@@ -154,11 +154,18 @@
  *                    use this altered functionality
  * v3.021  22/11/2021 Updated the --help text (belatedly), and set database creation to "controlledby:all".
  * v3.022  24/11/2021 General minor and cosmetic bug fixing.
+ * v3.023  30/11/2021 Changed avatars and added version control on handouts.
+ * v3.024  04/12/2021 Fixed bug which scrambled the 'play', 'pause' & 'stop' symbols portrayed in the 
+ *                    turn order tracker when downloaded from the Roll20 One-Click Install
+ *                    Added --removetargetstatus command to deal with a caster loosing concentration
+ *                    Fixed issue with targeted statuses
+ *                    Changed abilityLookup() to prioritise ability macros in user databases
+ *                    Fixed bug in Effect macro processing of token bar values
  */
  
 var RoundMaster = (function() {
 	'use strict'; 
-	var version = 3.022,
+	var version = 3.024,
 		author = 'Ken L. & RED',
 		pending = null;
 	
@@ -532,12 +539,13 @@ var RoundMaster = (function() {
 
 	var handouts = Object.freeze({
 	RoundMaster_Help:	{name:'RoundMaster Help',
-						 avatar:'https://s3.amazonaws.com/files.d20.io/images/141800/VLyMWsmneMt4n6OBOLYn6A/max.png?1344434416',
+						 version:1.03,
+						 avatar:'https://s3.amazonaws.com/files.d20.io/images/257656656/ckSHhNht7v3u60CRKonRTg/thumb.png?1638050703',
 						 bio:'<div style="font-weight: bold; text-align: center; border-bottom: 2px solid black;">'
-							+'<span style="font-weight: bold; font-size: 125%">AttackMaster v'+version+'</span>'
+							+'<span style="font-weight: bold; font-size: 125%">RoundMaster Help v1.03</span>'
 							+'</div>'
 							+'<div style="padding-left: 5px; padding-right: 5px; overflow: hidden;">'
-							+'<h1>RoundMaster API for Roll20</h1>'
+							+'<h1>RoundMaster API v'+version+'</h1>'
 							+'<p>RoundMaster is an API for the Roll20 RPG-DS.  Its purpose is to extend the functionality of the Turn Tracker capability already built in to Roll20.  It is one of several other similar APIs available on the platform that support the Turn Tracker and manage token and character statuses related to the passing of time: the USP of this one is the full richness of its functionality and the degree of user testing that has occurred over a 12 month period.</p>'
 							+'<p>RoundMaster is based on the much older TrackerJacker API, and many thanks to Ken L. for creating TrackerJacker.  However, roundMaster is a considerable fix and extension to TrackerJacker, suited to many different applications in many different RPG scenarios.  RoundMaster is also the first release as part of the wider RPGMaster series of APIs for Roll20, composed of <b>RoundMaster, CommandMaster, InitiativeMaster, AttackMaster, MagicMaster</b> and <b>MoneyMaster</b> - other than RoundMaster (which is generic) these initially support only the AD&D2e RPG.</p>'
 							+'<p><b><u>Note:</u></b> For some aspects of the APIs to work, the <b>ChatSetAttr API</b> and the <b>Tokenmod API</b>, both from the Roll20 Script Library, must be loaded.  It is also <i>highly recommended</i> to load all the other RPGMaster series APIs listed above.  This will provide the most immersive game-support environment</p>'
@@ -703,16 +711,18 @@ var RoundMaster = (function() {
 							+'</div>',
 						},
 	EffectsDB_help:		{name:'Effects Database Help',
-						 avatar:'https://s3.amazonaws.com/files.d20.io/images/141800/VLyMWsmneMt4n6OBOLYn6A/max.png?1344434416',
+						 version:1.03,
+						 avatar:'https://s3.amazonaws.com/files.d20.io/images/257656656/ckSHhNht7v3u60CRKonRTg/thumb.png?1638050703',
 						 bio:'<div style="font-weight: bold; text-align: center; border-bottom: 2px solid black;">'
-							+'<span style="font-weight: bold; font-size: 125%">RoundMaster v'+version+'</span>'
+							+'<span style="font-weight: bold; font-size: 125%">Effects Database Help v1.03</span>'
 							+'</div>'
 							+'<div style="padding-left: 5px; padding-right: 5px; overflow: hidden;">'
-							+'<h1>Effect Database for RoundMaster API</h1>'
+							+'<h1>Effect Database for RoundMaster API v'+version+'</h1>'
 							+'<p>Effect-DB is a database character sheet created, used and updated by the <b>RoundMaster API</b> (see separate handout).  The database holds macros as Ability Macros that are run when certain matching statuses are placed on or removed from tokens (see Roll20 Help Centre for information on Ability Macros and Character Sheet maintenance).  The macros are run when various events occur, such as <i>end-of-round</i> or <i>Character\'s turn</i>, at which point no token or an incorrect token may be selected - this makes @{selected|attribute-name} useless as a macro command.  Therefore, the macros have certain defined parameters dynamically replaced when run by RoundMaster, which makes the token & character IDs and names, and values such as AC, HP and Thac0, available for manipulation.</p>'
 							+'<p>The Effects database as distributed with the API holds many effects that work with the spell & magic item macros distributed with other RPGMaster APIs. The API also checks for, creates and updates the Effects database to the latest version on start-up.  DMs can add their own effects to additional databases, but the database provided is totally rewritten when new updates are released and so the DM must add their own database sheets.  If the <i>provided</i> databases are accidentally deleted or overwritten, they will be automatically recreated the next time the Campaign is opened. Additional databases should be named as <b>Effects-DB-added-name</b> where <i>"added-name"</i> can be any name you want.</p>'
 							+'<p><b>However:</b> the system will ignore any database with a name that includes a version number of the form “v#.#” where # can be any number or group of numbers e.g. Effects-DB v2.13 will be ignored.  This is so that the DM can version control their databases, with only the current one (without a version number) being live.</p>'
 							+'<p>There can be as many additional databases as you want.  Other Master series APIs come with additional databases, some of which overlap - this does not cause a problem as version control and merging unique macros is managed by the APIs.</p>'
+							+'<p><b>Important Note:</b> all Character Sheet databases <b><u><i>must</i></u></b> have their <i>\‘ControlledBy\’</i> value (found under the [Edit] button at the top right of each sheet) set to <i>\‘All Players\’</i>.  This must be for all databases, both those provided (set by the API) and any user-defined ones.  Otherwise, Players will not be able to run the macros contained in them.</p>'
 							+'<p>Effect macros are primarily intended to act on the Token and its variables, but can also act on the represented Character Sheet.  A single Character Sheet can have multiple Tokens representing it, and each of these are able to do individual actions using the data on the Character Sheet jointly represented.  However, if such multi-token Characters / NPCs / creatures are likely to encounter effects that will affect the Character Sheet they must be split with each Token representing a separate Character Sheet, or else the one effect will affect all tokens associated with the Character Sheet, whether they were targeted or not!  In fact, <b>it is recommended that tokens and character sheets are 1-to-1 to keep things simple.</b></p>'
 							+'<p><b><u>Note:</u></b> Effect macros are heavily dependent upon the <b>ChatSetAttr API</b> and the <b>Tokenmod API</b>, both from the Roll20 Script Library, and they must be loaded.  It is also <i>highly recommended</i> to load all the other RPGMaster series APIs: <b>InitiativeMaster, AttackMaster, MagicMaster and CommandMaster</b>.  This will provide the most immersive game-support environment</p>'
 							+'<h2>Setup of the Token</h2>'
@@ -971,13 +981,12 @@ var RoundMaster = (function() {
 		// RED: v3.019 check the version of any existing Effects databases,
 		// and update them as necessary, creating any missing ones.
 
-		setTimeout( () => doUpdateEffectsDB(['Silent']), 3000 );
+		setTimeout( () => doUpdateEffectsDB(['Silent']), 1000 );
 		
 		// RED: v3.020 added the help-text handouts and a 
 		// function to create and update them
-		
-		updateHandouts(findTheGM());
-		
+		setTimeout( () => updateHandouts(true,findTheGM()), 1000);
+				
 		// RED: v1.301 update the global ID of the Effects Library
 		var effectsLib = findObjs({ _type: 'character' , name: fields.effectlib });
         state.roundMaster.effectsLib = false;
@@ -1237,7 +1246,7 @@ var RoundMaster = (function() {
 			attr = field[0].toLowerCase(),
 			altAttr = altAttr ? altField[0].toLowerCase() : 'EMPTY',
 			property = field[1],
-			attrVal = {}, attrObj, attrName;
+			attrVal = {}, attrObj, attrName, name;
 			
 		
 		if (tokenBar && tokenBar[0].length) {
@@ -1246,6 +1255,7 @@ var RoundMaster = (function() {
 		}
 		if (!attrVal.current || isNaN(attrVal.current)) {
 			if (_.some( ['bar2_link','bar1_link','bar3_link'], linkName=>{
+				name = linkName;
 				let linkID = curToken.get(linkName);
 				if (linkID) {
 					attrObj = getObj('attribute',linkID);
@@ -1256,7 +1266,7 @@ var RoundMaster = (function() {
 				}
 				return false;
 			})) {
-				attrName = {current:linkName.substring(0,4)+'_value', max:linkName.substring(0,4)+'_max'};
+				attrName = {current:name.substring(0,4)+'_value', max:name.substring(0,4)+'_max'};
 				attrVal = {current:attrObj.get('current'), max:attrObj.get('max')};
 			}
 		}
@@ -1353,20 +1363,18 @@ var RoundMaster = (function() {
 	var updateStatusDisplay = function(curToken,isTurn) {
 		if (!curToken) {return;}
 		var effects = getStatusEffects(curToken),
-			isPlayer,
+			isPlayer = isPlayerControlled( curToken ),
 			gstatus,
 			statusArgs,
 			toRemove = [],
 			content = '',
 			hcontent = ''; 
 			
-		isPlayer = isPlayerControlled( curToken );
-			
 		_.each(effects, function(e) {
 			if (!e) {return;}
 			statusArgs = e;
 			gstatus = statusExists(e.name); 
-//			log('updateStatusDisplay: dealing with next valid effect');
+//			log('updateStatusDisplay: dealing with next valid effect, isTurn='+isTurn+', state.round='+state.roundMaster.round+', e.round='+e.round);
 			// RED: v1.204 only need to increment if the first or only turn in the round
 			if (isTurn && parseInt(e.round) !== parseInt(state.roundMaster.round)) {
 //				log('updateStatusDisplay: isTurn true and this effect has not yet been updated');
@@ -1377,7 +1385,7 @@ var RoundMaster = (function() {
 				if (state.roundMaster.effectsLib && e.duration > 0) {
 					// RED: v1.301 run the relevant effect-turn macro if it exists
 //					log('updateStatusDisplay: attempting to run '+statusArgs.name+'-turn for '+curToken.get('name'));
-					sendAPImacro( curToken, statusArgs.msg, statusArgs.name, '-turn' );
+					setTimeout( () => sendAPImacro( curToken, statusArgs.msg, statusArgs.name, '-turn' ),2000 );
 				}
 			}
 //			log('updateStatusDisplay: name='+curToken.get('name')+', effect.round='+e.round+', status.round='+state.roundMaster.round+', effect.duration='+e.duration);
@@ -1395,7 +1403,7 @@ var RoundMaster = (function() {
 					// RED: v1.301 when removing the status marker
 					// run the relevant effect-end macro if it exists
 //        			log('updateStatusDisplay: name='+curToken.get('name')+', attempting to run ending effect for '+e.name);
-					sendAPImacro( curToken, e.msg, e.name, '-end' );
+					setTimeout( () => sendAPImacro( curToken, e.msg, e.name, '-end' ),2000 );
 				}
 				// remove from status args
 				var removedStatus = updateGlobalStatus(e.name,undefined,-1);
@@ -1566,16 +1574,19 @@ var RoundMaster = (function() {
 			switch(flags.rw_state) {
 				case RW_StateEnum.ACTIVE:
 					graphic.set('tint_color','transparent'); 
-					indicator = '▶ ';
+					indicator = String.fromCodePoint(9654)+' ';  // 9654
+//					log('Code for ACTIVE indicator ▶ is '+('▶ '.codePointAt(0)));
 					break;
 				case RW_StateEnum.PAUSED:
 					graphic = findTrackerGraphic();
 					graphic.set('tint_color','#FFFFFF'); 
-					indicator ='▍▍';
+					indicator = String.fromCodePoint(9613) + String.fromCodePoint(9613); // 9613
+//					log('Code for PAUSE indicator ▍▍ is '+('▍▍'.codePointAt(0)));
 					break;
 				case RW_StateEnum.STOPPED:
 					graphic.set('tint_color','transparent'); 
-					indicator = '◼ ';
+					indicator = String.fromCodePoint(9724)+' '; // 9724
+//					log('Code for STOPPED indicator ◼ is '+('◼ '.codePointAt(0)));
 					break;
 				default:
 					indicator = tracker.custom.substring(0,tracker.custom.indexOf('Round')).trim();
@@ -2448,9 +2459,6 @@ var RoundMaster = (function() {
 				} else {
 					turnorder = newRoundSort(turnorder,flags.newRoundSort);
 				};
-				turnorder.push(currentTurn);
-				currentTurn = turnorder[0];
-				updateTurnorderMarker(turnorder);
 				// RED: v1.204 visit every token with statuses and update them if not already done
 				// TODO
         		_.each(_.keys(state.roundMaster.effects), function(e) {
@@ -2458,8 +2466,12 @@ var RoundMaster = (function() {
         			if (!token) {
         				return; 
         			}
+//					log('handleAdvanceTurn: update remaining statuses');
         			updateStatusDisplay(token,true);
         		});
+				turnorder.push(currentTurn);
+				currentTurn = turnorder[0];
+				updateTurnorderMarker(turnorder);
                 
 				// RED: v1.204 set the global round state variable to the current round number
 				state.roundMaster.round = rounds;
@@ -2556,6 +2568,7 @@ var RoundMaster = (function() {
 						}
 				    }
 					if (curToken) {
+//						log('handleAdvanceTurn: announce the next tokens turn');
 						announceTurn(curToken,updateStatusDisplay(curToken,true),currentTurn.custom);
 					}
 				}
@@ -2804,7 +2817,7 @@ var RoundMaster = (function() {
 		    // legitimately no longer exist
 		    return;
 		}
-		args = args.join('|');
+//		args = args.join('|');
 		sendDebug('doAddTargetStatus: Target is ' + target.get('name'));
 		doAddStatus(args,target);
 		return;
@@ -2885,7 +2898,7 @@ var RoundMaster = (function() {
 					name: effect,
 					duration: duration,
 					direction: direction,
-					round: state.roundMaster.round,
+					round: state.roundMaster.round-1,
 					msg: msg
 				});
 				updateGlobalStatus(effect,undefined,1);
@@ -2895,7 +2908,7 @@ var RoundMaster = (function() {
 					name: effect,
 					duration: duration,
 					direction: direction,
-					round: state.roundMaster.round,
+					round: state.roundMaster.round-1,
 					msg: msg
 				});
 				updateGlobalStatus(effect,undefined,1);
@@ -3099,7 +3112,7 @@ var RoundMaster = (function() {
 		}
 		
 		var	msg = updateStatusDisplay(curToken,false);
-		log('doDisplayTokenStatus: msg.public='+msg.public+', and msg.hidden='+msg.hidden);
+//		log('doDisplayTokenStatus: msg.public='+msg.public+', and msg.hidden='+msg.hidden);
 		if (!isGM) {
 			sendResponse(senderId,msg.public);
 		} else {
@@ -3374,7 +3387,7 @@ var RoundMaster = (function() {
         if (!args)
             {return;}
 
-		log('doPlayerTargetStatus: args.length='+args.length);
+//		log('doPlayerTargetStatus: args.length='+args.length);
 		if (args.length <4 || args.length > 6) {
             sendDebug('doPlayerTargetStatus: Invalid number of arguments');
 			sendError('Invalid status item syntax');
@@ -3997,11 +4010,11 @@ var RoundMaster = (function() {
 	}
 
 	/**
-	 * Resets the turn order the the provided round number
-	 * or in its absense, configures it to 1. Does no other
+	 * Resets the turn order to the provided round number
+	 * or in its absence, configures it to 1. Does no other
 	 * operation other than change the round counter.
 	 */ 
-	var doResetTurnorder = function(args) {
+	var doResetTurnorder = function(args,isTurn=true) {
 		var initial = (typeof(args) === 'string' ? args.match(/\s*\d+/) : 1);
 		if (!initial) 
 				{initial = 1;}
@@ -4042,7 +4055,8 @@ var RoundMaster = (function() {
         			if (!token) {
         				return; 
         			}
-        			updateStatusDisplay(token,true);
+//					log('doResetTurnorder: update status display');
+        			updateStatusDisplay(token,isTurn);
         		});
 			}
 		}
@@ -4054,11 +4068,12 @@ var RoundMaster = (function() {
 	 * macro database with the specified root name, returning
 	 * the database name.  If can't find a matching ability macro
 	 * then return undefined objects
+	 * RED: v3.025 added a preference for user-defined macros
 	 **/
 	 
 	var abilityLookup = function( rootDB, abilityName ) {
 		
-        abilityName = abilityName.toLowerCase().trim();
+        abilityName = abilityName.toLowerCase().replace(reIgnore,'').trim();
         rootDB = rootDB.toLowerCase();
         if (!abilityName || abilityName.length==0) {
 			return {dB: rootDB, obj: undefined, ct: undefined};
@@ -4066,18 +4081,27 @@ var RoundMaster = (function() {
 	    
         var dBname,
 			magicDB, magicName,
-            abilityObj = _.chain(findObjs({type: 'ability', name: abilityName}, {caseInsensitive:true}))
-                            .filter(function(obj) {
-                                if (!(magicDB = getObj('character',obj.get('characterid')))) {return false;}
-                                magicName = magicDB.get('name').toLowerCase();
-								if ((magicName.indexOf(rootDB) !== 0) || (/\s*v\d*\.\d*/i.test(magicName))) {return false;}
-                    			if (!dBname) dBname = magicName;
-                    			return true;
-                            }).value();
-		if (!abilityObj || abilityObj.length === 0) {
+			abilityObj,
+			found = false;
+			
+		filterObjs(function(obj) {
+			if (found) return false;
+			if (obj.get('type') != 'ability') return false;
+			if (obj.get('name').toLowerCase().replace(reIgnore,'') != abilityName) return false;
+			if (!(magicDB = getObj('character',obj.get('characterid')))) return false;
+			magicName = magicDB.get('name');
+			if ((magicName.toLowerCase().indexOf(rootDB) !== 0) || (/\s*v\d*\.\d*/i.test(magicName))) return false;
+			if (!dbNames[magicName.replace(/-/g,'_')]) {
+				dBname = magicName;
+				found = true;
+			} else if (!dBname) dBname = magicName;
+			abilityObj = obj;
+			return true;
+		});
+		if (!abilityObj) {
 			dBname = rootDB;
 		}
-		return {dB: dBname, obj:abilityObj};
+		return {dB: dBname.toLowerCase(), obj:abilityObj};
 	}
 	
 	/*
@@ -4307,7 +4331,7 @@ var RoundMaster = (function() {
 					sq:		1,
 		};
 		
-		log('doSetAOE: called, args='+args.join('|'));
+//		log('doSetAOE: called, args='+args.join('|'));
 		
 		if (!args) args = [];
 		if (!args[0] && selected && selected.length) {
@@ -4371,54 +4395,54 @@ var RoundMaster = (function() {
 			args[0] = crossHairID = crossHairObj.id;
 			crossHair = crossHairObj;
 			question = !!!confirmedDrop;
-			log('doSetAOE: question for crossHair which is at '+chName);
+//			log('doSetAOE: question for crossHair which is at '+chName);
 		}
 		if (!shape || !['BOLT','CIRCLE','CONE','ELIPSE','RECTANGLE','SQUARE','WALL'].includes(shape)) {
 			// ask for shape of aoe
 			args[1] = '?{Specify area of effect shape|Bolt|Circle|Cone|Elipse|Rectangle|Square|Wall}';
 			question = true;
 			shape = 'ELIPSE';
-			log('doSetAOE: question for shape='+args[1]);
+//			log('doSetAOE: question for shape='+args[1]);
 		} 
 		if (!units || !['SQUARES','FEET','YARDS','UNITS'].includes(units)) {
 			// ask for units of dimensions
 			args[2] = '?{Specify units of measurement|Grid squares,squares|Feet,feet|Yards,yards}';
 			question = true;
-			log('doSetAOE: question for units='+args[2]);
+//			log('doSetAOE: question for units='+args[2]);
 		}
 		if (!args[3]) {
 			// ask for range
 			args[3] = '?{Specify the range'+(units ? (' in '+units) : '')+'}';
 			question = true;
-			log('doSetAOE: question for range='+args[3]);
+//			log('doSetAOE: question for range='+args[3]);
 		}
 		if (!length || length <= 0) {
 			// ask for length
 			args[4] = '?{Specify area of effect diameter/length'+(units ? (' in '+units) : '')+'}';
 			question = true;
-			log('doSetAOE: question for length='+args[4]);
+//			log('doSetAOE: question for length='+args[4]);
 		}
 		if ((!width || width <= 0) && ['CONE','RECTANGLE','ELIPSE','BOLT','WALL'].includes(shape)) { 
 			// ask for width
 			args[5] = '?{Specify area of effect width'+(units ? (' in '+units) : '')+'}';
 			question = true;
-			log('doSetAOE: question for width='+args[5]);
+//			log('doSetAOE: question for width='+args[5]);
 		}
 		if (!aoeImage || !aoeImage.length) {
 			// If there is no defined image, ask for a colour
 			args[6] = '?{Choose an effect/colour to show|Acid|Cold|Dark|Fire|Light|Lightning|Magic|Red|Yellow|Blue|Green|Magenta|Cyan|White|Black}';
 			question = true;
-			log('doSetAOE: question for aoeImage='+args[6]);
+//			log('doSetAOE: question for aoeImage='+args[6]);
 		}
 		if (!state.roundMaster.dropOnce && !confirmedDrop) {
 			// display a chat window button asking to confirm position of cross-hair
 			// Button will call --aoe with a confirmedDrop
 			args[7] = true;
 			question = true;
-			log('doSetAOE: question for confirming');
+//			log('doSetAOE: question for confirming');
 		}
 		if (question) {
-			log('doSetAOE: asking questions');
+//			log('doSetAOE: asking questions');
 			content = '&{template:default}{{name=Confirm AOE placement}}'
 					+ '{{AOE='+(range==0 ? ('Range is 0.') : ('Move the crosshair '+(range > 0 ? 'within the range depicted by the green area, then' : 'within the range, then')))
 					+ '<br>[Confirm](!rounds --aoe '+args.join('|')+') Area of Effect placement}}'
@@ -4446,8 +4470,8 @@ var RoundMaster = (function() {
 				endWidth = ((units == 'YARDS') ? (width * 3 / ftSize) : ((units == 'FEET') ? (width / ftSize) : width ))/((units == 'SQUARES') ? 1 : scale),
 				chImage = aoeImages[aoeImage.toUpperCase()];
 
-			log('doSetAOE: setting AOE, args='+args.join('|'));
-			log('doSetAOE: length='+length+', ftSize='+ftSize+', units='+units+', radius='+radius+', scale='+scale);
+//			log('doSetAOE: setting AOE, args='+args.join('|'));
+//			log('doSetAOE: length='+length+', ftSize='+ftSize+', units='+units+', radius='+radius+', scale='+scale);
 			if (!_.isUndefined(chImage)) {
 				chImage = chImage[shape] || '';
 			} else {
@@ -4626,7 +4650,7 @@ var RoundMaster = (function() {
      * set at the preserved round number
      */
             prepareTurnorder();
-            doResetTurnorder(rounds);
+            doResetTurnorder(rounds,false);
 		}
 
 	    
@@ -4709,15 +4733,15 @@ var RoundMaster = (function() {
 		        			
 		} else {
 			turnorder = _.filter(turnorder,(e,i)=>{if (parseInt(e.id) == -1 && e.custom.match(searchTerm)) {
-														log('doAddToTracker: found matching custom entry, keepAll='+keepAll);
+//														log('doAddToTracker: found matching custom entry, keepAll='+keepAll);
 														tracker.push({id: '-1', ix: i, pr: e.pr, custom: name});
 														return keepAll;
 													} else  if (parseInt(tokenId) != -1 && e.id == tokenId) {
-														log('doAddToTracker: found matching token entry, keepAll='+keepAll);
+//														log('doAddToTracker: found matching token entry, keepAll='+keepAll);
 														tracker.push({id: e.id, ix: i, pr: e.pr, custom: msg});
 														return keepAll;
 													} else {
-														log('doAddToTracker: not matched, keepAll='+keepAll);
+//														log('doAddToTracker: not matched, keepAll='+keepAll);
 														return true;
 													}
 			});
@@ -5218,9 +5242,9 @@ var RoundMaster = (function() {
 			}
 		}
 		if (player) {
-			log('doSetViewer: viewer set to be '+ playerName);
+//			log('doSetViewer: viewer set to be '+ playerName);
 		} else {
-			log('doSetViewer: viewer not set');
+//			log('doSetViewer: viewer not set');
 		}
 
 		return;
@@ -5248,7 +5272,7 @@ var RoundMaster = (function() {
 				buildCSdb( dbName, dbNames[dbLabel], silent );
 			}
 		} else if (_.some( dbNames, (db,dbName) => checkDBver( dbName, db, silent ))) {
-			log('Updating all Effect databases');
+//			log('Updating all Effect databases');
 			if (!silent) sendFeedback('Updating all Effect databases');
 			_.each( dbNames, (db,dbName) => {
 				let dbCS = findObjs({ type:'character', name:dbName.replace(/_/g,'-') },{caseInsensitive:true});
@@ -5268,20 +5292,35 @@ var RoundMaster = (function() {
 	 * Update or create the help handouts
 	 **/
 	 
-	var updateHandouts = function(senderId) {
+	var updateHandouts = function(silent,senderId) {
 		
 		_.each(handouts,(obj,k) => {
 			let dbCS = findObjs({ type:'handout', name:obj.name },{caseInsensitive:true});
 			if (!dbCS || !dbCS[0]) {
+			    log(obj.name+' not found.  Creating version '+obj.version);
 				dbCS = createObj('handout',{name:obj.name,inplayerjournals:senderId});
+				dbCS.set('notes',obj.bio);
+				dbCS.set('avatar',obj.avatar);
 			} else {
 				dbCS = dbCS[0];
+				dbCS.get('notes',function(note) {
+					let reVersion = new RegExp(obj.name+'\\s*?v(\\d+?.\\d*?)</span>', 'im');
+					let version = note.match(reVersion);
+					version = (version && version.length) ? (parseFloat(version[1]) || 0) : 0;
+					if (version >= obj.version) {
+//					    log('Not updating handout '+obj.name+' as is already version '+obj.version);
+					    return;
+					}
+					dbCS.set('notes',obj.bio);
+					dbCS.set('avatar',obj.avatar);
+					if (!silent) sendFeedback(obj.name+' handout updated to version '+obj.version);
+					log(obj.name+' handout updated to version '+obj.version);
+				});
 			}
-			dbCS.set({notes:obj.bio,avatar:obj.avatar});
 		});
 		return;
 	}
-	
+
 	/*
 	 * Run the effect macro specified in an external command call
 	 * Used by AttackMaster for weapon effects
@@ -5343,7 +5382,7 @@ var RoundMaster = (function() {
 						.includes(func.toLowerCase()),
 			cmd = '!'+from+' --hsr rounds'+((func && func.length) ? ('|'+func+'|'+funcTrue) : '');
 			
-		log('RoundMaster recieved handshake query from '+from+((func && func.length) ? (' checking command '+func+' so responding '+funcTrue) : (' and responding')));
+//		log('RoundMaster recieved handshake query from '+from+((func && func.length) ? (' checking command '+func+' so responding '+funcTrue) : (' and responding')));
 		sendRmAPI(cmd);
 		return;
 	};
@@ -5464,7 +5503,7 @@ var RoundMaster = (function() {
 			    bar3 = curToken.get('bar3_value'),
 				ac, acField, thac0, thac0Field, hp, hpField,
 				effectAbility = abilityLookup( fields.effectlib, effect+macro ),
-				effectMacro = effectAbility.obj && effectAbility.obj.length ? effectAbility.obj[0] : undefined;
+				effectMacro = effectAbility.obj;
 //				log('sendAPImacro: effectAbility.length='+effectAbility.length+', effectAbility.obj.length='+effectAbility.obj.length);
 				
 //				findObjs({ _type : 'ability' , characterid : effectsLib.id, name :  effect + macro }, {caseInsensitive: true});
@@ -5473,7 +5512,7 @@ var RoundMaster = (function() {
 				[thac0,thac0Field] = getTokenValues(curToken,fields.Token_Thac0,fields.Thac0,fields.MonsterThac0);
 				[hp,hpField] = getTokenValues(curToken,fields.Token_HP,fields.HP);
 				
-			log('sendAPImacro: hp.current='+hp.current+', hpField.current='+hpField.current);
+//			log('sendAPImacro: hp.current='+hp.current+', hpField.current='+hpField.current);
 
 			if (!effectMacro) {
 			    sendDebug('Not found effectMacro ' + effectsLib.get('name') + '|' + effect + macro);
@@ -5503,7 +5542,8 @@ var RoundMaster = (function() {
 				macroBody = macroBody.replace( /\^\^token_thac0_max\^\^/gi , thac0Field.max );
 				macroBody = macroBody.replace( /\^\^token_hp_max\^\^/gi , hpField.max );
         		sendDebug('sendAPImacro: macroBody is ' + macroBody );
-		        sendChat("character|"+cid,macroBody,null,{noarchive:!flags.archive, use3d:false});
+//		        sendChat("character|"+cid,macroBody,null,{noarchive:!flags.archive, use3d:false});
+		        sendChat('',macroBody,null,{noarchive:!flags.archive, use3d:false});
 				
 			}
 		}
@@ -5782,6 +5822,9 @@ var RoundMaster = (function() {
 						// spell durations end (mostly via macros)
 						doRemoveStatus(argString,selected,true);
 						break;
+				case 'removetargetstatus':
+						doDelTargetStatus(argString,true);
+						break;
 				case 'reset':
 						if (isGM) doResetTurnorder(argString);
 						break;
@@ -5811,7 +5854,7 @@ var RoundMaster = (function() {
 						if (isGM) doUpdateEffectsDB(arg);
 						break;
 				case 'handout':
-						if (isGM) updateHandouts(senderId);
+						if (isGM) updateHandouts(false,senderId);
 						break;
 				case 'viewer':
 						// RED: v3.011 allow a player to be set as a "viewer" that will see what the 
@@ -6025,21 +6068,21 @@ var RoundMaster = (function() {
 							ac, acField, thac0,thac0Field, hp, hpField,
 //							effectMacro = findObjs({ _type : 'ability' , characterid : effectsLib.id, name :  e.name + '-end' }, {caseInsensitive: true});
 							effectAbility = abilityLookup( fields.effectlib, e.name+'-end' ),
-							effectMacro = effectAbility.obj && effectAbility.obj.length ? effectAbility.obj[0] : undefined;
+							effectMacro = effectAbility.obj;
 							
 						[ac,acField] = getTokenValues(obj,fields.Token_AC,fields.AC,fields.MonsterAC);
 						[thac0,thac0Field] = getTokenValues(obj,fields.Token_Thac0,fields.Thac0,fields.MonsterThac0);
 						[hp,hpField] = getTokenValues(obj,fields.Token_HP,fields.HP);
 
-						if (!effectMacro || effectMacro.length === 0) {
-							log('handleDestroyToken: Not found effectMacro ' + effectsLib.get('name') + '|' + e.name + '-end');
+						if (!effectMacro) {
+//							log('handleDestroyToken: Not found effectMacro ' + effectsLib.get('name') + '|' + e.name + '-end');
 							sendDebug('handleDestroyToken: Not found effectMacro ' + effectsLib.get('name') + '|' + e.name + '-end');
 						} else {
 							if (!cname) {
 								cname = oldName;
 							}
-							if (effectMacro.length > 0) {
-								var macroBody = effectMacro[0].get('action');
+							if (effectMacro) {
+								var macroBody = effectMacro.get('action');
 
 								macroBody = macroBody.replace( /\^\^cname\^\^/gi , cname );
 								macroBody = macroBody.replace( /\^\^tname\^\^/gi , oldName );
@@ -6080,9 +6123,9 @@ var RoundMaster = (function() {
 	
 	var handleTokenDeath = function(obj,prev) {
 		
-		log('handleTokenDeath: checking statusmarker change for death');
+//		log('handleTokenDeath: checking statusmarker change for death');
 		if (obj.get("status_dead")) {
-			log('handleTokenDeath: '+obj.get('name')+' has died');
+//			log('handleTokenDeath: '+obj.get('name')+' has died');
 			// If the token dies and is marked as "dead" by the GM
 			// remove all active effects from the token
 			doRemoveStatus( 'all', obj, false );

@@ -4656,7 +4656,7 @@ var RoundMaster = (function() {
 		    tokenId = args[1],
 			increment = ('+-'.includes(args[2][0])),
 			priority = parseInt((args[2][0] == '=') ? (args[2].slice(1)) : args[2]),
-			qualifier = (args[3] || '0'),
+			qualifier = (args[3] || '0').toLowerCase(),
 			msg = (args[4] || ''),
 			detail = (args[5] || ''),
 			searchTerm = new RegExp(name,''),

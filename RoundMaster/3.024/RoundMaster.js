@@ -23,7 +23,7 @@
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  * 
- * The goal of this script is to be an iniative tracker, that manages statuses,
+ * The goal of this script is to be an initiative tracker, that manages statuses,
  * effects, and durations.
  * 
  * 1. It should advance the turn order and display a notification in chat with
@@ -140,11 +140,32 @@
  *                    rather than a base plus increments, to make it more intuitive
  * v3.013  28/06/2021 Adapted chat message handling to use a switch statement and have a try/catch strategy 
  *                    for error capture and prevent the API falling over
+ * v3.014  11/07/2021 Fixed viewer to only deal with player page tokens
+ * v3.015  21/07/2021 Fixed updateStatusDisplay() to deal with --reset-ing the round number.  Deducts the right
+ *                    number of rounds from the duration and, if <= 0, ends any effect and removes the status.
+ *                    However, will not run multiple -turn effects.
+ * v3.016  29/07/2021 Added function to trap a graphic/token being dragged onto the map and to run a
+ *                    token_name-add effect if one exists.  Fixed bug in --viewer command where used on its own
+ *                    (no args) it caused a reference error
+ * v3.017  02/09/2021 Search for Effects libraries with extended names to allow campaign-specific effects
+ * v3.018  22/09/2021 Add cross-hairs and area identification for area effect spells
+ * v3.019  31/10/2021 Added Effects-DB database updating and version management
+ * v3.020  10/11/2021 Changed Token bar value recovery to be more flexible and accurate.  Updated Effects-DB to 
+ *                    use this altered functionality
+ * v3.021  22/11/2021 Updated the --help text (belatedly), and set database creation to "controlledby:all".
+ * v3.022  24/11/2021 General minor and cosmetic bug fixing.
+ * v3.023  30/11/2021 Changed avatars and added version control on handouts.
+ * v3.024  04/12/2021 Fixed bug which scrambled the 'play', 'pause' & 'stop' symbols portrayed in the 
+ *                    turn order tracker when downloaded from the Roll20 One-Click Install
+ *                    Added --removetargetstatus command to deal with a caster loosing concentration
+ *                    Fixed issue with targeted statuses
+ *                    Changed abilityLookup() to prioritise ability macros in user databases
+ *                    Fixed bug in Effect macro processing of token bar values
  */
  
 var RoundMaster = (function() {
 	'use strict'; 
-	var version = 3.013,
+	var version = 3.024,
 		author = 'Ken L. & RED',
 		pending = null;
 	
@@ -171,16 +192,194 @@ var RoundMaster = (function() {
 	var fields = {
 		feedbackName: 'RoundMaster',
 		feedbackImg: 'https://s3.amazonaws.com/files.d20.io/images/11514664/jfQMTRqrT75QfmaD98BQMQ/thumb.png?1439491849',
-		
 		trackerId: '',
 		trackerName: 'RoundMaster_tracker',
-		
 		trackerImg: 'https://s3.amazonaws.com/files.d20.io/images/11920268/i0nMbVlxQLNMiO12gW9h3g/thumb.png?1440939062',
 		//trackerImg: 'https://s3.amazonaws.com/files.d20.io/images/6623517/8xw1KOSSOO1WocN3KQYmzw/thumb.png?1417994946',
+		coneImage: 'https://s3.amazonaws.com/files.d20.io/images/250318958/dFggs3eDRDXntGCEHDUbVw/thumb.png?1634215364',
 		trackerImgRatio: 2.25,
 		rotation_degree: 10,
+		effectlib: 'Effects-DB',
+		crossHairName: 'RoundMaster_crosshair',
+		chCircleImage: 'https://s3.amazonaws.com/files.d20.io/images/246879699/udrkMIWIio5-ZsMFlsdwSA/thumb.png?1632500227',
+		chSquareImage: 'https://s3.amazonaws.com/files.d20.io/images/246880604/wawFdevkLcoCWNElMEHt_g/thumb.png?1632500699',
+		chConeImage:   'https://s3.amazonaws.com/files.d20.io/images/246950559/Pliz5b-O8k_Sin7KuoPnJw/thumb.png?1632518407',
+		
+		dbVersion: 			['db-version','current'],
+		Token_Thac0:		['bar2','value'],
+		Token_MaxThac0:		['bar2','max'],
+		Thac0_base:			['thac0-base','current'],
+		Thac0:              ['thac0','current'],
+		MonsterThac0:		['monsterthac0','current'],
+		Token_HP:			['bar3','value'],
+		Token_MaxHP:		['bar3','max'],
+		HP:					['HP','current'],
+		Token_AC:			['bar1','value'],
+		Token_MaxAC:		['bar1','max'],
+		MonsterAC:			['monsterarmor','current'],
+		AC:					['AC','current'],
+		ItemWeaponList:		['spellmem','current'],
+		ItemArmourList:		['spellmem2','current'],
+		ItemRingList:		['spellmem3','current'],
+		ItemMiscList: 		['spellmem4','current'],
+		ItemPotionList:		['spellmem10','current'],
+		ItemScrollList:		['spellmem11','current'],
+		ItemWandsList:		['spellmem12','current'],
+		ItemDMList:			['spellmem13','current'],
 	}; 
-	
+
+	var dbNames = Object.freeze({
+	Effects_DB:		{bio:'<blockquote>Token Marker Effects Macro Library</blockquote><br><br>v5.1 10/11/2021<br><br>This database holds the definitions for all token status effects.  These are macros that optionally are triggered when a status of the same root name is placed on a token (statusname-start), each round it is still on the token (statusname-turn), and when the status countdown reaches zero or the token dies or is deleted (statusname-end)  There are also other possible status conditions such as weaponname-inhand, weaponname-dancing and weaponname-sheathed.  See the <b>RoundMaster API</b> documentation for further information.<br><br><b>Important Note:</b> Effects require a Roll20 Pro membership, and the installation of the ChatSetAttr, Tokenmod and RoundMaster API Scripts, to allow parameter passing between macros, update of character sheet variables, and marking spell effects on tokens.  If you do not have this level of subscription, I highly recommend you get it as a DM, as you get lots of other goodies as well.  If you want to know how to load the API Scripts to your game, the RoLL20 API help here gives guidance, or Richard can help you.<br><br><b>Important Note for DMs:</b> if a monster character sheet has multiple tokens associated with it, and token markers with associated Effects are placed on more than one of those Tokens, any Effect macros will run multiple times and, if changing variables on the Character Sheet using e.g. ChatSetAttr will make the changes multiple times to the same Character Sheet - generally this will cause unexpected results!  If using these Effect macros for Effects that could affect monsters in this way, it is <b>HIGHLY RECOMMENDED</b> that a 1 monster Token : 1 character sheet approach is adopted.',
+					gmnotes:'<blockquote>Change Log:</blockquote><br>v5.1  10/11/2021  Changed to use virtual Token bar field names, so bar allocations can be altered<br><br>v5.0  29/10/2021  First version loaded into roundMaster API<br><br>v4.2.4  03/10/2021  Added Hairy Spider poison v4.2.3  23/05/2021  Added a Timer effect that goes with the Time-Recorder Icon, to tell you when a Timer you set starts and ends.<br><br>v4.2.2  28/03/2021  Added Regeneration every Round for @conregen points<br><br>v4.2.1  25/02/2021  Added end effect for Wandering Monster check, so it recurs every n rounds<br><br>v4.2  23/02/2021  Added effect for Infravision to change night vision settings for token.<br><br>v4.1  17/12/2020  Added effects for Dr Lexicon use of spells, inc. Vampiric Touch & Spectral Hand<br><br>v4.0.3 09/11/2020 Added effects for Cube of Force<br><br>v4.0.2 20/10/2020 Added effects of a Slow spell<br><br>v4.0.1 17/10/2020 Added Qstaff-Dancing-turn to increment a dancing quarterstaff\'s round counter<br><br>v4.0  27/09/2020 Released into the new Version 4 Testbed<br><br>v1.0.1 16/09/2020 Initial full release for Lost & Found<br><br>v0.1 30/08/2020 Initial testing version',
+					controlledby:'all',
+					root:'effects-db',
+					version:5.1,
+					avatar:'https://s3.amazonaws.com/files.d20.io/images/2795868/caxnSIYW0gsdv4kOmO294w/thumb.png?1390102911',
+					db:[{name:'3min-geyser-end',type:'',ct:0,charge:'uncharged',cost:0,body:'!rounds --addtotracker 3min-Geyser|-1|[[1d10]]|0|3min Geyser blows'},
+						{name:'5min-geyser-end',type:'',ct:0,charge:'uncharged',cost:0,body:'!rounds --addtotracker 5min-Geyser|-1|[[1d10]]|0|5min Geyser blows'},
+						{name:'Aid-end',type:'',ct:0,charge:'uncharged',cost:0,body:'^^cname^^\'s *Aid* has come to an end, and Thac0 \\amp HP return to normal\n!token-mod --ignore-selected --ids ^^tid^^ --set ^^token_thac0^^|+1 --set ^^token_hp^^|[[{ {^^hp^^},{@{^^cname^^|aid^^tid^^} } }kl1]]'},
+						{name:'Aid-start',type:'',ct:0,charge:'uncharged',cost:0,body:'^^cname^^ gains *Aid* from a Priest\'s god, improving Thac0 and HP\n!setattr --silent --name ^^cname^^ --aid^^tid^^|^^hp^^\n!token-mod --ignore-selected --ids ^^tid^^ --set ^^token_thac0^^|-1 --set ^^token_hp^^|+[[1d8]]'},
+						{name:'Barkskin-end',type:'',ct:0,charge:'uncharged',cost:0,body:'!token-mod --ignore-selected --ids ^^tid^^ --set ^^token_ac^^|@{^^cname^^|Barkskin^^tid^^}\n^^cname^^\'s AC returns to normal as Barkskin fades'},
+						{name:'Barkskin-start',type:'',ct:0,charge:'uncharged',cost:0,body:'!setattr --silent --name ^^cname^^ --Barkskin^^tid^^|^^ac^^\n!token-mod --ignore-selected --ids ^^tid^^ --set ^^token_ac^^|[[{ {^^ac^^}, {[[6-floor(@{^^cname^^|casting-level}/4)]]} }kl1]]\n^^cname^^\'s AC might have improved as they get Barkskin'},
+						{name:'Bless-end',type:'',ct:0,charge:'uncharged',cost:0,body:'!token-mod {{\n --ignore-selected\n --ids ^^tid^^\n --set ^^token_thac0^^|+1\n}}\n^^cname^^\'s Bless has expired and their Thac0 has returned to normal'},
+						{name:'Bless-start',type:'',ct:0,charge:'uncharged',cost:0,body:'^^cname^^ has been blessed and their Thac0 has improved\n!token-mod {{\n --ignore-selected\n --ids ^^tid^^\n --set ^^token_thac0^^|-1\n}}'},
+						{name:'Blindness-end',type:'',ct:0,charge:'uncharged',cost:0,body:'!token-mod --ignore-selected --ids ^^tid^^ --set ^^token_ac^^|-4 --set ^^token_thac0^^|-4\n!modattr --silent --name ^^cname^^ --comreact|-2\n^^tname^^ has recovered from blindness and no longer suffers from penalties to attacks, AC and initiative'},
+						{name:'Blindness-start',type:'',ct:0,charge:'uncharged',cost:0,body:'!token-mod --ignore-selected --ids ^^tid^^ --set ^^token_ac^^|+4 --set ^^token_thac0^^|+4\n!modattr --silent --name ^^cname^^ --comreact|+2\n^^tname^^ has been blinded and suffers 4 penalty to attacks \\amp AC, and 2 penalty to initiative'},
+						{name:'Chant-ally-end',type:'',ct:0,charge:'uncharged',cost:0,body:'!modattr --silent --name ^^cname^^ --strengthdmg||-1\n!token-mod --ignore-selected --ids ^^tid^^ --set ^^token_thac0^^|1\nThe attacks \\amp damage done by ^^tname^^ returns to normal as *Chant* ends'},
+						{name:'Chant-ally-start',type:'',ct:0,charge:'uncharged',cost:0,body:'!modattr --silent --name ^^cname^^ --strengthdmg||1\n!token-mod --ignore-selected --ids ^^tid^^ --set ^^token_thac0^^|-1\nThe attacks \\amp damage done by ^^tname^^ are improved by *Chant*'},
+						{name:'Chant-foe-end',type:'',ct:0,charge:'uncharged',cost:0,body:'!modattr --silent --name ^^cname^^ --strengthdmg||1\n!token-mod --ignore-selected --ids ^^tid^^ --set ^^token_thac0^^|-1\nThe attacks \\amp damage done by ^^tname^^ returns to normal as *Chant* ends'},
+						{name:'Chant-foe-start',type:'',ct:0,charge:'uncharged',cost:0,body:'!modattr --silent --name ^^cname^^ --strengthdmg||-1\n!token-mod --ignore-selected --ids ^^tid^^ --set ^^token_thac0^^|+1\nThe attacks \\amp damage done by ^^tname^^ are hindered by *Chant*'},
+						{name:'Cube-of-Force-end',type:'',ct:0,charge:'uncharged',cost:0,body:'!setattr --silent --charid @{^^cname^^|Cube-user} --repeating_potions_$@{^^cname^^|Cube-row}_potionqty|@{^^cname^^|hp}\n!token-mod --ignore-selected --ids ^^tid^^ --set layer|gmlayer'},
+						{name:'Cube-of-Force-start',type:'',ct:0,charge:'uncharged',cost:0,body:'!modbattr --silent --charid @{^^cname^^|Cube-user} --repeating_potions_$@{^^cname^^|Cube-row}_potionqty|[[1-@{^^cname^^|Cube-charges}]]\n!modbattr --silent --charid ^^cid^^ --hp|[[1-@{^^cname^^|Cube-charges}]] \n!rounds --edit_status change %% ^^tid^^ %% cube-of-force %% duration %% [[{{[[@{^^cname^^|hp}-@{^^cname^^|Cube-charges}]]},{1}}kh1]] --edit_status change %% ^^tid^^ %% cube-of-force %% direction %% [[([[{{[[{{[[@{^^cname^^|hp}-@{^^cname^^|Cube-charges}]]},{1}}kl1]]},{0}}kh1]])-1]]'},
+						{name:'Cube-of-Force-turn',type:'',ct:0,charge:'uncharged',cost:0,body:'!setattr --silent --charid @{^^cname^^|Cube-user} --repeating_potions_$@{^^cname^^|Cube-row}_potionqty|[[{{[[@{^^cname^^|hp}-([[(1-([[{{[[@{Initiative|round-counter}%10]]},{1}}kl1]] )) *@{^^cname^^|Cube-charges}]])]]},{0}}kh1]]\n!modbattr --silent --charid ^^cid^^ --hp|[[(([[{{[[@{Initiative|round-counter}%10]]},{1}}kl1]])-1)*@{^^cname^^|Cube-charges}]]\n!rounds --edit_status change %% ^^tid^^ %% cube-of-force %% duration %% [[{{@{^^cname^^|hp}},{1}}kh1]] --edit_status change %% ^^tid^^ %% cube-of-force %% direction %% [[([[{{[[{{@{^^cname^^|hp}},{1}}kl1]]},{0}}kh1]])-1]]'},
+						{name:'Curse-end',type:'',ct:0,charge:'uncharged',cost:0,body:'!token-mod --ignore-selected --ids ^^tid^^ --set ^^token_thac0^^|-1\n^^tname^^ has recovered from being *Cursed*'},
+						{name:'Curse-start',type:'',ct:0,charge:'uncharged',cost:0,body:'!token-mod --ignore-selected --ids ^^tid^^ --set ^^token_thac0^^|+1\n^^tname^^ has been *Cursed*, which affects their attacks and morale'},
+						{name:'Dancing-Longbow-dancing',type:'',ct:0,charge:'uncharged',cost:0,body:'!rounds --addtargetstatus ^^tid^^|Longbow-is-Dancing|4|-1|The Longbow is Dancing by itself. Use this time wisely!|all-for-one\n!attk --quiet-modweap ^^tid^^|Dancing-Longbow|ranged|sb:0,db:0'},
+						{name:'Dancing-Longbow-end',type:'',ct:0,charge:'uncharged',cost:0,body:'!attk --dance ^^tid^^|Dancing-Longbow'},
+						{name:'Dancing-Longbow-inhand',type:'',ct:0,charge:'uncharged',cost:0,body:'!rounds --addtargetstatus ^^tid^^|Dancing-Longbow|4|-1|Longbow not yet dancing so keep using it|stopwatch'},
+						{name:'Dancing-Longbow-sheath',type:'',ct:0,charge:'uncharged',cost:0,body:'!rounds --deltargetstatus ^^tid^^|Dancing-Longbow'},
+						{name:'Dancing-Longbow-turn',type:'',ct:0,charge:'uncharged',cost:0,body:'!attk --quiet-modweap ^^tid^^|Dancing-Longbow|ranged|+:+1'},
+						{name:'Dancing-Quarterstaff-end',type:'',ct:0,charge:'uncharged',cost:0,body:'!attk --dance ^^tid^^|Quarterstaff-of-Dancing|stop'},
+						{name:'Dancing-Quarterstaff-turn',type:'',ct:0,charge:'uncharged',cost:0,body:'!attk --quiet-modweap ^^tid^^|quarterstaff-of-dancing|melee|+:+1 --quiet-modweap ^^tid^^|quarterstaff-of-dancing|dmg|+:+1'},
+						{name:'Deafness-end',type:'',ct:0,charge:'uncharged',cost:0,body:'!modattr --silent --name ^^cname^^ --comreact|-1\n^^tname^^ has recovered from deafness and no longer suffers an initiative penalty'},
+						{name:'Deafness-start',type:'',ct:0,charge:'uncharged',cost:0,body:'!modattr --silent --name ^^cname^^ --comreact|+1\n^^tname^^ has been deafened and suffers an initiative penalty, as well as other effects'},
+						{name:'Divine-Favour-end',type:'',ct:0,charge:'uncharged',cost:0,body:'^^cname^^\'s Divine Favour has run its course, and their Thac0 returns to normal\n!token-mod {{\n --ignore-selected\n --ids ^^tid^^\n --set ^^token_thac0^^|+4\n}}'},
+						{name:'Divine-Favour-start',type:'',ct:0,charge:'uncharged',cost:0,body:'^^cname^^ has been granted a Divine Favour and their Thac0 has improved by 4!\n!token-mod {{\n --ignore-selected\n --ids ^^tid^^\n --set ^^token_thac0^^|-4\n}}'},
+						{name:'Enfeeble-monster-end',type:'',ct:0,charge:'uncharged',cost:0,body:'!token-mod --ignore-selected --ids ^^tid^^ --set ^^token_thac0^^|-2 ^^token_thac0_max^^|+2\nThe monster has recovered from being enfeebled'},
+						{name:'Enfeeble-monster-start',type:'',ct:0,charge:'uncharged',cost:0,body:'!token-mod --ignore-selected --ids ^^tid^^ --set ^^token_thac0^^|+2 ^^token_thac0_max^^|-2\nThe monster has been enfeebled'},
+						{name:'Exhausted-end',type:'',ct:0,charge:'uncharged',cost:0,body:'!modattr --fb-public --name ^^cname^^ --fb-from Effects --fb-header ^^cname^^ has recovered from Exhaustion --thac0|-2 --^^token_ac^^|-2 --strengthdmg||+2'},
+						{name:'Faerie-fire-darkness-end',type:'',ct:0,charge:'uncharged',cost:0,body:'!token-mod --ignore-selected --ids ^^tid^^ --set ^^token_ac^^|-2\n^^tname^^ has lost that glow and is now harder to aim at'},
+						{name:'Faerie-fire-darkness-start',type:'',ct:0,charge:'uncharged',cost:0,body:'!token-mod --ignore-selected --ids ^^tid^^ --set ^^token_ac^^|+2\n^^tname^^ is surrounded by Faerie Fire, and becomes much easier to hit'},
+						{name:'Faerie-fire-twilight-end',type:'',ct:0,charge:'uncharged',cost:0,body:'!token-mod --ignore-selected --ids ^^tid^^ --set ^^token_ac^^|-1\n^^tname^^ has lost that glow and is now harder to aim at'},
+						{name:'Faerie-fire-twilight-start',type:'',ct:0,charge:'uncharged',cost:0,body:'!token-mod --ignore-selected --ids ^^tid^^ --set ^^token_ac^^|+1\n^^tname^^ is surrounded by Faerie Fire, and becomes easier to hit'},
+						{name:'Flaming-oil-end',type:'',ct:0,charge:'uncharged',cost:0,body:'!token-mod --ignore-selected --ids ^^tid^^ --set layer|gmlayer '},
+						{name:'GS-acid-dmg-turn',type:'',ct:0,charge:'uncharged',cost:0,body:'^^cname^^ takes [[1d10]] HP of acid damage from the burning on their feet!'},
+						{name:'Glitterdust-end',type:'',ct:0,charge:'uncharged',cost:0,body:'!token-mod --ignore-selected --ids ^^tid^^ --set ^^token_ac^^|-4 --set ^^token_thac0^^|-4\n!modattr --silent --name ^^cname^^ --comreact|-2\n^^tname^^ has recovered from Glitterdust blindness and no longer suffers from penalties to attacks, AC and initiative'},
+						{name:'Glitterdust-start',type:'',ct:0,charge:'uncharged',cost:0,body:'!token-mod --ignore-selected --ids ^^tid^^ --set ^^token_ac^^|+4 ^^token_thac0^^|+4\n!modattr --silent --name ^^cname^^ --comreact|+2\n^^tname^^ has been blinded by glitterdust and suffers 4 penalty to attacks \\amp AC, and 2 penalty to initiative'},
+						{name:'Hairy-Spider-Poison-end',type:'',ct:0,charge:'uncharged',cost:0,body:'!token-mod --ignore-selected --ids ^^tid^^ --set ^^token_ac^^|-1 ^^token_thac0^^|-1\n!modattr --silent --charid ^^cid^^ --dexterity|+3'},
+						{name:'Hairy-Spider-Poison-start',type:'',ct:0,charge:'uncharged',cost:0,body:'!token-mod --ignore-selected --ids ^^tid^^ --set ^^token_ac^^|+1 ^^token_thac0^^|+1\n!modattr --silent --charid ^^cid^^ --dexterity|-3'},
+						{name:'Haste-end',type:'',ct:0,charge:'uncharged',cost:0,body:'!modattr --silent --name ^^cname^^ --comreact|2|-2\nOne year older, ^^cname^^ is back to normal'},
+						{name:'Haste-start',type:'',ct:0,charge:'uncharged',cost:0,body:'!modattr --silent --name ^^cname^^ --comreact|-2|2\nBeing *Hasted*, ^^cname^^ moves twice as fast and has twice the number of attacks\n'},
+						{name:'Heroes-Feast-end',type:'',ct:0,charge:'uncharged',cost:0,body:'!token-mod --ignore-selected --ids ^^tid^^ --set ^^token_thac0^^|+1\nThe effects of Heroes Feast have worn off, and ^^tname^^ returns to normal'},
+						{name:'Heroes-Feast-start',type:'',ct:0,charge:'uncharged',cost:0,body:'!token-mod --ignore-selected --ids ^^tid^^ --set ^^token_thac0^^|-1\nHaving eaten a Heroes Feast, ^^tname^^ gains benefits to attacks as well as other bonuses'},
+						{name:'Hill-Giant-Strength-end',type:'',ct:0,charge:'uncharged',cost:0,body:'!resetattr --silent --name ^^cname^^ --strength\n^^cname^^ returns to their normal strength'},
+						{name:'Hill-Giant-Strength-start',type:'',ct:0,charge:'uncharged',cost:0,body:'!setattr --silent --name ^^cname^^ --strength|19|@{^^cname^^|strength}\n^^cname^^ gains enormous strength'},
+						{name:'Infravision-end',type:'',ct:0,charge:'uncharged',cost:0,body:'!token-mod --ignore-selected --ids ^^tid^^ --off has_night_vision\n"Who turned out the lights?" ^^tname^^ no longer has night vision.'},
+						{name:'Infravision-start',type:'',ct:0,charge:'uncharged',cost:0,body:'!token-mod --ignore-selected --ids ^^tid^^ --on has_night_vision --set night_distance|60\n^^tname^^ has gained 60ft infravision, which brightens up their night!'},
+						{name:'Invisibility-end',type:'',ct:0,charge:'uncharged',cost:0,body:'!token-mod --ignore-selected --ids ^^tid^^ --set ^^token_ac^^|+4\nBecoming visible means ^^cname^^\'s AC returns to normal'},
+						{name:'Invisibility-start',type:'',ct:0,charge:'uncharged',cost:0,body:'!token-mod --ignore-selected --ids ^^tid^^ --set ^^token_ac^^|-4\nBeing invisible improves ^^cname^^\'s AC by 4'},
+						{name:'Invulnerability-end',type:'',ct:0,charge:'uncharged',cost:0,body:'!token-mod --ignore-selected --ids ^^tid^^ --set ^^token_ac^^|+2\n^^tname^^ is no longer invulnerable-ish'},
+						{name:'Invulnerability-start',type:'',ct:0,charge:'uncharged',cost:0,body:'!token-mod --ignore-selected --ids ^^tid^^ --set ^^token_ac^^|-2\n^^tname^^ becomes invulnerable to normal attacks from many creatures (but not all, and not magical attacks)'},
+						{name:'Irritate-Rash-end',type:'',ct:0,charge:'uncharged',cost:0,body:'!rounds --target single|^^tid^^|^^tid^^|Rash|99|0|Broken out in Rash all over, Charisma \\amp Dexterity reducing|radioactive'},
+						{name:'Light-duration-end',type:'',ct:0,charge:'uncharged',cost:0,body:'/w gm **Delete the light spell token** - the light spell has ended'},
+						{name:'Light-end',type:'',ct:0,charge:'uncharged',cost:0,body:'!token-mod --ignore-selected --ids ^^tid^^ --set ^^token_ac^^|-4 --set ^^token_thac0^^|-4\n^^tname^^ has recovered from blindness and no longer suffers from penalties to attacks and AC'},
+						{name:'Light-start',type:'',ct:0,charge:'uncharged',cost:0,body:'!token-mod --ignore-selected --ids ^^tid^^ --set ^^token_ac^^|+4 --set ^^token_thac0^^|+4\n^^tname^^ has been blinded by light and suffers 4 penalty to attacks \\amp AC'},
+						{name:'Lightbringer-mace-end',type:'',ct:0,charge:'uncharged',cost:0,body:'!token-mod --ignore-selected --ids ^^tid^^ --off emits_bright_light emits_low_light\n^^cname^^ has commanded his mace to go dark'},
+						{name:'Lightbringer-mace-start',type:'',ct:0,charge:'uncharged',cost:0,body:'!token-mod --ignore-selected --ids ^^tid^^ --on emits_bright_light emits_low_light --set bright_light_distance|15 low_light_distance|15\n^^cname^^\'s mace now shines as bright as a torch.'},
+						{name:'Longbow-is-Dancing-end',type:'',ct:0,charge:'uncharged',cost:0,body:'!attk --dance ^^tid^^|Dancing-Longbow|stop'},
+						{name:'Longbow-is-Dancing-turn',type:'',ct:0,charge:'uncharged',cost:0,body:'!attk --quiet-modweap ^^tid^^|Dancing-Longbow|ranged|+:+1'},
+						{name:'Phlogyston-mine-end',type:'',ct:0,charge:'uncharged',cost:0,body:'A *Mine* goes off, doing [1d20](!\\amp#13;\\amp#47;r 1d20 damage to ship in contact) to any vessel that bumps into it, or [1d10](!\\amp#13;\\amp#47;r 1d10 damage to ships in range) to any vessel in range.\n!token-mod --ignore-selected --ids ^^tid^^ --set currentside|2 width|20s height|20s --order toback'},
+						{name:'Prayer-ally-end',type:'',ct:0,charge:'uncharged',cost:0,body:'!token-mod --ignore-selected --ids ^^tid^^ --set ^^token_thac0^^|+1\n!modattr --silent --name ^^cname^^ --strengthdmg||-1\n^^cname^^ loses the benefit of *Prayer*'},
+						{name:'Prayer-ally-start',type:'',ct:0,charge:'uncharged',cost:0,body:'!token-mod --ignore-selected --ids ^^tid^^ --set ^^token_thac0^^|-1\n!modattr --silent --name ^^cname^^ --strengthdmg||+1\n^^cname^^ gains the benefit of *Prayer*, with improved attacks and damage'},
+						{name:'Prayer-foe-end',type:'',ct:0,charge:'uncharged',cost:0,body:'!token-mod --ignore-selected --ids ^^tid^^ --set ^^token_thac0^^|-1\n!modattr --silent --name ^^cname^^ --strengthdmg||+1\n^^cname^^ loses the impact of *Prayer*'},
+						{name:'Prayer-foe-start',type:'',ct:0,charge:'uncharged',cost:0,body:'!token-mod --ignore-selected --ids ^^tid^^ --set ^^token_thac0^^|+1\n!modattr --silent --name ^^cname^^ --strengthdmg||-1\n^^cname^^ bears the penalties of *Prayer*, with worse attacks and damage'},
+						{name:'Prot-from-Evil-10ft-end',type:'',ct:0,charge:'uncharged',cost:0,body:'!token-mod --ignore-selected --ids ^^tid^^ --set aura1_radius| '},
+						{name:'Prot-from-Evil-10ft-start',type:'',ct:0,charge:'uncharged',cost:0,body:'!token-mod --ignore-selected --ids ^^tid^^ --set aura1_radius|10ft aura1_color|0ff'},
+						{name:'Prot-from-Good-10ft-end',type:'',ct:0,charge:'uncharged',cost:0,body:'!token-mod --ignore-selected --ids ^^tid^^ --set aura1_radius| '},
+						{name:'Prot-from-Good-10ft-start',type:'',ct:0,charge:'uncharged',cost:0,body:'!token-mod --ignore-selected --ids ^^tid^^ --set aura1_radius|10ft aura1_color|0ff'},
+						{name:'Qstaff-Dancing-turn',type:'',ct:0,charge:'uncharged',cost:0,body:'!setattr --name ^^cname^^ --dancing-round|[[(([[@{^^cname^^|dancing-round}]])%4)+1]]'},
+						{name:'Quarterstaff-of-Dancing-dancing',type:'',ct:0,charge:'uncharged',cost:0,body:'!rounds --addtargetstatus ^^tid^^|Dancing-Quarterstaff|4|-1|The Quarterstaff is Dancing by itself. Use this time wisely!|all-for-one\n!attk --quiet-modweap ^^tid^^|quarterstaff-of-dancing|melee|sb:0 --quiet-modweap ^^tid^^|quarterstaff-of-dancing|dmg|sb:0'},
+						{name:'Quarterstaff-of-Dancing-end',type:'',ct:0,charge:'uncharged',cost:0,body:'!attk --dance ^^tid^^|Quarterstaff-of-Dancing'},
+						{name:'Quarterstaff-of-Dancing-inhand',type:'',ct:0,charge:'uncharged',cost:0,body:'!rounds --addtargetstatus ^^tid^^|Quarterstaff-of-Dancing|4|-1|Quarterstaff not yet dancing so keep using it|stopwatch'},
+						{name:'Quarterstaff-of-Dancing-sheath',type:'',ct:0,charge:'uncharged',cost:0,body:'!rounds --deltargetstatus ^^tid^^|Quarterstaff-of-Dancing'},
+						{name:'Quarterstaff-of-Dancing-turn',type:'',ct:0,charge:'uncharged',cost:0,body:'!attk --quiet-modweap ^^tid^^|quarterstaff-of-dancing|melee|+:+1 --quiet-modweap ^^tid^^|quarterstaff-of-dancing|dmg|+:+1\nUpdating the quarterstaff +1 to attk \\amp dmg'},
+						{name:'Rage-end',type:'',ct:0,charge:'uncharged',cost:0,body:'!modattr --fb-public --name ^^cname^^ --fb-from Effects --fb-header ^^cname^^ is now Exhausted --thac0|+4 --^^token_ac^^|+4 --strengthdmg||[[-4]] --hp|-15\n!rounds --addtargetstatus ^^tid^^|Exhausted|10|-1|Exhausted - 2 worse on attk,dmg,ac|radioactive'},
+						{name:'Rage-start',type:'',ct:0,charge:'uncharged',cost:0,body:'!modattr --fb-public --name ^^cname^^ --fb-from Effects --fb-header ^^cname^^ is Raging! --thac0|-2 --^^token_ac^^|-2 --strengthdmg||2 --hp|+15'},
+						{name:'Ray-of-Enfeeblement-end',type:'',ct:0,charge:'uncharged',cost:0,body:'!setattr --silent --name ^^cname^^ --strength|@{^^cname^^|strength|max}\n^^tname^^ has recovered from enfeeblement'},
+						{name:'Ray-of-Enfeeblement-start',type:'',ct:0,charge:'uncharged',cost:0,body:'!setattr --silent --name ^^cname^^ --strength|5|@{^^cname^^|strength}\n^^tname^^ has been enfeebled, with impact on strength affecting hits and damage!\n'},
+						{name:'Recharge-Fireblast-end',type:'',ct:0,charge:'uncharged',cost:0,body:'!attk --setammo ^^tid^^|Fireblast|=|5'},
+						{name:'Recharge-Lightning-Head-end',type:'',ct:0,charge:'uncharged',cost:0,body:'!attk --setammo ^^tid^^|Lightning-Head|=|5'},
+						{name:'Regeneration-turn',type:'',ct:0,charge:'uncharged',cost:0,body:'!token-mod --ignore-selected --ids ^^tid^^ --set ^^token_hp^^|+[[@{^^cname^^|conregen}]]! --report control|"{name} regenerates {^^token_hp^^:change} HP"'},
+						{name:'Repel-Insects-end',type:'',ct:0,charge:'uncharged',cost:0,body:'!token-mod --ignore-selected --ids ^^tid^^ --set aura1_radius| '},
+						{name:'Repel-Insects-start',type:'',ct:0,charge:'uncharged',cost:0,body:'!token-mod --ignore-selected --ids ^^tid^^ --set aura1_radius|10ft aura1_color|0ff'},
+						{name:'Shield-end',type:'',ct:0,charge:'uncharged',cost:0,body:'!setattr --silent --name ^^cname^^ --^^token_ac^^|@{^^cname^^|Temp-AC}\n^^cname^^ loses his magic shield'},
+						{name:'Shield-start',type:'',ct:0,charge:'uncharged',cost:0,body:'!setattr --silent --name ^^cname^^ --Temp-AC|@{^^ac^^} --^^token_ac^^|3\n^^cname^^ is shielded by magic.'},
+						{name:'Slow-end',type:'',ct:0,charge:'uncharged',cost:0,body:'!token-mod --ignore-selected --ids ^^tid^^ --set ^^token_ac^^|-[[4+[[abs([[{{@{^^cname^^|norm_dexdefense}},{0}}kl1]])]]]] ^^token_thac0^^|-4\n!setattr --silent --name ^^cname^^ --dexreact|@{^^cname^^|norm_dexreact} --dexmissile|@{^^cname^^|norm_dexmissile} --dexdefense|@{^^cname^^|norm_dexdefense}\n^^tname^^ is moving at their normal speed again, and their AC and attacks have returned to normal'},
+						{name:'Slow-start',type:'',ct:0,charge:'uncharged',cost:0,body:'!token-mod --ignore-selected --ids ^^tid^^ --set ^^token_ac^^|+[[4+[[abs([[{{@{^^cname^^|dexdefense}},{0}}kl1]])]]]] ^^token_thac0^^|+4\n!setattr --silent --name ^^cname^^ --norm_dexreact|@{^^cname^^|dexreact} --norm_dexmissile|@{^^cname^^|dexmissile} --norm_dexdefense|@{^^cname^^|dexdefense} --dexreact|[[{{@{^^cname^^|dexreact}},{0}}kl1]] --dexmissile|[[{{@{^^cname^^|dexmissile}},{0}}kl1]] --dexdefense|[[{{@{^^cname^^|dexdefense}},{0}}kh1]]\n^^tname^^ is moving in slow motion, with worse AC and attacks '},
+						{name:'Smoke-Bomb-end',type:'',ct:0,charge:'uncharged',cost:0,body:'A *Smoke Bomb* goes off, obscuring all vision in a 4 square area.\n!token-mod --ignore-selected --ids ^^tid^^ --set currentside|2 width|15s height|15s --order toback'},
+						{name:'Snake-Poison-3-end',type:'',ct:0,charge:'uncharged',cost:0,body:'^^cname^^ takes [[2d4]]hp of damage from the poison injected by the snake that bit them.'},
+						{name:'Something-wrong-end',type:'',ct:0,charge:'uncharged',cost:0,body:'!rounds --addtargetstatus ^^tid^^|GS-Acid-dmg|99|0|Take acid damage to feet|tread'},
+						{name:'Spectral-hand-end',type:'',ct:0,charge:'uncharged',cost:0,body:'!modattr --charid ^^cid^^ --fb-from Effects --fb-header ^^tname^^\'s Spectral Hand fades away --fb-content They can no longer cast L1-4 touch spells at a distance, and Thac0 returns to _CUR0_ --thac0|+2'},
+						{name:'Spectral-hand-start',type:'',ct:0,charge:'uncharged',cost:0,body:'!modattr --charid ^^cid^^ --fb-from Effects --fb-header ^^tname^^ uses Spectral Hand --fb-content By doing so, they can cast L1-4 touch spells at a distance at +2, so Thac0 is now _CUR0_ --thac0|-2'},
+						{name:'Tashas-UHL-end',type:'',ct:0,charge:'uncharged',cost:0,body:'!modattr --silent --name ^^cname^^ --strength|2\n^^cname^^ stops laughing and regains strength'},
+						{name:'Tashas-UHL-monster-end',type:'',ct:0,charge:'uncharged',cost:0,body:'!token-mod --ignore-selected --ids ^^tid^^ --set ^^token_thac0^^|-2 ^^token_thac0_max^^|+2\nThe monster regains strength as they stop laughing'},
+						{name:'Tashas-UHL-monster-start',type:'',ct:0,charge:'uncharged',cost:0,body:'!token-mod --ignore-selected --ids ^^tid^^ --set ^^token_thac0^^|+2 ^^token_thac0_max^^|-2\nThe monstr loses strength as they laugh so hard!'},
+						{name:'Tashas-UHL-start',type:'',ct:0,charge:'uncharged',cost:0,body:'!modattr --silent --name ^^cname^^ --strength|-2\n^^cname^^ loses strength as they laugh so hard!'},
+						{name:'Timer-end',type:'',ct:0,charge:'uncharged',cost:0,body:'/w gm \\amp{template:default}{{name=Timer finished}}{{Timer=The timer you set has ended}}'},
+						{name:'Timer-start',type:'',ct:0,charge:'uncharged',cost:0,body:'/w gm \\amp{template:default}{{name=Timer started}}{{Timer=You have set a timer to go off}}'},
+						{name:'VT-bonus-end',type:'',ct:0,charge:'uncharged',cost:0,body:'!setattr --fb-public --fb-from Effects --fb-header ^^tname^^ looses their vampiric hit point bonus --fb-content ^^tname^^\'s HP return to _CUR0_ as the effects of the Vampiric Touch spell fade away --charid ^^cid^^ --hp|[[{{@{^^cname^^|VT-original-hp}},{@{^^cname^^|hp}}}kl1]]'},
+						{name:'Vampiric-touch-start',type:'',ct:0,charge:'uncharged',cost:0,body:'/w "^^cname^^" \\amp{template:2Edefault}{{name=Vampiric Touch}}{{desc=^^tname^^ has cast Vampiric Touch, but needs to [touch the enemy](~MU-Spells-DB|VT-Attack) as a normal attack to drain their hit points}}'},
+						{name:'Vampiric-touch-turn',type:'',ct:0,charge:'uncharged',cost:0,body:'/w "^^cname^^" \\amp{template:2Edefault}{{name=Vampiric Touch}}{{desc=^^tname^^ has cast Vampiric Touch, but needs to [touch the enemy](~MU-Spells-DB|VT-Attack) as a normal attack to drain their hit points}}'},
+						{name:'Wandering-Monster-end',type:'',ct:0,charge:'uncharged',cost:0,body:'/w gm Are there any wandering monsters? \n/gmroll 1t[Wandering-monsters]\n!rounds --addtargetstatus ^^tid^^|Wandering-Monster|10|-1|Counting down to next WM check|stopwatch'},
+						{name:'Water-trap-end',type:'',ct:0,charge:'uncharged',cost:0,body:'!roll20AM --audio,play|Glasses breaking\n!roll20AM --audio,play|breaking-window\n!token-mod --ignore-selected --ids @{^^cname^^|water-id} --set layer|objects\n/w gm Read Rm26 notes on Breaking Glass for full description of effects'},
+						]},
+	});
+
+	const dbTypeLists = {
+		Miscellaneous:	{type:'Miscellaneous',field:fields.ItemMiscList},
+		Light:			{type:'Miscellaneous',field:fields.ItemMiscList},
+		Weapon:			{type:'Weapon',field:fields.ItemWeaponList},
+		Melee:			{type:'Weapon',field:fields.ItemWeaponList},
+		Ranged:			{type:'Weapon',field:fields.ItemWeaponList},
+		Ammo:			{type:'Weapon',field:fields.ItemWeaponList},
+		Armour:			{type:'Armour',field:fields.ItemArmourList},
+		Ring:			{type:'Ring',field:fields.ItemRingList},
+		Potion:			{type:'Potion',field:fields.ItemPotionList},
+		Scroll:			{type:'Scroll',field:fields.ItemScrollList},
+		Rod:			{type:'Rod',field:fields.ItemWandsList},
+		Staff:			{type:'Rod',field:fields.ItemWandsList},
+		Wand:			{type:'Rod',field:fields.ItemWandsList},
+		MUspellL1:		{type:'MUspellL1',field:['spellmem','current']},
+		MUspellL2:		{type:'MUspellL2',field:['spellmem2','current']},
+		MUspellL3:		{type:'MUspellL3',field:['spellmem3','current']},
+		MUspellL4:		{type:'MUspellL4',field:['spellmem4','current']},
+		MUspellL5:		{type:'MUspellL5',field:['spellmem30','current']},
+		MUspellL6:		{type:'MUspellL6',field:['spellmem5','current']},
+		MUspellL7:		{type:'MUspellL7',field:['spellmem6','current']},
+		MUspellL8:		{type:'MUspellL8',field:['spellmem7','current']},
+		MUspellL9:		{type:'MUspellL9',field:['spellmem8','current']},
+		MUspellL0:		{type:'MUspellL0',field:['spellmem20','current']},
+		PRspellL1:		{type:'PRspellL1',field:['spellmem10','current']},
+		PRspellL2:		{type:'PRspellL2',field:['spellmem11','current']},
+		PRspellL3:		{type:'PRspellL3',field:['spellmem12','current']},
+		PRspellL4:		{type:'PRspellL4',field:['spellmem13','current']},
+		PRspellL5:		{type:'PRspellL5',field:['spellmem14','current']},
+		PRspellL6:		{type:'PRspellL6',field:['spellmem15','current']},
+		PRspellL7:		{type:'PRspellL7',field:['spellmem16','current']},
+		PRspellL0:		{type:'PRspellL0',field:['spellmem17','current']},
+		Power:			{type:'Power',field:['spellmem23','current']},
+	};
+
 	var flags = {
 		rw_state: RW_StateEnum.STOPPED, image: true,
 		rotation: true,
@@ -213,6 +412,73 @@ var RoundMaster = (function() {
 		apply_icon: 'https://s3.amazonaws.com/files.d20.io/images/11407460/cmCi3B1N0s9jU6ul079JeA/thumb.png?1439137300'
 	};
 	
+	var aoeImages = Object.freeze ({
+		ACID:	{BOLT:	 	'https://s3.amazonaws.com/files.d20.io/images/250364885/1iJyxTjkOYhLc5l-b9k5YQ/thumb.png?1634238992',
+				 CIRCLE: 	'https://s3.amazonaws.com/files.d20.io/images/250364901/UMOTJRtZBfs-2kIMQdHmkQ/thumb.png?1634238999',
+				 CONE:   	'https://s3.amazonaws.com/files.d20.io/images/250364917/jidptAhe0zyUj3GERQj3CA/thumb.png?1634239006',
+				 ELIPSE:	'https://s3.amazonaws.com/files.d20.io/images/250364901/UMOTJRtZBfs-2kIMQdHmkQ/thumb.png?1634238999',
+				 RECTANGLE:	'https://s3.amazonaws.com/files.d20.io/images/250365029/dey5IsSH-Ndzzv6RYxqVJQ/thumb.png?1634239057',
+				 SQUARE: 	'https://s3.amazonaws.com/files.d20.io/images/250365029/dey5IsSH-Ndzzv6RYxqVJQ/thumb.png?1634239057'},
+		COLD:	{BOLT:   	'https://s3.amazonaws.com/files.d20.io/images/250365049/6jB7qYbNL0SXpGj2_b3hiw/thumb.png?1634239066',
+				 CIRCLE: 	'https://s3.amazonaws.com/files.d20.io/images/250365063/1s-17jF8nj5ceyI6CVdl9Q/thumb.png?1634239072',
+				 CONE:   	'https://s3.amazonaws.com/files.d20.io/images/250334846/UTt7fuOj_v-PxiZP-2YwpQ/thumb.png?1634226450',
+				 ELIPSE:	'https://s3.amazonaws.com/files.d20.io/images/250365063/1s-17jF8nj5ceyI6CVdl9Q/thumb.png?1634239072',
+				 RECTANGLE:	'https://s3.amazonaws.com/files.d20.io/images/250365292/gftCVVIY-it7-rUDj60Fig/thumb.png?1634239180',
+				 SQUARE: 	'https://s3.amazonaws.com/files.d20.io/images/250365292/gftCVVIY-it7-rUDj60Fig/thumb.png?1634239180'},
+		DARK:	{BOLT:   	'https://s3.amazonaws.com/files.d20.io/images/250365316/jtYu-J2HDivQ7l4nuMq3dQ/thumb.png?1634239190',
+				 CIRCLE: 	'https://s3.amazonaws.com/files.d20.io/images/250365330/90rdp0d39Nx3-C8bf4u_Hg/thumb.png?1634239196',
+				 CONE:   	'https://s3.amazonaws.com/files.d20.io/images/250365553/Pj1CQ1D2yPooTYEhrFjuXw/thumb.png?1634239309',
+				 ELIPSE:	'https://s3.amazonaws.com/files.d20.io/images/250365330/90rdp0d39Nx3-C8bf4u_Hg/thumb.png?1634239196',
+				 RECTANGLE:	'https://s3.amazonaws.com/files.d20.io/images/250365570/Gh-4SRf-jrguKzn23L0G6g/thumb.png?1634239314',
+				 SQUARE: 	'https://s3.amazonaws.com/files.d20.io/images/250365570/Gh-4SRf-jrguKzn23L0G6g/thumb.png?1634239314'},
+		FIRE:	{BOLT:   	'https://s3.amazonaws.com/files.d20.io/images/250365584/SvQAEtcyM-TdxRlc6bbJiw/thumb.png?1634239320',
+				 CIRCLE: 	'https://s3.amazonaws.com/files.d20.io/images/250365798/9zHnGGJsw0rhpEx0llfqgw/thumb.png?1634239400',
+				 CONE:   	'https://s3.amazonaws.com/files.d20.io/images/250333443/ZPyK7EPeiLp3y0V40SDaQw/thumb.png?1634225721',
+				 ELIPSE:	'https://s3.amazonaws.com/files.d20.io/images/250365798/9zHnGGJsw0rhpEx0llfqgw/thumb.png?1634239400',
+				 RECTANGLE:	'https://s3.amazonaws.com/files.d20.io/images/250365814/HB7bJNTar3xasqz7X9W5bg/thumb.png?1634239406',
+				 SQUARE: 	'https://s3.amazonaws.com/files.d20.io/images/250365814/HB7bJNTar3xasqz7X9W5bg/thumb.png?1634239406'},
+		LIGHT:	{BOLT:   	'https://s3.amazonaws.com/files.d20.io/images/250365820/DI-LYWLxPj0GP5wwRJtwag/thumb.png?1634239412',
+				 CIRCLE: 	'https://s3.amazonaws.com/files.d20.io/images/250365961/PkFip9NS6_O6hs6pnR8aBg/thumb.png?1634239466',
+				 CONE:   	'https://s3.amazonaws.com/files.d20.io/images/250365973/HfejMDi_2_MkcgJUYpqUYw/thumb.png?1634239471',
+				 ELIPSE:	'https://s3.amazonaws.com/files.d20.io/images/250365961/PkFip9NS6_O6hs6pnR8aBg/thumb.png?1634239466',
+				 RECTANGLE:	'https://s3.amazonaws.com/files.d20.io/images/250365985/WFrMhE6VZE1VCAOjx3LnkA/thumb.png?1634239477',
+				 SQUARE: 	'https://s3.amazonaws.com/files.d20.io/images/250365985/WFrMhE6VZE1VCAOjx3LnkA/thumb.png?1634239477'},
+		LIGHTNING:{BOLT: 	'https://s3.amazonaws.com/files.d20.io/images/250366001/tkb8HFMptLHL2vqjuf840g/thumb.png?1634239484',
+				 CIRCLE: 	'https://s3.amazonaws.com/files.d20.io/images/250366246/TVN6nx3g5mPDJzZeN-O8Rw/thumb.png?1634239596',
+				 CONE:   	'https://s3.amazonaws.com/files.d20.io/images/250366391/HYkDYIx_aNGmTxl3T9iyEQ/thumb.png?1634239664',
+				 ELIPSE:	'https://s3.amazonaws.com/files.d20.io/images/250366246/TVN6nx3g5mPDJzZeN-O8Rw/thumb.png?1634239596',
+				 RECTANGLE:	'https://s3.amazonaws.com/files.d20.io/images/250366617/6YX4WunRuiQ1C4B65RHY5A/thumb.png?1634239765',
+				 SQUARE: 	'https://s3.amazonaws.com/files.d20.io/images/250366617/6YX4WunRuiQ1C4B65RHY5A/thumb.png?1634239765'},
+		MAGIC:	{BOLT:   	'https://s3.amazonaws.com/files.d20.io/images/250366823/oX0JRhH3wLUk-3lNMOKrxg/thumb.png?1634239839',
+				 CIRCLE: 	'https://s3.amazonaws.com/files.d20.io/images/250366882/XDc_tvXiMAcYbCLr_eWKOQ/thumb.png?1634239877',
+				 CONE:   	'https://s3.amazonaws.com/files.d20.io/images/250367109/enzpndcQDrax2XI_KnXMmA/thumb.png?1634239955',
+				 ELIPSE:	'https://s3.amazonaws.com/files.d20.io/images/250366882/XDc_tvXiMAcYbCLr_eWKOQ/thumb.png?1634239877',
+				 RECTANGLE: 'https://s3.amazonaws.com/files.d20.io/images/250367267/GUGEGqGSoNp6DwprW2NYBg/thumb.png?1634240001',
+				 SQUARE: 	'https://s3.amazonaws.com/files.d20.io/images/250367267/GUGEGqGSoNp6DwprW2NYBg/thumb.png?1634240001'},
+		COLOR:	{BOLT:		'https://s3.amazonaws.com/files.d20.io/images/250450699/N-DlZe7PhXIrn2DtS3vk_A/thumb.png?1634281345',
+				 CIRCLE:	'https://s3.amazonaws.com/files.d20.io/images/250450680/2SS_5Or7fNrfwpmCHj7n7A/thumb.png?1634281318',
+				 CONE:		'https://s3.amazonaws.com/files.d20.io/images/250318958/dFggs3eDRDXntGCEHDUbVw/thumb.png?1634215364',
+				 ELIPSE:	'https://s3.amazonaws.com/files.d20.io/images/250450680/2SS_5Or7fNrfwpmCHj7n7A/thumb.png?1634281318',
+				 RECTANGLE:	'https://s3.amazonaws.com/files.d20.io/images/250450699/N-DlZe7PhXIrn2DtS3vk_A/thumb.png?1634281345',
+				 SQUARE:	'https://s3.amazonaws.com/files.d20.io/images/250450699/N-DlZe7PhXIrn2DtS3vk_A/thumb.png?1634281345'},
+	});
+		
+	var reIgnore = /[\s\-\_]*/gi;
+	
+	var	replacers = [
+			[/\\amp/gm, "&"],
+			[/\\lbrak/gm, "["],
+			[/\\rbrak/gm, "]"],
+			[/\\ques/gm, "?"],
+			[/\\at/gm, "@"],
+			[/\\dash/gm, "-"],
+			[/\\n/gm, "\n"],
+			[/\\vbar/gm, "|"],
+			[/\\clon/gm, ":"],
+			[/\\gt/gm, ">"],
+			[/\\lt/gm, "<"],
+		];
+
 	var statusMarkers = Object.freeze([
 		{name:"red",img:'https://s3.amazonaws.com/files.d20.io/images/8123890/TkC_M8_6X-UHy8euEymakQ/thumb.png?1425804412'},
 		{name:"blue",img:'https://s3.amazonaws.com/files.d20.io/images/8123884/pV7HJJVqORAhrOftpmVHUw/thumb.png?1425804373'},
@@ -270,6 +536,292 @@ var RoundMaster = (function() {
 		{name:"angel-outfit",img:'https://s3.amazonaws.com/files.d20.io/images/8074238/dKSnapoJ7JyGcINc8PIA1Q/thumb.png?1425598742'},
 		{name:"archery-target",img:'https://s3.amazonaws.com/files.d20.io/images/8074237/ei4JHB51P6az3slwgZmTEw/thumb.png?1425598739'}
 	]);
+
+	var handouts = Object.freeze({
+	RoundMaster_Help:	{name:'RoundMaster Help',
+						 version:1.03,
+						 avatar:'https://s3.amazonaws.com/files.d20.io/images/257656656/ckSHhNht7v3u60CRKonRTg/thumb.png?1638050703',
+						 bio:'<div style="font-weight: bold; text-align: center; border-bottom: 2px solid black;">'
+							+'<span style="font-weight: bold; font-size: 125%">RoundMaster Help v1.03</span>'
+							+'</div>'
+							+'<div style="padding-left: 5px; padding-right: 5px; overflow: hidden;">'
+							+'<h1>RoundMaster API v'+version+'</h1>'
+							+'<p>RoundMaster is an API for the Roll20 RPG-DS.  Its purpose is to extend the functionality of the Turn Tracker capability already built in to Roll20.  It is one of several other similar APIs available on the platform that support the Turn Tracker and manage token and character statuses related to the passing of time: the USP of this one is the full richness of its functionality and the degree of user testing that has occurred over a 12 month period.</p>'
+							+'<p>RoundMaster is based on the much older TrackerJacker API, and many thanks to Ken L. for creating TrackerJacker.  However, roundMaster is a considerable fix and extension to TrackerJacker, suited to many different applications in many different RPG scenarios.  RoundMaster is also the first release as part of the wider RPGMaster series of APIs for Roll20, composed of <b>RoundMaster, CommandMaster, InitiativeMaster, AttackMaster, MagicMaster</b> and <b>MoneyMaster</b> - other than RoundMaster (which is generic) these initially support only the AD&D2e RPG.</p>'
+							+'<p><b><u>Note:</u></b> For some aspects of the APIs to work, the <b>ChatSetAttr API</b> and the <b>Tokenmod API</b>, both from the Roll20 Script Library, must be loaded.  It is also <i>highly recommended</i> to load all the other RPGMaster series APIs listed above.  This will provide the most immersive game-support environment</p>'
+							+'<h2>Syntax of RoundMaster calls</h2>'
+							+'<p>The roundMaster API is called using !rounds, though it reveals its history in that it can also be called using !tj (the command for the TrackerJacker API roundMaster is based on).</p>'
+							+'<pre>!rounds --start<br>'
+							+'!tj --start</pre>'
+							+'<p>Commands to be sent to the roundMaster API must be preceeded by two hyphens ‘--’ as above for the --start command.  Parameters to these commands are separated by vertical bars ‘|’, for example:</p>'
+							+'<pre>!rounds --addtotracker name|tokenID|3|all|sleeping|sleepy</pre>'
+							+'<p>If optional parameters are not to be included, but subsequent parameters are needed, use two vertical bars together with nothing between them, e.g.</p>'
+							+'<pre>!rounds --addtotracker name|tokenID|3|all||sleepy</pre>'
+							+'<p>Commands can be stacked in the call, for example:</p>'
+							+'<pre>!rounds --start --addtotracker name|tokenID|3|all|sleeping|sleepy --sort</pre>'
+							+'<p>When specifying the commands in this document, parameters enclosed in square brackets [like this] are optional: the square brackets are not included when calling the command with an optional parameter, they are just for description purposes in this document.  Parameters that can be one of a small number of options have those options listed, separated by forward slash ‘/’, meaning at least one of those listed must be provided (unless the parameter is also specified in [] as optional): again, the slash ‘/’ is not part of the command.  Parameters in UPPERCASE are literal, and must be spelt as shown (though their case is actually irrelevant).</p>'
+							+'<br>'
+							+'<h2>Command Index</h2>'
+							+'<h3>1.	Tracker commands</h3>'
+							+'<pre>--start<br>'
+							+'--stop<br>'
+							+'--pause<br>'
+							+'--reset [number]<br>'
+							+'--sort<br>'
+							+'--clear<br>'
+							+'--clearonround [OFF/ON]<br>'
+							+'--clearonclose [OFF/ON]<br>'
+							+'--sortorder [NOSORT/ATOZ/ZTOA/DESCENDING/ASCENDING]<br>'
+							+'--addToTracker name|tokenID/-1|priority|[qualifier]|[message]|[detail]<br>'
+							+'--removefromtracker name|tokenID/-1|[retain]</pre>'
+							+'<h3>2.	Token Status Marker commands</h3>'
+							+'<pre>--addstatus status|duration|direction|[message]|[marker]<br>'
+							+'--addtargetstatus tokenID|status|duration|direction|[message]|[marker]<br>'
+							+'--edit<br>'
+							+'--target CASTER|casterID|status|duration|direction|[message]|[marker]<br>'
+							+'--target SINGLE/AREA|casterID|targetID|status|duration|direction|[message]|[marker]<br>'
+							+'--aoe tokenID|[shape]|[units]|[range]|[length]|[width]|[image]|[confirmed]<br>'
+							+'--clean<br>'
+							+'--removestatus status(es) / ALL<br>'
+							+'--deletestatus status(es) / ALL<br>'
+							+'--deltargetstatus tokenID|status(es) / ALL<br>'
+							+'--movestatus<br>'
+							+'--s_marker<br>'
+							+'--disptokenstatus [tokenID]<br>'
+							+'--listfav</pre>'
+							+'<h3>3.	Other commands</h3>'
+							+'<pre>–help<br>'
+							+'–hsq from|[command]<br>'
+							+'–handshake from|[command]<br>'
+							+'--debug (ON/OFF)</pre>'
+							+'<br>'
+							+'<h2>1.	Tracker Command detail</h2>'
+							+'<pre>!rounds --start</pre>'
+							+'<p>This command alternates between starting the automatic functions of the Turn Tracker, and pausing the Tracker.  In its started state, the tracker will follow the current token at the top of the tracker with a highlight graphic, report the token’s turn to all players, and follow the options selected for ‘sortorder’ and ‘clearonround’.  When paused, the Tracker will not highlight the top token, report turns or execute the options.</p>'
+							+'<pre>!rounds --stop</pre>'
+							+'<p>Stops the tracker and removes all statuses and status markers from tokens currently held by roundMaster.  This also dumps the tables held in the campaign status object.  It is useful if you want to start a fresh version of a campaign, or if everything goes wrong.</p>'
+							+'<pre>!rounds --pause</pre>'
+							+'<p>Pauses the Turn Tracker in its current state without deleting any information, and is the same as using the --start command again having already called it once.  The Turn Tracker can still be moved on, cleared, sorted, and reset, but the highlight graphic is paused.  It can be restarted using --start</p>'
+							+'<pre>!rounds --reset [number]</pre>'
+							+'<p>Sets the round in the Turn Order to the number, or to 1 if number is not provided.</p>'
+							+'<pre>!rounds --sort</pre>'
+							+'<p>Sorts the Turn Tracker entries according to the previously set sort order, with the default being ascending numeric priority.</p>'
+							+'<pre>!rounds --clear</pre>'
+							+'<p>Clears all entries in the Turn Tracker without stopping it.</p>'
+							+'<pre>!rounds --clearonround [OFF/ON]</pre>'
+							+'<p>Sets the ‘clear on round’ option.  If set, this option means that when the Tracker is running and reaches the end of the round, all entries in the Turn Tracker are automatically removed ready for players to do initiative for the next round.  Otherwise, the Turn Tracker is not cleared automatically at any point.  Any parameter other than ‘off’ turns clearonround on.  Default on.</p>'
+							+'<pre>!rounds --clearonclose [OFF/ON]</pre>'
+							+'<p>Sets the ‘clear on close’ option.  If set, this option means that when the Tracker window is closed, the Turn Tracker is cleared.  Any parameter other than ‘on’ turns clear on close off.  Default off.</p>'
+							+'<pre>!rounds --sortorder [NOSORT/ATOZ/ZTOA/DESCENDING/ASCENDING]</pre>'
+							+'<p>This command sets the automatic sort order of the entries in the Turn Tracker.  The Turn Tracker is automatically sorted at the beginning of each round as the Turn Tracker is moved on to the first entry, based on the order set by this option.  Descending and Ascending are numeric sorts based on the Priority number of each entry.  AtoZ and ZtoA are alphabetic sorts based on the name of each entry in the Turn Tracker.  Nosort will mean that no sorting takes place, and the order remains the order in which the entries were made.  The default order is Ascending.</p>'
+							+'<pre>!rounds --addToTracker name|tokenID/-1|priority|[qualifier]|[message]|[detail]</pre>'
+							+'<p>This command adds an entry to the TurnTracker.  tokenID can either be the ID of a valid token, or -1 to create a custom entry.  If a custom entry, name is used for the entry in the Turn Tracker with the provided priority, otherwise the token name is used for the entry with the provided priority.  The qualifier can be one of first/last/smallest/largest/all.</p>'
+							+'<ul><li>First keeps only the first entry made for that name (for custom entries) or token and removes any others, but leaves all entries for other tokens and names in the Tracker</li>'
+							+'<li>Last keeps only the latest entry for that token or name (i.e. the one now being set)</li>'
+							+'<li>Smallest keeps only the entry with the lowest numeric priority for that token or name</li>'
+							+'<li>Largest keeps only the entry with the highest numeric priority for that token or name</li>'
+							+'<li>All keeps all entries in the list and adds this one to those for that token or name, meaning that the Turn Tracker can have multiple entries for one or more tokens or names</li></ul>'
+							+'<p>The optional message will be displayed on the turn announcement for this turn when it is reached in the Turn Order.  Generally, the message relates what the player said the character was doing for their initiative.  The optional detail can be the detail of how the initiative priority was calculated or any other additional message you want to show to the Player only when the command is processed.</p>'
+							+'<p>By using the name, tokenID/-1 and qualifier parameters judiciously, group initiative, individual initiative, or any combination of other types can be created.  When used with the InitiativeMaster API, Players get menus of actions they can take (based on their weapons, powers, memorised spells, magic items, thieving skills etc) which manage the calls to RoundMaster for the desired initiative type, and the DM gets menus to control all RoundMaster functions, and to set the type of initiative to undertake.</p>'
+							+'<pre>!rounds --removefromtracker name|tokenID/-1|[retain]</pre>'
+							+'<p>This command removes entries from the Turn Tracker for the specified tokenID or name.  However, if the optional retain number is given, it will retain this number of entries for the specified token or name, and only remove any beyond this number.  The earliest entries made are kept when the retain parameter is set.</p>'
+							+'<pre>!rounds --viewer on/off/all/tokenID</pre>'
+							+'<p>This command controls the viewer mode setting for the Player who calls it.  Rather than showing what that Player’s characters can see when Dynamic Lighting is turned on, viewer mode shows that Player what each player-character (even if not theirs) can see as their token reaches the top of the Turn Tracker and it is their turn.  Quite often, this can be a Player ID set up just to be a viewer e.g. for a DM view of what players can see, or for a touchscreen playing surface. The current player-character is defined as the token representing a character sheet controlled by any Player at the top of the Turn Tracker.  As each new token comes to the top of the Turn Tracker, if it is a player-character the display changes to only what it can see.  If it is a token representing an NPC, or when the Turn Order reaches the next round and clears, the map for the Player reverts to showing what all player-characters can see (but not what NPCs can see).</p>'
+							+'<p>The on option turns on viewer mode for the Player, and off turns it off.  The all option immediately turns on vision for all player-characters, and passing a tokenID as a parameter shows vision for that token (even if it represents an NPC).  Options off, all and tokenID can be used by any Player or the DM to affect the viewer Player’s screen.</p>'
+							+'<br>'
+							+'<h2>2.	Token Status Marker commands</h2>'
+							+'<pre>!rounds --addstatus status|duration|direction|[message]|[marker]</pre>'
+							+'<p>Adds a status and a marker for that status to the currently selected token(s).  The status has the name given in the status parameter and will be given the duration specified, which will be changed by direction each round.  Thus setting a duration of 8 and direction of -1 will decrement the duration by 1 each round.  If the duration gets to 0 the status and token marker will be removed automatically.  direction can be any number - including a positive one meaning duration will increase.  Each Turn Announcement for the turn of a token with one or more statuses will display the status, the duration and direction, and the message, if specified.  The specified marker (from the default token marker set) will be applied to the token - if it is not specified the option will be given to pick one from a menu in the chat window (which can be declined).</p>'
+							+'<p>For player-characters, when the duration reaches 9 or less the duration will be counted-down by a number appearing on the marker.  For NPCs this number does not appear (so that Players don’t see the remaining duration for statuses on NPCs), but the remaining duration does appear for DM only on the status message below the Turn Announcement on the NPCs turn.</p>'
+							+'<p>If a Player other than the DM uses this command, the DM will be asked to confirm the setting of the status and marker.  This allows the DM to make any decisions on effectiveness.</p>'
+							+'<p>If an Effects database of effect macros exists within the campaign (a character sheet with the name Effects-DB, with Ability Macros named the same as the status status parameter set for markers) the Effects database will be searched in three ways: when a status marker is set, any Ability Macro with the name status-start (where status is the status name specified in the command) is run.  Each round when it is the turn of a token with the status marker set, the Ability Macro with the name status-turn is run.  And when the status ends (duration reaches 0) or the status is removed using --removestatus, or the token has the Dead marker set or is deleted, an Ability Macro with the name status-end is run.  See the Effects database documentation for full information on effect macros and the options and parameters that can be used in them.</p>'
+							+'<pre>!rounds --addtargetstatus tokenID|status|duration|direction|[message]|[marker]</pre>'
+							+'<p>This command is identical to addstatus, except for the addition of a tokenID.  Instead of using a selected token or tokens to apply the status to, this applies the status to the specified token.</p>'
+							+'<pre>!rounds --edit</pre>'
+							+'<p>This command brings up a menu in the chat window showing the current status(es) set on the selected token(s), with the ability to remove or edit them.  Against each named status, a spanner icon opens another menu to edit the selected status name, duration, direction, message and marker on all the selected token(s), and also allows this status to be set as a favourite.  A bin icon will remove the status from all the selected token(s), and run any status-end macros, if any.</p>'
+							+'<pre>!rounds --target CASTER|casterID|status|duration|direction|[message]|[marker]<br>'
+							+'!rounds --target SINGLE/AREA|casterID|targetID|status|duration|direction|[message]|[marker]</pre>'
+							+'<p>This command targets a status on a token or a series of tokens.  If a version using CASTER is called, it acts identically to the addtargetstatus command, using the casterID as the target token.  If the SINGLE version is called, the targetID is used.  If the AREA version is used, after applying the status to the targetID token, the system asks in the chat window if the status is to be applied to another target and, if confirmed, asks for the next target to be selected, repeating this process after each targeting and application.  In each case, it applies the status, effect macro and marker to the specified token(s) in the same way as addtargetstatus.</p>'
+							+'<pre>!rounds --aoe tokenID|[shape]|[units]|[range]|[length]|[width]|[image]|[confirmed]</pre>'
+							+'<table>'
+							+'	<tr><th scope="row">shape</th><td>[BOLT/ CIRCLE/ CONE/ ELLIPSE/ RECTANGLE/ SQUARE/ WALL]</td></tr>'
+							+'	<tr><th scope="row">units</th><td>[SQUARES/ FEET/ YARDS/ UNITS]</td></tr>'
+							+'	<tr><th scope="row">image</th><td>[ACID/ COLD/ DARK/ FIRE/ LIGHT/ LIGHTNING/ MAGIC/ RED/ YELLOW/ BLUE/ GREEN/ MAGENTA/ CYAN/ WHITE/ BLACK]</td></tr>'
+							+'	<tr><th scope="row">confirmed</th><td>[TRUE / FALSE]</td></tr>'
+							+'	<tr><th scope="row">range, length & width</th><td>numbers specified in whatever unit was specified as [units]</td></tr>'
+							+'</table>'
+							+'<p>This command displays an Area of Effect for an action that has or is to occur, such as a spell.  This quite often can be used before the --target area command to identify targets.  The system will present lists of options for each parameter that is not specified for the Player to select.  On executing this command, if the range is not zero the Player will be given a crosshair to position the effect, and if the range is zero the effect will be centred on the Token (or at its “finger-tips” for directional effects like cones).  The range of the effect will be centred on the TokenID specified and will be displayed as a coloured circle - the crosshair should be positioned within this area (the system does not check).  The Crosshair (or if range is zero, the Token) can be turned to affect the direction of the effect. The effect ‘direction’ will be the direction the token/crosshair is facing.  If Confirmed is false or omitted, the Player will be asked to confirm the positioning of the token/crosshair with a button in the chat window (setting it to true will apply the effect immediately - good for range zero circular effects (i.e. don’t need placing or direction setting).  The effect can have one of the shapes listed:</p>'
+							+'<ul><li>Bolt is a long rectangle extending away from the crosshair/token for length, and width wide.</li>'
+							+'<li>Circle is a circle centred on the crosshair/token of diameter length.</li>'
+							+'<li>Cone is a cone starting at the crosshair/token of length, with an end width.</li>'
+							+'<li>Ellipse is an ellipse of length extending away, and width wide.</li>'
+							+'<li>Rectangle is a rectangle of length extending away, and width wide.</li>'
+							+'<li>Square is a square of sides length parallel with the direction the crosshair/token.</li>'
+							+'<li>Wall is a rectangle perpendicular to the crosshair or token, i.e. width away and length wide.</li></ul>'
+							+'<p>For the units, Feet & Yards are obvious and are scaled to the map.  Squares are map squares (whatever scale they are set to), and Units are the map scale units and are not scaled.</p>'
+							+'<p>Images are set with transparency and sent to the back of the Object layer.  Red/ Yellow/ Blue/ Green/ Magenta/ Cyan/ White/ Black colour the effect area the specified colour, and Acid/ Cold/ Dark/ Fire/ Light/ Lightning/ Magic use textured fills.</p>'
+							+'<pre>!rounds --clean</pre>'
+							+'<p>Drops all the status markers on the selected token(s), without removing the status(es) from the campaign status object, meaning live statuses will be rebuilt at the end of the round or the next trigger event.  This deals with situations where token markers have become corrupted for some reason, and should not be needed very often.</p>'
+							+'<pre>!rounds --removestatus status(es) / ALL</pre>'
+							+'<p>Removes the status, a comma-delimited list of statuses, or all statuses, and their status marker(s) from the selected token(s), and runs any associated status-end Ability Macros in any existing Effects database in the campaign.  See addstatus command and the Effect database documentation for details on effect macros.  Statuses can be ‘all’ which will remove all statuses from the selected token(s).</p>'
+							+'<pre>!rounds --deletestatus statuses</pre> / ALL'
+							+'<p>Removes the status, a comma-delimited list of statuses, or all statuses, and status marker(s) from the selected token(s), but does not run any associated status-end Ability Macros in any existing Effects database in the campaign.  Statuses can be ‘all’ which will delete all statuses from the selected token(s).</p>'
+							+'<pre>!rounds --deltargetstatus tokenID|status(es) / ALL</pre>'
+							+'<p>Works the same as deletestatus command, except only on the specified tokenID rather than selected tokens.</p>'
+							+'<pre>!rounds --movestatus</pre>'
+							+'<p>For each of the selected tokens in turn, searches for tokens in the whole campaign with the same name and representing the same character sheet, and moves all existing statuses and markers from all the found tokens to the selected token (removing any duplicates).  This supports Players moving from one Roll20 map to another and, indeed, roundMaster detects page changes and automatically runs this command for all tokens on the new page controlled by the Players who have moved to the new page.</p>'
+							+'<pre>!rounds --s_marker</pre>'
+							+'<p>Shows a display of all markers available in the API to the DM, and also lists which are currently in use.</p>'
+							+'<pre>!rounds --disptokenstatus [tokenID]</pre>'
+							+'<p>Shows the statuses on the specified token to the DM using the same display format as used in the Turn Announcement.</p>'
+							+'<pre>!rounds --listfav</pre>'
+							+'<p>Shows statuses to the DM that have been defined as favourites (see the edit command), and provides buttons to allow the DM to apply one or more favourite statuses to the selected token(s), and to edit the favourite statuses or remove them as favourites.</p>'
+							+'<h2>3.	Other commands</h2>'
+							+'<pre>!rounds –help</pre>'
+							+'<p>Displays a listing of RoundMaster commands and their syntax.</p>'
+							+'<pre>!rounds –hsq from|[command]<br>'
+							+'!rounds –handshake from|[command]</pre>'
+							+'<p>Either form performs a handshake with another API, whose call (without the ‘!’) is specified as from in the command parameters.  The command calls the from API command responding with its own command to confirm that RoundMaster is loaded and running: e.g. </p>'
+							+'<p><i>Received:	!rounds –hsq magic</i><br>'
+							+'<i>Response:	!magic –hsr rounds</i><br></p>'
+							+'<p>Optionally, a command query can be made to see if the command is supported by RoundMaster if the command string parameter is added, where command is the RoundMaster command (the ‘--’ text without the ‘--‘).  This will respond with a true/false response: e.g.</p>'
+							+'<p><i>Received:	!rounds –hsq init|addtotraker</i><br>'
+							+'<i>Response:	!init –hsr rounds|addtotracker|true</i></p>'
+							+'<pre>!rounds --debug (ON/OFF)</pre>'
+							+'<p>Takes one mandatory argument which should be ON or OFF.</p>'
+							+'<p>The command turns on a verbose diagnostic mode for the API which will trace what commands are being processed, including internal commands, what attributes are being set and changed, and more detail about any errors that are occurring.  The command can be used by the DM or any Player – so the DM or a technical advisor can play as a Player and see the debugging messages.</p>'
+							+'<h2>How to use RoundMaster</h2>'
+							+'<h3>Who uses RoundMaster calls?</h3>'
+							+'<p>The vast majority of RoundMaster calls are designed for the DM/GM to use, or to be called from RPGMaster APIs and database macros, rather than being called by the Player directly.  RoundMaster should be hidden from the Players in most circumstances.  It is highly recommended that RoundMaster is used with the other RPGMaster APIs, but especially <b>InitiativeMaster API</b> which uses RoundMaster to create and manage entries in the Roll20 Turn Order Tracker.</p>'
+							+'<h3>Managing the Turn Order Tracker</h3>'
+							+'<p>If the <b>InitiativeMaster API</b> is used, it must be accompanied by RoundMaster – it will not work otherwise.  InitiativeMaster provides many menu-driven and data-driven means of controlling RoundMaster, making it far easier for the DM to run their campaign.  The InitiativeMaster <b>--maint</b> command supports the necessary calls to RoundMaster for control of the Turn Order Tracker, and its <b>--menu</b> command uses the data on the Character Sheet to create Turn Order initiative entries with the correct speeds and adjustments.  See the InitiativeMaster API Handout for more information.</p>'
+							+'<h3>Adding and managing Token Statuses</h3>'
+							+'<p>The Token status management functions allow the application and management of status markers with durations (measured in rounds) set on tokens.  The easiest way to use status markers is to use the <b>MagicMaster API</b> which runs spell and magic item macros the Player can initiate, which in turn ally the right status markers and statuses with the appropriate durations to the relevant tokens.  See the MagicMaster API handout for more information.</p>'
+							+'<h3>Status Effects</h3>'
+							+'<p>RoundMaster comes with a number of status ‘effects’: Roll20 Ability Macros that are automatically run when certain matching statuses are applied to, exist on, and/or removed from a token.  These macros can use commands (typically using APIs like <b>ChatSetAttr API</b> and/or <b>Tokenmod API</b> from the Roll20 API Script Library) to temporarily or permanently alter the characteristics of the Token or the represented Character Sheet, thus impacting the state of play.</p>'
+							+'<p>If used with the <b>MagicMaster API</b>, its pre-configured databases of spell and magic item macros work well with the Effect macros supplied in the Effects Database provided with this API.</p>'
+							+'<p>For full information on Status Effects, how to use them, and how to add more of your own, see the separate Effects Database handout.</p>'
+							+'<h3>Token Death and Removal</h3>'
+							+'<p>If a token is marked as Dead by using the Dead status marker (either via the Roll20 token emoticon menu or any other means), the system will automatically end all statuses, remove all status markers and run all status-end effect macros (if any) for the token.</p>'
+							+'<p>If a token is deleted on a map and not previously marked as Dead, the API will search for any other token in the Campaign (with a preference to one on the current page) with the same name and representing the same character, and if found the API will transfer all statuses and status markers to the first token found (even if not on the current page).  If no such token is found, all statuses and status markers are removed from the token being deleted, and any corresponding status-end effect macros are run.</p>'
+							+'<h3>Page Change and Adding Tokens</h3>'
+							+'<p>If a Player, or all Players, are moved to another Roll20 page in the campaign (i.e. a different map), the API will automatically migrate all current statuses and status markers from the previous page (and all other pages in the Campaign, to support where tokens have come from different pages) to any token on the new page with the same Token Name and representing the same Character.  These statuses and their effects will then continue to apply on the new page for their set durations.</p>'
+							+'<p>If a token is added to the current map the Players are on, either by dragging a character onto the map or by dragging on a picture and editing its properties to give it a name and optionally a representation, the API will again search for tokens with the same name and representing the same character, and move statuses and markers to the new token.</p>'
+							+'<p>Of course, either before or after each of these situations, the <b>--edit</b> command can be used to change or remove statuses from any token(s).</p>'
+							+'</div>',
+						},
+	EffectsDB_help:		{name:'Effects Database Help',
+						 version:1.03,
+						 avatar:'https://s3.amazonaws.com/files.d20.io/images/257656656/ckSHhNht7v3u60CRKonRTg/thumb.png?1638050703',
+						 bio:'<div style="font-weight: bold; text-align: center; border-bottom: 2px solid black;">'
+							+'<span style="font-weight: bold; font-size: 125%">Effects Database Help v1.03</span>'
+							+'</div>'
+							+'<div style="padding-left: 5px; padding-right: 5px; overflow: hidden;">'
+							+'<h1>Effect Database for RoundMaster API v'+version+'</h1>'
+							+'<p>Effect-DB is a database character sheet created, used and updated by the <b>RoundMaster API</b> (see separate handout).  The database holds macros as Ability Macros that are run when certain matching statuses are placed on or removed from tokens (see Roll20 Help Centre for information on Ability Macros and Character Sheet maintenance).  The macros are run when various events occur, such as <i>end-of-round</i> or <i>Character\'s turn</i>, at which point no token or an incorrect token may be selected - this makes @{selected|attribute-name} useless as a macro command.  Therefore, the macros have certain defined parameters dynamically replaced when run by RoundMaster, which makes the token & character IDs and names, and values such as AC, HP and Thac0, available for manipulation.</p>'
+							+'<p>The Effects database as distributed with the API holds many effects that work with the spell & magic item macros distributed with other RPGMaster APIs. The API also checks for, creates and updates the Effects database to the latest version on start-up.  DMs can add their own effects to additional databases, but the database provided is totally rewritten when new updates are released and so the DM must add their own database sheets.  If the <i>provided</i> databases are accidentally deleted or overwritten, they will be automatically recreated the next time the Campaign is opened. Additional databases should be named as <b>Effects-DB-added-name</b> where <i>"added-name"</i> can be any name you want.</p>'
+							+'<p><b>However:</b> the system will ignore any database with a name that includes a version number of the form “v#.#” where # can be any number or group of numbers e.g. Effects-DB v2.13 will be ignored.  This is so that the DM can version control their databases, with only the current one (without a version number) being live.</p>'
+							+'<p>There can be as many additional databases as you want.  Other Master series APIs come with additional databases, some of which overlap - this does not cause a problem as version control and merging unique macros is managed by the APIs.</p>'
+							+'<p><b>Important Note:</b> all Character Sheet databases <b><u><i>must</i></u></b> have their <i>\‘ControlledBy\’</i> value (found under the [Edit] button at the top right of each sheet) set to <i>\‘All Players\’</i>.  This must be for all databases, both those provided (set by the API) and any user-defined ones.  Otherwise, Players will not be able to run the macros contained in them.</p>'
+							+'<p>Effect macros are primarily intended to act on the Token and its variables, but can also act on the represented Character Sheet.  A single Character Sheet can have multiple Tokens representing it, and each of these are able to do individual actions using the data on the Character Sheet jointly represented.  However, if such multi-token Characters / NPCs / creatures are likely to encounter effects that will affect the Character Sheet they must be split with each Token representing a separate Character Sheet, or else the one effect will affect all tokens associated with the Character Sheet, whether they were targeted or not!  In fact, <b>it is recommended that tokens and character sheets are 1-to-1 to keep things simple.</b></p>'
+							+'<p><b><u>Note:</u></b> Effect macros are heavily dependent upon the <b>ChatSetAttr API</b> and the <b>Tokenmod API</b>, both from the Roll20 Script Library, and they must be loaded.  It is also <i>highly recommended</i> to load all the other RPGMaster series APIs: <b>InitiativeMaster, AttackMaster, MagicMaster and CommandMaster</b>.  This will provide the most immersive game-support environment</p>'
+							+'<h2>Setup of the Token</h2>'
+							+'<p>The recommended Token Bar assignments for all APIs in the Master Series are:</p>'
+							+'<table>'
+							+'<tr><th scope="row">Bar1<br>(Green Circle):</th><td>Armour Class (AC field) – only current value</td></tr>'
+							+'<tr><th scope="row">Bar2<br>(Blue Circle):</th><td>Base Thac0 (thac0-base field) before adjustments – only current value</td></tr>'
+							+'<tr><th scope="row">Bar3<br>(Red Circle):</th><td>Hit Points (HP field) – current & max</td></tr>'
+							+'</table>'
+							+'<p>It is recommended to use these assignments, and they are the bar assignments set by the CommandMaster API if its facilities are used to set up the tokens.  All tokens must be set the same way, whatever way you eventually choose.</p>'
+							+'<p>These assignments can be changed in each API, by changing the fields object near the top of the API script.  See the RPGMaster Character Sheet setup Handout for details of how to do this.</p>'
+							+'<h2>Macro Parameter Fields</h2>'
+							+'<p>Dynamic parameters are identified in the macros by bracketing them with two carets: <b>^^</b>parameter<b>^^</b>.  The standard Roll20 syntax of @{selected|…} is not available, as at the time the macros run the targeted token may not be selected, and @{character_name|…} will not enable the token to be affected (especially where the Character Sheet is represented by more than one token).  The ^^…^^ parameters always relate to the token on which a status has been set, and the Character Sheet it represents.  Currently available parameters are:</p>'
+							+'<table>'
+							+'	<thead>'
+							+'		<tr><th scope="col">Place holder</th><th scope="col">Replaced with</th></tr>'
+							+'	</thead>'
+							+'	<tr><th scope="row">^^tid^^</th><td>TokenID</td></tr>'
+							+'	<tr><th scope="row">^^tname^^</th><td>Token_name</td></tr>'
+							+'	<tr><th scope="row">^^cid^^</th><td>CharacterID</td></tr>'
+							+'	<tr><th scope="row">^^cname^^</th><td>Character_name</td></tr>'
+							+'	<tr><th scope="row" colspan="2"><span style="background-color: lightgrey;"> </span></th></tr>'
+							+'	<tr><th scope="row">^^ac^^</th><td>Armour Class value (order looked for: a token bar, Character Sheet AC field, MonsterAC)</td></tr>'
+							+'	<tr><th scope="row">^^ac_max^^</th><td>Maximum value of AC, wherever it is found</td></tr>'
+							+'	<tr><th scope="row">^^token_ac^^</th><td>The token field name for AC value field, if set as a token bar</td></tr>'
+							+'	<tr><th scope="row">^^token_ac_max^^</th><td>The token field name for AC max field, if set as a token bar</td></tr>'
+							+'	<tr><th scope="row" colspan="2"><span style="background-color: lightgrey;"> </span></th></tr>'
+							+'	<tr><th scope="row">^^thac0^^</th><td>Thac0 value (order looking: a token bar, Character Sheet Thac0_base field, MonsterThac0)</td></tr>'
+							+'	<tr><th scope="row">^^thac0_max^^</th><td>Maximum value of Thac0, wherever it is found</td></tr>'
+							+'	<tr><th scope="row">^^token_thac0^^</th><td>The token field name for Thac0 value field, if set as a token bar</td></tr>'
+							+'	<tr><th scope="row">^^token_thac0_max^^</th><td>The token field name for Thac0 max field, if set as a token bar</td></tr>'
+							+'	<tr><th scope="row" colspan="2"><span style="background-color: lightgrey;"> </span></th></tr>'
+							+'	<tr><th scope="row">^^hp^^</th><td>HP value (order looked for: a token bar, Character Sheet HP field)</td></tr>'
+							+'	<tr><th scope="row">^^hp_max^^</th><td>Maximum value of HP, wherever it is found</td></tr>'
+							+'	<tr><th scope="row">^^token_hp^^</th><td>The token field name for HP value field, if set as a token bar</td></tr>'
+							+'	<tr><th scope="row">^^token_hp_max^^</th><td>The token field name for HP max field, if set as a token bar</td></tr>'
+							+'	<tr><th scope="row" colspan="2"><span style="background-color: lightgrey;"> </span></th></tr>'
+							+'	<tr><th scope="row">^^bar1_current^^</th><td>Value of the token Bar1_value field</td></tr>'
+							+'	<tr><th scope="row">^^bar2_current^^</th><td>Value of the token Bar2_value field</td></tr>'
+							+'	<tr><th scope="row">^^bar3_current^^</th><td>Value of the token Bar3_value field</td></tr>'
+							+'</table>'
+							+'<p>This allows most data on both the token and the character sheet to be accessed.  For example <b>@{^^cname^^|strength}</b> will return the strength value from the represented character sheet.  Of course all loaded RPGMaster series API commands are available, along with commands for any other APIs you have loaded.</p>'
+							+'<p>Two other APIs from the Roll20 Script Library are extremely useful for these macros, and indeed are used by many of the provided APIs: ChatSetAttr API from joesinghaus allows easy and flexible setting of Character Sheet attributes.  Tokenmod API from The Aaron supports easy setting and modifying of Token attributes.  Combined with the dynamic parameters above, these make for exceptionally powerful real-time effects in game-play.</p>'
+							+'<h2>Effect Macro qualifiers</h2>'
+							+'<p>Each effect macro runs when a particular status event occurs.  Here is the complete list of effect macro status name qualifiers that can be used.  Each of these is appended to the status whenever the status experiences the relevant event, and an effect macro with that name searched for and run if found:</p>'
+							+'<table>'
+							+'	<tr><th scope="row">statusname-start</th><td>The status is created on a token</td></tr>'
+							+'	<tr><th scope="row">statusname-turn</th><td>Each round the status has a duration that is not zero</td></tr>'
+							+'	<tr><th scope="row">statusname-end</th><td>The status duration reaches zero</td></tr>'
+							+'</table>'
+							+'<p>These effect macros are triggered for weapons when certain events take place:</p>'
+							+'<table>'
+							+'	<tr><th scope="row">weaponname-inhand</th><td>A weapon is taken in-hand (triggered by AttackMaster API --weapon command)</td></tr>'
+							+'	<tr><th scope="row">weaponname-dancing</th><td>A weapon starts dancing (triggered by AttackMaster API --dance command)</td></tr>'
+							+'	<tr><th scope="row">weaponname-sheathed</th><td>A weapon  is sheathed (out of hand - triggered by AttackMaster --weapon cmd)</td></tr>'
+							+'</table>'
+							+'<h2>Examples of Effect Macros</h2>'
+							+'<p>Here is an example of an effect macro that runs when a Faerie fire (twilight form) status is placed on a token.  The following --target command might be run to set this status, with the caster token selected:</p>'
+							+'<p style="display: inline-block; background-color: lightgrey; border: 1px solid black; padding: 4px; color: dimgrey; font-weight: extra-light;">!rounds --target area|@{selected|token_id}|&#64;{target|Select first target|token_id}|Faerie-Fire-twilight|[[4*@{selected|Casting-Level}]]|-1|Outlined in dim Faerie Fire, 1 penalty to AC|aura</p>'
+							+'<p>(See the RoundMaster Help handout for an explanation of the <b>--target</b> command and its parameters). This command will result in the following effect macro being run when the first token is targeted:</p>'
+							+'<h3>Faerie-fire-twilight-start</h3>'
+							+'<p style="display: inline-block; background-color: lightgrey; border: 1px solid black; padding: 4px; color: dimgrey; font-weight: extra-light;">!token-mod --ignore-selected --ids ^^tid^^ --set ^^token_ac^^|+1<br>'
+							+'^^tname^^ is surrounded by Faerie Fire, and becomes easier to hit</p>'
+							+'<p>This uses the Tokenmod API to increase the AC number of the targeted token by 1 (making it 1 wose), and then display a message to all Players stating the name of the targeted token, and the effect on it.  This will be run for each token targeted, and will be individual to each. Note: the tokens are not ‘selected’ in Roll20 terms, and so @{selected|…} will not work</p>'
+							+'<p>When the Faerie Fire status counts down to zero, the following effect macro will be run on each of the tokens it was applied to:</p>'
+							+'<h3>Faerie-fire-twilight-end</h3>'
+							+'<p style="display: inline-block; background-color: lightgrey; border: 1px solid black; padding: 4px; color: dimgrey; font-weight: extra-light;">!token-mod --ignore-selected --ids ^^tid^^ --set ^^token_ac^^|-1<br>'
+							+'^^tname^^ has lost that glow and is now harder to aim at</p>'
+							+'<p>Again, the Tokenmod API is used to decrease the token AC and a message issued confirming what has happened.  If messages should only be sent to the Player(s) controlling the character represented by the token, use /w “^^cname^^” before the message.  If the message is only for the gm, use /w gm.</p>'
+							+'<p>A more complex example is a Quarterstaff of Dancing, that uses the complete suite of possible effect macros and certain aspects of the AttackMaster API functionality triggered by Weapon table field settings.  The first macro is triggered by AttackMaster API when a Character takes a Quarterstaff-of-Dancing in hand to use as a weapon:</p>'
+							+'<h3>Quarterstaff-of-Dancing-inhand</h3>'
+							+'<p style="display: inline-block; background-color: lightgrey; border: 1px solid black; padding: 4px; color: dimgrey; font-weight: extra-light;">!rounds --addtargetstatus ^^tid^^|Quarterstaff-of-Dancing|4|-1|Quarterstaff not yet dancing so keep using it|stopwatch</p>'
+							+'<p>This command sets a status marker on the Token of the Character taking the Quarterstaff in hand, and sets a countdown of 4 rounds, running the next effect macro in each of those rounds:</p>'
+							+'<h3>Quarterstaff-of-Dancing-turn</h3>'
+							+'<p style="display: inline-block; background-color: lightgrey; border: 1px solid black; padding: 4px; color: dimgrey; font-weight: extra-light;">'
+							+'!attk --quiet-modweap ^^tid^^|quarterstaff-of-dancing|melee|+:+1 --quiet-modweap ^^tid^^|quarterstaff-of-dancing|dmg|+:+1<br>'
+							+'/w “^^cname^^” Updating the quarterstaff +1 to attk & dmg</p>'
+							+'<p>This command then runs each round as the Quarterstaff-of-Dancing status counts down, and uses the !attk --quiet-modweap command to gradually increment the magical to-hit and dmg plus, round by round.  Once the countdown reaches zero, the next effect macro is run:</p>'
+							+'<h3>Quarterstaff-of-Dancing-end</h3>'
+							+'<p style="display: inline-block; background-color: lightgrey; border: 1px solid black; padding: 4px; color: dimgrey; font-weight: extra-light;">'
+							+'!attk --dance ^^tid^^|Quarterstaff-of-Dancing</p>'
+							+'<p>This calls an AttackMaster API command to start the weapon dancing, resets the weapon to its specs that it starts dancing with, and the AttackMaster API then automatically calls the next effect macro:</p>'
+							+'<h3>Quarterstaff-of-Dancing-dancing</h3>'
+							+'<p style="display: inline-block; background-color: lightgrey; border: 1px solid black; padding: 4px; color: dimgrey; font-weight: extra-light;">'
+							+'!rounds --addtargetstatus ^^tid^^|Dancing-Quarterstaff|4|-1|The Quarterstaff is Dancing by itself. Use this time wisely!|all-for-one<br>'
+							+'!attk --quiet-modweap ^^tid^^|quarterstaff-of-dancing|melee|sb:0 --quiet-modweap ^^tid^^|quarterstaff-of-dancing|dmg|sb:0</p>'
+							+'<p>This places a new status marker on the token representing the Character with the dancing weapon (note the new status name Dancing-Quarterstaff), and resets the Strength Bonus flags for the weapon - a dancing weapon can’t have the Strength Bonus of the wielder.  As each round now passes, the following different status effect macro is run:</p>'
+							+'<h3>Dancing-Quarterstaff-turn</h3>'
+							+'<p style="display: inline-block; background-color: lightgrey; border: 1px solid black; padding: 4px; color: dimgrey; font-weight: extra-light;">'
+							+'!attk --quiet-modweap ^^tid^^|quarterstaff-of-dancing|melee|+:+1 --quiet-modweap ^^tid^^|quarterstaff-of-dancing|dmg|+:+1</p>'
+							+'<p>As per the previous -turn effect macro, this increments the magical plusses on To-Hit and Dmg, round by round.  It has to have a different name, as the -end effect macro does different actions:</p>'
+							+'<h3>Dancing-Quarterstaff-end</h3>'
+							+'<p style="display: inline-block; background-color: lightgrey; border: 1px solid black; padding: 4px; color: dimgrey; font-weight: extra-light;">'
+							+'!attk --dance ^^tid^^|Quarterstaff-of-Dancing|stop</p>'
+							+'<p>This uses the AttackMaster API command to stop the Quarterstaff from dancing.  As can be seen from the above, quite complex sequences of effect macros can be created.</p>'
+							+'</div>',
+						},
+
+	});
 
 	var RoundMaster_tmp = (function() {
 		var templates = {
@@ -426,13 +978,20 @@ var RoundMaster = (function() {
 			{state.roundMaster.round = 1;
 			log(`-=> roundMaster round reset <=-`);}
 			
+		// RED: v3.019 check the version of any existing Effects databases,
+		// and update them as necessary, creating any missing ones.
+
+		setTimeout( () => doUpdateEffectsDB(['Silent']), 1000 );
+		
+		// RED: v3.020 added the help-text handouts and a 
+		// function to create and update them
+		setTimeout( () => updateHandouts(true,findTheGM()), 1000);
+				
 		// RED: v1.301 update the global ID of the Effects Library
-		var effectsLib = findObjs({ _type: 'character' , name: 'Effects' });
+		var effectsLib = findObjs({ _type: 'character' , name: fields.effectlib });
         state.roundMaster.effectsLib = false;
-		if (effectsLib) {
-    		if (effectsLib.length > 0) {
-    			state.roundMaster.effectsLib = effectsLib[0];
-    		}
+		if (effectsLib  && effectsLib.length > 0) {
+   			state.roundMaster.effectsLib = effectsLib[0];
     	}
 		
 		// RED: v1.301 determine if the Initiative Macro Library is present
@@ -652,7 +1211,86 @@ var RoundMaster = (function() {
 		}
 	};
 
+	/*
+	 * Function to replace special characters in a string
+	 */
+	 
+	var parseStr=function(str){
+		return replacers.reduce((m, rep) => m.replace(rep[0], rep[1]), str);
+	}
 
+	/*
+	 * Find a character sheet attribute object.  If not found, create it
+	 */
+
+	var findAttrObj = function( charCS, attrName ) {
+		
+		var attrObj = findObjs({ type:'attribute', characterid:charCS.id, name: attrName}, {caseInsensitive: true});
+		if (!attrObj || attrObj.length == 0) {
+			return createObj( 'attribute', {characterid:charCS.id, name:attrName, current:'0'} );
+		} else {
+			return attrObj[0];
+		}
+	}
+		
+	/*
+	 * Get a bar value from the right place for this token.  This should be from 
+	 * a bar current value on the token (to support multi-token monsters affected 
+	 * individually by +/- magic impacts on bar values) but checks if another bar allocated
+	 * or, if none are, get from character sheet (monster or character)
+	 */
+	 
+	var getTokenValues = function( curToken, tokenBar, field, altField, nameFlag=false ) {
+		
+		var charCS = getObj('character', curToken.get('represents')),
+			attr = field[0].toLowerCase(),
+			altAttr = altAttr ? altField[0].toLowerCase() : 'EMPTY',
+			property = field[1],
+			attrVal = {}, attrObj, attrName, name;
+			
+		
+		if (tokenBar && tokenBar[0].length) {
+			attrName = {current:tokenBar[0]+'_value', max:tokenBar[0]+'_max'};
+			attrVal = {current:curToken.get(attrName.current), max:curToken.get(attrName.max)};
+		}
+		if (!attrVal.current || isNaN(attrVal.current)) {
+			if (_.some( ['bar2_link','bar1_link','bar3_link'], linkName=>{
+				name = linkName;
+				let linkID = curToken.get(linkName);
+				if (linkID) {
+					attrObj = getObj('attribute',linkID);
+					if (attrObj) {
+						attrName = attrObj.get('name').toLowerCase();
+						return (attrName.includes(attr) || attrName.includes(altAttr));
+					}
+				}
+				return false;
+			})) {
+				attrName = {current:name.substring(0,4)+'_value', max:name.substring(0,4)+'_max'};
+				attrVal = {current:attrObj.get('current'), max:attrObj.get('max')};
+			}
+		}
+		if (charCS && (!attrVal.current || isNaN(attrVal.current))) {
+			attrName = {current:'',max:''};
+			if (attr == 'thac0') {
+				attrObj = findAttrObj( charCS, fields.Thac0_base[0] );
+				attrVal = {current:parseInt(attrObj.get('current')),
+							max:parseInt(attrObj.get('max'))};
+			}
+			if (!attrVal.current || isNaN(attrVal.current)) {
+				attrObj = findAttrObj( charCS, field[0] );
+				attrVal = {current:parseInt(attrObj.get('current')),
+							max:parseInt(attrObj.get('max'))};
+			}
+			if (altField && (!attrVal.current || isNaN(attrVal.current))) {
+				attrObj = findAttrObj( charCS, altField[0] );
+				attrVal = {current:parseInt(attrObj.get('current')),
+							max:parseInt(attrObj.get('max'))};
+			}
+		}
+		return [attrVal,attrName];
+	}
+	
 	/**
 	 * Prepare the turn order by checking if the tracker is present,
 	 * if so, then we're resuming a previous turnorder (perhaps a restart).
@@ -725,40 +1363,47 @@ var RoundMaster = (function() {
 	var updateStatusDisplay = function(curToken,isTurn) {
 		if (!curToken) {return;}
 		var effects = getStatusEffects(curToken),
-			isPlayer,
+			isPlayer = isPlayerControlled( curToken ),
 			gstatus,
 			statusArgs,
 			toRemove = [],
 			content = '',
 			hcontent = ''; 
 			
-		isPlayer = isPlayerControlled( curToken );
-			
 		_.each(effects, function(e) {
 			if (!e) {return;}
 			statusArgs = e;
 			gstatus = statusExists(e.name); 
+//			log('updateStatusDisplay: dealing with next valid effect, isTurn='+isTurn+', state.round='+state.roundMaster.round+', e.round='+e.round);
 			// RED: v1.204 only need to increment if the first or only turn in the round
 			if (isTurn && parseInt(e.round) !== parseInt(state.roundMaster.round)) {
-				statusArgs.round = state.roundMaster.round;
-				statusArgs.duration = parseInt(statusArgs.duration) + 
-					parseInt(statusArgs.direction);
-				if (state.roundMaster.effectsLib && statusArgs.duration > 0) {
+//				log('updateStatusDisplay: isTurn true and this effect has not yet been updated');
+				e.duration = parseInt(statusArgs.duration) + 
+					(parseInt(statusArgs.direction) * Math.max(state.roundMaster.round - statusArgs.round,0));
+				e.round = state.roundMaster.round;
+//				log('updateStatusDisplay: effectsLib='+state.roundMaster.effectsLib+', duration='+e.duration);
+				if (state.roundMaster.effectsLib && e.duration > 0) {
 					// RED: v1.301 run the relevant effect-turn macro if it exists
-					sendAPImacro( curToken, statusArgs.msg, statusArgs.name, '-turn' );
+//					log('updateStatusDisplay: attempting to run '+statusArgs.name+'-turn for '+curToken.get('name'));
+					setTimeout( () => sendAPImacro( curToken, statusArgs.msg, statusArgs.name, '-turn' ),2000 );
 				}
 			}
+//			log('updateStatusDisplay: name='+curToken.get('name')+', effect.round='+e.round+', status.round='+state.roundMaster.round+', effect.duration='+e.duration);
 			if (gstatus.marker && isPlayer)
 				{content += makeStatusDisplay(e);}
 			else
 				{hcontent += makeStatusDisplay(e)}
 		});
 		effects = _.reject(effects,function(e) {
+//			log('updateStatusDisplay: name='+curToken.get('name')+', testing for duration <= 0');
 			if (e.duration <= 0) {
+//    			log('updateStatusDisplay: name='+curToken.get('name')+', duration is less than 0, test for effect library');
+
 				if (state.roundMaster.effectsLib) {
 					// RED: v1.301 when removing the status marker
 					// run the relevant effect-end macro if it exists
-					sendAPImacro( curToken, e.msg, e.name, '-end' );
+//        			log('updateStatusDisplay: name='+curToken.get('name')+', attempting to run ending effect for '+e.name);
+					setTimeout( () => sendAPImacro( curToken, e.msg, e.name, '-end' ),2000 );
 				}
 				// remove from status args
 				var removedStatus = updateGlobalStatus(e.name,undefined,-1);
@@ -872,12 +1517,13 @@ var RoundMaster = (function() {
 				if (status) {
 			        foundMarkerVal = 10;
 			        replaceMarker = true;
+//			        log('updateAllStatusMarkers: effect.round='+elem.round+', status.round='+state.roundMaster.round);
 					tokenStatusString = _.reject(tokenStatusString, function(j) {
 						if (foundMarker = j.match(new RegExp(status.marker+'@?[1-9]?$'))) {
 						    if (markerVals = foundMarker[0].match(/[1-9]/)) {
 						        foundMarkerVal = parseInt(markerVals[0]);
 						    }
-    						return replaceMarker = foundMarkerVal >= (elem.duration - elem.direction);
+    						return replaceMarker = foundMarkerVal >= (elem.duration - (elem.direction * Math.max(state.roundMaster.round-elem.round,0)));
 						}
 						return false;
 					}); 
@@ -928,16 +1574,19 @@ var RoundMaster = (function() {
 			switch(flags.rw_state) {
 				case RW_StateEnum.ACTIVE:
 					graphic.set('tint_color','transparent'); 
-					indicator = '▶ ';
+					indicator = String.fromCodePoint(9654)+' ';  // 9654
+//					log('Code for ACTIVE indicator ▶ is '+('▶ '.codePointAt(0)));
 					break;
 				case RW_StateEnum.PAUSED:
 					graphic = findTrackerGraphic();
 					graphic.set('tint_color','#FFFFFF'); 
-					indicator ='▍▍';
+					indicator = String.fromCodePoint(9613) + String.fromCodePoint(9613); // 9613
+//					log('Code for PAUSE indicator ▍▍ is '+('▍▍'.codePointAt(0)));
 					break;
 				case RW_StateEnum.STOPPED:
 					graphic.set('tint_color','transparent'); 
-					indicator = '◼ ';
+					indicator = String.fromCodePoint(9724)+' '; // 9724
+//					log('Code for STOPPED indicator ◼ is '+('◼ '.codePointAt(0)));
 					break;
 				default:
 					indicator = tracker.custom.substring(0,tracker.custom.indexOf('Round')).trim();
@@ -1151,8 +1800,9 @@ var RoundMaster = (function() {
 					+'</div>';
 			} else {
 				markerList += '<div style="float: left; padding: 1px 1px 1px 1px; width: 25px; height: 25px;">' 
-					+ '<a style="font-size: 0px; background: url('+e.img+') center center no-repeat; width: 21px; height: 21px" href="'+command+'"><img style="text-align: center;" src="'+e.img+'"></img></a>'
-					+'</div>';	  
+					+ '<span class="showtip tipsy" title="'+e.name+'" style="width: 21px; height: 21px">'
+					+ '<a style="font-size: 0px; background: url('+e.img+') center center no-repeat; width: 21px; height: 21px" href="'+command+'"><img style="text-align: center;" src="'+e.img+'"></img></a></span>'
+					+ '</div>';	  
 			}
 		});
 		content = '<div style="font-weight: bold; background-color: #FFF; border: 2px solid #000; box-shadow: rgba(0,0,0,0.4) 3px 3px; border-radius: 0.5em; margin-left: 2px; margin-right: 2px; padding-top: 5px; padding-bottom: 5px;">'
@@ -1695,6 +2345,8 @@ var RoundMaster = (function() {
 		var charCS,
 			controllers, curCtrl, viewerCtrl = false,
 			tokenSight, curSight,
+			player = getObj('player',viewerID),
+			viewerName = player.get('_displayname'),
     		charID = curToken.get('represents');
 
 		charCS = (charID) ? getObj('character',charID) : false;
@@ -1702,36 +2354,41 @@ var RoundMaster = (function() {
 		if (!controllers && !addNPC) {return;}
 		
 		curSight = curToken.get('has_bright_light_vision');
+//        log('addRemovePID: on entry viewer '+viewerName+', token '+curToken.get('name')+', addPlayer='+addPlayer+', addNPC='+addNPC+', controllers='+controllers+', curSight='+curSight);
+		
         if (!_.isUndefined(state.roundMaster.viewer[curToken.id])) {
-            state.roundMaster.viewer[curToken.id] = curSight;
-        }
-        tokenSight = state.roundMaster.viewer[curToken.id] || false;
-
-//        log('addRemovePID: token '+curToken.get('name')+' on entry addPlayer='+addPlayer+', addNPC='+addNPC+', controllers='+controllers+' tokenSight='+tokenSight);
+//			log('addRemovePID: viewer['+curToken.get('name')+'] exists so it and tokenSight being set to '+curSight);
+            tokenSight = state.roundMaster.viewer[curToken.id] = curSight;
+        } else {
+//			log('addRemovePID: viewer['+curToken.get('name')+'] does not exist so tokenSight being set to false');
+			tokenSight = false;
+		}
 
 		curCtrl = controllers.includes(viewerID);
 		controllers = controllers.split(',').filter(id => (!!id && id != viewerID));
 		addNPC = addNPC || controllers.length;
 //		log('addRemovePID: token '+curToken.get('name')+' controllers.length='+controllers.length+', addNPC='+addNPC);
 		if (addPlayer && addNPC) {
-		    state.roundMaster.viewer[curToken.id] = curToken.get('has_bright_light_vision');
+		    state.roundMaster.viewer[curToken.id] = curSight;
 			controllers.push(viewerID);
 			viewerCtrl = tokenSight = true;
 //			log('addRemovePID: token '+curToken.get('name')+' adding token vision saved as '+state.roundMaster.viewer[curToken.id]);
 		}
 		
 		if (viewerCtrl != curCtrl) {
+//			log('addRemovePID: changing '+curToken.get('name')+' controllers to '+controllers.join());
 			charCS.set('controlledby',controllers.join());
 		}
 		if (tokenSight != curSight) {
+//			log('addRemovePID: changing '+curToken.get('name')+' tokenSight to '+tokenSight);
 			curToken.set('has_bright_light_vision',tokenSight);
 		}
 		if ((viewerCtrl != curCtrl) || (tokenSight != curSight)) {
 			setTimeout(function() {
-				curToken.set('left',(curToken.get('left')+1));     // moving the token forces a screen update for ray tracing
-			},500);
+				curToken.set('left',(curToken.get('left')+(state.roundMaster.round%2 ? 1 : -1)));     // moving the token forces a screen update for ray tracing
+			},400);
 		}
-//		log('addRemovePID: token '+curToken.get('name')+' final outcome controllers='+controllers+', tokenSight='+tokenSight);
+//		log('addRemovePID: token '+curToken.get('name')+' final outcome controllers='+controllers.join()+', tokenSight='+tokenSight);
 		
 		return;
 	}
@@ -1747,7 +2404,23 @@ var RoundMaster = (function() {
 		if (typeof(priororder) === 'string') 
 			{priororder = JSON.parse(priororder);}
 		var currentTurn = turnorder[0],
-		    newRound = false;
+		    newRound = false,
+			curPageID = Campaign().get('playerpageid'),
+			playerPages = Campaign().get('playerspecificpages'),
+			viewerPageID = playerPages[state.roundMaster.viewer.pid] || curPageID,
+			newRoundSort = function(turnorder,sortorder) {
+				switch (sortorder) {
+				case TO_SortEnum.NUMASCEND:
+					turnorder.sort(function(a,b) {  return parseInt(a.pr) - parseInt(b.pr); }); break;
+				case TO_SortEnum.NUMDESCEND:
+					turnorder.sort(function(a,b) { return parseInt(b.pr) - parseInt(a.pr); }); break;
+				case TO_SortEnum.ALPHAASCEND:
+					turnorder.sort(function(a,b) { return compareTokenNames(a,b); }); break;
+				case TO_SortEnum.ALPHADESCEND:
+					turnorder.sort(function(a,b) { return compareTokenNames(b,a); }); break;
+				}
+				return turnorder;
+			};
 		
 		if (currentTurn) {
 			if (turnorder.length > 1
@@ -1783,10 +2456,9 @@ var RoundMaster = (function() {
 						});
 						state.roundMaster.viewer.tokenID = '';
 					}
+				} else {
+					turnorder = newRoundSort(turnorder,flags.newRoundSort);
 				};
-				turnorder.push(currentTurn);
-				currentTurn = turnorder[0];
-				updateTurnorderMarker(turnorder);
 				// RED: v1.204 visit every token with statuses and update them if not already done
 				// TODO
         		_.each(_.keys(state.roundMaster.effects), function(e) {
@@ -1794,12 +2466,17 @@ var RoundMaster = (function() {
         			if (!token) {
         				return; 
         			}
+//					log('handleAdvanceTurn: update remaining statuses');
         			updateStatusDisplay(token,true);
         		});
+				turnorder.push(currentTurn);
+				currentTurn = turnorder[0];
+				updateTurnorderMarker(turnorder);
                 
 				// RED: v1.204 set the global round state variable to the current round number
 				state.roundMaster.round = rounds;
-				// RED: v 1.190 Set an attribute in the character sheet Initiative to the value of round
+
+/*				// RED: v 1.190 Set an attribute in the character sheet Initiative to the value of round
 				// RED: Requires that the API ChatSetAttr is loaded and Initiative exists
                 // RED: v1.207 check to see that ChatSetAttr and Initiative are defined via flags
                 if (flags.canSetAttr && flags.canSetRoundCounter) {
@@ -1809,9 +2486,12 @@ var RoundMaster = (function() {
                 } else {
                     sendDebug('Not setting round_counter');
                 }
-                // RED: v2.007 introduced the new initMaster API script.  Send it the round counter
+*/              // RED: v2.007 introduced the new initMaster API script.  Send it the round counter
+				// RED: v3.019 added an InitMaster initiative management menu to support AD&D2e
+				// Standard, Group & Individual initiative types, take initiative dice rolls, and
+				// manage the player characters for which initiative is done
                 if (flags.canUseInitMaster) {
-                    roundCtrCmd = '!init --isRound ' + rounds;
+                    roundCtrCmd = '!init --isRound ' + rounds + ' --init ||rounds';
                     sendRmAPI(roundCtrCmd);
                 }
 			
@@ -1821,20 +2501,11 @@ var RoundMaster = (function() {
 
     				//RED: sort the turnorder according to the configuration
     				var priorturn = turnorder.pop();
-    				switch (flags.newRoundSort) {
-    				case TO_SortEnum.NUMASCEND:
-    					turnorder.sort(function(a,b) {  return parseInt(a.pr) - parseInt(b.pr); }); break;
-    				case TO_SortEnum.NUMDESCEND:
-    					turnorder.sort(function(a,b) { return parseInt(b.pr) - parseInt(a.pr); }); break;
-    				case TO_SortEnum.ALPHAASCEND:
-    					turnorder.sort(function(a,b) { return compareTokenNames(a,b); }); break;
-    				case TO_SortEnum.ALPHADESCEND:
-    					turnorder.sort(function(a,b) { return compareTokenNames(b,a); }); break;
-    				}
+					turnorder = newRoundSort(turnorder,flags.newRoundSort);
 					if (state.roundMaster.viewer.is_set) {
 						filterObjs( obj => {
-							if (obj.get('type') !== 'graphic' || obj.get('subtype') !== 'token') {return false;}
-							addRemovePID(obj,state.roundMaster.viewer.pid,false,false);
+							if (obj.get('type') !== 'graphic' || obj.get('subtype') !== 'token' || obj.get('_pageid') !== viewerPageID) {return false;}
+							addRemovePID(obj,state.roundMaster.viewer.pid,(obj.id === turnorder[0].id),false);
 						});
 						state.roundMaster.viewer.tokenID = '';
 						
@@ -1844,7 +2515,7 @@ var RoundMaster = (function() {
     				currentTurn = turnorder[0];
 			    }
 			}
-			// RED: v1.190 vary the behaviour based on a config re clear on newRound
+			// RED: v1.190 vary the behavior based on a config re clear on newRound
 			if (!newRound) {
 			    if (currentTurn.id !== -1 && priororder) {
 		    	    var curToken = getObj('graphic',currentTurn.id);
@@ -1856,10 +2527,9 @@ var RoundMaster = (function() {
 							sendDebug( 'handleAdvanceTurn: invalid token in turnorder' );
 						} else {
 							if (state.roundMaster.viewer.is_set) {
-							    var showPC = !isPlayerControlled(curToken),
-									playerPage = Campaign().get('playerpageid');
+							    var showPC = !isPlayerControlled(curToken);
         						filterObjs( obj => {
-        							if (obj.get('type') !== 'graphic' || obj.get('subtype') !== 'token' || obj.get('_pageid') !== playerPage) {return false;}
+        							if (obj.get('type') !== 'graphic' || obj.get('subtype') !== 'token' || obj.get('_pageid') !== viewerPageID) {return false;}
         							addRemovePID(obj,state.roundMaster.viewer.pid,(showPC || obj.id == curToken.id),false);
         						});
 								state.roundMaster.viewer.tokenID = curToken.id;
@@ -1898,6 +2568,7 @@ var RoundMaster = (function() {
 						}
 				    }
 					if (curToken) {
+//						log('handleAdvanceTurn: announce the next tokens turn');
 						announceTurn(curToken,updateStatusDisplay(curToken,true),currentTurn.custom);
 					}
 				}
@@ -2125,7 +2796,6 @@ var RoundMaster = (function() {
         if (!args)
             {return;}
             
-        args = args.split('|');
 		if (args.length <4 || args.length > 6) {
 		    sendDebug('doAddTargetStatus: Invalid number of args');
 			sendError('Invalid status item syntax');
@@ -2147,7 +2817,7 @@ var RoundMaster = (function() {
 		    // legitimately no longer exist
 		    return;
 		}
-		args = args.join('|');
+//		args = args.join('|');
 		sendDebug('doAddTargetStatus: Target is ' + target.get('name'));
 		doAddStatus(args,target);
 		return;
@@ -2165,10 +2835,6 @@ var RoundMaster = (function() {
 			return;
 		}
 
-		// RED: changed the parameter seperator from ':' to '|'
-		// RED: to allow use of !rounds calls in API Buttons
-		args = args.split('|');
-		
 		if (args.length <3 || args.length > 5) {
 		    sendDebug('doAddStatus: wrong number of args');
 			sendError('Invalid status item syntax');
@@ -2232,7 +2898,7 @@ var RoundMaster = (function() {
 					name: effect,
 					duration: duration,
 					direction: direction,
-					round: state.roundMaster.round,
+					round: state.roundMaster.round-1,
 					msg: msg
 				});
 				updateGlobalStatus(effect,undefined,1);
@@ -2242,7 +2908,7 @@ var RoundMaster = (function() {
 					name: effect,
 					duration: duration,
 					direction: direction,
-					round: state.roundMaster.round,
+					round: state.roundMaster.round-1,
 					msg: msg
 				});
 				updateGlobalStatus(effect,undefined,1);
@@ -2422,6 +3088,38 @@ var RoundMaster = (function() {
 		var content = makeTokenConfig(curToken); 
 		sendFeedback(content); 
 	}; 
+	
+	/**
+	 * Display the status configuration of a token, in the 
+	 * same way as a turn announcement.  If run by the GM 
+	 * show both public and hidden statuses
+	 **/
+	 
+	var doDisplayTokenStatus = function(args,selected,senderId,isGM) {
+		if (!args) args = [];
+		
+		if (!args[0] && selected && selected.length) {
+			args[0] = selected[0]._id;
+		} else if (!args[0]) {
+            sendDebug('doDisplayTokenStatus: Invalid token selected');
+			sendError('Invalid target'); 
+		}
+		var curToken = getObj('graphic',args[0]);
+		
+		if (!curToken) {
+            sendDebug('doDisplayTokenStatus: Invalid token selected');
+			sendError('Invalid target'); 
+		}
+		
+		var	msg = updateStatusDisplay(curToken,false);
+//		log('doDisplayTokenStatus: msg.public='+msg.public+', and msg.hidden='+msg.hidden);
+		if (!isGM) {
+			sendResponse(senderId,msg.public);
+		} else {
+			sendFeedback( msg.public+msg.hidden );
+		}
+		return;
+	}
 
 	/**
 	 * Display status configuration (internally used)
@@ -2689,16 +3387,16 @@ var RoundMaster = (function() {
         if (!args)
             {return;}
 
-        args = args.split('|');
+//		log('doPlayerTargetStatus: args.length='+args.length);
 		if (args.length <4 || args.length > 6) {
             sendDebug('doPlayerTargetStatus: Invalid number of arguments');
 			sendError('Invalid status item syntax');
 			return;
 		}
-		var target = getObj('graphic', args[0]),
-		    args = args[1] + '|' + args[2] + '|' + args[3]
-		    + '|' + ((args[4] && args[4].length > 0) ? args[4] : ' ')
-		    + ((args[5] && args[5].length > 0) ? ('|' + args[5]) : '');
+
+		var target = getObj('graphic', args[0]);			
+		args.shift();
+//		if (!args[3] || !args[3].length) args[3] = ' ';
 		    
 		if (!target) {
             sendDebug('doPlayerTargetStatus: Target token object not found');
@@ -2722,10 +3420,6 @@ var RoundMaster = (function() {
 			sendResponseError('Invalid selection');
 			return;
 		}
-		
-		// RED: v1.190 changed the parameter seperator from ':' to '|'
-		// RED: to allow use of !rounds calls in API Buttons
-		args = args.split('|');
 		
 		// RED: v1.204 extended arguments to optionally include the marker
 		if (args.length <3 || args.length > 5) {
@@ -2908,16 +3602,16 @@ var RoundMaster = (function() {
 		pr_confirm = new PendingResponse(PR_Enum.YESNO,function(args) {
     		// RED: changed the parameter seperator from ':' to '|'
     		// RED: to allow use of !rounds calls in API Buttons
-			var argStr = args.statusArgs.name
-					+ '|' + args.statusArgs.duration
-					+ '|' + args.statusArgs.direction
-					+ '|' + args.statusArgs.msg
-					+ '|' + args.statusArgs.marker,
-				markerdef; 
-			markerdef = _.findWhere(statusMarkers,{name: statusArgs.marker});
+			var addArgs = [],
+				markerdef = _.findWhere(statusMarkers,{name: statusArgs.marker});
+			addArgs[0] = args.statusArgs.name;
+			addArgs[1] = args.statusArgs.duration;
+			addArgs[2] = args.statusArgs.direction;
+			addArgs[3] = args.statusArgs.msg;
+			addArgs[4] = args.statusArgs.marker;
 
             // RED: v2.002 The system should now be able to deal with a marker used for multiple different effects as per v1.302
-            doAddStatus(argStr,selection);
+            doAddStatus(addArgs,selection);
             
             /*
 			if (statusExists(args.statusArgs.name)) {
@@ -3271,7 +3965,7 @@ var RoundMaster = (function() {
 	* RED: v1.202 Added configuration function -clearonround [on/off], default is on
 	**/
 	var doSetClearOnRound = function(args) {
-		flags.clearonnewround = (typeof(args) === 'string' ? args.toLowerCase() !== 'off' : true );
+		flags.clearonnewround = (args[0] || '').toLowerCase() != 'off';
 		sendFeedback('Turn Order will '+(flags.clearonnewround ? '' : '<b>not</b> ')+'be cleared at the end of the round'); 
     	return;
 	}
@@ -3280,7 +3974,7 @@ var RoundMaster = (function() {
 	* RED: v1.202 Added configuration function -clearonclose [on/off], default is off
 	**/
 	var doSetClearOnClose = function(args) {
-		flags.clearonclose = (typeof(args) === 'string' ? args.toLowerCase() === 'on' : false );
+		flags.clearonclose = (args[0] || '').toLowerCase() == 'on';
 		sendFeedback('Turn Order will '+(flags.clearonclose ? '' : '<b>not</b> ')+'be cleared and stopped when it is closed'); 
 	    return;
 	}
@@ -3290,7 +3984,7 @@ var RoundMaster = (function() {
 	**/
 	var doSetSort = function(args) {
         var sortorder;
-		switch (args.toLowerCase()) {
+		switch (args[0].toLowerCase()) {
 		case 'nosort':
 			flags.newRoundSort=TO_SortEnum.NOSORT;
 			sortorder = 'not be sorted';
@@ -3316,11 +4010,11 @@ var RoundMaster = (function() {
 	}
 
 	/**
-	 * Resets the turn order the the provided round number
-	 * or in its absense, configures it to 1. Does no other
+	 * Resets the turn order to the provided round number
+	 * or in its absence, configures it to 1. Does no other
 	 * operation other than change the round counter.
 	 */ 
-	var doResetTurnorder = function(args) {
+	var doResetTurnorder = function(args,isTurn=true) {
 		var initial = (typeof(args) === 'string' ? args.match(/\s*\d+/) : 1);
 		if (!initial) 
 				{initial = 1;}
@@ -3356,11 +4050,83 @@ var RoundMaster = (function() {
 				    roundCtrCmd = '!init --isRound ' + initial + '|true';
 				    sendRmAPI(roundCtrCmd);
 				}
+        		_.each(_.keys(state.roundMaster.effects), function(e) {
+        			var token = getObj('graphic',e);
+        			if (!token) {
+        				return; 
+        			}
+//					log('doResetTurnorder: update status display');
+        			updateStatusDisplay(token,isTurn);
+        		});
 			}
 		}
 		
 	};
 	
+	/**
+	 * Find an ability macro with the specified name in any 
+	 * macro database with the specified root name, returning
+	 * the database name.  If can't find a matching ability macro
+	 * then return undefined objects
+	 * RED: v3.025 added a preference for user-defined macros
+	 **/
+	 
+	var abilityLookup = function( rootDB, abilityName ) {
+		
+        abilityName = abilityName.toLowerCase().replace(reIgnore,'').trim();
+        rootDB = rootDB.toLowerCase();
+        if (!abilityName || abilityName.length==0) {
+			return {dB: rootDB, obj: undefined, ct: undefined};
+        }
+	    
+        var dBname,
+			magicDB, magicName,
+			abilityObj,
+			found = false;
+			
+		filterObjs(function(obj) {
+			if (found) return false;
+			if (obj.get('type') != 'ability') return false;
+			if (obj.get('name').toLowerCase().replace(reIgnore,'') != abilityName) return false;
+			if (!(magicDB = getObj('character',obj.get('characterid')))) return false;
+			magicName = magicDB.get('name');
+			if ((magicName.toLowerCase().indexOf(rootDB) !== 0) || (/\s*v\d*\.\d*/i.test(magicName))) return false;
+			if (!dbNames[magicName.replace(/-/g,'_')]) {
+				dBname = magicName;
+				found = true;
+			} else if (!dBname) dBname = magicName;
+			abilityObj = obj;
+			return true;
+		});
+		if (!abilityObj) {
+			dBname = rootDB;
+		}
+		return {dB: dBname.toLowerCase(), obj:abilityObj};
+	}
+	
+	/*
+	 * Create or update an ability on a character sheet
+	 */
+	
+	var setAbility = function( charCS, abilityName, abilityMacro, actionBar=false ) {
+		
+		var abilityObj = findObjs({type: 'ability',
+								   characterid: charCS.id,
+								   name: abilityName}, 
+								   {caseInsensitive:true});
+		if (!abilityObj || abilityObj.length == 0) {
+			abilityObj = createObj( 'ability', {characterid: charCS.id,
+												name: abilityName,
+												action: abilityMacro,
+												istokenaction: actionBar});
+		} else {
+			abilityObj = abilityObj[0];
+			abilityObj.set( 'action', abilityMacro );
+			abilityObj.set( 'istokenaction', actionBar );
+		}
+		return abilityObj;
+	}
+
 	/**
 	 * Get an array of controllers for the current token either
 	 * from the direct token control, or linked journal control
@@ -3421,6 +4187,314 @@ var RoundMaster = (function() {
 			flags.animating = false;
 		}
 	}; 
+	
+	/*
+	 * Check the version of a Character Sheet database against 
+	 * the current version in the API.  Return true if needs updating
+	 */
+	 
+	var checkDBver = function( dbFullName, dbObj, silent ) {
+		
+		dbFullName = dbFullName.replace(/_/g,'-');
+		
+		var dbName = dbFullName.toLowerCase(),
+			dbCS = findObjs({ type:'character', name:dbFullName },{caseInsensitive:true}),
+			dbVersion = 0.0,
+			msg, versionObj;
+		
+		if (dbCS && dbCS.length) {
+			dbCS = dbCS[0];
+			versionObj = findAttrObj( dbCS, fields.dbVersion[0] );
+			dbVersion = parseFloat(versionObj.get('current') || dbVersion);
+			
+//			log('checkDBver: got dbCS with name='+dbCS.get('name')+' vesion '+dbVersion);
+			if (dbVersion >= (parseFloat(dbObj.version) || 0)) {
+				msg = dbFullName+' v'+dbVersion+' not updated as is already latest version';
+				if (!silent) {
+					sendFeedback(msg); 
+				} else {
+					log(msg);
+				}
+				return false;
+			}
+		}
+//		log('checkDBver: '+dbFullName+' version '+dbVersion+' needs updating');
+		return true;
+	}
+
+	/*
+	 * Check the version of a Character Sheet database and, if 
+	 * it is earlier than the static data held in this API, update 
+	 * it to the latest version.
+	 */
+	 
+	var buildCSdb = function( dbFullName, dbObj, silent ) {
+		
+//		log('Called buildCSdb with dbName='+dbName);
+
+		dbFullName = dbFullName.replace(/_/g,'-');
+		
+		var dbName = dbFullName.toLowerCase(),
+			dbCS = findObjs({ type:'character', name:dbFullName },{caseInsensitive:true}),
+			dbVersion = 0.0,
+			errFlag = false,
+			lists = {},
+			rootDB = dbObj.root.toLowerCase(),
+			msg, versionObj, curDB;
+		
+		if (!checkDBver( dbFullName, dbObj, silent )) return false; 
+
+		if (dbCS && dbCS.length) {
+			dbCS[0].remove();
+		}
+		dbCS = createObj( 'character', {name:dbFullName} );
+		
+//		log('buildCSdb: updating '+dbName);
+		_.each(_.sortBy(dbObj.db,'name'),function( item ) {
+//			log('buildCSdb: '+item.name+' item.body = '+item.body);
+			item.body = parseStr(item.body);
+//			log('buildCSdb: parsed the body = '+item.body);
+
+			// If the effect to be written already exists but not
+			// in the database to be updated, don't write it (unless 
+			//
+			// allows the user to create new versions, but only in
+			// their own databases
+			curDB = abilityLookup( dbObj.root, item.name ).dB.toLowerCase();
+			if (curDB != rootDB) {
+				if (curDB != dbName) return;
+			} else if (curDB.obj && curDB.obj[0] && dbName != rootDB) {
+				curDB.obj[0].remove();
+			}
+			
+			if (!setAbility( dbCS, item.name, item.body )) {
+				errFlag = true;
+//				log('buildCSdb: unable to set database '+dbName+' entry '+item.name);
+			}
+		});
+		if (errFlag) {
+			sendError( 'Unable to completely update database '+dbName );
+		} else {
+			versionObj = findAttrObj( dbCS, fields.dbVersion[0] );
+			versionObj.set( 'current', dbObj.version );
+			dbCS.set('avatar',dbObj.avatar);
+			dbCS.set('bio',dbObj.bio);
+			dbCS.set('controlledby',dbObj.controlledby);
+			dbCS.set('gmnotes',dbObj.gmnotes);
+			msg = 'Updated database '+dbName+' to version '+String(dbObj.version);
+			if (!silent) {
+				sendFeedback( msg );
+			} else {
+				log(msg);
+			}
+		}
+		
+				// RED: v1.301 update the global ID of the Effects Library
+		if (dbCS) {
+   			state.roundMaster.effectsLib = dbCS;
+    	} else {
+			state.roundMaster.effectsLib = false;
+		}
+
+		return !errFlag;
+	};
+
+	/**
+	 * Ask the player/GM to place a cross-hair on the centre of an area-of-effect
+	 * and then display a token aura around the cross-hair representative of the
+	 * aoe parameter.
+	 *
+	 * !rounds --aoe crosshairID|shape|units|length|width|confirmed|image
+	 */
+	var doSetAOE = function( args, selected, senderID ) {
+		
+		const colors = {
+					RED:	'#FF0000',
+					YELLOW:	'#FFFF00',
+					BLUE:	'#0000FF',
+					GREEN:	'#00FF00',
+					MAGENTA:'#FF00FF',
+					CYAN:	'#00FFFF',
+					WHITE:	'#FFFFFF',
+					BLACK:	'#000000',
+		};
+		
+		const convertFt = {
+					ft:		1,
+					m:		3,
+					km:		3280,
+					mi:		5280,
+					in:		(1/12),
+					cm:		(1/30),
+					un:		1,
+					hex:	1,
+					sq:		1,
+		};
+		
+//		log('doSetAOE: called, args='+args.join('|'));
+		
+		if (!args) args = [];
+		if (!args[0] && selected && selected.length) {
+			args[0] = selected[0]._id;
+		};
+		
+		var crossHairID = args[0],
+			shape = (args[1] || '').toUpperCase(),
+			units = (args[2] || '').toUpperCase(),
+			range = parseInt(args[3] || -1),
+			length = parseInt(args[4] || 0),
+			width = parseInt(args[5] || 0),
+			aoeImage = (args[6] || '').toUpperCase(),
+			confirmedDrop = args[7] && (args[7] == '1' || !!args[7] == true),
+			casterID = args[8],
+			crossHair = getObj('graphic',crossHairID),
+			question  = false,
+			content = '',
+			degToRad = function(degrees) {return degrees * (Math.PI / 180);},
+			pageid = crossHair ? crossHair.get('_pageid') : Campaign().get('playerpageid'),
+			pageObj = getObj('page',pageid),
+			chLeft = crossHair ? crossHair.get('left') : 70,
+			chTop = crossHair ? crossHair.get('top') : 70,
+			chWidth = crossHair ? crossHair.get('width') : 70,
+			chHeight = crossHair ? crossHair.get('height') : 70,
+			chRotation = crossHair ? crossHair.get('rotation') : 0,
+			scale = pageObj.get('scale_number'),
+			ftSize = convertFt[pageObj.get('scale_units')] || 1,
+			cellSize = pageObj.get('snapping_increment');
+			
+		if (!crossHair || !crossHair.get('name').toLowerCase().replace(reIgnore,'').includes('crosshair')) {
+			if (!confirmedDrop) {
+				chLeft += Math.sin(degToRad(chRotation))*35;
+				chTop -= Math.cos(degToRad(chRotation))*35;
+			}
+			range = ((units == 'YARDS') ? (range * 3 / ftSize) : ((units == 'FEET') ? (range / ftSize) : range ));
+			let chName = crossHair ? crossHair.get('name') : fields.crossHairName,
+				chOwnerID = crossHair ? crossHair.get('represents') : '',
+				chImg = ((shape == 'CIRCLE')?fields.chCircleImage:((shape=='SQUARE')?fields.chSquareImage:fields.chConeImage)),
+				crossHairObj = createObj('graphic', {
+						_type: 'graphic',
+						_subtype: 'token',
+						_pageid: pageid,
+						isdrawing: 1,
+						name: fields.crossHairName,
+						imgsrc: chImg,
+						layer: 'objects',
+						width: 70,
+						height: 70,
+						left: chLeft,
+						top: chTop,
+						rotation: chRotation,
+						represents: chOwnerID,
+				});
+			if (crossHair && !confirmedDrop) {
+				crossHair.set({aura2_color:colors.GREEN,aura2_radius:range});
+			}
+			toFront(crossHairObj);
+			crossHairObj.set('left',chLeft+1);
+			args[8] = crossHairID;
+			args[0] = crossHairID = crossHairObj.id;
+			crossHair = crossHairObj;
+			question = !!!confirmedDrop;
+//			log('doSetAOE: question for crossHair which is at '+chName);
+		}
+		if (!shape || !['BOLT','CIRCLE','CONE','ELIPSE','RECTANGLE','SQUARE','WALL'].includes(shape)) {
+			// ask for shape of aoe
+			args[1] = '?{Specify area of effect shape|Bolt|Circle|Cone|Elipse|Rectangle|Square|Wall}';
+			question = true;
+			shape = 'ELIPSE';
+//			log('doSetAOE: question for shape='+args[1]);
+		} 
+		if (!units || !['SQUARES','FEET','YARDS','UNITS'].includes(units)) {
+			// ask for units of dimensions
+			args[2] = '?{Specify units of measurement|Grid squares,squares|Feet,feet|Yards,yards}';
+			question = true;
+//			log('doSetAOE: question for units='+args[2]);
+		}
+		if (!args[3]) {
+			// ask for range
+			args[3] = '?{Specify the range'+(units ? (' in '+units) : '')+'}';
+			question = true;
+//			log('doSetAOE: question for range='+args[3]);
+		}
+		if (!length || length <= 0) {
+			// ask for length
+			args[4] = '?{Specify area of effect diameter/length'+(units ? (' in '+units) : '')+'}';
+			question = true;
+//			log('doSetAOE: question for length='+args[4]);
+		}
+		if ((!width || width <= 0) && ['CONE','RECTANGLE','ELIPSE','BOLT','WALL'].includes(shape)) { 
+			// ask for width
+			args[5] = '?{Specify area of effect width'+(units ? (' in '+units) : '')+'}';
+			question = true;
+//			log('doSetAOE: question for width='+args[5]);
+		}
+		if (!aoeImage || !aoeImage.length) {
+			// If there is no defined image, ask for a colour
+			args[6] = '?{Choose an effect/colour to show|Acid|Cold|Dark|Fire|Light|Lightning|Magic|Red|Yellow|Blue|Green|Magenta|Cyan|White|Black}';
+			question = true;
+//			log('doSetAOE: question for aoeImage='+args[6]);
+		}
+		if (!state.roundMaster.dropOnce && !confirmedDrop) {
+			// display a chat window button asking to confirm position of cross-hair
+			// Button will call --aoe with a confirmedDrop
+			args[7] = true;
+			question = true;
+//			log('doSetAOE: question for confirming');
+		}
+		if (question) {
+//			log('doSetAOE: asking questions');
+			content = '&{template:default}{{name=Confirm AOE placement}}'
+					+ '{{AOE='+(range==0 ? ('Range is 0.') : ('Move the crosshair '+(range > 0 ? 'within the range depicted by the green area, then' : 'within the range, then')))
+					+ '<br>[Confirm](!rounds --aoe '+args.join('|')+') Area of Effect placement}}'
+					+ (['BOLT','CONE'].includes(shape)?'{{Direction=Turn the cross hair so the arrow points in the direction of the effect}}':'')
+					+ '{{Location='+(['BOLT','CONE'].includes(shape)?'Effect will extend from the cross hair in the direction selected':'Effect will be centred on the cross hair')+'}}';
+			sendResponse( senderID, content );
+		
+		} else {
+			if (['CIRCLE','SQUARE'].includes(shape)) width = length;
+			if (shape == 'WALL') {chWidth = width; width = length; length = chWidth;shape = 'RECTANGLE';}
+			if (casterID) {
+				let casterToken = getObj('graphic',casterID);
+				if (casterToken) casterToken.set('aura2_radius','');
+			}
+			// Get the page the cross hair is on and
+			// discover it's units and scale.  Set the
+			// aoe radius as required based on these
+			let pageObj = getObj('page',crossHair.get('_pageid')),
+				chLeft = crossHair.get('left'),
+				chTop = crossHair.get('top'),
+				scale = pageObj.get('scale_number'),
+				ftSize = convertFt[pageObj.get('scale_units')] || 1,
+				cellSize = pageObj.get('snapping_increment'),
+				radius = ((units == 'YARDS') ? (length * 3 / ftSize) : ((units == 'FEET') ? (length / ftSize) : length ))/((units == 'SQUARES') ? 1 : scale),
+				endWidth = ((units == 'YARDS') ? (width * 3 / ftSize) : ((units == 'FEET') ? (width / ftSize) : width ))/((units == 'SQUARES') ? 1 : scale),
+				chImage = aoeImages[aoeImage.toUpperCase()];
+
+//			log('doSetAOE: setting AOE, args='+args.join('|'));
+//			log('doSetAOE: length='+length+', ftSize='+ftSize+', units='+units+', radius='+radius+', scale='+scale);
+			if (!_.isUndefined(chImage)) {
+				chImage = chImage[shape] || '';
+			} else {
+				chImage = aoeImages.COLOR[shape] || '';
+			}
+			chHeight = (70*radius);
+			radius = chHeight;
+			endWidth = 70*endWidth;
+			if (shape == 'CONE' || shape == 'BOLT') {
+				chLeft += Math.sin(degToRad(chRotation))*radius/2;
+				chTop -= Math.cos(degToRad(chRotation))*radius/2;
+			}
+			crossHair.set({tint_color:(colors[aoeImage.toUpperCase()] || 'transparent'),
+						   left:chLeft,
+						   top:chTop,
+						   height:chHeight,
+						   width:endWidth,
+						   imgsrc:chImage,
+						   represents:''});
+			toBack(crossHair);
+		}
+		return;
+	};
 	
 	/**
 	 * Start/Pause the tracker, does not annouce the starting turn
@@ -3498,21 +4572,17 @@ var RoundMaster = (function() {
 	 */ 
 	var doPauseTracker = function() {
 
-		if(flags.rw_state === RW_StateEnum.PAUSED) {
-			doStartTracker();
-		} else {
-            // Turn off the tracker graphic if we are pausing
-    		var trackergraphics = findObjs({
-    			_type: 'graphic',
-    			name: fields.trackerName,
-    		});
-    		_.each(trackergraphics, function(elem) {
-    			if (elem)
-    				{elem.remove();} 
-    		});
-			flags.rw_state = RW_StateEnum.PAUSED;	
-			updateTurnorderMarker();
-		}
+		// Turn off the tracker graphic if we are pausing
+		var trackergraphics = findObjs({
+			_type: 'graphic',
+			name: fields.trackerName,
+		});
+		_.each(trackergraphics, function(elem) {
+			if (elem)
+				{elem.remove();} 
+		});
+		flags.rw_state = RW_StateEnum.PAUSED;	
+		updateTurnorderMarker();
 	}; 
 	
 	/**
@@ -3580,7 +4650,7 @@ var RoundMaster = (function() {
      * set at the preserved round number
      */
             prepareTurnorder();
-            doResetTurnorder(rounds);
+            doResetTurnorder(rounds,false);
 		}
 
 	    
@@ -3628,8 +4698,6 @@ var RoundMaster = (function() {
 		if (!args) 
 			{return;}
 			
-		args = args.split('|');
-		
 		if (args.length < 3 || args.length > 6) {
             sendDebug('doAddToTracker: Invalid number of arguments');
 			sendError('Invalid tracker item syntax');
@@ -3646,79 +4714,71 @@ var RoundMaster = (function() {
 		    tokenId = args[1],
 			increment = ('+-'.includes(args[2][0])),
 			priority = parseInt((args[2][0] == '=') ? (args[2].slice(1)) : args[2]),
-			qualifier = (args[3] || '0'),
+			qualifier = (args[3] || '0').toLowerCase(),
 			msg = (args[4] || ''),
 			detail = (args[5] || ''),
-			searchTerm = name,
+			searchTerm = new RegExp(name,''),
 			keepAll = ['all','0'].includes(qualifier),
-			newEntry = {id: tokenId, pr: priority, custom: (tokenId !== -1 ? msg : name)},
+			newEntry = {id: tokenId, pr: priority, custom: (tokenId != -1 ? msg : name)},
 			tracker = [],
 			trackerpos;
 			
-        if (isNaN(priority) || !['first','last','smallest','largest','all','0'].includes(qualifier))
+//		log('doAddToTracker: parameters are '+args.join('|')+', name = '+name);
+
+		if (isNaN(priority) || !['first','last','smallest','largest','all','0'].includes(qualifier))
             {return;}
 
 		if (keepAll && !increment) {
 			turnorder.push(newEntry);
 		        			
 		} else {
-			turnorder = _.filter(turnorder,(e,i)=>{if (parseInt(e.id) === -1 && e.custom.match(searchTerm)) {
-														tracker.push({id: -1, ix: i, pr: e.pr, custom: name});
+			turnorder = _.filter(turnorder,(e,i)=>{if (parseInt(e.id) == -1 && e.custom.match(searchTerm)) {
+//														log('doAddToTracker: found matching custom entry, keepAll='+keepAll);
+														tracker.push({id: '-1', ix: i, pr: e.pr, custom: name});
 														return keepAll;
-													} else  if (parseInt(tokenId) !== -1 && e.id === tokenId) {
+													} else  if (parseInt(tokenId) != -1 && e.id == tokenId) {
+//														log('doAddToTracker: found matching token entry, keepAll='+keepAll);
 														tracker.push({id: e.id, ix: i, pr: e.pr, custom: msg});
 														return keepAll;
 													} else {
+//														log('doAddToTracker: not matched, keepAll='+keepAll);
 														return true;
 													}
 			});
 			
+//			log('doAddToTracker: turnorder.length = '+turnorder.length+', tracker.length = '+tracker.length);
+			
 			if (tracker.length) {
 			
 				tracker = _.sortBy(tracker,'ix');
-
-/* RED: v2.010 if a fighter is using two weapons, they might have the same speed
-				if (increment === 0)
-					{return;}
-*/		
+//				log('doAddToTracker: after sort, tracker.length = '+tracker.length);
 				switch (qualifier) {
 				
 				case 'smallest':
-					tracker = _.sortBy(tracker,'pr')[0];
-					if (!increment) {
-						tracker = (tracker.pr <= priority) ? tracker : newEntry;
-					} else {
-						tracker.pr += priority;
-					}
-					break;
 				case 'largest':
-					tracker = _.chain(tracker).sortBy('pr').last().value();
-					if (!increment) {
-						tracker = (tracker.pr >= priority) ? tracker : newEntry;
-					} else {
-						tracker.pr += priority;
-					}
+					if (!increment) tracker.push(newEntry);
+					newEntry = (qualifier == 'smallest') ? (_.sortBy(tracker,'pr')[0]) : (_.chain(tracker).sortBy('pr').last().value());
+					if (increment) newEntry.pr += priority;
 					break;
 				case 'first':
 				case 'last':
 				default:
-					tracker = (qualifier != 'first') ? _.last(tracker) : _.first(tracker);
+					newEntry = (qualifier != 'first') ? (!increment ? newEntry : _.last(tracker)) : _.first(tracker);
 					if (increment) { 
-						tracker.pr += priority;
+						newEntry.pr += priority;
 					}
 					break;
 				}
-				turnorder.push({
-					id: tracker.id,
-					pr: tracker.pr,
-					custom: tracker.custom,
-				});
-			} else {
-				turnorder.push(newEntry);
+//				log('doAddToTracker: after first/last newEntry.name='+newEntry.custom+', newEntry.pr='+newEntry.pr);
 			}
+			turnorder.push({
+			    id: newEntry.id,
+			    pr: newEntry.pr,
+			    custom: newEntry.custom,
+			});
 		}
 		
-		if (tokenId !== -1 && msg && msg.length > 0) {
+		if (tokenId != -1 && msg && msg.length > 0) {
 		    var controllers,
 		        player,
 		        curToken = getObj('graphic',tokenId);
@@ -3737,9 +4797,11 @@ var RoundMaster = (function() {
 	        }
 		}
 		
+//		_.each(turnorder,(turn,i) => log('doAddToTracker: after everything, turnorder['+i+'] .id='+turnorder[i].id+', .pr='+turnorder[i].pr+', .custom = '+turnorder[i].custom));
 		prepareTurnorder(turnorder);
 		updateTurnorderMarker(turnorder);
 		turnorder = JSON.stringify(turnorder);
+//		log('doAddToTracker: JSON turnorder='+turnorder);
 		Campaign().set('turnorder',turnorder);
 		
 	};
@@ -3816,18 +4878,33 @@ var RoundMaster = (function() {
 	 * Arguments token_name, token_id, no_to_retain (optional, default 0)
 	 * 
 	 **/
-	 var doRemoveFromTracker = function(args) {
+	 var doRemoveFromTracker = function(args,selection) {
 
-		if (!args) 
+		if (!args && !selection) 
 			{return;}
 
-		args = args.split('|');
+		args = args.length ? args.split('|') : [];
 		
-		if (args.length < 2 || args.length > 3) {
+		if (args.length > 3) {
             sendDebug('doRemoveFromTracker: Invalid number of arguments');
 			sendError('Invalid tracker item syntax');
 			return;
 		}
+		
+		if (!args.length) {
+//			log('doRemoveFroTracker: no args so using selection');
+			let cmd = '!rounds'
+			_.each(selection,token => {
+				let tokenID = token._id,
+				    curToken = getObj('graphic',tokenID),
+					name = curToken ? curToken.get('name') : '';
+//				log('doRemoveFroTracker: removing selection '+name);
+				if (curToken) cmd += (' --removefromtracker '+name+'|'+tokenID);
+			});
+//			log('doRemoveFromTracker: cmd = '+cmd)
+			sendRmAPI(cmd);
+			return;
+		};
 
         var turnorder = Campaign().get('turnorder');
 		if (!turnorder) 
@@ -3944,7 +5021,7 @@ var RoundMaster = (function() {
 			tokenStatusMarkers, oldStatusMarkers;
 			
 		_.each(selection,function(e) {
-			newToken_id = e.id;
+			newToken_id = e._id;
 			newToken = getObj('graphic', newToken_id);
 			if (!newToken || newToken.get('_subtype') !== 'token' || newToken.get('isdrawing'))
 				{return;}
@@ -3962,10 +5039,10 @@ var RoundMaster = (function() {
 			}
 		    effectList = getStatusEffects(newToken);
 		    tokenStatusMarkers = newToken.get('statusmarkers');
-
+			
 		    _.each(_.keys(state.roundMaster.effects), function(elem) {
-                if (newToken_id === elem) {
-                    return;
+				if (newToken_id === elem) {
+					return;
                 }
     			oldToken = getObj('graphic',elem);
     			if (!oldToken) {
@@ -3975,8 +5052,9 @@ var RoundMaster = (function() {
 				// RED: v3.004 don't move effects or status markers from any token
 				// on the same page, regardless of if it shares name & character
 				oldPage_id = oldToken.get('_pageid');
-				if (oldPage_id == page_id)
-					{return;}
+				if (oldPage_id == page_id) {
+					return;
+				}
 				oldName = oldToken.get('name');
 				oldChar_id = oldToken.get('represents');
 				if (!oldName || oldName.length == 0) {
@@ -4013,7 +5091,6 @@ var RoundMaster = (function() {
             if (tokenStatusMarkers) {
                 newToken.set('statusmarkers',tokenStatusMarkers);
             }
-
 		});
         updateAllTokenMarkers();
 	}
@@ -4025,17 +5102,18 @@ var RoundMaster = (function() {
 	var doTarget = function( args, senderId ) {
 	    
 	    if (!args) {return;}
-	    args = args.split('|');
 	    if (args.length < 5) {
 			sendDebug('doTarget: invalid number of arguments');
 			sendError('Too few targeting arguments');
 			return;
 	    }
 		
+//		log('doTarget: on entry, args are '+args.join('|'));
 		var command = args[0].toUpperCase(),
 			tokenID = args[1],
 			curToken = getObj('graphic',tokenID),
 			tokenName,
+			argString,
 			content;
 		
 		if (!curToken) {
@@ -4047,26 +5125,37 @@ var RoundMaster = (function() {
 			sendError('Invalid targeting command: must be CASTER, SINGLE, ATTACK or AREA');
 			return;
 		}
+//		log('doTarget: before any shifts, args are '+args.join('|'));
 		args.shift();
+//		log('doTarget: after first shift, args are '+args.join('|'));
 		if (args[1]==tokenID && command == 'CASTER') {
 			args.shift();
+//			log('doTarget: after CASTER shift, args are '+args.join('|'));
 		}
 		if (command != 'CASTER') {
 		    args.shift();
+//			log('doTarget: after not CASTER shift, args are '+args.join('|'));
 		}
 
+		argString = args.join('|');
+//		log('doTarget: before applying the status, args are '+args.join('|'));
 		if (playerIsGM(senderId)) {
-			doAddTargetStatus(args.join('|'));
+			doAddTargetStatus(args);
 		} else {
-			doPlayerTargetStatus(args.join('|'),senderId);
+			doPlayerTargetStatus(args,senderId);
 		}
 
+		args = argString.split('|');
+//		log('doTarget: before AREA test, args are '+args.join('|'));
 		if (command == 'AREA') {
-			args.shift();
+			tokenID = args.shift();
+//			log('doTarget: is Area, remaining args are '+args.join('|'));
 			content = '&{template:default}{{name=Target Area-Effect Spell}}'
 					+ '{{[Select another target](!rounds --target '+command+'|'+tokenID+'|&#64;{target|Select Next Target|token_id}|'+args.join('|')+') or just do something else}}';
 			sendResponse( senderId, content );
+			args.unshift(tokenID);
 		}
+
 		return;
 	}
 	
@@ -4076,14 +5165,19 @@ var RoundMaster = (function() {
 	 */
 	 
 	var doSetViewer = function(args,senderId) {
+		var player = getObj('player',state.roundMaster.viewer.pid),
+			playerName = 'not set';
+
+		if (player) playerName = player.get('_displayname');
+			
 		if (!args) {
-			if (senderId == viewer.pid) {
+			if (senderId == state.roundMaster.viewer.pid) {
 				state.roundMaster.viewer.is_set = !state.roundMaster.viewer.is_set;
 			} else {
 				state.roundMaster.viewer.is_set = true;
 				state.roundMaster.viewer.pid = senderId;
 			}
-			sendResponse(senderId,'Viewer turned '+(state.roundMaster.viewer.is_set ? 'on' : 'off'));
+			sendResponse(senderId,'Viewer '+playerName+' turned '+(state.roundMaster.viewer.is_set ? 'on' : 'off'));
 		} else {
 			args = args.split('|');
 			let cmd = args[0].toLowerCase();
@@ -4101,12 +5195,13 @@ var RoundMaster = (function() {
 				} else {
     				state.roundMaster.viewer.pid = senderId;
 				}
-    			sendResponse(senderId,'Viewer turned '+(state.roundMaster.viewer.is_set ? 'on' : 'off'));
+    			sendResponse(senderId,'Viewer '+playerName+' turned '+(state.roundMaster.viewer.is_set ? 'on' : 'off'));
 				break;
 			case 'echo':
 				args[1] = args[1].toLowerCase();
 				if (['on','off','all'].includes(args[1])) {
 					state.roundMaster.viewer.echo = args[1];
+					sendResponse(senderID,'Viewer '+playerName+' echo option set to '+args[1]);
 				} else {
 					sendResponseError(senderId,'Invalid Viewer echo option');
 				}
@@ -4114,23 +5209,23 @@ var RoundMaster = (function() {
 			case 'all':
 //			    state.roundMaster.viewer.priorID = '';
 			default:
-			    log('setting token view');
+//			    log('setting token view');
 				let tokenID = args[0],
 			        allView = cmd == 'all',
 //				    resetView = (state.roundMaster.viewer.tokenID == tokenID || allView),
 				    curToken = getObj('graphic',tokenID);
-				log('state tokenID = '+state.roundMaster.viewer.tokenID+', cmd = '+cmd+', allView = '+allView);
+//				log('state tokenID = '+state.roundMaster.viewer.tokenID+', cmd = '+cmd+', allView = '+allView);
 				if ((curToken || allView) && state.roundMaster.viewer.is_set) {
 					filterObjs( obj => {
 						if (obj.get('type') !== 'graphic' || obj.get('subtype') !== 'token') {return false;}
 						addRemovePID(obj,state.roundMaster.viewer.pid,allView,false);
 					});
 					state.roundMaster.viewer.tokenID = '';
-					log('completed setting all tokens');
+//					log('completed setting all tokens');
 					if (!allView) {
-					    log('not a reset view so setting view for token '+curToken.get('name'));
+//					    log('not a reset view so setting view for token '+curToken.get('name'));
     					addRemovePID(curToken,state.roundMaster.viewer.pid,true,true);
-//    					state.roundMaster.viewer.priorID = state.roundMaster.viewer.tokenID;
+    					state.roundMaster.viewer.priorID = state.roundMaster.viewer.tokenID;
     					state.roundMaster.viewer.tokenID = tokenID;
 /*					} else if (state.roundMaster.viewer.priorID != '') {
 					    log('resetting to prior token '+getObj('graphic',state.roundMaster.viewer.priorID).get('name'));
@@ -4138,6 +5233,7 @@ var RoundMaster = (function() {
                         state.roundMaster.viewer.tokenID = state.roundMaster.viewer.priorID;
                         state.roundMaster.viewer.priorID = tokenID;
 */					}
+					sendResponse(senderId,'View set to '+(allView ? 'all' : curToken.get('name')));
 				} else {
 					sendDebug('doSetViewer: invalid argument '+args[0]);
 					sendResponseError(senderId,'Invalid Viewer command');
@@ -4145,10 +5241,105 @@ var RoundMaster = (function() {
 				break;
 			}
 		}
+		if (player) {
+//			log('doSetViewer: viewer set to be '+ playerName);
+		} else {
+//			log('doSetViewer: viewer not set');
+		}
+
 		return;
 	}
 		
 				
+	/*
+	 * Update effect databases to latest versions held in API
+	 */
+ 
+	var doUpdateEffectsDB = function(args) {
+		
+		var silent = (args[0] || '').toLowerCase() == 'silent',
+			dbName = args[1];
+			
+//		log('doUpdateDB: args[0] = '+args[0]+', args[1] = '+args[1]+', silent = '+silent);
+		
+		if (dbName && dbName.length) {
+			let dbLabel = dbName.replace(/-/g,'_');
+			if (!dbNames[dbLabel]) {
+				sendError('Not found database '+dbName);
+			} else {
+				log('Updating database '+dbName);
+				sendFeedback('Updating database '+dbName);
+				buildCSdb( dbName, dbNames[dbLabel], silent );
+			}
+		} else if (_.some( dbNames, (db,dbName) => checkDBver( dbName, db, silent ))) {
+//			log('Updating all Effect databases');
+			if (!silent) sendFeedback('Updating all Effect databases');
+			_.each( dbNames, (db,dbName) => {
+				let dbCS = findObjs({ type:'character', name:dbName.replace(/_/g,'-') },{caseInsensitive:true});
+				if (dbCS && dbCS.length) {
+					dbCS[0].remove();
+				}
+			});
+			// Have to remove all pre-defined databases before updating them
+			// so that moves can happen without causing duplicates
+			_.each( dbNames, (db,dbName) => buildCSdb( dbName, db, silent ));
+		}
+		
+		return;
+	}
+	
+	/**
+	 * Update or create the help handouts
+	 **/
+	 
+	var updateHandouts = function(silent,senderId) {
+		
+		_.each(handouts,(obj,k) => {
+			let dbCS = findObjs({ type:'handout', name:obj.name },{caseInsensitive:true});
+			if (!dbCS || !dbCS[0]) {
+			    log(obj.name+' not found.  Creating version '+obj.version);
+				dbCS = createObj('handout',{name:obj.name,inplayerjournals:senderId});
+				dbCS.set('notes',obj.bio);
+				dbCS.set('avatar',obj.avatar);
+			} else {
+				dbCS = dbCS[0];
+				dbCS.get('notes',function(note) {
+					let reVersion = new RegExp(obj.name+'\\s*?v(\\d+?.\\d*?)</span>', 'im');
+					let version = note.match(reVersion);
+					version = (version && version.length) ? (parseFloat(version[1]) || 0) : 0;
+					if (version >= obj.version) {
+//					    log('Not updating handout '+obj.name+' as is already version '+obj.version);
+					    return;
+					}
+					dbCS.set('notes',obj.bio);
+					dbCS.set('avatar',obj.avatar);
+					if (!silent) sendFeedback(obj.name+' handout updated to version '+obj.version);
+					log(obj.name+' handout updated to version '+obj.version);
+				});
+			}
+		});
+		return;
+	}
+
+	/*
+	 * Run the effect macro specified in an external command call
+	 * Used by AttackMaster for weapon effects
+	 */
+	 
+	var runEffect = function(args) {
+		
+		var tokenID = args[0],
+			msg = args[1],
+			effect = args[2],
+			macro = args[3],
+			curToken = getObj('graphic',tokenID);
+			
+		if (!curToken || !effect || !macro) return;
+		sendAPImacro( curToken, msg, effect, macro );
+		return;
+	}
+
+
 	/**
 	 * Handle Pending Requests
 	 */
@@ -4177,6 +5368,24 @@ var RoundMaster = (function() {
 			}
 		}
 	}; 
+	
+	/**
+	 * Handle handshake request
+	 **/
+	 
+	var doHsQueryResponse = function(args) {
+		if (!args) return;
+		var from = args[0] || '',
+			func = args[1] || '',
+			funcTrue = ['start','stop','pause','reset','addtotracker','removefromtracker','sort','sortorder','clearonround','clearonclose','clear,','viewer','addstatus',
+						'addtargetstatus','aoe','edit','target','clean','removestatus','deletestatus','deltargetstatus','movestatus','s_marker','disptokenconfig','listfav']
+						.includes(func.toLowerCase()),
+			cmd = '!'+from+' --hsr rounds'+((func && func.length) ? ('|'+func+'|'+funcTrue) : '');
+			
+//		log('RoundMaster recieved handshake query from '+from+((func && func.length) ? (' checking command '+func+' so responding '+funcTrue) : (' and responding')));
+		sendRmAPI(cmd);
+		return;
+	};
 
 	/**
 	 * Show help message
@@ -4188,198 +5397,62 @@ var RoundMaster = (function() {
 					+ '<span style="font-weight: bold; font-size: 125%">RoundMaster v'+version+'</span>'
 				+ '</div>'
 				+ '<div style="padding-left: 5px; padding-right: 5px; overflow: hidden;">'
-					+ '<div style="font-weight: bold;">'
-						+ '!rounds --help'
-					+ '</div>'
-					+ '<li style="padding-left: 10px;">'
-						+ 'Display this message'
-					+ '</li>'
-					+ '<br>'
-					+ '<div style="font-weight: bold;">'
-						+ '!rounds --clearonround [on|off]'
-					+ '</div>'
-					+ '<li style="padding-left: 10px;">'
-						+ 'Alter behaviour of clearing the turn order at the end of a round.  Default is on.'
-					+ '</li>'
-					+ '<br>'
-					+ '<div style="font-weight: bold;">'
-						+ '!rounds --clearonclose [on|off]'
-					+ '</div>'
-					+ '<li style="padding-left: 10px;">'
-						+ 'Alter behaviour on closing the Turn Tracker.  Default is off.'
-					+ '</li>'
-					+ '<br>'
-					+ '<div style="font-weight: bold;">'
-						+ '!rounds --sortorder [ascending|descending|atoz|ztoa|nosort]'
-					+ '</div>'
-					+ '<li style="padding-left: 10px;">'
-						+ 'Set the automatic Turn Tracker sort order on starting a new round.  Default is numeric ascending'
-					+ '</li>'
-					+ '<br>'
-					+ '<div style="font-weight: bold;">'
-						+ '!rounds --start'
-					+ '</div>'
-					+ '<li style="padding-left: 10px;">'
-						+ 'Start/Pause the tracker. If not started starts; if active pauses; if paused, resumes. Behaves as a toggle.'
-					+ '</li>'
-					+ '<br>'
-					+ '<div style="font-weight: bold;">'
-						+ '!rounds --stop'
-					+ '</div>'
-					+ '<li style="padding-left: 10px;">'
-						+ 'Stops the tracker and clears all status effects.'
-					+ '</li>'
-					+ '<br>'
-					+ '<div style="font-weight: bold;">'
-						+ '!rounds --clear'
-					+ '</div>'
-					+ '<li style="padding-left: 10px;">'
-						+ 'Clears the turnorder of token turns, but leaves the Round counter. Does not stop the tracker.'
-					+ '</li>'
-					+ '<br>'
-					+ '<div style="font-weight: bold;">'
-						+ '!rounds --pause'
-					+ '</div>'
-					+ '<li style="padding-left: 10px;">'
-						+ 'Pauses the tracker.'
-					+ '</li>'
-					+ '<br>'
-					+ '<div style="font-weight: bold;">'
-						+ '!rounds --sort'
-					+ '</div>'
-					+ '<li style="padding-left: 10px;">'
-						+ 'Sorts the tracker, using the current sort order.'
-					+ '</li>'
-					+ '<br>'
-					+ '<div style="font-weight: bold;">'
-						+ '!rounds --reset [round#]'
-					+ '</div>'
-					+ '<li style="padding-left: 10px;">'
-						+ 'Reset the tracker\'s round counter to the given round, if none is supplied, it is set to round 1.'
-					+ '</li>'
-					+ '<br>'
-					+ '<div style="font-weight: bold;">'
-						+ '!rounds --addtotracker [name]|[id]|[increment]|[ignore]|[message]|[detail]'
-					+ '</div>'
-					+ '<li style="padding-left: 10px;">'
-						+ 'Add a new turn to the turn order.  Allows multiple entries for single token or custom item.'
-					+ '</li>'
-					+ '<li style="padding-left: 20px;">'
-						+ '<b>name</b> of the entry. Can be existing or not, and a token or a custom item.'
-					+ '</li>'
-		        	+ '<li style="padding-left: 20px;">'
-						+ '<b>id</b> for a token object (obtained using \'token_id\') or -1 for a custom item.'
-					+ '</li>'
-		        	+ '<li style="padding-left: 20px;">'
-						+ '<b>increment</b> to add to priority if a token or custom tracker entry exists for id or name. Otherwise is set as the new priority.'
-					+ '</li>'
-			    	+ '<li style="padding-left: 20px;">'
-						+ '<b>ignore</b> (optional) the command if this value is not 0.  Allows for conditional processing.'
-					+ '</li>'
-			    	+ '<li style="padding-left: 20px;">'
-						+ '<b>message</b> (optional) to post in the chat window. Results in \'[name]\'s initiative is [final number] [message]\'. Also displayed in turn announcement.'
-					+ '</li>'
-			    	+ '<li style="padding-left: 20px;">'
-						+ '<b>detail</b> (optional) to post after message in chat window. Not displayed in turn announcement.'
-					+ '</li>'
-					+ '<br>'
-					+ '<div style="font-weight: bold;">'
-						+ '!rounds --removefromtracker [name]|[id]'
-					+ '</div>'
-					+ '<li style="padding-left: 10px;">'
-						+ 'Removes turns from the turn order.  Removes all entries for single token or custom item.'
-					+ '</li>'
-					+ '<li style="padding-left: 20px;">'
-						+ '<b>name</b> of the entry. Can be a token or a custom item.'
-					+ '</li>'
-		        	+ '<li style="padding-left: 20px;">'
-						+ '<b>id</b> for a token object (obtained using \'token_id\') or -1 for a custom item.'
-					+ '</li>'
-					+ '<br>'
-					+ '<div style="font-weight: bold;">'
-						+ '!rounds --addstatus [name]|[duration]|[direction]|[message]|[marker]'
-					+ '</div>'
-					+ '<li style="padding-left: 10px;">'
-						+ 'Add a status to the group of selected tokens, if it does not have the named status.'
-					+ '</li>'
-					+ '<li style="padding-left: 20px;">'
-						+ '<b>name</b> name of the status.'
-					+ '</li>'
-					+ '<li style="padding-left: 20px;">'
-						+ '<b>duration</b> duration of the status (numeric).'
-					+ '</li>'
-					+ '<li style="padding-left: 20px;">'
-						+ '<b>direction</b> + or - direction (+# or -#) indicating the increase or decrease of the the status\' duration when the token\'s turn comes up.'
-					+ '</li>'
-					+ '<li style="padding-left: 20px;">'
-						+ '<b>message</b> optional description of the status. If dice text, ie: 1d4 exist, it\'ll roll this result when the token\'s turn comes up.'
-					+ '</li>'
-					+ '<li style="padding-left: 20px;">'
-						+ '<b>marker</b> optional name of marker to be used, as given in the table statusMarkers'
-					+ '</li>'
-					+ '<br>'
-					+ '<div style="font-weight: bold;">'
-						+ '!rounds --addtargetstatus [id]|[name]|[duration]|[direction]|[message]|[marker]'
-					+ '</div>'
-					+ '<li style="padding-left: 10px;">'
-						+ 'Add a status to the token with the given id, if it does not have the named status.  All other parameters are as for -addstatus'
-					+ '</li>'
-					+ '<li style="padding-left: 20px;">'
-						+ '<b>id</b> the token_id of the token to add the status to.'
-					+ '</li>'
-					+ '<br>'
-					+ '<div style="font-weight: bold;">'
-						+ '!rounds --target [CASTER]|[id]|[name]|[duration]|[direction]|[message]|[marker]<br>'
-						+ '!rounds --target [SINGLE|AREA]|[id]|[targetid]|[name]|[duration]|[direction]|[message]|[marker]'
-					+ '</div>'
-					+ '<li style="padding-left: 10px;">'
-						+ 'Add a status to the token with the given id, if it does not have the named status.  All other parameters are as for -addstatus'
-					+ '</li>'
-					+ '<li style="padding-left: 20px;">'
-						+ '<b>id</b> the token_id of the token to add the status to.'
-					+ '</li>'
-					+ '<br>'
-					+ '<div style="font-weight: bold;">'
-						+ '!rounds --removestatus [name],[name],[name],...'
-					+ '</div>'
-					+ '<li style="padding-left: 10px;">'
-						+ 'Remove a status or statuses from a group of selected tokens given the name(s).'
-					+ '</li>'
-					+ '<br>'
-					+ '<div style="font-weight: bold;">'
-						+ '!rounds --edit'
-					+ '</div>'
-					+ '<li style="padding-left: 10px;">'
-						+ 'Edit statuses on the selected tokens'
-					+ '</li>'
-					+ '<br>' 
-					+ '<div style="font-weight: bold;">'
-						+ '!rounds --moveStatus'
-					+ '</div>'
-					+ '<li style="padding-left: 10px;">'
-						+ 'Move statuses from other tokens with same name representing the same character to the selected tokens.  Supports tokens with live status effects moving between different maps'
-					+ '</li>'
-					+ '<br>' 
-					+ '<div style="font-weight: bold;">'
-						+ '!rounds --addfav [name]|[duration]|[direction]|[message]'
-					+ '</div>'
-					+ '<li style="padding-left: 10px;">'
-						+ 'Add a favorite status for quick application to selected tokens later.'
-					+ '</li>'
-					+ '<br>' 
-					+ '<div style="font-weight: bold;">'
-						+ '!rounds --listfavs'
-					+ '</div>'
-					+ '<li style="padding-left: 10px;">'
-						+ 'Displays favorite statuses with options to apply or edit.'
-					+ '</li>'
-					+ '<br>'
-					+ '<div style="font-weight: bold;">'
-						+ '!eot'
-					+ '</div>'
-					+ '<li style="padding-left: 10px;">'
-						+ 'Ends a player\'s turn and advances the tracker if the player has control of the current turn\'s token. Player usable command.'
-					+ '</li>'
+					+ '<div style="font-weight: bold;">See RoundMaster Help handout for full information</div><br>'
+					+ '<div style="font-weight: bold;">!rounds --help</div>'
+					+ '<li style="padding-left: 10px;">Display this message</li><br>'
+					+ '<div style="font-weight: bold;">!rounds --start</div>'
+					+ '<li style="padding-left: 10px;">Toggle Start/Pause Tracker functionality</li><br>'
+					+ '<div style="font-weight: bold;">!rounds --stop</div>'
+					+ '<li style="padding-left: 10px;">Stop Tracker & dump all Statuses</li><br>'
+					+ '<div style="font-weight: bold;">!rounds --pause</div>'
+					+ '<li style="padding-left: 10px;">Pause Tracker functionality</li><br>'
+					+ '<div style="font-weight: bold;">!rounds --reset [number]</div>'
+					+ '<li style="padding-left: 10px;">Set current Tracker round number (default is 1)</li><br>'
+					+ '<div style="font-weight: bold;">!rounds --sort</div>'
+					+ '<li style="padding-left: 10px;">Sort Tracker in previously defined order (dafault ascending numeric)</li><br>'
+					+ '<div style="font-weight: bold;">!rounds --clear</div>'
+					+ '<li style="padding-left: 10px;">Clear all Tracker entries</li><br>'
+					+ '<div style="font-weight: bold;">!rounds --clearonround [OFF/ON]</div>'
+					+ '<li style="padding-left: 10px;">Alter behaviour at end of round (default on)</li><br>'
+					+ '<div style="font-weight: bold;">!rounds --clearonclose [OFF/ON]</div>'
+					+ '<li style="padding-left: 10px;">Alter behaviour on closing the Tracker (default off)</li><br>'
+					+ '<div style="font-weight: bold;">!rounds --sortorder [order]</div>'
+					+ '<li style="padding-left: 10px;">Set the Tracker sort order to one of NOSORT, ATOZ, ZTOA, DESCENDING, ASCENDING (default ASCENDING)</li><br>'
+					+ '<div style="font-weight: bold;">!rounds --addtotracker name|tokenID/-1|priority|[qualifier]|[msg]|[detail]</div>'
+					+ '<li style="padding-left: 10px;">Add entry to Turn Order for <i>tokenID</i> or if tokenID=-1 custom entry <i>name</i>. Qualifier defines which entry is kept: FIRST, LAST, SMALLEST, LARGEST, ALL (default ALL)</li><br>'
+					+ '<div style="font-weight: bold;">!rounds --removefromtracker name|tokenID/-1|[retain]</div>'
+					+ '<li style="padding-left: 10px;">Remove Turn Order entries for <i>tokenID</i> or if tokenID=-1 custom entry <i>name</i>. Optionally retain first <i>retain</i> entries</li><br>'
+					+ '<div style="font-weight: bold;">!rounds --addstatus status|duration|[-]direction|[msg]|[marker]</div>'
+					+ '<li style="padding-left: 10px;">Add a status and status marker to currently selected token(s) for <i>duration</i> incremented by <i>direction</i> each round.  Display optional <i>msg</i> each time is token\'s turn</li><br>'
+					+ '<div style="font-weight: bold;">!rounds --addtargetstatus tokenID|status|duration|[-]direction|[msg]|[marker]</div>'
+					+ '<li style="padding-left: 10px;">Same as addstatus, but for a single specified token</li><br>'
+					+ '<div style="font-weight: bold;">!rounds --edit</div>'
+					+ '<li style="padding-left: 10px;">Edit the statuses on the selected token(s)</li><br>'
+					+ '<div style="font-weight: bold;">!rounds --target CASTER|casterID|status|duration|[-]direction|[msg]|[marker]</div>'
+					+ '<li style="padding-left: 10px;">Same as addtargetstatus for token <i>casterID</i></li><br>'
+					+ '<div style="font-weight: bold;">!rounds --target SINGLE|casterID|targetID|status|duration|[-]direction|[msg]|[marker]</div>'
+					+ '<li style="padding-left: 10px;">Same as addtargetstatus for token <i>tokenID</i></li><br>'
+					+ '<div style="font-weight: bold;">!rounds --target AREA|casterID|targetID|status|duration|[-]direction|[msg]|[marker]</div>'
+					+ '<li style="padding-left: 10px;">Performs addtargetstatus for token <i>tokenID</i> then asks Player whether to target another token</li><br>'
+					+ '<div style="font-weight: bold;">!rounds --aoe tokenID|[shape]|[units]|[range]|[length]|[width]|[image]|[confirmed]</div>'
+					+ '<li style="padding-left: 10px;">Displays an Area of Effect, prompting for any needed parameters that are not supplied in the command</li><br>'
+					+ '<div style="font-weight: bold;">!rounds --clean</div>'
+					+ '<li style="padding-left: 10px;">Remove token markers on selected token(s) without dropping statuses - status markers recreated at start of next round</li><br>'
+					+ '<div style="font-weight: bold;">!rounds --removestatus status(es)/ALL</div>'
+					+ '<li style="padding-left: 10px;">Removes the named status(es) from the selected token(s), running any assossiated effects</li><br>'
+					+ '<div style="font-weight: bold;">!rounds --deletestatus status(es)/ALL</div>'
+					+ '<li style="padding-left: 10px;">Removes the named status(es) from the selected token(s), but does not run any assossiated effects</li><br>'
+					+ '<div style="font-weight: bold;">!rounds --deltargetstatus tokenID|status(es) / ALL</div>'
+					+ '<li style="padding-left: 10px;">Runs deletestatus for the identified token</li><br>'
+					+ '<div style="font-weight: bold;">!rounds --movestatus</div>'
+					+ '<li style="padding-left: 10px;">Move all statuses from identical tokens in the rest of the campaign to the selected token</li><br>'
+					+ '<div style="font-weight: bold;">!rounds --s_marker</div>'
+					+ '<li style="padding-left: 10px;">Display markers and which are in use</li><br>'
+					+ '<div style="font-weight: bold;">!rounds --disptokenstatus [tokenID]</div>'
+					+ '<li style="padding-left: 10px;">Display statuses for selected token(s) in Turn Announcement format</li><br>'
+					+ '<div style="font-weight: bold;">!rounds --listfav</div>'
+					+ '<li style="padding-left: 10px;">Display statuses defined as favourites, and allow changes and applying to tokens</li><br>'
+					+ '<div style="font-weight: bold;">See RoundMaster Help handout for full information</div>'
 				+ '</div>'
    			+ '</div>'; 
 
@@ -4420,31 +5493,57 @@ var RoundMaster = (function() {
             if (words.length && words.length > 1 && words[0].toLowerCase() === 'effect')
                     {effect = words[1];}
 		}
-        journal = getObj( 'character', cid );
-		if (effectsLib && journal) {
-			var cname = journal.get('name'),
-			    ac = curToken.get('bar1_value'),
-			    thac0 = curToken.get('bar2_value'),
-			    hp = curToken.get('bar3_value'),
-				effectMacro = findObjs({ _type : 'ability' , characterid : effectsLib.id, name :  effect + macro }, {caseInsensitive: true});
-			if (!effectMacro || effectMacro.length === 0) {
+		if (cid) {
+			journal = getObj( 'character', cid );
+		}
+		if (effectsLib) {
+			var cname = journal ? journal.get('name') : curToken.get('name'),
+			    bar1 = curToken.get('bar1_value'),
+			    bar2 = curToken.get('bar2_value'),
+			    bar3 = curToken.get('bar3_value'),
+				ac, acField, thac0, thac0Field, hp, hpField,
+				effectAbility = abilityLookup( fields.effectlib, effect+macro ),
+				effectMacro = effectAbility.obj;
+//				log('sendAPImacro: effectAbility.length='+effectAbility.length+', effectAbility.obj.length='+effectAbility.obj.length);
+				
+//				findObjs({ _type : 'ability' , characterid : effectsLib.id, name :  effect + macro }, {caseInsensitive: true});
+
+				[ac,acField] = getTokenValues(curToken,fields.Token_AC,fields.AC,fields.MonsterAC);
+				[thac0,thac0Field] = getTokenValues(curToken,fields.Token_Thac0,fields.Thac0,fields.MonsterThac0);
+				[hp,hpField] = getTokenValues(curToken,fields.Token_HP,fields.HP);
+				
+//			log('sendAPImacro: hp.current='+hp.current+', hpField.current='+hpField.current);
+
+			if (!effectMacro) {
 			    sendDebug('Not found effectMacro ' + effectsLib.get('name') + '|' + effect + macro);
+				return;
 			}
-			if (!cname) {
-				cname = curToken.get('name');
-			}
-			if (effectMacro.length > 0) {
-				var macroBody = effectMacro[0].get('action');
+//			log('sendAPImacro: got effect '+effect+macro);
+			if (effectMacro) {
+				var macroBody = effectMacro.get('action');
 
 				macroBody = macroBody.replace( /\^\^cname\^\^/gi , cname );
 				macroBody = macroBody.replace( /\^\^tname\^\^/gi , tname );
 				macroBody = macroBody.replace( /\^\^cid\^\^/gi , cid );
 				macroBody = macroBody.replace( /\^\^tid\^\^/gi , tid );
-				macroBody = macroBody.replace( /\^\^bar1_current\^\^/gi , ac );
-				macroBody = macroBody.replace( /\^\^bar2_current\^\^/gi , thac0 );
-				macroBody = macroBody.replace( /\^\^bar3_current\^\^/gi , hp );
+				macroBody = macroBody.replace( /\^\^bar1_current\^\^/gi , bar1 );
+				macroBody = macroBody.replace( /\^\^bar2_current\^\^/gi , bar2 );
+				macroBody = macroBody.replace( /\^\^bar3_current\^\^/gi , bar3 );
+				macroBody = macroBody.replace( /\^\^ac\^\^/gi , ac.current );
+				macroBody = macroBody.replace( /\^\^thac0\^\^/gi , thac0.current );
+				macroBody = macroBody.replace( /\^\^hp\^\^/gi , hp.current );
+				macroBody = macroBody.replace( /\^\^ac_max\^\^/gi , ac.max );
+				macroBody = macroBody.replace( /\^\^thac0_max\^\^/gi , thac0.max );
+				macroBody = macroBody.replace( /\^\^hp_max\^\^/gi , hp.max );
+				macroBody = macroBody.replace( /\^\^token_ac\^\^/gi , acField.current );
+				macroBody = macroBody.replace( /\^\^token_thac0\^\^/gi , thac0Field.current );
+				macroBody = macroBody.replace( /\^\^token_hp\^\^/gi , hpField.current );
+				macroBody = macroBody.replace( /\^\^token_ac_max\^\^/gi , acField.max );
+				macroBody = macroBody.replace( /\^\^token_thac0_max\^\^/gi , thac0Field.max );
+				macroBody = macroBody.replace( /\^\^token_hp_max\^\^/gi , hpField.max );
         		sendDebug('sendAPImacro: macroBody is ' + macroBody );
-		        sendChat("character|"+cid,macroBody,null,{noarchive:!flags.archive, use3d:false});
+//		        sendChat("character|"+cid,macroBody,null,{noarchive:!flags.archive, use3d:false});
+		        sendChat('',macroBody,null,{noarchive:!flags.archive, use3d:false});
 				
 			}
 		}
@@ -4560,7 +5659,7 @@ var RoundMaster = (function() {
 		var args = processInlinerolls(msg),
 			senderId = msg.playerid,
 			selected = msg.selected,
-			isGM = (playerIsGM(senderId) || state.commandMaster.debug === senderId);
+			isGM = (playerIsGM(senderId) || state.roundMaster.debug === senderId);
 			
     	if (msg.type === 'api' && args.indexOf('!eot') === 0) {
     		doPlayerAdvanceTurn(senderId);
@@ -4591,14 +5690,14 @@ var RoundMaster = (function() {
 		
 		_.each(args, function(e) {
 			var arg = e, i=arg.indexOf(' '), cmd, argString;
-//			log('CommandMaster processing arg: '+arg);
+//			log('roundMaster processing arg: '+arg);
 			sendDebug('Processing arg: '+arg);
 			
 			cmd = (i<0 ? arg : arg.substring(0,i)).trim().toLowerCase();
 			argString = (i<0 ? '' : arg.substring(i+1).trim());
 			arg = argString.split('|');
 			
-//			log('commandMaster parsed to '+cmd+' '+argString);
+//			log('roundMaster parsed to '+cmd+' '+argString);
 
 			try {
 				switch (cmd) {
@@ -4606,13 +5705,13 @@ var RoundMaster = (function() {
 						if (isGM) doAddFavorite(argString);
 						break;
 				case 'addstatus':
-						if (isGM) doAddStatus(argString,selected)
+						if (isGM) doAddStatus(arg,selected)
 						else doPlayerAddStatus(arg,selected,senderId);
 						break;
 				case 'addtargetstatus':
 						// RED: v1.204 Added --addtargetstatus so that spells can be 
 						// cast by players on other player's tokens and on monsters
-						if (isGM) doAddTargetStatus(argString);
+						if (isGM) doAddTargetStatus(arg);
 							// RED: v1.204 Added --addtargetstatus so that spells can be 
 							// cast by players on other player's tokens and on monsters
 							// If player calls, DM is given option to refuse.
@@ -4623,7 +5722,13 @@ var RoundMaster = (function() {
 						// RED: multiple entries for 3/2, 2, ... attacks per round etc
 						// RED: v1.201 Added the ability to add additional lines
 						// into the turn tracker
-						doAddToTracker(argString,senderId);
+						doAddToTracker(arg,senderId);
+						break;
+				case 'aoe':
+						// RED: v3.018 add function to display the area of effect of 
+						// a spell or other action by dropping a cross-hair or arrow
+						// token on the map at the origin/centre
+						doSetAOE(arg,selected,senderId);
 						break;
 				case 'applyfav':
 						if (isGM) doApplyFavorite(argString,selected);
@@ -4640,11 +5745,11 @@ var RoundMaster = (function() {
 						break;
 				case 'clearonclose':
 						// RED: v1.201 added ability to set flags via commands
-						if (isGM) doSetClearOnClose(argString);
+						if (isGM) doSetClearOnClose(arg);
 						break;
 				case 'clearonround':
 						// RED: v1.201 added ability to set flags via commands
-						if (isGM) doSetClearOnRound(argString);
+						if (isGM) doSetClearOnRound(arg);
 						break;
 				case 'debug':
 						// RED: v1.207 allow anyone to set debug and who to send debug messages to
@@ -4668,6 +5773,9 @@ var RoundMaster = (function() {
 				case 'disptokenconfig':
 						if (isGM) doDisplayTokenConfig(argString);
 						break;
+				case 'disptokenstatus':
+						doDisplayTokenStatus(arg,selected,senderId,isGM);
+						break;
 				case 'edit':
 						if (isGM) doMultiEditTokenStatus(selected);
 						break;
@@ -4677,8 +5785,15 @@ var RoundMaster = (function() {
 				case 'edit_status':
 						if (isGM) doEditStatus(argString);
 						break;
+				case 'effect':
+						runEffect(arg);
+						break;
 				case 'help':
 						if (isGM) showHelp();
+						break;
+				case 'hsq':
+				case 'handshake':
+						doHsQueryResponse(arg);
 						break;
 				case 'listfav':
 						if (isGM) doDisplayFavConfig(); 	
@@ -4686,7 +5801,7 @@ var RoundMaster = (function() {
 				case 'marker':
 						if (isGM) doDirectMarkerApply(argString);
 						break;
-				case 'moveStatus':
+				case 'movestatus':
 						if (isGM) doMoveStatus(selected);
 						break;
 				case 'pause':
@@ -4700,16 +5815,20 @@ var RoundMaster = (function() {
 						// RED: to clean up the turn order if needed
 						// RED: v1.203 allow players access to removeFromTracker to 
 						// assist clean initiative selection
-						doRemoveFromTracker(argString);
+						doRemoveFromTracker(argString,selected);
 						break;
 				case 'removestatus':
 						// RED: v1.210 allow players to remove statuses e.g. when
 						// spell durations end (mostly via macros)
 						doRemoveStatus(argString,selected,true);
 						break;
+				case 'removetargetstatus':
+						doDelTargetStatus(argString,true);
+						break;
 				case 'reset':
 						if (isGM) doResetTurnorder(argString);
 						break;
+				case 'listmarkers':
 				case 's_marker':
 						if (isGM) doShowMarkers();
 						break;
@@ -4720,7 +5839,7 @@ var RoundMaster = (function() {
 						break;
 				case 'sortorder':
 						// RED: v1.201 added ability to set flags via commands
-						if (isGM) doSetSort(argString);
+						if (isGM) doSetSort(arg);
 						break;
 				case 'start':
 						if (isGM) doStartTracker();
@@ -4729,7 +5848,13 @@ var RoundMaster = (function() {
 						if (isGM) doStopTracker();
 						break;
 				case 'target':
-						doTarget(argString,senderId);
+						doTarget(arg,senderId);
+						break;
+				case 'update-db':
+						if (isGM) doUpdateEffectsDB(arg);
+						break;
+				case 'handout':
+						if (isGM) updateHandouts(false,senderId);
 						break;
 				case 'viewer':
 						// RED: v3.011 allow a player to be set as a "viewer" that will see what the 
@@ -4748,6 +5873,18 @@ var RoundMaster = (function() {
 		});
 	};
 	
+	/**
+	 * Handle a token being added to the tabletop: run an token_name'-add' effect macro
+	 */
+	
+	var handleAddGraphic = function(obj) {
+		
+		if (obj.get('type') != 'graphic' || obj.get('subtype') != 'token') {return;}
+		
+		if (state.roundMaster.effectsLib) {
+			sendAPImacro( obj, '', obj.get('name'), '-add' );
+		}
+	};
 
 	/**
 	 * Handle turn order change event
@@ -4762,7 +5899,7 @@ var RoundMaster = (function() {
 		} else {
 			if (flags.clearonclose) {
 				doClearTurnorder();
-				doStopTracker();
+				doPauseTracker();
 			}
 		}
 	};
@@ -4815,7 +5952,7 @@ var RoundMaster = (function() {
 		    tokens = _.toArray(tokens);
 			doMoveStatus( tokens );
 		}
-		return;		
+		return;
 	}
 	
 	/**
@@ -4829,17 +5966,23 @@ var RoundMaster = (function() {
 		if (!obj)
 			{return;}
 			
+//		log('handleChangeToken: called with obj name '+obj.get('name')+' and prev name '+prev['name']);
 		if (obj.get('name') == prev['name'])
 		    {return;}
 		
-		if (prev['name'].length > 0 && obj.get('_subtype') == 'token' && !obj.get('isdrawing')) {
-		    doPushStatus( obj.id, prev['name'], ((prev['represents'] && prev['represents'].length>0) ? prev['represents'] : obj.get('represents')) );
-		}
-			
-		if (obj.get('_pageid') == Campaign().get('playerpageid')) {
-			var tokens = [];
-			tokens[0] = obj;
-			doMoveStatus( tokens );
+/*** Put the call to change the cross-hair targeting graphic here (setAOE) ***/
+//		log('handleChangeToken: obj name to test is '+obj.get('name').toLowerCase().replace(reIgnore,'')+' and result is '+obj.get('name').toLowerCase().replace(reIgnore,'').includes('dmcrosshair'));
+		if (obj.get('name').toLowerCase().replace(reIgnore,'').includes('dmcrosshair')) {
+			doSetAOE([obj.id], findTheGM());
+		} else {
+			if (prev['name'].length > 0 && obj.get('_subtype') == 'token' && !obj.get('isdrawing')) {
+				doPushStatus( obj.id, prev['name'], ((prev['represents'] && prev['represents'].length>0) ? prev['represents'] : obj.get('represents')) );
+			}
+			if (obj.get('_pageid') == Campaign().get('playerpageid')) {
+				var tokens = [];
+				tokens[0] = obj;
+				doMoveStatus( tokens );
+			}
 		}
 		return;
 	}
@@ -4859,6 +6002,7 @@ var RoundMaster = (function() {
 			oldStatusMarkers = obj.get('statusmarkers'),
 			oldEffects = state.roundMaster.effects[oldID],
 			effectsLib = state.roundMaster.effectsLib,
+			effectAbility,
 		    newToken,
 			newEffects,
 			newStatusMarkers,
@@ -4918,27 +6062,47 @@ var RoundMaster = (function() {
 					charCS = getObj( 'character', oldRepresents );
 					if (charCS) {
 						var cname = charCS.get('name'),
-							ac = obj.get('bar1_value'),
-							thac0 = obj.get('bar2_value'),
-							hp = obj.get('bar3_value'),
-							effectMacro = findObjs({ _type : 'ability' , characterid : effectsLib.id, name :  e.name + '-end' }, {caseInsensitive: true});
-						if (!effectMacro || effectMacro.length === 0) {
-							log('handleDestroyToken: Not found effectMacro ' + effectsLib.get('name') + '|' + e.name + '-end');
+							bar1 = curToken.get('bar1_value'),
+							bar2 = curToken.get('bar2_value'),
+							bar3 = curToken.get('bar3_value'),
+							ac, acField, thac0,thac0Field, hp, hpField,
+//							effectMacro = findObjs({ _type : 'ability' , characterid : effectsLib.id, name :  e.name + '-end' }, {caseInsensitive: true});
+							effectAbility = abilityLookup( fields.effectlib, e.name+'-end' ),
+							effectMacro = effectAbility.obj;
+							
+						[ac,acField] = getTokenValues(obj,fields.Token_AC,fields.AC,fields.MonsterAC);
+						[thac0,thac0Field] = getTokenValues(obj,fields.Token_Thac0,fields.Thac0,fields.MonsterThac0);
+						[hp,hpField] = getTokenValues(obj,fields.Token_HP,fields.HP);
+
+						if (!effectMacro) {
+//							log('handleDestroyToken: Not found effectMacro ' + effectsLib.get('name') + '|' + e.name + '-end');
 							sendDebug('handleDestroyToken: Not found effectMacro ' + effectsLib.get('name') + '|' + e.name + '-end');
 						} else {
 							if (!cname) {
 								cname = oldName;
 							}
-							if (effectMacro.length > 0) {
-								var macroBody = effectMacro[0].get('action');
+							if (effectMacro) {
+								var macroBody = effectMacro.get('action');
 
 								macroBody = macroBody.replace( /\^\^cname\^\^/gi , cname );
 								macroBody = macroBody.replace( /\^\^tname\^\^/gi , oldName );
 								macroBody = macroBody.replace( /\^\^cid\^\^/gi , oldRepresents );
 								macroBody = macroBody.replace( /\^\^tid\^\^/gi , oldID );
-								macroBody = macroBody.replace( /\^\^bar1_current\^\^/gi , ac );
-								macroBody = macroBody.replace( /\^\^bar2_current\^\^/gi , thac0 );
-								macroBody = macroBody.replace( /\^\^bar3_current\^\^/gi , hp );
+								macroBody = macroBody.replace( /\^\^bar1_current\^\^/gi , bar1 );
+								macroBody = macroBody.replace( /\^\^bar2_current\^\^/gi , bar2 );
+								macroBody = macroBody.replace( /\^\^bar3_current\^\^/gi , bar3 );
+								macroBody = macroBody.replace( /\^\^ac\^\^/gi , ac.current );
+								macroBody = macroBody.replace( /\^\^thac0\^\^/gi , thac0.current );
+								macroBody = macroBody.replace( /\^\^hp\^\^/gi , hp.current );
+								macroBody = macroBody.replace( /\^\^ac_max\^\^/gi , ac.max );
+								macroBody = macroBody.replace( /\^\^thac0_max\^\^/gi , thac0.max );
+								macroBody = macroBody.replace( /\^\^hp_max\^\^/gi , hp.max );
+								macroBody = macroBody.replace( /\^\^token_ac\^\^/gi , acField.current );
+								macroBody = macroBody.replace( /\^\^token_thac0\^\^/gi , thac0Field.current );
+								macroBody = macroBody.replace( /\^\^token_hp\^\^/gi , hpField.current );
+								macroBody = macroBody.replace( /\^\^token_ac_max\^\^/gi , acField.max );
+								macroBody = macroBody.replace( /\^\^token_thac0_max\^\^/gi , thac0Field.max );
+								macroBody = macroBody.replace( /\^\^token_hp_max\^\^/gi , hpField.max );
 								sendDebug('handleDestroyToken: macroBody is ' + macroBody );
 								sendChat("character|"+oldRepresents,macroBody,null,{noarchive:!flags.archive, use3d:false});
 								
@@ -4959,16 +6123,16 @@ var RoundMaster = (function() {
 	
 	var handleTokenDeath = function(obj,prev) {
 		
-		log('handleTokenDeath: checking statusmarker change for death');
+//		log('handleTokenDeath: checking statusmarker change for death');
 		if (obj.get("status_dead")) {
-			log('handleTokenDeath: '+obj.get('name')+' has died');
+//			log('handleTokenDeath: '+obj.get('name')+' has died');
 			// If the token dies and is marked as "dead" by the GM
 			// remove all active effects from the token
 			doRemoveStatus( 'all', obj, false );
 		}
 		return;		
 	};
-	
+		
 	/**
 	 * Register and bind event handlers
 	 */ 
