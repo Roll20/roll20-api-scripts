@@ -1083,3 +1083,7 @@ alienrpgroller:
 roundmaster:
   - "RoundMaster"
   - "Utility"
+
+initmaster:
+  - "InitMaster"
+  - "Utility"
