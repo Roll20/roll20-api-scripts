@@ -10365,6 +10365,7 @@ log("spirit " + strRating );
             }
 
 
+
                 // what, is 0 for first loop, 1 for 2nd loop.
                 // To Find.    Save Name,                             "movement"
                 // Value of set or modification.
@@ -10374,7 +10375,7 @@ log("spirit " + strRating );
               'use strict';
               try {
                 if( val == undefined )
-                  val = save[ tf ];
+                  val = (( typeof save[ tf ] === "object") &&  ("field" in save[ tf ])) ? save[ tf ][ "field" ] : save[ tf ];
                 val = getSR( val );
                 let v,
                   aObj = Earthdawn.findOrMakeObj({ _type: 'attribute', _characterid: po.charID, name: adj });
@@ -10420,8 +10421,8 @@ log("spirit " + strRating );
                 case "spell defense":
                 case "mysdef":  case "mystic defense":    getStuff( i, 0x00, tf, "MD", 6 );             break;
                 case "socdef":  case "social defense":    getStuff( i, 0x00, tf, "SD", 6 );             break;
-                case "armor":   case "phyarm":    case "physical armor":    save[ tf ] = statBlock( i, tf, "PA-Nat", "num", mult );    break;
-                case "mysarm":  case "mystic armor":                        save[ tf ] = statBlock( i, tf, "MA-Nat", "num", mult );    break;
+                case "armor":   case "phyarm":    case "physical armor":    save[ tf ] = statBlock( i, tf, null, "num", mult );    break;
+                case "mysarm":  case "mystic armor":                        save[ tf ] = statBlock( i, tf, null, "num", mult );    break;
 //                case "mysarm":  case "mystic armor":      getStuff( i, 0x00, tf, "MA-Nat", 2 );         break;
                 case "attack \\( \\d* \\)": 
                 case "attack":                            save[ tf ] = statBlock( i, tf, "Attack \\( \\d* \\)", "num", mult );    break;    // ED 3rd Ed, Attack (5): 11
@@ -10622,7 +10623,6 @@ log("spirit " + strRating );
                 for( let i = blockIndexArray.length -2; i > -1; --i) {    // For each label found.
                   let tf = blockIndexArray[ i ][ "name"].toLowerCase();
                             // 2nd pass through, process derived attributes.
-// log( tf);
                  switch( tf ) {
                     case "initiative":    Adjust( 0x01, tf, undefined, "Initiative", 5, "Misc-Initiative-Adjust" ); break;
                     case "knockdown": {
@@ -10655,12 +10655,13 @@ log("spirit " + strRating );
                     case "socdef":        case "social defense":
                       Adjust( 0x01, tf, undefined, "SD", 6, "Defense-Soc-Nat-Adjust" );       break;
                     case "phyarm":	      case "physical armor":      case "armor":
-//log( save[tf]);
-                      carryover += save[ tf ][ "remain" ];      break;
-//                      Adjust( 0x01, tf, undefined, "PA-Nat", 2, "Armor-Phys-Nat-Adjust" );    break;
+                      if( "remain" in save[ tf ] && save[ tf ][ "remain" ] )
+                        carryover += save[ tf ][ "remain" ];
+                      Adjust( 0x01, tf, undefined, "PA-Nat", 2, "Armor-Phys-Nat-Adjust" );    break;
                     case "mysarm":        case "mystic armor":
-                      carryover += save[ tf ][ "remain" ];      break;
-//                      Adjust( 0x01, tf, undefined, "MA-Nat", 2, "Armor-Myst-Nat-Adjust" );    break;
+                      if( "remain" in save[ tf ] && save[ tf ][ "remain" ] )
+                        carryover += save[ tf ][ "remain" ];
+                      Adjust( 0x01, tf, undefined, "MA-Nat", 2, "Armor-Myst-Nat-Adjust" );    break;
                     case "attack":                      // ED 1st Ed. Attack: 7
                     case "spellcasting":
                     case "attack \\( \\d* \\)": {       // ED 3rd Ed, Attack (5): 11 
@@ -10698,10 +10699,7 @@ log("spirit " + strRating );
                                         // 2×Claws (2): 7; Tail (3): 8 Mystic Armor: 1
                                         // Rule. if Physical Armor and/or Mystic Armor have a newline in them. Then that part is really the continuation of damage. 
                                         // ED 1st ED.   Damage: 8
-//log( "carryover " + carryover);
-//log( save[tf]);
-//log( save[tf]["field"]);
-                      let t = (save[ tf ][ "field" ] + carryover).slice( 7 );   // slice off the label (damage:)
+                      let t = (save[ tf ][ "field" ] + carryover);   // slice off the label (damage:)
                       let dmgarr = t.split( ";" ),
                           sc = (tf === "effect");
                       for( let i = 0; i < dmgarr.length; ++i ) {
