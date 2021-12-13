@@ -1087,3 +1087,7 @@ roundmaster:
 initmaster:
   - "InitMaster"
   - "Utility"
+
+randomtokentinter:
+  - "RandomTokenTinter"
+  - "Tokens"
