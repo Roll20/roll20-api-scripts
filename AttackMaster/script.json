@@ -42,7 +42,7 @@
 		"handout.id": "read,write",
 		"handout.name": "read,write",
 		"handout.notes": "write",
-		"handout.inplayerjournals": "write",
+		"handout.inplayerjournals": "write"
     },
     "conflicts": []
 }
