@@ -336,6 +336,7 @@
                   <li><code>--demiAuto</code> : si l'attaque rate, on considère juste que les saves partiels sont automatiquemet réussi. Ça signifie en général que la cible prend au moins la moitié des dégâts.</li>
                   <li><code>--dmSiRate <i>dmg</i></code> : si l'attaque rate, la cible est quand même touchée et se voit infliger <i>dmg</i> dégâts</li>
                   <li><code>--save <i>carac seuil</i></code> : même effet que <code>--psave</code>, mais pour annuler le dernier <code>--effet</code> ou <code>etat</code> (aucun effet sur les DM). Si on rajoute un argument <code>demiDuree</code> au save, alors la réussite du save ne fait que diviser par 2 sa durée.</li>
+                  <li><code>--saveDM <i>carac seuil</i></code> : même effet que <code>--psave</code>, mais pour annuler l'ensemble des dégâts.</li>
                   <li><code>--saveParTour <i>carac seuil</i></code> : même effet que <code>--save</code>, mais donne droit à un jet à la fin de chaque tour au lieu d'un jet au moment de l'attaque.</li>
                   <li><code>--saveParJour <i>carac seuil</i></code> : même effet que <code>--save</code>, mais donne droit à un jet à la fin de chaque jour au lieu d'un jet au moment de l'attaque.</li>
                   <li><code>--fx <i>effet</i></code> : ajoute un <a href="https://wiki.roll20.net/Custom_FX">effet</a> qui part de l'attaquant à la cible. Si l'attaque rate, l'effet rate aussi, d'autant plus que le jet d'attaque est loin de la défense. Il est possible d'utiliser un effet que vous avez défini vous-même en utilisant l'option <code>--fx custom <i>nom</i></code>, où <i>nom</i> est le nom de votre effet.</li>
@@ -369,7 +370,7 @@
                   <li><code>--plus <i>dmg</i></code> : ajoute <i>dmg</i> dégâts. Attention, si <i>dmg</i> est un simple nombre, ces dégâts sont multipliés par les critiques (sauf si de type différent de l'attaque principale). Ainsi, <code>--plus [[1d6]]</code> donnera des dégâts multipliés par les critiques (car la fonction ne voit que le résultat du jet), alors que <code>--plus 1d6</code> ne le sera pas. </li>
                   <li><code>--plusCrit <i>dmg</i></code> : ajoute <i>dmg</i> dégâts en cas de réussite critique</li>
                   <li><code>--test</code> pour voir le résultat du jet d'attaque. On n'applique pas les résultats d'un touché.</li>
-                  <li><code>--sournoise <i>n</i></code> : ajoute <i>n</i>d6 de dégâts d'attaque sournoise ou par surprise.</li>
+                  <li><code>--sournoise <i>n</i></code> : ajoute <i>n</i>d6 de dégâts d'attaque sournoise ou par surprise. Si l'option n'a pas d'argument, le nombre de dés rajoutés sera celui associé à un prédicat <code>attaqueSournoise</code>, et si l'attaquant n'a pas de prédicat <code>attaqueSournoise</code>, l'attaque ajoute juste 1d6. Le script limite le nombre d'attaque sournoise par personnage à 1 par tour. On peut augmenter ce nombre en utilisant un prédicat <code>sournoisesParTour</code>, de valeur la limite au nombre de sournoises pour ce personnage.</li>
                   <li><code>--magique</code> : les dégâts sont magiques. On peut passer en argument le niveau de magie. Il est utilisé contre les créatures immunisées aux armes. Le niveau par défaut est 1.</li>
                   <li><code>--+<i>k</i></code> : l'attaque utilise une arme magique +<i>k</i>. Pratique à mettre dans les modificateurs de l'attaque (dans ce cas, on n'a pas les <code>--</code>), cela rajoute les bonus au toucher et aux dégâts, et indique que les dégâts sont magiques. Si un niveau de magie est spécifié, rajoute <i>k</i> à ce niveau.</li>
                   <li><code>--feu</code>, <code>--acide</code>, <code>--electrique</code>, <code>--froid</code>, <code>--sonique</code>, --<code>poison</code>, --<code>maladie</code>, <code>--argent</code>, <code>--drain</code>, <code>--energie</code>&nbsp;: les dégâts sont de type feu, acide, électrique, froid, sonique, poison, maladie, argent, drain ou énergie. Le type spécifie uniquement le dernier <code>--plus</code> précédent cette option, ou si il n'y en a pas, celui des dégâts principaux. Seul le dernier type spécifié est pris en compte (pas de type multiple pour l'instant). Le type affecte différents attributs, et aussi la couleur d'affichage des dégâts.</li>
@@ -385,7 +386,7 @@
                   <li><code>--limiteParJour <i>l</i></code> : limite le nombre d'utilisations de cette attaque à <i>l</i> fois par jour. On peut préciser un nom après <i>l</i>, qui va correspondre à une ressource pouvant être partagée avec d'autres attaques ou d'autres effets (voir <code>!cof-effet-temp</code>). Par défaut, le nom de cette ressource est le label de l'attaque.</li>
                   <li><code>--limiteParCombat</code> : même effet que la limite par jour. Si aucun argument n'est donné, la limite est de une fois par combat.</li>
                   <li><code>--munition <i>nom</i> <i>taux</i></code> : l'attaque utilise des munitions dont on garde le compte. Le nombre de munitions doit être inscrit dans un attribut <code>munition_<i>nom</i></code>. <i>nom</i> ne doit pas contenir de blanc, mais à l'affichage les <code>_</code> seront remplacés par des blancs. La valeur courante de l'attribut est le nombre qu'il reste sur le personnage, alors que le maximum contient ce qu'il a plus ce qu'il peut récupérer après le combat. À chaque attaque portée, une munition est utilisée, et il y a <i>taux</i> chances (sur 100) que la munition ne soit pas récupérable. En fin de combat, on considère que le personnage récupère toutes les munitions récupérables. Par défaut, le taux de pertes est de 100&nbsp;%. À noter que cette option devrait être inutile pour les armes de jet qui ont déjà leur propre cases sur la fiche.</li>
-                  <li><code>--aussiArmeDeJet <i>L</i></code> : permet d'indiquer que l'arme peut aussi être employée comme arme de jet. <i>L</i> doit être le label de l'attaque avec cette arme en tant qu'arme de jet. Cela permet de tenir compte des cas où l'arme a été lancée et ne peut donc plus être utilisée au corps à corps.</li>
+                  <li><code>--aussiArmeDeJet <i>L</i></code> : permet d'indiquer que l'arme peut aussi être employée comme arme de jet. <i>L</i> doit être le label de l'attaque avec cette arme en tant qu'arme de jet. Cela permet de tenir compte des cas où l'arme a été lancée et ne peut donc plus être utilisée au corps à corps. Si l'arme est utilisée à distance, le script va automatiquement utiliser l'attaque <i>L</i>.</li>
                   <li><code>--seulementDistance</code> : l'attaque ne peut être réalisée que contre un adversaire à distance.</li>
                   <li><code>--vampirise</code> : soigne de tous les DM infligés, quel que soit leur type. Il est possible de soigner un pourcentage des dégâts : pour cela, préciser le pourcentage entier après l'option. Par exemple, pour une attaque qui soigne de la moitié des dégâts infligés, on pourra mettre <code>--vampirise 50</code>. À noter que les soins se cumulent avec les dégâts de type drain.</li>
                   <li><code>--seulementVivant</code> : n'affecte que les cibles vivantes</li>
@@ -411,9 +412,10 @@
                   <li><code>--incrCritCoef <i>n</i></code> : augmente le coefficient des dégâts critiques de <i>n</i> (1 si on ne donne pas d'argument).</li>
                   <li><code>--diviseDmg <i>n</i></code> : divise les dégâts de base par <i>n</i>.</li>
                   <li><code>--maxDmg</code> : l'attaque inflige le maximum de DM permis par les dés de base.</li>
-                  <li><code>--runeDePuissance</code> : l'arme est enchantée avec une rune de puissance permanente. Contrairement à la rune de puissance du forgesort, l'activation est proposée avant de voir les dégâts et maximise tous les dés, pas seulement ceux de base de l'arme.</li>
+                  <li><code>--runeDePuissance</code> : l'arme est enchantée avec une rune de puissance permanente.</li>
                   <li><code>--difficultePVmax</code> : la difficulté du jet d'attaque est le maximum de PVs au lieu de la défense.</li>
                   <li><code>--difficultePV</code> : la difficulté du jet d'attaque est la valeur courante des PVs au lieu de la défense.</li>
+                  <li><code>--difficulteCarac <i>carac</i></code> : la difficulté du jet d'attaque est une des caractéristiques de la cible (sous forme de code à 3 lettres, <code>FOR</code>, <code>DEX</code>, etc). Il est possible de prendre le meilleur de 2 caractéristiques en écrivant les 2 noms collés. Par exemple, pour viser le meilleur de l'intelligence et du charisme, on écrira <code>--difficuletCarac INTCHA</code>.</li>
                   <li><code>--affute</code> : augmente de 1 les chances de crit et +1d6 aux DM des crit.</li>
                   <li><code>--tirDeBarrage</code> : ignore la charge, multiplie les DM par 2 et message pour undo si la cible bouge.</li>
                   <li><code>--tirAveugle</code> : ignore le malus de tir sur une cible invisible.</li>
@@ -426,7 +428,7 @@
                   <li><code>--feinte</code> : L'attaque ne fait pas de dégât, mais un bonus de +5 en attaque est donné sur les attaques du tour suivant sur cette cible (par celui qui a fait la feinte), et +2d6 DM si l'attaque fictive était un succès. Si l'attaquant possède un <a href=#predicats>prédicat</a> <code>bonusFeinte</code>, c'est la valeur de ce prédicat qui est donné en bonus aux attaques, à la place de +5.</li>
                   <li><code>--enveloppe <i>difficulte type expr</i></code> : si l'attaque touche, elle a une chance d'envelopper la cible. Dans ce cas, un bouton apparaît qui lance un test en opposition. Si celui-ci est remporté par l'attaquant, <i>difficulte</i> est la difficulté du test pour se sortir de l'enveloppement, <i>type</i> est soit <code>label</code>, et dans ce cas, <i>expr</i> doit être le label d'une attaque de l'attaquant, soit <code>ability</code>, et dans ce cas, <i>expr</i> est le nom d'une ability de l'attaquant. Cette attaque ou ability est appelée pour les dégâts périodiques. Si les deux derniers arguments sont ommis, le script prend <code>label</code> et le label de l'attaque courante, et si le premier argument est ommis, la difficulté est de 15.</li>
                   <li><code>--etreinte <i>difficulte</i></code> : si l'attaque touche, il y a une chance que l'attaquant puisse s'enrouler autour de la cible. Dans ce cas, un bouton apparaît qui lance un test en opposition. Si celui-ci est remporté par l'attaquant, <i>difficulte</i> est la difficulté du test pour se sortir de l'enveloppement. Cela fera apparaître un bouton pour les dégâts de l'étreinte, par défaut <code>1d6</code>, mais on peut spécifier une autre expression pour les dégâts (optionelle, juste après la difficulté).</li>
-                  <li><code>--ouvertureMortelle</code> : touche automatiquement, fait des dégât comme en cas de critique et multiplie par 2 les dégâts d'attaque sournoise (si il y en as).</li>
+                  <li><code>--ouvertureMortelle</code> : touche automatiquement, fait des dégât comme en cas de critique et multiplie par 2 les dégâts d'attaque sournoise (si il y en a).</li>
                   <li><code>--rate</code>, <code>--touche</code>, <code>--critique</code>, <code>--echecCritique</code>, <code>--pasDEchecCritique</code> : options pour tricher : le résultat des dés donne toujours le résultat voulu.</li>
                   <li><code>--ligne</code> : l'attaque porte sur toutes les cibles à portée, entre l'attaquant et le token ciblé. Si le token ciblé est plus proche que la portée de l'attaque, les tokens derrière le token ciblé sont aussi visés. Pour permettre de viser un point quelconque, on peut utiliser un personnage dédié avec un maximum de 0 pv. À chaque fois qu'un token représentant ce personnage est utilisé comme cible de <code>--ligne</code>, le token est enlevé de la carte.</li>
                   <li><code>--disque <i>r</i></code> : l'attaque porte sur toutes les cibles dans le disque de centre le token ciblé et de rayon <i>r</i>. Comme pour <code>--ligne</code>, on peut utiliser un token cible qui sera supprimé après l'attaque. À noter que l'attaquant lui-même peut prendre des dégâts, sauf si l'attaque a une portée nulle et que l'attaquant se cible lui-même (attaque centrée sur le lanceur).</li>
@@ -851,7 +853,7 @@
               </div>
               <h4 class="text-secondary">Personnages immobilisés</h4>
               <div class="decalage">
-                <p>Par défaut, le script empêche le déplacement des personnages immobilisés (paralysé, étourdi, etc...). Pour permettre de déplacer ces personnages, le script envoie au MJ 2 boutons, l'un pour réaliser le déplacement qui vient d'être annulé, et l'autre pour débloquer le personnage pour un tour (et dans ce cas, toutes les personnes contrôlant le token peuvent le bouger jusqu'au prochain changement de tour.</p>
+                <p>Par défaut, le script empêche le déplacement des personnages immobilisés (paralysé, étourdi, etc...). Pour permettre de déplacer ces personnages, le script envoie au MJ 2 boutons, l'un pour réaliser le déplacement qui vient d'être annulé, et l'autre pour débloquer le personnage pour un tour (et dans ce cas, toutes les personnes contrôlant le token peuvent le bouger jusqu'au prochain changement de tour).</p>
               </div>
               <h4 class="text-secondary" id="escaliers">Escaliers</h4>
               <div class="decalage">
@@ -995,7 +997,7 @@
                 <h4 class="text-secondary">Voie du pourfendeur</h4>
                 <ol>
                   <li><strong>Réflexes félins</strong> : ajouter un <a href=#predicats>prédicat</a> <code>reflexesFelins</code>, avec comme valeur le bonus aux saves et à l'initiative.</li>
-                  <li><strong>Charge</strong> : faire une attaque avec les options <code>--bonusAttaque 2</code> <code>--plus 1d6</code>. Pour gérer plusieurs armes, vous pouvez aussi créer une liste d'actions, comme avec l'attaque sournoise du voleur.</li>
+                  <li><strong>Charge</strong> : faire une attaque avec les options <code>--bonusAttaque 2</code> <code>--plus 1d6</code>. Pour gérer plusieurs armes, vous pouvez utiliser la commande <code>#Attaque -1</code>.</li>
                   <li><strong>Enchaînement</strong> : ajouter un <a href=#predicats>prédicat</a> <code>enchainement</code>.</li>
                   <li><strong>Déchaînement d'acier</strong> : pas de support particulier pour l'instant. Déplacer le token et faire les attaques au passage.</li>
                   <li><strong>Attaque tourbillon</strong> : Faite une action avec le code <code>!cof-attack @{selected|token_id} @{selected|token_id} -1 --auto --disque 5 --saufAllies --limiteParCombat 1 tourbillon</code>.</li>
@@ -1081,7 +1083,7 @@
                 <h4 class="text-secondary">Voie du cavalier</h4>
                 <ol>
                   <li><strong>Fidèle monture</strong> : Faire un personnage pour la monture, avec un <a href=#predicats>prédicat</a> <code>monture</code>. Pour monter sur la monture, on peut utiliser une ability de type token action, avec <code>!cof-en-selle @{selected|token_id} <i>nom_de_la_monture</i></code>. Pour en descendre, il suffit de cliquer à nouveau sur le bouton de l'ability.</li>
-                  <li><strong>Cavalier émérite</strong> : ajuster la DEF de la monture. Ajouter au chevalier un <a href=#predicats>prédicat</a> <code>cavalierEmerite:2</code>.</li>
+                  <li><strong>Cavalier émérite</strong> : Ajouter au chevalier un <a href=#predicats>prédicat</a> <code>cavalierEmerite:2</code>. Pour la défense de la monture, ajouter à cellle-ci un attribut <code>defDeriveeDe</code> de valeur le nom du chevalier (exactement tel qu'il apparaît sur la fiche).</li>
                   <li><strong>Monture magique</strong> : pour les soins automatiques de la nuit, ajouter un <a href=#predicats>prédicat</a> <code>montureMagique</code>.</li>
                   <li>
                     <strong>Charge</strong> : pas de support pour le déplacement, mais
@@ -1109,7 +1111,7 @@
                 <ol>
                   <li><strong>Ignorer la douleur</strong> : Ajouter un <a href=#predicats>prédicat</a> <code>ignorerLaDouleur</code>. Normalement, le script affiche un bouton quand cela est utilisable, mais on peut aussi le déclencher avec <code>!cof-ignorer-la-douleur</code> juste après le coup.</li>
                   <li><strong>Piqures d'insectes</strong> : ajouter un <a href=#predicats>prédicat</a> <code>piquresDInsectes</code>, avec comme valeur le rang dans la voie.</li>
-                  <li><strong>Laissez-le-moi</strong> : pas de support pour restreindre au chef de groupe. On pourraît peut-être utiliser la voie du chef d'armée pour le faire automatiquement ? Pour l'instant, utiliser l'option <code>--plus 1d6</code> contre les leaders.</li>
+                  <li><strong>Laissez-le-moi !</strong> : Ajouter un <a href=#predicats>prédicat</a> <code>laissez-le-moi</code>. Ensuite faire : <code>!cof-set-attribute seulContreTous_leader true --target @{target|token_id}</code> et désigner le leader. On peut par exemple mettre ceci en Token Action pour le Chevalier, ou bien en Macro pour GM uniquement, selon l'envie.</li>
                   <li><strong>Seul contre tous</strong> : Utiliser <code>!cof-effet-temp seulContreTous 1</code> pour se mettre en position. Les actions affichées en cas de riposte seront normalement une attaque avec l'arme en main si il y en a, plus les attaques naturelles cochées sur la liste d'attaque. Si ça ne convient pas, vous pouvez écrire une liste d'actions nommée<code>Ripostes</code> (voir les <a href="#actions_du_tour">actions du tour</a>).</li>
                   <li><strong>Charisme héroïque</strong> : reporter sur la fiche.</li>
                 </ol>
@@ -1145,7 +1147,7 @@
                       <li>Objet de sort : <code>#Attaque Nuée d'insectes --toucher [[@{selected|ATKMAG}]] --pasDeDmg --portee 20 --sortilege --effet nueeDInsectes [[5+@{selected|SAG}]]</code></li>
                     </ul>
                   </li>
-                  <li><strong>Le guetteur</strong> : Créer une compétence <code>perception</code> avec un bonus de 5. Ajouter un personnage et un token pour l'oiseau.</li>
+                  <li><strong>Le guetteur</strong> : Si elle n'est pas déjà présente dans votre handout de compétences, ajouter au druide une compétence <code>perception</code> (valeur 0 pour le moment). Créer un personnage et un token pour l'oiseau. Ajouter au druide un attribut <code>guetteur</code> de valeur le nom exact de l'oiseau (sur la fiche). Ajouter de même un attribut <code>PVPartagesAvec</code> de valeur le nom de l'oiseau. Ajouter aussi à l'oiseau un attribut <code>PVPartagesAvec</code> de valeur le nom du druide. Pour le faire agir en même temps que le druide, ajoutez aussi à l'oiseau un attribut <code>initiativeDeriveeDe</code> de valeur le nom du druide. Pour l'attaque, ajouter sur la fiche une attaque de contact faisant 1d4 DM, avec dans les options <code>--attaqueMagiqueDe <i>nom de personnage du druide</i></code>.</li>
                   <li><strong>Masque du prédateur</strong> : <code>!cof-effet-temp masqueDuPredateur [[5+@{selected|SAG}]] <i>--mana 2</i></code></li>
                   <li><strong>Forme animale</strong> : pas d'autre support que <code>!cof-lancer-sort se transforme en ?{Transformation en ?} <i>--mana 3</i></code></li>
                 </ol>
@@ -1846,10 +1848,10 @@
                 <h4 class="text-secondary">Voie de l'assassin</h4>
                 <ol>
                   <li><strong>Discrétion</strong> : ajouter une compétence discrétion sur la fiche, avec le bon bonus. </li>
-                  <li><strong>Attaque sournoise</strong> : Faire des versions des attaques avec <code>--sournoise <i>n</i></code>, où <i>n</i> est le nombre de dés de l'attaque sournoise. Au MJ de vérifier que les conditions de l'attaque sournoise sont remplies. Le plus pratique pour l'utilisation avec differentes armes, est d'ajouter à la liste des <a href="#actions_du_tour">actions du tour</a> une action de titre <code>Attaque sournoise</code> et de code <code>#Attaque -1 --sournoise <i>n</i></code>.</li>
+                  <li><strong>Attaque sournoise</strong> : Ajouter un <a href=#predicats>prédicat</a> <code>attaqueSournoise</code>, de valeur le nombre de dés de l'attaque sournoise. Ensuite, faire des versions des attaques avec <code>--sournoise</code>. Au MJ de vérifier que les conditions de l'attaque sournoise sont remplies. Le plus pratique pour l'utilisation avec différentes armes, est d'ajouter à la liste des <a href="#actions_du_tour">actions du tour</a> une action de titre <code>Attaque sournoise</code> et de code <code>#Attaque -1 --sournoise</code>.</li>
                   <li><strong>Ombre mouvante</strong> : utiliser la commande <code>!cof-ombre-mouvante --fx burst-smoke</code> (la partie <code>--fx burst-smoke</code> peut être omise ou changée, bien sûr). Le script ne gère pas encore l'attaque sournoise qui peut suivre, au MJ de surveiller l'initiative du voleur par rapport à sa cible.</li>
                   <li><strong>Surprise</strong> : ajouter un <a href=#predicats>prédicat</a> <code>immunite_surpris</code>. Pour le reste, à gérer par le MJ.</li>
-                  <li><strong>Ouverture mortelle</strong> : ajouter les options <code>--ouvertureMortelle --limiteParCombat 1 ouvertureMortelle --sournoise <i>rang</i></code>.</li>
+                  <li><strong>Ouverture mortelle</strong> : ajouter les options <code>--ouvertureMortelle --limiteParCombat 1 ouvertureMortelle --sournoise</code>. Selon les <a href="https://www.black-book-editions.fr/forums.php?topic_id=4800&tid=477673#msg477673">indications de Kegron</a>, ne mettre la partie <code>--sournoise</code> que si les conditions s'y prêtent (dans le dos, surprise, acrobatie, etc).</li>
                 </ol>
                 <h4 class="text-secondary">Voie de l'aventurier</h4>
                 <ol>
@@ -1877,6 +1879,7 @@
                   <li><strong>Esquive fatale</strong> : Ajouter un <a href=#predicats>prédicat</a> <code>esquiveFatale</code> (on peut y associer un nombre pour permettre plus d'une utilisation par combat). En combat, si la situation s'y prête, un bouton permettre d'utiliser l'esquive. Ne pas oublier de définir les alliés du voleur pour que la vérification des cibles soit correcte.</li>
                   <li><strong>Frappe chirurgicale</strong> : ajouter un <a href=#predicats>prédicat</a> <code>frappeChirurgicale</code>.</li>
                   <li><strong>Ambidextrie</strong> : pas géré par le script.</li>
+                  <li><strong>Botte secrète</strong> : ajouter un <a href=#predicats>prédicat</a> <code>botteSecrete</code>. Ne pas oublier le prédicat <code>attaqueSournoise<code> qui doit être associé au nombre de dés des attaques sournoises du voleur.</li>
                 </ol>
               </div>
             </div>
@@ -1980,6 +1983,12 @@
               </div>
               <h3 class="text-info" id="Prestige">4.2 Voies de prestige et capacités épiques</h3>
               <div class="decalage">
+                <h4 class="text-secondary">Voie de l'archange</h4>
+                <ol>
+                  <li><strong>Forme d'ange</strong> : <code>!cof-effet-temp formeDAnge [[5+@{selected|SAG}]] --mana 0</code>. Le MJ devra gérer l'aspect en vol.</li>
+                  <li><strong>Soins améliorés</strong> : utiliser un prédicat <code>voieDeLArchange</code> avec comme valeur le rang dans la voie.</li>
+                  <li><strong>Épée céleste</strong> : rien à faire si le prédicat <code>voieDeLArchange</code> a la bonne valeur. Si le personnage n'a pas déjà la capacité Arme d'argent, ajouter une attaque pour cette arme, avec le modificateur <code>armeDArgent</code> et l'option <code>--si etat armeDArgent</code>.</li>
+                </ol>
                 <h4 class="text-secondary">Voie de l'expert du combat</h4>
                 <ol>
                   <li><strong>Expertise du combat</strong> : créer un prédicat <code>expertDuCombat</code> avec comme valeur le rang dans la voie. La commande <code>!cof-statut</code> donne un état des lieux des dés dépensés pendant le combat/le tour. Les dés ne sont actifs qu'en combat et sont réinitialisés à l'utilisation de <code>!cof-fin-combat</code>. L'implémentation part du principe que l'augmentation de la DEF doit être décidée avant le jet de dommages, comme une esquive acrobatique par exemple.</li>
@@ -2018,6 +2027,12 @@
                 <h4 class="text-secondary">Voie du guérisseur</h4>
                 <ol>
                   <li><strong>Premiers soins</strong> : ajouter un <a href=#predicats>prédicat</a> <code>voieDuGuerisseur</code> de valeur le rang dans cette voie pour le bonus aux soins de la Voie des soins. Pas encore de support complet pour le sort, faire simplement <code>!cof-soin @{selected|token_id} @{target|token_id} 2d6+@{selected|SAG}</code>.</li>
+                </ol>
+                <h4 class="text-secondary">Voie du héro</h4>
+                <ol>
+                  <li><strong>Destin héroïque</strong> : ajouter le bonus au bonus de points de chances sur la fiche (utiliser la roue crantée à droite de la section CHANCE de la fiche).</li>
+                  <li><strong>Ténacité</strong> : ajouter un <a href=#predicats>prédicat</a> <code>tenacite</code>.</li>
+                  <li><strong>Homme de la situation</strong> : pas de support.</li>
                 </ol>
                 <h4 class="text-secondary">Voie du porteur de bouclier</h4>
                 <ol>
@@ -2189,6 +2204,7 @@
                   <li><strong>Noirbois</strong> : À l'entrée dans des ténèbres magiques, utiliser la commande <code>!cof-tenebres-magiques</code>. À la sortie ou la fin de ces ténèbres, faire <code>!cof-tenebres-magiques fin</code>. Pour allumer la fiole de lumière, sélectionner un token est faire <code>!cof-fiole-de-lumiere <i>d</i></code> où <i>d</i> est la distance à laquelle la fiole éclaire. On peut ajouter un troisième argument, qui est la distance à laquelle la lumière devient moins brillante (pas d'effet sur la mécanique de jeu). Pour éteindre la lumière, il faut mettre utiliser <code>!cof-fiole-de-lumiere fin</code>.</li>
                   <li><strong>Noyade (plante carnivore)</strong> : il existe un effet de combat nommé <code>noyade</code> (pas de durée, il dure par défaut tout le combat) qui fait perdre 1d6 PV par tour, sauf à réussir un test de CON difficulté 15, et qui impose un malus de -3 aux attaques et aux DMs.</li>
                   <li><strong>Ondes corruptrices</strong> : Pour simplement le premier effet, faire <code>!cof-effet ondesCorruptrices 2</code>, puis pour augmeter l'effet <code>!cof-effet ondesCorruptrices +2</code>. L'effet peut être annulé avec <code>!cof-effet ondesCorruptrices 0</code>. Pour le porteur du bouclier de Grabuge, on peut mettre un <a href=#predicats>prédicat</a> <code>porteurDuBouclierDeGrabuge</code>.</li>
+                  <li><strong>Paralysie des goules</strong> : ajouter à l'attaque de morsure <code>--effet paralyseGoule [[1d6]] --save CON 10</code>.</li>
                   <li><strong>Piqûres d'insectes</strong> : Rajouter un <a href=#predicats>prédicat</a> <code>piquresDInsectes</code> avec comme valeur la résistance aux dégâts à distance appropriée</li>
                   <li>
                     <strong>Poison</strong> : pour enduire une arme de label <i>L</i> de poison, utiliser <code>!cof-enduire-poison <i>L type force save</i></code>. Pour l'instant, <i>type</i> ne peut être que <code>rapide</code>, et <i>force</i> est une expression pour les dégâts (typiquement, <code>2d6</code> pour un poison rapide). <i>save</i> est la difficulté du jet de CON pour résister au poison. On peut rajouter deux arguments optionnels :
@@ -2206,6 +2222,7 @@
                   <li><strong>Saisir et broyer</strong> : ajouter un <a href=#predicats>prédicat</a> <code>saisirEtBroyer</code></li>
                   <li><strong>Sang de fer</strong> : ajouter un <a href=#predicats>prédicat</a> <code>sangDeFerIf</code>.</li>
                   <li><strong>Sans esprit</strong> : ajouter un <a href=#predicats>prédicat</a> <code>sansEsprit</code> permet la réussite automatique des jets de résistance basés sur INT, SAG ou CHA.</li>
+                  <li><strong>Sphère de feu</strong> : <code>!cof-sphere-de-feu</code>.</li>
                   <li><strong>Vulnérabilité aux coups critiques</strong> : si la créature possède un <a href=#predicats>prédicat</a> <code>vulnerableCritique</code>, le script interprète la valeur de ce prédicat comme les chances (sur 100) qu'un coup critique tue directment la créature. Par exemple, la valeur sera de 25 pour un esprit du givre.</li>
                 </ul>
               </div>
