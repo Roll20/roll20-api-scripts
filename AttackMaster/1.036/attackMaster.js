@@ -89,9 +89,11 @@
  * v1.035  10/11/2021  Updated getThac0() to be getTokenValue() and work for token AC 
  *                     and HP as well.  Added flag to return the found object 
  *                     (or undefined) so that name of field can be obtained for targeting
- * v1.036  15/11/2021  Reduced fields object to only include fields used in AttackMaster API,
+ * v1.036  18/12/2021  Reduced fields object to only include fields used in AttackMaster API,
  *                     and added API handshaking to check if other APIs are loaded
  *                     Fixed DM-controlled NPC/creature saving throws to not be shown to Players
+ *                     Give a feedback message to the player when changing weapon, as 
+ *                     updating the weapon tables takes some time
  */
  
 var attackMaster = (function() {
@@ -124,8 +126,8 @@ var attackMaster = (function() {
 	 */
 
 	var fields = Object.freeze({
-		feedbackName:       'attackMaster',
-		feedbackImg:        'https://s3.amazonaws.com/files.d20.io/images/11514664/jfQMTRqrT75QfmaD98BQMQ/thumb.png?1439491849',
+		feedbackName:       'AttackMaster',
+		feedbackImg:        'https://s3.amazonaws.com/files.d20.io/images/52530/max.png?1340359343',
 		defaultTemplate:    '2Edefault',
 		commandMaster:		'!cmd',
 		roundMaster:		'!rounds',
@@ -345,6 +347,7 @@ var attackMaster = (function() {
 		noChar: '/w "gm" &{template:2Edefault} {{name=^^tname^^\'s\nMagic Items Bag}}{{desc=^^tname^^ does not have an associated Character Sheet, and so cannot attack}}',
 		cursedSlot: '&{template:2Edefault} {{name=^^cname^^\'s\nMagic Item Bag}}{{desc=Oh what a shame.  No, you can\'t overwrite a cursed item with a different item.  You\'ll need a *Remove Curse* spell or equivalent to be rid of it!}}',
         cursedItem: '&{template:2Edefault} {{name=^^cname^^\'s\nMagic Item Bag}}{{desc=Oh no!  You try putting this away, but is seems to be back where it was...  Perhaps you need a *Remove Curse* spell or equivalent to be rid of it!}}',
+		PleaseWait: '**Please wait...** - processing is taking a while',
 	});
 	
 	var MenuState = Object.freeze({
@@ -1668,7 +1671,7 @@ var attackMaster = (function() {
 		log(`-=> attackMaster v${version} <=-`);
 		
 		// Handshake with other APIs to see if they are loaded
-//		setTimeout( cmdMasterRegister, 4000 );
+		setTimeout( cmdMasterRegister, 4000 );
 		setTimeout( () => issueHandshakeQuery('magic'), 4000);
 		setTimeout( () => issueHandshakeQuery('money'), 4000);
 		setTimeout( () => updateHandouts(true,findTheGM()), 4000);
@@ -2469,26 +2472,34 @@ var attackMaster = (function() {
 			return {dB: rootDB, obj: undefined, ct: undefined};
         }
 	    
-        var dBname,
-			ctObj,
-			magicDB, magicName,
-            abilityObj = filterObjs(function(obj) {
-							if (obj.get('type') != 'ability') return false;
-							if (obj.get('name').toLowerCase().replace(reIgnore,'') != abilityName) return false;
-							if (!(magicDB = getObj('character',obj.get('characterid')))) return false;
-							magicName = magicDB.get('name').toLowerCase();
-                           if ((magicName.indexOf(rootDB) !== 0) || (/\s*v\d*\.\d*/i.test(magicName))) return false;
-							if (!dBname) dBname = magicName;
-							return true;
-						});
+        var dBname, ctObj, found = false,
+			magicDB, magicName, abilityObj = [];
+
+		filterObjs(function(obj) {
+			if (found) return false;
+			if (obj.get('type') != 'ability') return false;
+			if (obj.get('name').toLowerCase().replace(reIgnore,'') != abilityName) return false;
+			if (!(magicDB = getObj('character',obj.get('characterid')))) return false;
+			magicName = magicDB.get('name');
+			if ((magicName.toLowerCase().indexOf(rootDB) !== 0) || (/\s*v\d*\.\d*/i.test(magicName))) return false;
+			if (!dbNames[magicName.replace(/-/g,'_')]) {
+				dBname = magicName;
+				found = true;
+			} else if (!dBname) dBname = magicName;
+			abilityObj[0] = obj;
+			return true;
+		});
 		if (!abilityObj || abilityObj.length === 0) {
 			if (!silent) sendError('Not found ability '+abilityName);
 			dBname = rootDB;
 		} else {
-			ctObj = filterObjs(function(obj) { 
+			found = false;
+			// Must use a filterObjs() as ignoring reIgnore character set
+			ctObj = filterObjs(function(obj) {
+						if (found) return false;
 						if (obj.get('type') != 'attribute') return false;
 						if (obj.get('name').toLowerCase().replace(reIgnore,'') != ('ct'+abilityName)) return false;
-						return (obj.get('characterid') == abilityObj[0].get('characterid'));
+						return found = (obj.get('characterid') == abilityObj[0].get('characterid'));
 			});
 			if (!silent && (!ctObj || ctObj.length === 0)) {sendError('Can\'t find ct-'+abilityName+' in '+dBname);}
 		}
@@ -5150,6 +5161,27 @@ var attackMaster = (function() {
 		return;
 	};	
 			
+	/**
+	 * The processing to change weapon is lengthy as it has to do
+	 * a lot of searching & updating of tables.  So send a
+	 * "please wait..." message to the Player and a time-delayed
+	 * call to the processing to allow the screen to update before
+	 * hogging the processing power...
+	 */
+	 
+	var handleChangeWeapon = function( args, isGM ) {
+
+		// Give some feedback to the user that something is happening
+		
+		sendResponse( getCharacter(args[1]), "**Please Wait... Updating weapon tables" );
+
+		// delay the call to the processing of the weapon change to
+		// allow Roll20 to update the chat window
+		
+		setTimeout( () => handleChangeWeaponDelayed( args, isGM ), 100 );
+		return;
+	}
+
 	/*
 	 * Handle the selection of weapons when the character is
 	 * changing weapons.  Delete all weapons in the weapons,
@@ -5157,7 +5189,7 @@ var attackMaster = (function() {
 	 * than trying to discover which remain & which to remove)
 	 */
 
-	var handleChangeWeapon = function( args, isGM ) {
+	var handleChangeWeaponDelayed = function( args, isGM ) {
 	    
 		var tokenID = args[1],
 			selection = args[2],
@@ -5170,7 +5202,7 @@ var attackMaster = (function() {
 			values = initValues( 'InHand_' ),
 			weapon, trueWeapon, weaponSpecs, handedness, item, i, hand, index;
 			
-        // First, check there are enough rows in the InHand table
+		// First, check there are enough rows in the InHand table
 		
 		InHandTable = checkInHandRows( charCS, InHandTable, row );
 
@@ -5237,8 +5269,8 @@ var attackMaster = (function() {
 		sendAPImacro(curToken,'',trueWeapon,'-inhand');
 		
 		doCheckAC( [tokenID], isGM, [], true );
-
 		makeChangeWeaponMenu( args, isGM, 'Now using '+weapon+'. ' );
+
         return;
 	}
 	
@@ -6493,7 +6525,7 @@ var attackMaster = (function() {
 		if (msg.type !=='api' || args.indexOf('!attk') !== 0)
 			{return;}
 
-        sendDebug('attackMaster called');
+		sendDebug('attackMaster called');
 		state.attackMaster.attrsToCreate = {};
 
 		args = args.split(' --');
@@ -6611,6 +6643,7 @@ var attackMaster = (function() {
 				sendError('attackMaster JavaScript '+e.name+': '+e.message);
 			}
     	});
+		return;
 	};
 
 	 
@@ -6627,7 +6660,13 @@ var attackMaster = (function() {
 				+ ' --register Attack_roll|Do an attack where player rolls the dice|attk|~~attk-roll|`{selected|token_id}'
 				+ ' --register Attack_target|Do an attack with full target statistics (GM-only)|attk|~~attk-target|`{selected|token_id}'
 				+ ' --register Attack_menu|Display a menu of attack functions|attk|~~menu|`{selected|token_id}'
-				+ ' --register Other_actions|Display a menu of Other Actions|attk|~~other-menu|`{selected|token_id}';
+				+ ' --register Other_actions|Display a menu of Other Actions|attk|~~other-menu|`{selected|token_id}'
+				+ ' --register Ammo|Retrieve or acquire ammo|attk|~~ammo|`{selected|token_id}'
+				+ ' --register Save|Make and maintain saving throws|attk|~~save|`{selected|token_id}'
+				+ ' --register Change_weapon|Change weapons in-hand|attk|~~weapon|`{selected|token_id}'
+				+ ' --register Check_armour|Check and display current armour class|attk|~~checkac|`{selected|token_id}'
+				+ ' --register Edit_weapons|Add and remove weapons owned|attk|~~edit-weapons|`{selected|token_id}'
+				+ ' --register Edit_armour|Add and remove armour owned|attk|~~edit-armour|`{selected|token_id}';
 		sendAttkAPI( cmd );
 		return;
 	};
