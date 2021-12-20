@@ -94,12 +94,11 @@
  * v1.037  30/11/2021  Bug fixes for when using with manually created Character Sheet
  * v1.038  03/12/2021  Added all Roll Template names to fields object and fixed illegal
  *                     characters in handout text
- * v1.039  18/12/2021  Found & fixed errors in command registration with CommandMaster API
  */
 
 var initMaster = (function() {
 	'use strict'; 
-	var version = 1.039,
+	var version = 1.038,
 		author = 'RED',
 		pending = null;
 
@@ -1101,13 +1100,16 @@ var initMaster = (function() {
 		    controlledBy = controlledBy.split(',');
 			viewerID = state.roundMaster.viewer.is_set ? (state.roundMaster.viewer.pid || null) : null;
             players = controlledBy.filter(id => id != viewerID);
+//            log('Init sendResponse: character is '+charCS.get('name')+', viewerID='+viewerID+', controlledBy='+controlledBy+', players.length='+players.length);
 			if (players.length) {
     		    isPlayer = _.some( controlledBy, function(playerID) {
         		    players = findObjs({_type: 'player', _id: playerID, _online: true});
         		    return (players && players.length > 0);
         		});
+//			    log('Init sendResponse: has players other than viewer, online='+isPlayer);
 			};
 		};
+//		log('Init sendResponse: !charCS='+!charCS+', controlledBy.length='+controlledBy.length+', !isPlayer='+!isPlayer);
         if (controlledBy.includes('all')) {
             to = '';
         } else if (!charCS || controlledBy.length == 0 || !isPlayer) {
@@ -1235,6 +1237,7 @@ var initMaster = (function() {
 		if (_.isUndefined(defaultVal)) {
 			defaultVal=attrDef[2];
 		}
+//        log('getTable table is '+rowName);
 		tableObj.character=character;
 		tableObj.table=tableDef;
 		tableObj.column=col;
@@ -1265,14 +1268,17 @@ var initMaster = (function() {
                     .union(createOrderKeys)
                     .value();
 
+//			log('getTable setting sortKeys');
 			if (_.isUndefined(tableObj.sortKeys)) {
 				tableObj.sortKeys = sortOrderKeys;
 			} else {
 				tableObj.sortKeys = tableObj.sortKeys.concat(_.difference(sortOrderKeys,tableObj.sortKeys));
 				if (_.some(sortOrderKeys, (e,k) => e !== tableObj.sortKeys[k])) sendDebug('Warning: table '+tableDef[0]+', attr '+attrDef[0]+' is not fully aligned');
 			}
+//            log('getTable updating attrs length '+_.size(attrs));
 			tableObj[name].attrs=attrs;
         } else {
+//            log('getTable initialising attrs '+(_.isUndefined(tableObj.sortKeys)?'and sortKeys':''));
             tableObj[name].attrs=[];
             if (_.isUndefined(tableObj.sortKeys)) {
                 tableObj.sortKeys = [];
@@ -1309,16 +1315,20 @@ var initMaster = (function() {
 			_.each( fields, (elem,key) => {
 				if (key.startsWith(tableInfo[setupType].fieldGroup)
 					&& ['current','max'].includes(String(elem[1]).toLowerCase())) {
+//                    log('getAllTables saving rows['+key+']');
 					rows[key]=elem;
 					if (_.isUndefined(tableInfo[setupType].values[elem[0]])) {
+//					    log('getAllTables initialising values['+elem[0]+']');
 						tableInfo[setupType].values[elem[0]] = {current:'',max:''};
 					}
+//				    log('getAllTables setting values['+elem[0]+'].'+elem[1]+' to '+(elem[2] || ''));
 					tableInfo[setupType].values[elem[0]][elem[1]] = elem[2] || '';
 				};
 				return;
         	});
 			_.each(rows, (elem,key) => {
 				tableInfo[setupType] = getTable( charCS, tableInfo[setupType], tableInfo[setupType].table, elem, c, elem[2] );
+//			    log('getAllTables got table '+setupType+'.'+elem[0]+', property='+elem+', defaultVal='+tableInfo[setupType][elem[0]].defaultVal);
 			});
 		});
 
@@ -1335,6 +1345,7 @@ var initMaster = (function() {
 	 */
 	 
 	var tableLookup = function( tableObj, attrDef, index, defVal, retObj ) {
+//        log('tableLookup tableObj:'+!!tableObj+', attrDef:'+attrDef[0]+','+attrDef[1]+', index:'+index+', retObj:'+retObj);
         var val, name = attrDef[0];
         if (_.isUndefined(retObj)) {
 			retObj=false;
@@ -1344,32 +1355,43 @@ var initMaster = (function() {
 		if (_.isUndefined(defVal)) {
 			defVal=true;
 		}
+//        log('tableLookup table '+name+' row '+index+' on entry defVal='+defVal+', retObj='+retObj);
 		if (tableObj[name]) {
+//		    log('tableLookup found tableObj '+tableObj.table[0]+' name '+name+' with a standard default value of '+tableObj[name].defaultVal);
 			let property = (retObj === true) ? null : ((retObj === false) ? attrDef :  retObj);
 			defVal = (defVal===false) ? (undefined) : ((defVal===true) ? tableObj[name].defaultVal[attrDef[1]] : defVal);
+//			log('tableLookup table['+name+'] row '+index+' calculated defVal is '+defVal);
 			if (index>=0) {
 				let attrs = tableObj[name].attrs,
 					sortOrderKeys = tableObj.sortKeys;
 				if (index<sortOrderKeys.length && _.has(attrs,sortOrderKeys[index])) {
 					if (_.isUndefined(property) || _.isNull(property) || !property || !property[1] || _.isUndefined(attrs[sortOrderKeys[index]])) {
+//					    log('tableLookup table '+name+' property='+property+', object isUndefined='+_.isUndefined(attrs[sortOrderKeys[index]]));
 						return attrs[sortOrderKeys[index]];
 					} else {
 						val = attrs[sortOrderKeys[index]].get(property[1]);
 						if (_.isUndefined(val)) {
+//						    log('tableLookup table '+name+' property '+property[0]+' undefined, setting to '+defVal+', table default is '+tableObj[name].defaultVal);
 						    val = defVal;
 						};
+//						log('tableLookup table '+name+' row '+index+' returning '+val);
 						return val;
 					}
 				}
+//				log('tableLookup '+name+' index '+index+' beyond length '+sortOrderKeys.length+' or not in attrs');
 				return defVal;
 			} else if (!_.isUndefined(property) && !_.isNull(property)) {
+//			    log('tableLookup '+name+' first row static, index:'+index+', property.length:'+property.length+', property:'+property);
 				val = attrLookup( tableObj.character, property );
 				if ( _.isUndefined(val)) {
+//				    log('tableLookup table '+name+' property '+property[0]+' undefined, setting to '+defVal+', table default is '+tableObj[name].defaultVal);
 				    val = defVal;
 				}
 				return val;
 			}
 		}
+		
+//		log('tableLookup table '+name+' row '+index+' drop through returning undefined');
 		return undefined;
 	}
 
@@ -1388,6 +1410,7 @@ var initMaster = (function() {
 				attrValue = tableObj[name].defaultVal;
 			}
     		if (r < 0) {
+//    		    log('tableSet r<0 setting '+attrDef[0]+' to '+attrValue);
 				let attrObj = attrLookup( tableObj.character, [attrDef[0], null], null, null, null, caseSensitive );
 				if (!attrObj) attrObj = createObj( 'attribute', {characterid:tableObj.character.id, name:attrDef[0] });
 				attrObj.set(attrDef[1],attrValue);
@@ -1398,10 +1421,13 @@ var initMaster = (function() {
 				value = {},
 				rowObj;
 			    
+//			log('attrDef = '+attrDef);
+//			log('tableSet r='+r+', sok.length='+sortOrderKeys.length);
 			if (r<sortOrderKeys.length && !_.has(attrs,sortOrderKeys[r])) {
 				let finalName = tableObj.table[0]+tableObj.column+'_'+sortOrderKeys[r]+'_'+attrDef[0]+tableObj.column;
     	        value = tableObj.values[attrDef[0]] || {current:'', max:''};
     			value[attrDef[1]]=String(attrValue);
+//				log('tableSet create obj r='+r+', length='+sortOrderKeys.length+', _.has(attrs[sok[r]])='+_.has(attrs,sortOrderKeys[r])+', trying to set '+finalName+','+attrDef[1]+' to '+attrValue);
 				rowObj = createObj( "attribute", {characterid: tableObj.character.id, name: finalName});
 				rowObj.set(value);
 				tableObj[name].attrs[sortOrderKeys[r]] = rowObj;
@@ -1411,6 +1437,7 @@ var initMaster = (function() {
 										&& attrDef[1]
 										&& !_.isUndefined(attrs[sortOrderKeys[r]])) {
 				attrs[sortOrderKeys[r]].set(attrDef[1],String(attrValue));
+//	            log('tableSet able to set '+tableObj.table[0]+' row '+r+' '+attrDef+' to '+attrs[sortOrderKeys[r]].get(attrDef[1])+', should be'+attrValue);
 			} else {
 				log('tableSet not been able to set '+tableObj.table[0]+tableObj.column+'_$'+r+'_'+attrDef[0]+tableObj.column+' "'+attrDef[1]+'" to '+attrValue);
 				sendError('initMaster not able to save to '+tableObj.table[0]+' table row '+r);
@@ -1471,11 +1498,14 @@ var initMaster = (function() {
 			throw {name:'magicMaster Error',message:'undefined addTable fieldGroup'};
 		}
 		    
+//	    log('addTableRow called, tableObj.table='+tableObj.table[0]+', index='+index+', fieldGroup='+fieldGroup+', table '+(fieldGroup+'name')
+//	                    +', value='+tableLookup( tableObj, fields[fieldGroup+'name'], index, false ));
 		if ((index < 0) || !_.isUndefined(tableLookup( tableObj, fields[fieldGroup+'name'], index, false ))) {
 			_.each( list, (elem,key) => {
 			    if (_.isUndefined(elem.attrs)) return;
 				currentVal = (!values || _.isUndefined(values[key])) ? elem.defaultVal['current'] : values[key]['current'];
 				maxVal = (!values || _.isUndefined(values[key])) ? elem.defaultVal['max'] : values[key]['max'];
+//				log('addTableRow index='+index+' static or exists, setting '+key+' to be '+newVal);
 				tableObj = tableSet( tableObj, [key,'current'], index, currentVal );
 				tableObj = tableSet( tableObj, [key,'max'], index, maxVal );
 			});
@@ -1484,12 +1514,14 @@ var initMaster = (function() {
 			    namePt1 = tableObj.table[0]+tableObj.column+'_'+rowObjID+'_';
 			_.each( list, (elem,key) => {
 			    if (_.isUndefined(elem.attrs)) return;
+//				log('addTableRow found elem '+key);
 				rowObj = createObj( "attribute", {characterid: tableObj.character.id, name: (namePt1+key+tableObj.column)} );
 				if (!values || _.isUndefined(values[key])) {
 					newVal = elem.defaultVal;
 				} else {
 					newVal = values[key];
 				}
+//				log('addTableRow creating elem[0] '+key+', newVal.current '+newVal.current+' max '+newVal.max+'');
 				rowObj.set(newVal);
 				tableObj[key].attrs[rowObjID] = rowObj;
 				tableObj.sortKeys[index] = rowObjID;
@@ -1513,6 +1545,7 @@ var initMaster = (function() {
 								values[elem[0]] = {current:'',max:''};
 							}
 							values[elem[0]][elem[1]] = elem[2] || '';
+//							log('initValues values['+elem[0]+'] initialised to '+values[elem[0]][elem[1]]);
 						});
         return values;
 	};
@@ -1556,6 +1589,7 @@ var initMaster = (function() {
         if(match){
             let index=match[2],
 				tableObj = getTable(character,{},tableDef,attrDef,c,caseSensitive);
+//			if (_.isNull(tableDef)) {log('attrLookup tableLookup for '+attrDef;}
 			return tableLookup(tableObj,attrDef,index,false,!attrDef[1]);
 		} else {
 			let attrObj = findObjs({ type:'attribute', characterid:character.id, name: name}, {caseInsensitive: !caseSensitive});
@@ -1579,24 +1613,30 @@ var initMaster = (function() {
 	
 	var setAttr = function( character, attrDef, attrValue, tableDef, r, c, caseSensitive ) {
 	    
+//	    if(_.isUndefined(attrDef)) {log('setAttr attrDef:'+attrDef+', attrValue:'+attrValue+', tableDef:'+tableDef+', r:'+r+', c:'+c);}
+	    
 		var name, attrObj, match;
 
 	    try {
 	        name = attrDef[0];
 	    } catch {
+	        // log('setAttr attrDef is '+attrDef+', attrValue is '+attrValue);
 	        return undefined;
 	    }
 		
 		if (tableDef && (tableDef[1] || r >= 0)) {
 			c = (c && (tableDef[1] || c != 1)) ? c : '';
 			name = tableDef[0] + c + '_$' + r + '_' + attrDef[0] + c;
+//            log('setAttr: table:'+tableDef[0]+', r:'+r+', c:'+c+', name:'+name);
 		} else {
+//            log('setAttr: name:'+attrDef);
 			name = attrDef[0];
 		}
 		match=name.match(/^(repeating_.*)_\$(\d+)_.*$/);
         if(match){
             let index=match[2],
 				tableObj = getTable(character,{},tableDef,attrDef,c,caseSensitive);
+//			if (_.isNull(tableDef)) {log('attrLookup tableLookup for '+tableObj.property);}
 			if (tableObj)
 				tableObj = tableSet(tableObj,attrDef,r,attrValue);
 			attrObj = tableLookup(tableObj,attrDef,r,false,true);
@@ -1604,11 +1644,14 @@ var initMaster = (function() {
 		} else {
 			attrObj = attrLookup( character, [name, null], null, null, null, caseSensitive );
 			if (!attrObj) {
+//				log( 'setAttr: ' + name + ' not found so creating');
 				attrObj = createObj( 'attribute', {characterid:character.id, name:attrDef[0]} );
 			}
+//    		log('setAttr: attrObj.get(name) = '+attrObj.get('name'));
 			if (_.isUndefined(attrDef)) {log('setAttr attrDef corrupted:'+attrDef);return undefined;}
 			sendDebug( 'setAttr: character ' + character.get('name') + ' attribute ' + attrDef[0] + ' ' + attrDef[1] + ' set to ' + attrValue );
 			if (attrDef[3]) {
+			    log('setAttr: setting with worker');
 				attrObj.setWithWorker( attrDef[1], String(attrValue) );
 			} else {
 				attrObj.set( attrDef[1], String(attrValue) );
@@ -1657,7 +1700,7 @@ var initMaster = (function() {
 					let version = note.match(reVersion);
 					version = (version && version.length) ? (parseFloat(version[1]) || 0) : 0;
 					if (version >= obj.version) {
-//					    log('Not updating handout '+obj.name+' as is already version '+obj.version);
+					    log('Not updating handout '+obj.name+' as is already version '+obj.version);
 					    return;
 					}
 					dbCS.set('notes',obj.bio);
@@ -1676,7 +1719,7 @@ var initMaster = (function() {
 	 **/
 	 
 	var issueHandshakeQuery = function( api, cmd ) {
-		sendDebug('InitMaster issuing handshake to '+api+((cmd && cmd.length) ? (' for command '+cmd) : ''));
+		log('InitMaster issuing handshake to '+api+((cmd && cmd.length) ? (' for command '+cmd) : ''));
 		var handshake = '!'+api+' --hsq init'+((cmd && cmd.length) ? ('|'+cmd) : '');
 		sendInitAPI(handshake);
 		return;
@@ -1731,6 +1774,7 @@ var initMaster = (function() {
 	 
 	var getPlayerCharList = function( page=false, monster=false ) {
 		
+		log('getPlayerCharList called with page='+page+', monster='+monster);
 		var charID,charCS,controlledBy,
 			nameList = [new Set()];
 			
@@ -1748,6 +1792,7 @@ var initMaster = (function() {
 				.uniq(false,obj => obj.name)
 				.sortBy('name')
 				.value();
+		log('gPCL: got list '+(_.pluck(nameList,'name').join(', ')));
 		return nameList;
 	}
 	
@@ -1785,6 +1830,7 @@ var initMaster = (function() {
 		}
 		
 		if (property == 'current') {
+//		    log('setInitVars setting 2nd weap_num:'+attrLookup( charCS, fields.Weapon_num )+', action:'+attrLookup( charCS, fields.Init_action ));
 			setAttr( charCS, fields.Weapon_2ndNum, attrLookup( charCS, fields.Weapon_num ) );
 			setAttr( charCS, fields.Init_2ndAction, attrLookup( charCS, fields.Init_action ) );
 			setAttr( charCS, fields.Init_2ndSpeed, attrLookup( charCS, fields.Init_speed ) );
@@ -1795,6 +1841,7 @@ var initMaster = (function() {
 			setAttr( charCS, fields.Init_2nd2Hweapon, attrLookup( charCS, fields.Init_2Hweapon ) );
 		}
 		
+//	    log('setInitVars setting 1st weap_num:'+args[2]+', action:'+args[3]);
 		setAttr( charCS, [fields.Weapon_num[0], property], args[2]);
 		setAttr( charCS, [fields.Init_action[0], property], args[3]);
 		setAttr( charCS, [fields.Init_speed[0], property], args[4]);
@@ -1905,6 +1952,8 @@ var initMaster = (function() {
 			speedMult, attackNum,
 			buildCall;
 			
+//		log('handlePrimeWeapon called, args='+args);
+
 		if (rowIndex > 0) {
 			speedMult = Math.max(parseFloat(attrLookup( charCS, fields.initMultiplier ) || 1), 1);
 		    if (command != BT.RW_PRIME) {
@@ -1939,6 +1988,9 @@ var initMaster = (function() {
 					+ '|0'
 					+ '|0';
 		}
+		
+//		log('handlePrimeWeapon buildCall='+buildCall);
+
 		sendInitAPI( buildCall );
 		return;
 		
@@ -1961,13 +2013,17 @@ var initMaster = (function() {
 			speedMult, attackNum,
 			buildCall;
 			
+//		log('handleSecondWeapon args:'+args+', command='+command);
+			
 		if (rowIndex == rowIndex2)
 			{return;}
 
 		if (parseInt(rowIndex2,10) > 0) {
+//		    log('handleSecondWeapon getting info from rowIndex2='+rowIndex2+' and refIndex2='+refIndex2);
 		    weapon = rowIndex2;
 		    weaponRef = refIndex2;
 		} else {
+//		    log('handleSecondWeapon getting info from rowIndex='+rowIndex+' and refIndex='+refIndex);
 		    weapon = rowIndex;
 		    weaponRef = refIndex;
 		}
@@ -1993,6 +2049,8 @@ var initMaster = (function() {
 				+ '|0'
 				+ '|1'
 				+ '|' + (rowIndex2 > 0 ? rowIndex : rowIndex2);
+				
+//		log('handleSecondWeapon buildCall:'+buildCall);
 				
 		sendInitAPI( buildCall );
 		
@@ -2288,11 +2346,16 @@ var initMaster = (function() {
 			WeaponTable, weapon, dancing, speed, 
 			actionNum, actions, initiative, i;
 
+//		log('handleAllWeapons getting Melee Weapon tables.  hands='+hands+', noDancing='+noDancing);
+			
 		WeaponTable = getTable( charCS, {}, fields.MW_table, fields.MW_name );
 		WeaponTable = getTable( charCS, WeaponTable, fields.MW_table, fields.MW_speed );
 		WeaponTable = getTable( charCS, WeaponTable, fields.MW_table, fields.MW_noAttks );
 		WeaponTable = getTable( charCS, WeaponTable, fields.MW_table, fields.MW_dancing );
 		
+//		log('handleAllWeapons dancing default is '+WeaponTable[fields.MW_dancing[0]].defaultVal[fields.MW_dancing[1]]);
+//		log('handleAllWeapons about to loop on Melee Weapons');
+			
 		do {
 			weapon = tableLookup( WeaponTable, fields.MW_name, row, false );
 			dancing = parseInt(tableLookup( WeaponTable, fields.MW_dancing, row ));
@@ -2305,9 +2368,12 @@ var initMaster = (function() {
 				actionNum = tableLookup( WeaponTable, fields.MW_noAttks, row, '1' );
 				actions = eval(actionNum+'*2*'+speedMult);
 				initiative = base+speed+init_Mod;
+//		log('handleAllWeapons pushing init:'+initiative+', action: with their '+(!!dancing ? 'dancing ' : '')+weapon+', msg: rate '+actionNum+', speed '+speed+', modifier '+init_Mod);
+			
 				attacks.push({init:initiative,ignore:0,action:('with their '+(!!dancing ? 'dancing ' : '')+weapon),msg:(' rate '+actionNum+', speed '+speed+', modifier '+init_Mod)});
 				for (i=(3+(round%2)); i<=actions; i+=2) {
 					initiative += speed;
+//        log('handleAllWeapons pushing init:'+initiative+', action: with their '+(!!dancing ? 'dancing ' : '')+weapon+', msg: rate '+actionNum+', speed '+speed+', modifier '+init_Mod);
 					attacks.push({init:initiative,ignore:0,action:('with their '+(!!dancing ? 'dancing ' : '')+weapon),msg:(' rate '+actionNum+', speed '+speed+', modifier '+init_Mod)});
 				}
 				entry++;
@@ -2315,12 +2381,16 @@ var initMaster = (function() {
 			row++;
 		} while (entry < hands+noDancing);
 		
+//		log('handleAllWeapons Getting Ranged Weapon tables');
+
 		WeaponTable = getTable( charCS, {}, fields.RW_table, fields.RW_name );
 		WeaponTable = getTable( charCS, WeaponTable, fields.RW_table, fields.RW_speed );
 		WeaponTable = getTable( charCS, WeaponTable, fields.RW_table, fields.RW_noAttks );
 		WeaponTable = getTable( charCS, WeaponTable, fields.RW_table, fields.RW_dancing );
 		row = fields.RW_table[1];
 		
+//		log('handleAllWeapons about to start Ranged Weapon loop');
+
 		do {
 			weapon = tableLookup( WeaponTable, fields.RW_name, row, false );
 			dancing = parseInt(tableLookup( WeaponTable, fields.RW_dancing, row ));
@@ -2332,9 +2402,11 @@ var initMaster = (function() {
 				actionNum = tableLookup( WeaponTable, fields.RW_noAttks, row, '1' );
 				actions = eval(actionNum+'*2*'+speedMult);
 				initiative = base+speed+init_Mod;
+//		log('handleAllWeapons pushing init:'+initiative+', action: with their '+(dancing ? 'dancing ' : '')+weapon+', msg: rate '+actionNum+', speed '+speed+', modifier '+init_Mod);
 				attacks.push({init:initiative,ignore:0,action:('with their '+(dancing ? 'dancing ' : '')+weapon),msg:(' rate '+actionNum+', speed '+speed+', modifier '+init_Mod)});
 				for (i=(3+(round%2)); i<=actions; i+=2) {
 					initiative += speed;
+//		log('handleAllWeapons pushing init:'+initiative+', action: with their '+(dancing ? 'dancing ' : '')+weapon+', msg: rate '+actionNum+', speed '+speed+', modifier '+init_Mod);
 					attacks.push({init:initiative,ignore:0,action:('with their '+(dancing ? 'dancing ' : '')+weapon),msg:(' rate '+actionNum+', speed '+speed+', modifier '+init_Mod)});
 				}
 				entry++;
@@ -2347,6 +2419,8 @@ var initMaster = (function() {
 			setAttr( charCS, [fields.Prev_round[0] + tokenID, fields.Prev_round[1]], state.initMaster.round, null, null, null, true );
 			buildMenu( initMenu, charCS, MenuState.DISABLED, args );
 		}
+//		log('handleAllWeapons got all '+(onlyDancing?'dancing':'')+' weapons');
+
 		return attacks;
 	}
 	
@@ -2389,7 +2463,11 @@ var initMaster = (function() {
 			return;
 		}
 		
+		log('handleInitSubmt args:'+args);
+		
 		actions = handleAllWeapons( senderId, charCS, args, base, (rowIndex != -2) );
+
+        log('handleInitSubmit done handleAllWeapons');
 
 		if (rowIndex == 0 && (initMenu == MenuType.COMPLEX || initMenu == MenuType.SIMPLE)) {
 			buildMenu( initMenu, charCS, MenuState.DISABLED, args );
@@ -2433,12 +2511,16 @@ var initMaster = (function() {
 				weapno = attrLookup( charCS, fields.Weapon_num ),
 				actionNum = Math.floor(eval( '2 * '+init_actionnum )),
 				preinit = eval( init_preinit ),
+//				weapSpeed = parseInt( init_speed, 10 ),
 				twoHanded = attrLookup( charCS, fields.Init_2Hweapon ),
 				round = state.initMaster.round;
 			
+//			log('handleInitSubmit get initial vars');
+
 			if (initMenu == MenuType.TWOWEAPONS) {
 				
 				var init_speed2 = parseInt(attrLookup( charCS, fields.Init_2ndSpeed )) || 0,
+//					weapSpeed2 = parseInt( init_speed2, 10 ),
 					init_action2 = attrLookup( charCS, fields.Init_2ndAction ),
 					init_actionnum2 = flags.twoWeapSingleAttk ? (init_Mult + '*1') : attrLookup( charCS, fields.Init_2ndActNum ),
 					actionNum2 = Math.floor(eval( '2 * '+init_actionnum2 )),
@@ -2460,15 +2542,19 @@ var initMaster = (function() {
 			setAttr( charCS, fields.Init_carryPreInit, init_preinit );
 			setAttr( charCS, fields.Init_carry2H, twoHanded );
 			
+//			log('handleInitSubmit done setAttr block');
+			
 			if (init_Done) {
 				return;
 			}
 			
+//			log( 'handleInitSubmit first weapon='+init_action+', second weapon='+init_action2);
 			buildMenu( initMenu, charCS, MenuState.DISABLED, args );
 			if (initMenu != MenuType.TWOWEAPONS) {
 				setAttr( charCS, fields.Weapon_num, -1 );
 				setAttr( charCS, fields.Weapon_2ndNum, -1 );
 			}
+//			log('handleInitSubmit: built menu again');
 
 			if (initMenu != MenuType.TWOWEAPONS || init_speed2 >= init_speed) {
 				
@@ -2529,7 +2615,9 @@ var initMaster = (function() {
 		    if (_.isUndefined(act.init)) {return;}
 			content += ' --addtotracker '+tokenName+'|'+tokenID+'|'+act.init+'|'+act.ignore+'|'+act.action+'|'+act.msg;
 		});
+//		log('handleInitSubmit actions.length+1 is '+(actions.length+1));
 		content += ' --removefromtracker '+tokenName+'|'+tokenID+'|'+(actions.length);
+//		log('handleInitSubmit '+content);
 
 		sendInitAPI( content, senderId );
 		
@@ -2784,8 +2872,10 @@ var initMaster = (function() {
 		for (i = a; i < (fields.MWrows + a); i++) {
 			w = (1 - (a * 2)) + (i * 2);
 			weapName = tableLookup( WeaponTable, fields.MW_name, i, false );
+//			log('makeWeaponButtons i='+i+', weapName='+weapName);
 			if (_.isUndefined(weapName)) {log('makeWeaponButtons MW loop breaking');break;}
 			if (_.isUndefined(weapName)) {break;}
+//			log('makeWeaponButtons name='+weapName+', 2H='+tableLookup( WeaponTable, fields.MW_twoHanded, i )+', dancing='+tableLookup(WeaponTable, fields.MW_dancing, i ));
 			twoHanded = tableLookup( WeaponTable, fields.MW_twoHanded, i ) != 0;
 			dancing = tableLookup(WeaponTable, fields.MW_dancing, i ) != 0;
 			if (showInHand && (weapName != '-') && (show2H || !twoHanded) && !dancing) {
@@ -2798,6 +2888,7 @@ var initMaster = (function() {
 				content += (((w == charButton) || submitted) ? '</span>' : '](!init --button ' + MWcmd + '|' + tokenID + '|' + w + '|' + i + ')');
 			} else if ((weapName != '-') && dancing) {
 				dancingWeapons += '<span style='+(submitted ? design.grey_button : design.green_button)+'>'+weapName+'</span>';
+//				log('makeWeaponButtons adding '+weapName+' to dancingWeapons');
 			}
 		};
 		if (!header) {
@@ -2815,7 +2906,8 @@ var initMaster = (function() {
 		for (i = a; i < (fields.RWrows + a); i++) {
 			w = (2 - (a * 2)) + (i * 2);
 			weapName = tableLookup( WeaponTable, fields.RW_name, i );
-			if (_.isUndefined(weapName)) {break;}
+			if (_.isUndefined(weapName)) {log('makeWeaponButtons MW loop breaking');break;}
+//			log('makeWeaponButtons name='+weapName+', 2H='+tableLookup( WeaponTable, fields.RW_twoHanded, i )+', dancing='+tableLookup(WeaponTable, fields.RW_dancing, i ));
 			twoHanded = tableLookup( WeaponTable, fields.RW_twoHanded, i ) != 0;
 			dancing = tableLookup(WeaponTable, fields.RW_dancing, i ) != 0;
 			if (showInHand && weapName != '-' && (show2H || !twoHanded) && !dancing) {
@@ -2828,12 +2920,14 @@ var initMaster = (function() {
 				content += (((w == charButton) || submitted) ? '</span>' : '](!init --button ' + RWcmd + '|' + tokenID + '|' + w + '|' + i + ')');
 			} else if ((weapName != '-') && dancing && !dancingWeapons.includes('>'+weapName+'<')) {
 				dancingWeapons += '<span style='+design.green_button+'>'+weapName+'</span>';
+//				log('makeWeaponButtons adding '+weapName+' to dancingWeapons');
 			}
 		}
 		if (!header) {
 			content += '\n';
 		}
 		if (dancingWeapons.length) {
+//		    log('makeWeaponButtons adding dancingWeapons to returned string');
 			content += '**Dancing weapons**\nAutomatic Initiative\n' + dancingWeapons;
 		}
 		
@@ -2914,6 +3008,7 @@ var initMaster = (function() {
 		tokenName = curToken.get('name');
 		
 		weaponButtons = makeWeaponButtons( tokenID, -1, false, BT.MELEE, BT.RANGED, false, false );
+		log('makeWeaponMenu weaponButtons = '+weaponButtons);
 
 		content = '&{template:'+fields.defaultTemplate+'}{{name=What is ' + tokenName + ' doing?}}'
 				+ '{{subtitle=Initiative for Weapon Attacks}}';
@@ -2971,6 +3066,8 @@ var initMaster = (function() {
             content,
 			w, rowCount;
 			
+//		log('makePrimeWeaponMenu called');
+            
 		tokenName = getObj( 'graphic', tokenID ).get('name');
 		
 		content = '&{template:'+fields.defaultTemplate+'}{{name=What is ' + tokenName + ' doing?}}'
@@ -3129,12 +3226,19 @@ var initMaster = (function() {
 
 		// set up the shape of the spell book.  This is complicated due to
 		// the 2E sheet L5 MU Spells start out-of-sequence at column 70
+		log('makeSpellMenu: called and about to do shapeSpellBook()');
 		levelSpells = shapeSpellbook( charCS, isMU );
 
 		// build the Spell list
+		log('makeSpellMenu: done shapeSpellBook() and entering loop');
+		
 		for (l = 1; l < levelSpells.length; l++) {
 			r = 0;
+			log('makeSpellMenu: scanning level '+l);
+
             if (levelSpells[l].spells > 0) {
+				log('makeSpellMenu: found '+levelSpells[l].spells+' level '+l+' spells');
+
 				if (l != 1)
 					{content += '\n';}
 				content += '**Level '+l+' spells**\n';
@@ -3143,11 +3247,14 @@ var initMaster = (function() {
 				c = levelSpells[l].base;
 				for (w = 1; (w <= fields.SpellsCols) && (levelSpells[l].spells > 0); w++) {
 					spellName = attrLookup( charCS, fields.Spells_name, fields.Spells_table, r, c );
+					log('makeSpellMenu: showing spell '+buttonID+' which is '+spellName);
 					if (_.isUndefined(spellName)) {
 						levelSpells[l].spells = 0;
+						log('makeSpellMenu: spell undefined so breaking');
 						break;
 					}
 					qty = parseInt(attrLookup( charCS, fields.Spells_castValue, fields.Spells_table, r, c ) || 0);
+					log('makeSpellMenu: qty is '+qty);
 					content += (buttonID == spellButton ? '<span style=' + design.selected_button + '>' : (submitted || qty == 0 ? '<span style=' + design.grey_button + '>' : '['));
 					content += spellName;
 					content += (((buttonID == spellButton) || submitted || !qty) ? '</span>' : '](!init --button ' + (isMU ? BT.MU_SPELL : BT.PR_SPELL) + '|' + tokenID + '|' + buttonID + '|' + r + '|' + c + ')');
@@ -3164,7 +3271,9 @@ var initMaster = (function() {
 			return;
 		}
 		
+		log('makeSpellMenu: about to call makeWeaponButtons()');
 		dancers =  makeWeaponButtons( tokenID, -1, submitted, '', '', true, true, false );
+		log('makeSpellMenu: makeWeaponButtons() returned with dancers.length='+dancers.length);
 
 		content += (dancers.length ? '\n'+dancers : '')
 		        +  MIandPowers( tokenID, submitted ) + '}}'
@@ -3790,6 +3899,12 @@ var initMaster = (function() {
 		}
 
 		
+//		init_carry = parseInt(attrLookup( charCS, 'init-carry', 'current' ));
+//		if (init_carry !== 0) {
+//			doCarryOver( tokenID, charCS, initMenu );
+//			return;
+//		}
+
 		var content = '',
 		    charName = charCS.get('name'),
 			tokenName = curToken.get('name'),
@@ -3798,6 +3913,9 @@ var initMaster = (function() {
 			prevRound = (attrLookup( charCS, [fields.Prev_round[0] + tokenID, fields.Prev_round[1]], true ) || 0),
 			init_submitVal = (changedRound || (prevRound != roundCounter) ? 1 : 0 );
 			
+//		log('doInitMenu: changedRound = '+changedRound+', roundCounter = '+roundCounter+', prevRound = '+prevRound);
+			
+//		setAmmoFlags( charCS );
 		setAttr( charCS, fields.Init_done, 0 );
 		setAttr( charCS, fields.Init_submitVal, init_submitVal );
 
@@ -3829,6 +3947,8 @@ var initMaster = (function() {
 	 
 	var doInitDiceRoll = function( args, msg='' ) {
 		
+//		log('doInitDiceRoll: on entry, state.initMaster.initType = '+state.initMaster.initType);
+
 		var playerRoll = args[0] || NaN,
 			dmRoll = args[1] || NaN,
 			cmd = (args[2] || '').toLowerCase(),
@@ -3859,6 +3979,7 @@ var initMaster = (function() {
 					+ '[Check Tracker Complete](!init --check-tracker roll|'+argStr+')}}';
 		};
 		if (cmd == 'disptoggle') state.initMaster.dispRollOnInit = !state.initMaster.dispRollOnInit;
+		log('doInitDiceRoll: cmd = '+cmd+', dispRollOnInit = '+state.initMaster.dispRollOnInit);
 		content += '{{desc2=['+(state.initMaster.dispRollOnInit ? ('<span style='+design.selected_button+'>Auto-displaying</span>') : 'Auto-display')+'](!init --init '+args[0]+'|'+args[1]+'|dispToggle) on new round}}';
 		
 		if (cmd != 'rounds' || state.initMaster.dispRollOnInit) sendFeedback( content );
@@ -3889,6 +4010,7 @@ var initMaster = (function() {
 			args[1] = state.initMaster.dmRoll;
 		}
 		if (!isNaN(args[1]) && state.initMaster.initType == 'standard') {
+			log('doInitRoll: sending foes roll to roundMaster');
 			sendInitAPI( fields.roundMaster+' --addtotracker Foes|-1|='+args[1]+'|last' );
 		}
 		doInitDiceRoll( args, 'Dice Roll made' );
@@ -3911,6 +4033,7 @@ var initMaster = (function() {
 		
 		state.initMaster.initType = args[0].toLowerCase();
 		args.shift();
+		log('doSetInitType: state.initType = '+state.initMaster.initType);
 		if (args.length) {
 			doInitDiceRoll( args, msg );
 		} else {
@@ -3931,6 +4054,7 @@ var initMaster = (function() {
 			msg = '',
 			curToken, charID, charCS;
 		
+		log('doCharList: called with args='+args.join('|'));
 		switch( listType ) {
 		case 'all':
 			state.initMaster.playerChars = getPlayerCharList();
@@ -3949,16 +4073,21 @@ var initMaster = (function() {
 				if (!(curToken = getObj('graphic',token._id))) return;
 				if (!((charID=curToken.get('represents')).length)) return;
 				if (!(charCS = getObj('character',charID))) return;
+				log('doCharList: found token with name '+curToken.get('name'));
 				//				if (!(charCS.get('controlledby').length)) return;
 				list.push({name:curToken.get('name'),id:curToken.id});
+				log('doCharList: pushed object, length is now '+list.length);
 			});
 			list = _.uniq(list,false,obj => obj.name);
 			state.initMaster.playerChars = _.sortBy(list,'name');
+//			 = _.chain(state.initMaster.playerChars).uniq(false,obj => obj.name).sort('name').value();
+			log('doCharList: removed duplicates, length is now '+state.initMaster.playerChars.length);
 			msg += 'Added all selected tokens';
 			break;
 		default:
 			sendError('Invalid initMaster parameter');
 		};
+		log('doCharList: playerChars = '+_.pluck(state.initMaster.playerChars,'name').join());
 		args.shift();
 		if (args.length) {
 			doInitDiceRoll( args, msg );
@@ -4134,6 +4263,7 @@ var initMaster = (function() {
 					+  '}}';
 //					+ '\n!setattr --name '+names.join()+' --in-game-day|@{Money-Gems-Exp|today}'
 		}
+//		log('doEndOfDay: content='+content);
 		sendFeedback( content );
 		if (rest && restStr.length) sendInitAPI( '!magic '+restStr );
 		return;
@@ -4322,7 +4452,7 @@ var initMaster = (function() {
 						'end-of-day','help','debug'].includes(func.toLowerCase()),
 			cmd = '!'+from+' --hsr init'+((func && func.length) ? ('|'+func+'|'+funcTrue) : '');
 
-		sendDebug('InitMaster recieved handshake query from '+from+((func && func.length) ? (' checking command '+func+' so responding '+funcTrue) : (' and responding')));
+		log('InitMaster recieved handshake query from '+from+((func && func.length) ? (' checking command '+func+' so responding '+funcTrue) : (' and responding')));
 		sendRmAPI(cmd);
 		return;
 	};
@@ -4347,7 +4477,7 @@ var initMaster = (function() {
 		if (func && func.length) {
 			apiCommands[from][func] = funcExists;
 		}
-		sendDebug('InitMaster recieved handshake response from '+from+((func && func.length) ? (' that command '+func+' is '+funcTrue) : (' so it is loaded')));
+		log('InitMaster recieved handshake response from '+from+((func && func.length) ? (' that command '+func+' is '+funcTrue) : (' so it is loaded')));
 		return;
 	}
 
@@ -4366,7 +4496,7 @@ var initMaster = (function() {
 			senderId = msg.playerid,
 			selected = msg.selected,
 			roundsExists = apiCommands.rounds && apiCommands.rounds.exists,
-			isGM = (playerIsGM(senderId) || state.initMaster.debug === senderId);
+			isGM = (playerIsGM(senderId) || state.commandMaster.debug === senderId);
 			
 		if (args.indexOf('!init') !== 0)
 			{return;}
@@ -4391,12 +4521,15 @@ var initMaster = (function() {
 		
 		_.each(args, function(e) {
 			var arg = e, i=arg.indexOf(' '), cmd, argString;
+//			log('CommandMaster processing arg: '+arg);
 			sendDebug('Processing arg: '+arg);
 			
 			cmd = (i<0 ? arg : arg.substring(0,i)).trim().toLowerCase();
 			argString = (i<0 ? '' : arg.substring(i+1).trim());
 			arg = argString.split('|');
 			
+//			log('commandMaster parsed to '+cmd+' '+argString);
+
 			if (!(roundsExists || ['hsq','handshake','hsr','help','debug','isround','button'].includes(cmd))) {
 				sendError('RoundMaster API not found.  InitMaster requires RoundMaster API to be loaded and enabled');
 				return;
@@ -4480,6 +4613,9 @@ var initMaster = (function() {
 	    		case 'buildmenu':
 		    		doBuildMenu(arg);
 					break;
+//	    		case 'disp-weaps':
+//		    		doDispWeaps(arg);
+//					break;
     			case 'help':
     				showHelp();
 					break;
@@ -4513,12 +4649,12 @@ var initMaster = (function() {
 				+ ' --register Do_Initiative|Specify what character will do in current round and roll initiative|init|~~menu|`{selected|token_id}'
 				+ ' --register Complex_Monster_Init|Specify initiative for a Monster that can have both inate and weapon attacks|init|~~monmenu|`{selected|token_id}'
 				+ ' --register Monster_Init|Specify simple monster initiative|init|~~monster|`{selected|token_id}'
-				+ ' --register Wizard_Spell_Init|Specify only wizard spell-casting initiative|init|~~muspell|`{selected|token_id}'
-				+ ' --register Priest_Spell_Init|Specify only priest spell-casting initiative|init|~~prspell|`{selected|token_id}'
-				+ ' --register Powers_Init|Specify only power use initiative|init|~~power|`{selected|token_id}'
-				+ ' --register Magic_Item_Init|Specify only magic item use initiative|init|~~mibag|`{selected|token_id}'
-				+ ' --register Thief_Init|Specify only thief skill initiative|init|~~thief|`{selected|token_id}'
-				+ ' --register Other_Actions_Init|Specify only other actions initiative|init|~~other|`{selected|token_id}';
+				+ ' --register Wizard_Spell_Init|Specify only wizard spell-casting initiative|~~muspell|`{selected|token_id}'
+				+ ' --register Priest_Spell_Init|Specify only priest spell-casting initiative|~~prspell|`{selected|token_id}'
+				+ ' --register Powers_Init|Specify only power use initiative|~~power|`{selected|token_id}'
+				+ ' --register Magic_Item_Init|Specify only magic item use initiative|~~mibag|`{selected|token_id}'
+				+ ' --register Thief_Init|Specify only thief skill initiative|~~thief|`{selected|token_id}'
+				+ ' --register Other_Actions_Init|Specify only other actions initiative|~~other|`{selected|token_id}';
 		sendInitAPI( cmd );
 		return;
 	};
