@@ -1,6 +1,6 @@
 var SafetyToolsAlert = (function() {
 	'use strict';
-	var version = 0.5,
+	var version = 0.51,
 		author = 'James C. (Chuz)',
 		lastUpdated = 'Sep 16 2021';
 
@@ -20,6 +20,7 @@ var SafetyToolsAlert = (function() {
 		}
 
 		log('-=> SafetyToolAlerts v'+version+' loaded <=-');
+		sendChat('Safety Card Alerts', '/w GM **Safety Card Alerts v'+version+' loaded.**');
 	};
 
 	// Handler for when a graphic is added to the table
@@ -94,9 +95,11 @@ var SafetyToolsAlert = (function() {
 			if (args.indexOf('-deckname') === 0) {
 				config.deckname = args.replace('-deckname', '').trim();
 				state.safety_tools_alert.deckname = config.deckname;
+				sendChat('Safety Card Alerts', '/w GM Deck name set to "'+config.deckname+'".');
 			} else if (args.indexOf('-cardname_prefix') === 0) {
 				config.cardname_prefix = args.replace('-cardname_prefix', '').trim();
 				state.safety_tools_alert.cardname_prefix = config.cardname_prefix;
+				sendChat('Safety Card Alerts', '/w GM Card name prefix set to "'+config.cardname_prefix+'".');
 			} else if (args.indexOf('-play_sound') === 0) {
 				var sound = args.replace('-play_sound', '').trim();
 				if(sound) {
@@ -104,9 +107,11 @@ var SafetyToolsAlert = (function() {
 					if(track) {
 						config.alert_sound = sound;
 						config.play_sound = true;
+						sendChat('Safety Card Alerts', '/w GM Alert sound set to "'+config.alert_sound+'".  Sound playing enabled.');
 					} else {
 						config.alert_sound = '';
 						config.play_sound = false;
+						sendChat('Safety Card Alerts', '/w GM Alert sound unset.  Sound playing disabled.');
 					}
 					state.safety_tools_alert.alert_sound = config.alert_sound;
 					state.safety_tools_alert.play_sound = config.play_sound;
