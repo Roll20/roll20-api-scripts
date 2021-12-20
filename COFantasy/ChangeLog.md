@@ -1,6 +1,13 @@
 # COFantasy: Historique des changements (depuis la version 1.0)
 ## 3.04
 ### Capacités
+* Ajout de la botte secrète du voleur.
+* Support pour le sort de sphère de feu (tiré de Pathfinder)
+* Quelques améliorations pour le guetteur, de la Voie des animaux.
+* Ajout de la ténacité de la Voie du héro.
+* Ajout d'Épée céleste de la Voie de l'archange.
+* Ajout de la paralysie des goules.
+* Ajout des deux premiers rangs de la voie de l'archange.
 * Simulacre de vie
 * Ajout d'un visuel pour la prison végétale
 * Meilleure automatisation de la capacité intercepter du chevalier.
@@ -13,14 +20,20 @@
 * Ajout d'une option de malus de répétition pour la destruction des morts-vivants.
 * Ajout du type d'ennemi juré gobelin
 * Implémentation de base de la voie de l'expert du combat
+* La Rune de Puissance du Forgesort maximise tous les dés mais doit s'utiliser avant le lancer des jets de dégâts
 
 ### Corrections de bugs
+* Prise en compte de la liberté d'action pour le mot de pouvoir qui immobilise.
 * Pas de DOT sur les personnages déjà morts.
 * --demiAuto divise les dégâts par deux en cas d'échec, même si il n'y a pas de jet de sauvegarde.
 * ne pas faire entrer en combat quand on fait un effet qui ne fait pas de DM ou qui n'est pas préjudiciable (conséquences sur pacifisme, sanctuaire, et).
 * Prise en compte correcte des malus d'armure et de casques pour les compétences sur la fiche.
 
 ### Autres améliorations
+* Possibilité de faire des jets d'attaque contre des valeurs de caractéristiques
+* Prise en compte d'un prédicat attaqueSournoise pour indiquer le nombre de dés des attaques sournoises.
+* Si une arme est aussi une arme de jet, le script va automatiquement sélectionner la bonne attaque selon la distance de la cible.
+* Ajout d'une option --saveDM pour éviter tous les dégâts d'une attaque.
 * Prise en compte des options de sélections pour !cof-init.
 * Option d'attaque --forceMinimum
 * Prise en compte de --message pour !cof-animer-mort.
@@ -40,6 +53,7 @@
 * Modifie l'affichage des boutons de soins si plus disponibles
 * Un peu plus de discrétion avec les messages sur les limites par jour ou par combat
 * Passage en prédicats d'un grand nombre de capacités qui utilisaient encore des attributs.
+* Meilleur support de Laissez-le-moi (Chevalier, Voie du Héros R3)
 
 ## 3.03
 ### Capacités
