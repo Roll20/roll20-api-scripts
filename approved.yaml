@@ -1091,3 +1091,7 @@ initmaster:
 randomtokentinter:
   - "RandomTokenTinter"
   - "Tokens"
+
+attackmaster:
+  - "AttackMaster"
+  - "System Toolbox"
