@@ -1082,11 +1082,11 @@ alienrpgroller:
 
 roundmaster:
   - "RoundMaster"
-  - "Utility"
+  - "System Toolbox"
 
 initmaster:
   - "InitMaster"
-  - "Utility"
+  - "System Toolbox"
 
 randomtokentinter:
   - "RandomTokenTinter"
@@ -1094,4 +1094,12 @@ randomtokentinter:
 
 attackmaster:
   - "AttackMaster"
+  - "System Toolbox"
+  
+commandmaster:
+  - "CommandMaster"
+  - "System Toolbox"
+
+magicmaster:
+  - "MagicMaster"
   - "System Toolbox"
