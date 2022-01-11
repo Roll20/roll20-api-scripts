@@ -14,7 +14,7 @@
 var statusMarkers = [];
 var InitiativeTrackerPlus = (function() {
 	'use strict';
-	var version = 1.27,
+	var version = 1.28,
 		author = 'James C. (Chuz)',
 		lastUpdated = 'July 21 2021',
 		pending = null;
@@ -41,6 +41,7 @@ var InitiativeTrackerPlus = (function() {
 		rotation_degree: 15,
 		rotation_rate: 250, // time between rotation updates (lower number == faster rotation, likely will have negative impact on performance)
 		round_separator_initiative: -100, // the initiative value of the round separator, defaults to -100 to display [?Round # -100] in the turn tracker
+		combatmusic: ''
 	};
 
 	fields.defaultTrackerImg = fields.trackerImg;
@@ -51,7 +52,8 @@ var InitiativeTrackerPlus = (function() {
 		animating: false,
 		archive: false,
 		clearonclose: true,
-		show_eot: true
+		show_eot: true,
+		playcombatmusic: false
 	};
 
 	var design = {
@@ -1818,13 +1820,14 @@ var InitiativeTrackerPlus = (function() {
 			}
 
 			var oldvalue = '';
-			// There's probably a better way to do this, but I'm using this to explicitely define what defaults can be overridden.
+			// There's probably a better way to do this, but I'm using this to explicitly define what defaults can be overridden.
 			switch(p[0]) {
 				case 'trackerImgRatio':
 					p[1] = parseFloat(p[1]);
 				case 'rotation_degree':
 				case 'rotation_rate':
 				case 'round_separator_initiative':
+				case 'combatmusic':
 					if(p[0] == 'round_separator_initiative') {
 						p[1] = parseInt(p[1]);
 					}
@@ -1832,6 +1835,7 @@ var InitiativeTrackerPlus = (function() {
 					fields[p[0]] = p[1];
 					state.initiative_tracker_plus.config.fields[p[0]] = p[1];
 					break;
+				case 'playcombatmusic':
 				case 'show_eot':
 				case 'rotation':
 					oldvalue = flags[p[0]];
@@ -2976,6 +2980,23 @@ var InitiativeTrackerPlus = (function() {
 			doPauseTracker();
 			return;
 		}
+
+		// playcombatmusic?
+		if(flags['playcombatmusic']) {
+			fields['currenttrack'] = findObjs({type: 'jukeboxtrack', playing: true})[0] || '';
+			if(fields['currenttrack']) {
+				fields['currenttrack'].set('playing', false);
+			}
+
+			var track = findObjs({type: 'jukeboxtrack', title: fields['combatmusic']})[0] || '';
+			if(track) {
+				track.set('playing', false);
+				track.set('softstop', false);
+				track.set('loop', true);
+				track.set('playing', true);
+			}
+		}
+
 		flags.tj_state = ITP_StateEnum.ACTIVE;
 		prepareTurnorder();
 		var curToken = findCurrentTurnToken();
@@ -3017,6 +3038,19 @@ var InitiativeTrackerPlus = (function() {
 	 * statuses.
 	 */
 	var doStopTracker = function() {
+		// playcombatmusic?
+		if(flags['playcombatmusic']) {
+			var track = findObjs({type: 'jukeboxtrack', title: fields['combatmusic']})[0] || '';
+			if(track) {
+				track.set('playing', false);
+			}
+
+			if(fields['currenttrack']) {
+				fields['currenttrack'].set('playing', true);
+			}
+
+		}
+
 		flags.tj_state = ITP_StateEnum.STOPPED;
 		// Remove Graphic
 		var trackergraphics = findObjs({
@@ -3051,6 +3085,19 @@ var InitiativeTrackerPlus = (function() {
 		if(flags.tj_state === ITP_StateEnum.PAUSED) {
 			doStartTracker();
 		} else {
+			// playcombatmusic?
+			if(flags['playcombatmusic']) {
+				var track = findObjs({type: 'jukeboxtrack', title: fields['combatmusic']})[0] || '';
+				if(track) {
+					track.set('playing', false);
+				}
+
+				if(fields['currenttrack']) {
+					fields['currenttrack'].set('playing', true);
+				}
+
+			}
+
 			flags.tj_state = ITP_StateEnum.PAUSED;
 			updateTurnorderMarker();
 		}
@@ -3315,6 +3362,8 @@ var InitiativeTrackerPlus = (function() {
 							+ "<li><b>statusbordercolor</b> [#430D3D] - Hex color code, changes the color of the border of the chat message announcing statuses of the current actor.</li>"
 							+ "<li><b>statusargscolor</b> [#FFFFFF] - Hex color code, changes the color of the feedback text when changing the marker for a status.</li>"
 							+ "<li><b>eotcolor</b> [#FFFFFF] - Hex color code, changes the color of the EOT button.</li>"
+							+ "<li><b>playcombatmusic</b> [0] - Will a track from the jukebox be played when the tracker is active.  Values should be 0 for off, 1 for on.</li>"
+							+ "<li><b>combatmusic</b> [] - The name of the track to play when the tracker is active if playcombatmusic is turned on [1].  Track can not contain spaces (example: Combat).</li>"
 						+ '</ul>'
 					+ '</li>'
 				+ '</div>'
