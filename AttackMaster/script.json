@@ -1,8 +1,12 @@
 {
     "$schema": "",
     "name": "AttackMaster",
+<<<<<<< HEAD
     "script": "attackMaster.js",
 <<<<<<< HEAD
+=======
+    "script": "AttackMaster.js",
+>>>>>>> parent of d534e416 (Attempt to resolve pull request conflict)
     "version": "1.038",
     "previousversions": ["1.036"],
 =======
