@@ -2,8 +2,13 @@
     "$schema": "",
     "name": "AttackMaster",
     "script": "attackMaster.js",
+<<<<<<< HEAD
     "version": "1.038",
     "previousversions": ["1.036"],
+=======
+    "version": "1.036",
+    "previousversions": [],
+>>>>>>> parent of bc560605 (Improved indexing & performance)
     "description": "AttackMaster API provides functions to manage weapons, armour & shields, including taking weapons in hand and using them to attack.  It uses standard AD&D 2e rules to the full extent, taking into account: ranged weapon ammo management with ranges varying appropriately and range penalties/bonuses applied; Strength & Dexterity bonuses where appropriate; any magic bonuses to attacks that is in effect (if used with RoundMaster API effects); penalties & bonuses for non-proficiency, proficiency, specialisation & mastery; penalties for non-Rangers attacking with two weapons; use of 1-handed, 2-handed or many-handed weapons and restrictions on the number of weapons & shields that can be held at the same time; plus many other features.  This API works best with the MagicMaster API and its databases which hold the data for automatic definition of weapons and armour.  However, some attack commands will generally work with manual entry of weapons onto the character sheet.  The CommandMaster API can be used by the GM to easily manage weapon proficiencies.",
     "authors": "Richard E.",
     "roll20userid": "6497708",
