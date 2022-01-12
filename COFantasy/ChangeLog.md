@@ -1,6 +1,11 @@
 # COFantasy: Historique des changements (depuis la version 1.0)
+## 3.05
+### Autres améliorations
+* Prise en compte des changements d'attributs d'armure de la version 5.01 de la fiche.
+
 ## 3.04
 ### Capacités
+* Implémentation des rangs 1 et 4 de la voie du danseur de guerre
 * Ajout de la botte secrète du voleur.
 * Support pour le sort de sphère de feu (tiré de Pathfinder)
 * Quelques améliorations pour le guetteur, de la Voie des animaux.
@@ -21,8 +26,13 @@
 * Ajout du type d'ennemi juré gobelin
 * Implémentation de base de la voie de l'expert du combat
 * La Rune de Puissance du Forgesort maximise tous les dés mais doit s'utiliser avant le lancer des jets de dégâts
+* Implémentation de Contrôle Sanguin (Voie du contrôle corporel, R4)
+* Ajout de Meneur d'hommes (Voie du héros (prestige), R4)
 
 ### Corrections de bugs
+* Correction d'un bug avec corps élémentaire.
+* Correction du bonus de compétence appliqué en double en cas de majuscule.
+* Correction du coût de pacte sanglant.
 * Prise en compte de la liberté d'action pour le mot de pouvoir qui immobilise.
 * Pas de DOT sur les personnages déjà morts.
 * --demiAuto divise les dégâts par deux en cas d'échec, même si il n'y a pas de jet de sauvegarde.
@@ -30,6 +40,7 @@
 * Prise en compte correcte des malus d'armure et de casques pour les compétences sur la fiche.
 
 ### Autres améliorations
+* Possibilité d'immuniser à un effet temporaire particulier.
 * Possibilité de faire des jets d'attaque contre des valeurs de caractéristiques
 * Prise en compte d'un prédicat attaqueSournoise pour indiquer le nombre de dés des attaques sournoises.
 * Si une arme est aussi une arme de jet, le script va automatiquement sélectionner la bonne attaque selon la distance de la cible.
