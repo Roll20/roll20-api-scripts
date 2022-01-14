@@ -1,4 +1,5 @@
 {
+    "$schema": "https://github.com/DameryDad/roll20-api-scripts/blob/MagicMaster/MagicMaster/Script.json",
     "name": "MagicMaster",
     "script": "MagicMaster.js",
     "version": "2.044",
