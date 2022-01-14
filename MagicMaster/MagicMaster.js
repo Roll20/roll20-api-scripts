@@ -4118,7 +4118,7 @@ var MagicMaster = (function() {
 		case 'POWER':
 		case 'MI':
 		default:
-			level = characterLevel( charCS );
+			level = castingLevel = characterLevel( charCS );
 			charClass = '';
 			break;
 		}
@@ -4236,7 +4236,6 @@ var MagicMaster = (function() {
 				break;
 				
 			case 'PR':
-				log('shapeSpellbook: PR level='+level+', class='+charClass);
 				levelSpells = spellLevels.pr;
                 if (!level || !charClass) {return levelSpells;}
 				maxLevel = spellsPerLevel[charClass][0][0];
