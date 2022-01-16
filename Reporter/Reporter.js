@@ -17,9 +17,9 @@ on('ready', function () {
 
 
 on('ready', () => {
-    const version = '1.1.5'; //verion number set here
-    log('-=> Reporter v' + version + ' <=-'); //Logs version number to console
-    sendChat('ReporterDev', '/w gm Ready');
+    const version = '1.1.6'; //version number set here
+    log('-=> Reporter v' + version + ' is loaded. Internal commands of !RPping, !RPpage-mod, !RPechochat, and !RPchangelayer are used in code.');
+    //sendChat('Reporter', '/w gm Ready');
 
     const L = (o) => Object.keys(o).forEach(k => log(`${k} is ${o[k]}`));
     const tokenChar = '<span style="color: #fff; font-weight: bold; background-color: #b30000; padding:0px 2px; margin-right:3px;">T</span>';
@@ -391,6 +391,7 @@ on('ready', () => {
             let isBioButton = false;
             let isAvatarButton = false;
             let isImageButton = false;
+            let isTooltipButton = false;
             let printButton = "";
             let ignoreSelected = false;
             let characterSheetLink = true;
@@ -406,6 +407,7 @@ on('ready', () => {
             let isNPC = "";
             let showPageInfo = false;
             let pageInfo = "";
+            let displayNotes = false;
 
 
             let testChar = findObjs({
@@ -424,6 +426,7 @@ on('ready', () => {
                     if (mapKeyChar) {
                         mapKey = mapKeyChar.get('_id');
                         msg.content = `!report||+|t|represents|${mapKey} ---  ---- layer|gmlayer compact|true charactersheetlink|false notesbutton|true showprintbutton|false title|Map Keys| tokennotesbutton|true ignoreselected|true showheader|false `;
+//if (reportName){msg.content = `${msg.content} handout|${reportName}|`};
                     } else {
                         msg.content = `!report||+|t|thereisnocharacterbythisname`
                     }
@@ -436,6 +439,7 @@ on('ready', () => {
                     if (mapKeyChar) {
                         mapKey = mapKeyChar.get('_id');
                         msg.content = `!report||+|t|represents|${mapKey} ---  ---- layer|gmlayer compact|true sort|tokenName charactersheetlink|false notesbutton|true showprintbutton|false title|Map Keys| tokennotesbutton|true ignoreselected|true showheader|false `;
+//if (reportName){msg.content = `${msg.content} handout|${reportName}|`};
                     } else {
                         msg.content = `!report||+|t|thereisnocharacterbythisname`
                     }
@@ -573,6 +577,7 @@ on('ready', () => {
                 })[0];
                 mapKey = mapKeyChar.get('_id');
                 msg.content = `!report||+|t|represents|${mapKey} ---  ---- layer|gmlayer compact|true sort|tokennameI charactersheetlink|false notesbutton|true showprintbutton|false title|Map Keys| tokennotesbutton|true ignoreselected|true showheader|false `;
+if (reportName){msg.content = `${msg.content} handout|${reportName}`};
             }
 
 
@@ -600,6 +605,7 @@ on('ready', () => {
                 isCharNotesButton = ((keywords.includes("charnotesbutton|true")) ? true : false);
                 isBioButton = ((keywords.includes("biobutton|true")) ? true : false);
                 isAvatarButton = ((keywords.includes("avatarbutton|true")) ? true : false);
+                isTooltipButton = ((keywords.includes("tooltipbutton|true")) ? true : false);
                 isImageButton = ((keywords.includes("imagebutton|true")) ? true : false);
                 subTitle = ((keywords.includes("subtitle|false")) ? false : true);
                 ignoreSelected = ((keywords.includes("ignoreselected|true")) || (keywords.includes("layer|tracker")) ? true : false);
@@ -611,6 +617,7 @@ on('ready', () => {
                 hideEmpty = ((keywords.includes("hideempty|true")) ? true : false);
                 characterSheetLink = ((keywords.includes("charactersheetlink|false")) ? false : true);
                 characterSheetButton = ((keywords.includes("charactersheetbutton|true")) ? true : false);
+                displayNotes = ((keywords.includes("displaynotes|true")) ? true : false);
                 sortTerm = ((keywords.includes("sort|")) ? keywords.split("sort|")[1].split(" ")[0] : 'identity');
                 reportName = ((keywords.match(/handout\|.*?\|/)) ? keywords.match(/handout\|.*?\|/).toString().split("|")[1] : "");
                 if (keywords.includes(" overtitle|")){
@@ -618,7 +625,6 @@ on('ready', () => {
                     showFooter = false
                 }
             }
-
 
             // ##### Assign selected if no tokens are selected
             if (msg.selected && ignoreSelected === false) {
@@ -1008,7 +1014,6 @@ on('ready', () => {
 
 
 
-                            //                    log ('buttonLine = '+ buttonLine);
                             if (buttonLine) {
                                 newbuttonLine = buttonLine.replace(/!token-mod --/g, "!token-mod --ignore-selected --ids " + tId + " --")
                                     .replace(/!pcnote/g, "!pcnote --id" + tId)
@@ -1057,21 +1062,22 @@ on('ready', () => {
                                     return ""
                                 }
                             }
-
+let notesHandout = ((reportName) ? ` handout|${reportName}| ` : ``)
                             characterSheet = ((characterSheetLink) ? "<i> - <a style = " + buttonStyle + "href='http://journal.roll20.net/character/" + tc.character.get('_id') + "'>" + tc.character.get('name') + "</a></i>" : ""); //" <a style = " + buttonStyle + "href='http://journal.roll20.net/character/" + tc.character.get('_id') + "'>&#128442;</a>"
                             characterSheet = ((characterSheetButton) ? "</i> <a style = " + buttonStyle + "href='http://journal.roll20.net/character/" + tc.character.get('_id') + "'><b>" + linkBox + "</b></a>" : characterSheet); //" <a style = " + buttonStyle + "href='http://journal.roll20.net/character/" + tc.character.get('_id') + "'>&#128442;</a>"
                             printButton = ((isPrintbutton) ? "<a style = " + printButtonStyle + " href='!RPechochat --" + tc.token.get('name') + "'>w</a>" : "");
-                            tokenNotesButton = ((isTokenNotesButton) ? "<a style = " + notesButtonStyle + " href='" + noteRecipient + " --id" + tc.token.get('_id') + "'>T</a>" : "");
-                            charNotesButton = ((isCharNotesButton) ? "<a style = " + notesButtonStyle + " href='" + noteRecipient + " --charnote --id" + tc.token.get('_id') + "'>C</a>" : "");
-                            bioButton = ((isBioButton) ? "<a style = " + notesButtonStyle + " href='" + noteRecipient + " --bio --id" + tc.token.get('_id') + "'>B</a>" : "");
-                            avatarButton = ((isAvatarButton) ? "<a style = " + notesButtonStyle + " href='" + noteRecipient + " --avatar --id" + tc.token.get('_id') + "'>A</a>" : "");
-                            imageButton = ((isImageButton) ? "<a style = " + notesButtonStyle + " href='" + noteRecipient + " --image --id" + tc.token.get('_id') + "'>&thinsp;I&thinsp;</a>" : "");
-                            tokenImageButton = ((isTokenImageButton) ? "<a style = 'float:right; decoration:none; background-color: transparent; border: none; color: #999; padding:0px; font-family: pictos; margin-right:3px; !important'" + " href='" + noteRecipient + " --tokenimage --id" + tc.token.get('_id') + "'>L</a>" : "");
+                            tokenNotesButton = ((isTokenNotesButton) ? "<a style = " + notesButtonStyle + " href='" + noteRecipient + notesHandout + " --id" + tc.token.get('_id') + "'>T</a>" : "");
+                            charNotesButton = ((isCharNotesButton) ? "<a style = " + notesButtonStyle + " href='" + noteRecipient + notesHandout  + " --charnote --id" + tc.token.get('_id') + "'>C</a>" : "");
+                            bioButton = ((isBioButton) ? "<a style = " + notesButtonStyle + " href='" + noteRecipient + notesHandout  + " --bio --id" + tc.token.get('_id') + "'>B</a>" : "");
+                            avatarButton = ((isAvatarButton) ? "<a style = " + notesButtonStyle + " href='" + noteRecipient + notesHandout  + " --avatar --id" + tc.token.get('_id') + "'>A</a>" : "");
+                            imageButton = ((isImageButton) ? "<a style = " + notesButtonStyle + " href='" + noteRecipient + notesHandout  + " --image --id" + tc.token.get('_id') + "'>&thinsp;I&thinsp;</a>" : "");
+                            tooltipButton = ((isTooltipButton) ? "<a style = " + notesButtonStyle + " href='" + noteRecipient + notesHandout  + " --tooltip --id" + tc.token.get('_id') + "'>tt</a>" : "");
+                            tokenImageButton = ((isTokenImageButton) ? "<a style = 'float:right; decoration:none; background-color: transparent; border: none; color: #999; padding:0px; font-family: pictos; margin-right:3px; !important'" + " href='" + noteRecipient + notesHandout  + " --tokenimage --id" + tc.token.get('_id') + "'>L</a>" : "");
                             //tokenImageButton = ((isTokenImageButton) ? "<a style = 'float:right; opacity: 0.5'  href='" + noteRecipient + " --tokenimage --id" + tc.token.get('_id') + "'><img src='" + tc.token.get('imgsrc') + "' alt='token image' width='18' height='18'></a>" : "");
 
 
 
-                            noteButtons = tokenImageButton + tokenNotesButton + charNotesButton + bioButton + avatarButton + imageButton;
+                            noteButtons = tokenImageButton + tokenNotesButton + charNotesButton + bioButton + avatarButton + tooltipButton + imageButton;
 
                             if (compact === false) {
                                 tokenGraphicHeight = 37;
@@ -1293,7 +1299,7 @@ on('ready', () => {
                                     } else {
                                         notes = '<hr>'
                                     }
-                                    reportHandout.set("notes", notes + lines)
+                                    reportHandout.set("notes", notes + lines)//+ ((displayNotes) ? "<hr>" : ""))
                                 });
                             }
                         } else {
@@ -1357,7 +1363,7 @@ on('ready', () => {
         };
 
     });
-    log("-=> !RPping command loaded (!RPping) <=-")
+    //log("-=> !RPping command loaded (!RPping) <=-")
 
 
     //##################################
@@ -1431,7 +1437,7 @@ on('ready', () => {
                 if (pageAttribute === 'dynamic_lighting_enabled') {
                     if (pageValue === "false" || pageValue === "true") {
                         stringToBoolean(pageValue);
-                        log('2 pageValue is now ' + pageValue);
+                        //log('2 pageValue is now ' + pageValue);
                     } else {
                         sendChat('Reporter', '/w gm ' + openReport + pageValue + ' is not a valid value for ' + pageAttribute + ' It has been set to false.' + closeReport, null, {
                             noarchive: true
@@ -1449,7 +1455,6 @@ on('ready', () => {
                         sendChat('Reporter', '/w gm ' + openReport + pageValue + ' is not a valid value for ' + pageAttribute + ' It has been set to false.' + closeReport, null, {
                             noarchive: true
                         });
-                        //                        sendChat('Reporter', '/w gm ' + pageValue + ' is not a valid value for ' + pageAttribute + ' It has been set to false.');
                     }
                 }
 
@@ -1477,7 +1482,7 @@ on('ready', () => {
 
         };
     });
-    log("-=> !RPpage-mod command loaded <=-")
+    //log("-=> !RPpage-mod command loaded <=-")
 
     //##################################
     //EchoChat
@@ -1498,7 +1503,7 @@ on('ready', () => {
             sendChat('echochat', '/w gm ' + args[1]);
         };
     });
-    log("-=> !RPechochat command loaded (!RPechochat) <=-")
+    //log("-=> !RPechochat command loaded (!RPechochat) <=-")
 
 
 
@@ -1532,6 +1537,6 @@ on('ready', () => {
         };
 
     });
-    log("-=> !RPchangelayer command loaded (!RPchangelayer [token_id]) <=-")
+    //log("-=> !RPchangelayer command loaded (!RPchangelayer [token_id]) <=-")
 
 });
