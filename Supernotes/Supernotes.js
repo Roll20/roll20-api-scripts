@@ -15,20 +15,37 @@ on('ready', function () {
 
 on('ready', () => {
 
+    function parseMarkdown(markdownText) {
+        const htmlText = markdownText
+            .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+            .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+            .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+            .replace(/^\> (.*$)/gim, '<blockquote>$1</blockquote>')
+            .replace(/\*\*(.*)\*\*/gim, '<b>$1</b>')
+            .replace(/\*(.*)\*/gim, '<i>$1</i>')
+            .replace(/!\[(.*?)\]\((.*?)\)/gim, "<img alt='$1' src='$2' />")
+            .replace(/\[(.*?)\]\((.*?)\)/gim, "<a href='$2'>$1</a>")
+            .replace(/\n$/gim, '<br />')
+
+        return htmlText.trim()
+    }
+
+
     const decodeUnicode = (str) => str.replace(/%u[0-9a-fA-F]{2,4}/g, (m) => String.fromCharCode(parseInt(m.slice(2), 16)));
 
-    const version = '0.1.3';
+    const version = '0.1.4';
     log('Supernotes v' + version + ' is ready!  To set the template of choice or to toggle the send to players option, Use the command !gmnote --config');
 
     on('chat:message', function (msg) {
         if ('api' === msg.type && msg.content.match(/^!(gm|pc|self)note\b/)) {
             let match = msg.content.match(/^!gmnote-(.*)$/);
 
-
             //define command                     
             let command = msg.content.split(/\s+--/)[0];
-            let sender = msg.who
-            //log(sender);
+            let sender = msg.who;
+            let senderID = msg.playerid;
+
+            let isGM = playerIsGM(senderID);
             let messagePrefix = '/w gm ';
             if (command === '!pcnote') {
                 messagePrefix = '';
@@ -37,14 +54,6 @@ on('ready', () => {
             if (command === '!selfnote') {
                 messagePrefix = '/w ' + sender + ' ';
             }
-
-            //define option
-            /*            let option = msg.content.split(/\s+--/)[1];
-                        let secondOption = msg.content.split(/\s+--/)[2];
-                        if (option === 'notitle'){
-                            option = secondOption;
-                            secondOption = 'notitle';}
-            */
 
             let secondOption = '';
             let args = msg.content.split(/\s+--/);
@@ -57,10 +66,12 @@ on('ready', () => {
             let trueToken = [];
             let handoutTitle = '';
             function sendMessage(whom, messagePrefix, template, title, theText, message, playerButton) {
-                //log('HANDOUTTITLE is ' + handoutTitle);
-
+                if (message === "" && option.match(/^(bio|charnote|token|tooltip)/)) { message = `The information does not exist for the <code>${option}</code> option` }
                 if (handoutTitle === '') {
-
+                    //Crops out GM info on player messages
+                    if (isGM) {
+                        message = (message.includes("-----") ? message.split('-----')[0] + "<div style= 'background-color:#fbfcf0; border-width: 1px; border-style: solid; border-color:#a3a681; padding:5px'>" + message.split('-----')[1] + "</div>" : message);
+                    }
                     return sendChat(whom, messagePrefix + '&{template:' + template + '}{{' + title + '=' + whom + '}} {{' + theText + '=' + message + playerButton + '}}');
                 } else {
                     let noteHandout = findObjs({
@@ -81,20 +92,37 @@ on('ready', () => {
                     }
                     if (noteHandout) {
 
-                        playerButton = '<BR><a href = "&#96;' + msg.content.replace(/!(gm|self)/, "!pc").replace(/\s--handout\|.*\|/, "") + '">Send to Players in Chat</a>';
+                        playerButton = '<BR><a href = "&#96;' + msg.content.replace(/!(gm|self)/, "!pc").replace(/\s(--|)handout\|.*\|/, "") + '">Send to Players in Chat</a>';
                         //convert  markdown images to html for handouts
-                        message = message.replace(/\[.*?\]\((.*?)\)/g, '<img src="$1">');
+                        message = message.replace(/\[.*?\]\((.*?\.(jpg|jpeg|png|gif))\)/g, `<img style=" max-width:100%; max-height: 200px; float:right; padding-top:0px; margin-bottom:5px; margin-left:5px" src="$1">`);
+                        message = message.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2">$1</a>');
+                        message = message.replace(/<img(.*)<(\/|)br(\/|)>/g, `<img$1`);
 
+                        ((isGM) ? message = message : message = ((message.includes("-----") ? message.split('-----')[0] : message)));
 
-
+                        message = parseMarkdown(message);
+                        if (isGM) {
+                            message = (message.includes("-----") ? message.split('-----')[0] + "<div style= 'background-color:#F2F5D3; display:inline-block; width:100%; padding:5px'>" + message.split('-----')[1] + "</div>" : message);
+                        }
 
                         noteHandout.get("notes", function (notes) {
                             if (notes.includes('<hr>')) {
-                                notes = notes.split('<hr>')[0] + '<hr>'
+                                if (notes.includes('!report')) {
+                                    notes = notes.split('<hr>')[0] + '<hr>' + notes.split('<hr>')[1] + '<hr>'
+
+                                } else {
+                                    notes = notes.split('<hr>')[0] + '<hr>'
+                                }
                             } else {
                                 notes = '<hr>'
                             }
-                            noteHandout.set("notes", notes + "<h2>" + whom + "</h2><BR>" + message + playerButton)
+                            /*if (notes.includes('&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;')) {
+                                notes = notes.split('&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;')[0] + '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'
+                            } else {
+                                notes = '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'
+                            }*/
+
+                            noteHandout.set("notes", notes + "<h3>" + whom + "</h3>" + message + playerButton)
                         })
                     } else {
                         sendChat('Supernotes', whom + `No handout named ${handoutTitle} was found.`, null, {
@@ -112,9 +140,8 @@ on('ready', () => {
             args.forEach(a => {
                 if (a === 'notitle') { notitle = true }
                 if (a.includes('id-')) { id = a.split(/id/)[1] }
-                if (a.match(/handout\|.*?\|/)){ handoutTitle = a.match(/handout\|.*?\|/).toString().split('|')[1] }
+                if (a.match(/handout\|.*?\|/)) { handoutTitle = a.match(/handout\|.*?\|/).toString().split('|')[1] }
                 if (a !== command && !(a.includes('id-')) && !(a.includes('handout|')) && a !== 'notitle') { option = a }
-                //log('ARGS = ' + a);
             });
 
             ((id) ? theToken = [{ "_id": id, "type": "graphic" }] : theToken = msg.selected);
@@ -253,7 +280,7 @@ on('ready', () => {
                             (theToken || [])
                                 .map(o => getObj('graphic', o._id))
                                 .filter(g => undefined !== g)
-/*                                .map(t => getObj('character', t.get('represents')))*/
+                                /*                                .map(t => getObj('character', t.get('represents')))*/
                                 .filter(c => undefined !== c)
                                 .forEach(c => {
                                     message = "<img src='" + tokenImage + "'>";
@@ -296,12 +323,12 @@ on('ready', () => {
                                                 }
                                                 if (option === "images") {
                                                     artwork = message.match(/\<img src.*?\>/g)
-                                                    if (artwork ===  null) {artwork = 'No artwork exists for this character. Consider specifiying avatar.'};
+                                                    if (artwork === null) { artwork = 'No artwork exists for this character. Consider specifiying avatar.' };
 
                                                 } else {
                                                     artwork = message.match(/\<img src.*?\>/g);
                                                     artwork = String(artwork);
-                                                    if (artwork ===  null) {artwork = 'No artwork exists for this character. Consider specifiying avatar.'};
+                                                    if (artwork === null) { artwork = 'No artwork exists for this character. Consider specifiying avatar.' };
 
 
                                                     imageIndex = option.match(/\d+/g);
@@ -325,7 +352,7 @@ on('ready', () => {
                                                 } else {
                                                     message = 'No artwork exists for this character.';
                                                 }
-                                                if (artwork ===  "null" || message ===  "null") {message = 'No artwork exists for this character. Consider specifiying avatar.'};
+                                                if (artwork === "null" || message === "null") { message = 'No artwork exists for this character. Consider specifiying avatar.' };
 
                                                 whom = c.get('name');
 
@@ -359,11 +386,17 @@ on('ready', () => {
                                                     }
                                                     whom = c.get('name');
                                                     //Crops out GM info on player messages
-                                                    if (command === '!pcnote') {
+                                                    if (command === '!pcnote' || command === '!selfnote') {
                                                         message = (message.includes("-----") ? message.split('-----')[0] : message);
                                                     }
                                                     //Sends the final message
                                                     if (notitle) { whom = ''; }
+                                                    sendMessage(whom, messagePrefix, template, title, theText, message, playerButton);
+
+                                                }
+                                                else {
+                                                    if (notitle) { whom = '' }
+                                                    message = `The information does not exist for the <code>${option}</code> option`;
                                                     sendMessage(whom, messagePrefix, template, title, theText, message, playerButton);
 
                                                 }
@@ -384,7 +417,7 @@ on('ready', () => {
                                             });
 
                                         //Crops out GM info on player messages
-                                        if (command === '!pcnote') {
+                                        if (command === '!pcnote' || command === '!selfnote') {
                                             message = (message.includes("-----") ? message.split('-----')[0] : message);
                                         }
 
