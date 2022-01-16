@@ -185,7 +185,7 @@ A report Handout automatically creates a horizontal rule at the top of the hando
 
 **Supernotes Buttons**
 
-These are small buttons that will appear on each line of the report that call up Supernotes commands. These buttons require Supernotes to be installed (Available in the Roll20 One Click installed. If Supernotes is not installed, the buttons will still display but will have no effect. If the report is in the Chat tab, the notes will display in the chat tab, and if the report is set to be in a handout, the notes will in the handout, directly below the report. This can be used to create a handout that can run a report and display notes below. An example use could be a handout that can read map pins and display the notes for each map pin, making an interactive city guide. 
+These are small buttons that will appear on each line of the report that call up Supernotes commands. These buttons require Supernotes to be installed (Available from the Roll20 One Click installer). If Supernotes is not installed, the buttons will still display but will have no effect. If the report is in the Chat tab, the notes will display in the chat tab, and if the report is set to be in a handout, the notes will in the handout, directly below the report. This can be used to create a handout that can run a report and display notes below. An example use could be a handout that can read map pins and display the notes for each map pin, making an interactive city guide. 
 
 `tokennotesbutton|[true|false]` _(default=false):_  If this keyword is set to true, the report will place a small shortcut button to return the contents of the reported token's GM Notes field.
 
