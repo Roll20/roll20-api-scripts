@@ -123,7 +123,7 @@
  *                     Add all remaining spells from the PHB to the databases
  * v2.044  08/01/2022  Added index of database ability objects to improve performance.
  * v2.045  14/01/2022  Fixes to multiclass spell level calculation and non-MU/non-Priest
- *                     spellcaster spell numbers.
+ *                     spellcaster spell numbers, and force container type when adding items.
  */
  
 var MagicMaster = (function() {
@@ -626,7 +626,7 @@ var MagicMaster = (function() {
 						{name:'Quaals-Feather-Tree-Token',type:'Miscellaneous',ct:'10',charge:'charged',cost:'0',body:'/w "@{selected|character_name}" \\amp{template:'+fields.spellTemplate+'}{{title=Quaal\'s Feather Token}}{{splevel=Magic Item}}{{school=Conjuration/Summoning}}Specs=[Quaals Feather Token,Miscellaneous,1H,Conjuration-Summoning]{{components=M}}{{time=[[10]]}}MiscData=[w:Quaals Feather Tree Token,sp:10,rc:charged]{{range=[[0]]}}{{duration=Permanent}}{{aoe=Special}}{{save=None}}{{effects=Feather tokens are small magical devices of various forms to suit special needs. Each token is usable once.\n**Tree Token**: a token that causes a great oak to spring into being (6-foot diameter trunk, 60-foot height, 40-foot top diameter).}}'},
 						{name:'Red-ioun-stone',type:'Miscellaneous',ct:'4',charge:'uncharged',cost:'0',body:'/w "@{selected|character_name}" \\amp{template:'+fields.spellTemplate+'}{{title=Light Red Ioun Stone}}{{splevel=Magic Item}}{{school=Illusion/Phantasm}}Specs=[Ioun Stone,Miscellaneous,1H,Illusion-Phantasm]{{components=M}}{{time=[[4]]}}MiscData=[w:Red Ioun Stone,sp:4,rc:uncharged]{{range=[[0]]}}{{duration=[[8]] rounds}}{{aoe=[60ft cone, 30ft at end, 5ft base](!rounds --aoe @{selected|token_id}|cone|feet|0|60|30|acid)}}{{save=Negates}}{{damage=[Frighten them](!rounds --target area|@{selected|token_id}|\\amp#64;{target|Select first target|token_id}|Red-Ioun-Stone|8|-1|Fear|screaming)}}{{effects=These magical stones always float in the air and must be within 3 feet of their owner to be of any use. When a character first acquires the stones, he must hold each and then release it, so it takes up a circling orbit, whirling and trailing, circling [1d3](!\\amp#13;\\amp#47;r 1d3) feet from his head. Thereafter, the stones must be grasped or netted to separate them their owner. The owner may voluntarily seize and stow the stones (at night, for example) to keep them safe, but he loses the benefits of the stones during that time. Whenever ioun stones are exposed to attack, they are treated as Armor Class [[0-4]] and take [[10]] points of damage to destroy. They save as if they were of hard metal—+[[3]] bonus.\nThis Red Ioun stone is able to cast *Fear* once per day, as per the 4th level Wizard spell. When a fear spell is cast, the wizard sends forth an invisible cone of terror that causes creatures within its area of effect to turn away from the caster and flee in panic. Affected creatures are likely to drop whatever they are holding when struck by the spell; the base\nchance of this is 60% at 1st level (or at 1 Hit Die), and each level (or Hit Die) above this reduces the probability by 5%. Thus, at 10th level there is only a 15% chance, and at 13th\nlevel no chance, of dropping items. Creatures affected by fear flee at their fastest rate for a number of melee rounds equal to the level of experience of the user. Undead and creatures that successfully roll their saving throws vs. spell are not affected.}}{{materials=The Ioun stone}}'},
 						{name:'Robe-of-Ears',type:'Miscellaneous',ct:'3',charge:'uncharged',cost:'0',body:'/w "@{selected|character_name}" \\amp{template:'+fields.spellTemplate+'}{{title=Robe of Ears}}{{splevel=Magic Item}}{{school=Alteration}}Specs=[Robe of Ears,Miscellaneous,1H,Alteration]{{components=M}}{{time=[[3]]}}MiscData=[w:Robe of Ears,sp:3,rc:uncharged,ns:1],[cl:PW,w:ROE-Clairaudience,sp:3,pd:2,lv:12]{{range=Wearer}}{{duration=While worn}}{{aoe=Wearer}}{{save=Special}}{{effects=This robe grants the wearer the ability to hear anything that they are listening for despite other distracting noises, even the merest pin drop in a crowded room, if that is what they are listening for. If they know a crowd contains a particular person or creature, they will know exactly where they are if they move, even if the target is invisible, hiding in shadows, or surrounded by crowds - however, the wearer will not necessarily be able to see them. Specific sounds listened for can be heard even through thin to medium barriers such as doors made of wood or metal without fail (but not thick stone walls). The wearer cannot be snuck up upon, as they will hear any approach, so it is impossible to surprise them. Wearing the robe also grants [*Clairaudience*](!magic --mi-power @{selected|token_id}|ROE-Clairaudience|Robe-of-Ears|12) twice per day, and +4 on any saves related to causing deafness. Attacks against invisible, or otherwise unseen (such as in magical darkness), moving creatures will suffer no more than a -1 penalty to hit, as the wearer tracks the sounds of their movement, however slight.\nThe Robe of Ears cannot function in an area of a magical Silence, and the wearer will suffer double maximum damage and be deafened for four times as long from a Shout spell, including if it is cast by them while wearing the robe.}}'},
-						{name:'Robe-of-Protection+2',type:'Protection Robe',ct:'0',charge:'uncharged',cost:'0',body:'/w "@{selected|character_name}" \\amp{template:'+fields.defaultTemplate+'}{{name=Robe of Protection}}{{subtitle=Robe}}{{Speed=[[0]]}}{{Size=Large}}{{Immunity=None}}{{Protection=+[[2]] on AC}}Specs=[Robe of Protection,Protection Robe,1H,Abjuration-Protection]{{Saves=+[[2]] on saves}}ACData=[a:Robe of Protection+2,st:Robe,+:2,sz:L,wt:0,w:Robe of Protection+2,sp:0,rc:uncharged]{{desc=A robe of protection improves the wearer\'s Armour Class value and saving throws versus all forms of attack. A robe +1 betters AC by 1 (say, from 10 to 9) and gives a bonus of +1 on saving throw die rolls. The magical properties of a robe of protection are cumulative with all other magical items of protection except as follows:\n1. The robe does not improve Armour Class if magical armour is worn, although it does add to saving throw die rolls.\n2. Robes and Rings of protection operating on the same person, or in the same area, do not combine protection. Only one such ring or robe—the strongest—functions, so a pair of protection rings +2 provides only +2 protection.}}'},
+						{name:'Robe-of-Protection+2',type:'Protection Robe',ct:'0',charge:'uncharged',cost:'0',body:'/w "@{selected|character_name}" \\amp{template:'+fields.defaultTemplate+'}{{name=Robe of Protection}}{{subtitle=Robe}}{{Speed=[[0]]}}{{Size=Large}}{{Immunity=None}}{{Protection=+[[2]] on AC}}Specs=[Cloak of Protection,Protection Cloak,1H,Abjuration-Protection]{{Saves=+[[2]] on saves}}ACData=[a:Robe of Protection+2,st:Robe,+:2,sz:L,wt:0,w:Robe of Protection+2,sp:0,rc:uncharged]{{desc=A robe of protection improves the wearer\'s Armour Class value and saving throws versus all forms of attack. A robe +1 betters AC by 1 (say, from 10 to 9) and gives a bonus of +1 on saving throw die rolls. The magical properties of a robe of protection are cumulative with all other magical items of protection except as follows:\n1. The robe does not improve Armour Class if magical armour is worn, although it does add to saving throw die rolls.\n2. Robes and Rings of protection operating on the same person, or in the same area, do not combine protection. Only one such ring or robe—the strongest—functions, so a pair of protection rings +2 provides only +2 protection.}}'},
 						{name:'Scabbard-of-Enchanting',type:'Miscellaneous',ct:'0',charge:'uncharged',cost:'0',body:'/w "@{selected|character_name}" \\amp{template:'+fields.defaultTemplate+'}{{name=Scabbard of Enchanting}}{{subtitle=Magic Item}}Specs=[Scabbard of Enchanting,Miscellaneous,1H,Alteration]{{Speed=[[0]]}}MiscData=[w:Scabbard of Enchanting,sp:0,rc:uncharged]{{Size=Medium}}{{Immunity=None}}{{Resistance=None}}{{Saves=No effect}}{{desc=[Sheath Blade](!rounds --target caster|@{selected|token_id}|Scabbard-of-Enchanting|10|-1|The blade in the scabbard is being enchanted|stopwatch)\n[Draw Blade](!rounds --target caster|@{selected|token_id}|Scabbard-Enchanting-draw|1|-1|Drawing the blade from the Scabbard|all-for-one)}}{{desc1=This scabbard will magically resize to fit any blade. If left in the scabbard for [[1]]turn, the blade is enhanced by +1 (adding to any existing enchantment)}}'},
 						{name:'Shocking-Bracers',type:'Miscellaneous',ct:'1',charge:'uncharged',cost:'0',body:'/w "@{selected|character_name}" \\amp{template:'+fields.spellTemplate+'}{{title=Shocking Bracers}}{{splevel=Magic Item}}{{school=Evocation}}Specs=[Shocking Bracers,Miscellaneous,1H,Evocation]{{components=V,S,M}}{{time=[[1]]}}MiscData=[w:Shocking Bracers,sp:1,rc:uncharged]{{range=[[100]] yds}}{{duration=Instantanious}}{{aoe=[[5]]ft wide x [[40]]ft long}}{{save=[Halves](!\\amp#13;\\amp#47gmroll 1d20 save vs wand for 1/2 Shocking Bracers damage)}}{{effects=Marked L \\amp R in dwarvish runes, and with a lightning bolt symbol. Pick them up with the wrong hands and take [1D6](!\\amp#13;\\amp#47;r 1d6 damage picking up bracers incorrectly) damage. When worn, if an attack succeeds with both hands (eg 2 weapons, 2 bare hands), opponent will take [1D10](!\\amp#13;\\amp#47;r 1d10 electrical damage from double hit by bracers - save vs wands to halve damage?) of electrical damage. If hit by electricity (e.g. Lightning Bolt) while wearing them, they will [absorb damage](~Shocking-Bracers-Absorb-HP) up to **2d10** of power, currently [[0+@{selected|Shocking-Bracers-HP} @{noerror}]]HP which can be re-flashed at will as a [lightning bolt weapon](~Shocking-Bracers-LB), 5\' wide x 40\' long. Speed 1, uses up one attack per hand of a multi attack character.}}{{materials=Bracers}}'},
 						{name:'Shocking-Bracers-Absorb-HP',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!modattr --fb-public --fb-from Shocking Bracers --fb-header Absorbing Damage --fb-content _CHARNAME_\'s Shocking Bracers absorb _TCUR0_ HP of electrical damage, and now store _CUR0_ HP --charid @{selected|character_id} --Shocking-Bracers-HP|[[{{[[2d10]]},{?{HP Electrical damage taken?}}}kl1]]'},
@@ -2228,7 +2228,7 @@ var MagicMaster = (function() {
 				  'INVOKER',
 				  'NECROMANCER',
 				  'TRANSMUTER'];
-
+				  
 	const wisdomSpells=[[0,0,0,0,0,0,0,0,0,0,0,0,0,1,2,2,2,2,2,3,3,3,3,4,4],
 						[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,2,2,2,2,3,3,3,3,3],
 						[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,2,2,2,3,3,3,3],
@@ -4082,47 +4082,47 @@ var MagicMaster = (function() {
 	 
 	var caster = function( charCS, casterType ) {
 		
-		var level, castingLevel, charClass;
+		var level, castingLevel, charClass, castingClass;
 		
 		switch (casterType) {
 		case 'MU':
 			level = attrLookup(charCS,fields.Wizard_level) || 0;
 			if (level >= 1) {
-				charClass = (attrLookup( charCS, fields.Wizard_class ) || 'WIZARD').toUpperCase();
+				castingClass = charClass = (attrLookup( charCS, fields.Wizard_class ) || 'WIZARD').toUpperCase();
 				if (charClass != 'BARD') {
-					charClass = 'WIZARD';
+					castingClass = 'WIZARD';
 				}						
 			} else {
-				charClass = (attrLookup( charCS, fields.Rogue_class ) || '').toUpperCase();
+				castingClass = charClass = (attrLookup( charCS, fields.Rogue_class ) || '').toUpperCase();
 				if (charClass == 'BARD') {
 					level = attrLookup(charCS,fields.Rogue_level) || 0;
 				}
 			}
-			castingLevel = (!level || !charClass) ? 0 : Math.min(Math.max((1+parseInt(level) - spellsPerLevel[charClass][0][1]),0),spellsPerLevel[charClass][0][2]);
+			castingLevel = (!level || !castingClass) ? 0 : Math.min(Math.max((1+parseInt(level) - spellsPerLevel[castingClass][0][1]),0),spellsPerLevel[castingClass][0][2]);
 			break;
 		case 'PR':
 			level = attrLookup( charCS, fields.Priest_level ) || 0;
 			if (level >= 1) {
-				charClass = (attrLookup( charCS, fields.Priest_class ) || 'PRIEST').toUpperCase();
+				castingClass = charClass = (attrLookup( charCS, fields.Priest_class ) || 'PRIEST').toUpperCase();
 				if (charClass != 'RANGER' && charClass != 'PALADIN') {
-					charClass = 'PRIEST';
+					castingClass = 'PRIEST';
 				}
 			} else {
-				charClass = (attrLookup( charCS, fields.Fighter_class ) || '').toUpperCase();
+				castingClass = charClass = (attrLookup( charCS, fields.Fighter_class ) || '').toUpperCase();
 				if (charClass == 'RANGER' || charClass == 'PALADIN') {
 					level = attrLookup(charCS,fields.Fighter_level) || 0;
 				}
 			}
-			castingLevel = (!level || !charClass) ? 0 : Math.min(Math.max((1+parseInt(level) - spellsPerLevel[charClass][0][1]),0),spellsPerLevel[charClass][0][2]);
+			castingLevel = (!level || !castingClass) ? 0 : Math.min(Math.max((1+parseInt(level) - spellsPerLevel[castingClass][0][1]),0),spellsPerLevel[castingClass][0][2]);
 			break;
 		case 'POWER':
 		case 'MI':
 		default:
 			level = castingLevel = characterLevel( charCS );
-			charClass = '';
+			castingClass = charClass = '';
 			break;
 		}
-		return {lv:level,cl:charClass,clv:castingLevel};
+		return {lv:level,cl:charClass,clv:castingLevel,ccl:castingClass};
 	}
 	
 	/*
@@ -4218,7 +4218,7 @@ var MagicMaster = (function() {
 		if (charCS) {
 			var casterSpecs = caster( charCS, spellbook ),
 				level = casterSpecs.lv,
-				charClass = casterSpecs.cl;
+				charClass = casterSpecs.ccl;
 			
 			switch (spellbook) {
 
@@ -4226,11 +4226,12 @@ var MagicMaster = (function() {
 				levelSpells = spellLevels.mu;
                 if (!level || !charClass) {return levelSpells;}
 				maxLevel = spellsPerLevel[charClass][0][0];
+				specSpells = specMU.includes(casterSpecs.cl);
 				for (let i=1; i<levelSpells.length; i++) {
 				    noSpells = parseInt(spellsPerLevel[charClass][(Math.min(i,maxLevel))][level]);
 					miscSpells = noSpells ? parseInt(attrLookup(charCS,[fields.MUSpellNo_table[0] + i + fields.MUSpellNo_misc[0],fields.MUSpellNo_misc[1]]) || 0) : 0;
 				    setAttr(charCS,[fields.MUSpellNo_table[0] + i + fields.MUSpellNo_memable[0],fields.MUSpellNo_memable[1]],noSpells);
-					setAttr(charCS,[fields.MUSpellNo_table[0] + i + fields.MUSpellNo_specialist[0],fields.MUSpellNo_specialist[1],'',true],(noSpells ? specSpells : 0));
+					setAttr(charCS,[fields.MUSpellNo_table[0] + i + fields.MUSpellNo_specialist[0],fields.MUSpellNo_specialist[1],'',true],(((noSpells + miscSpells) && specSpells) ? 1 : 0));
 					levelSpells[i].spells = noSpells + miscSpells + ((noSpells + miscSpells) ? specSpells : 0);
 				}
 				break;
@@ -6888,6 +6889,10 @@ var MagicMaster = (function() {
 		toMIvalues[fields.Items_cost[0]][fields.Items_cost[1]] = 0;
 		toMIvalues[fields.Items_type[0]][fields.Items_type[1]] = MItype;
 		toMIbag = addTableRow( toMIbag, toRowRef, toMIvalues );
+		
+		let containerType = (parseInt(attrLookup(toCS, fields.ItemContainerType) || 0) || 0);
+		containerType = (containerType == 0 ? 1 : (containerType == 2 ? 3 : containerType));
+		setAttr( toCS, fields.ItemContainerType, containerType );
 		
 		moveMIspells( fromCS, toCS, MIname );
 		
