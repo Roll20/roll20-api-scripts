@@ -438,7 +438,7 @@ Earthdawn.tokenLinkNPC = {			// Bit flags that control how the sheet links NPC t
 
 
                     // This is a wrapper for the attribute .set() function, that checks to make sure val is not undefined. 
-					// If val is undefined it errors out the entire API, requireing a restart. Worse, the error prempts logging that should have happened and the error message gives you no clue as to where your code errored out.
+					// If val is undefined it errors out the entire API, requireing a restart. Worse, the error preempts logging that should have happened and the error message gives you no clue as to where your code errored out.
 					// This checks for undefined, writes an error message, and substitutes a default value. 
 					//
 					// Rats. Can't test for NaN here, because use same routine for string and numbers. But NaN fails as well. 
@@ -603,6 +603,8 @@ Earthdawn.EDclass = function( origMsg ) {
 				vUpdate( this, this.updateVersion1p0021, 1.0021 );
             if( state.Earthdawn.version < 1.0022)
 				vUpdate( this, this.updateVersion1p0022, 1.0022 );
+//            if( state.Earthdawn.version < 1.0023)
+//				vUpdate( this, this.updateVersion1p0023, 1.0023 );
 					
             state.Earthdawn.version = Earthdawn.Version;    
         }
@@ -945,7 +947,7 @@ Earthdawn.EDclass = function( origMsg ) {
 				if ( att.get("name").endsWith( "_Mod-Type" )) {
 					if( att.get( "current" ).search( /Armor-IP/ ) != -1)
 						att.set( "current", "@{Adjust-All-Tests-Total}+(-1*@{Armor-IP})");
-					else if( att.get( "current" ).search( /IP/ ) != -1)
+					else if( att.get( "current" ).search( /\{IP\}/ ) != -1)
 						att.set( "current", "@{Adjust-All-Tests-Total}+(-1*@{IP})");
 				}
 			}); // End for each attribute.
@@ -954,6 +956,26 @@ Earthdawn.EDclass = function( origMsg ) {
 			log( "ED.updateVersion1p0022() cID=" + cID + "   error caught: " + err );
         }
     }; // end updateVersion1p0022()
+
+
+
+	this.updateVersion1p0023 = function( cID ) {
+        'use strict';
+        try {
+			let count = 0;
+							// go through all attributes for this character and look for ones we are interested in
+			let attributes = findObjs({ _type: "attribute", _characterid: cID });
+			_.each( attributes, function (att) {
+				if ( att.get("name").endsWith( "_Mod-Type" )) {
+					if( att.get( "current" ).search( /\{IP\}/ ) != -1)
+						att.set( "current", "@{Adjust-Effect-Tests-Total}+@{Initiative-Mods}");
+				}
+			}); // End for each attribute.
+			return count;
+        } catch(err) {
+			log( "ED.updateVersion1p0023() cID=" + cID + "   error caught: " + err );
+        }
+    }; // end updateVersion1p0023()
 
 
 
@@ -1460,7 +1482,7 @@ Step/Action Dice Table
 					armortype = Earthdawn.getAttrBN( this.charID, pre + "ArmorType", "N/A");
 					this.misc[ "succMsg" ] = Earthdawn.getAttrBN( this.charID, pre + "SuccessText", "");
                     if( modtype != "(0)")
-						this.doLater += "~Karma: def: 0: " + pre + "Karma-Control"; 
+						this.doLater += "~Karma: " + pre + "Karma-Control"; 
 					this.doLater += "~Strain:" + (this.getValue( pre + "Strain")		// Strain from this action, aggressive attacks, called shots and split movement.
 								+ (( modtype === "@{Adjust-Attacks-Total}" || modtype === "@{Adjust-Attacks-Total-CC}" )
 								? (this.getValue( "combatOption-AggressiveAttack") * this.getValue( "Misc-Aggressive-Strain") ) 
@@ -1471,9 +1493,9 @@ Step/Action Dice Table
 						this.misc[ "Special" ] = special;
 					if( special === "Recovery" ) {				// Recovery Test
 						this.bFlags |= Earthdawn.flags.Recovery;
-						if (Earthdawn.getAttrBN( this.charID, "NPC", "0") != "2") {
+						if (Earthdawn.getAttrBN( this.charID, "NPC", "0") != "2") {		// not mook
 							let aobj = Earthdawn.findOrMakeObj({ _type: 'attribute', _characterid: this.charID, name: "Recovery-Tests" }, 0, 2);
-							if( aobj.get( "current" ) >= Earthdawn.getAttrBN( this.charID, "Recovery-Tests_max", "2")) {
+							if( (aobj.get( "current" ) || 0) >= Earthdawn.getAttrBN( this.charID, "Recovery-Tests_max", "2")) {
 								this.chat( this.tokenInfo.name + " does not have a recover test to spend.", Earthdawn.whoFrom.apiWarning );
 								return;
 							} else
@@ -1554,14 +1576,14 @@ Step/Action Dice Table
 					this.misc[ "headcolor" ] = "action";
                 break;
                 case "skk":
-					this.doLater += "~Karma: def: 0: " + pre + "Karma-Control"; 
+					this.doLater += "~Karma: kcdef: -1: " + pre + "Karma-Control"; 
                     def_attr = "Per";
 					this.misc[ "rollWhoSee" ] = pre + "RollType";
 					this.misc[ "headcolor" ] = "action";
                 break;
                 case "wpn":
 					stepAttrib = "Base";
-					this.doLater += "~Karma: def: 0: " + pre + "Karma-Control"; 
+					this.doLater += "~Karma: kcdef: -1: " + pre + "Karma-Control"; 
                     def_attr = "Str";
 					if (state.Earthdawn.gED)
 						modtype = ((Earthdawn.getAttrBN( this.charID, pre + "CloseCombat", "0" ) == "1") ? "@{Adjust-Damage-Total-CC}": "@{Adjust-Damage-Total}" );
@@ -1864,24 +1886,24 @@ Step/Action Dice Table
 				}	break;
 				case "damage": {
 					s = "<br>Selected Tokens Take Dmg - ";
-					s += this.makeButton( "PA", "!edToken~ " + Earthdawn.constant( "percent" ) + "{selected|Take-Damage-PA}",
+					s += this.makeButton( "PA", "!Earthdawn~ setToken: @{selected|token_id}~ ?{Type of damage|Damage|Stun} : PA : ?{Damage (Physical Armor applies)|1}",
 								"The Selected Token(s) take damage. Physical Armor applies.", "red", "white" );
-					s += this.makeButton( "MA", "!edToken~ " + Earthdawn.constant( "percent" ) + "{selected|Take-Damage-MA}",
+					s += this.makeButton( "MA", "!Earthdawn~ setToken: @{selected|token_id}~ ?{Type of damage|Damage|Stun} : MA : ?{Damage (Mystic Armor applies)|1}",
 								"The Selected Token(s) take damage. Mystic Armor applies.", "red", "white" );
-					s += this.makeButton( "NA", "!edToken~ " + Earthdawn.constant( "percent" ) + "{selected|Take-Damage-NA}",
+					s += this.makeButton( "NA", "!Earthdawn~ setToken: @{selected|token_id}~ ?{Type of damage|Damage|Stun|Strain} : NA : ?{Damage (No Armor)|1}",
 								"The Selected Token(s) take damage. No Armor applies.", "red", "white" );
-					s += this.makeButton( "Other", "!edToken~ " + Earthdawn.constant( "percent" ) + "{selected|Take-Damage}",
+					s += this.makeButton( "Other", "!Earthdawn~ setToken: @{selected|token_id}~ ?{Type of damage|Damage|Stun|Strain} : ?{Armor| None,NA| Physical,PA| Mystic,MA| Nat PA,PA-Nat| Nat MA,MA-Nat} : ?{Damage)|1}",
 								"The Selected Token(s) take damage, which might be of type Stun, Strain, or Normal. Armors may be applied.", "red", "white" );
-					s += "<br>Give Dmg to Target Token - ";
-					s += this.makeButton( "PA", "!edToken~ " + Earthdawn.constant( "percent" ) + "{target|Damage-Target-PA}", 
-								"Give damage to a Target token. Physical Armor applies.", "green", "white" );
-					s += this.makeButton( "MA", "!edToken~ " + Earthdawn.constant( "percent" ) + "{target|Damage-Target-MA}", 
-								"Give damage to a Target token. Mystic Armor applies.", "green", "white" );
-					s += this.makeButton( "NA", "!edToken~ " + Earthdawn.constant( "percent" ) + "{target|Damage-Target-NA}", 
-								"Give damage to a Target token. No Armor applies.", "green", "white" );
-					s += this.makeButton( "Other", "!edToken~ " + Earthdawn.constant( "percent" ) + "{target|Damage-Target}", 
-								"Give damage to a Target token, which might be of type Stun, Strain, or Normal. Armors may be applied.", "green", "white" );
 
+					s += "<br>Give Dmg to Target Token - ";
+					s += this.makeButton( "PA", "!Earthdawn~ setToken: @{target|token_id}~ ?{Type of damage|Damage|Stun} : PA : ?{Damage (Physical Armor applies)|1}", 
+								"Give damage to a Target token. Physical Armor applies.", "green", "white" );
+					s += this.makeButton( "MA", "!Earthdawn~ setToken: @{target|token_id}~ ?{Type of damage|Damage|Stun} : MA : ?{Damage (Mystic Armor applies)|1}", 
+								"Give damage to a Target token. Mystic Armor applies.", "green", "white" );
+					s += this.makeButton( "NA", "!Earthdawn~ setToken: @{target|token_id}~ ?{Type of damage|Damage|Stun|Strain} : NA : ?{Damage (No Armor)|1}", 
+								"Give damage to a Target token. No Armor applies.", "green", "white" );
+					s += this.makeButton( "Other", "!Earthdawn~ setToken: @{target|token_id}~ ?{Type of damage|Damage|Stun|Strain} : ?{Armor| None,NA| Physical,PA| Mystic,MA| Nat PA,PA-Nat| Nat MA,MA-Nat } : ?{Damage)|1}", 
+								"Give damage to a Target token, which might be of type Stun, Strain, or Normal. Armors may be applied.", "green", "white" );
 					lst = this.getUniqueChars( 1 );
 					if ( _.size( lst) === 1 )
 						for( let k in lst ) {
@@ -2181,7 +2203,7 @@ Step/Action Dice Table
 					switch( ssa[ 3 ] ) {
 						case "Attribute": 	lnk( ssa[ 4 ] );					break;
 						case "T":			lnk( "Effective-Rank", "Mods" );	break;
-						case "NAC":			lnk( "Step" );						break;
+						case "NAC":			lnk( "Mods" );						break;
 						case "WPN":			lnk( "Base", "Mods" );				break;
 					}
 					llst.push( l );
@@ -2409,7 +2431,7 @@ Step/Action Dice Table
 					makeButton( "Clip the Wing", "ClipTheWing", undefined,
 						"The attacker may spend two additional successes from an Attack test to remove the creature’s ability to fly until the end of the next round. If the attack causes a Wound, the creature cannot fly until the Wound is healed. If the creature is in flight, it falls and suffers falling damage for half the distance fallen." );
 					makeButton( "Crack the Shell", "CrackTheShell", ": ?{How many successes to spend Cracking the Shell|1}",
-						"The attacker may spend extra successes from physical attacks (not spells) to reduce the creature’s Physical Armor by 1 per success spent. This reduction takes place after damage is assessed, and lasts until the end of combat." );
+						"Importaint! Press this button AFTER rolling and applying damage, then press this button to record your manuver. The attacker may spend extra successes from physical attacks (not spells) to reduce the creature’s Physical Armor by 1 per success spent. This reduction takes place after damage is assessed, and lasts until the end of combat." );
 					makeButton( "Defang", "Defang", ": ?{How many successes to spend Defanging|1}",
 						"The opponent may spend additional successes to affect the creature’s ability to use its poison. Each success spent reduces the Poison’s Step by 2. If the attack causes a Wound, the creature cannot use its Poison power at all until the Wound is healed." );
 					makeButton( "Enrage", "Enrage", ": ?{How many successes to spend Enraging|1}",
@@ -2494,9 +2516,17 @@ Step/Action Dice Table
 						else	this.chat( "You can/'t Clip the Wing of this opponent.", Earthdawn.whoFrom.noArchive );
 						break;
 					case "CrackTheShell":
-						if( oflags & Earthdawn.flagsCreature.CrackTheShell ) 
-							this.chat( ssa[3] + " successes spent Cracking the Shell. This is not automated yet. Remember to manually add bonus damage to all damage effects after this one to represent reduced armor. IE: if you cracked the shell three times, then on all damage tests after the current one, you would roll damage as normal, but apply +3 to the result when applying damage.", Earthdawn.whoFrom.noArchive );
-						else	this.chat( "You can't Crack the Shell of this opponent.", Earthdawn.whoFrom.noArchive );
+						if( oflags & Earthdawn.flagsCreature.CrackTheShell ) {
+							let attr = Earthdawn.findOrMakeObj({ _type: 'attribute', _characterid: cID, name: "PA-Buff" }, 0);
+							let newpa = Earthdawn.getAttrBN( cID, "Physical-Armor", "0") - ssa[ 3 ];
+							if( newpa < 0 ) {
+								Earthdawn.setWithWorker( attr, "current", parseInt( attr.get( "current" )) - (newpa + parseInt(ssa[ 3 ])), 0 );
+								this.chat( "Spent " + ssa[3] + " successes Cracking the Shell but only needed " + (newpa + parseInt(ssa[ 3 ])) + " to remove all remaining armor. Physical armor has been reduced. Important! This is supposed to be done AFTER rolling for damage and applying it.", Earthdawn.whoFrom.noArchive );
+							} else {
+								Earthdawn.setWithWorker( attr, "current", parseInt( attr.get( "current" )) - ssa[ 3 ], 0 );
+								this.chat( ssa[3] + " successes spent Cracking the Shell. Physical armor has been reduced. Important! This is supposed to be done AFTER rolling for damage and applying it.", Earthdawn.whoFrom.noArchive );
+							}
+						} else	this.chat( "You can't Crack the Shell of this opponent.", Earthdawn.whoFrom.noArchive );
 						break;
 					case "Defang":
 						if( oflags & Earthdawn.flagsCreature.Defang ) 
@@ -3635,54 +3665,56 @@ log( nm);
             try {
 				if ( this.StatusMarkerCollection != undefined )
 					return;
-// "red", "blue", "green", "brown", "purple", "pink", "yellow", "dead", 
+// xx "red", xx "blue", xx "green", xx "brown", "purple", xx "pink", xx "yellow", "dead", 
 // "skull", "sleepy", "half-heart", "half-haze", "interdiction", "snail", "lightning-helix", xx "spanner", 
-// xx "chained-heart", "chemical-bolt", "death-zone", x"drink-me", x"edge-crack", "ninja-mask", "stopwatch", "fishing-net", 
+// -- "chained-heart", "chemical-bolt", "death-zone", xx "drink-me", xx "edge-crack", "ninja-mask", "stopwatch", "fishing-net", 
 // "overdrive", "strong", xx "fist", xx "padlock", "three-leaves", "fluffy-wing", xx "pummeled", "tread", 
-// "arrowed", "aura", "back-pain", xx "black-flag", "bleeding-eye", xx "bolt-shield", xx "broken-heart", xx "cobweb", 
-// "broken-shield", xx "flying-flag", xx "radioactive", xx "trophy", "broken-skull", xx "frozen-orb", "rolling-bomb", "white-tower", 
+// "arrowed", "aura", "back-pain", -- "black-flag", "bleeding-eye", -- "bolt-shield", xx "broken-heart", xx "cobweb", 
+// "broken-shield", xx "flying-flag", -- "radioactive", xx "trophy", "broken-skull", -- "frozen-orb", "rolling-bomb", "white-tower", 
 // xx "grab", "screaming", xx "grenade", "sentry-gun", "all-for-one", "angel-outfit", "archery-target"
                 var smc = [];			// IMPORTAINT NOTE!!! if you make changes that affect any attrib, also edit attribute section of the on ready event near the bottom of this file and the chat menu section dealing with status's.
                 smc.push ( { code: "karma", prompt: "Karma", attrib: "Karma-Roll", icon: "lightning-helix", submenu: "?{Karma|None,[0^u]|One,[1^s]|Two,[2^b]|Three,[3^c]}" } );
 				if( state.Earthdawn.gED )
 					smc.push ( { code: "devpnt", prompt: "Dev Pnts", attrib: "Devotion-Roll", icon: "angel-outfit", submenu: "?{Dev Pnts|None,[0^u]|One,[1^s]|Two,[2^b]|Three,[3^c]}" } );
                 smc.push ( { code: "willforce", prompt: "WillForce", attrib: "SP-Willforce-Use", icon: "chemical-bolt" } );
+                smc.push ( { code: "ambushing", prompt: "Ambushing", attrib: "Creature-Ambushing", icon: "overdrive" } );
+                smc.push ( { code: "divingcharging", prompt: "Diving/Charging", attrib: "Creature-DivingCharging", icon: "rolling-bomb" } );
+
                                     // Combat options: - Not shown - Attack to knockdown, Attack to Stun, Jump-up, setting against a charge, shatter shield.
+                smc.push ( { code: "called", prompt: "Called Shot", attrib: "combatOption-CalledShot", icon: "archery-target" } );
                 smc.push ( { code: "aggressive", prompt: "Aggressive Attack", attrib: "combatOption-AggressiveAttack", icon: "sentry-gun" } );
                 smc.push ( { code: "defensive", prompt: "Defensive Stance", attrib: "combatOption-DefensiveStance", icon: "white-tower" } );
-                smc.push ( { code: "called", prompt: "Called Shot", attrib: "combatOption-CalledShot", icon: "archery-target" } );
+
+                smc.push ( { code: "blindsided", prompt: "Blindsided", attrib: "condition-Blindsided", icon: "arrowed" } );
+                smc.push ( { code: "surprised", prompt: "Surprised", attrib: "condition-Surprised", icon: "sleepy" } );
+                smc.push ( { code: "noshield", prompt: "NoShield", attrib: "condition-NoShield", icon: "broken-shield" } );
                 smc.push ( { code: "split", prompt: "Split Movement", attrib: "combatOption-SplitMovement", icon: "tread" } );
                 smc.push ( { code: "tail", prompt: "Tail Attack", attrib: "combatOption-TailAttack", icon: "purple" } );
-                smc.push ( { code: "reserved", prompt: "Reserved Action", attrib: "combatOption-Reserved", icon: "stopwatch" } );
-                                    // Conditions
-                smc.push ( { code: "noshield", prompt: "NoShield", attrib: "condition-NoShield", icon: "broken-shield" } );
-                smc.push ( { code: "blindsided", prompt: "Blindsided", attrib: "condition-Blindsided", icon: "arrowed" } );
+
                 smc.push ( { code: "blindsiding", prompt: "Blindsiding", attrib: "condition-Blindsiding", icon: "interdiction" } );
                 smc.push ( { code: "targetpartialcover", prompt: "Tgt Partial Cover", attrib: "condition-TargetPartialCover", icon: "half-heart" } );
                 smc.push ( { code: "knocked", prompt: "Knocked Down", attrib: "condition-KnockedDown", icon: "back-pain" } );
                 smc.push ( { code: "range", prompt: "Long Range", attrib: "condition-RangeLong", icon: "half-haze" } );
-                smc.push ( { code: "surprised", prompt: "Surprised", attrib: "condition-Surprised", icon: "sleepy" } );
+                smc.push ( { code: "reserved", prompt: "Reserved Action", attrib: "combatOption-Reserved", icon: "stopwatch" } );
 
-                smc.push ( { code: "entangled", prompt: "Entangled/Grappled", icon: "fishing-net" } );
-                smc.push ( { code: "poison", prompt: "Poisoned", icon: "death-zone", submenu: "?{Amount|0}" } );
-                smc.push ( { code: "stealth", prompt: "Stealth", icon: "ninja-mask", submenu: "?{Amount|0}" } );
-                smc.push ( { code: "flying", prompt: "Flying", icon: "fluffy-wing", submenu: "?{Amount|0}" } );
-                smc.push ( { code: "buffed", prompt: "buffed", icon: "strong", submenu: "?{Amount|0}" } );
-                smc.push ( { code: "buff2", prompt: "buff2", icon: "aura", submenu: "?{Amount|0}" } );
-                smc.push ( { code: "debuff", prompt: "debuff", icon: "broken-skull", submenu: "?{Amount|0}" } );
-                smc.push ( { code: "debuff2", prompt: "debuff2", icon: "screaming", submenu: "?{Amount|0}" } );
-
-                smc.push ( { code: "ambushing", prompt: "Ambushing", attrib: "Creature-Ambushing", icon: "overdrive" } );
-                smc.push ( { code: "divingcharging", prompt: "Diving/Charging", attrib: "Creature-DivingCharging", icon: "rolling-bomb" } );
+/*                smc.push ( { code: "entangled", prompt: "Entangled/Grappled", attrib: "condition-Entangled-Grappled", icon: "fishing-net" } );
+                smc.push ( { code: "poison", prompt: "Poisoned", icon: "death-zone", attrib: "condition-Poisoned", submenu: "?{Amount|0}" } );
+                smc.push ( { code: "stealth", prompt: "Stealth", icon: "ninja-mask", attrib: "condition-Stealth", submenu: "?{Amount|0}" } );
+                smc.push ( { code: "flying", prompt: "Flying", icon: "fluffy-wing", attrib: "condition-Flying", submenu: "?{Amount|0}" } );
+                smc.push ( { code: "buffed", prompt: "buffed", icon: "strong", attrib: "condition-Buffed", submenu: "?{Amount|0}" } );
+                smc.push ( { code: "buff2", prompt: "buff2", icon: "aura", attrib: "condition-Buffed2", submenu: "?{Amount|0}" } );
+                smc.push ( { code: "debuff", prompt: "debuff", icon: "broken-skull", attrib: "condition-Debuffed", submenu: "?{Amount|0}" } );
+                smc.push ( { code: "debuff2", prompt: "debuff2", icon: "screaming", attrib: "condition-Debuffed2", submenu: "?{Amount|0}" } ); 
+*/ 
  //               smc.push ( { code: "pd", prompt: "PD minus", icon: "bolt-shield", submenu: "?{Amount to subtract from PD|0}" } );
  //               smc.push ( { code: "md", prompt: "MD minus", icon: "frozen-orb", submenu: "?{Amount to subtract from MD|0}" } );
  //               smc.push ( { code: "sd", prompt: "SD minus", icon: "chained-heart", submenu: "?{Amount to subtract from SD|0}" } );
- //               smc.push ( { code: "pa", prompt: "PA minus", icon: "broken-shield", submenu: "?{Amount to subtract from PA|0}" } );
+ //               smc.push ( { code: "pa", prompt: "PA minus", icon: "XXXXXXXXXX", submenu: "?{Amount to subtract from PA|0}" } );
  //               smc.push ( { code: "ma", prompt: "MA minus", icon: "radioactive", submenu: "?{Amount to subtract from MA|0}" } );
 //                smc.push ( { code: "penalty", prompt: "All Tests Penalty", icon: "black-flag", submenu: "?{Penalty to Action tests|0}" } );
-//                smc.push ( { code: "penalty", prompt: "All Tests Penalty", attrib: "Adjust-All-Tests-Misc", icon: "black-flag", submenu: "?{Penalty to Action tests|0}" } );
-                smc.push ( { code: "cover", prompt: "Cover", attrib: "condition-Cover", icon: "three-leaves", submenu: "?{Cover|None,[0^u]|Partial,[2^b]|Full,[99^s]}" } );
+//                smc.push ( { code: "penalty", prompt: "All Tests Penalty", attrib: "Adjust-All-Tests-Misc", icon: "XXXXXXXXX", submenu: "?{Penalty to Action tests|0}" } );
                 smc.push ( { code: "harried", prompt: "Harried", attrib: "condition-Harried", icon: "all-for-one", submenu: "?{Harried|Not Harried,[0^u]|Harried,[2^s]|Overwhelmed,[3^a]|Overwhelmed II,[4^b]|Overwhelmed III,[5^c]|Increase,++|Decrease,--}" } );
+                smc.push ( { code: "cover", prompt: "Cover", attrib: "condition-Cover", icon: "three-leaves", submenu: "?{Cover|None,[0^u]|Partial,[2^b]|Full,[99^s]}" } );
                 smc.push ( { code: "move", prompt: "Movement Impaired", attrib: "condition-ImpairedMovement", icon: "snail", submenu: "?{Impaired Movement|None,[0^u]|Partial,[2^b]|Full,[4^d]}" } );
                 smc.push ( { code: "vision", prompt: "Vision Impaired", attrib: "condition-Darkness", icon: "bleeding-eye", submenu: "?{Impaired Vision|None,[0^u]|Partial,[2^b]|Full,[4^d]}" } );
                 smc.push ( { code: "health", prompt: "Health", attrib: "condition-Health", icon: "dead", submenu: "?{Health|OK,[0^u]|Unconscious,[5^s]|Dead,[-5^a]}" } );
@@ -3933,16 +3965,21 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
                     this.chat( "Error! tokenInfo undefined in Karma() command. Msg is: " + this.edClass.msg.content, Earthdawn.whoFrom.apiError); 
                     return;
                 }
-                if( kcdef === undefined)
-                    kcdef = -1;
-                if( dpdef === undefined || state.Earthdawn.g1879)
-                    dpdef = -1;
-
                 let ttmp, kc, dp,
 					kAsk = false,
 					dAsk = false,
 					kdice = 0,
-					ddice = 0;
+					ddice = 0,
+					realkcdef = true,		// We want to know if we were passed a real default for karma control, or whether we are assuming a default.
+					realdpdef = true;
+                if( kcdef === undefined) {
+                    kcdef = -1;
+					realkcdef = false;
+				}
+                if( dpdef === undefined || state.Earthdawn.g1879) {
+                    dpdef = -1;
+					realdpdef = false;
+				}
                 if( _.isString( ssa ))
                     ssa = [ "", ssa ];
 				if( "kask" in this.misc) {
@@ -3955,23 +3992,35 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
 				}
                 if((ssa !== undefined) && (ssa.length > 0 ))
                     for( let i = 1; i < ssa.length; i++) {
+						let skip = false;
                         kc = kcdef;
 						dp = dpdef;
                         ttmp = ssa[ i ];
                         if( _.isString( ttmp )) {
 							switch (ttmp.toLowerCase()) {
 								case "def":
+									kcdef = parseInt( ssa[ ++i ]);
+									dpdef = parseInt( ssa[ i ]);
+									realkcdef = true;
+									realdpdef = true;
+									skip = true;
+									break;
 								case "kcdef":
 									kcdef = parseInt( ssa[ ++i ]);
-									continue;
+									realkcdef = true;
+									skip = true;
+									break;
 								case "dpdef":
 									dpdef = parseInt( ssa[ ++i ]);
-									continue;
+									realdpdef = true;
+									skip = true;
+									break;
 							}
                             if( isNaN( ttmp )) {
 								if( !kAsk) {
-									let ttmp2 = Earthdawn.getAttrBN( this.charID, ttmp, 		// Talents and NACs default to karma sometimes. 
-											ttmp === "Dummy" || ttmp.endsWith( "_T_Karma-Control" ) || ttmp.endsWith( "_NAC_Karma-Control" ) || ttmp.startsWith( "SP-" ) ? "0" : "-1" );
+									let ttmp2 = Earthdawn.getAttrBN( this.charID, ttmp, realkcdef ? kcdef :		// Talents and NACs default to karma sometimes. 
+											(ttmp === "Dummy" || ttmp.endsWith( "_T_Karma-Control" ) || ttmp.endsWith( "_NAC_Karma-Control" ) 
+														|| (ttmp.startsWith( "SP-" ) && ttmp !== "SP-WilEffect-Karma-Control")) ? "0" : "-1" );
 									if( ttmp2 !== undefined && ttmp2 !== "") {
 										let kc2 = parseInt( ttmp2 );
 										if( !isNaN( kc2 ) )
@@ -3979,7 +4028,7 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
 									}
 								}
 								if( state.Earthdawn.gED && !dAsk ) {
-									let ttmp2 = Earthdawn.getAttrBN( this.charID, ttmp.replace( /Karma-/g, "DP-"), "-1" );
+									let ttmp2 = Earthdawn.getAttrBN( this.charID, ttmp.replace( /Karma-/g, "DP-"), realdpdef ? dpdef : "-1" );
 									if( ttmp2 !== undefined && ttmp2 !== "") {
 										let dp2 = parseInt( ttmp2 );
 										if( !isNaN( dp2 ) )
@@ -3991,12 +4040,12 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
 							else
 								kc = parseInt( ttmp );
                         }
-						if( !kAsk )
+						if( !kAsk && !skip )
 							if (kc > 0)
 								kdice += kc;
 							else if ( kc == 0 )
 								kdice += parseInt( Earthdawn.getAttrBN( this.charID, "Karma-Roll", "0" ));
-						if ( !dAsk )
+						if ( !dAsk && !skip )
 							if (dp > 0)
 								ddice += dp;
 							else if ( dp == 0 && state.Earthdawn.gED)
@@ -4137,18 +4186,18 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
                     Earthdawn.set( TokenObj, "bar3_max",   Earthdawn.getAttrBN( edParse.charID, "Damage_max", "20" ));
 					if( !linkOnly ) {
 						Earthdawn.set( TokenObj, "showname", true );
-						Earthdawn.set( TokenObj, "showplayers_name", ((pc == "0") || (state.Earthdawn.tokenLinkNPC & Earthdawn.tokenLinkNPC.showplayers_name)) ? true : false);
-						Earthdawn.set( TokenObj, "showplayers_bar1", ((pc == "0") && (state.Earthdawn.tokenLinkNPC & Earthdawn.tokenLinkNPC.showplayers_pcKarma)) 
-												|| ((pc != "0") && (state.Earthdawn.tokenLinkNPC & Earthdawn.tokenLinkNPC.showplayers_karma)) ? true : false);
-						Earthdawn.set( TokenObj, "showplayers_bar2", ((pc == "0") || (state.Earthdawn.tokenLinkNPC & Earthdawn.tokenLinkNPC.showplayers_wounds)) ? true : false);
-						Earthdawn.set( TokenObj, "showplayers_bar3", ((pc == "0") || (state.Earthdawn.tokenLinkNPC & Earthdawn.tokenLinkNPC.showplayers_damage)) ? true : false);
+						Earthdawn.set( TokenObj, "showplayers_name",  ((pc == "0") || (state.Earthdawn.tokenLinkNPC & Earthdawn.tokenLinkNPC.showplayers_name)) ? true : false);
+						Earthdawn.set( TokenObj, "showplayers_bar1", (((pc == "0") && (state.Earthdawn.tokenLinkNPC & Earthdawn.tokenLinkNPC.showplayers_pcKarma)) 
+																   || ((pc != "0") && (state.Earthdawn.tokenLinkNPC & Earthdawn.tokenLinkNPC.showplayers_karma))) ? true : false);
+						Earthdawn.set( TokenObj, "showplayers_bar2",  ((pc == "0") || (state.Earthdawn.tokenLinkNPC & Earthdawn.tokenLinkNPC.showplayers_wounds)) ? true : false);
+						Earthdawn.set( TokenObj, "showplayers_bar3",  ((pc == "0") || (state.Earthdawn.tokenLinkNPC & Earthdawn.tokenLinkNPC.showplayers_damage)) ? true : false);
 						Earthdawn.set( TokenObj, "showplayers_aura1", true );
 						Earthdawn.set( TokenObj, "showplayers_aura2", true );
 						Earthdawn.set( TokenObj, "light_hassight", pc != -1 );
 					}
-                    if( !setTokenOnly && ( pc == "0" || pc == "1" )) {        // Not a mook, unique PC or NPC.
-                        var kobj  = Earthdawn.findOrMakeObj({ _type: 'attribute', _characterid: edParse.charID, name: "Karma" }, 0);
-                        var kid = kobj.get("_id");
+                    if( !setTokenOnly && ( pc == "0" || pc == "1" )) {        // unique PC or NPC (not a mook).
+                        let kobj  = Earthdawn.findOrMakeObj({ _type: 'attribute', _characterid: edParse.charID, name: "Karma" }, 0);
+                        let kid = kobj.get("_id");
                         if( kid !== undefined )
                            Earthdawn.set( TokenObj, "bar1_link", kid );
                         kobj  = Earthdawn.findOrMakeObj({ _type: 'attribute', _characterid: edParse.charID, name: "Wounds" }, 0);
@@ -4348,6 +4397,7 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
 
                     // ParseObj.MarkerSet ( ssa )
                     // Set the Status Markers for current tokens
+					//  ssa[ 0 ] This does not matter, except if it is "sheetDirect", then the value has been directly changed on the sheet, and we want to set the status marker, but we do NOT want to update the value on the sheet (again). 
                     //  ssa[ 1 ] is condition to be set OR name of marker to be set. IE: "aggressive" or "sentry-gun" both set the same marker.
                     //  ssa[ 2 ] level. If -1 or start with letter the letter U (unset) or O (for off - but not equal ON), remove the marker.   
                     //                  If zero or not present or is ON or starts with S (set), set the marker without a badge.
@@ -4412,8 +4462,7 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
 								level = this.uncloned.misc.charIDsUnique[ indx + 1 ];
 								dupChar = true;
 							} else if( mi["attrib"] != undefined ) {
-								var attribute = Earthdawn.findOrMakeObj({ _type: 'attribute', _characterid: this.charID, name: mi["attrib"] }, 0);
-								level = (parseInt(attribute.get( "current" ) ) == "1") ? -1: 0;
+								level = (parseInt( Earthdawn.getAttrBN( this.charID, mi[ "attrib" ], 0)) == 1) ? -1: 0; 
 								this.uncloned.misc.charIDsUnique.push( this.charID );
 								this.uncloned.misc.charIDsUnique.push( level );
 							} else
@@ -4452,10 +4501,9 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
                     }
 //log( "marker: " + marker + "   level: " + level);
                     Earthdawn.set( this.tokenInfo.tokenObj, "status_" + marker, (( level < 0 ) ? false : (( level == 0 ) ? true : level.toString() )) );
-                    if( !dupChar && ( mi["attrib"] != undefined ) && !(mook && lu === "health")) {       // If this character has not already been done, also change the character sheet.
-                        var attribute = Earthdawn.findOrMakeObj({ _type: 'attribute', _characterid: this.charID, name: mi["attrib"] }, 0);
-                        var oldAtt = parseInt(attribute.get( "current" ) );
-                        var newAtt;
+					if( ssa[ 0 ] !== "sheetDirect" && !dupChar && ( mi["attrib"] != undefined ) && !(mook && lu === "health")) {       // If this character has not already been done, also change the character sheet.
+						let oldAtt = Earthdawn.getAttrBN( this.charID, mi[ "attrib" ], 0),
+							newAtt;
                         if( sm == undefined ) {         // This means it is a checkbox that is ether 1 (checked) or 0 (unchecked)
                             if( level < 0 ) {
                                 if( oldAtt != 0)
@@ -4482,8 +4530,10 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
                                 }
                             } else if ( ss === "t" )
 								newAtt = level ? "0" : "1";
+							else newAtt = level;
                         }
-                        if( newAtt !== undefined && oldAtt != newAtt) {
+                        if( newAtt !== undefined && newAtt != oldAtt) {
+							let attribute = Earthdawn.findOrMakeObj({ _type: 'attribute', _characterid: this.charID, name: mi["attrib"] }, 0);
                             Earthdawn.setWithWorker( attribute, "current", newAtt);
                         }
                     } // End Character (not mook)
@@ -4599,6 +4649,7 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
 							this.MacroDetail( "​Attrib", "!Earthdawn~ ChatMenu: Attrib", true );
 							this.MacroDetail( "Damage", "!Earthdawn~ ChatMenu: Damage", true );
 							this.MacroDetail( "Init", "!edToken~ %{selected|Dex-Initiative-Check}", true );
+							this.MacroDetail( "KnockD", "!edToken~ %{selected|Knockdown-Check", true );
 							this.MacroDetail( "Karma-R", "!edToken~ !Earthdawn~ Reason: 1 Karma Only~ ForEach~ Karma: 1~ Roll: 0", true );
 							this.MacroDetail( "Karma-T", "!edToken~ !Earthdawn~ ForEach~ marker: karma :t", true );
 							this.MacroDetail( "Skills", "!Earthdawn~ ChatMenu: Skills", true );
@@ -4608,8 +4659,8 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
 */ /*                    this.MacroDetail( "⚡Cast", "!edToken~ %{selected|SP-Spellcasting}", true );   /* high voltage: 9889; 
 */
 
-							this.MacroDetail( Earthdawn.constant( "Target" ) + "Clear-Targets", "!Earthdawn~ charID: @{selected|character_id}~ ForEach~ TargetsClear", true);
-							this.MacroDetail( Earthdawn.constant( "Target" ) +   "Set-Targets", "!Earthdawn~ charID: @{selected|character_id}~ Target: Set", true);
+//							this.MacroDetail( Earthdawn.constant( "Target" ) + "Clear-Targets", "!Earthdawn~ charID: @{selected|character_id}~ ForEach~ TargetsClear", true);
+//							this.MacroDetail( Earthdawn.constant( "Target" ) +   "Set-Targets", "!Earthdawn~ charID: @{selected|character_id}~ Target: Set", true);
 						}
 					} catch(err) {
 						this.edClass.errorLog( "ED.funcMisc.MacroCreate error caught: " + err );
@@ -4767,7 +4818,7 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
 								if( parseInt( ssa[ 4] ))
 									state.Earthdawn.tokenLinkNPC |= parseInt( ssa[ 3 ]);
 								else
-									state.Earthdawn.tokenLinkNPC &= parseInt( ssa[ 3 ]);
+									state.Earthdawn.tokenLinkNPC &= ~parseInt( ssa[ 3 ]);
 								this.chat( "Token Linking Options -   NPC names: " 		+ ((state.Earthdawn.tokenLinkNPC & Earthdawn.tokenLinkNPC.showplayers_name) ? "true" : "false") 
 											+ "   NPC / PC karma: "	+ ((state.Earthdawn.tokenLinkNPC & Earthdawn.tokenLinkNPC.showplayers_Karma) ? "true" : "false") 
 											+ " / "			 		+ ((state.Earthdawn.tokenLinkNPC & Earthdawn.tokenLinkNPC.showplayers_pcKarma) ? "true" : "false") 
@@ -4946,7 +4997,7 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
                 post =  (( ssa[ 1 ] === oldReal.trim() )    ? "" : ( ssa[ 1 ] + "   ")) +
                         (( ssa[ 2 ] === oldThroalic.trim()) ? "" : ( ssa[ 2 ] + "   ")) +
                         (( ssa[ 3 ] === "Other")            ? "" : ( ssa[ 5 ] + " " + parseInt( ssa[ 4 ]) + " " + dispItem + " ")) +
-                        (( newTotal === undefined)          ? "" : ( "(new total " + (( gold === undefined ) ? "" : gold + " GP and " ) + 
+                        (( newTotal === undefined)          ? "" : ( "(new total " + (( gold === undefined || gold == 0) ? "" : gold + " GP and " ) + 
 																	newTotal + " " + dispItem + ") "  )) +
                         reason.slice(1);
 
@@ -5438,7 +5489,7 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
 						if( modtype.endsWith( "-CC}" ))
 							txt += texttip( " Aggressive.", "Aggressive Stance: +3 bonus to Close Combat attack and damage tests. -3 Penalty to PD and MD. 1 Strain per Attack." );
 					}
-					if( "rsPrefix" in this.misc || "SP-Step" in this.misc ) {
+					if( "rsPrefix" in this.misc || "SP-Step" in this.misc ) {		// rsPrefix means came from "Action". SP-Step means spellcasing command line. 
 						if( Earthdawn.getAttrBN( this.charID, "combatOption-DefensiveStance", "0" ) == "1" && (action == 1 || modtype.startsWith( "@{Adjust-Damage-" ))) {
 							if ( ("Defensive" in this.misc ) )
 								extraMod += 3;
@@ -5577,28 +5628,26 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
 				else if ( rolls )
 					gmResult += "   <b>Result:</b> " + this.BuildRoll( true, this.misc[ "result" ], rolls );
 				if( "failBy" in this.misc )
-					txt += ((txt.length > 0) ? "   " : "" ) + "<span style='color: red;'>Failure</span> " 
+					txt += ((txt.length > 0) ? "   " : "" ) + "<span style='color: red;'>Failure</span>" 
 							+ ((( "StyleOverride" in this.misc ? this.misc[ "StyleOverride" ] : state.Earthdawn.style) != Earthdawn.style.VagueSuccess ) 
 							? " by " + this.BuildRoll( this.misc[ "showResult" ], this.misc[ "failBy" ], rolls ) + "." : "!" );
 				if( "succBy" in this.misc ) {
-					txt += ((txt.length > 0) ? "   " : "" ) + "<span style='color: green;'>Success</span> " 
+					let es = parseInt( "extraSucc" in this.misc ? this.misc[ "extraSucc" ] : 0 );
+					txt += ((txt.length > 0) ? "   " : "" ) + "<span style='color: green;'>Success</span>" 
 							+ ((( "StyleOverride" in this.misc ? this.misc[ "StyleOverride" ] : state.Earthdawn.style) != Earthdawn.style.VagueSuccess ) 
 							? " by " + this.BuildRoll( this.misc[ "showResult" ], this.misc[ "succBy" ], rolls ) : "!" )
-							+ (( "extraSucc" in this.misc && this.misc[ "extraSucc" ] > 0)
-							? (("sayTotalSuccess" in this.misc && this.misc[ "sayTotalSuccess" ] ) 
-								? new HtmlBuilder( "span", " (" + ( parseInt( this.misc[ "extraSucc" ] ) + 1) + " TOTAL Successes)", {
+							+ (("sayTotalSuccess" in this.misc && this.misc[ "sayTotalSuccess" ] )
+								? new HtmlBuilder( "span", " (" + (es +1) + " TOTAL Success" + ((es != 0) ? "es)" : ")"), {
 									style: { "background": "lavender" },
 									class: "showtip tipsy",
-									title: Earthdawn.encode( Earthdawn.encode( this.misc[ "extraSucc" ] 
-										+ " extra success" + (( this.misc[ "extraSucc" ] < 2) ? "!" : "es!") 
+									title: Earthdawn.encode( Earthdawn.encode( es + " extra success" + ((es != 1) ? "es!" : "!")
 										+ (("grimCast" in this.misc) ? " One added assuming you are casting from your own Grimoire." : ""))) })
-								: new HtmlBuilder( "span", " (" + this.misc[ "extraSucc" ] + " EXTRA Successes)", {
+								: (( es > 0) ? new HtmlBuilder( "span", " (" + es + " EXTRA Success" + ((es != 1) ? "es)" : ")"), {
 									style: { "background": "lightgoldenrodyellow" },
 									class: "showtip tipsy",
-									title: Earthdawn.encode( Earthdawn.encode(( parseInt( this.misc[ "extraSucc" ] ) + 1) 
-										+ " total success" + (( this.misc[ "extraSucc" ] < 1) ? "!" : "es!") 
+									title: Earthdawn.encode( Earthdawn.encode((es +1) + " total success" + ((es != 0) ? "es!" : "!") 
 										+ (("grimCast" in this.misc) ? " One added assuming you are casting from your own Grimoire." : ""))) })
-								) : ".");
+									: "." ))
 					if (this.misc[ "reason" ] === "Jumpup Test") {
 						body.append( (( ++linenum % 2) ? ".odd" : ".even"), "No longer Knocked Down");
 						this.MarkerSet( [ "m", "knocked", "u" ] );
@@ -5612,30 +5661,28 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
 				if( "RuleOfOnes" in this.misc ) {
 					body.append( "", "Rule of Ones", { style: { "background-color": "DarkRed", "color": "white", "text-align": 	"center" }});
 					playerCardNix.push( body._children.length );
+					delete this.misc[ "RuleOfOnes" ];		// Need to delete it, or will show up for other rolls in this group.
 				}
-
+				let TNall = (this.bFlags & Earthdawn.flags.VerboseRoll) 
+						|| (( "StyleOverride" in this.misc ? this.misc[ "StyleOverride" ] : state.Earthdawn.style) === Earthdawn.style.Full);
 				if( "secondaryResult" in this.misc ) {
-					let TNall = (this.bFlags & Earthdawn.flags.VerboseRoll) 
-							|| (( "StyleOverride" in this.misc ? this.misc[ "StyleOverride" ] : state.Earthdawn.style) === Earthdawn.style.Full);
+					let es = Math.floor(this.misc[ "secondaryResult" ] / 5);
 					txt = "<b>Cntr-Atk:</b>" 
 							+ ( TNall ? " TN# " + this.misc[ "targetNum2" ] : "" )
 							+ ((this.misc[ "secondaryResult" ] < 0)
 									? " <span style='color: red;'>Failed</span>  by " 
 									: " <span style='color: green;'>Succeeded</span> by ") 
 							+ Math.abs( this.misc[ "secondaryResult" ])
-							+ ((this.misc[ "secondaryResult" ] > 9)
-							? (("sayTotalSuccess" in this.misc && this.misc[ "sayTotalSuccess" ] )
-								? new HtmlBuilder( "span", " (" + Math.floor(this.misc[ "secondaryResult" ] / 5) + " TOTAL Successes)", {
-									style: { "background": "lavender" },
-									class: "showtip tipsy",
-									title: Earthdawn.encode( Earthdawn.encode( this.misc[ "extraSucc" ] 
-										+ " extra success" + (( this.misc[ "extraSucc" ] < 2) ? "!" : "es!"))) })
-								: new HtmlBuilder( "span", " (" + Math.floor((this.misc[ "secondaryResult" ] - 5) / 5) + " EXTRA Successes)", {
+							+ (("sayTotalSuccess" in this.misc && this.misc[ "sayTotalSuccess" ] )
+							? new HtmlBuilder( "span", " (" + (es +1) + " TOTAL Success" + ((es != 0) ? "es)" : ")"), {
+								style: { "background": "lavender" },
+								class: "showtip tipsy",
+								title: Earthdawn.encode( Earthdawn.encode( es + " extra success" + ((es != 1) ? "es!" : "!"))) })
+							: (( es > 0) ? new HtmlBuilder( "span", " (" + es + " EXTRA Success" + ((es != 1) ? "es)" : ")"), {
 									style: { "background": "lightgoldenrodyellow" },
 									class: "showtip tipsy",
-									title: Earthdawn.encode( Earthdawn.encode( Math.floor(this.misc[ "secondaryResult" ] / 5)
-										+ " total success" + ((this.misc[ "secondaryResult" ] < 9) ? "!" : "es!"))) })
-							) : ".");
+									title: Earthdawn.encode( Earthdawn.encode((es +1) + " total success" + ((es != 0) ? "es!" : "!"))) })
+								: "." ))
 					if( txt.length > 0 ) {
 						body.append( (( ++linenum % 2) ? ".odd" : ".even"), txt);
 						playerCardNix.push( body._children.length );
@@ -5875,7 +5922,8 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
                     if( attName === undefined )
                         return;
 
-                    attValue = parseInt( getAttrByName( po.charID, attName ) || 0);
+                    attValue = parseInt( Earthdawn.getAttrBN( po.charID, attName, 0 ));
+//                    attValue = parseInt( getAttrByName( po.charID, attName ) || 0);
 //log( attName + "   " + attValue);
                     if( attValue === 0 ) 
                         return;
@@ -6195,6 +6243,7 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
 					let fx = Earthdawn.getAttrBN( this.charID, pre + "FX", "");
 					if( fx && ( fx.startsWith( "Attempt" ) || fx.startsWith( "Success")))
 						this.misc[ "FX" ] = fx;
+					this.misc[ "succMsg" ] = Earthdawn.getAttrBN( this.charID, pre + "SuccessText", "");
 					this.misc[ "sayTotalSuccess" ] = Earthdawn.getAttrBN( this.charID, pre + "sayTotalSuccess", "0" ) == "1";
 					ssa[ 2 ] = "Cast2";
 					this.misc[ "Spell" ] = ssa;
@@ -6296,10 +6345,10 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
 
 					this.misc[ "headcolor" ] = "effect";
 					if (Earthdawn.getAttrBN( this.charID, "SP-Willforce-Use", "0") == "1") {
-						this.doLater += "~Karma: SP-WilEffect-Karma-Control: SP-Willforce-Karma-Control" + "~Strain: 1";
+						this.doLater += "~Karma: kcdef: -1: SP-WilEffect-Karma-Control: kcdef: 0: SP-Willforce-Karma-Control" + "~Strain: 1";
 						this.misc[ "reason" ] = Earthdawn.getAttrBN( this.charID, pre + (!bGrim ? "Contains" : "Name"), "") + " WillForce Effect";
 					} else {
-						this.doLater += "~Karma: SP-WilEffect-Karma-Control"; 
+						this.doLater += "~Karma: kcdef: -1: SP-WilEffect-Karma-Control"; 
 						this.misc[ "reason" ] = Earthdawn.getAttrBN( this.charID, pre + (!bGrim ? "Contains" : "Name"), "") + " Will Effect";
 					}
 					let fx = Earthdawn.getAttrBN( this.charID, pre + "FX", "");
@@ -6658,6 +6707,7 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
 						//
 						// This operates on section variable fullText.
 				function removePageNumbers() {
+					'use strict';
 					let eol = fullText.length,
 						prev = eol,
 						i = fullText.lastIndexOf( '\n', eol -1 );
@@ -6680,6 +6730,7 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
 
 						// This operates on section variables fullText and name.
 				function getName () {		// Name needs to be alone on first line.
+					'use strict';
 					let i = fullText.indexOf( '\n' );
 					locTextStart = i + 1;
 					return fullText.slice( 0, i).trim();
@@ -6697,37 +6748,60 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
 						//
 						// This routine is self-contained and does not operate on section variables. 
 				function textBlock( tBlock, liberal ) {
+					'use strict';
 					if( typeof tBlock !== 'string' ) {
 						po.edClass.errorLog( "edParse.textImport.textBlock: Bad Value" );
 						log( tBlock);
 						return;
 					}
-								// For some reason lines "Immune to Fear" don't end with punctuation. 
 								// So if we find a newline that we are going to keep, and then a line that starts with a capital letter and has 4 or less words before the next newline, and then a Capital letter, keep the 2nd newline as well.
 					let nlnew = 0, ind = [ 0 ], ma;
 					if ( liberal )
 						ma = tBlock.match( /[\\.\\?\\!\\)\\:\\;]\s*\n\s*[A-Z]/g );		// As below, but also accept an end paran, end bracket, colon, or semi-colon. 
 					else
 						ma = tBlock.match( /[\\.\\?\\!]\s*\n\s*[A-Z]/g );				// All occurrences of, a punctuation mark, a newline, and then a capital letter. 
-					let mb = tBlock.match( /\n\s*[A-Z]\s*(\w+\b\W*){1,4}\s*\n\s*[A-Z]/g ),		// newline Capital one to four words a newline and a capital. 
-						mc = tBlock.match( /^\s*[A-Z]\s*(\w+\b\W*){1,4}\s*\n\s*[A-Z]/g );		// As above, except start of string instead of newline. 
- 
-					function keep( m, words ) {
+					let mb = tBlock.match( /(^|\n)\s*[A-Z]\s*(\w+\b\W*){1,4}\s*(?=(\n\s*[A-Z]|$))/g ),		// For some reason lines "Immune to (Fear or whatever)" don't end with punctuation.  newline Capital one to four words a newline and a capital. 
+						mc = tBlock.match( /(^|\n)\s*(Fury|Resist Pain|Willful|Ambush|Dive|Charge)\s*\(.*?\)\s*(?=(\s*\n|$))/gi ),		// start of line, certain words, start and ending paren and everything inside, than another newline, keep both newlines. 
+						md = tBlock.match(  /(^|\n)\s*Enhanced Sense\s*(.*?\b){1,6}\s*(?=(\n\s*[A-Z]|$))/g );
+
+								// we don't want to keep a \n inside a (), [], or {}. 
+								// if a backward search finds a ( before a ), and a forward search finds a ) before a (, then keep 
+					function inside( cr, opn, cls ) {
+						'use strict';
+						let opnloc = tBlock.lastIndexOf( opn, cr );
+						if( opnloc === -1 ) return false;
+						let clsloc = tBlock.lastIndexOf( cls, cr );
+						if( clsloc === -1 || (clsloc < opnloc)) {
+							clsloc = tBlock.indexOf( cls, cr );
+							if( clsloc === -1 ) return false;
+							opnloc = tBlock.indexOf( opn, cr );
+							if( opnloc === -1 || clsloc < opnloc)
+								return true;
+						}
+						return false;
+					}
+							// Find a list (ind) of newlines that we are going to keep. 
+							// flags bit 1, keep the newline at the front.		// flags bit 2, keep the newline at the end.
+					function keep( m, flags ) {
+						'use strict';
 						if( !m ) return;
 						let curr = -1;
 						for (let i = 0; i < m.length; ++i ) {
 							curr = tBlock.indexOf( m[ i ], curr + 1);
 							if( curr !== -1 )
-								if( !words )
-									ind.push( tBlock.indexOf( "\n", curr));			// for match ma, we want the first newline (which will be the 2nd character)
-								else if( ind.indexOf( curr ) !== -1)				// mb and mc only are kept if we already determined that the FIRST newline in the string is to be kept.
-									ind.push( tBlock.indexOf( "\n", curr + 1));		// for match mb and mc, we want the 2nd newline, so skip the first character (which is the first newline)
-					}	}
-					keep( ma, false );
-					keep( mb, true );
-					keep( mc, true);
+								if (!inside( curr, "(", ")" ) && !inside( curr, "[", "]" ) && !inside( curr, "{", "}" )) {
+									if( flags & 1 )
+										ind.push( tBlock.indexOf( "\n", curr -1));			// We want the first newline (for match ma it will be the 2nd character, for md and me it will be the first)
+									if( flags & 2) {
+										let t = tBlock.indexOf( "\n", curr +1);
+										if(( flags & 2) && (t !== -1))		// mb and mc only are kept if we already determined that the FIRST newline in the string is to be kept.
+											ind.push( t );			// for match mb, mc, md and me, we want the 2nd newline, so skip the first character (which is the first newline)
+					}	}		}	}
+					keep( mc, 3);
+					keep( ma, 1);
+					keep( mb, 2);		keep( md, 2);
 					while( (nlnew = tBlock.indexOf( '\n', nlnew +1 )) !== -1) {				// Check every newline in tBlock
-						if( ind.indexOf( nlnew ) === -1 )
+						if( ind.indexOf( nlnew ) === -1 )									// ind array is list of newlines we want to KEEP.
 							tBlock = tBlock.slice( 0, nlnew) + " " + tBlock.slice( nlnew +1 );		// replace all \n that are not where we think the paragraph ends with space.
 					}
 //log( tBlock);
@@ -6770,6 +6844,7 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
 						// Find toFind, and save it's index.
 						// This operates upon section variables block and blockIndexArray
 				function blockIndex( toFind, newline ) {
+					'use strict';
 					let x = findToken( toFind, newline );
 					if( x > -1) {
 						if( newline )			// If we insisted toFind be the first thing after a newline, find the first non-whitespace character as the real start.
@@ -6980,17 +7055,17 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
 							case "Default":		// 1879			This is 1879 field saying if a skill is default-able. Just add it to afterBlock.
 								break;
 							case "devotion required": {			// Questor Devotions			Devotions Required: Yes
-								let x = statBlock( i, tf, null, "Word" );
+								let x = statBlock( i, tf, null, "Word" ), b;
 								if( x && "val" in x ) {
-									let b = ( x[ "val" ].trim().slice(0, 1).toUpperCase() === "Y" ),
-										aobj = Earthdawn.findOrMakeObj({ _type: 'attribute', _characterid: po.charID, name: pre + "DP-Req" });
+									b = ( x[ "val" ].trim().slice(0, 1).toUpperCase() === "Y" );
+									let aobj = Earthdawn.findOrMakeObj({ _type: 'attribute', _characterid: po.charID, name: pre + "DP-Req" });
 									aobj.setWithWorker( "current", b ? "1" : "0");
 								}
 								let bobj = Earthdawn.findOrMakeObj({ _type: 'attribute', _characterid: po.charID, name: pre + "Type" }, "QD-Follower");
 								let y = bobj.get( "current" );
 								if( y && y.slice(0, 3) !== "QD-" )		// If not already set to questor devotion, set it. 
 									bobj.setWithWorker( "current", "QD-Follower");
-								bobj = Earthdawn.findOrMakeObj({ _type: 'attribute', _characterid: po.charID, name: pre + "DP-Control" }, "1");
+								bobj = Earthdawn.findOrMakeObj({ _type: 'attribute', _characterid: po.charID, name: pre + "DP-Control" }, b ? "1" : "0");
 							}	break;
 							case "karma": {		// 1879
 								let x = statBlock( i, tf, null, "Word" );
@@ -7022,7 +7097,6 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
 									}
 									if( !tdate )
 										tdate = "1517-1-1";
-
 									let sdate = today.getFullYear() + "-" + (today.getMonth()+1) + "-" + today.getDate();
 									let	stem = "&{template:chatrecord} {{header=" + getAttrByName( po.charID, "character_name" ) + ": " + name + "}}"
 											+ "{{misclabel=Knack}}{{miscval=Rank " + rnk + "}}"
@@ -7403,7 +7477,7 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
 //log( "parse " + name + "    " + mult); log(block);
 						let dsp = getDSP(),
 							lastBlock = 9999,		// This holds the index number of the first label that is not a short simple value. The short simple values are all lumped into one afterblock. The ones after this index all have special processing. 
-							spells;
+							spells, third;
 
 											// Here we are messing with the DSP repeating section. 
 											// Unless it has already been set to Spirit, we are going to set this to Creature, and set the Circle to the Challenge Rating.
@@ -7508,7 +7582,7 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
 
 
 // Note: ToDo 1879
-						blockIndex( "Challenge" );
+						blockIndex( "Challenge" );				blockIndex( "Legend Award" );	// Challenge is 4th edition, Legend Award is 3rd.
 						blockIndex( "DEX" );
 						blockIndex( "STR" );
 						blockIndex( "TOU" );
@@ -7516,24 +7590,16 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
 						blockIndex( "WIL" );
 						blockIndex( "CHA" );
 						blockIndex( "Initiative" );
-						blockIndex( "Uncon" );
-						blockIndex( "Unconsciousness" );
-						blockIndex( "Death" );
-						blockIndex( "Death Rating" );
-						blockIndex( "Wound" );
-						blockIndex( "Wound Threshold" );
+						blockIndex( "Unconsciousness" );		blockIndex( "Uncon" );
+						blockIndex( "Death Rating" );			blockIndex( "Death" );
+						blockIndex( "Wound Threshold" );		blockIndex( "Wound" );
 						blockIndex( "Recovery Tests" );
 						blockIndex( "Knockdown" );
-						blockIndex( "Physical Defense" );
-						blockIndex( "PhyDef" );
-						blockIndex( "Mystic Defense" );
-						blockIndex( "MysDef" );
-						blockIndex( "Social Defense" );
-						blockIndex( "SocDef" );
-						blockIndex( "Physical Armor" );
-						blockIndex( "PhyArm" );
-						blockIndex( "Mystic Armor" );
-						blockIndex( "MysArm" );
+						blockIndex( "Physical Defense" );		blockIndex( "PhyDef" );
+						blockIndex( "Mystic Defense" );			blockIndex( "MysDef" );				blockIndex( "Spell Defense" ); // 3rd editon. 
+						blockIndex( "Social Defense" );			blockIndex( "SocDef" );
+						blockIndex( "Physical Armor" );			blockIndex( "PhyArm" );
+						blockIndex( "Mystic Armor" );			blockIndex( "MysArm" );
 						blockIndex( "Karma" );
 						blockIndex( "Movement" );
 						blockIndex( "Move" );
@@ -7653,6 +7719,7 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
 				case "wound":	case "wound threshold": 	getStuff( i, 0x00, tf, "Wound-Threshold", 7 );			break;
 								case "recovery tests": 		getStuff( i, 0x00, tf, "Recovery-Tests_max", 2 );		break;
 				case "phydef":	case "physical defense":	getStuff( i, 0x00, tf, "PD", 6 );						break;
+				case "spell defense":	
 				case "mysdef":	case "mystic defense":		getStuff( i, 0x00, tf, "MD", 6 );						break;
 				case "socdef":	case "social defense":		getStuff( i, 0x00, tf, "SD", 6 );						break;
 				case "phyarm":	case "mystic armor":		getStuff( i, 0x00, tf, "MA-Nat", 2 );					break;
@@ -7669,12 +7736,19 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
 												aObj.set( "max", k );
 									}	}	}
 								}	break;
+								case "legend award": third = true;
 								case "challenge": {			// new creature only. 		// Challenge: Journeyman (Seventh Circle)
-									let x = statBlock( i, tf, null, "Word" );			// This will get the tier, such as "Journeyman"
+									let ord, 
+										x = statBlock( i, tf, null, "Word" );			// This will get the tier, such as "Journeyman"
 									if ( "Creature" in dsp ) {
-										let fnd = x[ "remain" ].match( /\(\w+/i );		// get circle as first word inside paren
-										if( fnd ) {
-											let ord = fnd[0].slice(1).toLowerCase();
+										if ( third )
+											ord = x[ "val" ].toLowerCase();
+										else {
+											let fnd = x[ "remain" ].match( /\(\w+/i );		// get circle as first word inside paren
+											if( fnd )
+												ord = fnd[0].slice(1).toLowerCase();
+										}
+										if( ord ) {
 											let cr = [ "zero", "first", "second", "third", "fourth", "fifth", "sixth", "seventh", "eighth", "ninth", 
 														"tenth", "eleventh", "twelfth", "thirteenth", "fourteenth", "fifteenth", "sixteenth" ].indexOf( ord );
 											if( cr !== -1 ) {
@@ -7825,25 +7899,11 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
 								modify( mult, t[ "lu" ], t[ "cur" ] );
 						}
 
-									// We want to wait until sheet workers have set all the updates done above. 
-						let aobj = Earthdawn.findOrMakeObj({ _type: 'attribute', _characterid: po.charID, name: "wt-test1" }, 0),
-							wt1 = aobj.get( "current" ),
-							wt2 = Earthdawn.getAttrBN( po.charID, "wt-test2", 0),
-							lookfor = 0;
-						while(( lookfor == wt1 || lookfor == wt2) && lookfor < 4 )
-							++lookfor;
-						Earthdawn.setWithWorker( aobj, "current", lookfor);
-						function waitForWtest( n ) {
-							setTimeout( function() {
-								if( n < 1 )
-									creature2();
-								else {
-									if (Earthdawn.getAttrBN( po.charID, "wt-test2", 0) == lookfor)
-										waitForWtest( 0 );
-									else
-										waitForWtest( n-1);
-						}	}, 1000);	}
-						waitForWtest( 15 );			// Wait no more than 15 seconds. 
+						onSheetWorkerCompleted(function() {			// We want to wait until sheet workers have set all the updates done above.
+							creature2();
+						});
+						let aobj = Earthdawn.findOrMakeObj({ _type: 'attribute', _characterid: po.charID, name: "wt-test1" }, 0);
+						Earthdawn.setWithWorker( aobj, "current", Earthdawn.getAttrBN( po.charID, "wt-test1", 0) +2);		// On the very unlikely chance that the sheetworker stack is already empty, call a sheetworker. 
 
 
 
@@ -7867,7 +7927,7 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
 						case "wound":	case "wound threshold": 	Adjust( 0x01, tf, undefined, "Wound-Threshold", 	 7, "Wound-Threshold-Adjust" );		break;
 										case "recovery tests": 		Adjust( 0x01, tf, undefined, "Recovery-Tests_max", 	 2, "Recovery-Tests-Misc-Adjust" );	break;
 						case "phydef":	case "physical defense":	Adjust( 0x01, tf, undefined, "PD", 6, "Defense-Phys-Nat-Adjust" );				break;
-						case "mysdef":	case "mystic defense":		Adjust( 0x01, tf, undefined, "MD", 6, "Defense-Myst-Nat-Adjust" );				break;
+case "spell defense":	case "mysdef":	case "mystic defense":		Adjust( 0x01, tf, undefined, "MD", 6, "Defense-Myst-Nat-Adjust" );				break;
 						case "socdef":	case "social defense":		Adjust( 0x01, tf, undefined, "SD", 6, "Defense-Soc-Nat-Adjust" );				break;
 						case "mysarm":	case "mystic armor":		Adjust( 0x01, tf, undefined, "MA-Nat", 2, "Armor-Myst-Nat-Adjust" );			break;
 										case "actions": {		// Actions: 2; Bite: 18 (14), Claw x2: 18 (13)
@@ -8228,12 +8288,16 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
 												+ "The spirit makes a Temperature test, comparing it to the Mystic Defense of each character in the area of effect. Each success causes affected targets to suffer a -1 penalty to their Perception and Willpower based tests. The effect lasts for a number of minutes equal to the spirit’s Strength Rating." );
 										} // end lst not blank (purposely indented wrong). 
 
-											function parenvalue( toCheck, rank, toFind, attra ) {
+											function parenvalue( toCheck, rank, toFind, attra, chkbox ) {
 												'use strict';
 												let fnd = toCheck.match( new RegExp( "^\\s*" + toFind.replace( /\s+/g, "\\s*" ), "gi" ) );
 												if( fnd ) {
 													let aObj = Earthdawn.findOrMakeObj({ _type: 'attribute', _characterid: po.charID, name: attra });
 													Earthdawn.setWithWorker( aObj, "current",  (parseInt( aObj.get( "current" )) || 0) + (parseInt(rank) * ((mult < 0) ? -1 : 1)));
+													if( chkbox ) {
+														let aObj = Earthdawn.findOrMakeObj({ _type: 'attribute', _characterid: po.charID, name: chkbox });
+														Earthdawn.setWithWorker( aObj, "current", 1 );
+													}
 													return 1;
 												} return 0;
 											}
@@ -8277,9 +8341,9 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
 												cnt += parenvalue( pwr, rnk, "Fury", "Creature-Fury");			// Fury (2)
 												cnt += parenvalue( pwr, rnk, "Resist Pain", "Creature-ResistPain");
 												cnt += parenvalue( pwr, rnk, "Willful", "Creature-Willful");
-												cnt += parenvalue( pwr, rnk, "Ambush", "Creature-Ambush");		// Creature-Ambushing
-												cnt += parenvalue( pwr, rnk, "Dive", "Creature-DiveCharge");		// Creature-DivingCharging
-												cnt += parenvalue( pwr, rnk, "Charge", "Creature-DiveCharge");	// Creature-DivingCharging
+												cnt += parenvalue( pwr, rnk, "Ambush", "Creature-Ambush", "Creature-Ambushing");
+												cnt += parenvalue( pwr, rnk, "Dive", "Creature-DiveCharge", "Creature-DivingCharging");
+												cnt += parenvalue( pwr, rnk, "Charge", "Creature-DiveCharge", "Creature-DivingCharging");
 
 												pwr = pwr.trim();
 												bio += "<br>" + "<i>" + pwr + "</i>" + (rnk ? " (" + rnk + ")" : "") + (ptxt ? " " + ptxt : "");
@@ -8318,7 +8382,7 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
 												+ ("equipment" in save 	? "<p>" + textBlock( save[ "equipment" ] ) + "</p>" : "" )
 												+ ("loot" in save 	? "<p>" + textBlock( save[ "loot" ] ) + "</p>" : "" )
 												+ "<p>--- <b>Description</b> ---\n" 
-												+ textBlock( fullText.slice( locTextStart, blockOffset ).trim()).replace( /\n/g, "<\p><p>") + "<\p>"
+												+ textBlock( fullText.slice( locTextStart, blockOffset ).trim()).replace( /\n/g, "</p><p>") + "</p>"
 												+ "<p>" + afterBlock.trim().replace( /\n/g, " ") + "</p>"			// afterBlock is the stat block.
 												).replace( /\n/g, "<br>" ));
 									}
@@ -9006,7 +9070,7 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
 						this.misc[ "headcolor" ] = "recovery";
 						if (Earthdawn.getAttrBN( this.charID, "NPC", "0") != "2") {
 							let aobj = Earthdawn.findOrMakeObj({ _type: 'attribute', _characterid: this.charID, name: "Recovery-Tests" }, 0, 2);
-							if( aobj.get( "current" ) >= Earthdawn.getAttrBN( this.charID, "Recovery-Tests_max", "2")) {
+							if( (aobj.get( "current" ) || 0) >= Earthdawn.getAttrBN( this.charID, "Recovery-Tests_max", "2")) {
 								this.chat( this.tokenInfo.name + " does not have a recover test to spend.", Earthdawn.whoFrom.apiWarning );
 								falloutParse = true;
 							} else
@@ -9019,7 +9083,7 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
 						this.misc[ "headcolor" ] = "md";
 						if( Earthdawn.getAttrBN( this.charID, base + "SuccessLevels", "None") !== "Effect +2 Inc")
 							this.bFlags |= Earthdawn.flags.NoOppMnvr;
-						this.doLater += "~Karma: SP-Spellcasting-Karma-Control";
+						this.doLater += "~Karma: kcdef: 0: SP-Spellcasting-Karma-Control";
 						this.misc[ "reason" ] = Earthdawn.getAttrBN( this.charID, base + "Contains", "") + " Spellcasting Test";
 						SubsegmentArray = [ "value", "SP-Spellcasting-Step" ];
 					}	break;
@@ -9030,10 +9094,10 @@ this.edClass.errorLog( "spm_wil_effect  I think this is dead code. used to be ol
 						let base = Earthdawn.buildPre( "SPM", SubsegmentArray[2] );
 						this.misc[ "headcolor" ] = "effect";
 						if (Earthdawn.getAttrBN( this.charID, "SP-Willforce-Use", "0") == "1") {
-							this.doLater += "~Karma: SP-WilEffect-Karma-Control: SP-Willforce-Karma-Control" + "~Strain: 1";
+							this.doLater += "~Karma: kcdef: -1: SP-WilEffect-Karma-Control: kcdef: 0: SP-Willforce-Karma-Control" + "~Strain: 1";
 							this.misc[ "reason" ] = Earthdawn.getAttrBN( this.charID, base + "Contains", "") + " WillForce Effect";
 						} else {
-							this.doLater += "~Karma: SP-WilEffect-Karma-Control"; 
+							this.doLater += "~Karma: kcdef: -1: SP-WilEffect-Karma-Control"; 
 							this.misc[ "reason" ] = Earthdawn.getAttrBN( this.charID, base + "Contains", "") + " Will Effect";
 						}
 						this.Parse( "armortype: " + Earthdawn.getAttrBN( this.charID, base + "EffectArmor", "N/A") );
@@ -9045,10 +9109,10 @@ this.edClass.errorLog( "spm_wil_effect  I think this is dead code. used to be ol
 					case "will-effect":		// Generic casting will effect button. 
 						this.misc[ "headcolor" ] = "effect";
 						if (Earthdawn.getAttrBN( this.charID, "SP-Willforce-Use", "0") == "1") {
-							this.doLater += "~Karma: SP-WilEffect-Karma-Control: SP-Willforce-Karma-Control" + "~Strain: 1";
+							this.doLater += "~Karma: kcdef: -1: SP-WilEffect-Karma-Control: kcdef: 0: SP-Willforce-Karma-Control" + "~Strain: 1";
 							this.misc[ "reason" ] = "WillForce Effect"; 
 						} else {
-							this.doLater += "~Karma: SP-WilEffect-Karma-Control"; 
+							this.doLater += "~Karma: kcdef: -1: SP-WilEffect-Karma-Control"; 
 							this.misc[ "reason" ] = "Will Effect";
 						}
 						this.bFlags |= (Earthdawn.flagsArmor.Unknown & Earthdawn.flags.WillEffect );
@@ -9246,6 +9310,8 @@ on("ready", function() {
 						ED.updateVersion1p0021( attr.get( "_characterid" ));
 					if( shouldUpdate( 1.0022 ))
 						ED.updateVersion1p0022( attr.get( "_characterid" ));
+//					if( shouldUpdate( 1.0023 ))
+//						ED.updateVersion1p0023( attr.get( "_characterid" ));
 					break;
 				default:
 					log( "Unknown command in APIflag: " + cmd);
@@ -9341,6 +9407,8 @@ on("ready", function() {
 							log( "Continued: Got type: " + type );
 						}
 					}
+					if( lpBasis > 3 ) 
+						lpBasis = 3;		// Can't cost higher than master. 
 					return 
 				} // end typeLP
 
@@ -9499,19 +9567,19 @@ on("ready", function() {
 					if( party !== undefined )			// Look for throalic date on the "Party" sheet.
 						tdate = Earthdawn.getAttrBN( party.get( "_id" ), "record-date-throalic", "" ); 
 				}
-				if( !tdate )
+				if( !tdate && state.Earthdawn.gED )
 					tdate = "1517-1-1";
 
-                switch( wrapper ) {
+                switch( wrapper ) {				// This switch is for catagories that are calculated once, no matter how many ranks have been gained. 
 				case "SP-Circle":
 				case "NAC_Requirements":
 					break;
-				default:		// All except SP-Circle
+				default:		// All except DSP-Circle
 					for( let ind = rankMin; ind < rankMax; ++ind) {			// We want this loop to go once for each rank being done.
-						switch( wrapper ) {
+						switch( wrapper ) {			// This switch is run once per rank gained.
 						case "DSP_Circle":
 							if( rankTo > 0 )
-								silver = Earthdawn.fibonacci( ind + 1 ) * 100;
+								silver = [ 0, 0, 200, 300, 500, 800, 1000, 1500, 2000, 2500, 3500, 5000, 7500, 10000, 15000, 20000 ][ ind + 1 ]
 							break;
 						case "Increases":
 							let stepValue = Math.floor(( 5 + ind + parseInt( Earthdawn.getAttrBN( cID, sa.slice( 0, -9 ) + "Race", "0" ))
@@ -9535,15 +9603,11 @@ on("ready", function() {
 								if( state.Earthdawn.gED ) {
 									silver += (ind + 1) * (ind + 1) * 10;
 									sTime = iTime + " weeks" + (( wrapper === "Rank") ? "." : " plus a month." );
-								}
-							}
-						}
-					}
-				}
+				}	}	}	}	}
 
 				let sdate = today.getFullYear() + "-" + (today.getMonth()+1) + "-" + today.getDate();
 				let	stem = "&{template:chatrecord} {{header=" + getAttrByName( cID, "character_name" ) + ": " + header + "}}" 
-							+ ( rankDiff < 0 ? "{{refund=Refund}}" : "") + ((tdate !== "" ) ? "{{throalic=" + tdate + "}}" : "");
+							+ ( rankDiff < 0 ? "{{refund=Refund}}" : "") + (tdate ? "{{throalic=" + tdate + "}}" : "");
 				let slink = "{{button1=[Press here](!Earthdawn~ charID: " + cID;
 
 				if ( miscval )
@@ -9751,6 +9815,14 @@ on("ready", function() {
 			case "Creature-Ambushing":
 			case "Creature-DivingCharging":
             case "condition-Darkness":
+			case "condition-Entangled-Grappled":
+			case "condition-Poisoned":
+			case "condition-Stealth":
+			case "condition-Flying":
+			case "condition-Buffed":
+			case "condition-Buffed2":
+			case "condition-Debuffed":
+			case "condition-Debuffed2":
             case "condition-Health": {
                 let ED = new Earthdawn.EDclass();
                 let edParse = new ED.ParseObj( ED );
@@ -9769,7 +9841,7 @@ on("ready", function() {
 					if ( i != -1) {				// There is a [n^a] structure. 
 						op = sm.charAt( sm.indexOf( "^", i) + 1);
 					} else					// The sub-menu has no [n^a] structure, so just send the value with a z in front of it.
-						op = "z" + attr.get("current");
+						op = attr.get("current");
 				} 
 				if( "a" <= op && op <= "j" )
 					op = (op.charCodeAt( 0 ) - 96).toString();
@@ -9777,10 +9849,9 @@ on("ready", function() {
                 let tkns = findObjs({ _type: "graphic",  _subtype: "token", represents: edParse.charID });
                     _.each( tkns, function (TokObj) {
 						edParse.tokenInfo = { type: "token", tokenObj: TokObj }	
-						edParse.MarkerSet( [ "marker", code, op] );
+						edParse.MarkerSet( [ "sheetDirect", code, op] );
                     }) // End ForEach Token 
 			}   break;
-
             case "Creature-Ambush":
 				Earthdawn.abilityRemove( cID, "Ambush");
 				if( parseInt( attr.get("current")))
@@ -9822,7 +9893,7 @@ on("ready", function() {
 					Earthdawn.setWithWorker( aobj, "current", rtype );
 				}	// Falls through to below. 
 			case "Attack-Rank": {
-                if( Earthdawn.getAttrBN( cID, "NPC", "0") > "0" && Earthdawn.getAttrBN( cID, "Attack-Rank", 0) != 0)			// NPC or Mook and have a generic attack value.
+                if( parseInt(Earthdawn.getAttrBN( cID, "NPC", "0")) > 0 && Earthdawn.getAttrBN( cID, "Attack-Rank", 0) != 0)			// NPC or Mook and have a generic attack value.
                     Earthdawn.abilityAdd( cID, "Attack", "!edToken~ %{selected|Attack-CB}");
                 else		// PC
                     Earthdawn.abilityRemove( cID, "Attack" );
@@ -9862,7 +9933,10 @@ on("ready", function() {
 					edParse.textImport( [ "Attribute", "Mask", "Add", attr.get( "current" ) ] );
 					break;
 				default: 
-					edParse.chat( "Error! could not import. " + getAttrByName(edParse.charID, "SpecialFunction" ).trim(), Earthdawn.whoFrom.apiError );
+					let x = getAttrByName(edParse.charID, "SpecialFunction" );
+					if ( x && typeof x === "string" ) x = x.trim();
+					else x = "undefined";
+					edParse.chat( "Error! could not import. " + x, Earthdawn.whoFrom.apiError );
 				}
 				Earthdawn.waitToRemove( cID, sa, 15 );
 			}	} // End switch
@@ -9941,7 +10015,7 @@ on("ready", function() {
 		let rep = attr.get("represents");
 		if( rep && rep != "" ) {
 			let npc = Earthdawn.getAttrBN( rep, "NPC", "0" );
-			if( 0 > npc || npc > 1 )				// Don't mess with the statusmarkers of anything except PCs and NPC. 
+			if( npc < 0 || npc > 1 )				// Don't mess with the statusmarkers of anything except PCs and NPC. 
 				return;
 			let newSM = _.without( attr.get( "statusmarkers" ).split( "," ), ""),		// split( "" ) will return an array of [""], so filter those out. 
 				oldSM = _.without( prev[ "statusmarkers" ].split( "," ), "");
