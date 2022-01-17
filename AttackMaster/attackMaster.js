@@ -101,12 +101,13 @@
  * v1.038  08/01/2022  Added database indexing for improved performance
  *                     Changed data tags to reflect newest standard
  *                     Fixed bug relating to calculated AC0 when checking AC
+ *                     Fixed ranged weapon magical to-hit bonus due to spells in operation
  */
  
 var attackMaster = (function() {
 	'use strict'; 
 	var version = 1.038,
-		author = 'RED',
+		author = 'Richard @ Damery',
 		pending = null;
 
 	/*
@@ -712,9 +713,7 @@ var attackMaster = (function() {
 							+'<p>AttackMaster API provides functions to manage weapons, armour & shields, including taking weapons in hand and using them to attack.  It uses standard AD&D 2e rules to the full extent, taking into account: ranged weapon ammo management with ranges varying appropriately and range penalties/bonuses applied; Strength & Dexterity bonuses where appropriate; any magic bonuses to attacks that are in effect (if used with <b>RoundMaster API</b> effects); penalties & bonuses for non-proficiency, proficiency, specialisation & mastery; penalties for non-Rangers attacking with two weapons; use of 1-handed, 2-handed or many-handed weapons and restrictions on the number of weapons & shields that can be held at the same time; plus many other features.  This API works best with the databases provided with this API, which hold the data for automatic definition of weapons and armour.  However, some attack commands will generally work with manual entry of weapons onto the character sheet.  The <b>CommandMaster API</b> can be used by the GM to easily manage weapon proficiencies.</p>'
 							+'<p>Specification for weapons, armour & shields are implemented as ability macros in specific database character sheets.  This API comes with a wide selection of weapon and armour macros, held in databases that are created and updated automatically when the API is run.  If the <b>MagicMaster API</b> is also loaded, it provides many more specifications for standard and magic items that are beneficial to melee actions and armour class.  The GM can add to the provided items in the databases using standard Roll20 Character Sheet editing, following the instructions provided in the relevant Database Help handout.</p>'
 							+'<p><b><u>Note:</u></b> For some aspects of the APIs to work, the <b>ChatSetAttr API</b> and the <b>Tokenmod API</b>, both from the Roll20 Script Library, must be loaded.  It is also <i>highly recommended</i> to load all the other RPGMaster series APIs: <b>RoundMaster, InitiativeMaster, MagicMaster and CommandMaster</b>.  This will provide the most immersive game-support environment</p>'
-							+'<h2>Syntax of AttackMaster calls</h2>'
-							+'<p>The AttackMaster API is called using !attk.</p>'
-							+'<pre>!attk --help</pre>'
+							+'<h2>Syntax of AttackMaster calls</h2>'							+'<p>The AttackMaster API is called using !attk.</p>'							+'<pre>!attk --help</pre>'
 							+'<p>Commands to be sent to the AttackMaster API must be preceded by two hyphens <b>\'--\'</b> as above for the <b>--help</b> command.  Parameters to these commands are separated by vertical bars \'|\', for example:</p>'
 							+'<pre>!attk --attk-hit token_id | [message] | [monster weap1] | [monster weap2] | [monster weap3]</pre>'
 							+'<p>If optional parameters are not to be included, but subsequent parameters are needed, use two vertical bars together with nothing between them, e.g.</p>'
@@ -3904,15 +3903,16 @@ var attackMaster = (function() {
 									} else {
 										let data = acValues[itemClass].data,
 											itemAdj = (parseInt(data.adj || 0) + parseInt(data.madj || 0) + parseInt(data.sadj || 0) + parseInt(data.padj || 0) + parseInt(data.badj || 0))/5;
-										if (itemClass == 'armour') {
+//										if (itemClass == 'armour') {
 											diff = (parseInt(data.ac || 10) - itemAdj - (parseFloat(data.db || 1)*dexBonus)) - (ac - adj - dexAdj);
-										} else {
-											diff = ((adj + dexAdj) - (itemAdj + (parseFloat(data.db || 1)*dexBonus)));
+//										} else {
+//											diff = ((adj + dexAdj) - (itemAdj + (parseFloat(data.db || 1)*dexBonus)));
 											if (itemClass.includes('protection') && acValues.armour.magic) {
 												armourMsg.push(itemName+' does not add to magical armour');
 											}
-										}
+//										}
 									}
+									
 								} else {
 									armourMsg.push(itemName+' is overridden by another item');
 									diff = undefined;
@@ -3947,6 +3947,7 @@ var attackMaster = (function() {
 												});
 											}
 										}
+//										log('name='+itemName+', itemClass='+itemClass+', total adj='+(parseInt(acData.adj)+parseInt(acData.madj)+parseInt(acData.sadj)+parseInt(acData.padj)+parseInt(acData.badj))+', magic='+acValues.armour.magic);
 									}
 								}
 							}
@@ -4251,7 +4252,7 @@ var attackMaster = (function() {
 				
         		totalAttkAdj = '([['+attkAdj+']][Weapon+]) + ([['+dmgAdj+']][Ammo+]) + ([[ '+weapDexBonus+' *[['+dexMissile+']]]][Dexterity+] )'
         					 + '+([['+weapStrBonus+'*[['+strHit+']]]][Strength+])+([['+race+']][Race mod])+([['+Math.min(proficiency,0)+']][Prof penalty])'
-							 + '+([['+twoWeapPenalty+']][2-weap penalty])+([['+rangeMod+']][Range mod])';
+							 + '+([['+magicHitAdj+']][Magic Hit+])+([['+twoWeapPenalty+']][2-weap penalty])+([['+rangeMod+']][Range mod])';
         			
 				totalDmgAdj = '( ([['+dmgAdj+']][Ammo+]) +([['+magicDmgAdj+']][Magic dmg+]) +([['+(ammoStrBonus*strDmg)+']][Strength+]) )';
 
@@ -6287,7 +6288,8 @@ var attackMaster = (function() {
 		_.each( acValues, (e,k) => {
 			if (k == 'armour') return;
 			if (!k.toLowerCase().includes('protection') || !magicArmour) {
-				dmgAdj.armoured = _.mapObject(dmgAdj.armoured, (d,a) => {;return d + parseInt(e.data[a] || 0)});
+				
+				dmgAdj.armoured = _.mapObject(dmgAdj.armoured, (d,a) => {return d + parseInt(e.data[a] || 0)});
 				armouredDexBonus *= parseFloat(e.data.db || 1);
 				if (k == 'shield') {
 					dmgAdj.armoured.adj += parseInt(e.data.ac || 1);
@@ -6310,6 +6312,9 @@ var attackMaster = (function() {
 		if (dexBonus) {
 			acValues.dexBonus = {name:('Dexterity Bonus '+dexBonus),specs:['',('Dexterity Bonus '+dexBonus),'dexterity','0H','dexterity'],data:{adj:dexBonus}};
 		}
+
+//		log('Final baseAC='+baseAC+', -adj='+dmgAdj.armoured.adj+', -dexBonus='+dexBonus);
+
         setAttr( charCS, fields.Armour_normal, (baseAC - dmgAdj.armoured.adj - dexBonus) );
 		setAttr( charCS, fields.Armour_missile, (baseAC - dmgAdj.armoured.adj - dexBonus - dmgAdj.armoured.madj) );
 		setAttr( charCS, fields.Armour_surprised, (baseAC - dmgAdj.armoured.adj) );

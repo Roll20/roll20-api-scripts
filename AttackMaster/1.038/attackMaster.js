@@ -101,12 +101,13 @@
  * v1.038  08/01/2022  Added database indexing for improved performance
  *                     Changed data tags to reflect newest standard
  *                     Fixed bug relating to calculated AC0 when checking AC
+ *                     Fixed ranged weapon magical to-hit bonus due to spells in operation
  */
  
 var attackMaster = (function() {
 	'use strict'; 
 	var version = 1.038,
-		author = 'RED',
+		author = 'Richard @ Damery',
 		pending = null;
 
 	/*
@@ -3902,15 +3903,16 @@ var attackMaster = (function() {
 									} else {
 										let data = acValues[itemClass].data,
 											itemAdj = (parseInt(data.adj || 0) + parseInt(data.madj || 0) + parseInt(data.sadj || 0) + parseInt(data.padj || 0) + parseInt(data.badj || 0))/5;
-										if (itemClass == 'armour') {
+//										if (itemClass == 'armour') {
 											diff = (parseInt(data.ac || 10) - itemAdj - (parseFloat(data.db || 1)*dexBonus)) - (ac - adj - dexAdj);
-										} else {
-											diff = ((adj + dexAdj) - (itemAdj + (parseFloat(data.db || 1)*dexBonus)));
+//										} else {
+//											diff = ((adj + dexAdj) - (itemAdj + (parseFloat(data.db || 1)*dexBonus)));
 											if (itemClass.includes('protection') && acValues.armour.magic) {
 												armourMsg.push(itemName+' does not add to magical armour');
 											}
-										}
+//										}
 									}
+									
 								} else {
 									armourMsg.push(itemName+' is overridden by another item');
 									diff = undefined;
@@ -3945,6 +3947,7 @@ var attackMaster = (function() {
 												});
 											}
 										}
+//										log('name='+itemName+', itemClass='+itemClass+', total adj='+(parseInt(acData.adj)+parseInt(acData.madj)+parseInt(acData.sadj)+parseInt(acData.padj)+parseInt(acData.badj))+', magic='+acValues.armour.magic);
 									}
 								}
 							}
@@ -4249,7 +4252,7 @@ var attackMaster = (function() {
 				
         		totalAttkAdj = '([['+attkAdj+']][Weapon+]) + ([['+dmgAdj+']][Ammo+]) + ([[ '+weapDexBonus+' *[['+dexMissile+']]]][Dexterity+] )'
         					 + '+([['+weapStrBonus+'*[['+strHit+']]]][Strength+])+([['+race+']][Race mod])+([['+Math.min(proficiency,0)+']][Prof penalty])'
-							 + '+([['+twoWeapPenalty+']][2-weap penalty])+([['+rangeMod+']][Range mod])';
+							 + '+([['+magicHitAdj+']][Magic Hit+])+([['+twoWeapPenalty+']][2-weap penalty])+([['+rangeMod+']][Range mod])';
         			
 				totalDmgAdj = '( ([['+dmgAdj+']][Ammo+]) +([['+magicDmgAdj+']][Magic dmg+]) +([['+(ammoStrBonus*strDmg)+']][Strength+]) )';
 
@@ -6285,7 +6288,8 @@ var attackMaster = (function() {
 		_.each( acValues, (e,k) => {
 			if (k == 'armour') return;
 			if (!k.toLowerCase().includes('protection') || !magicArmour) {
-				dmgAdj.armoured = _.mapObject(dmgAdj.armoured, (d,a) => {;return d + parseInt(e.data[a] || 0)});
+				
+				dmgAdj.armoured = _.mapObject(dmgAdj.armoured, (d,a) => {return d + parseInt(e.data[a] || 0)});
 				armouredDexBonus *= parseFloat(e.data.db || 1);
 				if (k == 'shield') {
 					dmgAdj.armoured.adj += parseInt(e.data.ac || 1);
@@ -6308,6 +6312,9 @@ var attackMaster = (function() {
 		if (dexBonus) {
 			acValues.dexBonus = {name:('Dexterity Bonus '+dexBonus),specs:['',('Dexterity Bonus '+dexBonus),'dexterity','0H','dexterity'],data:{adj:dexBonus}};
 		}
+
+//		log('Final baseAC='+baseAC+', -adj='+dmgAdj.armoured.adj+', -dexBonus='+dexBonus);
+
         setAttr( charCS, fields.Armour_normal, (baseAC - dmgAdj.armoured.adj - dexBonus) );
 		setAttr( charCS, fields.Armour_missile, (baseAC - dmgAdj.armoured.adj - dexBonus - dmgAdj.armoured.madj) );
 		setAttr( charCS, fields.Armour_surprised, (baseAC - dmgAdj.armoured.adj) );
