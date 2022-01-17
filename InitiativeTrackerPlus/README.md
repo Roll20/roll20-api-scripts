@@ -106,6 +106,8 @@ Changes various configuration values.  Permitted keys and what they expect for v
 * statusbordercolor [#430D3D] - Hex color code, changes the color of the border of the chat message announcing statuses of the current actor.
 * statusargscolor [#FFFFFF] - Hex color code, changes the color of the feedback text when changing the marker for a status.
 * eotcolor [#FF0000] - Hex color code, changes the color of the EOT button.
+* playcombatmusic [0] - Will a track from the jukebox be played when the tracker is active. Values should be 0 for off, 1 for on.
+* combatmusic [] - The name of the track to play when the tracker is active if playcombatmusic is turned on [1]. Track can not contain spaces (example: Combat).
 
 
 
