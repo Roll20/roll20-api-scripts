@@ -1,5 +1,5 @@
 /*
-Token Control - A Roll20 Script to move tokens along scripted paths at one second intervals
+Token Control - A Roll20 Script to move tokens along scripted paths at a variable interval
 * Commands:
 *   !token-control - Displays the help text
 *   !token-control Setup - Sets up the GM Macros for the script
@@ -28,7 +28,7 @@ const TokenController = (() => {
     // Version 2 will include the ability to build Paths from the menu
     const AUTHOR = 'Scott E. Schwarz';
 
-    const __RESET__ = true;
+    const __RESET__ = false;
 
     on('ready', function () {
         if (!state[NAME]) {
