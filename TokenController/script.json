@@ -1,0 +1,28 @@
+{
+    "name": "TokenController",
+    "script": "TokenController.js",
+    "version": "1.0.0",
+    "previousversions": [],
+    "description": "# Token Controller\n\rBring your scene to life with simple but dynamic patrol pathing. Select a pre-defined path or quickly create your own (not map or position dependent, just works with grids), select a token, and click start. Tokens may have multiple paths assigned to them at a time, allowing for intricate path layering. Version 2 will have a Path Building tool!",
+    "authors": "Scott E. Schwarz",
+    "roll20userid": "6975764",
+    "useroptions": [],
+    "dependencies": [],
+    "modifies": {
+        "state.TokenController.module": "read,write",
+        "state.TokenController.schemaVersion": "read,write",
+        "state.TokenController.resets": "read,write",
+        "state.TokenController.storedVariables.paths.name": "read,write",
+        "state.TokenController.storedVariables.paths.path": "read,write",
+        "state.TokenController.storedVariables.activeTokenPaths.tokenId": "read,write",
+        "state.TokenController.storedVariables.activeTokenPaths.pathName": "read,write",
+        "state.TokenController.storedVariables.activeTokenPaths.step": "read,write",
+        "state.TokenController.storedVariables.activeTokenPaths.initialLeft": "read,write",
+        "state.TokenController.storedVariables.activeTokenPaths.initialTop": "read,write",
+        "state.TokenController.storedVariables.interval": "read,write",
+        "state.TokenController.storedVariables.hideCommands": "read,write",
+        "token.top":"read,write",
+        "token.left":"read,write"
+    },
+    "conflicts": []
+}
