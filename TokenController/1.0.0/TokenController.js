@@ -576,7 +576,7 @@ const TokenController = (() => {
 
         menu.append('.patreon', '[``Become a Patron``](https://www.patreon.com/bePatron?u=23167000)');
 
-        sendChat(`${NAME}`, menu.toString({
+        sendChat(`${NAME}`, '/w GM ' + menu.toString({
             'optionsTable': {
                 'width': '100%'
             },
