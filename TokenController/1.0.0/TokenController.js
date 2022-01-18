@@ -16,6 +16,13 @@ Token Control - A Roll20 Script to move tokens along scripted paths at a variabl
 
 *   !token-control Tick <interval> - Sets the interval for the script to run at in milliseconds
         If interval is less than 100, the script will assume seconds and convert to milliseconds
+
+* Upcomging Features:
+*   Path Builder - Allows the GM to create paths with tokens and menu buttons
+*   Path Auto-Facing - Automatically faces the token along the path, toggled on/off per path
+*   Path Layer Swapping - "Hide" and "Show" tokens at various points of the path
+*   Cleaner Pathing - Break long segments into smaller steps
+*   Token Start Position Memory - Current design removes initial position from memory when path is stopped
 */
 
 var API_Meta = API_Meta || {};
