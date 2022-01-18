@@ -24,5 +24,6 @@
         "token.top":"read,write",
         "token.left":"read,write"
     },
-    "conflicts": []
+    "conflicts": [],
+    "patreon": "https://www.patreon.com/Developesque"
 }
