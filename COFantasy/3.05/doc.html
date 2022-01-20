@@ -309,6 +309,7 @@
               <p>Toutes les attaques ayant une portée non nulles sont considérées par le script comme des attaques à distance.</p>
               <p>Le test d'attaque à distance tient compte de la portée (malus de -1 à -5 si distance entre portée et deux fois cette valeur), ainsi que des tokens sur le trajet de l'attaque. Une attaque de trop loin ne porte jamais.</p>
               <p>Utiliser une attaque fait rentrer l'attaquant en combat (et le rajoute au turn tracker).</p>
+              <p>Il existe une version spécialisée permettant de faire des dégâts dans un disque centré sur un token, <code>!cof-explosion</code>, dont le premier argument doit être le label d'une attaque.</p>
               </div>
               <h4 class="text-secondary">Options pour l'attaque&nbsp;:</h4>
               <div class="decalage">
@@ -332,7 +333,14 @@
                   <li><code>--modifiePortee <i>n</i></code> : ajoute <i>n</i> à la portée de l'attaque.</li>
                   <li><code>--divisePortee <i>n</i></code> : divise la portée de base par <i>n</i>. C'est appliqué avant toute modification de portée.</li>
                   <li><code>--bonusContreBouclier <i>n</i></code> : ajoute <i>n</i> au jet d'attaque si le défenseur porte un bouclier. Utile par exemple pour le fléau d'arme.</li>
-                  <li><code>--psave <i>carac seuil</i></code> : jet de <i>carac</i>, si le jet est supérieur à <i>seuil</i>, les dégâts sont divisés par 2. <i>carac</i> est l'abbréviation de caractéristiques de 3 lettres standard (FOR, DEX, ...). Si on souhaite que le jet ne permette de réduire qu'une partie des dommages (la dernière ajoutée avec <code>--plus</code>), on peut ajouter <code>local</code>. La syntaxe complète est alors <code>--psave <i>carac seuil</i> local</code>. Si on souhaite que la difficulté soit augmentée en cas de tempête de mana, on peut utiliser le mot clé <code>tempete</code> suivi si besoin de l'incrément en fonction de la mana (par defaut 1 mana augmente de 1 la difficulté). Si on a besoin des 2 options, il suffit de les séparer par <code> +</code>. Enfin, il est possible de prendre la meilleure de 2 caractéristiques pour le save&nbsp;: pour cela indiquer les 2 caractéristiques collées (donc 6 caractères, par exemple FORDEX, pour le meilleur de FOR et de DEX). Le script choisira automatiquement la caractéristique qui donne les meilleures chances de réussite (en tenant compte de la difficulté et des caractéristiques supérieures).</li>
+                  <li><code>--psave <i>carac seuil</i></code> : jet de <i>carac</i>, si le jet est supérieur à <i>seuil</i>, les dégâts sont divisés par 2. <i>carac</i> est l'abbréviation de caractéristiques de 3 lettres standard (FOR, DEX, ...). Il est possible de prendre la meilleure de 2 caractéristiques pour le save&nbsp;: pour cela indiquer les 2 caractéristiques collées (donc 6 caractères, par exemple FORDEX, pour le meilleur de FOR et de DEX). Le script choisira automatiquement la caractéristique qui donne les meilleures chances de réussite (en tenant compte de la difficulté et des caractéristiques supérieures).</li> Enfin on peut encore ajouter un ou des arguments optionnels. Si vous avez besoin de plus d'un argument optionnel, séparez-les par <code> +</code>:
+                  <ul>
+                    <li> Si on souhaite que le jet ne permette de réduire qu'une partie des dommages (la dernière ajoutée avec <code>--plus</code>), on peut ajouter <code>local</code>. La syntaxe complète est alors <code>--psave <i>carac seuil</i> local</code>.</li>
+                    <li> Si on souhaite que la difficulté soit augmentée en cas de tempête de mana, on peut utiliser le mot clé <code>tempete</code> suivi si besoin de l'incrément en fonction de la mana (par defaut 1 mana augmente de 1 la difficulté). </li>
+                    <li> Si on souhaite indiquer une difficulté alternative pour les cibles au contact, ajouter <code>contact <i>n</i></code>, où <i>n</i> est la difficulté en question.</li>
+                  </ul>
+                  </li>
+
                   <li><code>--demiAuto</code> : si l'attaque rate, on considère juste que les saves partiels sont automatiquemet réussi. Ça signifie en général que la cible prend au moins la moitié des dégâts.</li>
                   <li><code>--dmSiRate <i>dmg</i></code> : si l'attaque rate, la cible est quand même touchée et se voit infliger <i>dmg</i> dégâts</li>
                   <li><code>--save <i>carac seuil</i></code> : même effet que <code>--psave</code>, mais pour annuler le dernier <code>--effet</code> ou <code>etat</code> (aucun effet sur les DM). Si on rajoute un argument <code>demiDuree</code> au save, alors la réussite du save ne fait que diviser par 2 sa durée.</li>
@@ -433,6 +441,7 @@
                   <li><code>--ligne</code> : l'attaque porte sur toutes les cibles à portée, entre l'attaquant et le token ciblé. Si le token ciblé est plus proche que la portée de l'attaque, les tokens derrière le token ciblé sont aussi visés. Pour permettre de viser un point quelconque, on peut utiliser un personnage dédié avec un maximum de 0 pv. À chaque fois qu'un token représentant ce personnage est utilisé comme cible de <code>--ligne</code>, le token est enlevé de la carte.</li>
                   <li><code>--disque <i>r</i></code> : l'attaque porte sur toutes les cibles dans le disque de centre le token ciblé et de rayon <i>r</i>. Comme pour <code>--ligne</code>, on peut utiliser un token cible qui sera supprimé après l'attaque. À noter que l'attaquant lui-même peut prendre des dégâts, sauf si l'attaque a une portée nulle et que l'attaquant se cible lui-même (attaque centrée sur le lanceur).</li>
                   <li><code>--cone <i>angle</i></code> : cible toutes les créatures dans un cône de sommet l'attaquant, d'angle <i>angle</i> degrés (90 degrés par défaut), et séparé en deux par le segment joignant l'attaquant et le token visé.</li>
+                  <li><code>--explosion</code> : si l'attaque n'est pas déjà un disque, considère qu'elle forme un disque de rayon égal à la portée. L'attaquant est automatiquement exclus de la zone.</li>
                   <li><code>--dmCible <i>dmg</i></code> : utilisé conjointement aux options de zone ci-dessus, cette option permet de remplacer les dommages de base de l'attaque spécifiquement sur la cible sélectionnée lors de l'attaque</li>
                   <li><code>--saufAllies</code> : ne cible pas les allies dans la zone ou les cibles spécifiées.</li>
                   <li><code>--target <i>id</i></code> : ajoute une cible à l'attaque (s'ajoute à la cible principale et aux options d'aoe).</li>
@@ -1000,7 +1009,7 @@
                   <li><strong>Charge</strong> : faire une attaque avec les options <code>--bonusAttaque 2</code> <code>--plus 1d6</code>. Pour gérer plusieurs armes, vous pouvez utiliser la commande <code>#Attaque -1</code>.</li>
                   <li><strong>Enchaînement</strong> : ajouter un <a href=#predicats>prédicat</a> <code>enchainement</code>.</li>
                   <li><strong>Déchaînement d'acier</strong> : pas de support particulier pour l'instant. Déplacer le token et faire les attaques au passage.</li>
-                  <li><strong>Attaque tourbillon</strong> : Faite une action avec le code <code>!cof-attack @{selected|token_id} @{selected|token_id} -1 --auto --disque 5 --saufAllies --limiteParCombat 1 tourbillon</code>.</li>
+                  <li><strong>Attaque tourbillon</strong> : Faite une action avec le code <code>!cof-explosion -1 --auto --disque 5 --saufAllies --limiteParCombat 1 tourbillon</code>.</li>
                 </ol>
                 <h4 class="text-secondary">Voie du primitif</h4>
                 <ol>
@@ -1281,7 +1290,7 @@
                   <li><strong>Bâton de mage</strong> : simplement adapter l'attaque, avec aussi <code>--magique</code>. Pour l'éclair d'énergie, le mieux est d'ajouter une autre attaque.</li>
                   <li><strong>Blocage</strong> : pas de support autre que <code>!cof-lancer-sort scelle une porte ou un coffre (+5 solidité & RD) pour [[@{selected|INT}]] minutes <i>--mana 0</i></code></li>
                   <li><strong>Sac sans fond</strong> : pas de support particulier</li>
-                  <li><strong>Frappe des arcanes</strong> : le plus simple est d'utiliser la même ligne d'attaque (disons que son label est <code>E</code>) que pour l'attaque d'énergie (mais si besoin, rien n'empêche d'en utiliser une autre). La commande sera alors <code>!cof-attack @{selected|token_id} @{selected|token_id} E --auto --magique --sortilege --disque 10 --etat renverse --save FOR [[10+@{selected|INT}]]</code>.</li>
+                  <li><strong>Frappe des arcanes</strong> : le plus simple est d'utiliser la même ligne d'attaque (disons que son label est <code>E</code>) que pour l'attaque d'énergie (mais si besoin, rien n'empêche d'en utiliser une autre). La commande sera alors <code>!cof-explosion E --auto --magique --sortilege --portee 10 --etat renverse --save FOR [[10+@{selected|INT}]]</code>.</li>
                   <li><strong>Artefact majeur</strong> : pas de support particulier</li>
                 </ol>
                 <h4 class="text-secondary">Voie des élixirs</h4>
@@ -1513,7 +1522,7 @@
                   <li><strong>Esquive du singe</strong> : mettre à jour la défense sur la fiche, et ajouter une compétence <code>acrobatie</code> avec le bonus donné par la capacité.</li>
                   <li><strong>Morsure du serpent</strong> : pour ne pas avoir à modifier les chances de critique pour toutes les attaques au contact, utiliser un <a href=#predicats>prédicat</a> <code>morsureDuSerpent</code>. Attention à ne pas faire ça ET modifier les chances de critiques de l'attaque, car ça s'additionne. (En revanche, pas de soucis avec la science du critique).</li>
                   <li><strong>Griffes du tigre</strong> : rajouter l'option <code>--explodeMax</code> aux attaques à mains nues.</li>
-                  <li><strong>Fureur du dragon</strong> : Créer une action : <code>!cof-attack @{selected|token_id} @{selected|token_id} Fureur du dragon --auto --portee 0 --disque 1 --saufAllies --dm 2D6+[[@{selected|FOR}]] --etat renverse --save FOR 10</code></li>
+                  <li><strong>Fureur du dragon</strong> : Créer une action : <code>!cof-explosion Fureur du dragon --auto --portee 0 --disque 1 --saufAllies --dm 2D6+[[@{selected|FOR}]] --etat renverse --save FOR 10 --limiteParCombat 1 fureurDuDragon</code></li>
                   <li><strong>Moment de perfection</strong> : <code>!cof-effet-temp momentDePerfection 1 --limiteParCombat 1</code></li>
                 </ol>
                 <h4 class="text-secondary">Voie de la méditation</h4>
@@ -1674,8 +1683,8 @@
                   <li><strong>Ailes célestes</strong> : <code>!cof-effet-temp ailesCelestes [[5+@{selected|SAG}]] <i>--mana 1</i></code>.</li>
                   <li><strong>Foudres divines</strong> :
                     <ul>
-                      <li>Sort : Ajouter une attaque sur la fiche utilisant l'attaque magique, dommages 1d6+SAG, portée 0, type Sortilège, dégâts électrique, options <code><i>--mana 2</i> --disque 10 --saufAllies</code>. Si le label de ce sort est <code><i>L</i></code>, il ne vous reste plus qu'à faire une action avec <code>!cof-attack @{selected|token_id} @{selected|token_id} <i>L</i></code>.</li>
-                      <li>Objet de sort : <code>!cof-attack @{selected|token_id} @{selected|token_id} Foudres divines --toucher [[@{selected|ATKMAG}]] --dm 1d6+[[@{selected|SAG}]] --electrique --sortilege --disque 10 --saufAllies</code></li>
+                      <li>Sort : Ajouter une attaque sur la fiche utilisant l'attaque magique, dommages 1d6+SAG, portée 10, type Sortilège, dégâts électrique, modificateur <code>saufAllies</code>, option <code>--mana 2</code>. Décochez cette attaque, car elle sera appelée de manière spéciale : si le label de ce sort est <code><i>L</i></code>, il ne vous reste plus qu'à faire une action avec <code>!cof-explosion <i>L</i></code>.</li>
+                      <li>Objet de sort : <code>!cof-explosion Foudres divines --toucher [[@{selected|ATKMAG}]] --dm 1d6+[[@{selected|SAG}]] --electrique --sortilege --portee 10 --saufAllies</code></li>
                     </ul>
                   </li>
                   <li><strong>Charisme héroïque</strong> : reporter les bonus sur la fiche</li>
@@ -1754,8 +1763,8 @@
                   <li><strong>Champ de protection</strong> : pour l'effet de base, si vous suivez les règles, ajustez simplement la DEF sur la fiche. Si vous préférez en faire un sort, vous pouvez utiliser la commande <code>!cof-effet-temp champDeProtection [[5+@{selected|CHA}]]</code>. La valeur par défaut est celle d'un <a href=#predicats>prédicat</a> <code>voieDeLaTelekinesie</code>, et pour utiliser une autre valeur, on peut utiliser l'option <code>--valeur</code>. Pour le champ à distance, faire <code>!cof-effet-temp champDeProtection 1 --lanceur @{selected|token_id} --portee 10 --valeur <em>n</em> --target @{target|token_id}</code>. </li>
                   <li><strong>Onde de choc</strong> :
                     <ul>
-                      <li>Sort : Ajouter une attaque sur la fiche dommages 1d8+CHA, portée 0, type Sortilège, modificateurs <code>auto</code>, options <code><i>--mana 1</i> --disque ?{Portée (max 10) ?|10} --etat renverse --save FOR [[10+@{selected|CHA}]] --targetFx explode-magic</code></li>
-                      <li>Objet de sort : <code>!cof-attack @{selected|token_id} @{selected|token_id} Onde de choc --auto --dm 1d8+[[@{selected|SAG}]] --portee 0 --sortilege --disque ?{Portée (max 10) ?|10} --etat renverse --save FOR [[10+@{selected|CHA}]] --targetFx explode-magic</code></li>
+                      <li>Sort : Ajouter une attaque sur la fiche dommages 1d8+CHA, portée 0, type Sortilège, modificateurs <code>auto</code>, options <code>--mana 1 --disque ?{Portée (max 10) ?|10} --etat renverse --save FOR [[10+@{selected|CHA}]] --targetFx explode-magic</code>. Décochez cette attaque, et appelez la dans une action qui fait <code>!cof-explosion <i>l</i></code> où <i>i</i> est le label de l'attaque.</li>
+                      <li>Objet de sort : <code>!cof-explosion Onde de choc --auto --dm 1d8+[[@{selected|SAG}]] --portee 0 --sortilege --disque ?{Portée (max 10) ?|10} --etat renverse --save FOR [[10+@{selected|CHA}]] --targetFx explode-magic</code></li>
                     </ul>
                   </li>
                   <li><strong>Combat kinétique</strong> : créer un <a href=#predicats>prédicat</a> <code>combatKinetique</code>. Cela appliquera automatiquement la RD dans tous les cas où le personnage est attaqué par un adversaire et qu'il est conscient. Pour l'augmentation des dommages, reporter sur les attaques sur la fiche.</li>
@@ -1764,7 +1773,7 @@
                 <h4 class="text-secondary">Voie de la télépathie</h4>
                 <ol>
                   <li><strong>Télépathie</strong> : pas de support autre que <code>!cof-lancer-sort communique par télépathie pendant [[5+@{selected|SAG}]] tours <i>--mana 0</i></code></li>
-                  <li><strong>Radar mental</strong> : ajouter un <a href=#predicats>prédicat</a> <code>radarMental</code>, de valeur le bonus procuré par le radar mental (2 fois le rang dans la voie).</li>
+                  <li><strong>Radar mental</strong> : ajouter un <a href=#predicats>prédicat</a> <code>radarMental</code>, de valeur le bonus procuré par le radar mental (2 fois le rang dans la voie). En cas de surprise provoquée par quelque chose de non-vivant penser à utiliser l'option <code>--nonVivant</code> dans <code>!cof-surprise</code>.</li>
                   <li><strong>Suggestion</strong> : utiliser <code>!cof-attaque-magique-contre-pv @{selected|token_id} @{target|token_id} --limiteParJour 1 suggestion <i>--mana 1</i></code> (attention, ça ne teste pas si la cible a un niveau inférieur au psionique, ni si la cible est pensante).</li>
                 </ol>
               </div>
@@ -2008,7 +2017,7 @@
                 </ol>
                 <h4 class="text-secondary">Voie des vermines</h4>
                 <ol>
-                  <li><strong>Nuée de criquets</strong> : ajouter une attaque magique, de portée 20 m. Puis appeler cette attaque (avec <code>!cof-attack</code>) avec les arguments <code>--pasDeDmg --sortilege --effet nueeDeCriquets [[5+@{selected|SAG}]]</code>. Pas de support particulier pour les DM de zone qui détruisent la nuée (enlever l'attribut <code>nueeDeCriquets</code> sur la cible dans ce cas).</li>
+                  <li><strong>Nuée de criquets</strong> : ajouter une attaque magique, de portée 20 m, type Sortilege, modificateur <code>pasDeDmg</code> et options <code>--effet nueeDeCriquets [[5+@{selected|SAG}]]</code>. Pas de support particulier pour les DM de zone qui détruisent la nuée (enlever l'attribut <code>nueeDeCriquets</code> sur la cible dans ce cas).</li>
                 </ol>
                 <h4 class="text-secondary">Voie du chevalier dragon</h4>
                 <ol>
@@ -2102,6 +2111,7 @@
                 <ol>
                   <li><strong>Souffle</strong> : faire une attaque avec le bon nombre de d6 en DM, de portée la portée du souffle, à utiliser avec les options <code>--auto --cone --<i>type</i> --tempsRecharge rechargeSouffle [[1d4]] --psave DEX 13</code>, où <i>type</i> est le type de la créature (feu, acide, froid, ...). Ne pas oublier la possibilité d'utiliser un token cible temporaire pour le cone.</li>
                   <li><strong>Corps élémentaire</strong> : ajouter un <a href=#predicats>prédicat</a> <code>corpsElementaire</code>, de valeur l'élément (<code>feu</code>, <code>froid</code>,...). Cela va automatiquement ajouter les dégâts aux attaques de contact, et faire des dégâts à ceux qui l'attaquent au contact. Cela va aussi faire apparaître dans les actions du tour une action de régéneration, que le MJ peut utiliser chaque tour, à lui de voir si les conditions s'y prêtent (source élémentaire proche). Pas de support générique pour les victimes saisies ou agripper, à gérer au cas par cas.</li>
+                  <li><strong>Explosion finale</strong> : ajouter un <a href=#predicats>prédicat</a> <code>explosionFinale</code> de valeur le label de l'attaque d'explosion. Cette attaque ne doit contenir aucune demande de valeur (de type <code>?{Munitions}</code>). Par exemple, pour une explosion finale qui fait 3d6 DM à tout le monde dans les 10 m et qui permettrait de diviser les dégâts par 2 par un test de DEX difficulte 13 (18 si au contact)&nbsp;: on crée une attaque Explosion, de dégâts 3d6 du type voulu, de portée 10, de modificateur <code>auto</code> et avec l'option <code>--psave DEX 13 contact 18</code>. Pour changer les dégâts du corps élémentaire, on peut utiliser un prédicat <code>nbCorpsElementaire</code> de valeur le nombre de d6 à utiliser (2 normalement pour cette capacité).</li> 
                 </ol>
                 <h4 class="text-secondary">Voie des créatures magique</h4>
                 <ol>
@@ -2164,7 +2174,7 @@
                   <li><strong>Animation des objets</strong> : <code>!cof-animation-des-objets @{selected|token_id} ?{Taille d'objet|tabouret ou coffret,1|chaise ou coffre,2|meuble bas ou table,4|grande table,7|grosse armoire,10}</code> On peut ajouter un troisième argument, <code>@{target|token_id}</code> pour animer un token d'objet sur la carte.</li>
                   <li><strong>Armure d'eau</strong> : <code>!cof-effet-combat armureDEau</code>. Le script automatise l'immunité aux étreintes (pas aux enveloppements) et à la capacité Agripper des créatures volantes.</li>
                   <li><strong>Force de géant</strong> : <code>!cof-effet-temp forceDeGeant 10</code>. Le bonus est de 2 par défaut, mais peut être modifié en utilisant l'option <code>--valeur</code>.</li>
-                  <li><strong>Nuée de scorpions</strong> : ajouter une attaque magique, de portée 20 m. Puis appeler cette attaque (avec <code>!cof-attack</code>) avec les arguments <code>--pasDeDmg --sortilege --effet nueeDeScorpions 10</code>. Pas de support particulier pour les DM de zone qui détruisent la nuée (enlever l'attribut <code>nueeDeScorpions</code> sur la cible dans ce cas).</li>
+                  <li><strong>Nuée de scorpions</strong> : ajouter une attaque magique, de portée 20 m, type Sortilège, modificateur <code>--pasDeDmg</code> et option  <code>--effet nueeDeScorpions 10</code>. Pas de support particulier pour les DM de zone qui détruisent la nuée (enlever l'attribut <code>nueeDeScorpions</code> sur la cible dans ce cas).</li>
                   <li><strong>Résistance à la magie</strong> : pour l'augmentation de la DEF contre la magie, utiliser un <a href=#predicats>prédicat</a> <code>DEF_magie</code> et pour le bonus aux tests, <code>resistanceALaMagie</code></li>
                   <li><strong>Simulacre de vie</strong> : <code>!cof-set-attribute PVTemporaires [[1d10 + @{selected|niveau}]] --message simulacre de vie</code></li>
                   <li><strong>Sixième sens</strong> : <code>!cof-effet sixiemeSens true</code>. Pour mettre fin à l'effet du sort (qui a une durée en heures), on peut effacer l'attribut <code>sixiemeSens</code>, ou mieux encore, sélectionner le token et faire <code>!cof-effet sixiemeSens false</code>.</li>
