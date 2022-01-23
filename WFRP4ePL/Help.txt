@@ -1,0 +1,55 @@
+Wpisz !critloc by rzucić na lokację krytyka i od razu uzyskać efekt Trafienia krytycznego.
+Wpisz !crithead, !critarm, !critbody lub !critleg by wylosować trafienie krytyczne dla danej lokacji.
+Wpisz !crithead x, !critarm x, !critbody x lub !critleg x by uzyskać opis trafienia krytycznego o tej wartości.
+Wpisz !critloc less, !crithead less, !critarm less, !critbody less lub !critleg less by wylosować trafienie krytyczne z modyfikatorem -20 za niskie obrażenia.
+Wpisz !ozez lub !oops by rzucić na tabelę Ożeż!.
+Wpisz !stany lub !cond by wypisać wszystkie stany wraz z podpowiedzią i linkami do kompedium.
+Wszystkie stany z tabel mają podpowiedzi i linki do kompedium.
+
+przykładowe macro do wykorzystania i zamienienia w przycisk:
+
+?{Trafienie krytyczne|
+Losowe,!critloc|
+Głowa,!crithead|
+Ręka,!critarm|
+Noga,!critleg|
+Korpus,!critbody }
+
+To samo z modyfikatorem -20:
+
+?{Trafienie krytyczne -20|
+Losowe,!critloc less|
+Głowa,!crithead less|
+Ręka,!critarm less|
+Noga,!critleg less|
+Korpus,!critbody less}
+
+
+//-------------------------------------ENGLISH------------------------------------//
+
+Type !critloc to determine Critical Hit Location and roll for crit value.
+Type !crithead, !critarm, !critbody, or !critleg to roll a critical hit for the appropriate location.
+Type !crithead x, !critarm x, !critbody x, or !critleg x to determine the outcome of a critical rolled by other means.
+For example: !crithead 99 will return the results of a Critical hit to the head with a value of 99.
+Type !critloc less, !crithead less, !critarm less, !critbody less or !critleg less to roll critical hit with -20 modifier to roll from
+Type !oops or !ozez to roll an Oops! result.
+Type !cond or !stany to list all conditions with links to compedium.
+All of the conditions have a tooltip for fast reminder and are also linked to compedium
+
+Sample macro to use:
+
+?{Critical hit|
+Random,!critloc|
+Head,!crithead|
+Arm,!critarm|
+Leg,!critleg|
+Body,!critbody }
+
+same macro with -20 modifier:
+
+?{Critical hit -20|
+Random,!critloc less|
+Head,!crithead less|
+Arm,!critarm less|
+Leg,!critleg less|
+Body,!critbody }

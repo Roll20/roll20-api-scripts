@@ -1,6 +1,143 @@
 # COFantasy: Historique des changements (depuis la version 1.0)
+## 3.05
+### Autres améliorations
+* Prise en compte des changements d'attributs d'armure de la version 5.01 de la fiche.
+
+## 3.04
+### Capacités
+* Implémentation des rangs 1 et 4 de la voie du danseur de guerre
+* Ajout de la botte secrète du voleur.
+* Support pour le sort de sphère de feu (tiré de Pathfinder)
+* Quelques améliorations pour le guetteur, de la Voie des animaux.
+* Ajout de la ténacité de la Voie du héro.
+* Ajout d'Épée céleste de la Voie de l'archange.
+* Ajout de la paralysie des goules.
+* Ajout des deux premiers rangs de la voie de l'archange.
+* Simulacre de vie
+* Ajout d'un visuel pour la prison végétale
+* Meilleure automatisation de la capacité intercepter du chevalier.
+* Réaction violente du demi-ogre.
+* Ajout de la capacité Insignifiant de la voie du gnome.
+* Implémentation de l'immunité à tout ce qui n'est pas magique.
+* Support du sort d'animation des objets
+* Ajout de l'effet fiévreux.
+* Jets de dégâts séparés par cible pour la destruction des morts-vivants
+* Ajout d'une option de malus de répétition pour la destruction des morts-vivants.
+* Ajout du type d'ennemi juré gobelin
+* Implémentation de base de la voie de l'expert du combat
+* La Rune de Puissance du Forgesort maximise tous les dés mais doit s'utiliser avant le lancer des jets de dégâts
+* Implémentation de Contrôle Sanguin (Voie du contrôle corporel, R4)
+* Ajout de Meneur d'hommes (Voie du héros (prestige), R4)
+
+### Corrections de bugs
+* Correction d'un bug avec corps élémentaire.
+* Correction du bonus de compétence appliqué en double en cas de majuscule.
+* Correction du coût de pacte sanglant.
+* Prise en compte de la liberté d'action pour le mot de pouvoir qui immobilise.
+* Pas de DOT sur les personnages déjà morts.
+* --demiAuto divise les dégâts par deux en cas d'échec, même si il n'y a pas de jet de sauvegarde.
+* ne pas faire entrer en combat quand on fait un effet qui ne fait pas de DM ou qui n'est pas préjudiciable (conséquences sur pacifisme, sanctuaire, et).
+* Prise en compte correcte des malus d'armure et de casques pour les compétences sur la fiche.
+
+### Autres améliorations
+* Possibilité d'immuniser à un effet temporaire particulier.
+* Possibilité de faire des jets d'attaque contre des valeurs de caractéristiques
+* Prise en compte d'un prédicat attaqueSournoise pour indiquer le nombre de dés des attaques sournoises.
+* Si une arme est aussi une arme de jet, le script va automatiquement sélectionner la bonne attaque selon la distance de la cible.
+* Ajout d'une option --saveDM pour éviter tous les dégâts d'une attaque.
+* Prise en compte des options de sélections pour !cof-init.
+* Option d'attaque --forceMinimum
+* Prise en compte de --message pour !cof-animer-mort.
+* Ajout d'une option --affaiblirCarac pour les attaques.
+* Pour !cof-effet-temporaire, possibilité de prendre en compte la magie en armure.
+* Passage de l'aura d'initiative dynamique au layer map, pour éviter les sélections involontaires.
+* Ajout d'options pour des sons de réussite et échec critiques d'attaques par défaut.
+* Ajout de modificateurs d'attaque +n pour les armes magiques.
+* La durée restante des effets est affichée pour le MJ dans le statut des persos.
+* !cof-effet-temp ne fait entrer en combat que si au moins une des cibles est effectivement affectée.
+* --divisePortee permet de diviser la portée d'une attaque.
+* Possibilité d'utiliser --effet etat sans argument de durée.
+* Support pour les affaiblissements de caractéristiques
+* Ajout d'une condition d'attaque typeCible
+* Ajout d'un type de dégâts "énergie", pour des settings science fiction.
+* Message plus explicite en cas d'expression de soins incorrecte.
+* Modifie l'affichage des boutons de soins si plus disponibles
+* Un peu plus de discrétion avec les messages sur les limites par jour ou par combat
+* Passage en prédicats d'un grand nombre de capacités qui utilisaient encore des attributs.
+* Meilleur support de Laissez-le-moi (Chevalier, Voie du Héros R3)
+
+## 3.03
+### Capacités
+* Ajouts des capacités épiques d'Anathazerïn
+
+### Corrections de bugs
+* Correction de assome en assomme.
+
+### Autres améliorations
+* Ajout d'une option d'affichage pour que le MJ puisse prendre le temps de décrire une attaque avant de montrer le résultat aux joueurs.
+* Passage de armeParDefaut en prédicat, et prise en compte de ce prédicat au moment de poser un token.
+
+## 3.02
+### Capacité
+* Ajout des réaction allergiques pour les chiens gobelins
+* Possibilité optionelle de lancer plus de soins légers en une journée que le rang dans la voie, en échange d'un coût en mana.
+
+### Corrections de bugs
+* Correction d'un crash en cas de #Attaque -1 et pas d'arme en main.
+* Correction du prédicat increvable
+* Prise en compte du type drain dans les attaques sur la fiche.
+
+### Autres améliorations
+* Ajout de la commande d'action !arme-en-main
+* Possibilité de restreindre une attaque aux cibles qui ne sont pas au contact.
+* Outil de conversion de Pathfinder vers COF
+* Ajout d'un test de prédicat pour la cible d'une attaque
+* Changement d'interface pour les montures : déplacer le cavalier ne fait plus descendre de monture.
+* Options --degainer pour les effets de combat
+* Option d'attaque aussiArmeDeJet, pour les armes qui peuvent être utilisées au contact ou lancées.
+* Affichage du nombre d'armes de jets sur la fiche, plus besoin de munitions.
+* Support de la ceinture de rage améliorée d'Anathazerïn
+
+## 3.01
+* Affichage des armes cochées au lieu des armes non cochées, qui doivent pouvoir exister pour garder des attaques avec des armes que le personnage a temporairement perdues.
+* Passage d'une partie des attributs numériques qui ne dépendent pas des mooks en prédicats sur la fiche.
+
+## 3.00
+* Passage des listes d'actions sur la fiche
+* Passage des attributs booléens qui ne dépendent pas des mooks en prédicats sur la fiche
+* Ajout d'une fonction !cof-set-predicate pour modifier les prédicats depuis le chat.
+
+## 2.18
+### Capacités
+* Ajout de la possibilité pour un siphon des âmes d'empêcher les autres siphons.
+
+### Correction de bugs
+* Prise en compte correcte des bonus de save contre les sorts.
+
+### Autres amélioration
+* Ajout d'un type drain.
+* Attribut aucuneActionCombat pour les personnages qui n'agissent pas en combat
+* Possibilité de préciser un pourcentage des dégâts transformés en soins avec l'option --vampirise.
+
 ## 2.17
 ### Capacités
+* Support des effets des ondes corruptrices
+* Support de la potion de sang de l'Arbre-Coeur
+* Possibilité de changer la taille jusqu'à laquelle le fauchage est possible.
+* Haches et marteaux des nains.
+* Support de la capacité Agripper du démon de Noirbois.
+* Support de la capacité Grosse tête du forgesort
+* Capacité d'objet magique "Action libre"
+* Saisir et broyer pour les chaoses.
+* Amélioration de la prise en charge d'ombre mouvante.
+* Ajout de la capacité Force d'âme du haut elfe.
+* Ajout de la capacité Bûcheron
+* Ajout des capacités Attaque sanglante et Flèche sanglante.
+* Amélioration de la prise en compte des sens affûtés.
+* Amélioration de la prise en charge du second souffle du guerrier.
+* Ajout de l'effet noyade des plantes carnivores.
+* Ajout de la capacité Gober de la Voie du prédateur.
+* Meilleure prise en charge de la capacité Dévorer des prédateurs
 * Ajout de la capacité Increvable de la Voie de l'humain.
 * Ajout de la capacité Briseur d'os du barbare.
 * Meilleure automatisation de l'Argument de taille du barbare.
@@ -20,10 +157,32 @@
 * Support complet de la Voie du porteur de bouclier (prestige)
 
 ### Autres améliorations
+* Ajout de fonctions pour aider en Noirbois.
+* Quelques effets pour simuler la limitation Grande taille du minotaure.
+* On n'affiche pas les attaques qui ne sont pas possibles (limites épuisées, condition --si non remplie, pas assez de mana).
+* Ajout d'une option pour vérifier que les cibles d'une attaque peuvent tenir dans un disque d'un rayon donné.
+* Ajout d'une option de limitation du montant des soins par jour.
+* Label -2 pour l'arme en main gauche.
+* Termine les effets dont on enlève le marker à la main.
+* Utilisation des nom de caractéristiques au lieu de pictogrammes douteux pour les jets de caractéristiques et de compétences.
+* Gestion des identités secrètes.
+* Possibilité de passer des options aux effets à dégâts sur la durée.
+* Un personnage invisible ne peut plus être vu des autres joueurs.
+* Ajout d'une possibilité de synchronisation des tokens entre cartes.
+* Une réussite critique à une feinte double les bonus de DM à l'attaque suivante.
+* Ajout d'un attribut pour des modification de tous les tests d'un personnage (bonus ou malus)
+* Tirage d'initiative aléatoire secret pour les tokens sur le layer MJ.
 * Possibilité de rajouter des attributs à afficher dans le statut.
 * Le script ne bloque plus que le déplacement des personnages immobilisés contrôlés par un joueur connecté.
 * En cas d'échec critique d'une boule de feu qui cible une cible artificielle, la cible est déplacée aléatoirement de 15 m.
 * Refactoring !cof-tenebres pour supporter les options de Mana (y compris Tempête de Mana)
+* Séparation des options de blessure grave et de dommages importants
+
+### Corrections de bugs
+* Correction de bugs avec l'invisibilité.
+* Amélioration de l'Action concertée.
+* Correction d'un bug sur les bonus de compétences
+* Correction de la prise en compte des familiers dans les aoe.
 
 ## 2.16
 ### Capacités

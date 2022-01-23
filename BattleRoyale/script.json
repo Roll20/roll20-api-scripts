@@ -1,0 +1,66 @@
+{
+    "name": "BattleRoyale",
+    "script": "BattleRoyale.js",
+    "version": "1.0",
+    "previousversions": [],
+    "description": "Transforms a Roll20 Campaign into a Battle Royale, playable without a GM present, so that everyone can take part!",
+    "authors": "Jakob Sigvard",
+    "roll20userid": "1183802",
+    "patreon": "",
+    "tipeee": "",
+    "useroptions": [
+        {
+            "name": "Page Prefix", 
+            "type": "text",
+            "default": "[BR]",
+            "description": "Only allow the !map command to show and change to maps starting with this. eg. '[BR]Arena'. Can be empty if you want it to work everywhere."
+        },
+        {
+            "name": "Allow Character Claiming", 
+            "type": "checkbox",
+            "value": "allow_claim",
+            "checked" : "checked",
+            "description": "Allow players to use the command !claim to gain control over a character in the journal."
+        },
+        {
+            "name": "Visible Spectators", 
+            "type": "checkbox",
+            "value": "visible_specattors",
+            "checked" : "checked",
+            "description": "Should the spectator tokens be visible to contestants and other spectators?"
+        },
+        {
+            "name": "Show Health Bars", 
+            "type": "checkbox",
+            "value": "show_health_bars",
+            "checked" : "",
+            "description": "Make a contestants health bar visible to other players. Only tested using the Roll20 5e Sheet"
+        },
+        {
+            "name": "Spectator Vision Range", 
+            "type": "number",
+            "default": "300",
+            "description": "How far spectators can see."
+        },
+        {
+            "name": "Initial Token Vision", 
+            "type": "number",
+            "default": "0",
+            "description": "How far can tokens see when created."
+        },
+        {
+            "name": "Grant Vision Range", 
+            "type": "number",
+            "default": "300",
+            "description": "Range of vision granted by the 'Grant Vision' token macro. If set to 0 'Grant Vision' macro will be removed."
+        },
+        {
+            "name": "Sound Ping Radius", 
+            "type": "number",
+            "default": "200",
+            "description": "Range of randomness for sound pings. Default is a random location within 200 pixels of the center of the token. Default tile size is 70 pixels."
+        }
+    ],
+    "dependencies": [],
+    "modifies": {}
+}
