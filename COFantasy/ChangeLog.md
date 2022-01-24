@@ -1,6 +1,15 @@
 # COFantasy: Historique des changements (depuis la version 1.0)
 ## 3.05
+### Capacités
+* Explosion finale de la voie des créatures élémentaires
+
+### Corrections de bugs
+* Correction de bugs sur le radar mental
+* Correction d'un bug sur le pacifisme
+
 ### Autres améliorations
+* Ajout d'une commande !cof-explosion
+* Possibilité de différencier les saves pour les cibles au contact.
 * Prise en compte des changements d'attributs d'armure de la version 5.01 de la fiche.
 
 ## 3.04
