@@ -104,6 +104,7 @@ const TokenController = (() => {
 
                         initialLeft: 0,
                         initialTop: 0,
+                        pageId: "Test",
                     },*/
                 ],
                 tokenMemory: [
@@ -997,6 +998,11 @@ const TokenController = (() => {
         row.append('td', 'ID');
         row.append('td', 'Path');
         row.append('td', 'Step');
+        row.append('td', 'Init.Left');
+        row.append('td', 'Init.Top');
+        row.append('td', 'Reversing');
+        row.append('td', 'Page ID');
+
 
         for (let i = 0; i < state[NAME].storedVariables.activeTokenPaths.length; i++) {
             const tokenPath = state[NAME].storedVariables.activeTokenPaths[i];
@@ -1005,6 +1011,10 @@ const TokenController = (() => {
             row.append('td', `${tokenPath.tokenId}`);
             row.append('td', `${tokenPath.pathName}`);
             row.append('td', `${tokenPath.step}`);
+            row.append('td', `${tokenPath.initialLeft}`);
+            row.append('td', `${tokenPath.initialTop}`);
+            row.append('td', `${tokenPath.isReversing}`);
+            row.append('td', `${tokenPath.pageId}`);
         }
 
         // Create a table for Paths
@@ -1045,6 +1055,23 @@ const TokenController = (() => {
             if (pathDraft.currentStep) {
                 row.append('td', `${pathDraft.currentStep.direction + pathDraft.currentStep.distance}`);
             }
+        }
+
+        // state[NAME].storedVariables.pageMetas
+        table = content.append('table', 'Page Metas');
+        row = table.append('tr'); // Headers
+        row.append('td', 'Page');
+        row.append('td', 'PageId');
+        row.append('td', 'Width');
+        row.append('td', 'Height');
+
+        for (let i = 0; i < state[NAME].storedVariables.pageMetas.length; i++) {
+            const pageMeta = state[NAME].storedVariables.pageMetas[i];
+            row = table.append('tr');
+            row.append('td', `${pageMeta.pageName}`);
+            row.append('td', `${pageMeta.pageId}`);
+            row.append('td', `${pageMeta.pageWidth}`);
+            row.append('td', `${pageMeta.pageHeight}`);
         }
 
         // Create Config Table with Header { Interval, Units/Click, Pixel/Unit }
@@ -1198,6 +1225,7 @@ const TokenController = (() => {
                     pageScaleNumber: pageScale
                 });
             } else if (state[NAME].storedVariables.pageMetas[pageMetaIndex].pageScaleNumber === undefined) {
+                state[NAME].storedVariables.pageMetas[pageMetaIndex].pageName = pageName;
                 state[NAME].storedVariables.pageMetas[pageMetaIndex].pageWidth = pageWidth * 70;
                 state[NAME].storedVariables.pageMetas[pageMetaIndex].pageHeight = pageHeight * 70;
                 state[NAME].storedVariables.pageMetas[pageMetaIndex].pageScaleNumber = pageScale;
