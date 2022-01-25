@@ -13,7 +13,9 @@ Token Control - A Roll20 Script to move tokens along scripted paths at a variabl
 *   Cleaner Pathing -- Version(N.M.+)
     - Break long segments into smaller steps
 *   Area Patrol -- Version (+.0.0)
-*   Detect Light Walls (only doing with grid matrix math, no linear)
+*   Detect Walls (only doing with grid matrix math, no linear)
+*   Allow user to define unit pixel size
+*   Draft Token Handling
 
 # Known Defects:
 *
@@ -25,11 +27,8 @@ API_Meta.TokenController = { offset: Number.MAX_SAFE_INTEGER, lineCount: -1 };
 
 const TokenController = (() => {
     const NAME = 'TokenController';
-    const VERSION = '2.1.1'; // Builder, Reversals, and so much more
+    const VERSION = '2.1.2';
     const AUTHOR = 'Scott E. Schwarz';
-
-    const __RESET__ = false;
-
     let errorMessage = "";
     let listingVars = false;
 
@@ -68,19 +67,19 @@ const TokenController = (() => {
                 if (state[NAME].storedVariables.interval == undefined) {
                     state[NAME].storedVariables.interval = 5000;
                 }
-                if (state[NAME].storedVariables.hideCommands == undefined) {
-                    state[NAME].storedVariables.hideCommands = true;
-                }
                 if (state[NAME].storedVariables.unitPerClick == undefined) {
                     state[NAME].storedVariables.unitPerClick = 2;
                 }
                 if (state[NAME].storedVariables.pageMetas == undefined) {
                     state[NAME].storedVariables.pageMetas = [];
                 }
+                if (state[NAME].storedVariables.unitPx == undefined) {
+                    state[NAME].storedVariables.unitPx = 70;
+                }
             }
         }
 
-        if (state[NAME].storedVariables == undefined || __RESET__) {
+        if (state[NAME].storedVariables == undefined) {
             state[NAME].storedVariables = {
                 paths: [
                     {
@@ -146,14 +145,14 @@ const TokenController = (() => {
                     /*{
                         pageId: "",
                         pageName: "",
-                        pageWidth: 0, // Grid Units * pageScaleNumber
-                        pageHeight: 0, // Grid Units * pageScaleNumber
+                        pageWidth: 0, // Grid Units * 70
+                        pageHeight: 0, // Grid Units * 70
                         pageScaleNumber: 0 // in {scale_units}
                     }*/
                 ],
                 interval: 5000,
-                hideCommands: true,
-                unitPerClick: 1
+                unitPerClick: 1,
+                unitPx: 70,
             };
         }
 
@@ -162,7 +161,7 @@ const TokenController = (() => {
         setInterval(pathTokens, state[NAME].storedVariables.interval);
 
         log(`${NAME} ${VERSION} by ${AUTHOR} Ready  Meta Offset : ${API_Meta.TokenController.offset}`);
-        sendChat(`${NAME}`, "/w GM Version: " + state[NAME].schemaVersion + " ready.");
+        createMenu();
     });
 
     on("change:graphic", function (obj, prev) {
@@ -289,6 +288,10 @@ const TokenController = (() => {
                     case "reset":
                         resetTokens();
                         break;
+                    case "usage":
+                        showUsage();
+                        break;
+
                 }
             }
         } catch (err) {
@@ -521,7 +524,106 @@ const TokenController = (() => {
                 followMacro[i].remove();
             }
         }
+
+        let usageHandout = findObjs({ type: 'handout', name: 'TokenController Usage Guide' });
+        if (!usageHandout || usageHandout.length < 1 && gmPlayers.length > 0) {
+            setupHandouts(gmPlayers[0]);
+        } else if (usageHandout.length > 1) {
+            for (let i = 1; i < usageHandout.length; i++) {
+                usageHandout[i].remove();
+            }
+        }
     }
+
+    function setupHandouts() {
+        // Create Handout
+        // Add usage to Handout
+        // Tell user about Handout
+
+        var handout = createObj('handout', {
+            name: 'TokenController Usage Guide',
+            inplayerjournals: 'all',
+            archived: false
+        });
+
+        let content = new HtmlBuilder('div');
+        content.append('.heading', 'Macros');
+        content.append('.info', [
+            'TokenController mostly functions via the Menu (!tc) and a few macros found on the Tokens and the DM Macro Bar.',
+            'If not present, head over to Macros Tab and add them to your bars.',
+            'Macros are always verified as existing on API restart, but not verified correct.',
+            'You can delete any Macros with the "T-Cntrl_" prefix for rebuilding.',
+        ].join('<br>'));
+
+        content.append('.heading', 'Path Building');
+        content.append('.info', [
+            'Select a Token on any map and click the "T-Cntrl_Builder" Macro, filling in the Path Name Popup.',
+            'The TokenController Menu now has Draft Paths with directional Buttons and "Units per Movement - Tick", as well as Set and Remove.',
+            'You can unselect the Token used to start the Draft, but you must leave it on the map until your draft is Set as a Path.',
+            'Clicking the U|D|L|R buttons, the Token will move in that direction the set amount of units in confirmation.',
+            '* Paths are not map or start-position specific, but TokenController will take some Page measurements to try not to lose your token as it paths.',
+        ].join('<br>'));
+
+        content.append('.heading', 'Token Controls');
+        content.append('.info', [
+            'Once a Token is selected, you can set it on one or more Paths simultaneously, stacking the path shapes together for intricate patrolling.',
+            '* Click Start, Stop or Reset on the Menu under Paths',
+            '* To Stop a single path, use the Path Stop button. To stop all paths the Token is on, use the Token Stop button.',
+            '* Clicking Path Stop without a Token selected will stop all Tokens on that Path.',
+            '* Clicking Token Stop without a Token selected will stop all Tokens on all Paths.',
+
+            'Tokens can be locked in place via the Menu, or set to follow another Token by clicking the Token\'s "T-Cntrl_Follow" Macro.',
+            '* Tokens follow the Control Priority of: Locked > Follow > Path.',
+            '* Unlocking a Token will stop it from following another Token.',
+            '* Locking a Token will not remove its Paths, just prevent it from Pathing until unlocked.',
+        ].join('<br>'));
+
+        content.append('.heading', 'Settings');
+        content.append('.info', [
+            'Interval: Time (in milliseconds) between each movement tick.',
+            '* Default is 5000ms (5 seconds)',
+            '* Requires API restart to take effect (for now).',
+
+            'Pixels Per Unit: How many pixels a Token moves per unit of movement, based on your maps current Grid Pixel Size (standard is 70).',
+        ].join('<br>'));
+
+        handout.set({
+            notes: content.toString({
+                "heading": {
+                    "font-size": "1.5em",
+                    "color": "#00f",
+                    "text-align": "center",
+                },
+                "info": {
+                    "font-size": "1em",
+                    "color": "#000",
+                    "margin-bottom": "10px",
+                }
+            }),
+        })
+    }
+
+    function showUsage() {
+        createMenu();
+        sendChat('TokenController', '/w gm ' + '<div style="border: 1px solid black; background-color: white; padding: 3px 3px;">' + "See the Handout: <b>TokenController Usage Guide</b> for more information." + '</div>');
+    }
+
+    // https://help.roll20.net/hc/en-us/articles/360037772893-API-Cookbook#API:Cookbook-decodeEditorText
+    const decodeEditorText = (t, o) => {
+        let w = t;
+        o = Object.assign({ separator: '\r\n', asArray: false }, o);
+        /* Token GM Notes */
+        if (/^%3Cp%3E/.test(w)) {
+            w = unescape(w);
+        }
+        if (/^<p>/.test(w)) {
+            let lines = w.match(/<p>.*?<\/p>/g)
+                .map(l => l.replace(/^<p>(.*?)<\/p>$/, '$1'));
+            return o.asArray ? lines : lines.join(o.separator);
+        }
+        /* neither */
+        return t;
+    };
 
     function addPath(name, pathString) {
         if (!name) {
@@ -1208,33 +1310,12 @@ const TokenController = (() => {
     }
 
     function createMenu() {
-        const controls = state[NAME].storedVariables.hideCommands ? [] : [
-            "!token-control Setup",
-            "- Sets up the GM Macros for the script",
-            "!token-control List Paths ", "- Lists all paths",
-            "!token-control List Paths [pathName]", "- Lists all tokens on a path",
-            "!token-control List Tokens ", "- Lists all tokens on a path",
-            "!token-control Add <path_name> <path_code>", "- Adds a new path to the list of paths",
-            "!token-control Set <path_name> <path_code>", "- Sets the path code for a path",
-            "!token-control Remove <path_name>", "- Removes a path from the list of paths",
-            "!token-control Start <path_name>", "- Starts a path with a selected token, moving every second",
-            "!token-control Stop <path_name>",
-            "- Stops a path with a selected token",
-            "!token-control Stop All",
-            "- Stops all paths with a selected token",
-            "!token-control Tick <interval>",
-            "- Sets the interval between ticks in milliseconds",
-            "- Default is 2000 milliseconds (2 second)",
-            "- Intervals less than 100 are assumed to be in seconds and will be converted to milliseconds"
-        ];
-
         let menu = new HtmlBuilder('.menu');
         menu.append('.menuHeader', 'Token Controls');
 
         let content = menu.append('div');
-        content.append('.menuLabel', '[Commands](!tc hide)');
+        content.append('.menuLabel', '[Usage](!tc usage)');
         content.append('.subLabel', '!tc may be used in place of !token-control');
-        content.append('p', controls.join('<br/>'));
 
         content.append('.menuLabel', 'Paths');
         content.append('.subLabel', 'Select one or more tokens to start a path');
@@ -1396,6 +1477,16 @@ const TokenController = (() => {
                 'margin-top': '5px',
             },
             'menuHeader': {
+                'background': '#000',
+                'color': '#fff',
+                'text-align': 'center',
+            },
+            'usageHeader': {
+                'background': '#000',
+                'color': '#fff',
+                'text-align': 'center',
+            },
+            'usage': {
                 'background': '#000',
                 'color': '#fff',
                 'text-align': 'center',
