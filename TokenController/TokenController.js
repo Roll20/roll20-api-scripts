@@ -619,7 +619,7 @@ const TokenController = (() => {
 
     function showUsage() {
         createMenu();
-        sendChat('TokenController', '/w gm ' + '<div style="border: 1px solid black; background-color: white; padding: 3px 3px;">' + "See the Handout: <b>TokenController Usage Guide</b> for more information." + '</div>');
+        sendChat(NAME, '/w gm ' + '<div style="border: 1px solid black; background-color: white; padding: 3px 3px;">' + "See the Handout: <b>TokenController Usage Guide</b> for more information." + '</div>');
     }
 
     function addPath(name, pathString) {
@@ -941,8 +941,128 @@ const TokenController = (() => {
     }
 
     function listVars() {
-        listingVars = true;
+        // find handout "TokenController Dashboard"
+        let handout = findObjs({
+            _type: "handout",
+            name: "TokenController Dashboard",
+        })[0];
+
+        if (!handout) {
+            handout = createObj("handout", {
+                name: "TokenController Dashboard",
+                inplayerjournals: "all",
+                archived: false,
+            });
+        }
+
+        let content = new HtmlBuilder('div');
+
+        content.append('.menuLabel', 'Variables');
+        content.append('.subLabel', 'Current variables live in script state.');
+
+        // Create a table for Token Memory Variables
+        let table = content.append('table', 'Token Memory');
+        row = table.append('tr'); // Headers
+        row.append('td', 'Token');
+        row.append('td', 'ID');
+        row.append('td', 'Page');
+        row.append('td', 'Rotation');
+        row.append('td', 'Left');
+        row.append('td', 'Top');
+        row.append('td', 'Following Token');
+        row.append('td', 'Is Following');
+        row.append('td', 'Is Locked');
+
+        for (let i = 0; i < state[NAME].storedVariables.tokenMemory.length; i++) {
+            const token = state[NAME].storedVariables.tokenMemory[i];
+            const obj = getObj('graphic', token.tokenId);
+            if (!obj) continue;
+
+            row = table.append('tr');
+            row.append('td', `${obj.get('name')}`);
+            row.append('td', `${token.tokenId}`);
+            row.append('td', `${token.pageId}`);
+            row.append('td', `${token.rotation}`);
+            row.append('td', `${token.left}`);
+            row.append('td', `${token.top}`);
+            row.append('td', `${token.followingTokenId}`);
+            row.append('td', `${token.isFollowing}`);
+            row.append('td', `${token.isLocked}`);
+        }
+
+        // Create a table for Active Token Paths
+        table = content.append('table', 'Active Token Paths');
+        row = table.append('tr'); // Headers
+        row.append('td', 'Token');
+        row.append('td', 'ID');
+        row.append('td', 'Path');
+        row.append('td', 'Step');
+
+        for (let i = 0; i < state[NAME].storedVariables.activeTokenPaths.length; i++) {
+            const tokenPath = state[NAME].storedVariables.activeTokenPaths[i];
+            row = table.append('tr');
+            row.append('td', `${getObj('graphic', tokenPath.tokenId).get('name')}`);
+            row.append('td', `${tokenPath.tokenId}`);
+            row.append('td', `${tokenPath.pathName}`);
+            row.append('td', `${tokenPath.step}`);
+        }
+
+        // Create a table for Paths
+        table = content.append('table', 'Paths');
+        row = table.append('tr'); // Headers
+        row.append('td', 'Name');
+        row.append('td', 'Path');
+        row.append('td', 'Cycle');
+
+        for (let i = 0; i < state[NAME].storedVariables.paths.length; i++) {
+            const path = state[NAME].storedVariables.paths[i];
+            row = table.append('tr');
+            row.append('td', `${path.name}`);
+            row.append('td', `${path.path}`);
+            row.append('td', `${path.isCycle}`);
+        }
+
+        // Create a table for Path Drafts
+        table = content.append('table', 'Path Drafts');
+        row = table.append('tr'); // Headers
+        row.append('td', 'Name');
+        row.append('td', 'TokenId');
+        row.append('td', 'Path');
+        row.append('td', 'Step');
+        row.append('td', 'Prev');
+        row.append('td', 'Curr');
+
+        for (let i = 0; i < state[NAME].storedVariables.pathDrafts.length; i++) {
+            const pathDraft = state[NAME].storedVariables.pathDrafts[i];
+            row = table.append('tr');
+            row.append('td', `${pathDraft.name}`);
+            row.append('td', `${pathDraft.tokenId}`);
+            row.append('td', `${pathDraft.path}`);
+            row.append('td', `${pathDraft.step}`);
+            if (pathDraft.prevStep) {
+                row.append('td', `${pathDraft.previousStep.direction + pathDraft.previousStep.distance}`);
+            }
+            if (pathDraft.currentStep) {
+                row.append('td', `${pathDraft.currentStep.direction + pathDraft.currentStep.distance}`);
+            }
+        }
+
+        // Create Config Table with Header { Interval, Units/Click, Pixel/Unit }
+        table = content.append('table', 'Config');
+        row = table.append('tr'); // Headers
+        row.append('td', 'Interval');
+        row.append('td', 'Units/Click');
+        row.append('td', 'Pixel/Unit');
+
+        row = table.append('tr');
+        row.append('td', `${state[NAME].storedVariables.interval}`);
+        row.append('td', `${state[NAME].storedVariables.unitPerClick}`);
+        row.append('td', `${state[NAME].storedVariables.unitPx}`);
+
+        handout.set('notes', content.toString(css));
+
         createMenu();
+        sendChat(NAME, '/w gm ' + '<div style="border: 1px solid black; background-color: white; padding: 3px 3px;">' + "Handout: <b>TokenController Dashboard</b> Updated!" + '</div>');
     }
 
     function listDrafts(name) {
@@ -1314,6 +1434,8 @@ const TokenController = (() => {
         content.append('.menuLabel', '[Usage](!tc usage)');
         content.append('.subLabel', '!tc may be used in place of !token-control');
 
+        content.append('.menuLabel', '[List Vars](!tc list vars)');
+
         content.append('.menuLabel', 'Paths');
         content.append('.subLabel', 'Select one or more tokens to start a path');
         let table = content.append('table');
@@ -1376,137 +1498,60 @@ const TokenController = (() => {
         row.append('td', `[\`\`${state[NAME].storedVariables.unitPx}\`\`](!tc unitpx ?{Pixels per Grid Unit?})`);
         row.append('td', `[\`\`Default\`\`](!tc unitpx 70)`);
 
-        if (listingVars) {
-
-            content.append('.menuLabel', 'Variables');
-            content.append('.subLabel', 'Current variables live in script state.');
-            // Create a table for Token Memory Variables
-            table = content.append('table', 'Token Memory');
-            row = table.append('tr'); // Headers
-            row.append('td', 'Token');
-            row.append('td', 'ID');
-            row.append('td', 'Page');
-            row.append('td', 'Rotation');
-            row.append('td', 'Left');
-            row.append('td', 'Top');
-            row.append('td', 'Following Token');
-            row.append('td', 'Is Following');
-            row.append('td', 'Is Locked');
-
-            for (let i = 0; i < state[NAME].storedVariables.tokenMemory.length; i++) {
-                const token = state[NAME].storedVariables.tokenMemory[i];
-                const obj = getObj('graphic', token.tokenId);
-                if (!obj) continue;
-
-                row = table.append('tr');
-                row.append('td', `${obj.get('name')}`);
-                row.append('td', `${token.tokenId}`);
-                row.append('td', `${token.pageId}`);
-                row.append('td', `${token.rotation}`);
-                row.append('td', `${token.left}`);
-                row.append('td', `${token.top}`);
-                row.append('td', `${token.followingTokenId}`);
-                row.append('td', `${token.isFollowing}`);
-                row.append('td', `${token.isLocked}`);
-            }
-
-            // Create a table for Active Token Paths
-            table = content.append('table', 'Active Token Paths');
-            row = table.append('tr'); // Headers
-            row.append('td', 'Token');
-            row.append('td', 'ID');
-            row.append('td', 'Path');
-            row.append('td', 'Step');
-
-            for (let i = 0; i < state[NAME].storedVariables.activeTokenPaths.length; i++) {
-                const tokenPath = state[NAME].storedVariables.activeTokenPaths[i];
-                row = table.append('tr');
-                row.append('td', `${getObj('graphic', tokenPath.tokenId).get('name')}`);
-                row.append('td', `${tokenPath.tokenId}`);
-                row.append('td', `${tokenPath.pathName}`);
-                row.append('td', `${tokenPath.step}`);
-            }
-
-            // Create a table for Path Drafts
-            table = content.append('table', 'Path Drafts');
-            row = table.append('tr'); // Headers
-            row.append('td', 'Name');
-            row.append('td', 'TokenId');
-            row.append('td', 'Path');
-            row.append('td', 'Step');
-            row.append('td', 'Prev');
-            row.append('td', 'Curr');
-
-            for (let i = 0; i < state[NAME].storedVariables.pathDrafts.length; i++) {
-                const pathDraft = state[NAME].storedVariables.pathDrafts[i];
-                row = table.append('tr');
-                row.append('td', `${pathDraft.name}`);
-                row.append('td', `${pathDraft.tokenId}`);
-                row.append('td', `${pathDraft.path}`);
-                row.append('td', `${pathDraft.step}`);
-                if (pathDraft.prevStep) {
-                    row.append('td', `${pathDraft.previousStep.direction + pathDraft.previousStep.distance}`);
-                }
-                if (pathDraft.currentStep) {
-                    row.append('td', `${pathDraft.currentStep.direction + pathDraft.currentStep.distance}`);
-                }
-            }
-
-            listingVars = false;
-        }
-
         menu.append('.patreon', '[``Become a Patron``](https://www.patreon.com/bePatron?u=23167000)');
 
-        sendChat(`${NAME}`, '/w GM ' + menu.toString({
-            'optionsTable': {
-                'width': '100%'
-            },
-            'menu': {
-                'background': '#33658A',
-                'border': 'solid 1px #000',
-                'border-radius': '5px',
-                'font-weight': 'bold',
-                'margin-bottom': '1em',
-                'overflow': 'hidden',
-                'color': '#fff',
-                'justify-content': 'space-evenly',
-            },
-            'menuBody': {
-                'padding': '5px',
-                'text-align': 'center'
-            },
-            'menuLabel': {
-                'color': '#F6AE2D',
-                'margin-top': '5px',
-            },
-            'menuHeader': {
-                'background': '#000',
-                'color': '#fff',
-                'text-align': 'center',
-            },
-            'usageHeader': {
-                'background': '#000',
-                'color': '#fff',
-                'text-align': 'center',
-            },
-            'usage': {
-                'background': '#000',
-                'color': '#fff',
-                'text-align': 'center',
-            },
-            'subLabel': {
-                'color': '#F26419',
-                'font-size': '0.8em',
-            },
-            'patreon': {
-                'color': '#F6AE2D',
-                'font-size': '1.1em',
-                'text-align': 'center',
-                'margin-top': '10px',
-                'margin-bottom': '10px'
-            }
-        }));
+        sendChat(`${NAME}`, '/w GM ' + menu.toString(css));
     }
+
+    const css = {
+        'optionsTable': {
+            'width': '100%'
+        },
+        'menu': {
+            'background': '#33658A',
+            'border': 'solid 1px #000',
+            'border-radius': '5px',
+            'font-weight': 'bold',
+            'margin-bottom': '1em',
+            'overflow': 'hidden',
+            'color': '#fff',
+            'justify-content': 'space-evenly',
+        },
+        'menuBody': {
+            'padding': '5px',
+            'text-align': 'center'
+        },
+        'menuLabel': {
+            'color': '#F6AE2D',
+            'margin-top': '5px',
+        },
+        'menuHeader': {
+            'background': '#000',
+            'color': '#fff',
+            'text-align': 'center',
+        },
+        'usageHeader': {
+            'background': '#000',
+            'color': '#fff',
+            'text-align': 'center',
+        },
+        'usage': {
+            'background': '#000',
+            'color': '#fff',
+            'text-align': 'center',
+        },
+        'subLabel': {
+            'color': '#F26419',
+            'font-size': '0.8em',
+        },
+        'patreon': {
+            'color': '#F6AE2D',
+            'font-size': '1.1em',
+            'text-align': 'center',
+            'margin-top': '10px',
+            'margin-bottom': '10px'
+        }
+    };
 
     return {};
 })();
