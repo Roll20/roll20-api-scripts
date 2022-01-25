@@ -1095,3 +1095,7 @@ randomtokentinter:
 attackmaster:
   - "AttackMaster"
   - "System Toolbox"
+
+unsanity:
+  - "UnSanity"
+  - "Utility"
