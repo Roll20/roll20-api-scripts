@@ -1,0 +1,12 @@
+{
+  "name": "UnSanity",
+  "script": "UnSanity.js",
+  "version": "0.0.1",
+  "description": "UnSanity is a unicode sanitation test script and is mainly intended for scripters, sheet designers, and GMs looking to prepare for a game. It gives us a window into what unicode characters are allowed in various locations around the Roll20 interface. Use this script to check unicode characters in code (i.e., what survives the one-click sanitation process), in the script log console, in chat, and in a handout. Of these, the first two deserve a little explanation.\r\r<b>In Code</b>: At the bottom of the code is a table of unicode characters commented-out of the viable code. As these will pass through the one-click sanitation process, examining this table for particular characters could tell you whether those characters would survive that process. Obviously this would only matter to scripters and sheet-designers. If you find yourself wanting/needing to see this list, remember you will need to <b>Import</b> UnSanity rather than installing it from the one-click. This will give you access to the source code.\r<b>Script Log</b>Another niche environment, but one that you may want to explore if, like me, you like to sign your scripts with a little personal touch as it registers to the sandbox. This one also may only matter to scripters (possibly sheet-designers), but will work whether the script is installed or imported. What is important is that the only way to see the script log console is to be a GM of the game where you are running the UnSanity command.\r\rAll three of the output destinations (log, chat, handout) are available to produce once you're in the game. Use the script handle (!unsanity) alone to produce a help panel in chat with further options.",
+  "authors": "timmaugh",
+  "roll20userid": "5962076",
+  "useroptions": [],
+  "modifies": {},
+  "conflicts": [],
+  "previousversions": []
+}
