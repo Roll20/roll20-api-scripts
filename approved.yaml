@@ -1103,3 +1103,11 @@ commandmaster:
 magicmaster:
   - "MagicMaster"
   - "System Toolbox"
+
+tokencontroller:
+  - "TokenController"
+  - "Tokens"
+  
+unsanity:
+  - "UnSanity"
+  - "Utility"
