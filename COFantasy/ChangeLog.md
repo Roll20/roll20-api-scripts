@@ -1,13 +1,21 @@
 # COFantasy: Historique des changements (depuis la version 1.0)
 ## 3.05
 ### Capacités
+* Amélioration de la prise en charge de la marche sylvestre.
 * Explosion finale de la voie des créatures élémentaires
 
 ### Corrections de bugs
+* Prise en compte des limites pour les provocations.
+* Quand un familier aux PV liés meurt, son maître aussi.
+* On ne peut plus drainer qu'un PV des cibles multiples.
 * Correction de bugs sur le radar mental
 * Correction d'un bug sur le pacifisme
 
 ### Autres améliorations
+* Support pour les arcs composites façon Pathfinder.
+* Possibilité de save par tour actif pour les effets temporaires.
+* Possibilité d'indiquer des temps de recharge pour les effets.
+* Option de magie en armure pour les attaques.
 * Ajout d'une commande !cof-explosion
 * Possibilité de différencier les saves pour les cibles au contact.
 * Prise en compte des changements d'attributs d'armure de la version 5.01 de la fiche.
