@@ -1,0 +1,21 @@
+{
+    "name": "Simple Sound",
+    "script": "simplesound.js",
+    "version": "2.1",
+    "description": "The goal of this script is to play/stop sound effects from the Roll20 Jukebox via macro and chat commands.",
+    "authors": "Ben F.",
+    "roll20userid": "587921",
+    "useroptions": {},
+    "dependencies": [],
+    "modifies": {
+        "state.simpleSound.version": "read,write",
+        "state.simpleSound.whisper": "read,write",
+        "jukeboxtrack.playing": "read,write",
+        "msg.content": "read",
+        "sendChat": "write"
+    },
+    "conflicts": [],
+    "previousversions": [
+	 "2.0"
+	]
+}
