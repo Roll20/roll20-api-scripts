@@ -1111,3 +1111,7 @@ tokencontroller:
 unsanity:
   - "UnSanity"
   - "Utility"
+
+simplesound:
+- "SimpleSound"
+- "Jukebox"
