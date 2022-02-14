@@ -108,6 +108,14 @@
 									<li><a class="text-info" href="#Sorts">Autres sorts</a></li>
 									<li><a class="text-info" href="#Capacites_diverses">Capacités diverses</a></li>
                 </ul>
+                <li data-toggle="collapse" data-target="#terres_d_arran"><a href="#Terres_d_Arran">Terres d'Arran</a></li>
+								<ul id="terres_d_arran" class="collapse">
+									<li><a class="text-info" href="#Peuples_d_Arran">Les peuples</a></li>
+									<li><a class="text-info" href="#Voies_de_la_famille_des_combattants">Les combattants</a></li>
+									<li><a class="text-info" href="#Voies_de_la_famille_des_aventuriers">Les aventuriers</a></li>
+									<li><a class="text-info" href="#Voies_de_la_famille_des_mystiques">Les mystiques</a></li>
+									<li><a class="text-info" href="#Voies_de_prestige_Arran">Voies de prestige</a></li>
+                </ul>
                 <li data-toggle="collapse" data-target="#markers_personnalises"><a href="#Markers_personnalisés">Markers personnalisés</a></li>
 								<ul id="markers_personnalises" class="collapse">
                   <li><a class="text-info" href="#Markers_presentation">Présentation</a></li>
@@ -884,7 +892,7 @@
               </div>
               <h4 class="text-secondary" id="suivre">Suivre un autre personnages</h4>
               <div class="decalage">
-                Le principe est le suivant : on sélectionne un token, dans les abilities qui s'affichent en haut de la map, on clique sur <code>Suivre</code>, puis on sélectionne le token à suivre. À partir de ce moment, le script déplace le premier token à chaque fois qu'on déplace le second (en tenant compte des états qui empêchent le mouvement et des obstacles sur le layer de lumière, si ils doivent empêcher le mouvement). On peut aussi suivre un token qui en suit un autre. Et pour arrêter de suivre un token, il suffit de déplacer manuellement le premier token.
+                Le principe est le suivant : on sélectionne un token, dans les abilities qui s'affichent en haut de la map, on clique sur <code>Suivre</code>, puis on sélectionne le token à suivre. À partir de ce moment, le script déplace le premier token à chaque fois qu'on déplace le second (en tenant compte des états qui empêchent le mouvement et des obstacles sur le layer de lumière, si ils doivent empêcher le mouvement). On peut aussi suivre un token qui en suit un autre. Et pour arrêter de suivre un token, il suffit de déplacer manuellement le premier token.
 
 Ça permet donc d'avoir un familier qui suit un personnage, ou bien de faire automatiquement bouger un groupe de perosnnage dont l'ordre de marche est déterminé.
               </div>
@@ -1348,7 +1356,7 @@
                     <strong>Absorber un coup</strong> :
                     <ul>
                       <li>utiliser <code>!cof-effet-temp absorberUnCoup 1</code> pour se mettre en position. Attention, ça ne vérifie pas si le guerrier porte son bouclier.</li>
-                      <li>le script propose un bouton à activer en cas d'attaque réussie alors que le guerrier est en position,</li>
+                      <li>le script propose un bouton à activer en cas d'attaque réussie alors que le guerrier est en position.</li>
                     </ul>
                   </li>
                   <li>
@@ -1358,7 +1366,7 @@
                       <li>le script propose un bouton à activer en cas d'attaque réussie alors que le guerrier est en position.</li>
                     </ul>
                   </li>
-                  <li><strong>Armure lourde</strong> : Noter l'armure sur la feuille du personnage, et ajouter un <a href=#predicats>prédicat</a> <code>armureLourdeGuerrier</code> au personnage. L'annulation du critique ne se produira que si l'armure est portée et que la valeur totale du bonus de défense supérieure ou égale à 8 (le bonus de DEF d'une armure de plaques complète).</li>
+                  <li><strong>Armure lourde</strong> : Noter l'armure sur la feuille du personnage, et ajouter un <a href=#predicats>prédicat</a> <code>armureLourdeGuerrier</code> au personnage. L'annulation du critique ne se produira que si l'armure est portée et que la valeur totale du bonus de défense supérieure ou égale à 7 (le bonus de DEF d'une armure de plaques complète).</li>
                 </ol>
                 <h4 class="text-secondary">Voie du combat</h4>
                 <ol>
@@ -1916,8 +1924,12 @@
                   <li><a href="#Vision_dans_le_noir">Vision dans le noir</a>.</li>
                   <li><strong>Énorme</strong> : pas de support, ajuster les attaques</li>
                   <li><strong>Grande taille</strong> : quand le demi-ogre rentre dans une construction de taille humaine, utiliser <code>!cof-effet constructionTailleHumaine true</code>. À la sortie du bâtiment, <code>!cof-effet constructionTailleHumaine false</code>. Pour les espaces exigus, de même avec l'effet <code>espaceExigu</code>.</li>
-                  <li><strong>Réaction violente</strong> : en cas de provocationm exécuter <code>!cof-effet-temp reactionViolente [[1d6]] --save SAG 10</code>. On peut par exemple mettre ce code en ability liée au token. Au MJ et au joueur de gérer les actions qui s'ensuivent. Le script propose une action à l'ogre pour prendre sur lui à chaque tour.</li>
+                  <li><strong>Réaction violente</strong> : en cas de provocation, exécuter <code>!cof-effet-temp reactionViolente [[1d6]] --save SAG 10</code>. On peut par exemple mettre ce code en ability liée au token. Au MJ et au joueur de gérer les actions qui s'ensuivent. Le script propose une action à l'ogre pour prendre sur lui à chaque tour.</li>
                 </ul>
+                <ol>
+                  <li><strong>Sang-froid</strong> : ajouter un prédicat <code>sangFroid</code>. Modifier la commande pour les provocations en <code>!cof-effet-temp reactionViolente [[1d4]] --save SAG 5</code>. </li>
+                  <li><strong>Violence ciblée</strong> : ajouter un prédicat <code>violenceCiblee</code>.</li>
+                </ol>
                 <h4 class="text-secondary">Demi-orque</h4>
                 <a href="#Vision_dans_le_noir">Vision dans le noir</a>.
                 <ol>
@@ -2212,6 +2224,7 @@
                   <li><strong>Faucheuse de géants</strong>: ajouter le modifcateur <code>tueurDeGrands</code> aux attaques.</li>
                   <li><strong>Fièvre du chêne</strong> : pour ajouter encore une RD de 5 contre le feu, ajouter un <a href=#predicats>prédicat</a> <code>fievreChene</code>.</li>
                   <li><strong>Fiévreux</strong> : <code>!cof-effet fievreux</code> donne -2 en attaque, au dégâts et aux tests.</li>
+                  <li><strong>Foudres du temps</strong> : <code>!cof-foudre-du-temps</code> permet d'activer les foudres du temps. On peut donner un argument pour remplacer la valeur par défaut (13) par un autre jet de dés. Un deuxième argument permet de faire sortir la foudre pour tout jet entre les deux valeurs. Par exemple <code>!cof-foudre-du-temps 13 14</code> fait venir la foudre pour tout jet de 13 ou 14. Si votre jeu contient un son (ou playlist) nommé <code>Foudre</code> (avec la majuscule), le son sera joué à chaque fois que la foudre frappera. Finalement, <code>!cof-foudre-du-temps fin</code> met fin aux foudres du temps.</li>
                   <li><strong>Frénésie</strong> : Ajouter un <a href=#predicats>prédicat</a> <code>frenesie</code> avec comme valeur le nombre de PV en-dessous duquel la créature devient frénétique (+2 aus jets d'attaque).</li>
                   <li><strong>Hors de portée</strong> : ajouter un <a href=#predicats>prédicat</a> <code>horsDePortee</code></li>
                   <li><strong>Huile de fort assaut</strong> : <code>!cof-effet-temp dmgArme(<i>L</i>) 10 --valeur 1d6</code> où <i>L</i> est le label de l'arme qu'on veut enduire d'huile de fort assaut.</li>
@@ -2252,8 +2265,452 @@
                 </ul>
               </div>
             </div>
-            <h2 class="text-primary" id="Markers_personnalisés">5. Markers Personnalisés</h2>
-            <h3 class="text-info" id="Markers_presentation">5.1 Présentation</h3>
+            <h2 class="text-primary" id="Terres_d_Arran">5. Terres d'Arran</h2>
+            <p>Le script determine s'il doit utiliser les règles par défaut des Terres d'Arran ou celles de COF générique en fonction des fiches de personnages présentes sur la partie. Pour que toutes vox fiches soient bien adaptées au setting des Terres d'Arran, assurez-vous de bien sélectionner ce setting dans les réglages du jeu (accessibles avant de lancer la partie "Options de jeu" ou "Game Settings".</p>
+                <p><img class="img-fluid" width="80%" src="images/Settings_arran.jpg"></p>
+                <p>Le fait d'être dans ce mode de règles change le calcul de l'initiative et des mods d'attaque.</p>
+            <h3 class="text-info" id="Peuples_d_Arran">5.1 Les peuples d'Arran</h3>
+            <h4 class="text-info">5.1.1 Elfes</h4>
+            <div class="decalage">
+              <h5 class=text-secondary>Voie du peuple des Elfes</h5>
+              <ol>
+                <li><strong>Grâce Elfique :</strong> Ajouter le bonus au jets de charisme sur la fiche, et une compétence <code>discrétion</code> pour les déplacements silencieux.</li>
+                <li><strong>Essence magique :</strong> ajouter un <a href=#predicats>prédicat</a> <code>DEF_magie</code> de valeur 2, et un <a href=#predicats>prédicat</a> <code>resistanceALaMagie</code> de valeur 2 aussi. Passer ces valeurs à 4 au rang 4 dans la voie.</li>
+                <li><strong>Maîtrise des armes elfiques :</strong> Pas de support pour l'instant</li>
+                <li><strong>Empathie elfique :</strong> Pas de support</li>
+                <li><strong>Immortalité :</strong>TODO</li>
+              </ol>
+              <h5 class=text-secondary>Voie culturelle des elfes blancs</h5>
+              <ol>
+         	<li><strong>Mémoire du monde :</strong> En Attente </li>
+          	<li><strong>Prédispositions magiques :</strong> En Attente </li>
+		<li><strong>Lancier d’élite :</strong> En Attente </li>
+		<li><strong>Blancheur immaculée :</strong> En Attente </li>
+		<li><strong>Parangon elfe blanc :</strong> En Attente </li>
+              </ol>
+              <h5 class=text-secondary>Voie culturelle des elfes bleus</h5>
+              <ol>
+          	<li><strong>Équilibre parfait :</strong> Ajouter une compétence équilibre avec le bonus. </li>
+          	<li><strong>Natif d’Elsémur :</strong> voir la capacité choisie. </li>
+		<li><strong>Imperturbable :</strong> En Attente </li>
+		<li><strong>Les enseignements de l’eau  :</strong> En Attente </li>
+		<li><strong>Parangon elfe bleu :</strong> En Attente </li>
+              </ol>
+              <h5 class=text-secondary>Voie culturelle des elfes noirs</h5>
+              <ol>
+         	<li><strong>Artiste de l’ombre :</strong> En Attente </li>
+         	<li><strong>Apprenti de Slurce :</strong> En Attente </li>
+		<li><strong>Armes secrètes :</strong> En Attente </li>
+		<li><strong>Noir comme le sang :</strong> En Attente </li>
+		<li><strong>Parangon elfe noir :</strong> En Attente </li>
+              </ol>
+              <h5 class=text-secondary>Voie culturelle des elfes sylvains</h5>
+              <ol>
+         	<li><strong>Le chant de la Terre :</strong> En Attente </li>
+        	<li><strong>Enfant de la forêt :</strong> voir la capacité choisie </li>
+		<li><strong>Archer émérite :</strong> ajuster les chances de critique pour les attaques utilisant les arcs. </li>
+		<li><strong>Compagnon animal supérieur :</strong> En Attente </li>
+		<li><strong>Parangon elfe vert :</strong> En Attente </li>
+              </ol>
+            </div>
+	<h4 class="text-info">5.1.2 Nains</h4>
+            <div class="decalage">
+              <h5 class=text-secondary>Voie du peuple des Nains</h5>
+              <ol>
+         	<li><strong>Résistance :</strong> En Attente </li>
+        	<li><strong>Solide comme un roc :</strong> En Attente </li>
+		<li><strong>Maîtrise des armes runiques :</strong> En Attente </li>
+		<li><strong>Résistance à la magie :</strong> En Attente </li>
+		<li><strong>Ténacité naine :</strong> En Attente </li>
+              </ol>
+              <h5 class=text-secondary>Voie culturelle de l’ordre de la Forge  </h5>
+              <ol>
+         	<li><strong>Artisan de la forge :</strong> En Attente </li>
+         	<li><strong>Forgeron runique :</strong> En Attente </li>
+		<li><strong>Marteler le métal :</strong> En Attente </li>
+		<li><strong>Runes de défense :</strong> En Attente </li>
+		<li><strong>Maître artisan :</strong> En Attente </li>
+              </ol>
+              <h5 class=text-secondary>Voie culturelle de l’ordre du Talion  </h5>
+              <ol>
+         	<li><strong>Plein aux as :</strong> En Attente </li>
+         	<li><strong>Le sens des affaires :</strong> En Attente </li>
+		<li><strong>Pot-de-vin :</strong> En Attente </li>
+		<li><strong>La Loge noire  :</strong> En Attente </li>
+		<li><strong>Seigneur du Talion :</strong> En Attente </li>
+              </ol>
+              <h5 class=text-secondary>Voie culturelle de l’ordre du Temple </h5>
+              <ol>
+         	<li><strong>Grosse tête :</strong> En Attente </li>
+          	<li><strong>Enseigne du Temple :</strong> En Attente </li>
+		<li><strong>Invention étrange :</strong> En Attente </li>
+		<li><strong>Rites funéraires (L) :</strong> En Attente </li>
+		<li><strong>Maître du temple :</strong> En Attente </li>
+              </ol>
+              <h5 class=text-secondary>Voie culturelle de l’ordre du Bouclier</h5>
+              <ol>
+          	<li><strong>Combat en phalange :</strong> En Attente </li>
+          	<li><strong>Formation militaire :</strong> En Attente </li>
+		<li><strong>Capitaine du Bouclier :</strong> En Attente </li>
+		<li><strong>Fuite interdite :</strong> En Attente </li>
+		<li><strong>Veilleur du roi :</strong> En Attente </li>
+              </ol>
+              <h5 class=text-secondary>Voie culturelle de l’ordre des Errants</h5>
+              <ol>
+          	<li><strong>Moins que rien :</strong> En Attente </li>
+           	<li><strong>Passé révolu :</strong> En Attente </li>
+		<li><strong>Paysan aguerri :</strong> En Attente </li>
+		<li><strong>Solidarité des Errants :</strong> En Attente </li>
+		<li><strong>Volonté héroïque :</strong> En Attente </li>
+              </ol>
+
+            </div>
+	<h4 class="text-info">5.1.3 Humain</h4>
+            <div class="decalage">
+              <h5 class=text-secondary>Voie du peuple des Humains</h5>
+              <ol>
+            	<li><strong>Adaptable :</strong> En Attente </li>
+            	<li><strong>Loup parmi les loups :</strong> En Attente </li>
+		<li><strong>Enseignement exotique :</strong> En Attente </li>
+		<li><strong>Versatile :</strong> En Attente </li>
+		<li><strong>Dépassement :</strong> En Attente </li>
+              </ol>
+              <h5 class=text-secondary>Voie culturelle des ruines nordiques</h5>
+              <ol>
+           	<li><strong>Pied marin :</strong> En Attente </li>
+           	<li><strong>Barbare :</strong> En Attente </li>
+		<li><strong>Expertise des haches :</strong> En Attente </li>
+		<li><strong>Homme des clans :</strong> En Attente </li>
+		<li><strong>Conquéran:</strong> En Attente </li>
+              </ol>
+              <h5 class=text-secondary>Voie culturelle du Mitan</h5>
+              <ol>
+           	<li><strong>Homme des cités :</strong> En Attente </li>
+           	<li><strong>Entre tradition et progrès :</strong> En Attente </li>
+		<li><strong>Modernisme :</strong> En Attente </li>
+		<li><strong>Conspirateur :</strong> En Attente </li>
+		<li><strong>Maître marchand :</strong> En Attente </li>
+              </ol>
+              <h5 class=text-secondary>Voie culturelle des empires austraux</h5>
+              <ol>
+           	<li><strong>Érudition :</strong> En Attente </li>
+           	<li><strong>Études arcaniques :</strong> En Attente </li>
+		<li><strong>Autorité culturelle :</strong> En Attente </li>
+		<li><strong>Prédispositions arcaniques :</strong> En Attente </li>
+		<li><strong>Mage :</strong> En Attente </li>
+              </ol>
+              <h5 class=text-secondary>Voie culturelle des Terres orientales</h5>
+              <ol>
+     	   	<li><strong>Connaissances cosmopolites :</strong> En Attente </li>
+           	<li><strong>Rejeton de la cité des Sang-mêlés :</strong> En Attente </li>
+		<li><strong>Sentir la magie :</strong> En Attente </li>
+		<li><strong>Chevaucheur de dragons :</strong> En Attente </li>
+		<li><strong>Expert en filouterie :</strong> En Attente </li>
+              </ol>
+            </div>
+	<h4 class="text-info">5.1.3 Peaux Vertes</h4>
+            <div class="decalage">
+              <h5 class=text-secondary>Voie du peuple des Peaux Vertes </h5>
+              <ol>
+           	<li><strong>Pour l’honneur :</strong> En Attente </li>
+           	<li><strong>Frappe déloyale :</strong> En Attente </li>
+	      	<li><strong>Maîtrise des armes sauvages :</strong> En Attente </li>
+	      	<li><strong>Croyances païennes :</strong> En Attente </li>
+	      	<li><strong>Héros tribal :</strong> En Attente </li>
+              </ol>
+              <h5 class=text-secondary>Voie culturelle des Ogres
+</h5>
+              <ol>
+            	<li><strong>Énorme :</strong> En Attente </li>
+            	<li><strong>Brute :</strong> En Attente </li>
+	    	<li><strong>Attaque massive (L) :</strong> En Attente </li>
+	    	<li><strong>Intuable :</strong> En Attente </li>
+	    	<li><strong>Monstre :</strong> En Attente </li>
+              </ol>
+              <h5 class=text-secondary>Voie culturelle des Orcs</h5>
+              <ol>
+            	<li><strong>Force de la nature :</strong> En Attente </li>
+            	<li><strong>Talent pour la violence :</strong> En Attente </li>
+		<li><strong>Critique brutal :</strong> En Attente </li>
+		<li><strong>Attaque sanglante (L) :</strong> En Attente </li>
+		<li><strong>Colosse :</strong> En Attente </li>
+              </ol>
+              <h5 class=text-secondary>Voie culturelle des Gobelins</h5>
+              <ol>
+            	<li><strong>Insignifiant :</strong> En Attente </li>
+            	<li><strong>Agile et sournois :</strong> En Attente </li>
+		<li><strong>Ombre mouvante (L) :</strong> En Attente </li>
+		<li><strong>Rochassier :</strong> En Attente </li>
+		<li><strong>Teigneux :</strong> En Attente </li>
+              </ol>
+
+              <div class="decalage">
+              </div>
+            <h3 class="text-info" id="Voies_de_la_famille_des_combattants">5.2 Voies de la famille des combattants</h3>
+              <div class="decalage">
+		<h4 class="text-secondary">Voie du bastion</h4>
+		<ol>
+      <li><strong>Protéger un allié</strong> : <code>!cof-proteger-un-allie @{selected|token_id} @{target|token_id}</code>. Fonctionne aussi si on remplace le target par un nom de token. Le script ne vérifie pas que le combattant ne change pas d'allié plus d'une fois par tour. Pour la capacité avancée, ajouter un prédicat <code>protegerUnAllieAvance</code>.</li>
+		<li><strong>Absorber un coup (L) :</strong>
+                    <ul>
+                      <li>utiliser <code>!cof-effet-temp absorberUnCoup 1</code> pour se mettre en position. Attention, ça ne vérifie pas si le combattant porte son bouclier.</li>
+                      <li>le script propose un bouton à activer en cas d'attaque réussie alors que le combattant est en position.</li>
+                    </ul>
+    </li>
+                  <li><strong>Coup de bouclier :</strong> faire une attaque de bouclier, avec l'option <code>--avecd12</code></li>
+		<li><strong>Absorber un sort (L) :</strong>
+                    <ul>
+                      <li>utiliser <code>!cof-effet-temp absorberUnSort 1</code> pour se mettre en position. Attention, ça ne vérifie pas si le combattant porte son bouclier.</li>
+                      <li>le script propose un bouton à activer en cas d'attaque réussie alors que le combattant est en position.</li>
+                    </ul>
+    </li>
+                  <li><strong>Armure lourde :</strong> Noter l'armure sur la feuille du personnage, et ajouter un <a href=#predicats>prédicat</a> <code>armureLourdeGuerrier</code> au personnage. L'annulation du critique ne se produira que si l'armure est portée et que la valeur totale du bonus de défense supérieure ou égale à 7 (le bonus de DEF d'une armure de plaques complète).</li>
+		</ol>
+		<h4 class="text-secondary">Voie de la bravoure</h4>
+		<ol>
+		<li><strong>Robustesse :</strong> En Attente </li>
+		<li><strong>Armure naturelle :</strong> En Attente </li>
+		<li><strong>Prouesse :</strong> En Attente </li>
+		<li><strong>Dernier rempart (L) :</strong> En Attente </li>
+		<li><strong>Constitution héroïque :</strong> En Attente </li>
+		</ol>
+		<h4 class="text-secondary">Voie du combat à deux armes</h4>
+		<ol>
+		<li><strong>Combat à deux armes (L) :</strong> En Attente </li>
+		<li><strong>Parade croisée (L) :</strong> En Attente </li>
+		<li><strong>Symétrie :</strong> En Attente </li>
+		<li><strong>Double peine :</strong> En Attente </li>
+		<li><strong>Combat à deux armes parfait :</strong> En Attente </li>
+		</ol>
+		<h4 class="text-secondary">Voie du combat monté  </h4>
+		<ol>
+		<li><strong>Fidèle monture :</strong> En Attente </li>
+		<li><strong>Cavalier émérite :</strong> En Attente </li>
+		<li><strong>Massacrer la piétaille :</strong> En Attente </li>
+		<li><strong>Charge (L) :</strong> En Attente </li>
+		<li><strong>Monture fantastique :</strong> En Attente </li>
+		</ol>
+		<h4 class="text-secondary">Voie du commandement</h4>
+		<ol>
+		<li><strong>Action concertée :</strong> En Attente </li>
+		<li><strong>À couvert (L) :</strong> En Attente </li>
+		<li><strong>Exemplaire :</strong> En Attente </li>
+		<li><strong>Ordre de bataille :</strong> En Attente </li>
+		<li><strong>Charge fantastique (L) :</strong> En Attente </li>
+		</ol>
+		<h4 class="text-secondary">Voie de la férocité</h4>
+		<ol>
+		<li><strong>Cri de guerre :</strong> En Attente </li>
+		<li><strong>Charge (L) :</strong> En Attente </li>
+		<li><strong>Rage du berserk (L) :</strong> En Attente </li>
+		<li><strong>Même pas mal :</strong> En Attente </li>
+		<li><strong>Attaque tourbillon (L) :</strong> En Attente </li>
+		</ol>
+		<h4 class="text-secondary">Voie de la guerre</h4>
+		<ol>
+		<li><strong>Posture de combat :</strong> En Attente </li>
+		<li><strong>Désarmer (L) :</strong> En Attente </li>
+		<li><strong>Double attaque (L) :</strong> En Attente </li>
+		<li><strong>Attaque circulaire (L) :</strong> En Attente </li>
+		<li><strong>Attaque puissante :</strong> En Attente </li>
+		</ol>
+		<h4 class="text-secondary">Voie de la maîtrise des armes</h4>
+		<ol>
+		<li><strong>Arme de prédilection :</strong> En Attente </li>
+		<li><strong>Science du critique :</strong> En Attente </li>
+		<li><strong>Spécialisation :</strong> En Attente </li>
+		<li><strong>Attaque parfaite (L) :</strong> En Attente </li>
+		<li><strong>Riposte :</strong> En Attente </li>
+		</ol>
+		<h4 class="text-secondary">Voie du pugilat</h4>
+		<ol>
+		<li><strong>Poings de fer :</strong> En Attente </li>
+		<li><strong>Peau de pierre :</strong> En Attente </li>
+		<li><strong>Peau d’acier :</strong> En Attente </li>
+		<li><strong>Déluge de coups (L) :</strong> En Attente </li>
+		<li><strong>Force héroïque :</strong> En Attente </li>
+		</ol>
+		<h4 class="text-secondary">Voie de la puissance</h4>
+		<ol>
+		<li><strong>Argument de taille :</strong> En Attente </li>
+		<li><strong>Tour de force :</strong> En Attente </li>
+		<li><strong>Attaque brutale (L) :</strong> En Attente </li>
+		<li><strong>Briseur d’os :</strong> En Attente </li>
+		<li><strong>Vitalité débordante :</strong> En Attente </li>
+		</ol>
+
+              </div>
+            <h3 class="text-info" id="Voies_de_la_famille_des_aventuriers">5.3 Voies de la famille des aventuriers</h3>
+		<div class="decalage">
+		<h4 class="text-secondary">Voie de l’acrobatie</h4>
+		<ol>
+		<li><strong>Acrobate :</strong> En Attente </li>
+		<li><strong>Grâce féline :</strong> En Attente </li>
+		<li><strong>Lanceur de couteau :</strong> En Attente </li>
+		<li><strong>Esquive acrobatique :</strong> En Attente </li>
+		<li><strong>Dextérité héroïque :</strong> En Attente </li>
+		</ol>
+		<h4 class="text-secondary">Voie de l’arbalètrie</h4>
+		<ol>
+		<li><strong>Joli coup! :</strong> En Attente </li>
+		<li><strong>Cadence de tir :</strong> En Attente </li>
+		<li><strong>Tir double (L) :</strong> En Attente </li>
+		<li><strong>As de la gâchette :</strong> En Attente </li>
+		<li><strong>Tir mortel :</strong> En Attente </li>
+		</ol>
+		<h4 class="text-secondary">Voie de l’archerie</h4>
+		<ol>
+		<li><strong>Sens affûtés :</strong> En Attente </li>
+		<li><strong>Tir aveugle (L) :</strong> En Attente </li>
+		<li><strong>Tir rapide (L) :</strong> En Attente </li>
+		<li><strong>Flèche de mort (L) :</strong> En Attente </li>
+		<li><strong>Dans le mille :</strong> En Attente </li>
+		</ol>
+		<h4 class="text-secondary">Voie de l’assassinat</h4>
+		<ol>
+		<li><strong>Discrétion :</strong> En Attente </li>
+		<li><strong>Attaque sournoise (L) :</strong> En Attente </li>
+		<li><strong>Frappe chirurgicale :</strong> En Attente </li>
+		<li><strong>Surprise :</strong> En Attente </li>
+		<li><strong>Botte secrète :</strong> En Attente </li>
+		</ol>
+		<h4 class="text-secondary">Voie du bohème</h4>
+		<ol>
+		<li><strong>Rumeurs et légendes :</strong> En Attente </li>
+		<li><strong>Argumenter :</strong> En Attente </li>
+		<li><strong>Débrouillard :</strong> En Attente </li>
+		<li><strong>Déguisement :</strong> En Attente </li>
+		<li><strong>Touche-à-tout :</strong> En Attente </li>
+		</ol>
+		<h4 class="text-secondary">Voie du charme</h4>
+		<ol>
+		<li><strong>Charmant :</strong> En Attente </li>
+		<li><strong>Provocation (L) :</strong> En Attente </li>
+		<li><strong>Attaque flamboyante (L) :</strong> En Attente </li>
+		<li><strong>Suggestion (L) :</strong> En Attente </li>
+		<li><strong>Charisme héroïque  :</strong> En Attente </li>
+		</ol>
+		<h4 class="text-secondary">Voie de la chasse</h4>
+		<ol>
+		<li><strong>Proche de la nature :</strong> En Attente </li>
+		<li><strong>Nature nourricière :</strong> En Attente </li>
+		<li><strong>Attaque éclair (L) :</strong> En Attente </li>
+		<li><strong>Ennemis jurés :</strong> En Attente </li>
+		<li><strong>Perception héroïque :</strong> En Attente </li>
+		</ol>
+		<h4 class="text-secondary">Voie du compagnon animal</h4>
+		<ol>
+		<li><strong>Odorat :</strong> En Attente </li>
+		<li><strong>Surveillance :</strong> En Attente </li>
+		<li><strong>Combat :</strong> En Attente </li>
+		<li><strong>Empathie animale :</strong> En Attente </li>
+		<li><strong>Animal fabuleux :</strong> En Attente </li>
+		</ol>
+		<h4 class="text-secondary">Voie de l’escrime</h4>
+		<ol>
+		<li><strong>Attaque en finesse :</strong> En Attente </li>
+		<li><strong>Intelligence du combat :</strong> En Attente </li>
+		<li><strong>Feinte (L) :</strong> En Attente </li>
+		<li><strong>Ambidextrie :</strong> En Attente </li>
+		<li><strong>Botte mortelle :</strong> En Attente </li>
+		</ol>
+		<h4 class="text-secondary">Voie de la fourberie</h4>
+		<ol>
+		<li><strong>Doigts agiles :</strong> En Attente </li>
+		<li><strong>Détecter les pièges :</strong> En Attente </li>
+		<li><strong>Croc-en-jambe :</strong> En Attente </li>
+		<li><strong>Attaque paralysante (L) :</strong> En Attente </li>
+		<li><strong>Attaque en traître :</strong> En Attente </li>
+		</ol>
+
+              </div>
+            <h3 class="text-info" id="Voies_de_la_famille_des_mystiques">5.4 Voies de la famille des mystiques</h3>
+		<div class="decalage">
+		<h4 class="text-secondary">Voie de l’alchimie</h4>
+		<ol>
+		<li><strong>Fortifiant :</strong> En Attente </li>
+		<li><strong>Feu grégeois :</strong> En Attente </li>
+		<li><strong>Huile instable :</strong> En Attente </li>
+		<li><strong>Élixir de guérison :</strong> En Attente </li>
+		<li><strong>Élixirs de Protection :</strong> En Attente </li>
+		</ol>
+		<h4 class="text-secondary">Voie des arts druidiques</h4>
+		<ol>
+		<li><strong>Langage des animaux :</strong> En Attente </li>
+		<li><strong>Nuée d’insectes* :</strong> En Attente </li>
+		<li><strong>Le guetteur :</strong> En Attente </li>
+		<li><strong>Masque du prédateur* :</strong> En Attente </li>
+		<li><strong>Sagesse héroïque :</strong> En Attente </li>
+		</ol>
+		<h4 class="text-secondary">Voie de la divination</h4>
+		<ol>
+		<li><strong>Sixième sens :</strong> En Attente </li>
+		<li><strong>Détection de l’invisible* :</strong> En Attente </li>
+		<li><strong>Clairvoyance* :</strong> En Attente </li>
+		<li><strong>Prescience* :</strong> En Attente </li>
+		<li><strong>Hyperconscience :</strong> En Attente </li>
+		</ol>
+		<h4 class="text-secondary">Voie de l’envoûtement</h4>
+		<ol>
+		<li><strong>Injonction* :</strong> En Attente </li>
+		<li><strong>Sommeil* :</strong> En Attente </li>
+		<li><strong>Confusion* :</strong> En Attente </li>
+		<li><strong>Amitié* :</strong> En Attente </li>
+		<li><strong>Domination* :</strong> En Attente </li>
+		</ol>
+		<h4 class="text-secondary">Voie des forêts</h4>
+		<ol>
+		<li><strong>Peau d’écorce* :</strong> En Attente </li>
+		<li><strong>Prison végétale* :</strong> En Attente </li>
+		<li><strong>Baies magiques* :</strong> En Attente </li>
+		<li><strong>Animation d’un arbre* :</strong> En Attente </li>
+		<li><strong>Régénération* :</strong> En Attente </li>
+		</ol>
+		<h4 class="text-secondary">Voie des illusions</h4>
+		<ol>
+		<li><strong>Image décalée* :</strong> En Attente </li>
+		<li><strong>Mirage* :</strong> En Attente </li>
+		<li><strong>Imitation* :</strong> En Attente </li>
+		<li><strong>Dédoublement* :</strong> En Attente </li>
+		<li><strong>Tueur fantasmagorique* :</strong> En Attente </li>
+		</ol>
+		<h4 class="text-secondary">Voie de la magie élémentaliste</h4>
+		<ol>
+		<li><strong>Brumes* :</strong> En Attente </li>
+		<li><strong>Sous tension* :</strong> En Attente </li>
+		<li><strong>Armure de terre* :</strong> En Attente </li>
+		<li><strong>Boule de feu* :</strong> En Attente </li>
+		<li><strong>Intelligence héroïque :</strong> En Attente </li>
+		</ol>
+		<h4 class="text-secondary">Voie de la magie runique</h4>
+		<ol>
+		<li><strong>Forgeron* :</strong> En Attente </li>
+		<li><strong>Rune d’énergie* :</strong> En Attente </li>
+		<li><strong>Rune de puissance* :</strong> En Attente </li>
+		<li><strong>Rune de garde* :</strong> En Attente </li>
+		<li><strong>Rune de tradition :</strong> En Attente </li>
+		</ol>
+		<h4 class="text-secondary">Voie du mysticisme</h4>
+		<ol>
+		<li><strong>Bénédiction* :</strong> En Attente </li>
+		<li><strong>Protection contre le mal* :</strong> En Attente </li>
+		<li><strong>Délivrance* :</strong> En Attente </li>
+		<li><strong>Sanctuaire* :</strong> En Attente </li>
+		<li><strong>Rituel de puissance :</strong> En Attente </li>
+		</ol>
+		<h4 class="text-secondary">Voie des sombres savoirs</h4>
+		<ol>
+		<li><strong>Saignements* :</strong> En Attente </li>
+		<li><strong>Malédiction* :</strong> En Attente </li>
+		<li><strong>Pacte sanglant* :</strong> En Attente </li>
+		<li><strong>Hémorragie* :</strong> En Attente </li>
+		<li><strong>Invocation d’un démon* :</strong> En Attente </li>
+		</ol>
+
+              </div>
+            <h3 class="text-info" id="Voies_de_prestige_Arran">5.4 Voies de prestige</h3>
+            <h2 class="text-primary" id="Markers_personnalisés">6. Markers Personnalisés</h2>
+            <h3 class="text-info" id="Markers_presentation">6.1 Présentation</h3>
             <div class="decalage">
               <p>Roll20 peut être déroutant lors des premières utilisations pour des joueurs plus habitués au Jeu de Rôle sur table. Il introduit des notions peu courantes du fait que les combats vont se dérouler sur des "battlemaps" quadrillées ou non. Aussi on va prendre quelques minutes pour expliquer deux notions importantes : <strong>les tokens</strong> et <strong>les tokens markers</strong> (plus simplement appelés <strong>markers</strong> par la suite).</p>
               <p>Le token : Un token est la représentation graphique d'un personnage (PJ ou PNJ) sur la battlemap. Grâce au token on sait à tout moment où se trouve le personnage, s'il subit un sort à effet de zone ou si sa ligne de tir est dégagée par exemple.</p>
@@ -2262,14 +2719,14 @@
               <p>Dans l'image ci-dessus le token c'est le personnage à la cape bleue qui représente un PJ et le marker c'est le petit escargot qui signifie que ce même PJ est "ralenti". Le script gère les états des PJ et PNJ et il matérialisera leurs états grâce aux markers. Par exemple le MJ va demande un jet de surprise, le script effectue les jets de dés nécessaire et matérialise l'état "surpris" grâce à un marker pour les personnages qui ont raté leur jet de dé. Le script applique automatiquement le malus -5 à la DEF. Au bout d'un tour l'état "surpris" et le marker seront retirés automatiquement par le script. Le MJ peut aussi mettre directement un état à un personnage. Par exemple s'il considère que ses PJs voyagent trop chargés il peut ajouter le marker "encombré" qui lui rappelera que dorénavant les jets de DEX se font sur un d12 et plus sur un d20.</p>
               <p>Il existe des markers qui ne représentent pas un état mais ils sont rares. On peut souligner les ronds de couleurs qui permmettent au joueur de retrouver son token plus facilement. De la même manière dans les markers cof il y existent deux marqueurs <code>cof-init...</code> qui permettent de repérer le prochain joueur pendant les combats. Ce n'est pas un état.</p>
             </div>
-            <h3 class="text-info" id="Markers_COF">5.2 Récupération des markers dédiés COF</h3>
+            <h3 class="text-info" id="Markers_COF">6.2 Récupération des markers dédiés COF</h3>
             <div class="decalage">
               <p>Roll20 possède des markers par défaut mais ils ne sont pas toujours adaptés pour Chroniques Oubliées Fantasy. La communauté a voté pour choisir les tokens les plus pertinents dans le contexte COF. Voici le <a href="https://www.black-book-editions.fr/forums.php?topic_id=16514">lien vers le post dans le forum BBE</a>. N'hésitez pas à venir poser vos questions ou proposer vos talents de graphiste à la communauté.</p>
               <p>Avant de pouvoir créer votre propre jeu de markers sur Roll20, vous devez préalablement télécharger ceux mis à disposition par la communauté depuis <a href="https://github.com/Ulty/COFantasy">le repository GitHub du projet</a>. Procédez comme suit :</p>
               <p><img class="img-fluid" src="https://imgur.com/xEUDHaC.png" data-href="https://imgur.com/xEUDHaC.png"></p>
               <p>Une fois le fichier téléchargé sur votre PC dézippez le répertoire <code>cof-marker-set</code> et son sous-répertoire</p>
             </div>
-            <h3 class="text-info" id="Markers_Import">5.3 Importation des markers dans Roll20</h3>
+            <h3 class="text-info" id="Markers_Import">6.3 Importation des markers dans Roll20</h3>
             <div class="decalage">
               <p>Dans le répertoire <code>cof-marker-set</code> vous trouverez tous les markers qui ont été choisis par la communauté. Dans le répertoire <code>markers-alternatifs</code> vous trouverez les glorieux seconds au vote que vous pouvez utiliser en lieu et place du marker choisi s'il vous plaît plus. Il vous suffit alors de glisser-déposer le fichier dans le répertoire principal et de confirmer l'écrasement de l'autre marker. Vous pouvez aussi choisir vos propres markers dans  <a href="https://game-icons.net/">cette géniale bibliothéque d'icônes</a>. Vous pouvez aussi déssiner vos propre marker. Les limites sont que la taille de l'image doit être exactement de 512x512 px. Un fichier PNG est préférable pour gérer la transparence. Enfin votre fichier doit porter exactement le même nom qu'indiqué <a href="#etats">dans cette documentation</a>.</p>
               <p>Dans Roll20 rendez-vous dans le menu "Outils" puis "Token Marker Library". Appuyez sur "Create Set". Puis renseignez le nom du marker set. "cof markers" par exemple. Appuyez sur "Create Set".</p>
@@ -2278,14 +2735,14 @@
               <p><img class="img-fluid" src="https://imgur.com/5TUTgWb.png" data-href="https://imgur.com/5TUTgWb.png"></p>
               <p>A ce moment il y a deux écoles de vie : ceux qui lâchent tous leurs markers en même temps et qui laisse le soin aux serveurs de Roll20 de décider dans quel ordre ils verront apparaître les markers dans leur interface pour le restant de leur jour. Et ceux qui posent les fichiers un par un pour que l'ordre qu'ils souhaitent soit respecté par Roll20. Quand tout est prêt cliquez sur "Upload". Vous avez un message "Fichiers en cours de traitement" pendant 1 à 2 minutes. Ensuite Roll20 vous propose de renommer vos tokens. Ne changez rien et faîtes "Save". Ca y est, vos markers personnalisés sont enfin prêts !</p>
             </div>
-            <h3 class="text-info" id="Markers_Check">5.4 Activation et Vérification</h3>
+            <h3 class="text-info" id="Markers_Check">6.4 Activation et Vérification</h3>
             <div class="decalage">
               <p>Mais ce n'est pas fini il vous faut encore affecter vos markers à votre campagne. Cela se passe sur la page d'acceuil de votre campagne:</p>
               <p><img class="img-fluid" src="https://imgur.com/cE5OAga.png" data-href="https://imgur.com/cE5OAga.png"></p>
               <p>Lancez votre campagne et vérifiez que les nouveaux markers apparaissent bien. Lancez ensuite la commande <code>!cof-options</code> pour cocher "Markers Personnalises". Enfin comme dernier contrôle allez dans la console des API, faîtes "restart API sandbox" et vérifiez que le message "Markers personnalisés activés" est bien présent. Si ce n'est pas le cas vous avez probablement oublié des markers "obligatoires" et le script n'a pas pu activer les markers cof pour cette raison. La liste des markers manquants devrait apparaître dans la console.</p>
             </div>
-            <h2 class="text-primary" id="Console">6. Console API</h2>
-            <h3 class="text-info" id="Generalites_Console">6.1 Généralités sur la Console </h3>
+            <h2 class="text-primary" id="Console">7. Console API</h2>
+            <h3 class="text-info" id="Generalites_Console">7.1 Généralités sur la Console </h3>
             <div class="decalage">
               <p>Il est recommandé quand vous jouez de garder un onglet de votre navigateur ouvert sur la Console API de votre campagne (Paramètres -> Scripts API). En cas d'absence de réponse du jeu il vous permet de facilement prendre connaissance d'une éventuelle erreur et de prendre rapidement les actions correctives nécessaires.</p>
               <p>Un message bloquant est écrit dans un bloc rouge en dehors de la fenêtre API Output Console et ressemble à l'image suivante :</p>
@@ -2295,7 +2752,7 @@
               <p><img class="img-fluid" src="https://imgur.com/5N5xrXI.png" data-href="https://imgur.com/5N5xrXI.png"></p>
               <p>Malgré la gravité apparente de certains de ces messages (SyntaxError) ils n'empêchent jamais le bon fonctionnement du script. Seuls les messages bloquants apparaissants en rouge empêche le bon fonctionnement du script. Nous n'avons pas complétement la main sur l'apparition de ces messages d'alerte et nous travaillons activement avec Roll20 pour les éliminer. Des messages d'informations sont aussi présents comme par exemple le numéro de version du script que vous utilisez actuellement.</p>
             </div>
-            <h3 class="text-info" id="Messages_Console">6.2 Principaux messages bloquants</h3>
+            <h3 class="text-info" id="Messages_Console">7.2 Principaux messages bloquants</h3>
             <div class="decalage">
               <ul>
                 <li><code>There was an error communicating with the QuantumRoll server</code> Erreur Roll20 courante. "Restart API Sandbox" règle normalement ce problème.</li>
@@ -2305,7 +2762,7 @@
                 <li><code>TypeError: Cannot read property '...' of undefined </code> Erreur dans le code. Pas de solution évidente. Le signaler uniquement si c'est un message bloquant (rouge).</li>
               </ul>
             </div>
-            <h3 class="text-info" id="Infos_Console">6.3 Principaux messages d'information et d'alerte</h3>
+            <h3 class="text-info" id="Infos_Console">7.3 Principaux messages d'information et d'alerte</h3>
             <div class="decalage">
               <ul>
                 <li><code>COFantasy X.XX loaded</code> Information : Le script a correctement démarré. Vous indique le numéro de version utilisé.</li>
@@ -2317,11 +2774,11 @@
                 <li><code>Compétences sans caractéristique associée</code>Alerte : Erreur de déclaration dans le <a href="#jet_caracteristiques">handout de jets de caractéristique</a>.</li>
               </ul>
             </div>
-            <h2 class="text-primary" id="pathfinder">7. Utiliser des personnages Pathfinder</h2>
+            <h2 class="text-primary" id="pathfinder">8. Utiliser des personnages Pathfinder</h2>
 						<div class="decalage">
               <p>Il existe un support basique des fiches Roll20 venant du système Pathfinder 1. La fonction <code>!cof-pathfinder1</code> se lance en sélectionnant un ou plusieurs tokens liés à des fiches Pathfinder (par exemple obtenues en achetant des aventures Pathfinder sur le marketplace de Roll20). L'effet est d'une part de transformer une partie des attributs de la fiche en attributs compris par la fiche COF et le script COFantasy, de changer un peu le token associé à la fiche, mais surtout d'effacer les attributs inutiles pour COF. En effet, le script est relativement sensible au nombre total d'attributs en jeu, et les fiches Pathfinder ont tendence à en avoir vraiment beaucoup. Tout ce qui n'est pas compris par le script se retrouve dans un attribut <code>Attributs Pathfinder</code>. Mais le mieux est de compléter la fiche COF en se basant sur la fiche Pathfinder ouverte dans une autre partie.</p>
             </div>
-            <h2 class="text-primary" id="statistiques">8. Statistiques</h2>
+            <h2 class="text-primary" id="statistiques">9. Statistiques</h2>
 						<div class="decalage">
 							<p>Il est possible d'activer la collecte de statistiques en utilisant la commande <code>!cof-demarrer-statistiques</code>.</p>
 							<p>On peut arrêter la collecte avec <code>!cof-arreter-statistiques</code>, et la mettre en pause avec <code>!cof-pause-statistiques</code>.<br />
