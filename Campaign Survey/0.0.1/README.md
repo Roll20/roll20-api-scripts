@@ -27,6 +27,6 @@ tables A list of all tables in a campaign in alphabetical order. All entries are
 
 **makehandout** Sends the report to a handout named "Campaign Survey Report". You can use this with any other keyword or as the sole keyword. Every category on the campaign overview display has a handout option. There is a button at the bottom of the display to directly open the handout. All reports sent to the handout will update in real time. If you want the name of the campaign to appear at the top of every report, put it in the gmnotes of the Campaign Survey Report handout.
 
-**overview** (optional) gives a count of each of the categories. Each category is clickable to send that command to chat or to the report. typiing !survey --overview, is the same as typing !survey.
+**overview** _(optional)_ gives a count of each of the categories. Each category is clickable to send that command to chat or to the report. typiing **!survey --overview**, is the same as typing **!survey**.
 
 **Help** Displays this help information.
