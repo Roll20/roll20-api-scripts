@@ -95,11 +95,19 @@
  * v1.038  03/12/2021  Added all Roll Template names to fields object and fixed illegal
  *                     characters in handout text
  * v1.039  18/12/2021  Found & fixed errors in command registration with CommandMaster API
+ * v1.040  16/01/2022  Corrected initiative modifier for haste & slow on 2nd and subsequent
+ *                     attacks in a round, and corrected a slight issue with Bow specialist
+ *                     initiative
+ * v1.041  23/01/2022  Corrected illegal characters not rendered by One-Click install
+ *                     Fixed issue with non-character tokens displaying errors on end-of-day
+ * v1.042  28/01/2022  Stopped the Initiative Std/Group roll menu reappearing after reloading
+ *                     the campaign if it is turned off.
+ * v1.043  04/02/2022  Corrected the Maintenance Menu "End-of-Day" button command call
  */
 
 var initMaster = (function() {
 	'use strict'; 
-	var version = 1.039,
+	var version = 1.043,
 		author = 'RED',
 		pending = null;
 
@@ -189,12 +197,17 @@ var initMaster = (function() {
 		RWrows:				12,
 		RW_table:           ['repeating_weapons2',0],
 		RW_name:            ['weaponname2','current','-'],
+		RW_type:			['weaponname2','max',''],
+		RW_superType:		['range2','max',''],
 		RW_speed:           ['weapspeed2','current',5],
 		RW_dancing:         ['weapspeed2','max',0],
 		RW_noAttks:         ['attacknum2','current',1],
         RW_twoHanded:       ['twohanded2','current',1],
 		WP_table:           ['repeating_weaponprofs',0],
+		WP_name:			['weapprofname','current','-'],
+		WP_type:			['weapprofname','max',''],
 		WP_specialist:      ['specialist','current',0],
+		WP_mastery:			['mastery','current',0],
 		SpellsCols:			3,
 		MUSpellNo_table:	['spell-level',0],
 		MUSpellNo_memable:	['-castable','current'],
@@ -246,7 +259,7 @@ var initMaster = (function() {
 						 version:1.05,
 						 avatar:'https://s3.amazonaws.com/files.d20.io/images/257656656/ckSHhNht7v3u60CRKonRTg/thumb.png?1638050703',
 						 bio:'<div style="font-weight: bold; text-align: center; border-bottom: 2px solid black;">'
-							+'<span style="font-weight: bold; font-size: 125%">InitiativeMaster Help v1.04</span>'
+							+'<span style="font-weight: bold; font-size: 125%">InitiativeMaster Help v1.05</span>'
 							+'</div>'
 							+'<div style="padding-left: 5px; padding-right: 5px; overflow: hidden;">'
 							+'<h1>Initiative Master API</h1>'
@@ -494,10 +507,10 @@ var initMaster = (function() {
 							+'</div>',
 						},
 	RPGCS_Setup:		{name:'RPGMaster CharSheet Setup',
-						 version:1.04,
+						 version:1.06,
 						 avatar:'https://s3.amazonaws.com/files.d20.io/images/257656656/ckSHhNht7v3u60CRKonRTg/thumb.png?1638050703',
 						 bio:'<div style="font-weight: bold; text-align: center; border-bottom: 2px solid black;">'
-							+'<span style="font-weight: bold; font-size: 125%">RPGMaster CharSheet Setup v1.03</span>'
+							+'<span style="font-weight: bold; font-size: 125%">RPGMaster CharSheet Setup v1.06</span>'
 							+'</div>'
 							+'<div style="padding-left: 5px; padding-right: 5px; overflow: hidden;">'
 							+'<h2>Character Sheet and Token setup for use with RPGMaster APIs</h2>'
@@ -528,17 +541,18 @@ var initMaster = (function() {
 							+'<pre>Fighter_level:[\'level-class1\',\'current\'],<br>'
 							+'Or<br>'
 							+'MUSpellNo_memable:[\'spell-level-castable\',\'current\',\'\',true],</pre>'
+							+'<p>The <i>internal_api_name</i> <b><u>must not be altered!</b></u> Doing so will cause the system not to work.  However, the <i>sheet_field_name</i> and <i>field_attribute</i> can be altered to match any character sheet.</p>'
 							+'<p>Table names are slightly different: always have an <i>internal_api_name</i> ending in \'_table\' and their definition specifies the repeating table name and the index of the starting row of the table or -1 for a static field as the 1<sup>st</sup> row.</p>'
 							+'<p><i>Internal_api_table: [sheet_repeating_table_name,starting_index]</i></p>'
 							+'<p>An example is:</p>'
 							+'<pre>MW_table:[\'repeating_weapons\',0],</pre>'
-							+'<p>The <i>internal_api_name</i> <b><u>must not be altered!</b></u> Doing so will cause the system not to work.  However, the <i>sheet_repeating_table_name</i> and <i>starting_index</i> can be altered to match any character sheet.</p>'
-							+'<p>Each character sheet must have repeating tables to hold weapons, ammo and magic items.  By default, melee weapons \'in hand\' are held in sections of the repeating_weapons table, melee weapon damage in the repeating_weapons-damage table, ranged weapons in the repeating_weapons2 table, ammo in the repeating_ammo table, and magic items are held in the repeating_potions table.  The table management system provided by the API expands and writes to repeating attributes automatically, and the DM & Players do not need to worry about altering or updating any of these tables on the Character Sheet. </p>'
+							+'<p>The <i>internal_api_table</i> <b><u>must not be altered!</b></u> Doing so will cause the system not to work.  However, the <i>sheet_repeating_table_name</i> and <i>starting_index</i> can be altered to match any character sheet.</p>'
+							+'<p>Each character sheet must have repeating tables to hold weapons, ammo and magic items, as well as other data.  By default, melee weapons \'in hand\' are held in sections of the repeating_weapons table, melee weapon damage in the repeating_weapons-damage table, ranged weapons in the repeating_weapons2 table, ammo in the repeating_ammo table, and magic items are held in the repeating_potions table.  The table management system provided by the API expands and writes to repeating attributes automatically, and the DM & Players do not need to worry about altering or updating any of these tables on the Character Sheet. </p>'
 							+'<h3>4. Character Attributes, Races, Classes and Levels</h3>'
-							+'<p>Character Attributes of <i>Strength, Dexterity, Constitution, Intelligence, Wisdom</i> and <i>Charisma</i> are generally not directly important to the AttackMaster API, but the resulting bonuses and penalties are.  All Attributes and resulting modifiers should be entered into the Character Sheet in the appropriate places (that is in the Character Sheet fields identified in the \'fields\' API object as noted in section 2 above).</p>'
+							+'<p>Character Attributes of <i>Strength, Dexterity, Constitution, Intelligence, Wisdom</i> and <i>Charisma</i> are generally not directly important to the RPGMaster Series APIs, but the resulting bonuses and penalties are.  All Attributes and resulting modifiers should be entered into the Character Sheet in the appropriate places (that is in the Character Sheet fields identified in the \'fields\' API object as noted in section 2 above).</p>'
 							+'<p>The Character\'s race is also important for calculating saves and ability to use certain items.  The race should be set in the appropriate Character Sheet field.  Currently, the races <i>\'dwarf\', \'elf\', \'gnome\', \'halfelf\', \'halfling\', \'half-orc\'</i> and <i>\'human\'</i> are implemented (not case sensitive, and spaces, hyphens and underscores are ignored).  If not specified, <i>human</i> is assumed.  The race impacts saves, some magic items and armour, and bonuses on some attacks.</p>'
-							+'<p>The system supports single-class and multi-class characters.  Classes must be entered in the appropriate fields on the Character Sheet.  Classes and levels affect spell casting ability, ability to do two-weapon attacks with or without penalty, and the ability to backstab and the related modifiers, among other things.  Class and level also determine valid armour, shields, some magic items and saves.</p>'
-							+'<p><b>Note:</b> on the Advanced D&D 2e Character Sheet, Fighter classes must be in the first class column, Wizard classes in the second column, Priest classes in the third, Rogues in the fourth, and Psions (or any others) in the fifth.  It is important that these locations are adhered to.</p>'
+							+'<p>The system supports single-class and multi-class characters.  Classes must be entered in the appropriate fields on the Character Sheet.  Classes and levels affect spell casting ability, ability to do two-weapon attacks with or without penalty, and the ability to backstab and the related modifiers, among other things.  Class and level also determine valid weapons, armour, shields, some magic items and saves.</p>'
+							+'<p><b>Important Note:</b> on the Advanced D&D 2e Character Sheet, Fighter classes must be in the first class column, Wizard classes in the second column, Priest classes in the third, Rogues in the fourth, and Psions (or any others) in the fifth.  It is important that these locations are adhered to.</p>'
 							+'<p><b>Note:</b> classes of Fighter and Rogue (such as Rangers and Bards) that can use clerical &/or wizard spells will automatically be allowed to cast spells once they reach the appropriate level by AD&D 2e rules, but not before.  They <b><u>do not</b></u> need to have levels set in the corresponding spell-caster columns - the casting ability & level is worked out by the system</p>'
 							+'<p>The following Classes are currently supported:</p>'
 							+'<table><thead><tr><td>Fighter classes</td><td>Wizard Classes</td><td>Priest Classes</td><td>Rogue Classes</td></tr></thead>'
@@ -562,9 +576,9 @@ var initMaster = (function() {
 							+'<h3>7. Weapon Proficiencies</h3>'
 							+'<p>Weapon Proficiencies must be set on the Character Sheet.  This is best done by using the <b>CommandMaster API</b> character sheet management functions, but can be done manually.  Both specific weapons and related weapon groups can be entered in the table, and when a Player changes the character\'s weapons in-hand the table of proficiencies will be consulted to set the correct bonuses and penalties.  Weapon specialisation and mastery (otherwise known as double specialisation) are supported by the CommandMaster functions, but can also be set by ticking/selecting the relevant fields on the Character Sheet weapon proficiencies table.  If a weapon or its related weapon group does not appear in the list, it will be assumed to be not proficient.</p>'
 							+'<h3>8. Spell books and memorisable spells</h3>'
-							+'<p>The best (and easiest) way to give a Character or NPC spells and powers is to use the <b>MagicMaster API</b>.  However, for the purposes of just doing initiative and selecting which spell to cast in the next round, the spells and powers can be entered manually onto the character sheet.  Spells are held in the relevant section of the Spells table, which by default is set to the character sheet spells table, <i>repeating_spells</i>.  As with other fields, this can be changed in the <i>\'fields\'</i> object.  Note that on the Advanced D&D 2e character sheet Wizard spells, Priest spells & Powers are all stored in various parts of this one very large table.</p>'
-							+'<p>If you are just using the character sheet fields to type into, add spells (or powers) to the relevant “Spells Memorised” section (using the [+Add] buttons to add more as required) <b>a complete row at a time</b> (that is add columns before starting the next row).  Enter the spell names into the “Spell Name” field, and “1” into each of the “current” & “maximum” “Cast Today” fields - the API suite <i>counts down</i> to zero on using a spell, so in order for a spell to appear as available (not greyed out) on the initiative menus, the “current” number left must be > 0.  This makes spells consistent with other tables in the system (e.g. potion dose quantities also count down as they are consumed, etc).</p>'
-							+'<p>Then, you need to set the “Spell Slots” values on each level of spell to be correct for the level of caster.  Just enter numbers into each of the “Level”, “Misc.” and “Wisdom” (for Priests) fields, and/or tick “Specialist” for the Wizard levels as relevant.  This will determine the maximum number of spells memorised each day, that will appear in the spells Initiative Menu.  Do the same for Powers using the “Powers Available” field.  As with other fields on the character sheet, each of these fields can be re-mapped by altering the <i>\'fields\'</i> object in the APIs.</p>'
+							+'<p>The best (and easiest) way to give a Character or NPC spells and powers is to use <b>CommandMaster API</b> to add spells and powers to the Character\'s spellbooks, and <b>MagicMaster API</b> to memorise and cast spells and use powers.  However, for the purposes of just doing initiative and selecting which spell to cast in the next round, the spells and powers can be entered manually onto the character sheet.  Spells are held in the relevant section of the Spells table, which by default is set to the character sheet spells table, <i>repeating_spells</i>.  As with other fields, this can be changed in the <i>\'fields\'</i> object.  Note that on the Advanced D&D 2e character sheet Wizard spells, Priest spells & Powers are all stored in various parts of this one very large table.</p>'
+							+'<p>If you are just using the character sheet fields to type into, add spells (or powers) to the relevant "Spells Memorised" section (using the [+Add] buttons to add more as required) <b>a complete row at a time</b> (that is add columns before starting the next row).  Enter the spell names into the "Spell Name" field, and "1" into each of the "current" & "maximum" "Cast Today" fields - the API suite <i>counts down</i> to zero on using a spell, so in order for a spell to appear as available (not greyed out) on the initiative menus, the "current" number left must be > 0.  This makes spells consistent with other tables in the system (e.g. potion dose quantities also count down as they are consumed, etc).</p>'
+							+'<p>Then, you need to set the "Spell Slots" values on each level of spell to be correct for the level of caster.  Just enter numbers into each of the "Level", "Misc." and "Wisdom" (for Priests) fields, and/or tick "Specialist" for the Wizard levels as relevant.  This will determine the maximum number of spells memorised each day, that will appear in the spells Initiative Menu.  Do the same for Powers using the "Powers Available" field.  As with other fields on the character sheet, each of these fields can be re-mapped by altering the <i>\'fields\'</i> object in the APIs.</p>'
 							+'<p>Spells can only be cast if they have macros defined in the spell databases (see Spell Database Handout).  If the <b>CommandMaster API</b> is loaded, the DM can use the tools provided there to manage Character, NPC & creature spell books and granted powers from the provided spell & power databases.</p>'
 							+'<p>The spells a spell caster can memorise (what they have in their spell books, or what their god has granted to them) is held as a list of spell names separated by vertical bars \'|\' in the character sheet attribute defined in <i>fields.Spellbook</i> (on the AD&D2E character sheet \'spellmem\') of each level of spell.  On the AD&D2E sheet, the spell books are the large Spell Book text fields at the bottom of each spell level tab.  The spell names used must be identical (though not case sensitive) to the spell ability macro names in the spell databases (hence the hyphens in the names).   So, for example, a 1<sup>st</sup> level Wizard might have the following in their large Wizard Level 1 spell book field:</p>'
 							+'<pre>Armour|Burning-Hands|Charm-Person|Comprehend-Languages|Detect-Magic|Feather-fall|Grease|Identify|Light|Magic-Missile|Read-Magic|Sleep</pre>'
@@ -693,6 +707,8 @@ var initMaster = (function() {
 	
 	var apiCommands = {};
 	
+	const reIgnore = /[\s\-\_]*/gi;
+	
 	var	replacers = [
 			[/\\lbrc/g, "{"],
 			[/\\rbrc/g, "}"],
@@ -802,11 +818,11 @@ var initMaster = (function() {
 	var init = function() {
 		if (!state.initMaster)
 			{state.initMaster = {};}
-		if (!state.initMaster.debug)
+		if (_.isUndefined(state.initMaster.debug))
 		    {state.initMaster.debug = false;}
 		if (!state.initMaster.round)
 			{state.initMaster.round = 1;}
-		if (!state.initMaster.changedRound)
+		if (_.isUndefined(state.initMaster.changedRound))
 			{state.initMaster.changedRound = false;}
 		if (!state.initMaster.dailyCost)
 			{state.initMaster.dailyCost = '?{What costs?|Camping 1sp,0.1|Inn D&B&B 2gp,2|Inn B&B 1gp,1|Set other amount,?{How many GP - fractions OK?&#125;|No charge,0}';}
@@ -818,11 +834,11 @@ var initMaster = (function() {
 		// initiative types
 		if (!state.initMaster.initType)
 			{state.initMaster.initType = 'individual';}
-		if (!state.initMaster.playerRoll)
+		if (_.isUndefined(state.initMaster.playerRoll))
 			{state.initMaster.playerRoll = '';}
-		if (!state.initMaster.dmRoll)
+		if (_.isUndefined(state.initMaster.dmRoll))
 			{state.initMaster.dmRoll = '';}
-		if (!state.initMaster.dispRollOnInit)
+		if (_.isUndefined(state.initMaster.dispRollOnInit))
 			{state.initMaster.dispRollOnInit = true;}
 			
 		// RED: v1.036 setup in-game-day as a MoneyMaster
@@ -830,7 +846,7 @@ var initMaster = (function() {
 		
 		if (!state.moneyMaster)
 			{state.moneyMaster = {};}
-		if (!state.moneyMaster.inGameDay)
+		if (_.isUndefined(state.moneyMaster.inGameDay))
 			{state.moneyMaster.inGameDay = 0;}
 			
 		// RED: v1.037 register with commandMaster
@@ -1647,6 +1663,7 @@ var initMaster = (function() {
 			let dbCS = findObjs({ type:'handout', name:obj.name },{caseInsensitive:true});
 			if (!dbCS || !dbCS[0]) {
 			    log(obj.name+' not found.  Creating version '+obj.version);
+				if (!silent) sendFeedback(obj.name+' not found.  Creating version '+obj.version);
 				dbCS = createObj('handout',{name:obj.name,inplayerjournals:senderId});
 				dbCS.set('notes',obj.bio);
 				dbCS.set('avatar',obj.avatar);
@@ -1658,6 +1675,7 @@ var initMaster = (function() {
 					version = (version && version.length) ? (parseFloat(version[1]) || 0) : 0;
 					if (version >= obj.version) {
 //					    log('Not updating handout '+obj.name+' as is already version '+obj.version);
+						if (!silent) sendFeedback('Not updating handout '+obj.name+' as is already version '+obj.version);
 					    return;
 					}
 					dbCS.set('notes',obj.bio);
@@ -1804,7 +1822,54 @@ var initMaster = (function() {
 		setAttr( charCS, [fields.Init_chosen[0], property], 1);
 	};
 
+	/*
+	 * Check for a character's proficiency with a weapon type
+	 */
+
+	var proficient = function( charCS, wname, wt, wst ) {
+		
+        wname = wname ? wname.toLowerCase().replace(reIgnore,'') : '';
+        wt = wt ? wt.toLowerCase().replace(reIgnore,'') : '';
+        wst = wst ? wst.toLowerCase().replace(reIgnore,'') : '';
+        
+		var i = fields.WP_table[1],
+			prof = -1,
+			WeaponProfs = getTable( charCS, {},          fields.WP_table, fields.WP_name ),
+			WeaponProfs = getTable( charCS, WeaponProfs, fields.WP_table, fields.WP_type ),
+			WeaponProfs = getTable( charCS, WeaponProfs, fields.WP_table, fields.WP_specialist ),
+			WeaponProfs = getTable( charCS, WeaponProfs, fields.WP_table, fields.WP_mastery ),
+			spec;
+			
+		do {
+			let wpName = tableLookup( WeaponProfs, fields.WP_name, i, false ),
+				wpType = tableLookup( WeaponProfs, fields.WP_type, i );
+			if (_.isUndefined(wpName)) {break;}
+            wpName = wpName.toLowerCase().replace(reIgnore,'');
+            wpType = (!!wpType ? wpType.toLowerCase().replace(reIgnore,'') : '');
+
+            let isType = (wpName && wpName.length && wt.includes(wpName)),
+                isSuperType = (wpType && (wst.includes(wpType))),
+                isSameName = (wpName && wpName.length && wname.includes(wpName));
+
+			if (isType || (!isSuperType && isSameName)) {
+				prof = 0;
+				spec = tableLookup( WeaponProfs, fields.WP_specialist, i );
+				if (spec && spec != 0) {
+					prof = 2;
+				}
+				spec = tableLookup( WeaponProfs, fields.WP_mastery, i );
+				if (spec && spec != 0) {
+					prof = 3;
+				}
+			} else if (isSuperType) {
+				prof = Math.floor(prof/2);
+			}
+			i++;
+		} while (prof < 0);
+		return prof;
+	};
 	
+
 //----------------------------------- button press handlers ------------------------------------------	
 	/**
 	* Handle the results of pressing a monster attack initiative button
@@ -2007,16 +2072,9 @@ var initMaster = (function() {
 	
 	var handleInitRW = function( charType, charCS, args ) {
 
-		var weaponName,
-			weapSpeed,
-			weapSpecial,
-			speedMult,
-			attackNum,
-			twoHanded,
-			tokenID = args[1],
+		var tokenID = args[1],
 			rowIndex = args[2],
-			refIndex = args[3],
-			buildCall = '';
+			refIndex = args[3];
 
 		if (rowIndex == undefined || refIndex == undefined) {
 			sendDebug( 'handleInitRW: indexes undefined' );
@@ -2024,22 +2082,15 @@ var initMaster = (function() {
 			return;
 		}
 		
-		weaponName = (attrLookup( charCS, fields.RW_name, fields.RW_table, refIndex ) || '');
-		weapSpeed = (attrLookup( charCS, fields.RW_speed, fields.RW_table, refIndex ) || 0);
-		speedMult = Math.max(parseFloat(attrLookup( charCS, fields.initMultiplier ) || 1), 1);
-		attackNum = (attrLookup( charCS, fields.RW_noAttks, fields.RW_table, refIndex ) || 1);
-		weapSpecial = (attrLookup( charCS, fields.WP_specialist, fields.WP_table, (rowIndex-2)) || 0);
-		twoHanded = (attrLookup( charCS, fields.MW_twoHanded, fields.RW_table, refIndex ) || 0);
-
-/*        // RED: the next few lines are only here due to a bug in attrLookup and the weaponProfs 2E charater sheet table
-        // which seems to randomly cause issues with undefined values.
-
-        if (!weapSpecial) {
-    		weapSpecial = (attrLookup( charCS, fields.WP_specialist, fields.WP_table, 0 ) || 1);
-        }
-*/        
-        // End of bug handling
-
+		var	weaponName = (attrLookup( charCS, fields.RW_name, fields.RW_table, refIndex ) || ''),
+			weaponType = (attrLookup( charCS, fields.RW_type, fields.RW_table, refIndex ) || ''),
+			weapSpeed = (attrLookup( charCS, fields.RW_speed, fields.RW_table, refIndex ) || 0),
+			speedMult = Math.max(parseFloat(attrLookup( charCS, fields.initMultiplier ) || 1), 1),
+			attackNum = (attrLookup( charCS, fields.RW_noAttks, fields.RW_table, refIndex ) || 1),
+			weapSpecial = (proficient( charCS, weaponName, weaponType, '' ) > 0) ? 1 : 0,
+			twoHanded = (attrLookup( charCS, fields.MW_twoHanded, fields.RW_table, refIndex ) || 0),
+			buildCall = '';
+		
 		// RED: v1.013 tacked the 2-handed weapon status to the end of the --buildmenu call
 
 		buildCall = '!init --buildMenu ' + (charType == CharSheet.MONSTER ? MenuType.COMPLEX : MenuType.WEAPON)
@@ -2296,7 +2347,6 @@ var initMaster = (function() {
 		do {
 			weapon = tableLookup( WeaponTable, fields.MW_name, row, false );
 			dancing = parseInt(tableLookup( WeaponTable, fields.MW_dancing, row ));
-    		log('handleAllWeapons found weapon '+weapon+', dancing='+dancing);
 			
 			if (_.isUndefined(weapon)) {break;}
 			if (weapon != '-' && (!onlyDancing || (!isNaN(dancing) && dancing != 0))) {
@@ -2324,7 +2374,6 @@ var initMaster = (function() {
 		do {
 			weapon = tableLookup( WeaponTable, fields.RW_name, row, false );
 			dancing = parseInt(tableLookup( WeaponTable, fields.RW_dancing, row ));
-    		log('handleAllWeapons found weapon '+weapon+', dancing='+dancing);
 			if (_.isUndefined(weapon)) {break;}
 			if (weapon != '-' && !weapons.includes(weapon) && (!onlyDancing || (!isNaN(dancing) && dancing != 0))) {
 
@@ -2502,20 +2551,20 @@ var initMaster = (function() {
 
 			for( let i=2; actionNum>i; i+=2 ) {
 				if ((actionNum > (i+2)) || !(actionNum % 2) || !(round % 2)) {
-					initiative = base + (((i+2)/2) * (init_speed+init_Mod));
+					initiative = base + (((i+2)/2) * (init_speed)) + init_Mod;
 					actions.push({init:initiative,ignore:0,action:init_action,msg:''});
 				}
 			}
 			
 			if (initMenu == MenuType.TWOWEAPONS) {
 				if (actionNum2 > 2 && (actionNum2 > 4 || !(actionNum2 % 2) || !(round % 2))) {
-					initiative = base + 2*(init_speed + init_Mod);
+					initiative = base + (2*init_speed) + init_Mod;
 					actions.push({init:initiative,ignore:0,action:init_action2,msg:(' rate '+init_actionnum2+', speed '+init_speed2+', modifier '+init_Mod)});
 				}
 
 				for( let i=4; actionNum2>i; i+=2 ) {
 					if ((actionNum2 > (i+2)) || !(actionNum2 % 2) || !(round % 2)) {
-						initiative = base + ((i/2) * (init_speed2+init_Mod));
+						initiative = base + ((i/2) * (init_speed2)) + init_Mod;
 						actions.push({init:initiative,ignore:0,action:init_action2,msg:''});
 					}
 				}
@@ -2784,7 +2833,6 @@ var initMaster = (function() {
 		for (i = a; i < (fields.MWrows + a); i++) {
 			w = (1 - (a * 2)) + (i * 2);
 			weapName = tableLookup( WeaponTable, fields.MW_name, i, false );
-			if (_.isUndefined(weapName)) {log('makeWeaponButtons MW loop breaking');break;}
 			if (_.isUndefined(weapName)) {break;}
 			twoHanded = tableLookup( WeaponTable, fields.MW_twoHanded, i ) != 0;
 			dancing = tableLookup(WeaponTable, fields.MW_dancing, i ) != 0;
@@ -4027,7 +4075,7 @@ var initMaster = (function() {
 					+ 'Select one or multiple tokens\n'
 					+ '[Edit Selected Tokens](!rounds --edit)[Move Token Status](!rounds --moveStatus)[Clean Selected Tokens](!rounds --clean)\n'
 					+ '**End of Day**\n'
-					+ '[Enable Long Rest for PCs](!init --end-of-day '+state.initMaster.dailyCost+')\n'
+					+ '[Enable Long Rest for PCs](!init --end-of-day)\n'
 					+ '[Enable Long Rest for selected tokens](!setattr --fb-from Spell system --fb-header Rest Enabled --fb-content _CHARNAME_ can now Rest --sel --timespent|1)\n'
 //					+ '**Manage Campaign**\n'
 //					+ '[Set Date](~Money-Gems-Exp|Set-Date)[Set Campaign](~Money-Gems-Exp|Set-Campaign)\n'
@@ -4092,16 +4140,17 @@ var initMaster = (function() {
 			if (foes) content += '\nAll NPCs & monsters';
 			filterObjs( function(obj) {
 				if (!names.length) return false;
-				if (obj.get('type') != 'graphic' || obj.get('subtype') != 'token' || obj.get('represents').length < 1) return false;
+				if (obj.get('type') != 'graphic' || obj.get('subtype') != 'token') return false;
+				let charID = obj.get('represents');
+				if (!charID || !charID.length) return false;
 				let tokenName = obj.get('name');
-				let charObj = getCharacter(obj.id);
+				let charObj = getObj('character',charID);
 				if (!charObj) return false;
 				let charName = charObj.get('name');
 				if (done.includes(charName)) return false;
 				let party = names.includes(tokenName);
 				if (!(foes ^ party)) return false;
 				done.push(charName);
-				setAttr( charObj, fields.timespent, '1' );
 				if (rest) restStr += ' --rest '+obj.id+'|long';
 				if (!foes) content += tokenName+'\n';
 				if (night) {
@@ -4110,7 +4159,7 @@ var initMaster = (function() {
 										+ ' '+Math.abs(cost)+'gp, and can now rest}}');
 				}
 				names = _.without(names,tokenName);
-				setAttr( charObj, fields.Timespent, 1 );
+				setAttr( charObj, fields.Timespent, '1' );
 				setAttr( charObj, fields.CharDay, state.moneyMaster.inGameDay );
 				cost = parseFloat(cost) || 0;
 				if (cost == 0) return true;
@@ -4472,6 +4521,7 @@ var initMaster = (function() {
 					doHandleHsResponse(arg);
 					break;
 				case 'handout':
+				case 'handouts':
 					if (isGM) updateHandouts(false,senderId);
 					break;
 				case 'button':

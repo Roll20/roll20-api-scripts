@@ -5,8 +5,8 @@
 const GroupInitiative = (() => { // eslint-disable-line no-unused-vars
 
     const scriptName = "GroupInitiative";
-    const version = '0.9.35';
-    const lastUpdate = 1602510347;
+    const version = '0.9.36';
+    const lastUpdate = 1643852555;
     const schemaVersion = 1.3;
 
     const isString = (s)=>'string'===typeof s || s instanceof String;
@@ -1151,6 +1151,7 @@ const _h = {
                                 return {
                                     id: s.token.id,
                                     pr: s.rollResults.total,
+                                    _pageid: s.token.get('pageid'),
                                     custom: ''
                                 };
                             })

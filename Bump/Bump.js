@@ -10,10 +10,10 @@ API_Meta.Bump={offset:Number.MAX_SAFE_INTEGER,lineCount:-1};
 const Bump = (() => { // eslint-disable-line no-unused-vars
 
   const scriptName = "Bump";
-  const version = '0.2.25';
+  const version = '0.2.26';
   API_Meta.Bump.version = version;
-  const lastUpdate = 1625972211;
-  const schemaVersion = 0.5;
+  const lastUpdate = 1643588841;
+  const schemaVersion = 0.6;
   const clearURL = 'https://s3.amazonaws.com/files.d20.io/images/4277467/iQYjFOsYC5JsuOPUCI9RGA/thumb.png?1401938659';
   const checkerURL = 'https://s3.amazonaws.com/files.d20.io/images/16204335/MGS1pylFSsnd5Xb9jAzMqg/med.png?1455260461';
 
@@ -27,8 +27,10 @@ const Bump = (() => { // eslint-disable-line no-unused-vars
           // Bar settings (except max & link fields)
           'bar1_value', 'bar2_value', 'bar3_value',
 
-          'tint_color', 'lastmove', 'controlledby', 'represents',
+          'tint_color', 'lastmove', 'controlledby', 'represents'
+        ];
 
+        const mirroredPropsWithLight = [
           //LDL settings
           'light_hassight', 'light_radius', 'light_dimradius', 'light_angle',
           'light_losangle','light_multiplier', 'adv_fow_view_distance',
@@ -163,6 +165,67 @@ const Bump = (() => { // eslint-disable-line no-unused-vars
       burndown();
     };
 
+    const fixupSlaveLight = () => {
+      let ids = Object.values(state[scriptName].mirrored);
+      const burndown = () =>{
+        if(ids.length){
+          let id = ids.shift();
+          let slave = getObj('graphic',id);
+          if(slave){
+            if(state[scriptName].config.noLight) {
+              slave.set({
+                  light_hassight: false,
+                  light_radius: 0,
+                  light_dimradius: 0,
+                  light_angle: 360,
+
+                  light_losangle: 360,
+                  light_multiplier: 1,
+                  adv_fow_view_distance: 0,
+
+                  has_bright_light_vision: false,
+                  has_limit_field_of_vision: false,
+
+                  limit_field_of_vision_center: 0,
+                  limit_field_of_vision_total: 360,
+
+                  light_sensitivity_multiplier: 1,
+
+                  emits_bright_light: false,
+                  bright_light_distance: 0,
+                  has_directional_bright_light: false,
+                  directional_bright_light_total: 360,
+                  directional_bright_light_center: 0,
+
+                  emits_low_light: false,
+                  low_light_distance: 0,
+                  has_directional_low_light: false,
+                  directional_low_light_total: 360,
+                  directional_low_light_center: 0,
+
+                  dim_light_opacity: 1,
+
+                  has_night_vision: false,
+                  night_vision_tint: '#ffffff',
+                  night_vision_distance: 0,
+
+                  night_vision_effect: 'none',
+                  has_limit_field_of_night_vision: false,
+                  limit_field_of_night_vision_center: 0,
+                  limit_field_of_night_vision_total: 360
+              });
+            } else {
+                let master = getMirrored(id);
+                slave.set(mirroredPropsWithLight.reduce((m,p)=>({...m,[p]:master.get(p)}),{}));
+            }
+          }
+          setTimeout(burndown,0);
+        }
+      };
+      burndown();
+    };
+
+
     const checkInstall = () => {
         log(`-=> ${scriptName} v${version} <=-  [${new Date(lastUpdate*1000)}]`);
 
@@ -185,6 +248,9 @@ const Bump = (() => { // eslint-disable-line no-unused-vars
                   state[scriptName].config.autoUnslave = false;
                   /* falls through */
 
+                case 0.5:
+                  state[scriptName].config.noLight = false;
+
                 case 'UpdateSchemaVersion':
                     state[scriptName].version = schemaVersion;
                     break;
@@ -202,7 +268,8 @@ const Bump = (() => { // eslint-disable-line no-unused-vars
                             autoPush: false,
                             autoSlave: false,
                             noBars: false,
-                            autoUnslave: false
+                            autoUnslave: false,
+                            noLight: false
                         },
                         mirrored: {}
                     };
@@ -301,6 +368,12 @@ const Bump = (() => { // eslint-disable-line no-unused-vars
       ids.forEach(id=>createMirrored(id,push,'API'));
     };
 
+    const getMirroredPropList = () => ([
+      ...mirroredPropsNoBar,
+      ...(state[scriptName].config.noBars ? [] : mirroredPropsWithBar),
+      ...(state[scriptName].config.noLight ? [] : mirroredPropsWithLight)
+    ]);
+
     const createMirrored = (id, push, who) => {
         // get root obj
         let master = getObj('graphic',id);
@@ -327,7 +400,7 @@ const Bump = (() => { // eslint-disable-line no-unused-vars
                 showplayers_aura1: false,
                 showplayers_aura2: false
             };
-            (state[scriptName].config.noBars ? mirroredPropsNoBar : mirroredProps ).forEach( p => baseObj[p]=master.get(p) );
+            getMirroredPropList().forEach( p => baseObj[p]=master.get(p) );
             slave = createObj('graphic',baseObj);
             state[scriptName].mirrored[master.id]=slave.id;
             forceLightUpdateOnPage(master.get('page_id'));
@@ -465,7 +538,7 @@ const Bump = (() => { // eslint-disable-line no-unused-vars
                 pair.master.set('statusmarkers',packSM(mSM));
             }
 
-            const propList = (state[scriptName].config.noBars ? mirroredPropsNoBar : mirroredProps );
+            const propList = getMirroredPropList();
 
             (pair.master.id === obj.id ? pair.slave : pair.master).set(propList.reduce((m,p) => {
                 m[p]=obj.get(p);
@@ -596,13 +669,22 @@ const Bump = (() => { // eslint-disable-line no-unused-vars
         );
     };
 
+    const getConfigOption_NoLight = () => {
+        return makeConfigOption(
+            state[scriptName].config.noLight,
+            '!bump-config --toggle-no-light',
+            '<b>No Light on Slave</b> causes slave tokens to not retain any of the light settings themselves, thus hiding their light on the GM layer.'
+        );
+    };
+
     const getAllConfigOptions = () => {
         return getConfigOption_GMLayerColor() +
             getConfigOption_ObjectsLayerColor() +
             getConfigOption_AutoPush() +
             getConfigOption_AutoSlave() +
             getConfigOption_AutoUnslave() +
-            getConfigOption_NoBars();
+            getConfigOption_NoBars() +
+            getConfigOption_NoLight();
     };
 
     const assureHelpHandout = (create = false) => {
@@ -893,6 +975,16 @@ const Bump = (() => { // eslint-disable-line no-unused-vars
                 sendChat('','/w "'+who+'" '+
                   '<div style="border: 1px solid black; background-color: white; padding: 3px 3px;">'+
                   getConfigOption_NoBars()+
+                  '</div>'
+                );
+                break;
+
+              case 'toggle-no-light':
+                state[scriptName].config.noLight=!state[scriptName].config.noLight;
+                fixupSlaveLight();
+                sendChat('','/w "'+who+'" '+
+                  '<div style="border: 1px solid black; background-color: white; padding: 3px 3px;">'+
+                  getConfigOption_NoLight()+
                   '</div>'
                 );
                 break;

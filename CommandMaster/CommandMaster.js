@@ -63,11 +63,19 @@
  * v1.019  29/11/2021  Fixed issues with API command registration & update
  * v1.020  06/12/2022  Added multi-type & multi-supertype weapon proficiency support
  *                     Added indexing of database Ability objects to improve performance
+ * v1.021  16/01/2022  Fixed bug of handling undefined API command registrations
+ *                     Fixed overrun on PR spellbook setup
+ * v1.022  23/01/2022  Fixed illegal characters not rendered by One-Click install
+ * v1.023  31/01/2022  Added flag to weapon proficiency table to remove ranged weapon
+ *                     restrictions on Mastery - future development will add settings menu
+ * v1.024  02/02/2022  Added buttons to Abilities menu to set if a PC or DM token
+ *                     Linked to AttackMaster "masterRange" flag to allow or disallow
+ *                     setting of Ranged Weapon Mastery level of proficiency
  */
  
 var CommandMaster = (function() {
 	'use strict'; 
-	var version = 1.020,
+	var version = 1.024,
 		author = 'RED',
 		pending = null;
 
@@ -97,7 +105,7 @@ var CommandMaster = (function() {
 	const fields = Object.freeze({
 		feedbackName:       'CommandMaster',
 		feedbackImg:        'https://s3.amazonaws.com/files.d20.io/images/11514664/jfQMTRqrT75QfmaD98BQMQ/thumb.png?1439491849',
-		defaultTemplate:    '&{template:2Edefault}',
+		defaultTemplate:    '2Edefault',
 		CommandMaster:      '!cmd',
 		ToHitRoll:			'1d20',
 		MagicItemDB:        'MI-DB',
@@ -219,10 +227,10 @@ var CommandMaster = (function() {
 	
 	const handouts = Object.freeze({
 	CommandMaster_Help:	{name:'CommandMaster Help',
-						 version:1.02,
+						 version:1.04,
 						 avatar:'https://s3.amazonaws.com/files.d20.io/images/257656656/ckSHhNht7v3u60CRKonRTg/thumb.png?1638050703',
 						 bio:'<div style="font-weight: bold; text-align: center; border-bottom: 2px solid black;">'
-							+'<span style="font-weight: bold; font-size: 125%">CommandMaster Help v1.02</span>'
+							+'<span style="font-weight: bold; font-size: 125%">CommandMaster Help v1.04</span>'
 							+'</div>'
 							+'<div style="padding-left: 5px; padding-right: 5px; overflow: hidden;">'
 							+'<h1>Command Master API</h1>'
@@ -230,11 +238,11 @@ var CommandMaster = (function() {
 							+'<h2>Syntax of CommandMaster calls</h2>'
 							+'<p>The CommandMaster API is called using !cmd.</p>'
 							+'<pre>!cmd --initialise</pre>'
-							+'<p>Commands to be sent to the CommandMaster API must be preceded by two hyphens ‘--’ as above for the --initialise command.  Parameters to these commands are separated by vertical bars ‘|’, for example:</p>'
+							+'<p>Commands to be sent to the CommandMaster API must be preceded by two hyphens \'--\' as above for the --initialise command.  Parameters to these commands are separated by vertical bars \'|\', for example:</p>'
 							+'<pre>!cmd --register action|description|api-call|api-command|parameters</pre>'
 							+'<p>Commands can be stacked in the call, for example:</p>'
 							+'<pre>!cmd --initialise --abilities</pre>'
-							+'<p>When specifying the commands in this document, parameters enclosed in square brackets [like this] are optional: the square brackets are not included when calling the command with an optional parameter, they are just for description purposes in this document.  Parameters that can be one of a small number of options have those options listed, separated by forward slash ‘/’, meaning at least one of those listed must be provided (unless the parameter is also specified in [] as optional): again, the slash ‘/’ is not part of the command.  Parameters in UPPERCASE are literal, and must be spelt as shown (though their case is actually irrelevant).</p>'
+							+'<p>When specifying the commands in this document, parameters enclosed in square brackets [like this] are optional: the square brackets are not included when calling the command with an optional parameter, they are just for description purposes in this document.  Parameters that can be one of a small number of options have those options listed, separated by forward slash \'/\', meaning at least one of those listed must be provided (unless the parameter is also specified in [...] as optional): again, the slash \'/\' is not part of the command.  Parameters in UPPERCASE are literal, and must be spelt as shown (though their case is actually irrelevant).</p>'
 							+'<br>'
 							+'<h2>Command Index</h2>'
 							+'<h3>1. Campaign setup</h3>'
@@ -255,7 +263,7 @@ var CommandMaster = (function() {
 							+'<h2>1. Campaign setup</h2>'
 							+'<h3>1.1 Initialise for RPGMaster APIs</h3>'
 							+'<pre>--initialise</pre>'
-							+'<p>This command creates a number of Player Macros which can be found under the Player Macro tab in the Chat window (the tab that looks like three bulleted lines, next to the cog).  These macros hold a number of DM commands that are useful in setting up and running a campaign.  It is recommended that the “Show in Bar” flags for these macros are set, and the “Show Macro Bar” flag is set (the macro bar is standard Roll20 functionality - see Roll20 Help Centre for more information).</p>'
+							+'<p>This command creates a number of Player Macros which can be found under the Player Macro tab in the Chat window (the tab that looks like three bulleted lines, next to the cog).  These macros hold a number of DM commands that are useful in setting up and running a campaign.  It is recommended that the "Show in Bar" flags for these macros are set, and the "Show Macro Bar" flag is set (the macro bar is standard Roll20 functionality - see Roll20 Help Centre for more information).</p>'
 							+'<p>The buttons added are:</p>'
 							+'<ul>'
 							+'	<li><i>Maint-menu:</i> Runs the <b>!init --maint</b> command</li>'
@@ -263,12 +271,13 @@ var CommandMaster = (function() {
 							+'	<li><i>Add-items:</i> Runs the <b>!magic --gm-edit-mi</b> command</li>'
 							+'	<li><i>End-of-Day:</i> Runs the <b>!init --end-of-day</b> command</li>'
 							+'	<li><i>Initiative-menu:</i>	Runs the <b>!init --init</b> command</li>'
+							+'	<li><i>Check-tracker:</i>	Runs the <b>!init --check-tracker</b> command</li>'
 							+'</ul>'
 							+'<p>The DM can drag Macro Bar buttons around on-screen to re-order them, or even right-click them to change their name and colour of the button.  Feel free to do this to make the Macro Bar as usable for you as you desire.</p>'
 							+'<h3>1.2 Setup Tokens & Character Sheets</h3>'
 							+'<pre>--abilities</pre>'
-							+'<p>Displays a menu with which one or more selected tokens and the Character Sheets they represent can be set up with the correct Token Action Buttons and data specific to the RPGMaster APIs, to work with the APIs in the best way.  The menu provides buttons to add any command registered with CommandMaster (see <b>--register</b> command) as a Token Action Button, add spells to spell books, add granted powers, add or change weapon proficiencies and proficiency levels for each weapon, set the correct saving throws based on race, class & level of character / NPC / creature, and optionally clear or set the Token ‘circles’ to represent AC (bar 1), base Thac0 (bar 2) and HP (bar 3).  Essentially, using this menu accesses the commands in section 2 without the DM having to run them individually.</p>'
-							+'<p>All tokens selected when menu items are used will be set up the same way: exceptions to this are using the Set Saves button (sets saves for each selected token/character sheet correctly for the specifications of that sheet), and the Set All Profs button (sets weapon proficiencies to proficient based on the weapons in each individual token/character sheet’s item bag).  Different tokens can be selected and set up differently without having to refresh the menu.</p>'
+							+'<p>Displays a menu with which one or more selected tokens and the Character Sheets they represent can be set up with the correct Token Action Buttons and data specific to the RPGMaster APIs, to work with the APIs in the best way.  The menu provides buttons to add any command registered with CommandMaster (see <b>--register</b> command) as a Token Action Button, set the visibility of the token name to players (which also affects RoundMaster behaviour), add spells to spell books, add granted powers, add or change weapon proficiencies and proficiency levels for each weapon, set the correct saving throws based on race, class & level of character / NPC / creature, and optionally clear or set the Token \'circles\' to represent AC (bar 1), base Thac0 (bar 2) and HP (bar 3).  Essentially, using this menu accesses the commands in section 2 without the DM having to run them individually.</p>'
+							+'<p>All tokens selected when menu items are used will be set up the same way: exceptions to this are using the Set Saves button (sets saves for each selected token/character sheet correctly for the specifications of that sheet), and the Set All Profs button (sets weapon proficiencies to proficient based on the weapons in each individual token/character sheet\'s item bag).  Different tokens can be selected and set up differently without having to refresh the menu.</p>'
 							+'<h2>2. Character Sheet configuration</h2>'
 							+'<p>The commands in this section can be accessed using the --abilities command menu.  The individual commands below are used less frequently.</p>'
 							+'<h3>2.1 Add spells to spell book</h3>'
@@ -293,21 +302,21 @@ var CommandMaster = (function() {
 							+'<h3>3.1 Register an API command</h3>'
 							+'<pre>--register action|description|api-call|api-command|parameters</pre>'
 							+'<p>Register an API command with the CommandMaster API to achieve two outcomes: allow the command to be set up as a Token Action Button, and/or automatically maintain & update the syntax of the commands in Character Sheet ability macros and the RPGMaster API databases.</p>'
-							+'<p>This is a powerful and potentially hazardous command.  Registry of an API command is remembered by the system in the state variable, which is preserved throughout the life of the Campaign in Roll20.  If a subsequent registration of the same <b>action</b> has different parameters, the system detects this and searches all Character Sheet ability macros for the <i>old version</i> of the command and replaces all of them with the new command.  It also changes the parameters, using a syntax including a range of character \‘escapes\’ to substitute characters that Roll20 might otherwise interpret as commands itself.  In detail, the --register command takes:</p>'
+							+'<p>This is a powerful and potentially hazardous command.  Registry of an API command is remembered by the system in the state variable, which is preserved throughout the life of the Campaign in Roll20.  If a subsequent registration of the same <b>action</b> has different parameters, the system detects this and searches all Character Sheet ability macros for the <i>old version</i> of the command and replaces all of them with the new command.  It also changes the parameters, using a syntax including a range of character \'escapes\' to substitute characters that Roll20 might otherwise interpret as commands itself.  In detail, the --register command takes:</p>'
 							+'<table>'
 							+'	<tr><th scope="row">action:</th><td>the unique name given to this command in the whole system.  This can be any legal text name including A-Z, a-z, 1-9, -, _ only.  Must start with an alpha.  Case is ignored.</td></tr>'
 							+'	<tr><th scope="row">description:</th><td>a short description of the command, which is displayed in the menu that allows the command to be added as a Token Action Button.</td></tr>'
 							+'	<tr><th scope="row">api-call:</th><td>the API call <i>without</i> the !, e.g. cmd, or magic, etc</td></tr>'
 							+'	<tr><th scope="row">api-command:</th><td>the command to be passed to the specified API, with the hyphens replaced by ~~ or plusses replaced by **, e.g. ~~cast-spell or **menu.</td></tr>'
-							+'	<tr><th scope="row">parameters:</th><td>the parameters (or initial parameters) to be passed as part of this command to replace the matching existing command parameters.  This string  is \‘escaped\’ using the following character replacements:</td></tr>'
+							+'	<tr><th scope="row">parameters:</th><td>the parameters (or initial parameters) to be passed as part of this command to replace the matching existing command parameters.  This string  is \'escaped\' using the following character replacements:</td></tr>'
 							+'</table>'
 							+'<table>'
 							+'	<tr><th scope="row">Character</th><td>Parameter separator</td><td>?</td><td>[</td><td>]</td><td>&lt;</td><td>&gt;</td><td>@</td><td>-</td><td>|</td><td>:</td><td>&</td><td>{</td><td>}</td></tr>'
-							+'	<tr><th scope="row">Substitute</th><td>%%</td><td>^</td><td>&lt;&lt;</td><td>&gt;&gt;</td><td> </td><td> </td><td>`</td><td>~</td><td>¦</td><td> </td><td>&amp;amp;</td><td>&amp;#123;</td><td>&amp;#125;</td></tr>'
+							+'	<tr><th scope="row">Substitute</th><td>%%</td><td>^</td><td>&lt;&lt;</td><td>&gt;&gt;</td><td> </td><td> </td><td>`</td><td>~</td><td>&amp;#124;</td><td> </td><td>&amp;amp;</td><td>&amp;#123;</td><td>&amp;#125;</td></tr>'
 							+'	<tr><th scope="row">Alternative<br>(no ; )</th><td> \\vbar</td><td>\\ques</td><td>\\lbrak</td><td>\\rbrak</td><td>\\lt</td><td>\\gt</td><td>\\at</td><td>\\dash</td><td>\\vbar</td><td>\\clon</td><td>\\amp</td><td>\\lbrc</td><td>\\rbrc</td></tr>'
 							+'</table>'
 							+'<p>Commands cannot have a CR (carrage return/new line) in the middle of them, but CR can separate commands in multi-command sequences.</p>'
-							+'<p>If the parameter string ends with $$, this will ensure that a complete command up to the next CR is to be replaced (including everything up to the CR even if not part of the command).  If there is not a $$ on the end of the parameter string, then only the command and parameters that are matched are replaced (using a parameter count of each old and new parameter separated by ‘%%’) - the rest of the line (including any remaining parameters not so matched) will be left in place.</p>'
+							+'<p>If the parameter string ends with $$, this will ensure that a complete command up to the next CR is to be replaced (including everything up to the CR even if not part of the command).  If there is not a $$ on the end of the parameter string, then only the command and parameters that are matched are replaced (using a parameter count of each old and new parameter separated by \'%%\') - the rest of the line (including any remaining parameters not so matched) will be left in place.</p>'
 							+'<p>Here are some examples of registration commands:</p>'
 							+'<pre>--register Spells_menu|Open a menu with spell management functions|magic|~~spellmenu |\`{selected|token_id}<br>'
 							+'--register Use_power|Use a Power|magic|~~cast-spell|POWER%%\`{selected|token_id}<br>'
@@ -315,7 +324,7 @@ var CommandMaster = (function() {
 							+'<h3>3.2 Edit ability macros</h3>'
 							+'<pre>--edit existing-string | new-string</pre>'
 							+'<p style="background-color:yellow;"><b>Danger:</b> use this command with extreme care!  It can destroy your Campaign!  It is recommended that you make a backup copy of your Campaign before using this command.  --register is more controlled, as it has been tested with the RPGMaster command strings, and any future releases that change the API commands will be fully tested before release for their effect on Campaigns, with accompanying release notes.  Using the --edit function directly can have unintended consequences!</p>'
-							+'<p>Replaces an existing ‘escaped’ string with a new replacement string in all ability macros on all Character Sheets including the API character sheet databases.  These strings both use the same escape sequence replacements as for the <b>--register</b> command (see section 3.1) as in fact <b>--register</b> and <b>--edit</b> use the same functionality.</p>'
+							+'<p>Replaces an existing \'escaped\' string with a new replacement string in all ability macros on all Character Sheets including the API character sheet databases.  These strings both use the same escape sequence replacements as for the <b>--register</b> command (see section 3.1) as in fact <b>--register</b> and <b>--edit</b> use the same functionality.</p>'
 							+'<p>Examples of its use are to change API command calls, or Character Sheet field name access in macros should the field names change.</p>'
 							+'<br>'
 							+'<h2>4. Other Commands</h2>'
@@ -325,25 +334,25 @@ var CommandMaster = (function() {
 							+'<h3>4.2 Switch on or off Debug mode</h3>'
 							+'<pre>--debug (ON/OFF)</pre>'
 							+'<p>Takes one mandatory argument which should be ON or OFF.</p>'
-							+'<p>The command turns on a verbose diagnostic mode for the API which will trace what commands are being processed, including internal commands, what attributes are being set and changed, and more detail about any errors that are occurring.  The command can be used by the DM or any Player – so the DM or a technical advisor can play as a Player and see the debugging messages.</p>'
+							+'<p>The command turns on a verbose diagnostic mode for the API which will trace what commands are being processed, including internal commands, what attributes are being set and changed, and more detail about any errors that are occurring.  The command can be used by the DM or any Player - so the DM or a technical advisor can play as a Player and see the debugging messages.</p>'
 							+'<br>'
 							+'<h2>5. How CommandMaster Works</h2>'
 							+'<p>The CommandMaster API coordinates other APIs in the RPGMaster API series and provides the DM with facilities to set the Campaign up to use them.  It will initialise a Campaign in Roll20 to use the RPGMaster series APIs.  APIs can register their commands with CommandMaster and, should they change in the future, CommandMaster will search all Character Sheets and databases for that command and offer the DM the option to automatically update any or all of those found to the new command structure of that API.  Selected Tokens and their associated Character Sheets can be set up with the correct Token Action Buttons, with spell-users given spells in their spell book, fighters given weapon proficiencies, setting saving throws correctly, and linking token circles to standard Character Sheet fields.</p>'
 							+'<h3>Initialising a Campaign</h3>'
-							+'<p>Using the <b>--initialise</b> command will add a number of Player Macros for the DM that will run the most-used RPGMater DM commands, which can be flagged to appear in the Macro Bar at the bottom of the DM’s screen for ease of access.</p>'
+							+'<p>Using the <b>--initialise</b> command will add a number of Player Macros for the DM that will run the most-used RPGMater DM commands, which can be flagged to appear in the Macro Bar at the bottom of the DM\'s screen for ease of access.</p>'
 							+'<h3>Setting up tokens & character sheets</h3>'
 							+'<p>Selecting one or multiple tokens and running the <b>--abilities</b> command will allow token action buttons and RPGMaster API capabilities to be set up for all the represented Character Sheets at the same time, though all Character Sheets will be set up the same way.</p>'
 							+'<h3>Registering API commands</h3>'
 							+'<p>Any API command can be registered with CommandMaster using the <b>--register</b> command.  This will allow the command registered to be added as a Token Action Button to Character Sheets by the   abilities command, and to be optionally updated in all Character Sheets wherever used should the details of the registration change.</p>'
 							+'<h3>Editing Character Sheet abilities</h3>'
-							+'<p><b>Danger:</b> this command is very powerful, and can ruin your campaign if mis-used!  The <b>--edit</b> command can be used to change any string in Character Sheet ability macros to any other string, using ‘escaped’ characters to replace even the most complex strings.  However, use with care!</p>'
+							+'<p><b>Danger:</b> this command is very powerful, and can ruin your campaign if mis-used!  The <b>--edit</b> command can be used to change any string in Character Sheet ability macros to any other string, using \'escaped\' characters to replace even the most complex strings.  However, use with care!</p>'
 							+'</div>',
 						},
 	RPGCS_Setup:		{name:'RPGMaster CharSheet Setup',
-						 version:1.05,
+						 version:1.06,
 						 avatar:'https://s3.amazonaws.com/files.d20.io/images/257656656/ckSHhNht7v3u60CRKonRTg/thumb.png?1638050703',
 						 bio:'<div style="font-weight: bold; text-align: center; border-bottom: 2px solid black;">'
-							+'<span style="font-weight: bold; font-size: 125%">RPGMaster CharSheet Setup v1.05</span>'
+							+'<span style="font-weight: bold; font-size: 125%">RPGMaster CharSheet Setup v1.06</span>'
 							+'</div>'
 							+'<div style="padding-left: 5px; padding-right: 5px; overflow: hidden;">'
 							+'<h2>Character Sheet and Token setup for use with RPGMaster APIs</h2>'
@@ -410,8 +419,8 @@ var CommandMaster = (function() {
 							+'<p>Weapon Proficiencies must be set on the Character Sheet.  This is best done by using the <b>CommandMaster API</b> character sheet management functions, but can be done manually.  Both specific weapons and related weapon groups can be entered in the table, and when a Player changes the character\'s weapons in-hand the table of proficiencies will be consulted to set the correct bonuses and penalties.  Weapon specialisation and mastery (otherwise known as double specialisation) are supported by the CommandMaster functions, but can also be set by ticking/selecting the relevant fields on the Character Sheet weapon proficiencies table.  If a weapon or its related weapon group does not appear in the list, it will be assumed to be not proficient.</p>'
 							+'<h3>8. Spell books and memorisable spells</h3>'
 							+'<p>The best (and easiest) way to give a Character or NPC spells and powers is to use <b>CommandMaster API</b> to add spells and powers to the Character\'s spellbooks, and <b>MagicMaster API</b> to memorise and cast spells and use powers.  However, for the purposes of just doing initiative and selecting which spell to cast in the next round, the spells and powers can be entered manually onto the character sheet.  Spells are held in the relevant section of the Spells table, which by default is set to the character sheet spells table, <i>repeating_spells</i>.  As with other fields, this can be changed in the <i>\'fields\'</i> object.  Note that on the Advanced D&D 2e character sheet Wizard spells, Priest spells & Powers are all stored in various parts of this one very large table.</p>'
-							+'<p>If you are just using the character sheet fields to type into, add spells (or powers) to the relevant “Spells Memorised” section (using the [+Add] buttons to add more as required) <b>a complete row at a time</b> (that is add columns before starting the next row).  Enter the spell names into the “Spell Name” field, and “1” into each of the “current” & “maximum” “Cast Today” fields - the API suite <i>counts down</i> to zero on using a spell, so in order for a spell to appear as available (not greyed out) on the initiative menus, the “current” number left must be > 0.  This makes spells consistent with other tables in the system (e.g. potion dose quantities also count down as they are consumed, etc).</p>'
-							+'<p>Then, you need to set the “Spell Slots” values on each level of spell to be correct for the level of caster.  Just enter numbers into each of the “Level”, “Misc.” and “Wisdom” (for Priests) fields, and/or tick “Specialist” for the Wizard levels as relevant.  This will determine the maximum number of spells memorised each day, that will appear in the spells Initiative Menu.  Do the same for Powers using the “Powers Available” field.  As with other fields on the character sheet, each of these fields can be re-mapped by altering the <i>\'fields\'</i> object in the APIs.</p>'
+							+'<p>If you are just using the character sheet fields to type into, add spells (or powers) to the relevant "Spells Memorised" section (using the [+Add] buttons to add more as required) <b>a complete row at a time</b> (that is add columns before starting the next row).  Enter the spell names into the "Spell Name" field, and "1" into each of the "current" & "maximum" "Cast Today" fields - the API suite <i>counts down</i> to zero on using a spell, so in order for a spell to appear as available (not greyed out) on the initiative menus, the "current" number left must be > 0.  This makes spells consistent with other tables in the system (e.g. potion dose quantities also count down as they are consumed, etc).</p>'
+							+'<p>Then, you need to set the "Spell Slots" values on each level of spell to be correct for the level of caster.  Just enter numbers into each of the "Level", "Misc." and "Wisdom" (for Priests) fields, and/or tick "Specialist" for the Wizard levels as relevant.  This will determine the maximum number of spells memorised each day, that will appear in the spells Initiative Menu.  Do the same for Powers using the "Powers Available" field.  As with other fields on the character sheet, each of these fields can be re-mapped by altering the <i>\'fields\'</i> object in the APIs.</p>'
 							+'<p>Spells can only be cast if they have macros defined in the spell databases (see Spell Database Handout).  If the <b>CommandMaster API</b> is loaded, the DM can use the tools provided there to manage Character, NPC & creature spell books and granted powers from the provided spell & power databases.</p>'
 							+'<p>The spells a spell caster can memorise (what they have in their spell books, or what their god has granted to them) is held as a list of spell names separated by vertical bars \'|\' in the character sheet attribute defined in <i>fields.Spellbook</i> (on the AD&D2E character sheet \'spellmem\') of each level of spell.  On the AD&D2E sheet, the spell books are the large Spell Book text fields at the bottom of each spell level tab.  The spell names used must be identical (though not case sensitive) to the spell ability macro names in the spell databases (hence the hyphens in the names).   So, for example, a 1<sup>st</sup> level Wizard might have the following in their large Wizard Level 1 spell book field:</p>'
 							+'<pre>Armour|Burning-Hands|Charm-Person|Comprehend-Languages|Detect-Magic|Feather-fall|Grease|Identify|Light|Magic-Missile|Read-Magic|Sleep</pre>'
@@ -455,6 +464,8 @@ var CommandMaster = (function() {
 		BOTH:			'BOTH',
 		AMMO:			'AMMO',
 		ABILITY:		'ABILITY',
+		AB_PC:			'AB_PC',
+		AB_DM:			'AB_DM',
 		AB_OTHER:		'AB_OTHER',
 		AB_REPLACE:     'AB_REPLACE',
 		AB_SIMPLE:		'AB_SIMPLE',
@@ -560,7 +571,7 @@ var CommandMaster = (function() {
 			mi_menu:		{api:'magic',action:'Magic_Item_menu'},
 			rest:			{api:'magic',action:'Rest'},
 			specials:		{api:'attk',action:'Specials'},
-			bar:			{api:'money',action:'Bar'},
+			bar:			{api:'init',action:'Bar'},
 	});
 	
 	const spellLevels = Object.freeze({ 
@@ -669,6 +680,7 @@ var CommandMaster = (function() {
 	};
 	
 	var parsedCmds = false,
+		apiCommands = {},
 		registeredCmds = [],
 		registeredAPI = {},
 		abilities = [],
@@ -734,10 +746,12 @@ var CommandMaster = (function() {
 			state.CommandMaster.cmds[0] = 'Specials|Display special attacks and defences|attk|\n/w "`{selected|character_name}" &{template:2Edefault}{{name=Special Attacks & Defences for\n`{selected|character_name}}}{{Special Attacks=`{selected|monsterspecattacks} }}{{Special Defences=`{selected|monsterspecdefenses} }}|';
 			state.CommandMaster.cmds[1] = 'Bar|Add inactive bar as an action button|money| |';
 		}
-		if (!state.CommandMaster.debug)
+		if (_.isUndefined(state.CommandMaster.debug))
 		    {state.CommandMaster.debug = false;}
 			
 		setTimeout(() => updateHandouts(true,findTheGM()), 5000);
+		setTimeout( () => issueHandshakeQuery('attk'), 5000);
+		setTimeout( () => issueHandshakeQuery('magic'), 5000);
 		setTimeout(handleChangedCmds,10000);
 
 		log(`-=> CommandMaster v${version} <=-`);
@@ -1003,7 +1017,9 @@ var CommandMaster = (function() {
 	 
 	var issueHandshakeQuery = function( api, cmd ) {
 		var handshake = '!'+api+' --hsq cmd'+((cmd && cmd.length) ? ('|'+cmd) : '');
-		sendInitAPI(handshake);
+		sendCommandAPI(handshake);
+		if (_.isUndefined(apiCommands[api])) apiCommands[api] = {};
+		apiCommands[api].exists = false;
 		return;
 	};
 	
@@ -1698,7 +1714,7 @@ var CommandMaster = (function() {
 	 
 	var parseCmd = function( api, action ) {
 		var cmdSpec = _.find(registeredCmds,obj => ((obj.api == api) && (obj.action == action)));
-		return parseStr('!'+api+' '+cmdSpec.cmd+' '+cmdSpec.params);
+		return (cmdSpec ? parseStr('!'+api+' '+cmdSpec.cmd+' '+cmdSpec.params) : 'Undefined');
 	}
 
 	/*
@@ -1916,7 +1932,7 @@ var CommandMaster = (function() {
 			curSpells = attrLookup( charCS, listAttr ) || '';
 		}
 			
-		content = fields.defaultTemplate+'{{name=Grant Spells}}{{ ='+(msg||'')+'}}{{'+desc+'='+curSpells+'}}'
+		content = '&{template:'+fields.defaultTemplate+'}{{name=Grant Spells}}{{ ='+(msg||'')+'}}{{'+desc+'='+curSpells+'}}'
 				+ '{{desc=1. [Choose](!cmd --button CHOOSE_'+cmd+'|'+level+'|&#63;{Choose which spell|'+getMagicList( rootDB, listAttr )+'}) a spell\n';
 				
 		if (spell) {
@@ -1936,7 +1952,7 @@ var CommandMaster = (function() {
 		} else if (isMU) {
 			content += 'go to [Level '+(level < 9 ? level+1 : 1)+'](!cmd --add-spells MUSPELLS|'+(level < 9 ? level+1 : 1)+'|), [Priest](!cmd --add-spells PRSPELLS|1|) or [Power](!cmd --add-spells POWERS|1|) spells';
 		} else {
-			content += 'go to [Level '+(level < 7 ? level+1 : 1)+'](!cmd --add-spells PRSPELLS|'+(level < 9 ? level+1 : 1)+'|), [Wizard](!cmd --add-spells MUSPELLS|1|) or [Power](!cmd --add-spells POWERS|1|) spells';
+			content += 'go to [Level '+(level < 7 ? level+1 : 1)+'](!cmd --add-spells PRSPELLS|'+(level < 7 ? level+1 : 1)+'|), [Wizard](!cmd --add-spells MUSPELLS|1|) or [Power](!cmd --add-spells POWERS|1|) spells';
 		}
 		content += '\n[Return to Main Menu](!cmd --abilities) or just do something else}}';
 		sendFeedback(content);
@@ -1952,8 +1968,9 @@ var CommandMaster = (function() {
 		var	weapon = args[1] || '',
 			meleeWeapon = args[2] || false,
 			weapType = args[3] || '',
+			masterRange = apiCommands['attk'].exists ? state.attackMaster.weapRules.masterRange : true,
 			weapObj, buttons,
-    		content = fields.defaultTemplate + '{{name=Grant Weapon Proficiencies}}{{ ='+(msg||'')+'}}'
+    		content = '&{template:' + fields.defaultTemplate + '}{{name=Grant Weapon Proficiencies}}{{ ='+(msg||'')+'}}'
     				+ '{{  =['+((weapon) ? weapon : 'Choose Weapon')+'](!cmd --button CHOOSE_PROF|&#63;{Choose which Weapon?|'+getMagicList( fields.WeaponDB, fields.ItemWeaponList )+'})'
 					+ 'or make [All Owned Weapons](!cmd --set-all-prof PROFICIENT) proficient\n'
     				+ 'and optionally ';
@@ -1966,7 +1983,7 @@ var CommandMaster = (function() {
 					+  '[Not Proficient](!cmd --set-prof NOT-PROF|'+weapon+'|'+weapType+')'
 					+  '[Proficient](!cmd --set-prof PROFICIENT|'+weapon+'|'+weapType+')'
 					+  '[Specialist](!cmd --set-prof SPECIALIST|'+weapon+'|'+weapType+')';
-			if (meleeWeapon) content += '[Mastery](!cmd --set-prof MASTERY|'+weapon+'|'+weapType+')';
+			if (masterRange || meleeWeapon) content += '[Mastery](!cmd --set-prof MASTERY|'+weapon+'|'+weapType+')';
 			else content += '<span style=' + design.grey_button + '>Mastery</span>';
 		} else {
 			content += '<span style=' + design.grey_button + '>Review Weapon</span>}}'
@@ -1999,17 +2016,22 @@ var CommandMaster = (function() {
 			regs = registeredAPI,
 			cmds,
 			content,
+			selButton = '<span style=' + design.selected_button + '>',
+			pc = _.some( selected, curToken => getObj('graphic',curToken._id).get('showplayers_name') ),
+			dm = _.some( selected, curToken => !getObj('graphic',curToken._id).get('showplayers_name') ),
 			charIDs = [],
 			buttonType = function( buttonName, buttonCmd, api, action, question, defaultAns ) {
 				let abilityObjs = findAbilities( api, action, selected );
 				abilities[buttonName] = abilities[buttonName] || (abilityObjs && abilityObjs.length);
-				let	buttonText = (abilities[buttonName] ? '<span style=' + design.selected_button + '>' : '[')
+				let	buttonText = (abilities[buttonName] ? selButton : '[')
 							   + buttonName
 							   + (abilities[buttonName] ? '</span>' : '](!cmd --button '+buttonCmd+'|'+menuType+'|'+buttonName+'|'+api+'|'+action+'|&#63;{'+question+'&#124;'+defaultAns+'})');
 				return buttonText;
 			};
 			
-		content = fields.defaultTemplate+'{{name=Assign Abilities}}'
+		if (!selected || !selected.length) pc = dm = true;
+			
+		content = '&{template:'+fields.defaultTemplate+'}{{name=Assign Abilities}}'
 				+ '{{desc=Click a button to add an Ability Action Button to the character sheets of the selected tokens.  More than one token can be selected at the same time.}}'
 				+ '{{desc1=<table><tr><td style="width:100px;">Ability</td><td>Description</td></tr>';
 				
@@ -2047,7 +2069,10 @@ var CommandMaster = (function() {
 			return;
 		}
 		
-		content += ' or [Set base Saving Throws](!cmd --button '+BT.AB_SAVES+'|'+menuType+'|0)'
+		content += ' or '
+				+  (dm ? '[Make' : (selButton + 'Is')) + ' Player-Character' + (dm ? ('](!cmd --button '+BT.AB_PC+'|'+menuType+'|0)') : '</span>')
+				+  (pc ? '[Make' : (selButton + 'Is')) + ' DMs Token' + (pc ? ('](!cmd --button '+BT.AB_DM+'|'+menuType+'|0)') : '</span>')
+				+  '[Set base Saving Throws](!cmd --button '+BT.AB_SAVES+'|'+menuType+'|0)'
 		        +  '[Add to Spellbook](!cmd --add-spells MUSPELLS)'
 				+  '[Add to Proficiencies](!cmd --add-profs)'
 				+  '[Set Token Circles](!cmd --button '+BT.AB_TOKEN+'|'+menuType+'|0)'
@@ -2066,7 +2091,7 @@ var CommandMaster = (function() {
 	var makeAskReplace = function( args ) {
         args.shift();
 		var buttonName = args[1],
-			content = fields.defaultTemplate+'{{name=Replace existing '+buttonName+' Abilities?}}'
+			content = '&{template:'+fields.defaultTemplate+'}{{name=Replace existing '+buttonName+' Abilities?}}'
 					+ '{{desc=The selected ability already exists on one or more of the selected token(s).  Replacing or Removing them is NOT recommended.'
 					+ ' Selecting *Do Nothing* will still add the ability to those tokens that do not have it.   Are you sure you want to replace or remove existing abilities?}}'
 					+ '{{desc1=[ Replace ]('+fields.CommandMaster+' --button '+BT.AB_REPLACE+'|'+args.join('|')+'|replace)'
@@ -2083,7 +2108,7 @@ var CommandMaster = (function() {
 	 */
 	 
 	var makeCheckReplace = function( args, charName, abilityName ) {
-		var content = fields.defaultTemplate+'{{name=Replace '+charName+' '+abilityName+' Ability String?}}'
+		var content = '&{template:'+fields.defaultTemplate+'}{{name=Replace '+charName+' '+abilityName+' Ability String?}}'
 					+ '{{desc=The ability **'+abilityName+'** on character sheet **'+charName+'** has the string '+args[1]+' which will be replaced with '+args[2]+'.'
 					+ '  Are you sure you want to replace this string in this ability?}}'
 					+ '{{desc1=[ Yes ]('+fields.CommandMaster+' --button '+BT.STR_REPLACE+'|'+args[1]+'|'+args[2]+'|true|true)'
@@ -2100,7 +2125,7 @@ var CommandMaster = (function() {
 	 */
 	 
 	var makeMsg = function(title,msg) {
-	    var content = fields.defaultTemplate+'{{name='+title+'}}'
+	    var content = '&{template:'+fields.defaultTemplate+'}{{name='+title+'}}'
 	                + '{{desc='+msg+'}}';
 	   sendFeedback(content);
 	   return;
@@ -2159,7 +2184,7 @@ var CommandMaster = (function() {
 
 		args[0] = isPower ? 'POWERS' : (isMU ? 'MUSPELLS' : 'PRSPELLS');
 		cmdStr = args.join('|');
-		content = fields.defaultTemplate+'{{name=Return to Menu}}'
+		content = '&{template:'+fields.defaultTemplate+'}{{name=Return to Menu}}'
 				+ '{{desc=[Return to Menu](!cmd --add-spells '+cmdStr+') or do something else}}';
 		sendFeedback(content);
 	}
@@ -2258,7 +2283,7 @@ var CommandMaster = (function() {
 	var handleReviewProf = function( args, selected ) {
 		
 		var cmdStr = args.join('|'),
-			content = fields.defaultTemplate+'{{name=Return to Menu}}'
+			content = '&{template:'+fields.defaultTemplate+'}{{name=Return to Menu}}'
 				+ '{{desc=[Return to Menu](!cmd --add-profs '+cmdStr+') or do something else}}';
 		sendFeedback(content);
 	}
@@ -2459,7 +2484,7 @@ var CommandMaster = (function() {
 			setLevel = parseInt(args[2] || 0),
 			tokenIDs = [],
 			raceMods,
-			content = fields.defaultTemplate+'{{name=Set Base Saves}}'
+			content = '&{template:'+fields.defaultTemplate+'}{{name=Set Base Saves}}'
 					+ '{{=Based on their level(s) and race(s), base saves have been set to}}';
 		
 		_.each( selected, curToken => {
@@ -2481,7 +2506,7 @@ var CommandMaster = (function() {
 				monsterIntField = attrLookup( charCS, fields.Monster_int ) || '',
 				monsterIntNum = (monsterIntField.match(/\d+/)||["1"])[0],
 				monsterInt = monsterIntField.toLowerCase().includes('non') ? 0 : monsterIntNum,
-				monsterLevel = Math.ceil((monsterHD + Math.ceil(monsterHPplus/4)) / (monsterInt != 0 ? 1 : 2)),
+				monsterLevel = Math.ceil((monsterHD + Math.ceil(monsterHPplus/4)) / (monsterInt != 0 ? 1 : 2)),  // Calculation based on p65 of DMG
 				warriorSaves = baseSaves.Warrior[saveLevels.Warrior[Math.min(Math.max(fighterLevel,monsterLevel),saveLevels.Warrior.length-1)]],
 				wizardSaves = baseSaves.Wizard[saveLevels.Wizard[Math.min(wizardLevel,saveLevels.Wizard.length-1)]],
 				priestSaves = baseSaves.Priest[saveLevels.Priest[Math.min(priestLevel,saveLevels.Priest.length-1)]],
@@ -2536,6 +2561,34 @@ var CommandMaster = (function() {
 	};
 	
 	/*
+	 * Handle setting the visibility of the token name 
+	 * to the Players, which effects how RoundMaster
+	 * displays the token in the Turn Order and token 
+	 * actions when it is their turn.
+	 */
+	 
+	var handleTokenNameVisibility = function( args, selected ) {
+		
+		var cmd = args[0],
+			abMenu = args[1],
+			tokens = [];
+		
+		_.each( selected, sel => {
+			let curToken = getObj('graphic',sel._id);
+			curToken.set('showplayers_name',(cmd == BT.AB_PC));
+			curToken.set('showplayers_bar3',(cmd == BT.AB_PC));
+			tokens.push(curToken.get('name'));
+		});
+		tokens.filter(t => !!t).sort();
+		sendFeedback('&{template:'+fields.defaultTemplate+'}'
+					+'{{name=Token Ownership}}'
+					+'{{desc=The following tokens are now '+(cmd == BT.AB_PC ? 'Player' : 'DM')+' controlled}}'
+					+'{{desc1='+tokens.join(', ')+'}}'
+					+'{{desc2=[Return to menu](!cmd --button '+abMenu+')}}');
+		return;
+	};
+	
+	/*
 	 * Handle changing the token bars/circles to the
 	 * standard used by the APIs, or all to None, as 
 	 * selected by the user 
@@ -2552,7 +2605,7 @@ var CommandMaster = (function() {
 				charCS = getCharacter(tokenID),
 				content;
 				
-			content = fields.defaultTemplate+'{{name=Setting Token Circles for '+curToken.get('name')+'}}{{desc=';
+			content = '&{template:'+fields.defaultTemplate+'}{{name=Setting Token Circles for '+curToken.get('name')+'}}{{desc=';
 			if (!charCS)
 				content += 'Token does not represent a character\n';
 			else if (cmd.toUpperCase() == BT.AB_TOKEN_NONE) {
@@ -2761,6 +2814,10 @@ var CommandMaster = (function() {
 		if (!macro || !macro.length || !macro[0]) {
 			macro = createObj('macro',{name:'Initiative-menu',action:'!init --init',playerid:senderID});
 		}
+		macro = findObjs({ type: 'macro', name: 'Check-tracker'},{caseInsensitive:true});
+		if (!macro || !macro.length || !macro[0]) {
+			macro = createObj('macro',{name:'Check-tracker',action:'!init --check-tracker',playerid:senderID});
+		}
 		player = findObjs({ type: 'player', id: senderID });
 		if (player && player[0]) {
 			player[0].set('showmacrobar','true');
@@ -2919,6 +2976,12 @@ var CommandMaster = (function() {
 			makeAbilitiesMenu( args, selected );
 			break;
 			
+		case BT.AB_PC :
+		case BT.AB_DM :
+
+			handleTokenNameVisibility( args, selected );
+			break;
+			
 		case BT.AB_SAVES :
 		
 			handleSetSaves( args, selected );
@@ -2999,7 +3062,7 @@ var CommandMaster = (function() {
 			funcTrue = ['initialise','abilities','add-spells','add-profs','set-prof','set-all-prof','register','edit','debug','help'].includes(func.toLowerCase()),
 			cmd = '!'+from+' --hsr cmd'+((func && func.length) ? ('|'+func+'|'+funcTrue) : '');
 			
-		sendRmAPI(cmd);
+		sendCommandAPI(cmd);
 		return;
 	};
 

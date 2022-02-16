@@ -10,8 +10,8 @@
 var TurnMarker = TurnMarker || (function(){
     "use strict";
     
-    var version = '1.3.11',
-        lastUpdate = 1637341057,
+    var version = '1.3.12',
+        lastUpdate = 1643855734,
         schemaVersion = 1.18,
         active = false,
         threadSync = 1,
@@ -120,7 +120,7 @@ var TurnMarker = TurnMarker || (function(){
                     '<div style="float:right;width:40px;border:1px solid black;background-color:#ffc;text-align:center;">'+( state.TurnMarker.rotation ? '<span style="color: red; font-weight:bold; padding: 0px 4px;">ON</span>' : '<span style="color: #999999; font-weight:bold; padding: 0px 4px;">OFF</span>' )+'</div>'+
                 '<li style="border-bottom: 1px solid #ccc;"><b><span style="font-family: serif;">toggle-rotate</span></b> -- When on, the turn marker will rotate slowly clockwise. [Animation]</li> '+
                     '<div style="float:right;width:40px;border:1px solid black;background-color:#ffc;text-align:center;">'+( state.TurnMarker.aura1.pulse ? '<span style="color: red; font-weight:bold; padding: 0px 4px;">ON</span>' : '<span style="color: #999999; font-weight:bold; padding: 0px 4px;">OFF</span>' )+'</div>'+
-                '<li style="border-bottom: 1px solid #ccc;"><b><span style="font-family: serif;">toggle-aura-1</span></b> -- When on, aura 2 will pulse in and out. [Animation]</li> '+
+                '<li style="border-bottom: 1px solid #ccc;"><b><span style="font-family: serif;">toggle-aura-1</span></b> -- When on, aura 1 will pulse in and out. [Animation]</li> '+
                     '<div style="float:right;width:40px;border:1px solid black;background-color:#ffc;text-align:center;">'+( state.TurnMarker.aura2.pulse ? '<span style="color: red; font-weight:bold; padding: 0px 4px;">ON</span>' : '<span style="color: #999999; font-weight:bold; padding: 0px 4px;">OFF</span>' )+'</div>'+
                 '<li style="border-bottom: 1px solid #ccc;"><b><span style="font-family: serif;">toggle-aura-2</span></b> -- When on, aura 2 will pulse in and out. [Animation]</li> '+
             '</ul>'+
@@ -334,7 +334,7 @@ var TurnMarker = TurnMarker || (function(){
                 id: marker.id,
                 pr: -1,
                 custom: "",
-                pageid: marker.get('pageid')
+                _pageid: marker.get('pageid')
             });
         }
         return marker;    
