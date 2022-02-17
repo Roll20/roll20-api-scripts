@@ -22,7 +22,7 @@ const ScriptCards = (() => { // eslint-disable-line no-unused-vars
 	*/
 
 	const APINAME = "ScriptCards";
-	const APIVERSION = "1.6.2";
+	const APIVERSION = "1.6.2a";
 	const APIAUTHOR = "Kurt Jaegers";
 	const debugMode = false;
 
@@ -2414,6 +2414,7 @@ const ScriptCards = (() => { // eslint-disable-line no-unused-vars
 			var thisMatch = content.match(/\[(?:[\$|\&|\@|\%|\*\#])[\w|À-ÖØ-öø-ÿ|\%|\(|\:|\.|\_|\>|\^|\-|\)]*?(?!\w+[\[])(\])/g)[0];
 			var replacement = "";
 			matchCount++;
+			var doReplace=true;
 			switch (thisMatch.charAt(1)) {
 				case "&":
 					// Replace a string variable
@@ -2451,7 +2452,11 @@ const ScriptCards = (() => { // eslint-disable-line no-unused-vars
 				case "#":
 					// Replace a settings reference
 					var vName = thisMatch.substring(2, thisMatch.length - 1);
-					replacement = cardParameters[vName.toLowerCase()] || "";
+					if (cardParameters.hasOwnProperty(vName)) {
+						replacement = cardParameters[vName.toLowerCase()] || "";
+					} else {
+						doReplace=false;
+					}
 					break;
 				/* 				case "#":
 									var tableName = thisMatch.match(/(?<=\[\#).*?(?=[\.|\]])/g)[0];
@@ -2578,7 +2583,9 @@ const ScriptCards = (() => { // eslint-disable-line no-unused-vars
 			}
 
 			//replacement = replaceSubattributeReferences(replacement, charId);
-			content = content.replace(thisMatch, replacement);
+			if (doReplace) {
+				content = content.replace(thisMatch, replacement);
+			}
 
 			failCount++;
 			if (failCount > failLimit) return content;
@@ -3052,6 +3059,7 @@ const ScriptCards = (() => { // eslint-disable-line no-unused-vars
 
 	function processInlineFormatting(outputLine, cardParameters) {
 		if (cardParameters.disableinlineformatting !== "0") { return outputLine; }
+		outputLine = outputLine.replace(/\[\#([A-Fa-f0-9]{3}|[A-Fa-f0-9]{6})\](.*?)\[\/[\#]\]/g, "<span style='color: #$1;'>$2</span>"); // [#xxx] or [#xxxx]...[/#] for color codes. xxx is a 3-digit hex code
 		outputLine = outputLine.replace(/\[hr(.*?)\]/gi, '<hr style="width:95%; align:center; margin:0px 0px 5px 5px; border-top:2px solid $1;">');
 		//outputLine = outputLine.replace(/\[hr\]/gi, '<table width=100% height=2px><tr><td bgcolor=red></td><font size=xx-small>&nbsp;</font></tr></table>');
 		outputLine = outputLine.replace(/\[br\]/gi, "<br />");
@@ -3071,7 +3079,6 @@ const ScriptCards = (() => { // eslint-disable-line no-unused-vars
 		outputLine = outputLine.replace(/\[[Ll]\](.*?)\[\/[Ll]\]/g, "<span style='text-align: left;'>$1</span>"); // [L]..[/L] for left
 		outputLine = outputLine.replace(/\[[Rr]\](.*?)\[\/[Rr]\]/g, "<div style='text-align: right; float: right;'>$1</div><div style='clear: both;'></div>"); // [R]..[/R] for right
 		outputLine = outputLine.replace(/\[[Jj]\](.*?)\[\/[Jj]\]/g, "<div style='text-align: justify; display:block;'>$1</div>"); // [J]..[/J] for justify
-		outputLine = outputLine.replace(/\[\#([A-Fa-f0-9]{3}|[A-Fa-f0-9]{6})\](.*?)\[\/[\#]\]/g, "<span style='color: #$1;'>$2</span>"); // [#xxx] or [#xxxx]...[/#] for color codes. xxx is a 3-digit hex code
 		var images = outputLine.match(/(\[img(.*?)\](.*?)\[\/img\])/gi);
 		for (var image in images) {
 			var work = images[image].replace("[img", "<img").replace("[/img]", "></img>").replace("]", " src=");
