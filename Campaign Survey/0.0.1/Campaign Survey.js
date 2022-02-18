@@ -1,12 +1,18 @@
 var API_Meta = API_Meta || {};
-API_Meta.Survey = { offset: Number.MAX_SAFE_INTEGER, lineCount: -1 };
-{
-    try { throw new Error(''); } catch (e) { API_Meta.Survey.offset = (parseInt(e.stack.split(/\n/)[1].replace(/^.*:(\d+):.*$/, '$1'), 10) - (4)); }
+API_Meta.Survey = {
+    offset: Number.MAX_SAFE_INTEGER,
+    lineCount: -1
+}; {
+    try {
+        throw new Error('');
+    } catch (e) {
+        API_Meta.Survey.offset = (parseInt(e.stack.split(/\n/)[1].replace(/^.*:(\d+):.*$/, '$1'), 10) - (4));
+    }
 }
 
 on('ready', () => {
     const version = '0.0.1';
-    log('Campaign Survey v' + version + ' is ready! --offset '+ API_Meta.Survey.offset + ' -- Use the command !survey to get started');
+    log('Campaign Survey v' + version + ' is ready! --offset ' + API_Meta.Survey.offset + ' -- Use the command !survey to get started');
 });
 
 on('chat:message', async (msg_orig) => {
@@ -32,10 +38,24 @@ on('chat:message', async (msg_orig) => {
             name = "untitled"
         }
         if (link) {
-            return `<a style = '${buttonStyle}; width:${minwidth} !important' href='${link}'>${name}</a>`;
+            if (link.includes('amazonaws')) {
+                return makeCardImageLink(link)
+            } else {
+                return `<a style = '${buttonStyle}; width:${minwidth} !important' href='${link}'>${name}</a>`;
+            }
+
+
+
+            //makeCardImageLink(url)
+            //return `<a style = '${buttonStyle}; width:${minwidth} !important' href='${link}'>${name}</a>`;
         } else {
             return `<div style = '${buttonStyle}; width:${minwidth}; display:inline-block !important'>${name}</div>`;
         }
+    }
+
+    function imgBorder(url) {
+        return ((url.includes('marketplace')) ? 'border: 2px solid #000;; ' : 'border: 2px solid #aaa;');
+
     }
 
     function makeHelpButton(title, helpText) {
@@ -43,18 +63,36 @@ on('chat:message', async (msg_orig) => {
     }
 
     function makeBox(color, id, name) {
-        return `<a href = '!survey --pcs ${id}' style= 'float: left; display:inline-block; height: 20px; width: 20px;  margin-top: 2px; margin-right: 2px; background-color:${color}; border: 1px solid black; clear: both; !important'</a>`;
+        return `<a href = '!survey --pcs ${id}' style= 'float: left; display:inline-block !important; height: 20px !important; width: 20px!important; border-radius:10px; margin-top: 2px !important; padding: 0px !important; margin-right: 2px !important; background-color:${color}; border: 1px solid black; clear: both; !important'</a>`;
+    }
+
+    function buildImageURL(url, size) {
+        imageCode = url.split('d20.io/')[1];
+        return url.replace(/thumb\.|med\.|max\.|original\./, size + '.') || url;
+
     }
 
     function makeImageLink(url) {
-        imageCode = url.split('/')[5] + '/' + url.split('/')[6];
-        url = url.replace('med.png', 'thumb.png') || url;
-        url = url.replace('max.png', 'thumb.png') || url;
-        url = url.replace('original.png', 'thumb.png') || url;
+        url = buildImageURL(url, 'thumb');
         return `<a href = '!survey --url ${imageCode}'><img style = 'max-height: 35px; max-width: 35px; padding: 0px; margin: 0px !important' src = '${url}'</img></a>`;
     }
 
-    const playSound = function(trackName, action) {
+    function makeBigImageLink(url) {
+        url = buildImageURL(url, 'thumb');
+        return `<a href = '!survey --url ${imageCode}'><img style = 'max-height: 70px; max-width: 70px; padding: 0px; margin: 0px !important' src = '${url}'</img></a>`;
+    }
+
+    function makeFullImageLink(url) {
+        url = buildImageURL(url, 'original');
+        return `<a href = '!survey --img ${imageCode}'><img style = 'padding: 0px; margin: 0px !important' src = '${url}'</img></a>`;
+    }
+
+    function makeCardImageLink(url) {
+        url = buildImageURL(url, 'thumb');
+        return `<a href = '!survey --img ${imageCode}'><img style = 'max-height: 70px; max-width: 70px; padding: 0px; margin: 0px !important' src = '${url}'</img></a>`;
+    }
+
+    const playSound = function (trackName, action) {
         let track = findObjs({
             type: 'jukeboxtrack',
             title: trackName
@@ -75,13 +113,13 @@ on('chat:message', async (msg_orig) => {
         }
     }
 
-    const stopAllSounds = function() {
+    const stopAllSounds = function () {
         let tracks = findObjs({
             type: 'jukeboxtrack',
             playing: true
         });
         if (tracks) {
-            _.each(tracks, function(sound) {
+            _.each(tracks, function (sound) {
                 sound.set('playing', false);
             });
         }
@@ -104,8 +142,8 @@ on('chat:message', async (msg_orig) => {
         helpTables: `A list of all tables in a campaign in alphabetical order. All entries are linked to a roll on that table. Clicking on the name will produce a gmroll, clicking on the number of entries will perform an inline roll. Tables are low impact items.`,
         helpTexts: `A list of all text obejcts in a campaign. Text objects are low impact items. There may be some entries for empty texts. This can happen when the user clicks with the text editing tool in error and then abandons the process to do something else. Empty texts are not a serious problem, but in order to clean things up and make it easier not select them by accident. <a href='!survey --deleteemptytexts'>Click here</a> to remove all empty texts. Use with caution.`,
         helpPlayers: `A list of all players in a campaign, along with their player id, and avatar color. Clicking the player color box calls up a character list report formatted like the characters keyword in descending order of complexity, but is limited to characters for whom the player is listed as a controller. Clicking on the player name will take you to their public Roll20 profile page, in case you need to PM them or can't remember what they are called outside of the game.`,
-        helpGraphics: `A list of all graphics in a campaign, followed by the number of times they are used. You may occasionally see a 1x and a say, 6x for the same graphic. This likely indicates that an item was dragged in from a marketplace source and used again from the art library. Clicking on the button lists all occurrences of the identified graphic in a campaign, broken out by page. Information on best practices for creating and uploading graphics can be found in <a href='https://help.roll20.net/hc/en-us/articles/360037256634-Best-Practices-for-Files-on-Roll20s'>Best Practices for Files on Roll20</a> in the Help Center`,
-        helpDecks: `A list of all card decks in a campaign, along with a card count for each deck. Decks are a relatively low-impact item, unless there are an inordinate number of cards in play on the VTT.`,
+        helpGraphics: `A list of all graphics in a campaign, followed by the number of times they are used. You may occasionally see a 1x and a say, 6x for the same graphic. This likely indicates that an item was dragged in from a marketplace source and used again from the art library. Using the alternate argumeents of <b>ugraphics</b> or <b>mgraphics</b> will constrain the report to User Art Library or Marketplace items respectively. Marketplace items can be identified by a thin black border around the graphics frame. Clicking on a graphic lists all occurrences of the identified graphic in a campaign, broken out by page, with the source of the graphic clearly labeled. Information on best practices for creating and uploading graphics can be found in <a href='https://help.roll20.net/hc/en-us/articles/360037256634-Best-Practices-for-Files-on-Roll20s'>Best Practices for Files on Roll20</a> in the Help Center`,
+        helpDecks: `A list of all card decks in a campaign, along with a card count for each deck. Decks are a relatively low-impact item, unless there are an inordinate number of cards in play on the VTT. Clicking on the deck name will send the card image and names to chat. Clicking on the card count will do the same to the handout. Clicking on a card image will send its full size image to chat. `,
         helpMacros: `A list of all macros in a campaign. Each macro will play the macro when clicked. Macros are low impact items.`,
         helpTracks: ` A list of all jukebox tracks in a campaign. Clicking on the track will play the track. Each track name has a button next to it that will stop playing that track. Jukebox tracks are streaming files and will not affect loading time. They are unlikely to contribute to lag, except in cases where there is already low bandwidth.`,
         helpAttributes: `A list of all character attributes in a campaign. This is a <i>very</i> rough indicator of the size of the Firebase DB, when combined with the number of graphics placed on the VTT. A high number will likely affect loading time, and may contribute to lag. Character sheets, and the number of graphics and drawings on the VTT are the greatest contributors to game size.`,
@@ -115,7 +153,7 @@ on('chat:message', async (msg_orig) => {
         helpOverview: `Gives a count of each of the categories. Each category is clickable to send that command to chat or to the report. typiing <b>!survey --overview</b> is the same as typing <b>!survey.</b>`,
         helpHelp: `Displays this help information.<br>If you need specific Roll20 information, the <a href='https://help.roll20.net/'>Help Center</a> is avaiable for all official documentation, and the <a href='https://tinyurl.com/mtz43sun'>Roll20 Community Wiki</a> has a wealth of information contributed by community members, often more technical than the Help Center. If you need to report a bug, or a problem with your game, the best way to get team attention is through filing a <a href='https://roll20.zendesk.com/hc/en-us/requests/new'>Help Center Request</a>. More general help can often be provided by friendly community members on the <a href='https://app.roll20.net/forum/'>Roll20 Forum</a>.`
     }, {
-        get: function(target, prop) {
+        get: function (target, prop) {
             return target[prop] || 'Invalid property, try again';
         }
     });
@@ -140,8 +178,8 @@ on('chat:message', async (msg_orig) => {
     }).sort((a, b) => (a.get("name") > b.get("name") ? 1 : -1));
 
     const getAttrCountByChar = () => findObjs({
-            type: 'attribute'
-        })
+        type: 'attribute'
+    })
         .map(o => o.get('characterid'))
         .reduce((m, o) => ({
             ...m,
@@ -149,8 +187,8 @@ on('chat:message', async (msg_orig) => {
         }), {});
 
     const getAbilityCountByChar = () => findObjs({
-            type: 'ability'
-        })
+        type: 'ability'
+    })
         .map(o => o.get('characterid'))
         .reduce((m, o) => ({
             ...m,
@@ -177,6 +215,14 @@ on('chat:message', async (msg_orig) => {
         type: 'graphic'
     })
 
+    let marketplaceGraphics = graphics.filter(function (obj) {
+        return obj.get('imgsrc').includes("marketplace");
+    });
+
+    let userGraphics = graphics.filter(function (obj) {
+        return !obj.get('imgsrc').includes("marketplace");
+    });
+
     let texts = findObjs({
         type: 'text'
     });
@@ -192,10 +238,10 @@ on('chat:message', async (msg_orig) => {
         if (!m.hasOwnProperty(imgsrc)) {
             m[imgsrc] = {
                 locations: [],
-                getTotalUses: function() {
+                getTotalUses: function () {
                     return this.locations.length;
                 },
-                getUniquePages: function() {
+                getUniquePages: function () {
                     return [...new Set(this.locations.map(l => l.pageid))]
                 }
             };
@@ -281,9 +327,9 @@ on('chat:message', async (msg_orig) => {
             archived: false
         });
     }
-    
+
     let campaignTitle = await new Promise((resolve, reject) => {
-        reportHandout.get("gmnotes", function(gmnotes) {
+        reportHandout.get("gmnotes", function (gmnotes) {
             let text = gmnotes.replace(/(<([^>]+)>)/ig, '');
             resolve(text);
         });
@@ -308,6 +354,10 @@ on('chat:message', async (msg_orig) => {
         });
         return
     }
+    function isHandout(yes, no) {
+        return ((commands.includes('makehandout')) ? yes : no);
+        //((commands.includes('makehandout')) ? yes : no);
+    }
 
 
 
@@ -322,13 +372,13 @@ on('chat:message', async (msg_orig) => {
             case 'characterattrs':
                 helpLabel = makeHelpButton('Characters', 'helpCharacters');
                 charSorted = characters.sort((a, b) => ((CharAttrLookup[b.id] || 0) - (CharAttrLookup[a.id] || 0)));
-                characterList = (characterList === '') ? `${openHeader}Characters: ${helpLabel}${characters.length} items, ${attributes.length} attributes${closeHeader}Name, Attribute Count, Percent of Total<br>${charSorted.map((obj) => { return makeButton(obj.get('name'), sheetURL + obj.get('_id'), 105) + makeButton(findObjs({ type: 'attribute', characterid: obj.id }).length + ' attr', '', 55) + makeButton(Math.round(findObjs({ type: 'attribute', characterid: obj.id }).length/attributes.length*10000) / 100 + '%', '', 47) }).join('<br>')}<br>` : '';
+                characterList = (characterList === '') ? `${openHeader}Characters: ${helpLabel}${characters.length} items, ${attributes.length} attributes${closeHeader}Name, Attribute Count, Percent of Total<br>${charSorted.map((obj) => { return makeButton(obj.get('name'), sheetURL + obj.get('_id'), 105) + makeButton(findObjs({ type: 'attribute', characterid: obj.id }).length + ' attr', '', 55) + makeButton(Math.round(findObjs({ type: 'attribute', characterid: obj.id }).length / attributes.length * 10000) / 100 + '%', '', 47) }).join('<br>')}<br>` : '';
                 lines = lines + characterList;
                 break;
             case 'characterabilities':
                 helpLabel = makeHelpButton('Characters', 'helpCharacterAbilities');
                 charSorted = characters.sort((a, b) => ((charAbilityLookup[b.id] || 0) - (charAbilityLookup[a.id] || 0)));
-                characterList = (characterList === '') ? `${openHeader}Characters: ${helpLabel}${characters.length} items, ${abilities.length} abilities${closeHeader}Name, Ability Count, Percent of Total<br>${charSorted.map((obj) => { return makeButton(obj.get('name'), sheetURL + obj.get('_id'), 105) + makeButton(findObjs({ type: 'ability', characterid: obj.id }).length + ' ablt', '', 55) + makeButton(Math.round(findObjs({ type: 'ability', characterid: obj.id }).length/abilities.length*10000) / 100 + '%', '', 47) }).join('<br>')}<br>` : '';
+                characterList = (characterList === '') ? `${openHeader}Characters: ${helpLabel}${characters.length} items, ${abilities.length} abilities${closeHeader}Name, Ability Count, Percent of Total<br>${charSorted.map((obj) => { return makeButton(obj.get('name'), sheetURL + obj.get('_id'), 105) + makeButton(findObjs({ type: 'ability', characterid: obj.id }).length + ' ablt', '', 55) + makeButton(Math.round(findObjs({ type: 'ability', characterid: obj.id }).length / abilities.length * 10000) / 100 + '%', '', 47) }).join('<br>')}<br>` : '';
                 lines = lines + characterList;
                 break;
             case 'handouts':
@@ -372,22 +422,33 @@ on('chat:message', async (msg_orig) => {
                         type: 'graphic',
                         _pageid: p.get("_id")
                     });
+                    findObjs({
+                        type: 'graphic',
+                        _pageid: p.get("_id")
+                    }).filter(o => o.get('emits_low_light') === true || o.get('emits_bright_light') === true).length;
+
+
+
                     pageList = pageList + makeButton(p.get("name"), "", 'f') + '<BR>' +
                         '<div style="display:inline-block"><b>Sighted:</b> ' + findObjs({
                             type: 'graphic',
                             _pageid: p.get("_id"),
                             has_bright_light_vision: true
-                        }).length + ' <b>Lights: </b>' +
+                        }).length + ' | <b>Lights: </b>' +
+                        findObjs({
+                            type: 'graphic',
+                            _pageid: p.get("_id")
+                        }).filter(o => o.get('emits_low_light') === true || o.get('emits_bright_light') === true).length + ' <i>(' +
                         findObjs({
                             type: 'graphic',
                             _pageid: p.get("_id"),
                             emits_low_light: true
-                        }).length + '/' +
+                        }).length + ' low/' +
                         findObjs({
                             type: 'graphic',
                             _pageid: p.get("_id"),
                             emits_bright_light: true
-                        }).length + '</div> <div style="display:inline-block"><b>Paths: </b>' +
+                        }).length + ' bright)</i></div> <div style="display:inline-block">' + ((commands.includes('makehandout')) ? ' | ' : '') + '<b>DL Paths: </b>' +
                         myPaths.length + ' paths, ' + pathSum + ' points</div><br>'
                 });
                 lines = lines + pageList;
@@ -395,13 +456,15 @@ on('chat:message', async (msg_orig) => {
 
             case 'tables':
                 helpLabel = makeHelpButton('Rollable Tables', 'helpTables');
-                tableList = (tableList === '') ? `${openHeader}Rollable Tables: ${helpLabel}${tables.length} items${closeHeader}${tables.map((obj) => { return makeButton(obj.get('name'), '!&#10;&#47;' + "gmroll 1t[" + obj.get('name') + "]", 160) + makeButton(findObjs({ type: 'tableitem', _rollabletableid: obj.get("_id") }).length + ' items', '!&#10;&#47;' + "w gm [[1t[" + obj.get('name') + "]]]", 65) }).join('<br>')}<br>` : '';
+                tableList = (tableList === '') ? `${openHeader}Rollable Tables: ${helpLabel}${tables.length} items${closeHeader}` + 'Name, <i>(click to roll on table), </i>Item Count' + ((commands.includes("makehandout")) ? ' <i> (click for inline roll)</i> ' : '') + `<br>${tables.map((obj) => { return makeButton(obj.get('name'), '!&#10;&#47;' + "gmroll 1t[" + obj.get('name') + "]", 160) + makeButton(findObjs({ type: 'tableitem', _rollabletableid: obj.get("_id") }).length + ' items', ((commands.includes('makehandout')) ? '!&#10;&#47;' + "w gm [[1t[" + obj.get('name') + "]]]" : ""), 65) }).join('<br>')}<br>` : '';
                 lines = lines + tableList;
                 break;
 
+            //` + 'Name, <i>(click to roll on table), </i>Item Count' + ((commands.includes("makehandout")) ? ' <i> (click for inline roll)</i> ': '') + `<br>
+
             case 'texts':
                 helpLabel = makeHelpButton('Text Objects', 'helpTexts');
-                textList = (textList === '') ? `${openHeader}Text Objects: ${helpLabel}${texts.length} items${closeHeader}${texts.map((obj) => { return makeButton('<b>'+getObj('page',obj.get('_pageid')).get('name') + '</b> <i>(' + obj.get('layer') + ')</i>: "' + obj.get('text').replace(/(\r\n|\n|\r)/gm,"<br>")+'"', '', 'f') }).join('<br>')}<br>` : '';
+                textList = (textList === '') ? `${openHeader}Text Objects: ${helpLabel}${texts.length} items${closeHeader}${texts.map((obj) => { return makeButton('<b>' + getObj('page', obj.get('_pageid')).get('name') + '</b> <i>(' + obj.get('layer') + ')</i>: "' + obj.get('text').replace(/(\r\n|\n|\r)/gm, "<br>") + '"', '', 'f') }).join('<br>')}<br>` : '';
                 lines = lines + textList;
                 break;
 
@@ -419,12 +482,12 @@ on('chat:message', async (msg_orig) => {
 
             case 'decks':
                 helpLabel = makeHelpButton('Decks', 'helpDecks');
-                deckList = `${openHeader}Decks: ${helpLabel}${decks.length} items${closeHeader}Name <i>(click to display in handout)</i>,<br>Card Count<i>(click to display in chat)</i><BR>`
+                deckList = `${openHeader}Decks: ${helpLabel}${decks.length} items${closeHeader}Name <i>(click to display in chat)</i>,<br>Card Count<i>(click to display in handout)</i><BR>`
                 decks.forEach(d => {
-                    deckList = deckList + makeButton(d.get("name"), "!survey --cards " + d.get("_id") + " makehandout", 100) + makeButton(findObjs({
+                    deckList = deckList + makeButton(d.get("name"), "!survey --cards " + d.get("_id"), 100) + makeButton(findObjs({
                         type: 'card',
                         _deckid: d.get("_id")
-                    }).length + " cards", "!survey --cards " + d.get("_id"), 80) + "<br>"
+                    }).length + " cards", "!survey --cards " + d.get("_id") + " makehandout", 80) + "<br>"
                 });
                 lines = lines + deckList;
                 break;
@@ -432,7 +495,7 @@ on('chat:message', async (msg_orig) => {
             case 'cards':
                 let deckID = ((msg.content.split('cards ')[1]));
                 deckID = deckID.split(" ")[0] || deckID;
-                let theDeck=findObjs({
+                let theDeck = findObjs({
                     type: 'deck',
                     _id: deckID
                 })[0]
@@ -441,13 +504,22 @@ on('chat:message', async (msg_orig) => {
                     type: 'card',
                     _deckid: deckID
                 });
-                cardList = (cardList === '') ? `${openHeader}Cards of ${deckName}:${closeHeader}` + makeButton('Back' + '<br><img style= "max-width:70px; max-height:100px;" src="' + theDeck.get('avatar')+ '">','',70) + `${deckCards.map((obj) => { return makeButton(obj.get('name') + '<br><img style= "max-width:70px; max-height:100px;" src="' + obj.get('avatar')+ '">','',70) }).join(' ')}<br>` : '';
+                cardList = (cardList === '') ? `${openHeader}Cards of ${deckName}:${closeHeader}` + makeButton('Back' + `<br><img style= "max-width:${isHandout(99, 70)}px; max-height:${isHandout(150, 100)}px;" src="` + theDeck.get('avatar') + '">', theDeck.get('avatar'), isHandout('99', '70')) + `${deckCards.map((obj) => { return makeButton(obj.get('name') + `<br><img style= "max-width:${isHandout(99, 70)}px; max-height:${isHandout(250, 100)}px;" src="` + obj.get('avatar') + '">', obj.get('avatar'), isHandout(99, 70)) }).join(' ')}<br>` : '';
                 lines = lines + cardList;
+                break;
+
+            case 'img':
+                let imgCode = ((msg.content.split('img ')[1]))
+                imgurl = 'https://s3.amazonaws.com/files.d20.io/' + imgCode;
+                theImage = `<div style = 'text-align: center; margin: 5px'>` + ((imgurl.includes("marketplace")) ? " Marketplace image" : " User Library image") + '<br>' + makeFullImageLink(imgurl) + `</div>`;
+
+                lines = lines + theImage;
+
                 break;
 
             case 'macros':
                 helpLabel = makeHelpButton('Macros', 'helpMacros');
-                macroList = (macroList === '') ? `${openHeader}Macros: ${helpLabel}${macros.length} items${closeHeader}${macros.map((obj) => { return makeButton(obj.get('name'),"!&#10;#"+obj.get('name'),210) }).join('<br>')}<br>` : '';
+                macroList = (macroList === '') ? `${openHeader}Macros: ${helpLabel}${macros.length} items${closeHeader}${macros.map((obj) => { return makeButton(obj.get('name'), "!&#10;#" + obj.get('name'), 210) }).join('<br>')}<br>` : '';
                 lines = lines + macroList;
                 break;
 
@@ -468,11 +540,30 @@ on('chat:message', async (msg_orig) => {
                 break;
 
             case 'graphics':
+            case 'ugraphics':
+            case 'mgraphics':
+                let imageFilter = '';
+                let sourceLabel = '';
+
+                if (c === 'mgraphics') {
+                    imageFilter = 'marketplace';
+                    sourceLabel = ' Marketplace';
+                    graphics = marketplaceGraphics
+                }
+                if (c === 'ugraphics') {
+                    imageFilter = 'images';
+                    sourceLabel = ' User Art Library';
+                    graphics = userGraphics
+                }
+
                 helpLabel = makeHelpButton('Image usage', 'helpGraphics');
-                imageList = (imageList === '') ? `${openHeader}Image usage: ${helpLabel}${graphics.length} items${closeHeader}` : '';
+                imageList = (imageList === '') ? `${openHeader}Image usage: ${helpLabel}${graphics.length}${sourceLabel} items${closeHeader}` : '';
 
                 Object.keys(images).forEach(g => {
-                    rows.push(`<div style= 'width: 65px; height: 38px; background-color: #aaa; border-radius: 3px; padding: 2px; margin: 2px; display: inline-block !important'>${images[g].getTotalUses()} x ${makeImageLink(g)}</div>`);
+                    if (g.includes(imageFilter)) {
+
+                        rows.push(`<div style= 'width: 65px; height: 38px; background-color: #aaa; ${imgBorder(g)} border-radius: 3px; padding: 2px; margin: 2px; display: inline-block !important'>${images[g].getTotalUses()} x ${makeImageLink(g)}</div>`);
+                    }
                 });
                 imageList = imageList + rows.reverse().join(' ');
                 lines = lines + imageList;
@@ -481,7 +572,7 @@ on('chat:message', async (msg_orig) => {
             case 'attributes':
                 helpLabel = makeHelpButton('Character Attributes', 'helpAttributes');
                 charSorted = characters.sort((a, b) => ((CharAttrLookup[b.id] || 0) - (CharAttrLookup[a.id] || 0)));
-                characterList = (characterList === '') ? `${openHeader}Characters: ${helpLabel}${characters.length} items, ${attributes.length} attributes${closeHeader}Name, Attribute Count, Percent of Total<br>${charSorted.map((obj) => { return makeButton(obj.get('name'), sheetURL + obj.get('_id'), 105) + makeButton(findObjs({ type: 'attribute', characterid: obj.id }).length + ' attr', '', 55) + makeButton(Math.round(findObjs({ type: 'attribute', characterid: obj.id }).length/attributes.length*10000) / 100 + '%', '', 47) }).join('<br>')}<br>` : '';
+                characterList = (characterList === '') ? `${openHeader}Characters: ${helpLabel}${characters.length} items, ${attributes.length} attributes${closeHeader}Name, Attribute Count, Percent of Total<br>${charSorted.map((obj) => { return makeButton(obj.get('name'), sheetURL + obj.get('_id'), 105) + makeButton(findObjs({ type: 'attribute', characterid: obj.id }).length + ' attr', '', 55) + makeButton(Math.round(findObjs({ type: 'attribute', characterid: obj.id }).length / attributes.length * 10000) / 100 + '%', '', 47) }).join('<br>')}<br>` : '';
                 lines = lines + attributeList;
                 break;
 
@@ -511,8 +602,8 @@ on('chat:message', async (msg_orig) => {
             case 'url':
                 let urlCode = ((msg.content.split('url ')[1]))
 
-                imgurl = 'https://s3.amazonaws.com/files.d20.io/images/' + urlCode + '/thumb.png';
-                pageList = `${makeImageLink(imgurl)}${openHeader}Count Per Page:${closeHeader} <BR>`;
+                imgurl = 'https://s3.amazonaws.com/files.d20.io/' + urlCode;
+                pageList = `<div style = 'text-align: center; margin: 5px'> ${((imgurl.includes("marketplace")) ? " Marketplace image" : " User Library image")}<br>${makeFullImageLink(imgurl)}</div>${openHeader}Count Per Page:${closeHeader} <BR>`;
 
                 pages.forEach(p => {
                     pageList = pageList + `<div style = 'width: 75%; background-color: #aaa; border-radius: 3px; padding: 2px; margin: 2px; display: inline-block !important'> ${p.get("name")}</div>`;
@@ -543,7 +634,7 @@ on('chat:message', async (msg_orig) => {
                 playerList = (playerList === '') ? `${openHeader}Players: ${helpLabel}${players.length} items${closeHeader}Click on the player color box for a list of characters controlled by that player. Click on the player name to open a new tab showing their Roll20 public profile.<BR>${players.map((obj) => { return makeBox(obj.get('color'), obj.get('_id'), obj.get('_displayname')) + makeButton(obj.get('_displayname'), profileURL + obj.get('_d20userid'), 175) + '<BR><div style = "width: 27px; display: inline-block;"></div>id: ' + (obj.get('_id')) }).join('<br>')}<br>` : '';
                 lines = lines + playerList;
                 break;
- 
+
             case 'help':
                 let argumentButtonWidth = 90;
                 helpText = `${openHeader}Campaign Survey Help${closeHeader}${helpLinks['helpSurvey']} The <b>!survey</b> command can be followed by " --" and one or more of the following keywords:<br><br>` +
@@ -573,6 +664,9 @@ on('chat:message', async (msg_orig) => {
                 pageButton = makeButton(pages.length + " pages", "!survey --pages", 150) + makeButton("handout", "!survey --pages makehandout", 55);
                 dlPageButton = makeButton("<i> • " + dlPages.length + " lighting", "!survey --lighting</i>", 150) + makeButton("handout", "!survey --lighting makehandout", 55);
                 graphicButton = makeButton("<i> • " + graphics.length + " graphics", "!survey --graphics", 150) + makeButton("handout", "!survey --graphics makehandout", 55);
+                graphicSourceButton = makeButton("<i> • " + userGraphics.length + " Library", "!survey --ugraphics", 103) + makeButton("<i> • " + marketplaceGraphics.length + " Market", "!survey --mgraphics", 102) + "<br>" +
+                    makeButton("handout", "!survey --ugraphics makehandout", 103) + makeButton("handout", "!survey --mgraphics makehandout", 102);
+
                 handoutButton = makeButton(handouts.length + " handouts", "!survey --handouts", 150) + makeButton("handout", "!survey --handouts makehandout", 55);
                 macroButton = makeButton(macros.length + " macros", "!survey --macros", 150) + makeButton("handout", "!survey --macros makehandout", 55);
                 tableButton = makeButton(tables.length + " tables", "!survey --tables", 150) + makeButton("handout", "!survey --tables makehandout", 55);
@@ -580,12 +674,12 @@ on('chat:message', async (msg_orig) => {
                 deckButton = makeButton(decks.length + " decks", "!survey --decks", 150) + makeButton("handout", "!survey --decks makehandout", 55);
                 trackButton = makeButton(tracks.length + " jukebox tracks", "!survey --tracks", 150) + makeButton("handout", "!survey --tracks makehandout", 55);
                 playerButton = makeButton(players.length + " players", "!survey --players</i>", 150) + makeButton("handout", "!survey --players makehandout", 55);
-                everythingButton = makeButton("Entire Campaign", "!survey --characters handouts pages tables decks macros tracks players graphics", 150) + makeButton("handout", "!survey --characters handouts pages tables decks macros tracks players makehandout", 55);
+                everythingButton = makeButton("Entire Campaign", "!survey --overview characterattrs characterabilities pages lighting handouts macros tables texts decks tracks players graphics", 150) + makeButton("handout", "!survey --overview characterattrs characterabilities pages lighting handouts macros tables texts decks tracks players graphics makehandout", 55);
                 helpButton = makeButton("Help", "!survey --help", 150) + makeButton("handout", "!survey --help makehandout", 55);
                 let infoButton = `<a style = 'float: right' href = '!survey --sendtext|${helpLabel}'')'>Help</a>`;
                 helpLabel = `<div style = 'float:right; display:inline-block; background-color:white; border-radius:8px;'><a style = 'color: red' href = '!survey --help'>&nbsp;?&nbsp;</a></div>`
 
-                lines = `${openHeader}Campaign Survey:${closeHeader}${characterButton}<br>${attributeButton}<br>${abilityButton}<br>${pageButton}<br>${dlPageButton}<br>${graphicButton}<br>${handoutButton}<br>${macroButton}<br>${tableButton}<br>${textButton}<br>${deckButton}<br>${trackButton}<br>${playerButton}<br>${everythingButton}<br>${helpButton}<br>${reportHandoutButton}`;
+                lines = `${openHeader}Campaign Survey:${closeHeader}${characterButton}<br>${attributeButton}<br>${abilityButton}<br>${pageButton}<br>${dlPageButton}<br>${graphicButton}<br>${graphicSourceButton}<br>${handoutButton}<br>${macroButton}<br>${tableButton}<br>${textButton}<br>${deckButton}<br>${trackButton}<br>${playerButton}<br>${everythingButton}<br>${helpButton}<br>${reportHandoutButton}`;
                 break;
             default:
         }
@@ -596,7 +690,7 @@ on('chat:message', async (msg_orig) => {
 
             lines = campaignTitleBox + lines;
 
-            reportHandout.get("notes", function(notes) {
+            reportHandout.get("notes", function (notes) {
                 reportHandout.set("notes", lines);
             });
         } else {
