@@ -60,22 +60,6 @@
                                                         //delay: DEFAULT = 50. how many milliseconds between triggering each frame? Anything less than 30 may appear instant
       --layer| < object/token/map/gm >                  //DEFAULT = token(s) spawn on the same layer as the selected token(s). May explicitly set to spawn on a different layer.
       --tokenName| < some name >                        //optional override for the token name - allows token name to be different than the character name
-      --controlledby| <optional +> <comma-delimited list of playerIDs or displayNames>   //adds or replaces the  controlledby property of the CHARACTER SHEET defined by the --name command
-      --tokenProps|<prop1:val1,prop2:val2...>           //sets various token properties. Valid properties include:
-                                                            name,statusmarkers,bar1_value,bar1_max,bar2_value,bar2_max,bar3_value,bar3_max,top,left,
-                                                            width,height,rotation,layer,aura1_radius,aura1_color,aura2_radius,aura2_color,aura1_square,
-                                                            aura2_square,tint_color,light_radius,light_dimradius,light_angle,light_losangle,light_multiplier,
-                                                            light_otherplayers,light_hassight,flipv,fliph,bar1_link,bar2_link,bar3_link,represents,layer,
-                                                            isdrawing,name,gmnotes,showname,showplayers_name,showplayers_bar1,showplayers_bar2,showplayers_bar3,
-                                                            showplayers_aura1,showplayers_aura2,playersedit_name,playersedit_bar1,playersedit_bar2,
-                                                            playersedit_bar3,playersedit_aura1,playersedit_aura2,lastmove,tooltip,show_tooltip,
-                                                            adv_fow_view_distance,has_bright_light_vision,has_night_vision,night_vision_distance,
-                                                            emits_bright_light,bright_light_distance,emits_low_light,low_light_distance,has_limit_field_of_vision,
-                                                            limit_field_of_vision_center,limit_field_of_vision_total,has_limit_field_of_night_vision,
-                                                            limit_field_of_night_vision_center,limit_field_of_night_vision_total,has_directional_bright_light,
-                                                            directional_bright_light_center,directional_bright_light_total,has_directional_dim_light,
-                                                            directional_dim_light_center,directional_dim_light_total,bar_location,compact_bar,
-                                                            light_sensitivity_multiplier,night_vision_effect,lightColor
     }}
     
     
@@ -91,12 +75,9 @@ API_Meta.SpawnWIP = { offset: Number.MAX_SAFE_INTEGER, lineCount: -1 };
 const SpawnDefaultToken = (() => {
     
     const scriptName = "SpawnDefaultToken";
-    const version = '0.24';
+    const version = '0.23';
     var gridSize = 70;  //this may be updated based on page settings 
     
-    //an array of token properties which may be set for Spawned tokens
-	var tokenAttributes = ['name','statusmarkers','bar1_value','bar1_max','bar2_value','bar2_max','bar3_value','bar3_max','top','left','width','height','rotation','layer','aura1_radius','aura1_color','aura2_radius','aura2_color','aura1_square','aura2_square','tint_color','light_radius','light_dimradius','light_angle','light_losangle','light_multiplier','light_otherplayers','light_hassight','flipv','fliph','bar1_link','bar2_link','bar3_link','layer','isdrawing','name','gmnotes','showname','showplayers_name','showplayers_bar1','showplayers_bar2','showplayers_bar3','showplayers_aura1','showplayers_aura2','playersedit_name','playersedit_bar1','playersedit_bar2','playersedit_bar3','playersedit_aura1','playersedit_aura2','lastmove','tooltip','show_tooltip','adv_fow_view_distance','has_bright_light_vision','has_night_vision','night_vision_distance','emits_bright_light','bright_light_distance','emits_low_light','low_light_distance','has_limit_field_of_vision',' limit_field_of_vision_center',' limit_field_of_vision_total',' has_limit_field_of_night_vision',' limit_field_of_night_vision_center',' limit_field_of_night_vision_total',' has_directional_bright_light','directional_bright_light_center','directional_bright_light_total','has_directional_dim_light','directional_dim_light_center','directional_dim_light_total','bar_location','compact_bar','light_sensitivity_multiplier','night_vision_effect','lightColor'];
-	
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
         //Due to a bug in the API, if a @{target|...} is supplied, the API does not acknowledge msg.selected anymore
         //This code block helps enable the user to pass both selected and target info into the script
@@ -221,7 +202,7 @@ const SpawnDefaultToken = (() => {
     
     //This function runs asynchronously, as called from the processCommands function
     //We will sendChat errors, but the rest of processCommands keeps running :(
-    function spawnTokenAtXY (who, tokenJSON, pageID, spawnLayer, spawnX, spawnY, currentSideNew, sizeX, sizeY, zOrder, lightRad, lightDim, mook, UDL, bar1Val, bar1Max, bar1Link, bar2Val, bar2Max, bar2Link, bar3Val, bar3Max, bar3Link, expandIterations, expandDelay, destroyWhenDone, angle, isDrawing, tokenName, tooltip, tokenPropValPairs) {
+    function spawnTokenAtXY (who, tokenJSON, pageID, spawnLayer, spawnX, spawnY, currentSideNew, sizeX, sizeY, zOrder, lightRad, lightDim, mook, UDL, bar1Val, bar1Max, bar1Link, bar2Val, bar2Max, bar2Link, bar3Val, bar3Max, bar3Link, expandIterations, expandDelay, destroyWhenDone, angle, isDrawing, tokenName, tooltip) {
         let newSideImg;
         let spawnObj;
         let currentSideOld;
@@ -354,18 +335,6 @@ const SpawnDefaultToken = (() => {
             if (tooltip) {
                 baseObj.tooltip = tooltip;
                 baseObj.show_tooltip = true;
-            }
-            
-            if (tokenPropValPairs) {
-                tokenPropValPairs.forEach(pair => {
-                    if (pair.indexOf(':') !== -1) {
-                        let pairArr = pair.split(":")
-                        let prop = pairArr[0].trim();
-                        if (tokenAttributes.includes(prop)) {
-                            baseObj[prop] = pairArr[1];
-                        }
-                    }
-                });
             }
             ////////////////////////////////////////////////////////////
             //      Spawn the Token!
@@ -779,8 +748,7 @@ const SpawnDefaultToken = (() => {
         let q = 0;              //counter for spawn qty loops
         let fxModes = ['bomb', 'bubbling', 'burn', 'burst', 'explode', 'glow', 'missile', 'nova', 'splatter'];
         let fxColors = ['acid', 'blood', 'charm', 'death', 'fire', 'frost', 'holy', 'magic', 'slime', 'smoke', 'water'];
-        let charControlledBy = [];
-        let appendControlledBy = false;
+        
         let pageGridIncrement = 1;
         
         try {
@@ -979,46 +947,6 @@ const SpawnDefaultToken = (() => {
                             break;
                         case "tooltip":
                             data.tooltip = param;
-                            break;
-                        case "tokenprops":
-                        case "tokenprop":
-                            data.tokenPropValPairs = param.split(',');
-                            data.tokenPropValPairs = data.tokenPropValPairs.map(s => s.replace('%comma%',','));
-                            data.tokenPropValPairs.forEach(pair => {
-                                let pairArr = pair.split(':');
-                                let prop = pairArr[0].trim();
-                                if (!tokenAttributes.includes(prop)) {
-                                    retVal.push('Invalid token attribute requested (' + prop + ')');
-                                }
-                            });
-                            break;
-                        case "controlledby":
-                            if (param.charAt(0)==='+') {
-                                appendControlledBy = true;
-                                param = param.substring(1);
-                            }
-                            let list = param.split(',').map(e=>e.trim());
-                            let players=findObjs({_type:'player'});
-                            list.forEach(item => {
-                                if (item.toLowerCase().includes('all') && item.length===3) {
-                                    charControlledBy.push('all');
-                                } else {
-                                    let playerID;
-                                    let player = players.filter(p=>p.get('_id')===item);
-                                    if (player.length > 0) {
-                                        playerID = player[0].get('_id');
-                                        charControlledBy.push(playerID);
-                                    } else {
-                                        player = players.filter(p=>p.get('_displayname')===item);
-                                        if (player.length > 0) {
-                                            playerID = player[0].get('_id');
-                                            charControlledBy.push(playerID);
-                                        } else {
-                                            retVal.push('Invalid playerID or displayname (' + item + ') in --controlledby statement.)');
-                                        }
-                                    }
-                                }
-                            });
                             break;
                         default:
                             retVal.push('Unexpected argument identifier (' + option + '). Choose from: (' + data.validArgs + ')');
@@ -1488,32 +1416,6 @@ const SpawnDefaultToken = (() => {
                 return retVal;
             }
             
-            //potentially update the controlledby property of the character sheet to be spawned
-            if (charControlledBy.length > 0) {
-                let cbList = '';
-                let tempArr = [];
-                if (appendControlledBy) {
-                    let currentControlledBy = spawnObj.get('controlledby');
-                    if (currentControlledBy === '') {
-                        cbList = charControlledBy.join(',');
-                    } else {
-                        charControlledBy.forEach(pid => {
-                            if (currentControlledBy.includes(pid)===false) {
-                                tempArr.push(pid);
-                            }
-                        });
-                        if (tempArr.length > 0) {
-                            cbList = currentControlledBy + ',' + tempArr.join(',');
-                        } else {
-                            cbList = currentControlledBy;
-                        }
-                    }
-                } else {
-                    cbList = charControlledBy.join(',');
-                }
-                spawnObj.set('controlledby', cbList);
-            }
-            
             ///////////////////////////////////////////////////////////////////////////////////
             //  Start spawning!         --spawns (q=qty) tokens at each of (o=origin) locations
             ///////////////////////////////////////////////////////////////////////////////////
@@ -1530,7 +1432,7 @@ const SpawnDefaultToken = (() => {
                                     spawnFx(data.spawnX[iteration], data.spawnY[iteration], data.fx, data.spawnPageID);
                                 }
                                 //Spawn the token!
-                                spawnTokenAtXY(data.who, defaultToken, data.spawnPageID, data.spawnLayer, data.spawnX[iteration], data.spawnY[iteration], data.currentSide, data.sizeX, data.sizeY, data.zOrder, data.lightRad, data.lightDim, data.mook, data.UDL, data.bar1Val, data.bar1Max, data.bar1Link, data.bar2Val, data.bar2Max, data.bar2Link, data.bar3Val, data.bar3Max, data.bar3Link, data.expandIterations, data.expandDelay, data.destroySpawnWhenDone, data.angle, data.isDrawing, data.tokenName, data.tooltip, data.tokenPropValPairs);
+                                spawnTokenAtXY(data.who, defaultToken, data.spawnPageID, data.spawnLayer, data.spawnX[iteration], data.spawnY[iteration], data.currentSide, data.sizeX, data.sizeY, data.zOrder, data.lightRad, data.lightDim, data.mook, data.UDL, data.bar1Val, data.bar1Max, data.bar1Link, data.bar2Val, data.bar2Max, data.bar2Link, data.bar3Val, data.bar3Max, data.bar3Link, data.expandIterations, data.expandDelay, data.destroySpawnWhenDone, data.angle, data.isDrawing, data.tokenName, data.tooltip);
                                 
                             } else {
                                 log("off the map!");
@@ -1723,8 +1625,7 @@ const SpawnDefaultToken = (() => {
                     spawnLayer: "objects",         //user can set to "object", "token", "gm", or "map"
                     isDrawing: false,              //user can set isdrawing property of token 
                     tokenName: "",                 //optional override for the token name - allows token name to be different than the character name 
-                    tooltip: "",                   //new tooltip token property   
-                    tokenPropValPairs: ""          //array of tokenProp:value pairs
+                    tooltip: ""                    //new tooltip token property    
                 };
                 
                 //Parse msg into an array of argument objects [{cmd:params}]
