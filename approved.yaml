@@ -1115,3 +1115,11 @@ unsanity:
 simplesound:
 - "SimpleSound"
 - "Jukebox"
+
+smartaoe:
+- "SmartAoE"
+- "Maps & Drawing"
+
+campaignsurvey:
+- "Campaign Survey"
+- "Utility"
