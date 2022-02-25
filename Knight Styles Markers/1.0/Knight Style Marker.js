@@ -96,7 +96,7 @@ var KnightStyleMarker = KnightStyleMarker || (function() {
 
 				if(value == "agressif")
 				{
-					sendChat(name, "/me se met en style aggressif.");
+					sendChat(name, "/me se met en style agressif.");
 
 					_.each(currentPageTokens, function(obj) {   
 						obj.set("status_fist", true);

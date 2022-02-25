@@ -1,6 +1,8 @@
 # COFantasy: Historique des changements (depuis la version 1.0)
 ## 3.05
 ### Capacités
+* Violence ciblée des demi-ogres.
+* Sang-froid des demi-ogres.
 * Amélioration de la prise en charge de la marche sylvestre.
 * Explosion finale de la voie des créatures élémentaires
 
@@ -12,6 +14,8 @@
 * Correction d'un bug sur le pacifisme
 
 ### Autres améliorations
+* Support pour les foudres du temps.
+* Possibilité de renouveler les élixirs et les runes en dehors de la page des joueurs.
 * Support pour les arcs composites façon Pathfinder.
 * Possibilité de save par tour actif pour les effets temporaires.
 * Possibilité d'indiquer des temps de recharge pour les effets.

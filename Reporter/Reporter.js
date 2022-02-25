@@ -37,9 +37,9 @@ on('ready', () => {
     const openHeader = "<div style='font-weight:bold; color:#fff; background-color:#404040; margin-right:3px; padding:3px;'>"
     const closeHeader = '</div>';
     const closeReport = '</div>';
-    const openReport = "<div style='color: #000; border: 1px solid #000; background-color: #fff; box-shadow: 0 0 3px #000; display: block; text-align: left; font-size: 13px; padding: 5px; margin-bottom: 0.25em; font-family: sans-serif; white-space: pre-wrap;'>";
     const linkBox = "<img src = 'https://s3.amazonaws.com/files.d20.io/images/227379729/jnwjD5rKjjr9QqGiy8EATg/original.png'";
     let sheet = state.Reporter.sheet;
+    let openReport = "<div style='color: #000; border: 1px solid #000; background-color: #fff; box-shadow: 0 0 3px #000; display: block; text-align: left; font-size: 13px; padding: 5px; margin-bottom: 0.25em; font-family: sans-serif; white-space: pre-wrap;'>";
 
     function makeButton(name, link) {
         return '<a style = ' + buttonStyle + ' href="' + link + '">' + name + '</a>';
@@ -416,6 +416,10 @@ on('ready', () => {
             let showPageInfo = false;
             let pageInfo = "";
             let displayNotes = false;
+            let scrolling = false;
+            let sidebar = false;
+            //resets this value
+            openReport = "<div style='color: #000; border: 1px solid #000; background-color: #fff; box-shadow: 0 0 3px #000; display: block; text-align: left; font-size: 13px; padding: 5px; margin-bottom: 0.25em; font-family: sans-serif; white-space: pre-wrap;'>";
 
 
             let testChar = findObjs({
@@ -626,6 +630,8 @@ on('ready', () => {
                 characterSheetLink = ((keywords.includes("charactersheetlink|false")) ? false : true);
                 characterSheetButton = ((keywords.includes("charactersheetbutton|true")) ? true : false);
                 displayNotes = ((keywords.includes("displaynotes|true")) ? true : false);
+                scrolling = ((keywords.includes("scrolling|")) ? keywords.match(/(?<=scrolling\|)\d*/g) : false);
+                sidebar = ((keywords.includes("sidebar|")) ? keywords.match(/(?<=sidebar\|)left|right/) : false);
                 sortTerm = ((keywords.includes("sort|")) ? keywords.split("sort|")[1].split(" ")[0] : 'identity');
                 reportName = ((keywords.match(/handout\|.*?\|/)) ? keywords.match(/handout\|.*?\|/).toString().split("|")[1] : "");
                 if (keywords.includes(" overtitle|")) {
@@ -793,6 +799,14 @@ on('ready', () => {
                 }
             });
 
+log('scrolling = ' + scrolling);
+if (scrolling){
+        openReport = "<div style='max-height:" + scrolling +"px; overflow-x:hidden; color: #000; border: 1px solid #000; background-color: #fff; box-shadow: 0 0 3px #000; display: block; text-align: left; font-size: 13px; padding: 5px; margin-bottom: 0.25em; font-family: sans-serif; white-space: pre-wrap;'>";
+}
+if (sidebar){
+    openReport = ((sidebar.includes('left')) ? openReport.replace('color: #000','color: #000; width:30%; float:left; margin-right:10px;') : openReport.replace('color: #000','color: #000; width:30%; float:right; margin-right:5px;'))
+}
+log('openReport is ' + openReport);
 
 
             if (TCData.length > 0) {
