@@ -22,7 +22,7 @@ const ScriptCards = (() => { // eslint-disable-line no-unused-vars
 	*/
 
 	const APINAME = "ScriptCards";
-	const APIVERSION = "1.6.4a";
+	const APIVERSION = "1.6.4b";
 	const APIAUTHOR = "Kurt Jaegers";
 	const debugMode = false;
 
@@ -1100,7 +1100,7 @@ const ScriptCards = (() => { // eslint-disable-line no-unused-vars
 											}
 										}
 									}
-									if (params.length == 4) {
+									if (params.length == 4 || params.length == 5) {
 										if (params[1].toLowerCase() == "addtoken") {
 											var turnorder = [];
 											if (Campaign().get("turnorder") !== "") {
@@ -1147,12 +1147,22 @@ const ScriptCards = (() => { // eslint-disable-line no-unused-vars
 											if (Campaign().get("turnorder") !== "") {
 												turnorder = JSON.parse(Campaign().get("turnorder"));
 											}
-											turnorder.push({
-												id: "-1",
-												pr: params[3],
-												_pageid:Campaign().get('playerpageid'),
-												custom: params[2],
-											});
+											if (params[4]) {
+												turnorder.push({
+													id: "-1",
+													pr: params[3],
+													_pageid:Campaign().get('playerpageid'),
+													custom: params[2],
+													formula: params[4],
+												});
+											} else {
+												turnorder.push({
+													id: "-1",
+													pr: params[3],
+													_pageid:Campaign().get('playerpageid'),
+													custom: params[2],
+												});
+											}
 											Campaign().set("turnorder", JSON.stringify(turnorder));
 										}
 									}
