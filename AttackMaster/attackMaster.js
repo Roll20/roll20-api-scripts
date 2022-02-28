@@ -4334,7 +4334,7 @@ var attackMaster = (function() {
 							  + '{{Target AC='+tokenAC+'}}'
 							  + '{{Damage if hit SM=[[ floor( [['+dmgSM+']][Dice roll] '+(dist=='N'?'/':'*')+' [['+((isPBmastery || dist=='N')?2:1)+']][N/PBM dmg mult] )'
 							  + ' + ([['+(isPBmastery?2:0)+']][Mast PB+]) + ('+totalDmgAdj+') ]]HP}}'
-							  + '{{Damage if hit L=[[ floor( [['+dmgSM+']][Dice roll] '+(dist=='N'?'/':'*')+' [['+((isPBmastery || dist=='N')?2:1)+']][N/PBM dmg mult] )'
+							  + '{{Damage if hit L=[[ floor( [['+dmgL+']][Dice roll] '+(dist=='N'?'/':'*')+' [['+((isPBmastery || dist=='N')?2:1)+']][N/PBM dmg mult] )'
 							  + ' + ([['+(isPBmastery?2:0)+']][PBM+]) + ('+totalDmgAdj+') ]]HP}}'
 							  + '{{Target HP='+tokenHP+'}}'
 							  + '{{Ammo left='+(ammoReuse != 1 ? (ammoQty-1) : ammoQty)+'}}'+(msg && msg.length ? '{{'+msg+'}}' : '')
