@@ -11,7 +11,7 @@ API_Meta.Survey = {
 }
 
 on('ready', () => {
-    const version = '0.0.1';
+    const version = '0.0.2';
     log('Campaign Survey v' + version + ' is ready! --offset ' + API_Meta.Survey.offset + ' -- Use the command !survey to get started');
 });
 
@@ -148,7 +148,7 @@ on('chat:message', async (msg_orig) => {
         helpTracks: ` A list of all jukebox tracks in a campaign. Clicking on the track will play the track. Each track name has a button next to it that will stop playing that track. Jukebox tracks are streaming files and will not affect loading time. They are unlikely to contribute to lag, except in cases where there is already low bandwidth.`,
         helpAttributes: `A list of all character attributes in a campaign. This is a <i>very</i> rough indicator of the size of the Firebase DB, when combined with the number of graphics placed on the VTT. A high number will likely affect loading time, and may contribute to lag. Character sheets, and the number of graphics and drawings on the VTT are the greatest contributors to game size.`,
         helpMakeHandout: `Sends the report to a handout named "Campaign Survey Report". You can use this with any other keyword or as the sole keyword. Every category on the campaign overview display has a handout option. There is a button at the bottom of the display to directly open the handout. All reports sent to the handout will update in real time. If you want the name of the campaign to appear at the top of every report, put it in the gmnotes of the Campaign Survey Report handout.`,
-        helpCampaign: `If you want the name of the campaign to appear at the top of every report, put it in the gmnotes of the Campaign Survey Report handout.`,
+        helpCampaign: `If you want the name of the campaign to appear at the top of every report, put it in the gmnotes of the Campaign Survey Report handout. If you wish your Campaign Report to use the image of a module, press <a style ='background-color: transparent; padding: 0px; color: #ce0f69; display: inline-block;border: none' href ='!survey --makeheader'>this button</a> and the script will attempt to find the module's title image. You may remove it manually by editing the handout normally.`,
         helpSurvey: `Campaign Survey is a script that tries to give the user a bird-eye view of their campaign, reporting on how much space is taken up by which elements. Some elements have more of an impact on game performance than others, and in general, the script tries to show them in descending order of importance. Information on improving Roll20 performance can be found on <a href='https://help.roll20.net/hc/en-us/articles/4403128607127-Roll20-System-Recommendations'>Roll20 system Recommendations</a> and  <a href='https://help.roll20.net/hc/en-us/articles/360041544654'>Optimizing Roll20 Performance</a>in the Help Center.`,
         helpOverview: `Gives a count of each of the categories. Each category is clickable to send that command to chat or to the report. typiing <b>!survey --overview</b> is the same as typing <b>!survey.</b>`,
         helpHelp: `Displays this help information.<br>If you need specific Roll20 information, the <a href='https://help.roll20.net/'>Help Center</a> is avaiable for all official documentation, and the <a href='https://tinyurl.com/mtz43sun'>Roll20 Community Wiki</a> has a wealth of information contributed by community members, often more technical than the Help Center. If you need to report a bug, or a problem with your game, the best way to get team attention is through filing a <a href='https://roll20.zendesk.com/hc/en-us/requests/new'>Help Center Request</a>. More general help can often be provided by friendly community members on the <a href='https://app.roll20.net/forum/'>Roll20 Forum</a>.`
@@ -157,6 +157,8 @@ on('chat:message', async (msg_orig) => {
             return target[prop] || 'Invalid property, try again';
         }
     });
+
+    
 
 
     if (msg.content === '!survey' && playerIsGM(msg.playerid)) {
@@ -635,6 +637,19 @@ on('chat:message', async (msg_orig) => {
                 lines = lines + playerList;
                 break;
 
+            case 'makeheader':
+                helpLabel = makeHelpButton('Players', 'helpPlayers');
+                homePage = pages.filter(p => p.get('name') === "Home")[0] || false;
+
+                if (homePage){
+                headerImage = graphics.filter(g => g.get('layer') === "map" && g.get('_pageid') === homePage.get('_id')).sort((a, b) => ((a.get("width")*a.get("height")) < (b.get("width")*b.get("height")) ? 1 : -1))[0];
+                
+                reportHandout.set("avatar", headerImage.get('imgsrc') );
+
+                }
+                lines = lines  + "Report header image has been pulled from largets image on map layer of a page named 'Home'. You may reomve this manually if you wish.<br><img src= '" + headerImage.get('imgsrc') + "'>";
+                break;
+
             case 'help':
                 let argumentButtonWidth = 90;
                 helpText = `${openHeader}Campaign Survey Help${closeHeader}${helpLinks['helpSurvey']} The <b>!survey</b> command can be followed by " --" and one or more of the following keywords:<br><br>` +
@@ -659,12 +674,12 @@ on('chat:message', async (msg_orig) => {
 
             case 'overview':
                 characterButton = makeButton(characters.length + " characters", "!survey --characterattrs", 150) + makeButton("handout", "!survey --characterattrs makehandout", 55);
-                attributeButton = makeButton("<i> • " + attributes.length + " attributes", "!survey --characterattrs</i>", 150) + makeButton("handout", "!survey --characterattrs makehandout", 55);
-                abilityButton = makeButton("<i> • " + abilities.length + " abilities", "!survey --characterabilities</i>", 150) + makeButton("handout", "!survey --characterabilities makehandout", 55);
+                attributeButton = makeButton(" • " + attributes.length + " attributes", "!survey --characterattrs", 150) + makeButton("handout", "!survey --characterattrs makehandout", 55);
+                abilityButton = makeButton(" • " + abilities.length + " abilities", "!survey --characterabilities", 150) + makeButton("handout", "!survey --characterabilities makehandout", 55);
                 pageButton = makeButton(pages.length + " pages", "!survey --pages", 150) + makeButton("handout", "!survey --pages makehandout", 55);
-                dlPageButton = makeButton("<i> • " + dlPages.length + " lighting", "!survey --lighting</i>", 150) + makeButton("handout", "!survey --lighting makehandout", 55);
-                graphicButton = makeButton("<i> • " + graphics.length + " graphics", "!survey --graphics", 150) + makeButton("handout", "!survey --graphics makehandout", 55);
-                graphicSourceButton = makeButton("<i> • " + userGraphics.length + " Library", "!survey --ugraphics", 103) + makeButton("<i> • " + marketplaceGraphics.length + " Market", "!survey --mgraphics", 102) + "<br>" +
+                dlPageButton = makeButton(" • " + dlPages.length + " lighting", "!survey --lighting", 150) + makeButton("handout", "!survey --lighting makehandout", 55);
+                graphicButton = makeButton(" • " + graphics.length + " graphics", "!survey --graphics", 150) + makeButton("handout", "!survey --graphics makehandout", 55);
+                graphicSourceButton = makeButton(" • " + userGraphics.length + " Library", "!survey --ugraphics", 103) + makeButton(" • " + marketplaceGraphics.length + " Market", "!survey --mgraphics", 102) + "<br>" +
                     makeButton("handout", "!survey --ugraphics makehandout", 103) + makeButton("handout", "!survey --mgraphics makehandout", 102);
 
                 handoutButton = makeButton(handouts.length + " handouts", "!survey --handouts", 150) + makeButton("handout", "!survey --handouts makehandout", 55);
@@ -673,7 +688,7 @@ on('chat:message', async (msg_orig) => {
                 textButton = makeButton(texts.length + " texts", "!survey --texts", 150) + makeButton("handout", "!survey --texts makehandout", 55);
                 deckButton = makeButton(decks.length + " decks", "!survey --decks", 150) + makeButton("handout", "!survey --decks makehandout", 55);
                 trackButton = makeButton(tracks.length + " jukebox tracks", "!survey --tracks", 150) + makeButton("handout", "!survey --tracks makehandout", 55);
-                playerButton = makeButton(players.length + " players", "!survey --players</i>", 150) + makeButton("handout", "!survey --players makehandout", 55);
+                playerButton = makeButton(players.length + " players", "!survey --players", 150) + makeButton("handout", "!survey --players makehandout", 55);
                 everythingButton = makeButton("Entire Campaign", "!survey --overview characterattrs characterabilities pages lighting handouts macros tables texts decks tracks players graphics", 150) + makeButton("handout", "!survey --overview characterattrs characterabilities pages lighting handouts macros tables texts decks tracks players graphics makehandout", 55);
                 helpButton = makeButton("Help", "!survey --help", 150) + makeButton("handout", "!survey --help makehandout", 55);
                 let infoButton = `<a style = 'float: right' href = '!survey --sendtext|${helpLabel}'')'>Help</a>`;
