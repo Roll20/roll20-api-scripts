@@ -3,33 +3,37 @@
 Name:           ImportHS6e
 GitHub:         https://github.com/eepjr24/ImportHS6e
 Roll20 Contact: eepjr24
-Version:        1.01
-Last Update:    8/4/2021
+Version:        1.03
+Last Update:    02/21/2022
 =========================================================
 Updates:
-Fixed JSON parsing error for unicode characters reserved for UTF-16 surrogate pairs
+Removed Rolls section from parsing (caused JSON bugs and was not used)
+Added support for Charges
+Updated END calcs for many powers
+Handled Limitations that change END cost
+Added support for END Reserves
+Added support for powers with END and Charges
+Added more abbreviation for complications
 
 */
 var API_Meta = API_Meta || {};
 API_Meta.ImportHS6e = { offset: Number.MAX_SAFE_INTEGER, lineCount: -1 };
 {
-try { throw new Error(''); } catch (e) { API_Meta.ImportHS6e.offset = (parseInt(e.stack.split(/\n/)[1].replace(/^.*:(\d+):.*$/, '$1'), 10) - (16)); }
+try { throw new Error(''); } catch (e) { API_Meta.ImportHS6e.offset = (parseInt(e.stack.split(/\n/)[1].replace(/^.*:(\d+):.*$/, '$1'), 10) - (21)); }
 }
 
-// TODO Deal with MP
-// TODO create reserves
   const ImportHS6e = (() => {
 
-  let version = '1.01',
-  lastUpdate  = 1628114013101,
+  let version = '1.xx',
+  lastUpdate  = 1645461785103,
   debug_log   = 0,                                                             // Debug settings, all debug values 1=on
-  logObjs     = 0,                                                             // Output character object to api log
+  logObjs     = 1,                                                             // Output character object to api log
   comp_log    = 0,                                                             // Debug complications
   cskl_log    = 0,                                                             // Debug combat skill Levels
   move_log    = 0,                                                             // Debug movement debug
   perk_log    = 0,                                                             // Debug perks
   pnsk_log    = 0,                                                             // Debug penalty skill levels
-  powr_log    = 0,                                                             // Debug powers
+  powr_log    = 1,                                                             // Debug powers
   remv_log    = 0,                                                             // Debug attribute removal
   resv_log    = 0,                                                             // Debug reserves
   skil_log    = 0,                                                             // Debug skills
@@ -127,7 +131,7 @@ try { throw new Error(''); } catch (e) { API_Meta.ImportHS6e.offset = (parseInt(
     }
   };
 
-  const createOrSetAttr = (atnm, val, cid) => {                                // Set an individual attribute if it exists, otherwise create it.
+  const createOrSetAttr = (atnm, val, mval, cid) => {                          // Set an individual attribute if it exists, otherwise create it.
     var objToSet = findObjs({type: 'attribute', characterid: cid, name: atnm})[0]
     if(val===undefined)
     {
@@ -141,10 +145,11 @@ try { throw new Error(''); } catch (e) { API_Meta.ImportHS6e.offset = (parseInt(
     }
     if(objToSet===undefined)                                                   // If attribute does not exist, create otherwise set current value.
     {
-      return createObj('attribute', {name: atnm, current: val, characterid: cid});
+      return createObj('attribute', {name: atnm, current: val, max: mval, characterid: cid});
     } else
     {
       objToSet.set('current', val);
+      objToSet.set('max',     mval);
       return objToSet;
     }
   };
@@ -152,11 +157,11 @@ try { throw new Error(''); } catch (e) { API_Meta.ImportHS6e.offset = (parseInt(
   const createCharacteristics = (stlst, chid) => {
     for (const [key, value] of Object.entries(stlst)) {                        // Set the characteristics
       let chnm = key + '_base';
-      createOrSetAttr(chnm, value.value, chid);
+      createOrSetAttr(chnm, value.value, "", chid);
       if(/^(end|body|stun)/.test(chnm))                                        // Handle display values for body, end and stun.
       {
         chnm = key.toUpperCase();
-        createOrSetAttr(chnm, value.value, chid);
+        createOrSetAttr(chnm, value.value, "", chid);
       }
       if(!!stat_log){logDebug("Set " + chnm + " to " + value.value);}          // Log characteristic assignment
     }
@@ -164,17 +169,17 @@ try { throw new Error(''); } catch (e) { API_Meta.ImportHS6e.offset = (parseInt(
 
   const createFeatures = (hdj, chid) => {
     //createOrSetAttr("alternate_ids", hdj.,      chid);                         // Future Placeholder
-    createOrSetAttr("player_name",   hdj.playername,  chid);
-    createOrSetAttr("height",        hdj.height,      chid);
-    createOrSetAttr("weight",        hdj.weight,      chid);
-    createOrSetAttr("hair",          hdj.hair,        chid);
-    createOrSetAttr("eyes",          hdj.eye,         chid);
-    createOrSetAttr("appearance",    hdj.appearance,  chid);
-    createOrSetAttr("background",    hdj.background,  chid);
-    createOrSetAttr("personality",   hdj.personality, chid);
-    createOrSetAttr("quotes",        hdj.quote,       chid);
-    createOrSetAttr("tactics",       hdj.tactics,     chid);
-    createOrSetAttr("campaign",      hdj.campUse,     chid);
+    createOrSetAttr("player_name",   hdj.playername, "", chid);
+    createOrSetAttr("height",        hdj.height,     "", chid);
+    createOrSetAttr("weight",        hdj.weight,     "", chid);
+    createOrSetAttr("hair",          hdj.hair,       "", chid);
+    createOrSetAttr("eyes",          hdj.eye,        "", chid);
+    createOrSetAttr("appearance",    hdj.appearance, "", chid);
+    createOrSetAttr("background",    hdj.background, "", chid);
+    createOrSetAttr("personality",   hdj.personality,"", chid);
+    createOrSetAttr("quotes",        hdj.quote,      "", chid);
+    createOrSetAttr("tactics",       hdj.tactics,    "",chid);
+    createOrSetAttr("campaign",      hdj.campUse,    "",chid);
   };
 
   const createSkills = (sklst, cid) => {                                       // Create all skills
@@ -211,19 +216,19 @@ try { throw new Error(''); } catch (e) { API_Meta.ImportHS6e.offset = (parseInt(
       }
 
       // Create the skill entries.
-      createOrSetAttr(rsnm, sknm,   cid);
-      createOrSetAttr(rshr, !!roll, cid);
-      createOrSetAttr(rshi, !!incr, cid);
-      createOrSetAttr(rsin, incr,   cid);
+      createOrSetAttr(rsnm, sknm,   "", cid);
+      createOrSetAttr(rshr, !!roll, "", cid);
+      createOrSetAttr(rshi, !!incr, "", cid);
+      createOrSetAttr(rsin, incr,   "", cid);
       if(!!roll)
       {
-        createOrSetAttr(rsrs, targ, cid);
-        createOrSetAttr(rsrf, "&{template:hero6template} {{charname=@{character_name}}}  {{action=@{skill_name}}}  {{roll=[[3d6]]}}  {{target=" + roll + "}} {{base=9}} {{stat= " + roll-9 + "}} {{lvls=" + incr + "}}", cid);
-        createOrSetAttr(rsrt, roll, cid);
+        createOrSetAttr(rsrs, targ, "", cid);
+        createOrSetAttr(rsrf, "&{template:hero6template} {{charname=@{character_name}}}  {{action=@{skill_name}}}  {{roll=[[3d6]]}}  {{target=" + roll + "}} {{base=9}} {{stat= " + roll-9 + "}} {{lvls=" + incr + "}}", "", cid);
+        createOrSetAttr(rsrt, roll, "", cid);
       }
       if(!(/^(GENERAL)/.test(noch) || noch === undefined))
       {
-        createOrSetAttr(rsch, noch, cid);
+        createOrSetAttr(rsch, noch, "", cid);
       }
     }
   };
@@ -238,8 +243,8 @@ try { throw new Error(''); } catch (e) { API_Meta.ImportHS6e.offset = (parseInt(
       rsnm     = rspre + "_skill_level",                                       // Build the skill name value
       rshi     = rspre + "_radio_skill_level";                                 // Build the level name value
 
-      createOrSetAttr(rsnm, sllst[h].name.trim(), cid);
-      createOrSetAttr(rshi, 0, cid);
+      createOrSetAttr(rsnm, sllst[h].name.trim(), "", cid);
+      createOrSetAttr(rshi, 0, "", cid);
       if(!!sklv_log){logDebug("Set " + sllst[h].name.trim());}                 // Log skill level assignment
     }
   };
@@ -252,15 +257,15 @@ try { throw new Error(''); } catch (e) { API_Meta.ImportHS6e.offset = (parseInt(
       ncnm = key + '_noncombat';
       if(/^(leap)/.test(cmnm))                                                 // Handle split for leap
       {
-        createOrSetAttr('h' + cmnm, value.combat, cid);
-        createOrSetAttr('h' + ncnm, value.noncombat, cid);
-        createOrSetAttr('v' + cmnm, value.primary.combat.value/2 + "m", cid);
-        createOrSetAttr('v' + ncnm, value.combat, cid);
+        createOrSetAttr('h' + cmnm, value.combat,                       "", cid);
+        createOrSetAttr('h' + ncnm, value.noncombat,                    "", cid);
+        createOrSetAttr('v' + cmnm, value.primary.combat.value/2 + "m", "", cid);
+        createOrSetAttr('v' + ncnm, value.combat,                       "", cid);
         if (move_log){logDebug(cmnm);}                                         // Debug movement
       } else if (/^(run|swim)/.test(cmnm))                                     // Handle run, swim (always appear)
       {
-      createOrSetAttr(cmnm, value.combat, cid);
-      createOrSetAttr(ncnm, value.noncombat, cid);
+      createOrSetAttr(cmnm, value.combat,    "", cid);
+      createOrSetAttr(ncnm, value.noncombat, "", cid);
       if (move_log){logDebug(cmnm);}                                           // Debug movement
       } else                                                                   // Handle all other cases
       {
@@ -290,9 +295,9 @@ try { throw new Error(''); } catch (e) { API_Meta.ImportHS6e.offset = (parseInt(
         mvnm = "repeating_moves_" + uuid + "_spec_move_name";                  // Build the movement repeating name
         mvcb = "repeating_moves_" + uuid + "_spec_move_combat";                // Build the combat repeating name
         mvnc = "repeating_moves_" + uuid + "_spec_move_noncombat";             // Build the noncombat repeating name
-        createOrSetAttr(mvnm, cmnm, cid);
-        createOrSetAttr(mvcb, value.combat, cid);
-        createOrSetAttr(mvnc, value.noncombat, cid);
+        createOrSetAttr(mvnm, cmnm,            "", cid);
+        createOrSetAttr(mvcb, value.combat,    "", cid);
+        createOrSetAttr(mvnc, value.noncombat, "", cid);
       }
     }
   };
@@ -319,13 +324,13 @@ try { throw new Error(''); } catch (e) { API_Meta.ImportHS6e.offset = (parseInt(
       rdcv   = "repeating_combatskills_" + uuid + "_radio_csl_dcv";
       rdmv   = "repeating_combatskills_" + uuid + "_radio_csl_dmcv";
       rdc    = "repeating_combatskills_" + uuid + "_radio_csl_dc";
-      createOrSetAttr(clnm, hcs.text, cid);
-      createOrSetAttr(ccb,  0, cid);
-      createOrSetAttr(rocv, 0, cid);
-      createOrSetAttr(romv, 0, cid);
-      createOrSetAttr(rdcv, 0, cid);
-      createOrSetAttr(rdmv, 0, cid);
-      createOrSetAttr(rdc,  0, cid);
+      createOrSetAttr(clnm, hcs.text, "", cid);
+      createOrSetAttr(ccb,  0,        "", cid);
+      createOrSetAttr(rocv, 0,        "", cid);
+      createOrSetAttr(romv, 0,        "", cid);
+      createOrSetAttr(rdcv, 0,        "", cid);
+      createOrSetAttr(rdmv, 0,        "", cid);
+      createOrSetAttr(rdc,  0,        "", cid);
       if(!!cskl_log){logDebug("Set " + hcs.name );}                            // Log skill level assignment
     }
   };
@@ -348,12 +353,12 @@ try { throw new Error(''); } catch (e) { API_Meta.ImportHS6e.offset = (parseInt(
       rocv   = "repeating_penaltyskills_" + uuid + "_radio_psl_";
       rdcv   = "repeating_penaltyskills_" + uuid + "_radio_psl_";
       rmod   = "repeating_penaltyskills_" + uuid + "_radio_psl_";
-      createOrSetAttr(psnm, hps.text, cid);
-      createOrSetAttr(pcb,  0, cid);
+      createOrSetAttr(psnm, hps.text,                            "", cid);
+      createOrSetAttr(pcb,  0,                                   "", cid);
 // TODO Use OptionID to set appropriate flags for ocv, dcv, rmod Example:SINGLEDCV
-      createOrSetAttr(rocv, 0, cid);
-      createOrSetAttr(rmod, 0, cid);
-      createOrSetAttr(rdcv, (/^(SINGLEDCV)/.test(hps.optionID)), cid);
+      createOrSetAttr(rocv, 0,                                   "", cid);
+      createOrSetAttr(rmod, 0,                                   "", cid);
+      createOrSetAttr(rdcv, (/^(SINGLEDCV)/.test(hps.optionID)), "", cid);
       if(!!pnsk_log){logDebug("Set " + hps.text);}                             // Log penalty skill level assignment
     }
   };
@@ -473,32 +478,62 @@ try { throw new Error(''); } catch (e) { API_Meta.ImportHS6e.offset = (parseInt(
         break;
       }
 // TODO make abbreviations optional
-// TODO abbreviations for Rivalry
       compnm = compnm.replace(/[,\s]+$/g, '')                                  // Trim trailing comma and space as needed
-      .replace('Uncommon', 'Unc')                                              // Abbreviate Uncommon
-      .replace('Common', 'Com')                                                // Abbreviate Common
-      .replace('Very Common', 'VC')                                            // Abbreviate Very Common
       .replace('As Powerful', 'AsPow')                                         // Abbreviate As Powerful
-      .replace('More Powerful', 'MoPow')                                       // Abbreviate More Powerful
-      .replace('Less Powerful', 'LessPow')                                     // Abbreviate Less Powerful
-      .replace('Strong', 'Str')                                                // Abbreviate Strong
-      .replace('Total', 'Tot')                                                 // Abbreviate Total
+      .replace('Common', 'Com')                                                // Abbreviate Common
       .replace('Frequently', 'Freq')                                           // Abbreviate Frequent
       .replace('Infrequently', 'Infreq')                                       // Abbreviate Infrequent
-      .replace('Moderate', 'Mod')                                              // Abbreviate Moderate
+      .replace('Less Powerful', 'LessPow')                                     // Abbreviate Less Powerful
       .replace('Major', 'Maj')                                                 // Abbreviate Major
+      .replace('Moderate', 'Mod')                                              // Abbreviate Moderate
+      .replace('More Powerful', 'MoPow')                                       // Abbreviate More Powerful
+      .replace('Professional', 'Prof.')                                        // Abbreviate Professional
+      .replace('Rival Aware of Rivalry', 'Aware')                              // Abbreviate Rival wording
+      .replace('Rival is', '')                                                 // Remove Rival wording (redundant)
+      .replace('Rival Unaware of Rivalry', 'Unaware')                          // Abbreviate Rival wording
+      .replace('Romantic', 'Rom.')                                             // Abbreviate Romantic
+      .replace('Seek to Harm or Kill Rival', 'Harm/Kill')                      // Shorten Seek to Harm or Kill
+      .replace('Seek to Outdo, Embarrass or Humiliate Rival', 'Outdo/Emb.')    // Shorten Seek Outdo
       .replace('Slightly', 'Slight')                                           // Abbreviate Slightly
-      createOrSetAttr(rcap, hc.active, cid);                                   // Assign the complication cost
-      createOrSetAttr(rcnm, compnm, cid);                                      // Assign the complication name
+      .replace('Strong', 'Str')                                                // Abbreviate Strong
+      .replace('Total', 'Tot')                                                 // Abbreviate Total
+      .replace('Uncommon', 'Unc')                                              // Abbreviate Uncommon
+      .replace('Very Common', 'VC')                                            // Abbreviate Very Common
+
+      createOrSetAttr(rcap, hc.active, "", cid);                               // Assign the complication cost
+      createOrSetAttr(rcnm, compnm,    "", cid);                               // Assign the complication name
     }
   };
 
-  const figurePowerMod = (modf, calc) => {
+  const createReserve = (resnm, amt, cid) => {
+    let rrnm  = "",
+        rre   = "";
+    logDebug(resnm);
+    uuid   = generateUUID().replace(/_/g, "Z");                                // Generate a UUID for penalty skill grouping
+    rrnm   = "repeating_reserves_" + uuid + "_reserve_name";                   // Build the penalty skill repeating name
+    rre    = "repeating_reserves_" + uuid + "_reserve_end";
+    createOrSetAttr(rrnm, resnm, "", cid);
+    createOrSetAttr(rre,  amt,   amt, cid);
+    if(!!resv_log){logDebug("Set " + resnm + " to " + amt);}                   // Log penalty skill level assignment
+  };
+
+  // Calculate the power modifiers (Advantages / Limitations) and endurance modifiers for a power
+  const figurePowerMod = (modf, calc, endf) => {
     let lval = 0,
         aval = 0,
-        rend = 1.0,
+        rend = 1.0,                                                            // Set return end to 1 by default
         rsrr = 0,
+        mset = 0,                                                              // Flag to determine if a modifier set the rend
+        chgs = 0,
         val  = "";
+
+    if(endf === 0){                                                            // If the power does not cost END by default
+      rend = 0;                                                                // Set return to 0 to start
+      if(!modf.length){                                                        // If there are no modifiers
+        rend = "no cost";
+        mset = 1;
+      }
+    }
 
     modf.forEach(m => {                                                        // Loop all modifiers
       val = m.value;
@@ -514,16 +549,40 @@ try { throw new Error(''); } catch (e) { API_Meta.ImportHS6e.offset = (parseInt(
         if(m.input === "Half END")                                             // Set to half endurance cost
         {
           rend = .5;
+          mset = 1;
         } else if (m.input === "0 END")                                        // Set to zero endurance cost
         {
           rend = 0;
+          mset = 1;
         }
       } else if(m.type === "Increased Endurance Cost")
       {
         rend = parseInt(m.input.substring(1,3).trim());                        // Set to increased endurance cost
-      }
+        mset = 1;
+      } else if(m.type === "Costs Endurance")                                  // Handle limitations that add endurance cost
+      {
+	    if(m.input === "Costs Half Endurance")
+        {
+          rend = .5;
+          mset = 1;
+        } else                                                                 // Set to normal endurance cost
+        {
+          rend = 1.0;
+          mset = 1;
+        }
+      } else if (m.type === "Charges")
+      {
+		chgs = m.input;
+	  }
+
 // TODO handle rsr figures, need HD examples
     })
+
+    // If the power costs no end naturally and was not set by a modifier,
+    // set to no cost
+    if(mset === 0 && rend === 0){
+        rend = "no cost";
+    }
 
     switch (calc)
     {
@@ -535,6 +594,8 @@ try { throw new Error(''); } catch (e) { API_Meta.ImportHS6e.offset = (parseInt(
       return rend;
     case "rsr":                                                                // Figure skill roll
       return rsrr;
+    case "chg":                                                                // Figure charges
+      return chgs;
     default:                                                                   // Unknown calculation
       return sendChat("i6e_API", "Unknown calculation value: " + calc);
     }
@@ -589,23 +650,27 @@ try { throw new Error(''); } catch (e) { API_Meta.ImportHS6e.offset = (parseInt(
         rpahl  = rppre + "_attack_hit_location",
         rppft  = rppre + "_pow_frame_type",                                    // Power Framework type
         rppfn  = rppre + "_pow_framework_name",                                // Power framework name
-        rppef  = rppre + "_power_end_fixed",                                   // VPP fixed END
-        pwtype = pwjson.type.trim(),
+        rppef  = rppre + "_power_end_fixed",                                   // Fixed END value for Charges and Reserves
+        rpper  = rppre + "_power_end_reserve_name",                            // Name of Reserve for Charges and Reserves
+        pwtype = pwjson.type.trim(),                                           // Power type
         xmlid  = pwjson.XMLID,
         pwlvl  = pwjson.level,
-        lim    = 0.0,
-        adv    = 0.0,
+        pwsn   = "",                                                           // Power short name (no prefix)
+        lim    = 0.0,                                                          // Base power limitation value (without list of framework lims)
+        adv    = 0.0,                                                          // Base power advantage value (without list of framework lims)
         endm   = 1,                                                            // Endurance multiplier
         ocv    = getAttrByName(cid, 'ocv'),
         mocv   = getAttrByName(cid, 'omcv'),
         zero   = 0,
-        ka     = 0,
+        ka     = 0,                                                            // Killing attack flag (1 for RKA, HKA)
         wiz    = 0,                                                            // Does this power use the wiard for die calculation
         cvtyp  = "",                                                           // Combat Value Type (OCV or OMCV)
+        coste  = 0,                                                            // Whether the power costs end or not
         adc    = 0,                                                            // Attack die cost (CP per die of power)
         att    = "",
         wizc   = "",
         hl     = 0,                                                            // Power uses hit locations
+        chg    = 0,                                                            // Number of charges for the power
         strbs  = 0;                                                            // Power uses strength as a basis
 
     if (isNaN(pwjson.end) || pwjson.end==="") {end = 0;} else {end = parseInt(pwjson.end)}
@@ -620,37 +685,22 @@ try { throw new Error(''); } catch (e) { API_Meta.ImportHS6e.offset = (parseInt(
     }
     if (pwjson.name.trim() === "No Name Supplied")
     {
-      pwnm = pwtype;
+      pwnm = pwjson.prefix + pwtype;
+      pwsn = pwtype;
     } else
     {
-      pwnm = pwjson.name.trim();
+      pwnm = pwjson.prefix + pwjson.name.trim();
+      pwsn = pwjson.name.trim();
     }
 
-    if (isNaN(pwjson.end))
-    {
-// TODO implement powers with charges and reserves
-      sendChat("i6e_API", "Powers with charges not implemented yet: " + pwnm);
-      return;
-    }
+    if(pwjson.prefix === "" && pwjson.framework === ""){
+	  pft = "";
+	}
 
-    // Calculate limitation, advantages and endurance multipliers
-    if(pwjson.modifiers.length)
-    {
-      lim  = figurePowerMod(pwjson.modifiers, "lim");
-      adv  = figurePowerMod(pwjson.modifiers, "adv");
-      endm = figurePowerMod(pwjson.modifiers, "end");
-      if(!!powr_log){logDebug("Lim,Adv,Endm: " + lim + ", " + adv + ", " + endm);}
-    }
-
-    // Calculate real points from AP and Limitations.
-    if(ap !== 0){
-      rp = ap/(1+lim);
-      dec = rp - Math.floor(rp);
-      if(dec > .5){rp = Math.ceil(rp)}else{rp = Math.floor(rp)};               // Round the real points
-    }
+	logDebug(xmlid + " 1 CostE: " + coste);
 
     // Create the power entries. Reordered to correct order for sheet macro to read.
-    createOrSetAttr(rpnm,  pwnm, cid);                                         // Assign the power name
+    createOrSetAttr(rpnm, pwnm, "", cid);                                      // Assign the power name
     switch (xmlid)
     {
     // Handle Effect powers
@@ -664,10 +714,11 @@ try { throw new Error(''); } catch (e) { API_Meta.ImportHS6e.offset = (parseInt(
       adc   = 10;
     case "TRANSFORM":
 // TODO Figure out a way to determine Transform Severity to set Active Die Cost
+      coste = 1;
       adc   = bp/pwlvl;
       logDebug(adc);
-      createOrSetAttr(rppf,  "&{template:hero6template} {{charname=@{character_name}}} {{power=" + pwnm + "}}  {{base=" + ocv + "}} {{ocv=" + ocv + "}} {{attack=[[3d6]]}} {{damage=[[" + pwjson.damage + "]]}} {{type=Effect}}", cid);
-      createOrSetAttr(rppf2, "&{template:hero6template} {{charname=@{character_name}}} {{power=" + pwnm + "}}  {{base=" + ocv + "}} {{ocv=" + ocv + "}} {{attack=[[3d6]]}} {{damage=[[" + pwjson.damage + "]]}} {{type=Effect}} {{description=" + pwdesc + "}}", cid);
+      createOrSetAttr(rppf,  "&{template:hero6template} {{charname=@{character_name}}} {{power=" + pwnm + "}}  {{base=" + ocv + "}} {{ocv=" + ocv + "}} {{attack=[[3d6]]}} {{damage=[[" + pwjson.damage + "]]}} {{type=Effect}}", "", cid);
+      createOrSetAttr(rppf2, "&{template:hero6template} {{charname=@{character_name}}} {{power=" + pwnm + "}}  {{base=" + ocv + "}} {{ocv=" + ocv + "}} {{attack=[[3d6]]}} {{damage=[[" + pwjson.damage + "]]}} {{type=Effect}} {{description=" + pwdesc + "}}", "", cid);
       att   = "Effect";
       wiz   = 1;
       hl    = 0;
@@ -678,12 +729,22 @@ try { throw new Error(''); } catch (e) { API_Meta.ImportHS6e.offset = (parseInt(
       adc   = 10;
     case "FLASH":
 // TODO Figure out a way to determine targetting or non to set Active Die Cost
-      createOrSetAttr(rppf,  "&{template:hero6template} {{charname=@{character_name}}} {{power=" + pwnm + "}}  {{base=" + ocv + "}} {{ocv=" + ocv + "}} {{attack=[[3d6]]}} {{damage=[[" + pwjson.damage + "]]}} {{type=Die Rolls}} {{count=BODY}}", cid);
-      createOrSetAttr(rppf2, "&{template:hero6template} {{charname=@{character_name}}} {{power=" + pwnm + "}}  {{base=" + ocv + "}} {{ocv=" + ocv + "}} {{attack=[[3d6]]}} {{damage=[[" + pwjson.damage + "]]}} {{type=Die Rolls}} {{count=BODY}}{{description=" + pwdesc + "}}", cid);
+      createOrSetAttr(rppf,  "&{template:hero6template} {{charname=@{character_name}}} {{power=" + pwnm + "}}  {{base=" + ocv + "}} {{ocv=" + ocv + "}} {{attack=[[3d6]]}} {{damage=[[" + pwjson.damage + "]]}} {{type=Die Rolls}} {{count=BODY}}", "", cid);
+      createOrSetAttr(rppf2, "&{template:hero6template} {{charname=@{character_name}}} {{power=" + pwnm + "}}  {{base=" + ocv + "}} {{ocv=" + ocv + "}} {{attack=[[3d6]]}} {{damage=[[" + pwjson.damage + "]]}} {{type=Die Rolls}} {{count=BODY}}{{description=" + pwdesc + "}}", "", cid);
       att   = "BODY only";
       adc   = 5;
       wiz   = 1;
       hl    = 0;
+      coste = 1;
+      cvtyp = "OCV";
+      break;
+    // Handle attack roll only powers
+    case "DARKNESS":
+      createOrSetAttr(rppf,  "&{template:hero6template} {{charname=@{character_name}}} {{power=" + pwnm + "}}  {{base=" + ocv + "}} {{ocv=" + ocv + "}} {{attack=[[3d6]]}} {{hitlocation=[[3d6]]}} {{damage=[[" + pwjson.damage + "]]}} {{type=STUN}} {{count=BODY}}", "", cid);
+      createOrSetAttr(rppf2, "&{template:hero6template} {{charname=@{character_name}}} {{power=" + pwnm + "}}  {{base=" + ocv + "}} {{ocv=" + ocv + "}} {{attack=[[3d6]]}} {{hitlocation=[[3d6]]}} {{damage=[[" + pwjson.damage + "]]}} {{type=STUN}} {{count=BODY}}{{description=" + pwdesc + "}}", "", cid);
+      wiz   = 0;
+      hl    = 0;
+      coste = 1;
       cvtyp = "OCV";
       break;
     // Handle Standard Attack powers
@@ -694,30 +755,32 @@ try { throw new Error(''); } catch (e) { API_Meta.ImportHS6e.offset = (parseInt(
       adc   = 5;
     case "TELEKINESIS":
 // TODO Look up ADC cost in character sheet
-      createOrSetAttr(rppf,  "&{template:hero6template} {{charname=@{character_name}}} {{power=" + pwnm + "}}  {{base=" + ocv + "}} {{ocv=" + ocv + "}} {{attack=[[3d6]]}} {{hitlocation=[[3d6]]}} {{damage=[[" + pwjson.damage + "]]}} {{type=STUN}} {{count=BODY}}", cid);
-      createOrSetAttr(rppf2, "&{template:hero6template} {{charname=@{character_name}}} {{power=" + pwnm + "}}  {{base=" + ocv + "}} {{ocv=" + ocv + "}} {{attack=[[3d6]]}} {{hitlocation=[[3d6]]}} {{damage=[[" + pwjson.damage + "]]}} {{type=STUN}} {{count=BODY}}{{description=" + pwdesc + "}}", cid);
-      wiz   = 1;
-      hl    = 1;
+      createOrSetAttr(rppf,  "&{template:hero6template} {{charname=@{character_name}}} {{power=" + pwnm + "}}  {{base=" + ocv + "}} {{ocv=" + ocv + "}} {{attack=[[3d6]]}} {{hitlocation=[[3d6]]}} {{damage=[[" + pwjson.damage + "]]}} {{type=STUN}} {{count=BODY}}", "", cid);
+      createOrSetAttr(rppf2, "&{template:hero6template} {{charname=@{character_name}}} {{power=" + pwnm + "}}  {{base=" + ocv + "}} {{ocv=" + ocv + "}} {{attack=[[3d6]]}} {{hitlocation=[[3d6]]}} {{damage=[[" + pwjson.damage + "]]}} {{type=STUN}} {{count=BODY}}{{description=" + pwdesc + "}}", "", cid);
+      wiz   = 0;
+      hl    = 0;
       att   = "STUN & BODY";
+      coste = 1;
       cvtyp = "OCV";
       break;
     // Handle Killing Attack powers
     case "HKA":
       strbs = 1;
     case "RKA":
-      createOrSetAttr(rppf,  "&{template:hero6template} {{charname=@{character_name}}} {{power=" + pwnm + "}}  {{base=" + ocv + "}} {{ocv=" + ocv + "}} {{attack=[[3d6]]}} {{hitlocation=[[3d6]]}} {{damage=[[" + pwjson.damage + "]]}} {{killing=1}} {{type=BODY}}", cid);
-      createOrSetAttr(rppf2, "&{template:hero6template} {{charname=@{character_name}}} {{power=" + pwnm + "}}  {{base=" + ocv + "}} {{ocv=" + ocv + "}} {{attack=[[3d6]]}} {{hitlocation=[[3d6]]}} {{damage=[[" + pwjson.damage + "]]}} {{killing=1}} {{type=BODY}}{{description=" + pwdesc + "}}", cid);
+      createOrSetAttr(rppf,  "&{template:hero6template} {{charname=@{character_name}}} {{power=" + pwnm + "}}  {{base=" + ocv + "}} {{ocv=" + ocv + "}} {{attack=[[3d6]]}} {{hitlocation=[[3d6]]}} {{damage=[[" + pwjson.damage + "]]}} {{killing=1}} {{type=BODY}}", "", cid);
+      createOrSetAttr(rppf2, "&{template:hero6template} {{charname=@{character_name}}} {{power=" + pwnm + "}}  {{base=" + ocv + "}} {{ocv=" + ocv + "}} {{attack=[[3d6]]}} {{hitlocation=[[3d6]]}} {{damage=[[" + pwjson.damage + "]]}} {{killing=1}} {{type=BODY}}{{description=" + pwdesc + "}}", "", cid);
       adc   = 15;
       ka    = 1;
       hl    = 1;
       wiz   = 1;
+      coste = 1;
       att   = "BODY";
       cvtyp = "OCV";
       break;
     // Handle Luck powers
     case "LUCK":
-      createOrSetAttr(rppf,  "&{template:hero6template} {{charname=@{character_name}}} {{power=" + pwnm + "}} {{damage=[[" + pwjson.damage + "]]}} {{type=Die Rolls}} {{count=Luck}}", cid);
-      createOrSetAttr(rppf2, "&{template:hero6template} {{charname=@{character_name}}} {{power=" + pwnm + "}} {{damage=[[" + pwjson.damage + "]]}} {{type=Die Rolls}} {{count=Luck}}{{description=" + pwdesc + "}}", cid);
+      createOrSetAttr(rppf,  "&{template:hero6template} {{charname=@{character_name}}} {{power=" + pwnm + "}} {{damage=[[" + pwjson.damage + "]]}} {{type=Die Rolls}} {{count=Luck}}", "", cid);
+      createOrSetAttr(rppf2, "&{template:hero6template} {{charname=@{character_name}}} {{power=" + pwnm + "}} {{damage=[[" + pwjson.damage + "]]}} {{type=Die Rolls}} {{count=Luck}}{{description=" + pwdesc + "}}", "", cid);
       att   = "Luck";
       adc   = 5;
       hl    = 0;
@@ -725,12 +788,13 @@ try { throw new Error(''); } catch (e) { API_Meta.ImportHS6e.offset = (parseInt(
       break;
     // Handle Ego Attack powers
     case "EGOATTACK":
-      createOrSetAttr(rppf,  "&{template:hero6template} {{charname=@{character_name}}} {{power=" + pwnm + "}} {{ocv=" + mocv + "}} {{attack=[[3d6]]}} {{damage=[[" + pwjson.damage + "]]}} {{type=STUN}}", cid);
-      createOrSetAttr(rppf2, "&{template:hero6template} {{charname=@{character_name}}} {{power=" + pwnm + "}} {{ocv=" + mocv + "}} {{attack=[[3d6]]}} {{damage=[[" + pwjson.damage + "]]}} {{type=STUN}}{{description=" + pwdesc + "}}", cid);
+      createOrSetAttr(rppf,  "&{template:hero6template} {{charname=@{character_name}}} {{power=" + pwnm + "}} {{ocv=" + mocv + "}} {{attack=[[3d6]]}} {{damage=[[" + pwjson.damage + "]]}} {{type=STUN}}", "", cid);
+      createOrSetAttr(rppf2, "&{template:hero6template} {{charname=@{character_name}}} {{power=" + pwnm + "}} {{ocv=" + mocv + "}} {{attack=[[3d6]]}} {{damage=[[" + pwjson.damage + "]]}} {{type=STUN}}{{description=" + pwdesc + "}}", "", cid);
       adc   = 10;
       wiz   = 1;
       hl    = 0;
       att   = "STUN";
+      coste = 1;
       cvtyp = "OMCV";
       break;
     // Handle Mental Effect powers
@@ -738,104 +802,233 @@ try { throw new Error(''); } catch (e) { API_Meta.ImportHS6e.offset = (parseInt(
     case "MINDCONTROL":
     case "MINDSCAN":
     case "TELEPATHY":
-      createOrSetAttr(rppf,  "&{template:hero6template} {{charname=@{character_name}}} {{power=" + pwnm + "}} {{ocv=" + mocv + "}} {{attack=[[3d6]]}} {{damage=[[" + pwjson.damage + "]]}} {{type=Effect}}", cid);
-      createOrSetAttr(rppf2, "&{template:hero6template} {{charname=@{character_name}}} {{power=" + pwnm + "}} {{ocv=" + mocv + "}} {{attack=[[3d6]]}} {{damage=[[" + pwjson.damage + "]]}} {{type=Effect}}{{description=" + pwdesc + "}}", cid);
+      createOrSetAttr(rppf,  "&{template:hero6template} {{charname=@{character_name}}} {{power=" + pwnm + "}} {{ocv=" + mocv + "}} {{attack=[[3d6]]}} {{damage=[[" + pwjson.damage + "]]}} {{type=Effect}}", "", cid);
+      createOrSetAttr(rppf2, "&{template:hero6template} {{charname=@{character_name}}} {{power=" + pwnm + "}} {{ocv=" + mocv + "}} {{attack=[[3d6]]}} {{damage=[[" + pwjson.damage + "]]}} {{type=Effect}}{{description=" + pwdesc + "}}", "", cid);
       att   = "Effect";
+      coste = 1;
       cvtyp = "OMCV";
       hl    = 0;
       adc   = 5;
       wiz   = 1;
       break;
-    // Handle standard description output powers
+    // Handle Misc powers (cost 0 END default)
   //        case "ABSORPTION": check spelling
+    case "ARMOR":
+// Figure out how to add armor to resistant Defenses on sheet.
+    case "DAMAGENEGATION":
+    case "DCV":
+    case "LIFESUPPORT":
+    case "MENTALDEFENSE":
+      createOrSetAttr(rppf,  "&{template:hero6template} {{charname=@{character_name}}} {{power=" + pwnm + "}}", "", cid);
+      createOrSetAttr(rppf2, "&{template:hero6template} {{charname=@{character_name}}} {{power=" + pwnm + "}} {{description=" + pwdesc + "}}", "", cid); // Assign the power name
+      hl    = 0;
+      wiz   = 0;
+      break;
+    // Handle Misc powers (cost END default)
+    case "FLIGHT":
+    case "FORCEFIELD":
+// Figure out how to add FF to resistant Defenses on sheet.
+    case "FORCEWALL":
+    case "IMAGES":
+    case "INVISIBILITY":
+      createOrSetAttr(rppf,  "&{template:hero6template} {{charname=@{character_name}}} {{power=" + pwnm + "}}", "", cid);
+      createOrSetAttr(rppf2, "&{template:hero6template} {{charname=@{character_name}}} {{power=" + pwnm + "}} {{description=" + pwdesc + "}}", "", cid); // Assign the power name
+      coste = 1;
+      hl    = 0;
+      wiz   = 0;
+      break;
+    // Handle Senses
+    case "HRRP":
+    case "NIGHTVISION":
+      createOrSetAttr(rppf,  "&{template:hero6template} {{charname=@{character_name}}} {{power=" + pwnm + "}}", "", cid);
+      createOrSetAttr(rppf2, "&{template:hero6template} {{charname=@{character_name}}} {{power=" + pwnm + "}} {{description=" + pwdesc + "}}", "", cid); // Assign the power name
+      hl    = 0;
+      wiz   = 0;
+      break;
+    // Handle END Reserves
+    case "ENDURANCERESERVE":
+      createOrSetAttr(rppf,  "&{template:hero6template} {{charname=@{character_name}}} {{power=" + pwnm + "}}", "", cid);
+      createOrSetAttr(rppf2, "&{template:hero6template} {{charname=@{character_name}}} {{power=" + pwnm + "}} {{description=" + pwdesc + "}}", "", cid); // Assign the power name
+      sendChat("i6e_API", "END Reserves in BETA, check reserve: " + pwnm);
+      // Parse END and REC from description
+      //chg = pwjson.end.replace(/\[*\]*/g, '');                                 // Calculate max charges
+      createReserve("R_" + pwnm, chg, cid);                                    // Create the charge Pool
+//      createOrSetAttr(rpper, "R_" + pwnm, "", cid);                            // Set the charge pool name
+//      createOrSetAttr(rppef, "1", "", cid);                                    // Set charges per use to 1
+      endm  = "no cost";
+      logDebug("Charges: " + chg);
+      hl    = 0;
+      wiz   = 0;
+      break;
+    // Handle Frameworks
     case "GENERIC_OBJECT":
-      if(pwjson.type==="Variable Power Pool")
-      {
-        createOrSetAttr(rppft, "Variable Power Pool", cid);
-        createOrSetAttr(rppfn, pwnm, cid);
-        createOrSetAttr(rppef, "0", cid);
+      if(pwjson.framework !== ""){
+        hl    = 0;
+        wiz   = 0;
+        endm  = "no cost";
+        pfn   = pwnm;
+        pft   = pwjson.framework;
+
+        // Frameworks can have advantages and limitations that carry to all entries. Store them for later use.
+        lav  = adv;
+        llv  = lim;
       }
-/*
-{"name":"repeating_powers_-MZcTB4QZrODnr95ikiX_pow_frame_type","current":"VPP Slot","max":"","_id":"-M_fEJw5Tb3Twd5QDRfm","_type":"attribute","_characterid":"-MZs-0JF2h1Ua0e2Hv1Y"},
-{"name":"repeating_powers_-MZcTB4QZrODnr95ikiX_pow_framework_name","current":"Divine VPP","max":"","_id":"-M_fEUBbQxPhV74m0c4E","_type":"attribute","_characterid":"-MZs-0JF2h1Ua0e2Hv1Y"},
-*/
+      break;
+    // Handle everything that falls through
     default:
-      createOrSetAttr(rppf,  "&{template:hero6template} {{charname=@{character_name}}} {{power=" + pwnm + "}}", cid);
-      createOrSetAttr(rppf2, "&{template:hero6template} {{charname=@{character_name}}} {{power=" + pwnm + "}} {{description=" + pwdesc + "}}", cid);                                      // Assign the complication name
-  //  sendChat("i6e_API", "Defaulted Power Type: " + xmlid);
+      createOrSetAttr(rppf,  "&{template:hero6template} {{charname=@{character_name}}} {{power=" + pwnm + "}}", "", cid);
+      createOrSetAttr(rppf2, "&{template:hero6template} {{charname=@{character_name}}} {{power=" + pwnm + "}} {{description=" + pwdesc + "}}", "", cid); // Assign the power name
+      sendChat("i6e_API", "Defaulted Power Type: " + xmlid);
       hl    = 0;
       wiz   = 0;
       break;
     }
-    createOrSetAttr(rpec,  pwjson.end, cid);                                   // Endurance Cost (string)
-    createOrSetAttr(rpea,  end, cid);                                          // Endurance Cost - AP (number)
-    createOrSetAttr(rpes,  zero, cid);                                         // Endurance Cost - STR (number)
-    createOrSetAttr(rprc,  pwjson.end, cid);                                   // Endurance Cost - Remaining Charges (string)
-    createOrSetAttr(rppow, pwdesc, cid);                                       // Assign the power description
 
-    createOrSetAttr(rppe,  zero, cid);                                         // FLAG: Is power wizard expanded?
-    wizc = wiz.toString();
-    createOrSetAttr(rppat, wizc, cid);                                         // FLAG: Is power preselected attack option
-
-    createOrSetAttr(rpbp,  pwjson.base, cid);                                  // Assign base points (string)
-    createOrSetAttr(rpap,  ap, cid);                                           // Assign active points (number)
-    createOrSetAttr(rpan,  parseInt(pwjson.base)*adv, cid);                    // Active Points without reduced end
-    if (endm === 0){
-      createOrSetAttr(rppn, adv-(.5), cid);                                    // Power advantage total without Reduced End
-    } else if (endm === .5){
-      createOrSetAttr(rppn, adv-(.25), cid);                                   // Power advantage total without Reduced End
-    } else {
-      createOrSetAttr(rppn, adv, cid);                                         // Power advantage total without Reduced End
+    // Calculate limitation, advantages and endurance multipliers
+    if(pwjson.modifiers.length)
+    {
+      lim  = figurePowerMod(pwjson.modifiers, "lim", coste);
+      adv  = figurePowerMod(pwjson.modifiers, "adv", coste);
+      chg  = figurePowerMod(pwjson.modifiers, "chg", coste);
     }
-    createOrSetAttr(rpbd,  pwjson.damage, cid);                                // Base dice
-    createOrSetAttr(rpbs,  pwjson.damage, cid);                                // Base dice show
-    createOrSetAttr(rprp,  rp, cid);                                           // Real Points
-    createOrSetAttr(rprl,  rp, cid);                                           // Real Cost
-    createOrSetAttr(rpsd,  " ", cid);                                          // Strength dice
-    createOrSetAttr(rpss,  " ", cid);                                          // Strength dice show
-    createOrSetAttr(rpse,  zero, cid);                                         // STR for END
-    createOrSetAttr(rpmd,  " ", cid);                                          // Attack Maneuver dice show
-    createOrSetAttr(rpcd,  " ", cid);                                          // CSL dice show
-    createOrSetAttr(rped,  " ", cid);                                          // Extra dice
-    createOrSetAttr(rpds,  " ", cid);                                          // Extra dice show
-    createOrSetAttr(rpad,  pwjson.damage, cid);                                // Attack dice
-    createOrSetAttr(rpas,  pwjson.damage, cid);                                // Attack dice show
+    endm   = figurePowerMod(pwjson.modifiers, "end", coste);
 
-// Add "no cost" and possibly other limited values like 1/2?
+    if(!!powr_log){logDebug(xmlid + " Lim,Adv,Chg,Endm: " + lim + ", " + adv + ", " + chg + ", " + endm);}
+
+    createOrSetAttr(rppow, pwdesc, "", cid);                                   // Assign the power description
+    createOrSetAttr(rpbp,  pwjson.base, "", cid);                              // Assign base points (string)
+    createOrSetAttr(rppa,  adv, "", cid);                                      // Power advantage total
+    createOrSetAttr(rpap,  ap, "", cid);                                       // Assign active points (number)
+    createOrSetAttr(rpan,  parseInt(pwjson.base)*adv, "", cid);                // Active Points without reduced end
+    createOrSetAttr(rppl,  lim, "", cid);                                      // Power limitation total
+
+    if(pft!=="")                                                               // Set up framework attributes
+    {
+	  if(pft==="MP"){
+        createOrSetAttr(rppft, "Multipower Pool", "", cid);
+      } else if (pft==="VPP"){
+        createOrSetAttr(rppft, "Variable Power Pool", "", cid);
+      }
+      createOrSetAttr(rppfn, pwnm, "", cid);
+    }
+
+    if (endm === 0){
+      createOrSetAttr(rppn, adv-(.5), "", cid);                                // Power advantage total without Reduced End
+    } else if (endm === .5){
+      createOrSetAttr(rppn, adv-(.25), "", cid);                               // Power advantage total without Reduced End
+    } else {
+      createOrSetAttr(rppn, adv, "", cid);                                     // Power advantage total
+    }
+
 // Use case: Absorption, Cannot be stunned, Clinging, etc.
 // Also Lim: Costs 1/2 END
     if(endm === 1){                                                            // Set Endurance Multiplier
-      createOrSetAttr(rpem, "1x END", cid);
+      coste = 1;
+      createOrSetAttr(rpem, "1x END", "", cid);
     } else if (endm === 0){
-      createOrSetAttr(rpem, "0 END", cid);
+      coste = 0;
+      createOrSetAttr(rpem, "0 END", "", cid);
     } else if (endm === .5){
-      createOrSetAttr(rpem, "½ END", cid);
-    } else {
-      createOrSetAttr(rpem, "Costs " + endm + "x", cid);
+      coste = 1;
+      createOrSetAttr(rpem, "½ END", "", cid);
+    } else if (endm === "no cost"){
+      coste = 0;
+      createOrSetAttr(rpem, "no cost", "", cid);
+    } else if (endm > 1){
+      coste = 1;
+      createOrSetAttr(rpem, "Costs " + endm + "x", "", cid);
     }
-// TODO: Create Function to check for alternate END sources
-    createOrSetAttr(rpps, "END", cid);                                         // Endurance Source
 
-    createOrSetAttr(rppa, adv, cid);                                           // Power advantage total
-    createOrSetAttr(rppl, lim, cid);                                           // Power limitation total
+    if (chg !== 0){
+      sendChat("i6e_API", "Charges in BETA, check power: " + pwnm);
+      createReserve("C_" + pwsn, chg, cid);                                    // Create the charge Pool
+      createOrSetAttr(rpper, "C_" + pwsn, "", cid);                            // Set the charge pool name
+      createOrSetAttr(rppef, "1",         "", cid);                            // Set charges per use to 1
+      createOrSetAttr(rprc,  chg,         "", cid);                            // Endurance Cost - Remaining Charges (string)
+      logDebug(pwsn + " Charges: " + chg);
+    }
+
+    // Assign Endurance Source
+    if(chg !== 0 && coste !== 0){
+      createOrSetAttr(rpps, "Both", "", cid);                                  // Set Endurance Source to Both
+    } else if (chg !== 0 && coste === 0){
+      createOrSetAttr(rpps, "Reserve", "", cid);                               // Set Endurance Source to Reserve
+    } else if ((chg === 0 && coste === 0) || (pwjson.framework!=="")){
+      createOrSetAttr(rpps, "none", "", cid);                                  // Set Endurance Source to none
+    } else {
+      createOrSetAttr(rpps, "END", "", cid);                                   // Set Endurance Source to END
+    }
+
+    // Set the slot types for MP and VPP
+    if(pwjson.prefix!=="" && pft!=="")
+    {
+	  adv = adv + lav;                                                         // Add list advantage to list items
+	  lim = lim + llv;                                                         // Add list limitation to list items
+	  if(pft==="MP")
+	  {
+        createOrSetAttr(rppfn, pfn, "", cid);
+        if(/^\d*f/.test(pwjson.real))                                          // Test to see if the cost ends in f.
+        {
+          createOrSetAttr(rppft, "MP Slot, fixed", "", cid);
+        } else
+        {
+          createOrSetAttr(rppft, "MP Slot, variable", "", cid);
+        }
+      }
+	  if(pft==="VPP")
+	  {
+        createOrSetAttr(rppfn, pfn, "", cid);
+        createOrSetAttr(rppft, "VPP Slot", "", cid);
+      }
+    }
+
+    // TODO: Check if this is needed? Does the sheet calculate it?
+    // Calculate real points from AP and Limitations.
+    if(ap !== 0){
+      rp = ap/(1+lim);
+      dec = rp - Math.floor(rp);
+      if(dec > .5){rp = Math.ceil(rp)}else{rp = Math.floor(rp)};               // Round the real points
+    }
+
+//    createOrSetAttr(rpec,  pwjson.end, "", cid);                               // Endurance Cost (string)
+//    createOrSetAttr(rpea,  end, "", cid);                                      // Endurance Cost - AP (number)
+//    createOrSetAttr(rpes,  zero, "", cid);                                     // Endurance Cost - STR (number)
+
+    createOrSetAttr(rppe,  zero, "", cid);                                     // FLAG: Is power wizard expanded?
+    wizc = wiz.toString();
+    createOrSetAttr(rppat, wizc, "", cid);                                     // FLAG: Is power preselected attack option
+    createOrSetAttr(rpbd,  pwjson.damage, "", cid);                            // Base dice
+    createOrSetAttr(rpbs,  pwjson.damage, "", cid);                            // Base dice show
+    createOrSetAttr(rprp,  rp, "", cid);                                       // Real Points
+    // Calculated by sheet?
+    //createOrSetAttr(rprl,  pwjson.real, "", cid);                            // Real Cost
+    createOrSetAttr(rpsd,  " ", "", cid);                                      // Strength dice
+    createOrSetAttr(rpss,  " ", "", cid);                                      // Strength dice show
+    createOrSetAttr(rpse,  zero, "", cid);                                     // STR for END
+    createOrSetAttr(rpmd,  " ", "", cid);                                      // Attack Maneuver dice show
+    createOrSetAttr(rpcd,  " ", "", cid);                                      // CSL dice show
+    createOrSetAttr(rped,  " ", "", cid);                                      // Extra dice
+    createOrSetAttr(rpds,  " ", "", cid);                                      // Extra dice show
+    createOrSetAttr(rpad,  pwjson.damage, "", cid);                            // Attack dice
+    createOrSetAttr(rpas,  pwjson.damage, "", cid);                            // Attack dice show
 
     if(!!wiz)
     {
-      createOrSetAttr(rpaus, strbs, cid);
-      createOrSetAttr(rpaw,  "", cid);
+      createOrSetAttr(rpaus, strbs, "", cid);
+      createOrSetAttr(rpaw,  "", "", cid);
 // TODO: Figure out how to set.
-//          createOrSetAttr(rpatt, , cid);
-      createOrSetAttr(rpatk, ka, cid);
-      createOrSetAttr(rpac, cvtyp, cid);
-      createOrSetAttr(rpadc, adc, cid);
+//          createOrSetAttr(rpatt, , "", cid);
+      createOrSetAttr(rpatk, ka, "", cid);
+      createOrSetAttr(rpac, cvtyp, "", cid);
+      createOrSetAttr(rpadc, adc, "", cid);
       if(strbs)
       {
-        createOrSetAttr(rpac, cvtyp, cid);
+        createOrSetAttr(rpac, cvtyp, "", cid);
       } else
       {
-        createOrSetAttr(rpac, cvtyp, cid);
+        createOrSetAttr(rpac, cvtyp, "", cid);
       }
-      createOrSetAttr(rpahl, hl, cid);
+      createOrSetAttr(rpahl, hl, "", cid);
     }
   };
 
@@ -846,7 +1039,7 @@ try { throw new Error(''); } catch (e) { API_Meta.ImportHS6e.offset = (parseInt(
     {
       UUID = generateUUID().replace(/_/g, "Z");                                // Generate a UUID for perk grouping
       pknm = "repeating_perks_" + UUID + "_perk_name";
-      createOrSetAttr(pknm, plst[p].desc.trim(), cid);
+      createOrSetAttr(pknm, plst[p].desc.trim(), "", cid);
     }
   };
 
@@ -859,7 +1052,7 @@ try { throw new Error(''); } catch (e) { API_Meta.ImportHS6e.offset = (parseInt(
       if(tlst[t].desc===undefined){continue;}
       UUID = generateUUID().replace(/_/g, "Z");                                // Generate a UUID for perk grouping
       tlnm = "repeating_perks_" + UUID + "_perk_name";
-      createOrSetAttr(tlnm, tlst[t].desc.trim(), cid);
+      createOrSetAttr(tlnm, tlst[t].desc.trim(), "", cid);
     }
   };
 
@@ -988,7 +1181,8 @@ try { throw new Error(''); } catch (e) { API_Meta.ImportHS6e.offset = (parseInt(
       dec_gmnotes = dec_gmnotes.replace(/<[^>]*>/g, '')                        //   Remove <tags>
                                .replace(/&[^;]*;/g, '')                        //   Remove &nbsp;
                                .replace(/[^\x0A-\xBF]/g, '')                   //   Remove nonstandard letters;
-                               .replace(/\},\s{1,}\]/g, '\}\]');               //   Remove extra comma
+                               .replace(/\},\s{1,}\]/g, '\}\]')                //   Remove extra comma
+                               .replace(/"rolls":[^]*?(?=],\r)/g, '"rolls":['); //  Remove Rolls section
 
       logDebug(dec_gmnotes);
 
