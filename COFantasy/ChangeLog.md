@@ -1,6 +1,9 @@
 # COFantasy: Historique des changements (depuis la version 1.0)
 ## 3.05
 ### Capacités
+* Armes naturelles du félis.
+* Âme féline, du félis.
+* Parade croisée de la Voie du combat à deux armes.
 * Violence ciblée des demi-ogres.
 * Sang-froid des demi-ogres.
 * Amélioration de la prise en charge de la marche sylvestre.
@@ -14,6 +17,7 @@
 * Correction d'un bug sur le pacifisme
 
 ### Autres améliorations
+* Possibilité de retarder l'affichage de la mort
 * Support pour les foudres du temps.
 * Possibilité de renouveler les élixirs et les runes en dehors de la page des joueurs.
 * Support pour les arcs composites façon Pathfinder.
