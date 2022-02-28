@@ -1450,7 +1450,7 @@ var attackMaster = (function() {
 			[/¦/g, "|"],
 			[/\\vbar/g, "|"],
 			[/\\clon/g, ":"],
-			[/\\amp[^;]/g, "&"],
+			[/\\amp/g, "&"],
 		];
 		
 	const	dbReplacers = [
