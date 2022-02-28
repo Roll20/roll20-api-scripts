@@ -22,7 +22,7 @@ const ScriptCards = (() => { // eslint-disable-line no-unused-vars
 	*/
 
 	const APINAME = "ScriptCards";
-	const APIVERSION = "1.6.4";
+	const APIVERSION = "1.6.4a";
 	const APIAUTHOR = "Kurt Jaegers";
 	const debugMode = false;
 
@@ -299,7 +299,7 @@ const ScriptCards = (() => { // eslint-disable-line no-unused-vars
 
 				if (apiCmdText.startsWith("!sc-reentrant ")) {
 					var resumeString = msg.content.substring(14);
-					resumeArgs = resumeString.split("-|-");
+					resumeArgs = resumeString.split("-|-");			
 					if (scriptCardsStashedScripts[resumeArgs[0]]) {
 						isResume = true;
 						isReentrant = true;
@@ -410,6 +410,14 @@ const ScriptCards = (() => { // eslint-disable-line no-unused-vars
 								cardParameters.targetcharacter = undefined;
 							}
 						}
+
+						if (msg.selected) {
+							arrayVariables["SC_SelectedTokens"] = [];
+							for(let x=0; x<msg.selected.length; x++) {
+								arrayVariables["SC_SelectedTokens"].push(msg.selected[x]._id);
+								arrayIndexes["SC_SelectedTokens"] = 0;
+							}
+						}						
 
 						if (!isReentrant) {
 							for (var x = 1; x < resumeArgs.length; x++) {
