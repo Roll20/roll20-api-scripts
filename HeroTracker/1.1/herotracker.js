@@ -1,6 +1,7 @@
 // Name:          HeroTracker, version 1.1
 // Author:        Darren
-// Last Updated:  4/30/2018
+// Last Updated:  2/28/2022
+//   Bugfix by The Aaron for initiative issue
 //
 // Purpse:
 //
@@ -248,7 +249,7 @@ var HeroTracker = HeroTracker || {
 					s = ( speed ? speed : getAttrByName(c, speed_field) );
 					d = ( dex ? dex : getAttrByName(c, dex_field) );
 					HeroTracker.removeFromTracker(token_id);
-					HeroTracker.addToTracker(token_id, (s ? s : 0), (d ? d : 0), segment, tag, who);
+					HeroTracker.addToTracker(token_id, (s ? s : 0), (d ? d : 0), segment, tag, who, t.get('pageid'));
 				}
 			} else {
 				// add tokens based on current selection
@@ -269,7 +270,7 @@ var HeroTracker = HeroTracker || {
 						d = ( dex ? dex : getAttrByName(c, dex_field) );
 						if(!d) return HeroTracker.write("could not find attribute: " + dex_field, who, "", "HeroTracker" );
 						HeroTracker.removeFromTracker(obj._id);
-						HeroTracker.addToTracker(obj._id, (s ? s : 0), (d ? d : 0), segment, tag, who);
+						HeroTracker.addToTracker(obj._id, (s ? s : 0), (d ? d : 0), segment, tag, who,t.get('pageid'));
 					}
 				});
 			}
@@ -407,7 +408,7 @@ var HeroTracker = HeroTracker || {
 		);
 	},
 
-	addToTracker: function(token_id, speed, dex, segment, custom, who) {
+	addToTracker: function(token_id, speed, dex, segment, custom, who, pageid) {
 		"use strict";
 
 		var turnorder;
@@ -430,11 +431,15 @@ var HeroTracker = HeroTracker || {
 		turnorder = JSON.parse(Campaign().get('turnorder')||'[]');
 
 		if (token_id === "") { token_id = "-1"; }  // if no token id is present, set to -1 to use the custom arg
+        let pageidExtra = {};
+        if(pageid){
+          pageidExtra._pageid=pageid;
+        }
 
 		// if a segment was provided, we skip speed and dex entirely
 		if( segment ) {
 			var i = HeroTracker.getSortIndex(turnorder, segment);
-			turnorder.splice(i, 0, {id:token_id,pr:segment,custom:custom});
+			turnorder.splice(i, 0, {id:token_id,pr:segment,custom:custom, ...pageidExtra});
 			Campaign().set("turnorder", JSON.stringify(turnorder));
 			return;
 		}
@@ -445,7 +450,7 @@ var HeroTracker = HeroTracker || {
 			for (var s=1;s<=12;s++) {
 				var p = Math.round( (s + tiebreaker + 0.00001) * 100 ) / 100;
 				i = HeroTracker.getSortIndex(turnorder, p);
-				turnorder.splice(i, 0, {id:token_id,pr:p,custom:custom});
+				turnorder.splice(i, 0, {id:token_id,pr:p,custom:custom, ...pageidExtra});
 			}
 			speed = speed - 12;
 		}
@@ -455,7 +460,7 @@ var HeroTracker = HeroTracker || {
 			var p = Math.round( (s + tiebreaker + 0.00001) * 100 ) / 100;
 			if(HeroTracker.TURN[speed][s] == 1) {
 				i = HeroTracker.getSortIndex(turnorder, p);
-				turnorder.splice(i, 0, {id:token_id,pr:p,custom:custom});
+				turnorder.splice(i, 0, {id:token_id,pr:p,custom:custom, ...pageidExtra});
 			}
 		}
 
