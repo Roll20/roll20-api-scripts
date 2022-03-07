@@ -370,7 +370,7 @@ tr {line-height: 25px;}
                     </ul>
                   </li>
                   <li><code>--if <i>condition</i></code> <i>options</i> <code>--endif</code>: permet de ne prendre en compte des options que si certaines conditions sont réalisées. Il est possible d'utiliser un <code>--else</code> pour activer des options quand les conditions ne sont pas réalisées. Attention, les options qui modifient une option précédente (comme <code>--valeur</code>) doivent apparaître au même niveau que l'option qu'elles modifient. Comme les conditions peuvent dépendre du dé d'attaque, un certain nombre d'options ne sont pas affectées par cette conditionnelle : tempeteDeMana, les options d'aoe (ligne, cone, disque, target), avecd12, avantage, auto, demiAuto, test, rate, touche, critique, echecCritique, pointsVitaux, tempsRecharge, sortilege, bonusCritique, disparition, affute, munition, tirDouble, semonce, tirDeBarrage, poudre, traquenard, feinte, asDeLaGachette, magique, tranchant, percant, contondant, pasDeDmg. Ne pas hésiter à me demander si vous aviez besoin que l'une de ces options puissent être conditionnelle.</li>
-                  <li><code>--ifSaveFails <i>carac seuil</i></code> <i>options</i> <code> --endif</code> : comme <code>--if</code>, mais fait réaliser une jet de sauvegarde à la cible (comme avec <code>--save</code>), et si le test est raté, applique les options qui suivent. Un <code>--else</code> permet de choisir des options à appliquer quand le test est réussi.</li>
+                  <li><code>--ifSaveFails <i>carac seuil</i></code> <i>options</i> <code> --endif</code> : comme <code>--if</code>, mais fait réaliser une jet de sauvegarde à la cible (comme avec <code>--save</code>), et si le test est raté, applique les options qui suivent. Un <code>--else</code> permet de choisir des options à appliquer quand le test est réussi. À utiliser seulement si on ne peut pas se contenter d'un <code>--save</code>, car ça marche moins bien.</li>
                   <li><code>--decrAttribute <i>nom</i></code> : l'attaque n'est possible que si l'attribut existe et si sa valeur est strictement positive. L'attaque diminue cette valeur de 1. Si cette option est utilisée à l'intérieur d'un <code>--if</code>, alors l'option se contente de diminuer l'attribut (on peut savoir si la valeur est positive grâce à <code>--if etat <i>nom</i></code>).</li>
                   <li><code>--decrLimitePredicatParTour <i>nom</i></code> : l'attaque n'est possible que si un prédicat <i>nom</i> existe et si elle n'a pas été utilisée plus de fois dans le tour que la valeur de ce prédicat. L'attaque augmente ce nombre de 1.</li>
                   <li><code>--tempsRecharge <i>effet</i> <i>duree</i></code> : l'attaque n'est possible que si l'effet est inactif sur l'attaquant, et de plus active l'effet sur l'attaquant pour la durée indiquée si l'attaque est possible. Il existe un effet temporaire générique, <code>rechargeGen(<i>desc</i>)</code> que vous pouvez utiliser si aucun effet existant ne correspond pour votre attaque.</li>
@@ -1893,6 +1893,8 @@ tr {line-height: 25px;}
                   <li><strong>Esquive</strong> : Ajouter un <a href=#predicats>prédicat</a> <code>esquiveVoleur</code>, de valeur le rang dans la voie. Ne pas modifier la DEF sur la fiche, le script fera les ajustements (et montrera le total avec <code>!cof-statut</code>).</li>
                   <li><strong>Chute</strong> : pas de support particulier.</li>
                   <li><strong>Acrobaties</strong> : faire <code>!cof-jet DEX 15</code> pour le jet de dextérité, le reste est géré par le MJ.</li>
+                  <li><strong>Esquive de la magie :</strong> ajouter un <a href=#predicats>prédicat</a> <code>esquiveDeLaMagie</code>.</li>
+                  <li><strong>Dextérité héroïque :</strong> ajouter les bonus sur la fiche</li>
                 </ol>
                 <h4 class="text-secondary">Voie du roublard</h4>
                 <ol>
@@ -2010,6 +2012,10 @@ tr {line-height: 25px;}
                 </ul>
                 <ol>
                   <li><strong>Charge :</strong> <code>#Attaque -1 --bonusAttaque 2 --plus 1d6</code>. Le déplacement n'est pas encore géré. Modifier les bonus si le minotaure possède la capacité Charge du barbare.</li>
+                  <li><strong>Frénésie :</strong> On peut faire passer en frénésie avec la commande <code>!cof-effet-temp frenesieMinotaure [[1d6]]</code>. Quand j'aurai le temps, il devrait être possible de faire apparaître un bouton quand le minotaure est blessé.</li>
+                  <li><strong>Orientation infaillible :</strong> pas de support particulier.</li>
+                  <li><strong>Encorner :</strong> pas de support particulier.</li>
+                  <li><strong>Colosse :</strong> reporter sur la fiche.</li>
                 </ol>
                 <h4 class="text-secondary">Nain</h4>
                 <ul>
@@ -2037,6 +2043,8 @@ tr {line-height: 25px;}
                   <li><strong>Soins améliorés</strong> : utiliser un prédicat <code>voieDeLArchange</code> avec comme valeur le rang dans la voie.</li>
                   <li><strong>Épée céleste</strong> : rien à faire si le prédicat <code>voieDeLArchange</code> a la bonne valeur. Si le personnage n'a pas déjà la capacité Arme d'argent, ajouter une attaque pour cette arme, avec le modificateur <code>armeDArgent</code> et l'option <code>--si etat armeDArgent</code>.</li>
                 </ol>
+                <h4 class="text-secondary">Voie de l'expert</h4>
+                Reporter les bonus sur la fiche et créer les compétences adéquates.
                 <h4 class="text-secondary">Voie de l'expert du combat</h4>
                 <ol>
                   <li><strong>Expertise du combat</strong> : créer un prédicat <code>expertDuCombat</code> avec comme valeur le rang dans la voie. La commande <code>!cof-statut</code> donne un état des lieux des dés dépensés pendant le combat/le tour. Les dés ne sont actifs qu'en combat et sont réinitialisés à l'utilisation de <code>!cof-fin-combat</code>. L'implémentation part du principe que l'augmentation de la DEF doit être décidée avant le jet de dommages, comme une esquive acrobatique par exemple.</li>
@@ -2045,6 +2053,8 @@ tr {line-height: 25px;}
                   <li><strong>Déplacement tactique</strong> : pas de support spécifique pour le déplacement, mais on peut prévoir une action <code>!cof-expert-combat</code> pour le personnage, qui ne fera qu'une dépense simple de dé d'expertise.</li>
                   <li><strong>Expertise majeure</strong> : les limites de dés par tour sont automatiques avec la bonne valeur du prédicat <code>expertDuCombat</code>. Pour l'instant le cumul de dés sur le même jet n'est pas supporté.</li>
                 </ol>
+                <h4 class="text-secondary">Voie de l'homme du peuple</h4>
+                Reporter les bonus sur la fiche et créer les compétences adéquates.
                 <h4 class="text-secondary">Voie des armes à deux mains</h4>
                 <ol>
                   <li><strong>Allonge</strong> : reporter le bonus d'attaque sur la fiche. Par facilité, j'ai considéré que le bonus d'Init était permanent et nous l'avons reporté sur la fiche.</li>
@@ -2657,6 +2667,16 @@ tr {line-height: 25px;}
               </div>
               <h3 class="text-info" id="Voies_de_la_famille_des_mystiques">5.4 Voies de la famille des mystiques</h3>
               <div class="decalage">
+                <h4 class="text-secondary">Talents magiques</h4>
+                <ul>
+                  <li><strong>Détection de la magie :</strong> pas de support.</li>
+                  <li><strong>Flamme :</strong> Faire une attaque magique de type feu pour l'attaque au contact. Pour l'illumination, <code>!cof-lumiere @{selected|token_id} 5 1 --mana 0</code>.</li>
+                  <li><strong>Inspiration :</strong> <code>!cof-effet-temp inspiration [[2+@{selected|SAG}]] --target @{target|token_id} --lanceur @{selected|token_id} --portee 10</code>. Pour l'instant le script ne vérifie pas que le sort n'est pas actif sur trop de cibles à la fois.</li>
+                  <li><strong>Lumières dansantes :</strong> <code>!cof-lumiere @{selected|token_id} 20 15 --mana 0</code>. Le script ne gère pas encore l'annulation de l'effet au moindre choc.</li>
+                  <li><strong>Projectile de force : </strong>
+                      Ajouter une attaque sur la fiche utilisant l'attaque magique, dommages 1d4, portée 50, type Sortilège, modificateur <code>auto</code> dégâts contondants, option <code>--mana 0</code>.
+                  </li>
+                </ul>
                 <h4 class="text-secondary">Voie de l’alchimie</h4>
                 <ol>
                   <li><strong>Fortifiant :</strong> En Attente </li>
@@ -2675,7 +2695,7 @@ tr {line-height: 25px;}
                 </ol>
                 <h4 class="text-secondary">Voie de la divination</h4>
                 <ol>
-                  <li><strong>Sixième sens :</strong> En Attente </li>
+                  <li><strong>Sixième sens :</strong> ajouter le bonus en DEF divers et initiative divers, ajouter une compétence <code>vigilance</code>, de valeur 5 (le bonus aux jet de surprise).</li>
                   <li><strong>Détection de l’invisible* :</strong> En Attente </li>
                   <li><strong>Clairvoyance* :</strong> En Attente </li>
                   <li><strong>Prescience* :</strong> En Attente </li>
@@ -2707,7 +2727,8 @@ tr {line-height: 25px;}
                 </ol>
                 <h4 class="text-secondary">Voie de la magie élémentaliste</h4>
                 <ol>
-                  <li><strong>Brumes* :</strong> En Attente </li>
+                  <li><strong>Brumes* :</strong>
+                  <code>!cof-tenebres @{selected|token_id} @{target|token_id} --brumes --mana 1</code>. La commande pose un token de brouillard pour visualiser la zone. Tous les tokens présents dans la zone au lancement du sort sont automatiquement dans l'état pénombre. Au MJ ensuite d'enlever l'état pénombre quand les cibles sortent de la zone. A la fin de la durée du sort, ou à la fin du combat, la zone et les états pénombre restant disparaissent automatiquement. Il est aussi possible de changer les valeurs par défaut du sort (portée 20m, rayon 20m) avec les options <code>--portee X</code> et <code>--rayon X</code>. En règle custom, l'option <code>puissant</code> permet de doubler la superficie couverte (le script calcule le rayon approprié si custom).</li>
                   <li><strong>Sous tension* :</strong> En Attente </li>
                   <li><strong>Armure de terre* :</strong> En Attente </li>
                   <li><strong>Boule de feu* :</strong> En Attente </li>
@@ -2715,7 +2736,7 @@ tr {line-height: 25px;}
                 </ol>
                 <h4 class="text-secondary">Voie de la magie runique</h4>
                 <ol>
-                  <li><strong>Forgeron* :</strong> En Attente </li>
+                  <li><strong>Forgeron* :</strong> Il faut un <a href=#predicats>prédicat</a> <code>voieDuMetal</code> pour connaître le rang (ou utiliser l'option <code>--valeur</code>). Lancer le sort avec <code>!cof-effet-temp forgeron(<i>L</i>) [[5+@{selected|SAG}]]</code> où <i>L</i> est le label d'une attaque. Ensuite, chaque fois que cette attaque sera utilisée, les dégâts seront ajoutés. Limitations : si deux attaques utilisent la même arme, il faut faire deux fois l'action, une pour chaque attaque.</li>
                   <li><strong>Rune d’énergie* :</strong> En Attente </li>
                   <li><strong>Rune de puissance* :</strong> En Attente </li>
                   <li><strong>Rune de garde* :</strong> En Attente </li>
