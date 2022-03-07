@@ -1,6 +1,10 @@
 # COFantasy: Historique des changements (depuis la version 1.0)
 ## 3.05
 ### Capacités
+* Sort de brumes.
+* Support basique pour l'inspiration des Terres d'Arran.
+* Esquive de la magie.
+* Support basique pour la frénésie du minotaure.
 * Armes naturelles du félis.
 * Âme féline, du félis.
 * Parade croisée de la Voie du combat à deux armes.
@@ -10,6 +14,7 @@
 * Explosion finale de la voie des créatures élémentaires
 
 ### Corrections de bugs
+* Fix d'un problème lors du rechargement automatique des armes,
 * Prise en compte des limites pour les provocations.
 * Quand un familier aux PV liés meurt, son maître aussi.
 * On ne peut plus drainer qu'un PV des cibles multiples.
@@ -17,6 +22,7 @@
 * Correction d'un bug sur le pacifisme
 
 ### Autres améliorations
+* Ajout d'un marker pour les chefs de groupe.
 * Possibilité de retarder l'affichage de la mort
 * Support pour les foudres du temps.
 * Possibilité de renouveler les élixirs et les runes en dehors de la page des joueurs.
