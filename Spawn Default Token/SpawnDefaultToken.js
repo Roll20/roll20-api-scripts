@@ -4,7 +4,7 @@
     Description of of syntax:
     !Spawn {{
       --name|        < charName >    //(REQUIRED) name of the character whose target we want to spawn
-      --targets|     < # >           //Destination override. Instead of using selected token(s) as origin, use target token(s)
+      --targets|     < #, optional text >           //Destination override. Instead of using selected token(s) as origin, use target token(s). If commas are to be included in Text, use replacement value %comma%
       --qty|         < # >           //How many tokens to spawn at each origin point. DEFAULT =
       --offset|	 < #,# >         //X,Y pos or neg shift in position of the spawn origin point(s) relative to the origin token(s), in number of SQUARES 
                                             //DEFAULT = 0,0  // (NOTE: a POSITIVE Y offset means LOWER on the map)
@@ -91,7 +91,7 @@ API_Meta.SpawnWIP = { offset: Number.MAX_SAFE_INTEGER, lineCount: -1 };
 const SpawnDefaultToken = (() => {
     
     const scriptName = "SpawnDefaultToken";
-    const version = '0.24';
+    const version = '0.25';
     var gridSize = 70;  //this may be updated based on page settings 
     
     //an array of token properties which may be set for Spawned tokens
@@ -1742,8 +1742,16 @@ const SpawnDefaultToken = (() => {
                 if (targ) { // USER REQUESTING TARGETS CASE
                     // if --targets was specified, find the number of targets to get and whisper a button to the caller
                     let mid = store(msg);
-                    let num = parseInt(targ.params)||1;
-                    sendChat('',`/w "${data.who}" [Select Targets](!Spawn --memento|${mid} --targs|${range(num).map(n=>`&commat;{target|Pick ${n}|token_id}`).join(',')})`);
+                    
+                    let splits = targ.params.split(',');
+                    let userText = "";
+                    if (splits.length > 1){          
+                        userText = splits[1].replace(/%comma%/g,",").trim();          	
+                    }
+					let num = parseInt(splits[0])||1;
+                    
+                    sendChat('',`/w "${data.who}" [Select Targets](!Spawn --memento|${mid} --targs|${range(num).map(n=>`&commat;{target|Pick ${n}|token_id}`).join(',')}) ${userText}`);
+                    
                     
                 } else {    // NO "--TARGETS" IN MESSAGE -- could be an original call or a call from the api-generated chat button
                     
