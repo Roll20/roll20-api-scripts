@@ -30,7 +30,7 @@ var tokenAction = tokenAction || (function () {
     }
     //end Oosh function
 
-    var version = '0.3.6',
+    var version = '0.3.7',
         sheetVersion = 'D&D 5th Edition by Roll20',
         sheet = '5e',
         checkInstall = function () {
@@ -180,6 +180,20 @@ var tokenAction = tokenAction || (function () {
                         createObj("ability", {
                             name: getFirstCharacters(repeatingName) + ((repeatingName.includes('-R')) ? '-R3' : '3'),
                             action: repeatingAction.replace('ATTACK-DAMAGE-NPC', 'ATTACK-DAMAGE-NPC3'),
+                            characterid: id,
+                            istokenaction: true
+                        });
+}
+                    if (sheet === 'pf2' && repeatingAction.includes('ATTACK-DAMAGE') && !repeatingAction.includes('ATTACK-DAMAGE-NPC')) {
+                        createObj("ability", {
+                            name: getFirstCharacters(repeatingName) + ((repeatingName.includes('-R')) ? '-R2' : '2'),
+                            action: repeatingAction.replace('ATTACK-DAMAGE', 'ATTACK-DAMAGE2'),
+                            characterid: id,
+                            istokenaction: true
+                        });
+                        createObj("ability", {
+                            name: getFirstCharacters(repeatingName) + ((repeatingName.includes('-R')) ? '-R3' : '3'),
+                            action: repeatingAction.replace('ATTACK-DAMAGE', 'ATTACK-DAMAGE3'),
                             characterid: id,
                             istokenaction: true
                         });
@@ -698,8 +712,8 @@ var tokenAction = tokenAction || (function () {
                                 createAbility('Save', "@{selected|wtype}&{template:simple} @{selected|rtype}?{Save|Strength, +@{selected|strength_save_bonus}@{selected|pbd_safe}]]&" + "#125;&" + "#125; {{rname=Strength Save&" + "#125;&" + "#125 {{mod=@{selected|strength_save_bonus}&" + "#125;&" + "#125; {{r1=[[@{selected|d20}+@{selected|strength_save_bonus}@{selected|pbd_safe}]]&" + "#125;&" + "#125; |Dexterity, +@{selected|dexterity_save_bonus}@{selected|pbd_safe}]]&" + "#125;&" + "#125; {{rname=Dexterity Save&" + "#125;&" + "#125 {{mod=@{selected|dexterity_save_bonus}&" + "#125;&" + "#125; {{r1=[[@{selected|d20}+@{selected|dexterity_save_bonus}@{selected|pbd_safe}]]&" + "#125;&" + "#125; |Constitution, +@{selected|constitution_save_bonus}@{selected|pbd_safe}]]&" + "#125;&" + "#125; {{rname=Constitution Save&" + "#125;&" + "#125 {{mod=@{selected|constitution_save_bonus}&" + "#125;&" + "#125; {{r1=[[@{selected|d20}+@{selected|constitution_save_bonus}@{selected|pbd_safe}]]&" + "#125;&" + "#125; |Intelligence, +@{selected|intelligence_save_bonus}@{selected|pbd_safe}]]&" + "#125;&" + "#125; {{rname=Intelligence Save&" + "#125;&" + "#125 {{mod=@{selected|intelligence_save_bonus}&" + "#125;&" + "#125; {{r1=[[@{selected|d20}+@{selected|intelligence_save_bonus}@{selected|pbd_safe}]]&" + "#125;&" + "#125; |Wisdom, +@{selected|wisdom_save_bonus}@{selected|pbd_safe}]]&" + "#125;&" + "#125; {{rname=Wisdom Save&" + "#125;&" + "#125 {{mod=@{selected|wisdom_save_bonus}&" + "#125;&" + "#125; {{r1=[[@{selected|d20}+@{selected|wisdom_save_bonus}@{selected|pbd_safe}]]&" + "#125;&" + "#125; |Charisma, +@{selected|charisma_save_bonus}@{selected|pbd_safe}]]&" + "#125;&" + "#125; {{rname=Charisma Save&" + "#125;&" + "#125 {{mod=@{selected|charisma_save_bonus}&" + "#125;&" + "#125; {{r1=[[@{selected|d20}+@{selected|charisma_save_bonus}@{selected|pbd_safe}]]&" + "#125;&" + "#125;}@{selected|global_save_mod}@{selected|charname_output}", a.id);
                             }
                             if (args.includes("attacks")) {//PF2
-                                createRepeating(/repeating_melee-strikes_[^_]+_weapon\b/, 'repeating_melee-strikes_%%RID%%_ATTACK-DAMAGE-NPC', a.id, usename);
-                                createRepeating(/repeating_ranged-strikes_[^_]+_weapon\b/, 'repeating_ranged-strikes_%%RID%%_ATTACK-DAMAGE-NPC', a.id, usename);
+                                createRepeating(/repeating_melee-strikes_[^_]+_weapon\b/, 'repeating_melee-strikes_%%RID%%_ATTACK-DAMAGE', a.id, usename);
+                                createRepeating(/repeating_ranged-strikes_[^_]+_weapon\b/, 'repeating_ranged-strikes_%%RID%%_ATTACK-DAMAGE', a.id, usename);
                             }
                             if (args.includes("offensive")) {//PF2
                             }
