@@ -229,7 +229,7 @@ var tokenAction = tokenAction || (function () {
                     _characterid: id,
                     name: 'sheet_type'
                 });
-                if (_.isUndefined(checkNpc[0]) || checkNpc[0].get('current') === 'character') {
+                if (_.isUndefined(checkNpc[0]) || checkNpc[0].get('current') !== 'npc') {
                     return "0";
                 } else {
                     return "1";
