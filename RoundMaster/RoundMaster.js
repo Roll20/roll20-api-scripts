@@ -1751,7 +1751,7 @@ var RoundMaster = (function() {
 			} else {
 				markerList += '<div style="float: left; padding: 1px 1px 1px 1px; width: 25px; height: 25px;">' 
 					+ '<span class="showtip tipsy" title="'+sName+'" style="width: 21px; height: 21px">'
-					+ '<a style="font-size: 0px; background-image: url('+e.url+') centre centre norepeat; width: 21px; height: 21px" href="'+command+'"><img style="text-align: center;" src="'+e.url+'"></img></a></span>'
+					+ '<a style="font-size: 0px; background-color: white; background-image: url('+e.url+') centre centre norepeat; width: 21px; height: 21px" href="'+command+'"><img style="text-align: center;" src="'+e.url+'"></img></a></span>'
 					+ '</div>';	  
 			}
 		});
