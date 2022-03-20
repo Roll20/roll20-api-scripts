@@ -112,14 +112,19 @@
  *                     Fixed bug with prioritising of user-defined database entries
  * v2.043  26/02/2022  Added one character able to "lend a hand" to another character to 
  *                     cooperate on using weapons (or other objects) that require more than 2 hands.
- *                     Also added Character Class Database to expose all rules relating to
+ *                     Added Class-DB to expose all rules relating to
  *                     a character's class, and allow them to be altered or new classes defined.
  * v2.044  02/03/2022  Created the Attacks-DB to expose attack calculations and enable DMs and game
  *                     creators to alter them as needed for their campaigns and rule sets.
+ *                     Added full AC and Attack support for damage types Slash, Pierce & Bludgeon.
+ *                     Added support for v. fast & v. slow weapon types.  Fixed proficiency calculation
+ *                     for weapons with multiple types & supertypes.
  * v2.045  06/03/2022  Added saving throw data to Class specs using method that can also apply
  *                     to other database items.  Updated --check-saves function to include MIs
  *                     that affect saves.  Make database updates asynchronous to avoid invalid
- *                     "infinite loop" errors.  Added Creature character class.
+ *                     "infinite loop" errors.  Synchronised DB indexing between APIs to ensure
+ *                     all DBs loaded before indexed. Added Creature character class.
+ *                     Fixed handling of manual Character Sheet table entries.
  */
  
 var attackMaster = (function() {
