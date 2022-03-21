@@ -4691,6 +4691,8 @@ var MagicMaster = (function() {
 			// If spell not found, just blank the row
 			return addTableRow( spellTables, r );
 		}
+
+		log('setSpell: called');
 		
 		var	speed = (newSpellObj.ct ? newSpellObj.ct[0].get('current') : 0),
 			values = spellTables.values;
@@ -4701,15 +4703,23 @@ var MagicMaster = (function() {
 		values[fields.Spells_cost[0]][fields.Spells_cost[1]] = cost || (newSpellObj.ct ? newSpellObj.ct[0].get('max') : 0);
 		values[fields.Spells_msg[0]][fields.Spells_msg[1]] = msg;
 
+		log('setSpell: initial values set');
+		
 		if (spellDB.toUpperCase().includes('POWER')) {
 			values[fields.Spells_castValue[0]][fields.Spells_castValue[1]] = (levelOrPerDay[1] || fields.Spells_castValue[2]);
 			values[fields.Spells_castMax[0]][fields.Spells_castMax[1]] = levelOrPerDay[0];
+			log('setSpell: POWER values set');
+		
 		} else {
 			values[fields.Spells_miSpellSet[0]][fields.Spells_miSpellSet[1]] = (levelOrPerDay[1] || fields.Spells_miSpellSet[2]);
 			values[fields.Spells_storedLevel[0]][fields.Spells_storedLevel[1]] = levelOrPerDay[0];
 			values[fields.Spells_castValue[0]][fields.Spells_castValue[1]] = (levelOrPerDay[0]==0 ? 0 : 1);
 			values[fields.Spells_castMax[0]][fields.Spells_castMax[1]] = 1;
+			log('setSpell: NON-POWER values set');
+		
 		}
+		log('setSpell: about to addtablerow');
+		
 		return addTableRow( spellTables, r, values );
 	}
 
@@ -6724,8 +6734,12 @@ var MagicMaster = (function() {
 		
 		var rootDB = isPower ? fields.PowersDB : (isMU ? fields.MU_SpellsDB : fields.PR_SpellsDB),
 			spellTables = getAllTables( charCS, (isPower ? 'POWERS' : 'SPELLS'), col )[(isPower ? 'POWERS' : 'SPELLS')],
+			
+		log('handleMemoriseSpell: calling setSpell');
 
 		spellTables = setSpell( charCS, spellTables, rootDB, spellName, row, col, undefined, '', [noToMemorise,noToMemorise] );
+
+		log('handleMemoriseSpell: returned from setSpell');
 
 		if (isMI && isPower) {
 			setAttr( charCS, ['power-'+spellName, 'current'], row );
