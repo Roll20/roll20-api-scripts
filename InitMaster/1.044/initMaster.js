@@ -106,12 +106,13 @@
  * v2.044  01/03/2022  Replaced "Other Actions" initiative menu button with the expanded menu 
  *                     throughout.  Fixed to support very slow weapons of > 1 rounds per attack.
  *                     Changed multi-attack counting method to support any fractional or whole 
- *                     number of attacks per round.
+ *                     number of attacks per round. Fixed issues with manual entries in Character 
+ *                     Sheet tables. Changed white text on grey buttons to black text
  */
 
 var initMaster = (function() {
 	'use strict'; 
-	var version = 2.044,
+	var version = 2.045,
 		author = 'RED',
 		pending = null;
 
@@ -1824,6 +1825,8 @@ var initMaster = (function() {
 		setAttr( charCS, [fields.Init_2Hweapon[0], property], args[7]);
 		setAttr( charCS, [fields.Init_attacks[0], property], (args[9] || 1));
 		setAttr( charCS, [fields.Init_chosen[0], property], 1);
+		
+		log('setInitVars: setting Init_attacks to '+args[9]);
 	};
 
 	/*
@@ -1947,7 +1950,8 @@ var initMaster = (function() {
 		speedMult = Math.max(parseFloat(attrLookup( charCS, fields.initMultiplier ) || 1), 1);
 		attackNum = (tableLookup( WeaponTables, fields.MW_noAttks, refIndex ) || 1);
 		// RED: v1.044 changed attackNum calculation to deal with numbers of attacks that are not multiples/divisors of 2
-		attackCount = (tableLookup( charCS, fields.MW_attkCount, refIndex ) || 0);
+		attackCount = tableLookup( WeaponTables, fields.MW_attkCount, refIndex );
+		if (!attackCount) attackCount = 0;
 		attackCount = eval( attackCount + '+(' + speedMult + '*' + attackNum + ')' );
 		attacks = Math.floor( attackCount );
 		WeaponTables = tableSet( WeaponTables, fields.MW_attkCount, refIndex, (attackCount-attacks) );
@@ -1966,7 +1970,7 @@ var initMaster = (function() {
 				+ '|' + twoHanded
 				+ '|'
 				+ '|' + attacks;
-
+				
 		sendInitAPI( buildCall );
 		return;
 	}
@@ -2415,6 +2419,7 @@ var initMaster = (function() {
 				attackCount = eval( attackCount + '+(' + speedMult + '*' + actionNum + ')' );
 				actions = Math.floor( attackCount );
 				tableSet( WeaponTable, fields.MW_attkCount, row, (attackCount-actions));
+				log('handleAllWeapons: setting MW_attkCount to '+tableLookup(WeaponTable, fields.MW_attkCount, row));
 				initiative = base+speed+init_Mod;
 				attacks.push({init:initiative,ignore:0,action:('with their '+(!!dancing ? 'dancing ' : '')+weapon),msg:(' rate '+actionNum+', speed '+speed+', modifier '+init_Mod)});
 				for (i=2; i<=actions; i++) {
@@ -2548,7 +2553,7 @@ var initMaster = (function() {
 				preinit = eval( init_preinit ),
 				twoHanded = attrLookup( charCS, fields.Init_2Hweapon ),
 				round = state.initMaster.round;
-			
+				
 			if (initMenu == MenuType.TWOWEAPONS) {
 				
 				var init_speed2 = parseInt(attrLookup( charCS, fields.Init_2ndSpeed )) || 0,
