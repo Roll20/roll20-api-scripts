@@ -40,6 +40,7 @@
     "token.light_otherplayers": "read,write",
     "token.showname": "read",
     "token.light_losangle": "read,write",
+    "token.lockMovement": "read,write",
     "page.scale_number": "read",
     "Campaign.turnorder": "read, write",
     "Campaign.initiativepage": "read, write",
