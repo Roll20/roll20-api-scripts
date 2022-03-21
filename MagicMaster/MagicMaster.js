@@ -50,7 +50,7 @@
  
 var MagicMaster = (function() {
 	'use strict'; 
-	var version = 3.051,
+	var version = 3.052,
 		author = 'RED',
 		pending = null;
 		
@@ -4587,25 +4587,18 @@ var MagicMaster = (function() {
 			classObj = classObjects( getCharacter( args[1] ) ),
 			foundPower = false;
 			
-		log('checkValidPower: matchPower='+matchPower);
-			
 		if (!matchPower || !matchPower.length || state.MagicMaster.spellRules.allowAll) return true;
 			
 		return classObj.some( c => {
 			let className = c.obj.get('name'),
 				classDB = getObj('character',c.obj.get('characterid')),
 				classPowers = (attrLookup( classDB, [fields.ItemPowersList[0]+className, fields.ItemPowersList[1]] ) || '');
-			log('checkValidPower: checking className '+className+' which has '+fields.ItemPowersList[0]+className+' '+classPowers);
 			if (classPowers.toLowerCase().replace(reIgnore,'').includes(matchPower)) {
 				foundPower = true;
 				let classData = c.obj.get('action');
-				log('checkValidPower: class action = '+classData);
 				classData = classData.match(reClassData);
-				log('checkValidPower: matched classData='+(!classData?'undefined':classData[1]));
 				classData = classData ? [...('['+classData[1]+']').matchAll(/\[[\s\w\-\+\,\:\/]+?\]/g)] : [];
-				log('checkValidPower: split array length='+classData.length);
 				return _.some(classData, p => {
-					log('checkValidPower: processing data '+p);
 					let powerData = parseData( String(p), reSpellSpecs );
 					return ((matchPower == powerData.name.toLowerCase().replace(reIgnore,'')) && (powerData.level <= c.level));
 				});
@@ -4692,8 +4685,6 @@ var MagicMaster = (function() {
 			return addTableRow( spellTables, r );
 		}
 
-		log('setSpell: called');
-		
 		var	speed = (newSpellObj.ct ? newSpellObj.ct[0].get('current') : 0),
 			values = spellTables.values;
 			
@@ -4701,26 +4692,19 @@ var MagicMaster = (function() {
 		values[fields.Spells_db[0]][fields.Spells_db[1]] = spellDB;
 		values[fields.Spells_speed[0]][fields.Spells_speed[1]] = speed;
 		values[fields.Spells_cost[0]][fields.Spells_cost[1]] = cost || (newSpellObj.ct ? newSpellObj.ct[0].get('max') : 0);
-		values[fields.Spells_msg[0]][fields.Spells_msg[1]] = msg;
-
-		log('setSpell: initial values set');
 		
 		if (spellDB.toUpperCase().includes('POWER')) {
 			values[fields.Spells_castValue[0]][fields.Spells_castValue[1]] = (levelOrPerDay[1] || fields.Spells_castValue[2]);
 			values[fields.Spells_castMax[0]][fields.Spells_castMax[1]] = levelOrPerDay[0];
-			log('setSpell: POWER values set');
 		
 		} else {
 			values[fields.Spells_miSpellSet[0]][fields.Spells_miSpellSet[1]] = (levelOrPerDay[1] || fields.Spells_miSpellSet[2]);
 			values[fields.Spells_storedLevel[0]][fields.Spells_storedLevel[1]] = levelOrPerDay[0];
 			values[fields.Spells_castValue[0]][fields.Spells_castValue[1]] = (levelOrPerDay[0]==0 ? 0 : 1);
 			values[fields.Spells_castMax[0]][fields.Spells_castMax[1]] = 1;
-			log('setSpell: NON-POWER values set');
-		
 		}
-		log('setSpell: about to addtablerow');
 		
-		return addTableRow( spellTables, r, values );
+		return tableSet( addTableRow( spellTables, r, values ), fields.Spells_msg, r, msg );
 	}
 
 	/*
@@ -6733,13 +6717,9 @@ var MagicMaster = (function() {
 		}
 		
 		var rootDB = isPower ? fields.PowersDB : (isMU ? fields.MU_SpellsDB : fields.PR_SpellsDB),
-			spellTables = getAllTables( charCS, (isPower ? 'POWERS' : 'SPELLS'), col )[(isPower ? 'POWERS' : 'SPELLS')],
+			spellTables = getAllTables( charCS, (isPower ? 'POWERS' : 'SPELLS'), col )[(isPower ? 'POWERS' : 'SPELLS')];
 			
-		log('handleMemoriseSpell: calling setSpell');
-
 		spellTables = setSpell( charCS, spellTables, rootDB, spellName, row, col, undefined, '', [noToMemorise,noToMemorise] );
-
-		log('handleMemoriseSpell: returned from setSpell');
 
 		if (isMI && isPower) {
 			setAttr( charCS, ['power-'+spellName, 'current'], row );
