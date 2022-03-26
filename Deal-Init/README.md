@@ -5,7 +5,7 @@
 ```
 DealInit supports Savage Worlds style card based inititive by dealing cards to the Turn Order and 
 sorting the order by suit.  
-(Note: If you are using the amazing VTTES to enhance your Roll20 experience, you must disable 
+(Note: If you are using VTTES to enhance your Roll20 experience, you must disable 
 "Automatically Sort Initiative" in the VTTES config settings for Deal-Init to work properly.)
 
 DealInit does not utilize the Roll20 deck system. Instead it manages an internal array of cards 
@@ -31,7 +31,7 @@ value in order for DealInit to start dealing to that token again.
 
 The script only has a few options:
 
-!deal-init [ --help ] [--clearTurnOrder] [--reset ] [--4jreset] [ --show ] [ --onlyto --string ] [ --deal2chat ]
+!deal-init [ --help ] [--clearTurnOrder] [--reset ] [--4jreset] [ --show ] [ --onlyto --string ] [ --deal2chat ] [--quiet]]
 (no args) Deals cards to turn order and sorts by suit.
 --help : Displays the help.
 --clearTurnOrder : Removes all tokens from the Turn Order.  Useful after changing pages in Roll20.
@@ -44,6 +44,7 @@ The script only has a few options:
                     Overwrites init if token is on hold. Case sensitive.
 --deal2chat : Deal a card into the chat window.  Use this when someone spends a benny 
               to draw a new card
+--quiet : minimize chat output to GM 
 
 I personally use these macros to call the script that look like this:
 "New Scene"
