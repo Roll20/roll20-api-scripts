@@ -1,9 +1,11 @@
 {
 	"name": "WildHelpers",
 	"script": "WildHelpers.js",
-	"version": "1.3.2",
+	"version": "1.3.4",
 	"previousversions": [
-		"1.3.1"
+		"1.3.1",
+		"1.3.2",
+		"1.3.3"
 	],
 	"description": "Set of utilities used by the **WildShape** API(and possibly others)\n Create menus, parse journal items, duplicate characters etc.",
 	"authors": "Angelo",

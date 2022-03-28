@@ -1,7 +1,7 @@
 var AgoneDice = AgoneDice || (function () {
 	'use strict';
-	var version = '0.2',
-	lastUpdate = 1586019853,
+	var version = '0.4',
+	lastUpdate = 1618513706,
 
 	checkInstall = function() {
 		log('### AgoneDice v'+version+' ### ['+(new Date(lastUpdate*1000))+']');
@@ -84,7 +84,7 @@ var AgoneDice = AgoneDice || (function () {
 					return;
 				}
 				var diceResult = diceRoll.rolls[i].results[0].v || 0;
-				var total = diceRoll.total || 0;
+				var total = msg.inlinerolls[msg.inlinerolls.length - 1].results.total || 0;
 				var t = msg.content.split('{');
 				t = t[2].split('}');
 				t = t[0].split('=');
@@ -95,7 +95,7 @@ var AgoneDice = AgoneDice || (function () {
 					prefix = '/w gm ';
 				}
 				if (diceResult === 1) {
-					sendChat(person, prefix+"&{template:agone-fumble} {{name=@{"+name+"|character_name}}} {{Fumble=[["+total+"-1d10!]]}}");
+					sendChat(person, prefix+"&{template:agone-fumble} {{name=@{"+name+"|character_name}}} {{Fumble=@{"+name+"|fumbleRoll}[[[["+total+"]]-[[1d10!]]]]}} {{Dice=@{"+name+"|rollRoll}: $[[1]]}} {{Roll=@{"+name+"|lastRoll}: $[[0]]}}");
 				}
 			break;
 		}

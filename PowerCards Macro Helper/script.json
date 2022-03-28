@@ -1,8 +1,8 @@
 {
     "name": "PowerCards Macro Helper",
     "script": "PCMHelper.js",
-    "version": "1.0.10",
-    "previousversions": ["1.0.9","1.0.8","1.0.5"],
+    "version": "1.0.13",
+    "previousversions": ["1.0.12","1.0.11","1.0.10","1.0.9","1.0.8","1.0.5"],
     "description": "Companion Script to **PowerCards**. Automatically creates character attributes and macros to allow for system-generated PowerCards based on compendium/custom entered NPC Actions and Player Attacks.\n\n * [PowerCard Macro Helper Documentation](https://wiki.roll20.net/Script:PowerCards_Macro_Helper)\n* [PowerCards & Macro Helper forum thread](https://app.roll20.net/forum/post/7136858/script-powercards-3-thread-6)",
     "authors": "Kurt Jaegers",
 	"patreon": "https://www.patreon.com/KurtJaegers",
