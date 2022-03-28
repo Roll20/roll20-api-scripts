@@ -1,7 +1,7 @@
 {
 	"name" : "Initiative Tracker Plus",
 	"script" : "initiative_tracker_plus.js",
-	"version" : "1.28",
+	"version" : "1.29",
 	"description": "**From Ken L's original Tracker Jacker script.**\r\rAn attempt to modernize Tracker Jacker and add new functionality as it becomes desired.\r\rFor help visit [Initiative Tracker Plus Readme](https://github.com/Roll20/roll20-api-scripts/blob/master/InitiativeTrackerPlus/README.md) or the [Roll20 Forums Thread](https://app.roll20.net/forum/post/9805171/script-initiative-tracker-plus-successor-to-tracker-jacker).",
 	"authors" : "Ken L., James C. (Chuz)",
 	"roll20userid" : "4306461",
@@ -11,6 +11,7 @@
 	"modifies" : {},
 	"conflicts" : [],
 	"previousversions" : [
+		"1.28",
 		"1.27",
 		"1.25",
 		"1.0"
