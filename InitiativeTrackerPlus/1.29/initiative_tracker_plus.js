@@ -3356,6 +3356,8 @@ var InitiativeTrackerPlus = (function() {
 							+ "<li><b>statusargsbgcolor</b> [#333333] - Hex color code, changes the background color of the feedback text when changing the marker for a status.</li>"
 							+ "<li><b>eotcolor</b> [#FFFFFF] - Hex color code, changes the color of the EOT button.</li>"
 							+ "<li><b>eotbgcolor</b> [#990000] - Hex color code, changes the background color of the EOT button.</li>"
+							+ "<li><b>playcombatmusic</b> [0] - Will a track from the jukebox be played when the tracker is active. Values should be 0 for off, 1 for on.</li>"
+							+ "<li><b>combatmusic</b> [] - The name of the track to play when the tracker is active if playcombatmusic is turned on [1]. Track can not contain spaces (example: Combat).</li>"
 						+ '</ul>'
 					+ '</li>'
 				+ '</div>'
