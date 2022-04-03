@@ -2,8 +2,8 @@ var PowerCards = PowerCards || (function () {
     //'use strict';
     // VERSION INFO
     var PowerCards_Author = "Sky and Kurt Jaegers";
-    var PowerCards_Version = "3.8.20";
-    var PowerCards_LastUpdated = "2022-01-02";
+    var PowerCards_Version = "3.8.21";
+    var PowerCards_LastUpdated = "2022-04-03";
 
     // FUNCTION DECLARATIONS
     var PowerCard = PowerCard || {};
@@ -1574,7 +1574,7 @@ var PowerCards = PowerCards || (function () {
             if (result["addToTracker"]) {
                 // ADD TOKEN OR CHARACTER OR DISPLAY NAME TO TURN ORDER TRACKER...
                 var TrackerName = "";
-                let pageid ='';
+                let pageid = Campaign().get("playerpageid");
                 if (TrackerID != undefined && TrackerID.charAt(0) === "C") {
                     var Char = getObj("character", TrackerID.substring(2));
                     var Tok = findObjs({
