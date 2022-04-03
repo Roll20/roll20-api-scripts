@@ -404,8 +404,6 @@ var PowerCards = PowerCards || (function () {
             n[x] = n[x].replace(/~[A-Za-z]*\$/g, "");
         }
 
-        log(n);
-
         //_.each(n, function(a) { log(a); });
 
         // Handle each tag, one at a time
