@@ -1,9 +1,15 @@
 # COFantasy: Historique des changements (depuis la version 1.0)
-##3.06
+## 3.06
 ### Capacités
+* Ajout des capacités de la Voie du drakonide.
 * Meilleure prise en charge du coup de bouclier.
 
+### Corrections de bugs
+* frenesieMinotaure est bien un effet temporaire.
+
 ### Autres améliorations
+* Possibilité de laisser le MJ montrer le résultat d'un jet ou non.
+* Implémentation d'un anneau de protection.
 * Fonction de pause du jeu
 * Utilisation de la possiblité de bloquer des tokens
 
@@ -30,8 +36,6 @@
 * Correction d'un bug sur le pacifisme
 
 ### Autres améliorations
-* Fonction de pause du jeu
-* Utilisation de la possiblité de bloquer des tokens
 * Ajout d'un marker pour les chefs de groupe.
 * Possibilité de retarder l'affichage de la mort
 * Support pour les foudres du temps.
