@@ -496,7 +496,7 @@ tr {line-height: 25px;}
                 <p>Pour les effets qui divisent par 2 les dégâts ou la durée, utiliser un <a href=#predicats>prédicat</a> <code>diviseEffet_<i>type</i></code>.</p>
                 <p>Pour les effets qui donnent un bonus aux tests pour résister aux effets ou dégâts d'un certain type, utiliser un <a href=#predicats>prédicat</a> <code>bonusSaveContre_<i>type</i></code> de valeur le bonus accordé. Par exemple, un objet qui donnerait +5 à tous les tests pour résister au poison pourrait être encodé par un prédicat <code>bonusSaveContre_poison</code> de valeur <code>5</code>.</p>
                 <h5>Armures/Boucliers de Protection (COF p. 203)</h5>
-                <p>ajoutez un <a href=#predicats>prédicat</a> <code>armureProtection</code> ou <code>bouclierProtection</code>. Le script détecte si l'équipement est porté ou pas via la fiche, et fonctionne spécifiquement contre les attaques qui utilisent <code>--sournoise</code></p>
+                <p>ajoutez un <a href=#predicats>prédicat</a> <code>armureProtection</code> ou <code>bouclierProtection</code>. Le script détecte si l'équipement est porté ou pas via la fiche, et fonctionne spécifiquement contre les attaques qui utilisent <code>--sournoise</code>. Il est aussi possible de spécifier le port d'un anneau de protection ayant le même effet (prédicat <code>anneauProtection</code>.</p>
               </div>
               <h4 class="text-secondary">Manoeuvres</h4>
               <div class="decalage">
@@ -903,6 +903,7 @@ tr {line-height: 25px;}
                   <li><code>--plageEchecCritique <i>c</i></code> : permet de considérer tout jet de dé inférieur ou égal à <i>c</i> comme un échec critique.</li>
                 </ul>
                 <p>Si le personnage possède un attribut numérique <code>modificateurTests</code>, ce modificateur sera pris en compte pour tous les tests.</p>
+                <p>Dans les options de jeu (affichés en utilisant <code>!cof-options</code>, dans le menu des options d'affichage, il est possible de choisir de ne faire afficher les résultats qu'au MJ, qui peut alors en cliquant sur un bouton le montrer aux joueurs (ou pas).</p>
               </div>
               <h3 class="text-info" id="anonymat">2.10 Anonymat et fausses identités</h3>
               <div class="decalage">
@@ -1182,7 +1183,7 @@ tr {line-height: 25px;}
                 </ol>
                 <h4 class="text-secondary">Voie du fauve</h4>
                 <ol>
-                  <li><strong>Vitesse du félin</strong> : simplement ajouter les bonus sur la fiche, ainsi que les compétences course, escalade et saut.</li>
+                  <li><strong>Vitesse du félin</strong> : ajouter un prédicat <code>vitesseDuFelin</code>, de valeur le rang dans la voie. Pensez à ajouter des compétences de saut, escalade et course sur la fiche (sans les bonus !) s'ils ne sont pas déjà présent dans votre handout de compétences.</li>
                   <li><strong>Panthère</strong> : ajouter un personnage pour la panthère, qui sera contrôlé par le joueur.</li>
                   <li><strong>Attaque bondissante</strong> : faire l'attaque avec les options <code>--bonusAttaque 5</code> <code>--plus 1d6</code>. Les conditions d'utilisation sont à vérifier par le MJ.</li>
                   <li><strong>Grand félin</strong> : ajuster la fiche de la panthère, et pour le soin, utiliser <code>!cof-soin @{selected|token_id} nom_familier ?{Montant des soins} --transfer</code>.</li>
@@ -2001,6 +2002,14 @@ tr {line-height: 25px;}
                   <li><strong>Loup parmi les loups</strong> : ajouter un <a href=#predicats>prédicat</a> <code>loupParmiLesLoups</code> avec comme valeur 1 ou 2 selon le rang dans la voie. Une créature sera considérée comme humanoïde si elle a un <a href=#predicats>prédicat</a> <code>humanoide</code>, ou si sa race est reconnue comme humanoïde.</li>
                   <li><strong>Versatile</strong> : se reporter à la capacité choisie.</li>
                   <li><strong>Increvable</strong> : ajouter un <a href=#predicats>prédicat</a> <code>increvableHumain</code>.</li>
+                </ol>
+                <h4 class="text-secondary">Drakonide</h4>
+                <ol>
+                  <li><strong>Souffle</strong> : ajouter une attaque naturelle cochée, faisant des dégâts du type du drakonide, de portée 10 m, avec comme option <code>--cone 30 --psave DEX 12 --tempsRecharge rechargeSouffle [[1d4]]</code>.</li>
+                  <li><strong>Intimidant</strong> : ajouter la compétence <code>intimidation</code> sur la fiche, avec un bonus de +5.</li>
+                  <li><strong>Écailles robustes</strong> : ajouter le bonus sur la fiche.</li>
+                  <li><strong>Fureur drakonide</strong> : ajouter un prédicat <code>fureurDrakonide</code>.</li>
+                  <li><strong>Héritage draconique</strong> : ajuster les caractéristiques sur la fiche.</li>
                 </ol>
                 <h4 class="text-secondary">Lutin</h4>
                 Voir les <a href="#fee_et_lutin">fées</a>.
