@@ -135,11 +135,13 @@ d6	You see a/an
 Getting to this point might seem like a lot of steps but I will go through a couple of examples and it should seem really simple by the end. **Most of the processing is handled by your spreadsheet software automatically, and most or the remaining is handled by CardTable**. Only a very minor bit of manual processing is required.
 
 ## 3. Example table 1
-Let's say we want to convert the table I showed in the example above into a ✨card table✨.
+Let's say we want to convert the table I showed in the example above into a ✨card table✨. For a much more simpler table to convert go to **section 4**
 
 ![image2](images/step0-1.png)
-### Step 1 - Copy the tables into a spreadsheet
-Just copy all the relevant text into a spreadsheet. I am using google docs for this example because it is 🌟free🌟
+
+Let's begin!
+
+Just copy all the relevant text into a spreadsheet. I am using google docs for this example because it is 🌟free🌟. For a microsoft excel example, go to **section 4**
 
 Once you have copied everything, it should look like this-
 
@@ -166,3 +168,70 @@ Fill out the first column accordingly. SInce here it is just simple ranges of nu
 Fill out all the tables like this and you should be ready to save it.
 
 ![image8](images/step6-1.png)
+
+Now we can easily save it in the format we need. Just go to *File>Download>Tab Separated Values (.tsv)* and click on it
+
+![image9](images/step7-1.png)
+
+Now you should have a file basically in the format needed by CardTable except a few minor adjustments.
+
+Open the file you just downloaded (in Notepad or any text editor of your choice). It should look like this -
+
+![image](images/step8-1.png)
+
+Now all we need to do is add the formatting required by CardTable and we are all set.
+
+Add this to the beginning of the file in a new line (section 2)-
+
+`!cardtable{{`
+
+and this to the end of the file in a new line (section 2)-
+
+`}}`
+
+The file should look like this now-
+
+![image](images/step9-1.png)
+
+Now we add the name of the table in a new line after the first line we just added following the format detailed in section 2.1. Since this contains multiple tables, it will have the `m` prefix -
+
+![image](images/step10-1.png)
+
+Now all that is left is to separate these tables so that CardTable can identify them. As detailed in section 2.4, add a `-----` between each table.
+
+![image](images/step11-1.png)
+
+🎉All done!🎉 Now just copy and paste all this text into your roll20 chatbox and let CardTable do its magic (It is instantaneous!).
+
+## Example table 2
+Let's say you want to convert the spell critical fumble table you can find [here](https://www.reddit.com/r/DnDBehindTheScreen/comments/68pwms/dnd_5e_critical_hit_tables_and_fumble_tables/). Let's begin!
+
+Copy all the table into your favourite spreadsheet software. This time I will use Microsoft excel to show the same steps with this ultra popular software. Since this table is already formatted on reddit, it should look like this in excel -
+
+![image](images/step1-2.png)
+
+As you can see, no need to make new columns or fill anything in. It is all done already. But still a few fixes are required.
+
+1. As you can see in this table, the author is calling the dice roll a "Roll %" but for cardtable this needs to be written as `d100` instead (section 2.2).
+2. Excel has this very annoying 🌟feature🌟 where it converts numbers of the form 02-05 into dates automatically. Google sheets thankfully does not do this, and if you are using google sheets you can skip this step. Wherever excel has converted your number into a date, you will see that it has automaticall added a date to the front. Just delete this and put an apostrophe there instead. i.e. Excel will convert `02-05` to `2022-02-05`. You need to make it `'02-05` and excel will stop being so helpful. **This step is very important to do as otherwise CardTable will fail**. Repeat this for whichever rows excel has messed up (or just get annoyed and move to google sheets instead).
+
+Once you have done these two things, your spreadsheet should look like this -
+
+![image](images/step2-2.png)
+
+AND...that's basically all you needed to do in the spreadsheet. Nose save it *File>Save as* and in the file format selection dropdown menu, select _Text (Tab delimited)(*.txt)_
+
+![image](images/step2-3.png)
+
+The next steps are basically the same as the ones in the last example -
+
+1. Open this file in a text editor
+2. Add `!cardtable{{` to the beginning in a new line and `}}` at the end in a new line
+3. Add a new line after the first and write the table name following the format in section 2.1. For this example it will be `s-spell-critical-fumble` since the rolling just happens on one table
+4. Since this is only one table no separation between tables is required. So the file is ready to be used now.
+
+The final file should look like this -
+
+![image](images/step2-4.png)
+
+And that's it! All set to be pasted into the chatbox and then rolled whenever your players roll a perfect ✨**Nat 1**✨
