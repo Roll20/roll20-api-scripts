@@ -1,0 +1,26 @@
+!cardtable{{	
+feywild-cavern	
+d6	Location: This cavern is located
+1	 Within the territory of a subterranean hobgoblin kingdom.
+2	 Deep beneath an elvish palace.
+3	 Far below an ancient elvish ruin.
+4	 Under a range of misty mountains.
+5	 Far below a thriving city.
+6	 Deeper than any mortal has been known to go.
+------	
+d6	Major feature: You see a/an
+1	 Dark underground pond.
+2	" Series of beautiful, natural columns."
+3	 Pair of large stalactites that resemble fangs.
+4	 Magically-crafted colonnade.
+5	" Dense, swirling fog.."
+6	 Set of stone doors in an otherwise natural cavern.
+------	
+d6	Minor feature: You see a/an
+1	 Constant drip of water.
+2	 Signpost warning all to turn back.
+3	 Elvish writing scrawled on the cave wall.
+4	 Pile of recently cleaned bones.
+5	 Ring of brightly-colored mushrooms.
+6	 Shimmering mist.
+}}	
