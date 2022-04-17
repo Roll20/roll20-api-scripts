@@ -9,13 +9,13 @@
     "useroptions": [],
     "dependencies": [],
     "modifies": {
-        "character": "read,create,delete",
-        "attribute": "read,create,delete",
-        "ability": "read,create,delete",
-        "graphic": "read,create,delete",
-        "token.bar1_link": "read,write",
-        "token.bar2_link": "read,write",
-        "token.bar3_link": "read,write"
+        "character": "read, write",
+        "attribute": "read, write",
+        "ability": "read, write",
+        "graphic": "read, write",
+        "token.bar1_link": "read, write",
+        "token.bar2_link": "read, write",
+        "token.bar3_link": "read, write"
     },
     "conflicts": []
 }
