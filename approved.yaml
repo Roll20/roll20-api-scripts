@@ -1123,3 +1123,7 @@ smartaoe:
 campaignsurvey:
 - "Campaign Survey"
 - "Utility"
+
+cardtables:
+- "CardTables"
+- "Utility"
