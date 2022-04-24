@@ -41,9 +41,21 @@
     },
     {
       "name": "Refresh Attribute Name",
-      "type": "checkbox",
+      "type": "text",
       "default": "refresh",
       "description": "The name of the attribute representing a character's Refresh. Defaults to value used by Evil Hats' official Roll20 FATE Character Sheet (https://github.com/Roll20/roll20-character-sheets/tree/master/Fate)."
+    },
+    {
+      "name": "Disable Marker Display Attribute Name",
+      "type": "text",
+      "default": "",
+      "description": "If set then Characters with this attribute set to '1' will not have token markers enabled. NOTE: this will remove markers of the designated type from tokens with this flag set."
+    },
+    {
+      "name": "Enable Marker Display Attribute Name",
+      "type": "text",
+      "default": "",
+      "description": "If set then only Characters with this attribute set to '1' will have token markers enabled. NOTE: this will remove markers of the designated type from tokens without this flag."
     }
   ],
   "previousversions": []

@@ -6,7 +6,7 @@
  * See README.md for full description
  *
  * Commands:
- *      !fatepointdisplay [add|remove|reset|resetall]
+ *      !fatepointdisplay [add|remove|reset|resetall|update]
  *
  * User Options:
  *      [Use Macros]
@@ -15,17 +15,21 @@
  *      [Token Marker Name]
  *      [Fate Point Attribute Name]
  *      [Refresh Attribute Name]
+ *      [Disable Marker Display Attribute Name]
+ *      [Enable Marker Display Attribute Name]
  */
 
 var FatePointDisplayConfig = FatePointDisplayConfig || (function () {
     /* Global Config options for the script */
     const userOptions = (globalconfig && globalconfig.FatePointDisplay) || {
-        "Use Macros": true, // If true, only players with GM permissions can use commands.
+        "Use Macros": true,
         "GM Only": true,
         "Players Can Reset": false,
         "Token Marker Name": "",
         "Fate Point Attribute Name": "fp",
-        "Refresh Attribute Name": "refresh"
+        "Refresh Attribute Name": "refresh",
+        "Disable Marker Display Attribute Name": "",
+        "Enable Marker Display Attribute Name": "",
     };
 
     return {
@@ -40,7 +44,11 @@ var FatePointDisplayConfig = FatePointDisplayConfig || (function () {
         /** The name of the attribute representing a character's current Fate Point total. */
         fatePointAttrName: userOptions["Fate Point Attribute Name"],
         /** The name of the attribute representing a character's Refresh. */
-        refreshAttrName: userOptions["Refresh Attribute Name"]
+        refreshAttrName: userOptions["Refresh Attribute Name"],
+        /** The name of the attribute which, if set to 1, will add the Character to the auto-update blacklist. */
+        blackListAttrName: userOptions["Disable Marker Display Attribute Name"],
+        /** The name of the attribute which, if set to 1, will add the Character to the auto-update whitelist. */
+        whiteListAttrName: userOptions["Enable Marker Display Attribute Name"],
     };
 }());
 
@@ -80,6 +88,24 @@ var FatePointDisplay = FatePointDisplay || (function (config) {
         token.set("statusmarkers", markers.join(","));
     };
 
+    /** Updates a token's marker list with the specified value. */
+    const removeMarkerOnToken = function (tag, token) {
+        let markersList = token.get("statusmarkers");
+        if (!markersList.includes(tag)) return;
+
+        let markers = markersList.split(',');
+        let newMarkers = [];
+
+        for (let i = 0; i < markers.length; i++) {
+            if (!markers[i].startsWith(tag)) {
+                newMarkers.push(markers[i]);
+            }
+        }
+
+        token.set("statusmarkers", newMarkers.join(","));
+    };
+
+
     /** Updates the token marker on all character tokens. */
     const updateAllCharsMarkers = function () {
         let markerTag = getMarkerTag();
@@ -100,10 +126,32 @@ var FatePointDisplay = FatePointDisplay || (function (config) {
         let value = getAttrByName(charId, config.fatePointAttrName);
         if (value == undefined) return;
 
-        let tokens = findObjs({ type: 'graphic', represents: charId });
+        let removeTokens = false;
 
+        // If the blacklist is enabled in config, check if the current character is flagged.
+        if (config.blackListAttrName != undefined && config.blackListAttrName != "") {
+            let blackListAttrs = findObjs({ _type: "attribute", _characterid: charId, name: config.blackListAttrName });
+            removeTokens = blackListAttrs != undefined && blackListAttrs.length > 0 && blackListAttrs[0].get("current") == "1";
+            if (removeTokens) log("Update called on blacklisted char");
+        }
+
+        // If the whitelist is enabled in config, check if the current character is flagged.
+        if (config.whiteListAttrName != undefined && config.whiteListAttrName != "") {
+            let whiteListAttrs = findObjs({ _type: "attribute", _characterid: charId, name: config.whiteListAttrName });
+            removeTokens = whiteListAttrs == undefined || whiteListAttrs.length == 0 || whiteListAttrs[0].get("current") != "1";
+            if (removeTokens) log("Update called on non-whitelisted char");
+        }
+
+        let tokens = findObjs({ type: 'graphic', represents: charId });
         for (let i = 0; i < tokens.length; i++) {
-            addOrUpdateMarkerOnToken(markerTag, tokens[i], value);
+            if (removeTokens) {
+                log("remove called.");
+                removeMarkerOnToken(markerTag, tokens[i]);
+            }
+            else {
+                log("Add/update called.");
+                addOrUpdateMarkerOnToken(markerTag, tokens[i], value);
+            }
         }
     };
 
@@ -219,6 +267,7 @@ var FatePointDisplay = FatePointDisplay || (function (config) {
             addOrUpdateMacro("Fate-", "!fatepointdisplay remove", gmId, modFatePointUsers, true);
             addOrUpdateMacro("FateReset", "!fatepointdisplay reset", gmId, resetFatePointUsers, true);
             addOrUpdateMacro("FateResetAll", "!fatepointdisplay resetall", gmId, resetFatePointUsers, false);
+            addOrUpdateMacro("FateUpdateAll", "!fatepointdisplay update", gmId, "", false);
             log("FatePointDisplay: macros added.");
         }
         else {
@@ -226,6 +275,7 @@ var FatePointDisplay = FatePointDisplay || (function (config) {
             removeMacro("Fate-");
             removeMacro("FateReset");
             removeMacro("FateResetAll");
+            removeMacro("FateUpdateAll");
         }
     };
 
@@ -250,13 +300,15 @@ var FatePointDisplay = FatePointDisplay || (function (config) {
         msg += "<li><b>Token Marker Name:</b> " + config.tokenMarkerName + "</li>";
         msg += "<li><b>Fate Point Attribute name:</b> " + config.fatePointAttrName + "</li>";
         msg += "<li><b>Refresh Attribute Name:</b> " + config.refreshAttrName + "</li>";
+        msg += "<li><b>Disable Marker Display Attribute Name:</b> " + config.blackListAttrName + "</li>";
+        msg += "<li><b>Enable Marker Display Attribute Name:</b> " + config.whiteListAttrName + "</li>";
         msg += "</ul></td></tr></tbody></table>";
 
         sendChat("FatePointDisplay", msg);
     };
 
-    /** Event handler for when the fate point attribute is changed. */
-    const onUpdateAttribute = function (obj) {
+    /** Event handler for when the fate point attribute is changed on a character. */
+    const onUpdateFPAttribute = function (obj) {
         let charId = obj.get("_characterid");
 
         // Keep fate point count >= 0 and <= 9
@@ -276,11 +328,28 @@ var FatePointDisplay = FatePointDisplay || (function (config) {
             updateCharacterMarkers(markerTag, charId);
         }
 
-        log("FatePointDisplay: change:attribute event processed.");
+        log("FatePointDisplay: change:attribute:" + config.fatePointAttrName + " event processed.");
+    };
+
+    /** Event handler for when the blacklist or whitelist flag is changed on a character. */
+    const onUpdateFlagAttribute = function (obj) {
+        let charId = obj.get("_characterid");
+        if (config.tokenMarkerName != "") {
+            let markerTag = getMarkerTag();
+            if (markerTag == undefined) {
+                sendMarkerTagError();
+                return;
+            }
+            updateCharacterMarkers(markerTag, charId);
+        }
+
+        log("FatePointDisplay: change:attribute:" + obj.get("name") + " event processed.");
     };
 
     /** Event handler for chat input. */
     const onChatInput = function (msg) {
+        if (!config.useMacros) return;
+
         if (msg.type == "api") {
             var args = msg.content.trim().toLowerCase().split(/[ ]+/);
 
@@ -302,8 +371,11 @@ var FatePointDisplay = FatePointDisplay || (function (config) {
 
                 return;
             }
-
-            if (msg.selected && msg.selected.length > 0) {
+            else if (args[1] == "update") {
+                updateAllCharsMarkers();
+                log("FatePointDisplay: Update all character token markers command processed.");
+            }
+            else if (msg.selected && msg.selected.length > 0) {
                 var tokens = msg.selected.flatMap(function (o) {
                     return o._type == "graphic" ? getObj("graphic", o._id) : [];
                 });
@@ -355,7 +427,7 @@ var FatePointDisplay = FatePointDisplay || (function (config) {
 
     /** Event handler for when the API server is finished loading the game. */
     const onReady = function () {
-        //sendDebugUserOptions();
+        sendDebugUserOptions();
         manageMacros();
         if (config.tokenMarkerName != "") {
             updateAllCharsMarkers();
@@ -368,7 +440,8 @@ var FatePointDisplay = FatePointDisplay || (function (config) {
         init: onReady,
         chatInput: onChatInput,
         updatePage: onChangePage,
-        updateAttr: onUpdateAttribute
+        updateFatePoints: onUpdateFPAttribute,
+        updateFlags: onUpdateFlagAttribute
     };
 }(FatePointDisplayConfig));
 
@@ -377,8 +450,14 @@ on("ready", FatePointDisplay.init);
 on('chat:message', FatePointDisplay.chatInput);
 on("change:campaign:playerpageid", FatePointDisplay.updatePage);
 on("change:attribute:current", function (obj) {
-    if (obj.get("name") == "fp") {
-        FatePointDisplay.updateAttr(obj);
+    let name = obj.get("name");
+    switch (name) {
+        case FatePointDisplayConfig.fatePointAttrName:
+            FatePointDisplay.updateAttr(obj);
+            break;
+        case FatePointDisplayConfig.blackListAttrName:
+        case FatePointDisplayConfig.whiteListAttrName:
+            FatePointDisplay.updateFlags(obj);
     }
 });
 
