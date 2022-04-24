@@ -105,7 +105,6 @@ var FatePointDisplay = FatePointDisplay || (function (config) {
         token.set("statusmarkers", newMarkers.join(","));
     };
 
-
     /** Updates the token marker on all character tokens. */
     const updateAllCharsMarkers = function () {
         let markerTag = getMarkerTag();
@@ -132,26 +131,18 @@ var FatePointDisplay = FatePointDisplay || (function (config) {
         if (config.blackListAttrName != undefined && config.blackListAttrName != "") {
             let blackListAttrs = findObjs({ _type: "attribute", _characterid: charId, name: config.blackListAttrName });
             removeTokens = blackListAttrs != undefined && blackListAttrs.length > 0 && blackListAttrs[0].get("current") == "1";
-            if (removeTokens) log("Update called on blacklisted char");
         }
 
         // If the whitelist is enabled in config, check if the current character is flagged.
         if (config.whiteListAttrName != undefined && config.whiteListAttrName != "") {
             let whiteListAttrs = findObjs({ _type: "attribute", _characterid: charId, name: config.whiteListAttrName });
             removeTokens = whiteListAttrs == undefined || whiteListAttrs.length == 0 || whiteListAttrs[0].get("current") != "1";
-            if (removeTokens) log("Update called on non-whitelisted char");
         }
 
         let tokens = findObjs({ type: 'graphic', represents: charId });
         for (let i = 0; i < tokens.length; i++) {
-            if (removeTokens) {
-                log("remove called.");
-                removeMarkerOnToken(markerTag, tokens[i]);
-            }
-            else {
-                log("Add/update called.");
-                addOrUpdateMarkerOnToken(markerTag, tokens[i], value);
-            }
+            if (removeTokens) removeMarkerOnToken(markerTag, tokens[i]);
+            else addOrUpdateMarkerOnToken(markerTag, tokens[i], value);
         }
     };
 
