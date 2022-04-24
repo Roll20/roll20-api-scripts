@@ -1,0 +1,50 @@
+{
+  "name": "Fate Point Helper",
+  "script": "FatePointHelper.js",
+  "version": "1.0",
+  "authors": "Tyson Tiatia",
+  "description": "Automatically adds and updates token markers to track characters' FATE Point totals, and provides helper macros to increment, decrement, and reset those values.",
+  "roll20userid": "514883",
+  "useroptions": [
+    {
+      "name": "Use Macros",
+      "type": "checkbox",
+      "value": "true",
+      "checked": "checked",
+      "description": "Automatically create and maintain macros for this API."
+    },
+    {
+      "name": "GM Only",
+      "type": "checkbox",
+      "value": "true",
+      "checked": "checked",
+      "description": "The commands and macros will only be visible and usable by players with GM permissions."
+    },
+    {
+      "name": "Players Can Reset",
+      "type": "checkbox",
+      "value": "true",
+      "checked": "unchecked",
+      "description": "Players can use the reset and resetall commands. Overridden by [GM Only]."
+    },
+    {
+      "name": "Token Marker Name",
+      "type": "text",
+      "default": "",
+      "description": "If not blank then the specified marker will be used to indicate the current fate point total on character-linked tokens. Supports custom markers. If multiple tokens with the same name exist, the first returned will be used."
+    },
+    {
+      "name": "Fate Point Attribute Name",
+      "type": "text",
+      "default": "fp",
+      "description": "The name of the attribute representing a character's current Fate Point total. Defaults to value used by Evil Hats' official Roll20 FATE Character Sheet (https://github.com/Roll20/roll20-character-sheets/tree/master/Fate)."
+    },
+    {
+      "name": "Refresh Attribute Name",
+      "type": "checkbox",
+      "default": "refresh",
+      "description": "The name of the attribute representing a character's Refresh. Defaults to value used by Evil Hats' official Roll20 FATE Character Sheet (https://github.com/Roll20/roll20-character-sheets/tree/master/Fate)."
+    }
+  ],
+  "previousversions": []
+}
