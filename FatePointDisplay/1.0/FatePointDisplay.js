@@ -427,7 +427,7 @@ var FatePointDisplay = FatePointDisplay || (function (config) {
 
     /** Event handler for when the API server is finished loading the game. */
     const onReady = function () {
-        sendDebugUserOptions();
+        //sendDebugUserOptions();
         manageMacros();
         if (config.tokenMarkerName != "") {
             updateAllCharsMarkers();
