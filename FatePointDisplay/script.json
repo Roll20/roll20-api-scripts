@@ -1,6 +1,6 @@
 {
-  "name": "Fate Point Helper",
-  "script": "FatePointHelper.js",
+  "name": "Fate Point Display",
+  "script": "FatePointDisplay.js",
   "version": "1.0",
   "authors": "Tyson Tiatia",
   "description": "Automatically adds and updates token markers to track characters' FATE Point totals, and provides helper macros to increment, decrement, and reset those values.",

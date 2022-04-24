@@ -1,12 +1,12 @@
 /*
- * FatePointHelper.js
+ * FatePointDisplay.js
  * Current version: 1.0
  * Last updated: 2022-04-24 by Tyson Tiatia
  *
  * See README.md for full description
  *
  * Commands:
- *      !fatepointhelper [add|remove|reset|resetall]
+ *      !fatepointdisplay [add|remove|reset|resetall]
  *
  * User Options:
  *      [Use Macros]
@@ -16,26 +16,11 @@
  *      [Fate Point Attribute Name]
  *      [Refresh Attribute Name]
  */
-var FatePointHelper = FatePointHelper || (function () {
-    const version = "1.0";
-    const lastUpdate = "2022-04-24";
 
-    /** If true, only players with GM permissions can use commands. */
-    const opt_gmOnly = "GM Only";
-    /** If true (and GM Only is false), non-gm players will have access to the Reset and Reset All commands. */
-    const opt_playersCanReset = "Players Can Reset";
-    /** If true, the script macros will be create and maintain macros for itself. */
-    const opt_useMacros = "Use Macros";
-    /** If not null/blank then the specified marker will be used to indicate the current fate point total on character-linked tokens. If multiple tokens with the same name exist, the first will be used. */
-    const opt_tokenMarkerName = "Token Marker Name";
-    /** The name of the attribute representing a character's current Fate Point total. */
-    const opt_fatePointAttrName = "Fate Point Attribute Name";
-    /** The name of the attribute representing a character's Refresh. */
-    const opt_refreshAttrName = "Refresh Attribute Name";
-
+var FatePointDisplayConfig = FatePointDisplayConfig || (function () {
     /* Global Config options for the script */
-    const userOptions = (globalconfig && globalconfig.FatePointHelper) || {
-        "Use Macros": true,
+    const userOptions = (globalconfig && globalconfig.FatePointDisplay) || {
+        "Use Macros": true, // If true, only players with GM permissions can use commands.
         "GM Only": true,
         "Players Can Reset": false,
         "Token Marker Name": "",
@@ -43,12 +28,32 @@ var FatePointHelper = FatePointHelper || (function () {
         "Refresh Attribute Name": "refresh"
     };
 
+    return {
+        /** If true, only players with GM permissions can use commands. */
+        gmOnly: userOptions["GM Only"],
+        /** If true (and GM Only is false), non-gm players will have access to the Reset and Reset All commands. */
+        playersCanReset: userOptions["Players Can Reset"],
+        /** If true, the script macros will be create and maintain macros for itself. */
+        useMacros: userOptions["Use Macros"],
+        /** If not null/blank then the specified marker will be used to indicate the current fate point total on character-linked tokens. If multiple tokens with the same name exist, the first will be used. */
+        tokenMarkerName: userOptions["Token Marker Name"],
+        /** The name of the attribute representing a character's current Fate Point total. */
+        fatePointAttrName: userOptions["Fate Point Attribute Name"],
+        /** The name of the attribute representing a character's Refresh. */
+        refreshAttrName: userOptions["Refresh Attribute Name"]
+    };
+}());
+
+var FatePointDisplay = FatePointDisplay || (function (config) {
+    const version = "1.0";
+    const lastUpdate = "2022-04-24";
+
     /** Retrieves the metadata for the desired marker. */
     const getMarkerTag = function () {
         var allMarkers = JSON.parse(Campaign().get("token_markers"));
         for (let i = 0; i < allMarkers.length; i++) {
             let marker = allMarkers[i];
-            if (marker.name === userOptions[opt_tokenMarkerName]) {
+            if (marker.name === config.tokenMarkerName) {
                 return marker.tag;
             }
         }
@@ -92,8 +97,8 @@ var FatePointHelper = FatePointHelper || (function () {
 
     /** Updates the token marker on all of a given character's tokens. */
     const updateCharacterMarkers = function (markerTag, charId) {
-        let value = getAttrByName(charId, userOptions[opt_fatePointAttrName]);
-        if (value == undefined) return; // Safety clause
+        let value = getAttrByName(charId, config.fatePointAttrName);
+        if (value == undefined) return;
 
         let tokens = findObjs({ type: 'graphic', represents: charId });
 
@@ -104,7 +109,7 @@ var FatePointHelper = FatePointHelper || (function () {
 
     /** Modifies the character's Fate Points by the given amount, bounded to the inclusive range of 0-9. */
     const modCharacterFatePoint = function (charId, mod) {
-        let attrs = findObjs({ _type: "attribute", _characterid: charId, _name: userOptions[opt_fatePointAttrName] });
+        let attrs = findObjs({ _type: "attribute", _characterid: charId, _name: config.fatePointAttrName });
         if (attrs == undefined || attrs.length == 0) return;
 
         let attr = attrs[0];
@@ -119,15 +124,15 @@ var FatePointHelper = FatePointHelper || (function () {
 
     /** Resets a character's fate point totals based on refresh. */
     const resetCharacterFatePoints = function (charId) {
-        let fpAttrs = findObjs({ _type: "attribute", _characterid: charId, _name: userOptions[opt_fatePointAttrName] });
+        let fpAttrs = findObjs({ _type: "attribute", _characterid: charId, _name: config.fatePointAttrName });
         if (fpAttrs == undefined || fpAttrs.length == 0) {
-            log("FatePointHelper: character '" + charId + "' does not have attribute '" + userOptions[opt_fatePointAttrName] + "'.");
+            log("FatePointDisplay: character '" + charId + "' does not have attribute '" + config.fatePointAttrName + "'.");
             return;
         }
 
-        let refAttrs = findObjs({ _type: "attribute", _characterid: charId, _name: userOptions[opt_refreshAttrName] });
+        let refAttrs = findObjs({ _type: "attribute", _characterid: charId, _name: config.refreshAttrName });
         if (refAttrs == undefined || refAttrs.length == 0) {
-            log("FatePointHelper: character '" + charId + "' does not have attribute '" + userOptions[opt_refreshAttrName] + "'.");
+            log("FatePointDisplay: character '" + charId + "' does not have attribute '" + config.refreshAttrName + "'.");
             return;
         }
 
@@ -153,7 +158,7 @@ var FatePointHelper = FatePointHelper || (function () {
         msg += senderName;
         msg += " has reset Fate Points.</td></tr></tbody></table>";
 
-        sendChat("FatePointHelper", msg);
+        sendChat("FatePointDisplay", msg);
     };
 
     /**
@@ -202,24 +207,19 @@ var FatePointHelper = FatePointHelper || (function () {
         }
     };
 
-    /** Adds the event listeners for the script */
-    const registerListeners = function () {
-        on('chat:message', onChatInput);
-    };
-
     /** Creates the macros for the script. */
     const manageMacros = function () {
         var gmId = findObjs({ _type: 'player' })[0].id;
 
-        if (userOptions[opt_useMacros]) {
-            var modFatePointUsers = userOptions[opt_gmOnly] ? "" : "all";
-            var resetFatePointUsers = (!userOptions[opt_gmOnly] && userOptions[opt_playersCanReset]) ? "all" : "";
+        if (config.useMacros) {
+            var modFatePointUsers = config.gmOnly ? "" : "all";
+            var resetFatePointUsers = (!config.gmOnly && config.playersCanReset) ? "all" : "";
 
-            addOrUpdateMacro("Fate+", "!fatepointhelper add", gmId, modFatePointUsers, true);
-            addOrUpdateMacro("Fate-", "!fatepointhelper remove", gmId, modFatePointUsers, true);
-            addOrUpdateMacro("FateReset", "!fatepointhelper reset", gmId, resetFatePointUsers, true);
-            addOrUpdateMacro("FateResetAll", "!fatepointhelper resetall", gmId, resetFatePointUsers, false);
-            log("FatePointHelper: Macros added.");
+            addOrUpdateMacro("Fate+", "!fatepointdisplay add", gmId, modFatePointUsers, true);
+            addOrUpdateMacro("Fate-", "!fatepointdisplay remove", gmId, modFatePointUsers, true);
+            addOrUpdateMacro("FateReset", "!fatepointdisplay reset", gmId, resetFatePointUsers, true);
+            addOrUpdateMacro("FateResetAll", "!fatepointdisplay resetall", gmId, resetFatePointUsers, false);
+            log("FatePointDisplay: macros added.");
         }
         else {
             removeMacro("Fate+");
@@ -231,40 +231,52 @@ var FatePointHelper = FatePointHelper || (function () {
 
     /** Reports a failure to retrieve the configured token marker. */
     const sendMarkerTagError = function () {
-        log("FatePointHelper: The marker named '" + userOptions[opt_tokenMarkerName] + "' could not be found.");
+        log("FatePointDisplay: The marker named '" + config.tokenMarkerName + "' could not be found.");
         let msg = "<table style='width: 100%; border-width: 2px 2px 2px 2px; border-collapse: collapse; border-color: black; border-style: solid; background-color: white; color:red'><tbody><tr style=' background-color: white; border-width: 2px 2px 2px 2px; border-collapse: collapse; border-color: black; border-style: solid'><td style='padding: 2px 5px 2px 5px' colspan='2'><b>Error:</b> Marker named '";
-        msg += userOptions[opt_tokenMarkerName];
+        msg += config.tokenMarkerName;
         msg += "' could not be retrieved. Please check you script settings and token library.</td></tr></tbody></table>";
-        sendChat("FatePointHelper", msg);
+        sendChat("FatePointDisplay", msg);
         return;
     };
 
-    /* Sends message containing user option config. For debugging purposes */
+    /* Sends message containing user option config. For debugging purposes. */
     const sendDebugUserOptions = function () {
         log("debug msg");
         let msg = "<table style='width: 100%; border-width: 2px 2px 2px 2px; border-collapse: collapse; border-color: black; border-style: solid; background-color: white; color:black'><tbody><tr style='background-color: white; border-width: 2px 2px 2px 2px; border-collapse: collapse; border-color: black; border-style: solid'><td style='padding: 2px 5px 2px 5px' colspan='2'>";
         msg += "User Options:<ul>";
-        msg += "<li><b>" + opt_useMacros + ":</b> " + userOptions[opt_useMacros] + "</li>";
-        msg += "<li><b>" + opt_gmOnly + ":</b> " + userOptions[opt_gmOnly] + "</li>";
-        msg += "<li><b>" + opt_playersCanReset + ":</b> " + userOptions[opt_playersCanReset] + "</li>";
-        msg += "<li><b>" + opt_tokenMarkerName + ":</b> " + userOptions[opt_tokenMarkerName] + "</li>";
-        msg += "<li><b>" + opt_fatePointAttrName + ":</b> " + userOptions[opt_fatePointAttrName] + "</li>";
-        msg += "<li><b>" + opt_refreshAttrName + ":</b> " + userOptions[opt_refreshAttrName] + "</li>";
+        msg += "<li><b>Use Macros:</b> " + config.useMacros + "</li>";
+        msg += "<li><b>GM Only:</b> " + config.gmOnly + "</li>";
+        msg += "<li><b>Players Can Reset:</b> " + config.playersCanReset + "</li>";
+        msg += "<li><b>Token Marker Name:</b> " + config.tokenMarkerName + "</li>";
+        msg += "<li><b>Fate Point Attribute name:</b> " + config.fatePointAttrName + "</li>";
+        msg += "<li><b>Refresh Attribute Name:</b> " + config.refreshAttrName + "</li>";
         msg += "</ul></td></tr></tbody></table>";
 
-        sendChat("FatePointHelper", msg);
+        sendChat("FatePointDisplay", msg);
     };
 
     /** Event handler for when the fate point attribute is changed. */
     const onUpdateAttribute = function (obj) {
-        let markerTag = getMarkerTag();
         let charId = obj.get("_characterid");
 
+        // Keep fate point count >= 0 and <= 9
         if (parseInt(obj.get("current"), 10) < 0) {
             obj.set("current", 0);
         }
+        else if (parseInt(obj.get("current"), 10) > 9) {
+            obj.set("current", 9);
+        }
 
-        updateCharacterMarkers(markerTag, charId);
+        if (config.tokenMarkerName != "") {
+            let markerTag = getMarkerTag();
+            if (markerTag == undefined) {
+                sendMarkerTagError();
+                return;
+            }
+            updateCharacterMarkers(markerTag, charId);
+        }
+
+        log("FatePointDisplay: change:attribute event processed.");
     };
 
     /** Event handler for chat input. */
@@ -272,20 +284,20 @@ var FatePointHelper = FatePointHelper || (function () {
         if (msg.type == "api") {
             var args = msg.content.trim().toLowerCase().split(/[ ]+/);
 
-            if (args[0] != "!fatepointhelper" || args.length < 2 || args.length > 3) return;                        // Ignore commands that are not for this script, or which have an invalid arg structure.
-            else if ((userOptions[opt_gmOnly] && !playerIsGM(msg.playerid)) ||                                      // Ignore commands by non-gm users while GM Only is enabled
-                (args[1].startsWith("reset") && !playerIsGM(msg.playerid) && !userOptions[opt_playersCanReset])) {  // Ignore reset and resetall commands from non-gm users when Players Can Reset is disabled.
-                log("FatePointHelper: '" + args[1] + "' command from '" + msg.who + "' ignored due to script config.");
+            if (args[0] != "!fatepointdisplay" || args.length < 2 || args.length > 3) return;                        // Ignore commands that are not for this script, or which have an invalid arg structure.
+            else if ((config.gmOnly && !playerIsGM(msg.playerid)) ||                                      // Ignore commands by non-gm users while GM Only is enabled
+                (args[1].startsWith("reset") && !playerIsGM(msg.playerid) && !config.playersCanReset)) {  // Ignore reset and resetall commands from non-gm users when Players Can Reset is disabled.
+                log("FatePointDisplay: '" + args[1] + "' command from '" + msg.who + "' ignored due to script config.");
                 return;
             }
                         
             if (args[1] == "resetall") {
                 resetAllCharacterFatePoints(msg.who);
-                log("FatePointHelper: Reset all character fate points command processed.");
+                log("FatePointDisplay: Reset all character fate points command processed.");
 
-                if (userOptions[opt_tokenMarkerName] != "") {
+                if (config.tokenMarkerName != "") {
                     updateAllCharsMarkers();
-                    log("FatePointHelper: Update all character token markers command processed.");
+                    log("FatePointDisplay: Update all character token markers command processed.");
                 }
 
                 return;
@@ -295,7 +307,7 @@ var FatePointHelper = FatePointHelper || (function () {
                 var tokens = msg.selected.flatMap(function (o) {
                     return o._type == "graphic" ? getObj("graphic", o._id) : [];
                 });
-                let markerTag = (userOptions[opt_tokenMarkerName] == null || userOptions[opt_tokenMarkerName] == "") ? undefined : getMarkerTag();
+                let markerTag = (config.tokenMarkerName == undefined || config.tokenMarkerName == "") ? undefined : getMarkerTag();
 
                 for (var i = 0; i < tokens.length; i++) {
                     var token = tokens[i];
@@ -305,30 +317,30 @@ var FatePointHelper = FatePointHelper || (function () {
                     switch (args[1]) {
                         case "add":
                             modCharacterFatePoint(id, 1);
-                            log("FatePointHelper: Add fate point command processed.");
+                            log("FatePointDisplay: Add fate point command processed.");
                             break;
                         case "remove":
                             modCharacterFatePoint(id, -1);
-                            log("FatePointHelper: Remove fate point command processed.");
+                            log("FatePointDisplay: Remove fate point command processed.");
                             break;
                         case "reset":
                             if (!playerIsGM(msg.playerid)) {
-                                log("FatePointHelper: Reset command from '" + msg.who + "' blocked.");
+                                log("FatePointDisplay: Reset command from '" + msg.who + "' blocked.");
                                 return;
                             }
 
                             resetCharacterFatePoints(id);
-                            log("FatePointHelper: Reset character fate points command processed.");
+                            log("FatePointDisplay: Reset character fate points command processed.");
                             break;
                     }
 
-                    if (userOptions[opt_tokenMarkerName] != "") {
+                    if (config.tokenMarkerName != "") {
                         if (markerTag == undefined) {
                             sendMarkerTagError();
                             return;
                         }
                         updateCharacterMarkers(markerTag, id);
-                        log("FatePointHelper: Update character token markers command processed.");
+                        log("FatePointDisplay: Update character token markers command processed.");
                     }
                 }
             }
@@ -338,40 +350,35 @@ var FatePointHelper = FatePointHelper || (function () {
     /** Evenet handler for when the GM changes the active page. */
     const onChangePage = function () {
         updateAllCharsMarkers();
+        log("FatePointDisplay: change:campaign:playerpageid event processed.");
     };
 
     /** Event handler for when the API server is finished loading the game. */
     const onReady = function () {
-        sendDebugUserOptions();
-
-        registerListeners();
+        //sendDebugUserOptions();
         manageMacros();
-        if (userOptions[opt_tokenMarkerName] != "") {
+        if (config.tokenMarkerName != "") {
             updateAllCharsMarkers();
         }
+        log("FatePointDisplay: initialisation complete.");
+
     };
 
     return {
         init: onReady,
+        chatInput: onChatInput,
         updatePage: onChangePage,
         updateAttr: onUpdateAttribute
     };
-}());
+}(FatePointDisplayConfig));
 
-on("ready", function () {
-    FatePointHelper.init();
-    log("FatePointHelper: initialisation complete.");
-});
-
-on("change:campaign:playerpageid", function () {
-    FatePointHelper.updatePage();
-    log("FatePointHelper: change:campaign:playerpageid event processed.");
-});
-
+// Register event handlers
+on("ready", FatePointDisplay.init);
+on('chat:message', FatePointDisplay.chatInput);
+on("change:campaign:playerpageid", FatePointDisplay.updatePage);
 on("change:attribute:current", function (obj) {
     if (obj.get("name") == "fp") {
-        FatePointHelper.updateAttr(obj);
-        log("FatePointHelper: change:attribute event processed.");
+        FatePointDisplay.updateAttr(obj);
     }
 });
 
