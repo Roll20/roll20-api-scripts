@@ -1113,17 +1113,21 @@ unsanity:
   - "Utility"
 
 simplesound:
-- "SimpleSound"
-- "Jukebox"
+  - "SimpleSound"
+  - "Jukebox"
 
 smartaoe:
-- "SmartAoE"
-- "Maps & Drawing"
+  - "SmartAoE"
+  - "Maps & Drawing"
 
 campaignsurvey:
-- "Campaign Survey"
-- "Utility"
+  - "Campaign Survey"
+  - "Utility"
 
 cardtables:
-- "CardTables"
-- "Utility"
+  - "CardTables"
+  - "Utility"
+
+fatepointdisplay:
+  - "FatePointDisplay"
+  - "System Toolbox"
