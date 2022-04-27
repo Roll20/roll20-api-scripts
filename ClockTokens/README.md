@@ -37,3 +37,7 @@ There are other token scripts with far more functionality, and if you feel you'l
 ### _v1.2_ (2022-04-24)
 
 * Removed chat reporting of blocked commands, and fixed the issue where ClockTokens would report on commands sent to other scripts. Also corrected .readme file.
+
+## _v1.2.1_ (2022-04-24)
+
+* Fixed longstanding issue where useroptions were not being read correctly.
