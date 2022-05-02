@@ -1,4 +1,15 @@
 # COFantasy: Historique des changements (depuis la version 1.0)
+## 3.07
+### Capacités
+* Voie de l'alchimie (Terres d'Arran)
+* Don de soin, de la Voie de Périndé
+
+### Corrections de bugs
+* Plus de message d'erreur quand on attend trop avant de sauvegarder un nouveau personnage.
+
+### Autres améliorations
+* Passage d'un certain nombres de prédicats concernant des armes dans le champ SPÉCIAL des armes concernées.
+
 ## 3.06
 ### Capacités
 * Ajout des capacités de la Voie du drakonide.
@@ -8,6 +19,9 @@
 * frenesieMinotaure est bien un effet temporaire.
 
 ### Autres améliorations
+* Ajout d'un bouton pour libérer un personnage étreint ou enveloppé.
+* Possibilité de mettre un titre pour un effet de peur.
+* Option pour des effets de disque qui ignorent les murs.
 * Possibilité de laisser le MJ montrer le résultat d'un jet ou non.
 * Implémentation d'un anneau de protection.
 * Fonction de pause du jeu
