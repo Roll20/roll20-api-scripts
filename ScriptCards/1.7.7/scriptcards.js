@@ -25,7 +25,7 @@ const ScriptCards = (() => { // eslint-disable-line no-unused-vars
 	*/
 
 	const APINAME = "ScriptCards";
-	const APIVERSION = "1.7.7";
+	const APIVERSION = "1.7.7a";
 	const APIAUTHOR = "Kurt Jaegers";
 	const debugMode = false;
 
@@ -3010,7 +3010,9 @@ const ScriptCards = (() => { // eslint-disable-line no-unused-vars
 					componentHandled = true;
 					if ((text.charAt(1) !== "$") && (text.charAt(1) !== "=")) {
 						if(text.charAt(1) == "t" || text.charAt(1) =="T") {
-							rollResult.Text += ` [&zwnj;${text.substring(1)} `;
+							if (text.charAt(2) !== "#") {
+								rollResult.Text += ` [&zwnj;${text.substring(1)} `;
+							}
 						}
 						rollResult.Text += ` ${text} `;
 						log(rollResult.Text);
@@ -3053,6 +3055,7 @@ const ScriptCards = (() => { // eslint-disable-line no-unused-vars
 		input = input.replace(/\\/g, " \\ ")
 		input = input.replace(/\%/g, " % ");
 		input = input.replace(/\[/g, " [&zwnj;");
+		input = input.replace(/\[\&zwnj;T\#/g, " [T#");
 		input = input.replace(/\]/g, "] ");
 		input = input.replace(/\s+/g, " ");
 		input = input.replace(/\* \- /g, "* -");
