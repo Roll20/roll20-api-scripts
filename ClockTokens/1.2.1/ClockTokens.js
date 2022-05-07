@@ -37,9 +37,13 @@ var ClockTokens = function () {
 
     /** Reads the user options from the global config object. */
     const getUserOptions = function () {
-        return (globalconfig && globalconfig.clocktokens) || {
-            "GM Only": true,
-            "Use Macros": true
+        var opts = (globalconfig && globalconfig.clocktokens) || {
+            "GM Only": "true",
+            "Use Macros": "true"
+        };
+        return {
+            "GM Only": opts["GM Only"] == "true",
+            "Use Macros": opts["Use Macros"] == "true"
         };
     };
 
