@@ -56,3 +56,7 @@ In case you don't want every Character in your campaign to have the marker token
 ### _v1.0.1_ (2022-04-27)
 
 * Fixed issue where user options wouldn't load. Settings are now logged to API console just in case.
+
+### _v1.0.2_ (2022-05-07)
+
+* Fixed user options which are checkboxes not being read correctly.

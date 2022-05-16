@@ -1,7 +1,7 @@
 {
   "name": "Fate Point Display",
   "script": "FatePointDisplay.js",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "authors": "Tyson Tiatia",
   "description": "Automatically adds and updates token markers to track characters' FATE Point totals, and provides helper macros to increment, decrement, and reset those values.",
   "roll20userid": "514883",
@@ -59,6 +59,7 @@
     }
   ],
   "previousversions": [
-    "1.0"
+    "1.0",
+    "1.0.1"
   ]
 }
