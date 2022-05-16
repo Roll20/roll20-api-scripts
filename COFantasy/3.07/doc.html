@@ -130,7 +130,7 @@ tr {line-height: 25px;}
           </div>
         </div>
         <div class="col-md-9 col-sm-8 content">
-          <h1>Documentation pour la version 3.05 de COFantasy</h1>
+          <h1>Documentation pour la version 3.07 de COFantasy</h1>
           <h2 class="text-primary" id="comment_utiliser_script">1. Comment utiliser Le script</h2>
           <div class="decalage">
             <h3 class="text-info" id="token_personnages">1.1 Tokens et personnages</h3>
@@ -1380,11 +1380,11 @@ tr {line-height: 25px;}
                   <li><strong>Désarmer</strong> : <code>!cof-desarmer @{selected|token_id} @{target|token_id}</code>. On peut utiliser un troisième argument optionnel, qui est le label d'une arme par défaut, au cas où le guerrier n'aurait pas d'arme en main.</li>
                   <li><strong>Double attaque</strong> : faire deux attaques, avec l'option supplémentaire <code>--bonusAttaque -2</code>.</li>
                   <li><strong>Attaque circulaire</strong> : faire les attaques normalement, ce n'est pas considéré comme une aoe.</li>
-                  <li><strong>Attaque puissante</strong> : utiliser les options <code>--avecd12crit --plus 2d6</code>.</li>
+                  <li><strong>Attaque puissante</strong> : <code>#Attaque -1 --avecd12crit --plus 2d6</code>.</li>
                 </ol>
                 <h4 class="text-secondary">Voie du maître d'armes</h4>
                 <ol>
-                  <li><strong>Arme de prédilection</strong> : le mieux est de refléter ça sur l'attaque dans la fiche.</li>
+                  <li><strong>Arme de prédilection</strong> : il est possible de préciser une famille d'armes de prédilection (un peu plus large que dans les règles), parmis <code>arc</code>, <code>arbalete</code>, <code>hache</code>, <code>epee</code>, <code>marteau</code>, <code>masse</code>, <code>epieu</code>, <code>poudre</code>, <code>baton</code> et <code>rapiere</code>. Si cela vous convient, ajoutez un prédicat <code>armeDePredilection</code> de valeur une de ces familles. Sinon, simplement ajouter le bonus sur les attaques dans la fiche.</li>
                   <li><strong>Science du critique</strong> : pour ne pas avoir à modifier les chances de critique pour toutes les attaques, utiliser un <a href=#predicats>prédicat</a> <code>scienceDuCritique</code>. Attention à ne pas faire ça ET modifier les chances de critiques de l'attaque, car ça s'additionne.</li>
                   <li><strong>Spécialisation</strong> : reporter le bonus aux DM sur la fiche.</li>
                   <li><strong>Attaque parfaite</strong> : utiliser les options <code>--m2d20 --plus 1d6</code>.</li>
@@ -1861,7 +1861,7 @@ tr {line-height: 25px;}
                 </ol>
                 <h4 class="text-secondary">Voie du ki</h4>
                 <ol>
-                  <li><strong>Esprit vide</strong> : reporter le bonus sur la fiche.</li>
+                  <li><strong>Esprit vide</strong> : ajouter un <a href=#predicats>prédicat</a> <code>espritVide</code>. Si vous voulez un boonus différent (par exemple à partir du rang 4 dans la voie), associez les bonus au prédicat.</li>
                   <li><strong>Main vide</strong> : faire l'attaque à mains nues correspondant à la capacité.</li>
                   <li><strong>Kiai</strong> : ajouter un <a href=#predicats>prédicat</a> <code>kiai</code>, de valeur <code>1</code>. Au rang 5, mettre cette valeur à <code>2</code>, le script se charge d'attendre 1d6 tours avant de proposer le deuxième kiai.</li>
                 </ol>
@@ -2566,15 +2566,15 @@ tr {line-height: 25px;}
                 </ol>
                 <h4 class="text-secondary">Voie de la guerre</h4>
                 <ol>
-                  <li><strong>Posture de combat :</strong> En Attente </li>
-                  <li><strong>Désarmer (L) :</strong> En Attente </li>
-                  <li><strong>Double attaque (L) :</strong> En Attente </li>
-                  <li><strong>Attaque circulaire (L) :</strong> En Attente </li>
-                  <li><strong>Attaque puissante :</strong> En Attente </li>
+                  <li><strong>Posture de combat :</strong> <code>!cof-posture-de-combat <i>bonus attr1 attr2</i></code>, où les deux <i>attr</i> peuvent être soit <code>DEF</code> soit <code>ATT</code> soit <code>DM</code>, et le <i>bonus</i> est retiré au premier attribut pour être ajouté au second. Le bonus peut être limité si le combattant a un <a href=#predicats>prédicat</a> <code>voieDuSoldat</code> qui indique son rang dans la voie. Exemple d'utilisation&nbsp;: <code>!cof-posture-de-combat ?{Bonus|1|2|3|4|5} ?{Baisser|Défense,DEF|Attaque,ATT|Dégâts,DM} ?{Augmenter|Défense,DEF|Attaque,ATT|Dégâts,DM}</code>. Normalement, la règle fait décider de sa posture au combattant à chaque tour, mais en pratique, il en change assez rarement. Une posture de combat reste donc active jusqu'à la fin du combat ou jusqu'à ce qu'on en change (elle est neutre si on a le même attribut à buffer et débuffer).</li>
+                  <li><strong>Désarmer (L) :</strong> <code>!cof-desarmer @{selected|token_id} @{target|token_id}</code>.</li>
+                  <li><strong>Double attaque (L) :</strong> faire deux attaques, avec l'option supplémentaire <code>--bonusAttaque -2</code>.</li>
+                  <li><strong>Attaque circulaire (L) :</strong> faire les attaques normalement, ce n'est pas considéré comme une aoe.</li>
+                  <li><strong>Attaque puissante :</strong> <code>#Attaque -1 --avecd12crit --plus 2d6</code>.</li>
                 </ol>
                 <h4 class="text-secondary">Voie de la maîtrise des armes</h4>
                 <ol>
-                  <li><strong>Arme de prédilection :</strong> En Attente </li>
+                  <li><strong>Arme de prédilection :</strong> il est possible de préciser une famille d'armes de prédilection (un peu plus large que dans les règles), parmis <code>arc</code>, <code>arbalete</code>, <code>hache</code>, <code>epee</code>, <code>marteau</code>, <code>masse</code>, <code>epieu</code>, <code>poudre</code>, <code>baton</code> et <code>rapiere</code>. Si cela vous convient, ajoutez un prédicat <code>armeDePredilection</code> de valeur une de ces familles. Sinon, simplement ajouter le bonus sur les attaques dans la fiche.</li>
                   <li><strong>Science du critique :</strong> En Attente </li>
                   <li><strong>Spécialisation :</strong> En Attente </li>
                   <li><strong>Attaque parfaite (L) :</strong> En Attente </li>
