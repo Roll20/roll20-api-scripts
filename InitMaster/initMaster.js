@@ -284,10 +284,10 @@ var initMaster = (function() {
 
 	var handouts = Object.freeze({
 	InitMaster_Help:	{name:'InitiativeMaster Help',
-						 version:1.05,
+						 version:1.06,
 						 avatar:'https://s3.amazonaws.com/files.d20.io/images/257656656/ckSHhNht7v3u60CRKonRTg/thumb.png?1638050703',
 						 bio:'<div style="font-weight: bold; text-align: center; border-bottom: 2px solid black;">'
-							+'<span style="font-weight: bold; font-size: 125%">InitiativeMaster Help v1.05</span>'
+							+'<span style="font-weight: bold; font-size: 125%">InitiativeMaster Help v1.06</span>'
 							+'</div>'
 							+'<div style="padding-left: 5px; padding-right: 5px; overflow: hidden;">'
 							+'<h1>Initiative Master API</h1>'
@@ -438,8 +438,8 @@ var initMaster = (function() {
 							+'	<tr><td>Edit Selected Tokens</td><td>--edit</td><td>Displays the status markers on all the selected tokens, and offers options to edit or delete them.  The "spanner" icon edits the status, and the "bin" icon deletes it.</td></tr>'
 							+'	<tr><td>Move Token Status</td><td>--moveStatus</td><td>For each of the selected tokens in turn, searches for tokens in the whole campaign with the same name and representing the same character sheet, and moves all existing statuses and markers from all the found tokens to the selected token (removing any duplicates).  This supports Players moving from one Roll20 map to another and, indeed, roundMaster detects page changes and automatically runs this command for all tokens on the new page controlled by the Players who have moved to the new page.</td></tr>'
 							+'	<tr><td>Clean Selected Tokens</td><td>--clean</td><td>Drops all status markers from the selected token, whether they have associated effects or time left, or are just manually applied markers.  Useful when there might have been corruption, or everyone is just confused!  The token statuses still exist, and associated markers will be correctly rebuilt at the start of the next round or the next trigger event (but not manually added ones).</td></tr>'
-							+'	<tr><td>Enable Long Rest for PCs</td><td>--end-of-day <cost></td><td>Run the normal initMaster end-of-day command</td></tr>'
-							+'	<tr><td>Enable Long Rest for selected tokens</td><td>--enable-rest</td><td>Enable a long rest only for the characters / NPCs / creatures represented by the selected tokens.  See the MagicMaster API documentation for information on Long Rests</td></tr>'
+							+'	<tr><td>Enable Long Rest for PCs</td><td>!init --end-of-day <cost></td><td>Run the normal initMaster end-of-day command</td></tr>'
+							+'	<tr><td>Enable Long Rest for selected tokens</td><td>!init --enable-rest</td><td>InitMaster API command to enable a long rest only for the characters / NPCs / creatures represented by the selected tokens.  See the MagicMaster API documentation for information on Long Rests</td></tr>'
 							+'	<tr><td>Set Date</td><td> </td><td>Currently not implemented - future expansion</td></tr>'
 							+'	<tr><td>Set Campaign</td><td> </td><td>Currently not implemented - future expansion</td></tr>'
 							+'	<tr><td>Update Selected Tokens</td><td>!cmd --abilities</td><td>Use the <b>CommandMaster API</b> function (if loaded) to setup and maintain Character ability action buttons, weapon proficiencies, spell books & granted powers, saving throws, token "bar & circle" assignment etc.  See CommandMaster API documentation on the --abilities command.</td></tr>'
@@ -490,7 +490,7 @@ var initMaster = (function() {
 							+'<p>Received:	<i>!init --hsq magic</i><br>'
 							+'Response:	<i>!magic --hsr init</i></p>'
 							+'Which means the MagicMaster API has requested a handshake with InitiativeMaster to see if it is loaded, and InitiativeMaster has responded, proving it is running and taking commands.</p>'
-							+'<p>Optionally, a command query can be made to see if the command is supported by RoundMaster if the command string parameter is added, where command is the RoundMaster command (the \'--\' text without the \'--\').  This will respond with a true/false response: e.g.</p>'
+							+'<p>Optionally, a command query can be made to see if the command is supported by InitMaster if the command string parameter is added, where command is the InitMaster command (the \'--\' text without the \'--\').  This will respond with a true/false response: e.g.</p>'
 							+'<p>Received:	<i>!init --handshake attk|monster</i><br>'
 							+'Response:	<i>!attk --hsr init|monster|true</i></p>'
 							+'<h4>6.3 Switch on or off Debug mode</h4>'
@@ -4155,7 +4155,7 @@ var initMaster = (function() {
 					+ '[Edit Selected Tokens](!rounds --edit)[Move Token Status](!rounds --moveStatus)[Clean Selected Tokens](!rounds --clean)\n'
 					+ '**End of Day**\n'
 					+ '[Enable Long Rest for PCs](!init --end-of-day)\n'
-					+ '[Enable Long Rest for selected tokens](!setattr --fb-from Spell system --fb-header Rest Enabled --fb-content _CHARNAME_ can now Rest --sel --timespent|1)\n'
+					+ '[Enable Long Rest for selected tokens](!init --enable-rest)\n'
 //					+ '**Manage Campaign**\n'
 //					+ '[Set Date](~Money-Gems-Exp|Set-Date)[Set Campaign](~Money-Gems-Exp|Set-Campaign)\n'
 					+ '**Add or Change Action Buttons**\n'
@@ -4203,7 +4203,7 @@ var initMaster = (function() {
 			return;
 		}
 		
-		if (!cost) {
+		if (!cost && parseFloat(cost) !== 0) {
 			cost = state.initMaster.dailyCost;
 		};
 		
@@ -4267,6 +4267,36 @@ var initMaster = (function() {
 		return;
 	}
 	
+	var doEnableLongRest = function( args, selected ) {
+		
+		var names=[],
+			curToken, charID, charCS, name, content;
+		
+		if (!args) args = [];
+		if (!args[0] && !(selected && selected.length)) {
+			sendDebug( 'doEnableLongRest: tokenID is invalid' );
+            sendError( 'No tokens selected' );
+            return;
+ 		}	
+		if (!selected && !selected.length) {
+			selected = [];
+			selected[0]._id = args[0];
+		}
+		selected.forEach(t => {
+			if (!(curToken = getObj('graphic',t._id))) return;
+			if (!(charID = curToken.get('represents'))) return;
+			if (!(charCS=getCharacter(t._id))) return;
+			setAttr( charCS, fields.Timespent, 1 );
+			name = curToken.get('name');
+			names.push( name );
+			content = '&{template:'+fields.menuTemplate+'}{{title='+name+' can now rest}}{{desc='+name+' has reached a relatively safe place and can now rest}}';
+			sendResponse( charCS, content );
+		});
+		content = '&{template:'+fields.messageTemplate+'}{{desc=These tokens have had long rests enabled:\n'+names.join(', ')+'}}';
+		sendFeedback( content, flags.feedbackName, flags.feedbackImg );
+		return;
+	}
+
 	/*
 	 * Handle a button press, and redirect to the correct handler
 	 */
@@ -4585,6 +4615,9 @@ var initMaster = (function() {
 					break;
 				case 'end-of-day':
 					if (isGM) doEndOfDay(arg);
+					break;
+				case 'enable-rest':
+					if (isGM) doEnableLongRest(arg,selected);
 					break;
 				case 'check-tracker':
 					if (isGM) doCheckTracker(arg);
