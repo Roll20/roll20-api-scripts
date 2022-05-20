@@ -111,7 +111,8 @@
  * v2.045  10/04/2022  Fixed 2nd weapon initiative held to 1 when twoWeapSingleAttk is true (bug
  *                     introduced with v2.044)
  * v2.046  20/05/2022  Fixed Group initiative action calculation - was concatenating strings rather
- *                     than adding numbers.
+ *                     than adding numbers.  Enhanced --init command to automatically add parameter
+ *                     dice rolls to the turn order.
  */
 
 var initMaster = (function() {
@@ -3973,6 +3974,7 @@ var initMaster = (function() {
 		if (state.initMaster.initType !== 'individual') {
 			state.initMaster.playerRoll = playerRoll;
 			state.initMaster.dmRoll = dmRoll;
+			doInitRoll( args, true );
 			content +='{{desc=Ask a Player to roll 1d10 and also roll 1d10 as DM, then enter the values below\n'
 					+ '['+(isNaN(playerRoll) ? ('Enter Party Roll') : ('<span style='+design.selected_button+'>Party Rolled '+playerRoll+'</span>'))+'](!init --roll &#63;{Enter 1d10 roll|&#124;1&#124;2&#124;3&#124;4&#124;5&#124;6&#124;7&#124;8&#124;9&#124;10}|'+dmRoll+'|menu)'
 					+ '['+(isNaN(dmRoll) ? ('Enter Foes Roll') : ('<span style='+design.selected_button+'>DM Rolled '+dmRoll+'</span>'))+'](!init --roll '+playerRoll+'|&#63;{Enter 1d10 roll|&#124;1&#124;2&#124;3&#124;4&#124;5&#124;6&#124;7&#124;8&#124;9&#124;10}|menu)'
@@ -3996,8 +3998,8 @@ var initMaster = (function() {
 	 
 	var doInitRoll = function( args, isGM ) {
 		
-		var playerRoll = args[0] || '',
-			dmRoll = args[1] || '',
+		var playerRoll = args[0] || NaN,
+			dmRoll = args[1] || NaN,
 			isMenu = ((args[2] || '') == 'menu');
 			
 		if (!isGM && !isNaN(state.initMaster.playerRoll)) return;
@@ -4006,7 +4008,7 @@ var initMaster = (function() {
 			args[0] = state.initMaster.playerRoll;
 		}
 		if (!isNaN(args[0]) && state.initMaster.initType == 'standard') {
-			_.each(state.initMaster.playerChars, obj => sendInitAPI( fields.roundMaster+' --addtotracker '+obj.name+'|'+obj.id+'|='+args[0]+'|last|doing an action' ));
+			_.each(_.shuffle(state.initMaster.playerChars), obj => sendInitAPI( fields.roundMaster+' --addtotracker '+obj.name+'|'+obj.id+'|='+args[0]+'|last|doing an action' ));
 		}
 
 		if (!isMenu && (!isGM || isNaN(dmRoll))) {
@@ -4015,7 +4017,7 @@ var initMaster = (function() {
 		if (!isNaN(args[1]) && state.initMaster.initType == 'standard') {
 			sendInitAPI( fields.roundMaster+' --addtotracker Foes|-1|='+args[1]+'|last' );
 		}
-		doInitDiceRoll( args, 'Dice Roll made' );
+		if (isMenu) doInitDiceRoll( args, (isNaN(playerRoll) && isNaN(dmRoll) ? '' : 'Dice Roll made') );
 		return;
 	}
 
