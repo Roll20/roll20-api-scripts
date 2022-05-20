@@ -3974,6 +3974,7 @@ var initMaster = (function() {
 		if (state.initMaster.initType !== 'individual') {
 			state.initMaster.playerRoll = playerRoll;
 			state.initMaster.dmRoll = dmRoll;
+			args[2] = '';
 			doInitRoll( args, true );
 			content +='{{desc=Ask a Player to roll 1d10 and also roll 1d10 as DM, then enter the values below\n'
 					+ '['+(isNaN(playerRoll) ? ('Enter Party Roll') : ('<span style='+design.selected_button+'>Party Rolled '+playerRoll+'</span>'))+'](!init --roll &#63;{Enter 1d10 roll|&#124;1&#124;2&#124;3&#124;4&#124;5&#124;6&#124;7&#124;8&#124;9&#124;10}|'+dmRoll+'|menu)'
