@@ -112,7 +112,8 @@
  *                     introduced with v2.044)
  * v2.046  20/05/2022  Fixed Group initiative action calculation - was concatenating strings rather
  *                     than adding numbers.  Enhanced --init command to automatically add parameter
- *                     dice rolls to the turn order.
+ *                     dice rolls to the turn order.  Fixed error with initiative failing for
+ *                     dancing weapons.
  */
 
 var initMaster = (function() {
@@ -2403,7 +2404,7 @@ var initMaster = (function() {
     		content = fields.roundMaster,
 			round = state.initMaster.round,
 			WeaponTable, weapon, dancing, speed, 
-			actionNum, actions, initiative, i;
+			actionNum, attackCount, actions, initiative, i;
 
 		WeaponTable = getTable( charCS, {}, fields.MW_table, fields.MW_name );
 		WeaponTable = getTable( charCS, WeaponTable, fields.MW_table, fields.MW_speed );
