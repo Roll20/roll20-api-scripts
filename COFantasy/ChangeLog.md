@@ -1,17 +1,21 @@
 # COFantasy: Historique des changements (depuis la version 1.0)
 ## 3.07
 ### Capacités
+* Prédicat immuniteAucCritiques
 * Amélioration de l'arme de prédilection
 * Voie de l'alchimie (Terres d'Arran)
 * Don de soin, de la Voie de Périndé
 
 ### Corrections de bugs
+* Liberté d'action immunise à la paralysie des goules.
+* Correction d'un bug faisant appliquer certains effets 2 fois à la fin des tours.
 * Prise en compte des immunités pour les états venant des attaques
 * Affichage correct de l'arme en main pour les mooks
 * On garde les attributs quand un mook invisible redevient visible
 * Plus de message d'erreur quand on attend trop avant de sauvegarder un nouveau personnage.
 
 ### Autres améliorations
+* Affichage d'un message au joueur qui fait le jet quand le MJ doit valider l'affichage.
 * Si le statut d'un personnage est affiché pour le MJ, propose de supprimer les effets à durée indéterminée.
 * Possibilité d'ajouter des effets spéciaux et du son à un !cof-set-state.
 * Passage d'un certain nombres de prédicats concernant des armes dans le champ SPÉCIAL des armes concernées.
