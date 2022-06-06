@@ -144,7 +144,6 @@ const libInline = (() => {
                 if (r.table) { // table roll
                     rollData.parsed = '(' + r.results.map(nr => nr.tableItem ? nr.tableItem.name : nr.v).join('+') + ')';
                     rollData.display = rollData.parsed;
-                    rollData.customDisplay = () => { return rollData.parsed; };
                     rollData.tableReturns.push({ table: r.table, returns: r.results.map(nr => nr.tableItem ? nr.tableItem.name : nr.v) });
                 } else { // standard roll (might include fate or matched dice)
                     // fate dice should be joined on empty string (no operator); normal rolls on +
@@ -179,17 +178,13 @@ const libInline = (() => {
                                 Object.keys(r.mods.match.matches).forEach(k => matchFormatObj[k] = ` style="color: ${r.mods.match.matches[k]}"`);
                             }
                         }
-                        return {
-                            v: nr.v,
-                            type: type,
-                            display: `${rollspancss1}${cssclass ? ' ' : ''}${cssclass}${/^crit/g.test(cssclass) ? ' ' : ''}"${matchFormatObj[type] || matchFormatObj[nr.v] || ''}>${r.fate ? fatedie[nr.v] : nr.v}${rollspanend}`
-                        };
+                        return { v: nr.v, type: type, display: `${rollspancss1}${cssclass ? ' ' : ''}${cssclass}${/^crit/g.test(cssclass) ? ' ' : ''}"${matchFormatObj[type] || matchFormatObj[nr.v] || ''}>${r.fate ? fatedie[nr.v] : nr.v}${rollspanend}` };
                     });
                     // fate dice should be joined on empty string (no operator); normal rolls on +
                     rollData.display = '(' + conditionalPluck(rollData.dice, 'display').join(r.fate ? '' : '+') + ')';
                 }
                 break;
-            case 'G': // GROUP ROLL
+            case 'G': // ROLL
                 gRoll = r.rolls.map(nr => {
                     return nr.map(collectRollData);
                 });
@@ -272,17 +267,6 @@ const libInline = (() => {
                 parts.push(`${bordercolors[(/basicdiceroll(?:\scritsuccess)?\scritfail/.test(roll.display) ? 1 : 0) + (/basicdiceroll\scritsuccess/.test(roll.display) ? 2 : 0)]}" `);
                 parts.push(`title="${HE(HE(`Rolling ${roll.expression} = ${roll.display}`))}">${roll.value}</span>`);
                 return parts.join('');
-            };
-            roll.getCustomTip = () => {
-                const baseInlineCSS = `style="-webkit-tap-highlight-color: rgba(0,0,0,0);font-family: 'Helvetica Neue',Helvetica,Arial,sans-serif;color: #404040;line-height: 1.25em;` +
-                    `box-sizing: content-box; background-color: #FEF68E; padding: 0 3px 0 3px; font-weight: bold; cursor: help; font-size: 1.1em;border: 2px solid `;
-                const bordercolors = {
-                    0: '#FEF68E;',
-                    1: '#B31515;',
-                    2: '#3FB315;',
-                    3: '#4A57ED;'
-                };
-
             };
             return roll;
         });

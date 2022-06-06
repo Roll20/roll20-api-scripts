@@ -3,8 +3,8 @@
 Name			:	Plugger
 GitHub			:	https://github.com/TimRohr22/Cauldron/tree/master/Plugger
 Roll20 Contact	:	timmaugh
-Version			:	1.0.7
-Last Update		:	6/6/2022
+Version			:	1.0.6
+Last Update		:	6/3/2022
 =========================================================
 */
 var API_Meta = API_Meta || {};
@@ -18,7 +18,7 @@ const Plugger = (() => {
     const version = '1.0.6';
     const schemaVersion = 0.1;
     API_Meta[apiproject].version = version;
-    const vd = new Date(1654543510049);
+    const vd = new Date(1654263080019);
     const versionInfo = () => {
         log(`\u0166\u0166 ${apiproject} v${API_Meta[apiproject].version}, ${vd.getFullYear()}/${vd.getMonth() + 1}/${vd.getDate()} \u0166\u0166 -- offset ${API_Meta[apiproject].offset}`);
         if (!state.hasOwnProperty(apiproject) || state[apiproject].version !== schemaVersion) {
@@ -376,8 +376,8 @@ const PluggerPlugins01 = (() => {
     };
     const getDiceByVal = (m) => {
         // expected syntax: !getDiceByVal $[[0]] <=2|6-7|>10 included count/total/list|delim
-        let [rollmarker, valparams, dicetype = 'included', op = 'count'] = m.content.split(/\s--+/.test(m.content) ? /\s--+/ : /\s+/g).slice(1);
-        if (!rollmarker || !valparams) { log(`getDiceByVal: wrong number of arguments, expected 4`); return; }
+        let [rollmarker, valparams, dicetype = 'included', op = 'count'] = m.content.split(/\s+/g).slice(1);
+        if (!rollmarker || !valparams) { log(`getDiceByVal: wrong number of arguments, expected 3`); return; }
         if (!['all', 'included', 'success', 'crit', 'fail', 'fumble', 'allcrit', 'dropped'].includes(dicetype)) { log(`getDiceByVal: Invalid dice type. Permitted values: all, included, success, crit, fail, fumble, allcrit, dropped`); return; }
         const typeProcessor = {
             '!=': (r, t) => r != t,
@@ -395,7 +395,7 @@ const PluggerPlugins01 = (() => {
 
         let roll = (/\$\[\[(\d+)]]/.exec(rollmarker) || /{\&(\d+)}/.exec(rollmarker) || ['', ''])[1];
         if (roll === '') return '0';
-        let searchdicerx = /^((?<low>-?\d+)-(?<high>-?\d+)|(?<range>!=|>=|<=|>|<*)(?<singleval>-?\d+))$/;
+        let searchdicerx = /^((?<low>\d+)-(?<high>\d+)|(?<range>!=|>=|<=|>|<*)(?<singleval>\d+))$/;
         let res;
         let tests = valparams.split('|').map(p => {
             res = searchdicerx.exec(p);
@@ -430,8 +430,8 @@ const PluggerPlugins01 = (() => {
 
     const getDiceByPos = (m) => {
         // expected syntax: !getDiceByPos $[[0]] <=2|6-7|>10 included total/count/list|delim
-        let [rollmarker, valparams, dicetype = 'included', op = 'count'] = m.content.split(/\s--+/.test(m.content) ? /\s--+/ : /\s+/g).slice(1);
-        if (!rollmarker || !valparams) { log(`getDiceByPos: wrong number of arguments, expected 4`); return; }
+        let [rollmarker, valparams, dicetype = 'included', op = 'count'] = m.content.split(/\s+/g).slice(1);
+        if (!rollmarker || !valparams) { log(`getDiceByPos: wrong number of arguments, expected 3`); return; }
         if (!['all', 'included', 'success', 'crit', 'fail', 'fumble', 'allcrit', 'dropped'].includes(dicetype)) { log(`getDiceByPos: Invalid dice type. Permitted values: all, included, success, crit, fail, fumble, allcrit, dropped`); return; }
         const typeProcessor = {
             '!=': (r, t) => r != t,
@@ -449,7 +449,7 @@ const PluggerPlugins01 = (() => {
 
         let roll = (/\$\[\[(\d+)]]/.exec(rollmarker) || /{\&(\d+)}/.exec(rollmarker) || ['', ''])[1];
         if (roll === '') return '0';
-        let searchdicerx = /^((?<low>-?\d+)-(?<high>-?\d+)|(?<range>!=|>=|<=|>|<*)(?<singleval>-?\d+))$/;
+        let searchdicerx = /^((?<low>\d+)-(?<high>\d+)|(?<range>!=|>=|<=|>|<*)(?<singleval>\d+))$/;
         let res;
         let tests = valparams.split('|').map(p => {
             res = searchdicerx.exec(p);
@@ -482,65 +482,10 @@ const PluggerPlugins01 = (() => {
         }
     };
 
-    const filter = (m) => {
-        // expected syntax: !filter --a|b|c --<=c|d|>10 --count/total/list|delim
-        let [list, valparams, op = 'count'] = m.content.split(/\s+--/.test(m.content) ? /\s+--/ : /\s+/g).slice(1);
-        if (!list || !valparams) { log(`filterFor: wrong number of arguments, expected 3`); return; }
-
-        const isNum = (...v) => v.reduce((m, a) => { return m && +a === +a; }, true);
-        const typeProcessor = {
-            '!=': (r, t) => r != t,
-            '>': (r, t) => isNum(r, t) ? Number(r) > Number(t) : r > t,
-            '>=': (r, t) => isNum(r, t) ? Number(r) >= Number(t) : r >= t,
-            '<': (r, t) => isNum(r, t) ? Number(r) < Number(t) : r < t,
-            '<=': (r, t) => isNum(r, t) ? Number(r) <= Number(t) : r <= t,
-            '-': (r, l, h) => isNum(r, l, h) ? Number(r) >= Number(l) && Number(r) <= Number(h) : r >= l && r <= h,
-            '=': (r, t) => r == t
-        };
-
-        let delim;
-        [op, ...delim] = op.split(/\|/);
-        delim = delim.join('|');
-        delim = /^('|"|`){0,1}(.*)?\1$/.exec(delim)[2] || '';
-
-        let searchrx = /^((?<low>-?\d+)-(?<high>-?\d+)|(?<range>!=|>=|<=|>|<*)(?<singleval>-?\d+))$/;
-        let res;
-        let tests = valparams.split('|').map(p => {
-            res = searchrx.exec(p);
-            if (!res) return;
-            return res.groups.low ?
-                {
-                    test: '-',
-                    params: [res.groups.low, res.groups.high]
-                } :
-                {
-                    test: res.groups.range || '=',
-                    params: [res.groups.singleval]
-                };
-        });
-        if (!tests) return '';
-
-        list = list.split(/\|/g)
-            .filter(l => {
-                return tests.reduce((m, t) => {
-                    return m || typeProcessor[t.test](l, ...t.params);
-                }, false);
-            });
-        switch (op) {
-            case 'list':
-                return list.join(delim || '');
-            case 'total':
-                return list.length ? list.reduce((a, b) => (isNaN(a) ? 0 : a) + (isNaN(b) ? 0 : b)) : '0';
-            case 'count':
-            default:
-                return list.length;
-        }
-    };
-
     on('ready', () => {
         versionInfo();
         try {
-            Plugger.RegisterRule(getDiceByVal, getDiceByPos, filter);
+            Plugger.RegisterRule(getDiceByVal, getDiceByPos);
         } catch (error) {
             log(`ERROR Registering to PlugEval: ${error.message}`);
         }

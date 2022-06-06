@@ -1,7 +1,7 @@
 {
   "name": "DiscreteWhisper",
   "script": "DiscreteWhisper.js",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "DiscreteWhisper gives the ability to send a single command to the API and produce individual, differentiated whispers to various targets, including action buttons.\r\rFor more information, see the original thread in the API forum:\r\rhttps://app.roll20.net/forum/post/9430875/script-discretewhisper-multi-recipient-whispers-with-asides-and-buttons",
   "authors": "timmaugh",
   "roll20userid": "5962076",
@@ -10,7 +10,8 @@
   "modifies": [],
   "conflicts": [],
   "previousversions": [
-    "1.1.0"
+    "1.1.0",
+    "1.1.2"
   ]
 
 }
