@@ -540,7 +540,7 @@ const PluggerPlugins01 = (() => {
     on('ready', () => {
         versionInfo();
         try {
-            Plugger.RegisterRule(getDiceByVal, getDiceByPos);
+            Plugger.RegisterRule(getDiceByVal, getDiceByPos, filter);
         } catch (error) {
             log(`ERROR Registering to PlugEval: ${error.message}`);
         }
