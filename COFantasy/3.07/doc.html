@@ -1867,7 +1867,7 @@ tr {line-height: 25px;}
                 </ol>
                 <h4 class="text-secondary">Voie du sabre</h4>
                 <ol>
-                  <li><strong>Technique du sabre</strong> : ajuster les attaques au sabre en conséquence.</li>
+                  <li><strong>Technique du sabre</strong> : ajouter un <a href=#predicats>prédicat</a> <code>techniqueDuSabre</code>, de valeur le rang dans la Voie.</li>
                   <li><strong>Frappe du vide</strong> : ajouter un <a href=#predicats>prédicat</a> <code>frappeDuVide</code>.</li>
                   <li><strong>Lames Jumelles</strong> : faire les attaques avec le modificateur <code>lamesJumelles</code> permet de prendre en compte la force courante de l'attaquant pour les malus éventuels à l'attaque. Comme le samouraï va par défaut commencer le combat les mains vides, et qu'avec cette capacité il voudra certainement dégainer à la fois le katana et le wakizachi, on peut utiliser un prédicat pour lui faciliter la tâche : si le label du katana est <code>5</code> et celui du wakizachi par exemple <code>3</code>, ajouter un prédicat <code>actionDegainer1:5-3</code> (de cette façon, le fait de dégainer le katana et le wakizachi sera en tête de liste).</li>
                 </ol>
@@ -2285,6 +2285,7 @@ tr {line-height: 25px;}
                   <li><strong>Illusion</strong> : Pour les illusions qui disparaissent et réapparaissent un peu plus loin quand on essaie de les toucher, ajouter un <a href=#predicats>prédicat</a> <code>estUneIllusion</code>.</li>
                   <li><strong>Immunité aux armes</strong> : ajouter un <a href=#predicats>prédicat</a> <code>immuniteAuxArmes</code>. À noter qu'il est possible de spécifier le niveau de magie d'une attaque en donnant un argument à l'option <code>--magique</code>. Ainsi une arme de niveau magique 3 aura en argument <code>--magique 3</code>.</li>
                   <li><strong>Immunité aux attaques non magiques</strong> : ajouter un <a href=#predicats>prédicat</a> <code>immunite_nonMagique</code></li>
+                  <li><strong>Immunité aux critiques</strong> : ajouter un <a href=#predicats>prédicat</a> <code>immuniteAuxCritiques</code>.</li>
                   <li><strong>Indéracinable</strong> : ajouter un <a href=#predicats>prédicat</a> <code>inderacinable</code>.</li>
                   <li><strong>Insensible</strong> : ajouter un <a href=#predicats>prédicat</a> <code>insensibleAffaibli</code>.</li>
                   <li><strong>Invisible</strong> : passer le personnage invisible (<code>!cof-set-state invisible true</code>, ou mettre directment le statut sur le token). Si il peut rester invisible en combat, lui ajouter un <a href=#predicats>prédicat</a> <code>invisibleEnCombat</code>. Si il est attaqué autrement qu'avec tir en aveugle par quelqu'un qui ne voit pas l'invisble (à vous de montrer au moins temporairement le token), un malus de +5 en DEF au contact et +10 à distance sera appliqué, de même que le bonus de +5 en attaque contre ceux qui ne voient pas l'invisible. Le script suppose toujours qu'un personnage qui dispose de tir aveugle utilise sa capacité contre les cibles invisibles: à vous de vérifier qu'il ne cumule pas ça avec une capacité limitée.</li>
@@ -2574,7 +2575,7 @@ tr {line-height: 25px;}
                 </ol>
                 <h4 class="text-secondary">Voie de la maîtrise des armes</h4>
                 <ol>
-                  <li><strong>Arme de prédilection :</strong> il est possible de préciser une famille d'armes de prédilection (un peu plus large que dans les règles), parmis <code>arc</code>, <code>arbalete</code>, <code>hache</code>, <code>epee</code>, <code>marteau</code>, <code>masse</code>, <code>epieu</code>, <code>poudre</code>, <code>baton</code> et <code>rapiere</code>. Si cela vous convient, ajoutez un prédicat <code>armeDePredilection</code> de valeur une de ces familles. Sinon, simplement ajouter le bonus sur les attaques dans la fiche.</li>
+                  <li><strong>Arme de prédilection :</strong> il est possible de préciser une famille d'armes de prédilection (un peu plus large que dans les règles), parmis <code>arc</code>, <code>arbalete</code>, <code>hache</code>, <code>epee</code>, <code>marteau</code>, <code>masse</code>, <code>sabre</code>, <code>epieu</code>, <code>poudre</code>, <code>baton</code> et <code>rapiere</code>. Si cela vous convient, ajoutez un prédicat <code>armeDePredilection</code> de valeur une de ces familles. Sinon, simplement ajouter le bonus sur les attaques dans la fiche.</li>
                   <li><strong>Science du critique :</strong> En Attente </li>
                   <li><strong>Spécialisation :</strong> En Attente </li>
                   <li><strong>Attaque parfaite (L) :</strong> En Attente </li>
