@@ -3212,6 +3212,9 @@ var COFantasy = COFantasy || function() {
               setToken(tokenOriginel, 'rotation', tokenCourant.get('rotation'), evt);
               setToken(tokenOriginel, 'flipv', tokenCourant.get('flipv'), evt);
               setToken(tokenOriginel, 'fliph', tokenCourant.get('fliph'), evt);
+              if (tokenCourant.get('bar1_link') === '') {
+                setToken(tokenOriginel, 'bar1_value', tokenCourant.get('bar1_value'), evt);
+              }
               setToken(tokenOriginel, 'bar2_value', tokenCourant.get('bar2_value'), evt);
               setToken(tokenOriginel, 'aura2_radius', tokenCourant.get('aura2_radius'), evt);
               setToken(tokenOriginel, 'aura2_color', tokenCourant.get('aura2_color'), evt);
@@ -6358,6 +6361,27 @@ var COFantasy = COFantasy || function() {
       return chemin;
     });
     return murs;
+  }
+
+  //v\xE9rifie si de la nouvelle position on peut voir le suivi
+  function obstaclePresent(nsx, nsy, pt, murs) {
+    if (nsx == pt.x && nsy == pt.y) return false;
+    let ps = {
+      x: nsx,
+      y: nsy
+    };
+    let obstacle = murs && murs.find(function(path) {
+      if (path.length === 0) return false;
+      let pc = path[0];
+      return path.find(function(v, i) {
+        if (i === 0) return false;
+        if (isNaN(v.x) || isNaN(v.y)) return false;
+        if (segmentIntersecte(ps, pt, pc, v)) return true;
+        pc = v;
+        return false;
+      });
+    });
+    return obstacle;
   }
 
   // callback(selected, playerId, aoe)
@@ -19080,11 +19104,22 @@ var COFantasy = COFantasy || function() {
       }
       total = tNames.length;
       if (total > 1) {
-        let character = getObj('character', charId);
-        let charName = "d'id " + charId;
-        if (character) charName = character.get('name');
-        error("Attention, il y a plusieurs tokens nomm\xE9s " + tokenName, total);
-        log("  tokens instances du personnage " + charName, total);
+        //On regarde combien il y en a dans le layer objects.
+        let tObjects = tNames.filter(function(tok) {
+          return tok.get('layer') == 'objects';
+        });
+        let totalObjects = tObjects.length;
+        if (totalObjects > 0) {
+          tNames = tObjects;
+          total = totalObjects;
+        }
+        if (total > 1) {
+          let character = getObj('character', charId);
+          let charName = "d'id " + charId;
+          if (character) charName = character.get('name');
+          error("Attention, il y a plusieurs tokens nomm\xE9s " + tokenName, total);
+          log("  tokens instances du personnage " + charName, total);
+        }
       }
       tNames.forEach(function(tok) {
         foo(tok, total);
@@ -31505,6 +31540,10 @@ var COFantasy = COFantasy || function() {
       if (runesDuForgesort === undefined) {
         // Check de l'existence d'un token pr\xE9sent pour le cr\xE9ateur
         let forgesort = persoOfCharId(forgesortId, options.pageId, "ayant cr\xE9\xE9 une rune");
+        if (forgesort === undefined) {
+          attr.remove();
+          return;
+        }
         // Check du perso voie des Runes
         let voieDesRunes = predicateAsInt(forgesort, 'voieDesRunes', 0);
         if (voieDesRunes < 1) {
@@ -42022,26 +42061,6 @@ var COFantasy = COFantasy || function() {
       x: x,
       y: y
     };
-  }
-
-  //v\xE9rifie si de la nouvelle position on peut voir le suivi
-  function obstaclePresent(nsx, nsy, pt, murs) {
-    if (nsx == pt.x && nsy == pt.y) return false;
-    let ps = {
-      x: nsx,
-      y: nsy
-    };
-    let obstacle = murs && murs.find(function(path) {
-      if (path.length === 0) return false;
-      let pc = path[0];
-      return path.find(function(v, i) {
-        if (i === 0) return false;
-        if (segmentIntersecte(ps, pt, pc, v)) return true;
-        pc = v;
-        return false;
-      });
-    });
-    return obstacle;
   }
 
   //R\xE9agit au d\xE9placement manuel d'un token.
