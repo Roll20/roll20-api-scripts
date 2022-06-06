@@ -395,7 +395,7 @@ const PluggerPlugins01 = (() => {
 
         let roll = (/\$\[\[(\d+)]]/.exec(rollmarker) || /{\&(\d+)}/.exec(rollmarker) || ['', ''])[1];
         if (roll === '') return '0';
-        let searchdicerx = /^((?<low>\d+)-(?<high>\d+)|(?<range>!=|>=|<=|>|<*)(?<singleval>\d+))$/;
+        let searchdicerx = /^((?<low>-?\d+)-(?<high>-?\d+)|(?<range>!=|>=|<=|>|<*)(?<singleval>-?\d+))$/;
         let res;
         let tests = valparams.split('|').map(p => {
             res = searchdicerx.exec(p);
@@ -449,7 +449,7 @@ const PluggerPlugins01 = (() => {
 
         let roll = (/\$\[\[(\d+)]]/.exec(rollmarker) || /{\&(\d+)}/.exec(rollmarker) || ['', ''])[1];
         if (roll === '') return '0';
-        let searchdicerx = /^((?<low>\d+)-(?<high>\d+)|(?<range>!=|>=|<=|>|<*)(?<singleval>\d+))$/;
+        let searchdicerx = /^((?<low>-?\d+)-(?<high>-?\d+)|(?<range>!=|>=|<=|>|<*)(?<singleval>-?\d+))$/;
         let res;
         let tests = valparams.split('|').map(p => {
             res = searchdicerx.exec(p);
@@ -484,7 +484,7 @@ const PluggerPlugins01 = (() => {
 
     const filter = (m) => {
         // expected syntax: !filter --a|b|c --<=c|d|>10 --count/total/list|delim
-        let [list, valparams, op = 'count'] = m.content.split(/\s--+/.test(m.content) ? /\s--+/ : /\s+/g).slice(1);
+        let [list, valparams, op = 'count'] = m.content.split(/\s+--/.test(m.content) ? /\s+--/ : /\s+/g).slice(1);
         if (!list || !valparams) { log(`filterFor: wrong number of arguments, expected 3`); return; }
 
         const isNum = (...v) => v.reduce((m, a) => { return m && +a === +a; }, true);
@@ -503,7 +503,7 @@ const PluggerPlugins01 = (() => {
         delim = delim.join('|');
         delim = /^('|"|`){0,1}(.*)?\1$/.exec(delim)[2] || '';
 
-        let searchrx = /^((?<low>\d+)-(?<high>\d+)|(?<range>!=|>=|<=|>|<*)(?<singleval>\d+))$/;
+        let searchrx = /^((?<low>-?\d+)-(?<high>-?\d+)|(?<range>!=|>=|<=|>|<*)(?<singleval>-?\d+))$/;
         let res;
         let tests = valparams.split('|').map(p => {
             res = searchrx.exec(p);
