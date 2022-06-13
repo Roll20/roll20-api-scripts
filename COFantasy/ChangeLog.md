@@ -7,6 +7,7 @@
 * Don de soin, de la Voie de Périndé
 
 ### Corrections de bugs
+* Prise en compte correcte du rayon des ténèbres.
 * Protection contre les erreurs dans les murs de l'éclairage dynamique.
 * Protection contre l'absence de créateur d'une rune.
 * Liberté d'action immunise à la paralysie des goules.
@@ -17,6 +18,8 @@
 * Plus de message d'erreur quand on attend trop avant de sauvegarder un nouveau personnage.
 
 ### Autres améliorations
+* Prise en compte de l'option --message pour !cof-tenebres
+* Le token des ténèbres est laissé sous les autres tokens.
 * Affichage d'un message au joueur qui fait le jet quand le MJ doit valider l'affichage.
 * Si le statut d'un personnage est affiché pour le MJ, propose de supprimer les effets à durée indéterminée.
 * Possibilité d'ajouter des effets spéciaux et du son à un !cof-set-state.
