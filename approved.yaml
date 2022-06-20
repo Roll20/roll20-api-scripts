@@ -1131,3 +1131,7 @@ cardtables:
 fatepointdisplay:
   - "FatePointDisplay"
   - "System Toolbox"
+
+rolemasterd100:
+  - "RoleMasterD100"
+  - "Utility"
