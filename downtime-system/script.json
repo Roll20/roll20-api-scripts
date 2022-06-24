@@ -6,6 +6,7 @@
     "previousversions": ["0.5a","0.7a","0.8a","0.8b"],
     "description": "A System for tracking Downtime Activities in Roll20 and automating the Options to only require a few Button clicks, making them add and remove things for you so you don't have to",
     "authors": "Julexar",
+    "patreon": "https://patreon.com/julexar",
     "roll20userid": "9989180",
     "dependencies": ["ChatSetAttr"],
     "modifies": {
