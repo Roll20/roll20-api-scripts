@@ -1135,3 +1135,7 @@ fatepointdisplay:
 rolemasterd100:
   - "RoleMasterD100"
   - "Utility"
+
+downtimesystem:
+  - "downtime-system"
+  - "Utility"
