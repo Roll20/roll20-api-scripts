@@ -12,7 +12,7 @@
 var Downtime = Downtime || (function(){
     'use strict';
     
-    var version='0.8c',
+    var version='0.9b',
     
     setDefaults = function() {
         state.down = {
@@ -25,6 +25,8 @@ var Downtime = Downtime || (function(){
                 train: "",
                 potion: "",
                 item: "",
+                minprice: 10,
+                maxprice: 1000,
             }
         };
     },
@@ -39,6 +41,16 @@ var Downtime = Downtime || (function(){
                 case '!setdown':
                     setdown(args[1],args[2],args[3],msg);
                     downmenu(args[1],msg);
+                    return;
+                case '!setminbet':
+                    let min=Number(String(args[1]).replace("amount ",""));
+                    state.down.now.minprice=min;
+                    downmenu(undefined,msg);
+                    return;
+                case '!setmaxbet':
+                    let max=Number(String(args[1]).replace("amount ",""));
+                    state.down.now.maxprice=max;
+                    downmenu(undefined,msg);
                     return;
             }
         }
@@ -73,6 +85,21 @@ var Downtime = Downtime || (function(){
                 state.down.now.item=args[1];
                 craftmenu(args[2],args[3],args[4],args[5],msg);
                 return;
+            case '!researchmenu':
+                researchmenu(args[1],msg);
+                return;
+            case '!research':
+                research(args[1],args[2],msg);
+                return;
+            case '!gamblemenu':
+                gamblemenu(args[1],args[2],msg);
+                return;
+            case '!gamble':
+                gamble(args[1],args[2],msg);
+                return;
+            case '!work':
+                work(args[1],args[2],args[3],msg);
+                return;
         }
     },
     
@@ -95,44 +122,51 @@ var Downtime = Downtime || (function(){
                     _type: 'character',
                     _id: charid
                 })[0];
-                if (playerIsGM(msg.playerid)) {
-                    let name=option;
-                    char.get('gmnotes',function(gmnotes) {
-                        sendChat("Downtime","/w gm <div "+ divstyle + ">" + //--
-                            '<div ' + headstyle + '>Downtime</div>' + //--
-                            '<div ' + substyle + '>Menu</div>' + //--
-                            '<div ' + arrowstyle + '></div>' + //--
-                            '<table>' + //--
-                            '<tr><td>Downtime: </td><td><a ' + astyle1 + '" href="!setdown --type ?{Player?|All|' + name + '} --amount ?{Amount?|1} --type ?{Type?|Day|Week|Month|Year}">' + gmnotes + '</a></td></tr>' + //--
-                            '</table>' + //--
-                            '</div>'
-                        );
-                    });
-                } else {
-                    char.get("gmnotes",function(gmnotes) {
-                        if (gmnotes="") {
-                            sendChat("Downtime","/w "+msg.who+" You do not have available Downtime!");
-                        } else {
-                            sendChat("Downtime","/w " + speakingName + " <div "+ divstyle + ">" + //--
+                if (char) {
+                    if (playerIsGM(msg.playerid)) {
+                        let name=char.get('name');
+                        char.get('gmnotes',function(gmnotes) {
+                            sendChat("Downtime","/w gm <div "+ divstyle + ">" + //--
                                 '<div ' + headstyle + '>Downtime</div>' + //--
                                 '<div ' + substyle + '>Menu</div>' + //--
                                 '<div ' + arrowstyle + '></div>' + //--
                                 '<table>' + //--
-                                'Downtime: ' + gmnotes + //--
+                                '<tr><td>Downtime: </td><td><a ' + astyle1 + '" href="!setdown --type ?{Player?|All|' + name + '} --amount ?{Amount?|1} --timetype ?{Type?|Day|Week|Month|Year}">' + gmnotes + '</a></td></tr>' + //--
+                                '<tr><td>Min Bet: </td><td><a ' + astyle1 + '" href="!setminbet --amount ?{Amount?|10}">' + state.down.now.minprice + ' GP</a></td></tr>' + //--
+                                '<tr><td>Max Bet: </td><td><a ' + astyle1 + '" href="!setmaxbet --amount ?{Amount?|1000}">' + state.down.now.maxprice + ' GP</a></td></tr>' + //--
                                 '</table>' + //--
-                                '<br>' + //--
-                                '<div style="text-align:center;">Available Downtime Activities</div>' + //--
-                                '<br>' + //--
-                                '<div style="text-align:center;"><a ' + astyle2 + '" href="!brewmenu --charid ' + charid + ' --rarity ?{Type?|Common|Uncommon|Rare|Very Rare|Legendary} --amount ?{Amount?|1}">Brew Potion</a></div>' + //--
-                                '<div style="text-align:center;"><a ' + astyle2 + '" href="!craftmenu --charid ' + charid + ' --type ?{Type?|Weapon|Armor|Accessoires|Scroll} --rarity ?{Rarity?|Common|Uncommon|Rare|Very Rare|Legendary} --time ?{Time?|1}">Craft Items</a></div>' + //--
-                                '<div style="text-align:center;"><a ' + astyle2 + '" href="!work --charid ' + charid + '--skill ?{Skill?|Acrobatics|Animal Handling|Arcana|Athletics|Deception|History|Insight|Intimidation|Investigation|Medicine|Nature|Perception|Performance|Persuasion|Religion|Sleight of Hand|Stealth|Survival} --time ?{Time?|1}">Work</a></div>' + //--
-                                '<div style="text-align:center;"><a ' + astyle2 + '" href="!trainmenu --charid ' + charid + ' --type ?{Type?|Tool|Language}">Train</a></div>' + //--
-                                '<div style="text-align:center;"><a ' + astyle2 + '" href="!crimemenu --charid ' + charid + ' --type ?{Type?|Stealth|Thieves\' Tools|Investigation|Perception|Deception}">Commit Crime</a></div>' + //--
-                                '<div style="text-align:center;"><a ' + astyle2 + '" href="!research --charid ' + charid + ' --time ?{Time?|7}">Research</a></div>' + //--
                                 '</div>'
                             );
-                        }
-                    });
+                        });
+                    } else {
+                        char.get("gmnotes",function(gmnotes) {
+                            if (gmnotes="") {
+                                sendChat("Downtime","/w "+msg.who+" You do not have available Downtime!");
+                            } else {
+                                sendChat("Downtime","/w " + speakingName + " <div "+ divstyle + ">" + //--
+                                    '<div ' + headstyle + '>Downtime</div>' + //--
+                                    '<div ' + substyle + '>Menu</div>' + //--
+                                    '<div ' + arrowstyle + '></div>' + //--
+                                    '<table>' + //--
+                                    'Downtime: ' + gmnotes + //--
+                                    '</table>' + //--
+                                    '<br>' + //--
+                                    '<div style="text-align:center;">Available Downtime Activities</div>' + //--
+                                    '<br>' + //--
+                                    '<div style="text-align:center;"><a ' + astyle2 + '" href="!brewmenu --charid ' + charid + ' --rarity ?{Type?|Common|Uncommon|Rare|Very Rare|Legendary} --amount ?{Amount?|1}">Brew Potion</a></div>' + //--
+                                    '<div style="text-align:center;"><a ' + astyle2 + '" href="!craftmenu --charid ' + charid + ' --type ?{Type?|Weapon|Armor|Accessoires|Scroll} --rarity ?{Rarity?|Common|Uncommon|Rare|Very Rare|Legendary} --time ?{Time?|1}">Craft Items</a></div>' + //--
+                                    '<div style="text-align:center;"><a ' + astyle2 + '" href="!work --charid ' + charid + ' --skill ?{Skill?|Acrobatics|Animal Handling|Arcana|Athletics|Deception|History|Insight|Intimidation|Investigation|Medicine|Nature|Perception|Performance|Persuasion|Religion|Sleight of Hand|Stealth|Survival} --time ?{Time?|1}">Work</a></div>' + //--
+                                    '<div style="text-align:center;"><a ' + astyle2 + '" href="!trainmenu --charid ' + charid + ' --type ?{Type?|Tool|Language}">Train</a></div>' + //--
+                                    '<div style="text-align:center;"><a ' + astyle2 + '" href="!crimemenu --charid ' + charid + ' --type ?{Type?|Stealth|Thieves\' Tools|Investigation|Perception|Deception}">Commit Crime</a></div>' + //--
+                                    '<div style="text-align:center;"><a ' + astyle2 + '" href="!researchmenu --charid ' + charid + ' --price 50">Research</a></div>' + //--
+                                    '<div style="text-align:center;"><a ' + astyle2 + '" href="!gamblemenu --charid ' + charid + ' --amount ?{Amount?|10}">Gamble</a></div>' + //--
+                                    '</div>'
+                                );
+                            }
+                        });
+                    }
+                } else {
+                    sendChat("Downtime","/w " + msg.who + " The selected character doesn\'t exist!");
                 }
             } else if (option.includes('name')) {
                 option.replace("name ","");
@@ -140,8 +174,54 @@ var Downtime = Downtime || (function(){
                     _type: 'character',
                     name: option
                 }, {caseInsensitive: true});
-                if (char.length>1) {
+                if (char && char.length>1) {
                     sendChar("Downtime","/w "+msg.who+" Multiple Characters with the same name exist, please select the token and use >>!down --sel<< instead");
+                } else if (char[0]) {
+                    char=char[0];
+                    if (playerIsGM(msg.playerid)) {
+                        let name = char.get('name');
+                        char.get('gmnotes',function(gmnotes) {
+                            sendChat("Downtime","/w gm <div "+ divstyle + ">" + //--
+                                '<div ' + headstyle + '>Downtime</div>' + //--
+                                '<div ' + substyle + '>Menu</div>' + //--
+                                '<div ' + arrowstyle + '></div>' + //--
+                                '<table>' + //--
+                                '<tr><td>Downtime: </td><td><a ' + astyle1 + '" href="!setdown --type ?{Player?|All|' + name + '} --amount ?{Amount?|1} --timetype ?{Type?|Day|Week|Month|Year}">' + gmnotes + '</a></td></tr>' + //--
+                                '<tr><td>Min Bet: </td><td><a ' + astyle1 + '" href="!setminbet --amount ?{Amount?|10}">' + state.down.now.minprice + ' GP</a></td></tr>' + //--
+                                '<tr><td>Max Bet: </td><td><a ' + astyle1 + '" href="!setmaxbet --amount ?{Amount?|1000}">' + state.down.now.maxprice + ' GP</a></td></tr>' + //--
+                                '</table>' + //--
+                                '</div>'
+                            );
+                        });
+                    } else {
+                        let charid=char.get('_id');
+                        char.get("gmnotes",function(gmnotes) {
+                            let time=String(gmnotes);
+                            if (time=="") {
+                                sendChat("Downtime","/w "+msg.who+" You do not have available Downtime!");
+                            } else {
+                                sendChat("Downtime","/w " + speakingName + " <div "+ divstyle + ">" + //--
+                                    '<div ' + headstyle + '>Downtime</div>' + //--
+                                    '<div ' + substyle + '>Menu</div>' + //--
+                                    '<div ' + arrowstyle + '></div>' + //--
+                                    '<table>' + //--
+                                    'Downtime: ' + time + //--
+                                    '</table>' + //--
+                                    '<br>' + //--
+                                    '<div style="text-align:center;">Available Downtime Activities</div>' + //--
+                                    '<br>' + //--
+                                    '<div style="text-align:center;"><a ' + astyle2 + '" href="!brewmenu --charid ' + charid + ' --rarity ?{Type?|Common|Uncommon|Rare|Very Rare|Legendary} --amount ?{Amount?|1}">Brew Potion</a></div>' + //--
+                                    '<div style="text-align:center;"><a ' + astyle2 + '" href="!craftmenu --charid ' + charid + ' --type ?{Type?|Weapon|Armor|Accessoires|Scroll} --rarity ?{Rarity?|Common|Uncommon|Rare|Very Rare|Legendary} --time ?{Time?|1}">Craft Items</a></div>' + //--
+                                    '<div style="text-align:center;"><a ' + astyle2 + '" href="!work --charid ' + charid + ' --skill ?{Skill?|Acrobatics|Animal Handling|Arcana|Athletics|Deception|History|Insight|Intimidation|Investigation|Medicine|Nature|Perception|Performance|Persuasion|Religion|Sleight of Hand|Stealth|Survival} --time ?{Time?|1}">Work</a></div>' + //--
+                                    '<div style="text-align:center;"><a ' + astyle2 + '" href="!trainmenu --charid ' + charid + ' --type ?{Type?|Tool|Language}">Train</a></div>' + //--
+                                    '<div style="text-align:center;"><a ' + astyle2 + '" href="!crimemenu --charid ' + charid + ' --type ?{Type?|Stealth|Thieves\' Tools|Investigation|Perception|Deception}">Commit Crime</a></div>' + //--
+                                    '<div style="text-align:center;"><a ' + astyle2 + '" href="!researchmenu --charid ' + charid + ' --price 50">Research</a></div>' + //--
+                                    '<div style="text-align:center;"><a ' + astyle2 + '" href="!gamblemenu --charid ' + charid + ' --amount ?{Amount?|10}">Gamble</a></div>' + //--
+                                    '</div>'
+                                );
+                            }
+                        });
+                    }
                 }
             } else if (option.includes('charid')) {
                 option.replace("charid ","");
@@ -149,46 +229,190 @@ var Downtime = Downtime || (function(){
                     _type: 'character',
                     _id: option
                 }, {caseInsensitive: true})[0];
-            }
-            if (option.includes("type")) {
-                option=option.replace("type ","");
-                if (option=="All") {
-                    
-                } else {
+                if (char) {
                     if (playerIsGM(msg.playerid)) {
-                        let name=option;
+                        let name = char.get('name');
                         char.get('gmnotes',function(gmnotes) {
                             sendChat("Downtime","/w gm <div "+ divstyle + ">" + //--
                                 '<div ' + headstyle + '>Downtime</div>' + //--
                                 '<div ' + substyle + '>Menu</div>' + //--
                                 '<div ' + arrowstyle + '></div>' + //--
                                 '<table>' + //--
-                                '<tr><td>Downtime: </td><td><a ' + astyle1 + '" href="!setdown --type ?{Player?|All|' + name + '} --amount ?{Amount?|1} --type ?{Type?|Day|Week|Month|Year}">' + gmnotes + '</a></td></tr>' + //--
+                                '<tr><td>Downtime: </td><td><a ' + astyle1 + '" href="!setdown --type ?{Player?|All|' + name + '} --amount ?{Amount?|1} --timetype ?{Type?|Day|Week|Month|Year}">' + gmnotes + '</a></td></tr>' + //--
+                                '<tr><td>Min Bet: </td><td><a ' + astyle1 + '" href="!setminbet --amount ?{Amount?|10}">' + state.down.now.minprice + ' GP</a></td></tr>' + //--
+                                '<tr><td>Max Bet: </td><td><a ' + astyle1 + '" href="!setmaxbet --amount ?{Amount?|1000}">' + state.down.now.maxprice + ' GP</a></td></tr>' + //--
                                 '</table>' + //--
                                 '</div>'
                             );
                         });
+                    } else {
+                        let charid=char.get('_id');
+                        char.get("gmnotes",function(gmnotes) {
+                            let time=String(gmnotes);
+                            if (time=="") {
+                                sendChat("Downtime","/w "+msg.who+" You do not have available Downtime!");
+                            } else {
+                                sendChat("Downtime","/w " + speakingName + " <div "+ divstyle + ">" + //--
+                                    '<div ' + headstyle + '>Downtime</div>' + //--
+                                    '<div ' + substyle + '>Menu</div>' + //--
+                                    '<div ' + arrowstyle + '></div>' + //--
+                                    '<table>' + //--
+                                    'Downtime: ' + time + //--
+                                    '</table>' + //--
+                                    '<br>' + //--
+                                    '<div style="text-align:center;">Available Downtime Activities</div>' + //--
+                                    '<br>' + //--
+                                    '<div style="text-align:center;"><a ' + astyle2 + '" href="!brewmenu --charid ' + charid + ' --rarity ?{Type?|Common|Uncommon|Rare|Very Rare|Legendary} --amount ?{Amount?|1}">Brew Potion</a></div>' + //--
+                                    '<div style="text-align:center;"><a ' + astyle2 + '" href="!craftmenu --charid ' + charid + ' --type ?{Type?|Weapon|Armor|Accessoires|Scroll} --rarity ?{Rarity?|Common|Uncommon|Rare|Very Rare|Legendary} --time ?{Time?|1}">Craft Items</a></div>' + //--
+                                    '<div style="text-align:center;"><a ' + astyle2 + '" href="!work --charid ' + charid + ' --skill ?{Skill?|Acrobatics|Animal Handling|Arcana|Athletics|Deception|History|Insight|Intimidation|Investigation|Medicine|Nature|Perception|Performance|Persuasion|Religion|Sleight of Hand|Stealth|Survival} --time ?{Time?|1}">Work</a></div>' + //--
+                                    '<div style="text-align:center;"><a ' + astyle2 + '" href="!trainmenu --charid ' + charid + ' --type ?{Type?|Tool|Language}">Train</a></div>' + //--
+                                    '<div style="text-align:center;"><a ' + astyle2 + '" href="!crimemenu --charid ' + charid + ' --type ?{Type?|Stealth|Thieves\' Tools|Investigation|Perception|Deception}">Commit Crime</a></div>' + //--
+                                    '<div style="text-align:center;"><a ' + astyle2 + '" href="!researchmenu --charid ' + charid + ' --price 50">Research</a></div>' + //--
+                                    '<div style="text-align:center;"><a ' + astyle2 + '" href="!gamblemenu --charid ' + charid + ' --amount ?{Amount?|10}">Gamble</a></div>' + //--
+                                    '</div>'
+                                );
+                            }
+                        });
+                    }
+                } else {
+                    sendChat("Downtime","/w "+msg.who+" No Characters with the given ID exist!");
+                }
+            } else if (option.includes("type")) {
+                option=option.replace("type ","");
+                if (option=="All") {
+                    if (state.down.now.time>1) {
+                        sendChat("Downtime","/w gm <div "+ divstyle + ">" + //--
+                            '<div ' + headstyle + '>Downtime</div>' + //--
+                            '<div ' + substyle + '>Menu</div>' + //--
+                            '<div ' + arrowstyle + '></div>' + //--
+                            '<table>' + //--
+                            '<tr><td>Downtime: </td><td><a ' + astyle1 + '" href="!setdown --type All --amount ?{Amount?|1} --timetype ?{Type?|Day|Week|Month|Year}">' + state.down.now.time + " " + state.down.now.type + state.down.now.substr + '</a></td></tr>' + //--
+                            '<tr><td>Min Bet: </td><td><a ' + astyle1 + '" href="!setminbet --amount ?{Amount?|10}">' + state.down.now.minprice + ' GP</a></td></tr>' + //--
+                            '<tr><td>Max Bet: </td><td><a ' + astyle1 + '" href="!setmaxbet --amount ?{Amount?|1000}">' + state.down.now.maxprice + ' GP</a></td></tr>' + //--
+                            '</table>' + //--
+                            '</div>'
+                        );
+                    } else {
+                        sendChat("Downtime","/w gm <div "+ divstyle + ">" + //--
+                            '<div ' + headstyle + '>Downtime</div>' + //--
+                            '<div ' + substyle + '>Menu</div>' + //--
+                            '<div ' + arrowstyle + '></div>' + //--
+                            '<table>' + //--
+                            '<tr><td>Downtime: </td><td><a ' + astyle1 + '" href="!setdown --type All --amount ?{Amount?|1} --timetype ?{Type?|Day|Week|Month|Year}">' + state.down.now.time + " " + state.down.now.type + '</a></td></tr>' + //--
+                            '<tr><td>Min Bet: </td><td><a ' + astyle1 + '" href="!setminbet --amount ?{Amount?|10}">' + state.down.now.minprice + ' GP</a></td></tr>' + //--
+                            '<tr><td>Max Bet: </td><td><a ' + astyle1 + '" href="!setmaxbet --amount ?{Amount?|1000}">' + state.down.now.maxprice + ' GP</a></td></tr>' + //--
+                            '</table>' + //--
+                            '</div>'
+                        );
+                    }
+                } else if (option!=="All") {
+                    option=option.replace("type ","");
+                    let char=findObjs({
+                        _type: 'character',
+                        name: option
+                    }, {caseInsensitive: true})[0];
+                    if (char) {
+                        if (playerIsGM(msg.playerid)) {
+                            let name=option;
+                            char.get('gmnotes',function(gmnotes) {
+                                sendChat("Downtime","/w gm <div "+ divstyle + ">" + //--
+                                    '<div ' + headstyle + '>Downtime</div>' + //--
+                                    '<div ' + substyle + '>Menu</div>' + //--
+                                    '<div ' + arrowstyle + '></div>' + //--
+                                    '<table>' + //--
+                                    '<tr><td>Downtime: </td><td><a ' + astyle1 + '" href="!setdown --type ?{Player?|All|' + name + '} --amount ?{Amount?|1} --timetype ?{Type?|Day|Week|Month|Year}">' + gmnotes + '</a></td></tr>' + //--
+                                    '<tr><td>Min Bet: </td><td><a ' + astyle1 + '" href="!setminbet --amount ?{Amount?|10}">' + state.down.now.minprice + ' GP</a></td></tr>' + //--
+                                    '<tr><td>Max Bet: </td><td><a ' + astyle1 + '" href="!setmaxbet --amount ?{Amount?|1000}">' + state.down.now.maxprice + ' GP</a></td></tr>' + //--
+                                    '</table>' + //--
+                                    '</div>'
+                                );
+                            });
+                        }
+                    } else {
+                        if (state.down.now.time>1) {
+                            sendChat("Downtime","/w gm <div "+ divstyle + ">" + //--
+                                '<div ' + headstyle + '>Downtime</div>' + //--
+                                '<div ' + substyle + '>Menu</div>' + //--
+                                '<div ' + arrowstyle + '></div>' + //--
+                                '<table>' + //--
+                                '<tr><td>Downtime: </td><td><a ' + astyle1 + '" href="!setdown --type All --amount ?{Amount?|1} --timetype ?{Type?|Day|Week|Month|Year}">' + state.down.now.time + " " + state.down.now.type + state.down.now.substr + '</a></td></tr>' + //--
+                                '<tr><td>Min Bet: </td><td><a ' + astyle1 + '" href="!setminbet --amount ?{Amount?|10}">' + state.down.now.minprice + ' GP</a></td></tr>' + //--
+                                '<tr><td>Max Bet: </td><td><a ' + astyle1 + '" href="!setmaxbet --amount ?{Amount?|1000}">' + state.down.now.maxprice + ' GP</a></td></tr>' + //--
+                                '</table>' + //--
+                                '</div>'
+                            );
+                        } else {
+                            sendChat("Downtime","/w gm <div "+ divstyle + ">" + //--
+                                '<div ' + headstyle + '>Downtime</div>' + //--
+                                '<div ' + substyle + '>Menu</div>' + //--
+                                '<div ' + arrowstyle + '></div>' + //--
+                                '<table>' + //--
+                                '<tr><td>Downtime: </td><td><a ' + astyle1 + '" href="!setdown --type All --amount ?{Amount?|1} --timetype ?{Type?|Day|Week|Month|Year}">' + state.down.now.time + " " + state.down.now.type + '</a></td></tr>' + //--
+                                '<tr><td>Min Bet: </td><td><a ' + astyle1 + '" href="!setminbet --amount ?{Amount?|10}">' + state.down.now.minprice + ' GP</a></td></tr>' + //--
+                                '<tr><td>Max Bet: </td><td><a ' + astyle1 + '" href="!setmaxbet --amount ?{Amount?|1000}">' + state.down.now.maxprice + ' GP</a></td></tr>' + //--
+                                '</table>' + //--
+                                '</div>'
+                            );
+                        }
                     }
                 }
             }
         } else {
             if (playerIsGM(msg.playerid)) {
-                sendChat("Downtime","/w gm <div "+ divstyle + ">" + //--
-                    '<div ' + headstyle + '>Downtime</div>' + //--
-                    '<div ' + substyle + '>Menu</div>' + //--
-                    '<div ' + arrowstyle + '></div>' + //--
-                    '<table>' + //--
-                    '<tr><td>Downtime: </td><td><a ' + astyle1 + '" href="!setdown --type All --amount ?{Amount?|1} --type ?{Type?|Day|Week|Month|Year}">' + state.down.now.time + " " + state.down.now.type + '</a></td></tr>' + //--
-                    '</table>' + //--
-                    '</div>'
-                );
+                let char=findObjs({
+                    _type: 'character',
+                    name: msg.who
+                }, {caseInsensitive: true})[0];
+                if (char) {
+                    let name = char.get('name');
+                    char.get('gmnotes',function(gmnotes) {
+                        let time=gmnotes;
+                        sendChat("Downtime","/w gm <div "+ divstyle + ">" + //--
+                            '<div ' + headstyle + '>Downtime</div>' + //--
+                            '<div ' + substyle + '>Menu</div>' + //--
+                            '<div ' + arrowstyle + '></div>' + //--
+                            '<table>' + //--
+                            '<tr><td>Downtime: </td><td><a ' + astyle1 + '" href="!setdown --type ?{Player?|All|' + name + '} --amount ?{Amount?|1} --timetype ?{Type?|Day|Week|Month|Year}">' + time + '</a></td></tr>' + //--
+                            '<tr><td>Min Bet: </td><td><a ' + astyle1 + '" href="!setminbet --amount ?{Amount?|10}">' + state.down.now.minprice + ' GP</a></td></tr>' + //--
+                            '<tr><td>Max Bet: </td><td><a ' + astyle1 + '" href="!setmaxbet --amount ?{Amount?|1000}">' + state.down.now.maxprice + ' GP</a></td></tr>' + //--
+                            '</table>' + //--
+                            '</div>'
+                        );
+                    });
+                } else {
+                    if (state.down.now.time>1) {
+                        sendChat("Downtime","/w gm <div "+ divstyle + ">" + //--
+                            '<div ' + headstyle + '>Downtime</div>' + //--
+                            '<div ' + substyle + '>Menu</div>' + //--
+                            '<div ' + arrowstyle + '></div>' + //--
+                            '<table>' + //--
+                            '<tr><td>Downtime: </td><td><a ' + astyle1 + '" href="!setdown --type All --amount ?{Amount?|1} --timetype ?{Type?|Day|Week|Month|Year}">' + state.down.now.time + " " + state.down.now.type + state.down.now.substr + '</a></td></tr>' + //--
+                            '<tr><td>Min Bet: </td><td><a ' + astyle1 + '" href="!setminbet --amount ?{Amount?|10}">' + state.down.now.minprice + ' GP</a></td></tr>' + //--
+                            '<tr><td>Max Bet: </td><td><a ' + astyle1 + '" href="!setmaxbet --amount ?{Amount?|1000}">' + state.down.now.maxprice + ' GP</a></td></tr>' + //--
+                            '</table>' + //--
+                            '</div>'
+                        );
+                    } else {
+                        sendChat("Downtime","/w gm <div "+ divstyle + ">" + //--
+                            '<div ' + headstyle + '>Downtime</div>' + //--
+                            '<div ' + substyle + '>Menu</div>' + //--
+                            '<div ' + arrowstyle + '></div>' + //--
+                            '<table>' + //--
+                            '<tr><td>Downtime: </td><td><a ' + astyle1 + '" href="!setdown --type All --amount ?{Amount?|1} --timetype ?{Type?|Day|Week|Month|Year}">' + state.down.now.time + " " + state.down.now.type + '</a></td></tr>' + //--
+                            '<tr><td>Min Bet: </td><td><a ' + astyle1 + '" href="!setminbet --amount ?{Amount?|10}">' + state.down.now.minprice + ' GP</a></td></tr>' + //--
+                            '<tr><td>Max Bet: </td><td><a ' + astyle1 + '" href="!setmaxbet --amount ?{Amount?|1000}">' + state.down.now.maxprice + ' GP</a></td></tr>' + //--
+                            '</table>' + //--
+                            '</div>'
+                        );
+                    }
+                }
             } else {
                 let char = findObjs({
                     _type: 'character',
                     name: msg.who
                 }, {caseInsensitive: true})[0];
-                let charid=char.get('_id');
                 if (char) {
+                    let charid=char.get('_id');
                     char.get("gmnotes",function(gmnotes) {
                         let time=String(gmnotes);
                         if (time=="") {
@@ -206,10 +430,11 @@ var Downtime = Downtime || (function(){
                                 '<br>' + //--
                                 '<div style="text-align:center;"><a ' + astyle2 + '" href="!brewmenu --charid ' + charid + ' --rarity ?{Type?|Common|Uncommon|Rare|Very Rare|Legendary} --amount ?{Amount?|1}">Brew Potion</a></div>' + //--
                                 '<div style="text-align:center;"><a ' + astyle2 + '" href="!craftmenu --charid ' + charid + ' --type ?{Type?|Weapon|Armor|Accessoires|Scroll} --rarity ?{Rarity?|Common|Uncommon|Rare|Very Rare|Legendary} --time ?{Time?|1}">Craft Items</a></div>' + //--
-                                '<div style="text-align:center;"><a ' + astyle2 + '" href="!work --charid ' + charid + '--skill ?{Skill?|Acrobatics|Animal Handling|Arcana|Athletics|Deception|History|Insight|Intimidation|Investigation|Medicine|Nature|Perception|Performance|Persuasion|Religion|Sleight of Hand|Stealth|Survival} --time ?{Time?|1}">Work</a></div>' + //--
+                                '<div style="text-align:center;"><a ' + astyle2 + '" href="!work --charid ' + charid + ' --skill ?{Skill?|Acrobatics|Animal Handling|Arcana|Athletics|Deception|History|Insight|Intimidation|Investigation|Medicine|Nature|Perception|Performance|Persuasion|Religion|Sleight of Hand|Stealth|Survival} --time ?{Time?|1}">Work</a></div>' + //--
                                 '<div style="text-align:center;"><a ' + astyle2 + '" href="!trainmenu --charid ' + charid + ' --type ?{Type?|Tool|Language}">Train</a></div>' + //--
                                 '<div style="text-align:center;"><a ' + astyle2 + '" href="!crimemenu --charid ' + charid + ' --type ?{Type?|Stealth|Thieves\' Tools|Investigation|Perception|Deception}">Commit Crime</a></div>' + //--
-                                '<div style="text-align:center;"><a ' + astyle2 + '" href="!research --charid ' + charid + ' --time ?{Time?|7}">Research</a></div>' + //--
+                                '<div style="text-align:center;"><a ' + astyle2 + '" href="!research --charid ' + charid + ' --price 50">Research</a></div>' + //--
+                                '<div style="text-align:center;"><a ' + astyle2 + '" href="!gamblemenu --charid ' + charid + ' --amount ?{Amount?|10}">Gamble</a></div>' + //--
                                 '</div>'
                             );
                         }
@@ -221,6 +446,99 @@ var Downtime = Downtime || (function(){
         }
     },
     
+    createHandout = function(charid,msg) {
+        let char=findObjs({
+            _type: 'character',
+            _id: charid
+        }, {caseInsensitive: true})[0];
+        if (char) {
+            let playerid = char.get('controlledby');
+            let existing=findObjs({
+                _type: 'handout',
+            });
+            let count=0;
+            let multiple=false;
+            let handid;
+            _.each(existing,function(handout) {
+                let name=handout.get('name');
+                if (name.includes("Downtime Activities") && name.includes(char.get('name'))) {
+                    count+=1;
+                    if (name.includes(String(count))) {
+                        handid=handout.get('_id');
+                    }
+                }
+            })
+            if (count==0) {
+                count=1;
+            } else {
+                count+=1;
+            }
+            char.get('gmnotes',function(gmnotes) {
+                let notes=gmnotes;
+                let handout=createObj('handout',{
+                    name: 'Downtime Activities of '+char.get('name')+" #"+count,
+                    inplayerjournals: playerid,
+                    controlledby: msg.playerid,
+                });
+                handout.set('notes',"Total Downtime: "+notes);
+            });
+        }
+    },
+    
+    setHandoutDesc = function(playerid,num,description) {
+        num=Number(num);
+        let handout=findObjs({
+            _type: 'handout',
+        });
+        let id;
+        _.each(handout,function(object) {
+            let name=object.get('name');
+            let injournal=object.get('inplayerjournals');
+            if (name.includes("Downtime Activities")) {
+                if (name.includes(String(num))) {
+                    if (injournal.includes(playerid)) {
+                        id=object.get('_id');
+                    }
+                } else {
+                    sendChat("Downtime","/w gm A Handout with that Number does not exist!");
+                }
+            }
+        });
+        handout=findObjs({
+            _type: 'handout',
+            _id: id
+        })[0];
+        handout.get("notes",function(notes) {
+            let nnotes=String(notes)+description;
+            let newHand=createObj('handout',{
+                name: handout.get('name'),
+                inplayerjournals: handout.get('inplayerjournals'),
+                controlledby: handout.get("controlledby")
+            });
+            newHand.set("notes",nnotes);
+        });
+        handout.remove();
+    },
+    
+    getHandoutNum = function(playerid,charid) {
+        let handout=findObjs({
+            _type: 'handout',
+        });
+        let char=findObjs({
+            _type: 'character',
+            _id: charid
+        })[0];
+        let num;
+        _.each(handout,function(object) {
+            let name=object.get('name');
+            let injournal=object.get('inplayerjournals');
+            if ((name.includes("Downtime Activities") && name.includes(char.get('name')))&&String(injournal).includes(playerid)) {
+                num=Number(name.replace("Downtime Activities of "+char.get('name')+" #",""));
+            }
+        });
+        return num;
+    },
+    
     getIDsFromTokens = function (selected) {
 		return (selected || []).map(obj => getObj("graphic", obj._id))
 			.filter(x => !!x)
@@ -230,7 +548,7 @@ var Downtime = Downtime || (function(){
     
     setdown = function(player,amount,type,msg) {
         amount=Number(amount.replace("amount ",""));
-        type=type.replace("type ","");
+        type=type.replace("timetype ","");
         player=player.replace("type ","");
         if (player=="All") {
             state.down.now.time=amount;
@@ -254,12 +572,16 @@ var Downtime = Downtime || (function(){
                     break;
             }
             _.each(characters,function(attr) {
-                if (realamount>1) {
-                    attr.set('gmnotes',realamount+" Days");
-                } else if (realamount==1) {
-                    attr.set('gmnotes',realamount+" Day");
-                } else {
-                    attr.set('gmnotes',"");
+                if (attr.get('inplayerjournals')!=="") {
+                    if (realamount>1) {
+                        attr.set('gmnotes',realamount+" Days");
+                    } else if (realamount==1) {
+                        attr.set('gmnotes',realamount+" Day");
+                    } else {
+                        attr.set('gmnotes',"");
+                    }
+                    let id=attr.get('_id');
+                    createHandout(id,msg);
                 }
             });
         } else {
@@ -267,6 +589,7 @@ var Downtime = Downtime || (function(){
                 _type: 'character',
                 name: player
             }, {caseInsensitive: true})[0];
+            let id=char.get('_id');
             var realamount=0;
             switch (type) {
                 case 'Week':
@@ -289,6 +612,7 @@ var Downtime = Downtime || (function(){
             } else {
                 char.set('gmnotes',"");
             }
+            createHandout(id,msg);
         }
     },
     
@@ -680,6 +1004,10 @@ var Downtime = Downtime || (function(){
                 sendChat("Downtime","!setattr --charid "+charid+" --repeating_attack_-CREATE_atkname|Detect Thoughts --repeating_attack_-CREATE_atkflag|0 --repeating_attack_-CREATE_saveattr|Wisdom --repeating_attack_-CREATE_saveflat|13 --repeating_attack_-CREATE_saveeffect|No effect");
             }
         }
+        let handnum=getHandoutNum(msg.playerid,charid);
+        let name = char.get("name");
+        let desc="<br><br>"+name+" spends "+time+" Days and "+price+" GP crafting "+amount+"x "+potion
+        setHandoutDesc(msg.playerid,handnum,desc);
     },
     
     craftmenu = function(charid,type,rarity,amount,msg) {
@@ -785,12 +1113,13 @@ var Downtime = Downtime || (function(){
     },
     
     work = function(charid,type,amount,msg) {
+        let skill=type.replace("skill ","");
         type=type.replace("skill ","");
         type=type.replace(" ","_");
         type=type.replace(" ","_");
         type=type.toLowerCase();
         type=type+"_bonus";
-        amount=amount.replace("time ","");
+        amount=Number(amount.replace("time ",""));
         charid=charid.replace("charid ","");
         let char=findObjs({ 
             _type: 'character', 
@@ -804,16 +1133,22 @@ var Downtime = Downtime || (function(){
             }
             char.get("gmnotes",function(gmnotes) {
                 let time;
-                time=gmnotes.replace(" Days","");
+                time=Number(String(gmnotes.replace(" Day","")).replace("s",""));
                 
-                if (!(Number(time)<amount)) {
-                    time=Number(time)-amount;
+                if (time<amount) {
+                    sendChat("Downtime","/w "+msg.who+" You do not have enough time to do that!")
+                } else {
+                    time-=amount;
+                    let nnotes="";
+                    if (time>0) {
+                        if (time==1) {
+                            nnotes=String(time)+" Day";
+                        } else {
+                            nnotes=String(time)+" Days";
+                        }
+                    }
+                    char.set("gmnotes",nnotes);
                 }
-                let nnotes="";
-                if (time && time!=0) {
-                    nnotes+=String(time)+" Days";
-                }
-                char.set("gmnotes",nnotes);
             });
             var gold=findObjs({
                 _type: 'attribute',
@@ -822,8 +1157,13 @@ var Downtime = Downtime || (function(){
             }, {caseInsensitive: true})[0];
             var cur=Number(gold.get('current'));
             sendChat("Downtime","/w "+msg.who+" You worked for "+amount+" Days and gained "+gp+" GP!");
+            let mun=gp;
             gp+=cur;
             gold.set('current',gp);
+            let handnum=getHandoutNum(msg.playerid,charid);
+            let name = char.get("name");
+            let desc="<br><br>"+name+" spends "+amount+" Days working, using "+skill+", earning "+mun+" GP.";
+            setHandoutDesc(msg.playerid,handnum,desc);
         }
     },
     
@@ -892,6 +1232,8 @@ var Downtime = Downtime || (function(){
             _characterid: charid,
             _name: "gp"
         }, {caseInsensitive: true})[0];
+        let handnum=getHandoutNum(msg.playerid,charid);
+        let name = char.get("name");
         var cur=Number(gold.get('current'));
         char.get("gmnotes",function(gmnotes){
             let ntime=Number(gmnotes.replace(" Days",""));
@@ -929,6 +1271,8 @@ var Downtime = Downtime || (function(){
                     if (passnum==0) {
                         var weeknum=Math.floor(state.down.now.crimeval/25);
                         sendChat("Downtime","/w "+msg.who+" The Heist fails and you are caught, forced to pay a fine of " + state.down.now.crimeval + " GP and are locked into Jail for "+weeknum+" Weeks");
+                        let desc="<br><br>"+name+" spends 7 Days and 25 GP setting up a Heist, but they fail and are caught. They pay a fine of "+state.down.now.crimeval+" GP and are locked into Jail for "+weeknum+" Weeks.";
+                        setHandoutDesc(msg.playerid,handnum,desc);
                         if ((cur-Number(state.down.now.crimeval))<0) {
                             cur=0;
                             gold.set('current',0);
@@ -958,17 +1302,24 @@ var Downtime = Downtime || (function(){
                             char.set("gmnotes",notes);
                         });
                     } else if (passnum==1) {
+                        let crimeval=Number(state.down.now.crimeval)
                         sendChat("Downtime","/w "+msg.who+" You fail the Heist but manage to get away.");
+                        let desc="<br><br>"+name+" spends 7 Days and 25 GP trying to pull off a Heist, targeting "+crimeval+" GP, but fail. They manage to get away before they could get caught.";
+                        setHandoutDesc(msg.playerid,handnum,desc);
                     } else if (passnum==2) {
                         let crimeval=Number(state.down.now.crimeval)/2;
                         sendChat("Downtime","/w "+msg.who+" You manage to pull off the Heist but could only get away with "+crimeval+" GP.");
                         cur+=crimeval;
                         gold.set('current',cur);
+                        let desc="<br><br>"+name+" spends 7 Days and 25 GP setting up a Heist. They pull it off but only manage to get away with "+crimeval+" GP.";
+                        setHandoutDesc(msg.playerid,handnum,desc);
                     } else if (passnum==3) {
                         let crimeval=Number(state.down.now.crimeval);
                         sendChat("Downtime","/w "+msg.who+" You pull off the Heist successfully and gain "+crimeval+" GP.");
                         cur+=crimeval;
                         gold.set('current',cur);
+                        let desc="<br><br>"+name+" spends 7 Days and 25 GP setting up a Heist. They pull it off and gain "+crimeval+" GP.";
+                        setHandoutDesc(msg.playerid,handnum,desc);
                     }
                 }
             }
@@ -1055,7 +1406,6 @@ var Downtime = Downtime || (function(){
             list=list.split(',');
         }
         let mintime=50;
-        let cost=25*5;
         list=String(list);
         for (let i=0;i<37;i++) {
             list=list.replace(',','|');
@@ -1122,37 +1472,300 @@ var Downtime = Downtime || (function(){
             _type: 'character',
             _id: charid
         }, {caseInsensitive: true})[0];
-        type=type.replace(" ","");
-        if (type=="Tool") {
-            let attributes = findObjs({
-                _type: 'attribute',
-                _characterid: charid
-            });
-            let count=0;
-            _.each(attributes,function(attr) {
-                let attrname = attr.get('_name');
-                if (attrname.includes('repeating_tool') && attrname.includes('_toolname')) {
-                    count+=1;
-                }
-            });
-            char.get('gmnotes',function(gmnotes) {
-                let num=Number(gmnotes.replace(' Days',''));
-                num-=50;
-                let notes=String(num)+" Days";
-                char.set('gmnotes',notes);
-            });
-            sendChat("Downtime",'!setattr --charid '+charid+' --repeating_tool_-CREATE_toolname|'+name);
-            sendChat("Downtime",'!setattr --charid '+charid+' --repeating_tool_$'+count+'_toolattr|QUERY');
+        let handnum=getHandoutNum(msg.playerid,charid);
+        let pname = char.get("name");
+        let cost=25*5;
+        let gold=findObjs({
+            _type: 'attribute',
+            _characterid: charid,
+            _name: 'gp'
+        }, {caseInsensitive: true})[0];
+        let cur=gold.get('current');
+        if (cur<cost) {
+            sendChat("Downtime","/w "+msg.who+" You do not have enough money to do that!");
         } else {
-            char.get('gmnotes',function(gmnotes) {
-                let num=Number(gmnotes.replace(' Days',''));
-                num-=50;
-                let notes=String(num)+" Days";
-                char.set('gmnotes',notes);
-            });
-            sendChat("Downtime",'!setattr --charid '+charid+' --repeating_proficiencies_-CREATE_name|'+name);
+            cur-=cost;
+            gold.set('current',cur);
+            type=type.replace(" ","");
+            if (type=="Tool") {
+                let attributes = findObjs({
+                    _type: 'attribute',
+                    _characterid: charid
+                });
+                let count=0;
+                _.each(attributes,function(attr) {
+                    let attrname = attr.get('_name');
+                    if (attrname.includes('repeating_tool') && attrname.includes('_toolname')) {
+                        count+=1;
+                    }
+                });
+                char.get('gmnotes',function(gmnotes) {
+                    let num=Number(gmnotes.replace(' Days',''));
+                    num-=50;
+                    let notes=String(num)+" Days";
+                    char.set('gmnotes',notes);
+                });
+                sendChat("Downtime",'!setattr --charid '+charid+' --repeating_tool_-CREATE_toolname|'+name);
+                sendChat("Downtime",'!setattr --charid '+charid+' --repeating_tool_$'+count+'_toolattr|QUERY');
+            } else {
+                char.get('gmnotes',function(gmnotes) {
+                    let num=Number(gmnotes.replace(' Days',''));
+                    num-=50;
+                    let notes=String(num)+" Days";
+                    char.set('gmnotes',notes);
+                });
+                sendChat("Downtime",'!setattr --charid '+charid+' --repeating_proficiencies_-CREATE_name|'+name);
+            }
         }
-    }, 
+        let desc="<br><br>"+pname+" spends 50 Days and "+cost+" GP training with "+name+".";
+        setHandoutDesc(msg.playerid,handnum,desc);
+    },
+    
+    researchmenu = function(charid,price,msg) {
+        var divstyle = 'style="width: 220px; border: 1px solid black; background-color: #ffffff; padding: 5px;"';
+        var astyle1 = 'style="text-align:center; border: 1px solid black; margin: 1px; background-color: #7E2D40; border-radius: 4px;  box-shadow: 1px 1px 1px #707070; width: 100px;';
+        var astyle2 = 'style="text-align:center; border: 1px solid black; margin: 1px; background-color: #7E2D40; border-radius: 4px;  box-shadow: 1px 1px 1px #707070; width: 150px;';
+        var tablestyle = 'style="text-align:center;"';
+        var arrowstyle = 'style="border: none; border-top: 3px solid transparent; border-bottom: 3px solid transparent; border-left: 195px solid rgb(126, 45, 64); margin-bottom: 2px; margin-top: 2px;"';
+        var headstyle = 'style="color: rgb(126, 45, 64); font-size: 18px; text-align: left; font-variant: small-caps; font-family: Times, serif;"';
+        var substyle = 'style="font-size: 11px; line-height: 13px; margin-top: -3px; font-style: italic;"';
+        let neededtime=5;
+        charid=charid.replace('charid ','');
+        let char = findObjs({
+            _type: 'character',
+            _id: charid
+        })[0];
+        price=price.replace("price ","");
+        let amount=Number(price);
+        let base=50;
+        if (!amount) {
+            amount=base;
+        } else {
+            if (amount<base) {
+                amount=base;
+            } else {
+                amount+=base;
+            }
+        }
+        let gold = findObjs({
+            _type: 'attribute',
+            _characterid: charid,
+            _name: 'gp'
+        }, {caseInsensitive: true})[0];
+        char.get('gmnotes',function(gmnotes) {
+            let time=Number(String(gmnotes.replace(" Day","")).replace("s",""));
+            if (time<neededtime) {
+                sendChat("Downtime","/w "+msg.who+" You do not have enough time to do that!")
+            } else {
+                let cur=gold.get('current');
+                if (cur<amount) {
+                    sendChat("Downtime","/w "+msg.who+" You do not have enough money to do that!");
+                } else {
+                    sendChat("Downtime","/w " + msg.who + " <div " + divstyle + ">" + //--
+                        '<div ' + headstyle + '>Research</div>' + //--
+                        '<div ' + substyle + '>Menu</div>' + //--
+                        '<div ' + arrowstyle + '></div>' + //--
+                        '<table>' + //--
+                        '<tr><td>Needed Time: </td><td>' + neededtime + ' Days</td></tr>' + //--
+                        '<tr><td>GP spent: </td><td><a ' + astyle1 + '" href="!researchmenu --charid ' + charid + ' --price ?{Amount?|50}">' + amount + ' GP</a></td></tr>' + //--
+                        '</table>' + //--
+                        '<div style="text-align:center;"><a ' + astyle2 + '" href="!research --charid ' + charid + ' --price ' + amount + '">Research</a></div>' + //--
+                        '</div>'
+                    );
+                }
+            }
+        });
+    },
+    
+    research = function(charid,gp,msg) {
+        charid=charid.replace("charid ","");
+        gp=Number(gp.replace("price ",""));
+        let bonus=0;
+        let base=50;
+        if (gp<base*2) {
+            bonus=1;
+        } else if (gp<base*3) {
+            bonus=2;
+        } else if (gp<base*4) {
+            bonus=3;
+        } else if (gp<base*5) {
+            bonus=4;
+        } else if (gp<base*6) {
+            bonus=5;
+        } else if (gp>=base*6) {
+            bonus=6;
+        }
+        let char = findObjs({
+            _type: 'character',
+            _id: charid
+        })[0];
+        let gold=findObjs({
+            _type: 'attribute',
+            _characterid: charid,
+            _name: 'gp'
+        }, {caseInsensitive: true})[0];
+        let cur=gold.get('current');
+        cur-=gp;
+        gold.set('current',cur);
+        char.get("gmnotes",function(gmnotes){
+            let time=Number(String(gmnotes.replace(' Day','')).replace('s',''));
+            time-=5;
+            let notes="";
+            if (time>0) {
+                if (time==1) {
+                    notes=String(time)+" Day";
+                } else {
+                    notes=String(time)+" Days";
+                }
+            }
+            char.set("gmnotes",notes);
+        });
+        let rand=randomInteger(20)+bonus;
+        let desc;
+        if (rand<=5) {
+            desc="<br><br>"+char.get('name')+" spends 7 days and "+gp+" GP researching in the library but doesn\'t learn anything important.";
+            sendChat("Downtime","/w "+msg.who+" You do not discover any important Information");
+        } else if (rand<=10) {
+            desc="<br><br>"+char.get('name')+" spends 7 days and "+gp+" GP researching in the library and learns one piece of lore.";
+            sendChat("Downtime","/w gm "+char.get('name')+"learns one piece of lore.");
+            sendChat("Downtime","/w "+msg.who+" You learn one piece of lore.");
+        } else if (rand<=20) {
+            desc="<br><br>"+char.get('name')+" spends 7 days and "+gp+" GP researching in the library and learns two pieces of lore.";
+            sendChat("Downtime","/w gm "+char.get('name')+"learns two pieces of lore.");
+            sendChat("Downtime","/w "+msg.who+" You learn two pieces of lore.");
+        } else if (rand>20) {
+            desc="<br><br>"+char.get('name')+" spends 7 days and "+gp+" GP researching in the library and learns three pieces of lore.";
+            sendChat("Downtime","/w gm "+char.get('name')+"learns three pieces of lore.");
+            sendChat("Downtime","/w "+msg.who+" You learn three pieces of lore.");
+        }
+        let handnum=getHandoutNum(msg.playerid,charid);
+        setHandoutDesc(msg.playerid,handnum,desc);
+    },
+    
+    gamblemenu = function(charid,amount,msg) {
+        var divstyle = 'style="width: 220px; border: 1px solid black; background-color: #ffffff; padding: 5px;"';
+        var astyle1 = 'style="text-align:center; border: 1px solid black; margin: 1px; background-color: #7E2D40; border-radius: 4px;  box-shadow: 1px 1px 1px #707070; width: 100px;';
+        var astyle2 = 'style="text-align:center; border: 1px solid black; margin: 1px; background-color: #7E2D40; border-radius: 4px;  box-shadow: 1px 1px 1px #707070; width: 150px;';
+        var tablestyle = 'style="text-align:center;"';
+        var arrowstyle = 'style="border: none; border-top: 3px solid transparent; border-bottom: 3px solid transparent; border-left: 195px solid rgb(126, 45, 64); margin-bottom: 2px; margin-top: 2px;"';
+        var headstyle = 'style="color: rgb(126, 45, 64); font-size: 18px; text-align: left; font-variant: small-caps; font-family: Times, serif;"';
+        var substyle = 'style="font-size: 11px; line-height: 13px; margin-top: -3px; font-style: italic;"';
+        let neededtime=5;
+        let minprice=state.down.now.minprice;
+        let maxprice=state.down.now.maxprice;
+        charid=charid.replace('charid ','');
+        amount=Number(amount.replace("amount ",""));
+        if (amount<minprice) {
+            sendChat("Downtime","/w " + msg.who + " You must bet at least "+minprice+" GP!");
+            amount=minprice;
+        } else if (amount>maxprice) {
+            sendChat("Downtime","/w " + msg.who + " The maximum amount you can bet is "+maxprice+" GP!");
+            amount=maxprice;
+        }
+        let char=findObjs({
+            _type: 'character',
+            _id: charid
+        })[0];
+        let gold=findObjs({
+            _type: 'attribute',
+            _characterid: charid,
+            _name: 'gp'
+        }, {caseInsensitive: true})[0];
+        char.get("gmnotes",function(gmnotes) {
+            let time=Number(String(gmnotes.replace(" Day","")).replace("s",""));
+            if (time<5) {
+                sendChat("Downtime","/w "+msg.who+" You do not have enough time to do that!");
+            } else {
+                let cur=gold.get('current');
+                if (cur<amount) {
+                    sendChat("Downtime","/w "+msg.who+" You do not have enough money!");
+                } else {
+                    sendChat("Downtime","/w " + msg.who + " <div " + divstyle + ">" + //--
+                        '<div ' + headstyle + '>Gamble</div>' + //--
+                        '<div ' + substyle + '>Menu</div>' + //--
+                        '<div ' + arrowstyle + '></div>' + //--
+                        '<table>' + //--
+                        '<tr><td>Needed Time: </td><td>5 Days</td></tr>' + //--
+                        '<tr><td>Minimum Bet: </td><td>' + minprice + ' GP</td></tr>' + //--
+                        '<tr><td>Maximum Bet: </td><td>' + maxprice + ' GP</td></tr>' + //--
+                        '<tr><td>Current Bet: </td><td><a ' + astyle1 + '" href="!gamblemenu --charid ' + charid + ' --amount ?{Amount?|10}">' + amount + '</a></td></tr>' + //--
+                        '</table>' + //--
+                        '<br>' + //--
+                        '<div style="text-align:center;"><a ' + astyle2 + '" href="!gamble --charid ' + charid + ' --amount ' + amount + '">Start Gambling</a></div>' + //--
+                        '</div>'
+                    );
+                }
+            }
+        });
+    },
+    
+    gamble = function(charid,amount,msg) {
+        charid=charid.replace("charid ","");
+        amount=Number(amount.replace("amount ",""));
+        let char=findObjs({
+            _type: 'character',
+            _id: charid
+        })[0];
+        let gold=findObjs({
+            _type: 'attribute',
+            _characterid: charid,
+            _name: 'gp'
+        }, {caseInsensitive: true})[0];
+        let cur=gold.get('current');
+        char.get("gmnotes",function(gmnotes) {
+            let time=Number(String(gmnotes.replace(" Day","")).replace("s",""));
+            time-=5;
+            let notes;
+            if (time>0) {
+                if (time==1) {
+                    notes=String(time)+" Day";
+                } else {
+                    notes=String(time)+" Days";
+                }
+            }
+            char.set("gmnotes",notes);
+        });
+        let dc1=5+randomInteger(10)+randomInteger(10);
+        let dc2=5+randomInteger(10)+randomInteger(10);
+        let dc3=5+randomInteger(10)+randomInteger(10);
+        let check1=randomInteger(20)+getAttrByName(charid,"insight_bonus");
+        let check2=randomInteger(20)+getAttrByName(charid,"deception_bonus");
+        let check3=randomInteger(20)+getAttrByName(charid,"intimidation_bonus");
+        let pass=0;
+        if (check1>=dc1) {
+            pass+=1;
+        }
+        if (check2>=dc2) {
+            pass+=1;
+        }
+        if (check3>=dc3) {
+            pass+=1;
+        }
+        let desc;
+        if (pass==0) {
+            desc="<br><br>"+char.get('name')+" spends 5 days gambling and places a bet of "+amount+" GP. They lose all the money they bet and accrue a debt of "+amount+" GP!";
+            cur-=(amount*2);
+            gold.set('current',cur);
+            sendChat("Downtime","/w "+msg.who+" You place a bet of "+amount+" GP but lose it all and accrue a debt of "+amount+" GP.");
+        } else if (pass==1) {
+            desc="<br><br>"+char.get('name')+" spends 5 days gambling and places a bet of "+amount+" GP. They lose half the amount they bet.";
+            cur-=(amount/2);
+            gold.set('current',cur);
+            sendChat("Downtime","/w "+msg.who+" You place a bet of "+amount+" GP but lose half of it.");
+        } else if (pass==2) {
+            desc="<br><br>"+char.get('name')+" spends 5 days gambling and places a bet of "+amount+" GP. They win 1.5 times the bet amount.";
+            cur+=(amount/2);
+            gold.set('current',cur);
+            sendChat("Downtime","/w "+msg.who+" You place a bet of "+amount+" GP and win 1.5 times the bet amount.");
+        } else if (pass==3) {
+            desc="<br><br>"+char.get('name')+" spends 5 days gambling and places a bet of "+amount+" GP. They win twice the amount they bet.";
+            cur+=(amount);
+            gold.set('current',cur);
+            sendChat("Downtime","/w "+msg.who+" You place a bet of "+amount+" GP and win twice the bet.");
+        }
+        let handnum=getHandoutNum(msg.playerid,charid);
+        setHandoutDesc(msg.playerid,handnum,desc);
+    },
     
     checkInstall = function() {
         if (!state.down) {
