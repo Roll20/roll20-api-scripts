@@ -13,6 +13,6 @@
         "state.down.now": "read,write",
         "attribute.id": "read,write",
         "attribute.gp": "read,write",
-        "attribute": "read,write"
+        "attribute": "read,write",
     }
 }
