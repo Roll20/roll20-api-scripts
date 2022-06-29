@@ -9,10 +9,10 @@
     "patreon": "https://patreon.com/julexar",
     "roll20userid": "9989180",
     "dependencies": ["ChatSetAttr"],
-    "modifies": {
+    "modifiers": {
         "state.down.now": "read,write",
         "attribute.id": "read,write",
         "attribute.gp": "read,write",
-        "attribute": "read,write",
+        "attribute": "read,write"
     }
 }
