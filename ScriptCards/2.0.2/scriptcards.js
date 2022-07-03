@@ -25,7 +25,7 @@ const ScriptCards = (() => { // eslint-disable-line no-unused-vars
 	*/
 
 	const APINAME = "ScriptCards";
-	const APIVERSION = "2.0.2c";
+	const APIVERSION = "2.0.2d";
 	const APIAUTHOR = "Kurt Jaegers";
 	const debugMode = false;
 
@@ -106,6 +106,7 @@ const ScriptCards = (() => { // eslint-disable-line no-unused-vars
 		buttonbordercolor: "#999999",
 		buttonfontsize: "x-small",
 		buttonfontface: "Tahoma",
+		buttonpadding: "5px",
 		parameterdelimiter: ";",
 		formatoutputforobjectmodification: "0",
 		dicefontcolor: "#1C6EA4",
@@ -156,7 +157,7 @@ const ScriptCards = (() => { // eslint-disable-line no-unused-vars
 	var htmlTemplateHiddenTitle = `<div style="display: table; border: !{tableborder}; background-color: !{tablebgcolor}; width: 100%; text-align: left; border-radius: !{tableborderradius}; border-collapse: separate; box-shadow: !{tableshadow};"><div style="display: table-row-group; background-image:!{bodybackgroundimage};">`;
 	var htmlRowTemplate = `<div style="display: table-row; =X=ROWBG=X=;"><div style="display: table-cell; padding: 0px 0px; font-family: !{bodyfontface}; font-style: normal; font-weight:normal; font-size: !{bodyfontsize}; "><span style="line-height: !{lineheight}; color: =X=FONTCOLOR=X=;">=X=ROWDATA=X=</span></div></div>`;
 	var htmlTemplateEnd = `</div></div><br />`;
-	var buttonStyle = 'background-color:!{buttonbackground}; background-image:!{buttonbackgroundimage}; color: !{buttontextcolor}; text-align: center; vertical-align:middle; border-radius: 5px; border-color:!{buttonbordercolor}; font-family: !{buttonfontface}; font-size:!{buttonfontsize};';
+	var buttonStyle = 'background-color:!{buttonbackground}; padding:!{buttonpadding}; background-image:!{buttonbackgroundimage}; color: !{buttontextcolor}; text-align: center; vertical-align:middle; border-radius: 5px; border-color:!{buttonbordercolor}; font-family: !{buttonfontface}; font-size:!{buttonfontsize};';
 	var gradientStyle = "linear-gradient(rgba(255, 255, 255, .3), rgba(255, 255, 255, 0))";
 
 	// Objects to hold various variables and things we could need while running a script.
@@ -3318,7 +3319,7 @@ const ScriptCards = (() => { // eslint-disable-line no-unused-vars
 		var styleList = [
 			"tableborder", "tablebgcolor", "tableborderradius", "tableshadow", "titlecardbackground", "titlecardbottomborder",
 			"titlefontsize", "titlefontlineheight", "titlefontcolor", "bodyfontsize", "subtitlefontsize", "subtitlefontcolor", "titlefontshadow",
-			"titlefontface", "bodyfontface", "subtitlefontface", "buttonbackground", "buttonbackgroundimage", "buttontextcolor", "buttonbordercolor",
+			"titlefontface", "bodyfontface", "subtitlefontface", "buttonbackground", "buttonpadding", "buttonbackgroundimage", "buttontextcolor", "buttonbordercolor",
 			"dicefontcolor", "dicefontsize", "lineheight", "buttonfontsize", "buttonfontface", "titlecardbackgroundimage", "bodybackgroundimage",
 			"rollhilightlineheight", "rollhilightcolornormal", "rollhilightcolorfumble", "rollhilightcolorcrit", "rollhilightcolorboth",
 			"titlefontweight", "titlefontstyle"
