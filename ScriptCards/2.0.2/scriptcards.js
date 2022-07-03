@@ -25,7 +25,7 @@ const ScriptCards = (() => { // eslint-disable-line no-unused-vars
 	*/
 
 	const APINAME = "ScriptCards";
-	const APIVERSION = "2.0.2a";
+	const APIVERSION = "2.0.2b";
 	const APIAUTHOR = "Kurt Jaegers";
 	const debugMode = false;
 
@@ -2637,6 +2637,19 @@ const ScriptCards = (() => { // eslint-disable-line no-unused-vars
 			return [];
 		}
 	}
+	
+	function resolveAttributeSubstitution(characterid, reference) {
+		if(typeof reference.match === "function") {
+			while(reference.match(/\@(?:[\{])[\w|\s|À-ÖØ-öø-ÿ|\%|\(|\:|\.|\_|\>|\^|\-\+|\)]*?(?!\w+[\{])(\})/g) != null) {
+				var thisMatch = reference.match(/\@(?:[\{])[\w|\s|À-ÖØ-öø-ÿ|\%|\(|\:|\.|\_|\>|\^|\-\+|\)]*?(?!\w+[\{])(\})/g)[0];
+				var attrName = thisMatch.substring(2, thisMatch.length-1);
+				var replacement = getAttrByName(characterid, attrName);
+				reference = reference.replace(thisMatch, replacement);
+			}		
+		}
+
+		return reference;
+	}
 
 	function replaceVariableContent(content, cardParameters, rollHilighting) {
 		//var matchCount = 0;
@@ -2702,19 +2715,6 @@ const ScriptCards = (() => { // eslint-disable-line no-unused-vars
 					var vName = thisMatch.substring(2, thisMatch.length - 1);
 					replacement = cardParameters[vName.toLowerCase()] || "";
 					break;
-				/* 				case "#":
-									var tableName = thisMatch.match(/(?<=\[\#).*?(?=[\.|\]])/g)[0];
-									var table = findObjs({_type: "rollabletable", name: tableName});					
-									if (table) { table = table[0] } else { log(`ScriptCards Error: Table ${tableName} not found in game.`)}
-									if (table) {
-										var vSuffix = "name";
-										if (thisMatch.match(/(?<=\.).*?(?=[\.|\]])/g) !== null) {
-											vSuffix = thisMatch.match(/(?<=\.).*?(?=[\.|\]])/g)[0];
-										}
-										if (table.get(vSuffix)) { replacement = table.get(vSuffix); }
-									}
-									break;
-				 */
 
 				case "=":
 					var vName = "ScriptCardsInternalDummyRollVariable";
@@ -2768,9 +2768,10 @@ const ScriptCards = (() => { // eslint-disable-line no-unused-vars
 						activeCharacter = thisMatch.substring(2, thisMatch.indexOf(":"));
 					}
 					if (activeCharacter !== "") {
+						var workString = resolveAttributeSubstitution(activeCharacter, thisMatch);
 						var token;
 						var attribute = "";
-						var attrName = thisMatch.substring(thisMatch.indexOf(":") + 1, thisMatch.length - 1);
+						var attrName = workString.substring(workString.indexOf(":") + 1, workString.length - 1);
 						var character = getObj("character", activeCharacter);
 						if (character === undefined) {
 							token = getObj("graphic", activeCharacter);
@@ -2799,12 +2800,15 @@ const ScriptCards = (() => { // eslint-disable-line no-unused-vars
 						}
 						if (token == undefined && character == undefined) {
 							// Try finding a Player object
-							var player = getObj("player", activeCharacter);
-							if (player) {
+							var player = getObj("player", activeCharacter) ;
+							if (player !== undefined) {
 								attribute = player.get(attrName) || "";
 							}
 						}
 						replacement = attribute;
+						if (character !== undefined) {
+							replacement = resolveAttributeSubstitution(character.get("_id"), replacement);
+						}
 					}
 
 					if (thisMatch.charAt(2).toLowerCase() == "p") {
@@ -2855,28 +2859,6 @@ const ScriptCards = (() => { // eslint-disable-line no-unused-vars
 		}
 		return content;
 	}
-
-	/*
-	function replaceSubattributeReferences(content, characterid) {
-		var failCount = 100;
-		while (content.toString().match(/\@\{.*?\}/g) !== null) {
-			var thisMatch = content.match(/\@\{.*?\}/g)[0];
-			var replacement = "";
-			var attrName = "";
-			var theCharacter = getObj("character", characterid);
-			if (theCharacter !== undefined) {
-				attrName = thisMatch.substring(2, thisMatch.length - 1);
-				debugOutput(`AttrName: ${attrName}, char: ${theCharacter}, Attr: ${theCharacter.get(attrName)}`);
-				replacement = getAttrByName(characterid, attrName);
-			}
-			debugOutput(`Subattribute: Replacing ${thisMatch} with ${replacement} for char ${theCharacter} attr: ${attrName}`);
-			content.replace(thisMatch, replacement);
-			failCount++;
-			if (failCount > 100) { return content; }
-		}
-		return content;
-	}
-	*/
 
 	function getLineTag(line, linenum, logerror) {
 		if (line.indexOf("|") >= 0) {
