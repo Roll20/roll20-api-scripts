@@ -4,7 +4,7 @@
     "script": "down.js",
     "version": "0.9c",
     "previousversions": ["0.8c","0.9b"],
-    "description": "A System for tracking Downtime Activities in Roll20 and automating the Options to only require a few Button clicks, making them add and remove things for you so you don't have to",
+    "description": "A System for tracking Downtime Activities in Roll20 and automating the Options to only require a few Button clicks, making them add and remove things for you so you don\'t have to",
     "authors": "Julexar",
     "patreon": "https://patreon.com/julexar",
     "roll20userid": "9989180",
