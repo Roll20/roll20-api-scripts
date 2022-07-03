@@ -25,7 +25,7 @@ const ScriptCards = (() => { // eslint-disable-line no-unused-vars
 	*/
 
 	const APINAME = "ScriptCards";
-	const APIVERSION = "2.0.2";
+	const APIVERSION = "2.0.2a";
 	const APIAUTHOR = "Kurt Jaegers";
 	const debugMode = false;
 
@@ -2009,6 +2009,24 @@ const ScriptCards = (() => { // eslint-disable-line no-unused-vars
 										repeatingSection = undefined;
 									}
 									break;
+								case "byindex":
+									if (param[0] && param[1] && param[2]) {
+										repeatingSectionIDs = getRepeatingSectionIDs(param[0], param[1]);
+										if (repeatingSectionIDs) {
+											repeatingIndex = Number(param[2]);
+											repeatingCharID = param[0];
+											repeatingSectionName = param[1];
+											fillCharAttrs(findObjs({ _type: 'attribute', _characterid: repeatingCharID }));
+											repeatingSection = getSectionAttrsByID(repeatingCharID, repeatingSectionName, repeatingSectionIDs[repeatingIndex]);
+											parseRepeatingSection();
+											repeatingIndex = 0;
+										} else {
+											repeatingSection = undefined;
+										}
+									} else {
+										repeatingSection = undefined;
+									}
+									break;
 								case "next":
 									if (repeatingSectionIDs) {
 										if (repeatingSectionIDs[repeatingIndex + 1]) {
@@ -2087,6 +2105,8 @@ const ScriptCards = (() => { // eslint-disable-line no-unused-vars
 
 						// Handle Conditional Lines
 						if (thisTag.charAt(0) === "?") {
+							// For the conditional rewrite:
+							// ((\s+)?(.+?)\s+(-eq|-eqi|-ne|-nei|-gt|-ge|-lt|-le|-inc|-ninc)\s+(.+?)($|\s-and\s|\s-or\s))
 							var isTrue = processFullConditional(thisTag.substring(1));
 							var trueDest = thisContent.trim();
 							var falseDest = undefined;
