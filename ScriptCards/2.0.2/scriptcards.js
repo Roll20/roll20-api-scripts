@@ -25,7 +25,7 @@ const ScriptCards = (() => { // eslint-disable-line no-unused-vars
 	*/
 
 	const APINAME = "ScriptCards";
-	const APIVERSION = "2.0.2b";
+	const APIVERSION = "2.0.2c";
 	const APIAUTHOR = "Kurt Jaegers";
 	const debugMode = false;
 
@@ -129,6 +129,7 @@ const ScriptCards = (() => { // eslint-disable-line no-unused-vars
 		hpbar: "3",
 		outputtagprefix: "",
 		outputcontentprefix: " ",
+		enableattributesubstitution: "0",
 		styleTableTag: " border-collapse:separate; border: solid black 2px; border-radius: 6px; -moz-border-radius: 6px; ",
 		stylenone: " text-align: center; font-size: 100%; display: inline-block; font-weight: bold; height: !{rollhilightlineheight}; min-width: 1.75em; margin-top: -1px; margin-bottom: 1px; padding: 0px 2px; ",
 		stylenormal: " text-align: center; font-size: 100%; display: inline-block; font-weight: bold; height: !{rollhilightlineheight}; min-width: 1.75em; margin-top: -1px; margin-bottom: 1px; padding: 0px 2px; border: 1px solid; border-radius: 3px; background-color: !{rollhilightcolornormal}; border-color: #87850A; color: #000000;",
@@ -2662,8 +2663,6 @@ const ScriptCards = (() => { // eslint-disable-line no-unused-vars
 		while (content.match(/\[(?:[\$|\&|\@|\%|\*\~\=])[\w|\s|À-ÖØ-öø-ÿ|\%|\(|\:|\.|\_|\>|\^|\-\+|\)]*?(?!\w+[\[])(\])/g) !== null) {
 			var thisMatch = content.match(/\[(?:[\$|\&|\@|\%|\*\~\=])[\w|\s|À-ÖØ-öø-ÿ|\%|\(|\:|\.|\_|\>|\^|\-\+|\)]*?(?!\w+[\[])(\])/g)[0];
 			var replacement = "";
-			//matchCount++;
-			//var doReplace=true;
 			switch (thisMatch.charAt(1)) {
 				case "&":
 					// Replace a string variable
@@ -2729,16 +2728,20 @@ const ScriptCards = (() => { // eslint-disable-line no-unused-vars
 
 				case "@":
 					// Replace Array References
-					var vName = thisMatch.match(/(?<=\[\$|\@).*?(?=[\(])/g)[0];
-					var vIndex = 0;
-					if (thisMatch.match(/(?<=\().*?(?=[)]])/g) !== null) {
-						vIndex = parseInt(thisMatch.match(/(?<=\().*?(?=[)]])/g)[0]);
-					}
-					if (arrayVariables[vName] && arrayVariables[vName].length > vIndex) {
-						replacement = arrayVariables[vName][vIndex];
-					}
-					if (cardParameters.debug !== "0") {
-						log(`ContentIn: ${content} Match: ${thisMatch}, vName: ${vName}, vIndex: ${vIndex}, replacement ${replacement}`)
+					if (thisMatch.match(/(?<=\[\$|\@).*?(?=[\(])/g)) {
+						var vName = thisMatch.match(/(?<=\[\$|\@).*?(?=[\(])/g)[0];
+						var vIndex = 0;
+						if (thisMatch.match(/(?<=\().*?(?=[)]])/g) !== null) {
+							vIndex = parseInt(thisMatch.match(/(?<=\().*?(?=[)]])/g)[0]);
+						}
+						if (arrayVariables[vName] && arrayVariables[vName].length > vIndex) {
+							replacement = arrayVariables[vName][vIndex];
+						}
+						if (cardParameters.debug !== "0") {
+							log(`ContentIn: ${content} Match: ${thisMatch}, vName: ${vName}, vIndex: ${vIndex}, replacement ${replacement}`)
+						}
+					} else {
+						log(`Bad array variable reference : ${thisMatch}`)
 					}
 					break;
 
@@ -2768,7 +2771,8 @@ const ScriptCards = (() => { // eslint-disable-line no-unused-vars
 						activeCharacter = thisMatch.substring(2, thisMatch.indexOf(":"));
 					}
 					if (activeCharacter !== "") {
-						var workString = resolveAttributeSubstitution(activeCharacter, thisMatch);
+						var workString = thisMatch;
+						if (cardParameters.enableattributesubstitution !== "0") { workString = resolveAttributeSubstitution(activeCharacter, thisMatch); }
 						var token;
 						var attribute = "";
 						var attrName = workString.substring(workString.indexOf(":") + 1, workString.length - 1);
@@ -2807,7 +2811,9 @@ const ScriptCards = (() => { // eslint-disable-line no-unused-vars
 						}
 						replacement = attribute;
 						if (character !== undefined) {
-							replacement = resolveAttributeSubstitution(character.get("_id"), replacement);
+							if (cardParameters.enableattributesubstitution !== "0") {
+								replacement = resolveAttributeSubstitution(character.get("_id"), replacement);
+							}
 						}
 					}
 
