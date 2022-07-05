@@ -25,7 +25,7 @@ const ScriptCards = (() => { // eslint-disable-line no-unused-vars
 	*/
 
 	const APINAME = "ScriptCards";
-	const APIVERSION = "2.0.2d";
+	const APIVERSION = "2.0.2e";
 	const APIAUTHOR = "Kurt Jaegers";
 	const debugMode = false;
 
@@ -818,7 +818,19 @@ const ScriptCards = (() => { // eslint-disable-line no-unused-vars
 												if (settingName.toLowerCase() == "imgsrc") {
 													settingValue = getCleanImgsrc(settingValue);
 												}
-												if (settingValue.startsWith("+=") || settingValue.startsWith("-=")) {
+												if (settingName.toLowerCase() == "currentside") {
+													if (settingValue) {
+														var sides = theToken.get("sides").split("|");
+														if (sides[Number(settingValue)]) {
+															if (settingValue == "0") { settingValue = ""; }
+															theToken.set("currentSide", settingValue);
+															var newImgSrc = getCleanImgsrc(sides[Number(settingValue)].replace("%3A",":").replace("%3F","?"));
+															theToken.set("imgsrc", newImgSrc);
+														}
+													}
+													
+												}
+												if (settingValue && (settingValue.startsWith("+=") || settingValue.startsWith("-="))) {
 													var currentValue = theToken.get(settingName);
 													var delta = settingValue.substring(2);
 													if (isNumber(currentValue) && isNumber(delta)) {
@@ -831,14 +843,16 @@ const ScriptCards = (() => { // eslint-disable-line no-unused-vars
 													settingValue = processInlineFormatting(settingValue, cardParameters);
 												}
 
-												if (typeof (theToken.get(settingName)) == "boolean") {
+												if (typeof (theToken.get(settingName)) == "boolean" && settingValue) {
 													switch (settingValue.toLowerCase()) {
 														case "true": settingValue = true; break;
 														case "false": settingValue = false; break;
 													}
 												}
 
-												theToken.set(settingName, settingValue);
+												if (settingName && settingValue) { 
+													theToken.set(settingName, settingValue);
+												}
 											}
 										} else {
 											log(`ScriptCards Error: Modify Token called without valid TokenID`)
