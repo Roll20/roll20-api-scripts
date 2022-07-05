@@ -25,7 +25,7 @@ const ScriptCards = (() => { // eslint-disable-line no-unused-vars
 	*/
 
 	const APINAME = "ScriptCards";
-	const APIVERSION = "2.0.2e";
+	const APIVERSION = "2.0.2f";
 	const APIAUTHOR = "Kurt Jaegers";
 	const debugMode = false;
 
@@ -3359,6 +3359,7 @@ const ScriptCards = (() => { // eslint-disable-line no-unused-vars
 		outputLine = outputLine.replace(/\[\/t\]/gi, "</table>");
 		outputLine = outputLine.replace(/\[p\]/gi, "<p>");
 		outputLine = outputLine.replace(/\[\/p\]/gi, "</p>");
+		outputLine = outputLine.replace(/\[F(\d+)\](.*?)\[\/F\]/gi, "<div style='font-size:$1px;'>$2</div>"); // [F8] for font size 8
 		outputLine = outputLine.replace(/\[[Bb]\](.*?)\[\/[Bb]\]/g, "<b>$1</b>"); // [B]...[/B] for bolding
 		outputLine = outputLine.replace(/\[[Ii]\](.*?)\[\/[Ii]\]/g, "<i>$1</i>"); // [I]...[/I] for italics
 		outputLine = outputLine.replace(/\[[Uu]\](.*?)\[\/[Uu]\]/g, "<u>$1</u>"); // [U]...[/u] for underline
