@@ -25,7 +25,7 @@ const ScriptCards = (() => { // eslint-disable-line no-unused-vars
 	*/
 
 	const APINAME = "ScriptCards";
-	const APIVERSION = "2.0.2f";
+	const APIVERSION = "2.0.2g";
 	const APIAUTHOR = "Kurt Jaegers";
 	const debugMode = false;
 
@@ -2532,6 +2532,8 @@ const ScriptCards = (() => { // eslint-disable-line no-unused-vars
 					if ((cardParameters.leftsub == "") && (cardParameters.rightsub !== "")) {
 						subtitle = cardParameters.rightsub;
 					}
+
+					subtitle = processInlineFormatting(subtitle, cardParameters);
 
 					var cardOutput;
 					var gmoutput;
