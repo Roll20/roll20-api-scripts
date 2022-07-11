@@ -961,7 +961,7 @@ const ScriptCards = (() => { // eslint-disable-line no-unused-vars
 												}
 											}
 										} else {
-											log(`ScriptCards Error: Modify attribute called without valid ID`)
+											log(`ScriptCards Error: Modify attribute called without valid ID ${thisTag}, ${thisContent}`)
 										}
 										break;
 								}
