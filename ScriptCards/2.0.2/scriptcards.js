@@ -25,7 +25,7 @@ const ScriptCards = (() => { // eslint-disable-line no-unused-vars
 	*/
 
 	const APINAME = "ScriptCards";
-	const APIVERSION = "2.0.2h";
+	const APIVERSION = "2.0.2i";
 	const APIAUTHOR = "Kurt Jaegers";
 	const debugMode = false;
 
@@ -3760,10 +3760,10 @@ const ScriptCards = (() => { // eslint-disable-line no-unused-vars
 
 		action_attrs.forEach(function (z) {
 			try {
-				return_set.push(z.get("name").replace(action_prefix, "") + "|" + z.get("current").replace(/(?:\r\n|\r|\n)/g, "<br>"));//.replace(/[\[\]\@]/g, " "));
-				return_set.push(z.get("name").replace(action_prefix, "") + "_max|" + z.get("max"));
+				return_set.push(z.get("name").replace(action_prefix, "") + "|" + z.get("current").toString().replace(/(?:\r\n|\r|\n)/g, "<br>"));//.replace(/[\[\]\@]/g, " "));
+				return_set.push(z.get("name").replace(action_prefix, "") + "_max|" + z.get("max").toString());
 				// eslint-disable-next-line no-empty
-			} catch { }
+			} catch { log(`Attribute lookup error parsing ${z.get("name'")}`) }
 		})
 		return (return_set);
 	}
