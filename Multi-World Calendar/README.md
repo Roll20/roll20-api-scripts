@@ -1,4 +1,4 @@
-#multi-world calendar
+# multi-world calendar
 Calendar for Eberron, Faerun, Greyhawk, Modern and Tal'Dorei Settings
 
 Original created by Kirsty (https://app.roll20.net/users/1165285/kirsty)
