@@ -25,7 +25,7 @@ const ScriptCards = (() => { // eslint-disable-line no-unused-vars
 	*/
 
 	const APINAME = "ScriptCards";
-	const APIVERSION = "2.0.2j";
+	const APIVERSION = "2.0.2k";
 	const APIAUTHOR = "Kurt Jaegers";
 	const debugMode = false;
 
@@ -2039,7 +2039,7 @@ const ScriptCards = (() => { // eslint-disable-line no-unused-vars
 											fillCharAttrs(findObjs({ _type: 'attribute', _characterid: repeatingCharID }));
 											repeatingSection = getSectionAttrsByID(repeatingCharID, repeatingSectionName, repeatingSectionIDs[repeatingIndex]);
 											parseRepeatingSection();
-											repeatingIndex = 0;
+											repeatingIndex = Number(param[2]);
 										} else {
 											repeatingSection = undefined;
 										}
