@@ -25,7 +25,7 @@ const ScriptCards = (() => { // eslint-disable-line no-unused-vars
 	*/
 
 	const APINAME = "ScriptCards";
-	const APIVERSION = "2.0.2i";
+	const APIVERSION = "2.0.2j";
 	const APIAUTHOR = "Kurt Jaegers";
 	const debugMode = false;
 
@@ -2752,17 +2752,24 @@ const ScriptCards = (() => { // eslint-disable-line no-unused-vars
 					if (thisMatch.match(/(?<=\[\$|\@).*?(?=[\(])/g)) {
 						var vName = thisMatch.match(/(?<=\[\$|\@).*?(?=[\(])/g)[0];
 						var vIndex = 0;
+						var TestMatch = thisMatch.match(/(?<=\().*?(?=[)]])/g)[0].toString();
+						if (TestMatch == "" || TestMatch.toLowerCase() == "length") {
+							replacement = arrayVariables[vName].length.toString();
+						}
+						if (TestMatch.toLowerCase() == "lastindex" || TestMatch.toLowerCase() == "maxindex") {
+							replacement = (arrayVariables[vName].length - 1).toString();
+						}
 						if (thisMatch.match(/(?<=\().*?(?=[)]])/g) !== null) {
 							vIndex = parseInt(thisMatch.match(/(?<=\().*?(?=[)]])/g)[0]);
-						}
-						if (arrayVariables[vName] && arrayVariables[vName].length > vIndex) {
-							replacement = arrayVariables[vName][vIndex];
+							if (arrayVariables[vName] && arrayVariables[vName].length > vIndex) {
+								replacement = arrayVariables[vName][vIndex];
+							}
 						}
 						if (cardParameters.debug !== "0") {
 							log(`ContentIn: ${content} Match: ${thisMatch}, vName: ${vName}, vIndex: ${vIndex}, replacement ${replacement}`)
 						}
 					} else {
-						log(`Bad array variable reference : ${thisMatch}`)
+						log(`Array reference error : ${thisMatch}`)
 					}
 					break;
 
