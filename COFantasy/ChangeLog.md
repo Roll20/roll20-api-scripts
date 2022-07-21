@@ -1,4 +1,17 @@
 # COFantasy: Historique des changements (depuis la version 1.0)
+## 3.08
+### Capacités
+* 3 premiers rangs du maître des poisons
+
+### Corrections de bugs
+* Mise à jour de la conjuration d'armée.
+* Correction d'un crash avec des persos ayant un alias.
+
+### Autres améliorations
+* Prise en charge des conditions hostiles et des conditions extrêmes.
+* Prise en charge de la perte de substance d'Invincible.
+* Prise en charge du poison affaiblissant
+
 ## 3.07
 ### Capacités
 * Prédicat immuniteAucCritiques
@@ -7,6 +20,8 @@
 * Don de soin, de la Voie de Périndé
 
 ### Corrections de bugs
+* Affichage des saves actifs seulement pour le mook concerné.
+* Correction de l'affichage des DM contre les nuées.
 * Prise en compte correcte du rayon des ténèbres.
 * Protection contre les erreurs dans les murs de l'éclairage dynamique.
 * Protection contre l'absence de créateur d'une rune.
@@ -18,6 +33,10 @@
 * Plus de message d'erreur quand on attend trop avant de sauvegarder un nouveau personnage.
 
 ### Autres améliorations
+* Ajout de la gestion des RD aux armes bénies
+* Ajout d'un prédicat immunite_destruction
+* Possibilité d'utiliser !cof-echange-init sans argument.
+* Affichage des messages de la cible quand un allié peut intercepter.
 * Prise en compte de l'option --message pour !cof-tenebres
 * Le token des ténèbres est laissé sous les autres tokens.
 * Affichage d'un message au joueur qui fait le jet quand le MJ doit valider l'affichage.
