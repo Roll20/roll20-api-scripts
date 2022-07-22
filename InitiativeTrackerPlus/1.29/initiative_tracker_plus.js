@@ -51,7 +51,8 @@ var InitiativeTrackerPlus = (function() {
 		animating: false,
 		archive: false,
 		clearonclose: true,
-		show_eot: true
+		show_eot: true,
+		show_motd: true
 	};
 
 	var design = {
@@ -1010,7 +1011,7 @@ var InitiativeTrackerPlus = (function() {
 			+ '<tr>'
 			+ (markerdef ? ('<td style="vertical-align: top;"><div style="width: 35px; height: 35px;"><img src="'+markerdef.img+'"></img></div></td>'):'')
 			+ '<td width="100%" style="text-align: left;">'+statusArgs.name.charAt(0).toUpperCase() + statusArgs.name.substring(1) + ' ' + (parseInt(statusArgs.direction) === 0 ? '': (parseInt(statusArgs.duration) <= 0 ? '<span style="color: red;">Expiring</span>':statusArgs.duration))
-			+ (parseInt(statusArgs.direction)===0 ? ' <span style="color: lightblue; font-size: x-large; float: right; margin-right: 10px">&infin;</span>' : (parseInt(statusArgs.direction) > 0 ? ' <span style="color: green; float: right; margin-right: 10px">&Delta; +'+statusArgs.direction+')</span>':' <span style="color: red; float: right; margin-right: 10px">&Delta; ('+statusArgs.direction+')</span>'))
+			+ (parseInt(statusArgs.direction)===0 ? ' <span style="color: lightblue; font-size: x-large; float: right; margin-right: 10px">&infin;</span>' : (parseInt(statusArgs.direction) > 0 ? ' <span style="color: green; float: right; margin-right: 10px">&Delta; +'+statusArgs.direction+'</span>':' <span style="color: red; float: right; margin-right: 10px">&Delta; ('+statusArgs.direction+')</span>'))
 			+ ((statusArgs.msg) ? ('<br><span style="color: '+design.statusargscolor+'">' + getFormattedRoll(statusArgs.msg) + '</span>'):'')+'</td>'
 			+ '</tr>'
 			+ '</table>'
@@ -1175,22 +1176,24 @@ var InitiativeTrackerPlus = (function() {
 	 */
 	var displayMotd = function(curToken, statusName, favored) {
 		var motd = 'Please be aware, it is possible the animation is causing some browsers to run out of memory.  For this reason the animation now defaults to disabled.  Use <br>"<span style="font-weight: bold;">!itp -setConfig rotation:true</span>"<br> to turn it back on if you desire this functionality.';
-		var content = '<div style="background-color: '+design.turnbgcolor+'; color: '+design.turncolor+'; border: 2px solid #000; box-shadow: rgba(0,0,0,0.4) 3px 3px; border-radius: 0.5em; min-height: 50px;">'
+		var content = '<div style="background-color: '+design.turnbgcolor+'; color: '+design.turncolor+'; border: 2px solid #000; box-shadow: rgba(0,0,0,0.4) 3px 3px; border-radius: 0.5em; min-height: 20px;">'
 			+ '<table width="100%">'
 				+ '<tr>'
 					+ '<td width="100%" style="text-align: center; font-weight: bold; width: 100%">'
 						+ 'Initiative Tracker Plus (v.' + version + ')'
 					+ '</td>'
 				+ '</tr>'
-				+ '<tr>'
+		if(flags.show_motd && flags.show_motd != 0) {
+			content +=  '<tr>'
 					+ '<td>&nbsp;</td>'
 				+ '</tr>'
 				+ '<tr>'
 					+ '<td width="100%"  style="font-style: italic; text-align: left; padding: 5px;">'
 						+ motd
 					+ '</td>'
-				+ '</tr>'
-			+ '</table>'
+				+ '</tr>';
+		}
+		content += '</table>'
 		+ '</div>';
 
 
@@ -1865,6 +1868,7 @@ var InitiativeTrackerPlus = (function() {
 					fields[p[0]] = p[1];
 					state.initiative_tracker_plus.config.fields[p[0]] = p[1];
 					break;
+				case 'show_motd':
 				case 'show_eot':
 				case 'rotation':
 					oldvalue = flags[p[0]];
@@ -3354,10 +3358,12 @@ var InitiativeTrackerPlus = (function() {
 							+ "<li><b>statusbordercolor</b> [#430D3D] - Hex color code, changes the color of the border of the chat message announcing statuses of the current actor.</li>"
 							+ "<li><b>statusargscolor</b> [#FFFFFF] - Hex color code, changes the color of the feedback text when changing the marker for a status.</li>"
 							+ "<li><b>statusargsbgcolor</b> [#333333] - Hex color code, changes the background color of the feedback text when changing the marker for a status.</li>"
+							+ "<li><b>show_eot</b> [true] - true or false, hides the EOT button.</li>"
 							+ "<li><b>eotcolor</b> [#FFFFFF] - Hex color code, changes the color of the EOT button.</li>"
 							+ "<li><b>eotbgcolor</b> [#990000] - Hex color code, changes the background color of the EOT button.</li>"
 							+ "<li><b>playcombatmusic</b> [0] - Will a track from the jukebox be played when the tracker is active. Values should be 0 for off, 1 for on.</li>"
 							+ "<li><b>combatmusic</b> [] - The name of the track to play when the tracker is active if playcombatmusic is turned on [1]. Track can not contain spaces (example: Combat).</li>"
+							+ "<li><b>show_motd</b> [true] - true or false, hides the Message of the Day when the script is started. (Does not hide the version call-out)</li>"
 						+ '</ul>'
 					+ '</li>'
 				+ '</div>'
