@@ -11,7 +11,7 @@ const PlayerCharacters = (() => { // eslint-disable-line no-unused-vars
   const scriptName = 'PlayerCharacters';
   const version = '0.1.1';
   API_Meta.PlayerCharacters.version = version;
-  const lastUpdate = 1658609014;
+  const lastUpdate = 1658609741;
   const schemaVersion = 0.2;
   const secToMs = 1000;
   const OwnerAttrName = 'OwnerRoll20IDs';
@@ -382,9 +382,9 @@ const PlayerCharacters = (() => { // eslint-disable-line no-unused-vars
         ),
         _h.paragraph( 'Lists Characters by Player.'),
         _h.ul(
-          `${_h.bold('--skip-all')} -- causes the listing to not show characters which have a controleld by of ${_h.code('all')}. Characters with Players explicitly assigned to them in addition to ${_h.code('all')} will still be listed under the explicit Player name.`,
+          `${_h.bold('--skip-all')} -- causes the listing to not show characters which have a controlled by of ${_h.code('all')}. Characters with Players explicitly assigned to them in addition to ${_h.code('all')} will still be listed under the explicit Player name.`,
           `${_h.bold('--skip-claim')} -- causes the listing to not show imported characters which have not been claimed.`,
-          `${_h.bold('--show-all')} -- causes the listing to show characters which have a controleld by of ${_h.code('all')}.`,
+          `${_h.bold('--show-all')} -- causes the listing to show characters which have a controlled by of ${_h.code('all')}.`,
           `${_h.bold('--show-claim')} -- causes the listing to show imported characters which have not been claimed.`,
           `${_h.bold(`--add-character ${_h.required('Player ID or all')}`)} -- Add a character for the specified player or all players.  This command is used via the plus button in the list output.`,
           `${_h.bold(`--name ${_h.optional('Name')}`)} -- Set the name for the new character.  This is only used if ${_h.code('--add-character')} is also specified.  If no name is specified, a default name based on the Player is used.  This command is used via the plus button in the list output.`, 
@@ -431,7 +431,7 @@ const PlayerCharacters = (() => { // eslint-disable-line no-unused-vars
         ),
         _h.minorhead('Available Configuration Properties:'),
         _h.ul(
-          `${_h.bold('show-characters-on-login')} -- Contols if players will be shown their characters when they log on. Values: ${_h.code('on')}, ${_h.code('off')}, ${_h.code('toggle')} `,
+          `${_h.bold('show-characters-on-login')} -- Controls if players will be shown their characters when they log on. Values: ${_h.code('on')}, ${_h.code('off')}, ${_h.code('toggle')} `,
           `${_h.bold('show-characters-delay')} -- How long to wait before showing players their characters. Value: ${_h.code(_h.required('number of seconds'))}`,
           `${_h.bold('show-all-characters')} -- Sets the default showing behavior for characters assigned to all players. Values: ${_h.code('on')}, ${_h.code('off')}, ${_h.code('toggle')} `,
           `${_h.bold('show-unclaimed-characters')} -- Sets the default showing behavior for imported characters that have not been claimed by players. Values: ${_h.code('on')}, ${_h.code('off')}, ${_h.code('toggle')} `,
