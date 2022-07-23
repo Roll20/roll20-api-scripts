@@ -41,6 +41,7 @@ var InitiativeTrackerPlus = (function() {
 		rotation_degree: 15,
 		rotation_rate: 250, // time between rotation updates (lower number == faster rotation, likely will have negative impact on performance)
 		round_separator_initiative: -100, // the initiative value of the round separator, defaults to -100 to display [?Round # -100] in the turn tracker
+		combatmusic: ''
 	};
 
 	fields.defaultTrackerImg = fields.trackerImg;
@@ -52,6 +53,7 @@ var InitiativeTrackerPlus = (function() {
 		archive: false,
 		clearonclose: true,
 		show_eot: true,
+		playcombatmusic: false,
 		show_motd: true
 	};
 
@@ -1861,6 +1863,7 @@ var InitiativeTrackerPlus = (function() {
 				case 'rotation_degree':
 				case 'rotation_rate':
 				case 'round_separator_initiative':
+				case 'combatmusic':
 					if(p[0] == 'round_separator_initiative') {
 						p[1] = parseInt(p[1]);
 					}
@@ -1869,6 +1872,7 @@ var InitiativeTrackerPlus = (function() {
 					state.initiative_tracker_plus.config.fields[p[0]] = p[1];
 					break;
 				case 'show_motd':
+				case 'playcombatmusic':
 				case 'show_eot':
 				case 'rotation':
 					oldvalue = flags[p[0]];
@@ -3017,6 +3021,23 @@ var InitiativeTrackerPlus = (function() {
 			doPauseTracker();
 			return;
 		}
+
+		// playcombatmusic?
+		if(flags['playcombatmusic']) {
+			fields['currenttrack'] = findObjs({type: 'jukeboxtrack', playing: true})[0] || '';
+			if(fields['currenttrack']) {
+				fields['currenttrack'].set('playing', false);
+			}
+
+			var track = findObjs({type: 'jukeboxtrack', title: fields['combatmusic']})[0] || '';
+			if(track) {
+				track.set('playing', false);
+				track.set('softstop', false);
+				track.set('loop', true);
+				track.set('playing', true);
+			}
+		}
+
 		flags.tj_state = ITP_StateEnum.ACTIVE;
 		prepareTurnorder();
 		var curToken = findCurrentTurnToken();
@@ -3058,6 +3079,19 @@ var InitiativeTrackerPlus = (function() {
 	 * statuses.
 	 */
 	var doStopTracker = function() {
+		// playcombatmusic?
+		if(flags['playcombatmusic']) {
+			var track = findObjs({type: 'jukeboxtrack', title: fields['combatmusic']})[0] || '';
+			if(track) {
+				track.set('playing', false);
+			}
+
+			if(fields['currenttrack']) {
+				fields['currenttrack'].set('playing', true);
+			}
+
+		}
+
 		flags.tj_state = ITP_StateEnum.STOPPED;
 		// Remove Graphic
 		var trackergraphics = findObjs({
@@ -3092,6 +3126,19 @@ var InitiativeTrackerPlus = (function() {
 		if(flags.tj_state === ITP_StateEnum.PAUSED) {
 			doStartTracker();
 		} else {
+			// playcombatmusic?
+			if(flags['playcombatmusic']) {
+				var track = findObjs({type: 'jukeboxtrack', title: fields['combatmusic']})[0] || '';
+				if(track) {
+					track.set('playing', false);
+				}
+
+				if(fields['currenttrack']) {
+					fields['currenttrack'].set('playing', true);
+				}
+
+			}
+
 			flags.tj_state = ITP_StateEnum.PAUSED;
 			updateTurnorderMarker();
 		}
