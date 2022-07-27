@@ -7,6 +7,11 @@ Token Control - A Roll20 Script to move tokens along scripted paths at a variabl
     - Displays the help text
     - Honestly, just use the menu, it got crazy
 
+# Versioning
+*   2.2.0 - Tokens now automatically reverse paths when reaching the end (thought that already existed)
+*   2.2.1 - Fixed path reversal bug
+*   2.2.2 - Fixed Draft Path Token Movement
+
 # Upcomging Features:
 *   Path Layer Swapping -- Version(N.+.0)
     - "Hide" and "Show" tokens at various points of the path
@@ -27,7 +32,7 @@ API_Meta.TokenController = { offset: Number.MAX_SAFE_INTEGER, lineCount: -1 };
 
 const TokenController = (() => {
     const NAME = 'TokenController';
-    const VERSION = '2.1.3';
+    const VERSION = '2.2.0';
     const AUTHOR = 'Scott E. Schwarz';
     let errorMessage = "";
     let listingVars = false;
@@ -104,7 +109,6 @@ const TokenController = (() => {
 
                         initialLeft: 0,
                         initialTop: 0,
-                        pageId: "Test",
                     },*/
                 ],
                 tokenMemory: [
@@ -379,17 +383,32 @@ const TokenController = (() => {
 
             const pathVector = pathArray[tokenPath.step];
             if (!pathVector) {
-                log(`${NAME}: Error: Path code ${pathCode} is invalid - No Vectors present.`);
+                log(`${NAME}: Error: Path code ${pathCode} is invalid - No Vectors present at step ${tokenPath.step}.`);
                 state[NAME].storedVariables.activeTokenPaths.splice(i, 1);
                 i--;
                 continue;
             }
 
-            const direction = pathVector.substring(0, 1);
+            let direction = pathVector.substring(0, 1);
+            if (tokenPath.isReversing) {
+                switch (direction) {
+                    case "U":
+                        direction = "D";
+                        break;
+                    case "D":
+                        direction = "U";
+                        break;
+                    case "L":
+                        direction = "R";
+                        break;
+                    case "R":
+                        direction = "L";
+                        break;
+                }
+            }
 
             const distance = parseInt(pathVector.substring(1));
             if (isNaN(distance) && direction != "W") {
-                log(`${NAME}: Error: Path code ${pathCode} is invalid - distance not a number.`);
                 state[NAME].storedVariables.activeTokenPaths.splice(i, 1);
                 i--;
                 continue;
@@ -404,7 +423,10 @@ const TokenController = (() => {
             if (tokenPath.isReversing) {
                 if (tokenPath.step == 0) {
                     state[NAME].storedVariables.activeTokenPaths[i].isReversing = false;
-                    state[NAME].storedVariables.activeTokenPaths[i].step++;
+
+                    if (state[NAME].storedVariables.activeTokenPaths[i].length > 1) {
+                        state[NAME].storedVariables.activeTokenPaths[i].step++;
+                    }
                 } else {
                     state[NAME].storedVariables.activeTokenPaths[i].step--;
                 }
@@ -414,7 +436,9 @@ const TokenController = (() => {
                         state[NAME].storedVariables.activeTokenPaths[i].step = 0;
                     } else {
                         state[NAME].storedVariables.activeTokenPaths[i].isReversing = true;
-                        state[NAME].storedVariables.activeTokenPaths[i].step--;
+                        if (state[NAME].storedVariables.activeTokenPaths[i].length > 1) {
+                            state[NAME].storedVariables.activeTokenPaths[i].step--;
+                        }
                     }
                 } else {
                     state[NAME].storedVariables.activeTokenPaths[i].step++;
@@ -456,10 +480,13 @@ const TokenController = (() => {
             return true;
         }
 
-        const pageMeta = state[NAME].storedVariables.pageMetas.find(p => p.pageId == pageId);
+        let pageMeta = state[NAME].storedVariables.pageMetas.find(p => p.pageId == pageId);
         if (!pageMeta) {
-            sendChat(`${NAME}`, `/w GM Error: Page ${pageId} not found. Please restart the path.`);
-            return false;
+            pageMeta = token.get('_pageid');
+            if (!pageMeta) {
+                sendChat(`${NAME}`, `/w GM Error: Page ${pageId} not found. Please restart the path.`);
+                return false;
+            }
         }
 
         if (angle === 0 || angle === 180) {
@@ -620,7 +647,7 @@ const TokenController = (() => {
 
     function showUsage() {
         createMenu();
-        sendChat(NAME, '/w gm ' + '<div style="border: 1px solid black; background-color: white; padding: 3px 3px;">' + "See the Handout: <b>TokenController Usage Guide</b> for more information." + '</div>');
+        sendChat('TokenController', '/w gm ' + '<div style="border: 1px solid black; background-color: white; padding: 3px 3px;">' + "See the Handout: <b>TokenController Usage Guide</b> for more information." + '</div>');
     }
 
     function addPath(name, pathString) {
@@ -767,7 +794,7 @@ const TokenController = (() => {
             setDraftToPath(name);
             createMenu();
             return;
-        } else if (direction == "Remove") {
+        } else if (direction == "Rmv") {
             state[NAME].storedVariables.pathDrafts.splice(state[NAME].storedVariables.pathDrafts.findIndex(p => p.name == name), 1);
             createMenu();
             return;
@@ -808,7 +835,9 @@ const TokenController = (() => {
         state[NAME].storedVariables.pathDrafts[draftIndex].step++;
 
         // Move Token for Visual Verification
-        moveToken(state[NAME].storedVariables.pathDrafts[draftIndex].tokenId, direction, distance);
+        if (!moveToken(state[NAME].storedVariables.pathDrafts[draftIndex].tokenId, direction, distance)) {
+            sendChat(`${NAME}`, "/w GM Failed to move token.");
+        }
 
         // Update Step
         state[NAME].storedVariables.pathDrafts[draftIndex].step++;
@@ -942,154 +971,8 @@ const TokenController = (() => {
     }
 
     function listVars() {
-        // find handout "TokenController Dashboard"
-        let handout = findObjs({
-            _type: "handout",
-            name: "TokenController Dashboard",
-        })[0];
-
-        if (!handout) {
-            handout = createObj("handout", {
-                name: "TokenController Dashboard",
-                inplayerjournals: "all",
-                archived: false,
-            });
-        }
-
-        let content = new HtmlBuilder('div');
-
-        content.append('.menuLabel', 'Variables');
-        content.append('.subLabel', 'Current variables live in script state.');
-
-        // Create a table for Token Memory Variables
-        let table = content.append('table', 'Token Memory');
-        row = table.append('tr'); // Headers
-        row.append('td', 'Token');
-        row.append('td', 'ID');
-        row.append('td', 'Page');
-        row.append('td', 'Rotation');
-        row.append('td', 'Left');
-        row.append('td', 'Top');
-        row.append('td', 'Following Token');
-        row.append('td', 'Is Following');
-        row.append('td', 'Is Locked');
-
-        for (let i = 0; i < state[NAME].storedVariables.tokenMemory.length; i++) {
-            const token = state[NAME].storedVariables.tokenMemory[i];
-            const obj = getObj('graphic', token.tokenId);
-            if (!obj) continue;
-
-            row = table.append('tr');
-            row.append('td', `${obj.get('name')}`);
-            row.append('td', `${token.tokenId}`);
-            row.append('td', `${token.pageId}`);
-            row.append('td', `${token.rotation}`);
-            row.append('td', `${token.left}`);
-            row.append('td', `${token.top}`);
-            row.append('td', `${token.followingTokenId}`);
-            row.append('td', `${token.isFollowing}`);
-            row.append('td', `${token.isLocked}`);
-        }
-
-        // Create a table for Active Token Paths
-        table = content.append('table', 'Active Token Paths');
-        row = table.append('tr'); // Headers
-        row.append('td', 'Token');
-        row.append('td', 'ID');
-        row.append('td', 'Path');
-        row.append('td', 'Step');
-        row.append('td', 'Init.Left');
-        row.append('td', 'Init.Top');
-        row.append('td', 'Reversing');
-        row.append('td', 'Page ID');
-
-
-        for (let i = 0; i < state[NAME].storedVariables.activeTokenPaths.length; i++) {
-            const tokenPath = state[NAME].storedVariables.activeTokenPaths[i];
-            row = table.append('tr');
-            row.append('td', `${getObj('graphic', tokenPath.tokenId).get('name')}`);
-            row.append('td', `${tokenPath.tokenId}`);
-            row.append('td', `${tokenPath.pathName}`);
-            row.append('td', `${tokenPath.step}`);
-            row.append('td', `${tokenPath.initialLeft}`);
-            row.append('td', `${tokenPath.initialTop}`);
-            row.append('td', `${tokenPath.isReversing}`);
-            row.append('td', `${tokenPath.pageId}`);
-        }
-
-        // Create a table for Paths
-        table = content.append('table', 'Paths');
-        row = table.append('tr'); // Headers
-        row.append('td', 'Name');
-        row.append('td', 'Path');
-        row.append('td', 'Cycle');
-
-        for (let i = 0; i < state[NAME].storedVariables.paths.length; i++) {
-            const path = state[NAME].storedVariables.paths[i];
-            row = table.append('tr');
-            row.append('td', `${path.name}`);
-            row.append('td', `${path.path}`);
-            row.append('td', `${path.isCycle}`);
-        }
-
-        // Create a table for Path Drafts
-        table = content.append('table', 'Path Drafts');
-        row = table.append('tr'); // Headers
-        row.append('td', 'Name');
-        row.append('td', 'TokenId');
-        row.append('td', 'Path');
-        row.append('td', 'Step');
-        row.append('td', 'Prev');
-        row.append('td', 'Curr');
-
-        for (let i = 0; i < state[NAME].storedVariables.pathDrafts.length; i++) {
-            const pathDraft = state[NAME].storedVariables.pathDrafts[i];
-            row = table.append('tr');
-            row.append('td', `${pathDraft.name}`);
-            row.append('td', `${pathDraft.tokenId}`);
-            row.append('td', `${pathDraft.path}`);
-            row.append('td', `${pathDraft.step}`);
-            if (pathDraft.prevStep) {
-                row.append('td', `${pathDraft.previousStep.direction + pathDraft.previousStep.distance}`);
-            }
-            if (pathDraft.currentStep) {
-                row.append('td', `${pathDraft.currentStep.direction + pathDraft.currentStep.distance}`);
-            }
-        }
-
-        // state[NAME].storedVariables.pageMetas
-        table = content.append('table', 'Page Metas');
-        row = table.append('tr'); // Headers
-        row.append('td', 'Page');
-        row.append('td', 'PageId');
-        row.append('td', 'Width');
-        row.append('td', 'Height');
-
-        for (let i = 0; i < state[NAME].storedVariables.pageMetas.length; i++) {
-            const pageMeta = state[NAME].storedVariables.pageMetas[i];
-            row = table.append('tr');
-            row.append('td', `${pageMeta.pageName}`);
-            row.append('td', `${pageMeta.pageId}`);
-            row.append('td', `${pageMeta.pageWidth}`);
-            row.append('td', `${pageMeta.pageHeight}`);
-        }
-
-        // Create Config Table with Header { Interval, Units/Click, Pixel/Unit }
-        table = content.append('table', 'Config');
-        row = table.append('tr'); // Headers
-        row.append('td', 'Interval');
-        row.append('td', 'Units/Click');
-        row.append('td', 'Pixel/Unit');
-
-        row = table.append('tr');
-        row.append('td', `${state[NAME].storedVariables.interval}`);
-        row.append('td', `${state[NAME].storedVariables.unitPerClick}`);
-        row.append('td', `${state[NAME].storedVariables.unitPx}`);
-
-        handout.set('notes', content.toString(css));
-
+        listingVars = true;
         createMenu();
-        sendChat(NAME, '/w gm ' + '<div style="border: 1px solid black; background-color: white; padding: 3px 3px;">' + "Handout: <b>TokenController Dashboard</b> Updated!" + '</div>');
     }
 
     function listDrafts(name) {
@@ -1225,7 +1108,6 @@ const TokenController = (() => {
                     pageScaleNumber: pageScale
                 });
             } else if (state[NAME].storedVariables.pageMetas[pageMetaIndex].pageScaleNumber === undefined) {
-                state[NAME].storedVariables.pageMetas[pageMetaIndex].pageName = pageName;
                 state[NAME].storedVariables.pageMetas[pageMetaIndex].pageWidth = pageWidth * 70;
                 state[NAME].storedVariables.pageMetas[pageMetaIndex].pageHeight = pageHeight * 70;
                 state[NAME].storedVariables.pageMetas[pageMetaIndex].pageScaleNumber = pageScale;
@@ -1462,8 +1344,6 @@ const TokenController = (() => {
         content.append('.menuLabel', '[Usage](!tc usage)');
         content.append('.subLabel', '!tc may be used in place of !token-control');
 
-        content.append('.menuLabel', '[List Vars](!tc list vars)');
-
         content.append('.menuLabel', 'Paths');
         content.append('.subLabel', 'Select one or more tokens to start a path');
         let table = content.append('table');
@@ -1526,60 +1406,137 @@ const TokenController = (() => {
         row.append('td', `[\`\`${state[NAME].storedVariables.unitPx}\`\`](!tc unitpx ?{Pixels per Grid Unit?})`);
         row.append('td', `[\`\`Default\`\`](!tc unitpx 70)`);
 
+        if (listingVars) {
+
+            content.append('.menuLabel', 'Variables');
+            content.append('.subLabel', 'Current variables live in script state.');
+            // Create a table for Token Memory Variables
+            table = content.append('table', 'Token Memory');
+            row = table.append('tr'); // Headers
+            row.append('td', 'Token');
+            row.append('td', 'ID');
+            row.append('td', 'Page');
+            row.append('td', 'Rotation');
+            row.append('td', 'Left');
+            row.append('td', 'Top');
+            row.append('td', 'Following Token');
+            row.append('td', 'Is Following');
+            row.append('td', 'Is Locked');
+
+            for (let i = 0; i < state[NAME].storedVariables.tokenMemory.length; i++) {
+                const token = state[NAME].storedVariables.tokenMemory[i];
+                const obj = getObj('graphic', token.tokenId);
+                if (!obj) continue;
+
+                row = table.append('tr');
+                row.append('td', `${obj.get('name')}`);
+                row.append('td', `${token.tokenId}`);
+                row.append('td', `${token.pageId}`);
+                row.append('td', `${token.rotation}`);
+                row.append('td', `${token.left}`);
+                row.append('td', `${token.top}`);
+                row.append('td', `${token.followingTokenId}`);
+                row.append('td', `${token.isFollowing}`);
+                row.append('td', `${token.isLocked}`);
+            }
+
+            // Create a table for Active Token Paths
+            table = content.append('table', 'Active Token Paths');
+            row = table.append('tr'); // Headers
+            row.append('td', 'Token');
+            row.append('td', 'ID');
+            row.append('td', 'Path');
+            row.append('td', 'Step');
+
+            for (let i = 0; i < state[NAME].storedVariables.activeTokenPaths.length; i++) {
+                const tokenPath = state[NAME].storedVariables.activeTokenPaths[i];
+                row = table.append('tr');
+                row.append('td', `${getObj('graphic', tokenPath.tokenId).get('name')}`);
+                row.append('td', `${tokenPath.tokenId}`);
+                row.append('td', `${tokenPath.pathName}`);
+                row.append('td', `${tokenPath.step}`);
+            }
+
+            // Create a table for Path Drafts
+            table = content.append('table', 'Path Drafts');
+            row = table.append('tr'); // Headers
+            row.append('td', 'Name');
+            row.append('td', 'TokenId');
+            row.append('td', 'Path');
+            row.append('td', 'Step');
+            row.append('td', 'Prev');
+            row.append('td', 'Curr');
+
+            for (let i = 0; i < state[NAME].storedVariables.pathDrafts.length; i++) {
+                const pathDraft = state[NAME].storedVariables.pathDrafts[i];
+                row = table.append('tr');
+                row.append('td', `${pathDraft.name}`);
+                row.append('td', `${pathDraft.tokenId}`);
+                row.append('td', `${pathDraft.path}`);
+                row.append('td', `${pathDraft.step}`);
+                if (pathDraft.prevStep) {
+                    row.append('td', `${pathDraft.previousStep.direction + pathDraft.previousStep.distance}`);
+                }
+                if (pathDraft.currentStep) {
+                    row.append('td', `${pathDraft.currentStep.direction + pathDraft.currentStep.distance}`);
+                }
+            }
+
+            listingVars = false;
+        }
+
         menu.append('.patreon', '[``Become a Patron``](https://www.patreon.com/bePatron?u=23167000)');
 
-        sendChat(`${NAME}`, '/w GM ' + menu.toString(css));
+        sendChat(`${NAME}`, '/w GM ' + menu.toString({
+            'optionsTable': {
+                'width': '100%'
+            },
+            'menu': {
+                'background': '#33658A',
+                'border': 'solid 1px #000',
+                'border-radius': '5px',
+                'font-weight': 'bold',
+                'margin-bottom': '1em',
+                'overflow': 'hidden',
+                'color': '#fff',
+                'justify-content': 'space-evenly',
+            },
+            'menuBody': {
+                'padding': '5px',
+                'text-align': 'center'
+            },
+            'menuLabel': {
+                'color': '#F6AE2D',
+                'margin-top': '5px',
+            },
+            'menuHeader': {
+                'background': '#000',
+                'color': '#fff',
+                'text-align': 'center',
+            },
+            'usageHeader': {
+                'background': '#000',
+                'color': '#fff',
+                'text-align': 'center',
+            },
+            'usage': {
+                'background': '#000',
+                'color': '#fff',
+                'text-align': 'center',
+            },
+            'subLabel': {
+                'color': '#F26419',
+                'font-size': '0.8em',
+            },
+            'patreon': {
+                'color': '#F6AE2D',
+                'font-size': '1.1em',
+                'text-align': 'center',
+                'margin-top': '10px',
+                'margin-bottom': '10px'
+            }
+        }));
     }
-
-    const css = {
-        'optionsTable': {
-            'width': '100%'
-        },
-        'menu': {
-            'background': '#33658A',
-            'border': 'solid 1px #000',
-            'border-radius': '5px',
-            'font-weight': 'bold',
-            'margin-bottom': '1em',
-            'overflow': 'hidden',
-            'color': '#fff',
-            'justify-content': 'space-evenly',
-        },
-        'menuBody': {
-            'padding': '5px',
-            'text-align': 'center'
-        },
-        'menuLabel': {
-            'color': '#F6AE2D',
-            'margin-top': '5px',
-        },
-        'menuHeader': {
-            'background': '#000',
-            'color': '#fff',
-            'text-align': 'center',
-        },
-        'usageHeader': {
-            'background': '#000',
-            'color': '#fff',
-            'text-align': 'center',
-        },
-        'usage': {
-            'background': '#000',
-            'color': '#fff',
-            'text-align': 'center',
-        },
-        'subLabel': {
-            'color': '#F26419',
-            'font-size': '0.8em',
-        },
-        'patreon': {
-            'color': '#F6AE2D',
-            'font-size': '1.1em',
-            'text-align': 'center',
-            'margin-top': '10px',
-            'margin-bottom': '10px'
-        }
-    };
 
     return {};
 })();
