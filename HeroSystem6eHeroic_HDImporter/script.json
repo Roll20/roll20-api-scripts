@@ -4,6 +4,7 @@
     "version":"1.0",
     "previousVersions":[],
     "description":"HDImporter imports characters created in HERO Designer and exported using the format HeroSystem6eHeroic.hde, which is included in this repository.",
+    "authors": "Villain In Glasses",
     "roll20userid":"633423",
     "useroptions":[],
     "dependencies":[],
