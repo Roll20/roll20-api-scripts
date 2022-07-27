@@ -3,15 +3,10 @@
     "script":"HeroSystem6eHeroic_HDImporter.js",
     "version":"1.0",
     "previousVersions":[],
-    "description":"HDImporter imports characters created in HERO Designer using the export format HeroSystem6eHeroic.hde included in this repository.",
+    "description":"HDImporter imports characters created in HERO Designer and exported using the format HeroSystem6eHeroic.hde, which is included in this repository.",
     "roll20userid":"633423",
     "useroptions":[],
     "dependencies":[],
-    "modifies":{
-        "bar3_value": "read,write",
-        "bar3_max":"read",
-        "bar1_value":"read,write",
-        "bar1_max":"read"
-    },
+    "modifies":{},
     "conflicts":[]
 }
