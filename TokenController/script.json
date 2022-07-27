@@ -1,13 +1,13 @@
 {
     "name": "TokenController",
     "script": "TokenController.js",
-    "version": "2.1.1",
+    "version": "2.2.0",
     "previousversions": [],
     "description": "# Token Controller\n\rBring your scene to life with simple but dynamic patrol pathing. Select a pre-defined path or quickly create your own (not map or position dependent, just works with grids), select a token, and click start. Tokens may have multiple paths assigned to them at a time, allowing for intricate path layering. Version 2 will have a Path Building tool!",
     "authors": "Scott E. Schwarz",
     "roll20userid": "6975764",
     "useroptions": [],
-    "dependencies": [],
+    "dependencies": ["HTML Builder"],
     "modifies": {
         "state.TokenController.module": "read,write",
         "state.TokenController.schemaVersion": "read,write",
