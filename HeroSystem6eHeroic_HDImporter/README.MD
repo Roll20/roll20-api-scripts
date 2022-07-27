@@ -1,5 +1,5 @@
 # Hero System 6e Heroic: HD Importer
-A script for importing characters built in HERO Designer into Roll20 for use with the Hero System 6e Heroic character sheet. 
+A script for importing characters built in HERO Designer into Roll20 Hero System 6e Heroic games. 
 
 # Instructions for use:
 
