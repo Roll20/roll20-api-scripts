@@ -78,4 +78,4 @@ Hero-related code and modifications by [Villain in Glasses](https://app.roll20.n
 Based on D&D Beyond Importer by [Robin Kuiper](https://app.roll20.net/users/1226016/robin) (Discord: Atheos#1095), [Matt DeKok](https://app.roll20.net/users/494585/sillvva) (Discord: Sillvva#2532), and [Ammo Goeetsch](https://app.roll20.net/users/2990964/ammo) (Discord: ammo#7063).
 
 # Version history
-Version 1.0 -- Initial release on July 30, 2022.
+Version 1.0 -- Initial release on August 1, 2022.
