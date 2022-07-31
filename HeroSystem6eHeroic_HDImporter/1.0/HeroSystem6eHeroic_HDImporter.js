@@ -23,6 +23,7 @@
  * Commands:
  *   Import character: "!hero --import {character text}"
  *   Help: "!hero --help"
+ *   Config: "!hero --config"
  * 
  * Based on BeyondImporter Version O.4.0 by 
  * Robin Kuiper
@@ -141,8 +142,6 @@
 		if(args.length < 1) { sendHelpMenu(hero_caller); return; }
 
 		let config = state[state_name][hero_caller.id].config;
-		let initTiebreaker = config.initTieBreaker;
-		let languageGrouping = config.languageGrouping;
 
 		for(let i = 0; i < args.length; i+=2) {
 			let k = args[i].trim();
@@ -6606,9 +6605,9 @@
 
 	const sendConfigMenu = (player, first) => {
 		let playerid = player.id;
-		let prefix = (state[state_name][playerid].config.prefix !== "") ? state[state_name][playerid].config.prefix : '[NONE]';
+		let prefix = (state[state_name][playerid].config.prefix !== '') ? state[state_name][playerid].config.prefix : '[NONE]';
 		let prefixButton = makeButton(prefix, '!hero --config prefix|?{Prefix}', buttonStyle);
-		let suffix = (state[state_name][playerid].config.suffix !== "") ? state[state_name][playerid].config.suffix : '[NONE]';
+		let suffix = (state[state_name][playerid].config.suffix !== '') ? state[state_name][playerid].config.suffix : '[NONE]';
 		let suffixButton = makeButton(suffix, '!hero --config suffix|?{Suffix}', buttonStyle);
 		let overwriteButton = makeButton(state[state_name][playerid].config.overwrite, '!hero --config overwrite|'+!state[state_name][playerid].config.overwrite, buttonStyle);
 		let debugButton = makeButton(state[state_name][playerid].config.debug, '!hero --config debug|'+!state[state_name][playerid].config.debug, buttonStyle);
@@ -6618,10 +6617,10 @@
 		let optionLocationsButton = makeButton(state[state_name][playerid].config.locations, '!hero --config locations|'+!state[state_name][playerid].config.locations, buttonStyle);
 	
 		let listItems = [
-			'<span style="float: left; margin-top: 6px;">Overwrite:</span> '+overwriteButton+'<br /><small style="clear: both; display: inherit; color: white;">This option will overwrite an existing character sheet that has a matching character name.</small>',
+			'<span style="float: left; margin-top: 6px;">Overwrite:</span> '+overwriteButton+'<br /><small style="clear: both; display: inherit; color: white;">CAUTION: overwrites an existing character sheet that has a matching character name.</small>',
 			'<span style="float: left; margin-top: 6px;">Prefix:</span> '+prefixButton,
 			'<span style="float: left; margin-top: 6px;">Suffix:</span> '+suffixButton,
-			'<span style="float: left; margin-top: 6px;">Verbose Report:</span> '+debugButton
+			'<span style="float: left; margin-top: 6px;">Verbose Report:</span> '+debugButton,
 		]
 	
 		let list = '<b>Importer</b>'+makeList(listItems, 'overflow: hidden; list-style: none; padding: 0; margin: 0;', 'overflow: hidden; margin-top: 5px;');
@@ -6880,45 +6879,41 @@
 		setDefaults();
 	};
 
-
+	
 	const setDefaults = (reset) => {
-		
-		sendChat(script_name, '<div style="'+style+'">HDImporter Config Reset.</div>', null, {noarchive:true});
-		
 		const defaults = {
 			overwrite: false,
 			debug: false,
-			prefix: "",
-			suffix: "",
-			inplayerjournals: "",
-			controlledby: "",
+			prefix: '',
+			suffix: '',
+			inplayerjournals: '',
+			controlledby: '',
 			maximums: false,
 			literacy: false,
 			superEND: false,
 			locations: false
 		};
-
+	
 		let playerObjects = findObjs({
 			_type: "player",
 		});
-		
 		playerObjects.forEach((player) => {
-			if(! state[state_name][player.id]) {
+			if(!state[state_name][player.id]) {
 				state[state_name][player.id] = {};
 			}
-
-			if(state[state_name][player.id].config) {
+	
+			if(!state[state_name][player.id].config) {
 				state[state_name][player.id].config = defaults;
 			}
-
+	
 			for(let item in defaults) {
-				if(! state[state_name][player.id].config.hasOwnProperty(item)) {
+				if(!state[state_name][player.id].config.hasOwnProperty(item)) {
 					state[state_name][player.id].config[item] = defaults[item];
 				}
 			}
-
-			if(! state[state_name][player.id].config.hasOwnProperty('firsttime')){
-				if(! reset){
+	
+			if(!state[state_name][player.id].config.hasOwnProperty('firsttime')){
+				if(!reset){
 					sendConfigMenu(player, true);
 				}
 				state[state_name][player.id].config.firsttime = false;

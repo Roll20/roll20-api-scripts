@@ -2767,7 +2767,7 @@
 		"genre":"<!--GENRE-->",
 		"campaign":"<!--CAMPAIGN_NAME-->",
 		"version":"1.0",
-		"HeroSystem6eHeroic":"true"
+		"HeroSystem6eHeroic":true
 	}
 }
 
