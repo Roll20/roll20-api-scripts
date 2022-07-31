@@ -6,7 +6,7 @@ HD Importer attempts to translate as much of a [HERO Designer](https://www.herog
 This script was tested with the following commercial character packs:
 - [Dead Orc Pass](https://www.herogames.com/store/product/910-dead-orc-pass-mini-campaign-book-pdfhdc/)
 - [Kazei](https://www.herogames.com/store/product/92-kazei-5-character-pack/)
-- [Monster Hunter International]([https://www.herogames.com/store/category/8-monster-hunter-international/](https://www.herogames.com/store/product/5-monster-hunter-international-character-pack/)
+- [Monster Hunter International](https://www.herogames.com/store/category/8-monster-hunter-international/](https://www.herogames.com/store/product/5-monster-hunter-international-character-pack/)
 
 # Instructions:
 
