@@ -37,11 +37,11 @@ Access the in-game help menu by entering the command "!hero --help" into the cha
 
 # Configuration Options
 
-The configuration menu is accessible from the Help Screen or via the chat window command "!hero --config". HD Importer offers a number of options to help organize imported characters and to pre-configure them.
+The configuration menu is accessible from the Help Screen or via the chat window command "!hero --config". HD Importer offers a number of options to help organize imported characters and to pre-configure campaign options.
 
 ![HelpMenu](/HeroSystem6eHeroic_HDImporter/images/ConfigMenu.png)
 
-- Overwrite: If true, HDImporter will overwrite an existing character with the same name if present. Take care when using this option.
+- Overwrite: If true, HD Importer will overwrite an existing character with the same name if present. Take care when using this option.
 - Prefix: Adds a text label to the beginning of an imported character's name.
 - Suffix: Adds a text label to the end of an imporated character's name.
 - In Player Journal: Presets the imported character's visiblity to players.
