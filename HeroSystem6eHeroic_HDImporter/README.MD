@@ -53,7 +53,8 @@ The configuration menu is accessible from the Help Screen or via the chat window
 
 # Credits
 This script is based on D&D Beyond Importer by Robin Kuiper, Matt DeKok, and Ammo Goeetsch.
-Hero-related modifications by Villain in Glasses.
+
+Hero-related code and modifications by Villain in Glasses.
 
 # Version history
 Version 1.0 -- Initial release on July 30, 2022.
