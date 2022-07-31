@@ -17,7 +17,7 @@ This script was tested with the following commercial character packs:
 3. Change the export format to HeroSystem6eHeroic.hde via the menu item "Current Character->Export->Set Export Format..."
 4. Select "Current Character->Export->Export to File..." to save the character as a .txt file.
 
-## Text editor
+## Text Editor
 1. Open the exported character file in your favorite text editor.
 2. Copy the entire contents (with cmd-A or ctrl-A).
 
