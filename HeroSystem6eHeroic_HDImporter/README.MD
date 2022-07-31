@@ -52,9 +52,9 @@ The configuration menu is accessible from the Help Screen or via the chat window
 - _Use Hit Locations_ : Presets the sheet option to determine hit locations. 
 
 # Credit
-This script is based on D&D Beyond Importer by Robin Kuiper, Matt DeKok, and Ammo Goeetsch.
+Hero-related code and modifications by [Villain in Glasses](https://app.roll20.net/users/633423/villain-in-glasses) (Discord: Villain#0604).
 
-Hero-related code and modifications by [Villain in Glasses](https://app.roll20.net/users/633423/villain-in-glasses).
+This script is based on D&D Beyond Importer by [Robin Kuiper](https://app.roll20.net/users/1226016/robin), [Matt DeKok](https://app.roll20.net/users/494585/sillvva), and [Ammo Goeetsch](https://app.roll20.net/users/2990964/ammo).
 
 # Version history
 Version 1.0 -- Initial release on July 30, 2022.
