@@ -35,7 +35,7 @@ Access the in-game help menu by entering the command "!hero --help" into the cha
 
 The configuration menu is accessible from the Help Screen or via the chat window command "!hero --config". HD Importer offers a number of options to help organize imported characters and to pre-configure them.
 
-![HelpMenu](/HeroSystem6eHeroic_HDImporter/images/ConfigpMenu.png)
+![HelpMenu](/HeroSystem6eHeroic_HDImporter/images/ConfigMenu.png)
 
 ## Import Notes
 
