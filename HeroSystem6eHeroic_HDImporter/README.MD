@@ -8,7 +8,7 @@ This script was tested with the following commercial character packs:
 - Kazei (replicates, zone, droids, Hong Kong, and generic NPCs) 
 - Monster Hunter (heroes, villains, and monsters)
 
-# Instructions for use:
+# Instructions:
 
 ## HERO Designer
 
