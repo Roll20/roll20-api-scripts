@@ -12,7 +12,7 @@ This script was tested with the following commercial character packs:
 
 ## HERO Designer
 
-1. Download the export format file HeroSystem6eHeroic.hde and install it into your HERO Designer folder.
+1. Download the export format file HeroSystem6eHeroic.hde from this respository and install it into your HERO Designer folder.
 2. Create a new character or load a character file into HERO Designer.
 3. Change the export format to HeroSystem6eHeroic.hde via the menu item "Current Character->Export->Set Export Format..."
 4. Select "Current Character->Export->Export to File..." to save the character as a .txt file.
