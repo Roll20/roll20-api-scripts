@@ -41,7 +41,7 @@ The configuration menu is accessible from the Help Screen or via the chat window
 
 ![HelpMenu](/HeroSystem6eHeroic_HDImporter/images/ConfigMenu.png)
 
-####__Overwrite__####
+#### Overwrite ####
     If true, HD Importer will overwrite an existing character with the same name if present. Take care when using this option.
 - __Prefix__ 
     - Adds a text label to the beginning of an imported character's name.
