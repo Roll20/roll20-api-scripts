@@ -29,6 +29,8 @@ This script was tested with the following commercial character packs:
 # Help
 Access the in-game help screen by entering the command "!hero --help" into the chat window.
 
+![HelpMenu](/HeroSystem6eHeroic_HDImporter/images/HelpMenu.png)
+
 # Configuration Options
 
 HD Importer offers a number of options to help organize imported characters and to pre-configure them.
