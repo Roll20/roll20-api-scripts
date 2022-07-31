@@ -37,6 +37,8 @@ The configuration menu is accessible from the Help Screen or via the chat window
 
 ![HelpMenu](/HeroSystem6eHeroic_HDImporter/images/ConfigMenu.png)
 
+- Overwrite
+
 ## Import Notes
 
 Weapons, armor, and other equipment is imported as text and shown in the text field in the "Gear" page. HD Importer attempts to fill in the appropriate spaces in the sheet with the items it can identify, but HERO items often have additional information to track. Expect this area to require some degree of human attention.
