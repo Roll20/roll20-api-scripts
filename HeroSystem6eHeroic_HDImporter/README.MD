@@ -10,7 +10,13 @@ This script was tested with the following commercial character packs:
 
 # Installation:
 
-If HD Importer has started correctly the following notification should appear in chat when your Roll20 campaign starts up:
+From the caimpaign's home page go to Mods page via 'Settings -> Mod (API) Scripts.' 
+
+From the Mods page select 'HeroSystem6eHeroic HDImporter' from the Mod Library dropdown list. Alternatively, create new script and copy and paste the contents of HeroSystem6eHeroic_HDImporter.js into the text editing box. Save the script.
+
+Launch the game.
+
+If HD Importer has started correctly the following notification should appear in chat when your Roll20 campaign starts up for the first time:
 ![HelpMenu](/HeroSystem6eHeroic_HDImporter/images/ScriptReady.png)
 
 # Import a Character:
