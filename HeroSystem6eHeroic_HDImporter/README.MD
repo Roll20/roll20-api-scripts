@@ -41,15 +41,15 @@ The configuration menu is accessible from the Help Screen or via the chat window
 
 ![HelpMenu](/HeroSystem6eHeroic_HDImporter/images/ConfigMenu.png)
 
-- __Overwrite__: If true, HD Importer will overwrite an existing character with the same name if present. Take care when using this option.
-- Prefix: Adds a text label to the beginning of an imported character's name.
-- Suffix: Adds a text label to the end of an imporated character's name.
-- In Player Journal: Presets the imported character's visiblity to players.
-- Player Control: Presets the player control assigned to the imported character.
-- Use Char Maximums: Sets the sheet option that figures characteristic maximums into point costs.
-- Literacy Costs CP: Sets the sheet opttion that literacy costs 1 CP. Most common in Fantasy Hero campaigns.
-- Super-Heroic END: Sets the option for higher endurance costs for strength.
-- Use Hit Locations: Sets the sheet option to determine hit locations. 
+- __Overwrite:__ If true, HD Importer will overwrite an existing character with the same name if present. Take care when using this option.
+- __Prefix:__ Adds a text label to the beginning of an imported character's name.
+- __Suffix:__ Adds a text label to the end of an imporated character's name.
+- __In Player Journal:__ Presets the imported character's visiblity to players.
+- __Player Control:__ Presets the player control assigned to the imported character.
+- __Use Char Maximums:__ Sets the sheet option that figures characteristic maximums into point costs.
+- __Literacy Costs CP:__ Sets the sheet opttion that literacy costs 1 CP. Most common in Fantasy Hero campaigns.
+- __Super-Heroic END:__ Sets the option for higher endurance costs for strength.
+- __Use Hit Locations:__ Sets the sheet option to determine hit locations. 
 
 # Credits
 This script is based on D&D Beyond Importer by Robin Kuiper, Matt DeKok, and Ammo Goeetsch.
