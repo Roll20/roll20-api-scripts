@@ -26,10 +26,10 @@ This script was tested with the following commercial character packs:
 1. Paste the copied text into the chat window of your Roll20 HeroSystem6eHeroic game.
 2. Hit enter.
 
-## Help
+# Help
 Access the in-game help screen by entering the command "!hero --help" into the chat window.
 
-## Configuration Options
+# Configuration Options
 
 HD Importer offers a number of options to help organize imported characters and to pre-configure them.
 
@@ -37,9 +37,9 @@ HD Importer offers a number of options to help organize imported characters and 
 
 Weapons, armor, and other equipment is imported as text and shown in the text field in the "Gear" page. HD Importer attempts to fill in the appropriate spaces in the sheet with the items it can identify, but HERO items often have additional information to track. Expect this area to require some degree of human attention.
 
-## Credit
+# Credit
 This script is based on D&D Beyond Importer by Robin Kuiper, Matt DeKok, and Ammo Goeetsch.
 Hero-related modifications by Villain in Glasses.
 
-## Version history
+# Version history
 Version 1.0 -- Initial release on July 30, 2022.
