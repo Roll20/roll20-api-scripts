@@ -25,7 +25,8 @@ This script was tested with the following commercial character packs:
 ## Roll20
 
 1. Paste the copied text into the chat window of your Roll20 HeroSystem6eHeroic game.
-2. Hit enter. If all goes well you should see
+2. Hit enter. If all goes well you should see a start and finish notification, which for the character "Alena" appears as
+![HelpMenu](/HeroSystem6eHeroic_HDImporter/images/ImportSuccess.png)
 
 ## Notes
 
