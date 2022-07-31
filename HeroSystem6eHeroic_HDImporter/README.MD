@@ -41,7 +41,7 @@ The configuration menu is accessible from the Help Screen or via the chat window
 
 ![HelpMenu](/HeroSystem6eHeroic_HDImporter/images/ConfigMenu.png)
 
-- _Overwrite_ : If true, HD Importer will overwrite an existing character with the same name if present. Take care when using this option.
+- _Overwrite_ : **CAUTION** If set to true, when importing a new character, HD Importer will overwrite an existing character that has the same name.
 - _Prefix_ : Adds a text label to the beginning of an imported character's name.
 - _Suffix_ : Adds a text label to the end of an imporated character's name.
 - _In Player Journal_ : Presets the imported character's visiblity to players.
@@ -52,9 +52,9 @@ The configuration menu is accessible from the Help Screen or via the chat window
 - _Use Hit Locations_ : Presets the sheet option to determine hit locations. 
 
 # Credit
-Hero-related code and modifications by [Villain in Glasses](https://app.roll20.net/users/633423/villain-in-glasses) ([Discord](https://discordapp.com/users/Villain#0604/)).
+Hero-related code and modifications by [Villain in Glasses](https://app.roll20.net/users/633423/villain-in-glasses) (Discord: Villain#0604).
 
-Based on D&D Beyond Importer by [Robin Kuiper](https://app.roll20.net/users/1226016/robin), [Matt DeKok](https://app.roll20.net/users/494585/sillvva), and [Ammo Goeetsch](https://app.roll20.net/users/2990964/ammo).
+Based on D&D Beyond Importer by [Robin Kuiper](https://app.roll20.net/users/1226016/robin) (Discord: Atheos#1095), [Matt DeKok](https://app.roll20.net/users/494585/sillvva) (Discord: Sillvva#2532), and [Ammo Goeetsch](https://app.roll20.net/users/2990964/ammo) (Discord: ammo#7063).
 
 # Version history
 Version 1.0 -- Initial release on July 30, 2022.
