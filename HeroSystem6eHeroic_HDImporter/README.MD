@@ -35,7 +35,15 @@ If HD Importer has started correctly the following notification should appear in
 
 ## Notes
 
+Quotation marks are used to indicate JSON data values. Please take care when using quotation marks in Hero Designer text fields. The exporter will attempt to remove them, but this may not be fullproof.
+
+Hero Designer has fields for height, weight, eye color, hair color, a quote, and tactics notes. This information is not imported since the character sheet does not have corresponding fields.
+
 Weapons, armor, and other equipment is imported as text and shown in the text field in the "Gear" page. HD Importer attempts to fill in the appropriate spaces in the sheet with the items it can identify, but HERO items often have additional information to track. Expect this area to require some degree of human attention.
+
+Powers over the ten-power limit will appear in the text field below Complications. Additional perks and talents will appear in the text field below the Perks and Talents section. These items will not count toward the character's cost.
+
+The base costs of powers that modifiy characteristics are added to the "Bonus" points field in the Tally Bar so that they are not counted twice in the character's total cost.
 
 # Help
 Access the in-game help menu by entering the command "!hero --help" into the chat window.
