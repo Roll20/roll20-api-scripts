@@ -8,7 +8,12 @@ This script was tested with the following commercial character packs:
 - [Kazei 5](https://www.herogames.com/store/product/92-kazei-5-character-pack/)
 - [Monster Hunter International](https://www.herogames.com/store/product/5-monster-hunter-international-character-pack/)
 
-# Instructions:
+# Installation:
+
+If HD Importer has started correctly the following notification should appear in chat when your Roll20 campaign starts up:
+![HelpMenu](/HeroSystem6eHeroic_HDImporter/images/ScriptReady.png)
+
+# Import a Character:
 
 ## HERO Designer
 
