@@ -10,18 +10,18 @@ This script was tested with the following commercial character packs:
 
 # Instructions for use:
 
-## In HERO Designer
+## HERO Designer
 
 1. Download the export format file HeroSystem6eHeroic.hde and install it into your HERO Designer folder.
 2. Create a new character or load a character file into HERO Designer.
 3. Change the export format to HeroSystem6eHeroic.hde via the menu item "Current Character->Export->Set Export Format..."
 4. Select "Current Character->Export->Export to File..." to save the character as a .txt file.
 
-## In a text editor
+## Text editor
 1. Open the exported character file in your favorite text editor.
 2. Copy the entire contents (with cmd-A or ctrl-A).
 
-## In Roll20
+## Roll20
 
 1. Paste the copied text into the chat window of your Roll20 HeroSystem6eHeroic game.
 2. Hit enter.
