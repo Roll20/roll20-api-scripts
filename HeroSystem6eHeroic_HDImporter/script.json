@@ -1,9 +1,9 @@
 {
-    "name":"HeroSystem6eHeroic HDImporter",
+    "name":"Hero System 6e Heroic HD Importer",
     "script":"HeroSystem6eHeroic_HDImporter.js",
     "version":"1.0",
     "previousVersions":[],
-    "description":"HDImporter imports characters created in HERO Designer and exported using the format HeroSystem6eHeroic.hde, which is included in this repository.",
+    "description":"HDImporter imports HERO Designer heroes, villains, monsters, and other characters into a HeroSystem6eHeroic Roll20 campaign. The repository includes the required Hero Designer export format file HeroSystem6eHeroic.hde. ",
     "authors": "Villain In Glasses",
     "roll20userid":"633423",
     "useroptions":[],
