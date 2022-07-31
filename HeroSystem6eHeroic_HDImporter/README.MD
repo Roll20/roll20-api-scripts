@@ -26,6 +26,10 @@ This script was tested with the following commercial character packs:
 1. Paste the copied text into the chat window of your Roll20 HeroSystem6eHeroic game.
 2. Hit enter.
 
+## Notes
+
+Weapons, armor, and other equipment is imported as text and shown in the text field in the "Gear" page. HD Importer attempts to fill in the appropriate spaces in the sheet with the items it can identify, but HERO items often have additional information to track. Expect this area to require some degree of human attention.
+
 # Help
 Access the in-game help menu by entering the command "!hero --help" into the chat window.
 
@@ -46,10 +50,6 @@ The configuration menu is accessible from the Help Screen or via the chat window
 - Literacy Costs CP: Sets the sheet opttion that literacy costs 1 CP. Most common in Fantasy Hero campaigns.
 - Super-Heroic END: Sets the option for higher endurance costs for strength.
 - Use Hit Locations: Sets the sheet option to determine hit locations. 
-
-## Import Notes
-
-Weapons, armor, and other equipment is imported as text and shown in the text field in the "Gear" page. HD Importer attempts to fill in the appropriate spaces in the sheet with the items it can identify, but HERO items often have additional information to track. Expect this area to require some degree of human attention.
 
 # Credit
 This script is based on D&D Beyond Importer by Robin Kuiper, Matt DeKok, and Ammo Goeetsch.
