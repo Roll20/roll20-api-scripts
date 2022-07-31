@@ -41,9 +41,10 @@ The configuration menu is accessible from the Help Screen or via the chat window
 
 ![HelpMenu](/HeroSystem6eHeroic_HDImporter/images/ConfigMenu.png)
 
-- _Overwrite:_ 
-    - if true, HD Importer will overwrite an existing character with the same name if present. Take care when using this option.
-- _Prefix:_ adds a text label to the beginning of an imported character's name.
+- __Overwrite__ 
+    - If true, HD Importer will overwrite an existing character with the same name if present. Take care when using this option.
+- __Prefix__ 
+    - Adds a text label to the beginning of an imported character's name.
 - _Suffix:_ adds a text label to the end of an imporated character's name.
 - _In Player Journal:_ presets the imported character's visiblity to players.
 - _Player Control:_ presets the player control assigned to the imported character.
