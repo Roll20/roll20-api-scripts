@@ -42,13 +42,21 @@ The configuration menu is accessible from the Help Screen or via the chat window
 ![HelpMenu](/HeroSystem6eHeroic_HDImporter/images/ConfigMenu.png)
 
 - _Overwrite_ : If true, HD Importer will overwrite an existing character with the same name if present. Take care when using this option.
+- 
 - _Prefix_ : Adds a text label to the beginning of an imported character's name.
+- 
 - _Suffix_ : Adds a text label to the end of an imporated character's name.
+- 
 - _In Player Journal_ : Presets the imported character's visiblity to players.
+- 
 - _Player Control_ : Presets the player control assigned to the imported character.
+- 
 - _Use Char Maximums_ : Presets the sheet option that figures characteristic maximums into point costs.
+- 
 - _Literacy Costs CP_ : Presets the sheet opttion that literacy costs 1 CP. Most common in Fantasy Hero campaigns.
+- 
 - _Super-Heroic END_ : Presets the option for higher endurance costs for strength.
+- 
 - _Use Hit Locations_ : Presets the sheet option to determine hit locations. 
 
 # Credit
