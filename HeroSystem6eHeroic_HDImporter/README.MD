@@ -51,7 +51,7 @@ The configuration menu is accessible from the Help Screen or via the chat window
 - Super-Heroic END: Sets the option for higher endurance costs for strength.
 - Use Hit Locations: Sets the sheet option to determine hit locations. 
 
-# Credit
+# Credits
 This script is based on D&D Beyond Importer by Robin Kuiper, Matt DeKok, and Ammo Goeetsch.
 Hero-related modifications by Villain in Glasses.
 
