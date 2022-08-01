@@ -25,7 +25,7 @@ If HD Importer has started correctly the following notification should appear in
 
 1. Download the export format file HeroSystem6eHeroic.hde from this respository and install it into your HERO Designer folder.
 2. Create a new character or load a character file into HERO Designer.
-3. Change the export format to HeroSystem6eHeroic.hde via the menu item "Current Character->Export->Set Export Format..."
+3. Change the export format to [HeroSystem6eHeroic.hde](https://github.com/Roll20/roll20-api-scripts/tree/master/HeroSystem6eHeroic_HDImporter/1.0/HeroSystem6eHeroic.hde) via the menu item "Current Character->Export->Set Export Format..."
 4. Select "Current Character->Export->Export to File..." to save the character as a .txt file.
 5. If the character has a profile image, save that as well.
 
