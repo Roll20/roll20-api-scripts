@@ -9,9 +9,9 @@ API_Meta.PlayerCharacters={offset:Number.MAX_SAFE_INTEGER,lineCount:-1};
 const PlayerCharacters = (() => { // eslint-disable-line no-unused-vars
 
   const scriptName = 'PlayerCharacters';
-  const version = '0.1.2';
+  const version = '0.1.1';
   API_Meta.PlayerCharacters.version = version;
-  const lastUpdate = 1658963395;
+  const lastUpdate = 1658609741;
   const schemaVersion = 0.2;
   const secToMs = 1000;
   const OwnerAttrName = 'OwnerRoll20IDs';
@@ -127,10 +127,7 @@ const PlayerCharacters = (() => { // eslint-disable-line no-unused-vars
       let pids = cbArray(a.get('current'));
       let cba = toPlayerIDs(pids);
       if(cba){
-        c.set({
-          inplayerjournals: ( state[scriptName].config.charactersInPlayerJournals ? 'all' : cba.join(',')),
-          controlledby: cba.join(',')
-        });
+        c.set('controlledby',cba.join(','));
         return true;
       }
     }
