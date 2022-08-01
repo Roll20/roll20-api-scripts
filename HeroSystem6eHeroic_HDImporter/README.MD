@@ -23,7 +23,7 @@ If HD Importer has started correctly the following notification should appear in
 
 ## HERO Designer
 
-1. Download the export format file [HeroSystem6eHeroic.hde](https://github.com/Roll20/roll20-api-scripts/tree/master/HeroSystem6eHeroic_HDImporter/1.0/HeroSystem6eHeroic.hde) from this respository and install it into your HERO Designer folder.
+1. Download the export format file [HeroSystem6eHeroic.hde](https://github.com/Roll20/roll20-api-scripts/tree/master/HeroSystem6eHeroic_HDImporter/1.0) from this respository and install it into your HERO Designer folder.
 2. Create a new character or load a character file into HERO Designer.
 3. Change the export format to HeroSystem6eHeroic.hde via the menu item "Current Character->Export->Set Export Format..."
 4. Select "Current Character->Export->Export to File..." to save the character as a .txt file.
@@ -76,6 +76,8 @@ The configuration menu is accessible from the Help Screen or via the chat window
 Hero-related code and modifications by [Villain in Glasses](https://app.roll20.net/users/633423/villain-in-glasses) (Discord: Villain#0604).
 
 Based on D&D Beyond Importer by [Robin Kuiper](https://app.roll20.net/users/1226016/robin) (Discord: Atheos#1095), [Matt DeKok](https://app.roll20.net/users/494585/sillvva) (Discord: Sillvva#2532), and [Ammo Goeetsch](https://app.roll20.net/users/2990964/ammo) (Discord: ammo#7063).
+
+Apologies to Darci, who played the role of Duncan Idaho.
 
 # Version history
 Version 1.0 -- Initial release on August 1, 2022.
