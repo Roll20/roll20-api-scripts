@@ -63,14 +63,14 @@ The configuration menu is accessible from the Help Screen or via the chat window
 ![HelpMenu](/HeroSystem6eHeroic_HDImporter/images/ConfigMenu.png)
 
 - `Overwrite` : **CAUTION!** If set to true, when importing a new character, HD Importer will overwrite an existing character that has the same name.
-- _Prefix_ : Adds a text label to the beginning of an imported character's name.
-- _Suffix_ : Adds a text label to the end of an imporated character's name.
-- _In Player Journal_ : Presets the imported character's visiblity to players.
-- _Player Control_ : Presets the player control assigned to the imported character.
-- _Use Char Maximums_ : Presets the sheet option that figures characteristic maximums into point costs.
-- _Literacy Costs CP_ : Presets the sheet opttion that literacy costs 1 CP. Most common in Fantasy Hero campaigns.
-- _Super-Heroic END_ : Presets the option for higher endurance costs for strength.
-- _Use Hit Locations_ : Presets the sheet option to determine hit locations. 
+- `Prefix` : Adds a text label to the beginning of an imported character's name.
+- `Suffix` : Adds a text label to the end of an imporated character's name.
+- `In Player Journal` : Presets the imported character's visiblity to players.
+- `Player Control` : Presets the player control assigned to the imported character.
+- `Use Char Maximums` : Presets the sheet option that figures characteristic maximums into point costs.
+- `Literacy Costs CP` : Presets the sheet opttion that literacy costs 1 CP. Most common in Fantasy Hero campaigns.
+- `Super-Heroic END` : Presets the option for higher endurance costs for strength.
+- `Use Hit Locations` : Presets the sheet option to determine hit locations. 
 
 # Credit
 Hero-related code and modifications by [Villain in Glasses](https://app.roll20.net/users/633423/villain-in-glasses) (Discord: Villain#0604).
