@@ -39,6 +39,11 @@ If HD Importer has started correctly the following notification should appear in
 2. Hit enter. If all goes well you should see a start and finish notification, which for the character "Alena" appears as
 ![HelpMenu](/HeroSystem6eHeroic_HDImporter/images/ImportSuccess.png)
 
+## Sample Character
+The release folder contains two sample character files:
+- SampleCharacter.hdc : is a Hero Designer character, which you may use with Hero Designer for testing and evaulation.
+- SampleCharacter.txt : is the same character exported from Hero Designer using the HeroSystem6eHeroic.hde as the export format. 
+
 ## Notes
 
 Quotation marks are used to indicate JSON data values. Please take care when using quotation marks in Hero Designer text fields. The exporter will attempt to remove them, but this may not be fullproof.
