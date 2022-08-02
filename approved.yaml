@@ -1143,3 +1143,7 @@ downtimesystem:
 multiworldcalendar:
   - "Multi-World Calendar"
   - "Utility"
+
+calendardnd:
+  - "Calendar DND"
+  - "Utility"
