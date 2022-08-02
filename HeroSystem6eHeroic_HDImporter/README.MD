@@ -41,8 +41,8 @@ If HD Importer has started correctly the following notification should appear in
 
 ## Sample Character
 The release folder contains two sample character files:
-- SampleCharacter.hdc -- is a Hero Designer character, which you may use with Hero Designer for testing and evaulation.
-- SampleCharacter.txt -- is the same character exported from Hero Designer using the HeroSystem6eHeroic.hde as the export format. 
+- `SampleCharacter.hdc` is a Hero Designer character, which you may use with Hero Designer for testing and evaulation.
+- `SampleCharacter.txt` is the same character exported from Hero Designer using HeroSystem6eHeroic.hde as the export format. 
 
 ## Notes
 
