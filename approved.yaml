@@ -1137,5 +1137,13 @@ rolemasterd100:
   - "Utility"
 
 downtimesystem:
-  - "downtime-system"
+  - "Downtime System"
+  - "Utility"
+
+multiworldcalendar:
+  - "Multi-World Calendar"
+  - "Utility"
+
+calendardnd:
+  - "Calendar DND"
   - "Utility"
