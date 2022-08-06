@@ -36,9 +36,10 @@ New in version 0.4.0
 
 
 Fumble Charts now support "weight" as a simpler apprach to setting up a table, making it easier to add and remove.
+They also have the option to randomize dc rolls for you.  Don't add the dcLow and dcHigh field if not applicable.
 
 [
-    {"weight": 1, "result": "Distracted", "effect": "Roll DEX or fall down."},
+    {"weight": 1, "result": "Distracted", "effect": "Roll DEX or fall down.", "dcLow": 8, "dcHigh": 20},
     {"weight": 2, "result": "Negligent", "effect": "Fall down."},
     ...
 ]

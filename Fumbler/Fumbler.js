@@ -142,7 +142,7 @@ var fumbler = fumbler || (function () {
 			if (whoops) {
 				let dc = "";
 				if (whoops.dcLow && whoops.dcHigh) {
-					let res = Math.floor(Math.random() * whoops.dcHigh) + whoops.dcLow;
+					let res = Math.floor(Math.random() * (whoops.dcHigh - whoops.dcLow + 1)) + whoops.dcLow;
 					dc = "DC " + res;
 				}
 
