@@ -28,6 +28,24 @@ Hit friend, normal damage. Friend stunned for 1 round.
 Hit self. Double damage. Stunned for 1 round.
 
 
+New in version 0.4.0
+--------------------
+**!removeFumble** command: Requires title field.  Will remove all fumbles with that title field
+**!resetFumbleList** command: Resets fumble list to default values.  Required if previously using 0.3.0 and want to add to the table.
+**!clearFumbleList** command: Completely removes all fumbles from table
+
+
+Fumble Charts now support "weight" as a simpler apprach to setting up a table, making it easier to add and remove.
+
+[
+    {"weight": 1, "result": "Distracted", "effect": "Roll DEX or fall down."},
+    {"weight": 2, "result": "Negligent", "effect": "Fall down."},
+    ...
+]
+
+The only downside to this method is that it is harder for the user to specify the fumble (but who wants to do that???).
+
+
 New in version 0.3.0
 --------------------
 
