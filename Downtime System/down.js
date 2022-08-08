@@ -12,7 +12,7 @@
 var Downtime = Downtime || (function(){
     'use strict';
     
-    var version='0.9c',
+    var version='0.9d',
     
     setDefaults = function() {
         state.down = {
@@ -27,6 +27,165 @@ var Downtime = Downtime || (function(){
                 item: "",
                 minprice: 10,
                 maxprice: 1000,
+            }
+        };
+    },
+
+    setItemList = function() {
+        state.List = {
+            common: {
+                weapon: [
+                    //Common Weapons
+                    {
+                        description: "An Armblade is a magic weapon that attaches to your arm, becoming inseperable from you as long as you\'re attuned to it. To attune to this item, you must hold it against your forearm for the entire attunement period.<br><br>As a bonus action, you can retract the armblade into your forearm or extend it from there. While it is extended, you can use the weapon as if you were holding it, and you can\'t use that hand for other purposes.",
+                        attunement: true,
+                        attune_requirement: "Warforged",
+                        name: "Armblade",
+                        specifics: "one-handed melee",
+                        magicbonus: 0,
+                        modifiers: "Item Type: Melee Weapon",
+                        properties: "One-Handed"
+                    },
+                    {
+                        description: "In darkness, the unsheathed blade of this sword sheds moonlight, creating bright light in a 15-foot radius and dim light for an additional 15 feet.",
+                        attunement: false,
+                        specifics: "sword",
+                        name: "Moon-Touched Sword",
+                        magicbonus: 0,
+                        modifiers: "Item Type: Melee Weapon",
+                        properties: ""
+                    },
+                    {
+                        description: "This arrow can\'t be broken, except when it is within an Antimagic Field.",
+                        attunement: false,
+                        specifics: "arrow",
+                        name: "Unbreakable Arrow",
+                        magicbonus: 0,
+                        modifiers: "Item Type: Ammunition",
+                        properties: ""
+                    },
+                    {
+                        description: "This ammunition packs a wallop. A creature hit by the ammunition must succeed on a DC 10 Strength saving throw or be knocked prone.",
+                        attunement: false,
+                        specifics: "ammunition",
+                        name: "Walloping Ammunition",
+                        magicbonus: 0,
+                        modifiers: "Item Type: Ammunition",
+                        properties: ""
+                    }
+                ],
+                armor: [
+                    //Common Armor
+                    {
+                        description: "This armor never gets dirty.",
+                        attunement: false,
+                        specifics: "medium or heavy",
+                        name: "Armor of Gleaming",
+                        modifiers: "Item Type: Armor",
+                        properties: ""
+                    },
+                    {
+                        description: "You can doff this armor as an action",
+                        attunement: false,
+                        specifics: "any armor",
+                        name: "Cast-Off Armor",
+                        modifiers: "Item Type: Armor",
+                        properties: ""
+                    },
+                    {
+                        description: "The front of this shield is shaped in the likeness of a face. While bearing the shield, you can use a bonus action to alter the face\'s expression.",
+                        attunement: false,
+                        specifics: "shield",
+                        name: "Shield of Expression",
+                        modifiers: "Item Type: Shield, AC: 2",
+                        properties: ""
+                    },
+                    {
+                        description: "Wisps of harmless, odorless smoke rise from this armor while it is worn.",
+                        attunement: false,
+                        specifics: "any armor",
+                        name: "Smoldering Armor",
+                        modifiers: "Item Type: Armor",
+                        properties: ""
+                    }
+                ],
+                accessoires: [
+                    //Common Accessoires (Rings, Rods, Staffs, Wearables)
+                ],
+                scroll: [
+                    //Common Scrolls    
+                ],
+                misc: [
+                    //Common misc Items (edibles & other things that don't belong in previous categories)
+                ]
+            },
+            uncommon: {
+                weapon: [
+                    //Uncommon Weapons
+                ],
+                armor: [
+                    //Uncommon Armor
+                ],
+                accessoires: [
+                    //Uncommon Accessoires (Rings, Rods, Staffs, Wearables)
+                ],
+                scroll: [
+                    //Uncommon Scrolls    
+                ],
+                misc: [
+                    //Uncommon misc Items (edibles & other things that don't belong in previous categories)
+                ]
+            },
+            rare: {
+                weapon: [
+                    //Rare Weapons
+                ],
+                armor: [
+                    //Rare Armor
+                ],
+                accessoires: [
+                    //Rare Accessoires (Rings, Rods, Staffs, Wearables)
+                ],
+                scroll: [
+                    //Rare Scrolls    
+                ],
+                misc: [
+                    //Rare misc Items (edibles & other things that don't belong in previous categories)
+                ]
+            },
+            very_rare: {
+                weapon: [
+                    //Very Rare Weapons
+                ],
+                armor: [
+                    //Very Rare Armor
+                ],
+                accessoires: [
+                    //Very Rare Accessoires (Rings, Rods, Staffs, Wearables)
+                ],
+                scroll: [
+                    //Very Rare Scrolls    
+                ],
+                misc: [
+                    //Very Rare misc Items (edibles & other things that don't belong in previous categories)
+                ]
+            },
+            legendary: {
+                weapon: [
+                    //Legendary Weapons
+                ],
+                armor: [
+                    //Legendary Armor
+                ],
+                accessoires: [
+                    //Legendary Accessoires (Rings, Rods, Staffs, Wearables)
+                ],
+                scroll: [
+                    //Legendary Scrolls    
+                ],
+                misc: [
+                    //Legendary misc Items (edibles & other things that don't belong in previous categories)
+                ]
             }
         };
     },
@@ -64,10 +223,10 @@ var Downtime = Downtime || (function(){
             case '!brew':
                 brew(args[1],args[2],args[3],msg);
             case '!craftmenu':
-                craftmenu(args[1],args[2],args[3],args[4],msg);
+                craftmenu(args[1],args[2],args[3],args[4],args[5],msg);
                 return;
             case '!craft':
-                craft(args[1],args[2],args[3],msg);
+                craft(args[1],args[2],args[3],args[4],msg);
                 return;
             case '!trainmenu':
                 trainmenu(args[1],args[2],msg);
@@ -158,7 +317,7 @@ var Downtime = Downtime || (function(){
                                     '<div style="text-align:center;">Available Downtime Activities</div>' + //--
                                     '<br>' + //--
                                     '<div style="text-align:center;"><a ' + astyle2 + '" href="!brewmenu --charid ' + charid + ' --rarity ?{Type?|Common|Uncommon|Rare|Very Rare|Legendary} --amount ?{Amount?|1}">Brew Potion</a></div>' + //--
-                                    '<div style="text-align:center;"><a ' + astyle2 + '" href="!craftmenu --charid ' + charid + ' --type ?{Type?|Weapon|Armor|Accessoires|Scroll|Misc} --rarity ?{Rarity?|Common|Uncommon|Rare|Very Rare|Legendary} --time ?{Time?|1}">Craft Items</a></div>' + //--
+                                    '<div style="text-align:center;"><a ' + astyle2 + '" href="!craftmenu --charid ' + charid + ' --type ?{Type?|Weapon|Armor|Accessoires|Scroll|Misc} --rarity ?{Rarity?|Common|Uncommon|Rare|Very Rare|Legendary} --amount ?{Amount?|1}">Craft Items</a></div>' + //--
                                     '<div style="text-align:center;"><a ' + astyle2 + '" href="!work --charid ' + charid + ' --skill ?{Skill?|Acrobatics|Animal Handling|Arcana|Athletics|Deception|History|Insight|Intimidation|Investigation|Medicine|Nature|Perception|Performance|Persuasion|Religion|Sleight of Hand|Stealth|Survival} --time ?{Time?|1}">Work</a></div>' + //--
                                     '<div style="text-align:center;"><a ' + astyle2 + '" href="!trainmenu --charid ' + charid + ' --type ?{Type?|Tool|Language}">Train</a></div>' + //--
                                     '<div style="text-align:center;"><a ' + astyle2 + '" href="!crimemenu --charid ' + charid + ' --type ?{Type?|Stealth|Thieves\' Tools|Investigation|Perception|Deception}">Commit Crime</a></div>' + //--
@@ -215,7 +374,7 @@ var Downtime = Downtime || (function(){
                                     '<div style="text-align:center;">Available Downtime Activities</div>' + //--
                                     '<br>' + //--
                                     '<div style="text-align:center;"><a ' + astyle2 + '" href="!brewmenu --charid ' + charid + ' --rarity ?{Type?|Common|Uncommon|Rare|Very Rare|Legendary} --amount ?{Amount?|1}">Brew Potion</a></div>' + //--
-                                    '<div style="text-align:center;"><a ' + astyle2 + '" href="!craftmenu --charid ' + charid + ' --type ?{Type?|Weapon|Armor|Accessoires|Scroll|Misc} --rarity ?{Rarity?|Common|Uncommon|Rare|Very Rare|Legendary} --time ?{Time?|1}">Craft Items</a></div>' + //--
+                                    '<div style="text-align:center;"><a ' + astyle2 + '" href="!craftmenu --charid ' + charid + ' --type ?{Type?|Weapon|Armor|Accessoires|Scroll|Misc} --rarity ?{Rarity?|Common|Uncommon|Rare|Very Rare|Legendary} --amount ?{Amount?|1}">Craft Items</a></div>' + //--
                                     '<div style="text-align:center;"><a ' + astyle2 + '" href="!work --charid ' + charid + ' --skill ?{Skill?|Acrobatics|Animal Handling|Arcana|Athletics|Deception|History|Insight|Intimidation|Investigation|Medicine|Nature|Perception|Performance|Persuasion|Religion|Sleight of Hand|Stealth|Survival} --time ?{Time?|1}">Work</a></div>' + //--
                                     '<div style="text-align:center;"><a ' + astyle2 + '" href="!trainmenu --charid ' + charid + ' --type ?{Type?|Tool|Language}">Train</a></div>' + //--
                                     '<div style="text-align:center;"><a ' + astyle2 + '" href="!crimemenu --charid ' + charid + ' --type ?{Type?|Stealth|Thieves\' Tools|Investigation|Perception|Deception}">Commit Crime</a></div>' + //--
@@ -267,7 +426,7 @@ var Downtime = Downtime || (function(){
                                     '<div style="text-align:center;">Available Downtime Activities</div>' + //--
                                     '<br>' + //--
                                     '<div style="text-align:center;"><a ' + astyle2 + '" href="!brewmenu --charid ' + charid + ' --rarity ?{Type?|Common|Uncommon|Rare|Very Rare|Legendary} --amount ?{Amount?|1}">Brew Potion</a></div>' + //--
-                                    '<div style="text-align:center;"><a ' + astyle2 + '" href="!craftmenu --charid ' + charid + ' --type ?{Type?|Weapon|Armor|Accessoires|Scroll|Misc} --rarity ?{Rarity?|Common|Uncommon|Rare|Very Rare|Legendary} --time ?{Time?|1}">Craft Items</a></div>' + //--
+                                    '<div style="text-align:center;"><a ' + astyle2 + '" href="!craftmenu --charid ' + charid + ' --type ?{Type?|Weapon|Armor|Accessoires|Scroll|Misc} --rarity ?{Rarity?|Common|Uncommon|Rare|Very Rare|Legendary} --amount ?{Amount?|1}">Craft Items</a></div>' + //--
                                     '<div style="text-align:center;"><a ' + astyle2 + '" href="!work --charid ' + charid + ' --skill ?{Skill?|Acrobatics|Animal Handling|Arcana|Athletics|Deception|History|Insight|Intimidation|Investigation|Medicine|Nature|Perception|Performance|Persuasion|Religion|Sleight of Hand|Stealth|Survival} --time ?{Time?|1}">Work</a></div>' + //--
                                     '<div style="text-align:center;"><a ' + astyle2 + '" href="!trainmenu --charid ' + charid + ' --type ?{Type?|Tool|Language}">Train</a></div>' + //--
                                     '<div style="text-align:center;"><a ' + astyle2 + '" href="!crimemenu --charid ' + charid + ' --type ?{Type?|Stealth|Thieves\' Tools|Investigation|Perception|Deception}">Commit Crime</a></div>' + //--
@@ -433,7 +592,7 @@ var Downtime = Downtime || (function(){
                                 '<div style="text-align:center;">Available Downtime Activities</div>' + //--
                                 '<br>' + //--
                                 '<div style="text-align:center;"><a ' + astyle2 + '" href="!brewmenu --charid ' + charid + ' --rarity ?{Type?|Common|Uncommon|Rare|Very Rare|Legendary} --amount ?{Amount?|1}">Brew Potion</a></div>' + //--
-                                '<div style="text-align:center;"><a ' + astyle2 + '" href="!craftmenu --charid ' + charid + ' --type ?{Type?|Weapon|Armor|Accessoires|Scroll|Misc} --rarity ?{Rarity?|Common|Uncommon|Rare|Very Rare|Legendary} --time ?{Time?|1}">Craft Items</a></div>' + //--
+                                '<div style="text-align:center;"><a ' + astyle2 + '" href="!craftmenu --charid ' + charid + ' --type ?{Type?|Weapon|Armor|Accessoires|Scroll|Misc} --rarity ?{Rarity?|Common|Uncommon|Rare|Very Rare|Legendary} --amount ?{Amount?|1}">Craft Items</a></div>' + //--
                                 '<div style="text-align:center;"><a ' + astyle2 + '" href="!work --charid ' + charid + ' --skill ?{Skill?|Acrobatics|Animal Handling|Arcana|Athletics|Deception|History|Insight|Intimidation|Investigation|Medicine|Nature|Perception|Performance|Persuasion|Religion|Sleight of Hand|Stealth|Survival} --time ?{Time?|1}">Work</a></div>' + //--
                                 '<div style="text-align:center;"><a ' + astyle2 + '" href="!trainmenu --charid ' + charid + ' --type ?{Type?|Tool|Language}">Train</a></div>' + //--
                                 '<div style="text-align:center;"><a ' + astyle2 + '" href="!crimemenu --charid ' + charid + ' --type ?{Type?|Stealth|Thieves\' Tools|Investigation|Perception|Deception}">Commit Crime</a></div>' + //--
@@ -1015,10 +1174,9 @@ var Downtime = Downtime || (function(){
         setHandoutDesc(msg.playerid,handnum,desc);
         sendChat("Downtime","/w "+msg.who+" You craft "+amount+" "+potion);
     },
-    
+
     craftmenu = function(charid,type,rarity,amount,msg) {
         let itemlist;
-        let attunementlist;
         var divstyle = 'style="width: 220px; border: 1px solid black; background-color: #ffffff; padding: 5px;"';
         var astyle1 = 'style="text-align:center; border: 1px solid black; margin: 1px; background-color: #7E2D40; border-radius: 4px;  box-shadow: 1px 1px 1px #707070; width: 100px;';
         var astyle2 = 'style="text-align:center; border: 1px solid black; margin: 1px; background-color: #7E2D40; border-radius: 4px;  box-shadow: 1px 1px 1px #707070; width: 150px;';
@@ -1028,121 +1186,117 @@ var Downtime = Downtime || (function(){
         var substyle = 'style="font-size: 11px; line-height: 13px; margin-top: -3px; font-style: italic;"';
         let price;
         let neededtime;
-        type=type.replace("type ","");
+        type=type.replace("type ","")
         charid=charid.replace("charid ","");
-        rarity=rarity.replace("rarity ","");
+        rarity=rarity.replace("rarity ","")
         amount=Number(amount.replace("amount ",""));
+        specific=specific.replace("specific ","");
         switch (rarity) {
             case 'Common':
                 price=50;
                 neededtime=5;
                 if (type=="Weapon") {
-                    itemlist=["Moon-Touched Sword","Veteran\'s Cane","Staff of Flowers","Staff of Birdcalls","Staff of Adornment"];
-                    attunementlist=["Armblade","Warforged"];
+                    itemlist=state.List.common.weapon;
                 } else if (type=="Armor") {
-                    itemlist=["Shield of Expression", "Smoldering Armor", "Cast-Off Armor", "Armor of Gleaming"];
-                    attunementlist=[];
+                    itemlist=state.List.common.armor;
                 } else if (type=="Accessoires") {
-                    itemlist=["Breathing Bubble","Boots of False Tracks","Clothes of Mending","Clockwork Amulet","Cloak of Many Fashions","Cloak of Billowing","Common Glamerweave","Dread Helm","Feather Token","Prosthetic Limb","Shiftweave","Hat of Vermin","Wand of Smiles","Wand of Scowls","Wand of Pyrotechnics","Wand of Conducting","Spellwrought Tattoo(Cantrip)","Spellwrought Tattoo(1st Level)"];
-                    attunementlist=["Masquerade Tattoo","","Instrument of Scribing","","Instrument of Illusions","","Wand Sheath","Warforged","Ruby of the War Mage","Spellcaster","Hat of Wizardry","Wizard","Dark Shard Amulet","Warlock","Orb of Shielding","","Imbued Wood Focus","","Illuminator\'s Tattoo","","Ersatz Eye",""];
+                    itemlist=state.List.common.accessoires;
                 } else if (type=="Scroll") {
+                    itemlist=state.List.common.scroll;
                     price=Math.floor(price/2);
                     neededtime=Math.floor(price/2);
-                    itemlist=["Cantrip Scroll","1st Level Scroll"];
                 } else if (type=="Misc") {
-                    itemlist=["Cleansing Stone","Candle of the Deep","Bead of Nourishment","Bead of Refreshment","Coin of Delving","Ear Horn of Hearing","Everbright Lantern","Enduring Spellbook","Heward\'s Handy Spice Pouch","Moodmark Paint","Lock of Trickery","Horn of Silent Alarm","Mystery Key","Orb of Time","Orb of Direction","Pole of Angling","Pipe of Smoke Monsters","Pot of Awakening","Pole of Collapsing","Rope of Mending","Walloping Ammunition","Vox Seeker","Unbreakable Arrow","Tankard of Sobriety","Spellshard"];
-                    attunementlist=["Scribe\'s Pen","creature with the Mark of Scribing","Charlatan\'s Die","","Talking Doll","","Keycharm",""];
+                    itemlist=state.List.common.misc;
                 }
-                return;
+                break;
             case 'Uncommon':
                 price=200;
                 neededtime=10;
                 if (type=="Weapon") {
-                    itemlist=["+1 Ammunition","+1 Weapon","Javelin of Lightning"];
-                    attunementlist=["Dragon\'s Wrath Weapon","","+1 Moon Sickle","Druid or Ranger","Sword of Vengeance","","Trident of Fish Command","","Weapon of Warning",""];
+                    itemlist=state.List.uncommon.weapon;
                 } else if (type=="Armor") {
-                    itemlist=[];
-                    attunementlist=[];
+                    itemlist=state.List.uncommon.armor;
                 } else if (type=="Accessoires") {
-                    itemlist=[];
-                    attunementlist=[];
+                    itemlist=state.List.uncommon.accessoires;
                 } else if (type=="Scroll") {
+                    itemlist=state.List.uncommon.scroll;
                     price=Math.floor(price/2);
                     neededtime=Math.floor(price/2);
-                    itemlist=[];
                 } else if (type=="Misc") {
-                    itemlist=[];
-                    attunementlist=[];
+                    itemlist=state.List.uncommon.misc;
                 }
-                return;
+                break;
             case 'Rare':
                 price=2000;
                 neededtime=50;
                 if (type=="Weapon") {
-                    itemlist=["+2 Ammunition","+2 Weapon","Dagger of Venom","Dragon Slayer","Flame Tongue","Giant Slayer","Mace of Smiting","Two-Birds Sling","Vicious Weapon","Weapon of Certain Death","Woodcutter\'s Axe"];
-                    attunementlist=["Acheron Blade","","Berserker Axe","","Corpse Slayer","","Crystal Blade","","Devotee\'s Censer","Cleric or Paladin","Dragon Wing Bow","","+1 Dragon\'s Wrath Weapon","","Mace of Disruption","","Mace of Terror","","Mind Blade","specific individual","Mind Lash","mind flayer","+2 Moon Sickle","Druid or Ranger","Needle of Mending","","Sun Blade","","Sunforger","","Sword of Life Stealing","","Sword of Wounding",""];
+                    itemlist=state.List.rare.weapon;
                 } else if (type=="Armor") {
-                    itemlist=[];
-                    attunementlist=[];
+                    itemlist=state.List.rare.armor;
                 } else if (type=="Accessoires") {
-                    itemlist=[];
-                    attunementlist=[];
+                    itemlist=state.List.rare.accessoires;
                 } else if (type=="Scroll") {
+                    itemlist=state.List.rare.scroll;
                     price=Math.floor(price/2);
                     neededtime=Math.floor(price/2);
-                    itemlist=[];
                 } else if (type=="Misc") {
-                    itemlist=[];
-                    attunementlist=[];
+                    itemlist=state.List.rare.misc;
                 }
-                return;
+                break;
             case 'Very Rare':
                 price=20000;
                 neededtime=125;
                 if (type=="Weapon") {
-                    itemlist=["+3 Ammunition","+3 Weapon","Arrow of Slaying","Sling Bullets of Althemone",""];
-                    attunementlist=["Bloodaxe","","Dancing Sword","","+2 Dragon\'s Wrath Weapon","","Duskcrusher","","Dwarven Thrower","Dwarf","Dyrrn\'s Tentacle Whip","","Frost Band","","+3 Moon Sickle","Druid or Ranger","Nine Lives Stealer","","Oathbow","","Scimitar of Speed","","Steel","Good-aligned Creature","Sword of Sharpness","","Sword of the Paruns",""];
+                    itemlist=state.List.very_rare.weapon;
                 } else if (type=="Armor") {
-                    itemlist=[];
-                    attunementlist=[];
+                    itemlist=state.List.very_rare.armor;
                 } else if (type=="Accessoires") {
-                    itemlist=[];
-                    attunementlist=[];
+                    itemlist=state.List.very_rare.accessoires;
                 } else if (type=="Scroll") {
+                    itemlist=state.List.very_rare.scroll;
                     price=Math.floor(price/2);
                     neededtime=Math.floor(price/2);
-                    itemlist=[];
                 } else if (type=="Misc") {
-                    itemlist=[];
-                    attunementlist=[];
+                    itemlist=state.List.very_rare.misc;
                 }
-                return;
+                break;
             case 'Legendary':
                 price=100000;
                 neededtime=250;
                 if (type=="Weapon") {
-                    itemlist=["Hammer of Thunderbolts"];
-                    attunementlist=["Blackrazor","creature of non-lawful alignment","Defender","","Dragonlance","","+3 Dragon\'s Wrath Weapon","","Flail of Tiamat","","Holy Avenger","Paladin","Luck Blade","","Moonblade","elf or half-elf of neutral good alignment","Nepenthe","Paladin","Rakdos Riteknife","","Snicker-Snack","Non-evil Creature","Sword of Answering","creature with the same alignment as the sword","Topaz Annihilator","","Vorpal Sword","","Wave","creature that worships a god of the sea","Whelm","Dwarf"];
+                    itemlist=state.List.legendary.weapon;
                 } else if (type=="Armor") {
-                    itemlist=[];
-                    attunementlist=[];
+                    itemlist=state.List.legendary.armor;
                 } else if (type=="Accessoires") {
-                    itemlist=[];
-                    attunementlist=[];
+                    itemlist=state.List.legendary.accessoires;
                 } else if (type=="Scroll") {
+                    itemlist=state.List.legendary.scroll;
                     price=Math.floor(price/2);
                     neededtime=Math.floor(price/2);
-                    itemlist=[];
                 } else if (type=="Misc") {
-                    itemlist=[];
-                    attunementlist=[];
+                    itemlist=state.List.legendary.misc;
                 }
-                return;
+                break;
         }
-        let list=String(itemlist);
+        let item = itemlist.find(e => e.name.toLowerCase().includes(state.down.now.item.toLowerCase()));
+        if (item) {
+            price+=Number(item.price);
+        }
+        let firstlist=""
         for (let i=0;i<itemlist.length;i++) {
-            list=list.replace(",","|");
+            firstlist=firstlist+itemlist[i].name+",";
         }
+        firstlist=firstlist.split(",");
+        let secondlist=[]
+        for (let i=0;i<firstlist.length;i++) {
+            if (firstlist[i]!=="") {
+                secondlist[i]=firstlist[i];
+            }
+        }
+        for (let i=0;i<50;i++) {
+            secondlist=String(secondlist).replace(",","|");
+        }
+        let list=secondlist;
         let char = findObjs({
             _type: 'character',
             _id: charid
@@ -1162,37 +1316,257 @@ var Downtime = Downtime || (function(){
                     sendChat("Downtime","/w "+msg.who+" You do not have enough money to do that!");
                 } else {
                     let test=false;
-                    for (let i=0;i<itemlist.length;i++) {
-                        if (itemlist[i]==state.down.now.item) {
+                    itemlist.forEach(element => {
+                        if (element.name.toLowerCase().includes(state.down.now.item.toLowerCase())) {
                             test=true;
+                            state.down.now.item=element.name;
                         }
-                    }
+                    });
                     if (test==false) {
                         state.down.now.item="";
                     }
-                    sendChat("Downtime","/w "+msg.who+" <div " + divstyle + ">" + //--
-                        '<div ' + headstyle + '>Crafting</div>' + //--
-                        '<div ' + substyle + '>Menu</div>' + //--
-                        '<div ' + arrowstyle + '></div>' + //--
-                        '<div style="text-align:center;">' + "Available " + type + "s" + //--
-                        '<table>' + //--
-                        '<tr><td>Rarity: </td><td><a ' + astyle1 + '" href="!craftmenu --charid ' + charid + ' --type ' + type + ' --rarity ?{Rarity?|Common|Uncommon|Rare|Very Rare|Legendary}' + ' --amount ' + amount + '">' + rarity + '</a></td></tr>' + //--
-                        '<tr><td>Item Type: </td><td><a ' + astyle1 + '" href="!craftmenu --charid ' + charid + ' --type ?{Type?|Weapon|Armor|Accessoires|Scroll} --rarity ' + rarity + ' --amount ' + amount + '">' + type + '</a></td></tr>' + //--
-                        '<tr><td>Amount: </td><td><a ' + astyle1 + '" href="!craftmenu --charid ' + charid + ' --type ' + type + ' --rarity ' + rarity + ' --amount ?{Amount?|1}">' + amount + '</a></td></tr>' + //--
-                        '<tr><td>Item: </td><td><a ' + astyle1 + '" href="!setitem --item ?{Item?|' + list + '} --charid ' + charid + '--type ' + type + ' --rarity ' + rarity + ' --amount ' + amount + '">' + state.down.now.item + '</a></td></tr>' + //--
-                        '</table>' + //--
-                        '<div style="text-align:center;"><a ' + astyle2 + '" href="!craft --charid ' + charid + ' --item ' + state.down.now.item + ' --amount ' + amount + '">Craft Item</a></div>' + //--
-                        '</div>'
-                    );
+                    if (type=="Weapon" || type=="Scroll") {
+                        sendChat("Downtime","/w "+msg.who+" <div " + divstyle + ">" + //--
+                            '<div ' + headstyle + '>Crafting</div>' + //--
+                            '<div ' + substyle + '>Menu</div>' + //--
+                            '<div ' + arrowstyle + '></div>' + //--
+                            '<div style="text-align:center;">Available ' + type + "s" + //--
+                            '<table>' + //--
+                            '<tr><td>Rarity: </td><td><a ' + astyle1 + '" href="!craftmenu --charid ' + charid + ' --type ' + type + ' --rarity ?{Rarity?|Common|Uncommon|Rare|Very Rare|Legendary} --amount ' + amount + '">' + rarity + '</a></td></tr>' + //--
+                            '<tr><td>Item Type: </td><td><a ' + astyle1 + '" href="!craftmenu --charid ' + charid + ' --type ?{Item Type?|Weapon|Armor|Accessoires|Scroll|Misc} --rarity ' + rarity + ' --amount ' + amount + '">' + type + '</a></td></tr>' + //--
+                            '<tr><td>Amount: </td><td><a ' + astyle1 + '" href="!craftmenu --charid ' + charid + ' --type ' + type + ' --rarity ' + rarity + ' --amount ?{Amount?|1}">' + amount + '</a></td></tr>' + //--
+                            '<tr><td>Item: </td><td><a ' + astyle1 + '" href="!setitem --item ?{Item?|' + list + '} --charid ' + charid + ' --type ' + type + ' --rarity ' + rarity + ' --amount ' + amount + '">' + state.down.now.item + '</a></td></tr>' + //--
+                            '</table>' + //--
+                            '<div style="text-align:center;">Price: ' + price + ' GP</div>' + //--
+                            '<br><div style="text-align:center;"><a ' + astyle2 + '" href="!craft --charid ' + charid + ' --item ' + state.down.now.item + ' --type ' + type + ' --rarity ' + rarity + '--amount ' + amount + '">Craft Item</a></div>' + //--
+                            '</div>'
+                        );
+                    } else if (type=="Misc") {
+                        sendChat("Downtime","/w "+msg.who+" <div " + divstyle + ">" + //--
+                            '<div ' + headstyle + '>Crafting</div>' + //--
+                            '<div ' + substyle + '>Menu</div>' + //--
+                            '<div ' + arrowstyle + '></div>' + //--
+                            '<div style="text-align:center;">Available ' + type + " Items" + //--
+                            '<table>' + //--
+                            '<tr><td>Rarity: </td><td><a ' + astyle1 + '" href="!craftmenu --charid ' + charid + ' --type ' + type + ' --rarity ?{Rarity?|Common|Uncommon|Rare|Very Rare|Legendary} --amount ' + amount + '">' + rarity + '</a></td></tr>' + //--
+                            '<tr><td>Item Type: </td><td><a ' + astyle1 + '" href="!craftmenu --charid ' + charid + ' --type ?{Item Type?|Weapon|Armor|Accessoires|Scroll|Misc} --rarity ' + rarity + ' --amount ' + amount + '">' + type + '</a></td></tr>' + //--
+                            '<tr><td>Amount: </td><td><a ' + astyle1 + '" href="!craftmenu --charid ' + charid + ' --type ' + type + ' --rarity ' + rarity + ' --amount ?{Amount?|1}">' + amount + '</a></td></tr>' + //--
+                            '<tr><td>Item: </td><td><a ' + astyle1 + '" href="!setitem --item ?{Item?|' + list + '} --charid ' + charid + ' --type ' + type + ' --rarity ' + rarity + ' --amount ' + amount + '">' + state.down.now.item + '</a></td></tr>' + //--
+                            '</table>' + //--
+                            '<div style="text-align:center;">Price: ' + price + ' GP</div>' + //--
+                            '<br><div style="text-align:center;"><a ' + astyle2 + '" href="!craft --charid ' + charid + ' --item ' + state.down.now.item + ' --type ' + type + ' --rarity ' + rarity + '--amount ' + amount + '">Craft Item</a></div>' + //--
+                            '</div>'
+                        );
+                    } else if (type=="Armor" || type=="Accessoires") {
+                        sendChat("Downtime","/w "+msg.who+" <div " + divstyle + ">" + //--
+                            '<div ' + headstyle + '>Crafting</div>' + //--
+                            '<div ' + substyle + '>Menu</div>' + //--
+                            '<div ' + arrowstyle + '></div>' + //--
+                            '<div style="text-align:center;">Available ' + type + //--
+                            '<table>' + //--
+                            '<tr><td>Rarity: </td><td><a ' + astyle1 + '" href="!craftmenu --charid ' + charid + ' --type ' + type + ' --rarity ?{Rarity?|Common|Uncommon|Rare|Very Rare|Legendary} --amount ' + amount + '">' + rarity + '</a></td></tr>' + //--
+                            '<tr><td>Item Type: </td><td><a ' + astyle1 + '" href="!craftmenu --charid ' + charid + ' --type ?{Item Type?|Weapon|Armor|Accessoires|Scroll|Misc} --rarity ' + rarity + ' --amount ' + amount + '">' + type + '</a></td></tr>' + //--
+                            '<tr><td>Amount: </td><td><a ' + astyle1 + '" href="!craftmenu --charid ' + charid + ' --type ' + type + ' --rarity ' + rarity + ' --amount ?{Amount?|1}">' + amount + '</a></td></tr>' + //--
+                            '<tr><td>Item: </td><td><a ' + astyle1 + '" href="!setitem --item ?{Item?|' + list + '} --charid ' + charid + ' --type ' + type + ' --rarity ' + rarity + ' --amount ' + amount + '">' + state.down.now.item + '</a></td></tr>' + //--
+                            '</table>' + //--
+                            '<div style="text-align:center;">Price: ' + price + ' GP</div>' + //--
+                            '<br><div style="text-align:center;"><a ' + astyle2 + '" href="!craft --charid ' + charid + ' --item ' + state.down.now.item + ' --type ' + type + ' --rarity ' + rarity + '--amount ' + amount + '">Craft Item</a></div>' + //--
+                            '</div>'
+                        );
+                    }
                 }
             }
-        })
+        });
     },
     
-    craft = function(charid,item,amount,msg) {
+    craft = function(charid,item,type,rarity,amount,msg) {
         charid=charid.replace("charid ","");
-        item=item.replace("item ","");
+        type=type.replace("type ","");
+        rarity=rarity.replace("rarity ","");
         amount=Number(amount.replace("amount ",""));
+        item=item.replace("item ","");
+        let itemList;
+        let price;
+        let neededtime;
+        switch (rarity) {
+            case 'Common':
+                price=50;
+                neededtime=5;
+                if (type=="Weapon") {
+                    itemList=state.List.common.weapon;
+                } else if (type=="Armor") {
+                    itemList=state.List.common.armor;
+                } else if (type=="Accessoires") {
+                    itemList=state.List.common.accessoires;
+                } else if (type=="Scroll") {
+                    itemList=state.List.common.scroll;
+                    price=Math.floor(price/2);
+                    neededtime=Math.floor(price/2);
+                } else if (type=="Misc") {
+                    itemList=state.List.common.misc;
+                }
+                break;
+            case 'Uncommon':
+                price=200;
+                neededtime=10;
+                if (type=="Weapon") {
+                    itemList=state.List.uncommon.weapon;
+                } else if (type=="Armor") {
+                    itemList=state.List.uncommon.armor;
+                } else if (type=="Accessoires") {
+                    itemList=state.List.uncommon.accessoires;
+                } else if (type=="Scroll") {
+                    itemList=state.List.uncommon.scroll;
+                    price=Math.floor(price/2);
+                    neededtime=Math.floor(price/2);
+                } else if (type=="Misc") {
+                    itemList=state.List.uncommon.misc;
+                }
+                break;
+            case 'Rare':
+                price=2000;
+                neededtime=50;
+                if (type=="Weapon") {
+                    itemList=state.List.rare.weapon;
+                } else if (type=="Armor") {
+                    itemList=state.List.rare.armor;
+                } else if (type=="Accessoires") {
+                    itemList=state.List.rare.accessoires;
+                } else if (type=="Scroll") {
+                    itemList=state.List.rare.scroll;
+                    price=Math.floor(price/2);
+                    neededtime=Math.floor(price/2);
+                } else if (type=="Misc") {
+                    itemList=state.List.rare.misc;
+                }
+                break;
+            case 'Very Rare':
+                price=20000;
+                neededtime=125;
+                if (type=="Weapon") {
+                    itemList=state.List.very_rare.weapon;
+                } else if (type=="Armor") {
+                    itemList=state.List.very_rare.armor;
+                } else if (type=="Accessoires") {
+                    itemList=state.List.very_rare.accessoires;
+                } else if (type=="Scroll") {
+                    itemList=state.List.very_rare.scroll;
+                    price=Math.floor(price/2);
+                    neededtime=Math.floor(price/2);
+                } else if (type=="Misc") {
+                    itemList=state.List.very_rare.misc;
+                }
+                break;
+            case 'Legendary':
+                price=100000;
+                neededtime=250;
+                if (type=="Weapon") {
+                    itemList=state.List.legendary.weapon;
+                } else if (type=="Armor") {
+                    itemList=state.List.legendary.armor;
+                } else if (type=="Accessoires") {
+                    itemList=state.List.legendary.accessoires;
+                } else if (type=="Scroll") {
+                    itemList=state.List.legendary.scroll;
+                    price=Math.floor(price/2);
+                    neededtime=Math.floor(price/2);
+                } else if (type=="Misc") {
+                    itemList=state.List.legendary.misc;
+                }
+                break;
+        }
+        let trueitem = itemList.find(e => e.name.toLowerCase().includes(item.toLowerCase()));
+        if (trueitem) {
+            let char = findObjs({
+                _type: 'character',
+                _id: charid
+            }, {caseInsensitive: true})[0];
+            if (char) {
+                let gold=findObjs({
+                    _type: 'attribute',
+                    _characterid: charid,
+                    _name: 'gp'
+                }, {caseInsensitive: true})[0]
+                let cur=gold.get('current');
+                cur-=price;
+                gold.set('current',cur);
+                char.get("gmnotes", function(gmnotes) {
+                    let time = Number(String(gmnotes.replace(" Day","")).replace("s",""));
+                    time-=neededtime;
+                    let notes = "";
+                    if (time<=1) {
+                        if (time==1) {
+                            notes+=time+" Day";
+                        }
+                    } else if (time>1) {
+                        notes+=time+" Days";
+                    }
+                    char.set("gmnotes",notes);
+                });
+                let description=trueitem.description;
+                let modifiers=trueitem.modifiers;
+                let itemname=trueitem.name;
+                amount=trueitem.amount*amount;
+                let inventory=findObjs({
+                    _type: 'attribute',
+                    _characterid: charid
+                });
+                let row=-1;
+                let itemid;
+                let rownum;
+                let count;
+                _.each(inventory,function(object) {
+                    let name = object.get('_name');
+                    if (name.includes('repeating_inventory')) {
+                        if (name.includes('_itemname')) {
+                            row+=1;
+                            if (object.get('current')==item) {
+                                let test=name.replace("repeating_inventory_","");
+                                test=test.replace("_itemname","");
+                                itemid=test;
+                                rownum=row;
+                            }
+                        }
+                    }
+                });
+                _.each(inventory,function(object) {
+                    let name=object.get('_name');
+                    if (name.includes('_itemcount')) {
+                        let test=name.replace("repeating_inventory_","");
+                        test=test.replace("_itemcount","");
+                        if (test==itemid) {
+                            count=object.get('current');
+                        }
+                    }
+                });
+                if (itemid) {
+                    if (count) {
+                        amount=Number(amount)+Number(count);
+                    }
+                    sendChat("Downtime","!setattr --charid "+charid+" --repeating_inventory_"+itemid+"_itemcount|"+amount);
+                } else {
+                    if (type=="Weapon") {
+                        let dmgbase=trueitem.dmgbase;
+                        let dmgtype=trueitem.dmgtype;
+                        let magicbonus=trueitem.magicbonus;
+                        if (!magicbonus) {
+                            magicbonus="";
+                        }
+                        sendChat("Downtime","!setattr --charid "+charid+" --repeating_inventory_-CREATE_itemname|"+itemname+" --repeating_inventory_-CREATE_itemcount|"+amount+" --repeating_inventory_-CREATE_itemcontent|"+description+" --repeating_inventory_-CREATE_itemmodifiers|"+modifiers+" --repeating_inventory_-CREATE_itemweight|"+itemweight);
+                        if (dmgbase) {
+                            sendChat("Downtime","!setattr --charid "+charid+" --repeating_attack_-CREATE_atkname|"+itemname+" --repeating_attack_-CREATE_dmgbase|"+dmgbase+" --repeating_attack_-CREATE_dmgtype|"+dmgtype+" --repeating_attack_-CREATE_atkmagic|"+magicbonus);
+                        }
+                    } else {
+                        sendChat("Downtime","!setattr --charid "+charid+" --repeating_inventory_-CREATE_itemname|"+itemname+" --repeating_inventory_-CREATE_itemcount|"+amount+" --repeating_inventory_-CREATE_itemcontent|"+description+" --repeating_inventory_-CREATE_itemmodifiers|"+modifiers+" --repeating_inventory_-CREATE_itemweight|"+itemweight);
+                    }
+                }
+            }
+        }
+        let handnum=getHandoutNum(msg.playerid,charid);
+        let name = char.get("name");
+        let desc="<br><br>"+name+" spends "+time+" Days and "+price+" GP crafting "+amount+"x "+item
+        setHandoutDesc(msg.playerid,handnum,desc);
+        sendChat("Downtime","/w "+msg.who+" You craft "+amount+"x "+item);
     },
     
     work = function(charid,type,amount,msg) {
@@ -1864,6 +2238,9 @@ var Downtime = Downtime || (function(){
     checkInstall = function() {
         if (!state.down) {
             setDefaults();
+        }
+        if (state.List) {
+            setItemList();
         }
     },
     
