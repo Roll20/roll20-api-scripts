@@ -1113,13 +1113,37 @@ unsanity:
   - "Utility"
 
 simplesound:
-- "SimpleSound"
-- "Jukebox"
+  - "SimpleSound"
+  - "Jukebox"
 
 smartaoe:
-- "SmartAoE"
-- "Maps & Drawing"
+  - "SmartAoE"
+  - "Maps & Drawing"
 
 campaignsurvey:
-- "Campaign Survey"
-- "Utility"
+  - "Campaign Survey"
+  - "Utility"
+
+cardtables:
+  - "CardTables"
+  - "Utility"
+
+fatepointdisplay:
+  - "FatePointDisplay"
+  - "System Toolbox"
+
+rolemasterd100:
+  - "RoleMasterD100"
+  - "Utility"
+
+downtimesystem:
+  - "Downtime System"
+  - "Utility"
+
+multiworldcalendar:
+  - "Multi-World Calendar"
+  - "Utility"
+
+calendardnd:
+  - "Calendar DND"
+  - "Utility"

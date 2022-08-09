@@ -3,8 +3,8 @@
 Name            :	libInline
 GitHub          :	https://github.com/TimRohr22/Cauldron/tree/master/libInline
 Roll20 Contact  :	timmaugh & The Aaron
-Version         :	1.0.4
-Last Update     :	11/15/2021
+Version         :	1.0.5
+Last Update     :	5/19/2022
 =========================================================
 */
 var API_Meta = API_Meta || {};
@@ -18,8 +18,8 @@ const libInline = (() => {
     //		VERSION
     // ==================================================
     const apiproject = 'libInline';
-    API_Meta[apiproject].version = '1.0.4';
-    const vd = new Date(1637012556201);
+    API_Meta[apiproject].version = '1.0.5';
+    const vd = new Date(1653010186714);
     const versionInfo = () => {
         log(`\u0166\u0166 ${apiproject} v${API_Meta[apiproject].version}, ${vd.getFullYear()}/${vd.getMonth() + 1}/${vd.getDate()} \u0166\u0166 -- offset ${API_Meta[apiproject].offset}`);
         return;
@@ -91,8 +91,8 @@ const libInline = (() => {
                     }
                 });
             }
-            if (b) return o[key];
-        }).filter(e => e);
+            return b ? o[key] : null;
+        }).filter(e => e !== null);
     };
     const ops = {
         '==': (v, p) => v === p,
@@ -144,6 +144,7 @@ const libInline = (() => {
                 if (r.table) { // table roll
                     rollData.parsed = '(' + r.results.map(nr => nr.tableItem ? nr.tableItem.name : nr.v).join('+') + ')';
                     rollData.display = rollData.parsed;
+                    rollData.customDisplay = () => { return rollData.parsed; };
                     rollData.tableReturns.push({ table: r.table, returns: r.results.map(nr => nr.tableItem ? nr.tableItem.name : nr.v) });
                 } else { // standard roll (might include fate or matched dice)
                     // fate dice should be joined on empty string (no operator); normal rolls on +
@@ -178,13 +179,17 @@ const libInline = (() => {
                                 Object.keys(r.mods.match.matches).forEach(k => matchFormatObj[k] = ` style="color: ${r.mods.match.matches[k]}"`);
                             }
                         }
-                        return { v: nr.v, type: type, display: `${rollspancss1}${cssclass ? ' ' : ''}${cssclass}${/^crit/g.test(cssclass) ? ' ' : ''}"${matchFormatObj[type] || matchFormatObj[nr.v] || ''}>${r.fate ? fatedie[nr.v] : nr.v}${rollspanend}` };
+                        return {
+                            v: nr.v,
+                            type: type,
+                            display: `${rollspancss1}${cssclass ? ' ' : ''}${cssclass}${/^crit/g.test(cssclass) ? ' ' : ''}"${matchFormatObj[type] || matchFormatObj[nr.v] || ''}>${r.fate ? fatedie[nr.v] : nr.v}${rollspanend}`
+                        };
                     });
                     // fate dice should be joined on empty string (no operator); normal rolls on +
                     rollData.display = '(' + conditionalPluck(rollData.dice, 'display').join(r.fate ? '' : '+') + ')';
                 }
                 break;
-            case 'G': // ROLL
+            case 'G': // GROUP ROLL
                 gRoll = r.rolls.map(nr => {
                     return nr.map(collectRollData);
                 });
@@ -268,13 +273,26 @@ const libInline = (() => {
                 parts.push(`title="${HE(HE(`Rolling ${roll.expression} = ${roll.display}`))}">${roll.value}</span>`);
                 return parts.join('');
             };
+            roll.getCustomTip = () => {
+                const baseInlineCSS = `style="-webkit-tap-highlight-color: rgba(0,0,0,0);font-family: 'Helvetica Neue',Helvetica,Arial,sans-serif;color: #404040;line-height: 1.25em;` +
+                    `box-sizing: content-box; background-color: #FEF68E; padding: 0 3px 0 3px; font-weight: bold; cursor: help; font-size: 1.1em;border: 2px solid `;
+                const bordercolors = {
+                    0: '#FEF68E;',
+                    1: '#B31515;',
+                    2: '#3FB315;',
+                    3: '#4A57ED;'
+                };
+
+            };
             return roll;
         });
     };
     const getRollFromInline = (ira) => {
         if (Array.isArray(ira) && ira.length) {
             return parseInlineRolls([ira[0]])[0];
-        } else if (typeof ira === 'object') {
+        } else if (Array.isArray(ira) && ira.length) {
+            return parseInlineRolls(ira)[0];
+        } else if (!Array.isArray(ira) && typeof ira === 'object' && _.every(['expression', 'rollid', 'results'], p => { return ira.hasOwnProperty(p); })) {
             return parseInlineRolls([ira])[0];
         } else return;
     };
@@ -288,6 +306,8 @@ const libInline = (() => {
             pir = parseInlineRolls(ira.inlinerolls);
         } else if (Array.isArray(ira) && ira.length) {
             pir = parseInlineRolls(ira);
+        } else if (!Array.isArray(ira) && typeof ira === 'object' && _.every(['expression', 'rollid', 'results'], p => { return ira.hasOwnProperty(p); })) {
+            pir = parseInlineRolls([ira]);
         }
         return pir;
     };
