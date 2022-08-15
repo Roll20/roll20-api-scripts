@@ -17,16 +17,16 @@ API Commands:
     --date {date} - Sets the Alarm to a certain date. This uses the following format: DD.MM.YYYY (type the name of the month, number support coming soon)
     --time {time} - Sets the Alarm to a certain time. This uses the following format (24 Hour): HH:MM
 */
-var Calendar = Calendar || (function() {
+var MultiWorldCalendar = MultiWorldCalendar || (function() {
     'use strict';
-    
-    var version = "5.0b",
-    
+
+    var version = "5.0d",
+
     setDefaults = function() {
-        state.calendar = {
+        state.MWCalendar = {
             now: {
-                world: 1,
                 ordinal: 1,
+                world: 1,
                 year: 1486,
                 divider: 1,
                 day: 1,
@@ -38,176 +38,184 @@ var Calendar = Calendar || (function() {
                 moonImg: "",
                 mtype: "ON",
                 wtype: "ON"
-            }
+            },
         };
     },
-    
+
     setAlarmDefaults = function() {
-        state.Alarm1 = {
+        state.Alarm = {
             now: {
                 day: 1,
                 month: "",
                 year: 1486,
                 hour: 1,
-                minute: 0,
+                minute: 1,
                 title: ""
-            }
+            },
         };
     },
-    
+
     handleInput = function(msg) {
         var args=msg.content.split(/\s+--/);
         if (msg.type!=="api") {
             return;
         }
-        
         if (playerIsGM(msg.playerid)) {
-            if (args[0]=="!cal") {
-                if (!args[1] || args[1]=="") {
-                    calmenu();
-                    chkalarms();
-                } else if ((args[1].toLowerCase()).includes("world")) {
-                    let option=(args[1].toLowerCase()).replace("world ","");
-                    if (option.includes("random")) {
-                        let rand=randomInteger(5);
-                        state.calendar.now.world=rand;
-                    } else if (option.includes("eberron")) {
-                        state.calendar.now.world=4;
-                    } else if (option.includes("faerun")) {
-                        state.calendar.now.world=1;
-                    } else if (option.includes("greyhawk")) {
-                        state.calendar.now.world=2;
-                    } else if (option.includes("modern")) {
-                        state.calendar.now.world=3;
-                    } else if (option.includes("tal")) {
-                        state.calendar.now.world=5;
-                    }
-                } else if ((args[1].toLowerCase()).includes("adv")) {
-                    let type=String(args[1].toLowerCase()).replace("adv ","");
-                    let amount=Number(args[2]);
-                    switch (type) {
-                        case 'short rest':
-                            addtime(amount,"hour");
-                            return;
-                        case 'long rest':
-                            addtime(amount*8,"hour");
-                            return;
-                        case 'hour':
-                            addtime(amount,"hour");
-                            return;
-                        case 'minute':
-                            addtime(amount,"minute");
-                            return;
-                        case 'day':
-                            advdate(amount,"day");
-                            return;
-                        case 'weel':
-                            advdate(amount*7,"day");
-                            return;
-                        case 'month':
-                            advdate(amount,"month");
-                            return;
-                        case 'year':
-                            advdate(amount,"year");
-                            return;
-                    }
-                } else if ((args[1].toLowerCase()).includes("set")) {
-                    let type=String(args[1].toLowerCase()).replace("set ","");
-                    let amount=Number(args[2]);
-                    if (type.includes("hour")) {
-                        state.calendar.now.hour=amount;
-                    } else if (type.includes("minute")) {
-                        state.calendar.now.minute=amount;
-                    } else if (type.includes("day")) {
-                        switch (Number(state.calendar.now.world)) {
-                            case 1:
-                                getFaerunOrdinal(amount,state.calendar.now.month);
-                                return;
-                            case 2:
-                                getGreyhawkOrdinal(amount,state.calendar.now.month);
-                                return;
-                            case 3:
-                                getModernOrdinal(amount,state.calendar.now.month);
-                                return;
-                            case 4:
-                                getEberronOrdinal(amount,state.calendar.now.month);
-                                return;
-                            case 5:
-                                getTalOrdinal(amount,state.calendar.now.month);
+            switch (args[0]) {
+                case '!mwcal':
+                    if (args[1]==undefined) {
+                        calmenu();
+                        chkalarms();
+                    } else {
+                        if (args[1].includes("world")) {
+                            let option=(args[1].toLowerCase()).replace("world ","");
+                            if (option.includes("random")) {
+                                let rand=randomInteger(5);
+                                state.MWCalendar.now.world=rand;
+                            } else if (option.includes("eberron")) {
+                                state.MWCalendar.now.world=4;
+                            } else if (option.includes("faerun")) {
+                                state.MWCalendar.now.world=1;
+                            } else if (option.includes("greyhawk")) {
+                                state.MWCalendar.now.world=2;
+                            } else if (option.includes("modern")) {
+                                state.MWCalendar.now.world=3;
+                            } else if (option.includes("tal")) {
+                                state.MWCalendar.now.world=5;
+                            }
+                        } else if (args[1].includes("adv")) {
+                            let type=String(args[1].toLowerCase()).replace("adv ","");
+                            let amount=Number(args[2]);
+                            switch (type) {
+                                case 'short rest':
+                                    addtime(amount,"hour");
+                                    return;
+                                case 'long rest':
+                                    addtime(amount*8,"hour");
+                                    return;
+                                case 'hour':
+                                    addtime(amount,"hour");
+                                    return;
+                                case 'minute':
+                                    addtime(amount,"minute");
+                                    return;
+                                case 'day':
+                                    advdate(amount,"day");
+                                    return;
+                                case 'weel':
+                                    advdate(amount*7,"day");
+                                    return;
+                                case 'month':
+                                    advdate(amount,"month");
+                                    return;
+                                case 'year':
+                                    advdate(amount,"year");
+                                    return;
+                            }
+                        } else if (args[1].includes("set")) {
+                            let type=String(args[1].toLowerCase()).replace("set ","");
+                            let amount=Number(args[2]);
+                            if (type.includes("hour")) {
+                                state.MWCalendar.now.hour=amount;
+                            } else if (type.includes("minute")) {
+                                state.MWCalendar.now.minute=amount;
+                            } else if (type.includes("day")) {
+                                switch (Number(state.MWCalendar.now.world)) {
+                                    case 1:
+                                        getFaerunOrdinal(amount,state.MWCalendar.now.month);
+                                        return;
+                                    case 2:
+                                        getGreyhawkOrdinal(amount,state.MWCalendar.now.month);
+                                        return;
+                                    case 3:
+                                        getModernOrdinal(amount,state.MWCalendar.now.month);
+                                        return;
+                                    case 4:
+                                        getEberronOrdinal(amount,state.MWCalendar.now.month);
+                                        return;
+                                    case 5:
+                                        getTalOrdinal(amount,state.MWCalendar.now.month);
+                                }
+                            } else if (type.includes("month")) {
+                                let month=args[2].toLowerCase();
+                                switch (Number(state.MWCalendar.now.world)) {
+                                    case 1:
+                                        getFaerunOrdinal(state.MWCalendar.now.day,month);
+                                        return;
+                                    case 2:
+                                        getGreyhawkOrdinal(state.MWCalendar.now.day,month);
+                                        return;
+                                    case 3:
+                                        getModernOrdinal(state.MWCalendar.now.day,month);
+                                        return;
+                                    case 4:
+                                        getEberronOrdinal(state.MWCalendar.now.day,month);
+                                        return;
+                                    case 5:
+                                        getTalOrdinal(state.MWCalendar.now.day,month);
+                                        return;
+                                }
+                            } else if (type.includes("year")) {
+                                state.MWCalendar.now.year=Number(args[2]);
+                            }
+                            calmenu();
+                            chkalarms();
+                        } else if (args[1].includes("weather")) {
+                            weather((args[1].toLowerCase()).replace("weather ",""));
+                            calmenu();
+                            chkalarms();
+                        } else if (args[1].includes("toggle")) {
+                            let type=args[1].replace("toggle ","");
+                            if (type=="weather") {
+                                switch (state.MWCalendar.now.wtype) {
+                                    case 'ON':
+                                        state.MWCalendar.now.wtype="OFF";
+                                        return;
+                                    case 'OFF':
+                                        state.MWCalendar.now.wtype="ON";
+                                        return;
+                                }
+                            } else if (type=="moon") {
+                                switch (state.MWCalendar.now.mtype) {
+                                    case 'ON':
+                                        state.MWCalendar.now.mtype="OFF";
+                                        return;
+                                    case 'OFF':
+                                        state.MWCalendar.now.mtype="ON";
+                                        return;
+                                }
+                            }
+                            calmenu();
+                        } else if (args[1].includes("moon")) {
+                            moon((args[1].toLowerCase()).replace("moon ",""));
+                            calmenu();
+                            chkalarms();
+                        } else if (args[1].includes("enc")) {
+                            encounter();
+                            calmenu();
+                            chkalarms();
+                        } else if (args[1].includes("reset")) {
+                            reset();
+                            calmenu();
                         }
-                    } else if (type.includes("month")) {
-                        let month=args[2].toLowerCase();
-                        switch (Number(state.calendar.now.world)) {
-                            case 1:
-                                getFaerunOrdinal(state.calendar.now.day,month);
-                                return;
-                            case 2:
-                                getGreyhawkOrdinal(state.calendar.now.day,month);
-                                return;
-                            case 3:
-                                getModernOrdinal(state.calendar.now.day,month);
-                                return;
-                            case 4:
-                                getEberronOrdinal(state.calendar.now.day,month);
-                                return;
-                            case 5:
-                                getTalOrdinal(state.calendar.now.day,month);
-                                return;
-                        }
-                    } else if (type.includes("year")) {
-                        state.calendar.now.year=Number(args[2]);
                     }
-                    calmenu();
-                    chkalarms();
-                } else if ((args[1].toLowerCase()).includes("weather")) {
-                    weather((args[1].toLowerCase()).replace("weather ",""));
-                    calmenu();
-                    chkalarms();
-                } else if ((args[1].toLowerCase()).includes("toggle")) {
-                    let type=args[1].replace("toggle ","");
-                    if (type=="weather") {
-                        switch (state.Calendar.now.wtype) {
-                            case 'ON':
-                                state.Calendar.now.wtype="OFF";
-                                return;
-                            case 'OFF':
-                                state.Calendar.now.wtype="ON";
-                                return;
-                        }
-                    } else if (type=="moon") {
-                        switch (state.Calendar.now.mtype) {
-                            case 'ON':
-                                state.Calendar.now.mtype="OFF";
-                                return;
-                            case 'OFF':
-                                state.Calendar.now.mtype="ON";
-                                return;
-                        }
+                    return;
+                case '!alarm':
+                    if (args[2]) {
+                        createAlarm(args[1],args[2]);
+                    } else {
+                        alarmmenu(args[1]);
                     }
-                    calmenu();
-                } else if ((args[1].toLowerCase()).includes("moon")) {
-                    moon((args[1].toLowerCase()).replace("moon ",""));
-                    calmenu();
-                    chkalarms();
-                } else if ((args[1].toLowerCase()).includes("enc")) {
-                    encounter();
-                    calmenu();
-                    chkalarms();
-                } else if ((args[1].toLowerCase()).includes("reset")) {
-                    reset();
-                    calmenu();
-                }
-            } else if (args[0]=="!alarm") {
-                if (!args[2]) {
-                    alarmmenu(args[1]);
-                } else {
-                    createAlarm(args[1],args[2]);
-                }
+                    return;
+                case '!showcal':
+                    showcal();
+                    return;
             }
-        } else if (!playerIsGM(msg.playerid)) {
-            if (args[0]=="!cal") {
+        }
+        switch (args[0]) {
+            case '!mwcal':
                 showcal(msg);
-            }
+                return;
         }
     },
 
@@ -222,33 +230,33 @@ var Calendar = Calendar || (function() {
         var tdstyle = 'style="padding: 2px; padding-left: 5px; border: none;"';
         var world=getWorld();
         var moMenu = getMoMenu();
-        var ordinal = state.calendar.now.ordinal;
+        var ordinal = state.MWCalendar.now.ordinal;
         var nowDate;
-        switch (Number(state.calendar.now.world)) {
+        switch (Number(state.MWCalendar.now.world)) {
             case 1:
                 nowDate=getFaerunDate(ordinal).split(',');
-                return;
+                break;
             case 2:
                 nowDate=getGreyhawkDate(ordinal).split(',');
-                return;
+                break;
             case 3:
                 nowDate=getModernDate(ordinal).split(',');
-                return;
+                break;
             case 4:
                 nowDate=getEberronDate(ordinal).split(',');
-                return;
+                break;
             case 5:
                 nowDate=getTalDate(ordinal).split(',');
-                return;
+                break;
         }
         var month=nowDate[0];
         var day=nowDate[1];
-        state.Calendar.now.day=day;
-        state.Calendar.now.month=month;
+        state.MWCalendar.now.day=day;
+        state.MWCalendar.now.month=month;
         var suffix=getSuffix(day);
-        var hour=state.calendar.now.hour;
-        var min=state.calendar.now.minute;
-        var year = state.calendar.now.year;
+        var hour=state.MWCalendar.now.hour;
+        var min=state.MWCalendar.now.minute;
+        var year = state.MWCalendar.now.year;
         if (hour<10) {
             hour="0"+hour;
         }
@@ -256,18 +264,18 @@ var Calendar = Calendar || (function() {
             min="0"+min;
         }
         let weather;
-        switch (state.Calendar.now.wtype) {
+        switch (state.MWCalendar.now.wtype) {
             case 'ON':
-                weather=state.Calendar.now.weather;
+                weather=state.MWCalendar.now.weather;
                 break;
             case 'OFF':
                 weather=undefined;
                 break;
         }
         let moon;
-        switch (state.Calendar.now.mtype) {
+        switch (state.MWCalendar.now.mtype) {
             case 'ON':
-                moon=state.Calendar.now.moon;
+                moon=state.MWCalendar.now.moon;
                 break;
             case 'OFF':
                 moon=undefined;
@@ -277,13 +285,13 @@ var Calendar = Calendar || (function() {
                 '<div ' + headstyle + '>Calendar</div>' + //--
                 '<div ' + substyle + '>Menu</div>' + //--
                 '<div ' + arrowstyle + '></div>' + //--
-                '<table' + tablestyle + '>' + //--
+                '<table>' + //--
                 '<tr><td ' + tdstyle + '>World: </td><td ' + tdstyle + '>' + world + '</td></tr>' + //--
                 '<tr><td ' + tdstyle + '>Day: </td><td ' + tdstyle + '><a ' + astyle1 + '" href="!cal --set Day --?{Day?|1}">' + day + suffix + '</a></td></tr>' + //--
                 '<tr><td ' + tdstyle + '>Month: </td><td ' + tdstyle + '><a ' + astyle1 + '" href="!cal --set Month --' + moMenu + '">' + month + '</a></td></tr>' + //-- 
                 '<tr><td ' + tdstyle + '>Year: </td><td ' + tdstyle + '><a ' + astyle1 + '" href="!cal --set Year --?{Year?|'+year+'}">' + year + '</a></td></tr>' + //--
-                '<tr><td ' + tdstyle + '>Hour: </td><td ' + tdstyle + '><a ' + astyle1 + '" href="!cal --set Hour --?{Hour?|'+state.calendar.now.hour+'}">' + hour + '</a></td></tr>' + //--
-                '<tr><td ' + tdstyle + '>Minute: </td><td ' + tdstyle + '><a ' + astyle1 + '" href="!cal --set Minute --?{Minute?|'+state.calendar.now.minute+'}">' + min + '</a></td></tr>' + //--
+                '<tr><td ' + tdstyle + '>Hour: </td><td ' + tdstyle + '><a ' + astyle1 + '" href="!cal --set Hour --?{Hour?|'+state.MWCalendar.now.hour+'}">' + hour + '</a></td></tr>' + //--
+                '<tr><td ' + tdstyle + '>Minute: </td><td ' + tdstyle + '><a ' + astyle1 + '" href="!cal --set Minute --?{Minute?|'+state.MWCalendar.now.minute+'}">' + min + '</a></td></tr>' + //--
                 '<tr><td ' + tdstyle + '>Moon: </td><td ' + tdstyle + '><a ' + astyle1 + '" href="!cal --moon ?{Moon?|Full Moon|Waning Gibbous|Last Quarter|Waning Crescent|New Moon|Waxing Crescent|First Quarter|Waxing Gibbous|Random}">' + moon + '</a></td></tr>' + //--
                 '<tr><td ' + tdstyle + '>Weather: </td><td ' + tdstyle + '>' + weather + '</td></tr>' + //--
                 '</table>' + //--
@@ -291,6 +299,7 @@ var Calendar = Calendar || (function() {
                 '<div style="text-align:center;"><a ' + astyle2 + '" href="!cal --enc">Roll Encounter</a></div>' + //--
                 '<div style="text-align:center;"><a ' + astyle2 + '" href="!cal --toggle weather">Toggle Weather Display</a></div>' + //--
                 '<div style="text-align:center;"><a ' + astyle2 + '" href="!cal --toggle moon">Toggle Moon Display</a></div>' + //--
+                '<div style="text-align:center;"><a ' + astyle2 + '" href="!showcal">Show to Players</a></div>' + //--
                 '</div>'
             );
         } else if (weather && !moon) {
@@ -303,14 +312,15 @@ var Calendar = Calendar || (function() {
                 '<tr><td ' + tdstyle + '>Day: </td><td ' + tdstyle + '><a ' + astyle1 + '" href="!cal --set Day --?{Day?|1}">' + day + suffix + '</a></td></tr>' + //--
                 '<tr><td ' + tdstyle + '>Month: </td><td ' + tdstyle + '><a ' + astyle1 + '" href="!cal --set Month --' + moMenu + '">' + month + '</a></td></tr>' + //-- 
                 '<tr><td ' + tdstyle + '>Year: </td><td ' + tdstyle + '><a ' + astyle1 + '" href="!cal --set Year --?{Year?|'+year+'}">' + year + '</a></td></tr>' + //--
-                '<tr><td ' + tdstyle + '>Hour: </td><td ' + tdstyle + '><a ' + astyle1 + '" href="!cal --set Hour --?{Hour?|'+state.calendar.now.hour+'}">' + hour + '</a></td></tr>' + //--
-                '<tr><td ' + tdstyle + '>Minute: </td><td ' + tdstyle + '><a ' + astyle1 + '" href="!cal --set Minute --?{Minute?|'+state.calendar.now.minute+'}">' + min + '</a></td></tr>' + //--
+                '<tr><td ' + tdstyle + '>Hour: </td><td ' + tdstyle + '><a ' + astyle1 + '" href="!cal --set Hour --?{Hour?|'+state.MWCalendar.now.hour+'}">' + hour + '</a></td></tr>' + //--
+                '<tr><td ' + tdstyle + '>Minute: </td><td ' + tdstyle + '><a ' + astyle1 + '" href="!cal --set Minute --?{Minute?|'+state.MWCalendar.now.minute+'}">' + min + '</a></td></tr>' + //--
                 '<tr><td ' + tdstyle + '>Weather: </td><td ' + tdstyle + '>' + weather + '</td></tr>' + //--
                 '</table>' + //--
                 '<div style="text-align:center;"><a ' + astyle2 + '" href="!cal --adv ?{Type?|Short Rest|Long Rest|Hour|Minute|Day|Week|Month|Year} --?{Amount?|1}">Advance the Date</a></div>' + //--
                 '<div style="text-align:center;"><a ' + astyle2 + '" href="!cal --enc">Roll Encounter</a></div>' + //--
                 '<div style="text-align:center;"><a ' + astyle2 + '" href="!cal --toggle weather">Toggle Weather Display</a></div>' + //--
                 '<div style="text-align:center;"><a ' + astyle2 + '" href="!cal --toggle moon">Toggle Moon Display</a></div>' + //--
+                '<div style="text-align:center;"><a ' + astyle2 + '" href="!showcal">Show to Players</a></div>' + //--
                 '</div>'
             );
         } else if (!weather && moon) {
@@ -323,14 +333,15 @@ var Calendar = Calendar || (function() {
                 '<tr><td ' + tdstyle + '>Day: </td><td ' + tdstyle + '><a ' + astyle1 + '" href="!cal --set Day --?{Day?|1}">' + day + suffix + '</a></td></tr>' + //--
                 '<tr><td ' + tdstyle + '>Month: </td><td ' + tdstyle + '><a ' + astyle1 + '" href="!cal --set Month --' + moMenu + '">' + month + '</a></td></tr>' + //-- 
                 '<tr><td ' + tdstyle + '>Year: </td><td ' + tdstyle + '><a ' + astyle1 + '" href="!cal --set Year --?{Year?|'+year+'}">' + year + '</a></td></tr>' + //--
-                '<tr><td ' + tdstyle + '>Hour: </td><td ' + tdstyle + '><a ' + astyle1 + '" href="!cal --set Hour --?{Hour?|'+state.calendar.now.hour+'}">' + hour + '</a></td></tr>' + //--
-                '<tr><td ' + tdstyle + '>Minute: </td><td ' + tdstyle + '><a ' + astyle1 + '" href="!cal --set Minute --?{Minute?|'+state.calendar.now.minute+'}">' + min + '</a></td></tr>' + //--
+                '<tr><td ' + tdstyle + '>Hour: </td><td ' + tdstyle + '><a ' + astyle1 + '" href="!cal --set Hour --?{Hour?|'+state.MWCalendar.now.hour+'}">' + hour + '</a></td></tr>' + //--
+                '<tr><td ' + tdstyle + '>Minute: </td><td ' + tdstyle + '><a ' + astyle1 + '" href="!cal --set Minute --?{Minute?|'+state.MWCalendar.now.minute+'}">' + min + '</a></td></tr>' + //--
                 '<tr><td ' + tdstyle + '>Moon: </td><td ' + tdstyle + '><a ' + astyle1 + '" href="!cal --moon ?{Moon?|Full Moon|Waning Gibbous|Last Quarter|Waning Crescent|New Moon|Waxing Crescent|First Quarter|Waxing Gibbous|Random}">' + moon + '</a></td></tr>' + //--
                 '</table>' + //--
                 '<div style="text-align:center;"><a ' + astyle2 + '" href="!cal --adv ?{Type?|Short Rest|Long Rest|Hour|Minute|Day|Week|Month|Year} --?{Amount?|1}">Advance the Date</a></div>' + //--
                 '<div style="text-align:center;"><a ' + astyle2 + '" href="!cal --enc">Roll Encounter</a></div>' + //--
                 '<div style="text-align:center;"><a ' + astyle2 + '" href="!cal --toggle weather">Toggle Weather Display</a></div>' + //--
                 '<div style="text-align:center;"><a ' + astyle2 + '" href="!cal --toggle moon">Toggle Moon Display</a></div>' + //--
+                '<div style="text-align:center;"><a ' + astyle2 + '" href="!showcal">Show to Players</a></div>' + //--
                 '</div>'
             );
         } else if (!weather && !moon) {
@@ -343,13 +354,14 @@ var Calendar = Calendar || (function() {
                 '<tr><td ' + tdstyle + '>Day: </td><td ' + tdstyle + '><a ' + astyle1 + '" href="!cal --set Day --?{Day?|1}">' + day + suffix + '</a></td></tr>' + //--
                 '<tr><td ' + tdstyle + '>Month: </td><td ' + tdstyle + '><a ' + astyle1 + '" href="!cal --set Month --' + moMenu + '">' + month + '</a></td></tr>' + //-- 
                 '<tr><td ' + tdstyle + '>Year: </td><td ' + tdstyle + '><a ' + astyle1 + '" href="!cal --set Year --?{Year?|'+year+'}">' + year + '</a></td></tr>' + //--
-                '<tr><td ' + tdstyle + '>Hour: </td><td ' + tdstyle + '><a ' + astyle1 + '" href="!cal --set Hour --?{Hour?|'+state.calendar.now.hour+'}">' + hour + '</a></td></tr>' + //--
-                '<tr><td ' + tdstyle + '>Minute: </td><td ' + tdstyle + '><a ' + astyle1 + '" href="!cal --set Minute --?{Minute?|'+state.calendar.now.minute+'}">' + min + '</a></td></tr>' + //--
+                '<tr><td ' + tdstyle + '>Hour: </td><td ' + tdstyle + '><a ' + astyle1 + '" href="!cal --set Hour --?{Hour?|'+state.MWCalendar.now.hour+'}">' + hour + '</a></td></tr>' + //--
+                '<tr><td ' + tdstyle + '>Minute: </td><td ' + tdstyle + '><a ' + astyle1 + '" href="!cal --set Minute --?{Minute?|'+state.MWCalendar.now.minute+'}">' + min + '</a></td></tr>' + //--
                 '</table>' + //--
                 '<div style="text-align:center;"><a ' + astyle2 + '" href="!cal --adv ?{Type?|Short Rest|Long Rest|Hour|Minute|Day|Week|Month|Year} --?{Amount?|1}">Advance the Date</a></div>' + //--
                 '<div style="text-align:center;"><a ' + astyle2 + '" href="!cal --enc">Roll Encounter</a></div>' + //--
                 '<div style="text-align:center;"><a ' + astyle2 + '" href="!cal --toggle weather">Toggle Weather Display</a></div>' + //--
                 '<div style="text-align:center;"><a ' + astyle2 + '" href="!cal --toggle moon">Toggle Moon Display</a></div>' + //--
+                '<div style="text-align:center;"><a ' + astyle2 + '" href="!showcal">Show to Players</a></div>' + //--
                 '</div>'
             );
         }
@@ -358,7 +370,6 @@ var Calendar = Calendar || (function() {
     alarmmenu = function(num,title,date,time) {
         var divstyle = 'style="width: 220px; border: 1px solid black; background-color: #ffffff; padding: 5px;"';
         var astyle1 = 'style="text-align:center; border: 1px solid black; margin: 1px; background-color: #7E2D40; border-radius: 4px;  box-shadow: 1px 1px 1px #707070; width: 100px;';
-        var astyle2 = 'style="text-align:center; border: 1px solid black; margin: 1px; background-color: #7E2D40; border-radius: 4px;  box-shadow: 1px 1px 1px #707070; width: 150px;';
         var tablestyle = 'style="text-align:center;"';
         var arrowstyle = 'style="border: none; border-top: 3px solid transparent; border-bottom: 3px solid transparent; border-left: 195px solid rgb(126, 45, 64); margin-bottom: 2px; margin-top: 2px;"';
         var headstyle = 'style="color: rgb(126, 45, 64); font-size: 18px; text-align: left; font-variant: small-caps; font-family: Times, serif;"';
@@ -372,7 +383,7 @@ var Calendar = Calendar || (function() {
                 '<div ' + headstyle + '>Alarm</div>' + //--
                 '<div ' + substyle + '>Menu</div>' + //--
                 '<div ' + arrowstyle + '></div>' + //--
-                '<table ' + tablestyle + '>' + //--
+                '<table>' + //--
                 '<tr><td ' + tdstyle + '>Alarm: </td><td ' + tdstyle + '><a ' + astyle1 + '" href="!alarm --?{Number?|'+num+'}">' + num + '</a></td></tr>' + //--
                 '<tr><td ' + tdstyle + '>Title: </td><td ' + tdstyle + '><a ' + astyle1 + '" href="!alarm --' + num + ' --title ?{Title?|'+title+'}">' + title + '</a></td></tr>' + //--
                 '<tr><td ' + tdstyle + '>Date: </td><td ' + tdstyle + '><a ' + astyle1 + '" href="!alarm --' + num + ' --date ?{Day?|'+splitDate[0]+'}.?{Month?|'+splitDate[1]+'}.?{Year?|'+splitDate[2]+'}">' + date + '</a></td></tr>' + //--
@@ -395,10 +406,12 @@ var Calendar = Calendar || (function() {
             alarm=createObj("handout",{
                 name: "Alarm #"+num
             });
+            sendChat("Multi-World Calendar","/w gm Created Alarm #"+num);
         }
         if (type.includes("title")) {
             type=type.replace("title ","");
             alarm.set("notes",type);
+            sendChat("Multi-World Calendar","/w gm Set the Title of Alarm #"+num+" to \""+type+"\"");
         } else if (type.includes("date")) {
             type=type.replace("date ","");
             alarm.get("gmnotes",function(gmnotes) {
@@ -410,6 +423,7 @@ var Calendar = Calendar || (function() {
                     alarm.set("gmnotes",type+";");
                 }
             });
+            sendChat("Multi-World Calendar","/w gm Setting the Date of Alarm #"+num+"to "+type);
         } else if (type.includes("time")) {
             type=type.replace("time ","");
             alarm.get("gmnotes",function(gmnotes) {
@@ -421,56 +435,111 @@ var Calendar = Calendar || (function() {
                     alarm.set("gmnotes",";"+type);
                 }
             });
+            sendChat("Multi-World Calendar","/w gm Setting the Time of Alarm #"+num+"to "+type);
         }
     },
 
-    showcal = function() {
+    showcal = function(msg) {
         var nowDate;
-        var ordinal=state.Calendar.now.ordinal;
-        var moon;
-        switch (state.Calendar.now.world) {
+        var ordinal=state.MWCalendar.now.ordinal;
+        var rmoon;
+        moon(state.MWCalendar.now.moon);
+        switch (Number(state.MWCalendar.now.world)) {
             case 1:
-                nowDate=getFaerunDate(ordinal).split(',');
-                if (state.Calendar.now.mtype=="ON") {
-                    moon = '<table style = "border: none;"><tr><td style="border: none; padding: 2px; padding-left: 5px;">Moon:</td><td style="border: none; padding: 2px; padding-left: 5px;">'+state.Calendar.now.moonImg+'</table>';
+                if (state.MWCalendar.now.mtype=="ON") {
+                    rmoon = '<table style = "border: none;"><tr><td style="border: none; padding: 2px; padding-left: 5px;">Moon:</td><td style="border: none; padding: 2px; padding-left: 5px;">'+state.MWCalendar.now.moonImg+'</table>';
                 } else {
-                    moon=undefined;
+                    rmoon=undefined;
                 }
                 break;
             case 2:
-                nowDate=getGreyhawkDate(ordinal).split(',');
-                if (state.Calendar.now.mtype=="ON") {
-                    moon = '<table style = "border: none;"><tr><td style="border: none; padding: 2px; padding-left: 5px;">Moon:</td><td style="border: none; padding: 2px; padding-left: 5px;">'+state.Calendar.now.moonImg+'</table>';
+                if (state.calendar.now.mtype=="ON") {
+                    rmoon = '<table style = "border: none;"><tr><td style="border: none; padding: 2px; padding-left: 5px;">Moon:</td><td style="border: none; padding: 2px; padding-left: 5px;">'+state.MWCalendar.now.moonImg+'</table>';
                 } else {
-                    moon=undefined;
+                    rmoon=undefined;
                 }
                 break;
             case 3:
-                nowDate=getModernDate(ordinal).split(',');
+                
                 break;
             case 4:
-                nowDate=getEberronDate(ordinal).split(',');
+                
                 break;
             case 5:
-                nowDate=getTalDate(ordinal).split(',');
+                
                 break;
         }
-        var month=nowDate[0];
-        var day=nowDate[1];
+        var month=state.MWCalendar.now.month;
+        var day=state.MWCalendar.now.day;
         var suffix=getSuffix(day);
         var world=getWorld();
         var divstyle = 'style="width: 189px; border: 1px solid black; background-color: #ffffff; padding: 5px;"'
-        var tablestyle = 'style="text-align:center;"';
-        var arrowstyle = 'style="border: none; border-top: 3px solid transparent; border-bottom: 3px solid transparent; border-left: 195px solid ' + colour + '; margin-bottom: 2px; margin-top: 2px;"';
-        var headstyle = 'style="color: ' + colour + '; font-size: 18px; text-align: left; font-variant: small-caps; font-family: Times, serif;"';
+        var arrowstyle = 'style="border: none; border-top: 3px solid transparent; border-bottom: 3px solid transparent; border-left: 195px solid rgb(126, 45, 64); margin-bottom: 2px; margin-top: 2px;"';
+        var headstyle = 'style="color: rgb(126, 45, 64); font-size: 18px; text-align: left; font-variant: small-caps; font-family: Times, serif;"';
         var substyle = 'style="font-size: 11px; line-height: 13px; margin-top: -3px; font-style: italic;"';
-        var weather;
-        if (state.Calendar.now.wtype=="ON") {
-            weather=state.Calendar.now.weather;
-        } else if (state.Calendar.now.wtype=="OFF") {
-            weather=undefined;
+        let whisper="";
+        let hour=state.MWCalendar.now.hour;
+        let minute=state.MWCalendar.now.minute;
+        if (hour<=9) {
+            hour="0"+hour;
         }
-
+        if (minute<=9) {
+            minute="0"+minute;
+        }
+        if (msg) {
+            whisper="/w "+msg.who+" ";
+        }
+        if (state.MWCalendar.now.wtype=="ON") {
+            weather=state.MWCalendar.now.weather;
+            if (state.MWCalendar.now.mtype=="ON") {
+                sendChat("Multi-World Calendar",whisper+"<div " + divstyle + ">" + //--
+                    '<div ' + headstyle + '>Calendar</div>' + //--
+                    '<div ' + substyle + '>Player View</div>' + //--
+                    '<div ' + arrowstyle + '></div>' + //--
+                    '<div style="text-align:center;">World: ' + world + '</div>' + //--
+                    day + suffix + ' of ' + month + ', ' + state.MWCalendar.now.year + //--
+                    '<br>Time: ' + hour + ':' + minute + //--
+                    '<br><br>Today\'s Weather:<br>' + state.MWCalendar.now.weather + //--
+                    rmoon + //--
+                    '</div>'
+                );
+            } else {
+                sendChat("Multi-World Calendar",whisper+"<div " + divstyle + ">" + //--
+                    '<div ' + headstyle + '>Calendar</div>' + //--
+                    '<div ' + substyle + '>Player View</div>' + //--
+                    '<div ' + arrowstyle + '></div>' + //--
+                    '<div style="text-align:center;">World: ' + world + '</div>' + //--
+                    day + suffix + ' of ' + month + ', ' + state.MWCalendar.now.year + //--
+                    '<br>Time: ' + hour + ':' + minute + //--
+                    '<br><br>Today\'s Weather:<br>' + state.MWCalendar.now.weather + //--
+                    '</div>'
+                );
+            }
+        } else if (state.calendar.now.wtype=="OFF") {
+            weather=undefined;
+            if (state.MWCalendar.now.mtype=="ON") {
+                sendChat("Multi-World Calendar",whisper+"<div " + divstyle + ">" + //--
+                    '<div ' + headstyle + '>Calendar</div>' + //--
+                    '<div ' + substyle + '>Player View</div>' + //--
+                    '<div ' + arrowstyle + '></div>' + //--
+                    '<div style="text-align:center;">World: ' + world + '</div>' + //--
+                    day + suffix + ' of ' + month + ', ' + state.MWCalendar.now.year + //--
+                    '<br>Time: ' + hour + ':' + minute + //--
+                    rmoon + //--
+                    '</div>'
+                );
+            } else {
+                sendChat("Multi-World Calendar",whisper+"<div " + divstyle + ">" + //--
+                    '<div ' + headstyle + '>Calendar</div>' + //--
+                    '<div ' + substyle + '>Player View</div>' + //--
+                    '<div ' + arrowstyle + '></div>' + //--
+                    '<div style="text-align:center;">World: ' + world + '</div>' + //--
+                    day + suffix + ' of ' + month + ', ' + state.MWCalendar.now.year + //--
+                    '<br>Time: ' + hour + ':' + minute + //--
+                    '</div>'
+                );
+            }
+        }
     },
 
     getAlarm = function(num) {
@@ -514,7 +583,7 @@ var Calendar = Calendar || (function() {
                             let month=date[1];
                             let year=date[2];
                             time=String(time).split(':');
-                            switch (state.Calendar.now.world) {
+                            switch (state.MWCalendar.now.world) {
                                 case 1:
                                     //Faerun Check
                                     if (month=="1"||month=="01"||month==1) {
@@ -547,11 +616,11 @@ var Calendar = Calendar || (function() {
                                     if (time) {
                                         hour=Number(time[0]);
                                         minute=Number(time[1]);
-                                        if (year>=state.Calendar.now.year) {
-                                            if (month==state.Calendar.now.month) {
-                                                if (day>=state.Calendar.now.day) {
-                                                    if (hour>=state.Calendar.now.hour) {
-                                                        if (minute>=state.Calendar.now.minute) {
+                                        if (year>=state.MWCalendar.now.year) {
+                                            if (month==state.MWCalendar.now.month) {
+                                                if (day>=state.MWCalendar.now.day) {
+                                                    if (hour>=state.MWCalendar.now.hour) {
+                                                        if (minute>=state.MWCalendar.now.minute) {
                                                             sendChat("Calendar","/w gm "+name+": "+title+" triggered!");
                                                             alarm.remove();
                                                         }
@@ -560,9 +629,9 @@ var Calendar = Calendar || (function() {
                                             }
                                         }
                                     } else {
-                                        if (year>=state.Calendar.now.year) {
-                                            if (month==state.Calendar.now.month) {
-                                                if (day>=state.Calendar.now.day) {
+                                        if (year>=state.MWCalendar.now.year) {
+                                            if (month==state.MWCalendar.now.month) {
+                                                if (day>=state.MWCalendar.now.day) {
                                                     sendChat("Calendar","/w gm "+name+": "+title+" triggered!");
                                                     alarm.remove();
                                                 }
@@ -591,10 +660,10 @@ var Calendar = Calendar || (function() {
     },
 
     addtime = function(amount,type) {
-        var hour=state.Calendar.now.hour;
-        var minute=state.Calendar.now.minute;
-        var day=state.Calendar.now.ordinal;
-        var year=state.Calendar.now.year;
+        var hour=state.MWCalendar.now.hour;
+        var minute=state.MWCalendar.now.minute;
+        var day=state.MWCalendar.now.ordinal;
+        var year=state.MWCalendar.now.year;
         if (type=="minute") {
             var newmin=Number(minute)+Number(amount);
             while (newmin>59) {
@@ -620,21 +689,21 @@ var Calendar = Calendar || (function() {
                 year++;
             }
         }
-        state.Calendar.now.hour=hour;
-        state.Calendar.now.minute=minute;
-        state.Calendar.now.ordinal=ordinal;
-        state.Calendar.now.year=year;
+        state.MWCalendar.now.hour=hour;
+        state.MWCalendar.now.minute=minute;
+        state.MWCalendar.now.ordinal=ordinal;
+        state.MWCalendar.now.year=year;
     },
 
     advdate = function(amount,type) {
-        var ordinal=state.Calendar.now.ordinal;
-        var day=state.Calendar.now.day;
-        var month=state.Calendar.now.month;
-        var year=state.Calendar.now.year;
+        var ordinal=state.MWCalendar.now.ordinal;
+        var day=state.MWCalendar.now.day;
+        var month=state.MWCalendar.now.month;
+        var year=state.MWCalendar.now.year;
         var monthlist;
         var monthNum;
         amount=Number(amount);
-        switch (state.Calendar.now.world) {
+        switch (state.MWCalendar.now.world) {
             case 1:
                 monthlist=["Hammer","Alturiak","Ches","Tarsakh","Mirtul","Kythorn","Flamerule","Eleasias","Eleint","Marpenoth","Uktar","Nightal"];
                 for (let i=0;i<monthlist.length();i++) {
@@ -685,10 +754,10 @@ var Calendar = Calendar || (function() {
         } else if (type=="year") {
             year+=amount;
         }
-        state.Calendar.now.ordinal=ordinal;
-        state.Calendar.now.day=day;
-        state.Calendar.now.month=month;
-        state.Calendar.now.year=year;
+        state.MWCalendar.now.ordinal=ordinal;
+        state.MWCalendar.now.day=day;
+        state.MWCalendar.now.month=month;
+        state.MWCalendar.now.year=year;
     },
 
     getFaerunDate = function(ordinal) {
@@ -753,7 +822,7 @@ var Calendar = Calendar || (function() {
     },
 
     getFaerunOrdinal = function(day,month) {
-        let ordinal = state.Calendar.now.ordinal;
+        let ordinal = state.MWCalendar.now.ordinal;
         switch (month) {
             case 'Hammer':
                 ordinal=day;
@@ -792,7 +861,7 @@ var Calendar = Calendar || (function() {
                 ordinal=330+day;
                 break;
         }
-        state.Calendar.now.ordinal=ordinal;
+        state.MWCalendar.now.ordinal=ordinal;
     },
 
     getGreyhawkOrdinal = function(day,month) {
@@ -826,12 +895,12 @@ var Calendar = Calendar || (function() {
     },
 
     weather = function(type) {
-        if (state.Calendar.now.wtype=="ON") {
+        if (state.MWCalendar.now.wtype=="ON") {
             var temp;
             var wind;
             var precip;
             var season;
-            var ordinal=state.Calendar.now.ordinal;
+            var ordinal=state.MWCalendar.now.ordinal;
             if (ordinal>330 || ordinal<=75) {
                 season="Winter";
             } else if (ordinal<=170) {
@@ -919,65 +988,48 @@ var Calendar = Calendar || (function() {
                     }
                 }
                 var forecast=temp+wind+precip;
-                state.Calendar.now.weather=forecast;
+                state.MWCalendar.now.weather=forecast;
             } else {
-                state.Calendar.now.weather=type;
+                state.MWCalendar.now.weather=type;
             }
         }
     },
 
     moon = function(type) {
         if (type!=="random") {
-            var year=state.Calendar.now.year;
-            var ordinal=state.Calendar.now.ordinal;
-            var array;
+            var ordinal=state.MWCalendar.now.ordinal;
             var moon;
-            if (state.Calendar.now.world==1) {
-                var remainder = year/4 - Math.floor(year/4);
-                if(remainder==0.25) {
-                    array='array2';
-                } else if (remainder==0.5) {
-                    array='array3';
-                } else if (remainder==0.75) {
-                    array='array4';
-                } else if (remainder==0) {
-                    array='array1';
-                }    
-                var moonArray = getFaerunArray(array);    
-                var moonNO = moonArray.split(",");
-                var moonImg = moonNO[ordinal];
-                var countStatement = '';    
-                var full = moonNO[ordinal];
-                var counter = 0;
-                var nextDay = Number(ordinal)+1;    
-                if (state.Calendar.now.mtype=="ON") {
-                    while(full != 1){
-                        if (nextDay > 360){
-                            nextDay-=360;
-                            if (array=='array1') {
-                                array='array2';
-                            }
-                            if (array=='array2') {
-                                array='array3';
-                            }
-                            if (array=='array3') {
-                                array='array4';
-                            }
-                            if (array=='array4') {
-                                array='array1';
-                            }
-                            moonArray = getFaerunArray(array);
-                        } 
-                        moonNO = moonArray.split(",");
-                        full = moonNO[nextDay];
-                        counter++;
-                        nextDay++;
-                    }
-                    countStatement = '<tr><td colspan="2" style = "border:none; padding: 5px;">Days until full moon: '+counter+'</td></tr>';
+            if (state.MWCalendar.now.world==1) {
+                let num;
+                switch (type) {
+                    case 'Full Moon':
+                        num=1;
+                        break;
+                    case 'Waning Gibbous':
+                        num=2;
+                        break;
+                    case 'Last Quarter':
+                        num=5;
+                        break;
+                    case 'Waning Crescent':
+                        num=6;
+                        break;
+                    case 'New Moon':
+                        num=9;
+                        break;
+                    case 'Waxing Crescent':
+                        num=11;
+                        break;
+                    case 'First Quarter':
+                        num=13;
+                        break;
+                    case 'Waxing Gibbous':
+                        num=14;
+                        break;
                 }
-                moon = '<img src="'+getMoon(moonImg)+'" style="width:30px;height:30px;"></td></tr>';
-                state.Calendar.now.moonImg=moon;
-            } else if (state.Calendar.now.world==2) {
+                moon = '<img src="'+getMoon(num)+'" style="width:30px;height:30px;"></td></tr>';
+                state.MWCalendar.now.moonImg=moon;
+            } else if (state.MWCalendar.now.world==2) {
                 var lunaArray = '0,7,8,8,9,10,10,11,12,12,13,13,14,14,15,15,16,16,1,2,2,3,4,4,5,5,6,6,7,7,8,8,9,10,10,11,12,12,13,13,14,14,15,15,16,16,1,2,2,3,4,4,5,5,6,6,7,7,8,8,9,10,10,11,12,12,13,13,14,14,15,15,16,16,1,2,2,3,4,4,5,5,6,6,7,7,8,8,9,10,10,11,12,12,13,13,14,14,15,15,16,16,1,2,2,3,4,4,5,5,6,6,7,7,8,8,9,10,10,11,12,12,13,13,14,14,15,15,16,16,1,2,2,3,4,4,5,5,6,6,7,7,8,8,9,10,10,11,12,12,13,13,14,14,15,15,16,16,1,2,2,3,4,4,5,5,6,6,7,7,8,8,9,10,10,11,12,12,13,13,14,14,15,15,16,16,1,2,2,3,4,4,5,5,6,6,7,7,8,8,9,10,10,11,12,12,13,13,14,14,15,15,16,16,1,2,2,3,4,4,5,5,6,6,7,7,8,8,9,10,10,11,12,12,13,13,14,14,15,15,16,16,1,2,2,3,4,4,5,5,6,6,7,7,8,8,9,10,10,11,12,12,13,13,14,14,15,15,16,16,1,2,2,3,4,4,5,5,6,6,7,7,8,8,9,10,10,11,12,12,13,13,14,14,15,15,16,16,1,2,2,3,4,4,5,5,6,6,7,7,8,8,9,10,10,11,12,12,13,13,14,14,15,15,16,16,1,2,2,3,4,4,5,5,6,6,7,7,8,8,9,10,10,11,12,12,13,13,14,14,15,15,16,16,1,2,2,3,4,4,5,5,6,6,7';
                 var celeneArray = '0,16,16,16,1,2,2,2,2,2,2,2,3,3,3,3,3,3,3,4,4,4,4,4,4,4,5,6,6,6,6,6,6,6,7,7,7,7,7,7,7,8,8,8,8,8,8,8,9,9,10,10,10,10,10,10,10,11,11,11,11,11,11,11,12,12,12,12,12,12,12,12,13,14,14,14,14,14,14,14,15,15,15,15,15,15,15,16,16,16,16,16,16,16,16,1,2,2,2,2,2,2,2,3,3,3,3,3,3,3,4,4,4,4,4,4,4,5,6,6,6,6,6,6,6,7,7,7,7,7,7,7,8,8,8,8,8,8,8,9,9,10,10,10,10,10,10,10,11,11,11,11,11,11,11,12,12,12,12,12,12,12,12,13,14,14,14,14,14,14,14,15,15,15,15,15,15,15,16,16,16,16,16,16,16,16,1,2,2,2,2,2,2,2,3,3,3,3,3,3,3,4,4,4,4,4,4,4,5,6,6,6,6,6,6,6,7,7,7,7,7,7,7,8,8,8,8,8,8,8,9,9,10,10,10,10,10,10,10,11,11,11,11,11,11,11,12,12,12,12,12,12,12,12,13,14,14,14,14,14,14,14,15,15,15,15,15,15,15,16,16,16,16,16,16,16,16,1,2,2,2,2,2,2,2,3,3,3,3,3,3,3,4,4,4,4,4,4,4,5,6,6,6,6,6,6,6,7,7,7,7,7,7,7,8,8,8,8,8,8,8,9,9,10,10,10,10,10,10,10,11,11,11,11,11,11,11,12,12,12,12,12,12,12,12,13,14,14,14,14,14,14,14,15,15,15,15,15,15,15,16,16,16,16,16';
                 
@@ -990,10 +1042,10 @@ var Calendar = Calendar || (function() {
                 var Celene = getMoon(celeneImg);
                 
                 var moon = '<img src="'+Luna+'" style="width:40px;height:40px;"><img src="'+Celene+'" style="width:30px;height:30px;"></td></tr>';
-                state.Calendar.now.moonImg=moon;
+                state.MWCalendar.now.moonImg=moon;
             }
         } else {
-            if (state.Calendar.now.world==1) {
+            if (state.MWCalendar.now.world==1) {
                 switch (type) {
                     case 'full moon':
                         moon = '<img src="'+getMoon(1)+'" style="width:30px;height:30px;"></td></tr>';
@@ -1020,8 +1072,8 @@ var Calendar = Calendar || (function() {
                         moon = '<img src="'+getMoon(14)+'" style="width:30px;height:30px;"></td></tr>';
                         break;
                 }
-                state.Calendar.now.moonImg=moon;
-            } else if (state.Calendar.now.world==2) {
+                state.MWCalendar.now.moonImg=moon;
+            } else if (state.MWCalendar.now.world==2) {
                 //Eberron Moon
             }
         }
@@ -1073,74 +1125,125 @@ var Calendar = Calendar || (function() {
         switch(args) {
             case '1':
                 // moon = 'Full Moon';
-                moon = 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/78/Twemoji_1f315.svg/512px-Twemoji_1f315.svg.png';
+                moon = 'https://upload.wikimedia.org/wikipedia/commons/b/b5/20110319_Supermoon.jpg';
                 break;
             case '2':
                 // moon = 'Waning Gibbous';
-                moon = 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/de/Twemoji_1f316.svg/512px-Twemoji_1f316.svg.png';
+                moon = 'https://upload.wikimedia.org/wikipedia/commons/7/7d/2013-01-02_00-00-55-Waning-gibbous-moon.jpg';
                 break;
             case '3':
                 // moon = 'Waning Gibbous';
-                moon = 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/de/Twemoji_1f316.svg/512px-Twemoji_1f316.svg.png';
+                moon = 'https://upload.wikimedia.org/wikipedia/commons/7/7d/2013-01-02_00-00-55-Waning-gibbous-moon.jpg';
                 break;
             case '4':
                 // moon = 'Waning Gibbous';
-                moon = 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/de/Twemoji_1f316.svg/512px-Twemoji_1f316.svg.png';
+                moon = 'https://upload.wikimedia.org/wikipedia/commons/7/7d/2013-01-02_00-00-55-Waning-gibbous-moon.jpg';
                 break;
             case '5':
                 // moon = 'Last Quarter';
-                moon = 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/67/Twemoji_1f317.svg/512px-Twemoji_1f317.svg.png';
+                moon = 'https://upload.wikimedia.org/wikipedia/commons/b/b2/Waning_gibbous_moon_near_last_quarter_-_23_Sept._2016.png';
                 break;
             case '6':
                 // moon = 'Waning Crescent';
-                moon = 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/96/Twemoji_1f318.svg/512px-Twemoji_1f318.svg.png';
+                moon = 'https://upload.wikimedia.org/wikipedia/commons/2/2f/2011-11-19-Waning_crescent_moon.jpg';
                 break;
             case '7':
                 // moon = 'Waning Crescent';
-                moon = 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/96/Twemoji_1f318.svg/512px-Twemoji_1f318.svg.png';
+                moon = 'https://upload.wikimedia.org/wikipedia/commons/2/2f/2011-11-19-Waning_crescent_moon.jpg';
                 break;
             case '8':
                 // moon = 'Waning Crescent';
-                moon = 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/96/Twemoji_1f318.svg/512px-Twemoji_1f318.svg.png';
+                moon = 'https://upload.wikimedia.org/wikipedia/commons/2/2f/2011-11-19-Waning_crescent_moon.jpg';
                 break;
             case '9':
                 // moon = 'New Moon';
-                moon = 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Twemoji_1f311.svg/512px-Twemoji_1f311.svg.png';
+                moon = 'https://upload.wikimedia.org/wikipedia/commons/d/dd/New_Moon.jpg';
                 break;
             case '10':
                 // moon = 'Waxing Crescent';
-                moon = 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Twemoji_1f312.svg/512px-Twemoji_1f312.svg.png';
+                moon = 'https://upload.wikimedia.org/wikipedia/commons/8/8b/Waxing_crescent_moon_20131108.jpg';
                 break;
             case '11':
                 // moon = 'Waxing Crescent';
-                moon = 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Twemoji_1f312.svg/512px-Twemoji_1f312.svg.png';
+                moon = 'https://upload.wikimedia.org/wikipedia/commons/8/8b/Waxing_crescent_moon_20131108.jpg';
                 break;
             case '12':
                 // moon = 'Waxing Crescent';
-                moon = 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Twemoji_1f312.svg/512px-Twemoji_1f312.svg.png';
+                moon = 'https://upload.wikimedia.org/wikipedia/commons/8/8b/Waxing_crescent_moon_20131108.jpg';
                 break;
             case '13':
                 // moon = 'First Quarter';
-                moon = 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/40/Twemoji_1f313.svg/512px-Twemoji_1f313.svg.png';
+                moon = 'https://upload.wikimedia.org/wikipedia/commons/4/4d/Daniel_Hershman_-_march_moon_%28by%29.jpg';
                 break;
             case '14':
                 // moon = 'Waxing Gibbous';
-                moon = 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1c/Twemoji_1f314.svg/512px-Twemoji_1f314.svg.png';
+                moon = 'https://upload.wikimedia.org/wikipedia/commons/2/2b/Lune-Nikon-600-F4_Luc_Viatour.jpg';
                 break;
             case '15':
                 // moon = 'Waxing Gibbous';
-                moon = 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1c/Twemoji_1f314.svg/512px-Twemoji_1f314.svg.png';
+                moon = 'https://upload.wikimedia.org/wikipedia/commons/2/2b/Lune-Nikon-600-F4_Luc_Viatour.jpg';
                 break;
             case '16':
                 // moon = 'Waxing Gibbous';
-                moon = 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1c/Twemoji_1f314.svg/512px-Twemoji_1f314.svg.png';
+                moon = 'https://upload.wikimedia.org/wikipedia/commons/2/2b/Lune-Nikon-600-F4_Luc_Viatour.jpg';
                 break;
         }
         return moon;
     },
 
+    getWorld = function() {
+        let worldnum=state.MWCalendar.now.world;
+        let world;
+        switch (worldnum) {
+            case 1:
+                world="Faerûn";
+            break;
+            case 2:
+                world="Greyhawk";
+            break;
+            case 3:
+                world="Modern";
+            break;
+            case 4:
+                world="Eberron";
+            break;
+            case 5:
+                world="Tal\'Dorei";
+            break;
+        }
+        return world;
+    },
+
+    getMoMenu = function() {
+        var world = Number(state.MWCalendar.now.world);
+        var moMenu;
+        
+        switch(world){
+            case 1:
+                moMenu = '?{Month|Hammer|Alturiak|Ches|Tarsakh|Mirtul|Kythorn|Flamerule|Eleasias|Eleint|Marpenoth|Uktar||Nightal}';
+                break;
+            case 2:
+                moMenu = '?{Month|Fire Seek|Readying|Coldeven|Planting|Flocktime|Wealsun|Reaping|Goodmonth|Harvester|Patchwall|Ready\'reat|Sunsebb}';
+                break;
+            case 3:
+                moMenu = '?{Month|January|February|March|April|May|June|July|August|September|October|November|December}';
+                break;
+            case 4:
+                moMenu = '?{Month|Zarantyr|Olarune|Therendor|Eyre|Dravago|Nymm|Lharvion|Barrakas|Rhaan|Sypheros|Aryth|Vult}';
+                break;
+            case 5:
+                moMenu = '?{Month|Horisal|Misuthar|Dualahei|Thunsheer|Unndilar|Brussendar|Sydenstar|Fessuran|Quen\'pillar|Cuersaar|Duscar}';
+        }
+        
+        return moMenu;
+    },
+
+    reset = function() {
+        setDefaults();
+    },
+
     checkInstall = function() {
-        if (!state.Calendar) {
+        if (!state.MWCalendar) {
             setDefaults();
         }
         if (!state.Alarm) {
@@ -1157,8 +1260,8 @@ var Calendar = Calendar || (function() {
         RegisterEventHandlers: registerEventHandlers
     };
 }());
-on("ready",function() {
+on("ready", function() {
     'use strict';
-    Calendar.CheckInstall();
-    Calendar.RegisterEventHandlers();
+    MultiWorldCalendar.CheckInstall();
+    MultiWorldCalendar.RegisterEventHandlers();
 });

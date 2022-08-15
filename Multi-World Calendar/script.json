@@ -8,7 +8,8 @@
     "patreon": "https://patreon.com/julexar",
     "roll20userid": "9989180",
     "modifies": {
-        "state.Calendar.now": "read,write",
+        "state.MWCalendar.now": "read,write",
+        "state.Alarm": "read,write",
         "handout": "read,write"
     }
 }
