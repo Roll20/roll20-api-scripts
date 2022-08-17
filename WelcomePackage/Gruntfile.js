@@ -6,7 +6,7 @@ module.exports = function(grunt) {
     concat: {
       dist: {
         src: [
-          'src/script.js'
+          'src/ImprovedCritical.js'
         ],
         dest: '<%= pkg.version %>/<%= pkg.script %>'
       }
