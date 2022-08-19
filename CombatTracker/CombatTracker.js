@@ -1305,7 +1305,7 @@ var CombatTracker = CombatTracker || (function() {
             return;
         }
 
-        if(!StatusInfo.version || StatusInfo.version !== "0.3.8"){
+        if(!StatusInfo.version || StatusInfo.version !== "0.3.11"){
             makeAndSendMenu('Please update '+makeButton('StatusInfo', 'https://github.com/RobinKuiper/Roll20APIScripts/tree/master/StatusInfo', styles.textButton)+' to the latest version.', '', 'gm');
             return;
         }
