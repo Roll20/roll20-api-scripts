@@ -25,7 +25,7 @@ const ScriptCards = (() => { // eslint-disable-line no-unused-vars
 	*/
 
 	const APINAME = "ScriptCards";
-	const APIVERSION = "2.1.7a";
+	const APIVERSION = "2.1.7b";
 	const APIAUTHOR = "Kurt Jaegers";
 	const debugMode = false;
 
@@ -819,6 +819,20 @@ const ScriptCards = (() => { // eslint-disable-line no-unused-vars
 													if (settingName.toLowerCase() == "imgsrc") {
 														settingValue = getCleanImgsrc(settingValue);
 													}
+													if (settingName.toLowerCase() == "bar1_link" ||
+														settingName.toLowerCase() == "bar2_link" ||
+														settingName.toLowerCase() == "bar3_link") {
+															var theChar = getObj("character", theToken.get("represents"));
+															if (theChar != null) {
+																try {
+																	var theAttribute = findObjs({_type:"attribute", _characterid: theChar.get("_id"), name: settingValue})[0];
+																} catch { log("Error setting bar link. Attribute not found.") }
+																if (theAttribute != null) {
+																	settingValue = theAttribute.get("_id");
+																}
+															}
+														}
+
 													if (settingName.toLowerCase() == "currentside") {
 														if (settingValue) {
 															var sides = theToken.get("sides").split("|");
