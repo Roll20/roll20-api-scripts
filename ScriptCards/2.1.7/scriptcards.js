@@ -25,7 +25,7 @@ const ScriptCards = (() => { // eslint-disable-line no-unused-vars
 	*/
 
 	const APINAME = "ScriptCards";
-	const APIVERSION = "2.1.7";
+	const APIVERSION = "2.1.7a";
 	const APIAUTHOR = "Kurt Jaegers";
 	const debugMode = false;
 
@@ -1062,6 +1062,8 @@ const ScriptCards = (() => { // eslint-disable-line no-unused-vars
 												case ">": resultType = "gosub"; break;
 												case "<": resultType = "return"; break;
 												case "%": resultType = "next"; break;
+												case "+": resultType = "directoutput"; break;
+												case "*": resultType = "gmoutput"; break;
 												case "=":
 												case "&":
 													jumpDest.charAt(0) == "=" ? resultType = "rollset" : resultType = "stringset";
@@ -1083,6 +1085,29 @@ const ScriptCards = (() => { // eslint-disable-line no-unused-vars
 													if (returnStack.length > 0) {
 														callParamList = parameterStack.pop();
 														lineCounter = returnStack.pop();
+													}
+													break;
+												case "directoutput":
+												case "gmoutput":
+													if (jumpDest.split(";") != null) {
+														var conditionalTag = jumpDest.split(";")[0];
+														var conditionalContent = jumpDest.substring(jumpDest.indexOf(";") + 1);
+														var rowData = buildRowOutput(conditionalTag.substring(1), replaceVariableContent(conditionalContent, cardParameters, true), cardParameters.outputtagprefix, cardParameters.outputcontentprefix);
+
+														tableLineCounter += 1;
+														if (tableLineCounter % 2 == 0) {
+															while (rowData.indexOf("=X=FONTCOLOR=X=") > 0) { rowData = rowData.replace("=X=FONTCOLOR=X=", cardParameters.evenrowfontcolor); }
+															while (rowData.indexOf("=X=ROWBG=X=") > 0) { rowData = rowData.replace("=X=ROWBG=X=", ` background: ${cardParameters.evenrowbackground}; background-image: ${cardParameters.evenrowbackgroundimage}; `); }
+														} else {
+															while (rowData.indexOf("=X=FONTCOLOR=X=") > 0) { rowData = rowData.replace("=X=FONTCOLOR=X=", cardParameters.oddrowfontcolor); }
+															while (rowData.indexOf("=X=ROWBG=X=") > 0) { rowData = rowData.replace("=X=ROWBG=X=", ` background: ${cardParameters.oddrowbackground}; background-image: ${cardParameters.oddrowbackgroundimage}; `); }
+														}
+														rowData = processInlineFormatting(rowData, cardParameters);
+														if (resultType == "directoutput") {
+															outputLines.push(rowData);
+														} else {
+															gmonlyLines.push(rowData);
+														}
 													}
 													break;
 												case "gosub":
@@ -2306,6 +2331,8 @@ const ScriptCards = (() => { // eslint-disable-line no-unused-vars
 									case "<": resultType = "return"; break;
 									case "%": resultType = "next"; break;
 									case "[": resultType = "block"; break;
+									case "+": resultType = "directoutput"; break;
+									case "*": resultType = "gmoutput"; break;
 									case "=":
 									case "&":
 										jumpDest.charAt(0) == "=" ? resultType = "rollset" : resultType = "stringset";
@@ -2327,6 +2354,29 @@ const ScriptCards = (() => { // eslint-disable-line no-unused-vars
 										if (returnStack.length > 0) {
 											callParamList = parameterStack.pop();
 											lineCounter = returnStack.pop();
+										}
+										break;
+									case "directoutput":
+									case "gmoutput":
+										if (jumpDest.split(";") != null) {
+											var conditionalTag = jumpDest.split(";")[0];
+											var conditionalContent = jumpDest.substring(jumpDest.indexOf(";") + 1);
+											var rowData = buildRowOutput(conditionalTag.substring(1), replaceVariableContent(conditionalContent, cardParameters, true), cardParameters.outputtagprefix, cardParameters.outputcontentprefix);
+
+											tableLineCounter += 1;
+											if (tableLineCounter % 2 == 0) {
+												while (rowData.indexOf("=X=FONTCOLOR=X=") > 0) { rowData = rowData.replace("=X=FONTCOLOR=X=", cardParameters.evenrowfontcolor); }
+												while (rowData.indexOf("=X=ROWBG=X=") > 0) { rowData = rowData.replace("=X=ROWBG=X=", ` background: ${cardParameters.evenrowbackground}; background-image: ${cardParameters.evenrowbackgroundimage}; `); }
+											} else {
+												while (rowData.indexOf("=X=FONTCOLOR=X=") > 0) { rowData = rowData.replace("=X=FONTCOLOR=X=", cardParameters.oddrowfontcolor); }
+												while (rowData.indexOf("=X=ROWBG=X=") > 0) { rowData = rowData.replace("=X=ROWBG=X=", ` background: ${cardParameters.oddrowbackground}; background-image: ${cardParameters.oddrowbackgroundimage}; `); }
+											}
+											rowData = processInlineFormatting(rowData, cardParameters);
+											if (resultType == "directoutput") {
+												outputLines.push(rowData);
+											} else {
+												gmonlyLines.push(rowData);
+											}
 										}
 										break;
 									case "gosub":
