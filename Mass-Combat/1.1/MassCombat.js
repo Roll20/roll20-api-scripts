@@ -1370,7 +1370,7 @@ on('ready', () => {
                                 cache[tokenOwner] = cacheEntry;
                             } else {
                                 // Get formation values
-                                let formationTraitArray = traits.filter(trait => (trait||{get:()=>[]}).get('current').includes('Formation of'));
+                                let formationTraitArray = traits.filter(trait => ((trait||{get:()=>false}).get('current')||[]).includes('Formation of'));
                                 if(formationTraitArray.length === 0) {
                                     cacheEntry = {
                                         char: char,
