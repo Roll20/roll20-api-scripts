@@ -25,7 +25,7 @@ const ScriptCards = (() => { // eslint-disable-line no-unused-vars
 	*/
 
 	const APINAME = "ScriptCards";
-	const APIVERSION = "2.1.7b";
+	const APIVERSION = "2.1.7c";
 	const APIAUTHOR = "Kurt Jaegers";
 	const debugMode = false;
 
@@ -962,6 +962,12 @@ const ScriptCards = (() => { // eslint-disable-line no-unused-vars
 																}
 															}
 															theAttribute.set(setType, settingValue);
+															if (setType == "current") {
+																theAttribute.setWithWorker({current: settingValue});
+															}
+															if (setType == "max") {
+																theAttribute.setWithWorker({max: settingValue});
+															}
 														} else {
 															if (createAttribute) {
 																theAttribute = createObj('attribute', {
