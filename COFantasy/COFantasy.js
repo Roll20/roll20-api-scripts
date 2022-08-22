@@ -2226,7 +2226,7 @@ var COFantasy = COFantasy || function() {
           dmgTemp = toInt(token.get('bar2_value'), 0);
         }
         if (dmgTemp > 0) {
-          var newDmgTemp = dmgTemp - bar1 + pvmax;
+          let newDmgTemp = dmgTemp - bar1 + pvmax;
           if (newDmgTemp < 0) {
             newDmgTemp = 0;
             bar1 -= dmgTemp;
@@ -5144,8 +5144,8 @@ var COFantasy = COFantasy || function() {
         expliquer("Perte de substance : -5 aux interactions sociales");
         bonus -= 5;
       } else {
-        expliquer("Perte de substance : -2 aux interactions sociales");
-        bonus += 10;
+        expliquer("Perte de substance : -10 aux interactions sociales");
+        bonus -= 10;
         if (perteDeSubstance >= 15) {
           expliquer("Perte de substance : faire un test de CHA pour se faire remarquer");
         }
@@ -7435,7 +7435,8 @@ var COFantasy = COFantasy || function() {
     if (indexD > 0) {
       dm.nbDe = parseInt(exprDM.substring(0, indexD));
       if (isNaN(dm.nbDe) || dm.nbDe < 0) {
-        error("Expression de " + msg + ' ' + exprDM + " mal form\xE9e", expr);
+        if (msg)
+          error("Expression de " + msg + ' ' + exprDM + " mal form\xE9e", expr);
         return;
       }
       exprDM = exprDM.substring(indexD + 1);
@@ -7443,7 +7444,8 @@ var COFantasy = COFantasy || function() {
       if (indexD <= 0) {
         dm.dice = parseInt(exprDM);
         if (isNaN(dm.dice) || dm.dice < 1) {
-          error("Nombre de faces incorrect dans l'expression de " + msg, expr);
+          if (msg)
+            error("Nombre de faces incorrect dans l'expression de " + msg, expr);
           return;
         }
         return dm;
@@ -7451,14 +7453,16 @@ var COFantasy = COFantasy || function() {
       exprDM = exprDM.replace('+-', '-');
       dm.dice = parseInt(exprDM.substring(0, indexD));
       if (isNaN(dm.dice) || dm.dice < 1) {
-        error("Nombre de faces incorrect dans l'expression de " + msg, expr);
+        if (msg)
+          error("Nombre de faces incorrect dans l'expression de " + msg, expr);
         return;
       }
       exprDM = exprDM.substring(indexD).trim();
     }
     dm.bonus = parseInt(exprDM);
     if (isNaN(dm.bonus)) {
-      error("Expression de " + msg + " incorrecte", expr);
+      if (msg)
+        error("Expression de " + msg + " incorrecte", expr);
       return;
     }
     return dm;
@@ -14382,10 +14386,10 @@ var COFantasy = COFantasy || function() {
                   target.chatimentDuMaleLowRoll = target.d20roll;
                 }
               }
-              var attackRoll = targetd20roll + attSkill + attBonus;
+              let attackRoll = targetd20roll + attSkill + attBonus;
               target.attackRoll = attackRoll;
-              var attackResult; // string
-              var paralyse = false;
+              let attackResult = '';
+              let paralyse = false;
               if (getState(target, 'paralyse')) {
                 paralyse = true;
                 if (!options.attaqueAssuree)
@@ -17605,6 +17609,7 @@ var COFantasy = COFantasy || function() {
       res.acide = (res.acide || 0) + 5;
       res.feu = (res.feu || 0) + 5;
     }
+    if (perso.perteDeSubstance) res.rdt += perso.perteDeSubstance;
     let rd = ficheAttribute(perso, 'RDS', '');
     rd = (rd + '').trim();
     if (rd === '') {
@@ -17640,7 +17645,6 @@ var COFantasy = COFantasy || function() {
       if (isNaN(rds) || rds === 0) return;
       res.rdt += rds;
     });
-    if (perso.perteDeSubstance) rd.rdt += perso.perteDeSubstance;
     perso.rd = res;
     return res;
   }
@@ -17969,7 +17973,7 @@ var COFantasy = COFantasy || function() {
             if (typeCount === 0) {
               if (!target.ignoreTouteRD) {
                 rd = rd || getRDS(target);
-                var rdl = typeRD(rd, dmgType);
+                let rdl = typeRD(rd, dmgType);
                 if (dmgType == 'normal') {
                   if (options.tranchant && rd.tranchant) rdl += rd.tranchant;
                   if (options.percant && rd.percant) rdl += rd.percant;
@@ -30403,7 +30407,7 @@ var COFantasy = COFantasy || function() {
           setTokenAttr(perso, attribut, typePoison + ' ' + forcePoison, evt, {
             maxVal: infosAdditionelles
           });
-          sendPlayer(perso, armeEnduite + " est maintenant enduit de poison");
+          sendPlayer(msg, armeEnduite + " est maintenant enduit de poison", playerId);
           return;
         }
         doEnduireDePoison(perso, armeEnduite, savePoison, typePoison, forcePoison, attribut, testINT, infosAdditionelles, options);
@@ -30602,27 +30606,26 @@ var COFantasy = COFantasy || function() {
           error("La liste de consommables n'est pas au point pour les tokens non li\xE9s", perso);
           return;
         }
-        var display = startFramedDisplay(playerId, 'Liste de vos consommables :', perso, {
+        let display = startFramedDisplay(playerId, 'Liste de vos consommables :', perso, {
           chuchote: true
         });
-        var attributes = findObjs({
+        let attributes = findObjs({
           _type: 'attribute',
           _characterid: perso.charId
         });
-        var consommables = {}; //map id -> nom, quantite, effet, attr
+        let consommables = {}; //map id -> nom, quantite, effet, attr
         attributes.forEach(function(attr) {
-          var attrName = attr.get('name').trim();
-          var m = consommableNomRegExp.exec(attrName);
-          var consoPrefix;
+          let attrName = attr.get('name').trim();
+          let m = consommableNomRegExp.exec(attrName);
           if (m) {
-            consoPrefix = m[1];
+            let consoPrefix = m[1];
             consommables[consoPrefix] = consommables[consoPrefix] || {};
             consommables[consoPrefix].nom = attr.get('current');
             return;
           }
           m = consommableQuantiteRegExp.exec(attrName);
           if (m) {
-            consoPrefix = m[1];
+            let consoPrefix = m[1];
             consommables[consoPrefix] = consommables[consoPrefix] || {};
             consommables[consoPrefix].quantite = parseInt(attr.get('current'));
             consommables[consoPrefix].attr = attr;
@@ -30630,7 +30633,7 @@ var COFantasy = COFantasy || function() {
           }
           m = consommableEffetRegExp.exec(attrName);
           if (m) {
-            consoPrefix = m[1];
+            let consoPrefix = m[1];
             consommables[consoPrefix] = consommables[consoPrefix] || {};
             consommables[consoPrefix].effet = attr.get('current');
             return;
@@ -41016,12 +41019,25 @@ var COFantasy = COFantasy || function() {
   }
 
   function rollAndDealDmg(perso, dmg, type, effet, attrName, msg, count, evt, options, callback, display) {
-    let dmgExpr = dmg;
-    let tdmi = attributeAsInt(perso, effet + 'TempeteDeManaIntense', 0);
     if (options.valeur) {
       let attrsVal = tokenAttribute(perso, options.valeur);
-      if (attrsVal.length > 0) dmgExpr = attrsVal[0].get('current');
-    } else if (dmg.de) {
+      if (attrsVal.length > 0) {
+        dmg = attrsVal[0].get('current');
+        let dmgDice = parseDice(dmg);
+        if (dmgDice) {
+          if (dmgDice.nbDe === 0) dmg = {
+            cst: dmgDice.bonus
+          };
+          else if (dmgDice.bonus === 0) dmg = {
+            de: dmgDice.dice,
+            nbDe: dmgDice.nbDe
+          };
+        }
+      }
+    }
+    let dmgExpr = dmg;
+    let tdmi = attributeAsInt(perso, effet + 'TempeteDeManaIntense', 0);
+    if (dmg.de) {
       if (tdmi) {
         dmgExpr = (tdmi + dmg.nbDe) + 'd' + dmg.de;
         removeTokenAttr(perso, effet + 'TempeteDeManaIntense', evt);
@@ -41095,8 +41111,8 @@ var COFantasy = COFantasy || function() {
           v: total
         };
         let perso = {
-          token: token,
-          charId: charId
+          token,
+          charId
         };
         if (getState(perso, 'mort')) {
           if (callback) callback();
@@ -41208,7 +41224,7 @@ var COFantasy = COFantasy || function() {
         else evt.deletedAttributes = [attr];
         attr.remove();
       } else {
-        var prevAttr = {
+        let prevAttr = {
           attribute: attr,
           current: 2
         };
@@ -41219,12 +41235,12 @@ var COFantasy = COFantasy || function() {
     // Pour la feinte, on augmente la valeur, et on supprime si la valeur est 2
     let feinte = allAttributesNamed(attrs, 'feinte');
     feinte.forEach(function(attr) {
-      var valFeinte = parseInt(attr.get('current'));
+      let valFeinte = parseInt(attr.get('current'));
       if (isNaN(valFeinte) || valFeinte > 0) {
         evt.deletedAttributes.push(attr);
         attr.remove();
       } else {
-        var prevAttr = {
+        let prevAttr = {
           attribute: attr,
           current: 0
         };
