@@ -1147,3 +1147,7 @@ multiworldcalendar:
 calendardnd:
   - "Calendar DND"
   - "Utility"
+  
+ improvedcritical:
+  - "Improved Critical"
+  - "Utility"
