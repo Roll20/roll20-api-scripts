@@ -8,9 +8,6 @@
     "patreon": "https://patreon.com/julexar",
     "roll20userid": "9989180",
     "modifies": {
-        "state.store": "read,write",
-        "state": "read,write",
-        "state.cart": "read,write",
-        "handout": "read,write",
+        "state.store": "read,write"
     }
 }
