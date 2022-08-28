@@ -19,15 +19,15 @@ The parameters are explained below. But before that, I want to point out you can
 The parameters are separated by a colon and they represent (from left to right):
 
 * **Travel Hours Per Day**: how many daylight hours can be travelled safely (i.e. if dawn to dusk is 6am to 10pm then you have 15 travel hours).
-* Party Has Vehicles: Yes means 1 hour per sector, No means 2 hours per sector (which may be lessened based on stunts rolled).
-* Is Ocean: Yes means that rot will be randomly rolled for every sector travelled, No means rot will be based on input of Oasis/Weak/Heavy. NOTE: the numbers input for those three textboxes will be added together if Is Ocean is Yes, so you could just enter total number of sectors in one of the three and leave the others as zero.
-* Oasis Rot Sectors: number of sectors they will pass through with Oasis rot level.
-* Weak Rot Sectors: number of sectors they will pass through with Weak rot level.
-* Heavy Rot Sectors: number of sectors they will pass through with Heavy rot level.
-* Stalker Agility: agility score of stakler finding the path (or non-stalker).
-* Stalker Find the Path: skill points (will be zero for non-stalker).
-* Stalker Gear Bonuses: for example, binoculars give +2 to FIND THE PATH
-* Night Hours Marched: how many of the dark hours party will travel. Each dark hour travelled lessens time to destination but greatly increases failures.
+* **Party Has Vehicles**: Yes means 1 hour per sector, No means 2 hours per sector (which may be lessened based on stunts rolled).
+* **Is Ocean**: Yes means that rot will be randomly rolled for every sector travelled, No means rot will be based on input of Oasis/Weak/Heavy. NOTE: the numbers input for those three textboxes will be added together if Is Ocean is Yes, so you could just enter total number of sectors in one of the three and leave the others as zero.
+* **Oasis Rot Sectors**: number of sectors they will pass through with Oasis rot level.
+* **Weak Rot Sectors**: number of sectors they will pass through with Weak rot level.
+* **Heavy Rot Sectors**: number of sectors they will pass through with Heavy rot level.
+* **Stalker Agility**: agility score of stakler finding the path (or non-stalker).
+* **Stalker Find the Path**: skill points (will be zero for non-stalker).
+* **Stalker Gear Bonuses**: for example, binoculars give +2 to FIND THE PATH
+* **Night Hours Marched**: how many of the dark hours party will travel. Each dark hour travelled lessens time to destination but greatly increases failures.
 The results are determined by artifacts, environements, and threats from the core Mutant Year Zero book.
 
 The basic algorithm is:
