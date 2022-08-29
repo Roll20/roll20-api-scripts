@@ -1147,7 +1147,15 @@ multiworldcalendar:
 calendardnd:
   - "Calendar DND"
   - "Utility"
-  
+
 improvedcritical:
   - "Improved Critical"
   - "Utility"
+
+mutantyearzerosectorgenerator:
+  - "MutantYearZero_SectorGenerator"
+  - "Utility"
+
+itemstore:
+  - "Item Store"
+  - "Utility" 
