@@ -23,7 +23,7 @@ API Commands:
 var MultiWorldCalendar = MultiWorldCalendar || (function() {
     'use strict';
 
-    var version = "5.2",
+    var version = "5.3",
 
     setDefaults = function() {
         state.MWCalendar = {
@@ -276,7 +276,7 @@ var MultiWorldCalendar = MultiWorldCalendar || (function() {
                             }
                             editAlarm(alarmnum,title,date,time);
                         } else {
-                            alarmMenu(args[1]);
+                            alarmMenu(Number(args[1]));
                         }
                     } else if (args[1]==undefined) {
                         alarmMenu(args[1]);
@@ -616,7 +616,7 @@ var MultiWorldCalendar = MultiWorldCalendar || (function() {
                 }
             break;
             case 2:
-                if (state.calendar.now.mtype=="ON") {
+                if (state.MWCalendar.now.mtype=="ON") {
                     rmoon = '<table style = "border: none;"><tr><td style="border: none; padding: 2px; padding-left: 5px;">Moon:</td><td style="border: none; padding: 2px; padding-left: 5px;">'+state.MWCalendar.now.moonImg+'</table>';
                 } else {
                     rmoon=undefined;
@@ -672,7 +672,7 @@ var MultiWorldCalendar = MultiWorldCalendar || (function() {
                     '</div>'
                 );
             }
-        } else if (state.calendar.now.wtype=="OFF") {
+        } else if (state.MWCalendar.now.wtype=="OFF") {
             weather=undefined;
             if (state.MWCalendar.now.mtype=="ON") {
                 sendChat("Multi-World Calendar",whisper+"<div " + divstyle + ">" + //--
@@ -698,27 +698,6 @@ var MultiWorldCalendar = MultiWorldCalendar || (function() {
                     '</div>'
                 );
             }
-        }
-    },
-
-    getAlarm = function(num) {
-        let alarm=findObjs({
-            _type: "handout",
-            name: "Alarm #"+num
-        }, {caseInsensitive: true})[0];
-        if (!alarm) {
-            sendChat("Multi-World Calendar","/w gm Could not find an Alarm with that Number!");
-        } else {
-            alarm.get("notes",function(notes) {
-                let title=String(notes);
-                alarm.get("gmnotes",function(gmnotes) {
-                    let datetime=String(gmnotes);
-                    datetime=datetime.split(';');
-                    let date=String(datetime[0]);
-                    let time=String(datetime[1]);
-                    alarmmenu(num,title,date,time);
-                });
-            });
         }
     },
 
