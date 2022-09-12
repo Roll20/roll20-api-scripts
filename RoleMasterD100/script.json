@@ -1,7 +1,7 @@
 {
   "name": "RoleMasterD100",
   "script": "RoleMasterD100.js",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "RoleMaster D100 Generator is a configurable script for generating d100 rolls according to RoleMaster explosion rules. Rolls can be high open-ended, low open-ended, open-ended in both directions (the default), with the option to allow multiple change of directions (see Help by sending the following command through chat: !rmd100 --help). Use the Config panel to set script-level parameters, or command line arguments to apply settings to a single roll. This script is set up to work as a metascript, feeding the resulting roll into another script's command line, if you need it. More details are in the Help panel.\r\rFor more information, see the original thread in the API forum:\r\r[RoleMasterD100 Forum Thread](https://app.roll20.net/forum/permalink/10917965/)",
   "authors": "timmaugh",
   "roll20userid": "5962076",
@@ -11,5 +11,7 @@
     "state.RoleMasterD100": "read, write"
   },
   "conflicts": [],
-  "previousversions": []
+  "previousversions": [
+    "1.0.0"
+  ]
 }
