@@ -23,7 +23,7 @@ API Commands:
 var MultiWorldCalendar = MultiWorldCalendar || (function() {
     'use strict';
 
-    var version = "5.3",
+    var version = "5.2",
 
     setDefaults = function() {
         state.MWCalendar = {
@@ -31,6 +31,7 @@ var MultiWorldCalendar = MultiWorldCalendar || (function() {
                 ordinal: 1,
                 world: 1,
                 year: 1486,
+                divider: 1,
                 day: 1,
                 month: "Hammer",
                 hour: 1,
@@ -100,15 +101,23 @@ var MultiWorldCalendar = MultiWorldCalendar || (function() {
                             switch (type) {
                                 case 'short rest':
                                     addtime(amount,"hour");
+                                    calmenu();
+                                    chkalarms();
                                     return;
                                 case 'long rest':
                                     addtime(amount*8,"hour");
+                                    calmenu();
+                                    chkalarms();
                                     return;
                                 case 'hour':
                                     addtime(amount,"hour");
+                                    calmenu();
+                                    chkalarms();
                                     return;
                                 case 'minute':
                                     addtime(amount,"minute");
+                                    calmenu();
+                                    chkalarms();
                                     return;
                                 case 'day':
                                     advdate(amount,"day");
@@ -117,7 +126,7 @@ var MultiWorldCalendar = MultiWorldCalendar || (function() {
                                     calmenu();
                                     chkalarms();
                                     return;
-                                case 'week':
+                                case 'weel':
                                     advdate(amount*7,"day");
                                     weather("random");
                                     moon(state.MWCalendar.now.prevType);
@@ -139,15 +148,6 @@ var MultiWorldCalendar = MultiWorldCalendar || (function() {
                                     chkalarms();
                                     return;
                             }
-                        } else if (args[1]=="reset") {
-                            if (args[2]==undefined) {
-                                reset();
-                            } else if (args[2]=="Yes") {
-                                checkInstall(true);
-                                calmenu();
-                            } else if (args[2]=="No") {
-                                calmenu();
-                            }
                         } else if (args[1].includes("set")) {
                             let type=String(args[1].toLowerCase()).replace("set ","");
                             let amount=Number(args[2]);
@@ -159,62 +159,46 @@ var MultiWorldCalendar = MultiWorldCalendar || (function() {
                                 switch (Number(state.MWCalendar.now.world)) {
                                     case 1:
                                         getFaerunOrdinal(amount,state.MWCalendar.now.month);
-                                        weather("random");
-                                        moon(state.MWCalendar.now.prevType);
-                                        calmenu();
-                                        chkalarms();
                                         return;
                                     case 2:
-                                        //getGreyhawkOrdinal(amount,state.MWCalendar.now.month);
+                                        getGreyhawkOrdinal(amount,state.MWCalendar.now.month);
                                         return;
                                     case 3:
-                                        //getModernOrdinal(amount,state.MWCalendar.now.month);
+                                        getModernOrdinal(amount,state.MWCalendar.now.month);
                                         return;
                                     case 4:
                                         getEberronOrdinal(amount,state.MWCalendar.now.month);
-                                        weather("random");
-                                        moon(state.MWCalendar.now.prevType);
-                                        calmenu();
-                                        chkalarms();
                                         return;
                                     case 5:
-                                        //getTalOrdinal(amount,state.MWCalendar.now.month);
+                                        getTalOrdinal(amount,state.MWCalendar.now.month);
                                         return;
                                 }
                             } else if (type.includes("month")) {
-                                let month=args[2];
+                                let month=args[2].toLowerCase();
                                 switch (Number(state.MWCalendar.now.world)) {
                                     case 1:
                                         getFaerunOrdinal(state.MWCalendar.now.day,month);
-                                        weather("random");
-                                        moon(state.MWCalendar.now.prevType);
-                                        calmenu();
-                                        chkalarms();
                                         return;
                                     case 2:
-                                        //getGreyhawkOrdinal(state.MWCalendar.now.day,month);
+                                        getGreyhawkOrdinal(state.MWCalendar.now.day,month);
                                         return;
                                     case 3:
-                                        //getModernOrdinal(state.MWCalendar.now.day,month);
+                                        getModernOrdinal(state.MWCalendar.now.day,month);
                                         return;
                                     case 4:
                                         getEberronOrdinal(state.MWCalendar.now.day,month);
-                                        weather("random");
-                                        moon(state.MWCalendar.now.prevType);
-                                        calmenu();
-                                        chkalarms();
                                         return;
                                     case 5:
-                                        //getTalOrdinal(state.MWCalendar.now.day,month);
+                                        getTalOrdinal(state.MWCalendar.now.day,month);
                                         return;
                                 }
                             } else if (type.includes("year")) {
                                 state.MWCalendar.now.year=Number(args[2]);
-                                weather("random");
-                                moon(state.MWCalendar.now.prevType);
-                                calmenu();
-                                chkalarms();
                             }
+                            weather("random");
+                            moon(state.MWCalendar.now.prevType);
+                            calmenu();
+                            chkalarms();
                         } else if (args[1].includes("toggle")) {
                             let type=args[1].replace("toggle ","");
                             if (type=="weather") {
@@ -250,6 +234,9 @@ var MultiWorldCalendar = MultiWorldCalendar || (function() {
                             encounter();
                             calmenu();
                             chkalarms();
+                        } else if (args[1].includes("reset")) {
+                            reset();
+                            calmenu();
                         }
                     }
                     return;
@@ -289,7 +276,7 @@ var MultiWorldCalendar = MultiWorldCalendar || (function() {
                             }
                             editAlarm(alarmnum,title,date,time);
                         } else {
-                            alarmMenu(Number(args[1]));
+                            alarmMenu(args[1]);
                         }
                     } else if (args[1]==undefined) {
                         alarmMenu(args[1]);
@@ -320,6 +307,7 @@ var MultiWorldCalendar = MultiWorldCalendar || (function() {
         var moMenu = getMoMenu();
         var ordinal = state.MWCalendar.now.ordinal;
         var nowDate;
+        nowDate=getFaerunDate(ordinal).split(',');
         switch (Number(state.MWCalendar.now.world)) {
             case 1:
                 nowDate=getFaerunDate(ordinal).split(',');
@@ -391,8 +379,6 @@ var MultiWorldCalendar = MultiWorldCalendar || (function() {
                 '<div style="text-align:center;"><a ' + astyle2 + '" href="!mwcal --weather ?{Weather?|Put Weather here, type Random to randomise}">Set Weather</a></div>' + //--
                 '<div style="text-align:center;"><a ' + astyle2 + '" href="!alarm --new --title ?{Title?|Insert Title} --date ?{Date?|DD.MM.YYYY} --time ?{Time?|HH:MM}">Create Alarm</a></div>' + //--
                 '<div style="text-align:center;"><a ' + astyle2 + '" href="!showcal">Show to Players</a></div>' + //--
-                '<br><br>' + //--
-                '<div style="text-align:center;"><a ' + astyle2 + '" href="!mwcal --reset">Reset Calendar</a></div>' + //--
                 '</div>'
             );
         } else if (state.MWCalendar.now.wtype=="ON" && state.MWCalendar.now.mtype=="OFF") {
@@ -416,8 +402,6 @@ var MultiWorldCalendar = MultiWorldCalendar || (function() {
                 '<div style="text-align:center;"><a ' + astyle2 + '" href="!mwcal --weather ?{Weather?|Put Weather here, type Random to randomise}">Set Weather</a></div>' + //--
                 '<div style="text-align:center;"><a ' + astyle2 + '" href="!alarm --new --title ?{Title?|Insert Title} --date ?{Date?|DD.MM.YYYY} --time ?{Time?|HH:MM}">Create Alarm</a></div>' + //--
                 '<div style="text-align:center;"><a ' + astyle2 + '" href="!showcal">Show to Players</a></div>' + //--
-                '<br><br>' + //--
-                '<div style="text-align:center;"><a ' + astyle2 + '" href="!mwcal --reset">Reset Calendar</a></div>' + //--
                 '</div>'
             );
         } else if (state.MWCalendar.now.wtype=="OFF" && state.MWCalendar.now.mtype=="ON") {
@@ -441,8 +425,6 @@ var MultiWorldCalendar = MultiWorldCalendar || (function() {
                 '<div style="text-align:center;"><a ' + astyle2 + '" href="!mwcal --weather ?{Weather?|Put Weather here, type Random to randomise}">Set Weather</a></div>' + //--
                 '<div style="text-align:center;"><a ' + astyle2 + '" href="!alarm --new --title ?{Title?|Insert Title} --date ?{Date?|DD.MM.YYYY} --time ?{Time?|HH:MM}">Create Alarm</a></div>' + //--
                 '<div style="text-align:center;"><a ' + astyle2 + '" href="!showcal">Show to Players</a></div>' + //--
-                '<br><br>' + //--
-                '<div style="text-align:center;"><a ' + astyle2 + '" href="!mwcal --reset">Reset Calendar</a></div>' + //--
                 '</div>'
             );
         } else if (state.MWCalendar.now.wtype=="OFF" && state.MWCalendar.now.mtype=="OFF") {
@@ -465,8 +447,6 @@ var MultiWorldCalendar = MultiWorldCalendar || (function() {
                 '<div style="text-align:center;"><a ' + astyle2 + '" href="!mwcal --weather ?{Weather?|Put Weather here, type Random to randomise}">Set Weather</a></div>' + //--
                 '<div style="text-align:center;"><a ' + astyle2 + '" href="!alarm --new --title ?{Title?|Insert Title} --date ?{Date?|DD.MM.YYYY} --time ?{Time?|HH:MM}">Create Alarm</a></div>' + //--
                 '<div style="text-align:center;"><a ' + astyle2 + '" href="!showcal">Show to Players</a></div>' + //--
-                '<br><br>' + //--
-                '<div style="text-align:center;"><a ' + astyle2 + '" href="!mwcal --reset">Reset Calendar</a></div>' + //--
                 '</div>'
             );
         }
@@ -636,7 +616,7 @@ var MultiWorldCalendar = MultiWorldCalendar || (function() {
                 }
             break;
             case 2:
-                if (state.MWCalendar.now.mtype=="ON") {
+                if (state.calendar.now.mtype=="ON") {
                     rmoon = '<table style = "border: none;"><tr><td style="border: none; padding: 2px; padding-left: 5px;">Moon:</td><td style="border: none; padding: 2px; padding-left: 5px;">'+state.MWCalendar.now.moonImg+'</table>';
                 } else {
                     rmoon=undefined;
@@ -692,7 +672,7 @@ var MultiWorldCalendar = MultiWorldCalendar || (function() {
                     '</div>'
                 );
             }
-        } else if (state.MWCalendar.now.wtype=="OFF") {
+        } else if (state.calendar.now.wtype=="OFF") {
             weather=undefined;
             if (state.MWCalendar.now.mtype=="ON") {
                 sendChat("Multi-World Calendar",whisper+"<div " + divstyle + ">" + //--
@@ -718,6 +698,27 @@ var MultiWorldCalendar = MultiWorldCalendar || (function() {
                     '</div>'
                 );
             }
+        }
+    },
+
+    getAlarm = function(num) {
+        let alarm=findObjs({
+            _type: "handout",
+            name: "Alarm #"+num
+        }, {caseInsensitive: true})[0];
+        if (!alarm) {
+            sendChat("Multi-World Calendar","/w gm Could not find an Alarm with that Number!");
+        } else {
+            alarm.get("notes",function(notes) {
+                let title=String(notes);
+                alarm.get("gmnotes",function(gmnotes) {
+                    let datetime=String(gmnotes);
+                    datetime=datetime.split(';');
+                    let date=String(datetime[0]);
+                    let time=String(datetime[1]);
+                    alarmmenu(num,title,date,time);
+                });
+            });
         }
     },
 
@@ -1024,7 +1025,7 @@ var MultiWorldCalendar = MultiWorldCalendar || (function() {
         }
         state.MWCalendar.now.hour=hour;
         state.MWCalendar.now.minute=minute;
-        state.MWCalendar.now.ordinal=day;
+        state.MWCalendar.now.ordinal=ordinal;
         state.MWCalendar.now.year=year;
     },
 
@@ -1289,7 +1290,6 @@ var MultiWorldCalendar = MultiWorldCalendar || (function() {
     getEberronOrdinal = function(day,month) {
         //Eberron Ordinal
         let ordinal;
-        day=Number(day);
         switch (month) {
             case 'Zarantyr':
                 ordinal=day;
@@ -1693,43 +1693,17 @@ var MultiWorldCalendar = MultiWorldCalendar || (function() {
         
         return moMenu;
     },
-    
+
     reset = function() {
-        var divstyle = 'style="width: 220px; border: 1px solid black; background-color: #ffffff; padding: 5px;"';
-        var astyle1 = 'style="text-align:center; border: 1px solid black; margin: 1px; background-color: #7E2D40; border-radius: 4px;  box-shadow: 1px 1px 1px #707070; width: 100px;';
-        var astyle2 = 'style="text-align:center; border: 1px solid black; margin: 1px; background-color: #7E2D40; border-radius: 4px;  box-shadow: 1px 1px 1px #707070; width: 150px;';
-        var tablestyle = 'style="text-align:center;"';
-        var arrowstyle = 'style="border: none; border-top: 3px solid transparent; border-bottom: 3px solid transparent; border-left: 195px solid rgb(126, 45, 64); margin-bottom: 2px; margin-top: 2px;"';
-        var headstyle = 'style="color: rgb(126, 45, 64); font-size: 18px; text-align: left; font-variant: small-caps; font-family: Times, serif;"';
-        var substyle = 'style="font-size: 11px; line-height: 13px; margin-top: -3px; font-style: italic;"';
-        var tdstyle = 'style="padding: 2px; padding-left: 5px; border: none;"';
-        sendChat("Multi-World Calendar","/w gm <div " + divstyle + ">" + //--
-            '<div ' + headstyle + '>Multi-World Calendar</div>' + //--
-            '<div ' + substyle + '>Reset</div>' + //--
-            '<div ' + arrowstyle + '></div>' + //--
-            'Are you absolutely sure that you want to Reset this Script?<br><br>This will completely reset all settings that you have made and also delete all Alarms.' + //--
-            '<br><br>' + //--
-            '<div style="text-align:center;"><a ' + astyle2 + '" href="!mwcal --reset --Yes">Confirm</a></div>' + //--
-            '<div style="text-align:center;"><a ' + astyle2 + '" href="!mwcal --reset --No">Cancel</a></div>' + //--
-            '<div>'
-        );
+        setDefaults();
     },
 
-    checkInstall = function(reset) {
-        if (Boolean(reset)!==true) {
-            if (!state.MWCalendar) {
-                setDefaults();
-            }
-            if (!state.Alarm) {
-                setAlarmDefaults();
-            }
-        } else if (Boolean(reset)==true) {
-            if (state.MWCalendar) {
-                setDefaults();
-            }
-            if (state.Alarm) {
-                setAlarmDefaults();
-            }
+    checkInstall = function() {
+        if (!state.MWCalendar) {
+            setDefaults();
+        }
+        if (!state.Alarm) {
+            setAlarmDefaults();
         }
     },
 
