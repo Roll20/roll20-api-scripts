@@ -418,6 +418,7 @@ tr {line-height: 25px;}
                   <li><code>--attaqueAssuree</code> : implémente une attaque assurée (+5 à l'attaque, dégâts divisés par 2, critique impossible).</li>
                   <li><code>--attaqueRisquee</code> : implémente une attaque risquée (+2 à l'attaque au contact, -4 en DEF pendant un tour).</li>
                   <li><code>--attaqueDeGroupe <i>n</i></code> : <i>n</i> est le nombre de créatures qui attaquent ; implémente une attaque de groupe (+2 à l'attaque par attaquant au-delà du premier, x2 DMG si l'attaque dépasse la DEF de 5 ou plus, x3 DMG si critique).</li>
+                  <li><code>--attaqueAcrobatique</code> : l'attaquant effectue un test d'acrobatie difficulté 15, et s'il réussit, l'attaque bénéficie des effets d'une sournoise. On peut en option préciser le nombre de dés de cette attaque sournoise.</li>
                   <li><code>--strigeSuce</code> : option spécifique aux striges. Donne le malus de -3 en DEF et compte la quantite sucée. Quand cette quantité arrive à 6, enlève le malus de DEF et rend la cible affaiblie.</li>
                   <li><code>--mainsDEnergie</code> : +2 à +5 à l'attaque, selon l'armure de la cible</li>
                   <li><code>--semonce</code> : +5 au touché et +1d6 aux DM (ne change pas les charges de l'arme).</li>
@@ -458,6 +459,7 @@ tr {line-height: 25px;}
                   <li><code>--message <i>texte</i></code> : ajoute une ligne avec le message dans la fenêtre de l'attaque. Attention, <i>texte</i> ne doit pas contenir la séquence <code> --</code>.</li>
                   <li><code>--secret</code> : affiche les jets et résultats de l'attaque seulement aux joueurs qui contrôlent l'attaquant ou ses cibles, ainsi qu'au MJ.</li>
                   <li><code>--allonge <i>n</i></code> : ajoute <i>n</i> mètres à la portée d'une attaque au contact. L'allonge peut être un nombre à virgule et même négative.</li>
+                  <li><code>--canaliseParFamilier</code> : le point de départ de l'attaque est le familier s'il est actif sur la carte.</li>
                   <li><code>--soundAttack <i>son</i></code> : joue le son <i>son</i>, à moins qu'une version plus longue de l'option (voir ci-dessous) n'existe et qu'elle soit active.</li>
                   <li><code>--soundAttackEchec <i>son</i></code> : joue le son <i>son</i> lorque l'arme fait un echec, sauf si c'est un échec particulier et une version plus longue existe.</li>
                   <li><code>--soundAttackEchecCritique <i>son</i></code> : joue le son <i>n</i> lorque l'arme fait un echec critique</li>
@@ -487,7 +489,7 @@ tr {line-height: 25px;}
                 <h5>RD simple</h5>
                 <p>Dans le cas d'une RD simple (résistance à tous les dégâts), il suffit d'indiquer un nombre. Exemple : <code>3</code></p>
                 <h5>RD à un type de dégâts particuliers</h5>
-                <p>Pour une RD qui ne s'applique qu'à un type de dégâts particuliers, indiquer le type et la valeur séparés par <code>:</code>. Exemple : <code>feu:5</code>. On peut aussi spécifier une RD conte tous les types élémentaires avec le mot clé <code>elementaire</code>.</p>
+                <p>Pour une RD qui ne s'applique qu'à un type de dégâts particuliers, indiquer le type et la valeur séparés par <code>:</code>. Exemple : <code>feu:5</code>. On peut aussi spécifier une RD conte tous les types élémentaires avec le mot clé <code>elementaire</code>. On peut aussi avoir une RD qui ne s'applique qu'aux attaques à distance avec le mot clé <code>distance</code>.</p>
                 <h5>RD sauf un ou plusieurs types de dégâts particuliers</h5>
                 <p>Pour une RD qui s'applique tout le temps sauf un ou plusieurs types de dégâts particuliers, indiquer la valeur puis <code>/</code> puis les différents types séparés par <code>_</code>. Exemple <code>/</code>. Exemple : <code>5/argent_magique</code><br/>
                 Pour une RD qui s'appliquerait à tous les types d'armes sauf une, utiliser à la place une résistance aux 2 autres types d'armes. Exemple, pour 5/tranchant, utiliser <code>percant:5,contondant:5</code>.</p>
@@ -615,7 +617,7 @@ tr {line-height: 25px;}
               </div>
               <h3 class="text-info" id="statut_etats">2.4 Statut et états</h3>
               <div class="decalage">
-                <p><code>!cof-statut</code> affiche l'état courant de tous les tokens sélectionnés. Utile pour connaître facilement les états qui ne sont pas directement visibles sur un token (points de récupération, armes chargées, ...). Il est possible de rajouter l'affichage d'autres attributs que ceux sélectionnés par défaut par le sript. Pour cela, utiliser un attribut <code>attributsDeStatut</code>, de valeur courante la liste des noms d'attributs à afficher, séparés par des virgules.</p>
+                <p><code>!cof-statut</code> affiche l'état courant de tous les tokens sélectionnés. Utile pour connaître facilement les états qui ne sont pas directement visibles sur un token (points de récupération, armes chargées, ...). Il est possible de rajouter l'affichage d'autres attributs que ceux sélectionnés par défaut par le script. Pour cela, utiliser un attribut <code>attributsDeStatut</code>, de valeur courante la liste des noms d'attributs à afficher, séparés par des virgules.</p>
                 <h4 class="text-secondary" id="etats">États gérés en utilisant le statut des tokens</h4>
                 <div class="decalage">
                   <p><code>!cof-set-state <i>etat</i> <i>[true|false]</i></code> permet de changer l'état des tokens sélectionnés. Si cet état concerne un personnage avec tokens liés (en liant la barre 1 aux points de vie), alors l'état persiste si on change de carte (utilisation d'un attribut hors fiche).</p>
@@ -761,7 +763,7 @@ tr {line-height: 25px;}
                 </div>
                 <h4 class="text-secondary">Conditions hostiles et extrêmes</h4>
                 <div class="decalage">
-                <p>Pour des conditions hostiles, faire <code>!cof-effet conditionsHostiles oui</code> en sélectionnant les personnages concernés. Pour des conditions extrêmes, <code>!cof-effet conditionsHostiles 5</code>. À noter que le script permet de passer en argument n'importe quel nombre, qui sera appliqué en malus à la DEX, FOR, DEf et attaque.</p>
+                <p>Pour des conditions hostiles, faire <code>!cof-effet conditionsHostiles oui</code> en sélectionnant les personnages concernés. Pour des conditions extrêmes, <code>!cof-effet conditionsHostiles 5</code>. À noter que le script permet de passer en argument n'importe quel nombre, qui sera appliqué en malus à la DEX, FOR, DEF et attaque.</p>
                 </div>
                 <h4 class="text-secondary">Autres bufs et debufs</h4>
                 <div class="decalage">
@@ -973,6 +975,7 @@ tr {line-height: 25px;}
                   <li><strong>Tir de semonce</strong> : utiliser le modificateur <code>semonce</code> aux attaques. On laisse le MJ vérifier si la dernière attaque du personnage était bien un échec (devrait être facile à voir dans le chat). Le plus pratique pour l'utilisation avec differentes armes, est de créer une action <code>Tir de barrage</code> dans les <a href="#actions_du_tour">actions du tour</a>, avec comme code <code>#Attaque -1 --semonce</code>.
                     <li><strong>Tir de barrage</strong> : Utiliser l'option <code>--tirDeBarrage</code>. Ça multiplie les dégâts par 2, ignore la charge, et laisse un message demandant le undo si la cible décide de ne pas bouger.</li>
                     <li><strong>Couleuvrine</strong> : ajouter une attaque à distance, avec dans les modificateurs, <code>poudre, limiteParCombat</code> (ou en ligne de commande, avec l'option <code>--limiteParCombat</code>)</li>
+                    <li><strong>Feu nourri</strong> : faire les attaques comme pour le tirde barrage. Le script ne va pas vérifier que les cibles ne sont pas trop loin les unes des autres.</li>
                 </ol>
                 <h4 class="text-secondary">Voie des explosifs</h4>
                 <ol>
@@ -984,7 +987,7 @@ tr {line-height: 25px;}
                 </ol>
                 <h4 class="text-secondary">Voie du champ de bataille</h4>
                 <ol>
-                  <li><strong>Action concertée</strong> : utiliser <code>!cof-echange-init @{selected|token_id} @{target|token_id} <i>n</i></code> où <i>n</i> peut valoir 1 ou 2 selon le rang dans la voie.</li>
+                  <li><strong>Action concertée</strong> : utiliser <code>!cof-echange-init @{selected|token_id} @{target|token_id} <i>n</i></code> où <i>n</i> peut valoir 0, 1 ou 2 selon le rang dans la voie.</li>
                   <li><strong>À couvert</strong> : <code>!cof-a-couvert @{selected|token_id} @{target|token_id}</code> le target est l'allié qui se déplace avec l'arquebusier. Se sélectionner soi-même si pas d'allié.</li>
                   <li><strong>Combattant aguerri</strong> : se reporter à la capacité choisie</li>
                   <li><strong>Combat de masse</strong> : pas de support particulier, effectuer les actions supplémentaires en fonction des situations.</li>
@@ -1060,7 +1063,7 @@ tr {line-height: 25px;}
                   <li><strong>Précision</strong> : simplement utiliser le bon score sur la fiche.</li>
                   <li><strong>Intelligence du combat</strong> : ajouter un <a href=#predicats>prédicat</a> <code>intelligenceDuCombat</code>.</li>
                   <li><strong>Feinte</strong> : faire une attaque avec l'option <code>--feinte</code> pour profiter des effets de feinte au tour suivant. Par défaut, le bonus à l'attaque suivante est de +5 (règles de base), mais vous pouvez spécifier un bonus différent (par exemple 10 pour les règles de la boîte d'initiation) avec un <a href=#predicats>prédicat</a> <code>bonusFeinte</code> (la valeur du prédicat remplace le bonus de +5 par défaut). Il est aussi possible de changer le nombre de dés de dégât bonus en utilisant un prédicat<code>nbDesFeinte</code>.</li>
-                  <li><strong>Attaque flamboyante</strong> : faire une attaque avec les options <code>--bonusAttaque [[@{selected|CHA}]] --plus [[@{selected|CHA}]]</code>.</li>
+                  <li><strong>Attaque flamboyante</strong> : faire une attaque avec le modificateur <code>attaqueFlamboyante</code>. Le plus pratique pour l'utilisation avec différentes armes, est d'ajouter à la liste des <a href="#actions_du_tour">actions du tour</a> une action de titre <code>Attaque flamboyante</code> et de code <code>#Attaque -1 --attaqueFlamboyante</code>. Attention, afin de garder un intérêt à la feinte quand on dispose de cette attaque, j'ai choisi de rajouter encore le mod. de charisme aux DM en cas d'attaque flamboyante suivant une feinte réussie. Si cela ne vous convient pas, vous pouvez à la place de cette option ajouter <code>--bonusAttaque [[@{selected|CHA}]] --plus [[@{selected|CHA}]]</code>.</li>
                   <li><strong>Botte mortelle</strong> : ajoutez un <a href=#predicats>prédicat</a> <code>botteMortelle</code>.</li>
                 </ol>
                 <h4 class="text-secondary">Voie du musicien</h4>
@@ -1286,7 +1289,7 @@ tr {line-height: 25px;}
                 </ol>
                 <h4 class="text-secondary">Voie de l'invocation</h4>
                 <ol>
-                  <li><strong>Familier</strong> : créer un personnage (de type PNJ) pour le familier, controlé par le joueur et avec un token lié ayant la capcité de voir. 
+                  <li><strong>Familier</strong> : créer un personnage (de type PNJ) pour le familier, controlé par le joueur et avec un token lié ayant la capacité de voir. 
                     <ul>
                       <li>Pour le bonus en initiative, ajouter un attribut <code>familier</code> au personnage, avec comme valeur le nom du compagnon (doit être exactement le même que celui du token du compagnon). Cela automatise l'initiative quand le familier est présent.</li>
                       <li>Pour les points de vie partagés avec le familier, il faut mettre un attribut <code>PVPartagesAvec</code> de valeur le nom du familier (celui de la fiche, pas forcément le même que le token) pour le personnage, et un attribut similaire chez le familier, de valeur courante le nom du personnage. Le partage de PVs ne fonctionne pas avec des mooks, et il ne fait pas le partage de dégâts temporaires. En revanche, le script devrait gérer correctement les dégâts de zone.</li>
@@ -1351,7 +1354,7 @@ tr {line-height: 25px;}
                 <h4 class="text-secondary">Voie des runes</h4>
                 <p style="margin-top:0px; margin-bottom:0px">Ajouter un <a href=#predicats>prédicat</a> <code>voieDesRunes</code> pour le personnage avec comme valeur le niveau dans la voie des Runes.</p>
                 <ol>
-                  <li><strong>Runes de défense</strong> : ajuster la DEF sur la fiche.</li>
+                  <li><strong>Runes de défense</strong> : Rien à faire, le prédicat <code>voieDesRunes</code> est pris en compte dans le calcule de la DEF.</li>
                   <li><strong>Rune d'énergie</strong> : La fabrication des runes de combat est gérée par la commande <code>!cof-runes</code> (il est fortement conseillé de créer une ability pour le forgesort). Le script tente de détecter quand les runes peuvent être utilisées en combat et propose un bouton (à la manière des points de chance). Lors de chaque nuit (utilisation de la commande <code>!cof-nouveau-jour</code>) toutes les runes sont retirées, mais le script va suggérer des raccourcis au forgesort pour les restaurer facilement à tous les tokens présents sur la page des joueurs (par personnage, type de rune, et aussi un bouton "Tout renouveler"). Les points de mana sont automatiquement décomptés.</li>
                   <li><strong>Rune de protection</strong> : cf. ci-dessus. Le script implémente par défaut un maximum de dommages absorbés par la rune équivalent au rang du forgesort dans la voie des Runes multiplié par 10. Il est possible de désactiver cette limitation via !cof-options.</li>
                   <li><strong>Rune de puissance</strong> : cf. ci-dessus. Créer une rune de puissance vous demandera d'indiquer en plus le numéro de l'arme sur la fiche du propriétaire.</li>
@@ -1567,7 +1570,7 @@ tr {line-height: 25px;}
                 </ol>
                 <h4 class="text-secondary">Voie du vent</h4>
                 <ol>
-                  <li><strong>Pas du vent</strong> : pas de support particulier, simplement ajuster l'initiative.</li>
+                  <li><strong>Pas du vent</strong> : un prédicat <code>pasDuVent</code> avec comme valeur le rang dans la voie permet d'augmenter automatiquement l'initiative. Pour le reste, il n'y a pas de support particulier.</li>
                   <li><strong>Course du vent</strong> : géré par le MJ.</li>
                   <li><strong>Course des airs</strong> : pas de support.</li>
                   <li><strong>Lévitation</strong> : pas de support.</li>
@@ -1805,7 +1808,7 @@ tr {line-height: 25px;}
               <div class="decalage">
                 <h4 class="text-secondary">Voie de l'archer</h4>
                 <ol>
-                  <li><strong>Sens affutés</strong> : Créez un <a href=#predicats>prédicat</a> <code>sensAffutes</code>. Cela va ajuster l'initiative (ne se voit pas sur la fiche). Pour le bonus aux dégâts des arcs, ajouter manuellement pour chaque attaque. Et ajouter le bonus aux compétences <code>perception</code> et <code>vigilance</code> (ou créez-les).</li>
+                  <li><strong>Sens affutés</strong> : Créez un <a href=#predicats>prédicat</a> <code>sensAffutes</code>. Cela va ajuster l'initiative (ne se voit pas sur la fiche), ainsi que les dégâts des arcs (attention à ne pas en plus le rajouter sur la fiche !).  Ajoutez ensuite le bonus aux compétences <code>perception</code> et <code>vigilance</code> (ou créez-les).</li>
                   <li><strong>Tir aveugle</strong> : utiliser une attaque avec l'option <code>--tirAveugle</code>.</li>
                   <li><strong>Tir rapide</strong> : faire simplement deux attaques dans le tour</li>
                   <li><strong>Flèche de mort</strong> : faire l'attaque avec les options <code>--m2d20 --incrDmgCoef</code></li>
@@ -1897,7 +1900,7 @@ tr {line-height: 25px;}
                 <ol>
                   <li><strong>Esquive</strong> : Ajouter un <a href=#predicats>prédicat</a> <code>esquiveVoleur</code>, de valeur le rang dans la voie. Ne pas modifier la DEF sur la fiche, le script fera les ajustements (et montrera le total avec <code>!cof-statut</code>).</li>
                   <li><strong>Chute</strong> : pas de support particulier.</li>
-                  <li><strong>Acrobaties</strong> : faire <code>!cof-jet DEX 15</code> pour le jet de dextérité, le reste est géré par le MJ.</li>
+                  <li><strong>Acrobaties</strong> : faire <code>!cof-jet DEX 15 --nom acrobatie</code> pour le jet de dextérité, le reste est géré par le MJ. Il est possible d'automatiser quand le personnage décide de faire une attaque quel que soit le résultat du jet d'acrobatie grace à la commande <code>#Attaque -1 --attaqueAcrobatique</code>.</li>
                   <li><strong>Esquive de la magie :</strong> ajouter un <a href=#predicats>prédicat</a> <code>esquiveDeLaMagie</code>.</li>
                   <li><strong>Dextérité héroïque :</strong> ajouter les bonus sur la fiche</li>
                 </ol>
@@ -2050,6 +2053,13 @@ tr {line-height: 25px;}
               </div>
               <h3 class="text-info" id="Prestige">4.2 Voies de prestige et capacités épiques</h3>
               <div class="decalage">
+                <h4 class="text-secondary">Voie d'Arwendée</h4>
+                <ol>
+                  <li><strong>Sens affutés</strong> : Créez un <a href=#predicats>prédicat</a> <code>sensAffutes</code>. Cela va ajuster l'initiative (ne se voit pas sur la fiche), ainsi que les dégâts des arcs. Ajoutez ensuite le bonus aux compétences <code>perception</code> et <code>vigilance</code> (ou créez-les).</li>
+                  <li><strong>Arc de maître</strong> : Créez un <a href=#predicats>prédicat</a> <code>arcDeMaitre</code> pour automatiquement augmenter la portée des arcs de 20 m.</li>
+                  <li><strong>Carquois magique</strong> : <code>!cof-effet-temp carquoisMagique [[5+@{selected|SAG}]] --valeur ?{Type de DM?|feu|froid|foudre} --mana 1</code>.</li>
+                  <li><strong>Protection contre les projectiles</strong> : Créez un <a href=#predicats>prédicat</a> <code>protectionContreLesProjectiles</code>  de valeur 10. Puis, pour lancer le sort, utilisez <code>!cof-effet-temp protectionContreLesProjectiles [[6*(5+@{selected|SAG})]] --lanceur @{selected|token_id} --target @{target|token_id} --mana 2</code>.</li>
+                </ol>
                 <h4 class="text-secondary">Voie de l'archange</h4>
                 <ol>
                   <li><strong>Forme d'ange</strong> : <code>!cof-effet-temp formeDAnge [[5+@{selected|SAG}]] --mana 0</code>. Le MJ devra gérer l'aspect en vol.</li>
@@ -2088,6 +2098,14 @@ tr {line-height: 25px;}
                 <ol>
                   <li><strong>Nuée de criquets</strong> : ajouter une attaque magique, de portée 20 m, type Sortilege, modificateur <code>pasDeDmg</code> et options <code>--effet nueeDeCriquets [[5+@{selected|SAG}]]</code>. Pas de support particulier pour les DM de zone qui détruisent la nuée (enlever l'attribut <code>nueeDeCriquets</code> sur la cible dans ce cas).</li>
                 </ol>
+                <h4 class="text-secondary">Voie du chasseur de corruption</h4>
+                <p>Pour savoir si une cible est corrompue, le script va utiliser un <a href=#predicats>prédicat</a> <code>corrompu</code> qu'il appartient au MJ d'ajouter pour les créatures selon ses critères.</p>
+                <ol>
+                  <li><strong>Sentir la corruption</strong> : <code>!cof-sentir-la-corruption @{selected|token_id} @{target|token_id}</code>.</li>
+                  <li><strong>Combattre la corruption</strong> : ajouter un prédicat <code>combattreLaCorruption</code>. Y associer la valeur 2 au rang 4 dans la voie.</li>
+                  <li><strong>Chasseur de sorcière</strong> : ajouter un prédicat <code>chasseurDeSorciere</code>. Pour reconnaître les nécromanciens et autres prêtres maléfiques, il faut aussi leur ajouter un prédicat <code>necromancien</code>.</li>
+                  <li><strong>Frappe préventive</strong> : pas de support du script.</li>
+                </ol>
                 <h4 class="text-secondary">Voie du chevalier dragon</h4>
                 <ol>
                   <li><strong>Ordre du chevalier dragon</strong> : créer les compétences Persuasion et Intimidation avec les bonus de base de +5. Ajouter un <a href=#predicats>prédicat</a> <code>ordreDuChevalierDragon</code>. Quand le personnage est monté, le script rajoutera automatiquement un bonus de +5 via <code>!cof-jet</code></li>
@@ -2108,6 +2126,28 @@ tr {line-height: 25px;}
                   <li><strong>Attaque en mouvement</strong> : pas de support du script.</li>
                   <li><strong>Danse des lames</strong> : <code>!cof-effet-combat danseDesLames</code>. Pour l'attaque gratuite supplémentaire, on peut faire <code>#Attaque -1 --si etat danseDesLames --avecd12crit</code>.</li>
                 </ol>
+                <h4 class="text-secondary">Voie du familier fantastique</h4>
+                <ol>
+                  <li><strong>Familier fantastique</strong> : créer un personnage (de type PNJ) pour le familier, controlé par le joueur et avec un token lié ayant la capacité de voir. 
+                    <ul>
+                      <li>Pour le bonus en initiative, ajouter un attribut <code>familier</code> au personnage, avec comme valeur le nom du compagnon (doit être exactement le même que celui du token du compagnon). Cela automatise l'initiative quand le familier est présent.</li>
+                      <li>Pour les points de vie partagés avec le familier, il faut mettre un attribut <code>PVPartagesAvec</code> de valeur le nom du familier (celui de la fiche, pas forcément le même que le token) pour le personnage, et un attribut similaire chez le familier, de valeur courante le nom du personnage. Le partage de PVs ne fonctionne pas avec des mooks, et il ne fait pas le partage de dégâts temporaires. En revanche, le script devrait gérer correctement les dégâts de zone.</li>
+                      <li>Pour la défense du familier, ajouter lui un attribut <code>defDeriveeDe</code>, de valeur le nom du personnage (nom complet sur la fiche).</li>
+                      <li>Pour l'initiative, ajoutez un attribut <code>initiativeDeriveeDe</code> de valeur le nom du personnage.</li>
+                    </ul>
+                  </li>
+                  <li><strong>Pouvoir mineur</strong> : 
+                    <ul>
+                      <li><strong>Minimoi (Égocentrisme)</strong> : Téléportation, pas de support.</li>
+                    </ul>
+                  </li>
+                  <li><strong>Canalisation</strong> : Lancer l'attaque avec l'option <code>--canaliseParFamilier</code>.</li>
+                  <li><strong>Pouvoir supérieur</strong> :
+                    <ul>
+                      <li><strong>Minimoi (Clone)</strong> : à faire.</li>
+                    </ul>
+                  </li>
+                </ol>
                 <h4 class="text-secondary">Voie du gel</h4>
                 <ol>
                   <li></li>
@@ -2118,6 +2158,12 @@ tr {line-height: 25px;}
                 <h4 class="text-secondary">Voie du guérisseur</h4>
                 <ol>
                   <li><strong>Premiers soins</strong> : ajouter un <a href=#predicats>prédicat</a> <code>voieDuGuerisseur</code> de valeur le rang dans cette voie pour le bonus aux soins de la Voie des soins. Pas encore de support complet pour le sort, faire simplement <code>!cof-soin @{selected|token_id} @{target|token_id} 2d6+@{selected|SAG}</code>.</li>
+                </ol>
+                <h4 class="text-secondary">Voie du guerrier-mage</h4>
+                <p>Penser à utiliser l'option <code>--magieEnArmure</code> pour le lancement des sorts affectés.</p>
+                <ol>
+                  <li><strong>Magie en armure</strong> : Ajouter un <a href=#predicats>prédicat</a> <code>magieEnArmure</code> de valeur la DEF totale à partir de laquelle le personnage peut lancer des sorts. Comme la fiche ne contient pas l'information de la DEF normale (sans magie) de l'armure portée, le script utilise la moyenne de la DEF et du malus d'armure. En ajoutant un prédicat <code>magieEnArmureFacilitee</code>, le script diminue aussi la difficulté des jets d'INT pour les armures avec une DEF trop grande de la valeur du prédicat de magie en armure.</li>
+                  <li><strong>Rituel Assuré</strong> : <code>!cof-effet-temp rituelAssure 2</code>. Le script ne permet pas de préciser le sort, le premier qui sera lancé après le rituel assuré bénéficiera de l'effet.</li>
                 </ol>
                 <h4 class="text-secondary">Voie du héro</h4>
                 <ol>
@@ -2227,7 +2273,7 @@ tr {line-height: 25px;}
                 </ol>
                 <h4 class="text-secondary">Voie de la meute</h4>
                 <ol>
-                  <li><strong>Intergeanchables</strong> : Utiliser un <a href=#predicats>prédicat</a> <code>interchangeable</code>, avec comme valeur le nombre d'opposants à partir duquel les cibles peuvent être interverties. Par défaut, cela va donner un bonus de +2 en DEf et +3 an attaque. Pour retrouver la valeur normale de +5 en DEF, utilisez <code>!cof-options</code>.</li>
+                  <li><strong>Intergeanchables</strong> : Utiliser un <a href=#predicats>prédicat</a> <code>interchangeable</code>, avec comme valeur le nombre d'opposants à partir duquel les cibles peuvent être interverties. Par défaut, cela va donner un bonus de +2 en DEF et +3 an attaque. Pour retrouver la valeur normale de +5 en DEF, utilisez <code>!cof-options</code>.</li>
                   <li><strong>Attaque en traître</strong> : Au MJ de décider si une attaque est en traître ou pas. Pour une attaque en traître, rajouter les arguments <code>--sournoise 2 --bonusAttaque 5</code>.</li>
                 </ol>
                 <h4 class="text-secondary">Voie du PNJ récurrent</h4>
@@ -2254,6 +2300,7 @@ tr {line-height: 25px;}
                 <ul>
                   <li><strong>Animation des objets</strong> : <code>!cof-animation-des-objets @{selected|token_id} ?{Taille d'objet|tabouret ou coffret,1|chaise ou coffre,2|meuble bas ou table,4|grande table,7|grosse armoire,10}</code> On peut ajouter un troisième argument, <code>@{target|token_id}</code> pour animer un token d'objet sur la carte.</li>
                   <li><strong>Armure d'eau</strong> : <code>!cof-effet-combat armureDEau</code>. Le script automatise l'immunité aux étreintes (pas aux enveloppements) et à la capacité Agripper des créatures volantes.</li>
+                  <li><strong>Choc</strong> : Faire une attaque de portée 20 m, de type Sortilège, DM contondants, portée 20 m, et avec les options <code>--etat renverse --save FOR 10</code>.</li>
                   <li><strong>Coup au but</strong> : <code>!cof-effet-temp bonusAttaqueTemp 1 --valeur 10 --lanceur @{selected|token_id} --portee 10 --mana 0 --target @{target|token_id}</code>.</li>
                   <li><strong>Force de géant</strong> : <code>!cof-effet-temp forceDeGeant 10</code>. Le bonus est de 2 par défaut, mais peut être modifié en utilisant l'option <code>--valeur</code>.</li>
                   <li><strong>Nuée de scorpions</strong> : ajouter une attaque magique, de portée 20 m, type Sortilège, modificateur <code>--pasDeDmg</code> et option  <code>--effet nueeDeScorpions 10</code>. Pas de support particulier pour les DM de zone qui détruisent la nuée (enlever l'attribut <code>nueeDeScorpions</code> sur la cible dans ce cas).</li>
@@ -2564,7 +2611,7 @@ tr {line-height: 25px;}
                 </ol>
                 <h4 class="text-secondary">Voie du commandement</h4>
                 <ol>
-                  <li><strong>Action concertée :</strong> utiliser <code>!cof-echange-init @{selected|token_id} @{target|token_id} <i>n</i></code> où <i>n</i> peut valoir 1, 2 ou 3 selon le rang dans la voie et si la capacité est avancée.</li>
+                  <li><strong>Action concertée :</strong> utiliser <code>!cof-echange-init @{selected|token_id} @{target|token_id} <i>n</i></code> où <i>n</i> peut valoir 0, 1, 2 ou 3 selon le rang dans la voie et si la capacité est avancée.</li>
                   <li><strong>À couvert (L) :</strong> <code>!cof-a-couvert @{selected|token_id} @{target|token_id}</code> le target est l'allié qui se déplace avec l'arquebusier. Se sélectionner soi-même si pas d'allié. Pas encore de support pour la capacité avancée.</li>
                   <li><strong>Exemplaire :</strong> faire <code>!cof-exemplaire</code>, juste après l'attaque ratée.</li>
                   <li><strong>Ordre de bataille :</strong> pas de support </li>
