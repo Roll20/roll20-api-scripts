@@ -1,6 +1,12 @@
 # COFantasy: Historique des changements (depuis la version 1.0)
 ## 3.08
 ### Capacités
+* Ajout de la Voie d'Arwendée. Attention sens affûtés ajoute maintenant automatiquement le bonus de DM aux arcs.
+* Rang 3 de la Voie du familier fantastique.
+* Prise en compte automatique du rang 1 de la Voie des runes.
+* Automatisation d'un cas courant d'utilisation de la capacité Acrobaties.
+* Ajout des 3 premiers rangs de la Voie du chasseur de corruption.
+* Magie en armure et rituel assuré de la Voie du guerrier-mage.
 * 3 premiers rangs du maître des poisons
 
 ### Corrections de bugs
@@ -8,6 +14,7 @@
 * Correction d'un crash avec des persos ayant un alias.
 
 ### Autres améliorations
+* Plus d'affichage des actions de recharge des armes déjà chargées.
 * Prise en charge des conditions hostiles et des conditions extrêmes.
 * Prise en charge de la perte de substance d'Invincible.
 * Prise en charge du poison affaiblissant
