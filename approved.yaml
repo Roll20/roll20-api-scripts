@@ -1159,3 +1159,7 @@ mutantyearzerosectorgenerator:
 itemstore:
   - "Item Store"
   - "Utility" 
+
+rpgmasterlibraryad+d2e:
+  - "RPGMaster library AD+D2e"
+  - "Utility" 
