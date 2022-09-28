@@ -1082,12 +1082,84 @@ alienrpgroller:
 
 roundmaster:
   - "RoundMaster"
-  - "Utility"
+  - "System Toolbox"
 
 initmaster:
   - "InitMaster"
-  - "Utility"
+  - "System Toolbox"
 
 randomtokentinter:
   - "RandomTokenTinter"
   - "Tokens"
+
+attackmaster:
+  - "AttackMaster"
+  - "System Toolbox"
+  
+commandmaster:
+  - "CommandMaster"
+  - "System Toolbox"
+
+magicmaster:
+  - "MagicMaster"
+  - "System Toolbox"
+
+tokencontroller:
+  - "TokenController"
+  - "Tokens"
+  
+unsanity:
+  - "UnSanity"
+  - "Utility"
+
+simplesound:
+  - "SimpleSound"
+  - "Jukebox"
+
+smartaoe:
+  - "SmartAoE"
+  - "Maps & Drawing"
+
+campaignsurvey:
+  - "Campaign Survey"
+  - "Utility"
+
+cardtables:
+  - "CardTables"
+  - "Utility"
+
+fatepointdisplay:
+  - "FatePointDisplay"
+  - "System Toolbox"
+
+rolemasterd100:
+  - "RoleMasterD100"
+  - "Utility"
+
+downtimesystem:
+  - "Downtime System"
+  - "Utility"
+
+multiworldcalendar:
+  - "Multi-World Calendar"
+  - "Utility"
+
+calendardnd:
+  - "Calendar DND"
+  - "Utility"
+
+improvedcritical:
+  - "Improved Critical"
+  - "Utility"
+
+mutantyearzerosectorgenerator:
+  - "MutantYearZero_SectorGenerator"
+  - "Utility"
+
+itemstore:
+  - "Item Store"
+  - "Utility" 
+
+rpgmasterlibraryadd2e:
+  - "RPGMlibrary AD+D2e"
+  - "Utility" 
