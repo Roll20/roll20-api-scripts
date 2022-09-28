@@ -1,0 +1,39 @@
+!cardtable{{		
+s-spell-critical-fumble		
+d100	Description	Effect
+1	"You are embarassed by your poor showing, but nothing remarkable happens."	You miss your attack.
+02-05	You get wrapped up in your spellcasting and forget to watch your target.	Your target has advantage on their first attack roll against you next round.
+06-09	You get wrapped up in your spellcasting and forget to watch your surroundings.	All enemies have advantage on their first attack roll against you next round.
+10-14	You are so wrapped up in your spellcasting that you forget you are fighting a battle.	All enemies have advantage on their attack rolls against you until the end of your next turn.
+15-19	Your spell creates a large plume of smoke obscuring your location.	The area in a 5 foot radius around your location becomes heavily obscured for 1 minute. A strong breeze can blow away the smoke in 1 round.
+20-29	Your spell misfires knocking you over.	You are knocked prone.
+30-39	"The spell fires in an unexpected manner, causing your confidence in your abilities to falter."	"You have disadvantage on any spell attacks, and enemies have advantage against your spell savings throws until the end of your next turn."
+40-49	"The placement of your spell startles your allies near your target, causing them to drop their guard."	Your target is able to use their reaction to take an attack of opportunity on one of your allies in melee range.
+50-59	You scramble the ingredients of your component pouch or your focus becomes overloaded with magical energy and temporarily stops working.	You are unable to perform material components to cast spells until the end of your next turn.
+60-69	Your arm cramps as you cast.	You are unable to perform somatic components to cast spells until the end of your next turn.
+70-79	You bite your tongue as you cast.	You are unable to use verbal components to cast spells until the end of your next turn.
+80-84	"Your spell misfires and dazes you, causing you to lose track of the fight."	End your turn and move to the bottom of the initiative order at the start of the next round.
+85-89	Your spell misfires causing you to panic.	End your current turn and you are surprised until the end of your next turn.
+90-94	Your spell backfires creating a small explosion causing you to fall and bump your head.	"You fall prone. Roll a DC 10 constitution save, on failure you take 1d6 bludeoning damage and are knocked unconscious for 1 minute or until you receive damage from any source. On success take half damage and you remain conscious."
+95-99	Your spell backfires creating a large explosion causing you to fall and bump your head.	"You fall prone. Roll a DC 15 constitution save, on failure you take 1d6 bludgeoning damage, 1d6 thunder damage, and are knocked unconscious for 1 minute or until you receive damage from any source. On success take half damage and you remain conscious."
+100	Your spell completely backfires creating a large explosion causing you to fall and bump your head.	"You hit yourself with your spell. If the spell effect is instant you take the full effect. If the spell requires concentration the effect persists until the end of your next turn. You also fall prone, take 1d6 bludgeoning damage, 1d6 thunder damage, and become unconscious for 1 minute or until you receive damage from any source."
+}}		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
