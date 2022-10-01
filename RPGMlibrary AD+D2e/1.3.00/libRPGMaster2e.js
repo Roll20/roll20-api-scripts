@@ -2262,11 +2262,11 @@ const libRPGMaster = (() => { // eslint-disable-line no-unused-vars
 							+'<p>A function to get an entry from a database. Uses the global DBindex internally to access the correct database entry directly, eliminating the speed of a Roll20 object search. The building of the index using getDBindex() will determine the priority order of the potential sources for database items: see that function description for details. However, if the item does not have an entry in the DBindex (i.e. is not in any currently loaded database), and if a character sheet object is passed as a parameter, this abilityLookup() function will also search the character sheet for a copy of the database item which might have previously been placed there by a getAbility() function call. This allows characters to have items that come from user-defined databases in one campaign that are carried with them to other campaigns which perhaps don\'t have the same user-defined databases loaded.</p>'
 							+'<p>Takes the following parameters:</p>'
 							+'<ul>'
-							+	'<li><b>rootDB:</b> The root database name for the type of item being recovered. Will access indexes from any database name that starts with the rootDB name. Can be one of <i>MU-Spells-DB, PR-Spells-DB, Powers-DB, MI-DB, Attacks-DB, Class-DB</i></li>'
-							+	'<li><b>dbItemName:</b> The name of the item being searched for. The following characters are ignored: \'-\', \'_\', \'space\'.</li>'
-							+	'<li><b><i>character:</i></b> (optional) the character sheet object for the character sheet for which the item is relevant, and which might hold any orphaned item that is not available in current databases.</li>'
+							+	'<li><b>rootDB:</b> The root database name for the type of item being recovered. Will access indexes from any database name that starts with the rootDB name. Can be one of <i>MU-Spells-DB, PR-Spells-DB, Powers-DB, MI-DB, Attacks-DB, Class-DB</i> or in fact any database name starting with any of these strings (the function will derive the core database name from the rootDB name provided).</li>'
+							+	'<li><b>dbItemName:</b> The name of the item being searched for. The case and the following characters are ignored: \'-\', \'_\', \'space\'.</li>'
+							+	'<li><b><i>character:</i></b> (optional) the Roll20 Character object for the character sheet for which the item is relevant, and which might hold any orphaned item that is not available in current databases.</li>'
 							+	'<li><b><i>silent:</i></b> (optional) a boolean value which, if true, will surpress any error message if the rootDB is invalid or the item cannot be found. False or not provided will result in error messages being returned.</li>'
-							+	'<li><b><i>default:</i></b> (optional) a boolean value which, if false, returns < undefined > for any database item object if the item is not found or other errors occur, or if true or not defined returns a default item with the following structure:<br>'
+							+	'<li><b><i>default:</i></b> (optional) a boolean value which, if false, returns < undefined > for dbItemObject if the item is not found or other errors occur, or if true or not defined returns a default item with the following structure:<br>'
 							+		'<pre>{name:\'-\',type:\'\',ct:\'0\',charge:\'uncharged\',cost:\'0\',body:\'This is a blank slot. Go search out something new to fill it up!\'}</pre></li>'
 							+	'<li><b>dbItemObject</b> A database item object, of class AbilityObj, with structure:'
 							+		'<pre>	class AbilityObj {<br>'
@@ -2279,7 +2279,7 @@ const libRPGMaster = (() => { // eslint-disable-line no-unused-vars
 							+		'		}</pre></li>'
 							+'</ul><br>'
 							+'<pre>dbItemObject = getAbility( rootDB, dbItemName, character, <i>silent</i> )</pre>'
-							+'<p>A special version of <i>abilityLookup()</i> that not only gets the requested database item from the databases, but also saves that item to the stated character sheet for later reference. All parameters are defined the same as those for <i>AbilityLookup()</i> above.</p>'
+							+'<p>A special version of <i>abilityLookup()</i> that not only gets the requested database item from the databases, but also saves that item to the stated character sheet for later reference. All parameters are defined the same as those for <i>AbilityLookup()</i> above. The returned <i>dbItemObject.dB</i> object attribute always holds the name of the character sheet, so that after a call to <i>getAbility()</i>, the standard Roll20 syntax of `%{${dbItemObject.dB}|${dbItemName}}` will work to display the database item in the chat window, but the original source database information will be lost.</p>'
 							+'<br>'
 							+'<pre>itemObject = setAbility( character, itemName, itemBody, <i>actionBar</i> )</pre>'
 							+'<p>A function to set or update a database item or an ability macro in a character sheet (database items are stored as ability macros on a character sheet). <b>Note:</b> the API in-memory databases cannot be updated in this way. Only items and ability macros on character sheets can be created and updated. Takes the following parameters:</p>'
@@ -4550,7 +4550,7 @@ const libRPGMaster = (() => { // eslint-disable-line no-unused-vars
 			 
 			LibFunctions.abilityLookup = function( rootDB, ability, charCS, silent=false, def=true ) {
 				
-				var charID, obj, ct, dBname, spells, objIndex,
+				var charID, obj, ct, dBname, spells, items, objIndex,
 					abilityName = ability.toLowerCase().replace(reIgnore,''),
 					source = 'charDB',
 					abilityObj = [],
@@ -4598,14 +4598,15 @@ const libRPGMaster = (() => { // eslint-disable-line no-unused-vars
 				} else {
 					charID = obj.get('characterid');
 					dBname = getObj('character',charID).get('name');
-					spells = dBname.includes('spell') || dBname.includes('power');
+					spells = dBname.startsWith(fields.MU_SpellsDB) || dBname.startsWith(fields.PR_SpellsDB) || dBname.startsWith(fields.Powers_DB);
+					items = dBname.startsWith(fields.MagicItemDB);
 					abilityObj[0] = obj;
 					ct = !ct ? getObj('attribute',objIndex[1]) : ct[0];
 					abilityObj[1] = {name:obj.get('name'),
 									 type:'',
 									 ct:(!ct ? 0 : ct.get('current')),
 									 charge:(!ct || spells ? 'uncharged' : ct.get('max')),
-									 cost:(!ct || !spells ? '0' : ct.get('max')),
+									 cost:(!ct || items ? '0' : ct.get('max')),
 									 body:obj.get('action')};
 					ctObj = [ct,abilityObj[1].ct];
 				};
