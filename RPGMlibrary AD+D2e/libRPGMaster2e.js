@@ -5764,6 +5764,7 @@ const libRPGMaster = (() => { // eslint-disable-line no-unused-vars
 						handoutIDs[name] = h.id;
 					}
 				});
+				return handoutIDs;
 			};
 					
 			
@@ -6449,6 +6450,7 @@ const libRPGMaster = (() => { // eslint-disable-line no-unused-vars
 		addMIspells: (...a) => LibFunctions.addMIspells(...a),
 		getMagicList: (...a) => LibFunctions.getMagicList(...a),
 		handleCheckSaves: (...a) => LibFunctions.handleCheckSaves(...a),
+		getHandoutIDs: (...a) => LibFunctions.getHandoutIDs(...a),
     };
 
 })();
