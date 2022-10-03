@@ -45,7 +45,7 @@
 
 var initMaster = (function() {
 	'use strict'; 
-var version = '1.3.00',
+	var version = '1.3.00',
 		author = 'RED',
 		pending = null;
     const lastUpdate = 1663353439;
