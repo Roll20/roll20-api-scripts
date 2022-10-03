@@ -1101,6 +1101,15 @@ var CommandMaster = (function() {
 	 
 	var makeProficienciesMenu = function( args, selected, msg ) {
 		
+		var tokenID, charCS;
+		
+		if (selected && selected.length) {
+			tokenID = selected[0]._id,
+			charCS = getCharacter( tokenID );
+		}
+		
+		if (!charCS) return;
+		
 		var	weapon = args[1] || '',
 			meleeWeapon = args[2] || false,
 			weapType = args[3] || '',
@@ -1594,7 +1603,7 @@ var CommandMaster = (function() {
 	var handleChooseProf = function( args, selected ) {
 		
 		var weapon = args[1],
-			weap = abilityLookup( fields.WeaponDB, weapon, charCS ),
+			weap = abilityLookup( fields.WeaponDB, weapon ),
 			weapProf = false,
 			meleeWeap = false,
 			weapType = false;
