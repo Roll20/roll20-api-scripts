@@ -67,26 +67,7 @@ var ItemStore = ItemStore || (function() {
     var version = '1.5',
     
     setDefaults = function() {
-        state.store = [
-            {
-                name: "Test",
-                inv: [
-                    {
-                        name: "Item",
-                        desc: "Wondrous Item (uncommon);This is a Test item",
-                        mods: "Item Type: Wondrous Item",
-                        props: "",
-                        price: 1,
-                        weight: 1,
-                        amount: 1,
-                        sellam: 1
-                    }    
-                ],
-                hdc: 10,
-                cprice: 0,
-                active: true
-            }
-        ];
+        state.store = [];
     },
     
     setBasics = function() {
