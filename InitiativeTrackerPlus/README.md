@@ -3,6 +3,7 @@
 An attempt to modernize Tracker Jacker and add new functionality as it becomes desired.  
   
 **Change Log:**  
+* 2022-03-29 - v1.29 added ability to set foreground and background colors to most (all) elements to make ITP play nicer with the new roll20 Dark Mode.
 * 2021-03-02 - v1.25 published to one-click API script list
 * 2021-03-01 - Added eotcolor option to -setConfig to change [ EOT ] button color.
 * 2021-02-13 - Added -setConfig functionality to modify various fields, flags and design variables.  These changes will be stored in the state so should continue between sessions.  Use detailed below.
@@ -99,13 +100,19 @@ Changes various configuration values.  Permitted keys and what they expect for v
 * round_separator_initiative - [-100] - an integer number, displays the "initiative" for the round separator 100 will put it at the top of the round, -100 will put it at the bottom of the round.
 * rotation - [true] - true or false, turns the spinning animation for the turn indicator on (true) or off (false)
 * show_eot - [true] - true or false, shows or hides the EOT button when announcing actor turns.
-* turncolor - [#D8F9FF] - Hex color code, changes the color of the background of the chat message announcing who's turn it is.
-* roundcolor - [#363574] - Hex color code, changes the color of the round announcement chat message.
-* statuscolor - [#F0D6FF] - Hex color code, changes the color of the text of the chat message announcing statuses of the current actor.
-* statusbgcolor - [#897A87] - Hex color code, changes the background color of the chat message announcing statuses of the current actor.
+* turncolor - [#FFFFFF] - Hex color code, changes the color of the background of the chat message announcing who's turn it is.
+* turnbgcolor - [#333333] - Hex color code, changes the background color of the background of the chat message announcing who's turn it is.
+* roundcolor - [#FFFFFF] - Hex color code, changes the color of the round announcement chat message.
+* roundbgcolor - [#363574] - Hex color code, changes the background color of the round announcement chat message.
+* statuscolor - [#FFFFFF] - Hex color code, changes the color of the text of the chat message announcing statuses of the current actor.
+* statusbgcolor - [#333333] - Hex color code, changes the background color of the chat message announcing statuses of the current actor.
 * statusbordercolor [#430D3D] - Hex color code, changes the color of the border of the chat message announcing statuses of the current actor.
 * statusargscolor [#FFFFFF] - Hex color code, changes the color of the feedback text when changing the marker for a status.
-* eotcolor [#FF0000] - Hex color code, changes the color of the EOT button.
+* statusargsbgcolor [#333333] - Hex color code, changes the background color of the feedback text when changing the marker for a status.
+* eotcolor [#FFFFFF] - Hex color code, changes the color of the EOT button.
+* eotbgcolor [#FF0000] - Hex color code, changes the background color of the EOT button.
+* playcombatmusic [0] - Will a track from the jukebox be played when the tracker is active. Values should be 0 for off, 1 for on.
+* combatmusic [] - The name of the track to play when the tracker is active if playcombatmusic is turned on [1]. Track can not contain spaces (example: Combat).
 
 
 

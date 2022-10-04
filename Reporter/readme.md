@@ -183,4 +183,20 @@ If the layer keyword tracker is used the report will be on all token/character p
 
 A report Handout automatically creates a horizontal rule at the top of the handout. Anything typed manually above that rule will be persistent. Reporter will not overwrite it. You can use this area to create Journal Command Buttons to generate new reports or to give some context to the existing report. All updates are live.
 
+**Supernotes Buttons**
+
+These are small buttons that will appear on each line of the report that call up Supernotes commands. These buttons require Supernotes to be installed (Available from the Roll20 One Click installer). If Supernotes is not installed, the buttons will still display but will have no effect. If the report is in the Chat tab, the notes will display in the chat tab, and if the report is set to be in a handout, the notes will in the handout, directly below the report. This can be used to create a handout that can run a report and display notes below. An example use could be a handout that can read map pins and display the notes for each map pin, making an interactive city guide. 
+
+`tokennotesbutton|[true|false]` _(default=false):_  If this keyword is set to true, the report will place a small shortcut button to return the contents of the reported token's GM Notes field.
+
+`charnotesbutton|[true|false]` _(default=false):_  If this keyword is set to true, the report will place a small shortcut button to return the contents of the GM Notes field of the character assigned to the reported token.
+
+`biobutton|[true|false]` _(default=false):_  If this keyword is set to true, the report will place a small shortcut button to return the contents of the Bio Notes field of the character assigned to the reported token.
+
+`avatarbutton|[true|false]` _(default=false):_  If this keyword is set to true, the report will place a small shortcut button to return the Avatar of the character assigned to the reported token.
+
+`tooltipbutton|[true|false]` _(default=false):_  If this keyword is set to true, the report will place a small shortcut button to return contents of the reported token's Tooltips field.
+
+`imagebutton|[true|false]` _(default=false):_  If this keyword is set to true, the report will place a small shortcut button to return images from the Bio field of the character assigned to the reported token.
+
 See this thread in the Roll20 Forums for more details [Reporter Feedback thread](https://app.roll20.net/forum/post/10381135/script-reporter-1-dot-x)

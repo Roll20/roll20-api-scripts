@@ -1,0 +1,16 @@
+{
+    "$schema": "https://github.com/Roll20/roll20-api-scripts/master/_Example%20Script%20-%20Check%20for%20formatting%20details/script.schema.json",
+    "name": "Multi-World Calendar",
+    "script": "calendar.js",
+    "version": "5.3",
+    "previousversions": ["5.2","5.1","5.0"],
+    "description": "A Calendar for D&D 5e that includes Eberron, Faerun, Greyhawk, Modern and Tal'Dorei",
+    "authors": "Julexar",
+    "patreon": "https://patreon.com/julexar",
+    "roll20userid": "9989180",
+    "modifies": {
+        "state.MWCalendar": "read,write",
+        "state.Alarm": "read,write",
+        "handout": "read,write"
+    }
+}

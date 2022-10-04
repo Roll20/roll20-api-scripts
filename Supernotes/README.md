@@ -61,3 +61,4 @@ Default Template, D&D 5th Edition by Roll20, 5e Shaped, Pathfinder by Roll20, Pa
 - 1.1.1 added `--tokenimage`, updated semantic versioning
 - 1.1.2 Added Handout Feature
 - 1.1.3 Added support for Call of Cthulhu 7th Edition by Roll20
+- 1.1.4 Added better coordination with Reporter. Handouts can now support a Reporter report and display the desired notes in the same handout.
