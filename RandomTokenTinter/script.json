@@ -1,0 +1,18 @@
+{
+    "name": "Random Token Tinter", 
+    "script": "RandomTokenTinter.js",
+    "version": "0.0.0",
+    "previousversions": [],
+    "description": "Need to add amusing colors to a horde of pixies?  Want to re-create the periodic defining struggle between the green and purple Drazi?  Or do you just want to drive your players mad trying to find the pattern in the kobolds' body paint choices when there is no such pattern?  \rThis script will randomly assign (or remove) tints on tokens based on either a command-line list, a predefined Rollable Table, or as a last resort, a default rainbow (ROYGBV).  Tokens can either be identified by selection or listed on the command line or both.  \r\r# Usage: #  \r`!randtint [--help] [--pc] [--ids ID1..IDn] [--ignore-selected] [--tintlist -TINT1..-TINTn] | [--tinttable -TABLENAME]`  \r\r`--help` will display a summary of the command options (essentially, the following data)  \r`--pc` will cause any player character tokens in the selection or ID list to be tinted as well (by default they will be ignored)  \r`--ids ID1..IDn` will add the space-delimited list of token IDs ID1..IDn to the list of tokens to be affected  \r`--ignore-selected` will use the ID list above as a starting point for tokens to tint and _remove_ any selected tokens from the list instead of combining the two  \r`--tintlist -TINT1..-TINTn` will randomly choose from the space-delimited list of tints -TINT1..-TINTn to tint each token.  Each tint TINTx is either a six-digit hexidecimal color of the form #RRGGBB or the word \"transparent\" (to remove tinting).  Each entry in the list must be preceded by a \"-\" and are not case-sensitive.  The list can be one element long if you need to make everything the same color (this is particularly useful for _removing_ tints).  \r`--tinttable -TABLENAME` will use the Rollable Table TABLENAME to choose the tint for each token.  The \"Name\" field for each entry in the table must either be a six-digit hexidecimal color of the form #RRGGBB or the word \"transparent\" and is not case-sensitive.  \r\rIf both `--tintlist` and `--tinttable` are present, `--tintlist` will take precedence unless `--tintlist` contains no valid entries.  If neither is provided (or if both are invalid), a six-color rainbow palette will be used (Red, Orange, Yellow, Green, Blue, and Violet).  \r\rDeveloper's note: I deliberately chose not to simply generate entirely random tints due to the large probability of coming up with something too faint to be useful or which is otherwise imcompatible with the map background or the token itself (for example, applying a red tint to a predominantly green token makes it brown, not red).",
+    "authors": "Bill (Do Not Kill)",
+    "roll20userid": "4386819",
+    "patreon": "n/a",
+    "tipeee": "n/a",
+    "useroptions": [],        
+    "dependencies": [],
+    "modifies": {
+                 "token.tint_color": "write",
+                 "token.represents": "read"
+                },
+    "conflicts": []
+}
