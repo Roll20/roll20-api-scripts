@@ -8,7 +8,7 @@
     "authors": "Richard E.",
     "roll20userid": "6497708",
     "useroptions": [],
-    "dependencies": ["ChatSetAttr","Tokenmod","RoundMaster","libRPGMaster2e","InitMaster","AttackMaster"],
+    "dependencies": ["ChatSetAttr","Tokenmod","RoundMaster","RPGMaster library AD+D2e","InitMaster","AttackMaster"],
     "modifies": {
         "state.MagicMaster": "read,write",
 		"player.online": "read",
