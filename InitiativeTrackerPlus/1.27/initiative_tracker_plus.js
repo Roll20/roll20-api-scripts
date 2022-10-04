@@ -1818,7 +1818,7 @@ var InitiativeTrackerPlus = (function() {
 			}
 
 			var oldvalue = '';
-			// There's probably a better way to do this, but I'm using this to explicitely define what defaults can be overridden.
+			// There's probably a better way to do this, but I'm using this to explicitly define what defaults can be overridden.
 			switch(p[0]) {
 				case 'trackerImgRatio':
 					p[1] = parseFloat(p[1]);
