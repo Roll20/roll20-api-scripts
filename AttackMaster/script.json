@@ -8,7 +8,7 @@
     "authors": "Richard E.",
     "roll20userid": "6497708",
     "useroptions": [],
-    "dependencies": ["libRPGMaster2e"],
+    "dependencies": ["RPGMaster library AD+D2e"],
     "modifies": {
 		"Campaign().turnorder": "read,write",
 		"Campaign().playerpageid": "read",
