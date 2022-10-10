@@ -8,7 +8,7 @@
     "authors": "Richard E.",
     "roll20userid": "6497708",
     "useroptions": [],
-    "dependencies": ["RoundMaster","libRPGMaster2e"],
+    "dependencies": ["RoundMaster","RPGMaster library AD+D2e"],
     "modifies": {
 		"state.initMaster": "read,write",
 		"player.id": "read",
