@@ -1,4 +1,13 @@
 # COFantasy: Historique des changements (depuis la version 1.0)
+## 3.09
+### Capacités
+* Drain de force de Dominia (Invincible)
+
+### Autres améliorations
+* Ajout de l'option --bonusContreArmure
+* Changement des macros Monter et Descendre en icones.
+* Changement de fonctionnement des auras, qui réagissent maintenant au déplacement
+
 ## 3.08
 ### Capacités
 * Ajout de la Voie d'Arwendée. Attention sens affûtés ajoute maintenant automatiquement le bonus de DM aux arcs.
@@ -14,6 +23,8 @@
 * Correction d'un crash avec des persos ayant un alias.
 
 ### Autres améliorations
+* Utilisation d'un attribut entrerEnCombatAvec pour faire rentrer en combat plusieurs tokens en même temps.
+* Amélioration des effets de peur.
 * Plus d'affichage des actions de recharge des armes déjà chargées.
 * Prise en charge des conditions hostiles et des conditions extrêmes.
 * Prise en charge de la perte de substance d'Invincible.
