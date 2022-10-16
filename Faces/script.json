@@ -9,5 +9,5 @@
 		"ability.*": "read, write"
 	},
 	"conflicts": [],
-	"previousversions": [""]
+	"previousversions": ["0.1.0"]
 }
