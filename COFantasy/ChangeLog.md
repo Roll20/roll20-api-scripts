@@ -1,9 +1,22 @@
 # COFantasy: Historique des changements (depuis la version 1.0)
+## 3.10
+### Capacités
+* Mur de vent
+* Rage de Baphit (Invincible)
+
+### Autres améliorations
+* Utilisation de l'icone chef pour la capacité laissez-le moi.
+* Ajout d'un icone pour l'état enflammé.
+* Support des options de tempête de mana pour la conjuration de prédateurs et la conjuration d'armée.
+* Permet aux joueurs de lancer l'initiative pour leur perso.
+
 ## 3.09
 ### Capacités
 * Drain de force de Dominia (Invincible)
 
 ### Autres améliorations
+* Prise en compte de l'option --saufAllies pour !cof-tenebres.
+* Ajout d'une options pour des DM explosifs.
 * Ajout de l'option --bonusContreArmure
 * Changement des macros Monter et Descendre en icones.
 * Changement de fonctionnement des auras, qui réagissent maintenant au déplacement
