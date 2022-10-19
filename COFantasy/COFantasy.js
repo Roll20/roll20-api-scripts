@@ -9682,8 +9682,19 @@ var COFantasy = COFantasy || function() {
     return false;
   }
 
-  //ne rajoute pas evt \xE0 l'historique
-  function persoInit(perso, evt) {
+  function initDeriveeRec(perso, already) {
+    already = already || new Set();
+    let pid = [perso.charId, perso.token.id];
+    if (already.has(pid)) {
+      error("Il y a un cycle d'initiatives d\xE9riv\xE9es les unes des autres impliquant " + nomPerso(perso), already);
+      return perso;
+    }
+    let persoD = initDerivee(perso, already);
+    if (persoD) return persoD;
+    return perso;
+  }
+
+  function initDerivee(perso, already) {
     let initDerivee = charAttribute(perso.charId, 'initiativeDeriveeDe');
     if (initDerivee.length > 0) {
       let charDerive = findObjs({
@@ -9695,14 +9706,21 @@ var COFantasy = COFantasy || function() {
           charId: charDerive[0].id,
           token: perso.token
         };
-        return persoInit(persoD, evt);
+        return initDeriveeRec(persoD, already);
       }
     }
     let persoMonte = tokenAttribute(perso, 'estMontePar');
     if (persoMonte.length > 0) {
       let cavalier = persoOfIdName(persoMonte[0].get('current'), perso.token.get('pageid'));
-      if (cavalier !== undefined) return persoInit(cavalier, evt);
+      if (cavalier !== undefined) return initDeriveeRec(cavalier, already);
     }
+    // retourne undefined sinon
+  }
+
+  //ne rajoute pas evt \xE0 l'historique
+  function persoInit(perso, evt, already) {
+    let persoD = initDerivee(perso);
+    if (persoD) perso = persoD;
     let init;
     if (persoEstPNJ(perso)) {
       init = ficheAttributeAsInt(perso, 'pnj_init', 10);
@@ -9867,16 +9885,20 @@ var COFantasy = COFantasy || function() {
       if (predicateAsBool(perso, 'aucuneActionCombat')) return;
       if (!boutonRoll && !recompute &&
         reglesOptionelles.initiative.val.joueurs_lancent_init.val &&
-        reglesOptionelles.initiative.val.initiative_variable.val &&
-        !attributeAsBool(perso, 'bonusInitVariable')) {
-        let pl = getPlayerIds(perso);
-        let controlleParJoueur = pl.find(function(pid) {
-          return !playerIsGM(pid);
-        });
-        if (controlleParJoueur) {
-          let commande = "!cof-init --boutonRoll --target " + perso.token.id;
-          sendPerso(perso, "Cliquez sur " + boutonSimple(commande, "&#127922;") + " pour lancer l'initiative", true);
-          return;
+        reglesOptionelles.initiative.val.initiative_variable.val) {
+        let persoRoll = perso;
+        let persoD = initDerivee(perso);
+        if (persoD) persoRoll = persoD;
+        if (!attributeAsBool(persoRoll, 'bonusInitVariable')) {
+          let pl = getPlayerIds(persoRoll);
+          let controlleParJoueur = pl.find(function(pid) {
+            return !playerIsGM(pid);
+          });
+          if (controlleParJoueur) {
+            let commande = "!cof-init --boutonRoll --target " + persoRoll.token.id;
+            sendPerso(persoRoll, "Cliquez sur " + boutonSimple(commande, "&#127922;") + " pour lancer l'initiative", true);
+            return;
+          }
         }
       }
       let init = persoInit(perso, evt);
@@ -10051,6 +10073,9 @@ var COFantasy = COFantasy || function() {
           sendPlayer(msg, "pas le droit d'utiliser ce bouton");
           return;
         }
+      } else if (reglesOptionelles.initiative.val.joueurs_lancent_init.val) {
+        let playerId = getPlayerIdFromMsg(msg);
+        boutonRoll = playerId && !playerIsGM(playerId);
       }
       initiative(selected, evt, undefined, undefined, boutonRoll);
       addEvent(evt);
@@ -10668,12 +10693,10 @@ var COFantasy = COFantasy || function() {
         explications.push("Posture de combat => +" + postureVal + " DEF");
       }
     }
-    let attrAttaqueAOutrance = tokenAttribute(target, 'attaqueAOutrance');
-    if (attrAttaqueAOutrance.length > 0) {
-      attrAttaqueAOutrance = attrAttaqueAOutrance[0];
-      var attaqueAOutranceVal = parseInt(attrAttaqueAOutrance.get('current'));
-      defense -= attaqueAOutranceVal;
-      explications.push("Attaque \xE0 outrance => -" + attaqueAOutranceVal + " DEF");
+    let attaqueAOutrance = attributeAsInt(target, 'attaqueAOutrance', 0);
+    if (attaqueAOutrance) {
+      defense -= attaqueAOutrance;
+      explications.push("Attaque \xE0 outrance => -" + attaqueAOutrance+ " DEF");
     }
     let instinctSurvie = predicateAsInt(target, 'instinctDeSurvie', 0);
     if (instinctSurvie > 0 && target.token.get('bar1_value') <= instinctSurvie)
@@ -16222,7 +16245,7 @@ var COFantasy = COFantasy || function() {
       if (bonusMasque > 0) {
         attDMBonusCommun += " +" + bonusMasque;
         if (options.auto)
-        explications.push("Masque du pr\xE9dateur : +" + bonusMasque + " aux DM");
+          explications.push("Masque du pr\xE9dateur : +" + bonusMasque + " aux DM");
       }
     }
     if (attributeAsBool(attaquant, 'masqueDuPredateurAmeLiee')) {
@@ -16302,17 +16325,15 @@ var COFantasy = COFantasy || function() {
         explications.push("Posture de combat => +" + postureVal + " DM");
       }
     }
-    let attrAttaqueAOutrance = tokenAttribute(attaquant, 'attaqueAOutrance');
-    if (attrAttaqueAOutrance.length > 0) {
-      attrAttaqueAOutrance = attrAttaqueAOutrance[0];
-      let attaqueAOutranceVal = parseInt(attrAttaqueAOutrance.get('current'));
-      if (attaqueAOutranceVal == 2) {
+    let attaqueAOutrance = attributeAsInt(attaquant, 'attaqueAOutrance', 0);
+    if (attaqueAOutrance > 1) {
+      if (attaqueAOutrance < 5) {
         attaquant.additionalDmg.push({
           type: mainDmgType,
           value: '1' + options.d6
         });
         explications.push("Attaque \xE0 outrance => +1d6 DM");
-      } else if (attaqueAOutranceVal == 5) {
+      } else {
         attaquant.additionalDmg.push({
           type: mainDmgType,
           value: '2' + options.d6
@@ -20312,7 +20333,6 @@ var COFantasy = COFantasy || function() {
     attrs = removeAllAttributes('lienDeSangVers', evt, attrs);
     attrs = removeAllAttributes('lienDeSangDe', evt, attrs);
     attrs = removeAllAttributes('prescienceUtilisee', evt, attrs);
-    attrs = removeAllAttributes('attaqueAOutrance', evt, attrs);
     attrs = removeAllAttributes('increvableHumainUtilise', evt, attrs);
     attrs = removeAllAttributes('resistanceRaillerie', evt, attrs);
     attrs = removeAllAttributes('defierLaMort', evt, attrs);
@@ -24854,11 +24874,9 @@ var COFantasy = COFantasy || function() {
           }
           addLineToFramedDisplay(display, postureMsg);
         }
-        var attrattaqueAOutrance = tokenAttribute(perso, 'attaqueAOutrance');
-        if (attrattaqueAOutrance.length > 0) {
-          attrattaqueAOutrance = attrattaqueAOutrance[0];
-          var attaqueAOutrance = attrattaqueAOutrance.get('current');
-          var attaqueAOutranceMsg = "attaque \xE0 outrance ";
+        let attaqueAOutrance = attributeAsInt(perso, 'attaqueAOutrance', 0);
+        if (attaqueAOutrance) {
+          let attaqueAOutranceMsg = "attaque \xE0 outrance ";
           switch (attaqueAOutrance) {
             case 2:
               attaqueAOutranceMsg += "(-2 DEF, +1D6 DM)";
@@ -30033,19 +30051,19 @@ var COFantasy = COFantasy || function() {
   }
 
   function attaqueAOutrance(msg) {
-    var args = msg.content.split(' ');
+    let args = msg.content.split(' ');
     if (args.length < 2) {
       error("Pas assez d'arguments pour !cof-attaque-a-outrance", args);
       return;
     }
-    var bonus = parseInt(args[1]);
+    let bonus = parseInt(args[1]);
     if (bonus != 0 && bonus != 2 && bonus != 5) {
       error("Le malus de DEF ne peut \xEAtre que 0, 2 ou 5", args);
       return;
     }
     getSelected(msg, function(selected) {
       iterSelected(selected, function(guerrier) {
-        var evt = {
+        const evt = {
           type: "Attaque \xE0 outrance"
         };
         if (bonus === 0) {
@@ -42035,6 +42053,11 @@ var COFantasy = COFantasy || function() {
       actif: "poss\xE8de une arme d'argent et de lumi\xE8re",
       fin: "ne poss\xE8de plus d'arme d'argent et de lumi\xE8re",
       dm: true
+    },
+    attaqueAOutrance: {
+      activation: "attaque \xE0 outrance",
+      actif: "attaque \xE0 outrance",
+      fin: "attaque normalement",
     },
     criDeGuerre: {
       activation: "pousse son cri de guerre",
