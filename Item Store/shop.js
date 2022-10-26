@@ -65,7 +65,7 @@ GM & Players
 var ItemStore = ItemStore || (function() {
     'use strict';
     
-    var version = "1.7";
+    var version = "1.7",
     
     setDefaults = function() {
         state.store = [];
