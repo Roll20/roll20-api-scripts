@@ -2816,7 +2816,6 @@ var RoundMaster = (function() {
         if (!args)
             {return;}
             
-		log('doAddTargetStatus: args = '+args.join(', '));
 		if (args.length <4 || args.length > 6) {
 		    sendDebug('doAddTargetStatus: Invalid number of args');
 			sendError('Invalid status item syntax');
@@ -5483,7 +5482,6 @@ var RoundMaster = (function() {
 		if (cid) {
 			journal = getObj( 'character', cid );
 		}
-
 		var cname = journal ? journal.get('name') : curToken.get('name'),
 			bar1 = curToken.get('bar1_value'),
 			bar2 = curToken.get('bar2_value'),
@@ -5520,6 +5518,7 @@ var RoundMaster = (function() {
 								 .replace( /\^\^token_hp_max\^\^/gi , hpField.max );
 			sendDebug('sendAPImacro: macroBody is ' + macroBody );
 			sendChat('',macroBody,null,{noarchive:!flags.archive, use3d:false});
+			
 		}
 	}
 
