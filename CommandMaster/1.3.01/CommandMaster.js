@@ -53,7 +53,7 @@
  
 var CommandMaster = (function() {
 	'use strict'; 
-	var version = '1.3.02',
+	var version = '1.3.01',
 		author = 'RED',
 		pending = null;
     const lastUpdate = 1664891202;
@@ -558,51 +558,44 @@ var CommandMaster = (function() {
 	 * Init
 	 */
 	var init = function() {
-		try {
-			if (!state.CommandMaster)
-				{state.CommandMaster = {};}
-			if (_.isUndefined(state.CommandMaster.CheckChar))
-				{state.CommandMaster.CheckChar = false;}
-			if (!state.CommandMaster.cmds) {
-				state.CommandMaster.cmds = [];
-				state.CommandMaster.cmds[0] = 'Specials|Display special attacks and defences|attk| |\n/w "\\at{selected|character_name}" &{template:RPGMdefault}{{name=Special Attacks & Defences for\n\\at{selected|character_name}}}{{Special Attacks=\\at{selected|monsterspecattacks} }}{{Special Defences=\\at{selected|monsterspecdefenses} }}|';
-				state.CommandMaster.cmds[1] = 'Bar|Add inactive bar as an action button|money| |';
-			}
-			if (_.isUndefined(state.CommandMaster.debug))
-				{state.CommandMaster.debug = false;}
-
-			[fields,RPGMap] = getRPGMap();
-			fieldGroups = RPGMap.fieldGroups;
-			primeClasses = RPGMap.primeClasses;
-			classLevels = RPGMap.classLevels;
-			spellLevels = RPGMap.spellLevels;
-			saveLevels = RPGMap.saveLevels;
-			baseSaves = RPGMap.baseSaves;
-			raceSaveMods = RPGMap.raceSaveMods;
-			clTypeLists = RPGMap.clTypeLists;
-			miTypeLists = RPGMap.miTypeLists;
-			spTypeLists = RPGMap.spTypeLists;
-			dbNames = RPGMap.dbNames;
-			DBindex = undefined;
-
-			// Force the Specials action button to be updated, due to spelling error
-			state.CommandMaster.cmds[0] = 'Specials|Display special attacks and defences|attk| |\n/w "\\at{selected|character_name}" &{template:RGPMdefault}{{name=Special Attacks & Defences for\n\\at{selected|character_name}}}{{Special Attacks=\\at{selected|monsterspecattacks} }}{{Special Defences=\\at{selected|monsterspecdefenses} }}|';
-			doRegistration('Specials|Display special attacks and defences|attk| |\n/w "\\at{selected%%character_name}" &{template:RPGMdefault}{{name=Special Attacks & Defences for\n\\at{selected%%character_name}}}{{Special Attacks=\\at{selected%%monsterspecattacks} }}{{Special Defences=\\at{selected%%monsterspecdefenses} }}|');
-				
-			setTimeout( () => issueHandshakeQuery('attk'), 20);
-			setTimeout( () => issueHandshakeQuery('magic'), 20);
-			setTimeout(() => updateHandouts(handouts,true,findTheGM()), 50);
-			setTimeout(handleChangedCmds,10000);
-			
-			if (state.CommandMaster.CheckChar)
-				setTimeout(doCheckCharSetupDelayed,10000);
-
-			log('-=> CommandMaster v'+version+' <=-  ['+(new Date(lastUpdate*1000))+']');
-		} catch (e) {
-			log('CommandMaster Initialisation: JavaScript '+e.name+': '+e.message+' while initialising the API');
-			sendDebug('CommandMaster Initialisation: JavaScript '+e.name+': '+e.message+' while initialising the API');
-			sendError('CommandMaster JavaScript '+e.name+': '+e.message);
+		if (!state.CommandMaster)
+			{state.CommandMaster = {};}
+		if (_.isUndefined(state.CommandMaster.CheckChar))
+			{state.CommandMaster.CheckChar = false;}
+		if (!state.CommandMaster.cmds) {
+	        state.CommandMaster.cmds = [];
+			state.CommandMaster.cmds[0] = 'Specials|Display special attacks and defences|attk| |\n/w "\\at{selected|character_name}" &{template:RPGMdefault}{{name=Special Attacks & Defences for\n\\at{selected|character_name}}}{{Special Attacks=\\at{selected|monsterspecattacks} }}{{Special Defences=\\at{selected|monsterspecdefenses} }}|';
+			state.CommandMaster.cmds[1] = 'Bar|Add inactive bar as an action button|money| |';
 		}
+		if (_.isUndefined(state.CommandMaster.debug))
+		    {state.CommandMaster.debug = false;}
+
+		[fields,RPGMap] = getRPGMap();
+		fieldGroups = RPGMap.fieldGroups;
+		primeClasses = RPGMap.primeClasses;
+		classLevels = RPGMap.classLevels;
+		spellLevels = RPGMap.spellLevels;
+		saveLevels = RPGMap.saveLevels;
+		baseSaves = RPGMap.baseSaves;
+		raceSaveMods = RPGMap.raceSaveMods;
+		clTypeLists = RPGMap.clTypeLists;
+		miTypeLists = RPGMap.miTypeLists;
+		spTypeLists = RPGMap.spTypeLists;
+		dbNames = RPGMap.dbNames;
+		DBindex = undefined;
+
+		doRegistration('Specials|Display special attacks and defences|attk| |\n/w "\\at{selected%%character_name}" &{template:RGPMdefault}{{name=Special Attacks & Defences for\n\\at{selected%%character_name}}}{{Special Attacks=\\at{selected%%monsterspecattacks} }}{{Special Defences=\\at{selected%%monsterspecdefenses} }}|');
+			
+		setTimeout( () => issueHandshakeQuery('attk'), 20);
+		setTimeout( () => issueHandshakeQuery('magic'), 20);
+		setTimeout(() => updateHandouts(handouts,true,findTheGM()), 50);
+		setTimeout(handleChangedCmds,10000);
+		
+		if (state.CommandMaster.CheckChar)
+			setTimeout(doCheckCharSetupDelayed,10000);
+
+        log('-=> CommandMaster v'+version+' <=-  ['+(new Date(lastUpdate*1000))+']');
+
 	}; 
 	
 // ------------------------------------------------ Deal with in-line expressions --------------------------------
@@ -1253,7 +1246,7 @@ var CommandMaster = (function() {
 					+ (isGM ? '{{desc2=[Return to Token Menu](!cmd --abilities) or just do something else}}' : '');
 		
 		if (isGM) {
-			sendFeedback( content,flags.feedbackName,flags.feedbackImg );
+			sendFeedback( content,flags.feedbackName,flags.feedbackImg, tokenID, charCS );
 		} else {
 			sendResponse( charCS, content, null, flags.feedbackName, flags.feedbackImg, tokenID );
 		}
@@ -1293,7 +1286,7 @@ var CommandMaster = (function() {
 					+ (classMenu ? ('{{desc2=[Return to Class Menu](!cmd --button '+BT.AB_CLASSES+')}}') : '');
 		};
 		if (isGM) {
-			sendFeedback( content,flags.feedbackName,flags.feedbackImg );
+			sendFeedback( content,flags.feedbackName,flags.feedbackImg, tokenID, charCS );
 		} else {
 			sendResponse( charCS, content, null, flags.feedbackName, flags.feedbackImg, tokenID );
 		}
@@ -2235,7 +2228,7 @@ var CommandMaster = (function() {
 			cmd = args.shift(),
 			newParams = args.join('|').replace(/%%/g,'|'),
 			cmdObj = [];
-			
+
    		registeredAPI[api] = true;
 
 		[cmdObj,registeredCmds] = _.partition(registeredCmds,obj => ((obj.api == api) && (obj.action == action)));
@@ -2245,6 +2238,7 @@ var CommandMaster = (function() {
 			cmdObj.desc = desc;
 			cmdObj.changed = (cmdObj.params != newParams) || (cmdObj.cmd != cmd);
 			if (cmdObj.changed) {
+				log('doRegistration registeredCmds['+api+']['+action+'] changed');
 				if (!_.isUndefined(cmdObj.params)) {
 					cmdObj.oldCmdStr = parseStr('!'+cmdObj.api+' '+cmdObj.cmd+' '+cmdObj.params);
 				}

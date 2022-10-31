@@ -6325,7 +6325,7 @@ const libRPGMaster = (() => { // eslint-disable-line no-unused-vars
 			apis.init = ('undefined' !== typeof initMaster);
 			DBindex = undefined;
 			
-			del_Old_DBs();
+			setTimeout( del_Old_DBs, 3000 );
 			
 			// RED: v1.036 create help handouts from stored data
 			setTimeout( () => LibFunctions.updateHandouts(handouts,true,findTheGM()),30);

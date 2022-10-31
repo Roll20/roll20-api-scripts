@@ -4163,6 +4163,7 @@ var attackMaster = (function() {
 		if (ring != '-') {
 			trueItem = getAbility(fields.MagicItemDB, trueRing, charCS, false);
 			ringData = trueItem.obj[1].body.match(/(?:ring|ac)data\s*?=\s*?(\[.*?\])/im);
+      
 			if (ringData) {
 				ringData = parseData(ringData[1], reSpellSpecs, false);
 				if (ringData.off) {
