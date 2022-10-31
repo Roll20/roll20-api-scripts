@@ -411,7 +411,7 @@ tr {line-height: 25px;}
                   <li><code>--forceMinimum <i>n</i></code> : l'attaque n'est possible que si l'attaquant a au moins <i>n</i> en force.</li>
                   <li><code>--necromancie</code> : l'attaque est de la nécromancie</li>
                   <li><code>--ferFroid</code> : multiplie par 2 les dégâts contre les fées et les démons (le script reconnaît certaines races et les prédicats <code>démon</code> et <code>fée</code>).</li>
-                  <li><code>--tueurDeGeants</code> : bonus de +2 en attaque et +2d6 DM contre les géants, ogres, ettins et cyclopes.</li>
+                  <li><code>--tueurDe <i>categorie</i></code> : bonus de +2 en attaque et +2d6 DM contre les espèces appartenant à la catégorie (voir la condition <code>typeCible</code>.</li>
                   <li><code>--tueurDeGrands</code> : bonus de +1d6 DM contre les créatures de taille grande et +2d6 DM contre les créatures de taille énorme ou plus.</li>
                   <li><code>--ignoreObstacles</code> : ignore les tokens sur le trajet. Ça semble nécessaire pour les attaques magiques d'après Kegron.</li>
                   <li><code>--retourneEnMain</code> : L'arme de jet revient en main après l'attaque.</li>
@@ -835,6 +835,7 @@ tr {line-height: 25px;}
                   <li><code>--titre <i>message</i></code> : spécifie un titre pour la fenêtre affichant les jets de résistance à la peur.</li>
                   <li><code>--immuniseSiResiste <i>nom</i></code> : la personne qui résiste à cet effet de peur est ensuite immunisé pour la journée aux effets de peur ayant la même option (avec le même <i>nom</i>).</li>
                 </ul>
+                Noter qu'un prédicat <code>courage</code> permet d'obtenir un bonus (égal à la valeur du prédicat) au jet pour résister à la peur.
               </div>
               <h3 class="text-info" id="consommables">2.6 Consommables <code>!cof-consommables</code></h3>
               <div class="decalage">
@@ -1111,7 +1112,7 @@ tr {line-height: 25px;}
                 <h4 class="text-secondary">Voie du vagabond</h4>
                 <ol>
                   <li><strong>Rumeurs et légendes</strong> : ajouter les compétences sur la fiche</li>
-                  <li><strong>Compréhension des langues</strong> : <code>!cof-lancer-sort lance un sort de compréhension des langues qui dure [[1d6+@{selected|CHA}]] minutes --mana 0</code></li>
+                  <li><strong>Compréhension des langues</strong> : <code>!cof-lancer-sort lance un sort de compréhension des langues. --messageMJ la compréhension des langues va durer [[1d6+@{selected|CHA}]] minutes --mana 0</code></li>
                   <li><strong>Débrouillard</strong> : pas de support particulier. Ajouter le bonus aux compétences que vous souhaitez noter.</li>
                   <li><strong>Déguisement</strong> :<code>!cof-lancer-sort lance un sort de déguisement --mana 2</code></li>
                   <li><strong>Touche à tout</strong> : se reporter aux capacités choisies</li>
@@ -1532,8 +1533,8 @@ tr {line-height: 25px;}
                 <ol>
                   <li><strong>Lumière</strong> : <code>!cof-lumiere @{target|token_id} 20 --mana 0</code>. On peut utiliser une cible qui ne soit qu'un personnage sans PV, et dans ce cas le token disparaît, et pour éteindre la lumière, le MJ doit supprimer le token dans le layer de l'éclairage dynamique. Si la cible est un personnage avec des PV, alors la lumière se déplacera avec lui, et pour étaindre la lumière, il faut séclectionner le ou les tokens et lancer <code>!cof-eteindre-lumiere lumiere</code>.</li>
                   <li><strong>Détection de la magie</strong> : pas de support autre que <code>!cof-lancer-sort lance un sort de Détection de la Magie --mana 0</code>.</li>
-                  <li><strong>Invisibilité</strong> : utiliser <code>!cof-set-state invisible true --message se rend invisible ([[1d6+@{selected|INT}]] minutes) --mana 1</code>. Pour les ennemis, mettre dans le layer gm, pour les joueurs, ne pas les cibler. Reste le problème des AOE...</li>
-                  <li><strong>Vol</strong> : pas de support autre que <code>!cof-lancer-sort vole ([[1d6+@{selected|INT}]] minutes) --mana 2</code></li>
+                  <li><strong>Invisibilité</strong> : utiliser <code>!cof-set-state invisible true --message se rend invisible --messageMJ l'invisibilité va durer [[1d6+@{selected|INT}]] minutes --mana 1</code>. Pour les ennemis, mettre dans le layer gm, pour les joueurs, ne pas les cibler. Reste le problème des AOE...</li>
+                  <li><strong>Vol</strong> : pas de support autre que <code>!cof-lancer-sort vole --messageMJ le vol va durer [[1d6+@{selected|INT}]] minutes --mana 2</code></li>
                   <li><strong>Intelligence héroïque</strong> : reporter sur la fiche</li>
                 </ol>
               </div>
@@ -1969,14 +1970,15 @@ tr {line-height: 25px;}
                 <h4 class="text-secondary" id="fee_et_lutin">Fée et lutin</h4>
                 <ul>
                   <li><a href="#Vision_dans_le_noir">Vision dans le noir</a>.</li>
-                  <li><strong>Tout petit</strong> : reporter le bonus de DEF sur la fiche, et ajouter 5 à une compétence <code>discrétion</code>.</li>
+                  <li><strong>Tout petit</strong> : ajouter un <a href=#predicats>prédicat</a> <code>toutPetit</code> qui va automatiquement ajuster la défense et les jets de discrétion.</li>
                   <li><strong>Vol</strong> et <strong>Téléportation</strong> : pas de support.</li>
-                  <li><strong>Trop petit</strong> : ajouter un <a href=#predicats>prédicat</a> <code>tropPetit</code>, et pour les attaques au d3, mettre un dé quelconque dans l'attaque, et rajouter le texte <code>d3</code> dans les notes de l'attaque concernée. </li>
+                  <li><strong>Trop petit</strong> : ajouter un <a href=#predicats>prédicat</a> <code>tropPetit</code>. Cela va aussi changer les dégâts de base des armes (il vaut mieux laisser les vrais DM pour que la capacité Grande taille fonctionne).</li>
                 </ul>
                 <ol>
                   <li><strong>Langage des animaux</strong> : aucun support</li>
-                  <li><strong>Invisibilité</strong> : <code>!cof-set-state invisible true --message se rend invisible ([[1d6+@{selected|INT}]] minutes) --limiteParJour <i>r</i></code> où <i>r</i> est le rang dans la Voie.</li>
+                  <li><strong>Invisibilité</strong> : <code>!cof-set-state invisible true --message se rend invisible --messageMJ l'invisibilité va durer [[1d6+@{selected|INT}]] minutes --limiteParJour <i>r</i></code> où <i>r</i> est le rang dans la Voie.</li>
                   <li><strong>Monture féérique</strong> : ajouter un ersonnage pour la monture. Ajoutez-lui le <a href=#predicats>prédicat</a> <code>monture</code>. Pour monter sur la monture, utiliser <code>!cof-en-selle @{selected|token_id} nom_de_la_monture</code>, et pour en descendre, il suffit de faire la même commande (utiliser une ability "token action" rend cela assez facile à l'usage). Si vous souhaitez que la monture rentre en combat à chaque fois que l'être féérique entre en combat, ajoutez à l'être féérique un attribut nommé <code>entrerEnCombatAvec</code>, de valeur le nom du token de la monture.</li>
+                  <li><strong>Grande taille</strong> : <code>!cof-effet grandeTaille oui --lanceur @{selected|token_id} --limiteParJour 3 --messageMJ La taille humaine durera [[1d6+@{selected|CHA}]] minutes</code>. Le script ne gère pas les durées en minutes, le MJ devra penser à supprimer l'effet, par exemple depuis le statut (<code>!cof-statut</code>).</li>
                 </ol>
                 <h4 class="text-secondary">Félis</h4>
                 <ol>
@@ -2332,6 +2334,7 @@ tr {line-height: 25px;}
                   <li><strong>Cibles multiples</strong> (nuées) : ajouter un <a href=#predicats>prédicat</a> <code>ciblesMultiples</code>.</li>
                   <li><strong>Clignotement</strong> : <code>!cof-effet-temp clignotement [[1d6+2]]</code>.</li>
                   <li><strong>Créature non-vivante</strong> : ajouter un <a href=#predicats>prédicat</a> <code>nonVivant</code>.</li>
+                  <li><strong>Créature végétative</strong> : ajouter un <a href=#predicats>prédicat</a> <code>vegetatif</code>.</li>
                   <li><strong>Cyclone</strong> (pour les élementaires) : <code>!cof-effet-temp cyclone [[1d4+1]] --limiteParCombat 1</code>. Cela va proposer une attaque <code>Traverser</code> dans les actions de l'élémentaire, qui ne peut fonctionner que si le personnage a au moins une attaque sur sa fiche. Par défaut, l'attaque utilisée en traversant est l'attaque de label <code>1</code>, mais on peut préciser un autre label en utilisant l'option <code>--valeur</code>.</li>
                   <li><strong>Dégâts si touché au contact</strong> (élémentaire de feu,...) : ajouter un attribut nommé <code>dmSiToucheContact</code>, de valeur courante les dégâts, et de valeur maximale leur type. Par exemple, pour un élémentaire de feu, la valeur courant sera <code>1d6</code>, et la valeur maximale sera <code>feu</code>.</li>
                   <li><strong>Drain de force</strong> (pour la campagne Invincible) : ajouter un <a href=#predicats>prédicat</a> <code>auraDrainDeForce</code></li>
