@@ -2,10 +2,10 @@
 Item Store Generator for D&D 5e
 Original created by Kirsty (https://app.roll20.net/users/1165285/kirsty)
 Updated Version by Julexar (https://app.roll20.net/users/9989180/julexar)
-
 API Commands:
 GM ONLY
 !store - Pulls up the Menu and allows the GM to create and modify Stores
+    --reset - Resets all stores
     --create --name {Insert Name} - Allows the GM to create a new Store.
     --store {Insert existing Store name/number} - Shows the GM all Information about a certain Store.
         --inv view/edit/generate/reset - Allows the GM to edit, generate or reset the Inventory of the selected Store or view a specific item.
@@ -48,6 +48,7 @@ GM & Players
                         --amount - sets the amount you want to haggle for
                             --skill {Insert Skill} - sets the skill used in haggling (Persuasion or Intimidation)
 !cart - Pulls up the Shopping Cart Menu.
+    --reset - Resets all Carts.
     --new - Creates a new Shopping Cart.
     --{Insert Cart Number/Name} - Shows you the content of the selected Cart.
         --rem {Insert Item name/num} - Removes an Item from your Cart.
@@ -64,7 +65,7 @@ GM & Players
 var ItemStore = ItemStore || (function() {
     'use strict';
     
-    var version = "1.7";
+    var version = "1.7",
     
     setDefaults = function() {
         state.store = [];
@@ -1625,6 +1626,8 @@ var ItemStore = ItemStore || (function() {
                     cartMenu(args[1],msg);
                 } else if (args[1]=="new") {
                     createCart(msg);
+                } else if (args[1]=="reset" && playerIsGM(msg.playerid)) {
+                    resetCarts();
                 } else {
                     if (args[2]==undefined) {
                         cartMenu(args[1],msg);
@@ -1820,7 +1823,7 @@ var ItemStore = ItemStore || (function() {
                     '</div>'
                 );
             }
-        } else {
+        } else if (store!==undefined) {
             if (state.store.length==undefined || state.store.length==0) {
                 sendChat("Item Store","/w gm <div " + divstyle + ">" + //--
                     '<div ' + headstyle + '>Item Store</div>' + //--
@@ -1887,7 +1890,7 @@ var ItemStore = ItemStore || (function() {
                             '<div style="text-align:center;"><a ' + astyle3 + '" href="!store --store ' + shop.name + ' --inflate ?{Inflation %|0}">Inflate Price</a>' + //--
                             '<a ' + astyle3 + '" href="!store --store ' + shop.name + ' --deflate ?{Deflation %|0}">Deflate Price</a></div>' + //--
                             '<div style="text-align:center;"><a ' + astyle2 + '" href="!store --store ' + shop.name + ' --inv view">Item Menu</a></div>' + //--
-                            '<div style="text-align:center;"><a ' + astyle2 + '" href="!store --store ' + shop.name + ' --inv gen --type ?{Item Type?|' + state.typeList + '} --minrare ?{Minimum Rarity?|' + state.rareList + '} --maxrare ?{Maximum Rarity?|' + state.rareList + '} --overwrite ?{Overwrite Inventory?|true|false}">Generate Inventory</a></div>' + //--
+                            '<div style="text-align:center;"><a ' + astyle2 + '" href="!store --store ' + shop.name + ' --inv gen --type ?{Item Type?|' + state.typeList + '} --amount ?{Amount?|1} --minrare ?{Minimum Rarity?|' + state.rareList + '} --maxrare ?{Maximum Rarity?|' + state.rareList + '} --overwrite ?{Overwrite Inventory?|true|false}">Generate Inventory</a></div>' + //--
                             '<div style="text-align:center;"><a ' + astyle2 + '" href="!store --store ' + shop.name + ' --inv reset">Reset Inventory</a></div>' + //--
                             '<div style="text-align:center;"><a ' + astyle2 + '" href="!store --store ' + shop.name + ' --deactivate">Deactivate Store</a></div>' + //--
                             '<div style="text-align:center;"><a ' + astyle1 + '" href="!store --create --name ?{Shop name?|Insert Name}">Create Store</a>' + //--
@@ -1916,7 +1919,7 @@ var ItemStore = ItemStore || (function() {
                             '<div style="text-align:center;"><a ' + astyle3 + '" href="!store --store ' + shop.name + ' --inflate ?{Inflation %|0}">Inflate Price</a>' + //--
                             '<a ' + astyle3 + '" href="!store --store ' + shop.name + ' --deflate ?{Deflation %|0}">Deflate Price</a></div>' + //--
                             '<div style="text-align:center;"><a ' + astyle2 + '" href="!store --store ' + shop.name + ' --inv view">Item Menu</a></div>' + //--
-                            '<div style="text-align:center;"><a ' + astyle2 + '" href="!store --store ' + shop.name + ' --inv gen --type ?{Item Type?|' + state.typeList + '} --minrare ?{Minimum Rarity?|' + state.rareList + '} --maxrare ?{Maximum Rarity?|' + state.rareList + '} --overwrite ?{Overwrite Inventory?|true|false}">Generate Inventory</a></div>' + //--
+                            '<div style="text-align:center;"><a ' + astyle2 + '" href="!store --store ' + shop.name + ' --inv gen --type ?{Item Type?|' + state.typeList + '} --amount ?{Amount?|1} --minrare ?{Minimum Rarity?|' + state.rareList + '} --maxrare ?{Maximum Rarity?|' + state.rareList + '} --overwrite ?{Overwrite Inventory?|true|false}">Generate Inventory</a></div>' + //--
                             '<div style="text-align:center;"><a ' + astyle2 + '" href="!store --store ' + shop.name + ' --inv reset">Reset Inventory</a></div>' + //--
                             '<div style="text-align:center;"><a ' + astyle2 + '" href="!store --store ' + shop.name + ' --deactivate">Deactivate Store</a></div>' + //--
                             '<div style="text-align:center;"><a ' + astyle1 + '" href="!store --create --name ?{Shop name?|Insert Name}">Create Store</a>' + //--
@@ -1941,9 +1944,9 @@ var ItemStore = ItemStore || (function() {
                 active: true
             }
         ];
-        let len=state.store.length+1;
-        state.store[len]=store[0];
+        state.store.push(store[0]);
         sendChat("Item Store","/w gm Store with the name \""+name+"\" created!");
+        checkStores();
     },
     
     deleteStore = function(store) {
@@ -2448,7 +2451,6 @@ var ItemStore = ItemStore || (function() {
         maxrare=rarity[1];
         if (Boolean(overwrite)==true) {
             let list;
-            let seclist;
             type=type.toLowerCase();
             if (type.includes("weapon")) {
                 list=genWeapon(amount,minrare,maxrare);
@@ -3481,23 +3483,19 @@ var ItemStore = ItemStore || (function() {
         let rarity;
         let rand;
         let potionList=[];
-        let count=0;
         amount=Number(amount);
         for (let i=0;i<amount;i++) {
-            switch (rare) {
-                case 'common:common':
+            if (rare=='common:common') {
+                rarity="common";
+            } else if (rare=="common:uncommon") {
+                rand=randomInteger(2);
+                if (rand==1) {
                     rarity="common";
-                break;
-                case 'common:uncommon':
-                    rand=randomInteger(2);
-                    if (rand==1) {
-                        rarity="common";
-                    } else if (rand==2) {
-                        rarity="uncommon";
-                    }
-                break;
-                case 'common:rare':
-                    rand=randomInteger(3);
+                } else if (rand==2) {
+                    rarity="uncommon";
+                }
+            } else if (rare=="common:rare") {
+                rand=randomInteger(3);
                     if (rand==1) {
                         rarity="common";
                     } else if (rand==2) {
@@ -3505,9 +3503,8 @@ var ItemStore = ItemStore || (function() {
                     } else if (rand==3) {
                         rarity="rare";
                     }
-                break;
-                case 'common:very rare':
-                    rand=randomInteger(4);
+            } else if (rare=="common:very rare") {
+                rand=randomInteger(4);
                     if (rand==1) {
                         rarity="common";
                     } else if (rand==2) {
@@ -3517,9 +3514,8 @@ var ItemStore = ItemStore || (function() {
                     } else if (rand==4) {
                         rarity="very rare";
                     }
-                break;
-                case 'common:legendary':
-                    rand=randomInteger(5);
+            } else if (rare=="common:legendary") {
+                rand=randomInteger(5);
                     if (rand==1) {
                         rarity="common";
                     } else if (rand==2) {
@@ -3531,20 +3527,17 @@ var ItemStore = ItemStore || (function() {
                     } else if (rand==5) {
                         rarity="legendary";
                     }
-                break;
-                case 'uncommon:uncommon':
-                    rarity="uncommon";
-                break;
-                case 'uncommon:rare':
-                    rand=randomInteger(2);
+            } else if (rare=="uncommon:uncommon") {
+                rarity="uncommon";
+            } else if (rare=="uncommon:rare") {
+                rand=randomInteger(2);
                     if (rand==1) {
                         rarity="uncommon";
                     } else if (rand==2) {
                         rarity="rare";
                     }
-                break;
-                case 'uncommon:very rare':
-                    rand=randomInteger(3);
+            } else if (rare=="uncommon:very rare") {
+                rand=randomInteger(3);
                     if (rand==1) {
                         rarity="uncommon";
                     } else if (rand==2) {
@@ -3552,9 +3545,8 @@ var ItemStore = ItemStore || (function() {
                     } else if (rand==3) {
                         rarity="very rare";
                     }
-                break;
-                case 'uncommon:legendary':
-                    rand=randomInteger(4);
+            } else if (rare=="uncommon:legendary") {
+                rand=randomInteger(4);
                     if (rand==1) {
                         rarity="uncommon";
                     } else if (rand==2) {
@@ -3564,20 +3556,17 @@ var ItemStore = ItemStore || (function() {
                     } else if (rand==4) {
                         rarity="legendary";
                     }
-                break;
-                case 'rare:rare':
-                    rarity="rare";
-                break;
-                case 'rare:very rare':
-                    rand=randomInteger(2);
+            } else if (rare=="rare:rare") {
+                rarity="rare";
+            } else if (rare=="rare:very rare") {
+                rand=randomInteger(2);
                     if (rand==1) {
                         rarity="rare";
                     } else if (rand==2) {
                         rarity="very rare";
                     }
-                break;
-                case 'rare:legendary':
-                    rand=randomInteger(3);
+            } else if (rare=="rare:legendary") {
+                rand=randomInteger(3);
                     if (rand==1) {
                         rarity="rare";
                     } else if (rand==2) {
@@ -3585,34 +3574,29 @@ var ItemStore = ItemStore || (function() {
                     } else if (rand==3) {
                         rarity="legendary";
                     }
-                break;
-                case 'very rare:very rare':
-                    rarity="very rare";
-                break;
-                case 'very rare:legendary':
-                    rand=randomInteger(2);
+            } else if (rare=="very rare:very rare") {
+                rarity="very rare";
+            } else if (rare=="very rare:legendary") {
+                rand=randomInteger(2);
                     if (rand==1) {
                         rarity="very rare";
                     } else if (rand==2) {
                         rarity="legendary";
                     }
-                break;
-                case 'legendary:legendary':
-                    rarity="legendary";
-                break;
+            } else if (rare=="legendary:legendary") {
+                rarity="legendary";
             }
             for (let j=0;j<list.length;j++) {
-                if (list[i].rarity==rarity) {
-                    potionList[count]=list[i];
-                    count++;
+                if (list[j].rarity==rarity) {
+                    potionList.push(list[j]);
                 }
             }
-            rand=randomInteger(potionList.length);
+            rand=randomInteger(potionList.length)-1;
             if (items[0]==undefined) {
                 items.push(potionList[rand]);
             } else {
                 for (let j=0;j<items.length;j++) {
-                    if (items[j].name==potionList[rand-1].name) {
+                    if (items[j].name==potionList[rand].name) {
                         items[j].amount++;
                     }
                 }
@@ -4026,41 +4010,85 @@ var ItemStore = ItemStore || (function() {
     checkRarity = function(minrare,maxrare) {
         minrare=minrare.toLowerCase();
         maxrare=maxrare.toLowerCase();
+        log("Check Rarity minrare: "+minrare);
+        log("Check Rarity maxrare: "+maxrare);
         let rarity=[];
-        switch (minrare) {
-            case 'uncommon':
-                if (maxrare=="common") {
-                    sendChat("Item Store","/w gm Maximum Rarity may not be below Minimum Rarity!");
-                } else {
-                    rarity[0]=minrare;
-                    rarity[1]=maxrare;
+        if (minrare=="uncommon") {
+            if (maxrare=="common") {
+                sendChat("Item Store","/w gm Maximum Rarity may not be below Minimum Rarity!");
+                return;
+            }
+        } else if (minrare=="rare") {
+            if (maxrare=="common" || maxrare=="uncommon") {
+                sendChat("Item Store","/w gm Maximum Rarity may not be below Minimum Rarity!");
+                return;
+            }
+        } else if (minrare=="very rare") {
+            if (maxrare=="common" || maxrare=="uncommon" || maxrare=="rare") {
+                sendChat("Item Store","/w gm Maximum Rarity may not be below Minimum Rarity!");
+                return;
+            }
+        } else if (minrare=="legendary") {
+            if (maxrare!=="legendary") {
+                sendChat("Item Store","/w gm Maximum Rarity may not be below Minimum Rarity!");
+                return;
+            }
+        } else if (minrare=="random") {
+            if (maxrare=="common") {
+                minrare=maxrare;
+            } else if (maxrare=="uncommon") {
+                let rand=randomInteger(2);
+                if (rand==1) {
+                    minrare="common";
+                } else if (rand==2) {
+                    minrare=maxrare;
                 }
-            break;
-            case 'rare':
-                if (maxrare=="common" || maxrare=="uncommon") {
-                    sendChat("Item Store","/w gm Maximum Rarity may not be below Minimum Rarity!");
-                } else {
-                    rarity[0]=minrare;
-                    rarity[1]=maxrare;
+            } else if (maxrare=="rare") {
+                let rand=randomInteger(3);
+                if (rand==1) {
+                    minrare="common";
+                } else if (rand==2) {
+                    minrare="uncommon";
+                } else if (rand==3) {
+                    minrare=maxrare;
                 }
-            break;
-            case 'very rare':
-                if (maxrare=="common" || maxrare=="uncommon" || maxrare=="rare") {
-                    sendChat("Item Store","/w gm Maximum Rarity may not be below Minimum Rarity!");
-                } else {
-                    rarity[0]=minrare;
-                    rarity[1]=maxrare;
+            } else if (maxrare=="very rare") {
+                let rand=randomInteger(4);
+                if (rand==1) {
+                    minrare="common";
+                } else if (rand==2) {
+                    minrare="uncommon";
+                } else if (rand==3) {
+                    minrare="rare";
+                } else if (rand==4) {
+                    minrare=maxrare;
                 }
-            break;
-            case 'legendary':
-                if (maxrare!=="legendary") {
-                    sendChat("Item Store","/w gm Maximum Rarity may not be below Minimum Rarity!");
-                } else {
-                    rarity[0]=minrare;
-                    rarity[1]=maxrare;
+            } else if (maxrare=="legendary") {
+                let rand=randomInteger(5);
+                if (rand==1) {
+                    minrare="common";
+                } else if (rand==2) {
+                    minrare="uncommon";
+                } else if (rand==3) {
+                    minrare="rare";
+                } else if (rand==4) {
+                    minrare="very rare";
+                } else if (rand==5) {
+                    minrare=maxrare;
                 }
-            break;
-            case 'random':
+            } else if (maxrare=="random") {
+                let rand2=randomInteger(5);
+                if (rand2==1) {
+                    maxrare="common";
+                } else if (rand2==2) {
+                    maxrare="uncommon";
+                } else if (rand2==3) {
+                    maxrare="rare";
+                } else if (rand2==4) {
+                    maxrare="very rare";
+                } else if (rand2==5) {
+                    maxrare="legendary";
+                }
                 if (maxrare=="common") {
                     minrare=maxrare;
                 } else if (maxrare=="uncommon") {
@@ -4103,67 +4131,11 @@ var ItemStore = ItemStore || (function() {
                     } else if (rand==5) {
                         minrare=maxrare;
                     }
-                } else if (maxrare=="random") {
-                    let rand2=randomInteger(5);
-                    if (rand2==1) {
-                        maxrare="common";
-                    } else if (rand2==2) {
-                        maxrare="uncommon";
-                    } else if (rand2==3) {
-                        maxrare="rare";
-                    } else if (rand2==4) {
-                        maxrare="very rare";
-                    } else if (rand2==5) {
-                        maxrare="legendary";
-                    }
-                    if (maxrare=="common") {
-                        minrare=maxrare;
-                    } else if (maxrare=="uncommon") {
-                        let rand=randomInteger(2);
-                        if (rand==1) {
-                            minrare="common";
-                        } else if (rand==2) {
-                            minrare=maxrare;
-                        }
-                    } else if (maxrare=="rare") {
-                        let rand=randomInteger(3);
-                        if (rand==1) {
-                            minrare="common";
-                        } else if (rand==2) {
-                            minrare="uncommon";
-                        } else if (rand==3) {
-                            minrare=maxrare;
-                        }
-                    } else if (maxrare=="very rare") {
-                        let rand=randomInteger(4);
-                        if (rand==1) {
-                            minrare="common";
-                        } else if (rand==2) {
-                            minrare="uncommon";
-                        } else if (rand==3) {
-                            minrare="rare";
-                        } else if (rand==4) {
-                            minrare=maxrare;
-                        }
-                    } else if (maxrare=="legendary") {
-                        let rand=randomInteger(5);
-                        if (rand==1) {
-                            minrare="common";
-                        } else if (rand==2) {
-                            minrare="uncommon";
-                        } else if (rand==3) {
-                            minrare="rare";
-                        } else if (rand==4) {
-                            minrare="very rare";
-                        } else if (rand==5) {
-                            minrare=maxrare;
-                        }
-                    }
                 }
-                rarity[0]=minrare;
-                rarity[1]=maxrare;
-            break;
+            }
         }
+        rarity.push(minrare);
+        rarity.push(maxrare);
         return rarity;
     },
 
@@ -4798,6 +4770,7 @@ var ItemStore = ItemStore || (function() {
             });
             hand.set("notes",'<table><tr><th>Pos.</th><th>Amount</th><th>Item Name</th><th>Description</th><th>Price (GP)</th><th>Shop</th></tr></thead>'+invList+"</table>");
             sendChat("Item Store","/w "+name+" Created \""+cart[0].name+"\"!");
+            checkCarts();
             cartMenu(cart[0].name,msg);
         }
     },
@@ -5028,6 +5001,16 @@ var ItemStore = ItemStore || (function() {
         }
     },
     
+    resetStores = function() {
+        setDefaults();
+        sendChat("Item Store","/w gm Reset all Stores!");
+    },
+    
+    resetCarts = function() {
+        setCartDefaults();
+        sendChat("Item Store","/w gm Reset all Carts!");
+    },
+    
     checkInstall = function() {
         if (!state.store) {
             setDefaults();
@@ -5037,6 +5020,9 @@ var ItemStore = ItemStore || (function() {
         }
         if (!state.cart) {
             setCartDefault();
+        }
+        if (!state.list) {
+            setItemDefaults();
         }
     },
     

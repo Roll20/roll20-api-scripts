@@ -1162,4 +1162,8 @@ itemstore:
 
 rpgmasterlibraryadd2e:
   - "RPGMlibrary AD+D2e"
-  - "Utility" 
+  - "Utility"
+  
+faces:
+  - "faces"
+  - "Utility"
