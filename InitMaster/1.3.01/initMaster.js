@@ -42,13 +42,12 @@
  *                     provide a menu of links to help handouts
  * v1.3.00 17/09/2022  First release of RPGMaster InitiativeMaster using the RPGMaster Library.
  * v1.3.01 10/10/2022  Fixed initiative for classes that have multi-class spell casting
- * v1.3.02 21/10/2022  Gray out attack initiative buttons for weapons without charges
  */
 
 var initMaster = (function() {
 	'use strict'; 
-	var version = '1.3.02',
-		author = 'Richerd @ Damery',
+	var version = '1.3.01',
+		author = 'RED',
 		pending = null;
     const lastUpdate = 1663353439;
 
@@ -59,7 +58,6 @@ var initMaster = (function() {
 	const getRPGMap = (...a) => libRPGMaster.getRPGMap(...a);
 	const setAttr = (...a) => libRPGMaster.setAttr(...a);
 	const attrLookup = (...a) => libRPGMaster.attrLookup(...a);
-	const abilityLookup = (...a) => libRPGMaster.abilityLookup(...a);
 	const getTableField = (...t) => libRPGMaster.getTableField(...t);
 	const getTable = (...t) => libRPGMaster.getTable(...t);
 	const initValues = (...v) => libRPGMaster.initValues(...v);
@@ -575,57 +573,51 @@ var initMaster = (function() {
 	 * Init
 	 */
 	var init = function() {
-		try {
-			if (!state.initMaster)
-				{state.initMaster = {};}
-			if (_.isUndefined(state.initMaster.debug))
-				{state.initMaster.debug = false;}
-			if (!state.initMaster.round)
-				{state.initMaster.round = 1;}
-			if (_.isUndefined(state.initMaster.changedRound))
-				{state.initMaster.changedRound = false;}
-			if (!state.initMaster.dailyCost)
-				{state.initMaster.dailyCost = '?{What costs?|Camping 1sp,0.1|Inn D&B&B 2gp,2|Inn B&B 1gp,1|Set other amount,?{How many GP - fractions OK?&#125;|No charge,0}';}
-			if (!state.initMaster.playerChars)
-				{state.initMaster.playerChars = getPlayerCharList();}
-			if (!state.initMaster.initType)
-				{state.initMaster.initType = 'individual';}
-			if (_.isUndefined(state.initMaster.playerRoll))
-				{state.initMaster.playerRoll = '';}
-			if (_.isUndefined(state.initMaster.dmRoll))
-				{state.initMaster.dmRoll = '';}
-			if (_.isUndefined(state.initMaster.dispRollOnInit))
-				{state.initMaster.dispRollOnInit = true;}
-				
-			if (!state.moneyMaster)
-				{state.moneyMaster = {};}
-			if (_.isUndefined(state.moneyMaster.inGameDay))
-				{state.moneyMaster.inGameDay = 0;}
-				
-			[fields,RPGMap] = getRPGMap();
-			fieldGroups = RPGMap.fieldGroups;
-			spellLevels = RPGMap.spellLevels;
-			casterLevels = RPGMap.casterLevels;
-			spellsPerLevel = RPGMap.spellsPerLevel;
-
-			// RED: v1.037 register with commandMaster
-			setTimeout( cmdMasterRegister, 30 );
+		if (!state.initMaster)
+			{state.initMaster = {};}
+		if (_.isUndefined(state.initMaster.debug))
+		    {state.initMaster.debug = false;}
+		if (!state.initMaster.round)
+			{state.initMaster.round = 1;}
+		if (_.isUndefined(state.initMaster.changedRound))
+			{state.initMaster.changedRound = false;}
+		if (!state.initMaster.dailyCost)
+			{state.initMaster.dailyCost = '?{What costs?|Camping 1sp,0.1|Inn D&B&B 2gp,2|Inn B&B 1gp,1|Set other amount,?{How many GP - fractions OK?&#125;|No charge,0}';}
+		if (!state.initMaster.playerChars)
+			{state.initMaster.playerChars = getPlayerCharList();}
+		if (!state.initMaster.initType)
+			{state.initMaster.initType = 'individual';}
+		if (_.isUndefined(state.initMaster.playerRoll))
+			{state.initMaster.playerRoll = '';}
+		if (_.isUndefined(state.initMaster.dmRoll))
+			{state.initMaster.dmRoll = '';}
+		if (_.isUndefined(state.initMaster.dispRollOnInit))
+			{state.initMaster.dispRollOnInit = true;}
 			
-			// RED: v1.036 create help handouts from stored data
-			setTimeout( () => updateHandouts(handouts,true,findTheGM()),30);
-
-			// RED: v1.036 handshake with RoundMaster API
-			setTimeout( () => issueHandshakeQuery('rounds'),80);
+		if (!state.moneyMaster)
+			{state.moneyMaster = {};}
+		if (_.isUndefined(state.moneyMaster.inGameDay))
+			{state.moneyMaster.inGameDay = 0;}
 			
-			// RED: log the version of the API Script
+		[fields,RPGMap] = getRPGMap();
+		fieldGroups = RPGMap.fieldGroups;
+		spellLevels = RPGMap.spellLevels;
+		casterLevels = RPGMap.casterLevels;
+		spellsPerLevel = RPGMap.spellsPerLevel;
 
-			log('-=> initMaster v'+version+' <=-  ['+(new Date(lastUpdate*1000))+']');
-			return;
-		} catch (e) {
-			log('InitMaster Initialisation: JavaScript '+e.name+': '+e.message+' while initialising the API');
-			sendDebug('InitMaster Initialisation: JavaScript '+e.name+': '+e.message+' while initialising the API');
-			sendError('InitMaster JavaScript '+e.name+': '+e.message);
-		}
+		// RED: v1.037 register with commandMaster
+		setTimeout( cmdMasterRegister, 30 );
+		
+		// RED: v1.036 create help handouts from stored data
+		setTimeout( () => updateHandouts(handouts,true,findTheGM()),30);
+
+		// RED: v1.036 handshake with RoundMaster API
+		setTimeout( () => issueHandshakeQuery('rounds'),80);
+		
+	    // RED: log the version of the API Script
+
+		log('-=> initMaster v'+version+' <=-  ['+(new Date(lastUpdate*1000))+']');
+		return;
 	}; 
 	
     /**
@@ -2033,13 +2025,9 @@ var initMaster = (function() {
 			content = '',
 			dancingWeapons = '',
 
-			WeaponTable = getTableField( charCS, {}, fields.MW_table, fields.MW_name ),
-			ItemsTable  = getTableField( charCS, {}, fields.Items_table, fields.Items_name );
-			WeaponTable = getTableField( charCS, WeaponTable, fields.MW_table, fields.MW_miName );
+			WeaponTable = getTableField( charCS, {}, fields.MW_table, fields.MW_name );
 			WeaponTable = getTableField( charCS, WeaponTable, fields.MW_table, fields.MW_twoHanded );
 			WeaponTable = getTableField( charCS, WeaponTable, fields.MW_table, fields.MW_dancing );
-			WeaponTable = getTableField( charCS, WeaponTable, fields.MW_table, fields.MW_charges );
-			ItemsTable  = getTableField( charCS, ItemsTable, fields.Items_table, fields.Items_qty );
 		
 		a = fields.MW_table[1];
 		for (i = a; i < (fields.MWrows + a); i++) {
@@ -2053,21 +2041,9 @@ var initMaster = (function() {
 			        content += '**Melee Weapons**\n';
 			        header = false;
 			    }
-				let miName = WeaponTable.tableLookup( fields.MW_miName, i ) || '',
-					weapObj = abilityLookup( fields.WeaponDB, miName, charCS ),
-					weapCharged = weapObj.obj && !(['uncharged','cursed'].includes(weapObj.obj[1].charge.toLowerCase())),
-					charges = weapCharged  ? (WeaponTable.tableLookup( fields.MW_charges, i ) || 1) : 0,
-					exhausted = submitted,
-					qty = '';
-				if (charges) {
-					let itemIndex = ItemsTable.tableFind( fields.Items_name, miName );
-					qty = _.isUndefined(itemIndex) ? 0 : ItemsTable.tableLookup( fields.Items_qty, itemIndex ) || 0;
-					exhausted = qty < charges;
-					qty = String(qty) + ' ';
-				}
-				content += (w == charButton || exhausted ? '<span style=' + (exhausted ? design.grey_button : design.selected_button) + '>' : '[');
-				content += qty + weapName;
-				content += (((w == charButton) || exhausted) ? '</span>' : '](!init --button ' + MWcmd + '|' + tokenID + '|' + w + '|' + i + ')');
+				content += (w == charButton || submitted ? '<span style=' + (submitted ? design.grey_button : design.selected_button) + '>' : '[');
+				content += weapName;
+				content += (((w == charButton) || submitted) ? '</span>' : '](!init --button ' + MWcmd + '|' + tokenID + '|' + w + '|' + i + ')');
 			} else if ((weapName != '-') && dancing) {
 				dancingWeapons += '<span style='+(submitted ? design.grey_button : design.green_button)+'>'+weapName+'</span>';
 			}
@@ -2080,8 +2056,6 @@ var initMaster = (function() {
 		// build the character Ranged Weapons list ****
 		
 		WeaponTable = getTableField( charCS, {}, fields.RW_table, fields.RW_name );
-		WeaponTable = getTableField( charCS, WeaponTable, fields.RW_table, fields.RW_miName, '', 1 );
-		WeaponTable = getTableField( charCS, WeaponTable, fields.RW_table, fields.RW_charges, '', 1 );
 		WeaponTable = getTableField( charCS, WeaponTable, fields.RW_table, fields.RW_twoHanded, '', 1 );
 		WeaponTable = getTableField( charCS, WeaponTable, fields.RW_table, fields.RW_dancing, '', 0 );
 
@@ -2097,21 +2071,9 @@ var initMaster = (function() {
 			        content += '**Ranged weapons**\n';
 			        header = false;
 			    }
-				let miName = WeaponTable.tableLookup( fields.RW_miName, i ) || '',
-					weapObj = abilityLookup( fields.WeaponDB, miName, charCS ),
-					weapCharged = weapObj.obj && !(['uncharged','cursed'].includes(weapObj.obj[1].charge.toLowerCase())),
-					charges = weapCharged  ? WeaponTable.tableLookup( fields.RW_charges, i ) : 0,
-					exhausted = submitted,
-					qty = '';
-				if (charges) {
-					let itemIndex = ItemsTable.tableFind( fields.Items_name, miName );
-					qty = _.isUndefined(itemIndex) ? 0 : ItemsTable.tableLookup( fields.Items_qty, itemIndex ) || 0;
-					exhausted = qty < charges;
-					qty = String(qty) + ' ';
-				}
-				content += (w == charButton || exhausted ? '<span style=' + (exhausted ? design.grey_button : design.selected_button) + '>' : '[');
-				content += qty + weapName;
-				content += (((w == charButton) || exhausted) ? '</span>' : '](!init --button ' + RWcmd + '|' + tokenID + '|' + w + '|' + i + ')');
+				content += (w == charButton || submitted ? '<span style=' + (submitted ? design.grey_button : design.selected_button) + '>' : '[');
+				content += weapName;
+				content += (((w == charButton) || submitted) ? '</span>' : '](!init --button ' + RWcmd + '|' + tokenID + '|' + w + '|' + i + ')');
 			} else if ((weapName != '-') && dancing && !dancingWeapons.includes('>'+weapName+'<')) {
 				dancingWeapons += '<span style='+design.green_button+'>'+weapName+'</span>';
 			}
