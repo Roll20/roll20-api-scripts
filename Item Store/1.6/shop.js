@@ -2,6 +2,7 @@
 Item Store Generator for D&D 5e
 Original created by Kirsty (https://app.roll20.net/users/1165285/kirsty)
 Updated Version by Julexar (https://app.roll20.net/users/9989180/julexar)
+
 API Commands:
 GM ONLY
 !store - Pulls up the Menu and allows the GM to create and modify Stores
@@ -65,7 +66,7 @@ GM & Players
 var ItemStore = ItemStore || (function() {
     'use strict';
     
-    var version = "1.8",
+    var version = '1.6',
     
     setDefaults = function() {
         state.store = [];
@@ -1222,7 +1223,6 @@ var ItemStore = ItemStore || (function() {
                             sendChat("Item Store","/w gm Please define a name for the Store you wish to create!");
                         } else {
                             createStore(args[2].replace("name ",""));
-                            storeMenu(args[2].replace("name ",""));
                         }
                     } else if (args[1].includes("store")) {
                         let store=args[1].replace("store ","");
@@ -1287,7 +1287,7 @@ var ItemStore = ItemStore || (function() {
                                                     }
                                                 }
                                                 if (args[11]=="confirm") {
-                                                    editItem(store,item,name,desc,mods,props,price,weight,amount,sellam);
+                                                    editItem(store,item,name,desc,mods,props,price,weight,amount,sellam)
                                                 } else if (args[11]==undefined || args[11]!=="confirm") {
                                                     editMenu(store,option,mode,item,name,desc,mods,props,price,weight,amount,sellam);
                                                 }
@@ -1390,11 +1390,9 @@ var ItemStore = ItemStore || (function() {
                                                                 if (args[7]==undefined) {
                                                                     args[7]=true;
                                                                     createInv(store,type,amount,minrare,maxrare,args[7]);
-                                                                    storeMenu(store);
                                                                 } else if (args[7].includes("overwrite")) {
                                                                     let overwrite=Boolean(args[7].replace("overwrite ",""));
                                                                     createInv(store,type,amount,minrare,maxrare,overwrite);
-                                                                    storeMenu(store);
                                                                 }
                                                             }
                                                         }
@@ -1405,43 +1403,35 @@ var ItemStore = ItemStore || (function() {
                                     }
                                 } else if (option=="reset") {
                                     resetInv(store);
-                                    storeMenu(store);
                                 }
                             } else if (args[2]=="player" || args[2]=="players") {
-                                showStore(store,msg);
+                                showStore(store);
                             } else if (args[2].includes("hdc")) {
                                 let hdc=Number(args[2].replace("hdc ",""));
                                 editStore(store,"hdc",hdc);
-                                storeMenu(store);
                             } else if (args[2].includes("name")) {
                                 let name=args[2].replace("name ","");
                                 if (name=="" || name==" ") {
                                     sendChat("Item Store","/w gm The new name of a Store cannot be empty!");
                                 } else {
                                     editStore(store,"name",name);
-                                    storeMenu(name);
                                 }
                             } else if (args[2].includes("inflate")) {
                                 let num=Number(args[2].replace("inflate ",""));
                                 editStore(store,"cprice",num);
-                                storeMenu(store);
                             } else if (args[2].includes("deflate")) {
                                 let num=Number(args[2].replace("deflate ",""));
                                 editStore(store,"cprice",num);
-                                storeMenu(store);
                             } else if (args[2]=="activate") {
                                 editStore(store,"active",true);
-                                storeMenu(store);
                             } else if (args[2]=="deactivate") {
                                 editStore(store,"active",false);
-                                storeMenu(store);
                             } else if (args[2]=="delete") {
                                 deleteStore(store);
                             }
                         } 
                     } else if (args[1]=="reset") {
                         resetStores();
-                        storeMenu(undefined);
                     }
                 return;
             }
@@ -1585,7 +1575,7 @@ var ItemStore = ItemStore || (function() {
                                 sendChat("Item Store","/w "+msg.who+" Please insert a valid Character ID!");
                             } else if (char!==undefined) {
                                 if (args[3]==undefined) {
-                                    shopMenu(store,undefined,charid,msg);
+                                    sendChat("Item Store","/w "+msg.who+" Please define an Item you want to buy!");
                                 } else if (args[3].includes("buy")) {
                                     let item=args[3].replace("buy ","");
                                     if (args[4]==undefined) {
@@ -1606,7 +1596,7 @@ var ItemStore = ItemStore || (function() {
                                 sendChat("Item Store","/w "+msg.who+" Please insert a valid Character ID!");
                             } else if (char!==undefined) {
                                 if (args[3]==undefined) {
-                                    shopMenu(store,undefined,charid,msg);
+                                    sendChat("Item Store","/w "+msg.who+" Please define an Item you want to buy!");
                                 } else if (args[3].includes("buy")) {
                                     let item=args[3].replace("buy ","");
                                     if (args[4]==undefined) {
@@ -1692,7 +1682,7 @@ var ItemStore = ItemStore || (function() {
                         if (char==undefined) {
                             sendChat("Item Store","/w "+msg.who+" You must define a valid Character ID!");
                         } else if (char!==undefined) {
-                            purchase("cart",cart,undefined,undefined,charid,msg);
+                            purchase("cart",cart,undefined,undefined,args[2],msg);
                         }
                     } else if (args[2].includes("char")) {
                         let charname=args[2].replace("char ","");
@@ -1700,11 +1690,10 @@ var ItemStore = ItemStore || (function() {
                             _type: 'character',
                             name: charname
                         }, {caseInsensitive: true})[0];
-                        let charid=char.get('_id');
                         if (char==undefined) {
                             sendChat("Item Store","/w "+msg.who+" You must define a valid Character Name!");
                         } else if (char!==undefined) {
-                            purchase("cart",cart,undefined,undefined,charid,msg);
+                            purchase("cart",cart,undefined,undefined,args[2],msg);
                         }
                     }
                 } else if (args[1].includes("store")){
@@ -1731,10 +1720,10 @@ var ItemStore = ItemStore || (function() {
                                         sendChat("Item Store","/w "+msg.who+" Please define a valid Item.");
                                     } else {
                                         if (args[4]==undefined) {
-                                            purchase("item",item,1,store,charid,msg);
+                                            purchase("item",item,1,store,args[3],msg);
                                         } else if (args[4].includes("amount")) {
                                             let amount=Number(args[4].replace("amount ",""));
-                                            purchase("item",item,amount,store,charid,msg);
+                                            purchase("item",item,amount,store,args[2],msg);
                                         }
                                     }
                                 }
@@ -1745,7 +1734,6 @@ var ItemStore = ItemStore || (function() {
                                 _type: 'character',
                                 id: charname
                             }, {caseInsensitive: true})[0];
-                            let charid=char.get('_id');
                             if (char==undefined) {
                                 sendChat("Item Store","/w "+msg.who+" You must define a valid Character ID!");
                             } else if (char!==undefined) {
@@ -1757,10 +1745,10 @@ var ItemStore = ItemStore || (function() {
                                         sendChat("Item Store","/w "+msg.who+" Please define a valid Item.");
                                     } else {
                                         if (args[4]==undefined) {
-                                            purchase("item",item,1,store,charid,msg);
+                                            purchase("item",item,1,store,args[3],msg);
                                         } else if (args[4].includes("amount")) {
                                             let amount=Number(args[4].replace("amount ",""));
-                                            purchase("item",item,amount,store,charid,msg);
+                                            purchase("item",item,amount,store,args[2],msg);
                                         }
                                     }
                                 }
@@ -1771,13 +1759,6 @@ var ItemStore = ItemStore || (function() {
             return;
         }
     },
-
-    getIDsFromTokens = function (selected) {
-		return (selected || []).map(obj => getObj("graphic", obj._id))
-			.filter(x => !!x)
-			.map(token => token.get("represents"))
-			.filter(id => getObj("character", id || ""));
-	},
 
     storeMenu = function(store) {
         var divstyle = 'style="width: 260px; border: 1px solid black; background-color: #ffffff; padding: 5px;"';
@@ -1838,20 +1819,20 @@ var ItemStore = ItemStore || (function() {
                 );
             } else if (state.store.length>=1) {
                 let shop;
-                let shopList=[];
+                let shopList;
                 for (let i=0;i<state.store.length;i++) {
                     if (state.store[i].name==store) {
                         shop=state.store[i];
                     }
                 }
                 if (shop==undefined) {
-                    sendChat("Item Store","/w gm Could not find a Store with that Name!")
+                    sendChat("Item Store","/w gm Could not find a Store with that Number!")
                 } else if (shop!==undefined) {
                     let count=0;
                     for (let i=0;i<state.store.length;i++) {
                         if (state.store[i].name!==shop.name) {
-                            shopList[count]=state.store[i].name;
                             count++;
+                            shopList[count]=state.store[i].name;
                         }
                     }
                     shopList=String(shopList);
@@ -1887,7 +1868,6 @@ var ItemStore = ItemStore || (function() {
                             '<tr><td>Haggle DC: </td><td><a ' + astyle3 + '" href="!store --store ' + shop.name + ' --hdc ?{Haggle DC|10}">' + shop.hdc + '</a></td></tr>' + //--
                             '</table>' + //--
                             '<br><br>Price Change %: ' + shop.cprice + '<br><br>' + //--
-                            '<div style="text-align:center;"><a ' + astyle2 + '" href="!store --store ' + shop.name + ' --name ?[Name?|Insert Name}">Change Name</a></div>' + //--
                             '<div style="text-align:center;"><a ' + astyle3 + '" href="!store --store ' + shop.name + ' --inflate ?{Inflation %|0}">Inflate Price</a>' + //--
                             '<a ' + astyle3 + '" href="!store --store ' + shop.name + ' --deflate ?{Deflation %|0}">Deflate Price</a></div>' + //--
                             '<div style="text-align:center;"><a ' + astyle2 + '" href="!store --store ' + shop.name + ' --inv view">Item Menu</a></div>' + //--
@@ -1914,10 +1894,9 @@ var ItemStore = ItemStore || (function() {
                             '</table>' + //--
                             '<br><br>' + //--
                             '<table' + tablestyle + '>' + //--
-                            '<tr><td>Haggle DC: </td><td><a ' + astyle1 + '" href="!store --store ' + shop.name + ' --hdc ?{Haggle DC|10}">' + shop.hdc + '</a></td></tr>' + //--
+                            '<tr><td>Haggle DC: </td><td><a ' + astyle3 + '" href="!store --store ' + shop.name + ' --hdc ?{Haggle DC|10}">' + shop.hdc + '</a></td></tr>' + //--
                             '</table>' + //--
                             '<br><br>Price Change %: ' + shop.cprice + '<br><br>' + //--
-                            '<div style="text-align:center;"><a ' + astyle2 + '" href="!store --store ' + shop.name + ' --name ?[Name?|Insert Name}">Change Name</a></div>' + //--
                             '<div style="text-align:center;"><a ' + astyle3 + '" href="!store --store ' + shop.name + ' --inflate ?{Inflation %|0}">Inflate Price</a>' + //--
                             '<a ' + astyle3 + '" href="!store --store ' + shop.name + ' --deflate ?{Deflation %|0}">Deflate Price</a></div>' + //--
                             '<div style="text-align:center;"><a ' + astyle2 + '" href="!store --store ' + shop.name + ' --inv view">Item Menu</a></div>' + //--
@@ -4164,36 +4143,31 @@ var ItemStore = ItemStore || (function() {
                 num=i;
             }
         }
-        log(num);
         switch (attr) {
             case 'name':
-                sendChat("Item Store","/w gm Changed Name of Store \""+store.name+"\"<br><b>Old:</b> "+store.name+"<br><b>New:</b> "+val);
-                store.name=val;
-                state.store[num]=store;
+                sendChat("Item Store","/w gm Changed Name of Store #"+num+"<br><b>Old:</b> "+store.name+"<br><b>New:</b> "+val);
+                state.store[num].name=val;
             break;
             case 'hdc':
-                sendChat("Item Store","/w gm Changed Haggle DC of Store \""+store.name+"\"<br><b>Old:</b> "+String(store.hdc)+"<br><b>New:</b> "+val);
-                store.hdc=Number(val);
-                state.store[num]=store;
+                sendChat("Item Store","/w gm Changed Haggle DC of Store #"+num+"<br><b>Old:</b> "+store.hdc+"<br><b>New:</b> "+val);
+                state.store[num].hdc=Number(val);
             break;
             case 'cprice':
-                sendChat("Item Store","/w gm Changed Price Change % of Store \""+store.name+"\"<br><b>Old:</b> "+String(store.cprice)+"<br><b>New:</b> "+val);
-                store.cprice=Number(val);
-                state.store[num]=store;
+                sendChat("Item Store","/w gm Changed Price Change % of Store #"+num+"<br><b>Old:</b> "+store.cprice+"<br><b>New:</b> "+val);
+                state.store[num].cprice=Number(val);
             break;
             case 'active':
                 if (val=="true" || val==true) {
-                    sendChat("Item Store","/w gm Activated Store \""+store.name+"\"");
+                    sendChat("Item Store","/w gm Activated Store #"+num);
                 } else if (val=="false" || val==false) {
-                    sendChat("Item Store","/w gm Deactivated Store \""+store.name+"\"");
+                    sendChat("Item Store","/w gm Deactivated Store #"+num);
                 }
-                store.active=Boolean(val);
-                state.store[num]=store;
+                state.store[num].active=Boolean(val);
             break;
         }
     },
 
-    showStore = function(store,msg) {
+    showStore = function(store) {
         //Shows a certain Store or all available Stores to Players.
         var divstyle = 'style="width: 260px; border: 1px solid black; background-color: #ffffff; padding: 5px;"';
         var astyle1 = 'style="text-align:center; border: 1px solid black; margin: 1px; background-color: #7E2D40; border-radius: 4px;  box-shadow: 1px 1px 1px #707070; width: 100px;';
@@ -4219,24 +4193,25 @@ var ItemStore = ItemStore || (function() {
             }
             invList += '<tr style="'+border+'border-left:1px solid #cccccc; border-right: 1px solid #cccccc;"><td style="border-right: 1px solid #cccccc; text-align:center;">' + i + '</td><td style="border-right: 1px solid #cccccc; text-align:center;">' + inv[i].amount + '</td><td style="border-right: 1px solid #cccccc; text-align:center;">' + inv[i].name + '</td><td style="border-right: 1px solid #cccccc; text-align:center;">' + desc[0] + '</td><td style="text-align:center;">' + price + '</td></tr>';
         }
-        let charid=getIDsFromTokens(msg.selected)[0];
         sendChat("Item Store","<div " + divstyle + ">" + //--
             '<div ' + headstyle + '>Item Store</div>' + //--
             '<div ' + substyle + '>Player View</div>' + //--
             '<div ' + arrowstyle + '></div>' + //--
-            '<div style="text-align:center;">Current Store: ' + store.name + '</div>' + //--
+            '<table ' + tablestyle + '>' + //--
+            '<tr><td style="text-align:left;">Current Store: </td><td style="text-align:center;">' + store.name + '</td></tr>' + //--
+            '</table>' + //--
             '<br><div style="text-align:center;"><b>Inventory</b></div><br>' + //--
             '<table ' + tablestyle + '>' + //--
             '<thead><tr style="border-top: 1px solid #cccccc;"><th style="border-right: 1px solid #cccccc; border-left: 1px solid #cccccc;">Pos.</th><th style="border-right: 1px solid #cccccc; text-align:center;">Amount</th><th style="border-right: 1px solid #cccccc; text-align:center;">Item Name</th><th style="border-right: 1px solid #cccccc; text-align:center;">Description</th><th style="border-right: 1px solid #cccccc; text-align:center;">Price (GP)</th></tr></thead>' + //--
             '<tbody>' + invList + '</tbody>' + //--
             '</table>' + //--
             '<br><br>' + //--
-            '<div style="text-align:center;"><a ' + astyle2 + '" href="!shop --store ' + store.name + ' --charid ' + charid + '">Shop Menu</a></div>' + //--
+            '<div style="text-align:center;"><a ' + astyle2 + '" href="!shop --store ' + store.name + '">Shop Menu</a></div>' + //--
             '</div>'
         );
     },
 
-    shopMenu = function(store,cart,charid,msg) {
+    shopMenu = function(store,cart,msg) {
         //Store Menu for Players
         var divstyle = 'style="width: 260px; border: 1px solid black; background-color: #ffffff; padding: 5px;"';
         var astyle1 = 'style="text-align:center; border: 1px solid black; margin: 1px; background-color: #7E2D40; border-radius: 4px;  box-shadow: 1px 1px 1px #707070; width: 100px;';
@@ -4432,8 +4407,8 @@ var ItemStore = ItemStore || (function() {
                             '<div ' + substyle + '>Player Menu</div>' + //--
                             '<div ' + arrowstyle + '></div>' + //--
                             '<table ' + tablestyle + '>' + //--
-                            '<tr><td>Current Store: </td><td ' + tdstyle + '><a ' + astyle1 + '" href="!shop --store ?{Store?|' + shopList + '} --charid ' + charid + '">' + shop.name + '</a></td></tr>' + //--
-                            '<tr><td>Cart: </td><td ' + tdstyle + '><a ' + astyle1 + '" href="!shop --cart ?{Cart?|' + cartList + '} --store ' + shop.name + ' --charid ' + charid + '">None</a></td></tr>' + //--
+                            '<tr><td>Current Store: </td><td ' + tdstyle + '><a ' + astyle1 + '" href="!shop --store ?{Store?|' + shopList + '}">' + shop.name + '</a></td></tr>' + //--
+                            '<tr><td>Cart: </td><td ' + tdstyle + '><a ' + astyle1 + '" href="!shop --cart ?{Cart?|' + cartList + '} --store ' + shop.name + '">None</a></td></tr>' + //--
                             '</table>' + //--
                             '<br><br><div style="text-align:center;"><b>Inventory</b></div>' + //--
                             '<table ' + tablestyle + '>' + //--
@@ -4441,8 +4416,8 @@ var ItemStore = ItemStore || (function() {
                             '<tbody>' + invList + '</tbody>' + //--
                             '</table>' + //--
                             '<br><br>' + //--
-                            '<div style="text-align:center;"><a ' + astyle2 + '" href="!shop --store ' + shop.name + ' --charid ' + charid + ' --buy ?{Item?|' + itemList + '} --amount ?{Amount?|1}">Purchase Item</a></div>' + //--
-                            '<div style="text-align:center;"><a ' + astyle2 + '" href="!shop --store ' + shop.name + ' --charid ' + charid + ' --haggle">Haggle Price</a></div>' + //--
+                            '<div style="text-align:center;"><a ' + astyle2 + '" href="!shop --store ' + shop.name + ' --buy ?{Item?|' + itemList + '} --amount ?{Amount?|1}">Purchase Item</a></div>' + //--
+                            '<div style="text-align:center;"><a ' + astyle2 + '" href="!shop --store ' + shop.name + ' --haggle">Haggle Price</a></div>' + //--
                             '</div>'
                         );
                     }
@@ -4470,8 +4445,8 @@ var ItemStore = ItemStore || (function() {
                             '<div ' + substyle + '>Player Menu</div>' + //--
                             '<div ' + arrowstyle + '></div>' + //--
                             '<table ' + tablestyle + '>' + //--
-                            '<tr><td>Current Store: </td><td ' + tdstyle + '><a ' + astyle1 + '" href="!shop --cart ' + cart + ' --shop ?{Shop?|' + shopList + '} --charid ' + charid + '">' + shop.name + '</a></td></tr>' + //--
-                            '<tr><td>Cart: </td><td ' + tdstyle + '><a ' + astyle1 + '" href="!shop --cart ?{Cart?|' + cartList + '} --shop '+ shop.name + ' --charid ' + charid + '">' + cart + '</a></td></tr>' + //--
+                            '<tr><td>Current Store: </td><td ' + tdstyle + '><a ' + astyle1 + '" href="!shop --cart ' + cart + ' --shop ?{Shop?|' + shopList + '}">' + shop.name + '</a></td></tr>' + //--
+                            '<tr><td>Cart: </td><td ' + tdstyle + '><a ' + astyle1 + '" href="!shop --cart ?{Cart?|' + cartList + '} --shop '+ shop.name + '">' + cart + '</a></td></tr>' + //--
                             '</table>' + //--
                             '<br><br><div style="text-align:center;"><b>Inventory</b></div>' + //--
                             '<table ' + tablestyle + '>' + //--
@@ -4479,9 +4454,9 @@ var ItemStore = ItemStore || (function() {
                             '<tbody>' + invList + '</tbody>' + //--
                             '</table>' + //--
                             '<br><br>' + //--
-                            '<div style="text-align:center;"><a ' + astyle2 + '" href="!shop --cart ' + cart + ' --store ' + shop.name + ' --charid ' + charid + ' --buy ?{Item?|' + itemList + '} --amount ?{Amount?|1}">Add Item to Cart</a></div>' + //--
+                            '<div style="text-align:center;"><a ' + astyle2 + '" href="!shop --cart ' + cart + ' --store ' + shop.name + ' --buy ?{Item?|' + itemList + '} --amount ?{Amount?|1}">Add Item to Cart</a></div>' + //--
                             '<div style="text-align:center;"><a ' + astyle2 + '" href="!cart --' + cart + '">View Cart Content</a></div>' + //--
-                            '<div style="text-align:center;"><a ' + astyle2 + '" href="!shop --cart ' + cart + ' --store ' + shop.name + ' --charid ' + charid + ' --haggle">Haggle Price</a></div>' + //--
+                            '<div style="text-align:center;"><a ' + astyle2 + '" href="!shop --cart ' + cart + ' --store ' + shop.name + ' --haggle">Haggle Price</a></div>' + //--
                             '</div>'
                         );
                     }
@@ -4777,15 +4752,21 @@ var ItemStore = ItemStore || (function() {
         }
     },
     
-    purchase = function(type,cart,amount,store,charid,msg) {
+    purchase = function(type,cart,amount,store,charident,msg) {
         //Purchase either individual Item or a bunch of Items from a cart.
         let char;
         amount=Number(amount);
-        char=findObjs({
-            _type: 'character',
-            _id: charid
-        }, {caseInsensitive: true})[0];
-        
+        if (charident.includes("charid")) {
+            char=findObjs({
+                _type: 'character',
+                _id: charident
+            }, {caseInsensitive: true})[0];
+        } else if (charident.includes("char")) {
+            char=findObjs({
+                _type: 'character',
+                name: charident
+            }, {caseInsensitive: true})[0];
+        }
         switch (type) {
             case 'cart':
                 cart=state.cart.find(c => c.name==cart);

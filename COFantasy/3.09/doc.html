@@ -130,7 +130,7 @@ tr {line-height: 25px;}
           </div>
         </div>
         <div class="col-md-9 col-sm-8 content">
-          <h1>Documentation pour la version 3.10 de COFantasy</h1>
+          <h1>Documentation pour la version 3.09 de COFantasy</h1>
           <h2 class="text-primary" id="comment_utiliser_script">1. Comment utiliser Le script</h2>
           <div class="decalage">
             <h3 class="text-info" id="token_personnages">1.1 Tokens et personnages</h3>
@@ -177,7 +177,7 @@ tr {line-height: 25px;}
                 <li>option <code>--self</code> : pour rajouter le personnage sélectionné. Utile si on veut le personnage et ses alliés, par exemple.</li>
                 <li>option <code>--target</code> : pour ajouter une seule cible, avec une id de token. Le personnage qui agit est celui qui est sélectionné.</li>
                 <li>option <code>--disque</code> : le premier argument, optionnel, est l'id ou le nom d'un token qui représente un personnage, le deuxième argument un rayon. Cela sélectionne tous les tokens à une distance de moins que le rayon du premier argument (ou du personnage à l'origine de l'effet, si le premier argument est absent). Si un troisième argument est donné, il est interprété comme la portée maximum entre le centre du disque et le token du personnage à l'origine de l'effet. Si le premier argument représente un personnage avec un max de PV à 0, il est compris comme un personnage fictif créé juste pour définir le disque, et il sera supprimé après la sélection. À noter que le script crée par défaut un tel personnage, utilisable par tous, et appelé Cible.</li>
-                <li>option <code>--disquePasseMur</code> : comme <code>--disque</code>, mais l'effet traverse les murs.</li>
+                <li>option <code>--disquePasseMurs</code> : comme <code>--disque</code>, mais l'effet traverse les murs.</li>
                 <li>option <code>--enVue</code> : sélectionne tous les tokens en vue du personnage qui lance l'effet. Accepte aussi un argument d'id de token, dans ce cas on garde les token en vue de celui avec cette id.</li>
                 <li>option <code>--saufAllies</code> permet d'exclure les alliés de la sélection (voir plus haut pour la définition des alliés).</li>
               </ul>
@@ -244,7 +244,7 @@ tr {line-height: 25px;}
               <h4 class="text-secondary">Initiative : <code>!cof-init</code></h4>
               <div class="decalage">
                 <p>Les tokens sélectionnés sont ajouté au tracker de tour. Si celui-ci n'existe pas, un nouveau est créé, avec compteur de tour à 1, et on rentre en combat. Les tokens ayant un <a href=#predicats>prédicat</a> <code>aucuneActionCombat</code> ne sont jamais ajoutés au turn tracker.</p>
-                <p>Une option du script (ajustable en utilisant <code>!cof-options</code>) permet d'utiliser la règle de l'initiative variable (ajout d'un d6 explosif à l'initiative). Il est alors possible de faire lancer les dés d'initiative par les joueurs.</p>
+                <p>Une option du script (ajustable en utilisant <code>!cof-options</code>) permet d'utiliser la règle de l'initiative variable (ajout d'un d6 à l'initiative). </p>
                 <p>Les règles de tri suivent ce qui est donné p 70 : priorité aux PJs. Pour l'instant, on distingue un PJ d'un PNJ au dé de vie : si le personnage d'a pas de dé de vie, c'est un PNJ. Ensuite, entre PJs, priorité à la plus haute sagesse. Pour les PNJ, c'est aléatoire.</p>
                 <p>À chaque instant, le token dont c'est le tour d'agir est signalé par une aura qui bouge lentement. L'image de cette aura peut être modifiée dans les options (<code>!cof-options images</code>), et il est possible de spécifier une aura pour chaque token, en ajoutant une ligne dans le champ <code>GM Notes</code> du token (en bas de la partie basique de l'édition du token). Cette ligne doit commencer par <code>init_aura:</code>, et contenir une <a href=https://wiki.roll20.net/API:Objects#imgsrc_and_avatar_property_restrictions>url valide pour un token</a>. N'oubliez pas de sauvegarder le token comme token par défaut our un personnage si vous voulez que ce personnage ait toujours cette aura.</p>
                 <p>Il est possible de laisser les joueurs passer leur tour, en utilisant la commande <code>!cof-tour-suivant</code>. Une utilisation possible est de le mettre en macro dans les actions du tour (voir <a href="#actions_du_tour">Actions du tour</a> ci-dessous).</p>
@@ -411,7 +411,7 @@ tr {line-height: 25px;}
                   <li><code>--forceMinimum <i>n</i></code> : l'attaque n'est possible que si l'attaquant a au moins <i>n</i> en force.</li>
                   <li><code>--necromancie</code> : l'attaque est de la nécromancie</li>
                   <li><code>--ferFroid</code> : multiplie par 2 les dégâts contre les fées et les démons (le script reconnaît certaines races et les prédicats <code>démon</code> et <code>fée</code>).</li>
-                  <li><code>--tueurDe <i>categorie</i></code> : bonus de +2 en attaque et +2d6 DM contre les espèces appartenant à la catégorie (voir la condition <code>typeCible</code>.</li>
+                  <li><code>--tueurDeGeants</code> : bonus de +2 en attaque et +2d6 DM contre les géants, ogres, ettins et cyclopes.</li>
                   <li><code>--tueurDeGrands</code> : bonus de +1d6 DM contre les créatures de taille grande et +2d6 DM contre les créatures de taille énorme ou plus.</li>
                   <li><code>--ignoreObstacles</code> : ignore les tokens sur le trajet. Ça semble nécessaire pour les attaques magiques d'après Kegron.</li>
                   <li><code>--retourneEnMain</code> : L'arme de jet revient en main après l'attaque.</li>
@@ -835,7 +835,6 @@ tr {line-height: 25px;}
                   <li><code>--titre <i>message</i></code> : spécifie un titre pour la fenêtre affichant les jets de résistance à la peur.</li>
                   <li><code>--immuniseSiResiste <i>nom</i></code> : la personne qui résiste à cet effet de peur est ensuite immunisé pour la journée aux effets de peur ayant la même option (avec le même <i>nom</i>).</li>
                 </ul>
-                Noter qu'un prédicat <code>courage</code> permet d'obtenir un bonus (égal à la valeur du prédicat) au jet pour résister à la peur.
               </div>
               <h3 class="text-info" id="consommables">2.6 Consommables <code>!cof-consommables</code></h3>
               <div class="decalage">
@@ -1112,7 +1111,7 @@ tr {line-height: 25px;}
                 <h4 class="text-secondary">Voie du vagabond</h4>
                 <ol>
                   <li><strong>Rumeurs et légendes</strong> : ajouter les compétences sur la fiche</li>
-                  <li><strong>Compréhension des langues</strong> : <code>!cof-lancer-sort lance un sort de compréhension des langues. --messageMJ la compréhension des langues va durer [[1d6+@{selected|CHA}]] minutes --mana 0</code></li>
+                  <li><strong>Compréhension des langues</strong> : <code>!cof-lancer-sort lance un sort de compréhension des langues qui dure [[1d6+@{selected|CHA}]] minutes --mana 0</code></li>
                   <li><strong>Débrouillard</strong> : pas de support particulier. Ajouter le bonus aux compétences que vous souhaitez noter.</li>
                   <li><strong>Déguisement</strong> :<code>!cof-lancer-sort lance un sort de déguisement --mana 2</code></li>
                   <li><strong>Touche à tout</strong> : se reporter aux capacités choisies</li>
@@ -1151,7 +1150,7 @@ tr {line-height: 25px;}
                 <ol>
                   <li><strong>Ignorer la douleur</strong> : Ajouter un <a href=#predicats>prédicat</a> <code>ignorerLaDouleur</code>. Normalement, le script affiche un bouton quand cela est utilisable, mais on peut aussi le déclencher avec <code>!cof-ignorer-la-douleur</code> juste après le coup.</li>
                   <li><strong>Piqures d'insectes</strong> : ajouter un <a href=#predicats>prédicat</a> <code>piquresDInsectes</code>, avec comme valeur le rang dans la voie.</li>
-                  <li><strong>Laissez-le-moi !</strong> : Ajouter un <a href=#predicats>prédicat</a> <code>laissezLeMoi</code>. Le bonus sera accordé contre tous les tokens ayant le statut de <code>chef</code> (donnés avec <code>!cof-set-state chef true</code>, ou alors simplement en activant le marker <img style="display:inline-block" width="12rem" src="cof-marker-set/cof-chef.png"> sur le token).</li>
+                  <li><strong>Laissez-le-moi !</strong> : Ajouter un <a href=#predicats>prédicat</a> <code>laissez-le-moi</code>. Ensuite faire : <code>!cof-set-attribute seulContreTous_leader true --target @{target|token_id}</code> et désigner le leader. On peut par exemple mettre ceci en Token Action pour le Chevalier, ou bien en Macro pour GM uniquement, selon l'envie.</li>
                   <li><strong>Seul contre tous</strong> : Utiliser <code>!cof-effet-temp seulContreTous 1</code> pour se mettre en position. Les actions affichées en cas de riposte seront normalement une attaque avec l'arme en main si il y en a, plus les attaques naturelles cochées sur la liste d'attaque. Si ça ne convient pas, vous pouvez écrire une liste d'actions nommée<code>Ripostes</code> (voir les <a href="#actions_du_tour">actions du tour</a>).</li>
                   <li><strong>Charisme héroïque</strong> : reporter sur la fiche.</li>
                 </ol>
@@ -1533,8 +1532,8 @@ tr {line-height: 25px;}
                 <ol>
                   <li><strong>Lumière</strong> : <code>!cof-lumiere @{target|token_id} 20 --mana 0</code>. On peut utiliser une cible qui ne soit qu'un personnage sans PV, et dans ce cas le token disparaît, et pour éteindre la lumière, le MJ doit supprimer le token dans le layer de l'éclairage dynamique. Si la cible est un personnage avec des PV, alors la lumière se déplacera avec lui, et pour étaindre la lumière, il faut séclectionner le ou les tokens et lancer <code>!cof-eteindre-lumiere lumiere</code>.</li>
                   <li><strong>Détection de la magie</strong> : pas de support autre que <code>!cof-lancer-sort lance un sort de Détection de la Magie --mana 0</code>.</li>
-                  <li><strong>Invisibilité</strong> : utiliser <code>!cof-set-state invisible true --message se rend invisible --messageMJ l'invisibilité va durer [[1d6+@{selected|INT}]] minutes --mana 1</code>. Pour les ennemis, mettre dans le layer gm, pour les joueurs, ne pas les cibler. Reste le problème des AOE...</li>
-                  <li><strong>Vol</strong> : pas de support autre que <code>!cof-lancer-sort vole --messageMJ le vol va durer [[1d6+@{selected|INT}]] minutes --mana 2</code></li>
+                  <li><strong>Invisibilité</strong> : utiliser <code>!cof-set-state invisible true --message se rend invisible ([[1d6+@{selected|INT}]] minutes) --mana 1</code>. Pour les ennemis, mettre dans le layer gm, pour les joueurs, ne pas les cibler. Reste le problème des AOE...</li>
+                  <li><strong>Vol</strong> : pas de support autre que <code>!cof-lancer-sort vole ([[1d6+@{selected|INT}]] minutes) --mana 2</code></li>
                   <li><strong>Intelligence héroïque</strong> : reporter sur la fiche</li>
                 </ol>
               </div>
@@ -1855,7 +1854,7 @@ tr {line-height: 25px;}
               <div class="decalage">
                 <h4 class="text-secondary">Voie de l'arc et du cheval</h4>
                 <ol>
-                  <li><strong>Monture loyale</strong> : ajouter un <a href=#predicats>prédicat</a> <code>montureLoyale</code>. Pour la monture, il faut faire un personnage avec un <a href=#predicats>prédicat</a> <code>monture</code>. Pour monter sur la monture, utiliser <code>!cof-en-selle @{selected|token_id} nom_de_la_monture</code>, et pour en descendre, il suffit de faire la même commande (utiliser une ability "token action" rend cela assez facile à l'usage).</li>
+                  <li><strong>Monture loyale</strong> : ajouter un <a href=#predicats>prédicat</a> <code>montureLoyale</code>. Pour la monture, il faut faire un personnage avec un <a href=#predicats>prédicat</a> <code>monture</code>. Pour monter de la monture, utiliser <code>!cof-en-selle @{selected|token_id} nom_de_la_monture</code>, et pour en descendre, il suffit de faire la même commande (utiliser une ability "token action" rend cela assez facile à l'usage).</li>
                   <li><strong>Tir en mouvement</strong> : pas de support particulier.</li>
                   <li><strong>Tir fatal</strong> : ajouter un prédicat <code>tirFatal</code>. Pour tenir compte du bonus supplémentaire avec le rang dans la voie, ajouter un <a href=#predicats>prédicat</a> <code>voieDeLArcEtDuCheval</code> de valeur le rang atteint dans cette voie. Si vous souhaitez que cette capacité s'applique à une autre classe d'arme que les arcs, vous pouvez associer ce nom au prédicat <code>tirfatal</code> (attention, sans accent). Par exemple, pour les arbalètes, <code>tirFatal:arbalete</code>.</li>
                 </ol>
@@ -1970,15 +1969,12 @@ tr {line-height: 25px;}
                 <h4 class="text-secondary" id="fee_et_lutin">Fée et lutin</h4>
                 <ul>
                   <li><a href="#Vision_dans_le_noir">Vision dans le noir</a>.</li>
-                  <li><strong>Tout petit</strong> : ajouter un <a href=#predicats>prédicat</a> <code>toutPetit</code> qui va automatiquement ajuster la défense et les jets de discrétion.</li>
+                  <li><strong>Tout petit</strong> : reporter le bonus de DEF sur la fiche, et ajouter 5 à une compétence <code>discrétion</code>.</li>
                   <li><strong>Vol</strong> et <strong>Téléportation</strong> : pas de support.</li>
-                  <li><strong>Trop petit</strong> : ajouter un <a href=#predicats>prédicat</a> <code>tropPetit</code>. Cela va aussi changer les dégâts de base des armes (il vaut mieux laisser les vrais DM pour que la capacité Grande taille fonctionne).</li>
+                  <li><strong>Trop petit</strong> : ajouter un <a href=#predicats>prédicat</a> <code>tropPetit</code>, et pour les attaques au d3, mettre un dé quelconque dans l'attaque, et rajouter le texte <code>d3</code> dans les notes de l'attaque concernée. </li>
                 </ul>
                 <ol>
                   <li><strong>Langage des animaux</strong> : aucun support</li>
-                  <li><strong>Invisibilité</strong> : <code>!cof-set-state invisible true --message se rend invisible --messageMJ l'invisibilité va durer [[1d6+@{selected|INT}]] minutes --limiteParJour <i>r</i></code> où <i>r</i> est le rang dans la Voie.</li>
-                  <li><strong>Monture féérique</strong> : ajouter un ersonnage pour la monture. Ajoutez-lui le <a href=#predicats>prédicat</a> <code>monture</code>. Pour monter sur la monture, utiliser <code>!cof-en-selle @{selected|token_id} nom_de_la_monture</code>, et pour en descendre, il suffit de faire la même commande (utiliser une ability "token action" rend cela assez facile à l'usage). Si vous souhaitez que la monture rentre en combat à chaque fois que l'être féérique entre en combat, ajoutez à l'être féérique un attribut nommé <code>entrerEnCombatAvec</code>, de valeur le nom du token de la monture.</li>
-                  <li><strong>Grande taille</strong> : <code>!cof-effet grandeTaille oui --lanceur @{selected|token_id} --limiteParJour 3 --messageMJ La taille humaine durera [[1d6+@{selected|CHA}]] minutes</code>. Le script ne gère pas les durées en minutes, le MJ devra penser à supprimer l'effet, par exemple depuis le statut (<code>!cof-statut</code>).</li>
                 </ol>
                 <h4 class="text-secondary">Félis</h4>
                 <ol>
@@ -2310,7 +2306,6 @@ tr {line-height: 25px;}
                   <li><strong>Choc</strong> : Faire une attaque de portée 20 m, de type Sortilège, DM contondants, portée 20 m, et avec les options <code>--etat renverse --save FOR 10</code>.</li>
                   <li><strong>Coup au but</strong> : <code>!cof-effet-temp bonusAttaqueTemp 1 --valeur 10 --lanceur @{selected|token_id} --portee 10 --mana 0 --target @{target|token_id}</code>.</li>
                   <li><strong>Force de géant</strong> : <code>!cof-effet-temp forceDeGeant 10</code>. Le bonus est de 2 par défaut, mais peut être modifié en utilisant l'option <code>--valeur</code>.</li>
-                  <li><strong>Mur de vent</strong> : <code>!cof-mur-de-force vent</code>. Par défaut, la durée sera de 5+mod. d'INT, mais on peut donner une autre valeur en argument, après <code>vent</code>. On peut aussi changer le rayon du mur en utilisant <code>--portee</code>. Cela ne gère ni les immunités, ni le jet de force pour passer le mur.</li>
                   <li><strong>Nuée de scorpions</strong> : ajouter une attaque magique, de portée 20 m, type Sortilège, modificateur <code>--pasDeDmg</code> et option  <code>--effet nueeDeScorpions 10</code>. Pas de support particulier pour les DM de zone qui détruisent la nuée (enlever l'attribut <code>nueeDeScorpions</code> sur la cible dans ce cas).</li>
                   <li><strong>Résistance à la magie</strong> : pour l'augmentation de la DEF contre la magie, utiliser un <a href=#predicats>prédicat</a> <code>DEF_magie</code> et pour le bonus aux tests, <code>resistanceALaMagie</code></li>
                   <li><strong>Simulacre de vie</strong> : <code>!cof-set-attribute PVTemporaires [[1d10 + @{selected|niveau}]] --message simulacre de vie</code></li>
@@ -2334,7 +2329,6 @@ tr {line-height: 25px;}
                   <li><strong>Cibles multiples</strong> (nuées) : ajouter un <a href=#predicats>prédicat</a> <code>ciblesMultiples</code>.</li>
                   <li><strong>Clignotement</strong> : <code>!cof-effet-temp clignotement [[1d6+2]]</code>.</li>
                   <li><strong>Créature non-vivante</strong> : ajouter un <a href=#predicats>prédicat</a> <code>nonVivant</code>.</li>
-                  <li><strong>Créature végétative</strong> : ajouter un <a href=#predicats>prédicat</a> <code>vegetatif</code>.</li>
                   <li><strong>Cyclone</strong> (pour les élementaires) : <code>!cof-effet-temp cyclone [[1d4+1]] --limiteParCombat 1</code>. Cela va proposer une attaque <code>Traverser</code> dans les actions de l'élémentaire, qui ne peut fonctionner que si le personnage a au moins une attaque sur sa fiche. Par défaut, l'attaque utilisée en traversant est l'attaque de label <code>1</code>, mais on peut préciser un autre label en utilisant l'option <code>--valeur</code>.</li>
                   <li><strong>Dégâts si touché au contact</strong> (élémentaire de feu,...) : ajouter un attribut nommé <code>dmSiToucheContact</code>, de valeur courante les dégâts, et de valeur maximale leur type. Par exemple, pour un élémentaire de feu, la valeur courant sera <code>1d6</code>, et la valeur maximale sera <code>feu</code>.</li>
                   <li><strong>Drain de force</strong> (pour la campagne Invincible) : ajouter un <a href=#predicats>prédicat</a> <code>auraDrainDeForce</code></li>
@@ -2380,7 +2374,6 @@ tr {line-height: 25px;}
                   <li><strong>Potion de sang de l'Arbre-Coeur</strong> : <code>!cof-effet sangDeLArbreCoeur true</code>, à enlever quand les 24h sont passées.</li>
                   <li><strong>Protection contre les souffles</strong> et dégâts de zone : ajouter un <a href=#predicats>prédicat</a> <code>protectionDMZone</code>. Pour une protection contre un seul élément (feu, froid, etc), ajouter <code>_</code> et le nom de l'élément. Par exemple, contre le feu, on aura un prédicat <code>protectionDMZone_feu</code>.</li>
                   <li><strong>Putréfaction</strong> : ajouter à l'attaque <code>--effet putrefaction 5 --save CON 14</code> (pour les données des momies)</li>
-                  <li><strong>Rage</strong> (pour la campagne Invincible) : pour entrer en rage, faire <code>!cof-effet-combat rage</code>. On peut par exemple mettre cette commande dans une ability.</li>
                   <li><strong>Réaction allergique</strong> : il existe un effet <code>reactionAllergique</code> qui fait le malus en DEX et CHA et disparaît en cas de soin magique. Pour une attaque, on peut par exemple mettre <code>--effet reactionAllergique --save CON 11</code>.</li>
                   <li><strong>Résistant (insectes)</strong> : ajouter un <a href=#predicats>prédicat</a> <code>durACuire</code>.</li>
                   <li><strong>Saisir et broyer</strong> : ajouter un <a href=#predicats>prédicat</a> <code>saisirEtBroyer</code></li>

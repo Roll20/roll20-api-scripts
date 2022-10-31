@@ -884,7 +884,7 @@ var MagicMaster = (function() {
 			setTimeout( () => updateHandouts(handouts,true,findTheGM()), 30);
 			setTimeout(cmdMasterRegister, 40);
 			setTimeout( () => updateDBindex(false), 80);
-	//		setTimeout( () => handleCStidy( [], true ), 5000 );
+	//	setTimeout( () => handleCStidy( [], true ), 5000 );
 
 			
 			// RED: log the version of the API Script
@@ -4896,6 +4896,8 @@ var MagicMaster = (function() {
 		containerType = (containerType == 0 ? 1 : (containerType == 2 ? 3 : containerType));
 		setAttr( toCS, fields.ItemContainerType, containerType );
 		
+		log('handlePickOrPut: about to call moveMIspells');
+
 		moveMIspells( fromCS, toCS, MIname );
 
 		if (MIqty == 0) {
