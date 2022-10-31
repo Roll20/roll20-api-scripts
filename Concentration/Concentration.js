@@ -259,11 +259,15 @@ var Concentration = Concentration || (function() {
     },
 
     roll = (represents, DC, con_save_mod, name, target, advantage) => {
-        sendChat(script_name, '[[1d20cf<'+(DC-con_save_mod-1)+'cs>'+(DC-con_save_mod-1)+'+'+con_save_mod+']]', results => {
+        // Bound the crit success and fail targets so negatives stop wrecking the roll --Oosh
+        const criticalFail = Math.max(DC-con_save_mod-1, 0),
+            criticalSuccess = Math.max(DC-con_save_mod, 0),
+            rollString = `[[1d20cf<${criticalFail}cs>${criticalSuccess} + (${con_save_mod})]]`;
+        sendChat(script_name, rollString, results => {
             let title = 'Concentration Save <br> <b style="font-size: 10pt; color: gray;">'+name+'</b>',
                 advantageRollResult;
-
-            let rollresult = results[0].inlinerolls[0].results.rolls[0].results[0].v;
+            // Error check the results object and debug for any future issues --Oosh
+            let rollresult = results ? results[0].inlinerolls[0].results.rolls[0].results[0].v : `Roll error! DC: "${DC}", con_sav_mod: "${con_save_mod}"`;
             let result = rollresult;
 
             if(advantage){
@@ -438,6 +442,8 @@ var Concentration = Concentration || (function() {
         on('chat:message', handleInput);
         on('change:graphic:bar'+state[state_name].config.bar+'_value', handleGraphicChange);
         on('change:graphic:statusmarkers', handleStatusMarkerChange);
+        // Add tokenMod observer so changes made with TM will trigger a conc. check --Oosh
+        if (typeof(TokenMod) === 'object') TokenMod.ObserveTokenChange(handleGraphicChange);
     },
 
     setDefaults = (reset) => {

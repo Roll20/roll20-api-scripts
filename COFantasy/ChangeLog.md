@@ -1,6 +1,133 @@
 # COFantasy: Historique des changements (depuis la version 1.0)
-## 3.05
+## 3.10
+### Capacités
+* traits des créatures végétatives.
+* prédicat pour le trait "Tout petit".
+* Grande taille de la Voie des êtres féériques.
+* Mur de vent
+* Rage de Baphit (Invincible)
+
 ### Autres améliorations
+* Utilisation de l'icone chef pour la capacité laissez-le moi.
+* Ajout d'un icone pour l'état enflammé.
+* Support des options de tempête de mana pour la conjuration de prédateurs et la conjuration d'armée.
+* Permet aux joueurs de lancer l'initiative pour leur perso.
+
+## 3.09
+### Capacités
+* Drain de force de Dominia (Invincible)
+
+### Autres améliorations
+* Prise en compte de l'option --saufAllies pour !cof-tenebres.
+* Ajout d'une options pour des DM explosifs.
+* Ajout de l'option --bonusContreArmure
+* Changement des macros Monter et Descendre en icones.
+* Changement de fonctionnement des auras, qui réagissent maintenant au déplacement
+
+## 3.08
+### Capacités
+* Ajout de la Voie d'Arwendée. Attention sens affûtés ajoute maintenant automatiquement le bonus de DM aux arcs.
+* Rang 3 de la Voie du familier fantastique.
+* Prise en compte automatique du rang 1 de la Voie des runes.
+* Automatisation d'un cas courant d'utilisation de la capacité Acrobaties.
+* Ajout des 3 premiers rangs de la Voie du chasseur de corruption.
+* Magie en armure et rituel assuré de la Voie du guerrier-mage.
+* 3 premiers rangs du maître des poisons
+
+### Corrections de bugs
+* Mise à jour de la conjuration d'armée.
+* Correction d'un crash avec des persos ayant un alias.
+
+### Autres améliorations
+* Utilisation d'un attribut entrerEnCombatAvec pour faire rentrer en combat plusieurs tokens en même temps.
+* Amélioration des effets de peur.
+* Plus d'affichage des actions de recharge des armes déjà chargées.
+* Prise en charge des conditions hostiles et des conditions extrêmes.
+* Prise en charge de la perte de substance d'Invincible.
+* Prise en charge du poison affaiblissant
+
+## 3.07
+### Capacités
+* Prédicat immuniteAucCritiques
+* Amélioration de l'arme de prédilection
+* Voie de l'alchimie (Terres d'Arran)
+* Don de soin, de la Voie de Périndé
+
+### Corrections de bugs
+* Affichage des saves actifs seulement pour le mook concerné.
+* Correction de l'affichage des DM contre les nuées.
+* Prise en compte correcte du rayon des ténèbres.
+* Protection contre les erreurs dans les murs de l'éclairage dynamique.
+* Protection contre l'absence de créateur d'une rune.
+* Liberté d'action immunise à la paralysie des goules.
+* Correction d'un bug faisant appliquer certains effets 2 fois à la fin des tours.
+* Prise en compte des immunités pour les états venant des attaques
+* Affichage correct de l'arme en main pour les mooks
+* On garde les attributs quand un mook invisible redevient visible
+* Plus de message d'erreur quand on attend trop avant de sauvegarder un nouveau personnage.
+
+### Autres améliorations
+* Ajout de la gestion des RD aux armes bénies
+* Ajout d'un prédicat immunite_destruction
+* Possibilité d'utiliser !cof-echange-init sans argument.
+* Affichage des messages de la cible quand un allié peut intercepter.
+* Prise en compte de l'option --message pour !cof-tenebres
+* Le token des ténèbres est laissé sous les autres tokens.
+* Affichage d'un message au joueur qui fait le jet quand le MJ doit valider l'affichage.
+* Si le statut d'un personnage est affiché pour le MJ, propose de supprimer les effets à durée indéterminée.
+* Possibilité d'ajouter des effets spéciaux et du son à un !cof-set-state.
+* Passage d'un certain nombres de prédicats concernant des armes dans le champ SPÉCIAL des armes concernées.
+
+## 3.06
+### Capacités
+* Ajout des capacités de la Voie du drakonide.
+* Meilleure prise en charge du coup de bouclier.
+
+### Corrections de bugs
+* frenesieMinotaure est bien un effet temporaire.
+
+### Autres améliorations
+* Ajout d'un bouton pour libérer un personnage étreint ou enveloppé.
+* Possibilité de mettre un titre pour un effet de peur.
+* Option pour des effets de disque qui ignorent les murs.
+* Possibilité de laisser le MJ montrer le résultat d'un jet ou non.
+* Implémentation d'un anneau de protection.
+* Fonction de pause du jeu
+* Utilisation de la possiblité de bloquer des tokens
+
+## 3.05
+### Capacités
+* Sort de brumes.
+* Support basique pour l'inspiration des Terres d'Arran.
+* Esquive de la magie.
+* Support basique pour la frénésie du minotaure.
+* Armes naturelles du félis.
+* Âme féline, du félis.
+* Parade croisée de la Voie du combat à deux armes.
+* Violence ciblée des demi-ogres.
+* Sang-froid des demi-ogres.
+* Amélioration de la prise en charge de la marche sylvestre.
+* Explosion finale de la voie des créatures élémentaires
+
+### Corrections de bugs
+* Fix d'un problème lors du rechargement automatique des armes,
+* Prise en compte des limites pour les provocations.
+* Quand un familier aux PV liés meurt, son maître aussi.
+* On ne peut plus drainer qu'un PV des cibles multiples.
+* Correction de bugs sur le radar mental
+* Correction d'un bug sur le pacifisme
+
+### Autres améliorations
+* Ajout d'un marker pour les chefs de groupe.
+* Possibilité de retarder l'affichage de la mort
+* Support pour les foudres du temps.
+* Possibilité de renouveler les élixirs et les runes en dehors de la page des joueurs.
+* Support pour les arcs composites façon Pathfinder.
+* Possibilité de save par tour actif pour les effets temporaires.
+* Possibilité d'indiquer des temps de recharge pour les effets.
+* Option de magie en armure pour les attaques.
+* Ajout d'une commande !cof-explosion
+* Possibilité de différencier les saves pour les cibles au contact.
 * Prise en compte des changements d'attributs d'armure de la version 5.01 de la fiche.
 
 ## 3.04

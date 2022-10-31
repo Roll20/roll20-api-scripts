@@ -1,8 +1,8 @@
 {
 	"name": "Alien RPG Dice Roller",
 	"script": "AlienRPG.js",
-	"version": "1.01",
-	"description": "This is a Dice Roller used for Alien RPG dice rolls. It can be used in combination with the Alien RPG Character Sheet, but can also be used independently. Get info on how to use with chat command '!alienr' (without quotes).",
+	"version": "2.00",
+	"description": "This is a Dice Roller used for Alien RPG dice rolls. It can be used in combination with the Alien RPG Character Sheet, but can also be used independently. Get info on how to use with chat command '!alienr' (without quotes). \r\r## Commands\r\r```!alienr [Roll name] [Base Roll] [Stress Roll][--&lt;Label&gt;|&lt;Message&gt; ...]\r```\r\rRolls an Alien RPG dice roll, including stress dice and mechanics for pushing the roll.\r\r* **[Roll name]** -- The name of the roll to display in the chat output, need to be within single square brackets. Example: [Command] \r* **[Base Roll]** -- An inline dice expression rolling the d6s. 6s are counted as a success. Example: [[4d6]]\r* **[Stress Roll]** -- An inline dice expression rolling the d6s. 6s are counted as a success, 1s are counted as Panic. Example: [[2d6]] \r* **[--&lt;Label&gt;|&lt;Message&gt; ...]** -- An optional set of text to be shown under the roll in the chat output. Label may be omitted to just provide a text field. You can specify as many optional descriptions as you like. The `runas` label is specifically used to display and map a character name to the roll and used to increase stress automatically on pushing roll. \r\r```!alienrw [Roll name] [Base Roll] [Stress Roll] \r```\r\rIdentical to !alienr except that the results are whispered to the player rolling and the GM.\r\r### Configuration\r\r```!alienr-config```\r\r* **GM Can Push** -- determines if the GM is allowed to push a player' roll.\r* **Report Mode** -- determines when and how invalid push attempts are reported. Options are: `None`, `GM`, `GM & Player`, `Public`. \r### Examples\r\r```!alienr [M41A Pulse Rifle] [[6d6]] [[3d6]] --runas|Hudson Hicks --|Armor piercing, full auto```\r\r```!alienr [Heavy Machinery] [[4d6]] [[2d6]] --runas|Ellen Ripley --Talent|True Grit```\r\r```!alienrw [Manipulation] [[4d6]] [[0d6]] --runas|Lance Bishop --Android| ```\r",
 	"authors": "Richard W",
 	"roll20userid": "8097845",
 	"useroptions": [],
@@ -12,6 +12,7 @@
 	  },
 	"conflicts": [],
 	"previousversions": [
-		"1.00"
+		"1.00",
+		"1.01"
 	]
 }

@@ -33,7 +33,7 @@ on('ready', () => {
 
     const decodeUnicode = (str) => str.replace(/%u[0-9a-fA-F]{2,4}/g, (m) => String.fromCharCode(parseInt(m.slice(2), 16)));
 
-    const version = '0.1.4';
+    const version = '0.1.3';
     log('Supernotes v' + version + ' is ready!  To set the template of choice or to toggle the send to players option, Use the command !gmnote --config');
 
     on('chat:message', function (msg) {
@@ -102,7 +102,7 @@ on('ready', () => {
 
                         message = parseMarkdown(message);
                         if (isGM) {
-                            message = (message.includes("-----") ? message.split('-----')[0] + "<div style= 'background-color:#F2F5D3; display:inline-block; width:100%; padding:5px'>" + message.split('-----')[1] + "</div>" : message);
+                            message = (message.includes("-----") ? message.split('-----')[0] + "<div style= 'background-color:#F2F5D3;  padding:5px'>" + message.split('-----')[1] + "</div>" : message);
                         }
 
                         noteHandout.get("notes", function (notes) {
