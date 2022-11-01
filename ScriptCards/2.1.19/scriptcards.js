@@ -25,7 +25,7 @@ const ScriptCards = (() => { // eslint-disable-line no-unused-vars
 	*/
 
 	const APINAME = "ScriptCards";
-	const APIVERSION = "2.1.19a";
+	const APIVERSION = "2.1.19b";
 	const APIAUTHOR = "Kurt Jaegers";
 	const debugMode = false;
 
@@ -1878,7 +1878,7 @@ const ScriptCards = (() => { // eslint-disable-line no-unused-vars
 											//stringfuncs;strlength;string
 											case "strlength":
 											case "length":
-												setStringOrArrayElement(variableName, parseDiceRoll((params[2].length.toString()), cardParameters), cardParameters)
+												rollVariables[variableName] = parseDiceRoll((params[2].length.toString()), cardParameters)
 												break;
 
 											case "tolowercase":
@@ -4996,6 +4996,7 @@ const ScriptCards = (() => { // eslint-disable-line no-unused-vars
 				varValue = (stringVariables[varName] || "") + varValue.substring(1);
 			}
 
+			//log(`Setting [${varName}] to [${varValue}]`)
 			stringVariables[varName] = replaceVariableContent(varValue, cardParameters, true);
 		}
 	}
