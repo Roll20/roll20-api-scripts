@@ -508,7 +508,7 @@ var MagicMaster = (function() {
 	var ordMU;
 	var wisdomSpells;
 	var spellLevels;
-	var reClassSpecs;
+//	var reClassSpecs;
 
 	/*
 	 * MagicMaster specific global data tables and variables.
@@ -735,16 +735,22 @@ var MagicMaster = (function() {
 		spheres:	{field:'sph',def:'',re:/[\[,\s]sph:([\s\w\-\|\d]+?)[,\]]/i},
 	});
 	
-/*	const reClassSpecs = Object.freeze ({
+	const reClassSpecs = Object.freeze({
 		name:		{field:'name',def:'-',re:/[\[,\s]w:([\s\w\-\+]+?)[,\]]/i},
-		alignment:	{field:'align',def:'any',re:/[\[,\s]align:([\s\w\-\+\|]+?)[,\s\]]/i},
+		alignment:	{field:'align',def:'any',re:/[\[,\s]align:([\!\s\w\-\+\|]+?)[,\s\]]/i},
 		hitdice:	{field:'hd',def:'1d10',re:/[\[,\s]hd:([d\d\+\-]+?)[,\s\]]/i},
-		race:		{field:'race',def:'any',re:/[\[,\s]race:([\s\w\-\|]+?)[,\s\]]/i},
-		weapons:	{field:'weaps',def:'any',re:/[\[,\s]weaps:([\s\w\-\+\|]+?)[,\s\]]/i},
-		armour:		{field:'ac',def:'any',re:/[\[,\s]ac:([\s\w\-\+\|]+?)[,\s\]]/i},
+		race:		{field:'race',def:'any',re:/[\[,\s]race:([\!\s\w\-\|]+?)[,\s\]]/i},
+		weapons:	{field:'weaps',def:'any',re:/[\[,\s]weaps:([\!\s\w\-\+\|]+?)[,\s\]]/i},
+		armour:		{field:'ac',def:'any',re:/[\[,\s]ac:([\!\s\w\-\+\|]+?)[,\s\]]/i},
 		majorsphere:{field:'sps',def:'any',re:/[\[,\s]sps:([\s\w\-\|]+?)[,\s\]]/i},
 		minorsphere:{field:'spm',def:'',re:/[\[,\s]spm:([\s\w\-\|]+?)[,\]]/i},
 		bannedsphere:{field:'spb',def:'',re:/[\[,\s]spb:([\s\w\-\|]+?)[,\]]/i},
+		attklevels:	{field:'attkLevels',def:'0',re:/[\[,\s]attkl:([-\s\d\|]+?)[,\]]/i},
+		attkmelee:	{field:'attkMelee',def:'0',re:/[\[,\s]attkm:([-.\s\d\|\/]+?)[,\]]/i},
+		attkranged:	{field:'attkRanged',def:'0',re:/[\[,\s]attkr:([-.\s\d\|\/]+?)[,\]]/i},
+		nonprofpen:	{field:'nonProfPen',def:'',re:/[\[,\s]npp:([-\s\d]+?)[,\]]/i},
+		twoweappen:	{field:'twoWeapPen',def:'2.4',re:/[\[,\s]twp:([-\s\d\.]+?)[,\]]/i},
+		tohitmods:	{field:'toHitMods',def:'',re:/[\[,\s]thmod:([-=\+\s\w\|]+?)[,\]]/i},
 		spelllevels:{field:'spellLevels',def:'',re:/[\[,\s]slv:([\s\w\-\|]+?)[,\]]/i},
 		spLevel1:	{field:'spellLV1',def:'',re:/[\[,\s]spl1:([\s\w\-\|]+?)[,\]]/i},
 		spLevel2:	{field:'spellLV2',def:'',re:/[\[,\s]spl2:([\s\w\-\|]+?)[,\]]/i},
@@ -758,7 +764,7 @@ var MagicMaster = (function() {
 		spLevel10:	{field:'spellLV10',def:'',re:/[\[,\s]spl10:([\s\w\-\|]+?)[,\]]/i},
 		spLevel11:	{field:'spellLV11',def:'',re:/[\[,\s]spl11:([\s\w\-\|]+?)[,\]]/i},
 	});
-*/	
+	
 	const design = {
 		turncolor: '#D8F9FF',
 		roundcolor: '#363574',
@@ -874,7 +880,7 @@ var MagicMaster = (function() {
 			ordMU = RPGMap.ordMU;
 			wisdomSpells = RPGMap.wisdomSpells;
 			spellLevels = RPGMap.spellLevels;
-			reClassSpecs = RPGMap.reClassSpecs;
+//			reClassSpecs = RPGMap.reClassSpecs;
 			DBindex = undefined;
 
 			// RED: v2.040 check what other APIs are loaded
@@ -1386,9 +1392,11 @@ var MagicMaster = (function() {
 				classSpecs = classDef.specs(reSpecs),
 				classData = classDef.data(reClassData),
 				classType;
+//			log('parseClassDB: called for class '+ClassName);
 			if (classSpecs && !_.isNull(classSpecs)) {
 				if (classSpecs.some( s => {
 					if (s && s.length >= 5) {
+//			log('parseClassDB: s[1] = '+s[1]+', s[4] = '+s[4]);
 						classType = (s[1]||'').toUpperCase().replace(reIgnore,''); 
 						return (((s[4]||'').toUpperCase().replace(reIgnore,'') == 'WIZARD' ) && !ordMU.includes(classType));
 					}
@@ -1397,10 +1405,13 @@ var MagicMaster = (function() {
 					if (!specMU.includes(classType)) specMU.push(classType);
 				};
 			};
+//			log('parseClassDB: got classType = '+classType);
 			if (classData && !_.isNull(classData)) {
 				for (let r=0; r<classData.length; r++) {
 					let rowData = classData[r][0];
+//			log('parseClassDB: rowData = '+rowData);
 					rowData = parseData( rowData, reClassSpecs, false );
+//			log('parseClassDB: rowData.name = '+rowData.name);
 					let	name = rowData.name.toUpperCase().replace(reIgnore,'');
 					if (rowData.spellLevels) {
 						let spellData = rowData.spellLevels.toUpperCase().split('|');
@@ -1455,8 +1466,10 @@ var MagicMaster = (function() {
 		var parsedData = {},
 			val;
 
+//		log('parseData: attributes = '+attributes);
 		_.each( reSpecs, spec => {
 			val = attributes.match(spec.re);
+//			log('parseData: spec.field = '+spec.field+', match = '+val);
 			if (!!val && val.length>1 && val[1].length) {
 				parsedData[spec.field] = val[1];
 			} else if (!def) {
