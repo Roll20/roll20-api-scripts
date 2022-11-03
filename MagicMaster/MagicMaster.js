@@ -884,7 +884,7 @@ var MagicMaster = (function() {
 			setTimeout( () => updateHandouts(handouts,true,findTheGM()), 30);
 			setTimeout(cmdMasterRegister, 40);
 			setTimeout( () => updateDBindex(false), 80);
-	//	setTimeout( () => handleCStidy( [], true ), 5000 );
+	//		setTimeout( () => handleCStidy( [], true ), 5000 );
 
 			
 			// RED: log the version of the API Script
@@ -1387,7 +1387,13 @@ var MagicMaster = (function() {
 				classData = classDef.data(reClassData),
 				classType;
 			if (classSpecs && !_.isNull(classSpecs)) {
-				if (classSpecs.some( s => {classType = s[1].toUpperCase().replace(reIgnore,''); return ((s[4].toUpperCase().replace(reIgnore,'') == 'WIZARD' ) && !ordMU.includes(classType))})) {
+				if (classSpecs.some( s => {
+					if (s && s.length >= 5) {
+						classType = (s[1]||'').toUpperCase().replace(reIgnore,''); 
+						return (((s[4]||'').toUpperCase().replace(reIgnore,'') == 'WIZARD' ) && !ordMU.includes(classType));
+					}
+					return false;
+				})) {
 					if (!specMU.includes(classType)) specMU.push(classType);
 				};
 			};
@@ -4896,8 +4902,6 @@ var MagicMaster = (function() {
 		containerType = (containerType == 0 ? 1 : (containerType == 2 ? 3 : containerType));
 		setAttr( toCS, fields.ItemContainerType, containerType );
 		
-		log('handlePickOrPut: about to call moveMIspells');
-
 		moveMIspells( fromCS, toCS, MIname );
 
 		if (MIqty == 0) {
@@ -5588,6 +5592,8 @@ var MagicMaster = (function() {
 		var errFlag = false,
 			namesList = {},
 			objList;
+			
+		log('handleCStidy: called');
 
 		var getNamesList = function( token ) {
 
@@ -5674,7 +5680,7 @@ var MagicMaster = (function() {
 				if (objName.startsWith(fields.ItemPowersList[0])) foundName = objName.substring(fields.ItemPowersList[0].length);
 				if (objName.startsWith(fields.MIspellPrefix[0])) foundName = objName.substring(fields.MIspellPrefix[0].length);
 				if (objName.startsWith(fields.MIpowerPrefix[0])) foundName = objName.substring(fields.MIpowerPrefix[0].length);
-				if (objName.startsWith(fields.Prev_round[0])) foundName = objName;
+				if (objName.startsWith(fields.Prev_round[0]) && !objName.includes(token.id)) {log('handleCStidy: removed '+objName);foundName = objName;}
 				return (!!foundName && !namesList[charID].includes(foundName));
 			} else {
 				let dbItem = false;
