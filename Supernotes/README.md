@@ -41,27 +41,27 @@ This script as written is optimized for the D&D 5th Edition by Roll20 sheet, but
 
 *--template[templatename]* Instead of using the configured sheet roll template, you can choose from between more than 10 custom templates that cover most common genres. Add the template command directly after the main prompt, followed by any of the regular parameters above. The current choices are:
 
-**generic.** Just the facts, ma'am. Nothing fancy here.
+- **generic.** Just the facts, ma'am. Nothing fancy here.
 
-**dark.** As above, but in reverse.
+- **dark.** As above, but in reverse.
 
-**crt.** Retro greenscreen for hacking and cyberpunk. Or for reports on that xenomorph hiding on your ship.
+- **crt.** Retro greenscreen for hacking and cyberpunk. Or for reports on that xenomorph hiding on your ship.
 
-**notebook.** You know, for kids. Who like to ride bikes. Maybe they attend a school and fight vampires or rescue lost extraterrestrials
+- **notebook.** You know, for kids. Who like to ride bikes. Maybe they attend a school and fight vampires or rescue lost extraterrestrials
 
-**gothic.** Classic noire horror for contending with Universal monsters or maybe contending with elder gods.
+- **gothic.** Classic noire horror for contending with Universal monsters or maybe contending with elder gods.
 
-**apoc.** Messages scrawled on a wall. Crumbling and ancient, like the world that was.
+- **apoc.** Messages scrawled on a wall. Crumbling and ancient, like the world that was.
 
-**scroll.** High fantasy. Or low fantasy—we don't judge.
+- **scroll.** High fantasy. Or low fantasy—we don't judge.
 
-**lcars.** For opening hailing frequencies and to boldly split infinitives that no one has split before!
+- **lcars.** For opening hailing frequencies and to boldly split infinitives that no one has split before!
 
-**faraway.** No animated title crawl, but still has that space wizard feel.
+- **faraway.** No animated title crawl, but still has that space wizard feel.
 
-**steam.** Gears and brass have changed my life.
+- **steam.** Gears and brass have changed my life.
 
-**western.** Return with us now to those thrilling days of yesteryear!
+- **western.** Return with us now to those thrilling days of yesteryear!
 
 *--help* Displays help.
 
