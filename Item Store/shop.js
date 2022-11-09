@@ -65,7 +65,7 @@ GM & Players
 var ItemStore = ItemStore || (function() {
     'use strict';
     
-    var version = "1.8",
+    var version = "1.9",
     
     setDefaults = function() {
         state.store = [];
@@ -1052,7 +1052,7 @@ var ItemStore = ItemStore || (function() {
                 {
                     name: "Cantrip Scroll",
                     mods: "Item Type: Scroll",
-                    desc: "Scroll (common);A spell scroll bears the words of a single spell, written in a mystical cipher. If the spell is on your class\'s spell list, you can read the scroll and cast its spell without providing any material components. Otherwise, the scroll is unintelligible. Casting the spell by reading the scroll requires the spell\'s normal casting time. Once the spell is cast, the words on the scroll fade, and it crumbles to dust. If the casting is interrupted, the scroll is not lost.<br><br>If the spell is on your class\'s spell list but of a higher level than you can normally cast, you must make an ability check using your spellcasting ability to determine whether you cast it successfully. The DC equals 10 + the spell\'s level. On a failed check, the spell disappears from the scroll with no other effect.<br><br>Once the spell is cast, the words on the scroll fade, and the scroll itself crumbles to dust.",
+                    desc: "Scroll (common);",
                     props: "",
                     rarity: "common",
                     price: 10,
@@ -1063,7 +1063,7 @@ var ItemStore = ItemStore || (function() {
                 {
                     name: "1st-Level Scroll",
                     mods: "Item Type: Scroll",
-                    desc: "Scroll (common);A spell scroll bears the words of a single spell, written in a mystical cipher. If the spell is on your class\'s spell list, you can read the scroll and cast its spell without providing any material components. Otherwise, the scroll is unintelligible. Casting the spell by reading the scroll requires the spell\'s normal casting time. Once the spell is cast, the words on the scroll fade, and it crumbles to dust. If the casting is interrupted, the scroll is not lost.<br><br>If the spell is on your class\'s spell list but of a higher level than you can normally cast, you must make an ability check using your spellcasting ability to determine whether you cast it successfully. The DC equals 10 + the spell\'s level. On a failed check, the spell disappears from the scroll with no other effect.<br><br>Once the spell is cast, the words on the scroll fade, and the scroll itself crumbles to dust.",
+                    desc: "Scroll (common);",
                     props: "",
                     rarity: "common",
                     price: 60,
@@ -1073,7 +1073,7 @@ var ItemStore = ItemStore || (function() {
                 },
                 {
                     name: "2nd-Level Scroll",
-                    desc: "Scroll (uncommon);A spell scroll bears the words of a single spell, written in a mystical cipher. If the spell is on your class\'s spell list, you can read the scroll and cast its spell without providing any material components. Otherwise, the scroll is unintelligible. Casting the spell by reading the scroll requires the spell\'s normal casting time. Once the spell is cast, the words on the scroll fade, and it crumbles to dust. If the casting is interrupted, the scroll is not lost.<br><br>If the spell is on your class\'s spell list but of a higher level than you can normally cast, you must make an ability check using your spellcasting ability to determine whether you cast it successfully. The DC equals 10 + the spell\'s level. On a failed check, the spell disappears from the scroll with no other effect.<br><br>Once the spell is cast, the words on the scroll fade, and the scroll itself crumbles to dust.",
+                    desc: "Scroll (uncommon);",
                     mods: "Item Type: Scroll",
                     props: "",
                     rarity: "uncommon",
@@ -1084,7 +1084,7 @@ var ItemStore = ItemStore || (function() {
                 },
                 {
                     name: "3rd-Level Scroll",
-                    desc: "Scroll (uncommon);A spell scroll bears the words of a single spell, written in a mystical cipher. If the spell is on your class\'s spell list, you can read the scroll and cast its spell without providing any material components. Otherwise, the scroll is unintelligible. Casting the spell by reading the scroll requires the spell\'s normal casting time. Once the spell is cast, the words on the scroll fade, and it crumbles to dust. If the casting is interrupted, the scroll is not lost.<br><br>If the spell is on your class\'s spell list but of a higher level than you can normally cast, you must make an ability check using your spellcasting ability to determine whether you cast it successfully. The DC equals 10 + the spell\'s level. On a failed check, the spell disappears from the scroll with no other effect.<br><br>Once the spell is cast, the words on the scroll fade, and the scroll itself crumbles to dust.",
+                    desc: "Scroll (uncommon);",
                     mods: "Item Type: Scroll",
                     props: "",
                     rarity: "uncommon",
@@ -1095,7 +1095,7 @@ var ItemStore = ItemStore || (function() {
                 },
                 {
                     name: "4th-Level Scroll",
-                    desc: "Scroll (rare);A spell scroll bears the words of a single spell, written in a mystical cipher. If the spell is on your class\'s spell list, you can read the scroll and cast its spell without providing any material components. Otherwise, the scroll is unintelligible. Casting the spell by reading the scroll requires the spell\'s normal casting time. Once the spell is cast, the words on the scroll fade, and it crumbles to dust. If the casting is interrupted, the scroll is not lost.<br><br>If the spell is on your class\'s spell list but of a higher level than you can normally cast, you must make an ability check using your spellcasting ability to determine whether you cast it successfully. The DC equals 10 + the spell\'s level. On a failed check, the spell disappears from the scroll with no other effect.<br><br>Once the spell is cast, the words on the scroll fade, and the scroll itself crumbles to dust.",
+                    desc: "Scroll (rare);",
                     mods: "Item Type: Scroll",
                     props: "",
                     rarity: "rare",
@@ -1106,7 +1106,7 @@ var ItemStore = ItemStore || (function() {
                 },
                 {
                     name: "5th-Level Scroll",
-                    desc: "Scroll (rare);A spell scroll bears the words of a single spell, written in a mystical cipher. If the spell is on your class\'s spell list, you can read the scroll and cast its spell without providing any material components. Otherwise, the scroll is unintelligible. Casting the spell by reading the scroll requires the spell\'s normal casting time. Once the spell is cast, the words on the scroll fade, and it crumbles to dust. If the casting is interrupted, the scroll is not lost.<br><br>If the spell is on your class\'s spell list but of a higher level than you can normally cast, you must make an ability check using your spellcasting ability to determine whether you cast it successfully. The DC equals 10 + the spell\'s level. On a failed check, the spell disappears from the scroll with no other effect.<br><br>Once the spell is cast, the words on the scroll fade, and the scroll itself crumbles to dust.",
+                    desc: "Scroll (rare);",
                     mods: "Item Type: Scroll",
                     props: "",
                     rarity: "rare",
@@ -1117,7 +1117,7 @@ var ItemStore = ItemStore || (function() {
                 },
                 {
                     name: "6th-Level Scroll",
-                    desc: "Scroll (very rare);A spell scroll bears the words of a single spell, written in a mystical cipher. If the spell is on your class\'s spell list, you can read the scroll and cast its spell without providing any material components. Otherwise, the scroll is unintelligible. Casting the spell by reading the scroll requires the spell\'s normal casting time. Once the spell is cast, the words on the scroll fade, and it crumbles to dust. If the casting is interrupted, the scroll is not lost.<br><br>If the spell is on your class\'s spell list but of a higher level than you can normally cast, you must make an ability check using your spellcasting ability to determine whether you cast it successfully. The DC equals 10 + the spell\'s level. On a failed check, the spell disappears from the scroll with no other effect.<br><br>Once the spell is cast, the words on the scroll fade, and the scroll itself crumbles to dust.",
+                    desc: "Scroll (very rare);",
                     mods: "Item Type: Scroll",
                     props: "",
                     rarity: "very rare",
@@ -1128,7 +1128,7 @@ var ItemStore = ItemStore || (function() {
                 },
                 {
                     name: "7th-Level Scroll",
-                    desc: "Scroll (very rare);A spell scroll bears the words of a single spell, written in a mystical cipher. If the spell is on your class\'s spell list, you can read the scroll and cast its spell without providing any material components. Otherwise, the scroll is unintelligible. Casting the spell by reading the scroll requires the spell\'s normal casting time. Once the spell is cast, the words on the scroll fade, and it crumbles to dust. If the casting is interrupted, the scroll is not lost.<br><br>If the spell is on your class\'s spell list but of a higher level than you can normally cast, you must make an ability check using your spellcasting ability to determine whether you cast it successfully. The DC equals 10 + the spell\'s level. On a failed check, the spell disappears from the scroll with no other effect.<br><br>Once the spell is cast, the words on the scroll fade, and the scroll itself crumbles to dust.",
+                    desc: "Scroll (very rare);",
                     mods: "Item Type: Scroll",
                     props: "",
                     rarity: "very rare",
@@ -1139,7 +1139,7 @@ var ItemStore = ItemStore || (function() {
                 },
                 {
                     name: "8th-Level Scroll",
-                    desc: "Scroll (very rare);A spell scroll bears the words of a single spell, written in a mystical cipher. If the spell is on your class\'s spell list, you can read the scroll and cast its spell without providing any material components. Otherwise, the scroll is unintelligible. Casting the spell by reading the scroll requires the spell\'s normal casting time. Once the spell is cast, the words on the scroll fade, and it crumbles to dust. If the casting is interrupted, the scroll is not lost.<br><br>If the spell is on your class\'s spell list but of a higher level than you can normally cast, you must make an ability check using your spellcasting ability to determine whether you cast it successfully. The DC equals 10 + the spell\'s level. On a failed check, the spell disappears from the scroll with no other effect.<br><br>Once the spell is cast, the words on the scroll fade, and the scroll itself crumbles to dust.",
+                    desc: "Scroll (very rare);",
                     mods: "Item Type: Scroll",
                     props: "",
                     rarity: "very rare",
@@ -1150,7 +1150,7 @@ var ItemStore = ItemStore || (function() {
                 },
                 {
                     name: "9th-Level Scroll",
-                    desc: "Scroll (legendary);A spell scroll bears the words of a single spell, written in a mystical cipher. If the spell is on your class\'s spell list, you can read the scroll and cast its spell without providing any material components. Otherwise, the scroll is unintelligible. Casting the spell by reading the scroll requires the spell\'s normal casting time. Once the spell is cast, the words on the scroll fade, and it crumbles to dust. If the casting is interrupted, the scroll is not lost.<br><br>If the spell is on your class\'s spell list but of a higher level than you can normally cast, you must make an ability check using your spellcasting ability to determine whether you cast it successfully. The DC equals 10 + the spell\'s level. On a failed check, the spell disappears from the scroll with no other effect.<br><br>Once the spell is cast, the words on the scroll fade, and the scroll itself crumbles to dust.",
+                    desc: "Scroll (legendary);",
                     mods: "Item Type: Scroll",
                     props: "",
                     rarity: "legendary",
@@ -1253,7 +1253,7 @@ var ItemStore = ItemStore || (function() {
                                             if (args[4]==undefined) {
                                                 editMenu(store,option,undefined,item);
                                             } else if (args[4]=="del") {
-                                                deleteItem(store,item);
+                                                removeItem(store,item);
                                             } else if (args[4].includes("mode")) {
                                                 let mode=args[4].replace("mode ","").toLowerCase();
                                                 if (mode=="none" || mode=="" || mode==" ") {
@@ -1268,27 +1268,29 @@ var ItemStore = ItemStore || (function() {
                                                 let amount;
                                                 let sellam;
                                                 for (let i=5;i<11;i++) {
-                                                    if (args[i].includes("name")) {
-                                                        name=args[i].replace("name ","");
-                                                    } else if (args[i].includes("desc")) {
-                                                        desc=args[i].replace("desc ","");
-                                                    } else if (args[i].includes("mods")) {
-                                                        mods=args[i].replace("mods ","");
-                                                    } else if (args[i].includes("props")) {
-                                                        props=args[i].includes("props ","");
-                                                    } else if (args[i].includes("price")) {
-                                                        price=args[i].replace("price ","");
-                                                    } else if (args[i].includes("amount")) {
-                                                        amount=Number(args[i].replace("amount ",""));
-                                                    } else if (args[i].includes("sellam")) {
-                                                        sellam=Number(args[i].replace("sellam ",""));
-                                                    } else if (args[i].includes("weight")) {
-                                                        weight=Number(args[i].replace("weight ",""));
+                                                    if (args[i]!==undefined) {
+                                                        if (args[i].includes("name")) {
+                                                            name=args[i].replace("name ","");
+                                                        } else if (args[i].includes("desc")) {
+                                                            desc=args[i].replace("desc ","");
+                                                        } else if (args[i].includes("mods")) {
+                                                            mods=args[i].replace("mods ","");
+                                                        } else if (args[i].includes("props")) {
+                                                            props=args[i].includes("props ","");
+                                                        } else if (args[i].includes("price")) {
+                                                            price=args[i].replace("price ","");
+                                                        } else if (args[i].includes("amount")) {
+                                                            amount=Number(args[i].replace("amount ",""));
+                                                        } else if (args[i].includes("sellam")) {
+                                                            sellam=Number(args[i].replace("sellam ",""));
+                                                        } else if (args[i].includes("weight")) {
+                                                            weight=Number(args[i].replace("weight ",""));
+                                                        }
                                                     }
                                                 }
                                                 if (args[11]=="confirm") {
                                                     editItem(store,item,name,desc,mods,props,price,weight,amount,sellam);
-                                                } else if (args[11]==undefined || args[11]!=="confirm") {
+                                                } else if (args[11]==undefined && args[11]!=="confirm") {
                                                     editMenu(store,option,mode,item,name,desc,mods,props,price,weight,amount,sellam);
                                                 }
                                             } else if (args[4].includes("name") || args[4].includes("desc") || args[4].includes("mods") || args[4].includes("props") || args[4].includes("price") || args[4].includes("amount") || args[4].includes("sellam")) {
@@ -1301,32 +1303,33 @@ var ItemStore = ItemStore || (function() {
                                                 let sellam;
                                                 let weight;
                                                 for (let i=4;i<10;i++) {
-                                                    if (args[i].includes("name")) {
-                                                        name=args[i].replace("name ","");
-                                                    } else if (args[i].includes("desc")) {
-                                                        desc=args[i].replace("desc ","");
-                                                    } else if (args[i].includes("mods")) {
-                                                        mods=args[i].replace("mods ","");
-                                                    } else if (args[i].includes("props")) {
-                                                        props=args[i].includes("props ","");
-                                                    } else if (args[i].includes("price")) {
-                                                        price=args[i].replace("price ","");
-                                                    } else if (args[i].includes("amount")) {
-                                                        amount=Number(args[i].replace("amount ",""));
-                                                    } else if (args[i].includes("sellam")) {
-                                                        sellam=Number(args[i].replace("sellam ",""));
-                                                    } else if (args[i].includes("weight")) {
-                                                        weight=Number(args[i].replace("weight ",""));
+                                                    if (args[i]!==undefined) {
+                                                        if (args[i].includes("name")) {
+                                                            name=args[i].replace("name ","");
+                                                        } else if (args[i].includes("desc")) {
+                                                            desc=args[i].replace("desc ","");
+                                                        } else if (args[i].includes("mods")) {
+                                                            mods=args[i].replace("mods ","");
+                                                        } else if (args[i].includes("props")) {
+                                                            props=args[i].includes("props ","");
+                                                        } else if (args[i].includes("price")) {
+                                                            price=args[i].replace("price ","");
+                                                        } else if (args[i].includes("amount")) {
+                                                            amount=Number(args[i].replace("amount ",""));
+                                                        } else if (args[i].includes("sellam")) {
+                                                            sellam=Number(args[i].replace("sellam ",""));
+                                                        } else if (args[i].includes("weight")) {
+                                                            weight=Number(args[i].replace("weight ",""));
+                                                        }
                                                     }
                                                 }
                                                 if (args[10]=="confirm") {
                                                     editItem(store,item,name,desc,mods,props,price,weight,amount,sellam)
-                                                } else if (args[10]==undefined || args[10]!=="confirm") {
+                                                } else if (args[10]==undefined && args[10]!=="confirm") {
                                                     editMenu(store,option,undefined,item,name,desc,mods,props,price,weight,amount,sellam);
                                                 }
                                             }
                                         }
-                                        sendChat("/w gm Invalid Item. Please use the name/number of an existing Item");
                                     } else if (args[3]=="new") {
                                         if (args[11]==undefined) {
                                             let name;
@@ -1338,22 +1341,24 @@ var ItemStore = ItemStore || (function() {
                                             let amount;
                                             let sellam;
                                             for (let i=4;i<11;i++) {
-                                                if (args[i].includes("name")) {
-                                                    name=args[i].replace("name ","");
-                                                } else if (args[i].includes("desc")) {
-                                                    desc=args[i].replace("desc ","");
-                                                } else if (args[i].includes("mods")) {
-                                                    mods=args[i].replace("mods ","");
-                                                } else if (args[i].includes("props")) {
-                                                    props=args[i].replace("props ","");
-                                                } else if (args[i].includes("price")) {
-                                                    price=Number(args[i].replace("price ",""));
-                                                } else if (args[i].includes("weight")) {
-                                                    weight=Number(args[i].replace("weight ",""));
-                                                } else if (args[i].includes("amount")) {
-                                                    amount=Number(args[i].replace("amount ",""));
-                                                } else if (args[i].includes("sellam")) {
-                                                    sellam=Number(args[i].replace("sellam ",""));
+                                                if (args[i]!==undefined) {
+                                                    if (args[i].includes("name")) {
+                                                        name=args[i].replace("name ","");
+                                                    } else if (args[i].includes("desc")) {
+                                                        desc=args[i].replace("desc ","");
+                                                    } else if (args[i].includes("mods")) {
+                                                        mods=args[i].replace("mods ","");
+                                                    } else if (args[i].includes("props")) {
+                                                        props=args[i].replace("props ","");
+                                                    } else if (args[i].includes("price")) {
+                                                        price=Number(args[i].replace("price ",""));
+                                                    } else if (args[i].includes("weight")) {
+                                                        weight=Number(args[i].replace("weight ",""));
+                                                    } else if (args[i].includes("amount")) {
+                                                        amount=Number(args[i].replace("amount ",""));
+                                                    } else if (args[i].includes("sellam")) {
+                                                        sellam=Number(args[i].replace("sellam ",""));
+                                                    }
                                                 }
                                             }
                                             editMenu(store,option,undefined,undefined,name,desc,mods,props,price,weight,amount,sellam);
@@ -1392,7 +1397,7 @@ var ItemStore = ItemStore || (function() {
                                                                     createInv(store,type,amount,minrare,maxrare,args[7]);
                                                                     storeMenu(store);
                                                                 } else if (args[7].includes("overwrite")) {
-                                                                    let overwrite=Boolean(args[7].replace("overwrite ",""));
+                                                                    let overwrite=args[7].replace("overwrite ","");
                                                                     createInv(store,type,amount,minrare,maxrare,overwrite);
                                                                     storeMenu(store);
                                                                 }
@@ -1801,6 +1806,7 @@ var ItemStore = ItemStore || (function() {
                     '</table>' + //--
                     '<br><br>' + //--
                     '<div style="text-align:center;"><a ' + astyle2 + '" href="!store --create --name ?{Name?|Insert Name}">Create new Store</a></div>' + //--
+                    '<div style="text-align:center;"><a ' + astyle2 + '" href="!store --reset">Reset Stores</a></div>' + //--
                     '</div>'
                 );
             } else if (state.store.length>=1) {
@@ -1820,6 +1826,7 @@ var ItemStore = ItemStore || (function() {
                     '<br><div style="text-align:center;">Unavailable</div>' + //--
                     '<br><br>' + //--
                     '<div style="text-align:center;"><a ' + astyle2 + '" href="!store --create --name ?{Name?|Insert Name}">Create new Store</a></div>' + //--
+                    '<div style="text-align:center;"><a ' + astyle2 + '" href="!store --reset">Reset Stores</a></div>' + //--
                     '</div>'
                 );
             }
@@ -1834,6 +1841,7 @@ var ItemStore = ItemStore || (function() {
                     '</table>' + //--
                     '<br><br>' + //--
                     '<div style="text-align:center;"><a ' + astyle2 + '" href="!store --create --name ?{Name?|Insert Name}">Create new Store</a></div>' + //--
+                    '<div style="text-align:center;"><a ' + astyle2 + '" href="!store --reset">Reset Stores</a></div>' + //--
                     '</div>'
                 );
             } else if (state.store.length>=1) {
@@ -1847,15 +1855,12 @@ var ItemStore = ItemStore || (function() {
                 if (shop==undefined) {
                     sendChat("Item Store","/w gm Could not find a Store with that Name!")
                 } else if (shop!==undefined) {
-                    let count=0;
                     for (let i=0;i<state.store.length;i++) {
-                        if (state.store[i].name!==shop.name) {
-                            shopList[count]=state.store[i].name;
-                            count++;
-                        }
+                        shopList.push(state.store[i].name);
                     }
+                    let len=shopList.length;
                     shopList=String(shopList);
-                    for (let i=0;i<state.store.length;i++) {
+                    for (let i=0;i<len;i++) {
                         shopList=shopList.replace(",","|");
                     }
                     let inv=shop.inv;
@@ -1863,7 +1868,10 @@ var ItemStore = ItemStore || (function() {
                     let border="border-top: 1px solid #cccccc; border-bottom: 1px solid #cccccc; ";
                     for (let i=0;i<inv.length;i++) {
                         let price=inv[i].price+(shop.cprice*inv[i].price);
-                        let desc=inv[i].desc.split(";");
+                        let desc=["",""];
+                        if (inv[i].desc) {
+                            desc=inv[i].desc.split(';');
+                        }
                         if (i>=1) {
                             border="border-bottom: 1px solid #cccccc; ";
                         }
@@ -2083,7 +2091,7 @@ var ItemStore = ItemStore || (function() {
             for (let i=0;i<inv.length;i++) {
                 itemList[i]=inv[i].name;
             }
-            item=itemList.find(i => i.name==item);
+            item=inv.find(it => it.name.includes(item));
             if (option=="edit") {
                 if (mode==undefined) {
                     if (item==undefined) {
@@ -2181,7 +2189,7 @@ var ItemStore = ItemStore || (function() {
                             '<tr><td>Bundle size: </td><td ' + tdstyle + '><a ' + astyle1 + '" href="!store --store ' + shop.name + ' --inv edit --item ' + item.name + ' --mode none --sellam ?{Bundle size?|1}">' + sellam + '</a></td></tr>' + //--
                             '</table>' + //--
                             '<br><br>' + //--
-                            '<div style="text-align:center;"><a ' + astyle2 + '" href="!store --store ' + shop.name + ' --inv edit --name ' + name + ' --desc ' + desc + ' --mods ' + mods + ' --props ' + props + ' --price ' + price + ' --weight ' + weight + ' --amount ' + amount + ' --sellam ' + sellam + ' --confirm">Apply Changes</a></div>' + //--
+                            '<div style="text-align:center;"><a ' + astyle2 + '" href="!store --store ' + shop.name + ' --inv edit --item ' + item.name + ' --name ' + name + ' --desc ' + desc + ' --mods ' + mods + ' --props ' + props + ' --price ' + price + ' --weight ' + weight + ' --amount ' + amount + ' --sellam ' + sellam + ' --confirm">Apply Changes</a></div>' + //--
                             '<div style="text-align:center;"><a ' + astyle2 + '" href="!store --store ' + shop.name + ' --inv edit --item ' + item.name + ' --del">Delete Item</a></div>' + //--
                             '</div>'
                         );
@@ -2282,7 +2290,7 @@ var ItemStore = ItemStore || (function() {
                             '<tr><td>Bundle size: </td><td ' + tdstyle + '><a ' + astyle1 + '" href="!store --store ' + shop.name + ' --inv edit --item ' + item.name + ' --mode none --sellam ?{Bundle size?|1}">' + sellam + '</a></td></tr>' + //--
                             '</table>' + //--
                             '<br><br>' + //--
-                            '<div style="text-align:center;"><a ' + astyle2 + '" href="!store --store ' + shop.name + ' --inv edit --name ' + name + ' --desc ' + desc + ' --mods ' + mods + ' --props ' + props + ' --price ' + price + ' --weight ' + weight + ' --amount ' + amount + ' --sellam ' + sellam + ' --confirm">Apply Changes</a></div>' + //--
+                            '<div style="text-align:center;"><a ' + astyle2 + '" href="!store --store ' + shop.name + ' --inv edit --item ' + item.name + ' --mode none --name ' + name + ' --desc ' + desc + ' --mods ' + mods + ' --props ' + props + ' --price ' + price + ' --weight ' + weight + ' --amount ' + amount + ' --sellam ' + sellam + ' --confirm">'+'Apply Changes</a></div>' + //--
                             '<div style="text-align:center;"><a ' + astyle2 + '" href="!store --store ' + shop.name + ' --inv edit --item ' + item.name + ' --del">Delete Item</a></div>' + //--
                             '</div>'
                         );
@@ -2451,7 +2459,7 @@ var ItemStore = ItemStore || (function() {
         let rarity=checkRarity(minrare,maxrare);
         minrare=rarity[0];
         maxrare=rarity[1];
-        if (Boolean(overwrite)==true) {
+        if (overwrite=="true") {
             let list;
             type=type.toLowerCase();
             if (type.includes("weapon")) {
@@ -2464,8 +2472,8 @@ var ItemStore = ItemStore || (function() {
                 list=genPotion(amount,minrare,maxrare);
             } else if (type.includes("misc")) {
                 list=genMisc(amount,minrare,maxrare);
-            } else if (type.includes("mund")) {
-                list=genMundane(amount);
+            } else if (type.includes("mundane")) {
+                list=genMundane(amount,minrare,maxrare);
             } else if (type.includes("rand")) {
                 for (let i=0;i<amount;i++) {
                     let rand=randomInteger(6);
@@ -2481,7 +2489,7 @@ var ItemStore = ItemStore || (function() {
                         } else if (rand==5) {
                             list.push(genMisc(1,minrare,maxrare)[0]);
                         } else if (rand==6) {
-                            list.push(genMundane(1)[0]);
+                            list.push(genMundane(1,minrare,maxrare)[0]);
                         }
                     } else if (list==undefined) {
                         if (rand==1) {
@@ -2495,14 +2503,14 @@ var ItemStore = ItemStore || (function() {
                         } else if (rand==5) {
                             list=genMisc(1,minrare,maxrare);
                         } else if (rand==6) {
-                            list=genMundane(1);
+                            list=genMundane(1,minrare,maxrare);
                         }
                     }
                 }
             }
             store.inv=list;
             sendChat("Item Store","/w gm Generated new Inventory and overwrote the previous Inventory.");
-        } else if (Boolean(overwrite)==false) {
+        } else if (overwrite=="false") {
             let list=store.inv;
             let seclist;
             type=type.toLowerCase();
@@ -2511,9 +2519,8 @@ var ItemStore = ItemStore || (function() {
                 for (let i=0;i<list.length;i++) {
                     for (let j=0;j<seclist.length;j++) {
                         if (list[i].name==seclist[j].name) {
-                            list[i]=seclist[j];
+                            list[i].amount++;
                             seclist.splice(j);
-                            j--;
                         }
                     }
                 }
@@ -2525,9 +2532,8 @@ var ItemStore = ItemStore || (function() {
                 for (let i=0;i<list.length;i++) {
                     for (let j=0;j<seclist.length;j++) {
                         if (list[i].name==seclist[j].name) {
-                            list[i]=seclist[j];
+                            list[i].amount++;
                             seclist.splice(j);
-                            j--;
                         }
                     }
                 }
@@ -2539,9 +2545,9 @@ var ItemStore = ItemStore || (function() {
                 for (let i=0;i<list.length;i++) {
                     for (let j=0;j<seclist.length;j++) {
                         if (list[i].name==seclist[j].name) {
-                            list[i]=seclist[j];
+                            list[i].amount++;
                             seclist.splice(j);
-                            j--;
+                            log(seclist[i].desc);
                         }
                     }
                 }
@@ -2553,9 +2559,8 @@ var ItemStore = ItemStore || (function() {
                 for (let i=0;i<list.length;i++) {
                     for (let j=0;j<seclist.length;j++) {
                         if (list[i].name==seclist[j].name) {
-                            list[i]=seclist[j];
+                            list[i].amount++;
                             seclist.splice(j);
-                            j--;
                         }
                     }
                 }
@@ -2567,9 +2572,8 @@ var ItemStore = ItemStore || (function() {
                 for (let i=0;i<list.length;i++) {
                     for (let j=0;j<seclist.length;j++) {
                         if (list[i].name==seclist[j].name) {
-                            list[i]=seclist[j];
+                            list[i].amount++;
                             seclist.splice(j);
-                            j--;
                         }
                     }
                 }
@@ -2577,13 +2581,12 @@ var ItemStore = ItemStore || (function() {
                     list.push(seclist[i]);
                 }
             } else if (type.includes("mund")) {
-                seclist=genMundane(amount);
+                seclist=genMundane(amount,minrare,maxrare);
                 for (let i=0;i<list.length;i++) {
                     for (let j=0;j<seclist.length;j++) {
                         if (list[i].name==seclist[j].name) {
-                            list[i]=seclist[j];
+                            list[i].amount++;
                             seclist.splice(j);
-                            j--;
                         }
                     }
                 }
@@ -2673,14 +2676,17 @@ var ItemStore = ItemStore || (function() {
                         } else if (rand==5) {
                             list=genMisc(1,minrare,maxrare);
                         } else if (rand==6) {
-                            list=genMundane(1);
+                            list=genMundane(1,minrare,maxrare);
                         }
                     }
                 }
             }
-            for (let i=0;i<list.length;i++) {
-                store.inv.push(list[i]);
-            }
+            /*let num;
+            for (let i=0;i<state.store.length;i++) {
+                if (state.store[i].name==store.name) {
+                    state.store[i].inv=list;
+                }
+            }*/
             sendChat("Item Store","/w gm Generated new Items and added them to the Store.");
         }
     },
@@ -2700,6 +2706,7 @@ var ItemStore = ItemStore || (function() {
                 case 'common:common':
                     pricechange=0;
                     rarity="common";
+                    namechange="";
                 break;
                 case 'common:uncommon':
                     rand=randomInteger(2);
@@ -2883,15 +2890,17 @@ var ItemStore = ItemStore || (function() {
             rand=randomInteger(list.length);
             let price=pricechange+Math.trunc(list[rand-1].price);
             let name=namechange+list[rand-1].name;
-            let mods=list[rand-1].mods
+            let mods=list[rand-1].mods;
             let desc=list[rand-1].desc.split(';');
-            if (namechange.includes("+1")) {
+            let props=list[rand-1].props;
+            let weight=list[rand-1].weight;
+            if (name.includes("+1")) {
                 mods+=", Attack +1, Damage +1";
                 desc[1]="You have a +1 bonus to attack and damage rolls made with this magic weapon.";
-            } else if (namechange.includes("+2")) {
+            } else if (name.includes("+2")) {
                 mods+=", Attack +2, Damage +2";
                 desc[1]="You have a +2 bonus to attack and damage rolls made with this magic weapon.";
-            } else if (namechange.includes("+3")) {
+            } else if (name.includes("+3")) {
                 mods+=", Attack +3, Damage +3";
                 desc[1]="You have a +1 bonus to attack and damage rolls made with this magic weapon.";
             }
@@ -2910,9 +2919,9 @@ var ItemStore = ItemStore || (function() {
                     name: name,
                     desc: desc[0]+";"+desc[1],
                     mods: mods,
-                    props: list[i-1].props,
+                    props: props,
                     price: price,
-                    weight: list[i-1].weight,
+                    weight: weight,
                     amount: 1
                 });
             }
@@ -2936,6 +2945,7 @@ var ItemStore = ItemStore || (function() {
                     case 'common:common':
                         pricechange=0;
                         rarity="common";
+                        namechange="";
                     break;
                     case 'common:uncommon':
                         rand=randomInteger(2);
@@ -3121,6 +3131,7 @@ var ItemStore = ItemStore || (function() {
                     case 'common:common':
                         pricechange=0;
                         rarity="common";
+                        namechange="";
                     break;
                     case 'common:uncommon':
                         rand=randomInteger(2);
@@ -3309,25 +3320,27 @@ var ItemStore = ItemStore || (function() {
             let name=namechange+list[rand-1].name;
             let mods=list[rand-1].mods
             let desc=list[rand-1].desc.split(';');
+            let props=list[rand-1].props;
+            let weight=list[rand-1].weight;
             if (name.includes("shield")) {
-                if (namechange.includes("+1")) {
+                if (name.includes("+1")) {
                     mods+=", AC +1";
                     desc[1]="While holding this shield, you have a +1 bonus to AC. This bonus is in addition to the shield\'s normal bonus to AC.";
-                } else if (namechange.includes("+2")) {
+                } else if (name.includes("+2")) {
                     mods+=", AC +2";
                     desc[1]="While holding this shield, you have a +2 bonus to AC. This bonus is in addition to the shield\'s normal bonus to AC.";
-                } else if (namechange.includes("+3")) {
+                } else if (name.includes("+3")) {
                     mods+=", AC +3";
                     desc[1]="While holding this shield, you have a +3 bonus to AC. This bonus is in addition to the shield\'s normal bonus to AC.";
                 }
             } else {
-                if (namechange.includes("+1")) {
+                if (name.includes("+1")) {
                     mods+=", AC +1";
                     desc[1]="You have a +1 bonus to AC while wearing this armor.";
-                } else if (namechange.includes("+2")) {
+                } else if (name.includes("+2")) {
                     mods+=", AC +2";
                     desc[1]="You have a +2 bonus to AC while wearing this armor.";
-                } else if (namechange.includes("+3")) {
+                } else if (name.includes("+3")) {
                     mods+=", AC +3";
                     desc[1]="You have a +3 bonus to AC while wearing this armor.";
                 }
@@ -3347,9 +3360,9 @@ var ItemStore = ItemStore || (function() {
                     name: name,
                     desc: desc[0]+";"+desc[1],
                     mods: mods,
-                    props: list[i-1].props,
+                    props: props,
                     price: price,
-                    weight: list[i-1].weight,
+                    weight: weight,
                     amount: 1
                 });
             }
@@ -3410,26 +3423,21 @@ var ItemStore = ItemStore || (function() {
                 level=9;
             break;
         }
-        let name;
-        let price;
-        let am;
-        let sellam;
-        let mods;
-        let props;
-        let desc;
-        let weight;
+        let test;
         for (let i=0;i<list.length;i++) {
-            if (list.name.includes(String(level))) {
-                name=list[i].name;
-                price=list[i].price;
-                am=list[i].amount;
-                sellam=list[i].sellam;
-                mods=list[i].mods;
-                props=list[i].props;
-                desc=list[i].desc;
-                weight=list[i];
+            if (list[i].name.includes(String(level))) {
+                test=list[i];
             }
         }
+        let name=test.name;
+        let price=test.price;
+        let am=test.amount;
+        let sellam=test.sellam;
+        let mods=test.mods;
+        let props=test.props;
+        let constdesc="A spell scroll bears the words of a single spell, written in a mystical cipher. If the spell is on your class\'s spell list, you can read the scroll and cast its spell without providing any material components. Otherwise, the scroll is unintelligible. Casting the spell by reading the scroll requires the spell\'s normal casting time. Once the spell is cast, the words on the scroll fade, and it crumbles to dust. If the casting is interrupted, the scroll is not lost.  If the spell is on your class\'s spell list but of a higher level than you can normally cast, you must make an ability check using your spellcasting ability to determine whether you cast it successfully. The DC equals 10 + the spell\'s level. On a failed check, the spell disappears from the scroll with no other effect. Once the spell is cast, the words on the scroll fade, and the scroll itself crumbles to dust.";
+        let desc=`${test.desc}${constdesc}`;
+        let weight=test.weight;
         for (let i=0;i<amount;i++) {
             if (items[i]==undefined) {
                 let spell=rollSpell(level);
@@ -3446,7 +3454,7 @@ var ItemStore = ItemStore || (function() {
                     }
                 ];
                 items.push(truespell[0]);
-            } else {
+            } else if (items[i]!==undefined) {
                 let spell=rollSpell(level);
                 if (items[i].name==spell[0]) {
                     items[i].amount++;
@@ -3608,7 +3616,7 @@ var ItemStore = ItemStore || (function() {
     },
 
     genMisc = function(amount,minrare,maxrare) {
-        let items;
+        let items=[];
         let list;
         let rare=minrare+':'+maxrare;
         const commonlist="Bead of Nourishment,50;Bead of Refreshment,50;Boots of False Tracks,50;Candle of the Deep,50;Charlatan\'s Die,50;Cloak of Billowing,50;Cloak of Many Fashions,50;Clockwork Amulet,50;Clothes of Mending,50;Dark Shard Amulet,50;Dread Helm,50;Ear Horn of Hearing,50;Enduring Spellbook,50;Ersatz Eye,50;Hat of Vermin,50;Hat of Wizardry,50;Heward\'s Handy Spice,50;Horn of Silent Alarm,50;Instrument of Illusions,50;Instrument of Scribing,50;Lock of Trickery,50;Mystery Key,50;Orb of Direction,50;Orb of Time,50;Perfume of Bewiching,50;Pipe of Smoke Monsters,50;Pole of Angling,50;Pole of Collapsing,50;Pot of Awakening,50;Rope of Mending,50;Ruby of the Wary Mage,50;Staff of Adornment,50;Staff of Birdcalls,50;Staff of Flowers,50;Talking Doll,50;Tankard of Sobriety,50;Unbreakable Arrow,50;Veteran\'s Cane,50;Wand of Conduction,50;Wand of Pyrotechnics,50;Wand of Scowls,50;Wand of Smiles,50";
@@ -3765,38 +3773,39 @@ var ItemStore = ItemStore || (function() {
             }
             list=list.split(";");
             rand=randomInteger(list.length);
-            let props;
+            let stuff=String(list[rand-1]);
+            stuff=stuff.split(',');
+            let name=stuff[0];
+            let price=Number(stuff[1]);
             let found=false;
             if (items[0]==undefined) {
-                props=String(list[rand]).split(',');
                 items.push(
                     {
-                        name: props[0],
+                        name: name,
                         desc: "Misc Item ("+rarity+");",
                         mods: "Item Type: Item",
                         props: "",
-                        price: Number(props[1]),
+                        price: price,
                         weight: 0,
                         amount: 1,
                         sellam: 1
                     }
                 );
-            } else {
+            } else if (items[0]!==undefined) {
                 for (let j=0;j<items.length;j++) {
-                    if (items[j].name==list[rand-1].name) {
+                    if (items[j].name==name) {
                         items[j].amount++;
                         found=true;
                     }
                 }
-                props=String(list[rand-1]).split(',');
                 if (found==false) {
                     items.push(
                         {
-                            name: props[0],
+                            name: name,
                             desc: "Misc Item ("+rarity+");",
                             mods: "Item Type: Item",
                             props: "",
-                            price: Number(props[1]),
+                            price: price,
                             weight: 0,
                             amount: 1,
                             sellam: 1
@@ -3810,16 +3819,17 @@ var ItemStore = ItemStore || (function() {
 
     genMundane = function(amount,minrare,maxrare) {
         let items=[];
-        let mundaneList;
+        let list;
+        let mundaneList="";
         let rare=minrare+':'+maxrare;
         amount=Number(amount);
         var rand;
         let rarity;
-        const commonlist="Candle,0.01;Chalk (1 piece),0.01;Sack,0.01;Torch,0.01;Wheat,0.01;Whetstone,0.01;Blowgun Needle,0.01;Chicken,0.02;Flask,0.02;Flour,0.02;Jug,0.02;Loaf of Bread,0.02;Pitcher,0.02;Soap,0.02;Tankard,0.02;Ale (mug),0.04;Sling Bullets (20),0.04;Arrow,0.05;Bucket,0.05;Caltrop,0.05;Crossbow Bolt,0.05;Dart,0.05;Feed (per day),0.05;Piton,0.05;Pole (10-foot),0.05;Salt,0.05;Signal Whistle,0.05;Canvas (1 sq. yd.),0.1;Club,0.1;Dice Set,0.1;Hunk of Cheese,0.1;Insect Repellent (Block of Incense),0.1;Iron,0.1;Iron Spike,0.1;Ladder (10-foot),0.1;Oil (flask),0.1;Parchment (one sheet),0.1;Sling,0.1;Ale (Gallon),0.2;Common Wine (Pitcher),0.2;Greatclub,0.2;Mess Kit,0.2;Paper (one sheet),0.2;Quarterstaff,0.2;Waterskin,0.2;Chunk of Meat,0.3;Basket,0.4;Blanket,0.5;Common Clothes,0.5;Copper,0.5;Cotton Cloth (1 sq. yd.),0.5;Javelin,0.5;Lamp,0.5;Playing Card Set,0.5;Pouch,0.5;Rations (1 day),0.5;Sealing Wax,0.5;Stabling (per day),0.5;Tinderbox,0.5;Arrows (20),1;Ball Bearings (bag of 1000),1;Bedroll,1;Bell,1;Block and Tackle,1;Blowgun Needles (50),1;Caltrops (bag of 20),1;Cook\'s Utensils,1;Crossbow Bolt Case,1;Crossbow Bolts (20),1;Dragonchess Set,1;Fishing Tackle,1;Ginger,1;Goat,1;Hammer,1;Hempen Rope (50 feet),1;Insect Repellent (greasy salve),1;Iron Spikes (10),1;Map or Scroll Case,1;Net,1;Quiver,1;Rain Catcher,1;Robes,1;Sickle,1;Spear,1;Spring of Mistletoe,1;Three-Dragon Ante Set,1;Totem,1;Vial,1;Weaver\'s Tools,1;Wukka Nut,1;Yahcha,1;Yklwa,1;Backpack,2;Barrel,2;Bit and Bridle,2;Cinnamon,2;Crampons,2;Crowbar,2;Dagger,2;Flute,2;Glass Bottle,2;Grappling Hook,2;Iron Pot,2;Light Hammer,2;Menacles,2;Menga leaves (1 ounce),2;Miner\'s Pick,2;Pepper,2;Abacus,2,Shawm,2;Sheep,2;Shovel,2;Sledgehammer,2;Snowshoes,2;Traveler\'s Clothes,2;Two-Person Tent,2;Whip,2;Cloves,3;Horn,3;Pig,3;Theki Root,3;Portable Ram,4;Saddlebags,4";
-        const uncommonlist="Amulet,5;Chain (10 feet),5;Chest,5;Cobbler\'s Tools,5;Costume Clothes,5;Emblem,5;Handaxe,5;Healer\'s Kit,5;Herbalism Kit,5;Hooded Lantern,5;Hunting Trap,5;Leatherworker\'s Tools,5;Linen (1 sq. yd.),5;Mace,5;Merchant\'s Scale,5;Six person Tent,5;Pack Saddle,5;Padded Armor,5;Perfume (vial),5;Pike,5;Reliquary,5;Signet Ring,5;Silver,5;Sinda berries (10),5;Staff,5;Steel Mirror,5;Trident,5;War Pick,5;Wooden Staff,5;Drum,6;Carpenter\'s Tools,8;Donkey,8;Mule,8;Battleaxe,10;Blowgun,10;Bullseye Lantern,10;Calligrapher\'s Supplies,10;Clothing (cold weather),10;Cow,10;Crystal,10;Explorer\'s Pack,10;Fine Wine (Bottle),10;Flail,10;Hide Armor,10;Ink (1-ounce bottle),10;Lance,10;Leather Armor,10;Lock,10;Mason\'s Tools,10;Maul,10;Painter\'s Supplies,10;Potter\'s Tools,10;Riding Saddle,10;Rod,10;Shield,10;Shortsword,10;Silk (1 sq. yd.),10;Silk Rope (50 feet),10;Wand,10;Yew Wand,10;Zabou,10;Dungeoneer\'s Pack,12;Pan Flute,12;Cart,15;Cartographer\'s Tools,15;Fine Clothes,15;Forgery Kit,15;Longsword,15;Morningstar,15;Ox,15;Saffron,15;Warhammer,15;Burglar\'s Pack,16;Priest\'s Pack,19;Brewer\'s Supplies,20;Dogsled,20;Glaive,20;Halberd,20;Military Saddle,20;Orb,20;Sled,20;Smith\'s Tools,20;Acid (vial),25;Book,25;Climber\'s Kit,25;Component Pouch,25;Disguise Kit,25;Dulcimer,25;Holy Water (flask),25;Hourglass,25;Jeweler\'s Tools,25;Light Crossbow,25;Navigator\'s Tools,25;Rapier,25;Scimitar,25;Shortbow,25;Thieves\' Tools,25;Wildroot,25;Yarting,25;Bagpipes,30;Glassblower\'s Tools,30;Greataxe,30;Lyre,30;Ring Mail,30;Pony,30;Viol,30;Willowshade Oil,30;Monster Hunter\'s Pack,33;Lute,35;Wagon,35;Diplomat\'s Pack,39;Entertainer\'s Pack,40;Scholar\'s Pack,40;Studded Leather Armor,45";
-        const rarelist="Alchemist\'s Fire (Flask),50,Alchemist\'s Supplies,50;Antitoxin (vial),50;Axe Beak,50;Camel,50;Canoe,50;Chain Shirt,50;Draft Horse,50;Gold,50;Greatsword,50;Heavy Crossbow,50;Longbow,50;Olisuba Leaf,50;Poisoner\'s Kit,50;Rowboat,50;Ryath Root,50;Scale Mail,50;Sled Dog,50;Spellbook,50;Tinker\'s Tools,50;Exotic Saddle,60;Chain Mail,75;Hand Crossbow,75;Riding Horse,75;Spiked Armor,75;Basic Potion (vial),100;Silvered Weapon,100;Silvered Ammunition (10),100;Carriage,100;Double-Bladed Scimitar,100;Magnifying Glass,100;Muroosa Balm,100;Pride Silk,100;Assassin\'s Blood,Soothsalts,150;Truth Serum,150;Oversized Longbow,150;Oversized Arrow (20),3";
-        const veryrarelist="Blight Ichor,200;Carrion Crawler Mucus,200;Drow Poison,200;Elephant,200;Serpent Venom,200;Splint Armor,200;Chariot,250;Malice,250;Pale Tincture,250;Black Sap,300;Essence of Ether,300;Breastplate,400;Moorbounder,400;Oil of Taggit,400;Warhorse,400;Burnt Othur Fumes,500;Platinum,500;Pride Silk Outfit,500;Vial of Stardust,500;Torpor,600;Half Plate Armor,750";
-        const legendarylist="Adamantine Bar,1000;Spyglass,1000;Wyvern Poison,1200;Midnight Tears,1500;Plate Armor,1500;Purple Worm Poison,2000;Keelboat,3000;Longship,10000;Airship,20000;Warship,25000;Galley,30000;Skyship,100000";
+        let commonlist="Candle,0.01;Chalk (1 piece),0.01;Sack,0.01;Torch,0.01;Wheat,0.01;Whetstone,0.01;Blowgun Needle,0.01;Chicken,0.02;Flask,0.02;Flour,0.02;Jug,0.02;Loaf of Bread,0.02;Pitcher,0.02;Soap,0.02;Tankard,0.02;Ale (mug),0.04;Sling Bullets (20),0.04;Arrow,0.05;Bucket,0.05;Caltrop,0.05;Crossbow Bolt,0.05;Dart,0.05;Feed (per day),0.05;Piton,0.05;Pole (10-foot),0.05;Salt,0.05;Signal Whistle,0.05;Canvas (1 sq. yd.),0.1;Club,0.1;Dice Set,0.1;Hunk of Cheese,0.1;Insect Repellent (Block of Incense),0.1;Iron,0.1;Iron Spike,0.1;Ladder (10-foot),0.1;Oil (flask),0.1;Parchment (one sheet),0.1;Sling,0.1;Ale (Gallon),0.2;Common Wine (Pitcher),0.2;Greatclub,0.2;Mess Kit,0.2;Paper (one sheet),0.2;Quarterstaff,0.2;Waterskin,0.2;Chunk of Meat,0.3;Basket,0.4;Blanket,0.5;Common Clothes,0.5;Copper,0.5;Cotton Cloth (1 sq. yd.),0.5;Javelin,0.5;Lamp,0.5;Playing Card Set,0.5;Pouch,0.5;Rations (1 day),0.5;Sealing Wax,0.5;Stabling (per day),0.5;Tinderbox,0.5;Arrows (20),1;Ball Bearings (bag of 1000),1;Bedroll,1;Bell,1;Block and Tackle,1;Blowgun Needles (50),1;Caltrops (bag of 20),1;Cook\'s Utensils,1;Crossbow Bolt Case,1;Crossbow Bolts (20),1;Dragonchess Set,1;Fishing Tackle,1;Ginger,1;Goat,1;Hammer,1;Hempen Rope (50 feet),1;Insect Repellent (greasy salve),1;Iron Spikes (10),1;Map or Scroll Case,1;Net,1;Quiver,1;Rain Catcher,1;Robes,1;Sickle,1;Spear,1;Spring of Mistletoe,1;Three-Dragon Ante Set,1;Totem,1;Vial,1;Weaver\'s Tools,1;Wukka Nut,1;Yahcha,1;Yklwa,1;Backpack,2;Barrel,2;Bit and Bridle,2;Cinnamon,2;Crampons,2;Crowbar,2;Dagger,2;Flute,2;Glass Bottle,2;Grappling Hook,2;Iron Pot,2;Light Hammer,2;Menacles,2;Menga leaves (1 ounce),2;Miner\'s Pick,2;Pepper,2;Abacus,2,Shawm,2;Sheep,2;Shovel,2;Sledgehammer,2;Snowshoes,2;Traveler\'s Clothes,2;Two-Person Tent,2;Whip,2;Cloves,3;Horn,3;Pig,3;Theki Root,3;Portable Ram,4;Saddlebags,4";
+        let uncommonlist="Amulet,5;Chain (10 feet),5;Chest,5;Cobbler\'s Tools,5;Costume Clothes,5;Emblem,5;Handaxe,5;Healer\'s Kit,5;Herbalism Kit,5;Hooded Lantern,5;Hunting Trap,5;Leatherworker\'s Tools,5;Linen (1 sq. yd.),5;Mace,5;Merchant\'s Scale,5;Six person Tent,5;Pack Saddle,5;Padded Armor,5;Perfume (vial),5;Pike,5;Reliquary,5;Signet Ring,5;Silver,5;Sinda berries (10),5;Staff,5;Steel Mirror,5;Trident,5;War Pick,5;Wooden Staff,5;Drum,6;Carpenter\'s Tools,8;Donkey,8;Mule,8;Battleaxe,10;Blowgun,10;Bullseye Lantern,10;Calligrapher\'s Supplies,10;Clothing (cold weather),10;Cow,10;Crystal,10;Explorer\'s Pack,10;Fine Wine (Bottle),10;Flail,10;Hide Armor,10;Ink (1-ounce bottle),10;Lance,10;Leather Armor,10;Lock,10;Mason\'s Tools,10;Maul,10;Painter\'s Supplies,10;Potter\'s Tools,10;Riding Saddle,10;Rod,10;Shield,10;Shortsword,10;Silk (1 sq. yd.),10;Silk Rope (50 feet),10;Wand,10;Yew Wand,10;Zabou,10;Dungeoneer\'s Pack,12;Pan Flute,12;Cart,15;Cartographer\'s Tools,15;Fine Clothes,15;Forgery Kit,15;Longsword,15;Morningstar,15;Ox,15;Saffron,15;Warhammer,15;Burglar\'s Pack,16;Priest\'s Pack,19;Brewer\'s Supplies,20;Dogsled,20;Glaive,20;Halberd,20;Military Saddle,20;Orb,20;Sled,20;Smith\'s Tools,20;Acid (vial),25;Book,25;Climber\'s Kit,25;Component Pouch,25;Disguise Kit,25;Dulcimer,25;Holy Water (flask),25;Hourglass,25;Jeweler\'s Tools,25;Light Crossbow,25;Navigator\'s Tools,25;Rapier,25;Scimitar,25;Shortbow,25;Thieves\' Tools,25;Wildroot,25;Yarting,25;Bagpipes,30;Glassblower\'s Tools,30;Greataxe,30;Lyre,30;Ring Mail,30;Pony,30;Viol,30;Willowshade Oil,30;Monster Hunter\'s Pack,33;Lute,35;Wagon,35;Diplomat\'s Pack,39;Entertainer\'s Pack,40;Scholar\'s Pack,40;Studded Leather Armor,45";
+        let rarelist="Alchemist\'s Fire (Flask),50,Alchemist\'s Supplies,50;Antitoxin (vial),50;Axe Beak,50;Camel,50;Canoe,50;Chain Shirt,50;Draft Horse,50;Gold,50;Greatsword,50;Heavy Crossbow,50;Longbow,50;Olisuba Leaf,50;Poisoner\'s Kit,50;Rowboat,50;Ryath Root,50;Scale Mail,50;Sled Dog,50;Spellbook,50;Tinker\'s Tools,50;Exotic Saddle,60;Chain Mail,75;Hand Crossbow,75;Riding Horse,75;Spiked Armor,75;Basic Potion (vial),100;Silvered Weapon,100;Silvered Ammunition (10),100;Carriage,100;Double-Bladed Scimitar,100;Magnifying Glass,100;Muroosa Balm,100;Pride Silk,100;Assassin\'s Blood,Soothsalts,150;Truth Serum,150;Oversized Longbow,150;Oversized Arrow (20),3";
+        let veryrarelist="Blight Ichor,200;Carrion Crawler Mucus,200;Drow Poison,200;Elephant,200;Serpent Venom,200;Splint Armor,200;Chariot,250;Malice,250;Pale Tincture,250;Black Sap,300;Essence of Ether,300;Breastplate,400;Moorbounder,400;Oil of Taggit,400;Warhorse,400;Burnt Othur Fumes,500;Platinum,500;Pride Silk Outfit,500;Vial of Stardust,500;Torpor,600;Half Plate Armor,750";
+        let legendarylist="Adamantine Bar,1000;Spyglass,1000;Wyvern Poison,1200;Midnight Tears,1500;Plate Armor,1500;Purple Worm Poison,2000;Keelboat,3000;Longship,10000;Airship,20000;Warship,25000;Galley,30000;Skyship,100000";
         for (let i=0;i<amount;i++) {
             rand=randomInteger(100);
             switch (rare) {
@@ -3964,19 +3974,21 @@ var ItemStore = ItemStore || (function() {
                     rarity="legendary";
                 break;
             }
-            mundaneList=mundaneList.split(";");
-            rand=randomInteger(mundaneList.length);
-            let props;
+            list=mundaneList.split(";");
+            rand=randomInteger(list.length);
+            let stuff=String(list);
+            stuff=stuff.split(',');
+            let name=stuff[0];
+            let price=Number(stuff[1]);
             let found=false;
             if (items[0]==undefined) {
-                props=String(mundaneList[rand]).split(',');
                 items.push(
                     {
-                        name: props[0],
+                        name: name,
                         desc: "Misc Item ("+rarity+");",
                         mods: "Item Type: Item",
                         props: "",
-                        price: Number(props[1]),
+                        price: price,
                         weight: 0,
                         amount: 1,
                         sellam: 1
@@ -3984,20 +3996,19 @@ var ItemStore = ItemStore || (function() {
                 );
             } else {
                 for (let j=0;j<items.length;j++) {
-                    if (items[j].name==mundaneList[rand-1].name) {
+                    if (items[j].name==name) {
                         items[j].amount++;
                         found=true;
                     }
                 }
-                props=String(mundaneList[rand-1]).split(',');
                 if (found==false) {
                     items.push(
                         {
-                            name: props[0],
+                            name: name,
                             desc: "Mundane Item ("+rarity+");",
                             mods: "Item Type: Item",
                             props: "",
-                            price: Number(props[1]),
+                            price: price,
                             weight: 0,
                             amount: 1,
                             sellam: 1
@@ -4012,8 +4023,6 @@ var ItemStore = ItemStore || (function() {
     checkRarity = function(minrare,maxrare) {
         minrare=minrare.toLowerCase();
         maxrare=maxrare.toLowerCase();
-        log("Check Rarity minrare: "+minrare);
-        log("Check Rarity maxrare: "+maxrare);
         let rarity=[];
         if (minrare=="uncommon") {
             if (maxrare=="common") {
@@ -4151,7 +4160,7 @@ var ItemStore = ItemStore || (function() {
                 num=i;
             }
         }
-        state.store[i].inv=shop.inv;
+        state.store[num].inv=shop.inv;
         sendChat("Item Store","/w gm Inventory of Store \""+store+"\" has been reset!");
     },
 
@@ -5005,6 +5014,8 @@ var ItemStore = ItemStore || (function() {
     
     resetStores = function() {
         setDefaults();
+        setBasics();
+        setItemDefaults();
         sendChat("Item Store","/w gm Reset all Stores!");
     },
     
