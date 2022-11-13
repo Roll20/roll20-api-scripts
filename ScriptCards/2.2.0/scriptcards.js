@@ -25,7 +25,7 @@ const ScriptCards = (() => { // eslint-disable-line no-unused-vars
 	*/
 
 	const APINAME = "ScriptCards";
-	const APIVERSION = "2.2.0e";
+	const APIVERSION = "2.2.0f";
 	const APIAUTHOR = "Kurt Jaegers";
 	const debugMode = false;
 
@@ -4144,7 +4144,7 @@ const ScriptCards = (() => { // eslint-disable-line no-unused-vars
 		outputLine = outputLine.replace(/\[h1(.*?)\]/gi, `<h1 ${FillTemplateStyle("h1style", cardParameters, raw)} $1>`);
 		outputLine = outputLine.replace(/\[\/h1\]/gi, `</h1>`);
 		outputLine = outputLine.replace(/\[h2(.*?)\]/gi, `<h2 ${FillTemplateStyle("h2style", cardParameters, raw)} $1>`);
-		outputLine = outputLine.replace(/\[\/h1\]/gi, `</h2>`);
+		outputLine = outputLine.replace(/\[\/h2\]/gi, `</h2>`);
 		outputLine = outputLine.replace(/\[h3(.*?)\]/gi, `<h3 ${FillTemplateStyle("h3style", cardParameters, raw)} $1>`);
 		outputLine = outputLine.replace(/\[\/h3\]/gi, `</h3>`);
 		outputLine = outputLine.replace(/\[h4(.*?)\]/gi, `<h4 ${FillTemplateStyle("h4style", cardParameters, raw)} $1>`);
