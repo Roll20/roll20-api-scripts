@@ -25,7 +25,7 @@ const ScriptCards = (() => { // eslint-disable-line no-unused-vars
 	*/
 
 	const APINAME = "ScriptCards";
-	const APIVERSION = "2.2.0d";
+	const APIVERSION = "2.2.0e";
 	const APIAUTHOR = "Kurt Jaegers";
 	const debugMode = false;
 
@@ -122,6 +122,7 @@ const ScriptCards = (() => { // eslint-disable-line no-unused-vars
 		disableparameterexpansion: "0",
 		disablerollprocessing: "0",
 		disableattributereplacement: "0",
+		attemptattributeparsing: "0",
 		disableinlineformatting: "0",
 		executionlimit: "40000",
 		deferralcharacter: "^",
@@ -3076,7 +3077,7 @@ const ScriptCards = (() => { // eslint-disable-line no-unused-vars
 					}
 
 					subtitle = processInlineFormatting(subtitle, cardParameters, (cardParameters.overridetemplate.toLowerCase() !== "none"));
-
+					
 					var cardOutput;
 					var gmoutput;
 					if (gmonlyLines.length > 0) {
@@ -3154,7 +3155,7 @@ const ScriptCards = (() => { // eslint-disable-line no-unused-vars
 						}
 						cardOutput = boxCode + titleCode + cardParameters.title + textCode;
 						if (subtitle != "") {
-							cardOutput += `<div align=center>${subtitle}</div>`
+							cardOutput += `<div align=center ${FillTemplateStyle("subtitlestyle", cardParameters, true)}> ${subtitle}</div>` 
 						}
 						for (var x = 0; x < outputLines.length; x++) {
 							cardOutput += bareoutputLines[x];
@@ -3551,6 +3552,9 @@ const ScriptCards = (() => { // eslint-disable-line no-unused-vars
 								character.get(attrName, function (a) {
 									attribute = a;
 								});
+							}
+							if (cardParameters.attemptattributeparsing != 0) {
+								attribute = ParseCalculatedAttribute(attribute, character)
 							}
 						}
 						if (token == undefined && character == undefined) {
@@ -4131,10 +4135,22 @@ const ScriptCards = (() => { // eslint-disable-line no-unused-vars
 		outputLine = outputLine.replace(/\[\#([A-Fa-f0-9]{3}|[A-Fa-f0-9]{6})\](.*?)\[\/[\#]\]/g, "<span style='color: #$1;'>$2</span>"); // [#xxx] or [#xxxx]...[/#] for color codes. xxx is a 3-digit hex code
 		outputLine = outputLine.replace(/\[hr(.*?)\]/gi, '<hr style="width:95%; align:center; margin:0px 0px 5px 5px; border-top:2px solid $1;">');
 		outputLine = outputLine.replace(/\[br\]/gi, "<br />");
-		outputLine = outputLine.replace(/\[tr(.*?)\]/gi, "<tr $1>");
+		outputLine = outputLine.replace(/\[tr(.*?)\]/gi, `<tr ${FillTemplateStyle("tablestyle", cardParameters, raw)} $1>`);
 		outputLine = outputLine.replace(/\[\/tr\]/gi, "</tr>");
-		outputLine = outputLine.replace(/\[td(.*?)\]/gi, "<td $1>");
+		outputLine = outputLine.replace(/\[td(.*?)\]/gi, `<td ${FillTemplateStyle("tdstyle", cardParameters, raw)} $1>`);
 		outputLine = outputLine.replace(/\[\/td\]/gi, "</td>");
+		outputLine = outputLine.replace(/\[th(.*?)\]/gi, `<th ${FillTemplateStyle("thstyle", cardParameters, raw)} $1>`);
+		outputLine = outputLine.replace(/\[\/th\]/gi, `</th>`);
+		outputLine = outputLine.replace(/\[h1(.*?)\]/gi, `<h1 ${FillTemplateStyle("h1style", cardParameters, raw)} $1>`);
+		outputLine = outputLine.replace(/\[\/h1\]/gi, `</h1>`);
+		outputLine = outputLine.replace(/\[h2(.*?)\]/gi, `<h2 ${FillTemplateStyle("h2style", cardParameters, raw)} $1>`);
+		outputLine = outputLine.replace(/\[\/h1\]/gi, `</h2>`);
+		outputLine = outputLine.replace(/\[h3(.*?)\]/gi, `<h3 ${FillTemplateStyle("h3style", cardParameters, raw)} $1>`);
+		outputLine = outputLine.replace(/\[\/h3\]/gi, `</h3>`);
+		outputLine = outputLine.replace(/\[h4(.*?)\]/gi, `<h4 ${FillTemplateStyle("h4style", cardParameters, raw)} $1>`);
+		outputLine = outputLine.replace(/\[\/h4\]/gi, `</h4>`);
+		outputLine = outputLine.replace(/\[h5(.*?)\]/gi, `<h5 ${FillTemplateStyle("h5style", cardParameters, raw)} $1>`);
+		outputLine = outputLine.replace(/\[\/h5\]/gi, `</h5>`);
 		outputLine = outputLine.replace(/\[t(.*?)\]/gi, "<table $1>");
 		outputLine = outputLine.replace(/\[\/t\]/gi, "</table>");
 		outputLine = outputLine.replace(/\[p\]/gi, "<p>");
@@ -5121,7 +5137,7 @@ const ScriptCards = (() => { // eslint-disable-line no-unused-vars
 				if (muleTemplates) {
 					for (var x = 0; x < muleTemplates.length; x++) {
 						var tempName = muleTemplates[x].get("name")
-						templates[tempName] = {}
+						templates[tempName] = templates[tempName] || {}
 						var templateText = muleTemplates[x].get("action")
 						var templateLines = templateText.split("||")
 						for (var i = 0; i < templateLines.length; i++) {
@@ -5135,6 +5151,16 @@ const ScriptCards = (() => { // eslint-disable-line no-unused-vars
 								if (pieces[0] == 'buttonwrapper') { templates[tempName].buttonwrapper = pieces[1] }
 								if (pieces[0] == 'buttonstyle') { templates[tempName].buttonstyle = pieces[1] }
 								if (pieces[0] == 'footer') { templates[tempName].footer = pieces[1] }
+								if (pieces[0] == 'tablestyle') { templates[tempName].tablestyle = pieces[1] }
+								if (pieces[0] == 'thstyle') { templates[tempName].thstyle = pieces[1] }
+								if (pieces[0] == 'tdstyle') { templates[tempName].tdstyle = pieces[1] }
+								if (pieces[0] == 'trstyle') { templates[tempName].trstyle = pieces[1] }
+								if (pieces[0] == 'subtitlestyle') { templates[tempName].subtitlestyle = pieces[1] }
+								if (pieces[0] == 'h1style') { templates[tempName].h1style = pieces[1] }
+								if (pieces[0] == 'h2style') { templates[tempName].h2style = pieces[1] }
+								if (pieces[0] == 'h3style') { templates[tempName].h3style = pieces[1] }
+								if (pieces[0] == 'h4style') { templates[tempName].h4style = pieces[1] }
+								if (pieces[0] == 'h5style') { templates[tempName].h5style = pieces[1] }
 							}
 						}
 					}
@@ -5144,6 +5170,34 @@ const ScriptCards = (() => { // eslint-disable-line no-unused-vars
 			log("ScriptCards: Error parsing Tempates Mule. Mule templates may not be available")
 		}
 		log(`ScriptCards: ${Object.keys(templates).length} Templates loaded`);
+	}
+
+	function ParseCalculatedAttribute(attribute, character) {
+		while (attribute.match(/\@\{(.*?)\}/g) != null) {
+			var thisMatch = attribute.match(/\@\{(.*?)\}/g)[0];
+			var replacement = "";
+			try {
+				replacement = getAttrByName(character.id, thisMatch.replace("@{", "").replace("}", ""), "current");				
+			} catch { 
+				log(`Failure looking up attribute ${thisMatch}`)
+			}
+			attribute = attribute.replace(thisMatch, replacement);
+		}
+		attribute = attribute.replace(/floor\((.*?)\)/g, "$1 {FLOOR}"); // Remove double square brackets
+		attribute = attribute.replace(/ceil\((.*?)\)/g, "$1 {CEIL}"); // Remove double square brackets
+		attribute = attribute.replace(/\[\[(.*?)\]\]/g, "$1"); // Remove double square brackets
+		attribute = attribute.replace(/\((.*?)\)/g, "$1"); // Remove double square brackets
+		return attribute;
+	}
+
+	function FillTemplateStyle(piece, cardParameters, raw) {
+		if (!raw) { return "" }
+		if (cardParameters.overridetemplate == "none") { return "" }
+		if (templates[cardParameters.overridetemplate][piece]) {
+			return `style='${templates[cardParameters.overridetemplate][piece]}'`
+		} else { 
+			return "" 
+		}
 	}
 
 	return {}
