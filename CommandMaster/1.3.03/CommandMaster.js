@@ -1076,18 +1076,14 @@ var CommandMaster = (function() {
 	 
 	var setCreatureAttrs = function( charCS, creature, selected ) {
 		
-		log('setCreatureAttrs: called');
-		let raceObj = abilityLookup( fields.RaceDB, creature );
+		let raceObj = abilityLookup( fields.RaceDB, creature, charCS, true );
 		if (!raceObj.obj) return;
 		let raceData = raceObj.data(/}}\s*?racedata\s*?=\s*\[(.*?)\]{{/im);
 		if (!raceData || !raceData[0]) return;
-		log('setCreatureAttrs: raceData[0][0]='+raceData[0][0]+', type '+typeof raceData[0][0]);
 		raceData = parseData( raceData[0][0], reClassSpecs );
 		if (!raceData.cattr) return;
-		log('setCreatureAttrs: cattr= '+raceData.cattr);
 		let attrData = parseData( raceData.cattr+',', reAttr );
 		let hd = attrData.hd.match(/(\d+)(?:d\d+)?(\+\d+|\-\d+)?/i);
-		log('setCreatureAttrs: intel='+calcAttr(attrData.intel)+', cac='+calcAttr(attrData.cac)+', hd='+hd+', attk1='+parseStr(attrData.attk1)+', attk2='+parseStr(attrData.attk2));
 		setAttr( charCS, fields.Monster_int, calcAttr(attrData.intel) );
 		setAttr( charCS, fields.MonsterAC, calcAttr(attrData.cac) );
 		setAttr( charCS, fields.Monster_mov, attrData.mov+(attrData.fly ? ', FL'+attrData.fly : '') );
