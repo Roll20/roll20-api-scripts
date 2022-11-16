@@ -1,0 +1,13 @@
+{
+  "name": "libTable",
+  "script": "libTable.js",
+  "version": "1.0.0",
+  "description": "libTable provides an easy interface for interacting with rollable table objects. The rows of a table can be returned as an object keyed by the row name, keyed on a 1-for-1 index, keyed on a weighted index (where a weight of 3 becomes 3 entries of the same data), keyed on an open-ended index (utilizing >, <, >=, <=, or ranges), or an object that contains all of this information. Pass in a rollabletable name or a rollabletable object to the exposed function.",
+  "authors": "timmaugh",
+  "roll20userid": "5962076",
+  "useroptions": [],
+  "dependencies": [],
+  "modifies": [],
+  "conflicts": [],
+  "previousversions": []
+}
