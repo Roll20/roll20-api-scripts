@@ -17,7 +17,7 @@ let Supernotes_Templates = {
         titlecode: `<div style='font-weight:bold; color:#fff; background-color:#404040; margin-right:3px; padding:3px;'>`,
         textcode: "</div><div><div style='padding:3px;'>",
         buttonwrapper: `<div style='display:block; margin-top:5px'>`,
-        buttonstyle: `style='display:inline-block; color:#ce0f69; background-color: transparent;padding: 0px; border: none'`,
+        buttonstyle: `style='display:inline-block; color:#ce0f69 !important; background-color: transparent;padding: 0px; border: none'`,
         playerbuttonstyle: `style='display:inline-block; color:#ce0f69; background-color: transparent;padding: 0px; border: none;'`,
         buttondivider: ' | ',
         handoutbuttonstyle: `style='display:inline-block; color:#ce0f69; background-color: transparent;padding: 0px; border: none;'`,
@@ -83,6 +83,33 @@ let Supernotes_Templates = {
         handoutbuttonstyle: `style='display:inline-block; color:#7e2d40; background-color: transparent;padding: 0px; border: none'`,
         footer: ""
     },
+    //text-shadow: 0px 0px 2px #b1a098, 0px 0px 2px #b1a098, 2px 2px 3px #000; WESTERN DROP SHADOW
+
+    dragon: {
+        boxcode: `<div style='color: #000; border: 1px solid #b5ac89; box-shadow: 2px 2px 4px #000, 0px 0px 20px 0px #d9bea0 inset; background-image: url(https://i.imgur.com/YoWsOow.jpg); background-size: auto; background-repeat: repeat-y;  background-color: #e6daae; display: block; text-align: left; font-size: 14px; line-height: 16px;padding: 12px 10px 8px 10px; margin-bottom: 2px; font-family: ""Times New Roman", serif; white-space: pre-wrap;'>`,
+        titlecode: `<div style='font-weight:bold; color: #0e3365; text-transform: uppercase; background-color:#transparent; margin-bottom:2px;  border-bottom: 2px solid #0e3365; padding:3px 3ps 0px 3px;font-size: 20px; font-family: Luminari,"times new roman", times, baskerville, serif; text-align:right'>`,
+        textcode: `</div><div style='padding:3px; margin-bottom:0px; font-family: Georgia, serif; line-height: 19px;'>`,
+        buttonwrapper: `<div style='display:block; margin-top:14px ;text-align:center;font-family: Luminari,"times new roman"'>`,
+        buttonstyle: `style='display:inline-block; color:#0e3365; background-color: transparent;padding: 0px; border: none'`,
+        playerbuttonstyle: `style='display:inline-block; color: #0e3365; font-size:14px; background-color: transparent;padding: 0px; border: none'`,
+        buttondivider: " &nbsp;&bull;&nbsp; ", //`<img style='margin:0px 4px 0px 4px; width:20px;' src='https://i.imgur.com/x41nAwF.png'>`,
+        handoutbuttonstyle: `style='display:inline-block; color: #0e3365; font-size:14px; background-color: transparent;padding: 0px; border: none'`,
+        footer: ""
+    },
+
+
+
+    wizard: {
+        boxcode: `<div style='color: #000; border: 1px solid #b5ac89; box-shadow: 2px 2px 4px #000, 0px 0px 20px 0px #d9bea0 inset; background-image: url(https://i.imgur.com/fYJp37l.jpg); background-repeat: repeat; background-color: #e6daae; display: block; text-align: left; font-size: 14px; padding: 12px 10px 8px 10px; margin-bottom: 2px; font-family: "Times New Roman", serif; white-space: pre-wrap;'>`,
+        titlecode: `<div style='font-weight:bold; color: #58170D; font-variant: small-caps; background-color:#transparent; margin-bottom:0px;  border-bottom: 2px solid #c9ad6a; padding:3px;font-size: 22px; font-family: "times new roman", times, baskerville, garamond, serif; text-align:left'>`,
+        textcode: `</div><div style='padding:3px; margin-bottom:0px; font-family: Georgia, serif; line-height: 19px;'>`,
+        buttonwrapper: `<div style='display:block; border-top: solid 1px #000; background-color: #E0E5C1; margin-top:12px ;text-align:center;font-family:arial, sans-serif'>`,
+        buttonstyle: `style='display:inline-block; color:#58170D; background-color: transparent;padding: 0px; border: none'`,
+        playerbuttonstyle: `style='display:inline-block; color: #000; font-size:12px; background-color: transparent;padding: 0px; border: none'`,
+        buttondivider: " &nbsp;&bull;&nbsp; ", //`<img style='margin:0px 4px 0px 4px; width:20px;' src='https://i.imgur.com/x41nAwF.png'>`,
+        handoutbuttonstyle: `style='display:inline-block; color: #000; font-size:12px; background-color: transparent;padding: 0px; border: none'`,
+        footer: ""
+    },
 
     apoc: {
         boxcode: `<div style='color: 000; background-image: url(https://i.imgur.com/vql1NqV.jpg); background-size: 100%; background-repeat: repeat-y; background-color: transparent; display: block; box-shadow: 0 0 3px #fff; text-align: left; font-size: 14px; padding: 0px; margin-bottom: 2px; font-family: Monaco,"Courier New", monospace; white-space: pre-wrap;'>`,
@@ -119,6 +146,7 @@ let Supernotes_Templates = {
         handoutbuttonstyle: `style='display:inline-block; color:#056b20; font-size:12px; font-weight:normal; background-color: transparent; padding: 0px; border: none;'`,
         footer: ""
     },
+
 
     crt: {
         boxcode: `<div style='color: #0eb350; font-weight: bold; border: 1px solid #0eb350; border-radius: 12px; background-image: url("https://i.imgur.com/DTYvEus.png"); background-image: repeat; background-color: #0a2b07; box-shadow: 0 0 3px #000; display: block; text-align: left; font-size: 18px; padding: 5px; margin-bottom: 2px; font-family: Monaco, monospace; white-space: pre-wrap;'>`,
@@ -184,7 +212,7 @@ on('ready', () => {
 
     const decodeUnicode = (str) => str.replace(/%u[0-9a-fA-F]{2,4}/g, (m) => String.fromCharCode(parseInt(m.slice(2), 16)));
 
-    const version = '0.2.0';
+    const version = '0.2.1';
     log('Supernotes v' + version + ' is ready! --offset ' + API_Meta.Supernotes.offset + 'To set the template of choice or to toggle the send to players option, Use the command !gmnote --config');
 
     on('chat:message', function(msg) {
@@ -262,6 +290,12 @@ on('ready', () => {
                             case "western":
                                 chosenTemplate = templates.western;
                                 break;
+                            case "dragon":
+                                chosenTemplate = templates.dragon;
+                                break;
+                            case "wizard":
+                                chosenTemplate = templates.wizard;
+                                break;
                             case "steam":
                                 chosenTemplate = templates.steam;
                                 break;
@@ -289,17 +323,25 @@ on('ready', () => {
                         //need to replace markdown hyperlinks without replacing markdown image codes.
 
                         message = ((undefined !== message) ? message.replace(/\[([^\]]*?)\]\(([^\)]*?)\)(?<!\.jpg\)|\.png\)|\.gif\)|\.webm\)|\.jpeg\))/gim, "<a " + chosenTemplate.buttonstyle + "href='$2'>$1</a>").replace(/<p>/gm, "<div>").replace(/<\/p>/gm, "</div>").replace("padding:5px'></div><div>", "padding:5px'>") : "");
+                        message = message.replace('<a href=\"http://journal.roll20.net','<a '+chosenTemplate.buttonstyle+ ' href=\"http://journal.roll20.net').replace('<a href=\"https://app.roll20.net','<a '+chosenTemplate.buttonstyle+ ' href=\"https://app.roll20.net');
 
 
-                        return sendChat(whom, messagePrefix + chosenTemplate.boxcode + chosenTemplate.titlecode + whom + chosenTemplate.textcode + message + chosenTemplate.buttonwrapper + playerButton + chosenTemplate.buttondivider + handoutButton + '</div></div></div>' + chosenTemplate.footer + '</div>');
+                        log("message = "+message);
 
+                        if (command === '!pcnote') {
+                            return sendChat(whom, messagePrefix + chosenTemplate.boxcode + chosenTemplate.titlecode + whom + chosenTemplate.textcode + message + '</div></div>' + chosenTemplate.footer + '</div>');
+
+                        } else {
+
+                            return sendChat(whom, messagePrefix + chosenTemplate.boxcode + chosenTemplate.titlecode + whom + chosenTemplate.textcode + message + chosenTemplate.buttonwrapper + playerButton + chosenTemplate.buttondivider + handoutButton + '</div></div></div>' + chosenTemplate.footer + '</div>');
+                        }
 
 
 
                     } else {
-                        message = ((undefined !== message) ? message.replace(/\[([^\]]*?)\]\(([^\)]*?)\)(?<!\.jpg\)|\.png\)|\.gif\)|\.webm\)|\.jpeg\))/gim, "<a " + buttonstyle + "href='$2'>$1</a>").replace(/<p>/gm, "<div>").replace(/<\/p>/gm, "</div>").replace("padding:5px'></div><div>", "padding:5px'>") : "");
                         playerButton = ((undefined !== playerButton) ? playerButton.replace(/\[([^\]]*?)\]\(([^\)]*?)\)(?<!\.jpg\)|\.png\)|\.gif\)|\.webm\)|\.jpeg\))/gim, "<a " + buttonstyle + "href='$2'>$1</a>") : "");
                         handoutButton = ((undefined !== handoutButton) ? handoutButton.replace(/\[([^\]]*?)\]\(([^\)]*?)\)(?<!\.jpg\)|\.png\)|\.gif\)|\.webm\)|\.jpeg\))/gim, "<a " + buttonstyle + "href='$2'>$1</a>") : "");
+
                         return sendChat(whom, messagePrefix + '&{template:' + template + '}{{' + title + '=' + whom + '}} {{' + theText + '=' + message + playerButton + handoutButton + '}}');
                     }
 
