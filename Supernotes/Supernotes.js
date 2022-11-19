@@ -387,7 +387,7 @@ on('ready', () => {
                                 if (notes.includes('!report')) {
                                     notes = notes.split('<!---End Report--->')[0] + '<!---End Report--->';
                                 } else {
-                                    notes = notes.split('<HR>')[0] + '<!---End Report--->';
+                                    notes = notes.split(/<hr>/i)[0] + '<!---End Report--->';
                                 }
                             } else {
                                 playerButton = '';
