@@ -621,11 +621,98 @@ const ZeroFrame = (() => { //eslint-disable-line no-unused-vars
         }
     };
 
+    const checkDependencies = (deps) => {
+        /* pass array of objects like
+            { name: 'ModName', version: '#.#.#' || '', mod: ModName || undefined, checks: [ [ExposedItem, type], [ExposedItem, type] ] }
+        */
+        const dependencyEngine = (deps) => {
+            const versionCheck = (mv, rv) => {
+                let modv = [...mv.split('.'), ...Array(4).fill(0)].slice(0, 4);
+                let reqv = [...rv.split('.'), ...Array(4).fill(0)].slice(0, 4);
+                return reqv.reduce((m, v, i) => {
+                    if (m.pass || m.fail) return m;
+                    if (i < 3) {
+                        if (parseInt(modv[i]) > parseInt(reqv[i])) m.pass = true;
+                        else if (parseInt(modv[i]) < parseInt(reqv[i])) m.fail = true;
+                    } else {
+                        // all betas are considered below the release they are attached to
+                        if (reqv[i] === 0 && modv[i] === 0) m.pass = true;
+                        else if (modv[i] === 0) m.pass = true;
+                        else if (reqv[i] === 0) m.fail = true;
+                        else if (parseInt(modv[i].slice(1)) >= parseInt(reqv[i].slice(1))) m.pass = true;
+                    }
+                    return m;
+                }, { pass: false, fail: false }).pass;
+            };
+
+            let result = { passed: true, failures: {}, optfailures: {} };
+            deps.forEach(d => {
+                let failObj = d.optional ? result.optfailures : result.failures;
+                if (!d.mod) {
+                    if (!d.optional) result.passed = false;
+                    failObj[d.name] = 'Not found';
+                    return;
+                }
+                if (d.version && d.version.length) {
+                    if (!(API_Meta[d.name].version && API_Meta[d.name].version.length && versionCheck(API_Meta[d.name].version, d.version))) {
+                        if (!d.optional) result.passed = false;
+                        failObj[d.name] = `Incorrect version. Required v${d.version}. ${API_Meta[d.name].version && API_Meta[d.name].version.length ? `Found v${API_Meta[d.name].version}` : 'Unable to tell version of current.'}`;
+                        return;
+                    }
+                }
+                d.checks.reduce((m, c) => {
+                    if (!m.passed) return m;
+                    let [pname, ptype] = c;
+                    if (!d.mod.hasOwnProperty(pname) || typeof d.mod[pname] !== ptype) {
+                        if (!d.optional) m.passed = false;
+                        failObj[d.name] = `Incorrect version.`;
+                    }
+                    return m;
+                }, result);
+            });
+            return result;
+        };
+        let depCheck = dependencyEngine(deps);
+        let failures = '', contents = '', msg = '';
+        if (Object.keys(depCheck.optfailures).length) { // optional components were missing
+            failures = Object.keys(depCheck.optfailures).map(k => `&bull; <code>${k}</code> : ${depCheck.optfailures[k]}`).join('<br>');
+            contents = `<span style="font-weight: bold">${apiproject}</span> utilizies one or more other scripts for optional features, and works best with those scripts installed. You can typically find these optional scripts in the 1-click Mod Library:<br>${failures}`;
+            msg = `<div style="width: 100%;border: none;border-radius: 0px;min-height: 60px;display: block;text-align: left;white-space: pre-wrap;overflow: hidden"><div style="font-size: 14px;font-family: &quot;Segoe UI&quot;, Roboto, Ubuntu, Cantarell, &quot;Helvetica Neue&quot;, sans-serif"><div style="background-color: #000000;border-radius: 6px 6px 0px 0px;position: relative;border-width: 2px 2px 0px 2px;border-style:  solid;border-color: black;"><div style="border-radius: 18px;width: 35px;height: 35px;position: absolute;left: 3px;top: 2px;"><img style="background-color: transparent ; float: left ; border: none ; max-height: 40px" src="${typeof apilogo !== 'undefined' ? apilogo : 'https://i.imgur.com/kxkuQFy.png'}"></div><div style="background-color: #c94d4d;font-weight: bold;font-size: 18px;line-height: 36px;border-radius: 6px 6px 0px 0px;padding: 4px 4px 0px 43px;color: #ffffff;min-height: 38px;">MISSING MOD DETECTED</div></div><div style="background-color: white;padding: 4px 8px;border: 2px solid #000000;border-bottom-style: none;color: #404040;">${contents}</div><div style="background-color: white;text-align: right;padding: 4px 8px;border: 2px solid #000000;border-top-style: none;border-radius: 0px 0px 6px 6px"></div></div></div>`;
+            sendChat(apiproject, `/w gm ${msg}`);
+        }
+        if (!depCheck.passed) {
+            failures = Object.keys(depCheck.failures).map(k => `&bull; <code>${k}</code> : ${depCheck.failures[k]}`).join('<br>');
+            contents = `<span style="font-weight: bold">${apiproject}</span> requires other scripts to work. Please use the 1-click Mod Library to correct the listed problems:<br>${failures}`;
+            msg = `<div style="width: 100%;border: none;border-radius: 0px;min-height: 60px;display: block;text-align: left;white-space: pre-wrap;overflow: hidden"><div style="font-size: 14px;font-family: &quot;Segoe UI&quot;, Roboto, Ubuntu, Cantarell, &quot;Helvetica Neue&quot;, sans-serif"><div style="background-color: #000000;border-radius: 6px 6px 0px 0px;position: relative;border-width: 2px 2px 0px 2px;border-style:  solid;border-color: black;"><div style="border-radius: 18px;width: 35px;height: 35px;position: absolute;left: 3px;top: 2px;"><img style="background-color: transparent ; float: left ; border: none ; max-height: 40px" src="${typeof apilogo !== 'undefined' ? apilogo : 'https://i.imgur.com/kxkuQFy.png'}"></div><div style="background-color: #c94d4d;font-weight: bold;font-size: 18px;line-height: 36px;border-radius: 6px 6px 0px 0px;padding: 4px 4px 0px 43px;color: #ffffff;min-height: 38px;">MISSING MOD DETECTED</div></div><div style="background-color: white;padding: 4px 8px;border: 2px solid #000000;border-bottom-style: none;color: #404040;">${contents}</div><div style="background-color: white;text-align: right;padding: 4px 8px;border: 2px solid #000000;border-top-style: none;border-radius: 0px 0px 6px 6px"></div></div></div>`;
+            sendChat(apiproject, `/w gm ${msg}`);
+            return false;
+        }
+        return true;
+    };
+
+
     on('chat:message', handleInput);
 
     on('ready', () => {
         versionInfo();
         logsig();
+        let reqs = [
+            {
+                name: 'libInline',
+                version: `1.0.4`,
+                mod: typeof libInline !== 'undefined' ? libInline : undefined,
+                checks: [
+                    ['getRollData', 'function'],
+                    ['getDice', 'function'],
+                    ['getValue', 'function'],
+                    ['getTables', 'function'],
+                    ['getParsed', 'function'],
+                    ['getRollTip', 'function']
+                ]
+            }
+        ];
+        if (!checkDependencies(reqs)) return;
+
     });
 
     return {
