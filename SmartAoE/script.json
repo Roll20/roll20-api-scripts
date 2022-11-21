@@ -1,7 +1,7 @@
 {
   "name": "SmartAoE",
   "script": "SmartAoE.js",
-  "version": "0.25",
+  "version": "0.28",
   "description": "Have you ever overlayed a cone, line, or circle template on a map and wondered if that square that is just barely covered should count as 'in'? Sure, there are pre-made grid templates out there, but you are usually limited to 90/45deg orientations. The idea behind this script is to provide flexibility in casting angles (to align just the right spot before triggering) and a means for consistent ruling of these cases. The script can be used with either just basic functionality to simply draw AoE regions, or can utilize a host of subcommands to define damage, saving throws, chat output, etc., detecting creatures within affected squares and either rolling saving throws and/or applying damage and condition markers automatically (ala GroupCheck or similar script), or as a deferred action by clicking buttons on the chat interface.\r\r**WIKI DOCUMENTATION**\rFull documentation can be found on the wiki page [here](https://wiki.roll20.net/SmartAoE)\r\r**FORUM LINK:**\rFor more information and discussion please visit the forum thread [here] (https://app.roll20.net/forum/post/10485883/script-smartaoe-graphical-interface-for-implementing-aoes-on-gridded-maps/?pageforid=10485883#post-10485883)",
   "authors": "David M.",
   "roll20userid": 3987469,
@@ -18,5 +18,9 @@
     "player.displayname": "read"
   },
   "conflicts": [],
-  "previousversions": []
+  "previousversions": [
+    "0.25",
+    "0.26",
+    "0.27"
+  ]
 }
