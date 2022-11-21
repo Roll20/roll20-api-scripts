@@ -14,11 +14,6 @@ API_Meta.TableToTable = { offset: Number.MAX_SAFE_INTEGER, lineCount: -1 };
     try { throw new Error(''); } catch (e) { API_Meta.TableToTable.offset = (parseInt(e.stack.split(/\n/)[1].replace(/^.*:(\d+):.*$/, '$1'), 10) - (14)); }
 }
 
-// TODO: button to wrap/unwrap image urls as images (for copying/pasting)
-// TODO: button to delete table
-// TODO: button to "reload" processed data as "REPLACE"
-// TODO: help documentation
-
 const TableToTable = (() => { // eslint-disable-line no-unused-vars
     const apiproject = 'TableToTable';
     const apilogo = 'https://i.imgur.com/rqEKJhJ.png';
