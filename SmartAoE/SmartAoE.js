@@ -1,6 +1,6 @@
 const SmartAoE = (() => {
     const scriptName = "SmartAoE";
-    const version = '0.25';
+    const version = '0.28';
     const schemaVersion = '0.1';
     
     var cardParameters = {};
@@ -101,6 +101,50 @@ const SmartAoE = (() => {
         return typeof value === 'number' && isFinite(value);
     }
     
+    //Jukebox function taken from Kurt J.'s Scriptcards script'
+    const playJukeboxTrack = function (trackname, whisperString) {
+		var track = findObjs({ type: 'jukeboxtrack', title: trackname })[0];
+		if (track) {
+			track.set('softstop', false);
+			track.set('playing', true);
+		} else {
+		    sendChat(scriptName, `${whisperString} Error: Jukebox track ${trackname} not found in game`);
+		}
+	}
+	
+	const modifyTurnTracker = function(operation, turnName, turnValue, turnFormula, controlTokID, pageID, linkToToken = true) {
+	    let turnOrder;
+	    if (Campaign().get("turnorder") !== "") {
+			turnOrder = JSON.parse(Campaign().get("turnorder"));
+		} else {
+		    turnOrder = [];
+		}
+		
+	    switch (operation) {
+            case "add":
+    		    //Add custom turn immediately after the current turn.
+    		    //      NOTE: we add an additional parameter "smartaoeid". This is to allow removal of the turn when the controlTok is deleted
+    		    //      We could have used the normal "id" parameter, but the turn tracker won't allow us to override the name if we do so. Defaulting to the name of the controlTok rather than the AoE effect name 
+    		    let newTurn; 
+    		    if (linkToToken) {
+    		        newTurn = {id: '-1', pr: turnValue, custom: turnName, _pageid: pageID, formula: turnFormula, smartaoeid:controlTokID};
+    		    } else {
+    		        newTurn = {id: '-1', pr: turnValue, custom: turnName, _pageid: pageID, formula: turnFormula};
+    		    }
+    	        turnOrder.splice(1,0,newTurn);
+    	        Campaign().set("turnorder", JSON.stringify(turnOrder));
+                break;
+            case "remove":
+                let turnIndex = turnOrder.findIndex(t => t.smartaoeid === controlTokID);
+                if (turnIndex > -1) {
+                    turnOrder.splice(turnIndex,1);
+    	            Campaign().set("turnorder", JSON.stringify(turnOrder));
+                }
+                break;
+            default:
+                break;
+        }
+	}
     
     const buildTitle = function (cardParameters) {
         var subtitle = "";
@@ -222,21 +266,22 @@ const SmartAoE = (() => {
         return output;
     }
     
-    const buildSaveRow = function (imageURL, id, layer, name, success, saveInline1, saveInline2, roll2x, hideforumula, dam, autoApply, bar, markerString, RVI, zeroHPmarker, removeAtZero, cardParameters) {
+    const buildSaveRow = function (imageURL, id, layer, name, success, saveInline1, saveInline2, roll2x, hideforumula, dam, autoApply, bar, markerString, RVI, zeroHPmarker, removeAtZero, cardParameters, whisperString, whisperResults) {
         let result;
         let damString = dam.join('/');
         markerString = markerString.replace(/::/g,'%%');
         zeroHPmarker = zeroHPmarker.replace(/::/g,'%%');
         if (markerString === '') { markerString = 'n/a' }
         if (zeroHPmarker === '') { zeroHPmarker = 'n/a' }
-        let whisperDamageMsg = (layer === 'gmlayer') ? 'true' : 'false';
+        let gmWhisperDamageMsg = (layer === 'gmlayer' || whisperResults) ? 'true' : 'false';
+        
         let removeAtZeroMsg = removeAtZero ? 'true' : 'false';
         let barString = bar.join(',');
         
         //replace some problem characters before creating the !smartapply button action text. These will get un-replaced when triggered
         let tempName = name.replace(/'/g, '%apostrophe%').replace(/`/g, /%backtick%/g);
         
-        let applyDamLink = autoApply ? '' : ` href='!smartapply --args|${id}|"${tempName}"|${barString}|${damString}|${markerString}|${zeroHPmarker}|${removeAtZeroMsg}|${whisperDamageMsg}'`;
+        let applyDamLink = autoApply ? '' : ` href='!smartapply --args|${id}|"${tempName}"|${barString}|${damString}|${markerString}|${zeroHPmarker}|${removeAtZeroMsg}|${gmWhisperDamageMsg}|${whisperString}'`;
         damString = damString.replace('/', ' / ');
         
         let RVI_output = '';
@@ -816,7 +861,7 @@ const SmartAoE = (() => {
         //log(state[scriptName]);
     }
     
-    const makeAoELink = function(controlTokName, controlTokID, aoeType, coneWidth, aoeFloat, instant, forceIntersection, aoeColor, aoeOutlineColor, gridColor, radius, wallWidth, originType, originPt, minGridArea, minTokArea, originTokID, pathIDs, pageID, fxType, saveFormula, saveName, ignoreAttr, ignoreVal, DC, noSave, damageBar, autoApply, damageFormula1, damageFormula2, damageBase1, damageBase2, damageType1, damageType2, rollDamage1, rollDamage2, damageSaveRule, resistanceRule, vulnerableRule, immunityRule, resistAttrs, vulnerableAttrs, immunityAttrs, conditionPass, conditionFail, zeroHPmarker, removeAtZero, hideNames, cardParameters) {
+    const makeAoELink = function(controlTokName, controlTokID, aoeType, coneWidth, aoeFloat, instant, forceIntersection, aoeColor, aoeOutlineColor, gridColor, radius, wallWidth, originType, originPt, minGridArea, minTokArea, originTokID, pathIDs, pageID, fxType, saveFormula, saveName, ignoreAttr, ignoreVal, DC, noSave, damageBar, autoApply, damageFormula1, damageFormula2, damageBase1, damageBase2, damageType1, damageType2, rollDamage1, rollDamage2, damageSaveRule, resistanceRule, vulnerableRule, immunityRule, resistAttrs, vulnerableAttrs, immunityAttrs, conditionPass, conditionFail, zeroHPmarker, removeAtZero, hideNames,  spawnSound, moveSound, triggerSound, deleteSound, cardParameters, whisperString, whisperAll, whisperResults) {
     //const makeAoELink = function(aoeType, aoeColor, radius, originType, originPt, minGridArea, minTokArea, originTokID, controlTokID, pathIDs, pageID, fxType, saveFormula, saveName, DC) {
         //log(originTokID + ',' + controlTokID + ',' + pathIDs + ',' + pageID);
         let pathArr = [];
@@ -855,7 +900,7 @@ const SmartAoE = (() => {
             damageBar: damageBar,
             autoApply: autoApply,
             damageFormula1: damageFormula1, 
-            damageFormula2: damageFormula2, 
+            damageFormula2: damageFormula2,
             damageBase1: damageBase1, 
             damageBase2: damageBase2,
             damageType1: damageType1, 
@@ -874,7 +919,14 @@ const SmartAoE = (() => {
             zeroHPmarker: zeroHPmarker,
             removeAtZero: removeAtZero,
             hideNames: hideNames,
-            cardParameters: cardParameters
+            spawnSound:  spawnSound,
+            moveSound: moveSound,
+            triggerSound: triggerSound,
+            deleteSound: deleteSound,
+            cardParameters: cardParameters,
+            whisperString: whisperString,
+            whisperAll: whisperAll,
+            whisperResults: whisperResults
         };
         
         state[scriptName].links.push(link);
@@ -938,7 +990,7 @@ const SmartAoE = (() => {
         }
     }
     
-    const spawnTokenAtXY =  async function(who, tokenJSON, pageID, spawnX, spawnY, size, controlledby, isDrawing, currentSideNew, numSpawns=1) {
+    const spawnTokenAtXY =  async function(who, tokenJSON, pageID, spawnX, spawnY, size, controlledby, isDrawing, currentSideNew, tooltip, numSpawns=1) {
         //let spawnObj;
         let controlTok;
         let controlTok2;
@@ -959,6 +1011,12 @@ const SmartAoE = (() => {
             baseObj.height = size;
             baseObj.controlledby = controlledby;
             baseObj.isdrawing = isDrawing;
+            baseObj.layer = 'objects';
+            
+            if (tooltip !== '') {
+                baseObj.tooltip = tooltip;
+                baseObj.show_tooltip = true;
+            }
             
             baseObj.imgsrc = getCleanImgsrc(baseObj.imgsrc); //ensure that we're using the thumb.png
             
@@ -2928,7 +2986,7 @@ const SmartAoE = (() => {
         let deg2rad = Math.PI/180;
         let bbRadX;
         let bbRadY;
-        
+       
         let coneEndPts;
         
         let isFlatCone = aoeType==='5econe' ? true : false;
@@ -3385,12 +3443,14 @@ const SmartAoE = (() => {
         let pageGridCenters = [];
         let pageWidth = page.get('width');
         let pageHeight = page.get('height');
-        for (let i=0-pageWidth; i<1.5*pageWidth*(1/pageGridIncrement); i++) {
-            for (let j=0-pageHeight; j<1.5*pageHeight*(1/pageGridIncrement); j++) {
+        
+        for (let i=0-pageWidth; i<2*pageWidth*(1/pageGridIncrement); i++) {
+            for (let j=0-pageHeight; j<2*pageHeight*(1/pageGridIncrement); j++) {
                 pageGridCenters.push(new pt(35*pageGridIncrement+i*70*pageGridIncrement, 35*pageGridIncrement+j*70*pageGridIncrement))
             }
         }
-        //log(pageGridCenters);
+        //log('pageGridCenters');
+        //log(pageGridCenters.length);
         if (page) {
             
             let originPtU = convertPtPixels2Units(originPtPx, pageGridIncrement);
@@ -3699,6 +3759,7 @@ const SmartAoE = (() => {
         if (obj.get('left') === prev.left && obj.get('top') === prev.top) {
             return;
         }
+                
         let pathLocations;
         let newPaths = [];
         let pageGridIncrement;
@@ -3723,6 +3784,12 @@ const SmartAoE = (() => {
         }
         
         if (aoeLinks && obj) {
+            //optional sound fx during move
+            let trackName = aoeLinks.links[0].moveSound;
+            if (trackName !== '') {
+                whisperString = aoeLinks.links[0].whisperString || '';
+            	playJukeboxTrack(trackName, whisperString);
+            }
             updateMapWithAoE(aoeLinks, obj);
         } 
     }
@@ -3731,6 +3798,9 @@ const SmartAoE = (() => {
         let controlToks = [];
         let tokID = obj['id'];
         
+        //Possibly remove a value from the turn tracker
+        modifyTurnTracker('remove', '', '', '', tokID, '');
+                
         let aoeLinks = getAoELinks(obj.get('id'));
         
         if (aoeLinks) {
@@ -3755,11 +3825,15 @@ const SmartAoE = (() => {
                 //state[scriptName].links[index] = [];
                 state[scriptName].links.splice(stateLinkIndex, 1)
                 //log(state[scriptName])
-            
             }  
             controlToks.forEach(id => {
                 removeToken(id);
             });
+            let trackName = aoeLinks.links[0].deleteSound;
+            if (trackName !== '') {
+                let whisperString = aoeLinks.links[0].whisperString || '';
+            	playJukeboxTrack(trackName, whisperString);
+            }
         }
     }
     
@@ -3810,9 +3884,7 @@ const SmartAoE = (() => {
         
         foundInlines.forEach((inline) => {
             index = inline.replace(/\$\[\[/,'').replace(/\]\]/,'')
-            
             str = str.replace(inline, parsedInlines[index].total);
-            
             inlineArr.push(parsedInlines[index]);
         });
         return {text:str, inlines:inlineArr};
@@ -3995,6 +4067,7 @@ const SmartAoE = (() => {
     const processMessagesMaster = function(messages, damageRolls, tokenRolls, aoeLink) {
         //takes all the rolls that were processed thru the Roll20 die roller for all tokens and formats them.
         //   then, we will format the final chat output
+        let whisperString = '';
         let freetext = "";
         let rowData = '';
         if (damageRolls.length > 0) {
@@ -4044,7 +4117,11 @@ const SmartAoE = (() => {
                 
                 let descRow = buildDescRow(aoeLink.cardParameters.descriptiontext, aoeLink.cardParameters)
                 output = output + buildTableBody('', '', descRow, aoeLink.cardParameters);
-                sendChat(scriptName, output);
+                
+                if (aoeLink.whisperAll) {
+                    whisperString = aoeLink.whisperString;
+                }
+                sendChat(scriptName, `${whisperString} ${output}`);
             }
         }
     }
@@ -4115,12 +4192,17 @@ const SmartAoE = (() => {
             returnString = newHP===maxHP ? `Healed ${name} by ${amountHealed} (@Max)` : `Healed ${name} by ${amountHealed}`;
         }
         
+        let dummy;
+        //log('zeroHPmarker')
+        //log(zeroHPmarker)
         if (zeroHPmarker && newHP[bar.length-1]===0) {
-            let dummy = addStatusMarkers(tokID, zeroHPmarker);
+            dummy = addStatusMarkers(tokID, zeroHPmarker);
+        } else if (zeroHPmarker && newHP[bar.length-1]>0) {
+            dummy = removeStatusMarkers(tokID, zeroHPmarker);
         }
         
         if (removeAtZero && newHP===0) {
-            let dummy = removeToken(tokID);
+            dummy = removeToken(tokID);
         } else {
             //grab the previous token settings before setting new ones
             let prevTok = JSON.parse(JSON.stringify(tok));
@@ -4140,6 +4222,9 @@ const SmartAoE = (() => {
     }
     
     const addStatusMarkers = function(tokID, markerString) {
+        if (!markerString) {
+            return;
+        }
         let tok = getObj('graphic', tokID);
         let currentMarkers = tok.get('statusmarkers');
         
@@ -4155,6 +4240,9 @@ const SmartAoE = (() => {
     }
     
     const removeStatusMarkers = function(tokID, markerString) {
+        if (!markerString) {
+            return;
+        }
         let tok = getObj('graphic', tokID);
         let currentMarkers = tok.get('statusmarkers').split(',');
         
@@ -4211,6 +4299,11 @@ const SmartAoE = (() => {
         let gmDamageMessages = [];
         let autoApplyMsg = '';
         let name;   //override for ApplyDamage function
+        let whisperString = '';
+        
+        if (aoeLink.whisperAll) {
+            whisperString = aoeLink.whisperString || '';
+        }
         
         messages.forEach((msgList, j) => {
             const inlinerollData = (msgList[0].inlinerolls || []).map(roll => {
@@ -4343,7 +4436,7 @@ const SmartAoE = (() => {
             if (aoeLink.autoApply) {
                 let damMsg = applyDamage(o.id, name, aoeLink.damageBar, thisDamage, aoeLink.zeroHPmarker, aoeLink.removeAtZero);
                 if (damMsg !== '') { 
-                    if (o.layer === 'gmlayer') {
+                    if (o.layer === 'gmlayer' || aoeLink.whisperResults) {
                         gmDamageMessages.push(damMsg)
                     } else {
                         publicDamageMessages.push(damMsg)
@@ -4351,14 +4444,14 @@ const SmartAoE = (() => {
                 };
             }
             
-            return buildSaveRow(o.pic, o.id, o.layer, name, success, o.styled_1, o.styled_2, o.roll2x, false, thisDamage, aoeLink.autoApply, aoeLink.damageBar, thisMarker, RVI_string, aoeLink.zeroHPmarker, aoeLink.removeAtZero, aoeLink.cardParameters);
+            return buildSaveRow(o.pic, o.id, o.layer, name, success, o.styled_1, o.styled_2, o.roll2x, false, thisDamage, aoeLink.autoApply, aoeLink.damageBar, thisMarker, RVI_string, aoeLink.zeroHPmarker, aoeLink.removeAtZero, aoeLink.cardParameters, whisperString, aoeLink.whisperResults);
         });
         
-        let publicSaveRolls = saveRolls.filter(r => {return r.layer!=='gmlayer'})
+        let publicSaveRolls = saveRolls.filter(r => {return r.layer!=='gmlayer' && !aoeLink.whisperResults})
         		                        .map(e => {return e.output})
                                         .join('');
         
-        let gmSaveRolls = saveRolls.filter(r => {return r.layer==='gmlayer'})
+        let gmSaveRolls = saveRolls.filter(r => {return r.layer==='gmlayer' || aoeLink.whisperResults})
                             		.map(e => {return e.output})
                                     .join('');
 
@@ -4370,9 +4463,10 @@ const SmartAoE = (() => {
         //log(publicOutput);
         
         //public output
-        sendChat(scriptName, publicOutput);
+        sendChat(scriptName, `${whisperString} ${publicOutput}`);
+        
         if (publicDamageMessages.length > 0) {
-            autoApplyMsg = '<br>' + publicDamageMessages.join('<br>');
+            autoApplyMsg = `${whisperString} <br>${publicDamageMessages.join('<br>')}`;
             sendChat(scriptName, autoApplyMsg);
         }
         
@@ -4399,6 +4493,8 @@ const SmartAoE = (() => {
     async function smartAoE_handleInput (msg) {
         var who;
         var whisperString;
+        let whisperAll = false;
+        let whisperResults = false;
         var selectedID;
         var playerID;               //which player called the script. Will determine who gets whispered results 
         let tok;
@@ -4458,6 +4554,7 @@ const SmartAoE = (() => {
         let removeAtZero = false;
         let autoApply = false;
         let aoeFloat = false;
+        let tooltip = '';
         
         let damageSaveRule = '*0.5';
         let resistanceRule = '*0.5';
@@ -4481,6 +4578,16 @@ const SmartAoE = (() => {
         let resourceName = "";
         let resourceCost = 0;
         let resourceAlias = "";
+        
+        let spawnSound = '';
+        let moveSound = '';
+        let triggerSound = '';
+        let deleteSound = '';
+        
+        let turnName = '';
+        let turnValue = 0;
+        let turnFormula = 0;
+        let linkTurnToToken = true;
         
         try {
             //-------------------------------------------------------------------------------
@@ -4578,6 +4685,7 @@ const SmartAoE = (() => {
             //   Applies Damage & Status Markers via chat interaction
             //--------------------------------------------------------------------
             if(msg.type=="api" && msg.content.toLowerCase().indexOf("!smartapply")==0) {
+                /*
                 let player = getObj('player',msg.playerid);
                 if (player) {
                     who = getObj('player',msg.playerid).get('_displayname');
@@ -4585,13 +4693,14 @@ const SmartAoE = (() => {
                 } else {
                     whisperString='';
                 }
+                */
                 
                 //Before parsing, Un-replace any temporary special character replacements made when the button event text was created
                 let args = msg.content.replace(/%apostrophe%/g, '\'').replace(/%backtick%/g, '\`').split(/\s+--args/);
                 if (args.length > 1) {
                     args = args[1].split(/\|/);
                 }
-                
+                log(args)
                 let damageMsg = '';
                 //let marker = '';
                 //let zeroHPmarker = ''
@@ -4600,21 +4709,22 @@ const SmartAoE = (() => {
                 let name = args[2]
                 let bar = args[3].split(',').map(b=>b.trim());
                 let damageArr = args[4].split('/').map(e=>parseInt(e));
-                
                 let marker = args[5].replace(/%%/g,'::').replace('n/a','') || '';         //not all commands will include status marker(s)
                 let zeroHPmarker = args[6].replace(/%%/g,'::').replace('n/a','') || ''    //not all commands will include seroHPmarker(s)
-                
+                //log('parsed zeroHPmarker')
+                //log(zeroHPmarker)
                 let removeAtZero = args[7].includes('true') ? true : false;
-                let whisperOutput = args[8].includes('true') ? true : false;
+                let gmWhisper = args[8].includes('true') ? true : false;
+                let whisperString = args[9];
                 
                 let token = getObj('graphic', tokenID);
                 if (token) {
                     damageMsg = applyDamage(tokenID, name, bar, damageArr, zeroHPmarker, removeAtZero);
                     
-                    if (whisperOutput) {
+                    if (gmWhisper) {
                         sendChat(scriptName, `/w gm ${damageMsg}`)
                     } else {
-                        sendChat(scriptName, damageMsg)
+                        sendChat(scriptName, `${whisperString} ${damageMsg}`)
                     }
                     
                     if (marker) {
@@ -4804,6 +4914,10 @@ const SmartAoE = (() => {
                 let instant = false;
                 let isOriginTok = false;
                 if (aoeLinks.indices.length > 0) {
+                    let trackName = aoeLinks.links[0].triggerSound;
+                    if (trackName !== '') {
+                    	playJukeboxTrack(trackName, whisperString);
+                    }
                     //for each link associated with selected token (could be originTok or controlTok)
                     var tokenRolls = [];
                     var damageRolls = [];
@@ -4819,6 +4933,7 @@ const SmartAoE = (() => {
                                     _characterid: represents,
                                     name: aoeLinks.links[a].ignoreAttr
                                 }, {caseInsensitive: true});
+                                //log(attrs)
                                 if (attrs.length > 0) {
                                     return attrs[0].get("current") !== aoeLinks.links[a].ignoreVal.toString()
                                 } else {
@@ -5109,7 +5224,6 @@ const SmartAoE = (() => {
                             }
                             break;
                         case "ignore":
-                            
                             let ig = param.split(',').map(e=>e.trim());
                             if (ig.length < 2) {
                                 throw 'Invalid argument syntax.<br>Structure is --ignore|attrName,value';
@@ -5322,6 +5436,60 @@ const SmartAoE = (() => {
                                 resourceAlias = resourceName;
                             }
                             break;
+                        case "spawnsound":
+                            spawnSound = param;
+                            break;
+                        case "movesound":
+                            moveSound = param;
+                            break;
+                        case "triggersound":
+                            triggerSound = param;
+                            break;
+                        case "deletesound":
+                            deleteSound = param;
+                            break;
+                        case "whisperall":
+                            if (_.contains(['true','yes', '1'], param.toLowerCase())) {
+                                whisperAll = true;
+                            } else {
+                                whisperAll = false;
+                            }
+                            break;
+                        case "whisperresults":
+                            if (_.contains(['true','yes', '1'], param.toLowerCase())) {
+                                whisperResults = true;
+                            } else {
+                                whisperResults = false;
+                            }
+                            break;
+                        case "turnorder":
+                            let t = param.split(',').map((s) => s.trim());
+                            turnName = t[0];
+                            if (t.length > 1){
+                                if (isNaN(parseInt(t[1]))) {
+                                    retVal.push('Error: Non-numeric value detected in the turnOrder command. Value will be set to 0.');
+                                } else {
+                                    turnValue = parseInt(t[1]);
+                                }
+                            }
+                            if (t.length > 2){
+                                if (isNaN(parseInt(t[2]))) {
+                                    retVal.push('Error: Non-numeric formula detected in the turnOrder command. Formula will be ignored.');
+                                } else {
+                                    turnFormula = parseInt(t[2]);
+                                }
+                            }
+                            if (t.length > 3){
+                                if (_.contains(['false','no', '0'], t[3].toLowerCase())) {
+                                    linkTurnToToken = false;
+                                } else {
+                                    linkTurnToToken = true;
+                                }
+                            }
+                            break;
+                        case "tooltip":
+                            tooltip = param;
+                            break;
                         default:
                             retVal.push('Unexpected argument identifier (' + option + ').');
                             break;    
@@ -5348,7 +5516,7 @@ const SmartAoE = (() => {
                     //who = getObj('player',playerID).get('_displayname');
                     who = p.get('_displayname');
                     controlledby = playerID;
-                    oTok = getObj("graphic",selectedID);
+                    oTok = getObj('graphic',selectedID);
                 } else {
                     //SmartAoE WAS CALLED DIRECTLY BY A PLAYER VIA CHAT. Get values from msg *IF* they weren't explicitly passed as arguments
                     if (selectedID===undefined) {
@@ -5379,6 +5547,7 @@ const SmartAoE = (() => {
                         }
                     }
                 }
+                oTokID = oTok.get('_id');
                 
                 //Check for valid offset X/Y (numeric)
                 if (isNaN(offsetX) || isNaN(offsetY)) {
@@ -5566,7 +5735,7 @@ const SmartAoE = (() => {
                         //create a link between the source and control tokens (stored in state object)
                         let oPt = new pt(oTok.get('left'), oTok.get('top'))
                         
-                        let newLink = makeAoELink(controlTokName, controlTok.get("_id"), aoeType, coneWidth, aoeFloat, instant, forceIntersection, aoeColor, aoeOutlineColor, gridColor, radius, wallWidth, originType, oPt, minGridArea, minTokArea, oTok.get('_id'), path.get('_id'), controlTok.get('_pageid'), fxType, saveFormula, saveName, ignoreAttr, ignoreVal, DC, noSave, damageBar, autoApply, damageFormula1, damageFormula2, damageBase1, damageBase2, damageType1, damageType2, rollDamage1, rollDamage2, damageSaveRule, resistanceRule, vulnerableRule, immunityRule, resistAttrs, vulnerableAttrs, immunityAttrs, conditionPass, conditionFail, zeroHPmarker, removeAtZero, hideNames, cardParameters);
+                        let newLink = makeAoELink(controlTokName, controlTok.get("_id"), aoeType, coneWidth, aoeFloat, instant, forceIntersection, aoeColor, aoeOutlineColor, gridColor, radius, wallWidth, originType, oPt, minGridArea, minTokArea, oTok.get('_id'), path.get('_id'), controlTok.get('_pageid'), fxType, saveFormula, saveName, ignoreAttr, ignoreVal, DC, noSave, damageBar, autoApply, damageFormula1, damageFormula2, damageBase1, damageBase2, damageType1, damageType2, rollDamage1, rollDamage2, damageSaveRule, resistanceRule, vulnerableRule, immunityRule, resistAttrs, vulnerableAttrs, immunityAttrs, conditionPass, conditionFail, zeroHPmarker, removeAtZero, hideNames, spawnSound, moveSound, triggerSound, deleteSound, cardParameters, whisperString, whisperAll, whisperResults);
                         
                         //Immediately trigger a "change:graphic" event on the origin/controlTok to generate the AoE
                         smartAoE_handleTokenChange (controlTok,controlTok)
@@ -5595,7 +5764,12 @@ const SmartAoE = (() => {
                             }
                         }
                         
-                        controlToks = await spawnTokenAtXY(who, defaultToken, pageID, spawnX, spawnY, controlTokSize, controlledby, isDrawing, controlTokSide, numSpawns);
+                        controlToks = await spawnTokenAtXY(who, defaultToken, pageID, spawnX, spawnY, controlTokSize, controlledby, isDrawing, controlTokSide, tooltip, numSpawns);
+                        
+                        //Possibly add a value to the turn tracker
+                        if (turnName !== '') {
+                            modifyTurnTracker('add', turnName, turnValue, turnFormula, controlToks[0].get("_id"), pageID, linkTurnToToken);
+                        }
                         
                         let pathstring = buildSquarePath(35*pageGridIncrement);
                         let path = createPath(pathstring, pageID, 'objects', aoeColor, gridColor, 2, 70*pageGridIncrement, 70*pageGridIncrement, controlToks[0].get("left"), controlToks[0].get("top"));
@@ -5616,17 +5790,22 @@ const SmartAoE = (() => {
                                 //create a link between the source and control tokens (stored in state object).
                                 //in this case, the origin token is now the 2nd "controlTok" spawned
                                 let oPt = new pt(controlToks[1].get('left'), controlToks[1].get('top'))
-                                let newLink = makeAoELink(controlTokName, controlToks[0].get("_id"), aoeType, coneWidth, aoeFloat, instant, forceIntersection, aoeColor, aoeOutlineColor, gridColor, radius, wallWidth, originType, oPt, minGridArea, minTokArea, controlToks[1].get('_id'), path.get('_id'), controlToks[0].get('_pageid'), fxType, saveFormula, saveName, ignoreAttr, ignoreVal, DC, noSave, damageBar, autoApply, damageFormula1, damageFormula2, damageBase1, damageBase2, damageType1, damageType2, rollDamage1, rollDamage2, damageSaveRule, resistanceRule, vulnerableRule, immunityRule, resistAttrs, vulnerableAttrs, immunityAttrs, conditionPass, conditionFail, zeroHPmarker, removeAtZero, hideNames, cardParameters);
+                                let newLink = makeAoELink(controlTokName, controlToks[0].get("_id"), aoeType, coneWidth, aoeFloat, instant, forceIntersection, aoeColor, aoeOutlineColor, gridColor, radius, wallWidth, originType, oPt, minGridArea, minTokArea, controlToks[1].get('_id'), path.get('_id'), controlToks[0].get('_pageid'), fxType, saveFormula, saveName, ignoreAttr, ignoreVal, DC, noSave, damageBar, autoApply, damageFormula1, damageFormula2, damageBase1, damageBase2, damageType1, damageType2, rollDamage1, rollDamage2, damageSaveRule, resistanceRule, vulnerableRule, immunityRule, resistAttrs, vulnerableAttrs, immunityAttrs, conditionPass, conditionFail, zeroHPmarker, removeAtZero, hideNames,  spawnSound, moveSound, triggerSound, deleteSound, cardParameters, whisperString, whisperAll, whisperResults);
                             } else {
                                 //create a link between the source and control tokens (stored in state object)
                                 let oPt = new pt(oTok.get('left'), oTok.get('top'))
-                                let newLink = makeAoELink(controlTokName, controlToks[0].get("_id"), aoeType, coneWidth, aoeFloat, instant, forceIntersection, aoeColor, aoeOutlineColor, gridColor, radius, wallWidth, originType, oPt, minGridArea, minTokArea, oTok.get('_id'), path.get('_id'), controlToks[0].get('_pageid'), fxType, saveFormula, saveName, ignoreAttr, ignoreVal, DC, noSave, damageBar, autoApply, damageFormula1, damageFormula2, damageBase1, damageBase2, damageType1, damageType2, rollDamage1, rollDamage2, damageSaveRule, resistanceRule, vulnerableRule, immunityRule, resistAttrs, vulnerableAttrs, immunityAttrs, conditionPass, conditionFail, zeroHPmarker, removeAtZero, hideNames, cardParameters);
+                                let newLink = makeAoELink(controlTokName, controlToks[0].get("_id"), aoeType, coneWidth, aoeFloat, instant, forceIntersection, aoeColor, aoeOutlineColor, gridColor, radius, wallWidth, originType, oPt, minGridArea, minTokArea, oTok.get('_id'), path.get('_id'), controlToks[0].get('_pageid'), fxType, saveFormula, saveName, ignoreAttr, ignoreVal, DC, noSave, damageBar, autoApply, damageFormula1, damageFormula2, damageBase1, damageBase2, damageType1, damageType2, rollDamage1, rollDamage2, damageSaveRule, resistanceRule, vulnerableRule, immunityRule, resistAttrs, vulnerableAttrs, immunityAttrs, conditionPass, conditionFail, zeroHPmarker, removeAtZero, hideNames,  spawnSound, moveSound, triggerSound, deleteSound, cardParameters, whisperString, whisperAll, whisperResults);
                             }
                         } else {
                             sendChat(scriptName, `${whisperString} Unknown error. createObj failed. AoE path not created.`);
                             return;
                         }
                     });
+                }
+                
+                //Posiibly play sound fx when the control token is spawned
+                if (spawnSound !== '') {
+                    playJukeboxTrack(spawnSound, whisperString);
                 }
             }
         } 
