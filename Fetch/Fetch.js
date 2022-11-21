@@ -16,7 +16,8 @@ const Fetch = (() => { //eslint-disable-line no-unused-vars
     const apiproject = 'Fetch';
     const version = '2.0.0';
     const apilogo = 'https://i.imgur.com/jeIkjvS.png';
-    const schemaVersion = 0.1;
+    apilogoalt = 'https://i.imgur.com/boYO3cf.png';
+    const schemaVersion = 0.2;
     API_Meta[apiproject].version = version;
     const vd = new Date(1668568195650);
     const versionInfo = () => {
@@ -26,8 +27,15 @@ const Fetch = (() => { //eslint-disable-line no-unused-vars
             switch (state[apiproject] && state[apiproject].version) {
 
                 case 0.1:
-                /* break; // intentional dropthrough */ /* falls through */
-
+                /* falls through */
+                case 0.2:
+                    state[apiproject].settings = {
+                        playerscanids: false
+                    };
+                    state[apiproject].defaults = {
+                        playerscanids: false
+                    }
+                /* falls through */
                 case 'UpdateSchemaVersion':
                     state[apiproject].version = schemaVersion;
                     break;
@@ -35,6 +43,12 @@ const Fetch = (() => { //eslint-disable-line no-unused-vars
                 default:
                     state[apiproject] = {
                         version: schemaVersion,
+                        settings: {
+                            playerscanids: false
+                        },
+                        defaults: {
+                            playerscanids: false
+                        }
                     };
                     break;
             }
@@ -66,6 +80,18 @@ const Fetch = (() => { //eslint-disable-line no-unused-vars
         }
         return;
     };
+    // ==================================================
+    //		STATE MANAGEMENT
+    // ==================================================
+    const manageState = { // eslint-disable-line no-unused-vars
+        reset: () => state[apiproject].settings = _.clone(state[apiproject].defaults),
+        set: (p, v) => state[apiproject].settings[p] = v,
+        get: (p) => { return state[apiproject].settings[p]; }
+    };
+
+    // ==================================================
+    //		UTILTIES
+    // ==================================================
     const generateUUID = (() => {
         let a = 0;
         let b = [];
@@ -114,6 +140,108 @@ const Fetch = (() => { //eslint-disable-line no-unused-vars
         }, ret);
         return ret;
     };
+
+    // ==================================================
+    //		PRESENTATION
+    // ==================================================
+
+    let html = {};
+    let css = {}; // eslint-disable-line no-unused-vars
+    let HE = () => { }; // eslint-disable-line no-unused-vars
+    const theme = {
+        primaryColor: '#5E0099',
+        primaryTextColor: '#232323',
+        primaryTextBackground: '#ededed'
+    }
+    const localCSS = {
+        msgheader: {
+            'background-color': theme.primaryColor,
+            'color': 'white',
+            'font-size': '1.2em',
+            'padding-left': '4px'
+        },
+        msgbody: {
+            'color': theme.primaryTextColor,
+            'background-color': theme.primaryTextBackground
+        },
+        msgfooter: {
+            'color': theme.primaryTextColor,
+            'background-color': theme.primaryTextBackground
+        },
+        msgheadercontent: {
+            'display': 'table-cell',
+            'vertical-align': 'middle',
+            'padding': '4px 8px 4px 6px'
+        },
+        msgheaderlogodiv: {
+            'display': 'table-cell',
+            'max-height': '30px',
+            'margin-right': '8px',
+            'margin-top': '4px',
+            'vertical-align': 'middle'
+        },
+        logoimg: {
+            'background-color': 'transparent',
+            'float': 'left',
+            'border': 'none',
+            'max-height': '30px'
+        },
+        boundingcss: {
+            'background-color': theme.primaryTextBackground
+        },
+        inlineEmphasis: {
+            'font-weight': 'bold'
+        }
+    }
+    const msgbox = ({
+        msg: msg = '',
+        title: title = '',
+        headercss: headercss = localCSS.msgheader,
+        bodycss: bodycss = localCSS.msgbody,
+        footercss: footercss = localCSS.msgfooter,
+        sendas: sendas = 'SelectManager',
+        whisperto: whisperto = '',
+        footer: footer = '',
+        btn: btn = '',
+    } = {}) => {
+        if (title) title = html.div(html.div(html.img(apilogoalt, 'SelectManager Logo', localCSS.logoimg), localCSS.msgheaderlogodiv) + html.div(title, localCSS.msgheadercontent), {});
+        Messenger.MsgBox({ msg: msg, title: title, bodycss: bodycss, sendas: sendas, whisperto: whisperto, footer: footer, btn: btn, headercss: headercss, footercss: footercss, boundingcss: localCSS.boundingcss, noarchive: true });
+    };
+
+    const getWhisperTo = (who) => who.toLowerCase() === 'api' ? 'gm' : who.replace(/\s\(gm\)$/i, '');
+    const handleConfig = msg => {
+        if (msg.type !== 'api' || !/^!fetchconfig/.test(msg.content)) return;
+        let recipient = getWhisperTo(msg.who);
+        if (!playerIsGM(msg.playerid)) {
+            msgbox({ title: 'GM Rights Required', msg: 'You must be a GM to perform that operation', whisperto: recipient });
+            return;
+        }
+        let cfgrx = /^(\+|-)(playerscanids)$/i;
+        let res;
+        let cfgTrack = {};
+        let message;
+        if (/^!fetchconfig\s+[^\s]/.test(msg.content)) {
+            msg.content.split(/\s+/).slice(1).forEach(a => {
+                res = cfgrx.exec(a);
+                if (!res) return;
+                if (res[2].toLowerCase() === 'playerscanids') {
+                    manageState.set('playerscanids', (res[1] === '+'));
+                    cfgTrack[res[2]] = res[1];
+                }
+            });
+            let changes = Object.keys(cfgTrack).map(k => `${html.span(k, localCSS.inlineEmphasis)}: ${cfgTrack[k] === '+' ? 'enabled' : 'disabled'}`).join('<br>');
+            msgbox({ title: `Fetch Config Changed`, msg: `You have made the following changes to the Fetch configuration:<br>${changes}`, whisperto: recipient });
+        } else {
+            cfgTrack.playerscanids = `${html.span('playerscanids', localCSS.inlineEmphasis)}: ${manageState.get('playerscanids') ? 'enabled' : 'disabled'}`;
+            message = `Fetch is currently configured as follows:<br>${cfgTrack.playerscanids}`;
+            msgbox({ title: 'Fetch Configuration', msg: message, whisperto: recipient });
+        }
+    };
+
+    // ==================================================
+    //		PROCESS
+    // ==================================================
+
     const repeatingOrdinal = (character_id, section = '', attr_name = '') => {
         if (!section && !attr_name) return;
         let ordrx, match;
@@ -285,7 +413,7 @@ const Fetch = (() => { //eslint-disable-line no-unused-vars
         if (typeof query !== 'string') return character;
         let qrx = new RegExp(escapeRegExp(query), 'i');
         let charsIControl = findObjs({ type: 'character' });
-        charsIControl = playerIsGM(pid) ? charsIControl : charsIControl.filter(c => {
+        charsIControl = playerIsGM(pid) || manageState.get('playerscanids') ? charsIControl : charsIControl.filter(c => {
             return c.get('controlledby').split(',').reduce((m, p) => {
                 return m || p === 'all' || p === pid;
             }, false)
@@ -338,7 +466,7 @@ const Fetch = (() => { //eslint-disable-line no-unused-vars
         token = getToken(t);
         if (!token) return;
         token = simpleObj(token);
-        if (!tokenStatuses.hasOwnProperty(token.id) || tokenStatuses[token.id].msgId !== msgId) { // eslint-disable-line no-prototype-builtins
+        if (!tokenStatuses.hasOwnProperty(token.id) || tokenStatuses[token.id].msgId !== msgId) {
             tokenStatuses[token.id] = new StatusBlock({ token: token, msgId: msgId });
         }
         rxret = /(?<marker>.+?)(?:\?(?<index>\d+|all\+?))?$/.exec(query);
@@ -1119,20 +1247,20 @@ const Fetch = (() => { //eslint-disable-line no-unused-vars
                 version: `0.1.2`,
                 mod: typeof libTokenMarkers !== 'undefined' ? libTokenMarkers : undefined,
                 checks: [['getStatus', 'function'], ['getStatuses', 'function'], ['getOrderedList', 'function']]
+            },
+            {
+                name: 'Messenger',
+                version: `1.0.0`,
+                mod: typeof Messenger !== 'undefined' ? Messenger : undefined,
+                checks: [['Button', 'function'], ['MsgBox', 'function'], ['HE', 'function'], ['Html', 'function'], ['Css', 'function']]
             }
         ];
         if (!checkDependencies(reqs)) return;
+        html = Messenger.Html();
+        css = Messenger.Css();
+        HE = Messenger.HE;
 
-        if ('undefined' === typeof libTokenMarkers
-            || (['getStatus', 'getStatuses', 'getOrderedList'].find(k =>
-                !libTokenMarkers.hasOwnProperty(k) || 'function' !== typeof libTokenMarkers[k] // eslint-disable-line no-prototype-builtins
-            ))
-        ) {
-            // blow up
-            let msg = `<div style="width: 100%;border: none;border-radius: 0px;min-height: 60px;display: block;text-align: left;white-space: pre-wrap;overflow: hidden"><div style="font-size: 14px;font-family: &quot;Segoe UI&quot;, Roboto, Ubuntu, Cantarell, &quot;Helvetica Neue&quot;, sans-serif"><div style="background-color: #000000;border-radius: 6px 6px 0px 0px;position: relative;border-width: 2px 2px 0px 2px;border-style:  solid;border-color: black;"><div style="border-radius: 18px;width: 35px;height: 35px;position: absolute;left: 3px;top: 2px;"><img style="background-color: transparent ; float: left ; border: none ; max-height: 40px" src="https://i.imgur.com/jeIkjvS.png"></div><div style="background-color: #c94d4d;font-weight: bold;font-size: 18px;line-height: 36px;border-radius: 6px 6px 0px 0px;padding: 4px 4px 0px 43px;color: #ffffff;min-height: 38px;">MISSING MOD</div></div><div style="background-color: white;padding: 4px 8px;border: 2px solid #000000;border-bottom-style: none;color: #404040;"><span style="font-weight: bold">Fetch</span> requires <code>libTokenMarkers</code>.  Please install it from the 1-click Mod Library.</div><div style="background-color: white;text-align: right;padding: 4px 8px;border: 2px solid #000000;border-top-style: none;border-radius: 0px 0px 6px 6px"></div></div></div>`;
-            sendChat('Fetch', `/w gm ${msg}`);
-            return;
-        }
+        on('chat:message', handleConfig);
 
         scriptisplugin = (typeof ZeroFrame !== `undefined`);
         if (typeof ZeroFrame !== 'undefined') {
