@@ -6,7 +6,7 @@
   "authors": "timmaugh",
   "roll20userid": "5962076",
   "useroptions": [],
-  "dependencies": [],
+  "dependencies": ["Messenger","libTable"],
   "modifies": {
     "state.TableToTable": "read, write"
   },
