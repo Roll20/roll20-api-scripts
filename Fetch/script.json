@@ -15,6 +15,7 @@
     "attribute.name": "read",
     "attribute.type": "read"
   },
+  "dependencies": [ "Messenger" ],
   "conflicts": [],
   "previousversions": [
     "1.0.4",
