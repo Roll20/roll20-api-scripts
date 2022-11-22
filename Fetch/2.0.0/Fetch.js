@@ -199,7 +199,7 @@ const Fetch = (() => { //eslint-disable-line no-unused-vars
         headercss: headercss = localCSS.msgheader,
         bodycss: bodycss = localCSS.msgbody,
         footercss: footercss = localCSS.msgfooter,
-        sendas: sendas = 'SelectManager',
+        sendas: sendas = 'Fetch',
         whisperto: whisperto = '',
         footer: footer = '',
         btn: btn = '',
