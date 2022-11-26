@@ -6307,7 +6307,7 @@ const libRPGMaster = (() => { // eslint-disable-line no-unused-vars
 						return {name:charClass.toLowerCase().replace(reIgnore,''), base:baseClass.toLowerCase().replace(reIgnore,''), level:charLevel, obj:classObj.obj};
 					});
 				if (_.isUndefined(classDef) || !classDef.length) classDef = [{name:'creature', base:'warrior', level:0, obj:LibFunctions.abilityLookup( fields.ClassDB, 'creature', charCS ).obj}];
-				classDef = classDef.map(c => {c.classData = LibFunctions.parseData(c.obj[1].body.match(reClassData)[1],reClassSpecs);return c});
+				classDef = classDef.map(c => {c.classData = LibFunctions.parseData((c.obj[1].body.match(reClassData)||['',''])[1],reClassSpecs);return c});
 				return classDef;
 			};
 	
