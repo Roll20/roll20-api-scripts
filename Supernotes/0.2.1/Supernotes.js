@@ -774,7 +774,7 @@ on('ready', () => {
 
                                     }
 
-                                    /* Log Block. Turn on for debugging
+                                    /* Log Block. Turn on for doing debugging
                                                                     [
                                                                         `### REPORT###`,
                                                                         `THE MESSAGE =${message}`,
