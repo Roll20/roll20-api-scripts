@@ -1,0 +1,407 @@
+!scriptcard{{
+--#title|Spell Critical Fumble
+--#titlecardgradient|1
+--#titlecardbottomborder|1px solid black
+--#titleCardBackground|#77dd77
+--=var|1d100
+--? [$var.Total] -eq 1|[
+--+Description|You are embarassed by your poor showing, but nothing remarkable happens.
+--+Effect|You miss your attack.
+--]|
+--? [$var.Total] -eq 2|[
+--+Description|You get wrapped up in your spellcasting and forget to watch your target.
+--+Effect|Your target has advantage on their first attack roll against you next round.
+--]|
+--? [$var.Total] -eq 3|[
+--+Description|You get wrapped up in your spellcasting and forget to watch your target.
+--+Effect|Your target has advantage on their first attack roll against you next round.
+--]|
+--? [$var.Total] -eq 4|[
+--+Description|You get wrapped up in your spellcasting and forget to watch your target.
+--+Effect|Your target has advantage on their first attack roll against you next round.
+--]|
+--? [$var.Total] -eq 5|[
+--+Description|You get wrapped up in your spellcasting and forget to watch your target.
+--+Effect|Your target has advantage on their first attack roll against you next round.
+--]|
+--? [$var.Total] -eq 6|[
+--+Description|You get wrapped up in your spellcasting and forget to watch your surroundings.
+--+Effect|All enemies have advantage on their first attack roll against you next round.
+--]|
+--? [$var.Total] -eq 7|[
+--+Description|You get wrapped up in your spellcasting and forget to watch your surroundings.
+--+Effect|All enemies have advantage on their first attack roll against you next round.
+--]|
+--? [$var.Total] -eq 8|[
+--+Description|You get wrapped up in your spellcasting and forget to watch your surroundings.
+--+Effect|All enemies have advantage on their first attack roll against you next round.
+--]|
+--? [$var.Total] -eq 9|[
+--+Description|You get wrapped up in your spellcasting and forget to watch your surroundings.
+--+Effect|All enemies have advantage on their first attack roll against you next round.
+--]|
+--? [$var.Total] -eq 10|[
+--+Description|You are so wrapped up in your spellcasting that you forget you are fighting a battle.
+--+Effect|All enemies have advantage on their attack rolls against you until the end of your next turn.
+--]|
+--? [$var.Total] -eq 11|[
+--+Description|You are so wrapped up in your spellcasting that you forget you are fighting a battle.
+--+Effect|All enemies have advantage on their attack rolls against you until the end of your next turn.
+--]|
+--? [$var.Total] -eq 12|[
+--+Description|You are so wrapped up in your spellcasting that you forget you are fighting a battle.
+--+Effect|All enemies have advantage on their attack rolls against you until the end of your next turn.
+--]|
+--? [$var.Total] -eq 13|[
+--+Description|You are so wrapped up in your spellcasting that you forget you are fighting a battle.
+--+Effect|All enemies have advantage on their attack rolls against you until the end of your next turn.
+--]|
+--? [$var.Total] -eq 14|[
+--+Description|You are so wrapped up in your spellcasting that you forget you are fighting a battle.
+--+Effect|All enemies have advantage on their attack rolls against you until the end of your next turn.
+--]|
+--? [$var.Total] -eq 15|[
+--+Description|Your spell creates a large plume of smoke obscuring your location.
+--+Effect|The area in a 5 foot radius around your location becomes heavily obscured for 1 minute. a strong breeze can blow away the smoke in 1 round.
+--]|
+--? [$var.Total] -eq 16|[
+--+Description|Your spell creates a large plume of smoke obscuring your location.
+--+Effect|The area in a 5 foot radius around your location becomes heavily obscured for 1 minute. a strong breeze can blow away the smoke in 1 round.
+--]|
+--? [$var.Total] -eq 17|[
+--+Description|Your spell creates a large plume of smoke obscuring your location.
+--+Effect|The area in a 5 foot radius around your location becomes heavily obscured for 1 minute. a strong breeze can blow away the smoke in 1 round.
+--]|
+--? [$var.Total] -eq 18|[
+--+Description|Your spell creates a large plume of smoke obscuring your location.
+--+Effect|The area in a 5 foot radius around your location becomes heavily obscured for 1 minute. a strong breeze can blow away the smoke in 1 round.
+--]|
+--? [$var.Total] -eq 19|[
+--+Description|Your spell creates a large plume of smoke obscuring your location.
+--+Effect|The area in a 5 foot radius around your location becomes heavily obscured for 1 minute. a strong breeze can blow away the smoke in 1 round.
+--]|
+--? [$var.Total] -eq 20|[
+--+Description|Your spell misfires knocking you over.
+--+Effect|You are knocked prone.
+--]|
+--? [$var.Total] -eq 21|[
+--+Description|Your spell misfires knocking you over.
+--+Effect|You are knocked prone.
+--]|
+--? [$var.Total] -eq 22|[
+--+Description|Your spell misfires knocking you over.
+--+Effect|You are knocked prone.
+--]|
+--? [$var.Total] -eq 23|[
+--+Description|Your spell misfires knocking you over.
+--+Effect|You are knocked prone.
+--]|
+--? [$var.Total] -eq 24|[
+--+Description|Your spell misfires knocking you over.
+--+Effect|You are knocked prone.
+--]|
+--? [$var.Total] -eq 25|[
+--+Description|Your spell misfires knocking you over.
+--+Effect|You are knocked prone.
+--]|
+--? [$var.Total] -eq 26|[
+--+Description|Your spell misfires knocking you over.
+--+Effect|You are knocked prone.
+--]|
+--? [$var.Total] -eq 27|[
+--+Description|Your spell misfires knocking you over.
+--+Effect|You are knocked prone.
+--]|
+--? [$var.Total] -eq 28|[
+--+Description|Your spell misfires knocking you over.
+--+Effect|You are knocked prone.
+--]|
+--? [$var.Total] -eq 29|[
+--+Description|Your spell misfires knocking you over.
+--+Effect|You are knocked prone.
+--]|
+--? [$var.Total] -eq 30|[
+--+Description|The spell fires in an unexpected manner, causing your confidence in your abilities to falter.
+--+Effect|You have disadvantage on any spell attacks, and enemies have advantage against your spell savings throws until the end of your next turn.
+--]|
+--? [$var.Total] -eq 31|[
+--+Description|The spell fires in an unexpected manner, causing your confidence in your abilities to falter.
+--+Effect|You have disadvantage on any spell attacks, and enemies have advantage against your spell savings throws until the end of your next turn.
+--]|
+--? [$var.Total] -eq 32|[
+--+Description|The spell fires in an unexpected manner, causing your confidence in your abilities to falter.
+--+Effect|You have disadvantage on any spell attacks, and enemies have advantage against your spell savings throws until the end of your next turn.
+--]|
+--? [$var.Total] -eq 33|[
+--+Description|The spell fires in an unexpected manner, causing your confidence in your abilities to falter.
+--+Effect|You have disadvantage on any spell attacks, and enemies have advantage against your spell savings throws until the end of your next turn.
+--]|
+--? [$var.Total] -eq 34|[
+--+Description|The spell fires in an unexpected manner, causing your confidence in your abilities to falter.
+--+Effect|You have disadvantage on any spell attacks, and enemies have advantage against your spell savings throws until the end of your next turn.
+--]|
+--? [$var.Total] -eq 35|[
+--+Description|The spell fires in an unexpected manner, causing your confidence in your abilities to falter.
+--+Effect|You have disadvantage on any spell attacks, and enemies have advantage against your spell savings throws until the end of your next turn.
+--]|
+--? [$var.Total] -eq 36|[
+--+Description|The spell fires in an unexpected manner, causing your confidence in your abilities to falter.
+--+Effect|You have disadvantage on any spell attacks, and enemies have advantage against your spell savings throws until the end of your next turn.
+--]|
+--? [$var.Total] -eq 37|[
+--+Description|The spell fires in an unexpected manner, causing your confidence in your abilities to falter.
+--+Effect|You have disadvantage on any spell attacks, and enemies have advantage against your spell savings throws until the end of your next turn.
+--]|
+--? [$var.Total] -eq 38|[
+--+Description|The spell fires in an unexpected manner, causing your confidence in your abilities to falter.
+--+Effect|You have disadvantage on any spell attacks, and enemies have advantage against your spell savings throws until the end of your next turn.
+--]|
+--? [$var.Total] -eq 39|[
+--+Description|The spell fires in an unexpected manner, causing your confidence in your abilities to falter.
+--+Effect|You have disadvantage on any spell attacks, and enemies have advantage against your spell savings throws until the end of your next turn.
+--]|
+--? [$var.Total] -eq 40|[
+--+Description|The placement of your spell startles your allies near your target, causing them to drop their guard.
+--+Effect|Your target is able to use their reaction to take an attack of opportunity on one of your allies in melee range.
+--]|
+--? [$var.Total] -eq 41|[
+--+Description|The placement of your spell startles your allies near your target, causing them to drop their guard.
+--+Effect|Your target is able to use their reaction to take an attack of opportunity on one of your allies in melee range.
+--]|
+--? [$var.Total] -eq 42|[
+--+Description|The placement of your spell startles your allies near your target, causing them to drop their guard.
+--+Effect|Your target is able to use their reaction to take an attack of opportunity on one of your allies in melee range.
+--]|
+--? [$var.Total] -eq 43|[
+--+Description|The placement of your spell startles your allies near your target, causing them to drop their guard.
+--+Effect|Your target is able to use their reaction to take an attack of opportunity on one of your allies in melee range.
+--]|
+--? [$var.Total] -eq 44|[
+--+Description|The placement of your spell startles your allies near your target, causing them to drop their guard.
+--+Effect|Your target is able to use their reaction to take an attack of opportunity on one of your allies in melee range.
+--]|
+--? [$var.Total] -eq 45|[
+--+Description|The placement of your spell startles your allies near your target, causing them to drop their guard.
+--+Effect|Your target is able to use their reaction to take an attack of opportunity on one of your allies in melee range.
+--]|
+--? [$var.Total] -eq 46|[
+--+Description|The placement of your spell startles your allies near your target, causing them to drop their guard.
+--+Effect|Your target is able to use their reaction to take an attack of opportunity on one of your allies in melee range.
+--]|
+--? [$var.Total] -eq 47|[
+--+Description|The placement of your spell startles your allies near your target, causing them to drop their guard.
+--+Effect|Your target is able to use their reaction to take an attack of opportunity on one of your allies in melee range.
+--]|
+--? [$var.Total] -eq 48|[
+--+Description|The placement of your spell startles your allies near your target, causing them to drop their guard.
+--+Effect|Your target is able to use their reaction to take an attack of opportunity on one of your allies in melee range.
+--]|
+--? [$var.Total] -eq 49|[
+--+Description|The placement of your spell startles your allies near your target, causing them to drop their guard.
+--+Effect|Your target is able to use their reaction to take an attack of opportunity on one of your allies in melee range.
+--]|
+--? [$var.Total] -eq 50|[
+--+Description|You scramble the ingredients of your component pouch or your focus becomes overloaded with magical energy and temporarily stops working.
+--+Effect|You are unable to perform material components to cast spells until the end of your next turn.
+--]|
+--? [$var.Total] -eq 51|[
+--+Description|You scramble the ingredients of your component pouch or your focus becomes overloaded with magical energy and temporarily stops working.
+--+Effect|You are unable to perform material components to cast spells until the end of your next turn.
+--]|
+--? [$var.Total] -eq 52|[
+--+Description|You scramble the ingredients of your component pouch or your focus becomes overloaded with magical energy and temporarily stops working.
+--+Effect|You are unable to perform material components to cast spells until the end of your next turn.
+--]|
+--? [$var.Total] -eq 53|[
+--+Description|You scramble the ingredients of your component pouch or your focus becomes overloaded with magical energy and temporarily stops working.
+--+Effect|You are unable to perform material components to cast spells until the end of your next turn.
+--]|
+--? [$var.Total] -eq 54|[
+--+Description|You scramble the ingredients of your component pouch or your focus becomes overloaded with magical energy and temporarily stops working.
+--+Effect|You are unable to perform material components to cast spells until the end of your next turn.
+--]|
+--? [$var.Total] -eq 55|[
+--+Description|You scramble the ingredients of your component pouch or your focus becomes overloaded with magical energy and temporarily stops working.
+--+Effect|You are unable to perform material components to cast spells until the end of your next turn.
+--]|
+--? [$var.Total] -eq 56|[
+--+Description|You scramble the ingredients of your component pouch or your focus becomes overloaded with magical energy and temporarily stops working.
+--+Effect|You are unable to perform material components to cast spells until the end of your next turn.
+--]|
+--? [$var.Total] -eq 57|[
+--+Description|You scramble the ingredients of your component pouch or your focus becomes overloaded with magical energy and temporarily stops working.
+--+Effect|You are unable to perform material components to cast spells until the end of your next turn.
+--]|
+--? [$var.Total] -eq 58|[
+--+Description|You scramble the ingredients of your component pouch or your focus becomes overloaded with magical energy and temporarily stops working.
+--+Effect|You are unable to perform material components to cast spells until the end of your next turn.
+--]|
+--? [$var.Total] -eq 59|[
+--+Description|You scramble the ingredients of your component pouch or your focus becomes overloaded with magical energy and temporarily stops working.
+--+Effect|You are unable to perform material components to cast spells until the end of your next turn.
+--]|
+--? [$var.Total] -eq 60|[
+--+Description|Your arm cramps as you cast.
+--+Effect|You are unable to perform somatic components to cast spells until the end of your next turn.
+--]|
+--? [$var.Total] -eq 61|[
+--+Description|Your arm cramps as you cast.
+--+Effect|You are unable to perform somatic components to cast spells until the end of your next turn.
+--]|
+--? [$var.Total] -eq 62|[
+--+Description|Your arm cramps as you cast.
+--+Effect|You are unable to perform somatic components to cast spells until the end of your next turn.
+--]|
+--? [$var.Total] -eq 63|[
+--+Description|Your arm cramps as you cast.
+--+Effect|You are unable to perform somatic components to cast spells until the end of your next turn.
+--]|
+--? [$var.Total] -eq 64|[
+--+Description|Your arm cramps as you cast.
+--+Effect|You are unable to perform somatic components to cast spells until the end of your next turn.
+--]|
+--? [$var.Total] -eq 65|[
+--+Description|Your arm cramps as you cast.
+--+Effect|You are unable to perform somatic components to cast spells until the end of your next turn.
+--]|
+--? [$var.Total] -eq 66|[
+--+Description|Your arm cramps as you cast.
+--+Effect|You are unable to perform somatic components to cast spells until the end of your next turn.
+--]|
+--? [$var.Total] -eq 67|[
+--+Description|Your arm cramps as you cast.
+--+Effect|You are unable to perform somatic components to cast spells until the end of your next turn.
+--]|
+--? [$var.Total] -eq 68|[
+--+Description|Your arm cramps as you cast.
+--+Effect|You are unable to perform somatic components to cast spells until the end of your next turn.
+--]|
+--? [$var.Total] -eq 69|[
+--+Description|Your arm cramps as you cast.
+--+Effect|You are unable to perform somatic components to cast spells until the end of your next turn.
+--]|
+--? [$var.Total] -eq 70|[
+--+Description|You bite your tongue as you cast.
+--+Effect|You are unable to use verbal components to cast spells until the end of your next turn.
+--]|
+--? [$var.Total] -eq 71|[
+--+Description|You bite your tongue as you cast.
+--+Effect|You are unable to use verbal components to cast spells until the end of your next turn.
+--]|
+--? [$var.Total] -eq 72|[
+--+Description|You bite your tongue as you cast.
+--+Effect|You are unable to use verbal components to cast spells until the end of your next turn.
+--]|
+--? [$var.Total] -eq 73|[
+--+Description|You bite your tongue as you cast.
+--+Effect|You are unable to use verbal components to cast spells until the end of your next turn.
+--]|
+--? [$var.Total] -eq 74|[
+--+Description|You bite your tongue as you cast.
+--+Effect|You are unable to use verbal components to cast spells until the end of your next turn.
+--]|
+--? [$var.Total] -eq 75|[
+--+Description|You bite your tongue as you cast.
+--+Effect|You are unable to use verbal components to cast spells until the end of your next turn.
+--]|
+--? [$var.Total] -eq 76|[
+--+Description|You bite your tongue as you cast.
+--+Effect|You are unable to use verbal components to cast spells until the end of your next turn.
+--]|
+--? [$var.Total] -eq 77|[
+--+Description|You bite your tongue as you cast.
+--+Effect|You are unable to use verbal components to cast spells until the end of your next turn.
+--]|
+--? [$var.Total] -eq 78|[
+--+Description|You bite your tongue as you cast.
+--+Effect|You are unable to use verbal components to cast spells until the end of your next turn.
+--]|
+--? [$var.Total] -eq 79|[
+--+Description|You bite your tongue as you cast.
+--+Effect|You are unable to use verbal components to cast spells until the end of your next turn.
+--]|
+--? [$var.Total] -eq 80|[
+--+Description|Your spell misfires and dazes you, causing you to lose track of the fight.
+--+Effect|End your turn and move to the bottom of the initiative order at the start of the next round.
+--]|
+--? [$var.Total] -eq 81|[
+--+Description|Your spell misfires and dazes you, causing you to lose track of the fight.
+--+Effect|End your turn and move to the bottom of the initiative order at the start of the next round.
+--]|
+--? [$var.Total] -eq 82|[
+--+Description|Your spell misfires and dazes you, causing you to lose track of the fight.
+--+Effect|End your turn and move to the bottom of the initiative order at the start of the next round.
+--]|
+--? [$var.Total] -eq 83|[
+--+Description|Your spell misfires and dazes you, causing you to lose track of the fight.
+--+Effect|End your turn and move to the bottom of the initiative order at the start of the next round.
+--]|
+--? [$var.Total] -eq 84|[
+--+Description|Your spell misfires and dazes you, causing you to lose track of the fight.
+--+Effect|End your turn and move to the bottom of the initiative order at the start of the next round.
+--]|
+--? [$var.Total] -eq 85|[
+--+Description|Your spell misfires causing you to panic.
+--+Effect|End your current turn and you are surprised until the end of your next turn.
+--]|
+--? [$var.Total] -eq 86|[
+--+Description|Your spell misfires causing you to panic.
+--+Effect|End your current turn and you are surprised until the end of your next turn.
+--]|
+--? [$var.Total] -eq 87|[
+--+Description|Your spell misfires causing you to panic.
+--+Effect|End your current turn and you are surprised until the end of your next turn.
+--]|
+--? [$var.Total] -eq 88|[
+--+Description|Your spell misfires causing you to panic.
+--+Effect|End your current turn and you are surprised until the end of your next turn.
+--]|
+--? [$var.Total] -eq 89|[
+--+Description|Your spell misfires causing you to panic.
+--+Effect|End your current turn and you are surprised until the end of your next turn.
+--]|
+--? [$var.Total] -eq 90|[
+--+Description|Your spell backfires creating a small explosion causing you to fall and bump your head.
+--+Effect|You fall prone. roll a dc 10 constitution save, on failure you take 1d6 bludeoning damage and are knocked unconscious for 1 minute or until you receive damage from any source. on success take half damage and you remain conscious.
+--]|
+--? [$var.Total] -eq 91|[
+--+Description|Your spell backfires creating a small explosion causing you to fall and bump your head.
+--+Effect|You fall prone. roll a dc 10 constitution save, on failure you take 1d6 bludeoning damage and are knocked unconscious for 1 minute or until you receive damage from any source. on success take half damage and you remain conscious.
+--]|
+--? [$var.Total] -eq 92|[
+--+Description|Your spell backfires creating a small explosion causing you to fall and bump your head.
+--+Effect|You fall prone. roll a dc 10 constitution save, on failure you take 1d6 bludeoning damage and are knocked unconscious for 1 minute or until you receive damage from any source. on success take half damage and you remain conscious.
+--]|
+--? [$var.Total] -eq 93|[
+--+Description|Your spell backfires creating a small explosion causing you to fall and bump your head.
+--+Effect|You fall prone. roll a dc 10 constitution save, on failure you take 1d6 bludeoning damage and are knocked unconscious for 1 minute or until you receive damage from any source. on success take half damage and you remain conscious.
+--]|
+--? [$var.Total] -eq 94|[
+--+Description|Your spell backfires creating a small explosion causing you to fall and bump your head.
+--+Effect|You fall prone. roll a dc 10 constitution save, on failure you take 1d6 bludeoning damage and are knocked unconscious for 1 minute or until you receive damage from any source. on success take half damage and you remain conscious.
+--]|
+--? [$var.Total] -eq 95|[
+--+Description|Your spell backfires creating a large explosion causing you to fall and bump your head.
+--+Effect|You fall prone. roll a dc 15 constitution save, on failure you take 1d6 bludgeoning damage, 1d6 thunder damage, and are knocked unconscious for 1 minute or until you receive damage from any source. on success take half damage and you remain conscious.
+--]|
+--? [$var.Total] -eq 96|[
+--+Description|Your spell backfires creating a large explosion causing you to fall and bump your head.
+--+Effect|You fall prone. roll a dc 15 constitution save, on failure you take 1d6 bludgeoning damage, 1d6 thunder damage, and are knocked unconscious for 1 minute or until you receive damage from any source. on success take half damage and you remain conscious.
+--]|
+--? [$var.Total] -eq 97|[
+--+Description|Your spell backfires creating a large explosion causing you to fall and bump your head.
+--+Effect|You fall prone. roll a dc 15 constitution save, on failure you take 1d6 bludgeoning damage, 1d6 thunder damage, and are knocked unconscious for 1 minute or until you receive damage from any source. on success take half damage and you remain conscious.
+--]|
+--? [$var.Total] -eq 98|[
+--+Description|Your spell backfires creating a large explosion causing you to fall and bump your head.
+--+Effect|You fall prone. roll a dc 15 constitution save, on failure you take 1d6 bludgeoning damage, 1d6 thunder damage, and are knocked unconscious for 1 minute or until you receive damage from any source. on success take half damage and you remain conscious.
+--]|
+--? [$var.Total] -eq 99|[
+--+Description|Your spell backfires creating a large explosion causing you to fall and bump your head.
+--+Effect|You fall prone. roll a dc 15 constitution save, on failure you take 1d6 bludgeoning damage, 1d6 thunder damage, and are knocked unconscious for 1 minute or until you receive damage from any source. on success take half damage and you remain conscious.
+--]|
+--? [$var.Total] -eq 100|[
+--+Description|Your spell completely backfires creating a large explosion causing you to fall and bump your head.
+--+Effect|You hit yourself with your spell. if the spell effect is instant you take the full effect. if the spell requires concentration the effect persists until the end of your next turn. you also fall prone, take 1d6 bludgeoning damage, 1d6 thunder damage, and become unconscious for 1 minute or until you receive damage from any source.
+--]|
+}}

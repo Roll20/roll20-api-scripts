@@ -1,0 +1,13 @@
+{
+	"name": "Faces",
+	"script": "Faces.js",
+	"version": "0.1.0",
+	"description": "**Faces** is a script is designed to provide a quick visual interface for swapping token images and names, drawing the information from a Rollabel Table or an existing token. The user can choose which face to apply from the graphical list, or apply random faces to a group of selected tokens. It can also quickly create rollable tables from an existing set of tokens, both simple and multisided. The interface will work for both players and GMs.\r\rThere is a comprehensive help system accessible by typing `!faces help` in the chat window, once the script is installed. There is also documentation and feedback available from the [Faces Feedback Thread](https://app.roll20.net/forum/post/11129007/script-faces-1-dot-0) in the Roll20 Forums.\r\r**What this script does not do:**\r- Adjust token size.\r- Change any token-character representation, linking, or attributes.\r- It is not intended to be a Wildshape script. There are much better-suited scripts for that.\r\r\r**Potential uses for this script:**\r- Disguise-master characters\r- Changeling characters\r- Alter Self and Seeming spells (and similar)\r- Providing the GM a way to alter the image choices for a group of enemies. Quickly differentiate between goblin archers, goblin infantry, dead goblins\r- Give a visual interface for a player who has multiple expressions or variations for their character\r- Characters who contract lycanthropy\r- Monsters with different states: Ankheg on surface, surfacing or a Bugs Bunny-style burrowing mound\r- Build a library of townsfolk, scholars, city guards or other commoner-types.\r- Assigning map pin icons: Tavern vs temple vs shop, etc.\r- Quickly changing the state of a trap image\r- Changing a closed door image to an open door image.\r- Laying out a bunch of map tiles and quickly switching between them to build a dungeon\r- having tables for map furnishings: a chair table, a door, even a table table.\r- Change downed enemies to a creative variety of grisly remains?\r- A GM could present players with a menu of tokens for their PCs\r- A rollable table of scenes and images to show characters using shift-Z. Just keep one token on the VTT and switch at need.\r- Quickly create a rollable table from a bunch of uploaded images.\r- Move image from one token to another (select first token, use !faces existing, and use the resulting button to assign to one or more other tokens)\r- Randomly populate a scene with differentiated token images\r- Probably more I haven't thought of.",
+	"authors": "Keith Curtis",
+	"roll20userid": "162065",
+	"modifies": {
+		"ability.*": "read, write"
+	},
+	"conflicts": [],
+	"previousversions": ["0.1.0"]
+}

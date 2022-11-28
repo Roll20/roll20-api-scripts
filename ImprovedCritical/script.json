@@ -1,0 +1,13 @@
+{
+  "name": "Improved Critical",
+  "script": "ImprovedCritical.js",
+  "version": "1.0",
+  "previousversions": [],
+  "description": "Critical/Fumble effect generator.\n Usage: **Critical**\n `!critical [percent]` where percent is an optional number between 1 and 100. If omitted random percent will be rolled\n **Fumble**\n `!fumble [percent]` where percent is an optional number between 1 and 100. If omitted random percent will be rolled\n\n [Details](https://github.com/Roll20/roll20-api-scripts/blob/master/ImprovedCritical/READ.md)",
+  "authors": "Ryan Jentzsch",
+  "roll20userid": "1638601",
+  "patreon": "https://patreon.com/user?u=3985594",
+  "modifies": {},
+  "conflicts": ["Critical", "Fumbler"],
+  "useroptions": []
+}
