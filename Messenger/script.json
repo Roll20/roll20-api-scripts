@@ -1,0 +1,12 @@
+{
+  "name": "Messenger",
+  "script": "Messenger.js",
+  "version": "1.0.0",
+  "description": "Messenger is a utility script for some of timmaugh's scripts that require a formatted chat output.",
+  "authors": "timmaugh",
+  "roll20userid": "5962076",
+  "useroptions": [],
+  "modifies": { },
+  "conflicts": [],
+  "previousversions": []
+}

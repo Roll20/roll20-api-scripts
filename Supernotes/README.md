@@ -63,6 +63,10 @@ This script as written is optimized for the D&D 5th Edition by Roll20 sheet, but
 
 - **western.** Return with us now to those thrilling days of yesteryear!
 
+- **wizard.** Like the ones that live on the coast.
+
+- **dragon.** Three-fivey goodness!
+
 *--help* Displays help.
 
 *--config* Returns a configuration dialog box that allows you to set which sheet's roll template to use, and to toggle the 'Send to Players' footer.
@@ -87,3 +91,4 @@ Default Template, D&D 5th Edition by Roll20, 5e Shaped, Pathfinder by Roll20, Pa
 - 1.1.3 Added support for Call of Cthulhu 7th Edition by Roll20
 - 1.1.4 Added better coordination with Reporter. Handouts can now support a Reporter report and display the desired notes in the same handout.
 - 0.2.0 Added custom templates, and configured base script to return in-line text links instead of Roll20 Big Pink Buttons.
+- 0.2.1 Fixed parsing bug and added two new templates - wizard and dragon
