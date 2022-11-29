@@ -54,7 +54,7 @@
  * v1.3.03 22/10/2022 Support for the Race Database.
  * v1.3.04 15/11/2022 Allow handleCheckSaves() to work in silent mode. Added support 
  *                    for the Creatures database.
- * v1.4.01 28/11/2022 Support for the Fighting Styles database & creature setup
+ * v1.4.01 29/11/2022 Support for the Fighting Styles database & creature setup
  **/
  
 var API_Meta = API_Meta||{}; // eslint-disable-line no-var
