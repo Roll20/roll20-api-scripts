@@ -76,15 +76,16 @@
  * v1.3.03 19/10/2022  Extended the Ability object with new methods - .data() and .hands()
  *                     Added Race database parsing & use. Fixed error in taking a weapon
  *                     in hand that can be either 1 or 2 handed (such as a Bastard Sword).
- * v1.3.04 15/11/22022 Fixed sub-race to-hit bonus calculation. Fix Melee damage posting.
+ * v1.3.04 15/11/2022  Fixed sub-race to-hit bonus calculation. Fix Melee damage posting.
+ * v1.4.01 26/11/2022  Added Fighting Style database and implementation.
  */
  
 var attackMaster = (function() {
 	'use strict'; 
-	var version = '1.3.04',
+	var version = '1.4.01',
 		author = 'Richard @ Damery',
 		pending = null;
-    const lastUpdate = 1668950818;
+    const lastUpdate = 1669708967;
 
 	/*
 	 * Define redirections for functions moved to the RPGMaster library
@@ -168,15 +169,15 @@ var attackMaster = (function() {
 
 	const handouts = Object.freeze({
 	AttackMaster_Help:	{name:'AttackMaster Help',
-						 version:2.02,
+						 version:2.03,
 						 avatar:'https://s3.amazonaws.com/files.d20.io/images/257656656/ckSHhNht7v3u60CRKonRTg/thumb.png?1638050703',
 						 bio:'<div style="font-weight: bold; text-align: center; border-bottom: 2px solid black;">'
-							+'<span style="font-weight: bold; font-size: 125%">AttackMaster Help v2.02</span>'
+							+'<span style="font-weight: bold; font-size: 125%">AttackMaster Help v2.03</span>'
 							+'</div>'
 							+'<div style="padding-left: 5px; padding-right: 5px; overflow: hidden;">'
 							+'<h1>Attack Master API v'+version+'</h1>'
 							+'<h4>and later</h4>'
-							+'<p>AttackMaster API provides functions to manage weapons, armour & shields, including taking weapons in hand and using them to attack.  It uses rules (defined in the <b>RPGMaster Library</b>) to the full extent, taking into account: ranged weapon ammo management with ranges varying appropriately and range penalties/bonuses applied; Strength & Dexterity bonuses where appropriate; any magic bonuses to attacks that are in effect (if used with <b>RoundMaster API</b> effects); penalties & bonuses for non-proficiency, proficiency, specialisation & mastery; penalties for non-Rangers attacking with two weapons; use of 1-handed, 2-handed or many-handed weapons and restrictions on the number of weapons & shields that can be held at the same time; plus many other features.  This API works best with the databases provided with the RPGMaster series APIs (or added by yourself in custom databases), which hold the data for automatic definition of weapons and armour.  However, some attack commands will generally work with manual entry of weapons onto the character sheet.  The <b>CommandMaster API</b> can be used by the GM to easily manage weapon proficiencies.</p>'
+							+'<p>AttackMaster API provides functions to manage weapons, armour & shields, including taking weapons in hand and using them to attack.  It uses rules (defined in the <b>RPGMaster Library</b>) to the full extent, taking into account: ranged weapon ammo management with ranges varying appropriately and range penalties/bonuses applied; Strength & Dexterity bonuses where appropriate; any magic bonuses to attacks that are in effect (if used with <b>RoundMaster API</b> effects); penalties & bonuses for non-proficiency, proficiency, specialisation & mastery; penalties for non-Rangers attacking with two weapons; use of 1-handed, 2-handed or many-handed weapons and restrictions on the number of weapons & shields that can be held at the same time; support for <i>Fighting Styles</i> as defined in <i>The Complete Fighter\'s Handbook;</i> plus many other features.  This API works best with the databases provided with the RPGMaster series APIs (or added by yourself in custom databases), which hold the data for automatic definition of weapons and armour.  However, some attack commands will generally work with manual entry of weapons onto the character sheet.  The <b>CommandMaster API</b> can be used by the GM to easily manage weapon proficiencies.</p>'
 							+'<p>Specification for weapons, armour & shields are implemented as ability macros in specific database character sheets.  This API comes with a wide selection of weapon and armour macros, held in databases in the RPGMaster Library for the specific game version you are playing.  If the <b>MagicMaster API</b> is also loaded, it provides many more specifications for standard and magic items that are beneficial to melee actions and armour class.  The GM can add to the provided items in the databases using standard Roll20 Character Sheet editing, following the instructions provided in the relevant Database Help handout.</p>'
 							+'<p><b><u>Note:</u></b> For some aspects of the APIs to work, the <b>ChatSetAttr API</b> and the <b>Tokenmod API</b>, both from the Roll20 Script Library, must be loaded.  It is also <i>highly recommended</i> to load all the other RPGMaster series APIs: <b>RoundMaster, InitiativeMaster, MagicMaster and CommandMaster</b> as well as the mandatory game version specific <b>RPGMaster Library</b>.  This will provide the most immersive game-support environment</p>'
 							+'<h2>Syntax of AttackMaster calls</h2>'
@@ -236,6 +237,7 @@ var attackMaster = (function() {
 							+'Ammunition<br>'
 							+'Ranged weapon and ammunition ranges<br>'
 							+'Dancing weapons<br>'
+							+'Fighting Styles<br>'
 							+'Armour Class management<br>'
 							+'Saves</pre>'
 							+'<br>'
@@ -436,6 +438,8 @@ var attackMaster = (function() {
 							+'<p>Each type of ammunition has a range with the weapon used to fire it.  These ranges can be different for different types of weapon - thus a longbow can fire an flight arrow further than a short bow, and a sheaf arrow has different ranges than the flight arrow with each.  The ranges that can be achieved by the weapon and ammunition combination are displayed when they are used in an attack, and the Player is asked to select which range to use, which then applies the correct range modifier to the attack roll.</p>'
 							+'<h3>Dancing weapons</h3>'
 							+'<p>The system can support any weapon becoming a dancing weapon, with qualities that can be the same as or different from a Sword of Dancing.  In the system a dancing weapon does not have to be held in hand in order for it to be available for attacks and, if using the <b>InitiativeMaster API</b>, the weapon is also automatically added to the Turn Order Tracker for its attacks to be performed in battle sequence.  All of this can be achieved automatically if used with the <b>RoundMaster API</b>, with durations of \'warm up\' and \'dancing\' dealt with, as well as magical properties changing as the rounds progress - that function requires some editing of the Effects database to adapt for a particular weapon - see the RoundMaster API Effect Database documentation for details.</p>'
+							+'<h3>Fighting Styles</h3>'
+							+'<p><i>The Complete Fighter\'s Handbook</i> introduced the concept of Fighters being able to become proficient or a specialist in various styles of fighting, such as with two-handed melee weapons, a weapon and a shield, and such like. These are supported in the RPGMaster APIs via the <b>Styles-DB</b> database, and functions in the <b>CommandMaster API, InitiativeMaster API</b> as well as here in AttackMaster.  Each time weapons & shields in-hand are changed using the <i>Attack Menu / Change Weapons</i> menu, AttackMaster checks what is in-hand against any Fighting Styles the character is proficient or specialised in (as defined via the <b>CommandMaster</b> <i>Token-Setup / Set Proficiencies</i> menu). If any are applicable given what is currently in use, AttackMaster will apply the relevant fighting style benefits to the character and their use of their weapons and armour. The APIs are distributed with rules defined for the four styles defined in <i>The Complete Fighter\'s Handbook</i>, and DMs and game authors can add their own as desired. See the <b>Styles Database Help</b> handout for more information.</p>'
 							+'<h3>Armour Class management</h3>'
 							+'<p>The system continually checks the Armour Class of each Character / NPC / creature by examining the information on the Character Sheet and the items in the Item table.  Armour and Shields can be placed in the Items table which will be discovered, and the specifications from the Armour database used to calculate the appropriate AC under various conditions and display them to the Player.  The process the system made to achieve the calculated AC will be shown.</p>'
 							+'<p>Many magic items have AC qualities, such as Bracers of Defence and Rings of Protection, and if the <b>MagicMaster API</b> is used these are also taken into account - invalid combinations will also be prevented, such as Rings of Protection with magical armour.  If allocated to a Token Circle, the calculated AC is compared to the displayed Token AC and any difference highlighted - this may be due to magical effects currently in place, for instance - the highlight allows the Player to review why this might be.</p>'
@@ -542,8 +546,8 @@ var attackMaster = (function() {
 		SPECIFY:    'SPECIFY',
 		CARRY:      'CARRY',
 		SUBMIT:     'SUBMIT',
-		LEFT:		'LEFT',
-		RIGHT:		'RIGHT',
+		RIGHT:		'PRIMARY',
+		LEFT:		'OFFHAND',
 		BOTH:		'BOTH',
 		HAND:		'HAND',
 		LEFTRING:	'LEFTRING',
@@ -719,8 +723,37 @@ var attackMaster = (function() {
 		long:		{field:'L',def:'-5',re:/[\[,\s]L:([-\+\d]+?)[,\]]/i},
 		far:		{field:'F',def:'-20',re:/[\[,\s]F:([-\+\d]+?)[,\]]/i},
 	});
-		
 	
+	const reStyleData = Object.freeze ({
+		prime:		{field:'prime',def:'',re:/[\[,\s]prime:([\s\w\-\+\|\!]+?)[,\s\]]/i},
+		offhand:	{field:'offhand',def:'',re:/[\[,\s]offhand:([\s\w\-\+\|\!]+?)[,\s\]]/i},
+		twohand:	{field:'twohand',def:'',re:/[\[,\s]twohand:([\s\w\-\+\|\!]+?)[,\s\]]/i},
+		weaps:		{field:'weaps',def:'any',re:/[\[,\s]weaps:([\s\w\-\+\|\!]+?)[,\s\]]/i},
+		ac:			{field:'ac',def:'0',re:/[\[,\s]ac:([-+]?[\d]+?)[,\s\]]/i},
+		oneh:		{field:'oneh',def:'',re:/[\[,\s]1H:(.+?)[,\s\]]/i},
+		twoh:		{field:'twoh',def:'',re:/[\[,\s]2H:(.+?)[,\s\]]/i},
+		shattk:		{field:'shattk',def:'0',re:/[\[,\s]shattk:([-\+]?[\d]+?)[,\s\]]/i},
+		twp:		{field:'twp',def:'2.4',re:/[\[,\s]twp:(\d\.\d)[,\s\]]/i},
+		mwsp:		{field:'mwsp',def:'0',re:/[\[,\s]mwsp:([-+]?\d+?)[,\s\]]/i},
+		rwsp:		{field:'rwsp',def:'0',re:/[\[,\s]rwsp:([-+]?\d+?)[,\s\]]/i},
+		mwn:		{field:'mwn',def:'0',re:/[\[,\s]mwn:([+-]?[\d.\/]+)[,\s\]]/i},
+		rwn:		{field:'rwn',def:'0',re:/[\[,\s]rwn:([+-]?[\d.\/]+)[,\s\]]/i},
+		mwadj:		{field:'mwadj',def:'0',re:/[\[,\s]mwadj:([-+]?\d+?)[,\s\]]/i},
+		rwadj:		{field:'rwadj',def:'0',re:/[\[,\s]rwadj:([-+]?\d+?)[,\s\]]/i},
+		mwch:		{field:'mwch',def:'20',re:/[\[,\s]mwch:(\d+?)[,\s\]]/i},
+		rwch:		{field:'rwch',def:'20',re:/[\[,\s]rwch:(\d+?)[,\s\]]/i},
+		mwcm:		{field:'mwcm',def:'1',re:/[\[,\s]mwcm:(\d+?)[,\s\]]/i},
+		rwcm:		{field:'rwcm',def:'1',re:/[\[,\s]rwcm:(\d+?)[,\s\]]/i},
+		rwr:		{field:'rwr',def:'',re:/[\[,\s]rwr:(=?[+-]?[\s\w\+\-\d\/]+)[,\s\]]/i},
+		rwrm:		{field:'rwrm',def:'0',re:/[\[,\s]rwrm:(=?[+-]?[\s\w\+\-\d\/]+)[,\s\]]/i},
+		dmg:		{field:'dmg',def:'0',re:/[\[,\s]dmg:([-\+]?\d+?)[,\s\]]/i},
+		dmgsm:		{field:'dmgsm',def:'0',re:/[\[,\s]dmgsm:([-+]?\d+?)[,\s\]]/i},
+		dmgl:		{field:'dmgl',def:'0',re:/[\[,\s]dmgl:([-+]?\d+?)[,\s\]]/i},
+		ammoadj:	{field:'ammoadj',def:'0',re:/[\[,\s]ammoadj:([-+]?\d+?)[,\s\]]/i},
+		ammosm:		{field:'ammosm',def:'0',re:/[\[,\s]ammosm:([-+]?\d+?)[,\s\]]/i},
+		ammol:		{field:'ammol',def:'0',re:/[\[,\s]ammol:([-+]?\d+?)[,\s\]]/i},
+	});
+
 	const design = Object.freeze ({
 		turncolor: '#D8F9FF',
 		roundcolor: '#363574',
@@ -1377,13 +1410,339 @@ var attackMaster = (function() {
 			val = attributes.match(spec.re);
 			if (!!val && val.length>1 && val[1].length) {
 				parsedData[spec.field] = val.length == 3 ? [val[1],val[2]] : val[1];
-			} else if (!def) {
-				parsedData[spec.field] = undefined;
-			} else {
+//			} else if (!def) {
+//				parsedData[spec.field] = undefined;
+//			} else {
+			} else if (def) {
 				parsedData[spec.field] = spec.def;
 			}
 		});
 		return parsedData;
+	}
+	
+	/*
+	 * Check if the item specified by a name, type & supertype is
+	 * in the list of allowed itemSpecs
+	 */
+
+	var checkItemAllowed = function( wname, wt, wst, allowedItems ) {
+		log('checkAllowedItems: called with wname='+wname+', wt='+wt+', wst='+wst+', allowedItems='+allowedItems);
+		let forceFalse = false;
+		allowedItems = allowedItems.toLowerCase().replace(reIgnore,'').split('|'),
+		wt = _.uniq(wt);
+		wst = _.uniq(wst);
+		return allowedItems.reduce((p,c) => {
+			let item = '!+'.includes(c[0]) ? c.slice(1) : c,
+				found = item.includes('any') || wt.includes(item) || wst.includes(item) || wname.includes(item);
+			forceFalse = (forceFalse || (c[0] === '!' && found)) && !(c[0] === '+' && found);
+			return (p || found) && !forceFalse;
+		}, false);
+	}
+		
+	/*
+	 * Assess In-Hand weapons and armour to check if equipment 
+	 * matches any currently proficient fighting style
+	 */
+	 
+	var checkCurrentStyles = function( charCS, InHandTable ) {
+		
+		var spell, melee, shield, ranged, sield, throwing, twoHanded,
+			inPrimary = {},
+			inBoth = {},
+			inOther = {}, 
+			wt = [],
+			wst = [],
+			weaps = [],
+			inHandName, fightStyles, style,
+			i=0;
+
+//		InHandTable = getTable( charCS, fieldGroups.INHAND );
+
+		for (let i=0; !_.isUndefined(inHandName = InHandTable.tableLookup( fields.InHand_name, i, false )); i++) {
+			
+			let inHand = InHandTable.tableLookup( fields.InHand_trueName, i ) || inHandName;
+			spell = melee = ranged = shield = throwing = false;
+			if (inHand !== '-') {
+				let inHandDB = InHandTable.tableLookup( fields.InHand_db, i );
+				let inHandObj = abilityLookup( inHandDB, inHand, charCS );
+				if (inHandObj.obj) {
+					twoHanded = InHandTable.tableLookup( fields.InHand_handedness, i ) == 2;
+					let inHandSpecs = inHandObj.specs(/}}\s*Specs\s*=(.*?){{/im);
+					let throwing = throwing || (/}}\s*tohitdata\s*=/im.test(inHandObj.obj[1].body) && /}}\s*ammodata\s*=/im.test(inHandObj.obj[1].body));
+					for (const c of inHandSpecs) {
+						let inHandClass = c[2].toLowerCase();
+						spell = spell || !inHandDB.startsWith(fields.MagicItemDB);
+						melee = melee || inHandClass.includes('melee');
+						ranged = ranged || inHandClass.includes('ranged');
+						shield = shield || inHandClass.includes('shield');
+						wt.push(c[1].toLowerCase().replace(reIgnore,''));
+						wst.push(c[4].toLowerCase().replace(reIgnore,''));
+						weaps.push(inHand.toLowerCase().replace(reIgnore,''));
+					}
+				}
+			}
+			if (i == 0) {
+				inPrimary = {spell:spell, melee:melee, ranged:ranged, shield:shield, throwing:throwing, none:!(spell || melee || ranged || shield)};
+			} else if (i == 2 || twoHanded) {
+				inBoth = {spell:inBoth.spell || spell, melee:inBoth.melee || melee, ranged:inBoth.ranged || ranged, shield:inBoth.shield || shield, throwing:inBoth.throwing || throwing};
+				inBoth.none = !(inBoth.spell || inBoth.melee || inBoth.ranged || inBoth.shield );
+			} else {
+				inOther = {spell:inOther.spell || spell, melee:inOther.melee || melee, ranged:inOther.ranged || ranged, shield:inOther.shield || shield, throwing:inOther.throwing || throwing};
+				inOther.none = !(inOther.spell || inOther.melee || inOther.ranged || inOther.shield );
+			}
+		}
+		log('checkCurrentStyles: inPrimary='+_.pairs(inPrimary).flat()+'\ninOther='+_.pairs(inOther).flat()+'\ninBoth='+_.pairs(inBoth).flat());
+		
+		fightStyles = getTable( charCS, fieldGroups.STYLES );
+		for (let r=0; !_.isUndefined(style = fightStyles.tableLookup( fields.Style_name, r, false )); r++) {
+			let styleObj = abilityLookup( fields.StylesDB, style, charCS );
+			if (!styleObj.obj) continue;
+			let styleData = styleObj.data(/}}\s*styledata\s*=(.*?){{/im);
+			if (_.isUndefined( styleData )) continue;
+			let styleRow = parseData( styleData[0][0], reStyleData ),
+				primeHand = !styleRow.prime   || _.reduce(inPrimary, (valid,weapon,key) => (styleRow.prime.includes(key) ? valid && weapon : valid), true),
+				offhand   = !styleRow.offhand || _.reduce(inOther, (valid,weapon,key) => (styleRow.offhand.includes(key) ? valid && weapon : valid), true),
+				both      = !styleRow.twohand || _.reduce(inBoth, (valid,weapon,key) => (styleRow.twohand.includes(key) ? valid && weapon : valid), true),
+				allowed   = checkItemAllowed( weaps, wt, wst, (styleRow.weaps || 'any'));
+
+			log('checkCurrentStyles: style '+style+' primeHand='+primeHand+', offHand='+offhand+', both='+both+', allowed='+allowed);
+			fightStyles.tableSet( fields.Style_current, r, (primeHand && offhand && both && allowed) );
+		};
+		applyFightingStyle( charCS, InHandTable, fightStyles );
+		return;
+	}
+	
+	/*
+	 * Set all fighting style modifiers to their default values
+	 * ready for establishing fighting style bonuses
+	 */
+	 
+	var setStyleDefaults = function( charCS, styleFieldMap, meleeTable, rangedTable, dmgTable, ammoTable ) {
+		
+		setAttr( charCS, fields.Armour_styleMod, 0 );
+		setAttr( charCS, fields.Init_2ndShield, 0 );
+		setAttr( charCS, fields.TwoWeapStylePenalty, 9.9 );
+		
+		_.each( styleFieldMap, (field,key) => {
+			switch (field[0]) {
+			case 'MW':
+				meleeTable.tableDefault( field[1] );
+				break;
+			case 'RW':
+				rangedTable.tableDefault( field[1] );
+				break;
+			case 'DMG':
+				dmgTable.tableDefault( field[1] );
+				break;
+			case 'AMMO':
+				ammoTable.tableDefault( field[1] );
+				break;
+			}
+		});
+	}
+		
+	/*
+	 * Determine if any proficient style is current and, if so,
+	 * if it applies to an attack with the named weapon
+	 */
+	 
+	var applyFightingStyle = function( charCS, InHandTable, fightStyles ) {
+		
+		var spell, melee, ranged, shield, throwing, prime, both, offhand, inHandName, style,
+			meleeTable = getTable( charCS, fieldGroups.MELEE ),
+			dmgTable = getTable( charCS, fieldGroups.DMG ),
+			rangedTable = getTable( charCS, fieldGroups.RANGED ),
+			ammoTable = getTable( charCS, fieldGroups.AMMO ),
+			styleBenefits = [];
+
+		const styleFieldMap = Object.freeze ({
+			mwsp:		['MW',fields.MW_styleSpeed],
+			rwsp:		['RW',fields.RW_styleSpeed],
+			mwn:		['MW',fields.MW_styleAttks],
+			rwn:		['RW',fields.RW_styleAttks],
+			mwadj:		['MW',fields.MW_styleAdj],
+			rwadj:		['RW',fields.RW_styleAdj],
+			mwch:		['MW',fields.MW_styleCH],
+			rwch:		['RW',fields.RW_styleCH],
+			mwcm:		['MW',fields.MW_styleCM],
+			rwcm:		['RW',fields.RW_styleCM],
+			rwr:		['RW',fields.RW_styleRange],
+			rwrm:		['RW',fields.RW_styleRangeMods],
+			dmg:		['DMG',fields.Dmg_styleAdj],
+			dmgsm:		['DMG',fields.Dmg_styleSM],
+			dmgl:		['DMG',fields.Dmg_styleL],
+			ammoadj:	['AMMO',fields.Ammo_styleAdj],
+			ammosm:		['AMMO',fields.Ammo_styleSM],
+			ammol:		['AMMO',fields.Ammo_styleL],
+			oneh:		['',['','']],
+			twoh:		['',['','']],
+		});
+
+		var implementStyle = function( charCS, row, weapon, styleBenefits ) {
+
+		log('implementStyle: called for weapon '+weapon+' with benefits = '+styleBenefits);
+			
+			var parsedBenefits = parseData( styleBenefits, reStyleData, false );
+				
+			weapon = weapon.toLowerCase().replace(reIgnore,'');
+
+			_.each( parsedBenefits, (val,key) => {
+				log('implementStyle: processing val='+val+', key='+key);
+				if (_.isUndefined(val) || !styleFieldMap[key]) return;
+				let field = styleFieldMap[key][1];
+//				log('implementStyle: field['+key+'] = '+field);
+				switch (key) {
+				case 'oneh':
+					if (InHandTable.tableLookup( fields.InHand_handedness, row ) == 1) {
+						implementStyle( charCS, row, weapon, '['+val.replace(/=/g,':').replace(/\|/g,',')+']');
+					}
+					break;
+				case 'twoh':
+					if (InHandTable.tableLookup( fields.InHand_handedness, row ) != 1) {
+						implementStyle( charCS, row, weapon, '['+val.replace(/=/g,':').replace(/\|/g,',')+']');
+					}
+					break;
+				case 'dmg':
+				case 'dmgsm':
+				case 'dmgl':
+					if (!dmgTable) dmgTable = getTable( charCS, fieldGroups.DMG );
+					for (let r=dmgTable.table[1]; !_.isUndefined(dmgTable.tableLookup( fields.Dmg_name, r, false )); r++) {
+						let rowWeap = dmgTable.tableLookup( fields.Dmg_miName, r );
+						if (rowWeap.toLowerCase().replace(reIgnore,'') == weapon) {
+							dmgTable.tableSet( field, r, val );
+						}
+					}
+					break;
+				case 'mwsp':
+				case 'mwn':
+				case 'mwadj':
+				case 'mwch':
+				case 'mwcm':
+					if (!meleeTable) meleeTable = getTable( charCS, fieldGroups.MELEE );
+					for (let r=meleeTable.table[1]; !_.isUndefined(meleeTable.tableLookup( fields.MW_name, r, false )); r++) {
+						let rowWeap = meleeTable.tableLookup( fields.MW_miName, r );
+						if (rowWeap.toLowerCase().replace(reIgnore,'') == weapon) {
+							meleeTable.tableSet( field, r, val );
+						}
+					}
+					break;
+				case 'rwsp':
+				case 'rwn':
+				case 'rwadj':
+				case 'rwch':
+				case 'rwcm':
+				case 'rwr':
+				case 'rwrm':
+					if (!rangedTable) rangedTable = getTable( charCS, fieldGroups.RANGED );
+					for (let r=rangedTable.table[1]; !_.isUndefined(rangedTable.tableLookup( fields.RW_name, r, false )); r++) {
+						let rowWeap = rangedTable.tableLookup( fields.RW_miName, r );
+						if (rowWeap.toLowerCase().replace(reIgnore,'') == weapon) {
+							rangedTable.tableSet( field, r, val );
+						}
+					}
+					break;
+				case 'ammoadj':
+				case 'ammosm':
+				case 'ammol':
+					if (!ammoTable) ammoTable = getTable( charCS, fieldGroups.AMMO );
+					for (let r=ammoTable.table[1]; !_.isUndefined(ammoTable.tableLookup( fields.Ammo_name, r, false )); r++) {
+						let rowWeap = ammoTable.tableLookup( fields.Ammo_miName, r );
+						if (rowWeap.toLowerCase().replace(reIgnore,'') == weapon) {
+							ammoTable.tableSet( field, r, val );
+						}
+					}
+					break;
+				}
+			});
+			return;
+		}
+		
+		setStyleDefaults( charCS, styleFieldMap, meleeTable, rangedTable, dmgTable, ammoTable );
+
+		for (let r=fightStyles.table[1]; !_.isUndefined(style = fightStyles.tableLookup(fields.Style_name,r,false)); r++) {
+//			log('applyFightingStyle: checking row '+r+' of fightStyles table, which is '+style+', and is '+('true' == fightStyles.tableLookup(fields.Style_current, r)));
+			if (style != '-' && (fightStyles.tableLookup(fields.Style_current, r) == 'true')) {
+				log('applyFightingStyle: '+style+' is valid');
+				let styleObj = abilityLookup( fields.StylesDB, style, charCS );
+				if (!styleObj.obj) return;
+				let styleData = styleObj.data(/}}\s*styledata\s*=(.*?){{/im);
+				if (_.isUndefined( styleData )) return;
+				
+				let styleProf = (parseInt(fightStyles.tableLookup( fields.Style_proficiency, r ) || 1) || 1);
+				if (styleProf) {
+//					log('applyFightingStyle: about to call applyFightingStyle - styleData['+styleProf+'] = '+styleData[styleProf][0]);
+					let benefits = styleData[styleProf][0];
+					styleBenefits.push(benefits);
+//					log('applyFightingStyle: parsed styles table');
+		
+					for (let i=0; !_.isUndefined(inHandName = InHandTable.tableLookup( fields.InHand_name, i, false )); i++) {
+						
+//						log('applyFightingStyle: checking weapon '+inHandName);
+						let inHand = InHandTable.tableLookup( fields.InHand_trueName, i ) || inHandName;
+						spell = melee = ranged = shield = throwing = false;
+						if (inHand !== '-') {
+							let inHandDB = InHandTable.tableLookup( fields.InHand_db, i );
+							let inHandObj = abilityLookup( inHandDB, inHand );
+							if (inHandObj.obj) {
+								let twoHanded = InHandTable.tableLookup( fields.InHand_handedness, i ) == 2;
+								let inHandSpecs = inHandObj.specs(/}}\s*Specs\s*=(.*?){{/im);
+								let throwing = throwing || (/}}\s*tohitdata\s*=/im.test(inHandObj.obj[1].body) && /}}\s*ammodata\s*=/im.test(inHandObj.obj[1].body));
+								let wt = [], wst = [];
+								for (const c of inHandSpecs) {
+									let inHandClass = c[2].toLowerCase();
+									spell = spell || !inHandDB.startsWith(fields.MagicItemDB);
+									melee = melee || inHandClass.includes('melee');
+									ranged = ranged || inHandClass.includes('ranged');
+									shield = shield || inHandClass.includes('shield');
+									wt.push(c[1].toLowerCase().replace(reIgnore,''));
+									wst.push(c[4].toLowerCase().replace(reIgnore,''));
+								}
+								prime = both = offhand = true;
+								let styleDef = parseData( styleData[0][0], reStyleData );
+								if (i == 0 && styleDef.prime) {
+									prime = (spell && styleDef.prime.includes('spell'))
+										 || (melee && styleDef.prime.includes('melee'))
+										 || (ranged && styleDef.prime.includes('ranged'))
+										 || (shield && styleDef.prime.includes('shield'))
+										 || (throwing && styleDef.prime.includes('throwing'));
+								} else if ((i == 2 || twoHanded) && styleDef.twohand) {
+									both = (spell && styleDef.twohand.includes('spell'))
+										 || (melee && styleDef.twohand.includes('melee'))
+										 || (ranged && styleDef.twohand.includes('ranged'))
+										 || (shield && styleDef.twohand.includes('shield'))
+										 || (throwing && styleDef.twohand.includes('throwing'));
+								} else if (styleDef.offhand) {
+									offhand = (spell && styleDef.offhand.includes('spell'))
+										 || (melee && styleDef.offhand.includes('melee'))
+										 || (ranged && styleDef.offhand.includes('ranged'))
+										 || (shield && styleDef.offhand.includes('shield'))
+										 || (throwing && styleDef.offhand.includes('throwing'));
+								}
+								if (prime && both && offhand && checkItemAllowed([inHand], wt, wst, (styleDef.weaps || 'any'))) {
+									implementStyle( charCS, i, inHand, benefits );
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+
+		_.each( parseData( styleBenefits.join(), reStyleData ), (val,key) => {
+			if (_.isUndefined(val)) return;
+			switch (key) {
+			case 'ac':
+				setAttr( charCS, fields.Armour_styleMod, val );
+				break;
+			case 'shattk':
+				setAttr( charCS, fields.Init_2ndShield, val );
+				break;
+			case 'twp':
+				setAttr( charCS, fields.TwoWeapStylePenalty, val );
+				break;
+			}
+		});
+		return;
 	}
 	
 	/*
@@ -1695,7 +2054,7 @@ var attackMaster = (function() {
 			spec, wpName, wpType,
 			isType, isSuperType, isSameName, isSpecialist, isMastery;
 
-			isType = isSuperType = isSameName = isSpecialist = isMastery = false;
+		isType = isSuperType = isSameName = isSpecialist = isMastery = false;
 		
 		if (allowedWeap) {
 			do {
@@ -2202,20 +2561,27 @@ var attackMaster = (function() {
 		return new Promise(resolve => {
 
 			try {
+				log('updateAttackTables: called');
 				var base = fields.InHand_table[1],
 					i = base,
 					lentHands = parseInt(attrLookup( charCS, fields.Equip_lentHands )) || 0,
 					noHands = Math.max(((parseInt(attrLookup( charCS, fields.Equip_handedness )) || 2) + lentHands), 2),
 					weapon, hand, index;
 
+				log('updateAttackTables: defined vars');
 				while ((!_.isUndefined(weapon = InHandTable.tableLookup( fields.InHand_name, i, false )))) {
+				log('updateAttackTables: dealing with weapon '+weapon);
 					index = InHandTable.tableLookup( fields.InHand_index, i, false );
 					if (i == rowInHand) {
+				log('updateAttackTables: adding requested weapon');
 						index = parseFloat(miSelection);
 						hand = (i==base ? fields.Equip_leftHand : (i==base+1 ? fields.Equip_rightHand : (i==base+2 ? fields.Equip_bothHands : null)));
+				log('updateAttackTables: calling addWeapon with hand='+hand+', handedness='+handedness+', i='+i);
 						[weaponInfo,Quiver] = addWeapon( charCS, hand, handedness, i, (i>(noHands+base)), weaponInfo, Quiver, InHandTable );
 					} else {
+				log('updateAttackTables: checking for ammo');
 						if (weapon != '-' && index != '' && index >= -1) {
+				log('updateAttackTables: putting ammo in quiver, index='+index);
 							Quiver = putAmmoInQuiver( charCS, weaponInfo, Quiver, index );
 						}
 					}
@@ -2603,11 +2969,12 @@ var attackMaster = (function() {
 					miName		= tableInfo.MELEE.tableLookup( fields.MW_miName, mwIndex ),
 					dancing		= tableInfo.MELEE.tableLookup( fields.MW_dancing, mwIndex ),
 					attkAdj 	= tableInfo.MELEE.tableLookup( fields.MW_adj, mwIndex ),
+					attkStyleAdj= tableInfo.MELEE.tableLookup( fields.MW_styleAdj, mwIndex ),
 					strBonus 	= tableInfo.MELEE.tableLookup( fields.MW_strBonus, mwIndex ),
 					mwType 		= tableInfo.MELEE.tableLookup( fields.MW_type, mwIndex ),
 					mwSuperType = tableInfo.MELEE.tableLookup( fields.MW_superType, mwIndex ),
-					critHit 	= tableInfo.MELEE.tableLookup( fields.MW_critHit, mwIndex ) || 20,  // Temp fix for Efriiti corruption
-					critMiss 	= tableInfo.MELEE.tableLookup( fields.MW_critMiss, mwIndex ),
+					critHit 	= Math.min((tableInfo.MELEE.tableLookup( fields.MW_critHit, mwIndex )||20),(tableInfo.MELEE.tableLookup( fields.MW_styleCH, mwIndex )||20)),
+					critMiss 	= Math.max((tableInfo.MELEE.tableLookup( fields.MW_critMiss, mwIndex )||1),(tableInfo.MELEE.tableLookup( fields.MW_styleCM, mwIndex )||1)),
 					slashWeap	= parseInt(tableInfo.MELEE.tableLookup( fields.MW_slash, mwIndex )),
 					pierceWeap	= parseInt(tableInfo.MELEE.tableLookup( fields.MW_pierce, mwIndex )),
 					bludgeonWeap= parseInt(tableInfo.MELEE.tableLookup( fields.MW_bludgeon, mwIndex )),
@@ -2617,8 +2984,11 @@ var attackMaster = (function() {
 					weapCharged = (weapObj.obj ? !(['uncharged','cursed'].includes(weapObj.obj[1].charge.toLowerCase())) : false),
 					weapTypeTxt = (slashWeap?'S':'')+(pierceWeap?'P':'')+(bludgeonWeap?'B':''),
 					dmgAdj 		= tableInfo.DMG.tableLookup( fields.Dmg_adj, mwIndex ),
+					dmgStyleAdj = tableInfo.DMG.tableLookup( fields.Dmg_styleAdj, mwIndex ),
 					dmgSM 		= tableInfo.DMG.tableLookup( fields.Dmg_dmgSM, mwIndex ),
+					dmgSMstyle	= tableInfo.DMG.tableLookup( fields.Dmg_styleSM, mwIndex ),
 					dmgL 		= tableInfo.DMG.tableLookup( fields.Dmg_dmgL, mwIndex ),
+					dmgLstyle	= tableInfo.DMG.tableLookup( fields.Dmg_styleL, mwIndex ),
 					dmgStrBonus = (tableInfo.DMG.tableLookup( fields.Dmg_strBonus, mwIndex ) || 1),
 					dmgMsg		= tableInfo.DMG.tableLookup( fields.Dmg_message, mwIndex ),
 					strHit 		= attrLookup( charCS, fields.Strength_hit ) || 0,
@@ -2630,7 +3000,7 @@ var attackMaster = (function() {
 					magicHitAdj = attrLookup( charCS, fields.Magic_hitAdj ) || 0, 
 					magicDmgAdj = attrLookup( charCS, fields.Magic_dmgAdj ) || 0,
 					primeWeapon = attrLookup( charCS, fields.Primary_weapon ) || 0,
-					twPen		= classes.map(c => parseFloat(c.classData.twoWeapPen)).reduce((prev,cur) => (Math.min(prev,cur))),
+					twPen		= Math.min(parseFloat(attrLookup( charCS, fields.TwoWeapStylePenalty ) || 9.9), classes.map(c => parseFloat(c.classData.twoWeapPen)).reduce((prev,cur) => (Math.min(prev,cur)))),
 					twoWeapPenalty = (ranger || primeWeapon < 1) ? 0 : (-1*(((mwIndex*2)+(fields.MW_table[1]==0?1:3)) == primeWeapon ? Math.floor(twPen) : Math.floor((10*twPen)%10))),
 					proficiency = dancing != 1 ? proficient( charCS, weaponName, mwType, mwSuperType ) : tableInfo.MELEE.tableLookup( fields.MW_dancingProf, mwIndex ),
 					race		= raceMods( charCS, mwType, mwSuperType ),
@@ -2673,6 +3043,7 @@ var attackMaster = (function() {
 										 .replace( /\^\^tid\^\^/gi , tokenID )
 										 .replace( /\^\^toHitRoll\^\^/gi , toHitRoll )
 										 .replace( /\^\^weapAttkAdj\^\^/gi , attkAdj )
+										 .replace( /\^\^weapStyleAdj\^\^/gi , attkStyleAdj )
 										 .replace( /\^\^strAttkBonus\^\^/gi , strHit )
 										 .replace( /\^\^weapStrHit\^\^/gi , strBonus )
 										 .replace( /\^\^profPenalty\^\^/gi , Math.min(proficiency,0) )
@@ -2682,6 +3053,7 @@ var attackMaster = (function() {
 										 .replace( /\^\^magicAttkAdj\^\^/gi , magicHitAdj )
 										 .replace( /\^\^twoWeapPenalty\^\^/gi , twoWeapPenalty )
 										 .replace( /\^\^weapDmgAdj\^\^/gi , dmgAdj )
+										 .replace( /\^\^weapStyleDmgAdj\^\^/gi , dmgStyleAdj )
 										 .replace( /\^\^magicDmgAdj\^\^/gi , magicDmgAdj )
 										 .replace( /\^\^strDmgBonus\^\^/gi , strDmg )
 										 .replace( /\^\^backstab\^\^/gi , backstab ? 1 : 0 )
@@ -2709,8 +3081,10 @@ var attackMaster = (function() {
 										 .replace( /\^\^targetACfield\^\^/gi , tokenAC )
 										 .replace( /\^\^targetAC\^\^/gi , tokenAC )
 										 .replace( /\^\^weapDmgSM\^\^/gi , dmgSMroll )
+										 .replace( /\^\^weapStyleDmgSM\^\^/gi , dmgSMstyle )
 										 .replace( /\^\^weapStrDmg\^\^/gi , dmgStrBonus )
 										 .replace( /\^\^weapDmgL\^\^/gi , dmgLroll )
+										 .replace( /\^\^weapStyleDmgL\^\^/gi , dmgLstyle )
 										 .replace( /\^\^targetHPfield\^\^/gi , tokenHP )
 										 .replace( /\^\^targetHP\^\^/gi , tokenHP )
 										 .replace( /\^\^targetMaxHP\^\^/gi , tokenMaxHP )
@@ -2811,14 +3185,16 @@ var attackMaster = (function() {
 			miName		= tableInfo.RANGED.tableLookup( fields.RW_miName, rwIndex ),
 			dancing		= tableInfo.RANGED.tableLookup( fields.RW_dancing, rwIndex ),
 			attkAdj 	= tableInfo.RANGED.tableLookup( fields.RW_adj, rwIndex ),
+			attkStyleAdj= tableInfo.RANGED.tableLookup( fields.RW_styleAdj, rwIndex ),
 			weapStrBonus= tableInfo.RANGED.tableLookup( fields.RW_strBonus, rwIndex ),
 			weapDexBonus= tableInfo.RANGED.tableLookup( fields.RW_dexBonus, rwIndex ),
 			rwType 		= tableInfo.RANGED.tableLookup( fields.RW_type, rwIndex ),
 			rwSuperType = tableInfo.RANGED.tableLookup( fields.RW_superType, rwIndex ),
-			critHit 	= tableInfo.RANGED.tableLookup( fields.RW_critHit, rwIndex ),
-			critMiss 	= tableInfo.RANGED.tableLookup( fields.RW_critMiss, rwIndex ),
+			critHit 	= Math.min((tableInfo.RANGED.tableLookup( fields.RW_critHit, rwIndex )||20),(tableInfo.RANGED.tableLookup( fields.RW_styleCH, rwIndex )||20)),
+			critMiss 	= Math.min((tableInfo.RANGED.tableLookup( fields.RW_critMiss, rwIndex )||20),(tableInfo.RANGED.tableLookup( fields.RW_styleCM, rwIndex )||20)),
 			weapMsg		= tableInfo.RANGED.tableLookup( fields.RW_message, rwIndex ),
 			hitCharges	= tableInfo.RANGED.tableLookup( fields.RW_charges, rwIndex ),
+			styleRangeMods=tableInfo.RANGED.tableLookup(fields.RW_styleRangeMods, rwIndex ),
 			weapObj		= abilityLookup( fields.WeaponDB, miName, charCS ),
 			weapCharged = (weapObj.obj ? !(['uncharged','cursed'].includes(weapObj.obj[1].charge.toLowerCase())) : false),
 			slashWeap	= parseInt(tableInfo.RANGED.tableLookup( fields.RW_slash, rwIndex )),
@@ -2828,8 +3204,11 @@ var attackMaster = (function() {
 			ammoName    = tableInfo.AMMO.tableLookup( fields.Ammo_name, ammoIndex ),
 			ammoMIname  = tableInfo.AMMO.tableLookup( fields.Ammo_miName, ammoIndex ),
 			dmgAdj 		= tableInfo.AMMO.tableLookup( fields.Ammo_adj, ammoIndex ),
+			dmgStyleAdj = tableInfo.AMMO.tableLookup( fields.Ammo_styleAdj, ammoIndex ),
 			dmgSM 		= tableInfo.AMMO.tableLookup( fields.Ammo_dmgSM, ammoIndex ),
+			dmgSMstyle	= tableInfo.AMMO.tableLookup( fields.Ammo_styleSM, ammoIndex ),
 			dmgL 		= tableInfo.AMMO.tableLookup( fields.Ammo_dmgL, ammoIndex ),
+			dmgLstyle	= tableInfo.AMMO.tableLookup( fields.Ammo_styleL, ammoIndex ),
 			ammoStrBonus= tableInfo.AMMO.tableLookup( fields.Ammo_strBonus, ammoIndex ),
 			ammoQty		= tableInfo.AMMO.tableLookup( fields.Ammo_qty, ammoIndex ),
 			ammoReuse	= tableInfo.AMMO.tableLookup( fields.Ammo_reuse, ammoIndex ),
@@ -2844,7 +3223,9 @@ var attackMaster = (function() {
 			magicHitAdj = attrLookup( charCS, fields.Magic_hitAdj ) || 0, 
 			magicDmgAdj = attrLookup( charCS, fields.Magic_dmgAdj ) || 0,
 			primeWeapon = attrLookup( charCS, fields.Primary_weapon ) || 0,
-			twoWeapPenalty = (ranger || primeWeapon < 1) ? 0 : (((rwIndex*2)+(fields.RW_table[1]==0?2:4)) == primeWeapon ? -2 : -4),
+			twPen		= Math.min(parseFloat(attrLookup( charCS, fields.TwoWeapStylePenalty ) || 9.9), classes.map(c => parseFloat(c.classData.twoWeapPen)).reduce((prev,cur) => (Math.min(prev,cur)))),
+//			twoWeapPenalty = (ranger || primeWeapon < 1) ? 0 : (-1*(((rwIndex*2)+(fields.RW_table[1]==0?2:4)) == primeWeapon ? Math.floor(twPen) : Math.floor((10*twPen)%10))),
+			twoWeapPenalty = (ranger || primeWeapon < 1) ? 0 : (((rwIndex*2)+(fields.RW_table[1]==0?2:4)) == primeWeapon ? Math.floor(twPen) : Math.floor((10*twPen)%10)),
 			proficiency = dancing != 1 ? proficient( charCS, weaponName, rwType, rwSuperType ) : tableInfo.RANGED.tableLookup( fields.RW_dancingProf, rwIndex ),
 			race		= raceMods( charCS, rwType, rwSuperType ),
 			tokenACname = getTokenValue( curToken, fields.Token_AC, fields.AC, fields.MonsterAC, fields.Thac0_base ).barName,
@@ -2875,6 +3256,7 @@ var attackMaster = (function() {
 			missileACpTxt		= pierceWeap ? 'P' : '',
 			missileACbTxt		= bludgeonWeap ? 'B' : '',
 			attkMacro, attkMacroDef, qualifier;
+		styleRangeMods = parseData( (styleRangeMods.replace(/=/g,':').replace(/\|/,',') || ''), reRangeMods );
 
 		var parseRWattkMacro = function( args, charCS, attkType, range, attkMacro ) {
 
@@ -2890,7 +3272,7 @@ var attackMaster = (function() {
 				dmgLroll  = '?{Roll Damage vs LH|'+dmgL+'}';
 			}
 			rangeMods = parseData( ((rangeMods && !_.isNull(rangeMods)) ? rangeMods[1] : ''), reRangeMods );
-			rangeMod = attrLookup( charCS, [fields.RWrange_mod[0]+range, fields.RWrange_mod[1]] ) || rangeMods[range];
+			rangeMod = Math.max((attrLookup( charCS, [fields.RWrange_mod[0]+range, fields.RWrange_mod[1]] ) || rangeMods[range]),styleRangeMods[range]);
 				
 			attkMacro = attkMacro.replace( /\^\^toWho\^\^/gi , sendToWho(charCS,senderId,false) )
 								 .replace( /\^\^toWhoPublic\^\^/gi , sendToWho(charCS,senderId,true) )
@@ -2901,6 +3283,7 @@ var attackMaster = (function() {
 								 .replace( /\^\^tid\^\^/gi , tokenID )
 								 .replace( /\^\^toHitRoll\^\^/gi , toHitRoll )
 								 .replace( /\^\^weapAttkAdj\^\^/gi , attkAdj )
+								 .replace( /\^\^weapStyleAdj\^\^/gi , attkStyleAdj )
 								 .replace( /\^\^dexMissile\^\^/gi , dexMissile )
 								 .replace( /\^\^weapDexBonus\^\^/gi , weapDexBonus )
 								 .replace( /\^\^strAttkBonus\^\^/gi , strHit )
@@ -2913,6 +3296,7 @@ var attackMaster = (function() {
 								 .replace( /\^\^twoWeapPenalty\^\^/gi , twoWeapPenalty )
 								 .replace( /\^\^rangeMod\^\^/gi , rangeMod )
 								 .replace( /\^\^ammoDmgAdj\^\^/gi , dmgAdj )
+								 .replace( /\^\^ammoStyleDmgAdj\^\^/gi , dmgStyleAdj )
 								 .replace( /\^\^magicDmgAdj\^\^/gi , magicDmgAdj )
 								 .replace( /\^\^strDmgBonus\^\^/gi , strDmg )
 								 .replace( /\^\^weapon\^\^/gi , weaponName )
@@ -2958,9 +3342,11 @@ var attackMaster = (function() {
 								 .replace( /\^\^rangeF\^\^/gi , (range == 'F' ? 1 : 0) )
 								 .replace( /\^\^rangeSMLF\^\^/gi , ((range != 'N' && range != 'PB') ? 1 : 0) )
 								 .replace( /\^\^ammoName\^\^/gi , ammoName )
-								 .replace( /\^\^ammoDmgSM\^\^/gi , dmgSMroll )
 								 .replace( /\^\^ammoStrDmg\^\^/gi , ammoStrBonus )
+								 .replace( /\^\^ammoDmgSM\^\^/gi , dmgSMroll )
+								 .replace( /\^\^ammoStyleDmgSM\^\^/gi , dmgSMstyle )
 								 .replace( /\^\^ammoDmgL\^\^/gi , dmgLroll )
+								 .replace( /\^\^ammoStyleDmgL\^\^/gi , dmgLstyle )
 								 .replace( /\^\^targetHPfield\^\^/gi , tokenHP )
 								 .replace( /\^\^targetHP\^\^/gi , tokenHP )
 								 .replace( /\^\^targetMaxHP\^\^/gi , tokenMaxHP )
@@ -3091,6 +3477,31 @@ var attackMaster = (function() {
 					weapRangeMod, weapRangeOverride,
 					disabled = isNaN(weaponIndex) || isNaN(ammoIndex);
 
+				var adjustRange = function( ranges, rangeMod ) {
+					if (!rangeMod || !rangeMod.length) return ranges.split('/');
+					var weapRangeMod,
+						weapRangeOverride = (rangeMod[0] == '=');
+					if (weapRangeOverride) rangeMod.slice(1);
+					weapRangeOverride = weapRangeOverride || !ranges || !ranges.length;
+					weapRangeMod = (rangeMod[0] == '-' || rangeMod[0] == '+');
+			
+					ranges = ranges.split('/');
+					rangeMod = rangeMod.split('/');
+					// Remove any non-numeric entries from the ranges
+					ranges = _.reject(ranges, function(dist){return isNaN(parseInt(dist,10));}).map( r => parseInt(r,10));
+					rangeMod = _.reject(rangeMod, function(dist){return isNaN(parseInt(dist,10));}).map( r => parseInt(r,10));
+					if (weapRangeOverride) {
+						ranges = rangeMod;
+					} else if (weapRangeMod) {
+						if (ranges.length == 4 && rangeMod.length == 3) rangeMod.unshift(0);
+						if (ranges.length == 3 && rangeMod.length == 4) rangeMod.shift();
+						for (let i=0; rangeMod.length && i<ranges.length; i++) {
+							ranges[i] += rangeMod[Math.min(i,(rangeMod.length-1))];
+						}
+					}
+					return ranges;
+				};
+
 				if (!disabled) {
 					ranges = tableInfo.AMMO.tableLookup( fields.Ammo_range, ammoIndex );
 					wname = tableInfo.RANGED.tableLookup( fields.RW_name, weaponIndex );
@@ -3103,23 +3514,11 @@ var attackMaster = (function() {
 					
 					errFlag = buildRWattkMacros( args, senderId, charCS, tableInfo );
 					
-					if (weapRangeOverride = (rangeMod[0] == '=')) rangeMod.slice(1);
-					weapRangeOverride = weapRangeOverride || !ranges || !ranges.length;
-					weapRangeMod = (rangeMod[0] == '-' || rangeMod[0] == '+');
-			
-					ranges = ranges.split('/');
-					rangeMod = rangeMod.split('/');
-					// Remove any non-numeric entries from the ranges
-					ranges = _.reject(ranges, function(dist){return isNaN(parseInt(dist,10));}).map( r => parseInt(r,10));
-					rangeMod = _.reject(rangeMod, function(dist){return isNaN(parseInt(dist,10));}).map( r => parseInt(r,10));
-					if (weapRangeOverride) {
-						ranges = rangeMod;
-					} else if (weapRangeMod) {
-						for (let i=0; rangeMod.length && i<ranges.length; i++) {
-							ranges[i] += rangeMod[Math.min(i,(rangeMod.length-1))];
-						}
-					}
-
+					log('makeRangeButtons: ammo ranges = '+ranges);
+					ranges = adjustRange( ranges, tableInfo.RANGED.tableLookup( fields.RW_range, weaponIndex ) );
+					log('makeRangeButtons: 1st pass ranges = '+ranges);
+					ranges = adjustRange( ranges.join('/'), tableInfo.RANGED.tableLookup( fields.RW_styleRange, weaponIndex ) );
+					
 					// Test for if ranges need *10 (assume 1st range (PB or short) is never >= 100 yds or < 10)
 					if (ranges[0] < 10) ranges = ranges.map(x => x * 10);
 						
@@ -3552,19 +3951,19 @@ var attackMaster = (function() {
 		
 		content = '&{template:'+fields.defaultTemplate+'}{{name=Change '+tokenName+'\'s weapon}}'
 				+ (msg && msg.length ? '{{Section1=**'+msg+'**}}' : '')
-				+ '{{Section2=Select Left or Right Hand to hold a one-handed weapon or shield.'
+				+ '{{Section2=Select Primary or Off Hand to hold a one-handed weapon or shield.'
 				+ ' Select Both Hands to hold a two handed weapon and set AC to Shieldless}}'
 				+ '{{section3=Weapons\n'
-				+ '<table style="text-align:center"><thead><tr><th scope="col" style="text-align:center; max-width:50%">Left</th><th scope="col" style="text-align:center; max-width:50%">Right</th></tr></thead>'
+				+ '<table style="text-align:center"><thead><tr><th scope="col" style="text-align:center; max-width:50%">Primary</th><th scope="col" style="text-align:center; max-width:50%">Offhand</th></tr></thead>'
 				+ '<tbody style="text-align:center"><tr>'
-				+ '<td>[' + (left != '-' ? left : 'Left Hand') + '](!attk --button '+BT.LEFT+'|'+tokenID+'|'+weapList1H+'|0)</td>'
-				+ '<td>[' + (right != '-' ? right : 'Right Hand') + '](!attk --button '+BT.RIGHT+'|'+tokenID+'|'+weapList1H+'|1)</td></tr>'
+				+ '<td>[' + (left != '-' ? left : 'Primary Hand') + '](!attk --button '+BT.RIGHT+'|'+tokenID+'|'+weapList1H+'|0)</td>'
+				+ '<td>[' + (right != '-' ? right : 'Off-Hand') + '](!attk --button '+BT.LEFT+'|'+tokenID+'|'+weapList1H+'|1)</td></tr>'
 				+ '<tr><td colspan="2">[' + (both != '-' ? '2H\: '+both : 'Both Hands') + '](!attk --button '+BT.BOTH+'|'+tokenID+'|'+weaponQuery(charCS,noHands,'weap',2)+'|2)</td></tr></tbody></table>}}'
 				+ '{{section4=Rings\n'
-				+ '<table style="text-align:center"><thead><tr><th scope="col" style="text-align:center; max-width:50%">Left</th><th scope="col" style="text-align:center; max-width:50%">Right</th></tr></thead>'
+				+ '<table style="text-align:center"><thead><tr><th scope="col" style="text-align:center; max-width:50%">Primary</th><th scope="col" style="text-align:center; max-width:50%">Offhand</th></tr></thead>'
 				+ '<tbody style="text-align:center"><tr>'
-				+ '<td>[' + (lRing != '-' ? lRing : 'Left Ring') + '](!attk --button '+BT.LEFTRING+'|'+tokenID+'|'+ringList+'|0)</td>'
-				+ '<td>[' + (rRing != '-' ? rRing : 'Right Ring') + '](!attk --button '+BT.RIGHTRING+'|'+tokenID+'|'+ringList+'|1)</td></tr></tbody></table>}}';
+				+ '<td>[' + (lRing != '-' ? lRing : 'Primary Ring') + '](!attk --button '+BT.RIGHTRING+'|'+tokenID+'|'+ringList+'|0)</td>'
+				+ '<td>[' + (rRing != '-' ? rRing : 'Off-hand Ring') + '](!attk --button '+BT.LEFTRING+'|'+tokenID+'|'+ringList+'|1)</td></tr></tbody></table>}}';
 					
 		extraHands = noHands -= Math.max(2,extraHands);
 		if (noHands > 0) {
@@ -4124,174 +4523,186 @@ var attackMaster = (function() {
 	 
 	async function handleChangeWeapon ( args, senderId, silent=false ) {
 
-		var tokenID = args[1],
-			selection = args[2],
-			row = args[3],
-			handsLent = parseInt(args[4]) || 0,
-			silent = silent || (args[5] && args[5].toUpperCase() == 'SILENT'),
-			twoHanded = args[0] == BT.BOTH,
-			curToken = getObj('graphic',tokenID),
-			charCS = getCharacter(tokenID),
-			weaponInfo = {},
-			InHandTable = getTable( charCS, fieldGroups.INHAND ),
-			Quiver = getTable( charCS, fieldGroups.QUIVER ),
-			values = initValues( InHandTable.fieldGroup ),
-			noHands = parseInt(attrLookup(charCS,fields.Equip_handedness)) || 2,
-			lentHands = parseInt(attrLookup(charCS,fields.Equip_lentHands)) || 0,
-			handedness = 1,
-			r = parseInt(selection.split(':')[0]),
-			c = parseInt(selection.split(':')[1]),
-			isGM = playerIsGM(senderId),
-			weaponDB = fields.WeaponDB,
-			lentLeftID, lentRightID, lentBothID,
-			weapon, trueWeapon, weaponSpecs, weaponQty, weapData,
-			item, i, hand, index, sheathed;
+		try {
+			var tokenID = args[1],
+				selection = args[2],
+				row = args[3],
+				handsLent = parseInt(args[4]) || 0,
+				silent = silent || (args[5] && args[5].toUpperCase() == 'SILENT'),
+				twoHanded = args[0] == BT.BOTH,
+				curToken = getObj('graphic',tokenID),
+				charCS = getCharacter(tokenID),
+				weaponInfo = {},
+				InHandTable = getTable( charCS, fieldGroups.INHAND ),
+				Quiver = getTable( charCS, fieldGroups.QUIVER ),
+				values = initValues( InHandTable.fieldGroup ),
+				noHands = parseInt(attrLookup(charCS,fields.Equip_handedness)) || 2,
+				lentHands = parseInt(attrLookup(charCS,fields.Equip_lentHands)) || 0,
+				handedness = 1,
+				r = parseInt(selection.split(':')[0]),
+				c = parseInt(selection.split(':')[1]),
+				isGM = playerIsGM(senderId),
+				weaponDB = fields.WeaponDB,
+				lentLeftID, lentRightID, lentBothID,
+				weapon, trueWeapon, weaponSpecs, weaponToHit, weaponQty, weapData,
+				item, i, hand, index, sheathed;
+				
+			weaponInfo.MELEE = getTable( charCS, fieldGroups.MELEE );
+			weaponInfo.DMG = getTable( charCS, fieldGroups.DMG );
+			weaponInfo.RANGED = getTable( charCS, fieldGroups.RANGED );
+			weaponInfo.AMMO = getTable( charCS, fieldGroups.AMMO );
+			weaponInfo.ammoTypes = [];
+				
+			// First, check there are enough rows in the InHand table
 			
-		weaponInfo.MELEE = getTable( charCS, fieldGroups.MELEE );
-		weaponInfo.DMG = getTable( charCS, fieldGroups.DMG );
-		weaponInfo.RANGED = getTable( charCS, fieldGroups.RANGED );
-		weaponInfo.AMMO = getTable( charCS, fieldGroups.AMMO );
-		weaponInfo.ammoTypes = [];
-			
-		// First, check there are enough rows in the InHand table
-		
-		InHandTable = checkInHandRows( charCS, InHandTable, row );
+			InHandTable = checkInHandRows( charCS, InHandTable, row );
 
-		// See if any hands are currently lent to anyone else
-		
-		lentLeftID = (attrLookup( charCS, fields.Equip_lendLeft ) || '');
-		lentRightID = (attrLookup( charCS, fields.Equip_lendRight ) || '');
-		lentBothID = (attrLookup( charCS, fields.Equip_lendBoth ) || '');
-
-		// Find the weapon items
-		
-		if (selection == -2) {
-			weapon = trueWeapon = 'Touch';
-		} else if (selection == -2.5) {
-			weapon = trueWeapon = 'Punch-Wrestle';
-		} else if (selection == -3) {
-			weapon = trueWeapon = 'Lend-a-Hand';
-			handedness = Math.min(Math.max(handsLent,2), noHands);
-			setAttr( charCS, fields.Equip_lentHands, (lentHands - handedness) );
-		} else if (selection.includes(':')) {
+			// See if any hands are currently lent to anyone else
 			
-			let Spells = getTable( charCS, fieldGroups.SPELLS, c );
-			weapon = trueWeapon = Spells.tableLookup( fields.Spells_name, r );
-			weaponQty = parseInt(Spells.tableLookup( fields.Spells_castValue, r ));
-			weaponDB = Spells.tableLookup( fields.Spells_db, r );
-			selection = r;
-			if (!weaponDB || (!weaponQty && weapon !== '-')) {
-				sendParsedMsg(tokenID,messages.spellCast,senderId);
-				return;
+			lentLeftID = (attrLookup( charCS, fields.Equip_lendLeft ) || '');
+			lentRightID = (attrLookup( charCS, fields.Equip_lendRight ) || '');
+			lentBothID = (attrLookup( charCS, fields.Equip_lendBoth ) || '');
+
+			// Find the weapon items
+			
+			if (selection == -2) {
+				weapon = trueWeapon = 'Touch';
+			} else if (selection == -2.5) {
+				weapon = trueWeapon = 'Punch-Wrestle';
+			} else if (selection == -3) {
+				weapon = trueWeapon = 'Lend-a-Hand';
+				handedness = Math.min(Math.max(handsLent,2), noHands);
+				setAttr( charCS, fields.Equip_lentHands, (lentHands - handedness) );
+			} else if (selection.includes(':')) {
+				
+				let Spells = getTable( charCS, fieldGroups.SPELLS, c );
+				weapon = trueWeapon = Spells.tableLookup( fields.Spells_name, r );
+				weaponQty = parseInt(Spells.tableLookup( fields.Spells_castValue, r ));
+				weaponDB = Spells.tableLookup( fields.Spells_db, r );
+				selection = r;
+				if (!weaponDB || (!weaponQty && weapon !== '-')) {
+					sendParsedMsg(tokenID,messages.spellCast,senderId);
+					return;
+				}
+				Spells.tableSet( fields.Spells_castValue, r, Math.max(weaponQty-1,0) );
+			} else {
+				weapon = attrLookup( charCS, fields.Items_name, fields.Items_table, r ) || '-';
+				trueWeapon = attrLookup( charCS, fields.Items_trueName, fields.Items_table, r ) || weapon;
+				weaponQty = parseInt(attrLookup( charCS, fields.Items_qty, fields.Items_table, r ) || 0);
+				if (!weaponQty && weapon !== '-') {
+					sendParsedMsg(tokenID,messages.noneLeft,senderId);
+					return;
+				}
 			}
-			Spells.tableSet( fields.Spells_castValue, r, Math.max(weaponQty-1,0) );
-		} else {
-			weapon = attrLookup( charCS, fields.Items_name, fields.Items_table, r ) || '-';
-			trueWeapon = attrLookup( charCS, fields.Items_trueName, fields.Items_table, r ) || weapon;
-			weaponQty = parseInt(attrLookup( charCS, fields.Items_qty, fields.Items_table, r ) || 0);
-			if (!weaponQty && weapon !== '-') {
-				sendParsedMsg(tokenID,messages.noneLeft,senderId);
-				return;
+			if (weapon !== '-') {
+				item = abilityLookup(weaponDB, trueWeapon, charCS, true);
+				if (!item.obj) {
+					sendDebug('handleChangeWeapon not found '+weapon);
+					return;
+				};
+				weaponSpecs = item.specs(/}}\s*Specs\s*=(.*?){{/im);
+				weaponToHit = item.data(/}}\s*ToHitData\s*=(.*?){{/im);
+				weaponSpecs = weaponSpecs.slice(0,weaponToHit.length);
+//				handedness = twoHanded ? 2 : (weaponSpecs ? (parseInt(weaponSpecs[0][3]) || 1) : 1);
+				handedness = row < 2 ? 1 : (weaponSpecs ? weaponSpecs.reduce((hands, weapon) => Math.max( hands, (parseInt(weapon[3])||1) ), 1) : 1);
+				if (twoHanded) handedness = Math.min(handedness,2);
+				log('handleChangeWeapon: weaponSpecs.length='+weaponSpecs.length+', weaponToHit.length='+weaponToHit.length+', row='+row+', handedness='+handedness);
 			}
-		}
-		if (weapon !== '-') {
-			item = abilityLookup(weaponDB, trueWeapon, charCS, true);
-			if (!item.obj) {
-				sendDebug('handleChangeWeapon not found '+weapon);
-				return;
-			};
-			weaponSpecs = item.specs(/}}\s*Specs\s*=(.*?){{/im);
-			handedness = twoHanded ? 2 : (weaponSpecs ? (parseInt(weaponSpecs[0][3]) || 1) : 1);
-		}
-		
-		// Next, blank the quiver table
-		
-		Quiver = blankQuiver( charCS, Quiver );
+			
+			// Next, blank the quiver table
+			
+			Quiver = blankQuiver( charCS, Quiver );
 
-		// And reverse any previously lent hands
-		
-		if (lentBothID.length) {
-			setAttr( charCS, fields.Equip_lendBoth, '' );
-			setAttr( charCS, fields.Equip_lentHands, 0 );
-			sendAPI('!attk --lend-a-hand '+tokenID+'|'+lentBothID+'|'+lentHands+'|'+BT.BOTH);
-		}
+			// And reverse any previously lent hands
+			
+			if (lentBothID.length) {
+				setAttr( charCS, fields.Equip_lendBoth, '' );
+				setAttr( charCS, fields.Equip_lentHands, 0 );
+				sendAPI('!attk --lend-a-hand '+tokenID+'|'+lentBothID+'|'+lentHands+'|'+BT.BOTH);
+			}
 
-		// Then add the weapon to the InHand table
-		
-	    values[fields.InHand_name[0]][fields.InHand_name[1]] = weapon;
-	    values[fields.InHand_trueName[0]][fields.InHand_trueName[1]] = trueWeapon;
-	    values[fields.InHand_index[0]][fields.InHand_index[1]] = selection;
-	    values[fields.InHand_column[0]][fields.InHand_column[1]] = c;
-	    values[fields.InHand_handedness[0]][fields.InHand_handedness[1]] = handedness;
-	    values[fields.InHand_db[0]][fields.InHand_db[1]] = weaponDB;
-		
-		switch (args[0]) {
-		case BT.BOTH:
-		    InHandTable.tableSet( fields.InHand_name, 0, '-');
-		    InHandTable.tableSet( fields.InHand_trueName, 0, '');
-		    InHandTable.tableSet( fields.InHand_index, 0, '');
-		    InHandTable.tableSet( fields.InHand_name, 1, '-');
-		    InHandTable.tableSet( fields.InHand_trueName, 1, '');
-		    InHandTable.tableSet( fields.InHand_index, 1, '');
-			break;
-		case BT.HAND:
-			break;
-		default:
-		    InHandTable.tableSet( fields.InHand_name, 2, '-');
-		    InHandTable.tableSet( fields.InHand_trueName, 2, '');
-		    InHandTable.tableSet( fields.InHand_index, 2, '');
-		    InHandTable.tableSet( fields.InHand_handedness, 2, 0);
-		    break;
-		}
-        InHandTable.addTableRow( row, values );
-		
-		// If weapon requires more than 1 hand, blank the following rows that
-		// represent hands holding this weapon
-		
-		i = handedness;
-		hand = row;
-		while (i>1) {
-			InHandTable.addTableRow( ++hand );
-			i--;
-		}
-		
-		if (!silent) makeChangeWeaponMenu( args, senderId, 'Now using '+weapon+'. ' );
+			// Then add the weapon to the InHand table
+			
+			values[fields.InHand_name[0]][fields.InHand_name[1]] = weapon;
+			values[fields.InHand_trueName[0]][fields.InHand_trueName[1]] = trueWeapon;
+			values[fields.InHand_index[0]][fields.InHand_index[1]] = selection;
+			values[fields.InHand_column[0]][fields.InHand_column[1]] = c;
+			values[fields.InHand_handedness[0]][fields.InHand_handedness[1]] = handedness;
+			values[fields.InHand_db[0]][fields.InHand_db[1]] = weaponDB;
+			
+			switch (args[0]) {
+			case BT.BOTH:
+				InHandTable.tableSet( fields.InHand_name, 0, '-');
+				InHandTable.tableSet( fields.InHand_trueName, 0, '');
+				InHandTable.tableSet( fields.InHand_index, 0, '');
+				InHandTable.tableSet( fields.InHand_name, 1, '-');
+				InHandTable.tableSet( fields.InHand_trueName, 1, '');
+				InHandTable.tableSet( fields.InHand_index, 1, '');
+				break;
+			case BT.HAND:
+				break;
+			default:
+				InHandTable.tableSet( fields.InHand_name, 2, '-');
+				InHandTable.tableSet( fields.InHand_trueName, 2, '');
+				InHandTable.tableSet( fields.InHand_index, 2, '');
+				InHandTable.tableSet( fields.InHand_handedness, 2, 0);
+				break;
+			}
+			InHandTable.addTableRow( row, values );
+			
+			// If weapon requires more than 1 hand, blank the following rows that
+			// represent hands holding this weapon
+			
+			i = twoHanded ? 2 : handedness;
+			hand = row;
+			while (i>1) {
+				InHandTable.addTableRow( ++hand );
+				i--;
+			}
+			
+			if (!silent) makeChangeWeaponMenu( args, senderId, 'Now using '+weapon+'. ' );
 
-		// Next add the new weapon to the weapon tables and 
-		// at the same time check every weapon InHand for ammo to 
-		// add to the quiver
-		
-		if (selection != -3) [weaponInfo,Quiver] = await updateAttackTables( charCS, InHandTable, Quiver, weaponInfo, row, selection, handedness );
-		
-		// Then remove any weapons or ammo from the weapon tables that 
-		// are not currently inHand (in the InHand or Quiver tables)
+			// Next add the new weapon to the weapon tables and 
+			// at the same time check every weapon InHand for ammo to 
+			// add to the quiver
+			
+			if (selection != -3) [weaponInfo,Quiver] = await updateAttackTables( charCS, InHandTable, Quiver, weaponInfo, row, selection, handedness );
+			
+			// Then remove any weapons or ammo from the weapon tables that 
+			// are not currently inHand (in the InHand or Quiver tables)
 
-		sheathed = filterWeapons( tokenID, charCS, InHandTable, Quiver, weaponInfo, 'MELEE', [] );
-		sheathed = filterWeapons( tokenID, charCS, InHandTable, Quiver, weaponInfo, 'RANGED', sheathed );
-		sheathed = filterWeapons( tokenID, charCS, InHandTable, Quiver, weaponInfo, 'DMG', sheathed );
-		sheathed = filterWeapons( tokenID, charCS, InHandTable, Quiver, weaponInfo, 'AMMO', sheathed );
-		
-		sendAPImacro(curToken,'',trueWeapon,'-inhand');
-		
-		if (item && item.obj) {
-			weapData = item.obj[1].body.match(/weapdata\s*?=\s*?(\[.*?\])/im);
-			if (weapData) {
-				weapData = parseData(weapData[1], reSpellSpecs, false);
-				if (weapData.on) {
-					sendAPI( parseStr(weapData.on).replace(/@{\s*selected\s*\|\s*token_id\s*}/ig,tokenID)
-												  .replace(/{\s*selected\s*\|/ig,'{'+charCS.get('name')+'|'));
+			sheathed = filterWeapons( tokenID, charCS, InHandTable, Quiver, weaponInfo, 'MELEE', [] );
+			sheathed = filterWeapons( tokenID, charCS, InHandTable, Quiver, weaponInfo, 'RANGED', sheathed );
+			sheathed = filterWeapons( tokenID, charCS, InHandTable, Quiver, weaponInfo, 'DMG', sheathed );
+			sheathed = filterWeapons( tokenID, charCS, InHandTable, Quiver, weaponInfo, 'AMMO', sheathed );
+			
+			sendAPImacro(curToken,'',trueWeapon,'-inhand');
+			
+			if (item && item.obj) {
+				weapData = item.obj[1].body.match(/weapdata\s*?=\s*?(\[.*?\])/im);
+				if (weapData) {
+					weapData = parseData(weapData[1], reSpellSpecs, false);
+					if (weapData.on) {
+						sendAPI( parseStr(weapData.on).replace(/@{\s*selected\s*\|\s*token_id\s*}/ig,tokenID)
+													  .replace(/{\s*selected\s*\|/ig,'{'+charCS.get('name')+'|'));
+					};
 				};
 			};
-		};
-		
-		// RED v1.038: store name of weapon just taken in hand for later reference as needed
-		setAttr( charCS, fields.Equip_takenInHand, weapon );
-		setAttr( charCS, fields.Equip_trueInHand, trueWeapon );
-		
-		doCheckAC( [tokenID], senderId, [], true );
-//		if (!silent) makeChangeWeaponMenu( args, senderId, 'Now using '+weapon+'. ' );
-		
-        return;
+			
+			// RED v1.038: store name of weapon just taken in hand for later reference as needed
+			setAttr( charCS, fields.Equip_takenInHand, weapon );
+			setAttr( charCS, fields.Equip_trueInHand, trueWeapon );
+			
+			checkCurrentStyles( charCS, InHandTable );
+			doCheckAC( [tokenID], senderId, [], true );
+	//		if (!silent) makeChangeWeaponMenu( args, senderId, 'Now using '+weapon+'. ' );
+			
+			return;
+		} catch (e) {
+			log('attackMaster JavaScript '+e.name+': '+e.message+' while processing handleChangeWeapon');
+			sendDebug('attackMaster handleChatMsg: JavaScript '+e.name+': '+e.message+' while processing handleChangeWeapon');
+			sendError('attackMaster JavaScript '+e.name+': '+e.message);
+		}
 	}
 	
 	/* 
@@ -5155,6 +5566,34 @@ var attackMaster = (function() {
 	}
 	
 	/*
+	 * Check the weapons in-hand against the proficient fighting 
+	 * styles
+	 */
+	 
+	var doCheckStyles = function( args, senderId, selected ) {
+		
+		if (!args) {args = [];}
+		
+		if (!args[0] && selected && selected.length) {
+			args[0] = selected[0]._id;
+		} else if (!args[0]) {
+			sendDebug('doCheckStyles: No token selected');
+			sendError('No token selected');
+			return;
+		}
+
+		var charCS = getCharacter(args[0]);
+		
+		if (!charCS) {
+            sendDebug( 'doCheckStyles: tokenID does not represent a valid character sheet' );
+            sendError( 'Invalid token selected' );
+            return;
+        };
+
+		checkCurrentStyles( charCS, getTable( charCS, fieldGroups.INHAND ) );
+	};
+	
+	/*
 	 * Manage the starting and stopping of a dancing weapon, or 
 	 * other form of auto-attacking weapon that does not use a 
 	 * character's hand
@@ -5308,6 +5747,7 @@ var attackMaster = (function() {
 			acValues = armourInfo.acValues,
 			armourMsgs = armourInfo.msgs,
 			dexBonus = parseInt(attrLookup( charCS, fields.Dex_acBonus ) || 0) * -1,
+			styleBonus =  parseInt(attrLookup(charCS,fields.Armour_styleMod) || 0),
 			baseAC = (parseInt(acValues.armour.data.ac || 10) - parseInt(acValues.armour.data.adj || 0)),
 //          prevAC = parseInt(attrLookup( charCS, fields.Armour_normal )) || baseAC,
             prevAC = parseInt(attrLookup( charCS, fields.Armour_normal )),
@@ -5349,22 +5789,25 @@ var attackMaster = (function() {
 		if (dexBonus) {
 			acValues.dexBonus = {name:('Dexterity Bonus '+dexBonus),specs:['',('Dexterity Bonus '+dexBonus),'Dexterity','0H','Dexterity'],data:{adj:dexBonus}};
 		}
+		if (styleBonus) {
+			acValues.styleBonus = {name:('Fighting Style Bonus '+styleBonus),specs:['',('Fighting Style Bonus '+dexBonus),'Style','0H','Style'],data:{adj:styleBonus}};
+		}
 
-        setAttr( charCS, fields.Armour_normal, (baseAC - dmgAdj.armoured.adj - dexBonus) );
-		setAttr( charCS, fields.Armour_missile, (baseAC - dmgAdj.armoured.adj - dexBonus - dmgAdj.armoured.madj) );
+        setAttr( charCS, fields.Armour_normal, (baseAC - dmgAdj.armoured.adj - dexBonus - styleBonus) );
+		setAttr( charCS, fields.Armour_missile, (baseAC - dmgAdj.armoured.adj - dexBonus - styleBonus - dmgAdj.armoured.madj) );
 		setAttr( charCS, fields.Armour_surprised, (baseAC - dmgAdj.armoured.adj) );
 		setAttr( charCS, fields.Armour_back, (baseAC - dmgAdj.sless.adj - dmgAdj.sless.madj) );
-		setAttr( charCS, fields.Armour_head, (baseAC - dmgAdj.armoured.adj - dexBonus - 4) );
-		setAttr( charCS, fields.Shieldless_normal, (baseAC - dmgAdj.sless.adj - shieldlessDexBonus) );
-		setAttr( charCS, fields.Shieldless_missile, (baseAC - dmgAdj.sless.adj - shieldlessDexBonus - dmgAdj.sless.madj) );
+		setAttr( charCS, fields.Armour_head, (baseAC - dmgAdj.armoured.adj - dexBonus - styleBonus - 4) );
+		setAttr( charCS, fields.Shieldless_normal, (baseAC - dmgAdj.sless.adj - shieldlessDexBonus - styleBonus) );
+		setAttr( charCS, fields.Shieldless_missile, (baseAC - dmgAdj.sless.adj - shieldlessDexBonus - styleBonus - dmgAdj.sless.madj) );
 		setAttr( charCS, fields.Shieldless_surprised, (baseAC - dmgAdj.sless.adj) );
 		setAttr( charCS, fields.Shieldless_back, (baseAC - dmgAdj.sless.adj) );
-		setAttr( charCS, fields.Shieldless_head, (baseAC - dmgAdj.sless.adj - shieldlessDexBonus - 4) );
-		setAttr( charCS, fields.Armourless_normal, (armourlessAC - dmgAdj.aless.adj - armourlessDexBonus) );
-		setAttr( charCS, fields.Armourless_missile, (armourlessAC - dmgAdj.aless.adj - armourlessDexBonus - dmgAdj.aless.madj) );
+		setAttr( charCS, fields.Shieldless_head, (baseAC - dmgAdj.sless.adj - shieldlessDexBonus - styleBonus - 4) );
+		setAttr( charCS, fields.Armourless_normal, (armourlessAC - dmgAdj.aless.adj - armourlessDexBonus - styleBonus) );
+		setAttr( charCS, fields.Armourless_missile, (armourlessAC - dmgAdj.aless.adj - armourlessDexBonus - styleBonus - dmgAdj.aless.madj) );
 		setAttr( charCS, fields.Armourless_surprised, (armourlessAC - dmgAdj.aless.adj) );
 		setAttr( charCS, fields.Armourless_back, (armourlessAC - dmgAdj.aless.adj) );
-		setAttr( charCS, fields.Armourless_head, (armourlessAC - dmgAdj.aless.adj - armourlessDexBonus - 4) );
+		setAttr( charCS, fields.Armourless_head, (armourlessAC - dmgAdj.aless.adj - armourlessDexBonus - styleBonus - 4) );
 		
 		dmgAdj.armoured.sadj += parseInt(acValues.armour.data.sadj || 0);
 		dmgAdj.armoured.padj += parseInt(acValues.armour.data.padj || 0);
@@ -5372,7 +5815,7 @@ var attackMaster = (function() {
 			
 		// set token circles & bars
 		
-        ac = (baseAC - dmgAdj.armoured.adj - dexBonus);
+        ac = (baseAC - dmgAdj.armoured.adj - dexBonus - styleBonus);
 		currentAC = getTokenValue(curToken,fields.Token_AC,fields.AC,fields.MonsterAC,fields.Thac0_base);
 		currentAC.val = ((isNaN(currentAC.val) || isNaN(prevAC)) ? ac : currentAC.val + ac - prevAC);
 		if (fields.Token_MaxAC[0].length) {
@@ -5575,7 +6018,7 @@ var attackMaster = (function() {
 					currentHands -= noHands;
 					if (currentHands < 0) {
 						droppedWeapons.push( weapon );
-						hand = (i==0) ? BT.LEFT : (i==1 ? BT.RIGHT : (i==2 ? BT.BOTH : BT.HAND));
+						hand = (i==0) ? BT.RIGHT : (i==1 ? BT.LEFT : (i==2 ? BT.BOTH : BT.HAND));
 						handleChangeWeapon( [hand,toID,'-',i], senderId, true );
 					}
 				}
@@ -6070,6 +6513,10 @@ var attackMaster = (function() {
 					case 'weapon':
 						doChangeWeapon(arg,senderId,selected);
 						break;
+					case 'check-styles':
+					case 'checkstyles':
+						doCheckStyles(arg,senderId,selected);
+						break;
 					case 'lend-a-hand':
 						doLendAHand(arg, senderId);
 						break;
@@ -6204,9 +6651,17 @@ var attackMaster = (function() {
 			
 		if (obj.get('name') == prev['name'])
 		    {return;}
-		
+			
 		if (obj.get('_subtype') == 'token' && !obj.get('isdrawing')) {
-			doCheckAC( [obj.id], findTheGM(), [], true );
+			let charCS = getCharacter(obj.id);
+			if (charCS) {
+				let race = attrLookup( charCS, fields.Race );
+				let classObjs = classObjects( charCS );
+				let defClass = (classObjs.length == 1 && classObjs[0].name == 'creature' && classObjs[0].level == 0);
+				if ((race && race.length) || !defClass) {
+					doCheckAC( [obj.id], findTheGM(), [], true );
+				}
+			}
 		}
 		return;
 	}
