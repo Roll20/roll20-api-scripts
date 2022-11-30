@@ -1447,6 +1447,7 @@ var attackMaster = (function() {
 	var checkCurrentStyles = function( charCS, InHandTable ) {
 		
 		var spell, melee, shield, ranged, sield, throwing, twoHanded,
+			inHand, inHandDB, inHandObj, inHandSpecs, inHandClass,
 			inPrimary = {},
 			inBoth = {},
 			inOther = {}, 
@@ -1456,21 +1457,20 @@ var attackMaster = (function() {
 			inHandName, fightStyles, style,
 			i=0;
 
-//		InHandTable = getTable( charCS, fieldGroups.INHAND );
-
 		for (let i=0; !_.isUndefined(inHandName = InHandTable.tableLookup( fields.InHand_name, i, false )); i++) {
 			
-			let inHand = InHandTable.tableLookup( fields.InHand_trueName, i ) || inHandName;
+			inHand = InHandTable.tableLookup( fields.InHand_trueName, i ) || inHandName;
 			spell = melee = ranged = shield = throwing = false;
 			if (inHand !== '-') {
-				let inHandDB = InHandTable.tableLookup( fields.InHand_db, i );
-				let inHandObj = abilityLookup( inHandDB, inHand, charCS );
+				inHandDB = InHandTable.tableLookup( fields.InHand_db, i );
+				inHandObj = abilityLookup( inHandDB, inHand, charCS );
 				if (inHandObj.obj) {
+//					spell = melee = ranged = shield = throwing = false;
 					twoHanded = InHandTable.tableLookup( fields.InHand_handedness, i ) == 2;
-					let inHandSpecs = inHandObj.specs(/}}\s*Specs\s*=(.*?){{/im);
-					let throwing = throwing || (/}}\s*tohitdata\s*=/im.test(inHandObj.obj[1].body) && /}}\s*ammodata\s*=/im.test(inHandObj.obj[1].body));
+					inHandSpecs = inHandObj.specs(/}}\s*Specs\s*=(.*?){{/im);
+					throwing = (/}}\s*tohitdata\s*=/im.test(inHandObj.obj[1].body) && /}}\s*ammodata\s*=/im.test(inHandObj.obj[1].body));
 					for (const c of inHandSpecs) {
-						let inHandClass = c[2].toLowerCase();
+						inHandClass = c[2].toLowerCase();
 						spell = spell || !inHandDB.startsWith(fields.MagicItemDB);
 						melee = melee || inHandClass.includes('melee');
 						ranged = ranged || inHandClass.includes('ranged');
@@ -5231,7 +5231,7 @@ var attackMaster = (function() {
 	var showHelp = function() {
 		
 		var handoutIDs = getHandoutIDs();
-		var content = '&{template:'+fields.defaultTemplate+'}{{title=AttackMaster Help}}{{AttackMaster Help=For help on using AttackMaster, and the !attk commands, [**Click Here**]('+fields.journalURL+handoutIDs.AttackMasterHelp+')}}{{Weapons & Armour DB Help=For help on the Weapons, Ammo and Armour databases, [**Click Here**]('+fields.journalURL+handoutIDs.WeaponsArmourDatabaseHelp+')}}{{Attacks Database=For help on using and adding Attack Templates and the Attacks Database, [**Click Here**]('+fields.journalURL+handoutIDs.AttacksDatabaseHelp+')}}{{Class Database=For help on using and adding to the Class Database, [**Click Here**]('+fields.journalURL+handoutIDs.ClassDatabaseHelp+')}}{{Character Sheet Setup=For help on setting up character sheets for use with RPGMaster APIs, [**Click Here**]('+fields.journalURL+handoutIDs.RPGMasterCharSheetSetup+').}}{{RPGMaster Templates=For help using RPGMaster Roll Templates, [**Click Here**]('+fields.journalURL+handoutIDs.RPGMasterTemplatesHelp+')}}';
+		var content = '&{template:'+fields.defaultTemplate+'}{{title=AttackMaster Help}}{{AttackMaster Help=For help on using AttackMaster, and the !attk commands, [**Click Here**]('+fields.journalURL+handoutIDs.AttackMasterHelp+')}}{{Weapons & Armour DB Help=For help on the Weapons, Ammo and Armour databases, [**Click Here**]('+fields.journalURL+handoutIDs.WeaponArmourDatabaseHelp+')}}{{Attacks Database=For help on using and adding Attack Templates and the Attacks Database, [**Click Here**]('+fields.journalURL+handoutIDs.AttacksDatabaseHelp+')}}{{Class Database=For help on using and adding to the Class Database, [**Click Here**]('+fields.journalURL+handoutIDs.ClassRaceDatabaseHelp+')}}{{Character Sheet Setup=For help on setting up character sheets for use with RPGMaster APIs, [**Click Here**]('+fields.journalURL+handoutIDs.RPGMasterCharSheetSetup+').}}{{RPGMaster Templates=For help using RPGMaster Roll Templates, [**Click Here**]('+fields.journalURL+handoutIDs.RPGMasterLibraryHelp+')}}';
 		
 		sendFeedback(content,flags.feedbackName,flags.feedbackImg); 
 	};
