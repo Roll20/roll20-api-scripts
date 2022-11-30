@@ -2196,6 +2196,59 @@ const libRPGMaster = (() => { // eslint-disable-line no-unused-vars
 	});
 	
 	const handouts = Object.freeze({
+	RPGM_Release_Notes:	{name:'RPGM Release Notes',
+						 version:'1.401',
+						 avatar:'https://s3.amazonaws.com/files.d20.io/images/257656656/ckSHhNht7v3u60CRKonRTg/thumb.png?1638050703',
+						 bio:'<div style="font-weight: bold; text-align: center; border-bottom: 2px solid black;">'
+							+'<span style="font-weight: bold; font-size: 125%">RPGMaster Release Notes v1.401</span>'
+							+'</div>'
+							+'<div style="padding-left: 5px; padding-right: 5px; overflow: hidden;">'
+							+'<h1>RPGMaster Release Notes</h1>'
+							+'<h6><i>for version 1.4.01</i></h6>'
+							+'<br>'
+							+'<h3>Support for Fighting Styles</h3>'
+							+'<p>Fighting Styles, as defined in <i>The Complete Fighter\'s Handbook,</i> have been added to the RPGMaster suite of APIs.</p>'
+							+'<ul>'
+								+'<li><b>RPGMLibrary:</b> A new database has been added called <i>Styles-DB</i> has been added, that contains the rules and description of each Fighting Style. A new help handout has also been added explaining the Styles Database.</li>'
+								+'<li><b>CommandMaster:</b> In the <i>Add to Proficiencies</i> menu (under the DM\'s Token-Setup menu - !cmd --abilities), a new button at the top, next to [Choose Weapon], is [Choose Style] which opens a drop-down list of currently available Fighting Styles that can be granted to the selected Character. Once selected, the style can be added in the same way as other proficiencies as Proficient or Specialised.</li>'
+								+'<li><b>AttackMaster:</b> When a Player uses the <i>Change Weapon</i> menu to equip what is in each hand (or both hands), the API checks all currently proficient Fighting Styles and assesses if the criteria for each has been met (the right combination of weapons, shields and even spells in specific hands). It then sets up the benefits to be applied for those styles that are in effect, including when calculating attack success and damage.</li>'
+								+'<li><b>InitMaster:</b> If a Fighting Style is in effect, and its benefits/penalties affect the speed and/or number of attacks, the API will take this into account when calculating initiative priorities and entries in the Turn Order.</li>'
+							+'</ul>'
+							+'<h3>Creature <i>Drag-and-Drop</i> Setup</h3>'
+							+'<p>After introducing the basic Creature database and functionality in v1.3.04, the database has been expanded with a few more creatures. However, the main reason for this release is the introduction of the capability to drag a blank Character Sheet onto the map area of the Roll20 UI and select the Creature for it to represent from a drop-down list: at which point the APIs setup both the Token and Character Sheet to represent that Creature in such a way as to work optimally with the RPGMastre APIs.  Try the following:</p>'
+							+'<ol>'
+								+'<li>Add a new blank character sheet in the Campaign Journal, give it a name and an image if you want, and then close the Character Sheet</li>'
+								+'<li>Drag the blank Character Sheet onto the map area and drop it anywhere, to drop a token</li>'
+								+'<li>In the Chat Window, the Race/Class menu should pop up (scroll down to the bottom - Chat often does not scroll when you are in Journal)</li>'
+								+'<li><b>Important:</b> check that the token you have just dropped is selected - annoyingly, Roll20 does not do this by default and I can\'t find a way to select it from the API</li>'
+								+'<li>Choose a Creature (any Creature) from under the [Creatures] button on the Race/Class menu</li>'
+								+'<li>--- lots of things happen ---</li>'
+								+'<li>Click away from the token, then reselect it. This is now the current state:<ul>'
+									+'<li>The token is now the Default token for the Character Sheet</li>'
+									+'<li>The bars on the Token are correctly set up for RPGMaster</li>'
+									+'<li>All the attributes for the creature that RPGMaster needs have been set up on the character sheet</li>'
+									+'<li>Innate Creature attacks have been set up, with Special Attack messages and actions added - however, if the Creature can use normal/magical weapons & armour, these will need to be added to it in the normal way.</li>'
+									+'<li>The correct Action Buttons for the Creature have been added and appear at the top of the screen when the token is selected</li>'
+									+'<li>If the Creature has Powers, they have been added and automatically memorised for the correct uses per day</li>'
+									+'<li>If the Creature has spell casting capability (other than Powers), they have the right Classes & levels set up (you need to add spells to their spellbooks manually - if spells are specifically specified for a Creature in the Monsterous Compendium, I have added them as Powers).</li>'
+									+'<li>Each Creature added in this way as a separate Character Sheet & token will have unique HP rolled for it using the Hit Dice spec of the creature</li></ol>'
+								+'<li>Essentially, this is a one-click Creature Creation system, replicating the D&D5e Compendium capabilities...</li>'
+							+'</ol>'
+							+'<br>'
+							+'<h3>Effect Name Hiding</h3>'
+							+'<p>There are many effects already programmed for RoundMaster, which can be used with the <b>!rounds --target</b> command to have effects on Character Sheets when spells or powers affect them.  See the RoundMaster Help and Effects Database Help handouts for more information.  However, the process of placing an effect on a character shows the Player the name of the effect to the Player, which can spoil the surprise of the effect!</p>'
+							+'<p>So there is now a new syntax for Effect specification that will apply an effect to a character, but show the Player a different text. The syntax for an Effect name is now:</p>'
+							+'<pre>Effect-name<br>'
+							+'Effect-name_Player-text<br>'
+							+'Effect-name_Player-text_Differentiator</pre>'
+							+'<p>The above are optional syntaxes - any one can be used.</p>'
+							+'<ul>'
+								+'<li><i>Effect-name</i> is mandatory, and is the name of the effect in the Effects database or, if there is no associated Effect, the name of the status being applied.</li>'
+								+'<li><i>Player-text</i> if provided is the text that will be shown to the Player instead of the Effect/status name.</li>'
+								+'<li><i>Differentiator</i> if provided just makes this Effect/status different from any other with the same Effect-name and Player-text. This will only be needed in very limited circumstances that perhaps requires the same effect to be applied twice due to two different status applications.</p>'
+							+'</ul>'
+							+'</div>',
+						},
 	RPGM_Templates_Handout:	{name:'RPGMaster Library Help',
 						 version:1.01,
 						 avatar:'https://s3.amazonaws.com/files.d20.io/images/257656656/ckSHhNht7v3u60CRKonRTg/thumb.png?1638050703',
@@ -4476,7 +4529,7 @@ const libRPGMaster = (() => { // eslint-disable-line no-unused-vars
 					'https://s3.amazonaws.com/files.d20.io/images/281334682/xbcpGhbmeEAf3ZmKEgs3Ow/thumb.png?1650395074',
 					'https://s3.amazonaws.com/files.d20.io/images/281334693/xTlsD3NHddK4g3-nlQVCDg/thumb.png?1650395080'
 				   ];
-	var handoutIDs = {
+/*	var handoutIDs = {
 			AttackMasterHelp:			'',
 			AttacksDatabaseHelp:		'',
 			ClassDatabaseHelp:			'',
@@ -4490,11 +4543,12 @@ const libRPGMaster = (() => { // eslint-disable-line no-unused-vars
 			RPGMasterTemplatesHelp:		'',
 			WeaponArmourDatabaseHelp:	'',
 	};
-	var DBindex;
+*/	var DBindex;
 	var magicList = {};
 	var RPGMap = {};
 	var apis = {magic:false,attk:false,init:false};
 	var lastMsg = [];
+	var doneRNmsg = false;
 
 	const isString = (s) => 'string' === typeof s || s instanceof String;
 	const isArray = (a) => Array.isArray(a);
@@ -4615,6 +4669,18 @@ const libRPGMaster = (() => { // eslint-disable-line no-unused-vars
 			}
 		}
 		return undefined;
+	}
+	
+	/*
+	 * Display a message with a link to the Release Notes
+	 */
+	 
+	var displayReleaseNotesLink = function() {
+		var handoutIDs = LibFunctions.getHandoutIDs();
+		if (!doneRNmsg) {
+			doneRNmsg = true;
+			LibFunctions.sendFeedback('<div style="color:green;font-weight:bold;border:2px solid black;background-color:white;border-radius:1em;padding:1em;">You can read the latest **[Release Notes here]('+fields.journalURL+handoutIDs.RPGMReleaseNotes+')**</div>');
+		}
 	}
 	
 	class AbilityObj {
@@ -5022,7 +5088,7 @@ const libRPGMaster = (() => { // eslint-disable-line no-unused-vars
 				RPGMap.weapMultiAttks = weapMultiAttks;
 				RPGMap.punchWrestle = punchWrestle;
 				RPGMap.saveFormat = saveFormat;
-				RPGMap.handoutIDs = handoutIDs;
+//				RPGMap.handoutIDs = handoutIDs;
 				RPGMap.reClassSpecs = reClassSpecs;
 				return [fields,RPGMap];
 			}
@@ -6334,12 +6400,11 @@ const libRPGMaster = (() => { // eslint-disable-line no-unused-vars
 			 
 			LibFunctions.getHandoutIDs = function() {
 				
-				var handoutObjs = findObjs({ type: 'handout' });
+				var handoutObjs = findObjs({ type: 'handout' }),
+					handoutIDs = {};
 				_.each( handoutObjs, h => {
 					let name = h.get('name').replace(/[-_&\s]/g,'');
-					if (!_.isUndefined(handoutIDs[name])) {
-						handoutIDs[name] = h.id;
-					}
+					handoutIDs[name] = h.id;
 				});
 				return handoutIDs;
 			};
@@ -7061,7 +7126,7 @@ const libRPGMaster = (() => { // eslint-disable-line no-unused-vars
 			
 			// RED: v1.036 create help handouts from stored data
 			setTimeout( () => LibFunctions.updateHandouts(handouts,true,findTheGM()),300);
-			setTimeout( () => LibFunctions.getHandoutIDs(), 5000 );
+			setTimeout( () => displayReleaseNotesLink(), 5000 );
 
 		}
 	}
