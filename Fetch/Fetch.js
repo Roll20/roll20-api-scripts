@@ -19,7 +19,7 @@ const Fetch = (() => { //eslint-disable-line no-unused-vars
     apilogoalt = 'https://i.imgur.com/boYO3cf.png';
     const schemaVersion = 0.2;
     API_Meta[apiproject].version = version;
-    const vd = new Date(1670003076993);
+    const vd = new Date(1670003964177);
     const versionInfo = () => {
         log(`\u0166\u0166 ${apiproject} v${API_Meta[apiproject].version}, ${vd.getFullYear()}/${vd.getMonth() + 1}/${vd.getDate()} \u0166\u0166 -- offset ${API_Meta[apiproject].offset}`);
         if (!state.hasOwnProperty(apiproject) || state[apiproject].version !== schemaVersion) { //eslint-disable-line no-prototype-builtins
