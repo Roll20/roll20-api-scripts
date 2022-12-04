@@ -75,7 +75,11 @@ The configuration menu is accessible from the Help Screen or via the chat window
 - `Use Char Maximums` : Presets the sheet option that figures characteristic maximums into point costs.
 - `Literacy Costs CP` : Presets the sheet opttion that literacy costs 1 CP. Most common in Fantasy Hero campaigns.
 - `Super-Heroic END` : Presets the option for higher endurance costs for strength.
-- `Use Hit Locations` : Presets the sheet option to determine hit locations. 
+- `Use Hit Locations` : Presets the sheet option to determine hit locations.
+
+# Troubleshooting Import Errors
+
+Notepad++ and potentially other text editors may convert double quotes to pairs of single quotes. Check to see if pairs of single quotes exist in your character files. If they do exist, consider using another text editor or try replacing them with double quotes. Thank you to Jim E. for reporting this issue.
 
 # Credit
 Hero-related code and modifications by [Villain in Glasses](https://app.roll20.net/users/633423/villain-in-glasses) (Discord: Villain#0604).
