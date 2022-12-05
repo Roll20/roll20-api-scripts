@@ -55,7 +55,10 @@
  * v1.3.04 17/11/2022  Added possible creature data attributes, & fixed certain creature 
  *                     setup issues. Added weapon data update after race/class/level change
  *                     to support things like attacks/round improvement
- * v1.4.01 28/11/2022  Added support for the fighting Styles-DB.
+ * v1.4.01 28/11/2022  Added support for the fighting Styles-DB. Fixed help menu. Improved 
+ *                     creature attribute dice rolling. Improved creature HD & HP calcs. 
+ *                     Added creature attribute dexdef dexterity bonus for ranged attacks. 
+ *                     Added use of alpha indexed drop down for selection of creatures.
  */
  
 var CommandMaster = (function() {
@@ -63,7 +66,7 @@ var CommandMaster = (function() {
 	var version = '1.4.01',
 		author = 'RED',
 		pending = null;
-    const lastUpdate = 1669708967;
+    const lastUpdate = 1670233770;
 
 	/*
 	 * Define redirections for functions moved to the RPGMaster library
@@ -492,12 +495,13 @@ var CommandMaster = (function() {
 	
 	const reAttr = Object.freeze ({
 		intel:		{field:'intel',def:'3:18',re:/[:\s\|]?int\s*=\s*([\s\d]+?(?:\:[\s\d]+?)?)[\|,\]]/i},
-		cac:		{field:'cac',def:'',re:/[:\s\|]?c?ac\s*=\s*([\s\d]+?):?([\s\d]*?)[\|,\]]/i},
+		cac:		{field:'cac',def:'',re:/[:\s\|]?c?ac\s*=\s*(.+?(?:\:[\s\d]+?)?)[\|,\]]/i},
 		mov:		{field:'mov',def:'',re:/[:\s\|]?mov\s*=\s*(.+?(?:\:[\s\d]+?)?)[\|,\]]/i},
 		fly:		{field:'fly',def:'',re:/[:\s\|]?fly\s*=\s*(.+?)[\|,\]]/i},
 		swim:		{field:'swim',def:'',re:/[:\s\|]?sw(?:im)?\s*=\s*(.+?)[\|,\]]/i},
 		tohit:		{field:'tohit',def:'',re:/[:\s\|]?tohit\s*=\s*([-+]?\d+?)[\|,\]]/i},
 		dmg:		{field:'dmg',def:'',re:/[:\s\|]?dmg\s*=\s*([-+]?\d+?)[\|,\]]/i},
+		dexdef:		{field:'dexdef',def:'',re:/[:\s\|]?dexdef\s*=\s*([-+]?\d+?)[\|,\]]/i},
 		crith:		{field:'crith',def:'20',re:/[:\s\|]?ch\s*=\s*(\d+?)[\|,\]]/i},
 		critm:		{field:'critm',def:'1',re:/[:\s\|]?cm\s*=\s*(\d+?)[\|,\]]/i},
 		hd:			{field:'hd',def:'',re:/[:\s\|]?hd\s*=\s*(\d[dr\d\+\-]*?)[\|,\]]/i},
@@ -1092,11 +1096,11 @@ var CommandMaster = (function() {
 	 * Always tries to create a 3 dice bell curve for the value
 	 **/
 	 
-	var calcAttr = function( attrRange='3:18' ) {
-		attrRange = attrRange.split(':');
-		let	low = parseInt(attrRange[0]) || 3,
+	var calcAttr = function( attr='3:18' ) {
+		let attrRange = attr.split(':'),
+			low = parseInt(attrRange[0]),
 			high = parseInt(attrRange[1]);
-		if (high && !isNaN(high)) {
+		if (high && !isNaN(low) && !isNaN(high)) {
 			let range = high - (low - 1);
 			if (range === 2) {
 				return low - 1 + randomInteger(2);
@@ -1112,7 +1116,7 @@ var CommandMaster = (function() {
 				return low - 3 + randomInteger((range/3)+1) + randomInteger((range/3)+1) + randomInteger(range/3);
 			}
 		}
-		return low;
+		return attr;
 	}
 	
 	/**
@@ -1122,6 +1126,21 @@ var CommandMaster = (function() {
 	 
 	var setCreatureAttrs = function( charCS, creature, selected ) {
 		
+		var rollDice = function( count, dice, reroll ) {
+			count = parseInt(count || 1);
+			dice = parseInt(dice || 8);
+			reroll = parseInt(reroll || 0);
+			let total = 0,
+				roll;
+			for (let d=0; d<count; d++) {
+				do {
+					roll = randomInteger(dice);
+				} while (roll <= (reroll || 0));
+				total += roll;
+			}
+			return total;
+		}
+		if (!creature || !creature.trim().length) return;
 		let raceObj = abilityLookup( fields.RaceDB, creature, charCS, true );
 		if (!raceObj.obj) return;
 		let raceSpecs = raceObj.specs();
@@ -1140,41 +1159,35 @@ var CommandMaster = (function() {
 		let attrData = parseData( raceData.cattr+',', reAttr, false );
 		let baseAttr = parseData( baseData.cattr+',', reAttr );
 		attrData = _.mapObject(attrData, (attr,k) => attr ? attr : baseAttr[k]);
-		let hd = attrData.hd.match(/(\d+)(?:d\d+)?([-+]\d+)?(?:r(\d+))?/i) || ['','1','0',''];
+		raceData = _.mapObject(raceData, (attr,k) => attr ? attr : baseData[k]);
+		let hd = attrData.hd.match(/(\d+)(?:d\d+)?([-+]\d+(?:d\d+)?(?:[-+]\d+)?)?(?:r(\d+))?/i) || ['','1','0',''];
+		let hpExtra = (hd[2] || '0').match(/([-+]\d+)(?:d(\d+))?([-+]\d+)?/);
 		setAttr( charCS, fields.Monster_int, calcAttr(attrData.intel) );
-		setAttr( charCS, fields.MonsterAC, calcAttr(attrData.cac || '10') );
+		setAttr( charCS, fields.MonsterAC, calcAttr(parseStr(attrData.cac || '10')) );
 		setAttr( charCS, fields.Monster_mov, attrData.mov+(attrData.fly ? ', FL'+attrData.fly : '')+(attrData.swim ? ', SW'+attrData.swim : '') );
 		setAttr( charCS, fields.MonsterThac0, attrData.thac0 );
 		setAttr( charCS, fields.Monster_size, attrData.size );
 		setAttr( charCS, fields.Strength_hit, attrData.tohit );
 		setAttr( charCS, fields.Strength_dmg, attrData.dmg );
+		setAttr( charCS, fields.Dex_acBonus, attrData.dexdef );
 		setAttr( charCS, fields.MonsterCritHit, attrData.crith );
 		setAttr( charCS, fields.MonsterCritMiss, attrData.critm );
 		setAttr( charCS, fields.Monster_dmg1, parseStr(attrData.attk1.replace(/:/g,',')) );
 		setAttr( charCS, fields.Monster_dmg2, parseStr(attrData.attk2.replace(/:/g,',')) );
 		setAttr( charCS, fields.Monster_dmg3, parseStr(attrData.attk3.replace(/:/g,',')) );
+		setAttr( charCS, fields.Monster_attks, (((attrData.attk1 && attrData.attk1.length) ? 1 : 0) + ((attrData.attk2 && attrData.attk2.length) ? 1 : 0) + ((attrData.attk3 && attrData.attk3.length) ? 1 : 0)) );
 		setAttr( charCS, fields.Attk_specials, parseStr(attrData.attkmsg) );
 		setAttr( charCS, fields.Monster_speed, attrData.speed );
 		setAttr( charCS, fields.Regenerate, attrData.regen );
-		setAttr( charCS, fields.Monster_spAttk, raceData.spattk || 'Nil' );
-		setAttr( charCS, fields.Monster_spDef, raceData.spdef || 'Nil' );
-		setAttr( charCS, fields.Monster_hitDice, (hd[1]||'1') );
-		setAttr( charCS, fields.Monster_hpExtra, (hd[2]||'0').replace('+','') );
-		setAttr( charCS, fields.Monster_hdReroll, (hd[3]||'') );
+		setAttr( charCS, fields.Monster_spAttk, parseStr(raceData.spattk) || 'Nil' );
+		setAttr( charCS, fields.Monster_spDef, parseStr(raceData.spdef) || 'Nil' );
 		if (!attrData.hp && hd && hd.length) {
-			hd[1] = parseInt(hd[1] || 1);
-			hd[2] = parseInt(hd[2] || 0);
-			hd[3] = parseInt(hd[3] || 0);
-			let total = 0,
-				roll;
-			for (let d=0; d<hd[1]; d++) {
-				do {
-					roll = randomInteger(8);
-				} while (roll <= (hd[3] || 0));
-				total += roll;
-			}
-			attrData.hp = total + hd[2];
+			hd[2] = ((hpExtra && hpExtra.length >= 2 && parseInt(hpExtra[2])) ? (rollDice( hpExtra[1], hpExtra[2], 0 ) + parseInt(hpExtra[3] || 0)) : parseInt(hd[2] || 0));
+			attrData.hp = rollDice( hd[1], 8, hd[3] ) + hd[2];
 		}
+		setAttr( charCS, fields.Monster_hitDice, (hd[1]||'1') );
+		setAttr( charCS, fields.Monster_hpExtra, (hd[2]||'0') );
+		setAttr( charCS, fields.Monster_hdReroll, (hd[3]||'') );
 		if (attrData.hp) {
 			setAttr( charCS, fields.HP, attrData.hp );
 			setAttr( charCS, fields.MaxHP, attrData.hp );
@@ -1422,8 +1435,8 @@ var CommandMaster = (function() {
 			psion_classes = getMagicList( fields.ClassDB, clTypeLists, 'psion', 'Psionicist|Psion', true, 'Specify class' ),
 			psion_def = abilityLookup( fields.ClassDB, psion_class, charCS, true ),
 			races = getMagicList( fields.RaceDB, clTypeLists, 'humanoid', 'Human|Dwarf|Elf|Gnome|Half-Elf|Halfling|Half-Orc', true, 'Specify race' ),
-			creatures = getMagicList( fields.RaceDB, clTypeLists, 'creature', '-', true, 'Specify creature' ),
-			race_def = abilityLookup( fields.RaceDB, race, charCS, true );
+			creatures = getMagicList( fields.RaceDB, clTypeLists, 'creature', '-', true, 'Specify creature', true );
+//			race_def = abilityLookup( fields.RaceDB, race, charCS, true );
 			
 		if (!fighter_level) {
 			fighter_class = '<span style='+design.dark_button+'>'+fighter_class+'</span>';
@@ -2563,7 +2576,7 @@ var CommandMaster = (function() {
 
 	var showHelp = function() {
 		var handoutIDs = getHandoutIDs();
-		var content = '&{template:'+fields.defaultTemplate+'}{{title=CommandMaster Help}}{{CommandMaster Help=For help on using CommandMaster, and the !cmd commands, [**Click Here**]('+fields.journalURL+handoutIDs.CommandMasterHelp+')}}{{Class Database=For help on using and adding to the Class Database, [**Click Here**]('+fields.journalURL+handoutIDs.ClassDatabaseHelp+')}}{{Character Sheet Setup=For help on setting up character sheets for use with RPGMaster APIs, [**Click Here**]('+fields.journalURL+handoutIDs.RPGMasterCharSheetSetup+')}}{{RPGMaster Templates=For help using RPGMaster Roll Templates, [**Click Here**]('+fields.journalURL+handoutIDs.RPGMasterTemplatesHelp+')}}';
+		var content = '&{template:'+fields.defaultTemplate+'}{{title=CommandMaster Help}}{{CommandMaster Help=For help on using CommandMaster, and the !cmd commands, [**Click Here**]('+fields.journalURL+handoutIDs.CommandMasterHelp+')}}{{Class Database=For help on using and adding to the Class Database, [**Click Here**]('+fields.journalURL+handoutIDs.ClassRaceDatabaseHelp+')}}{{Character Sheet Setup=For help on setting up character sheets for use with RPGMaster APIs, [**Click Here**]('+fields.journalURL+handoutIDs.RPGMasterCharSheetSetup+')}}{{RPGMaster Templates=For help using RPGMaster Roll Templates, [**Click Here**]('+fields.journalURL+handoutIDs.RPGMasterLibraryHelp+')}}';
 
 		sendFeedback(content,flags.feedbackName,flags.feedbackImg); 
 	};
