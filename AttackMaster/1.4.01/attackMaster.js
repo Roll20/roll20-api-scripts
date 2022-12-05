@@ -77,7 +77,9 @@
  *                     Added Race database parsing & use. Fixed error in taking a weapon
  *                     in hand that can be either 1 or 2 handed (such as a Bastard Sword).
  * v1.3.04 15/11/2022  Fixed sub-race to-hit bonus calculation. Fix Melee damage posting.
- * v1.4.01 26/11/2022  Added Fighting Style database and implementation.
+ * v1.4.01 26/11/2022  Added Fighting Style database and implementation. Improved the way
+ *                     Situational Modifiers are shown & applied for saves. Fixed targeted 
+ *                     attack failure on certain armour types.
  */
  
 var attackMaster = (function() {
@@ -85,7 +87,7 @@ var attackMaster = (function() {
 	var version = '1.4.01',
 		author = 'Richard @ Damery',
 		pending = null;
-    const lastUpdate = 1669708967;
+    const lastUpdate = 1670233770;
 
 	/*
 	 * Define redirections for functions moved to the RPGMaster library
@@ -1446,31 +1448,31 @@ var attackMaster = (function() {
 	 
 	var checkCurrentStyles = function( charCS, InHandTable ) {
 		
-		var spell, melee, shield, ranged, sield, throwing, twoHanded,
-			inPrimary = {},
-			inBoth = {},
-			inOther = {}, 
+		var spell, melee, shield, ranged, shield, throwing, twoHanded,
+			inHand, inHandDB, inHandObj, inHandSpecs, inHandClass,
+			inPrimary = {spell:false,melee:false,ranged:false,shield:false,throwing:false,none:true},
+			inBoth = {spell:false,melee:false,ranged:false,shield:false,throwing:false,none:true},
+			inOther = {spell:false,melee:false,ranged:false,shield:false,throwing:false,none:true},
 			wt = [],
 			wst = [],
 			weaps = [],
 			inHandName, fightStyles, style,
 			i=0;
 
-//		InHandTable = getTable( charCS, fieldGroups.INHAND );
-
 		for (let i=0; !_.isUndefined(inHandName = InHandTable.tableLookup( fields.InHand_name, i, false )); i++) {
 			
-			let inHand = InHandTable.tableLookup( fields.InHand_trueName, i ) || inHandName;
+			inHand = InHandTable.tableLookup( fields.InHand_trueName, i ) || inHandName;
 			spell = melee = ranged = shield = throwing = false;
 			if (inHand !== '-') {
-				let inHandDB = InHandTable.tableLookup( fields.InHand_db, i );
-				let inHandObj = abilityLookup( inHandDB, inHand, charCS );
+				inHandDB = InHandTable.tableLookup( fields.InHand_db, i );
+				inHandObj = abilityLookup( inHandDB, inHand, charCS );
 				if (inHandObj.obj) {
+//					spell = melee = ranged = shield = throwing = false;
 					twoHanded = InHandTable.tableLookup( fields.InHand_handedness, i ) == 2;
-					let inHandSpecs = inHandObj.specs(/}}\s*Specs\s*=(.*?){{/im);
-					let throwing = throwing || (/}}\s*tohitdata\s*=/im.test(inHandObj.obj[1].body) && /}}\s*ammodata\s*=/im.test(inHandObj.obj[1].body));
+					inHandSpecs = inHandObj.specs(/}}\s*Specs\s*=(.*?){{/im);
+					throwing = (/}}\s*tohitdata\s*=/im.test(inHandObj.obj[1].body) && /}}\s*ammodata\s*=/im.test(inHandObj.obj[1].body));
 					for (const c of inHandSpecs) {
-						let inHandClass = c[2].toLowerCase();
+						inHandClass = c[2].toLowerCase();
 						spell = spell || !inHandDB.startsWith(fields.MagicItemDB);
 						melee = melee || inHandClass.includes('melee');
 						ranged = ranged || inHandClass.includes('ranged');
@@ -1658,7 +1660,7 @@ var attackMaster = (function() {
 		}
 		
 		setStyleDefaults( charCS, styleFieldMap, meleeTable, rangedTable, dmgTable, ammoTable );
-
+// throwing
 		for (let r=fightStyles.table[1]; !_.isUndefined(style = fightStyles.tableLookup(fields.Style_name,r,false)); r++) {
 //			log('applyFightingStyle: checking row '+r+' of fightStyles table, which is '+style+', and is '+('true' == fightStyles.tableLookup(fields.Style_current, r)));
 			if (style != '-' && (fightStyles.tableLookup(fields.Style_current, r) == 'true')) {
@@ -1686,7 +1688,7 @@ var attackMaster = (function() {
 							if (inHandObj.obj) {
 								let twoHanded = InHandTable.tableLookup( fields.InHand_handedness, i ) == 2;
 								let inHandSpecs = inHandObj.specs(/}}\s*Specs\s*=(.*?){{/im);
-								let throwing = throwing || (/}}\s*tohitdata\s*=/im.test(inHandObj.obj[1].body) && /}}\s*ammodata\s*=/im.test(inHandObj.obj[1].body));
+								throwing = throwing || (/}}\s*tohitdata\s*=/im.test(inHandObj.obj[1].body) && /}}\s*ammodata\s*=/im.test(inHandObj.obj[1].body));
 								let wt = [], wst = [];
 								for (const c of inHandSpecs) {
 									let inHandClass = c[2].toLowerCase();
@@ -2741,7 +2743,7 @@ var attackMaster = (function() {
 		if (cmdMsg.length || dmgMsg.length || weapMsg.length) {
 			let parts = attkMacro.match(/^([^]*}}[^}{]*?$)([^]*)/);
 			if (parts && parts[1]) {
-				attkMacro = parts[1] + (weapMsg.length ? ('{{desc7='+parseStr(weapMsg)+'}}') : '') + (dmgMsg.length ? ('{{desc8='+parseStr(dmgMsg)+'}}') : '') + (cmdMsg.length ? ('{{desc9='+parseStr(cmdMsg)+'}}') : '') + (parts[2] || '');
+				attkMacro = parts[1] + (weapMsg.trim().length ? ('{{desc7='+parseStr(weapMsg.trim())+'}}') : '') + (dmgMsg.trim().length ? ('{{desc8='+parseStr(dmgMsg.trim())+'}}') : '') + (cmdMsg.trim().length ? ('{{desc9='+parseStr(cmdMsg.trim())+'}}') : '') + (parts[2] || '');
 			}
 		}
 		return attkMacro;
@@ -3010,9 +3012,9 @@ var attackMaster = (function() {
 					tokenHP 	= (tokenHPname ? ('[[0+@{Target|Select Target|'+tokenHPname+'} &{noerror}]]') : ''),
 					tokenMaxHP	= (tokenHPname ? ('[[0+@{Target|Select Target|'+tokenHPname+'|max} &{noerror}]]') : ''),
 					ACnoMods	= '[[0+@{Target|Select Target|'+fields.StdAC[0]+'} &{noerror}]]',
-					ACslash		= slashWeap ? '[[([[0+@{Target|Select Target|'+fields.SlashAC[0]+'} &{noerror}]]+([[0+@{Target|Select Target|'+tokenACname+'} &{noerror}]]-[[0+@{Target|Select Target|'+fields.StdAC[0]+'} &{noerror}]]))]]' : '',
-					ACpierce	= pierceWeap ? '[[([[0+@{Target|Select Target|'+fields.PierceAC[0]+'} &{noerror}]]+([[0+@{Target|Select Target|'+tokenACname+'} &{noerror}]]-[[0+@{Target|Select Target|'+fields.StdAC[0]+'} &{noerror}]]))]]' : '',
-					ACbludgeon	= bludgeonWeap ? '[[([[0+@{Target|Select Target|'+fields.BludgeonAC[0]+'} &{noerror}]]+([[0+@{Target|Select Target|'+tokenACname+'} &{noerror}]]-[[0+@{Target|Select Target|'+fields.StdAC[0]+'} &{noerror}]]))]]' : '',
+					ACslash		= slashWeap ? '[[(([[0+@{Target|Select Target|'+fields.SlashAC[0]+'} &{noerror}]])+(([[0+@{Target|Select Target|'+tokenACname+'} &{noerror}]])-([[0+@{Target|Select Target|'+fields.StdAC[0]+'} &{noerror}]])))]]' : '',
+					ACpierce	= pierceWeap ? '[[(([[0+@{Target|Select Target|'+fields.PierceAC[0]+'} &{noerror}]])+(([[0+@{Target|Select Target|'+tokenACname+'} &{noerror}]])-([[0+@{Target|Select Target|'+fields.StdAC[0]+'} &{noerror}]])))]]' : '',
+					ACbludgeon	= bludgeonWeap ? '[[(([[0+@{Target|Select Target|'+fields.BludgeonAC[0]+'} &{noerror}]])+(([[0+@{Target|Select Target|'+tokenACname+'} &{noerror}]])-([[0+@{Target|Select Target|'+fields.StdAC[0]+'} &{noerror}]])))]]' : '',
 					noModsACtxt = 'No Mods',
 					sACtxt		= slashWeap ? 'S' : '',
 					pACtxt		= pierceWeap ? 'P' : '',
@@ -4136,6 +4138,8 @@ var attackMaster = (function() {
 			tokenName = curToken.get('name'),
 			currentAC = getTokenValue(curToken,fields.Token_AC,fields.AC,fields.MonsterAC,fields.Thac0_base).val,
 			AC = getACvalues(tokenID),
+			monsterAC = attrLookup( charCS, fields.MonsterAC ) || 10,
+			monSpecial = (/\[(.+?)\]/.exec(monsterAC) || ['',''])[1],
 			content = '&{template:'+fields.defaultTemplate+'}{{name=Current Armour for '+tokenName+'}}';
 
 		if (currentAC != finalAC) {
@@ -4155,7 +4159,7 @@ var attackMaster = (function() {
 		} else {
 			content += '{{AC=<span style='+design.selected_button+'>'+finalAC+'</span>';
 		}
-
+		if (monSpecial && monSpecial.length) content += '\n'+monSpecial;
 		content += '}}'
 				+ (acValues.armour ? '{{Armour='+acValues.armour.name+' AC'+(parseInt(acValues.armour.data.ac||10)-parseInt(acValues.armour.data.adj||0)-parseInt(acValues.armour.data[dmgType]||0))+'}}' : '')
 				+ (acValues.shield ? '{{Shield='+acValues.shield.name+'}}' : '');
@@ -4214,14 +4218,19 @@ var attackMaster = (function() {
 	 
 	var makeSavingThrowMenu = function( args, senderId ) {
 		
+		log('makeSavingThrowMenu: args = '+args);
+		
 		var tokenID = args[0],
 			sitMod = (parseInt((args[1] || 0),10) || 0),
+			msg = args[2] || '',
 			curToken = getObj('graphic',tokenID),
 			charCS  = getCharacter( tokenID ),
 			name =  curToken.get('name'),
 			charName = charCS.get('name'),
 			isGM = playerIsGM(senderId),
-			content = '&{template:'+fields.defaultTemplate+'}{{name=Roll a Saving Throw for '+name+'}}{{desc=<table>'
+			content = '&{template:'+fields.defaultTemplate+'}{{name=Roll a Saving Throw for '+name+'}}'
+					+ (msg && msg.length ? '{{Section='+msg+'}}' : '')
+					+ '{{desc=<table>'
 					+ '<thead>'
 						+ '<th width="50%">Save</th><th width="25%">Base</th><th width="25%">Mod</th>'
 					+ '</thead>';
@@ -4230,21 +4239,21 @@ var attackMaster = (function() {
 			content += '<tr>'
 					+  '<td>['+save+'](~'+charName+'|Do-not-use-'+save+'-save)</td>'
 					+  '<td>[[0+'+attrLookup(charCS,saveObj.save)+']]</td>'
-					+  '<td>[[0+'+attrLookup(charCS,saveObj.mod)+']]</td>'
+					+  '<td>[[0+'+attrLookup(charCS,saveObj.mod)+'+'+sitMod+']]</td>'
 					+  '</tr>';
 		});
 				
 		content += '</table>}}'
 				+  '{{desc1=Select a button above to roll a saving throw or '
 				+  '[Add Situational Modifier](!attk --save '+tokenID+'|?{What type of attack to save against'
-															 +'&#124;Weak Poison,?{Enter DM\'s adjustment for Weak Poison&amp;#124;0&amp;#125;'
-															 +'&#124;Dodgeable ranged attack,([[([[0+'+attrLookup(charCS,fields.Dex_acBonus)+']])*-1]]&#41;'
-															 +'&#124;Mental Attack,'+attrLookup(charCS,fields.Wisdom_defAdj)
-															 +'&#124;Physical damage attack,?{Enter your magical armour plusses&amp;#124;0&amp;#125;'
-															 +'&#124;Fire or acid attack,?{Enter your magical armour plusses&amp;#124;0&amp;#125;'
-															 +'&#124;DM adjustment,?{Ask DM for value of adjustment&amp;#124;0&amp;#125;'
+															 +'&#124;Weak Poison,?{Enter DM\'s adjustment for Weak Poison&amp;#124;0&amp;#125;&amp;#124;Weak poison'
+															 +'&#124;Dodgeable ranged attack,[[([[0+'+attrLookup(charCS,fields.Dex_acBonus)+']])*-1]]&amp;#124;Dodgeable ranged attack'
+															 +'&#124;Mental Attack,'+attrLookup(charCS,fields.Wisdom_defAdj)+'&amp;#124;Mental attack'
+															 +'&#124;Physical damage attack,?{Enter your magical armour plusses&amp;#124;0&amp;#125;&amp;#124;Physical attack'
+															 +'&#124;Fire or acid attack,?{Enter your magical armour plusses&amp;#124;0&amp;#125;&amp;#124;Fire or acid'
+															 +'&#124;DM adjustment,?{Ask DM for value of adjustment&amp;#124;0&amp;#125;&amp;#124;DM adjustment'
 															 +'&#124;None of the above,0})'
-				+  'such as Wisdom adjustment, Dexterity adjustment, etc. before making the roll}}'
+				+  'such as ***Wisdom adjustment, Dexterity adjustment, fire or acid*** etc. before making the roll}}'
 				+  '{{desc2=[Auto-check Saving Throws](!attk --check-saves '+tokenID+') to set saves using Race, Class, Level & MI data, or\n'
 				+  '[Update Saving Throw table](!attk --setSaves '+tokenID+') to manually change numbers}}';
 					
@@ -5231,7 +5240,7 @@ var attackMaster = (function() {
 	var showHelp = function() {
 		
 		var handoutIDs = getHandoutIDs();
-		var content = '&{template:'+fields.defaultTemplate+'}{{title=AttackMaster Help}}{{AttackMaster Help=For help on using AttackMaster, and the !attk commands, [**Click Here**]('+fields.journalURL+handoutIDs.AttackMasterHelp+')}}{{Weapons & Armour DB Help=For help on the Weapons, Ammo and Armour databases, [**Click Here**]('+fields.journalURL+handoutIDs.WeaponsArmourDatabaseHelp+')}}{{Attacks Database=For help on using and adding Attack Templates and the Attacks Database, [**Click Here**]('+fields.journalURL+handoutIDs.AttacksDatabaseHelp+')}}{{Class Database=For help on using and adding to the Class Database, [**Click Here**]('+fields.journalURL+handoutIDs.ClassDatabaseHelp+')}}{{Character Sheet Setup=For help on setting up character sheets for use with RPGMaster APIs, [**Click Here**]('+fields.journalURL+handoutIDs.RPGMasterCharSheetSetup+').}}{{RPGMaster Templates=For help using RPGMaster Roll Templates, [**Click Here**]('+fields.journalURL+handoutIDs.RPGMasterTemplatesHelp+')}}';
+		var content = '&{template:'+fields.defaultTemplate+'}{{title=AttackMaster Help}}{{AttackMaster Help=For help on using AttackMaster, and the !attk commands, [**Click Here**]('+fields.journalURL+handoutIDs.AttackMasterHelp+')}}{{Weapons & Armour DB Help=For help on the Weapons, Ammo and Armour databases, [**Click Here**]('+fields.journalURL+handoutIDs.WeaponArmourDatabaseHelp+')}}{{Attacks Database=For help on using and adding Attack Templates and the Attacks Database, [**Click Here**]('+fields.journalURL+handoutIDs.AttacksDatabaseHelp+')}}{{Class Database=For help on using and adding to the Class Database, [**Click Here**]('+fields.journalURL+handoutIDs.ClassRaceDatabaseHelp+')}}{{Character Sheet Setup=For help on setting up character sheets for use with RPGMaster APIs, [**Click Here**]('+fields.journalURL+handoutIDs.RPGMasterCharSheetSetup+').}}{{RPGMaster Templates=For help using RPGMaster Roll Templates, [**Click Here**]('+fields.journalURL+handoutIDs.RPGMasterLibraryHelp+')}}';
 		
 		sendFeedback(content,flags.feedbackName,flags.feedbackImg); 
 	};
