@@ -52,7 +52,7 @@ var initMaster = (function() {
 	var version = '1.4.01',
 		author = 'Richerd @ Damery',
 		pending = null;
-    const lastUpdate = 1669708967;
+    const lastUpdate = 1670233770;
 
 	/*
 	 * Define redirections for functions moved to the RPGMaster library
@@ -2796,7 +2796,7 @@ var initMaster = (function() {
 	var showHelp = function() {
 
 	var handoutIDs = getHandoutIDs();
-	var content = '&{template:'+fields.defaultTemplate+'}{{title=InitiativeMaster Help}}{{InitMaster Help=For help on !init commands [**Click Here**]('+fields.journalURL+handoutIDs.InitiativeMasterHelp+')}}{{Character Sheet Setup=For help on setting up character sheets for use with RPGMaster APIs, [**Click Here**]('+fields.journalURL+handoutIDs.RPGMasterCharSheetSetup+')}}{{RPGMaster Templates=For help using RPGMaster Roll Templates, [**Click Here**]('+fields.journalURL+handoutIDs.RPGMasterTemplatesHelp+')}}';
+	var content = '&{template:'+fields.defaultTemplate+'}{{title=InitiativeMaster Help}}{{InitMaster Help=For help on !init commands [**Click Here**]('+fields.journalURL+handoutIDs.InitiativeMasterHelp+')}}{{Character Sheet Setup=For help on setting up character sheets for use with RPGMaster APIs, [**Click Here**]('+fields.journalURL+handoutIDs.RPGMasterCharSheetSetup+')}}{{RPGMaster Templates=For help using RPGMaster Roll Templates, [**Click Here**]('+fields.journalURL+handoutIDs.RPGMasterLibraryHelp+')}}';
 
 		sendFeedback(content,flags.feedbackName,flags.feedbackImg); 
 	}; 
