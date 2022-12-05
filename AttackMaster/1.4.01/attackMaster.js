@@ -79,7 +79,7 @@
  * v1.3.04 15/11/2022  Fixed sub-race to-hit bonus calculation. Fix Melee damage posting.
  * v1.4.01 26/11/2022  Added Fighting Style database and implementation. Improved the way
  *                     Situational Modifiers are shown & applied for saves. Fixed targeted 
- *                     attack failure on certain armour types.
+ *                     attack failure on certain armour types. Fixed help menu.
  */
  
 var attackMaster = (function() {
@@ -87,7 +87,7 @@ var attackMaster = (function() {
 	var version = '1.4.01',
 		author = 'Richard @ Damery',
 		pending = null;
-    const lastUpdate = 1670233770;
+    const lastUpdate = 1670258672;
 
 	/*
 	 * Define redirections for functions moved to the RPGMaster library
@@ -1428,7 +1428,6 @@ var attackMaster = (function() {
 	 */
 
 	var checkItemAllowed = function( wname, wt, wst, allowedItems ) {
-		log('checkAllowedItems: called with wname='+wname+', wt='+wt+', wst='+wst+', allowedItems='+allowedItems);
 		let forceFalse = false;
 		allowedItems = allowedItems.toLowerCase().replace(reIgnore,'').split('|'),
 		wt = _.uniq(wt);
@@ -2563,27 +2562,20 @@ var attackMaster = (function() {
 		return new Promise(resolve => {
 
 			try {
-				log('updateAttackTables: called');
 				var base = fields.InHand_table[1],
 					i = base,
 					lentHands = parseInt(attrLookup( charCS, fields.Equip_lentHands )) || 0,
 					noHands = Math.max(((parseInt(attrLookup( charCS, fields.Equip_handedness )) || 2) + lentHands), 2),
 					weapon, hand, index;
 
-				log('updateAttackTables: defined vars');
 				while ((!_.isUndefined(weapon = InHandTable.tableLookup( fields.InHand_name, i, false )))) {
-				log('updateAttackTables: dealing with weapon '+weapon);
 					index = InHandTable.tableLookup( fields.InHand_index, i, false );
 					if (i == rowInHand) {
-				log('updateAttackTables: adding requested weapon');
 						index = parseFloat(miSelection);
 						hand = (i==base ? fields.Equip_leftHand : (i==base+1 ? fields.Equip_rightHand : (i==base+2 ? fields.Equip_bothHands : null)));
-				log('updateAttackTables: calling addWeapon with hand='+hand+', handedness='+handedness+', i='+i);
 						[weaponInfo,Quiver] = addWeapon( charCS, hand, handedness, i, (i>(noHands+base)), weaponInfo, Quiver, InHandTable );
 					} else {
-				log('updateAttackTables: checking for ammo');
 						if (weapon != '-' && index != '' && index >= -1) {
-				log('updateAttackTables: putting ammo in quiver, index='+index);
 							Quiver = putAmmoInQuiver( charCS, weaponInfo, Quiver, index );
 						}
 					}
@@ -4544,6 +4536,7 @@ var attackMaster = (function() {
 				weaponInfo = {},
 				InHandTable = getTable( charCS, fieldGroups.INHAND ),
 				Quiver = getTable( charCS, fieldGroups.QUIVER ),
+				Items = getTable( charCS, fieldGroups.MI ),
 				values = initValues( InHandTable.fieldGroup ),
 				noHands = parseInt(attrLookup(charCS,fields.Equip_handedness)) || 2,
 				lentHands = parseInt(attrLookup(charCS,fields.Equip_lentHands)) || 0,
@@ -4595,9 +4588,9 @@ var attackMaster = (function() {
 				}
 				Spells.tableSet( fields.Spells_castValue, r, Math.max(weaponQty-1,0) );
 			} else {
-				weapon = attrLookup( charCS, fields.Items_name, fields.Items_table, r ) || '-';
-				trueWeapon = attrLookup( charCS, fields.Items_trueName, fields.Items_table, r ) || weapon;
-				weaponQty = parseInt(attrLookup( charCS, fields.Items_qty, fields.Items_table, r ) || 0);
+				weapon = Items.tableLookup( fields.Items_name, r ) || '-';
+				trueWeapon = Items.tableLookup( fields.Items_trueName, r ) || weapon;
+				weaponQty = parseInt(Items.tableLookup( fields.Items_qty, r ) || 0);
 				if (!weaponQty && weapon !== '-') {
 					sendParsedMsg(tokenID,messages.noneLeft,senderId);
 					return;
@@ -4611,11 +4604,10 @@ var attackMaster = (function() {
 				};
 				weaponSpecs = item.specs(/}}\s*Specs\s*=(.*?){{/im);
 				weaponToHit = item.data(/}}\s*ToHitData\s*=(.*?){{/im);
-				weaponSpecs = weaponSpecs.slice(0,weaponToHit.length);
+				weaponSpecs = weaponToHit ? weaponSpecs.slice(0,weaponToHit.length) : undefined;
 //				handedness = twoHanded ? 2 : (weaponSpecs ? (parseInt(weaponSpecs[0][3]) || 1) : 1);
 				handedness = row < 2 ? 1 : (weaponSpecs ? weaponSpecs.reduce((hands, weapon) => Math.max( hands, (parseInt(weapon[3])||1) ), 1) : 1);
 				if (twoHanded) handedness = Math.min(handedness,2);
-				log('handleChangeWeapon: weaponSpecs.length='+weaponSpecs.length+', weaponToHit.length='+weaponToHit.length+', row='+row+', handedness='+handedness);
 			}
 			
 			// Next, blank the quiver table
