@@ -89,7 +89,7 @@ var MagicMaster = (function() {
 	var version = '1.4.01',
 		author = 'RED',
 		pending = null;
-    const lastUpdate = 1669708967;
+    const lastUpdate = 1670233770;
 		
 	/*
 	 * Define redirections for functions moved to the RPGMaster library
@@ -6025,8 +6025,9 @@ var MagicMaster = (function() {
 	 */ 
 
 	var showHelp = function() {
+
 		var handoutIDs = getHandoutIDs();
-		var content = '&{template:'+fields.defaultTemplate+'}{{title=MagicMaster Help}}{{MagicMaster Help=For help on using MagicMaster, and the !magic commands, [**Click Here**]('+fields.journalURL+handoutIDs.MagicMasterHelp+')}}{{Spells & Magic Items Help=For help on the Spells, Powers and Magic Items databases, [**Click Here**]('+fields.journalURL+handoutIDs.MagicDatabaseHelp+')}}{{Effects Database=For help on using and adding Effects and the Effects Database, [**Click Here**]('+fields.journalURL+handoutIDs.EffectsDatabaseHelp+')}}{{Class Database=For help on using and adding to the Class Database, [**Click Here**]('+fields.journalURL+handoutIDs.ClassDatabaseHelp+')}}{{Character Sheet Setup=For help on setting up character sheets for use with RPGMaster APIs, [**Click Here**]('+fields.journalURL+handoutIDs.RPGMasterCharSheetSetup+')}}{{RPGMaster Templates=For help using RPGMaster Roll Templates, [**Click Here**]('+fields.journalURL+handoutIDs.RPGMasterTemplatesHelp+')}}';
+		var content = '&{template:'+fields.defaultTemplate+'}{{title=MagicMaster Help}}{{MagicMaster Help=For help on using MagicMaster, and the !magic commands, [**Click Here**]('+fields.journalURL+handoutIDs.MagicMasterHelp+')}}{{Spells & Magic Items Help=For help on the Spells, Powers and Magic Items databases, [**Click Here**]('+fields.journalURL+handoutIDs.MagicDatabaseHelp+')}}{{Effects Database=For help on using and adding Effects and the Effects Database, [**Click Here**]('+fields.journalURL+handoutIDs.EffectsDatabaseHelp+')}}{{Class Database=For help on using and adding to the Class Database, [**Click Here**]('+fields.journalURL+handoutIDs.ClassRaceDatabaseHelp+')}}{{Character Sheet Setup=For help on setting up character sheets for use with RPGMaster APIs, [**Click Here**]('+fields.journalURL+handoutIDs.RPGMasterCharSheetSetup+')}}{{RPGMaster Templates=For help using RPGMaster Roll Templates, [**Click Here**]('+fields.journalURL+handoutIDs.RPGMasterLibraryHelp+')}}';
 
 		sendFeedback(content,flags.feedbackName,flags.feedbackImg); 
 	}; 
