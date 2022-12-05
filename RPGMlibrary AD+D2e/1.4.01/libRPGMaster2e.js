@@ -67,7 +67,7 @@ const libRPGMaster = (() => { // eslint-disable-line no-unused-vars
 	'use strict';
 	const version = '1.4.01';
 	API_Meta.libRPGMaster.version = version;
-	const lastUpdate = 1669708967;
+	const lastUpdate = 1670233770;
 	const schemaVersion = 0.1;
 	log('now in seconds is '+Date.now()/1000);
 
