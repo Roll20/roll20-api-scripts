@@ -87,7 +87,7 @@ var attackMaster = (function() {
 	var version = '1.4.01',
 		author = 'Richard @ Damery',
 		pending = null;
-    const lastUpdate = 1670258672;
+    const lastUpdate = 1670396443;
 
 	/*
 	 * Define redirections for functions moved to the RPGMaster library
@@ -1976,7 +1976,9 @@ var attackMaster = (function() {
 		var itemName,
 			itemTable = getTableField( charCS, {}, fields.Items_table, fields.Items_name ),
 			itemTable = getTableField( charCS, itemTable, fields.Items_table, fields.Items_qty ),
-			weaponList = (type == 'ring') ? ['-,-'] : ['-,-','Touch,-2','Punch-Wrestle,-2.5'];
+			weaponList = (type == 'ring') ? ['-,-'] : ['-,-','Touch,-2','Punch-Wrestle,-2.5'],
+			spellFields = {mu:{table:fields.MUSpellNo_table,spells:fields.MUSpellNo_memable,spec:fields.MUSpellNo_specialist,misc:fields.MUSpellNo_misc},
+						   pr:{table:fields.PRSpellNo_table,spells:fields.PRSpellNo_memable,spec:fields.PRSpellNo_wisdom,misc:fields.PRSpellNo_misc}};
 			
 		for (let r = fields.Items_table[1]; !_.isUndefined(itemName = itemTable.tableLookup( fields.Items_name, r, false )); r++) {
 			if (itemTable.tableLookup( fields.Items_qty, r, 0 ) <= 0) continue;
@@ -2017,19 +2019,30 @@ var attackMaster = (function() {
 		if (type !== 'ring') {
 			_.each (spellLevels, (level,k) => {
 				_.each (level, (l,n) => {
+					let totalSpells = 100,
+						s = 0;
+					if (k == 'mu' || k == 'pr') {
+						let noSpells = parseInt(attrLookup(charCS,[spellFields[k].table[0] + n + spellFields[k].spells[0],spellFields[k].spells[1]])) || 0,
+							miscSpells = (noSpells && !state.MagicMaster.spellRules.strictNum) ? parseInt(attrLookup(charCS,[spellFields[k].table[0] + n + spellFields[k].misc[0],spellFields[k].misc[1]]) || 0) : 0,
+							levelSpec = parseInt(attrLookup(charCS,[spellFields[k].table[0] + n + spellFields[k].spec[0],spellFields[k].spec[1]])) || 0;
+						totalSpells = noSpells + miscSpells + levelSpec;
+					}
 					itemName = '-';
 					itemTable = {};
-					for (let r=fields.Spells_table[1]; !_.isUndefined(itemName); r++) {
-						for (let c=0; (c<fields.SpellsCols && !_.isUndefined(itemName)); c++) {
+					let items = [];
+					for (let r=fields.Spells_table[1]; (s < totalSpells) && !_.isUndefined(itemName); r++) {
+						for (let c=0; (c<fields.SpellsCols && s<totalSpells && !_.isUndefined(itemName)); c++) {
 							if (!itemTable[c]) {
 								itemTable[c] = getTableField( charCS, {}, fields.Spells_table, fields.Spells_name, (c+l.base) );
 								itemTable[c] = getTableField( charCS, itemTable[c], fields.Spells_table, fields.Spells_weapon, (c+l.base) );
 								itemTable[c] = getTableField( charCS, itemTable[c], fields.Spells_table, fields.Spells_castValue, (c+l.base) );
 							}
 							itemName = itemTable[c].tableLookup( fields.Spells_name, r, false );
-							if (itemName && itemName != '-' && itemTable[c].tableLookup( fields.Spells_weapon, r ) === '1' && itemTable[c].tableLookup( fields.Spells_castValue, r ) > 0) {
-								weaponList.push(itemName+','+r+':'+(c+l.base))
+							if (itemName && itemName != '-' && !items.includes(itemName) && itemTable[c].tableLookup( fields.Spells_weapon, r ) === '1' && itemTable[c].tableLookup( fields.Spells_castValue, r ) > 0) {
+								weaponList.push(itemName+','+r+':'+(c+l.base));
+								items.push(itemName);
 							}
+							s++;
 						}
 					}
 				});
