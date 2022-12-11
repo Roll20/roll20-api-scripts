@@ -59,6 +59,8 @@
  *                     creature attribute dice rolling. Improved creature HD & HP calcs. 
  *                     Added creature attribute dexdef dexterity bonus for ranged attacks. 
  *                     Added use of alpha indexed drop down for selection of creatures.
+ *                     Added suppression of power inheritance. Added function to check
+ *                     player, speakingas, token & character names for illegal characters.
  */
  
 var CommandMaster = (function() {
@@ -91,6 +93,7 @@ var CommandMaster = (function() {
 	const getMagicList = (...a) => libRPGMaster.getMagicList(...a);
 	const handleCheckSaves = (...a) => libRPGMaster.handleCheckSaves(...a);
 	const handleCheckWeapons = (...a) => libRPGMaster.handleCheckWeapons(...a);
+	const resolveData = (...a) => libRPGMaster.resolveData(...a);
 	
 	/*
 	 * Handle for reference to character sheet field mapping table.
@@ -472,7 +475,7 @@ var CommandMaster = (function() {
 		spattk:		{field:'spattk',def:'',re:/[\[,\s]spattk:(.+?)[,\]]/i},
 		spdef:		{field:'spdef',def:'',re:/[\[,\s]spdef:(.+?)[,\]]/i},
 		powerdef:	{field:'cl',def:'',re:/[\[,\s]cl:([\s\w]+?)[,\]]/i},
-		numpowers:	{field:'numpowers',def:0,re:/[\[,\s]ns:([\d\w]+?)[,\s\]]/i},
+		numpowers:	{field:'numpowers',def:0,re:/[\[,\s]ns:([=\w]+?)[,\s\]]/i},
 		extralevel1:{field:'xspell1',def:'',re:/[\[,\s]sp1:([\s\w\-\|]+?)[,\]]/i},
 		extralevel2:{field:'xspell2',def:'',re:/[\[,\s]sp2:([\s\w\-\|]+?)[,\]]/i},
 		extralevel3:{field:'xspell3',def:'',re:/[\[,\s]sp3:([\s\w\-\|]+?)[,\]]/i},
@@ -496,26 +499,26 @@ var CommandMaster = (function() {
 	const reAttr = Object.freeze ({
 		intel:		{field:'intel',def:'3:18',re:/[:\s\|]?int\s*=\s*([\s\d]+?(?:\:[\s\d]+?)?)[\|,\]]/i},
 		cac:		{field:'cac',def:'',re:/[:\s\|]?c?ac\s*=\s*(.+?(?:\:[\s\d]+?)?)[\|,\]]/i},
-		mov:		{field:'mov',def:'',re:/[:\s\|]?mov\s*=\s*(.+?(?:\:[\s\d]+?)?)[\|,\]]/i},
-		fly:		{field:'fly',def:'',re:/[:\s\|]?fly\s*=\s*(.+?)[\|,\]]/i},
-		swim:		{field:'swim',def:'',re:/[:\s\|]?sw(?:im)?\s*=\s*(.+?)[\|,\]]/i},
+		mov:		{field:'mov',def:'',re:/[:\s\|]?mov\s*=\s*(.*?(?:\:[\s\d]+?)?)[\|,\]]/i},
+		fly:		{field:'fly',def:'',re:/[:\s\|]?fly\s*=\s*(.*?)[\|,\]]/i},
+		swim:		{field:'swim',def:'',re:/[:\s\|]?sw(?:im)?\s*=\s*(.*?)[\|,\]]/i},
 		tohit:		{field:'tohit',def:'',re:/[:\s\|]?tohit\s*=\s*([-+]?\d+?)[\|,\]]/i},
 		dmg:		{field:'dmg',def:'',re:/[:\s\|]?dmg\s*=\s*([-+]?\d+?)[\|,\]]/i},
 		dexdef:		{field:'dexdef',def:'',re:/[:\s\|]?dexdef\s*=\s*([-+]?\d+?)[\|,\]]/i},
 		crith:		{field:'crith',def:'20',re:/[:\s\|]?ch\s*=\s*(\d+?)[\|,\]]/i},
 		critm:		{field:'critm',def:'1',re:/[:\s\|]?cm\s*=\s*(\d+?)[\|,\]]/i},
 		hd:			{field:'hd',def:'',re:/[:\s\|]?hd\s*=\s*(\d[dr\d\+\-]*?)[\|,\]]/i},
-		hp:			{field:'hp',def:'',re:/[:\s\|]?hp\s*=\s*(\d+?)[\|,\]]/i},
-		regen:		{field:'regen',def:'',re:/[:\s\|]?regen\s*=\s*(\d+?)[\|,\]]/i},
+		hp:			{field:'hp',def:'',re:/[:\s\|]?hp\s*=\s*(\d*?)[\|,\]]/i},
+		regen:		{field:'regen',def:'',re:/[:\s\|]?regen\s*=\s*(\d*?)[\|,\]]/i},
 		thac0:		{field:'thac0',def:'',re:/[:\s\|]?thac0\s*=\s*([\d\+\-]+?)[\|,\]]/i},
 		size:		{field:'size',def:'M',re:/[:\s\|]?size\s*=\s*([TSMLHG])[\|,\]]/i},
-		attk1:		{field:'attk1',def:'',re:/[:\s\|]?attk1\s*=\s*(.+?)[\|,\]]/i},
-		attk2:		{field:'attk2',def:'',re:/[:\s\|]?attk2\s*=\s*(.+?)[\|,\]]/i},
-		attk3:		{field:'attk3',def:'',re:/[:\s\|]?attk3\s*=\s*(.+?)[\|,\]]/i},
-		attkmsg:	{field:'attkmsg',def:'',re:/[:\s\|]?msg\s*=\s*(.+?)[\|,\]]/i},
+		attk1:		{field:'attk1',def:'',re:/[:\s\|]?attk1\s*=\s*(.*?)[\|,\]]/i},
+		attk2:		{field:'attk2',def:'',re:/[:\s\|]?attk2\s*=\s*(.*?)[\|,\]]/i},
+		attk3:		{field:'attk3',def:'',re:/[:\s\|]?attk3\s*=\s*(.*?)[\|,\]]/i},
+		attkmsg:	{field:'attkmsg',def:'',re:/[:\s\|]?msg\s*=\s*(.*?)[\|,\]]/i},
 		speed:		{field:'speed',def:'',re:/[:\s\|]?sp\s*=\s*([\d\+\-]+?)[\|,\]]/i},
-		cl:			{field:'cl',def:'',re:/[:\s\|]?cl\s*=\s*([-\:\w]+?)[\|,\]]/i},
-		lv:			{field:'lv',def:'',re:/[:\s\|]?lv\s*=\s*([\d]+?)[\|,\]]/i},
+		cl:			{field:'cl',def:'',re:/[:\s\|]?cl\s*=\s*([-\:\w]*?)[\|,\]]/i},
+		lv:			{field:'lv',def:'',re:/[:\s\|]?lv\s*=\s*([\d]*?)[\|,\]]/i},
 	});
 	
 	const std = Object.freeze({
@@ -664,6 +667,8 @@ var CommandMaster = (function() {
 			setTimeout( () => issueHandshakeQuery('magic'), 20);
 			setTimeout(() => updateHandouts(handouts,true,findTheGM()), 50);
 			setTimeout(handleChangedCmds,10000);
+			setTimeout( () => updateDBindex(false), 100); // checking the DB indexing
+			setTimeout( () => makeCheckNamesMenu( [], true ), 2000);
 			
 			if (state.CommandMaster.CheckChar)
 				setTimeout(doCheckCharSetupDelayed,10000);
@@ -1126,6 +1131,8 @@ var CommandMaster = (function() {
 	 
 	var setCreatureAttrs = function( charCS, creature, selected ) {
 		
+		var raceData, attrData;
+		
 		var rollDice = function( count, dice, reroll ) {
 			count = parseInt(count || 1);
 			dice = parseInt(dice || 8);
@@ -1140,26 +1147,39 @@ var CommandMaster = (function() {
 			}
 			return total;
 		}
-		if (!creature || !creature.trim().length) return;
-		let raceObj = abilityLookup( fields.RaceDB, creature, charCS, true );
-		if (!raceObj.obj) return;
-		let raceSpecs = raceObj.specs();
-		let baseObj = raceSpecs && raceSpecs[0] ? abilityLookup(fields.RaceDB, raceSpecs[0][4], charCS, true) : undefined;
-		let raceData = raceObj.data(/}}\s*?racedata\s*?=\s*\[(.*?)\],?{{/im);
-		let baseData = baseObj.obj ? baseObj.data(/}}\s*?racedata\s*?=\s*\[(.*?)\],?{{/im) : undefined;
-		if (!raceData || !raceData[0]) {
-			raceData = baseData;
+/*		var resolveData = function( charCS, creature, dBase, reThisData ) {
+			
+			var thisObj, thisSpecs, baseObj, thisData, thisAttr,
+				baseData = parseData( '', reClassSpecs, true ),
+				baseAttr = parseData( '', reAttr, true );
+
+			if (!creature || !creature.trim().length) return [baseData,baseAttr];
+			thisObj = abilityLookup( dBase, creature, null, true );
+			if (!thisObj.obj) return [baseData,baseAttr];
+			thisSpecs = thisObj.specs();
+			if (!thisSpecs || !thisSpecs[0] || (thisSpecs[0][4] === creature)) return [baseData,baseAttr];
+			thisData = thisObj.data(reThisData);
+			[baseData,baseAttr] = resolveData( charCS, thisSpecs[0][4], dBase, reThisData );			
+			if (!thisData || !thisData[0]) return [baseData,baseAttr];
+			thisData = parseData( thisData[0][0], reClassSpecs, false );
+			thisAttr = parseData( thisData.cattr+',', reAttr, false );
+			if (baseData) {
+				if (!thisData.cattr) {
+					thisData.cattr = baseData.cattr;
+					thisAttr = baseAttr;
+				} else if (baseAttr) {
+					thisAttr = _.mapObject(thisAttr, (attr,k) => attr == '-' ? '' : (!_.isUndefined(attr) ? attr : baseAttr[k]));
+				}
+				thisData = _.mapObject(thisData, (attr,k) => attr == '-' ? '' : (!_.isUndefined(attr) ? attr : baseData[k]));
+			}
+			return [thisData,thisAttr];
 		}
-		if (!raceData || !raceData[0]) return;
-		if (!baseData || !baseData[0]) baseData = raceData;
-		raceData = parseData( raceData[0][0], reClassSpecs );
-		baseData = parseData( baseData[0][0], reClassSpecs );
-		if (!raceData.cattr) raceData.cattr = baseData.cattr;
-		if (!raceData.cattr) return;
-		let attrData = parseData( raceData.cattr+',', reAttr, false );
-		let baseAttr = parseData( baseData.cattr+',', reAttr );
-		attrData = _.mapObject(attrData, (attr,k) => attr ? attr : baseAttr[k]);
-		raceData = _.mapObject(raceData, (attr,k) => attr ? attr : baseData[k]);
+*/
+		if (!creature || !creature.trim().length) return;
+
+		[raceData,attrData] = resolveData( creature, fields.RaceDB, /}}\s*?racedata\s*?=\s*\[(.*?)\],?{{/im );
+		if (!raceData || !attrData) return;
+
 		let hd = attrData.hd.match(/(\d+)(?:d\d+)?([-+]\d+(?:d\d+)?(?:[-+]\d+)?)?(?:r(\d+))?/i) || ['','1','0',''];
 		let hpExtra = (hd[2] || '0').match(/([-+]\d+)(?:d(\d+))?([-+]\d+)?/);
 		setAttr( charCS, fields.Monster_int, calcAttr(attrData.intel) );
@@ -1192,6 +1212,11 @@ var CommandMaster = (function() {
 			setAttr( charCS, fields.HP, attrData.hp );
 			setAttr( charCS, fields.MaxHP, attrData.hp );
 		}
+		setAttr( charCS, fields.Fighter_level, '' );
+		setAttr( charCS, fields.Wizard_level, '' );
+		setAttr( charCS, fields.Priest_level, '' );
+		setAttr( charCS, fields.Rogue_level, '' );
+		setAttr( charCS, fields.Psion_level, '' );
 		if (attrData.lv) {
 			let classData = (attrData.cl || 'F:Warrior').split(':');
 			let classField, levelField;
@@ -1223,6 +1248,7 @@ var CommandMaster = (function() {
 			}
 			setAttr( charCS, classField, classData[1] || '');
 			setAttr( charCS, levelField, attrData.lv);
+			handleAddAllPRspells( ['',BT.ALL_PRSPELLS,0], selected );
 		}
 		handleSetAbility( ['',BT.AB_SILENT,'Init menu',std.init_menu.api,std.init_menu.action,'1.Initiative','replace'], selected );
 		handleSetAbility( ['',BT.AB_SILENT,'Attack',std.attk_hit.api,std.attk_hit.action,'2.Attack','replace'], selected );
@@ -1234,7 +1260,7 @@ var CommandMaster = (function() {
 			handleSetAbility( ['',BT.AB_SILENT,'Use Power',std.use_power.api,std.use_power.action,'2.Use Power','replace'], selected );
 			handleSetAbility( ['',BT.AB_SILENT,'Powers menu',std.powers_menu.api,std.powers_menu.action,'3.Powers Menu','replace'], selected );
 		}
-		return;
+		return raceData.name;
 	}
 					  
 // ---------------------------------------------------- Make Menus ---------------------------------------------------------
@@ -1474,7 +1500,7 @@ var CommandMaster = (function() {
 		let content = '&{template:'+fields.defaultTemplate+'}{{name=Review & Set\nRace and Classes}}'
 					+ (msg ? ('='+msg) : '')
 					+ '{{desc=Drop down lists show Races, Creatures and Classes defined in the Databases.  If not shown in a list, choose "Other" and it can be typed in at the next prompt.  Any class *can* be in any class field (even if not in the list for that field), especially to support multi-class characters.  Classes not found in the Class database will get the defaults for the field: Unrecognised Classes in the *Wizard* or *Priest* lines default to Wizard or Priest spellcasting rules.}}'
-					+ '{{desc1=Currently a'+('aeiouAEIOU'.includes(race[0])?'n':'')+' **'+race+'**\nChange to [Race](!cmd --button '+BT.RACE+'|&#63;{Which Race?|'+races+'}) or [Creature](!cmd --button '+BT.CREATURE+'|&#63;{Which Creature?|'+creatures+'})}}'
+					+ '{{desc1=Currently a'+('aeiouAEIOU'.includes(race[0])?'n':'')+' **'+race+'**\nChange to [Race](!cmd --button '+BT.RACE+'|&#63;{Which Race?|'+races+'})'+(isGM ? ('or [Creature](!cmd --button '+BT.CREATURE+'|&#63;{Which Creature?|'+creatures+'})') : '')+'}}'
 					+ '{{desc2=<table>'
 					+ '<tr><td>['+fighter_class+'](!cmd --button '+BT.CLASS_F+'|&#63;{Which Warrior Class?|'+fighter_classes+'})</td><td>[Level '+fighter_level+'](!cmd --button '+BT.LEVEL_F+'|&#63;{Which Warrior Level?|'+fighter_level+'})</td><td>'+fighter_default+'</td></tr>'
 					+ '<tr><td>['+wizard_class+'](!cmd --button '+BT.CLASS_W+'|&#63;{Which Wizard Class?|'+wizard_classes+'})</td><td>[Level '+wizard_level+'](!cmd --button '+BT.LEVEL_W+'|&#63;{Which Wizard Level?|'+wizard_level+'})</td><td>'+wizard_default+'</td></tr>'
@@ -1662,6 +1688,78 @@ var CommandMaster = (function() {
 	}
 	
 	/*
+	 * Make a menu displaying issues with names of players, characters,
+	 * tokens etc that might cause the APIs to error. Offer the DM
+	 * ways of fixing the issues, where possible.
+	 */
+	 
+	var makeCheckNamesMenu = function (args,silent=false) {
+		
+		var chosen = args[0],
+			msg = args[1];
+
+		silent = silent || (args[2] || '').toUpperCase() == 'SILENT';
+			
+		const errMsgs = {player:'Ask the Player to go into his settings and remove all the illegal characters from their *Display name*',
+						 speakingas:'Ask the Player to change their speaking as selection - using the "As" dropdown at the bottom of the Chat window - to something without illegal characters, then change the name of the character/token that they were speaking as to something legal',
+						 character:'Change the name on the Character Sheet to remove any illegal characters - it may be that any associated token will need its name changing as well',
+						 token:'Change the token name to remove any illegal characters - it may be that any character sheet that the token represents may need its name changing as well',
+						};
+		
+		var listProblemNames = function( args, list, field, errMsg ) {
+			
+			var reInvalid = /[\[\]\(\)\|\$\%\@\?\{\}\\]/g,
+				replacements = [[/\$/g,'&#36;'],
+								[/\%/g,'&#37;'],
+								[/\(/g,'&#40;'],
+								[/\)/g,'&#41;'],
+								[/\?/g,'&#63;'],
+								[/\@/g,'&#64;'],
+								[/\[/g,'&#91;'],
+								[/\\/g,'&#92;'],
+								[/\]/g,'&#93;'],
+								[/\{/g,'&#123;'],
+								[/\|/g,'&#124;'],
+								[/\}/g,'&#125;'],
+							  ],
+				chosen = args[0],
+				buttons = '';
+			
+			_.each( list, o => {
+				let name = o.get(field);
+				if (name && reInvalid.test(name)) {
+					let legal = name.replace(reInvalid,''),
+						selected = legal == chosen;
+					_.each( replacements, r => name = name.replace(r[0],r[1]) );
+					buttons += (selected ? ('<span style='+design.selected_button+'>') : '[')
+							+  name
+							+  (selected ? ('</span>') : ('](!cmd --check-names '+legal+'|'+errMsg+')'));
+				}
+			});
+			return buttons || 'None';
+		}
+		
+		var illegalPlayers = listProblemNames(args,findObjs({type:'player'}),'_displayname',errMsgs.player),
+//			illegalSpeakers = listProblemNames(args,findObjs({type:'player'}),'speakingas',errMsgs.speakingas),
+			illegalChars = listProblemNames(args,findObjs({type:'character'}),'name',errMsgs.character),
+			illegalTokens = listProblemNames(args,findObjs({type:'graphic'}),'name',errMsgs.token);
+			
+		if (silent && illegalPlayers === 'None' && illegalChars ==='None' && illegalTokens === 'None') return;
+		var	content = '&{template:'+fields.defaultTemplate+'}{{name=Detected Possible Problems}}'
+					+ '{{Section=The following names (if any) contain characters that might cause the RPGMaster APIs problems, such as "\'"\\{}[]()|$%@?,:;"'
+					+ ' It is best to stick to alphanumeric characters (A-Z,a-z,0-9), space, dot, hyphen "-", plus "+" and underscore "_" for all names,'
+					+ ' as others can have special meaning for Roll20.}}'
+					+ '{{Section1=**Player Names**\n'+illegalPlayers+'}}'
+//					+ '{{Section2=**Speaking As Names**\n'+illegalSpeakers+'}}'
+					+ '{{Section3=**Character Names**\n'+illegalChars+'}}'
+					+ '{{Section4=**Token Names**\n'+illegalTokens+'}}'
+					+ (msg && msg.trim().length ? ('{{Section5=**To correct the selected name:** '+msg+'}}') : '')
+					+ '{{desc=Select any name button to get recommendations as to how to rectify the issue.}}';
+					
+		sendFeedback( content );
+	}
+	
+	/*
 	 * Make a simple message confirming a cancelled action
 	 */
 	 
@@ -1760,8 +1858,8 @@ var CommandMaster = (function() {
 						spellType = data.spellLevels ? data.spellLevels.split('|')[3] : '';
 					if (!data.cl || !data.cl.length) {
 						if ((c.base == 'priest' && spellType != 'MU') || spellType == 'PR') {
-							majorSpheres.push(data.sps.toLowerCase().replace(reIgnore,''));
-							minorSpheres.push(data.spm.toLowerCase().replace(reIgnore,''));
+							majorSpheres.push(data.sps.dbName());
+							minorSpheres.push(data.spm.dbName());
 							for (let s=1; s<spellLevels.pr.length; s++) {
 								if (data['xspell'+s] && data['xspell'+s].length) {
 									if (_.isUndefined(extraSpells[s])) extraSpells[s]=[];
@@ -1790,7 +1888,7 @@ var CommandMaster = (function() {
 				if (spellData) {
 					spellData = (spellData.match(/}}\s*SpellData\s*=(.*?){{/im) || ['',''])[1];
 					spellData = parseData( spellData, reSpellSpecs, false );
-					sphere = (spellData.sph+'|any').toLowerCase().replace(reIgnore,'').split('|');
+					sphere = (spellData.sph+'|any').dbName().split('|');
 					if (_.some( sphere, s => (majorSpheres.includes(s) || (spellData.level < 4 && minorSpheres.includes(s))))) {
 						if (_.isUndefined(spellBook[spellData.level])) spellBook[spellData.level] = [];
 						if (!spellBook[spellData.level].includes(spellName)) {
@@ -1813,7 +1911,7 @@ var CommandMaster = (function() {
 						+ '{{Major Spheres=*'+majorSpheres.join(', ')+'*}}{{Minor Spheres=*'+minorSpheres.join(', ')+'*}}',flags.feedbackName,flags.feedbackImg);
 		});
 		args[2] = '';
-		makeSpellsMenu( args, selected, ('Spells added to all Priest Levels') );
+		if (args[1] > 0) makeSpellsMenu( args, selected, ('Spells added to all Priest Levels') );
 	};
 	
 	/*
@@ -1841,7 +1939,7 @@ var CommandMaster = (function() {
 					if (spellSet.PW[0].length) {
 						powers.push(spellSet.PW[0].join('|'));
 					}
-					content += '{{'+className+'='+(spellSet.PW[0].join(', ') || 'None')+'}}';
+					content += '{{'+className+'='+(spellSet.PW[0].join('|').replace(/\|/g,', ') || 'None')+'}}';
 				}
 			}
 			
@@ -1849,27 +1947,31 @@ var CommandMaster = (function() {
 			raceObj = abilityLookup( fields.RaceDB, race );
 			if (raceObj.obj) {
 				let racePowers = [];
+				let inherit = raceObj.data(/}}\s*RaceData\s*=(.*?){{/im);
 				spellSet = addMIspells( charCS, raceObj.obj[1] );
 				if (spellSet.PW[0].length) {
 					let list = spellSet.PW[0].join('|');
 					racePowers.push(list);
 					powers.push(list);
 				}
-				let raceType = raceObj.specs(/}}\s*Specs\s*=(.*?){{/im);
-				if (raceType && raceType[0][4]) {
-					raceObj = abilityLookup( fields.RaceDB, raceType[0][4], charCS, true );
-					if (raceObj.obj) {
-						spellSet = addMIspells( charCS, raceObj.obj[1] );
-						if (spellSet.PW[0].length) {
-							let list = spellSet.PW[0].join('|');
-							powers.push(list);
-							racePowers.push(list);
+				inherit = inherit ? parseData(inherit[0][0],reClassSpecs) : {};
+				if (_.isUndefined(inherit.numpowers) || inherit.numpowers[0]!=='=') {
+					let raceType = raceObj.specs(/}}\s*Specs\s*=(.*?){{/im);
+					if (raceType && raceType[0][4]) {
+						raceObj = abilityLookup( fields.RaceDB, raceType[0][4], charCS, true );
+						if (raceObj.obj) {
+							spellSet = addMIspells( charCS, raceObj.obj[1] );
+							if (spellSet.PW[0].length) {
+								let list = spellSet.PW[0].join('|');
+								powers.push(list);
+								racePowers.push(list);
+							}
 						}
 					}
 				}
-				content += '{{'+race+'='+(racePowers.join(', ') || 'None')+'}}';
+				content += '{{'+race+'='+(racePowers.join('|').replace(/\|/g,', ') || 'None')+'}}';
 			}
-			setAttr( charCS, [fields.Spellbook[0]+spellLevels.pw[1].book,fields.Spellbook[1]], powers.join('|') );
+			setAttr( charCS, [fields.Spellbook[0]+spellLevels.pw[1].book,fields.Spellbook[1]], _.uniq(powers.join('|').split('|')).join('|') );
 			sendFeedback( content,flags.feedbackName,flags.feedbackImg );
 		});
 		if (args[0] == BT.ALL_POWERS) {
@@ -2124,8 +2226,7 @@ var CommandMaster = (function() {
 				let currentRace = attrLookup( charCS, fields.Race ) || '';
 				let currentClass = classObjects( charCS );
 				let newToken = (currentRace == '' && currentClass.length == 1 && currentClass[0].name == 'creature' && currentClass[0].level == 0);
-				setAttr( charCS, fields.Race, value );
-				setCreatureAttrs( charCS, value, [token] );
+				setAttr( charCS, fields.Race, setCreatureAttrs( charCS, value, [token] ));
 				if (!newToken) break;
 				handleSetTokenBars( [''], [token], true );
 				setDefaultTokenForCharacter( charCS, getObj('graphic',token._id) );
@@ -2135,9 +2236,13 @@ var CommandMaster = (function() {
 				sendError( 'Internal CommandMaster Error' );
 				break;
 			}
+			log('handleClassSelection: set class & attributes');
 			handleCheckWeapons( token._id, charCS );
+			log('handleClassSelection: checked weapon settings');
 		});
+		log('handleClassSelection: set about to check saves');
 		handleCheckSaves( null, null, selected, true );
+		log('handleClassSelection: about to create menu');
 		makeClassMenu( args, selected, isGM, msg );
 		return;
 	};
@@ -2383,7 +2488,7 @@ var CommandMaster = (function() {
 				wizardLevel = attrLookup( charCS, fields.Wizard_level ) || 0,
 				priestLevel = attrLookup( charCS, fields.Priest_level ) || 0,
 				rogueLevel = attrLookup( charCS, fields.Rogue_level ) || 0,
-				race = (attrLookup( charCS, fields.Race ) || 'human').toLowerCase().replace(reIgnore,''),
+				race = (attrLookup( charCS, fields.Race ) || 'human').dbName(),
 				constitution = attrLookup( charCS, fields.Constitution ) || 0,
 				monsterHD = parseInt(attrLookup( charCS, fields.Monster_hitDice )) || 0,
 				monsterHPplus = parseInt(attrLookup( charCS, fields.Monster_hpExtra )) || 0,
@@ -3235,6 +3340,10 @@ var CommandMaster = (function() {
 						break;
 					case 'index-db':
 						if (isGM) doIndexDB(arg);
+						break;
+					case 'check-names':
+					case 'checknames':
+						if (isGM) makeCheckNamesMenu(arg);
 						break;
 					case 'button':
 						doButton(arg,isGM,selected);

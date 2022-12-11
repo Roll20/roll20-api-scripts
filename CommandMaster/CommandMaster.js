@@ -55,14 +55,20 @@
  * v1.3.04 17/11/2022  Added possible creature data attributes, & fixed certain creature 
  *                     setup issues. Added weapon data update after race/class/level change
  *                     to support things like attacks/round improvement
+ * v1.4.01 28/11/2022  Added support for the fighting Styles-DB. Fixed help menu. Improved 
+ *                     creature attribute dice rolling. Improved creature HD & HP calcs. 
+ *                     Added creature attribute dexdef dexterity bonus for ranged attacks. 
+ *                     Added use of alpha indexed drop down for selection of creatures.
+ *                     Added suppression of power inheritance. Added function to check
+ *                     player, speakingas, token & character names for illegal characters.
  */
  
 var CommandMaster = (function() {
 	'use strict'; 
-	var version = '1.3.04',
+	var version = '1.4.01',
 		author = 'RED',
 		pending = null;
-    const lastUpdate = 1668950818;
+    const lastUpdate = 1670233770;
 
 	/*
 	 * Define redirections for functions moved to the RPGMaster library
@@ -86,6 +92,8 @@ var CommandMaster = (function() {
 	const addMIspells = (...a) => libRPGMaster.addMIspells(...a);
 	const getMagicList = (...a) => libRPGMaster.getMagicList(...a);
 	const handleCheckSaves = (...a) => libRPGMaster.handleCheckSaves(...a);
+	const handleCheckWeapons = (...a) => libRPGMaster.handleCheckWeapons(...a);
+	const resolveData = (...a) => libRPGMaster.resolveData(...a);
 	
 	/*
 	 * Handle for reference to character sheet field mapping table.
@@ -133,10 +141,10 @@ var CommandMaster = (function() {
 	
 	const handouts = Object.freeze({
 	CommandMaster_Help:	{name:'CommandMaster Help',
-						 version:2.01,
+						 version:2.02,
 						 avatar:'https://s3.amazonaws.com/files.d20.io/images/257656656/ckSHhNht7v3u60CRKonRTg/thumb.png?1638050703',
 						 bio:'<div style="font-weight: bold; text-align: center; border-bottom: 2px solid black;">'
-							+'<span style="font-weight: bold; font-size: 125%">CommandMaster Help v2.01</span>'
+							+'<span style="font-weight: bold; font-size: 125%">CommandMaster Help v2.02</span>'
 							+'</div>'
 							+'<div style="padding-left: 5px; padding-right: 5px; overflow: hidden;">'
 							+'<h1>Command Master API</h1>'
@@ -156,6 +164,7 @@ var CommandMaster = (function() {
 							+'--abilities</pre>'
 							+'<h3>2. Character Sheet configuration</h3>'
 							+'<pre>--check-chars<br>'
+							+'--class-menu [token_id]<br>'
 							+'--add-spells [POWERS/MUSPELLS/PRSPELLS] | [level]<br>'
 							+'--add-profs<br>'
 							+'--set-prof  [NOT-PROF/PROFICIENT/SPECIALIST/MASTERY] | weapon | weapon-type<br>'
@@ -190,20 +199,25 @@ var CommandMaster = (function() {
 							+'<h3>2.1 Check control of Character Sheets</h3>'
 							+'<pre>--check-chars</pre>'
 							+'<p>Displays a list of every Character Sheet with a defined Class, Level, or Monster Hit Dice categorised by <i>DM Controlled, Player Controlled PCs & NPCs, Player Controlled Creatures,</i> and <i>Controlled by Everyone.</i>  Each name is shown as a button which, if selected, swaps control of that Character Sheet between DM control and the control of a selected Player (the Player, of course, must be one that has already accepted an invite to join the campaign). A button is also provided at the bottom of this menu to toggle the running of this check whenever the Campaign is loaded.</p>'
-							+'<h3>2.2 Add spells to spell book</h3>'
+							+'<h3>2.2 Set Character Class, Race & Species</h3>'
+							+'<pre>--class-menu [token_id]</pre>'
+							+'<p>Takes an optional ID for a token representing a character. If not specified, takes the currently selected token</p>'
+							+'<p>Displays a menu from which the Race, Class and Level of a Character can be set, or a Creature species can be selected. Setting the Race, Class and Level of a Character (PC or NPC) enables all other capabilities to be used as appropriate for that character sheet in this and other APIs in the <b>RPGMaster API suite</b>, such as spell use, appropriate race & class powers, selection of allowed weapons, and the like. Selecting a Creature species <i>automatically</i> sets up the Character Sheet in an optimal way for the APIs to use it to represent the chosen creature, including saves, armour class, hit dice and rolling of hit points, as well as special attacks such as paralysation & level drain of high level undead, spell use by the likes of Orc Shamen, regeneration powers, and so on. However, it does not automatically give weapons, armour equipment, or magic items to Creatures - if appropriate this still needs to be done by the DM/Game Creator.</p>'
+							+'<p>DMs/Game Creatores can add to or amend the Class, Race and Creature definitions. Refer to the appropriate database help handout distributed with the APIs and created as handouts in your campaign for more information.</p>'
+							+'<h3>2.3 Add spells to spell book</h3>'
 							+'<pre>--add-spells [POWERS/MUSPELLS/PRSPELLS] | [level]</pre>'
 							+'<p>Displays a menu allowing spells in the Spells Databases to be added to the Character Sheet(s) represented by the selected Token(s).  If no spell type and/or spell level is specified, the initial menu shown is for Level 1 Wizard spells (MUSPELLS). Buttons are shown on the menu that allow navigation to other levels, spell types and powers.  For <i>Priests</i>, a button is also provided to add every spell allowed for the Priest\'s Class to their spellbooks at all levels (of course, they will only be able to memorise those that their experience level allows them to). For all Character Classes that have <i>Powers</i> (or Power-like capabilities, such as Priestly <i>Turn Undead</i> or Paladin <i>Lay on Hands</i>), there is a button on the <i>Powers</i> menu to add Powers that the character\'s Class can have.</p>'
 							+'<p><b>Note:</b> adding spells / powers to a sheet does not mean the Character can immediately use them.  They must be <i>memorised</i> first.  Use the commands in the <b>MagicMaster API</b> to memorise spells and powers.</p>'
-							+'<h3>2.3 Choose weapon proficiencies</h3>'
+							+'<h3>2.4 Choose weapon proficiencies</h3>'
 							+'<pre>--add-profs</pre>'
 							+'<p>Displays a menu from which to select proficiencies and level of proficiency for any weapons in the Weapon Databases for the Character Sheet(s) represented by the selected tokens.  Also provides a button for making the Character proficient in all weapons carried (i.e. those currently in their Item table).</p>'
-							+'<p>All current proficiencies are displayed, with the proficiency level of each, which can be changed or removed.</p>'
+							+'<p>All current proficiencies are displayed, with the proficiency level of each, which can be changed or removed.  It is also now possible to select proficiencies in <b>Fighting Styles</b> as introduced by <i>The Complete Fighter\'s Handbook</i>: these can be found under the <i>Choose Style</i> button, and can also be set as Proficient or Specialised.  Selecting a Fighting Style proficiency grants benefits as defined in the Handbook, or as modified by the DM - see the <i>Styles Database Help</i> handout for more information.</p>'
 							+'<p><b>Note:</b> this does more than just entering the weapon in the proficiency table.  It adds the <i>weapon group</i> that the weapon belongs to as a field to the table (see weapon database help handouts for details), which is then used by the <b>AttackMaster API</b> to manage <i>related weapon</i> attacks and give the correct proficiency bonuses or penalties for the class and weapon used.</p>'
-							+'<h3>2.4 Set weapon proficiencies</h3>'
+							+'<h3>2.5 Set weapon proficiencies</h3>'
 							+'<pre>--set-prof  [NOT-PROF/PROFICIENT/SPECIALIST/MASTERY] | weapon | weapon-type </pre>'
 							+'<p>Sets a specific weapon proficiency to a named level.  If the proficiency level is omitted, PROFICIENT is assumed.  If the weapon already exists in the proficiencies table, the existing proficiency level is updated to that specified.  Otherwise, the weapon (and its weapon group) are added to the table at the specified level.</p>'
 							+'<p><b>Note:</b> this does more than just entering the weapon in the proficiency table.  It adds the weapon group that the weapon belongs to as a field to the table (see weapon database help handouts for details), which is then used by the AttackMaster API to manage related weapon attacks and give the correct proficiency bonuses or penalties for the class and weapon used.</p>'
-							+'<h3>2.5 Add proficiencies for all carried weapons</h3>'
+							+'<h3>2.6 Add proficiencies for all carried weapons</h3>'
 							+'<pre>--set-all-prof</pre>'
 							+'<p>Adds all currently carried weapons (those in the Items table) to PROFICIENT, saving them and their <i>weapon group</i> to the weapon proficiency table.  Those weapons found that are already in the table are reset to PROFICIENT (overwriting any existing different proficiency level).  Any other proficiencies already in the table are not altered.</p>'
 							+'<p><b>Note:</b> this command always adds a weapon proficiency called <i>innate</i>.  This proficiency is used for attacks with innate weapons, such as claws and bites, but also for spells that require a <i>touch attack</i>.  Indeed, to make this even more specific, the weapons database distributed with the AttackMaster and MagicMaster APIs includes a weapon called <i>Touch</i>.</p>'
@@ -330,8 +344,8 @@ var CommandMaster = (function() {
 		SPECIFY:    	'SPECIFY',
 		CARRY:      	'CARRY',
 		SUBMIT:     	'SUBMIT',
-		LEFT:			'LEFT',
-		RIGHT:			'RIGHT',
+		RIGHT:			'PRIMARY',
+		LEFT:			'OFFHAND',
 		BOTH:			'BOTH',
 		HAND:			'HAND',
 		AMMO:			'AMMO',
@@ -352,6 +366,7 @@ var CommandMaster = (function() {
 		CREATURE:		'CREATURE',
 		REVIEW_CLASS:	'REVIEW_CLASS',
 		REVIEW_RACE:	'REVIEW_RACE',
+		REVIEW_STYLE:	'REVIEW_STYLE',
 		ABILITY:		'ABILITY',
 		AB_PC:			'AB_PC',
 		AB_DM:			'AB_DM',
@@ -363,6 +378,7 @@ var CommandMaster = (function() {
 		AB_SAVES:		'AB_SAVES',
 		AB_TOKEN:		'AB_TOKEN',
 		AB_TOKEN_NONE:	'AB_TOKEN_NONE',
+		AB_SILENT:		'AB_SILENT',
 		STR_REPLACE:    'STR_REPLACE',
 	});
 		
@@ -391,7 +407,8 @@ var CommandMaster = (function() {
 		
 	const reIgnore = /[\s\-\_]*/gi;
 	
-	const replacers = [
+	const	replacers = [
+			[/\\api;?/g, "!"],
 			[/\\lbrc;?/g, "{"],
 			[/\\rbrc;?/g, "}"],
 			[/\\gt;?/gm, ">"],
@@ -400,7 +417,7 @@ var CommandMaster = (function() {
 			[/\\lbrak;?/g, "["],
 			[/>>|»/g, "]"],
 			[/\\rbrak;?/g, "]"],
-			[/\^/g, "?"],
+			[/\\\^/g, "?"],
 			[/\\ques;?/g, "?"],
 			[/`/g, "@"],
 			[/\\at;?/g, "@"],
@@ -411,6 +428,9 @@ var CommandMaster = (function() {
 			[/\\vbar;?/g, "|"],
 			[/\\clon;?/g, ":"],
 			[/\\amp;?/g, "&"],
+			[/\\lpar;?/g, "("],
+			[/\\rpar;?/g, ")"],
+			[/\\cr;?/g, "\n"],
 		];
 		
 	const encoders = [
@@ -434,19 +454,28 @@ var CommandMaster = (function() {
 		spheres:	{field:'sph',def:'',re:/[\[,\s]sph:([\s\w\-\|\d]+?)[,\]]/i},
 	});
 	
-	const reClassSpecs = Object.freeze ({
+	const reClassSpecs = Object.freeze({
 		name:		{field:'name',def:'-',re:/[\[,\s]w:([\s\w\-\+]+?)[,\]]/i},
-		alignment:	{field:'align',def:'any',re:/[\[,\s]align:([\s\w\-\+\|]+?)[,\s\]]/i},
+		alignment:	{field:'align',def:'any',re:/[\[,\s]align:([\s\w\-\+\|\!]+?)[,\s\]]/i},
 		hitdice:	{field:'hd',def:'1d10',re:/[\[,\s]hd:([d\d\+\-]+?)[,\s\]]/i},
-		race:		{field:'race',def:'any',re:/[\[,\s]race:([\s\w\-\|]+?)[,\s\]]/i},
-		weapons:	{field:'weaps',def:'any',re:/[\[,\s]weaps:([\s\w\-\+\|]+?)[,\s\]]/i},
-		armour:		{field:'ac',def:'any',re:/[\[,\s]ac:([\s\w\-\+\|]+?)[,\s\]]/i},
-		majorsphere:{field:'sps',def:'any',re:/[\[,\s]sps:([\s\w\-\|]+?)[,\s\]]/i},
-		minorsphere:{field:'spm',def:'',re:/[\[,\s]spm:([\s\w\-\|]+?)[,\]]/i},
-		bannedsphere:{field:'spb',def:'',re:/[\[,\s]spb:([\s\w\-\|]+?)[,\]]/i},
+		race:		{field:'race',def:'any',re:/[\[,\s]race:([\s\w\-\+\|\!]+?)[,\s\]]/i},
+		weapons:	{field:'weaps',def:'any',re:/[\[,\s]weaps:([\s\w\-\+\|\!]+?)[,\s\]]/i},
+		armour:		{field:'ac',def:'any',re:/[\[,\s]ac:([\s\w\-\+\|\!]+?)[,\s\]]/i},
+		majorsphere:{field:'sps',def:'any',re:/[\[,\s]sps:([\s\w\-\+\|\!]+?)[,\s\]]/i},
+		minorsphere:{field:'spm',def:'',re:/[\[,\s]spm:([\s\w\-\+\|\!]+?)[,\]]/i},
+		bannedsphere:{field:'spb',def:'',re:/[\[,\s]spb:([\s\w\-\+\|\!]+?)[,\]]/i},
+		attklevels:	{field:'attkLevels',def:'0',re:/[\[,\s]attkl:([-\s\d\|]+?)[,\]]/i},
+		attkmelee:	{field:'attkMelee',def:'0',re:/[\[,\s]attkm:([-.\s\d\|\/]+?)[,\]]/i},
+		attkranged:	{field:'attkRanged',def:'0',re:/[\[,\s]attkr:([-.\s\d\|\/]+?)[,\]]/i},
+		nonprofpen:	{field:'nonProfPen',def:'',re:/[\[,\s]npp:([-\s\d]+?)[,\]]/i},
+		twoweappen:	{field:'twoWeapPen',def:'2.4',re:/[\[,\s]twp:([-\s\d\.]+?)[,\]]/i},
+		tohitmods:	{field:'toHitMods',def:'',re:/[\[,\s]thmod:([-=\+\s\w\|]+?)[,\]]/i},
+		spelllevels:{field:'spellLevels',def:'',re:/[\[,\s]slv:([\s\w\-\|]+?)[,\]]/i},
 		cattr:		{field:'cattr',def:'',re:/[\[,\s]cattr:(.+?)[,\]]/i},
 		spattk:		{field:'spattk',def:'',re:/[\[,\s]spattk:(.+?)[,\]]/i},
 		spdef:		{field:'spdef',def:'',re:/[\[,\s]spdef:(.+?)[,\]]/i},
+		powerdef:	{field:'cl',def:'',re:/[\[,\s]cl:([\s\w]+?)[,\]]/i},
+		numpowers:	{field:'numpowers',def:0,re:/[\[,\s]ns:([=\w]+?)[,\s\]]/i},
 		extralevel1:{field:'xspell1',def:'',re:/[\[,\s]sp1:([\s\w\-\|]+?)[,\]]/i},
 		extralevel2:{field:'xspell2',def:'',re:/[\[,\s]sp2:([\s\w\-\|]+?)[,\]]/i},
 		extralevel3:{field:'xspell3',def:'',re:/[\[,\s]sp3:([\s\w\-\|]+?)[,\]]/i},
@@ -454,33 +483,42 @@ var CommandMaster = (function() {
 		extralevel5:{field:'xspell5',def:'',re:/[\[,\s]sp5:([\s\w\-\|]+?)[,\]]/i},
 		extralevel6:{field:'xspell6',def:'',re:/[\[,\s]sp6:([\s\w\-\|]+?)[,\]]/i},
 		extralevel7:{field:'xspell7',def:'',re:/[\[,\s]sp7:([\s\w\-\|]+?)[,\]]/i},
-		spelllevels:{field:'spellLevels',def:'',re:/[\[,\s]slv:([\s\w\-\|]+?)[,\]]/i},
-		powerdef:	{field:'cl',def:'',re:/[\[,\s]cl:([\s\w]+?)[,\]]/i},
-		numpowers:	{field:'numpowers',def:0,re:/[\[,\s]ns:([\d\w]+?)[,\s\]]/i},
+		spLevel1:	{field:'spellLV1',def:'',re:/[\[,\s]spl1:([\s\w\-\|]+?)[,\]]/i},
+		spLevel2:	{field:'spellLV2',def:'',re:/[\[,\s]spl2:([\s\w\-\|]+?)[,\]]/i},
+		spLevel3:	{field:'spellLV3',def:'',re:/[\[,\s]spl3:([\s\w\-\|]+?)[,\]]/i},
+		spLevel4:	{field:'spellLV4',def:'',re:/[\[,\s]spl4:([\s\w\-\|]+?)[,\]]/i},
+		spLevel5:	{field:'spellLV5',def:'',re:/[\[,\s]spl5:([\s\w\-\|]+?)[,\]]/i},
+		spLevel6:	{field:'spellLV6',def:'',re:/[\[,\s]spl6:([\s\w\-\|]+?)[,\]]/i},
+		spLevel7:	{field:'spellLV7',def:'',re:/[\[,\s]spl7:([\s\w\-\|]+?)[,\]]/i},
+		spLevel8:	{field:'spellLV8',def:'',re:/[\[,\s]spl8:([\s\w\-\|]+?)[,\]]/i},
+		spLevel9:	{field:'spellLV9',def:'',re:/[\[,\s]spl9:([\s\w\-\|]+?)[,\]]/i},
+		spLevel10:	{field:'spellLV10',def:'',re:/[\[,\s]spl10:([\s\w\-\|]+?)[,\]]/i},
+		spLevel11:	{field:'spellLV11',def:'',re:/[\[,\s]spl11:([\s\w\-\|]+?)[,\]]/i},
 	});
 	
 	const reAttr = Object.freeze ({
 		intel:		{field:'intel',def:'3:18',re:/[:\s\|]?int\s*=\s*([\s\d]+?(?:\:[\s\d]+?)?)[\|,\]]/i},
-		cac:		{field:'cac',def:'',re:/[:\s\|]?c?ac\s*=\s*([\s\d]+?):?([\s\d]*?)[\|,\]]/i},
-		mov:		{field:'mov',def:'',re:/[:\s\|]?mov\s*=\s*(.+?(?:\:[\s\d]+?)?)[\|,\]]/i},
-		fly:		{field:'fly',def:'',re:/[:\s\|]?fly\s*=\s*(.+?)[\|,\]]/i},
-		swim:		{field:'swim',def:'',re:/[:\s\|]?sw(?:im)?\s*=\s*(.+?)[\|,\]]/i},
+		cac:		{field:'cac',def:'',re:/[:\s\|]?c?ac\s*=\s*(.+?(?:\:[\s\d]+?)?)[\|,\]]/i},
+		mov:		{field:'mov',def:'',re:/[:\s\|]?mov\s*=\s*(.*?(?:\:[\s\d]+?)?)[\|,\]]/i},
+		fly:		{field:'fly',def:'',re:/[:\s\|]?fly\s*=\s*(.*?)[\|,\]]/i},
+		swim:		{field:'swim',def:'',re:/[:\s\|]?sw(?:im)?\s*=\s*(.*?)[\|,\]]/i},
 		tohit:		{field:'tohit',def:'',re:/[:\s\|]?tohit\s*=\s*([-+]?\d+?)[\|,\]]/i},
 		dmg:		{field:'dmg',def:'',re:/[:\s\|]?dmg\s*=\s*([-+]?\d+?)[\|,\]]/i},
+		dexdef:		{field:'dexdef',def:'',re:/[:\s\|]?dexdef\s*=\s*([-+]?\d+?)[\|,\]]/i},
 		crith:		{field:'crith',def:'20',re:/[:\s\|]?ch\s*=\s*(\d+?)[\|,\]]/i},
 		critm:		{field:'critm',def:'1',re:/[:\s\|]?cm\s*=\s*(\d+?)[\|,\]]/i},
 		hd:			{field:'hd',def:'',re:/[:\s\|]?hd\s*=\s*(\d[dr\d\+\-]*?)[\|,\]]/i},
-		hp:			{field:'hp',def:'',re:/[:\s\|]?hp\s*=\s*(\d+?)[\|,\]]/i},
-		regen:		{field:'regen',def:'',re:/[:\s\|]?regen\s*=\s*(\d+?)[\|,\]]/i},
+		hp:			{field:'hp',def:'',re:/[:\s\|]?hp\s*=\s*(\d*?)[\|,\]]/i},
+		regen:		{field:'regen',def:'',re:/[:\s\|]?regen\s*=\s*(\d*?)[\|,\]]/i},
 		thac0:		{field:'thac0',def:'',re:/[:\s\|]?thac0\s*=\s*([\d\+\-]+?)[\|,\]]/i},
 		size:		{field:'size',def:'M',re:/[:\s\|]?size\s*=\s*([TSMLHG])[\|,\]]/i},
-		attk1:		{field:'attk1',def:'',re:/[:\s\|]?attk1\s*=\s*(.+?)[\|,\]]/i},
-		attk2:		{field:'attk2',def:'',re:/[:\s\|]?attk2\s*=\s*(.+?)[\|,\]]/i},
-		attk3:		{field:'attk3',def:'',re:/[:\s\|]?attk3\s*=\s*(.+?)[\|,\]]/i},
-		attkmsg:	{field:'attkmsg',def:'',re:/[:\s\|]?msg\s*=\s*(.+?)[\|,\]]/i},
+		attk1:		{field:'attk1',def:'',re:/[:\s\|]?attk1\s*=\s*(.*?)[\|,\]]/i},
+		attk2:		{field:'attk2',def:'',re:/[:\s\|]?attk2\s*=\s*(.*?)[\|,\]]/i},
+		attk3:		{field:'attk3',def:'',re:/[:\s\|]?attk3\s*=\s*(.*?)[\|,\]]/i},
+		attkmsg:	{field:'attkmsg',def:'',re:/[:\s\|]?msg\s*=\s*(.*?)[\|,\]]/i},
 		speed:		{field:'speed',def:'',re:/[:\s\|]?sp\s*=\s*([\d\+\-]+?)[\|,\]]/i},
-		cl:			{field:'cl',def:'',re:/[:\s\|]?cl\s*=\s*([-\:\w]+?)[\|,\]]/i},
-		lv:			{field:'lv',def:'',re:/[:\s\|]?lv\s*=\s*([\d]+?)[\|,\]]/i},
+		cl:			{field:'cl',def:'',re:/[:\s\|]?cl\s*=\s*([-\:\w]*?)[\|,\]]/i},
+		lv:			{field:'lv',def:'',re:/[:\s\|]?lv\s*=\s*([\d]*?)[\|,\]]/i},
 	});
 	
 	const std = Object.freeze({
@@ -629,6 +667,8 @@ var CommandMaster = (function() {
 			setTimeout( () => issueHandshakeQuery('magic'), 20);
 			setTimeout(() => updateHandouts(handouts,true,findTheGM()), 50);
 			setTimeout(handleChangedCmds,10000);
+			setTimeout( () => updateDBindex(false), 100); // checking the DB indexing
+			setTimeout( () => makeCheckNamesMenu( [], true ), 2000);
 			
 			if (state.CommandMaster.CheckChar)
 				setTimeout(doCheckCharSetupDelayed,10000);
@@ -1061,11 +1101,11 @@ var CommandMaster = (function() {
 	 * Always tries to create a 3 dice bell curve for the value
 	 **/
 	 
-	var calcAttr = function( attrRange='3:18' ) {
-		attrRange = attrRange.split(':');
-		let	low = parseInt(attrRange[0]) || 3,
+	var calcAttr = function( attr='3:18' ) {
+		let attrRange = attr.split(':'),
+			low = parseInt(attrRange[0]),
 			high = parseInt(attrRange[1]);
-		if (high && !isNaN(high)) {
+		if (high && !isNaN(low) && !isNaN(high)) {
 			let range = high - (low - 1);
 			if (range === 2) {
 				return low - 1 + randomInteger(2);
@@ -1081,7 +1121,7 @@ var CommandMaster = (function() {
 				return low - 3 + randomInteger((range/3)+1) + randomInteger((range/3)+1) + randomInteger(range/3);
 			}
 		}
-		return low;
+		return attr;
 	}
 	
 	/**
@@ -1091,63 +1131,92 @@ var CommandMaster = (function() {
 	 
 	var setCreatureAttrs = function( charCS, creature, selected ) {
 		
-		let raceObj = abilityLookup( fields.RaceDB, creature, charCS, true );
-		if (!raceObj.obj) return;
-		let raceSpecs = raceObj.specs();
-		let baseObj = raceSpecs && raceSpecs[0] ? abilityLookup(fields.RaceDB, raceSpecs[0][4], charCS, true) : undefined;
-		let raceData = raceObj.data(/}}\s*?racedata\s*?=\s*\[(.*?)\],?{{/im);
-		let baseData = baseObj.obj ? baseObj.data(/}}\s*?racedata\s*?=\s*\[(.*?)\],?{{/im) : undefined;
-		if (!raceData || !raceData[0]) {
-			raceData = baseData;
+		var raceData, attrData;
+		
+		var rollDice = function( count, dice, reroll ) {
+			count = parseInt(count || 1);
+			dice = parseInt(dice || 8);
+			reroll = parseInt(reroll || 0);
+			let total = 0,
+				roll;
+			for (let d=0; d<count; d++) {
+				do {
+					roll = randomInteger(dice);
+				} while (roll <= (reroll || 0));
+				total += roll;
+			}
+			return total;
 		}
-		if (!raceData || !raceData[0]) return;
-		if (!baseData || !baseData[0]) baseData = raceData;
-		raceData = parseData( raceData[0][0], reClassSpecs );
-		baseData = parseData( baseData[0][0], reClassSpecs );
-		if (!raceData.cattr) raceData.cattr = baseData.cattr;
-		if (!raceData.cattr) return;
-		let attrData = parseData( raceData.cattr+',', reAttr, false );
-		let baseAttr = parseData( baseData.cattr+',', reAttr );
-		attrData = _.mapObject(attrData, (attr,k) => attr ? attr : baseAttr[k]);
-		let hd = attrData.hd.match(/(\d+)(?:d\d+)?([-+]\d+)?(?:r(\d+))?/i) || ['','1','0',''];
+/*		var resolveData = function( charCS, creature, dBase, reThisData ) {
+			
+			var thisObj, thisSpecs, baseObj, thisData, thisAttr,
+				baseData = parseData( '', reClassSpecs, true ),
+				baseAttr = parseData( '', reAttr, true );
+
+			if (!creature || !creature.trim().length) return [baseData,baseAttr];
+			thisObj = abilityLookup( dBase, creature, null, true );
+			if (!thisObj.obj) return [baseData,baseAttr];
+			thisSpecs = thisObj.specs();
+			if (!thisSpecs || !thisSpecs[0] || (thisSpecs[0][4] === creature)) return [baseData,baseAttr];
+			thisData = thisObj.data(reThisData);
+			[baseData,baseAttr] = resolveData( charCS, thisSpecs[0][4], dBase, reThisData );			
+			if (!thisData || !thisData[0]) return [baseData,baseAttr];
+			thisData = parseData( thisData[0][0], reClassSpecs, false );
+			thisAttr = parseData( thisData.cattr+',', reAttr, false );
+			if (baseData) {
+				if (!thisData.cattr) {
+					thisData.cattr = baseData.cattr;
+					thisAttr = baseAttr;
+				} else if (baseAttr) {
+					thisAttr = _.mapObject(thisAttr, (attr,k) => attr == '-' ? '' : (!_.isUndefined(attr) ? attr : baseAttr[k]));
+				}
+				thisData = _.mapObject(thisData, (attr,k) => attr == '-' ? '' : (!_.isUndefined(attr) ? attr : baseData[k]));
+			}
+			return [thisData,thisAttr];
+		}
+*/
+		if (!creature || !creature.trim().length) return;
+
+		[raceData,attrData] = resolveData( creature, fields.RaceDB, /}}\s*?racedata\s*?=\s*\[(.*?)\],?{{/im );
+		if (!raceData || !attrData) return;
+
+		let hd = attrData.hd.match(/(\d+)(?:d\d+)?([-+]\d+(?:d\d+)?(?:[-+]\d+)?)?(?:r(\d+))?/i) || ['','1','0',''];
+		let hpExtra = (hd[2] || '0').match(/([-+]\d+)(?:d(\d+))?([-+]\d+)?/);
 		setAttr( charCS, fields.Monster_int, calcAttr(attrData.intel) );
-		setAttr( charCS, fields.MonsterAC, calcAttr(attrData.cac || '10') );
+		setAttr( charCS, fields.MonsterAC, calcAttr(parseStr(attrData.cac || '10')) );
 		setAttr( charCS, fields.Monster_mov, attrData.mov+(attrData.fly ? ', FL'+attrData.fly : '')+(attrData.swim ? ', SW'+attrData.swim : '') );
 		setAttr( charCS, fields.MonsterThac0, attrData.thac0 );
 		setAttr( charCS, fields.Monster_size, attrData.size );
 		setAttr( charCS, fields.Strength_hit, attrData.tohit );
 		setAttr( charCS, fields.Strength_dmg, attrData.dmg );
+		setAttr( charCS, fields.Dex_acBonus, attrData.dexdef );
 		setAttr( charCS, fields.MonsterCritHit, attrData.crith );
 		setAttr( charCS, fields.MonsterCritMiss, attrData.critm );
 		setAttr( charCS, fields.Monster_dmg1, parseStr(attrData.attk1.replace(/:/g,',')) );
 		setAttr( charCS, fields.Monster_dmg2, parseStr(attrData.attk2.replace(/:/g,',')) );
 		setAttr( charCS, fields.Monster_dmg3, parseStr(attrData.attk3.replace(/:/g,',')) );
+		setAttr( charCS, fields.Monster_attks, (((attrData.attk1 && attrData.attk1.length) ? 1 : 0) + ((attrData.attk2 && attrData.attk2.length) ? 1 : 0) + ((attrData.attk3 && attrData.attk3.length) ? 1 : 0)) );
 		setAttr( charCS, fields.Attk_specials, parseStr(attrData.attkmsg) );
 		setAttr( charCS, fields.Monster_speed, attrData.speed );
 		setAttr( charCS, fields.Regenerate, attrData.regen );
-		setAttr( charCS, fields.Monster_spAttk, raceData.spattk || 'Nil' );
-		setAttr( charCS, fields.Monster_spDef, raceData.spdef || 'Nil' );
-		setAttr( charCS, fields.Monster_hitDice, (hd[1]||'1') );
-		setAttr( charCS, fields.Monster_hpExtra, (hd[2]||'0').replace('+','') );
-		setAttr( charCS, fields.Monster_hdReroll, (hd[3]||'') );
+		setAttr( charCS, fields.Monster_spAttk, parseStr(raceData.spattk) || 'Nil' );
+		setAttr( charCS, fields.Monster_spDef, parseStr(raceData.spdef) || 'Nil' );
 		if (!attrData.hp && hd && hd.length) {
-			hd[1] = parseInt(hd[1] || 1);
-			hd[2] = parseInt(hd[2] || 0);
-			hd[3] = parseInt(hd[3] || 0);
-			let total = 0,
-				roll;
-			for (let d=0; d<hd[1]; d++) {
-				do {
-					roll = randomInteger(8);
-				} while (roll <= (hd[3] || 0));
-				total += roll;
-			}
-			attrData.hp = total + hd[2];
+			hd[2] = ((hpExtra && hpExtra.length >= 2 && parseInt(hpExtra[2])) ? (rollDice( hpExtra[1], hpExtra[2], 0 ) + parseInt(hpExtra[3] || 0)) : parseInt(hd[2] || 0));
+			attrData.hp = rollDice( hd[1], 8, hd[3] ) + hd[2];
 		}
+		setAttr( charCS, fields.Monster_hitDice, (hd[1]||'1') );
+		setAttr( charCS, fields.Monster_hpExtra, (hd[2]||'0') );
+		setAttr( charCS, fields.Monster_hdReroll, (hd[3]||'') );
 		if (attrData.hp) {
 			setAttr( charCS, fields.HP, attrData.hp );
 			setAttr( charCS, fields.MaxHP, attrData.hp );
 		}
+		setAttr( charCS, fields.Fighter_level, '' );
+		setAttr( charCS, fields.Wizard_level, '' );
+		setAttr( charCS, fields.Priest_level, '' );
+		setAttr( charCS, fields.Rogue_level, '' );
+		setAttr( charCS, fields.Psion_level, '' );
 		if (attrData.lv) {
 			let classData = (attrData.cl || 'F:Warrior').split(':');
 			let classField, levelField;
@@ -1155,10 +1224,14 @@ var CommandMaster = (function() {
 			case 'MU':
 				classField = fields.Wizard_class;
 				levelField = fields.Wizard_level;
+				handleSetAbility( ['',BT.AB_SILENT,'Cast Spell',std.cast_spell.api,std.cast_spell.action,'2.Cast Spell','replace'], selected );
+				handleSetAbility( ['',BT.AB_SILENT,'Spells menu',std.spells_menu.api,std.spells_menu.action,'3.Spells Menu','replace'], selected );
 				break;
 			case 'PR':
 				classField = fields.Priest_class;
 				levelField = fields.Priest_level;
+				handleSetAbility( ['',BT.AB_SILENT,'Cast Spell',std.cast_spell.api,std.cast_spell.action,'2.Cast Spell','replace'], selected );
+				handleSetAbility( ['',BT.AB_SILENT,'Spells menu',std.spells_menu.api,std.spells_menu.action,'3.Spells Menu','replace'], selected );
 				break;
 			case 'RO':
 				classField = fields.Rogue_class;
@@ -1175,12 +1248,19 @@ var CommandMaster = (function() {
 			}
 			setAttr( charCS, classField, classData[1] || '');
 			setAttr( charCS, levelField, attrData.lv);
+			handleAddAllPRspells( ['',BT.ALL_PRSPELLS,0], selected );
 		}
-		
-		if (!attrLookup( charCS, fields.PowersSpellbook ) ) {
-			handleAddAllPowers( [BT.RACE], selected );
+		handleSetAbility( ['',BT.AB_SILENT,'Init menu',std.init_menu.api,std.init_menu.action,'1.Initiative','replace'], selected );
+		handleSetAbility( ['',BT.AB_SILENT,'Attack',std.attk_hit.api,std.attk_hit.action,'2.Attack','replace'], selected );
+		handleSetAbility( ['',BT.AB_SILENT,'Attk menu',std.attk_menu.api,std.attk_menu.action,'3.Attk Menu','replace'], selected );
+		handleSetAbility( ['',BT.AB_SILENT,'Other Actions',std.other_actions.api,std.other_actions.action,'4.Other actions','replace'], selected );
+		handleSetAbility( ['',BT.AB_SILENT,'Specials',std.specials.api,std.specials.action,'5.Specials','replace'], selected );
+		if (handleAddAllPowers( [BT.RACE], [selected[0]] )) {
+			sendAPI('!magic --mem-all-powers '+selected[0]._id);
+			handleSetAbility( ['',BT.AB_SILENT,'Use Power',std.use_power.api,std.use_power.action,'2.Use Power','replace'], selected );
+			handleSetAbility( ['',BT.AB_SILENT,'Powers menu',std.powers_menu.api,std.powers_menu.action,'3.Powers Menu','replace'], selected );
 		}
-		return;
+		return raceData.name;
 	}
 					  
 // ---------------------------------------------------- Make Menus ---------------------------------------------------------
@@ -1295,16 +1375,20 @@ var CommandMaster = (function() {
 		var	weapon = args[1] || '',
 			meleeWeapon = args[2] || false,
 			weapType = args[3] || '',
+			style = (weapType || '').toLowerCase().includes('style'),
 			masterRange = apiCommands['attk'].exists ? state.attackMaster.weapRules.masterRange : true,
 			buttons, weapObj,
     		content = '&{template:' + fields.defaultTemplate + '}{{name=Grant Weapon Proficiencies}}{{ ='+(msg||'')+'}}'
-    				+ '{{  =['+((weapon) ? weapon : 'Choose Weapon')+'](!cmd --button CHOOSE_PROF|&#63;{Choose which Weapon?|'+getMagicList( fields.WeaponDB, miTypeLists, 'weapon' )+'})'
-					+ 'or make [All Owned Weapons](!cmd --set-all-prof PROFICIENT) proficient\n'
+    				+ '{{  =['+((weapon && !style) ? weapon : 'Choose Weapon')+'](!cmd --button CHOOSE_PROF|&#63;{Choose which Weapon?|'+getMagicList( fields.WeaponDB, miTypeLists, 'weapon' )+'})'
+					+ 'or ['+((weapon && style) ? weapon+' Style' : 'Choose Style')+'](!cmd --button CHOOSE_PROF|&#63;{Choose which Style?|'+getMagicList( fields.StylesDB, miTypeLists, 'style' )+'})'
+ 					+ 'or make [All Owned Weapons](!cmd --set-all-prof PROFICIENT) proficient\n'
     				+ 'and optionally ';
+					
+		log('makeProficienciesMenu: weapon='+weapon+', weapType='+weapType+', style='+style);
 		
 		if (weapon) {
-			let weapObj = getAbility( fields.WeaponDB, weapon, charCS );
-			content += '[Review '+weapon+'](!cmd --button REVIEW_PROF|'+weapon
+			let weapObj = getAbility( (style ? fields.StylesDB : fields.WeaponDB), weapon, charCS );
+			content += '[Review '+weapon+'](!cmd --button '+(style?'REVIEW_STYLE':'REVIEW_PROF')+'|'+weapon
 					+  '&#13;&#47;w gm &#37;{' + weapObj.dB + '|'+weapon+'})}}'
 					+  '{{desc=Level of '+weapon+' Proficiency\n'
 					+  '[Not Proficient](!cmd --set-prof NOT-PROF|'+weapon+'|'+weapType+')'
@@ -1377,8 +1461,8 @@ var CommandMaster = (function() {
 			psion_classes = getMagicList( fields.ClassDB, clTypeLists, 'psion', 'Psionicist|Psion', true, 'Specify class' ),
 			psion_def = abilityLookup( fields.ClassDB, psion_class, charCS, true ),
 			races = getMagicList( fields.RaceDB, clTypeLists, 'humanoid', 'Human|Dwarf|Elf|Gnome|Half-Elf|Halfling|Half-Orc', true, 'Specify race' ),
-			creatures = getMagicList( fields.RaceDB, clTypeLists, 'creature', '-', true, 'Specify creature' ),
-			race_def = abilityLookup( fields.RaceDB, race, charCS, true );
+			creatures = getMagicList( fields.RaceDB, clTypeLists, 'creature', '-', true, 'Specify creature', true );
+//			race_def = abilityLookup( fields.RaceDB, race, charCS, true );
 			
 		if (!fighter_level) {
 			fighter_class = '<span style='+design.dark_button+'>'+fighter_class+'</span>';
@@ -1405,16 +1489,18 @@ var CommandMaster = (function() {
 		} else if (!psion_def.obj) {
 			psion_default = 'Will use Psionicist class defaults';
 		}
+		if (!chosen || !chosen.length) {
+			chosen = race;
+			base = 'Human';
+		}
 		if (races.includes(chosen)) {
 			base = 'Human';
 		}
 		
-		let content = '&{template:'+fields.defaultTemplate+'}{{name=Review & Set Race and Classes}}'
+		let content = '&{template:'+fields.defaultTemplate+'}{{name=Review & Set\nRace and Classes}}'
 					+ (msg ? ('='+msg) : '')
 					+ '{{desc=Drop down lists show Races, Creatures and Classes defined in the Databases.  If not shown in a list, choose "Other" and it can be typed in at the next prompt.  Any class *can* be in any class field (even if not in the list for that field), especially to support multi-class characters.  Classes not found in the Class database will get the defaults for the field: Unrecognised Classes in the *Wizard* or *Priest* lines default to Wizard or Priest spellcasting rules.}}'
-//					+ '{{desc=Drop down lists show Races and Classes defined in the Databases.  If not shown in a list, choose "Other" and it can be typed in at the next prompt.  Any class *can* be in any class field (even if not in the list for that field), especially to support multi-class characters.  Classes not found in the Class database will get the defaults for the field: Unrecognised Classes in the *Wizard* or *Priest* lines default to Wizard or Priest spellcasting rules.}}'
-					+ '{{desc1=Currently a'+('aeiouAEIOU'.includes(race[0])?'n':'')+' **'+race+'**\nChange to [Race](!cmd --button '+BT.RACE+'|&#63;{Which Race?|'+races+'}) or [Creature](!cmd --button '+BT.CREATURE+'|&#63;{Which Creature?|'+creatures+'})}}'
-//					+ '{{desc1=Currently a'+('aeiouAEIOU'.includes(race[0])?'n':'')+' **'+race+'**\nChange to [Race](!cmd --button '+BT.RACE+'|&#63;{Which Race?|'+races+'})}}'
+					+ '{{desc1=Currently a'+('aeiouAEIOU'.includes(race[0])?'n':'')+' **'+race+'**\nChange to [Race](!cmd --button '+BT.RACE+'|&#63;{Which Race?|'+races+'})'+(isGM ? ('or [Creature](!cmd --button '+BT.CREATURE+'|&#63;{Which Creature?|'+creatures+'})') : '')+'}}'
 					+ '{{desc2=<table>'
 					+ '<tr><td>['+fighter_class+'](!cmd --button '+BT.CLASS_F+'|&#63;{Which Warrior Class?|'+fighter_classes+'})</td><td>[Level '+fighter_level+'](!cmd --button '+BT.LEVEL_F+'|&#63;{Which Warrior Level?|'+fighter_level+'})</td><td>'+fighter_default+'</td></tr>'
 					+ '<tr><td>['+wizard_class+'](!cmd --button '+BT.CLASS_W+'|&#63;{Which Wizard Class?|'+wizard_classes+'})</td><td>[Level '+wizard_level+'](!cmd --button '+BT.LEVEL_W+'|&#63;{Which Wizard Level?|'+wizard_level+'})</td><td>'+wizard_default+'</td></tr>'
@@ -1602,6 +1688,78 @@ var CommandMaster = (function() {
 	}
 	
 	/*
+	 * Make a menu displaying issues with names of players, characters,
+	 * tokens etc that might cause the APIs to error. Offer the DM
+	 * ways of fixing the issues, where possible.
+	 */
+	 
+	var makeCheckNamesMenu = function (args,silent=false) {
+		
+		var chosen = args[0],
+			msg = args[1];
+
+		silent = silent || (args[2] || '').toUpperCase() == 'SILENT';
+			
+		const errMsgs = {player:'Ask the Player to go into his settings and remove all the illegal characters from their *Display name*',
+						 speakingas:'Ask the Player to change their speaking as selection - using the "As" dropdown at the bottom of the Chat window - to something without illegal characters, then change the name of the character/token that they were speaking as to something legal',
+						 character:'Change the name on the Character Sheet to remove any illegal characters - it may be that any associated token will need its name changing as well',
+						 token:'Change the token name to remove any illegal characters - it may be that any character sheet that the token represents may need its name changing as well',
+						};
+		
+		var listProblemNames = function( args, list, field, errMsg ) {
+			
+			var reInvalid = /[\[\]\(\)\|\$\%\@\?\{\}\\]/g,
+				replacements = [[/\$/g,'&#36;'],
+								[/\%/g,'&#37;'],
+								[/\(/g,'&#40;'],
+								[/\)/g,'&#41;'],
+								[/\?/g,'&#63;'],
+								[/\@/g,'&#64;'],
+								[/\[/g,'&#91;'],
+								[/\\/g,'&#92;'],
+								[/\]/g,'&#93;'],
+								[/\{/g,'&#123;'],
+								[/\|/g,'&#124;'],
+								[/\}/g,'&#125;'],
+							  ],
+				chosen = args[0],
+				buttons = '';
+			
+			_.each( list, o => {
+				let name = o.get(field);
+				if (name && reInvalid.test(name)) {
+					let legal = name.replace(reInvalid,''),
+						selected = legal == chosen;
+					_.each( replacements, r => name = name.replace(r[0],r[1]) );
+					buttons += (selected ? ('<span style='+design.selected_button+'>') : '[')
+							+  name
+							+  (selected ? ('</span>') : ('](!cmd --check-names '+legal+'|'+errMsg+')'));
+				}
+			});
+			return buttons || 'None';
+		}
+		
+		var illegalPlayers = listProblemNames(args,findObjs({type:'player'}),'_displayname',errMsgs.player),
+//			illegalSpeakers = listProblemNames(args,findObjs({type:'player'}),'speakingas',errMsgs.speakingas),
+			illegalChars = listProblemNames(args,findObjs({type:'character'}),'name',errMsgs.character),
+			illegalTokens = listProblemNames(args,findObjs({type:'graphic'}),'name',errMsgs.token);
+			
+		if (silent && illegalPlayers === 'None' && illegalChars ==='None' && illegalTokens === 'None') return;
+		var	content = '&{template:'+fields.defaultTemplate+'}{{name=Detected Possible Problems}}'
+					+ '{{Section=The following names (if any) contain characters that might cause the RPGMaster APIs problems, such as "\'"\\{}[]()|$%@?,:;"'
+					+ ' It is best to stick to alphanumeric characters (A-Z,a-z,0-9), space, dot, hyphen "-", plus "+" and underscore "_" for all names,'
+					+ ' as others can have special meaning for Roll20.}}'
+					+ '{{Section1=**Player Names**\n'+illegalPlayers+'}}'
+//					+ '{{Section2=**Speaking As Names**\n'+illegalSpeakers+'}}'
+					+ '{{Section3=**Character Names**\n'+illegalChars+'}}'
+					+ '{{Section4=**Token Names**\n'+illegalTokens+'}}'
+					+ (msg && msg.trim().length ? ('{{Section5=**To correct the selected name:** '+msg+'}}') : '')
+					+ '{{desc=Select any name button to get recommendations as to how to rectify the issue.}}';
+					
+		sendFeedback( content );
+	}
+	
+	/*
 	 * Make a simple message confirming a cancelled action
 	 */
 	 
@@ -1700,8 +1858,8 @@ var CommandMaster = (function() {
 						spellType = data.spellLevels ? data.spellLevels.split('|')[3] : '';
 					if (!data.cl || !data.cl.length) {
 						if ((c.base == 'priest' && spellType != 'MU') || spellType == 'PR') {
-							majorSpheres.push(data.sps.toLowerCase().replace(reIgnore,''));
-							minorSpheres.push(data.spm.toLowerCase().replace(reIgnore,''));
+							majorSpheres.push(data.sps.dbName());
+							minorSpheres.push(data.spm.dbName());
 							for (let s=1; s<spellLevels.pr.length; s++) {
 								if (data['xspell'+s] && data['xspell'+s].length) {
 									if (_.isUndefined(extraSpells[s])) extraSpells[s]=[];
@@ -1730,7 +1888,7 @@ var CommandMaster = (function() {
 				if (spellData) {
 					spellData = (spellData.match(/}}\s*SpellData\s*=(.*?){{/im) || ['',''])[1];
 					spellData = parseData( spellData, reSpellSpecs, false );
-					sphere = (spellData.sph+'|any').toLowerCase().replace(reIgnore,'').split('|');
+					sphere = (spellData.sph+'|any').dbName().split('|');
 					if (_.some( sphere, s => (majorSpheres.includes(s) || (spellData.level < 4 && minorSpheres.includes(s))))) {
 						if (_.isUndefined(spellBook[spellData.level])) spellBook[spellData.level] = [];
 						if (!spellBook[spellData.level].includes(spellName)) {
@@ -1753,7 +1911,7 @@ var CommandMaster = (function() {
 						+ '{{Major Spheres=*'+majorSpheres.join(', ')+'*}}{{Minor Spheres=*'+minorSpheres.join(', ')+'*}}',flags.feedbackName,flags.feedbackImg);
 		});
 		args[2] = '';
-		makeSpellsMenu( args, selected, ('Spells added to all Priest Levels') );
+		if (args[1] > 0) makeSpellsMenu( args, selected, ('Spells added to all Priest Levels') );
 	};
 	
 	/*
@@ -1781,7 +1939,7 @@ var CommandMaster = (function() {
 					if (spellSet.PW[0].length) {
 						powers.push(spellSet.PW[0].join('|'));
 					}
-					content += '{{'+className+'='+(spellSet.PW[0].join(', ') || 'None')+'}}';
+					content += '{{'+className+'='+(spellSet.PW[0].join('|').replace(/\|/g,', ') || 'None')+'}}';
 				}
 			}
 			
@@ -1789,35 +1947,38 @@ var CommandMaster = (function() {
 			raceObj = abilityLookup( fields.RaceDB, race );
 			if (raceObj.obj) {
 				let racePowers = [];
+				let inherit = raceObj.data(/}}\s*RaceData\s*=(.*?){{/im);
 				spellSet = addMIspells( charCS, raceObj.obj[1] );
 				if (spellSet.PW[0].length) {
 					let list = spellSet.PW[0].join('|');
 					racePowers.push(list);
 					powers.push(list);
 				}
-				let raceType = raceObj.specs(/}}\s*Specs\s*=(.*?){{/im);
-				if (raceType && raceType[0][4]) {
-					raceObj = abilityLookup( fields.RaceDB, raceType[0][4], charCS, true );
-					if (raceObj.obj) {
-						spellSet = addMIspells( charCS, raceObj.obj[1] );
-						if (spellSet.PW[0].length) {
-							let list = spellSet.PW[0].join('|');
-							powers.push(list);
-							racePowers.push(list);
+				inherit = inherit ? parseData(inherit[0][0],reClassSpecs) : {};
+				if (_.isUndefined(inherit.numpowers) || inherit.numpowers[0]!=='=') {
+					let raceType = raceObj.specs(/}}\s*Specs\s*=(.*?){{/im);
+					if (raceType && raceType[0][4]) {
+						raceObj = abilityLookup( fields.RaceDB, raceType[0][4], charCS, true );
+						if (raceObj.obj) {
+							spellSet = addMIspells( charCS, raceObj.obj[1] );
+							if (spellSet.PW[0].length) {
+								let list = spellSet.PW[0].join('|');
+								powers.push(list);
+								racePowers.push(list);
+							}
 						}
 					}
 				}
-				content += '{{'+race+'='+(racePowers.join(', ') || 'None')+'}}';
+				content += '{{'+race+'='+(racePowers.join('|').replace(/\|/g,', ') || 'None')+'}}';
 			}
-				
-			setAttr( charCS, [fields.Spellbook[0]+spellLevels.pw[1].book,fields.Spellbook[1]], powers.join('|') );
+			setAttr( charCS, [fields.Spellbook[0]+spellLevels.pw[1].book,fields.Spellbook[1]], _.uniq(powers.join('|').split('|')).join('|') );
 			sendFeedback( content,flags.feedbackName,flags.feedbackImg );
 		});
 		if (args[0] == BT.ALL_POWERS) {
 			args[2] = '';
 			makeSpellsMenu( args, selected, ('All Class & Race powers added') );
 		}
-		return;
+		return !!powers.length;
 	}
 
 	/*
@@ -1829,21 +1990,33 @@ var CommandMaster = (function() {
 		
 		var weapon = args[1],
 			weap = abilityLookup( fields.WeaponDB, weapon ),
-			weapProf = false,
-			meleeWeap = false,
-			weapType = false;
+			weapProf = '',
+			melee = false,
+			weapType = '',
+			weapClass = [];
 			
 		if (weap.obj) {
-			let specs = weap.obj[1].body,
-				weaponSpecs = specs.match(/}}\s*specs\s*=(.*?){{/im);
-			weaponSpecs = weaponSpecs ? [...('['+weaponSpecs[0]+']').matchAll(/\[\s*?(\w[\s\|\w\-]*?)\s*?,\s*?(\w[\s\w]*?\w)\s*?,\s*?(\w[\s\w]*?\w)\s*?,\s*?(\w[\s\|\w\-]*?\w)\s*?\]/g)] : [];
+			let weaponSpecs = weap.specs();
+//				specs = weap.obj[1].body,
+//				weaponSpecs = specs.match(/}}\s*specs\s*=(.*?){{/im);
+//			weaponSpecs = weaponSpecs ? [...('['+weaponSpecs[0]+']').matchAll(/\[\s*?(\w[\s\|\w\-]*?)\s*?,\s*?(\w[-\s\w\|]*?\w)\s*?,\s*?(\w[\s\w]*?\w)\s*?,\s*?(\w[\s\|\w\-]*?\w)\s*?\]/g)] : [];
 			for (let i=0; i<weaponSpecs.length; i++) {
                 weapProf = weapProf || weaponSpecs[i][1];
-				meleeWeap = meleeWeap || weaponSpecs[i][2].toLowerCase();
+				melee = melee || weaponSpecs[i][2].toLowerCase().includes('melee');
+				weapClass.push( weaponSpecs[i][2] );
 				weapType = weapType || weaponSpecs[i][4];
 			}
+		} else {
+			let style = abilityLookup( fields.StylesDB, weapon );
+			if (style.obj) {
+				let styleSpecs = style.specs();
+				weapProf = weapon;
+				weapClass = ['style'];
+				weapType = styleSpecs[0][4];
+			}
 		}
-		makeProficienciesMenu( ['',weapProf,(meleeWeap == 'melee'),weapType], selected, 'Chosen '+meleeWeap+' proficiency \n**'+weapProf+'**\n of type '+weapType );
+		weapClass = weapClass.join('/').replace('|','/');
+		makeProficienciesMenu( ['',weapProf,melee,weapType], selected, 'Chosen '+weapClass+' proficiency \n**'+weapProf+'**\n of type '+weapType );
 	}
 	
 	/*
@@ -1861,7 +2034,10 @@ var CommandMaster = (function() {
 			charCS = getCharacter( e._id, true );
 			if (charCS) {
 				let ProfTable = getTable( charCS, fieldGroups.WPROF ),
-					weapProf = ProfTable.values;
+					StyleTable = getTable( charCS, fieldGroups.STYLES ),
+					weapProf = ProfTable.values,
+					styleObj = getAbility( fields.StylesDB, weapon, charCS, true );
+
 				if (_.isUndefined(row = ProfTable.tableFind( fields.WP_name, weapon ))) {
     				if (_.isUndefined(row = ProfTable.tableFind( fields.WP_name, '-' ))) {
     				    row = ProfTable.sortKeys.length;
@@ -1869,6 +2045,10 @@ var CommandMaster = (function() {
 				}
 				if (weapLevel == 'NOT-PROF') {
 					ProfTable.addTableRow( row );
+					if (styleObj.obj && !_.isUndefined(row = StyleTable.tableFind( fields.Style_name, weapon ))) {
+						StyleTable.addTableRow( row );
+						sendAPI( fields.attackMaster+' --check-styles '+e._id );
+					}
 				} else {
 					weapProf[fields.WP_name[0]][fields.WP_name[1]] = weapon;
 					weapProf[fields.WP_type[0]][fields.WP_type[1]] = weapType;
@@ -1876,6 +2056,20 @@ var CommandMaster = (function() {
 					weapProf[fields.WP_specialist[0]][fields.WP_specialist[1]] = (weapLevel.toUpperCase() == 'SPECIALIST' || weapLevel.toUpperCase() == 'MASTERY') ? '1' : '0';
 					weapProf[fields.WP_mastery[0]][fields.WP_mastery[1]] = (weapLevel.toUpperCase() == 'MASTERY') ? '1' : '0';
 					ProfTable.addTableRow( row, weapProf );
+					
+					if (styleObj.obj) {
+						if (_.isUndefined(row = StyleTable.tableFind( fields.Style_name, weapon ))) {
+							if (_.isUndefined(row = StyleTable.tableFind( fields.Style_name, '-' ))) {
+								row = StyleTable.sortKeys.length;
+							}
+						}
+						let styleRow = StyleTable.values;
+						styleRow[fields.Style_name[0]][fields.Style_name[1]] = weapon;
+						styleRow[fields.Style_current[0]][fields.Style_current[1]] = false;
+						styleRow[fields.Style_proficiency[0]][fields.Style_proficiency[1]] = weapLevel.toUpperCase() == 'SPECIALIST' ? 2 : (weapLevel.toUpperCase() == 'MASTERY' ? 3 : 1);
+						StyleTable.addTableRow( row, styleRow );
+						sendAPI( fields.attackMaster+' --check-styles '+e._id );
+					}
 				}
 			}
 		});
@@ -1916,7 +2110,7 @@ var CommandMaster = (function() {
 		var cmdStr = args.join('|'),
 			content = '&{template:'+fields.defaultTemplate+'}{{name=Return to Menu}}'
 				+ '{{desc=[Return to Menu](!cmd --add-profs '+cmdStr+') or do something else}}';
-		sendFeedback(content,flags.feedbackName,flags.feedbackImg);
+		setTimeout( () => sendFeedback(content,flags.feedbackName,flags.feedbackImg), 2000 );
 	}
 	
 	/*
@@ -2029,17 +2223,26 @@ var CommandMaster = (function() {
 				break;
 			case BT.RACE:
 			case BT.CREATURE:
-				setAttr( charCS, fields.Race, value );
-				setCreatureAttrs( charCS, value, [token] );
+				let currentRace = attrLookup( charCS, fields.Race ) || '';
+				let currentClass = classObjects( charCS );
+				let newToken = (currentRace == '' && currentClass.length == 1 && currentClass[0].name == 'creature' && currentClass[0].level == 0);
+				setAttr( charCS, fields.Race, setCreatureAttrs( charCS, value, [token] ));
+				if (!newToken) break;
+				handleSetTokenBars( [''], [token], true );
+				setDefaultTokenForCharacter( charCS, getObj('graphic',token._id) );
 				break;
 			default:
 				sendDebug( 'handleClassSelection: invalid class selection command '+cmd);
 				sendError( 'Internal CommandMaster Error' );
 				break;
 			}
+			log('handleClassSelection: set class & attributes');
 			handleCheckWeapons( token._id, charCS );
+			log('handleClassSelection: checked weapon settings');
 		});
+		log('handleClassSelection: set about to check saves');
 		handleCheckSaves( null, null, selected, true );
+		log('handleClassSelection: about to create menu');
 		makeClassMenu( args, selected, isGM, msg );
 		return;
 	};
@@ -2049,17 +2252,17 @@ var CommandMaster = (function() {
 	 * data after a race, class or level change.  Will not work 
 	 * for weapons entered manually into the weapon tables
 	 */
-	 
+/*	 
 	var handleCheckWeapons = function( tokenID, charCS ) {
 		
 		var InHand = getTable( charCS, fieldGroups.INHAND ),
 			itemIndex = InHand.tableLookup( fields.InHand_index, 0 );
 		if (itemIndex.length && !isNaN(itemIndex)) {
-			sendAPI('!attk --button '+BT.LEFT+'|'+tokenID+'|'+itemIndex+'|0||silent');
+			sendAPI('!attk --button '+BT.RIIGHT+'|'+tokenID+'|'+itemIndex+'|0||silent');
 		}
 		itemIndex = InHand.tableLookup( fields.InHand_index, 1 );
 		if (itemIndex.length && !isNaN(itemIndex)) {
-			sendAPI('!attk --button '+BT.RIGHT+'|'+tokenID+'|'+itemIndex+'|1||silent');
+			sendAPI('!attk --button '+BT.LEFT+'|'+tokenID+'|'+itemIndex+'|1||silent');
 		}
 		itemIndex = InHand.tableLookup( fields.InHand_index, 2 );
 		if (itemIndex.length && !isNaN(itemIndex)) {
@@ -2256,7 +2459,7 @@ var CommandMaster = (function() {
 		}
 		abilities[buttonName]=true;
 		args.shift();
-		makeAbilitiesMenu( args, selected );
+		if (menuType != BT.AB_SILENT) makeAbilitiesMenu( args, selected );
 		return;
 	};
 	
@@ -2285,7 +2488,7 @@ var CommandMaster = (function() {
 				wizardLevel = attrLookup( charCS, fields.Wizard_level ) || 0,
 				priestLevel = attrLookup( charCS, fields.Priest_level ) || 0,
 				rogueLevel = attrLookup( charCS, fields.Rogue_level ) || 0,
-				race = (attrLookup( charCS, fields.Race ) || 'human').toLowerCase().replace(reIgnore,''),
+				race = (attrLookup( charCS, fields.Race ) || 'human').dbName(),
 				constitution = attrLookup( charCS, fields.Constitution ) || 0,
 				monsterHD = parseInt(attrLookup( charCS, fields.Monster_hitDice )) || 0,
 				monsterHPplus = parseInt(attrLookup( charCS, fields.Monster_hpExtra )) || 0,
@@ -2383,7 +2586,7 @@ var CommandMaster = (function() {
 	 * selected by the user 
 	 */
 	 
-	var handleSetTokenBars = function( args, selected ) {
+	var handleSetTokenBars = function( args, selected, silent=false ) {
 		
 		var cmd = args[0],
 		    abMenu = args[1];
@@ -2437,13 +2640,17 @@ var CommandMaster = (function() {
 				curToken.set('bar1_link',(AC ? AC.id : ''));
 				curToken.set('bar2_link',(thac0 ? thac0.id : ''));
 				curToken.set('bar3_link',(HP ? HP.id : ''));
+				curToken.set('bar1_value',ACval);
+				curToken.set('bar2_value',thac0val);
+				curToken.set('bar3_value',HP.get('current'));
+				curToken.set('bar3_max',HP.get('max'));
 				
 				content += 'Bar 1 set to '+(AC ? AC.get('name') : 'undefined')+', '
 						+  'Bar 2 set to '+(thac0 ? thac0.get('name') : 'undefined')+', '
 						+  'Bar 3 set to '+(HP ? HP.get('name') : 'undefined');
 			}
 			content += '}}{{desc1=[Return to Menu](!cmd --button '+abMenu+')}}';
-			sendFeedback( content,flags.feedbackName,flags.feedbackImg );
+			if (!silent) sendFeedback( content,flags.feedbackName,flags.feedbackImg );
 		});
 		return;
 	}
@@ -2474,7 +2681,7 @@ var CommandMaster = (function() {
 
 	var showHelp = function() {
 		var handoutIDs = getHandoutIDs();
-		var content = '&{template:'+fields.defaultTemplate+'}{{title=CommandMaster Help}}{{CommandMaster Help=For help on using CommandMaster, and the !cmd commands, [**Click Here**]('+fields.journalURL+handoutIDs.CommandMasterHelp+')}}{{Class Database=For help on using and adding to the Class Database, [**Click Here**]('+fields.journalURL+handoutIDs.ClassDatabaseHelp+')}}{{Character Sheet Setup=For help on setting up character sheets for use with RPGMaster APIs, [**Click Here**]('+fields.journalURL+handoutIDs.RPGMasterCharSheetSetup+')}}{{RPGMaster Templates=For help using RPGMaster Roll Templates, [**Click Here**]('+fields.journalURL+handoutIDs.RPGMasterTemplatesHelp+')}}';
+		var content = '&{template:'+fields.defaultTemplate+'}{{title=CommandMaster Help}}{{CommandMaster Help=For help on using CommandMaster, and the !cmd commands, [**Click Here**]('+fields.journalURL+handoutIDs.CommandMasterHelp+')}}{{Class Database=For help on using and adding to the Class Database, [**Click Here**]('+fields.journalURL+handoutIDs.ClassRaceDatabaseHelp+')}}{{Character Sheet Setup=For help on setting up character sheets for use with RPGMaster APIs, [**Click Here**]('+fields.journalURL+handoutIDs.RPGMasterCharSheetSetup+')}}{{RPGMaster Templates=For help using RPGMaster Roll Templates, [**Click Here**]('+fields.journalURL+handoutIDs.RPGMasterLibraryHelp+')}}';
 
 		sendFeedback(content,flags.feedbackName,flags.feedbackImg); 
 	};
@@ -2795,7 +3002,8 @@ var CommandMaster = (function() {
 		var	handler = args[0];
 			
 		switch (handler) {
-        case BT.MELEE :
+
+/*        case BT.MELEE :
         case BT.BACKSTAB :
 		case BT.RANGED :
 		
@@ -2817,7 +3025,7 @@ var CommandMaster = (function() {
 		
 			handleChangeWeapon( args );
 			break;
-
+*/
 		case BT.ABILITY :
 		case BT.AB_REPLACE :
 		
@@ -2931,6 +3139,7 @@ var CommandMaster = (function() {
 			break;
 			
         case 'REVIEW_PROF':
+		case BT.REVIEW_STYLE:
             
             handleReviewProf( args, selected );
             break;
@@ -3132,6 +3341,10 @@ var CommandMaster = (function() {
 					case 'index-db':
 						if (isGM) doIndexDB(arg);
 						break;
+					case 'check-names':
+					case 'checknames':
+						if (isGM) makeCheckNamesMenu(arg);
+						break;
 					case 'button':
 						doButton(arg,isGM,selected);
 						break;
@@ -3167,14 +3380,36 @@ var CommandMaster = (function() {
 			}, (300*t++), e);
     	});
 	};
-	
 // -------------------------------------------------------------- Register the API -------------------------------------------
+
+	var handleNewToken = function(obj,prev) {
+		
+		if (!obj)
+			{return;}
+			
+		if (obj.get('name') == prev['name'])
+		    {return;}
+			
+		if (obj.get('_subtype') == 'token' && !obj.get('isdrawing')) {
+			let charCS = getCharacter(obj.id);
+			if (charCS) {
+				let race = attrLookup( charCS, fields.Race );
+				let classObjs = classObjects( charCS );
+				let defClass = (classObjs.length == 1 && classObjs[0].name == 'creature' && classObjs[0].level == 0);
+				if ((!race || !race.length) && defClass) {
+					sendAPI(fields.commandMaster+' --class-menu '+obj.id);
+				}
+			}
+		}
+		return;
+	}
 
 	/**
 	 * Register and bind event handlers
 	 */ 
 	var registerAPI = function() {
 		on('chat:message',handleChatMessage);
+		on('change:graphic:name',handleNewToken);
 	};
  
 	return {
