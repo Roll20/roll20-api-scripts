@@ -966,6 +966,7 @@ var initMaster = (function() {
         wname = wname ? wname.dbName() : '';
         wt = wt ? wt.dbName() : '';
         wst = wst ? wst.dbName() : '';
+
         
 		var i = fields.WP_table[1],
 			prof = -1,
