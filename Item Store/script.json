@@ -2,9 +2,9 @@
     "$schema": "https://github.com/Roll20/roll20-api-scripts/master/_Example%20Script%20-%20Check%20for%20formatting%20details/script.schema.json",
     "name": "Item Store",
     "script": "shop.js",
-    "version": "1.5",
-    "previousversions": ["1.3"],
-    "description": "This Script allows you to create an Item Store, with multiple Options for Items./nv1.5 allows you to create multiple Stores, create, edit and generate Items as well as set markup prices and much more!/nCreated by [Julexar](https://app.roll20.net/users/9989180/julexar)./nInspired by [Kirsty](https://app.roll20.net/users/1165285/kirsty)./n/nFor a Guide, please see the [Wiki](https://github.com/Julexar/magicstore-dnd/wiki)",
+    "version": "1.9",
+    "previousversions": ["1.8","1.7","1.6","1.5","1.3"],
+    "description": "This Script allows you to create an Item Store, with multiple Options for Items.\nv1.5+ allows you to create multiple Stores, create, edit and generate Items as well as set markup prices and much more!\nCreated by [Julexar](https://app.roll20.net/users/9989180/julexar).\nInspired by [Kirsty](https://app.roll20.net/users/1165285/kirsty).\n\nFor a Guide, please see the [Wiki](https://github.com/Julexar/magicstore-dnd/wiki)",
     "authors": "Julexar",
     "patreon": "https://patreon.com/julexar",
     "roll20userid": "9989180",
@@ -13,6 +13,7 @@
         "state.store": "read,write",
         "state": "read,write",
         "state.cart": "read,write",
+        "state.list":"read,write",
         "handout": "read,write"
     }
 }

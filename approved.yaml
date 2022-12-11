@@ -1162,4 +1162,24 @@ itemstore:
 
 rpgmasterlibraryadd2e:
   - "RPGMlibrary AD+D2e"
-  - "Utility" 
+  - "Utility"
+ 
+faces:
+  - "faces"
+  - "Utility"
+
+inspector:
+  - "Inspector"
+  - "Utility"
+ 
+messenger:
+  - "Messenger"
+  - "Utility"
+  
+tabletotable:
+  - "TableToTable"
+  - "Utility"
+  
+libTable: 
+  - "libTable"
+  - "Utility"
