@@ -81,7 +81,8 @@
  *                     config option for restricting powers to valid level or not.
  * v1.3.04 24/11/2022  Skipped, to keep in line with versions of other APIs
  * v1.3.05 24/11/2022  Added new --level-change command to allow level-drain by creatures.
- * v1.4.01 28/11/2022  Support for the extended Creatures database & fighting styles
+ * v1.4.01 28/11/2022  Support for the extended Creatures database & fighting styles. Extended String
+ *                     prototype with dbName() method.
  */
  
 var MagicMaster = (function() {
@@ -120,7 +121,7 @@ var MagicMaster = (function() {
 	const addMIspells = (...a) => libRPGMaster.addMIspells(...a);
 	const handleCheckWeapons = (...a) => libRPGMaster.handleCheckWeapons(...a);
 	const handleCheckSaves = (...a) => libRPGMaster.handleCheckSaves(...a);
-		
+
 	/*
 	 * Handle for reference to character sheet field mapping table.
 	 * See RPG library for your RPG/character sheet combination for 
@@ -918,7 +919,6 @@ var MagicMaster = (function() {
 			setTimeout( () => updateDBindex(false), 80);
 	//		setTimeout( () => handleCStidy( [], true ), 5000 );
 
-			
 			// RED: log the version of the API Script
 
 			log('-=> MagicMaster v'+version+' <=-  ['+(new Date(lastUpdate*1000))+']');
@@ -1423,8 +1423,8 @@ var MagicMaster = (function() {
 				if (classSpecs.some( s => {
 					if (s && s.length >= 5) {
 //			log('parseClassDB: s[1] = '+s[1]+', s[4] = '+s[4]);
-						classType = (s[1]||'').toUpperCase().replace(reIgnore,''); 
-						return (((s[4]||'').toUpperCase().replace(reIgnore,'') == 'WIZARD' ) && !ordMU.includes(classType));
+						classType = (s[1]||'').dbName(); 
+						return (((s[4]||'').dbName() == 'WIZARD' ) && !ordMU.includes(classType));
 					}
 					return false;
 				})) {
@@ -1479,8 +1479,8 @@ var MagicMaster = (function() {
 	 * Function to standardise two strings and compare them.
 	 */
 	 
-	var stdEqual=function(strA,strB,ignore){
-		return ((strA.toLowerCase().replace(ignore,'') || '-') === (strB.toLowerCase().replace(ignore,'') || '-'));
+	var stdEqual=function(strA,strB){
+		return ((strA.dbName() || '-') === (strB.dbName() || '-'));
 	}
 
 	/*
@@ -1820,10 +1820,10 @@ var MagicMaster = (function() {
 		if (!spellSpec.obj) return false;
 		spellData = spellSpec.obj[1].body;
 		school = (spellData.match(reSpecSuperType) || ['','Invalid'])[1];
-		school = (school+'|any').toLowerCase().replace(reIgnore,'').split('|');
+		school = (school+'|any').dbName().split('|');
 		spellData = (spellData.match(reSpellData) || ['',''])[1];
 		spellData = parseData( spellData, reSpellSpecs );
-		sphere = (spellData.sph+'|any').toLowerCase().replace(reIgnore,'').split('|');
+		sphere = (spellData.sph+'|any').dbName().split('|');
 		casterSpec = abilityLookup( fields.ClassDB, casterDef.cl, charCS, true, false );
 		if (!casterSpec.obj) {
 			casterSpec = abilityLookup( fields.ClassDB, casterDef.ccl, charCS );
@@ -1833,9 +1833,9 @@ var MagicMaster = (function() {
 		casterData = casterSpec.obj[1].body;
 		casterData = (casterData.match(reClassData) || ['',''])[1];
 		casterData = parseData( casterData, reClassSpecs );
-		majorSpells = casterData.sps.toLowerCase().replace(reIgnore,'');
-		minorSpells = casterData.spm.toLowerCase().replace(reIgnore,'');
-		bannedSpells = casterData.spb.toLowerCase().replace(reIgnore,'');
+		majorSpells = casterData.sps.dbName();
+		minorSpells = casterData.spm.dbName();
+		bannedSpells = casterData.spb.dbName();
 		
 		return _.some( (isMU ? school : sphere), s => {
 			return ((isMU || majorSpells.includes(s) || (minorSpells.includes(s) && spellData.level < 4)) && (s == 'any' || !bannedSpells.includes(s))) 
@@ -1849,18 +1849,20 @@ var MagicMaster = (function() {
 	 
 	var checkValidPower = function( args ) {
 		
-		var matchPower = (args[5] || '').toLowerCase().replace(reIgnore,''),
+		var matchPower = (args[5] || '').dbName(),
 			classObj = classObjects( getCharacter( args[1] ) ),
 			foundPower = false;
 			
 		if (!matchPower || !matchPower.length || state.MagicMaster.spellRules.allowAnyPower) {log('checkValidPower: no check possible. !matchPower='+!matchPower+', matchPower.length='+matchPower.length+', !matchPower.length='+!matchPower.length+', allowAll='+state.MagicMaster.spellRules.allowAll); return true;}
 			
 		let success = classObj.some( c => {
-			let classData = c.obj[1].body.match(reClassData);
-			classData = classData ? [...('['+classData[1]+']').matchAll(/\[[\s\w\-\+\,\:\/]+?\]/g)] : [];
+//			let classData = c.obj[1].body.match(reClassData);
+//			classData = classData ? [...('['+classData[1]+']').matchAll(/\[[\s\w\-\+\,\:\/]+?\]/g)] : [];
+			let parsedData, parsedAttr, classData;
+			[parsedData,parsedAttr,classData] = resolveData( c.name, c.dB, reClassData );
 			return _.some(classData, p => {
 				let powerData = parseData( String(p), reSpellSpecs );
-				let isClassPower = matchPower == powerData.name.toLowerCase().replace(reIgnore,'');
+				let isClassPower = matchPower == powerData.name.dbName();
 				foundPower = foundPower || isClassPower;
 				return (isClassPower && (powerData.level <= c.level));
 			});
@@ -1875,16 +1877,18 @@ var MagicMaster = (function() {
 	 
 	var getUsesPerDay = function( charCS, power ) {
 		
-		var matchPower = (power || '').toLowerCase().replace(reIgnore,''),
+		var matchPower = (power || '').dbName(),
 			classObj = classObjects( charCS ),
 			foundPower, perDay;
 			
 		foundPower = classObj.some( c => {
-			let classData = c.obj[1].body.match(reClassData);
-			classData = classData ? [...('['+classData[1]+']').matchAll(/\[[\s\w\-\+\,\:\/]+?\]/g)] : [];
+//			let classData = c.obj[1].body.match(reClassData);
+//			classData = classData ? [...('['+classData[1]+']').matchAll(/\[[\s\w\-\+\,\:\/]+?\]/g)] : [];
+			let parsedData, parsedAttr, classData;
+			[parsedData,parsedAttr,classData] = resolveData( c.name, c.dB, reClassData );
 			return _.some(classData, p => {
 				let powerData = parseData( String(p), reSpellSpecs, false );
-				let isClassPower = matchPower == powerData.name.toLowerCase().replace(reIgnore,'');
+				let isClassPower = matchPower == powerData.name.dbName();
 				if (isClassPower) {
 					let perLevel = powerData.perDay.match(/(\d+)L(\d+?)/i);
 					if (perLevel) {
@@ -1903,7 +1907,7 @@ var MagicMaster = (function() {
 				let raceData = raceDef.data(reRaceData);
 				foundPower = _.some(raceData, p => {
 					let powerData = parseData( String(p), reSpellSpecs, false );
-					let isRacePower = matchPower == powerData.name.toLowerCase().replace(reIgnore,'');
+					let isRacePower = matchPower == powerData.name.dbName();
 					if (isRacePower) perDay = powerData.perDay;
 					return (isRacePower);
 				});
@@ -2488,14 +2492,15 @@ var MagicMaster = (function() {
 		if (isPower && isMI) {
 		    spellType = 'MIPOWER';
 			buttonList = 'EmptyList,' + attrLookup( charCS, [fields.ItemPowersList[0]+miName, fields.ItemPowersList[1]] ) || '';
-			buttonList = buttonList.toLowerCase().replace(reIgnore,'').split(',');
+			buttonList = buttonList.dbName().split(',');
+			log('makeSpellList: miName = '+miName+', buttonList = '+buttonList);
 		} else if (isPower) {
 		    spellType = 'POWER';
 		} else if (isMI) {
 		    spellType = 'MI';
 			buttonList = 'EmptyList,' + attrLookup( charCS, [fields.ItemMUspellsList[0]+miName, fields.ItemMUspellsList[1]] ) || '';
 			buttonList += ',' + attrLookup( charCS, [fields.ItemPRspellsList[0]+miName, fields.ItemPRspellsList[1]]) || '';
-			buttonList = buttonList.toLowerCase().replace(reIgnore,'').split(',');
+			buttonList = buttonList.dbName().split(',');
 		} else if (!isMU) {
 		    spellType = 'PR';
 			magicDB = fields.PR_SpellsDB;
@@ -2528,7 +2533,7 @@ var MagicMaster = (function() {
 						levelSpells[l].spells = 0;
 						break;
 					}
-					if (!buttonList.length || (buttonIndex = buttonList.indexOf(spellName.toLowerCase().replace(reIgnore,''))) != -1) {
+					if (!buttonList.length || (buttonIndex = buttonList.indexOf(spellName.dbName())) != -1) {
 						if (buttonList.length) buttonList.splice(buttonIndex,1);
 						let	spellValue = parseInt((spellTables[w].tableLookup( fields.Spells_castValue, r )),10),
 							disabled = (miStore ? (spellValue != 0) : (spellValue == 0));
@@ -2755,7 +2760,7 @@ var MagicMaster = (function() {
 		if (MIbutton >= 0) {
 			MIspellName = attrLookup( charCS, fields.Spells_msg, fields.Spells_table, MIrow, MIcol ) || '-';
 		}
-		var canStore = (spellName.toLowerCase().replace(reIgnore,'') == MIspellName.toLowerCase().replace(reIgnore,''));
+		var canStore = (spellName.dbName() == MIspellName.dbName());
 		
 		content += '{{desc2=3.Once both spell and slot selected\n'
 				+  (canStore ? '[' : '<span style='+design.grey_button+'>')
@@ -3464,19 +3469,19 @@ var MagicMaster = (function() {
 		putItems = getTableField( putCS, {}, fields.Items_table, fields.Items_name );
 		if (pickRow >= 0) {
 			pickedMI = attrLookup( pickCS, fields.Items_name, fields.Items_table, pickRow ) || '';
-			pickedTrueMI = (attrLookup( pickCS, fields.Items_trueName, fields.Items_table, pickRow ) || '').toLowerCase().replace(reIgnore,'') || '-';
+			pickedTrueMI = (attrLookup( pickCS, fields.Items_trueName, fields.Items_table, pickRow ) || '').dbName() || '-';
 			pickableQty = attrLookup( pickCS, fields.Items_qty, fields.Items_table, pickRow ) || '';
-			pickedType = (attrLookup( pickCS, fields.Items_type, fields.Items_table, pickRow ) || '').toLowerCase().replace(reIgnore,'') || '-';
+			pickedType = (attrLookup( pickCS, fields.Items_type, fields.Items_table, pickRow ) || '').dbName() || '-';
 			putItems = getTableField( putCS, putItems, fields.Items_table, fields.Items_trueName );
 			putItems = getTableField( putCS, putItems, fields.Items_table, fields.Items_type );
-			let lowerMI = pickedMI.toLowerCase().replace(reIgnore,'') || '-';
+			let lowerMI = pickedMI.dbName() || '-';
 			for (i = 0; i < putItems.sortKeys.length; i++) {
-				mi = (putItems.tableLookup(fields.Items_name,i) || '').toLowerCase().replace(reIgnore,'') || '-';
+				mi = (putItems.tableLookup(fields.Items_name,i) || '').dbName() || '-';
 				if (_.isUndefined(mi)) break;
 				if (mi != lowerMI) continue;
-				miTrueName = (putItems.tableLookup(fields.Items_trueName,i) || '').toLowerCase().replace(reIgnore,'') || '-';
+				miTrueName = (putItems.tableLookup(fields.Items_trueName,i) || '').dbName() || '-';
 				if (mi != pickedTrueMI) continue;
-				miType = (putItems.tableLookup(fields.Items_type,i) || '').toLowerCase().replace(reIgnore,'') || '-';
+				miType = (putItems.tableLookup(fields.Items_type,i) || '').dbName() || '-';
 				if (miType != pickedType) continue;
 				putRow = i;
 				break;
@@ -3921,9 +3926,9 @@ var MagicMaster = (function() {
 			charCS = getCharacter(tokenID),
 			db, action,
 			delScrollSpell = function ( charCS, spellName, scrollName, nameField, valueField ) {
-				spellName = spellName.toLowerCase().replace(reIgnore,'');
+				spellName = spellName.dbName();
 				var muSpellList = (attrLookup( charCS, [nameField[0]+scrollName, nameField[1]] ) || '').split(','),
-					nameIndex = _.findIndex( muSpellList, e => e.toLowerCase().replace(reIgnore,'') == spellName );
+					nameIndex = _.findIndex( muSpellList, e => e.dbName() == spellName );
 				if (nameIndex >= 0) {
 					muSpellList.splice( nameIndex, 1 );
 					setValue( charCS, [nameField[0]+scrollName, nameField[1]], muSpellList.join(',') );
@@ -4799,7 +4804,7 @@ var MagicMaster = (function() {
 			spellName = SpellsTable.tableLookup( fields.Spells_name, spellRow ),
 			MIspellName = MIspellsTable.tableLookup( fields.Spells_msg, MIrow );
 			
-		if (!stdEqual(spellName, MIspellName, reIgnore )) {
+		if (!stdEqual(spellName, MIspellName )) {
 			sendParsedMsg( tokenID, messages.fixedSpell, senderId, getObj('graphic',tokenID).get('name')+'\'s magic item');
 			makeStoreMIspell( args, senderId, 'Could not store '+spellName+' in '+getObj('graphic',tokenID).get('name')+'\'s spell storing magic item' );
 			return;
@@ -5097,7 +5102,7 @@ var MagicMaster = (function() {
 		finalQty = pickQty;
 		finalCharges = charges;
 		
-		if (stdEqual( toSlotName, MIname, reIgnore ) && stdEqual( toSlotType, MItype, reIgnore ) && stdEqual( toSlotTrueName, MItrueName, reIgnore )) {
+		if (stdEqual( toSlotName, MIname ) && stdEqual( toSlotType, MItype ) && stdEqual( toSlotTrueName, MItrueName )) {
 		    finalQty = (parseInt(finalQty)||0) + (parseInt(toSlotQty)||0);
 			finalCharges = (parseInt(finalCharges)||0) + (parseInt(toSlotCharges)||0);
 			slotInc = 0;
@@ -5938,7 +5943,7 @@ var MagicMaster = (function() {
 				let attack = objName.startsWith('Do-not-use');
 				let menuCmd = obj.get('istokenaction');
 				let owned = namesList[charID].includes(objName);
-				objName = (objName || '').toLowerCase().replace(reIgnore,'');
+				objName = (objName || '').dbName();
 				if (!menuCmd && !owned && !attack) {
 					dbItem   = !_.isUndefined(DBindex[MIroot][objName])
 							|| !_.isUndefined(DBindex[MUroot][objName])
@@ -6193,7 +6198,7 @@ var MagicMaster = (function() {
 			return;
 		}
 		
-		args = setCaster( [args[0],args[1],'','','',args[2]], messages.viewSpellClass, senderId );
+		args = setCaster( [args[0],args[1],args[3],'','',args[2]], messages.viewSpellClass, senderId );
 		if (!args) return;
 
 		args[2] = args[3] = args[4] = -1;
