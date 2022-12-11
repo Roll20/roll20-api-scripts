@@ -44,7 +44,7 @@
  * v1.3.01 10/10/2022  Fixed initiative for classes that have multi-class spell casting
  * v1.3.02 21/10/2022  Gray out attack initiative buttons for weapons without charges
  * v1.3.03 31/10/2022  Fixed bug in Initiative Redo command
- * v1.4.01 28/11/2022  Deal with fighting styles
+ * v1.4.01 28/11/2022  Deal with fighting styles. Extended String prototype with dbName() method.
  */
 
 var initMaster = (function() {
@@ -963,9 +963,9 @@ var initMaster = (function() {
 
 	var proficient = function( charCS, wname, wt, wst ) {
 		
-        wname = wname ? wname.toLowerCase().replace(reIgnore,'') : '';
-        wt = wt ? wt.toLowerCase().replace(reIgnore,'') : '';
-        wst = wst ? wst.toLowerCase().replace(reIgnore,'') : '';
+        wname = wname ? wname.dbName() : '';
+        wt = wt ? wt.dbName() : '';
+        wst = wst ? wst.dbName() : '';
         
 		var i = fields.WP_table[1],
 			prof = -1,
@@ -979,8 +979,8 @@ var initMaster = (function() {
 			let wpName = WeaponProfs.tableLookup( fields.WP_name, i, false ),
 				wpType = WeaponProfs.tableLookup( fields.WP_type, i );
 			if (_.isUndefined(wpName)) {break;}
-            wpName = wpName.toLowerCase().replace(reIgnore,'');
-            wpType = (!!wpType ? wpType.toLowerCase().replace(reIgnore,'') : '');
+            wpName = wpName.dbName();
+            wpType = (!!wpType ? wpType.dbName() : '');
 
             let isType = (wpName && wpName.length && wt.includes(wpName)),
                 isSuperType = (wpType && (wst.includes(wpType))),
@@ -1022,7 +1022,7 @@ var initMaster = (function() {
 		
 		for (const casterData of casterLevels) {
 			charClass = (attrLookup( charCS, casterData[0] ) || '');
-			castingClass = charClass.toUpperCase().replace(reIgnore,'');
+			castingClass = charClass.dbName();
 			level = attrLookup(charCS,casterData[1]) || 0;
 			if (level > 0 && (_.isUndefined(spellsPerLevel[castingClass]) || _.isUndefined(spellsPerLevel[castingClass][casterType]))) {
 				if (casterType == 'MU' && casterData[0][0] == fields.Wizard_class[0]) {
