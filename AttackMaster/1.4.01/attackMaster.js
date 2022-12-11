@@ -79,7 +79,9 @@
  * v1.3.04 15/11/2022  Fixed sub-race to-hit bonus calculation. Fix Melee damage posting.
  * v1.4.01 26/11/2022  Added Fighting Style database and implementation. Improved the way
  *                     Situational Modifiers are shown & applied for saves. Fixed targeted 
- *                     attack failure on certain armour types. Fixed help menu.
+ *                     attack failure on certain armour types. Fixed help menu. Extended
+ *                     String prototype with dbName() method.  Added support for creature 
+ *                     database.
  */
  
 var attackMaster = (function() {
@@ -117,6 +119,7 @@ var attackMaster = (function() {
 	const redisplayOutput = (...a) => libRPGMaster.redisplayOutput(...a);
 	const getMagicList = (...a) => libRPGMaster.getMagicList(...a);
 	const classAllowedItem = (...a) => libRPGMaster.classAllowedItem(...a);
+	const resolveData = (...a) => libRPGMaster.resolveData(...a);
 	
 	/*
 	 * Handle for reference to character sheet field mapping table.
@@ -1103,19 +1106,21 @@ var attackMaster = (function() {
 	 * Parse the Class Databases to update internal rule tables with 
 	 * any changes held for specific Class definitions
 	 */
- 
+
 	var parseClassDB = function(silent=true) {
 		
 		var doParse = function( rootDB, saveMods ) {
 			let indexDB = rootDB.toLowerCase().replace(/-/g,'_');
 			if (!DBindex[indexDB]) return;
 			for (const ClassName in DBindex[indexDB]) {
-				let classData = abilityLookup(rootDB, ClassName).data(/}}\s*?(?:Class|Race)Data\s*?=(.*?){{/im);
+				let parsedData, parsedAttr, classData;
+//				let classData = abilityLookup(rootDB, ClassName).data(/}}\s*?(?:Class|Race)Data\s*?=(.*?){{/im);
+				[parsedData,parsedAttr,classData] = resolveData( ClassName, rootDB, /}}\s*?(?:Class|Race)Data\s*?=(.*?){{/im );
 				if (classData) {
 					for (let r=0; r<classData.length; r++) {
-						let rowData = classData[r][0],
-							parsedData = parseData( rowData, reClassSpecs, false );
-						let	name = _.isUndefined(parsedData.name) ? 'Other' : parsedData.name.toLowerCase().replace(reIgnore,'');
+						let rowData = classData[r][0];
+						if (r != 0) parsedData = parseData( rowData, reClassSpecs, false );
+						let	name = _.isUndefined(parsedData.name) ? 'Other' : parsedData.name.dbName();
 						if (parsedData.attkLevels || parsedData.attkMelee || parsedData.attkRanged) {
 							if (_.isUndefined(weapMultiAttks[name])) {
 								weapMultiAttks[name] = {};
@@ -1132,12 +1137,12 @@ var attackMaster = (function() {
 						if (parsedData.toHitMods) {
 							raceToHitMods[name] = _.map(parsedData.toHitMods.split('|'), pen => {
 								pen = pen.toLowerCase().split('=');
-								pen[0] = pen[0].replace(reIgnore,'');
+								pen[0] = pen[0].dbName();
 								pen[1] = parseInt(pen[1]) || 0;
 								return pen;
 							});
 						}
-						let rowArray = rowData.toLowerCase().replace(reIgnore,'').replace(/\[/g,'').replace(/\]/g,'').split(','),
+						let rowArray = rowData.dbName().replace(/\[/g,'').replace(/\]/g,'').split(','),
 							svlArray = rowArray.filter(elem => elem.startsWith('svl'));
 						if (svlArray && svlArray.length) {
 							svlArray.sort((a,b)=>{parseInt((a.match(/svl(\d+):/)||[0,0])[1])-parseInt((b.match(/svl(\d+):/)||[0,0])[1]);});
@@ -1169,7 +1174,7 @@ var attackMaster = (function() {
 								if (sv[1] == 'all') {
 									saveMods[name] = _.mapObject(saveMods[name], (v,k) => {return k != 'att' ? v + (parseInt(sv[2] || 0) || 0) : v;});
 								} else {
-									saveMods[name][sv[1]] = (sv[1] != 'att') ? (parseFloat(sv[2] || 0) || 0) : (sv[2] || 'con').toLowerCase().replace(reIgnore,'');
+									saveMods[name][sv[1]] = (sv[1] != 'att') ? (parseFloat(sv[2] || 0) || 0) : (sv[2] || 'con').dbName();
 								}
 							});
 						};
@@ -1181,7 +1186,7 @@ var attackMaster = (function() {
 								if (sv[1] == 'all') {
 									classSaveMods[name] = _.mapObject(classSaveMods[name], (v,k) => {return k != 'att' ? v + (parseInt(sv[2] || 0) || 0) : v;});
 								} else {
-									classSaveMods[name][sv[1]] = (sv[1] != 'att') ? (parseFloat(sv[2] || 0) || 0) : (sv[2] || 'con').toLowerCase().replace(reIgnore,'');
+									classSaveMods[name][sv[1]] = (sv[1] != 'att') ? (parseFloat(sv[2] || 0) || 0) : (sv[2] || 'con').dbName();
 								}
 							});
 						};
@@ -1364,14 +1369,14 @@ var attackMaster = (function() {
 	var getCharNonProfs = function( charCS ) {
 		
 		var sheetNonProf = attrLookup( charCS, fields.NonProfPenalty ),
-			raceNonProf = parseInt(classNonProfPenalty[(attrLookup( charCS, fields.Race ) || '').toLowerCase().replace(reIgnore,'')]) || 0,
+			raceNonProf = parseInt(classNonProfPenalty[(attrLookup( charCS, fields.Race ) || 'creature').dbName()]) || 0,
 			penalties = _.filter( defaultNonProfPenalty, elem => (0 < (attrLookup(charCS,elem[1]) || 0)));
 		if (!state.attackMaster.weapRules.prof && !_.isUndefined(sheetNonProf)) {
 			return sheetNonProf;
 		} else if (!penalties || !penalties.length) {
 		    return 0;
 		} else {
-		    return _.map(penalties, elem => parseInt(classNonProfPenalty[(attrLookup( charCS, elem[0] ) || '').toLowerCase().replace(reIgnore,'')] || elem[2]))
+		    return _.map(penalties, elem => parseInt(classNonProfPenalty[(attrLookup( charCS, elem[0] ) || '').dbName()] || elem[2]))
 					.reduce((penalty,highest) => Math.max(penalty,highest))+raceNonProf;
 		}
 	}
@@ -1382,19 +1387,19 @@ var attackMaster = (function() {
 	 
 	var raceMods = function( charCS, wt, wst ) {
 		var weaponMod,
-		    race = (attrLookup( charCS, fields.Race ) || '').toLowerCase().replace(reIgnore,''),
+		    race = (attrLookup( charCS, fields.Race ) || '').dbName(),
     		mods = raceToHitMods[race];
 		if (_.isUndefined(mods)) {
 			let raceObj = abilityLookup( fields.RaceDB, race, charCS ),
 				raceSpecs = raceObj.obj ? raceObj.specs(/}}\s*specs=\s*?(\[.*?\])\s*?{{/im) : [];
 			if (raceSpecs && raceSpecs[0]) {
-				mods = raceToHitMods[(raceSpecs[0][4] || 'humanoid').toLowerCase().replace(reIgnore,'')];
+				mods = raceToHitMods[(raceSpecs[0][4] || 'humanoid').dbName()];
 			}
 		}
 		if (_.isUndefined(mods)) {return 0};
-		wt = wt.toLowerCase().replace(reIgnore,'');
-		wst = wst.toLowerCase().replace(reIgnore,'');
-		weaponMod = _.find( mods, elem => [wt,wst].includes(elem[0].toLowerCase().replace(reIgnore,'')));
+		wt = wt.dbName();
+		wst = wst.dbName();
+		weaponMod = _.find( mods, elem => [wt,wst].includes(elem[0].dbName()));
 		if (_.isUndefined(weaponMod)) {return 0;}
 		return weaponMod[1];
 	}
@@ -1429,7 +1434,7 @@ var attackMaster = (function() {
 
 	var checkItemAllowed = function( wname, wt, wst, allowedItems ) {
 		let forceFalse = false;
-		allowedItems = allowedItems.toLowerCase().replace(reIgnore,'').split('|'),
+		allowedItems = allowedItems.dbName().split('|'),
 		wt = _.uniq(wt);
 		wst = _.uniq(wst);
 		return allowedItems.reduce((p,c) => {
@@ -1476,9 +1481,9 @@ var attackMaster = (function() {
 						melee = melee || inHandClass.includes('melee');
 						ranged = ranged || inHandClass.includes('ranged');
 						shield = shield || inHandClass.includes('shield');
-						wt.push(c[1].toLowerCase().replace(reIgnore,''));
-						wst.push(c[4].toLowerCase().replace(reIgnore,''));
-						weaps.push(inHand.toLowerCase().replace(reIgnore,''));
+						wt.push(c[1].dbName());
+						wst.push(c[4].dbName());
+						weaps.push(inHand.dbName());
 					}
 				}
 			}
@@ -1492,7 +1497,7 @@ var attackMaster = (function() {
 				inOther.none = !(inOther.spell || inOther.melee || inOther.ranged || inOther.shield );
 			}
 		}
-		log('checkCurrentStyles: inPrimary='+_.pairs(inPrimary).flat()+'\ninOther='+_.pairs(inOther).flat()+'\ninBoth='+_.pairs(inBoth).flat());
+//		log('checkCurrentStyles: inPrimary='+_.pairs(inPrimary).flat()+'\ninOther='+_.pairs(inOther).flat()+'\ninBoth='+_.pairs(inBoth).flat());
 		
 		fightStyles = getTable( charCS, fieldGroups.STYLES );
 		for (let r=0; !_.isUndefined(style = fightStyles.tableLookup( fields.Style_name, r, false )); r++) {
@@ -1506,7 +1511,7 @@ var attackMaster = (function() {
 				both      = !styleRow.twohand || _.reduce(inBoth, (valid,weapon,key) => (styleRow.twohand.includes(key) ? valid && weapon : valid), true),
 				allowed   = checkItemAllowed( weaps, wt, wst, (styleRow.weaps || 'any'));
 
-			log('checkCurrentStyles: style '+style+' primeHand='+primeHand+', offHand='+offhand+', both='+both+', allowed='+allowed);
+//			log('checkCurrentStyles: style '+style+' primeHand='+primeHand+', offHand='+offhand+', both='+both+', allowed='+allowed);
 			fightStyles.tableSet( fields.Style_current, r, (primeHand && offhand && both && allowed) );
 		};
 		applyFightingStyle( charCS, InHandTable, fightStyles );
@@ -1581,17 +1586,13 @@ var attackMaster = (function() {
 
 		var implementStyle = function( charCS, row, weapon, styleBenefits ) {
 
-		log('implementStyle: called for weapon '+weapon+' with benefits = '+styleBenefits);
-			
 			var parsedBenefits = parseData( styleBenefits, reStyleData, false );
 				
-			weapon = weapon.toLowerCase().replace(reIgnore,'');
+			weapon = weapon.dbName();
 
 			_.each( parsedBenefits, (val,key) => {
-				log('implementStyle: processing val='+val+', key='+key);
 				if (_.isUndefined(val) || !styleFieldMap[key]) return;
 				let field = styleFieldMap[key][1];
-//				log('implementStyle: field['+key+'] = '+field);
 				switch (key) {
 				case 'oneh':
 					if (InHandTable.tableLookup( fields.InHand_handedness, row ) == 1) {
@@ -1609,7 +1610,7 @@ var attackMaster = (function() {
 					if (!dmgTable) dmgTable = getTable( charCS, fieldGroups.DMG );
 					for (let r=dmgTable.table[1]; !_.isUndefined(dmgTable.tableLookup( fields.Dmg_name, r, false )); r++) {
 						let rowWeap = dmgTable.tableLookup( fields.Dmg_miName, r );
-						if (rowWeap.toLowerCase().replace(reIgnore,'') == weapon) {
+						if (rowWeap.dbName() == weapon) {
 							dmgTable.tableSet( field, r, val );
 						}
 					}
@@ -1622,7 +1623,7 @@ var attackMaster = (function() {
 					if (!meleeTable) meleeTable = getTable( charCS, fieldGroups.MELEE );
 					for (let r=meleeTable.table[1]; !_.isUndefined(meleeTable.tableLookup( fields.MW_name, r, false )); r++) {
 						let rowWeap = meleeTable.tableLookup( fields.MW_miName, r );
-						if (rowWeap.toLowerCase().replace(reIgnore,'') == weapon) {
+						if (rowWeap.dbName() == weapon) {
 							meleeTable.tableSet( field, r, val );
 						}
 					}
@@ -1637,7 +1638,7 @@ var attackMaster = (function() {
 					if (!rangedTable) rangedTable = getTable( charCS, fieldGroups.RANGED );
 					for (let r=rangedTable.table[1]; !_.isUndefined(rangedTable.tableLookup( fields.RW_name, r, false )); r++) {
 						let rowWeap = rangedTable.tableLookup( fields.RW_miName, r );
-						if (rowWeap.toLowerCase().replace(reIgnore,'') == weapon) {
+						if (rowWeap.dbName() == weapon) {
 							rangedTable.tableSet( field, r, val );
 						}
 					}
@@ -1648,7 +1649,7 @@ var attackMaster = (function() {
 					if (!ammoTable) ammoTable = getTable( charCS, fieldGroups.AMMO );
 					for (let r=ammoTable.table[1]; !_.isUndefined(ammoTable.tableLookup( fields.Ammo_name, r, false )); r++) {
 						let rowWeap = ammoTable.tableLookup( fields.Ammo_miName, r );
-						if (rowWeap.toLowerCase().replace(reIgnore,'') == weapon) {
+						if (rowWeap.dbName() == weapon) {
 							ammoTable.tableSet( field, r, val );
 						}
 					}
@@ -1659,11 +1660,8 @@ var attackMaster = (function() {
 		}
 		
 		setStyleDefaults( charCS, styleFieldMap, meleeTable, rangedTable, dmgTable, ammoTable );
-// throwing
 		for (let r=fightStyles.table[1]; !_.isUndefined(style = fightStyles.tableLookup(fields.Style_name,r,false)); r++) {
-//			log('applyFightingStyle: checking row '+r+' of fightStyles table, which is '+style+', and is '+('true' == fightStyles.tableLookup(fields.Style_current, r)));
 			if (style != '-' && (fightStyles.tableLookup(fields.Style_current, r) == 'true')) {
-				log('applyFightingStyle: '+style+' is valid');
 				let styleObj = abilityLookup( fields.StylesDB, style, charCS );
 				if (!styleObj.obj) return;
 				let styleData = styleObj.data(/}}\s*styledata\s*=(.*?){{/im);
@@ -1671,14 +1669,9 @@ var attackMaster = (function() {
 				
 				let styleProf = (parseInt(fightStyles.tableLookup( fields.Style_proficiency, r ) || 1) || 1);
 				if (styleProf) {
-//					log('applyFightingStyle: about to call applyFightingStyle - styleData['+styleProf+'] = '+styleData[styleProf][0]);
 					let benefits = styleData[styleProf][0];
 					styleBenefits.push(benefits);
-//					log('applyFightingStyle: parsed styles table');
-		
 					for (let i=0; !_.isUndefined(inHandName = InHandTable.tableLookup( fields.InHand_name, i, false )); i++) {
-						
-//						log('applyFightingStyle: checking weapon '+inHandName);
 						let inHand = InHandTable.tableLookup( fields.InHand_trueName, i ) || inHandName;
 						spell = melee = ranged = shield = throwing = false;
 						if (inHand !== '-') {
@@ -1695,8 +1688,8 @@ var attackMaster = (function() {
 									melee = melee || inHandClass.includes('melee');
 									ranged = ranged || inHandClass.includes('ranged');
 									shield = shield || inHandClass.includes('shield');
-									wt.push(c[1].toLowerCase().replace(reIgnore,''));
-									wst.push(c[4].toLowerCase().replace(reIgnore,''));
+									wt.push(c[1].dbName());
+									wst.push(c[4].dbName());
 								}
 								prime = both = offhand = true;
 								let styleDef = parseData( styleData[0][0], reStyleData );
@@ -1745,58 +1738,6 @@ var attackMaster = (function() {
 		});
 		return;
 	}
-	
-	/*
-	 * Determine if a particular item type or superType is an 
-	 * allowed type for a specific class.
-	 */
-/* Moved to Library	 
-	var classAllowedItem = function( charCS, wname, wt, wst, allowedItemsByClass ) {
-		
-        wt = wt ? wt.toLowerCase().replace(reIgnore,'') : '-';
-        wst = wst ? wst.toLowerCase().replace(reIgnore,'') : '-';
-        wname = wname ? wname.toLowerCase().replace(reIgnore,'') : '-';
-		allowedItemsByClass = allowedItemsByClass.toLowerCase().replace(reIgnore,'');
-		
-		var typeDefaults = {weaps:'any',ac:'any',sps:'any',spm:'',spb:'',align:'any',race:'any'},
-			itemType = !_.isUndefined(typeDefaults[allowedItemsByClass]) ? allowedItemsByClass : 'weaps',
-			forceFalse = false;
-			
-		var classAllowed = classObjects( charCS ).some( elem => {
-				if ([wt,wst].includes('innate')) return true;
-
-				if (!elem.obj) return false;
- 				let allowedItems = (elem.classData[itemType] || typeDefaults[itemType]).toLowerCase().replace(reIgnore,'').split('|');
-				return allowedItems.reduce((p,c) => {
-					let item = '!+'.includes(c[0]) ? c.slice(1) : c,
-						found = item.includes('any') || (wt.includes(item) || wst.includes(item) || (wt=='-' && wst=='-' && wname.includes(item)));
-					forceFalse = (forceFalse || (c[0] === '!' && found)) && !(c[0] === '+' && found);
-					return (p || found) && !forceFalse;
-				}, false);
-			}),
-			raceObj = abilityLookup( fields.RaceDB, (attrLookup( charCS, fields.Race ) || 'human') ),
-			raceAllowed = true;
-
-		forceFalse = false;
-		if (raceObj.obj) {
-			let allowedItems = parseData((raceObj.data(/}}\s*?(?:Class|Race)Data\s*?=.*?{{/im)[0][0] || ''),reClassSpecs)[itemType];
-			raceObj = abilityLookup( fields.RaceDB, (raceObj.specs()[0] || [])[4], charCS, true );
-			if (raceObj.obj) {
-				allowedItems += (allowedItems && allowedItems.length ? '|' : '')+parseData((raceObj.data(/}}\s*?(?:Class|Race)Data\s*?=(.*?){{/im)[0][0] || ''),reClassSpecs)[itemType];
-			}
-			if (!allowedItems || !allowedItems.length) {
-				allowedItems =  typeDefaults[itemType];
-			}
-			allowedItems = allowedItems.toLowerCase().replace(reIgnore,'').split('|');
-			raceAllowed = allowedItems.reduce((p,c) => {
-				let item = '!+'.includes(c[0]) ? c.slice(1) : c,
-					found = item.includes('any') || (wt.includes(item) || wst.includes(item) || (wt=='-' && wst=='-' && wname.includes(item)));
-				forceFalse = (forceFalse || (c[0] === '!' && found)) && !(c[0] === '+' && found);
-				return (p || found) && !forceFalse;
-			}, false);
-		};
-		return (classAllowed && raceAllowed);
-	};
 	
 	/*
 	 * Determine if the character has a shield in-hand
@@ -1870,11 +1811,11 @@ var attackMaster = (function() {
 	var getAttksPerRound = function( charCS, proficiency, weaponSpecs, weapBase ) {
 
 		var level = Math.max((parseInt(attrLookup( charCS, fields.Fighter_level )) || 0),0),
-			charClass = (attrLookup( charCS, fields.Fighter_class ) || 'fighter').toLowerCase().replace(reIgnore,''),
-			charRace = (attrLookup( charCS, fields.Race ) || 'human').toLowerCase().replace(reIgnore,''),
-			wt = weaponSpecs[1].toLowerCase().replace(reIgnore,''),
-			wst = weaponSpecs[4].toLowerCase().replace(reIgnore,''),
-			wc = weaponSpecs[2].toLowerCase().replace(reIgnore,''),
+			charClass = (attrLookup( charCS, fields.Fighter_class ) || 'fighter').dbName(),
+			charRace = (attrLookup( charCS, fields.Race ) || 'human').dbName(),
+			wt = weaponSpecs[1].dbName(),
+			wst = weaponSpecs[4].dbName(),
+			wc = weaponSpecs[2].dbName(),
 			levelsData = [],
 			attksData, raceData,
 			boost, raceBoost, newVal, result;
@@ -1982,7 +1923,7 @@ var attackMaster = (function() {
 			
 		for (let r = fields.Items_table[1]; !_.isUndefined(itemName = itemTable.tableLookup( fields.Items_name, r, false )); r++) {
 			if (itemTable.tableLookup( fields.Items_qty, r, 0 ) <= 0) continue;
-			let nameMatch = itemName.toLowerCase().replace(reIgnore,'');
+			let nameMatch = itemName.dbName();
 			let mi = abilityLookup( fields.MagicItemDB, itemName, charCS );
 			if (!mi.obj) continue;
 			let specs = mi.obj[1].body;
@@ -2057,9 +1998,9 @@ var attackMaster = (function() {
 
 	var proficient = function( charCS, wname, wt, wst ) {
  
-		wname = wname ? wname.toLowerCase().replace(reIgnore,'') : '-';
-        wt = wt ? wt.toLowerCase().replace(reIgnore,'') : '';
-        wst = wst ? wst.toLowerCase().replace(reIgnore,'') : '';
+		wname = wname ? wname.dbName() : '-';
+        wt = wt ? wt.dbName() : '';
+        wst = wst ? wst.dbName() : '';
         
 		var i = fields.WP_table[1],
 			prof = getCharNonProfs( charCS ),
@@ -2067,7 +2008,7 @@ var attackMaster = (function() {
 			allowedWeap = state.attackMaster.weapRules.allowAll || classAllowedItem( charCS, wname, wt, wst, 'weaps' ),
 			spec, wpName, wpType,
 			isType, isSuperType, isSameName, isSpecialist, isMastery;
-
+			
 		isType = isSuperType = isSameName = isSpecialist = isMastery = false;
 		
 		if (allowedWeap) {
@@ -2075,8 +2016,8 @@ var attackMaster = (function() {
 				wpName = WeaponProfs.tableLookup( fields.WP_name, i, false );
 				wpType = WeaponProfs.tableLookup( fields.WP_type, i );
 				if (_.isUndefined(wpName)) {break;}
-				wpName = wpName.toLowerCase().replace(reIgnore,'');
-				wpType = (!!wpType ? wpType.toLowerCase().replace(reIgnore,'') : '');
+				wpName = wpName.dbName();
+				wpType = (!!wpType ? wpType.dbName() : '');
 				
 				let typeTest = (wpName && wpName.length && wt.includes(wpName)),
 					superTypeTest = (wpType && (wst.includes(wpType))),
@@ -2107,7 +2048,7 @@ var attackMaster = (function() {
 				if (state.attackMaster.weapRules.classBan) {
 					prof = -100;
 				} else {
-					prof *= 2;
+					prof = (prof ||-5) * 2;
 				}
 			}
 		}
@@ -2237,7 +2178,7 @@ var attackMaster = (function() {
 	var insertAmmo = function( charCS, ammoTrueName, ammoSpecs, rangeSpecs, tableInfo, ammoType, sb, miIndex ) {
  
 		var ammoData, ammoTest, specType, specSuperType, values, rowAmmo, ammoRow, qty,
-			typeCheck = ammoType.toLowerCase().replace(reIgnore,'');
+			typeCheck = ammoType.dbName();
 
         if (tableInfo.ammoTypes.includes(ammoTrueName+'-'+ammoType)) {return tableInfo;}
 		tableInfo.ammoTypes.push(ammoTrueName+'-'+ammoType);
@@ -2245,8 +2186,8 @@ var attackMaster = (function() {
  
 		for (let w=0; w<ammoSpecs.length; w++) {
 			ammoData = ammoSpecs[w][0];
-			specType = (ammoData.match(/[\[,\s]t:([\s\w\-\+\:]+?)[,\]]/i) || ['','unknown'])[1].toLowerCase().replace(reIgnore,'');
-			specSuperType = (ammoData.match(/[\[,\s]st:([\s\w\-\+\:]+?)[,\]]/i) || ['','unknown'])[1].toLowerCase().replace(reIgnore,'');
+			specType = (ammoData.match(/[\[,\s]t:([\s\w\-\+\:]+?)[,\]]/i) || ['','unknown'])[1].dbName();
+			specSuperType = (ammoData.match(/[\[,\s]st:([\s\w\-\+\:]+?)[,\]]/i) || ['','unknown'])[1].dbName();
 			let clv = ammoData.match(/[\[,\s]clv:([-\+]?\d+?)[,\]]/i),
 				mulv = ammoData.match(/[\[,\s]mulv:([-\+]?\d+?)[,\]]/i),
 				prlv = ammoData.match(/[\[,\s]prlv:([-\+]?\d+?)[,\]]/i);
@@ -2298,8 +2239,8 @@ var attackMaster = (function() {
 		var miIndex = fields.Items_table[1]-1,
 			MagicItems = getTableField( charCS, {}, fields.Items_table, fields.Items_trueName ),
 			MagicItems = getTableField( charCS, MagicItems, fields.Items_table, fields.Items_name ),
-            weaponType = weaponType ? weaponType.toLowerCase().replace(reIgnore,'') : '',
-            weaponSuperType = weaponSuperType ? weaponSuperType.toLowerCase().replace(reIgnore,'') : '',
+            weaponType = weaponType ? weaponType.dbName() : '',
+            weaponSuperType = weaponSuperType ? weaponSuperType.dbName() : '',
 		    ammoTypeCheck = new RegExp('[\[,\s]t:\\s*?'+weaponType+'\\s*?[,\\]]', 'i'),
 			ammoSuperTypeCheck = new RegExp('[\[,\s]st:\\s*?'+weaponSuperType+'\\s*?[,\\]]', 'i'),
 			rangeTypeCheck = new RegExp( '[\[,\s]t:\\s*?'+weaponType+'\\s*?[,\\]]','i' ),
@@ -2315,9 +2256,9 @@ var attackMaster = (function() {
 			if (ammo.obj) {
 				ammoMatch = ammo.data(/}}\s*?ammodata\s*?=.*?(?:\n.*?)*{{/im);
 				if (ammoMatch && ammoMatch[0] && ammoMatch[0][0]) {
-					ammoSpecs = ammoMatch.filter(elem => ammoTypeCheck.test(elem[0].toLowerCase().replace(reIgnore,'')));
+					ammoSpecs = ammoMatch.filter(elem => ammoTypeCheck.test(elem[0].dbName()));
 					if (!ammoSpecs.length) {
-						ammoSpecs = ammoMatch.filter(elem => ammoSuperTypeCheck.test(elem[0].toLowerCase().replace(reIgnore,'')));
+						ammoSpecs = ammoMatch.filter(elem => ammoSuperTypeCheck.test(elem[0].dbName()));
 						t = weaponSuperType;
 					} else {
 						t = weaponType;
@@ -2328,10 +2269,10 @@ var attackMaster = (function() {
 						ammoMatch = ammo.data(/}}\s*?rangedata\s*?=.*?(?:\n.*?)*{{/im);
 						if (ammoMatch && ammoMatch[0]) {
 																		
-							rangeSpecs = ammoMatch.filter(elem => rangeTypeCheck.test(elem[0].toLowerCase().replace(reIgnore,'')));
+							rangeSpecs = ammoMatch.filter(elem => rangeTypeCheck.test(elem[0].dbName()));
 							if (!rangeSpecs.length) {
 																			  
-								rangeSpecs = ammoMatch.filter(elem => rangeSuperTypeCheck.test(elem[0].toLowerCase().replace(reIgnore,'')));
+								rangeSpecs = ammoMatch.filter(elem => rangeSuperTypeCheck.test(elem[0].dbName()));
 							}
 						}
 						if (!!rangeSpecs.length) {
@@ -2642,10 +2583,10 @@ var attackMaster = (function() {
 					for (let i=0; i<Math.min(itemSpecs.length,itemData.length); i++) {
 						let	acData = parseData( itemData[i][0], reACSpecs );
 						if (!acData.name.length) continue;
-						let itemType = itemSpecs[i][1].toLowerCase().replace(reIgnore,''),
-							itemClass = itemSpecs[i][2].toLowerCase().replace(reIgnore,''),
+						let itemType = itemSpecs[i][1].dbName(),
+							itemClass = itemSpecs[i][2].dbName(),
 							itemHands = itemSpecs[i][3].toUpperCase(),
-							itemSuperType = itemSpecs[i][4].toLowerCase().replace(reIgnore,'');
+							itemSuperType = itemSpecs[i][4].dbName();
 						if (itemClass == 'armor') itemClass = 'armour';
 						if (!state.attackMaster.weapRules.allowArmour && !classAllowedItem(charCS, itemName, itemType, itemSuperType, 'ac')) {
 							armourMsg.push(itemName+' is not of a usable type');
@@ -3521,9 +3462,7 @@ var attackMaster = (function() {
 					
 					errFlag = buildRWattkMacros( args, senderId, charCS, tableInfo );
 					
-					log('makeRangeButtons: ammo ranges = '+ranges);
 					ranges = adjustRange( ranges, tableInfo.RANGED.tableLookup( fields.RW_range, weaponIndex ) );
-					log('makeRangeButtons: 1st pass ranges = '+ranges);
 					ranges = adjustRange( ranges.join('/'), tableInfo.RANGED.tableLookup( fields.RW_styleRange, weaponIndex ) );
 					
 					// Test for if ranges need *10 (assume 1st range (PB or short) is never >= 100 yds or < 10)
@@ -3736,12 +3675,12 @@ var attackMaster = (function() {
 						miQty = Items.tableLookup( fields.Items_qty, itemIndex ),
 						valid = (!weapCharged || ((miQty-charges) >= 0));
 					weapButton = '{{'+(weapCharged ? '**'+miQty+'** ' : '')+weaponName+'=';
-					weaponType = tableInfo.RANGED.tableLookup( fields.RW_type, weaponIndex ).toLowerCase().replace(reIgnore,'');
-					weaponSuperType = tableInfo.RANGED.tableLookup( fields.RW_superType, weaponIndex ).toLowerCase().replace(reIgnore,'');
+					weaponType = tableInfo.RANGED.tableLookup( fields.RW_type, weaponIndex ).dbName();
+					weaponSuperType = tableInfo.RANGED.tableLookup( fields.RW_superType, weaponIndex ).dbName();
 					ammoIndex = fields.Ammo_table[1]-1;
 					while (!_.isUndefined(ammoName = tableInfo.AMMO.tableLookup( fields.Ammo_name, ++ammoIndex, false ))) {
-						ammoType = tableInfo.AMMO.tableLookup( fields.Ammo_type, ammoIndex ).toLowerCase().replace(reIgnore,'');
-						if (ammoName != '-' && (!ammoType ? (weaponName.includes((ammoName.split(',')||['none',''])[0])) : ((ammoType == weaponType || ammoType == weaponSuperType) || ammoType == weaponName.toLowerCase().replace(reIgnore,'')))) {
+						ammoType = tableInfo.AMMO.tableLookup( fields.Ammo_type, ammoIndex ).dbName();
+						if (ammoName != '-' && (!ammoType ? (weaponName.includes((ammoName.split(',')||['none',''])[0])) : ((ammoType == weaponType || ammoType == weaponSuperType) || ammoType == weaponName.dbName()))) {
 							ammoQty = tableInfo.AMMO.tableLookup( fields.Ammo_qty, ammoIndex );
 							weapButton += (weaponIndex == weaponButton && ammoIndex == ammoButton) ? ('<span style=' + design.selected_button + '>')
 											: ((ammoQty <= 0 || !valid) ? ('<span style=' + design.grey_button + '>') : '[');
@@ -4866,7 +4805,7 @@ var attackMaster = (function() {
 	//  attribute: w,t,st,+,sb,db,n,r,sp,sz,ty,sm,l,
 	
 		var tokenID = args[1],
-			weapon = (args[2]||'').toLowerCase().replace(reIgnore,''),
+			weapon = (args[2]||'').dbName(),
 			tableName = (args[3]||'').toUpperCase(),
 			attributes = args[4],
 			charCS = getCharacter(tokenID),
@@ -4887,10 +4826,10 @@ var attackMaster = (function() {
 					typeName = table.tableLookup( fields[group+'type'], i );
 					superType = table.tableLookup( fields[group+'superType'], i );
 				}
-				if ('all' == weapon || miName.toLowerCase().replace(reIgnore,'') == weapon 
-									|| attkName.toLowerCase().replace(reIgnore,'') == weapon
-									|| typeName.toLowerCase().replace(reIgnore,'') == weapon
-									|| superType.toLowerCase().replace(reIgnore,'') == weapon) {
+				if ('all' == weapon || miName.dbName() == weapon 
+									|| attkName.dbName() == weapon
+									|| typeName.dbName() == weapon
+									|| superType.dbName() == weapon) {
 					weapIndex = i;
 					_.each( weapData, (val,key) => {
 						var oldVal, ranges, rangeMod;
