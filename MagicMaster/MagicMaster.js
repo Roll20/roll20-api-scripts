@@ -121,6 +121,7 @@ var MagicMaster = (function() {
 	const addMIspells = (...a) => libRPGMaster.addMIspells(...a);
 	const handleCheckWeapons = (...a) => libRPGMaster.handleCheckWeapons(...a);
 	const handleCheckSaves = (...a) => libRPGMaster.handleCheckSaves(...a);
+	const resolveData = (...a) => libRPGMaster.resolveData(...a);
 
 	/*
 	 * Handle for reference to character sheet field mapping table.
