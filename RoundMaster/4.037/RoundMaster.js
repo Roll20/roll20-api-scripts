@@ -132,12 +132,11 @@
  *                    initiative modifier field from comreact to custom field init-mod
  * v4.036  11/11/2022 Added new effects to support the new race and creature databases
  * v4.037  30/11/2022 Extended the status name syntax to support hiding the effect name from the Players
- * v4.038  08/12/2022 Added ability to extend or reduce existing statuses using duration of +# or -#
  */
  
 var RoundMaster = (function() {
 	'use strict'; 
-	var version = 4.038,
+	var version = 4.037,
 		author = 'Ken L. & RED',
 		pending = null;
 	const lastUpdate = 1668950818;
@@ -204,12 +203,12 @@ var RoundMaster = (function() {
 	}; 
 
 	var dbNames = Object.freeze({
-	Effects_DB:		{bio:'<blockquote>Token Marker Effects Macro Library</blockquote><br><br>v6.07 09/12/2022<br><br>This database holds the definitions for all token status effects.  These are macros that optionally are triggered when a status of the same root name is placed on a token (statusname-start), each round it is still on the token (statusname-turn), and when the status countdown reaches zero or the token dies or is deleted (statusname-end)  There are also other possible status conditions such as weaponname-inhand, weaponname-dancing and weaponname-sheathed.  See the <b>RoundMaster API</b> documentation for further information.<br><br><b>Important Note:</b> Effects require a Roll20 Pro membership, and the installation of the ChatSetAttr, Tokenmod and RoundMaster API Scripts, to allow parameter passing between macros, update of character sheet variables, and marking spell effects on tokens.  If you do not have this level of subscription, I highly recommend you get it as a DM, as you get lots of other goodies as well.  If you want to know how to load the API Scripts to your game, the RoLL20 API help here gives guidance, or Richard can help you.<br><br><b>Important Note for DMs:</b> if a monster character sheet has multiple tokens associated with it, and token markers with associated Effects are placed on more than one of those Tokens, any Effect macros will run multiple times and, if changing variables on the Character Sheet using e.g. ChatSetAttr will make the changes multiple times to the same Character Sheet - generally this will cause unexpected results!  If using these Effect macros for Effects that could affect monsters in this way, it is <b>HIGHLY RECOMMENDED</b> that a 1 monster Token : 1 character sheet approach is adopted.',
-					gmnotes:'<blockquote>Change Log:</blockquote><br>v6.07  09/12/2022  Added effects to support the new Creatures database<br>v6.06  14/11/2022  Added effects to support new Race Database & Powers<br><br>v6.04  16/10/2022  Added effect for Spiritual-Hammer-end and for Chromatic-Orb Heat effects<br><br>v6.03  12/10/2022  Changed the Initiative dice roll modification field from "comreact" to the new custom field "init-mod"<br><br>v6.02  07/10/2022  Added new effects to support newly programmed magic items<br><br>v6.01  11/05/2022  Added effects to turn on and off underwater infravision<br><br>v5.8  04/02/2022  Fixed old field references when Raging<br><br>v5.7  17/01/2022  Fixed magical To-Hit adjustments for Chant to work in same way as dmg adjustment<br><br>v5.6  01/01/2022  Added multiple Effect Macros to support MagicMaster spell enhancements<br><br>v5.2-5.5 skipped to bring version numbering in line across all APIs<br><br>v5.1  10/11/2021  Changed to use virtual Token bar field names, so bar allocations can be altered<br><br>v5.0  29/10/2021  First version loaded into roundMaster API<br><br>v4.2.4  03/10/2021  Added Hairy Spider poison v4.2.3  23/05/2021  Added a Timer effect that goes with the Time-Recorder Icon, to tell you when a Timer you set starts and ends.<br><br>v4.2.2  28/03/2021  Added Regeneration every Round for @conregen points<br><br>v4.2.1  25/02/2021  Added end effect for Wandering Monster check, so it recurs every n rounds<br><br>v4.2  23/02/2021  Added effect for Infravision to change night vision settings for token.<br><br>v4.1  17/12/2020  Added effects for Dr Lexicon use of spells, inc. Vampiric Touch & Spectral Hand<br><br>v4.0.3 09/11/2020 Added effects for Cube of Force<br><br>v4.0.2 20/10/2020 Added effects of a Slow spell<br><br>v4.0.1 17/10/2020 Added Qstaff-Dancing-turn to increment a dancing quarterstaff\'s round counter<br><br>v4.0  27/09/2020 Released into the new Version 4 Testbed<br><br>v1.0.1 16/09/2020 Initial full release for Lost & Found<br><br>v0.1 30/08/2020 Initial testing version',
+	Effects_DB:		{bio:'<blockquote>Token Marker Effects Macro Library</blockquote><br><br>v6.06 14/11/2022<br><br>This database holds the definitions for all token status effects.  These are macros that optionally are triggered when a status of the same root name is placed on a token (statusname-start), each round it is still on the token (statusname-turn), and when the status countdown reaches zero or the token dies or is deleted (statusname-end)  There are also other possible status conditions such as weaponname-inhand, weaponname-dancing and weaponname-sheathed.  See the <b>RoundMaster API</b> documentation for further information.<br><br><b>Important Note:</b> Effects require a Roll20 Pro membership, and the installation of the ChatSetAttr, Tokenmod and RoundMaster API Scripts, to allow parameter passing between macros, update of character sheet variables, and marking spell effects on tokens.  If you do not have this level of subscription, I highly recommend you get it as a DM, as you get lots of other goodies as well.  If you want to know how to load the API Scripts to your game, the RoLL20 API help here gives guidance, or Richard can help you.<br><br><b>Important Note for DMs:</b> if a monster character sheet has multiple tokens associated with it, and token markers with associated Effects are placed on more than one of those Tokens, any Effect macros will run multiple times and, if changing variables on the Character Sheet using e.g. ChatSetAttr will make the changes multiple times to the same Character Sheet - generally this will cause unexpected results!  If using these Effect macros for Effects that could affect monsters in this way, it is <b>HIGHLY RECOMMENDED</b> that a 1 monster Token : 1 character sheet approach is adopted.',
+					gmnotes:'<blockquote>Change Log:</blockquote><br>v6.06  14/11/2022  Added effects to support new Race Database & Powers<br><br>v6.04  16/10/2022  Added effect for Spiritual-Hammer-end and for Chromatic-Orb Heat effects<br><br>v6.03  12/10/2022  Changed the Initiative dice roll modification field from "comreact" to the new custom field "init-mod"<br><br>v6.02  07/10/2022  Added new effects to support newly programmed magic items<br><br>v6.01  11/05/2022  Added effects to turn on and off underwater infravision<br><br>v5.8  04/02/2022  Fixed old field references when Raging<br><br>v5.7  17/01/2022  Fixed magical To-Hit adjustments for Chant to work in same way as dmg adjustment<br><br>v5.6  01/01/2022  Added multiple Effect Macros to support MagicMaster spell enhancements<br><br>v5.2-5.5 skipped to bring version numbering in line across all APIs<br><br>v5.1  10/11/2021  Changed to use virtual Token bar field names, so bar allocations can be altered<br><br>v5.0  29/10/2021  First version loaded into roundMaster API<br><br>v4.2.4  03/10/2021  Added Hairy Spider poison v4.2.3  23/05/2021  Added a Timer effect that goes with the Time-Recorder Icon, to tell you when a Timer you set starts and ends.<br><br>v4.2.2  28/03/2021  Added Regeneration every Round for @conregen points<br><br>v4.2.1  25/02/2021  Added end effect for Wandering Monster check, so it recurs every n rounds<br><br>v4.2  23/02/2021  Added effect for Infravision to change night vision settings for token.<br><br>v4.1  17/12/2020  Added effects for Dr Lexicon use of spells, inc. Vampiric Touch & Spectral Hand<br><br>v4.0.3 09/11/2020 Added effects for Cube of Force<br><br>v4.0.2 20/10/2020 Added effects of a Slow spell<br><br>v4.0.1 17/10/2020 Added Qstaff-Dancing-turn to increment a dancing quarterstaff\'s round counter<br><br>v4.0  27/09/2020 Released into the new Version 4 Testbed<br><br>v1.0.1 16/09/2020 Initial full release for Lost & Found<br><br>v0.1 30/08/2020 Initial testing version',
 					controlledby:'all',
 					root:'effects-db',
 					avatar:'https://s3.amazonaws.com/files.d20.io/images/2795868/caxnSIYW0gsdv4kOmO294w/thumb.png?1390102911',
-					version:6.07,
+					version:6.08,
 					db:[{name:'3min-geyser-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!rounds --addtotracker 3min-Geyser|-1|[[1d10]]|0|3min Geyser blows'},
 						{name:'5min-geyser-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!rounds --addtotracker 5min-Geyser|-1|[[1d10]]|0|5min Geyser blows'},
 						{name:'AE-Aerial-Combat-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!modattr --charid ^^cid^^ --fb-header ^^cname^^ has finished Aerial Combat --fb-content Loses bonuses to to-hit and damage --strengthhit||-1 --strengthdmg||-4'},
@@ -227,8 +226,6 @@ var RoundMaster = (function() {
 						{name:'Bless-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'^^cname^^ has been blessed and their Thac0 has improved\n!token-mod {{\n --ignore-selected\n --ids ^^tid^^\n --set ^^token_thac0^^|-1\n}}'},
 						{name:'Blindness-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!token-mod --ignore-selected --ids ^^tid^^ --set ^^token_ac^^|-4 --set ^^token_thac0^^|-4\n!modattr --silent --name ^^cname^^ --init-mod|-2\n^^tname^^ has recovered from blindness and no longer suffers from penalties to attacks, AC and initiative'},
 						{name:'Blindness-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!token-mod --ignore-selected --ids ^^tid^^ --set ^^token_ac^^|+4 --set ^^token_thac0^^|+4\n!modattr --silent --name ^^cname^^ --init-mod|+2\n^^tname^^ has been blinded and suffers 4 penalty to attacks \\amp AC, and 2 penalty to initiative'},
-						{name:'Blood-Drain-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!delattr --silent --charid ^^cid^^ --blood-drain'},
-						{name:'Blood-Drain-turn',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!token-mod --ignore-selected --ids ^^tid^^ --set ^^token_hp^^|-@{^^cname^^|blood-drain}'},
 						{name:'CO-Heat-vs-Creature-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!token-mod --ignoreselected --ids ^^tid^^ --set ^^token_ac^^|-1 ^^token_thac0^^|-1 --report character|"^^tname^^ is no longer hot and their Thac0 and AC return to normal"'},
 						{name:'CO-Heat-vs-Creature-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!token-mod --ignoreselected --ids ^^tid^^ --set ^^token_ac^^|+1 ^^token_thac0^^|+1 --report character|"^^tname^^ is weakened by heat and suffers a penalty of 1 to Thac0 and AC"'},
 						{name:'CO-Heat-vs-PC-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!modattr --charid ^^cid^^ --fb-public --fb-header ^^cname^^ is no longer hot --fb-content ^^cname^^\'s Strength returns to _CUR0_, and Dexterity to _CUR1_ --strength|+1 --dexterity|+1'},
@@ -240,9 +237,6 @@ var RoundMaster = (function() {
 						{name:'Chant-ally-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!modattr --silent --name ^^cname^^ --strengthdmg||+1 --strengthhit||+1\nThe attacks \\amp damage done by ^^tname^^ are improved by *Chant*'},
 						{name:'Chant-foe-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!modattr --silent --name ^^cname^^ --strengthdmg||+1 --strengthhit||+1\nThe attacks \\amp damage done by ^^tname^^ returns to normal as *Chant* ends'},
 						{name:'Chant-foe-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!modattr --silent --name ^^cname^^ --strengthdmg||-1 --strengthhit||-1\nThe attacks \\amp damage done by ^^tname^^ are hindered by *Chant*'},
-						{name:'Choke-Risk-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!rounds --addtargetstatus ^^tid^^|Choking-Risk|99|0|Throat is full... argh! Cough cough splutter splutter|back-pain'},
-						{name:'Choke-Risk-turn',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!token-mod --ignore-selected --ids ^^tid^^ --set ^^token_hp^^|-[[1d3]]\n/w gm \\amp{template:default}{{name=Choking Risk}}{{Choking?=[50% chance](!\\amp#13;\\amp#47;gr 1d100\\lt50 choking?) of choking}}{{If choking=Take another [1d4 damage](!\\amp#13;\\amp#47;gr 1d4 choking damage on ^^tname^^)}}{{3 Rounds Choking=If have 3 consecutive rounds choking, ^^tname^^ dies!}}'},
-						{name:'Choking-Risk-turn',type:'',ct:'0',charge:'uncharged',cost:'0',body:'/w gm \\amp{template:default}{{name=Choking Risk}}{{Choking?=[50% chance](!\\amp#13;\\amp#47;gr 1d100\\lt50 choking?) of choking}}{{If choking=Take another [1d4 damage](!\\amp#13;\\amp#47;gr 1d4 choking damage on ^^tname^^)}}{{3 Rounds Choking=If have 3 consecutive rounds choking, ^^tname^^ dies!}}'},
 						{name:'Cloud-Giant-Strength-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!resetattr --silent --name ^^cname^^ --strength\n^^cname^^ returns to their normal strength'},
 						{name:'Cloud-Giant-Strength-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!setattr --silent --name ^^cname^^ --strength|23|@{^^cname^^|strength}\n^^cname^^ gains enormous strength'},
 						{name:'Cube-of-Force-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!setattr --silent --charid @{^^cname^^|Cube-user} --repeating_potions_$@{^^cname^^|Cube-row}_potionqty|@{^^cname^^|hp}\n!token-mod --ignore-selected --ids ^^tid^^ --set layer|gmlayer'},
@@ -611,7 +605,7 @@ var RoundMaster = (function() {
 						 version:1.08,
 						 avatar:'https://s3.amazonaws.com/files.d20.io/images/257656656/ckSHhNht7v3u60CRKonRTg/thumb.png?1638050703',
 						 bio:'<div style="font-weight: bold; text-align: center; border-bottom: 2px solid black;">'
-							+'<span style="font-weight: bold; font-size: 125%">RoundMaster Help v1.08</span>'
+							+'<span style="font-weight: bold; font-size: 125%">RoundMaster Help v1.07</span>'
 							+'</div>'
 							+'<div style="padding-left: 5px; padding-right: 5px; overflow: hidden;">'
 							+'<h1>RoundMaster API v'+version+'</h1>'
@@ -711,17 +705,8 @@ var RoundMaster = (function() {
 								+'<li><i>Player-text</i> if provided is the text that will be shown to the Player instead of the Effect/status name.</li>'
 								+'<li><i>Differentiator</i> if provided just makes this Effect/status different from any other with the same Effect-name and Player-text. This will only be needed in very limited circumstances that perhaps requires the same effect to be applied twice due to two different status applications. It is only ever displayed to the DM.</p>'
 							+'</ul>'
-							+'<p>Next, durations for statuses are normally just an integer number of rounds. However if preceeded by \'+\', \'-\', \'<\', \'>\', or \'=\' and a status of the same name is already set on the identified token the command will modify the current duration, like so:</p>'
-							+'<ul>'
-								+'<li>\'+#\' will increase the duration of the status by # rounds</li>'
-								+'<li>\'-#\' will reduce the duration of the status by # rounds</li>'
-								+'<li>\'<#\' will compare # to the duration of the current status and use the smaller</li>'
-								+'<li>\'>#\' will compare # to the duration of the current status and use the larger</li>'
-								+'<li>\'=#\' (or just the number) will replace the duration of the status with # rounds</li>'
-							+'</ul>'
-							+'<p>If a status of the same name does not exist on the identified token, the duration will be applied as normal to a new status for that token.</p>'
 							+'<pre>!rounds --addstatus status|duration|direction|[message]|[marker]</pre>'
-							+'<p>Adds a status and a marker for that status to the currently selected token(s).  The status has the name given in the status parameter, with the format described above, and will be given the duration specified (or a modified duration as stated above) which will be changed by direction each round.  Thus setting a duration of 8 and direction of -1 will decrement the duration by 1 each round for 8 rounds.  If the duration gets to 0 the status and token marker will be removed automatically.  direction can be any number - including a positive one meaning duration will increase.  Each Turn Announcement for the turn of a token with one or more statuses will display the effect_name/status (or the Player Text if specified), the duration and direction, and the message, if specified.  The specified marker will be applied to the token - if it is not specified, or is not a valid token marker name, the option will be given to pick one from a menu in the chat window (which can be declined).</p>'
+							+'<p>Adds a status and a marker for that status to the currently selected token(s).  The status has the name given in the status parameter, with the format described above, and will be given the duration specified which will be changed by direction each round.  Thus setting a duration of 8 and direction of -1 will decrement the duration by 1 each round for 8 rounds.  If the duration gets to 0 the status and token marker will be removed automatically.  direction can be any number - including a positive one meaning duration will increase.  Each Turn Announcement for the turn of a token with one or more statuses will display the effect_name/status (or the Player Text if specified), the duration and direction, and the message, if specified.  The specified marker will be applied to the token - if it is not specified, or is not a valid token marker name, the option will be given to pick one from a menu in the chat window (which can be declined).</p>'
 							+'<p>For player-characters, when the duration reaches 9 or less the duration will be counted-down by a number appearing on the marker.  For NPCs this number does not appear (so that Players don\'t see the remaining duration for statuses on NPCs), but the remaining duration does appear for DM only on the status message below the Turn Announcement on the NPCs turn.</p>'
 							+'<p>If a Player other than the DM uses this command, the DM will be asked to confirm the setting of the status and marker.  This allows the DM to make any decisions on effectiveness.</p>'
 							+'<p>The API-held Effects database and any GM-supplied additional Effects databases will be searched in three ways: when a status marker is set, any Ability Macro with the name Effect-name-start (where Effect-name is from the command using the syntax described above) is run.  Each round when it is the turn of a token with the status marker set, the Ability Macro with the name Effect-name-turn is run.  And when the status ends (duration reaches 0) or the status is removed using --removestatus, or the token has the Dead marker set or is deleted, an Ability Macro with the name Effect-name-end is run.  See the Effects database documentation for full information on effect macros and the options and parameters that can be used in them.</p>'
@@ -1923,7 +1908,7 @@ var RoundMaster = (function() {
 			+ '<table width="100%">' 
 			+ '<tr>'
 			+ (markerdef.length ? ('<td><div style="width: 21px; height: 21px;"><img src="'+markerdef[0].url+'"></img></div></td>'):'')
-			+ '<td width="100%">'+(/_([^_]+)_?/.exec(statusArgs.name) || ['',statusArgs.name])[1] + ' ' + (parseInt(statusArgs.direction) === 0 ? '': (parseInt(statusArgs.duration) <= 0 ? '<span style="color: red;">Expiring</span>':statusArgs.duration))
+			+ '<td width="100%">'+(/_(.+?)_/.exec(statusArgs.name) || ['',statusArgs.name])[1] + ' ' + (parseInt(statusArgs.direction) === 0 ? '': (parseInt(statusArgs.duration) <= 0 ? '<span style="color: red;">Expiring</span>':statusArgs.duration))
 			+ (parseInt(statusArgs.direction)===0 ? '<span style="font-size: larger; color: blue;">\u221E</span>' : (parseInt(statusArgs.direction) > 0 ? '<span style="color: green;">\u25B2(+'+statusArgs.direction+')</span>':'<span style="color: red;">\u25BC('+statusArgs.direction+')</span>'))
 			+ ((statusArgs.msg) ? ('<br><span style="color: #000">' + getFormattedRoll(parseStr(statusArgs.msg)) + '</span>'):'')+'</td>'
 			+ '</tr>' 
@@ -2281,7 +2266,10 @@ var RoundMaster = (function() {
 		
 		// RED: changed the parameter seperator in the -addstatus call below from ':' to '|'
 		// RED: to allow use of !rounds calls in API Buttons
-		content += '</div>'; 
+		content += /*'<div style="border-top: 1px solid black;">'
+					+ '<a style="font-weight: bold" href="!rounds --addstatus ?{name}|?{duration}|?{direction}|?{message}"> Add Status</a>'
+					+ '<br><a style="font-weight: bold" href="!rounds --listfavs"> Apply Favorite</a>'
+				+ '</div>'+*/'</div>'; 
 		return content;
 	}; 
 
@@ -2894,11 +2882,6 @@ var RoundMaster = (function() {
 			sendError('Invalid status item syntax');
 			return;
 		}
-		var mod;
-		if ('+-<>='.includes(args[1][0])) {
-			mod = args[1][0];
-			if (mod !=='-' && mod !=='+') {args[1] = args[1].slice(1)};
-		}
 		var effect = args[0].trim(),
 			duration = parseInt(args[1]),
 			direction = parseInt(args[2]),
@@ -2948,30 +2931,7 @@ var RoundMaster = (function() {
 			effectId = e._id;
 			effectList = state.roundMaster.effects[effectId];
 			
-			if (_.find(effectList,function(elem,k) {
-					if (elem.name.toLowerCase() === effect.toLowerCase()) {
-						switch (mod || ' ') {
-						case '+':
-						case '-':
-							effectList[k].duration += duration;
-							break;
-						case '<':
-							effectList[k].duration = Math.min(effectList[k].duration,duration);
-							break;
-						case '>':
-							effectList[k].duration = Math.max(effectList[k].duration,duration);
-							break;
-						default:
-							effectList[k].duration = duration;
-							break;
-						}
-						duration = effectList[k].duration;
-						effectList[k].direction = direction;
-						effectList[k].msg = msg;
-						return true;
-					}
-				})
-			) {
+			if ((status = _.find(effectList,function(elem) {return elem.name.toLowerCase() === effect.toLowerCase();}))) {
 				return;
 			} else if (effectList && Array.isArray(effectList)) {
 			    // RED: v1.204 added the round of last update
@@ -2982,6 +2942,7 @@ var RoundMaster = (function() {
 					round: state.roundMaster.round,
 					msg: msg
 				});
+				updateGlobalStatus(effect,undefined,1);
 			} else {
 			    // RED: v1.204 added the round of last update
 				state.roundMaster.effects[effectId] = effectList = new Array({
@@ -2991,8 +2952,8 @@ var RoundMaster = (function() {
 					round: state.roundMaster.round,
 					msg: msg
 				});
+				updateGlobalStatus(effect,undefined,1);
 			}
-			updateGlobalStatus(effect,undefined,1);
 
 			// RED: v1.301 when adding a new effect marker
 			// run the relevant effect-start macro if it exists
@@ -3334,6 +3295,7 @@ var RoundMaster = (function() {
 				}
 			}	
 		});
+
 		content = makeMultiTokenConfig(tuple); 
 		sendFeedback(content); 
 	};
@@ -3592,7 +3554,7 @@ var RoundMaster = (function() {
 		},choosemarker_args);
 
 		pr_nomarker = new PendingResponse(PR_Enum.CUSTOM,function(args) {
-			sendResponse('<span style="color: orange; font-weight: bold;">Request sent for \''+(/_(.+)_?/.exec(statusArgs.name) || ['',statusArgs.name])[1]+'\'</span>'); 
+			sendResponse('<span style="color: orange; font-weight: bold;">Request sent for \''+(/_(.+?)_/.exec(statusArgs.name) || ['',statusArgs.name])[1]+'\'</span>'); 
 			doDispPlayerStatusAllow(args.statusArgs,args.selection,args.senderId); 	
 			_.each(args.hlist,function(e) {
 				clearPending(e) ;
@@ -3701,7 +3663,7 @@ var RoundMaster = (function() {
 				return; 
 			}
 			*/
-			sendResponse(args.senderId,'<span style="color: green; font-weight: bold;">Status application for \''+(/_(.+)_?/.exec(statusArgs.name) || ['',statusArgs.name])[1]+'\' accepted</span>'); 
+			sendResponse(args.senderId,'<span style="color: green; font-weight: bold;">Status application for \''+(/_(.+?)_/.exec(statusArgs.name) || ['',statusArgs.name])[1]+'\' accepted</span>'); 
 
 			_.each(args.hlist,function(e) {
 				clearPending(e) ;
@@ -3714,7 +3676,7 @@ var RoundMaster = (function() {
                 sendDebug('doDispPlayerStatusAllow: Non-existant player requested to add a status?');
 				sendError('Non-existant player requested to add a status?');
 			}
-			sendResponseError(args.senderId,'Status application for \''+(/_(.+)_?/.exec(statusArgs.name) || ['',statusArgs.name])[1]+'\' rejected'); 
+			sendResponseError(args.senderId,'Status application for \''+(/_(.+?)_/.exec(statusArgs.name) || ['',statusArgs.name])[1]+'\' rejected'); 
 			sendError('Rejected status application for \''+statusArgs.name+'\' from ' + player.get('_displayname')); 
 
 			_.each(args.hlist,function(e) {
@@ -3754,7 +3716,7 @@ var RoundMaster = (function() {
 		// GM feedback
 		sendFeedback(content); 
 		// Player feedback
-		sendResponse(senderId,'<span style="color: orange; font-weight: bold;">Request sent for \''+(/_(.+)_?/.exec(statusArgs.name) || ['',statusArgs.name])[1]+'\'</span>'); 
+		sendResponse(senderId,'<span style="color: orange; font-weight: bold;">Request sent for \''+(/_(.+?)_/.exec(statusArgs.name) || ['',statusArgs.name])[1]+'\'</span>'); 
 	}; 
 
 	/**
