@@ -4,8 +4,8 @@
 Name			:	Fetch
 GitHub			:	https://github.com/TimRohr22/Cauldron/tree/master/Fetch
 Roll20 Contact  :	timmaugh
-Version			:   2.0.3
-Last Update		:	12/7/2022
+Version			:   2.0.2
+Last Update		:	12/6/2022
 =========================================================
 */
 var API_Meta = API_Meta || {};
@@ -14,12 +14,12 @@ API_Meta.Fetch = { offset: Number.MAX_SAFE_INTEGER, lineCount: -1 };
 
 const Fetch = (() => { //eslint-disable-line no-unused-vars
     const apiproject = 'Fetch';
-    const version = '2.0.3';
+    const version = '2.0.2';
     const apilogo = 'https://i.imgur.com/jeIkjvS.png';
     apilogoalt = 'https://i.imgur.com/boYO3cf.png';
     const schemaVersion = 0.2;
     API_Meta[apiproject].version = version;
-    const vd = new Date(1670419583628);
+    const vd = new Date(1670346243354);
     const versionInfo = () => {
         log(`\u0166\u0166 ${apiproject} v${API_Meta[apiproject].version}, ${vd.getFullYear()}/${vd.getMonth() + 1}/${vd.getDate()} \u0166\u0166 -- offset ${API_Meta[apiproject].offset}`);
         if (!state.hasOwnProperty(apiproject) || state[apiproject].version !== schemaVersion) { //eslint-disable-line no-prototype-builtins
@@ -567,11 +567,6 @@ const Fetch = (() => { //eslint-disable-line no-unused-vars
                 return o ? o.get('name') : undefined;
         }
     };
-    getControlledByList = (s, d) => {
-        if (!s.represents || !s.represents.length) return d && d.length ? d : s.controlledby;
-        let c = getObj('character', s.represents);
-        if (c) return c.get('controlledby');
-    };
     const tokenProps = {
         cardid: { refersto: '_cardid', permissionsreq: 'any', dataval: (d) => d },
         cid: { refersto: '_cardid', permissionsreq: 'any', dataval: (d) => d },
@@ -637,14 +632,14 @@ const Fetch = (() => { //eslint-disable-line no-unused-vars
         checklight_total: { refersto: 'checklight_total', permissionsreq: 'any', dataval: (d) => d },
 
         compact_bar: { refersto: 'compact_bar', permissionsreq: 'any', dataval: (d) => d },
-        player: { refersto: 'controlledby', permissionsreq: 'any', dataval: (d, s) => getControlledByList(s, d).split(/\s*,\s*/).filter(a => a.toLowerCase() !== 'all')[0] },
-        player_name: { refersto: 'controlledby', permissionsreq: 'any', dataval: (d, s) => getControlledByList(s, d).split(/\s*,\s*/).filter(a => a.toLowerCase() !== 'all').map(a => getObjName(a, 'player'))[0] },
-        token_cby: { refersto: 'controlledby', permissionsreq: 'any', dataval: (d, s) => getControlledByList(s, d) },
-        token_controlledby: { refersto: 'controlledby', permissionsreq: 'any', dataval: (d, s) => getControlledByList(s, d) },
-        token_cby_names: { refersto: 'controlledby', permissionsreq: 'any', dataval: (d, s) => getObjName(getControlledByList(s, d), 'playerlist') },
-        token_controlledby_names: { refersto: 'controlledby', permissionsreq: 'any', dataval: (d, s) => getObjName(getControlledByList(s, d), 'playerlist') },
-        token_cby_name: { refersto: 'controlledby', permissionsreq: 'any', dataval: (d, s) => getObjName(getControlledByList(s, d), 'playerlist') },
-        token_controlledby_name: { refersto: 'controlledby', permissionsreq: 'any', dataval: (d, s) => getObjName(getControlledByList(s, d), 'playerlist') },
+        player: { refersto: 'controlledby', permissionsreq: 'any', dataval: (d) => d.split(/\s*,\s*/).filter(a => a.toLowerCase() !== 'all')[0] },
+        player_name: { refersto: 'controlledby', permissionsreq: 'any', dataval: (d) => d.split(/\s*,\s*/).filter(a => a.toLowerCase() !== 'all').map(a => getObjName(a, 'player'))[0] },
+        token_cby: { refersto: 'controlledby', permissionsreq: 'any', dataval: (d) => d },
+        token_controlledby: { refersto: 'controlledby', permissionsreq: 'any', dataval: (d) => d },
+        token_cby_names: { refersto: 'controlledby', permissionsreq: 'any', dataval: d => getObjName(d, 'playerlist') },
+        token_controlledby_names: { refersto: 'controlledby', permissionsreq: 'any', dataval: d => getObjName(d, 'playerlist') },
+        token_cby_name: { refersto: 'controlledby', permissionsreq: 'any', dataval: d => getObjName(d, 'playerlist') },
+        token_controlledby_name: { refersto: 'controlledby', permissionsreq: 'any', dataval: d => getObjName(d, 'playerlist') },
         currentside: { refersto: 'currentSide', permissionsreq: 'any', dataval: (d) => d },
         curside: { refersto: 'currentSide', permissionsreq: 'any', dataval: (d) => d },
         side: { refersto: 'currentSide', permissionsreq: 'any', dataval: (d) => d },
@@ -941,7 +936,7 @@ const Fetch = (() => { //eslint-disable-line no-unused-vars
             } else if (!Object.keys(propObj).includes(item.toLowerCase())) {
                 notes.push(`Unable to find a ${objtype.toLowerCase()} property named ${item}. Using default value.`);
             } else {
-                retval = propObj[item.toLowerCase()].dataval(source[propObj[item.toLowerCase()].refersto],source);
+                retval = propObj[item.toLowerCase()].dataval(source[propObj[item.toLowerCase()].refersto]);
                 if (typeof retval === 'undefined') {
                     notes.push(`Unable to find ${objtype.toLowerCase()} value for ${item}. Using default value.`);
                     retval = def;
