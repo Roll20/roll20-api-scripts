@@ -846,7 +846,7 @@ const libRPGMaster = (() => { // eslint-disable-line no-unused-vars
 						{name:'Ogre-Chieftain',type:'CreatureRace',ct:'0',charge:'uncharged',cost:'0',body:'\\amp{template:'+fields.defaultTemplate+'}{{name= Chieftain}}RaceData=[w:Orc, align:CE, cattr:ac=4|hd=7r2|hp=34:37|thac0=13|tohit=+4|dmg=+6|attk1=Simple Club:6+2d6:3:B]{{}}%{Race-DB-Creatures|Ogre}{{AC=4 (preset)}}Specs=[Ogre Chieftain,CreatureRace,0H,Ogre]{{Hit Dice=7}}{{Hit Points=34:37}}{{THAC0=13}}{{Attack=2d6+6, or by equipped weapon (which is +4/+6 due to Strength)}}{{Great Strength=+6 damage on innate attacks. If wielding an equipped weapon, gain +4 to hit and +6 on damage.}}{{desc=**Ogre Chieftain:** If 16 or more ogres are encountered, they will be led by two patrol leaders and a chieftain. The chieftain is a 7 Hit Dice monster with 34-37 hit points and Armor Class 4. He inflicts 8-18 (2d6+6) points of damage per attack, +6 with weapon. Chieftains are usually the biggest and smartest ogres in their tribes.}}'},
 						{name:'Ogre-Leader',type:'CreatureRace',ct:'0',charge:'uncharged',cost:'0',body:'\\amp{template:'+fields.defaultTemplate+'}{{name= Leader}}RaceData=[w:Orc, align:CE, cattr:ac=3|hd=7r2|hp=30:33|thac0=13|tohit=+3|dmg=+6|attk1=Simple Club:3+2d6:3:B]{{subtitle=Creature}}%{Race-DB-Creatures|Ogre}{{AC=3 (preset)}}Specs=[Ogre Leader,CreatureRace,0H,Ogre]{{Hit Dice=7}}{{Hit Points=30 to 33}}{{THAC0=13}}{{Attack=2d6+3, or by equipped weapon (which is +3/+6 due to Strength)}}{{Great Strength=+3 damage on innate attacks. If wielding an equipped weapon, gain +3 to hit and +6 on damage.}}{{desc=**Ogre Leader:** When more than 11 ogres are encountered, a leader will be present. He is a 7 Hit Dice monster with 30-33 hit points and Armor Class 3. He inflicts 5-15 (2d6+3) points of damage per attack, +6 with weapon.}}'},
 						{name:'Ogre-Mage',type:'CreatureRace',ct:'3',charge:'uncharged',cost:'0',body:'\\amp{template:'+fields.defaultTemplate+'}{{title=Ogre Mage}}{{subtitle=Creature}}Specs=[Ogre Mage,CreatureRace,0H,Creature]{{Section=**Attributes**}}{{Intelligence=Average to Exceptional (9 to 16)}}{{AC=4}}{{Alignment=Lawful Evil}}{{Move=9, FL 15(B)}}{{Hit Dice=5+2}}{{HP=}}{{THAC0=15}}{{Attacks=Resorts to physical attacks only if necessary. Innate weapon does 1d12. Equip a *naganata* (75%) or a *scimitar* and *whip* (25%)}}{{Languages=Ogre magi speak the *common* tongue, their own special language, and the speech of normal ogres.}}{{Size=L 10½ft tall}}{{Life Expectancy=About 90 years}}{{Section2=**Powers**}}{{Section3=*Fly* (for 12 turns), become *invisible*, *cause darkness* in a 10-foot radius, *polymorph* to a human or similar bipedal creature (4 feet to 12 feet tall). Once per day they can do the following: charm person, sleep, assume gaseous form, and create a cone of cold 60 feet long with a terminal diameter of 20 feet, which inflicts 8-64 (8d8) points of damage (save vs. spell for half damage).}}{{Regenerate=One hit point per round (lost members must be reattached to regenerate)}}{{Section4=**Special Advantages**}}{{Great Strength=+2 damage on innate attacks. If wielding an equipped weapon, gain +2 to hit and +6 on damage.}}{{Priest Spells=}}RaceData=[w:Ogre Mage, align:LE, cattr:int=9:16|mov=9|ac=4|hd=5+2r3|thac0=15|regen=1|size=L|attk1=Simple Club:1d12:3:S|attkmsg=**Remember** to use your Regenerate power to recover 1HP/round, spattk:Spell effects as powers, spdef:Regenerate at 1HP/round. Escapes using *gaseous form*, ns:],[cl:PW,w:Fly,sp:3,pd:1],[cl:PW,w:Invisibility,sp:2,pd:-1],[cl:PW,w:Darkness 10ft radius,sp:2,pd:-1],[cl:PW,w:Polymorph Self,sp:4,pd:-1],[cl:PW,w:Charm Person,sp:1,pd:1],[cl:PW,w:Sleep,sp:1,pd:1],[cl:PW,w:Gaseous Form,sp:1,pd:1],[cl:PW,w:Oni-Code-of-Cold,sp:5,pd:1],[cl:PW,w:Regenerate,sp:10,pd:-1]{{Section9=**Description**}}{{desc8=The oriental ogre has light blue, light green, or pale brown skin with ivory horns. The hair is usually a different color (blue with green, green with blue) and is darker in shade; the main exception to this coloration is found in ogre magi with pale brown skin and yellow hair. They have black nails and dark eyes with white pupils. The teeth and tusks are very white. Ogre magi are taller and more intelligent than their cousins and they dress in oriental clothing and armor.}}{{desc9=**Combat:** Ogre magi can perform the following feats of magic: fly (for 12 turns), become invisible, cause darkness in a 10-foot radius, polymorph to a human or similar bipedal creature (4 feet to 12 feet tall), and regenerate one hit point per round (lost members must be reattached to regenerate). Once per day they can do the following: charm person, sleep, assume gaseous form, and create a cone of cold 60 feet long with a terminal diameter of 20 feet, which inflicts 8-64 (8d8) points of damage (save vs. spell for half damage).\nOriental ogres attack with magic first and resort to physical attacks only if necessary. They are +1 on morale. In battle, ogre magi prefer the naganata (75%) or scimitar and whip (25%). Those found in oriental settings might (25%) possess ki power or have mastered a martial arts form. As ogre magi are intelligent, they will not fight if faced with overwhelming odds, but will flee to gather their forces or hide.}}'},
-						{name:'Ogre-Mage-Priest',type:'',ct:'0',charge:'uncharged',cost:'0',body:'\\amp{template:'+fields.defaultTemplate+'}{{name= Priest}}RaceData=[w:Ogre Mage Priest, cattr:cl=pr:priest|lv=7]{{}}%{Race-DB-Creatures|Ogre-Mage}Specs=[Ogre Mage Priest,CreatureRace,0H,Orge-Mage]{{Priest Spells=Ogre magi priests of up to 7th level have been reported.}}'},
+						{name:'Ogre-Mage-Priest',type:'',ct:'0',charge:'uncharged',cost:'0',body:'\\amp{template:'+fields.defaultTemplate+'}{{name= Priest}}RaceData=[w:Ogre Mage Priest, cattr:cl=pr:priest|lv=7]{{}}%{Race-DB-Creatures|Ogre-Mage}Specs=[Ogre Mage Priest,CreatureRace,0H,Ogre-Mage]{{Priest Spells=Ogre magi priests of up to 7th level have been reported.}}'},
 						{name:'Orc',type:'CreatureRace',ct:'0',charge:'uncharged',cost:'0',body:'\\amp{template:'+fields.defaultTemplate+'}{{title=Orc}}{{subtitle=Creature}}Specs=[Orc,CreatureRace,0H,Creature]{{Section=**Attributes**}}{{Intelligence=Average (8-9)}}{{AC=10 (can wear simple armour up to AC6)}}{{Alignment=Lawful Evil}}{{Move=12 (9 in armour)}}{{Hit Dice=1}}{{THAC0=19}}{{Attack=1d8 and by weapon (see description)}}{{Languages=Orcish, a language derived from older human and elvish languages, with no common standard, so the language has many dialects which vary from tribe to tribe. Orcs have also learned local common tongues, but are not comfortable with them. Some orcs have a limited vocabulary in goblin, hobgoblin, and ogre dialects.}}{{Size=M 6ft tall}}{{Life Expectancy=40 years or so}}{{Section2=**Powers**}}{{Section3=None}}{{Follow the Standard=}}{{Priest Spells=}}{{Section4=**Special Advantages**}}{{Infravision=60 foot, but suffer -1 to attacks in bright sunlight}}RaceData=[w:Orc, align:LE, cattr:int=8:9|mov=12|hd=1r5|thac0=19|attk1=Simple weapon:1d8:3:S|attkmsg=Remember -1 to-hit penalty in \\lbrak;Bright Sunlight\\rbrak;\\lpar;!rounds ~~target caster\\vbar;\\at;{selected\\vbar;token_id}\\vbar;Sunlight 1 tohit penalty\\vbar;99\\vbar;0\\vbar;Suffering -1 to hit due to being in bright sunlight|bleeding-eye\\rpar; but back to normal in \\lbrak;Shade\\rbrak;\\lpar;!rounds ~~removetargetstatus \\at;{selected\\var;token_id}\\vbar;Sunlight 1 tohit penalty\\rpar;]{{Section9=**Description**}}{{desc=A species of aggressive mammalian carnivores that band together in tribes and survive by hunting and raiding. Orcs believe that in order to survive they must expand their territory, and so they are constantly involved in wars against many enemies: humans, elves, dwarves, goblins, and other orc tribes.\nOrcs vary widely in appearance, as they frequently crossbreed with other species. In general, they resemble primitive humans with grey-green skin covered with coarse hair. Orcs have a slightly stooped posture, a low jutting forehead, and a snout instead of a nose, though comparisons between this facial feature and those of pigs are exaggerated and perhaps unfair. Orcs have well-developed canine teeth for eating meat and short pointed ears that resemble those of a wolf. Orcish snouts and ears have a slightly pink tinge. Their eyes are human, with a reddish tint that sometimes makes them appear to glow red when they reflect dim light sources in near darkness. This is actually part of their optical system, a pigment which gives them infravision.}}{{desc1=**Combat:** Orcs are constantly in battle. They use the following weapons: sword and flail 5%; sword and spear 10%; axe and spear 10%; axe and polearm 10%; axe and crossbow 10%; axe and bow 10%; sword and battleaxe 5%; spear 10%; axe 10%\npolearm 20%. Use the *Add Items* or *Attk Menu/Edit Weapons \\amp Armour* menus to give the Orc weapons \\amp armour.\nPolearms are typically either halberds, pikes (set to receive charge), or glaives. Leaders typically possess two weapons. If a subchief is present, there is a 40% chance the orcs will be fighting around a standard. The presence of this standard increases attack rolls and morale by +1 for all orcs within 60 yards. The sub-chief will hav the relevant *Power* to use. Orcs typically wear studded leather armor and a shield (AC 6).}}'},
 						{name:'Orc-Assistant',type:'CreatureRace',ct:'0',charge:'uncharged',cost:'0',body:'\\amp{template:'+fields.defaultTemplate+'}{{name= Leader\'s Assistant}}RaceData=[w:Orc Assistant, cattr:hp=8|mov=9|ac=6]{{subtitle=Creature}}%{Race-DB-Creatures|Orc}{{AC=6 (preset)}}Specs=[Orc Assistant,CreatureRace,0H,Orc]{{Hit Dice=1}}{{Hit Points=8}}{{desc=**Orc Leader\'s Assistant:** For every thirty orcs encountered, there will be a leader and three assistants. These orcs will have 8 hit points each, being the meanest and strongest in the group.}}'},
 						{name:'Orc-Bodyguard',type:'CreatureRace',ct:'0',charge:'uncharged',cost:'0',body:'\\amp{template:'+fields.defaultTemplate+'}{{name= Bodyguard}}RaceData=[w:Orc Bodyguard, cattr:hd=3|hp=13:16|mov=9|ac=4|dmg=+2|attk2=Second weapon:1d8:5:B]{{subtitle=Creature}}%{Race-DB-Creatures|Orc}{{AC=4 (preset)}}Specs=[Orc Bodyguard,CreatureRace,0H,Orc]{{Hit Dice=3}}{{Hit Points=13 to 16}}{{THAC0=17}}{{Attack=1d8 and by weapon (see description), +2 for strength}}{{desc=**Kobold Chief\'s Bodyguard:** There will always be additional orcs when the encounter is in a creature\'s lair: a chief and 5-30 bodyguards (AC 4, 13-16 hit points, attack as monsters with 3 Hit Dice (THAC0 17) and inflict an extra +2 damage on all attacks due to Strength).}}'},
@@ -5394,7 +5394,7 @@ const libRPGMaster = (() => { // eslint-disable-line no-unused-vars
 					abilityObj = [],
 					ctObj = [],
 					rDB = rootDB.toLowerCase().replace(/-/g,'_');
-				
+					
 				if (_.isUndefined(DBindex[rDB])) {
 					for (dBname of _.keys(DBindex)) {
 						if (rDB.startsWith(dBname)) {
@@ -5566,12 +5566,18 @@ const libRPGMaster = (() => { // eslint-disable-line no-unused-vars
 			LibFunctions.getAbility = function( rootDB, name, charCS, silent ) {
 				var abObj = LibFunctions.abilityLookup( rootDB, name, charCS, silent ),
 					extra = false,
+					extraList = [],
 					extraDef = {};
 				if (abObj.obj && abObj.source && abObj.source !== 'sheet' && charCS) {
 					do {
 						extra = abObj.obj[1].body.match(/%{(.+?)\|(.+?)}/);
 						if (extra) {
-							extraDef = LibFunctions.abilityLookup( extra[1], extra[2], charCS, silent );
+							if (!extraList.includes(extra[2].dbName())) {
+								extraList.push(extra[2].dbName());
+								extraDef = LibFunctions.abilityLookup( extra[1], extra[2], charCS, silent );
+							} else {
+								extraDef.obj = undefined;
+							}
 							if (extraDef.obj) {
 								abObj.obj[1].body = abObj.obj[1].body.replace(/%{(.+?)\|(.+?)}/,extraDef.obj[1].body);
 							} else {
@@ -6648,21 +6654,22 @@ const libRPGMaster = (() => { // eslint-disable-line no-unused-vars
 			 * consolidate their parsed data and attribute specifications
 			 */
 				
-			LibFunctions.resolveData = function( name, dBase, reThisData, defBase=true ) {
+			LibFunctions.resolveData = function( name, dBase, reThisData, defBase=true, doneList=[] ) {
 				
 				var thisObj, thisSpecs, baseObj, thisData, thisAttr, parsedData,
 					baseData = [],
 					baseParsed = LibFunctions.parseData( '', reClassSpecs, defBase ),
 					baseAttr = LibFunctions.parseData( '', reAttr, defBase );
 
-				if (!name || !name.trim().length) return [baseParsed,baseAttr,baseData];
+				if (!name || !name.trim().length || doneList.includes(name.dbName())) {/*log('resolveData: no name or already processed '+name);*/ return [baseParsed,baseAttr,baseData];}
 				thisObj = LibFunctions.abilityLookup( dBase, name, null, true );
-				if (!thisObj.obj) return [baseParsed,baseAttr,baseData];
+				if (!thisObj.obj) {/*log('resolveData: no definition of '+name);*/return [baseParsed,baseAttr,baseData];}
+				doneList.push(name.dbName());
 				thisSpecs = thisObj.specs();
-				if (!thisSpecs || !thisSpecs[0] || (thisSpecs[0][4].dbName() === name.dbName())) return [baseParsed,baseAttr,baseData];
+				if (!thisSpecs || !thisSpecs[0]) {/*log('resolveData: no Specs in definition of '+name);*/return [baseParsed,baseAttr,baseData];}
 				thisData = thisObj.data(reThisData);
-				[baseParsed,baseAttr,baseData] = LibFunctions.resolveData( thisSpecs[0][4], dBase, reThisData );			
-				if (!thisData || !thisData[0]) return [baseParsed,baseAttr,baseData];
+				[baseParsed,baseAttr,baseData] = LibFunctions.resolveData( thisSpecs[0][4], dBase, reThisData, defBase, doneList );			
+				if (!thisData || !thisData[0]) {/*log('resolveData: no data in definition of '+name);*/return [baseParsed,baseAttr,baseData];}
 				parsedData = LibFunctions.parseData( thisData[0][0], reClassSpecs, false );
 				thisAttr = LibFunctions.parseData( parsedData.cattr+',', reAttr, false );
 				if (baseParsed) {
@@ -6674,8 +6681,10 @@ const libRPGMaster = (() => { // eslint-disable-line no-unused-vars
 					}
 					parsedData = _.mapObject(parsedData, (attr,k) => attr == '-' ? '' : (!_.isUndefined(attr) ? attr : baseParsed[k]));
 				}
+//				log('resolveData: concatinating '+thisSpecs[0][4]+' baseData = '+baseData+'\nwith '+name+' thisData = '+thisData);
 				baseData.shift();
 				if (parsedData.numpowers[0]!=='=') thisData = thisData.concat(baseData);
+//				log('resolveData: result is '+thisData.length+' long = '+thisData);
 				return [parsedData,thisAttr,thisData];
 			}
 
@@ -7066,7 +7075,6 @@ const libRPGMaster = (() => { // eslint-disable-line no-unused-vars
 					if (!charCS) {
 						return;
 					}
-					log('handleCheckSaves: dealing with '+charCS.get('name'));
 					let	tokenName = getObj('graphic',tokenID).get('name'),
 						classes = LibFunctions.classObjects( charCS ),
 						race = (LibFunctions.attrLookup( charCS, fields.Race ) || 'human').dbName(),
