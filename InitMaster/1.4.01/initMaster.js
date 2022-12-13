@@ -966,7 +966,6 @@ var initMaster = (function() {
         wname = wname ? wname.dbName() : '';
         wt = wt ? wt.dbName() : '';
         wst = wst ? wst.dbName() : '';
-
         
 		var i = fields.WP_table[1],
 			prof = -1,
@@ -1137,8 +1136,6 @@ var initMaster = (function() {
 		WeaponTables.tableSet( fields.MW_attkCount, refIndex, (attackCount-attacks) );
 		twoHanded = (WeaponTables.tableLookup( fields.MW_twoHanded, refIndex ) || 0);
 		
-		log('hamdleInitMW: weapSpeed = '+weapSpeed);
-
 		buildCall = '!init --buildMenu ' + senderId 
 				+ '|' + (charType == CharSheet.MONSTER ? MenuType.COMPLEX : MenuType.WEAPON)
 				+ '|' + tokenID
@@ -1150,8 +1147,6 @@ var initMaster = (function() {
 				+ '|' + twoHanded
 				+ '|'
 				+ '|' + attacks;
-				
-		log('handleInitMW: buildCall = '+buildCall);
 				
 		sendAPI( buildCall, senderId );
 		return;
@@ -1181,7 +1176,7 @@ var initMaster = (function() {
 				weapSpeed = (WeaponTables.tableLookup( fields.MW_speed, refIndex) || 0) + ('-+'.includes(styleSpeed[0])?styleSpeed:'+'+styleSpeed);
 				styleNum = WeaponTables.tableLookup( fields.MW_styleAttks, refIndex) || 0;
 				attackNum = (WeaponTables.tableLookup( fields.MW_noAttks, refIndex ) || 1);
-				attackNum = (styleNum && styleNum != '0') ? '(('+attackNum+')+('+styleNum+'))' : attackNum;
+				attackNum = (styleNum && styleNum != '0') ? ('(('+attackNum+')+('+styleNum+'))') : attackNum;
 				preInit = (WeaponTables.tableLookup( fields.MW_preInit, refIndex ) || 0);
 				attackCount = (WeaponTables.tableLookup( fields.MW_attkCount, refIndex ) || 0);
 				attackCount = eval( attackCount + '+(' + speedMult + '*' + attackNum + ')' );
@@ -1194,7 +1189,7 @@ var initMaster = (function() {
 				styleNum = WeaponTables.tableLookup( fields.RW_styleAttks, refIndex) || 0;
 				attackNum = (WeaponTables.tableLookup( fields.RW_noAttks, refIndex ) || 1);
 				attackNum = (styleNum && styleNum != '0') ? '(('+attackNum+')+('+styleNum+'))' : attackNum;
-				preInit = (WeaponTables.tableLookup( fields.MW_preInit, refIndex ) || 0);
+				preInit = (WeaponTables.tableLookup( fields.RW_preInit, refIndex ) || 0);
 				attackCount = (WeaponTables.tableLookup( fields.RW_attkCount, refIndex ) || 0);
 				attackCount = eval( attackCount + '+(' + speedMult + '*' + attackNum + ')' );
 				attacks = Math.floor( attackCount );
@@ -1263,10 +1258,10 @@ var initMaster = (function() {
 		speedMult = Math.max(parseFloat(attrLookup( charCS, fields.initMultiplier ) || 1), 1);
 		if (command != BT.RW_SECOND) {
 			weaponName = (WeaponTables.tableLookup( fields.MW_name, weaponRef ) || '');
-			styleSpeed = WeaponTables.tableLookup( fields.MW_styleSpeed, refIndex) || 0;
-			weapSpeed = (WeaponTables.tableLookup( fields.MW_speed, refIndex) || 0) + ('-+'.includes(styleSpeed[0])?styleSpeed:'+'+styleSpeed);
-			styleNum = WeaponTables.tableLookup( fields.MW_styleAttks, refIndex) || 0;
-			attackNum = (WeaponTables.tableLookup( fields.MW_noAttks, refIndex ) || 1);
+			styleSpeed = WeaponTables.tableLookup( fields.MW_styleSpeed, weaponRef) || 0;
+			weapSpeed = (WeaponTables.tableLookup( fields.MW_speed, weaponRef) || 0) + ('-+'.includes(styleSpeed[0])?styleSpeed:'+'+styleSpeed);
+			styleNum = WeaponTables.tableLookup( fields.MW_styleAttks, weaponRef) || 0;
+			attackNum = (WeaponTables.tableLookup( fields.MW_noAttks, weaponRef ) || 1);
 			attackNum = (styleNum && styleNum != '0') ? '(('+attackNum+')+('+styleNum+'))' : attackNum;
 			preInit = (WeaponTables.tableLookup( fields.MW_preInit, weaponRef ) || 0);
 			attackCount = (WeaponTables.tableLookup( fields.MW_attkCount, weaponRef ) || 0);
@@ -1275,10 +1270,10 @@ var initMaster = (function() {
 			WeaponTables.tableSet( fields.MW_attkCount, weaponRef, (attackCount-attacks) );
 		} else {
 			weaponName = (WeaponTables.tableLookup( fields.RW_name, weaponRef ) || '');
-			styleSpeed = WeaponTables.tableLookup( fields.RW_styleSpeed, refIndex) || 0;
-			weapSpeed = (WeaponTables.tableLookup( fields.RW_speed, refIndex) || 0) + ('-+'.includes(styleSpeed[0])?styleSpeed:'+'+styleSpeed);
-			styleNum = WeaponTables.tableLookup( fields.RW_styleAttks, refIndex) || 0;
-			attackNum = (WeaponTables.tableLookup( fields.RW_noAttks, refIndex ) || 1);
+			styleSpeed = WeaponTables.tableLookup( fields.RW_styleSpeed, weaponRef) || 0;
+			weapSpeed = (WeaponTables.tableLookup( fields.RW_speed, weaponRef) || 0) + ('-+'.includes(styleSpeed[0])?styleSpeed:'+'+styleSpeed);
+			styleNum = WeaponTables.tableLookup( fields.RW_styleAttks, weaponRef) || 0;
+			attackNum = (WeaponTables.tableLookup( fields.RW_noAttks, weaponRef ) || 1);
 			attackNum = (styleNum && styleNum != '0') ? '(('+attackNum+')+('+styleNum+'))' : attackNum;
 			preInit = (WeaponTables.tableLookup( fields.MW_preInit, weaponRef ) || 0);
 			attackCount = (WeaponTables.tableLookup( fields.RW_attkCount, weaponRef ) || 0);
@@ -1336,8 +1331,6 @@ var initMaster = (function() {
 			buildCall = '',
 			attackCount, attacks;
 			
-		log('handleInitRW: styleNum = '+styleNum+', attackNum = '+attackNum);
-			
 		attackNum = (styleNum && styleNum != '0') ? '(('+attackNum+')+('+styleNum+'))' : attackNum;
 		attackCount = (WeaponTables.tableLookup( fields.RW_attkCount, refIndex ) || 0);
 		attackCount = eval( attackCount + '+(' + speedMult + '*' + attackNum + ')' );
@@ -1356,7 +1349,6 @@ var initMaster = (function() {
 				+ '|0'
 				+ '|' + attacks;
 
-		log('handleInitRW: buildCall = '+buildCall);
 		sendAPI( buildCall, senderId );
 		return;
 	}
@@ -1741,8 +1733,8 @@ var initMaster = (function() {
 				
 				var init_speed2 = parseInt(attrLookup( charCS, fields.Init_2ndSpeed )) || 0,
 					init_action2 = attrLookup( charCS, fields.Init_2ndAction ),
-					init_actionnum2 = flags.twoWeapSingleAttk ? (init_Mult + '*1') : attrLookup( charCS, fields.Init_2ndActNum ),
-					init_attacks2 = parseInt(attrLookup( charCS, fields.Init_2ndAttacks ) || 1),
+					init_actionnum2 = flags.twoWeapSingleAttk ? (init_Mult + '*1 (2nd weap)') : attrLookup( charCS, fields.Init_2ndActNum ),
+					init_attacks2 = flags.twoWeapSingleAttk ? 1 : parseInt(attrLookup( charCS, fields.Init_2ndAttacks ) || 1),
 					preinit2 = false;
 
 				args[3] = args[4];
