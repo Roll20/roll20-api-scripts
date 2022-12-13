@@ -1147,34 +1147,6 @@ var CommandMaster = (function() {
 			}
 			return total;
 		}
-/*		var resolveData = function( charCS, creature, dBase, reThisData ) {
-			
-			var thisObj, thisSpecs, baseObj, thisData, thisAttr,
-				baseData = parseData( '', reClassSpecs, true ),
-				baseAttr = parseData( '', reAttr, true );
-
-			if (!creature || !creature.trim().length) return [baseData,baseAttr];
-			thisObj = abilityLookup( dBase, creature, null, true );
-			if (!thisObj.obj) return [baseData,baseAttr];
-			thisSpecs = thisObj.specs();
-			if (!thisSpecs || !thisSpecs[0] || (thisSpecs[0][4] === creature)) return [baseData,baseAttr];
-			thisData = thisObj.data(reThisData);
-			[baseData,baseAttr] = resolveData( charCS, thisSpecs[0][4], dBase, reThisData );			
-			if (!thisData || !thisData[0]) return [baseData,baseAttr];
-			thisData = parseData( thisData[0][0], reClassSpecs, false );
-			thisAttr = parseData( thisData.cattr+',', reAttr, false );
-			if (baseData) {
-				if (!thisData.cattr) {
-					thisData.cattr = baseData.cattr;
-					thisAttr = baseAttr;
-				} else if (baseAttr) {
-					thisAttr = _.mapObject(thisAttr, (attr,k) => attr == '-' ? '' : (!_.isUndefined(attr) ? attr : baseAttr[k]));
-				}
-				thisData = _.mapObject(thisData, (attr,k) => attr == '-' ? '' : (!_.isUndefined(attr) ? attr : baseData[k]));
-			}
-			return [thisData,thisAttr];
-		}
-*/
 		if (!creature || !creature.trim().length) return;
 
 		[raceData,attrData] = resolveData( creature, fields.RaceDB, /}}\s*?racedata\s*?=\s*\[(.*?)\],?{{/im );
@@ -1250,6 +1222,7 @@ var CommandMaster = (function() {
 			setAttr( charCS, levelField, attrData.lv);
 			handleAddAllPRspells( ['',BT.ALL_PRSPELLS,0], selected );
 		}
+		setAttr( charCS, fields.Race, raceData.name );
 		handleSetAbility( ['',BT.AB_SILENT,'Init menu',std.init_menu.api,std.init_menu.action,'1.Initiative','replace'], selected );
 		handleSetAbility( ['',BT.AB_SILENT,'Attack',std.attk_hit.api,std.attk_hit.action,'2.Attack','replace'], selected );
 		handleSetAbility( ['',BT.AB_SILENT,'Attk menu',std.attk_menu.api,std.attk_menu.action,'3.Attk Menu','replace'], selected );
@@ -2226,7 +2199,7 @@ var CommandMaster = (function() {
 				let currentRace = attrLookup( charCS, fields.Race ) || '';
 				let currentClass = classObjects( charCS );
 				let newToken = (currentRace == '' && currentClass.length == 1 && currentClass[0].name == 'creature' && currentClass[0].level == 0);
-				setAttr( charCS, fields.Race, setCreatureAttrs( charCS, value, [token] ));
+				setCreatureAttrs( charCS, value, [token] );
 				if (!newToken) break;
 				handleSetTokenBars( [''], [token], true );
 				setDefaultTokenForCharacter( charCS, getObj('graphic',token._id) );
@@ -2236,13 +2209,9 @@ var CommandMaster = (function() {
 				sendError( 'Internal CommandMaster Error' );
 				break;
 			}
-			log('handleClassSelection: set class & attributes');
 			handleCheckWeapons( token._id, charCS );
-			log('handleClassSelection: checked weapon settings');
 		});
-		log('handleClassSelection: set about to check saves');
 		handleCheckSaves( null, null, selected, true );
-		log('handleClassSelection: about to create menu');
 		makeClassMenu( args, selected, isGM, msg );
 		return;
 	};
