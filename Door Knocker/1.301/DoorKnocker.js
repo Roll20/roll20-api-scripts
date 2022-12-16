@@ -37,8 +37,8 @@ var DoorKnocker = DoorKnocker || (function () {
   - Hidden doors
   */
   //Script Constants
-  const version = 1.3,
-    lastUpdate = 1639501151,
+  const version = 1.301,
+    lastUpdate = 1671172395,
     defaults = {
       css: {
         button: {
