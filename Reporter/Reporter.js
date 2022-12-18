@@ -17,7 +17,7 @@ on('ready', function () {
 
 
 on('ready', () => {
-    const version = '1.1.6'; //version number set here
+    const version = '1.1.7'; //version number set here
     log('-=> Reporter v' + version + ' is loaded. Internal commands of !RPping, !RPpage-mod, !RPechochat, and !RPchangelayer are used in code.');
     //sendChat('Reporter', '/w gm Ready');
 
@@ -38,9 +38,10 @@ on('ready', () => {
     const closeHeader = '</div>';
     const closeReport = '</div>';
     const linkBox = "<img src = 'https://s3.amazonaws.com/files.d20.io/images/227379729/jnwjD5rKjjr9QqGiy8EATg/original.png'";
+    const baseOpenReport = "<div style='color: #000; border: 1px solid #000; background-color: #fff; box-shadow: 0 0 3px #000; display: block; text-align: left; font-size: 13px; padding: 5px; margin-bottom: 0.25em; font-family: sans-serif; white-space: pre-wrap;'>";
     let sheet = state.Reporter.sheet;
-    let openReport = "<div style='color: #000; border: 1px solid #000; background-color: #fff; box-shadow: 0 0 3px #000; display: block; text-align: left; font-size: 13px; padding: 5px; margin-bottom: 0.25em; font-family: sans-serif; white-space: pre-wrap;'>";
-
+    let openReport = baseOpenReport;
+    
     function makeButton(name, link) {
         return '<a style = ' + buttonStyle + ' href="' + link + '">' + name + '</a>';
     }
@@ -217,10 +218,12 @@ on('ready', () => {
             'If the layer keyword all is used the report will be on all token/character pairs on all layers. In this case, a layer character will appear on each subhead line of the report to let you know which layer the token is on. ' + '<BR>' +
             'If the layer keyword tracker is used the report will be on all token/character pairs on the Turn Tracker as if it were a layer. In this case, a layer character will appear on each subhead line of the report to let you know which layer the token is on. If you click on the layer token, it will switch the token from the GM/Notes layer to the  Token/Objects layer and back.' + '<BR>' +
             '<code>compact|[true|false]</code> (default=false): The compact mode shows the token image at half size, and eliminates the second line of the report subhead, since it is not always desired. You may have a very large report you want to see better, or you may be using a sheet that does not support the default values. Currently the second line of the subhead only references the D&D 5th Edition by Roll20 Sheet. ' + '<BR>' +
+            '<code>minimal|[true|false]</code> (default=false): Like the compact option, only even more bare bones. It is the functional equivalent of adding <i>showHeader = false showFooter|false compact|rue source |false characterSheetButton|true characterSheetLink|true hideEmpty|true</i>. You can still use a custom title.' + '<BR>' +
             '<code>showheader|[true|false]</code> (default=true): This will control whether the header will display at the top of the report. ' + '<BR>' +
             '<code>showfooter|[true|false]</code> (default=true): This will control whether the footer will display at the bottom of the report. ' + '<BR>' +
             '<code>printbutton|[true|false]</code> (default=true): This will control whether the print button will display on each line of the report. ' + '<BR>' +
             '<code>notesbutton|[true|false]</code> (default=false): This will control whether a notes button will display on each line of the report. This notes button will return the token notes for the token on that line. The visibility of the notes button is controlled by the visibility keyword. If the visibility is "gm", it will use a !gmnote command, if the If the visibility is "whisper", it will use a !selftnote command, and if the visibility is "all", it will use a !pcnote command. ' + '<BR>' +
+            '<code>layerbutton|[true|false]</code> (default=false): This will control whether a layer indicator button will display on each line of the report. The layer button indicates which layer the token is on and normally appears only when the layer keword is set to all.' + '<BR>' +
             '<code>visibility|[gm|whisper|all]</code> (default=gm): This will determine how the report is presented. "gm" is whispered to the gm, "whisper" is whispered to the user who sent the command, "all" is posted openly for all to see. ' + '<BR>' +
             '<code>showfooter|[true|false]</code> (default=true): This will control whether the footer will display at the bottom of the report. ' + '<BR>' +
             '<code>source|[true|false]</code> (default=true): if source is set to false, the C and T characters that show whether an attribute comes fromthe token or the sheet will not be displayed. Use this is they are a distraction. ' + '<BR>' +
@@ -241,6 +244,7 @@ on('ready', () => {
             '<li>bar3I: token bar3 value, inverse order.' + '<BR>' +
             '<li>cr - Challenge Rating. D&D 5th Edition by Roll20 Sheet only' + '<BR>' +
             '<li>crI - Challenge Rating, inverse order. D&D 5th Edition by Roll20 Sheet only</UL>' + '<BR>' +
+            '<code>handout|handoutname|</code> If this is present in the keywords, the report will be sent to a handout instead of chat. This can allow a report to remain usable without scrolling through the chat. It can also be used as a sort of floating palette. Reports in handouts can be updated. Running the macro again will regenerate the table, as will pressing the Repeat button. The string in between pipes will be used as the name of the report handout. If no handout by that name exists, Reporter will create one and post a link in chat to open it. The title must be placed between two pipes. handout|My Handout| will work. handout|My Handout will break.<BR>A report Handout automatically creates a horizontal rule at the top of the handout. Anything typed manually above that rule will be persistent. Reporter will not overwrite it. You can use this area to create Journal Command Buttons to generate new reports or to give some context to the existing report. All updates are live.' + '<BR>' +
             '<code>title|Title|</code> If this is present in the keywords, the string in between pipes will be placed at the top of the report. If you only want the custom title to display, be sure turn off the header with showheader|false. The title must be placed between two pipes. title|My Title| will work. title|My Title will break.' + '<BR>' +
             '<b>Supernotes Buttons</b>' + '<BR>' +
             'These are small buttons that will appear on each line of the report that call up Supernotes commands. These buttons require Supernotes to be installed (Available from the Roll20 One Click installer). If Supernotes is not installed, the buttons will still display but will have no effect. If the report is in the Chat tab, the notes will display in the chat tab, and if the report is set to be in a handout, the notes will in the handout, directly below the report. This can be used to create a handout that can run a report and display notes below. An example use could be a handout that can read map pins and display the notes for each map pin, making an interactive city guide.' + '<BR>' +
@@ -250,6 +254,8 @@ on('ready', () => {
             '<code>avatarbutton|[true|false]</code>  (default=false): If this keyword is set to true, the report will place a small shortcut button to return the Avatar of the character assigned to the reported token.' + '<BR>' +
             '<code>tooltipbutton|[true|false]</code>  (default=false): If this keyword is set to true, the report will place a small shortcut button to return contents of the reported tokens Tooltips field.' + '<BR>' +
             '<code>imagebutton|[true|false]</code>  (default=false): If this keyword is set to true, the report will place a small shortcut button to return images from the Bio field of the character assigned to the reported token.' + '<BR>' +
+            '<code>sidebar|[true|false]</code>  (default=false, accepts "Left" or "Right"): Used in handout reports. If this keyword is set to "left" or "right" a floating sidebar will be displayed of the report to the left or right of any content the reporting buttons produce.' + '<BR>' +
+            '<code>scrolling|[true|false]</code>  (default=false, accepts integer value): Used for handouts that employ a sidebar. If this keyword is set to an integer value, the height of the sidebar will become fixed and allow for scrolling to display all results.' + '<BR>' +
             closeReport, null, {
             noarchive: true
         });
@@ -387,6 +393,7 @@ on('ready', () => {
             let buttonLine = '';
             let currentLayer = "";
             let compact = false;
+            let minimal = false;
             let showFooter = true;
             let customTitle = '';
             let showHeader = true;
@@ -400,6 +407,7 @@ on('ready', () => {
             let isAvatarButton = false;
             let isImageButton = false;
             let isTooltipButton = false;
+            let isLayerButton = true;
             let printButton = "";
             let ignoreSelected = false;
             let characterSheetLink = true;
@@ -605,11 +613,12 @@ on('ready', () => {
                 }
 
                 compact = ((keywords.includes("compact|true")) ? true : false);
+                minimal = ((keywords.includes("minimal|")) ? true : false);
                 showFooter = ((keywords.includes("showfooter|false")) ? false : true);
                 showHeader = ((keywords.includes("showheader|false")) ? false : true);
                 showPageInfo = ((keywords.includes("showpageinfo|true")) ? true : false);
-                customTitle = ((keywords.includes(" title|")) ? keywords.match(/title\|.*?\|/).toString().split("|")[1] : '');
-                customTitle = ((keywords.includes(" overtitle|")) ? keywords.match(/title\|.*?\|/).toString().split("|")[1] : customTitle);
+                customTitle = ((keywords.includes("title|")) ? keywords.match(/title\|.*?\|/).toString().split("|")[1] : '');
+                customTitle = ((keywords.includes("overtitle|")) ? keywords.match(/title\|.*?\|/).toString().split("|")[1] : customTitle);
                 source = ((keywords.includes("source|false")) ? false : true);
                 isPrintbutton = ((keywords.includes("printbutton|true")) ? true : false);
                 isTokenNotesButton = ((keywords.includes("tokennotesbutton|true")) ? true : false);
@@ -618,6 +627,7 @@ on('ready', () => {
                 isBioButton = ((keywords.includes("biobutton|true")) ? true : false);
                 isAvatarButton = ((keywords.includes("avatarbutton|true")) ? true : false);
                 isTooltipButton = ((keywords.includes("tooltipbutton|true")) ? true : false);
+                isLayerButton = ((keywords.includes("layerbutton|false")) ? false : true);
                 isImageButton = ((keywords.includes("imagebutton|true")) ? true : false);
                 subTitle = ((keywords.includes("subtitle|false")) ? false : true);
                 ignoreSelected = ((keywords.includes("ignoreselected|true")) || (keywords.includes("layer|tracker")) ? true : false);
@@ -634,7 +644,24 @@ on('ready', () => {
                 sidebar = ((keywords.includes("sidebar|")) ? keywords.match(/(?<=sidebar\|)left|right/) : false);
                 sortTerm = ((keywords.includes("sort|")) ? keywords.split("sort|")[1].split(" ")[0] : 'identity');
                 reportName = ((keywords.match(/handout\|.*?\|/)) ? keywords.match(/handout\|.*?\|/).toString().split("|")[1] : "");
-                if (keywords.includes(" overtitle|")) {
+                if (keywords.includes("minimal|")) {
+                    showHeader = false;
+                    showFooter = false;
+                    compact=true;
+                    source = false;
+                    characterSheetButton = true;
+                    characterSheetLink = true;
+                    hideEmpty = true;
+                    if (!customTitle && !keywords.includes("minimal|true")) {
+                        
+customTitle = keywords.match(/minimal\|.*?$/).toString().split("|")[1];
+                    } else {
+                    customTitle = ((!customTitle) ? "Report" : customTitle);}
+}
+                
+                
+                
+                if (keywords.includes("overtitle|")) {
                     showHeader = false;
                     showFooter = false
                 }
@@ -799,14 +826,12 @@ on('ready', () => {
                 }
             });
 
-log('scrolling = ' + scrolling);
 if (scrolling){
         openReport = "<div style='max-height:" + scrolling +"px; overflow-x:hidden; color: #000; border: 1px solid #000; background-color: #fff; box-shadow: 0 0 3px #000; display: block; text-align: left; font-size: 13px; padding: 5px; margin-bottom: 0.25em; font-family: sans-serif; white-space: pre-wrap;'>";
 }
 if (sidebar){
-    openReport = ((sidebar.includes('left')) ? openReport.replace('color: #000','color: #000; width:30%; float:left; margin-right:10px;') : openReport.replace('color: #000','color: #000; width:30%; float:right; margin-right:5px;'))
+    openReport = ((sidebar.includes('left')) ? openReport.replace('color: #000','color: #000; width:30%; float:left; margin-right:10px;') : openReport.replace('color: #000','color: #000; width:30%; float:right; margin-left:5px;'))
 }
-log('openReport is ' + openReport);
 
 
             if (TCData.length > 0) {
@@ -831,6 +856,7 @@ log('openReport is ' + openReport);
                     default:
                         layerChar = TKChar;
                 }
+                layerChar = ((isLayerButton) ? layerChar : '');
 
                 if (showPageInfo) {
                     pageInfo = "<div style='color:#fff; background-color:#404040; margin-right:3px%; padding:3px;'><a style = " + printButtonStyle + " href='!RPechochat --" + pageData.get('name') + "'>w</a><b>" + layerChar + pageData.get('name') + "</b><BR>DL: " + ((pageData.get('dynamic_lighting_enabled')) ? '<a href="!RPpage-mod --dynamic_lighting_enabled|false" style = ' + headerButtonStyle + '>On</a>' : '<a href="!RPpage-mod --dynamic_lighting_enabled|true" style = ' + headerButtonStyle + '>Off</a>') + " | Day: " + ((pageData.get('daylight_mode_enabled')) ? '<a href="!RPpage-mod --daylight_mode_enabled|false" style = ' + headerButtonStyle + '>On</a>' : '<a href="!RPpage-mod --daylight_mode_enabled|true" style = ' + headerButtonStyle + '>Off</a>') + " | Opacity: " + '<a href="!RPpage-mod --daylightModeOpacity|?{Input value between 0 and 100?|100}" style = ' + headerButtonStyle + '>' + (pageData.get('daylightModeOpacity') * 100) + "%</a></a></i></div>";
@@ -1066,8 +1092,9 @@ log('openReport is ' + openReport);
                             // ######## report subheader
                             function specificLayer(id) {
                                 if (allLayers) {
-
-                                    switch (tc.token.get("layer")) {
+                                    let layer = tc.token.get("layer");
+                                    layer = ((isLayerButton) ? layer : 'nobutton');
+                                    switch (layer) {
                                         case "gmlayer":
                                             return `<a href='!RPchangelayer ${tc.token.get("_id")}' style ='background-color: transparent; padding: 0px; color: #ce0f69; display: inline-block; border: none; float:right !important'>${GMChar}</a>`;
                                             break;
@@ -1076,6 +1103,9 @@ log('openReport is ' + openReport);
                                             break;
                                         case "walls":
                                             return "<span style ='display:inline-block; float:right !important'>" + DLChar + "</span>";
+                                            break;
+                                        case "nobutton":
+                                            return "";
                                             break;
                                         default:
                                             return `<a href='!RPchangelayer ${tc.token.get("_id")}' style ='background-color: transparent; padding: 0px; color: #ce0f69; display: inline-block; border: none; float:right !important'>${TKChar}</a>`;
@@ -1086,15 +1116,15 @@ log('openReport is ' + openReport);
                             }
                             let notesHandout = ((reportName) ? ` handout|${reportName}| ` : ``)
                             characterSheet = ((characterSheetLink) ? "<i> - <a style = " + buttonStyle + "href='http://journal.roll20.net/character/" + tc.character.get('_id') + "'>" + tc.character.get('name') + "</a></i>" : ""); //" <a style = " + buttonStyle + "href='http://journal.roll20.net/character/" + tc.character.get('_id') + "'>&#128442;</a>"
-                            characterSheet = ((characterSheetButton) ? "</i> <a style = " + buttonStyle + "href='http://journal.roll20.net/character/" + tc.character.get('_id') + "'><b>" + linkBox + "</b></a>" : characterSheet); //" <a style = " + buttonStyle + "href='http://journal.roll20.net/character/" + tc.character.get('_id') + "'>&#128442;</a>"
-                            printButton = ((isPrintbutton) ? "<a style = " + printButtonStyle + " href='!RPechochat --" + tc.token.get('name') + "'>w</a>" : "");
-                            tokenNotesButton = ((isTokenNotesButton) ? "<a style = " + notesButtonStyle + " href='" + noteRecipient + notesHandout + " --id" + tc.token.get('_id') + "'>T</a>" : "");
+                            characterSheet = ((characterSheetButton) ? "</i> <a title = '" + tc.character.get('name') + "' style = " + buttonStyle + "href='http://journal.roll20.net/character/" + tc.character.get('_id') + "'><b>" + linkBox + "</b></a>" : characterSheet); //" <a style = " + buttonStyle + "href='http://journal.roll20.net/character/" + tc.character.get('_id') + "'>&#128442;</a>"
+                            printButton = ((isPrintbutton) ? "<a style = " + printButtonStyle + "title = 'print to chat' href='!RPechochat --" + tc.token.get('name') + "'>w</a>" : "");
+                            tokenNotesButton = ((isTokenNotesButton) ? "<a style = " + notesButtonStyle + "title = 'token notes'  href='" + noteRecipient + notesHandout + " --id" + tc.token.get('_id') + "'>T</a>" : "");
                             charNotesButton = ((isCharNotesButton) ? "<a style = " + notesButtonStyle + " href='" + noteRecipient + notesHandout + " --charnote --id" + tc.token.get('_id') + "'>C</a>" : "");
-                            bioButton = ((isBioButton) ? "<a style = " + notesButtonStyle + " href='" + noteRecipient + notesHandout + " --bio --id" + tc.token.get('_id') + "'>B</a>" : "");
-                            avatarButton = ((isAvatarButton) ? "<a style = " + notesButtonStyle + " href='" + noteRecipient + notesHandout + " --avatar --id" + tc.token.get('_id') + "'>A</a>" : "");
-                            imageButton = ((isImageButton) ? "<a style = " + notesButtonStyle + " href='" + noteRecipient + notesHandout + " --image --id" + tc.token.get('_id') + "'>&thinsp;I&thinsp;</a>" : "");
-                            tooltipButton = ((isTooltipButton) ? "<a style = " + notesButtonStyle + " href='" + noteRecipient + notesHandout + " --tooltip --id" + tc.token.get('_id') + "'>tt</a>" : "");
-                            tokenImageButton = ((isTokenImageButton) ? "<a style = 'float:right; decoration:none; background-color: transparent; border: none; color: #999; padding:0px; font-family: pictos; margin-right:3px; !important'" + " href='" + noteRecipient + notesHandout + " --tokenimage --id" + tc.token.get('_id') + "'>L</a>" : "");
+                            bioButton = ((isBioButton) ? "<a style = " + notesButtonStyle + "title = 'bio' href='" + noteRecipient + notesHandout + " --bio --id" + tc.token.get('_id') + "'>B</a>" : "");
+                            avatarButton = ((isAvatarButton) ? "<a style = " + notesButtonStyle + "title = 'avatar'  href='" + noteRecipient + notesHandout + " --avatar --id" + tc.token.get('_id') + "'>A</a>" : "");
+                            imageButton = ((isImageButton) ? "<a style = " + notesButtonStyle + "title = 'token image'  href='" + noteRecipient + notesHandout + " --image --id" + tc.token.get('_id') + "'>&thinsp;I&thinsp;</a>" : "");
+                            tooltipButton = ((isTooltipButton) ? "<a title = '" + tc.token.get('tooltip').replace(/'/g, '&apos;') + "' style = " + notesButtonStyle + " href='" + noteRecipient + notesHandout + " --tooltip --id" + tc.token.get('_id') + "'>tt</a>" : "");
+                            tokenImageButton = ((isTokenImageButton) ? "<a title = 'token image' style = 'float:right; decoration:none; background-color: transparent; border: none; color: #999; padding:0px; font-family: pictos; margin-right:3px; !important'" + " href='" + noteRecipient + notesHandout + " --tokenimage --id" + tc.token.get('_id') + "'>L</a>" : "");
                             //tokenImageButton = ((isTokenImageButton) ? "<a style = 'float:right; opacity: 0.5'  href='" + noteRecipient + " --tokenimage --id" + tc.token.get('_id') + "'><img src='" + tc.token.get('imgsrc') + "' alt='token image' width='18' height='18'></a>" : "");
 
 
@@ -1250,6 +1280,23 @@ log('openReport is ' + openReport);
                                         value = value.replace(/::\d\d\d\d\d/g, "");
                                         value = ((value.charAt(0) === ',') ? value.substring(1) : value);
                                     }
+                                    
+                                    // #########Corrects for token gmnotes
+                                    if (attribute.match(/gmnotes|bio|notes/)) {
+                                        try {
+                                            value = unescape(decodeUnicode(value));
+                                            value = value.replace(/\[.*?\]\((.*?\.(jpg|jpeg|png|gif))\)/g, `<img style=" max-width:100px; max-height: 200px; float:right; padding-top:0px; margin-bottom:5px; margin-left:5px" src="$1">`);
+                                        }
+                                        catch(err) {
+                                            value = value
+                                        }
+                                    }
+                                    
+                                    // #########Corrects for status markers
+                                    if (attribute === "page" || attribute === "pagename") {
+                                        value = getObj('page', tc.token.get("_pageid")).get("name");
+                                    }
+                                    
                                     //Corrects for returns
                                     if (undefined !== value && typeof value === "string") {
                                         value = value.replace(/\n/g, '<BR>')
@@ -1317,11 +1364,13 @@ log('openReport is ' + openReport);
                                 reportHandout.get("notes", function (notes) {
                                     //L({notes});
                                     if (notes.includes('<hr>')) {
-                                        notes = notes.split('<hr>')[0] + '<hr>'
+                                        notes = notes.split('<hr>')[0] + '<hr>';
                                     } else {
                                         notes = '<hr>'
                                     }
-                                    reportHandout.set("notes", notes + lines)//+ ((displayNotes) ? "<hr>" : ""))
+                                    
+                                    reportHandout.set("gmnotes", '')//+ ((displayNotes) ? "<hr>" : ""))
+                                    reportHandout.set("notes", notes + lines  + '<!---End Report--->')//+ ((displayNotes) ? "<hr>" : ""))
                                 });
                             }
                         } else {
@@ -1332,7 +1381,7 @@ log('openReport is ' + openReport);
                         }
                     } else {
 
-                        sendChat("Reporter", toWhom + lines, null, {
+                        sendChat("Reporter", toWhom + lines + '<!---End Report--->' , null, {
                             noarchive: true
                         });
                     }
@@ -1341,7 +1390,7 @@ log('openReport is ' + openReport);
 
                 }
             } else {
-                sendChat('Reporter', toWhom + openReport + `No viable tokens found.` + closeReport, null, {
+                sendChat('Reporter', toWhom + baseOpenReport + `No viable tokens found.` + closeReport, null, {
                     noarchive: true
                 });
 
@@ -1498,7 +1547,7 @@ log('openReport is ' + openReport);
 
             });
 
-            sendChat('Reporter', '/w gm ' + openReport + lines + closeReport, null, {
+            sendChat('Reporter', '/w gm ' + openReport + lines + '<!---End Report--->' + closeReport, null, {
                 noarchive: true
             });
 
