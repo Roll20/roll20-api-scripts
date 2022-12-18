@@ -484,9 +484,24 @@ var PathToWindowOrDoor = PathToWindowOrDoor || (function () {
           </p>
           <h3>Using PathToWindowOrDoor</h3>
           <p>
-              The script will convert dynamic lighting lines used as doors or windows that are on the map layer or on the DL layer.
-              Beware, only "paths" with 1 line (2 coords, 2 clics not one more) will be converted to door/windows as they are only representing 2 handles at the moment
+              This script will convert all single-segment paths on dynamic lighting & map layer (on a page or across the entire game)
+              that match a specific color into either windows or doors, depending on the chosen command.<br/>
+              For example: If the setting for hidden doors is the color green (#00ff00),
+              then all single-segment green paths will be converted to a hidden door.<br/><br/>
+
+              <b><u>You can configure the color relationship in the Bio tab of a character created by the script.</u></b>
           </p>
+          <p>
+              <h4>BEWARE</h4>
+              This script won't ask for confirmation, it will convert all single-segment paths on DL & map layer which color correspond to configuration, if you want to limit scope, be sure to read next section.
+          </p>
+          <p><b>Default configuration :</b></p>
+          <p><ul>
+              <li>Hidden Doors: #00ff00</li>
+              <li>Locked Doors: #ff9900</li>
+              <li>Unlocked Doors: #ffff00</li>
+              <li>Windows: #00ffff</li>
+          </ul></p>
           <h3>Basic Command Syntax</h3>
           <p>
               The script uses a standardized API command syntax. All PathToWindowOrDoor commands will begin with <b>!ptwod</b>. This will then be followed
@@ -495,25 +510,28 @@ var PathToWindowOrDoor = PathToWindowOrDoor || (function () {
           <p>
               <b>!ptwod --keyWord|option1|option2|...</b>
           </p>
+          <p>
+              For example: By default you will convert on the current page all single-segment green, yellow and orange paths to the new doors
+              by using the command <code style="white-space: nowrap">!ptwod --convertDoors|page</code><br/>
+              If the <code style="white-space: nowrap">"|page"</code> flag is omitted, then the script will convert all matching paths across the entire game
+          </p>
           <hr/>
           <h3>Converting Windows</h3>
           <p>
               Convert windows using the <code style="white-space: nowrap">!ptwod --convertWindows</code> 
               or <code style="white-space: nowrap">!ptwod --convertWindows|page</code> commands
-              by appending the <b>|page</b> part, you restrict the script to apply only on the page you are looking at right now instead of all at once
-              <h4>Windows converted as :</h4>
-              <ul><li>Windows => Roll20 Windows Locked by default</li></ul>
+              <h4>Configured Windows segments converted as :</h4>
+              <ul><li>Windows color => Roll20 Windows Locked by default</li></ul>
           </p>
           <h3>Converting Doors</h3>
           <p>
               Convert doors using the <code style="white-space: nowrap">!ptwod --convertDoors</code> 
               or <code style="white-space: nowrap">!ptwod --convertDoors|page</code> commands
-              by appending the <b>|page</b> part, you restrict the script to apply only on the page you are looking at right now instead of all at once
-              <h4>Doors converted as :</h4>
+              <h4>Configured Doors segments converted as :</h4>
               <ul>
-                <li>Hidden => Roll20 Secret doors Locked by default</li>
-                <li>Locked => Roll20 Locked doors</li>
-                <li>Unlocked => Normal Roll20 doors</li>
+                <li>Hidden color => Roll20 Secret doors Locked by default</li>
+                <li>Locked color => Roll20 Locked doors</li>
+                <li>Unlocked color => Normal Roll20 doors</li>
               </ul>
               <b>All doors are closed by default</b>
           </p>
