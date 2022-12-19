@@ -1183,3 +1183,7 @@ tabletotable:
 libTable: 
   - "libTable"
   - "Utility"
+  
+HeroSystem6eHeroic_HDImporter:
+  - "HeroSystem6eHeroic_HDImporter"
+  - "Utility"
