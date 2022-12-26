@@ -370,7 +370,7 @@ var PathToWindowOrDoor = PathToWindowOrDoor || (function () {
                 for (const door of finalDoorList) {
                     deletedCount += door.pathRemoved;
                 }
-                sendChat('PathToWindowOrDoor', `PathToWindowOrDoor removed ${deletedCount} paths`);
+                sendChat('PathToWindowOrDoor', `/w gm PathToWindowOrDoor removed ${deletedCount} paths`);
                 resolve();
             });
         },
@@ -387,7 +387,7 @@ var PathToWindowOrDoor = PathToWindowOrDoor || (function () {
                     .then(waitProm);
                 convertedCount++;
             }
-            sendChat('PathToWindowOrDoor', `PathToWindowOrDoor converted ${convertedCount} ${doorOrWindow}${convertedCount > 1 ? 's' : ''}`);
+            sendChat('PathToWindowOrDoor', `/w gm PathToWindowOrDoor converted ${convertedCount} ${doorOrWindow}${convertedCount > 1 ? 's' : ''}`);
             return chain.then(() => callDeleteProm(finalDoorList));
         },
 
@@ -484,6 +484,7 @@ var PathToWindowOrDoor = PathToWindowOrDoor || (function () {
           </p>
           <h3>Using PathToWindowOrDoor</h3>
           <p>
+              This script is only meant to be used by the GM, only the help will be returned to other players.<br/>
               This script will convert all single-segment paths on dynamic lighting & map layer (on a page or across the entire game)
               that match a specific color into either windows or doors, depending on the chosen command.<br/>
               For example: If the setting for hidden doors is the color green (#00ff00),
@@ -631,7 +632,7 @@ var PathToWindowOrDoor = PathToWindowOrDoor || (function () {
                 if (msg.type !== 'api' || !/^!ptwod/.test(msg.content))
                     return;
                 args = msg.content.split(/\s+--/);//splits the message contents into discrete arguments
-                if (args[1]) {
+                if (args[1] && playerIsGM(msg.playerid)) {
                     _.each(_.rest(args, 1), (cmd) => {
                         cmdDetails = cmdExtract(cmd);
                         log(`cmd=${cmd}, cmdDetails=${JSON.stringify(cmdDetails)}`);
