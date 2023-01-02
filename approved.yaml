@@ -1187,3 +1187,7 @@ libTable:
 HeroSystem6eHeroic_HDImporter:
   - "HeroSystem6eHeroic_HDImporter"
   - "Utility"
+  
+PathToWindowOrDoor:
+  - "PathToWindowOrDoor"
+  - "Utility"
