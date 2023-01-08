@@ -25,7 +25,7 @@ const ScriptCards = (() => { // eslint-disable-line no-unused-vars
 	*/
 
 	const APINAME = "ScriptCards";
-	const APIVERSION = "2.2.4c";
+	const APIVERSION = "2.2.4d";
 	const APIAUTHOR = "Kurt Jaegers";
 	const debugMode = false;
 
@@ -36,6 +36,9 @@ const ScriptCards = (() => { // eslint-disable-line no-unused-vars
 		"norollhilight": "norollhilight",
 		"buttonbackgroundcolor": "buttonbackground",
 	}
+
+	var lastExecutedByID;
+	var lastExecutedDisplayName;
 
 	// These are the parameters that all cards will start with. This table is copied to the
 	// cardParameters table inside the processing loop and that table is updated with settings
@@ -528,7 +531,9 @@ const ScriptCards = (() => { // eslint-disable-line no-unused-vars
 						var sendingPlayer = getObj("player", msg.playerid);
 						if (sendingPlayer) {
 							stringVariables["SendingPlayerID"] = msg.playerid;
+							lastExecutedByID = msg.playerid;
 							stringVariables["SendingPlayerName"] = sendingPlayer.get("_displayname");
+							lastExecutedDisplayName = sendingPlayer.get("_displayname");
 							stringVariables["SendingPlayerColor"] = sendingPlayer.get("color");
 							stringVariables["SendingPlayerSpeakingAs"] = sendingPlayer.get("speakingas");
 							stringVariables["SendingPlayerIsGM"] = playerIsGM(msg.playerid) ? "1" : "0";
@@ -3522,7 +3527,7 @@ const ScriptCards = (() => { // eslint-disable-line no-unused-vars
 							case "raw":
 							case "total":
 								replacement = rawValue;
-							break;
+								break;
 
 							default:
 								replacement = rollVariables[vName][vSuffix];
@@ -3834,7 +3839,7 @@ const ScriptCards = (() => { // eslint-disable-line no-unused-vars
 			var text = rollComponents[x];
 			var componentHandled = false;
 
-			if (text.match(/^(\d+[dDuU][fF\d]+)([kK][lLhH]\d+)?([rR][<\>]\d+)?([rR][oO][<\>]\d+)?(![HhLl])?(![<\>]\d+)?(!)?([Ww][Ss][Xx])?([Ww][Ss])?([Ww][Xx])?([Ww])?([\><]\d+)?(\#)?$/)) {
+			if (text.match(/^(\d+[dDuUmM][fF\d]+)([kK][lLhH]\d+)?([rR][<\>]\d+)?([rR][oO][<\>]\d+)?(![HhLl])?(![<\>]\d+)?(!)?([Ww][Ss][Xx])?([Ww][Ss])?([Ww][Xx])?([Ww])?([\><]\d+)?(\#)?$/)) {
 				var thisRollHandled = handleDiceFormats(text);
 				componentHandled = true;
 
@@ -3859,7 +3864,7 @@ const ScriptCards = (() => { // eslint-disable-line no-unused-vars
 					if (thisRollHandled.rollTextSet[i].indexOf("!") > 0 && cardParameters.explodingonesandaces == "1") {
 						// Handle reroll ones counting
 						let subrolls = thisRollHandled.rollTextSet[i].split("!");
-						for (var x=1; x < subrolls.length; x++) {
+						for (var x = 1; x < subrolls.length; x++) {
 							if (subrolls[x] == "1") {
 								rollResult.Ones += 1;
 							}
@@ -3876,7 +3881,7 @@ const ScriptCards = (() => { // eslint-disable-line no-unused-vars
 						rollResult.Odds++;
 					}
 				}
-				
+
 				switch (currentOperator) {
 					case "+": rollResult.Total += thisRollHandled.rollTotal; if (!thisRollHandled.dontBase) { rollResult.Base += thisRollHandled.rollTotal; } break;
 					case "-": rollResult.Total -= thisRollHandled.rollTotal; if (!thisRollHandled.dontBase) { rollResult.Base -= thisRollHandled.rollTotal; } break;
@@ -4298,7 +4303,8 @@ const ScriptCards = (() => { // eslint-disable-line no-unused-vars
 		outputLine = outputLine.replace(/\[\/t\]/gi, "</table>");
 		outputLine = outputLine.replace(/\[p\]/gi, "<p>");
 		outputLine = outputLine.replace(/\[\/p\]/gi, "</p>");
-		outputLine = outputLine.replace(/\[F(\d+)\](.*?)\[\/F\]/gi, "<div style='font-size:$1px;'>$2</div>"); // [F8] for font size 8
+		outputLine = outputLine.replace(/\[[Ff](\d+)\](.*?)\[\/F\]/gi, "<div style='font-size:$1px;'>$2</div>"); // [F8] for font size 8
+		outputLine = outputLine.replace(/\[[Ff]\:([a-zA-Z\s]*)\:?(\d+)?\](.*?)\[\/[Ff]\]/gi, "<span style='font-family:$1; font-size:$2px'>$3</span>"); // [F8] for font size 8
 		outputLine = outputLine.replace(/\[[Bb]\](.*?)\[\/[Bb]\]/g, "<b>$1</b>"); // [B]...[/B] for bolding
 		outputLine = outputLine.replace(/\[[Ii]\](.*?)\[\/[Ii]\]/g, "<i>$1</i>"); // [I]...[/I] for italics
 		outputLine = outputLine.replace(/\[[Uu]\](.*?)\[\/[Uu]\]/g, "<u>$1</u>"); // [U]...[/u] for underline
@@ -4885,7 +4891,7 @@ const ScriptCards = (() => { // eslint-disable-line no-unused-vars
 	// eslint-disable-next-line no-unused-vars
 	function handleDiceFormats(text, rollResult, hadOne, hadAce, currentOperator) {
 		// Split the dice roll into components
-		var matches = text.toLowerCase().match(/^(\d+[dDuU][fF\d]+)([kK][lLhH]\d+)?([rR][<\>]\d+)?([rR][oO][<\>]\d+)?(![HhLl])?(![<\>]\d+)?(!)?([Ww][Ss][Xx])?([Ww][Ss])?([Ww][Xx])?([Ww])?([\><]\d+)?(\#)?$/);
+		var matches = text.toLowerCase().match(/^(\d+[dDuUmM][fF\d]+)([kK][lLhH]\d+)?([rR][<\>]\d+)?([rR][oO][<\>]\d+)?(![HhLl])?(![<\>]\d+)?(!)?([Ww][Ss][Xx])?([Ww][Ss])?([Ww][Xx])?([Ww])?([\><]\d+)?(\#)?$/);
 
 		var resultSet = {
 			rollSet: [],
@@ -4915,6 +4921,7 @@ const ScriptCards = (() => { // eslint-disable-line no-unused-vars
 		var rollUnique = false;
 		var explodeValue = 0;
 		var isWildDie = false;
+		var minRollValue = 1;
 		var wildDieDropSelf = false;
 		var wildDieDropHighest = false;
 		var successThreshold = 0;
@@ -4931,12 +4938,22 @@ const ScriptCards = (() => { // eslint-disable-line no-unused-vars
 						if (sides == "f") { sides = 3; fudgeDice = true; }
 					}
 
-					// Handle XuY
+					// Handle XmY (X dice, always returning the highest possible (sides) roll value)
+					if (matches[x].match(/^\d+[mM]\d+$/)) {
+						count = matches[x].split("m")[0]
+						keepcount = count;
+						sides = matches[x].split("m")[1]
+						minRollValue = Number(sides);
+						if (sides == "f") { sides = 3; fudgeDice = true; }
+						log(`ScriptCards: Player ${lastExecutedDisplayName}(${lastExecutedByID}) used an XmY dice formula in a roll: ${text}`)
+					}
+
+					// Handle XuY (Roll XdY dice, always getting a unique value on the roll)
 					if (matches[x].match(/^\d+[uU]\d+$/)) {
 						count = matches[x].split("u")[0]
 						keepcount = count;
 						sides = matches[x].split("u")[1]
-						if (parseInt(keepcount) > parseInt(sides)) { keepcount = sides; count = sides; log(`ScriptCards: Attempt to roll more than ${sides} unique d${sides}`)}
+						if (parseInt(keepcount) > parseInt(sides)) { keepcount = sides; count = sides; log(`ScriptCards: Attempt to roll more than ${sides} unique d${sides}`) }
 						rollUnique = true;
 					}
 
@@ -5014,8 +5031,12 @@ const ScriptCards = (() => { // eslint-disable-line no-unused-vars
 			for (var x = 0; x < count; x++) {
 				do {
 					var thisDiceRoll = rollWithReroll(sides, rerollThreshold, rerollType, rerollUnlimited);
-					var thisRoll = Number(thisDiceRoll[1]);					
+					var thisRoll = Number(thisDiceRoll[1]);
 				} while (resultSet.rollSet.includes(thisRoll) && rollUnique)
+				if (Number(minRollValue) > 1) { 
+					thisRoll = Number(minRollValue);
+					thisDiceRoll[0] = sides.toString() + ` {MIN ${minRollValue}}`;
+				}
 				if (fudgeDice) { thisRoll -= 2; resultSet.dontHilight = true }
 				var thisTotal = thisRoll;
 				//var thisText = thisTotal.toString();
