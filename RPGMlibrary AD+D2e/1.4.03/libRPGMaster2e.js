@@ -61,7 +61,18 @@
  *                    Updated Attacks-DB with Throat Leech attacks. Added more creatures.
  *                    Adds and fixes to other database entries. Added deeper inheritance
  *                    chaining for race and class definitions.
- * v1.4.02 16/12/2022 More creature definitions, and supporting powers
+ * v1.4.02 16/12/2022 More creature definitions, and supporting powers. Add ability to
+ *                    specify weapons and armour for creatures with probability of
+ *                    different sets. Also added ammo reuse type 2: becomes only possible
+ *                    ammo of several for that weapon e.g. spitting snake venom, and
+ *                    type 3: reduces in qty by 1, and all other ammo for same weapon
+ *                    increases qty b 1.
+ * v1.4.03 16/01/2023 Added Attack messages (similar to damage messages) using Ranged 
+ *                    weapons notes field. Added ability for creature innate attacks to 
+ *                    have damage roll before attack name so they work with CS buttons.
+ *                    Fixed issue with abilityLookup() if ability name undefined.
+ *                    Fixed issue with resolveData() if not defaulting values & ns: 
+ *                    attribute not specified.
  **/
  
 var API_Meta = API_Meta||{}; // eslint-disable-line no-var
@@ -2455,55 +2466,36 @@ const libRPGMaster = (() => { // eslint-disable-line no-unused-vars
 	
 	const handouts = Object.freeze({
 	RPGM_Release_Notes:	{name:'RPGM Release Notes',
-						 version:'1.401',
+						 version:'1.403',
 						 avatar:'https://s3.amazonaws.com/files.d20.io/images/257656656/ckSHhNht7v3u60CRKonRTg/thumb.png?1638050703',
 						 bio:'<div style="font-weight: bold; text-align: center; border-bottom: 2px solid black;">'
-							+'<span style="font-weight: bold; font-size: 125%">RPGMaster Release Notes v1.401</span>'
+							+'<span style="font-weight: bold; font-size: 125%">RPGMaster Release Notes v1.403</span>'
 							+'</div>'
 							+'<div style="padding-left: 5px; padding-right: 5px; overflow: hidden;">'
 							+'<h1>RPGMaster Release Notes</h1>'
-							+'<h6><i>for version 1.4.01</i></h6>'
+							+'<h6><i>for version 1.4.03</i></h6>'
 							+'<br>'
-							+'<h3>Support for Fighting Styles</h3>'
-							+'<p>Fighting Styles, as defined in <i>The Complete Fighter\'s Handbook,</i> have been added to the RPGMaster suite of APIs.</p>'
-							+'<ul>'
-								+'<li><b>RPGMLibrary:</b> A new database has been added called <i>Styles-DB</i> has been added, that contains the rules and description of each Fighting Style. A new help handout has also been added explaining the Styles Database.</li>'
-								+'<li><b>CommandMaster:</b> In the <i>Add to Proficiencies</i> menu (under the DM\'s Token-Setup menu - !cmd --abilities), a new button at the top, next to [Choose Weapon], is [Choose Style] which opens a drop-down list of currently available Fighting Styles that can be granted to the selected Character. Once selected, the style can be added in the same way as other proficiencies as Proficient or Specialised.</li>'
-								+'<li><b>AttackMaster:</b> When a Player uses the <i>Change Weapon</i> menu to equip what is in each hand (or both hands), the API checks all currently proficient Fighting Styles and assesses if the criteria for each has been met (the right combination of weapons, shields and even spells in specific hands). It then sets up the benefits to be applied for those styles that are in effect, including when calculating attack success and damage.</li>'
-								+'<li><b>InitMaster:</b> If a Fighting Style is in effect, and its benefits/penalties affect the speed and/or number of attacks, the API will take this into account when calculating initiative priorities and entries in the Turn Order.</li>'
-							+'</ul>'
-							+'<h3>Creature <i>Drag-and-Drop</i> Setup</h3>'
-							+'<p>After introducing the basic Creature database and functionality in v1.3.04, the database has been expanded with a few more creatures. However, the main reason for this release is the introduction of the capability to drag a blank Character Sheet onto the map area of the Roll20 UI and select the Creature for it to represent from a drop-down list: at which point the APIs setup both the Token and Character Sheet to represent that Creature in such a way as to work optimally with the RPGMastre APIs.  Try the following:</p>'
-							+'<ol>'
-								+'<li>Add a new blank character sheet in the Campaign Journal, give it a name and an image if you want, and then close the Character Sheet</li>'
-								+'<li>Drag the blank Character Sheet onto the map area and drop it anywhere, to drop a token</li>'
-								+'<li>In the Chat Window, the Race/Class menu should pop up (scroll down to the bottom - Chat often does not scroll when you are in Journal)</li>'
-								+'<li><b>Important:</b> check that the token you have just dropped is selected - annoyingly, Roll20 does not do this by default and I can\'t find a way to select it from the API</li>'
-								+'<li>Choose a Creature (any Creature) from under the [Creatures] button on the Race/Class menu</li>'
-								+'<li>--- lots of things happen ---</li>'
-								+'<li>Click away from the token, then reselect it. This is now the current state:<ul>'
-									+'<li>The token is now the Default token for the Character Sheet</li>'
-									+'<li>The bars on the Token are correctly set up for RPGMaster</li>'
-									+'<li>All the attributes for the creature that RPGMaster needs have been set up on the character sheet</li>'
-									+'<li>Innate Creature attacks have been set up, with Special Attack messages and actions added - however, if the Creature can use normal/magical weapons & armour, these will need to be added to it in the normal way.</li>'
-									+'<li>The correct Action Buttons for the Creature have been added and appear at the top of the screen when the token is selected</li>'
-									+'<li>If the Creature has Powers, they have been added and automatically memorised for the correct uses per day</li>'
-									+'<li>If the Creature has spell casting capability (other than Powers), they have the right Classes & levels set up (you need to add spells to their spellbooks manually - if spells are specifically specified for a Creature in the Monsterous Compendium, I have added them as Powers).</li>'
-									+'<li>Each Creature added in this way as a separate Character Sheet & token will have unique HP rolled for it using the Hit Dice spec of the creature</li></ol>'
-								+'<li>Essentially, this is a one-click Creature Creation system, replicating the D&D5e Compendium capabilities...</li>'
-							+'</ol>'
+							+'<h3>Bug Fixes</h3>'
+							+'<p>A couple of bug fixes for errors in calculating weapon attacks per round, and when using the "Memorise all Powers" funtion for a creature.</p>'
+							+'<h3>Creature Innate Attack specification improvements</h3>'
+							+'<p>Creature innate attacks, specified using the Attack fields on the Monster tab of the Character Sheet, have always had the ability to specify either just the dice roll for damage, or "Attk name,dice roll,speed,type". However, doing the latter meant the roll button on the Character Sheet did not work, so those using <i>Drag & Drop</i> creatures but not the RPGMaster AttackMaster API experienced issues.</p>'
+							+'<p>It is now possible to put either the Attack Name <i>or</i> the Dice Roll first in the sequence (i.e. "Dice Roll,attack name,speed,type" is now also supported). Using this new alternative format means the Character Sheet roll buttons work, and the AttackMaster API will check whether the dice roll specification is in the first or second fields and use whichever is appropriate.</p>'
+							+'<h3>Attack & Damage messages</h3>'
+							+'<p>The AttackMaster API has supported the addition of messages to Damage Roll notifications as specified in the AttackMaster Help handout for some time. These messages can be added manually to a Character Sheet in the notes field on the Melee Weapons page (tooltip: abilitiesnotes). It is now also possible to add Attack Roll notifications in a similar way by manually adding them to the Character Sheet in the notes field of the Ranged Weapons page (tooltip: abilitiesnotesranged). This message uses exactly the same format as the Damage message.</p>'
 							+'<br>'
-							+'<h3>Effect Name Hiding</h3>'
-							+'<p>There are many effects already programmed for RoundMaster, which can be used with the <b>!rounds --target</b> command to have effects on Character Sheets when spells or powers affect them.  See the RoundMaster Help and Effects Database Help handouts for more information.  However, the process of placing an effect on a character shows the Player the name of the effect to the Player, which can spoil the surprise of the effect!</p>'
-							+'<p>So there is now a new syntax for Effect specification that will apply an effect to a character, but show the Player a different text. The syntax for an Effect name is now:</p>'
-							+'<pre>Effect-name<br>'
-							+'Effect-name_Player-text<br>'
-							+'Effect-name_Player-text_Differentiator</pre>'
-							+'<p>The above are optional syntaxes - any one can be used.</p>'
+							+'<h2>Release v1.4.02</h2>'
+							+'<h3>Extra Creatures</h3>'
+							+'<p>Additional creatures from the AD&D 2e Monsterous Manual have been added to the creature database for DMs to use them when dragging and dropping character tokens.</p>'
+							+'<h3>Specify Weapons & Armour for Creatures</h3>'
+							+'<p>For humanoid (or non-humanoid) creatures that can wield weapons as specified in the Monsterous Manual, these can now be specified in the Creature Database definitions. Where there are multiple different possible weapon combinations, with percentage chances of each weapon or weapon group, the chance of each can also be specified and will be chosen based on a dice roll made by the API when the creature is dragged and dropped onto the map window.</p>'
+							+'<p>It is possible to specify which weapon is in which hand or other limb: prime, offhand, both, or 3rd, 4th, 5th... etc limbs. When equipped, the weapons will automatically be placed in the specified hands ready for battle. It is also possible to specify weapons and ammunition that are in the backpack or quiver. Ammunition used by an equipped ranged weapon will also be automatically made available for use.</p>'
+							+'<p>This approach can also be used for armour and shields for creatures.  See the Class & Race Database handout for information.</p>'
+							+'<h3>Additional Reusable Ammunition Modes</h3>'
+							+'<p>Reusable ammunition modes 0: ordinary recoverable ammo, 1: automatically returning ammo, and -1: breaking ammo already exist.</p>'
+							+'<p>There are two new modes.</p>'
 							+'<ul>'
-								+'<li><i>Effect-name</i> is mandatory, and is the name of the effect in the Effects database or, if there is no associated Effect, the name of the status being applied.</li>'
-								+'<li><i>Player-text</i> if provided is the text that will be shown to the Player instead of the Effect/status name.</li>'
-								+'<li><i>Differentiator</i> if provided just makes this Effect/status different from any other with the same Effect-name and Player-text. This will only be needed in very limited circumstances that perhaps requires the same effect to be applied twice due to two different status applications.</p>'
+								+'<li>2: ammunition that, once used, becomes the only possible ammunition of several types previously available for a particular weapon.</li>'
+								+'<li>3: ammunition that, on use, reduces in quantity by 1 (as normal), but all other ammunition for the same weapon increases in quantity by 1, allowing multiple "ammunition modes" to be set up, e.g. as for nets.</li>'
 							+'</ul>'
 							+'</div>',
 						},
@@ -3071,7 +3063,7 @@ const libRPGMaster = (() => { // eslint-disable-line no-unused-vars
 								+'<tr><th scope="row">0</th><td>Flight Arrow</td><td>The default value. The ammunition will behave normally, reducing by 1 on use, and recoverable if the DM agrees</td></tr>'
 								+'<tr><th scope="row">1</th><td>Whelm (magic Warhammer)</td><td>The ammunition quantity does not reduce with use. The ammo magically returns by itself</td></tr>'
 								+'<tr><th scope="row">2</th><td>Spitting Snake Venoms</td><td>The ammunition is one of several possible for the weapon, but when one is used it becomes the only type available, not reducing, while the others all become 0 quantity</td></tr>'
-								+'<tr><th scope="row">2</th><td>Net (Folded to Unfolded)</td><td>The ammunition has two or more states. The selected ammo will reduce by 1 and the other states will increase by 1</td></tr>'
+								+'<tr><th scope="row">3</th><td>Net (Folded to Unfolded)</td><td>The ammunition has two or more states. The selected ammo will reduce by 1 and the other states will increase by 1</td></tr>'
 							+'</table>'
 							+'<br>'
 							+'<h3>Making a 1-Handed Weapon able to be 2-Handed</h3>'
@@ -5511,7 +5503,7 @@ const libRPGMaster = (() => { // eslint-disable-line no-unused-vars
 			LibFunctions.abilityLookup = function( rootDB, ability, charCS, silent=false, def=true ) {
 				
 				var charID, obj, ct, dBname, spells, items, objIndex,
-					abilityName = ability.dbName(),
+					abilityName = (ability || '').dbName(),
 					source = 'charDB',
 					abilityObj = [],
 					ctObj = [],
