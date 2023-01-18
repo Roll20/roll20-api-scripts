@@ -188,6 +188,7 @@ const DungeonAlchemistImporter = (() => {
         },
         controller_by: map.get("_id"),
       };
+
       createObj(type, doorObj);
       log(doorObj);
     }
