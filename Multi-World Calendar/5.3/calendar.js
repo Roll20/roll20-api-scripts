@@ -100,15 +100,23 @@ var MultiWorldCalendar = MultiWorldCalendar || (function() {
                             switch (type) {
                                 case 'short rest':
                                     addtime(amount,"hour");
+                                    calmenu();
+                                    chkalarms();
                                     return;
                                 case 'long rest':
                                     addtime(amount*8,"hour");
+                                    calmenu();
+                                    chkalarms();
                                     return;
                                 case 'hour':
                                     addtime(amount,"hour");
+                                    calmenu();
+                                    chkalarms();
                                     return;
                                 case 'minute':
                                     addtime(amount,"minute");
+                                    calmenu();
+                                    chkalarms();
                                     return;
                                 case 'day':
                                     advdate(amount,"day");
@@ -262,7 +270,7 @@ var MultiWorldCalendar = MultiWorldCalendar || (function() {
                                 let title;
                                 let date;
                                 let time;
-                                for (let i=2;i<=args.length;i++) {
+                                for (let i=2;i<=args.length-1;i++) {
                                     if (args[i].includes("title")) {
                                         title=args[i].replace("title ","");
                                     } else if (args[i].includes("date")) {
@@ -278,7 +286,7 @@ var MultiWorldCalendar = MultiWorldCalendar || (function() {
                             let title;
                             let date;
                             let time;
-                            for (let i=2;i<=args.length;i++) {
+                            for (let i=2;i<=args.length-1;i++) {
                                 if (args[i].includes("title")) {
                                     title=args[i].replace("title ","");
                                 } else if (args[i].includes("date")) {
@@ -547,7 +555,7 @@ var MultiWorldCalendar = MultiWorldCalendar || (function() {
         let hour=Number(time[0]);
         let min=Number(time[1]);
         world=state.MWCalendar.now.world;
-        month=getMonth(monnum,world);
+        month=getMonth(month,world);
         state.Alarm[num]={
             day: day,
             month: month,
@@ -655,6 +663,7 @@ var MultiWorldCalendar = MultiWorldCalendar || (function() {
         let hour=state.MWCalendar.now.hour;
         let minute=state.MWCalendar.now.minute;
         let alarmmsg=checkMonthAlarms();
+        let weather;
         if (hour<=9) {
             hour="0"+hour;
         }
@@ -955,6 +964,7 @@ var MultiWorldCalendar = MultiWorldCalendar || (function() {
         var minute=state.MWCalendar.now.minute;
         var day=state.MWCalendar.now.ordinal;
         var year=state.MWCalendar.now.year;
+        amount=Number(amount);
         if (type=="minute") {
             var newmin=Number(minute)+Number(amount);
             while (newmin>59) {
@@ -965,64 +975,40 @@ var MultiWorldCalendar = MultiWorldCalendar || (function() {
                 hour-=24;
                 day++;
             }
-            switch (state.MWCalendar.now.world) {
-                case 1:
-                    //Faerun
-                    while (day>360) {
-                        day-=360;
-                        year++;
-                    }
-                break;
-                case 2:
-                    //Greyhawk
-                break;
-                case 3:
-                    //Modern
-                break;
-                case 4:
-                    //Eberron
-                    while (day>336) {
-                        day-=336;
-                        year++;
-                    }
-                break;
-                case 5:
-                    //Tal'Dorei
-                break;
+            if (state.MWCalendar.now.world==1) {
+                while (day>360) {
+                    day-=360;
+                    year++;
+                }
+            } else if (state.MWCalendar.now.world==4) {
+                while (day>336) {
+                    day-=336;
+                    year++;
+                }
             }
+            minute=newmin;
         } else if (type=="hour") {
             var newhour=Number(hour)+Number(amount);
             while (newhour>24) {
                 newhour-=24;
                 day++;
             }
-            switch (state.MWCalendar.now.world) {
-                case 1:
-                    //Faerun
-                    while (day>360) {
-                        day-=360;
-                        year++;
-                    }
-                break;
-                case 2:
-                    //Greyhawk
-                break;
-                case 3:
-                    //Modern
-                break;
-                case 4:
-                    //Eberron
-                    while (day>336) {
-                        day-=336;
-                        year++;
-                    }
-                break;
-                case 5:
-                    //Tal'Dorei
-                break;
+            if (state.MWCalendar.now.world==1) {
+                while (day>360) {
+                    day-=360;
+                    year++;
+                }
+            } else if (state.MWCalendar.now.world==4) {
+                while (day>336) {
+                    day-=336;
+                    year++;
+                }
             }
+            hour=newhour;
         }
         state.MWCalendar.now.hour=hour;
+        log(hour);
+        log(state.MWCalendar.now.hour);
         state.MWCalendar.now.minute=minute;
         state.MWCalendar.now.ordinal=day;
         state.MWCalendar.now.year=year;
