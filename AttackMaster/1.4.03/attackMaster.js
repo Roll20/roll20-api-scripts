@@ -90,17 +90,14 @@
  * v1.4.03 15/01/2023  Allow creature innate attack specs to be either of
  *                      attk_name,dmg_roll,speed,type or dmg_roll,attk_name,speed,type
  *                     Fixed error in parsing the class & race dBs for attks/r
- * v1.4.04 21/01/2023  Fixed error in attack calculations if effects were in play that 
- *                     altered token Thac0 bar.  Added support for configurable default 
- *                     token bars.
  */
  
 var attackMaster = (function() {
 	'use strict'; 
-	var version = '1.4.04',
+	var version = '1.4.03',
 		author = 'Richard @ Damery',
 		pending = null;
-    const lastUpdate = 1674549902;
+    const lastUpdate = 1673204210;
 
 	/*
 	 * Define redirections for functions moved to the RPGMaster library
@@ -2599,7 +2596,7 @@ var attackMaster = (function() {
 		while (!_.isUndefined(itemName = Items.tableLookup( fields.Items_name, ++i, false ))) {
 			itemTrueName = Items.tableLookup( fields.Items_trueName, i ) || itemName;
 			if (itemName.length && itemName != '-') {
-				itemDef = abilityLookup( fields.MagicItemDB, itemTrueName, charCS, true );
+				itemDef = abilityLookup( fields.MagicItemDB, itemTrueName, charCS );
 				if (itemDef.obj) {
 					itemSpecs = itemDef.specs(/}}\s*Specs\s*=(.*?(?:armou?r|shield|protection).*?){{/im) || [];
 					itemData = itemDef.data(/}}\s*a?c?data\s*=(.*?){{/im) || [];
@@ -2737,13 +2734,13 @@ var attackMaster = (function() {
 					tokenName = curToken.get('name'),
 					charName = charCS.get('name'),
 					raceName = attrLookup( charCS, fields.Race ) || '',
-					thac0 = attrLookup( charCS, fields.MonsterThac0 ),
+					thac0 = getTokenValue(curToken,fields.Token_Thac0,fields.Thac0,fields.MonsterThac0,fields.Thac0_base).val || 20,
 					monsterCritHit = attrLookup( charCS, fields.MonsterCritHit ) || 20,
 					monsterCritMiss = attrLookup( charCS, fields.MonsterCritMiss ) || 1,
 					monsterDmg1 = (attrLookup( charCS, fields.Monster_dmg1 ) || '0').split(','),
 					monsterDmg2 = (attrLookup( charCS, fields.Monster_dmg2 ) || '0').split(','),
 					monsterDmg3 = (attrLookup( charCS, fields.Monster_dmg3 ) || '0').split(','),
-					magicHitAdj = (attrLookup( charCS, fields.Magic_hitAdj ) || 0) + thac0 - (getTokenValue(curToken,fields.Token_Thac0,fields.Thac0_base,fields.MonsterThac0,fields.Thac0_base).val || 20),
+					magicHitAdj = attrLookup( charCS, fields.Magic_hitAdj ) || 0,
 					magicDmgAdj = attrLookup( charCS, fields.Magic_dmgAdj ) || 0,
 					strHit 		= attrLookup( charCS, fields.Strength_hit ) || 0,
 					strDmg 		= attrLookup( charCS, fields.Strength_dmg ) || 0,
@@ -2942,7 +2939,7 @@ var attackMaster = (function() {
 					charName	= charCS.get('name'),
 					raceName	= attrLookup( charCS, fields.Race ) || 'human',
 					classes		= classObjects( charCS ),
-					thac0		= handleGetBaseThac0(charCS),
+					thac0		= getTokenValue(curToken,fields.Token_Thac0,fields.Thac0,fields.MonsterThac0,fields.Thac0_base).val || 20,
 					mwNumber    = mwIndex + (fields.MW_table[1]==0 ? 1 : 2),
 					weaponName 	= tableInfo.MELEE.tableLookup( fields.MW_name, mwIndex ),
 					miName		= tableInfo.MELEE.tableLookup( fields.MW_miName, mwIndex ),
@@ -2976,7 +2973,7 @@ var attackMaster = (function() {
 								+ (((attrLookup( charCS, fields.Wizard_class ) || '').toUpperCase() == 'BARD') ? parseInt(attrLookup( charCS, fields.Wizard_level ) || 0) : 0),
 					fighterType = attrLookup( charCS, fields.Fighter_class ) || '',
 					ranger		= fighterType.toUpperCase() == 'RANGER' || fighterType.toUpperCase() == 'MONSTER' || _.some(classes, c => parseFloat(c.classData.twoWeapPen == 0)),
-					magicHitAdj = (attrLookup( charCS, fields.Magic_hitAdj ) || 0) + thac0 - (getTokenValue(curToken,fields.Token_Thac0,fields.Thac0_base,fields.MonsterThac0,fields.Thac0_base).val || 20), 
+					magicHitAdj = attrLookup( charCS, fields.Magic_hitAdj ) || 0, 
 					magicDmgAdj = attrLookup( charCS, fields.Magic_dmgAdj ) || 0,
 					primeWeapon = attrLookup( charCS, fields.Primary_weapon ) || 0,
 					twPen		= Math.min(parseFloat(attrLookup( charCS, fields.TwoWeapStylePenalty ) || 9.9), classes.map(c => parseFloat(c.classData.twoWeapPen)).reduce((prev,cur) => (Math.min(prev,cur)))),
@@ -3160,7 +3157,7 @@ var attackMaster = (function() {
 			charName	= charCS.get('name'),
 			raceName	= attrLookup( charCS, fields.Race ) || 'human',
 			classes		= classObjects( charCS ),
-			thac0		= handleGetBaseThac0( charCS ),
+			thac0		= getTokenValue(curToken,fields.Token_Thac0,fields.Thac0,fields.MonsterThac0,fields.Thac0_base).val || 20,
 			rwNumber    = rwIndex + (fields.RW_table[1]==0 ? 1 : 2),
 			weaponName 	= tableInfo.RANGED.tableLookup( fields.RW_name, rwIndex ),
 			miName		= tableInfo.RANGED.tableLookup( fields.RW_miName, rwIndex ),
@@ -3201,7 +3198,7 @@ var attackMaster = (function() {
 						+ (((attrLookup( charCS, fields.Wizard_class ) || '').toUpperCase() == 'BARD') ? parseInt(attrLookup( charCS, fields.Wizard_level ) || 0) : 0),
 			fighterType = attrLookup( charCS, fields.Fighter_class ) || '',
 			ranger		= fighterType.toUpperCase() == 'RANGER' || fighterType.toUpperCase() == 'MONSTER',
-			magicHitAdj = (attrLookup( charCS, fields.Magic_hitAdj ) || 0) + thac0 - (getTokenValue(curToken,fields.Token_Thac0,fields.Thac0_base,fields.MonsterThac0,fields.Thac0_base).val || 20), 
+			magicHitAdj = attrLookup( charCS, fields.Magic_hitAdj ) || 0, 
 			magicDmgAdj = attrLookup( charCS, fields.Magic_dmgAdj ) || 0,
 			primeWeapon = attrLookup( charCS, fields.Primary_weapon ) || 0,
 			twPen		= Math.min(parseFloat(attrLookup( charCS, fields.TwoWeapStylePenalty ) || 9.9), classes.map(c => parseFloat(c.classData.twoWeapPen)).reduce((prev,cur) => (Math.min(prev,cur)))),
@@ -4390,8 +4387,7 @@ var attackMaster = (function() {
 					+  '<tr><td>Spell Schools</td>'+configButtons(state.MagicMaster.spellRules.allowAll, 'Strict by Rules', '!magic --config all-spells|false', 'All Can Use Any', '!magic --config all-spells|true')+'</tr>';
 					+  '<tr><td>Powers by Level</td>'+configButtons(state.MagicMaster.spellRules.allowAnyPower, 'Strict by Rules', '!magic --config all-powers|false', 'All Can Use Any', '!magic --config all-powers|true')+'</tr>'
 		}
-		content += (apiCommands['cmd'] ? ('<tr><td colspan="2">[Set Default Token Bars](!cmd --button '+BT.AB_ASK_TOKENBARS+'|)</td></tr>') : '')
-				+  '</table>}}';
+		content += '</table>}}';
 		sendFeedback( content,flags.feedbackName,flags.feedbackImg );
 		return;
 	}
@@ -5757,6 +5753,7 @@ var attackMaster = (function() {
 			dexBonus = parseInt(attrLookup( charCS, fields.Dex_acBonus ) || 0) * -1,
 			styleBonus =  parseInt(attrLookup(charCS,fields.Armour_styleMod) || 0),
 			baseAC = (parseInt(acValues.armour.data.ac || 10) - parseInt(acValues.armour.data.adj || 0)),
+//          prevAC = parseInt(attrLookup( charCS, fields.Armour_normal )) || baseAC,
             prevAC = parseInt(attrLookup( charCS, fields.Armour_normal )),
 			dmgAdj = {armoured:{adj:0,madj:0,sadj:0,padj:0,badj:0,nadj:0},
 					  sless:{adj:0,madj:0,sadj:0,padj:0,badj:0,nadj:0},
@@ -5767,7 +5764,7 @@ var attackMaster = (function() {
 			shieldlessDexBonus = dexBonus,
 			armourlessAC = 10,
 			ac, currentAC;
-			
+
 		_.each( acValues, (e,k) => {
 			if (k == 'armour') return;
 			if (!k.toLowerCase().includes('protection') || !magicArmour) {
@@ -5799,7 +5796,7 @@ var attackMaster = (function() {
 		if (styleBonus) {
 			acValues.styleBonus = {name:('Fighting Style Bonus '+styleBonus),specs:['',('Fighting Style Bonus '+dexBonus),'Style','0H','Style'],data:{adj:styleBonus}};
 		}
-		
+
         setAttr( charCS, fields.Armour_normal, (baseAC - dmgAdj.armoured.adj - dexBonus - styleBonus) );
 		setAttr( charCS, fields.Armour_missile, (baseAC - dmgAdj.armoured.adj - dexBonus - styleBonus - dmgAdj.armoured.madj) );
 		setAttr( charCS, fields.Armour_surprised, (baseAC - dmgAdj.armoured.adj) );
@@ -5822,16 +5819,18 @@ var attackMaster = (function() {
 			
 		// set token circles & bars
 		
-		ac = (baseAC - dmgAdj.armoured.adj - dexBonus - styleBonus);
+        ac = (baseAC - dmgAdj.armoured.adj - dexBonus - styleBonus);
 		currentAC = getTokenValue(curToken,fields.Token_AC,fields.AC,fields.MonsterAC,fields.Thac0_base);
-		currentAC.val = ((isNaN(currentAC.val) || isNaN(prevAC)) ? ac : (currentAC.val + ac - prevAC));
-		if (currentAC.barName.startsWith('bar')) {
+		currentAC.val = ((isNaN(currentAC.val) || isNaN(prevAC)) ? ac : currentAC.val + ac - prevAC);
+		if (fields.Token_MaxAC[0].length) {
 			if (currentAC.val != ac) {
-				curToken.set(currentAC.barName+'_max',ac);
+				curToken.set(fields.Token_MaxAC[0]+'_'+fields.Token_MaxAC[1],((ac*currentAC.val)<0)?currentAC.val:ac);
 			} else {
-				curToken.set(currentAC.barName+'_max',' ');
+				curToken.set(fields.Token_MaxAC[0]+'_'+fields.Token_MaxAC[1],'');
 			}
-			curToken.set(currentAC.barName+'_value',currentAC.val);
+		}
+		if (fields.Token_AC[0].length) {
+			curToken.set(fields.Token_AC[0]+'_'+fields.Token_AC[1],currentAC.val);
 		}
 		
 		setAttr( charCS, fields.StdAC, (ac+dmgAdj.armoured[dmgType]-dmgAdj.armoured.nadj) );
