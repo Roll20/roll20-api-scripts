@@ -1936,11 +1936,11 @@ var CommandMaster = (function() {
 			_.each( ['MI','WPROF'], type => {
 				Items = getTable( charCS, fieldGroups[type] );
 				for (let r=Items.table[1]; r<Items.sortKeys.length; r++) {
-					let name = Items.tableLookup( fields[Weaps.fieldGroup+'name'], r );
+					let name = Items.tableLookup( fields[Items.fieldGroup+'name'], r );
 					let def = abilityLookup( fields.MagicItemDB, name, charCS, true, false );
 					let qty = (type !== 'MI') ? 0 : (Items.tableLookup( fields.Items_qty, r ) || 1);
 					if ((!def.obj) && name && name !== '-') {
-						miList.push([name,qty]);
+						miList.push({name:name,qty:qty});
 					}
 				};
 			});
@@ -1958,8 +1958,8 @@ var CommandMaster = (function() {
 					+ 'unknown items are not guaranteed to work properly with the APIs, and may cause interruptions to game-play. Items can be added to the databases: refer to the database help handouts.}}'
 					+ '{{Section2=**Items to replace**\n';
 					
-			_.each( miList.sort(), i => {
-				content += (i[0] !== toConvert ? ('['+i[1]+' '+i[0]+'](!cmd --button '+BT.FROMITEM+'|'+i[0]+'|'+replaceWith+'|'+i[1]+')') : ('<span style=' + design.selected_button + '>'+i[1]+' '+i[0]+'</span>'));
+			_.each( miList, i => {
+				content += (i.name !== toConvert ? ('['+i.qty+' '+i.name+'](!cmd --button '+BT.FROMITEM+'|'+i.name+'|'+replaceWith+'|'+i.qty+')') : ('<span style=' + design.selected_button + '>'+i.qty+' '+i.name+'</span>'));
 			});
 			content += ('Add Item' !== toConvert ? ('[Add Item](!cmd --button '+BT.FROMITEM+'|Add Item|'+replaceWith+'|0})') : ('<span style=' + design.selected_button + '>Add Item</span>'));
 
