@@ -3125,8 +3125,6 @@ var CommandMaster = (function() {
 			allTokens = false,
 			names = [];
 			
-		log('handleSetTokenBars: called');
-			
 		if (cmd === BT.AB_TOKEN_ASK_ALL) {
 			content = '&{template:'+fields.warningTemplate+'}{{name=Setting Token Circles}}'
 					+ '{{desc=You have requested to set the token bars of ***All Tokens***, including those of mobs (i.e. multiple tokens linked to a single character sheet which normally '
@@ -3216,19 +3214,19 @@ var CommandMaster = (function() {
 					curToken.set({bar1_value:(!!bar1obj ? bar1obj.get('current') : ''),bar1_max:(!!bar1obj ? bar1obj.get('max') : '')});
 					curToken.set({bar2_value:(!!bar2obj ? bar2obj.get('current') : ''),bar2_max:(!!bar2obj ? bar2obj.get('max') : '')});
 					curToken.set({bar3_value:(!!bar3obj ? bar3obj.get('current') : ''),bar3_max:(!!bar3obj ? bar3obj.get('max') : '')});
-					
-					setDefaultTokenForCharacter(charCS,curToken);
 
 					if (!allTokens && !silent) names.push(curToken.get('name'));
 					sendAPI( '!attk --check-ac '+tokenID+'|silent' );
+					
+					setDefaultTokenForCharacter(charCS,curToken);
 				};
 			});
+			if (!silent) {
+				if (names.length) content += '{{desc8=**Tokens updated**\n' + names.sort().join(', ') + '}}';
+				content += '{{desc9=[Return to Menu](!cmd --button '+abMenu+')}}';
+				sendFeedback( content,flags.feedbackName,flags.feedbackImg );
+			}
 		}, 100);
-		if (!silent) {
-			if (names.length) content += '{{desc8=**Tokens updated**\n' + names.sort().join(', ') + '}}';
-			content += '{{desc9=[Return to Menu](!cmd --button '+abMenu+')}}';
-			sendFeedback( content,flags.feedbackName,flags.feedbackImg );
-		}
 		return;
 	}
 	
