@@ -3216,6 +3216,8 @@ var CommandMaster = (function() {
 					curToken.set({bar1_value:(!!bar1obj ? bar1obj.get('current') : ''),bar1_max:(!!bar1obj ? bar1obj.get('max') : '')});
 					curToken.set({bar2_value:(!!bar2obj ? bar2obj.get('current') : ''),bar2_max:(!!bar2obj ? bar2obj.get('max') : '')});
 					curToken.set({bar3_value:(!!bar3obj ? bar3obj.get('current') : ''),bar3_max:(!!bar3obj ? bar3obj.get('max') : '')});
+					
+					setDefaultTokenForCharacter(charCS,curToken);
 
 					if (!allTokens && !silent) names.push(curToken.get('name'));
 					sendAPI( '!attk --check-ac '+tokenID+'|silent' );
