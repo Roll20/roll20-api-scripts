@@ -92,7 +92,10 @@
  *                     Fixed error in parsing the class & race dBs for attks/r
  * v1.4.04 21/01/2023  Fixed error in attack calculations if effects were in play that 
  *                     altered token Thac0 bar.  Added support for configurable default 
- *                     token bars.
+ *                     token bars. Added ammo range '=' qualifier which forces literal
+ *                     ranges without multiplication. Given Ammo its own list on Edit 
+ *                     weapons & armour dialogue. Changed attack calcs to show changes
+ *                     to token thac0 as magic-adjust to the To-Hit calc.
  */
  
 var attackMaster = (function() {
@@ -100,7 +103,7 @@ var attackMaster = (function() {
 	var version = '1.4.04',
 		author = 'Richard @ Damery',
 		pending = null;
-    const lastUpdate = 1674549902;
+    const lastUpdate = 1674815932;
 
 	/*
 	 * Define redirections for functions moved to the RPGMaster library
@@ -131,6 +134,7 @@ var attackMaster = (function() {
 	const getMagicList = (...a) => libRPGMaster.getMagicList(...a);
 	const classAllowedItem = (...a) => libRPGMaster.classAllowedItem(...a);
 	const resolveData = (...a) => libRPGMaster.resolveData(...a);
+	const handleGetBaseThac0 = (...a) => libRPGMaster.handleGetBaseThac0(...a);
 	
 	/*
 	 * Handle for reference to character sheet field mapping table.
@@ -2208,8 +2212,8 @@ var attackMaster = (function() {
  
 		for (let w=0; w<ammoSpecs.length; w++) {
 			ammoData = ammoSpecs[w][0];
-			specType = (ammoData.match(/[\[,\s]t:([\s\w\-\+\:]+?)[,\]]/i) || ['','unknown'])[1].dbName();
-			specSuperType = (ammoData.match(/[\[,\s]st:([\s\w\-\+\:]+?)[,\]]/i) || ['','unknown'])[1].dbName();
+			specType = (ammoData.match(/[\[,\s]t:([\s\w\-\+\:\|]+?)[,\]]/i) || ['','unknown'])[1].dbName();
+			specSuperType = (ammoData.match(/[\[,\s]st:([\s\w\-\+\:\|]+?)[,\]]/i) || ['','unknown'])[1].dbName();
 			let clv = ammoData.match(/[\[,\s]clv:([-\+]?\d+?)[,\]]/i),
 				mulv = ammoData.match(/[\[,\s]mulv:([-\+]?\d+?)[,\]]/i),
 				prlv = ammoData.match(/[\[,\s]prlv:([-\+]?\d+?)[,\]]/i);
@@ -2232,7 +2236,7 @@ var attackMaster = (function() {
 				qtySet=(ammoData.match(/[\[,\s]qty:\s*?=\d+?[,\]]/i) || '');
 				qty=parseInt((ammoData.match(/[\[,\s]qty:\s*?(\d+?)[,\]]/i) || [0,0])[1]);
 				values[fields.Ammo_setQty[0]][fields.Ammo_setQty[1]] = qty ? 1 : 0;
-				values[fields.Ammo_message[0]][fields.Ammo_message[1]]=(ammoData.match(/[\[,\s]msg:(.+?)[,\]]/i) || ['',''])[1];
+				values[fields.Ammo_message[0]][fields.Ammo_message[1]]=(ammoData.match(/[\[,\s]msg:(.+?)[,\]]/i) || ['',''])[1]; 
 				values[fields.Ammo_charges[0]][fields.Ammo_charges[1]]=(ammoData.match(/[\[,\s]c:(\d+?)[,\]]/i) || ['',''])[1];
 				if (!qty && !qtySet) {
 					values[fields.Ammo_qty[0]][fields.Ammo_qty[1]]=miQty;
@@ -2242,7 +2246,7 @@ var attackMaster = (function() {
 					values[fields.Ammo_maxQty[0]][fields.Ammo_maxQty[1]] = Math.min(qty,miQty);
 				}
 				values[fields.Ammo_attkAdj[0]][fields.Ammo_attkAdj[1]]=(rangeSpecs[0][0].match(/[\[,\s]\+:\s*?([+-]?\d+?)\s*?[,\]]/i) || ['',''])[1];
-				values[fields.Ammo_range[0]][fields.Ammo_range[1]]=(rangeSpecs[0][0].match(/[\[,\s]r:\s*?([-\d\/]+)/i) || ['',''])[1];
+				values[fields.Ammo_range[0]][fields.Ammo_range[1]]=(rangeSpecs[0][0].match(/[\[,\s]r:(=?[+-]?[\s\w\+\-\d\/]+)[,\]]/i) || ['',''])[1];
 				values[fields.Ammo_type[0]][fields.Ammo_type[1]]=ammoType;
 				values[fields.Ammo_miName[0]][fields.Ammo_miName[1]]=ammoTrueName;
 				
@@ -2328,9 +2332,9 @@ var attackMaster = (function() {
 	 * ammo duplications don't occur
 	 */
 
-	var addWeapon = function( charCS, hand, noOfHands, i, dancing, tableInfo, Quiver, InHandTable ) {
+	var addWeapon = function( charCS, hand, noOfHands, handIndex, dancing, tableInfo, Quiver, InHandTable ) {
 		
-		var lineNo = InHandTable.tableLookup( fields.InHand_index, i );
+		var lineNo = InHandTable.tableLookup( fields.InHand_index, handIndex );
 
 		if (isNaN(lineNo) || lineNo < -3) {
 			if (!!hand) {
@@ -2340,9 +2344,9 @@ var attackMaster = (function() {
 			return [tableInfo,Quiver];
 		}
 		
-		var weaponDB = InHandTable.tableLookup( fields.InHand_db, i ),
-			weaponName = InHandTable.tableLookup( fields.InHand_name, i ),
-			weaponTrueName = InHandTable.tableLookup( fields.InHand_trueName, i, weaponName ),
+		var weaponDB = InHandTable.tableLookup( fields.InHand_db, handIndex ),
+			weaponName = InHandTable.tableLookup( fields.InHand_name, handIndex ),
+			weaponTrueName = InHandTable.tableLookup( fields.InHand_trueName, handIndex, weaponName ),
 			item = abilityLookup(weaponDB, weaponTrueName, charCS),
 			weaponSpecs = item.specs(/}}\s*specs=\s*?(\[.*?(?:melee|ranged).*?\])\s*?{{/im) || [],
 			toHitSpecs = item.data(/}}\s*ToHitData\s*=(.*?){{/im) || [],
@@ -2427,12 +2431,10 @@ var attackMaster = (function() {
 
 					if (_.isUndefined( weapRow = tableInfo.RANGED.tableFind( fields.RW_name, '-', false ))) weapRow = tableInfo.RANGED.sortKeys.length;
 					tableInfo.RANGED.addTableRow( weapRow, values );
-
 					let attkStrBonus = values[fields.RW_strBonus[0]][fields.RW_strBonus[1]];
 					if (ammoSpecs && ammoSpecs.length) {
 						let rangeSpecs = item.data(/}}\s*RangeData\s*=(.*?){{/im) || [];
 						if (rangeSpecs && rangeSpecs.length) {
-
 							if (!weaponDB.startsWith(fields.WeaponDB)) lineNo = NaN;
 							tableInfo = insertAmmo( charCS, weaponTrueName, ammoSpecs, rangeSpecs, tableInfo, weapon[1], attkStrBonus, lineNo );
 							values = initValues( fieldGroups.QUIVER.prefix );
@@ -3458,6 +3460,7 @@ var attackMaster = (function() {
 					proficiency,
 					specialist = true,
 					errFlag = false,
+					lowRange = false,
 					wt, wst, wname, dancing,
 					weapRangeMod, weapRangeOverride,
 					disabled = isNaN(weaponIndex) || isNaN(ammoIndex);
@@ -3466,15 +3469,15 @@ var attackMaster = (function() {
 					if (!rangeMod || !rangeMod.length) return ranges.split('/');
 					var weapRangeMod,
 						weapRangeOverride = (rangeMod[0] == '=');
-					if (weapRangeOverride) rangeMod.slice(1);
+					if (weapRangeOverride) rangeMod = rangeMod.slice(1);
 					weapRangeOverride = weapRangeOverride || !ranges || !ranges.length;
 					weapRangeMod = (rangeMod[0] == '-' || rangeMod[0] == '+');
 			
 					ranges = ranges.split('/');
 					rangeMod = rangeMod.split('/');
 					// Remove any non-numeric entries from the ranges
-					ranges = _.reject(ranges, function(dist){return isNaN(parseInt(dist,10));}).map( r => parseInt(r,10));
-					rangeMod = _.reject(rangeMod, function(dist){return isNaN(parseInt(dist,10));}).map( r => parseInt(r,10));
+					ranges = _.reject(ranges, function(dist){return isNaN(parseFloat(dist,10));}).map( r => parseFloat(r,10));
+					rangeMod = _.reject(rangeMod, function(dist){return isNaN(parseFloat(dist,10));}).map( r => parseFloat(r,10));
 					if (weapRangeOverride) {
 						ranges = rangeMod;
 					} else if (weapRangeMod) {
@@ -3489,6 +3492,8 @@ var attackMaster = (function() {
 
 				if (!disabled) {
 					ranges = tableInfo.AMMO.tableLookup( fields.Ammo_range, ammoIndex );
+					lowRange = ranges[0] === '=';
+					if (lowRange) ranges = ranges.slice(1);
 					wname = tableInfo.RANGED.tableLookup( fields.RW_name, weaponIndex );
 					dancing = tableInfo.RANGED.tableLookup( fields.RW_dancing, weaponIndex );
 					rangeMod = tableInfo.RANGED.tableLookup( fields.RW_range, weaponIndex );
@@ -3503,30 +3508,32 @@ var attackMaster = (function() {
 					ranges = adjustRange( ranges.join('/'), tableInfo.RANGED.tableLookup( fields.RW_styleRange, weaponIndex ) );
 					
 					// Test for if ranges need *10 (assume 1st range (PB or short) is never >= 100 yds or < 10)
-					if (ranges[0] < 10) ranges = ranges.map(x => x * 10);
+					if (ranges[0] < 10 && !lowRange) ranges = ranges.map(x => x * 10);
 						
 					// Make the range always start with Short (assume 4 or more ranges start with Point Blank)
 					if (ranges.length >= 4) {
 						specRange = ranges.shift();
+					} else {
+						specRange = Math.min(specRange,ranges[0]);
 					}
 				}
 				
 				weaponIndex += fields.RW_table[1]==0 ? 1 : 2;
 				
 				content += disabled ? ('<span style='+design.grey_button+'>') : '[';
-				farRange = 6;
-				content += ranges.length ? 'Near: 0 to 5' : 'Near';
+				farRange = Math.max(1,Math.min(6,(ranges[0]-2),specRange-2));
+				content += ranges.length ? ('Near: 0 to '+(farRange-1)) : 'Near';
 				content += disabled ? '</span>' : ('](~'+charName+'|Do-not-use-Attk-RW'+weaponIndex+'-N)');
 
 				if (specialist) {
 					content += disabled ? ('<span style='+design.grey_button+'>') : '[';
+					content += ranges.length ? 'PB: '+farRange+' to '+specRange : 'Point Blank' ;
 					farRange = specRange;
-					content += ranges.length ? 'PB: 6 to '+farRange : 'Point Blank' ;
 					content += disabled ? '</span>' : ('](~'+charName+'|Do-not-use-Attk-RW'+weaponIndex+'-PB)');
 				}
 				content += disabled ? ('<span style='+design.grey_button+'>') : '[';
 				farRange = ranges.length ? (ranges[0]) : farRange;
-				content += ranges.length ? ('S: '+(specialist ? (specRange+1) : '6')+' to '+farRange) : 'Short';
+				content += ranges.length ? ('S: '+Math.min(farRange,(specialist ? (specRange+1) : Math.max(1,Math.min(6,(ranges[0]-2),specRange-2))))+' to '+farRange) : 'Short';
 				content += disabled ? '</span>' : ('](~'+charName+'|Do-not-use-Attk-RW'+weaponIndex+'-S)');
 
 				if (ranges.length != 1) {
@@ -4037,6 +4044,7 @@ var attackMaster = (function() {
 		if (!shortMenu || !selected) {
 			content += '{{desc=**1.Choose what item to store**\n'
 					+  '[Weapon](!attk --button '+BT.CHOOSE_MI+'|'+tokenID+'|'+MIrowref+'|?{Weapon to store|'+getMagicList(fields.MagicItemDB,miTypeLists,'weapon')+'}|'+charges+')'
+					+  '[Ammo](!attk --button '+BT.CHOOSE_MI+'|'+tokenID+'|'+MIrowref+'|?{Ammunition to store|'+getMagicList(fields.MagicItemDB,miTypeLists,'ammo')+'}|'+charges+')'
 					+  '[Armour](!attk --button '+BT.CHOOSE_MI+'|'+tokenID+'|'+MIrowref+'|?{Armour to store|'+getMagicList(fields.MagicItemDB,miTypeLists,'armour')+'}|'+charges+')'
 			if (shortMenu) {
 				content +=  '\n**OR**\n'
@@ -5829,7 +5837,7 @@ var attackMaster = (function() {
 			if (currentAC.val != ac) {
 				curToken.set(currentAC.barName+'_max',ac);
 			} else {
-				curToken.set(currentAC.barName+'_max',' ');
+				curToken.set(currentAC.barName+'_max','');
 			}
 			curToken.set(currentAC.barName+'_value',currentAC.val);
 		}
