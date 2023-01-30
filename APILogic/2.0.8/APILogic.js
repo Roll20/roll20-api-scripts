@@ -742,7 +742,6 @@ const APILogic = (() => {
             o.logicgroups = msg.logicgroups;
             o.parsedinline = msg.parsedinline || [];
             let reconstruct = reconstructCommandLine(o, msgstate, status, notes);
-            if (msg.content !== reconstruct.content) status.push('chnaged');
             msg.content = reconstruct.content;
             msg.content = msg.content.replace(new RegExp(escapeRegExp(linebreak), 'g'), '<br/>\n');
             msg.logicgroups = reconstruct.logicgroups;
