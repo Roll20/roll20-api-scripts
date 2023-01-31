@@ -86,7 +86,8 @@
  * v1.4.02 13/11/2022  Added ability to specify "cast as level" in Class/Race/Creature powers
  * v1.4.03 24/01/2023  Fixed bugs in getting class/race default power uses per day, and in 
  *                     finding blank/extended rows in the Items table to store items in.
- * v1.4.04 24/01/2023  Added support for configurable default token bar mapping
+ * v1.4.04 24/01/2023  Added support for configurable default token bar mapping. Added separate 
+ *                     Ammo list to Change MI menu (appears if AttackMaster is not loaded).
  */
  
 var MagicMaster = (function() {
@@ -94,7 +95,7 @@ var MagicMaster = (function() {
 	var version = '1.4.04',
 		author = 'RED',
 		pending = null;
-    const lastUpdate = 1674549902;
+    const lastUpdate = 1674815932;
 		
 	/*
 	 * Define redirections for functions moved to the RPGMaster library
@@ -3198,6 +3199,7 @@ var MagicMaster = (function() {
 					+  (editMartial ? '' : '[Scroll](!magic --button '+chooseCmd+'|'+tokenID+'|'+MIrowref+'|?{Scroll to store|'+getMagicList(fields.MagicItemDB,miTypeLists,'scroll')+'}|'+charges+')')
 					+  (editMartial ? '' : '[Rods, Staves, Wands](!magic --button '+chooseCmd+'|'+tokenID+'|'+MIrowref+'|?{Rod Staff Wand to store|'+getMagicList(fields.MagicItemDB,miTypeLists,'rod')+'}|'+charges+')')
 					+  (!editMartial && !editAll ? '' : '[Weapon](!magic --button '+chooseCmd+'|'+tokenID+'|'+MIrowref+'|?{Weapon to store|'+getMagicList(fields.MagicItemDB,miTypeLists,'weapon')+'}|'+charges+')')
+					+  (!editMartial && !editAll ? '' : '[Ammo](!magic --button '+chooseCmd+'|'+tokenID+'|'+MIrowref+'|?{Ammunition to store|'+getMagicList(fields.MagicItemDB,miTypeLists,'ammo')+'}|'+charges+')')
 					+  (!editMartial && !editAll ? '' : '[Armour](!magic --button '+chooseCmd+'|'+tokenID+'|'+MIrowref+'|?{Armour to store|'+getMagicList(fields.MagicItemDB,miTypeLists,'armour')+'}|'+charges+')')
 					+  (editMartial ? '' : '[Ring](!magic --button '+chooseCmd+'|'+tokenID+'|'+MIrowref+'|?{Ring to store|'+getMagicList(fields.MagicItemDB,miTypeLists,'ring')+'}|'+charges+')')
 					+  (editMartial ? '' : '[Miscellaneous](!magic --button '+chooseCmd+'|'+tokenID+'|'+MIrowref+'|?{Misc Item to store|'+getMagicList(fields.MagicItemDB,miTypeLists,'miscellaneous')+'}|'+charges+')');
@@ -3297,6 +3299,7 @@ var MagicMaster = (function() {
 				+  '[Scroll](!magic --button GM-MItoStore|'+tokenID+'|'+MIrowref+'|?{Which Scroll?|'+getMagicList(fields.MagicItemDB,miTypeLists,'scroll')+'})'
 				+  '[Rods, Staves, Wands](!magic --button GM-MItoStore|'+tokenID+'|'+MIrowref+'|?{Which Rod, Staff or Wand?|'+getMagicList(fields.MagicItemDB,miTypeLists,'rod')+'})'
 				+  '[Weapon](!magic --button GM-MItoStore|'+tokenID+'|'+MIrowref+'|?{Which Weapon?|'+getMagicList(fields.MagicItemDB,miTypeLists,'weapon')+'})'
+				+  '[Ammo](!magic --button GM-MItoStore|'+tokenID+'|'+MIrowref+'|?{Which Ammo?|'+getMagicList(fields.MagicItemDB,miTypeLists,'ammo')+'})'
 				+  '[Armour](!magic --button GM-MItoStore|'+tokenID+'|'+MIrowref+'|?{Which piece of Armour?|'+getMagicList(fields.MagicItemDB,miTypeLists,'armour')+'})'
 				+  '[Ring](!magic --button GM-MItoStore|'+tokenID+'|'+MIrowref+'|?{Which Ring?|'+getMagicList(fields.MagicItemDB,miTypeLists,'ring')+'})'
 				+  '[Miscellaneous MI](!magic --button GM-MItoStore|'+tokenID+'|'+MIrowref+'|?{Which Misc MI?|'+getMagicList(fields.MagicItemDB,miTypeLists,'miscellaneous')+'})'
