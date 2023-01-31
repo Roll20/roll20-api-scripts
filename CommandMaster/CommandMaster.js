@@ -70,7 +70,9 @@
  *                     display with attack and damage rolls respectively. 
  * v1.4.04 24/01/2023  Added support for converting manually created character sheets to 
  *                     RPGMaster format. Added ability to configure the default token bars.
- *                     Added functions to set token bars for all campaign tokens.
+ *                     Added functions to set token bars for all campaign tokens. Added 
+ *                     separate Ammo list for Equipment conversion. Tidied up Token-Setup
+ *                     menu.
  */
  
 var CommandMaster = (function() {
@@ -78,7 +80,7 @@ var CommandMaster = (function() {
 	var version = '1.4.04',
 		author = 'RED',
 		pending = null;
-	const lastUpdate = 1674549902;
+	const lastUpdate = 1674815932;
 
 	/*
 	 * Define redirections for functions moved to the RPGMaster library
@@ -154,10 +156,10 @@ var CommandMaster = (function() {
 	
 	const handouts = Object.freeze({
 	CommandMaster_Help:	{name:'CommandMaster Help',
-						 version:2.02,
+						 version:2.03,
 						 avatar:'https://s3.amazonaws.com/files.d20.io/images/257656656/ckSHhNht7v3u60CRKonRTg/thumb.png?1638050703',
 						 bio:'<div style="font-weight: bold; text-align: center; border-bottom: 2px solid black;">'
-							+'<span style="font-weight: bold; font-size: 125%">CommandMaster Help v2.02</span>'
+							+'<span style="font-weight: bold; font-size: 125%">CommandMaster Help v2.03</span>'
 							+'</div>'
 							+'<div style="padding-left: 5px; padding-right: 5px; overflow: hidden;">'
 							+'<h1>Command Master API</h1>'
@@ -176,7 +178,10 @@ var CommandMaster = (function() {
 							+'<pre>--initialise<br>'
 							+'--abilities</pre>'
 							+'<h3>2. Character Sheet configuration</h3>'
-							+'<pre>--check-chars<br>'
+							+'<pre>--conv-spells<br>'
+							+'--conv-items<br>'
+							+'--token-defaults<br>'
+							+'--check-chars<br>'
 							+'--class-menu [token_id]<br>'
 							+'--add-spells [POWERS/MUSPELLS/PRSPELLS] | [level]<br>'
 							+'--add-profs<br>'
@@ -209,28 +214,46 @@ var CommandMaster = (function() {
 							+'<p>All tokens selected when menu items are used will be set up the same way: exceptions to this are using the Set Saves button (sets saves for each selected token/character sheet correctly for the specifications of that sheet), and the Set All Profs button (sets weapon proficiencies to proficient based on the weapons in each individual token/character sheet\'s item bag).  Different tokens can be selected and set up differently without having to refresh the menu.</p>'
 							+'<h2>2. Character Sheet configuration</h2>'
 							+'<p>The commands in this section can be accessed using the --abilities command menu.  The individual commands below are used less frequently.</p>'
-							+'<h3>2.1 Check control of Character Sheets</h3>'
+							+'<h3>2.1 Convert Character Sheet Spells</h3>'
+							+'<pre>--conv-spells</pre>'
+							+'<p>Works on multiple selected tokens representing several Character Sheets.</p>'
+							+'<p>For Character Sheets that have not been created using the commands provided by the <i>!cmd --abilities</i> menu, pre-existing from previous Roll20 campaigns using the Advanced D&D2e Character Sheet, this command does its best to convert all spells in tables on the Character Sheet to RPGMaster format and replace them with spells that exist in the RPGMaster spell databases. Those that the system can\'t automatically match are subsequently displayed in a menu, with additional buttons that list the spells that do exist in the databases that can be used to replace them by selecting both the spell to be replaced and the replacement spell.</p>'
+							+'<p>It is possible that not all spells will be able to be replaced, if the Character Sheet reflects campaign experience where bespoke spells or spells from other handbooks have been available. In this case, the spells can be left unconverted, and the DM might add the spells to their own databases using the information provided in the <i>Magic Database Help</i> handout. Until the spells are added to the databases, they will not work, and cannot be memorised for spell use.</p>'
+							+'<p>This command can be used on multiple selected tokens, as stated above. All the Character Sheets represented by the selected tokens will be converted, and the displayed list of spells to manually match represents the unmatched spells from all those Character Sheets. As the spells are manually matched, they will be replaced on all of the selected Character Sheets.</p>'
+							+'<h3>2.2 Convert Character Sheet Equipment</h3>'
+							+'<pre>--conv-items</pre>'
+							+'<p>Works on multiple selected tokens representing several Character Sheets.</p>'
+							+'<p>As for the <i>--conv-spells</i> command, Character Sheets that have not been created using the commands provided by the <i>!cmd --abilities</i> menu, pre-existing from previous Roll20 campaigns using the Advanced D&D2e Character Sheet, this command does its best to convert all weapons, armour, other items of equipment and magical items such as potions, rings etc, in tables on the Character Sheet to RPGMaster format and replace them with weapons, armour and items that exist in the RPGMaster spell databases. Those that the system can\'t automatically match are subsequently displayed in a menu, with additional buttons that list the items that do exist in the databases that can be used to replace the unknown ones by selecting both the item to be replaced and the replacement item.</p>'
+							+'<p>It is possible that not all weapons, armour, equipment and especially magic items will be able to be matched if the Character Sheet reflects campaign experience where bespoke magic items and equipment or equipment from other handbooks have been available. In this case, the items can be left unconverted, and the DM might add the items to their own databases using the information provided in the <i>Weapon & Armour Database Help</i> or <i>Magic Database Help</i> handouts. Until the items of equipment are added to the databases, if they are weapons they cannot be taken in-hand to fight with, armour will not be counted towards armour class calculations, and items that contribute to saving throws will not do so.</p>'
+							+'<p>As with the <i>--conv-spells</i> command, this command can be used on multiple selected tokens. All the Character Sheets represented by the selected tokens will be converted, and the displayed list of items to manually match represents the unmatched items from all those Character Sheets. As the items are manually matched, they will be replaced on all of the selected Character Sheets.</p>'
+							+'<h3>2.3 Set Default Token Bar mappings</h3>'
+							+'<pre>--token-defaults</pre>'
+							+'<p>This command uses the selected token as a model to set the default token bar mappings that will be used in future by the RPGMaster APIs.</p>'
+							+'<p>The standard defaults distributed with the APIs are for token bar1 to represent AC, bar2 to represent Thac0-base, and bar3 to represent HP. However, alternative mappings can be made. <b>It is highly recommended that HP, AC and Thac0-base are represented in some order</b> because these are the most common values to be affected by spells and circumstances, both in and out of combat situations.</p>'
+							+'<p>If no token is selected, or the token selected to be the model does not have any bars linked to a character sheet, an error message will be displayed. If some but not all the bars are linked, then any bars not linked will be automatically matched to some of the recommended Character Sheet fields of AC, Thac0-base, and HP (in that order of priority).</p>'
+							+'<p>Once this mapping is done, a menu will be displayed that can be used to map other tokens to the new defaults: either just the selected tokens, or all tokens in the campaign, or just those tokens that have bars currently linked to Character Sheets (i.e. excluding creature mobs with multiple tokens with unlinked bars representing a single character sheet). A button also exists to clear the bar links for all selected tokens to create creature mobs.</p>'
+							+'<h3>2.4 Check control of Character Sheets</h3>'
 							+'<pre>--check-chars</pre>'
 							+'<p>Displays a list of every Character Sheet with a defined Class, Level, or Monster Hit Dice categorised by <i>DM Controlled, Player Controlled PCs & NPCs, Player Controlled Creatures,</i> and <i>Controlled by Everyone.</i>  Each name is shown as a button which, if selected, swaps control of that Character Sheet between DM control and the control of a selected Player (the Player, of course, must be one that has already accepted an invite to join the campaign). A button is also provided at the bottom of this menu to toggle the running of this check whenever the Campaign is loaded.</p>'
-							+'<h3>2.2 Set Character Class, Race & Species</h3>'
+							+'<h3>2.5 Set Character Class, Race & Species</h3>'
 							+'<pre>--class-menu [token_id]</pre>'
 							+'<p>Takes an optional ID for a token representing a character. If not specified, takes the currently selected token</p>'
 							+'<p>Displays a menu from which the Race, Class and Level of a Character can be set, or a Creature species can be selected. Setting the Race, Class and Level of a Character (PC or NPC) enables all other capabilities to be used as appropriate for that character sheet in this and other APIs in the <b>RPGMaster API suite</b>, such as spell use, appropriate race & class powers, selection of allowed weapons, and the like. Selecting a Creature species <i>automatically</i> sets up the Character Sheet in an optimal way for the APIs to use it to represent the chosen creature, including saves, armour class, hit dice and rolling of hit points, as well as special attacks such as paralysation & level drain of high level undead, spell use by the likes of Orc Shamen, regeneration powers, and so on. However, it does not automatically give weapons, armour equipment, or magic items to Creatures - if appropriate this still needs to be done by the DM/Game Creator.</p>'
 							+'<p>DMs/Game Creatores can add to or amend the Class, Race and Creature definitions. Refer to the appropriate database help handout distributed with the APIs and created as handouts in your campaign for more information.</p>'
-							+'<h3>2.3 Add spells to spell book</h3>'
+							+'<h3>2.6 Add spells to spell book</h3>'
 							+'<pre>--add-spells [POWERS/MUSPELLS/PRSPELLS] | [level]</pre>'
 							+'<p>Displays a menu allowing spells in the Spells Databases to be added to the Character Sheet(s) represented by the selected Token(s).  If no spell type and/or spell level is specified, the initial menu shown is for Level 1 Wizard spells (MUSPELLS). Buttons are shown on the menu that allow navigation to other levels, spell types and powers.  For <i>Priests</i>, a button is also provided to add every spell allowed for the Priest\'s Class to their spellbooks at all levels (of course, they will only be able to memorise those that their experience level allows them to). For all Character Classes that have <i>Powers</i> (or Power-like capabilities, such as Priestly <i>Turn Undead</i> or Paladin <i>Lay on Hands</i>), there is a button on the <i>Powers</i> menu to add Powers that the character\'s Class can have.</p>'
 							+'<p><b>Note:</b> adding spells / powers to a sheet does not mean the Character can immediately use them.  They must be <i>memorised</i> first.  Use the commands in the <b>MagicMaster API</b> to memorise spells and powers.</p>'
-							+'<h3>2.4 Choose weapon proficiencies</h3>'
+							+'<h3>2.7 Choose weapon proficiencies</h3>'
 							+'<pre>--add-profs</pre>'
 							+'<p>Displays a menu from which to select proficiencies and level of proficiency for any weapons in the Weapon Databases for the Character Sheet(s) represented by the selected tokens.  Also provides a button for making the Character proficient in all weapons carried (i.e. those currently in their Item table).</p>'
 							+'<p>All current proficiencies are displayed, with the proficiency level of each, which can be changed or removed.  It is also now possible to select proficiencies in <b>Fighting Styles</b> as introduced by <i>The Complete Fighter\'s Handbook</i>: these can be found under the <i>Choose Style</i> button, and can also be set as Proficient or Specialised.  Selecting a Fighting Style proficiency grants benefits as defined in the Handbook, or as modified by the DM - see the <i>Styles Database Help</i> handout for more information.</p>'
 							+'<p><b>Note:</b> this does more than just entering the weapon in the proficiency table.  It adds the <i>weapon group</i> that the weapon belongs to as a field to the table (see weapon database help handouts for details), which is then used by the <b>AttackMaster API</b> to manage <i>related weapon</i> attacks and give the correct proficiency bonuses or penalties for the class and weapon used.</p>'
-							+'<h3>2.5 Set weapon proficiencies</h3>'
+							+'<h3>2.8 Set weapon proficiencies</h3>'
 							+'<pre>--set-prof  [NOT-PROF/PROFICIENT/SPECIALIST/MASTERY] | weapon | weapon-type </pre>'
 							+'<p>Sets a specific weapon proficiency to a named level.  If the proficiency level is omitted, PROFICIENT is assumed.  If the weapon already exists in the proficiencies table, the existing proficiency level is updated to that specified.  Otherwise, the weapon (and its weapon group) are added to the table at the specified level.</p>'
 							+'<p><b>Note:</b> this does more than just entering the weapon in the proficiency table.  It adds the weapon group that the weapon belongs to as a field to the table (see weapon database help handouts for details), which is then used by the AttackMaster API to manage related weapon attacks and give the correct proficiency bonuses or penalties for the class and weapon used.</p>'
-							+'<h3>2.6 Add proficiencies for all carried weapons</h3>'
+							+'<h3>2.9 Add proficiencies for all carried weapons</h3>'
 							+'<pre>--set-all-prof</pre>'
 							+'<p>Adds all currently carried weapons (those in the Items table) to PROFICIENT, saving them and their <i>weapon group</i> to the weapon proficiency table.  Those weapons found that are already in the table are reset to PROFICIENT (overwriting any existing different proficiency level).  Any other proficiencies already in the table are not altered.</p>'
 							+'<p><b>Note:</b> this command always adds a weapon proficiency called <i>innate</i>.  This proficiency is used for attacks with innate weapons, such as claws and bites, but also for spells that require a <i>touch attack</i>.  Indeed, to make this even more specific, the weapons database distributed with the AttackMaster and MagicMaster APIs includes a weapon called <i>Touch</i>.</p>'
@@ -313,6 +336,7 @@ var CommandMaster = (function() {
 		noChar: '&{template:'+fields.warningTemplate+'} {{name=^^tname^^\'s\nMagic Items Bag}}{{desc=^^tname^^ does not have an associated Character Sheet, and so cannot attack}}',
 		initMsg: '&{template:'+fields.menuTemplate+'} {{name=Initialisation Complete}}{{desc=Initialisation complete.  Command macros created.  Go to Macro tab (next to the cog at the top of the Chat window), and select them to show In Bar, and turn on the Macro Quick Bar.  Then start by dragging some characters on to the map to create tokens, and use Token-setup and Add-Items on each}}',
 		waitMsg: '&{template:'+fields.warningTemplate+'} {{name=Please Wait}}{{desc=Gathering data. Please wait for the menu to appear.}}',
+		convMsg: '&{template:'+fields.warningTemplate+'} {{name=Sheet Conversion}}{{Section1=You are about to convert the selected sheets to work with RPGMaster. This will move data from current tables and other places where it has previously been entered, and move it to where RPGMaster can make use of it. This means that the Character Sheets will probably become unusable in the way you were previously playing. <span style="color:red">***This cannot be undone!***</span> **It is highly recommended that you make copies of the Character Sheets before converting them** or, even better, make a complete copy of the campaign to use with RPGMaster in case you wish to reload any part from a previous version.}}',
 	});
 	
 	const MenuState = Object.freeze({
@@ -369,11 +393,13 @@ var CommandMaster = (function() {
 		AB_FULL:			'AB_FULL',
 		AB_CLASSES:			'AB_CLASSES',
 		AB_SAVES:			'AB_SAVES',
+		AB_MANAGE_TOKEN:	'AB_MANAGE_TOKEN',
 		AB_ASK_TOKENBARS:	'AB_ASK_TOKENBARS',
 		AB_SET_TOKENBARS:	'AB_SET_TOKENBARS',
 		AB_RESET_TOKENBARS:	'AB_RESET_TOKENBARS',
 		AB_TOKEN:			'AB_TOKEN',
 		AB_TOKEN_NONE:		'AB_TOKEN_NONE',
+		AB_TOKEN_ASK_LINKED:'AB_TOKEN_ASK_LINKED',
 		AB_TOKEN_SET_LINKED:'AB_TOKEN_SET_LINKED',
 		AB_TOKEN_SET_ALL:	'AB_TOKEN_SET_ALL',
 		AB_TOKEN_ASK_ALL:	'AB_TOKEN_ASK_ALL',
@@ -1455,8 +1481,6 @@ var CommandMaster = (function() {
 					+ 'or make [All Owned Weapons](!cmd --set-all-prof PROFICIENT) proficient\n'
 					+ 'and optionally ';
 					
-		log('makeProficienciesMenu: weapon='+weapon+', weapType='+weapType+', style='+style);
-		
 		if (weapon) {
 			let weapObj = getAbility( (style ? fields.StylesDB : fields.WeaponDB), weapon, charCS );
 			content += '[Review '+weapon+'](!cmd --button '+(style?'REVIEW_STYLE':'REVIEW_PROF')+'|'+weapon
@@ -1710,13 +1734,11 @@ var CommandMaster = (function() {
 		}
 		
 		content += '<tr><td width="50%">'+(dm ? '[Make' : (selButton + 'Is')) + ' Player-Character' + (dm ? ('](!cmd --button '+BT.AB_PC+'|'+menuType+'|0|&#63;{Whick player will control?|'+players.join('|')+'})') : '</span>')+'</td>'
-				+  '<td width="50%">'+(pc ? '[Make' : (selButton + 'Is')) + ' DMs Token' + (pc ? ('](!cmd --button '+BT.AB_DM+'|'+menuType+'|0|)') : '</span>')+'</td></tr>'
+				+  '<td width="50%">'+(pc ? '[Make' : (selButton + 'Is')) + ' Controlled by DM' + (pc ? ('](!cmd --button '+BT.AB_DM+'|'+menuType+'|0|)') : '</span>')+'</td></tr>'
 				+  '<tr><td colspan="2">[Check Who Controls What](!cmd --check-chars)</td></tr>'
-				+  '<tr><td width="50%">[Choose Race/Class](!cmd --button '+BT.AB_CLASSES+')</td><td width="50%">[Set base Saving Throws](!attk --check-saves |'+menuType+'|0)</td></tr>'
+				+  '<tr><td width="50%">[Choose Race/Class](!cmd --button '+BT.AB_CLASSES+')</td><td width="50%">[Set Saving Throws](!attk --check-saves |'+menuType+'|0)</td></tr>'
 				+  '<tr><td width="50%">[Add to Spellbook](!cmd --add-spells MUSPELLS)</td><td width="50%">[Add to Proficiencies](!cmd --add-profs)</td></tr>'
-				+  '<tr><td colspan="2">[Set Default Token Bars](!cmd --button '+BT.AB_ASK_TOKENBARS+'|'+menuType+')</td></tr>'
-				+  '<tr><td width="50%">[Set selected Token Bars to defaults](!cmd --button '+BT.AB_TOKEN+'|'+menuType+')</td><td width="50%">[Clear selected Token Bars](!cmd --button '+BT.AB_TOKEN_NONE+'|'+menuType+')</td></tr>'
-				+  '<tr><td width="50%">[Set All Token bars (not mobs)](!cmd --button '+BT.AB_TOKEN_SET_LINKED+'|'+menuType+')</td><td width="50%">[Set All Token bars (inc mobs)](!cmd --button '+BT.AB_TOKEN_ASK_ALL+'|'+menuType+')</td></tr>'
+				+  '<tr><td colspan="2">[Manage Token Bars](!cmd --button '+BT.AB_MANAGE_TOKEN+'|'+menuType+')</td></tr>'
 				+  '<tr><td colspan="2">**Convert Character Sheet to RPGMaster**</td></tr>'
 				+  '<tr><td width="50%">[Convert Items](!cmd --conv-items)</td><td width="50%">[Convert Spells](!cmd --conv-spells)</td></tr>'
 				+  '</table></div>}}';
@@ -1965,6 +1987,7 @@ var CommandMaster = (function() {
 
 			content += '}}{{Section4=**Lists of Possible Replacements**}}'
 					+ '{{Section5=[Weapon](!cmd --button '+BT.TOITEM+'|'+toConvert+'|?{Weapon to store|'+getMagicList(fields.MagicItemDB,miTypeLists,'weapon')+'}|'+setQty+')'
+					+ '[Ammo](!cmd --button '+BT.TOITEM+'|'+toConvert+'|?{Ammunition to store|'+getMagicList(fields.MagicItemDB,miTypeLists,'ammo')+'}|'+setQty+')'
 					+ '[Armour](!cmd --button '+BT.TOITEM+'|'+toConvert+'|?{Armour to store|'+getMagicList(fields.MagicItemDB,miTypeLists,'armour')+'}|'+setQty+')'
 					+ '[Potions](!cmd --button '+BT.TOITEM+'|'+toConvert+'|?{Potion to store|'+getMagicList(fields.MagicItemDB,miTypeLists,'potion')+'}|'+setQty+')'
 					+ '[Scrolls & Tomes](!cmd --button '+BT.TOITEM+'|'+toConvert+'|?{Scroll to store|'+getMagicList(fields.MagicItemDB,miTypeLists,'scroll')+'}|'+setQty+')'
@@ -2111,6 +2134,30 @@ var CommandMaster = (function() {
 	}
 	
 	/*
+	 * Display a menu of actions to manage token bars
+	 */
+	 
+	var makeMngTokenBarsMenu = function( args ) {
+		
+		var menuType = args[1];
+	 
+		var content = '&{template:'+fields.defaultTemplate+'}{{name=Manage Token Bars}}'
+					+ '{{Section=Use the following buttons to manage the mapping and values represented by token bars}}'
+					+ '{{Section1=Current default mappings are:\n'
+					+ '<span style="color:green">bar1 (green)</span> = '+state.RPGMaster.tokenFields[0]+'\n'
+					+ '<span style="color:blue">bar2 (blue)</span> = '+state.RPGMaster.tokenFields[1]+'\n'
+					+ '<span style="color:red">bar3 (red)</span> = '+state.RPGMaster.tokenFields[2]+'}}'
+					+ '{{Section2=[Set Default Token Bars for Campaign](!cmd --button '+BT.AB_ASK_TOKENBARS+'|'+menuType+')\n'
+					+ '[Set bars on selected Tokens to defaults](!cmd --button '+BT.AB_TOKEN+'|'+menuType+')\n'
+					+ '[Clear Bar links for selected Tokens](!cmd --button '+BT.AB_TOKEN_NONE+'|'+menuType+')\n'
+					+ '[Set bars on all Tokens to defaults (not mobs)](!cmd --button '+BT.AB_TOKEN_ASK_LINKED+'|'+menuType+')\n'
+					+ '[Set bars on all Tokens to defaults (including mobs)](!cmd --button '+BT.AB_TOKEN_ASK_ALL+'|'+menuType+')}}'
+					+ '{{desc=[Return to Token Setup menu](!cmd --abilities '+menuType+') or just do something else}}';
+					
+		sendFeedback( content );
+	}
+	
+	/*
 	 * Display a dialogue showing current token bar settings
 	 */
 	 
@@ -2119,11 +2166,11 @@ var CommandMaster = (function() {
 		var content = '&{template:'+fields.defaultTemplate+'}{{name=Default Token Bars}}{{desc=The following fields have been set as the default fields for the token bars. '
 					+ 'These will be set when using the [Set Token Bars] button, and for *Drag & Drop* creatures. Note that previously vacant bars have been set to recommended '
 					+ 'values: in order for RPGMaster spell efects to work best (especially for spells vs. creature mobs) , default token bars should include **Thac0_base, AC & HP**.}}'
-					+ '{{desc1=bar1 (green) = '+state.RPGMaster.tokenFields[0]+'\n'
-					+ 'bar2 (blue) = '+state.RPGMaster.tokenFields[1]+'\n'
-					+ 'bar3 (red) = '+state.RPGMaster.tokenFields[2]+'}}'
+					+ '{{desc1=<span style="color:green">bar1 (green)</span> = '+state.RPGMaster.tokenFields[0]+'\n'
+					+ '<span style="color:blue">bar2 (blue)</span> = '+state.RPGMaster.tokenFields[1]+'\n'
+					+ '<span style="color:red">bar3 (red)</span> = '+state.RPGMaster.tokenFields[2]+'}}'
 					+ '{{desc2=[Reset to recommended](!cmd --button '+BT.AB_RESET_TOKENBARS+'|'+abMenu+')}}'
-					+ '{{desc3=[Return to Token Setup menu](!cmd --button '+abMenu+')}}';
+					+ '{{desc3=[Return to Token Management menu](!cmd --button '+BT.AB_MANAGE_TOKEN+'|'+abMenu+')}}';
 				
 		sendFeedback( content );
 	 };
@@ -3075,26 +3122,28 @@ var CommandMaster = (function() {
 		if (!charCS) {
 			sendFeedback( '&{template:'+fields.warningTemplate+'}{{name=No token selected}}{{desc=You need to select a token that has its bar values set to those you want as defaults. '
 						+ 'Select the token and set the bars as you want now, and then rerun this command. In order for RPGMaster magical effects to work best (especially for spells '
-						+ 'vs. creature mobs) **it is recommended to map bars to AC, Thac0_base, and HP** so that the Players & DM see the effect of magic that affects these values on the token.}}' );
+						+ 'vs. creature mobs) **it is recommended to map bars to AC, Thac0_base, and HP** so that the Players & DM see the effect of magic that affects these values on the token.}}'
+						+ '{{desc1=[Return to Token Mgt menu](!cmd --button '+BT.AB_MANAGE_TOKEN+'|'+abMenu+')}}');
 			return;
 		};
 		if (!(curToken.get('bar1_link') || curToken.get('bar2_link') || curToken.get('bar3_link'))) {
 			sendFeedback( '&{template:'+fields.warningTemplate+'}}{{name=Unlinked token bars}}{{desc=This token does not have any bars linked to Character Sheet fields. Please link '
-						+ 'one or more of the token bars to Character Sheet fields.  In order for RPGMaster spell effects to work best (especially for spells vs. creature mobs) '
-						+ '**it is recommended to map bars to AC, Thac0_base, and HP** so that the Players & DM see the effect of magic that affects these values on the token.}}' );
+						+ 'one or more of the token bars to show how you want the default mappings to be.  In order for RPGMaster spell effects to work best (especially for spells vs. creature mobs) '
+						+ '**it is recommended to map bars to AC, Thac0_base, and HP** so that the Players & DM see the effect of magic that affects these values on the token.}}'
+						+ '{{desc1=[Return to Token Mgt menu](!cmd --button '+BT.AB_MANAGE_TOKEN+'|'+abMenu+')}}');
 			return;
 		};
 		if (cmd === BT.AB_ASK_TOKENBARS) {
-			sendFeedback( '&{template:'+fields.warningTemplate+'}{{name=Set Default Token Bars}}'
+			sendFeedback( '&{template:'+fields.defaultTemplate+'}{{name=Set Default Token Bars}}'
 						+ '{{desc=You are about to set the default token bars to:\n'
-						+ 'Bar1 = '+getBarName( curToken, charCS, 'bar1' )+'\n'
-						+ 'Bar2 = '+getBarName( curToken, charCS, 'bar2' )+'\n'
-						+ 'Bar3 = '+getBarName( curToken, charCS, 'bar3' )+'}}'
+						+ '<span style="color:green">Bar1 (green)</span> = '+getBarName( curToken, charCS, 'bar1' )+'\n'
+						+ '<span style="color:blue">Bar2 (blue)</span> = '+getBarName( curToken, charCS, 'bar2' )+'\n'
+						+ '<span style="color:red">Bar3 (red)</span> = '+getBarName( curToken, charCS, 'bar3' )+'}}'
 						+ '{{desc1=This is based on the selected token, with any unlinked bars set to recommended values. In order for RPGMaster magical effects to work best (especially for spells '
 						+ 'vs. creature mobs) **it is recommended to map bars to AC, Thac0_base, and HP** so that the Players & DM see the effect that magic has on these values on the token. '
 						+ 'HP is affected by powers such as *Rage*, AC and Thac0 by spells like *Bless* and *Prayer* and conditions such as *Blindness*. In a mob, some tokens may be affected, and '
 						+ 'others not affected: in this case clear token bar links but with values of default attributes set in respective token circles.}}'
-						+ '{{desc2=[Set default bars](!cmd --button '+BT.AB_SET_TOKENBARS+'|'+abMenu+') or just do something else}}' );
+						+ '{{desc2=[Set default bars](!cmd --button '+BT.AB_SET_TOKENBARS+'|'+abMenu+') or [Return to Menu](!cmd --button '+BT.AB_MANAGE_TOKEN+'|'+abMenu+')}}' );
 			return;
 		}
 		
@@ -3123,13 +3172,22 @@ var CommandMaster = (function() {
 			abMenu = args[1],
 			content = '',
 			allTokens = false,
-			names = [];
+			names = [],
+			linked = '',
+			not = '',
+			setCmd = BT.AB_TOKEN_SET_ALL;
 			
-		if (cmd === BT.AB_TOKEN_ASK_ALL) {
+		if (cmd === BT.AB_TOKEN_ASK_LINKED) {
+			linked = 'linked ';
+			not = 'not ';
+			setCmd = BT.AB_TOKEN_SET_LINKED;
+		}
+			
+		if (cmd === BT.AB_TOKEN_ASK_ALL || cmd === BT.AB_TOKEN_ASK_LINKED) {
 			content = '&{template:'+fields.warningTemplate+'}{{name=Setting Token Circles}}'
-					+ '{{desc=You have requested to set the token bars of ***All Tokens***, including those of mobs (i.e. multiple tokens linked to a single character sheet which normally '
+					+ '{{desc=You have requested to set the token bars of ***All '+linked+'Tokens***, '+not+'including those of mobs (i.e. multiple tokens linked to a single character sheet which normally '
 					+ 'do not have linked token bars) to the token bar defaults currently set. Is this what you want to do?}}'
-					+'{{desc1=[Yes Please](!cmd --button '+BT.AB_TOKEN_SET_ALL+'|'+abMenu+') or [No, I don\'t want to do that!](!cmd --button '+abMenu+')}}';
+					+'{{desc1=[Yes Please](!cmd --button '+setCmd+'|'+abMenu+') or [No, I don\'t want to do that!](!cmd --button '+BT.AB_MANAGE_TOKEN+'|'+abMenu+')}}';
 			sendFeedback(content);
 			return;
 		}
@@ -3138,14 +3196,15 @@ var CommandMaster = (function() {
 			content = '&{template:'+fields.defaultTemplate+'}{{name=Setting Token Circles}}';
 			if (cmd === BT.AB_TOKEN_NONE) {
 				content += '{{desc=Bar 1, 2 & 3 links set to \"None\"\n'
-						+  'Bar1 value set to '+state.RPGMaster.tokenFields[0]+'\n'
-						+  'Bar2 value set to '+state.RPGMaster.tokenFields[1]+'\n'
-						+  'Bar3 value set to '+state.RPGMaster.tokenFields[2]+'\n}}'
-						+  '{{desc1=This is best for multi-token Character Sheets e.g. Creature mobs}}';
+						+  '<span style="color:green">Bar1 (green)</span> value set to '+state.RPGMaster.tokenFields[0]+'\n'
+						+  '<span style="color:blue">Bar2 (blue)</span> value set to '+state.RPGMaster.tokenFields[1]+'\n'
+						+  '<span style="color:red">Bar3 (red)</span> value set to '+state.RPGMaster.tokenFields[2]+'\n}}'
+						+  '{{desc1=This is best for multi-token Character Sheets e.g. Creature mobs. Most spells will work on mobs where part of the mob is in the area of effect, but not all (e.g. *haste* and *slow*)}}';
 			} else {
-				content += '{{desc=Bar1 set to '+state.RPGMaster.tokenFields[0]+'\n'
-						+  'Bar2 set to '+state.RPGMaster.tokenFields[1]+'\n'
-						+  'Bar3 set to '+state.RPGMaster.tokenFields[2]+'}}';
+				content += '{{desc=<span style="color:green">Bar1 (green)</span> linked to '+state.RPGMaster.tokenFields[0]+'\n'
+						+  '<span style="color:blue">Bar2 (blue)</span> linked to '+state.RPGMaster.tokenFields[1]+'\n'
+						+  '<span style="color:red">Bar3 (red)</span> linked to '+state.RPGMaster.tokenFields[2]+'}}'
+						+  '{{desc1=Linking token bars to the character sheet is the preferred setting for PCs, NPCs & creatures. 1-to-1 mapping of tokens and character sheets supports full magical & spell effects.}}';
 			}
 		};
 		
@@ -3155,7 +3214,7 @@ var CommandMaster = (function() {
 			content += '{{desc2=For all tokens';
 			if (cmd === BT.AB_TOKEN_SET_LINKED) content += ' with linked bars';
 			content += '}}';
-			if (!silent) sendParsedMsg( selected[0].id, messages.waitMsg, findTheGM() );
+			if (!silent) sendFeedback( messages.waitMsg );
 		}
 		setTimeout( () => {
 			_.each( selected, token => {
@@ -3223,7 +3282,7 @@ var CommandMaster = (function() {
 			});
 			if (!silent) {
 				if (names.length) content += '{{desc8=**Tokens updated**\n' + names.sort().join(', ') + '}}';
-				content += '{{desc9=[Return to Menu](!cmd --button '+abMenu+')}}';
+				content += '{{desc9=[Return to Menu](!cmd --button '+BT.AB_MANAGE_TOKEN+'|'+abMenu+')}}';
 				sendFeedback( content,flags.feedbackName,flags.feedbackImg );
 			}
 		}, 100);
@@ -3606,6 +3665,14 @@ var CommandMaster = (function() {
 	};
 	
 	/*
+	 * Display a menu of token bar management buttons
+	 */
+	 
+	var doManageTokenBars = function( args ) {
+		makeMngTokenBarsMenu( args );
+	}
+	
+	/*
 	 * Display a menu to convert the spells on a legacy character sheet
 	 * to a format suitable for use with the APIs
 	 */
@@ -3617,17 +3684,22 @@ var CommandMaster = (function() {
 			args[0] = selected[0]._id;
 		}
 		var tokenID = args[0],
+			doIt = (args[1] || '') === 'true',
 			charCS = getCharacter(tokenID);
 			
 		if (!charCS) {
 			sendFeedback( '&{template:'+warningTemplate+'}{{name=Invalid Token}}{{desc=No token selected or the token does not have an associated Character Sheet}}' );
 			return;
 		}
-		sendParsedMsg( tokenID, messages.waitMsg, senderId );
-		setTimeout( () => {
-			spells2Convert( args, selected );
-			makeConvertSpellsMenu( [], selected );
-		}, 50);
+		if (!doIt) {
+			sendFeedback(messages.convMsg + '{{Section2=Do you wish to continue?\n[Yes Please](!cmd --conv-spells '+args[0]+'|true) or [No I don\'t want to do this!](!cmd --abilities)}}');
+		} else {
+			sendFeedback( messages.waitMsg );
+			setTimeout( () => {
+				spells2Convert( args, selected );
+				makeConvertSpellsMenu( [], selected );
+			}, 50);
+		};
 	};
 	
 	/*
@@ -3642,16 +3714,21 @@ var CommandMaster = (function() {
 			args[0] = selected[0]._id;
 		}
 		var tokenID = args[0],
+			doIt = (args[1] || '') === 'true',
 			charCS = getCharacter(tokenID);
 			
 		if (!charCS) {
 			sendFeedback( '&{template:'+warningTemplate+'}{{name=Invalid Token}}{{desc=No token selected or the token does not have an associated Character Sheet}}' );
 			return;
 		}
-		sendParsedMsg( tokenID, messages.waitMsg, senderId );
-		setTimeout( () => {
-			makeConvertItemsMenu( [], selected );
-		}, 50);
+		if (!doIt) {
+			sendFeedback(messages.convMsg + '{{Section2=Do you wish to continue?\n[Yes Please](!cmd --conv-items '+args[0]+'|true) or [No I don\'t want to do this!](!cmd --abilities)}}');
+		} else {
+			sendFeedback( messages.waitMsg );
+			setTimeout( () => {
+				makeConvertItemsMenu( [], selected );
+			}, 50);
+		};
 	};
 	
 	/*
@@ -3704,11 +3781,17 @@ var CommandMaster = (function() {
 		
 			handleSetDefaultBars( args, selected );
 			break;
+
+		case BT.AB_MANAGE_TOKEN :
+
+			makeMngTokenBarsMenu( args, selected );
+			break;
 			
 		case BT.AB_TOKEN :
 		case BT.AB_TOKEN_NONE :
 		case BT.AB_TOKEN_SET_LINKED :
 		case BT.AB_TOKEN_SET_ALL :
+		case BT.AB_TOKEN_ASK_LINKED :
 		case BT.AB_TOKEN_ASK_ALL :
 		
 			handleSetTokenBars( args, selected );
@@ -3947,7 +4030,8 @@ var CommandMaster = (function() {
 			selected = msg.selected,
 			isGM = (playerIsGM(senderId) || state.CommandMaster.debug === senderId),
 			changedCmds = false,
-			t = 0;
+			t = 0,
+			curToken, npc, val;
 			
 		// Make sure libRPGMaster exists, and has the functions that are expected
 		if('undefined' === typeof libRPGMaster
@@ -4035,6 +4119,9 @@ var CommandMaster = (function() {
 						break;
 					case 'conv-items':
 						if (isGM) doConvertItems(arg,selected,senderId);
+						break;
+					case 'token-defaults':
+						if (isGM) doManageTokenBars( arg );
 						break;
 					case 'index-db':
 						if (isGM) doIndexDB(arg);
