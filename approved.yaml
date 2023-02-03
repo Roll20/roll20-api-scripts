@@ -1191,3 +1191,7 @@ HeroSystem6eHeroic_HDImporter:
 PathToWindowOrDoor:
   - "PathToWindowOrDoor"
   - "Utility"
+
+ScriptInfo:
+  - "ScriptInfo"
+  - "Utility"
