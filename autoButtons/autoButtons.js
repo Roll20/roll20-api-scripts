@@ -34,7 +34,7 @@ const autoButtons = (() => { // eslint-disable-line no-unused-vars
         // 0.6.x => 0.8.0 Setting additions
         imageIcons: {
           type: 'boolean',
-          default: false,
+          default: true,
           name: `Image Icons`,
           description: `Render default icons as images (may solve font aligntment issues on Mac / ChromeOS)`,
           menuAction: `$--imageicon`,
