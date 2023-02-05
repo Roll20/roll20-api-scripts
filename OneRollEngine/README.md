@@ -20,3 +20,9 @@ since it puts the dice in a nice sorted group.
 
 ### Use the !sets API command
 If you use `!sets` followed by a dice pool, it will take care of sorting the dice for you! Great for macros.
+
+### The 'sh' roll modifier
+If you add `sh` at the end of your dice roll command that is returning sets, it will sort your results by Height instead of the default sort by Width.
+
+### The 'lean' roll modifier
+If you use `lean` at the end of your dice roll command that is returning sets, it will also return the 'lean' of your roll. The lean of a roll is defined as either even, odd, or balanced, depending on if more even or odd numbers were rolled, or if there were an equal number of both.

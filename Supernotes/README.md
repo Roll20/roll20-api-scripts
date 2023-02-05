@@ -39,6 +39,34 @@ This script as written is optimized for the D&D 5th Edition by Roll20 sheet, but
 
 *--handout|Handoutname|* If this is present in the arguments, the note will be sent to a handout instead of chat. This can allow a note to remain usable without scrolling through the chat. It can also be used as a sort of floating palette. Notes in handouts can be updated. Running the macro again will regenerate the note. The string in between pipes will be used as the name of the note handout. If no handout by that name exists, Supernotes will create one and post a link in chat to open it. The title must be placed between two pipes. *handout|My Handout|* will work. *handout|My Handout* will fail. A note handout automatically creates a horizontal rule at the top of the handout. Anything typed manually above that rule will be persistent. Supernotes will not overwrite this portion. You can use this area to create Journal Command Buttons to generate new notes or to give some context to the existing note. All updates are live.
 
+*--template[templatename]* Instead of using the configured sheet roll template, you can choose from between more than 10 custom templates that cover most common genres. Add the template command directly after the main prompt, followed by any of the regular parameters above. The current choices are:
+
+- **generic.** Just the facts, ma'am. Nothing fancy here.
+
+- **dark.** As above, but in reverse.
+
+- **crt.** Retro greenscreen for hacking and cyberpunk. Or for reports on that xenomorph hiding on your ship.
+
+- **notebook.** You know, for kids. Who like to ride bikes. Maybe they attend a school and fight vampires or rescue lost extraterrestrials
+
+- **gothic.** Classic noire horror for contending with Universal monsters or maybe contending with elder gods.
+
+- **apoc.** Messages scrawled on a wall. Crumbling and ancient, like the world that was.
+
+- **scroll.** High fantasy. Or low fantasy—we don't judge.
+
+- **lcars.** For opening hailing frequencies and to boldly split infinitives that no one has split before!
+
+- **faraway.** No animated title crawl, but still has that space wizard feel.
+
+- **steam.** Gears and brass have changed my life.
+
+- **western.** Return with us now to those thrilling days of yesteryear!
+
+- **wizard.** Like the ones that live on the coast.
+
+- **dragon.** Three-fivey goodness!
+
 *--help* Displays help.
 
 *--config* Returns a configuration dialog box that allows you to set which sheet's roll template to use, and to toggle the 'Send to Players' footer.
@@ -62,3 +90,5 @@ Default Template, D&D 5th Edition by Roll20, 5e Shaped, Pathfinder by Roll20, Pa
 - 1.1.2 Added Handout Feature
 - 1.1.3 Added support for Call of Cthulhu 7th Edition by Roll20
 - 1.1.4 Added better coordination with Reporter. Handouts can now support a Reporter report and display the desired notes in the same handout.
+- 0.2.0 Added custom templates, and configured base script to return in-line text links instead of Roll20 Big Pink Buttons.
+- 0.2.1 Fixed parsing bug and added two new templates - wizard and dragon
