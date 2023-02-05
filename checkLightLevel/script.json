@@ -2,11 +2,11 @@
   "name": "checkLightLevel",
   "script": "checkLightLevel.js",
   "version": "0.5.0",
-  "description": "*checkLightLevel* gives and approximation of the light level illuminating the selected token.\r\rBasic use: selected a token and type `!checklight`\r\rSee the main [checkLightLevel thread](https://app.roll20.net/forum/permalink/10766392/) for documentation.",
+  "description": "*checkLightLevel* gives an approximation of the percentage light level illuminating the selected token.\r\rBasic use: selected a token and type `!checklight`\r\rSee the main [checkLightLevel thread](https://app.roll20.net/forum/post/11312893/script-update-checklightlevel) for documentation.",
   "authors": "oosh",
   "roll20userid": "4775411",
   "useroptions": [],
-  "dependencies": ["PathMath"],
+  "dependencies": ["Path Math"],
   "modifies": {},
   "conflicts": [],
   "previousversions": []
