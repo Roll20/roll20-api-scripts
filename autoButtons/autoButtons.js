@@ -1893,7 +1893,6 @@ const autoButtons = (() => { // eslint-disable-line no-unused-vars
     saveToStore() {
       const customButtons = this.getButtonNames({default: false});
       customButtons.forEach(button => this._Config.toStore(`customButtons/${button}`, Helpers.copyObj(this._buttons[button])));
-      // debug.log(this._Config.fromStore('customButtons'));
     }
     _getReportTemplate(barNumber) {
       const template = `'*({name}) {bar${barNumber}_value;before}HP -> {bar${barNumber}_value}HP*'`;
@@ -1930,7 +1929,6 @@ const autoButtons = (() => { // eslint-disable-line no-unused-vars
         boundingPre = zeroBound ? `{0, ` : ``,
         boundingPost = zeroBound ? `}kh1` : ``;
       const queryString = Button.splitAndEscapeQuery(btn.query) || '';
-      // debug.info(reportString);
       if (!btn || typeof(btn.math) !== 'function') {
         debug.error(`${scriptName}: error creating API button ${buttonName}`);
         return ``;
@@ -2208,7 +2206,6 @@ const autoButtons = (() => { // eslint-disable-line no-unused-vars
     }
   }
 
-  // Tim would get mad if this wasn't here
   on('ready', startScript);
 
 })();
