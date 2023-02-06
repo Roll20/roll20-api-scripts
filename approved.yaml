@@ -1199,3 +1199,7 @@ autoButtons:
 checkLightLevel:
   - "checkLightLevel"
   - "Utility"
+  
+ScriptInfo:
+  - "ScriptInfo"
+  - "Utility"
