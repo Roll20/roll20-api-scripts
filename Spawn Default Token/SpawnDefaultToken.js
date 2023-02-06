@@ -82,16 +82,16 @@
 */
 // adding API_Meta for line offset
 var API_Meta = API_Meta || {};
-API_Meta.SpawnWIP = { offset: Number.MAX_SAFE_INTEGER, lineCount: -1 };
+API_Meta.Spawn = { offset: Number.MAX_SAFE_INTEGER, lineCount: -1 };
 {
-    try { throw new Error(''); } catch (e) { API_Meta.SpawnWIP.offset = (parseInt(e.stack.split(/\n/)[1].replace(/^.*:(\d+):.*$/, '$1'), 10) - (71)); }
+    try { throw new Error(''); } catch (e) { API_Meta.Spawn.offset = (parseInt(e.stack.split(/\n/)[1].replace(/^.*:(\d+):.*$/, '$1'), 10) - (71)); }
 }
-//        log(`SpawnWIP Offset: ${API_Meta.SpawnWIP.offset}`);
+//        log(`Spawn Offset: ${API_Meta.Spawn.offset}`);
 
 const SpawnDefaultToken = (() => {
     
     const scriptName = "SpawnDefaultToken";
-    const version = '0.25';
+    const version = '0.26';
     var gridSize = 70;  //this may be updated based on page settings 
     
     //an array of token properties which may be set for Spawned tokens
@@ -136,7 +136,7 @@ const SpawnDefaultToken = (() => {
     
     const checkInstall = function() {
         log(scriptName + ' v' + version + ' initialized.');
-        log(`SpawnWIP Offset: ${API_Meta.SpawnWIP.offset}`);
+        log(`Spawn Offset: ${API_Meta.Spawn.offset}`);
 
     };
     
@@ -1815,3 +1815,4 @@ const SpawnDefaultToken = (() => {
         registerEventHandlers();
     });
 })();
+{ try { throw new Error(''); } catch (e) { API_Meta.Spawn.lineCount = (parseInt(e.stack.split(/\n/)[1].replace(/^.*:(\d+):.*$/, '$1'), 10) - API_Meta.Spawn.offset); } }
