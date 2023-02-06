@@ -1191,3 +1191,11 @@ HeroSystem6eHeroic_HDImporter:
 PathToWindowOrDoor:
   - "PathToWindowOrDoor"
   - "Utility"
+
+autoButtons:
+  - "autoButtons"
+  - "Utility"
+ 
+checkLightLevel:
+  - "checkLightLevel"
+  - "Utility"
