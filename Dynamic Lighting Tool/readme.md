@@ -1,0 +1,22 @@
+### Dynamic Lighting Tool
+**Dynamic Lighting Tool** is a script that performs a host of Dynamic Lighting tasks. It allows you to change most Dynamic Lighting settings on tokens and pages in real time, without needing to call up dialog boxes. It also analyzes many common Dynamic Lighting issues and suggests solutions.
+
+
+### Features:
+ - A full report of all current relevant Dynamic Lighting information on the current page and the selected token.
+ - A *Why can't this token see?* button that performs a detailed analysis of the selected token and tries to pinpoint what the problem might be.
+ - A list of things to check manually that cannot be handled by mod scripts.
+ - Preset buttons for common lighting solutions.
+ - Identifies controllers and represented sheet (if any) of selected token.
+ - Extensive hover text over most labels and settings with explanations and tips.
+ - If the checkLightLevel script is installed (soon in One Click, or get it here), it will inform you of whether the token has light shining on it and how much.
+
+### Dependencies:
+This script requires the following scripts for best performance. They will be loaded as dependencies
+**Token Mod.** This is used for setting token values. There are many idiosyncrasies in the Mod system for tokens, and the Aaron has already done the hard work of accounting for them.
+**checkLightLevel.** This adds functionality, but the script will function without it.
+
+### Command:
+`!dltool` or `!dltool --report`
+
+For full documentation see [this thread](https://app.roll20.net/forum/post/11316788/script-dltool-a-dynamic-lighting-control-panel-and-troubleshooter) in the Roll20 forums
