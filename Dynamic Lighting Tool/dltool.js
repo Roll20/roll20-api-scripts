@@ -11,7 +11,7 @@ API_Meta.dltool = {
 }
 
 on('ready', () => {
-    const version = '0.0.2'; //version number set here
+    const version = '1.0.0'; //version number set here
     log('-=> Dynamic Lighting Tool v' + version + ' is loaded. Base command is !dltool');
 
     on('chat:message', (msg) => {
