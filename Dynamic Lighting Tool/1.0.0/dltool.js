@@ -266,7 +266,7 @@ on('ready', () => {
 
         //UTILITY INFO BLOCK
         const utilityInfo = openSection +
-            ((tokenData !== '') ? dlButton("Why can't this token see?", "!dltool --report|checklist") : dlButton("Why can't this token see?", "!dltool --report|checklist") ) +
+            ((tokenData !== '') ? dlButton("Why can't this token see?", "!dltool --report|checklist") : dlButton("Why can't this token see?", "!dltool --report|checklist")) +
             dlButton("Other things to check for", "!dltool --checklist") + `<br>` +
             dlButton("Help Center", "https&#58;\/\/help.roll20.net\/hc/en-us\/articles\/360045793374-Dynamic-Lighting-Requirements-Best-Practices") + `&nbsp;&nbsp;` +
             dlButton("DL Report", "!dltool --report") +
@@ -399,7 +399,7 @@ on('ready', () => {
 
 
 
-                            dlButton("Token settings don't stick?", "!dltool --default") +
+                                dlButton("Token settings don't stick?", "!dltool --default") +
 
 
 
@@ -478,15 +478,15 @@ on('ready', () => {
                             `<span style = "20% brightness over entire map. Simulates a clear, moonless night.">` + daylightButton("Star", 20, "!dltool --daylight_mode_enabled|true&#10;!dltool --daylightModeOpacity|20") + `</span>` +
                             `</div>`;
 
-/*
-                        //UTILITY SECTON
-                        utilityInfo = openSection +
-                            dlButton("Why can't this token see?", "!dltool --report|checklist") +
-                            dlButton("Other things to check for", "!dltool --checklist") + `<br>` +
-                            dlButton("Help Center", "https&#58;\/\/help.roll20.net\/hc/en-us\/articles\/360045793374-Dynamic-Lighting-Requirements-Best-Practices") + `&nbsp;&nbsp;` +
-                            dlButton("DL Report", "!dltool --report") +
-                            `</div>`;
-*/
+                        /*
+                                                //UTILITY SECTON
+                                                utilityInfo = openSection +
+                                                    dlButton("Why can't this token see?", "!dltool --report|checklist") +
+                                                    dlButton("Other things to check for", "!dltool --checklist") + `<br>` +
+                                                    dlButton("Help Center", "https&#58;\/\/help.roll20.net\/hc/en-us\/articles\/360045793374-Dynamic-Lighting-Requirements-Best-Practices") + `&nbsp;&nbsp;` +
+                                                    dlButton("DL Report", "!dltool --report") +
+                                                    `</div>`;
+                        */
 
                         //Determines which report to send
                         if (undefined === theOption) {
@@ -516,19 +516,19 @@ on('ready', () => {
 
                         }
                         break;
-                        
-                        
+
+
                     case 'default':
-                        
-                            theMessage = `${openHeader}Dynamic Lighting Tool</div>${openSection}${openSubhead}Saving a Default Token</div>${spacer}Sometimes, users can become frustrated when they set up a token perfectly, but the next time they pull it from the Journal Tab, none of the settings seem to have saved.<br>Setting a default token is like taking a snapshot of a token exactly as it is, and saving it to the character journal. Any changes you make to a token on the VTT will not affect the default token at all.<br><span style ="font-size:16px; font-weight:bold">Therefore, setting the journal's default token must always be done as the <i>last</i> step.</span></div>` + 
+
+                        theMessage = `${openHeader}Dynamic Lighting Tool</div>${openSection}${openSubhead}Saving a Default Token</div>${spacer}Sometimes, users can become frustrated when they set up a token perfectly, but the next time they pull it from the Journal Tab, none of the settings seem to have saved.<br>Setting a default token is like taking a snapshot of a token exactly as it is, and saving it to the character journal. Any changes you make to a token on the VTT will not affect the default token at all.<br><span style ="font-size:16px; font-weight:bold">Therefore, setting the journal's default token must always be done as the <i>last</i> step.</span></div>` +
                             `${openSection}${openSubhead}Two Methods to Save a Default Token</div>${spacer}<b>1) From the Token Settings</b><br>Open the Token Settings panel for the token. Click the "Update Default Token" button.<br>${spacer}<b>2) From the Journal</b><br>Open the journal for the character the token represents. Click the "Edit" button in the upper right corner. On the edit screen, there are three buttons.<br><b>${pictos('L')} Edit Token Properties: </b>This calls up the Token Settings panel for making other changes you wish to become new defaults.</b><br><b>${pictos('L')} Use Selected Token: </b>Sets the selected token as the new default token for that journal.<br><b>${pictos('L')} Apply Token Defaults: </b>This overwrites all tokens in play that represent this character to the new defaults. <i>Caution:</i> if you have edited tokens on the board (say, by numbering them), this can overwrite those changes.</div>`
 
-                            //theMessage = '' + theMessage + '</span>';
-                            sendChat('DLTool', '/w gm ' + openReport + theMessage + utilityInfo + closeReport, null, {
-                                noarchive: true
-                            });
+                        //theMessage = '' + theMessage + '</span>';
+                        sendChat('DLTool', '/w gm ' + openReport + theMessage + utilityInfo + closeReport, null, {
+                            noarchive: true
+                        });
 
-                        
+
                         break;
 
 
