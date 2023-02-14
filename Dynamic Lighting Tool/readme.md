@@ -11,10 +11,14 @@
  - Extensive hover text over most labels and settings with explanations and tips.
  - If the checkLightLevel script is installed (soon in One Click, or get it here), it will inform you of whether the token has light shining on it and how much.
 
+
 ### Dependencies:
 This script requires the following scripts for best performance. They will be loaded as dependencies
+
 **Token Mod.** This is used for setting token values. There are many idiosyncrasies in the Mod system for tokens, and the Aaron has already done the hard work of accounting for them.
+
 **checkLightLevel.** This adds functionality, but the script will function without it.
+
 
 ### Command:
 `!dltool` or `!dltool --report`
