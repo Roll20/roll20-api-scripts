@@ -1293,5 +1293,6 @@ on("ready", function() {
     MapChange.RegisterEventHandlers();
     log("Map Change Ready");
     // If it is then send a message to the GM to tell them the script is ready.
-    sendChat("Map Change", "/w gm Map Change Ready");
+    //Commented this out, since it produces a string of chat spam. - keithcurtis
+    //sendChat("Map Change", "/w gm Map Change Ready");
 });
