@@ -154,7 +154,7 @@ on('ready', () => {
         }
     }
     function sendMessage(message) {
-        sendChat('Reporter', '/w gm ' + openReport + message + closeReport, null, { noarchive: true });
+        sendChat('Reporter', '/w gm ' + baseOpenReport + message + closeReport, null, { noarchive: true });
 
     }
 
