@@ -2,6 +2,18 @@
 // Last Updated: 2021-03-26
 // A script to report token and character calls in a list.
 // Syntax is !report --[t|token_attribute] [c|character_attribute]... ---macro code for each character
+var API_Meta = API_Meta || {};
+API_Meta.Reporter = {
+    offset: Number.MAX_SAFE_INTEGER,
+    lineCount: -1
+}; {
+    try {
+        throw new Error('');
+    } catch (e) {
+        API_Meta.Reporter.offset = (parseInt(e.stack.split(/\n/)[1].replace(/^.*:(\d+):.*$/, '$1'), 10) - (4));
+    }
+}
+
 
 on('ready', function () {
     if (!_.has(state, 'Reporter')) {
@@ -17,7 +29,7 @@ on('ready', function () {
 
 
 on('ready', () => {
-    const version = '1.1.7'; //version number set here
+    const version = '1.1.8'; //version number set here
     log('-=> Reporter v' + version + ' is loaded. Internal commands of !RPping, !RPpage-mod, !RPechochat, and !RPchangelayer are used in code.');
     //sendChat('Reporter', '/w gm Ready');
 
@@ -218,12 +230,10 @@ on('ready', () => {
             'If the layer keyword all is used the report will be on all token/character pairs on all layers. In this case, a layer character will appear on each subhead line of the report to let you know which layer the token is on. ' + '<BR>' +
             'If the layer keyword tracker is used the report will be on all token/character pairs on the Turn Tracker as if it were a layer. In this case, a layer character will appear on each subhead line of the report to let you know which layer the token is on. If you click on the layer token, it will switch the token from the GM/Notes layer to the  Token/Objects layer and back.' + '<BR>' +
             '<code>compact|[true|false]</code> (default=false): The compact mode shows the token image at half size, and eliminates the second line of the report subhead, since it is not always desired. You may have a very large report you want to see better, or you may be using a sheet that does not support the default values. Currently the second line of the subhead only references the D&D 5th Edition by Roll20 Sheet. ' + '<BR>' +
-            '<code>minimal|[true|false]</code> (default=false): Like the compact option, only even more bare bones. It is the functional equivalent of adding <i>showHeader = false showFooter|false compact|rue source |false characterSheetButton|true characterSheetLink|true hideEmpty|true</i>. You can still use a custom title.' + '<BR>' +
             '<code>showheader|[true|false]</code> (default=true): This will control whether the header will display at the top of the report. ' + '<BR>' +
             '<code>showfooter|[true|false]</code> (default=true): This will control whether the footer will display at the bottom of the report. ' + '<BR>' +
             '<code>printbutton|[true|false]</code> (default=true): This will control whether the print button will display on each line of the report. ' + '<BR>' +
             '<code>notesbutton|[true|false]</code> (default=false): This will control whether a notes button will display on each line of the report. This notes button will return the token notes for the token on that line. The visibility of the notes button is controlled by the visibility keyword. If the visibility is "gm", it will use a !gmnote command, if the If the visibility is "whisper", it will use a !selftnote command, and if the visibility is "all", it will use a !pcnote command. ' + '<BR>' +
-            '<code>layerbutton|[true|false]</code> (default=false): This will control whether a layer indicator button will display on each line of the report. The layer button indicates which layer the token is on and normally appears only when the layer keword is set to all.' + '<BR>' +
             '<code>visibility|[gm|whisper|all]</code> (default=gm): This will determine how the report is presented. "gm" is whispered to the gm, "whisper" is whispered to the user who sent the command, "all" is posted openly for all to see. ' + '<BR>' +
             '<code>showfooter|[true|false]</code> (default=true): This will control whether the footer will display at the bottom of the report. ' + '<BR>' +
             '<code>source|[true|false]</code> (default=true): if source is set to false, the C and T characters that show whether an attribute comes fromthe token or the sheet will not be displayed. Use this is they are a distraction. ' + '<BR>' +
@@ -244,7 +254,6 @@ on('ready', () => {
             '<li>bar3I: token bar3 value, inverse order.' + '<BR>' +
             '<li>cr - Challenge Rating. D&D 5th Edition by Roll20 Sheet only' + '<BR>' +
             '<li>crI - Challenge Rating, inverse order. D&D 5th Edition by Roll20 Sheet only</UL>' + '<BR>' +
-            '<code>handout|handoutname|</code> If this is present in the keywords, the report will be sent to a handout instead of chat. This can allow a report to remain usable without scrolling through the chat. It can also be used as a sort of floating palette. Reports in handouts can be updated. Running the macro again will regenerate the table, as will pressing the Repeat button. The string in between pipes will be used as the name of the report handout. If no handout by that name exists, Reporter will create one and post a link in chat to open it. The title must be placed between two pipes. handout|My Handout| will work. handout|My Handout will break.<BR>A report Handout automatically creates a horizontal rule at the top of the handout. Anything typed manually above that rule will be persistent. Reporter will not overwrite it. You can use this area to create Journal Command Buttons to generate new reports or to give some context to the existing report. All updates are live.' + '<BR>' +
             '<code>title|Title|</code> If this is present in the keywords, the string in between pipes will be placed at the top of the report. If you only want the custom title to display, be sure turn off the header with showheader|false. The title must be placed between two pipes. title|My Title| will work. title|My Title will break.' + '<BR>' +
             '<b>Supernotes Buttons</b>' + '<BR>' +
             'These are small buttons that will appear on each line of the report that call up Supernotes commands. These buttons require Supernotes to be installed (Available from the Roll20 One Click installer). If Supernotes is not installed, the buttons will still display but will have no effect. If the report is in the Chat tab, the notes will display in the chat tab, and if the report is set to be in a handout, the notes will in the handout, directly below the report. This can be used to create a handout that can run a report and display notes below. An example use could be a handout that can read map pins and display the notes for each map pin, making an interactive city guide.' + '<BR>' +
@@ -254,8 +263,6 @@ on('ready', () => {
             '<code>avatarbutton|[true|false]</code>  (default=false): If this keyword is set to true, the report will place a small shortcut button to return the Avatar of the character assigned to the reported token.' + '<BR>' +
             '<code>tooltipbutton|[true|false]</code>  (default=false): If this keyword is set to true, the report will place a small shortcut button to return contents of the reported tokens Tooltips field.' + '<BR>' +
             '<code>imagebutton|[true|false]</code>  (default=false): If this keyword is set to true, the report will place a small shortcut button to return images from the Bio field of the character assigned to the reported token.' + '<BR>' +
-            '<code>sidebar|[true|false]</code>  (default=false, accepts "Left" or "Right"): Used in handout reports. If this keyword is set to "left" or "right" a floating sidebar will be displayed of the report to the left or right of any content the reporting buttons produce.' + '<BR>' +
-            '<code>scrolling|[true|false]</code>  (default=false, accepts integer value): Used for handouts that employ a sidebar. If this keyword is set to an integer value, the height of the sidebar will become fixed and allow for scrolling to display all results.' + '<BR>' +
             closeReport, null, {
             noarchive: true
         });
@@ -1611,3 +1618,6 @@ if (sidebar){
     //log("-=> !RPchangelayer command loaded (!RPchangelayer [token_id]) <=-")
 
 });
+
+
+{ try { throw new Error(''); } catch (e) { API_Meta.Reporter.lineCount = (parseInt(e.stack.split(/\n/)[1].replace(/^.*:(\d+):.*$/, '$1'), 10) - API_Meta.Reporter.offset); } }
