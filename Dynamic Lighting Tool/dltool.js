@@ -48,12 +48,10 @@ on('ready', () => {
         let tokenInfo = '';
         let lightInfo = '';
         let tokenData = '';
-
-
-
-
-        //utilityInfo = '';
-
+        let repeatCommand = `&#10;!dltool`
+        if (msg.content.match(/report\|light/m)){repeatCommand = `&#10;!!dltool --report|light`}
+        if (msg.content.match(/report\|vision/m)){repeatCommand = `&#10;!!dltool --report|vision`}
+        if (msg.content.match(/report\|page/m)){repeatCommand = `&#10;!!dltool --report|page`}
 
 
         const onButtonSmall = `<div style = 'background-color:#3b0; height:14px; width:25px; position: relative; top:2px; display: inline-block; border-radius:10px;'><div style = 'background-color:white; height:10px; width:10px; margin:2px 2px 2px 13px;display: inline-block;border-radius:10px'></div></div>`;
@@ -100,9 +98,9 @@ on('ready', () => {
             if (undefined === pageProperty) {
                 pageProperty = '';
             }
-            let finalButton = `<a style='background-color:transparent; border:0px solid transparent; padding:0px;' href = '!dltool --${pageProperty}|${((value === "true") ? "false" : "true")}&#10;!dltool --report'>${toggleButton}</a>`;
+            let finalButton = `<a style='background-color:transparent; border:0px solid transparent; padding:0px;' href = '!dltool --${pageProperty}|${((value === "true") ? "false" : "true")}${repeatCommand} --report'>${toggleButton}</a>`;
             if (pageProperty === "explorer_mode") {
-                finalButton = `<a style='background-color:transparent; border:0px solid transparent; padding:0px;' href = '!dltool --${pageProperty}|${((value === "basic") ? "off" : "basic")}&#10;!dltool --report'>${((value === "basic") ? onButtonSmall : offButtonSmall)}</a>`;
+                finalButton = `<a style='background-color:transparent; border:0px solid transparent; padding:0px;' href = '!dltool --${pageProperty}|${((value === "basic") ? "off" : "basic")}${repeatCommand} --report'>${((value === "basic") ? onButtonSmall : offButtonSmall)}</a>`;
             }
             return finalButton;
         };
@@ -121,7 +119,7 @@ on('ready', () => {
             if (undefined === tokenProperty) {
                 tokenProperty = '';
             }
-            let finalButton = `<a style='background-color:transparent; border:0px solid transparent; padding:0px;' href = '${buttonCode}&#10;!dltool --report'>${toggleButton}</a>`;
+            let finalButton = `<a style='background-color:transparent; border:0px solid transparent; padding:0px;' href = '${buttonCode}${repeatCommand} --report'>${toggleButton}</a>`;
             return finalButton;
         };
 
@@ -143,15 +141,15 @@ on('ready', () => {
             let totalLight = dimLight + brightLight;
             let finalButton = ``;
             let conditionalStyle = onStyle;
-            let conditonalLink = `!token-mod --set emits_bright_light|off emits_low_light|off light_angle|360&#10;!dltool --report`;
+            let conditonalLink = `!token-mod --set emits_bright_light|off emits_low_light|off light_angle|360${repeatCommand} --report`;
             if (tokenData.get("low_light_distance") === totalLight && tokenData.get("bright_light_distance") === brightLight && tokenData.get("limit_field_of_vision_total") === arc) {
                 if (tokenData.get("emits_bright_light") === false) {
                     conditionalStyle = disableStyle;
-                    conditonalLink = "!token-mod --set emits_bright_light|on emits_low_light|on light_angle|360&#10;!dltool --report";
+                    conditonalLink = "!token-mod --set emits_bright_light|on emits_low_light|on light_angle|360"+repeatCommand+" --report";
                 }
                 finalButton = `<a style=${conditionalStyle} href = '${conditonalLink}'><span title = "dim light ${dimLight}ft. bright light ${brightLight} ft.">${label}</span></a>`;
             } else {
-                finalButton = `<a style=${offStyle} href = '${onCode}&#10;!dltool --report'><span title = "dim light ${dimLight}ft. bright light ${brightLight} ft.">${label}</span></a>`;
+                finalButton = `<a style=${offStyle} href = '${onCode}${repeatCommand} --report'><span title = "dim light ${dimLight}ft. bright light ${brightLight} ft.">${label}</span></a>`;
             }
             return finalButton;
         }
@@ -166,9 +164,9 @@ on('ready', () => {
                     conditionalStyle = disableStyle;
                 }
 
-                finalButton = `<a style=${conditionalStyle} href = '${code}&#10;!dltool --report'>${label}</a>`;
+                finalButton = `<a style=${conditionalStyle} href = '${code}${repeatCommand} --report'>${label}</a>`;
             } else {
-                finalButton = `<a style=${offStyle} href = '${code}&#10;!dltool --report'>${label}</a>`;
+                finalButton = `<a style=${offStyle} href = '${code}${repeatCommand} --report'>${label}</a>`;
             }
             return finalButton;
         }
@@ -207,7 +205,7 @@ on('ready', () => {
                         dimmingDistance = Math.round(dimmingDistance * tokenData.get('night_vision_distance'));
                         openTitle = `<span title = "Dimming causes the vision area of the selected token to become dim Night Vision. ${dimmingDistance} feet of Dimming will have the inner ${dimmingDistance} feet of Night Vision appear bright while any amount left over will appear dim from that distance onward to the end of the night vision area.">`;
                         closeTitle = `</span><BR>` +
-                            `<div style = text-align:right;">Dimming Distance starts at: ${openTitle}<a style='background-color:#333; min-width: 15px; text-align:right; color:#eee; border:1px solid #3b0; border-radius:3px;padding:0px 3px 0px 3px;display:inline-block' href = '!token-mod --set night_vision_effect|dimming|?{Set dimming dropoff distance in feet|${dimmingDistance}} &#10;!dltool --report'>${dimmingDistance}</a>${closeTitle}</div>`;
+                            `<div style = text-align:right;">Dimming Distance starts at: ${openTitle}<a style='background-color:#333; min-width: 15px; text-align:right; color:#eee; border:1px solid #3b0; border-radius:3px;padding:0px 3px 0px 3px;display:inline-block' href = '!token-mod --set night_vision_effect|dimming|?{Set dimming dropoff distance in feet|${dimmingDistance}} ${repeatCommand} --report'>${dimmingDistance}</a>${closeTitle}</div>`;
                         value = "Dimming";
                 }
             }
@@ -216,7 +214,7 @@ on('ready', () => {
                 value = value * 100;//for display. We want the user to see percentages, not decimals
             }
 
-            let finalButton = `${openTitle}<a style='background-color:#333; min-width: 15px; text-align:right; color:#eee; border:1px solid #3b0; border-radius:3px;padding:0px 3px 0px 3px;display:inline-block' href = '${setCode} &#10;!dltool --report'>${value}</a>${closeTitle}`;
+            let finalButton = `${openTitle}<a style='background-color:#333; min-width: 15px; text-align:right; color:#eee; border:1px solid #3b0; border-radius:3px;padding:0px 3px 0px 3px;display:inline-block' href = '${setCode} ${repeatCommand} --report'>${value}</a>${closeTitle}`;
             return finalButton;
         };
 
@@ -267,9 +265,9 @@ on('ready', () => {
         //UTILITY INFO BLOCK
         const utilityInfo = openSection +
             ((tokenData !== '') ? dlButton("Why can't this token see?", "!dltool --report|checklist") : dlButton("Why can't this token see?", "!dltool --report|checklist")) +
-            dlButton("Other things to check for", "!dltool --checklist") + `<br>` +
+            dlButton("Other things to check for", "!dltool --checklist") +
             dlButton("Help Center", "https&#58;\/\/help.roll20.net\/hc/en-us\/articles\/360045793374-Dynamic-Lighting-Requirements-Best-Practices") + `&nbsp;&nbsp;` +
-            dlButton("DL Report", "!dltool --report") +
+            dlButton(" DL Report ", "!dltool --report") + `&nbsp;|&nbsp;` + dlButton("Vision", "!dltool --report|vision") + dlButton("Light", "!dltool --report|light") + dlButton("Page", "!dltool --report|page") + 
             `</div>`;
 
 
@@ -460,7 +458,7 @@ on('ready', () => {
                         //PAGE SECTON
                         pageInfo =
                             openSection +
-                            openSubhead + ' Dynamic Lighting</div>' +
+                            openSubhead + 'Dynamic Lighting for Page</div>' +
                             openPageHead + '&quot;' + pageData.get("name") + '&quot;</div>' +
                             toggle("small", pageData.get("dynamic_lighting_enabled"), "dynamic_lighting_enabled") + '<span title = "Toggling this setting to off will toggle off all settings below, but they will return to their previous state when you turn Dynamic Lighting back on.">Dynamic Lighting</span>' + '<BR>' +
                             '<span title = "This is how dark unlit areas appear to the GM. Keeping this value very low will lead to less confusion. Many Night Vision using tokens in one area can make that area look brightly lit.">GM Dark Opacity: </span>' +
@@ -473,9 +471,9 @@ on('ready', () => {
                             toggle("small", pageData.get("lightupdatedrop"), "lightupdatedrop") + ' <span title = "When Update on Drop is turned on, a token\'s view does not change while it is being moved, but only when that move is completed. This can keep players from scouting a map surreptitiously. Turning this on can also help performance, as the system does not need to continuously update.">Update on Drop</span>' + '<BR>' +
                             toggle("small", pageData.get("explorer_mode"), "explorer_mode") + ' <span title = "Explorer Mode will keep previously seen areas visible in a darkened gray style. It will not display tokens that cannot currently be seen. Commonly called Fog of War in video games. Turning this off can improve performance if lag is noticed.">Explorer Mode</span>' + '<BR>' +
                             HR + `<b>${label("Daylight Presets", "When Daylight Mode is on, tokens with Vision do not need specific light sources in able to see. These presets simulate regular daylight, a moonlit night, and a starlit night. Can also be used for buildings or dungeons with dim interiors.")} <b>` +
-                            `<span style = "Full brightness over entire map. Simulates a normal day.">` + daylightButton("Day", 100, "!dltool --daylight_mode_enabled|true&#10;!dltool --daylightModeOpacity|100") + `</span>` +
-                            `<span style = "Half brightness over entire map. Simulates a bright moonlit night.">` + daylightButton("Moon", 50, "!dltool --daylight_mode_enabled|true&#10;!dltool --daylightModeOpacity|50") + `</span>` +
-                            `<span style = "20% brightness over entire map. Simulates a clear, moonless night.">` + daylightButton("Star", 20, "!dltool --daylight_mode_enabled|true&#10;!dltool --daylightModeOpacity|20") + `</span>` +
+                            `<span style = "Full brightness over entire map. Simulates a normal day.">` + daylightButton("Day", 100, "!dltool --daylight_mode_enabled|true"+repeatCommand+" --daylightModeOpacity|100") + `</span>` +
+                            `<span style = "Half brightness over entire map. Simulates a bright moonlit night.">` + daylightButton("Moon", 50, "!dltool --daylight_mode_enabled|true"+repeatCommand+" --daylightModeOpacity|50") + `</span>` +
+                            `<span style = "20% brightness over entire map. Simulates a clear, moonless night.">` + daylightButton("Star", 20, "!dltool --daylight_mode_enabled|true"+repeatCommand+" --daylightModeOpacity|20") + `</span>` +
                             `</div>`;
 
                         /*
@@ -496,7 +494,7 @@ on('ready', () => {
                         } else {
 
                             switch (theOption) {
-                                case "token":
+                                case "vision":
                                     lines = openHeader + 'Dynamic Lighting Tool' + `</div>` +
                                         tokenInfo + utilityInfo +
                                         '</div>';
@@ -517,15 +515,6 @@ on('ready', () => {
                                         '</div>';
                             }
                         }
-
-
-
-
-
-
-
-
-
 
 
                         sendChat('DL Tool', '/w gm ' + openReport + lines + closeReport, null, {
