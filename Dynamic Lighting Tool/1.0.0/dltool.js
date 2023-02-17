@@ -494,10 +494,30 @@ on('ready', () => {
                                 tokenInfo + lightInfo + pageInfo + utilityInfo +
                                 '</div>';
                         } else {
-                            lines = openHeader + 'Dynamic Lighting Tool' + `</div>` +
-                                checklistTokenInfo + utilityInfo +
-                                '</div>';
+
+                            switch (theOption) {
+                                case "token":
+                                    lines = openHeader + 'Dynamic Lighting Tool' + `</div>` +
+                                        tokenInfo + utilityInfo +
+                                        '</div>';
+                                    break;
+                                case "light":
+                                    lines = openHeader + 'Dynamic Lighting Tool' + `</div>` +
+                                        lightInfo + utilityInfo +
+                                        '</div>';
+                                    break;
+                                case "page":
+                                    lines = openHeader + 'Dynamic Lighting Tool' + `</div>` +
+                                        pageInfo + utilityInfo +
+                                        '</div>';
+                                    break;
+                                default:
+                                    lines = openHeader + 'Dynamic Lighting Tool' + `</div>` +
+                                        checklistTokenInfo + utilityInfo +
+                                        '</div>';
+                            }
                         }
+
 
                         sendChat('DL Tool', '/w gm ' + openReport + lines + closeReport, null, {
                             noarchive: true
