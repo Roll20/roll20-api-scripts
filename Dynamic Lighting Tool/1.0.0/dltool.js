@@ -49,9 +49,9 @@ on('ready', () => {
         let lightInfo = '';
         let tokenData = '';
         let repeatCommand = `&#10;!dltool`
-        if (msg.content.match(/report\|light/m)){repeatCommand = `&#10;!!dltool --report|light`}
-        if (msg.content.match(/report\|vision/m)){repeatCommand = `&#10;!!dltool --report|vision`}
-        if (msg.content.match(/report\|page/m)){repeatCommand = `&#10;!!dltool --report|page`}
+        if (msg.content.match(/report\|light/m)){repeatCommand = `&#10;!dltool --report|light`}
+        if (msg.content.match(/report\|vision/m)){repeatCommand = `&#10;!dltool --report|vision`}
+        if (msg.content.match(/report\|page/m)){repeatCommand = `&#10;!dltool --report|page`}
 
 
         const onButtonSmall = `<div style = 'background-color:#3b0; height:14px; width:25px; position: relative; top:2px; display: inline-block; border-radius:10px;'><div style = 'background-color:white; height:10px; width:10px; margin:2px 2px 2px 13px;display: inline-block;border-radius:10px'></div></div>`;
@@ -153,6 +153,37 @@ on('ready', () => {
             }
             return finalButton;
         }
+
+
+
+
+
+       const visionButton = (label, has_bright_light_vision, has_night_vision, night_vision_distance, hoverText) => {
+            let finalButton = ``;
+            let conditionalStyle = onStyle;
+            let conditonalLink = `!token-mod --set emits_bright_light|off emits_low_light|off light_angle|360${repeatCommand} --report`;
+
+
+            if (tokenData.get("has_bright_light_vision") === has_bright_light_vision && tokenData.get("has_night_vision") === has_night_vision && tokenData.get("night_vision_distance") === night_vision_distance) {
+                    conditonalLink = "!token-mod --set has_bright_light_vision|false has_night_vision|false "+repeatCommand;
+                finalButton = `<a style=${onStyle} href = '${conditonalLink}'><span title = "${hoverText}">${label}</span></a>`;
+} else {
+                conditonalLink = "!token-mod --set has_bright_light_vision|" + has_bright_light_vision + " has_night_vision|"+has_night_vision+" night_vision_distance|"+night_vision_distance+ ((night_vision_distance===60)? " night_vision_effect|nocturnal": " ") +repeatCommand;
+                finalButton = `<a style=${offStyle} href = '${conditonalLink}'><span title = "${hoverText}">${label}</span></a>`;
+
+}
+
+
+
+            return finalButton;
+        }
+//https://app.roll20.net/editor/%22!token-mod%20--set%20has_bright_light_vision%7Cfalse%20has_night_vision%7Cfalse%20%22!dltool%20--report%7Cvision%20--report
+
+//https://app.roll20.net/editor/%22!token-mod%20--set%20has_bright_light_vision%7Cfalse%20has_night_vision%7Cfalse%20night_vision_distance%7Cfalse%20%22!dltool%20--report
+
+
+
+
 
         //BUTTON: DAYLIGHT PRESETS
         const daylightButton = (label, value, code) => {
@@ -350,7 +381,9 @@ on('ready', () => {
                                 toggleToken(tokenData.get("has_night_vision"), "has_night_vision", "!token-mod --set has_bright_light_vision|on has_night_vision|off", "!token-mod --set has_bright_light_vision|on has_night_vision|on  night_vision_effect|nocturnal") + ' <span title = "This defaults to night vision with the Nocturnal settin. No distance is set. Choose that in the fields to the right.">Night Vision</span> ' +
                                 setValue(tokenData.get("night_vision_distance"), "night_vision_distance", "!token-mod --set has_bright_light_vision|on has_night_vision|on night_vision_effect|nocturnal night_vision_distance|?{Input new Night Vision distance in feet}") + "ft " +
                                 "Mode: " + setValue(tokenData.get("night_vision_effect"), "night_vision_effect", "!token-mod --set night_vision_effect|?{Choose Mode|None,None|Nocturnal,Nocturnal|Dimming,Dimming } ") +
-                                checkLightButton +
+                                checkLightButton + HR +
+                                `<b>${label("Vision Presets:", "These buttons will handle the most common vision cases for DnD 5e.")} <b><br>` + 
+                                visionButton("normal",true,false,tokenData.get("night_vision_distance"),"Standard vision for humans and other characters without darkvision") + " | "+ visionButton("Darkvision 60ft",true,true,60,"Standard darkvision for most characters with this trait")  + visionButton("90",true,true,90,"Many monsters have 90ft of darkvision. Example: Trolls or Night Hags") +visionButton("120",true,true,120,"Enhanced darkvision used by races such as Drow or Duergar") +
                                 `</div>`;
 
 
