@@ -8,7 +8,7 @@ var MapChange = MapChange || (function() {
     // Date last modified in unix timestamp format.
     var lastModified = "1599488624";
     // Name of the person who last modified the script.
-    var modifiedBy = "TheWhiteWolves";
+    var modifiedBy = "TheWhiteWolves, keithcurtis";
     // Local version of the script.
     var version = "1.5";
     // Set to true to use built in debug statements
