@@ -1204,6 +1204,6 @@ ScriptInfo:
   - "ScriptInfo"
   - "Utility"
   
-Dynamic Lighting Tool:
-  - "dlTool"
+dynamicLightingTool:
+  - "Dynamic Lighting Tool"
   - "Utility"
