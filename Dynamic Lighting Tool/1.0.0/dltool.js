@@ -49,9 +49,9 @@ on('ready', () => {
         let lightInfo = '';
         let tokenData = '';
         let repeatCommand = `&#10;!dltool`
-        if (msg.content.match(/report\|light/m)){repeatCommand = `&#10;!dltool --report|light`}
-        if (msg.content.match(/report\|vision/m)){repeatCommand = `&#10;!dltool --report|vision`}
-        if (msg.content.match(/report\|page/m)){repeatCommand = `&#10;!dltool --report|page`}
+        if (msg.content.match(/report\|light/m)) { repeatCommand = `&#10;!dltool --report|light` }
+        if (msg.content.match(/report\|vision/m)) { repeatCommand = `&#10;!dltool --report|vision` }
+        if (msg.content.match(/report\|page/m)) { repeatCommand = `&#10;!dltool --report|page` }
 
 
         const onButtonSmall = `<div style = 'background-color:#3b0; height:14px; width:25px; position: relative; top:2px; display: inline-block; border-radius:10px;'><div style = 'background-color:white; height:10px; width:10px; margin:2px 2px 2px 13px;display: inline-block;border-radius:10px'></div></div>`;
@@ -65,7 +65,7 @@ on('ready', () => {
         const openHeader = `<div style = 'display: block; background-color:#333; color: #3b0; font-weight: bold; padding:2px; border-radius:20px; text-align:center;'>`;
         const openSubhead = `<div style = 'background-color:#333; color: #ccc; font-weight: bold; padding:2px; border-radius:20px; text-align:center;'>`;
         const openSubheadMargin = `<div style = 'background-color:#333; color: #ccc; font-weight: bold; padding:2px; border-radius:20px; text-align:center; margin-bottom:5px;'>`;
-        const openPageHead = `<div style = 'background-color:#aaa; color: #111; font-weight: bold; padding:2px; margin-bottom:10px; border-radius:20px; text-align:center;'>`;
+        const openPageHead = `<div style = 'background-color:#aaa; color: #111; font-weight: bold; padding:2px; margin-bottom:6px; border-radius:20px; text-align:center;'>`;
         const openReport = `<div style = 'display: block; position:relative;left: -5px; top: -30px; margin-bottom: -34px; background-color:#888; border-radius:18px; text-decoration:none;color:#000; font-family:Arial; font-size:13px; padding: 8px;'>`;
         const closeReport = `</div>`;
 
@@ -145,7 +145,7 @@ on('ready', () => {
             if (tokenData.get("low_light_distance") === totalLight && tokenData.get("bright_light_distance") === brightLight && tokenData.get("limit_field_of_vision_total") === arc) {
                 if (tokenData.get("emits_bright_light") === false) {
                     conditionalStyle = disableStyle;
-                    conditonalLink = "!token-mod --set emits_bright_light|on emits_low_light|on light_angle|360"+repeatCommand+" --report";
+                    conditonalLink = "!token-mod --set emits_bright_light|on emits_low_light|on light_angle|360" + repeatCommand + " --report";
                 }
                 finalButton = `<a style=${conditionalStyle} href = '${conditonalLink}'><span title = "dim light ${dimLight}ft. bright light ${brightLight} ft.">${label}</span></a>`;
             } else {
@@ -158,31 +158,25 @@ on('ready', () => {
 
 
 
-       const visionButton = (label, has_bright_light_vision, has_night_vision, night_vision_distance, hoverText) => {
+        const visionButton = (label, has_bright_light_vision, has_night_vision, night_vision_distance, hoverText) => {
             let finalButton = ``;
             let conditionalStyle = onStyle;
             let conditonalLink = `!token-mod --set emits_bright_light|off emits_low_light|off light_angle|360${repeatCommand} --report`;
 
 
             if (tokenData.get("has_bright_light_vision") === has_bright_light_vision && tokenData.get("has_night_vision") === has_night_vision && tokenData.get("night_vision_distance") === night_vision_distance) {
-                    conditonalLink = "!token-mod --set has_bright_light_vision|false has_night_vision|false "+repeatCommand;
+                conditonalLink = "!token-mod --set has_bright_light_vision|false has_night_vision|false " + repeatCommand;
                 finalButton = `<a style=${onStyle} href = '${conditonalLink}'><span title = "${hoverText}">${label}</span></a>`;
-} else {
-                conditonalLink = "!token-mod --set has_bright_light_vision|" + has_bright_light_vision + " has_night_vision|"+has_night_vision+" night_vision_distance|"+night_vision_distance+ ((night_vision_distance===60)? " night_vision_effect|nocturnal": " ") +repeatCommand;
+            } else {
+                conditonalLink = "!token-mod --set has_bright_light_vision|" + has_bright_light_vision + " has_night_vision|" + has_night_vision + " night_vision_distance|" + night_vision_distance + ((night_vision_distance === 60) ? " night_vision_effect|nocturnal" : " ") + repeatCommand;
                 finalButton = `<a style=${offStyle} href = '${conditonalLink}'><span title = "${hoverText}">${label}</span></a>`;
 
-}
+            }
 
 
 
             return finalButton;
         }
-//https://app.roll20.net/editor/%22!token-mod%20--set%20has_bright_light_vision%7Cfalse%20has_night_vision%7Cfalse%20%22!dltool%20--report%7Cvision%20--report
-
-//https://app.roll20.net/editor/%22!token-mod%20--set%20has_bright_light_vision%7Cfalse%20has_night_vision%7Cfalse%20night_vision_distance%7Cfalse%20%22!dltool%20--report
-
-
-
 
 
         //BUTTON: DAYLIGHT PRESETS
@@ -241,9 +235,11 @@ on('ready', () => {
                 }
             }
 
-            if (property === "fog_opacity" || property === "daylightModeOpacity") {
+            if (property === "fog_opacity" || property === "daylightModeOpacity" || property === "dim_light_opacity") {
                 value = value * 100;//for display. We want the user to see percentages, not decimals
             }
+
+
 
             let finalButton = `${openTitle}<a style='background-color:#333; min-width: 15px; text-align:right; color:#eee; border:1px solid #3b0; border-radius:3px;padding:0px 3px 0px 3px;display:inline-block' href = '${setCode} ${repeatCommand} --report'>${value}</a>${closeTitle}`;
             return finalButton;
@@ -264,12 +260,13 @@ on('ready', () => {
 
         //GENERATES Arc of Light
         const lightArc = (degrees) => {
+            let imgPosition = `style= "position:relative; top:-2px;" `;
             let finalButton = "";
-            if (degrees < 361) { finalButton = `<img src = "https://s3.amazonaws.com/files.d20.io/images/327269160/8sw7NxlV05adop79r5f2qQ/original.png?1676017045">` }
-            if (degrees < 290) { finalButton = `<img src = "https://s3.amazonaws.com/files.d20.io/images/327269162/d4MO9b-lpqOgNJvpxGsavQ/original.png?1676017045">` }
-            if (degrees < 220) { finalButton = `<img src = "https://s3.amazonaws.com/files.d20.io/images/327269161/qM3QHPQRvXsIQadDpqTo4Q/original.png?1676017045">` }
-            if (degrees < 150) { finalButton = `<img src = "https://s3.amazonaws.com/files.d20.io/images/327269163/zfqabEQXAHPqV9wPCfuK6g/original.png?1676017045">` }
-            if (degrees === 0) { finalButton = `<img src = "https://s3.amazonaws.com/files.d20.io/images/327269159/ieyV_MAZgBQfRS4e4PhjAw/original.png?1676017044">` }
+            if (degrees < 361) { finalButton = `<img ${imgPosition} src = "https://s3.amazonaws.com/files.d20.io/images/327269160/8sw7NxlV05adop79r5f2qQ/original.png?1676017045">` }
+            if (degrees < 290) { finalButton = `<img ${imgPosition} src = "https://s3.amazonaws.com/files.d20.io/images/327269162/d4MO9b-lpqOgNJvpxGsavQ/original.png?1676017045">` }
+            if (degrees < 220) { finalButton = `<img ${imgPosition} src = "https://s3.amazonaws.com/files.d20.io/images/327269161/qM3QHPQRvXsIQadDpqTo4Q/original.png?1676017045">` }
+            if (degrees < 150) { finalButton = `<img ${imgPosition} src = "https://s3.amazonaws.com/files.d20.io/images/327269163/zfqabEQXAHPqV9wPCfuK6g/original.png?1676017045">` }
+            if (degrees === 0) { finalButton = `<img ${imgPosition} src = "https://s3.amazonaws.com/files.d20.io/images/327269159/ieyV_MAZgBQfRS4e4PhjAw/original.png?1676017044">` }
 
 
             return finalButton;
@@ -298,7 +295,7 @@ on('ready', () => {
             ((tokenData !== '') ? dlButton("Why can't this token see?", "!dltool --report|checklist") : dlButton("Why can't this token see?", "!dltool --report|checklist")) +
             dlButton("Other things to check for", "!dltool --checklist") +
             dlButton("Help Center", "https&#58;\/\/help.roll20.net\/hc/en-us\/articles\/360045793374-Dynamic-Lighting-Requirements-Best-Practices") + `&nbsp;&nbsp;` +
-            dlButton(" DL Report ", "!dltool --report") + `&nbsp;|&nbsp;` + dlButton("Vision", "!dltool --report|vision") + dlButton("Light", "!dltool --report|light") + dlButton("Page", "!dltool --report|page") + 
+            dlButton(" DL Report ", "!dltool --report") + `&nbsp;|&nbsp;` + dlButton("Vision", "!dltool --report|vision") + dlButton("Light", "!dltool --report|light") + dlButton("Page", "!dltool --report|page") +
             `</div>`;
 
 
@@ -334,7 +331,7 @@ on('ready', () => {
                             if (typeof checkLightLevel != "undefined") {
                                 lightData = checkLightLevel.isLitBy(tokenData.get("id"));
                                 checkLightButton = HR +
-                                    "<b>" + `<span title="This is the amount of light currently falling on the token. Without night vision, a token needs to have a light source in order to be able to see. A zero value means the token is in darkness.">` + tokenData.get("name") + " is in " + (lightData.total * 100).toFixed() + "% total light</span></b>&nbsp;" +
+                                    "<b>" + `<span title="This is the amount of light currently falling on the token. Without night vision, a token needs to have a light source in order to be able to see. A zero value means the token is in darkness.">` + "Token is in " + (lightData.total * 100).toFixed() + "% total light</span></b>&nbsp;" +
                                     dlButton("Full Report", "!checklight");
 
                             } else {
@@ -377,13 +374,13 @@ on('ready', () => {
                                 openSection +
                                 openSubhead + 'Token Vision</div>' +
                                 openPageHead + '&quot;' + tokenName + '&quot; <span style ="font-size:12px; font-weight:normal;">' + ((char) ? ' (' + char.get("name") + ')' : '<span title = "This token does not represent a character">(generic)</span>') + '</span><BR><span style = "font-size=10px; font-weight:normal;" title="This is a list of people who control this token. If a name is not here, no player but the GM can use this token\'s vision settings.">Controllers: ' + controllerNames + '</span></div>' +
-                                toggleToken(tokenData.get("has_bright_light_vision"), "has_bright_light_vision", "!token-mod --set has_bright_light_vision|off has_night_vision|off", "!token-mod --set has_bright_light_vision|on has_limit_field_of_vision|false") + ' <span title = "If this is on, the token has vision enabled. It will still need either Night Vision, or a nearby lightsource, otherwise it will see only blackness. A GM can test this by selecting the token and pressing Cntrl/Cmd-L. This is only an approximation. For true testing, it is recommended to use a Dummy Account. You can find out more about this in the Roll20 wiki. NOTE: Sometimes default values in token light can cause a token to see nothing regardless. Try toggling a light preset for this token on and off.">Vision</span> &nbsp;' + '<BR>' +
+                                toggleToken(tokenData.get("has_bright_light_vision"), "has_bright_light_vision", "!token-mod --set has_bright_light_vision|off has_night_vision|off", "!token-mod --set has_bright_light_vision|on has_limit_field_of_vision|false") + ' <span title = "If this is on, the token has vision enabled. It will still need either Night Vision, or a nearby lightsource, otherwise it will see only blackness. A GM can test this by selecting the token and pressing Cntrl/Cmd-L. This is only an approximation. For true testing, it is recommended to use a Dummy Account. You can find out more about this in the Roll20 wiki. NOTE: Sometimes default values in token light can cause a token to see nothing regardless. Try toggling a light preset for this token on and off."> <b>Vision</b></span> &nbsp;' + '<BR>' +
                                 toggleToken(tokenData.get("has_night_vision"), "has_night_vision", "!token-mod --set has_bright_light_vision|on has_night_vision|off", "!token-mod --set has_bright_light_vision|on has_night_vision|on  night_vision_effect|nocturnal") + ' <span title = "This defaults to night vision with the Nocturnal settin. No distance is set. Choose that in the fields to the right.">Night Vision</span> ' +
                                 setValue(tokenData.get("night_vision_distance"), "night_vision_distance", "!token-mod --set has_bright_light_vision|on has_night_vision|on night_vision_effect|nocturnal night_vision_distance|?{Input new Night Vision distance in feet}") + "ft " +
                                 "Mode: " + setValue(tokenData.get("night_vision_effect"), "night_vision_effect", "!token-mod --set night_vision_effect|?{Choose Mode|None,None|Nocturnal,Nocturnal|Dimming,Dimming } ") +
                                 checkLightButton + HR +
-                                `<b>${label("Vision Presets:", "These buttons will handle the most common vision cases for DnD 5e.")} <b><br>` + 
-                                visionButton("normal",true,false,tokenData.get("night_vision_distance"),"Standard vision for humans and other characters without darkvision") + " | "+ visionButton("Darkvision 60ft",true,true,60,"Standard darkvision for most characters with this trait")  + visionButton("90",true,true,90,"Many monsters have 90ft of darkvision. Example: Trolls or Night Hags") +visionButton("120",true,true,120,"Enhanced darkvision used by races such as Drow or Duergar") +
+                                `<b>${label("Vision Presets:", "These buttons will handle the most common vision cases for DnD 5e.")} <b><br>` +
+                                visionButton("normal", true, false, tokenData.get("night_vision_distance"), "Standard vision for humans and other characters without darkvision") + " | " + visionButton("Darkvision 60ft", true, true, 60, "Standard darkvision for most characters with this trait") + visionButton("90", true, true, 90, "Many monsters have 90ft of darkvision. Example: Trolls or Night Hags") + visionButton("120", true, true, 120, "Enhanced darkvision used by races such as Drow or Duergar") +
                                 `</div>`;
 
 
@@ -453,35 +450,41 @@ on('ready', () => {
                             let char = ((tokenData.get("represents")) ? getObj("character", tokenData.get("represents")) : false);
                             lightInfo = openSection +
                                 openSubhead + 'Token Light</div>' +
+                                spacer.replace(`margin:5px`, `margin:2px`) +
+                                toggleToken(tokenData.get("emits_bright_light"), "emits_bright_light", "!token-mod --set emits_bright_light|off emits_low_light|off light_angle|360", "!token-mod --set emits_bright_light|on emits_low_light|on light_angle|360") + ' <span title = "This toggles whether or not the selected token emits light. You can set those values below, and they will persist and be restored if lighting is turned off and back on."><b>Light</b></span> &nbsp;' +
+                                `<div style= "float:right; margin: 2px 5px 0px 0px; "><div title="This is a graph which shows the proportion of bright to dim light" style = "width: 60px; height:12px; background-image: linear-gradient(to right, #aaa, #999, #444); display:inline-block; border: 1px solid #111"><div style = "width:${(Number(tokenData.get("bright_light_distance")) / Number(tokenData.get("low_light_distance"))) * 100}%; height:12px; background-image: linear-gradient(to right, #eee, #ccc);"></div></div></div>` + '<BR>' +
+                                spacer.replace(`margin:5px`, `margin:1px`) +
+                                'Bright: <span title="The amount of bright light emitted by this token. Bright light is generated from the center of the token.">' + setValue(tokenData.get("bright_light_distance"), "bright_light_distance", "!token-mod --set emits_bright_light|on bright_light_distance|?{Input Bright light in feet}") + "</span>ft " +
+                                '&nbsp;|&nbsp;Dim: <span title="The amount of dim light emitted by this token. Dim light begins at the end of the brght light range.">' + setValue(tokenData.get("low_light_distance") - tokenData.get("bright_light_distance"), "low_light_distance", "!token-mod --set emits_low_light|on low_light_distance|?{Input Bright light in feet}") + "</span>ft " +
+                                `<span title="this is the brightness of the dim light emitted by the token. 75% is the default.">Intensity: </span>${setValue(tokenData.get("dim_light_opacity"), "dim_light_opacity", "!token-mod --set dim_light_opacity|?{Set Brightness of Dim light|75}")}%` +
 
-                                toggleToken(tokenData.get("emits_bright_light"), "emits_bright_light", "!token-mod --set emits_bright_light|off emits_low_light|off light_angle|360", "!token-mod --set emits_bright_light|on emits_low_light|on light_angle|360") + ' <span title = "This toggles whether or not the selected token emits light. You can set those values below, and they will persist and be restored if lighting is turned off and back on.">Light</span> &nbsp;' + '<BR>' +
-                                'Light Bright: <span title="The amount of bright light emitted by this token. Bright light is generated from the center of the token.">' + setValue(tokenData.get("bright_light_distance"), "bright_light_distance", "!token-mod --set emits_bright_light|on bright_light_distance|?{Input Bright light in feet}") + "</span>ft " +
-                                'Dim: <span title="The amount of dim light emitted by this token. Dim light begins at the end of the brght light range.">' + setValue(tokenData.get("low_light_distance") - tokenData.get("bright_light_distance"), "low_light_distance", "!token-mod --set emits_low_light|on low_light_distance|?{Input Bright light in feet}") + "</span>ft " +
-                                ` <div title="This is a graph which shows the proportion of bright to dim light" style = "width: 60px; height:12px; background-image: linear-gradient(to right, #aaa, #999, #444); display:inline-block; border: 1px solid #111"><div style = "width:${(Number(tokenData.get("bright_light_distance")) / Number(tokenData.get("low_light_distance"))) * 100}%; height:12px; background-image: linear-gradient(to right, #eee, #ccc);"></div></div>` + '<BR>' +
+
+                                `<br>` + HR +
+
                                 toggleToken(tokenData.get("has_limit_field_of_vision"), "has_limit_field_of_vision", "!token-mod --set has_limit_field_of_vision|off", "!token-mod --set has_limit_field_of_vision|on") + ' <span title = "This toggles whether or not the selected token emits light. You can set those values below, and they will persist and be restored if lighting is turned off and back on.">Directional Light</span> &nbsp;' +
                                 `&nbsp;<span title="Arc of Light.">` + setValue(tokenData.get("limit_field_of_vision_total"), "limit_field_of_vision_total", "!token-mod --set limit_field_of_vision_total|?{Input arc of light in degrees}") + "</span>° Arc " +
                                 lightArc(tokenData.get("limit_field_of_vision_total")) + '<BR>' +
 
-                                `<div style="margin-top:5px; display:inline-block">` +
-                                '<span title="Use this sparingly, as light colors can interact in unpredicatble ways. Tinting vision is not recommended, since the interaction is problematic.">Color:' + setValue(tokenData.get("lightColor"), "lightColor", "!token-mod --set lightColor|?{Use sparingly. Input in hex, rgb or hsv format|transparent}") + "</span> " +
+                                `<div style="margin-top:0px; display:inline-block">` +
+                                '<span title="Use this sparingly, as light colors can interact in unpredicatble ways. Tinting vision is not recommended, since the interaction is problematic.">Color:' + setValue(tokenData.get("lightColor"), "lightColor", "!token-mod --set lightColor|?{Use sparingly. Input in hex, rgb or hsv format.|transparent}") + "</span> " +
                                 `<div style ="display:inline-block; width: 18px; height:14px; position:relative; top:1px; border: 1px solid #111; border-radius:3px; margin-top:1px; margin-left: -2px; background-color:${tokenData.get('lightColor')}">&nbsp;</div>` +
                                 '&nbsp;&nbsp;<span title="This should be at 100% in most cases. Some systems, like Pathfinder, and D&D 4e have Low Light Vision, which can increase the effective light of a light source for that token. For example, a token with a light multiplier of 200 would see the light from a campfire as twice as big than a token with the default 100 would.">Multiplier:' + setValue(tokenData.get("light_sensitivity_multiplier"), "light_sensitivity_multiplier", "!token-mod --set light_sensitivity_multiplier|?{Sometimes called Low Light Vision. 100% is recommended for most RPG systems|100}") + "%</span> " +
                                 `</div>` + `<br>` +
 
                                 HR +
-                                `<b>${label("Light Presets", "Presets for most common cases. These are geared toward 5e definitions, but are simple to redefine in the code. Clicking a preset name will also toggle the state of light being on or off. The preset will restored if you toggle the master token light switch off and on.")}</b><BR>` +
-                                lightButton("Spotlight", 0, 5, 360, "!token-mod --set emits_bright_light|on bright_light_distance|5 low_light_distance|0 has_limit_field_of_vision|off limit_field_of_vision_total|360") +
-                                lightButton("Candle", 5, 2, 360, "!token-mod --set emits_bright_light|on emits_low_light|on bright_light_distance|2 low_light_distance|5 has_limit_field_of_vision|off limit_field_of_vision_total|360") +
-                                lightButton("Lamp", 15, 15, 360, "!token-mod --set emits_bright_light|on emits_low_light|on bright_light_distance|15 low_light_distance|15 has_limit_field_of_vision|off limit_field_of_vision_total|360") +
-                                lightButton("Torch", 20, 20, 360, "!token-mod --set emits_bright_light|on emits_low_light|on bright_light_distance|20 low_light_distance|20 has_limit_field_of_vision|off limit_field_of_vision_total|360") +
-                                lightButton("Hooded Lantern", 30, 30, 360, "!token-mod --set emits_bright_light|on emits_low_light|on bright_light_distance|30 low_light_distance|30 has_limit_field_of_vision|off limit_field_of_vision_total|360") +
-                                lightButton("Bullseye Lantern", 60, 60, 90, "!token-mod --set emits_bright_light|on emits_low_light|on bright_light_distance|60 low_light_distance|60 has_limit_field_of_vision|on limit_field_of_vision_total|90") +
-                                lightButton("<i>Light<i>", 20, 20, 360, "!token-mod --set emits_bright_light|on emits_low_light|on bright_light_distance|20 low_light_distance|20 has_limit_field_of_vision|off limit_field_of_vision_total|360") +
-                                lightButton("<i>Daylight<i>", 60, 60, 360, "!token-mod --set emits_bright_light|on emits_low_light|on bright_light_distance|60 low_light_distance|60 has_limit_field_of_vision|off limit_field_of_vision_total|360") +
-                                lightButton("<i>Dancing Light<i>", 10, 0, 360, "!token-mod --set emits_bright_light|on emits_low_light|on bright_light_distance|0 low_light_distance|10 has_limit_field_of_vision|off limit_field_of_vision_total|360") +
-                                lightButton("<i>Faerie Fire<i>", 10, 0, 360, "!token-mod --set emits_bright_light|on emits_low_light|on bright_light_distance|0 low_light_distance|10 has_limit_field_of_vision|off limit_field_of_vision_total|360") +
-                                lightButton("<i>Flametongue<i>", 40, 40, 360, "!token-mod --set emits_bright_light|on emits_low_light|on bright_light_distance|40 low_light_distance|40 has_limit_field_of_vision|off limit_field_of_vision_total|360") +
-                                lightButton("<i>Gem of Brightness<i>", 30, 30, 360, "!token-mod --set emits_bright_light|on emits_low_light|on bright_light_distance|30 low_light_distance|30 has_limit_field_of_vision|off limit_field_of_vision_total|360") +
+                                `<b>${label("Light Presets: ", "Presets for most common cases. These are geared toward 5e definitions, but are simple to redefine in the code. Clicking a preset name will also toggle the state of light being on or off. The preset will restored if you toggle the master token light switch off and on.")}</b><br>` +
+                                lightButton("Spotlight", 0, 5, 360, "!token-mod --set emits_bright_light|on bright_light_distance|5 low_light_distance|0 has_limit_field_of_vision|off limit_field_of_vision_total|360 dim_light_opacity|" + tokenData.get("dim_light_opacity")) +
+                                lightButton("Candle", 5, 2, 360, "!token-mod --set emits_bright_light|on emits_low_light|on bright_light_distance|2 low_light_distance|5 has_limit_field_of_vision|off limit_field_of_vision_total|360 dim_light_opacity|" + tokenData.get("dim_light_opacity")) +
+                                lightButton("Lamp", 15, 15, 360, "!token-mod --set emits_bright_light|on emits_low_light|on bright_light_distance|15 low_light_distance|15 has_limit_field_of_vision|off limit_field_of_vision_total|360 dim_light_opacity|" + tokenData.get("dim_light_opacity")) +
+                                lightButton("Torch", 20, 20, 360, "!token-mod --set emits_bright_light|on emits_low_light|on bright_light_distance|20 low_light_distance|20 has_limit_field_of_vision|off limit_field_of_vision_total|360 dim_light_opacity|" + tokenData.get("dim_light_opacity")) +
+                                lightButton("Hooded Lantern", 30, 30, 360, "!token-mod --set emits_bright_light|on emits_low_light|on bright_light_distance|30 low_light_distance|30 has_limit_field_of_vision|off limit_field_of_vision_total|360 dim_light_opacity|" + tokenData.get("dim_light_opacity")) +
+                                lightButton("Bullseye Lantern", 60, 60, 90, "!token-mod --set emits_bright_light|on emits_low_light|on bright_light_distance|60 low_light_distance|60 has_limit_field_of_vision|on limit_field_of_vision_total|90 dim_light_opacity|" + tokenData.get("dim_light_opacity")) +
+                                lightButton("<i>Light<i>", 20, 20, 360, "!token-mod --set emits_bright_light|on emits_low_light|on bright_light_distance|20 low_light_distance|20 has_limit_field_of_vision|off limit_field_of_vision_total|360 dim_light_opacity|" + tokenData.get("dim_light_opacity")) +
+                                lightButton("<i>Daylight<i>", 60, 60, 360, "!token-mod --set emits_bright_light|on emits_low_light|on bright_light_distance|60 low_light_distance|60 has_limit_field_of_vision|off limit_field_of_vision_total|360 dim_light_opacity|" + tokenData.get("dim_light_opacity")) +
+                                lightButton("<i>Dancing Light<i>", 10, 0, 360, "!token-mod --set emits_bright_light|on emits_low_light|on bright_light_distance|0 low_light_distance|10 has_limit_field_of_vision|off limit_field_of_vision_total|360 dim_light_opacity|" + tokenData.get("dim_light_opacity")) +
+                                lightButton("<i>Faerie Fire<i>", 10, 0, 360, "!token-mod --set emits_bright_light|on emits_low_light|on bright_light_distance|0 low_light_distance|10 has_limit_field_of_vision|off limit_field_of_vision_total|360 dim_light_opacity|" + tokenData.get("dim_light_opacity")) +
+                                lightButton("<i>Flametongue<i>", 40, 40, 360, "!token-mod --set emits_bright_light|on emits_low_light|on bright_light_distance|40 low_light_distance|40 has_limit_field_of_vision|off limit_field_of_vision_total|360 dim_light_opacity|" + tokenData.get("dim_light_opacity")) +
+//                                lightButton("<i>Gem of Brightness<i>", 30, 30, 360, "!token-mod --set emits_bright_light|on emits_low_light|on bright_light_distance|30 low_light_distance|30 has_limit_field_of_vision|off limit_field_of_vision_total|360 dim_light_opacity|" + tokenData.get("dim_light_opacity")) +
                                 `</div>`;
                         } else {
                             tokenInfo = "No token is selected";
@@ -493,7 +496,7 @@ on('ready', () => {
                             openSection +
                             openSubhead + 'Dynamic Lighting for Page</div>' +
                             openPageHead + '&quot;' + pageData.get("name") + '&quot;</div>' +
-                            toggle("small", pageData.get("dynamic_lighting_enabled"), "dynamic_lighting_enabled") + '<span title = "Toggling this setting to off will toggle off all settings below, but they will return to their previous state when you turn Dynamic Lighting back on.">Dynamic Lighting</span>' + '<BR>' +
+                            toggle("small", pageData.get("dynamic_lighting_enabled"), "dynamic_lighting_enabled") + '<span title = "Toggling this setting to off will toggle off all settings below, but they will return to their previous state when you turn Dynamic Lighting back on."> <b>Dynamic Lighting</b></span>' + '<BR>' +
                             '<span title = "This is how dark unlit areas appear to the GM. Keeping this value very low will lead to less confusion. Many Night Vision using tokens in one area can make that area look brightly lit.">GM Dark Opacity: </span>' +
                             setValue(pageData.get("fog_opacity"), "fog_opacity", "!dltool-mod --fog_opacity|?&#123;Input value between 0 and 100?|100}") + "% <BR>" +
 
@@ -503,21 +506,12 @@ on('ready', () => {
                             toggle("small", pageData.get("lightrestrictmove"), "lightrestrictmove") + ' <span title = "Due to a bug in the Roll20 Mod system, you must open and close page settings for this to take effect. NOTE: Since this setting also affects the legacy lighting system, it is on the first tab of the Page Settings panel.">Barriers Restrict Movement <span style="font-family:pictos; color:#444">i</span></span>' + '<BR>' +
                             toggle("small", pageData.get("lightupdatedrop"), "lightupdatedrop") + ' <span title = "When Update on Drop is turned on, a token\'s view does not change while it is being moved, but only when that move is completed. This can keep players from scouting a map surreptitiously. Turning this on can also help performance, as the system does not need to continuously update.">Update on Drop</span>' + '<BR>' +
                             toggle("small", pageData.get("explorer_mode"), "explorer_mode") + ' <span title = "Explorer Mode will keep previously seen areas visible in a darkened gray style. It will not display tokens that cannot currently be seen. Commonly called Fog of War in video games. Turning this off can improve performance if lag is noticed.">Explorer Mode</span>' + '<BR>' +
-                            HR + `<b>${label("Daylight Presets", "When Daylight Mode is on, tokens with Vision do not need specific light sources in able to see. These presets simulate regular daylight, a moonlit night, and a starlit night. Can also be used for buildings or dungeons with dim interiors.")} <b>` +
-                            `<span style = "Full brightness over entire map. Simulates a normal day.">` + daylightButton("Day", 100, "!dltool --daylight_mode_enabled|true"+repeatCommand+" --daylightModeOpacity|100") + `</span>` +
-                            `<span style = "Half brightness over entire map. Simulates a bright moonlit night.">` + daylightButton("Moon", 50, "!dltool --daylight_mode_enabled|true"+repeatCommand+" --daylightModeOpacity|50") + `</span>` +
-                            `<span style = "20% brightness over entire map. Simulates a clear, moonless night.">` + daylightButton("Star", 20, "!dltool --daylight_mode_enabled|true"+repeatCommand+" --daylightModeOpacity|20") + `</span>` +
+                            HR + `<b>${label("Daylight Presets:", "When Daylight Mode is on, tokens with Vision do not need specific light sources in able to see. These presets simulate regular daylight, a moonlit night, and a starlit night. Can also be used for buildings or dungeons with dim interiors.")} <b>` +
+                            `<span style = "Full brightness over entire map. Simulates a normal day.">` + daylightButton("Day", 100, "!dltool --daylight_mode_enabled|true" + repeatCommand + " --daylightModeOpacity|100") + `</span>` +
+                            `<span style = "Half brightness over entire map. Simulates a bright moonlit night.">` + daylightButton("Moon", 50, "!dltool --daylight_mode_enabled|true" + repeatCommand + " --daylightModeOpacity|50") + `</span>` +
+                            `<span style = "20% brightness over entire map. Simulates a clear, moonless night.">` + daylightButton("Star", 20, "!dltool --daylight_mode_enabled|true" + repeatCommand + " --daylightModeOpacity|20") + `</span>` +
                             `</div>`;
 
-                        /*
-                                                //UTILITY SECTON
-                                                utilityInfo = openSection +
-                                                    dlButton("Why can't this token see?", "!dltool --report|checklist") +
-                                                    dlButton("Other things to check for", "!dltool --checklist") + `<br>` +
-                                                    dlButton("Help Center", "https&#58;\/\/help.roll20.net\/hc/en-us\/articles\/360045793374-Dynamic-Lighting-Requirements-Best-Practices") + `&nbsp;&nbsp;` +
-                                                    dlButton("DL Report", "!dltool --report") +
-                                                    `</div>`;
-                        */
 
                         //Determines which report to send
                         if (undefined === theOption) {
