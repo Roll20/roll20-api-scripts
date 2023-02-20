@@ -1203,3 +1203,7 @@ checkLightLevel:
 ScriptInfo:
   - "ScriptInfo"
   - "Utility"
+  
+Dynamic Lighting Tool:
+  - "dlTool"
+  - "Utility"
