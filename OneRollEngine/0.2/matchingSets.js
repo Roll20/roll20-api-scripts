@@ -3,7 +3,7 @@
 var MatchSets = MatchSets || (function(){
     'use strict';
 
-    var version = 0.3;
+    var version = 0.2;
 
     var useroptions = (globalconfig && 
       (globalconfig.MatchSets || globalconfig.matchsets)) ||
@@ -42,19 +42,13 @@ var MatchSets = MatchSets || (function(){
         return requestedSort;
     }
 
-    // checks for 'lean' argument in msg.content
-    function needLean(content){
-        var requestedLean = ( getComment(content).indexOf('lean') != -1 );
-        return requestedLean;
-    }
-
     function handleInput(msg) {
         var isRoll = (msg.type == 'rollresult' || msg.type == 'gmrollresult');
 
         if (isRoll) {
             var content = JSON.parse(msg.content);
             var doGetSets = needsSets(content);
-            
+
             if ( doGetSets ) {
 
                 //create an array to match sides
@@ -72,33 +66,6 @@ var MatchSets = MatchSets || (function(){
                 for ( var i = 0; i < results.length; i++ ) {
                     var current_result = results[i].v;
                     matches[current_result] += 1;
-                }
-
-                // The Lean of a roll is either even or odd depending on whether more individual die results are even or odd
-                var getLean = needLean(content);
-                if (getLean) {
-                    var even = 0;
-                    var odd = 0;
-                    var value = 0;
-                    var appendLean = '';
-
-                    for ( var i = 0; i < results.length; i++){
-                        value = results[i].v;
-                        if (value > 0) {
-                            if (value % 2 == 0) {
-                                ++even;
-                            } else {
-                                ++odd;
-                            }
-                        }
-                        if (even > odd) {
-                            appendLean = ` (even)`;
-                        } else if (odd > even) {
-                            appendLean =`  (odd)`;
-                        } else {
-                            appendLean = ` (balanced)`;
-                        }
-                    }
                 }
 
                 //output results
@@ -123,12 +90,7 @@ var MatchSets = MatchSets || (function(){
                         }
                     }
                 }
-                
                 if (chat_output.length == 0) { chat_output = 'no sets' }
-
-                if (getLean) {
-                    chat_output += appendLean;
-                }
 
                 if (msg.type == 'gmrollresult') {
                     sendChat(msg.who,'/w gm got '+chat_output);

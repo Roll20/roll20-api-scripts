@@ -1,7 +1,7 @@
 {
   "name": "APILogic",
   "script": "APILogic.js",
-  "version": "2.0.7",
+  "version": "2.0.8",
   "description": "APILogic is a meta-script and part of the Meta-Toolbox. APILogic provides chat input logical constructs for shaping the command line, including IF, ELSEIF, and ELSE. It provides a way to define terms for text-replacment operations, or to name condition sets to re-use later in the logical processing. \r\rFor more information, see the original API forum thread:\r\r[APILogic Forum Thread](https://app.roll20.net/forum/post/9771314/script-apilogic-gives-if-slash-elseif-slash-else-processing-to-other-scripts/)\r\rOr read about the full set of meta-scripts available: \r\r[Meta Toolbox Forum Thread](https://app.roll20.net/forum/post/10005695/script-set-the-meta-toolbox)",
   "authors": "timmaugh",
   "roll20userid": "5962076",
@@ -28,6 +28,7 @@
     "2.0.3",
     "2.0.4",
     "2.0.5",
-    "2.0.6"
+    "2.0.6",
+    "2.0.7"
   ]
 }
