@@ -11,7 +11,7 @@ API_Meta.dltool = {
 }
 
 on('ready', () => {
-    const version = '1.0.0'; //version number set here
+    const version = '1.0.1'; //version number set here
     log('-=> Dynamic Lighting Tool v' + version + ' is loaded. Base command is !dltool');
 
     on('chat:message', (msg) => {
@@ -48,7 +48,8 @@ on('ready', () => {
         let tokenInfo = '';
         let lightInfo = '';
         let tokenData = '';
-        let repeatCommand = `&#10;!dltool`
+        let repeatCommand = `&#10;!dltool`;
+        let repeatCommandChecklist = `&#10;!dltool --report|checklist`;
         if (msg.content.match(/report\|light/m)) { repeatCommand = `&#10;!dltool --report|light` }
         if (msg.content.match(/report\|vision/m)) { repeatCommand = `&#10;!dltool --report|vision` }
         if (msg.content.match(/report\|page/m)) { repeatCommand = `&#10;!dltool --report|page` }
@@ -70,13 +71,12 @@ on('ready', () => {
         const closeReport = `</div>`;
 
 
-
-        const stop = `<div style = "background-color: red;    display:inline-block; height:8px; width:8px; margin: 6px 4px 0px 0px; border: 1px solid #111 "></div>`;
-        const caution = `<div style = "background-color:#ffbf00; display:inline-block; height:8px; width:8px; margin: 6px 4px 0px 0px; border: 1px solid #111 "></div>`;
-        const go = `<div style = "background-color: #3b0;   display:inline-block; height:8px; width:8px; margin: 6px 4px 0px 0px; border: 1px solid #111 "></div>`;
+        const spacer = `<div style="width:100%; height:1px; background-color:transparent; margin:5px 0px;"></div>`;
+        const stop = `<div title="This is an issue that will prevent this token from being able to utilize dynamic lighting." style = "background-color: red;    display:inline-block; height:8px; width:8px; margin: 8px 4px 0px 0px; border: 1px solid #111 "></div>`;
+        const caution = `<div title="This may or may not be an issue. It means that the token will be able to use dynamic lighting but only under certain conditons. A light source token on the map layer for instance will work as intended, but a player token will be blind and inaccessible to players." style = "background-color:#ffbf00; display:inline-block; height:8px; width:8px; margin: 8px 4px 0px 0px; border: 1px solid #111 "></div>`;
+        const go = `<div title="The token has passed this particular test for dynamic lighting. There is no issue here." style = "background-color: #3b0;   display:inline-block; height:8px; width:8px; margin: 8px 4px 0px 0px; border: 1px solid #111 "></div>`;
         const brightnessChar = `<span style = 'font-family: pictos;'>y</span>`;
         const HR = `<div style="width:100%; height:1px; background-color:#fff; margin:5px 0px;"></div>`;
-        const spacer = `<div style="width:100%; height:1px; background-color:transparent; margin:5px 0px;"></div>`;
 
 
         //BUTTON: TOGGLE FOR PAGE PROPERTIES
@@ -387,17 +387,18 @@ on('ready', () => {
                             //CHECKLIST REPORT
 
                             let lightOnTOken = ((lightData) ? lightData.total : -1);
+                            let objectsLayerButton =  `<a style='background-color:#333; color:#eee; text-decoration: none; border:1px solid #3b0; border-radius:15px;padding:0px 3px 0px 3px;display:inline-block' href = '!token-mod --set layer|objects'>Move Token to Token Layer</a>`
 
                             checklistTokenInfo =
                                 openSection +
                                 openSubhead + 'Token Vision Checklist</div>' +
 
-                                ((tokenData.get("has_bright_light_vision")) ? label(`${go}<b>${tokenName}</b> has vision, but may require a light source. ` + ((lightData) ? `${tokenName} is in ${(lightData.total * 100).toFixed()}% total light` : ''), `Although this token has sight, it still may require a light source from itself or an outside source, or for page settings to grant daylight.`) : label(`<b>${stop}${tokenName}</b> has its vision turned off. It cannot see.`, `Without sight turned on, a token cannot utilize dynamic lighting. This is the recommended setting for most NPCs. Too many tokens with sight on the VTT can lead to confusing areas of apparent brightness for the GM`)) + `<BR>` +
+                                ((tokenData.get("has_bright_light_vision")) ? label(`${go}<b>${tokenName}</b> has vision, but may require a light source. ` + ((lightData) ? `${tokenName} is in ${(lightData.total * 100).toFixed()}% total light` : ''), `Although this token has sight, it still may require a light source from itself or an outside source, or for page settings to grant daylight.`) : label(`<b>${stop}${tokenName}</b> has its vision turned off. It cannot see.` + `<div style = "display:inline-block">` + toggleToken(tokenData.get("has_bright_light_vision"), "has_bright_light_vision", "!token-mod --set has_bright_light_vision|off has_night_vision|off", "!token-mod --set has_bright_light_vision|on has_limit_field_of_vision|false") + ' <span title = "If this is on, the token has vision enabled. It will still need either Night Vision, or a nearby lightsource, otherwise it will see only blackness. A GM can test this by selecting the token and pressing Cntrl/Cmd-L. This is only an approximation. For true testing, it is recommended to use a Dummy Account. You can find out more about this in the Roll20 wiki. NOTE: Sometimes default values in token light can cause a token to see nothing regardless. Try toggling a light preset for this token on and off.">Vision</span></div>', `Without sight turned on, a token cannot utilize dynamic lighting. This is the recommended setting for most NPCs. Too many tokens with sight on the VTT can lead to confusing areas of apparent brightness for the GM`)) + `<BR>` +
 
 
                                 ((tokenData.get("night_vision_distance") !== 0)
                                     ?
-                                    ((tokenData.get("has_night_vision")) ? label(`<b>${go}${tokenName}</b> has ${tokenData.get("night_vision_distance")}ft of Night Vision, and does not require a light source`, `You may still need to check if it has a non-zero distance on its night vision. Certain modes may affect how it interacts with existing light. For instance, Nocturnal mode can change dim light to bright within the token\'s Night Vision range.`) : label(`<b>${caution}${tokenName}</b> has Night Vision turned off. It cannot see without a light source.`, `Night Vision allows a token to see without a light source.`))
+                                    ((tokenData.get("has_night_vision")) ? label(`<b>${go}${tokenName}</b> has ${tokenData.get("night_vision_distance")}ft of Night Vision, and does not require a light source`, `You may still need to check if it has a non-zero distance on its night vision. Certain modes may affect how it interacts with existing light. For instance, Nocturnal mode can change dim light to bright within the token\'s Night Vision range.`) : label(`<b>${caution}${tokenName}</b> has Night Vision turned off. It cannot see without a light source.`, `Night Vision allows a token to see without a light source.`) + `<div style = "display:inline-block">` + toggleToken(tokenData.get("has_night_vision"), "has_night_vision", "!token-mod --set has_bright_light_vision|on has_night_vision|off", "!token-mod --set has_bright_light_vision|on has_night_vision|on  night_vision_effect|nocturnal") + ' <span title = "This defaults to night vision with the Nocturnal settin.">Night Vision</span></div> ')
                                     :
                                     ((tokenData.get("has_night_vision")) ? label(`${stop}<b>${tokenName}</b> has Night Vision, but the distance is set for ${tokenData.get("night_vision_distance")}ft. It can see light sources, but if you wish it to see in the dark, you must specify a distance.`, `Certain modes may affect how it interacts with existing light. For instance, Nocturnal mode can change dim light to bright within the token\'s Night Vision range.`) : label(`<b>${caution}${tokenName}</b> has Night Vision turned off. It cannot see without a light source.`, `Night Vision allows a token to see without a light source.`))
                                 ) + `<BR>` +
@@ -408,22 +409,22 @@ on('ready', () => {
                                         ?
                                         `${go}This token represents the character <b>${char.get("name")}</b>, and is under the control of the following players: <b>${controllerNames}</b>. They are the only ones who can use this token for dynamic lighting.`
                                         :
-                                        label(`${caution}This token represents the character <b>${char.get("name")}</b>, but has no specified controller. Only the GM can use it for dynamic lighting vision, and by pressing cmd/ctrl-L.`, `It does not represent a character sheet. If you are setting up a PC, be sure to assign the sheet to the token before saving this as the default token for the sheet. Saving as default should always be the last step. If this is meant to be an NPC it is fine as-is, but you may want to consider assigning control to the GM to avoid some transparency issues when using Exploration Mode.`))
+                                        label(`${caution}This token represents the character <b>${char.get("name")}</b>, but has no specified controller. Only the GM can use it for dynamic lighting vision, by pressing Cmd/Ctrl-L.`, `It does not represent a character sheet. If you are setting up a PC, be sure to assign the sheet to the token before saving this as the default token for the sheet. Saving as default should always be the last step. If this is meant to be an NPC it is fine as-is, but you may want to consider assigning control to the GM to avoid some transparency issues when using Exploration Mode.`))
                                     :
                                     ((controllerNames !== "None (GM only by default)")
                                         ?
                                         `${caution}This generic token is under the control of the following players: <b>${controllerNames}</b>. They are the only ones who can use this token for dynamic lighting. It does not represent a character sheet. If you are setting up a PC, be sure to make all settings and assign the sheet to the token <i>before</i> saving this as the default token for the sheet. Saving as default should always be the last step.`
                                         :
-                                        `${caution}This token has no specified controller. Only the GM can use it for dynamic lighting vision, by pressing cmd/ctrl-L.`)
+                                        `${caution}This token has no specified controller. Only the GM can use it for dynamic lighting vision, by pressing Cmd/Ctrl-L.`)
                                 ) + `<BR>` +
                                 ((tokenData.get("lightColor") !== "transparent" && tokenData.get("has_night_vision")) ? label(`${caution}<b>${tokenName}</b> is emitting tinted light, but also has Night Vision. Night Vision trumps tinted light, and the color will not appear within its limits.`, `Colored light should be used sparingly. It interacts in unexpected ways with other light sources and with night vision. Colored vision is not recommended.`) + `<BR>` : ``) +
 
 
-                                ((tokenData.get("layer") === "walls") ? `${caution}This token is on the Dynamic Lighting layer. Dynamic Lighting will work for the GM by using Cmd/Ctrl-L, but players are only able to access tokens on the Token/Objects layer. Light emitted by tokens on the Dynamic Lighting Layer can be seen by tokens on the Token/Objects layer.<BR>` : '') +
-                                ((tokenData.get("layer") === "gmlayer") ? `${stop}This token is on the GM layer. Dynamic Lighting will not function on the GM layer, nor will any light sources provide light. Players are only able to access tokens on the Token/Objects layer<BR>` : '') +
-                                ((tokenData.get("layer") === "map") ? `${caution}This token is on the Map layer. Dynamic Lighting will work for the GM by using Cmd/Ctrl-L. Light emitted by tokens on the Dynamic Lighting Layer can be seen by tokens on the Token/Objects layer. Players are only able to access tokens on the Token/Objects layer<BR>` : '') +
-                                ((pageData.get("dynamic_lighting_enabled")) ? `${go}Dynamic Lighting is on. All Dynamic Lighting features should be available.` : `${stop}Dynamic Lighting is <b>OFF</b>. No Dynamic Lighting features will function until this is turned on.`) + `<br>` +
-                                ((pageData.get("dynamic_lighting_enabled") && pageData.get("daylight_mode_enabled")) ? `${go}Daylight Mode is on. No tokens need a specific light source. Daylight Opacity level has been set for ${Math.round(pageData.get("daylightModeOpacity") * 100)}%. Low levels indicate a darker overall light.` : ((lightOnTOken === 0) ? stop : caution) + `Daylight Mode is off. Any token without Night Vision will need to have line of sight to a specific light source. ` + ((lightData) ? `<b>${tokenName}</b> is in ${(lightData.total * 100).toFixed()}% total light` : '')) + `<br>` +
+                                ((tokenData.get("layer") === "walls") ? `${caution}This token is on the Dynamic Lighting layer.<BR>Dynamic Lighting will only work for the GM, by using Cmd/Ctrl-L, but players are only able to access tokens on the Token layer.<BR>Light emitted by tokens on the Dynamic Lighting Layer can be seen by tokens on the Token layer. ${dlButton("Move token to Token Layer", "!token-mod --set layer|objects")}<BR>` : '') +
+                                ((tokenData.get("layer") === "gmlayer") ? `${stop}This token is on the GM layer.<BR>Dynamic Lighting will not function on the GM layer, nor will any light sources provide light.<BR>Players are only able to access tokens on the Token layer. ${dlButton("Move token to Token Layer", "!token-mod --set layer|objects")}<BR>` : '') +
+                                ((tokenData.get("layer") === "map") ? `${caution}This token is on the Map layer.<BR>Dynamic Lighting will only work for the GM, by using Cmd/Ctrl-L.<BR>Light emitted by tokens on the Dynamic Lighting Layer can be seen by tokens on the Token layer.<BR>Players are only able to access tokens on the Token layer. ${dlButton("Move token to Token Layer", "!token-mod --set layer|objects")}<BR>` : '') +
+                                ((pageData.get("dynamic_lighting_enabled")) ? `${go}Dynamic Lighting is on. All Dynamic Lighting features should be available.` : `${stop}Dynamic Lighting is <b>OFF</b>. No Dynamic Lighting features will function until this is turned on.` + `<div style = "display:inline-block">` + toggle("small", pageData.get("dynamic_lighting_enabled"), "dynamic_lighting_enabled") + '<span title = "Toggling this setting to off will toggle off all settings below, but they will return to their previous state when you turn Dynamic Lighting back on."> Dynamic Lighting</span> (May require game refresh)</div>') + `<br>` +
+                                ((pageData.get("dynamic_lighting_enabled") && pageData.get("daylight_mode_enabled")) ? `${go}Daylight Mode is on. No tokens need a specific light source. Daylight Opacity level has been set for ${Math.round(pageData.get("daylightModeOpacity") * 100)}%. Low levels indicate a darker overall light.` : ((lightOnTOken === 0 && !tokenData.get("has_night_vision")) ? stop : caution) + `Daylight Mode is off. Any token without Night Vision will need to have line of sight to a specific light source. ` + ((lightData) ? `<b>${tokenName}</b> is in ${(lightData.total * 100).toFixed()}% total light${((tokenData.get("has_night_vision")) ? ", but has Night Vision." : ", and has no Night Vision. " + `<div style = "display:inline-block">` + toggleToken(tokenData.get("has_night_vision"), "has_night_vision", "!token-mod --set has_bright_light_vision|on has_night_vision|off", "!token-mod --set has_bright_light_vision|on has_night_vision|on  night_vision_effect|nocturnal") + ` <span title = "This defaults to night vision with the Nocturnal settin.">Night Vision</span></div> `)} ` : '') + `<div style = "display:inline-block">` + toggle("small", pageData.get("daylight_mode_enabled"), "daylight_mode_enabled") + ' <span title = "When Daylight Mode is on, tokens with Vision do not need specific light sources in able to see. You can adjust the amount of daylight to simulate fog, twilight, a moonlit night or a shadowiy interior. Higher values are brighter.">Day Mode</span></div>') + `<br>` +
 
 
 
@@ -436,11 +437,12 @@ on('ready', () => {
                                 `${caution} Caution. This may give problems in some circumstances.<BR>` +
                                 `${stop} Problem that will likely prevent this token from using Dynamic Lighting.<BR>` +
                                 `</div>`;
-
+                                
+                                checklistTokenInfo = checklistTokenInfo.replace(/&#10;!dltool/g,"&#10;!dltool --report|checklist");
 
                         } else {
-                            tokenInfo = "No token is selected";
-                            checklistTokenInfo = "No token is selected. Please select a token and try again.";
+                            tokenInfo = `<div style="text-align:center; font-style: italic;">No token is selected.</div>`;
+                            checklistTokenInfo = `<div style="text-align:center; font-style: italic;">No token is selected.<br>Please select a token and try again.</div>`;
                         }
 
 
@@ -487,7 +489,7 @@ on('ready', () => {
 //                                lightButton("<i>Gem of Brightness<i>", 30, 30, 360, "!token-mod --set emits_bright_light|on emits_low_light|on bright_light_distance|30 low_light_distance|30 has_limit_field_of_vision|off limit_field_of_vision_total|360 dim_light_opacity|" + tokenData.get("dim_light_opacity")) +
                                 `</div>`;
                         } else {
-                            tokenInfo = "No token is selected";
+                            tokenInfo = `<div style="text-align:center; font-style: italic;">No token is selected.</div>`;
                         }
 
 
@@ -565,8 +567,8 @@ on('ready', () => {
 
                     case 'default':
 
-                        theMessage = `${openHeader}Dynamic Lighting Tool</div>${openSection}${openSubhead}Saving a Default Token</div>${spacer}Sometimes, users can become frustrated when they set up a token perfectly, but the next time they pull it from the Journal Tab, none of the settings seem to have saved.<br>Setting a default token is like taking a snapshot of a token exactly as it is, and saving it to the character journal. Any changes you make to a token on the VTT will not affect the default token at all.<br><span style ="font-size:16px; font-weight:bold">Therefore, setting the journal's default token must always be done as the <i>last</i> step.</span></div>` +
-                            `${openSection}${openSubhead}Two Methods to Save a Default Token</div>${spacer}<b>1) From the Token Settings</b><br>Open the Token Settings panel for the token. Click the "Update Default Token" button.<br>${spacer}<b>2) From the Journal</b><br>Open the journal for the character the token represents. Click the "Edit" button in the upper right corner. On the edit screen, there are three buttons.<br><b>${pictos('L')} Edit Token Properties: </b>This calls up the Token Settings panel for making other changes you wish to become new defaults.</b><br><b>${pictos('L')} Use Selected Token: </b>Sets the selected token as the new default token for that journal.<br><b>${pictos('L')} Apply Token Defaults: </b>This overwrites all tokens in play that represent this character to the new defaults. <i>Caution:</i> if you have edited tokens on the board (say, by numbering them), this can overwrite those changes.</div>`
+                        theMessage = `${openHeader}Dynamic Lighting Tool</div>${openSection}${openSubhead}Saving a Default Token</div>${spacer}Users can become frustrated when they set up a token perfectly, but the next time they pull it from the Journal Tab, none of the settings seem to have saved.<br>Setting a default token is like taking a snapshot of a token exactly as it is, and saving it to the character journal. Any changes you make to a token on the VTT will not affect the default token at all.<br><span style ="font-size:16px; font-weight:bold">Therefore, setting the journal's default token must always be done as the <i>last</i> step.</span></div>` +
+                            `${openSection}${openSubhead}Three Ways to Set a Default Token</div>${spacer}<b>1) From the Token Settings</b><br>Open the token's Token Settings panel. Click the "Update Default Token" button.<br>${HR}<b>2) From the Journal</b><br>Open the journal for the character the token represents. Click the "Edit" button in the upper right corner. On the edit screen, there are three buttons.<br><b>${pictos('L')} Edit Token Properties: </b>Calls up the Token Settings panel for making other changes you wish to become new defaults.</b><br><b>${pictos('L')} Use Selected Token: </b>Sets the selected token as the new default token for that journal.<br><b>${pictos('L')} Apply Token Defaults: </b>Overwrites all tokens in play that represent this character to the new defaults. <i>Caution:</i> if you have edited tokens on the board (say, by numbering them), this can overwrite those changes.${HR}<b>3) </b>${dlButton("Save Token as Default", "!token-mod  --set defaulttoken")}</div>`
 
                         //theMessage = '' + theMessage + '</span>';
                         sendChat('DLTool', '/w gm ' + openReport + theMessage + utilityInfo + closeReport, null, {
