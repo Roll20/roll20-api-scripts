@@ -25,7 +25,7 @@ const ScriptCards = (() => { // eslint-disable-line no-unused-vars
 	*/
 
 	const APINAME = "ScriptCards";
-	const APIVERSION = "2.2.9";
+	const APIVERSION = "2.2.9a";
 	const APIAUTHOR = "Kurt Jaegers";
 	const debugMode = false;
 
@@ -1716,19 +1716,22 @@ const ScriptCards = (() => { // eslint-disable-line no-unused-vars
 											}
 										}
 									}
-									if (params.length == 4 || params.length == 5) {
+									if (params.length == 4 || params.length == 5 || params.length == 6) {
 										if (params[1].toLowerCase() == "addtoken") {
 											var turnorder = [];
 											if (Campaign().get("turnorder") !== "") {
 												turnorder = JSON.parse(Campaign().get("turnorder"));
 											}
+											var custom = params[4] || ""
+											var formula = params[5] || ""
 											var t = getObj('graphic', params[2]);
 											if (t) {
 												turnorder.push({
 													id: params[2],
 													pr: params[3],
 													_pageid: t.get('pageid'),
-													custom: "",
+													custom: custom,
+													formula: formula
 												});
 											}
 											Campaign().set("turnorder", JSON.stringify(turnorder));
@@ -1739,9 +1742,13 @@ const ScriptCards = (() => { // eslint-disable-line no-unused-vars
 												turnorder = JSON.parse(Campaign().get("turnorder"));
 											}
 											var wasfound = false;
+											var custom = params[4] || ""
+											var formula = params[5] || ""
 											for (var x = turnorder.length - 1; x >= 0; x--) {
 												if (turnorder[x].id.trim() == params[2].trim()) {
 													turnorder[x].pr = params[3];
+													turnorder[x].custom = custom;
+													turnorder[x].formula = formula;
 													wasfound = true;
 												}
 											}
@@ -1752,7 +1759,8 @@ const ScriptCards = (() => { // eslint-disable-line no-unused-vars
 														id: params[2],
 														pr: params[3],
 														_pageid: t.get('pageid'),
-														custom: "",
+														custom: custom,
+														formula: formula
 													});
 												}
 											}
