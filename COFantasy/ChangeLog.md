@@ -1,6 +1,14 @@
 # COFantasy: Historique des changements (depuis la version 1.0)
 ## 3.11
+### Capacités
+* Attaque violente de la campagne Invicible.
+* Frappe des arcanes, de la Voie du guerrier-mage.
+* Sang puissant (voie du pacte vampirique)
+* Blessure sanglante (voie du pacte vampirique)
+
 ### Autres améliorations
+* Tentative pour un meilleur suivi de la lumière en cas de changement de carte.
+* Meilleure prise en compte des créatures mortes qui régénèrent
 * Nouvelle syntaxe pour les prédicats à valeur complexe.
 * Referme les portes qu'on ouvre quand le jeu est en pause.
 * Prise en compte des portes fermées.
