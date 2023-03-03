@@ -3,7 +3,6 @@
     "name": "Encounter Creator",
     "script": "encounter.js",
     "version": "0.9",
-    "previousversions": [],
     "description": "A Script for Roll20 that will create Encounters, generate Loot and more for you. Check the [Wiki](https://github.com/Julexar/Encounter-Creator/wiki) for more Info.",
     "authors": "Julexar",
     "patreon": "https://patreon.com/julexar",
@@ -16,7 +15,7 @@
         "state.monster": "read,write",
         "state.party": "read,write",
         "state.encbasics": "read",
-        "handout": "read,write"
+        "handout": "read,write",
         "attribute.id": "read,write",
         "attribute.gp": "read,write",
         "attribute": "read,write"
