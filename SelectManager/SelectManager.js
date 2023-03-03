@@ -4,7 +4,7 @@ Name			:	SelectManager
 GitHub			:   https://github.com/TimRohr22/Cauldron/tree/master/SelectManager
 Roll20 Contact	:	timmaugh && TheAaron
 Version			:	1.0.11
-Last Update		:	11/17/2022
+Last Update		:	3/3/2023
 =========================================================
 */
 var API_Meta = API_Meta || {};
