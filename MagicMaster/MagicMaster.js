@@ -2269,7 +2269,7 @@ var MagicMaster = (function() {
 		if (specs) {
 			mi = specs[0][2];
 			let lowerMI = mi.toLowerCase();
-			if (lowerMI.includes('melee') || lowerMI.includes('ranged')) {
+			if (lowerMI.includes('melee') || lowerMI.includes('ranged') || lowerMI.includes('magic')) {
 				mi = specs[0][4];
 			} else if (lowerMI.includes('armour') || lowerMI.includes('armor')) {
 				mi = specs[0][1];
@@ -2365,10 +2365,11 @@ var MagicMaster = (function() {
 			    qty = Items.tableLookup( fields.Items_qty, i );
 			}
 			if (_.isUndefined(mi)) {break;}
-			if (mi.length > 0 && (includeEmpty || mi != '-')) {
+			let miObj = abilityLookup( fields.MagicItemDB, mi, charCS );
+			if (mi.length > 0 && (includeEmpty || mi != '-') && (showTypes || (miObj.obj && !miObj.obj[1].type.toLowerCase().includes('magic')))) {
 				if (include0 || qty > 0) {
 					if (showTypes) {
-						miText = getShownType( abilityLookup( fields.MagicItemDB, mi, charCS ).specs() );
+						miText = getShownType( miObj.specs() );
 					}
 					if (mi != '-') slotsUsed++;
     				miList += '|' + qty + ' ' + miText + ',' + i;
@@ -2422,8 +2423,10 @@ var MagicMaster = (function() {
 			type = Items.tableLookup( fields.Items_type, i ).toLowerCase();
 			makeGrey = (!type.includes('selfchargeable') && !type.includes('absorbing') && disable0 && qty == 0);
 			if (mi.length > 0 && (includeEmpty || mi != '-')) {
+				let miObj = abilityLookup( fields.MagicItemDB, mi, charCS );
+				makeGrey = makeGrey || (!showTypes && (!miObj.obj || miObj.obj[1].type.toLowerCase().includes('magic')));
 				if (showTypes) {
-					miText = getShownType( abilityLookup( fields.MagicItemDB, mi, charCS ).specs() );
+					miText = getShownType( miObj.specs() );
 				}
 				content += (i == MIrowref || makeGrey) ? ('<span style=' + (i == MIrowref ? design.selected_button : design.grey_button) + '>') : '['; 
 				content += (mi != '-' ? (qty + ((qty != maxQty && isGM) ? '/'+maxQty : '') + ' ') : '') + miText;
@@ -3134,7 +3137,8 @@ var MagicMaster = (function() {
 			submitAction = (isView ? BT.VIEW_MI : BT.USE_MI),
 			content = '&{template:'+fields.defaultTemplate+'}{{name='+actionText+' '+charCS.get('name')+'\'s Magic Items}}'
 					+ '{{desc=Select a Magic Item below to '+actionText
-					+ (isView ? '. It will not be used and will remain in your Magic Item Bag' : ', and then press the **Use Item** button') + '}}'
+					+ (isView ? '. It will not be used and will remain in your Magic Item Bag' : ', and then press the **Use Item** button')
+					+ '. Note that some items, such as Rods, Staves or Wands, may need to be taken in-hand using *Change Weapon* and used via the *Attack* action}}'
 					+ '{{desc1=';
 
 		if (shortMenu) {
