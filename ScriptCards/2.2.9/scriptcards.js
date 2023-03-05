@@ -3736,6 +3736,7 @@ const ScriptCards = (() => { // eslint-disable-line no-unused-vars
 									attribute = character.get(attrName);
 								}
 							} else {
+								// Add URL Decoding?
 								character.get(attrName, function (a) {
 									attribute = a;
 								});
