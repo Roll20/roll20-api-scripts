@@ -2344,7 +2344,7 @@ var MagicMaster = (function() {
 	 * whether empty slots '-' are included
 	 */
 
-	var makeMIlist = function( charCS, includeEmpty=true, include0=true, showTypes=false ) {
+	var makeMIlist = function( charCS, includeEmpty=true, include0=true, showTypes=false, showMagic=true ) {
 	
 		var mi, miText, qty, rows, maxSize, specs,
 			i = fields.Items_table[1],
@@ -2366,7 +2366,7 @@ var MagicMaster = (function() {
 			}
 			if (_.isUndefined(mi)) {break;}
 			let miObj = abilityLookup( fields.MagicItemDB, mi, charCS );
-			if (mi.length > 0 && (includeEmpty || mi != '-') && (showTypes || (miObj.obj && !miObj.obj[1].type.toLowerCase().includes('magic')))) {
+			if (mi.length > 0 && (includeEmpty || mi != '-') && (showMagic || (miObj.obj && !miObj.obj[1].type.toLowerCase().includes('magic')))) {
 				if (include0 || qty > 0) {
 					if (showTypes) {
 						miText = getShownType( miObj.specs() );
@@ -2393,7 +2393,7 @@ var MagicMaster = (function() {
 	 * whether empty slots '-' are included.
 	 */
 
-	var makeMIbuttons = function( tokenID, senderId, miField, qtyField, cmd, extension='', MIrowref=-1, disable0=true, includeEmpty=false, showTypes=false, pickID ) {
+	var makeMIbuttons = function( tokenID, senderId, miField, qtyField, cmd, extension='', MIrowref=-1, disable0=true, includeEmpty=false, showTypes=false, showMagic=true, pickID ) {
 		
 		var charCS = getCharacter(tokenID),
 		    isView = extension == 'viewMI',
@@ -2424,7 +2424,7 @@ var MagicMaster = (function() {
 			makeGrey = (!type.includes('selfchargeable') && !type.includes('absorbing') && disable0 && qty == 0);
 			if (mi.length > 0 && (includeEmpty || mi != '-')) {
 				let miObj = abilityLookup( fields.MagicItemDB, mi, charCS );
-				makeGrey = makeGrey || (!showTypes && (!miObj.obj || miObj.obj[1].type.toLowerCase().includes('magic')));
+				makeGrey = makeGrey || (!showMagic && (!miObj.obj || miObj.obj[1].type.toLowerCase().includes('magic')));
 				if (showTypes) {
 					miText = getShownType( miObj.specs() );
 				}
@@ -3142,10 +3142,10 @@ var MagicMaster = (function() {
 					+ '{{desc1=';
 
 		if (shortMenu) {
-			content += '[Select a Magic Item](!magic --button '+selectAction+'|'+tokenID+'|?{Which Magic Item?'+makeMIlist( charCS, false, isView )+'}) }}';
+			content += '[Select a Magic Item](!magic --button '+selectAction+'|'+tokenID+'|?{Which Magic Item?'+makeMIlist( charCS, false, isView, false, isView )+'}) }}';
 		} else {
 			// build the character's visible MI Bag
-			content += makeMIbuttons( tokenID, senderId, (isGM ? 'max' : 'current'), fields.Items_qty[1], selectAction, (isView ? 'viewMI' : ''), MIrowref);
+			content += makeMIbuttons( tokenID, senderId, (isGM ? 'max' : 'current'), fields.Items_qty[1], selectAction, (isView ? 'viewMI' : ''), MIrowref, true, false, false, isView );
 			content += '}}';
 		}
 		content += '{{desc2=';
