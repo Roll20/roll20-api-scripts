@@ -11,7 +11,7 @@ API_Meta.dltool = {
 }
 
 on('ready', () => {
-    const version = '1.0.1'; //version number set here
+    const version = '1.0.2'; //version number set here
     log('-=> Dynamic Lighting Tool v' + version + ' is loaded. Base command is !dltool');
 
     on('chat:message', (msg) => {
@@ -404,7 +404,7 @@ on('ready', () => {
                                 ) + `<BR>` +
 
 
-                                ((tokenData.get("represents")) ?
+                                ((tokenData.get("represents") && typeof getObj('character', tokenData.get("represents")) !== "undefined") ?
                                     ((controllerNames !== "None (GM only by default)")
                                         ?
                                         `${go}This token represents the character <b>${char.get("name")}</b>, and is under the control of the following players: <b>${controllerNames}</b>. They are the only ones who can use this token for dynamic lighting.`
@@ -498,7 +498,7 @@ on('ready', () => {
                             openSection +
                             openSubhead + 'Dynamic Lighting for Page</div>' +
                             openPageHead + '&quot;' + pageData.get("name") + '&quot;</div>' +
-                            toggle("small", pageData.get("dynamic_lighting_enabled"), "dynamic_lighting_enabled") + '<span title = "Toggling this setting to off will toggle off all settings below, but they will return to their previous state when you turn Dynamic Lighting back on."> <b>Dynamic Lighting</b></span>' + '<BR>' +
+                            toggle("small", pageData.get("dynamic_lighting_enabled"), "dynamic_lighting_enabled") + '<span title = "Toggling this setting to off will toggle off all settings below, but they will return to their previous state when you turn Dynamic Lighting back on. NOTE: Due to a bug in the Roll20 system, toggling Dynamic Lighting on and off while using Ctrl/Cmd-L to check a token\'s line of site can cause Dynamic Lighting to seem unresponsive. The fix is to deselect all tokens and toggle Dynamic Lighting off and then back on. If this fails, just open the dynamic lighting settings for the page and do it manually."> <b>Dynamic Lighting</b></span>' + '<BR>' +
                             '<span title = "This is how dark unlit areas appear to the GM. Keeping this value very low will lead to less confusion. Many Night Vision using tokens in one area can make that area look brightly lit.">GM Dark Opacity: </span>' +
                             setValue(pageData.get("fog_opacity"), "fog_opacity", "!dltool-mod --fog_opacity|?&#123;Input value between 0 and 100?|100}") + "% <BR>" +
 
