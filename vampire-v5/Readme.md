@@ -28,9 +28,9 @@ Note: For anyone reading the code, to make the frenzy roll work I had to invert 
 !vtm humanity o# m# // Used for humanity roll. 
 
 Optional Flags:
-An extra variable (c~custom name ~) may be added to any of these rolls to display a custom name in the roll template. Note: As a coding querk please have a space after the name but before the close in the tilde.
-Example !vtm roll w5 r1 c~Prince Wolf ~ will roll 5 black die, 1 red die and the character will have the name - Prince Wolf
-An extra variable (t~custom name~) may be added to any of these rolls to display the roll type. This is text below the custom name
+An extra variable (c\~custom name \~) may be added to any of these rolls to display a custom name in the roll template. Note: As a coding querk please have a space after the name but before the close in the tilde.
+Example !vtm roll w5 r1 c\~Prince Wolf \~ will roll 5 black die, 1 red die and the character will have the name - Prince Wolf
+An extra variable (t\~custom name\~) may be added to any of these rolls to display the roll type. This is text below the custom name
 Adding b# to a skill roll will add the value/2.0 to the number of vampire dice. This is used for blood potency when handling disciplines
 If needs be both the Frenzy and Humanity Roll can be updated to use real values. For now however I'm going to leave it.
 
