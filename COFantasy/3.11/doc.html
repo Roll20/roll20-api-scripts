@@ -130,7 +130,7 @@ tr {line-height: 25px;}
           </div>
         </div>
         <div class="col-md-9 col-sm-8 content">
-          <h1>Documentation pour la version 3.10 de COFantasy</h1>
+          <h1>Documentation pour la version 3.11 de COFantasy</h1>
           <h2 class="text-primary" id="comment_utiliser_script">1. Comment utiliser Le script</h2>
           <div class="decalage">
             <h3 class="text-info" id="token_personnages">1.1 Tokens et personnages</h3>
@@ -166,6 +166,9 @@ tr {line-height: 25px;}
               <p><img class="img-fluid" src="images/predicats_barbare.jpg"></p>
               <figcaption>Exemple de prédicats.</figcaption>
               <p>Certains prédicats ont des valeurs complexes, qui peuvent contenir des blancs, des virgules, des guillements, ou même des <code>:</code> ou <code>//</code>. Afin de pouvoir utliser ces valeurs, vous pouvez faire suivre le nom du prédicat de <code>::</code>. Tout ce qui viendra après jusqu'à la fin de la ligne sera considéré comme étant la valeur associée à ce prédicat. Un exemple typique d'utilisation : quand la valeur est un nom de personnage.</p>
+              <p>Il est aussi possible d'associer des prédicats à des attaques. Ces prédicats sont pris en compte quand ses attaques sont des armes, et ce que ces armes sont tenues en main. Cela permet de coder une grande variété d'effets magiques des armes. Attention, cela ne fonctionne pas pour les mooks avec les prédicats <code>animeAPartirDExistant</code>, <code>intercepter</code>, <code>lienEpique</code>, <code>attaqueEnTraitre</code>, <code>sansPeur</code>, <code>immuniteSaignement</code>, et <code>controleSanguin</code>.</p>
+              <p><img class="img-fluid" src="images/mordante.jpg"></p>
+              <figcaption>Une épée +1 affûtée avec le prédicat enchainement (actif pour toute attaque, tant que cette épée est en main).</figcaption>
             </div>
             <h3 class="text-info" id="methode_selection_groupes">1.4 Méthodes de sélection de groupes</h3>
             <div class="decalage">
@@ -362,6 +365,7 @@ tr {line-height: 25px;}
                     <ul id="conditions">
                       <li><code>moins</code> <i>attribut</i> : vrai si l'attribut <i>attribut</i> de la cible est moins haute que celle de l'attaquant</li>
                       <li><code>etat</code> <i>e</i> : vrai si l'état <i>e</i> est actif sur l'attaquant. Cet état peut être un des états définis plus bas, ou un attribut quelconque.</li>
+                      <li><code>attribut</code> <i>attr</i> <i>val</i>: vrai si l'attaquant possède un attribut <i>attr</i>, de valeur <i>val</i>, aux majuscules près. On peut optionnellement préciser qu'il s'agit d'un attribut par token en rajoutant le mot clé <code>local</code>, ou encore qu'il sagit d'un attribut de la fiche, avec éventuellement sa valeur par défaut, en ajoutant le mot clé <code>fiche <i>defaut</i></code>.</li>
                       <li><code>etatCible</code> <i>e</i> : vrai si l'état <i>e</i> est actif sur toutes la cible. Cet état peut être un des états définis plus bas, ou un attribut quelconque.</li>
                       <li><code>attributCible</code> <i>attr</i> <i>val</i>: vrai si la cible possède un attribut <i>attr</i>, de valeur <i>val</i>, aux majuscules près. On peut optionnellement préciser qu'il s'agit d'un attribut par token en rajoutant le mot clé <code>local</code>, ou encore qu'il sagit d'un attribut de la fiche, avec éventuellement sa valeur par défaut, en ajoutant le mot clé <code>fiche <i>defaut</i></code>.</li>
                       <li><code>predicatCible</code> <i>predicat</i>: vrai si la cible possède un prédicat <i>predicat</i>. On peut aussi spécifier une valeur auquel le prédicat doit être égal.</li>
@@ -404,7 +408,7 @@ tr {line-height: 25px;}
                   <li><code>--frappeDesArcanes <i>n</i></code> : ajoute +5 à l'attaque et +<i>n</i>d6 aux DM, mais empêche de lancer des sorts pendant 1d6 tours si l'attaque touche. Si le nombre <i>n</i> n'est pas présent, le bonus est de 2d6.</li>
                   <li><code>--limiteParJour <i>l</i></code> : limite le nombre d'utilisations de cette attaque à <i>l</i> fois par jour. On peut préciser un nom après <i>l</i>, qui va correspondre à une ressource pouvant être partagée avec d'autres attaques ou d'autres effets (voir <code>!cof-effet-temp</code>). Par défaut, le nom de cette ressource est le label de l'attaque.</li>
                   <li><code>--limiteParCombat</code> : même effet que la limite par jour. Si aucun argument n'est donné, la limite est de une fois par combat.</li>
-                  <li><code>--munition <i>nom</i> <i>taux</i></code> : l'attaque utilise des munitions dont on garde le compte. Le nombre de munitions doit être inscrit dans un attribut <code>munition_<i>nom</i></code>. <i>nom</i> ne doit pas contenir de blanc, mais à l'affichage les <code>_</code> seront remplacés par des blancs. La valeur courante de l'attribut est le nombre qu'il reste sur le personnage, alors que le maximum contient ce qu'il a plus ce qu'il peut récupérer après le combat. À chaque attaque portée, une munition est utilisée, et il y a <i>taux</i> chances (sur 100) que la munition ne soit pas récupérable. En fin de combat, on considère que le personnage récupère toutes les munitions récupérables. Par défaut, le taux de pertes est de 100&nbsp;%. À noter que cette option devrait être inutile pour les armes de jet qui ont déjà leur propre cases sur la fiche.</li>
+                  <li><code>--munition <i>label</i></code> : l'attaque utilise les munitions de label <code>label</code> (notées dans l'onglet équipement de la fiche). À chaque attaque portée, une munition est utilisée, et le script teste si elle sera récupérable (en fonction du taux de pertes notée sur la fiche). En fin de combat, on considère que le personnage récupère toutes les munitions récupérables. Si une arme est reconnue comme étant un arc,une arbalète ou une arme à poudre, et que les options de l'attaque <strong>ne contiennent pas l'option <code>--munition</code></strong>, alors le script propose automatiquement de choisir parmis les munitions normales (supposées illimitées) et celles encores présentes du bon type. À noter que cette option devrait être inutile pour les armes de jet qui ont déjà leur propre case associée à l'attaque.</li>
                   <li><code>--aussiArmeDeJet <i>L</i></code> : permet d'indiquer que l'arme peut aussi être employée comme arme de jet. <i>L</i> doit être le label de l'attaque avec cette arme en tant qu'arme de jet. Cela permet de tenir compte des cas où l'arme a été lancée et ne peut donc plus être utilisée au corps à corps. Si l'arme est utilisée à distance, le script va automatiquement utiliser l'attaque <i>L</i>.</li>
                   <li><code>--arcComposite <i>n</i></code> : augmente les DM du modificateur de force, (qui peut être négatif), mais sans dépasser <i>n</i>. Si le modificateur est strictement inférieur à <i>n</i>, l'attaque se fait avec un malus de -2.</li>
                   <li><code>--seulementDistance</code> : l'attaque ne peut être réalisée que contre un adversaire à distance.</li>
@@ -413,6 +417,7 @@ tr {line-height: 25px;}
                   <li><code>--forceMinimum <i>n</i></code> : l'attaque n'est possible que si l'attaquant a au moins <i>n</i> en force.</li>
                   <li><code>--necromancie</code> : l'attaque est de la nécromancie</li>
                   <li><code>--ferFroid</code> : multiplie par 2 les dégâts contre les fées et les démons (le script reconnaît certaines races et les prédicats <code>démon</code> et <code>fée</code>).</li>
+                  <li><code>--adamantium</code> : l'arme utilisée est en adamantium. Reconnu pour la RD.</li>
                   <li><code>--tueurDe <i>categorie</i></code> : bonus de +2 en attaque et +2d6 DM contre les espèces appartenant à la catégorie (voir la condition <code>typeCible</code>.</li>
                   <li><code>--tueurDeGrands</code> : bonus de +1d6 DM contre les créatures de taille grande et +2d6 DM contre les créatures de taille énorme ou plus.</li>
                   <li><code>--ignoreObstacles</code> : ignore les tokens sur le trajet. Ça semble nécessaire pour les attaques magiques d'après Kegron.</li>
@@ -530,7 +535,7 @@ tr {line-height: 25px;}
                   <li>Enfin, en fin de combat, si le personnage possède un prédicat <code>armeParDefaut</code>, le script va lui faire dégainer l'arme dont le label est la valeur du prédicat. Donc si le prédicat n'a pas de label associé, le personnage va rengainer son arme.</li>
                 </ul>
                 <p>Dans tous les cas, si le personnage dégaine une arme à 2 mains, le script fait enlever le bouclier, et il le fait remettre si on passe d'une arme à 2 mains à une arme à 1 main.</p>
-                <p>Si l'arme contient dans le champ <code>SPÉCIAL</code> le prédicat <code>DEF</code> de valeur <i>n</i> (par exemple <code>DEF:2</code>), l'arme est considérée comme une arme de parade qui augmente la défense de <i>n</i> quand elle est portée. <p>
+                <p>Il existe un prédicat <code>DEF</code> qui permet d'ajouter sa valeur à la défense d'un personnage. C'est particulièrement utile pour coder une arme de parade. Par exemple avec<code>DEF:2</code> dans les prédicats de l'arme, elle augmentera la défense de <i>2</i> quand elle sera portée. <p>
                 </p>
               </div>
               <h4 class="text-secondary" id="degainer">Couvert :<code>!cof-bonus-couvert <i>b</i></code></h4>
@@ -781,7 +786,7 @@ tr {line-height: 25px;}
                     <li><code>--limiteParJour <i>l</i></code> : limite le nombre d'utilisations de cette effet à <i>l</i> fois par jour. On peut préciser un nom après <i>l</i>, qui va correspondre à une ressource pouvant être partagée avec d'autres attaques ou d'autres effets (voir <code>!cof-attack</code>). Par défaut, le nom de cette ressource est <i>effet</i>. Attention, il faut un lanceur auquel appliquer la limite par jour !</li>
                     <li><code>--limiteParCombat</code> : même effet que la limite par jour. Si aucun argument n'est donné, la limite est de une fois par combat.  Attention, il faut un lanceur auquel appliquer la limite par combat !</li>
                     <li><code>--tempsRecharge <i>effet</i> <i>duree</i></code> : l'action n'est possible que si l'effet est inactif sur le personnage qui génère l'effet, et de plus active l'effet sur celui-ci pour la durée indiquée. Il existe un effet temporaire générique, <code>rechargeGen(<i>desc</i>)</code> que vous pouvez utiliser si aucun effet existant ne correspond.</li>
-                    <li><code>--dose <i>nom</i></code>: définie une ressource nommée <code>dose_<i>nom</i></code>, dont la valeur doit être positive (à la manière des munitions). Utile par exemple pour les parchemins, les potions ou les baguettes.</li>
+                    <li><code>--dose <i>nom</i></code>: définie une ressource nommée <code>dose_<i>nom</i></code>, dont la valeur doit être positive. Utile par exemple pour les parchemins, les potions ou les baguettes.</li>
                     <li><code>--portee <i>id d</i></code> : impose aux cibles de l'effet d'être à moins de <i>d</i> mètres du token <i>id</i>. Si <code>--lanceur</code> est précisé, inutile de donner <i>id</i>.</li>
                     <li><code>--puissant</code> : lance la version puissante de l'effet</li>
                     <li><code>--puissant oui</code> : idem</li>
@@ -1042,7 +1047,7 @@ tr {line-height: 25px;}
                   <li><strong>Réflexes félins</strong> : ajouter un <a href=#predicats>prédicat</a> <code>reflexesFelins</code>, avec comme valeur le bonus aux saves et à l'initiative.</li>
                   <li><strong>Charge</strong> : faire une attaque avec les options <code>--bonusAttaque 2</code> <code>--plus 1d6</code>. Pour gérer plusieurs armes, vous pouvez utiliser la commande <code>#Attaque -1</code>.</li>
                   <li><strong>Enchaînement</strong> : ajouter un <a href=#predicats>prédicat</a> <code>enchainement</code>.</li>
-                  <li><strong>Déchaînement d'acier</strong> : pas de support particulier pour l'instant. Déplacer le token et faire les attaques au passage.</li>
+                  <li><strong>Déchaînement d'acier</strong> : <code>!cof-attack-line @{selected|token_id} --distanceMax 10</code>. L'attaque va être faite avec l'arme en main, mais on peut spécifier un label d'attaque (avant les options) et toutes les options supportées par <code>!cof-attack</code>.</li>
                   <li><strong>Attaque tourbillon</strong> : Faite une action avec le code <code>!cof-explosion -1 --auto --disque 5 --saufAllies --limiteParCombat 1 tourbillon</code>.</li>
                 </ol>
                 <h4 class="text-secondary">Voie du primitif</h4>
@@ -1147,7 +1152,7 @@ tr {line-height: 25px;}
                     </ul>
                   </li>
                   <li><strong>Coup de bouclier</strong> : faire une attaque de bouclier, de type <code>Arme gauche</code>, avec le modificateur <code>avecd12crit</code>. Pour que cette attaque soit proposée dans les listes d'action seulement quand le personnage porte son bouclier, ajouter un prédicat <code>attaqueAuBouclier</code> de valeur le label de l'attaque.</li>
-                  <li><strong>Frappe lourde</strong> : faire l'attaque avec les options <code>--avecd12crit --plus 2d6 --ignoreMoitieRD</code></li>
+                  <li><strong>Frappe lourde</strong> : faire l'attaque avec les options <code>--avecd12crit --plus 2d6 --ignoreMoitieRD --seulementContact</code></li>
                   <li><strong>Force héroïque</strong> : reporter les bonus sur la fiche</li>
                 </ol>
                 <h4 class="text-secondary">Voie du héro</h4>
@@ -1395,7 +1400,7 @@ tr {line-height: 25px;}
                   <li><strong>Désarmer</strong> : <code>!cof-desarmer @{selected|token_id} @{target|token_id}</code>. On peut utiliser un troisième argument optionnel, qui est le label d'une arme par défaut, au cas où le guerrier n'aurait pas d'arme en main.</li>
                   <li><strong>Double attaque</strong> : faire deux attaques, avec l'option supplémentaire <code>--bonusAttaque -2</code>.</li>
                   <li><strong>Attaque circulaire</strong> : faire les attaques normalement, ce n'est pas considéré comme une aoe.</li>
-                  <li><strong>Attaque puissante</strong> : <code>#Attaque -1 --avecd12crit --plus 2d6</code>.</li>
+                  <li><strong>Attaque puissante</strong> : <code>#Attaque -1 --avecd12crit --plus 2d6 --seulementContact</code>.</li>
                 </ol>
                 <h4 class="text-secondary">Voie du maître d'armes</h4>
                 <ol>
@@ -1879,6 +1884,8 @@ tr {line-height: 25px;}
                   <li><strong>Esprit vide</strong> : ajouter un <a href=#predicats>prédicat</a> <code>espritVide</code>. Si vous voulez un boonus différent (par exemple à partir du rang 4 dans la voie), associez les bonus au prédicat.</li>
                   <li><strong>Main vide</strong> : faire l'attaque à mains nues correspondant à la capacité.</li>
                   <li><strong>Kiai</strong> : ajouter un <a href=#predicats>prédicat</a> <code>kiai</code>, de valeur <code>1</code>. Au rang 5, mettre cette valeur à <code>2</code>, le script se charge d'attendre 1d6 tours avant de proposer le deuxième kiai.</li>
+                  <li><Strong>Course mortelle</strong> : <code>!cof-attack-line @{selected|token_id} --distanceMax 10</code>. L'attaque va être faite avec l'arme en main, mais on peut spécifier un label d'attaque (avant les options) et toutes les options supportées par <code>!cof-attack</code>.</li>
+                  <li><strong>Puissance du ki</strong> : <code>#Attaque -1 --avecd12crit --plus 2d6 --seulementContact</code>.</li>
                 </ol>
                 <h4 class="text-secondary">Voie du sabre</h4>
                 <ol>
@@ -2201,6 +2208,9 @@ tr {line-height: 25px;}
                 <ol>
                   <li><strong>Blessure sanglante</strong> : ajuter un <a href=#predicats>prédicat</a> <code>blessureSanglante</code>.</li>
                   <li><strong>Sang puissant</strong> : ajouter un <a href=#predicats>prédicat</a> <code>immuniteSaignement</code> et un prédicat <code>immuniteAbsorptionVampire</code>.</li>
+                  <li><strong>Drain de sang</strong> : ajouter un <a href=#predicats>prédicat</a> <code>drainDeSang</code>.</li>
+                  <li><strong>Flot de sang</strong> : associer la valeur <code>2</code> au prédicat <code>blessureSanglante</code>.</li>
+                  <li><strong>Énergie impie</strong> : ajouter un <a href=#predicats>prédicat</a> <code>energieImpie</code>.</li>
                 </ol>
                 <h4 class="text-secondary">Voie du porteur de bouclier</h4>
                 <ol>
@@ -2346,6 +2356,7 @@ tr {line-height: 25px;}
                   <li><strong>Auras</strong> : pour les capacités qui font un effet permanent à une certaine portée, comme l'aura glaciale des spectres, utiliser un attribut nommé <code>aura</code>, de valeur courante la portée en mètres de l'aura, et de valeur maximale l'effet à appliquer. Si cet effet contient la chaîne de caractère <code>$TOKEN</code>, cette chaîne sera remplacée par le nom du token à l'origine de l'aura. Pour un exemple d'utilisation, voyez la ligne <code>Aura glaciale</code> en dessous.</li>
                   <li><strong>Aura glaciale</strong> : ajouter un attribut <code>aura</code>, de valeur courante <code>5</code>, et de valeur maximale <code>!cof-effet-temp ralenti [[1d6]] --save CON 12 --magique --seulementVivant --message une aura de froid intense émane de $TOKEN</code>.</li>
                   <li><strong>Baroud d'honneur</strong> : ajouter un <a href=#predicats>prédicat</a> <code>baroudHonneur</code> (Quand le personnage arrive à 0 PV, il ne meurt pas jusqu'à sa prochaine attaque, qui se fait avec un bonus de +5)</li>
+                  <li><strong>Bonus à l'attaque magique</strong> : utiliser un  <a href=#predicats>prédicat</a> <code>bonusAttaqueMagique</code> de valeur le bonus permet d'ajouter ce bonus aux attaques magiques. Utile en particulier en prédicat d'arme.</li>
                   <li><strong>Canalisation</strong> : <code>!cof-canaliser <i>type</i></code> où <i>type</i> peut être <code>positif</code> ou <code>négatif</code>, selon le type d'énergie canalisée. Il faut au moins soit une option <code>--soin <i>expr</i></code> ou  <code>--dm <i>expr</i></code> (il est possible d'avoir les deux), pour exprimer le montant des soins ou des dégâts. Si vous souhaitez avoir un certain nombre de dégâts par point de mana dépensé, vous pouvez utiliser un prédicat <code>deCanalisation</code> contenant l'expression des dégâts (ou soins) par point de mana, et utiliser la syntaxe <code>--soin <i>n</i> pm</code>.</li>
                   <li><strong>Châtiment du mâle</strong> : utiliser un <a href=#predicats>prédicat</a> <code>chatimentDuMale</code>.</li>
                   <li><strong>Cibles multiples</strong> (nuées) : ajouter un <a href=#predicats>prédicat</a> <code>ciblesMultiples</code>.</li>
@@ -2391,9 +2402,9 @@ tr {line-height: 25px;}
                     <strong>Poison</strong> : pour enduire une arme de label <i>L</i> de poison, utiliser <code>!cof-enduire-poison <i>L type force save</i></code>. Pour l'instant, <i>type</i> ne peut être que <code>rapide</code> ou <code>affaiblissant</code>. Pour un poison rapide, <i>force</i> est une expression pour les dégâts (typiquement, <code>2d6</code>), pour un poison affaiblissant c'est une expression indiquant au bout de combien de tours le poison fait effet (si c'est 0, alors l'affaiblissement ne dure que pendant un combat, sinon c'est une durée en heures, à gérer par le MJ). <i>save</i> est la difficulté du jet de CON pour résister au poison. On peut rajouter deux arguments optionnels :
                     <ul>
                       <li><code>--testINT</code> <i>n</i>: fixe la difficulté du jet d'INT pour réussir à poser le poison. La difficulté par défaut est 14.</li>
-                      <li><code>--dose</code> <i>nom</i>: indique une ressource dans laquelle on puise pour enduire de poison (à la manière de munitions). Il faudra que le personnage ait un attribut de nom <code>dose_<i>nom</i></code> avec comme valeur le nombre de doses possédées.</li>
+                      <li><code>--dose</code> <i>nom</i>: indique une ressource dans laquelle on puise pour enduire de poison. Il faudra que le personnage ait un attribut de nom <code>dose_<i>nom</i></code> avec comme valeur le nombre de doses possédées.</li>
                     </ul>
-                    Il est aussi possible d'enduire de poison des munitions. Pour ce faire, remplacer le label de l'attaque par le nom de l'attribut contenant les mutions (ce nom commence donc par <code>munition_</code>). Le script suppose que toute munition lancée perd son poison.
+                    Il est aussi possible d'enduire de poison des munitions. Pour ce faire, remplacer le label de l'attaque par <code>munition_<i>L</i></code> où <i>L</i> est le label de la munition. Le script suppose que toute munition lancée perd son poison.
                   </li>
                   <li><strong>Potion de sang de l'Arbre-Coeur</strong> : <code>!cof-effet sangDeLArbreCoeur true</code>, à enlever quand les 24h sont passées.</li>
                   <li><strong>Protection contre les souffles</strong> et dégâts de zone : ajouter un <a href=#predicats>prédicat</a> <code>protectionDMZone</code>. Pour une protection contre un seul élément (feu, froid, etc), ajouter <code>_</code> et le nom de l'élément. Par exemple, contre le feu, on aura un prédicat <code>protectionDMZone_feu</code>.</li>
@@ -2661,11 +2672,11 @@ tr {line-height: 25px;}
                   <li><strong>Désarmer (L) :</strong> <code>!cof-desarmer @{selected|token_id} @{target|token_id}</code>.</li>
                   <li><strong>Double attaque (L) :</strong> faire deux attaques, avec l'option supplémentaire <code>--bonusAttaque -2</code>.</li>
                   <li><strong>Attaque circulaire (L) :</strong> faire les attaques normalement, ce n'est pas considéré comme une aoe.</li>
-                  <li><strong>Attaque puissante :</strong> <code>#Attaque -1 --avecd12crit --plus 2d6</code>.</li>
+                  <li><strong>Attaque puissante :</strong> <code>#Attaque -1 --avecd12crit --plus 2d6 --seulementContact</code>.</li>
                 </ol>
                 <h4 class="text-secondary">Voie de la maîtrise des armes</h4>
                 <ol>
-                  <li><strong>Arme de prédilection :</strong> il est possible de préciser une famille d'armes de prédilection (un peu plus large que dans les règles), parmis <code>arc</code>, <code>arbalete</code>, <code>hache</code>, <code>epee</code>, <code>marteau</code>, <code>masse</code>, <code>sabre</code>, <code>epieu</code>, <code>poudre</code>, <code>baton</code> et <code>rapiere</code>. Si cela vous convient, ajoutez un prédicat <code>armeDePredilection</code> de valeur une de ces familles. Sinon, simplement ajouter le bonus sur les attaques dans la fiche.</li>
+                  <li><strong>Arme de prédilection :</strong> il est possible de préciser une famille d'armes de prédilection (un peu plus large que dans les règles), parmis <code>arc</code>, <code>arbalete</code>, <code>fronde</code>, <code>hache</code>, <code>epee</code>, <code>marteau</code>, <code>masse</code>, <code>sabre</code>, <code>epieu</code>, <code>poudre</code>, <code>baton</code> et <code>rapiere</code>. Si cela vous convient, ajoutez un prédicat <code>armeDePredilection</code> de valeur une de ces familles. Sinon, simplement ajouter le bonus sur les attaques dans la fiche.</li>
                   <li><strong>Science du critique :</strong> En Attente </li>
                   <li><strong>Spécialisation :</strong> En Attente </li>
                   <li><strong>Attaque parfaite (L) :</strong> En Attente </li>
