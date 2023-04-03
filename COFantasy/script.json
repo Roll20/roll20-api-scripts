@@ -11,7 +11,7 @@
   "authors": "Ulti, Far2Casual",
   "roll20userid": "1794854",
   "useroptions": [],
-  "dependencies": ["Vector_Math"],
+  "dependencies": [],
   "modifies": {
     "token.subtype": "read",
     "token.pageid": "read",

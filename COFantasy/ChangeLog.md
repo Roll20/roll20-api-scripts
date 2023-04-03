@@ -9,6 +9,10 @@
 * Blessure sanglante (voie du pacte vampirique)
 
 ### Autres améliorations
+* Possibilité de tenir certaines armes à une main quand agrandi.
+* Prise en charge des armes batardes.
+* Prédicat pour la vulnérabilité à des éléments.
+* Prise en compte de l'option de jeu sans PR.
 * Utilisation d'une section munitions sur la fiche.
 * Ajout d'un prédicat bonusAttaqueMagique
 * Prédicats pour les armes.
