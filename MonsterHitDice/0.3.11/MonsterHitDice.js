@@ -10,7 +10,7 @@ const MonsterHitDice = (() => { // eslint-disable-line no-unused-vars
 
     const version = '0.3.11';
     API_Meta.MonsterHitDice.version = version;
-    const lastUpdate = 1680641047;
+    const lastUpdate = 1680641500;
     const schemaVersion = 0.3;
 
     let tokenIds = [];
@@ -201,8 +201,8 @@ const MonsterHitDice = (() => { // eslint-disable-line no-unused-vars
                                     hp+=val.total;
                                 }
                             });
-                            sets[bar+"_value"] = hp||1;
-                            sets[bar+"_max"] = hp||1;
+                            sets[bar+"_value"] = Math.max(hp,1);
+                            sets[bar+"_max"] = Math.max(hp,1);
                             obj.set(sets);
                         });
                     }
