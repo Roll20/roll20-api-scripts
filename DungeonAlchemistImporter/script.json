@@ -1,0 +1,21 @@
+{
+  "name": "Dungeon Alchemist Importer",
+  "script": "DungeonAlchemist.js",
+  "version": "0.0.6",
+  "description": "Imports Dungeon Alchemist maps. Read the guide at https://www.dungeonalchemist.com/import-to-roll20 for more info on how to use this script.",
+  "authors": "Karel Crombecq, Briganti",
+  "roll20userid": "7633819",
+  "useroptions": {},
+  "dependencies": {},
+  "modifies": {
+    "state.DungeonAlchemist": "read,write"
+  },
+  "conflicts": [],
+  "previousversions": [
+    "0.0.1",
+    "0.0.2",
+    "0.0.3",
+    "0.0.4",
+    "0.0.5"
+  ]
+}

@@ -10,7 +10,7 @@ var MapChange = MapChange || (function() {
     // Name of the person who last modified the script.
     var modifiedBy = "TheWhiteWolves";
     // Local version of the script.
-    var version = "1.4";
+    var version = "1.5";
     // Set to true to use built in debug statements
     var debug = false;
     // Set to false to turn off notifing the GM when a player moves.
@@ -1293,5 +1293,6 @@ on("ready", function() {
     MapChange.RegisterEventHandlers();
     log("Map Change Ready");
     // If it is then send a message to the GM to tell them the script is ready.
-    sendChat("Map Change", "/w gm Map Change Ready");
+    //Commented this out, since it produces a string of chat spam. - keithcurtis
+    //sendChat("Map Change", "/w gm Map Change Ready");
 });

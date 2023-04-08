@@ -987,15 +987,15 @@ starfinderguidance:
 scriptcards:
   - "ScriptCards"
   - "Utility"
-  
+
 imperator:
   - "Imperator"
   - "System Toolbox"
-  
+
 myzsectorgenerator:
   - "MutantYearZero_SectorGenerator"
   - "System Toolbox"
-  
+
 playercharacters:
   - "PlayerCharacters"
   - "Utility"
@@ -1003,4 +1003,207 @@ playercharacters:
 udlpasswall:
   - "UDLPasswall"
   - "Dynamic Lighting"
-  
+
+fetch:
+  - "Fetch"
+  - "Utility"
+
+mathops:
+  - "MathOps"
+  - "Utility"
+
+muler:
+  - "Muler"
+  - "Utility"
+
+plugger:
+  - "Plugger"
+  - "Utility"
+
+zeroframe:
+  - "ZeroFrame"
+  - "Utility"
+
+calendar:
+  - "Calendar"
+  - "Utility"
+
+wfrp4epl:
+  - "WFRP4ePL"
+  - "System Toolbox"
+
+libtypes:
+  - "libTypes"
+  - "Utility"
+
+addcustomturn:
+  - "AddCustomTurn"
+  - "Character"
+
+battleroyale:
+  - "BattleRoyale"
+  - "Utility"
+
+hs6e:
+  - "ImportHS6e"
+  - "System Toolbox"
+
+reporter:
+  - "Reporter"
+  - "Tokens"
+
+dungeonalchemist:
+  - "DungeonAlchemistImporter"
+  - "Maps & Drawing"
+
+statustracker:
+  - "StatusTracker"
+  - "Tokens"
+
+safetytoolsalert:
+  - "SafetyToolsAlert"
+  - "Utility"
+
+shadowrun3e:
+  - "Shadowrun3e"
+  - "System Toolbox"
+
+turnmarker1:
+  - "TurnMarker1"
+  - "Utility"
+
+arcdoom:
+  - "ARC"
+  - "System Toolbox"
+
+alienrpgroller:
+  - "AlienRPGroller"
+  - "System Toolbox"
+
+roundmaster:
+  - "RoundMaster"
+  - "System Toolbox"
+
+initmaster:
+  - "InitMaster"
+  - "System Toolbox"
+
+randomtokentinter:
+  - "RandomTokenTinter"
+  - "Tokens"
+
+attackmaster:
+  - "AttackMaster"
+  - "System Toolbox"
+
+commandmaster:
+  - "CommandMaster"
+  - "System Toolbox"
+
+magicmaster:
+  - "MagicMaster"
+  - "System Toolbox"
+
+tokencontroller:
+  - "TokenController"
+  - "Tokens"
+
+unsanity:
+  - "UnSanity"
+  - "Utility"
+
+simplesound:
+  - "SimpleSound"
+  - "Jukebox"
+
+smartaoe:
+  - "SmartAoE"
+  - "Maps & Drawing"
+
+campaignsurvey:
+  - "Campaign Survey"
+  - "Utility"
+
+cardtables:
+  - "CardTables"
+  - "Utility"
+
+fatepointdisplay:
+  - "FatePointDisplay"
+  - "System Toolbox"
+
+rolemasterd100:
+  - "RoleMasterD100"
+  - "Utility"
+
+downtimesystem:
+  - "Downtime System"
+  - "Utility"
+
+multiworldcalendar:
+  - "Multi-World Calendar"
+  - "Utility"
+
+calendardnd:
+  - "Calendar DND"
+  - "Utility"
+
+improvedcritical:
+  - "Improved Critical"
+  - "Utility"
+
+mutantyearzerosectorgenerator:
+  - "MutantYearZero_SectorGenerator"
+  - "Utility"
+
+itemstore:
+  - "Item Store"
+  - "Utility"
+
+rpgmasterlibraryadd2e:
+  - "RPGMlibrary AD+D2e"
+  - "Utility"
+
+faces:
+  - "Faces"
+  - "Utility"
+
+inspector:
+  - "Inspector"
+  - "Utility"
+
+messenger:
+  - "Messenger"
+  - "Utility"
+
+tabletotable:
+  - "TableToTable"
+  - "Utility"
+
+libTable:
+  - "libTable"
+  - "Utility"
+
+HeroSystem6eHeroic_HDImporter:
+  - "HeroSystem6eHeroic_HDImporter"
+  - "Utility"
+
+PathToWindowOrDoor:
+  - "PathToWindowOrDoor"
+  - "Utility"
+
+autoButtons:
+  - "autoButtons"
+  - "Utility"
+
+checkLightLevel:
+  - "checkLightLevel"
+  - "Utility"
+
+ScriptInfo:
+  - "ScriptInfo"
+  - "Utility"
+
+dynamicLightingTool:
+  - "Dynamic Lighting Tool"
+  - "Dynamic Lighting"

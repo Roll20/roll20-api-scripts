@@ -1,0 +1,11 @@
+{
+    "name": "WFRP4ePL",
+    "script": "WFRP4ePL.js",
+    "version": "1.0.0",
+    "description": "Unofficial polish version of Seth Williams' script to speed up combat. // Nieoficjalna polska wersja skryptu przyspieszającego walkę WFRP 4ed",
+    "authors": "Mariusz Dybowski",
+    "roll20userid": "2508202",
+    "dependencies": [],
+    "modifies": [],
+    "conflicts": []
+}

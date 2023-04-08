@@ -1,0 +1,15 @@
+{
+  "name": "Card Tables",
+  "script": "cardtable.js",
+  "version": "1.0",
+  "previousversions":["0.0"],
+  "description":"Give your rollable tables a bit more flair or consolidate rolling on multiple tables into one macro or make rollable tables with multiple columns using ScriptCards",
+  "authors":"Riddhi M.",
+  "roll20userid":"9979800",
+  "useroptions":[],
+  "dependencies":["ScriptCards"],
+  "modifies":{
+    "macro":"write"
+  },
+  "conflicts":[]
+}
