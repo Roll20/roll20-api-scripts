@@ -5973,6 +5973,7 @@ var attackMaster = (function() {
 			throw {name:'attackMaster error', message:'Invalid damage type provided.'};
 		}
 		
+		var magicItem = ((attrLookup( charCS, fields.Race ) || '').toLowerCase() === 'magic item');
 		silent = silent || (silentCmd.toLowerCase().trim() == 'silent');
 		senderId = args[3] || senderId;
 		
@@ -6068,7 +6069,7 @@ var attackMaster = (function() {
 		setAttr( charCS, fields.PierceMissileAC, (ac+dmgAdj.armoured[dmgType]-dmgAdj.armoured.padj-dmgAdj.armoured.madj) );
 		setAttr( charCS, fields.BludgeonMissileAC, (ac+dmgAdj.armoured[dmgType]-dmgAdj.armoured.badj-dmgAdj.armoured.madj) );
 
-		if (!silent || (ac != prevAC)) {
+		if (!silent || ((ac != prevAC) && !magicItem)) {
 			makeACDisplay( args, senderId, ac, dmgAdj, acValues, armourMsgs );
 		}
 		return false;
