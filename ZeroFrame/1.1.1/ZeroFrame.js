@@ -4,7 +4,7 @@ Name            : ZeroFrame
 GitHub          : https://github.com/TimRohr22/Cauldron/tree/master/ZeroFrame
 Roll20 Contact  : timmaugh
 Version         : 1.1.1
-Last Update     : 4/5/2023
+Last Update     : 4/8/2023
 =========================================================
 */
 var API_Meta = API_Meta || {};
@@ -18,7 +18,7 @@ const ZeroFrame = (() => { //eslint-disable-line no-unused-vars
     const apiproject = 'ZeroFrame';
     API_Meta[apiproject].version = '1.1.1';
     const schemaVersion = 0.2;
-    const vd = new Date(1678289191996);
+    const vd = new Date(1680955754278);
     let stateReady = false;
     const checkInstall = () => {
         if (!state.hasOwnProperty(apiproject) || state[apiproject].version !== schemaVersion) {
@@ -803,9 +803,9 @@ const ZeroFrame = (() => { //eslint-disable-line no-unused-vars
             batchMsgLibrary[msg.messageID].handles.push(uuid);
             batchMsgLibrary[msg.messageID].commands.push(`!${uuid}${cmd.replace(/\$\[\[(\d+)]]/g, `({&$1})`)}`);
         };
-
-        let breakpoint = getBatchTextBreakpoint(msg.content) + 1;
-        let [batchText, remainingText] = [msg.content.slice(0, breakpoint), msg.content.slice(breakpoint)];
+        let cleancmd = msg.content.replace(/\({\)/g, '{{').replace(/\(}\)/g, '}}');
+        let breakpoint = getBatchTextBreakpoint(cleancmd) + 1;
+        let [batchText, remainingText] = [cleancmd.slice(0, breakpoint), cleancmd.slice(breakpoint)];
         let lines = batchText.split(/<br\/>\n/gi)
             .map(l => l.trim())
             .reduce((m, l, i, a) => {
