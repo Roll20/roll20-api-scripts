@@ -1,6 +1,37 @@
 # COFantasy: Historique des changements (depuis la version 1.0)
+## 3.11
+### Capacités
+* Ajout des derniers rangs de la voie du pacte vampirique
+* Ajout d'une automatisation pour le déchaînement d'acier du barbare.
+* Attaque violente de la campagne Invicible.
+* Frappe des arcanes, de la Voie du guerrier-mage.
+* Sang puissant (voie du pacte vampirique)
+* Blessure sanglante (voie du pacte vampirique)
+
+### Autres améliorations
+* Possibilité de tenir certaines armes à une main quand agrandi.
+* Prise en charge des armes batardes.
+* Prédicat pour la vulnérabilité à des éléments.
+* Prise en compte de l'option de jeu sans PR.
+* Utilisation d'une section munitions sur la fiche.
+* Ajout d'un prédicat bonusAttaqueMagique
+* Prédicats pour les armes.
+* Tentative pour un meilleur suivi de la lumière en cas de changement de carte.
+* Meilleure prise en compte des créatures mortes qui régénèrent
+* Nouvelle syntaxe pour les prédicats à valeur complexe.
+* Referme les portes qu'on ouvre quand le jeu est en pause.
+* Prise en compte des portes fermées.
+* Ajout des armes vicieuses.
+
+### Corrections de bugs
+* Correction pour les options d'attaque --plus au sein d'un --if.
+
 ## 3.10
 ### Capacités
+* Magie de combat de la Voie du guerrier-mage.
+* Souffle de mort.
+* Souffle de vie de la Voie de Morn
+* Sort de secrets de l'au-delà.
 * traits des créatures végétatives.
 * prédicat pour le trait "Tout petit".
 * Grande taille de la Voie des êtres féériques.
@@ -8,6 +39,9 @@
 * Rage de Baphit (Invincible)
 
 ### Autres améliorations
+* Possibilité de faire des ricochets avec une attaque d'arme de jet
+* Possibilité d'affaiblir une caractéristique au hasard.
+* Possibilité de mettre et enlever son casque depuis !cof-statut
 * Utilisation de l'icone chef pour la capacité laissez-le moi.
 * Ajout d'un icone pour l'état enflammé.
 * Support des options de tempête de mana pour la conjuration de prédateurs et la conjuration d'armée.
