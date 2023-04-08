@@ -94,6 +94,8 @@
  *                     Added 'perm-' charge type qualifier to prevent any MI from disappearing at
  *                     zero charges. Add destination command to --message syntax. Add --mi-rest
  *                     command to reset single MI or single MI power.
+ * v1.4.06 08/04/2023  Fixed bug with item search introduced by v1.4.05.  Added magic item bag 
+ *                     creation to support Bags of Holding, and MIs that contain other MIs.
  */
  
 var MagicMaster = (function() {
@@ -827,14 +829,19 @@ var MagicMaster = (function() {
 	
 	const reSpellSpecs = Object.freeze ({
 		name:		{field:'name',def:'-',re:/[\[,\s]w:([\s\w\-\+]+?)[,\]]/i},
-		type:		{field:'spell',def:'',re:/[\[,\s]cl:(PR|MU|PW)[,\s\]]/i},
+		trueName:	{field:'truename',def:'',re:/[\[,\s]tw:([\s\w\-\+]+?)[,\]]/i},
+		type:		{field:'spell',def:'',re:/[\[,\s]cl:(PR|MU|PW|MI)[,\s\]]/i},
 		speed:		{field:'speed',def:0,re:/[\[,\s]sp:([d\d\+\-]+?)[,\s\]]/i},
 		level:		{field:'level',def:1,re:/[\[,\s]lv:(\d+?)[,\s\]]/i},
 		castlvl:	{field:'castlvl',def:-1,re:/[\[,\s]clv:(\d+?)[,\s\]]/i},
 		perDay:		{field:'perDay',def:1,re:/[\[,\s]pd:([-+]?\d+?(?:L\d+?)?)[,\s\]]/i},
 		cost:		{field:'cost',def:0,re:/[\[,\s]gp:(\d+?\.?\d*?)[,\s\]]/i},
 		recharge:	{field:'type',def:'uncharged',re:/[\[,\s]rc:([\-\w]+?)[,\s\]]/i},
+		truerc:		{field:'truetype',def:'uncharged',re:/[\[,\s]trc:([\-\w]+?)[,\]]/i},
 		spheres:	{field:'sph',def:'',re:/[\[,\s]sph:([\s\w\-\|\d]+?)[,\]]/i},
+		bag:		{field:'bag',def:'',re:/[\[,\s]bag:([\s\d]+?)[,\]]/i},
+		qty:		{field:'qty',def:'',re:/[\[,\s]n:([\s\d]+?)[,\]]/i},
+		reveal:		{field:'reveal',def:'',re:/[\[,\s]rev:([\s\d]+?)[,\]]/i},
 	});
 	
 	const reClassSpecs = Object.freeze({
@@ -2313,6 +2320,68 @@ var MagicMaster = (function() {
 		powerLib.name = power;
 		return powerLib;
 	}
+	
+	/*
+	 * Check an item to see if it is a "bag" that can contain
+	 * other items. If so, check to see if the "bag" character sheet 
+	 * has been created yet, and if it needs to be filled with initial
+	 * items.
+	 */
+	 
+	var checkForBag = function( charCS, miName ) {
+		
+		var miObj = abilityLookup( fields.MagicItemDB, miName, charCS );
+		if (!miObj.obj) return;
+		
+		var bagData = miObj.obj[1].body.match(/}}.*?data\s*?=[^{]+?bag:(\d+).*?{{/im);
+		if (!bagData) return;
+
+		bagData = parseInt(bagData[1]);
+		var bagCS = findObjs({ type:"character", name:miName });
+		
+		if (!bagCS || !bagCS.length) {
+
+			bagCS = createObj( "character",
+							   {name:miName,
+								avatar:'https://s3.amazonaws.com/files.d20.io/images/335981697/ocKqy1UIfPMSD-TYEO6oXA/thumb.png?1680722832',
+								inplayerjournals:charCS.get("inplayerjournals"),
+								controlledby:charCS.get("controlledby")});
+			setAttr( bagCS, fields.Race, 'Magic Item' );
+			setAttr( bagCS, fields.ItemContainerType, '0' ); 
+			if (bagData > 0) {
+				let Items = getTable( bagCS, fieldGroups.MI );
+				setAttr( bagCS, fields.ItemContainerType, '1' ); 
+				bagData = miObj.data(/}}[^{]*?data\s*?=\s*?(\[[^{]+?bag\:[^{]+?\]){{/im);
+				_.each( bagData, item => {
+					let itemData = parseData( item[0], reSpellSpecs, false );
+					if ((itemData.spell || '').toUpperCase() != 'MI') return;
+					let itemObj = abilityLookup( fields.MagicItemDB, (itemData.trueName || itemData.name), charCS );
+					if (itemObj.obj) {
+						itemData.speed = itemData.speed || itemObj.obj[1].ct;
+						itemData.type = itemData.type || itemObj.obj[1].charge;
+					}
+					
+					let values = Items.values;
+					values[fields.Items_name[0]][fields.Items_name[1]] = itemData.name;
+					values[fields.Items_trueName[0]][fields.Items_trueName[1]] = (itemData.trueName || itemData.name);
+					values[fields.Items_speed[0]][fields.Items_speed[1]] = itemData.speed || 5;
+					values[fields.Items_trueSpeed[0]][fields.Items_trueSpeed[1]] = itemData.speed || 5;
+					values[fields.Items_qty[0]][fields.Items_qty[1]] = itemData.qty || 1;
+					values[fields.Items_trueQty[0]][fields.Items_trueQty[1]] = itemData.qty || 1;
+					values[fields.Items_cost[0]][fields.Items_cost[1]] = 0;
+					values[fields.Items_type[0]][fields.Items_type[1]] = itemData.type || 'uncharged';
+					values[fields.Items_trueType[0]][fields.Items_trueType[1]] = itemData.trueType || itemData.type || 'uncharged';
+					values[fields.Items_reveal[0]][fields.Items_reveal[1]] = itemData.reveal || '';
+					
+					Items.addTableRow( NaN, values );
+				});
+			}
+		} else {
+			bagCS = bagCS[0];
+			bagCS.set({inplayerjournals:charCS.get("inplayerjournals"), controlledby:charCS.get("controlledby")});
+		}
+		return;
+	}
 		
 // ---------------------------------------------------- Make Menus ---------------------------------------------------------
 
@@ -3598,7 +3667,7 @@ var MagicMaster = (function() {
 		
 		if (pickingUp) content += treasure;
 		
-		magicItems = makeMIbuttons( tokenID, senderId, 'current', 'current', BT.POP_PICK, '|'+pickID+'|'+putID+'|'+putRow, pickRow, false, false, showTypes, pickID );
+		magicItems = makeMIbuttons( tokenID, senderId, 'current', 'current', BT.POP_PICK, '|'+pickID+'|'+putID+'|'+putRow, pickRow, false, false, showTypes, true, pickID );
 		
 		content += '{{desc=MI Bag has [['+(attrLookup( putCS, fields.ItemContainerSize ) - slotCounts[putID])+']] remaining slots. ';
 		
@@ -4717,6 +4786,8 @@ var MagicMaster = (function() {
 		default:
 			break;
 		}
+		
+		checkForBag( charCS, MIname );
 		
 		if (action.includes('USE') && (MIreveal == 'view' || MIreveal == 'use')) {
 			MIname = MItables.tableLookup( fields.Items_trueName, MIrowref );
@@ -6820,7 +6891,7 @@ var MagicMaster = (function() {
 		setAttr( putCS, ['target-token', 'current'], getObj('graphic',pickID).get('name') );
 		setAttr( pickCS, ['search-id', 'current'], pickID );
 		
-		MIBagSecurity = parseInt((attrLookup( pickCS, ['check-for-MIBag', 'current'] ) || '0'),10);
+		MIBagSecurity = parseInt((attrLookup( pickCS, fields.ItemContainerType ) || '0'),10);
 		switch (MIBagSecurity) {
 		
 		case 0:
