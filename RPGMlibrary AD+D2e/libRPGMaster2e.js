@@ -88,7 +88,9 @@
  *                    for several library functions. Moved caster level parsing to the library.
  * v1.4.06 09/04/2023 Updated MI database and Magic Database Help to add ability for bags to 
  *                    automatically create item-holding character sheet, and optionally for 
- *                    it to auto-populate initial items in the bag.
+ *                    it to auto-populate initial items in the bag. Added "GM Info" as a 
+ *                    possible line tag for RPGMspell & RPGMdefault Roll Templates, that 
+ *                    is shown only if the GM is one of the recipients for the message.
  **/
  
 var API_Meta = API_Meta||{}; // eslint-disable-line no-var
@@ -2656,6 +2658,8 @@ const libRPGMaster = (() => { // eslint-disable-line no-unused-vars
 							+'<br>'
 							+'<h3>Magic Item Bags</h3>'
 							+'<p>Some magic items are in fact bags that hold other magic items: e.g. a Bag of Holding, or a Bag of Beans. An item specification can now be written to automatically create a "magic item character sheet" which can hold other items, and even be specified with a starting set of items such as the beans in the bag. The character sheet so created will be controlled by and in the journal of the character that has the magic item bag, and if looted or given away, the ownership moves with it (requires the new owner to <i>view</i> or <i>use</i> the magic item bag first.  See the Magic Database Help handout for more details.</p>'
+							+'<h3>DM Info in Roll Templates</h3>'
+							+'<p>Any Roll Template based on any RPGM template (except RPGMattack and RPGMmessage) can now have a line tag of "GM Info=" included, the contents of which will only be displayed if the GM is one of the recipients for the message: e.g. {{GM Info=This will be displayed if the GM is one of the recipients of this Roll Template message}}. This can be useful to include information you only want the GM to see, for instance about how to play a spell or how to tailor a magic item.</p>'
 							+'<h3>Bug Fixes</h3>'
 							+'<p>Fixes to issues with manual updates to saving throws, changing the rings on each hand using the <i>Change Weapon</i> dialogue and searching, looting and storing items and equipment.</p>'
 							+'<h2>Release v1.4.05</h2>'
@@ -2810,6 +2814,7 @@ const libRPGMaster = (() => { // eslint-disable-line no-unused-vars
 							+'	<tr><th scope="row">Materials</th><td>Optional</td><td>The material components required to cast the spell or spell-like effect.</td></tr>'
 							+'	<tr><th scope="row">Effects</th><td>Optional</td><td>A description of the effects of the spell or spell-like effect.</td></tr>'
 							+'	<tr><th scope="row">Use</th><td>Optional</td><td>Instructions for how to use the spell or spell-like effect. Especially useful for complex spells that require actions to occur in a particular sequence, have different means of achieving different effects in different circumstances, or have long-lasting effects.</td></tr>'
+							+'	<tr><th scope="row">GM Info</th><td>Optional</td><td>Only appears if the message is for the GM (though other players included in the same message will also see it). Instructions for the GM on how to use the spell or spell-like effect, such as how to tailor for your own campaigns.</td></tr>'
 							+'	<tr><th scope="row">Desc / Desc(1-9)</th><td>Optional</td><td>Up to 10 description fields can be added to the bottom of any RPGMaster spell, potion or scroll template. The field tag is not displayed. These can, for example, hold reminders of special outcomes of the spell depending on the creature targeted, or anything else the GM thinks useful but does not fit in any other field.</td></tr>'
 							+'</table>'
 							+'<h4>RPGMmessage</h4>'
@@ -2828,6 +2833,7 @@ const libRPGMaster = (() => { // eslint-disable-line no-unused-vars
 							+'	<tr><th scope="row">Result</th><td>Optional</td><td>A comparison function between any two other field tags which have numeric data or calculations and attribute look-ups that result in numeric data. The field tag names to be compared should have underscores \'_\' instead of spaces. Can use any test from: = < > <= >= <> != e.g. AC_Hit<=Target_AC if true will give a green Success bar, if false will give a red Failure.</td></tr>'
 							+'	<tr><th scope="row">SuccessCmd</th><td>Optional</td><td>The text provided will not be displayed but will be sent to the chat window if the <i>Result</i> comparison indicates success. Normally used to send an API command on a successful attack result</td></tr>'
 							+'	<tr><th scope="row">FailCmd</th><td>Optional</td><td>The text provided will not be displayed but will be sent to the chat window if the <i>Result</i> comparison indicates failure. Normally used to send an API command on a failed attack result</td></tr>'
+							+'	<tr><th scope="row">GM Info</th><td>Optional</td><td>Only appears if the message is for the GM (though other players included in the same message will also see it). Instructions for the GM on whatever the roll template is about, such as how to tailor a magic item for your own campaigns.</td></tr>'
 							+'	<tr><th scope="row">Desc / Desc(1-9)</th><td>Optional</td><td>Up to 10 description fields can be defined, which will all be displayed at the bottom of the template in numeric order. The field tags are not displayed.</td></tr>'
 							+'</table>'
 							+'<h2>3. API Library Accessible Functions</h2>'
@@ -6005,9 +6011,11 @@ const libRPGMaster = (() => { // eslint-disable-line no-unused-vars
 			
 			LibFunctions.parseOutput = function( as, preamble, template, txt, senderId ) {
 				
+				var isGM = false;
 				if (senderId && senderId.length) {
 					for (const playerId of senderId.split(',')) {
 						lastMsg[playerId] = arguments;
+						isGM = isGM || playerIsGM(playerId);
 					}
 				}
 				
@@ -6281,6 +6289,7 @@ const libRPGMaster = (() => { // eslint-disable-line no-unused-vars
 									+(txtObj.materials ? (row2col[++k%2]+rowC2+'<b>Materials:</b> '+ txtObj.materials +endRowC2+endRow2col) : '')
 									+row2col[++k%2]+row2+'<b>Effects:</b> '+ txtObj.effects +endRow2+endRow2col
 									+(txtObj.use ? (row2col[++k%2]+row2+'<b>Use:</b> '+ txtObj.use +endRow2+endRow2col) : '')
+									+(isGM && txtObj.gm_info ? (row2col[++k%2]+row2+'<b>GM Info:</b> '+ txtObj.gm_info +endRow2+endRow2col) : '')
 									+addDescs(txtObj,++k);
 								+endBodyFrame
 							+endOuterFrame;
@@ -6349,6 +6358,8 @@ const libRPGMaster = (() => { // eslint-disable-line no-unused-vars
 							}
 						} else if (k.toLowerCase().startsWith('section')) {
 							content += row1col[(j++)%2]+row1C+ t +endRow1C+endRow1col;
+						} else if (k.toLowerCase().replace(/\s/g,'') === 'gminfo') {
+							if (isGM) content += (row1col[(j++)%2]+rowHeader+ k +endRowHeader+rowBodyC+ t +endRowBodyC+endRow1col);
 						} else {
 							content += (['name','title','subtitle'].includes(k.toLowerCase()) || k.toLowerCase().startsWith('desc')) ? '' : (row1col[(j++)%2]+rowHeader+ k +endRowHeader+rowBodyC+ t +endRowBodyC+endRow1col);
 						}
