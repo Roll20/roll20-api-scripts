@@ -3,8 +3,8 @@
 Name			:	APILogic
 GitHub			:	https://github.com/TimRohr22/Cauldron/tree/master/APILogic
 Roll20 Contact	:	timmaugh
-Version			:	2.0.6
-Last Update		:	8/4/2021
+Version			:	2.0.8
+Last Update		:	26 Jan 2023
 =========================================================
 */
 var API_Meta = API_Meta || {};
@@ -18,9 +18,9 @@ const APILogic = (() => {
     //		VERSION
     // ==================================================
     const apiproject = 'APILogic';
-    API_Meta[apiproject].version = '2.0.6';
+    API_Meta[apiproject].version = '2.0.8';
     const schemaVersion = 0.1;
-    const vd = new Date(1628090451948);
+    const vd = new Date(1674771283027);
     const versionInfo = () => {
         log(`\u0166\u0166 ${apiproject} v${API_Meta[apiproject].version}, ${vd.getFullYear()}/${vd.getMonth() + 1}/${vd.getDate()} \u0166\u0166 -- offset ${API_Meta[apiproject].offset}`);
         if (!state.hasOwnProperty(apiproject) || state[apiproject].version !== schemaVersion) {
@@ -441,9 +441,9 @@ const APILogic = (() => {
         };
         const defval = c => {
             // expects an object in the form of:
-            // { cmd: text, indent: # }
+            // { cmd: text, indent: #, defs: [] }
             let tokens = [];				// main text output array
-            let defs = [];					// main definition array
+            let defs = c.defs;					// main definition array
             let logcolor = 'aqua';
             let loopstop = false;
             let defendres = {};
@@ -493,7 +493,7 @@ const APILogic = (() => {
                 newcmd = newcmd.replace(new RegExp(escapeRegExp(d.term), 'g'), d.definition);
             });
             nestlog(`DEFVAL ENDS`, c.indent, logcolor, msgstate.logging);
-            return { cmd: newcmd };
+            return { cmd: newcmd, defs: defs };
         };
 
         const checkWellFormed = (cmd) => {
@@ -545,8 +545,9 @@ const APILogic = (() => {
             let retObj = {};
 
             // DEFINITION BLOCK DETECTION
-            let defcmd = defval({ cmd: msg.content, indent: 0, type: 'main', overallindex: 0 });
+            let defcmd = defval({ cmd: msg.content, indent: 0, type: 'main', overallindex: 0, defs: [...(msg.definitions || [])] });
             if (!defcmd.cmd) return { tokens: [], error: defcmd.error };
+            if (defcmd.defs.length) msg.definitions = defcmd.defs;
             // WELL-FORMED CHECK
             let wf = checkWellFormed(defcmd.cmd);
             if (!wf.wellformed) return { tokens: [], error: wf.error };
@@ -714,7 +715,11 @@ const APILogic = (() => {
     // ==================================================
     const handleInput = (msg, msgstate = {}) => {
         let funcret = { runloop: false, status: 'unchanged', notes: '' };
-        if (msg.type !== 'api' || !testConstructs(msg.content)) return funcret;
+        if (msg.type !== 'api' || !testConstructs(msg.content)) {
+            if (!msg.definitions || !msg.definitions.length) return funcret;
+            let termrx = new RegExp(msg.definitions.map(d => escapeRegExp(d.term)).join('|'), 'gm');
+            if (!termrx.test(msg.content)) return funcret;
+        }
         if (!Object.keys(msgstate).length && scriptisplugin) return funcret;
         let status = [];
         let notes = [];
@@ -722,6 +727,7 @@ const APILogic = (() => {
         msg.content = msg.content.replace(/<br\/>\n/g, linebreak);
 
         msg.logicgroups = msg.logicgroups || {};
+        msg.definitions = msg.definitions || [];
         let o = ifTreeParser(msg, msgstate, status, notes);
         if (o.error) {
             status.push('unresolved');
@@ -736,6 +742,7 @@ const APILogic = (() => {
             o.logicgroups = msg.logicgroups;
             o.parsedinline = msg.parsedinline || [];
             let reconstruct = reconstructCommandLine(o, msgstate, status, notes);
+            if (msg.content !== reconstruct.content) status.push('chnaged');
             msg.content = reconstruct.content;
             msg.content = msg.content.replace(new RegExp(escapeRegExp(linebreak), 'g'), '<br/>\n');
             msg.logicgroups = reconstruct.logicgroups;

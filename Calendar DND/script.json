@@ -9,5 +9,6 @@
     "roll20userid": "9989180",
     "modifies": {
         "state.Calendar.now": "read,write"
-    }
+    },
+    "conflicts": ["Multi-World Calendar", "Calendar"]
 }

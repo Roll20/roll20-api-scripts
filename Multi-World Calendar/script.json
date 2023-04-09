@@ -12,5 +12,6 @@
         "state.MWCalendar": "read,write",
         "state.Alarm": "read,write",
         "handout": "read,write"
-    }
+    },
+    "conflicts": ["Calendar DND", "Calendar"]
 }
