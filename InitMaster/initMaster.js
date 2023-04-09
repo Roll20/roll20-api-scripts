@@ -55,7 +55,7 @@ var initMaster = (function() {
 	var version = '1.4.06',
 		author = 'Richerd @ Damery',
 		pending = null;
-    const lastUpdate = 1677830592;
+    const lastUpdate = 1680856220;
 
 	/*
 	 * Define redirections for functions moved to the RPGMaster library
