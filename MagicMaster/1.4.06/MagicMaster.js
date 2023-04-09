@@ -100,10 +100,10 @@
  
 var MagicMaster = (function() {
 	'use strict';
-	var version = '1.4.05',
+	var version = '1.4.06',
 		author = 'RED',
 		pending = null;
-    const lastUpdate = 1677830592;
+    const lastUpdate = 1680856220;
 		
 	/*
 	 * Define redirections for functions moved to the RPGMaster library
