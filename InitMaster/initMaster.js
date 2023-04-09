@@ -43,14 +43,16 @@
  * v1.3.00 17/09/2022  First release of RPGMaster InitiativeMaster using the RPGMaster Library.
  * v1.3.01 10/10/2022  Fixed initiative for classes that have multi-class spell casting
  * v1.3.02 21/10/2022  Gray out attack initiative buttons for weapons without charges
+ * v1.3.03 31/10/2022  Fixed bug in Initiative Redo command
+ * v1.4.01 28/11/2022  Deal with fighting styles. Extended String prototype with dbName() method.
  */
 
 var initMaster = (function() {
 	'use strict'; 
-	var version = '1.3.02',
+	var version = '1.4.01',
 		author = 'Richerd @ Damery',
 		pending = null;
-    const lastUpdate = 1663353439;
+    const lastUpdate = 1670233770;
 
 	/*
 	 * Define redirections for functions moved to the RPGMaster library
@@ -961,9 +963,9 @@ var initMaster = (function() {
 
 	var proficient = function( charCS, wname, wt, wst ) {
 		
-        wname = wname ? wname.toLowerCase().replace(reIgnore,'') : '';
-        wt = wt ? wt.toLowerCase().replace(reIgnore,'') : '';
-        wst = wst ? wst.toLowerCase().replace(reIgnore,'') : '';
+        wname = wname ? wname.dbName() : '';
+        wt = wt ? wt.dbName() : '';
+        wst = wst ? wst.dbName() : '';
         
 		var i = fields.WP_table[1],
 			prof = -1,
@@ -977,8 +979,8 @@ var initMaster = (function() {
 			let wpName = WeaponProfs.tableLookup( fields.WP_name, i, false ),
 				wpType = WeaponProfs.tableLookup( fields.WP_type, i );
 			if (_.isUndefined(wpName)) {break;}
-            wpName = wpName.toLowerCase().replace(reIgnore,'');
-            wpType = (!!wpType ? wpType.toLowerCase().replace(reIgnore,'') : '');
+            wpName = wpName.dbName();
+            wpType = (!!wpType ? wpType.dbName() : '');
 
             let isType = (wpName && wpName.length && wt.includes(wpName)),
                 isSuperType = (wpType && (wst.includes(wpType))),
@@ -1020,7 +1022,7 @@ var initMaster = (function() {
 		
 		for (const casterData of casterLevels) {
 			charClass = (attrLookup( charCS, casterData[0] ) || '');
-			castingClass = charClass.toUpperCase().replace(reIgnore,'');
+			castingClass = charClass.dbName();
 			level = attrLookup(charCS,casterData[1]) || 0;
 			if (level > 0 && (_.isUndefined(spellsPerLevel[castingClass]) || _.isUndefined(spellsPerLevel[castingClass][casterType]))) {
 				if (casterType == 'MU' && casterData[0][0] == fields.Wizard_class[0]) {
@@ -1099,8 +1101,10 @@ var initMaster = (function() {
 
 		var weaponName,
 			weapSpeed,
+			styleSpeed,
 			speedMult,
 			attackNum,
+			styleNum,
 			preInit,
 			attackCount,
 			attacks,
@@ -1118,9 +1122,12 @@ var initMaster = (function() {
 		}
 
 		weaponName = (WeaponTables.tableLookup( fields.MW_name, refIndex ) || '');
-		weapSpeed = (WeaponTables.tableLookup( fields.MW_speed, refIndex) || 0);
+		styleSpeed = WeaponTables.tableLookup( fields.MW_styleSpeed, refIndex) || 0;
+		weapSpeed = (WeaponTables.tableLookup( fields.MW_speed, refIndex) || 0) + ('-+'.includes(styleSpeed[0])?styleSpeed:'+'+styleSpeed);
 		speedMult = Math.max(parseFloat(attrLookup( charCS, fields.initMultiplier ) || 1), 1);
+		styleNum = WeaponTables.tableLookup( fields.MW_styleAttks, refIndex) || 0;
 		attackNum = (WeaponTables.tableLookup( fields.MW_noAttks, refIndex ) || 1);
+		attackNum = (styleNum && styleNum != '0') ? '(('+attackNum+')+('+styleNum+'))' : attackNum;
 		preInit = (WeaponTables.tableLookup( fields.MW_preInit, refIndex ) || 0);
 		attackCount = WeaponTables.tableLookup( fields.MW_attkCount, refIndex );
 		if (!attackCount) attackCount = 0;
@@ -1128,6 +1135,8 @@ var initMaster = (function() {
 		attacks = Math.floor( attackCount );
 		WeaponTables.tableSet( fields.MW_attkCount, refIndex, (attackCount-attacks) );
 		twoHanded = (WeaponTables.tableLookup( fields.MW_twoHanded, refIndex ) || 0);
+		
+		log('hamdleInitMW: weapSpeed = '+weapSpeed);
 
 		buildCall = '!init --buildMenu ' + senderId 
 				+ '|' + (charType == CharSheet.MONSTER ? MenuType.COMPLEX : MenuType.WEAPON)
@@ -1140,6 +1149,8 @@ var initMaster = (function() {
 				+ '|' + twoHanded
 				+ '|'
 				+ '|' + attacks;
+				
+		log('handleInitMW: buildCall = '+buildCall);
 				
 		sendAPI( buildCall, senderId );
 		return;
@@ -1156,8 +1167,8 @@ var initMaster = (function() {
 			rowIndex = args[2],
 			refIndex = args[3],
 			WeaponTables = getTable( charCS, fieldGroups.MELEE ),
-			weaponName, weapSpeed,
-			speedMult, attackNum,
+			weaponName, weapSpeed, styleSpeed,
+			speedMult, attackNum, styleNum,
 			attackCount, attacks,
 			buildCall, preInit;
 			
@@ -1165,8 +1176,11 @@ var initMaster = (function() {
 			speedMult = Math.max(parseFloat(attrLookup( charCS, fields.initMultiplier ) || 1), 1);
 		    if (command != BT.RW_PRIME) {
     			weaponName = (WeaponTables.tableLookup( fields.MW_name, refIndex ) || '');
-    			weapSpeed = (WeaponTables.tableLookup( fields.MW_speed, refIndex ) || 0);
-    			attackNum = (WeaponTables.tableLookup( fields.MW_noAttks, refIndex ) || 1);
+				styleSpeed = WeaponTables.tableLookup( fields.MW_styleSpeed, refIndex) || 0;
+				weapSpeed = (WeaponTables.tableLookup( fields.MW_speed, refIndex) || 0) + ('-+'.includes(styleSpeed[0])?styleSpeed:'+'+styleSpeed);
+				styleNum = WeaponTables.tableLookup( fields.MW_styleAttks, refIndex) || 0;
+				attackNum = (WeaponTables.tableLookup( fields.MW_noAttks, refIndex ) || 1);
+				attackNum = (styleNum && styleNum != '0') ? '(('+attackNum+')+('+styleNum+'))' : attackNum;
 				preInit = (WeaponTables.tableLookup( fields.MW_preInit, refIndex ) || 0);
 				attackCount = (WeaponTables.tableLookup( fields.MW_attkCount, refIndex ) || 0);
 				attackCount = eval( attackCount + '+(' + speedMult + '*' + attackNum + ')' );
@@ -1174,8 +1188,11 @@ var initMaster = (function() {
 				WeaponTables.tableSet( fields.MW_attkCount, refIndex, (attackCount-attacks) );
             } else {
     			weaponName = (WeaponTables.tableLookup( fields.RW_name, refIndex ) || '');
-    			weapSpeed = (WeaponTables.tableLookup( fields.RW_speed, refIndex ) || 0);
-    			attackNum = (WeaponTables.tableLookup( fields.RW_noAttks, refIndex ) || 1);
+				styleSpeed = WeaponTables.tableLookup( fields.RW_styleSpeed, refIndex) || 0;
+				weapSpeed = (WeaponTables.tableLookup( fields.RW_speed, refIndex) || 0) + ('-+'.includes(styleSpeed[0])?styleSpeed:'+'+styleSpeed);
+				styleNum = WeaponTables.tableLookup( fields.RW_styleAttks, refIndex) || 0;
+				attackNum = (WeaponTables.tableLookup( fields.RW_noAttks, refIndex ) || 1);
+				attackNum = (styleNum && styleNum != '0') ? '(('+attackNum+')+('+styleNum+'))' : attackNum;
 				preInit = (WeaponTables.tableLookup( fields.MW_preInit, refIndex ) || 0);
 				attackCount = (WeaponTables.tableLookup( fields.RW_attkCount, refIndex ) || 0);
 				attackCount = eval( attackCount + '+(' + speedMult + '*' + attackNum + ')' );
@@ -1227,8 +1244,8 @@ var initMaster = (function() {
 			refIndex2 = args[5],
 			WeaponTables = getTable( charCS, fieldGroups.MELEE ),
 			weapon, weaponRef,
-			weaponName, weapSpeed,
-			speedMult, attackNum,
+			weaponName, weapSpeed, styleSpeed,
+			speedMult, attackNum, styleNum,
 			attackCount, attacks,
 			buildCall, preInit;
 			
@@ -1245,8 +1262,11 @@ var initMaster = (function() {
 		speedMult = Math.max(parseFloat(attrLookup( charCS, fields.initMultiplier ) || 1), 1);
 		if (command != BT.RW_SECOND) {
 			weaponName = (WeaponTables.tableLookup( fields.MW_name, weaponRef ) || '');
-			weapSpeed = (WeaponTables.tableLookup( fields.MW_speed, weaponRef ) || 0);
-			attackNum = (WeaponTables.tableLookup( fields.MW_noAttks, weaponRef ) || 1);
+			styleSpeed = WeaponTables.tableLookup( fields.MW_styleSpeed, refIndex) || 0;
+			weapSpeed = (WeaponTables.tableLookup( fields.MW_speed, refIndex) || 0) + ('-+'.includes(styleSpeed[0])?styleSpeed:'+'+styleSpeed);
+			styleNum = WeaponTables.tableLookup( fields.MW_styleAttks, refIndex) || 0;
+			attackNum = (WeaponTables.tableLookup( fields.MW_noAttks, refIndex ) || 1);
+			attackNum = (styleNum && styleNum != '0') ? '(('+attackNum+')+('+styleNum+'))' : attackNum;
 			preInit = (WeaponTables.tableLookup( fields.MW_preInit, weaponRef ) || 0);
 			attackCount = (WeaponTables.tableLookup( fields.MW_attkCount, weaponRef ) || 0);
 			attackCount = eval( attackCount + '+(' + speedMult + '*' + attackNum + ')' );
@@ -1254,8 +1274,11 @@ var initMaster = (function() {
 			WeaponTables.tableSet( fields.MW_attkCount, weaponRef, (attackCount-attacks) );
 		} else {
 			weaponName = (WeaponTables.tableLookup( fields.RW_name, weaponRef ) || '');
-			weapSpeed = (WeaponTables.tableLookup( fields.RW_speed, weaponRef ) || 0);
-			attackNum = (WeaponTables.tableLookup( fields.RW_noAttks, weaponRef ) || 1);
+			styleSpeed = WeaponTables.tableLookup( fields.RW_styleSpeed, refIndex) || 0;
+			weapSpeed = (WeaponTables.tableLookup( fields.RW_speed, refIndex) || 0) + ('-+'.includes(styleSpeed[0])?styleSpeed:'+'+styleSpeed);
+			styleNum = WeaponTables.tableLookup( fields.RW_styleAttks, refIndex) || 0;
+			attackNum = (WeaponTables.tableLookup( fields.RW_noAttks, refIndex ) || 1);
+			attackNum = (styleNum && styleNum != '0') ? '(('+attackNum+')+('+styleNum+'))' : attackNum;
 			preInit = (WeaponTables.tableLookup( fields.MW_preInit, weaponRef ) || 0);
 			attackCount = (WeaponTables.tableLookup( fields.RW_attkCount, weaponRef ) || 0);
 			attackCount = eval( attackCount + '+(' + speedMult + '*' + attackNum + ')' );
@@ -1301,8 +1324,10 @@ var initMaster = (function() {
 		var	WeaponTables = getTable( charCS, fieldGroups.RANGED ),
 			weaponName = (WeaponTables.tableLookup( fields.RW_name, refIndex ) || ''),
 			weaponType = (WeaponTables.tableLookup( fields.RW_type, refIndex ) || ''),
-			weapSpeed = (WeaponTables.tableLookup( fields.RW_speed, refIndex ) || 0),
+			styleSpeed = WeaponTables.tableLookup( fields.RW_styleSpeed, refIndex) || 0,
+			weapSpeed = (WeaponTables.tableLookup( fields.RW_speed, refIndex) || 0) + ('-+'.includes(styleSpeed[0])?styleSpeed:'+'+styleSpeed),
 			speedMult = Math.max(parseFloat(attrLookup( charCS, fields.initMultiplier ) || 1), 1),
+			styleNum = WeaponTables.tableLookup( fields.RW_styleAttks, refIndex) || 0,
 			attackNum = (WeaponTables.tableLookup( fields.RW_noAttks, refIndex ) || 1),
 			preInit = (WeaponTables.tableLookup( fields.MW_preInit, refIndex ) || 0),
 			weapSpecial = (proficient( charCS, weaponName, weaponType, '' ) > 0) ? 1 : preInit,
@@ -1310,6 +1335,9 @@ var initMaster = (function() {
 			buildCall = '',
 			attackCount, attacks;
 			
+		log('handleInitRW: styleNum = '+styleNum+', attackNum = '+attackNum);
+			
+		attackNum = (styleNum && styleNum != '0') ? '(('+attackNum+')+('+styleNum+'))' : attackNum;
 		attackCount = (WeaponTables.tableLookup( fields.RW_attkCount, refIndex ) || 0);
 		attackCount = eval( attackCount + '+(' + speedMult + '*' + attackNum + ')' );
 		attacks = Math.floor( attackCount );
@@ -1327,6 +1355,7 @@ var initMaster = (function() {
 				+ '|0'
 				+ '|' + attacks;
 
+		log('handleInitRW: buildCall = '+buildCall);
 		sendAPI( buildCall, senderId );
 		return;
 	}
@@ -1853,6 +1882,35 @@ var initMaster = (function() {
 		return false;
 	}
 	
+	/*
+	 * Count the number of active weapons currently in-hand
+	 */
+	 
+	var countWeaponsInHand = function( charCS ) {
+		var InHandTable = getTable( charCS, fieldGroups.INHAND ),
+			meleeWeap = 0,
+			rangedWeap = 0,
+			shieldWeap = 0,
+			r = InHandTable.table[1],
+			weapon;
+			
+		while (weapon = !_.isUndefined(InHandTable.tableLookup( fields.InHand_name, r, false ))) {
+			if (weapon != '-') {
+				weapon = InHandTable.tableLookup( fields.InHand_miName, r );
+				let dB = InHandTable.tableLookup( fields.InHand_db, r );
+				let weapObj = abilityLookup( dB, weapon, charCS );
+				if (weapObj.obj) {
+					let weapSpecs = weapObj.specs(/}}\s*?specs\s*?=(.*?){{/im);
+					if (_.some(weapSpecs, spec => spec[2].toLowerCase().includes('shield'))) shieldWeap++;
+					else if (_.some(weapSpecs, spec => spec[2].toLowerCase().includes('melee'))) meleeWeap++;
+					if (_.some(weapSpecs, spec => spec[2].toLowerCase().includes('ranged'))) rangedWeap++;
+				}
+			}
+			r++;
+		}
+		return {melee:meleeWeap, ranged:rangedWeap, shield:shieldWeap};
+	}
+	
 // ---------------------------------- build menus to display --------------------------------------------------------	
 
 	/**
@@ -2189,6 +2247,8 @@ var initMaster = (function() {
 			monsterLevel = Math.ceil((monsterHD + Math.ceil(monsterHPplus/4)) / (monsterInt != 0 ? 1 : 2)),
 			hands = parseInt(attrLookup( charCS, fields.Equip_handedness ) || 2 ),
 			monAttks = parseInt(attrLookup( charCS, fields.Monster_attks ) || 0 ),
+			weapCount = countWeaponsInHand( charCS ),
+			shieldStyle = attrLookup( charCS, fields.Init_2ndShield ) || 0,
             weaponButtons,content;
 
         if (!curToken) {
@@ -2204,7 +2264,7 @@ var initMaster = (function() {
 		content = '&{template:'+fields.defaultTemplate+'}{{name=What is ' + tokenName + ' doing?}}'
 				+ '{{subtitle=Initiative for Weapon Attacks}}';
 				
-		if (weaponButtons && weaponButtons.split(']').length > 1) {
+		if (weapCount.melee > 1 || (weapCount.melee > 0 && weapCount.shield > 0 && shieldStyle > 0)) {
 			if (fighterLevel || rogueLevel || (monsterLevel && monAttks > 1)) {
 				let refIndex = (charButton%2) ? (baseMW==0?((charButton-1)/2):((charButton-3)/2)) : ((baseRW==0)?((charButton-2)/2):((charButton-4)/2))
 				content += '{{Fighter\'s & Rogue\'s Option=';
@@ -2736,7 +2796,7 @@ var initMaster = (function() {
 	var showHelp = function() {
 
 	var handoutIDs = getHandoutIDs();
-	var content = '&{template:'+fields.defaultTemplate+'}{{title=InitiativeMaster Help}}{{InitMaster Help=For help on !init commands [**Click Here**]('+fields.journalURL+handoutIDs.InitiativeMasterHelp+')}}{{Character Sheet Setup=For help on setting up character sheets for use with RPGMaster APIs, [**Click Here**]('+fields.journalURL+handoutIDs.RPGMasterCharSheetSetup+')}}{{RPGMaster Templates=For help using RPGMaster Roll Templates, [**Click Here**]('+fields.journalURL+handoutIDs.RPGMasterTemplatesHelp+')}}';
+	var content = '&{template:'+fields.defaultTemplate+'}{{title=InitiativeMaster Help}}{{InitMaster Help=For help on !init commands [**Click Here**]('+fields.journalURL+handoutIDs.InitiativeMasterHelp+')}}{{Character Sheet Setup=For help on setting up character sheets for use with RPGMaster APIs, [**Click Here**]('+fields.journalURL+handoutIDs.RPGMasterCharSheetSetup+')}}{{RPGMaster Templates=For help using RPGMaster Roll Templates, [**Click Here**]('+fields.journalURL+handoutIDs.RPGMasterLibraryHelp+')}}';
 
 		sendFeedback(content,flags.feedbackName,flags.feedbackImg); 
 	}; 
@@ -2941,7 +3001,7 @@ var initMaster = (function() {
 			tokenName = curToken.get('name'),
 			changedRound = state.initMaster.changedRound,
 			roundCounter = state.initMaster.round,
-			prevRound = (attrLookup( charCS, [fields.Prev_round[0] + tokenID, fields.Prev_round[1]], true ) || 0),
+			prevRound = (attrLookup( charCS, [fields.Prev_round[0] + tokenID, fields.Prev_round[1]], null, null, null, true ) || 0),
 			init_submitVal = (changedRound || (prevRound != roundCounter) ? 1 : 0 );
 			
 		setAttr( charCS, fields.Init_done, 0 );
