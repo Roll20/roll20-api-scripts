@@ -2683,10 +2683,10 @@ const libRPGMaster = (() => { // eslint-disable-line no-unused-vars
 							+'</div>',
 						},
 	RPGM_Templates_Handout:	{name:'RPGMaster Library Help',
-						 version:1.02,
+						 version:1.03,
 						 avatar:'https://s3.amazonaws.com/files.d20.io/images/257656656/ckSHhNht7v3u60CRKonRTg/thumb.png?1638050703',
 						 bio:'<div style="font-weight: bold; text-align: center; border-bottom: 2px solid black;">'
-							+'<span style="font-weight: bold; font-size: 125%">RPGMaster Library Help v1.02</span>'
+							+'<span style="font-weight: bold; font-size: 125%">RPGMaster Library Help v1.03</span>'
 							+'</div>'
 							+'<div style="padding-left: 5px; padding-right: 5px; overflow: hidden;">'
 							+'<h1>RPGMaster Library and Templates</h1>'
