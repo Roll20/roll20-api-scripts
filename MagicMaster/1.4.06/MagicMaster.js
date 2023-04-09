@@ -4702,6 +4702,7 @@ var MagicMaster = (function() {
 			}
 			content = '[Return to menu](!magic --button '+BT.CHOOSE_VIEW_MI+'|'+args[1]+'|'+args[2]+')';
     		setTimeout(() => sendResponse( charCS, content, senderId, flags.feedbackName, flags.feedbackImg, tokenID ),500);
+			checkForBag( charCS, MIname );
 			return;
 		}
 		if (isNaN(MIrowref) || (fields.Items_table[1] == 0 && MIrowref < 0)) {
@@ -4787,7 +4788,7 @@ var MagicMaster = (function() {
 			break;
 		}
 		
-		checkForBag( charCS, MIname );
+		if (MIqty > charges) checkForBag( charCS, MIname );
 		
 		if (action.includes('USE') && (MIreveal == 'view' || MIreveal == 'use')) {
 			MIname = MItables.tableLookup( fields.Items_trueName, MIrowref );
@@ -5394,6 +5395,7 @@ var MagicMaster = (function() {
 		setAttr( toCS, fields.ItemContainerType, containerType );
 		
 		moveMIspells( fromCS, toCS, MIname );
+		checkForBag( toCS, MIname );
 
 		if (MIqty == 0) {
 			fromMIbag.addTableRow( fromRowRef );	// Blanks this row of the table
