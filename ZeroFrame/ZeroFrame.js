@@ -380,6 +380,21 @@ const ZeroFrame = (() => { //eslint-disable-line no-unused-vars
         }));
         return retval;
     };
+    const getLoopRolls = (msg, preserved, preservedstate) => {
+        let replaceTrack = {};
+        if (msg.inlinerolls) {
+            // insert inline rolls to preserved message, correct the placeholder shorthand index
+            msg.inlinerolls.forEach((r, i) => {
+                preserved.inlinerolls.push(r);
+                replaceTrack[i] = (preserved.inlinerolls.length - 1);
+            });
+            Object.keys(replaceTrack).reverse().forEach(k => {
+                msg.content = msg.content.replace(new RegExp(`\\$\\[\\[(${k})]]`, 'g'), `$[[${replaceTrack[k]}]]`);
+            });
+            preserved.parsedinline = [...(preserved.parsedinline || []), ...libInline.getRollData(msg)];
+            preservedstate.runloop = true;
+        }
+    };
     // ==================================================
     //      GLOBAL DEFINITIONS
     // ==================================================
@@ -467,19 +482,7 @@ const ZeroFrame = (() => { //eslint-disable-line no-unused-vars
             log(`  CONT: ${preserved.content}`);
             log(`  DEFS: ${JSON.stringify(preserved.definitions || [])}`);
         }
-        let replaceTrack = {};
-        if (msg.inlinerolls) {
-            // insert inline rolls to preserved message, correct the placeholder shorthand index
-            msg.inlinerolls.forEach((r, i) => {
-                preserved.inlinerolls.push(r);
-                replaceTrack[i] = (preserved.inlinerolls.length - 1);
-            });
-            Object.keys(replaceTrack).reverse().forEach(k => {
-                msg.content = msg.content.replace(new RegExp(`\\$\\[\\[(${k})]]`, 'g'), `$[[${replaceTrack[k]}]]`);
-            });
-            preserved.parsedinline = [...(preserved.parsedinline || []), ...libInline.getRollData(msg)];
-            preservedstate.runloop = true;
-        }
+        getLoopRolls(msg, preserved, preservedstate);
         preserved.content = msg.content.replace(/<br\/>\n/g, '({&br})');
         if (!preserved.rolltemplate && msg.rolltemplate && msg.rolltemplate.length) preserved.rolltemplate = msg.rolltemplate;
         msg.content = `${msg.apitrigger}`;
@@ -681,7 +684,7 @@ const ZeroFrame = (() => { //eslint-disable-line no-unused-vars
     // ==================================================
     const handleInput = (msg) => {
         const trigrx = new RegExp(`^!(${Object.keys(preservedMsgObj).join('|')})`);
-        const batchtrigrx = new RegExp(`^!(${Object.keys(batchMsgLibrary).map(k => batchMsgLibrary[k].handles.join('|'))})`, '');
+        const batchtrigrx = new RegExp(`^!(${Object.keys(batchMsgLibrary).map(k => batchMsgLibrary[k].handles.join('|')).join('|')})`, '');
         let preserved,
             preservedstate,
             apitrigger; // the apitrigger used by the message
@@ -757,18 +760,17 @@ const ZeroFrame = (() => { //eslint-disable-line no-unused-vars
                 msg.content = `!${apitrigger}${msg.content.slice(1)}`;
                 if (restoreMsg && restoreMsg.hasOwnProperty('message')) {
                     // this is a batched dispatch, restore non-Roll20 properties like mules, conditional tests, definitions, etc.
-                    Object.keys(restoreMsg.message).filter(k => !['inlinerolls', 'parsedinline'].includes(k))
+                    Object.keys(restoreMsg.message).filter(k => !['inlinerolls', 'parsedinline', 'content'].includes(k))
                         .forEach(k => msg[k] = msg[k] || restoreMsg.message[k]);
                 }
                 preservedMsgObj[apitrigger] = { message: _.clone(msg), state: initState() };
-                if (restoreMsg && restoreMsg.inlinerolls && restoreMsg.inlinerolls.length) {
-                    preservedMsgObj[apitrigger].message.inlinerolls = [...restoreMsg.inlinerolls];
-                    preservedMsgObj[apitrigger].message.parsedinline = [...restoreMsg.parsedinline];
-                }
                 preserved = preservedMsgObj[apitrigger].message;
                 preservedstate = preservedMsgObj[apitrigger].state;
 
-                if (!Object.keys((restoreMsg || {})).length) {
+                if (restoreMsg && restoreMsg.hasOwnProperty('message') && restoreMsg.message.hasOwnProperty('inlinerolls') && restoreMsg.message.inlinerolls.length) {
+                    preserved.inlinerolls = [...restoreMsg.message.inlinerolls];
+                    preserved.parsedinline = [...restoreMsg.message.parsedinline];
+                } else {
                     preserved.inlinerolls = [];
                     preserved.parsedinline = [];
                 }
@@ -966,3 +968,4 @@ const ZeroFrame = (() => { //eslint-disable-line no-unused-vars
 
 })();
 { try { throw new Error(''); } catch (e) { API_Meta.ZeroFrame.lineCount = (parseInt(e.stack.split(/\n/)[1].replace(/^.*:(\d+):.*$/, '$1'), 10) - API_Meta.ZeroFrame.offset); } }
+/* */
