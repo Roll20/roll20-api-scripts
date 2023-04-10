@@ -4441,7 +4441,7 @@ var attackMaster = (function() {
 					
 		_.each( saveAttributes, (saveObj,save) => {
 			let mod = parseInt(attrLookup(charCS,saveObj.mod)) || 0;
-			let target = parseInt(attrLookup(charCS,saveObj.save));
+			let target = parseInt(attrLookup(charCS,saveObj.save)) || 0;
 			content += '<tr>'
 					+  '<td>['+save+'](~'+charName+'|Do-not-use-'+save+'-save)</td>'
 					+  '<td>[['+target+']]</td>'
