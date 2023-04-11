@@ -1373,12 +1373,13 @@ var CommandMaster = (function() {
 		
 		var cmd = args[0].toUpperCase(),
 			level = parseInt(args[1]) || 1,
-			spell = args[2],
+			spellName = args[2],
 			tokenID = selected ? selected[0]._id : undefined,
 			charCS = tokenID ? getCharacter(tokenID) : undefined,
 			isMU = cmd.includes('MU'),
 			isPR = cmd.includes('PR'),
 			isPower = cmd.includes('POWER'),
+			spell = spellName.replace(/\s/g,'-'),
 			curSpells = '',
 			pwrPrefix = '',
 			word = 'spell',
@@ -1426,7 +1427,7 @@ var CommandMaster = (function() {
 				
 		if (spell) {
 			spellObj = getAbility( rootDB, spell, charCS );
-			content += '...Optionally [Review '+spell+'](!cmd --button REV_'+cmdStr
+			content += '...Optionally [Review '+spellName+'](!cmd --button REV_'+cmdStr
 					+  '&#13;&#47;w gm &#37;{' + spellObj.dB + '|'+spell+'})';
 		} else {
 			content += '...Optionally <span style='+design.grey_button+'>Review the chosen '+word+'</span>';
@@ -1440,9 +1441,9 @@ var CommandMaster = (function() {
 			content += ' or [Add all Class/Race powers](!cmd --button '+BT.ALL_POWERS+')';
 		}
 		
-		content += '}}{{desc1=2. '+(spell ? '[' : '<span style=' + design.grey_button + '>')+'Add '+(spell ? spell+'](!cmd --button ADD_'+cmdStr+')' : 'the '+word+'</span>' )
+		content += '}}{{desc1=2. '+(spell ? '[' : '<span style=' + design.grey_button + '>')+'Add '+(spell ? spellName+'](!cmd --button ADD_'+cmdStr+')' : 'the '+word+'</span>' )
 				+  ' to '+(isPower ? 'Powers' : ('level '+level+(isMU ? ' MU' : ' PR')+' spellbook'))
-		+  (isPower ? '}}' : '<br>or '+(spell ? '[' : '<span style=' + design.grey_button + '>')+'Add '+(spell ? spell+'](!cmd --button ADD_POWERS|1|'+pwrPrefix+spell+')' : 'the spell</span>' ) + ' as a Power }}')
+		+  (isPower ? '}}' : '<br>or '+(spell ? '[' : '<span style=' + design.grey_button + '>')+'Add '+(spell ? spellName+'](!cmd --button ADD_POWERS|1|'+pwrPrefix+spell+')' : 'the spell</span>' ) + ' as a Power }}')
 				+  '{{desc2=3. Choose and Add more spells or ';
 		
 		if (isPower) {
@@ -1871,7 +1872,7 @@ var CommandMaster = (function() {
 		
 		var cmd = args[0] || '',
 			toConvert = args[1] || '',
-			replaceWith = args[2] || '',
+			replaceWith = (args[2] || '').replace(/\s/g,'-'),
 			setQty = parseInt(args[3]),
 			tokenID, charCS,
 			miList = [],
@@ -2024,7 +2025,7 @@ var CommandMaster = (function() {
 			fromName = args[3] || '',
 			toType = args[4] || '',
 			toLevel = parseInt(args[5]) || 1,
-			toName = args[6] || '',
+			toName = (args[6] || '').replace(/\s/g,'-'),
 			msg = args[7],
 			isPower = caster === 'pw',
 			isWizard = caster === 'mu',
