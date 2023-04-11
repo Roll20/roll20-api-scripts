@@ -105,7 +105,8 @@
  *                     attacks that have magical charges expended on successful hit. Fixed 
  *                     Targeted attack type (i.e. S,P & B) specific calculations for -ve ACs.
  * v1.4.06 06/04/2023  Fixed bug in manual Update Saves dialog which prevented changes. Fixed
- *                     Change Weapon dialog to put rings in correct hand.
+ *                     Change Weapon dialog to put rings in correct hand. Fixed issues with 
+ *                     inconsistencies in hyphenated item names & spell storing items.
  */
  
 var attackMaster = (function() {
@@ -1387,7 +1388,7 @@ var attackMaster = (function() {
 			if (_.isUndefined(mi)) {break;}
 			if (mi.length > 0 && (includeEmpty || mi != '-')) {
 				content += (i == MIrowref || makeGrey) ? ('<span style=' + (i == MIrowref ? design.selected_button : design.grey_button) + '>') : '['; 
-				content += (mi != '-' ? (qty + ' ') : '') + mi;
+				content += (mi != '-' ? (qty + ' ' + mi.replace(/\-/g,' ')) : '-');
 				if (isView) {
 					let miObj = getAbility( fields.MagicItemDB, mi, charCS );
 					extension = '&#13;'+(miObj.api ? '' : sendToWho(charCS,senderId,false,true))+miObj.dB+'|'+mi+'}';
@@ -1540,8 +1541,6 @@ var attackMaster = (function() {
 				inOther.none = !(inOther.spell || inOther.melee || inOther.ranged || inOther.shield );
 			}
 		}
-//		log('checkCurrentStyles: inPrimary='+_.pairs(inPrimary).flat()+'\ninOther='+_.pairs(inOther).flat()+'\ninBoth='+_.pairs(inBoth).flat());
-		
 		fightStyles = getTable( charCS, fieldGroups.STYLES );
 		for (let r=0; !_.isUndefined(style = fightStyles.tableLookup( fields.Style_name, r, false )); r++) {
 			let styleObj = abilityLookup( fields.StylesDB, style, charCS );
@@ -1554,7 +1553,6 @@ var attackMaster = (function() {
 				both      = !styleRow.twohand || _.reduce(inBoth, (valid,weapon,key) => (styleRow.twohand.includes(key) ? valid && weapon : valid), true),
 				allowed   = checkItemAllowed( weaps, wt, wst, (styleRow.weaps || 'any'));
 
-//			log('checkCurrentStyles: style '+style+' primeHand='+primeHand+', offHand='+offhand+', both='+both+', allowed='+allowed);
 			fightStyles.tableSet( fields.Style_current, r, (primeHand && offhand && both && allowed) );
 		};
 		applyFightingStyle( charCS, InHandTable, fightStyles );
@@ -1940,10 +1938,6 @@ var attackMaster = (function() {
 			muLevel = Math.max(0,parseInt(caster( charCS, 'MU' ).clv)),
 			prLevel = Math.max(0,parseInt(caster( charCS, 'PR' ).clv)),
 			castLevel = Math.max(muLevel,prLevel);
-			
-		log('levelTest: vlv='+dataset.validLevel+', clv='+dataset.castLevel+', mulv='+dataset.muLevel+', prlv='+dataset.prLevel+', level='+level+', castLevel='+castLevel+', muLevel='+muLevel+', prLevel='+prLevel);
-		
-		log('levelTest: !isNaN(muLevel[0])='+!isNaN(dataset.muLevel[0])+', parseInt(muLevel[0])='+parseInt(dataset.muLevel[0])+', !isNaN(muLevel[1])='+!isNaN(dataset.muLevel[1])+', parseInt(muLevel[1])='+parseInt(dataset.muLevel[1]));
 			
 		if (dataset.validLevel && ((!isNaN(dataset.validLevel[0]) && (level < parseInt(dataset.validLevel[0]))) || (!isNaN(dataset.validLevel[1]) && (level > parseInt(dataset.validLevel[1]))))) return false;
 		if (dataset.castLevel && ((!isNaN(dataset.castLevel[0]) && (castLevel < parseInt(dataset.castLevel[0]))) || (!isNaN(dataset.castLevel[1]) && (castLevel > parseInt(dataset.castLevel[1]))))) return false;
@@ -3928,7 +3922,6 @@ var attackMaster = (function() {
 					+  '<td width="'+width+'">'+((attkType == Attk.ROLL) ? ('<span style=' + design.selected_button + '>') : '[') + 'You roll' + ((attkType == Attk.ROLL) ? '</span>' : '](!attk --set-attk-type '+senderId+'|'+Attk.ROLL+'|'+argString+')</td>')
 					+  (target ? ('<td width="'+width+'">'+((attkType == Attk.TARGET) ? ('<span style=' + design.selected_button + '>') : '[') + 'Targeted' + ((attkType == Attk.TARGET) ? '</span>' : '](!attk --set-attk-type '+senderId+'|'+Attk.TARGET+'|'+argString+')</td>')) : '')
 					+  '</tr></table></div>}}';
-			log('makeAttackMenu: content = '+content);
 			sendResponse( charCS, content, senderId,flags.feedbackName,flags.feedbackImg,tokenID );
 		} catch (e) {
 			log('AttackMaster makeAttackMenu: JavaScript '+e.name+': '+e.message);
@@ -4162,8 +4155,9 @@ var attackMaster = (function() {
 	    
 		var tokenID = args[1],
 			MIrowref = args[2],
-			selectedMI = args[3] || '',
+			itemName = args[3] || '',
 			charges = args[4],
+			selectedMI = itemName.replace(/\s/g,'-'),
 			charCS = getCharacter( tokenID );
 			
 		if (!charCS) {
@@ -4214,9 +4208,9 @@ var attackMaster = (function() {
 		if (!shortMenu || selected) {
 			if (!remove) {
 				if (shortMenu) {
-					content += '{{desc=**1.Item chosen** ['+selectedMI+'](!attk --button '+BT.REDO_CHOOSE_MI+'|'+tokenID+'|'+MIrowref+'), click to reselect\n';
+					content += '{{desc=**1.Item chosen** ['+itemName+'](!attk --button '+BT.REDO_CHOOSE_MI+'|'+tokenID+'|'+MIrowref+'), click to reselect\n';
 				}
-    			content += '\nOptionally, you can '+(selected ? '[' : '<span style='+design.grey_button+'>')+'Review '+selectedMI+(selected ? ('](!attk --button '+BT.REVIEW_MI+'|'+tokenID+'|'+MIrowref+'|'+selectedMI+'|&#13;'+(magicItem.api ? '' : sendToWho(charCS,senderId,false,true))+'&#37;{'+magicItem.dB+'|'+selectedMI+'})') : '')+'</span>';
+    			content += '\nOptionally, you can '+(selected ? '[' : '<span style='+design.grey_button+'>')+'Review '+itemName+(selected ? ('](!attk --button '+BT.REVIEW_MI+'|'+tokenID+'|'+MIrowref+'|'+selectedMI+'|&#13;'+(magicItem.api ? '' : sendToWho(charCS,senderId,false,true))+'&#37;{'+magicItem.dB+'|'+selectedMI+'})') : '')+'</span>';
             } else {
 				content += '{{desc=**1.Action chosen** ***Remove***, [click](!attk --button '+BT.REDO_CHOOSE_MI+'|'+tokenID+'|'+MIrowref+') to change';
 				}
@@ -4258,7 +4252,7 @@ var attackMaster = (function() {
 			content += '{{desc2=**3.';
 			if (!remove) {
 				content += ((selected && bagSlot) ? '[' : ('<span style='+design.grey_button+'>'))
-						+  'Store '+selectedMI
+						+  'Store '+itemName
 						+  ((selected && bagSlot && !remove) ? ('](!attk --button '+BT.STORE_MI+'|'+tokenID+'|'+MIrowref+'|'+selectedMI+'|?{Quantity?|'+qty+'+1})') : '</span>')
 						+  ' in your MI Bag**'+(!!removeMI ? (', overwriting **'+removeMI) : '')+'**\n\n'
 						+  'or ';
@@ -6197,8 +6191,6 @@ var attackMaster = (function() {
 	 */
 	 
 	var doLendAHand = function( args, senderId ) {
-		
-		log('doLendAHand: called');
 		
 		if (!args || args.length < 3) {
 			sendDebug('doLendAHand: invalid number of parameters for Lend-a-Hand');
