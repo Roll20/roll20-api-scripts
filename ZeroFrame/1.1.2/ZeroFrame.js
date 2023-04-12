@@ -3,8 +3,8 @@
 Name            : ZeroFrame
 GitHub          : https://github.com/TimRohr22/Cauldron/tree/master/ZeroFrame
 Roll20 Contact  : timmaugh
-Version         : 1.1.3
-Last Update     : 4/12/2023
+Version         : 1.1.2
+Last Update     : 4/10/2023
 =========================================================
 */
 var API_Meta = API_Meta || {};
@@ -16,9 +16,9 @@ const ZeroFrame = (() => { //eslint-disable-line no-unused-vars
     //		VERSION
     // ==================================================
     const apiproject = 'ZeroFrame';
-    API_Meta[apiproject].version = '1.1.3';
+    API_Meta[apiproject].version = '1.1.2';
     const schemaVersion = 0.2;
-    const vd = new Date(1681305901876);
+    const vd = new Date(1681157177114);
     let stateReady = false;
     const checkInstall = () => {
         if (!state.hasOwnProperty(apiproject) || state[apiproject].version !== schemaVersion) {
@@ -854,7 +854,7 @@ const ZeroFrame = (() => { //eslint-disable-line no-unused-vars
             //            dispatchOutbound(l);
 
         });
-        if (batchMsgLibrary[msg.messageID] && batchMsgLibrary[msg.messageID].commands && batchMsgLibrary[msg.messageID].commands.length) {
+        if (batchMsgLibrary[msg.messageID].commands.length) {
             sendChat('BatchOp', batchMsgLibrary[msg.messageID].commands.shift());
         }
 
