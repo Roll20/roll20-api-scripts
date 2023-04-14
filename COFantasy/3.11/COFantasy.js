@@ -1,4 +1,3 @@
-// Needs the Vector Math scripty
 // ------------------ generateRowID code from the Aaron ---------------------
 const generateUUID = (function() {
     "use strict";
@@ -157,9 +156,9 @@ var COFantasy = COFantasy || function() {
               type: 'bool'
             },
             degats_importants: {
-              explications: "Si les DMs d\xE9passent CON+niveau en une attaque, on applique aussi la r\xE8gle de blessure grave.",
-              val: true,
-              type: 'bool'
+              explications: "Si les DMs d\xE9passent CON+niveau en une attaque, on applique aussi la r\xE8gle de blessure grave. Si la valeur de cette option est 0, la r\xE8gles n'est pas appliqu\xE9e. Sinon, la r\xE8gle n'est appliqu\xE9e que si, de plus, les DMs d\xE9passent maxPV / valeur.",
+              val: 3,
+              type: 'int'
             },
             dm_minimum: {
               explications: "D\xE9g\xE2ts minimum d'une attaque ou autre source de DM.",
@@ -643,6 +642,8 @@ var COFantasy = COFantasy || function() {
   }
 
   function charPredicateAsBool(charId, name) {
+    let pred = stateCOF.predicats[charId];
+    if (pred) return pred;
     let raw = '';
     let attr = charAttribute(charId, 'predicats_script', {
       caseInsensitive: true
@@ -650,15 +651,92 @@ var COFantasy = COFantasy || function() {
     if (attr.length > 0) {
       raw = attr[0].get('current');
     }
-    let pred = predicateOfRaw(raw);
+    let attrArmes = charAttribute(charId, 'armeEnMain');
+    if (attrArmes.length > 0) {
+      let att;
+      let attaques;
+      let labelArme = attrArmes[0].get('current');
+      if (labelArme) {
+        attaques = listAllAttacks({
+          charId
+        });
+        let att = attaques[labelArme];
+        if (att) {
+          let rawArme = fieldAsString(att, 'armepredicats', '');
+          if (rawArme) raw += '\n' + rawArme;
+        }
+      }
+      //Ensuite l'arme gauche
+      labelArme = attrArmes[0].get('max');
+      if (labelArme) {
+        if (!att) {
+          attaques = attaques || listAllAttacks({
+            charId
+          });
+          att = attaques[labelArme];
+        }
+        if (att) {
+          let rawArme = fieldAsString(att, 'armepredicats', '');
+          if (rawArme) raw += '\n' + rawArme;
+        }
+      }
+    }
+    pred = predicateOfRaw(raw);
+    stateCOF.predicats[charId] = pred;
     return pred[name];
   }
 
+
+  //Probl\xE8me : \xE7a ne peut pas marcher pour les boucliers en main gauche
+  //car \xE7a utilise lui-m\xEAme un bouclier...
   function getPredicates(perso) {
     if (perso.predicates === undefined) {
+      const estMook = perso.token && perso.token.get('bar1_link') === '';
+      if (!estMook && stateCOF.predicats[perso.charId]) {
+        perso.predicates = stateCOF.predicats[perso.charId];
+        return perso.predicates;
+      }
       let raw = ficheAttribute(perso, 'predicats_script', '');
+      if (perso.armesEnMain) {
+        if (perso.arme && perso.arme.predicats)
+          raw += '\n' + perso.arme.predicats;
+        if (perso.armeGauche && perso.armeGauche.predicats)
+          raw += '\n' + perso.armeGauche.predicats;
+      } else if (perso.arme) { //possible si appel\xE9 depuis armesEnMain
+        if (perso.arme.predicats)
+          raw += '\n' + perso.arme.predicats;
+      } else { //il faut chercher les pr\xE9dicats des armes en main
+        //On n'appelle pas armesEnMain pour \xE9viter la r\xE9cursion
+        //et pour \xE9viter trop de calcul
+        let attrArmes = tokenAttribute(perso, 'armeEnMain');
+        if (attrArmes.length > 0) {
+          let att;
+          let labelArme = attrArmes[0].get('current');
+          if (labelArme) {
+            let attaques = listAllAttacks(perso);
+            let att = attaques[labelArme];
+            if (att) {
+              let rawArme = fieldAsString(att, 'armepredicats', '');
+              if (rawArme) raw += '\n' + rawArme;
+            }
+          }
+          //Ensuite l'arme gauche
+          labelArme = attrArmes[0].get('max');
+          if (labelArme) {
+            if (!att) {
+              let attaques = listAllAttacks(perso);
+              att = attaques[labelArme];
+            }
+            if (att) {
+              let rawArme = fieldAsString(att, 'armepredicats', '');
+              if (rawArme) raw += '\n' + rawArme;
+            }
+          }
+        }
+      }
       let pred = predicateOfRaw(raw);
       perso.predicates = pred;
+      if (!estMook) stateCOF.predicats[perso.charId] = pred;
     }
     return perso.predicates;
   }
@@ -1011,6 +1089,7 @@ var COFantasy = COFantasy || function() {
   //Appel\xE9 au lancement du script, mise \xE0 jour de certaines variables globales
   function setStateCOF() {
     stateCOF = state.COFantasy;
+    stateCOF.predicats = {}; //pr\xE9dicats par charId.
     if (stateCOF.roundMarkerId) {
       roundMarker = getObj('graphic', stateCOF.roundMarkerId);
       if (roundMarker === undefined) {
@@ -1444,7 +1523,7 @@ var COFantasy = COFantasy || function() {
   function getAttackName(attackLabel, perso) {
     const attaques = listAllAttacks(perso);
     const arme = attaques[attackLabel];
-    if (arme === undefined) return arme;
+    if (arme === undefined) return;
     return arme.armenom;
   }
 
@@ -2043,7 +2122,7 @@ var COFantasy = COFantasy || function() {
     }
     evt.attributes = evt.attributes || [];
     let fullAttribute = fullAttributeName(personnage, attribute, options);
-    if (fullAttribute === undefined) {
+    if (!fullAttribute) {
       let args = {
         personnage,
         attribute,
@@ -2075,6 +2154,15 @@ var COFantasy = COFantasy || function() {
         switch (attribute) {
           case 'agrandissement':
             personnage.taille = undefined;
+            let arme = armesEnMain(personnage);
+            if (arme.armeDeGrand) {
+              let taille = taillePersonnage(personnage, 4);
+              if (taille == 5) {
+                arme.deuxMains = false;
+                sendPerso(personnage, "peut maintenant tenir " + arme.name + " \xE0 une main");
+                degainerArme(personnage, arme.label, evt);
+              }
+            }
             let width = token.get('width');
             let height = token.get('height');
             affectToken(token, 'width', width, evt);
@@ -2270,6 +2358,17 @@ var COFantasy = COFantasy || function() {
     c += val;
     attr.set('current', c);
     return c;
+  }
+
+  function persoOfToken(token) {
+    let charId = token.get('represents');
+    if (charId === '') {
+      return undefined;
+    }
+    return {
+      token,
+      charId
+    };
   }
 
   //options:
@@ -3123,15 +3222,78 @@ var COFantasy = COFantasy || function() {
     return scale;
   }
 
-  function persoOfToken(token) {
-    let charId = token.get('represents');
-    if (charId === '') {
-      return undefined;
-    }
+  // si le token est plus grand que thresh, r\xE9duit la distance
+  function tokenSize(tok, thresh) {
+    let size = (tok.get('width') + tok.get('height')) / 2;
+    if (size > thresh) return ((size - thresh) / 2);
+    return 0;
+  }
+
+  function vecteurUnitaire(pt1, pt2) {
+    let x = pt2.x - pt1.x;
+    let y = pt2.y - pt1.y;
+    let n = Math.sqrt(x * x + y * y);
+    x = x / n;
+    y = y / n;
     return {
-      token: token,
-      charId: charId
+      x,
+      y
     };
+  }
+
+  function distancePoints(pt1, pt2) {
+    let x = pt2.x - pt1.x;
+    let y = pt2.y - pt1.y;
+    return Math.sqrt(x * x + y * y);
+  }
+
+  function distanceTokenPrev(token, prev) {
+    let x = token.get('left') - prev.left;
+    let y = token.get('top') - prev.top;
+    return Math.sqrt(x * x + y * y);
+  }
+
+  //Distance en pixels entre 2 tokens
+  function distancePixToken(tok1, tok2) {
+    let x = tok1.get('left') - tok2.get('left');
+    let y = tok1.get('top') - tok2.get('top');
+    return Math.sqrt(x * x + y * y);
+  }
+
+  function pointOfToken(token) {
+    return {
+      x: token.get('left'),
+      y: token.get('top')
+    };
+  }
+
+  //Distance en pixels entre un token et un segment
+  //le segment est donn\xE9 par ses extr\xE9mit\xE9s, sous forme de {x, y}
+  function distancePixTokenSegment(token, pt1, pt2) {
+    let pt = pointOfToken(token);
+    let seg = {
+      x: pt2.x - pt1.x,
+      y: pt2.y - pt1.y
+    };
+    let vec = {
+      x: pt.x - pt1.x,
+      y: pt.y - pt1.y
+    }; //vecteur de pt1 \xE0 pt
+    //On regarde d'abord si le projet\xE9 de token sur (pt1, pt2) est dans le segment
+    let ps = seg.x * vec.x + seg.y * vec.y;
+    if (ps <= 0) { //On est avant pt1
+      return Math.sqrt(vec.x * vec.x + vec.y * vec.y);
+    }
+    let dseg = seg.x * seg.x + seg.y * seg.y;
+    if (ps >= dseg) { //On est apr\xE8s pt2, on retourne donc la distance pt pt2
+      let x = pt.x - pt2.x;
+      let y = pt.y - pt2.y;
+      return Math.sqrt(x * x + y * y);
+    }
+    //On calcule le d\xE9terminant de vec et seg
+    let det = vec.x * seg.y - vec.y * seg.x;
+    //Et on divise par la longueur du segment
+    return Math.abs(det) / Math.sqrt(dseg);
   }
 
   //options peut avoir les champs:
@@ -3167,9 +3329,7 @@ var COFantasy = COFantasy || function() {
       }
     }
     let scale = computeScale(pageId);
-    let pt1 = tokenCenter(pseudoTok1);
-    let pt2 = tokenCenter(pseudoTok2);
-    let distance_pix = VecMath.length(VecMath.vec(pt1, pt2));
+    let distance_pix = distancePixToken(pseudoTok1, pseudoTok2);
     if (!options.strict1) distance_pix -= tokenSize(pseudoTok1, PIX_PER_UNIT / 2);
     if (!options.strict2) distance_pix -= tokenSize(pseudoTok2, PIX_PER_UNIT / 2);
     if (options.allonge) distance_pix -= (options.allonge * PIX_PER_UNIT) / scale;
@@ -3256,6 +3416,20 @@ var COFantasy = COFantasy || function() {
             token.set('width', normalToken.width);
             affectToken(token, 'height', height, evt);
             token.set('height', normalToken.height);
+            let perso = {
+              token,
+              charId
+            };
+            let arme = armesEnMain(perso);
+            if (arme && arme.armeDeGrand) {
+              let taille = taillePersonnage(perso, 4);
+              if (taille == 4 && arme.label != perso.attrArmeEnMain.get('max')) {
+                sendPerso(perso, "ne peut plus tenir " + arme.name + " \xE0 une main");
+                degainerArme(perso, arme.label, evt, {
+                  deuxMains: true
+                });
+              }
+            }
           }, {
             filterAffected: function(token) {
               if (token.get('width') == largeWidth) return true;
@@ -4561,6 +4735,7 @@ var COFantasy = COFantasy || function() {
     weaponStats.typeDegats = fieldAsString(att, 'armetypedegats', 'tranchant');
     weaponStats.options = fieldAsString(att, 'armeoptions', '');
     weaponStats.options = weaponStats.options.trim();
+    weaponStats.predicats = fieldAsString(att, 'armepredicats', '');
     switch (weaponStats.typeAttaque) {
       case 'Naturel':
         weaponStats.armeNaturelle = true;
@@ -4585,6 +4760,7 @@ var COFantasy = COFantasy || function() {
         weaponStats.armeDeJet = true;
         weaponStats.tauxDePerte = fieldAsInt(att, 'armejettaux', 0);
         weaponStats.nbArmesDeJet = fieldAsInt(att, 'armejetqte', 1);
+        weaponStats.nbArmesDeJetMax = fieldAsInt(att, 'armejetqte_max', 1);
         weaponStats.prefixe = att.prefixe; //pour trouver l'attribut
         armeDeCreatureFeerique(perso, weaponStats, 3);
         break;
@@ -4605,20 +4781,35 @@ var COFantasy = COFantasy || function() {
         }
     }
     //Informations dans le champ sp\xE9cial
-    let pred = predicateOfRaw(weaponStats.divers);
+    let champDivers = weaponStats.divers;
+    if (champDivers === '') champDivers = weaponStats.predicats;
+    else if (weaponStats.predicats !== '')
+      champDivers += '\n' + weaponStats.predicats;
+    let pred = predicateOfRaw(champDivers);
     //On transfert les pr\xE9dicats connus dans weaponStats
-    weaponStats.bonusDef = toInt(pred.DEF);
     if (pred.charge) weaponStats.charge = toInt(pred.charge, 1);
     weaponStats.eclaire = toInt(pred.eclaire);
     weaponStats.eclaireFaible = toInt(pred.eclaireFaible);
+    weaponStats.batarde = pred.batarde;
+    if (weaponStats.batarde && weaponStats.deuxMains) {
+      error("L'arme " + weaponStats.name + " est d\xE9clar\xE9e comme bat\xE2rde, il faudrait en faire une arme \xE0 une main par d\xE9faut", weaponStats);
+      weaponStats.deuxMains = undefined;
+    }
+    if (pred.armeDeGrand) {
+      weaponStats.armeDeGrand = true;
+      let taille = taillePersonnage(perso, 4);
+      if (taille < 5) weaponStats.deuxMains = true;
+      else weaponStats.deuxMains = false;
+    }
     //Identification des cat\xE9gories d'armes utilis\xE9es en jeu
     identifierArme(weaponStats, pred, 'arc', /\barc\b/i);
     identifierArme(weaponStats, pred, 'arbalete', /\barbal[e\xE8]te\b/i);
+    identifierArme(weaponStats, pred, 'baton', /\bb[a\xE2]ton\b/i);
     identifierArme(weaponStats, pred, 'hache', /\bhache\b/i);
     identifierArme(weaponStats, pred, 'epee', /\b[e\xE9]p[e\xE9]e\b/i);
-    identifierArme(weaponStats, pred, 'marteau', /\bmarteau\b/i);
     identifierArme(weaponStats, pred, 'epieu', /\b[e\xE9]pieu\b/i);
-    identifierArme(weaponStats, pred, 'baton', /\bb[a\xE2]ton\b/i);
+    identifierArme(weaponStats, pred, 'fronde', /\bfronde\b/i);
+    identifierArme(weaponStats, pred, 'marteau', /\bmarteau\b/i);
     identifierArme(weaponStats, pred, 'masse', /\bmasse\b/i);
     identifierArme(weaponStats, pred, 'rapiere', /\brapi[e\xE8]re\b/i);
     identifierArme(weaponStats, pred, 'poudre', /\bpoudre\b/i);
@@ -4736,7 +4927,9 @@ var COFantasy = COFantasy || function() {
             case 'etat':
               return !getState(perso, condition.etat);
             case 'attribut':
-              return !attributeAsBool(perso, condition.attribute);
+              if (condition.valeur === undefined)
+                return !attributeAsBool(perso, condition.attribute);
+              return testAttribut(perso, condition.attrbute, condition.valeur, condition);
           }
           return false;
         case 'mana':
@@ -4803,7 +4996,7 @@ var COFantasy = COFantasy || function() {
     return ai;
   }
 
-  //Enl\xE8ve les cha\xEEne de type ?{..} pour \xEAtre s\xFBr que l'action est impossible
+  //Enl\xE8ve les cha\xEEnes de type ?{..} pour \xEAtre s\xFBr que l'action est impossible
   function removeUserInputs(act) {
     let m = act.match(/\?\{[^\}]*\}/g);
     if (!m) return act;
@@ -4811,6 +5004,79 @@ var COFantasy = COFantasy || function() {
       act = act.replace(ma, '');
     });
     return act;
+  }
+
+  //Remplis les champs arme et armeGauche de perso
+  //renvoie undefined si aucune arme en main principale
+  //sinon renvoie l'arme principale
+  function armesEnMain(perso) {
+    if (perso.armesEnMain) return perso.arme;
+    let attr = tokenAttribute(perso, 'armeEnMain');
+    if (attr.length > 0) {
+      perso.attrArmeEnMain = attr[0];
+      let labelArmePrincipale = attr[0].get('current');
+      if (labelArmePrincipale) perso.arme = getWeaponStats(perso, labelArmePrincipale);
+      let labelArmeGauche = attr[0].get('max');
+      if (labelArmeGauche) {
+        if (labelArmeGauche == labelArmePrincipale) { //arme tenue \xE0 2 mains
+          perso.arme.deuxMains = true;
+        } else {
+          perso.armeGauche = getWeaponStats(perso, labelArmeGauche);
+        }
+      } else if (predicateAsBool(perso, 'attaqueAuBouclier') && ficheAttributeAsInt(perso, 'defbouclieron', 0)) {
+        //Alors il porte le bouclier en tant qu'arme en main gauche
+        perso.armeGauche = getWeaponStats(perso, predicateAsBool(perso, 'attaqueAuBouclier'));
+      }
+      perso.armesEnMain = 'calculee';
+      return perso.arme;
+    }
+    return;
+  }
+
+  function listAllMunitions(perso) {
+    if (perso.munitions) return perso.munitions;
+    let rawList = extractRepeating(perso, 'munitions');
+    let liste = {}; //liste tri\xE9e par label de munition
+    for (let pref in rawList) {
+      let ra = rawList[pref];
+      if (ra.labelmunition === undefined) ra.labelmunition = 0;
+      if (liste[ra.labelmunition]) {
+        error("Plusieurs munitions de label " + ra.labelmunitions, ra);
+        continue;
+      }
+      ra.prefixe = pref;
+      liste[ra.labelmunition] = ra;
+    }
+    perso.munitions = liste;
+    return liste;
+  }
+
+  //Les options de l'arme doivent d\xE9j\xE0 \xEAtre dans act
+  function demandeMunition(perso, weaponStats, options, act) {
+    if (act.includes('--munition')) return act;
+    let typeMunition;
+    if (weaponStats.arc) typeMunition = 'Fl\xE8che';
+    else if (weaponStats.arbalete) typeMunition = 'Carreau';
+    else if (weaponStats.poudre) typeMunition = 'Balle';
+    else if (weaponStats.fronde) typeMunition = 'Autre'; //TODO: ajouter le type bille sur la fiche
+    if (!typeMunition) return act;
+    let munitions = listAllMunitions(perso);
+    let munitionsDeType = [];
+    for (let label in munitions) {
+      let munition = munitions[label];
+      let tm = fieldAsString(munition, 'typemunition', 'Fl\xE8che');
+      if (tm != typeMunition) return;
+      let nb = fieldAsInt(munition, 'qtemunition', 1);
+      if (nb > 0) munitionsDeType.push(munition);
+    }
+    if (munitionsDeType.length === 0) return act;
+    let demande = ' ?{Munition|Normale,&amp;#32;';
+    munitionsDeType.forEach(function(m) {
+      demande += '|' +
+        fieldAsString(m, 'nommunition', typeMunition + ' ' + m.labelmunition) +
+        ', --munition ' + m.labelmunition;
+    });
+    return act + demande + '}';
   }
 
   //options peut avoir les champs:
@@ -4906,9 +5172,11 @@ var COFantasy = COFantasy || function() {
                 //Selon l'arme en main, une action peut \xEAtre possible ou non
                 let weaponStats = armesEnMain(perso);
                 if (weaponStats) {
+                  options.attackStats = options.attackStats || weaponStats;
                   options.actionImpossible =
                     (weaponStats.deuxMains && attributeAsBool(perso, 'espaceExigu')) ||
-                    (weaponStats.portee && cmd.includes('--attaqueFlamboyante')) ||
+                    (weaponStats.portee &&
+                      (cmd.includes('--attaqueFlamboyante') || cmd.includes('--seulementContact'))) ||
                     (cmd.includes('--ricochets') && !(weaponStats.armeDeJet || weaponStats.options.includes('--aussiArmeDeJet')));
                 }
               }
@@ -4951,6 +5219,7 @@ var COFantasy = COFantasy || function() {
                       act += ' --attaqueOptions ' + attackStats.options;
                     }
                   }
+                  act = demandeMunition(perso, attackStats, options, act);
                 }
                 //On cherche la port\xE9e dans les options (\xE7a a la priorit\xE9)
                 args.forEach(function(o) {
@@ -7415,12 +7684,12 @@ var COFantasy = COFantasy || function() {
   }
 
   function resultatJet(msg) {
-    var args = msg.content.split(' ');
+    let args = msg.content.split(' ');
     if (args.length < 3) {
       error("La fonction !cof-resultat-jet n'a pas assez d'arguments", args);
       return;
     }
-    var evt = findEvent(args[1]);
+    const evt = findEvent(args[1]);
     if (evt === undefined) {
       error("Le jet est trop ancien ou \xE9te annul\xE9", args);
       return;
@@ -7430,7 +7699,7 @@ var COFantasy = COFantasy || function() {
       return;
     }
     if (evt.attenteResultat) {
-      var message = evt.type + " ";
+      let message = evt.type + " ";
       if (args[2] == 'rate') {
         diminueMalediction(evt.personnage, evt);
         message += "rat\xE9.";
@@ -7544,7 +7813,7 @@ var COFantasy = COFantasy || function() {
       magieIntense = tempeteDeManaCourante.intense;
     let maxMagieIntense = magieIntense + restant;
     if (maxMagieIntense > 5 && restant > 0) maxMagieIntense = magieIntense + 1;
-    for (var i = 0; i <= maxMagieIntense; i++) {
+    for (let i = 0; i <= maxMagieIntense; i++) {
       if (i == magieIntense) line += " " + i;
       else line += " " + boutonSimple("!cof-tempete-de-mana " + i, i);
     }
@@ -7677,6 +7946,28 @@ var COFantasy = COFantasy || function() {
           attribute: args[1],
           text: args[1]
         };
+      case 'attribut':
+        if (args.length < 3) {
+          error("Il manque un argument pour comparer l'attribut", args);
+          return;
+        }
+        let res = {
+          type: 'attribut',
+          attribute: args[1],
+          valeur: args[2].toLowerCase(),
+          text: args[1] + ' ' + args[2]
+        };
+        if (args.length > 3) {
+          if (args[3] == 'local') {
+            res.local = true;
+          } else if (args[3] == 'fiche') {
+            res.fiche = {};
+            if (args.length > 4) {
+              res.fiche.def = args[4];
+            }
+          }
+        }
+        return res;
       case 'etatCible':
         if (args.length < 2) {
           error("condition non reconnue", args);
@@ -7700,8 +7991,8 @@ var COFantasy = COFantasy || function() {
           error("Il manque un argument pour comparer l'attribut de la cible", args);
           return;
         }
-        let res = {
-          type: 'attributCible',
+        res = {
+          type: 'attribut',
           attribute: args[1],
           valeur: args[2].toLowerCase(),
           text: args[1] + ' ' + args[2]
@@ -7745,7 +8036,7 @@ var COFantasy = COFantasy || function() {
           error("condition non reconnue", args);
           return;
         }
-        var valeurDeAttaque = parseInt(args[1]);
+        let valeurDeAttaque = parseInt(args[1]);
         if (isNaN(valeurDeAttaque)) {
           error("La condition de d\xE9 d'attaque doit \xEAtre un nombre", args);
           // on continue expr\xE8s pour tomber dans le cas par d\xE9faut
@@ -7767,7 +8058,7 @@ var COFantasy = COFantasy || function() {
   }
 
   function closeIte(scope) {
-    var ps = scope.parentScope;
+    let ps = scope.parentScope;
     if (ps === undefined) return;
     log("Il manque un endif");
     delete scope.parentScope;
@@ -7792,27 +8083,6 @@ var COFantasy = COFantasy || function() {
       }
       obj[argName] = effet[0].id;
     } else obj[argName] = cmd[1];
-  }
-
-  //Remplis les champs arme et armeGauche de perso
-  //renvoie undefined si aucune arme en main principale
-  //sinon renvoie l'arme principale
-  function armesEnMain(perso) {
-    if (perso.armesEnMain) return perso.arme;
-    let labelArme = tokenAttribute(perso, 'armeEnMain');
-    if (labelArme.length > 0) {
-      let labelArmePrincipale = labelArme[0].get('current');
-      if (labelArmePrincipale) perso.arme = getWeaponStats(perso, labelArmePrincipale);
-      let labelArmeGauche = labelArme[0].get('max');
-      if (labelArmeGauche) perso.armeGauche = getWeaponStats(perso, labelArmeGauche);
-      else if (predicateAsBool(perso, 'attaqueAuBouclier') && ficheAttributeAsInt(perso, 'defbouclieron', 0)) {
-        //Alors il porte le bouclier en tant qu'arme en main gauche
-        perso.armeGauche = getWeaponStats(perso, predicateAsBool(perso, 'attaqueAuBouclier'));
-      }
-      perso.armesEnMain = 'calculee';
-      return perso.arme;
-    }
-    return;
   }
 
   //parse les expressions du type 3d6+4
@@ -7925,161 +8195,11 @@ var COFantasy = COFantasy || function() {
     return res;
   }
 
-  //!cof-attack id_attaquant id_cible label_attaque [options]
-  function parseAttack(msg) {
-    const playerId = getPlayerIdFromMsg(msg);
-    if (stateCOF.pause && !playerIsGM(playerId)) {
-      sendPlayer(msg, "Le jeu est en pause", playerId);
-      return;
-    }
-    let optArgs = msg.content.split(' --');
-    let args = optArgs[0].split(' ');
-    args = args.filter(function(a) {
-      return a !== '';
-    });
-    optArgs.shift();
-    if (args.length < 3) {
-      error("Pas assez d'arguments pour !cof-attack: " + msg.content, args);
-      return;
-    }
-    const attaquant = persoOfId(args[1]);
-    if (attaquant === undefined) {
-      error("Le premier argument de !cof-attack n'est pas un token valide", args[1]);
-      return;
-    }
-    let targetToken = getObj('graphic', args[2]);
-    if (targetToken === undefined) {
-      error("le second argument de !cof-attack doit \xEAtre un token", args[2]);
-      return;
-    }
-    let attackLabel;
-    if (args.length > 3) {
-      attackLabel = args.slice(3).join(' ').trim();
-    }
-    let weaponStats = {};
-    let attaqueArray;
-    try {
-      attaqueArray = JSON.parse(attackLabel); //plus document\xE9 depuis 2020
-    } catch (e) {}
-    if (Array.isArray(attaqueArray) && attaqueArray.length > 4 &&
-      attaqueArray[1].length > 1 && attaqueArray[3].length > 3) {
-      weaponStats.name = attaqueArray[0].replace(/_/g, ' ');
-      weaponStats.attSkill = attaqueArray[1][0];
-      weaponStats.attSkillDiv = attaqueArray[1][1];
-      weaponStats.crit = attaqueArray[2];
-      const weaponDmg = attaqueArray[3];
-      weaponStats.attNbDices = weaponDmg[0];
-      weaponStats.attDice = weaponDmg[1];
-      weaponStats.attCarBonus = weaponDmg[2];
-      weaponStats.attDMBonusCommun = weaponDmg[3];
-      weaponStats.portee = attaqueArray[4];
-      if (attaqueArray.length > 5) {
-        weaponStats.divers = attaqueArray[5];
-      } else {
-        weaponStats.divers = '';
-      }
-      weaponStats.options = '';
-    } else {
-      //On trouve l'attaque correspondant au label
-      if (attackLabel == -1) { //attaque avec l'arme en main
-        weaponStats = armesEnMain(attaquant);
-        if (attributeAsBool(attaquant, 'paradeCroisee')) {
-          let main = randomInteger(2);
-          if (main == 2) weaponStats = attaquant.armeGauche;
-          if (weaponStats === undefined) weaponStats = attaqueAMainsNues;
-          if (main == 1) weaponStats.attaquePaire = true;
-          else weaponStats.attaqueImpaire = true;
-        } else if (weaponStats === undefined) weaponStats = attaqueAMainsNues;
-      } else if (attackLabel == -2) { //attaque avec l'arme en main gauche
-        if (attaquant.armesEnMain === undefined) armesEnMain(attaquant);
-        weaponStats = attaquant.armeGauche;
-        if (weaponStats === undefined)
-          weaponStats = getWeaponStats(attaquant, attackLabel);
-      } else weaponStats = getWeaponStats(attaquant, attackLabel);
-    }
-    if (weaponStats === undefined) {
-      error("Impossible de trouver l'arme pour l'attaque", attackLabel);
-      return;
-    }
-    if (weaponStats.deuxMains && attributeAsBool(attaquant, 'espaceExigu')) {
-      sendPerso(attaquant, "ne peut pas utiliser d'arme \xE0 deux mains dans un espace aussi exigu.");
-      return;
-    }
-    //Si c'est aussi une arme de jet, et que le personnage attaque \xE0 distance, on va utiliser la version arme de jet de l'attaque.
-    let msgIndex = msg.content;
-    let indexAussiJet = msgIndex.indexOf('--aussiArmeDeJet ');
-    if (indexAussiJet == -1 && weaponStats.options) {
-      msgIndex = weaponStats.options;
-      indexAussiJet = msgIndex.indexOf('--aussiArmeDeJet ');
-    }
-    if (indexAussiJet > 0) {
-      let labelAussiJet = parseInt(msgIndex.substring(indexAussiJet + 17));
-      if (isNaN(labelAussiJet)) {
-        error("Label --aussiArmeDeJet n'est pas un entier", msgIndex.substring(indexAussiJet + 17));
-      } else {
-        let armeAssociee = getWeaponStats(attaquant, labelAussiJet);
-        if (armeAssociee === undefined) {
-          error("Label --aussiArmeDeJet pas une attaque", labelAussiJet);
-        } else {
-          if (distanceCombat(attaquant.token, targetToken) > 0)
-            weaponStats = armeAssociee;
-        }
-      }
-    }
-    //Ajout des options de l'arme
-    let wo = weaponStats.options.trim();
-    //Pour la partie options, il est possible qu'elle soit d\xE9j\xE0 pass\xE9e en ligne de commande
-    if (wo !== '' && ((optArgs.length < 1 || !optArgs[0].startsWith('attaqueOptions'))) || indexAussiJet > 0) {
-      wo = ' ' + wo;
-      wo.split(' --').reverse().forEach(function(o) {
-        o = o.trim();
-        if (o === '') return;
-        optArgs.unshift(o);
-      });
-    }
-    if (weaponStats.modificateurs) {
-      weaponStats.modificateurs.split(',').reverse().forEach(function(m) {
-        m = m.trim();
-        if (m === '') return;
-        m.split(' ').reverse().forEach(function(m) {
-          m = m.trim();
-          if (m === '') return;
-          optArgs.unshift(m);
-        });
-      });
-    }
-    const options = {
-      sortilege: weaponStats.sortilege,
-      hache: weaponStats.hache,
-      armeNaturelle: weaponStats.armeNaturelle,
-      poudre: weaponStats.poudre,
-      arme: weaponStats.arme || weaponStats.armeGauche || weaponStats.armeDeJet,
-    };
-    switch (weaponStats.typeDegats) {
-      case 'mental':
-        options.attaqueMentale = true;
-        /* falls through */
-      case 'feu':
-      case 'froid':
-      case 'acide':
-      case 'electrique':
-      case 'sonique':
-      case 'poison':
-      case 'maladie':
-      case 'drain':
-      case 'energie':
-        options.type = weaponStats.typeDegats;
-        break;
-      case 'tranchant':
-      case 'percant':
-      case 'contondant':
-      case 'magique':
-        options[weaponStats.typeDegats] = true;
-        break;
-    }
-    let lastEtat; //dernier de etats et effets
-    let lastType = options.type; //dernier type de d\xE9g\xE2ts inflig\xE9s
-    let scope = options; //Pour les conditionnelles
+  //juste le traitement d'une liste d'options
+  // lastEtat : dernier de etats et effets
+  // lastType : dernier type de d\xE9g\xE2ts inflig\xE9s
+  // scope : pour les conditionnelles
+  function parseAttackOptions(attaquant, optArgs, lastEtat, lastType, scope, playerId, msg, targetToken, attackLabel, weaponStats, options) {
     optArgs.forEach(function(arg) {
       arg = arg.trim();
       let cmd = arg.split(' ');
@@ -8090,9 +8210,8 @@ var COFantasy = COFantasy || function() {
       switch (cmd[0]) {
         case 'enflamme':
         case 'ignoreMoitieRD':
-        case 'pressionMortelle':
-        case 'tempDmg':
         case 'malediction':
+        case 'pressionMortelle':
         case 'pietine':
         case 'percute':
         case 'maxDmg':
@@ -8101,6 +8220,8 @@ var COFantasy = COFantasy || function() {
         case 'etreinteImmole':
         case 'etreinteScorpion':
         case 'seulementDistance':
+        case 'seulementContact':
+        case 'tempDmg':
           scope[cmd[0]] = true;
           return;
         case 'affute':
@@ -8112,6 +8233,8 @@ var COFantasy = COFantasy || function() {
         case 'attaqueRisquee':
         case 'attaqueOptions':
         case 'beni':
+        case 'peutAgripper':
+        case 'spectral':
         case 'choc':
         case 'epieu':
         case 'hache':
@@ -8133,6 +8256,7 @@ var COFantasy = COFantasy || function() {
         case 'pointsVitaux':
         case 'poudre':
         case 'metal':
+        case 'adamantium':
         case 'ferFroid':
         case 'reroll1':
         case 'reroll2':
@@ -8757,7 +8881,7 @@ var COFantasy = COFantasy || function() {
             error("Usage : --" + cmd[0] + " b", cmd);
             return;
           }
-          var b2Att = parseInt(cmd[1]);
+          let b2Att = parseInt(cmd[1]);
           if (isNaN(b2Att)) {
             error("Le bonus (" + cmd[0] + ") doit \xEAtre un nombre");
             return;
@@ -8805,11 +8929,44 @@ var COFantasy = COFantasy || function() {
           }
           return;
         case 'munition':
-          if (cmd.length < 2) {
-            error("Pour les munitions, il faut pr\xE9ciser le nom", cmd);
+          if (options.munition) { //on \xE9vite la r\xE9cursion
+            error("Plusieurs options --munition. Seule la premi\xE8re est prise en compte", cmd);
             return;
           }
-          var tauxPertes = 100; //Par d\xE9faut, les munitions sont perdues
+          if (cmd.length < 2) {
+            error("Pour les munitions, il faut pr\xE9ciser le label de la munition", cmd);
+            return;
+          }
+          let labelMunition = cmd[1];
+          let munitions = listAllMunitions(attaquant);
+          if (munitions[labelMunition]) {
+            options.munition = munitions[labelMunition];
+            let effetMunition = fieldAsString(options.munition, 'effetmunition', '');
+            let optionsMunition = fieldAsString(options.munition, 'optionsmunition', '');
+            optionsMunition = (' ' + optionsMunition).split(' --');
+            if (optionsMunition.length > 0) optionsMunition.shift();
+            if (effetMunition) {
+              effetMunition.split(',').reverse().forEach(function(e) {
+                e = e.trim();
+                if (e === '') return;
+                e.split(' ').reverse().forEach(function(e) {
+                  e = e.trim();
+                  if (e === '') return;
+                  optionsMunition.unshift(e);
+                });
+              });
+            }
+            if (optionsMunition.length > 0) {
+              let r = parseAttackOptions(attaquant, optionsMunition, lastEtat, lastType, scope, playerId, msg, targetToken, attackLabel, weaponStats, options);
+              lastEtat = r.lastEtat;
+              lastType = r.lastType;
+              scope = r.scope;
+            }
+            return;
+          }
+          sendPlayer(msg, "Utilisez plut\xF4t les munitions d\xE9finies sur la fiche", playerId);
+          //Compatibilit\xE9 avec ancienne version:
+          let tauxPertes = 100; //Par d\xE9faut, les munitions sont perdues
           if (cmd.length > 2)
             tauxPertes = parseInt(cmd[2]);
           if (isNaN(tauxPertes) || tauxPertes < 0 || tauxPertes > 100) {
@@ -8823,7 +8980,7 @@ var COFantasy = COFantasy || function() {
           return;
         case "ligne":
           if (options.aoe) {
-            error("Deux options pour d\xE9finir une aoe", args);
+            error("Deux options pour d\xE9finir une aoe", optArgs);
             return;
           }
           options.aoe = {
@@ -8832,7 +8989,7 @@ var COFantasy = COFantasy || function() {
           return;
         case 'disque':
           if (options.aoe) {
-            error("Deux options pour d\xE9finir une aoe", args);
+            error("Deux options pour d\xE9finir une aoe", optArgs);
             return;
           }
           if (cmd.length < 2) {
@@ -8853,7 +9010,7 @@ var COFantasy = COFantasy || function() {
           return;
         case 'cone':
           if (options.aoe) {
-            error("Deux options pour d\xE9finir une aoe", args);
+            error("Deux options pour d\xE9finir une aoe", optArgs);
             return;
           }
           var angle = 90;
@@ -9052,7 +9209,7 @@ var COFantasy = COFantasy || function() {
         case 'incrCritCoef':
           scope.critCoef = (scope.critCoef || 1);
           if (cmd.length > 1) {
-            var incrCritCoef = parseInt(cmd[1]);
+            let incrCritCoef = parseInt(cmd[1]);
             if (isNaN(incrCritCoef)) {
               error("L'option --incrCritCoef attend un entier", cmd);
               return;
@@ -9063,9 +9220,9 @@ var COFantasy = COFantasy || function() {
           scope.critCoef++; //Par d\xE9faut, incr\xE9mente de 1
           return;
         case 'if':
-          var ifCond = parseCondition(cmd.slice(1));
+          let ifCond = parseCondition(cmd.slice(1));
           if (ifCond === undefined) return;
-          var ifThen = {
+          let ifThen = {
             parentScope: scope
           };
           scope.ite = scope.ite || [];
@@ -9303,10 +9460,26 @@ var COFantasy = COFantasy || function() {
             error("L'argument de --difficulteCarac n'est pas une caract\xE9ristique", cmd);
           }
           return;
+        case 'attackId':
+          if (cmd.length < 2) {
+            error("Il faut indiquer l'id", cmd);
+            return;
+          }
+          options.attackId = cmd[1];
+          return;
         default:
           let armeMagique = cmd[0].match(/^\+([0-9]+)$/);
           if (armeMagique && armeMagique.length > 0) {
-            options.armeMagiquePlus = parseInt(armeMagique[1]);
+            let amp = parseInt(armeMagique[1]);
+            //gestion du cumul des bonus
+            if (options.armeMagiquePlus) {
+              let bmp = amp;
+              if (amp > options.armeMagiquePlus) {
+                bmp = options.armeMagiquePlus;
+                options.armeMagiquePlus = amp;
+              }
+              if (weaponStats.portee) weaponStats.portee += 10 * bmp;
+            } else options.armeMagiquePlus = amp;
             if (options.magique === undefined) {
               options.magique = options.armeMagiquePlus;
             } else if (options.magique !== true) {
@@ -9318,6 +9491,190 @@ var COFantasy = COFantasy || function() {
       }
     });
     closeIte(scope); //pour fermer les endif mal form\xE9s et \xE9viter les boucles
+    return {
+      lastEtat,
+      lastType,
+      scope
+    };
+  }
+
+  //!cof-attack id_attaquant id_cible label_attaque [options]
+  function parseAttack(msg) {
+    const playerId = getPlayerIdFromMsg(msg);
+    if (stateCOF.pause && !playerIsGM(playerId)) {
+      sendPlayer(msg, "Le jeu est en pause", playerId);
+      return;
+    }
+    let optArgs = msg.content.split(' --');
+    let args = optArgs[0].split(' ');
+    args = args.filter(function(a) {
+      return a !== '';
+    });
+    optArgs.shift();
+    if (args.length < 3) {
+      error("Pas assez d'arguments pour !cof-attack: " + msg.content, args);
+      return;
+    }
+    const attaquant = persoOfId(args[1]);
+    if (attaquant === undefined) {
+      error("Le premier argument de !cof-attack n'est pas un token valide", args[1]);
+      return;
+    }
+    let pageId = attaquant.token.get('pageid');
+    let targetToken = getObj('graphic', args[2]);
+    if (targetToken === undefined) { //reste la possibilit\xE9 de trouver un token de ce nom
+      let tokens = findObjs({
+        _type: 'graphic',
+        _subtype: 'token',
+        _pageid: pageId,
+        name: args[2]
+      });
+      if (tokens.length == 0) {
+        error("le second argument de !cof-attack doit \xEAtre un token", args[2]);
+        return;
+      }
+      if (tokens.length > 1) {
+        error("Ambig\xFCit\xE9 sur le choix d'un token : il y a " +
+          tokens.length + " tokens nomm\xE9s " + args[2], tokens);
+      }
+      targetToken = tokens[0];
+    }
+    let attackLabel = -1;
+    if (args.length > 3) {
+      attackLabel = args.slice(3).join(' ').trim();
+    }
+    let weaponStats;
+    let attaqueArray;
+    try {
+      attaqueArray = JSON.parse(attackLabel); //plus document\xE9 depuis 2020
+    } catch (e) {}
+    if (Array.isArray(attaqueArray) && attaqueArray.length > 4 &&
+      attaqueArray[1].length > 1 && attaqueArray[3].length > 3) {
+      weaponStats = {};
+      weaponStats.name = attaqueArray[0].replace(/_/g, ' ');
+      weaponStats.attSkill = attaqueArray[1][0];
+      weaponStats.attSkillDiv = attaqueArray[1][1];
+      weaponStats.crit = attaqueArray[2];
+      const weaponDmg = attaqueArray[3];
+      weaponStats.attNbDices = weaponDmg[0];
+      weaponStats.attDice = weaponDmg[1];
+      weaponStats.attCarBonus = weaponDmg[2];
+      weaponStats.attDMBonusCommun = weaponDmg[3];
+      weaponStats.portee = attaqueArray[4];
+      if (attaqueArray.length > 5) {
+        weaponStats.divers = attaqueArray[5];
+      } else {
+        weaponStats.divers = '';
+      }
+      weaponStats.options = '';
+    } else {
+      //On trouve l'attaque correspondant au label
+      if (attackLabel == -1) { //attaque avec l'arme en main
+        weaponStats = armesEnMain(attaquant);
+        if (attributeAsBool(attaquant, 'paradeCroisee')) {
+          let main = randomInteger(2);
+          if (main == 2) weaponStats = attaquant.armeGauche;
+          if (weaponStats === undefined) weaponStats = attaqueAMainsNues;
+          if (main == 1) weaponStats.attaquePaire = true;
+          else weaponStats.attaqueImpaire = true;
+        }
+      } else if (attackLabel == -2) { //attaque avec l'arme en main gauche
+        if (attaquant.armesEnMain === undefined) armesEnMain(attaquant);
+        weaponStats = attaquant.armeGauche;
+      }
+      if (weaponStats === undefined) {
+        let arme = armesEnMain(attaquant);
+        if (arme && arme.label == attackLabel) weaponStats = arme;
+        else weaponStats = getWeaponStats(attaquant, attackLabel);
+      }
+    }
+    if (weaponStats === undefined) {
+      error("Impossible de trouver l'arme pour l'attaque", attackLabel);
+      return;
+    }
+    if (weaponStats.deuxMains && attributeAsBool(attaquant, 'espaceExigu')) {
+      sendPerso(attaquant, "ne peut pas utiliser d'arme \xE0 deux mains dans un espace aussi exigu.");
+      return;
+    }
+    //Si c'est aussi une arme de jet, et que le personnage attaque \xE0 distance, on va utiliser la version arme de jet de l'attaque.
+    let msgIndex = msg.content;
+    let indexAussiJet = msgIndex.indexOf('--aussiArmeDeJet ');
+    if (indexAussiJet == -1 && weaponStats.options) {
+      msgIndex = weaponStats.options;
+      indexAussiJet = msgIndex.indexOf('--aussiArmeDeJet ');
+    }
+    if (indexAussiJet > 0) {
+      let labelAussiJet = parseInt(msgIndex.substring(indexAussiJet + 17));
+      if (isNaN(labelAussiJet)) {
+        error("Label --aussiArmeDeJet n'est pas un entier", msgIndex.substring(indexAussiJet + 17));
+      } else {
+        let armeAssociee = getWeaponStats(attaquant, labelAussiJet);
+        if (armeAssociee === undefined) {
+          error("Label --aussiArmeDeJet pas une attaque", labelAussiJet);
+        } else {
+          if (distanceCombat(attaquant.token, targetToken) > 0)
+            weaponStats = armeAssociee;
+        }
+      }
+    }
+    //Ajout des options de l'arme
+    let wo = weaponStats.options.trim();
+    //Pour la partie options, il est possible qu'elle soit d\xE9j\xE0 pass\xE9e en ligne de commande
+    if (wo !== '' && ((optArgs.length < 1 || !optArgs[0].startsWith('attaqueOptions'))) || indexAussiJet > 0) {
+      wo = ' ' + wo;
+      wo.split(' --').reverse().forEach(function(o) {
+        o = o.trim();
+        if (o === '') return;
+        optArgs.unshift(o);
+      });
+    }
+    if (weaponStats.modificateurs) {
+      weaponStats.modificateurs.split(',').reverse().forEach(function(m) {
+        m = m.trim();
+        if (m === '') return;
+        m.split(' ').reverse().forEach(function(m) {
+          m = m.trim();
+          if (m === '') return;
+          optArgs.unshift(m);
+        });
+      });
+    }
+    const options = {
+      sortilege: weaponStats.sortilege,
+      hache: weaponStats.hache,
+      armeNaturelle: weaponStats.armeNaturelle,
+      poudre: weaponStats.poudre,
+      arme: weaponStats.arme || weaponStats.armeGauche || weaponStats.armeDeJet,
+    };
+    switch (weaponStats.typeDegats) {
+      case 'mental':
+        options.attaqueMentale = true;
+        /* falls through */
+      case 'feu':
+      case 'froid':
+      case 'acide':
+      case 'electrique':
+      case 'sonique':
+      case 'poison':
+      case 'maladie':
+      case 'drain':
+      case 'energie':
+        options.type = weaponStats.typeDegats;
+        break;
+      case 'magique':
+        options.magique = true;
+        options.type = 'energie'; //Les d\xE9g\xE2ts magiques sans type associ\xE9 sont suppos\xE9s de type \xE9nergie, l'\xE9quivalent de force dans PF1
+        break;
+      case 'tranchant':
+      case 'percant':
+      case 'contondant':
+        options[weaponStats.typeDegats] = true;
+        break;
+    }
+    let lastEtat; //dernier de etats et effets
+    let lastType = options.type; //dernier type de d\xE9g\xE2ts inflig\xE9s
+    let scope = options; //Pour les conditionnelles
+    parseAttackOptions(attaquant, optArgs, lastEtat, lastType, scope, playerId, msg, targetToken, attackLabel, weaponStats, options);
     let bene = predicateAsInt(attaquant, 'benedictionSuperieure', 0);
     if (bene) {
       if (!options.armeMagiquePlus || options.armeMagiquePlus < bene) {
@@ -9388,15 +9745,29 @@ var COFantasy = COFantasy || function() {
     attack(playerName, playerId, attaquant, targetToken, weaponStats, options);
   }
 
+  function attackCallback(options, evt) {
+    if (!options.attackId) return;
+    let combat = stateCOF.combat;
+    if (!combat || !combat.attackCallbacks) return;
+    let f = combat.attackCallbacks[options.attackId];
+    if (!evt) {
+      evt = {
+        type: "Suite d'attaque"
+      };
+      addEvent(evt);
+    }
+    if (f) f(evt);
+  }
+
   // Fait d\xE9penser de la mana, dep doit contenir une d\xE9pense possible
   function depenseMana(perso, dep, msg, evt) {
     if (!dep || dep.cout_null) return;
     updateCurrentBar(perso, 2, dep.pm, evt);
     msg = msg || '';
     if (dep.depense_pv) {
-      var source = reglesOptionelles.mana.val.brulure_de_magie.val ? "de la Br\xFBlure de Magie" : "du Contrecoup";
+      let source = reglesOptionelles.mana.val.brulure_de_magie.val ? "de la Br\xFBlure de Magie" : "du Contrecoup";
       updateCurrentBar(perso, 1, dep.pv, evt);
-      var pre = 'p';
+      let pre = 'p';
       if (stateCOF.options.affichage.val.depense_mana.val && dep.depense_pm > 0)
         pre = "d\xE9pense " + dep.depense_pm + " PM et p";
       sendPerso(perso, pre + "erd " + dep.depense_pv + " PV \xE0 cause " + source + " pour " + msg);
@@ -9478,6 +9849,23 @@ var COFantasy = COFantasy || function() {
     return charAttributeAsInt(perso, originalAttr, 0);
   }
 
+  //test si l'attribut est pr\xE9sent et si sa valeur est bonne
+  // options peut contenir
+  // fiche : si on cherche un attribut de fiche, et dans ce cas, le champ def donne la valeur par d\xE9faut
+  // local : si c'est un attribut diff\xE9rent selon le mook
+  function testAttribut(perso, attrName, valeur, options) {
+    let attr;
+    if (options.fiche) {
+      attr = ficheAttribute(perso, attrName, options.fiche.def);
+      if (attr === undefined) return false;
+      return (attr + '').toLowerCase() == valeur;
+    }
+    if (options.local) attr = tokenAttribute(perso, attrName);
+    else attr = charAttribute(perso.charId, attrName);
+    if (attr.length === 0) return false;
+    return (attr[0].get('current') + '').toLowerCase() == valeur;
+  }
+
   function testCondition(cond, attaquant, cibles, deAttaque, options) {
     if (cond == 'toujoursVrai') return true;
     switch (cond.type) {
@@ -9503,42 +9891,29 @@ var COFantasy = COFantasy || function() {
         });
         return resEtatCible;
       case 'attribut':
-        if (attributeAsBool(attaquant, cond.attribute)) return true;
-        if (cond.attribute == 'armeDArgent') {
-          return attributeAsBool(attaquant, 'formeDAnge') && predicateAsInt(attaquant, 'voieDeLArchange', 1) > 2;
-        }
-        return false;
-      case 'attributCible':
-        let resAttrCible = true;
-        if (cond.valeur === undefined) {
-          cibles.forEach(function(target) {
-            if (resAttrCible && !attributeAsBool(target, cond.attribute))
-              resAttrCible = false;
-          });
-        } else {
-          cibles.forEach(function(target) {
-            if (resAttrCible) {
-              let attr;
-              if (cond.fiche) {
-                attr = ficheAttribute(target, cond.attribute, cond.fiche.def);
-                if (attr === undefined) {
-                  resAttrCible = false;
-                  return;
-                }
-                resAttrCible = (attr + '').toLowerCase() == cond.valeur;
-                return;
-              }
-              if (cond.local) attr = tokenAttribute(target, cond.attribute);
-              else attr = charAttribute(target.charId, cond.attribute);
-              if (attr.length === 0) {
-                resAttrCible = false;
-                return;
-              }
-              resAttrCible = (attr[0].get('current') + '').toLowerCase() == cond.valeur;
+        {
+          if (cond.valeur === undefined) {
+            if (attributeAsBool(attaquant, cond.attribute)) return true;
+            if (cond.attribute == 'armeDArgent') {
+              return attributeAsBool(attaquant, 'formeDAnge') && predicateAsInt(attaquant, 'voieDeLArchange', 1) > 2;
             }
-          });
+            return false;
+          }
+          return testAttribut(attaquant, cond.attrbute, cond.valeur, cond);
         }
-        return resAttrCible;
+      case 'attributCible':
+        {
+          if (cond.valeur === undefined) {
+            let res = cibles.every(function(target) {
+              return attributeAsBool(target, cond.attribute);
+            });
+            return res;
+          }
+          let res = cibles.every(function(target) {
+            return testAttribut(target, cond.attrbute, cond.valeur, cond);
+          });
+          return res;
+        }
       case 'predicatCible':
         let resp = cibles.every(function(target) {
           if (cond.valeur === undefined) return predicateAsBool(target, cond.predicat);
@@ -9766,7 +10141,7 @@ var COFantasy = COFantasy || function() {
           };
           save(ite.condition.saveCond, target, saveId, expliquer, saveOpts, evt,
             function(reussite, rolltext) {
-              var branch;
+              let branch;
               target.saveResults = target.saveResults || {};
               if (reussite) {
                 branch = ite.else;
@@ -9790,7 +10165,7 @@ var COFantasy = COFantasy || function() {
           error("Condition non reconnue", ite.condition);
           resCondition = true;
       }
-      var branch;
+      let branch;
       if (resCondition) branch = ite.then;
       else branch = ite.else;
       if (branch === undefined) {
@@ -10804,17 +11179,19 @@ var COFantasy = COFantasy || function() {
     if (persoEstPNJ(target)) {
       defense = ficheAttributeAsInt(target, 'pnj_def', 10);
     } else {
-      if (target.defautCuirasse === undefined) {
-        defense += defenseArmure(target);
+      if (target.defautCuirasse === undefined && (!attaquant || !predicateAsBool(attaquant, 'creatureIntangible'))) {
+        if (!attaquant || !predicateAsBool(attaquant, 'creatureIntangible')) {
+          defense += defenseArmure(target);
+          if (attributeAsBool(target, 'armureDEau')) {
+            let bonusArmureDEau = getValeurOfEffet(target, 'armureDEau', 2);
+            defense += bonusArmureDEau;
+            explications.push("Armure d'eau : +" + bonusArmureDEau + " en DEF");
+          }
+        }
         if (attributeAsBool(target, 'armureDuMage')) {
           let bonusArmureDuMage = getValeurOfEffet(target, 'armureDuMage', 4);
           if (defense > 12) defense += bonusArmureDuMage / 2; // On a d\xE9j\xE0 une armure physique, \xE7a ne se cumule pas.
           else defense += bonusArmureDuMage;
-        }
-        if (attributeAsBool(target, 'armureDEau')) {
-          let bonusArmureDEau = getValeurOfEffet(target, 'armureDEau', 2);
-          defense += bonusArmureDEau;
-          explications.push("Armure d'eau : +" + bonusArmureDEau + " en DEF");
         }
         defense += ficheAttributeAsInt(target, 'DEFDIV', 0);
       } // Dans le cas contraire, on n'utilise pas ces bonus
@@ -11140,12 +11517,9 @@ var COFantasy = COFantasy || function() {
     let armeTarget = armesEnMain(target); //peuple target.arme et armeGauche
     //gestion de l'\xE9pieu
     if (attaquant) {
-      if (armeTarget && armeTarget.epieu) {
-        let armeAttaquant = tokenAttribute(attaquant, 'armeEnMain');
-        if (armeAttaquant.length === 0) {
-          defense += 2;
-          explications.push("\xC9pieu contre une attaque sans arme => +2 DEF");
-        }
+      if (armeTarget && armeTarget.epieu && !armesEnMain(attaquant)) {
+        defense += 2;
+        explications.push("\xC9pieu contre une attaque sans arme => +2 DEF");
       }
     }
     if (options.distance) {
@@ -11340,6 +11714,7 @@ var COFantasy = COFantasy || function() {
     if (predicateAsBool(target, 'toutPetit') && !attributeAsBool(target, 'grandeTaille')) {
       defense += 2;
     }
+    defense += predicateAsInt(target, 'DEF', 0);
     return defense;
   }
 
@@ -11483,6 +11858,11 @@ var COFantasy = COFantasy || function() {
     if ((options.marteau || options.hache) && predicateAsBool(attaquant, 'hachesEtMarteaux')) {
       options.bonusDM += 1;
       explications.push("Haches et marteaux => +1 DM");
+    }
+    let energieImpie = attributeAsInt(attaquant, 'energieImpie', 0);
+    if (energieImpie) {
+      options.bonusDM += energieImpie;
+      explications.push("\xC9nergie impie => +" + energieImpie + " DM");
     }
     if (options.arcComposite) {
       let force = modCarac(attaquant, 'force');
@@ -11646,6 +12026,16 @@ var COFantasy = COFantasy || function() {
       if (options.pasDeDmg || !options.contact) explications.push(msg);
       else explications.push(msg + " et aux DM");
       options.drainDeForce = true;
+    }
+    let energieImpie = attributeAsInt(attaquant, 'energieImpie', 0);
+    if (energieImpie) {
+      attBonus += energieImpie;
+      let msg = "\xC9nergie impie => +" + energieImpie + " en Attaque";
+      if (!options.pasDeDmg) {
+        msg += " et aux DM";
+        options.bonusDM += energieImpie;
+      }
+      explications.push(msg);
     }
     if (options.contact) {
       if (attributeAsBool(attaquant, 'rayonAffaiblissant')) {
@@ -11846,6 +12236,7 @@ var COFantasy = COFantasy || function() {
       switch (armeDePredilection) {
         case 'arc':
         case 'arbalete':
+        case 'fronde':
         case 'hache':
         case 'epee':
         case 'marteau':
@@ -12160,7 +12551,7 @@ var COFantasy = COFantasy || function() {
       if (persoEstPNJ(target)) {
         if (ficheAttributeAsBool(target, 'defarmureon', false)) targetArmorDef = 5;
       } else {
-        targetArmorDef = parseInt(getAttrByName(target.charId, "defarmure"));
+        targetArmorDef = defenseArmure(target);
       }
       if (isNaN(targetArmorDef) || targetArmorDef === 0) {
         attBonus += 2;
@@ -13010,6 +13401,7 @@ var COFantasy = COFantasy || function() {
 
   //renvoie le nom de l'arme si l'arme est d\xE9j\xE0 tenue en main
   // options.seulementDroite permet de ne rengainer que l'arme droite
+  // options.deuxMains permet de prendre une arme \xE0 2 mains
   function degainerArme(perso, labelArme, evt, options) {
     let pageId = perso.pageId;
     if (pageId === undefined) {
@@ -13020,12 +13412,20 @@ var COFantasy = COFantasy || function() {
     perso.armesEnMain = undefined; //il faut enlever le cache sur l'arme en main
     perso.arme = undefined;
     let nouvelleArme;
-    if (options.weaponStats) nouvelleArme = options.weaponStats;
-    else if (labelArme && labelArme !== '') nouvelleArme = getWeaponStats(perso, labelArme);
+    if (options.weaponStats) {
+      nouvelleArme = options.weaponStats;
+      labelArme = nouvelleArme.label;
+    } else if (labelArme && labelArme !== '')
+      nouvelleArme = getWeaponStats(perso, labelArme);
     if (nouvelleArme && nouvelleArme.armeGauche) options.gauche = true;
     let nouvelleArmeGauche;
-    let labelArmeGauche;
+    let labelArmeGauche; //d\xE9finie seulement si on d\xE9gaine l'arme gauche
+    // et toujours diff\xE9rent de labelArme
     if (options.armeGaucheLabel) {
+      if (options.armeGaucheLabel == labelArme) {
+        sendPerso("ne peut d\xE9gainer la m\xEAme arme dans les deux mains");
+        return;
+      }
       if (options.gauche) {
         nouvelleArmeGauche = nouvelleArme;
         labelArmeGauche = labelArme;
@@ -13047,6 +13447,11 @@ var COFantasy = COFantasy || function() {
     let labelArmeActuelleGauche = '';
     let ancienneArme;
     let message = nomPerso(perso) + " ";
+    let envoieMessage = function(m) {
+      if (options.messages) message += m;
+      else sendPerso(perso, m, options.secret);
+    };
+    let changementDePrise;
     if (armeActuelle.length > 0) {
       armeActuelle = armeActuelle[0];
       if (options.gauche) labelArmeActuelleGauche = armeActuelle.get('max');
@@ -13054,36 +13459,67 @@ var COFantasy = COFantasy || function() {
         labelArmeActuelle = armeActuelle.get('current');
         labelArmeActuelleGauche = armeActuelle.get('max');
       }
-      if ((labelArmeActuelle == labelArme && (labelArmeGauche === undefined || labelArmeGauche == labelArmeActuelleGauche)) ||
-        (options.gauche && labelArmeActuelleGauche == labelArme)) {
-        //Pas besoin de d\xE9gainer. Pas de message ?
+      let rienAFaire;
+      if (options.deuxMains) {
+        if (labelArmeActuelle == labelArme) {
+          if (labelArmeActuelleGauche == labelArme) rienAFaire = true;
+          else {
+            changementDePrise = true;
+            message += "prend son arme \xE0 deux mains";
+            armeActuelle.set('max', labelArme);
+          }
+        }
+      } else if (options.gauche) {
+        rienAFaire = labelArmeActuelleGauche == labelArmeGauche;
+      } else {
+        if (labelArmeActuelle == labelArme) {
+          if (labelArmeActuelleGauche == labelArme) {
+            changementDePrise = true;
+            message += "prend son arme \xE0 une main";
+            if (!labelArmeGauche) {
+              armeActuelle.set('max', '');
+            }
+          } else {
+            if (labelArmeGauche) //on d\xE9gaine 2 armes
+              rienAFaire = labelArmeActuelleGauche == labelArmeGauche;
+            else rienAFaire = true;
+          }
+        }
+      }
+      if (rienAFaire) {
+        //Pas besoin de d\xE9gainer.
         if (options.weaponStats) return options.weaponStats.name;
         if (nouvelleArme) return nouvelleArme.name;
         return;
       }
-      //On d\xE9gaine une nouvelle arme
-      if (labelArmeActuelle) {
+      //On d\xE9gaine une nouvelle arme, il faut rengainer l'ancienne
+      if (labelArmeActuelle) { //dans ce cas, pas options.gauche
         ancienneArme = getWeaponStats(perso, labelArmeActuelle);
         if (ancienneArme === undefined) {
           error("Impossible de trouver l'arme en main", labelArmeActuelle);
           return;
         }
-        if (attributeAsBool(perso, 'forgeron(' + labelArmeActuelle + ')')) {
-          finDEffetDeNom(perso, 'forgeron(' + labelArmeActuelle + ')', evt);
-        }
-        if (options.messages) message += "rengaine " + ancienneArme.name + " et ";
-        else sendPerso(perso, "rengaine " + ancienneArme.name, options.secret);
-        if (bonusPlusViteQueSonOmbre(perso, ancienneArme))
-          updateNextInit(perso);
-        if (ancienneArme.eclaire) {
-          eteindreUneLumiere(perso, pageId, undefined, 'eclaire_' + labelArmeActuelle, evt);
+        if (!changementDePrise) {
+          if (attributeAsBool(perso, 'forgeron(' + labelArmeActuelle + ')')) {
+            finDEffetDeNom(perso, 'forgeron(' + labelArmeActuelle + ')', evt);
+          }
+          envoieMessage("rengaine " + ancienneArme.name + " et ");
+          if (bonusPlusViteQueSonOmbre(perso, ancienneArme))
+            updateNextInit(perso);
+          if (ancienneArme.eclaire) {
+            eteindreUneLumiere(perso, pageId, undefined, 'eclaire_' + labelArmeActuelle, evt);
+          }
         }
       }
-      if ((!nouvelleArme || nouvelleArme.deuxMains || options.gauche || (nouvelleArmeGauche && labelArmeGauche != labelArmeActuelleGauche)) &&
-        labelArmeActuelleGauche) {
+      if (
+        (!nouvelleArme || nouvelleArme.deuxMains || options.deuxMains ||
+          options.gauche ||
+          (nouvelleArmeGauche && labelArmeGauche != labelArmeActuelleGauche)) &&
+        labelArmeActuelleGauche
+      ) {
         let ancienneArmeGauche = getWeaponStats(perso, labelArmeActuelleGauche);
         if (ancienneArmeGauche === undefined) {
-          error("Impossible de trouver l'arme en main gauch", labelArmeActuelleGauche);
+          error("Impossible de trouver l'arme en main gauche", labelArmeActuelleGauche);
           return;
         }
         if (attributeAsBool(perso, 'forgeron(' + labelArmeActuelleGauche + ')')) {
@@ -13098,6 +13534,7 @@ var COFantasy = COFantasy || function() {
         }
       }
     } else armeActuelle = undefined;
+    const estMook = perso.token && perso.token.get('bar1_link') === '';
     //Puis on d\xE9gaine
     //mais on v\xE9rifie que l'arme existe, sinon c'est juste un ordre de rengainer
     if (nouvelleArme === undefined) {
@@ -13112,6 +13549,8 @@ var COFantasy = COFantasy || function() {
           removeTokenAttr(perso, 'armeEnMain', evt);
         }
       }
+      if (!estMook) stateCOF.predicats[perso.charId] = undefined;
+      perso.predicates = undefined;
       return;
     }
     if (nouvelleArmeGauche) {
@@ -13122,14 +13561,14 @@ var COFantasy = COFantasy || function() {
         });
       }
     }
-    if (nouvelleArme.deuxMains) {
+    if (nouvelleArme.deuxMains || options.deuxMains) {
       if (ficheAttributeAsInt(perso, 'defbouclieron', 0)) {
         sendPerso(perso, "enl\xE8ve son bouclier", options.secret);
         setFicheAttr(perso, 'defbouclieron', 0, evt, {
           default: 0
         });
       }
-    } else if (ancienneArme && (ancienneArme.deuxMains || options.gauche)) {
+    } else if (ancienneArme && (ancienneArme.deuxMains || options.gauche || changementDePrise)) {
       if (ficheAttributeAsBool(perso, 'defbouclier', false) &&
         !ficheAttributeAsInt(perso, 'defbouclieron', 0)) {
         sendPerso(perso, "remet son bouclier", options.secret);
@@ -13140,19 +13579,20 @@ var COFantasy = COFantasy || function() {
       evt.attributes = evt.attributes || [];
       let evtAttr = {
         attribute: armeActuelle,
+        max: labelArmeActuelleGauche,
       };
       if (options.gauche) {
         evtAttr.current = armeActuelle.get('current');
-        evtAttr.max = labelArmeActuelle;
         evt.attributes.push(evtAttr);
         armeActuelle.set('max', labelArme);
       } else {
         evtAttr.current = labelArmeActuelle;
-        evtAttr.max = labelArmeActuelleGauche;
         evt.attributes.push(evtAttr);
         armeActuelle.set('current', labelArme);
         if (labelArmeGauche) armeActuelle.set('max', labelArmeGauche);
-        else if (labelArmeActuelleGauche && nouvelleArme.deuxMains)
+        else if (nouvelleArme.deuxMains || options.deuxMains)
+          armeActuelle.set('max', labelArme);
+        else if (changementDePrise || (ancienneArme && ancienneArme.deuxMains))
           armeActuelle.set('max', '');
       }
     } else { //On n'avait pas d'arme en main
@@ -13168,19 +13608,29 @@ var COFantasy = COFantasy || function() {
       } else {
         let opt = {};
         if (labelArmeGauche) opt.maxVal = labelArmeGauche;
+        else if (options.deuxMains || nouvelleArme.deuxMains)
+          opt.maxVal = labelArme;
         setTokenAttr(perso, 'armeEnMain', labelArme, evt, opt);
       }
     }
     if (options.messages) {
-      message += "d\xE9gaine " + nouvelleArme.name;
-      if (nouvelleArmeGauche) message += " et " + nouvelleArmeGauche.name;
+      if (changementDePrise) {
+        if (nouvelleArmeGauche) message += ", et d\xE9gaine " + nouvelleArmeGauche.name;
+      } else {
+        message += "d\xE9gaine " + nouvelleArme.name;
+        if (nouvelleArmeGauche) message += " et " + nouvelleArmeGauche.name;
+      }
       options.messages.push(message);
     } else {
-      message = "d\xE9gaine " + nouvelleArme.name;
-      if (nouvelleArmeGauche) message += " et " + nouvelleArmeGauche.name;
+      if (changementDePrise) {
+        if (nouvelleArmeGauche) message += ", et d\xE9gaine " + nouvelleArmeGauche.name;
+      } else {
+        message = "d\xE9gaine " + nouvelleArme.name;
+        if (nouvelleArmeGauche) message += " et " + nouvelleArmeGauche.name;
+      }
       sendPerso(perso, message, options.secret);
     }
-    if (nouvelleArme) {
+    if (nouvelleArme && !changementDePrise) {
       let radius = nouvelleArme.eclaire;
       if (radius && radius > 0) {
         let dimRadius = nouvelleArme.eclaireFaible;
@@ -13197,6 +13647,8 @@ var COFantasy = COFantasy || function() {
         ajouteUneLumiere(perso, 'eclaire_' + labelArmeGauche, radius, dimRadius, evt);
       }
     }
+    if (!estMook) stateCOF.predicats[perso.charId] = undefined;
+    perso.predicates = undefined;
   }
 
   function nePeutPlusPrendreDM(cible, options) {
@@ -13303,6 +13755,7 @@ var COFantasy = COFantasy || function() {
         sendPerso(attaquant, "est immunis\xE9 \xE0 la douleur");
       } else {
         sendPerso(attaquant, "ne peut pas attaquer car il est paralys\xE9 de douleur");
+        attackCallback(options);
         return;
       }
     }
@@ -13338,6 +13791,12 @@ var COFantasy = COFantasy || function() {
       weaponStats.attNbDices = options.dm.nbDe;
       weaponStats.attDice = options.dm.dice;
       weaponStats.attDMBonusCommun = options.dm.bonus;
+    } else if (weaponStats.batarde && weaponStats.deuxMains) {
+      let dm = parseDice(weaponStats.batarde, 'd\xE9g\xE2ts');
+      if (dm) {
+        weaponStats.attNbDices = dm.nbDe;
+        weaponStats.attDice = dm.dice;
+      }
     }
     if (options.portee !== undefined) {
       weaponStats.portee = options.portee;
@@ -13368,6 +13827,7 @@ var COFantasy = COFantasy || function() {
       let stats2 = getWeaponStats(attaquant, options.tirDouble.label);
       if (stats2 === undefined) {
         error("Pas d'arme de label " + options.tirDouble.label + " pour le tir double", attaquant);
+        attackCallback(options);
         return;
       }
       let tdSkillDiv = parseInt(stats2.attSkillDiv);
@@ -13394,6 +13854,12 @@ var COFantasy = COFantasy || function() {
       options.distance = true;
       if (attributeAsBool(attaquant, 'rageDuBerserk')) {
         sendPerso(attaquant, "est en rage du berserk, il ne veut attaquer qu'au contact");
+        attackCallback(options);
+        return;
+      }
+      if (options.seulementContact) {
+        sendPerso(attaquant, "ne peut utiliser cette attaque qu'au contact");
+        attackCallback(options);
         return;
       }
       if (options.puissantPortee || options.tempeteDeManaPortee) {
@@ -13403,6 +13869,7 @@ var COFantasy = COFantasy || function() {
     } else {
       if (options.ricochets) {
         sendPerso(attaquant, "ne peut pas faire de ricochets au contact.");
+        attackCallback(options);
         return;
       }
       options.contact = true;
@@ -13410,15 +13877,18 @@ var COFantasy = COFantasy || function() {
     //Ce qui peut emp\xEAcher l'attaque quelles que soient les cibles
     if (options.avecd12 && ((estAffaibli(attaquant) && !predicateAsBool(attaquant, 'insensibleAffaibli')) || getState(attaquant, 'immobilise'))) {
       sendPerso(attaquant, "ne peut pas utiliser cette capacit\xE9 quand il est affaibli.");
+      attackCallback(options);
       return;
     }
     if (options.forceMinimum &&
       caracCourante(attaquant, 'force') < options.forceMinimum) {
       sendPerso("n'est pas assez fort pour utiliser cette attaque (force minimum " + options.forceMinimum + ")");
+      attackCallback(options);
       return;
     }
     if ((options.sortilege || options.frappeDesArcanes) && attributeAsBool(attaquant, 'frappeDesArcanes')) {
       sendPerso("ne peut pas encore lancer de sorts");
+      attackCallback(options);
       return;
     }
     //Pour l'option grenaille implicite, il faut v\xE9rifier que toutes les charge de l'arme sont des charges de grenaille
@@ -13495,6 +13965,7 @@ var COFantasy = COFantasy || function() {
       cibles = targetToken;
       if (cibles.length === 0) {
         error("Attaque sans cible", targetToken);
+        attackCallback(options);
         return;
       } else if (cibles.length == 1) targetToken = cibles[0].token;
       nomCiblePrincipale = nomPerso(cibles[0]);
@@ -13571,30 +14042,22 @@ var COFantasy = COFantasy || function() {
             strict1: true,
             strict2: true
           });
-        let pta = tokenCenter(tokenOrigine);
-        let ptt = tokenCenter(targetToken);
+        let pta = pointOfToken(tokenOrigine);
+        let ptt = pointOfToken(targetToken);
         switch (options.aoe.type) {
           case 'ligne':
             {
               if (distanceTarget < portee) { //la ligne va plus loin que la cible
                 let scale = portee * 1.0 / distanceTarget;
-                ptt = [
-                  Math.round((ptt[0] - pta[0]) * scale) + pta[0],
-                  Math.round((ptt[1] - pta[1]) * scale) + pta[1]
-                ];
+                ptt = {
+                  x: Math.round((ptt.x - pta.x) * scale) + pta.x,
+                  y: Math.round((ptt.y - pta.y) * scale) + pta.y
+                };
               }
               if (targetToken.get('bar1_max') == 0) { // jshint ignore:line
                 //C'est juste un token utilis\xE9 pour d\xE9finir la ligne
                 if (options.fx) {
-                  let p1e = {
-                    x: tokenOrigine.get('left'),
-                    y: tokenOrigine.get('top'),
-                  };
-                  let p2e = {
-                    x: targetToken.get('left'),
-                    y: targetToken.get('top'),
-                  };
-                  spawnFxBetweenPoints(p1e, p2e, options.fx, pageId);
+                  spawnFxBetweenPoints(pta, ptt, options.fx, pageId);
                 }
                 cibles = [];
                 targetToken.remove(); //On l'enl\xE8ve, normalement plus besoin
@@ -13615,8 +14078,7 @@ var COFantasy = COFantasy || function() {
                   charId: objCharId
                 };
                 if (nePeutPlusPrendreDM(cible, options)) return; //pas de d\xE9g\xE2ts aux morts
-                let pt = tokenCenter(obj);
-                let distToTrajectory = VecMath.ptSegDist(pt, pta, ptt);
+                let distToTrajectory = distancePixTokenSegment(obj, pta, ptt);
                 if (distToTrajectory > (obj.get('width') + obj.get('height')) / 4 + PIX_PER_UNIT / 4)
                   return;
                 cible.tokName = obj.get('name');
@@ -13634,6 +14096,7 @@ var COFantasy = COFantasy || function() {
                   "Le centre du disque vis\xE9 est trop loin pour " + weaponName +
                   " (distance " + distanceTarget + ", port\xE9e " + portee + ")",
                   playerId);
+                attackCallback(options);
                 return;
               }
               if (options.aoe.souffleDeMort) {
@@ -13645,6 +14108,7 @@ var COFantasy = COFantasy || function() {
                 let charId = targetToken.get('represents');
                 if (!charId) {
                   sendPlayer(playerName, "Le centre du disque n'est pas un cadavre", playerId);
+                  attackCallback(options);
                   return;
                 }
                 let cadavre = {
@@ -13653,11 +14117,13 @@ var COFantasy = COFantasy || function() {
                 };
                 if (!getState(cadavre, 'mort')) {
                   sendPlayer(playerName, nomPerso(cadavre) + " n'est pas mort" + eForFemale(cadavre), playerId);
+                  attackCallback(options);
                   return;
                 }
                 let t = attributeAsInt(cadavre, 'a0PVDepuis', 0);
                 if (t < combat.tour - 1) {
                   sendPlayer(playerName, "La mort de " + nomPerso(cadavre) + " n'est pas assez r\xE9cente", playerId);
+                  attackCallback(options);
                   return;
                 }
                 options.aoe.souffleDeMort.allies = alliesParPerso[charId] || new Set();
@@ -13667,12 +14133,6 @@ var COFantasy = COFantasy || function() {
               }
               page = page || getObj("page", pageId);
               murs = getWalls(page, pageId, murs);
-              if (murs) {
-                pc = {
-                  x: ptt[0],
-                  y: ptt[1],
-                };
-              }
               let allToksDisque =
                 findObjs({
                   _type: "graphic",
@@ -13699,7 +14159,7 @@ var COFantasy = COFantasy || function() {
                 let objChar = getObj('character', objCharId);
                 if (objChar === undefined) return;
                 if (murs) {
-                  if (obstaclePresent(obj.get('left'), obj.get('top'), pc, murs)) return;
+                  if (obstaclePresent(obj.get('left'), obj.get('top'), ptt, murs)) return;
                 }
                 if (options.aoe.souffleDeMort) {
                   if (!options.aoe.souffleDeMort.allies.has(objCharId)) return;
@@ -13719,66 +14179,56 @@ var COFantasy = COFantasy || function() {
               break;
             }
           case 'cone':
-            if (options.fx) {
-              let p1eC = {
-                x: tokenOrigine.get('left'),
-                y: tokenOrigine.get('top'),
-              };
-              let p2eC = {
-                x: targetToken.get('left'),
-                y: targetToken.get('top'),
-              };
-              spawnFxBetweenPoints(p1eC, p2eC, options.fx, pageId);
-            }
-            let vecCentre = VecMath.normalize(VecMath.vec(pta, ptt));
-            let cosAngle = Math.cos(options.aoe.angle * Math.PI / 360.0);
-            //Pour \xE9viter des artfacts d'arrondi:
-            cosAngle = (Math.floor(cosAngle * 1000000)) / 1000000;
-            if (targetToken.get('bar1_max') == 0) { // jshint ignore:line
-              //C'est juste un token utilis\xE9 pour d\xE9finir le cone
-              cibles = [];
-              targetToken.remove(); //On l'enl\xE8ve, normalement plus besoin
-            }
-            page = page || getObj("page", pageId);
-            murs = getWalls(page, pageId, murs);
-            if (murs) {
-              pc = {
-                x: pta[0],
-                y: pta[1],
-              };
-            }
-            let allToksCone =
-              findObjs({
-                _type: "graphic",
-                _pageid: pageId,
-                _subtype: "token",
-                layer: "objects"
-              });
-            allToksCone.forEach(function(obj) {
-              if (obj.id == tokenOrigine.id) return; //on ne se cible pas
-              let objCharId = obj.get('represents');
-              if (objCharId === '') return;
-              let cible = {
-                token: obj,
-                charId: objCharId
-              };
-              if (nePeutPlusPrendreDM(cible, options)) return; //pas de d\xE9g\xE2ts aux morts
-              let pt = tokenCenter(obj);
-              let vecObj = VecMath.normalize(VecMath.vec(pta, pt));
-              if (VecMath.dot(vecCentre, vecObj) < cosAngle) return;
-              // La distance sera compar\xE9e \xE0 la port\xE9e plus loin
-              let objChar = getObj('character', objCharId);
-              if (objChar === undefined) return;
-              if (murs) {
-                if (obstaclePresent(pt[0], pt[1], pc, murs)) return;
+            {
+              if (options.fx) {
+                spawnFxBetweenPoints(pta, ptt, options.fx, pageId);
               }
-              cible.name = objChar.get('name');
-              cible.tokName = obj.get('name');
-              cibles.push(cible);
-            });
-            break;
+              let vecCentre = vecteurUnitaire(pta, ptt);
+              let cosAngle = Math.cos(options.aoe.angle * Math.PI / 360.0);
+              //Pour \xE9viter des artfacts d'arrondi:
+              cosAngle = (Math.floor(cosAngle * 1000000)) / 1000000;
+              if (targetToken.get('bar1_max') == 0) { // jshint ignore:line
+                //C'est juste un token utilis\xE9 pour d\xE9finir le cone
+                cibles = [];
+                targetToken.remove(); //On l'enl\xE8ve, normalement plus besoin
+              }
+              page = page || getObj("page", pageId);
+              murs = getWalls(page, pageId, murs);
+              let allToksCone =
+                findObjs({
+                  _type: "graphic",
+                  _pageid: pageId,
+                  _subtype: "token",
+                  layer: "objects"
+                });
+              allToksCone.forEach(function(obj) {
+                if (obj.id == tokenOrigine.id) return; //on ne se cible pas
+                let objCharId = obj.get('represents');
+                if (objCharId === '') return;
+                let cible = {
+                  token: obj,
+                  charId: objCharId
+                };
+                if (nePeutPlusPrendreDM(cible, options)) return; //pas de d\xE9g\xE2ts aux morts
+                let pt = pointOfToken(obj);
+                let vecObj = vecteurUnitaire(pta, pt);
+                if (vecCentre.x * vecObj.x + vecCentre.y * vecObj.y < cosAngle)
+                  return;
+                // La distance sera compar\xE9e \xE0 la port\xE9e plus loin
+                let objChar = getObj('character', objCharId);
+                if (objChar === undefined) return;
+                if (murs) {
+                  if (obstaclePresent(pt.x, pt.y, pta, murs)) return;
+                }
+                cible.name = objChar.get('name');
+                cible.tokName = obj.get('name');
+                cibles.push(cible);
+              });
+              break;
+            }
           default:
             error("aoe inconnue", options.aoe);
+            attackCallback(options);
             return;
         }
       } else {
@@ -13786,16 +14236,19 @@ var COFantasy = COFantasy || function() {
           sendPerso(attaquant,
             "s'attaque " + onGenre(attaquant, "lui", "elle") +
             "-m\xEAme ? Probablement une erreur \xE0 la s\xE9lection de la cible. On annule");
+          attackCallback(options);
           return;
         }
         let targetCharId = targetToken.get("represents");
         if (targetCharId === "") {
           error("Le token cibl\xE9 (" + nomCiblePrincipale + ") doit repr\xE9senter un personnage ", targetToken);
+          attackCallback(options);
           return;
         }
         let targetChar = getObj("character", targetCharId);
         if (targetChar === undefined) {
           error("Unexpected undefined 2", targetChar);
+          attackCallback(options);
           return;
         }
         cibles = [{
@@ -13818,6 +14271,7 @@ var COFantasy = COFantasy || function() {
     if (options.conditionAttaquant !== undefined) {
       if (!testCondition(options.conditionAttaquant, attaquant, cibles)) {
         sendPerso(attaquant, "ne peut pas utiliser " + weaponName);
+        attackCallback(options);
         return;
       }
     }
@@ -13886,6 +14340,7 @@ var COFantasy = COFantasy || function() {
         sendPlayer(playerName, "aucune cible dans l'aire d'effet de " + weaponName + ", action annul\xE9e",
           playerId);
       }
+      attackCallback(options);
       return;
     }
     if (!options.redo) {
@@ -13950,19 +14405,25 @@ var COFantasy = COFantasy || function() {
       let maxpix = options.ciblesDansDisque * PIX_PER_UNIT / computeScale(pageId);
       if ((l2 - l1) > 2 * maxpix || (t2 - t1) > 2 * maxpix) {
         sendPlayer(playerName, "Cibles trop \xE9loign\xE9es les unes des autres");
+        attackCallback(options);
         return;
       }
       //On calcule la longueur des diagonales du rectangle minimal
       let diag = Math.sqrt((l2 - l1) * (l2 - l1) + (t2 - t1) * (t2 - t1));
       if (diag > maxpix) {
-        let centre = [(l1 + l2) / 2, (t1 + t2) / 2];
+        let centre = {
+          x: (l1 + l2) / 2,
+          y: (t1 + t2) / 2
+        };
         //C'est approch\xE9, mais s\xFBrement assez bon pour ce qui nous occupe
         let tropLoin = cibles.some(function(target) {
-          let pt = tokenCenter(target.token);
-          return (VecMath.length(VecMath.vec(centre, pt)) > maxpix + 1);
+          let pt = pointOfToken(target.token);
+          attackCallback(options);
+          return (distancePoints(centre, pt) > maxpix + 1);
         });
         if (tropLoin) {
           sendPlayer(playerName, "Cibles trop \xE9loign\xE9es les unes des autres");
+          attackCallback(options);
           return;
         }
       }
@@ -14181,6 +14642,8 @@ var COFantasy = COFantasy || function() {
       if (!m) return;
       rawList[m[1]] = rawList[m[1]] || {};
       rawList[m[1]][m[2]] = a.get('current');
+      let max = a.get('max');
+      if (max) rawList[m[1]][m[2] + '_max'] = max;
     });
     return rawList;
   }
@@ -14578,6 +15041,21 @@ var COFantasy = COFantasy || function() {
     return false;
   }
 
+  function addToDmgTotal(dmgTotal, dm, d, expliquer, evt) {
+    if (d.drainDeSang) {
+      let soins = Math.floor(dm / 2);
+      if (soins > 0) {
+        soigneToken(d.drainDeSang, soins, evt, function(soins) {
+          expliquer("Le saignement soigne " + nomPerso(d.drainDeSang) + " de " + soins + " PV");
+        });
+      }
+      if (predicateAsBool(d.drainDeSang, 'energieImpie')) {
+        addToAttributeAsInt(d.drainDeSang, 'energieImpie', 0, 1, evt);
+      }
+    }
+    return dmgTotal + dm;
+  }
+
   // Fonction asynchrone
   // displayRes est optionnel, et peut avoir 2 arguments
   // - un texte affichant le jet de d\xE9g\xE2ts
@@ -14592,8 +15070,8 @@ var COFantasy = COFantasy || function() {
     if (options.interposer) {
       return dealDamageAfterOthers(target, crit, {}, evt, expliquer, displayRes, options.interposer, dmg.display, false);
     }
-    if ((attributeAsBool(target, 'intangible') && attributeAsInt(target, 'intangibleValeur', 1)) ||
-      (attributeAsBool(target, 'intangibleInvisible') && attributeAsInt(target, 'intangibleInvisibleValeur', 1)) ||
+    if ((!options.spectral && attributeAsBool(target, 'intangible') && attributeAsInt(target, 'intangibleValeur', 1)) ||
+      (!options.spectral && attributeAsBool(target, 'intangibleInvisible') && attributeAsInt(target, 'intangibleInvisibleValeur', 1)) ||
       attributeAsBool(target, 'ombreMortelle') ||
       (options.aoe === undefined &&
         attributeAsBool(target, 'formeGazeuse')) ||
@@ -14609,7 +15087,7 @@ var COFantasy = COFantasy || function() {
       }
     }
     if (!options.magique && !options.sortilege && dmg.type != 'magique' &&
-      predicateOrAttributeAsBool(target, 'immunite_nonMagique')) {
+      (predicateOrAttributeAsBool(target, 'immunite_nonMagique') || predicateAsBool(target, 'creatureIntangible'))) {
       expliquer("L'attaque ne semble pas affecter " + nomPerso(target));
       if (displayRes) displayRes('0', 0, 0);
       return 0;
@@ -14689,8 +15167,8 @@ var COFantasy = COFantasy || function() {
       }
       let firstBonusCritique = true;
       let x = {
-        dmgDisplay: dmgDisplay,
-        dmgTotal: dmgTotal
+        dmgDisplay,
+        dmgTotal
       };
       if (options.affute) {
         ajouteDe6Crit(x, firstBonusCritique, options.kiai);
@@ -14718,6 +15196,7 @@ var COFantasy = COFantasy || function() {
       dmgDisplay = x.dmgDisplay;
       dmgTotal = x.dmgTotal;
     }
+    addToDmgTotal(0, dmgTotal, dmg, expliquer, evt);
     //On trie les DM suppl\xE9mentaires selon leur type
     let dmgParType = {};
     otherDmg.forEach(function(d) {
@@ -14742,10 +15221,10 @@ var COFantasy = COFantasy || function() {
         partialSave(d, target, false, d.display, d.total, expliquer, evt,
           function(res) {
             if (res) {
-              dmgTotal += res.total;
+              dmgTotal = addToDmgTotal(dmgTotal, res.total, d, expliquer, evt);
               dmgDisplay += "+" + res.dmgDisplay;
             } else {
-              dmgTotal += d.total;
+              dmgTotal = addToDmgTotal(dmgTotal, d.total, d, expliquer, evt);
               dmgDisplay += "+" + d.display;
             }
             if (count === 0) dealDamageAfterDmgExtra(target, mainDmgType, dmgTotal, dmgDisplay, showTotal, dmgParType, dmgExtra, crit, options, evt, expliquer, displayRes);
@@ -14964,6 +15443,7 @@ var COFantasy = COFantasy || function() {
             atkmag = ficheAttributeAsInt(attaquant, 'niveau', 0) + 1 + modCarac(attaquant, 'sagesse');
           else atkmag = atk;
         }
+        atkmag += predicateAsInt(attaquant, 'bonusAttaqueMagique', 0);
         return atkmag;
       default:
         return x;
@@ -15003,6 +15483,7 @@ var COFantasy = COFantasy || function() {
         } else {
           attCar = getAttrByName(attaquant.charId, 'ATKMAG_CARAC');
         }
+        attDiv += predicateAsInt(attaquant, 'bonusAttaqueMagique', 0);
         break;
       default:
         return x;
@@ -15267,47 +15748,117 @@ var COFantasy = COFantasy || function() {
       if (estMook) {
         error("Les munitions ne sont pas support\xE9es pour les tokens qui ne sont pas li\xE9es \xE0 un personnage", attackingToken);
       }
-      let munitionsAttr = findObjs({
-        _type: 'attribute',
-        _characterid: attackingCharId,
-        name: 'munition_' + options.munition.nom
-      });
-      if (munitionsAttr.length === 0) {
-        sendPerso(attaquant, ": Pas de munition nomm\xE9e " + options.munition.nom);
-        return;
-      }
-      munitionsAttr = munitionsAttr[0];
-      let munitions = munitionsAttr.get('current');
-      if (munitions < 1 || (options.tirDouble && munitions < 2)) {
-        sendPerso(attaquant,
-          "ne peut pas utiliser cette attaque, car " + sujetAttaquant +
-          " n'a plus de " + options.munition.nom.replace(/_/g, ' '));
-        return;
-      }
-      let munitionsMax = parseInt(munitionsAttr.get('max'));
-      if (isNaN(munitionsMax)) {
-        error("Attribut de munitions mal form\xE9", munitionsMax);
-        return;
-      }
-      evt.attributes = evt.attributes || [];
-      evt.attributes.push({
-        attribute: munitionsAttr,
-        current: munitions,
-        max: munitionsMax
-      });
-      //On cherche si la munition est empoisonn\xE9e
-      let poisonAttr = tokenAttribute(attaquant, 'enduitDePoison_munition_' + options.munition.nom);
-      effetPoisonSurMunitions(poisonAttr, attaquant, explications, options, evt);
-      munitions--;
-      if (randomInteger(100) < options.munition.taux) munitionsMax--;
-      if (options.tirDouble) {
+      if (options.munition.nom) { //Ancienne variante, obsol\xE8te depuis mars 2023
+        let munitionsAttr = findObjs({
+          _type: 'attribute',
+          _characterid: attackingCharId,
+          name: 'munition_' + options.munition.nom
+        });
+        if (munitionsAttr.length === 0) {
+          sendPerso(attaquant, ": Pas de munition nomm\xE9e " + options.munition.nom);
+          return;
+        }
+        munitionsAttr = munitionsAttr[0];
+        let munitions = munitionsAttr.get('current');
+        if (munitions < 1 || (options.tirDouble && munitions < 2)) {
+          sendPerso(attaquant,
+            "ne peut pas utiliser cette attaque, car " + sujetAttaquant +
+            " n'a plus de " + options.munition.nom.replace(/_/g, ' '));
+          return;
+        }
+        let munitionsMax = parseInt(munitionsAttr.get('max'));
+        if (isNaN(munitionsMax)) {
+          error("Attribut de munitions mal form\xE9", munitionsMax);
+          return;
+        }
+        evt.attributes = evt.attributes || [];
+        evt.attributes.push({
+          attribute: munitionsAttr,
+          current: munitions,
+          max: munitionsMax
+        });
+        //On cherche si la munition est empoisonn\xE9e
+        let poisonAttr = tokenAttribute(attaquant, 'enduitDePoison_munition_' + options.munition.nom);
+        effetPoisonSurMunitions(poisonAttr, attaquant, explications, options, evt);
         munitions--;
         if (randomInteger(100) < options.munition.taux) munitionsMax--;
+        if (options.tirDouble) {
+          munitions--;
+          if (randomInteger(100) < options.munition.taux) munitionsMax--;
+        }
+        explications.push("Il reste " + munitions + " " +
+          options.munition.nom.replace(/_/g, ' ') + " \xE0 " + attackerTokName);
+        munitionsAttr.set('current', munitions);
+        munitionsAttr.set('max', munitionsMax);
+      } else { //Utilisation d'une munition de la fiche
+        let m = options.munition;
+        let typeMunition = fieldAsString(m, 'typemunition', 'Fl\xE8che');
+        let nom = fieldAsString(m, 'nommunition', typeMunition);
+        let munitions = fieldAsInt(m, 'qtemunition', 1);
+        if (munitions < 1 || (options.tirDouble && munitions < 2)) {
+          sendPerso(attaquant,
+            "ne peut pas utiliser cette attaque, car " + sujetAttaquant +
+            " n'a plus de " + nom);
+          return;
+        }
+        let label = fieldAsString(m, 'labelmunition', '0');
+        //On cherche si la munition est empoisonn\xE9e
+        let poisonAttr = tokenAttribute(attaquant, 'enduitDePoison_munition_' + label);
+        effetPoisonSurMunitions(poisonAttr, attaquant, explications, options, evt);
+        let munitionsMax = fieldAsInt(m, 'qtemunition_max', munitions);
+        munitions--;
+        let perte = 0;
+        let taux = fieldAsInt(m, 'tauxmunition', 100);
+        if (randomInteger(100) < taux) {
+          munitionsMax--;
+          perte++;
+        }
+        if (options.tirDouble) {
+          munitions--;
+          if (randomInteger(100) < taux) {
+            munitionsMax--;
+            perte++;
+          }
+        }
+        let msgm = "Il ";
+        if (munitions === 0) {
+          msgm += "ne reste plus de ";
+        } else {
+          msgm += "reste " + munitions + " ";
+        }
+        msgm += nom + " \xE0 " + attackerTokName;
+        if (taux < 100 && perte > 0) msgm += ", et la munition utilis\xE9e n'est pas r\xE9cup\xE9rable";
+        explications.push(msgm);
+        evt.attributes = evt.attributes || [];
+        let name = m.prefixe + 'qtemunition';
+        let attrQte = findObjs({
+          _type: 'attribute',
+          _characterid: attackingCharId,
+          name
+        }, {
+          caseInsensitive: true
+        });
+        if (attrQte.length > 0) {
+          attrQte = attrQte[0];
+          evt.attributes.push({
+            attribute: attrQte,
+            current: munitions,
+            max: munitionsMax
+          });
+          attrQte.set('current', munitions);
+          attrQte.set('max', munitionsMax);
+        } else {
+          attrQte = createObj('attribute', {
+            characterid: attackingCharId,
+            name,
+            current: munitions,
+            max: munitionsMax
+          });
+          evt.attributes.push({
+            attribute: attrQte,
+          });
+        }
       }
-      explications.push("Il reste " + munitions + " " +
-        options.munition.nom.replace(/_/g, ' ') + " \xE0 " + attackerTokName);
-      munitionsAttr.set('current', munitions);
-      munitionsAttr.set('max', munitionsMax);
     }
     // Armes charg\xE9es
     if (options.semonce === undefined && options.tirDeBarrage === undefined) {
@@ -15576,7 +16127,7 @@ var COFantasy = COFantasy || function() {
         if (!options.auto && d20roll > 14) {
           if (predicateAsBool(attaquant, 'saisirEtBroyer')) {
             options.saisirEtBroyer = true;
-          } else if (predicateAsBool(attaquant, 'projection')) {
+          } else if (predicateAsBool(attaquant, 'projection') && !options.sortilege) {
             options.projection = true;
           }
         }
@@ -15623,19 +16174,6 @@ var COFantasy = COFantasy || function() {
             removeTokenAttr(attaquant, 'menaceManoeuvre(' + target.token.id + ',crit)', evt);
             setTokenAttr(attaquant, 'attaqueMalgreMenace(' + target.token.id + ')', 2, evt);
           }
-          let amm = 'attaqueMalgreMenace(' + attaquant.token.id + ')';
-          if (options.contact && cibles.length == 1) {
-            if (attributeAsBool(target, amm)) {
-              target.messages.push('Attaque automatique suite \xE0 une menace ignor\xE9e');
-              options.auto = true;
-              if (attributeAsInt(target, amm, 1) > 1) options.dmFoisDeux = true;
-              target.additionalDmg.push({
-                type: mainDmgType,
-                value: '1d6'
-              });
-              removeTokenAttr(target, amm, evt);
-            }
-          }
           if (predicateAsBool(attaquant, 'dragonInvincible')) {
             let perteDeSubstance = predicateAsInt(target, 'perteDeSubstance', 0);
             if (perteDeSubstance > 0) target.perteDeSubstance = perteDeSubstance;
@@ -15657,6 +16195,19 @@ var COFantasy = COFantasy || function() {
               bad = bonusAttaqueD(attaquant, target, weaponStats.portee, pageId, evt, target.messages, options);
             else if (!options.pasDeDmg)
               bonusDMD(attaquant, target, weaponStats.portee, pageId, evt, target.messages, options);
+            let amm = 'attaqueMalgreMenace(' + attaquant.token.id + ')';
+            if (options.contact && cibles.length == 1) {
+              if (attributeAsBool(target, amm)) {
+                target.messages.push('Attaque automatique suite \xE0 une menace ignor\xE9e');
+                options.auto = true;
+                if (attributeAsInt(target, amm, 1) > 1) options.dmFoisDeux = true;
+                target.additionalDmg.push({
+                  type: mainDmgType,
+                  value: '1d6'
+                });
+                removeTokenAttr(target, amm, evt);
+              }
+            }
             let attBonus = attBonusCommun + bad;
             if (options.traquenard) {
               let initTarg = persoInit(target, evt);
@@ -15788,7 +16339,7 @@ var COFantasy = COFantasy || function() {
                 if (predicateAsBool(attaquant, 'champion'))
                   options.champion = true;
                 if (options.contact) {
-                  if (predicateAsBool(attaquant, 'agripper'))
+                  if (predicateAsBool(attaquant, 'agripper') || options.peutAgripper)
                     options.agripper = true;
                   if (predicateAsBool(attaquant, 'devorer'))
                     options.devorer = true;
@@ -15933,7 +16484,8 @@ var COFantasy = COFantasy || function() {
                     faireMouche = predicateAsInt(attaquant, 'faireMouche', 0);
                   if (faireMouche > 0) { //botte mortelle du duelliste
                     if (target.faireMouche) {
-                      var bonusBotteMortelle = Math.floor((attackRoll - defense) / 5) + options.d6;
+                      let bonusBotteMortelle =
+                        Math.floor((attackRoll - defense) / 5) + options.d6;
                       target.messages.push("Botte mortelle => + " + bonusBotteMortelle + " aux DM");
                       target.additionalDmg.push({
                         type: mainDmgType,
@@ -16244,7 +16796,7 @@ var COFantasy = COFantasy || function() {
               }
               resolvePreDmgOptions(attaquant, ciblesTouchees, echecCritique, attackLabel, weaponStats, d20roll, display, options, evt, explications, pageId, cibles);
             }
-          });
+          }, true); //comme on est dans une boucle qui d\xE9pend de la cible, inTarget doit \xEAtre vrai
         }); //fin de d\xE9termination de toucher des cibles
       }); // fin du jet d'attaque asynchrone
     } catch (e) {
@@ -16565,7 +17117,10 @@ var COFantasy = COFantasy || function() {
       setTokenAttr(target, 'lienDeSangDe', ef.attaquant.token.id, evt);
     }
     if (ef.duree) {
-      if (ef.typeDmg && (!ef.message || !ef.message.dm) && predicateAsBool(target, 'diviseEffet_' + ef.typeDmg)) {
+      if (ef.typeDmg && (!ef.message || !ef.message.dm) &&
+        (predicateAsBool(target, 'diviseEffet_' + ef.typeDmg) ||
+          (estElementaire(ef.typeDmg) && predicateAsBool(target, 'diviseEffet_elementaire')))
+      ) {
         duree = Math.ceil(duree / 2);
       }
       if (ef.accumuleDuree) {
@@ -16669,6 +17224,27 @@ var COFantasy = COFantasy || function() {
             });
           }
           break;
+        case 'hemorragie':
+        case 'blessureSanglante':
+        case 'saignementsSang':
+          if (ef.attaquant && predicateAsBool(ef.attaquant, 'drainDeSang')) {
+            let attAttr = ef.attaquant.token.id + ':' + attrEffet.id;
+            let attrDrain = tokenAttribute(target, 'attributDeCombat_drainDeSang');
+            if (attrDrain.length > 0) {
+              attrDrain = attrDrain[0];
+              let drains = attrDrain.get('current');
+              if (!drains.includes(attAttr)) {
+                evt.attributes = evt.attributes || [];
+                evt.attributes.push({
+                  attribute: attrDrain,
+                  current: drains
+                });
+                attrDrain.set('current', drains + ' ' + attAttr);
+              }
+            } else {
+              setTokenAttr(target, 'attributDeCombat_drainDeSang', attAttr, evt);
+            }
+          }
       }
       if (ef.message && ef.message.statusMarker) {
         affectToken(target.token, 'statusmarkers', target.token.get('statusmarkers'), evt);
@@ -16811,6 +17387,62 @@ var COFantasy = COFantasy || function() {
         sendChat('COF', "[[1t[Echec-Critique-Contact]]]");
       else sendChat('COF', "/w GM " + suggererEchecCritique(attaquant, weaponStats, cibles, options, evt));
     }
+  }
+
+  function moveTokenWithUndo(token, left, top, evt) {
+    if (evt) {
+      evt.movedTokens = evt.movedTokens || [];
+      evt.movedTokens.push({
+        token,
+        oldPosition: {
+          left: token.get('left'),
+          top: token.get('top'),
+        },
+        newPosition: {
+          left,
+          top
+        }
+      });
+    }
+    token.set('left', left);
+    token.set('top', top);
+    let combat = stateCOF.combat;
+    if (stateCOF.options.affichage.val.init_dynamique.val && roundMarker &&
+      combat) {
+      if ((!stateCOF.chargeFantastique && combat.activeTokenId == token.id) ||
+        (stateCOF.chargeFantastique && stateCOF.chargeFantastique.activeTokenId == token.id)) {
+        roundMarker.set('left', left);
+        roundMarker.set('top', top);
+      }
+    }
+  }
+
+  //pageId est optionnel
+  function saignementAvecDrain(cible, nomAttr, pageId) {
+    let drainAttr = tokenAttribute(cible, 'attributDeCombat_drainDeSang');
+    if (drainAttr.length === 0) return;
+    let attr = tokenAttribute(cible, nomAttr);
+    if (attr.length === 0) {
+      log("Attribut absent dans saignementAvecDrain " + nomAttr + " de " + nomPerso(cible));
+      return;
+    }
+    let drains = drainAttr[0].get('current').split(' ');
+    let source = drains.find(function(d) {
+      let sa = d.split(':');
+      if (sa.length != 2) {
+        log("Drain de sang mal form\xE9 : " + drains);
+        return false;
+      }
+      return attr.some(function(a) {
+        return a.id == sa[1];
+      });
+    });
+    if (!source) return;
+    let id = source.split(':')[0];
+    let perso = persoOfId(id);
+    if (!perso) return;
+    if (distanceCombat(perso.token, cible.token, pageId) > 10) return;
+    return perso;
   }
 
   function attackDealDmg(attaquant, ciblesTouchees, echecCritique, attackLabel, weaponStats, d20roll, display, options, evt, explications, pageId, cibles) {
@@ -17520,9 +18152,11 @@ var COFantasy = COFantasy || function() {
           }
         }
         if (attributeAsBool(target, 'hemorragie') && !options.sortilege && !options.armeNaturelle) {
+          let sourceDrain = saignementAvecDrain(target, 'hemorragie', pageId);
           target.additionalDmg.push({
             type: mainDmgType,
-            value: '1d6'
+            value: '1d6',
+            drainDeSang: sourceDrain
           });
           target.messages.push("H\xE9morragie => +1d6 DM");
         }
@@ -17678,9 +18312,9 @@ var COFantasy = COFantasy || function() {
           mainDmgRoll.total = rollsDmg.inlinerolls[mainDmgRollNumber].results.total;
           mainDmgRoll.display = buildinline(rollsDmg.inlinerolls[mainDmgRollNumber], mainDmgType, options.magique);
           if (target.critique && options.additionalCritDmg) {
-            var firstCritRoll = 1 + additionalDmg.length;
+            let firstCritRoll = 1 + additionalDmg.length;
             target.additionalCritDmg = [];
-            var rollsCrit = resDmg[0];
+            let rollsCrit = resDmg[0];
             if (target.rollsDmg && target.rollsDmg.length >= firstCritRoll + options.additinalCritDmg.length)
               rollsCrit = target.rollsDmg;
             options.additionalCritDmg.forEach(function(dmSpec, i) {
@@ -17688,7 +18322,7 @@ var COFantasy = COFantasy || function() {
               if (rRoll) {
                 target.additionalCritDmg.push(dmSpec);
                 dmSpec.total = dmSpec.total || rRoll.results.total;
-                var addDmType = dmSpec.type || 'normal';
+                let addDmType = dmSpec.type || 'normal';
                 dmSpec.display = dmSpec.display || buildinline(rRoll, addDmType, options.magique);
               } else { //l'expression de DM additionel est mal form\xE9e
                 error("Expression de d\xE9g\xE2ts de critiques mal form\xE9e : " + options.additionalCritDmg[i].value, options.additionalCritDmg[i]);
@@ -17749,7 +18383,7 @@ var COFantasy = COFantasy || function() {
               attaquant.alliesAvecAttaqueEnTraitre.forEach(function(tok) {
                 if (tok.id == target.id) return;
                 if (distanceCombat(target.token, tok, pageId) === 0) {
-                  var aetp = attaquesEnTraitrePossibles[tok.id];
+                  let aetp = attaquesEnTraitrePossibles[tok.id];
                   if (aetp === undefined) {
                     aetp = [];
                     attaquesEnTraitrePossibles[tok.id] = aetp;
@@ -18267,20 +18901,7 @@ var COFantasy = COFantasy || function() {
                             target.messages.push(nomPerso(target) + " est enti\xE8rement aval\xE9 par " + attackerTokName);
                             setTokenAttr(attaquant, 'aGobe', idName(target), evt);
                             setTokenAttr(target, 'estGobePar', idName(attaquant), evt);
-                            evt.movedTokens = evt.movedTokens || [];
-                            evt.movedTokens.push({
-                              token: target.token,
-                              oldPosition: {
-                                left: target.token.get('left'),
-                                top: target.token.get('top'),
-                              },
-                              newPosition: {
-                                left: attaquant.token.get('left'),
-                                top: attaquant.token.get('top'),
-                              }
-                            });
-                            target.token.set('left', attaquant.token.get('left'));
-                            target.token.set('top', attaquant.token.get('top'));
+                            moveTokenWithUndo(target.token, attaquant.token.get('left'), attaquant.token.get('top'), evt);
                           } else {
                             if (resultat === 0) diminueMalediction(attaquant, evt);
                             target.messages.push(nomPerso(target) + " n'est pas aval\xE9.");
@@ -18930,6 +19551,9 @@ var COFantasy = COFantasy || function() {
         }
       }
     }
+    if (!evt.action || !options.preDmg) {
+      attackCallback(options, evt);
+    }
   }
 
   // RD sp\xE9cifique au type
@@ -19401,8 +20025,11 @@ var COFantasy = COFantasy || function() {
     }
   }
 
-  function mitigate(target, dmgType, divide, zero, expliquer, options) {
+  function mitigate(target, dmgType, divide, zero, multiply, expliquer, options) {
     if (!options.sortilege && attributeAsBool(target, 'flou')) {
+      divide();
+    }
+    if (!options.energiePositive && dmgType != 'energie' && !options.spectral && predicateAsBool(target, 'creatureIntangible')) {
       divide();
     }
     if (options.attaqueMentale && predicateAsBool(target, 'bouclierPsi')) {
@@ -19417,11 +20044,14 @@ var COFantasy = COFantasy || function() {
     if (predicateOrAttributeAsBool(target, 'resistanceA_' + dmgType) || predicateAsBool(target, 'diviseEffet_' + dmgType)) {
       divide();
     }
+    if (predicateOrAttributeAsBool(target, 'vulnerableA_' + dmgType)) {
+      multiply();
+    }
     if (predicateOrAttributeAsBool(target, 'resistanceA_nonMagique') && !options.magique && !options.sortilege) {
       divide();
     }
     if (estElementaire(dmgType)) {
-      if (predicateAsBool(target, 'invulnerable')) {
+      if (predicateAsBool(target, 'invulnerable') || predicateAsBool(target, 'diviseEffet_elementaire')) {
         divide();
       }
       switch (dmgType) {
@@ -19553,6 +20183,8 @@ var COFantasy = COFantasy || function() {
         contondant: options.contondant,
         sortilege: options.sortilege,
         hache: options.hache,
+        ferFroid: options.ferFroid,
+        adamantium: options.adamantium,
       };
       let remainingRD = 0;
       if (rdMain < 0) remainingRD = rdMain;
@@ -19573,7 +20205,14 @@ var COFantasy = COFantasy || function() {
             dmgDisplay += '-' + dmgTotal;
             dmgTotal = 0;
           }
-        }, expliquer, options);
+        },
+        function() {
+          dmgTotal = Math.floor(dmgTotal * 1.5);
+          if (dmgExtra) dmgDisplay = "(" + dmgDisplay + ")";
+          dmgDisplay += " x 1.5";
+          showTotal = true;
+        },
+        expliquer, options);
     }
     let dmSuivis = {
       drain: 0
@@ -19697,8 +20336,14 @@ var COFantasy = COFantasy || function() {
                       typeDisplay += "-" + dm;
                       dm = 0;
                     }
-                  }, expliquer, options);
-                dmgTotal += dm;
+                  },
+                  function() {
+                    dm = Math.floor(dm * 1.5);
+                    if (dmgParType[dmgType].length > 1) typeDisplay = "(" + typeDisplay + ")";
+                    typeDisplay += " x 1.5";
+                  },
+                  expliquer, options);
+                dmgTotal = addToDmgTotal(dmgTotal, dm, d, expliquer, evt);
                 dmgDisplay += "+" + typeDisplay;
                 if (_.has(dmSuivis, dmgType)) {
                   dmSuivis[dmgType] = dm;
@@ -19813,15 +20458,91 @@ var COFantasy = COFantasy || function() {
     }
   }
 
-  function testBlessureGrave(target, dmgTotal, expliquer, evt) {
-    if (estPJ(target) && ((dmgTotal == 'mort' && reglesOptionelles.dommages.val.blessures_graves.val) ||
-        (reglesOptionelles.dommages.val.degats_importants.val && dmgTotal >
+  // retourne les nombre de PR restant, undefined si les PR ne sont pas d\xE9finis
+  // current, max, et si d\xE9fini, attribut
+  function pointsDeRecuperation(perso) {
+    if (!ficheAttributeAsBool(perso, 'option_pr', true)) return;
+    let attrPR = charAttribute(perso.charId, 'pr', {
+      caseInsensitive: true
+    });
+    if (attrPR.length === 0) {
+      return {
+        current: 5,
+        max: 5
+      };
+    }
+    attrPR = attrPR[0];
+    let prm = attrPR.get('max');
+    if (prm === '') prm = 5;
+    else {
+      prm = parseInt(prm);
+      if (isNaN(prm) || prm < 0) prm = 5;
+    }
+    let prc = attrPR.get('current');
+    if (prc === '') prc = 5;
+    else {
+      prc = parseInt(prc);
+      if (isNaN(prc)) prc = prm;
+      else if (prc < 0) prc = 0;
+      else if (prc > prm) prc = prm;
+    }
+    return {
+      current: prc,
+      max: prm,
+      attribut: attrPR
+    };
+  }
+
+  // pr doit \xEAtre d\xE9fini, et pr.current > 0
+  function enleverPointDeRecuperation(perso, pr, evt) {
+    evt.attributes = evt.attributes || [];
+    let attrPR;
+    if (pr.attribut) {
+      attrPR = pr.attribut;
+    } else {
+      attrPR = charAttribute(perso.charId, 'pr', {
+        caseInsensitive: true
+      });
+      if (attrPR.length === 0) {
+        attrPR = createObj("attribute", {
+          characterid: perso.charId,
+          name: 'pr',
+          current: 4,
+          max: 5
+        });
+        evt.attributes.push({
+          attribute: attrPR,
+        });
+        return;
+      }
+      attrPR = attrPR[0];
+    }
+    evt.attributes.push({
+      attribute: attrPR,
+      current: pr.current
+    });
+    pr.current--;
+    attrPR.set('current', pr.current);
+  }
+
+  function defaultIntVal(opt, def) {
+    if (opt.val === true) return def;
+    return opt.val;
+  }
+
+  function testBlessureGrave(target, dmgTotal, pvMax, expliquer, evt) {
+    let reglesDM = reglesOptionelles.dommages.val;
+    if (estPJ(target) && ((dmgTotal == 'mort' && reglesDM.blessures_graves.val) ||
+        (reglesDM.degats_importants.val &&
+          dmgTotal > pvMax / (defaultIntVal(reglesDM.degats_importants, 3)) &&
+          dmgTotal >
           (ficheAttributeAsInt(target, 'niveau', 1) +
             ficheAttributeAsInt(target, 'constitution', 10))))) {
       let pr = pointsDeRecuperation(target);
+      if (!pr) return;
       if (pr.current > 0) {
         expliquer("Les d\xE9g\xE2ts sont si importants que " + nomPerso(target) + " perd 1 PR");
-        enleverPointDeRecuperation(target, evt);
+        enleverPointDeRecuperation(target, pr, evt);
       } else if (getState(target, 'blesse')) {
         if (getState(target, 'mort')) {
           expliquer("Avec la blessure grave, c'est vraiment la fin, " + nomPerso(target) + " ne se rel\xE8vera plus...");
@@ -19897,10 +20618,11 @@ var COFantasy = COFantasy || function() {
     let expliquer = function(m) {
       sendPerso(target, m);
     };
-    mettreAZeroPV(target, evt, expliquer, true);
+    let pvMax = parseInt(target.token.get('bar1_max'));
+    mettreAZeroPV(target, pvMax, evt, expliquer, true);
   }
 
-  function mettreAZeroPV(target, evt, expliquer, really) {
+  function mettreAZeroPV(target, pvMax, evt, expliquer, really) {
     if (!really && predicateAsBool(target, 'mortDemandeConfirmation')) {
       let command = "!cof-mettre-a-zero-pv " + target.token.id + ' ' + evt.id;
       let msg = "/w GM " + nomPerso(target) + " a pris un coup mortel." + boutonSimple(command, "Confirmer");
@@ -19948,15 +20670,15 @@ var COFantasy = COFantasy || function() {
       });
     } else {
       mort(target, expliquer, evt);
-      testBlessureGrave(target, 'mort', expliquer, evt);
+      testBlessureGrave(target, 'mort', pvMax, expliquer, evt);
     }
   }
 
   //target prend un coup qui lui fait perdre tous ses PVs
   // Asynchrone
-  function prendreUnCoupMortel(target, dmgTotal, pvPerdus, bar1, tempDmg, dmgDisplay, showTotal, dmDrains, displayRes, options, evt, expliquer) {
+  function prendreUnCoupMortel(target, dmgTotal, pvPerdus, bar1, pvMax, tempDmg, dmgDisplay, showTotal, dmDrains, displayRes, options, evt, expliquer) {
     pvPerdus += bar1;
-    testBlessureGrave(target, dmgTotal, expliquer, evt);
+    testBlessureGrave(target, dmgTotal, pvMax, expliquer, evt);
     if (predicateAsBool(target, 'defierLaMort')) {
       let defierLaMort = charAttributeAsInt(target, 'defierLaMort', 10);
       let rollId = 'defierLaMort_' + target.token.id;
@@ -19979,14 +20701,14 @@ var COFantasy = COFantasy || function() {
             updateCurrentBar(target, 1, 1, evt);
             enlevePVStatueDeBois(target, pvPerdus, evt);
           } else {
-            mettreAZeroPV(target, evt, expliquer);
+            mettreAZeroPV(target, pvMax, evt, expliquer);
           }
           postBarUpdateForDealDamage(target, dmgTotal, pvPerdus, bar1, tempDmg, dmgDisplay, showTotal, dmDrains, displayRes, evt, expliquer);
         });
       //On arr\xEAte l\xE0, car tout le reste est fait dans la continuation du save.
       return;
     }
-    mettreAZeroPV(target, evt, expliquer);
+    mettreAZeroPV(target, pvMax, evt, expliquer);
     postBarUpdateForDealDamage(target, dmgTotal, pvPerdus, bar1, tempDmg, dmgDisplay, showTotal, dmDrains, displayRes, evt, expliquer);
   }
 
@@ -20293,7 +21015,7 @@ var COFantasy = COFantasy || function() {
             message: messageEffetTemp.blessureSanglante,
             attaquant: options.attaquant,
           };
-          setEffetTemporaire(target, ef, 1, evt, {});
+          setEffetTemporaire(target, ef, predicateAsInt(options.attaquant, 'blessureSanglante', 0, 1), evt, {});
         }
         let pvPerdus = dmgTotal;
         if (target.tempDmg) {
@@ -20485,7 +21207,7 @@ var COFantasy = COFantasy || function() {
                 //TODO: afficher les explications de calcul des bonus d'attaque ?
                 if (attackRollAttaquant < target.attackRoll) {
                   expliquer(msgIncrevable + " < " + target.attackRoll + " => \xE9chec ");
-                  prendreUnCoupMortel(target, dmgTotal, pvPerdus, bar1, tempDmg, dmgDisplay, showTotal, dmSuivis.drain, displayRes, options, evt, expliquer);
+                  prendreUnCoupMortel(target, dmgTotal, pvPerdus, bar1, pvmax, tempDmg, dmgDisplay, showTotal, dmSuivis.drain, displayRes, options, evt, expliquer);
                   return;
                 }
                 //L'attaque est \xE9vit\xE9e
@@ -20495,12 +21217,12 @@ var COFantasy = COFantasy || function() {
               });
               return;
             } else { //la cible prend le coup
-              prendreUnCoupMortel(target, dmgTotal, pvPerdus, bar1, tempDmg, dmgDisplay, showTotal, dmSuivis.drain, displayRes, options, evt, expliquer);
+              prendreUnCoupMortel(target, dmgTotal, pvPerdus, bar1, pvmax, tempDmg, dmgDisplay, showTotal, dmSuivis.drain, displayRes, options, evt, expliquer);
               //La suite est fait en continuation car la fonction est asynchrone
               return;
             }
           } else { // bar1>0
-            testBlessureGrave(target, dmgTotal, expliquer, evt);
+            testBlessureGrave(target, dmgTotal, pvmax, expliquer, evt);
             updateCurrentBar(target, 1, bar1, evt);
             enlevePVStatueDeBois(target, pvPerdus, evt);
           }
@@ -20575,8 +21297,10 @@ var COFantasy = COFantasy || function() {
         InlineColorOverride = ' background-color: #FFFEA2; color: #000;';
       }
     }
-    var expression = inlineroll.expression.replace(/=>|>=/, '&amp;ge;').replace(/>/, '&amp;gt;').replace(/<=|=</, '&amp;le;').replace(/</, '&amp;lt;');
-    var rollOut = '<span style="display: inline-block; border-radius: 5px; padding: 0 4px; ' + InlineColorOverride + '" title="' + expression + ' = ' + values.join("");
+    let expression =
+      inlineroll.expression.replace(/=>|>=/, '&amp;ge;').replace(/>/, '&amp;gt;').replace(/<=|=</, '&amp;le;').replace(/</, '&amp;lt;');
+    let rollOut =
+      '<span style="display: inline-block; border-radius: 5px; padding: 0 4px; ' + InlineColorOverride + '" title="' + expression + ' = ' + values.join("");
     rollOut += '" class="a inlinerollresult showtip tipsy-n';
     rollOut += (critCheck && failCheck) ? ' importantroll' : (critCheck ? ' fullcrit' : (failCheck ? ' fullfail' : ''));
     rollOut += '">' + inlineroll.results.total + '</span>';
@@ -20615,7 +21339,7 @@ var COFantasy = COFantasy || function() {
           value: roll.expr
         };
       case 'R':
-        var rollValues = [];
+        let rollValues = [];
         roll.results.forEach(function(result) {
           if (result.tableItem !== undefined) {
             rollValues.push(result.tableItem.name);
@@ -20723,10 +21447,6 @@ var COFantasy = COFantasy || function() {
     return toEvaluate.replace(/@{/g, "@{" + name + "|");
   }
 
-  function tokenCenter(tok) {
-    return [tok.get('left'), tok.get('top')];
-  }
-
   // Retourne le diam\xE8tre d'un disque inscrit dans un carr\xE9 de surface
   // \xE9quivalente \xE0 celle du token
   function tokenSizeAsCircle(token) {
@@ -20734,22 +21454,15 @@ var COFantasy = COFantasy || function() {
     return Math.sqrt(surface);
   }
 
-  // if token is bigger than thresh reduce the distance by that size
-  function tokenSize(tok, thresh) {
-    var size = (tok.get('width') + tok.get('height')) / 2;
-    if (size > thresh) return ((size - thresh) / 2);
-    return 0;
-  }
-
-
   function malusDistance(perso1, tok2, distanceDeBase, portee, pageId, explications, ignoreObstacles) {
     // Extension de distance pour tir parabolique
     let tirParabolique = predicateAsBool(perso1, 'tirParabolique');
-    var distance = tirParabolique ? Math.max(0, distanceDeBase - portee) : distanceDeBase;
+    let distance = tirParabolique ? Math.max(0, distanceDeBase - portee) : distanceDeBase;
 
     if (distance === 0) return 0;
-    var tok1 = perso1.token;
-    var mPortee = (distance <= portee) ? 0 : (Math.ceil(5 * (distance - portee) / portee));
+    let tok1 = perso1.token;
+    let mPortee =
+      (distance <= portee) ? 0 : (Math.ceil(5 * (distance - portee) / portee));
     if (mPortee > 0) {
       explications.push("Distance > " + ((tirParabolique) ? portee * 2 : portee) + " m => -" + mPortee + " en Attaque");
     }
@@ -20764,9 +21477,7 @@ var COFantasy = COFantasy || function() {
         layer: 'objects'
       });
     let mObstacle = 0;
-    let pt1 = tokenCenter(tok1);
-    let pt2 = tokenCenter(tok2);
-    let distance_pix = VecMath.length(VecMath.vec(pt1, pt2));
+    let dp = distancePixToken(tok1, tok2);
     let liste_obstacles = [];
     allToks.forEach(function(obj) {
       if (obj.id == tok1.id || obj.id == tok2.id) return;
@@ -20791,12 +21502,13 @@ var COFantasy = COFantasy || function() {
         return sp.id == tok1.id || sp.id == tok2.id;
       });
       if (estMonture) return;
-      let pt = tokenCenter(obj);
-      let obj_dist = VecMath.length(VecMath.vec(pt1, pt));
-      if (obj_dist > distance_pix) return;
-      obj_dist = VecMath.length(VecMath.vec(pt2, pt));
-      if (obj_dist > distance_pix) return;
-      let distToTrajectory = VecMath.ptSegDist(pt, pt1, pt2);
+      let obj_dist = distancePixToken(tok1, obj);
+      if (obj_dist > dp) return;
+      obj_dist = distancePixToken(tok2, obj);
+      if (obj_dist > dp) return;
+      let pt1 = pointOfToken(tok1);
+      let pt2 = pointOfToken(tok2);
+      let distToTrajectory = distancePixTokenSegment(obj, pt1, pt2);
       // On mod\xE9lise le token comme un disque
       let rayonObj = tokenSizeAsCircle(obj) / 2;
       if (distToTrajectory > rayonObj) return;
@@ -21003,6 +21715,8 @@ var COFantasy = COFantasy || function() {
         affectToken(prevToken, 'aura2_color', prevToken.get('aura2_color'), evt);
         affectToken(prevToken, 'showplayers_aura2', prevToken.get('showplayers_aura2'), evt);
         removeTokenFlagAura(prevToken);
+        let perso = persoOfToken(prevToken);
+        if (perso) removeTokenAttr(perso, 'energieImpie', evt);
       } else {
         if (pageId) {
           prevToken = findObjs({
@@ -21143,6 +21857,36 @@ var COFantasy = COFantasy || function() {
     });
   }
 
+  const munitionRegExpr = new RegExp(/^repeating_munitions_[^_]*_qtemunition$/);
+
+  function recupererMunitions(attrs, evt) {
+    let msgAffiche = new Set();
+    attrs.forEach(function(a) {
+      const nom = a.get('name');
+      if (!munitionRegExpr.test(nom)) return;
+      const charId = a.get('characterid');
+      let m = parseInt(a.get('max'));
+      if (isNaN(m) || m < 0) {
+        error("Erreur dans les quantit\xE9s de munitions", a);
+        a.remove();
+        return;
+      }
+      let n = parseInt(a.get('current'));
+      if (isNaN(n) || n < m) {
+        evt.attributes.push({
+          attribute: a,
+          current: n,
+          max: m
+        });
+        if (!msgAffiche.has(charId)) {
+          msgAffiche.add(charId);
+          whisperChar(charId, "r\xE9cup\xE8re ses munitions");
+        }
+        a.set('current', m);
+      }
+    });
+  }
+
   function sortirDuCombat() {
     stateCOF.prescience = undefined;
     stateCOF.nextPrescience = undefined;
@@ -21201,9 +21945,11 @@ var COFantasy = COFantasy || function() {
     attrs = removeAllAttributes('traquenardImpossible', evt, attrs);
     attrs = removeAllAttributes('niveauDesObjetsAnimes', evt, attrs);
     attrs = removeAllAttributes('meneurDHommesCible', evt, attrs);
+    attrs = removeAllAttributes('energieImpie', evt, attrs);
     // Autres attributs
     // On r\xE9cup\xE8re les munitions r\xE9cup\xE9rables
-    resetAttr(attrs, 'munition', evt, "r\xE9cup\xE8re ses munitions");
+    resetAttr(attrs, 'munition', evt, "r\xE9cup\xE8re ses munitions"); //obsol\xE8te depuis mars 2023.
+    recupererMunitions(attrs, evt);
     recupererArmesDeJet(attrs, evt);
     //Utilisation automatique de second souffle, si pas utilis\xE9
     let tokens = findObjs({ // Les tokens sur la page du combat
@@ -21484,113 +22230,18 @@ var COFantasy = COFantasy || function() {
     addEvent(evt);
   }
 
-  function pointsDeRecuperation(perso) {
-    // retourne les nombre de PR restant
-    let attrPR = tokenAttribute(perso, 'pointsDeRecuperation');
-    let prc = 5;
-    let prm = 5;
-    if (attrPR.length > 0) {
-      prc = parseInt(attrPR[0].get('current'));
-      prm = parseInt(attrPR[0].get('max'));
-      return {
-        current: prc,
-        max: prm
-      };
-    }
-    attrPR = charAttribute(perso.charId, 'pr', {
-      caseInsensitive: true
-    });
-    if (attrPR.length === 0) {
-      return {
-        current: 5,
-        max: 5
-      };
-    }
-    prm = attrPR[0].get('max');
-    if (prm === '') prm = 5;
-    else {
-      prm = parseInt(prm);
-      if (isNaN(prm) || prm < 0) prm = 5;
-    }
-    prc = attrPR[0].get('current');
-    if (prc === '') prc = 5;
-    else {
-      prc = parseInt(prc);
-      if (isNaN(prc)) prc = prm;
-      else if (prc < 0) prc = 0;
-      else if (prc > prm) prc = prm;
-    }
-    return {
-      current: prc,
-      max: prm
-    };
-  }
-
-  function enleverPointDeRecuperation(perso, evt) {
+  //pr est optionnel
+  function rajouterPointDeRecuperation(perso, evt, pr) {
     evt.attributes = evt.attributes || [];
-    let attrPR = charAttribute(perso.charId, 'pr', {
-      caseInsensitive: true
-    });
-    if (attrPR.length === 0) {
-      attrPR = createObj("attribute", {
-        characterid: perso.charId,
-        name: 'pr',
-        current: 4,
-        max: 5
-      });
-      evt.attributes.push({
-        attribute: attrPR,
-      });
-      return;
-    }
-    let prc = attrPR[0].get('current');
-    if (prc === '') prc = 5;
-    else prc = parseInt(prc);
-    if (isNaN(prc) || prc < 1) {
-      sendChat("COF", "Plus de point de r\xE9cup\xE9ration \xE0 enlever");
-      return;
-    }
+    pr = pr || pointsDeRecuperation(perso);
+    if (!pr.attribut) return false;
+    if (pr.current >= pr.max) return false;
     evt.attributes.push({
-      attribute: attrPR[0],
-      current: prc
+      attribute: pr.attribut,
+      current: pr.current,
     });
-    attrPR[0].set('current', prc - 1);
-  }
-
-  function rajouterPointDeRecuperation(perso, evt) {
-    evt.attributes = evt.attributes || [];
-    var attrPR = charAttribute(perso.charId, 'pr', {
-      caseInsensitive: true
-    });
-    if (attrPR.length === 0) {
-      attrPR = createObj("attribute", {
-        characterid: perso.charId,
-        name: 'pr',
-        current: 5,
-        max: 5
-      });
-      evt.attributes.push({
-        attribute: attrPR,
-      });
-      return;
-    }
-    var prmax = attrPR[0].get('max');
-    if (prmax === '') prmax = 5;
-    else {
-      prmax = parseInt(prmax);
-      if (isNaN(prmax) || prmax < 0) prmax = 5;
-    }
-    var prc = attrPR[0].get('current');
-    if (prc === '') prc = 5;
-    else prc = parseInt(prc);
-    if (isNaN(prc) || prc >= prmax) {
-      return;
-    }
-    evt.attributes.push({
-      attribute: attrPR[0],
-      current: prc
-    });
-    attrPR[0].set('current', prc + 1);
+    pr.current++;
+    pr.attribut.set('current', pr.current);
     return true;
   }
 
@@ -22381,10 +23032,10 @@ var COFantasy = COFantasy || function() {
       if (attrType.length > 0) {
         saveOpts.type = attrType[0].get('current');
       }
-      var saveId = 'saveParJour_' + effetC + "_" + perso.token.id;
+      let saveId = 'saveParJour_' + effetC + "_" + perso.token.id;
       save({
-          carac: carac,
-          seuil: seuil
+          carac,
+          seuil
         }, perso, saveId, expliquer, saveOpts, evt,
         function(reussite, texte) { //asynchrone
           if (reussite) {
@@ -22642,7 +23293,7 @@ var COFantasy = COFantasy || function() {
       let dmTemp = bar2;
       let estMook = token.get('bar1_link') === '';
       if (manaAttr.length > 0) { // R\xE9cup\xE9ration des points de mana
-        var manaMax = parseInt(manaAttr[0].get('max'));
+        let manaMax = parseInt(manaAttr[0].get('max'));
         hasMana = !isNaN(manaMax) && manaMax > 0;
         if (hasMana) {
           if (estMook) dmTemp = attributeAsInt(perso, 'DMTEMP', 0);
@@ -22682,7 +23333,7 @@ var COFantasy = COFantasy || function() {
             sendPerso(perso, "r\xE9cup\xE8re un point " + deCarac(carac));
           }
         });
-        if (bar1 >= pvmax && pr.current == pr.max) {
+        if (bar1 >= pvmax && (!pr || pr.current == pr.max)) {
           finalize();
           return;
         }
@@ -22707,7 +23358,7 @@ var COFantasy = COFantasy || function() {
         return;
       }
       let message;
-      if (reposLong && pr.current < pr.max) { // on r\xE9cup\xE8re un PR
+      if (reposLong && pr && pr.current < pr.max) { // on r\xE9cup\xE8re un PR
         //Sauf si on a une blessure gave
         if (getState(perso, 'blesse')) {
           let testId = 'gu\xE9rir_blessure_' + perso.token.id;
@@ -22725,7 +23376,7 @@ var COFantasy = COFantasy || function() {
           });
           return;
         }
-        let affAttr = rajouterPointDeRecuperation(perso, evt);
+        let affAttr = rajouterPointDeRecuperation(perso, evt, pr);
         if (affAttr === undefined) {
           error("Pas de point de r\xE9cup\xE9rartion \xE0 rajouter et pourtant pas au max", token);
           finalize();
@@ -22739,14 +23390,14 @@ var COFantasy = COFantasy || function() {
         finalize();
         return;
       }
-      if (!reposLong) {
+      if (!reposLong && pr) {
         if (pr.current === 0) { //pas possible de r\xE9cup\xE9rer
           message = " a besoin d'une nuit compl\xE8te pour r\xE9cup\xE9rer";
           sendPerso(perso, message);
           finalize();
           return;
         } else { //d\xE9pense d'un PR
-          enleverPointDeRecuperation(perso, evt);
+          enleverPointDeRecuperation(perso, pr, evt);
           pr.current--;
         }
       }
@@ -22782,8 +23433,8 @@ var COFantasy = COFantasy || function() {
         } else {
           message = "Apr\xE8s 5 minutes de repos, ";
         }
-        message +=
-          "r\xE9cup\xE8re " + buildinline(roll) + "+" + bonus + " PV. Il lui reste " + pr.current + " points de r\xE9cup\xE9ration";
+        message += "r\xE9cup\xE8re " + buildinline(roll) + "+" + bonus + " PV.";
+        if (pr) message += " Il lui reste " + pr.current + " points de r\xE9cup\xE9ration";
         sendPerso(perso, message);
         finalize();
       });
@@ -25028,23 +25679,28 @@ var COFantasy = COFantasy || function() {
         let labelArmeGauche;
         let ligneArmePrincipale;
         let ligneArmeGauche;
-        let labelArme = tokenAttribute(perso, 'armeEnMain');
-        if (labelArme.length > 0) {
-          labelArme = labelArme[0];
-          labelArmePrincipale = labelArme.get('current');
-          labelArmeGauche = labelArme.get('max');
+        let armePrincipale = armesEnMain(perso);
+        if (armePrincipale) {
+          labelArmePrincipale = armePrincipale.label;
+          if (perso.armeGauche)
+            labelArmeGauche = perso.armeGauche.label;
         }
         if ((labelArmeGauche === undefined || labelArmeGauche === '') &&
           predicateAsBool(perso, 'attaqueAuBouclier') && ficheAttributeAsInt(perso, 'defbouclieron', 0)) {
           labelArmeGauche = predicateAsBool(perso, 'attaqueAuBouclier');
         }
         let command = '!cof-attack ' + perso.token.id + ' @{target|token_id} ';
-        if (labelArmePrincipale && listeAttaques[labelArmePrincipale]) {
-          let nomCommande = listeAttaques[labelArmePrincipale].armenom;
+        if (armePrincipale) {
+          let nomCommande = armePrincipale.name;
+          if (armePrincipale.batarde) {
+            if (armePrincipale.deuxMains) nomCommande += ' (2M)';
+            else nomCommande += ' (1M)';
+          }
           if (attributeAsBool(perso, 'paradeCroisee')) {
             //On conna\xEEtra vraiment l'arme au moment de faire l'attaque
             command += '-1';
-            if (labelArmeGauche && listeAttaques[labelArmeGauche]) {
+            if (labelArmeGauche &&
+              listeAttaques[labelArmeGauche]) {
               nomCommande += ' ou ' + listeAttaques[labelArmeGauche].armenom;
               labelArmeGauche = undefined; //Pour ne pas l'afficher
             }
@@ -25060,8 +25716,8 @@ var COFantasy = COFantasy || function() {
             ligneArmePrincipale = bouton(command + argsAttaqueAMainsNues(perso), 'Mains nues', perso);
           }
         }
-        if (labelArmeGauche && listeAttaques[labelArmeGauche]) {
-          ligneArmeGauche = bouton("!cof-attack @{selected|token_id} @{target|token_id} " + labelArmeGauche, listeAttaques[labelArmeGauche].armenom, perso);
+        if (perso.armeGauche) {
+          ligneArmeGauche = bouton("!cof-attack @{selected|token_id} @{target|token_id} " + labelArmeGauche, perso.armeGauche.name, perso);
         }
         //Maintenant on propose de d\xE9gainer
         if (armeVisible) {
@@ -25114,7 +25770,20 @@ var COFantasy = COFantasy || function() {
             }
           }
           for (let l in armes) {
-            if (l != labelArmePrincipale && l != labelArmeGauche && !labelsVus.has(l)) {
+            if (l == labelArmePrincipale && armePrincipale.batarde) {
+              degainer += armes[l].armenom + ' ';
+              if (armePrincipale.deuxMains) {
+                degainer += "(1M)," + l + "|";
+              } else {
+                degainer += "(2M)," + l + " 2mains|";
+              }
+              if (armeADegainer) armeADegainer.unique = undefined;
+              else armeADegainer = {
+                unique: true,
+                nom: armes[l].armenom,
+                label: l
+              };
+            } else if (l != labelArmePrincipale && l != labelArmeGauche && !labelsVus.has(l)) {
               degainer += armes[l].armenom + "," + l + "|";
               if (armeADegainer) armeADegainer.unique = undefined;
               else armeADegainer = {
@@ -25528,9 +26197,11 @@ var COFantasy = COFantasy || function() {
         let aDV = ficheAttributeAsInt(perso, 'DV', 0);
         if (aDV > 0) { // correspond aux PJs
           let pr = pointsDeRecuperation(perso);
-          line =
-            "Points de r\xE9cup\xE9ration : " + pr.current + " / " + pr.max;
-          addLineToFramedDisplay(display, line);
+          if (pr) {
+            line =
+              "Points de r\xE9cup\xE9ration : " + pr.current + " / " + pr.max;
+            addLineToFramedDisplay(display, line);
+          }
           if (ficheAttributeAsInt(perso, 'option_pc', 1)) {
             let pc = 3;
             let pc_max = 3;
@@ -25599,7 +26270,11 @@ var COFantasy = COFantasy || function() {
             else line += ", pas en main";
             addLineToFramedDisplay(display, line);
           } else if (armeEnMain == armeLabel) {
-            addLineToFramedDisplay(display, "tient " + nomArme + " en main.");
+            if (armeEnMainGauche == armeLabel) {
+              addLineToFramedDisplay(display, "tient " + nomArme + " \xE0 2 mains.");
+            } else {
+              addLineToFramedDisplay(display, "tient " + nomArme + " en main.");
+            }
           } else if (armeEnMainGauche == armeLabel) {
             addLineToFramedDisplay(display, "tient " + nomArme + " en main gauche.");
           } else if (att.armetypeattaque == "Arme de jet") {
@@ -25713,6 +26388,7 @@ var COFantasy = COFantasy || function() {
             addLineToFramedDisplay(display, mi);
           }
         });
+        //ancienne version de munitions, obsol\xE8te depuis mars 2023
         allAttributesNamed(attrsChar, 'munition').forEach(function(attr) {
           let attrName = attr.get('name');
           let underscore = attrName.indexOf('_');
@@ -25851,6 +26527,9 @@ var COFantasy = COFantasy || function() {
           if (pointsDeViolence > 0) {
             addLineToFramedDisplay(display, "Points de violence : " + pointsDeViolence);
           }
+        }
+        if (attributeAsBool(perso, 'lumiere')) {
+          addLineToFramedDisplay(display, "\xE9claire ou fait de la lumi\xE8re");
         }
         let autresAttributs = predicatesNamed(perso, 'attributsDeStatut');
         autresAttributs.forEach(function(attr) {
@@ -26043,7 +26722,7 @@ var COFantasy = COFantasy || function() {
         case 'argent':
         case 'energie':
           if (options.additionalDmg) {
-            var l = options.additionalDmg.length;
+            let l = options.additionalDmg.length;
             if (l > 0) {
               options.additionalDmg[l - 1].type = opt[0];
             } else {
@@ -26706,6 +27385,7 @@ var COFantasy = COFantasy || function() {
     if (cmd.length > 1) armeLabel = cmd[1];
     if (cmd.length > 2) {
       if (cmd[2] == 'gauche') options.gauche = true;
+      else if (cmd[2] == '2mains') options.deuxMains = true;
       else options.armeGaucheLabel = cmd[2];
     }
     let personnages = [];
@@ -26726,9 +27406,9 @@ var COFantasy = COFantasy || function() {
       type: "degainer",
       attributes: [],
       action: {
-        persos: persos,
+        persos,
         armeLabel: labelArme,
-        options: options
+        options
       }
     };
     addEvent(evt);
@@ -28810,7 +29490,7 @@ var COFantasy = COFantasy || function() {
       perso.race = ficheAttribute(perso, 'race', '');
       perso.race = perso.race.toLowerCase();
     }
-    return (perso.race == race.toLowerCase());
+    return (perso.race.includes(race.toLowerCase()));
   }
 
   function estFee(perso) {
@@ -28822,6 +29502,7 @@ var COFantasy = COFantasy || function() {
     if (perso.race === '') return false;
     switch (perso.race) {
       case 'licorne':
+      case 'farfadet':
       case 'fee':
       case 'f\xE9e':
       case 'pixie':
@@ -29575,8 +30256,8 @@ var COFantasy = COFantasy || function() {
               if (estPJ(cible) && reglesOptionelles.dommages.val.blessures_graves.val) {
                 //Il faut alors annuler la perte de PR ou la blessure grave
                 let pr = pointsDeRecuperation(cible);
-                if (pr.current > 0 || !getState(cible, 'blesse')) {
-                  rajouterPointDeRecuperation(cible, evt);
+                if (pr && (pr.current > 0 || !getState(cible, 'blesse'))) {
+                  rajouterPointDeRecuperation(cible, evt, pr);
                 } else {
                   setState(cible, 'blesse', false, evt);
                 }
@@ -30895,9 +31576,9 @@ var COFantasy = COFantasy || function() {
           }
         });
         if (sortieEscalier) {
-          var left = sortieEscalier.get('left');
-          var top = sortieEscalier.get('top');
-          var newPageId = sortieEscalier.get('pageid');
+          let left = sortieEscalier.get('left');
+          let top = sortieEscalier.get('top');
+          let newPageId = sortieEscalier.get('pageid');
           //D\xE9placement du token
           if (newPageId == pageId) {
             token.set('left', left);
@@ -31240,20 +31921,16 @@ var COFantasy = COFantasy || function() {
 
   function appliquerEncaisserUnCoup(cible, options, evt) {
     removeTokenAttr(cible, 'encaisserUnCoup', evt);
-    cible.extraRD =
-      ficheAttributeAsInt(cible, 'defarmure', 0) *
-      ficheAttributeAsInt(cible, 'defarmureon', 0) +
-      ficheAttributeAsInt(cible, 'defbouclier', 0) *
-      ficheAttributeAsInt(cible, 'defbouclieron', 0);
+    cible.extraRD = defenseArmure(cible);
     removePreDmg(options, cible, "encaisserUnCoup");
   }
 
   //!cof-devier-les-coups, avec la personne qui encaisse s\xE9lectionn\xE9e
   function doDevierLesCoups(msg) {
-    var optionsDevier = parseOptions(msg);
+    let optionsDevier = parseOptions(msg);
     if (optionsDevier === undefined) return;
-    var cmd = optionsDevier.cmd;
-    var evt = lastEvent();
+    let cmd = optionsDevier.cmd;
+    let evt = lastEvent();
     if (cmd !== undefined && cmd.length > 1) { //On relance pour un \xE9v\xE9nement particulier
       evt = findEvent(cmd[1]);
       if (evt === undefined) {
@@ -31596,6 +32273,7 @@ var COFantasy = COFantasy || function() {
           } else {
             attBonus += modCarac(lanceur, carac);
           }
+          attBonus += predicateAsInt(lanceur, 'bonusAttaqueMagique', 0);
           break;
         case 'contact':
           attBonus += ficheAttributeAsInt(lanceur, 'ATKCAC_DIV', 0);
@@ -32299,37 +32977,32 @@ var COFantasy = COFantasy || function() {
         if (estMunition) {
           let munitionsCourantes;
           let maxMunitions;
-          let attrQte;
           if (arme) {
             armeEnduite = arme.name;
-            attrQte = findObjs({
-              _type: 'attribute',
-              _characterid: perso.charId,
-              name: arme.prefixe + 'armejetqte'
-            }, {
-              caseInsensitive: true
-            });
-            if (attrQte.length === 0) {
-              munitionsCourantes = 1;
-              maxMunitions = 1;
-            } else {
-              attrQte = attrQte[0];
-            }
+            munitionsCourantes = arme.nbArmesDeJet;
+            maxMunitions = arme.nbArmesDeJetMax;
           } else {
-            armeEnduite = nomMunition.replace(/_/g, ' ');
-            attrQte = tokenAttribute(perso, labelArme);
-            if (attrQte.length === 0) {
-              sendPerso(perso, "n'a pas de munition nomm\xE9e " + nomMunition);
-              return;
-            }
-            attrQte = attrQte[0];
-          }
-          if (munitionsCourantes === undefined) {
-            munitionsCourantes = parseInt(attrQte.get('current'));
-            maxMunitions = parseInt(attrQte.get('max'));
-            if (isNaN(munitionsCourantes) || isNaN(maxMunitions)) {
-              error("Attribut de munitions mal form\xE9", attrQte);
-              return;
+            let munitions = listAllMunitions(perso);
+            let m = munitions[nomMunition];
+            if (m) {
+              let typeMunition = fieldAsString(m, 'typemunition', 'Fl\xE8che');
+              armeEnduite = fieldAsString(m, 'nommunition', typeMunition);
+              munitionsCourantes = fieldAsInt(m, 'qtemunition', 1);
+              maxMunitions = fieldAsInt(m, 'qtemunition_max', 1);
+            } else { //ancienne variante, obsol\xE8te depuis mars 2023
+              armeEnduite = nomMunition.replace(/_/g, ' ');
+              let attrQte = tokenAttribute(perso, labelArme);
+              if (attrQte.length === 0) {
+                sendPerso(perso, "n'a pas de munition nomm\xE9e " + nomMunition);
+                return;
+              }
+              attrQte = attrQte[0];
+              munitionsCourantes = parseInt(attrQte.get('current'));
+              maxMunitions = parseInt(attrQte.get('max'));
+              if (isNaN(munitionsCourantes) || isNaN(maxMunitions)) {
+                error("Attribut de munitions mal form\xE9", attrQte);
+                return;
+              }
             }
           }
           if (munitionsCourantes === 0) {
@@ -34147,7 +34820,7 @@ var COFantasy = COFantasy || function() {
       var rang = 0;
       spec.actions.forEach(function(a) {
         rang++;
-        var pref = 'repeating_actions_' + generateRowID() + '_';
+        let pref = 'repeating_actions_' + generateRowID() + '_';
         createObj('attribute', {
           name: pref + 'actionoptflag',
           current: 'off',
@@ -34507,6 +35180,9 @@ var COFantasy = COFantasy || function() {
     else sendPerso(perso, msgSoin);
     if (getState(perso, 'blesse')) {
       setState(perso, 'blesse', false, evt);
+    } else { //On peut bien faire r\xE9cup\xE9rer un PR
+      let d = rajouterPointDeRecuperation(perso, evt);
+      if (d) sendPerso(perso, "r\xE9cup\xE8re un point de r\xE9cup\xE9ration");
     }
     let soins = perso.token.get('bar1_max') - perso.token.get('bar1_value');
     if (isNaN(soins)) {
@@ -34803,36 +35479,33 @@ var COFantasy = COFantasy || function() {
       pageId: pageId,
     };
     //On cherche l'arme de la cible. On en aura besoin pour d\xE9sarmer
-    let armeCible;
-    let attrArmeCible = tokenAttribute(cible, 'armeEnMain');
-    if (attrArmeCible.length > 0) {
-      attrArmeCible = attrArmeCible[0];
-      armeCible = getWeaponStats(cible, attrArmeCible.get('current'));
-      if (armeCible) {
-        options.armeDefenseur = armeCible;
-        if (armeCible.deuxMains) {
-          options.bonusAttaqueDefenseur = [{
-            val: 5,
-            explication: nomPerso(cible) + " porte une arme \xE0 2 mains => +5 \xE0 son jet"
-          }];
-        }
+    let armeCible = armesEnMain(cible);
+    let attrArmeCible = cible.attrArmeEnMain;
+    if (armeCible) {
+      options.armeDefenseur = armeCible;
+      if (armeCible.deuxMains) {
+        options.bonusAttaqueDefenseur = [{
+          val: 5,
+          explication: nomPerso(cible) + " porte une arme \xE0 2 mains => +5 \xE0 son jet"
+        }];
       }
-    } else attrArmeCible = undefined;
-    var enleverArmeCible = function() {
+    }
+    const enleverArmeCible = function() {
       if (attrArmeCible) {
         evt.deletedAttributes = evt.deletedAttributes || [];
         evt.deletedAttributes.push(attrArmeCible);
         attrArmeCible.remove();
+        cible.armesEnMain = undefined;
       }
     };
-    var evt = {
+    const evt = {
       type: 'D\xE9sarmer'
     };
     if (cmd.length > 3) options.labelArmeAttaquant = cmd[3];
-    var playerId = getPlayerIdFromMsg(msg);
+    const playerId = getPlayerIdFromMsg(msg);
     attaqueContactOpposee(playerId, guerrier, cible, evt, options,
       function(res, display, explications) {
-        var resultat;
+        let resultat;
         if (res.echecCritique) {
           resultat = "<span style='" + BS_LABEL + " " + BS_LABEL_DANGER + "'><b>\xE9chec&nbsp;critique</b></span>";
         } else if (res.echecCritiqueDefenseur) {
@@ -34900,7 +35573,7 @@ var COFantasy = COFantasy || function() {
     },
     desarmer: {
       appliquer: function(attaquant, cible, critique, evt, envoyerMessage) {
-        var attrArmeCible = tokenAttribute(cible, 'armeEnMain');
+        let attrArmeCible = tokenAttribute(cible, 'armeEnMain');
         if (attrArmeCible.length > 0) {
           attrArmeCible = attrArmeCible[0];
           evt.deletedAttributes = evt.deletedAttributes || [];
@@ -34908,7 +35581,7 @@ var COFantasy = COFantasy || function() {
           attrArmeCible.remove();
         }
         if (envoyerMessage) {
-          var msgDesarme = "est d\xE9sarm\xE9" + onGenre(cible, '', 'e');
+          let msgDesarme = "est d\xE9sarm\xE9" + onGenre(cible, '', 'e');
           if (critique) msgDesarme += ", son adversaire lui a pris son arme.";
           else msgDesarme += ".";
           sendPerso(cible, msgDesarme);
@@ -36558,24 +37231,24 @@ var COFantasy = COFantasy || function() {
   }
 
   function ajouteLumiere(msg) {
-    var options = parseOptions(msg);
+    const options = parseOptions(msg);
     if (options === undefined) return;
-    var cmd = options.cmd;
+    const cmd = options.cmd;
     if (cmd === undefined || cmd.length < 3) {
       error("Il faut au moins 2 arguments \xE0 !cof-lumiere", cmd);
       return;
     }
-    var cible = persoOfId(cmd[1]);
+    const cible = persoOfId(cmd[1]);
     if (cible === undefined) {
       error("le premier argument de !cof-lumi\xE8re doit \xEAtre un token", cmd);
       return;
     }
-    var radius = parseInt(cmd[2]);
+    const radius = parseInt(cmd[2]);
     if (isNaN(radius) || radius <= 0) {
       error("La distance de vue de la lumi\xE8re doit \xEAtre positive", cmd[2]);
       return;
     }
-    var dimRadius = '';
+    let dimRadius = '';
     if (cmd.length > 3) {
       dimRadius = parseInt(cmd[3]);
       if (isNaN(dimRadius)) {
@@ -36583,12 +37256,12 @@ var COFantasy = COFantasy || function() {
         dimRadius = '';
       }
     }
-    var nomToken = 'lumiere';
+    let nomToken = 'lumiere';
     if (cmd.length > 4) {
       nomToken = cmd[4].trim();
       if (nomToken === '') nomToken = 'lumiere';
     }
-    var evt = {
+    const evt = {
       type: 'lumiere',
     };
     addEvent(evt);
@@ -36641,17 +37314,12 @@ var COFantasy = COFantasy || function() {
       lumiere = tokensLumiere.shift();
       if (tokensLumiere.length > 0) {
         //On cherche le token le plus proche de perso
-        let pos = [perso.token.get('left'), perso.token.get('top')];
-        let d =
-          VecMath.length(
-            VecMath.vec([lumiere.get('left'), lumiere.get('top')], pos));
+        let d = distancePixToken(lumiere, perso.token);
         let samePage = lumiere.get('pageid') == pageId;
         tokensLumiere.forEach(function(tl) {
           if (tl.get('pageid') != pageId) return;
           if (samePage) {
-            let d2 =
-              VecMath.length(
-                VecMath.vec([tl.get('left'), tl.get('top')], pos));
+            let d2 = distancePixToken(tl, perso.token);
             if (d2 < d) {
               d = d2;
               lumiere = tl;
@@ -37011,10 +37679,10 @@ var COFantasy = COFantasy || function() {
       error("Le deuxi\xE8me token s\xE9lectionn\xE9 n'est pas valide", msg.content);
       return;
     }
-    var evt = {
+    const evt = {
       type: 'D\xE9fi samoura\xEF'
     };
-    var explications = [];
+    let explications = [];
     entrerEnCombat(samourai, [cible], explications, evt);
     explications.forEach(function(m) {
       sendPerso(samourai, m);
@@ -37124,8 +37792,7 @@ var COFantasy = COFantasy || function() {
               maxVal: maxval
             });
             let cibleId = idName(cible);
-            cible.token.set('left', attaquant.token.get('left'));
-            cible.token.set('right', attaquant.token.get('right'));
+            moveTokenWithUndo(cible.token, attaquant.token.get('left'), attaquant.token.get('top'), evt);
             toFront(attaquant.token);
             setTokenAttr(attaquant, 'enveloppe', cibleId, evt, {
               maxVal: exprDM
@@ -37647,7 +38314,7 @@ var COFantasy = COFantasy || function() {
           chanceRollId: options.chanceRollId,
           type: 'poison'
         };
-        var saveId = 'vapeursEthyliques_' + perso.token.id;
+        let saveId = 'vapeursEthyliques_' + perso.token.id;
         save(options.save, perso, saveId, expliquer, saveOpts, evt,
           function(succes, rollText) {
             if (!succes) {
@@ -37730,7 +38397,7 @@ var COFantasy = COFantasy || function() {
           chanceRollId: options.chanceRollId,
           type: 'poison'
         };
-        var saveId = 'boireAlcool_' + perso.token.id;
+        let saveId = 'boireAlcool_' + perso.token.id;
         save(options.save, perso, saveId, expliquer, saveOpts, evt,
           function(succes, rollText) {
             if (!succes) {
@@ -37886,6 +38553,7 @@ var COFantasy = COFantasy || function() {
     };
     if (options.messages && options.messages.length > 0)
       opt.msg = options.messages[0];
+    let predicats = state.COFantasy.predicats;
     getSelected(msg, function(selected, playerId) {
       if (selected.length === 0) {
         error('pas de token s\xE9lectionn\xE9 pour !cof-set-predicate');
@@ -37909,6 +38577,7 @@ var COFantasy = COFantasy || function() {
             if (pred === '') pred = predicat;
             else pred = pred + ' ' + predicat;
             setFicheAttr(perso, 'predicats_script', pred, evt);
+            if (predicats) predicats[perso.charId] = undefined;
             sendPlayer(msg, 'Pr\xE9dicat ' + predicat + ' ajout\xE9', playerId);
             break;
           case 'false':
@@ -37920,6 +38589,7 @@ var COFantasy = COFantasy || function() {
               sendPlayer(msg, 'Pr\xE9dicat ' + predicat + ' non trouv\xE9', playerId);
             } else {
               setFicheAttr(perso, 'predicats_script', newPred, evt);
+              if (predicats) predicats[perso.charId] = undefined;
               sendPlayer(msg, 'Pr\xE9dicat ' + predicat + ' enlev\xE9', playerId);
             }
             break;
@@ -37928,13 +38598,14 @@ var COFantasy = COFantasy || function() {
             return;
         }
         if (options.etats) {
-          for (var etat in options.etats) {
+          for (let etat in options.etats) {
             setState(perso, etat, options.etats[etat], evt);
           }
         }
       }); //fin iterSelected
     }, options);
   }
+
   //!cof-defense-armee-des-morts tokenId
   function defenseArmeeDesMorts(msg) {
     var options = parseOptions(msg);
@@ -39440,48 +40111,91 @@ var COFantasy = COFantasy || function() {
               changeAttributeName(attr, 'profil', evt);
               return;
             case 'defensive_abilities':
-              let da = attr.get('current');
-              let nonPrisEnCompte = '';
-              da.split(',').forEach(function(d) {
-                d = d.trim();
-                if (d === '') return;
-                switch (d) {
-                  case 'incorporeal':
-                    predicats += 'immunite_nonMagique ';
-                    return;
-                  case 'uncanny dodge':
-                    predicats += 'immunite_surpris ';
-                    return;
-                  case 'improved uncanny dodge':
-                    predicats += 'immuniteAuxSournoises ';
-                    return;
-                  default:
-                    if (d.startsWith('channel resistance ')) {
-                      let resChannel = parseInt(d.substring(19));
-                      if (isNaN(resChannel)) {
-                        log("Capacit\xE9 d\xE9fensive " + d + " non connue");
+              {
+                let da = attr.get('current');
+                let nonPrisEnCompte = '';
+                da.split(',').forEach(function(d) {
+                  d = d.trim();
+                  if (d === '') return;
+                  switch (d) {
+                    case 'incorporeal':
+                      predicats += 'creatureIntangible ';
+                      return;
+                    case 'uncanny dodge':
+                      predicats += 'immunite_surpris ';
+                      return;
+                    case 'improved uncanny dodge':
+                      predicats += 'immuniteAuxSournoises ';
+                      return;
+                    case 'rejuvenation':
+                      return; //Pas d'effet en combat
+                    default:
+                      if (d.startsWith('channel resistance ')) {
+                        let resChannel = parseInt(d.substring(19));
+                        if (isNaN(resChannel)) {
+                          log("Capacit\xE9 d\xE9fensive " + d + " non connue");
+                        } else {
+                          predicats += 'bonusSaveContre_positif:' + resChannel + ' ';
+                          return;
+                        }
+                      } else if (d.startsWith('bravery ')) {
+                        let courage = parseInt(d.substring(8));
+                        if (isNaN(courage)) {
+                          log("Capacit\xE9 d\xE9fensive " + d + " non connue");
+                        } else {
+                          predicats += 'courage:' + courage + ' ';
+                          return;
+                        }
                       } else {
-                        predicats += 'bonusSaveContre_positif:' + resChannel + ' ';
-                        return;
-                      }
-                    } else if (d.startsWith('bravery ')) {
-                      let courage = parseInt(d.substring(8));
-                      if (isNaN(courage)) {
                         log("Capacit\xE9 d\xE9fensive " + d + " non connue");
-                      } else {
-                        predicats += 'courage:' + courage + ' ';
-                        return;
                       }
-                    } else {
-                      log("Capacit\xE9 d\xE9fensive " + d + " non connue");
-                    }
-                    if (nonPrisEnCompte === '')
-                      nonPrisEnCompte = 'Capacit\xE9s d\xE9fensives : ' + d;
-                    else nonPrisEnCompte += ', ' + d;
-                }
-              });
-              if (nonPrisEnCompte !== '') notes += nonPrisEnCompte + '\n';
-              return;
+                      if (nonPrisEnCompte === '')
+                        nonPrisEnCompte = 'Capacit\xE9s d\xE9fensives : ' + d;
+                      else nonPrisEnCompte += ', ' + d;
+                  }
+                });
+                if (nonPrisEnCompte !== '') notes += nonPrisEnCompte + '\n';
+                return;
+              }
+            case 'weaknesses':
+              {
+                let wea = attr.get('current');
+                let nonPrisEnCompte = '';
+                wea.split(',').forEach(function(w) {
+                  w = w.trim();
+                  if (w === '') return;
+                  switch (w) {
+                    case 'resurrection vulnerability':
+                      notes += "D\xE9truit par un sort de r\xE9surection \n";
+                      return;
+                    case 'vulnerable to acid':
+                      predicats += 'vulnerableA_acide ';
+                      return;
+                    case 'vulnerable to cold':
+                      predicats += 'vulnerableA_froid ';
+                      return;
+                    case 'vulnerable to disease':
+                      predicats += 'vulnerableA_maladie ';
+                      return;
+                    case 'vulnerable to electricity':
+                      predicats += 'vulnerableA_electrique ';
+                      return;
+                    case 'vulnerable to fire':
+                      predicats += 'vulnerableA_feu ';
+                      return;
+                    case 'vulnerable to poison':
+                      predicats += 'vulnerableA_poison ';
+                      return;
+                    default:
+                      log("Faiblesse " + w + " non connue");
+                      if (nonPrisEnCompte === '')
+                        nonPrisEnCompte = 'Faiblesses : ' + w;
+                      else nonPrisEnCompte += ', ' + w;
+                  }
+                });
+                if (nonPrisEnCompte !== '') notes += nonPrisEnCompte + '\n';
+                return;
+              }
             case 'hp':
               changeAttributeName(attr, 'PV', evt);
               return;
@@ -39627,7 +40341,7 @@ var COFantasy = COFantasy || function() {
               let rdn = attr.get('current');
               if (rdn) {
                 rdn = '' + rdn;
-                rdn = rdn.replace('bludgeoning', 'contondant').replace('slashing', 'tranchant').replace('piercing', 'percant').replace('silver', 'argent').replace('magic', 'magique').replace('adamantine', 'adamantium').replace('/-', '');
+                rdn = rdn.replace('bludgeoning', 'contondant').replace('slashing', 'tranchant').replace('piercing', 'percant').replace('silver', 'argent').replace('magic', 'magique').replace('adamantine', 'adamantium').replace('cold iron', 'ferFroid').replace('/-', '');
                 if (rd === '') rd = rdn;
                 else rd += ', ' + rdn;
               }
@@ -39665,6 +40379,10 @@ var COFantasy = COFantasy || function() {
                   predicats += 'plante vegetatif ';
                   break;
                 default:
+                  if (npcType.includes('humanoid')) {
+                    predicats += 'humanoide ';
+                    break;
+                  }
                   log("npc_type non reconnue : " + npcType);
                   if (race === '') race = npcType;
               }
@@ -40057,6 +40775,12 @@ var COFantasy = COFantasy || function() {
                       ennemiJure = 'geant';
                       pasDEnnemi = false;
                     } else ennemiJure += ', geant';
+                    break;
+                  case 'humans':
+                    if (pasDEnnemi) {
+                      ennemiJure = 'humain';
+                      pasDEnnemi = false;
+                    } else ennemiJure += ', humain';
                     break;
                   default:
                     if (!e.startsWith('+')) {
@@ -41673,6 +42397,285 @@ var COFantasy = COFantasy || function() {
     door.set('isOpen', true);
   }
 
+  //Demande de bouger son token jusqu'\xE0 destination
+  function attaqueLigneBouger(msg) {
+    const playerId = getPlayerIdFromMsg(msg);
+    if (stateCOF.pause && !playerIsGM(playerId)) {
+      sendPlayer(msg, "Le jeu est en pause", playerId);
+      return;
+    }
+    let args = msg.content.split(' ');
+    if (args.length < 2) {
+      error("Il manque un argument \xE0 !cof-attack-line", args);
+      return;
+    }
+    const attaquant = persoOfId(args[1]);
+    if (attaquant === undefined) {
+      error("Le premier argument de !cof-attack-line n'est pas un token valide", args[1]);
+      return;
+    }
+    let token = attaquant.token;
+    let restArgs = args.slice(2).join(' ');
+    let command = '!cof-attack-line-from ' + token.get('left') + ' ' + token.get('top') + ' ' + token.id + ' ' + restArgs;
+    sendPlayer(msg, "D\xE9placer votre token jusqu'au bout de la ligne (l'emplacement doit \xEAtre libre), et " + boutonSimple(command, "cliquer ici"), playerId);
+    return;
+  }
+
+  //En partant de from, retourne la premi\xE8re position sur le segment [from, to] 
+  // \xE0 distance dist de pt. S'il n'y en a pas, retourne la projection de pt sur le segment
+  function positionLigne(from, to, token, dist) {
+    let fx = from.x;
+    let fy = from.y;
+    let tx = to.x;
+    let ty = to.y;
+    let x = token.get('left');
+    let y = token.get('top');
+    let a = (tx - fx) * (tx - fx) + (ty - fy) * (ty - fy);
+    let b = 2 * ((fx - x) * (tx - fx) + (fy - y) * (ty - fy));
+    let c = (fx - x) * (fx - x) + (fy - y) * (fy - y) - dist * dist;
+    let delta = b * b - 4 * a * c;
+    if (delta >= 0) {
+      let k = (b + Math.sqrt(delta)) / (2 * a);
+      if (k > 0) k = 0;
+      if (k < -1) k = -1;
+      return [fx - k * (tx - fx), fy - k * (ty - fy)];
+    }
+    //sinon on projette
+    let ps = (x - fx) * (tx - fx) + (y - fy) * (tx - fy) + 0.0;
+    let k = ps / Math.sqrt(a);
+    if (k < 0) k = 0;
+    if (k > 1) k = 1;
+    return [fx + k * (tx - fx), fy + k * (ty - fy)];
+  }
+
+  //!cof-attack-line-from left top id
+  function attaqueLigne(msg) {
+    const playerId = getPlayerIdFromMsg(msg);
+    if (stateCOF.pause && !playerIsGM(playerId)) {
+      sendPlayer(msg, "Le jeu est en pause", playerId);
+      return;
+    }
+    let optArgs = msg.content.split(' --');
+    let args = optArgs[0].split(' ');
+    args = args.filter(function(a) {
+      return a !== '';
+    });
+    optArgs.shift();
+    if (args.length < 4) {
+      error("Pas assez d'arguments pour !cof-attack-line: " + msg.content, args);
+      return;
+    }
+    let originLeft = parseInt(args[1]);
+    let originTop = parseInt(args[2]);
+    if (isNaN(originLeft) || isNaN(originTop)) {
+      error("Coordonn\xE9es non num\xE9riques dans !co-attack-line", args);
+      return;
+    }
+    const attaquant = persoOfId(args[3]);
+    if (attaquant === undefined) {
+      error("Le premier argument de !cof-attack-line n'est pas un token valide", args[3]);
+      return;
+    }
+    let destLeft = attaquant.token.get('left');
+    let destTop = attaquant.token.get('top');
+    //On remet l'attaquant \xE0 sa place
+    attaquant.token.set('left', originLeft);
+    attaquant.token.set('top', originTop);
+    let combat = stateCOF.combat;
+    if (stateCOF.options.affichage.val.init_dynamique.val && roundMarker &&
+      combat) {
+      if ((!stateCOF.chargeFantastique && combat.activeTokenId == attaquant.token.id) ||
+        (stateCOF.chargeFantastique && stateCOF.chargeFantastique.activeTokenId == attaquant.token.id)) {
+        roundMarker.set('left', originLeft);
+        roundMarker.set('top', originTop);
+      }
+    }
+    let pageId = attaquant.token.get('pageid');
+    let scale = computeScale(pageId);
+    let restArgs = '';
+    if (args.length > 4) {
+      restArgs = args.slice(4).join(' ');
+    }
+    let ptDest = {
+      x: destLeft,
+      y: destTop
+    };
+    let ptOrigin = {
+      x: originLeft,
+      y: originTop
+    };
+    let tropLoin = false;
+    //On cherche si argument --distanceMax, pas utilis\xE9 par cof-attack
+    optArgs = optArgs.filter(function(cmd) {
+      if (!cmd.startsWith('distanceMax')) return true;
+      let a = cmd.split(' ');
+      if (a.length < 2) {
+        error("Il manque un argument \xE0 --distanceMax", cmd);
+        return false;
+      }
+      let distanceMax = parseInt(a[1]);
+      if (isNaN(distanceMax) || distanceMax < 0) {
+        error("la distance max n'est pas un nombre positif", cmd);
+        return false;
+      }
+      let distancePix = distancePoints(ptOrigin, ptDest);
+      let distance = ((distancePix / PIX_PER_UNIT) * scale);
+      if (distance > distanceMax) {
+        sendPlayer(msg, "Ligne d'attaque trop grande, choisir une destination plus proche");
+        tropLoin = true;
+      }
+      return false;
+    });
+    if (optArgs.length > 0) {
+      restArgs = restArgs + ' --' + optArgs.join(' --');
+    }
+    if (tropLoin) return;
+    //On regarde si l'emplacement est bien vide.
+    let tokens = findObjs({
+      _pageid: pageId,
+      _type: 'graphic',
+      _subtype: 'token',
+      layer: attaquant.token.get('layer')
+    });
+    tokens = tokens.filter(function(tok) {
+      return tok.id != attaquant.token.id && tok.get('represents');
+    });
+    let attRayon = tokenSize(attaquant.token, 0);
+    let overLap = tokens.some(function(tok) {
+      let pt = pointOfToken(tok);
+      let distancePix = distancePoints(pt, ptDest);
+      return distancePix < attRayon + tokenSize(tok, 0);
+    });
+    if (overLap) {
+      sendPlayer(msg, "La place n'est pas libre", playerId);
+      return;
+    }
+    //Puis s'il n'y a pas d'obstacles sur le trajet
+    let page = getObj('page', pageId);
+    let murs = getWalls(page, pageId);
+    if (murs) {
+      let pc = {
+        x: originLeft,
+        y: originTop
+      };
+      if (obstaclePresent(destLeft, destTop, pc, murs)) {
+        sendPlayer(msg, "Il y a des obstacles sur le trajet", playerId);
+        return;
+      }
+    }
+    //On d\xE9termine les cibles sur le trajet
+    let cibles = [];
+    tokens.forEach(function(tok) {
+      let cible = {
+        token: tok,
+        charId: tok.get('represents')
+      };
+      if (nePeutPlusPrendreDM(cible, {})) return; //pas de d\xE9g\xE2ts aux morts
+      let distToTrajectory = distancePixTokenSegment(tok, ptOrigin, ptDest);
+      if (distToTrajectory > attRayon + tokenSize(tok, 0))
+        return;
+      cible.tokName = tok.get('name');
+      let tokChar = getObj('character', cible.charId);
+      if (tokChar === undefined) return;
+      cible.name = tokChar.get('name');
+      let pt = pointOfToken(tok);
+      cible.distanceOrigine = distancePoints(ptOrigin, pt);
+      cibles.push(cible);
+    });
+    if (cibles.length === 0) {
+      sendPlayer(msg, "Aucune cible valide sur le trajet", playerId);
+      return;
+    }
+    const evt = {
+      type: "Attaque en ligne"
+    };
+    addEvent(evt);
+    let explications = [];
+    combat = entrerEnCombat(attaquant, [], explications, evt);
+    explications.forEach(function(m) {
+      sendPerso(attaquant, m);
+    });
+    combat.attackId = combat.attackId || 0;
+    combat.attackCallbacks = combat.attackCallBacks || {};
+    //On trie les cibles selon leur distance \xE0 l'origine.
+    cibles.sort(function(c1, c2) {
+      return c1.distanceOrigine - c2.distanceOrigine;
+    });
+    combat.attackId++;
+    let firstAttack = combat.attackId;
+    cibles.forEach(function(cible) {
+      let nextAttack = combat.attackId + 1;
+      let dist = attRayon + tokenSize(cible.token, 0);
+      let [left, top] = positionLigne(ptOrigin, ptDest, cible.token, dist);
+      let comAttaque = '!cof-attack ' + attaquant.token.id + ' ' + cible.token.id + ' ' + restArgs + ' --attackId ' + nextAttack;
+      let comSkip = '!cof-skip-attack ' + nextAttack;
+      let m = boutonSimple(comAttaque, "Attaquer " + cible.tokName) + " ou " +
+        boutonSimple(comSkip, "Continuer");
+      combat.attackCallbacks[combat.attackId] = function(evt) {
+        moveTokenWithUndo(attaquant.token, left, top, evt);
+        sendPlayer(msg, m, playerId);
+      };
+      combat.attackId++;
+    });
+    combat.attackCallbacks[combat.attackId] = function() {
+      attaquant.token.set('left', destLeft);
+      attaquant.token.set('top', destTop);
+    };
+    combat.attackCallbacks[firstAttack]();
+  }
+
+  function skipAttack(msg) {
+    let args = msg.content.split(' ');
+    if (args.length < 2) {
+      error("Il manque l'id dans !cof-skip-attack", args);
+      return;
+    }
+    let options = {
+      attackId: args[1]
+    };
+    let evt = {
+      type: "skip attack"
+    };
+    addEvent(evt);
+    attackCallback(options, evt);
+  }
+
+  //!cof-vision-nocturne distance [distance vue normale]
+  function ajouterVisionNocturne(msg) {
+    let options = parseOptions(msg);
+    if (options === undefined) return;
+    let cmd = options.cmd;
+    if (cmd === undefined) {
+      error("Probl\xE8me de parse options", msg.content);
+      return;
+    }
+    if (cmd.length < 2) {
+      error("Il manque un argument \xE0 !cof-vision-nocturne", cmd);
+      return;
+    }
+    let distance = parseInt(cmd[1]);
+    if (isNaN(distance) || distance < 0) {
+      error("Distance de vue incorrecte", cmd);
+      return;
+    }
+    getSelected(msg, function(selected, playerId) {
+      if (selected.length === 0) {
+        sendPlayer(msg, "Utilisation de !cof-vision-nocturne sans s\xE9lection de token", playerId);
+        return;
+      }
+      const evt = {
+        type: 'vision nocturne',
+      };
+      addEvent(evt);
+      iterSelected(selected, function(perso) {
+        let token = perso.token;
+        setToken(token, 'has_night_vision', true, evt);
+        setToken(token, 'night_vision_effect', 'Nocturnal', evt);
+        setToken(token, 'night_vision_distance', distance, evt);
+      });
+    });
+  }
+
   function apiCommand(msg) {
     msg.content = msg.content.replace(/\s+/g, ' '); //remove duplicate whites
     const command = msg.content.split(' ', 1);
@@ -41688,8 +42691,17 @@ var COFantasy = COFantasy || function() {
       case '!cof-animation-des-objets':
         animationDesObjets(msg);
         return;
+      case '!cof-armure-magique':
+        armureMagique(msg);
+        return;
       case '!cof-attack':
         parseAttack(msg);
+        return;
+      case '!cof-attack-line':
+        attaqueLigneBouger(msg);
+        return;
+      case '!cof-attack-line-from': //seulement utilis\xE9 en interne
+        attaqueLigne(msg);
         return;
       case '!cof-attendre':
         attendreInit(msg);
@@ -41700,7 +42712,7 @@ var COFantasy = COFantasy || function() {
       case '!cof-bouton-chance':
         boutonChance(msg);
         return;
-      case "!cof-bouton-pousser-kiai":
+      case '!cof-bouton-pousser-kiai':
         kiai(msg);
         return;
       case '!cof-canaliser':
@@ -41717,13 +42729,13 @@ var COFantasy = COFantasy || function() {
       case '!cof-expert-combat-dm':
         expertDuCombat(msg);
         return;
-      case "!cof-expert-combat-def":
+      case '!cof-expert-combat-def':
         expertDuCombatDEF(msg);
         return;
-      case "!cof-expert-combat-bousculer":
+      case '!cof-expert-combat-bousculer':
         expertDuCombatBousculer(msg);
         return;
-      case "!cof-explosion":
+      case '!cof-explosion':
         attaqueExplosion(msg);
         return;
       case '!cof-hors-combat': //ancienne syntaxe, plus document\xE9e
@@ -41798,11 +42810,17 @@ var COFantasy = COFantasy || function() {
       case '!cof-sentir-la-corruption':
         parseSentirLaCorruption(msg);
         return;
+      case '!cof-skip-attack':
+        skipAttack(msg);
+        return;
       case '!cof-soigner-affaiblissement':
         soignerAffaiblissement(msg);
         return;
       case '!cof-sphere-de-feu':
         sphereDeFeu(msg);
+        return;
+      case '!cof-statut':
+        statut(msg);
         return;
       case '!cof-surprise':
         parseSurprise(msg);
@@ -41813,11 +42831,8 @@ var COFantasy = COFantasy || function() {
       case '!cof-undo':
         undoEvent();
         return;
-      case "!cof-statut":
-        statut(msg);
-        return;
-      case "!cof-armure-magique":
-        armureMagique(msg);
+      case '!cof-vision-nocturne':
+        ajouterVisionNocturne(msg);
         return;
       case "!cof-buf-def":
         bufDef(msg);
@@ -43737,6 +44752,10 @@ var COFantasy = COFantasy || function() {
       };
       let explications;
       if (display) explications = [];
+      if (options.saignement) {
+        let sourceDrain = saignementAvecDrain(perso, effet);
+        r.drainDeSang = sourceDrain;
+      }
       dealDamage(perso, r, [], evt, false, options, explications,
         function(dmgDisplay, dmg) {
           if (dmg > 0) {
@@ -44201,8 +45220,8 @@ var COFantasy = COFantasy || function() {
         perso.ignoreTouteRD = true;
         dealDamage(perso, r, [], evt, false, {}, [], function() {
           // V\xE9rification si le Zombie est toujours vivant
-          let tokens = getObj('graphic', perso.token.id);
-          if (tokens) whisperChar(perso.charId, "se d\xE9grade et perd 1 PV");
+          let token = getObj('graphic', perso.token.id);
+          if (token) whisperChar(perso.charId, "se d\xE9grade et perd 1 PV");
         });
       }
     });
@@ -44464,7 +45483,8 @@ var COFantasy = COFantasy || function() {
             de: 6
           }, 'normal',
           "saigne par tous les orifices du visage", evt, {
-            magique: true
+            magique: true,
+            saignement: true
           }, callBack);
         return;
       case 'blessureSanglante': //prend 1d6 DM
@@ -44477,7 +45497,9 @@ var COFantasy = COFantasy || function() {
             nbDe: 1,
             de: 6
           }, 'normal',
-          "saigne abondamment", evt, {}, callBack);
+          "saigne abondamment", evt, {
+            saignement: true
+          }, callBack);
         return;
       case 'armureBrulante': //prend 1d4 DM
         degatsParTour(charId, pageId, effet, attrName, {
@@ -45408,13 +46430,9 @@ var COFantasy = COFantasy || function() {
         lumiere = tokensLumiere.shift();
         if (tokensLumiere.length > 0) {
           //On cherche le token le plus proche de la position pr\xE9c\xE9dente
-          var d =
-            VecMath.length(
-              VecMath.vec([lumiere.get('left'), lumiere.get('top')], [prev.left, prev.top]));
+          let d = distanceTokenPrev(lumiere, prev);
           tokensLumiere.forEach(function(tl) {
-            var d2 =
-              VecMath.length(
-                VecMath.vec([tl.get('left'), tl.get('top')], [prev.left, prev.top]));
+            let d2 = distanceTokenPrev(tl, prev);
             if (d2 < d) {
               d = d2;
               lumiere = tl;
@@ -47640,3 +48658,11 @@ on('add:character', function(c) {
   }
 });
 on("change:door:isOpen", COFantasy.changeDoor);
+on("change:attribute", function(attr, prev) {
+  if (!COF_loaded) return;
+  let predicats = state.COFantasy.predicats;
+  if (!predicats) return;
+  let n = attr.get("name");
+  if (n == "predicats_script" || n.includes('armepredicats'))
+    predicats[attr.get('characterid')] = undefined;
+});

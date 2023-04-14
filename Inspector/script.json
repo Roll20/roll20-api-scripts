@@ -1,7 +1,7 @@
 {
   "name": "Inspector",
   "script": "Inspector.js",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Inspector is a tool for those curious about data in their Roll20 game, especially those who might be thinking about starting down the scripting road. Use simple command line switches to produce panels of information in formatted-JSON, complete with hover-tips, links, and browsable extended returns.\r\rInspector is designed to help you easily look at objects in your game and view their properties. Search by id, name, type, or other specialized parameters. All objects answering to that identifying piece of information will be reported, allowing you to examine them more closely. Roll20 object IDs are detected in the output and turned into links so that you can navigate from one object to a related object easily. Run !about to get an in-game help panel.\r\r[Original Forum Thread](https://app.roll20.net/forum/permalink/11160380/)",
   "authors": "timmaugh",
   "roll20userid": "5962076",
@@ -10,6 +10,7 @@
   "modifies": {},
   "conflicts": [],
   "previousversions": [
-    "1.0.0"
+    "1.0.0",
+    "1.0.1"
   ]
 }
