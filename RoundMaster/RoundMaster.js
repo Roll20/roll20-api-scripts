@@ -4607,9 +4607,9 @@ var RoundMaster = (function() {
 			let pageObj = getObj('page',crossHair.get('_pageid')),
 				chLeft = crossHair.get('left'),
 				chTop = crossHair.get('top'),
-				scale = pageObj.get('scale_number'),
+				scale = pageObj.get('scale_number') || 5,
 				ftSize = convertFt[pageObj.get('scale_units')] || 1,
-				cellSize = pageObj.get('snapping_increment'),
+				cellSize = pageObj.get('snapping_increment') || 1,
 				radius = ((units == 'YARDS') ? (length * 3 / ftSize) : ((units == 'FEET') ? (length / ftSize) : length ))/((units == 'SQUARES') ? 1 : scale),
 				endWidth = (((units == 'YARDS') ? (width * 3 / ftSize) : ((units == 'FEET') ? (width / ftSize) : width ))/((units == 'SQUARES') ? 1 : scale)),
 				chImage = aoeImages[aoeImage.toUpperCase()];
@@ -4642,7 +4642,7 @@ var RoundMaster = (function() {
 			args = args.slice(9);
 			let cmd = args.shift();
 			if (args.length) {
-				log('doSetAOE: targeted: args = '+args);
+//				log('doSetAOE: targeted: args = '+args);
 				content = '&{template:'+fields.defaultTemplate+'}{{name=Target Area-Effect Spell}}'
 						+ '{{[Select a target](!rounds --target '+cmd+'|'+casterID+'|&#64;{target|Select A Target|token_id}|'+args.join('|')+') or just do something else}}';
 				sendResponse( senderID, content );
