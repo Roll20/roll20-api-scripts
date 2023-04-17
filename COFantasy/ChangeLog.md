@@ -1,4 +1,21 @@
 # COFantasy: Historique des changements (depuis la version 1.0)
+## 3.12
+### Capacités
+* Meilleur support pour le bâton de mage du forgesort.
+* Regard pétrifiant du basilic et de la méduse.
+* Enkystement lointain.
+* Voie de prestige du messager.
+* Lycanthropie et Éventration de la Voie de la fusion lycanthropique.
+
+### Autres améliorations
+* ImplEmentation d'une RD spécifique contre les souffles de dragons
+* Implémentation d'une protection contre les souffles de dragons qui divise les DM en cas d'echec au test de DEX et les annule sinon.
+* Implémentation du bâton des runes mortes
+* Prise en compte des options image, fx et targetFx pour !cof-lancer-sort.
+* Implémentation des tremblements de terre d'Invincible.
+* Prédicat "volant" pour éviter certains effets.
+* Application du modificateur tempete aux save pour échapper à un effet ou un état.
+
 ## 3.11
 ### Capacités
 * Ajout des derniers rangs de la voie du pacte vampirique
