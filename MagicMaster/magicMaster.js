@@ -2212,7 +2212,7 @@ var MagicMaster = (function() {
 			notFrom = !fromCS && !!toCS,
 			update = (!!fromCS && !!toCS && (fromCS.id === toCS.id)),
 			oldCS = fromCS,
-			MIname = itemName.hyphened(),
+			MIname = (itemName || '').hyphened(),
 			doMU = type === 'MU' || type === 'ALL',
 			doPR = type === 'PR' || type === 'ALL',
 			doPW = type === 'PW' || type === 'ALL';
@@ -3833,13 +3833,13 @@ var MagicMaster = (function() {
 		
 		var lists = args[0].toUpperCase(),
 			tokenID = args[1],
-			item = args[2].dispName(),
-			miName = args[2].hyphened(),
+			item = (args[2] || '').dispName(),
+			miName = (args[2] || '').hyphened(),
 			cmd = args[3].toUpperCase(),
 			level = parseInt(args[4]) || 1,
 			retMenu = (args[5] || 'VIEW-ITEM').toUpperCase(),
-			spellName = args[6].dispName(),
-			spell = args[6].hyphened(),
+			spellName = (args[6] || '').dispName(),
+			spell = (args[6] || '').hyphened(),
 		    charCS = getCharacter(tokenID),
 			isMU = cmd.includes('MU'),
 			isPR = cmd.includes('PR'),
@@ -5114,11 +5114,11 @@ var MagicMaster = (function() {
 		var del = args[0].toUpperCase().includes('DEL'),
 			pwSpell = args[0].toUpperCase().includes('PWR'),
 			tokenID = args[1],
-			item = args[2].hyphened(),
+			item = (args[2] || '').hyphened(),
 			cmd = args[3].toUpperCase(),
 			level = parseInt(args[4]) || 1,
 			retMenu = args[5],
-			spell = args[6].hyphened(),
+			spell = (args[6] || '').hyphened(),
 			answer1 = args[7],
 			answer2 = args[8] || answer1,
 		    charCS = getCharacter(tokenID),
@@ -5298,8 +5298,9 @@ var MagicMaster = (function() {
 		    fromMIbag = getTable( fromCS, fieldGroups.MI ),
 		    toSlotName = toMIbag.tableLookup( fields.Items_name, toRowRef, false ),
 			toMIvalues = initValues( toMIbag.fieldGroup ),
-			toSlotTrueName, toSlotType, toSlotQty, toSlotCharges,
+			toSlotTrueName, toSlotType, toSlotQty, toSlotCharges, toSlotTrueType,
 		    fromSlotType = (fromMIbag.tableLookup( fields.Items_type, fromRowRef ) || '').toLowerCase(),
+		    fromSlotTrueType = (fromMIbag.tableLookup( fields.Items_trueType, fromRowRef ) || fromSlotType).toLowerCase(),
 			MIname = fromMIbag.tableLookup( fields.Items_name, fromRowRef ),
 			MItrueName = fromMIbag.tableLookup( fields.Items_trueName, fromRowRef ),
 			showType = parseInt(attrLookup( fromCS, fields.ItemContainerHide ));
@@ -5307,23 +5308,25 @@ var MagicMaster = (function() {
 	    if (!_.isUndefined(toSlotName)) {
 			toSlotType = toMIbag.tableLookup( fields.Items_type, toRowRef );
 			toSlotTrueName = toMIbag.tableLookup( fields.Items_trueName, toRowRef );
+			toSlotTrueType = toMIbag.tableLookup( fields.Items_trueType, toRowRef );
 			toSlotQty = parseInt((toMIbag.tableLookup( fields.Items_qty, toRowRef ) || 0),10);
 			toSlotCharges = parseInt((toMIbag.tableLookup( fields.Items_trueQty, toRowRef ) || 0),10);
 	    } else {
 			toSlotName = '-';
 			toSlotTrueName = toMIvalues[fields.Items_trueName[0]][fields.Items_trueName[1]];
 			toSlotType = toMIvalues[fields.Items_type[0]][fields.Items_type[1]];
+			toSlotTrueType = toSlotType;
 	    }
 
-		var sameMI = (MItrueName.toLowerCase() == toSlotTrueName.toLowerCase()) && (toSlotType == fromSlotType),
-			toSlotEmpty = toSlotName == '-';
+		var sameMI = (MItrueName.toLowerCase() === toSlotTrueName.toLowerCase()) && (toSlotType === fromSlotType) && (toSlotTrueType === fromSlotTrueType),
+			toSlotEmpty = toSlotName === '-';
 
-		if (toSlotType && toSlotType.includes('cursed') && !sameMI && !toSlotEmpty) {
+		if (((toSlotType && toSlotType.includes('cursed')) || (toSlotTrueType && toSlotTrueType.includes('cursed'))) && !sameMI && !toSlotEmpty) {
 			sendParsedMsg( tokenID, messages.cursedSlot + '{{desc1=[Select another slot](!magic --button '+BT.POP_PICK+'|'+tokenID+'|'+fromRowRef+'|'+fromID+'|'+toID+'|-1)}}', senderId );
 			return;
 		}
 			
-		if (fromSlotType && fromSlotType.includes('cursed') && fromID == tokenID) {
+		if (((fromSlotType && fromSlotType.includes('cursed')) || (fromSlotTrueType && fromSlotTrueType.includes('cursed'))) && fromID == tokenID) {
 			sendParsedMsg( tokenID, messages.cursedItem + '{{desc1=[Select another item](!magic --button '+BT.POP_PICK+'|'+tokenID+'|-1|'+fromID+'|'+toID+'|'+toRowRef+')}}', senderId );
 			return;
 		}
@@ -6668,6 +6671,7 @@ var MagicMaster = (function() {
 		Items = Items.tableSet( fields.Items_name, MIrowref, MItrueName );
 //		Items = Items.tableSet( fields.Items_qty, MIrowref, Items.tableLookup( fields.Items_trueQty, MIrowref ));
 		Items = Items.tableSet( fields.Items_speed, MIrowref, Items.tableLookup( fields.Items_speed, MIrowref ));
+		Items = Items.tableSet( fields.Items_type, MIrowref, Items.tableLookup( fields.Items_trueType, MIrowref ));
 		Items = Items.tableSet( fields.Items_reveal, MIrowref, '' );
 		
 		if (reveal && reveal.length) {
