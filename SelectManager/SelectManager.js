@@ -405,18 +405,28 @@ const SelectManager = (() => { //eslint-disable-line no-unused-vars
         return retResult;
     };
 
+    const dispatchForSelected = (trigger, i) => {
+        if (preservedMsgObj[trigger].selected.length > i) {
+            sendChat(preservedMsgObj[trigger].chatspeaker, `!${trigger}${i} ${preservedMsgObj[trigger].dsmsg.replace(/{&\s*i\s*((\+|-)\s*([\d]+)){0,1}}/gi, ((m, g1, op, val) => { return !g1 ? i : op === '-' ? parseInt(i) - parseInt(val) : parseInt(i) + parseInt(val); }))}`);
+        }
+        if (preservedMsgObj[trigger].selected.length <= i + 1) {
+            setTimeout(() => { delete preservedMsgObj[trigger] }, 10000);
+        }
+    };
     const fsrx = /(^!forselected(--|\+\+|\+-|-\+|\+|-|)(?:\((.)\)){0,1}\s+!?).+/i;
     const forselected = (msg, apitrigger) => {
         apitrigger = `${apiproject}${generateUUID()}`;
-        preservedMsgObj[apitrigger] = {
-            selected: preservedMsgObj[maintrigger].selected || [],
-            who: preservedMsgObj[maintrigger].who,
-            playerid: preservedMsgObj[maintrigger].playerid
-        };
-        if (!preservedMsgObj[apitrigger].selected.length) {
+        if (!preservedMsgObj[maintrigger].selected.length) {
             msgbox({ msg: `No selected tokens to use for that command. Please select some tokens then try again.`, title: `NO TOKENS`, whisperto: getWhisperTo(preservedMsgObj[apitrigger].who) });
             return;
         }
+        preservedMsgObj[apitrigger] = {
+            selected: [...(preservedMsgObj[maintrigger].selected || [])],
+            who: preservedMsgObj[maintrigger].who,
+            playerid: preservedMsgObj[maintrigger].playerid,
+            dsmsg: ''
+        };
+        preservedMsgObj[apitrigger].chatspeaker = getTheSpeaker(preservedMsgObj[apitrigger]).chatSpeaker;
         let fsres = fsrx.exec(msg.content);
         switch (fsres[2] || '++') {
             case '+-':
@@ -441,16 +451,16 @@ const SelectManager = (() => { //eslint-disable-line no-unused-vars
                 preservedMsgObj[apitrigger].nametoreplace = findObjs({ type: 'graphic', subtype: 'token', id: preservedMsgObj[apitrigger].selected[0]._id })[0].get('name');
                 break;
         }
-        let chatspeaker = getTheSpeaker(preservedMsgObj[apitrigger]).chatSpeaker;
         msg.content = msg.content.replace(/<br\/>\n/g, ' ');
-        let dsmsg = msg.content.slice(fsres[1].length);
+        preservedMsgObj[apitrigger].dsmsg = msg.content.slice(fsres[1].length);
         if (fsres[3]) {
-            dsmsg = dsmsg.replace(new RegExp(escapeRegExp(fsres[3]), 'g'), '');
+            preservedMsgObj[apitrigger].dsmsg = preservedMsgObj[apitrigger].dsmsg.replace(new RegExp(escapeRegExp(fsres[3]), 'g'), '');
         }
-        preservedMsgObj[apitrigger].selected.forEach((t, i) => {
-            sendChat(chatspeaker, `!${apitrigger}${i} ${dsmsg.replace(/{&\s*i\s*((\+|-)\s*([\d]+)){0,1}}/gi, ((m, g1, op, val) => { return !g1 ? i : op === '-' ? parseInt(i) - parseInt(val) : parseInt(i) + parseInt(val); }))}`);
-        });
-        setTimeout(() => { delete preservedMsgObj[apitrigger] }, 10000);
+        dispatchForSelected(apitrigger, 0);
+        //preservedMsgObj[apitrigger].selected.forEach((t, i) => {
+        //    sendChat(chatspeaker, `!${apitrigger}${i} ${dsmsg.replace(/{&\s*i\s*((\+|-)\s*([\d]+)){0,1}}/gi, ((m, g1, op, val) => { return !g1 ? i : op === '-' ? parseInt(i) - parseInt(val) : parseInt(i) + parseInt(val); }))}`);
+        //});
+        //setTimeout(() => { delete preservedMsgObj[apitrigger] }, 10000);
     };
     const trackprops = (msg) => {
         [
@@ -490,7 +500,7 @@ const SelectManager = (() => { //eslint-disable-line no-unused-vars
                 if (preservedMsgObj[apitrigger].replaceid) {
                     msg.content = msg.content.replace(apitrigger, '').replace(preservedMsgObj[apitrigger].selected[0]._id, msg.selected[0]._id);
                 }
-                if (preservedMsgObj[apitrigger].replacename) {
+                if (preservedMsgObj[apitrigger].replacename && msg.selected[0]._type === 'graphic') {
                     msg.content = msg.content.replace(apitrigger, '').replace(preservedMsgObj[apitrigger].nametoreplace, findObjs({ type: 'graphic', subtype: 'token', id: msg.selected[0]._id })[0].get('name'));
                 }
                 // handle replacements of at{selected|prop}
@@ -530,6 +540,7 @@ const SelectManager = (() => { //eslint-disable-line no-unused-vars
                         }
                     });
                 }
+                dispatchForSelected(apitrigger, nextindex + 1);
             } else { // api generated call to another script, copy in the appropriate data
                 if (manageState.get('autoinsert').includes('selected')) {
                     if (preservedMsgObj[maintrigger].selected && preservedMsgObj[maintrigger].selected.length) {
