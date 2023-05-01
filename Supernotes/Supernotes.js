@@ -153,6 +153,20 @@ let Supernotes_Templates = {
         whisperbuttonstyle: `style='display:inline-block; color:#bbb; background-color: transparent;padding: 0px; border: none'`,
         footer: `<img style = 'margin: 0px !important; padding:0px;width:100%' src = 'https://i.imgur.com/ssWzyQy.png'>`
     },
+    
+    roman: {
+        boxcode: `<div style='color: 000; background-image: url(https://i.imgur.com/aSthlxE.png); background-size: 100%; background-repeat: repeat-y; background-color: transparent; display: block; box-shadow: 0 0 3px #fff; text-align: left; font-size: 17px; padding: 0px; margin-bottom: 2px; font-family: "Shadows Into Light", Monaco,"Courier New", monospace; white-space: pre-wrap;'><div style = 'display:block; text-align:center;'><img style='margin-bottom:-25px; margin-top:0px; text-align:center;' src='https://i.imgur.com/oS3hgTt.png'></div>`,
+        titlecode: `<div style='font-weight:bold; color: #666; background-color:transparent; margin:20px 12px 0px 12px; padding:12px 3px 8px 3px;font-weight: 900; font-size: 24px; text-transform: uppercase; text-shadow: -1px -1px rgba(0,0,0,0.5), 1px 1px rgba(255,255,255,0.5); font-family: "Crimson Text", times,"Times New Roman", serif; text-align:center'>`,
+        textcode: `</div><div><div style='padding:0px 3px 0px 3px; margin:0px 12px 0px 12px; color: #333; font-weight: 900; font-size: 13px; text-transform: uppercase; text-shadow: -1px -1px rgba(0,0,0,0.25), 1px 1px rgba(255,255,255,0.5); font-family: "Crimson Text", times,"Times New Roman", serif; line-height: 20px;'>`,
+        buttonwrapper: `<div style='display:block; margin: 12px -10px 0px -10px; text-align:center;'>`,
+        buttonstyle: `style='display:inline-block; color:#555; background-color: transparent;padding: 0px; border: none'`,
+        playerbuttonstyle: `style='display:inline-block; color:#000; font-size:12px; font-weight:normal; background-color: transparent;padding: 0px; border: none;'`,
+        buttondivider: " | ",
+        handoutbuttonstyle: `style='display:inline-block; color:#000; font-size:12px; font-weight:normal; background-color: transparent; padding: 0px; border: none;'`,
+        whisperStyle: `'background-image: url(https://i.imgur.com/SkkPm0h.jpg); background-repeat: no-repeat; background-size: 100% 100%; background-color:#403f3d; color:#ddd; display:block; padding:8px !important; margin:5px 0px; text-shadow: none; line-height:16px;'`,
+        whisperbuttonstyle: `style='display:inline-block; color:#bbb; background-color: transparent;padding: 0px; border: none'`,
+        footer: `<img style = 'margin: 0px !important; padding:0px;width:100%' src = 'https://i.imgur.com/0h3lMRE.png'>`
+    },
 
     notebook: {
         boxcode: `<div style='color: 000; border-radius:10px; background-image: url(https://i.imgur.com/2tWlJSg.jpg); background-size: auto; background-repeat: repeat-y; background-color: transparent; display: block; box-shadow: 0 0 3px #fff; line-height 16px; text-align: left; font-size: 14px; padding: 8px 8px 8px 30px; margin-bottom: 2px; font-family: "Patrick Hand", Monaco,"Courier New", monospace; white-space: pre-wrap;'>`,
@@ -262,7 +276,7 @@ return text;
     on('chat:message', function(msg) {
         if ('api' === msg.type && msg.content.match(/^!(gm|pc|self)note\b/)) {
             let match = msg.content.match(/^!gmnote-(.*)$/);
-
+let selectedObject = msg.selected;
             //define command                     
             let command = msg.content.split(/\s+--/)[0];
             let sender = msg.who;
@@ -296,6 +310,29 @@ return text;
             let templates = Supernotes_Templates;
 
 
+//################## EXPERIMENTAL TO GET TOKEN ID FROM SUPPLIED VALUE
+if(msg.content.includes("--token|")){
+    virtualTokenID = msg.content.split(/--token\|/)[1].split(/\s/)[0];
+
+    if (virtualTokenID.length !== 20 && virtualTokenID.charAt(0) !== "-"){
+        sendChat ("notes","this is not a token id :" + virtualTokenID);
+        sendChat ("notes","player page id :" + Campaign().get("playerpageid"));
+        
+        let theToken = findObjs({
+            _type: "graphic",
+            name: virtualTokenID,
+            _pageid: Campaign().get("playerpageid")
+        });
+        selectedObject = theToken;
+    }
+    
+sendChat ("notes","virtual ID is " + selectedObject[0].get("_id"));
+//sendChat ("notes","real selected token is " + virtualTokenID);
+
+
+//msg.selected[0]._id = virtualTokenID;
+
+}
 
 
             function sendMessage(whom, messagePrefix, template, title, theText, message, tokenID, playerButton, handoutButton) {
@@ -353,6 +390,9 @@ return text;
                             case "apoc":
                                 chosenTemplate = templates.apoc;
                                 break;
+                            case "roman":
+                                chosenTemplate = templates.roman;
+                                break;
                             case "notebook":
                                 chosenTemplate = templates.notebook;
                                 break;
@@ -396,8 +436,8 @@ whisper= whisper.replace(/<\/span><BR>/i,"")
                         //message = message.replace("<br>\n<div style", "<br><br><div style");
 
 
-                        log("message = " + message);
-                                                log ("whisperfinal = " +whisper);
+                        //log("message = " + message);
+                        //log ("whisperfinal = " +whisper);
 
 
                         if (command === '!pcnote') {
@@ -457,6 +497,23 @@ log ("whisper = " + whisper);
                         }
 
                         noteHandout.get("notes", function(notes) {
+
+//##############TEST FOR VARIABLE IMAGE HEIGHT BASED ON HEIGHT OF REPORT###################################################
+// change 200 to 201 in line 447 to activate
+                            if(notes.match(/float:right; color:#aaa;'>\(\d*\)/)) {
+                                let reportCount= notes.match(/(?<=<span style = 'float:right; color:#aaa;'>\()\d+/);;
+//log ("reportCount = " + reportCount);
+
+let newHeight = reportCount * 20;
+if (newHeight > 500){newHeight = 500};
+if (newHeight < 200){newHeight = 200};
+//log ("newHeight = " + newHeight);
+message = message.replace(/201px/,newHeight+'px');
+
+                            }
+//##############TEST FOR VARIABLE IMAGE HEIGHT BASED ON HEIGHT OF REPORT###################################################
+
+                            
                             if (notes.includes('<!---End Report--->')) {
                                 if (notes.includes('!report')) {
                                     notes = notes.split('<!---End Report--->')[0] + '<!---End Report--->';
@@ -477,6 +534,8 @@ log ("whisper = " + whisper);
 
                             noteHandout.set("gmnotes", gmnote);
                             noteHandout.set("notes", notes + "<h3>" + whom + "</h3>" + message + playerButton + handoutButton)
+                            //THIS NEEDS A TOGGLE
+                            //if(!tokenImage.includes("marketplace")){noteHandout.set("avatar", tokenImage+"?12345678")}
                         })
                     } else {
                         sendChat('Supernotes', whom + `No handout named ${handoutTitle} was found.`, null, {
@@ -488,7 +547,7 @@ log ("whisper = " + whisper);
 
             }
 
-            let theToken = msg.selected
+            let theToken = selectedObject;
 
             args.forEach(a => {
                 if (a === 'notitle') {
@@ -512,7 +571,7 @@ log ("whisper = " + whisper);
             ((id) ? theToken = [{
                 "_id": id,
                 "type": "graphic"
-            }] : theToken = msg.selected);
+            }] : theToken = selectedObject);
 
 
             if (undefined !== theToken) {
