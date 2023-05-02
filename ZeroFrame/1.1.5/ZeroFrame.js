@@ -18,7 +18,7 @@ const ZeroFrame = (() => { //eslint-disable-line no-unused-vars
     const apiproject = 'ZeroFrame';
     API_Meta[apiproject].version = '1.1.5';
     const schemaVersion = 0.2;
-    const vd = new Date(1682708227865);
+    const vd = new Date(1683033153727);
     let stateReady = false;
     const checkInstall = () => {
         if (!state.hasOwnProperty(apiproject) || state[apiproject].version !== schemaVersion) {
@@ -416,7 +416,8 @@ const ZeroFrame = (() => { //eslint-disable-line no-unused-vars
         let index = 0;
         let gres;
         let globalrx = /{&\s*globals?\s+/gi;
-        let definitionrx = /\(\s*\[\s*(?<term>.+?)\s*]\s*('|"|`?)(?<definition>.*?)\2\)\s*/g;
+//        let definitionrx = /\(\s*\[\s*(?<term>.+?)\s*]\s*('|"|`?)(?<definition>.*?)\2\)\s*/g;
+        let definitionrx = /\(\s*\[\s*(?<term>.+?)\s*]\s*('|"|`?)(?<definition>.*?)\2(?:\)(?<!\({&\d+}\)\s*))\s*/g;
         let tokens = [];
 
         const closureCheck = (c, counter = 0) => {
