@@ -1,7 +1,7 @@
 {
   "name": "ZeroFrame",
   "script": "ZeroFrame.js",
-  "version": "1.1.4",
+  "version": "1.1.5",
   "description": "ZeroFrame is the meta-script to control meta-scripts. It cuts in front of other scripts to make sure it handles the API chat message first, then hands it off to registered meta-scripts in a loop, in whatever order is designated by the user. The net effect is that the functional interface of Roll20 is extended, allowing other scripts (and even normal chat messages) to make use of things like conditional logic branching, a wider array of properties that can be retrieved from characters and tokens, inline variables, nested inline rolls, inline math, plugin scriptlets, and selected tokens even when an API script alls an API script.\r\rFor more information, see the wiki entry: \r\r[ZeroFrame Wiki](https://wiki.roll20.net/Script:ZeroFrame) \r\rOr read about the full set of meta-scripts available: \r\r[Meta Toolbox Forum Thread](https://app.roll20.net/forum/post/10005695/script-set-the-meta-toolbox)",
   "authors": "timmaugh",
   "roll20userid": "5962076",
@@ -24,6 +24,7 @@
     "1.1.0",
     "1.1.1",
     "1.1.2",
-    "1.1.3"
+    "1.1.3",
+    "1.1.4"
   ]
 }
