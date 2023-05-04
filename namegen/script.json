@@ -1,7 +1,7 @@
 {
   "name": "namegen",
   "version": "0.0.3",
-  "description": "Script to randomly generate names based on gender and nationality",
+  "description": "Script to randomly generate names for character, towns or inns.\n\n**Use:** type `!namegen`, `!towngen`, or `!taverngen`.\n\nMore info: [Script:namegen](https://wiki.roll20.net/Script:namegen) or [Readme](https://github.com/Roll20/roll20-api-scripts/tree/master/namegen#readme)",
   "authors": "Paul S.",
   "roll20userid": "297250",
   "dependencies": [],

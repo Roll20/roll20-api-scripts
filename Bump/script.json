@@ -1,7 +1,7 @@
 {
   "name": "Bump",
   "script": "Bump.js",
-  "version": "0.2.25",
+  "version": "0.2.27",
   "description": "Bump provides a way to invisibly manipulate tokens on the GM Layer from the Objects Layer, and vice versa.\r\r For instructions, run `!bump --help`.\r\r Forum Discussion: https://app.roll20.net/forum/permalink/10226949/\r\r## API Interface\r\rTo require `Bump` for your script, add `\"Bump\"` to the `\"dependencies\"` property of your `script.json`:\r\r```json\r\"dependencies\": [\"Bump\"]\r```\r## Function Reference\r### `Bump.Bump(ids)`\rToggle the layer for each token represented by the ids in the array `ids`.\rTokens not already slaved in Bump will be ignored.  The array is not checked\rfor duplicates.\r\r### `Bump.Slave(ids,push=false)`\rAdds each token represented by the ids in the array `ids` to Bump.  If `push`\ris true, tokens on the objects layer will be pushed to the GM layer when\rslaved.\r\r### `Bump.Unslave(ids)`\rRemoves each token represented by the ids in the array `ids` from Bump.",
   "authors": "The Aaron",
   "roll20userid": "104025",
@@ -29,6 +29,8 @@
     "0.2.22",
     "0.2.23",
     "0.2.24",
+    "0.2.25",
+    "0.2.26",
     "0.2.8",
     "0.2.9"
   ]

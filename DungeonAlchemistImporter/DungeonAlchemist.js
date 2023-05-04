@@ -6,8 +6,8 @@ const DungeonAlchemistImporter = (() => {
   // eslint-disable-line no-unused-vars
 
   const scriptName = "DungeonAlchemistImporter";
-  const version = "0.0.1";
-  const lastUpdate = 20210907;
+  const version = "0.0.4";
+  const lastUpdate = 20211220;
   const schemaVersion = 0.1;
   const defaultGridSize = 70;
   const clearURL = 'https://s3.amazonaws.com/files.d20.io/images/4277467/iQYjFOsYC5JsuOPUCI9RGA/thumb.png?1401938659';
@@ -137,11 +137,12 @@ const DungeonAlchemistImporter = (() => {
     assureHelpHandout();
   };
 
-  const createWall = (page, map, wall, originalGridSize, gridSize) => {
-    let x1 = (wall.wall3D.p1.bottom.x+wall.wall3D.p1.top.x) * 0.5 * gridSize / originalGridSize;
-    let y1 = (wall.wall3D.p1.bottom.y+wall.wall3D.p1.top.y) * 0.5 * gridSize / originalGridSize;
-    let x2 = (wall.wall3D.p2.bottom.x+wall.wall3D.p2.top.x) * 0.5 * gridSize / originalGridSize;
-    let y2 = (wall.wall3D.p2.bottom.y+wall.wall3D.p2.top.y) * 0.5 * gridSize / originalGridSize;
+  const createWall = (page, map, wall, originalGridSize, gridSize, version) => {
+
+    let x1 = wall.wall3D.p1.top.x * gridSize / originalGridSize;
+    let y1 = wall.wall3D.p1.top.y * gridSize / originalGridSize;
+    let x2 = wall.wall3D.p2.top.x * gridSize / originalGridSize;
+    let y2 = wall.wall3D.p2.top.y * gridSize / originalGridSize;
 
     const xCenter = (x1 + x2) * 0.5;
     const yCenter = (y1 + y2) * 0.5;
@@ -154,47 +155,88 @@ const DungeonAlchemistImporter = (() => {
     const width = xMax - xMin;
     const height = yMax - yMin;
 
-    x1 -= xMin;
-    x2 -= xMin;
-    y1 -= yMin;
-    y2 -= yMin;
+    log("Center: " + xCenter + "," + yCenter);
 
-    const path = [
-      ["M", x1, y1],
-      ["L", x2, y2],
-    ];
+    // because partial walls used to be exported as windows, we can't support them for older exports
+    const generateWindows = version >= 2;
 
-	// different wall types have different colors
-	let color = "#000000";
-	if (wall.type == 0) {
-		color = "#FFFF00"; // normal wall
-	}
-	else if (wall.type == 1) {
-		color = "#0000FF"; // door
-	}
-	else if (wall.type == 2) {
-		color = "#ADD8E6"; // window
-	}
-	else {
-		return; // other types are not supported by roll20
-	}
+    // new door/window API
+    if (wall.type == 1 || (wall.type == 2 && generateWindows)) {
 
-    createObj("path", {
-      pageid: page.get("_id"),
-      stroke: color,
-      fill: "transparent",
-      left: xCenter,
-      top: yCenter,
-      width: width,
-      height: height,
-	  rotation: 0,
-	  scaleX: 1,
-	  scaleY: 1,
-      stroke_width: 5,
-      layer: "walls",
-      path: JSON.stringify(path),
-	  controller_by: map.get("_id")
-    });
+      const type = (wall.type == 1) ? "door" : "window";
+      const color = (wall.type == 1) ? "#00ff00" : "#00ffff";
+
+      x1 -= xCenter;
+      x2 -= xCenter;
+      y1 -= yCenter;
+      y2 -= yCenter;
+
+      let open = wall.open;
+      if (typeof(open) === 'undefined') open = false;
+
+      var doorObj = {
+        pageid: page.get("_id"),
+        color: color,
+        x: xCenter,
+        y: -yCenter,
+        isOpen: open,
+        isLocked: false,
+        isSecret: false,
+        path: {
+          handle0: {x: x1, y: y1},
+          handle1: {x: x2, y: y2},
+        },
+        controller_by: map.get("_id"),
+      };
+      createObj(type, doorObj);
+      log(doorObj);
+    }
+
+    // default
+    else if (wall.type == 0 || wall.type == 4 || (wall.type == 2 && !generateWindows)) {
+
+      x1 -= xMin;
+      x2 -= xMin;
+      y1 -= yMin;
+      y2 -= yMin;
+
+      const path = [
+        ["M", x1, y1],
+        ["L", x2, y2],
+      ];
+  
+      // different wall types have different colors - we use a color scheme compatible with WOTC modules and DoorKnocker
+      let color = "#0000ff";
+      let barrierType = "wall";
+      if (wall.type == 4) {
+        color = "#5555ff";
+        barrierType = "transparent";
+      }
+
+      // backwards compatibility
+      else if (wall.type == 2) {
+        color = "#00ffff"; // window (light blue)
+        barrierType = "transparent";
+      }
+
+      createObj("path", {
+        pageid: page.get("_id"),
+        stroke: color,
+        fill: "transparent",
+        left: xCenter,
+        top: yCenter,
+        width: width,
+        height: height,
+        rotation: 0,
+        scaleX: 1,
+        scaleY: 1,
+        stroke_width: 5,
+        layer: "walls",
+        path: JSON.stringify(path),
+        barrierType: barrierType,
+        controller_by: map.get("_id"),
+      });
+    }
   };
 
   const createLight = (page, light, originalGridSize, gridSize) => {
@@ -203,26 +245,27 @@ const DungeonAlchemistImporter = (() => {
 	const y = light.position.y * gridSize / originalGridSize;
 
 	
-	const range = light.range;
-	let dim_radius = range * 1;
-	let bright_radius = range / 3;
+	const range = light.range * 1.0;
+	let dim_radius = range;
+	let bright_radius = range / 2;
 	
 	// convert to the local scale value
 	const scale_number = page.get("scale_number");
+  //log("Go from dim_radius " + dim_radius + " which has range " + range + " to per tile " + (dim_radius/originalGridSize) + " from original grid size " + originalGridSize + " and scale_number is " + scale_number);
 	dim_radius *= scale_number / originalGridSize;
 	bright_radius *= scale_number / originalGridSize;
 
 
-	createObj('graphic',{
+	var newObj = createObj('graphic',{
 		imgsrc: clearURL,
 		subtype: 'token',
 		name: '',
 		aura1_radius: 0.5,
-		aura1_color: light.color,
+		aura1_color: "#" + light.color.substring(0, 6),
 
 		// UDL
 		emits_bright_light: true,
-		emits_low_light: false,
+		emits_low_light: true,
 		bright_light_distance: bright_radius,
 		low_light_distance: dim_radius,
 
@@ -233,6 +276,8 @@ const DungeonAlchemistImporter = (() => {
 		layer: "walls",
 		pageid: page.get("_id")
 	  });
+
+    //log("New obj light distance: " + newObj.get("bright_light_distance") + " / " + newObj.get("low_light_distance"));
   };
 
   const getMap = (page, msg) => {
@@ -292,6 +337,8 @@ const DungeonAlchemistImporter = (() => {
   };
 
   const handleInput = (msg) => {
+    log("Handle input!");
+    log(msg);
     if (
       "api" === msg.type &&
       /^!dungeonalchemist\b/i.test(msg.content) &&
@@ -304,6 +351,10 @@ const DungeonAlchemistImporter = (() => {
         // parse the data
         const json = s.substring(endOfHeader);
         const data = JSON.parse(json);
+
+        // determine the version
+        let version = data.version;
+        if (typeof(version) === 'undefined') version = 1;
 
         // load the player
         const player = getObj("player", msg.playerid);
@@ -333,9 +384,10 @@ const DungeonAlchemistImporter = (() => {
         // resize the map properly
         resizeMap(gridSize, data.grid, page, map);
 
+
         // spawn the walls & lights
         for (const wall of data.walls) {
-          createWall(page, map, wall, data.pixelsPerTile, gridSize);
+          createWall(page, map, wall, data.pixelsPerTile, gridSize, version);
         }
 
         for (const light of data.lights) {

@@ -121,7 +121,6 @@ const DungeonAlchemistImporter = (() => {
       create = true;
     }
     if (create || version !== state[scriptName].lastHelpVersion) {
-      log(`Set handout content for ${scriptName}`);
       hh.set({
         notes: helpParts.helpDoc({ who: "handout", playerid: "handout" }),
       });
@@ -237,16 +236,26 @@ const DungeonAlchemistImporter = (() => {
   };
 
   const getMap = (page, msg) => {
+
     // simplest case - get the ONLY map graphic and use that one
     var mapGraphics = findObjs({
       _pageid: page.get("_id"),
       _type: "graphic",
-	  layer: "map",
+      layer: "map",
     });
 
     // filter them all so we only consider the layer=map graphics
     if (mapGraphics.length === 1) {
       return mapGraphics[0];
+    }
+
+    // no map
+    if (mapGraphics.length == 0) {
+      sendChat(
+        "Dungeon Alchemist",
+        "You need to upload your map image and put it in the Map Layer before importing the line-of-sight data. Make sure that your map is in the background layer by right clicking on it, selecting \"Layer\" and choosing \"Map Layer\"."
+      );
+      return null;
     }
 
     // otherwise, see if we selected one
@@ -296,9 +305,17 @@ const DungeonAlchemistImporter = (() => {
         const json = s.substring(endOfHeader);
         const data = JSON.parse(json);
 
+        // load the player
+        const player = getObj("player", msg.playerid);
+        //log("PLAYER:");
+        //log(player);
+        const lastPageId = player.get("_lastpage");
+        //log(lastPageId);
+
         // load the page
         const pageId = Campaign().get("playerpageid");
-        const page = getObj("page", pageId);
+        //log("Page id: " + pageId + " vs last page " + lastPageId);
+        const page = getObj("page", lastPageId);
         //log("PAGE:");
         //log(page);
 

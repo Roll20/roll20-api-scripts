@@ -1,7 +1,7 @@
 {
   "name": "TokenNameNumber",
   "script": "TokenNameNumber.js",
-  "version": "0.5.14",
+  "version": "0.5.16",
   "description": "Provides automatic numbering of tokens dragged onto the tabletop.  Token names need to have the special word `%%NUMBERED%%` somewhere in them.\n\n`!tnn --help` displays the help and configuration options.",
   "authors": "The Aaron",
   "roll20userid": "104025",
@@ -18,6 +18,8 @@
     "0.5.11",
     "0.5.12",
     "0.5.13",
+    "0.5.14",
+    "0.5.15",
     "0.5.6",
     "0.5.7",
     "0.5.8",

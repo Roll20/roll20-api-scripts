@@ -1,23 +1,28 @@
 {
-	"name": "Combat Master",
-	"version": "2.41",
-	"description": "# Combat Master v2.41\r\r**Features:** The script provides management of combat, incuding rolling initiative(option to use GroupInitiative), stepping through a turnorder, adding or remove conditions(import/export lists), tracking the length of a condition, and options for using external calls to other APIs and Macros.\rtype `!cmaster --main` for launching the API, and select the `i` in the corner for help/more info.\n* Visit the [CombatMaster 2.0](https://app.roll20.net/forum/permalink/9441420/)-forum thread for discussions and updates on the script.\n* [Combat Master repo](https://github.com/vicberg/CombatMaster) is the location of the active development of the API, and can contain newer versions of the API than through the dropdown menu in Roll20. The sourcecode for the dropdown menu version can be found [here](https://github.com/Roll20/roll20-api-scripts/tree/master/CombatMaster)\n\nUntil Decemeber 2020, The Combat Master API installed through the API dropdown menu didn't work, but the issue have now been solved. v.2.22 and older versions of the API might use `!cmaster --help` for accessing the help menu, instead of the current `!cmaster --main`.",
-	"authors": "Victor B",
-	"roll20userid": "3135709",
-	"useroptions": [],
-	"dependencies": [],
-	"script": "CombatMaster.js",
-	"modifies": {
-		"state.COMBATMASTER": "read,write"
-	},
-	"conflicts": [],
-	"previousversions": [
-	     "2.40",
-		"2.38",
+  "name": "Combat Master",
+  "version": "2.48",
+  "description": "# Combat Master v2.47\r\r**Features:** The script provides management of combat, incuding rolling initiative(option to use GroupInitiative), stepping through a turnorder, adding or remove conditions(import/export lists), tracking the length of a condition, and options for using external calls to other APIs and Macros.\rtype `!cmaster --main` for launching the API, and select the `i` in the corner for help/more info.\n* Visit the [CombatMaster 2.0](https://app.roll20.net/forum/permalink/9441420/)-forum thread for discussions and updates on the script.\n* [Combat Master repo](https://github.com/vicberg/CombatMaster) is the location of the active development of the API, and can contain newer versions of the API than through the dropdown menu in Roll20. The sourcecode for the dropdown menu version can be found [here](https://github.com/Roll20/roll20-api-scripts/tree/master/CombatMaster)\n\nUntil Decemeber 2020, The Combat Master API installed through the API dropdown menu didn't work, but the issue have now been solved. v.2.22 and older versions of the API might use `!cmaster --help` for accessing the help menu, instead of the current `!cmaster --main`.",
+  "authors": "Victor B",
+  "roll20userid": "3135709",
+  "useroptions": [],
+  "dependencies": [],
+  "script": "CombatMaster.js",
+  "modifies": {
+    "state.COMBATMASTER": "read,write"
+  },
+  "conflicts": [],
+  "previousversions": [
+    "2.47",
+    "2.45",
+    "2.44",
+    "2.43",
+    "2.41",
+    "2.40",
+    "2.38",
     "2.36",
     "2.34",
-		"2.33",
-		"2.32",
-		"2.22"
-	]
+    "2.33",
+    "2.32",
+    "2.22"
+  ]
 }
