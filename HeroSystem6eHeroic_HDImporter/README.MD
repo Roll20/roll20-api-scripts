@@ -90,4 +90,5 @@ Apologies to Darci, who played the role of Duncan Idaho.
 
 # Version history
 Version 1.0 -- Initial release on August 1, 2022.
+
 Version 1.1 -- Updated to accommodate the seventeen power slots now available on the character sheet (May 4, 2023).
