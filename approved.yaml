@@ -987,15 +987,15 @@ starfinderguidance:
 scriptcards:
   - "ScriptCards"
   - "Utility"
-  
+
 imperator:
   - "Imperator"
   - "System Toolbox"
-  
+
 myzsectorgenerator:
   - "MutantYearZero_SectorGenerator"
   - "System Toolbox"
-  
+
 playercharacters:
   - "PlayerCharacters"
   - "Utility"
@@ -1003,7 +1003,7 @@ playercharacters:
 udlpasswall:
   - "UDLPasswall"
   - "Dynamic Lighting"
-  
+
 fetch:
   - "Fetch"
   - "Utility"
@@ -1019,7 +1019,7 @@ muler:
 plugger:
   - "Plugger"
   - "Utility"
-  
+
 zeroframe:
   - "ZeroFrame"
   - "Utility"
@@ -1031,7 +1031,7 @@ calendar:
 wfrp4epl:
   - "WFRP4ePL"
   - "System Toolbox"
-  
+
 libtypes:
   - "libTypes"
   - "Utility"
@@ -1039,7 +1039,7 @@ libtypes:
 addcustomturn:
   - "AddCustomTurn"
   - "Character"
-  
+
 battleroyale:
   - "BattleRoyale"
   - "Utility"
@@ -1051,11 +1051,11 @@ hs6e:
 reporter:
   - "Reporter"
   - "Tokens"
-  
+
 dungeonalchemist:
   - "DungeonAlchemistImporter"
   - "Maps & Drawing"
-  
+
 statustracker:
   - "StatusTracker"
   - "Tokens"
@@ -1067,11 +1067,11 @@ safetytoolsalert:
 shadowrun3e:
   - "Shadowrun3e"
   - "System Toolbox"
-  
+
 turnmarker1:
   - "TurnMarker1"
   - "Utility"
-  
+
 arcdoom:
   - "ARC"
   - "System Toolbox"
@@ -1095,7 +1095,7 @@ randomtokentinter:
 attackmaster:
   - "AttackMaster"
   - "System Toolbox"
-  
+
 commandmaster:
   - "CommandMaster"
   - "System Toolbox"
@@ -1107,7 +1107,7 @@ magicmaster:
 tokencontroller:
   - "TokenController"
   - "Tokens"
-  
+
 unsanity:
   - "UnSanity"
   - "Utility"
@@ -1158,28 +1158,52 @@ mutantyearzerosectorgenerator:
 
 itemstore:
   - "Item Store"
-  - "Utility" 
+  - "Utility"
 
 rpgmasterlibraryadd2e:
   - "RPGMlibrary AD+D2e"
   - "Utility"
- 
+
 faces:
-  - "faces"
+  - "Faces"
   - "Utility"
 
 inspector:
   - "Inspector"
   - "Utility"
- 
+
 messenger:
   - "Messenger"
   - "Utility"
-  
+
 tabletotable:
   - "TableToTable"
   - "Utility"
-  
-libTable: 
+
+libTable:
   - "libTable"
   - "Utility"
+
+HeroSystem6eHeroic_HDImporter:
+  - "HeroSystem6eHeroic_HDImporter"
+  - "Utility"
+
+PathToWindowOrDoor:
+  - "PathToWindowOrDoor"
+  - "Utility"
+
+autoButtons:
+  - "autoButtons"
+  - "Utility"
+
+checkLightLevel:
+  - "checkLightLevel"
+  - "Utility"
+
+ScriptInfo:
+  - "ScriptInfo"
+  - "Utility"
+
+dynamicLightingTool:
+  - "Dynamic Lighting Tool"
+  - "Dynamic Lighting"

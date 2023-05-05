@@ -1,0 +1,23 @@
+{
+    "$schema": "https://github.com/Roll20/roll20-api-scripts/master/_Example%20Script%20-%20Check%20for%20formatting%20details/script.schema.json",
+    "name": "Encounter Creator",
+    "script": "encounter.js",
+    "version": "0.9",
+    "description": "A Script for Roll20 that will create Encounters, generate Loot and more for you. Check the [Wiki](https://github.com/Julexar/Encounter-Creator/wiki) for more Info.",
+    "authors": "Julexar",
+    "patreon": "https://patreon.com/julexar",
+    "roll20userid": "9989180",
+    "dependencies": ["ChatSetAttr"],
+    "modifies": {
+        "state.encounter": "read,write",
+        "state.temp": "read,write",
+        "state.loot.item": "read,write",
+        "state.monster": "read,write",
+        "state.party": "read,write",
+        "state.encbasics": "read",
+        "handout": "read,write",
+        "attribute.id": "read,write",
+        "attribute.gp": "read,write",
+        "attribute": "read,write"
+    }
+}
