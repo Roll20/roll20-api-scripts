@@ -12,5 +12,7 @@
 		"state": "read, write"
 	},
 	"conflicts":[],
-	"previousVersions":[]
+	"previousVersions":[
+	"1.0"
+	]
 }
