@@ -1,0 +1,10 @@
+{
+    "name": "Marker Manager",
+    "script": "MarkerManager.js",
+    "version": "1.0",
+    "previousversions": [],
+    "description": "Enables adding markers by name to a token via a menu system",
+    "authors": "Jason Martin",
+    "roll20userid": "5420868",
+    "dependencies": ["HTML Builder"]
+}
