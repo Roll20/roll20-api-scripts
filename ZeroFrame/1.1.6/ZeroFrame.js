@@ -4,7 +4,7 @@ Name            : ZeroFrame
 GitHub          : https://github.com/TimRohr22/Cauldron/tree/master/ZeroFrame
 Roll20 Contact  : timmaugh
 Version         : 1.1.6
-Last Update     : 5/8/2023
+Last Update     : 5/10/2023
 =========================================================
 */
 var API_Meta = API_Meta || {};
@@ -18,7 +18,7 @@ const ZeroFrame = (() => { //eslint-disable-line no-unused-vars
     const apiproject = 'ZeroFrame';
     API_Meta[apiproject].version = '1.1.6';
     const schemaVersion = 0.2;
-    const vd = new Date(1683600799493);
+    const vd = new Date(1683732723836);
     let stateReady = false;
     const checkInstall = () => {
         if (!state.hasOwnProperty(apiproject) || state[apiproject].version !== schemaVersion) {
@@ -669,35 +669,6 @@ const ZeroFrame = (() => { //eslint-disable-line no-unused-vars
         if (zfconfig.test(c)) return 'runconfig';
         if (/^!0(\s+help|$)/.test(c)) return 'help';
     };
-    // ==================================================
-    //		BATCH OPERATIONS
-    // ==================================================
-
-    const getBatchTextBreakpoint = c => {
-        let counter = 1;
-        let pos = 3;
-        let openprime = false;
-        let closeprime = false;
-        while (counter !== 0 && pos <= c.length - 1) {
-            if (c.charAt(pos) === '{') {
-                closeprime = false;
-                if (openprime) {
-                    counter++;
-                    openprime = false;
-                } else openprime = true;
-            } else {
-                openprime = false;
-                if (c.charAt(pos) === '}') {
-                    if (closeprime) {
-                        counter--;
-                        closeprime = false;
-                    } else closeprime = true;
-                }
-            }
-            pos++;
-        }
-        return pos;
-    };
 
     // ==================================================
     //      HANDLE INPUT
@@ -808,6 +779,40 @@ const ZeroFrame = (() => { //eslint-disable-line no-unused-vars
                 }
             }
         }
+    };
+
+    // ==================================================
+    //		BATCH OPERATIONS
+    // ==================================================
+    const getBatchTextBreakpoint = c => {
+        let counter = 1;
+        let pos = 3;
+        let openprime = false;
+        let closeprime = false;
+        while (counter !== 0 && pos <= c.length - 1) {
+            if (c.charAt(pos) === '{') {
+                closeprime = false;
+                if (openprime) {
+                    counter++;
+                    openprime = false;
+                } else {
+                    openprime = true;
+                }
+            } else if (c.charAt(pos) === '}') {
+                openprime = false;
+                if (closeprime) {
+                    counter--;
+                    closeprime = false;
+                } else {
+                    closeprime = true;
+                }
+            } else {
+                openprime = false;
+                closeprime = false;
+            }
+            pos++;
+        }
+        return pos;
     };
 
     // ==================================================
