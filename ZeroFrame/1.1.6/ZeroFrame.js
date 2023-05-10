@@ -18,7 +18,7 @@ const ZeroFrame = (() => { //eslint-disable-line no-unused-vars
     const apiproject = 'ZeroFrame';
     API_Meta[apiproject].version = '1.1.6';
     const schemaVersion = 0.2;
-    const vd = new Date(1683732723836);
+    const vd = new Date(1683739913421);
     let stateReady = false;
     const checkInstall = () => {
         if (!state.hasOwnProperty(apiproject) || state[apiproject].version !== schemaVersion) {
