@@ -815,7 +815,8 @@ const ZeroFrame = (() => { //eslint-disable-line no-unused-vars
     // ==================================================
     const handleBatchInput = (msg) => {
         if (msg.type !== 'api' || !/^!{{/.test(msg.content)) return;
-        Object.keys(batchMsgLibrary).filter(k => Date.now() - batchMsgLibrary[k].time > 10000).forEach(k => delete batchMsgLibrary[k]);
+        //Object.keys(batchMsgLibrary).filter(k => Date.now() - batchMsgLibrary[k].time > 10000).forEach(k => delete batchMsgLibrary[k]);
+        msg.messageID = undefined;
 
         const storeOutbound = (cmd) => {
             if (!msg.messageID) {
