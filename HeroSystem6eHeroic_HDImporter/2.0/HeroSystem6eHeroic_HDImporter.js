@@ -72,9 +72,9 @@
 		speed: 2,
 		pd: 2,
 		ed: 2,
-		body: 10,
-		stun: 20,
-		endurance: 20,
+		body_max: 10,
+		stun_max: 20,
+		endurance_max: 20,
 		recovery: 4,
 		
 		// Movement Attributes
@@ -83,12 +83,9 @@
 		swimming: 4,
 		
 		// Health Status Attributes
-		CurrentBODY: 10,
-		CurrentSTUN: 20,
-		CurrentEND: 20,
-		gearCurrentBODY: 10,
-		gearCurrentSTUN: 20,
-		gearCurrentEND: 20,
+		body: 10,
+		stun: 20,
+		endurance: 20,
 		
 		// Make characteristic maximums default to no.
 		useCharacteristicMaximums: 0,
@@ -358,17 +355,11 @@
 			speed: parseInt(character.speed)||2,
 			pd: parseInt(character.pd)||2,
 			ed: parseInt(character.ed)||2,
-			body: parseInt(character.body)||10,
-			stun: parseInt(character.stun)||20,
+			body_max: parseInt(character.body) || 10,
+			stun_max: parseInt(character.stun) || 20,
 			hiddenSTUN: parseInt(character.stun)||20,
-			endurance: parseInt(character.endurance)||20,
+			endurance_max: parseInt(character.endurance) || 20,
 			recovery: parseInt(character.recovery)||4
-		}
-		
-		if (character.stun !== "") {
-			combat_attributes.stun = parseInt(character.stun);
-		} else {
-			combat_attributes.stun = 0;
 		}
 		
 		setAttrs(object.id, combat_attributes);
@@ -393,12 +384,9 @@
 		
 		// Set status attributes to starting values
 		let health_attributes = {
-			CurrentBODY: character.body,
-			CurrentSTUN: character.stun,
-			CurrentEND: character.endurance,
-			gearCurrentBODY: character.body,
-			gearCurrentSTUN: character.stun,
-			gearCurrentEND: character.endurance
+			body: parseInt(character.body) || 10,
+			stun: parseInt(character.stun) || 20,
+			endurance: parseInt(character.endurance) || 10,
 		}
 		
 		setAttrs(object.id, health_attributes);
