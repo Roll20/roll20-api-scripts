@@ -11,7 +11,7 @@ API_Meta.dltool = {
 }
 
 on('ready', () => {
-    const version = '1.0.5';
+    const version = '1.0.6';
     log('-=> Dynamic Lighting Tool v' + version + ' is loaded. Base command is !dltool');
 
 
@@ -94,10 +94,10 @@ on('ready', () => {
         return finalButton;
     };
 
-//BUTTON: COLOR PICKETR CALLING BUTTON
+    //BUTTON: COLOR PICKETR CALLING BUTTON
     const colorButton = (pageOrToken, property, value) => {
-        if (null===value) value = "transparent";
-    finalButton = `<a href = "!dltool --colorpicker|${pageOrToken}%%${property}" style ="display:inline-block; width: 18px; height:14px; position:relative; top:1px; border: 1px solid #111; border-radius:3px; padding:0px; margin-top:1px; margin-left: -2px; color:transparent; background-color:${value}">&nbsp;</a>`;
+        if (null === value) value = "transparent";
+        finalButton = `<a href = "!dltool --colorpicker|${pageOrToken}%%${property}" style ="display:inline-block; width: 18px; height:14px; position:relative; top:1px; border: 1px solid #111; border-radius:3px; padding:0px; margin-top:1px; margin-left: -2px; color:transparent; background-color:${value}">&nbsp;</a>`;
         return finalButton;
 
     }
@@ -187,12 +187,7 @@ on('ready', () => {
         if (value === undefined) {
             value = "&nbsp;-&nbsp;"
         }
-        /*        
-                if (value.toString().includes('"')){
-                    value = value.replace(/"/g,'');
-                    log("value = "+value);
-                }
-        */
+
         let openTitle = "";
         let closeTitle = "";
         if (property === "night_vision_effect") {
@@ -263,9 +258,60 @@ on('ready', () => {
         return finalButton;
     }
 
+    //The Aaron's Page Funcctions
+
+    // eslint-disable no-unused-vars
+    const getActivePages = () => [...new Set([
+        Campaign().get('playerpageid'),
+        ...Object.values(Campaign().get('playerspecificpages')),
+        ...findObjs({
+            type: 'player',
+            online: true
+        })
+        .filter((p) => playerIsGM(p.id))
+        .map((p) => p.get('lastpage'))
+    ])];
+
+
+
+    const getPlayersOnPage = (pageid) => {
+        let pages = {};
+        let ribbonPage = Campaign().get('playerpageid');
+        let psp = Campaign().get('playerspecificpages');
+        findObjs({
+                type: 'player'
+            })
+            .forEach(p => {
+                if (playerIsGM(p.id)) {
+                    const lp = p.get('lastpage') || Campaign().get('playerpageid');
+                    pages[lp] = pages[lp] || [];
+                    pages[lp].push(p.id);
+                } else if (psp.hasOwnProperty(p.id)) {
+                    pages[psp[p.id]] = pages[psp[p.id]] || [];
+                    pages[psp[p.id]].push(p.id);
+                } else {
+                    pages[ribbonPage] = pages[ribbonPage] || [];
+                    pages[ribbonPage].push(p.id);
+                }
+            });
+        if (pageid) {
+            return pages[pageid] || [];
+        }
+        return pages;
+    };
+
+    const getGMPlayers = (pageid) => findObjs({
+            type: 'player'
+        })
+        .filter((p) => playerIsGM(p.id))
+        .filter((p) => undefined === pageid || p.get('lastpage') === pageid)
+        .map(p => p.id);
+
+
+
 
     //BECAUSE ROLL20
-    const stringToBoolean = function (string) {
+    const stringToBoolean = function(string) {
         switch (string.toLowerCase().trim()) {
             case "true":
             case "yes":
@@ -352,7 +398,8 @@ on('ready', () => {
 
 
         //MESSAGE HANDLING
-        if (msg.type == "api" && msgTxt.indexOf(cmdName) !== -1 && playerIsGM(msg.playerid)) {
+        //        if ((msg.type == "api" && msgTxt.indexOf(cmdName) !== -1 && playerIsGM(msg.playerid)) || (msgTxt === "!dltool --pcchecklist")) {
+        if (msg.type == "api" && msgTxt.indexOf(cmdName) !== -1) {
             let APIMessage = msg.content;
             if (APIMessage === "!dltool" || APIMessage === "!dltools") {
                 APIMessage = "!dltool --report"
@@ -367,6 +414,7 @@ on('ready', () => {
 
             let theMessage = args[2];
             let checkLightButton = "";
+            tokenData = '';
             if (msg.selected) {
                 tokenData = getObj('graphic', msg.selected[0]._id)
             }
@@ -427,7 +475,7 @@ on('ready', () => {
 
                             controllerNames = controllerNames + "•"
                             controllerNames = controllerNames.split(" • •")[0].replace(/\s•\s/g, ", ").replace(/•/, "");
-                            if (controllerNames === '') (controllerNames = "None (GM only by default)");
+                            if (controllerNames === '')(controllerNames = "None (GM only by default)");
                             let tokenName = (tokenData.get("name") || "unnamed");
 
                             //REGULAR REPORT
@@ -437,12 +485,13 @@ on('ready', () => {
                                 openPageHead + '&quot;' + tokenName + '&quot; <span style ="font-size:12px; font-weight:normal;">' + ((char) ? ' (' + char.get("name") + ')' : '<span title = "This token does not represent a character">(generic)</span>') + '</span><BR><span style = "font-size=10px; font-weight:normal;" title="This is a list of people who control this token. If a name is not here, no player but the GM can use this token\'s vision settings.">Controllers: ' + controllerNames + '</span></div>' +
                                 toggleToken(tokenData.get("has_bright_light_vision"), "has_bright_light_vision", "!token-mod --set has_bright_light_vision|off has_night_vision|off", "!token-mod --set has_bright_light_vision|on has_limit_field_of_vision|false") + ' <span title = "If this is on, the token has vision enabled. It will still need either Night Vision, or a nearby lightsource, otherwise it will see only blackness. A GM can test this by selecting the token and pressing Cntrl/Cmd-L. This is only an approximation. For true testing, it is recommended to use a Dummy Account. You can find out more about this in the Roll20 wiki. NOTE: Sometimes default values in token light can cause a token to see nothing regardless. Try toggling a light preset for this token on and off."> <b>Vision</b></span> &nbsp;' + '<BR>' +
                                 toggleToken(tokenData.get("has_night_vision"), "has_night_vision", "!token-mod --set has_bright_light_vision|on has_night_vision|off", "!token-mod --set has_bright_light_vision|on has_night_vision|on  night_vision_effect|nocturnal") + ' <span title = "This defaults to night vision with the Nocturnal settin. No distance is set. Choose that in the fields to the right.">Night Vision</span> ' +
-                                setValue(tokenData.get("night_vision_distance"), "night_vision_distance", "!token-mod --set has_bright_light_vision|on has_night_vision|on night_vision_effect|nocturnal night_vision_distance|?{Input new Night Vision distance in feet}") + "ft <BR>" +
+                                setValue(tokenData.get("night_vision_distance"), "night_vision_distance", "!token-mod --set has_bright_light_vision|on has_night_vision|on night_vision_effect|nocturnal night_vision_distance|?{Input new Night Vision distance in feet}") + "ft " +
+                                ((tokenData.get("has_night_vision") && tokenData.get("night_vision_distance") < 1) ? `<span style='font-size:11px; position:relative;top:-5px;padding:0px;color:#ff0000; font-family:pictos;' title='This token has night vision, but the distance is set to zero, and it will not be able to see anything. You can set a deistance, or use one of the Vision Preset buttons below.'>*</span>` : "") +
+                                '<BR>' +
 
 
-
-                                '<span title="Use sparingly. Too many tokens with tinted light can lead to a confusing view for the GM, and may give unexpected results where they overlap." > Tint:' + setValue(tokenData.get("night_vision_tint"), "night_vision_tint", "!token-mod --set night_vision_tint|?{Use sparingly. May interact poorly with colored light. Input in hex, rgb or hsv format.|transparent}") + "</span> " +
-                            colorButton("token", "night_vision_tint", tokenData.get('night_vision_tint')) +
+                                '<span title="Use sparingly. Too many tokens with tinted light can lead to a confusing view for the GM, and may give unexpected results where they overlap." >&nbsp;Tint:' + setValue(tokenData.get("night_vision_tint"), "night_vision_tint", "!token-mod --set night_vision_tint|?{Use sparingly. May interact poorly with colored light. Input in hex, rgb or hsv format.|transparent}") + "</span> " +
+                                colorButton("token", "night_vision_tint", tokenData.get('night_vision_tint')) +
 
                                 //`<div style ="display:inline-block; width: 18px; height:14px; position:relative; top:1px; border: 1px solid #111; border-radius:3px; margin-top:1px; margin-left: -2px; background-color:${tokenData.get('night_vision_tint')}">&nbsp;</div>` +
 
@@ -468,11 +517,11 @@ on('ready', () => {
                                 openSection +
                                 openSubhead + 'Token Vision Checklist</div>' +
 
-                                ((tokenData.get("has_bright_light_vision")) ? label(`${go}<b>${tokenName}</b> has vision, but may require a light source. ` + ((lightData) ? `${tokenName} is in ${(lightData.total * 100).toFixed()}% total light` : ''), `Although this token has sight, it still may require a light source from itself or an outside source, or for page settings to grant daylight.`) : label(`<b>${stop}${tokenName}</b> has its vision turned off. It cannot see.` + `<div style = "display:inline-block">` + toggleToken(tokenData.get("has_bright_light_vision"), "has_bright_light_vision", "!token-mod --set has_bright_light_vision|off has_night_vision|off", "!token-mod --set has_bright_light_vision|on has_limit_field_of_vision|false") + ' <span title = "If this is on, the token has vision enabled. It will still need either Night Vision, or a nearby lightsource, otherwise it will see only blackness. A GM can test this by selecting the token and pressing Cntrl/Cmd-L. This is only an approximation. For true testing, it is recommended to use a Dummy Account. You can find out more about this in the Roll20 wiki. NOTE: Sometimes default values in token light can cause a token to see nothing regardless. Try toggling a light preset for this token on and off.">Vision</span></div>', `Without sight turned on, a token cannot utilize dynamic lighting. This is the recommended setting for most NPCs. Too many tokens with sight on the VTT can lead to confusing areas of apparent brightness for the GM`)) + `<BR>` +
+                                ((tokenData.get("has_bright_light_vision")) ? label(`${go}<b>${tokenName}</b> has vision, but may require a light source. ` + ((lightData) ? `${tokenName} is in ${(lightData.total * 100).toFixed()}% total light` : ''), `Although this token has sight, it still may require a light source from itself or an outside source, or for page settings to grant daylight.`) : label(`<b>${stop}${tokenName}</b> has its vision turned off. It cannot see.` + `<div style = "display:inline-block">` + ((playerIsGM(msg.playerid)) ? toggleToken(tokenData.get("has_bright_light_vision"), "has_bright_light_vision", "!token-mod --set has_bright_light_vision|off has_night_vision|off", "!token-mod --set has_bright_light_vision|on has_limit_field_of_vision|false") + ' <span title = "If this is on, the token has vision enabled. It will still need either Night Vision, or a nearby lightsource, otherwise it will see only blackness. A GM can test this by selecting the token and pressing Cntrl/Cmd-L. This is only an approximation. For true testing, it is recommended to use a Dummy Account. You can find out more about this in the Roll20 wiki. NOTE: Sometimes default values in token light can cause a token to see nothing regardless. Try toggling a light preset for this token on and off.">Vision</span>' : '') + '</div>', `Without sight turned on, a token cannot utilize dynamic lighting. This is the recommended setting for most NPCs. Too many tokens with sight on the VTT can lead to confusing areas of apparent brightness for the GM`)) + `<BR>` +
 
 
                                 ((tokenData.get("night_vision_distance") !== 0) ?
-                                    ((tokenData.get("has_night_vision")) ? label(`<b>${go}${tokenName}</b> has ${tokenData.get("night_vision_distance")}ft of Night Vision, and does not require a light source`, `You may still need to check if it has a non-zero distance on its night vision. Certain modes may affect how it interacts with existing light. For instance, Nocturnal mode can change dim light to bright within the token\'s Night Vision range.`) : label(`<b>${caution}${tokenName}</b> has Night Vision turned off. It cannot see without a light source.`, `Night Vision allows a token to see without a light source.`) + `<div style = "display:inline-block">` + toggleToken(tokenData.get("has_night_vision"), "has_night_vision", "!token-mod --set has_bright_light_vision|on has_night_vision|off", "!token-mod --set has_bright_light_vision|on has_night_vision|on  night_vision_effect|nocturnal") + ' <span title = "This defaults to night vision with the Nocturnal settin.">Night Vision</span></div> ') :
+                                    ((tokenData.get("has_night_vision")) ? label(`<b>${go}${tokenName}</b> has ${tokenData.get("night_vision_distance")}ft of Night Vision, and does not require a light source`, `You may still need to check if it has a non-zero distance on its night vision. Certain modes may affect how it interacts with existing light. For instance, Nocturnal mode can change dim light to bright within the token\'s Night Vision range.`) : label(`<b>${caution}${tokenName}</b> has Night Vision turned off. It cannot see without a light source.`, `Night Vision allows a token to see without a light source.`) + `<div style = "display:inline-block">` + ((playerIsGM(msg.playerid)) ? toggleToken(tokenData.get("has_night_vision"), "has_night_vision", "!token-mod --set has_bright_light_vision|on has_night_vision|off", "!token-mod --set has_bright_light_vision|on has_night_vision|on  night_vision_effect|nocturnal") + ' <span title = "This defaults to night vision with the Nocturnal settin.">Night Vision</span>' : '') + '</div> ') :
                                     ((tokenData.get("has_night_vision")) ? label(`${stop}<b>${tokenName}</b> has Night Vision, but the distance is set for ${tokenData.get("night_vision_distance")}ft. It can see light sources, but if you wish it to see in the dark, you must specify a distance.`, `Certain modes may affect how it interacts with existing light. For instance, Nocturnal mode can change dim light to bright within the token\'s Night Vision range.`) : label(`<b>${caution}${tokenName}</b> has Night Vision turned off. It cannot see without a light source.`, `Night Vision allows a token to see without a light source.`))
                                 ) + `<BR>` +
 
@@ -486,19 +535,23 @@ on('ready', () => {
                                         `${caution}This token has no specified controller. Only the GM can use it for dynamic lighting vision, by pressing Cmd/Ctrl-L.`)
                                 ) + `<BR>` +
                                 ((tokenData.get("lightColor") !== "transparent" && tokenData.get("has_night_vision")) ? label(`${caution}<b>${tokenName}</b> is emitting tinted light, but also has Night Vision. Night Vision trumps tinted light, and the color will not appear within its limits.`, `Colored light should be used sparingly. It interacts in unexpected ways with other light sources and with night vision. Colored vision is not recommended.`) + `<BR>` : ``) +
-                                ((tokenData.get("limit_field_of_vision_total") < 360 && tokenData.get("has_limit_field_of_vision")) ? label(`${caution}<b>${tokenName}</b>  has a limited field of vision. It is directional and may not show entire area around token. If the directional value is set to 0, the token will not be able to see anything. You can turn OFF limited field of view with this switch, but due to a Roll20 bug, you will need to open and close the token settings manually for it to take effect.<BR>` + toggleToken(tokenData.get("has_limit_field_of_vision"), "has_limit_field_of_vision", "!token-mod --set has_limit_field_of_vision|off", "!token-mod --set has_limit_field_of_vision|on") + '&nbsp;<span title = "Turn this off to restore a full field of view to the token.">Turn off Limited Field of View</span> &nbsp;', `Turn this off to restore a full field of view to the token.`) + `<BR>` : ``) +
+                                ((tokenData.get("limit_field_of_vision_total") < 360 && tokenData.get("has_limit_field_of_vision")) ? label(`${caution}<b>${tokenName}</b>  has a limited field of vision. It is directional and may not show entire area around token. If the directional value is set to 0, the token will not be able to see anything. ` + ((playerIsGM(msg.playerid)) ? `You can turn OFF limited field of view with this switch, but due to a Roll20 bug, you will need to open and close the token settings manually for it to take effect.<BR>` + toggleToken(tokenData.get("has_limit_field_of_vision"), "has_limit_field_of_vision", "!token-mod --set has_limit_field_of_vision|off", "!token-mod --set has_limit_field_of_vision|on") + '&nbsp;<span title = "Turn this off to restore a full field of view to the token.">Turn off Limited Field of View</span> &nbsp;' : ``), `Turn this off to restore a full field of view to the token.`) + `<BR>` : ``) +
 
 
                                 ((tokenData.get("layer") === "walls") ? `${caution}This token is on the Dynamic Lighting layer.<BR>Dynamic Lighting will only work for the GM, by using Cmd/Ctrl-L, but players are only able to access tokens on the Token layer.<BR>Light emitted by tokens on the Dynamic Lighting Layer can be seen by tokens on the Token layer. ${dlButton("Move token to Token Layer", "!token-mod --set layer|objects")}<BR>` : '') +
                                 ((tokenData.get("layer") === "gmlayer") ? `${stop}This token is on the GM layer.<BR>Dynamic Lighting will not function on the GM layer, nor will any light sources provide light.<BR>Players are only able to access tokens on the Token layer. ${dlButton("Move token to Token Layer", "!token-mod --set layer|objects")}<BR>` : '') +
                                 ((tokenData.get("layer") === "map") ? `${caution}This token is on the Map layer.<BR>Dynamic Lighting will only work for the GM, by using Cmd/Ctrl-L.<BR>Light emitted by tokens on the Dynamic Lighting Layer can be seen by tokens on the Token layer.<BR>Players are only able to access tokens on the Token layer. ${dlButton("Move token to Token Layer", "!token-mod --set layer|objects")}<BR>` : '') +
-                                ((pageData.get("dynamic_lighting_enabled")) ? `${go}Dynamic Lighting is on. All Dynamic Lighting features should be available.` : `${stop}Dynamic Lighting is <b>OFF</b>. No Dynamic Lighting features will function until this is turned on.` + `<div style = "display:inline-block">` + toggle("small", pageData.get("dynamic_lighting_enabled"), "dynamic_lighting_enabled") + '<span title = "Toggling this setting to off will toggle off all settings below, but they will return to their previous state when you turn Dynamic Lighting back on."> Dynamic Lighting</span> (May require game refresh)</div>') + `<br>` +
-                                ((pageData.get("dynamic_lighting_enabled") && pageData.get("daylight_mode_enabled")) ? `${go}Daylight Mode is on. No tokens need a specific light source. Daylight Opacity level has been set for ${Math.round(pageData.get("daylightModeOpacity") * 100)}%. Low levels indicate a darker overall light.` : ((lightOnTOken === 0 && !tokenData.get("has_night_vision")) ? stop : caution) + `Daylight Mode is off. Any token without Night Vision will need to have line of sight to a specific light source. ` + ((lightData) ? `<b>${tokenName}</b> is in ${(lightData.total * 100).toFixed()}% total light${((tokenData.get("has_night_vision")) ? ", but has Night Vision." : ", and has no Night Vision. " + `<div style = "display:inline-block">` + toggleToken(tokenData.get("has_night_vision"), "has_night_vision", "!token-mod --set has_bright_light_vision|on has_night_vision|off", "!token-mod --set has_bright_light_vision|on has_night_vision|on  night_vision_effect|nocturnal") + ` <span title = "This defaults to night vision with the Nocturnal settin.">Night Vision</span></div> `)} ` : '') + `<div style = "display:inline-block">` + toggle("small", pageData.get("daylight_mode_enabled"), "daylight_mode_enabled") + ' <span title = "When Daylight Mode is on, tokens with Vision do not need specific light sources in able to see. You can adjust the amount of daylight to simulate fog, twilight, a moonlit night or a shadowiy interior. Higher values are brighter.">Day Mode</span></div>') + `<br>` +
+                                ((pageData.get("dynamic_lighting_enabled")) ? `${go}Dynamic Lighting is on. All Dynamic Lighting features should be available.` : `${stop}Dynamic Lighting is <b>OFF</b> for this page. No Dynamic Lighting features will function until this is turned on.` + ((playerIsGM(msg.playerid)) ? `<div style = "display:inline-block">` + toggle("small", pageData.get("dynamic_lighting_enabled"), "dynamic_lighting_enabled") + '<span title = "Toggling this setting to off will toggle off all settings below, but they will return to their previous state when you turn Dynamic Lighting back on."> Dynamic Lighting</span> (May require game refresh)</div>' : ``)) + `<br>` +
 
+                                ((playerIsGM(msg.playerid)) ?
+                                    ((pageData.get("dynamic_lighting_enabled") && pageData.get("daylight_mode_enabled")) ? `${go}Daylight Mode is on. No tokens need a specific light source. Daylight Opacity level has been set for ${Math.round(pageData.get("daylightModeOpacity") * 100)}%. Low levels indicate a darker overall light.` : ((lightOnTOken === 0 && !tokenData.get("has_night_vision")) ? stop : caution) + `Daylight Mode is off. Any token without Night Vision will need to have line of sight to a specific light source. ` + ((lightData) ? `<b>${tokenName}</b> is in ${(lightData.total * 100).toFixed()}% total light${((tokenData.get("has_night_vision")) ? ", but has Night Vision." : ", and has no Night Vision. " + `<div style = "display:inline-block">` + toggleToken(tokenData.get("has_night_vision"), "has_night_vision", "!token-mod --set has_bright_light_vision|on has_night_vision|off", "!token-mod --set has_bright_light_vision|on has_night_vision|on  night_vision_effect|nocturnal") + ` <span title = "This defaults to night vision with the Nocturnal settin.">Night Vision</span></div> `)} ` : '') + `<div style = "display:inline-block">` + toggle("small", pageData.get("daylight_mode_enabled"), "daylight_mode_enabled") + ' <span title = "When Daylight Mode is on, tokens with Vision do not need specific light sources in able to see. You can adjust the amount of daylight to simulate fog, twilight, a moonlit night or a shadowiy interior. Higher values are brighter.">Day Mode</span></div>') + `<br>` :
+                                    ((pageData.get("dynamic_lighting_enabled") && pageData.get("daylight_mode_enabled")) ? `${go}Daylight Mode is on. No tokens need a specific light source. Daylight Opacity level has been set for ${Math.round(pageData.get("daylightModeOpacity") * 100)}%. Low levels indicate a darker overall light.` : ((lightOnTOken === 0 && !tokenData.get("has_night_vision")) ? stop : caution) + `Daylight Mode is off. Any token without Night Vision will need to have line of sight to a specific light source. ` + ((lightData) ? `<b>${tokenName}</b> is in ${(lightData.total * 100).toFixed()}% total light${((tokenData.get("has_night_vision")) ? ", but has Night Vision." : ", and has no Night Vision. " )} ` : '')) + `<br>`
+                                ) +
 
+                                //  ID of page the sender is on : ID of GMPlayers on this page
+                                ((getPageForPlayer(msg.playerid) === getPageForPlayer(getGMPlayers(getPageForPlayer(msg.playerid)))) ? `` : `${caution} GM is either not logged in, or is not on the same page this token is on. If testing vision or light for token against the GM's report, please make sure that both GM and player are on the same page, and that the token has not been <a style = "color:##7e2d40; background-color:transparent; padding:0px;" href="https&#58;\/\/help.roll20.net/hc/en-us/articles/360039675413-Page-Toolbar#PageToolbar-SplittheParty">split from the party</a>.<BR>`) +
 
-                                dlButton("Token settings don't stick?", "!dltool --default") +
-
+                                ((playerIsGM(msg.playerid)) ? dlButton("Token settings don't stick?", "!dltool --default") : '') +
 
 
                                 `${HR}<b>Key:</b><br>` +
@@ -529,10 +582,9 @@ on('ready', () => {
                                 '&nbsp;|&nbsp;Dim: <span title="The amount of dim light emitted by this token. Dim light begins at the end of the brght light range.">' + setValue(tokenData.get("low_light_distance") - tokenData.get("bright_light_distance"), "low_light_distance", "!token-mod --set emits_low_light|on low_light_distance|?{Input Bright light in feet}") + "</span>ft " +
                                 `<span title="this is the brightness of the dim light emitted by the token. 75% is the default.">Intensity: </span>${setValue(tokenData.get("dim_light_opacity"), "dim_light_opacity", "!token-mod --set dim_light_opacity|?{Set Brightness of Dim light|75}")}%` +
 
-
                                 `<br>` + HR +
 
-                                //############ Use this section when Roll20 ads directional dima and bright light to the GUI
+                                //############ Use this section if and when Roll20 adds directional dim and bright light to the GUI
                                 /*
                                 `<b>${label("Directional Light: ", "This section limits the arc of emited light, like a flashlight beam. You can set different values for bright and dim light. Due to a Roll20 bug, you may need to open an close the settings for the token for the change to take effect.")}</b><br>` + 
                                 toggleToken(tokenData.get("has_directional_bright_light"), "has_directional_bright_light", "!token-mod --set has_directional_bright_light|off", "!token-mod --set has_directional_bright_light|on") + ' <span title = "This toggles whether or not the selected token emits directional light, like a flashlight. You can set those values below, and they will persist and be restored if lighting is turned off and back on.">Bright</span>&nbsp;' +
@@ -549,20 +601,16 @@ on('ready', () => {
                                 `&nbsp;<span title="Arc of Light.">` + setValue(tokenData.get("directional_bright_light_total"), "directional_bright_light_total", "!token-mod --set directional_bright_light_total|?{Input arc of light in degrees}") + "</span>° Arc " +
                                 lightArc(tokenData.get("directional_bright_light_total")) + ' <span title = "Due to a bug in the Roll20 Mod system, you must open and close page settings for this to take effect.">' + manualWarning + '</span>' +
                                 //############ Use this section when Roll20 ads directional dima and bright light to the GUI
-
-
-
+                                
                                 '<BR>' +
-
                                 `<div style="margin-top:0px; display:inline-block">` +
-                                '<span title="Use this sparingly, as light colors can interact in unpredicatble ways. Tinting vision is not recommended, since the interaction is problematic.">Color:' + setValue(tokenData.get("lightColor"), "lightColor", "!token-mod --set lightColor|?{Use sparingly. Input in hex, rgb or hsv format.|transparent}") + "</span> " +
+                                '<span title="Use this sparingly, as light colors can interact in unpredicatble ways. Tinting vision is not always optimal, since the interaction is problematic.">&nbsp;Color:' + setValue(tokenData.get("lightColor"), "lightColor", "!token-mod --set lightColor|?{Use sparingly. Input in hex, rgb or hsv format.|transparent}") + "</span> " +
                                 colorButton("token", "lightColor", tokenData.get('lightColor')) +
 
 
 
-//#############
-//                                `<div style ="display:inline-block; width: 18px; height:14px; position:relative; top:1px; border: 1px solid #111; border-radius:3px; margin-top:1px; margin-left: -2px; background-color:${tokenData.get('lightColor')}">&nbsp;</div>` +
-
+                                //#############
+                                //                                `<div style ="display:inline-block; width: 18px; height:14px; position:relative; top:1px; border: 1px solid #111; border-radius:3px; margin-top:1px; margin-left: -2px; background-color:${tokenData.get('lightColor')}">&nbsp;</div>` +
 
 
 
@@ -584,7 +632,7 @@ on('ready', () => {
                                 lightButton("<i>Dancing Light<i>", 10, 0, 360, "!token-mod --set emits_bright_light|on emits_low_light|on bright_light_distance|0 low_light_distance|10 has_directional_bright_light|off directional_bright_light_total|360 dim_light_opacity|" + tokenData.get("dim_light_opacity")) +
                                 lightButton("<i>Faerie Fire<i>", 10, 0, 360, "!token-mod --set emits_bright_light|on emits_low_light|on bright_light_distance|0 low_light_distance|10 has_directional_bright_light|off directional_bright_light_total|360 dim_light_opacity|" + tokenData.get("dim_light_opacity")) +
                                 lightButton("<i>Flametongue<i>", 40, 40, 360, "!token-mod --set emits_bright_light|on emits_low_light|on bright_light_distance|40 low_light_distance|40 has_directional_bright_light|off directional_bright_light_total|360 dim_light_opacity|" + tokenData.get("dim_light_opacity")) +
-                                //                                lightButton("<i>Gem of Brightness<i>", 30, 30, 360, "!token-mod --set emits_bright_light|on emits_low_light|on bright_light_distance|30 low_light_distance|30 has_limit_field_of_vision|off limit_field_of_vision_total|360 dim_light_opacity|" + tokenData.get("dim_light_opacity")) +
+                                //lightButton("<i>Gem of Brightness<i>", 30, 30, 360, "!token-mod --set emits_bright_light|on emits_low_light|on bright_light_distance|30 low_light_distance|30 has_limit_field_of_vision|off limit_field_of_vision_total|360 dim_light_opacity|" + tokenData.get("dim_light_opacity")) +
                                 `</div>`;
 
 
@@ -603,7 +651,7 @@ on('ready', () => {
                             '&nbsp;&nbsp;' + toggle("small", pageData.get("showdarkness"), "showdarkness") + '<span title = "This will toggle manual fog of war. Fog of War and Dynamic Lighting are mutially exlusive. To permanently hide or reveal areas where sight is manually restricted, use the Darkness Tool in the toolbar to the left."> Fog of War</span>' +
 
                             '<BR>' +
-                            '<span title = "This is how dark unlit areas appear to the GM. Keeping this value very low will lead to less confusion. Many Night Vision using tokens in one area can make that area look brightly lit.">GM Dark Opacity: </span>' +
+                            '<span title = "This is how dark unlit areas appear to the GM. Keeping this value very low will lead to less confusion. Many Night Vision using tokens in one area can make that area look brightly lit.">&nbsp;GM Dark Opacity: </span>' +
                             setValue(pageData.get("fog_opacity"), "fog_opacity", "!dltool-mod --fog_opacity|?&#123;Input value between 0 and 100?|35}") + "% <BR>" +
 
                             toggle("small", pageData.get("daylight_mode_enabled"), "daylight_mode_enabled") + ' <span title = "When Daylight Mode is on, tokens with Vision do not need specific light sources in able to see. You can adjust the amount of daylight to simulate fog, twilight, a moonlit night or a shadowiy interior. Higher values are brighter.">Day Mode</span> &nbsp;' +
@@ -652,36 +700,34 @@ on('ready', () => {
                             '<span title = "The color of the grid lines, in hexadecimal format">&nbsp;Color:' + setValue(pageData.get("gridcolor"), "gridcolor", `!dltool-mod --gridcolor|?{Input value in Hex format|}`) + '</span> ' +
                             colorButton("page", "gridcolor", pageData.get('gridcolor')) + '<BR>' +
 
-                            //`<span style ="display:inline-block; width: 18px; height:14px; position:relative; top:1px; border: 1px solid #111; border-radius:3px; margin-top:1px; margin-left: -2px; background-color:#${pageData.get("gridcolor")}">&nbsp;</span>` + '<BR>' +
-
-                            '<span title = "The color of the background, in hexadecimal format">Background Color:' + setValue(pageData.get("background_color"), "background_color", `!dltool-mod --background_color|?{Input value in Hex format|}`) + '</span> ' +
-                             colorButton("page", "background_color", pageData.get("background_color")) + '<BR>' +
-
-
-                            //`<span style ="display:inline-block; width: 18px; height:14px; position:relative; top:1px; border: 1px solid #111; border-radius:3px; margin-top:1px; margin-left: -2px; background-color:#${pageData.get("background_color")}">&nbsp;</span>` + '<BR>' +
-
-
                             '<span title = "Choose between various grid types">Grid Type: </span>' +
                             setValue(pageData.get("grid_type"), "grid_type", "!dltool-mod --grid_type|?&#123;Choose grid type|Square,square|Hex(V),hex|Hex(H),hexr|Dimetric,dimetric|Isometric,isometric}") +
                             (((pageData.get("grid_type") === "hex" || pageData.get("grid_type") === "hexr")) ? "&nbsp;" + toggle("small", pageData.get("gridlabels"), "gridlabels") + '<span title = "Display numbers the hex grid">&nbsp;Show Labels</span>' : "") +
                             (((pageData.get("grid_type") === "square")) ? "&nbsp;<span title = 'Choose how diagonal movment is measured'>&nbsp;Diag.:&nbsp;</span>" + setValue(diagonalType, "diagonaltype", "!dltool-mod --diagonaltype|?&#123;Choose diagonal measurement method type|Dnd5e-4e,foure |Pathfinder-DnD3.5,threefive|Euclidean,pythagorean|Manhattan,manhattan}") : "") +
                             '<BR>' +
+
                             '<span title = "Set scale and unit. Typical for 5e or PF2 battlemat is \'5\' and \'ft\'.">Page scale: </span>' +
                             setValue(pageData.get("scale_number"), "scale_number", "!dltool-mod --scale_number|?&#123;Input numerical measurement for one grid unit|5}") + '&nbsp;' +
                             setValue(pageData.get("scale_units"), "scale_units", "!dltool-mod --scale_units|?&#123;Input type of unit, example: ft. for feet|ft.}") + '&nbsp;' +
                             dlButton("Get from map", "!dltool --report|setscale") + '<BR>' +
-                            'Change Name: ' + setValue(pageData.get("name"), "name", "!dltool-mod --name|&quot;?&#123;Input new name for page|" + pageData.get("name") + "}&quot;") + '<BR>' +
+
+                            HR +
+                            '<span title = "The color of the background, in hexadecimal format">Background Color: ' + setValue(pageData.get("background_color"), "background_color", `!dltool-mod --background_color|?{Input value in Hex format|}`) + '</span> ' +
+                            colorButton("page", "background_color", pageData.get("background_color")) + '<BR>' +
+
+                            '<span title = "You can re-name the page here. This function is not santized for problemtic characters, so it\'s best to keep it to simple alphanumeric characters. If you need accents or parentheses, use the regular Roll20 interface.">Change Name: </span>' +
+                            setValue(pageData.get("name"), "name", "!dltool-mod --name|&quot;?&#123;Input new name for page|" + pageData.get("name") + "}&quot;") + '<BR>' +
 
 
-                            HR + `<b>${label("Cell Width Divisions:", "How many times is one cell divided")} <b><BR>` +
-                            `<span style = "Cell Width = 1">` + cellWidthButton("1", "1", "!dltool --snapping_increment|1") + `</span>` +
-                            `<span style = "Cell Width = 0.5">` + cellWidthButton("2", "0.5", "!dltool --snapping_increment|0.5") + `</span>` +
-                            `<span style = "Cell Width = 0.33333">` + cellWidthButton("3", "0.33333", "!dltool --snapping_increment|0.33333") + `</span>` +
-                            `<span style = "Cell Width = 0.25">` + cellWidthButton("4", "0.25", "!dltool --snapping_increment|0.25") + `</span>` +
-                            `<span style = "Cell Width = 0.2">` + cellWidthButton("5", "0.2", "!dltool --snapping_increment|0.2") + `</span>` +
-                            `<span style = "Cell Width = 0.16666">` + cellWidthButton("6", "0.16666", "!dltool --snapping_increment|0.16666") + `</span>` +
-                            `<span style = "Cell Width = 0.142857">` + cellWidthButton("7", "0.142857", "!dltool --snapping_increment|0.142857") + `</span>` +
-                            `<span style = "Cell Width = 0.125">` + cellWidthButton("8", "0.125", "!dltool --snapping_increment|0.125") + `</span>` +
+                            HR + `<b>${label("Cell Width Divisions:", "How many times is one cell divided. This is the same as setting the Cell Width in the Page Settings, but is perhaps more intuitive. 2 divisions is the same as setting the cell width to 0.5. 8 divisions corresonds to 0.125.")} <b><BR>` +
+                            `<span title = "Cell Width = 1">` + cellWidthButton("1", "1", "!dltool --snapping_increment|1") + `</span>` +
+                            `<span title = "Cell Width = 0.5">` + cellWidthButton("2", "0.5", "!dltool --snapping_increment|0.5") + `</span>` +
+                            `<span title = "Cell Width = 0.33333">` + cellWidthButton("3", "0.33333", "!dltool --snapping_increment|0.33333") + `</span>` +
+                            `<span title = "Cell Width = 0.25">` + cellWidthButton("4", "0.25", "!dltool --snapping_increment|0.25") + `</span>` +
+                            `<span title = "Cell Width = 0.2">` + cellWidthButton("5", "0.2", "!dltool --snapping_increment|0.2") + `</span>` +
+                            `<span title = "Cell Width = 0.16666">` + cellWidthButton("6", "0.16666", "!dltool --snapping_increment|0.16666") + `</span>` +
+                            `<span title = "Cell Width = 0.142857">` + cellWidthButton("7", "0.142857", "!dltool --snapping_increment|0.142857") + `</span>` +
+                            `<span title = "Cell Width = 0.125">` + cellWidthButton("8", "0.125", "!dltool --snapping_increment|0.125") + `</span>` +
                             `</div>`;
 
 
@@ -736,13 +782,24 @@ on('ready', () => {
                         }
 
 
-                        sendChat('DL Tool', '/w gm ' + openReport + lines + closeReport, null, {
+                        let toWhom = '/w gm ';
+
+                        if (!playerIsGM(msg.playerid)) {
+
+                            lines = openHeader + 'Dynamic Lighting Tool' + `</div>` +
+                                checklistTokenInfo +
+                                '</div>';
+                            toWhom = '/w ' + getObj("player", msg.playerid).get("_displayname") + ' ';
+
+                        }
+
+                        sendChat('DL Tool', toWhom + openReport + lines + closeReport, null, {
                             noarchive: true
                         });
                         break;
 
 
-                    //GENERIC MESSSAGE
+                        //GENERIC MESSSAGE
                     case 'message':
                         if (undefined !== theMessage) {
                             theMessage = '<span style ="margin: 2px 10px 2px 10px; color:#111">' + theMessage + '</span>';
@@ -766,6 +823,11 @@ on('ready', () => {
 
 
                         break;
+
+
+
+
+                        //CHECKLIST REPORT
 
 
                     case 'checklist':
@@ -844,7 +906,7 @@ on('ready', () => {
 
                     case 'daylight_mode_enabled':
                         if (theOption === "false" || theOption === "true") {
-                            (theOption === 'true') ? true : false;
+                            (theOption === 'true') ? true: false;
                         } else {
                             theOption = false;
                             sendChat('DLTool', '/w gm ' + openReport + theOption + ' is not a valid value for ' + theCommand + ' It has been set to false.' + closeReport, null, {
@@ -869,7 +931,7 @@ on('ready', () => {
 
                     case 'lightupdatedrop':
                         if (theOption === "false" || theOption === "true") {
-                            (theOption === 'true') ? true : false;
+                            (theOption === 'true') ? true: false;
                         } else {
                             theOption = false;
                             sendChat('DLTool', '/w gm ' + openReport + theOption + ' is not a valid value for ' + theCommand + ' It has been set to false.' + closeReport, null, {
@@ -888,73 +950,69 @@ on('ready', () => {
                             });
                         }
                         break;
-                        
+
                     case 'colorpicker':
 
                         let dataSet = theOption.split("%%")[0]
                         let theProperty = theOption.split("%%")[1];
                         let opacityButton = "";
-                        let colorList = ["#000000","#434343","#666666","#C0C0C0","#D9D9D9","#FFFFFF","#980000","#FF0000","#FF9900","#FFFF00","#00FF00","#00FFFF","#4A86E8","#0000FF","#9900FF","#FF00FF","#E6B8AF","#F4CCCC","#FCE5CD","#FFF2CC","#D9EAD3","#D0E0E3","#C9DAF8","#CFE2F3","#D9D2E9","#EAD1DC","#DD7E6B","#EA9999","#F9CB9C","#FFE599","#B6D7A8","#A2C4C9","#A4C2F4","#9FC5E8","#B4A7D6","#D5A6BD","#CC4125","#E06666","#F6B26B","#FFD966","#93C47D","#76A5AF","#6D9EEB","#6FA8DC","#8E7CC3","#C27BA0","#A61C00","#CC0000","#E69138","#F1C232","#6AA84F","#45818E","#3C78D8","#3D85C6","#674EA7","#A64D79","#5B0F00","#660000","#783F04","#7F6000","#274E13","#0C343D","#1C4587","#073763","#20124D","#20124E"]
-                        let colorTable = openHeader + "Pick a color for this property:</div>"+
-                        openPageHead + theProperty + `</div>`;
+                        let colorList = ["#000000", "#434343", "#666666", "#C0C0C0", "#D9D9D9", "#FFFFFF", "#980000", "#FF0000", "#FF9900", "#FFFF00", "#00FF00", "#00FFFF", "#4A86E8", "#0000FF", "#9900FF", "#FF00FF", "#E6B8AF", "#F4CCCC", "#FCE5CD", "#FFF2CC", "#D9EAD3", "#D0E0E3", "#C9DAF8", "#CFE2F3", "#D9D2E9", "#EAD1DC", "#DD7E6B", "#EA9999", "#F9CB9C", "#FFE599", "#B6D7A8", "#A2C4C9", "#A4C2F4", "#9FC5E8", "#B4A7D6", "#D5A6BD", "#CC4125", "#E06666", "#F6B26B", "#FFD966", "#93C47D", "#76A5AF", "#6D9EEB", "#6FA8DC", "#8E7CC3", "#C27BA0", "#A61C00", "#CC0000", "#E69138", "#F1C232", "#6AA84F", "#45818E", "#3C78D8", "#3D85C6", "#674EA7", "#A64D79", "#5B0F00", "#660000", "#783F04", "#7F6000", "#274E13", "#0C343D", "#1C4587", "#073763", "#20124D", "#20124E"]
+                        let colorTable = openHeader + "Pick a color for this property:</div>" +
+                            openPageHead + theProperty + `</div>`;
 
-                        colorList.forEach (c => {
-                            
-                            colorTable = colorTable + 
-                            ((dataSet === "page") ? `<a href ="!dltool-mod --${theProperty}\|${c}"` : `<a href ="!token-mod --set ${theProperty}\|${c}"`) +` style = "display:inline-block; height:18px; padding:0px; width:18px; margin:0px 1px; border-radius:5px; background-color:#${c}; border:1px solid #111;"> </a>`
+                        colorList.forEach(c => {
+
+                            colorTable = colorTable +
+                                ((dataSet === "page") ? `<a href ="!dltool-mod --${theProperty}\|${c}"` : `<a href ="!token-mod --set ${theProperty}\|${c}"`) + ` style = "display:inline-block; height:18px; padding:0px; width:18px; margin:0px 1px; border-radius:5px; background-color:#${c}; border:1px solid #111;"> </a>`
                         });
-                        
+
                         colorTable = colorTable + `<BR>`;
-                        
+
                         TransparencyButton = `<a style = "display:inline-block; height:18px;padding:0px;  margin:0px 1px; border-radius:5px; color:#eee; background-color:#111; border:1px solid #111;"` + ((dataSet === "page") ? ` href ="!dltool-mod --${theProperty}\|transparent">` : ` href ="!token-mod --set ${theProperty}\|transparent">`) + `&nbsp;Transparent&nbsp;</a>`;
 
-                        switch (theProperty){
-                            
-                        case 'gridcolor':
-                            opacityButton = '<span title = "this is a scale of how opaque the grid is. 0 = Transparent. 1 = Opaque.">&nbsp;Grid Opacity: </span>'+
-                            setValue(pageData.get("grid_opacity"), "grid_opacity", "!dltool-mod --grid_opacity|?&#123;Input value between 0 and 1?|1}");
+                        switch (theProperty) {
 
-                        break;
-                        
-                        case 'night_vision_tint':
-                            opacityButton = "";
-                            //TransparencyButton = `<a style = "display:inline-block; height:18px;padding:0px;  margin:0px 1px; border-radius:5px; color:#eee; background-color:#111; border:1px solid #111;"` + ((dataSet === "page") ? ` href ="!dltool-mod --${theProperty}\|none">` : ` href ="!token-mod --set ${theProperty}\|none">`) + `&nbsp;None&nbsp;</a>`
+                            case 'gridcolor':
+                                opacityButton = '<span title = "this is a scale of how opaque the grid is. 0 = Transparent. 1 = Opaque.">&nbsp;Grid Opacity: </span>' +
+                                    setValue(pageData.get("grid_opacity"), "grid_opacity", "!dltool-mod --grid_opacity|?&#123;Input value between 0 and 1?|1}");
 
-                        break;
+                                break;
 
-                        case 'lightColor':
-                            opacityButton = '';
-                            // opacityButton = '<span title="Use this sparingly, as light colors can interact in unpredicatble ways. Tinting vision is not recommended, since the interaction is problematic.">Color:' + setValue(tokenData.get("lightColor"), "lightColor", "!token-mod --set lightColor|?{Use sparingly. Input in hex, rgb or hsv format.|transparent}") + "</span> " +
-                            //`<div style ="display:inline-block; width: 18px; height:14px; position:relative; top:1px; border: 1px solid #111; border-radius:3px; margin-top:1px; margin-left: -2px; background-color:${tokenData.get('lightColor')}">&nbsp;</div>`;
-                        break;
-                        
-                        
-                    default:
-                    // Nothing here. :)
-                }
+                            case 'night_vision_tint':
+                                opacityButton = "";
+                                //TransparencyButton = `<a style = "display:inline-block; height:18px;padding:0px;  margin:0px 1px; border-radius:5px; color:#eee; background-color:#111; border:1px solid #111;"` + ((dataSet === "page") ? ` href ="!dltool-mod --${theProperty}\|none">` : ` href ="!token-mod --set ${theProperty}\|none">`) + `&nbsp;None&nbsp;</a>`
+
+                                break;
+
+                            case 'lightColor':
+                                opacityButton = '';
+                                // opacityButton = '<span title="Use this sparingly, as light colors can interact in unpredicatble ways. Tinting vision is not recommended, since the interaction is problematic.">Color:' + setValue(tokenData.get("lightColor"), "lightColor", "!token-mod --set lightColor|?{Use sparingly. Input in hex, rgb or hsv format.|transparent}") + "</span> " +
+                                //`<div style ="display:inline-block; width: 18px; height:14px; position:relative; top:1px; border: 1px solid #111; border-radius:3px; margin-top:1px; margin-left: -2px; background-color:${tokenData.get('lightColor')}">&nbsp;</div>`;
+                                break;
 
 
+                            default:
+                                // Nothing here. :)
+                        }
 
-                        opacityButton = opacityButton.replace(" &#10;!dltool --report"," &#10;"+msg.content);
+
+
+                        opacityButton = opacityButton.replace(" &#10;!dltool --report", " &#10;" + msg.content);
 
                         colorTable = colorTable + TransparencyButton;
-                        //TransparencyButton = `<a style = "display:inline-block; height:18px;padding:0px;  margin:0px 1px; border-radius:5px; color:#eee; background-color:#111; border:1px solid #111;"` + ((dataSet === "page") ? ` href ="!dltool-mod --${theProperty}\|transparent">` : ` href ="!token-mod --set ${theProperty}\|transparent">`) + `&nbsp;Transparent&nbsp;</a>`
 
-                        
+
                         colorTable = colorTable + opacityButton;
-                        
-                        sendChat('DLTool', '/w gm ' + openReport + colorTable + utilityInfo + closeReport, null, {
-                                noarchive: true
-                            });
 
-                    //pageData.set('force_lighting_refresh', true);
-                    break;
+                        sendChat('DLTool', '/w gm ' + openReport + colorTable + utilityInfo + closeReport, null, {
+                            noarchive: true
+                        });
+
+                        break;
 
                     default:
-                    // Nothing here. :)
+                        // Nothing here. :)
                 }
-
-
 
 
                 if (theOption === "false") {
