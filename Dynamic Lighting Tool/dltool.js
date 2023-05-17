@@ -11,9 +11,27 @@ API_Meta.dltool = {
 }
 
 on('ready', () => {
-    const version = '1.0.6';
+    const version = '1.0.7';
     log('-=> Dynamic Lighting Tool v' + version + ' is loaded. Base command is !dltool');
 
+
+  const processInlinerolls = (msg) => {
+    if(msg.hasOwnProperty('inlinerolls')){
+      return msg.inlinerolls
+        .reduce((m,v,k) => {
+          let ti=v.results.rolls.reduce((m2,v2) => {
+            if(v2.hasOwnProperty('table')){
+              m2.push(v2.results.reduce((m3,v3) => [...m3,(v3.tableItem||{}).name],[]).join(", "));
+            }
+            return m2;
+          },[]).join(', ');
+          return [...m,{k:`$[[${k}]]`, v:(ti.length && ti) || v.results.total || 0}];
+        },[])
+        .reduce((m,o) => m.replace(o.k,o.v), msg.content);
+    } else {
+      return msg.content;
+    }
+  };
 
     const getPageForPlayer = (playerid) => {
         let player = getObj('player', playerid);
@@ -187,7 +205,12 @@ on('ready', () => {
         if (value === undefined) {
             value = "&nbsp;-&nbsp;"
         }
-
+        /*        
+                if (value.toString().includes('"')){
+                    value = value.replace(/"/g,'');
+                    log("value = "+value);
+                }
+        */
         let openTitle = "";
         let closeTitle = "";
         if (property === "night_vision_effect") {
@@ -341,6 +364,9 @@ on('ready', () => {
         if ('api' !== msg.type) {
             return;
         }
+        
+        msg.content = processInlinerolls(msg);
+
         var msgTxt = msg.content;
         repeatCommand = `&#10;!dltool`;
         let pageData = getObj('page', getPageForPlayer(msg.playerid));
@@ -551,6 +577,7 @@ on('ready', () => {
                                 //  ID of page the sender is on : ID of GMPlayers on this page
                                 ((getPageForPlayer(msg.playerid) === getPageForPlayer(getGMPlayers(getPageForPlayer(msg.playerid)))) ? `` : `${caution} GM is either not logged in, or is not on the same page this token is on. If testing vision or light for token against the GM's report, please make sure that both GM and player are on the same page, and that the token has not been <a style = "color:##7e2d40; background-color:transparent; padding:0px;" href="https&#58;\/\/help.roll20.net/hc/en-us/articles/360039675413-Page-Toolbar#PageToolbar-SplittheParty">split from the party</a>.<BR>`) +
 
+
                                 ((playerIsGM(msg.playerid)) ? dlButton("Token settings don't stick?", "!dltool --default") : '') +
 
 
@@ -582,9 +609,10 @@ on('ready', () => {
                                 '&nbsp;|&nbsp;Dim: <span title="The amount of dim light emitted by this token. Dim light begins at the end of the brght light range.">' + setValue(tokenData.get("low_light_distance") - tokenData.get("bright_light_distance"), "low_light_distance", "!token-mod --set emits_low_light|on low_light_distance|?{Input Bright light in feet}") + "</span>ft " +
                                 `<span title="this is the brightness of the dim light emitted by the token. 75% is the default.">Intensity: </span>${setValue(tokenData.get("dim_light_opacity"), "dim_light_opacity", "!token-mod --set dim_light_opacity|?{Set Brightness of Dim light|75}")}%` +
 
+
                                 `<br>` + HR +
 
-                                //############ Use this section if and when Roll20 adds directional dim and bright light to the GUI
+                                //############ Use this section when Roll20 ads directional dima and bright light to the GUI
                                 /*
                                 `<b>${label("Directional Light: ", "This section limits the arc of emited light, like a flashlight beam. You can set different values for bright and dim light. Due to a Roll20 bug, you may need to open an close the settings for the token for the change to take effect.")}</b><br>` + 
                                 toggleToken(tokenData.get("has_directional_bright_light"), "has_directional_bright_light", "!token-mod --set has_directional_bright_light|off", "!token-mod --set has_directional_bright_light|on") + ' <span title = "This toggles whether or not the selected token emits directional light, like a flashlight. You can set those values below, and they will persist and be restored if lighting is turned off and back on.">Bright</span>&nbsp;' +
@@ -601,8 +629,11 @@ on('ready', () => {
                                 `&nbsp;<span title="Arc of Light.">` + setValue(tokenData.get("directional_bright_light_total"), "directional_bright_light_total", "!token-mod --set directional_bright_light_total|?{Input arc of light in degrees}") + "</span>° Arc " +
                                 lightArc(tokenData.get("directional_bright_light_total")) + ' <span title = "Due to a bug in the Roll20 Mod system, you must open and close page settings for this to take effect.">' + manualWarning + '</span>' +
                                 //############ Use this section when Roll20 ads directional dima and bright light to the GUI
-                                
+
+
+
                                 '<BR>' +
+
                                 `<div style="margin-top:0px; display:inline-block">` +
                                 '<span title="Use this sparingly, as light colors can interact in unpredicatble ways. Tinting vision is not always optimal, since the interaction is problematic.">&nbsp;Color:' + setValue(tokenData.get("lightColor"), "lightColor", "!token-mod --set lightColor|?{Use sparingly. Input in hex, rgb or hsv format.|transparent}") + "</span> " +
                                 colorButton("token", "lightColor", tokenData.get('lightColor')) +
@@ -632,7 +663,7 @@ on('ready', () => {
                                 lightButton("<i>Dancing Light<i>", 10, 0, 360, "!token-mod --set emits_bright_light|on emits_low_light|on bright_light_distance|0 low_light_distance|10 has_directional_bright_light|off directional_bright_light_total|360 dim_light_opacity|" + tokenData.get("dim_light_opacity")) +
                                 lightButton("<i>Faerie Fire<i>", 10, 0, 360, "!token-mod --set emits_bright_light|on emits_low_light|on bright_light_distance|0 low_light_distance|10 has_directional_bright_light|off directional_bright_light_total|360 dim_light_opacity|" + tokenData.get("dim_light_opacity")) +
                                 lightButton("<i>Flametongue<i>", 40, 40, 360, "!token-mod --set emits_bright_light|on emits_low_light|on bright_light_distance|40 low_light_distance|40 has_directional_bright_light|off directional_bright_light_total|360 dim_light_opacity|" + tokenData.get("dim_light_opacity")) +
-                                //lightButton("<i>Gem of Brightness<i>", 30, 30, 360, "!token-mod --set emits_bright_light|on emits_low_light|on bright_light_distance|30 low_light_distance|30 has_limit_field_of_vision|off limit_field_of_vision_total|360 dim_light_opacity|" + tokenData.get("dim_light_opacity")) +
+                                //                                lightButton("<i>Gem of Brightness<i>", 30, 30, 360, "!token-mod --set emits_bright_light|on emits_low_light|on bright_light_distance|30 low_light_distance|30 has_limit_field_of_vision|off limit_field_of_vision_total|360 dim_light_opacity|" + tokenData.get("dim_light_opacity")) +
                                 `</div>`;
 
 
@@ -1000,6 +1031,7 @@ on('ready', () => {
                         opacityButton = opacityButton.replace(" &#10;!dltool --report", " &#10;" + msg.content);
 
                         colorTable = colorTable + TransparencyButton;
+                        //TransparencyButton = `<a style = "display:inline-block; height:18px;padding:0px;  margin:0px 1px; border-radius:5px; color:#eee; background-color:#111; border:1px solid #111;"` + ((dataSet === "page") ? ` href ="!dltool-mod --${theProperty}\|transparent">` : ` href ="!token-mod --set ${theProperty}\|transparent">`) + `&nbsp;Transparent&nbsp;</a>`
 
 
                         colorTable = colorTable + opacityButton;
@@ -1008,11 +1040,14 @@ on('ready', () => {
                             noarchive: true
                         });
 
+                        //pageData.set('force_lighting_refresh', true);
                         break;
 
                     default:
                         // Nothing here. :)
                 }
+
+
 
 
                 if (theOption === "false") {
