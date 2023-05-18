@@ -623,7 +623,7 @@ var EASYEXPERIENCE = EASYEXPERIENCE || (function() {
 			nextLevel;
 			if(currLevel<state.EASYEXPERIENCE.maxLvl){
 					if(currLevel>0){
-							if(currXP[0]){
+							if(currXP){
 									nextLevel = parseInt(level.get('current')) + 1;
 									currXP.set('max', thresholds[0].attrs[nextLevel].get('current'));
 									return;
