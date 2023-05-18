@@ -421,7 +421,7 @@ var EASYEXPERIENCE = EASYEXPERIENCE || (function() {
 	//Configure the progression system used. Options are - Pathfinder:Slow, Medium, Fast; PFS Standard; D&D 5e
 	configProgression = function(choice, customNum, customStart){
 			state.EASYEXPERIENCE.prog.selected = choice;
-			state.EASYEXPERIENCE.maxLvl = customNum;
+			state.EASYEXPERIENCE.maxLvl = customNum || 20;
 			createThresholds(choice, customNum, customStart);
 			outputConfig();
 	},
