@@ -8,7 +8,7 @@
     "authors": "Richard E.",
     "roll20userid": "6497708",
     "useroptions": [],
-    "dependencies": ["ChatSetAttr","TokenMod","RoundMaster","CommandMaster","InitMaster","AttackMaster","MagicMaster"],
+    "dependencies": [],
     "modifies": {
 		"Campaign().turnorder": "read,write",
 		"Campaign().playerpageid": "read",
