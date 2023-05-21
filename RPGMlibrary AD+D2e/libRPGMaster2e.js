@@ -5549,19 +5549,19 @@ const libRPGMaster = (() => { // eslint-disable-line no-unused-vars
 	}
 	
 	String.prototype.dbName = function() {
-		return toString(this).toLowerCase().replace(reIgnore,'');
+		return this.toLowerCase().replace(reIgnore,'');
 	}
 	
 	String.prototype.dispName = function() {
-		return (toString(this) || '').replace(/\-/g,' ');
+		return (this || '').replace(/\-/g,' ');
 	}
 	
 	String.prototype.hyphened = function() {
-		return (toString(this) || '').replace(/\s/g,'-');
+		return (this || '').replace(/\s/g,'-');
 	}
 	
 	String.prototype.trueCompare = function(txt) {
-		return (toString(this) || '').dbName() === (toString(txt) || '').dbName();
+		return (this || '').dbName() === (toString(txt) || '').dbName();
 	}
 
 	class AbilityObj {
@@ -7111,8 +7111,7 @@ const libRPGMaster = (() => { // eslint-disable-line no-unused-vars
 				
 				dbFullName = dbFullName.replace(/_/g,'-');
 
-				const dbName = dbFullName.toLowerCase(),
-					  spells = dbObj.type.includes('spell') || dbObj.type.includes('power'),
+				const spells = dbObj.type.includes('spell') || dbObj.type.includes('power'),
 					  charClass = dbObj.type.includes('class'),
 					  rootDB = dbObj.root.toLowerCase();
 
@@ -7161,7 +7160,7 @@ const libRPGMaster = (() => { // eslint-disable-line no-unused-vars
 						};
 					});
 					if (errFlag) {
-						LibFunctions.sendError( 'Unable to completely update database '+dbName );
+						LibFunctions.sendError( 'Unable to completely update database '+dbFullName );
 					} else {
 						_.each(typeList, dbList => dbList.field[0].length ? LibFunctions.setAttr( dbCS, [dbList.field[0],'current'], (lists[dbList.type.toLowerCase()] || ['']).join('|')) : '');
 						LibFunctions.setAttr( dbCS, fields.dbVersion, (dbObj.version || 1.0));
@@ -7169,7 +7168,7 @@ const libRPGMaster = (() => { // eslint-disable-line no-unused-vars
 						dbCS.set('bio',(dbObj.bio || ''));
 						dbCS.set('controlledby',(dbObj.controlledby || 'All'));
 						dbCS.set('gmnotes',(dbObj.gmnotes || ''));
-						let msg = 'Updated database '+dbName+' to version '+String(dbObj.version);
+						let msg = 'Updated database '+dbFullName+' to version '+String(dbObj.version);
 						if (!silent) LibFunctions.sendFeedback( msg, fields.feedbackName ); else log(msg);
 					}
 				}
