@@ -49,14 +49,19 @@
  *                     and Magic Item initiative menus
  * v1.4.06 09/04/2023  Non-functional update release to maintain version sequence.
  * v1.4.07 16/04/2023  Non-functional update release to maintain version sequence.
+ * v1.5.01 19/05/2023  Removed CheckAC call from initiative submission in an attempt to
+ *                     speed up multi-user experience. Fixed weapon menu display of creature
+ *                     attack descriptions. Fixed castingClass returned by caster() function 
+ *                     to be toUpperCase(). Made initiative processing much more asynchronous 
+ *                     to improve user response.
  */
 
 var initMaster = (function() {
 	'use strict'; 
-	var version = '1.4.07',
+	var version = '1.5.01',
 		author = 'Richerd @ Damery',
 		pending = null;
-    const lastUpdate = 1681632737;
+    const lastUpdate = 1684607663;
 
 	/*
 	 * Define redirections for functions moved to the RPGMaster library
@@ -472,6 +477,7 @@ var initMaster = (function() {
 		heavyArmour: '&{template:'+fields.warningTemplate+'} {{name=^^tname^^\'s\nInitiative}}{{desc=^^tname^^ realises that the armour they are wearing prevents them from using any thievish skills.  You will have to remove it, and then perhaps you might have a chance.  Change the armour type on the Rogue tab of your Character Sheet.}}',
 		stdInit: '&{template:'+fields.warningTemplate+'} {{name=^^tname^^\'s\nInitiative}}{{desc=Currently, the game is running on Standard AD&D Initiative rules, so it is a Party initiative roll.  You do not need to select an action.}}',
 		notYet: '&{template:'+fields.warningTemplate+'} {{name=^^tname^^\'s\nInitiative}}{{desc=The game is running on Group AD&D Initiative rules, so the Party need to make an initiative roll before you add the speed of what you are doing.  You cannot yet select an action yet.}}',
+		waitMsg: '&{template:'+fields.warningTemplate+'} {{name=Please Wait}}{{desc=Gathering data. Please wait for the menu to appear.}}',
 	});
 
 	var flags = {
@@ -501,6 +507,7 @@ var initMaster = (function() {
 	
 	const reIgnore = /[\s\-\_]*/gi;
 	const reRepeatingTable = /^(repeating_.*)_\$(\d+)_.*$/;
+	const reDiceRollSpec = /(?:^\d+$|\d+d\d+)/i;
 	
 	var	replacers = [
 			[/\\lbrc;?/g, "{"],
@@ -1038,7 +1045,7 @@ var initMaster = (function() {
 		
 		for (const casterData of casterLevels) {
 			charClass = (attrLookup( charCS, casterData[0] ) || '');
-			castingClass = charClass.dbName();
+			castingClass = charClass.dbName().toUpperCase();
 			level = attrLookup(charCS,casterData[1]) || 0;
 			if (level > 0 && (_.isUndefined(spellsPerLevel[castingClass]) || _.isUndefined(spellsPerLevel[castingClass][casterType]))) {
 				if (casterType == 'MU' && casterData[0][0] == fields.Wizard_class[0]) {
@@ -1691,7 +1698,7 @@ var initMaster = (function() {
 		if (entry > 0) {
 			setAttr( charCS, fields.Prev_round, 0 );
 			setAttr( charCS, [fields.Prev_round[0] + tokenID, fields.Prev_round[1]], state.initMaster.round, null, null, null, true );
-			buildMenu( initMenu, charCS, MenuState.DISABLED, args, senderId );
+//			buildMenu( initMenu, charCS, MenuState.DISABLED, args, senderId );
 		}
 		return attacks;
 	}
@@ -1724,154 +1731,166 @@ var initMaster = (function() {
 			return;
 		}
 		
-		var charName = charCS.get('name'),
-			tokenName = getObj( 'graphic', tokenID ).get('name'),
-			submitVal = attrLookup( charCS, fields.Init_submitVal ),
-			content = fields.roundMaster;
-
-
-		if (rowIndex < 0 && !submitVal) {
-			sendParsedMsg( tokenID, Init_Messages.doneInit, senderId, flags.feedbackName );
-			return;
-		}
+		buildMenu( initMenu, charCS, MenuState.DISABLED, args, senderId );
 		
-		actions = handleAllWeapons( senderId, charCS, args, base, (rowIndex != -2) );
+		setTimeout( () => {
 
-		if (rowIndex == 0 && (initMenu == MenuType.COMPLEX || initMenu == MenuType.SIMPLE)) {
-			buildMenu( initMenu, charCS, MenuState.DISABLED, args, senderId );
-			var monAttk1 = (attrLookup( charCS, fields.Monster_dmg1 ) || '').split(','),
-				monAttk2 = (attrLookup( charCS, fields.Monster_dmg2 ) || '').split(','),
-				monAttk3 = (attrLookup( charCS, fields.Monster_dmg3 ) || '').split(','),
-				monSpeed = parseInt(attrLookup( charCS, fields.Monster_speed ) || 0),
-				monSpeed1 = parseInt((monAttk1.length > 2) ? monAttk1[2] : monSpeed) || monSpeed,
-				monSpeed2 = parseInt((monAttk2.length > 2) ? monAttk2[2] : monSpeed) || monSpeed,
-				monSpeed3 = parseInt((monAttk3.length > 2) ? monAttk3[2] : monSpeed) || monSpeed,
-				monMod = parseInt(attrLookup( charCS, fields.initMod )) || 0;
-				
-			actions = [new Set()];
-			setAttr( charCS, fields.Prev_round, 0 );
-			setAttr( charCS, [fields.Prev_round[0] + tokenID, fields.Prev_round[1]], state.initMaster.round, null, null, null, true );
-			setAttr( charCS, fields.Init_chosen, 0 );
-			setAttr( charCS, fields.Init_done, -1 );
-			setAttr( charCS, fields.Init_submitVal, 0 );
-			setAttr( charCS, fields.Init_speed, monSpeed1 );
-			setAttr( charCS, fields.Init_carry, (monSpeed1 > 10 ? 1 : 0) );
-			setAttr( charCS, fields.Init_carrySpeed, (monSpeed1 - 10) );
-			setAttr( charCS, fields.Init_carryAction, 'with their '+monAttk1[0] );
-			setAttr( charCS, fields.Init_carryActNum, 1 );
-			setAttr( charCS, fields.Init_carryWeapNum, -1 );
-			setAttr( charCS, fields.Init_carryPreInit, 0 );
-			setAttr( charCS, fields.Init_carry2H, 0 );
+			var	initCmd = args[0],
+				tokenID = args[1],
+				rowIndex = args[2],
+				initMenu = args[3],
+				rowIndex2 = args[4],
+				base = parseInt(state.initMaster.initType == 'group' ? state.initMaster.playerRoll : randomInteger(10)),
+				actions, initiative, count,
+				charName = charCS.get('name'),
+				tokenName = getObj( 'graphic', tokenID ).get('name'),
+				submitVal = attrLookup( charCS, fields.Init_submitVal ),
+				content = fields.roundMaster;
 
-			if (monAttk1[0].length && (rowIndex2 == 0 || rowIndex2 == 1)) actions.push({init:(base+monSpeed1+monMod),ignore:0,action:('with their '+monAttk1[0]),msg:(' rate 1, speed '+monSpeed1+', modifier '+monMod)});
-			if (monAttk2[0].length && (rowIndex2 == 0 || rowIndex2 == 2)) actions.push({init:(base+monSpeed2+monMod),ignore:0,action:('with their '+monAttk2[0]),msg:(' rate 1, speed '+monSpeed2+', modifier '+monMod)});
-			if (monAttk3[0].length && (rowIndex2 == 0 || rowIndex2 == 3)) actions.push({init:(base+monSpeed3+monMod),ignore:0,action:('with their '+monAttk3[0]),msg:(' rate 1, speed '+monSpeed3+', modifier '+monMod)});
 
-		} else if (rowIndex != -2) {
-			var	fighterClass = (attrLookup( charCS, fields.Fighter_class ) || ''),
-				init_Mod = parseInt(attrLookup( charCS, fields.initMod )) || 0,
-				init_Mult = Math.max(parseFloat(attrLookup( charCS, fields.initMultiplier ) || 1),1),
-				init_Done = parseInt(attrLookup( charCS, fields.Init_done ), 10),
-				init_speed = parseInt(attrLookup( charCS, fields.Init_speed )) || 0,
-				init_action = attrLookup( charCS, fields.Init_action ),
-				init_actionnum = attrLookup( charCS, fields.Init_actNum ),
-				init_attacks = parseInt(attrLookup( charCS, fields.Init_attacks ) || 1),
-				init_preinit = attrLookup( charCS, fields.Init_preInit ),
-				weapno = attrLookup( charCS, fields.Weapon_num ),
-				preinit = eval( init_preinit ),
-				twoHanded = attrLookup( charCS, fields.Init_2Hweapon ),
-				round = state.initMaster.round;
-				
-			if (initMenu == MenuType.TWOWEAPONS) {
-				
-				var init_speed2 = parseInt(attrLookup( charCS, fields.Init_2ndSpeed )) || 0,
-					init_action2 = attrLookup( charCS, fields.Init_2ndAction ),
-					init_actionnum2 = flags.twoWeapSingleAttk ? (init_Mult + '*1 (2nd weap)') : attrLookup( charCS, fields.Init_2ndActNum ),
-					init_attacks2 = flags.twoWeapSingleAttk ? 1 : parseInt(attrLookup( charCS, fields.Init_2ndAttacks ) || 1),
-					preinit2 = false;
-
-				args[3] = args[4];
-			}
-			
-			setAttr( charCS, fields.Prev_round, 0 );
-			setAttr( charCS, [fields.Prev_round[0] + tokenID, fields.Prev_round[1]], state.initMaster.round, null, null, null, true );
-			setAttr( charCS, fields.Init_chosen, 0 );
-			setAttr( charCS, fields.Init_done, -1 );
-			setAttr( charCS, fields.Init_submitVal, 0 );
-			setAttr( charCS, fields.Init_carry, (init_speed > 10 ? 1 : 0) );
-			setAttr( charCS, fields.Init_carrySpeed, (init_speed - 10) );
-			setAttr( charCS, fields.Init_carryAction, init_action );
-			setAttr( charCS, fields.Init_carryActNum, init_actionnum );
-			setAttr( charCS, fields.Init_carryAttacks, init_attacks );
-			setAttr( charCS, fields.Init_carryWeapNum, weapno );
-			setAttr( charCS, fields.Init_carryPreInit, init_preinit );
-			setAttr( charCS, fields.Init_carry2H, twoHanded );
-			
-			if (init_Done) {
+			if (rowIndex < 0 && !submitVal) {
+				sendParsedMsg( tokenID, Init_Messages.doneInit, senderId, flags.feedbackName );
 				return;
 			}
 			
-			buildMenu( initMenu, charCS, MenuState.DISABLED, args, senderId );
-			if (initMenu != MenuType.TWOWEAPONS) {
-				setAttr( charCS, fields.Weapon_num, -1 );
-				setAttr( charCS, fields.Weapon_2ndNum, -1 );
-			}
+			actions = handleAllWeapons( senderId, charCS, args, base, (rowIndex != -2) );
 
-			if (initMenu != MenuType.TWOWEAPONS || init_speed2 >= init_speed) {
-				
-				if (init_attacks >= 1) {
-					initiative = (preinit ? 0 : base+init_speed+init_Mod);
-					actions.push({init:initiative,ignore:0,action:init_action,msg:(' rate '+init_actionnum+', speed '+init_speed+', modifier '+init_Mod)});
-				}
-				if (initMenu == MenuType.TWOWEAPONS && (init_attacks2 >= 1)) {
-					initiative = base + init_speed2 + init_Mod;
-					actions.push({init:initiative,ignore:0,action:init_action2,msg:(' rate '+init_actionnum2+', speed '+init_speed2+', modifier '+init_Mod)});
-				}
-				
-			} else {
-				
-				if (init_attacks2 >= 1) {
-					initiative = (preinit2 ? 0 : base+init_speed2+init_Mod);
-					actions.push({init:initiative,ignore:0,action:init_action2,msg:(' rate '+init_actionnum2+', speed '+init_speed2+', modifier '+init_Mod)});
-				}
-				if (init_attacks >= 1) {
-					initiative = base+init_speed+init_Mod;
-					actions.push({init:initiative,ignore:0,action:init_action,msg:(' rate '+init_actionnum+', speed '+init_speed+', modifier '+init_Mod)});
-				}
-				
-			}
+			if (rowIndex == 0 && (initMenu == MenuType.COMPLEX || initMenu == MenuType.SIMPLE)) {
+//				buildMenu( initMenu, charCS, MenuState.DISABLED, args, senderId );
+				var monAttk1 = (attrLookup( charCS, fields.Monster_dmg1 ) || '').split(','),
+					monAttk2 = (attrLookup( charCS, fields.Monster_dmg2 ) || '').split(','),
+					monAttk3 = (attrLookup( charCS, fields.Monster_dmg3 ) || '').split(','),
+					monSpeed = parseInt(attrLookup( charCS, fields.Monster_speed ) || 0),
+					monSpeed1 = parseInt((monAttk1.length > 2) ? monAttk1[2] : monSpeed) || monSpeed,
+					monSpeed2 = parseInt((monAttk2.length > 2) ? monAttk2[2] : monSpeed) || monSpeed,
+					monSpeed3 = parseInt((monAttk3.length > 2) ? monAttk3[2] : monSpeed) || monSpeed,
+					monMod = parseInt(attrLookup( charCS, fields.initMod )) || 0;
 					
-			for( let i=2; i<=init_attacks; i++ ) {
-				initiative = base + (i * (init_speed)) + init_Mod;
-				actions.push({init:initiative,ignore:0,action:init_action,msg:''});
-			}
-			
-			if (initMenu == MenuType.TWOWEAPONS) {
-				for( let i=2; i<=init_attacks2; i++ ) {
-					initiative = base + (i * (init_speed2)) + init_Mod;
-					actions.push({init:initiative,ignore:0,action:init_action2,msg:''});
+				actions = [new Set()];
+				setAttr( charCS, fields.Prev_round, 0 );
+				setAttr( charCS, [fields.Prev_round[0] + tokenID, fields.Prev_round[1]], state.initMaster.round, null, null, null, true );
+				setAttr( charCS, fields.Init_chosen, 0 );
+				setAttr( charCS, fields.Init_done, -1 );
+				setAttr( charCS, fields.Init_submitVal, 0 );
+				setAttr( charCS, fields.Init_speed, monSpeed1 );
+				setAttr( charCS, fields.Init_carry, (monSpeed1 > 10 ? 1 : 0) );
+				setAttr( charCS, fields.Init_carrySpeed, (monSpeed1 - 10) );
+				setAttr( charCS, fields.Init_carryAction, 'with their '+monAttk1[0] );
+				setAttr( charCS, fields.Init_carryActNum, 1 );
+				setAttr( charCS, fields.Init_carryWeapNum, -1 );
+				setAttr( charCS, fields.Init_carryPreInit, 0 );
+				setAttr( charCS, fields.Init_carry2H, 0 );
+
+				if (monAttk1[0].length && (rowIndex2 == 0 || rowIndex2 == 1)) actions.push({init:(base+monSpeed1+monMod),ignore:0,action:('with their '+monAttk1[0]),msg:(' rate 1, speed '+monSpeed1+', modifier '+monMod)});
+				if (monAttk2[0].length && (rowIndex2 == 0 || rowIndex2 == 2)) actions.push({init:(base+monSpeed2+monMod),ignore:0,action:('with their '+monAttk2[0]),msg:(' rate 1, speed '+monSpeed2+', modifier '+monMod)});
+				if (monAttk3[0].length && (rowIndex2 == 0 || rowIndex2 == 3)) actions.push({init:(base+monSpeed3+monMod),ignore:0,action:('with their '+monAttk3[0]),msg:(' rate 1, speed '+monSpeed3+', modifier '+monMod)});
+
+			} else if (rowIndex != -2) {
+				var	fighterClass = (attrLookup( charCS, fields.Fighter_class ) || ''),
+					init_Mod = parseInt(attrLookup( charCS, fields.initMod )) || 0,
+					init_Mult = Math.max(parseFloat(attrLookup( charCS, fields.initMultiplier ) || 1),1),
+					init_Done = parseInt(attrLookup( charCS, fields.Init_done ), 10),
+					init_speed = parseInt(attrLookup( charCS, fields.Init_speed )) || 0,
+					init_action = attrLookup( charCS, fields.Init_action ),
+					init_actionnum = attrLookup( charCS, fields.Init_actNum ),
+					init_attacks = parseInt(attrLookup( charCS, fields.Init_attacks ) || 1),
+					init_preinit = attrLookup( charCS, fields.Init_preInit ),
+					weapno = attrLookup( charCS, fields.Weapon_num ),
+					preinit = eval( init_preinit ),
+					twoHanded = attrLookup( charCS, fields.Init_2Hweapon ),
+					round = state.initMaster.round;
+					
+				if (initMenu == MenuType.TWOWEAPONS) {
+					
+					var init_speed2 = parseInt(attrLookup( charCS, fields.Init_2ndSpeed )) || 0,
+						init_action2 = attrLookup( charCS, fields.Init_2ndAction ),
+						init_actionnum2 = flags.twoWeapSingleAttk ? (init_Mult + '*1 (2nd weap)') : attrLookup( charCS, fields.Init_2ndActNum ),
+						init_attacks2 = flags.twoWeapSingleAttk ? 1 : parseInt(attrLookup( charCS, fields.Init_2ndAttacks ) || 1),
+						preinit2 = false;
+
+					args[3] = args[4];
+				}
+				
+				setAttr( charCS, fields.Prev_round, 0 );
+				setAttr( charCS, [fields.Prev_round[0] + tokenID, fields.Prev_round[1]], state.initMaster.round, null, null, null, true );
+				setAttr( charCS, fields.Init_chosen, 0 );
+				setAttr( charCS, fields.Init_done, -1 );
+				setAttr( charCS, fields.Init_submitVal, 0 );
+				setAttr( charCS, fields.Init_carry, (init_speed > 10 ? 1 : 0) );
+				setAttr( charCS, fields.Init_carrySpeed, (init_speed - 10) );
+				setAttr( charCS, fields.Init_carryAction, init_action );
+				setAttr( charCS, fields.Init_carryActNum, init_actionnum );
+				setAttr( charCS, fields.Init_carryAttacks, init_attacks );
+				setAttr( charCS, fields.Init_carryWeapNum, weapno );
+				setAttr( charCS, fields.Init_carryPreInit, init_preinit );
+				setAttr( charCS, fields.Init_carry2H, twoHanded );
+				
+				if (init_Done) {
+					return;
+				}
+				
+//				buildMenu( initMenu, charCS, MenuState.DISABLED, args, senderId );
+				if (initMenu != MenuType.TWOWEAPONS) {
+					setAttr( charCS, fields.Weapon_num, -1 );
+					setAttr( charCS, fields.Weapon_2ndNum, -1 );
+				}
+
+				if (initMenu != MenuType.TWOWEAPONS || init_speed2 >= init_speed) {
+					
+					if (init_attacks >= 1) {
+						initiative = (preinit ? 0 : base+init_speed+init_Mod);
+						actions.push({init:initiative,ignore:0,action:init_action,msg:(' rate '+init_actionnum+', speed '+init_speed+', modifier '+init_Mod)});
+					}
+					if (initMenu == MenuType.TWOWEAPONS && (init_attacks2 >= 1)) {
+						initiative = base + init_speed2 + init_Mod;
+						actions.push({init:initiative,ignore:0,action:init_action2,msg:(' rate '+init_actionnum2+', speed '+init_speed2+', modifier '+init_Mod)});
+					}
+					
+				} else {
+					
+					if (init_attacks2 >= 1) {
+						initiative = (preinit2 ? 0 : base+init_speed2+init_Mod);
+						actions.push({init:initiative,ignore:0,action:init_action2,msg:(' rate '+init_actionnum2+', speed '+init_speed2+', modifier '+init_Mod)});
+					}
+					if (init_attacks >= 1) {
+						initiative = base+init_speed+init_Mod;
+						actions.push({init:initiative,ignore:0,action:init_action,msg:(' rate '+init_actionnum+', speed '+init_speed+', modifier '+init_Mod)});
+					}
+					
+				}
+						
+				for( let i=2; i<=init_attacks; i++ ) {
+					initiative = base + (i * (init_speed)) + init_Mod;
+					actions.push({init:initiative,ignore:0,action:init_action,msg:''});
+				}
+				
+				if (initMenu == MenuType.TWOWEAPONS) {
+					for( let i=2; i<=init_attacks2; i++ ) {
+						initiative = base + (i * (init_speed2)) + init_Mod;
+						actions.push({init:initiative,ignore:0,action:init_action2,msg:''});
+					}
 				}
 			}
-		}
-		count = 0;
-		actions = _.sortBy( actions, 'init' );
-		_.each( actions, function(act) {
-			if (_.isUndefined(act.init)) {return;}
-			count++;
-			content += ' --addtotracker '+tokenName+'|'+tokenID+'|'+act.init+'|'+act.ignore+'|'+act.action+'|'+act.msg;
+			count = 0;
+			actions = _.sortBy( actions, 'init' );
+			_.each( actions, function(act) {
+				if (_.isUndefined(act.init)) {return;}
+				count++;
+				content += ' --addtotracker '+tokenName+'|'+tokenID+'|'+act.init+'|'+act.ignore+'|'+act.action+'|'+act.msg;
+				
+			});
+	//		content += ' --removefromtracker '+tokenName+'|'+tokenID+'|'+(actions.length);
+			sendAPI( content, senderId );
 			
-		});
-		content += ' --removefromtracker '+tokenName+'|'+tokenID+'|'+(actions.length);
-		sendAPI( content, senderId );
+			if (!count) {
+				content = '&{template:'+fields.defaultTemplate+'}{{name='+tokenName+'\'s Initiative}}'
+						+ '{{desc='+tokenName+'\'s action '+init_action+' at a rate of '+init_actionnum+' does not result in an action this round}}';
+				sendResponse( charCS, content, senderId,flags.feedbackName,flags.feedbackImg,tokenID );
+			};
+		}, 2000, senderId, charCS, args );
 		
-		if (!count) {
-			content = '&{template:'+fields.defaultTemplate+'}{{name='+tokenName+'\'s Initiative}}'
-					+ '{{desc='+tokenName+'\'s action '+init_action+' at a rate of '+init_actionnum+' does not result in an action this round}}';
-			sendResponse( charCS, content, senderId,flags.feedbackName,flags.feedbackImg,tokenID );
-		};
-		
-		content = fields.attackMaster + ' --checkac ' + tokenID + '|Silent||' + senderId;
-   		sendAPI( content, senderId );
+//		content = fields.attackMaster + ' --checkac ' + tokenID + '|Silent||' + senderId;
+// 		sendAPI( content, senderId );
 	};
 
 	/*
@@ -1965,78 +1984,83 @@ var initMaster = (function() {
 
 	var buildMenu = function( initMenu, charCS, selected, args, senderId ) {
 		
-		var content = '';
+		sendResponse( charCS, Init_Messages.waitMsg, senderId );
 		
-		switch (initMenu) {
+		setTimeout( () => {
 		
-		case MenuType.SIMPLE :
-				makeMonsterMenu( Monster.SIMPLE, charCS, selected, args, senderId );
-				break;
-				
-		case MenuType.COMPLEX :
-				makeMonsterMenu( Monster.COMPLEX, charCS, selected, args, senderId );
-				break;
-				
-			case MenuType.WEAPON :
-			case MenuType.MIATTK :
-				makeWeaponMenu( charCS, selected, args, senderId );
-				break;
+			var content = '';
 			
-			case MenuType.MW_MELEE :
-				args[3] = args[8];
-				makePrimeWeaponMenu( charCS, selected, args, senderId );
-				break;
-				
-            case MenuType.MW_PRIME :
-			case MenuType.MW_SECOND :
-				args[3] = args[8];
-				makeSecondWeaponMenu( charCS, selected, args, senderId );
-				break;
+			switch (initMenu) {
 			
-			case MenuType.TWOWEAPONS :
-				makeSecondWeaponMenu( charCS, selected, args, senderId );
-				break;
+			case MenuType.SIMPLE :
+					makeMonsterMenu( Monster.SIMPLE, charCS, selected, args, senderId );
+					break;
+					
+			case MenuType.COMPLEX :
+					makeMonsterMenu( Monster.COMPLEX, charCS, selected, args, senderId );
+					break;
+					
+				case MenuType.WEAPON :
+				case MenuType.MIATTK :
+					makeWeaponMenu( charCS, selected, args, senderId );
+					break;
 				
-			case MenuType.MUSPELL :
-				makeSpellMenu( Caster.WIZARD, charCS, selected, args, senderId );
-				break;
+				case MenuType.MW_MELEE :
+					args[3] = args[8];
+					makePrimeWeaponMenu( charCS, selected, args, senderId );
+					break;
+					
+				case MenuType.MW_PRIME :
+				case MenuType.MW_SECOND :
+					args[3] = args[8];
+					makeSecondWeaponMenu( charCS, selected, args, senderId );
+					break;
 				
-			case MenuType.PRSPELL :
-				makeSpellMenu( Caster.PRIEST, charCS, selected, args, senderId );
-				break;
-				
-			case MenuType.POWER :
-				makePowersMenu( charCS, selected, args, senderId );
-				break;
-				
-			case MenuType.MIBAG :
-				makeMIBagMenu( charCS, selected, args, senderId );
-				break;
-				
-			case MenuType.THIEF :
-				makeThiefMenu( charCS, selected, args, senderId );
-				break;
-				
-			case MenuType.OTHER :
-				makeOtherMenu( charCS, selected, args, senderId );
-				break;
-				
-			case MenuType.MENU :
-				makeInitMenu( charCS, CharSheet.CHARACTER, args, senderId );
-				break;
-				
-			case MenuType.MONSTER_MENU :
-				makeInitMenu( charCS, CharSheet.MONSTER, args, senderId );
-				break;
-				
-			case MenuType.CARRY :
-			    break;
-				
-			default:
-				sendDebug( 'buildMenu: "' + initMenu + '" is an invalid menu' );
-				sendError( 'Invalid initMaster menu call' );
+				case MenuType.TWOWEAPONS :
+					makeSecondWeaponMenu( charCS, selected, args, senderId );
+					break;
+					
+				case MenuType.MUSPELL :
+					makeSpellMenu( Caster.WIZARD, charCS, selected, args, senderId );
+					break;
+					
+				case MenuType.PRSPELL :
+					makeSpellMenu( Caster.PRIEST, charCS, selected, args, senderId );
+					break;
+					
+				case MenuType.POWER :
+					makePowersMenu( charCS, selected, args, senderId );
+					break;
+					
+				case MenuType.MIBAG :
+					makeMIBagMenu( charCS, selected, args, senderId );
+					break;
+					
+				case MenuType.THIEF :
+					makeThiefMenu( charCS, selected, args, senderId );
+					break;
+					
+				case MenuType.OTHER :
+					makeOtherMenu( charCS, selected, args, senderId );
+					break;
+					
+				case MenuType.MENU :
+					makeInitMenu( charCS, CharSheet.CHARACTER, args, senderId );
+					break;
+					
+				case MenuType.MONSTER_MENU :
+					makeInitMenu( charCS, CharSheet.MONSTER, args, senderId );
+					break;
+					
+				case MenuType.CARRY :
+					break;
+					
+				default:
+					sendDebug( 'buildMenu: "' + initMenu + '" is an invalid menu' );
+					sendError( 'Invalid initMaster menu call' );
 
-		}
+			}
+		}, (selected !== MenuState.DISABLED ? 1000 : 10), initMenu, charCS, selected, args, senderId );
 		return;
 	}
 
@@ -2153,19 +2177,21 @@ var initMaster = (function() {
 		if (monAttk1) {
 			monAttk1 = monAttk1.split(',');
 			content += ((0 == charButton && 1 == monButton) ? '<span style=' + design.selected_button + '>' : (submitted ? '<span style=' + design.grey_button + '>' : '['));
-			content += 'Monster '+monAttk1[0];
+			content += 'Creature '+ (monAttk1.length > 1 && reDiceRollSpec.test(monAttk1[0]) ? monAttk1[1] : monAttk1[0]);
 			content += (((0 == charButton && 1 == monButton) || submitted) ? '</span>' : '](!init --button ' + BT.MON_INNATE + '|' + tokenID + '|0|1)\n');
 		}
 		if (monAttk2) {
 			monAttk2 = monAttk2.split(',');
 			content += ((0 == charButton && 2 == monButton) ? '<span style=' + design.selected_button + '>' : (submitted ? '<span style=' + design.grey_button + '>' : '['));
-			content += 'Monster '+monAttk2[0];
+//			content += 'Monster '+monAttk2[0];
+			content += 'Creature '+ (monAttk2.length > 1 && reDiceRollSpec.test(monAttk2[0]) ? monAttk2[1] : monAttk2[0]);
 			content += (((0 == charButton && 2 == monButton) || submitted) ? '</span>' : '](!init --button ' + BT.MON_INNATE + '|' + tokenID + '|0|2)\n');
 		}
 		if (monAttk3) {
 			monAttk3 = monAttk3.split(',');
 			content += ((0 == charButton && 3 == monButton) ? '<span style=' + design.selected_button + '>' : (submitted ? '<span style=' + design.grey_button + '>' : '['));
-			content += 'Monster '+monAttk3[0];
+//			content += 'Monster '+monAttk3[0];
+			content += 'Creature '+ (monAttk3.length > 1 && reDiceRollSpec.test(monAttk3[0]) ? monAttk3[1] : monAttk3[0]);
 			content += (((0 == charButton && 3 == monButton) || submitted) ? '</span>' : '](!init --button ' + BT.MON_INNATE + '|' + tokenID + '|0|3)\n');
 		}
 		
