@@ -82,7 +82,7 @@
  
 var CommandMaster = (function() {
 	'use strict'; 
-	var version = '1.4.08',
+	var version = '1.5.01',
 		author = 'RED',
 		pending = null;
 	const lastUpdate = 1684607663;
@@ -433,7 +433,7 @@ var CommandMaster = (function() {
 	});
 		
 	/*
-	 * Object defining simple redMaster series ability actions to 
+	 * Object defining simple RPGMaster series ability actions to 
 	 * their respective APIs and registered API actions.
 	 */
 
