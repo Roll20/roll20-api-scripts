@@ -28,7 +28,6 @@ on("ready", () => {
   };
   
   const setConfig = (command) => {
-      log(command);
     const args = command.split("|");
     if (args.length > 1) {
       state.GREATERINVISIBILITY.config.invisibleTokenUrl = args[1];
@@ -66,7 +65,7 @@ on("ready", () => {
   }
 
   const getCleanImgsrc = (imgsrc) => {
-    let parts = imgsrc.match(/(.*\/images\/.*)(thumb|med|original|max)([^?]*)(\?[^?]+)?$/);
+    let parts = imgsrc.match(/(.*\/(?:images|marketplace)\/.*)(thumb|med|original|max)([^?]*)(\?[^?]+)?$/);
     if (parts) {
       return parts[1] + 'thumb' + parts[3] + (parts[4] ? parts[4] : `?${Math.round(Math.random() * 9999999)}`);
     }
@@ -74,8 +73,12 @@ on("ready", () => {
   };
 
   const setTokenInvisibilityState = (token, newValue) => {
+    if (token.get("imgsrc").includes("/marketplace/")) {
+        sendChat("GreaterInvisibility", " GreaterInvisibility does not support tokens with an image outside the user's library.  The Token for " + token.get("name") + " cannot be toggled.  Please manual update using side selector");
+    
+        return;
+    }
     let sides = token.get("sides").split(/\|/).map(decodeURIComponent).map(getCleanImgsrc);
-    let imgsrc = sides[newValue];
     token.set("currentSide", newValue);
     token.set("imgsrc", sides[newValue]);
     const messageAction = newValue === 0 ? " has disappeared!" : " has appeared!"
@@ -111,7 +114,6 @@ on("ready", () => {
     sendChat("GreaterInvisibility", msg);
   };
   
-  log("Casting Greater Invisiblity at level 0.2.0...");
 
   if (!state.GREATERINVISIBILITY) {
     state.GREATERINVISIBILITY = {
@@ -120,8 +122,11 @@ on("ready", () => {
         invisibleTokenUrl: ''
       }
     };
-
-    setConfig("config");
+  }
+  log("Casting Greater Invisiblity at level " + state.GREATERINVISIBILITY.version + "...");
+  
+  if (state.GREATERINVISIBILITY.config.invisibleTokenUrl.trim() === "") {
+      setConfig("config");
   }
 
   const ACTIONS = {
