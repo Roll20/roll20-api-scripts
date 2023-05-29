@@ -120,17 +120,17 @@ tr {line-height: 25px;}
                 <li><a class="text-info" href="#Markers_Check">Activation et Vérification</a></li>
               </ul>
               <li data-toggle="collapse" data-target="#console"><a href="#Console">Console API</a></li>
-              <li><a href="#pathfinder">Conversion depuis Pathfinder</a></li>
               <ul id="console" class="collapse">
                 <li><a class="text-info" href="#Generalites_Console">Généralités sur la Console API</a></li>
                 <li><a class="text-info" href="#Erreurs_Console">Principaux messages d'erreur</a></li>
                 <li><a class="text-info" href="#Infos_Console">Principaux messages d'information</a></li>
               </ul>
+              <li><a href="#pathfinder">Conversion depuis Pathfinder</a></li>
             </ol>
           </div>
         </div>
         <div class="col-md-9 col-sm-8 content">
-          <h1>Documentation pour la version 3.12 de COFantasy</h1>
+          <h1>Documentation pour la version 3.13 de COFantasy</h1>
           <h2 class="text-primary" id="comment_utiliser_script">1. Comment utiliser Le script</h2>
           <div class="decalage">
             <h3 class="text-info" id="token_personnages">1.1 Tokens et personnages</h3>
@@ -206,7 +206,7 @@ tr {line-height: 25px;}
                 <li><b>Magie puissante (durée) :</b> utiliser l'option <code>--puissant duree</code> dans vos abilities ou attaques</li>
               </ul>
               <p>On peut facilement combiner ces options avec un input de choix roll20 qui permettra au joueur de choisir le type d'incantation lorsqu'il lance le sort, tout en spécifiant la dépense de Mana.</p>
-              <p><code>--mana <i>X</i> ?{Incantation ?|Rapide,&#32;|Puissante (L),--puissant|Portée étendue (L),--puissant portee|Durée étendue (L),--puissant duree}</code></p>
+              <p><code>--mana <i>X</i> ?{Incantation ?|Rapide,&amp;#32;|Puissante (L),--puissant|Portée étendue (L),--puissant portee|Durée étendue (L),--puissant duree}</code></p>
               <h4>Mana Totale (COF p. 180)</h4>
               <p>La première chose à faire est d'activer l'option Mana totale via <code>!cof-options</code>. Pour le reste, vous pouvez réutiliser le principe du système de base ci-dessus.</p>
               <h5>Coût aléatoire</h5>
@@ -222,7 +222,7 @@ tr {line-height: 25px;}
               <h4>Terres d'Arran (COTA p. 112)</h4>
               <p>Première chose à faire, activer l'option Brûlure de Magie via <code>!cof-options</code>. <i>Note : si vous utilisez l'option de Brûlure de Magie avec l'option Mana Totale, vous pouvez utiliser un <a href=#predicats>prédicat</a> <code>coefPVMana</code> qui va diviser le nombre de PVs dépensé par point de mana.</i></p>
               <p>Vous pouvez ensuite réutiliser le même principe que le système de base en combinant dépense de Mana et effets supplémentaires. Voici un exemple pour une Boule de Feu (Voie de l'élémentaliste, rang 4) :</p>
-              <p><code>--mana 2 ?{Incantation ?|Normale,--mana 2|Econome (L),|Puissante (L),--mana 2 --puissant|Portée étendue (L),--mana 2 --puissant portee}</code> (notez que les coût total pour une incantation normale sera de 4 points de mana)</p>
+              <p><code>--mana 2 ?{Incantation ?|Normale,--mana 2|Économe (L),&amp;#32;|Puissante (L),--mana 2 --puissant|Portée étendue (L),--mana 2 --puissant portee}</code> (notez que les coût total pour une incantation normale sera de 4 points de mana)</p>
             </div>
             <h3 class="text-info" id="regles_optionnelles">1.6 Règles optionnelles utilisées</h3>
             <div class="decalage">
@@ -403,6 +403,7 @@ tr {line-height: 25px;}
                   <li><code>--reroll1</code> : relance les 1 aux dés de dégats. À noter que cela ne concerne que les dés de base de l'attaque, pas les DM supplémentaire. </li>
                   <li><code>--explodeMax</code> : relance les valeurs maximum aux dés de DM de base, et rajoute le nouveau résultat (qui lui-même explose).</li>
                   <li><code>--mana <i>n</i></code> : l'attaque coûte <i>n</i> points de mana. Si l'attaque provoque un effet temporaire, le script essaiera de le supprimer à la mort du lanceur (même avec un coût nul).</li>
+                  <li><code>--magieRapide</code> : augmente le coût en mana (1 avec la mana normale, 3 avec la mana totale) et affiche un petit message indiquant que le lancement est rapide. Il est possible de préciser un coût en mana différent.</li>
                   <li><code>--rang <i>n</i></code> : indique le rang de la capacité utilisée, si besoin. Utilisé par l'option <code>--tempeteDeMana</code>.</li>
                   <li><code>--tempeteDeMana <i>liste</i></code> : indique des effets de tempête de mana. La liste peut contenir un nombre (pour l'effet intense), <code>duree</code>, <code>rapide</code>, <code>portee</code> et <code>altruiste <i>id</i></code>. Si le rang du sort est spécifié (par l'option <code>--rang</code>, un message est affichée si le coût en mana est supérieur au rang. Si la liste d'options est vide ou ne contient que <code>altruiste</code>, le script affiche un menu dans le chat pour spécifier les options de tempête de mana. Il est possible d'utiliser les règles de mana totale pour les coûts de tempête de mana (à activer avec <code>!cof-options</code>).</li>
                   <li><code>--magieEnArmure</code> : applique un malus à l'attaque égale au rang du sort + le malus d'armure de l'attaquant. On peut ajouter un argument optionnel : soit un nombre qui va remplacer le rang dans cette formule, soit <code>mana</code> qui va augmenter le coût en mana de l'attaque en fonction de l'armure portée.</li>
@@ -1331,7 +1332,7 @@ tr {line-height: 25px;}
               <div class="decalage">
                 <h4 class="text-secondary">Voie des artefacts</h4>
                 <ol>
-                  <li><strong>Bâton de mage</strong> : simplement adapter l'attaque, avec aussi le modificateur <code>magique</code>. Pour l'éclair d'énergie, ajoutez dans les options <code>?{Attaque|Normale,&32;|Éclair d'énergie (L),--eclairDEnergie}</code>. Si vous autorisez les règles de mana pour cette attaque, remplacez par <code>?{Attaque|Normale,&32;|Éclair d'énergie (L),--eclairDEnergie|Éclair d'énergie rapide, --eclairDEnergie --magieRapide|Éclair d'énergie puissant (L), --eclairDEnergie --tempeteDeMana 1}</code>.</li>
+                  <li><strong>Bâton de mage</strong> : simplement adapter l'attaque, avec aussi le modificateur <code>magique</code>. Pour l'éclair d'énergie, ajoutez dans les options <code>?{Attaque|Normale,--magieRapide 2|Éclair d'énergie (L),--eclairDEnergie}</code>. Si vous autorisez les règles de mana pour cette attaque, remplacez par <code>?{Attaque|Normale,&amp;#32;|Éclair d'énergie (L),--eclairDEnergie|Éclair d'énergie rapide, --eclairDEnergie --magieRapide|Éclair d'énergie puissant (L), --eclairDEnergie --tempeteDeMana 1}</code>.</li>
                   <li><strong>Blocage</strong> : pas de support autre que <code>!cof-lancer-sort scelle une porte ou un coffre (+5 solidité & RD) pour [[@{selected|INT}]] minutes --mana 0</code></li>
                   <li><strong>Sac sans fond</strong> : pas de support particulier</li>
                   <li><strong>Frappe des arcanes</strong> : le plus simple est d'utiliser la même ligne d'attaque (disons que son label est <code>E</code>) que pour l'attaque d'énergie (mais si besoin, rien n'empêche d'en utiliser une autre). La commande sera alors <code>!cof-explosion E --auto --magique --sortilege --portee 10 --etat renverse --save FOR [[10+@{selected|INT}]]</code>.</li>
@@ -1515,7 +1516,7 @@ tr {line-height: 25px;}
                       <li>Objet de sort : <code>#Attaque Boule de feu --toucher [[@{selected|ATKMAG}]] --dm 4d6+[[@{selected|INT}]] --feu --magique --portee 30 --sortilege --demiAuto --disque 6 --psave DEX [[10+@{selected|INT}]] --targetFx explode-fire</code></li>
                     </ul>
                   </li>
-                  <li><strong>Rituel de puissance</strong> : faire l'appel aux attaques avec <code>--avecd12crit --plus 2d6</code>. On peut par exemple ajouter ceci dans les options des attaques lorsque le Rituel peut être utilisé :<code>?{Rituel de puissance?|Non,&#32;|Oui,--avecd12crit --plus 2d6}</code></li>
+                  <li><strong>Rituel de puissance</strong> : faire l'appel aux attaques avec <code>--avecd12crit --plus 2d6</code>. On peut par exemple ajouter ceci dans les options des attaques lorsque le Rituel peut être utilisé :<code>?{Rituel de puissance?|Non,&amp;#32;|Oui,--avecd12crit --plus 2d6}</code></li>
                 </ol>
                 <h4 class="text-secondary">Voie de la magie élémentaire</h4>
                 <ol>
@@ -1526,7 +1527,7 @@ tr {line-height: 25px;}
                     </ul>
                   </li>
                   <li><strong>Protection contre les éléments</strong> : ajouter un <a href=#predicats>prédicat</a> <code>voieDeLaMagieElementaire</code> avec comme valeur le rang dans la voie. Pour lancer le sort, faire <code>!cof-effet-temp protectionContreLesElements [[5+@{selected|INT}]] --mana 0</code>. Notez que si vous utilisez une option <code>--valeur</code> à la place d'utiliser le prédicat, la RD sera cette valeur multipliée par 2.</li>
-                  <li><strong>Arme enflammée</strong> : Lancer le sort avec <code>!cof-effet-temp armeEnflammee [[5+@{selected|INT}]] --lanceur @{selected|token_id} --target @{target|token_id} --portee 0 --mana 1</code>. Il faut que la cible tienne une arme en main (voir <code>!cof-degainer</code>). Limitations : si deux attaques utilisent la même arme, il faut faire deux fois l'action, une pour chaque attaque.</li>
+                  <li><strong>Arme enflammée</strong> : Lancer le sort avec <code>!cof-effet-temp armeEnflammee [[5+@{selected|INT}]] --lanceur @{selected|token_id} --target @{target|token_id} --portee 0 --mana 1</code>. Il faut que la cible tienne une arme en main (voir <code>!cof-degainer</code>). Limitations : si deux attaques utilisent la même arme, il faut faire deux fois l'action, une pour chaque attaque. Si vous souhaitez faire le même effet mais avec des dégâts de froid, vous pouvez utiliser <code>armeGlacee</code> à la place.</li>
                   <li><strong>Respiration aquatique</strong> : pas de support autre que <code>!cof-lancer-sort lance un sort de respiration aquatique (durée 10 minutes, sur soi plus [[@{selected|INT}]] compagnons) --mana 2</code>.</li>
                   <li><strong>Peau de pierre</strong> : <code>!cof-effet-temp peauDePierreMag [[5+@{selected|INT}]] --mana 3</code>. Le script va appliquer une RD de [5+Mod. d'INT] en dernier lieu, et compter le maximum des 40 dégâts par défaut. Il est possible de changer la valeur de la RD et le nombre de points de dégâts absorbés en ajoutant l'option <code>--valeur <i>rd absorbe</i></code>. À noter que le script rajoute +1 à la RD et +5 au total de dégâts absorbés en cas de magie puissante, ou par point de mana depensé en magie intense. </li>
                 </ol>
@@ -2121,6 +2122,10 @@ tr {line-height: 25px;}
                   <li><strong>Souffle de vie</strong> : <code>!cof-soin @{selected|token_id} @{target|token_id} souffleDeVie --portee 20 --mana 0</code></li>
                   <li><strong>Souffle de mort</strong> : faire une attaque magique, de portée 20 m (la portée par défaut pour les sorts, mais rien n'est spécifié dans le texte), de dégâts 2d8+INT. Ajoutez <code>auto</code> dans les modificateurs. Pour les options, <code>--disque 10 souffleDeMort --effet souffleDeMort 1 --save CON 10 --mana 1</code>.</li>
                 </ol>
+                <h4 class="text-secondary">Voie de Prestige spécialisée</h4>
+                <ol>
+                  <li><strong>Expertise</strong> : ajouter un <a href=#predicats>prédicat</a> <code>expertiseSpecialisee</code>, de valeur soit une caractéristique, soit une compétence, soit un mot-clé pour une capacité. Pour l'instant, ne sont implémentés que la rage du berserk (<code>rageDuBerserk</code>) et la furie du berserk (<code>furieDuBerserk</code>).</li>
+                </ol>
                 <h4 class="text-secondary">Voie de Périndé</h4>
                 <ol>
                   <li>Soutient</li>
@@ -2380,6 +2385,7 @@ tr {line-height: 25px;}
                   <li><strong>Action libre</strong> : ajouter un <a href=#predicats>prédicat</a> <code>actionLibre</code>.</li>
                   <li><strong>Agripper</strong> (démon dans Noirbois) : <code>!cof-agripper-de-demon @{selected|token_id} @{target|token_id}</code></li>
                   <li><strong>Apparition</strong> : un prédicat <code>apparition</code> immunise à tous les DMs, sauf ceux de canalisation (voir plus bas), ou les attaques avec l'option <code>energiePositive</code>.</li>
+                  <li><strong>Armes de l'été</strong> (Les seigneurs de l'hiver) : pour le bonus défensif contre le seigneur de l'hivers, ajoutez sur les arme un <a href=#predicats>prédicat</a> <code>armeDeLEte</code> et sur la créature qui attaque (a priori seulement le seigneur de l'hiver) le prédicat <code>creatureDeLHiver</code>. Pour la Flamme de l'été, on peut rajouter dans les options <code>--if predicatCible CreatureDeLHiver --incrDmgCoef 3 --incrCritCoef 3 --else --plus 1d6 --feu --enflamme --endif</code>, et pour la Lance de l'aubre, <code>--if predicatCible CreatureDeLHiver --incrDmgCoef 1 --incrCritCoef 1 --else --plus 1d6 --feu --enflamme --endif</code></li>
                   <li><strong>Attaque en meute</strong> : ajouter un <a href=#predicats>prédicat</a> <code>attaqueEnMeute</code> de valeur le bonus d'attaque (2 pour un gobelin). Cela confère le bonus pour toutes les attaques de personnages avec ce prédicat suivant une effectuée par un autre personnage avec ce prédicat, jusqu'au prochain tour de ce personnage. Ainsi, si 2 créatures continuent d'attaquer la même cible, elles bénéficieront du bonus tout le temps, sauf la toute première attaque.</li>
                   <li><strong>Attaque violente</strong> (Invicible) : ajouter un prédicat <code>attaqueViolente</code>.</li>
                   <li><strong>Auras</strong> : pour les capacités qui font un effet permanent à une certaine portée, comme l'aura glaciale des spectres, utiliser un attribut nommé <code>aura</code>, de valeur courante la portée en mètres de l'aura, et de valeur maximale l'effet à appliquer. Si cet effet contient la chaîne de caractère <code>$TOKEN</code>, cette chaîne sera remplacée par le nom du token à l'origine de l'aura. Pour un exemple d'utilisation, voyez la ligne <code>Aura glaciale</code> en dessous.</li>
@@ -2387,6 +2393,7 @@ tr {line-height: 25px;}
                   <li><strong>Baroud d'honneur</strong> : ajouter un <a href=#predicats>prédicat</a> <code>baroudHonneur</code> (Quand le personnage arrive à 0 PV, il ne meurt pas jusqu'à sa prochaine attaque, qui se fait avec un bonus de +5)</li>
                   <li><strong>Bâton des runes mortes</strong> : ajoutez dans les prédicats de l'arme le prédicat <code>batonDesRunesMortes</code>. Dans la fiche de Swarathnak, ajoutez le prédicat <code>ennemiDuBatonDesRunesMortes</code>.</li>
                   <li><strong>Bonus à l'attaque magique</strong> : utiliser un  <a href=#predicats>prédicat</a> <code>bonusAttaqueMagique</code> de valeur le bonus permet d'ajouter ce bonus aux attaques magiques. Utile en particulier en prédicat d'arme.</li>
+                  <li><strong>Boutefeu</strong> (Invincible) : utilisez un <a href=#predicats>prédicat</a> <code>boutefeu</code>.
                   <li><strong>Canalisation</strong> : <code>!cof-canaliser <i>type</i></code> où <i>type</i> peut être <code>positif</code> ou <code>négatif</code>, selon le type d'énergie canalisée. Il faut au moins soit une option <code>--soin <i>expr</i></code> ou  <code>--dm <i>expr</i></code> (il est possible d'avoir les deux), pour exprimer le montant des soins ou des dégâts. Si vous souhaitez avoir un certain nombre de dégâts par point de mana dépensé, vous pouvez utiliser un prédicat <code>deCanalisation</code> contenant l'expression des dégâts (ou soins) par point de mana, et utiliser la syntaxe <code>--soin <i>n</i> pm</code>.</li>
                   <li><strong>Châtiment du mâle</strong> : utiliser un <a href=#predicats>prédicat</a> <code>chatimentDuMale</code>.</li>
                   <li><strong>Cibles multiples</strong> (nuées) : ajouter un <a href=#predicats>prédicat</a> <code>ciblesMultiples</code>.</li>
@@ -2397,6 +2404,7 @@ tr {line-height: 25px;}
                   <li><strong>Dégâts si touché au contact</strong> (élémentaire de feu,...) : ajouter un <a href=#predicats>prédicat</a> nommé <code>dmSiToucheContact</code>, de valeur les dégâts, suivis de <code> --</code> et du type si besoin. Par exemple, pour un élémentaire de feu, le prédicat <code>dmSiToucheContact:: 1d6 --feu</code>, en fin de ligne (rien ne doit suivre sur cette ligne).</li>
                   <li><strong>Drain de force</strong> (pour la campagne Invincible) : ajouter un <a href=#predicats>prédicat</a> <code>auraDrainDeForce</code></li>
                   <li><strong>Écraser</strong> (pour la campagne Invincible) : ajouter un <a href=#predicats>prédicat</a> <code>ecraser</code> de valeur le label de l'attaque utilisée pour écraser.</li>
+                  <li><strong>Effroi</strong> (dragons) : <code>!cof-peur [[10+@{selected|FOR}]] 1d4 --effroi --ralenti --disque @{selected|token_id} 50</code> à utiliser au premier tour de jeu.</li>
                   <li><strong>Énergie de la mort</strong> (pour la campagne Vengeance) : ajouter un <a href=#predicats>prédicat</a> <code>energieDeLaMort</code>. Le MJ devra être attentif au message indiquant le retour à la vie, car c'est lui qui devra enlever l'état mort et ajuster les PVs.</li>
                   <li><strong>Enveloppement</strong> (cube gélatineux) : ajouter l'option <code>--enveloppe</code>, puis quand le bouton apparaît si l'attaque réussit, cliquer dessus. En cas d'enveloppement, la cible ne peut plus bouger et se déplace avec le cube (déplacer le cube met la cible dans le cube), et au tour du cube, il faut presser les boutons de dégâts pour les infliger aux cibles enveloppées.</li>
                   <li><strong>Étreinte</strong> (serpents) : ajouter l'option <code>--etreinte <i>difficulte</i></code>, puis quand le bouton apparaît si l'attaque réussit, cliquer dessus. En cas d'étreinte réussie, la cible ne peut plus bouger et se déplace avec le serpent, et au tour du serpent, il faut presser les boutons de dégâts pour les infliger aux cibles étreintes.</li>
@@ -2424,9 +2432,9 @@ tr {line-height: 25px;}
                   <li><strong>N'abandonne jamais</strong> : ajouter un <a href=#predicats>prédicat</a> <code>nAbandonnejamais</code>.</li>
                   <li><strong>Noirbois</strong> : À l'entrée dans des ténèbres magiques, utiliser la commande <code>!cof-tenebres-magiques</code>. À la sortie ou la fin de ces ténèbres, faire <code>!cof-tenebres-magiques fin</code>. Pour allumer la fiole de lumière, sélectionner un token est faire <code>!cof-fiole-de-lumiere <i>d</i></code> où <i>d</i> est la distance à laquelle la fiole éclaire. On peut ajouter un troisième argument, qui est la distance à laquelle la lumière devient moins brillante (pas d'effet sur la mécanique de jeu). Pour éteindre la lumière, il faut mettre utiliser <code>!cof-fiole-de-lumiere fin</code>.</li>
                   <li><strong>Noyade (plante carnivore)</strong> : il existe un effet de combat nommé <code>noyade</code> (pas de durée, il dure par défaut tout le combat) qui fait perdre 1d6 PV par tour, sauf à réussir un test de CON difficulté 15, et qui impose un malus de -3 aux attaques et aux DMs.</li>
-                  <li><strong>Ondes corruptrices</strong> : Pour simplement le premier effet, faire <code>!cof-effet ondesCorruptrices 2</code>, puis pour augmeter l'effet <code>!cof-effet ondesCorruptrices +2</code>. L'effet peut être annulé avec <code>!cof-effet ondesCorruptrices 0</code>. Pour le porteur du bouclier de Grabuge, on peut mettre un <a href=#predicats>prédicat</a> <code>porteurDuBouclierDeGrabuge</code>.</li>
+                  <li><strong>Ondes corruptrices</strong> (Anathazerïn) : Pour simplement le premier effet, faire <code>!cof-effet ondesCorruptrices 2</code>, puis pour augmeter l'effet <code>!cof-effet ondesCorruptrices +2</code>. L'effet peut être annulé avec <code>!cof-effet ondesCorruptrices 0</code>. Pour le porteur du bouclier de Grabuge, on peut mettre un <a href=#predicats>prédicat</a> <code>porteurDuBouclierDeGrabuge</code>.</li>
                   <li><strong>Paralysie des goules</strong> : ajouter à l'attaque de morsure <code>--effet paralyseGoule [[1d6]] --save CON 10</code>.</li>
-                  <li><strong>Perte de substance</strong> : Ajouter pour tous les personnages concernés un <a href=#predicats>prédicat</a> <code>perteDeSubstance</code> de valeur le nombre de jours. Le changement de jour n'est pas automatisé, il faudra faire faire le test de CHA et mettre le prédicat à jour à la main à chaque nouveau jour. Si le personnage porte une ancre, ajouter un prédicat <code>ancreInvincible</code>. Pour la réduction des dégâts, ajouter au dragon un prédicat <code>dragonInvincible</code>. Pour les DM indirects, il faudra gérer à la main la réduction de DM.</li>
+                  <li><strong>Perte de substance</strong> (Invincible) : Ajouter pour tous les personnages concernés un <a href=#predicats>prédicat</a> <code>perteDeSubstance</code>. Le changement de jour va augmenter un compteur, à condition que les tokens des joueurs soient sur la page, et soit on ne sélectionne aucun token quand on lance la commande de changement de jour, soit on sélectionne au moins tous les tokens des joueurs. Le test de CHA n'est pas automatisé, mais le script en rappelle la difficulté. Pour les ancres, ajouter un prédicat <code>ancreInvincible</code> (par exemple dans les prédicats de l'arme). Pour la réduction des dégâts, ajouter au dragon un prédicat <code>dragonInvincible</code>. Pour les DM indirects, il faudra gérer à la main la réduction de DM.</li>
                   <li><strong>Phylactère de canalisation</strong> : ajouter un prédicat <code>phylacterePositif</code> pour un phylactère de canalisation positive, ou <code>phylactereNegatif</code> pour un phylactère de canalisation négative. Associez à ce prédicat la valeur ajoutée pour chaque PM dépensé (nécessite l'utilisation du prédicat <code>deCanalisation</code>). Une valeur de <code>1d4</code> semble adaptée pour le phylactère de canalisation de Pathfinder 1.</li>
                   <li><strong>Piqûres d'insectes</strong> : Rajouter un <a href=#predicats>prédicat</a> <code>piquresDInsectes</code> avec comme valeur la résistance aux dégâts à distance appropriée</li>
                   <li>
@@ -2703,7 +2711,7 @@ tr {line-height: 25px;}
                 <ol>
                   <li><strong>Cri de guerre :</strong> <code>!cof-effet-combat criDeGuerre</code></li>
                   <li><strong>Charge (L) :</strong> <code>#Attaque -1 --bonusAttaque 2 --plus 1d6</code>. Le déplacement n'est pas encore géré.</li>
-                  <li><strong>Rage du berserk (L) :</strong> utiliser <code>!cof-rage-du-berserk</code>, à la fois pour entrer en rage et pour tenter d'en sortir avant la fin du combat.</li>
+                  <li><strong>Rage du berserk (L) :</strong> utiliser <code>!cof-rage-du-berserk</code>, à la fois pour entrer en rage et pour tenter d'en sortir avant la fin du combat. Si le MJ souhaite mettre fin à la rage à cause d'un effet extérieur, il peut utiliser la commande <code>!cof-effet-combat rageDuBerserk fin</code>.</li>
                   <li><strong>Même pas mal :</strong> ajouter un <a href=#predicats>prédicat</a> <code>memePasMal</code>. Le joueur doit lui-même activer la rage ou le furie si il souhaite en profiter.</li>
                   <li><strong>Attaque tourbillon (L) :</strong> <code>!cof-explosion -1 --auto --disque 5 --saufAllies --limiteParCombat 1 tourbillon</code>.</li>
                 </ol>
@@ -3010,5 +3018,7 @@ tr {line-height: 25px;}
             </div>
           </div>
         </div>
+          <p><i>Ce site utilise des marques déposées et des droits d’auteurs qui sont la propriété de Black Book Editions comme l’y autorisent les conditions d’utilisation de Black Book Editions. Ce site n’est pas publié par Black Book Editions et n’a pas reçu son aval ni une quelconque approbation de sa part. Pour de plus amples informations sur Black Book Editions, consultez <a href="www.black-book-editions.fr">www.black-book-editions.fr</a>.</i></p>
+        
   </body>
 </html>
