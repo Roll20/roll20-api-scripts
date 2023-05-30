@@ -928,7 +928,7 @@ var MagicMaster = (function() {
 	
 	var apiCommands = {},
 		slotCounts = {},
-		apiDBs = {magic:false,attk:false},
+		apiDBs = {magic:false,attk:false};
 
 	var flags = {
 		mib_state: MIB_StateEnum.STOPPED,
