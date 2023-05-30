@@ -125,7 +125,8 @@
  
 var MagicMaster = (function() {
 	'use strict';
-var version = '1.5.02',
+	var version = '1.5.02',
+
 		author = 'RED',
 		pending = null;
     const lastUpdate = 1684607663;
