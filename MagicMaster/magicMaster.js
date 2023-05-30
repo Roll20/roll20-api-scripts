@@ -126,6 +126,7 @@
 var MagicMaster = (function() {
 	'use strict';
 	var version = '1.5.02',
+
 		author = 'RED',
 		pending = null;
     const lastUpdate = 1684607663;
@@ -928,7 +929,8 @@ var MagicMaster = (function() {
 	
 	var apiCommands = {},
 		slotCounts = {},
-		apiDBs = {magic:false,attk:false};
+		apiDBs = {magic:false,attk:false},
+		GMalphaLists = true;
 
 	var flags = {
 		mib_state: MIB_StateEnum.STOPPED,

@@ -1,27 +1,37 @@
 # StatusTracker
-A helper script for managing timed status effects and associated markers on
-game tokens. The script allows you to define a timed status effect, any token 
-markers for that effect, and add/remove targets for those tokens. If the status
-is timed, it will automatically be removed, and associated markers taken off,
- if the timer goes to zero, or if the "owner" token is removed from the turn 
- order.
+A helper script for managing timed status effects in the turn tracker and 
+associated markers on game tokens. The script allows you to define a timed 
+status effect, any token markers for that effect, and add/remove targets for 
+those effects. If the status is timed, it will have a count-down place holder in
+the turn tracker. If the timer goes to zero, or the effects "owner" is removed
+from the turn tracker, the effect will be automatically removed, and associated
+markers will be removed from targets of the effect.
 
-The script provides a menu-based command interface allowing Game 
-Masters to define a status effect, it's duration, and whether it's visible in
-the turn tracker. Each effect has sub-menu which allows targets for the effect
-to be added or removed: target tokens will have the effects marker placed on
-them.
+The script provides a menu-based command interface allowing Game Masters to 
+define a status effect, it's duration, and whether it's visible in the turn 
+tracker. Each effect has sub-menu which allows targets for the effect to be 
+added or removed: target tokens will have the effects marker placed on
+them while the effect is active.
 
 The script will attempt to create a macro to show the initial status tracker 
-menu, but the menu can be displayed in the game chat with the following command:
+menu.
 
-`!statustracker showmenu`
+## Commands
+The intended interface for Status Tracker is the chat menu system. You _can_ 
+invoke the individual operations from the command line, but the Status Tracker
+commands are expecting object ids and tags that are internal to Roll20, which 
+the menus generate. It's possible to do from the command line, but I wouldn't 
+recommend it.
+
+`!statustracker showmenu` - Shows the general menu to manage status 
+effects.
+
 
 ## Hard Reset
-A commandline option to reset the StatusTracker object exists, though it's not
-available in a menu. The following command will attempt to gracefully remove all
-StatusTracker-maintained objects, but in the end will reset the status tracker
-object in the global game state.
+A commandline option to reset the StatusTracker global store exists, though it's 
+not available in a menu. The following command will attempt to gracefully remove 
+all StatusTracker-maintained objects, but in the end will reset the status 
+tracker object in the global game state.
 
 `!statustracker hard_reset`
 

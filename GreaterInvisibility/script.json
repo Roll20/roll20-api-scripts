@@ -1,0 +1,22 @@
+{
+    "name": "GreaterInvisibility",
+    "script": "GreaterInvisibility.js",
+    "version": "0.1.0",
+    "previousversions": [],
+    "description": "### Roll20-GreaterInvisibility\r*Version 0.1.0*\r\rA simple tool to add show invisibility for tokens in your game.\r[ReadMe](https://github.com/Roll20/roll20-api-scripts/GreaterInvisibility/README.md)",
+    "authors": "Kurtis B",
+    "roll20userid": "9087591",
+    "useroptions": [],    
+    "dependencies": [],
+    "modifies": {
+    "graphic.imgsrc": "write",
+    "graphic.currentSide": "write",
+    "graphic.sides": "write",
+    "graphic.playersedit_aura2": "write",
+    "graphic.showplayers_aura2": "write",
+    "graphic.aura2_radius": "write",
+    "graphic.aura2_color": "write",
+    "graphic.aura2_square": "write"
+    },
+    "conflicts": []
+}
