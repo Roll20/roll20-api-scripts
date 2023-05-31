@@ -1207,3 +1207,15 @@ ScriptInfo:
 dynamicLightingTool:
   - "Dynamic Lighting Tool"
   - "Dynamic Lighting"
+
+MarkerManager:
+  - "MarkerManager"
+  - "Utility"
+
+udltorchlight:
+  - "UDLTorchLight"
+  - "Dynamic Lighting"
+
+greaterinvisibility:
+  - "GreaterInvisibility"
+  - "Utility"
