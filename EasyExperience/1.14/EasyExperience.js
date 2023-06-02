@@ -21,7 +21,7 @@ Add handling for undefined, null defined, or empty experience/level attributes
 var EASYEXPERIENCE = EASYEXPERIENCE || (function() {
 	'use strict';
 
-	var version = '1.13',
+	var version = '1.14',
 			lastUpdate = 1636910805,
 			schemaVersion = 1.11518023682,
 			ExperienceThresholds,
