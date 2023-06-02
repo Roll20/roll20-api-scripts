@@ -1,6 +1,6 @@
 {
   "name": "UDLTorchLight",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Provides quick select of common lighting options, supporting UDL configurations. Use '!torchlight --setLightSource|[SourceName]' to set the light source.  Usue '!torchlight --toggleLight' to toggle light on / off",
   "authors": "Kurtis B",
   "roll20userid": "9087591",
@@ -19,6 +19,7 @@
   "conflicts": [],
   "script": "UDLTorchLight.js",
   "previousversions": [
-    "0.1.0"
+    "0.1.0",
+    "0.2.0"
   ]
 }
