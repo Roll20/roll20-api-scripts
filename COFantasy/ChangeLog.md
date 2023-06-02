@@ -1,9 +1,17 @@
 # COFantasy: Historique des changements (depuis la version 1.0)
 ## 3.13
+### Capacités
+* Expertise (rang 1 de la Voie de prestige spécialisée)
+
 ### Autres améliorations
+* Ajout d'un prédicat pour les armes de l'été.
+* Ajout d'un effet armeGlacee.
 * Plus d'automatisation pour la perte de substance.
 * Fin automatique de la rage du berserk quand un barbare tombe inconscient.
 * Ajout d'un prédicat pour l'immnunité aux dégâts magiques.
+
+### Corrections de bugs
+* Dépense de mana quand on dépasse les limites journalières
 
 ## 3.12
 ### Capacités

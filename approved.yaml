@@ -1211,3 +1211,11 @@ dynamicLightingTool:
 MarkerManager:
   - "MarkerManager"
   - "Utility"
+
+udltorchlight:
+  - "UDLTorchLight"
+  - "Dynamic Lighting"
+
+greaterinvisibility:
+  - "GreaterInvisibility"
+  - "Utility"
