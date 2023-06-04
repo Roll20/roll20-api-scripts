@@ -685,7 +685,7 @@ var tokenAction = tokenAction || (function () {
 
                     _.each(char, function (a) {//PF2 NPC
                         if (parseInt(isNpc(a.id)) === 1) {//PF2 NPC
-                                                        log('These are the commands that are being read : PF2 NPC');
+                            //                            log('These are the commands that are being read : PF2 NPC');
 
                             if (args.includes("init")) {
                                 createAbility('Init', "%{" + a.id + "|NPC_INITIATIVE}", a.id);
@@ -713,7 +713,7 @@ var tokenAction = tokenAction || (function () {
                                 createPF2Spell(a.id);
                             }
                         } else {
-                                                        log('These are the commands that are being read :PF2 PC');
+                            //                            log('These are the commands that are being read :PF2 PC');
                             if (args.includes("init")) {//PF2 PC
                                 const name = usename ? getObj('character', a.id).get('name') : a.id;
                                 createAbility('Init', "%{" + name + "|initiative}", a.id);
@@ -931,6 +931,6 @@ on('ready', function () {
     try {
         throw new Error('');
     } catch (e) {
-        API_Meta.dltool.lineCount = (parseInt(e.stack.split(/\n/)[1].replace(/^.*:(\d+):.*$/, '$1'), 10) - API_Meta.dltool.offset);
+        API_Meta.tokenActionMaker.lineCount = (parseInt(e.stack.split(/\n/)[1].replace(/^.*:(\d+):.*$/, '$1'), 10) - API_Meta.tokenActionMaker.offset);
     }
 }
