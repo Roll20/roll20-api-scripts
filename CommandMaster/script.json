@@ -42,5 +42,5 @@
 		"handout.notes": "write",
 		"handout.inplayerjournals": "write"
     },
-    "conflicts": []
+    "conflicts": ["RPGMaster Suite"]
 }
