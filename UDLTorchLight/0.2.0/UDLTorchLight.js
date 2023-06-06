@@ -69,7 +69,8 @@ const lightSources = {
         low_light_distance: 10,
         lightColor: '#00f00',
         has_directional_bright_light: false,
-        has_directional_dim_light: false
+        has_directional_dim_light: false,
+        flickering: false
     },
     'Faerie Fire - Violet': {
         bright_light_distance: 0,
@@ -121,7 +122,7 @@ function setLightSource(command, msg) {
     }
 }
 
-function toggleLight(_command, msg) {
+function toggleLight(command, msg) {
     for (obj of msg.selected) {
         let token = getObj(obj._type, obj._id);
         token.set("emits_bright_light", !token.get("emits_bright_light"));

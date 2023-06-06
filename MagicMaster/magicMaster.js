@@ -119,11 +119,13 @@
  *                     sheets. Prevented --tidy from accidentally tidying any db character sheet that 
  *                     had been dropped as a token. Allow --message to take a character ID or a token ID 
  *                     to send the message to
+ * v1.5.02 24/05/2023  Fixed tableLookup() reference for storing spells in spell-storing MIs. Fixed use
+ *                     of alphabetical lists in the GM's Add Items dialog.
  */
  
 var MagicMaster = (function() {
 	'use strict';
-	var version = '1.5.01',
+	var version = '1.5.02',
 		author = 'RED',
 		pending = null;
     const lastUpdate = 1684607663;
@@ -926,8 +928,7 @@ var MagicMaster = (function() {
 	
 	var apiCommands = {},
 		slotCounts = {},
-		apiDBs = {magic:false,attk:false},
-		GMalphaLists = true;
+		apiDBs = {magic:false,attk:false};
 
 	var flags = {
 		mib_state: MIB_StateEnum.STOPPED,
@@ -3491,14 +3492,14 @@ var MagicMaster = (function() {
 					+ (msg && msg.length ? '{{section='+msg+'}}' : '')
 					+ '{{desc=**1. Choose something to store** [Alpha '+!!alphaLists+'](!magic --button '+(alphaLists ? 'GM-MIalphaOff':'GM-MIalphaOn')+'|'+args[1]+'|'+args[2]+'|'+args[3]+')\n';
 					
-		content += '[Potion](!magic --button GM-MItoStore|'+tokenID+'|'+MIrowref+'|?{Which Potion?|'+getMagicList(fields.MagicItemDB,miTypeLists,'potion','',false,'',!!GMalphaLists)+'})'
-				+  '[Scroll](!magic --button GM-MItoStore|'+tokenID+'|'+MIrowref+'|?{Which Scroll?|'+getMagicList(fields.MagicItemDB,miTypeLists,'scroll','',false,'',!!GMalphaLists)+'})'
-				+  '[Rods, Staves, Wands](!magic --button GM-MItoStore|'+tokenID+'|'+MIrowref+'|?{Which Rod, Staff or Wand?|'+getMagicList(fields.MagicItemDB,miTypeLists,'rod','',false,'',!!GMalphaLists)+'})'
-				+  '[Weapon](!magic --button GM-MItoStore|'+tokenID+'|'+MIrowref+'|?{Which Weapon?|'+getMagicList(fields.MagicItemDB,miTypeLists,'weapon','',false,'',!!GMalphaLists)+'})'
-				+  '[Ammo](!magic --button GM-MItoStore|'+tokenID+'|'+MIrowref+'|?{Which Ammo?|'+getMagicList(fields.MagicItemDB,miTypeLists,'ammo','',false,'',!!GMalphaLists)+'})'
-				+  '[Armour](!magic --button GM-MItoStore|'+tokenID+'|'+MIrowref+'|?{Which piece of Armour?|'+getMagicList(fields.MagicItemDB,miTypeLists,'armour','',false,'',!!GMalphaLists)+'})'
-				+  '[Ring](!magic --button GM-MItoStore|'+tokenID+'|'+MIrowref+'|?{Which Ring?|'+getMagicList(fields.MagicItemDB,miTypeLists,'ring','',false,'',!!GMalphaLists)+'})'
-				+  '[Miscellaneous MI](!magic --button GM-MItoStore|'+tokenID+'|'+MIrowref+'|?{Which Misc MI?|'+getMagicList(fields.MagicItemDB,miTypeLists,'miscellaneous','',false,'',!!GMalphaLists)+'})'
+		content += '[Potion](!magic --button GM-MItoStore|'+tokenID+'|'+MIrowref+'|?{Which Potion?|'+getMagicList(fields.MagicItemDB,miTypeLists,'potion','',false,'',!!alphaLists)+'})'
+				+  '[Scroll](!magic --button GM-MItoStore|'+tokenID+'|'+MIrowref+'|?{Which Scroll?|'+getMagicList(fields.MagicItemDB,miTypeLists,'scroll','',false,'',!!alphaLists)+'})'
+				+  '[Rods, Staves, Wands](!magic --button GM-MItoStore|'+tokenID+'|'+MIrowref+'|?{Which Rod, Staff or Wand?|'+getMagicList(fields.MagicItemDB,miTypeLists,'rod','',false,'',!!alphaLists)+'})'
+				+  '[Weapon](!magic --button GM-MItoStore|'+tokenID+'|'+MIrowref+'|?{Which Weapon?|'+getMagicList(fields.MagicItemDB,miTypeLists,'weapon','',false,'',!!alphaLists)+'})'
+				+  '[Ammo](!magic --button GM-MItoStore|'+tokenID+'|'+MIrowref+'|?{Which Ammo?|'+getMagicList(fields.MagicItemDB,miTypeLists,'ammo','',false,'',!!alphaLists)+'})'
+				+  '[Armour](!magic --button GM-MItoStore|'+tokenID+'|'+MIrowref+'|?{Which piece of Armour?|'+getMagicList(fields.MagicItemDB,miTypeLists,'armour','',false,'',!!alphaLists)+'})'
+				+  '[Ring](!magic --button GM-MItoStore|'+tokenID+'|'+MIrowref+'|?{Which Ring?|'+getMagicList(fields.MagicItemDB,miTypeLists,'ring','',false,'',!!alphaLists)+'})'
+				+  '[Miscellaneous MI](!magic --button GM-MItoStore|'+tokenID+'|'+MIrowref+'|?{Which Misc MI?|'+getMagicList(fields.MagicItemDB,miTypeLists,'miscellaneous','',false,'',!!alphaLists)+'})'
 				+  '[DM only list](!magic --button GM-MItoStore|'+tokenID+'|'+MIrowref+'|?{Which DM only item?|'+getMagicList(fields.MagicItemDB,miTypeLists,'dmitem','',false,'',false)+'})}}';
 		content += '{{desc1=**2. Choose slot to edit or store in**\n';
 
@@ -5215,7 +5216,7 @@ var MagicMaster = (function() {
 		values[fields.Spells_msg[0]][fields.Spells_msg[1]] = spellName;
 		MIspellsTable.addTableRow( MIrow, values );
 
-		if (tableLookup( fields.Spells_castValue, spellRow ) != 0) {
+		if (SpellsTable.tableLookup( fields.Spells_castValue, spellRow ) != 0) {
 			SpellsTable = SpellsTable.tableSet( fields.Spells_castValue, spellRow, 0 );
 		}
 		args[2] = args[5] = -1;
