@@ -46,7 +46,7 @@ var tokenAction = tokenAction || (function () {
     }
     //end Oosh function
 
-    var version = '0.3.8',
+    var version = '0.3.9',
         sheetVersion = 'D&D 5th Edition by Roll20',
         sheet = '5e',
         checkInstall = function () {
@@ -800,7 +800,7 @@ var tokenAction = tokenAction || (function () {
                                 sortRepeating(/repeating_npcaction-l_[^_]+_name\b/, 'repeating_npcaction-l_%%RID%%_npc_action', a.id, usename);
                             }
                             if (args.includes("bonusactions")) {
-                                sortRepeating(/repeating_npcbonusaction_[^_]+_name\b/, 'repeating_npcbonusaction_%%RID%%_npc_roll_output', a.id, usename);
+                                sortRepeating(/repeating_npcbonusaction_[^_]+_name\b/, 'repeating_npcbonusaction_%%RID%%_npc_action', a.id, usename);
                             }
                             sendChat("Token Action Maker", `/w ${whom} Created Sorted 5e Token Actions for ${a.get('name')}.`);
 
