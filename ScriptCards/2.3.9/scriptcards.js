@@ -25,7 +25,7 @@ const ScriptCards = (() => { // eslint-disable-line no-unused-vars
 	*/
 
 	const APINAME = "ScriptCards";
-	const APIVERSION = "2.3.9";
+	const APIVERSION = "2.3.9a";
 	const APIAUTHOR = "Kurt Jaegers";
 	const debugMode = false;
 
@@ -1297,12 +1297,12 @@ const ScriptCards = (() => { // eslint-disable-line no-unused-vars
 																	theAttribute.set(setType, settingValue);
 																}
 															} else {
-																if (createAttribute) {
-																	if (settingValue.startsWith("+=")) {
+																if (createAttribute && settingValue) {
+																	if (settingValue.toString().startsWith("+=")) {
 																		settingValue = settingValue.substring(2);
 																		if (isNumber(settingValue)) { settingValue = Number(settingValue) }
 																	}
-																	if (settingValue.startsWith("-=")) {
+																	if (settingValue.toString().startsWith("-=")) {
 																		settingValue = "-" + settingValue.substring(2);
 																		if (isNumber(settingValue)) { settingValue = Number(settingValue) }
 																	}
@@ -3740,56 +3740,63 @@ const ScriptCards = (() => { // eslint-disable-line no-unused-vars
 					}
 					if (activeCharacter !== "") {
 						var workString = thisMatch;
-						if (cardParameters.enableattributesubstitution !== "0") { workString = resolveAttributeSubstitution(activeCharacter, thisMatch); }
-						var token;
-						var attribute = "";
-						var attrName = workString.substring(workString.indexOf(":") + 1, workString.length - 1);
-						var character = getObj("character", activeCharacter);
-						if (character === undefined) {
-							token = getObj("graphic", activeCharacter);
-							if (token != null) {
-								character = getObj("character", token.get("represents"));
-							}
-						}
-						if (character != null) {
-							var opType = "current";
-							if (attrName.endsWith("^")) {
-								attrName = attrName.substring(0, attrName.length - 1);
-								opType = "max";
-							}
-						}
-						if (token != null && attrName.toLowerCase().startsWith("t-")) { //&& tokenAttributes.indexOf(attrName.substring(2)) >= 0) {
-							if (token.get(attrName.substring(2))) {
-								attribute = token.get(attrName.substring(2)).toString() || "";
-							}
-						}
-						if (character != null && (!attrName.toLowerCase().startsWith("t-"))) {
-							if (attrName !== "bio" && attrName !== "notes" && attrName !== "gmnotes") {
-								attribute = getAttrByName(character.id, attrName, opType);
-								if (attribute === undefined) {
-									attribute = character.get(attrName);
+						if (workString.indexOf(":") !== workString.lastIndexOf(":")) {
+							// Format to access a repeating value: [*S:r-section:index:attribute]
+							let op = workString.split(":");
+
+
+						} else {
+							if (cardParameters.enableattributesubstitution !== "0") { workString = resolveAttributeSubstitution(activeCharacter, thisMatch); }
+							var token;
+							var attribute = "";
+							var attrName = workString.substring(workString.indexOf(":") + 1, workString.length - 1);
+							var character = getObj("character", activeCharacter);
+							if (character === undefined) {
+								token = getObj("graphic", activeCharacter);
+								if (token != null) {
+									character = getObj("character", token.get("represents"));
 								}
-							} else {
-								// Add URL Decoding?
-								character.get(attrName, function (a) {
-									attribute = a;
-								});
 							}
-							if (cardParameters.attemptattributeparsing != 0) {
-								attribute = ParseCalculatedAttribute(attribute, character)
+							if (character != null) {
+								var opType = "current";
+								if (attrName.endsWith("^")) {
+									attrName = attrName.substring(0, attrName.length - 1);
+									opType = "max";
+								}
 							}
-						}
-						if (token == undefined && character == undefined) {
-							// Try finding a Player object
-							var player = getObj("player", activeCharacter);
-							if (player != null) {
-								attribute = player.get(attrName) || "";
+							if (token != null && attrName.toLowerCase().startsWith("t-")) { //&& tokenAttributes.indexOf(attrName.substring(2)) >= 0) {
+								if (token.get(attrName.substring(2))) {
+									attribute = token.get(attrName.substring(2)).toString() || "";
+								}
 							}
-						}
-						replacement = attribute;
-						if (character != null) {
-							if (cardParameters.enableattributesubstitution !== "0") {
-								replacement = resolveAttributeSubstitution(character.get("_id"), replacement);
+							if (character != null && (!attrName.toLowerCase().startsWith("t-"))) {
+								if (attrName !== "bio" && attrName !== "notes" && attrName !== "gmnotes") {
+									attribute = getAttrByName(character.id, attrName, opType);
+									if (attribute === undefined) {
+										attribute = character.get(attrName);
+									}
+								} else {
+									// Add URL Decoding?
+									character.get(attrName, function (a) {
+										attribute = a;
+									});
+								}
+								if (cardParameters.attemptattributeparsing != 0) {
+									attribute = ParseCalculatedAttribute(attribute, character)
+								}
+							}
+							if (token == undefined && character == undefined) {
+								// Try finding a Player object
+								var player = getObj("player", activeCharacter);
+								if (player != null) {
+									attribute = player.get(attrName) || "";
+								}
+							}
+							replacement = attribute;
+							if (character != null) {
+								if (cardParameters.enableattributesubstitution !== "0") {
+									replacement = resolveAttributeSubstitution(character.get("_id"), replacement);
+								}
 							}
 						}
 					}
@@ -3854,6 +3861,7 @@ const ScriptCards = (() => { // eslint-disable-line no-unused-vars
 
 					if (thisMatch.charAt(2).toLowerCase() == "r") {
 						// Repeating section attributes
+
 						var opType = "";
 						var attrName = thisMatch.substring(4, thisMatch.length - 1);
 						if (attrName.endsWith("^")) {
