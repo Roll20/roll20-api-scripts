@@ -121,14 +121,15 @@
  *                     to send the message to
  * v1.5.02 24/05/2023  Fixed tableLookup() reference for storing spells in spell-storing MIs. Fixed use
  *                     of alphabetical lists in the GM's Add Items dialog.
+ * v1.5.03 08/06/2023  Fixed error where a self-hidden item name does not have a db definition.
  */
  
 var MagicMaster = (function() {
 	'use strict';
-	var version = '1.5.02',
+	var version = '1.5.03',
 		author = 'RED',
 		pending = null;
-    const lastUpdate = 1684607663;
+    const lastUpdate = 1686215927;
 		
 	/*
 	 * Define redirections for functions moved to the RPGMaster library
@@ -2467,7 +2468,7 @@ var MagicMaster = (function() {
 			let miObj = abilityLookup( fields.MagicItemDB, mi, charCS );
 			if (mi.length > 0 && (includeEmpty || mi != '-') && (showMagic || (miObj.obj && !miObj.obj[1].type.toLowerCase().includes('magic')))) {
 				if (include0 || qty > 0) {
-					if (showTypes) {
+					if (showTypes && miObj.obj) {
 						miText = getShownType( miObj );
 					}
 					if (mi != '-') slotsUsed++;
@@ -2525,7 +2526,7 @@ var MagicMaster = (function() {
 				let miObj = abilityLookup( fields.MagicItemDB, mi, charCS );
 				makeGrey = makeGrey || (!showMagic && (!miObj.obj || miObj.obj[1].type.toLowerCase().includes('magic')));
 				if (showTypes) {
-					miText = getShownType( miObj );
+					miText = !miObj.obj ? miText : getShownType( miObj );
 					if (!['charged','uncharged','cursed'].includes(type)) {
 						qty = Math.min(qty,1);
 					}
@@ -3727,7 +3728,7 @@ var MagicMaster = (function() {
 			}
 			if (showTypes) {
 				miObj = abilityLookup( fields.MagicItemDB, pickedMI, pickCS );
-				pickedMI = getShownType( miObj );
+				pickedMI = !miObj.obj ? pickedMI : getShownType( miObj );
 			}
 		}
 		i = slotsUsed = 0;
@@ -5468,7 +5469,7 @@ var MagicMaster = (function() {
 			
 		if (showType) {
 			let MIobj = abilityLookup( fields.MagicItemDB, MIname, fromCS );
-			MItext = getShownType( MIobj );
+			MItext = !MIobj.obj ? MItext : getShownType( MIobj );
 		}
 			
 		MIqty = isNaN(MIqty) ? 0 : MIqty;
