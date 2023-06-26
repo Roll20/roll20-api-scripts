@@ -46,7 +46,7 @@ var tokenAction = tokenAction || (function () {
     }
     //end Oosh function
 
-    var version = '0.3.9',
+    var version = '0.3.8',
         sheetVersion = 'D&D 5th Edition by Roll20',
         sheet = '5e',
         checkInstall = function () {
