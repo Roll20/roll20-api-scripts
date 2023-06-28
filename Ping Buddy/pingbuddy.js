@@ -15,10 +15,11 @@ v.0.0.4 pingme and pingmesilent added to tooltip behaviors
 v.0.0.5 placing name after !pingme will ping token by name
 v.0.0.6 remove capitalization as a concern, fix issue with unassigned tokens
 v.0.0.7 Added Help Functions and submitted to One Click
+v.0.0.8 Fixed version numbering for One Click
 #########################*/
 
 on("ready", function () {
-    const version = '0.0.7';
+    const version = '0.0.8';
     log('-=> Ping Buddy v' + version + ' is loaded. Help command is !pingbuddy --help');
 
     const theGM = findObjs({
