@@ -217,6 +217,9 @@ on("ready", function () {
                 })[0] : "all");
             //if (!char) {let tokenChar.controlledby = "all"}
             let tokenController = obj.get("controlledby").split(",")[0];
+if (char){
+    tokenController = char.get("controlledby").split(",")[0];
+}
 
 
 
