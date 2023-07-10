@@ -1223,7 +1223,11 @@ greaterinvisibility:
 RPGMaster-Suite:
   = "RPGMaster Suite"
   = "Utility
-  
-TriggeredCleanup:
+
+Triggered Cleanup:
   = "Triggered Cleanup"
+  = "Utility
+
+Ongoing Cleanup:
+  = "Ongoing Cleanup"
   = "Utility
