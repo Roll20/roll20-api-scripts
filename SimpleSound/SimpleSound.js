@@ -19,6 +19,7 @@
  * 
  * 0.2.0 - Added the !swhisper command to endable/disable whispers via command
  * 0.2.1 - Modified !sstop to stop all tracks with no variable
+ * 0.2.2 - fixed modification of msg object (affecting other scripts)
  * 
  */
 var simpleSound = simpleSound || (function(){
@@ -48,13 +49,14 @@ var simpleSound = simpleSound || (function(){
         }
     },
 
-	handleInput = function(msg) {
+	handleInput = function(msg_orig) {
     
-        var whispers = state.simpleSound.whisper;
-        
-		if ( "api" !== msg.type ) {
-			return;
-		}
+    var whispers = state.simpleSound.whisper;
+
+    if ( "api" !== msg_orig.type ) {
+      return;
+    }
+    let msg = _.clone(msg_orig);
 
 		if(_.has(msg,'inlinerolls')){
 			msg.content = _.chain(msg.inlinerolls)
