@@ -113,7 +113,8 @@
  * v1.5.03 13/06/2023 Fixed issue with self-hidden items being revealed incorrectly.
  * v1.5.04 23/06/2023 Fixed issue with adding items to any character.
  * v1.5.05 15/07/2023 Fixed issue with errors caused by tokens with un-linked token bars,
- *                    especially with the calculations of attack success.
+ *                    especially with the calculations of attack success. Fixed classObjects()
+ *                    error in classData[] return for multi-class characters
  **/
  
 var API_Meta = API_Meta||{}; // eslint-disable-line no-var
@@ -122,9 +123,9 @@ API_Meta.libRPGMaster={offset:Number.MAX_SAFE_INTEGER,lineCount:-1};
 
 const libRPGMaster = (() => { // eslint-disable-line no-unused-vars
 	'use strict';
-	const version = '1.5.03';
+	const version = '1.5.05';
 	API_Meta.libRPGMaster.version = version;
-	const lastUpdate = 1686215927;
+	const lastUpdate = 1689326353;
 	const schemaVersion = 0.1;
 	log('now in seconds is '+Date.now()/1000);
 
@@ -7643,7 +7644,7 @@ const libRPGMaster = (() => { // eslint-disable-line no-unused-vars
 						return {name:charClass.dbName(), dB:classObj.dB, base:baseClass.dbName(), dBbase:fields.ClassDB, level:charLevel, obj:classObj.obj};
 					});
 				if (_.isUndefined(classDef) || !classDef.length) classDef = [{name:'creature', base:'warrior', level:0, obj:LibFunctions.abilityLookup( fields.ClassDB, 'creature', charCS ).obj}];
-				classDef = classDef.map(c => {[c.classData] = LibFunctions.resolveData(charClass, dB, reData);return c});
+				classDef = classDef.map(c => {[c.classData] = LibFunctions.resolveData(c.name, c.dB, reData);return c});
 				return classDef;
 			};
 	
