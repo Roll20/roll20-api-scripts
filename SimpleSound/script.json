@@ -15,5 +15,5 @@
         "sendChat": "write"
     },
     "conflicts": [],
-    "previousversions": []
+    "previousversions": ["2.1"]
 }
