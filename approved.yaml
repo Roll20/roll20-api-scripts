@@ -1220,14 +1220,18 @@ greaterinvisibility:
   - "GreaterInvisibility"
   - "Utility"
 
-RPGMaster-Suite:
-  = "RPGMaster Suite"
-  = "Utility
+rpgMastersuite:
+  - "RPGMaster-Suite"
+  - "Utility
 
-Triggered Cleanup:
-  = "Triggered Cleanup"
-  = "Utility
+triggeredcleanup:
+  - "Triggered Cleanup"
+  - "Utility
 
-Ongoing Cleanup:
-  = "Ongoing Cleanup"
-  = "Utility
+ongoingcleanup:
+  - "Ongoing Cleanup"
+  - "Utility
+
+pingbuddy:
+  - "Ping Buddy"
+  - "Utility
