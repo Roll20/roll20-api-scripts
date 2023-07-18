@@ -352,7 +352,8 @@ tr {line-height: 25px;}
                   </li>
 
                   <li><code>--demiAuto</code> : si l'attaque rate, on considère juste que les saves partiels sont automatiquemet réussi. Ça signifie en général que la cible prend au moins la moitié des dégâts.</li>
-                  <li><code>--dmSiRate <i>dmg</i></code> : si l'attaque rate, la cible est quand même touchée et se voit infliger <i>dmg</i> dégâts</li>
+                  <li><code>--dmSiRate <i>dmg</i></code> : si l'attaque rate, la cible est quand même touchée et se voit infliger <i>dmg</i> dégâts.</li>
+                  <li><code>--toucheDoubleDmg</code> : si l'attaque rate, elle inflige les dégâts normaux, et si elle touche, elle double les dégâts de base. Pas cumulable avec <code>dmSiRate</code> ou <code>demiAuto</code>.</li>
                   <li><code>--save <i>carac seuil</i></code> : même effet que <code>--psave</code>, mais pour annuler le dernier <code>--effet</code> ou <code>etat</code> (aucun effet sur les DM). Si on rajoute un argument <code>demiDuree</code> au save, alors la réussite du save ne fait que diviser par 2 sa durée.</li>
                   <li><code>--saveDM <i>carac seuil</i></code> : même effet que <code>--psave</code>, mais pour annuler l'ensemble des dégâts.</li>
                   <li><code>--saveParTour <i>carac seuil</i></code> : même effet que <code>--save</code>, mais donne droit à un jet à la fin de chaque tour au lieu d'un jet au moment de l'attaque.</li>
@@ -376,7 +377,7 @@ tr {line-height: 25px;}
                       <li><code>echecCritique</code> : vrai si l'attaque est un échec critique.</li>
                     </ul>
                   </li>
-                  <li><code>--if <i>condition</i></code> <i>options</i> <code>--endif</code>: permet de ne prendre en compte des options que si certaines conditions sont réalisées. Il est possible d'utiliser un <code>--else</code> pour activer des options quand les conditions ne sont pas réalisées. Attention, les options qui modifient une option précédente (comme <code>--valeur</code>) doivent apparaître au même niveau que l'option qu'elles modifient. Comme les conditions peuvent dépendre du dé d'attaque, un certain nombre d'options ne sont pas affectées par cette conditionnelle : tempeteDeMana, les options d'aoe (ligne, cone, disque, target), avecd12, avantage, auto, demiAuto, test, rate, touche, critique, echecCritique, pointsVitaux, tempsRecharge, sortilege, bonusCritique, disparition, affute, munition, tirDouble, semonce, tirDeBarrage, poudre, traquenard, feinte, asDeLaGachette, magique, tranchant, percant, contondant, pasDeDmg. Ne pas hésiter à me demander si vous aviez besoin que l'une de ces options puissent être conditionnelle.</li>
+                  <li><code>--if <i>condition</i></code> <i>options</i> <code>--endif</code>: permet de ne prendre en compte des options que si certaines conditions sont réalisées. Il est possible d'utiliser un <code>--else</code> pour activer des options quand les conditions ne sont pas réalisées. Attention, les options qui modifient une option précédente (comme <code>--valeur</code>) doivent apparaître au même niveau que l'option qu'elles modifient. Comme les conditions peuvent dépendre du dé d'attaque, un certain nombre d'options ne sont pas affectées par cette conditionnelle : tempeteDeMana, les options d'aoe (ligne, cone, disque, target), avecd12, avantage, auto, demiAuto, test, pointsVitaux, tempsRecharge, sortilege, bonusCritique, disparition, affute, munition, tirDouble, semonce, tirDeBarrage, poudre, traquenard, feinte, asDeLaGachette, magique, tranchant, percant, contondant, pasDeDmg. Ne pas hésiter à me demander si vous aviez besoin que l'une de ces options puissent être conditionnelle.</li>
                   <li><code>--ifSaveFails <i>carac seuil</i></code> <i>options</i> <code> --endif</code> : comme <code>--if</code>, mais fait réaliser une jet de sauvegarde à la cible (comme avec <code>--save</code>), et si le test est raté, applique les options qui suivent. Un <code>--else</code> permet de choisir des options à appliquer quand le test est réussi. À utiliser seulement si on ne peut pas se contenter d'un <code>--save</code>, car ça marche moins bien.</li>
                   <li><code>--decrAttribute <i>nom</i></code> : l'attaque n'est possible que si l'attribut existe et si sa valeur est strictement positive. L'attaque diminue cette valeur de 1. Si cette option est utilisée à l'intérieur d'un <code>--if</code>, alors l'option se contente de diminuer l'attribut (on peut savoir si la valeur est positive grâce à <code>--if etat <i>nom</i></code>).</li>
                   <li><code>--decrLimitePredicatParTour <i>nom</i></code> : l'attaque n'est possible que si un prédicat <i>nom</i> existe et si elle n'a pas été utilisée plus de fois dans le tour que la valeur de ce prédicat. L'attaque augmente ce nombre de 1.</li>
@@ -524,7 +525,7 @@ tr {line-height: 25px;}
               </div>
               <h4 class="text-secondary">Recharger des armes : <code>!cof-recharger <i>N</i></code></h4>
               <div class="decalage">
-                <p>Il faut un <a href=#predicats>prédicat</a> <code>charge</code> dans le champ <code>SPÉCIAL</code> des armes qui ont besoin d'être chargées pour fonctionner. On peut associer un nombre au prédicat, pour indiquer un maximum de charges supérieur à 1. Noter que si on a 2 armes à une charge, il faut utiliser un maximum de 2.<br />
+                <p>Il faut un <a href=#predicats>prédicat</a> <code>charge</code> dans le champ de prédicat des armes qui ont besoin d'être chargées pour fonctionner. On peut associer un nombre au prédicat, pour indiquer un maximum de charges supérieur à 1. Noter que si on a 2 armes à une charge, il faut utiliser un maximum de 2.<br />
                 Recharge l'arme <i>N</i> (augmente les charges d'un). Les armes sont toutes rechargées à la fin d'un combat.<br />
                 La commande admet un argment optionel <code>--grenaille</code> pour charger (une arme à poudre) avec de la grenaille.
                 </p>
@@ -912,7 +913,7 @@ tr {line-height: 25px;}
                 <p>Pour faire de la lumière, on peut utiliser <code>!cof-lumiere <i>token_id portee</i></code>. Cela va faire en sorte que le token fasse de la lumière jusqu'à <i>portee</i> mètres. Il est possible d'avoir plusieurs sources de lumière, et la commande est compatible avec la <a href='#Vision_dans_le_noir'>vision dans le noir</a>. La commande admet un troisième argument qui est la distance à laquelle la lumière devient moins brillante, et un quatrième argument qui est le nom du type de lumière (par défaut, <code>lumiere</code>), utilisé quand on éteint les lumières.</p>
                 <p>Pour éteindre des lumières, utiliser <code>!cof-eteindre-lumiere</code> en sélectionnant le ou les tokens désirés. Il est possible de prendre un argument optionnel qui est le nom du groupe de lumières que l'on souhaite éteindre. Par exemple, on peut ainsi éteindre toutes les torches et laisser les effets de lumière magique actifs.</p>
                 <p>Pour les torches, le script propose d'automatiser la gestion en utilisant la commande <code>!cof-torche <i>token_id</i></code>. Si le token tient une torche allumée, cela éteint la torche (et propose au MJ d'indiquer combien de temps la torche est restée allumée), et sinon, si le token possède des torches, cela allume une torche. Le nombre de torche et leur état est stocké dans un attribut <code>torches</code>, dont la valeur courante contient le nombre de torches dans l'inventaire, et la valeur max le temps restant pour la torche en cours d'utilisation (60 minutes pour une torche neuve). Si aucun attribut de ce nom n'existe, le script se contente d'allumer ou d'éteindre une torche, sans gérer leur nombre.</p>
-                <p>Pour les armes qui font de la lumière, on peut préciser un prédicat <code>eclaire</code> dans le champe <code>SPÉCIAL</code> de l'arme. La valeur du prédicat doit être la distance à laquelle l'arme éclaire. On peut préciser dans un prédicat <code>eclaireFaible</code> (toujours dans le champ de l'arme) le début de la lumière faible, si besoin. Ça peut aussi être une façon de gérer les torches.</p>
+                <p>Pour les armes qui font de la lumière, on peut préciser un prédicat <code>eclaire</code> dans le champ de prédicats de l'arme. La valeur du prédicat doit être la distance à laquelle l'arme éclaire. On peut préciser dans un prédicat <code>eclaireFaible</code> (toujours dans le champ de l'arme) le début de la lumière faible, si besoin. Ça peut aussi être une façon de gérer les torches.</p>
                 <p>Quand les personnages sont dans le brouillard, je mets la carte sans lumière, et je sélectionne les tokens et lance la commande <code>!cof-vision-nocturne 6</code> pour qu'ils voient à 6 m.</p>
               </div>
               <h3 class="text-info" id="jet_caracteristiques">2.9 Jet de caractéristiques</h3>
@@ -1822,6 +1823,8 @@ tr {line-height: 25px;}
                   <li><strong>Télépathie</strong> : pas de support autre que <code>!cof-lancer-sort communique par télépathie pendant [[5+@{selected|SAG}]] tours --mana 0</code></li>
                   <li><strong>Radar mental</strong> : ajouter un <a href=#predicats>prédicat</a> <code>radarMental</code>, de valeur le bonus procuré par le radar mental (2 fois le rang dans la voie). En cas de surprise provoquée par quelque chose de non-vivant penser à utiliser l'option <code>--nonVivant</code> dans <code>!cof-surprise</code>.</li>
                   <li><strong>Suggestion</strong> : utiliser <code>!cof-attaque-magique-contre-pv @{selected|token_id} @{target|token_id} --limiteParJour 1 suggestion --mana 1</code> (attention, ça ne teste pas si la cible a un niveau inférieur au psionique, ni si la cible est pensante).</li>
+                  <li><strong>Lire les pensées</strong>: faire une attaque de type sortilège, portée 10 m, avec l'option <code>--difficulteCarac SAG --if touche --message lit les pensées de @{target|token_name} pendant [[1d6+@{selected|SAG}]] tours --endif</code>.</li>
+                  <li><strong>Domination psy</strong> : faire une attaque de type sortilège, portée 20 m, avec les modificateurs <code>dominationPsy</code>, <code>attaqueMentale</code> et <code>pasDeDmg</code>. </li>
                 </ol>
               </div>
               <h3 class="text-info" id="Rôdeur">Rôdeur</h3>
@@ -2084,6 +2087,7 @@ tr {line-height: 25px;}
                   <li><strong>Arc de maître</strong> : Créez un <a href=#predicats>prédicat</a> <code>arcDeMaitre</code> pour automatiquement augmenter la portée des arcs de 20 m.</li>
                   <li><strong>Carquois magique</strong> : <code>!cof-effet-temp carquoisMagique [[5+@{selected|SAG}]] --valeur ?{Type de DM?|feu|froid|foudre} --mana 1</code>.</li>
                   <li><strong>Protection contre les projectiles</strong> : Créez un <a href=#predicats>prédicat</a> <code>protectionContreLesProjectiles</code>  de valeur 10. Puis, pour lancer le sort, utilisez <code>!cof-effet-temp protectionContreLesProjectiles [[6*(5+@{selected|SAG})]] --lanceur @{selected|token_id} --target @{target|token_id} --mana 2</code>.</li>
+                  <li><strong>Pluie de flèches</strong> : lancer l'attaque avec les options <code>--limiteParCombat 1 pluieDeFleches --disque 5 --toucheDoubleDmg --mana 3</code>.</li>
                 </ol>
                 <h4 class="text-secondary">Voie de l'archange</h4>
                 <ol>
@@ -2119,7 +2123,7 @@ tr {line-height: 25px;}
                 <h4 class="text-secondary">Voie de Morn</h4>
                 <ol>
                   <li><strong>Secrets de l'au-delà</strong> : <code>!cof-effet-temp secretsDeLAuDela 1 --mana 0</code></li>
-                  <li><strong>Souffle de vie</strong> : <code>!cof-soin @{selected|token_id} @{target|token_id} souffleDeVie --portee 20 --mana 0</code></li>
+                  <li><strong>Souffle de vie</strong> : <code>!cof-soin @{selected|token_id} @{target|token_id} souffleDeVie --mana 0</code></li>
                   <li><strong>Souffle de mort</strong> : faire une attaque magique, de portée 20 m (la portée par défaut pour les sorts, mais rien n'est spécifié dans le texte), de dégâts 2d8+INT. Ajoutez <code>auto</code> dans les modificateurs. Pour les options, <code>--disque 10 souffleDeMort --effet souffleDeMort 1 --save CON 10 --mana 1</code>.</li>
                 </ol>
                 <h4 class="text-secondary">Voie de Prestige spécialisée</h4>
@@ -2205,7 +2209,10 @@ tr {line-height: 25px;}
                 </ol>
                 <h4 class="text-secondary">Voie du guérisseur</h4>
                 <ol>
-                  <li><strong>Premiers soins</strong> : ajouter un <a href=#predicats>prédicat</a> <code>voieDuGuerisseur</code> de valeur le rang dans cette voie pour le bonus aux soins de la Voie des soins. Pas encore de support complet pour le sort, faire simplement <code>!cof-soin @{selected|token_id} @{target|token_id} 2d6+@{selected|SAG}</code>.</li>
+                  <li><strong>Premiers soins</strong> : ajouter un <a href=#predicats>prédicat</a> <code>voieDuGuerisseur</code> de valeur le rang dans cette voie pour le bonus aux soins de la Voie des soins. Pour le sort, faire <code>!cof-soin @{selected|token_id} @{target|token_id} premiersSoins --mana 0</code>.</li>
+                  <li><strong>Immunité</strong> : utilisez <code>!cof-immunite-guerisseur [[1d6+@{selected|SAG}]] --mana 0 --target @{target|token_id}</code> dans les actions du tour. Si utilisé directement dans le chat, ajoutez <code>--lanceur @{selected|token_id}</code>.</li>
+                  <li><strong>Soins rapides</strong> : pas de support au niveau du script.</li>
+                  <li><strong>Zone de vie</strong> : <code>!cof-zone-de-vie [[1d6+@{selected|SAG}]] --mana 1 --limiteParJour 3 --lanceur @{selected|token_id}</code>. Cela devrait respecter le sort, sauf pour le moment où le soin prend effet : c'est au début de chaque tour du prêtre.</li>
                 </ol>
                 <h4 class="text-secondary">Voie du guerrier-mage</h4>
                 <p>Penser à utiliser l'option <code>--magieEnArmure</code> pour le lancement des sorts affectés.</p>
@@ -2265,6 +2272,7 @@ tr {line-height: 25px;}
                   <li><strong>Libérateur de Kerserac</strong> : ajouter un prédicat <code>liberateurDeKerserac</code>.</li>
                   <li><strong>Libérateur d'Anathazerïn</strong> : ajouter un prédicat <code>liberateurDAnathazerin</code>. La capacité donne le bonus de +2 quel que soit le poison.</li>
                   <li><strong>Lien épique</strong>: ajouter pour chaque personnage un <a href=#predicats>prédicat</a> <code>lienEpique</code>, qui contiennent la même chose dans le champ courant (pensez à un nom d'équipe, par exemple).</li>
+                  <li><strong>Vitalité épique</strong> : ajouter un <a href=#predicats>prédicat</a> <code>vitaliteEpique</code>. Pas de support pour le coup mortel ou la régénération horaire. Attention, si vous utlisez <code>!cof-soin</code> pour cette régénération, les soins seront aussi doublés.</li>
                 </ul>
               </div>
               <h3 class="text-info" id="Créatures">4.3 Voies de créatures</h3>

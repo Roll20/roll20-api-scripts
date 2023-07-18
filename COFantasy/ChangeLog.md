@@ -1,9 +1,14 @@
 # COFantasy: Historique des changements (depuis la version 1.0)
 ## 3.13
 ### Capacités
+* Vitalité épique.
+* Pluie de flèches de la Voie d'Arwendée.
+* Rangs 1 à 4 de la Voie du guérisseur.
+* Rangs 4 et 5 de la Voie télépathie
 * Expertise (rang 1 de la Voie de prestige spécialisée)
 
 ### Autres améliorations
+* Possibilité d'utiliser les options de triche avec les --if
 * Ajout d'un prédicat pour les armes de l'été.
 * Ajout d'un effet armeGlacee.
 * Plus d'automatisation pour la perte de substance.
@@ -11,6 +16,7 @@
 * Ajout d'un prédicat pour l'immnunité aux dégâts magiques.
 
 ### Corrections de bugs
+* Activation de Ignorer la douleur sur les attaques automatiques.
 * Dépense de mana quand on dépasse les limites journalières
 
 ## 3.12
