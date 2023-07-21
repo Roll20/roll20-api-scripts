@@ -1,0 +1,12 @@
+{
+    "name": "Ongoing Cleanup",
+    "script": "Ongoing Cleanup.js",
+    "version": "1.0",
+    "previousversions": [],
+    "description": "Originally designed for a specific table, this script was made with long duration campaigns in mind.  Many APIs find difficulties in running scripts when numerous tokens are left on a table.  This script removes all tokens linked to a character sheet when one of those tokens are deleted.  It also deletes tokens when the linked character sheet is deleted.",
+    "authors": "Jeffrey Simons",
+    "roll20userid": "4069317",
+    "useroptions": [],
+    "dependencies": [],
+    "conflicts": []
+}

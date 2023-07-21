@@ -380,8 +380,8 @@ tr {line-height: 25px;}
                   <li><code>--effet <i>e duree</i></code> : ajoute à la cible l'effet temporaire <i>e</i> pour la duree spécifiée. Pour que cela soit automatiquement mis à jour, il faut utiliser le turn tracker. Noter que l'argument de durée peut être omis pour certains effets, comme ceux qui par définition durent tout le combat.</li>
                   <li><code>--valeur <i>v</i></code> : spécifie une valeur au dernier effet mentionné.</li>
                   <li><code>--optionEffet <i>opt arg1 arg2 ...</i></code> : spécifie une option au dernier effet mentionné. L'option <i>opt</i> doit être donnée sans le <code>--</code> et sera passée telle quelle à l'effet, par exemple pour les dégâts périodiques.</li>
-                  <li><code>--peur <i>seuil duree</i></code> : fait un effet de peur si l'attaque touche. Le <i>seuil</i> sert pour le test de sagesse de résitance à la peur (tient compte de la capacité <b>sans peur</b> du chevalier).</li>
-                  <li><code>--affaiblirCarac <i>carac n</i></code> : l'attaque diminue la caractéristique <i>carac</i> de <i>n</i></li>
+                  <li><code>--peur <i>seuil duree</i></code> : fait un effet de peur si l'attaque touche. Le <i>seuil</i> sert pour le test de sagesse de résistance à la peur (tient compte de la capacité <b>sans peur</b> du chevalier).</li>
+                  <li><code>--affaiblirCarac <i>carac n</i></code> : l'attaque diminue la caractéristique <i>carac</i> de <i>n</i>. Si <i>carac</i> est <code>random</code>, le script tire une caractéristique au hasard.</li>
                   <li><code>--plus <i>dmg</i></code> : ajoute <i>dmg</i> dégâts. Attention, si <i>dmg</i> est un simple nombre, ces dégâts sont multipliés par les critiques (sauf si de type différent de l'attaque principale). Ainsi, <code>--plus [[1d6]]</code> donnera des dégâts multipliés par les critiques (car la fonction ne voit que le résultat du jet), alors que <code>--plus 1d6</code> ne le sera pas. </li>
                   <li><code>--plusCrit <i>dmg</i></code> : ajoute <i>dmg</i> dégâts en cas de réussite critique</li>
                   <li><code>--test</code> pour voir le résultat du jet d'attaque. On n'applique pas les résultats d'un touché.</li>
@@ -450,13 +450,14 @@ tr {line-height: 25px;}
                   <li><code>--ouvertureMortelle</code> : touche automatiquement, fait des dégât comme en cas de critique et multiplie par 2 les dégâts d'attaque sournoise (si il y en a).</li>
                   <li><code>--rate</code>, <code>--touche</code>, <code>--critique</code>, <code>--echecCritique</code>, <code>--pasDEchecCritique</code> : options pour tricher : le résultat des dés donne toujours le résultat voulu.</li>
                   <li><code>--ligne</code> : l'attaque porte sur toutes les cibles à portée, entre l'attaquant et le token ciblé. Si le token ciblé est plus proche que la portée de l'attaque, les tokens derrière le token ciblé sont aussi visés. Pour permettre de viser un point quelconque, on peut utiliser un personnage dédié avec un maximum de 0 pv. À chaque fois qu'un token représentant ce personnage est utilisé comme cible de <code>--ligne</code>, le token est enlevé de la carte.</li>
-                  <li><code>--disque <i>r</i></code> : l'attaque porte sur toutes les cibles dans le disque de centre le token ciblé et de rayon <i>r</i>. Comme pour <code>--ligne</code>, on peut utiliser un token cible qui sera supprimé après l'attaque. À noter que l'attaquant lui-même peut prendre des dégâts, sauf si l'attaque a une portée nulle et que l'attaquant se cible lui-même (attaque centrée sur le lanceur).</li>
+                  <li><code>--disque <i>r</i></code> : l'attaque porte sur toutes les cibles dans le disque de centre le token ciblé et de rayon <i>r</i>. Comme pour <code>--ligne</code>, on peut utiliser un token cible qui sera supprimé après l'attaque. À noter que l'attaquant lui-même peut prendre des dégâts, sauf si l'attaque a une portée nulle et que l'attaquant se cible lui-même (attaque centrée sur le lanceur). On peut donner en argument optionel le mot <code>souffleDeMort</code> pour ne valider l'attaque que si le centre du disque est un personnage mort depuis moins d'un tour et ne garder que les alliés de ce personnage de niveau inférieur ou égal.</li>
                   <li><code>--cone <i>angle</i></code> : cible toutes les créatures dans un cône de sommet l'attaquant, d'angle <i>angle</i> degrés (90 degrés par défaut), et séparé en deux par le segment joignant l'attaquant et le token visé.</li>
                   <li><code>--explosion</code> : si l'attaque n'est pas déjà un disque, considère qu'elle forme un disque de rayon égal à la portée. L'attaquant est automatiquement exclus de la zone.</li>
                   <li><code>--dmCible <i>dmg</i></code> : utilisé conjointement aux options de zone ci-dessus, cette option permet de remplacer les dommages de base de l'attaque spécifiquement sur la cible sélectionnée lors de l'attaque</li>
                   <li><code>--saufAllies</code> : ne cible pas les allies dans la zone ou les cibles spécifiées.</li>
                   <li><code>--target <i>id</i></code> : ajoute une cible à l'attaque (s'ajoute à la cible principale et aux options d'aoe).</li>
                   <li><code>--ciblesDansDisque <i>n</i></code> : impose que les différentes cibles soient dans un disque de rayon <i>n</i>.</li>
+                  <li><code>--ricochets <i>n</i></code> : l'arme de jet peut faire <i>n</i> ricochets. Une cible ne peut être touchée qu'une fois par attaque.</li>
                   <li><code>--message <i>texte</i></code> : ajoute une ligne avec le message dans la fenêtre de l'attaque. Attention, <i>texte</i> ne doit pas contenir la séquence <code> --</code>.</li>
                   <li><code>--secret</code> : affiche les jets et résultats de l'attaque seulement aux joueurs qui contrôlent l'attaquant ou ses cibles, ainsi qu'au MJ.</li>
                   <li><code>--allonge <i>n</i></code> : ajoute <i>n</i> mètres à la portée d'une attaque au contact. L'allonge peut être un nombre à virgule et même négative.</li>
@@ -756,7 +757,7 @@ tr {line-height: 25px;}
                 <h4 class="text-secondary">Affaiblissements de caractéristiques</h4>
                 <div class="decalage">
                   <p>
-                  <code>!cof-affaiblir-carac <i>carac</i> <i>valeur</i></code> permet d'affaiblir temporairement une caractéristique (force, dextérité, constitution, intelligence, sagesse ou charisme) d'une valeur positive. Il existe aussi une option pour les attaques, <code>--affaiblirCarac</code>, qui permet de n'affaiblir une caractéristique que si une attaque est réussie.
+                  <code>!cof-affaiblir-carac <i>carac</i> <i>valeur</i></code> permet d'affaiblir temporairement une caractéristique (force, dextérité, constitution, intelligence, sagesse, charisme ou random) d'une valeur positive. Il existe aussi une option pour les attaques, <code>--affaiblirCarac</code>, qui permet de n'affaiblir une caractéristique que si une attaque est réussie.
                   </p>
                   <p>Une caractéristique affaiblie remonte de 1 après chaque nuit de repos. Le sort de régénération permet de récupérer 1d4 points d'une seule caractéristique physique (d'abord constitution, puis force puis dextérité). Le sort délivrance permet de récupérer 1d4 point d'une seule caractéristique, et comme indiqué dans les règles, le sort de guérison annule tous les affaiblissements de caractéritiques. Enfin le script propose une commande dédiée, <code>!cof-soigner-affaiblissement <i>carac</i> <i>valeur</i></code> pour soigner les affaiblissements.
                   </p>
@@ -1222,7 +1223,7 @@ tr {line-height: 25px;}
                   <li><strong>Animation d'un arbre</strong> :  <code>!cof-animer-arbre @{selected|token_id} @{target|token_id} --portee 0 --mana 1</code>. Cela implique d'avoir un token représentant l'arbre sur la carte. Ce que je fais, c'est de passer un token d'arbre du layer map au layer tokens, puis je laisse le joueur faire le sort. Si c'est trop compliqué, vous pouvez aussi préparer un personnage arbre, avec les caractéristiques décrites, et le faire arriver sur la carte à la main (ne pas oublier sa RD <code>10/feu_hache</code>, dans ce cas).</li>
                   <li><strong>Gland de pouvoir</strong> :
                     <ul>
-                      <li>Sort : Ajouter une attaque sur la fiche utilisant l'attaque magique, portée 10, type Sortilège, modificateur <code>pasDeDmg</code>, options <code>--mana 2 --effet statueDeBois [[2d6+@{selected|SAG}]] --valeur 10 10</code>.</li>
+                      <li>Sort : Ajouter une attaque sur la fiche utilisant l'attaque magique, portée 10, type Sortilège, modificateur <code>pasDeDmg</code>, options <code>--mana 2 --effet statueDeBois [[2d6+@{selected|SAG}]] --valeur 10 10</code>. À noter qu'un prédicat <code>immunite_petrification</code> permet d'être immunisé à cet effet.</li>
                       <li>Objet de sort : <code>#Attaque Gland de pouvoir --toucher [[@{selected|ATKMAG}]] --pasDeDmg --portee 10 --sortilege --effet statueDeBois [[2d6+@{selected|SAG}]] --valeur 10 10</code></li>
                     </ul>
                   </li>
@@ -1406,7 +1407,7 @@ tr {line-height: 25px;}
                 <ol>
                   <li><strong>Robustesse</strong> : rajouter les PV sur la fiche.</li>
                   <li><strong>Armure naturelle</strong> : rajouter la DEF sur la fiche.</li>
-                  <li><strong>Second souffle</strong> : Ajouter un <a href=#predicats>prédicat</a> <code>secondSouffle</code> permet de faire apparaître un bouton pour utiliser le second souffle quand le guerrier a perdu des PVs en combat, limite le gain de PVs à ceux perdus dans le combat en cours, et utilise automatiquement la capacité en fin de combat si elle n'a pas été utilisée. Si cette automatisation ne vous convient pas, vous pouvez utiliser la commande <code>!cof-soin @{selected|token_id} secondSouffle</code> à la place.</li>
+                  <li><strong>Second souffle</strong> : Ajouter un <a href=#predicats>prédicat</a> <code>secondSouffle</code> permet de faire apparaître un bouton pour utiliser le second souffle quand le guerrier a perdu des PVs en combat, limite le gain de PVs à ceux perdus dans le combat en cours, et utilise automatiquement la capacité en fin de combat si elle n'a pas été utilisée. Si cette automatisation ne vous convient pas, vous pouvez utiliser la commande <code>!cof-soin @{selected|token_id} secondSouffle</code> à la place. Enfin, on peut préciser une valeur pour ce prédicat, pour remplacer le niveau + CON (par exemple pour un PNJ).</li>
                   <li><strong>Dur à cuire</strong> : rajouter un <a href=#predicats>prédicat</a> <code>durACuire</code> sur la fiche.</li>
                   <li><strong>Constitution héroïque</strong> : reporter les bonus sur la fiche.</li>
                 </ol>
@@ -1531,7 +1532,7 @@ tr {line-height: 25px;}
                 </ol>
                 <h4 class="text-secondary">Voie de la magie universelle</h4>
                 <ol>
-                  <li><strong>Lumière</strong> : <code>!cof-lumiere @{target|token_id} 20 --mana 0</code>. On peut utiliser une cible qui ne soit qu'un personnage sans PV, et dans ce cas le token disparaît, et pour éteindre la lumière, le MJ doit supprimer le token dans le layer de l'éclairage dynamique. Si la cible est un personnage avec des PV, alors la lumière se déplacera avec lui, et pour étaindre la lumière, il faut séclectionner le ou les tokens et lancer <code>!cof-eteindre-lumiere lumiere</code>.</li>
+                  <li><strong>Lumière</strong> : <code>!cof-lumiere @{target|token_id} 20 --mana 0</code>. On peut utiliser une cible qui ne soit qu'un personnage sans PV, et dans ce cas le token disparaît, et pour éteindre la lumière, le MJ doit supprimer le token dans le layer de l'éclairage dynamique. Si la cible est un personnage avec des PV, alors la lumière se déplacera avec lui, et pour éteindre la lumière, il faut séclectionner le ou les tokens et lancer <code>!cof-eteindre-lumiere lumiere</code>.</li>
                   <li><strong>Détection de la magie</strong> : pas de support autre que <code>!cof-lancer-sort lance un sort de Détection de la Magie --mana 0</code>.</li>
                   <li><strong>Invisibilité</strong> : utiliser <code>!cof-set-state invisible true --message se rend invisible --messageMJ l'invisibilité va durer [[1d6+@{selected|INT}]] minutes --mana 1</code>. Pour les ennemis, mettre dans le layer gm, pour les joueurs, ne pas les cibler. Reste le problème des AOE...</li>
                   <li><strong>Vol</strong> : pas de support autre que <code>!cof-lancer-sort vole --messageMJ le vol va durer [[1d6+@{selected|INT}]] minutes --mana 2</code></li>
@@ -2085,6 +2086,12 @@ tr {line-height: 25px;}
                 </ol>
                 <h4 class="text-secondary">Voie de l'homme du peuple</h4>
                 Reporter les bonus sur la fiche et créer les compétences adéquates.
+                <h4 class="text-secondary">Voie de Morn</h4>
+                <ol>
+                  <li><strong>Secrets de l'au-delà</strong> : <code>!cof-effet-temp secretsDeLAuDela 1 --mana 0</code></li>
+                  <li><strong>Souffle de vie</strong> : <code>!cof-soin @{selected|token_id} @{target|token_id} souffleDeVie --portee 20 --mana 0</code></li>
+                  <li><strong>Souffle de mort</strong> : faire une attaque magique, de portée 20 m (la portée par défaut pour les sorts, mais rien n'est spécifié dans le texte), de dégâts 2d8+INT. Ajoutez <code>auto</code> dans les modificateurs. Pour les options, <code>--disque 10 souffleDeMort --effet souffleDeMort 1 --save CON 10 --mana 1</code>.</li>
+                </ol>
                 <h4 class="text-secondary">Voie de Périndé</h4>
                 <ol>
                   <li>Soutient</li>
@@ -2171,6 +2178,7 @@ tr {line-height: 25px;}
                 <ol>
                   <li><strong>Magie en armure</strong> : Ajouter un <a href=#predicats>prédicat</a> <code>magieEnArmure</code> de valeur la DEF totale à partir de laquelle le personnage peut lancer des sorts. Comme la fiche ne contient pas l'information de la DEF normale (sans magie) de l'armure portée, le script utilise la moyenne de la DEF et du malus d'armure. En ajoutant un prédicat <code>magieEnArmureFacilitee</code>, le script diminue aussi la difficulté des jets d'INT pour les armures avec une DEF trop grande de la valeur du prédicat de magie en armure.</li>
                   <li><strong>Rituel Assuré</strong> : <code>!cof-effet-temp rituelAssure 2</code>. Le script ne permet pas de préciser le sort, le premier qui sera lancé après le rituel assuré bénéficiera de l'effet.</li>
+                  <li><strong>MagieDeCombat</strong> :  Ajouter un <a href=#predicats>prédicat</a> <code>magieDeCombat</code>.</li> 
                 </ol>
                 <h4 class="text-secondary">Voie du héro</h4>
                 <ol>

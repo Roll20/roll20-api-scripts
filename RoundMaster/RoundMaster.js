@@ -161,6 +161,7 @@ var RoundMaster = (function() {
 		author = 'Ken L. & RED',
 		pending = null;
 	const lastUpdate = 1689326353;
+
 	
 	var RW_StateEnum = Object.freeze({
 		ACTIVE: 0,

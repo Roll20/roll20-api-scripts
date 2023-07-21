@@ -54,7 +54,8 @@ var InitiativeTrackerPlus = (function() {
 		clearonclose: true,
 		show_eot: true,
 		playcombatmusic: false,
-		show_motd: true
+		show_motd: true,
+		player_use_favs: false
 	};
 
 	var design = {
@@ -1092,7 +1093,7 @@ var InitiativeTrackerPlus = (function() {
 
 		if (_.find(controllers,function(e){return (e === 'all');})) {
 			content += '<tr>'
-				+ '<td colspan="3"><div style="margin-left: -2px; font-style: normal; font-weight: bold; font-size: 125%; text-shadow: -1px -1px 1px #FFF, 1px -1px 1px #FFF, -1px 1px 1px #FFF, 1px 1px 1px #FFF; color #FFF; border: 2px solid #000; width: 100%; background-color: #FFF;">All Players</div></td>'
+				+ '<td colspan="3"><div style="margin-left: -2px; font-style: normal; font-weight: bold; font-size: 125%; text-shadow: -1px -1px 1px #FFF, 1px -1px 1px #FFF, -1px 1px 1px #FFF, 1px 1px 1px #FFF; color: ' + design.turnbgcolor + '; border: 2px solid #000; width: 100%; background-color: ' + design.turnbgcolor + ';">All Players</div></td>'
 				+ '</tr>';
 		} else {
 			_.each(controllers,function(e) {
@@ -1116,8 +1117,9 @@ var InitiativeTrackerPlus = (function() {
 	 * Build a listing of favorites with buttons that allow them
 	 * to be applied to a selection.
 	 */
-	var makeFavoriteConfig = function(args) {
+	var makeFavoriteConfig = function(args, senderId) {
 		var wantSorted = args[0];
+		var isGM = playerIsGM(senderId);
 
 		var midcontent = '',
 			content = '',
@@ -1143,8 +1145,11 @@ var InitiativeTrackerPlus = (function() {
 						+ '<a style="height: 16px; width: 16px;  border: 1px solid '+design.statusbordercolor+'; border-radius: 0.2em; background: none" title="Apply '+e.name+' status" href="!itp -applyfav '
 							+ e.name.toLowerCase()
 							+ '"><img src="'+design.apply_icon+'"></img></a>'
-					+ '</td>'
-					+ '<td width="32px" height="32px">'
+					+ '</td>';
+
+			if(isGM) {
+				midcontent +=
+					  '<td width="32px" height="32px">'
 						+ '<a style="height: 16px; width: 16px; border: 1px solid '+design.statusbordercolor+'; border-radius: 0.2em; background: none" title="Edit '+e.name+' status" href="!itp -dispstatusconfig '
 							+ ' %% changefav %% '+e.name.toLowerCase()
 							+ '"><img src="'+design.edit_icon+'"></img></a>'
@@ -1153,8 +1158,11 @@ var InitiativeTrackerPlus = (function() {
 						+ '<a style="height: 16px; width: 16px;  border: 1px solid '+design.statusbordercolor+'; border-radius: 0.2em; background: none" title="Remove '+e.name+' status" href="!itp -dispstatusconfig '
 							+ ' %% removefav %% '+e.name.toLowerCase()
 							+ '"><img src="'+design.delete_icon+'"></img></a>'
-					+ '</td>'
-				+ '</tr>';
+					+ '</td>';
+			}
+
+			midcontent +=
+					'</tr>';
 		});
 
 		if ('' === midcontent)
@@ -1177,7 +1185,8 @@ var InitiativeTrackerPlus = (function() {
 	 * Display a login message if we want to
 	 */
 	var displayMotd = function(curToken, statusName, favored) {
-		var motd = 'Please be aware, it is possible the animation is causing some browsers to run out of memory.  For this reason the animation now defaults to disabled.  Use <br>"<span style="font-weight: bold;">!itp -setConfig rotation:true</span>"<br> to turn it back on if you desire this functionality.';
+		var motd = 'New features added:<br><br>Player use of favorites. When this is enabled players can use the -listfavs command to view the favorites list and can assign favs to tokens they control.  To enable use<br>"<span style="font-weight: bold;">!itp -setConfig player_use_favs:true</span>"<br><br>Show Configured values use<br>"<span style="font-weight: bold;">!itp -showConfig</span>"<br>';
+
 		var content = '<div style="background-color: '+design.turnbgcolor+'; color: '+design.turncolor+'; border: 2px solid #000; box-shadow: rgba(0,0,0,0.4) 3px 3px; border-radius: 0.5em; min-height: 20px;">'
 			+ '<table width="100%">'
 				+ '<tr>'
@@ -1594,7 +1603,7 @@ var InitiativeTrackerPlus = (function() {
 	/**
 	 * Produce a listing of favorites
 	 */
-	var doApplyFavorite = function(statusName,selection) {
+	var doApplyFavorite = function(statusName, selection, senderId) {
 		if (!statusName)
 			{return;}
 		statusName = statusName.toLowerCase();
@@ -1675,11 +1684,16 @@ var InitiativeTrackerPlus = (function() {
 		status = statusExists(fav.name.toLowerCase());
 		if (status && !status.marker && fav.marker)
 			{doDirectMarkerApply(markerdef.name+' %% '+fav.name); }
-		else if (status && !status.marker)
-			{content += '<br><div style="text-align: center;">'+InitiativeTrackerPlus_tmp.getTemplate({command: '!itp -dispmarker '+fav.name, text: 'Choose Marker'},'button')+'</div>';}
-
+		else if (status && !status.marker) {
+			content += '<br><div style="text-align: center;">'+InitiativeTrackerPlus_tmp.getTemplate({command: '!itp -dispmarker '+fav.name, text: 'Choose Marker'},'button')+'</div>';
+		}
 		updateAllTokenMarkers();
 		content += '</div>';
+
+		if(! playerIsGM(senderId)) {
+			sendResponse(senderId, content);
+		}
+
 		sendFeedback(content);
 	};
 
@@ -1843,6 +1857,14 @@ var InitiativeTrackerPlus = (function() {
 	var setConfigVariable = function(args) {
 		var pairs = args.split(' ');
 
+		var content = '<div style="background-color: '+design.turnbgcolor+'; color: '+design.turncolor+'; border: 2px solid #000; box-shadow: rgba(0,0,0,0.4) 3px 3px; border-radius: 0.5em; min-height: 20px;">'
+			+ '<table width="100%">'
+				+ '<tr>'
+					+ '<td width="100%" style="text-align: center; font-weight: bold; width: 100%">'
+						+ 'Initiative Tracker Plus (v.' + version + ')'
+					+ '</td>'
+				+ '</tr>';
+
 		pairs.forEach(function(pair) {
 			// p[0] == var, p[1] == value
 			var p = pair.split(':');
@@ -1875,6 +1897,7 @@ var InitiativeTrackerPlus = (function() {
 				case 'playcombatmusic':
 				case 'show_eot':
 				case 'rotation':
+				case 'player_use_favs':
 					oldvalue = flags[p[0]];
 					flags[p[0]] = p[1];
 					state.initiative_tracker_plus.config.flags[p[0]] = p[1];
@@ -1898,13 +1921,104 @@ var InitiativeTrackerPlus = (function() {
 					break;
 			}
 
+					content +=  '<tr>'
+							+ '<td width="100%"  style="font-style: italic; text-align: left; padding: 5px;c">'
+								+ "Config: (<b>" + p[0] + "</b>) set to (<b>" + p[1] + "</b>)"
+							+ '</td>'
+						+ '</tr>';
+
 		});
 
+		content += '</table>'
+		+ '</div>';
 
+		sendFeedback(content);
 
 	}
 
+	/**
+	 * Display Configuration Variables
+	 */
+	var showConfigVariables = function(args) {
+		var types = args.split(' ');
 
+		// If no parameters supplied they want everything
+		if(! args) {
+			types = ['fields', 'flags', 'design'];
+		}
+
+
+		// List which keys we'll disclose
+		var fields_keys = ['rotation_degree', 'rotation_rate', 'round_separator_initiative', 'combatmusic'];
+		var design_keys = ['turncolor', 'turnbgcolor', 'roundcolor', 'roundbgcolor', 'statuscolor', 'statusbgcolor', 'statusbordercolor', 'statusargscolor', 'statusargsbgcolor', 'eotcolor', 'eotbgcolor'];
+		var flags_keys = ['show_motd', 'playcombatmusic', 'show_eot', 'rotation', 'player_use_favs'];
+
+		var content = '<div style="background-color: '+design.turnbgcolor+'; color: '+design.turncolor+'; border: 2px solid #000; box-shadow: rgba(0,0,0,0.4) 3px 3px; border-radius: 0.5em; min-height: 20px;">'
+			+ '<table width="100%">'
+				+ '<tr>'
+					+ '<td width="100%" style="text-align: center; font-weight: bold; width: 100%">'
+						+ 'Initiative Tracker Plus (v.' + version + ')'
+					+ '</td>'
+				+ '</tr>';
+
+
+		types.forEach( function(type) {
+			switch(type) {
+				case 'fields':
+					var vals_fields = dumpVars(fields, fields_keys);
+					content +=  '<tr>'
+							+ '<td><b>Fields Config</b></td>'
+						+ '</tr>'
+						+ '<tr>'
+							+ '<td width="100%"  style="font-style: italic; text-align: left; padding: 5px;c">'
+								+ vals_fields
+							+ '</td>'
+						+ '</tr>';
+					break;
+				case 'flags':
+					var vals_flags = dumpVars(flags, flags_keys);
+					content +=  '<tr>'
+							+ '<td><b>Flags Config</b></td>'
+						+ '</tr>'
+						+ '<tr>'
+							+ '<td width="100%"  style="font-style: italic; text-align: left; padding: 5px; padding-left: 15px;">'
+								+ vals_flags
+							+ '</td>'
+						+ '</tr>';
+					break;
+				case 'design':
+					var vals_design = dumpVars(design, design_keys);
+					content +=  '<tr>'
+							+ '<td><b>Design Config</b></td>'
+						+ '</tr>'
+						+ '<tr>'
+							+ '<td width="100%"  style="font-style: italic; text-align: left; padding: 5px; padding-left: 15px;">'
+								+ vals_design
+							+ '</td>'
+						+ '</tr>';
+					break;
+			};
+		});
+
+
+		content += '</table>'
+		+ '</div>';
+
+
+		sendFeedback(content);
+	}
+
+	var dumpVars = function(obj, keys) {
+		var out = '';
+
+		keys.forEach( function(key) {
+//			if(obj[key] !== undefined) {
+				out += key + ' => ' + obj[key] + "<br>";
+//			}
+		});
+log(out);
+		return out;
+	}
 
 	/**
 	 * Add turn item
@@ -2170,9 +2284,11 @@ var InitiativeTrackerPlus = (function() {
 	/**
 	 * Display favorite configuration
 	 */
-	var doDisplayFavConfig = function(args) {
-		var content = makeFavoriteConfig(args);
-		sendFeedback(content);
+	var doDisplayFavConfig = function(args, senderId) {
+		var content = makeFavoriteConfig(args, senderId);
+
+		sendResponse(senderId, content);
+//		sendFeedback(content);
 	};
 
 
@@ -3411,8 +3527,17 @@ var InitiativeTrackerPlus = (function() {
 							+ "<li><b>playcombatmusic</b> [0] - Will a track from the jukebox be played when the tracker is active. Values should be 0 for off, 1 for on.</li>"
 							+ "<li><b>combatmusic</b> [] - The name of the track to play when the tracker is active if playcombatmusic is turned on [1]. Track can not contain spaces (example: Combat).</li>"
 							+ "<li><b>show_motd</b> [true] - true or false, hides the Message of the Day when the script is started. (Does not hide the version call-out)</li>"
+							+ "<li><b>player_use_favs</b> [false] - true or false, allow players to use -listfavs and add statuses from the -listfavs output.</li>"
 						+ '</ul>'
 					+ '</li>'
+					+ '<br>'
+					+ '<div style="font-weight: bold;">'
+						+ '!itp -showConfig'
+					+ '</div>'
+					+ '<li style="padding-left: 10px;">'
+						+ 'Display configureable variables current values.'
+					+ '</li>'
+					+ '<br>'
 				+ '</div>'
    			+ '</div>';
 
@@ -3533,7 +3658,7 @@ var InitiativeTrackerPlus = (function() {
 			} else if (args.indexOf('-listfav') === 0) {
 				args = args.replace('-listfavs', '-listfav').trim();
 				args = args.replace('-listfav', '').trim();
-				doDisplayFavConfig(args);
+				doDisplayFavConfig(args, senderId);
 			} else if (args.indexOf('-dispmultistatusconfig') === 0) {
 				args = args.replace('-dispmultistatusconfig','').trim();
 				var sel = [];
@@ -3564,7 +3689,7 @@ var InitiativeTrackerPlus = (function() {
 				doAddFavorite(args);
 			} else if (args.indexOf('-applyfav') === 0) {
 				args = args.replace('-applyfav','').trim();
-				doApplyFavorite(args,selected);
+				doApplyFavorite(args, selected, senderId);
 			}  else if (args.indexOf('-relay') === 0) {
 				args = args.replace('-relay','').trim();
 				doRelay(args,senderId);
@@ -3583,6 +3708,10 @@ var InitiativeTrackerPlus = (function() {
 			} else if (args.indexOf('-setConfig') === 0) {
 				args = args.replace('-setConfig', '').trim();
 				setConfigVariable(args);
+			} else if (args.indexOf('-showConfig') === 0) {
+				args = args.replace('-showConfig', '').trim();
+log("caught showConfig");
+				showConfigVariables(args);
 			} else {
 				sendFeedback('<span style="color: red;">Invalid command " <b>'+msg.content+'</b> "</span>');
 				showHelp();
@@ -3590,12 +3719,23 @@ var InitiativeTrackerPlus = (function() {
 		} else if (msg.type === 'api') {
 			if (args.indexOf('!eot') === 0) {
 				doPlayerAdvanceTurn(senderId);
-			} else if (args.indexOf('!itp -addstatus') === 0) {
-				args = args.replace('!itp -addstatus','').trim();
-				doPlayerAddStatus(args,selected,senderId);
-			}  else if (args.indexOf('!itp -relay') === 0) {
-				args = args.replace('!itp -relay','').trim();
+			} else {
+				args = args.replace('!itp','').trim();
+			}
+
+			if (args.indexOf('-addstatus') === 0) {
+				args = args.replace('-addstatus','').trim();
+				doPlayerAddStatus(args,selected, senderId);
+			}  else if (args.indexOf('-relay') === 0) {
+				args = args.replace('-relay','').trim();
 				doRelay(args,senderId);
+			} else if (args.indexOf('-listfav') === 0 && flags.player_use_favs) {
+				args = args.replace('-listfavs', '!itp -listfav').trim();
+				args = args.replace('-listfav', '').trim();
+				doDisplayFavConfig(args, senderId);
+			} else if (args.indexOf('-applyfav') === 0 && flags.player_use_favs) {
+				args = args.replace('-applyfav','').trim();
+				doApplyFavorite(args, selected, senderId);
 			}
 		}
 	};
