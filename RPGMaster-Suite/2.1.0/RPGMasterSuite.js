@@ -1,6 +1,10 @@
-// Github:   tbd
-// By:       Rochard @ Damery
-// Contact:  tbd
+// Github:   https://github.com/Roll20/roll20-api-scripts/tree/master/RPGMaster-Suite
+// By:       Richard @ Damery
+// Contact:  https://app.roll20.net/users/6497708/richard-at-damery
+
+var API_Meta = API_Meta||{}; // eslint-disable-line no-var
+API_Meta.RPGMasterLoader={offset:Number.MAX_SAFE_INTEGER,lineCount:-1};
+{try{throw new Error('');}catch(e){API_Meta.RPGMasterLoader.offset=(parseInt(e.stack.split(/\n/)[1].replace(/^.*:(\d+):.*$/,'$1'),10)-7);}}
 
 /**
  * RPGMasterLoader.js
@@ -23,9 +27,6 @@
  * the RPGMaster suite of API / Mods, so that a One Click search for 
  * 'RPGMaster' finds the loader and allows loading of the suite.
 **/
-var API_Meta = API_Meta||{}; // eslint-disable-line no-var
-API_Meta.RPGMasterLoader={offset:Number.MAX_SAFE_INTEGER,lineCount:-1};
-{try{throw new Error('');}catch(e){API_Meta.RPGMasterLoader.offset=(parseInt(e.stack.split(/\n/)[1].replace(/^.*:(\d+):.*$/,'$1'),10)-6);}}
 
 const RPGMasterLoader = (() => { // eslint-disable-line no-unused-vars
 	'use strict';
