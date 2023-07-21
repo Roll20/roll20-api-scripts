@@ -1207,3 +1207,31 @@ ScriptInfo:
 dynamicLightingTool:
   - "Dynamic Lighting Tool"
   - "Dynamic Lighting"
+
+MarkerManager:
+  - "MarkerManager"
+  - "Utility"
+
+udltorchlight:
+  - "UDLTorchLight"
+  - "Dynamic Lighting"
+
+greaterinvisibility:
+  - "GreaterInvisibility"
+  - "Utility"
+
+rpgMastersuite:
+  - "RPGMaster-Suite"
+  - "Utility"
+
+triggeredcleanup:
+  - "Triggered Cleanup"
+  - "Utility"
+
+ongoingcleanup:
+  - "Ongoing Cleanup"
+  - "Utility"
+
+pingbuddy:
+  - "Ping Buddy"
+  - "Utility"

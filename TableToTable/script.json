@@ -1,15 +1,17 @@
 {
   "name": "TableToTable",
   "script": "TableToTable.js",
-  "version": "1.0.0",
-  "description": "With an intuitive interface, TableToTable provides an easy way to modify your Roll20 rollable tables, either directly in your game or by porting the tables to another software and then letting you return them easily. Run !t3 for help in game. \r\rFor more information, see the original thread in the API forum:\r\r[TableToTable Thread](*link here*)",
+  "version": "1.0.1",
+  "description": "With an intuitive interface, TableToTable provides an easy way to modify your Roll20 rollable tables, either directly in your game or by porting the tables to another software and then letting you return them easily. Run !t3 for help in game. \r\rFor more information, see the original thread in the API forum:\r\r[TableToTable Thread](https://app.roll20.net/forum/post/11181215/script-tabletotable-an-interface-to-easily-copy-slash-edit-slash-port-slash-share-your-rollabletables)",
   "authors": "timmaugh",
   "roll20userid": "5962076",
   "useroptions": [],
-  "dependencies": ["Messenger","libTable"],
+  "dependencies": [ "Messenger", "libTable" ],
   "modifies": {
     "state.TableToTable": "read, write"
   },
   "conflicts": [],
-  "previousversions": []
+  "previousversions": [
+    "1.0.0"
+  ]
 }

@@ -111,10 +111,10 @@ var DarkerDungeons = DarkerDungeons || (function() {
         );
     },
 
-    d4   = () => { return Math.floor(Math.random() * 3) + 1; },
-    d6   = () => { return Math.floor(Math.random() * 5) + 1; },
-    d10  = () => { return Math.floor(Math.random() * 9) + 1; },
-    d100 = () => { return Math.floor(Math.random() * 99) + 1; },
+    d4   = () => { return Math.floor(Math.random() * 4) + 1; },
+    d6   = () => { return Math.floor(Math.random() * 6) + 1; },
+    d10  = () => { return Math.floor(Math.random() * 10) + 1; },
+    d100 = () => { return Math.floor(Math.random() * 100) + 1; },
     randomArray = (array) => { return array[Math.floor(Math.random() * array.length)]; },
 
     // GENERATE ENCOUNTERS
