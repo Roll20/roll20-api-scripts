@@ -124,7 +124,9 @@
  *                     --mod-weap command selection of specified weapons for mod-ing.
  * v1.5.02 31/05/2023  Fixed bug with calculation of magic hit adjustment, which was treating
  *                     numbers as strings.
- * v2.1.0  02/06/2023  Recoded insertAmmo() to use setAttkTableRow() ensuring consistent 
+ * v1.5.03 16/07/2023  Fixed bug with reselecting a weapon from the weapon-in-hand list on
+ *                     the Change Weapon dialog
+ * v2.1.0  21/07/2023  Recoded insertAmmo() to use setAttkTableRow() ensuring consistent 
  *                     data parsing & weapon table construction. Made many more functions
  *                     asynchronous to multi-thread. Added support for AD&D2e Char Sheet v4.17.
  *                     Added AC rule '+inhand' meaning the item must be in-hand to have an
@@ -1472,14 +1474,15 @@ var attackMaster = (function() {
 		var sheetNonProf = attrLookup( charCS, fields.NonProfPenalty ),
 			raceNonProf = parseInt(classNonProfPenalty[(attrLookup( charCS, fields.Race ) || 'creature').dbName()]) || 0,
 			penalties = _.filter( defaultNonProfPenalty, elem => (0 < (attrLookup(charCS,elem[1]) || 0)));
-		if (!state.attackMaster.weapRules.prof && !_.isUndefined(sheetNonProf)) {
-			return sheetNonProf;
-		} else if (!penalties || !penalties.length) {
-		    return 0;
-		} else {
-		    return _.map(penalties, elem => parseInt(classNonProfPenalty[(attrLookup( charCS, elem[0] ) || '').dbName()] || elem[2]))
-					.reduce((penalty,highest) => Math.max(penalty,highest))+raceNonProf;
+		if (state.attackMaster.weapRules.prof || _.isUndefined(sheetNonProf)) {
+			if (!penalties || !penalties.length) {
+				sheetNonProf = 0;
+			} else {
+				sheetNonProf = _.map(penalties, elem => parseInt(classNonProfPenalty[(attrLookup( charCS, elem[0] ) || '').dbName()] || elem[2]))
+								.reduce((penalty,highest) => Math.max(penalty,highest))+raceNonProf;
+			}
 		}
+		return sheetNonProf;
 	}
 	
 	/*
@@ -6421,8 +6424,7 @@ var attackMaster = (function() {
 		}
 		setAttr( charCS, fields.Equip_handedness, Math.max(hands,0)+' '+handedness );
 
-		args = ['',tokenID];
-		makeChangeWeaponMenu( args, senderId );
+		makeChangeWeaponMenu( ['',tokenID];, senderId );
 	}
 	
 	/*
