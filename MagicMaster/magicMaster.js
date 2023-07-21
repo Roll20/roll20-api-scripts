@@ -127,6 +127,7 @@
  *                     to send the message to
  * v1.5.02 24/05/2023  Fixed tableLookup() reference for storing spells in spell-storing MIs. Fixed use
  *                     of alphabetical lists in the GM's Add Items dialog.
+ * v1.5.03 08/06/2023  Fixed error where a self-hidden item name does not have a db definition.
  * v2.1.0  21/07/2023  Extend the --mem-spell command with -ADD and -ANY command qualifiers that give 
  *                     players the ability to add additional spells to a spell storing MI, and/or 
  *                     change the existing spells. Weaponised spells cast from spell-storing MIs now 
@@ -3821,11 +3822,11 @@ var MagicMaster = (function() {
 			reviewObj  = ((cmd !== 'GM-MItoStore' && chosenSlot) ? slotObj : itemObj);
 		
 		content += '{{desc3=**3. '+selectableBoth+(chosenBoth ? ('Store '+itemName+'](!magic --button GM-StoreMI|'+tokenID+'|'+MIrowref+'|'+MItoStore+'|&#91;[?{Quantity?|'+initQty+'}]&#93;)') : ('Store'+(chosenSlot ? ('d '+slotActualName) : itemName)+'</span>'))+' **'
-				+  ' or '+hideableBoth+(hideAvail ? ('Hide '+slotName+' as '+itemName+'](!magic --button GM-RenameMI|'+tokenID+'|'+MIrowref+'|'+MItoStore+')') : ((hiddenMI ? ('Hidden as '+slotName) : ('Hide Item'+(chosenMI?(' as '+itemName):'')))+'</span>'))+'<br>'
+				+  ' or '+hideableBoth+(hideAvail ? ('Hide '+slotName+' as '+itemName+'](!magic --button GM-HideMI|'+tokenID+'|'+MIrowref+'|'+MItoStore+')') : ((hiddenMI ? ('Hidden as '+slotName) : ('Hide Item'+(chosenMI?(' as '+itemName):'')))+'</span>'))+'<br>'
 				+  ' or '+selectableEither+'Review'+(chosenEither ? (' '+reviewItem+'](!magic --button GM-ReviewMI|'+tokenID+'|'+MIrowref+'|'+MItoStore+'&#13;'+sendToWho(charCS,senderId,false,true)+(reviewObj.api ? '&#13;' : '')+'&#37;{'+reviewObj.dB+'|'+reviewObj.obj[1].name+'})') : ' the item</span>')+'<br><br>}}'
 				+  '{{desc4=1. Or select MI from above ^\n'
 				+  '<table width="100%"><tr><td>'
-				+  selectableSlot+'Rename '+slotName+(chosenSlot ? ('](!magic --button GM-renameMI|'+tokenID+'|'+MIrowref+'|'+MItoStore+'|?{What name should '+slotName+' now have?}) ') : '</span> ')+'<br>'
+				+  selectableSlot+'Rename '+slotName+(chosenSlot ? ('](!magic --button GM-RenameMI|'+tokenID+'|'+MIrowref+'|'+MItoStore+'|?{What name should '+slotName+' now have?}) ') : '</span> ')+'<br>'
 				+  selectableSlot+'Change Type'+(chosenSlot ? ('](!magic --button GM-ChangeMItype|'+tokenID+'|'+MIrowref+'|'+MItoStore+'|?{Currently '+slotType+'. What type should '+slotName+' now be?|charged|uncharged|recharging|rechargeable|selfchargeable|absorbing|discharging|cursed|cursed+charged|cursed+recharging|cursed+rechargeable|cursed+selfchargeable|cursed+absorbing}) ') : '</span> ')+'<br>'
 				+  selectableSlot+'Change displayed charges'+(chosenSlot ? ('](!magic --button GM-ChangeDispCharges|'+tokenID+'|'+MIrowref+'|'+MItoStore+'|?{How many displayed charges should '+slotName+' now have (currently '+slotQty+'&#41;?|'+slotQty+'}) ') : '</span> ')+'<br>'
 				+  selectableSlot+'Change actual charges'+(chosenSlot ? ('](!magic --button GM-ChangeActCharges|'+tokenID+'|'+MIrowref+'|'+MItoStore+'|?{How many actual charges should '+slotActualName+' now have (currently '+slotActualQty+'&#41;?|'+slotActualQty+'}) ') : '</span> ')+'<br>'
@@ -8504,7 +8505,7 @@ var MagicMaster = (function() {
 			handleStoreMI( args, (handler == 'GM-StoreMI'), senderId );
 			break;
 			
-		case 'GM-RenameMI':
+		case 'GM-HideMI':
 		
 			handleHideMI( args, senderId );
 			break;
@@ -8544,7 +8545,7 @@ var MagicMaster = (function() {
 			doResetSingleMI( args, senderId, selected );
 			break;
 		
-		case 'GM-renameMI':
+		case 'GM-RenameMI':
 		
 			handleRenameItem( args, senderId );
 			break;
