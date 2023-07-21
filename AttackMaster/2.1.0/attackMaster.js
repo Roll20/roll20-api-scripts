@@ -6424,7 +6424,7 @@ var attackMaster = (function() {
 		}
 		setAttr( charCS, fields.Equip_handedness, Math.max(hands,0)+' '+handedness );
 
-		makeChangeWeaponMenu( ['',tokenID];, senderId );
+		makeChangeWeaponMenu( ['',tokenID], senderId );
 	}
 	
 	/*
