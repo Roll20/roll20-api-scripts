@@ -5,7 +5,7 @@
 
 var API_Meta = API_Meta||{}; // eslint-disable-line no-var
 API_Meta.libRPGMaster={offset:Number.MAX_SAFE_INTEGER,lineCount:-1};
-{try{throw new Error('');}catch(e){API_Meta.libRPGMaster.offset=(parseInt(e.stack.split(/\n/)[1].replace(/^.*:(\d+):.*$/,'$1'),10)-7);}}
+{try{throw new Error('');}catch(e){API_Meta.libRPGMaster.offset=(parseInt(e.stack.split(/\n/)[1].replace(/^.*:(\d+):.*$/,'$1'),10)-8);}}
 
 /**
  * libRPGMaster.js
@@ -7942,8 +7942,8 @@ const libRPGMaster = (() => { // eslint-disable-line no-unused-vars
 						}
 						return {name:charClass.dbName(), dB:classObj.dB, base:baseClass.dbName(), dBbase:fields.ClassDB, level:charLevel, obj:classObj.obj};
 					});
-				if (_.isUndefined(classDef) || !classDef.length) classDef = [{name:'creature', base:'warrior', level:0, obj:LibFunctions.abilityLookup( fields.ClassDB, 'creature', charCS ).obj}];
-				classDef = classDef.map(c => {[c.classData] = LibFunctions.resolveData(c.name, c.dB, reData);return c});
+				if (_.isUndefined(classDef) || !classDef.length) classDef = [{name:'creature', dB:fields.RaceDB, base:'warrior', dBbase:fields.ClassDB, level:0, obj:LibFunctions.abilityLookup( fields.ClassDB, 'creature', charCS ).obj}];
+				classDef = classDef.map(c => {[c.classData] = LibFunctions.resolveData((c.name || charClass), (c.dB || dB), reData);return c});
 				return classDef;
 			};
 	
