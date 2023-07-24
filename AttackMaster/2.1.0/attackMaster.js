@@ -1884,7 +1884,7 @@ var attackMaster = (function() {
 			return new Promise(resolve => {
 
 				try {
-					var errFlag = doCheckAC( [tokenID], findTheGM(), [], true );
+					var errFlag = doCheckAC( [tokenID,'quiet'], findTheGM(), [], true );
 				} catch (e) {
 					log('AttackMaster checkACvars: JavaScript '+e.name+': '+e.message+' while checking AC for tokenID '+tokenID);
 					sendDebug('AttackMaster checkACvars: JavaScript '+e.name+': '+e.message+' while checking AC for tokenID '+tokenID);
@@ -6273,7 +6273,7 @@ var attackMaster = (function() {
 		
 		// set rogue activity percentages
 		
-		let csVersion = attrLookup(charCS,fields.csVersion).match(/(\d+)\.?(\d*)/);
+		let csVersion = String(attrLookup(charCS,fields.csVersion) || 4.17).match(/(\d+)\.?(\d*)/);
 		let modTag = (csVersion[1] >= 4 && (!csVersion[2] || csVersion[2] >= 17)) ? fields.Armor_mod_417 : fields.Armor_mod_416;
 		
 		setAttr( charCS, [fields.Pick_Pockets[0]+modTag,fields.Pick_Pockets[1]], acValues.armour.data.ppa );
@@ -6287,7 +6287,7 @@ var attackMaster = (function() {
 		setAttr( charCS, [fields.Legend_Lore[0]+modTag,fields.Legend_Lore[1]], acValues.armour.data.iba );
 		setAttr( charCS, fields.Armor_name, acValues.armour.data.racname);
 
-		if (!silent || ((ac != prevAC) && !magicItem)) {
+		if ((silentCmd !== 'quiet') && (!silent || ((ac != prevAC) && !magicItem))) {
 			makeACDisplay( args, senderId, ac, dmgAdj, acValues, armourMsgs );
 		} else {
 			sendWait(senderId,0);
