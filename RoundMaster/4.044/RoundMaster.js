@@ -1,8 +1,3 @@
-// Github:   https://github.com/Roll20/roll20-api-scripts/tree/master/RoundMaster
-// Beta:     https://github.com/DameryDad/roll20-api-scripts/tree/RoundMasterAPI/RoundMaster
-// By:       Richard @ Damery
-// Contact:  https://app.roll20.net/users/6497708/richard-at-damery
-
 /**
  * roundMaster.js
  *
@@ -150,18 +145,14 @@
  *                    Fixed aoe targeting where the caster is the only target. Added more effects to 
  *                    support new items.
  * v4.044  31/05/2023 Increment/decrement the Round Number by using +/- before the number with --reset.
- * v4.045  07/07/2023 Additional effects added. Added "always" parameter to --start which forces the 
- *                    tracker into an active state. Updated menu colours to be more readable.
- *                    Fixed tracker rotation status to be saved properly between sessions.
  **/
  
 var RoundMaster = (function() {
 	'use strict'; 
-	var version = 4.045,
+	var version = 4.044,
 		author = 'Ken L. & RED',
 		pending = null;
-	const lastUpdate = 1689326353;
-
+	const lastUpdate = 1684607663;
 	
 	var RW_StateEnum = Object.freeze({
 		ACTIVE: 0,
@@ -225,12 +216,12 @@ var RoundMaster = (function() {
 	}; 
 
 	var dbNames = Object.freeze({
-	Effects_DB:		{bio:'<blockquote>Token Marker Effects Macro Library</blockquote><br><br>v6.13 11/07/2023<br><br>This database holds the definitions for all token status effects.  These are macros that optionally are triggered when a status of the same root name is placed on a token (statusname-start), each round it is still on the token (statusname-turn), and when the status countdown reaches zero or the token dies or is deleted (statusname-end)  There are also other possible status conditions such as weaponname-inhand, weaponname-dancing and weaponname-sheathed.  See the <b>RoundMaster API</b> documentation for further information.<br><br><b>Important Note:</b> Effects require a Roll20 Pro membership, and the installation of the ChatSetAttr, Tokenmod and RoundMaster API Scripts, to allow parameter passing between macros, update of character sheet variables, and marking spell effects on tokens.  If you do not have this level of subscription, I highly recommend you get it as a DM, as you get lots of other goodies as well.  If you want to know how to load the API Scripts to your game, the RoLL20 API help here gives guidance, or Richard can help you.<br><br><b>Important Note for DMs:</b> if a monster character sheet has multiple tokens associated with it, and token markers with associated Effects are placed on more than one of those Tokens, any Effect macros will run multiple times and, if changing variables on the Character Sheet using e.g. ChatSetAttr will make the changes multiple times to the same Character Sheet - generally this will cause unexpected results!  If using these Effect macros for Effects that could affect monsters in this way, it is <b>HIGHLY RECOMMENDED</b> that a 1 monster Token : 1 character sheet approach is adopted.',
-					gmnotes:'<blockquote>Change Log:</blockquote><br>v6.13  11/07/2023  More effects for powers, spells and items<br>v6.09  03/03/2023  Added more effects for new magic items<br>v6.08  16/12/2022  Added more creature effects, such as poisons<br>v6.07  09/12/2022  Added effects to support the new Creatures database<br>v6.06  14/11/2022  Added effects to support new Race Database & Powers<br><br>v6.04  16/10/2022  Added effect for Spiritual-Hammer-end and for Chromatic-Orb Heat effects<br><br>v6.03  12/10/2022  Changed the Initiative dice roll modification field from "comreact" to the new custom field "init-mod"<br><br>v6.02  07/10/2022  Added new effects to support newly programmed magic items<br><br>v6.01  11/05/2022  Added effects to turn on and off underwater infravision<br><br>v5.8  04/02/2022  Fixed old field references when Raging<br><br>v5.7  17/01/2022  Fixed magical To-Hit adjustments for Chant to work in same way as dmg adjustment<br><br>v5.6  01/01/2022  Added multiple Effect Macros to support MagicMaster spell enhancements<br><br>v5.2-5.5 skipped to bring version numbering in line across all APIs<br><br>v5.1  10/11/2021  Changed to use virtual Token bar field names, so bar allocations can be altered<br><br>v5.0  29/10/2021  First version loaded into roundMaster API<br><br>v4.2.4  03/10/2021  Added Hairy Spider poison v4.2.3  23/05/2021  Added a Timer effect that goes with the Time-Recorder Icon, to tell you when a Timer you set starts and ends.<br><br>v4.2.2  28/03/2021  Added Regeneration every Round for @conregen points<br><br>v4.2.1  25/02/2021  Added end effect for Wandering Monster check, so it recurs every n rounds<br><br>v4.2  23/02/2021  Added effect for Infravision to change night vision settings for token.<br><br>v4.1  17/12/2020  Added effects for Dr Lexicon use of spells, inc. Vampiric Touch & Spectral Hand<br><br>v4.0.3 09/11/2020 Added effects for Cube of Force<br><br>v4.0.2 20/10/2020 Added effects of a Slow spell<br><br>v4.0.1 17/10/2020 Added Qstaff-Dancing-turn to increment a dancing quarterstaff\'s round counter<br><br>v4.0  27/09/2020 Released into the new Version 4 Testbed<br><br>v1.0.1 16/09/2020 Initial full release for Lost & Found<br><br>v0.1 30/08/2020 Initial testing version',
+	Effects_DB:		{bio:'<blockquote>Token Marker Effects Macro Library</blockquote><br><br>v6.12 06/06/2023<br><br>This database holds the definitions for all token status effects.  These are macros that optionally are triggered when a status of the same root name is placed on a token (statusname-start), each round it is still on the token (statusname-turn), and when the status countdown reaches zero or the token dies or is deleted (statusname-end)  There are also other possible status conditions such as weaponname-inhand, weaponname-dancing and weaponname-sheathed.  See the <b>RoundMaster API</b> documentation for further information.<br><br><b>Important Note:</b> Effects require a Roll20 Pro membership, and the installation of the ChatSetAttr, Tokenmod and RoundMaster API Scripts, to allow parameter passing between macros, update of character sheet variables, and marking spell effects on tokens.  If you do not have this level of subscription, I highly recommend you get it as a DM, as you get lots of other goodies as well.  If you want to know how to load the API Scripts to your game, the RoLL20 API help here gives guidance, or Richard can help you.<br><br><b>Important Note for DMs:</b> if a monster character sheet has multiple tokens associated with it, and token markers with associated Effects are placed on more than one of those Tokens, any Effect macros will run multiple times and, if changing variables on the Character Sheet using e.g. ChatSetAttr will make the changes multiple times to the same Character Sheet - generally this will cause unexpected results!  If using these Effect macros for Effects that could affect monsters in this way, it is <b>HIGHLY RECOMMENDED</b> that a 1 monster Token : 1 character sheet approach is adopted.',
+					gmnotes:'<blockquote>Change Log:</blockquote><br>v6.12  06/06/2023  More effects for powers and items<br>v6.09  03/03/2023  Added more effects for new magic items<br>v6.08  16/12/2022  Added more creature effects, such as poisons<br>v6.07  09/12/2022  Added effects to support the new Creatures database<br>v6.06  14/11/2022  Added effects to support new Race Database & Powers<br><br>v6.04  16/10/2022  Added effect for Spiritual-Hammer-end and for Chromatic-Orb Heat effects<br><br>v6.03  12/10/2022  Changed the Initiative dice roll modification field from "comreact" to the new custom field "init-mod"<br><br>v6.02  07/10/2022  Added new effects to support newly programmed magic items<br><br>v6.01  11/05/2022  Added effects to turn on and off underwater infravision<br><br>v5.8  04/02/2022  Fixed old field references when Raging<br><br>v5.7  17/01/2022  Fixed magical To-Hit adjustments for Chant to work in same way as dmg adjustment<br><br>v5.6  01/01/2022  Added multiple Effect Macros to support MagicMaster spell enhancements<br><br>v5.2-5.5 skipped to bring version numbering in line across all APIs<br><br>v5.1  10/11/2021  Changed to use virtual Token bar field names, so bar allocations can be altered<br><br>v5.0  29/10/2021  First version loaded into roundMaster API<br><br>v4.2.4  03/10/2021  Added Hairy Spider poison v4.2.3  23/05/2021  Added a Timer effect that goes with the Time-Recorder Icon, to tell you when a Timer you set starts and ends.<br><br>v4.2.2  28/03/2021  Added Regeneration every Round for @conregen points<br><br>v4.2.1  25/02/2021  Added end effect for Wandering Monster check, so it recurs every n rounds<br><br>v4.2  23/02/2021  Added effect for Infravision to change night vision settings for token.<br><br>v4.1  17/12/2020  Added effects for Dr Lexicon use of spells, inc. Vampiric Touch & Spectral Hand<br><br>v4.0.3 09/11/2020 Added effects for Cube of Force<br><br>v4.0.2 20/10/2020 Added effects of a Slow spell<br><br>v4.0.1 17/10/2020 Added Qstaff-Dancing-turn to increment a dancing quarterstaff\'s round counter<br><br>v4.0  27/09/2020 Released into the new Version 4 Testbed<br><br>v1.0.1 16/09/2020 Initial full release for Lost & Found<br><br>v0.1 30/08/2020 Initial testing version',
 					controlledby:'all',
 					root:'effects-db',
 					avatar:'https://s3.amazonaws.com/files.d20.io/images/2795868/caxnSIYW0gsdv4kOmO294w/thumb.png?1390102911',
-					version:6.13,
+					version:6.12,
 					db:[{name:'3min-geyser-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!rounds --addtotracker 3min-Geyser|-1|[[1d10]]|0|3min Geyser blows'},
 						{name:'5min-geyser-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!rounds --addtotracker 5min-Geyser|-1|[[1d10]]|0|5min Geyser blows'},
 						{name:'AE-Aerial-Combat-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!modattr --charid ^^cid^^ --fb-header ^^cname^^ has finished Aerial Combat --fb-content Loses bonuses to to-hit and damage --strengthhit||-1 --strengthdmg||-4'},
@@ -244,8 +235,6 @@ var RoundMaster = (function() {
 						{name:'Bad-Luck-1-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!modattr --charid ^^cid^^ --strengthhit||-1 --wisdef||-1 --fb-public --fb-header ^^cname^^ is Suffering Bad Luck --fb-content ^^cname^^ starts to suffer bad luck on attack rolls and saving throws. An automatic penalty of -1 is applied to both.'},
 						{name:'Barkskin-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!token-mod --ignore-selected --ids ^^tid^^ --set ^^token_ac^^|@{^^cname^^|Barkskin^^tid^^}\n/w "^^cname^^" ^^cname^^\'s AC returns to normal as Barkskin fades'},
 						{name:'Barkskin-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!setattr --silent --name ^^cname^^ --Barkskin^^tid^^|^^ac^^\n!token-mod --ignore-selected --ids ^^tid^^ --set ^^token_ac^^|[[{ {^^ac^^}, {[[6-floor(@{^^cname^^|casting-level}/4)]]} }kl1]]\n/w "^^cname^^" ^^cname^^\'s AC might have improved as they get Barkskin'},
-						{name:'Bestow-Curse-51-75-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!token-mod --ignore-selected --ids ^^tid^^ --set ^^token_thac0^^|-4\n!modattr --silent --name ^^cname^^ --wisdef||+4\n!magic --message c|^^tid^^|Cursed|^^cname^^ is no longer cursed: penalty of 4 to thac0 \\amp saves has been reversed'},
-						{name:'Bestow-Curse-51-75-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!token-mod --ignore-selected --ids ^^tid^^ --set ^^token_thac0^^|+4\n!modattr --silent --name ^^cname^^ --wisdef||-4\n!magic --message c|^^tid^^|Cursed|^^cname^^ is cursed: Thac0 and saves suffer a penalty of 4'},
 						{name:'Bless-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!token-mod {{\n --ignore-selected\n --ids ^^tid^^\n --set ^^token_thac0^^|+1\n}}\n/w "^^cname^^" ^^cname^^\'s Bless has expired and their Thac0 has returned to normal'},
 						{name:'Bless-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'/w "^^cname^^" ^^cname^^ has been blessed and their Thac0 has improved\n!token-mod {{\n --ignore-selected\n --ids ^^tid^^\n --set ^^token_thac0^^|-1\n}}'},
 						{name:'Blindness-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!token-mod --ignore-selected --ids ^^tid^^ --set ^^token_ac^^|-4 --set ^^token_thac0^^|-4\n!modattr --silent --name ^^cname^^ --init-mod|-2\n/w "^^cname^^" ^^tname^^ has recovered from blindness and no longer suffers from penalties to attacks, AC and initiative'},
@@ -284,6 +273,8 @@ var RoundMaster = (function() {
 						{name:'Dancing-Quarterstaff-turn',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --quiet-modweap ^^tid^^|quarterstaff-of-dancing|melee|+:+1 --quiet-modweap ^^tid^^|quarterstaff-of-dancing|dmg|+:+1'},
 						{name:'Deafness-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!modattr --silent --name ^^cname^^ --init-mod|-1\n/w "^^cname^^" ^^tname^^ has recovered from deafness and no longer suffers an initiative penalty'},
 						{name:'Deafness-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!modattr --silent --name ^^cname^^ --init-mod|+1\n/w "^^cname^^" ^^tname^^ has been deafened and suffers an initiative penalty, as well as other effects'},
+						{name:'Defence-stance-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!modattr --fb-header ^^cname^^ has ended Defence Stance --fb-content Being no longer in Defence Stance reverts ^^cname^^\'s saving throws to their previous state --charid ^^cid^^ --wisdef||-2'},
+						{name:'Defence-stance-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!modattr --fb-header ^^cname^^ adopts Defence Stance --fb-content Adopting Defence Stance has improved ^^cname^^\'s saving throws by +2 --charid ^^cid^^ --wisdef||+2'},
 						{name:'Divine-Favour-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'/w "^^cname^^" ^^cname^^\'s Divine Favour has run its course, and their Thac0 returns to normal\n!token-mod {{\n --ignore-selected\n --ids ^^tid^^\n --set ^^token_thac0^^|+4\n}}'},
 						{name:'Divine-Favour-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'/w "^^cname^^" ^^cname^^ has been granted a Divine Favour and their Thac0 has improved by 4!\n!token-mod {{\n --ignore-selected\n --ids ^^tid^^\n --set ^^token_thac0^^|-4\n}}'},
 						{name:'Djinni-Whirlwind-building-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!rounds --target caster|^^tid^^|Djinni-Whirlwind|99|0|Whirlwind now usable as transport or as a weapon|lightning-helix\n!magic --message ^^tid^^|Djinni Whirlwind|The whirlwind has now built to full speed and is usable as transport or as a weapon'},
@@ -334,8 +325,6 @@ var RoundMaster = (function() {
 						{name:'Lightbringer-mace-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!token-mod --ignore-selected --ids ^^tid^^ --on emits_bright_light emits_low_light --set bright_light_distance|15 low_light_distance|15\n/w "^^cname^^" ^^cname^^\'s mace now shines as bright as a torch.'},
 						{name:'Longbow-is-Dancing-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --dance ^^tid^^|Dancing-Longbow|stop'},
 						{name:'Longbow-is-Dancing-turn',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --quiet-modweap ^^tid^^|Dancing-Longbow|ranged|+:+1'},
-						{name:'Melfs-Acid-Arrow-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!magic --message w|^^tid^^|Melfs Acid Arrow|^^cname^^ takes a final [2d4](!token-mod ~~ignore-selected ~~ids ^^tid^^ ~~set ^^token_hp^^¦-\\amp#91;\\lbrak;\\amp#63;{How much acid damage is done?\\amp#124;2d4}\\rbrak;\\amp#93; ~~report character:gm¦\\amp#34;^^cname^^ takes a final {^^token_hp^^:abschange} hp of acid damage\\amp#34; all¦\\amp#34;The acid eats away at ^^cname^^ for the last time\\amp#34;) hp acid damage'},
-						{name:'Melfs-Acid-Arrow-turn',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!magic --message c|^^tid^^|Melfs Acid Arrow|^^cname^^ takes [2d4](!token-mod ~~ignore-selected ~~ids ^^tid^^ ~~set ^^token_hp^^¦-\\amp#91;\\lbrak;\\amp#63;{How much acid damage is done?\\amp#124;2d4}\\rbrak;\\amp#93; ~~report character:gm¦\\amp#34;^^cname^^ takes an additional {^^token_hp^^:abschange} hp of acid damage\\amp#34; all¦\\amp#34;The acid eats away at ^^cname^^\\amp#34;) hp additional acid damage'},
 						{name:'Nauseous-2-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!modattr --silent --charid ^^cid^^ --strengthhit||+2\n/w "^^cname^^" ^^tname^^ is no longer feeling nauseous, so is no longer subject to a penalty of 2 on attacks'},
 						{name:'Nauseous-2-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!modattr --silent --charid ^^cid^^ --strengthhit||-2\n/w "^^cname^^" ^^tname^^ is feeling very nauseous and is now at a -2 penalty to hit on attacks'},
 						{name:'Oil-fire-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'/w "^^cname^^" \\amp{template:default}{{name=Oil Fire Damage Round 2}}{{Damage=^^tname^^ takes another [1d6](!\\amp#13;\\amp#47;roll 1d6)HP of fire damage from the burning oil}}'},
@@ -508,8 +497,7 @@ var RoundMaster = (function() {
 	};
 
 	var flags = {
-		rw_state: RW_StateEnum.STOPPED, 
-		image: true,
+		rw_state: RW_StateEnum.STOPPED, image: true,
 		animating: true,
 		archive: false,
 		clearonclose: false,
@@ -532,10 +520,8 @@ var RoundMaster = (function() {
 	var design = {
 		turncolor: '#D8F9FF',
 		roundcolor: '#363574',
-//		statuscolor: '#F0D6FF',
-		statuscolor: '#9400D3',
-//		statusbgcolor: '#897A87',
-		statusbgcolor: '#D3D3D3',
+		statuscolor: '#F0D6FF',
+		statusbgcolor: '#897A87',
 		statusbordercolor: '#430D3D',
 		edit_icon: 'https://s3.amazonaws.com/files.d20.io/images/11380920/W_Gy4BYGgzb7jGfclk0zVA/thumb.png?1439049597',
 		delete_icon: 'https://s3.amazonaws.com/files.d20.io/images/11381509/YcG-o2Q1-CrwKD_nXh5yAA/thumb.png?1439051579',
@@ -687,10 +673,10 @@ var RoundMaster = (function() {
 
 	var handouts = Object.freeze({
 	RoundMaster_Help:	{name:'RoundMaster Help',
-						 version:1.10,
+						 version:1.09,
 						 avatar:'https://s3.amazonaws.com/files.d20.io/images/257656656/ckSHhNht7v3u60CRKonRTg/thumb.png?1638050703',
 						 bio:'<div style="font-weight: bold; text-align: center; border-bottom: 2px solid black;">'
-							+'<span style="font-weight: bold; font-size: 125%">RoundMaster Help v1.10</span>'
+							+'<span style="font-weight: bold; font-size: 125%">RoundMaster Help v1.09</span>'
 							+'</div>'
 							+'<div style="padding-left: 5px; padding-right: 5px; overflow: hidden;">'
 							+'<h1>RoundMaster API v'+version+'</h1>'
@@ -715,7 +701,6 @@ var RoundMaster = (function() {
 							+'<p>If the <b>InitiativeMaster API</b> is used, it must be accompanied by RoundMaster - it will not work otherwise.  InitiativeMaster provides many menu-driven and data-driven means of controlling RoundMaster, making it far easier for the DM to run their campaign.  The InitiativeMaster <b>--maint</b> command supports the necessary calls to RoundMaster for control of the Turn Order Tracker, and its <b>--menu</b> command uses the data on the Character Sheet to create Turn Order initiative entries with the correct speeds and adjustments.  See the InitiativeMaster API Handout for more information.</p>'
 							+'<h3>Adding and managing Token Statuses</h3>'
 							+'<p>The Token status management functions allow the application and management of status markers with durations (measured in rounds) set on tokens.  The easiest way to use status markers is to use the <b>MagicMaster API</b> which runs spell and magic item macros the Player can initiate, which in turn apply the right status markers and statuses with the appropriate durations to the relevant tokens.  See the MagicMaster API handout for more information.</p>'
-							+'<p>Statuses are marked on a token with icons provided by Roll20 (and extendable by purchases on the Roll20 Marketplace). In addition, for statuses with a duration (except on GM-controlled tokens), the status icons of player-controlled tokens display a number representing the remaining duration of the status (if less than 10 - durations of more than 10 are not shown). In addition, as the turn for each token is announced in the chat window, the user-provided description for any and all statuses on the token are displayed below the turn announcement, with the remaining duration. However, for statuses with an uncertain duration that the player / character should not know (e.g. for the spell <i>fly</i>) the remaining duration can be surpressed on both the status icon and the turn announcement by using a status duration "direction" value of less than -1, and a duration suitably multiplied to achieve the correct outcome. Often using a duration x 10 and a direction of -10 per round will work well.</p>'
 							+'<h3>Status Effects</h3>'
 							+'<p>RoundMaster comes with a number of status "effects": Roll20 Ability Macros that are automatically run when certain matching statuses are applied to, exist on, and/or removed from a token.  These macros can use commands (typically using APIs like <b>ChatSetAttr API</b> and/or <b>Tokenmod API</b> from the Roll20 API Script Library) to temporarily or permanently alter the characteristics of the Token or the represented Character Sheet, thus impacting the state of play.</p>'
 							+'<p>If used with the <b>MagicMaster API</b>, its pre-configured databases of spell and magic item macros work well with the Effect macros supplied in the Effects Database provided with this API.</p>'
@@ -807,7 +792,7 @@ var RoundMaster = (function() {
 							+'<p>Where underscores (\'_\') are shown, they are mandatory. Otherwise, spaces or hyphens can be used and will be ignored in name matches. The above are optional syntaxes - any one can be used.</p>'
 							+'<ul>'
 								+'<li><i>Effect-name</i> is mandatory, and is the name of the effect in the Effects database or, if there is no associated Effect, the name of the status being applied which can be anything desired.</li>'
-								+'<li><i>Player-text</i> if provided is the text that will be shown to the Player instead of the Effect/status name e.g. for slow acting poisons or delayed effect spells where the player should not be aware of the precise nature.</li>'
+								+'<li><i>Player-text</i> if provided is the text that will be shown to the Player instead of the Effect/status name.</li>'
 								+'<li><i>Differentiator</i> if provided just makes this Effect/status different from any other with the same Effect-name and Player-text. This will only be needed in very limited circumstances that perhaps requires the same effect to be applied twice due to two different status applications. It is only ever displayed to the DM.</p>'
 							+'</ul>'
 							+'<p>Next, durations for statuses are normally just an integer number of rounds. However if preceeded by \'+\', \'-\', \'<\', \'>\', or \'=\' and a status of the same name is already set on the identified token the command will modify the current duration, like so:</p>'
@@ -820,8 +805,8 @@ var RoundMaster = (function() {
 							+'</ul>'
 							+'<p>If a status of the same name does not exist on the identified token, the duration will be applied as normal to a new status for that token.</p>'
 							+'<pre>!rounds --addstatus status|duration|direction|[message]|[marker]</pre>'
-							+'<p>Adds a status and a marker for that status to the currently selected token(s).  The status has the name given in the status parameter, with the format described above, and will be given the duration specified (or a modified duration as stated above) which will be changed by direction each round.  Thus setting a duration of 8 and direction of -1 will decrement the duration by 1 each round for 8 rounds.  If the duration gets to 0 the status and token marker will be removed automatically.  direction can be any number - including a positive one meaning duration will increase.  Each Turn Announcement for the turn of a token with one or more statuses will display the effect-name/status (or the Player Text if specified), the duration and direction, and the message, if specified.  The specified marker will be applied to the token - if it is not specified, or is not a valid token marker name, the option will be given to pick one from a menu in the chat window (which can be declined).</p>'
-							+'<p>For player-characters, when the duration reaches 9 or less the duration will be counted-down by a number appearing on the marker.  For NPCs this number does not appear (so that Players don\'t see the remaining duration for statuses on NPCs), but the remaining duration does appear for DM only on the status message below the Turn Announcement on the NPCs turn. Turn announcement durations and status count-downs can also be surpressed for player characters by specifying a <i>direction</i> value of less than -1 and a <i>duration</i> suitably multiplied to achieve the same outcome. For example, the spell <i>fly</i> has an uncertain duration and perhaps the player should not be aware of what it is: multiplying the <i>duration</i> by 10 and setting the <i>direction</i> as -10 per round means that the turn announcement will not show the players the remaining duration of the status, and the final count of the duration will be from "10" down to "0" so the status count-down on the token will never display! Alternatively, if you want to give the player just a small hint of it coming to an end, multiplying the duration by 5 and setting the direction to -5 will display one count-down of "5" on the token before dropping to "0" and removing the status (perhaps a bit misleading), or x 2 and -2 will show "8", "6", "4", "2", then remove the status.</p>'
+							+'<p>Adds a status and a marker for that status to the currently selected token(s).  The status has the name given in the status parameter, with the format described above, and will be given the duration specified (or a modified duration as stated above) which will be changed by direction each round.  Thus setting a duration of 8 and direction of -1 will decrement the duration by 1 each round for 8 rounds.  If the duration gets to 0 the status and token marker will be removed automatically.  direction can be any number - including a positive one meaning duration will increase.  Each Turn Announcement for the turn of a token with one or more statuses will display the effect_name/status (or the Player Text if specified), the duration and direction, and the message, if specified.  The specified marker will be applied to the token - if it is not specified, or is not a valid token marker name, the option will be given to pick one from a menu in the chat window (which can be declined).</p>'
+							+'<p>For player-characters, when the duration reaches 9 or less the duration will be counted-down by a number appearing on the marker.  For NPCs this number does not appear (so that Players don\'t see the remaining duration for statuses on NPCs), but the remaining duration does appear for DM only on the status message below the Turn Announcement on the NPCs turn.</p>'
 							+'<p>If a Player other than the DM uses this command, the DM will be asked to confirm the setting of the status and marker.  This allows the DM to make any decisions on effectiveness.</p>'
 							+'<p>The API-held Effects database and any GM-supplied additional Effects databases will be searched in three ways: when a status marker is set, any Ability Macro with the name Effect-name-start (where Effect-name is from the command using the syntax described above) is run.  Each round when it is the turn of a token with the status marker set, the Ability Macro with the name Effect-name-turn is run.  And when the status ends (duration reaches 0) or the status is removed using --removestatus, or the token has the Dead marker set or is deleted, an Ability Macro with the name Effect-name-end is run.  See the Effects database documentation for full information on effect macros and the options and parameters that can be used in them.</p>'
 							+'<pre>!rounds --addtargetstatus tokenID|status|duration|direction|[message]|[marker]</pre>'
@@ -1154,7 +1139,7 @@ var RoundMaster = (function() {
 				state.roundMaster.viewer.pid = '';
 				state.roundMaster.viewer.echo = 'on';
 			}
-			if (_.isUndefined(!state.roundMaster.rotation))
+			if (!state.roundMaster.rotation)
 				{state.roundMaster.rotation = true;}
 			if (_.isUndefined(state.roundMaster.debug))
 				{state.roundMaster.debug = false;}
@@ -1464,6 +1449,7 @@ var RoundMaster = (function() {
 				if (attrObj) {
 					attrName = attrObj.get('name').toLowerCase();
 					barName = tokenField.substring(0,4);
+//					log('getTokenVal: searching for "'+attr+'", found link to field "'+attrName+'" in '+linkName);
 					return (attrName == attr) || (attrName == altAttr);
 				}
 			}
@@ -1472,10 +1458,12 @@ var RoundMaster = (function() {
 			attrName = {current:barName+'_value', max:barName+'_max'};
 			attrVal = {current:attrObj.get('current'), max:attrObj.get('max')};
 		}
+//		log('getTokenVal: searching for "'+attr+'", after token search attrName="'+_.chain(attrName).pairs().flatten().value()+'", attrVal='+_.chain(attrVal).pairs().flatten().value()+', barName='+barName);
 		if (isNaN(attrVal) && !linkedToken && fieldIndex >= 0) {
 			barName = 'bar'+(fieldIndex+1);
 			attrName = {current:barName+'_value', max:barName+'_max'};
 			attrVal = {current:parseFloat(curToken.get(barName+'_value')),max:parseFloat(curToken.get(barName+'_max'))};
+//			log('getTokenVal: searching for "'+attr+'", after unlinked token attrName="'+_.chain(attrName).pairs().flatten().value()+'", attrVal='+_.chain(attrVal).pairs().flatten().value()+', barName='+barName);
 		}
 		if (charCS && isNaN(parseFloat(attrVal.current))) {
 			attrName = {current:'',max:''};
@@ -1483,11 +1471,13 @@ var RoundMaster = (function() {
 				attrObj = findAttrObj( charCS, fields.Thac0_base[0] );
 				attrVal = {current:parseInt(attrObj.get('current')),
 							max:parseInt(attrObj.get('max'))};
+//				log('getTokenVal: searching for "'+attr+'", after char sheet thac0 search attrName="'+_.chain(attrName).pairs().flatten().value()+'", attrVal='+_.chain(attrVal).pairs().flatten().value()+', barName='+barName);
 			}
 			if (isNaN(parseFloat(attrVal.current))) {
 				attrObj = findAttrObj( charCS, field[0] );
 				attrVal = {current:parseInt(attrObj.get('current')),
 							max:parseInt(attrObj.get('max'))};
+//				log('getTokenVal: searching for "'+attr+'", after char sheet field search attrName="'+_.chain(attrName).pairs().flatten().value()+'", attrVal='+_.chain(attrVal).pairs().flatten().value()+', barName='+barName);
 			}
 			if (altField && isNaN(parseFloat(attrVal.current))) {
 				attrObj = findAttrObj( charCS, altField[0] );
@@ -1495,6 +1485,7 @@ var RoundMaster = (function() {
 							max:parseInt(attrObj.get('max'))};
 			}
 		}
+//		log('getTokenVal: searching for "'+attr+'", after all searches attrName="'+_.chain(attrName).pairs().flatten().value()+'", attrVal='+_.chain(attrVal).pairs().flatten().value()+', barName='+barName);
 		return [attrVal,attrName];
 	}
 	
@@ -1594,9 +1585,9 @@ var RoundMaster = (function() {
 				}
 			}
 			if (gstatus.marker && isPlayer)
-				{content += makeStatusDisplay(e,false);}
+				{content += makeStatusDisplay(e);}
 			else
-				{hcontent += makeStatusDisplay(e,true);}
+				{hcontent += makeStatusDisplay(e)}
 		});
 		effects = _.reject(effects,function(e) {
 			if (e.duration <= 0) {
@@ -1930,7 +1921,7 @@ var RoundMaster = (function() {
 			midcontent = '<span style="font-style: italic;">No Status Effects Present</span>'; 
 		}
 
-		content += '<div style="background-color: '+design.statusbgcolor+'; border: 2px solid #000; box-shadow: rgba(0,0,0,0.4) 3px 3px; border-radius: 0.5em; text-align: center;">'
+		content += '<div style="background-color: '+design.statuscolor+'; border: 2px solid #000; box-shadow: rgba(0,0,0,0.4) 3px 3px; border-radius: 0.5em; text-align: center;">'
 			+ '<div style="border-bottom: 2px solid black; font-size: 125%; font-weight: bold; ">'
 				+ 'Edit Status Group'
 			+ '</div>'
@@ -1996,12 +1987,10 @@ var RoundMaster = (function() {
 	/**
 	 * Build status display
 	 */ 
-	var makeStatusDisplay = function(statusArgs,isGM) {
+	var makeStatusDisplay = function(statusArgs) {
 		var content = '',
 			gstatus = statusExists(statusArgs.name),
-			markerdef,
-			dir = parseInt(statusArgs.direction),
-			dur = parseInt(statusArgs.duration); 
+			markerdef; 
 
 		if (gstatus && gstatus.marker)
 			{markerdef = libTokenMarkers.getStatuses(gstatus.marker);}
@@ -2011,8 +2000,8 @@ var RoundMaster = (function() {
 			+ '<table width="100%">' 
 			+ '<tr>'
 			+ (markerdef.length ? ('<td><div style="width: 21px; height: 21px;"><img src="'+markerdef[0].url+'"></img></div></td>'):'')
-			+ '<td width="100%">'+(/_([^_]+)_?/.exec(statusArgs.name) || ['',statusArgs.name])[1] + ' ' + (dir === 0 ? '': (dur <= 0 ? '<span style="color: red;">Expiring</span>':((!isGM && dir < -1) ? '' : dur)))
-			+ (dir===0 ? '<span style="font-size: larger; color: blue;">\u221E</span>' : (dir > 0 ? '<span style="color: green;">\u25B2(+'+dir+')</span>':'<span style="color: red;">\u25BC'+((!isGM && dir < -1) ? '' : ('('+dir+')'))+'</span>'))
+			+ '<td width="100%">'+(/_([^_]+)_?/.exec(statusArgs.name) || ['',statusArgs.name])[1] + ' ' + (parseInt(statusArgs.direction) === 0 ? '': (parseInt(statusArgs.duration) <= 0 ? '<span style="color: red;">Expiring</span>':statusArgs.duration))
+			+ (parseInt(statusArgs.direction)===0 ? '<span style="font-size: larger; color: blue;">\u221E</span>' : (parseInt(statusArgs.direction) > 0 ? '<span style="color: green;">\u25B2(+'+statusArgs.direction+')</span>':'<span style="color: red;">\u25BC('+statusArgs.direction+')</span>'))
 			+ ((statusArgs.msg) ? ('<br><span style="color: #000">' + getFormattedRoll(parseStr(statusArgs.msg)) + '</span>'):'')+'</td>'
 			+ '</tr>' 
 			+ '</table>'
@@ -2089,7 +2078,7 @@ var RoundMaster = (function() {
 			+ '<td width="50px" height="50px"><div style="margin-right 2px; padding-top: 2px; padding-bottom: 2px; padding-left: 2px; padding-right: 2px; text-align: center; width: 50px">' 
 			+ '<img width="50px" height="50px" src="' + curToken.get('imgsrc') + '"></img></div></td>'
 			+ '<td width="100%">' 
-			+ (name ? ('It is ' + name + '\'s turn ' + action + (speed > 1 ? (' for ' + (speed-1) + ' more rounds') : '')) : 'Turn') 
+			+ (name ? ('It is ' + name + '\'s turn ' + action + (speed > 1 ? (' for ' + speed + ' more rounds') : '')) : 'Turn') 
 			+ '</td>'
 			+ '<td width="32px" height="32px">'
 			+ '<a style="width: 20px; height: 18px; background: none; border: none;" href="!rounds --disptokenconfig '+curToken.get('_id')+'"><img src="'+design.settings_icon+'"></img></a>'
@@ -2246,7 +2235,7 @@ var RoundMaster = (function() {
 		else
 			{mImg = 'none';}
 
-		content += '<div style="background-color: '+design.statusbgcolor+'; border: 2px solid #000; box-shadow: rgba(0,0,0,0.4) 3px 3px; border-radius: 0.5em; text-align: center;">'
+		content += '<div style="background-color: '+design.statuscolor+'; border: 2px solid #000; box-shadow: rgba(0,0,0,0.4) 3px 3px; border-radius: 0.5em; text-align: center;">'
 			+ '<div style="border-bottom: 2px solid black;">'
 				+ '<table width="100%"><tr><td width="100%"><span style="font-weight: bold; font-size: 125%">'+ (favored ? 'Edit Favorite' :('Edit "'+statusName+'" for'))+'</span></td>'+(favored ? ('<td width="100%">'+statusName+'</td>') : ('<td width="32px" height="32px"><div style="width: 32px; height: 32px"><img src="'+curToken.get('imgsrc')+'"></img></div></td>')) + '</tr></table>'
 			+ '</div>'
@@ -2359,7 +2348,7 @@ var RoundMaster = (function() {
 			midcontent += '<tr><td><div style="text-align: center; font-style: italic;">No Status Effects Present</div></td></tr>'; 
 		}
 		
-		content += '<div style="background-color: '+design.statusbgcolor+'; border: 2px solid #000; box-shadow: rgba(0,0,0,0.4) 3px 3px; border-radius: 0.5em; text-align: center;">'
+		content += '<div style="background-color: '+design.statuscolor+'; border: 2px solid #000; box-shadow: rgba(0,0,0,0.4) 3px 3px; border-radius: 0.5em; text-align: center;">'
 			+ '<div style="border-bottom: 2px solid black;">'
 				+ '<table width="100%"><tr><td width="100%"><span style="font-weight: bold; font-size: 125%">Statuses for</span></td><td width="32px" height="32px"><div style="width: 32px; height: 32px"><img src="'+curToken.get('imgsrc')+'"></img></div></td></tr></table>'
 			+ '</div>'
@@ -4186,6 +4175,7 @@ var RoundMaster = (function() {
 	 */ 
 	var doResetTurnorder = function(args,isTurn=true) {
 		var initial = (typeof(args) === 'string' ? (args.match(/[+-]?\d+/) || [1,1])[0] : 1);
+//		log('doResetTurnorder: args = '+args+', initial = '+initial);
 		if (!initial) 
 				{initial = 1;}
 		var turnorder = Campaign().get('turnorder');
@@ -4197,7 +4187,9 @@ var RoundMaster = (function() {
 		} else {
 			if(!_.find(turnorder, function(e) {
 				if (parseInt(e.id) === -1 && parseInt(e.pr) === -100 && e.custom.match(/Round\s*\d+/)) {
+//					log('doResetTurnorder: setting round number, initial[0] = '+initial[0]);
 					if ('+-'.includes(initial[0])) {
+//						log('doResetTurnorder: got +/-, initial = '+parseInt( e.custom.match(/\d+/) || 1 )+' + '+parseInt(initial));
 						initial = parseInt( e.custom.match(/\d+/) || 1 ) + parseInt(initial);
 					}
 					e.custom = 'Round ' + initial;
@@ -4221,6 +4213,7 @@ var RoundMaster = (function() {
 				// RED: v2.007 introduced the new initMaster API Script.  Set it's round counter
 				if (flags.canUseInitMaster) {
 				    roundCtrCmd = '!init --isRound ' + initial + '|true';
+//					log('doResetTurnorder: init cmd = '+roundCtrCmd);
 				    sendRmAPI(roundCtrCmd);
 				}
         		_.each(_.keys(state.roundMaster.effects), function(e) {
@@ -4359,7 +4352,7 @@ var RoundMaster = (function() {
 			}
 			setTimeout(function() {animateTracker();},500);
 		} else if (flags.rw_state === RW_StateEnum.PAUSED 
-				|| flags.rw_state === RW_StateEnum.FROZEN) {
+		|| flags.rw_state === RW_StateEnum.FROZEN) {
 			setTimeout(function() {animateTracker();},500);
 		} else {
 			flags.animating = false;
@@ -4426,6 +4419,7 @@ var RoundMaster = (function() {
 			if (!foundItems.includes(item.name)) {
 				foundItems.push(item.name);
 				item.body = parseStr(item.body);
+				log('buildCSdb: saving effect '+item.name);
 				errFlag = errFlag || !setAbility( dbCS, item.name, item.body );
 			}
 		});
@@ -4546,6 +4540,7 @@ var RoundMaster = (function() {
 			crossHair = crossHairObj;
 			question = !!!confirmedDrop;
 			
+//			log('doSetAOE: created crosshair object, l = '+chLeft+', t = '+chTop);
 		}
 		if (!shape || !['ARC180','ARC90','BOLT','CIRCLE','CONE','ELIPSE','RECTANGLE','SQUARE','WALL'].includes(shape)) {
 			// ask for shape of aoe
@@ -4654,10 +4649,14 @@ var RoundMaster = (function() {
 						   represents:charID});
 			toBack(crossHair);
 			
+//			log('doSetAOE: final position, l = '+chLeft+', t = '+chTop);
+//			log('doSetAOE: final: args = '+args);
+			
 			casterID = args[8];
 			args = args.slice(9);
 			let cmd = args.shift();
 			if (args.length) {
+//				log('doSetAOE: targeted: cmd = '+cmd+', args = '+args);
 				if (cmd.toLowerCase() !== 'caster') {
 					content = '&{template:'+fields.defaultTemplate+'}{{name=Target Area-Effect Spell}}'
 							+ '{{[Select a target](!rounds --target '+cmd+'|'+casterID+'|&#64;{target|Select A Target|token_id}|'+args.join('|')+') or just do something else}}';
@@ -4675,14 +4674,11 @@ var RoundMaster = (function() {
 	 * as if you're moving around while paused, to reposition, you
 	 * don't want it to tick down on status effects.
 	 */ 
-	var doStartTracker = function( args ) {
-		
-		if ((!args || !args[0] || args[0].toLowerCase() !== 'always') && flags.rw_state === RW_StateEnum.ACTIVE) {
+	var doStartTracker = function() {
+		if (flags.rw_state === RW_StateEnum.ACTIVE) {
 			doPauseTracker();
 			return;
 		}
-		if (flags.rw_state === RW_StateEnum.ACTIVE) return;
-		
 		flags.rw_state = RW_StateEnum.ACTIVE;
 		prepareTurnorder();
 		var curToken = findCurrentTurnToken();
@@ -6026,7 +6022,7 @@ var RoundMaster = (function() {
 						if (isGM) doSetSort(arg);
 						break;
 				case 'start':
-						if (isGM) doStartTracker(arg);
+						if (isGM) doStartTracker();
 						break;
 				case 'stop':
 						if (isGM) doStopTracker();
@@ -6074,7 +6070,6 @@ var RoundMaster = (function() {
 	 * Handle turn order change event
 	 */ 	
 	var handleChangeCampaignTurnorder = function(obj,prev) {
-		sendRmAPI('!init --clearmarkers');
 		handleAdvanceTurn(obj.get('turnorder'),prev.turnorder);
 	};
 	
