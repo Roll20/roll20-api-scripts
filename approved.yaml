@@ -1235,3 +1235,7 @@ ongoingcleanup:
 pingbuddy:
   - "Ping Buddy"
   - "Utility"
+
+anchor:
+  - "Anchor"
+  - "Utility"
