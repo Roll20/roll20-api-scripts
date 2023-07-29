@@ -761,6 +761,7 @@ const Fetch = (() => { //eslint-disable-line no-unused-vars
         show_tooltip: { refersto: 'show_tooltip', permissionsreq: 'any', dataval: (d) => d },
         sides: { refersto: 'sides', permissionsreq: 'any', dataval: (d) => d },
         sidecount: { refersto: 'sides', permissionsreq: 'any', dataval: (d) => ('' || d).split(`|`).length },
+        sidescount: { refersto: 'sides', permissionsreq: 'any', dataval: (d) => ('' || d).split(`|`).length },
         markers: { refersto: 'statusmarkers', permissionsreq: 'any', dataval: (d) => d },
         statusmarkers: { refersto: 'statusmarkers', permissionsreq: 'any', dataval: (d) => d },
         tint: { refersto: 'tint_color', permissionsreq: 'any', dataval: (d) => d },
