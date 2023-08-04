@@ -136,11 +136,14 @@
  *                     and non-PR spell-casters to incorrectly have MU or PR spell level. Fixed issue 
  *                     of trying to display non-hyphenated abilities from char sheet. Fixed container 
  *                     type not updating when items are stored in it to become searchable.
+ * v2.1.1  26/07/2023  Made --tidy command less aggressive, so now only removes abilities that are 
+ *                     not action-buttons, not owned, and exist in some database - it will now not 
+ *                     delete abilities that are user-defined.
  */
  
 var MagicMaster = (function() {
 	'use strict';
-	var version = '2.1.0',
+	var version = '2.1.1',
 		author = 'RED',
 		pending = null;
     const lastUpdate = 1689326353;
@@ -6658,14 +6661,11 @@ var MagicMaster = (function() {
 				let menuCmd = obj.get('istokenaction');
 				let owned = namesList[charID].includes(objName);
 				objName = (objName || '').dbName();
-//				if (!menuCmd && !owned && !attack) {
-//					dbItem   = !_.isUndefined(DBindex[MIroot][objName])
-//							|| !_.isUndefined(DBindex[MUroot][objName])
-//							|| !_.isUndefined(DBindex[PRroot][objName])
-//							|| !_.isUndefined(DBindex[PWroot][objName]);
-//				}
-//				return (attack || (!menuCmd && !owned && dbItem));
-				return (attack || (!menuCmd && !owned));
+				if (!menuCmd && !owned && !attack) {
+					dbItem = _.some(DBindex,d => !_.isUndefined(d[objName]));
+				}
+				return (attack || (!menuCmd && !owned && dbItem));
+//				return (attack || (!menuCmd && !owned));
 			}
 		});
 		if (!silent) {
