@@ -1203,7 +1203,7 @@ const Fetch = (() => { //eslint-disable-line no-unused-vars
                     default: // all others -- could be token name, token id, character name, or character id
                         selsource = simpleObj(findObjs({ id: obj })[0] || {});
                         if (selsource.type && ['text', 'path'].includes(selsource.type)) { // text objects and paths
-                            retval = getPropertyValue(selsource, 'text', prop, def);
+                            retval = getPropertyValue(selsource, selsource.type, prop, def);
                         } else { // graphics/tokens/cards
                             if (Object.keys(tokenProps).includes(prop.toLowerCase())) {        // token property
                                 source = simpleObj(getToken(obj, getPageID(msg.playerid)));
