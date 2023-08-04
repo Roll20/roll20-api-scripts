@@ -3,8 +3,8 @@
 Name			:	Fetch
 GitHub			:	https://github.com/TimRohr22/Cauldron/tree/master/Fetch
 Roll20 Contact  :	timmaugh
-Version			:   2.0.9
-Last Update		:	8/4/2023
+Version			:   2.0.8
+Last Update		:	7/29/2023
 =========================================================
 */
 var API_Meta = API_Meta || {};
@@ -13,12 +13,12 @@ API_Meta.Fetch = { offset: Number.MAX_SAFE_INTEGER, lineCount: -1 };
 
 const Fetch = (() => { //eslint-disable-line no-unused-vars
     const apiproject = 'Fetch';
-    const version = '2.0.9';
+    const version = '2.0.8';
     const apilogo = 'https://i.imgur.com/jeIkjvS.png';
     const apilogoalt = 'https://i.imgur.com/boYO3cf.png';
     const schemaVersion = 0.2;
     API_Meta[apiproject].version = version;
-    const vd = new Date(1691176175905);
+    const vd = new Date(1684189922939);
     const versionInfo = () => {
         log(`\u0166\u0166 ${apiproject} v${API_Meta[apiproject].version}, ${vd.getFullYear()}/${vd.getMonth() + 1}/${vd.getDate()} \u0166\u0166 -- offset ${API_Meta[apiproject].offset}`);
         if (!state.hasOwnProperty(apiproject) || state[apiproject].version !== schemaVersion) { //eslint-disable-line no-prototype-builtins
@@ -607,18 +607,17 @@ const Fetch = (() => { //eslint-disable-line no-unused-vars
                 return o ? o.get('name') : undefined;
         }
     };
-    const getControlledByList = (s, d) => {
+    getControlledByList = (s, d) => {
         if (!s.represents || !s.represents.length) return d && d.length ? d : s.controlledby;
         let c = getObj('character', s.represents);
         if (c) return c.get('controlledby');
     };
     const tokenProps = {
-        id: { refersto: '_id', permissionsreq: 'any', dataval: (d) => d },
+        cardid: { refersto: '_cardid', permissionsreq: 'any', dataval: (d) => d },
+        cid: { refersto: '_cardid', permissionsreq: 'any', dataval: (d) => d },
         tid: { refersto: '_id', permissionsreq: 'any', dataval: (d) => d },
         token_id: { refersto: '_id', permissionsreq: 'any', dataval: (d) => d },
         token_name: { refersto: 'name', permissionsreq: 'any', dataval: (d) => d },
-        cardid: { refersto: '_cardid', permissionsreq: 'any', dataval: (d) => d },
-        cid: { refersto: '_cardid', permissionsreq: 'any', dataval: (d) => d },
         page_id: { refersto: '_pageid', permissionsreq: 'any', dataval: (d) => d },
         pageid: { refersto: '_pageid', permissionsreq: 'any', dataval: (d) => d },
         pid: { refersto: '_pageid', permissionsreq: 'any', dataval: (d) => d },
@@ -629,7 +628,6 @@ const Fetch = (() => { //eslint-disable-line no-unused-vars
         page_name: { refersto: '_pageid', permissionsreq: 'any', dataval: d => getObjName(d, 'page') },
         sub: { refersto: '_subtype', permissionsreq: 'any', dataval: (d) => d },
         subtype: { refersto: '_subtype', permissionsreq: 'any', dataval: (d) => d },
-        type: { refersto: '_type', permissionsreq: 'any', dataval: (d) => d },
         token_type: { refersto: '_type', permissionsreq: 'any', dataval: (d) => d },
         adv_fow_view_distance: { refersto: 'adv_fow_view_distance', permissionsreq: 'any', dataval: (d) => d },
         aura1: { refersto: 'aura1_color', permissionsreq: 'any', dataval: (d) => d },
@@ -679,8 +677,8 @@ const Fetch = (() => { //eslint-disable-line no-unused-vars
         checklight_total: { refersto: 'checklight_total', permissionsreq: 'any', dataval: (d) => d },
 
         compact_bar: { refersto: 'compact_bar', permissionsreq: 'any', dataval: (d) => d },
-        player: { refersto: 'controlledby', permissionsreq: 'any', dataval: (d, s) => getControlledByList(s, d).split(/\s*,\s*/).filter(a => a.toLowerCase() !== 'all' && getObj('player', a))[0] },
-        player_name: { refersto: 'controlledby', permissionsreq: 'any', dataval: (d, s) => getControlledByList(s, d).split(/\s*,\s*/).filter(a => a.toLowerCase() !== 'all').map(a => getObjName(a, 'player')).filter(a => a)[0] },
+        player: { refersto: 'controlledby', permissionsreq: 'any', dataval: (d, s) => getControlledByList(s, d).split(/\s*,\s*/).filter(a => a.toLowerCase() !== 'all')[0] },
+        player_name: { refersto: 'controlledby', permissionsreq: 'any', dataval: (d, s) => getControlledByList(s, d).split(/\s*,\s*/).filter(a => a.toLowerCase() !== 'all').map(a => getObjName(a, 'player'))[0] },
         token_cby: { refersto: 'controlledby', permissionsreq: 'any', dataval: (d, s) => getControlledByList(s, d) },
         token_controlledby: { refersto: 'controlledby', permissionsreq: 'any', dataval: (d, s) => getControlledByList(s, d) },
         token_cby_names: { refersto: 'controlledby', permissionsreq: 'any', dataval: (d, s) => getObjName(getControlledByList(s, d), 'playerlist') },
@@ -790,8 +788,8 @@ const Fetch = (() => { //eslint-disable-line no-unused-vars
         inplayerjournals_names: { refersto: 'inplayerjournals', permissionsreq: 'any', dataval: (d) => getObjName(d, 'playerlist') },
         character_controlledby: { refersto: 'controlledby', permissionsreq: 'any', dataval: (d) => d },
         character_cby: { refersto: 'controlledby', permissionsreq: 'any', dataval: (d) => d },
-        player: { refersto: 'controlledby', permissionsreq: 'any', dataval: (d) => d.split(/\s*,\s*/).filter(a => a.toLowerCase() !== 'all' && getObj('player', a))[0] },
-        player_name: { refersto: 'controlledby', permissionsreq: 'any', dataval: (d) => d.split(/\s*,\s*/).filter(a => a.toLowerCase() !== 'all').map(a => getObjName(a, 'player')).filter(a => a)[0] },
+        player: { refersto: 'controlledby', permissionsreq: 'any', dataval: (d) => d.split(/\s*,\s*/).filter(a => a.toLowerCase() !== 'all')[0] },
+        player_name: { refersto: 'controlledby', permissionsreq: 'any', dataval: (d) => d.split(/\s*,\s*/).filter(a => a.toLowerCase() !== 'all').map(a => getObjName(a, 'player'))[0] },
         char_cby: { refersto: 'controlledby', permissionsreq: 'any', dataval: (d) => d },
         char_controlledby: { refersto: 'controlledby', permissionsreq: 'any', dataval: (d) => d },
         character_controlledby_name: { refersto: 'controlledby', permissionsreq: 'any', dataval: (d) => getObjName(d, 'playerlist') },
@@ -905,6 +903,7 @@ const Fetch = (() => { //eslint-disable-line no-unused-vars
         jukeboxplaylistplaying: { refersto: '_jukeboxplaylistplaying', permissionsreq: 'any', dataval: (d) => d },
         token_markers: { refersto: '_token_markers', permissionsreq: 'any', dataval: (d) => d },
         markers: { refersto: '_token_markers', permissionsreq: 'any', dataval: (d) => d }
+
     };
     const markerProps = { // derived from the Campaign object
         marker_id: { refersto: 'tag', permissionsreq: 'any', dataval: (d) => d },
@@ -925,62 +924,6 @@ const Fetch = (() => { //eslint-disable-line no-unused-vars
         url: { refersto: 'url', permissionsreq: 'any', dataval: (d) => d },
         is: { refersto: 'is', permissionsreq: 'any', dataval: (d) => d },
         count: { refersto: 'count', permissionsreq: 'any', dataval: (d) => d }
-    };
-    const textProps = {
-        id: { refersto: '_id', permissionsreq: 'any', dataval: (d) => d },
-        type: { refersto: '_type', permissionsreq: 'any', dataval: (d) => d },
-        color: { refersto: 'color', permissionsreq: 'any', dataval: (d) => d },
-        cby: { refersto: 'controlledby', permissionsreq: 'any', dataval: (d) => d },
-        controlledby: { refersto: 'controlledby', permissionsreq: 'any', dataval: (d) => d },
-        cby_names: { refersto: 'controlledby', permissionsreq: 'any', dataval: (d) => getObjName(d, 'playerlist') },
-        controlledby_names: { refersto: 'controlledby', permissionsreq: 'any', dataval: (d) => getObjName(d, 'playerlist') },
-        cby_name: { refersto: 'controlledby', permissionsreq: 'any', dataval: (d) => getObjName(d, 'playerlist') },
-        controlledby_name: { refersto: 'controlledby', permissionsreq: 'any', dataval: (d) => getObjName(d, 'playerlist') },
-        font_family: { refersto: 'font_family', permissionsreq: 'any', dataval: (d) => d },
-        font_size: { refersto: 'font_size', permissionsreq: 'any', dataval: (d) => d },
-        height: { refersto: 'height', permissionsreq: 'any', dataval: (d) => d },
-        layer: { refersto: 'layer', permissionsreq: 'gm', dataval: (d) => d },
-        left: { refersto: 'left', permissionsreq: 'any', dataval: (d) => d },
-        page_id: { refersto: '_pageid', permissionsreq: 'any', dataval: (d) => d },
-        pageid: { refersto: '_pageid', permissionsreq: 'any', dataval: (d) => d },
-        pid: { refersto: '_pageid', permissionsreq: 'any', dataval: (d) => d },
-        page: { refersto: '_pageid', permissionsreq: 'any', dataval: d => getObjName(d, 'page') },
-        page_name: { refersto: '_pageid', permissionsreq: 'any', dataval: d => getObjName(d, 'page') },
-        player: { refersto: 'controlledby', permissionsreq: 'any', dataval: (d) => d.split(/\s*,\s*/).filter(a => a.toLowerCase() !== 'all' && getObj('player', a))[0] },
-        player_name: { refersto: 'controlledby', permissionsreq: 'any', dataval: (d, s) => getControlledByList(s, d).split(/\s*,\s*/).filter(a => a.toLowerCase() !== 'all').map(a => getObjName(a, 'player')).filter(a => a)[0] },
-        rotation: { refersto: 'rotation', permissionsreq: 'any', dataval: (d) => d },
-        text: { refersto: 'text', permissionsreq: 'any', dataval: (d) => d },
-        top: { refersto: 'top', permissionsreq: 'any', dataval: (d) => d },
-        width: { refersto: 'width', permissionsreq: 'any', dataval: (d) => d }
-    };
-    const pathProps = {
-        id: { refersto: '_id', permissionsreq: 'any', dataval: (d) => d },
-        type: { refersto: '_type', permissionsreq: 'any', dataval: (d) => d },
-        cby: { refersto: 'controlledby', permissionsreq: 'any', dataval: (d, s) => getControlledByList(s, d) },
-        controlledby: { refersto: 'controlledby', permissionsreq: 'any', dataval: (d, s) => getControlledByList(s, d) },
-        cby_names: { refersto: 'controlledby', permissionsreq: 'any', dataval: (d) => getObjName(d, 'playerlist') },
-        controlledby_names: { refersto: 'controlledby', permissionsreq: 'any', dataval: (d) => getObjName(d, 'playerlist') },
-        cby_name: { refersto: 'controlledby', permissionsreq: 'any', dataval: (d) => getObjName(d, 'playerlist') },
-        controlledby_name: { refersto: 'controlledby', permissionsreq: 'any', dataval: (d) => getObjName(d, 'playerlist') },
-        fill: { refersto: 'fill', permissionsreq: 'any', dataval: (d) => d },
-        height: { refersto: 'height', permissionsreq: 'any', dataval: (d) => d },
-        layer: { refersto: 'layer', permissionsreq: 'gm', dataval: (d) => d },
-        left: { refersto: 'left', permissionsreq: 'any', dataval: (d) => d },
-        page_id: { refersto: '_pageid', permissionsreq: 'any', dataval: (d) => d },
-        pageid: { refersto: '_pageid', permissionsreq: 'any', dataval: (d) => d },
-        pid: { refersto: '_pageid', permissionsreq: 'any', dataval: (d) => d },
-        page: { refersto: '_pageid', permissionsreq: 'any', dataval: d => getObjName(d, 'page') },
-        page_name: { refersto: '_pageid', permissionsreq: 'any', dataval: d => getObjName(d, 'page') },
-        path: { refersto: 'path', permissionsreq: 'any', dataval: (d) => d },
-        player: { refersto: 'controlledby', permissionsreq: 'any', dataval: (d) => d.split(/\s*,\s*/).filter(a => a.toLowerCase() !== 'all' && getObj('player', a))[0] },
-        player_name: { refersto: 'controlledby', permissionsreq: 'any', dataval: (d, s) => getControlledByList(s, d).split(/\s*,\s*/).filter(a => a.toLowerCase() !== 'all').map(a => getObjName(a, 'player')).filter(a => a)[0] },
-        rotation: { refersto: 'rotation', permissionsreq: 'any', dataval: (d) => d },
-        scalex: { refersto: 'scaleX', permissionsreq: 'any', dataval: (d) => d },
-        scaley: { refersto: 'scaleY', permissionsreq: 'any', dataval: (d) => d },
-        stroke: { refersto: 'stroke', permissionsreq: 'any', dataval: (d) => d },
-        stroke_width: { refersto: 'stroke_width', permissionsreq: 'any', dataval: (d) => d },
-        top: { refersto: 'top', permissionsreq: 'any', dataval: (d) => d },
-        width: { refersto: 'width', permissionsreq: 'any', dataval: (d) => d }
     };
 
     const condensereturn = (funcret, status, notes) => {
@@ -1017,15 +960,7 @@ const Fetch = (() => { //eslint-disable-line no-unused-vars
             return m;
         }, false);
     };
-    const simpleObj = (o) => {
-        if (typeof o === 'undefined') { return o; }
-        let obj = JSON.parse(JSON.stringify(o));
-        if (!Object.keys(obj).length) { return obj; }
-        return Object.keys(obj).reduce((m, k) => {
-            if (/^_/.test(k) && !m.hasOwnProperty(k.slice(1))) { m[k.slice(1)] = m[k]; }
-            return m;
-        }, obj);
-    };
+    const simpleObj = (o) => typeof o !== 'undefined' ? JSON.parse(JSON.stringify(o)) : o;
 
     const handleInput = (msg, msgstate = {}) => {
         let funcret = { runloop: false, status: 'unchanged', notes: '' };
@@ -1036,7 +971,7 @@ const Fetch = (() => { //eslint-disable-line no-unused-vars
         let msgId = generateUUID();
 
         const filterObj = {
-            'page': (t) => t._pageid === getPageForPlayer(msg.playerid),
+            'page': (t) => t._pageid === (Campaign().get('playerspecificpages')[msg.playerid] || Campaign().get('playerpageid')),
             'ribbon': (t) => t._pageid === Campaign().get('playerpageid'),
             'gm': () => true
         };
@@ -1047,9 +982,7 @@ const Fetch = (() => { //eslint-disable-line no-unused-vars
             campaign: campaignProps,
             marker: markerProps,
             player: playerProps,
-            status: statusProps,
-            text: textProps,
-            path: pathProps
+            status: statusProps
         };
         const getPropertyValue = (source, objtype, item, def = '') => {
             let propObj = propContainers[objtype.toLowerCase()];
@@ -1085,7 +1018,6 @@ const Fetch = (() => { //eslint-disable-line no-unused-vars
                 let offset = 0,
                     trackres,
                     pgfilter = 'page',
-                    selsource,
                     presource,
                     source,
                     retval = def,
@@ -1137,32 +1069,27 @@ const Fetch = (() => { //eslint-disable-line no-unused-vars
                             notes.push(`No token selected for ${m}. Using default value.`);
                             retval = def;
                         } else {
-                            selsource = simpleObj(findObjs({ id: msg.selected[0]._id })[0]);
-                            if (['text', 'path'].includes(selsource.type)) { // text objects and paths
-                                retval = getPropertyValue(selsource, selsource.type, prop, def);
-                            } else { // graphics/tokens/cards
-                                if (Object.keys(tokenProps).includes(prop.toLowerCase())) { // selected with token prop
-                                    source = simpleObj(getToken(msg.selected[0]._id));
-                                    retval = getPropertyValue(source, 'token', prop, def);
-                                } else if (prop.toLowerCase() === 'status') { // selected with status
-                                    if (identikey &&
-                                        getMarker(/(?<marker>.+?)(?:\?(?<index>\d+|all\+?))?$/.exec(identikey.toLowerCase())[1]).name &&
-                                        Object.keys(statusProps).includes((subprop || 'value').toLowerCase())) {
-                                        presource = simpleObj(getToken(msg.selected[0]._id));
-                                        if (presource && !presource.hasOwnProperty('id')) presource.id = presource._id;
-                                        if (!tokenStatuses.hasOwnProperty(presource.id) || tokenStatuses[presource.id].msgId !== msgId) {// eslint-disable-line no-prototype-builtins
-                                            tokenStatuses[presource.id] = new StatusBlock({ token: presource, msgId: msgId });
-                                        }
-                                        source = getStatus(msg.selected[0]._id, identikey, msgId);
-                                        retval = getPropertyValue(source, prop, (subprop || 'value'), def);
+                            if (Object.keys(tokenProps).includes(prop.toLowerCase())) { // selected with token prop
+                                source = simpleObj(getToken(msg.selected[0]._id));
+                                retval = getPropertyValue(source, 'token', prop, def);
+                            } else if (prop.toLowerCase() === 'status') { // selected with status
+                                if (identikey &&
+                                    getMarker(/(?<marker>.+?)(?:\?(?<index>\d+|all\+?))?$/.exec(identikey.toLowerCase())[1]).name &&
+                                    Object.keys(statusProps).includes((subprop || 'value').toLowerCase())) {
+                                    presource = simpleObj(getToken(msg.selected[0]._id));
+                                    if (presource && !presource.hasOwnProperty('id')) presource.id = presource._id; 
+                                    if (!tokenStatuses.hasOwnProperty(presource.id) || tokenStatuses[presource.id].msgId !== msgId) {// eslint-disable-line no-prototype-builtins
+                                        tokenStatuses[presource.id] = new StatusBlock({ token: presource, msgId: msgId });
                                     }
-                                } else { // selected with character prop/attribute/ability
-                                    source = simpleObj(getChar(msg.selected[0]._id, msg.playerid));
-                                    if (Object.keys(charProps).includes(prop.toLowerCase())) { // selected + character prop
-                                        retval = getPropertyValue(simpleObj(source), 'character', prop, def);
-                                    } else { // selected + character attribute or ability
-                                        retval = getCharacterAttribute(source, type, prop, identikey, def);
-                                    }
+                                    source = getStatus(msg.selected[0]._id, identikey, msgId);
+                                    retval = getPropertyValue(source, prop, (subprop || 'value'), def);
+                                }
+                            } else { // selected with character prop/attribute/ability
+                                source = simpleObj(getChar(msg.selected[0]._id, msg.playerid));
+                                if (Object.keys(charProps).includes(prop.toLowerCase())) { // selected + character prop
+                                    retval = getPropertyValue(simpleObj(source), 'character', prop, def);
+                                } else { // selected + character attribute or ability
+                                    retval = getCharacterAttribute(source, type, prop, identikey, def);
                                 }
                             }
                         }
@@ -1201,32 +1128,27 @@ const Fetch = (() => { //eslint-disable-line no-unused-vars
                         }
                         break;
                     default: // all others -- could be token name, token id, character name, or character id
-                        selsource = simpleObj(findObjs({ id: obj })[0] || {});
-                        if (selsource.type && ['text', 'path'].includes(selsource.type)) { // text objects and paths
-                            retval = getPropertyValue(selsource, 'text', prop, def);
-                        } else { // graphics/tokens/cards
-                            if (Object.keys(tokenProps).includes(prop.toLowerCase())) {        // token property
-                                source = simpleObj(getToken(obj, getPageID(msg.playerid)));
-                                retval = getPropertyValue(source, 'token', prop, def);
-                            } else if (prop.toLowerCase() === 'status') { // status
-                                if (identikey &&
-                                    getMarker(/(?<marker>.+?)(?:\?(?<index>\d+|all\+?))?$/.exec(identikey.toLowerCase())[1]).name &&
-                                    Object.keys(statusProps).includes((subprop || 'value').toLowerCase())) {
-                                    presource = simpleObj(getToken(obj));
-                                    if (presource && !presource.hasOwnProperty('id')) presource.id = presource._id;
-                                    if (!tokenStatuses.hasOwnProperty(presource.id) || tokenStatuses[presource.id].msgId !== msgId) {
-                                        tokenStatuses[presource.id] = new StatusBlock({ token: presource, msgId: msgId });
-                                    }
-                                    source = getStatus(obj, identikey, msgId);
-                                    retval = getPropertyValue(source, prop, (subprop || 'value'), def);
+                        if (Object.keys(tokenProps).includes(prop.toLowerCase())) {        // token property
+                            source = simpleObj(getToken(obj, getPageID(msg.playerid)));
+                            retval = getPropertyValue(source, 'token', prop, def);
+                        } else if (prop.toLowerCase() === 'status') { // status
+                            if (identikey &&
+                                getMarker(/(?<marker>.+?)(?:\?(?<index>\d+|all\+?))?$/.exec(identikey.toLowerCase())[1]).name &&
+                                Object.keys(statusProps).includes((subprop || 'value').toLowerCase())) {
+                                presource = simpleObj(getToken(obj));
+                                if (presource && !presource.hasOwnProperty('id')) presource.id = presource._id; 
+                                if (!tokenStatuses.hasOwnProperty(presource.id) || tokenStatuses[presource.id].msgId !== msgId) {
+                                    tokenStatuses[presource.id] = new StatusBlock({ token: presource, msgId: msgId });
                                 }
-                            } else { // character property or attribute or ability
-                                source = simpleObj(getChar(obj, msg.playerid) || getChar((simpleObj(getToken(obj, getPageID(msg.playerid))) || {}).represents, msg.playerid));
-                                if (Object.keys(charProps).includes(prop.toLowerCase())) { // character property
-                                    retval = getPropertyValue(simpleObj(source), 'character', prop, def);
-                                } else {                                                  // character attribute/ability
-                                    retval = getCharacterAttribute(source, type, prop, identikey, def);
-                                }
+                                source = getStatus(obj, identikey, msgId);
+                                retval = getPropertyValue(source, prop, (subprop || 'value'), def);
+                            }
+                        } else { // character property or attribute or ability
+                            source = simpleObj(getChar(obj, msg.playerid) || getChar((simpleObj(getToken(obj, getPageID(msg.playerid))) || {}).represents, msg.playerid));
+                            if (Object.keys(charProps).includes(prop.toLowerCase())) { // character property
+                                retval = getPropertyValue(simpleObj(source), 'character', prop, def);
+                            } else {                                                  // character attribute/ability
+                                retval = getCharacterAttribute(source, type, prop, identikey, def);
                             }
                         }
                         break;
