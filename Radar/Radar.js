@@ -128,7 +128,7 @@ API_Meta.RadarWIP = { offset: Number.MAX_SAFE_INTEGER, lineCount: -1 };
 const Radar = (() => {
     
     const scriptName = "Radar";
-    const version = '0.11';
+    const version = '0.12';
     
     const PING_NAME = 'RadarPing'; 
     const hRED = '#ff0000';
@@ -245,6 +245,7 @@ const Radar = (() => {
             let baseObj = JSON.parse(tokenJSON);
             
             //set token properties
+            baseObj.layer = 'objects';      //hardcoded to objects layer. visibility of aura is determined by character settings
             baseObj.pageid = pageID;
             baseObj.left = spawnX;
             baseObj.top = spawnY;
@@ -1825,6 +1826,7 @@ const Radar = (() => {
                 }
                 
                 let spawnObj = getCharacterFromName(PING_NAME);
+                
                 if (spawnObj === undefined) {
                     sendChat(scriptName,`/w "${who}" `+ 'Error: Character \"RadarPing\" must be in the journal with a default token: ');
                     return;
