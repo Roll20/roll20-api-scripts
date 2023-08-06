@@ -15,7 +15,7 @@
     "attribute.name": "read",
     "attribute.type": "read"
   },
-  "dependencies": [ "Messenger", "libTokenMarkers" ],
+  "dependencies": [ "Messenger", "libTokenMarkers", "checkLightLevel" ],
   "conflicts": [],
   "previousversions": [
     "1.0.4",
