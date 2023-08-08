@@ -1004,6 +1004,10 @@ udlpasswall:
   - "UDLPasswall"
   - "Dynamic Lighting"
 
+metascripttoolbox:
+  - "MetaScriptToolbox"
+  - "Utility"
+
 fetch:
   - "Fetch"
   - "Utility"
