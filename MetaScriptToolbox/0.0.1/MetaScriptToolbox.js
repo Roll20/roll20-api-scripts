@@ -3,7 +3,7 @@
 Name            :   MetaScriptToolbox
 GitHub          :   
 Roll20 Contact  :   timmaugh
-Version         :   1.0.0
+Version         :   0.0.1
 Last Update     :   8/8/2023
 =========================================================
 */
@@ -13,7 +13,7 @@ API_Meta.MetaScriptToolbox = { offset: Number.MAX_SAFE_INTEGER, lineCount: -1 };
 
 const MetaScriptToolbox = (() => { // eslint-disable-line no-unused-vars
     const apiproject = 'MetaScriptToolbox';
-    const version = '1.0.0';
+    const version = '0.0.1';
     const schemaVersion = 0.1;
     API_Meta[apiproject].version = version;
     const vd = new Date(1655476169424);
