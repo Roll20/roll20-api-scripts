@@ -586,6 +586,14 @@ const Fetch = (() => { //eslint-disable-line no-unused-vars
         }
         return token;
     };
+    class nullObj {
+        constructor() {
+            this.get = function () { return undefined; }
+        }
+    }
+    const getObjOrNull = (type, id) => {
+        return (getObj(type, id) || new nullObj());
+    };
     const getObjName = (key, type) => {
         let o;
         switch (type) {
@@ -599,6 +607,10 @@ const Fetch = (() => { //eslint-disable-line no-unused-vars
             case 'player':
                 o = getObj(type, key);
                 return o ? o.get('displayname') : undefined;
+            case 'deck':
+                o = getObjOrNull(type, getObjOrNull('card', key));
+                return o ? o.get('name') : undefined;
+            case 'card':
             case 'page':
             case 'attribute':
             case 'character':
@@ -617,8 +629,6 @@ const Fetch = (() => { //eslint-disable-line no-unused-vars
         tid: { refersto: '_id', permissionsreq: 'any', dataval: (d) => d },
         token_id: { refersto: '_id', permissionsreq: 'any', dataval: (d) => d },
         token_name: { refersto: 'name', permissionsreq: 'any', dataval: (d) => d },
-        cardid: { refersto: '_cardid', permissionsreq: 'any', dataval: (d) => d },
-        cid: { refersto: '_cardid', permissionsreq: 'any', dataval: (d) => d },
         page_id: { refersto: '_pageid', permissionsreq: 'any', dataval: (d) => d },
         pageid: { refersto: '_pageid', permissionsreq: 'any', dataval: (d) => d },
         pid: { refersto: '_pageid', permissionsreq: 'any', dataval: (d) => d },
@@ -674,6 +684,11 @@ const Fetch = (() => { //eslint-disable-line no-unused-vars
         bar3_current: { refersto: 'bar3_value', permissionsreq: 'any', dataval: (d) => d },
         bar3_value: { refersto: 'bar3_value', permissionsreq: 'any', dataval: (d) => d },
         bright_light_distance: { refersto: 'bright_light_distance', permissionsreq: 'any', dataval: (d) => d },
+        cardid: { refersto: '_cardid', permissionsreq: 'any', dataval: (d) => d },
+        cid: { refersto: '_cardid', permissionsreq: 'any', dataval: (d) => d },
+        cardname: { refersto: '_cardid', permissionsreq: 'any', dataval: (d) => getObjName(d, 'card') },
+        deckid: { refersto: '_cardid', permissionsreq: 'any', dataval: (d) => getObjOrNull('card', d).get('deckid') },
+        deckname: { refersto: '_cardid', permissionsreq: 'any', dataval: (d) => getObjOrNull('deck', getObjOrNull('card', d).get('deckid')).get('name') },
 
         checklight_isbright: { refersto: 'checklight_isbright', permissionsreq: 'any', dataval: (d) => d },
         checklight_total: { refersto: 'checklight_total', permissionsreq: 'any', dataval: (d) => d },
