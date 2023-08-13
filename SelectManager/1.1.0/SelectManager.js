@@ -368,6 +368,10 @@ const SelectManager = (() => { //eslint-disable-line no-unused-vars
         funcret.notes = notes.join('<br>');
         return funcret;
     };
+    const uniqueArrayByProp = (array, prop = 'id') => {
+        const set = new Set;
+        return array.filter(o => !set.has(o[prop]) && set.add(o[prop]));
+    };
     const decomposeStatuses = (list = '') => {
         return list.split(/\s*,\s*/g).filter(s => s.length)
             .reduce((m, s) => {
@@ -449,6 +453,37 @@ const SelectManager = (() => { //eslint-disable-line no-unused-vars
         if (typeof s !== 'string') return s;
         return ((s.charAt(0) === s.charAt(s.length - 1)) && check.includes(s.charAt(0))) ? s.slice(1, s.length - 1) : s;
     };
+    const isPlayerToken = (obj, pc = false) => {
+        let players;
+        if (!pc) {
+            players = obj.get('controlledby')
+            .split(/,/)
+            .filter(s => s.length);
+
+            if (players.includes('all') || players.filter((p) => !playerIsGM(p)).length) {
+                return true;
+            }
+        }
+
+        if ('' !== obj.get('represents')) {
+            players = (getObj('character', obj.get('represents')) || { get: function () { return ''; } })
+                .get('controlledby')
+                .split(/,/)
+                .filter(s => s.length);
+            return !!(players.includes('all') || players.filter((p) => !playerIsGM(p)).length);
+        }
+        return false;
+    };
+    const isNPC = (obj) => {
+        let players = (
+            obj.get('represents') && obj.get('represents').length
+                ? getObj('character', obj.get('represents') || { get: function () { return ''; } })
+                : obj
+        )
+            .get('controlledby').split(/,/)
+            .filter(s => s.length && !playerIsGM(s));
+        return !players.length;
+    };
     const internalTestLib = {
         'int': (v) => +v === +v && parseInt(parseFloat(v, 10), 10) == v,
         'num': (v) => +v === +v,
@@ -462,7 +497,11 @@ const SelectManager = (() => { //eslint-disable-line no-unused-vars
         '>': (t) => (internalTestLib.num(t[0]) ? Number(t[0]) : t[0]) > (internalTestLib.num(t[1]) ? Number(t[1]) : t[1]),
         '>=': (t) => (internalTestLib.num(t[0]) ? Number(t[0]) : t[0]) >= (internalTestLib.num(t[1]) ? Number(t[1]) : t[1]),
         '<': (t) => (internalTestLib.num(t[0]) ? Number(t[0]) : t[0]) < (internalTestLib.num(t[1]) ? Number(t[1]) : t[1]),
-        '<=': (t) => (internalTestLib.num(t[0]) ? Number(t[0]) : t[0]) <= (internalTestLib.num(t[1]) ? Number(t[1]) : t[1])
+        '<=': (t) => (internalTestLib.num(t[0]) ? Number(t[0]) : t[0]) <= (internalTestLib.num(t[1]) ? Number(t[1]) : t[1]),
+        'in': (t) => {
+            let array = (/^\[?([^\]]+)\]?$/.exec(t[1])[1] || '').split(/\s*,\s*/);
+            return array.includes(t[0]);
+        }
     }
 
     const evaluateCriteria = (c, t, msgId) => {
@@ -475,7 +514,7 @@ const SelectManager = (() => { //eslint-disable-line no-unused-vars
         switch (c.type) {
             case 'bar':
                 if (typeProcessor.hasOwnProperty(test)) {
-                    comp = [t.get(`bar${['1', '2', '3'].includes(c.ident)  ? c.ident : '1'}_value`), c.value];
+                    comp = [t.get(`bar${['1', '2', '3'].includes(c.ident) ? c.ident : '1'}_value`), c.value];
                 }
                 break;
             case 'max':
@@ -552,6 +591,24 @@ const SelectManager = (() => { //eslint-disable-line no-unused-vars
                     comp = [tksetting, c.value];
                 }
                 break;
+            case 'pc':
+                if (t.get('type') === 'graphic' && t.get('subtype') === 'token' && t.get('layer') === 'objects') {
+                    test = '=';
+                    comp = [isPlayerToken(t, true), true];
+                }
+                break;
+            case 'npc':
+                if (t.get('type') === 'graphic' && t.get('subtype') === 'token') {
+                    test = '=';
+                    comp = [isNPC(t), true];
+                }
+                break;
+            case 'pt':
+                if (t.get('type') === 'graphic' && t.get('subtype') === 'token' && t.get('layer') === 'objects') {
+                    test = '=';
+                    comp = [isPlayerToken(t, true), false];
+                }
+                break;
             default:
                 return false;
         }
@@ -577,11 +634,55 @@ const SelectManager = (() => { //eslint-disable-line no-unused-vars
     }
     const injectrx = /(\()?{&\s*inject\s+([^}]+?)\s*}((?<=\({&\s*inject\s+([^}]+?)\s*})\)|\1)/gi;
     const selectrx = /(\()?{&\s*select\s+([^}]+?)\s*}((?<=\({&\s*select\s+([^}]+?)\s*})\)|\1)/gi;
-    const criteriarx = /^(?<musthave>\+|-)(?<attr>@)?(?<typeitem>[^\s><=!~]+)(?:\s*$|\s*(?<test>>=|<=|~|!~|=|!=|<|>)?\s*(?<value>.+\s*)$)/;
-    const typeitemrx = /^(?<type>bar|max|aura|color|layer|tip|gmnotes|type)(?<ident>1|2|3)?(?<!bar|max|aura3|color3|layer1|layer2|layer3|tip1|tip2|tip3|gmnotes1|gmnotes2|gmnotes3|type1|type2|type3)$/i;
+    const criteriarx = /^(?<musthave>\+|-)(?<attr>@)?(?<typeitem>[^\s><=!~]+)(?:\s*$|\s*(?<test>>=|<=|~|!~|=|!=|<|>|in(?=\s+\[[^\]]+\]))?\s*(?<value>.+\s*)$)/;
+    const typeitemrx = /^(?<type>bar|max|aura|color|layer|tip|gmnotes|type|pc|npc|pt)(?<ident>1|2|3)?(?<!bar|max|aura3|color3|layer1|layer2|layer3|tip1|tip2|tip3|gmnotes1|gmnotes2|gmnotes3|type1|type2|type3|pc1|pc2|pc3|npc1|npc2|npc3|pt1|pt2|pt3)$/i;
     const inject = (msg, status, msgId/*, notes*/) => {
         const layerCriteria = (criteria) => {
             return criteria.filter(c => c.type === 'layer').length ? true : false;
+        };
+        const caseLibrary = [
+            { rx: /^(\+|-)[^\s]+\s+in\s+\[$/i, terminator: ']' }
+        ];
+        const getGroups = (cmd, index = 0, groups = []) => {
+            const getNextGroup = (cmd, terminator = ',') => {
+                let s = '';
+                let bstop = false;
+                while (index <= cmd.length - 1 && !bstop) {
+                    if (cmd.charAt(index) === terminator) {
+                        if (terminator !== ',') {
+                            s = `${s}${terminator}`;
+                            index++;
+                        }
+                        bstop = true;
+                    } else {
+                        if (s.length || cmd.charAt(index) !== ' ') {
+                            s = `${s}${cmd.charAt(index)}`;
+                        }
+                        index++;
+                        for (const c of caseLibrary) {
+                            c.rx.lastIndex = 0;
+                            if (c.rx.test(s)) {
+                                s = `${s}${getNextGroup(cmd, c.terminator)}`;
+                            }
+                        }
+                    }
+                }
+                return s;
+            };
+            while (index < cmd.length - 1) {
+                groups.push(getNextGroup(cmd));
+                index++;
+            }
+            return groups;
+        };
+        const unpackGroups = (array) => {
+            return array
+                .map(l => getTokens(l, msg.playerid))
+                .reduce((m, group) => {
+                    m = [...m, ...group];
+                    return m;
+                }, [])
+                .filter(t => typeof t !== 'undefined')
         };
         const replaceOps = (rx, rxtype) => {
             rx.lastIndex = 0;
@@ -591,7 +692,7 @@ const SelectManager = (() => { //eslint-disable-line no-unused-vars
                 } else if (rxtype === 'select') {
                     msg.selected = [];
                 }
-                let identifiers = group.split(/\s*,\s*/)
+                let identifiers = getGroups(group)
                     .reduce((m, v) => {
                         if (criteriarx.test(v)) {
                             let critres = criteriarx.exec(v);
@@ -622,25 +723,13 @@ const SelectManager = (() => { //eslint-disable-line no-unused-vars
                 if (playerIsGM(msg.playerid) && !layerCriteria(identifiers.criteria)) {
                     identifiers.criteria.push(new Criteria({ type: 'layer', musthave: true, test: '=', value: 'objects' }));
                 }
-                identifiers.selections = identifiers.selections
-                    .map(l => getTokens(l, msg.playerid))
-                    .reduce((m, group) => {
-                        m = [...m, ...group];
-                        return m;
-                    }, [])
-                    .filter(t => typeof t !== 'undefined')
-                    .reduce((m, t) => {
-                        if (!m.map(mt => mt.id).includes(t.id)) {
-                            m.push(t);
-                        }
-                        return m;
-                    }, [])
+                identifiers.selections = uniqueArrayByProp(unpackGroups(identifiers.selections), 'id')
                     .filter(t => {
                         return identifiers.criteria.every(c => evaluateCriteria(c, t, msgId));
                     });
 
                 msg.selected = identifiers.selections
-                    .map(t => { return { '_id': t.id, '_type': 'graphic' }; })
+                    .map(t => { return { '_id': t.id, '_type': t.get('type') }; })
                     .reduce((m, t) => {
                         if (!m.map(mt => mt._id).includes(t._id)) {
                             m.push(t);
