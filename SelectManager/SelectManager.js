@@ -609,6 +609,12 @@ const SelectManager = (() => { //eslint-disable-line no-unused-vars
                     comp = [isPlayerToken(t, true), false];
                 }
                 break;
+            case 'side':
+                if (typeProcessor.hasOwnProperty(test) && t.get('type') === 'graphic') {
+                    tksetting = t.get('currentSide');
+                    comp = [tksetting, c.value];
+                }
+                break;
             default:
                 return false;
         }
@@ -635,7 +641,7 @@ const SelectManager = (() => { //eslint-disable-line no-unused-vars
     const injectrx = /(\()?{&\s*inject\s+([^}]+?)\s*}((?<=\({&\s*inject\s+([^}]+?)\s*})\)|\1)/gi;
     const selectrx = /(\()?{&\s*select\s+([^}]+?)\s*}((?<=\({&\s*select\s+([^}]+?)\s*})\)|\1)/gi;
     const criteriarx = /^(?<musthave>\+|-)(?<attr>@)?(?<typeitem>[^\s><=!~]+)(?:\s*$|\s*(?<test>>=|<=|~|!~|=|!=|<|>|in(?=\s+\[[^\]]+\]))?\s*(?<value>.+\s*)$)/;
-    const typeitemrx = /^(?<type>bar|max|aura|color|layer|tip|gmnotes|type|pc|npc|pt)(?<ident>1|2|3)?(?<!bar|max|aura3|color3|layer1|layer2|layer3|tip1|tip2|tip3|gmnotes1|gmnotes2|gmnotes3|type1|type2|type3|pc1|pc2|pc3|npc1|npc2|npc3|pt1|pt2|pt3)$/i;
+    const typeitemrx = /^(?<type>bar|max|aura|color|layer|tip|gmnotes|type|pc|npc|pt|side)(?<ident>1|2|3)?(?<!bar|max|aura3|color3|layer1|layer2|layer3|tip1|tip2|tip3|gmnotes1|gmnotes2|gmnotes3|type1|type2|type3|pc1|pc2|pc3|npc1|npc2|npc3|pt1|pt2|pt3|side1|side2|side3)$/i;
     const inject = (msg, status, msgId/*, notes*/) => {
         const layerCriteria = (criteria) => {
             return criteria.filter(c => c.type === 'layer').length ? true : false;
