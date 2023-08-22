@@ -537,9 +537,9 @@ Commands      : Note: Encounter Names are case sensitive.
                                     case "create":
                                     case "c":
                                         if (msg.selected !== undefined) {
-                                            createEncounter(encounterPageID, args.join(" "), msg.selected);
-                                            var theEncounter = getEncounterMobs(encounterPageID, args.join(" "));
-                                            sendChat(translate(APINAME), "/w gm " + translate("created_encounter").replace("[0]", args.join(" ")).replace("[1]", theEncounter.length));
+                                            createEncounter(encounterPageID, args.join(" ").trim(), msg.selected);
+                                            var theEncounter = getEncounterMobs(encounterPageID, args.join(" ").trim());
+                                            sendChat(translate(APINAME), "/w gm " + translate("created_encounter").replace("[0]", args.join(" ").trim()).replace("[1]", theEncounter.length));
                                         } else {
                                             sendChat(translate(APINAME), "/w gm " + translate("select_tokens"));
                                         }
@@ -548,8 +548,8 @@ Commands      : Note: Encounter Names are case sensitive.
                                     case "remove":
                                     case "r":
                                         if (args.length > 0) {
-                                            sendChat(translate(APINAME), "/w gm " + translate("delete_encounter").replace("[0]", args.join(" ")));
-                                            var encName = args.join(" ");
+                                            sendChat(translate(APINAME), "/w gm " + translate("delete_encounter").replace("[0]", args.join(" ").trim()));
+                                            var encName = args.join(" ").trim();
                                             deleteEncounter(encounterPageID, encName);
                                         }
                                         break;
@@ -580,22 +580,22 @@ Commands      : Note: Encounter Names are case sensitive.
                                         break;
         
                                     case "promptreset":
-                                        sendChat(translate(APINAME), "/w gm " + makeButton(translate("confirm_reset").replace("[0]", args.join(" ")), `!eh reset ${args.join(" ")}`) + " for " + args.join(" "));
+                                        sendChat(translate(APINAME), "/w gm " + makeButton(translate("confirm_reset").replace("[0]", args.join(" ").trim()), `!eh reset ${args.join(" ").trim()}`) + " for " + args.join(" ").trim());
                                         break;
         
                                     case "reset":
                                         if (args.length > 0) {
-                                            sendChat(translate(APINAME), "/w gm " + translate("reset_encounter").replace("[0]", args.join(" ")));
-                                            var encName = args.join(" ");
+                                            sendChat(translate(APINAME), "/w gm " + translate("reset_encounter").replace("[0]", args.join(" ").trim()));
+                                            var encName = args.join(" ").trim();
                                             resetEncounter(encounterPageID, encName);
                                         }
                                         break;
         
                                     case "update_reset_info":
                                         if (args.length > 0) {
-                                            var encName = args.join(" ");
-                                            updateEncounterRestoreData(encounterPageID, args.join(" "));
-                                            sendChat(translate(APINAME), "/w gm " + translate("update_info_reset").replace("[0]", args.join(" ")));
+                                            var encName = args.join(" ").trim();
+                                            updateEncounterRestoreData(encounterPageID, args.join(" ").trim());
+                                            sendChat(translate(APINAME), "/w gm " + translate("update_info_reset").replace("[0]", args.join(" ").trim()));
                                         }
                                         break;
         
@@ -622,9 +622,9 @@ Commands      : Note: Encounter Names are case sensitive.
                                     case "show":
                                     case "s":
                                         if (args.length > 0) {
-                                            var encounterName = args.join(" ");
+                                            var encounterName = args.join(" ").trim();
                                             setEncounterLayer(encounterPageID, encounterName, true);
-                                            var message = "/w gm " + translate("encounter_shown").replace("[0]", args.join(" "));
+                                            var message = "/w gm " + translate("encounter_shown").replace("[0]", args.join(" ").trim());
                                             if (typeof GroupInitiative !== 'undefined') {
                                                 var mobs = getEncounterMobs(encounterPageID, encounterName);
                                                 var addPlayers = "";
@@ -640,16 +640,16 @@ Commands      : Note: Encounter Names are case sensitive.
                                     case "hide":
                                     case "h":
                                         if (args.length > 0) {
-                                            setEncounterLayer(encounterPageID, args.join(" "), false);
+                                            setEncounterLayer(encounterPageID, args.join(" ").trim(), false);
                                         }
                                         break;
         
                                     case "add":
                                     case "a":
                                         if (msg.selected !== undefined) {
-                                            addToEncounter(encounterPageID, args.join(" "), msg.selected);
-                                            var theEncounter = getEncounterMobs(encounterPageID, args.join(" "));
-                                            sendChat(translate(APINAME), "/w gm " + translate("added_to_encounter").replace("[0]", args.join(" ")).replace("[1]", theEncounter.length));
+                                            addToEncounter(encounterPageID, args.join(" ").trim(), msg.selected);
+                                            var theEncounter = getEncounterMobs(encounterPageID, args.join(" ").trim());
+                                            sendChat(translate(APINAME), "/w gm " + translate("added_to_encounter").replace("[0]", args.join(" ").trim()).replace("[1]", theEncounter.length));
                                         } else {
                                             sendChat(translate(APINAME), "/w gm " + translate("select_tokens"));
                                         }                                
@@ -722,7 +722,7 @@ Commands      : Note: Encounter Names are case sensitive.
                                     case "display":
                                     case "d":
                                         var encounters = getEncounterList(encounterPageID);
-                                        var encounterName = args.join(" ");
+                                        var encounterName = args.join(" ").trim();
                                         var mobs = getEncounterMobs(encounterPageID, encounterName);
                                         var columnHeaders = "";
                                         columns.forEach(function (colInfo) {
@@ -822,7 +822,7 @@ Commands      : Note: Encounter Names are case sensitive.
         
                                     case "groupinit":
                                         var encounters = getEncounterList(encounterPageID);
-                                        var encounterName = args.join(" ");
+                                        var encounterName = args.join(" ").trim();
                                         var mobs = getEncounterMobs(encounterPageID, encounterName);
                                         var players = findObjs({
                                             type: 'player'
@@ -839,7 +839,7 @@ Commands      : Note: Encounter Names are case sensitive.
         
                                     case "setactivepage":
                                     case "sap":
-                                        var page = getObj("page", args.join(" "));
+                                        var page = getObj("page", args.join(" ").trim());
                                         if (page !== undefined) {
                                             activeEncounterPage = page.get("_id");
                                             sendChat(translate(APINAME), "/w gm " + translate("active_page_set").replace("[0]", page.get("name")));
@@ -863,7 +863,7 @@ Commands      : Note: Encounter Names are case sensitive.
                                         break;
         
                                     case "show_config_string":
-                                        var setting = args.join(" ");
+                                        var setting = args.join(" ").trim();
                                         if (configSettings[setting] !== undefined) {
                                             sendChat(translate(APINAME), `/w gm ${translate("config_value")} : ${getConfigParameter(setting)}`);
                                         } else {
@@ -873,7 +873,7 @@ Commands      : Note: Encounter Names are case sensitive.
         
                                     case "set_columns_string":
                                         // Shortcut command to set the "columns" config parameter
-                                        var colValue = args.join(" ");
+                                        var colValue = args.join(" ").trim();
                                         setConfigParameter("columns", colValue);
                                         sendChat(translate(APINAME), "/w gm " + `${translate("set_columns_string")} ${colValue}`);
                                         determine_Column_Info();
@@ -881,7 +881,7 @@ Commands      : Note: Encounter Names are case sensitive.
         
                                     case "set_reset_string":
                                         // Shortcut command to set the "resetValues" config parameter
-                                        var colValue = args.join(" ");
+                                        var colValue = args.join(" ").trim();
                                         setConfigParameter("resetValues", colValue);
                                         sendChat(translate(APINAME), "/w gm " + `${translate("set_reset_string")} ${colValue}`);
                                         determine_Column_Info();
