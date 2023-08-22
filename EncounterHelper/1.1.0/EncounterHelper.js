@@ -1167,7 +1167,7 @@ Commands      : Note: Encounter Names are case sensitive.
                 }
             }
         
-            function addEncounter(pageid, encounterName, moblist, existingInfo) {
+            function addEncounter(pageid, encounterName, moblist) {
                 deleteEncounter(pageid, encounterName);
                 var currentList = getEncounterList(pageid);
                 currentList.push(`${encounterName}:${moblist.join("|")}`);
