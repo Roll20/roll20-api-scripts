@@ -1,7 +1,7 @@
 # Vampire the Masquerade 5th Edition Dice Roller.
 
 ### Current Version
-Version 1.2 (2018/09/08) 
+Version 1.4 (2023/01/12) 
 
 ### Many Thanks	
 Many thanks to Konrad J who's Hero Quest roller this is based on.
@@ -28,9 +28,9 @@ Note: For anyone reading the code, to make the frenzy roll work I had to invert 
 !vtm humanity o# m# // Used for humanity roll. 
 
 Optional Flags:
-An extra variable (c~custom name ~) may be added to any of these rolls to display a custom name in the roll template. Note: As a coding querk please have a space after the name but before the close in the tilde.
-Example !vtm roll w5 r1 c~Prince Wolf ~ will roll 5 black die, 1 red die and the character will have the name - Prince Wolf
-An extra variable (t~custom name~) may be added to any of these rolls to display the roll type. This is text below the custom name
+An extra variable (c\~custom name \~) may be added to any of these rolls to display a custom name in the roll template. Note: As a coding querk please have a space after the name but before the close in the tilde.
+Example !vtm roll w5 r1 c\~Prince Wolf \~ will roll 5 black die, 1 red die and the character will have the name - Prince Wolf
+An extra variable (t\~custom name\~) may be added to any of these rolls to display the roll type. This is text below the custom name
 Adding b# to a skill roll will add the value/2.0 to the number of vampire dice. This is used for blood potency when handling disciplines
 If needs be both the Frenzy and Humanity Roll can be updated to use real values. For now however I'm going to leave it.
 
@@ -45,6 +45,10 @@ For people reading the code there are several functions which I have yet to remo
   !vtm lupine // When people ask for too much. Currently disabled.
 
 ### Versions
+Version 1.4
+Added whispering
+Version 1.3
+Bug fix. Macros previously may have caused issues, removing some error checking to fix this issue.
 Version 1.2
 Updated images to a different location. Fixed bugs where players name would not appear for specific rolls. Fixed bug in which speech marks in a players name would cause issues.
 Version 1.1

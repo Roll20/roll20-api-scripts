@@ -1,4 +1,68 @@
 # COFantasy: Historique des changements (depuis la version 1.0)
+## 3.13
+### Capacités
+* Vitalité épique.
+* Pluie de flèches de la Voie d'Arwendée.
+* Rangs 1 à 4 de la Voie du guérisseur.
+* Rangs 4 et 5 de la Voie télépathie
+* Expertise (rang 1 de la Voie de prestige spécialisée)
+
+### Autres améliorations
+* Possibilité d'utiliser les options de triche avec les --if
+* Ajout d'un prédicat pour les armes de l'été.
+* Ajout d'un effet armeGlacee.
+* Plus d'automatisation pour la perte de substance.
+* Fin automatique de la rage du berserk quand un barbare tombe inconscient.
+* Ajout d'un prédicat pour l'immnunité aux dégâts magiques.
+
+### Corrections de bugs
+* Activation de Ignorer la douleur sur les attaques automatiques.
+* Dépense de mana quand on dépasse les limites journalières
+
+## 3.12
+### Capacités
+* Meilleur support pour le bâton de mage du forgesort.
+* Regard pétrifiant du basilic et de la méduse.
+* Enkystement lointain.
+* Voie de prestige du messager.
+* Lycanthropie et Éventration de la Voie de la fusion lycanthropique.
+
+### Autres améliorations
+* ImplEmentation d'une RD spécifique contre les souffles de dragons
+* Implémentation d'une protection contre les souffles de dragons qui divise les DM en cas d'echec au test de DEX et les annule sinon.
+* Implémentation du bâton des runes mortes
+* Prise en compte des options image, fx et targetFx pour !cof-lancer-sort.
+* Implémentation des tremblements de terre d'Invincible.
+* Prédicat "volant" pour éviter certains effets.
+* Application du modificateur tempete aux save pour échapper à un effet ou un état.
+
+## 3.11
+### Capacités
+* Ajout des derniers rangs de la voie du pacte vampirique
+* Ajout d'une automatisation pour le déchaînement d'acier du barbare.
+* Attaque violente de la campagne Invicible.
+* Frappe des arcanes, de la Voie du guerrier-mage.
+* Sang puissant (voie du pacte vampirique)
+* Blessure sanglante (voie du pacte vampirique)
+
+### Autres améliorations
+* Possibilité de tenir certaines armes à une main quand agrandi.
+* Prise en charge des armes batardes.
+* Prédicat pour la vulnérabilité à des éléments.
+* Prise en compte de l'option de jeu sans PR.
+* Utilisation d'une section munitions sur la fiche.
+* Ajout d'un prédicat bonusAttaqueMagique
+* Prédicats pour les armes.
+* Tentative pour un meilleur suivi de la lumière en cas de changement de carte.
+* Meilleure prise en compte des créatures mortes qui régénèrent
+* Nouvelle syntaxe pour les prédicats à valeur complexe.
+* Referme les portes qu'on ouvre quand le jeu est en pause.
+* Prise en compte des portes fermées.
+* Ajout des armes vicieuses.
+
+### Corrections de bugs
+* Correction pour les options d'attaque --plus au sein d'un --if.
+
 ## 3.10
 ### Capacités
 * Magie de combat de la Voie du guerrier-mage.
