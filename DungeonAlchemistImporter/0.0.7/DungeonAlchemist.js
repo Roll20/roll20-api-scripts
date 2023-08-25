@@ -6,9 +6,7 @@ const DungeonAlchemistImporter = (() => {
   // eslint-disable-line no-unused-vars
 
   const scriptName = "DungeonAlchemistImporter";
-  const version = "0.0.6";
-  const lastUpdate = 20211220;
-  const schemaVersion = 0.1;
+  const version = "0.0.7";
   const defaultGridSize = 70;
   const clearURL = 'https://s3.amazonaws.com/files.d20.io/images/4277467/iQYjFOsYC5JsuOPUCI9RGA/thumb.png?1401938659';
 
@@ -155,8 +153,6 @@ const DungeonAlchemistImporter = (() => {
     const width = xMax - xMin;
     const height = yMax - yMin;
 
-    log("Center: " + xCenter + "," + yCenter);
-
     // because partial walls used to be exported as windows, we can't support them for older exports
     const generateWindows = version >= 2;
 
@@ -189,7 +185,6 @@ const DungeonAlchemistImporter = (() => {
         controller_by: map.get("_id"),
       };
       createObj(type, doorObj);
-      log(doorObj);
     }
 
     // default
@@ -337,8 +332,6 @@ const DungeonAlchemistImporter = (() => {
   };
 
   const handleInput = (msg) => {
-    log("Handle input!");
-    log(msg);
     if (
       "api" === msg.type &&
       /^!dungeonalchemist\b/i.test(msg.content) &&
