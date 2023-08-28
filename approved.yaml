@@ -1239,3 +1239,7 @@ pingbuddy:
 anchor:
   - "Anchor"
   - "Utility"
+
+metascripttoolbox:
+  - "MetaScriptToolbox"
+  - "Utility"
