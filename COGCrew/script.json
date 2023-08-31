@@ -1,0 +1,18 @@
+{
+  "name": "COGCrew",
+  "script": "COGCrew.js",
+  "version": "1.00",
+  "previousversions": [],
+  "description": "Automatically updates the crew modifiers on starships and mecha sheets for the Chroniques Oubliees Galactiques french RPG.",
+  "authors": "stephaned68",
+  "roll20userid": "84776",
+  "useroptions": [],
+  "dependencies": [],
+  "modifies": {
+    "character.name": "read",
+    "character.gmnotes": "read,write",
+    "attribute.name": "read",
+    "attribute.current": "read"
+  },
+  "conflicts": []
+}
