@@ -12,7 +12,7 @@
     "character.name": "read",
     "character.gmnotes": "read,write",
     "attribute.name": "read",
-    "attribute.current": "read"
+    "attribute.current": "read,write"
   },
   "conflicts": []
 }
