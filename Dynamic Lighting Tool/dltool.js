@@ -9,9 +9,9 @@ API_Meta.dltool = {
         API_Meta.dltool.offset = (parseInt(e.stack.split(/\n/)[1].replace(/^.*:(\d+):.*$/, '$1'), 10) - (7));
     }
 }
-
+/* globals checkLightLevel */
 on('ready', () => {
-    const version = '1.0.7';
+    const version = '1.0.8';
     log('-=> Dynamic Lighting Tool v' + version + ' is loaded. Base command is !dltool');
 
 
@@ -52,7 +52,7 @@ on('ready', () => {
     const L = (o) => Object.keys(o).forEach(k => log(`${k} is ${o[k]}`));
     const decodeUnicode = (str) => str.replace(/%u[0-9a-fA-F]{2,4}/g, (m) => String.fromCharCode(parseInt(m.slice(2), 16)));
 
-    var cmdName = "!dltool";
+    let cmdName = "!dltool";
     let theCommand = '';
     let theOption = '';
     let lines = '';
@@ -69,10 +69,9 @@ on('ready', () => {
     let offStyle = `'background-color:#333; color:#ccc; text-decoration: none; text-transform: uppercase; font-weight:bold; font-size: 10px; border:0px solid transparent; border-radius:3px; margin: 2px 2px; padding:1px 6px; display:inline-block'`;
     let onStyle = `'background-color:#3b0; color:#fff; text-decoration: none; text-transform: uppercase; font-weight:bold; font-size: 10px; border:0px solid transparent; border-radius:3px; margin: 2px 3px; padding:1px 6px; display:inline-block'`;
     let disableStyle = `'background-color:#888; color:#fff; text-decoration: none; text-transform: uppercase; font-weight:bold; font-size: 10px; border:0px solid transparent; border-radius:3px; margin: 2px 3px; padding:1px 6px; display:inline-block'`;
-    const openSection = `<div style = 'background-color:#ccc; border: 1px solid black; padding:3px; border-radius:15px;margin-top:10px;'>`
+    const openSection = `<div style = 'background-color:#ccc; border: 1px solid black; padding:3px; border-radius:15px;margin-top:10px;'>`;
     const openHeader = `<div style = 'display: block; background-color:#333; color: #3b0; font-weight: bold; padding:2px; border-radius:20px; text-align:center;'>`;
     const openSubhead = `<div style = 'background-color:#333; color: #ccc; font-weight: bold; padding:2px; border-radius:20px; text-align:center;'>`;
-    const openSubheadMargin = `<div style = 'background-color:#333; color: #ccc; font-weight: bold; padding:2px; border-radius:20px; text-align:center; margin-bottom:5px;'>`;
     const openPageHead = `<div style = 'background-color:#aaa; color: #111; font-weight: bold; padding:2px; margin-bottom:6px; border-radius:20px; text-align:center;'>`;
     const openReport = `<div style = 'display: block; position:relative;left: -5px; top: -30px; margin-bottom: -34px; background-color:#888; border-radius:18px; text-decoration:none;color:#000; font-family:Arial; font-size:13px; padding: 8px;'>`;
     const closeReport = `</div>`;
@@ -93,13 +92,13 @@ on('ready', () => {
             toggleButton = onButtonLarge;
         }
         if (size === "large" && value === false) {
-            toggleButton = offButtonLarge
+            toggleButton = offButtonLarge;
         }
         if (size === "small" && (value === true || value === "true" || value === "basic")) {
-            toggleButton = onButtonSmall
+            toggleButton = onButtonSmall;
         }
         if (size === "small" && value === false) {
-            toggleButton = offButtonSmall
+            toggleButton = offButtonSmall;
         }
 
         if (undefined === pageProperty) {
@@ -115,14 +114,15 @@ on('ready', () => {
     //BUTTON: COLOR PICKETR CALLING BUTTON
     const colorButton = (pageOrToken, property, value) => {
         if (null === value) value = "transparent";
-        finalButton = `<a href = "!dltool --colorpicker|${pageOrToken}%%${property}" style ="display:inline-block; width: 18px; height:14px; position:relative; top:1px; border: 1px solid #111; border-radius:3px; padding:0px; margin-top:1px; margin-left: -2px; color:transparent; background-color:${value}">&nbsp;</a>`;
+        let finalButton = `<a href = "!dltool --colorpicker|${pageOrToken}%%${property}" style ="display:inline-block; width: 18px; height:14px; position:relative; top:1px; border: 1px solid #111; border-radius:3px; padding:0px; margin-top:1px; margin-left: -2px; color:transparent; background-color:${value}">&nbsp;</a>`;
         return finalButton;
 
-    }
+    };
 
     //BUTTON: TOGGLE FOR TOKEN PROPERTIES
     const toggleToken = (value, tokenProperty, offCode, onCode) => {
         let toggleButton = '';
+        let buttonCode;
         if (value === true || value === "true" || value === "on") {
             toggleButton = onButtonSmall;
             buttonCode = offCode;
@@ -143,13 +143,14 @@ on('ready', () => {
     const dlButton = (label, link) => {
         let finalButton = `<a style='background-color:#333; color:#eee; text-decoration: none; border:1px solid #3b0; border-radius:15px;padding:0px 3px 0px 3px;display:inline-block' href = '${link}'>${label}</a>`;
         return finalButton;
-    }
+    };
 
-    //BUTTON: SMALL INLINE BUTTON
-    const dlSmallButton = (label, link) => {
+    //BUTTON: SMALL INLINE BUTTON -- dropped, but keep if needed in future
+/*      const dlSmallButton = (label, link) => {
         let finalButton = `<a style='background-color:#333; color:#eee; text-decoration: none; border:1px solid #3b0; border-radius:15px;padding:0px 3px 0px 3px;display:inline-block; font-size:9px' href = '${link}'>${label}</a>`;
         return finalButton;
-    }
+    };
+*/
 
     //BUTTON: TOKEN LIGHT PRESETS
     const lightButton = (label, dimLight, brightLight, arc, onCode) => {
@@ -168,11 +169,10 @@ on('ready', () => {
             finalButton = `<a style=${offStyle} href = '${onCode}${repeatCommand} --report'><span title = "dim light ${dimLight}ft. bright light ${brightLight} ft.${cautionText}">${label}</span></a>`;
         }
         return finalButton;
-    }
+    };
 
     const visionButton = (label, has_bright_light_vision, has_night_vision, night_vision_distance, hoverText) => {
         let finalButton = ``;
-        let conditionalStyle = onStyle;
         let conditonalLink = `!token-mod --set emits_bright_light|off emits_low_light|off light_angle|360${repeatCommand} --report`;
 
 
@@ -188,7 +188,7 @@ on('ready', () => {
 
 
         return finalButton;
-    }
+    };
 
 
 
@@ -197,24 +197,19 @@ on('ready', () => {
 
         //Edge cases and Roll20 bug correctors
         if (value === '') {
-            value = "0"
+            value = "0";
         }
         if (value === null) {
-            value = "None"
+            value = "None";
         }
         if (value === undefined) {
-            value = "&nbsp;-&nbsp;"
+            value = "&nbsp;-&nbsp;";
         }
-        /*        
-                if (value.toString().includes('"')){
-                    value = value.replace(/"/g,'');
-                    log("value = "+value);
-                }
-        */
+
         let openTitle = "";
         let closeTitle = "";
         if (property === "night_vision_effect") {
-            let mode = tokenData.get("night_vision_effect");
+
             switch (value) {
                 case "None":
                     openTitle = `<span title = "The token sees everything within the night vision range as bright light.">`;
@@ -224,13 +219,14 @@ on('ready', () => {
                     openTitle = `<span title = "Nocturnal Vision is a mode that mimics DnD5e and PF2e rules for Darkvision. When enabled, tokens will have Low Light in No Light areas, and Low Light areas will appear Brightly Lit.">`;
                     closeTitle = `</span>`;
                     break;
-                default:
+                default: {
                     let dimmingDistance = parseFloat(tokenData.get('night_vision_effect').replace(/^Dimming_/, '')) || 0;
                     dimmingDistance = Math.round(dimmingDistance * tokenData.get('night_vision_distance'));
                     openTitle = `<span title = "Dimming causes the vision area of the selected token to become dim Night Vision. ${dimmingDistance} feet of Dimming will have the inner ${dimmingDistance} feet of Night Vision appear bright while any amount left over will appear dim from that distance onward to the end of the night vision area.">`;
                     closeTitle = `</span><BR>` +
                         `<span style="margin-left:28px;">Dimming Distance starts at: ${openTitle}<a style='background-color:#333; min-width: 15px; text-align:right; color:#eee; border:1px solid #3b0; border-radius:3px;padding:0px 3px 0px 3px;display:inline-block' href = '!token-mod --set night_vision_effect|dimming|?{Set dimming dropoff distance in feet|${dimmingDistance}} ${repeatCommand} --report'>${dimmingDistance}</a>${closeTitle}</span>`;
                     value = "Dimming";
+                }
             }
         }
 
@@ -246,14 +242,14 @@ on('ready', () => {
 
     //GENERATES A LABEL WITH HOVERTEXT
     const label = (phrase, helptext) => {
-        let finalLabel = `<span title = "${helptext}">${phrase}</span>`
+        let finalLabel = `<span title = "${helptext}">${phrase}</span>`;
         return finalLabel;
     };
 
 
     //GENERATES PICTOS CHARACTER
     const pictos = (character, color) => {
-        let pictosChar = `<span style = "font-family:pictos; ${((undefined !== color) ? 'color:' + color : '')}">${character}</span>`
+        let pictosChar = `<span style = "font-family:pictos; ${((undefined !== color) ? 'color:' + color : '')}">${character}</span>`;
         return pictosChar;
     };
 
@@ -262,66 +258,26 @@ on('ready', () => {
         let imgPosition = `style= "position:relative; top:-2px;" `;
         let finalButton = "";
         if (degrees < 361) {
-            finalButton = `<img ${imgPosition} src = "https://s3.amazonaws.com/files.d20.io/images/327269160/8sw7NxlV05adop79r5f2qQ/original.png?1676017045">`
+            finalButton = `<img ${imgPosition} src = "https://s3.amazonaws.com/files.d20.io/images/327269160/8sw7NxlV05adop79r5f2qQ/original.png?1676017045">`;
         }
         if (degrees < 290) {
-            finalButton = `<img ${imgPosition} src = "https://s3.amazonaws.com/files.d20.io/images/327269162/d4MO9b-lpqOgNJvpxGsavQ/original.png?1676017045">`
+ 
+            finalButton = `<img ${imgPosition} src = "https://s3.amazonaws.com/files.d20.io/images/327269162/d4MO9b-lpqOgNJvpxGsavQ/original.png?1676017045">`;
         }
         if (degrees < 220) {
-            finalButton = `<img ${imgPosition} src = "https://s3.amazonaws.com/files.d20.io/images/327269161/qM3QHPQRvXsIQadDpqTo4Q/original.png?1676017045">`
+            finalButton = `<img ${imgPosition} src = "https://s3.amazonaws.com/files.d20.io/images/327269161/qM3QHPQRvXsIQadDpqTo4Q/original.png?1676017045">`;
         }
         if (degrees < 150) {
-            finalButton = `<img ${imgPosition} src = "https://s3.amazonaws.com/files.d20.io/images/327269163/zfqabEQXAHPqV9wPCfuK6g/original.png?1676017045">`
+            finalButton = `<img ${imgPosition} src = "https://s3.amazonaws.com/files.d20.io/images/327269163/zfqabEQXAHPqV9wPCfuK6g/original.png?1676017045">`;
         }
         if (degrees === 0) {
-            finalButton = `<img ${imgPosition} src = "https://s3.amazonaws.com/files.d20.io/images/327269159/ieyV_MAZgBQfRS4e4PhjAw/original.png?1676017044">`
+            finalButton = `<img ${imgPosition} src = "https://s3.amazonaws.com/files.d20.io/images/327269159/ieyV_MAZgBQfRS4e4PhjAw/original.png?1676017044">`;
         }
 
 
         return finalButton;
-    }
-
-    //The Aaron's Page Funcctions
-
-    // eslint-disable no-unused-vars
-    const getActivePages = () => [...new Set([
-        Campaign().get('playerpageid'),
-        ...Object.values(Campaign().get('playerspecificpages')),
-        ...findObjs({
-            type: 'player',
-            online: true
-        })
-        .filter((p) => playerIsGM(p.id))
-        .map((p) => p.get('lastpage'))
-    ])];
-
-
-
-    const getPlayersOnPage = (pageid) => {
-        let pages = {};
-        let ribbonPage = Campaign().get('playerpageid');
-        let psp = Campaign().get('playerspecificpages');
-        findObjs({
-                type: 'player'
-            })
-            .forEach(p => {
-                if (playerIsGM(p.id)) {
-                    const lp = p.get('lastpage') || Campaign().get('playerpageid');
-                    pages[lp] = pages[lp] || [];
-                    pages[lp].push(p.id);
-                } else if (psp.hasOwnProperty(p.id)) {
-                    pages[psp[p.id]] = pages[psp[p.id]] || [];
-                    pages[psp[p.id]].push(p.id);
-                } else {
-                    pages[ribbonPage] = pages[ribbonPage] || [];
-                    pages[ribbonPage].push(p.id);
-                }
-            });
-        if (pageid) {
-            return pages[pageid] || [];
-        }
-        return pages;
     };
+
 
     const getGMPlayers = (pageid) => findObjs({
             type: 'player'
@@ -348,13 +304,13 @@ on('ready', () => {
             default:
                 return Boolean(string);
         }
-    }
+    };
 
     //UTILITY INFO BLOCK
     const utilityInfo = openSection +
         ((tokenData !== '') ? dlButton("Why can't this token see?", "!dltool --report|checklist") : dlButton("Why can't this token see?", "!dltool --report|checklist")) +
         dlButton("Other things to check for", "!dltool --checklist") +
-        dlButton("Help Center", "https&#58;\/\/help.roll20.net\/hc/en-us\/articles\/360045793374-Dynamic-Lighting-Requirements-Best-Practices") + `&nbsp;&nbsp;` +
+        dlButton("Help Center", "https&#58;//help.roll20.net/hc/en-us/articles/360045793374-Dynamic-Lighting-Requirements-Best-Practices") + `&nbsp;&nbsp;` +
         dlButton("DL Report ", "!dltool --report") + `&nbsp;|&nbsp;` + dlButton("Vision", "!dltool --report|vision") + dlButton("Light", "!dltool --report|light") + dlButton("Page", "!dltool --report|page") + dlButton(" + ", "!dltool --report|extra") +
         `</div>`;
 
@@ -367,31 +323,31 @@ on('ready', () => {
         
         msg.content = processInlinerolls(msg);
 
-        var msgTxt = msg.content;
+        let msgTxt = msg.content;
         repeatCommand = `&#10;!dltool`;
         let pageData = getObj('page', getPageForPlayer(msg.playerid));
         if (msg.content.match(/report\|extra/m)) {
-            repeatCommand = `&#10;!dltool --report|extra`
+            repeatCommand = `&#10;!dltool --report|extra`;
         }
         if (msg.content.match(/report\|setscale/m)) {
-            repeatCommand = `&#10;!dltool --report|setscale`
+            repeatCommand = `&#10;!dltool --report|setscale`;
         }
         if (msg.content.match(/report\|light/m)) {
-            repeatCommand = `&#10;!dltool --report|light`
+            repeatCommand = `&#10;!dltool --report|light`;
         }
         if (msg.content.match(/report\|vision/m)) {
-            repeatCommand = `&#10;!dltool --report|vision`
+            repeatCommand = `&#10;!dltool --report|vision`;
         }
         if (msg.content.match(/report\|page/m)) {
-            repeatCommand = `&#10;!dltool --report|page`
+            repeatCommand = `&#10;!dltool --report|page`;
         }
-        let repeatCommandChecklist = `&#10;!dltool --report|checklist`;
+        //let repeatCommandChecklist = `&#10;!dltool --report|checklist`;
 
 
         //BUTTON: DAYLIGHT PRESETS
         const daylightButton = (label, value, code) => {
             let finalButton = "";
-            let conditionalStyle = onStyle
+            let conditionalStyle = onStyle;
 
             if (pageData.get("daylightModeOpacity") * 100 === value) {
                 if (pageData.get("daylight_mode_enabled") === false) {
@@ -403,7 +359,7 @@ on('ready', () => {
                 finalButton = `<a style=${offStyle} href = '${code}${repeatCommand} --report'>${label}</a>`;
             }
             return finalButton;
-        }
+        };
 
         const cellWidthButton = (label, value, code) => {
             let finalButton = "";
@@ -418,7 +374,7 @@ on('ready', () => {
                 finalButton = `<a style=${offStyle} href = '${code}${repeatCommand} --report'>${label}</a>`;
             }
             return finalButton;
-        }
+        };
 
 
 
@@ -428,7 +384,7 @@ on('ready', () => {
         if (msg.type == "api" && msgTxt.indexOf(cmdName) !== -1) {
             let APIMessage = msg.content;
             if (APIMessage === "!dltool" || APIMessage === "!dltools") {
-                APIMessage = "!dltool --report"
+                APIMessage = "!dltool --report";
             }
             let args = APIMessage.split(/\s--/);
 
@@ -442,7 +398,10 @@ on('ready', () => {
             let checkLightButton = "";
             tokenData = '';
             if (msg.selected) {
-                tokenData = getObj('graphic', msg.selected[0]._id)
+                tokenData = getObj('graphic', msg.selected[0]._id);
+              if(!tokenData) {
+                tokenData ='';
+              }
             }
             pageData.set('force_lighting_refresh', true);
 
@@ -450,27 +409,30 @@ on('ready', () => {
             commands.forEach(c => {
                 theCommand = c.split(/\|/)[0];
                 theOption = c.split(/\|/)[1];
+ 
+                let checklistTokenInfo;
+                let pagePlusInfo;
+                let scaleInfo;
 
                 //CASES FOR COMMANDS
 
                 switch (theCommand) {
 
                     //CASE - REPORT
-                    case 'report':
+                    case 'report': {
 
                         //FULL REPORT
 
                         //VISION SECTON
                         if (tokenData !== '') {
                             let lightData = '';
-                            if (typeof checkLightLevel != "undefined") {
+                            if (typeof checkLightLevel !== "undefined") {
                                 lightData = checkLightLevel.isLitBy(tokenData.get("id"));
                                 checkLightButton = HR +
                                     "<b>" + `<span title="This is the amount of light currently falling on the token. Without night vision, a token needs to have a light source in order to be able to see. A zero value means the token is in darkness.">` + "Token is in " + (lightData.total * 100).toFixed() + "% total light</span></b>&nbsp;" +
                                     dlButton("Report", "!checklight");
 
                             } else {
-                                let scriptLoc = 'https&#58;//app.roll20.net/forum/post/11124325/script-checklightlevel-check-the-current-level-of-light-on-a-to';
                                 checkLightButton = '<br>' + dlButton("Check Amount of Light on the Token", "!dltool --message --If you want this functionality, you will need to install checkLightLevel, an external script by Oosh. You can find it in One Click install on your Mod page.");
                             }
                             let controllerNames = "";
@@ -499,7 +461,7 @@ on('ready', () => {
                             }
 
 
-                            controllerNames = controllerNames + "•"
+                            controllerNames = controllerNames + "•";
                             controllerNames = controllerNames.split(" • •")[0].replace(/\s•\s/g, ", ").replace(/•/, "");
                             if (controllerNames === '')(controllerNames = "None (GM only by default)");
                             let tokenName = (tokenData.get("name") || "unnamed");
@@ -537,7 +499,6 @@ on('ready', () => {
                             //CHECKLIST REPORT
 
                             let lightOnTOken = ((lightData) ? lightData.total : -1);
-                            let objectsLayerButton = `<a style='background-color:#333; color:#eee; text-decoration: none; border:1px solid #3b0; border-radius:15px;padding:0px 3px 0px 3px;display:inline-block' href = '!token-mod --set layer|objects'>Move Token to Token Layer</a>`
 
                             checklistTokenInfo =
                                 openSection +
@@ -547,8 +508,8 @@ on('ready', () => {
 
 
                                 ((tokenData.get("night_vision_distance") !== 0) ?
-                                    ((tokenData.get("has_night_vision")) ? label(`<b>${go}${tokenName}</b> has ${tokenData.get("night_vision_distance")}ft of Night Vision, and does not require a light source`, `You may still need to check if it has a non-zero distance on its night vision. Certain modes may affect how it interacts with existing light. For instance, Nocturnal mode can change dim light to bright within the token\'s Night Vision range.`) : label(`<b>${caution}${tokenName}</b> has Night Vision turned off. It cannot see without a light source.`, `Night Vision allows a token to see without a light source.`) + `<div style = "display:inline-block">` + ((playerIsGM(msg.playerid)) ? toggleToken(tokenData.get("has_night_vision"), "has_night_vision", "!token-mod --set has_bright_light_vision|on has_night_vision|off", "!token-mod --set has_bright_light_vision|on has_night_vision|on  night_vision_effect|nocturnal") + ' <span title = "This defaults to night vision with the Nocturnal settin.">Night Vision</span>' : '') + '</div> ') :
-                                    ((tokenData.get("has_night_vision")) ? label(`${stop}<b>${tokenName}</b> has Night Vision, but the distance is set for ${tokenData.get("night_vision_distance")}ft. It can see light sources, but if you wish it to see in the dark, you must specify a distance.`, `Certain modes may affect how it interacts with existing light. For instance, Nocturnal mode can change dim light to bright within the token\'s Night Vision range.`) : label(`<b>${caution}${tokenName}</b> has Night Vision turned off. It cannot see without a light source.`, `Night Vision allows a token to see without a light source.`))
+                                    ((tokenData.get("has_night_vision")) ? label(`<b>${go}${tokenName}</b> has ${tokenData.get("night_vision_distance")}ft of Night Vision, and does not require a light source`, `You may still need to check if it has a non-zero distance on its night vision. Certain modes may affect how it interacts with existing light. For instance, Nocturnal mode can change dim light to bright within the token's Night Vision range.`) : label(`<b>${caution}${tokenName}</b> has Night Vision turned off. It cannot see without a light source.`, `Night Vision allows a token to see without a light source.`) + `<div style = "display:inline-block">` + ((playerIsGM(msg.playerid)) ? toggleToken(tokenData.get("has_night_vision"), "has_night_vision", "!token-mod --set has_bright_light_vision|on has_night_vision|off", "!token-mod --set has_bright_light_vision|on has_night_vision|on  night_vision_effect|nocturnal") + ' <span title = "This defaults to night vision with the Nocturnal settin.">Night Vision</span>' : '') + '</div> ') :
+                                    ((tokenData.get("has_night_vision")) ? label(`${stop}<b>${tokenName}</b> has Night Vision, but the distance is set for ${tokenData.get("night_vision_distance")}ft. It can see light sources, but if you wish it to see in the dark, you must specify a distance.`, `Certain modes may affect how it interacts with existing light. For instance, Nocturnal mode can change dim light to bright within the token's Night Vision range.`) : label(`<b>${caution}${tokenName}</b> has Night Vision turned off. It cannot see without a light source.`, `Night Vision allows a token to see without a light source.`))
                                 ) + `<BR>` +
 
 
@@ -575,7 +536,7 @@ on('ready', () => {
                                 ) +
 
                                 //  ID of page the sender is on : ID of GMPlayers on this page
-                                ((getPageForPlayer(msg.playerid) === getPageForPlayer(getGMPlayers(getPageForPlayer(msg.playerid)))) ? `` : `${caution} GM is either not logged in, or is not on the same page this token is on. If testing vision or light for token against the GM's report, please make sure that both GM and player are on the same page, and that the token has not been <a style = "color:##7e2d40; background-color:transparent; padding:0px;" href="https&#58;\/\/help.roll20.net/hc/en-us/articles/360039675413-Page-Toolbar#PageToolbar-SplittheParty">split from the party</a>.<BR>`) +
+                                ((getPageForPlayer(msg.playerid) === getPageForPlayer(getGMPlayers(getPageForPlayer(msg.playerid)))) ? `` : `${caution} GM is either not logged in, or is not on the same page this token is on. If testing vision or light for token against the GM's report, please make sure that both GM and player are on the same page, and that the token has not been <a style = "color:##7e2d40; background-color:transparent; padding:0px;" href="https&#58;//help.roll20.net/hc/en-us/articles/360039675413-Page-Toolbar#PageToolbar-SplittheParty">split from the party</a>.<BR>`) +
 
 
                                 ((playerIsGM(msg.playerid)) ? dlButton("Token settings don't stick?", "!dltool --default") : '') +
@@ -598,7 +559,6 @@ on('ready', () => {
                         //LIGHT SECTON
                         if (tokenData !== '') {
 
-                            let char = ((tokenData.get("represents")) ? getObj("character", tokenData.get("represents")) : false);
                             lightInfo = openSection +
                                 openSubhead + 'Token Light</div>' +
                                 spacer.replace(`margin:5px`, `margin:2px`) +
@@ -612,7 +572,7 @@ on('ready', () => {
 
                                 `<br>` + HR +
 
-                                //############ Use this section when Roll20 ads directional dima and bright light to the GUI
+                                //############ Use this section when Roll20 ads directional dim and bright light to the GUI
                                 /*
                                 `<b>${label("Directional Light: ", "This section limits the arc of emited light, like a flashlight beam. You can set different values for bright and dim light. Due to a Roll20 bug, you may need to open an close the settings for the token for the change to take effect.")}</b><br>` + 
                                 toggleToken(tokenData.get("has_directional_bright_light"), "has_directional_bright_light", "!token-mod --set has_directional_bright_light|off", "!token-mod --set has_directional_bright_light|on") + ' <span title = "This toggles whether or not the selected token emits directional light, like a flashlight. You can set those values below, and they will persist and be restored if lighting is turned off and back on.">Bright</span>&nbsp;' +
@@ -638,17 +598,8 @@ on('ready', () => {
                                 '<span title="Use this sparingly, as light colors can interact in unpredicatble ways. Tinting vision is not always optimal, since the interaction is problematic.">&nbsp;Color:' + setValue(tokenData.get("lightColor"), "lightColor", "!token-mod --set lightColor|?{Use sparingly. Input in hex, rgb or hsv format.|transparent}") + "</span> " +
                                 colorButton("token", "lightColor", tokenData.get('lightColor')) +
 
-
-
-                                //#############
-                                //                                `<div style ="display:inline-block; width: 18px; height:14px; position:relative; top:1px; border: 1px solid #111; border-radius:3px; margin-top:1px; margin-left: -2px; background-color:${tokenData.get('lightColor')}">&nbsp;</div>` +
-
-
-
-
                                 '&nbsp;&nbsp;<span title="This should be at 100% in most cases. Some systems, like Pathfinder, and D&D 4e have Low Light Vision, which can increase the effective light of a light source for that token. For example, a token with a light multiplier of 200 would see the light from a campfire as twice as big than a token with the default 100 would.">Multiplier:' + setValue(tokenData.get("light_sensitivity_multiplier"), "light_sensitivity_multiplier", "!token-mod --set light_sensitivity_multiplier|?{Sometimes called Low Light Vision. 100% is recommended for most RPG systems|100}") + "%</span> " +
                                 `</div>` + `<br>` +
-
 
                                 HR +
                                 `<b>${label("Light Presets: ", "Presets for most common cases. These are geared toward 5e definitions, but are simple to redefine in the code. Clicking a preset name will also toggle the state of light being on or off. The preset will restored if you toggle the master token light switch off and on.")}</b><br>` +
@@ -827,6 +778,7 @@ on('ready', () => {
                         sendChat('DL Tool', toWhom + openReport + lines + closeReport, null, {
                             noarchive: true
                         });
+                      }
                         break;
 
 
@@ -845,7 +797,7 @@ on('ready', () => {
                     case 'default':
 
                         theMessage = `${openHeader}Dynamic Lighting Tool</div>${openSection}${openSubhead}Saving a Default Token</div>${spacer}Users can become frustrated when they set up a token perfectly, but the next time they pull it from the Journal Tab, none of the settings seem to have saved.<br>Setting a default token is like taking a snapshot of a token exactly as it is, and saving it to the character journal. Any changes you make to a token on the VTT will not affect the default token at all.<br><span style ="font-size:16px; font-weight:bold">Therefore, setting the journal's default token must always be done as the <i>last</i> step.</span></div>` +
-                            `${openSection}${openSubhead}Three Ways to Set a Default Token</div>${spacer}<b>1) From the Token Settings</b><br>Open the token's Token Settings panel. Click the "Update Default Token" button.<br>${HR}<b>2) From the Journal</b><br>Open the journal for the character the token represents. Click the "Edit" button in the upper right corner. On the edit screen, there are three buttons.<br><b>${pictos('L')} Edit Token Properties: </b>Calls up the Token Settings panel for making other changes you wish to become new defaults.</b><br><b>${pictos('L')} Use Selected Token: </b>Sets the selected token as the new default token for that journal.<br><b>${pictos('L')} Apply Token Defaults: </b>Overwrites all tokens in play that represent this character to the new defaults. <i>Caution:</i> if you have edited tokens on the board (say, by numbering them), this can overwrite those changes.${HR}<b>3) </b>${dlButton("Save Token as Default", "!token-mod  --set defaulttoken")}</div>`
+                            `${openSection}${openSubhead}Three Ways to Set a Default Token</div>${spacer}<b>1) From the Token Settings</b><br>Open the token's Token Settings panel. Click the "Update Default Token" button.<br>${HR}<b>2) From the Journal</b><br>Open the journal for the character the token represents. Click the "Edit" button in the upper right corner. On the edit screen, there are three buttons.<br><b>${pictos('L')} Edit Token Properties: </b>Calls up the Token Settings panel for making other changes you wish to become new defaults.</b><br><b>${pictos('L')} Use Selected Token: </b>Sets the selected token as the new default token for that journal.<br><b>${pictos('L')} Apply Token Defaults: </b>Overwrites all tokens in play that represent this character to the new defaults. <i>Caution:</i> if you have edited tokens on the board (say, by numbering them), this can overwrite those changes.${HR}<b>3) </b>${dlButton("Save Token as Default", "!token-mod  --set defaulttoken")}</div>`;
 
                         //theMessage = '' + theMessage + '</span>';
                         sendChat('DLTool', '/w gm ' + openReport + theMessage + utilityInfo + closeReport, null, {
@@ -861,14 +813,14 @@ on('ready', () => {
                         //CHECKLIST REPORT
 
 
-                    case 'checklist':
+                    case 'checklist': {
                         let VS = `<div style="height:8px">&nbsp;</div>`; //Vertical spacer
-                        theMessage = `<BR>Check that token is not blocked off by DL lines from seeing the immediate surroundings.${VS}If testing with the player present, make sure the player is looking at their token\'s immediate area. Shift-Click and hold on the token to pull the player\'s view to that area. Check the permission settings manually or with with the report to ensure they have control over the token.${VS}Check that the player has not been <i>Split from the Party</i> (Check the Help Center if this is unfamiliar)${VS}If Fog of War or Explorable Darkness (Dynamic Lighting feature that lets the token retain a memory of map areas it has seen) is being used, check that the area the token is in has been cleared. Both of these can be cleared using the darkness tool on the control palette to the left.${VS}Try toggling a light source preset on and off. Sometimes unset default values can cause a DL glitch.${VS}Can you see a rotating cube in <a style = "color:##7e2d40; background-color:transparent; padding:0px;" href="https&#58;\/\/get.webgl.org">this URL</a>? If not, the browser needs to be WebGL compatible (99%+ are).<br><br>${HR}<b>Golden Rule: If things don't seem to be working or responding properly,<br>1) Open and close the token settings manually, and/or 2) Reload the game.</b> `;
+                        theMessage = `<BR>Check that token is not blocked off by DL lines from seeing the immediate surroundings.${VS}If testing with the player present, make sure the player is looking at their token's immediate area. Shift-Click and hold on the token to pull the player's view to that area. Check the permission settings manually or with with the report to ensure they have control over the token.${VS}Check that the player has not been <i>Split from the Party</i> (Check the Help Center if this is unfamiliar)${VS}If Fog of War or Explorable Darkness (Dynamic Lighting feature that lets the token retain a memory of map areas it has seen) is being used, check that the area the token is in has been cleared. Both of these can be cleared using the darkness tool on the control palette to the left.${VS}Try toggling a light source preset on and off. Sometimes unset default values can cause a DL glitch.${VS}Can you see a rotating cube in <a style = "color:##7e2d40; background-color:transparent; padding:0px;" href="https&#58;//get.webgl.org">this URL</a>? If not, the browser needs to be WebGL compatible (99%+ are).<br><br>${HR}<b>Golden Rule: If things don't seem to be working or responding properly,<br>1) Open and close the token settings manually, and/or 2) Reload the game.</b> `;
 
                         theMessage = `${openSubhead}Other things to check for</div><span style ="margin: 2px 10px 2px 10px; color:#111">` + theMessage + '</span>';
 
                         if (msg.selected) {
-                            tokenData = getObj('graphic', msg.selected[0]._id)
+                            tokenData = getObj('graphic', msg.selected[0]._id);
                         }
 
 
@@ -876,6 +828,7 @@ on('ready', () => {
                         sendChat('DLTool', '/w gm ' + openReport + openHeader + 'Dynamic Lighting Tool</div>' + openSection + theMessage + closeReport + utilityInfo + closeReport, null, {
                             noarchive: true
                         });
+                    }
                         break;
 
 
@@ -917,6 +870,7 @@ on('ready', () => {
                         if (pageData.get("dynamic_lighting_enabled") && theOption === "true") {
                             pageData.set('dynamic_lighting_enabled', false);
                         }
+                        break;
 
                     case 'dynamic_lighting_enabled':
                         if (theOption === "false" || theOption === "true") {
@@ -937,7 +891,7 @@ on('ready', () => {
 
                     case 'daylight_mode_enabled':
                         if (theOption === "false" || theOption === "true") {
-                            (theOption === 'true') ? true: false;
+                            theOption = ((theOption === 'true') ? true : false);
                         } else {
                             theOption = false;
                             sendChat('DLTool', '/w gm ' + openReport + theOption + ' is not a valid value for ' + theCommand + ' It has been set to false.' + closeReport, null, {
@@ -949,7 +903,7 @@ on('ready', () => {
 
                     case 'lightrestrictmove':
                         if (theOption === "false" || theOption === "true") {
-                            (theOption === 'true') ? "true" : "false";
+                            theOption = ((theOption === 'true') ? true : false);
                         } else {
                             theOption = false;
                             sendChat('DLTool', '/w gm ' + openReport + theOption + ' is not a valid value for ' + theCommand + ' It has been set to false.' + closeReport, null, {
@@ -962,7 +916,7 @@ on('ready', () => {
 
                     case 'lightupdatedrop':
                         if (theOption === "false" || theOption === "true") {
-                            (theOption === 'true') ? true: false;
+                            theOption = ((theOption === 'true') ? true : false);
                         } else {
                             theOption = false;
                             sendChat('DLTool', '/w gm ' + openReport + theOption + ' is not a valid value for ' + theCommand + ' It has been set to false.' + closeReport, null, {
@@ -973,7 +927,7 @@ on('ready', () => {
 
                     case 'explorer_mode':
                         if (theOption === "off" || theOption === "basic") {
-                            (theOption === 'basic') ? 'basic' : 'off';
+                            theOption = (theOption === 'basic') ? 'basic' : 'off';
                         } else {
                             theOption = 'off';
                             sendChat('DLTool', '/w gm ' + openReport + theOption + ' is not a valid value for ' + theCommand + ' It has been set to false.' + closeReport, null, {
@@ -982,24 +936,24 @@ on('ready', () => {
                         }
                         break;
 
-                    case 'colorpicker':
+                    case 'colorpicker': {
 
-                        let dataSet = theOption.split("%%")[0]
+                        let dataSet = theOption.split("%%")[0];
                         let theProperty = theOption.split("%%")[1];
                         let opacityButton = "";
-                        let colorList = ["#000000", "#434343", "#666666", "#C0C0C0", "#D9D9D9", "#FFFFFF", "#980000", "#FF0000", "#FF9900", "#FFFF00", "#00FF00", "#00FFFF", "#4A86E8", "#0000FF", "#9900FF", "#FF00FF", "#E6B8AF", "#F4CCCC", "#FCE5CD", "#FFF2CC", "#D9EAD3", "#D0E0E3", "#C9DAF8", "#CFE2F3", "#D9D2E9", "#EAD1DC", "#DD7E6B", "#EA9999", "#F9CB9C", "#FFE599", "#B6D7A8", "#A2C4C9", "#A4C2F4", "#9FC5E8", "#B4A7D6", "#D5A6BD", "#CC4125", "#E06666", "#F6B26B", "#FFD966", "#93C47D", "#76A5AF", "#6D9EEB", "#6FA8DC", "#8E7CC3", "#C27BA0", "#A61C00", "#CC0000", "#E69138", "#F1C232", "#6AA84F", "#45818E", "#3C78D8", "#3D85C6", "#674EA7", "#A64D79", "#5B0F00", "#660000", "#783F04", "#7F6000", "#274E13", "#0C343D", "#1C4587", "#073763", "#20124D", "#20124E"]
+                        let colorList = ["#000000", "#434343", "#666666", "#C0C0C0", "#D9D9D9", "#FFFFFF", "#980000", "#FF0000", "#FF9900", "#FFFF00", "#00FF00", "#00FFFF", "#4A86E8", "#0000FF", "#9900FF", "#FF00FF", "#E6B8AF", "#F4CCCC", "#FCE5CD", "#FFF2CC", "#D9EAD3", "#D0E0E3", "#C9DAF8", "#CFE2F3", "#D9D2E9", "#EAD1DC", "#DD7E6B", "#EA9999", "#F9CB9C", "#FFE599", "#B6D7A8", "#A2C4C9", "#A4C2F4", "#9FC5E8", "#B4A7D6", "#D5A6BD", "#CC4125", "#E06666", "#F6B26B", "#FFD966", "#93C47D", "#76A5AF", "#6D9EEB", "#6FA8DC", "#8E7CC3", "#C27BA0", "#A61C00", "#CC0000", "#E69138", "#F1C232", "#6AA84F", "#45818E", "#3C78D8", "#3D85C6", "#674EA7", "#A64D79", "#5B0F00", "#660000", "#783F04", "#7F6000", "#274E13", "#0C343D", "#1C4587", "#073763", "#20124D", "#20124E"];
                         let colorTable = openHeader + "Pick a color for this property:</div>" +
                             openPageHead + theProperty + `</div>`;
 
                         colorList.forEach(c => {
 
                             colorTable = colorTable +
-                                ((dataSet === "page") ? `<a href ="!dltool-mod --${theProperty}\|${c}"` : `<a href ="!token-mod --set ${theProperty}\|${c}"`) + ` style = "display:inline-block; height:18px; padding:0px; width:18px; margin:0px 1px; border-radius:5px; background-color:#${c}; border:1px solid #111;"> </a>`
+                                ((dataSet === "page") ? `<a href ="!dltool-mod --${theProperty}|${c}"` : `<a href ="!token-mod --set ${theProperty}|${c}"`) + ` style = "display:inline-block; height:18px; padding:0px; width:18px; margin:0px 1px; border-radius:5px; background-color:#${c}; border:1px solid #111;"> </a>`;
                         });
 
                         colorTable = colorTable + `<BR>`;
 
-                        TransparencyButton = `<a style = "display:inline-block; height:18px;padding:0px;  margin:0px 1px; border-radius:5px; color:#eee; background-color:#111; border:1px solid #111;"` + ((dataSet === "page") ? ` href ="!dltool-mod --${theProperty}\|transparent">` : ` href ="!token-mod --set ${theProperty}\|transparent">`) + `&nbsp;Transparent&nbsp;</a>`;
+                        let TransparencyButton = `<a style = "display:inline-block; height:18px;padding:0px;  margin:0px 1px; border-radius:5px; color:#eee; background-color:#111; border:1px solid #111;"` + ((dataSet === "page") ? ` href ="!dltool-mod --${theProperty}|transparent">` : ` href ="!token-mod --set ${theProperty}|transparent">`) + `&nbsp;Transparent&nbsp;</a>`;
 
                         switch (theProperty) {
 
@@ -1041,6 +995,7 @@ on('ready', () => {
                         });
 
                         //pageData.set('force_lighting_refresh', true);
+                    }
                         break;
 
                     default:
@@ -1062,7 +1017,7 @@ on('ready', () => {
                     pageData.set('force_lighting_refresh', true);
                 }
             });
-        };
+        }
     });
 });
 
