@@ -1243,3 +1243,7 @@ anchor:
 metascripttoolbox:
   - "MetaScriptToolbox"
   - "Utility"
+
+cogcrew:
+  - "COGCrew"
+  - "Utility"
