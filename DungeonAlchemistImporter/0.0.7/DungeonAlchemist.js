@@ -6,7 +6,7 @@ const DungeonAlchemistImporter = (() => {
   // eslint-disable-line no-unused-vars
 
   const scriptName = "DungeonAlchemistImporter";
-  const version = "0.0.8";
+  const version = "0.0.7";
   const defaultGridSize = 70;
   const clearURL = 'https://s3.amazonaws.com/files.d20.io/images/4277467/iQYjFOsYC5JsuOPUCI9RGA/thumb.png?1401938659';
 
