@@ -157,6 +157,8 @@ API_Meta.RoundMaster={offset:Number.MAX_SAFE_INTEGER,lineCount:-1};
  * v4.045  07/07/2023 Additional effects added. Added "always" parameter to --start which forces the 
  *                    tracker into an active state. Updated menu colours to be more readable.
  *                    Fixed tracker rotation status to be saved properly between sessions.
+ * v4.046  08/09/2023 Added error handling based on The Aaron's technique. Ensured switch statements are
+ *                    based on consistent case of characters.
  **/
  
 var RoundMaster = (function() {
