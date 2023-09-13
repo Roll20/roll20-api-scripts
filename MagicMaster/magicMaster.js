@@ -151,7 +151,7 @@ API_Meta.MagicMaster={offset:Number.MAX_SAFE_INTEGER,lineCount:-1};
  *                     to support new –learn command. Support better management of Magic Item spells, 
  *                     using similar approach as to Powers. Removed potential setTimeout() issues with 
  *                     asynchronous use of variable values – passed as parameters instead. Improved 
- *                     --search processing to ensure works for both search & store.
+ *                     --search processing to ensure works for both search & store. Fixed button case error.
  */
  
 var MagicMaster = (function() {
@@ -159,7 +159,7 @@ var MagicMaster = (function() {
 	var version = '2.2.0',
 		author = 'RED',
 		pending = null;
-    const lastUpdate = 1694010951;
+    const lastUpdate = 1694601489;
 		
 	/*
 	 * Define redirections for functions moved to the RPGMaster library
@@ -8581,7 +8581,7 @@ var MagicMaster = (function() {
 		case BT.REVIEW_MARTIAL_MI :
 		case BT.REVIEW_ALLITEMS_MI :
 		case BT.REVIEW_MIPOWER :
-		case 'GM-ReviewMI' :
+		case 'GM-REVIEWMI' :
 			 
 			handleReviewSpell( args, senderId );
 			break;
