@@ -98,7 +98,8 @@ API_Meta.CommandMaster={offset:Number.MAX_SAFE_INTEGER,lineCount:-1};
  *                     Made –initialise command automatic on startup if the defined GM macros 
  *                     have changed. Enhanced parseDesc() to cater for both creatures and 
  *                     containers, locks & traps. Removed potential setTimeout() issues 
- *                     with asynchronous use of variable values – passed as parameters instead
+ *                     with asynchronous use of variable values – passed as parameters instead.
+ *                     Fixed error when cs attribute 'trap-name' is missing or empty.
  */
  
 var CommandMaster = (function() {
@@ -106,7 +107,7 @@ var CommandMaster = (function() {
 	var version = '2.2.0',
 		author = 'RED',
 		pending = null;
-	const lastUpdate = 1694010951;
+	const lastUpdate = 1694598860;
 
 	/*
 	 * Define redirections for functions moved to the RPGMaster library
@@ -2364,6 +2365,9 @@ var CommandMaster = (function() {
 			};
 			return tableTxt + '</table>';
 		};
+		
+		if (!trapType) setAttr( charCS, fields.Container_trap, (trapType = 'No-Trap'));
+		if (!lockType) setAttr( charCS, fields.Container_lock, (lockType = 'No-Lock'));
 				
 		var content = '&{template:RPGMdefault}{{name='+name+'\'s Images}}'+(msg ? ('{{Section='+msg+'}}') : '')
 					+ '{{subtitle=Change Images}}{{Use=Selecting a button below will change that stored image to be the same as the currently selected token image}}'
