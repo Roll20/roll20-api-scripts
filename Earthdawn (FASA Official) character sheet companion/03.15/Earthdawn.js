@@ -7794,7 +7794,7 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
             return;
 
           if ((Earthdawn.parseInt2( TokObj.get( "bar3_value" )) < (Earthdawn.getAttrBN( cID, "Damage_max", "20", true ))) &&
-                  ( Earthdawn.getAttrBN( cID, "NPC", "0", true) > 0 ))   // Not Items, not PCs, and nobody unconscious.
+                  ( Earthdawn.getAttrBN( cID, "NPC", "1", true) > 0 ))   // Not Items, not PCs, and nobody unconscious.
             chatMsg += "~ SetToken : " + sel.id + "~ value : Initiative~ Init~ SetStep: 0~ SetResult: 0";
         });  // End for each selected token
         Campaign().set( "turnorder", JSON.stringify( newTO ));
