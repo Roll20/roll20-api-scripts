@@ -728,7 +728,7 @@ Earthdawn.attribute = function ( attr, prev ) {
         else
           Earthdawn.abilityRemove( cID, Earthdawn.constant( "Target" ) + "Activate-Corrupt-Karma");
       } else if ( sa.endsWith( "_NAC_Requirements" )) {     // If this is a PC, post an accounting entry for them.
-        if( Earthdawn.getAttrBN( cID, "NPC", "0" ) == Earthdawn.charType.pc ) {
+        if( Earthdawn.getAttrBN( cID, "NPC", "1" ) == Earthdawn.charType.pc ) {
           let tdate = Earthdawn.getAttrBN( cID, "record-date-throalic", "" ),     // First look on the current character sheet
             today = new Date(),
             rnk = Earthdawn.parseInt2( current ),
@@ -893,7 +893,7 @@ Earthdawn.attribute = function ( attr, prev ) {
         Earthdawn.setWW( "RollType", rtype, cID );
       } // Falls through to Attack Rank below.
       case "Attack-Rank": {
-        if( Earthdawn.getAttrBN( cID, "NPC", "0", true) > 0 && Earthdawn.getAttrBN( cID, "Attack-Rank", 0) != 0)     // NPC or Mook and have a generic attack value.
+        if( Earthdawn.getAttrBN( cID, "NPC", "1", true) > 0 && Earthdawn.getAttrBN( cID, "Attack-Rank", 0) != 0)     // NPC or Mook and have a generic attack value.
           Earthdawn.abilityAdd( cID, "Attack", "!edToken~ %{selected|Attack}");
         else    // PC
           Earthdawn.abilityRemove( cID, "Attack" );
@@ -3005,7 +3005,7 @@ Step/Action Dice Table
   var callbackStTokenType = function( token )  {
     'use strict';
     let ret = "none";
-    switch (Earthdawn.getAttrBN(token.get('represents'), "NPC", "0" )) {
+    switch (Earthdawn.getAttrBN(token.get('represents'), "NPC", "1" )) {
       case "-1":  ret = "Object"; break;
       case "0":   ret = "PC";     break;
       case "1":   ret = "NPC";    break;
@@ -3250,7 +3250,7 @@ Step/Action Dice Table
             if( special && special !== "None" )
               this.misc[ "Special" ] = special;
             if( special === "Recovery" || special === "RecoveryCost") {
-              if (Earthdawn.getAttrBN( this.charID, "NPC", "0") != Earthdawn.charType.mook) {
+              if (Earthdawn.getAttrBN( this.charID, "NPC", "1") != Earthdawn.charType.mook) {
                 let aobj = Earthdawn.findOrMakeObj({ _type: 'attribute', _characterid: this.charID, name: "Recovery-Tests" }, 0, 2);
                 if( (aobj.get( "current" ) || 0) <= 0) {
                   this.chat( this.tokenInfo.name + " does not have a Recovery Test to spend.", Earthdawn.whoFrom.apiWarning );
@@ -3565,7 +3565,7 @@ Step/Action Dice Table
           });
 
                 //Attack, Charge, Ambush, Grimoire, Spell, and Questor DP.
-          if( Earthdawn.getAttrBN( cID, "NPC", "0", true) > 0 && Earthdawn.getAttrBN( cID, "Attack-Rank", 0) != 0)     // NPC or Mook and have a generic attack value.
+          if( Earthdawn.getAttrBN( cID, "NPC", "1", true) > 0 && Earthdawn.getAttrBN( cID, "Attack-Rank", 0) != 0)     // NPC or Mook and have a generic attack value.
             addit( "Attack", "!edToken~ %{selected|Attack}");
           if( Earthdawn.getAttrBN( cID, "Creature-DivingCharging_max", "0" ) != "0" )
             addit( "Charge",  "!edToken~ ForEach~ marker: divingcharging: t")
@@ -4909,7 +4909,7 @@ Step/Action Dice Table
           stuffDone |= 0x04;
         } // end cursed luck
 
-        if( Earthdawn.getAttrBN( this.charID, "NPC", "0", true ) > 0 ) {      // Pile-on prevention is only done on NPC dice rolls. PCs can pile on all they want.
+        if( Earthdawn.getAttrBN( this.charID, "NPC", "1", true ) > 0 ) {      // Pile-on prevention is only done on NPC dice rolls. PCs can pile on all they want.
                       // Pile on prevention. Dice explosion method. Dice are only allowed to explode so many times (maybe zero times, maybe more).
                       // Find occurrences of when the dice exploded too many times, and remove the excess.
           if( state.Earthdawn.noPileonDice != undefined && state.Earthdawn.noPileonDice >= 0) {
@@ -5121,7 +5121,7 @@ Step/Action Dice Table
         }
 
         let newMsg = "", gmMsg = "", recMsg = this.tokenInfo.name,
-          npc = Earthdawn.getAttrBN( this.charID, "NPC", "0" );
+          npc = Earthdawn.getAttrBN( this.charID, "NPC", "1" );
         if( bStrain && !bVerbose ) {      // Strain normally (when part of some other action) does not have a separate strain message, since the strain is reported as part of the roll results.
           if( !bStrainSilent )
             this.misc[ "strain" ] = dmg;
@@ -5210,7 +5210,7 @@ Step/Action Dice Table
         let WoundThreshold = Earthdawn.getAttrBN( this.charID, "Wound-Threshold", 7 ) || 0,
             currWound;
         if( !bStrain && !bStun && dmg >= WoundThreshold ) {     // wound.
-          let npc = Earthdawn.getAttrBN( this.charID, "NPC", "0" );   // Actually need to set Wounds on character sheet so that sheet worker will fire!
+          let npc = Earthdawn.getAttrBN( this.charID, "NPC", "1" );   // Actually need to set Wounds on character sheet so that sheet worker will fire!
           if( bToken && (( npc != Earthdawn.charType.pc && npc != Earthdawn.charType.npc ))) {
             currWound = Earthdawn.parseInt2( this.tokenInfo.tokenObj.get( "bar2_value" ));    // Here we are setting the wound on the token.
             if( isNaN( currWound ) )
@@ -5760,7 +5760,7 @@ log( cnt);
               let CharObj = getObj("character", cID);
               if (typeof CharObj === 'undefined')
                 return;
-              let npc = Earthdawn.getAttrBN( cID, "NPC", "0" );
+              let npc = Earthdawn.getAttrBN( cID, "NPC", "1" );
 //            if(( mooks && ( npc == "2" )) || ( notMooks && ( npc != "2" )) || ( NPCs && ( npc != "0" )) || ( PCs && ( npc == "0" ))) {
               if(( !mooks || ( npc == Earthdawn.charType.mook )) && ( !notMooks || ( npc != Earthdawn.charType.mook ))
                           && ( !NPCs || ( npc != Earthdawn.charType.pc )) && ( !PCs || ( npc == Earthdawn.charType.pc ))) {
@@ -5795,7 +5795,7 @@ log( cnt);
             if (typeof CharObj != 'undefined')
               objarr.push({ type: "character", name: CharObj.get("name"), characterObj: CharObj });      // All we have is character information.
           }
-          else if ( (bsct || binmt) && objarr.length > 1 && Earthdawn.getAttrBN( this.charID, "NPC", "0" ) != Earthdawn.charType.mook ) {
+          else if ( (bsct || binmt) && objarr.length > 1 && Earthdawn.getAttrBN( this.charID, "NPC", "1" ) != Earthdawn.charType.mook ) {
               this.chat( "Error! ForEachToken() with non-mook character and more than one token for that character, none of which were selected.", Earthdawn.whoFrom.apiError);
               objarr = [];
         } }
@@ -6524,7 +6524,7 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
             return;
         }
         let Count = 0;
-        let pc = Earthdawn.getAttrBN( this.charID, "NPC", "0");
+        let pc = Earthdawn.getAttrBN( this.charID, "NPC", "1");
         if( pc == Earthdawn.charType.mook && this.edClass.msg.selected.length > 1 )
         {
             this.chat( "Error! You can't link more than one token to a non-mook character!", Earthdawn.whoFrom.apiWarning );
@@ -6826,7 +6826,7 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
             level,          // -1 is unset, 0 is set, 1-9 is set with badge.
             adjust = 0,     // if we get an increment or decrement instead.
             setObj,
-            mook = (Earthdawn.getAttrBN( this.charID, "NPC", "0" ) == Earthdawn.charType.mook ),
+            mook = (Earthdawn.getAttrBN( this.charID, "NPC", "1" ) == Earthdawn.charType.mook ),
             dupChar = false,
             valid = [{ level: -1111, attrib: 0, badge: false, marker: Earthdawn.getIcon( mi ) }],   // unset is always valid.
             mia = _.filter( Earthdawn.StatusMarkerCollection, function(mio) { return mio[ "attrib" ] == attrib; });   // get an array of menu items with this attribute.
@@ -7310,7 +7310,7 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
                     }
 
                     Earthdawn.set( TokenObj, "statusmarkers", tMarkers.slice(0, -1) );   // set each tokens status markers to empty (except maybe ambush and charge, which default to on for those who have it)   Note that this should be unnessicary as far as the tokens go, but it also removes all hits and other things stored in the status markers.
-                    if( full && ( Earthdawn.getAttrBN( this.charID, "NPC", "0" ) == Earthdawn.charType.mook )) {   // We only need to process tokens if they are mooks. Otherwise everything is linked to the character.
+                    if( full && ( Earthdawn.getAttrBN( this.charID, "NPC", "1" ) == Earthdawn.charType.mook )) {   // We only need to process tokens if they are mooks. Otherwise everything is linked to the character.
                       Earthdawn.set( TokenObj, "bar1_value", karma);    // karma
                       Earthdawn.set( TokenObj, "bar2_value", 0);        // wounds
                       Earthdawn.set( TokenObj, "bar3_value", 0);        // damage
@@ -7549,7 +7549,7 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
           this.chat( "Error! charID undefined in mookWounds() command. Msg is: " + this.edClass.msg.content, Earthdawn.whoFrom.apiError);
           return 0;
         }
-        if( Earthdawn.getAttrBN( this.charID, "NPC", "0") != Earthdawn.charType.mook )
+        if( Earthdawn.getAttrBN( this.charID, "NPC", "1") != Earthdawn.charType.mook )
           return 0;
         if( this.tokenInfo === undefined || this.tokenInfo.type !== "token" )
           return 0;
@@ -7905,7 +7905,7 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
           this.misc[ "CursedLuck" ] = cluck;
           aobj.setWithWorker( "current", 0);
         }
-        if ((cluck > 0) || (Earthdawn.getAttrBN( this.charID, "NPC", "0") > 0 && ((state.Earthdawn.noPileonDice != undefined && state.Earthdawn.noPileonDice >= 0)
+        if ((cluck > 0) || (Earthdawn.getAttrBN( this.charID, "NPC", "1") > 0 && ((state.Earthdawn.noPileonDice != undefined && state.Earthdawn.noPileonDice >= 0)
               || (state.Earthdawn.noPileonStep != undefined && state.Earthdawn.noPileonStep > 0))))
           this.misc[ "DiceFunnyStuff" ] = true;
         if( "FX" in this.misc && (this.misc[ "FX" ].startsWith( "Attempt" ) || this.misc[ "FX" ].startsWith( "Effect" )))
@@ -8029,7 +8029,7 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
               state.Earthdawn.actionCount[ tID ] = 0;     // New initiative, so reset the count of Standard Actions taken.
               turnorder = _.reject(turnorder, function( toremove )   { return toremove.id === tID });
               turnorder.push({ id: tID, _pageid: TokenObj.get( "pageid" ), pr: po.misc[ "result" ], secondary: ("000" + po.misc[ "result" ]).slice(-3)
-                  + ((Earthdawn.getAttrBN( po.charID, "NPC", "0" ) == Earthdawn.charType.pc) ? "1" : "0" )
+                  + ((Earthdawn.getAttrBN( po.charID, "NPC", "1" ) == Earthdawn.charType.pc) ? "1" : "0" )
                   + ("000" + Earthdawn.getAttrBN( po.charID, "Attrib-Dex-Curr", "5" )).slice(-3) + ("000" + step).slice( -3)});
               turnorder.sort( function( a, b ) {
                 'use strict';
@@ -10813,7 +10813,7 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
                 this.misc[ "reason" ] = "Recovery Test";
               }
               this.misc[ "headcolor" ] = "recovery";
-              if (Earthdawn.getAttrBN( this.charID, "NPC", "0") != Earthdawn.charType.mook ) {
+              if (Earthdawn.getAttrBN( this.charID, "NPC", "1") != Earthdawn.charType.mook ) {
                 let aobj = Earthdawn.findOrMakeObj({ _type: 'attribute', _characterid: this.charID, name: "Recovery-Tests" }, 0, 2);
                 if( (aobj.get( "current" ) || 0) <= 0) {
                   this.chat( this.tokenInfo.name + " does not have a Recovery Test to spend.", Earthdawn.whoFrom.apiWarning );
@@ -11238,7 +11238,7 @@ log( "change character"); log( prev); log(attr);
       let rep = attr.get( "represents" );
       if( rep && rep != "" ) {
 //log("at change marker");
-        let npc = Earthdawn.getAttrBN( rep, "NPC", "0" );
+        let npc = Earthdawn.getAttrBN( rep, "NPC", "1" );
         if( npc !== Earthdawn.charType.pc && npc !== Earthdawn.charType.npc )       // Don't mess with the statusmarkers of anything except PCs and NPC.
           return;
         let newSM = _.without( attr.get( "statusmarkers" ).split( "," ), ""),   // split( "" ) will return an array of [""], so filter those out.
