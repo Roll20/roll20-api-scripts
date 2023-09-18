@@ -43,7 +43,7 @@
       "value": "findSRDFormula"
     },
     {
-      "name": "1st Edtion HD in Attribute (d8)",
+      "name": "1st Edition HD in Attribute (d8)",
       "type": "checkbox",
       "description": "Select this checkbox if the HitDice attribute contains a number of d8s to roll for hitdice",
       "value": "HDis1eD8s"
