@@ -1,7 +1,7 @@
 {
   "name": "SelectManager",
   "script": "SelectManager.js",
-  "version": "1.1.2",
+  "version": "1.1.3",
   "description": "SelectManager stores the selected, who, and playerid properties from the last user-generated message (as opposed to API generated), and makes them available for another script to retrieve. This solves the problem of an API-generated message not having the original array of selected tokens, for instance. \r\rIt also provides a !forselected handle to iterate over the selected tokens, firing off an individual call to another script for each token in turn, making each the selected token.\r\rFinally, it offers a way to virtually select tokens for the message, or to inject tokens into the selected token array.\r\rFor more information, see the original thread in the API forum:\r\r[SelectManager Forum Thread](https://app.roll20.net/forum/post/9817678/script-selectmanager-update-brings-forselected-iteration-and-gives-user-new-control-to-give-selected-tokens-back-to-api-generated-messages)\r\rOr read about the full set of meta-scripts available: \r\r[Meta Toolbox Forum Thread](https://app.roll20.net/forum/post/10005695/script-set-the-meta-toolbox)",
   "authors": "timmaugh, The Aaron",
   "roll20userid": "5962076, 104025",
@@ -26,6 +26,7 @@
     "1.0.12",
     "1.0.13",
     "1.1.0",
-    "1.1.1"
+    "1.1.1",
+    "1.1.2"
   ]
 }
