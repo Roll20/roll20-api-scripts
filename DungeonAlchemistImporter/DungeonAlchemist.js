@@ -293,7 +293,7 @@ const DungeonAlchemistImporter = (() => {
     if (mapGraphics.length == 0) {
       sendChat(
         "Dungeon Alchemist",
-        "You need to upload your map image and put it in the Map Layer before importing the line-of-sight data. Make sure that your map is in the background layer by right clicking on it, selecting \"Layer\" and choosing \"Map Layer\"."
+        "/w gm " + "You need to upload your map image and put it in the Map Layer before importing the line-of-sight data. Make sure that your map is in the background layer by right clicking on it, selecting \"Layer\" and choosing \"Map Layer\"."
       );
       return null;
     }
@@ -303,7 +303,7 @@ const DungeonAlchemistImporter = (() => {
     if (selected === undefined || selected.length == 0) {
       sendChat(
         "Dungeon Alchemist",
-        "If you have more than one image in the map layer, you need to select the one that contains the Dungeon Alchemist map image before running the command."
+        "/w gm " + "If you have more than one image in the map layer, you need to select the one that contains the Dungeon Alchemist map image before running the command."
       );
       return null;
     }
@@ -389,12 +389,12 @@ const DungeonAlchemistImporter = (() => {
 
         sendChat(
           "Dungeon Alchemist",
-          "Succesfully imported map data!"
+          "/w gm " + "Succesfully imported map data!"
         );
       } catch (err) {
         sendChat(
           "Dungeon Alchemist",
-          "Failed to import Dungeon Alchemist map data: " + err
+          "/w gm " + "Failed to import Dungeon Alchemist map data: " + err
         );
       }
     }
