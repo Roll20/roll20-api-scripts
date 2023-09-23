@@ -234,7 +234,7 @@ var Guidance = Guidance || function () {
             userGuide = objs[0];
         }
         userGuide.get("gmnotes", function (gmNotes) {
-            if (gmNotes.indexOf("debug")) {
+            if (gmNotes.includes("debug")) {
                 debugMode = true;
                 speakAsGuidanceToGM("Debug Mode has been enabled");
             }
