@@ -9,7 +9,7 @@ const DungeonAlchemistImporter = (() => {
   const version = "0.0.8";
   const defaultGridSize = 70;
   const clearURL = 'https://s3.amazonaws.com/files.d20.io/images/4277467/iQYjFOsYC5JsuOPUCI9RGA/thumb.png?1401938659';
-
+  const whisperCommand = "/w gm ";
 
   const regex = {
     colors: /^(?:#[0-9a-fA-F]{3}(?:[0-9a-fA-F]{3})?|transparent)$/,
@@ -293,7 +293,7 @@ const DungeonAlchemistImporter = (() => {
     if (mapGraphics.length == 0) {
       sendChat(
         "Dungeon Alchemist",
-        "/w gm " + "You need to upload your map image and put it in the Map Layer before importing the line-of-sight data. Make sure that your map is in the background layer by right clicking on it, selecting \"Layer\" and choosing \"Map Layer\"."
+        whisperCommand + "You need to upload your map image and put it in the Map Layer before importing the line-of-sight data. Make sure that your map is in the background layer by right clicking on it, selecting \"Layer\" and choosing \"Map Layer\"."
       );
       return null;
     }
@@ -303,7 +303,7 @@ const DungeonAlchemistImporter = (() => {
     if (selected === undefined || selected.length == 0) {
       sendChat(
         "Dungeon Alchemist",
-        "/w gm " + "If you have more than one image in the map layer, you need to select the one that contains the Dungeon Alchemist map image before running the command."
+        whisperCommand + "If you have more than one image in the map layer, you need to select the one that contains the Dungeon Alchemist map image before running the command."
       );
       return null;
     }
@@ -389,12 +389,12 @@ const DungeonAlchemistImporter = (() => {
 
         sendChat(
           "Dungeon Alchemist",
-          "/w gm " + "Succesfully imported map data!"
+          whisperCommand + "Succesfully imported map data!"
         );
       } catch (err) {
         sendChat(
           "Dungeon Alchemist",
-          "/w gm " + "Failed to import Dungeon Alchemist map data: " + err
+          whisperCommand + "Failed to import Dungeon Alchemist map data: " + err
         );
       }
     }
