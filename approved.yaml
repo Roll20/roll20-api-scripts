@@ -1247,3 +1247,7 @@ metascripttoolbox:
 cogcrew:
   - "COGCrew"
   - "Utility"
+
+pf2guidance:
+  - "Pathfinder 2e Guidance"
+  - "System Toolbox"
