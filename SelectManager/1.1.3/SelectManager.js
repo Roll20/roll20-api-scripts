@@ -3,8 +3,8 @@
 Name			:	SelectManager
 GitHub			:   https://github.com/TimRohr22/Cauldron/tree/master/SelectManager
 Roll20 Contact	:	timmaugh && TheAaron
-Version			:	1.1.4
-Last Update		:	9/22/2023
+Version			:	1.1.3
+Last Update		:	9/20/2023
 =========================================================
 */
 var API_Meta = API_Meta || {};
@@ -16,12 +16,12 @@ const SelectManager = (() => { //eslint-disable-line no-unused-vars
     //		VERSION
     // ==================================================
     const apiproject = 'SelectManager';
-    const version = '1.1.4';
+    const version = '1.1.3';
     const schemaVersion = 0.3;
     const apilogo = 'https://i.imgur.com/ewyOzMU.png';
     const apilogoalt = 'https://i.imgur.com/3U8c9rE.png'
     API_Meta[apiproject].version = version;
-    const vd = new Date(1695416641875);
+    const vd = new Date(1695224316664);
     const versionInfo = () => {
         log(`\u0166\u0166 ${apiproject} v${API_Meta[apiproject].version}, ${vd.getFullYear()}/${vd.getMonth() + 1}/${vd.getDate()} \u0166\u0166 -- offset ${API_Meta[apiproject].offset}`);
         if (!state.hasOwnProperty(apiproject) || state[apiproject].version !== schemaVersion) {
@@ -773,14 +773,11 @@ const SelectManager = (() => { //eslint-disable-line no-unused-vars
             setTimeout(() => { delete preservedMsgObj[trigger] }, 10000);
         }
     };
-    const fsrx = /(^!forselected(--|\+\+|\+-|-\+|\+|-|)(?:\((.)\)){0,1}(-silent)?\s+!?).+/i;
+    const fsrx = /(^!forselected(--|\+\+|\+-|-\+|\+|-|)(?:\((.)\)){0,1}\s+!?).+/i;
     const forselected = (msg, apitrigger) => {
         apitrigger = `${apiproject}${generateUUID()}`;
         if (!(preservedMsgObj[maintrigger].selected && preservedMsgObj[maintrigger].selected.length)) {
-            let fsres = fsrx.exec(msg.content);
-            if (fsres && !fsres[4]) { // account for silent output
-                msgbox({ msg: `No selected tokens to use for that command. Please select some tokens then try again.`, title: `NO TOKENS`, whisperto: getWhisperTo(preservedMsgObj[maintrigger].who) });
-            }
+            msgbox({ msg: `No selected tokens to use for that command. Please select some tokens then try again.`, title: `NO TOKENS`, whisperto: getWhisperTo(preservedMsgObj[maintrigger].who) });
             return;
         }
         preservedMsgObj[apitrigger] = {
