@@ -1,0 +1,24 @@
+{
+  "name": "Guidance: Pathfinder 2e Tools",
+  "script": "guidance.js",
+  "version": "1.0.0",
+  "description": "API for Roll20 and Pathfinder 2\n\nVersion 1.0.0\n\nThis is a tool to support Pathfinder 2e GMs in Roll20.\nIt has the ability to read a statblock from the GMNotes section of a selected character and fill out the NPC section of the character sheet. Statblocks from Archives of Nethys and PFS Society scenarios are supported.\n\nFeel free to reach out to me if you find any bug or have any suggestions [HERE](https://app.roll20.net/users/927625/kahn265).",
+  "authors": "Russell A. Sinclair,",
+  "roll20userid": "927625",
+  "dependencies": [],
+  "modifies": {
+    "name": "write",
+    "bar1_max": "write",
+    "bar1_value": "write",
+    "bar3_max": "write",
+    "bar3_value": "write",
+    "bar2_max": "write",
+    "bar2_value": "write",
+    "hit_points": "write",
+    "current": "write",
+    "max": "write",
+    "attributes": "write",
+    "abilities": "write"
+  },
+  "previousversions": []
+}
