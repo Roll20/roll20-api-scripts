@@ -20,5 +20,5 @@
     "attributes": "write",
     "abilities": "write"
   },
-  "previousversions": []
+  "previousversions": ["1.0.0"]
 }
