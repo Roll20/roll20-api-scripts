@@ -1,6 +1,11 @@
 # COFantasy: Historique des changements (depuis la version 1.0)
 ## 3.13
 ### Capacités
+* Support pour la démolition et les pièges explosifs.
+* Amélioration du support des tirs de semonce.
+* Attaque en meute pour un joueur gobelin.
+* Attaque bondissante du druide
+* Charge du barbare (avec le déplacement)
 * Vitalité épique.
 * Pluie de flèches de la Voie d'Arwendée.
 * Rangs 1 à 4 de la Voie du guérisseur.
@@ -8,6 +13,8 @@
 * Expertise (rang 1 de la Voie de prestige spécialisée)
 
 ### Autres améliorations
+* Possibilité d'utiliser des prédicats comme valeurs limites des limitations par jour ou par combat.
+* Possibilité de faire un déplacement automatique avant une attaque
 * Possibilité que la peur paralyse.
 * Ajout d'une commande !cof-clean-global-state.
 * Ajout d'une action pour relacher une cible agrippée.
@@ -20,6 +27,8 @@
 * Ajout d'un prédicat pour l'immnunité aux dégâts magiques.
 
 ### Corrections de bugs
+* Correction d'un bug avec le lien épique.
+* Activation correcte de l'attaque en traître.
 * Activation de Ignorer la douleur sur les attaques automatiques.
 * Dépense de mana quand on dépasse les limites journalières
 
