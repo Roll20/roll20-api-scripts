@@ -155,6 +155,7 @@ API_Meta.libRPGMaster={offset:Number.MAX_SAFE_INTEGER,lineCount:-1};
  *                    New 'specmu' ClassData attribute to flag specialist MU class. Several database fixes. 
  *                    New maths evaluator to resolve creature data qualifiers. Improved setAttr() error
  *                    handling. Fixed character level of creature that has both HD & caster level.
+ *                    Fixed parsing of magic item save mod values.
  **/
 
 const libRPGMaster = (() => { // eslint-disable-line no-unused-vars
@@ -3468,6 +3469,7 @@ const libRPGMaster = (() => { // eslint-disable-line no-unused-vars
 							+'<li>Fixed calculation of non-proficient weapon penalties set for classes & races.</li>'
 							+'<li>Fixed checking valid spells & valid powers which would show invalid spells/powers as valid under some circumstances.</li>'
 							+'<li>Fixed character level of creature that has both HD & caster level.</li>'
+							+'<li>Fixed save mods due to some magic items not being correctly applied.</li>'
 							+'<li>Several small database data fixes. </li>'
 							+'<li>Improved setAttr() error handling. </li>'
 							+'</ul>'
@@ -9082,7 +9084,7 @@ const libRPGMaster = (() => { // eslint-disable-line no-unused-vars
 							isCreature = type.toLowerCase().includes('creature') || (classSpecs && classSpecs[0] && classSpecs[0][4] && String(classSpecs[0][4]).toLowerCase().includes('creature'));
 
 						[parsedData,parsedAttr,classData] = LibFunctions.resolveData( ClassName, rootDB, /}}\s*?(?:Class|Race)Data\s*?=(.*?){{/im, [], false );
-
+						
 						if (isClass) {
 							let classType;
 							if (classSpecs && !_.isNull(classSpecs)) {
@@ -9142,6 +9144,7 @@ const libRPGMaster = (() => { // eslint-disable-line no-unused-vars
 								}
 								let rowArray = rowData.toLowerCase().replace(/\[/g,'').replace(/\]/g,'').split(','),
 									svlArray = rowArray.filter(elem => elem.startsWith('svl'));
+
 								if (svlArray && svlArray.length) {
 									svlArray.sort((a,b)=>{parseInt((a.match(/svl(\d+):/)||[0,0])[1])-parseInt((b.match(/svl(\d+):/)||[0,0])[1]);});
 									saveLevels[name] = [];
@@ -9164,7 +9167,7 @@ const libRPGMaster = (() => { // eslint-disable-line no-unused-vars
 										oldLevel = level+1;
 									});	
 								};
-								svlArray = rowArray.filter(elem => {return /^sv[a-z]{3}:/.test(elem);});
+								svlArray = rowArray.filter(elem => {return /^\s*sv[a-z]{3}:/.test(elem);});
 								if (svlArray && svlArray.length) {
 									saveMods[name] = {att:'con',par:0.0,poi:0.0,dea:0.0,rod:0.0,sta:0.0,wan:0.0,pet:0.0,pol:0.0,bre:0.0,spe:0.0,str:0.0,con:0.0,dex:0.0,int:0.0,wis:0.0,chr:0.0};
 									svlArray.forEach(svm => {
@@ -9179,7 +9182,7 @@ const libRPGMaster = (() => { // eslint-disable-line no-unused-vars
 										}
 									});
 								};
-								svlArray = rowArray.filter(elem => {return /^sv[a-z]{3}\+:/.test(elem);});
+								svlArray = rowArray.filter(elem => {return /^\s*sv[a-z]{3}\+:/.test(elem);});
 								if (svlArray && svlArray.length) {
 									classSaveMods[name] = {att:'con',par:0.0,poi:0.0,dea:0.0,rod:0.0,sta:0.0,wan:0.0,pet:0.0,pol:0.0,bre:0.0,spe:0.0,str:0.0,con:0.0,dex:0.0,int:0.0,wis:0.0,chr:0.0};
 									svlArray.forEach(svm => {
@@ -9349,7 +9352,7 @@ const libRPGMaster = (() => { // eslint-disable-line no-unused-vars
 									if (itemObj.obj) {
 										let specsArray = itemObj.specs(/}}\s*specs=\s*?(.*?)\s*?{{/im);
 										let	miClass = specsArray ? (specsArray[0][2].dbName() || 'magicitem') : 'magicitem',
-											dataArray = itemObj.data(/}}\s*\w*?data\s*=.*?sv[a-z]{3}:.*?{{/g); // [...itemDef.matchAll(/}}\s*\w*?data\s*=.*?sv[a-z]{3}:.*?{{/g)];
+											dataArray = itemObj.data(/}}\s*\w*?data\s*=.*?sv[a-z]{3}:.*?{{/img); // [...itemDef.matchAll(/}}\s*\w*?data\s*=.*?sv[a-z]{3}:.*?{{/g)];
 											
 										if (miClass.includes('ring') && miClass.includes('protection')) {
 											let leftRing = LibFunctions.attrLookup( charCS, fields.Equip_leftTrueRing ) || '-',
