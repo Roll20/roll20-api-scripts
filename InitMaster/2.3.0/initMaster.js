@@ -74,7 +74,8 @@ API_Meta.InitMaster={offset:Number.MAX_SAFE_INTEGER,lineCount:-1};
  *                     passed as parameters instead.
  * v2.3.0  29/09/2023  Moved caster() to library. Support the new spell-speed override attribute 
  *                     (e.g. dragons always cast spells at 1 segment). Fixed two-weapon attack speeds
- *                     where one weapon has less than one attack per round.
+ *                     where one weapon has less than one attack per round. Fixed the creature 
+ *                     attack descriptions when using "All Innate Attacks" button.
  */
 
 var initMaster = (function() {
@@ -1789,7 +1790,10 @@ var initMaster = (function() {
 					monSpeed1 = parseInt((monAttk1.length > 2) ? monAttk1[2] : monSpeed) || monSpeed,
 					monSpeed2 = parseInt((monAttk2.length > 2) ? monAttk2[2] : monSpeed) || monSpeed,
 					monSpeed3 = parseInt((monAttk3.length > 2) ? monAttk3[2] : monSpeed) || monSpeed,
-					monMod = parseInt(attrLookup( charCS, fields.initMod )) || 0;
+					monMod = parseInt(attrLookup( charCS, fields.initMod )) || 0,
+					monDmg1 = reDiceRollSpec.test(monAttk1[0]) ? monAttk1[1] : (monAttk1[0] || ''),
+					monDmg2 = reDiceRollSpec.test(monAttk2[0]) ? monAttk2[1] : (monAttk2[0] || ''),
+					monDmg3 = reDiceRollSpec.test(monAttk3[0]) ? monAttk3[1] : (monAttk3[0] || '');
 					
 				actions = [new Set()];
 				setAttr( charCS, fields.Prev_round, 0 );
@@ -1805,10 +1809,10 @@ var initMaster = (function() {
 				setAttr( charCS, fields.Init_carryWeapNum, -1 );
 				setAttr( charCS, fields.Init_carryPreInit, 0 );
 				setAttr( charCS, fields.Init_carry2H, 0 );
-
-				if (monAttk1[0].length && (rowIndex2 == 0 || rowIndex2 == 1)) actions.push({init:(base+monSpeed1+monMod),ignore:0,action:('with their '+monAttk1[0]),msg:(' rate 1, speed '+monSpeed1+', modifier '+monMod)});
-				if (monAttk2[0].length && (rowIndex2 == 0 || rowIndex2 == 2)) actions.push({init:(base+monSpeed2+monMod),ignore:0,action:('with their '+monAttk2[0]),msg:(' rate 1, speed '+monSpeed2+', modifier '+monMod)});
-				if (monAttk3[0].length && (rowIndex2 == 0 || rowIndex2 == 3)) actions.push({init:(base+monSpeed3+monMod),ignore:0,action:('with their '+monAttk3[0]),msg:(' rate 1, speed '+monSpeed3+', modifier '+monMod)});
+				
+				if (monAttk1[0].length && (rowIndex2 == 0 || rowIndex2 == 1)) actions.push({init:(base+monSpeed1+monMod),ignore:0,action:('with their '+monDmg1),msg:(' rate 1, speed '+monSpeed1+', modifier '+monMod)});
+				if (monAttk2[0].length && (rowIndex2 == 0 || rowIndex2 == 2)) actions.push({init:(base+monSpeed2+monMod),ignore:0,action:('with their '+monDmg2),msg:(' rate 1, speed '+monSpeed2+', modifier '+monMod)});
+				if (monAttk3[0].length && (rowIndex2 == 0 || rowIndex2 == 3)) actions.push({init:(base+monSpeed3+monMod),ignore:0,action:('with their '+monDmg3),msg:(' rate 1, speed '+monSpeed3+', modifier '+monMod)});
 
 			} else if (rowIndex != -2) {
 				var	fighterClass = (attrLookup( charCS, fields.Fighter_class ) || ''),
