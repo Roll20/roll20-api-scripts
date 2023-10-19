@@ -160,14 +160,15 @@ API_Meta.MagicMaster={offset:Number.MAX_SAFE_INTEGER,lineCount:-1};
  *                     asynchronous. Fixed checking valid spells & valid powers. Use stored spell 
  *                     row/column data to build item-specific spell lists. Ensure that --change-attr 
  *                     command rounds correctly for odd/even scores.
+ * v2.3.1  19/10/2023  For --extract-db if multiple databases start with the supplied name, ask which to extract
  */
  
 var MagicMaster = (function() {
 	'use strict';
-	var version = '2.3.0',
+	var version = '2.3.1',
 		author = 'RED',
 		pending = null;
-	const lastUpdate = 1697186733;
+	const lastUpdate = 1697697731;
 		
 	/*
 	 * Define redirections for functions moved to the RPGMaster library
@@ -1287,7 +1288,7 @@ var MagicMaster = (function() {
 									 .replace( /\^\^token_ac\^\^/gi , ac )
 									 .replace( /\^\^token_thac0\^\^/gi , thac0 )
 									 .replace( /\^\^token_hp\^\^/gi , hp );
-				
+									 
 				sendChat("character|"+cid,sendMsgToWho(journal,senderId,macroBody),null,{noarchive:!flags.archive, use3d:false});
 			}
 		}
@@ -8639,7 +8640,13 @@ var MagicMaster = (function() {
 			if (dbName && dbName.length) {
 				let dbLabel = dbName.replace(/-/g,'_');
 				if (!dbNames[dbLabel]) {
-					sendError('Not found database '+dbName);
+					let dbList = Object.keys(dbNames).filter(k => k.startsWith(dbLabel));
+					if (dbList && dbList.length) {
+						sendFeedback('&{template:'+fields.messageTemplate+'}{{title=Extract Database}}{{desc=Multiple databases start with '+dbName+'. [Select the one you want](!magic --extract-db ?{Choose which to extract|'+dbList.join('|')+'}) }}',senderId);
+						return;
+					} else {
+						sendError('Not found database '+dbName);
+					}
 				} else {
 					log('Updating database '+dbName);
 					sendFeedback('Updating database '+dbName,flags.feedbackName,flags.feedbackImg);
