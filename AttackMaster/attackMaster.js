@@ -149,7 +149,9 @@ API_Meta.AttackMaster={offset:Number.MAX_SAFE_INTEGER,lineCount:-1};
  * v2.3.0  30/09/2023  Fixed bugs in non-proficient weapon penalties for classes & races.
  * v2.3.1  18/10/2023  Added parsing a ^^pid^^ tag in attack macros and cmd: code. Use base 
  *                     range specs for ranged ammo if matching index not found. On --extract-db 
- *                     if multiple db start with supplied name, ask which to extract.
+ *                     if multiple db start with supplied name, ask which to extract. Added
+ *                     support for a creature to-hit modifier as parameter 5 of the monster 
+ *                     attack spec.
  */
  
 var attackMaster = (function() {
@@ -157,7 +159,7 @@ var attackMaster = (function() {
 	var version = '2.3.1',
 		author = 'Richard @ Damery',
 		pending = null;
-    const lastUpdate = 1697697731;
+    const lastUpdate = 1697791563;
 
 	/*
 	 * Define redirections for functions moved to the RPGMaster library
@@ -2809,7 +2811,7 @@ var attackMaster = (function() {
 					attkMacro, attkMacroDef, errFlag=false,
 					macroNameRoot, dmgSMmacro, dmgSMmacroName,
 					targetStatsName, dmgLmacro, dmgLmacroName, 
-					monDmg, monDmg1, monDmg2, monDmg3, monAttk, dmgType;
+					monDmg, monDmg1, monDmg2, monDmg3, monAttk, dmgType, attkPlus;
 
 				var parseMonAttkMacro = function( args, charCS, attkType, attkMacro ) {
 					
@@ -2866,7 +2868,7 @@ var attackMaster = (function() {
 										 .replace( /\^\^targetHP\^\^/gi , tokenHP )
 										 .replace( /\^\^targetMaxHP\^\^/gi , tokenMaxHP )
 										 .replace( /\^\^HPfield\^\^/gi , tokenHPname )
-										 .replace( /\^\^strAttkBonus\^\^/gi , strHit )
+										 .replace( /\^\^strAttkBonus\^\^/gi , (strHit + attkPlus) )
 										 .replace( /\^\^strDmgBonus\^\^/gi , strDmg )
 										 .replace( /\^\^monsterDmgMacroSM\^\^/gi , (charName+'|'+dmgSMmacroName))
 										 .replace( /\^\^monsterDmgMacroL\^\^/gi , (charName+'|'+dmgLmacroName))
@@ -2927,6 +2929,7 @@ var attackMaster = (function() {
 						if (monAttk) {
 							monDmg  = (i==1 ? monDmg1 : (i==2 ? monDmg2 : monDmg3));
 							dmgType = (i==1 ? monsterDmg1 : (i==2 ? monsterDmg2 : monsterDmg3 ));
+							attkPlus = parseInt(dmgType[4]) || 0;
 							dmgSMmacroName = macroNameRoot+'DmgSM-'+i;
 							dmgLmacroName = macroNameRoot+'DmgL-'+i;
 							if (dmgType.length > 3) {
