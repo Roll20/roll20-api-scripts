@@ -77,7 +77,7 @@ API_Meta.InitMaster={offset:Number.MAX_SAFE_INTEGER,lineCount:-1};
  *                     where one weapon has less than one attack per round. Fixed the creature 
  *                     attack descriptions when using "All Innate Attacks" button.
  * v2.3.1  19/10/2023  Fixed handling of weapons with pre-initiative flag set when used in a 
- *                     two-weapon attack.
+ *                     two-weapon attack. Fixed ranged weapon initiative error introduced in 2.3.0
  */
 
 var initMaster = (function() {
@@ -1400,17 +1400,22 @@ var initMaster = (function() {
 			weapSpecial = (proficient( charCS, weaponName, weaponType, '' ) > 0) ? 1 : preInit,
 			twoHanded = (WeaponTables.tableLookup( fields.MW_twoHanded, refIndex ) || 0),
 			buildCall = '',
-			attackCount, attacks;
+			attackCount, attacks, curRound;
 			
 		attackNum = (styleNum && styleNum != '0') ? '(('+attackNum+')+('+styleNum+'))' : attackNum;
-		attackCount = (WeaponTables.tableLookup( fields.RW_attkCount, refIndex ) || 0);
+		curRound = WeaponTables.tableLookup( fields.RW_attkRound, refIndex ) || 0;
+		if (curRound != state.initMaster.round) {
+			attackCount = WeaponTables.tableLookup( fields.RW_attkCount, refIndex ) || 0;
+			WeaponTables = WeaponTables.tableSet( fields.RW_curCount, refIndex, attackCount );
+			WeaponTables = WeaponTables.tableSet( fields.RW_attkRound, refIndex, state.initMaster.round );
+		} else {
+			attackCount = WeaponTables.tableLookup( fields.RW_curCount, refIndex ) || 0;
+		}
+		
 		attackCount = eval( attackCount + '+(' + speedMult + '*' + attackNum + ')' );
 		attacks = Math.floor( attackCount );
-		if (curRWround !== state.initMaster.round) {
-			WeaponTables.tableSet( fields.RW_attkCount, refIndex, (attackCount-attacks) );
-			curRWround = state.initMaster.round;
-		}			
-		
+		WeaponTables.tableSet( fields.RW_attkCount, refIndex, (attackCount-attacks) );
+
 		buildCall = '!init --buildMenu ' + senderId 
 				+ '|' + (charType == CharSheet.MONSTER ? MenuType.COMPLEX : MenuType.WEAPON)
 				+ '|' + tokenID
