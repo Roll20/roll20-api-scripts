@@ -108,7 +108,8 @@ API_Meta.CommandMaster={offset:Number.MAX_SAFE_INTEGER,lineCount:-1};
  *                     Added new dice roll evaluator. Moved characterLevel() to library.
  * v2.3.1  19/10/2023  Added "Token Image Quick Copy" --copyimg function. Added ^^gmid^^ field
  *                     for container macros to support TokenMod --api-as parameter. Stop 
- *                     specification of races not in the database for now.
+ *                     specification of races not in the database for now. Ensured spell names
+ *                     in spell books are hyphenated to avoid inconsistencies.
  */
  
 var CommandMaster = (function() {
@@ -3076,7 +3077,7 @@ var CommandMaster = (function() {
 			_.each( selected, e => {
 				charCS = getCharacter(e._id);
 				spellList = attrLookup( charCS, listAttr ) || '';
-				spellList += (spellList ? '|' : '') + spell;
+				spellList += (spellList ? '|' : '') + spell.hyphened();
 				spellList = spellList.split('|').sort().join('|');
 				setAttr( charCS, listAttr, spellList );
 			});
