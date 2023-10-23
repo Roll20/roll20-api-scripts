@@ -1,4 +1,15 @@
 # COFantasy: Historique des changements (depuis la version 1.0)
+## 3.14
+### Capacités
+* Ajout de la Voie de prestige du loup-garou.
+* Amélioration de la prise en charge du rang 1 de la Voie du prédateur.
+* Amélioration de la prise en chagre de la capacité Exemplaire du chevalier.
+* Utilisation d'un prédicat pour As de la gachette.
+* Amélioration de la prise en charge du tir double.
+
+### Corrections de bugs
+* Correction d'un bug qui faisait planter en cas d'interposition du golem.
+
 ## 3.13
 ### Capacités
 * Support pour la démolition et les pièges explosifs.
