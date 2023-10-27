@@ -161,14 +161,16 @@ API_Meta.MagicMaster={offset:Number.MAX_SAFE_INTEGER,lineCount:-1};
  *                     row/column data to build item-specific spell lists. Ensure that --change-attr 
  *                     command rounds correctly for odd/even scores.
  * v2.3.1  19/10/2023  For --extract-db if multiple databases start with the supplied name, ask which to extract
+ * v2.3.2  25/10/2023  Fixed hyphenation of reviewed weapons, items, spells & powers. Changed behavior of 
+ *                     menu to memorise spells & powers so more intuitive.
  */
  
 var MagicMaster = (function() {
 	'use strict';
-	var version = '2.3.1',
+	var version = '2.3.2',
 		author = 'RED',
 		pending = null;
-	const lastUpdate = 1697697731;
+	const lastUpdate = 1698409033;
 		
 	/*
 	 * Define redirections for functions moved to the RPGMaster library
@@ -2169,7 +2171,7 @@ var MagicMaster = (function() {
 		values[fields.Spells_speed[0]][fields.Spells_speed[1]] = speed;
 		values[fields.Spells_cost[0]][fields.Spells_cost[1]] = cost || newSpellObj.obj[1].cost;
 		values[fields.Spells_msg[0]][fields.Spells_msg[1]] = msg;
-		values[fields.Spells_macro[0]][fields.Spells_macro[1]] = csv < 2.1 ? msg : ('%{'+charCS.get('name')+'|'+spellName+'}');
+		values[fields.Spells_macro[0]][fields.Spells_macro[1]] = csv < 2.1 ? msg : ('%{'+charCS.get('name')+'|'+(spellName.hyphened())+'}');
 		values[fields.Spells_weapon[0]][fields.Spells_weapon[1]] = weapon ? '1' : '0';
 		values[fields.Spells_equip[0]][fields.Spells_equip[1]] = (equip==='prime'?'0':(equip==='offhand'?'1':(equip==='both'?'2':equip)));
 		values[fields.Spells_spellLevel[0]][fields.Spells_spellLevel[1]] = level;
@@ -2187,7 +2189,7 @@ var MagicMaster = (function() {
 			altValues[fields.AltSpells_name[0]][fields.AltSpells_name[1]] = spellName;
 			altValues[fields.AltSpells_speed[0]][fields.AltSpells_speed[1]] = speed;
 			altValues[fields.AltSpells_level[0]][fields.AltSpells_level[1]] = lv;
-			altValues[fields.AltSpells_effect[0]][fields.AltSpells_effect[1]] = '%{'+charCS.get('name')+'|'+spellName+'}';
+			altValues[fields.AltSpells_effect[0]][fields.AltSpells_effect[1]] = '%{'+charCS.get('name')+'|'+(spellName.hyphened())+'}';
 			altValues[fields.AltSpells_remaining[0]][fields.AltSpells_remaining[1]] = (levelOrPerDay[0]==0 ? 0 : 1);;
 			altValues[fields.AltSpells_memorized[0]][fields.AltSpells_memorized[1]] = 1;
 			altSpellTable.addTableRow( altSpellRow, altValues );
@@ -2940,8 +2942,8 @@ var MagicMaster = (function() {
 						spellTables[w] = getTable( charCS, fieldGroups.SPELLS, c ); 
 					}
 					let spellMsg = spellTables[w].tableLookup( (oldVer ? fields.Spells_macro : fields.Spells_msg), r );
-					if (miStore) spellName = spellMsg;
-					else spellName = spellTables[w].tableLookup( fields.Spells_name, r );
+					if (miStore) spellName = spellMsg.hyphened();
+					else spellName = spellTables[w].tableLookup( fields.Spells_name, r ).hyphened();
 					if (_.isUndefined(spellName)) {
 						levelSpells[lv].spells = 0;
 						break;
@@ -2962,7 +2964,7 @@ var MagicMaster = (function() {
 								extension = `${!learn ? '' : ` --message ${tokenID}|Learn Spell|Try to &#91;Learn this spell&#93;&#40;!magic ~~learn-spell ${tokenID}¦${spellName}&#41;`}&#13;${(spell.api ? '' : toWho)}&#37;{${spell.dB}|${spellName}}`;
 							}
 							content += (buttonID == selectedButton ? '<span style=' + design.selected_button + '>' : ((submitted || disabled || (lv > maxLevel)) ? '<span style=' + design.grey_button + '>' : '['));
-							content += ((spellType.includes('POWER') && spellValue) ? (spellValue + ' ') : '') + spellName;
+							content += ((spellType.includes('POWER') && spellValue) ? (spellValue + ' ') : '') + spellName.dispName();
 							content += (((buttonID == selectedButton) || submitted || disabled || (lv > maxLevel)) ? '</span>' : '](!magic --button '+ command +'|'+ tokenID +'|'+ buttonID +'|'+ r +'|'+ c + extension +')');
 						}
 					}
@@ -3070,7 +3072,7 @@ var MagicMaster = (function() {
 		if (selectedSpell) {
 			spell = getAbility( magicDB, spellToDisplay, charCS );
 			content += '...Optionally [Review '+spellToDisplay+'](!magic --button '+reviewCmd+'|'+tokenID+'|'+level+'|'+spellRow+'|'+spellCol+'|'+spellToMemorise 
-					+  '&#13;'+(spell.api ? '' : sendToWho(charCS,senderId,false,true))+'&#37;{'+spell.dB+'|'+spellToDisplay+'})}}';
+					+  '&#13;'+(spell.api ? '' : sendToWho(charCS,senderId,false,true))+'&#37;{'+spell.dB+'|'+spellToDisplay.hyphened()+'})}}';
 		} else {
 			content += '...Optionally <span style='+design.grey_button+'>Review the '+magicWord+'</span>}}';
 		}
@@ -3096,9 +3098,6 @@ var MagicMaster = (function() {
 				content += (selected ? ('<span style=' + design.selected_button + '>') : ('['+(spellValue == 0 ? ('<span style=' + design.dark_button + '>') : '')));
 				if (isPower && spellName != '-') {
 					content += spellValue + ' ';
-				}
-				if (!spellToMemorise.length && spellName != '-') {
-					spellToMemorise = spellName;
 				}
 				content += spellName;
 				content += (selected || spellValue == 0 ? '</span>' : '');
@@ -3403,7 +3402,7 @@ var MagicMaster = (function() {
 			spell = getAbility( macroDB, spellName, charCS ),
 			content = '&{template:'+fields.defaultTemplate+'}{{name='+args[5]+'}}'
 					+ '{{desc=[Use another charge?](!magic --button '+ args[0] +'|'+ args[1] +'|'+ args[2] +'|'+ args[3] +'|'+ args[4]
-					+ '&#13;'+(spell.api ? '' : sendToWho(charCS,senderId,false,true))+'&#37;{' + spell.dB + '|' + args[5] + '})}}';
+					+ '&#13;'+(spell.api ? '' : sendToWho(charCS,senderId,false,true))+'&#37;{' + spell.dB + '|' + (args[5].hyphened()) + '})}}';
 		
 		if (charCS) {
 			sendResponse( charCS, content, senderId, flags.feedbackName, flags.feedbackImg, args[1] );
@@ -3535,7 +3534,7 @@ var MagicMaster = (function() {
 					}
 					let magicItem = getAbility( fields.MagicItemDB, displayMI, charCS, false, isGM, trueMI );
 					content += '['+actionText+' '+selectedMI+'](!magic --button '+ submitAction +'|'+ tokenID +'|'+ MIrowref
-																+'&#13;'+(magicItem.api ? '' : sendToWho(charCS,senderId,false,true))+'&#37;{'+magicItem.dB+'|'+displayMI+'})';
+																+'&#13;'+(magicItem.api ? '' : sendToWho(charCS,senderId,false,true))+'&#37;{'+magicItem.dB+'|'+(displayMI.hyphened())+'})';
 				} else {
 					content	+= '<span style='+design.grey_button+'>'+actionText+' Magic Item</span>';
 				}
@@ -3577,8 +3576,8 @@ var MagicMaster = (function() {
 			content = '&{template:'+fields.defaultTemplate+'}{{name='+itemName+'\'s '+powerName+' power}}'
 					+ '{{desc='+tokenName+' is about to use '+itemName+'\'s '+powerName+' power.  Is this correct?}}'
 					+ '{{desc1=[Use '+powerName+'](!magic --button '+ BT.MI_POWER_USED +'|'+ tokenID +'|'+ powerName +'|'+ itemName +'|'+ castLevel
-					+ '&#13;'+(spell.api ? '' : toWho)+'&#37;{'+spell.dB +'|'+ power +'})'
-					+ ' or [Return to '+itemName+'](!&#13;'+(item.api ? '' : toWho)+'&#37;{'+MIlibrary+'|'+itemName+'})\nOr just do something else}}';
+					+ '&#13;'+(spell.api ? '' : toWho)+'&#37;{'+spell.dB +'|'+ (power.hyphened()) +'})'
+					+ ' or [Return to '+itemName+'](!&#13;'+(item.api ? '' : toWho)+'&#37;{'+MIlibrary+'|'+(itemName.hyphened())+'})\nOr just do something else}}';
 		sendResponse(charCS,content,senderId, flags.feedbackName, flags.feedbackImg, tokenID);
 		return;	
 	}
@@ -3676,7 +3675,7 @@ var MagicMaster = (function() {
 					if (shortMenu) {
 						content += '{{desc=**1.Item chosen** ['+itemName+'](!magic --button '+redoCmd+'|'+tokenID+'|'+MIrowref+'), click to reselect\n';
 					}
-					content += '\nOptionally, you can '+(selected ? '[' : '<span style='+design.grey_button+'>')+'Review '+itemName+(selected ? ('](!magic --button '+reviewCmd+'|'+tokenID+'|'+MIrowref+'|'+selectedMI+'|&#13;'+(magicItem.api ? '' : sendToWho(charCS,senderId,false,true))+'&#37;{'+magicItem.dB+'|'+selectedMI+'})') : '')+'</span>';
+					content += '\nOptionally, you can '+(selected ? '[' : '<span style='+design.grey_button+'>')+'Review '+itemName+(selected ? ('](!magic --button '+reviewCmd+'|'+tokenID+'|'+MIrowref+'|'+selectedMI+'|&#13;'+(magicItem.api ? '' : sendToWho(charCS,senderId,false,true))+'&#37;{'+magicItem.dB+'|'+(selectedMI.hyphened())+'})') : '')+'</span>';
 				} else {
 					content += '{{Section1=}}{{Section2=}}{{desc=**1.Action chosen** ***Remove***, [click](!magic --button '+redoCmd+'|'+tokenID+'|'+MIrowref+') to change';
 				}
@@ -3903,7 +3902,7 @@ var MagicMaster = (function() {
 			
 			content += '{{desc3=**3. '+selectableBoth+(chosenBoth ? ('Store '+itemName+'](!magic --button GM-StoreMI|'+tokenID+'|'+MIrowref+'|'+MItoStore+'|&#91;[?{Quantity?|'+initQty+'}]&#93;)') : ('Store'+(chosenSlot ? ('d '+slotActualName) : itemName)+'</span>'))+' **'
 					+  ' or '+hideableBoth+(hideAvail ? ('Hide '+slotName+' as '+itemName+'](!magic --button GM-HideMI|'+tokenID+'|'+MIrowref+'|'+MItoStore+')') : ((hiddenMI ? ('Hidden as '+slotName) : ('Hide Item'+(chosenMI?(' as '+itemName):'')))+'</span>'))+'<br>'
-					+  ' or '+selectableEither+'Review'+(chosenEither ? (' '+reviewItem+'](!magic --button GM-ReviewMI|'+tokenID+'|'+MIrowref+'|'+MItoStore+'&#13;'+(reviewObj.api ? '' : '/w gm ')+'&#37;{'+reviewObj.dB+'|'+reviewObj.obj[1].name+'})') : ' the item</span>')+'<br><br>}}'
+					+  ' or '+selectableEither+'Review'+(chosenEither ? (' '+reviewItem+'](!magic --button GM-ReviewMI|'+tokenID+'|'+MIrowref+'|'+MItoStore+'&#13;'+(reviewObj.api ? '' : '/w gm ')+'&#37;{'+reviewObj.dB+'|'+(reviewObj.obj[1].name.hyphened())+'})') : ' the item</span>')+'<br><br>}}'
 					+  '{{desc4=1. Or select MI from above ^\n'
 					+  '<table width="100%"><tr><td>'
 					+  selectableSlot+'Rename '+slotName+(chosenSlot ? ('](!magic --button GM-RenameMI|'+tokenID+'|'+MIrowref+'|'+MItoStore+'|?{What name should '+slotName+' now have?}) ') : '</span> ')+'<br>'
@@ -4323,7 +4322,7 @@ var MagicMaster = (function() {
 				}
 				spellObj = getAbility( rootDB, trueName, charCS );
 				content += '...Optionally [Review '+spellName+'](!magic --button REVIEW_'+lists+'|'+ cmdStr 
-						+  '&#13;'+(spellObj.api ? '' : sendToWho(charCS,senderId,false,true))+'&#37;{'+ spellObj.dB +'|'+ trueName +'})}}';
+						+  '&#13;'+(spellObj.api ? '' : sendToWho(charCS,senderId,false,true))+'&#37;{'+ spellObj.dB +'|'+ (trueName.hyphened()) +'})}}';
 			} else {
 				content += '...Optionally <span style='+design.grey_button+'>Review choice</span>}}';
 			}
@@ -4353,7 +4352,7 @@ var MagicMaster = (function() {
 				content += ' or\n[Return to Add Items Menu](!magic --gm-edit-mi '+tokenID+')';
 			} else {
 				let miObj = getAbility( fields.MagicItemDB, miName, charCS );
-				content += ' or\n[Return to '+item+' Description](!&#13;&#47;w gm &#37;{'+miObj.dB+'|'+miName+'})';
+				content += ' or\n[Return to '+item+' Description](!&#13;&#47;w gm &#37;{'+miObj.dB+'|'+(miName.hyphened())+'})';
 			}
 			content += 'or just do something else}}';
 			sendFeedback(content,flags.feedbackName,tokenID,charCS);
@@ -4649,7 +4648,7 @@ var MagicMaster = (function() {
 		}
 		
 		totalLeft = spendMoney( charCS, spellCost );
-		content = charName + ' is '+action+' [' + spellName.dispName() + '](!&#13;&#47;w gm &#37;{'+spell.dB+'|'+spellName+'})'
+		content = charName + ' is '+action+' [' + spellName.dispName() + '](!&#13;&#47;w gm &#37;{'+spell.dB+'|'+(spellName.hyphened())+'})'
 				+ (parseInt(spellCost || 0) ? (' at a cost of [[' + spellCost + ']]GP (leaving [[' + totalLeft + ']]GP).') : '')
 				+ '  Select ' + charName + '\'s token before pressing to see effects.';
 		sendFeedback( content, flags.feedbackName, flags.feedbackImg, tokenID, charCS );
@@ -4707,12 +4706,15 @@ var MagicMaster = (function() {
 			msg = '',
 			name = getObj('graphic',args[1]).get('name');
 		
+		if (args[3] > 0 && args[4] > 0 && (!args[5] || !args[5].length)) {
+			args[5] = attrLookup( getCharacter(args[1]), fields.Spells_name, fields.Spells_table, args[3], args[4] );
+		}
+
 		// Check this is a spell that is of a school that can be memorised
 		if (isPower ? !checkValidPower( args, senderId ) : !checkValidSpell( args )) {
 			msg=isPower ? ('**Warning:** '+name+' has not gained experience enough to use '+args[5]+' as a granted power')
 						: ('**Warning:** '+args[5]+' is not of a school or sphere '+name+' can use');
 			args[5] = '';
-
 		} else {
 			if ((args[3] >= 0 && args[4] >= 0) || (args[5] && args[5].length > 0)) {
 				msg += 'Selected ';
@@ -5362,7 +5364,7 @@ var MagicMaster = (function() {
 		}
 
 		content = '&{template:'+fields.defaultTemplate+'}{{name='+charName+' is using '+MIname+'}}'
-				+ '{{desc=To see the effects, select '+charName+'\'s token and press ['+MIname+'](!&#13;&#47;w gm &#37;{'+MIdb.dB+'|'+MIname+'})}}';
+				+ '{{desc=To see the effects, select '+charName+'\'s token and press ['+MIname+'](!&#13;&#47;w gm &#37;{'+MIdb.dB+'|'+(MIname.hyphened())+'})}}';
 		sendFeedback( content, flags.feedbackName, flags.feedbackImg, tokenID, charCS );
 		return true;
 	}
@@ -5433,8 +5435,8 @@ var MagicMaster = (function() {
 			magicItem = getAbility( fields.MagicItemDB, itemName, charCS ),
 			MIlibrary = charCS,
 			powerType = powerName.substring(0,3),
-			powerHyphen = powerName.replace(/\s/g,'-'),
-			itemHyphen = itemName.replace(/\s/g,'-');
+			powerHyphen = powerName.hyphened(),
+			itemHyphen = itemName.hyphened();
 			
 		if (_.some(dbList,dB=>dB[0]===powerType.toUpperCase())) {
 			powerName = powerName.slice(powerType.length);
@@ -5488,7 +5490,7 @@ var MagicMaster = (function() {
 				}
 				Powers = Powers.tableSet( fields.Powers_castValue, powerRow, powerCount-charges );
 			}
-			content = charCS.get('name') + ' is using [' + power + '](!&#13;&#47;w gm &#37;{'+powerLib.dB+'|'+power+'}). '
+			content = charCS.get('name') + ' is using [' + power + '](!&#13;&#47;w gm &#37;{'+powerLib.dB+'|'+(power.hyphened())+'}). '
 					+ 'Select ' + charCS.get('name') + '\'s token before pressing to see effects.';
 			sendFeedback( content, flags.feedbackName, flags.feedbackImg, tokenID, charCS );
 			
@@ -5509,7 +5511,7 @@ var MagicMaster = (function() {
 			content = '&{template:'+fields.defaultTemplate+'}{{name='+itemDesc+'\'s '+powerDesc+' power}}'
 					+ '{{desc='+tokenName+' is about to use **'+itemDesc+'\'s** '+powerDesc+' power.  Is this correct?}}'
 					+ '{{desc1=[Use '+powerDesc+'](!magic --button '+ BT.MI_POWER_USED +'|'+ args.join('|')
-					+ '&#13;'+(powerLib.api ? '' : toWho)+'&#37;{'+powerLib.dB +'|'+ power +'})'
+					+ '&#13;'+(powerLib.api ? '' : toWho)+'&#37;{'+powerLib.dB +'|'+ (power.hyphened()) +'})'
 					+ ' or [Return to '+itemDesc+'](!&#13;'+(magicItem.api ? '' : toWho)+'&#37;{'+magicItem.dB+'|'+itemHyphen+'})\nOr just do something else}}';
 			sendResponse(charCS,content,senderId, flags.feedbackName, flags.feedbackImg, tokenID);
 		}
@@ -5619,7 +5621,7 @@ var MagicMaster = (function() {
 			
 		var	SpellsTable = getTable( charCS, fieldGroups.SPELLS, spellCol ),
 			MIspellsTable = getTable( charCS, fieldGroups.SPELLS, MIcol ),
-			spellName = SpellsTable.tableLookup( fields.Spells_name, spellRow ),
+			spellName = SpellsTable.tableLookup( fields.Spells_name, spellRow ).hyphened(),
 			MIspellName = MIspellsTable.tableLookup( msgField, MIrow );
 			
 		if (!isChange && !stdEqual(spellName, MIspellName )) {
