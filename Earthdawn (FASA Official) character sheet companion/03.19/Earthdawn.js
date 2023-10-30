@@ -220,6 +220,7 @@ Earthdawn.attribute = function ( attr, prev ) {
 
     function recordWrap( wrapper ) {
       'use strict';
+// Oct 23
 log("Obsolete code. If you see this, please report to API developer");
       if( parseFloat( Earthdawn.getAttrBN( cID, "edition_max", 0 )) < state.Earthdawn.sheetVersion )    // If edition is not up to date, it is hopefully being updated, so don't do anything.
         return;
@@ -923,9 +924,10 @@ log("Obsolete code. If you see this, please report to API developer");
             Earthdawn.abilityAdd( cID, Earthdawn.constant( "Spell" ) + " Spells",  "!edToken~ ChatMenu: Spells");
         }
       } break;
+/*
       case "Karma":
         if ( state.Earthdawn.g1879 || state.Earthdawn.edition != "4" ) {
-// semi-obsolete. This should be moved to sheetworkers. 
+// obsolete. moved to sheetworkers. 
           let karmaNew = Earthdawn.parseInt2( current ) - Earthdawn.parseInt2( prev["current"] );
           if( karmaNew > 0 ) {
             let ED = new Earthdawn.EDclass();
@@ -934,6 +936,7 @@ log("Obsolete code. If you see this, please report to API developer");
             edParse.funcMisc( [ "", "KarmaBuy", karmaNew ] );
         } }
         break;
+*/
       case "Questor": {
         if( current === "None" ) {
           Earthdawn.abilityRemove( cID, "DP-Roll" );
@@ -7290,9 +7293,10 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
                 this.chat( "Error! Must be GM to Corrupt Karma.", Earthdawn.whoFrom.apiError );
             } catch(err) { Earthdawn.errorLog( "ED.funcMisc.CorruptKarma error caught: " + err, po ); }
             break;
+/*
           case "karmabuy":      // We know how many karma were bought, send out an accounting entry.
             try {
-// semi-obsolete. This needs to be moved to sheetworker.
+// Oct 23  obsolete. moved to sheetworker.
               if( ssa.length > 1 && Earthdawn.parseInt2( ssa[ 2  ] )) {
                 let newKarma = Earthdawn.parseInt2( ssa [ 2 ] ),
                   today = new Date(),
@@ -7307,6 +7311,7 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
               }
             } catch(err) { Earthdawn.errorLog( "ED.funcMisc.KarmaBuy error caught: " + err, po ); }
             break;
+*/
           case "macrocreate":
             try {
               let cmd;
@@ -7353,56 +7358,66 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
           case "newday":      // Recovery tests and Karma reset.   Some systems karma must be bought.
             try {
               let recov = Earthdawn.findOrMakeObj({ _type: 'attribute', _characterid: this.charID, name: "Recovery-Tests" });
-              Earthdawn.setWithWorker( recov, "current", recov.get( "max" ) || "2");           // set recovery tests available today to max.
+              let rt = (Earthdawn.parseInt2(recov.get( "max" )) || 2) + Earthdawn.parseInt2(Earthdawn.getAttrBN( this.charID, "Misc-NewDayRecoveryOffset", "0", true));
+//log(rt);
+              Earthdawn.setWithWorker( recov, "current", rt.toString());           // set recovery tests available today to max.
 
-              if( state.Earthdawn.gED && state.Earthdawn.edition == "4" ) {
-                let karma = Earthdawn.findOrMakeObj({ _type: 'attribute', _characterid: this.charID, name: "Karma" }, 0),
-                    kparam = Earthdawn.getAttrBN( this.charID, "Misc-KarmaRitual", "-1", true),
-                    add;
-                switch (kparam) {
-                  case -1:      // set karma to it's max value
-                    add = karma.get( "max" );
-                    break;
-                  case -2:      // Karma_ritual refills Circle per day
-                    add = Earthdawn.getAttrBN( this.charID, "working-Circle", "0" );
-                    break;
-                  case -3:      // Karma_ritual refills racial karma modifier per day
+//              if( state.Earthdawn.gED && state.Earthdawn.edition == "4" ) {
+              let karmaObj = Earthdawn.findOrMakeObj({ _type: 'attribute', _characterid: this.charID, name: "Karma" }, 0),
+                  kparam = ( ssa.length > 2 ) ? Earthdawn.parseInt2( ssa[ 2 ] ) : Earthdawn.getAttrBN( this.charID, "Misc-KarmaRitual", "-1", true),   // V3.19 and later karmaritual is passed.
+                  add;
+              switch ( kparam ) {
+                case -1:      // set karma to it's max value
+                  add = karmaObj.get( "max" );
+                  break;
+                case -2:      // Karma_ritual refills Circle per day
+                  add = Earthdawn.getAttrBN( this.charID, "working-Circle", "0" );
+                  break;
+                case -3:      // Karma_ritual refills racial karma modifier per day
+                  add = Earthdawn.getAttrBN( this.charID, "Karma-Modifier", "0" );
+                  break;
+                case -4: {    // There is a Karma Ritual Talent. Find it and use it's rank.
+                          // go through all attributes for this character and look for ones we are interested in.
+                  let po = this,
+                      attributes = findObjs({ _type: "attribute", _characterid: this.charID });
+                  _.each( attributes, function (att) {
+                    if( att.get( "name" ).endsWith( "_Special" ))
+                      if( att.get( "current" ) === "Karma Ritual" ) {
+                        if( add === undefined ) {
+                          let nm = att.get( "name" );
+                          add = Earthdawn.getAttrBN( po.charID, Earthdawn.buildPre( Earthdawn.repeatSection( 3, nm), Earthdawn.repeatSection( 2, nm)) + "Effective-Rank", "0" );
+                        } else
+                          po.chat( "Warning, found more than one Talent/Knack/Skill with special Karma Ritual. Using the first found.", Earthdawn.whoTo.player | Earthdawn.whoFrom.api | Earthdawn.whoFrom.apiWarning)
+                      }
+                  }); // End for each attribute.
+                  if( add === undefined ) {
+                    po.chat( "Warning, no Talent/Knack/Skill with special Karma Ritual. Using the Karma Modifier.", Earthdawn.whoTo.player | Earthdawn.whoFrom.api | Earthdawn.whoFrom.apiWarning)
                     add = Earthdawn.getAttrBN( this.charID, "Karma-Modifier", "0" );
-                    break;
-                  case -4:      // There is a Karma Ritual Talent. Find it and use it's rank.
-                            // go through all attributes for this character and look for ones we are interested in.
-                    let po = this;
-                    let attributes = findObjs({ _type: "attribute", _characterid: this.charID });
-                    _.each( attributes, function (att) {
-                      if( att.get( "name" ).endsWith( "_Special" ))
-                        if( att.get( "current" ) === "KarmaRitual" ) {
-                          if( add === undefined ) {
-                            let nm = att.get( "name" ),
-                              add = Earthdawn.getAttrBN( po.charID,
-                                    buildPre( Earthdawn.repeatSection( 3, nm), Earthdawn.repeatSection( 2, nm)) + "Effective-Rank", "0" );
-                          } else
-                            po.chat( "Warning, found more than one Talent/Knack/Skill with special KarmaRitual. Using the first found.", Earthdawn.whoTo.player | Earthdawn.whoFrom.api | Earthdawn.whoFrom.apiWarning)
-                        }
-                    }); // End for each attribute.
-
-                    add = Earthdawn.getAttrBN( this.charID, "Karma-Modifier", "0" );
-                    break;
-                  default :     // Karma_ritual refills the value in Misc-KarmaRitual
-                    add = kparam;
-                };
-                Earthdawn.setWithWorker( karma, "current", Math.min( Earthdawn.parseInt2( karma.get( "max" )), Earthdawn.parseInt2(karma.get( "current" )) + Earthdawn.parseInt2( add )));
-                this.chat( "New Day: Karma and Recovery tests reset.", this.WhoSendTo() | Earthdawn.whoFrom.character );
-              }     // Note: Don't set DP to max! that is not done on a mere new day.
-              else {    // 1879, or ED edition other than 4th.   Buy Karma.
-                let newKarma = Earthdawn.getAttrBN( this.charID, "Karma_max", "0", true ) - Earthdawn.getAttrBN( this.charID, "Karma", "0", true ),
-                  today = new Date();
-// CDD ToDo This uses semi-obsolete code so needs to be rewritten once karma is moved to sheetworker, and hopefully the sheetworker will catch the karma changing. 
+                  }
+                } break;
+                default :     // We were passed the number of karma to add. 
+                  add = kparam;
+              };
+              let newKarma = Math.min( Earthdawn.parseInt2( karmaObj.get( "max" )), Earthdawn.parseInt2(karmaObj.get( "current" )) + Earthdawn.parseInt2( add ))
+                    + Earthdawn.parseInt2(Earthdawn.getAttrBN( this.charID, "Misc-NewDayKarmaOffset", "0", true));
+              Earthdawn.setWithWorker( karmaObj, "current", newKarma.toString());
+              this.chat( "New Day: Karma and Recovery tests reset.", this.WhoSendTo() | Earthdawn.whoFrom.character );
+//              }     // Note: Don't set DP to max! that is not done on a mere new day.
+// Note, we no longer need specail code for older editions. 
+//              else {    // 1879, or ED edition other than 4th.   Buy Karma.
+//                let newKarma = Earthdawn.getAttrBN( this.charID, "Karma_max", "0", true ) - Earthdawn.getAttrBN( this.charID, "Karma", "0", true );
+// CDD ToDo This uses semi-obsolete code so needs to be rewritten once karma is moved to sheetworker, and hopefully the sheetworker will catch the karma changing.
+/*
                 this.chat( Earthdawn.makeButton( "Buy Karma?", "!Earthdawn~ charID: " + this.charID + "~ Misc: Add: Karma: ?{How many Karma to buy|" + newKarma + "}"
                       + "~ Record: ?{Posting Date|" + today.getFullYear() + "-" + (today.getMonth() +1) + "-" + today.getDate()
                       + "}: : LP: ?{How many " + ( state.Earthdawn.gED ? "LP" : "AP" ) +" does that cost|" + newKarma * 10 + "}",
                       "Did you do a karma ritual and want to buy karma?", Earthdawn.Colors.param, Earthdawn.Colors.paramfg ),
                       Earthdawn.whoTo.player | Earthdawn.whoFrom.character | Earthdawn.whoFrom.noArchive );
-              }
+*/
+//                this.chat( "New Day: " + Earthdawn.makeButton( "Buy Karma?", "!Earthdawn~ charID: " + this.charID + "~ Misc: Add: Karma: ?{How many Karma to buy|" + newKarma + "}",
+//                      "Did you do a karma ritual and want to buy karma?", Earthdawn.Colors.param, Earthdawn.Colors.paramfg ),
+//                      Earthdawn.whoTo.player | Earthdawn.whoFrom.character | Earthdawn.whoFrom.noArchive );
+//              }
             } catch(err) { Earthdawn.errorLog( "ED.funcMisc.NewDay error caught: " + err, po ); }
             break;
           case "resetchars":      // reset all selected tokens to full health, karma, Recovery Tests, and no modifications or status markers.
@@ -9271,7 +9286,7 @@ log("Record Obsolete code. If you see this except on an 1879 sheet, please repor
             let charname = getAttrByName( po.charID, "character_name" );
             let kask = "modValue : ?{Modification|0} ~ K-ask: @{" + charname + "|KarmaGlobalMode}@{" + charname + "|" +  pre2 + "Karma-Ask}: @{"+charname +"|DPGlobalMode}@{" + charname + "|" + pre2 + "DP-Ask}~";
 //            let strain = Earthdawn.getAttrBN( po.charID, pre2 + "Strain", "", true),
-            let strain = po.strainCalc( pre2 ),
+            let strain = po.strainCalc( pre2, true ),
                 straintxt = (strain >= 0) ? "Strain: " + strain + " ~":"",
                 strain2 = Earthdawn.getAttrBN( po.charID, presp + "Strain_max", "0"),
                 straintxt2 = "Strain: " + strain + " :" + strain2 + "  ~"; // To deal with the Spell Ask Strain
@@ -9997,6 +10012,9 @@ log("Record Obsolete code. If you see this except on an 1879 sheet, please repor
 
 
             // ParseObj.strainCalc()
+            // pre = prefix with "Strain" after it.
+            // ignoreStrainCommand. if this is defined, then it ignores strainCommand and will return strain for this routine. 
+            //
             // For right now this is extremely simple, but will become much more complex once strain formulas are implemented. 
             /*
               T_Strain is still the input for the numeric part
@@ -10014,10 +10032,10 @@ log("Record Obsolete code. If you see this except on an 1879 sheet, please repor
                 Strain: 1 + Casting Difficulty
                 Strain: 5 + Force Rating of spirit  
             */
-    this.strainCalc = function( pre )  {
+    this.strainCalc = function( pre, ignoreStrainCommand )  {
       'use strict';
       try {
-        if( "strainCommand" in this.misc )  return 0;       // Strain has already been applied.
+        if( !ignoreStrainCommand && ("strainCommand" in this.misc))  return 0;       // Strain has already been applied.
         if( "strain" in this.misc )         return Earthdawn.parseInt2( this.misc[ "strain" ] );    // Strain has already been calculated.
         return this.getValue( pre + "Strain" );
       } catch(err) { Earthdawn.errorLog( "ED.strainCalc() error caught: " + err, po ); }
