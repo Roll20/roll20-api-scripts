@@ -25,7 +25,7 @@ const ScriptCards = (() => { // eslint-disable-line no-unused-vars
 	*/
 
 	const APINAME = "ScriptCards";
-	const APIVERSION = "2.4.9";
+	const APIVERSION = "2.4.9a";
 	const APIAUTHOR = "Kurt Jaegers";
 	const debugMode = false;
 
@@ -3328,7 +3328,7 @@ const ScriptCards = (() => { // eslint-disable-line no-unused-vars
 													cardParameters[key] = newSettings[key];
 												}
 											} else {
-												log(`Attempt to load stored settings ${thisContent.Trim()}, but setting list not found.`)
+												log(`Attempt to load stored settings ${thisContent.trim()}, but setting list not found.`)
 											}
 										}
 										break;
