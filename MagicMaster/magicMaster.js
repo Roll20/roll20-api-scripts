@@ -1926,7 +1926,7 @@ var MagicMaster = (function() {
 				for (let i=1; i<Math.min(levelSpells.length,maxLevel); i++) {
 					noSpells = parseInt(spellsPerLevel[charClass]['PR'][i][level]);
 					miscSpells = !state.MagicMaster.spellRules.strictNum ? parseInt(attrLookup(charCS,[fields.PRSpellNo_table[0] + i + fields.PRSpellNo_misc[0],fields.PRSpellNo_misc[1]]) || 0) : 0;
-					specSpells = ((charClass == 'PRIEST') && (noSpells + miscSpells)) ? parseInt(wisdomSpells[(Math.min(i,wisdomSpells.length)-1)][(attrLookup(charCS,fields.Wisdom) || 0)]) : 0;
+					specSpells = ((charClass == 'priest') && (noSpells + miscSpells)) ? parseInt(wisdomSpells[(Math.min(i,wisdomSpells.length)-1)][(attrLookup(charCS,fields.Wisdom) || 0)]) : 0;
 					setAttr(charCS,[fields.PRSpellNo_table[0] + i + fields.PRSpellNo_memable[0],fields.PRSpellNo_memable[1]], noSpells);
 					setAttr(charCS,[fields.PRSpellNo_table[0] + i + fields.PRSpellNo_wisdom[0],fields.PRSpellNo_wisdom[1],'',true], specSpells);
 					levelSpells[i].spells = noSpells + specSpells + miscSpells;
