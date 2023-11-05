@@ -9328,7 +9328,7 @@ const libRPGMaster = (() => { // eslint-disable-line no-unused-vars
 									for (let i=1; i<=spellData[0]; ++i) {
 										let spells = [];
 										spells.length = spellData[1];
-										spellsPerLevel[name][spellType][i] = (!!parsedRow[('spellLV'+i)] && !!parsedRow[('spellLV'+i)].length) ? (spells.fill(0).concat(parsedRow[('spellLV'+i)].split('|'))) : spellsPerLevel[(spellType === 'MU'?'WIZARD':'PRIEST')][spellType][i];
+										spellsPerLevel[name][spellType][i] = (!!parsedRow[('spellLV'+i)] && !!parsedRow[('spellLV'+i)].length) ? (spells.fill(0).concat(parsedRow[('spellLV'+i)].split('|'))) : spellsPerLevel[(spellType === 'MU'?'wizard':'priest')][spellType][i];
 									};
 									if (spellData[4] && spellData[4].toLowerCase() === 'spec' && !specMU.includes(name)) specMU.push(name);
 									if (spellData[4] && spellData[4].toLowerCase() === 'ord' && !ordMU.includes(name)) ordMU.push(name);
