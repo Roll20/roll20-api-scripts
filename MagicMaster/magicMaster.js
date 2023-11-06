@@ -163,14 +163,15 @@ API_Meta.MagicMaster={offset:Number.MAX_SAFE_INTEGER,lineCount:-1};
  * v2.3.1  19/10/2023  For --extract-db if multiple databases start with the supplied name, ask which to extract
  * v2.3.2  25/10/2023  Fixed hyphenation of reviewed weapons, items, spells & powers. Changed behavior of 
  *                     menu to memorise spells & powers so more intuitive.
+ * v2.3.3  05/11/2023  Fixed issue with case mismatch on looking up SpellsPerLevel.
  */
  
 var MagicMaster = (function() {
 	'use strict';
-	var version = '2.3.2',
+	var version = '2.3.3',
 		author = 'RED',
 		pending = null;
-	const lastUpdate = 1698409033;
+	const lastUpdate = 1699173597;
 		
 	/*
 	 * Define redirections for functions moved to the RPGMaster library
@@ -1925,7 +1926,7 @@ var MagicMaster = (function() {
 				for (let i=1; i<Math.min(levelSpells.length,maxLevel); i++) {
 					noSpells = parseInt(spellsPerLevel[charClass]['PR'][i][level]);
 					miscSpells = !state.MagicMaster.spellRules.strictNum ? parseInt(attrLookup(charCS,[fields.PRSpellNo_table[0] + i + fields.PRSpellNo_misc[0],fields.PRSpellNo_misc[1]]) || 0) : 0;
-					specSpells = ((charClass == 'PRIEST') && (noSpells + miscSpells)) ? parseInt(wisdomSpells[(Math.min(i,wisdomSpells.length)-1)][(attrLookup(charCS,fields.Wisdom) || 0)]) : 0;
+					specSpells = ((charClass == 'priest') && (noSpells + miscSpells)) ? parseInt(wisdomSpells[(Math.min(i,wisdomSpells.length)-1)][(attrLookup(charCS,fields.Wisdom) || 0)]) : 0;
 					setAttr(charCS,[fields.PRSpellNo_table[0] + i + fields.PRSpellNo_memable[0],fields.PRSpellNo_memable[1]], noSpells);
 					setAttr(charCS,[fields.PRSpellNo_table[0] + i + fields.PRSpellNo_wisdom[0],fields.PRSpellNo_wisdom[1],'',true], specSpells);
 					levelSpells[i].spells = noSpells + specSpells + miscSpells;
@@ -4269,7 +4270,7 @@ var MagicMaster = (function() {
 				rootDB = fields.MU_SpellsDB;
 				storedSpellsAttr = storePowers ? pwList : muList;
 				listType = ['muspelll'+level,'itemspell'];
-				minLevel = spellsPerLevel.WIZARD.MU[level].findIndex(num => num > 0);
+				minLevel = spellsPerLevel.wizard.MU[level].findIndex(num => num > 0);
 				question = 'Cast at what level (normal min caster level '+minLevel+'&#41;?';
 			} else if (isPR) {
 				desc = storePowers ? 'Powers' : 'Stored Priest spells';
@@ -4277,7 +4278,7 @@ var MagicMaster = (function() {
 				rootDB = fields.PR_SpellsDB;
 				storedSpellsAttr = storePowers ? pwList : prList;
 				listType = ['prspelll'+level,'itemspell'];
-				minLevel = spellsPerLevel.PRIEST.PR[level].findIndex(num => num > 0);
+				minLevel = spellsPerLevel.priest.PR[level].findIndex(num => num > 0);
 				question = 'Cast at what level (normal min caster level '+minLevel+'&#41;?';
 			} else {
 				return;
