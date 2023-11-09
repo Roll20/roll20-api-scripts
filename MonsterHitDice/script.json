@@ -1,7 +1,7 @@
 {
   "name": "MonsterHitDice",
   "script": "MonsterHitDice.js",
-  "version": "0.3.9",
+  "version": "0.3.11",
   "description": "Automatically fills in the hit points for a characters dragged onto the table top.\r\rThe default token for the character needs to represent that creature but **should not** have the bar used for hit points linked to an attribute.  Use the settings below to configure the script for how you calculate hit points in your game.  There are several sheets for which the configurations are built in or you can use the more detailed settings.  Details about each setting are included along with it.\r\r## Commands\r\r```\r!mhd\r```\r\rThis will reroll hitpoints for all selected tokens.",
   "authors": "The Aaron",
   "roll20userid": "104025",
@@ -27,6 +27,7 @@
         "DnD 5e - Community Contributed",
         "DnD 5e - Shaped v2",
         "DnD 5e - OGL by roll20",
+        "Advanced 1st Edition",
         "Custom - (Use settings below)"
       ]
     },
@@ -40,6 +41,12 @@
       "type": "checkbox",
       "description": "Select this checkbox if the HitDice attribute has formula in the SRD embedded format '12 (3d4+5)' ",
       "value": "findSRDFormula"
+    },
+    {
+      "name": "1st Edition HD in Attribute (d8)",
+      "type": "checkbox",
+      "description": "Select this checkbox if the HitDice attribute contains a number of d8s to roll for hitdice",
+      "value": "HDis1eD8s"
     },
     {
       "name": "Separate Constitution Modifier",
@@ -74,11 +81,13 @@
   },
   "conflicts": [],
   "previousversions": [
+    "0.3.10",
     "0.3.3",
     "0.3.4",
     "0.3.5",
     "0.3.6",
     "0.3.7",
-    "0.3.8"
+    "0.3.8",
+    "0.3.9"
   ]
 }

@@ -1,0 +1,15 @@
+{
+    "name": "Anchor",
+    "version": "1.0.0",
+    "description": "Assign anchors to graphics, making it so they automatically move and rotate relative to their anchor.",
+    "authors": "Kenan Millet",
+    "roll20userid": "2614613",
+    "dependencies": [
+        "MatrixMath"
+    ],
+    "modifies": {},
+    "conflicts": [],
+    "script": "anchor.js",
+    "useroptions": [],
+    "previousversions": []
+}
