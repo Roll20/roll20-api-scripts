@@ -9180,15 +9180,15 @@ const libRPGMaster = (() => { // eslint-disable-line no-unused-vars
 			LibFunctions.characterLevel = function( charCS ) {
 //				var level = parseInt((LibFunctions.attrLookup( charCS, fields.Total_level ) || 0),10);
 //				if (!level) {
-					level = Math.max(((parseInt((LibFunctions.attrLookup( charCS, fields.Monster_hitDice ) || 0),10)
+				var level = Math.max(((parseInt((LibFunctions.attrLookup( charCS, fields.Monster_hitDice ) || 0),10)
 							+ ((parseInt((LibFunctions.attrLookup( charCS, fields.Monster_hpExtra ) || 0),10) >= 3) ? 1 : 0)) || 0),
 							((parseInt((LibFunctions.attrLookup( charCS, fields.Fighter_level ) || 0),10)
 							+ parseInt((LibFunctions.attrLookup( charCS, fields.Wizard_level ) || 0),10)
 							+ parseInt((LibFunctions.attrLookup( charCS, fields.Priest_level ) || 0),10)
 							+ parseInt((LibFunctions.attrLookup( charCS, fields.Rogue_level ) || 0),10)
 							+ parseInt((LibFunctions.attrLookup( charCS, fields.Psion_level ) || 0),10)) || 0));
-				}
-//				return level;
+//				}
+				return level;
 			}
 	
 			/*
