@@ -164,14 +164,15 @@ API_Meta.MagicMaster={offset:Number.MAX_SAFE_INTEGER,lineCount:-1};
  * v2.3.2  25/10/2023  Fixed hyphenation of reviewed weapons, items, spells & powers. Changed behavior of 
  *                     menu to memorise spells & powers so more intuitive.
  * v2.3.3  05/11/2023  Fixed issue with case mismatch on looking up SpellsPerLevel.
+ * v2.3.4  12/11/2023  Fixed issue with level at which Powers are cast.
  */
  
 var MagicMaster = (function() {
 	'use strict';
-	var version = '2.3.3',
+	var version = '2.3.4',
 		author = 'RED',
 		pending = null;
-	const lastUpdate = 1699173597;
+	const lastUpdate = 1699827880;
 		
 	/*
 	 * Define redirections for functions moved to the RPGMaster library
@@ -2137,7 +2138,7 @@ var MagicMaster = (function() {
 	 * insert a spell into an identified spellbook slot
 	 */
 	 
-	var setSpell = function( charCS, spellTables, altSpellTable, spellDB, spellName, r, c, lv, cost, msg, levelOrPerDay, castAsLvl ) {
+	var setSpell = function( charCS, spellTables, altSpellTable, spellDB, spellName, r, c, lv, cost, msg, levelOrPerDay, castAsLvl='' ) {
 		
 		var isPower = spellDB.toUpperCase().includes('POWER'),
 			isMU = spellDB.toUpperCase().includes('MU'),
@@ -4115,10 +4116,8 @@ var MagicMaster = (function() {
 			sendError('Invalid MagicMaster parameter');
 			return;
 		}
-		var level = casterLevel( charCS, 'MU' );
-		
 		var content = '&{template:'+fields.defaultTemplate+'} {{name='+curToken.get('name')+'\'s Magic User Spells menu}}'
-					+ '{{desc=[Cast MU spell](!magic --cast-spell MU|'+tokenID+'|'+level+')\n'
+					+ '{{desc=[Cast MU spell](!magic --cast-spell MU|'+tokenID+')\n'
 					+ ((apiCommands.rounds && apiCommands.rounds.exists) ? ('[Show an Area of Effect](!rounds --aoe '+tokenID+')\n') : ('<span style='+design.grey_button+'>Show an Area of Effect</span>'))
 					+ '[Short Rest for L1 MU Spells](!magic --rest '+tokenID+'|short|MU)\n'
 					+ '[Long Rest and recover MU spells](!magic --rest '+tokenID+'|long|MU)\n'
@@ -4140,10 +4139,8 @@ var MagicMaster = (function() {
 			sendError('Invalid MagicMaster parameter');
 			return;
 		}
-		var level = casterLevel( charCS, 'PR' );
-		
 		var content = '&{template:'+fields.defaultTemplate+'} {{name='+curToken.get('name')+'\'s Clerical Spells menu}}'
-					+ '{{desc=[Cast Priest spell](!magic --cast-spell PR|'+tokenID+'|'+level+')\n'
+					+ '{{desc=[Cast Priest spell](!magic --cast-spell PR|'+tokenID+')\n'
 					+ ((apiCommands.rounds && apiCommands.rounds.exists) ? ('[Show an Area of Effect](!rounds --aoe '+tokenID+')\n') : ('<span style='+design.grey_button+'>Show an Area of Effect</span>'))
 					+ '[Short Rest for L1 Priest Spells](!magic --rest '+tokenID+'|short|PR)\n'
 					+ '[Long Rest and recover Priest spells](!magic --rest '+tokenID+'|long|PR)\n'
@@ -4165,10 +4162,8 @@ var MagicMaster = (function() {
 			sendError('Invalid MagicMaster parameter');
 			return;
 		}
-		var level = characterLevel( charCS );
-		
 		var content = '&{template:'+fields.defaultTemplate+'} {{name='+curToken.get('name')+'\'s Powers menu}}'
-					+ '{{desc=[2. Use Power](!magic --cast-spell POWER|'+tokenID+'|'+level+')\n'
+					+ '{{desc=[2. Use Power](!magic --cast-spell POWER|'+tokenID+')\n'
 					+ '[3. Long Rest](!magic --rest '+tokenID+'|LONG)\n'
 					+ '[4. Memorise Powers](!magic --mem-spell POWER|'+tokenID+')\n'
 					+ '[4. View Powers](!magic --view-spell POWER|'+tokenID+')}}';
@@ -4517,7 +4512,6 @@ var MagicMaster = (function() {
 				storedLevel = attrLookup( charCS, fields.Spells_storedLevel, fields.Spells_table, args[3], args[4] );
 			if (storedLevel && storedLevel > 0) {
 				setAttr( charCS, fields.CastingLevel, storedLevel );
-				log('handleChooseSpell: casting level set to '+storedLevel);
 			}
 		}
 	
@@ -4895,7 +4889,7 @@ var MagicMaster = (function() {
 			altSpellTable;
 			
 		if (!isPower) altSpellTable = getLvlTable( charCS, (isMU ? fieldGroups.ALTWIZ : fieldGroups.ALTPRI), level );
-		spellTables = setSpell( charCS, spellTables, altSpellTable, rootDB, spellName, row, col-base, level, undefined, '', [noToMemorise,noToMemorise], castAsLvl );
+		spellTables = setSpell( charCS, spellTables, altSpellTable, rootDB, spellName, row, col-base, level, undefined, '', [noToMemorise,(isPower ? 0 : noToMemorise)], castAsLvl );
 		
 		if (isMI && isPower) {
 			setAttr( charCS, ['power-'+spellName, 'current'], row );
