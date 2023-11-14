@@ -4,11 +4,13 @@
 //
 // Version History:
 //   1.0.4: Refactoring the GMNotes so that it works a little better with different JSON Objects that might want to use the same item.
-//   1.0.5: Adding optional token size parameters to the handout gmnotes. 
+//   1.0.5: Adding optional token size parameters to the handout gmnotes. Fixed 
+//          bug that crashed the sandbox when handouts used an avatar image from 
+//          outside My Library.
 
 var ModifyTokenImage = ModifyTokenImage || (function() {
     'use strict';
-    var version = '1.0.4';
+    var version = '1.0.5';
     var isGmRestricted = true;
     var outputDebug = false;
     
@@ -132,8 +134,11 @@ var ModifyTokenImage = ModifyTokenImage || (function() {
                         if (keyval.length != 2) {
                             continue;
                         }
-                        var key = keyval[0].trim();
+                        var key = keyval[0].trim().toLowerCase();
                         var val = keyval[1].trim();
+                        if (key.length == 0 || val.length == 0) {
+                            continue;
+                        }
                         hashTable[key] = val;
                     }
                     resolve(hashTable);
@@ -149,8 +154,9 @@ var ModifyTokenImage = ModifyTokenImage || (function() {
         
         if (gmnotesObj) {
             if ("size" in gmnotesObj) {
-                height = Number(gmnotesObj["size"]);
-                width = Number(gmnotesObj["size"]);
+                let sizeVal = Number(gmnotesObj["size"])
+                height = sizeVal;
+                width  = sizeVal;
             } else {
                 if ("width" in gmnotesObj) {
                     width = Number(gmnotesObj["width"]);
@@ -162,8 +168,8 @@ var ModifyTokenImage = ModifyTokenImage || (function() {
                     
         }
         
-        let size_params = {"height": (unit_pixels * height), 
-                           "width": (unit_pixels * width) };
+        let size_params = {"height": height * unit_pixels, 
+                           "width" : width * unit_pixels };
         token.set(size_params);
     };
     
@@ -209,7 +215,6 @@ var ModifyTokenImage = ModifyTokenImage || (function() {
             case '!ModifyTokenImage':
                 while (args.length) {
                     var cmds = args.shift().match(/([^\s]+[|#]'[^']+'|[^\s]+[|#]"[^"]+"|[^\s]+)/g);
-                    
                     switch (cmds.shift()) {
                         case 'help':
                             showHelp(msg);
@@ -353,9 +358,13 @@ var ModifyTokenImage = ModifyTokenImage || (function() {
             
             gmNotes.ModifyTokenImage = current;
             setGmNotes(token, gmNotes);
-            token.set({"imgsrc": cleanImage});
-            
-            resizeToken(token, handout);
+            if (cleanImage) {
+                token.set({"imgsrc": cleanImage});
+                resizeToken(token, handout);
+            }
+            else {
+                whisperTalker(msg, handout.get("name") + " did not have a legal image. Images must come from <i>My Library</i>")
+            }
 
          });
     };
