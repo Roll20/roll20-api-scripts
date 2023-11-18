@@ -3637,6 +3637,7 @@ const libRPGMaster = (() => { // eslint-disable-line no-unused-vars
 							+'<ul>'
 							+'<li>Corrected how the casting level of wizard & priest spells is calculated, especially when used as powers.</li>'
 							+'<li>Fixed storing items in type 6 or 7 containers.</li>'
+							+'<li>Fixed long rest for magic item powers and spells used as magic item powers</li>'
 							+'<li>Fixed effects of <i>Haste</i> on Creature attacks, so now correctly double attacks and halve attack speeds.</li>'
 							+'<li>Fixed effects of <i>Haste</i> on number of off-hand weapon attacks when using two weapons to attack.</li>'
 							+'<li>Fixed effects of <i>Haste</i> on weapon speeds, especially where a non-hasted weapon gets multiple attacks per round.</li>'
