@@ -165,14 +165,20 @@ API_Meta.MagicMaster={offset:Number.MAX_SAFE_INTEGER,lineCount:-1};
  *                     menu to memorise spells & powers so more intuitive.
  * v2.3.3  05/11/2023  Fixed issue with case mismatch on looking up SpellsPerLevel.
  * v2.3.4  12/11/2023  Fixed issue with level at which Powers are cast.
+ * v3.0.0  31/10/2023  Added support for other character sheets and game systems.  Corrected how the 
+ *                     casting level of spells used as powers are calculated. Fixed storing items in 
+ *                     type 6 or 7 containers. Added query: attribute to magic items to add Roll Queries 
+ *                     to adding a new MI to a sheet to drive variable data. Moved parseData() to library.
+ *                     Fixed Long Rest for MI spells & powers. Added config option for magical weapon plus
+ *                     affecting weapon speeds, and corrected --config command documentation.
  */
  
 var MagicMaster = (function() {
 	'use strict';
-	var version = '2.3.4',
+	var version = '3.0.0',
 		author = 'RED',
 		pending = null;
-	const lastUpdate = 1699827880;
+	const lastUpdate = 1700058244;
 		
 	/*
 	 * Define redirections for functions moved to the RPGMaster library
@@ -211,6 +217,7 @@ var MagicMaster = (function() {
 	const handleCheckWeapons = (...a) => libRPGMaster.handleCheckWeapons(...a);
 	const handleCheckSaves = (...a) => libRPGMaster.handleCheckSaves(...a);
 	const parseClassDB = (...a) => libRPGMaster.parseClassDB(...a);
+	const parseData = (...a) => libRPGMaster.parseData(...a);
 	const resolveData = (...a) => libRPGMaster.resolveData(...a);
 	const sendToWho = (...m) => libRPGMaster.sendToWho(...m);
 	const sendMsgToWho = (...m) => libRPGMaster.sendMsgToWho(...m);
@@ -277,10 +284,10 @@ var MagicMaster = (function() {
 	
 	const handouts = Object.freeze({
 	MagicMaster_Help:	{name:'MagicMaster Help',
-						 version:3.02,
+						 version:3.03,
 						 avatar:'https://s3.amazonaws.com/files.d20.io/images/257656656/ckSHhNht7v3u60CRKonRTg/thumb.png?1638050703',
 						 bio:'<div style="font-weight: bold; text-align: center; border-bottom: 2px solid black;">'
-							+'<span style="font-weight: bold; font-size: 125%">MagicMaster Help v3.02</span>'
+							+'<span style="font-weight: bold; font-size: 125%">MagicMaster Help v3.03</span>'
 							+'</div>'
 							+'<div style="padding-left: 5px; padding-right: 5px; overflow: hidden;">'
 							+'<h1>MagicMaster API v'+version+'</h1>'
@@ -386,7 +393,7 @@ var MagicMaster = (function() {
 							+'--message [who|][token_id]|title|message<br>'
 							+'--display-ability [who|][token_id]|database|db_item|[dice_roll1]|[dice_roll2]|[target_id]<br>'
 							+'--tidy [token_id]|[SILENT]<br>'
-							+'--config [FANCY-MENUS/SPECIALIST-RULES/SPELL-NUM/ALL-SPELLS] | [TRUE/FALSE]<br>'
+							+'--config [FANCY-MENUS/SPECIALIST-RULES/SPELL-NUM/ALL-SPELLS/ALL-POWERS/CUSTOM-SPELLS/AUTO-HIDE/ALPHA-LISTS/GM-ROLLS] | [TRUE/FALSE]<br>'
 							+'--check-db [db-name]<br>'
 							+'--extract-db [db-name]<br>'
 							+'--handshake from | [cmd]<br>'
@@ -632,7 +639,7 @@ var MagicMaster = (function() {
 							+'<p>This command tidies up the character sheet, removing Spell and Magic Item attribute and ability objects that are no longer for items held, and for spells no longer in any spell book.  Attack ability objects will also all be removed.  All of these will be recreated as and when these items, spells or attacks are again picked up, added to spell books, or used for attacks. This simplifies and speeds up the system, removing redundant processing and memory usage.</p>'
 							+'<p><b>Note:</b> this command is automatically run whenever the DM moves the "Player Ribbon" to a new map page, for every token on that map page that represents a character sheet, and also whenever a character token is dragged onto the active Player page. This continually tidies the system while not imposing a heavy overhead on processing.</p>'
 							+'<h3>6.5 Configure API behavior</h3>'
-							+'<pre>--config [FANCY-MENUS/SPECIALIST-RULES/SPELL-NUM/ALL-SPELLS] | [TRUE/FALSE]</pre>'
+							+'<pre>--config [FANCY-MENUS/SPECIALIST-RULES/SPELL-NUM/ALL-SPELLS/ALL-POWERS/CUSTOM-SPELLS/AUTO-HIDE/ALPHA-LISTS/GM-ROLLS] | [TRUE/FALSE]</pre>'
 							+'<p>Takes two optional arguments, the first a switchable flag name, and the second TRUE or FALSE.</p>'
 							+'<p>Allows configuration of several API behaviors.  If no arguments given, displays menu for DM to select configuration.  Parameters have the following effects:</p>'
 							+'<table>'
@@ -641,6 +648,11 @@ var MagicMaster = (function() {
 							+'	<tr><th scope="row">SPECIALIST-RULES</th><td>Only Specialist Wizards specified in the PHB get an extra spell per spell level</td><td>Any non-Standard Wizard gets an extra spell per spell level</td></tr>'
 							+'	<tr><th scope="row">SPELL-NUM</th><td>Spellcaster spells per level restricted to PHB rules</td><td>Spellcaster spells per level alterable using Misc Spells button</td></tr>'
 							+'	<tr><th scope="row">ALL-SPELLS</th><td>Spellcaster spell schools are unrestricted</td><td>Spellcaster spell schools are restricted by class rules</td></tr>'
+							+'	<tr><th scope="row">ALL-POWERS</th><td>Class powers not restricted by level</td><td>Class powers <i>are</i> restricted by level as per spec</td></tr>'
+							+'	<tr><th scope="row">CUSTOM-SPELLS</th><td>No distributed custom spells/items allowed (but CS DB allowed)</td><td>All custom spells and items allowed</td></tr>'
+							+'	<tr><th scope="row">AUTO-HIDE</th><td>Items defined to be hideable will be automatically hidden when added to containers</td><td>Hideable items must be hidden manually if desired</td></tr>'
+							+'	<tr><th scope="row">ALPHA-LISTS</th><td>Long lists will automatically be split into alpha lists</td><td>Whole long lists will be displayed for selection</td></tr>'
+							+'	<tr><th scope="row">GM-ROLLS</th><td>GM is asked to roll thievish skill-based chances when using Find Traps</td><td>Player rolls skill-based chances for Find Traps</td></tr>'
 							+'</table>'
 							+'<h3>6.6 Check database completeness & integrity (GM only)</h3>'
 							+'<pre>--check-db [ db-name ]</pre>'
@@ -723,7 +735,7 @@ var MagicMaster = (function() {
 		longRest: 'After a good long rest, ^^cname^^ has regained their powers, read their spellbooks and rememorised their spells, and magic items that recharge have regained their charges.}}',
 		noLongRest: '&{template:'+fields.warningTemplate+'} {{name=^^cname^^ is Unable to Rest}}{{desc=I don\'t think the DM has declared it is time for a rest yet, perhaps due to system lag.}}{{desc1=[Try Again](!magic --rest ^^tid^^|long) once the DM says you can}}',
 		noMoreCharges: '&{template:'+fields.warningTemplate+'} {{name=^^cname^^ Has No Charges}}{{desc=^^cname^^ has used all the charges of the Power, Spell or Magic Item that they are using, and needs to rest before any charges are available again.}}',
-		miBagFull: '&{template:'+fields.warningTemplate+'} {{name=^^cname^^ MI Bag Full}}{{desc=There are no slots left in the selected container for any more items to store}}',
+		miBagFull: '&{template:'+fields.warningTemplate+'} {{name=^^c2name^^ MI Bag Full}}{{desc=There are no slots left in the selected container for any more items to store}}',
 		fixedSpell: '&{template:'+fields.warningTemplate+'} {{name=Fixed MI Spell Slot}}{{desc=The chosen slot in your spell-storing Magic Item is fixed to be the named spell. You may only refresh it with the same spell}}',
 		notSpellCaster: '&{template:'+fields.warningTemplate+'} {{name=^^cname^^ is Not a Spell Caster}}{{desc=^^cname^^ may aspire to be a wonderful Wizard or powerful Priest, but has yet to fulfil those desires.  Until then, refrain from pretending - you will be found out!}}',
 		notYetSpellCaster: '&{template:'+fields.warningTemplate+'} {{name=^^cname^^ can\'t cast spells yet}}{{desc=^^cname^^ is eager to reach a level of experience at which they can cast spells: keep adventuring and you\'ll get there soon!}}',
@@ -1036,7 +1048,7 @@ var MagicMaster = (function() {
 			if (!state.MagicMaster)
 				{state.MagicMaster = {};}
 			if (_.isUndefined(state.MagicMaster.spellRules))
-				{state.MagicMaster.spellRules = {specMU:true,strictNum:false,allowAll:false,allowAnyPower:false}}
+				{state.MagicMaster.spellRules = {specMU:true,strictNum:false,allowAll:false,allowAnyPower:false,denyCustom:false}}
 			if (_.isUndefined(state.MagicMaster.fancy))
 				{state.MagicMaster.fancy = true;}
 			if (_.isUndefined(state.MagicMaster.alphaLists))
@@ -1668,7 +1680,7 @@ var MagicMaster = (function() {
 	/*
 	 * Parse a data string for attribute settings
 	 */
-	 
+/*	 
 	var parseData = function( attributes, reSpecs, def=true ) {
 		
 		var parsedData = {},
@@ -1857,8 +1869,8 @@ var MagicMaster = (function() {
 		
 		if (!level || level <= 0) {
 			level = casterLevel( charCS, ((isPower || isMI) ? 'POWER' : (isMU ? 'MU' : 'PR')) );
-			mu_level = mu_level || 0;
-			pr_level = pr_level || 0;
+			mu_level = mu_level || ((isPower || isMI) ? level : 0);
+			pr_level = pr_level || ((isPower || isMI) ? level : 0);
 		} else{
 			mu_level = pr_level = level;
 		}
@@ -1896,6 +1908,34 @@ var MagicMaster = (function() {
 			specSpells = 0,
 			levelSpec = 0,
 			levelSpells = [];
+			
+		var countSpells = function( levelSpells ) {
+			levelSpells[1].spells = 0;
+			let r = 0,
+				spellName = '',
+				hasDash = false,
+				spellTables = [];
+			do {
+				let c = levelSpells[1].base;
+				for (let w = 1; (w <= fields.SpellsCols); w++) {
+					if (!spellTables[w]) {
+						spellTables[w] = getTable( charCS, fieldGroups.SPELLS, c );
+					}
+					spellName = spellTables[w].tableLookup( fields.Spells_name, r, false );
+					if (_.isUndefined(spellName)) {
+						break;
+					} else {
+						hasDash = hasDash || spellName == '-';
+						levelSpells[1].spells++;
+						c++;
+					}
+				}
+				r++;
+			} while(!_.isUndefined(spellName));
+			if (!hasDash) levelSpells[1].spells++;
+			return levelSpells;
+		};
+
 			
 		if (charCS) {
 			var casterSpecs = caster( charCS, spellbook ),
@@ -1935,40 +1975,15 @@ var MagicMaster = (function() {
 				break;
 				
 			case 'POWER':
-				levelSpells = spellLevels.pw;
-				levelSpells[1].spells = 0;
-				let r = 0,
-					spellName = '',
-					hasDash = false,
-					spellTables = [];
-				do {
-					let c = levelSpells[1].base;
-					for (let w = 1; (w <= fields.SpellsCols); w++) {
-						if (!spellTables[w]) {
-							spellTables[w] = getTable( charCS, fieldGroups.SPELLS, c );
-						}
-						spellName = spellTables[w].tableLookup( fields.Spells_name, r, false );
-						if (_.isUndefined(spellName)) {
-							break;
-						} else {
-							hasDash = hasDash || spellName == '-';
-							levelSpells[1].spells++;
-							c++;
-						}
-					}
-					r++;
-				} while(!_.isUndefined(spellName));
-				if (!hasDash) levelSpells[1].spells++;
+				levelSpells = countSpells(spellLevels.pw);
 				break;
 				
 			case 'MI':
-				levelSpells = spellLevels.mi;
-				levelSpells[1].spells = (attrLookup(charCS,[fields.MISpellNo_table[0] + fields.MIspellLevel + fields.MISpellNo_memable[0],fields.MISpellNo_memable[1]])||0);
+				levelSpells = countSpells(spellLevels.mi);
 				break;
 				
 			case 'MIPOWER':
-				levelSpells = spellLevels.pm;
-				levelSpells[1].spells = (attrLookup(charCS,[fields.MISpellNo_table[0] + fields.MIpowerLevel + fields.MISpellNo_memable[0],fields.MISpellNo_memable[1]])||0);
+				levelSpells = countSpells(spellLevels.pm);
 				break;
 				
 			default:
@@ -2144,20 +2159,25 @@ var MagicMaster = (function() {
 			isMU = spellDB.toUpperCase().includes('MU'),
 			newSpellObj, altValues, altSpellRow;
 
-		if (!isPower) {
+		if (fields.GameVersion === 'AD&D1e') {
+			altSpellRow = altSpellTable.tableFind( (isPower ? fields.AltPowers_name : fields.AltSpells_name), (spellTables.tableLookup( fields.Spells_name, r ) || '-') );
+		} else {
 			altSpellRow = (parseInt(r) * fields.SpellsCols) + parseInt(c);
-			newSpellObj = abilityLookup( spellDB, spellName, null, true );
+		}
+		if (!isPower) {
+			newSpellObj = getAbility( spellDB, spellName, charCS, true );
 		} else {
 			newSpellObj = findPower( charCS, spellName );
 			spellDB = newSpellObj.dB;
 			spellName = newSpellObj.obj ? newSpellObj.obj[1].name : spellName;
+			if (newSpellObj.obj) getAbility( spellDB, spellName, charCS, true );
 		}
 		
 		if (!newSpellObj.obj) {
 			sendError('Unable to find the spell or power '+spellName+' in any '+spellDB+' database');
 			
 			// If spell not found, just blank the row
-			if (!isPower) altSpellTable.addTableRow( altSpellRow );
+			if (!isPower || fields.GameVersion === 'AD&D1e') altSpellTable.addTableRow( altSpellRow );
 			return spellTables.addTableRow( r );
 		}
 		
@@ -2178,12 +2198,19 @@ var MagicMaster = (function() {
 		values[fields.Spells_equip[0]][fields.Spells_equip[1]] = (equip==='prime'?'0':(equip==='offhand'?'1':(equip==='both'?'2':equip)));
 		values[fields.Spells_spellLevel[0]][fields.Spells_spellLevel[1]] = level;
 		
+		if (!isPower || fields.GameVersion === 'AD&D1e') altValues = altSpellTable.copyValues();
 		if (isPower) {
 			values[fields.Spells_castValue[0]][fields.Spells_castValue[1]] = (levelOrPerDay[0] || fields.Spells_castValue[2]);
 			values[fields.Spells_castMax[0]][fields.Spells_castMax[1]] = levelOrPerDay[0];
 			values[fields.Spells_storedLevel[0]][fields.Spells_storedLevel[1]] = castAsLvl || levelOrPerDay[1] || casterLevel( charCS, 'POWER' );
+			if (fields.GameVersion === 'AD&D1e') {
+				altValues[fields.AltPowers_name[0]][fields.AltPowers_name[1]] = spellName;
+				altValues[fields.AltPowers_castValue[0]][fields.AltPowers_castValue[1]] = (levelOrPerDay[0] || fields.Spells_castValue[2]);
+				altValues[fields.AltPowers_castMax[0]][fields.AltPowers_castMax[1]] = 1;
+				altValues[fields.AltPowers_effect[0]][fields.AltPowers_effect[1]] = '%{'+charCS.get('name')+'|'+(spellName.hyphened())+'}';
+				altSpellTable.addTableRow( altSpellRow, altValues );
+			}
 		} else {
-			altValues = altSpellTable.copyValues();
 			values[fields.Spells_miSpellSet[0]][fields.Spells_miSpellSet[1]] = (levelOrPerDay[1] || fields.Spells_miSpellSet[2]);
 			values[fields.Spells_storedLevel[0]][fields.Spells_storedLevel[1]] = levelOrPerDay[0];
 			values[fields.Spells_castValue[0]][fields.Spells_castValue[1]] = (levelOrPerDay[0]==0 ? 0 : 1);
@@ -2207,7 +2234,7 @@ var MagicMaster = (function() {
 	var changeMIspells = function( charCS, MIname, listType, action, spellList, spellValues = '' ) {
 		
 		var	isAdd = action.toUpperCase() == 'ADD',
-			c, valueItem, spellHyphen,
+			c, valueItem, spellHyphen, altGroup,
 			spellDB, levelSpells,
 			spellName, spellQty,
 			toDoList = spellList,
@@ -2233,19 +2260,22 @@ var MagicMaster = (function() {
 		switch (listType.toUpperCase()) {
 		case 'MU':
 			spellDB = fields.MU_SpellsDB;
+			altGroup = fieldGroups.ALTWIZ;
 			break;
 		case 'PR':
 			spellDB = fields.PR_SpellsDB;
+			altGroup = fieldGroups.ALTPRI;
 			break;
 		case 'POWER':
 			spellDB = fields.PowersDB;
 			level = fields.MIpowerLevel;
 			indexPrefix = fields.MIpowerPrefix[0]+MIname+'-';
 			levelSpells = shapeSpellbook( charCS, 'MIPOWER' );
+			altGroup = fields.GameVersion === 'AD&D1e' ? fieldGroups.ALTPWR : undefined;
 			break;
 		}
 		for (let lv=1; lv < levelSpells.length; lv++) {
-			if (listType !== 'POWER') altSpellTable = getLvlTable( charCS, fieldGroups.ALTWIZ, (level+lv-1) );
+			if (altGroup) altSpellTable = getLvlTable( charCS, altGroup, (level+lv-1) );
 			let r = 0;
 			do {
 				let c = levelSpells[lv].base;
@@ -2418,8 +2448,9 @@ var MagicMaster = (function() {
 					PRspellValues = attrLookup( oldCS, PRlistField ),
 					powerValues = attrLookup( oldCS, PWlistField ),
 					saveLists = (MUspellList && MUspellList.length) || (PRspellList && PRspellList.length) || (powerList && MUspellList.length),
+					queries = (MIobj.obj[1].body.match(reClassSpecs.query.re) || ['',''])[1].split('$$'),
 					miSpellValues;
-					
+
 				if (!notFrom && toCS && saveLists) {
 					setAttr( toCS, [fields.ItemMUspellsList[0]+MIname, fields.ItemMUspellsList[1]], MUspellList );
 					setAttr( toCS, [fields.ItemPRspellsList[0]+MIname, fields.ItemPRspellsList[1]], PRspellList );
@@ -2449,6 +2480,14 @@ var MagicMaster = (function() {
 					}
 					if (del && !notFrom && !fromCS.get('name').startsWith('MI-DB')) powerObj.remove();
 				}
+				if (!notFrom && !update) {
+					_.each( queries, q => {
+						let varObj;
+						let field = [fields.ItemVar[0]+MIname+'-'+q.split('=')[0],fields.ItemVar[1]];
+						if (toCS) setAttr( toCS, field, (attrLookup( fromCS, field ) || '') ); else if (!_.isUndefined(varObj = attrLookup( fromCS, [field[0],null] ))) varObj.remove();
+					});
+				};
+					
 			} catch (e) {
 				log('MagicMaster moveMIspells: '+e.name+': '+e.message+' while processing item '+itemName);
 				sendDebug('MagicMaster moveMIspells: '+e.name+': '+e.message+' while processing item '+itemName);
@@ -2531,7 +2570,7 @@ var MagicMaster = (function() {
 				setAttr( bagCS, fields.ItemContainerSize, Math.max( fields.MIRowsStandard, bagData )); 
 				bagData = miObj.data(/}}[^{]*?data\s*?=\s*?(\[[^{]+?bag\:[^{]+?\]){{/im);
 				_.each( bagData, item => {
-					let itemData = parseData( item[0], reSpellSpecs, false );
+					let itemData = parseData( item[0], reSpellSpecs, false, charCS, miName );
 					if ((itemData.spell || '').toUpperCase() != 'MI') return;
 					let itemObj = abilityLookup( fields.MagicItemDB, (itemData.trueName || itemData.name), charCS );
 					if (itemObj.obj) {
@@ -2889,7 +2928,7 @@ var MagicMaster = (function() {
 			if (miObj.obj) {
 				let miData = miObj.data();
 				if (miData) {
-					miData = parseData( miData[0][0], reSpellSpecs );
+					miData = parseData( miData[0][0], reSpellSpecs, true, charCS, miName );
 					learn = miData.learn == 1;
 				}
 			};
@@ -3179,7 +3218,7 @@ var MagicMaster = (function() {
 			sendError('Item '+item+' not found. Unable to store spells in this item.');
 			return;
 		} else {
-			let itemData = parseData((itemObj.data()[0][0] || {}),reSpellSpecs);
+			let itemData = parseData((itemObj.data()[0][0] || {}),reSpellSpecs,true,charCS,item);
 			let storeSpells = (itemData.store || 'store').toLowerCase();
 			isAdd = isAdd || storeSpells === 'add';
 			isChange = isChange || storeSpells === 'change';
@@ -3612,6 +3651,7 @@ var MagicMaster = (function() {
 				selected = !!selectedMI && selectedMI.length > 0,
 				remove = (selectedMI.toLowerCase() == 'remove'),
 				bagSlot = !!MIrowref && MIrowref >= 0,
+				queries = '',
 				content = '&{template:'+fields.defaultTemplate+'}{{name=Edit Magic Item Bag}}';
 
 			if (!menuType) {
@@ -3633,7 +3673,7 @@ var MagicMaster = (function() {
 				storeCmd  = (editMartial ? BT.STORE_MARTIAL_MI : (editAll ? BT.STORE_ALLITEMS_MI : BT.STORE_MI)),
 				reviewCmd = (editMartial ? BT.REVIEW_MARTIAL_MI : (editAll ? BT.REVIEW_ALLITEMS_MI : BT.REVIEW_MI)),
 				removeCmd = (editMartial ? BT.REMOVE_MARTIAL_MI : (editAll ? BT.REMOVE_ALLITEMS_MI : BT.REMOVE_MI));
-
+				
 			if (selected && !remove) {
 				magicItem = getAbility( fields.MagicItemDB, selectedMI, charCS );
 				if (!magicItem.obj) {
@@ -3722,9 +3762,16 @@ var MagicMaster = (function() {
 				menuType = (shortMenu ? 'long' : 'short');
 				content += '{{desc2=**3.';
 				if (!remove) {
+					qty = String(qty)+'+1';
+					if (selected) {
+						qty = (magicItem.obj[1].body.match(reInitMIqty) || ['',String(qty)+'+1'])[1];
+						queries = (magicItem.obj[1].body.match(reClassSpecs.query.re) || ['',''])[1].replace(/\)/g,'\\rpar;').replace(/\|(.+?)%%/g,'|$1,$1/').replace(/=/g,'=&#63;{').replace(/\$\$/g,'}|');
+						if (queries.length) queries += '}';
+					}
+					
 					content += ((selected && bagSlot) ? '[' : ('<span style='+design.grey_button+'>'))
 							+  'Store '+itemName
-							+  ((selected && bagSlot && !remove) ? ('](!magic --button '+storeCmd+'|'+tokenID+'|'+MIrowref+'|'+selectedMI+'|?{Quantity?|'+qty+'+1})') : '</span>')
+							+  ((selected && bagSlot && !remove) ? ('](!magic --button '+storeCmd+'|'+tokenID+'|'+MIrowref+'|'+selectedMI+'|?{Quantity?|'+qty+'}||'+queries+')') : '</span>')
 							+  ' in your MI Bag**'+(!!removeMI ? (', overwriting **'+removeMI) : '')+'**\n\n'
 							+  'or ';
 				}
@@ -3832,6 +3879,7 @@ var MagicMaster = (function() {
 				showTypes = parseInt(attrLookup( charCS, fields.ItemContainerHide )),
 				spellStoring = false,
 				looksLike = false,
+				queries = '',
 				initQty, containerType, slotObj, itemObj;
 			
 			// build the character's visible MI Bag
@@ -3896,13 +3944,15 @@ var MagicMaster = (function() {
 				itemObj = getAbility( fields.MagicItemDB, MItoStore, charCS, false, true, MItoStore );
 				if (itemObj.obj) {
 					initQty = (itemObj.obj[1].body.match(reInitMIqty) || ['',initQty])[1];
+					queries = (itemObj.obj[1].body.match(reClassSpecs.query.re) || ['',''])[1].replace(/\)/g,'\\rpar;').replace(/\|(.+?)%%/g,'|$1,$1/').replace(/=/g,'=&#63;{').replace(/\$\$/g,'}|');
+					if (queries.length) queries += '}';
 				}
-			}
+			};
 			
 			var reviewItem = ((cmd !== 'GM-MItoStore' && chosenSlot) ? slotName : itemName),
 				reviewObj  = ((cmd !== 'GM-MItoStore' && chosenSlot) ? slotObj : itemObj);
 			
-			content += '{{desc3=**3. '+selectableBoth+(chosenBoth ? ('Store '+itemName+'](!magic --button GM-StoreMI|'+tokenID+'|'+MIrowref+'|'+MItoStore+'|&#91;[?{Quantity?|'+initQty+'}]&#93;)') : ('Store'+(chosenSlot ? ('d '+slotActualName) : itemName)+'</span>'))+' **'
+			content += '{{desc3=**3. '+selectableBoth+(chosenBoth ? ('Store '+itemName+'](!magic --button GM-StoreMI|'+tokenID+'|'+MIrowref+'|'+MItoStore+'|&#91;[?{Quantity?|'+initQty+'}]&#93;||'+queries+')') : ('Store'+(chosenSlot ? ('d '+slotActualName) : itemName)+'</span>'))+' **'
 					+  ' or '+hideableBoth+(hideAvail ? ('Hide '+slotName+' as '+itemName+'](!magic --button GM-HideMI|'+tokenID+'|'+MIrowref+'|'+MItoStore+')') : ((hiddenMI ? ('Hidden as '+slotName) : ('Hide Item'+(chosenMI?(' as '+itemName):'')))+'</span>'))+'<br>'
 					+  ' or '+selectableEither+'Review'+(chosenEither ? (' '+reviewItem+'](!magic --button GM-ReviewMI|'+tokenID+'|'+MIrowref+'|'+MItoStore+'&#13;'+(reviewObj.api ? '' : '/w gm ')+'&#37;{'+reviewObj.dB+'|'+(reviewObj.obj[1].name.hyphened())+'})') : ' the item</span>')+'<br><br>}}'
 					+  '{{desc4=1. Or select MI from above ^\n'
@@ -4058,7 +4108,7 @@ var MagicMaster = (function() {
 
 			if (putRow < 0) {
 				if (i >= bagSize) {
-					sendParsedMsg( tokenID, messages.miBagFull, senderId );
+					sendParsedMsg( tokenID, messages.miBagFull, senderId, '', putID );
 					return;
 				} else {
 					putRow = i;
@@ -4385,6 +4435,7 @@ var MagicMaster = (function() {
 			content += '<tr><td>Player Targeted Attks</td>'+configButtons(!state.attackMaster.weapRules.dmTarget, 'Not Allowed', '!attk --config dm-target|true', 'Allowed by All', '!attk --config dm-target|false')+'</tr>'
 					+  '<tr><td>Allowed weapons</td>'+configButtons(state.attackMaster.weapRules.allowAll, 'Restrict Usage', '!attk --config all-weaps|false', 'All Can Use Any', '!attk --config all-weaps|true')+'</tr>'
 					+  (state.attackMaster.weapRules.allowAll ? '' : ('<tr><td>Restrict weapons</td>'+configButtons(!state.attackMaster.weapRules.classBan, 'Strict Denial', '!attk --config weap-class|true', 'Apply Penalty', '!attk --config weap-class|false')+'</tr>'))
+					+  '<tr><td>Weapon Speed</td>'+configButtons(!state.attackMaster.weapRules.initPlus, 'Plus affects speed', '!attk --config weap-plus|true', 'Magic Plus Ignored', '!attk --config weap-plus|false')+'</tr>'
 					+  '<tr><td>Allowed Armour</td>'+configButtons(state.attackMaster.weapRules.allowArmour, 'Strict Denial', '!attk --config all-armour|false', 'All Can Use Any', '!attk --config all-armour|true')+'</tr>'
 					+  '<tr><td>Non-Prof Penalty</td>'+configButtons(!state.attackMaster.weapRules.prof, 'Class Penalty', '!attk --config prof|true', 'Character Sheet', '!attk --config prof|false')+'</tr>'
 					+  '<tr><td>Ranged Mastery</td>'+configButtons(state.attackMaster.weapRules.masterRange, 'Not Allowed', '!attk --config master-range|false', 'Mastery Allowed', '!attk --config master-range|true')+'</tr>';
@@ -4393,6 +4444,7 @@ var MagicMaster = (function() {
 				+  '<tr><td>Spells per Level</td>'+configButtons(!state.MagicMaster.spellRules.strictNum, 'Strict by Rules', '!magic --config spell-num|true', 'Allow to Set Misc', '!magic --config spell-num|false')+'</tr>'
 				+  '<tr><td>Spell Schools</td>'+configButtons(state.MagicMaster.spellRules.allowAll, 'Strict by Rules', '!magic --config all-spells|false', 'All Can Use Any', '!magic --config all-spells|true')+'</tr>'
 				+  '<tr><td>Powers by Level</td>'+configButtons(state.MagicMaster.spellRules.allowAnyPower, 'Strict by Rules', '!magic --config all-powers|false', 'All Can Use Any', '!magic --config all-powers|true')+'</tr>'
+				+  '<tr><td>Custom Objects</td>'+configButtons(!state.MagicMaster.spellRules.denyCustom, 'External Only', '!magic --config custom-spells|true', 'All Items Allowed', '!magic --config custom-spells|false')+'</tr>'
 				+  '<tr><td>Auto-Hide Items</td>'+configButtons(state.MagicMaster.autoHide, 'GM Hide Manually', '!magic --config auto-hide|false', 'Auto-Hide if Possible', '!magic --config auto-hide|true')+'</tr>'
 				+  '<tr><td>Alphabetic Lists</td>'+configButtons(!state.MagicMaster.alphaLists, 'Alphabetic Lists', '!magic --config alpha-lists|true', 'Not Alphabetic', '!magic --config alpha-lists|false')+'</tr>'
 				+  '<tr><td>Thievish Chance</td>'+configButtons(!state.MagicMaster.gmRolls, 'GM will roll', '!magic --config gm-rolls|true', 'Player rolls', '!magic --config gm-rolls|false')+'</tr>'
@@ -4888,7 +4940,12 @@ var MagicMaster = (function() {
 			base = spellLevels[(isPower ? (isMI ? 'pm' : 'pw') : (isMI ? 'mi' : (isMU ? 'mu' : 'pr')))][level].base,
 			altSpellTable;
 			
-		if (!isPower) altSpellTable = getLvlTable( charCS, (isMU ? fieldGroups.ALTWIZ : fieldGroups.ALTPRI), level );
+		if (!isPower) {
+			altSpellTable = getLvlTable( charCS, (isMU ? fieldGroups.ALTWIZ : fieldGroups.ALTPRI), level );
+		} else if (fields.GameVersion === 'AD&D1e') {
+			altSpellTable = getLvlTable( charCS, fieldGroups.ALTPWR );
+		};
+			
 		spellTables = setSpell( charCS, spellTables, altSpellTable, rootDB, spellName, row, col-base, level, undefined, '', [noToMemorise,(isPower ? 0 : noToMemorise)], castAsLvl );
 		
 		if (isMI && isPower) {
@@ -5121,7 +5178,7 @@ var MagicMaster = (function() {
 			levelSpells = shapeSpellbook( charCS, restType );
 			level = 1;
 			levelLimit = isShort ? 2 : levelSpells.length;
-
+			
 			while (level < levelLimit && levelSpells[level].spells > 0) {
 				r = 0;
 				while (levelSpells[level].spells > 0) {
@@ -5432,7 +5489,7 @@ var MagicMaster = (function() {
 			powerType = powerName.substring(0,3),
 			powerHyphen = powerName.hyphened(),
 			itemHyphen = itemName.hyphened();
-			
+						
 		if (_.some(dbList,dB=>dB[0]===powerType.toUpperCase())) {
 			powerName = powerName.slice(powerType.length);
 			if (!castLevel) castLevel = casterLevel( charCS, powerType.substring(0,2) );
@@ -5499,10 +5556,10 @@ var MagicMaster = (function() {
 			setAttr( charCS, fields.SpellToMem, power );
 			setAttr( charCS, fields.Casting_name, itemName );
 			setAttr( charCS, fields.CastingLevel, castLevel );
+			setAttr( charCS, fields.MU_CastingLevel, castLevel );
+			setAttr( charCS, fields.PR_CastingLevel, castLevel );
 			
 			args.shift();
-			
-
 			content = '&{template:'+fields.defaultTemplate+'}{{name='+itemDesc+'\'s '+powerDesc+' power}}'
 					+ '{{desc='+tokenName+' is about to use **'+itemDesc+'\'s** '+powerDesc+' power.  Is this correct?}}'
 					+ '{{desc1=[Use '+powerDesc+'](!magic --button '+ BT.MI_POWER_USED +'|'+ args.join('|')
@@ -5601,7 +5658,7 @@ var MagicMaster = (function() {
 			spellCol = args[7],
 			item = attrLookup( charCS, fields.ItemChosen ) || '-',
 			itemObj = abilityLookup( fields.MagicItemDB, item, charCS ),
-			itemData = parseData((itemObj.data()[0][0] || {}),reSpellSpecs),
+			itemData = parseData((itemObj.data()[0][0] || {}),reSpellSpecs,true,charCS,item),
 			storeSpells = (itemData.store || 'store').toLowerCase(),
 			csv = csVer(charCS),
 			msgField = (csv >= 2.1 ? fields.Spells_msg : fields.Spells_macro);
@@ -6208,7 +6265,8 @@ var MagicMaster = (function() {
 			MIqty = args[4],
 			silent = (args[5] || '').toUpperCase() === 'SILENT',
 			cmd = (args[0].toUpperCase().includes('MARTIAL') ? BT.EDIT_MARTIAL : (args[0].toUpperCase().includes('ALLITEMS') ? BT.EDIT_ALLITEMS : BT.EDIT_MI)),
-			charCS = getCharacter( tokenID );
+			charCS = getCharacter( tokenID ),
+			queries = args.slice(6);
 			
 		if (!charCS) {
 			sendDebug('handleStoreMI: invalid tokenID passed');
@@ -6283,11 +6341,13 @@ var MagicMaster = (function() {
 			removeMIability( charCS, slotName, MItables );
 		}
 		
-		if (!(containerNo % 2)) {
+		if (isNaN(containerNo) || (!(containerNo % 2) && (containerNo < 6))) {
 			setAttr( charCS, fields.ItemContainerType, (isNaN(containerNo) ? 1 : containerNo+1) );
 		}
 
 		await moveMIspells( senderId, null, charCS, MIchosen );
+		
+		_.each( queries, q => setAttr( charCS, [fields.ItemVar[0]+MIchosen+'-'+q.split('=')[0],fields.ItemVar[1]], (q.split('=') || ['',''])[1] ) );
 
 		sendAPI( (fields.attackMaster + ' --checkac ' + tokenID + '|Silent||' + senderId), senderId );
 
@@ -7618,6 +7678,7 @@ var MagicMaster = (function() {
 		isSpell = reCastMIspellCmd.test(ability.obj[1].body);
 		isPower = reCastMIpowerCmd.test(ability.obj[1].body);
 		if (isSpell || isPower) {
+			setCaster( ['MI',tokenID,level,item], '', senderId );
 			args.unshift((isSpell && isPower) ? 'BOTH' : (isPower ? 'POWERS' : 'SPELLS'));
 			if (!cmd) {
 				args[3] = (isSpell ? 'MU' : 'POWER') + (isSpell && isPower ? '-ALL' : '');
@@ -7752,9 +7813,11 @@ var MagicMaster = (function() {
 		
 		MIBagSecurity = parseInt(attrLookup( containerCS, fields.ItemContainerType )) || 0;
 		
+		let intelligence = Math.max( (parseInt(attrLookup( containerCS, fields.Intelligence )) || 0), (parseInt(attrLookup( containerCS, fields.Monster_int )) || 0)),
+			hp = parseInt(attrLookup( containerCS, fields.HP )) || 0;
+			
 		if (MIBagSecurity === 6) {
 			doPickOrPut( msg, senderId );
-
 		} else if (MIBagSecurity === 4 || MIBagSecurity === 5) {
 			var trapVersion = (attrLookup( containerCS, ['trap-version', 'current'] ) || 0),
 				trapName = 'trap-'+trapVersion,
@@ -7775,56 +7838,9 @@ var MagicMaster = (function() {
 				log('doSearchForMIs: Not found trapMacro');
 				MIBagSecurity = 1;
 			}
-		}
-
-		let intelligence = Math.max( (parseInt(attrLookup( containerCS, fields.Intelligence )) || 0), (parseInt(attrLookup( containerCS, fields.Monster_int )) || 0)),
-			hp = parseInt(attrLookup( containerCS, fields.HP )) || 0;
-		if (MIBagSecurity < 4) {
-			if (hp <= 0 || intelligence <= 0 || !search) {
-				doPickOrPut( msg, senderId );
-			} else {
-				// target is a creature that might detect any snooping.
-				// A pick pockets roll is necessary
-				
-				content = '&{template:'+fields.defaultTemplate+'}{{name='+charCS.get('name')+' is Picking Pockets}}'
-						+ '{{desc=Are you trying to '+(search ? 'pick ' : 'sneak something into ')+containerCS.get('name')+'\'s pocket?\n'
-						+ '[Yes](!magic --pickpockets '+tokenID+'|'+pickID+'|'+putID+'|&#91;&#91;?{Roll vs Pick Pockets|1d100}&#93;&#93;)'
-						+ ' or [No](!magic --message '+tokenID+'|Pick Pocket|OK, not making the attempt)}}';
-
-				sendResponse( charCS, content, senderId, flags.feedbackName, flags.feedbackImg, tokenID );
-			}
-		};
-/*		switch (MIBagSecurity) {
-		
-		case 0:
-		
-			// target is an inanimate object or insensitive creature without any magic items
-			
-			if (!search) {
-				doPickOrPut( msg, senderId );
-			} else {
-				var treasure = (attrLookup( pickCS, fields.Money_treasure ) || '');
-				content = messages.header + '{{desc=' + pickCS.get('name') + ' ' + messages.fruitlessSearch + treasure;
-				sendParsedMsg( tokenID, content, senderId );
-			};
-			break;
-			
-		case 1:
-		case 6:
-		
-			// target is an inanimate object or insensitive creature with magic items
-		
+		} else if (!search || MIBagSecurity < 2 || hp <= 0 || intelligence <= 0) {
 			doPickOrPut( msg, senderId );
-			break;
-		
-		case 2:
-		case 3:
-		
-			if (!search) {
-				doPickOrPut( msg, senderId );
-				break;
-			};	
-		
+		} else {
 			// target is a creature that might detect any snooping.
 			// A pick pockets roll is necessary
 			
@@ -7834,40 +7850,7 @@ var MagicMaster = (function() {
 					+ ' or [No](!magic --message '+tokenID+'|Pick Pocket|OK, not making the attempt)}}';
 
 			sendResponse( charCS, content, senderId, flags.feedbackName, flags.feedbackImg, tokenID );
-
-			break;
-			
-		case 4:
-		case 5:
-		
-			// target is trapped, and should have a trap ability macro
-			
-			var trapVersion = (attrLookup( containerCS, ['trap-version', 'current'] ) || 0),
-				trapName = 'trap-'+trapVersion,
-				trapMacro = findObjs({ _type : 'ability', characterid : containerCS.id, name : trapName }, {caseInsensitive: true});
-			if (!trapMacro || trapMacro.length === 0) {
-				trapName = 'Check-for-MIBag-'+trapVersion;
-				trapMacro = findObjs({ _type : 'ability', characterid : containerCS.id, name : trapName }, {caseInsensitive: true});
-			}
-			if (!trapMacro || trapMacro.length === 0) {
-				trapName = 'trap';
-				trapMacro = findObjs({ _type : 'ability', characterid : containerCS.id, name : trapName }, {caseInsensitive: true});
-			}
-			if (!trapMacro || trapMacro.length === 0) {
-				sendDebug('doSearchForMIs: Not found trapMacro');
-				log('doSearchForMIs: Not found trapMacro');
-				doPickOrPut( msg, senderId );
-				break;
-			}
-			sendAPImacro( senderId, tokenID, containerID, trapName );
-			sendWait(senderId,0);
-			break;
-			
-		default:
-			sendDebug('doSearchForMIs: unknown MIBagSecurity type');
-			sendError('Unknown MIBag security type');
 		};
-*/
 		return;
 	}
 	
@@ -7936,7 +7919,7 @@ var MagicMaster = (function() {
 			return;
 		};
 		
-		var pick_pockets = (attrLookup( charCS, [fields.Pick_Pockets[0]+'t', fields.Pick_Pockets[1]] ) || 5),
+		var pick_pockets = (attrLookup( charCS, [fields.Pick_Pockets[0]+fields.Thief_postfix[0], fields.Pick_Pockets[1]] ) || 5),
 			pp_target = (Math.min(Math.ceil(Math.max(pick_pockets,0)),96)),
 			content = '&{template:'+fields.defaultTemplate+'}{{name='+charCS.get('name')+' is Picking Pockets '+(search ? 'for items' : 'to place items')+'}}'
 					+ '{{Target=[['+pp_target+']]}}'
@@ -7961,12 +7944,12 @@ var MagicMaster = (function() {
 	*/
 
 	var doPickOrPut = function( args, senderId ) {
-
+		
 		if (!args) return;
 		
 		if (args.length < 3 || args.length > 4) {
 			sendDebug('doPickOrPut: Invalid number of arguments');
-			sendResponseError(senderId,'Invalid MagicMaster command syntax');
+			sendError(senderId,'Invalid MagicMaster command syntax');
 			return;
 		};
 
@@ -7980,7 +7963,7 @@ var MagicMaster = (function() {
 			
 		if (!tokenID || !putID || !pickID || !charCS || !pickCS) {
 			sendDebug('doPickOrPut: One or more IDs are invalid');
-			sendResponseError(senderId,'One or more invalid tokens specified');
+			sendError(senderId,'One or more invalid tokens specified');
 			return;
 		};
 		
@@ -8054,6 +8037,12 @@ var MagicMaster = (function() {
 		case 'all-powers':
 			state.MagicMaster.spellRules.allowAnyPower = value;
 			msg = value ? 'Class Powers not restricted by level' : 'Class Powers restricted by level';
+			break;
+			
+		case 'custom-spells':
+			state.MagicMaster.spellRules.denyCustom = value;
+			msg = value ? 'Custom Spells only from user databases' : 'Distributed custom spells allowed';
+			updateDBindex(true);
 			break;
 			
 		case 'auto-hide':
@@ -9305,6 +9294,7 @@ var MagicMaster = (function() {
 						break;
 					case 'extract-db':
 					case 'update-db':
+						sendWait( senderId, 0 );
 						if (isGM) doUpdateDB(arg,senderId,false);
 						break;
 					case 'check-db':
