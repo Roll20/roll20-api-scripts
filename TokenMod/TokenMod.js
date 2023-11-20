@@ -10,7 +10,7 @@ const TokenMod = (() => { // eslint-disable-line no-unused-vars
     const scriptName = "TokenMod";
     const version = '0.8.78';
     API_Meta.TokenMod.version = version;
-    const lastUpdate = 1696633259;
+    const lastUpdate = 1700509750;
     const schemaVersion = 0.4;
 
     const fields = {
@@ -179,7 +179,7 @@ const TokenMod = (() => { // eslint-disable-line no-unused-vars
     const getCleanImgsrc = (imgsrc) => {
       let parts = (imgsrc||'').match(/(.*\/images\/.*)(thumb|med|original|max)([^?]*)(\?[^?]+)?$/);
       if(parts) {
-        let leader = parts[1].replace(/^https:\/\/files.d20.io\//,'https://s3.amazonaws.com/files.d20.io/');
+        let leader = parts[1].replace(/^https:\/\/s3.amazonaws.com\/files.d20.io\//,'https://files.d20.io/');
           return `${leader}thumb${parts[3]}${parts[4] ? parts[4] : `?${Math.round(Math.random()*9999999)}`}`;
         }
     };
