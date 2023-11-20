@@ -1,6 +1,6 @@
 const SmartAoE = (() => {
     const scriptName = "SmartAoE";
-    const version = '0.28';
+    const version = '0.29';
     const schemaVersion = '0.1';
     
     var cardParameters = {};
@@ -398,8 +398,7 @@ const SmartAoE = (() => {
             `padding:3px;margin:0 10px 0 -32px">${content}</div>`;
         sendChatNoarchive(playerid, output);
     }
-    const handleError = (playerid, errorMsg) => sendChatBox(playerid, `<h4>Error</h4><p>${errorMsg}</p>`, "FFBABA")
-    
+
     let saveList = {
         "5estr": {
           "name": "STR Save",
@@ -861,7 +860,7 @@ const SmartAoE = (() => {
         //log(state[scriptName]);
     }
     
-    const makeAoELink = function(controlTokName, controlTokID, aoeType, coneWidth, aoeFloat, instant, forceIntersection, aoeColor, aoeOutlineColor, gridColor, radius, wallWidth, originType, originPt, minGridArea, minTokArea, originTokID, pathIDs, pageID, fxType, saveFormula, saveName, ignoreAttr, ignoreVal, DC, noSave, damageBar, autoApply, damageFormula1, damageFormula2, damageBase1, damageBase2, damageType1, damageType2, rollDamage1, rollDamage2, damageSaveRule, resistanceRule, vulnerableRule, immunityRule, resistAttrs, vulnerableAttrs, immunityAttrs, conditionPass, conditionFail, zeroHPmarker, removeAtZero, hideNames,  spawnSound, moveSound, triggerSound, deleteSound, cardParameters, whisperString, whisperAll, whisperResults) {
+    const makeAoELink = function(controlTokName, controlTokID, aoeType, coneWidth, aoeFloat, instant, forceIntersection, aoeColor, aoeOutlineColor, gridColor, radius, wallWidth, originType, originPt, minGridArea, minTokArea, originTokID, pathIDs, pageID, fxType, saveFormula, saveName, ignoreAttr, ignoreVal, DC, noSave, damageBar, autoApply, damageFormula1, damageFormula2, damageBase1, damageBase2, damageType1, damageType2, rollDamage1, rollDamage2, damageSaveRule, resistanceRule, vulnerableRule, immunityRule, resistAttrs, vulnerableAttrs, immunityAttrs, conditionPass, conditionFail, zeroHPmarker, removeAtZero, hideNames,  spawnSound, moveSound, triggerSound, deleteSound, cardParameters, whisperString, whisperAll, whisperResults, outlineOnly, aoeLayer, casterCondition, casterConditionOnFail, affectsCaster) {
     //const makeAoELink = function(aoeType, aoeColor, radius, originType, originPt, minGridArea, minTokArea, originTokID, controlTokID, pathIDs, pageID, fxType, saveFormula, saveName, DC) {
         //log(originTokID + ',' + controlTokID + ',' + pathIDs + ',' + pageID);
         let pathArr = [];
@@ -926,7 +925,12 @@ const SmartAoE = (() => {
             cardParameters: cardParameters,
             whisperString: whisperString,
             whisperAll: whisperAll,
-            whisperResults: whisperResults
+            whisperResults: whisperResults,
+            outlineOnly: outlineOnly,
+            aoeLayer: aoeLayer,
+            casterCondition: casterCondition,
+            casterConditionOnFail: casterConditionOnFail,
+            affectsCaster: affectsCaster
         };
         
         state[scriptName].links.push(link);
@@ -3604,33 +3608,34 @@ const SmartAoE = (() => {
                     wallParams = getWallParams(originPtPx, controlPtPx, aoeLinks.links[a].radius, aoeLinks.links[a].wallWidth)
                 }
                 
-                //This function returns the coords of the grid area paths (the individual squares)
-                pathLocations = getPathLocations(aoeLinks.links[a], oTok, cTok, originPtPx, controlPtPx, offsetX, offsetY, pageGridIncrement, pageScaleNumber, wallParams);
-                //log('pathLocations follows');
-                //log(pathLocations);
-                
-                //define the bounding box of affected grid squares
-                let ptUL = new pt(Math.min(...pathLocations.xVals)-35*pageGridIncrement, Math.min(...pathLocations.yVals)-35*pageGridIncrement);
-                let ptUR = new pt(Math.max(...pathLocations.xVals)+35*pageGridIncrement, Math.min(...pathLocations.yVals)-35*pageGridIncrement);
-                let ptLR = new pt(Math.max(...pathLocations.xVals)+35*pageGridIncrement, Math.max(...pathLocations.yVals)+35*pageGridIncrement);
-                let ptLL = new pt(Math.min(...pathLocations.xVals)-35*pageGridIncrement, Math.max(...pathLocations.yVals)+35*pageGridIncrement);
-                aoeLinks.links[a].boundingBox = [ptUL, ptUR, ptLR, ptLL];
-                //log(aoeLinks.links[a].boundingBox);
-                
-                let path;
-                let pathstring;
-                
-                for (let p=0; p<pathLocations.xVals.length; p++) {
-                    pathstring = buildSquarePath(35*pageGridIncrement);
-                    path = await new Promise(function(resolve){
-                        //let thePath = createPath(pathstring, pageID, 'gmlayer', '#ff000050', '#000000', 2, cHeight, cWidth, pathLocations.xVals[p], pathLocations.yVals[p]);
-                        //let thePath = createPath(pathstring, pageID, 'objects', '#ff000050', '#000000', 2, cHeight, cWidth, pathLocations.xVals[p], pathLocations.yVals[p]);
-                        let thePath = createPath(pathstring, pageID, 'objects', aoeLinks.links[a].aoeColor, aoeLinks.links[a].gridColor, 2, 70*pageGridIncrement, 70*pageGridIncrement, pathLocations.xVals[p], pathLocations.yVals[p]);
-                        resolve(thePath);
-                    });
-                    newPaths.push(path.get('_id'));
+                if (aoeLinks.links[a].outlineOnly===false) {
+                    //This function returns the coords of the grid area paths (the individual squares)
+                    pathLocations = getPathLocations(aoeLinks.links[a], oTok, cTok, originPtPx, controlPtPx, offsetX, offsetY, pageGridIncrement, pageScaleNumber, wallParams);
+                    //log('pathLocations follows');
+                    //log(pathLocations);
+                    
+                    //define the bounding box of affected grid squares
+                    let ptUL = new pt(Math.min(...pathLocations.xVals)-35*pageGridIncrement, Math.min(...pathLocations.yVals)-35*pageGridIncrement);
+                    let ptUR = new pt(Math.max(...pathLocations.xVals)+35*pageGridIncrement, Math.min(...pathLocations.yVals)-35*pageGridIncrement);
+                    let ptLR = new pt(Math.max(...pathLocations.xVals)+35*pageGridIncrement, Math.max(...pathLocations.yVals)+35*pageGridIncrement);
+                    let ptLL = new pt(Math.min(...pathLocations.xVals)-35*pageGridIncrement, Math.max(...pathLocations.yVals)+35*pageGridIncrement);
+                    aoeLinks.links[a].boundingBox = [ptUL, ptUR, ptLR, ptLL];
+                    //log(aoeLinks.links[a].boundingBox);
+                    
+                    let path;
+                    let pathstring;
+                    
+                    for (let p=0; p<pathLocations.xVals.length; p++) {
+                        pathstring = buildSquarePath(35*pageGridIncrement);
+                        path = await new Promise(function(resolve){
+                            //let thePath = createPath(pathstring, pageID, 'gmlayer', '#ff000050', '#000000', 2, cHeight, cWidth, pathLocations.xVals[p], pathLocations.yVals[p]);
+                            //let thePath = createPath(pathstring, pageID, 'objects', '#ff000050', '#000000', 2, cHeight, cWidth, pathLocations.xVals[p], pathLocations.yVals[p]);
+                            let thePath = createPath(pathstring, pageID, aoeLinks.links[a].aoeLayer, aoeLinks.links[a].aoeColor, aoeLinks.links[a].gridColor, 2, 70*pageGridIncrement, 70*pageGridIncrement, pathLocations.xVals[p], pathLocations.yVals[p]);
+                            resolve(thePath);
+                        });
+                        newPaths.push(path.get('_id'));
+                    }
                 }
-                
                 
                 //create a path with the true outline of the AoE
                 if (aoeLinks.links[a].aoeType==='5econe') {
@@ -3648,7 +3653,7 @@ const SmartAoE = (() => {
                     pathstring = build5eCone(rad, z, coneWidth, coneDirection)
                     path = await new Promise(function(resolve){
                         //let thePath = createPath(pathstring, pageID, 'gmlayer', 'transparent', '#ff0000', 3, rad*2, rad*2, originPtPx.x-z, originPtPx.y-z);
-                        let thePath = createPath(pathstring, pageID, 'objects', 'transparent', aoeLinks.links[a].aoeOutlineColor, 3, rad*2, rad*2, originPtPx.x-z, originPtPx.y-z);
+                        let thePath = createPath(pathstring, pageID, aoeLinks.links[a].aoeLayer, 'transparent', aoeLinks.links[a].aoeOutlineColor, 3, rad*2, rad*2, originPtPx.x-z, originPtPx.y-z);
                         resolve(thePath);
                     });
                     newPaths.push(path.get('_id'));
@@ -3665,7 +3670,7 @@ const SmartAoE = (() => {
                     pathstring = buildCirclePath(rad, aoeLinks.links[a].coneWidth, coneDirection);
                     path = await new Promise(function(resolve){
                         //let thePath = createPath(pathstring, pageID, 'gmlayer', 'transparent', '#ff0000', 3, rad*2, rad*2, originPtPx.x-z, originPtPx.y-z);
-                        let thePath = createPath(pathstring, pageID, 'objects', 'transparent', aoeLinks.links[a].aoeOutlineColor, 3, rad*2, rad*2, originPtPx.x, originPtPx.y);
+                        let thePath = createPath(pathstring, pageID, aoeLinks.links[a].aoeLayer, 'transparent', aoeLinks.links[a].aoeOutlineColor, 3, rad*2, rad*2, originPtPx.x, originPtPx.y);
                         resolve(thePath);
                     });
                     newPaths.push(path.get('_id'));
@@ -3680,7 +3685,7 @@ const SmartAoE = (() => {
                     pathstring = buildSquarePath(rad)
                     path = await new Promise(function(resolve){
                         //let thePath = createPath(pathstring, pageID, 'gmlayer', 'transparent', '#ff0000', 3, rad*2, rad*2, originPtPx.x-z, originPtPx.y-z);
-                        let thePath = createPath(pathstring, pageID, 'objects', 'transparent', aoeLinks.links[a].aoeOutlineColor, 3, rad*2, rad*2, originPtPx.x, originPtPx.y);
+                        let thePath = createPath(pathstring, pageID, aoeLinks.links[a].aoeLayer, 'transparent', aoeLinks.links[a].aoeOutlineColor, 3, rad*2, rad*2, originPtPx.x, originPtPx.y);
                         resolve(thePath);
                     });
                     newPaths.push(path.get('_id'));
@@ -3696,7 +3701,7 @@ const SmartAoE = (() => {
                     pathstring = buildCirclePath(rad, 360, 0);
                     path = await new Promise(function(resolve){
                         //let thePath = createPath(pathstring, pageID, 'gmlayer', 'transparent', '#ff0000', 3, rad*2, rad*2, originPtPx.x-z, originPtPx.y-z);
-                        let thePath = createPath(pathstring, pageID, 'objects', 'transparent', aoeLinks.links[a].aoeOutlineColor, 3, rad*2, rad*2, originPtPx.x, originPtPx.y);
+                        let thePath = createPath(pathstring, pageID, aoeLinks.links[a].aoeLayer, 'transparent', aoeLinks.links[a].aoeOutlineColor, 3, rad*2, rad*2, originPtPx.x, originPtPx.y);
                         resolve(thePath);
                     });
                     newPaths.push(path.get('_id'));
@@ -3705,12 +3710,12 @@ const SmartAoE = (() => {
                     //log('~~~~~~~~~~~~~~~~~~~~ WALL PATH~~~~~~~~~~~~~~~~~~~~');
                     pathstring = buildWallPath(wallParams);
                     path = await new Promise(function(resolve){
-                        let thePath = createPath(pathstring, pageID, 'objects', 'transparent', aoeLinks.links[a].aoeOutlineColor, 3, wallParams.heightBB, wallParams.widthBB, wallParams.pCenter.x, wallParams.pCenter.y);
+                        let thePath = createPath(pathstring, pageID, aoeLinks.links[a].aoeLayer, 'transparent', aoeLinks.links[a].aoeOutlineColor, 3, wallParams.heightBB, wallParams.widthBB, wallParams.pCenter.x, wallParams.pCenter.y);
                         resolve(thePath);
                     });
                     newPaths.push(path.get('_id'));
                 }
-                
+               
                 //Update the State object with new paths, originIndex, and bounding box array
                 updateAoELink(aoeLinks.indices[a], newPaths, aoeLinks.links[a].originIndex, aoeLinks.links[a].boundingBox);
             }
@@ -4097,7 +4102,7 @@ const SmartAoE = (() => {
                     sendChat("", `${o.formula}${o.roll2x ? `<br>${o.formula}` : ""}`, resolve);
                 })))
                 .then(async(messages) => processFinalMessages(messages, damageRolls, tokenRolls, aoeLink))
-                .catch(sendErrorMessage);
+                .catch(err => sendErrorMessage(err));
         } else {
             let output = buildTitle(aoeLink.cardParameters);
             
@@ -4225,16 +4230,23 @@ const SmartAoE = (() => {
         if (!markerString) {
             return;
         }
+        
         let tok = getObj('graphic', tokID);
         let currentMarkers = tok.get('statusmarkers');
+        let tempMarkers = markerString.split(',').map((s) => s.trim());
         
-        //ensure no spaces between entries in the comma-delimited string
-        markerString = markerString.split(',').map((s) => s.trim()).join(',');
+        //we don't want to duplicate statusmarkers, so check to see if they already exist
+        tempMarkers.forEach((m, idx) =>{
+            if (currentMarkers.includes(m)) {
+                tempMarkers.splice(idx, 1)
+            }
+        });	
+        let newMarkers = tempMarkers.join(',');
         
         //grab the previous token settings before setting new ones
         let prevTok = JSON.parse(JSON.stringify(tok));
         //set new tok settings
-        tok.set("statusmarkers", currentMarkers + ',' + markerString);
+        tok.set("statusmarkers", currentMarkers + ',' + newMarkers);
         //trigger tokenChange event for other api scripts
         notifyObservers('tokenChange',tok, prevTok);
     }
@@ -4300,6 +4312,7 @@ const SmartAoE = (() => {
         let autoApplyMsg = '';
         let name;   //override for ApplyDamage function
         let whisperString = '';
+        let atLeastOneFailedSave = false;
         
         if (aoeLink.whisperAll) {
             whisperString = aoeLink.whisperString || '';
@@ -4415,6 +4428,7 @@ const SmartAoE = (() => {
                 thisMarker = aoeLink.conditionPass;
             } else {
                 success = false;
+                atLeastOneFailedSave = true;
                 thisDamage.push(tempDam1);
                 if (damageRolls.length > 1) {
                     thisDamage.push(tempDam2);
@@ -4446,6 +4460,12 @@ const SmartAoE = (() => {
             
             return buildSaveRow(o.pic, o.id, o.layer, name, success, o.styled_1, o.styled_2, o.roll2x, false, thisDamage, aoeLink.autoApply, aoeLink.damageBar, thisMarker, RVI_string, aoeLink.zeroHPmarker, aoeLink.removeAtZero, aoeLink.cardParameters, whisperString, aoeLink.whisperResults);
         });
+        
+        if (aoeLink.casterCondition && !aoeLink.casterConditionOnFail) {
+            addStatusMarkers(aoeLink.originTokID, aoeLink.casterCondition);
+        } else if (aoeLink.casterCondition && aoeLink.casterConditionOnFail && atLeastOneFailedSave) {
+            addStatusMarkers(aoeLink.originTokID, aoeLink.casterCondition);
+        }
         
         let publicSaveRolls = saveRolls.filter(r => {return r.layer!=='gmlayer' && !aoeLink.whisperResults})
         		                        .map(e => {return e.output})
@@ -4481,13 +4501,11 @@ const SmartAoE = (() => {
             sendChat(scriptName, autoApplyMsg);
         }
     }
-    
-    const throwError = error => handleError(msg.playerid, error);
-                    
-    const sendErrorMessage = err => {
-        const errorMessage = "Something went wrong with the roll. The command you tried was:<br>" +
-            `${msg.content}<br>The error message generated by Roll20 is:<br>${err}`;
-        throwError(errorMessage);
+
+    const sendErrorMessage = function (err) {
+        const errorMessage = "Something went wrong when processing rolls.<br>" +
+            `The error message generated by Roll20 is:<br>${err}`;
+        sendChat('SmartAoE', errorMessage);
     };
     
     async function smartAoE_handleInput (msg) {
@@ -4525,6 +4543,8 @@ const SmartAoE = (() => {
         let isDrawing = false;
         let ignoreAttr = '';
         let ignoreVal = '';
+        let outlineOnly = false;
+        let aoeLayer = 'objects';
         //let filter = {              //optional filters for which tokens will be ignored
         //    type: "",               //types include "char" and "tok"
         //    attr: "",               //key to filter on. e.g. "npc_type" attribute for a character sheet, or "bar3" for a token filter
@@ -4588,6 +4608,9 @@ const SmartAoE = (() => {
         let turnValue = 0;
         let turnFormula = 0;
         let linkTurnToToken = true;
+        let casterCondition = '';
+        let casterConditionOnFail = false;
+        let affectsCaster = false;
         
         try {
             //-------------------------------------------------------------------------------
@@ -4711,8 +4734,8 @@ const SmartAoE = (() => {
                 let damageArr = args[4].split('/').map(e=>parseInt(e));
                 let marker = args[5].replace(/%%/g,'::').replace('n/a','') || '';         //not all commands will include status marker(s)
                 let zeroHPmarker = args[6].replace(/%%/g,'::').replace('n/a','') || ''    //not all commands will include seroHPmarker(s)
-                //log('parsed zeroHPmarker')
-                //log(zeroHPmarker)
+                //log('parsed marker')
+                //log(marker)
                 let removeAtZero = args[7].includes('true') ? true : false;
                 let gmWhisper = args[8].includes('true') ? true : false;
                 let whisperString = args[9];
@@ -4943,10 +4966,17 @@ const SmartAoE = (() => {
                         });
                         
                         //Next, omit origin token and any tokens that don't have at least one corner in the AoE bounding box (or at least one corner of AoE bounding box is within the token bounding box)
-                        thisValidToks = thisValidToks.filter(obj => {
-                            return obj.tok.get("_id") !== aoeLinks.links[a].originTokID &&
-                                rectanglesOverlap(obj.corners[0], obj.corners[2], aoeLinks.links[a].boundingBox[0], aoeLinks.links[a].boundingBox[2])
-                        });
+                        if (aoeLinks.links[a].affectsCaster) {
+                            thisValidToks = thisValidToks.filter(obj => {
+                                return rectanglesOverlap(obj.corners[0], obj.corners[2], aoeLinks.links[a].boundingBox[0], aoeLinks.links[a].boundingBox[2])
+                            });
+                        } else {
+                            thisValidToks = thisValidToks.filter(obj => {
+                                return obj.tok.get("_id") !== aoeLinks.links[a].originTokID &&
+                                    rectanglesOverlap(obj.corners[0], obj.corners[2], aoeLinks.links[a].boundingBox[0], aoeLinks.links[a].boundingBox[2])
+                            });
+                        }
+                        
                         
                         //sort the linked paths by distance to originPt
                         let tempOriginPt = aoeLinks.links[a].originPts[aoeLinks.links[a].originIndex];
@@ -5029,7 +5059,7 @@ const SmartAoE = (() => {
                                 
                             })))
                             .then(async(messages) => processMessagesMaster(messages, damageRolls, tokenRolls, aoeLinks.links[a]))
-                            .catch(sendErrorMessage);
+                            .catch(err => sendErrorMessage(err));
                     
                         //finally, check for instantaneous AoE and set flag for deletion
                         if (aoeLinks.links[a].instant) {
@@ -5490,6 +5520,40 @@ const SmartAoE = (() => {
                         case "tooltip":
                             tooltip = param;
                             break;
+                        case "outlineonly":
+                            if (_.contains(['true','yes', '1'], param.toLowerCase())) {
+                                outlineOnly = true;
+                            } else {
+                                outlineOnly = false;
+                            }
+                            break;
+                        case "aoelayer":
+                            //send token to object, gm, or map layer
+                             if ( param.match(/obj/i) || param.match(/tok/i) ) {
+                                aoeLayer = 'objects';
+                            } else if ( param.match(/gm/i) ) {
+                                aoeLayer = 'gmlayer';
+                            } else if ( param.match(/map/i) ) {
+                                aoeLayer = 'map';
+                            } else {
+                                retVal.push('Invalid layer requested. Valid layers are \"object(s)\", \"token\", \"tok\", \"gm\",\"map\"');
+                            }
+                            break;
+                        case "castercondition":
+                            //ensure no spaces between commas (required for the statusmarkers property of graphic object)
+                            let c = param.split(',').map((s) => s.trim());
+                            casterCondition = c[0];
+                            if (c.length > 1){
+                                casterConditionOnFail = param.match(/onfail/i) ? true : false; 
+                            }
+                            break;
+                        case "affectscaster":
+                            if (_.contains(['true','yes', '1'], param.toLowerCase())) {
+                                affectsCaster = true;
+                            } else {
+                                affectsCaster = false;
+                            }
+                            break;
                         default:
                             retVal.push('Unexpected argument identifier (' + option + ').');
                             break;    
@@ -5719,8 +5783,13 @@ const SmartAoE = (() => {
                 if (controlTokName.toLowerCase() === 'self') {
                     controlTok = getObj('graphic', oTok.get("_id"));
                     
+                    //Possibly add a value to the turn tracker
+                    if (turnName !== '') {
+                        modifyTurnTracker('add', turnName, turnValue, turnFormula, oTok.get("_id"), pageID, linkTurnToToken);
+                    }
+                        
                     let pathstring = buildSquarePath(35*pageGridIncrement);
-                    let path = createPath(pathstring, pageID, 'objects', aoeColor, gridColor, 2, 70*pageGridIncrement, 70*pageGridIncrement, controlTok.get("left"), controlTok.get("top"));
+                    let path = createPath(pathstring, pageID, aoeLayer, aoeColor, gridColor, 2, 70*pageGridIncrement, 70*pageGridIncrement, controlTok.get("left"), controlTok.get("top"));
                     
                     if (path) {
                         if (controlTok.get('width') > 70*pageGridIncrement) {
@@ -5735,7 +5804,7 @@ const SmartAoE = (() => {
                         //create a link between the source and control tokens (stored in state object)
                         let oPt = new pt(oTok.get('left'), oTok.get('top'))
                         
-                        let newLink = makeAoELink(controlTokName, controlTok.get("_id"), aoeType, coneWidth, aoeFloat, instant, forceIntersection, aoeColor, aoeOutlineColor, gridColor, radius, wallWidth, originType, oPt, minGridArea, minTokArea, oTok.get('_id'), path.get('_id'), controlTok.get('_pageid'), fxType, saveFormula, saveName, ignoreAttr, ignoreVal, DC, noSave, damageBar, autoApply, damageFormula1, damageFormula2, damageBase1, damageBase2, damageType1, damageType2, rollDamage1, rollDamage2, damageSaveRule, resistanceRule, vulnerableRule, immunityRule, resistAttrs, vulnerableAttrs, immunityAttrs, conditionPass, conditionFail, zeroHPmarker, removeAtZero, hideNames, spawnSound, moveSound, triggerSound, deleteSound, cardParameters, whisperString, whisperAll, whisperResults);
+                        let newLink = makeAoELink(controlTokName, controlTok.get("_id"), aoeType, coneWidth, aoeFloat, instant, forceIntersection, aoeColor, aoeOutlineColor, gridColor, radius, wallWidth, originType, oPt, minGridArea, minTokArea, oTok.get('_id'), path.get('_id'), controlTok.get('_pageid'), fxType, saveFormula, saveName, ignoreAttr, ignoreVal, DC, noSave, damageBar, autoApply, damageFormula1, damageFormula2, damageBase1, damageBase2, damageType1, damageType2, rollDamage1, rollDamage2, damageSaveRule, resistanceRule, vulnerableRule, immunityRule, resistAttrs, vulnerableAttrs, immunityAttrs, conditionPass, conditionFail, zeroHPmarker, removeAtZero, hideNames, spawnSound, moveSound, triggerSound, deleteSound, cardParameters, whisperString, whisperAll, whisperResults, outlineOnly, aoeLayer, casterCondition, casterConditionOnFail, affectsCaster);
                         
                         //Immediately trigger a "change:graphic" event on the origin/controlTok to generate the AoE
                         smartAoE_handleTokenChange (controlTok,controlTok)
@@ -5772,7 +5841,7 @@ const SmartAoE = (() => {
                         }
                         
                         let pathstring = buildSquarePath(35*pageGridIncrement);
-                        let path = createPath(pathstring, pageID, 'objects', aoeColor, gridColor, 2, 70*pageGridIncrement, 70*pageGridIncrement, controlToks[0].get("left"), controlToks[0].get("top"));
+                        let path = createPath(pathstring, pageID, aoeLayer, aoeColor, gridColor, 2, 70*pageGridIncrement, 70*pageGridIncrement, controlToks[0].get("left"), controlToks[0].get("top"));
                         
                         if (path) {
                             if (controlToks[0].get('width') > 70*pageGridIncrement) {
@@ -5790,17 +5859,21 @@ const SmartAoE = (() => {
                                 //create a link between the source and control tokens (stored in state object).
                                 //in this case, the origin token is now the 2nd "controlTok" spawned
                                 let oPt = new pt(controlToks[1].get('left'), controlToks[1].get('top'))
-                                let newLink = makeAoELink(controlTokName, controlToks[0].get("_id"), aoeType, coneWidth, aoeFloat, instant, forceIntersection, aoeColor, aoeOutlineColor, gridColor, radius, wallWidth, originType, oPt, minGridArea, minTokArea, controlToks[1].get('_id'), path.get('_id'), controlToks[0].get('_pageid'), fxType, saveFormula, saveName, ignoreAttr, ignoreVal, DC, noSave, damageBar, autoApply, damageFormula1, damageFormula2, damageBase1, damageBase2, damageType1, damageType2, rollDamage1, rollDamage2, damageSaveRule, resistanceRule, vulnerableRule, immunityRule, resistAttrs, vulnerableAttrs, immunityAttrs, conditionPass, conditionFail, zeroHPmarker, removeAtZero, hideNames,  spawnSound, moveSound, triggerSound, deleteSound, cardParameters, whisperString, whisperAll, whisperResults);
+                                let newLink = makeAoELink(controlTokName, controlToks[0].get("_id"), aoeType, coneWidth, aoeFloat, instant, forceIntersection, aoeColor, aoeOutlineColor, gridColor, radius, wallWidth, originType, oPt, minGridArea, minTokArea, controlToks[1].get('_id'), path.get('_id'), controlToks[0].get('_pageid'), fxType, saveFormula, saveName, ignoreAttr, ignoreVal, DC, noSave, damageBar, autoApply, damageFormula1, damageFormula2, damageBase1, damageBase2, damageType1, damageType2, rollDamage1, rollDamage2, damageSaveRule, resistanceRule, vulnerableRule, immunityRule, resistAttrs, vulnerableAttrs, immunityAttrs, conditionPass, conditionFail, zeroHPmarker, removeAtZero, hideNames,  spawnSound, moveSound, triggerSound, deleteSound, cardParameters, whisperString, whisperAll, whisperResults, outlineOnly, aoeLayer, casterCondition, casterConditionOnFail, affectsCaster);
                             } else {
                                 //create a link between the source and control tokens (stored in state object)
                                 let oPt = new pt(oTok.get('left'), oTok.get('top'))
-                                let newLink = makeAoELink(controlTokName, controlToks[0].get("_id"), aoeType, coneWidth, aoeFloat, instant, forceIntersection, aoeColor, aoeOutlineColor, gridColor, radius, wallWidth, originType, oPt, minGridArea, minTokArea, oTok.get('_id'), path.get('_id'), controlToks[0].get('_pageid'), fxType, saveFormula, saveName, ignoreAttr, ignoreVal, DC, noSave, damageBar, autoApply, damageFormula1, damageFormula2, damageBase1, damageBase2, damageType1, damageType2, rollDamage1, rollDamage2, damageSaveRule, resistanceRule, vulnerableRule, immunityRule, resistAttrs, vulnerableAttrs, immunityAttrs, conditionPass, conditionFail, zeroHPmarker, removeAtZero, hideNames,  spawnSound, moveSound, triggerSound, deleteSound, cardParameters, whisperString, whisperAll, whisperResults);
+                                let newLink = makeAoELink(controlTokName, controlToks[0].get("_id"), aoeType, coneWidth, aoeFloat, instant, forceIntersection, aoeColor, aoeOutlineColor, gridColor, radius, wallWidth, originType, oPt, minGridArea, minTokArea, oTok.get('_id'), path.get('_id'), controlToks[0].get('_pageid'), fxType, saveFormula, saveName, ignoreAttr, ignoreVal, DC, noSave, damageBar, autoApply, damageFormula1, damageFormula2, damageBase1, damageBase2, damageType1, damageType2, rollDamage1, rollDamage2, damageSaveRule, resistanceRule, vulnerableRule, immunityRule, resistAttrs, vulnerableAttrs, immunityAttrs, conditionPass, conditionFail, zeroHPmarker, removeAtZero, hideNames,  spawnSound, moveSound, triggerSound, deleteSound, cardParameters, whisperString, whisperAll, whisperResults, outlineOnly, aoeLayer, casterCondition, casterConditionOnFail, affectsCaster);
                             }
                         } else {
                             sendChat(scriptName, `${whisperString} Unknown error. createObj failed. AoE path not created.`);
                             return;
                         }
                     });
+                }
+                
+                if (casterCondition && !casterConditionOnFail) {
+                    addStatusMarkers(oTok.get('_id'), casterCondition);
                 }
                 
                 //Posiibly play sound fx when the control token is spawned
