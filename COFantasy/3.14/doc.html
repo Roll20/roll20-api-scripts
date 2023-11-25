@@ -131,7 +131,7 @@ tr {line-height: 25px;}
           </div>
         </div>
         <div class="col-md-9 col-sm-8 content">
-          <h1>Documentation pour la version 3.13 de COFantasy</h1>
+          <h1>Documentation pour la version 3.14 de COFantasy</h1>
           <h2 class="text-primary" id="comment_utiliser_script">1. Comment utiliser Le script</h2>
           <div class="decalage">
             <h3 class="text-info" id="token_personnages">1.1 Tokens et personnages</h3>
@@ -271,8 +271,8 @@ tr {line-height: 25px;}
                 Pour contrôler ce qui est affiché dans cette liste, vous pouvez principalement utiliser la liste des attaques du personnage et surtout la partie <code>script</code> de la fiche.</p>
                 <h5> Les attaques affichées </h5>
                 <p>Il est possible de ne pas afficher une attaque en décochant la case sous le dé dans les options d'attaque. Les attaques sont affichées dans l'ordre des labels d'attaques. les attaques avec des conditions impossibles (du genre limite par jour épuisée, etc.) ne sont pas affichées.</p>
-                <p>À cela se rajoute éventuellement l'attaque avec l'arme en main. À côté de cette attaque, le script propose un bouton pour rengainer l'arme ou en dégainer une autre (parmis les armes de la fiche cochées). On peut modifier cette liste des armes à dégainer en utilisant des prédicats <code>actionDegainer<i>n</i></code>, de valeur le label de l'arme à afficher en position <i>n</i> dans la liste (seulement pour les premières armes, il n'est pas possible de ne spécifier que la 2<sup>nde</sup> arme ou la 1<sup>ère</sup> et le 3<sup>ème</sup>). On peut ainsi faire afficher 2 armes à dégainer en même temps en séparant les labels d'un <code>-</code> (par exemple pour faire dégainer l'arme 1 en main droite et l'arme 4 en main gauche, en première position dans la liste, on écrira <code>actionDegainer1:1-4</code>). À noter que si aucune arme n'est en main, et qu'aucune attaque naturelle n'est cochée, le script va tout de même afficher une des attaques naturelles non cochées à la place de l'arme en main. Cela permet d'avoir une attaque que l'on n'affiche que quand on n'a pas d'arme en main.</p>
-                <p>Notez qu'il est possible d'avoir une arme par défaut en main, en ajoutant un prédicat <code>armeParDefaut</code>, de valeur le label de l'attaque correspondante. C'est parfois bien pratique pour ne pas avoir à dégainer les armes de chacun des orques en embuscade, par exemple.</p>
+                <p>À cela se rajoute éventuellement l'attaque avec l'arme en main. À côté de cette attaque, le script propose un bouton pour rengainer l'arme ou en dégainer une autre (parmis les armes de la fiche cochées). Si le personnage a un prédicat <code>combatADeuxArmes</code>, le script propose un bouton pour l'arme en main principale et un bouton pour l'arme en main gauche. On peut modifier cette liste des armes à dégainer en utilisant des prédicats <code>actionDegainer<i>n</i></code>, de valeur le label de l'arme à afficher en position <i>n</i> dans la liste (seulement pour les premières armes, il n'est pas possible de ne spécifier que la 2<sup>nde</sup> arme ou la 1<sup>ère</sup> et le 3<sup>ème</sup>). On peut ainsi faire afficher 2 armes à dégainer en même temps en séparant les labels d'un <code>-</code> (par exemple pour faire dégainer l'arme 1 en main droite et l'arme 4 en main gauche, en première position dans la liste, on écrira <code>actionDegainer1:1-4</code>). À noter que si aucune arme n'est en main, et qu'aucune attaque naturelle n'est cochée, le script va tout de même afficher une des attaques naturelles non cochées à la place de l'arme en main. Cela permet d'avoir une attaque que l'on n'affiche que quand on n'a pas d'arme en main.</p>
+                <p>Notez qu'il est possible d'avoir une arme par défaut en main, en ajoutant un prédicat <code>armeParDefaut</code>, de valeur le label de l'attaque correspondante. C'est parfois bien pratique pour ne pas avoir à dégainer les armes de chacun des orques en embuscade, par exemple. À noter que si un PNJ n'a qu'une seule arme cochée, celle-ci sera automatiquement dégainée, sans qu'il soit besoin du prédicat <code>armeParDefaut</code>.</p>
                 <h5>Choisir les actions à afficher</h5>
                 <p>Pour changer les attaques affichées par défaut, rajouter des actions à la liste d'actions du tour, ou utiliser de nouvelles listes, il faut aller dans l'onglet <code>Script</code> de la fiche de personnage.</p>
                 <p><img class="img-fluid" src="images/liste_actions_magicien.jpg"></p>
@@ -538,7 +538,7 @@ tr {line-height: 25px;}
               <div class="decalage">
                 <p>Pour certaines capacités, (commme <strong>Plus vite que son ombre</strong> ou <strong>Désarmer</strong>), il peut être utile de savoir quelle arme est en main. Pour cela, le script peut utiliser deux méthodes&nbsp;:
                 <ul>
-                  <li><code>!cof-degainer <i>L</i></code> où <i>L</i> est le label d'une des attaques sur la fiche de personnage : cela fait rengainer l'arme en main et dégainer l'arme correspondant à cette attaque. Si le label ne correspond à aucune attaque (ou qu'on ne donne pas de label), l'action fait rengainer l'arme en main. On peut donner en argument 2 labels d'armes, pour faire dégainer à la fois une arme dans la main droite (le premier label) et une arme dans la main gauche. <code>!cof-degainer <i>l</i> gauche</code> permet de dégainer uniquement une arme dans la main gauche. À noter que si une arme est notée comme arme gauche dans l'attaque, alors elle est toujours portée en main gauche. L'ordre de rengainer fait rengainer les deux armes si le personnage porte une arme en main gauche.</li>
+                  <li><code>!cof-degainer <i>L</i></code> où <i>L</i> est le label d'une des attaques sur la fiche de personnage : cela fait rengainer l'arme en main et dégainer l'arme correspondant à cette attaque. Si le label ne correspond à aucune attaque (ou qu'on ne donne pas de label), l'action fait rengainer l'arme en main. On peut donner en argument 2 labels d'armes, pour faire dégainer à la fois une arme dans la main dominante (le premier label) et une arme dans l'autre main. <code>!cof-degainer <i>l</i> gauche</code> permet de dégainer (ou rengainer) uniquement une arme dans l'autre main. À noter que si une arme est notée comme arme gauche dans l'attaque, alors elle est toujours portée par défaut en main faible. On peut la porter en main dominante avec <code>!cof-degainer <i>l</i> droite</code>. L'ordre de rengainer sans argument <code>gauche</code> ou <code>droite</code> fait rengainer les deux armes (si le personnage en porte deux). À noter que le script utilise les notions de main droite et de main gauche dans un soucis de simplification. Un personnage gaucher pourra utiliser les termes <code>dominant</code> ou <code>faible</code> s'il préfère.</li>
                   <li>Si on attaque avec <code>!cof-attack <i>tok1 tok2 L</i></code>, et que l'attaque est de type <code>Arme 1 main</code>, <code>Arme 2 mains</code> ou <code>Arme gauche</code>, alors on considère qu'on doit dégainer cette arme pour pouvoir l'utiliser. Le script envoie le message et considère ensuite l'arme comme étant en main, au MJ de vérifier que le joueur dispose bien d'une action de mouvement pour le faire.</li>
                   <li>En fin de combat, si le personnage a la capacité frappe du vide, le script va automatiquement lui faire rengainer son arme.</li>
                   <li>Enfin, en fin de combat, si le personnage possède un prédicat <code>armeParDefaut</code>, le script va lui faire dégainer l'arme dont le label est la valeur du prédicat. Donc si le prédicat n'a pas de label associé, le personnage va rengainer son arme.</li>
@@ -1012,7 +1012,7 @@ tr {line-height: 25px;}
                 </ol>
                 <h4 class="text-secondary">Voie du champ de bataille</h4>
                 <ol>
-                  <li><strong>Action concertée</strong> : utiliser <code>!cof-echange-init @{selected|token_id} @{target|token_id} <i>n</i></code> où <i>n</i> peut valoir 0, 1 ou 2 selon le rang dans la voie.</li>
+                  <li><strong>Action concertée</strong> : utiliser <code>!cof-echange-init @{selected|token_id} @{target|token_id} <i>n</i> --limiteParTour 1 actionConcertee</code> où <i>n</i> peut valoir 0, 1 ou 2 selon le rang dans la voie.</li>
                   <li><strong>À couvert</strong> : <code>!cof-a-couvert @{selected|token_id} @{target|token_id}</code> le target est l'allié qui se déplace avec l'arquebusier. Se sélectionner soi-même si pas d'allié.</li>
                   <li><strong>Combattant aguerri</strong> : se reporter à la capacité choisie</li>
                   <li><strong>Combat de masse</strong> : pas de support particulier, effectuer les actions supplémentaires en fonction des situations.</li>
@@ -1195,6 +1195,8 @@ tr {line-height: 25px;}
                       <li>Si on souhaite que l'écuyer puisse soigner gratuitement la monture, il faut aussi que celle-ci ait un <a href=#predicats>prédicat</a> <code>montureDe</code>, avec comme valeur le nom du chevalier.</li>
                     </ul>
                   </li>
+                  <li><strong>Massacrer la piétaille</strong> : ajouter un prédiact <code>massacrerLaPietaille</code>.</li>
+                  <li><strong>Formation d'élite</strong> : se référer à la capacité choisie.</li>
                 </ol>
               </div>
               <h3 class="text-info" id="Druide">Druide</h3>
@@ -1949,7 +1951,7 @@ tr {line-height: 25px;}
                   <li><strong>Attaque en finesse</strong> : faire les modifications sur la fiche</li>
                   <li><strong>Esquive fatale</strong> : Ajouter un <a href=#predicats>prédicat</a> <code>esquiveFatale</code> (on peut y associer un nombre pour permettre plus d'une utilisation par combat). En combat, si la situation s'y prête, un bouton permettre d'utiliser l'esquive. Ne pas oublier de définir les alliés du voleur pour que la vérification des cibles soit correcte.</li>
                   <li><strong>Frappe chirurgicale</strong> : ajouter un <a href=#predicats>prédicat</a> <code>frappeChirurgicale</code>.</li>
-                  <li><strong>Ambidextrie</strong> : pas géré par le script.</li>
+                  <li><strong>Ambidextrie</strong> : ajouter un prédicat <code>ambidextrie</code>. Pour une meilleure gestion des armes à dégainer, ajouter aussi un prédicat <code>combatADeuxArmes</code>.</li>
                   <li><strong>Botte secrète</strong> : ajouter un <a href=#predicats>prédicat</a> <code>botteSecrete</code>. Ne pas oublier le prédicat <code>attaqueSournoise</code> qui doit être associé au nombre de dés des attaques sournoises du voleur.</li>
                 </ol>
               </div>
@@ -2192,8 +2194,9 @@ tr {line-height: 25px;}
                   <li><strong>Souffle enflammé</strong> : ajouter une attaque au dragon, même jet pour touche, dm 2d6, portée 40, arme naturelle qui inflige des dégâts de feu, avec comme options <code>--disque 3 --dmSiRate 1d6 --dmCible 4d6</code></li>
                 </ol>
                 <h4 class="text-secondary">Voie du combat à deux armes</h4>
+                <p>Rajouter au personnage un prédicat <code>combatADeuxArmes</code> pour faire afficher la possibilité de choisir quelle arme dégainer en main gauche ou droite.</p>
                 <ol>
-                  <li><strong>Combat à deux armes amélioré :</strong> mettre une des attaques de type arme gauche, et y ajouter le modificateur <code>avecd12crit</code>. Pas encore de support pour la capacité avancée : dans ce cas, ajoutez le +1 dans la barre 3 du token ou sur les attaques. </li>
+                  <li><strong>Combat à deux armes amélioré :</strong> ajouter un prédicat <code>combatADeuxArmesAmeliore</code>.</li>
                   <li><strong>Parade croisée :</strong> <code>!cof-effet-temp paradeCroisee 1 --valeur <i>rang</i> --montreActions</code> où <i>rang</i> est le rang dans la Voie. </li>
                 </ol>
                 <h4 class="text-secondary">Voie du danseur de guerre</h4>
@@ -2450,6 +2453,7 @@ tr {line-height: 25px;}
                   <li><strong>Fiévreux</strong> : <code>!cof-effet fievreux</code> donne -2 en attaque, au dégâts et aux tests.</li>
                   <li><strong>Foudres du temps</strong> : <code>!cof-effet-chaque-d20 foudresDuTemps</code> permet d'activer les foudres du temps. On peut donner un argument pour remplacer la valeur par défaut (13) par un autre jet de dés. Un deuxième argument permet de faire sortir la foudre pour tout jet entre les deux valeurs. Par exemple <code>!cof-effet-chaque-d20 foudresDuTemps 13 14</code> fait venir la foudre pour tout jet de 13 ou 14. Si votre jeu contient un son (ou playlist) nommé <code>Foudre</code> (avec la majuscule), le son sera joué à chaque fois que la foudre frappera. Finalement, <code>!cof-effet-chaque-d20 foudresDuTemps fin</code> met fin aux foudres du temps.</li>
                   <li><strong>Frénésie</strong> : Ajouter un <a href=#predicats>prédicat</a> <code>frenesie</code> avec comme valeur le nombre de PV en-dessous duquel la créature devient frénétique (+2 aus jets d'attaque).</li>
+                  <li><strong>Général</strong> (pour la campagne Vengeance) : Ajouter au général un <a href=#predicats>prédicat</a> <code>generalVengeance</code>, et aux gardes d'élite un prédicat <code>gardeEliteVengeance</code>.</li>
                   <li><strong>Hors de portée</strong> : ajouter un <a href=#predicats>prédicat</a> <code>horsDePortee</code></li>
                   <li><strong>Huile de fort assaut</strong> : <code>!cof-effet-temp dmgArme(<i>L</i>) 10 --valeur 1d6</code> où <i>L</i> est le label de l'arme qu'on veut enduire d'huile de fort assaut.</li>
                   <li><strong>Hurlement</strong> : Pour les chiens infernaux, <code>!cof-peur [[10+?{Nombre de chiens?}]] 2d4 --titre Hurlement --immuniseSiResiste hurlement --disque 50 --saufAllies</code>, et pour les fantômes, <code>!cof-peur 12 1d6 --titre Hurlement terrible --immuniseSiResiste hurlement --disque 10 --saufAllies</code>.</li>
@@ -2697,7 +2701,7 @@ tr {line-height: 25px;}
                       <li>le script propose un bouton à activer en cas d'attaque réussie alors que le combattant est en position.</li>
                     </ul>
                   </li>
-                  <li><strong>Coup de bouclier</strong> : faire une attaque de bouclier, de type <code>Arme gauche</code>, avec le modificateur <code>avecd12crit</code>. Pour que cette attaque soit proposée dans les listes d'action seulement quand le personnage porte son bouclier, ajouter un prédicat <code>attaqueAuBouclier</code> de valeur le label de l'attaque.</li>
+                  <li><strong>Coup de bouclier</strong> : ajouter un prédicat <code>coupDeBouclier</code> et faire une attaque de bouclier, de type <code>Arme gauche</code>. Pour que cette attaque soit proposée dans les listes d'action seulement quand le personnage porte son bouclier, ajouter un prédicat <code>attaqueAuBouclier</code> de valeur le label de l'attaque.</li>
                   <li><strong>Absorber un sort (L) :</strong>
                     <ul>
                       <li>utiliser <code>!cof-effet-temp absorberUnSort 1</code> pour se mettre en position. Attention, ça ne vérifie pas si le combattant porte son bouclier.</li>
@@ -2753,7 +2757,7 @@ tr {line-height: 25px;}
                 </ol>
                 <h4 class="text-secondary">Voie de la guerre</h4>
                 <ol>
-                  <li><strong>Posture de combat :</strong> <code>!cof-posture-de-combat <i>bonus attr1 attr2</i></code>, où les deux <i>attr</i> peuvent être soit <code>DEF</code> soit <code>ATT</code> soit <code>DM</code>, et le <i>bonus</i> est retiré au premier attribut pour être ajouté au second. Le bonus peut être limité si le combattant a un <a href=#predicats>prédicat</a> <code>voieDuSoldat</code> qui indique son rang dans la voie. Exemple d'utilisation&nbsp;: <code>!cof-posture-de-combat ?{Bonus|1|2|3|4|5} ?{Baisser|Défense,DEF|Attaque,ATT|Dégâts,DM} ?{Augmenter|Défense,DEF|Attaque,ATT|Dégâts,DM}</code>. Normalement, la règle fait décider de sa posture au combattant à chaque tour, mais en pratique, il en change assez rarement. Une posture de combat reste donc active jusqu'à la fin du combat ou jusqu'à ce qu'on en change (elle est neutre si on a le même attribut à buffer et débuffer).</li>
+                  <li><strong>Posture de combat :</strong> <code>!cof-posture-de-combat <i>bonus attr1 attr2</i> --limiteParTour 1 postureDeCombat</code>, où les deux <i>attr</i> peuvent être soit <code>DEF</code> soit <code>ATT</code> soit <code>DM</code>, et le <i>bonus</i> est retiré au premier attribut pour être ajouté au second. Le bonus peut être limité si le combattant a un <a href=#predicats>prédicat</a> <code>voieDuSoldat</code> qui indique son rang dans la voie. Exemple d'utilisation&nbsp;: <code>!cof-posture-de-combat ?{Bonus|1|2|3|4|5} ?{Baisser|Défense,DEF|Attaque,ATT|Dégâts,DM} ?{Augmenter|Défense,DEF|Attaque,ATT|Dégâts,DM}</code>. Normalement, la règle fait décider de sa posture au combattant à chaque tour, mais en pratique, il en change assez rarement. Une posture de combat reste donc active jusqu'à la fin du combat ou jusqu'à ce qu'on en change (elle est neutre si on a le même attribut à buffer et débuffer).</li>
                   <li><strong>Désarmer (L) :</strong> <code>!cof-desarmer @{selected|token_id} @{target|token_id}</code>.</li>
                   <li><strong>Double attaque (L) :</strong> faire deux attaques, avec l'option supplémentaire <code>--bonusAttaque -2</code>.</li>
                   <li><strong>Attaque circulaire (L) :</strong> faire les attaques normalement, ce n'est pas considéré comme une aoe.</li>

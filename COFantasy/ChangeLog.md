@@ -1,11 +1,18 @@
 # COFantasy: Historique des changements (depuis la version 1.0)
 ## 3.14
 ### Capacités
+* Général de la campagne Vengeance.
+* Meilleure prise en charge de l'ambixtrie du voleur et du combat à deux armes amélioré.
+* Massacrer la piétaille
 * Ajout de la Voie de prestige du loup-garou.
 * Amélioration de la prise en charge du rang 1 de la Voie du prédateur.
 * Amélioration de la prise en chagre de la capacité Exemplaire du chevalier.
 * Utilisation d'un prédicat pour As de la gachette.
 * Amélioration de la prise en charge du tir double.
+
+### Autres améliorations
+* Amélioration de la présentation des armes à dégainer quand un personnage combat à deux armes.
+* Les PNJ avec une seule arme visible la dégainent automatiquement quand on pose le token.
 
 ### Corrections de bugs
 * Correction d'un bug qui faisait planter en cas d'interposition du golem.
