@@ -21393,7 +21393,7 @@ var COFantasy = COFantasy || function() {
     }
     if (predicateAsBool(target, 'generalVengeance')) {
       if (target.generalVengeance === undefined) {
-        let pageId = target.get('pageid');
+        let pageId = target.token.get('pageid');
         let tokensContact = findObjs({
           _type: 'graphic',
           _subtype: 'token',
