@@ -1251,3 +1251,7 @@ cogcrew:
 pf2guidance:
   - "Pathfinder 2e Guidance"
   - "System Toolbox"
+
+velvetgeneration:
+  - "VelvetGeneration"
+  - "Utility"
