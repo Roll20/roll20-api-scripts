@@ -2,7 +2,7 @@
 ## 3.14
 ### Capacités
 * Général de la campagne Vengeance.
-* Meilleure prise en charge de l'ambixtrie du voleur et du combat à deux armes amélioré.
+* Meilleure prise en charge de l'ambidextrie du voleur et du combat à deux armes amélioré.
 * Massacrer la piétaille
 * Ajout de la Voie de prestige du loup-garou.
 * Amélioration de la prise en charge du rang 1 de la Voie du prédateur.
