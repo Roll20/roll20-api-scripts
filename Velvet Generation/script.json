@@ -1,7 +1,7 @@
 {
   "name": "Velvet Generation",
   "script": "vg.js",
-  "version": "0.1",
+  "version": "0.2.0",
   "description": "This is a set of API helpers for Velvet Generation.\n* It automatically sets all d6 dice dragged from chat onto the table to be controlled by all players.\n* It enables the `!amped` command, which rerolls all 1s in a selection\n* It enables the `onFire|*` command, which sets all 1s in a selection to the number indicated by *.",
   "authors": "Rich Ranallo",
   "roll20userid": "104025",
