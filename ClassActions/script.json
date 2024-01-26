@@ -1,1 +1,14 @@
-{"$schema":"https://github.com/Roll20/roll20-api-scripts/blob/master/script.json.schema","name":"ClassActions","script":"ClassActions.js","version":"1.0.0","previousversions":[],"description":"This is a Lazy way do deal with class actions","authors":"Kilzak","roll20userid":"6666749","useroptions":[],"dependencies":[],"modifies":{},"conflicts":[]}
+{
+	"$schema": "https://github.com/Roll20/roll20-api-scripts/blob/master/script.json.schema",
+	"name": "ClassActions",
+	"script": "ClassActions.js",
+	"version": "1.0.0",
+	"previousversions": [],
+	"description": "This is a Lazy way do deal with class actions",
+	"authors": "Kilzak",
+	"roll20userid": "6666749",
+	"useroptions": [],
+	"dependencies": ["ChatSetAttr"],
+	"modifies": {},
+	"conflicts": []
+}
