@@ -4122,6 +4122,7 @@ const ScriptCards = (() => { // eslint-disable-line no-unused-vars
 							var attrName = workString.substring(workString.indexOf(":") + 1, workString.length - 1);
 							if (attrName.indexOf("::") >= 0) {
 								defaultValue = attrName.substring(attrName.indexOf("::") + 2, attrName.length);
+								attrName = attrName.substring(0,attrName.indexOf("::"))
 								useDefaultValue = true;
 							}
 							var character = getObj("character", activeCharacter);
