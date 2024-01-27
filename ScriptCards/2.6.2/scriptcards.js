@@ -25,7 +25,7 @@ const ScriptCards = (() => { // eslint-disable-line no-unused-vars
 	*/
 
 	const APINAME = "ScriptCards";
-	const APIVERSION = "2.6.2b";
+	const APIVERSION = "2.6.2c";
 	const APIAUTHOR = "Kurt Jaegers";
 	const debugMode = false;
 
@@ -4121,7 +4121,7 @@ const ScriptCards = (() => { // eslint-disable-line no-unused-vars
 							var useDefaultValue = false;
 							var attrName = workString.substring(workString.indexOf(":") + 1, workString.length - 1);
 							if (attrName.indexOf("::") >= 0) {
-								defaultValue = attrName.substring(attrName.indexOf("::") + 2, attrName.length - 1);
+								defaultValue = attrName.substring(attrName.indexOf("::") + 2, attrName.length);
 								useDefaultValue = true;
 							}
 							var character = getObj("character", activeCharacter);
