@@ -366,7 +366,8 @@ tr {line-height: 25px;}
                   <li>
                     <code>--si <i>condition</i></code> : l'attaque n'est possible que si <i>condition</i> est validée. Une condition peut être
                     <ul id="conditions">
-                      <li><code>moins</code> <i>attribut</i> : vrai si l'attribut <i>attribut</i> de la cible est moins haute que celle de l'attaquant</li>
+                      <li><code>moins</code> <i>attribut</i> : vrai si l'attribut <i>attribut</i> de la cible est strictement moins haut que celui de l'attaquant</li>
+                      <li><code>moitieMoins</code> <i>attribut</i> : vrai si l'attribut <i>attribut</i> de la cible est au plus la moitié de celui de l'attaquant</li>
                       <li><code>etat</code> <i>e</i> : vrai si l'état <i>e</i> est actif sur l'attaquant. Cet état peut être un des états définis plus bas, ou un attribut quelconque.</li>
                       <li><code>attribut</code> <i>attr</i> <i>val</i>: vrai si l'attaquant possède un attribut <i>attr</i>, de valeur <i>val</i>, aux majuscules près. On peut optionnellement préciser qu'il s'agit d'un attribut par token en rajoutant le mot clé <code>local</code>, ou encore qu'il sagit d'un attribut de la fiche, avec éventuellement sa valeur par défaut, en ajoutant le mot clé <code>fiche <i>defaut</i></code>.</li>
                       <li><code>etatCible</code> <i>e</i> : vrai si l'état <i>e</i> est actif sur toutes la cible. Cet état peut être un des états définis plus bas, ou un attribut quelconque.</li>
@@ -889,13 +890,14 @@ tr {line-height: 25px;}
                 <p>Le script bloque automatiquement personnages immobilisés (paralysé, étourdi, etc...). Pour permettre de déplacer ces personnages vous pouvez simplement enlever le blockage (click droit sur le token, propriétés avancées). Si vous souhaitez être le seul à pouvoir le bouger, sélectionner le (ou les) token et cliquer sur la macro <code>Bouger</code>. Cela crée un token non bloqué associé au personnage. Bien penser à supprimer ce token après utilisation.</p>
                 <p>Il est possible de mettre le jeu en pause (les joueurs ne peuvent plus bouger leurs tokens) en utilisant la macro &#x23f8;. La macro change alors de nom et devient &#x23f5;, que vous pouvez utiliser pour enlever la pause.</p>
               </div>
-              <h4 class="text-secondary" id="escaliers">Escaliers</h4>
+              <h4 class="text-secondary" id="escaliers">Escaliers et portails</h4>
               <div class="decalage">
                 <p>Pour gérer les escaliers sur les cartes, vous pouvez utiliser la méthode suivante, inspirée du script Teleport : placez dans le layer "GM Info Overlay", au niveau des escaliers, des tokens qui prennent exactement la place des escaliers. Nommez ces escaliers avec un nom, suivi d'une lettre majuscule. Par exemple <code>EscalierA</code>.</p>
                 <p>Chaque escalier de la même colonne doit avoir le même nom, et différer seulement par la lettre finale. Ensuite, si un ensemble de tokens est sur un escalier, utilisez <code>!cof-escalier</code> pour téléporter les tokens à l'emplacement de l'escalier suivant dans l'ordre des lettres. Si vous utilisez l'argument <code>haut</code>, alors les tokens n'iront pas plus loin que le dernier étage, et avec l'argument <code>bas</code>, il iront dans l'ordre inverse.</p>
                 <p>Dans l'exemple précédent, il serait téléporté à l'emplacement du token nommé <code>EscalierB</code>. Cela ne fonctionne que si les bouts de l'escalier sont sur la même carte. À vous de choisir sir vous préférez révéler cette fonctionalité à vos joueurs, ou si vous le faites vous-même.</p>
                 <p>La limite au nombre d'escaliers est de 12 étages, donc pas de lettre après <code>L</code>.</p>
-                <p>Il est possible d'avoir des escaliers qui mènent à d'autres cartes (ce qui fait alors changer la carte vue par le joueur). Il suffit que le nom de l'escalier commence par <code>tmap_</code>. Attention, à cause de limitations de Roll20, cela ne peut fonctionner que si l'image du token est dans une lirary personnelle d'un joueur : si elle vient du marketplace, il fait d'abord la copier dans sa library, puis utiliser l'image qui est dans la library pour le token.</p>
+                <p>Il est possible d'avoir des escaliers qui mènent à d'autres cartes (ce qui fait alors changer la carte vue par le joueur). Il suffit que le nom de l'escalier commence par <code>tmap_</code>. Attention, à cause de limitations de Roll20, cela ne peut fonctionner que si l'image du token est dans une library personnelle d'un joueur : si elle vient du marketplace, il fait d'abord la copier dans sa library, puis utiliser l'image qui est dans la library pour le token.</p>
+                <p>Pour des escaliers plus flexibles (voire des portails), on peut décrire dans le champ des <code>Notes du MJ</code> du token sur la couche MJ une destination quand on monte et une destination quand on descend. Il suffit de mettre sur une ligne, <code>descend:</code> directement suivi du nom du token vers lequel aller pour descendre, et/ou sur une autre ligne <code>monte:</code> suivi du nom du token vers lequel aller quand on monte. Par exemple, pour bloquer un escalier qui descend, il suffit de mettre <code>descend:</code> dans le champ de notes du MJ. On peut aussi faire des "escaliers" à sens unique.</p>
               </div>
               <h4 class="text-secondary" id="montures">Montures</h4>
               <div class="decalage">
@@ -1398,6 +1400,7 @@ tr {line-height: 25px;}
                     <ul>
                       <li>utiliser <code>!cof-effet-temp absorberUnCoup 1</code> pour se mettre en position. Attention, ça ne vérifie pas si le guerrier porte son bouclier.</li>
                       <li>le script propose un bouton à activer en cas d'attaque réussie alors que le guerrier est en position.</li>
+                      <li>si vous souhaitez que le bouclier porté donne un bonus à ce jet, ajoutez-lui un prédicat <code>bonusAttaqueBouclier</code> de valeur le bonus.</li>
                     </ul>
                   </li>
                   <li>
@@ -1421,7 +1424,7 @@ tr {line-height: 25px;}
                 <ol>
                   <li><strong>Arme de prédilection</strong> : il est possible de préciser une famille d'armes de prédilection (un peu plus large que dans les règles), parmis <code>arc</code>, <code>arbalete</code>, <code>hache</code>, <code>epee</code>, <code>marteau</code>, <code>masse</code>, <code>epieu</code>, <code>poudre</code>, <code>baton</code> et <code>rapiere</code>. Si cela vous convient, ajoutez un prédicat <code>armeDePredilection</code> de valeur une de ces familles. Sinon, simplement ajouter le bonus sur les attaques dans la fiche.</li>
                   <li><strong>Science du critique</strong> : pour ne pas avoir à modifier les chances de critique pour toutes les attaques, utiliser un <a href=#predicats>prédicat</a> <code>scienceDuCritique</code>. Attention à ne pas faire ça ET modifier les chances de critiques de l'attaque, car ça s'additionne.</li>
-                  <li><strong>Spécialisation</strong> : reporter le bonus aux DM sur la fiche.</li>
+                  <li><strong>Spécialisation</strong> : ajouter un prédicat <code>specialisationGuerrier</code>. Vous pouvez changer le bonus par défaut en associant une valeur à ce prédicat.</li>
                   <li><strong>Attaque parfaite</strong> : utiliser les options <code>--m2d20 --plus 1d6</code>.</li>
                   <li><strong>Riposte</strong> : ajouter un <a href=#predicats>prédicat</a> <code>riposteGuerrier</code>. Les actions affichées en cas de riposte seront normalement une attaque avec l'arme en main, et les attaques naturelles cochées du personnage. Si cela ne convient pas, écrivez une liste d'actions nommée <code>Ripostes</code>.</li>
                 </ol>
@@ -1920,7 +1923,7 @@ tr {line-height: 25px;}
                 <ol>
                   <li><strong>Discrétion</strong> : ajouter une compétence discrétion sur la fiche, avec le bon bonus. </li>
                   <li><strong>Attaque sournoise</strong> : Ajouter un <a href=#predicats>prédicat</a> <code>attaqueSournoise</code>, de valeur le nombre de dés de l'attaque sournoise. Ensuite, faire des versions des attaques avec <code>--sournoise</code>. Au MJ de vérifier que les conditions de l'attaque sournoise sont remplies. Le plus pratique pour l'utilisation avec différentes armes, est d'ajouter à la liste des <a href="#actions_du_tour">actions du tour</a> une action de titre <code>Attaque sournoise</code> et de code <code>#Attaque -1 --sournoise</code>.</li>
-                  <li><strong>Ombre mouvante</strong> : utiliser la commande <code>!cof-ombre-mouvante --fx burst-smoke</code> (la partie <code>--fx burst-smoke</code> peut être omise ou changée, bien sûr). Le script ne gère pas encore l'attaque sournoise qui peut suivre, au MJ de surveiller l'initiative du voleur par rapport à sa cible.</li>
+                  <li><strong>Ombre mouvante</strong> : utiliser la commande <code>!cof-ombre-mouvante --fx burst-smoke</code> (la partie <code>--fx burst-smoke</code> peut être omise ou changée, bien sûr). Le script ne gère pas encore l'attaque sournoise qui peut suivre, au MJ de surveiller l'initiative du voleur par rapport à sa cible. Il est possible de changer la difficulté du jet à une valeur égale à un prédicat <code>difficulteOmbreMouvante</code>.</li>
                   <li><strong>Surprise</strong> : ajouter un <a href=#predicats>prédicat</a> <code>immunite_surpris</code>. Pour le reste, à gérer par le MJ.</li>
                   <li><strong>Ouverture mortelle</strong> : ajouter les options <code>--ouvertureMortelle --limiteParCombat 1 ouvertureMortelle --sournoise</code>. Selon les <a href="https://www.black-book-editions.fr/forums.php?topic_id=4800&tid=477673#msg477673">indications de Kegron</a>, ne mettre la partie <code>--sournoise</code> que si les conditions s'y prêtent (dans le dos, surprise, acrobatie, etc).</li>
                 </ol>
@@ -2440,7 +2443,7 @@ tr {line-height: 25px;}
                   <li><strong>Créature végétative</strong> : ajouter un <a href=#predicats>prédicat</a> <code>vegetatif</code>.</li>
                   <li><strong>Cyclone</strong> (pour les élementaires) : <code>!cof-effet-temp cyclone [[1d4+1]] --limiteParCombat 1</code>. Cela va proposer une attaque <code>Traverser</code> dans les actions de l'élémentaire, qui ne peut fonctionner que si le personnage a au moins une attaque sur sa fiche. Par défaut, l'attaque utilisée en traversant est l'attaque de label <code>1</code>, mais on peut préciser un autre label en utilisant l'option <code>--valeur</code>.</li>
                   <li><strong>Dégâts si touché au contact</strong> (élémentaire de feu,...) : ajouter un <a href=#predicats>prédicat</a> nommé <code>dmSiToucheContact</code>, de valeur les dégâts, suivis de <code> --</code> et du type si besoin. Par exemple, pour un élémentaire de feu, le prédicat <code>dmSiToucheContact:: 1d6 --feu</code>, en fin de ligne (rien ne doit suivre sur cette ligne).</li>
-                  <li><strong>Drain de force</strong> (pour la campagne Invincible) : ajouter un <a href=#predicats>prédicat</a> <code>auraDrainDeForce</code></li>
+                  <li><strong>Drain de force</strong> (pour la campagne Invincible) : ajouter un <a href=#predicats>prédicat</a> <code>auraDrainDeForce</code> pour la version de base. Pour la version avancée, remplacer par un prédicat <code>auraDrainDeForceSup</code>.</li>
                   <li><strong>Écraser</strong> (pour la campagne Invincible) : ajouter un <a href=#predicats>prédicat</a> <code>ecraser</code> de valeur le label de l'attaque utilisée pour écraser.</li>
                   <li><strong>Effroi</strong> (dragons) : <code>!cof-peur [[10+@{selected|FOR}]] 1d4 --effroi --ralenti --disque @{selected|token_id} 50</code> à utiliser au premier tour de jeu.</li>
                   <li><strong>Énergie de la mort</strong> (pour la campagne Vengeance) : ajouter un <a href=#predicats>prédicat</a> <code>energieDeLaMort</code>. Le MJ devra être attentif au message indiquant le retour à la vie, car c'est lui qui devra enlever l'état mort et ajuster les PVs.</li>
