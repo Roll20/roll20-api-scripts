@@ -1,0 +1,13 @@
+{
+  name: "ListAttrs",
+  script: "listattrs.js",
+  version: "1.0.0",
+  description: "Lists attributes from tokens on the current page. Useful for quickly getting information from all the characters in plan. Can be used to quickly answer questions like 'Who is the strongest party member?' or 'Which languages do all the characters speak'? **without consulting the players.**\n\nUsage:\n    !listattrs <attrName> [--no-gm]\n\n'attrName' is an attribute present on the character sheets.\nIf --no-gm is specified, GM-only characters are skipped\n\nDoes not work with repeating sections.\n\nPlease report any bugs to rgould@u2622.ca",
+  authors: "Richard Gould",
+  roll20userid: "375203",
+  modifies: {
+    "token.controlledby": "read",
+    "token.represents": "read",
+    "character.controlledby": "read"
+  }
+}
