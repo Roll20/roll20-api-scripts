@@ -69,8 +69,7 @@ const lightSources = {
         low_light_distance: 10,
         lightColor: '#00f00',
         has_directional_bright_light: false,
-        has_directional_dim_light: false,
-        flickering: false
+        has_directional_dim_light: false
     },
     'Faerie Fire - Violet': {
         bright_light_distance: 0,
@@ -96,7 +95,7 @@ on("chat:message", function(msg){
             for (command of commands) {
                 for (method in methods){
                     if (command.startsWith(method)) {
-                        methods[method](command, msg.selected);
+                        methods[method](command, msg);
                     }
                 }
             }
@@ -104,31 +103,26 @@ on("chat:message", function(msg){
     }
 })
     
-function setLightSource(command, objs) {
+function setLightSource(command, msg) {
     if (command.split("|").length === 1) {
         let chatMessage = "Select Light Source:<br>";
         for (lightSource in lightSources) {
             chatMessage += "[" + lightSource + "](!torchlight --setLightSource|" + lightSource + ")<br>";
         }
-        sendChat("TorchLight", chatMessage);
+        sendChat("TorchLight", "/w " + msg.who + " " + chatMessage);
     } else {
         let lightSource = lightSources[command.split("|")[1]];
-        for (obj of objs) {
+        for (obj of msg.selected) {
             let token = getObj(obj._type, obj._id);
             for (prop in lightSource) {
-                if (prop === "flickering" && lightSource[prop]) {
-                    const flickerId = setFlickering(token);
-                    state.TORCHLIGHT.flickeringTokenIds[obj._id] = String(flickerId);
-                } else {
-                    token.set(prop, lightSource[prop]);
-                }
+                token.set(prop, lightSource[prop]);
             }
         }
     }
 }
 
-function toggleLight(command, objs) {
-    for (obj of objs) {
+function toggleLight(_command, msg) {
+    for (obj of msg.selected) {
         let token = getObj(obj._type, obj._id);
         token.set("emits_bright_light", !token.get("emits_bright_light"));
         token.set("emits_low_light", !token.get("emits_low_light"));

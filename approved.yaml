@@ -1219,3 +1219,39 @@ udltorchlight:
 greaterinvisibility:
   - "GreaterInvisibility"
   - "Utility"
+
+rpgMastersuite:
+  - "RPGMaster-Suite"
+  - "Utility"
+
+triggeredcleanup:
+  - "Triggered Cleanup"
+  - "Utility"
+
+ongoingcleanup:
+  - "Ongoing Cleanup"
+  - "Utility"
+
+pingbuddy:
+  - "Ping Buddy"
+  - "Utility"
+
+anchor:
+  - "Anchor"
+  - "Utility"
+
+metascripttoolbox:
+  - "MetaScriptToolbox"
+  - "Utility"
+
+cogcrew:
+  - "COGCrew"
+  - "Utility"
+
+pf2guidance:
+  - "Pathfinder 2e Guidance"
+  - "System Toolbox"
+
+velvetgeneration:
+  - "Velvet Generation"
+  - "Utility"

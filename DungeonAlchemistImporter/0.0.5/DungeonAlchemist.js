@@ -6,7 +6,7 @@ const DungeonAlchemistImporter = (() => {
   // eslint-disable-line no-unused-vars
 
   const scriptName = "DungeonAlchemistImporter";
-  const version = "0.0.4";
+  const version = "0.0.5";
   const lastUpdate = 20211220;
   const schemaVersion = 0.1;
   const defaultGridSize = 70;
