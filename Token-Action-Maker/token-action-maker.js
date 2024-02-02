@@ -1,3 +1,17 @@
+var API_Meta = API_Meta || {};
+API_Meta.tokenActionMaker = {
+    offset: Number.MAX_SAFE_INTEGER,
+    lineCount: -1
+}; {
+    try {
+        throw new Error('');
+    } catch (e) {
+        API_Meta.tokenActionMaker.offset = (parseInt(e.stack.split(/\n/)[1].replace(/^.*:(\d+):.*$/, '$1'), 10) - (7));
+    }
+}
+
+
+
 var tokenAction = tokenAction || (function () {
     'use strict';
     // Create dropdown Query menu
@@ -32,7 +46,7 @@ var tokenAction = tokenAction || (function () {
     }
     //end Oosh function
 
-    var version = '0.3.7',
+    var version = '0.3.9',
         sheetVersion = 'D&D 5th Edition by Roll20',
         sheet = '5e',
         checkInstall = function () {
@@ -184,9 +198,21 @@ var tokenAction = tokenAction || (function () {
                             characterid: id,
                             istokenaction: true
                         });
-
                     }
-
+                    if (sheet === 'pf2' && repeatingAction.includes('ATTACK-DAMAGE')  && !repeatingAction.includes('ATTACK-DAMAGE-NPC')) {
+                        createObj("ability", {
+                            name: getFirstCharacters(repeatingName) + ((repeatingName.includes('-R')) ? '-R2' : '2'),
+                            action: repeatingAction.replace('ATTACK-DAMAGE', 'ATTACK-DAMAGE2'),
+                            characterid: id,
+                            istokenaction: true
+                        });
+                        createObj("ability", {
+                            name: getFirstCharacters(repeatingName) + ((repeatingName.includes('-R')) ? '-R3' : '3'),
+                            action: repeatingAction.replace('ATTACK-DAMAGE', 'ATTACK-DAMAGE3'),
+                            characterid: id,
+                            istokenaction: true
+                        });
+                    }
 
                 }
             });
@@ -699,8 +725,8 @@ var tokenAction = tokenAction || (function () {
                                 createAbility('Save', "@{selected|whispertype} &{template:rolls} {{limit_height=@{selected|roll_limit_height}}} {{charactername=@{selected|character_name}}} {{subheader=^{saving_throw}}} {{roll01_type=saving-throw}} {{notes_show=@{selected|roll_show_notes}}} {{notes=@{selected|saving_throws_notes}}} ?{Save|Fortitude,{{roll01=[[1d20cs20cf1 + (@{selected|saving_throws_fortitude})[@{selected|text_modifier}] + (@{selected|query_roll_bonus})[@{selected|text_bonus}]]]&#125;&#125; {{header=fortitude&#125;&#125;|Reflex,{{roll01=[[1d20cs20cf1 + (@{selected|saving_throws_reflex})[@{selected|text_modifier}] + (@{selected|query_roll_bonus})[@{selected|text_bonus}]]]&#125;&#125;{{header=reflex&#125;&#125;|Will,{{roll01=[[1d20cs20cf1 + (@{selected|saving_throws_will})[@{selected|text_modifier}] + (@{selected|query_roll_bonus})[@{selected|text_bonus}]]]&#125;&#125; {{header=will&#125;&#125;}", a.id);
                             }
                             if (args.includes("attacks")) {//PF2
-                                createRepeating(/repeating_melee-strikes_[^_]+_weapon\b/, 'repeating_melee-strikes_%%RID%%_ATTACK-DAMAGE-NPC', a.id, usename);
-                                createRepeating(/repeating_ranged-strikes_[^_]+_weapon\b/, 'repeating_ranged-strikes_%%RID%%_ATTACK-DAMAGE-NPC', a.id, usename);
+                                createRepeating(/repeating_melee-strikes_[^_]+_weapon\b/, 'repeating_melee-strikes_%%RID%%_ATTACK-DAMAGE', a.id, usename);
+                                createRepeating(/repeating_ranged-strikes_[^_]+_weapon\b/, 'repeating_ranged-strikes_%%RID%%_ATTACK-DAMAGE', a.id, usename);
                             }
                             if (args.includes("offensive")) {//PF2
                             }
@@ -774,7 +800,7 @@ var tokenAction = tokenAction || (function () {
                                 sortRepeating(/repeating_npcaction-l_[^_]+_name\b/, 'repeating_npcaction-l_%%RID%%_npc_action', a.id, usename);
                             }
                             if (args.includes("bonusactions")) {
-                                sortRepeating(/repeating_npcbonusaction_[^_]+_name\b/, 'repeating_npcbonusaction_%%RID%%_npc_roll_output', a.id, usename);
+                                sortRepeating(/repeating_npcbonusaction_[^_]+_name\b/, 'repeating_npcbonusaction_%%RID%%_npc_action', a.id, usename);
                             }
                             sendChat("Token Action Maker", `/w ${whom} Created Sorted 5e Token Actions for ${a.get('name')}.`);
 
@@ -900,3 +926,11 @@ on('ready', function () {
     tokenAction.CheckInstall();
     tokenAction.RegisterEventHandlers();
 });
+
+{
+    try {
+        throw new Error('');
+    } catch (e) {
+        API_Meta.tokenActionMaker.lineCount = (parseInt(e.stack.split(/\n/)[1].replace(/^.*:(\d+):.*$/, '$1'), 10) - API_Meta.tokenActionMaker.offset);
+    }
+}

@@ -1046,8 +1046,6 @@ var initMaster = (function() {
 		setAttr( charCS, [fields.Init_2Hweapon[0], property], args[7]);
 		setAttr( charCS, [fields.Init_attacks[0], property], (args[9] || 1));
 		setAttr( charCS, [fields.Init_chosen[0], property], 1);
-		
-//		log('setInitVars: init_speed = '+args[4]);
 	};
 
 	/*
@@ -1211,8 +1209,6 @@ var initMaster = (function() {
 				+ '|' + twoHanded
 				+ '|'
 				+ '|' + attacks;
-				
-//		log('handleInitMW: sending command '+buildCall);
 				
 		sendAPI( buildCall, senderId );
 		return;
