@@ -3026,7 +3026,7 @@ var attackMaster = (function() {
 					weaponName 	= tableInfo.MELEE.tableLookup( fields.MW_name, mwIndex ),
 					miName		= tableInfo.MELEE.tableLookup( fields.MW_miName, mwIndex ),
 					dancing		= tableInfo.MELEE.tableLookup( fields.MW_dancing, mwIndex ),
-					attkAdj 	= tableInfo.MELEE.tableLookup( fields.MW_adj, mwIndex ).replace(/^[+-]([+-])/,'$1'),
+					attkAdj 	= (tableInfo.MELEE.tableLookup( fields.MW_adj, mwIndex ) || '').replace(/^[+-]([+-])/,'$1'),
 					attkStyleAdj= tableInfo.MELEE.tableLookup( fields.MW_styleAdj, mwIndex ),
 					strBonus 	= tableInfo.MELEE.tableLookup( fields.MW_strBonus, mwIndex ),
 					mwType 		= tableInfo.MELEE.tableLookup( fields.MW_type, mwIndex ),
@@ -4891,8 +4891,15 @@ var attackMaster = (function() {
 			
 			// Check if selection is a number or a item name
 			
+			if (selection === '-') {
+				r = Items.tableFind( fields.Items_name, '-' );
+				if (isNaN(r)) {
+					Items = Items.addTableRow();
+					r = Items.sortKeys.length - 1;
+				}
+			}
 			if (isNaN(r)) r = Items.tableFind( fields.Items_trueName, selection );
-			if (isNaN(r)) throw new Error('handleChangeWeapon: Can\'t find weapon '+selected);
+			if (isNaN(r)) throw new Error('handleChangeWeapon: Can\'t find weapon '+selection);
 			if (!(/\d+(?::\d+)?/.test(selection))) selection = String(r);
 				
 			// First, check there are enough rows in the InHand table
