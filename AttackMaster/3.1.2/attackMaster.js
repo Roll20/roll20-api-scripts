@@ -745,7 +745,7 @@ var attackMaster = (function() {
 	const reRangeData = /}}\s*?rangedata\s*?=.*?(?:\n.*?)*{{/im;
 	const reACData = /}}\s*acdata\s*=(.*?){{/im;
 	const reRingData = /(?:ring|ac)data\s*?=\s*?(\[.*?\])/im;
-	const reItemData = /}}[\s\w\-]*?(?<!tohit|dmg|ammo|range)data\s*?=\s*?\[[^{]+?\]/im;
+	const reItemData = /}}[\s\w\-]*?(?<!tohit|dmg|ammo|range)data\s*?=\s*?\[[^{]*?\]/im;
 	
 	const reRangeMods = Object.freeze ({
 		near:		{field:'N',def:'-5',re:/[\[,\s]N:([-\+\d]+?)[,\]]/i},
@@ -1812,8 +1812,9 @@ var attackMaster = (function() {
 		filterObjs( obj => {
 			if (obj.get('_type') !== 'graphic') return false;
 			if (!(charID = obj.get('represents'))) return false;
-			let charCS = getObj('character',charID),
-				Inhand = getTable( charCS, fieldGroups.INHAND );
+			let charCS = getObj('character',charID);
+			if (!charCS) return false;
+			let	Inhand = getTable( charCS, fieldGroups.INHAND );
 			for (let i=0; !_.isUndefined(weapon = Inhand.tableLookup( fields.InHand_name, i, false )); i++) {
 				if (weapon === '-') continue;
 				dancer = Inhand.tableLookup( fields.InHand_dancer, i );

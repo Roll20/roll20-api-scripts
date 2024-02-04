@@ -185,7 +185,6 @@ var attackMaster = (function() {
 		pending = null;
     const lastUpdate = 1706890344;
 
-
 	/*
 	 * Define redirections for functions moved to the RPGMaster library
 	 */
@@ -227,18 +226,18 @@ var attackMaster = (function() {
 	const handleGetBaseThac0 = (...a) => libRPGMaster.handleGetBaseThac0(...a);
 	const creatureAttkDefs = (...a) => libRPGMaster.creatureAttkDefs(...a);
 	const makeConfigMenu = (...a) => libRPGMaster.makeConfigMenu(...a);
-  const sendToWho = (...m) => libRPGMaster.sendToWho(...m);
-  const sendPublic = (...m) => libRPGMaster.sendPublic(...m);
-  const sendAPI = (...m) => libRPGMaster.sendAPI(...m);
-  const sendFeedback = (...m) => libRPGMaster.sendFeedback(...m);
-  const sendResponse = (...m) => libRPGMaster.sendResponse(...m);
-  const sendResponsePlayer = (...p) => libRPGMaster.sendResponsePlayer(...p);
-  const sendResponseError = (...e) => libRPGMaster.sendResponseError(...e);
-  const sendError = (...e) => libRPGMaster.sendError(...e);
-  const sendCatchError = (...e) => libRPGMaster.sendCatchError(...e);
-  const sendParsedMsg = (...m) => libRPGMaster.sendParsedMsg(...m);
-  const sendGMquery = (...m) => libRPGMaster.sendGMquery(...m);
-  const sendWait = (...m) => libRPGMaster.sendWait(...m);
+    const sendToWho = (...m) => libRPGMaster.sendToWho(...m);
+    const sendPublic = (...m) => libRPGMaster.sendPublic(...m);
+    const sendAPI = (...m) => libRPGMaster.sendAPI(...m);
+    const sendFeedback = (...m) => libRPGMaster.sendFeedback(...m);
+    const sendResponse = (...m) => libRPGMaster.sendResponse(...m);
+    const sendResponsePlayer = (...p) => libRPGMaster.sendResponsePlayer(...p);
+    const sendResponseError = (...e) => libRPGMaster.sendResponseError(...e);
+    const sendError = (...e) => libRPGMaster.sendError(...e);
+    const sendCatchError = (...e) => libRPGMaster.sendCatchError(...e);
+    const sendParsedMsg = (...m) => libRPGMaster.sendParsedMsg(...m);
+    const sendGMquery = (...m) => libRPGMaster.sendGMquery(...m);
+    const sendWait = (...m) => libRPGMaster.sendWait(...m);
 
 	/*
 	 * Handle for reference to character sheet field mapping table.
@@ -746,7 +745,7 @@ var attackMaster = (function() {
 	const reRangeData = /}}\s*?rangedata\s*?=.*?(?:\n.*?)*{{/im;
 	const reACData = /}}\s*acdata\s*=(.*?){{/im;
 	const reRingData = /(?:ring|ac)data\s*?=\s*?(\[.*?\])/im;
-	const reItemData = /}}[\s\w\-]*?(?<!tohit|dmg|ammo|range)data\s*?=\s*?\[[^{]+?\]/im;
+	const reItemData = /}}[\s\w\-]*?(?<!tohit|dmg|ammo|range)data\s*?=\s*?\[[^{]*?\]/im;
 	
 	const reRangeMods = Object.freeze ({
 		near:		{field:'N',def:'-5',re:/[\[,\s]N:([-\+\d]+?)[,\]]/i},
@@ -1813,8 +1812,9 @@ var attackMaster = (function() {
 		filterObjs( obj => {
 			if (obj.get('_type') !== 'graphic') return false;
 			if (!(charID = obj.get('represents'))) return false;
-			let charCS = getObj('character',charID),
-				Inhand = getTable( charCS, fieldGroups.INHAND );
+			let charCS = getObj('character',charID);
+			if (!charCS) return false;
+			let	Inhand = getTable( charCS, fieldGroups.INHAND );
 			for (let i=0; !_.isUndefined(weapon = Inhand.tableLookup( fields.InHand_name, i, false )); i++) {
 				if (weapon === '-') continue;
 				dancer = Inhand.tableLookup( fields.InHand_dancer, i );
@@ -2139,7 +2139,7 @@ var attackMaster = (function() {
 			typeCheck = ammoType.dbName(),
 			ammo1e = (_.isUndefined(dispValues) || _.isNull(dispValues));
 
-    if (tableInfo.ammoTypes.includes(ammoTrueName+'-'+ammoType)) {return tableInfo;}
+		if (tableInfo.ammoTypes.includes(ammoTrueName+'-'+ammoType)) {return tableInfo;}
 		tableInfo.ammoTypes.push(ammoTrueName+'-'+ammoType);
  
 		for (let w=0; w<ammoDataArray.length; w++) {
