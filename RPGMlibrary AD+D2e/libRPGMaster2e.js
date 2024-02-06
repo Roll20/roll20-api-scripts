@@ -9468,8 +9468,8 @@ const libRPGMaster = (() => { // eslint-disable-line no-unused-vars
 							while (reVars.test(thisData[i][0])) thisData[i][0] = thisData[i][0].replace(reVars,varRes);
 							if (!!baseData.length && i < thisSpecs.length) {
 								thisData[i][0] = '['+_.pairs(Object.assign(
-																_.object(baseData[0][0].replace(/^.*?=\[/,'').replace(/[\[\]]/g,'').split(',').map(v => {v = v.trim().split(':');v[0] = v[0].toLowerCase();return v})),
-																_.object(thisData[i][0].replace(/^.*?=\[/,'').replace(/[\[\]]/g,'').split(',').map(v => {v = v.trim().split(':');v[0] = v[0].toLowerCase();return v}))
+																_.object(baseData[0][0].replace(/^.*?=\[/,'').replace(/[\[\]]/g,'').split(',').map(v => v.trim().split(':'))),
+																_.object(thisData[i][0].replace(/^.*?=\[/,'').replace(/[\[\]]/g,'').split(',').map(v => v.trim().split(':')))
 																)
 															).map(v => v.join(':')).filter(v => v !== ':').join()+']';
 								if (baseData.length > 1) {baseData.shift();} // else {baseData = [['']]};
@@ -10795,8 +10795,8 @@ const libRPGMaster = (() => { // eslint-disable-line no-unused-vars
 		findThePlayer: (...a) => LibFunctions.findThePlayer(...a),
 		findCharacter: (...a) => LibFunctions.findCharacter(...a),
 		fixSenderId: (...a) => LibFunctions.fixSenderId(...a),
-		calcAttr: (...a) => libRPGMaster.calcAttr(...a),
-		rollDice: (...a) => libRPGMaster.rollDice(...a),
+		calcAttr: (...a) => LibFunctions.calcAttr(...a),
+		rollDice: (...a) => LibFunctions.rollDice(...a),
 		evalAttr: (...a) => LibFunctions.evalAttr(...a),
 		getCharacter: (...a) => LibFunctions.getCharacter(...a),
 		getTokenValue: (...a) => LibFunctions.getTokenValue(...a),
