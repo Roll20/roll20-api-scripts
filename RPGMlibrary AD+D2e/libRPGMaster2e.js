@@ -9468,8 +9468,8 @@ const libRPGMaster = (() => { // eslint-disable-line no-unused-vars
 							while (reVars.test(thisData[i][0])) thisData[i][0] = thisData[i][0].replace(reVars,varRes);
 							if (!!baseData.length && i < thisSpecs.length) {
 								thisData[i][0] = '['+_.pairs(Object.assign(
-																_.object(baseData[0][0].replace(/^.*?=\[/,'').replace(/[\[\]]/g,'').split(',').map(v => v.trim().split(':'))),
-																_.object(thisData[i][0].replace(/^.*?=\[/,'').replace(/[\[\]]/g,'').split(',').map(v => v.trim().split(':')))
+																_.object(baseData[0][0].replace(/^.*?=\[/,'').replace(/[\[\]]/g,'').split(',').map(v => {v = v.trim().split(':');v[0] = v[0].toLowerCase();return v})),
+																_.object(thisData[i][0].replace(/^.*?=\[/,'').replace(/[\[\]]/g,'').split(',').map(v => {v = v.trim().split(':');v[0] = v[0].toLowerCase();return v}))
 																)
 															).map(v => v.join(':')).filter(v => v !== ':').join()+']';
 								if (baseData.length > 1) {baseData.shift();} // else {baseData = [['']]};
