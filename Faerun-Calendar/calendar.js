@@ -86,11 +86,6 @@ const moonPhases = ["Full Moon", "Waning Gibbous", "Last Quarter", "Waning Cresc
 
 const monthNames = ["Hammer","Alturiak","Ches","Tarsakh","Mirtul","Kythorn","Flamerule","Eleasias","Eleint","Marpenoth","Uktar","Nightal"];
 
-let state = {
-    calendar: {},
-    alarms: []
-}
-
 class FaerunCalendar {
     constructor() {
         this.style = styles;
@@ -243,7 +238,7 @@ class FaerunCalendar {
 
     checkInstall() {
         if (!state.calendar) {
-            setDefaults();
+            setCalendarDefaults();
         }
 
         if (!state.alarms) {
@@ -253,7 +248,7 @@ class FaerunCalendar {
 
     registerEventHandlers() {
         on("chat:message", this.handleInput);
-        log("Calendar DND - Registered Event Handlers!");
+        log("Faerûn Calendar - Registered Event Handlers!");
     }
 }
 
