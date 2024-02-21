@@ -100,7 +100,7 @@ class FaerunCalendar {
         this.alarms = state.alarms;
     }
 
-    static handleInput(msg) {
+    handleInput(msg) {
         const args = msg.content.split(/\s+--/);
 
         if (msg.type !== "api") return;
@@ -239,6 +239,21 @@ class FaerunCalendar {
                 break;
             }
         }
+    }
+
+    checkInstall() {
+        if (!state.calendar) {
+            setDefaults();
+        }
+
+        if (!state.alarms) {
+            setAlarmDefaults();
+        }
+    }
+
+    registerEventHandlers() {
+        on("chat:message", this.handleInput);
+        log("Calendar DND - Registered Event Handlers!");
     }
 }
 
@@ -1016,3 +1031,8 @@ function chkAlarms() {
         }
     }
 }
+
+on("ready", () => {
+    calendar.checkInstall();
+    calendar.registerEventHandlers();
+});
