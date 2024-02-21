@@ -100,7 +100,7 @@ class FaerunCalendar {
 
         if (msg.type !== "api") return;
 
-        if (playerIsGM(msg.playerid)) {
+        if (playerIsGM(msg.player.id)) {
             switch (args[0]) {
                 case "!cal":
                     switch (args[1]) {
@@ -487,6 +487,7 @@ function calendarMenu() {
                         `<tr><td ${calendar.style.tdReg}>Moon: </td><td ${calendar.style.tdReg}><a ${calendar.style.buttonMedium}" href="!cal --moon --phase --?{Phase?|${moon}}">${moon}</a></td></tr>` + //--
                         `<tr><td ${calendar.style.tdReg}>Weather: </td><td ${calendar.style.tdReg}>${weather}</td></tr>` + //--
                         `</table>` + //--
+                        `<br><br>` + //--
                         `<div ${calendar.style.divButton}><a ${calendar.style.buttonLarge}" href="!cal --advance --?{Amount?|1} --?{Type?|Short Rest|Long Rest|Minute|Hour|Day|Week|Month|Year}">Advance Time</a></div>` + //--
                         `<div ${calendar.style.divButton}><a ${calendar.style.buttonLarge}" href="!cal --weather --toggle">Toggle Weather Display</a></div>` + //--
                         `<div ${calendar.style.divButton}><a ${calendar.style.buttonLarge}" href="!cal --moon --toggle">Toggle Moon Display</a></div>` + //--
@@ -508,6 +509,7 @@ function calendarMenu() {
                         `<tr><td ${calendar.style.tdReg}>Time: </td><td ${calendar.style.tdReg}><a ${calendar.style.buttonMedium}" href="!cal --settime --hour --?{Hour?|${hour}} --minute --?{Minute?|${minute}}">${hour}:${minute}</a></td></tr>` + //--
                         `<tr><td ${calendar.style.tdReg}>Weather: </td><td ${calendar.style.tdReg}>${weather}</td></tr>` + //--
                         `</table>` + //--
+                        `<br><br>` + //--
                         `<div ${calendar.style.divButton}><a ${calendar.style.buttonLarge}" href="!cal --advance --?{Amount?|1} --?{Type?|Short Rest|Long Rest|Minute|Hour|Day|Week|Month|Year}">Advance Time</a></div>` + //--
                         `<div ${calendar.style.divButton}><a ${calendar.style.buttonLarge}" href="!cal --weather --toggle">Toggle Weather Display</a></div>` + //--
                         `<div ${calendar.style.divButton}><a ${calendar.style.buttonLarge}" href="!cal --moon --toggle">Toggle Moon Display</a></div>` + //--
@@ -532,6 +534,7 @@ function calendarMenu() {
                         `<tr><td ${calendar.style.tdReg}>Time: </td><td ${calendar.style.tdReg}><a ${calendar.style.buttonMedium}" href="!cal --settime --hour --?{Hour?|${hour}} --minute --?{Minute?|${minute}}">${hour}:${minute}</a></td></tr>` + //--
                         `<tr><td ${calendar.style.tdReg}>Moon: </td><td ${calendar.style.tdReg}><a ${calendar.style.buttonMedium}" href="!cal --moon --phase --?{Phase?|${moon}}">${moon}</a></td></tr>` + //--
                         `</table>` + //--
+                        `<br><br>` + //--
                         `<div ${calendar.style.divButton}><a ${calendar.style.buttonLarge}" href="!cal --advance --?{Amount?|1} --?{Type?|Short Rest|Long Rest|Minute|Hour|Day|Week|Month|Year}">Advance Time</a></div>` + //--
                         `<div ${calendar.style.divButton}><a ${calendar.style.buttonLarge}" href="!cal --weather --toggle">Toggle Weather Display</a></div>` + //--
                         `<div ${calendar.style.divButton}><a ${calendar.style.buttonLarge}" href="!cal --moon --toggle">Toggle Moon Display</a></div>` + //--
@@ -551,6 +554,7 @@ function calendarMenu() {
                         `<tr><td ${calendar.style.tdReg}>Year: </td><td ${calendar.style.tdReg}><a ${calendar.style.buttonMedium}" href="!cal --setyear --?{Year?|${year}}">${year}</a></td></tr>` + //--
                         `<tr><td ${calendar.style.tdReg}>Time: </td><td ${calendar.style.tdReg}><a ${calendar.style.buttonMedium}" href="!cal --settime --hour --?{Hour?|${hour}} --minute --?{Minute?|${minute}}">${hour}:${minute}</a></td></tr>` + //--
                         `</table>` + //--
+                        `<br><br>` + //--
                         `<div ${calendar.style.divButton}><a ${calendar.style.buttonLarge}" href="!cal --advance --?{Amount?|1} --?{Type?|Short Rest|Long Rest|Minute|Hour|Day|Week|Month|Year}">Advance Time</a></div>` + //--
                         `<div ${calendar.style.divButton}><a ${calendar.style.buttonLarge}" href="!cal --weather --toggle">Toggle Weather Display</a></div>` + //--
                         `<div ${calendar.style.divButton}><a ${calendar.style.buttonLarge}" href="!cal --moon --toggle">Toggle Moon Display</a></div>` + //--
