@@ -182,7 +182,9 @@ API_Meta.AttackMaster={offset:Number.MAX_SAFE_INTEGER,lineCount:-1};
  *                     and disable of weapon attack rows. Reintroduce support for effects on 
  *                     '-inhand' in such a way as not to clash with new dancing weapons type.
  * v3.2.1  11/02/2024  Link weapon tables to InHand table by storing the row number. Use this
- *                     to reveal hidden weapons on an attack if "reveal on use" set.
+ *                     to reveal hidden weapons on an attack if "reveal on use" set. Improve
+ *                     parseStr() to handle undefined or empty strings without erroring. Fixed
+ *                     ad-hoc dancing weapons.
  */
  
 var attackMaster = (function() {
@@ -190,7 +192,7 @@ var attackMaster = (function() {
 	var version = '3.2.1',
 		author = 'Richard @ Damery',
 		pending = null;
-    const lastUpdate = 1707473376;
+    const lastUpdate = 1708765145;
 
 	/*
 	 * Define redirections for functions moved to the RPGMaster library
@@ -934,7 +936,6 @@ var attackMaster = (function() {
 			setTimeout( () => updateHandouts(handouts,true,findTheGM()), 30);
 			setTimeout( cmdMasterRegister, 40 );
 			setTimeout( () => updateDBindex(false), 90); // checking the DB indexing
-//			setTimeout( rebuildDancers, 5000 );
 		} catch (e) {
 			log('AttackMaster Initialisation: JavaScript '+e.name+': '+e.message+' while initialising the API');
 			sendDebug('AttackMaster Initialisation: JavaScript '+e.name+': '+e.message+' while initialising the API');
@@ -1127,7 +1128,7 @@ var attackMaster = (function() {
 	 * Function to replace special characters in a string
 	 */
 	 
-	var parseStr=function(str,replaced=replacers){
+	var parseStr=function(str='',replaced=replacers){
 		return replaced.reduce((m, rep) => m.replace(rep[0], rep[1]), str);
 	}
 
@@ -1806,52 +1807,6 @@ var attackMaster = (function() {
 		return true;
 	}
 	
-	/*
-	 * Check for any "in-hand" dancing weapons and prompt
-	 * RoundMaster to rebuild their dancing effects after a
-	 * campaign restart.
-	 */
-	 
-	var rebuildDancers = function() {
-		
-		var charID, delay = 10,
-			doneInhand = [];
-			
-		async function redance( charCS, obj ) {
-			var error = false;
-			try {
-				var dancer, weapon;
-				var Inhand = getTableField( charCS, {}, fields.InHand_table, fields.InHand_name );
-					Inhand = getTableField( charCS, Inhand, fields.InHand_table, fields.InHand_dancer );
-					Inhand = getTableField( charCS, Inhand, fields.InHand_table, fields.InHand_trueName );
-					Inhand = getTableField( charCS, Inhand, fields.InHand_table, fields.InHand_type );
-				for (let i=0; !_.isUndefined(weapon = Inhand.tableLookup( fields.InHand_name, i, false )); i++) {
-					if (weapon === '-') continue;
-					dancer = Inhand.tableLookup( fields.InHand_dancer, i );
-					if (dancer.length) {
-						let weapon = Inhand.tableLookup( fields.InHand_trueName, i ),
-							type = Inhand.tableLookup( fields.InHand_type, i );
-						sendAPI( fields.roundMaster+' --dancer rebuild|'+obj.id+'|'+weapon+'|'+type+'|'+dancer );
-					};
-				};
-			} catch (e) {
-				log('AttackMaster rebuildDancers: JavaScript '+e.name+': '+e.message+' while redancing '+charCS.get('name'));
-				sendCatchError('MagicMaster',msg_orig[senderId],e);
-				error = true;
-			};
-		};
-
-		filterObjs( obj => {
-			if (obj.get('_type') !== 'graphic') return false;
-			if (!(charID = obj.get('represents'))) return false;
-			if (!_.isUndefined( doneInhand[charID] )) return false;
-			let charCS = getObj('character',charID);
-			if (!charCS) return false;
-			setTimeout( redance, delay++, charCS, obj );
-			doneInhand[charID] = true;
-		});
-	};
-	
 /* ----------------------------------------------- Weapon Management Functions ----------------------------------------
 	
 	/*
@@ -2112,7 +2067,7 @@ var attackMaster = (function() {
 				if (weapName && weapName.length && !sheathed.includes(weapName)) {
 					sheathed.push(weapName);
 					sendAPImacro(curToken,'',weapName,'-sheath');
-					let weapData = resolveData( weapName, fields.MagicItemDB, /weapdata\s*?=\s*?(\[.*?\])/im, charCS ).parsed;
+					let weapData = resolveData( weapName, fields.MagicItemDB, reItemData, charCS ).parsed;
 					if (weapData && weapData.off) {
 						sendAPI( parseStr(weapData.off).replace(/@{\s*selected\s*\|\s*token_id\s*}/ig,tokenID)
 													   .replace(/{\s*selected\s*\|/ig,'{'+charCS.get('name')+'|'), null, 'attk filterWeapons');
@@ -2163,8 +2118,6 @@ var attackMaster = (function() {
 		var ammoData, ammoTest, parsedAmmoData, specType, specSuperType, values, ammoRow, qty, qtySet,
 			typeCheck = ammoType.dbName(),
 			ammo1e = (_.isUndefined(dispValues) || _.isNull(dispValues));
-			
-		log('insertAmmo: called with trueName = '+ammoTrueName+', ammoType = '+ammoType+', miIndex = '+miIndex);
 
 		if (tableInfo.ammoTypes.includes(ammoTrueName+'-'+ammoType)) {return tableInfo;}
 		tableInfo.ammoTypes.push(ammoTrueName+'-'+ammoType);
@@ -2176,8 +2129,6 @@ var attackMaster = (function() {
 			let clv = ammoData.match(/[\[,\s]clv:([-\+]?\d+?)[,\]]/i),
 				mulv = ammoData.match(/[\[,\s]mulv:([-\+]?\d+?)[,\]]/i),
 				prlv = ammoData.match(/[\[,\s]prlv:([-\+]?\d+?)[,\]]/i);
-				
-			log('insertAmmo: typeCheck = '+typeCheck+', specType = '+specType+', specSuperType = '+specSuperType);
 
 			ammoTest = (!clv  || (parseInt(attrLookup( charCS, fields.CastingLevel)) || 1) >= parseInt((clv || ['','0'])[1]))
 					&& (!mulv || (parseInt(attrLookup( charCS, fields.MU_CastingLevel)) || 1) >= parseInt((mulv || ['','0'])[1]))
@@ -2223,8 +2174,6 @@ var attackMaster = (function() {
 				values[fields.Ammo_type[0]][fields.Ammo_type[1]]=ammoType;
 				values[fields.Ammo_miName[0]][fields.Ammo_miName[1]]=ammoTrueName;
 				values[fields.Ammo_miIndex[0]][fields.Ammo_miIndex[1]]=miIndex;
-				
-				log('insertAmmo: inserting ammo '+values[fields.Ammo_name[0]][fields.Ammo_name[1]]);
 				
 				ammoRow = tableInfo.AMMO.tableFind( fields.Ammo_miName, ammoTrueName ) || tableInfo.AMMO.tableFind( fields.Ammo_name, '-' );
 				tableInfo.AMMO = tableInfo.AMMO.addTableRow( ammoRow, values );
@@ -3978,7 +3927,8 @@ var attackMaster = (function() {
 						weapCharged = !(['uncharged','cursed','cursed+uncharged','single-uncharged'].includes(weapCharge)),
 						enabling = ['enable','disable'].includes(weapCharge),
 						miQty = Items.tableLookup( fields.Items_qty, itemIndex );
-					if (miQty <= 0 || (!_.isUndefined(itemIndex) && weapCharged && (miQty - (!charges ? 1 : charges)) < 0)) {
+//					if (miQty <= 0 || (!_.isUndefined(itemIndex) && weapCharged && (miQty - (!charges ? 1 : charges)) < 0)) {
+					if (!_.isUndefined(itemIndex) && weapCharged && (miQty - (!charges ? 1 : charges)) < 0) {
 						meleeWeaps += '<span style=' + design.grey_button + '>' + (enabling ? '' : miQty) + ' ' + weaponName + '</span>';
 					} else {
 						if (errFlag = await buildMWattkMacros( args, senderId, charCS, tableInfo, weaponIndex, backstab )) return;
@@ -5034,7 +4984,7 @@ var attackMaster = (function() {
 			
 			// Check if this is a dancing weapon
 			
-			weapData = resolveData( trueWeapon, weaponDB, reWeapData, charCS, {on:reWeapSpecs.on,dancer:reWeapSpecs.dancer}, r ).parsed;
+			weapData = resolveData( trueWeapon, weaponDB, reItemData, charCS, {on:reWeapSpecs.on,dancer:reWeapSpecs.dancer}, r ).parsed;
 
 			// Then add the weapon to the InHand table
 			
@@ -6140,6 +6090,15 @@ var attackMaster = (function() {
 		
 		silent = silent || _.isUndefined(weapTable.INHAND.tableFind( fields.InHand_name, weapon )) || _.isUndefined(weapTable.INHAND.tableFind( fields.InHand_trueName, weapon ));
 		
+		let inhandRow = weapTable.INHAND.tableFind( fields.InHand_trueName, weapon ) || weapTable.INHAND.tableFind( fields.InHand_name, weapon ),
+			itemRow = _.isUndefined(inhandRow) ? undefined : weapTable.INHAND.tableLookup( fields.InHand_index, inhandRow ),
+			cmd = resolveData( weapon, fields.MagicItemDB, reItemData, charCS, {off:reWeapSpecs.off}, itemRow ).parsed.off;
+			
+		silent = silent || _.isUndefined(inhandRow);
+		if (!_.isUndefined(inhandRow) && cmd && cmd.length) {
+			sendAPI( parseStr(cmd).replace(/@{\s*selected\s*\|\s*token_id\s*}/ig,tokenID)
+										   .replace(/{\s*selected\s*\|/ig,'{'+charCS.get('name')+'|'), null, 'attk doBlankWeapon');
+		};
 		blankWeapon( charCS, weapTable, _.keys(weapTable), weapon );
 		
 		if (!silent) {
