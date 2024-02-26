@@ -2991,7 +2991,7 @@ var attackMaster = (function() {
 	 * Build melee weapon attack macro
 	 */
  
-	var buildMWattkMacros = function( args, senderId, charCS, tableInfo, mwIndex, backstab=false ) {
+	var buildMWattkMacros = function( args, senderId, charCS, tableInfo, mwIndex, backstab=false ) {   // toLowerCase()
 		
 		return new Promise(resolve => {
 			
@@ -3225,7 +3225,7 @@ var attackMaster = (function() {
 					setAbility( charCS, 'Do-not-use-DmgL-MW'+mwNumber, (parseMWattkMacro(args, charCS, attkType, addDmgMsg( dmgMacroDef.obj[1].body, dmgMsg, weapDmgMsg ))+attkMacro));
 					hitCharges = (hitCharges == '' ? 1 : hitCharges);
 					attkMacro = weapCharged && hitCharges ? ('\n!magic --mi-charges '+tokenID+'|-'+hitCharges+'|'+miName+'||'+weapCharged) : ''; 
-					attkMacro += ((weaponName !== miName) && attrLookup( charCS, fields.Items_reveal, fields.Items_table, miRowref ).toLowerCase() == 'use') ? ('\n!magic --button GM-ResetSingleMI|'+tokenID+'|'+miRowref+'|silent') : '';
+					attkMacro += ((weaponName !== miName) && (attrLookup( charCS, fields.Items_reveal, fields.Items_table, miRowref ) || '').toLowerCase() == 'use') ? ('\n!magic --button GM-ResetSingleMI|'+tokenID+'|'+miRowref+'|silent') : '';
 					attkMacro += weapCmd ? ('\n' + weapCmd) : '';
 					attkMacro += touchWeap ? ('\n!attk --blank-weapon '+tokenID+'|'+miName+'|silent') : '';
 					if (abilityType == Attk.TARGET) {
@@ -3551,8 +3551,8 @@ var attackMaster = (function() {
 				};
 				attkMacro += ((weapCharged && hitCharges) ? ('\n!magic --mi-charges '+tokenID+'|-'+hitCharges+'|'+miName+'|'+weapChgType) : ''); 
 				if (abilityType === Attk.TARGET) weapCmd = weapCmd.replace(/@{target\|.*?\|?token_id}/igm,'@{target|Select Target|token_id}');
-				attkMacro += ((weaponName !== miName) && attrLookup( charCS, fields.Items_reveal, fields.Items_table, miRowref ).toLowerCase() == 'use') ? ('\n!magic --button GM-ResetSingleMI|'+tokenID+'|'+miRowref+'|silent') : '';
-				attkMacro += ((ammoName !== ammoMIname) && attrLookup( charCS, fields.Items_reveal, fields.Items_table, ammoRowref ).toLowerCase() == 'use') ? ('\n!magic --button GM-ResetSingleMI|'+tokenID+'|'+ammoRowref+'|silent') : '';
+				attkMacro += ((weaponName !== miName) && (attrLookup( charCS, fields.Items_reveal, fields.Items_table, miRowref ) || '').toLowerCase() == 'use') ? ('\n!magic --button GM-ResetSingleMI|'+tokenID+'|'+miRowref+'|silent') : '';
+				attkMacro += ((ammoName !== ammoMIname) && (attrLookup( charCS, fields.Items_reveal, fields.Items_table, ammoRowref ) || '').toLowerCase() == 'use') ? ('\n!magic --button GM-ResetSingleMI|'+tokenID+'|'+ammoRowref+'|silent') : '';
 				attkMacro += weapCmd ? ('\n'+weapCmd) : '';
 				attkMacro += touchWeap ? ('\n!attk --blank-weapon '+tokenID+'|'+miName+'|silent') : '';
 				setAbility( charCS, 'Do-not-use-Attk-RW'+rwNumber+'-'+dist, attkMacro );
