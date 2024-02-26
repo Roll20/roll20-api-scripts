@@ -754,7 +754,7 @@ var attackMaster = (function() {
 	const reRangeData = /}}\s*?rangedata\s*?=.*?(?:\n.*?)*{{/im;
 	const reACData = /}}\s*acdata\s*=(.*?){{/im;
 	const reRingData = /(?:ring|ac)data\s*?=\s*?(\[.*?\])/im;
-	const reItemData = /}}[\s\w\-]*?(?<!tohit|dmg|ammo|range)data\s*?=\s*?\[[^{]*?\]/im;
+	const reItemData = /}}[\s\w\-]*?(?<!tohit|dmg|ammo|range)data\s*?=\s*?\[.*?\]{{/im;
 	
 	const reRangeMods = Object.freeze ({
 		near:		{field:'N',def:'-5',re:/[\[,\s]N:([-\+\d]+?)[,\]]/i},
@@ -2327,8 +2327,8 @@ var attackMaster = (function() {
 					innate = weapon[2].toLowerCase().includes('innate'),
 					weapData = parseData( toHit, reWeapSpecs ),
 					attk2H = noOfHands == 2 ? 1 : 0,
-					weapType = toHit.type || weapon[1],
-					weapSuperType = toHit.superType || weapon[4],
+					weapType = weapData.type || weapon[1],
+					weapSuperType = weapData.superType || weapon[4],
 					proficiency = innate ? 0 : proficient( charCS, weaponTrueName, weapType, weapSuperType );
 					
 				if (!levelTest( charCS, weapData )) continue;
