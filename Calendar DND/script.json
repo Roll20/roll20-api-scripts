@@ -9,7 +9,7 @@
     "roll20userid": "9989180",
     "modifies": {
         "state.calendar": "read,write",
-        "state.alarms": "read,write",
+        "state.alarms": "read,write"
     },
     "conflicts": ["Multi-World Calendar", "Faerun-Calendar"]
 }
