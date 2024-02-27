@@ -112,7 +112,7 @@ class FaerunCalendar {
 
 		if (msg.type !== 'api') return;
 
-		if (playerIsGM(msg.player.id)) {
+		if (playerIsGM(msg.playerid)) {
 			switch (args[0]) {
 				case '!cal':
 					switch (args[1]) {
