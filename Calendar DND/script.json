@@ -1,15 +1,15 @@
 {
-    "$schema": "https://github.com/Roll20/roll20-api-scripts/master/_Example%20Script%20-%20Check%20for%20formatting%20details/script.schema.json",
-    "name": "Calendar DND",
-    "script": "calendar.js",
-    "version": "4.2",
-    "description": "**Attention: This Script is deprecated! Please use the Faerun-Calendar Script instead!**",
-    "authors": "Julexar",
-    "patreon": "https://patreon.com/julexar",
-    "roll20userid": "9989180",
-    "modifies": {
-        "state.calendar": "read,write",
-        "state.alarms": "read,write"
-    },
-    "conflicts": ["Multi-World Calendar", "Faerun-Calendar"]
+	"$schema": "https://github.com/Roll20/roll20-api-scripts/master/_Example%20Script%20-%20Check%20for%20formatting%20details/script.schema.json",
+	"name": "Calendar DND",
+	"script": "calendar.js",
+	"version": "4.2",
+	"description": "**Attention: This Script is deprecated! Please use the Faerun-Calendar Script instead!**",
+	"authors": "Julexar",
+	"patreon": "https://patreon.com/julexar",
+	"roll20userid": "9989180",
+	"modifies": {
+		"state.calendar": "read,write",
+		"state.alarms": "read,write"
+	},
+	"conflicts": ["Multi-World Calendar", "Faerûn Calendar"]
 }
