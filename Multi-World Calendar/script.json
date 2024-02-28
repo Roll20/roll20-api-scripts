@@ -12,5 +12,5 @@
 		"state.alarms": "read,write",
 		"handout": "read,write"
 	},
-	"conflicts": ["Calendar DND", "Faerun-Calendar"]
+	"conflicts": ["Calendar DND", "Faerûn Calendar"]
 }
