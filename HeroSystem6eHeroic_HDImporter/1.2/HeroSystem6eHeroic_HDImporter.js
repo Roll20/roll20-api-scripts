@@ -420,157 +420,171 @@
 		// Overall list of maneuvers
 		let maneuverArray = new Array();
 		let maneuverArrayIndex = 0;
-		
-		// Imports twelve martial arts maneuvers, skipping empty slots.
-		// Only the first six are imported into sheet slots.
-		
-		// Maneuver 1
-		if ((typeof character.maneuvers.maneuver01 !== "undefined") && (typeof character.maneuvers.maneuver01.name !== "undefined")) {
-			maneuverArray[maneuverArrayIndex] = character.maneuvers.maneuver01;
-			
-			maneuverArrayIndex++;
-		}
-		
-		// Maneuver 2
-		if ((typeof character.maneuvers.maneuver02 !== "undefined") && (typeof character.maneuvers.maneuver02.name !== "undefined")) {
-			maneuverArray[maneuverArrayIndex] = character.maneuvers.maneuver02;
-			
-			maneuverArrayIndex++;
-		}
-		
-		// Maneuver 3
-		if ((typeof character.maneuvers.maneuver03 !== "undefined") && (typeof character.maneuvers.maneuver03.name !== "undefined")) {
-			maneuverArray[maneuverArrayIndex] = character.maneuvers.maneuver03;
-			
-			maneuverArrayIndex++;
-		}
-		
-		// Maneuver 4
-		if ((typeof character.maneuvers.maneuver04 !== "undefined") && (typeof character.maneuvers.maneuver04.name !== "undefined")) {
-			maneuverArray[maneuverArrayIndex] = character.maneuvers.maneuver04;
-			
-			maneuverArrayIndex++;
-		}
-		
-		// Maneuver 5
-		if ((typeof character.maneuvers.maneuver05 !== "undefined") && (typeof character.maneuvers.maneuver05.name !== "undefined")) {
-			maneuverArray[maneuverArrayIndex] = character.maneuvers.maneuver05;
-			
-			maneuverArrayIndex++;
-		}
-		
-		// Maneuver 6
-		if ((typeof character.maneuvers.maneuver06 !== "undefined") && (typeof character.maneuvers.maneuver06.name !== "undefined")) {
-			maneuverArray[maneuverArrayIndex] = character.maneuvers.maneuver06;
-			
-			maneuverArrayIndex++;
-		}
-		
-		// Maneuver 7
-		if ((typeof character.maneuvers.maneuver07 !== "undefined") && (typeof character.maneuvers.maneuver07.name !== "undefined")) {
-			maneuverArray[maneuverArrayIndex] = character.maneuvers.maneuver07;
-			
-			maneuverArrayIndex++;
-		}
-		
-		// Maneuver 8
-		if ((typeof character.maneuvers.maneuver08 !== "undefined") && (typeof character.maneuvers.maneuver08.name !== "undefined")) {
-			maneuverArray[maneuverArrayIndex] = character.maneuvers.maneuver08;
-			
-			maneuverArrayIndex++;
-		}
-		
-		// Maneuver 9
-		if ((typeof character.maneuvers.maneuver09 !== "undefined") && (typeof character.maneuvers.maneuver09.name !== "undefined")) {
-			maneuverArray[maneuverArrayIndex] = character.maneuvers.maneuver09;
-			
-			maneuverArrayIndex++;
-		}
-		
-		// Maneuver 10
-		if ((typeof character.maneuvers.maneuver10 !== "undefined") && (typeof character.maneuvers.maneuver10.name !== "undefined")) {
-			maneuverArray[maneuverArrayIndex] = character.maneuvers.maneuver10;
-			
-			maneuverArrayIndex++;
-		}
-		
-		// Maneuver 11
-		if ((typeof character.maneuvers.maneuver11 !== "undefined") && (typeof character.maneuvers.maneuver11.name !== "undefined")) {
-			maneuverArray[maneuverArrayIndex] = character.maneuvers.maneuver11;
-			
-			maneuverArrayIndex++;
-		}
-		
-		// Maneuver 12
-		if ((typeof character.maneuvers.maneuver12 !== "undefined") && (typeof character.maneuvers.maneuver12.name !== "undefined")) {
-			maneuverArray[maneuverArrayIndex] = character.maneuvers.maneuver12;
-			
-			maneuverArrayIndex++;
-		}
-		
-		// Maneuver 13
-		if ((typeof character.maneuvers.maneuver13 !== "undefined") && (typeof character.maneuvers.maneuver13.name !== "undefined")) {
-			maneuverArray[maneuverArrayIndex] = character.maneuvers.maneuver13;
-			
-			maneuverArrayIndex++;
-		}
-		
-		// Maneuver 14
-		if ((typeof character.maneuvers.maneuver14 !== "undefined") && (typeof character.maneuvers.maneuver14.name !== "undefined")) {
-			maneuverArray[maneuverArrayIndex] = character.maneuvers.maneuver14;
-			
-			maneuverArrayIndex++;
-		}
-		
-		// Maneuver 15
-		if ((typeof character.maneuvers.maneuver15 !== "undefined") && (typeof character.maneuvers.maneuver15.name !== "undefined")) {
-			maneuverArray[maneuverArrayIndex] = character.maneuvers.maneuver15;
-			
-			maneuverArrayIndex++;
-		}
-		
-		// Maneuver 16
-		if ((typeof character.maneuvers.maneuver16 !== "undefined") && (typeof character.maneuvers.maneuver16.name !== "undefined")) {
-			maneuverArray[maneuverArrayIndex] = character.maneuvers.maneuver16;
-			
-			maneuverArrayIndex++;
-		}
-		
-		// Maneuver 17
-		if ((typeof character.maneuvers.maneuver17 !== "undefined") && (typeof character.maneuvers.maneuver17.name !== "undefined")) {
-			maneuverArray[maneuverArrayIndex] = character.maneuvers.maneuver17;
-			
-			maneuverArrayIndex++;
-		}
-		
-		// Maneuver 18
-		if ((typeof character.maneuvers.maneuver18 !== "undefined") && (typeof character.maneuvers.maneuver18.name !== "undefined")) {
-			maneuverArray[maneuverArrayIndex] = character.maneuvers.maneuver18;
-			
-			maneuverArrayIndex++;
-		}
-		
-		// Maneuver 19
-		if ((typeof character.maneuvers.maneuver19 !== "undefined") && (typeof character.maneuvers.maneuver19.name !== "undefined")) {
-			maneuverArray[maneuverArrayIndex] = character.maneuvers.maneuver19;
-			
-			maneuverArrayIndex++;
-		}
-		
-		// Maneuver 20
-		if ((typeof character.maneuvers.maneuver20 !== "undefined") && (typeof character.maneuvers.maneuver20.name !== "undefined")) {
-			maneuverArray[maneuverArrayIndex] = character.maneuvers.maneuver20;
-			
-			maneuverArrayIndex++;
-		}
-		
-		let importedManeuvers = {};
+		const maxManeuvers = 20;
+		const maneuverSlots = 10;
 		let importCount = 0;
-		const maxManeuvers = 10;
-		const nameMax = 16;
 		var ID = "01";
 		
-		while ( (importCount < maxManeuvers) && (importCount < maneuverArrayIndex) ) {
+		// Imports twenty martial arts maneuvers, skipping empty slots.
+		// Only the first 10 are imported into sheet slots.
+		
+		for (importCount = 1; importCount < maxManeuvers; importCount++) {
+			
+			ID = String(importCount).padStart(2,'0');
+			
+			if ((typeof character.maneuvers["maneuver"+ID] !== "undefined") && (typeof character.maneuvers["maneuver"+ID].name !== "undefined")) {
+				maneuverArray[maneuverArrayIndex] = character.maneuvers["maneuver"+ID];
+				
+				maneuverArrayIndex++;
+			}
+			
+		}
+		
+		// // Maneuver 1
+		// if ((typeof character.maneuvers.maneuver01 !== "undefined") && (typeof character.maneuvers.maneuver01.name !== "undefined")) {
+		// 	maneuverArray[maneuverArrayIndex] = character.maneuvers.maneuver01;
+		// 	
+		// 	maneuverArrayIndex++;
+		// }
+		// 
+		// // Maneuver 2
+		// if ((typeof character.maneuvers.maneuver02 !== "undefined") && (typeof character.maneuvers.maneuver02.name !== "undefined")) {
+		// 	maneuverArray[maneuverArrayIndex] = character.maneuvers.maneuver02;
+		// 	
+		// 	maneuverArrayIndex++;
+		// }
+		// 
+		// // Maneuver 3
+		// if ((typeof character.maneuvers.maneuver03 !== "undefined") && (typeof character.maneuvers.maneuver03.name !== "undefined")) {
+		// 	maneuverArray[maneuverArrayIndex] = character.maneuvers.maneuver03;
+		// 	
+		// 	maneuverArrayIndex++;
+		// }
+		// 
+		// // Maneuver 4
+		// if ((typeof character.maneuvers.maneuver04 !== "undefined") && (typeof character.maneuvers.maneuver04.name !== "undefined")) {
+		// 	maneuverArray[maneuverArrayIndex] = character.maneuvers.maneuver04;
+		// 	
+		// 	maneuverArrayIndex++;
+		// }
+		// 
+		// // Maneuver 5
+		// if ((typeof character.maneuvers.maneuver05 !== "undefined") && (typeof character.maneuvers.maneuver05.name !== "undefined")) {
+		// 	maneuverArray[maneuverArrayIndex] = character.maneuvers.maneuver05;
+		// 	
+		// 	maneuverArrayIndex++;
+		// }
+		// 
+		// // Maneuver 6
+		// if ((typeof character.maneuvers.maneuver06 !== "undefined") && (typeof character.maneuvers.maneuver06.name !== "undefined")) {
+		// 	maneuverArray[maneuverArrayIndex] = character.maneuvers.maneuver06;
+		// 	
+		// 	maneuverArrayIndex++;
+		// }
+		// 
+		// // Maneuver 7
+		// if ((typeof character.maneuvers.maneuver07 !== "undefined") && (typeof character.maneuvers.maneuver07.name !== "undefined")) {
+		// 	maneuverArray[maneuverArrayIndex] = character.maneuvers.maneuver07;
+		// 	
+		// 	maneuverArrayIndex++;
+		// }
+		// 
+		// // Maneuver 8
+		// if ((typeof character.maneuvers.maneuver08 !== "undefined") && (typeof character.maneuvers.maneuver08.name !== "undefined")) {
+		// 	maneuverArray[maneuverArrayIndex] = character.maneuvers.maneuver08;
+		// 	
+		// 	maneuverArrayIndex++;
+		// }
+		// 
+		// // Maneuver 9
+		// if ((typeof character.maneuvers.maneuver09 !== "undefined") && (typeof character.maneuvers.maneuver09.name !== "undefined")) {
+		// 	maneuverArray[maneuverArrayIndex] = character.maneuvers.maneuver09;
+		// 	
+		// 	maneuverArrayIndex++;
+		// }
+		// 
+		// // Maneuver 10
+		// if ((typeof character.maneuvers.maneuver10 !== "undefined") && (typeof character.maneuvers.maneuver10.name !== "undefined")) {
+		// 	maneuverArray[maneuverArrayIndex] = character.maneuvers.maneuver10;
+		// 	
+		// 	maneuverArrayIndex++;
+		// }
+		// 
+		// // Maneuver 11
+		// if ((typeof character.maneuvers.maneuver11 !== "undefined") && (typeof character.maneuvers.maneuver11.name !== "undefined")) {
+		// 	maneuverArray[maneuverArrayIndex] = character.maneuvers.maneuver11;
+		// 	
+		// 	maneuverArrayIndex++;
+		// }
+		// 
+		// // Maneuver 12
+		// if ((typeof character.maneuvers.maneuver12 !== "undefined") && (typeof character.maneuvers.maneuver12.name !== "undefined")) {
+		// 	maneuverArray[maneuverArrayIndex] = character.maneuvers.maneuver12;
+		// 	
+		// 	maneuverArrayIndex++;
+		// }
+		// 
+		// // Maneuver 13
+		// if ((typeof character.maneuvers.maneuver13 !== "undefined") && (typeof character.maneuvers.maneuver13.name !== "undefined")) {
+		// 	maneuverArray[maneuverArrayIndex] = character.maneuvers.maneuver13;
+		// 	
+		// 	maneuverArrayIndex++;
+		// }
+		// 
+		// // Maneuver 14
+		// if ((typeof character.maneuvers.maneuver14 !== "undefined") && (typeof character.maneuvers.maneuver14.name !== "undefined")) {
+		// 	maneuverArray[maneuverArrayIndex] = character.maneuvers.maneuver14;
+		// 	
+		// 	maneuverArrayIndex++;
+		// }
+		// 
+		// // Maneuver 15
+		// if ((typeof character.maneuvers.maneuver15 !== "undefined") && (typeof character.maneuvers.maneuver15.name !== "undefined")) {
+		// 	maneuverArray[maneuverArrayIndex] = character.maneuvers.maneuver15;
+		// 	
+		// 	maneuverArrayIndex++;
+		// }
+		// 
+		// // Maneuver 16
+		// if ((typeof character.maneuvers.maneuver16 !== "undefined") && (typeof character.maneuvers.maneuver16.name !== "undefined")) {
+		// 	maneuverArray[maneuverArrayIndex] = character.maneuvers.maneuver16;
+		// 	
+		// 	maneuverArrayIndex++;
+		// }
+		// 
+		// // Maneuver 17
+		// if ((typeof character.maneuvers.maneuver17 !== "undefined") && (typeof character.maneuvers.maneuver17.name !== "undefined")) {
+		// 	maneuverArray[maneuverArrayIndex] = character.maneuvers.maneuver17;
+		// 	
+		// 	maneuverArrayIndex++;
+		// }
+		// 
+		// // Maneuver 18
+		// if ((typeof character.maneuvers.maneuver18 !== "undefined") && (typeof character.maneuvers.maneuver18.name !== "undefined")) {
+		// 	maneuverArray[maneuverArrayIndex] = character.maneuvers.maneuver18;
+		// 	
+		// 	maneuverArrayIndex++;
+		// }
+		// 
+		// // Maneuver 19
+		// if ((typeof character.maneuvers.maneuver19 !== "undefined") && (typeof character.maneuvers.maneuver19.name !== "undefined")) {
+		// 	maneuverArray[maneuverArrayIndex] = character.maneuvers.maneuver19;
+		// 	
+		// 	maneuverArrayIndex++;
+		// }
+		// 
+		// // Maneuver 20
+		// if ((typeof character.maneuvers.maneuver20 !== "undefined") && (typeof character.maneuvers.maneuver20.name !== "undefined")) {
+		// 	maneuverArray[maneuverArrayIndex] = character.maneuvers.maneuver20;
+		// 	
+		// 	maneuverArrayIndex++;
+		// }
+		
+		let importedManeuvers = {};
+		importCount = 0;
+		const nameMax = 16;
+		
+		while ( (importCount < maneuverSlots) && (importCount < maneuverArrayIndex) ) {
 			if (importCount < maneuverArrayIndex) {
 				ID = String(importCount+1).padStart(2,'0');
 				
@@ -603,11 +617,11 @@
 		}
 		
 		// Display additional maneuvers in the treasures text box.
-		if (maneuverArrayIndex>maxManeuvers) {
+		if (maneuverArrayIndex > maneuverSlots) {
 			let tempString = "";
 			let extras = 0;
 			
-			for (let i = maxManeuvers; i < maneuverArrayIndex; i++) {
+			for (let i = maneuverSlots; i < maneuverArrayIndex; i++) {
 				tempString = tempString + maneuverArray[i].name + "\n";
 				tempString = tempString + "CP: " + maneuverArray[i].points + "\n";
 				if (maneuverArray[i].ocv !== "") {
