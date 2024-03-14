@@ -566,71 +566,29 @@
 		
 		let importedManeuvers = {};
 		let importCount = 0;
+		const maxManeuvers = 10;
+		const nameMax = 16;
+		var ID = "01";
 		
-		if (maneuverArrayIndex > 0) {
-			importCount++;
-			
-			importedManeuvers.martialManeuverName01 = maneuverArray[0].name;
-			importedManeuvers.martialManeuverCP01 = maneuverArray[0].points;
-			importedManeuvers.martialManeuverPhase01 = maneuverArray[0].phase;
-			importedManeuvers.martialManeuverOCV01 = maneuverArray[0].ocv;
-			importedManeuvers.martialManeuverDCV01 = maneuverArray[0].dcv;
-			importedManeuvers.martialManeuverEffect01 = maneuverArray[0].effect;
-		}
-		
-		if (maneuverArrayIndex > 1) {
-			importCount++;
-			
-			importedManeuvers.martialManeuverName02 = maneuverArray[1].name;
-			importedManeuvers.martialManeuverCP02 = maneuverArray[1].points;
-			importedManeuvers.martialManeuverPhase02 = maneuverArray[1].phase;
-			importedManeuvers.martialManeuverOCV02 = maneuverArray[1].ocv;
-			importedManeuvers.martialManeuverDCV02 = maneuverArray[1].dcv;
-			importedManeuvers.martialManeuverEffect02 = maneuverArray[1].effect;
-		}
-		
-		if (maneuverArrayIndex > 2) {
-			importCount++;
-			
-			importedManeuvers.martialManeuverName03 = maneuverArray[2].name;
-			importedManeuvers.martialManeuverCP03 = maneuverArray[2].points;
-			importedManeuvers.martialManeuverPhase03 = maneuverArray[2].phase;
-			importedManeuvers.martialManeuverOCV03 = maneuverArray[2].ocv;
-			importedManeuvers.martialManeuverDCV03 = maneuverArray[2].dcv;
-			importedManeuvers.martialManeuverEffect03 = maneuverArray[2].effect;
-		}
-		
-		if (maneuverArrayIndex > 3) {
-			importCount++;
-			
-			importedManeuvers.martialManeuverName04 = maneuverArray[3].name;
-			importedManeuvers.martialManeuverCP04 = maneuverArray[3].points;
-			importedManeuvers.martialManeuverPhase04 = maneuverArray[3].phase;
-			importedManeuvers.martialManeuverOCV04 = maneuverArray[3].ocv;
-			importedManeuvers.martialManeuverDCV04 = maneuverArray[3].dcv;
-			importedManeuvers.martialManeuverEffect04 = maneuverArray[3].effect;
-		}
-		
-		if (maneuverArrayIndex > 4) {
-			importCount++;
-			
-			importedManeuvers.martialManeuverName05 = maneuverArray[4].name;
-			importedManeuvers.martialManeuverCP05 = maneuverArray[4].points;
-			importedManeuvers.martialManeuverPhase05 = maneuverArray[4].phase;
-			importedManeuvers.martialManeuverOCV05 = maneuverArray[4].ocv;
-			importedManeuvers.martialManeuverDCV05 = maneuverArray[4].dcv;
-			importedManeuvers.martialManeuverEffect05 = maneuverArray[4].effect;
-		}
-		
-		if (maneuverArrayIndex > 5) {
-			importCount++;
-			
-			importedManeuvers.martialManeuverName06 = maneuverArray[5].name;
-			importedManeuvers.martialManeuverCP06 = maneuverArray[5].points;
-			importedManeuvers.martialManeuverPhase06 = maneuverArray[5].phase;
-			importedManeuvers.martialManeuverOCV06 = maneuverArray[5].ocv;
-			importedManeuvers.martialManeuverDCV06 = maneuverArray[5].dcv;
-			importedManeuvers.martialManeuverEffect06 = maneuverArray[5].effect;
+		while ( (importCount < maxManeuvers) && (importCount < maneuverArrayIndex) ) {
+			if (importCount < maneuverArrayIndex) {
+				ID = String(importCount+1).padStart(2,'0');
+				
+				if ( maneuverArray[importCount].name.length > nameMax) {
+					importedManeuvers["martialManeuverName"+ID] = maneuverArray[importCount].name.slice(0, nameMax);
+					importedManeuvers["martialManeuverEffect"+ID] = maneuverArray[importCount].name + '\n' + maneuverArray[importCount].effect;
+				} else {
+					importedManeuvers["martialManeuverName"+ID] = maneuverArray[importCount].name;
+					importedManeuvers["martialManeuverEffect"+ID] = maneuverArray[importCount].effect;
+				}
+				
+				importedManeuvers["martialManeuverCP"+ID] = maneuverArray[importCount].points;
+				importedManeuvers["martialManeuverPhase"+ID] = maneuverArray[importCount].phase;
+				importedManeuvers["martialManeuverOCV"+ID] = maneuverArray[importCount].ocv;
+				importedManeuvers["martialManeuverDCV"+ID] = maneuverArray[importCount].dcv;
+				
+				importCount++;
+			}
 		}
 		
 		// Import maneuvers.
@@ -645,12 +603,11 @@
 		}
 		
 		// Display additional maneuvers in the treasures text box.
-		if (maneuverArrayIndex>6) {
+		if (maneuverArrayIndex>maxManeuvers) {
 			let tempString = "";
-			let i = 6;
 			let extras = 0;
 			
-			for (let i = 6; i<maneuverArrayIndex; i++) {
+			for (let i = maxManeuvers; i < maneuverArrayIndex; i++) {
 				tempString = tempString + maneuverArray[i].name + "\n";
 				tempString = tempString + "CP: " + maneuverArray[i].points + "\n";
 				if (maneuverArray[i].ocv !== "") {
@@ -690,6 +647,7 @@
 		
 		return;
 	};
+	
 	
 	var importEquipment = function(object, character, script_name) {
 		
@@ -6405,6 +6363,7 @@
 		return sheetSkillIndexes;
 	}
 	
+	
 	var importSkillEnhancer = function(object, character, script_name, enhancerString) {
 		// This function is called when a skill is identified as an enhancer.
 		// The skills' text will determine which enhancer it is.
@@ -6450,9 +6409,10 @@
 		}
 		
 		setAttrs(object.id, enhancer);
-	
+		
 		return;
 	}
+
 	
 	var importLanguage = function(object, character, script_name, languageObject, languageIndex) {
 		// This function is called when a skill is identified as an enhancer.
@@ -6475,7 +6435,7 @@
 		let fluency;
 		let literacy;
 		let cost = languageObject.cost;
-
+		
 		// Determine fluency.
 		if (tempString.includes("native")) {
 			fluency = "native";
@@ -6574,9 +6534,10 @@
 		}
 		
 		setAttrs(object.id, language);
-
+		
 		return;
 	}
+	
 	
 	var importWeaponSkill = function(object, character, script_name, skillObject, weaponSkillIndex) {
 		// Identify and assign combat levels
@@ -6725,9 +6686,10 @@
 		}
 		
 		setAttrs(object.id, weaponSkill);
-	
+		
 		return weaponSkillIndex;
 	}
+	
 	
 	var importSkillLevels = function(object, character, script_name, skillObject) {
 		
@@ -8002,25 +7964,25 @@
 
 
 	// Find an existing repeatable item with the same name, or generate new row ID
-	const getOrMakeRowID = (character,repeatPrefix,name) => {
-		// Get list of all of the character's attributes
-		let attrObjs = findObjs({ _type: "attribute", _characterid: character.get("_id") });
-
-		let i = 0;
-		while (i < attrObjs.length)
-		{
-			// If this is a feat taken multiple times, strip the number of times it was taken from the name
-			/*let attrName = attrObjs[i].get("current").toString();
-			 if (regexIndexOf(attrName, / x[0-9]+$/) !== -1)
-			 attrName = attrName.replace(/ x[0-9]+/,"");
-
-			 if (attrObjs[i].get("name").indexOf(repeatPrefix) !== -1 && attrObjs[i].get("name").indexOf("_name") !== -1 && attrName === name)
-			 return attrObjs[i].get("name").substring(repeatPrefix.length,(attrObjs[i].get("name").indexOf("_name")));
-			 i++;*/
-			i++;
-		}
-		return generateRowID();
-	};
+// 	const getOrMakeRowID = (character,repeatPrefix,name) => {
+// 		// Get list of all of the character's attributes
+// 		let attrObjs = findObjs({ _type: "attribute", _characterid: character.get("_id") });
+// 
+// 		let i = 0;
+// 		while (i < attrObjs.length)
+// 		{
+// 			// If this is a feat taken multiple times, strip the number of times it was taken from the name
+// 			let attrName = attrObjs[i].get("current").toString();
+// 			 if (regexIndexOf(attrName, / x[0-9]+$/) !== -1)
+// 			 attrName = attrName.replace(/ x[0-9]+/,"");
+// 
+// 			 if (attrObjs[i].get("name").indexOf(repeatPrefix) !== -1 && attrObjs[i].get("name").indexOf("_name") !== -1 && attrName === name)
+// 			 return attrObjs[i].get("name").substring(repeatPrefix.length,(attrObjs[i].get("name").indexOf("_name")));
+// 			 i++;
+// 			i++;
+// 		}
+// 		return generateRowID();
+// 	};
 
 
 	const generateUUID = (function() {
