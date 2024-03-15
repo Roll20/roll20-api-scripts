@@ -1,6 +1,6 @@
 /* HeroSystem6eHeroic_HDImporter.js
  * Hero Designer Importer for the Roll20 Hero System 6e Heroic character sheet
- * Version: 1.1
+ * Version: 1.2
  * By Villain in Glasses
  * villaininglasses@icloud.com
  * Discord: Villain#0604
@@ -41,7 +41,8 @@
 
 (function() {
 	// Constants
-	const version = "1.2";
+	const versionAPI = "1.2";
+	const versionSheet = "2.52";
 	const needsExporterVersion = "1.0";
 	
 	const defaultAttributes = {
@@ -55,7 +56,7 @@
 				
 		// Tally Bar
 		characteristicsCost: 0,
-	
+		
 		// Primary Attributes
 		strength: 10,
 		dexterity: 10,
@@ -100,7 +101,6 @@
 		agilityLevelsCP: 0,
 		noncombatLevelsCP: 0,
 		overallLevelsCP: 0
-		
 	}
 	
 	let hero_caller = {};
@@ -128,73 +128,73 @@
 
 	on('chat:message', (msg) => {
 		if (msg.type != 'api') return;
-
+	
 		// Split the message into command and argument(s)
 		let args = msg.content.split(/ --(help|reset|config|imports|import) ?/g);
 		let command = args.shift().substring(1).trim();
-
+		
 		hero_caller = getObj('player', msg.playerid);
-
+		
 		if (command !== 'hero') {
 			return;
 		}
 		let importData = "";
 		if(args.length < 1) { sendHelpMenu(hero_caller); return; }
-
+		
 		let config = state[state_name][hero_caller.id].config;
-
+		
 		for(let i = 0; i < args.length; i+=2) {
 			let k = args[i].trim();
 			let v = args[i+1] != null ? args[i+1].trim() : null;
-
+			
 			switch(k) {
 				case 'help':
 					sendHelpMenu(hero_caller);
 					return;
-
+					
 				case 'reset':
 					state[state_name][hero_caller] = {};
 					setDefaults(true);
 					sendConfigMenu(hero_caller);
 					return;
-
+					
 				case 'config':
 					if(args.length > 0){
 						let setting = v.split('|');
 						let key = setting.shift();
 						let value = (setting[0] === 'true') ? true : (setting[0] === 'false') ? false : (setting[0] === '[NONE]') ? '' : setting[0];
-
+						
 						if(key === 'prefix' && value.charAt(0) !== '_' && value.length > 0) { value = value + ' ';}
 						if(key === 'suffix' && value.charAt(0) !== '_' && value.length > 0) { value = ' ' + value}
-
+						
 						state[state_name][hero_caller.id].config[key] = value;
 					}
-
+					
 					sendConfigMenu(hero_caller);
 					return;
-
+					
 				case 'imports':
 					if(args.length > 0){
 						let setting = v.split('|');
 						let key = setting.shift();
 						let value = (setting[0] === 'true') ? true : (setting[0] === 'false') ? false : (setting[0] === '[NONE]') ? '' : setting[0];
-
+						
 						state[state_name][hero_caller.id].config.imports[key] = value;
 					}
-
+					
 					sendConfigMenu(hero_caller);
 					return;
-
+					
 				case 'import':
 					importData = v.replace(/[\n\r]/g, '');
 					break;
-
+					
 				default:
 					sendHelpMenu(hero_caller);
 					return;
 			}
 		}
-
+		
 		if(importData === '') {
 			return;
 		}
@@ -217,18 +217,18 @@
 			
 			return;
 		}
-
+		
 		sendChat(script_name, '<div style="'+style+'">Import of <b>' + character.character_name + '</b> started.</div>', null, {noarchive:true});
-
+		
 		object = null;
-
+		
 		// Remove characters with the same name if overwrite is enabled.
 		if(state[state_name][hero_caller.id].config.overwrite) {
 			let objects = findObjs({
 				_type: "character",
 				name: state[state_name][hero_caller.id].config.prefix + character.character_name + state[state_name][hero_caller.id].config.suffix
 			}, {caseInsensitive: true});
-
+			
 			if(objects.length > 0) {
 				object = objects[0];
 				for(let i = 1; i < objects.length; i++){
@@ -236,7 +236,7 @@
 				}
 			}
 		}
-
+		
 		if(!object) {
 			// Create character object
 			object = createObj("character", {
@@ -270,6 +270,9 @@
 		// Import Page 5: Complications
 		importComplications(object, character, script_name);
 		
+		// Version
+		applyVersion(object, character, script_name, versionSheet);
+		
 		// Finished notification
 		sendChat(script_name, '<div style="'+style+'">Import of <b>' + character.character_name + '</b> finished.</div>', null, {noarchive:true});
 	});
@@ -288,7 +291,7 @@
 		
 		// Set sticky note to importer details.
 		let importInfoString = "HDImporter for Roll20\n";
-		importInfoString = importInfoString + "Version: " + version + "\n";
+		importInfoString = importInfoString + "Version: " + versionAPI + "\n";
 		if (typeof character.playerName !== "undefined") {
 			importInfoString = importInfoString + "Player: " + character.playerName + "\n";
 		}
@@ -304,6 +307,7 @@
 		if (typeof character.versionHD !== "undefined") {
 			importInfoString = importInfoString + "Hero Designer version: " + character.versionHD + "\n";
 		}
+		importInfoString = importInfoString + "HeroSystem6eHeroic.hde version: " + character.version + "\n";
 		if (typeof character.characterFile !== "undefined") {
 			importInfoString = importInfoString + "Original file: " + character.characterFile + "\n";
 		}
@@ -408,7 +412,22 @@
 		}
 		
 		return;
-	};
+	}
+	
+	
+	var applyVersion = function(object, character, script_name, version) {
+		// Set version data to avoid improper sheet auto updates.
+		let version_attributes = {
+			version: version,
+			validateMay23: 1,
+			
+			// Show the Treasures slide where equipment will appear.	
+			gearSlideSelection : "gearTreasures"
+		}
+		
+		setAttrs(object.id, version_attributes);
+	}
+	
 	
 	var importManeuvers = function(object, character, script_name) {
 			
@@ -423,7 +442,7 @@
 		const maxManeuvers = 20;
 		const maneuverSlots = 10;
 		let importCount = 0;
-		var ID = "01";
+		let ID = "01";
 		
 		// Imports twenty martial arts maneuvers, skipping empty slots.
 		// Only the first 10 are imported into sheet slots.
@@ -439,146 +458,6 @@
 			}
 			
 		}
-		
-		// // Maneuver 1
-		// if ((typeof character.maneuvers.maneuver01 !== "undefined") && (typeof character.maneuvers.maneuver01.name !== "undefined")) {
-		// 	maneuverArray[maneuverArrayIndex] = character.maneuvers.maneuver01;
-		// 	
-		// 	maneuverArrayIndex++;
-		// }
-		// 
-		// // Maneuver 2
-		// if ((typeof character.maneuvers.maneuver02 !== "undefined") && (typeof character.maneuvers.maneuver02.name !== "undefined")) {
-		// 	maneuverArray[maneuverArrayIndex] = character.maneuvers.maneuver02;
-		// 	
-		// 	maneuverArrayIndex++;
-		// }
-		// 
-		// // Maneuver 3
-		// if ((typeof character.maneuvers.maneuver03 !== "undefined") && (typeof character.maneuvers.maneuver03.name !== "undefined")) {
-		// 	maneuverArray[maneuverArrayIndex] = character.maneuvers.maneuver03;
-		// 	
-		// 	maneuverArrayIndex++;
-		// }
-		// 
-		// // Maneuver 4
-		// if ((typeof character.maneuvers.maneuver04 !== "undefined") && (typeof character.maneuvers.maneuver04.name !== "undefined")) {
-		// 	maneuverArray[maneuverArrayIndex] = character.maneuvers.maneuver04;
-		// 	
-		// 	maneuverArrayIndex++;
-		// }
-		// 
-		// // Maneuver 5
-		// if ((typeof character.maneuvers.maneuver05 !== "undefined") && (typeof character.maneuvers.maneuver05.name !== "undefined")) {
-		// 	maneuverArray[maneuverArrayIndex] = character.maneuvers.maneuver05;
-		// 	
-		// 	maneuverArrayIndex++;
-		// }
-		// 
-		// // Maneuver 6
-		// if ((typeof character.maneuvers.maneuver06 !== "undefined") && (typeof character.maneuvers.maneuver06.name !== "undefined")) {
-		// 	maneuverArray[maneuverArrayIndex] = character.maneuvers.maneuver06;
-		// 	
-		// 	maneuverArrayIndex++;
-		// }
-		// 
-		// // Maneuver 7
-		// if ((typeof character.maneuvers.maneuver07 !== "undefined") && (typeof character.maneuvers.maneuver07.name !== "undefined")) {
-		// 	maneuverArray[maneuverArrayIndex] = character.maneuvers.maneuver07;
-		// 	
-		// 	maneuverArrayIndex++;
-		// }
-		// 
-		// // Maneuver 8
-		// if ((typeof character.maneuvers.maneuver08 !== "undefined") && (typeof character.maneuvers.maneuver08.name !== "undefined")) {
-		// 	maneuverArray[maneuverArrayIndex] = character.maneuvers.maneuver08;
-		// 	
-		// 	maneuverArrayIndex++;
-		// }
-		// 
-		// // Maneuver 9
-		// if ((typeof character.maneuvers.maneuver09 !== "undefined") && (typeof character.maneuvers.maneuver09.name !== "undefined")) {
-		// 	maneuverArray[maneuverArrayIndex] = character.maneuvers.maneuver09;
-		// 	
-		// 	maneuverArrayIndex++;
-		// }
-		// 
-		// // Maneuver 10
-		// if ((typeof character.maneuvers.maneuver10 !== "undefined") && (typeof character.maneuvers.maneuver10.name !== "undefined")) {
-		// 	maneuverArray[maneuverArrayIndex] = character.maneuvers.maneuver10;
-		// 	
-		// 	maneuverArrayIndex++;
-		// }
-		// 
-		// // Maneuver 11
-		// if ((typeof character.maneuvers.maneuver11 !== "undefined") && (typeof character.maneuvers.maneuver11.name !== "undefined")) {
-		// 	maneuverArray[maneuverArrayIndex] = character.maneuvers.maneuver11;
-		// 	
-		// 	maneuverArrayIndex++;
-		// }
-		// 
-		// // Maneuver 12
-		// if ((typeof character.maneuvers.maneuver12 !== "undefined") && (typeof character.maneuvers.maneuver12.name !== "undefined")) {
-		// 	maneuverArray[maneuverArrayIndex] = character.maneuvers.maneuver12;
-		// 	
-		// 	maneuverArrayIndex++;
-		// }
-		// 
-		// // Maneuver 13
-		// if ((typeof character.maneuvers.maneuver13 !== "undefined") && (typeof character.maneuvers.maneuver13.name !== "undefined")) {
-		// 	maneuverArray[maneuverArrayIndex] = character.maneuvers.maneuver13;
-		// 	
-		// 	maneuverArrayIndex++;
-		// }
-		// 
-		// // Maneuver 14
-		// if ((typeof character.maneuvers.maneuver14 !== "undefined") && (typeof character.maneuvers.maneuver14.name !== "undefined")) {
-		// 	maneuverArray[maneuverArrayIndex] = character.maneuvers.maneuver14;
-		// 	
-		// 	maneuverArrayIndex++;
-		// }
-		// 
-		// // Maneuver 15
-		// if ((typeof character.maneuvers.maneuver15 !== "undefined") && (typeof character.maneuvers.maneuver15.name !== "undefined")) {
-		// 	maneuverArray[maneuverArrayIndex] = character.maneuvers.maneuver15;
-		// 	
-		// 	maneuverArrayIndex++;
-		// }
-		// 
-		// // Maneuver 16
-		// if ((typeof character.maneuvers.maneuver16 !== "undefined") && (typeof character.maneuvers.maneuver16.name !== "undefined")) {
-		// 	maneuverArray[maneuverArrayIndex] = character.maneuvers.maneuver16;
-		// 	
-		// 	maneuverArrayIndex++;
-		// }
-		// 
-		// // Maneuver 17
-		// if ((typeof character.maneuvers.maneuver17 !== "undefined") && (typeof character.maneuvers.maneuver17.name !== "undefined")) {
-		// 	maneuverArray[maneuverArrayIndex] = character.maneuvers.maneuver17;
-		// 	
-		// 	maneuverArrayIndex++;
-		// }
-		// 
-		// // Maneuver 18
-		// if ((typeof character.maneuvers.maneuver18 !== "undefined") && (typeof character.maneuvers.maneuver18.name !== "undefined")) {
-		// 	maneuverArray[maneuverArrayIndex] = character.maneuvers.maneuver18;
-		// 	
-		// 	maneuverArrayIndex++;
-		// }
-		// 
-		// // Maneuver 19
-		// if ((typeof character.maneuvers.maneuver19 !== "undefined") && (typeof character.maneuvers.maneuver19.name !== "undefined")) {
-		// 	maneuverArray[maneuverArrayIndex] = character.maneuvers.maneuver19;
-		// 	
-		// 	maneuverArrayIndex++;
-		// }
-		// 
-		// // Maneuver 20
-		// if ((typeof character.maneuvers.maneuver20 !== "undefined") && (typeof character.maneuvers.maneuver20.name !== "undefined")) {
-		// 	maneuverArray[maneuverArrayIndex] = character.maneuvers.maneuver20;
-		// 	
-		// 	maneuverArrayIndex++;
-		// }
 		
 		let importedManeuvers = {};
 		importCount = 0;
@@ -660,7 +539,7 @@
 		}
 		
 		return;
-	};
+	}
 	
 	
 	var importEquipment = function(object, character, script_name) {
@@ -678,6 +557,7 @@
 		let subStringA;
 		let subStringB;
 		let sampleSize;
+		let strength = parseInt(character.strength)||1;
 		
 		let gearTextBox = "";
 		
@@ -701,548 +581,49 @@
 		let multipowerArray = new Array();
 		let multipowerArrayIndex = 0;
 		
-		// Item 01
-		if ((typeof character.equipment.equipment01 !== "undefined") && (typeof character.equipment.equipment01.name !== "undefined")) {
-			
-			equipmentArray[equipmentArrayIndex]=character.equipment.equipment01;
+		// Read equipment
+		const maxEquipment = 16;
+		let importCount = 0;
+		let ID = "01";
 		
-			tempString = equipmentArray[equipmentArrayIndex].name;
-			
-			if ((tempString !== "") && tempString.length) {
-				if ((equipmentArray[equipmentArrayIndex].name.includes("Multipower")) || (equipmentArray[equipmentArrayIndex].name.includes("MPSlot"))) {
-					// Then place in multipower array.
-					multipowerArray[multipowerArrayIndex]=equipmentArray[equipmentArrayIndex];
-					multipowerArrayIndex++;	
-					
-				} else if ((equipmentArray[equipmentArrayIndex].attack !== "") && (equipmentArray[equipmentArrayIndex].damage !== "") && (equipmentArray[equipmentArrayIndex].attack === "true")) {
-					// If the item is a damage attack add it to the weapon list.
-					weaponsArray[weaponsArrayIndex]=equipmentArray[equipmentArrayIndex];
-					weaponsArrayIndex++;
-					
-				} else if ((equipmentArray[equipmentArrayIndex].defense !== "") && (equipmentArray[equipmentArrayIndex].defense === "true")) {
-					// If the item is a defense add it to the armor list.
-					// This will need to be updated for shields.
-					armorArray[armorArrayIndex]=equipmentArray[equipmentArrayIndex];
-					armorArrayIndex++;
-					
-				} else {
-					// If the item is not an attack or defense add it to the equipment list.
-					equipmentListArray[equipmentListArrayIndex]=equipmentArray[equipmentArrayIndex];
-					equipmentListArrayIndex++;
-				}
-			}
-			
-			equipmentArrayIndex++;
-		}
+		// Imports sixteen martial arts maneuvers, skipping empty slots.
 		
-		// Item 02
-		if ((typeof character.equipment.equipment02 !== "undefined") && (typeof character.equipment.equipment02.name !== "undefined")) {
+		for (importCount = 1; importCount <= maxEquipment; importCount++) {
 			
-			equipmentArray[equipmentArrayIndex]=character.equipment.equipment02;
+			ID = String(importCount).padStart(2,'0');
 			
-			tempString = equipmentArray[equipmentArrayIndex].name;
-			
-			if ((tempString !== "") && tempString.length) {
-				if ((equipmentArray[equipmentArrayIndex].name.includes("Multipower")) || (equipmentArray[equipmentArrayIndex].name.includes("MPSlot"))) {
-					// Then place in multipower array.
-					multipowerArray[multipowerArrayIndex]=equipmentArray[equipmentArrayIndex];
-					multipowerArrayIndex++;	
-					
-				} else if ((equipmentArray[equipmentArrayIndex].attack !== "") && (equipmentArray[equipmentArrayIndex].damage !== "") && (equipmentArray[equipmentArrayIndex].attack === "true")) {
-					// If the item is a damage attack add it to the weapon list.
-					weaponsArray[weaponsArrayIndex]=equipmentArray[equipmentArrayIndex];
-					weaponsArrayIndex++;
-					
-				} else if ((equipmentArray[equipmentArrayIndex].defense !== "") && (equipmentArray[equipmentArrayIndex].defense === "true")) {
-					// If the item is a defense add it to the armor list.
-					// This will need to be updated for shields.
-					armorArray[armorArrayIndex]=equipmentArray[equipmentArrayIndex];
-					armorArrayIndex++;
-					
-				} else {
-					// If the item is not an attack or defense add it to the equipment list.
-					equipmentListArray[equipmentListArrayIndex]=equipmentArray[equipmentArrayIndex];
-					equipmentListArrayIndex++;
+			if ((typeof character.equipment["equipment"+ID] !== "undefined") && (typeof character.equipment["equipment"+ID].name !== "undefined")) {
+				
+				equipmentArray[equipmentArrayIndex]=character.equipment["equipment"+ID];
+				
+				tempString = equipmentArray[equipmentArrayIndex].name;
+				
+				if ((tempString !== "") && tempString.length) {
+					if ((equipmentArray[equipmentArrayIndex].name.includes("Multipower")) || (equipmentArray[equipmentArrayIndex].name.includes("MPSlot"))) {
+						// Then place in multipower array.
+						multipowerArray[multipowerArrayIndex]=equipmentArray[equipmentArrayIndex];
+						multipowerArrayIndex++;	
+						
+					} else if ((equipmentArray[equipmentArrayIndex].attack !== "") && (equipmentArray[equipmentArrayIndex].damage !== "") && (equipmentArray[equipmentArrayIndex].attack === "true")) {
+						// If the item is a damage attack add it to the weapon list.
+						weaponsArray[weaponsArrayIndex]=equipmentArray[equipmentArrayIndex];
+						weaponsArrayIndex++;
+						
+					} else if ((equipmentArray[equipmentArrayIndex].defense !== "") && (equipmentArray[equipmentArrayIndex].defense === "true")) {
+						// If the item is a defense add it to the armor list.
+						// This will need to be updated for shields.
+						armorArray[armorArrayIndex]=equipmentArray[equipmentArrayIndex];
+						armorArrayIndex++;
+						
+					} else {
+						// If the item is not an attack or defense add it to the equipment list.
+						equipmentListArray[equipmentListArrayIndex]=equipmentArray[equipmentArrayIndex];
+						equipmentListArrayIndex++;
+					}
 				}
-			}
-			
-			equipmentArrayIndex++;
-		}
-		
-		// Item 03
-		if ((typeof character.equipment.equipment03 !== "undefined") && (typeof character.equipment.equipment03.name !== "undefined")) {
-			
-			equipmentArray[equipmentArrayIndex]=character.equipment.equipment03;
-			
-			tempString = equipmentArray[equipmentArrayIndex].name;
-			
-			if ((tempString !== "") && tempString.length) {
-				if ((equipmentArray[equipmentArrayIndex].name.includes("Multipower")) || (equipmentArray[equipmentArrayIndex].name.includes("MPSlot"))) {
-					// Then place in multipower array.
-					multipowerArray[multipowerArrayIndex]=equipmentArray[equipmentArrayIndex];
-					multipowerArrayIndex++;	
-					
-				} else if ((equipmentArray[equipmentArrayIndex].attack !== "") && (equipmentArray[equipmentArrayIndex].damage !== "") && (equipmentArray[equipmentArrayIndex].attack === "true")) {
-					// If the item is a damage attack add it to the weapon list.
-					weaponsArray[weaponsArrayIndex]=equipmentArray[equipmentArrayIndex];
-					weaponsArrayIndex++;
-					
-				} else if ((equipmentArray[equipmentArrayIndex].defense !== "") && (equipmentArray[equipmentArrayIndex].defense === "true")) {
-					// If the item is a defense add it to the armor list.
-					// This will need to be updated for shields.
-					armorArray[armorArrayIndex]=equipmentArray[equipmentArrayIndex];
-					armorArrayIndex++;
-					
-				} else {
-					// If the item is not an attack or defense add it to the equipment list.
-					equipmentListArray[equipmentListArrayIndex]=equipmentArray[equipmentArrayIndex];
-					equipmentListArrayIndex++;
-				}
-			}
-			
-			equipmentArrayIndex++;
-		}
-		
-		// Item 04
-		if ((typeof character.equipment.equipment04 !== "undefined") && (typeof character.equipment.equipment04.name !== "undefined")) {
-			
-			equipmentArray[equipmentArrayIndex]=character.equipment.equipment04;
-			
-			tempString = equipmentArray[equipmentArrayIndex].name;
-			
-			if ((tempString !== "") && tempString.length) {
-				if ((equipmentArray[equipmentArrayIndex].name.includes("Multipower")) || (equipmentArray[equipmentArrayIndex].name.includes("MPSlot"))) {
-					// Then place in multipower array.
-					multipowerArray[multipowerArrayIndex]=equipmentArray[equipmentArrayIndex];
-					multipowerArrayIndex++;	
-					
-				} else if ((equipmentArray[equipmentArrayIndex].attack !== "") && (equipmentArray[equipmentArrayIndex].damage !== "") && (equipmentArray[equipmentArrayIndex].attack === "true")) {
-					// If the item is a damage attack add it to the weapon list.
-					weaponsArray[weaponsArrayIndex]=equipmentArray[equipmentArrayIndex];
-					weaponsArrayIndex++;
-					
-				} else if ((equipmentArray[equipmentArrayIndex].defense !== "") && (equipmentArray[equipmentArrayIndex].defense === "true")) {
-					// If the item is a defense add it to the armor list.
-					// This will need to be updated for shields.
-					armorArray[armorArrayIndex]=equipmentArray[equipmentArrayIndex];
-					armorArrayIndex++;
-					
-				} else {
-					// If the item is not an attack or defense add it to the equipment list.
-					equipmentListArray[equipmentListArrayIndex]=equipmentArray[equipmentArrayIndex];
-					equipmentListArrayIndex++;
-				}
-			}
-			
-			equipmentArrayIndex++;
-		}
-		
-		// Item 05
-		if ((typeof character.equipment.equipment05 !== "undefined") && (typeof character.equipment.equipment05.name !== "undefined")) {
-			
-			equipmentArray[equipmentArrayIndex]=character.equipment.equipment05;
-			
-			tempString = equipmentArray[equipmentArrayIndex].name;
-			
-			if ((tempString !== "") && tempString.length) {
-				if ((equipmentArray[equipmentArrayIndex].name.includes("Multipower")) || (equipmentArray[equipmentArrayIndex].name.includes("MPSlot"))) {
-					// Then place in multipower array.
-					multipowerArray[multipowerArrayIndex]=equipmentArray[equipmentArrayIndex];
-					multipowerArrayIndex++;	
-					
-				} else if ((equipmentArray[equipmentArrayIndex].attack !== "") && (equipmentArray[equipmentArrayIndex].damage !== "") && (equipmentArray[equipmentArrayIndex].attack === "true")) {
-					// If the item is a damage attack add it to the weapon list.
-					weaponsArray[weaponsArrayIndex]=equipmentArray[equipmentArrayIndex];
-					weaponsArrayIndex++;
-					
-				} else if ((equipmentArray[equipmentArrayIndex].defense !== "") && (equipmentArray[equipmentArrayIndex].defense === "true")) {
-					// If the item is a defense add it to the armor list.
-					// This will need to be updated for shields.
-					armorArray[armorArrayIndex]=equipmentArray[equipmentArrayIndex];
-					armorArrayIndex++;
-					
-				} else {
-					// If the item is not an attack or defense add it to the equipment list.
-					equipmentListArray[equipmentListArrayIndex]=equipmentArray[equipmentArrayIndex];
-					equipmentListArrayIndex++;
-				}
-			}
-			
-			equipmentArrayIndex++;
-		}
-		
-		// Item 06
-		if ((typeof character.equipment.equipment06 !== "undefined") && (typeof character.equipment.equipment06.name !== "undefined")) {
-			
-			equipmentArray[equipmentArrayIndex]=character.equipment.equipment06;
-			
-			tempString = equipmentArray[equipmentArrayIndex].name;
-			
-			if ((tempString !== "") && tempString.length) {
-				if ((equipmentArray[equipmentArrayIndex].name.includes("Multipower")) || (equipmentArray[equipmentArrayIndex].name.includes("MPSlot"))) {
-					// Then place in multipower array.
-					multipowerArray[multipowerArrayIndex]=equipmentArray[equipmentArrayIndex];
-					multipowerArrayIndex++;	
-					
-				} else if ((equipmentArray[equipmentArrayIndex].attack !== "") && (equipmentArray[equipmentArrayIndex].damage !== "") && (equipmentArray[equipmentArrayIndex].attack === "true")) {
-					// If the item is a damage attack add it to the weapon list.
-					weaponsArray[weaponsArrayIndex]=equipmentArray[equipmentArrayIndex];
-					weaponsArrayIndex++;
-					
-				} else if ((equipmentArray[equipmentArrayIndex].defense !== "") && (equipmentArray[equipmentArrayIndex].defense === "true")) {
-					// If the item is a defense add it to the armor list.
-					// This will need to be updated for shields.
-					armorArray[armorArrayIndex]=equipmentArray[equipmentArrayIndex];
-					armorArrayIndex++;
-					
-				} else {
-					// If the item is not an attack or defense add it to the equipment list.
-					equipmentListArray[equipmentListArrayIndex]=equipmentArray[equipmentArrayIndex];
-					equipmentListArrayIndex++;
-				}
-			}
-			
-			equipmentArrayIndex++;
-		}
-		
-		// Item 07
-		if ((typeof character.equipment.equipment07 !== "undefined") && (typeof character.equipment.equipment07.name !== "undefined")) {
-			
-			equipmentArray[equipmentArrayIndex]=character.equipment.equipment07;
-			
-			tempString = equipmentArray[equipmentArrayIndex].name;
-			
-			if ((tempString !== "") && tempString.length) {
-				if ((equipmentArray[equipmentArrayIndex].name.includes("Multipower")) || (equipmentArray[equipmentArrayIndex].name.includes("MPSlot"))) {
-					// Then place in multipower array.
-					multipowerArray[multipowerArrayIndex]=equipmentArray[equipmentArrayIndex];
-					multipowerArrayIndex++;	
-					
-				} else if ((equipmentArray[equipmentArrayIndex].attack !== "") && (equipmentArray[equipmentArrayIndex].damage !== "") && (equipmentArray[equipmentArrayIndex].attack === "true")) {
-					// If the item is a damage attack add it to the weapon list.
-					weaponsArray[weaponsArrayIndex]=equipmentArray[equipmentArrayIndex];
-					weaponsArrayIndex++;
-					
-				} else if ((equipmentArray[equipmentArrayIndex].defense !== "") && (equipmentArray[equipmentArrayIndex].defense === "true")) {
-					// If the item is a defense add it to the armor list.
-					// This will need to be updated for shields.
-					armorArray[armorArrayIndex]=equipmentArray[equipmentArrayIndex];
-					armorArrayIndex++;
-					
-				} else {
-					// If the item is not an attack or defense add it to the equipment list.
-					equipmentListArray[equipmentListArrayIndex]=equipmentArray[equipmentArrayIndex];
-					equipmentListArrayIndex++;
-				}
-			}
-			
-			equipmentArrayIndex++;
-		}
-		
-		// Item 08
-		if ((typeof character.equipment.equipment08 !== "undefined") && (typeof character.equipment.equipment08.name !== "undefined")) {
-			
-			equipmentArray[equipmentArrayIndex]=character.equipment.equipment08;
-			
-			tempString = equipmentArray[equipmentArrayIndex].name;
-			
-			if ((tempString !== "") && tempString.length) {
-				if ((equipmentArray[equipmentArrayIndex].name.includes("Multipower")) || (equipmentArray[equipmentArrayIndex].name.includes("MPSlot"))) {
-					// Then place in multipower array.
-					multipowerArray[multipowerArrayIndex]=equipmentArray[equipmentArrayIndex];
-					multipowerArrayIndex++;	
-					
-				} else if ((equipmentArray[equipmentArrayIndex].attack !== "") && (equipmentArray[equipmentArrayIndex].damage !== "") && (equipmentArray[equipmentArrayIndex].attack === "true")) {
-					// If the item is a damage attack add it to the weapon list.
-					weaponsArray[weaponsArrayIndex]=equipmentArray[equipmentArrayIndex];
-					weaponsArrayIndex++;
-					
-				} else if ((equipmentArray[equipmentArrayIndex].defense !== "") && (equipmentArray[equipmentArrayIndex].defense === "true")) {
-					// If the item is a defense add it to the armor list.
-					// This will need to be updated for shields.
-					armorArray[armorArrayIndex]=equipmentArray[equipmentArrayIndex];
-					armorArrayIndex++;
-					
-				} else {
-					// If the item is not an attack or defense add it to the equipment list.
-					equipmentListArray[equipmentListArrayIndex]=equipmentArray[equipmentArrayIndex];
-					equipmentListArrayIndex++;
-				}
-			}
-			
-			equipmentArrayIndex++;
-		}
-		
-		// Item 09
-		if ((typeof character.equipment.equipment09 !== "undefined") && (typeof character.equipment.equipment09.name !== "undefined")) {
-			
-			equipmentArray[equipmentArrayIndex]=character.equipment.equipment09;
-			
-			tempString = equipmentArray[equipmentArrayIndex].name;
-			
-			if ((tempString !== "") && tempString.length) {
-				if ((equipmentArray[equipmentArrayIndex].name.includes("Multipower")) || (equipmentArray[equipmentArrayIndex].name.includes("MPSlot"))) {
-					// Then place in multipower array.
-					multipowerArray[multipowerArrayIndex]=equipmentArray[equipmentArrayIndex];
-					multipowerArrayIndex++;	
-					
-				} else if ((equipmentArray[equipmentArrayIndex].attack !== "") && (equipmentArray[equipmentArrayIndex].damage !== "") && (equipmentArray[equipmentArrayIndex].attack === "true")) {
-					// If the item is a damage attack add it to the weapon list.
-					weaponsArray[weaponsArrayIndex]=equipmentArray[equipmentArrayIndex];
-					weaponsArrayIndex++;
-					
-				} else if ((equipmentArray[equipmentArrayIndex].defense !== "") && (equipmentArray[equipmentArrayIndex].defense === "true")) {
-					// If the item is a defense add it to the armor list.
-					// This will need to be updated for shields.
-					armorArray[armorArrayIndex]=equipmentArray[equipmentArrayIndex];
-					armorArrayIndex++;
-					
-				} else {
-					// If the item is not an attack or defense add it to the equipment list.
-					equipmentListArray[equipmentListArrayIndex]=equipmentArray[equipmentArrayIndex];
-					equipmentListArrayIndex++;
-				}
-			}
-			
-			equipmentArrayIndex++;
-		}
-		
-		// Item 10
-		if ((typeof character.equipment.equipment10 !== "undefined") && (typeof character.equipment.equipment10.name !== "undefined")) {
-			
-			equipmentArray[equipmentArrayIndex]=character.equipment.equipment10;
-			
-			tempString = equipmentArray[equipmentArrayIndex].name;
-			
-			if ((tempString !== "") && tempString.length) {
-				if ((equipmentArray[equipmentArrayIndex].name.includes("Multipower")) || (equipmentArray[equipmentArrayIndex].name.includes("MPSlot"))) {
-					// Then place in multipower array.
-					multipowerArray[multipowerArrayIndex]=equipmentArray[equipmentArrayIndex];
-					multipowerArrayIndex++;	
-					
-				} else if ((equipmentArray[equipmentArrayIndex].attack !== "") && (equipmentArray[equipmentArrayIndex].damage !== "") && (equipmentArray[equipmentArrayIndex].attack === "true")) {
-					// If the item is a damage attack add it to the weapon list.
-					weaponsArray[weaponsArrayIndex]=equipmentArray[equipmentArrayIndex];
-					weaponsArrayIndex++;
-					
-				} else if ((equipmentArray[equipmentArrayIndex].defense !== "") && (equipmentArray[equipmentArrayIndex].defense === "true")) {
-					// If the item is a defense add it to the armor list.
-					// This will need to be updated for shields.
-					armorArray[armorArrayIndex]=equipmentArray[equipmentArrayIndex];
-					armorArrayIndex++;
-					
-				} else {
-					// If the item is not an attack or defense add it to the equipment list.
-					equipmentListArray[equipmentListArrayIndex]=equipmentArray[equipmentArrayIndex];
-					equipmentListArrayIndex++;
-				}
-			}
-			
-			equipmentArrayIndex++;
-		}
-		
-		// Item 11
-		if ((typeof character.equipment.equipment11 !== "undefined") && (typeof character.equipment.equipment11.name !== "undefined")) {
-			
-			equipmentArray[equipmentArrayIndex]=character.equipment.equipment11;
-			
-			tempString = equipmentArray[equipmentArrayIndex].name;
-			
-			if ((tempString !== "") && tempString.length) {
-				if ((equipmentArray[equipmentArrayIndex].name.includes("Multipower")) || (equipmentArray[equipmentArrayIndex].name.includes("MPSlot"))) {
-					// Then place in multipower array.
-					multipowerArray[multipowerArrayIndex]=equipmentArray[equipmentArrayIndex];
-					multipowerArrayIndex++;	
-					
-				} else if ((equipmentArray[equipmentArrayIndex].attack !== "") && (equipmentArray[equipmentArrayIndex].damage !== "") && (equipmentArray[equipmentArrayIndex].attack === "true")) {
-					// If the item is a damage attack add it to the weapon list.
-					weaponsArray[weaponsArrayIndex]=equipmentArray[equipmentArrayIndex];
-					weaponsArrayIndex++;
-					
-				} else if ((equipmentArray[equipmentArrayIndex].defense !== "") && (equipmentArray[equipmentArrayIndex].defense === "true")) {
-					// If the item is a defense add it to the armor list.
-					// This will need to be updated for shields.
-					armorArray[armorArrayIndex]=equipmentArray[equipmentArrayIndex];
-					armorArrayIndex++;
-					
-				} else {
-					// If the item is not an attack or defense add it to the equipment list.
-					equipmentListArray[equipmentListArrayIndex]=equipmentArray[equipmentArrayIndex];
-					equipmentListArrayIndex++;
-				}
-			}
-			
-			equipmentArrayIndex++;
-		}
-		
-		// Item 12
-		if ((typeof character.equipment.equipment12 !== "undefined") && (typeof character.equipment.equipment12.name !== "undefined")) {
-			
-			equipmentArray[equipmentArrayIndex]=character.equipment.equipment12;
-			
-			tempString = equipmentArray[equipmentArrayIndex].name;
-			
-			if ((tempString !== "") && tempString.length) {
-				if ((equipmentArray[equipmentArrayIndex].name.includes("Multipower")) || (equipmentArray[equipmentArrayIndex].name.includes("MPSlot"))) {
-					// Then place in multipower array.
-					multipowerArray[multipowerArrayIndex]=equipmentArray[equipmentArrayIndex];
-					multipowerArrayIndex++;	
-					
-				} else if ((equipmentArray[equipmentArrayIndex].attack !== "") && (equipmentArray[equipmentArrayIndex].damage !== "") && (equipmentArray[equipmentArrayIndex].attack === "true")) {
-					// If the item is a damage attack add it to the weapon list.
-					weaponsArray[weaponsArrayIndex]=equipmentArray[equipmentArrayIndex];
-					weaponsArrayIndex++;
-					
-				} else if ((equipmentArray[equipmentArrayIndex].defense !== "") && (equipmentArray[equipmentArrayIndex].defense === "true")) {
-					// If the item is a defense add it to the armor list.
-					// This will need to be updated for shields.
-					armorArray[armorArrayIndex]=equipmentArray[equipmentArrayIndex];
-					armorArrayIndex++;
-					
-				} else {
-					// If the item is not an attack or defense add it to the equipment list.
-					equipmentListArray[equipmentListArrayIndex]=equipmentArray[equipmentArrayIndex];
-					equipmentListArrayIndex++;
-				}
-			}
-			
-			equipmentArrayIndex++;
-		}
-		
-		// Item 13
-		if ((typeof character.equipment.equipment13 !== "undefined") && (typeof character.equipment.equipment13.name !== "undefined")) {
-			
-			equipmentArray[equipmentArrayIndex]=character.equipment.equipment13;
-			
-			tempString = equipmentArray[equipmentArrayIndex].name;
-			
-			if ((tempString !== "") && tempString.length) {
-				if ((equipmentArray[equipmentArrayIndex].name.includes("Multipower")) || (equipmentArray[equipmentArrayIndex].name.includes("MPSlot"))) {
-					// Then place in multipower array.
-					multipowerArray[multipowerArrayIndex]=equipmentArray[equipmentArrayIndex];
-					multipowerArrayIndex++;	
-					
-				} else if ((equipmentArray[equipmentArrayIndex].attack !== "") && (equipmentArray[equipmentArrayIndex].damage !== "") && (equipmentArray[equipmentArrayIndex].attack === "true")) {
-					// If the item is a damage attack add it to the weapon list.
-					weaponsArray[weaponsArrayIndex]=equipmentArray[equipmentArrayIndex];
-					weaponsArrayIndex++;
-					
-				} else if ((equipmentArray[equipmentArrayIndex].defense !== "") && (equipmentArray[equipmentArrayIndex].defense === "true")) {
-					// If the item is a defense add it to the armor list.
-					// This will need to be updated for shields.
-					armorArray[armorArrayIndex]=equipmentArray[equipmentArrayIndex];
-					armorArrayIndex++;
-					
-				} else {
-					// If the item is not an attack or defense add it to the equipment list.
-					equipmentListArray[equipmentListArrayIndex]=equipmentArray[equipmentArrayIndex];
-					equipmentListArrayIndex++;
-				}
-			}
-			
-			equipmentArrayIndex++;
-		}
-		
-		// Item 14
-		if ((typeof character.equipment.equipment14 !== "undefined") && (typeof character.equipment.equipment14.name !== "undefined")) {
-			
-			equipmentArray[equipmentArrayIndex]=character.equipment.equipment14;
-			
-			tempString = equipmentArray[equipmentArrayIndex].name;
-			
-			if ((tempString !== "") && tempString.length) {
-				if ((equipmentArray[equipmentArrayIndex].name.includes("Multipower")) || (equipmentArray[equipmentArrayIndex].name.includes("MPSlot"))) {
-					// Then place in multipower array.
-					multipowerArray[multipowerArrayIndex]=equipmentArray[equipmentArrayIndex];
-					multipowerArrayIndex++;	
-					
-				} else if ((equipmentArray[equipmentArrayIndex].attack !== "") && (equipmentArray[equipmentArrayIndex].damage !== "") && (equipmentArray[equipmentArrayIndex].attack === "true")) {
-					// If the item is a damage attack add it to the weapon list.
-					weaponsArray[weaponsArrayIndex]=equipmentArray[equipmentArrayIndex];
-					weaponsArrayIndex++;
-					
-				} else if ((equipmentArray[equipmentArrayIndex].defense !== "") && (equipmentArray[equipmentArrayIndex].defense === "true")) {
-					// If the item is a defense add it to the armor list.
-					// This will need to be updated for shields.
-					armorArray[armorArrayIndex]=equipmentArray[equipmentArrayIndex];
-					armorArrayIndex++;
-					
-				} else {
-					// If the item is not an attack or defense add it to the equipment list.
-					equipmentListArray[equipmentListArrayIndex]=equipmentArray[equipmentArrayIndex];
-					equipmentListArrayIndex++;
-				}
-			}
-			
-			equipmentArrayIndex++;
-		}
-		
-		// Item 15
-		if ((typeof character.equipment.equipment15 !== "undefined") && (typeof character.equipment.equipment15.name !== "undefined")) {
-			
-			equipmentArray[equipmentArrayIndex]=character.equipment.equipment15;
-			
-			tempString = equipmentArray[equipmentArrayIndex].name;
-			
-			if ((tempString !== "") && tempString.length) {
-				if ((equipmentArray[equipmentArrayIndex].name.includes("Multipower")) || (equipmentArray[equipmentArrayIndex].name.includes("MPSlot"))) {
-					// Then place in multipower array.
-					multipowerArray[multipowerArrayIndex]=equipmentArray[equipmentArrayIndex];
-					multipowerArrayIndex++;	
-					
-				} else if ((equipmentArray[equipmentArrayIndex].attack !== "") && (equipmentArray[equipmentArrayIndex].damage !== "") && (equipmentArray[equipmentArrayIndex].attack === "true")) {
-					// If the item is a damage attack add it to the weapon list.
-					weaponsArray[weaponsArrayIndex]=equipmentArray[equipmentArrayIndex];
-					weaponsArrayIndex++;
-					
-				} else if ((equipmentArray[equipmentArrayIndex].defense !== "") && (equipmentArray[equipmentArrayIndex].defense === "true")) {
-					// If the item is a defense add it to the armor list.
-					// This will need to be updated for shields.
-					armorArray[armorArrayIndex]=equipmentArray[equipmentArrayIndex];
-					armorArrayIndex++;
-					
-				} else {
-					// If the item is not an attack or defense add it to the equipment list.
-					equipmentListArray[equipmentListArrayIndex]=equipmentArray[equipmentArrayIndex];
-					equipmentListArrayIndex++;
-				}
-			}
-			
-			equipmentArrayIndex++;
-		}
-		
-		// Item 16
-		if ((typeof character.equipment.equipment16 !== "undefined") && (typeof character.equipment.equipment16.name !== "undefined")) {
-			
-			equipmentArray[equipmentArrayIndex]=character.equipment.equipment16;
-			
-			tempString = equipmentArray[equipmentArrayIndex].name;
-			
-			if ((tempString !== "") && tempString.length) {
-				if ((equipmentArray[equipmentArrayIndex].name.includes("Multipower")) || (equipmentArray[equipmentArrayIndex].name.includes("MPSlot"))) {
-					// Then place in multipower array.
-					multipowerArray[multipowerArrayIndex]=equipmentArray[equipmentArrayIndex];
-					multipowerArrayIndex++;	
-					
-				} else if ((equipmentArray[equipmentArrayIndex].attack !== "") && (equipmentArray[equipmentArrayIndex].damage !== "") && (equipmentArray[equipmentArrayIndex].attack === "true")) {
-					// If the item is a damage attack add it to the weapon list.
-					weaponsArray[weaponsArrayIndex]=equipmentArray[equipmentArrayIndex];
-					weaponsArrayIndex++;
-					
-				} else if ((equipmentArray[equipmentArrayIndex].defense !== "") && (equipmentArray[equipmentArrayIndex].defense === "true")) {
-					// If the item is a defense add it to the armor list.
-					// This will need to be updated for shields.
-					armorArray[armorArrayIndex]=equipmentArray[equipmentArrayIndex];
-					armorArrayIndex++;
-					
-				} else {
-					// If the item is not an attack or defense add it to the equipment list.
-					equipmentListArray[equipmentListArrayIndex]=equipmentArray[equipmentArrayIndex];
-					equipmentListArrayIndex++;
-				}
-			}
-			
-			equipmentArrayIndex++;
+				
+				equipmentArrayIndex++;
+			}	
 		}
 		
 		// Write raw details of imported equipment to the treasures slide.
@@ -1286,427 +667,39 @@
 		
 		// Prepare object of items that are not weapons or armor. 
 		// Assign to character sheet Equipment List.
-		// Nested if statements.
 		
 		let importedEquipment = new Array();
-		let importCount = 0;
+		importCount = 0;
 		
-		// Prepare Item 01
-		if (equipmentListArrayIndex>0) {
+		// Prepare Items
+		for (importCount = 0; importCount < maxEquipment; importCount++) {
 			
-			// Check for charges.
-			if (equipmentListArray[0].end != "") {
-				tempString = equipmentListArray[0].end;
-				if (tempString.includes("[")) {
-					tempString = " (" + parseInt(tempString.replace(/[^\d.-]/g, "")) +")";
-				} else {
-					tempString = "";
-				};
-			}
+			ID = String(importCount+1).padStart(2,'0');
 			
-			importedEquipment.equipText01 = equipmentListArray[0].name;
-			
-			// Get item mass.
-			if (equipmentListArray[0].mass !== "") {
-				tempString = equipmentListArray[0].mass;
-				importedEquipment.equipMass01 = getItemMass(tempString, script_name);
-			} else {
-				importedEquipment.equipMass01 = 0;
-			}
-			
-			importCount++;
-		}
-			
-		// Prepare Item 02
-		if (equipmentListArrayIndex>1) {
-			
-			// Check for charges.
-			if (equipmentListArray[1].end != "") {
-				tempString = equipmentListArray[1].end;
-				if (tempString.includes("[")) {
-					tempString = " (" + parseInt(tempString.replace(/[^\d.-]/g, "")) +")";
-				} else {
-					tempString = "";
-				};
-			}
-			
-			importedEquipment.equipText02= equipmentListArray[1].name;
-			
-			// Get item mass.
-			if (equipmentListArray[1].mass !== "") {
-				tempString = equipmentListArray[1].mass;
-				importedEquipment.equipMass02 = getItemMass(tempString, script_name);
-			} else {
-				importedEquipment.equipMass02 = 0;
-			}
-			
-			importCount++;
-		}
+			if (importCount < equipmentListArrayIndex) {
 				
-		// Prepare Item 03
-		if (equipmentListArrayIndex>2) {
-			
-			// Check for charges.
-			if (equipmentListArray[2].end != "") {
-				tempString = equipmentListArray[2].end;
-				if (tempString.includes("[")) {
-					tempString = " (" + parseInt(tempString.replace(/[^\d.-]/g, "")) +")";
+				// Check for charges.
+				if (equipmentListArray[importCount].end != "") {
+					tempString = equipmentListArray[importCount].end;
+					if (tempString.includes("[")) {
+						tempString = " (" + parseInt(tempString.replace(/[^\d.-]/g, "")) +")";
+					} else {
+						tempString = "";
+					};
+				}
+				
+				importedEquipment["equipText"+ID] = equipmentListArray[importCount].name;
+				
+				// Get item mass.
+				if (equipmentListArray[importCount].mass !== "") {
+					tempString = equipmentListArray[importCount].mass;
+					importedEquipment["equipMass"+ID] = getItemMass(tempString, script_name);
 				} else {
-					tempString = "";
-				};
+					importedEquipment["equipMass"+ID] = 0;
+				}
 			}
-		
-			importedEquipment.equipText03= equipmentListArray[2].name;
-			
-			// Get item mass.
-			if (equipmentListArray[2].mass !== "") {
-				tempString = equipmentListArray[2].mass;
-				importedEquipment.equipMass03 = getItemMass(tempString, script_name);
-			} else {
-				importedEquipment.equipMass03 = 0;
-			}
-			
-			importCount++;
 		}
 		
-		// Prepare Item 04
-		if (equipmentListArrayIndex>3) {
-			
-			// Check for charges.
-			if (equipmentListArray[3].end != "") {
-				tempString = equipmentListArray[3].end;
-				if (tempString.includes("[")) {
-					tempString = " (" + parseInt(tempString.replace(/[^\d.-]/g, "")) +")";
-				} else {
-					tempString = "";
-				};
-			}
-			
-			importedEquipment.equipText04= equipmentListArray[3].name;
-			
-			// Get item mass.
-			if (equipmentListArray[3].mass !== "") {
-				tempString = equipmentListArray[3].mass;
-				importedEquipment.equipMass04 = getItemMass(tempString, script_name);
-			} else {
-				importedEquipment.equipMass04 = 0;
-			}
-			
-			importCount++;
-		}
-		
-		// Prepare Item 05
-		if (equipmentListArrayIndex>4) {
-			
-			// Check for charges.
-			if (equipmentListArray[4].end != "") {
-				tempString = equipmentListArray[4].end;
-				if (tempString.includes("[")) {
-					tempString = " (" + parseInt(tempString.replace(/[^\d.-]/g, "")) +")";
-				} else {
-					tempString = "";
-				};
-			}
-			
-			importedEquipment.equipText05= equipmentListArray[4].name;
-			
-			// Get item mass.
-			if (equipmentListArray[4].mass !== "") {
-				tempString = equipmentListArray[4].mass;
-				importedEquipment.equipMass05 = getItemMass(tempString, script_name);
-			} else {
-				importedEquipment.equipMass05 = 0;
-			}
-			
-			importCount++;
-		}
-		
-		// Prepare Item 06
-		if (equipmentListArrayIndex>5) {
-			
-			// Check for charges.
-			if (equipmentListArray[5].end != "") {
-				tempString = equipmentListArray[5].end;
-				if (tempString.includes("[")) {
-					tempString = " (" + parseInt(tempString.replace(/[^\d.-]/g, "")) +")";
-				} else {
-					tempString = "";
-				};
-			}
-			
-			importedEquipment.equipText06= equipmentListArray[5].name;
-			
-			// Get item mass.
-			if (equipmentListArray[5].mass !== "") {
-				tempString = equipmentListArray[5].mass;
-				importedEquipment.equipMass06 = getItemMass(tempString, script_name);
-			} else {
-				importedEquipment.equipMass06 = 0;
-			}
-			
-			importCount++;
-		}
-		
-		// Prepare Item 07
-		if (equipmentListArrayIndex>6) {
-			
-			// Check for charges.
-			if (equipmentListArray[6].end != "") {
-				tempString = equipmentListArray[6].end;
-				if (tempString.includes("[")) {
-					tempString = " (" + parseInt(tempString.replace(/[^\d.-]/g, "")) +")";
-				} else {
-					tempString = "";
-				};
-			}
-			
-			importedEquipment.equipText07= equipmentListArray[6].name;
-			
-			// Get item mass.
-			if (equipmentListArray[6].mass !== "") {
-				tempString = equipmentListArray[6].mass;
-				importedEquipment.equipMass07 = getItemMass(tempString, script_name);
-			} else {
-				importedEquipment.equipMass07 = 0;
-			}
-			
-			importCount++;
-		}
-									
-		// Prepare Item 08
-		if (equipmentListArrayIndex>7) {
-			
-			// Check for charges.
-			if (equipmentListArray[7].end != "") {
-				tempString = equipmentListArray[7].end;
-				if (tempString.includes("[")) {
-					tempString = " (" + parseInt(tempString.replace(/[^\d.-]/g, "")) +")";
-				} else {
-					tempString = "";
-				};
-			}
-			
-			importedEquipment.equipText08= equipmentListArray[7].name;
-			
-			// Get item mass.
-			if (equipmentListArray[7].mass !== "") {
-				tempString = equipmentListArray[7].mass;
-				importedEquipment.equipMass08 = getItemMass(tempString, script_name);
-			} else {
-				importedEquipment.equipMass08 = 0;
-			}
-			
-			importCount++;
-		}
-		
-		// Prepare Item 09
-		if (equipmentListArrayIndex>8) {
-			
-			// Check for charges.
-			if (equipmentListArray[8].end != "") {
-				tempString = equipmentListArray[8].end;
-				if (tempString.includes("[")) {
-					tempString = " (" + parseInt(tempString.replace(/[^\d.-]/g, "")) +")";
-				} else {
-					tempString = "";
-				};
-			}
-			
-			importedEquipment.equipText09= equipmentListArray[8].name;
-			
-			// Get item mass.
-			if (equipmentListArray[8].mass !== "") {
-				tempString = equipmentListArray[8].mass;
-				importedEquipment.equipMass09 = getItemMass(tempString, script_name);
-			} else {
-				importedEquipment.equipMass09 = 0;
-			}
-			
-			importCount++;
-		}
-		
-		// Prepare Item 10
-		if (equipmentListArrayIndex>9) {
-			
-			// Check for charges.
-			if (equipmentListArray[9].end != "") {
-				tempString = equipmentListArray[9].end;
-				if (tempString.includes("[")) {
-					tempString = " (" + parseInt(tempString.replace(/[^\d.-]/g, "")) +")";
-				} else {
-					tempString = "";
-				};
-			}
-			
-			importedEquipment.equipText10= equipmentListArray[9].name;
-			
-			// Get item mass.
-			if (equipmentListArray[9].mass !== "") {
-				tempString = equipmentListArray[9].mass;
-				importedEquipment.equipMass10 = getItemMass(tempString, script_name);
-			} else {
-				importedEquipment.equipMass10 = 0;
-			}
-			
-			importCount++;
-		}
-			
-		// Prepare Item 11
-		if (equipmentListArrayIndex>10) {
-			
-			// Check for charges.
-			if (equipmentListArray[10].end != "") {
-				tempString = equipmentListArray[10].end;
-				if (tempString.includes("[")) {
-					tempString = " (" + parseInt(tempString.replace(/[^\d.-]/g, "")) +")";
-				} else {
-					tempString = "";
-				};
-			}
-			
-			importedEquipment.equipText11= equipmentListArray[10].name;
-			
-			// Get item mass.
-			if (equipmentListArray[10].mass !== "") {
-				tempString = equipmentListArray[10].mass;
-				importedEquipment.equipMass11 = getItemMass(tempString, script_name);
-			} else {
-				importedEquipment.equipMass11 = 0;
-			}
-			
-			importCount++;
-		}
-			
-		// Prepare Item 12
-		if (equipmentListArrayIndex>11) {
-			
-			// Check for charges.
-			if (equipmentListArray[11].end != "") {
-				tempString = equipmentListArray[11].end;
-				if (tempString.includes("[")) {
-					tempString = " (" + parseInt(tempString.replace(/[^\d.-]/g, "")) +")";
-				} else {
-					tempString = "";
-				};
-			}
-			
-			importedEquipment.equipText12= equipmentListArray[11].name;
-			
-			// Get item mass.
-			if (equipmentListArray[11].mass !== "") {
-				tempString = equipmentListArray[11].mass;
-				importedEquipment.equipMass12 = getItemMass(tempString, script_name);
-			} else {
-				importedEquipment.equipMass12 = 0;
-			}
-			
-			importCount++;
-		}
-		
-		// Prepare Item 13
-		if (equipmentListArrayIndex>12) {
-			
-			// Check for charges.
-			if (equipmentListArray[12].end != "") {
-				tempString = equipmentListArray[12].end;
-				if (tempString.includes("[")) {
-					tempString = " (" + parseInt(tempString.replace(/[^\d.-]/g, "")) +")";
-				} else {
-					tempString = "";
-				};
-			}
-			
-			importedEquipment.equipText13= equipmentListArray[12].name;
-			
-			// Get item mass.
-			if (equipmentListArray[12].mass !== "") {
-				tempString = equipmentListArray[12].mass;
-				importedEquipment.equipMass13 = getItemMass(tempString, script_name);
-			} else {
-				importedEquipment.equipMass13 = 0;
-			}
-			
-			importCount++;
-		}
-		
-		// Prepare Item 14
-		if (equipmentListArrayIndex>13) {
-			
-			// Check for charges.
-			if (equipmentListArray[13].end != "") {
-				tempString = equipmentListArray[13].end;
-				if (tempString.includes("[")) {
-					tempString = " (" + parseInt(tempString.replace(/[^\d.-]/g, "")) +")";
-				} else {
-					tempString = "";
-				};
-			}
-			
-			importedEquipment.equipText14= equipmentListArray[13].name;
-			
-			// Get item mass.
-			if (equipmentListArray[13].mass !== "") {
-				tempString = equipmentListArray[13].mass;
-				importedEquipment.equipMass14 = getItemMass(tempString, script_name);
-			} else {
-				importedEquipment.equipMass14 = 0;
-			}
-			
-			importCount++;
-		}
-		
-		// Prepare Item 15
-		if (equipmentListArrayIndex>14) {
-			
-			// Check for charges.
-			if (equipmentListArray[14].end != "") {
-				tempString = equipmentListArray[14].end;
-				if (tempString.includes("[")) {
-					tempString = " (" + parseInt(tempString.replace(/[^\d.-]/g, "")) +")";
-				} else {
-					tempString = "";
-				};
-			}
-			
-			importedEquipment.equipText15= equipmentListArray[14].name;
-			
-			// Get item mass.
-			if (equipmentListArray[14].mass !== "") {
-				tempString = equipmentListArray[14].mass;
-				importedEquipment.equipMass15 = getItemMass(tempString, script_name);
-			} else {
-				importedEquipment.equipMass15 = 0;
-			}
-			
-			importCount++;
-		}
-		
-		// Prepare Item 16
-		if (equipmentListArrayIndex>15) {
-			
-			// Check for charges.
-			if (equipmentListArray[15].end != "") {
-				tempString = equipmentListArray[15].end;
-				if (tempString.includes("[")) {
-					tempString = " (" + parseInt(tempString.replace(/[^\d.-]/g, "")) +")";
-				} else {
-					tempString = "";
-				};
-			}
-			
-			importedEquipment.equipText16 = equipmentListArray[15].name;
-			
-			// Get item mass.
-			if (equipmentListArray[15].mass !== "") {
-				tempString = equipmentListArray[15].mass;
-				importedEquipment.equipMass16 = getItemMass(tempString, script_name);
-			} else {
-				importedEquipment.equipMass16 = 0;
-			}
-			
-			importCount++;
-		}
-			
 		// Import equipment.
 		setAttrs(object.id, importedEquipment);
 		
@@ -1714,356 +707,82 @@
 			sendChat(script_name, "Imported "+ importCount +" pieces of equipment.");
 		}
 		
-		// Prepare object of weapons. Assign to character sheet Weapon List.
+		// Prepare objects of weapons. Assign to character sheet Weapon List.
 		
 		let importedWeapons = new Array();
+		const maxWeapons = 5;
 		importCount = 0;
 		
-		if (weaponsArrayIndex>0) {
-			
-			importedWeapons.weaponName01 = weaponsArray[0].name;
-			
-			// Assign weapon damage.
-			importedWeapons.weaponDamage01 = getDamage(weaponsArray[0].damage);
-			
-			// Check for Killing Attack.
-			tempString = weaponsArray[0].text;
-			if (tempString.includes("Killing Attack") || tempString.includes("RKA") || tempString.includes("HKA")) {
-				// importedWeapons.weaponNormalDamage01= "off";
-			} else {
-				importedWeapons.weaponNormalDamage01= "on";
-			}
-			
-			// Get OCV bonus or penalty.
-			tempString = weaponsArray[0].text;
-			importedWeapons.weaponOCV01 = getOCVmodifier(tempString, script_name);
-			
-			// Check for range mod adjustment.
-			tempString = weaponsArray[0].text;
-			if (tempString.includes("vs. Range Modifier")) {
-				tempPosition=tempString.indexOf("vs. Range Modifier");
-				importedWeapons.weaponRangeMod01= parseInt(tempString.substr(tempPosition-3, 2));				
-			} else {
-				importedWeapons.weaponRangeMod01= 0;
-			}
-			
-			// Check for modified STUN multiplier.
-			tempString = weaponsArray[0].text;
-			importedWeapons.weaponStunMod01 = getStunModifier(tempString, script_name);
-			
-			// Check for charges.
-			tempString = weaponsArray[0].end;
-			if (tempString.includes("[")) {
-				importedWeapons.weaponShots01 =  parseInt(tempString.replace(/[^\d.-]/g, ""));
-			} else {
-				importedWeapons.weaponShots01 = 0;
-			}
-			
-			// Get STR minimum.	
-			tempString = weaponsArray[0].text;
-			if ((tempString !== "") && tempString.length) {
-				importedWeapons.weaponStrength01 = getWeaponStrMin(tempString);
-				if (importedWeapons.weaponStrength01 === 0) {
-					importedWeapons.weaponEndurance01 = 0;
-				}
-			}
-			
-			// Check for AoE.
-			tempString = weaponsArray[0].text;
-			if (tempString.includes("Area Of Effect")) {
-				importedWeapons.weaponAreaEffect01= "on";
-			} else {
-				// importedWeapons.weaponAreaEffect01= "off";
-			}
-			
-			// Get weapon mass.
-			if (weaponsArray[0].mass !== "") {
-				tempString = weaponsArray[0].mass;
-				importedWeapons.weaponMass01 = getItemMass(tempString, script_name);
-			} else {
-				importedWeapons.weaponMass01 = 0;
-			}
-			
-			// Calculate thrown weapon range or assign range without units.
-			importedWeapons.weaponRange01 = getWeaponRange(weaponsArray[0].range, character.strength, importedWeapons.weaponMass01, script_name);
- 
-			importCount++;
-		}
-			
-		// Prepare Weapon 02
-		if (weaponsArrayIndex>1) {
-			importedWeapons.weaponName02= weaponsArray[1].name;
-			
-			// Assign weapon damage.
-			importedWeapons.weaponDamage02 = getDamage(weaponsArray[1].damage);
-			
-			// Check for Killing Attack.
-			tempString = weaponsArray[1].text;
-			if (tempString.includes("Killing Attack") || tempString.includes("RKA") || tempString.includes("HKA")) {
-				// importedWeapons.weaponNormalDamage02= "off";
-			} else {
-				importedWeapons.weaponNormalDamage02= "on";
-			};
-			
-			// Get OCV bonus or penalty.
-			tempString = weaponsArray[1].text;
-			importedWeapons.weaponOCV02 = getOCVmodifier(tempString, script_name);
-			
-			// Check for range mod adjustment.
-			tempString = weaponsArray[1].text;
-			if (tempString.includes("vs. Range Modifier")) {
-				tempPosition=tempString.indexOf("vs. Range Modifier");
-				importedWeapons.weaponRangeMod02= parseInt(tempString.substr(tempPosition-3, 2));				
-			} else {
-				importedWeapons.weaponRangeMod02= 0;
-			};
-			
-			// Check for modified STUN multiplier.
-			tempString = weaponsArray[1].text;
-			importedWeapons.weaponStunMod02 = getStunModifier(tempString, script_name);
-			
-			// Check for charges.
-			tempString = weaponsArray[1].end;
-			if (tempString.includes("[")) {
-				importedWeapons.weaponShots02= parseInt(tempString.replace(/[^\d.-]/g, ""));
-			} else {
-				importedWeapons.weaponShots02= 0;
-			};
-			
-			// Get STR minimum.	
-			tempString = weaponsArray[1].text;
-			if ((tempString !== "") && tempString.length) {
-				importedWeapons.weaponStrength02 = getWeaponStrMin(tempString);
-				if (importedWeapons.weaponStrength02 === 0) {
-					importedWeapons.weaponEndurance02 = 0;
-				}
-			}
-			
-			// Check for AoE.
-			tempString = weaponsArray[1].text;
-			if (tempString.includes("Area Of Effect")) {
-				importedWeapons.weaponAreaEffect02= "on";
-			}
-			
-			// Get weapon mass.
-			if (weaponsArray[1].mass !== "") {
-				tempString = weaponsArray[1].mass;
-				importedWeapons.weaponMass02 = getItemMass(tempString, script_name);
-			} else {
-				importedWeapons.weaponMass02 = 0;
-			}
-			
-			// Calculate thrown weapon range or assign range without units.
-			importedWeapons.weaponRange02 = getWeaponRange(weaponsArray[1].range, character.strength, importedWeapons.weaponMass02, script_name);
-			
-			importCount++;
-		}
-				
-		// Prepare Weapon 03
-		if (weaponsArrayIndex>2) {
-			importedWeapons.weaponName03= weaponsArray[2].name;
-			
-			// Assign weapon damage.
-			importedWeapons.weaponDamage03 = getDamage(weaponsArray[2].damage);
-			
-			// Check for Killing Attack.
-			tempString = weaponsArray[2].text;
-			if (tempString.includes("Killing Attack") || tempString.includes("RKA") || tempString.includes("HKA")) {
-				// importedWeapons.weaponNormalDamage03= "off";
-			} else {
-				importedWeapons.weaponNormalDamage03= "on";
-			}
-			
-			// Get OCV bonus or penalty.
-			tempString = weaponsArray[2].text;
-			importedWeapons.weaponOCV03 = getOCVmodifier(tempString, script_name);
-			
-			// Check for range mod adjustment.
-			tempString = weaponsArray[2].text;
-			if (tempString.includes("vs. Range Modifier")) {
-				tempPosition=tempString.indexOf("vs. Range Modifier");
-				importedWeapons.weaponRangeMod03= parseInt(tempString.substr(tempPosition-3, 2));				
-			} else {
-				importedWeapons.weaponRangeMod03= 0;
-			}
-			
-			// Check for modified STUN multiplier.
-			tempString = weaponsArray[2].text;
-			importedWeapons.weaponStunMod03 = getStunModifier(tempString, script_name);
-			
-			// Check for charges.
-			tempString = weaponsArray[2].end;
-			if (tempString.includes("[")) {
-				importedWeapons.weaponShots03=  parseInt(tempString.replace(/[^\d.-]/g, ""));
-			} else {
-				importedWeapons.weaponShots03= 0;
-			}
-			
-			// Get STR minimum.	
-			tempString = weaponsArray[2].text;
-			if ((tempString !== "") && tempString.length) {
-				importedWeapons.weaponStrength03 = getWeaponStrMin(tempString);
-				if (importedWeapons.weaponStrength03 === 0) {
-					importedWeapons.weaponEndurance03 = 0;
-				}
-			}
-			
-			// Check for AoE.
-			tempString = weaponsArray[2].text;
-			if (tempString.includes("Area Of Effect")) {
-				importedWeapons.weaponAreaEffect03= "on";
-			}
-			
-			// Get weapon mass.
-			if (weaponsArray[2].mass !== "") {
-				tempString = weaponsArray[2].mass;
-				importedWeapons.weaponMass03 = getItemMass(tempString, script_name);
-			} else {
-				importedWeapons.weaponMass03 = 0;
-			}
-			
-			// Calculate thrown weapon range or assign range without units.
-			importedWeapons.weaponRange03 = getWeaponRange(weaponsArray[2].range, character.strength, importedWeapons.weaponMass03, script_name);
-			
-			importCount++;
-		}
-					
-		// Prepare Weapon 04
-		if (weaponsArrayIndex>3) {
-			importedWeapons.weaponName04= weaponsArray[3].name;
-			
-			// Assign weapon damage.
-			importedWeapons.weaponDamage04 = getDamage(weaponsArray[3].damage);
-			
-			// Check for Killing Attack.
-			tempString = weaponsArray[3].text;
-			if (tempString.includes("Killing Attack") || tempString.includes("RKA") || tempString.includes("HKA")) {
-				// importedWeapons.weaponNormalDamage04= "off";
-			} else {
-				importedWeapons.weaponNormalDamage04= "on";
-			}
-			
-			// Get OCV bonus or penalty.
-			tempString = weaponsArray[3].text;
-			importedWeapons.weaponOCV04 = getOCVmodifier(tempString, script_name);
+		for (importCount = 0; importCount < maxWeapons; importCount++) {
 		
-			// Check for range mod adjustment.
-			tempString = weaponsArray[3].text;
-			if (tempString.includes("vs. Range Modifier")) {
-				tempPosition=tempString.indexOf("vs. Range Modifier");
-				importedWeapons.weaponRangeMod04= parseInt(tempString.substr(tempPosition-3, 2));				
-			} else {
-				importedWeapons.weaponRangeMod04= 0;
-			}
+			ID = String(importCount+1).padStart(2,'0');
 			
-			// Check for modified STUN multiplier.
-			tempString = weaponsArray[3].text;
-			importedWeapons.weaponStunMod04 = getStunModifier(tempString, script_name);
-			
-			// Check for charges.
-			tempString = weaponsArray[3].end;
-			if (tempString.includes("[")) {
-				importedWeapons.weaponShots04= parseInt(tempString.replace(/[^\d.-]/g, ""));
-			} else {
-				importedWeapons.weaponShots04= 0;
-			}
-			
-			// Get STR minimum.	
-			tempString = weaponsArray[3].text;
-			if ((tempString !== "") && tempString.length) {
-				importedWeapons.weaponStrength04 = getWeaponStrMin(tempString);
-				if (importedWeapons.weaponStrength04 === 0) {
-					importedWeapons.weaponEndurance04 = 0;
+			if (importCount < weaponsArrayIndex) {
+				importedWeapons["weaponName"+ID] = weaponsArray[importCount].name;
+				
+				// Assign weapon damage.
+				importedWeapons["weaponDamage"+ID] = getDamage(weaponsArray[importCount].damage);
+				
+				// Check for Killing Attack.
+				tempString = weaponsArray[importCount].text;
+				if (tempString.includes("Killing Attack") || tempString.includes("RKA") || tempString.includes("HKA")) {
+					// importedWeapons.weaponNormalDamage01= "off";
+				} else {
+					importedWeapons["weaponNormalDamage"+ID]= "on";
 				}
-			}
-			
-			// Check for AoE.
-			tempString = weaponsArray[3].text;
-			if (tempString.includes("Area Of Effect")) {
-				importedWeapons.weaponAreaEffect04= "on";
-			}
-			
-			// Get weapon mass.
-			if (weaponsArray[3].mass !== "") {
-				tempString = weaponsArray[3].mass;
-				importedWeapons.weaponMass04 = getItemMass(tempString, script_name);
-			} else {
-				importedWeapons.weaponMass04 = 0;
-			}
-			
-			// Calculate thrown weapon range or assign range without units.
-			importedWeapons.weaponRange04 = getWeaponRange(weaponsArray[3].range, character.strength, importedWeapons.weaponMass04, script_name);
-			
-			importCount++;
-		}
-						
-		// Prepare Weapon 05
-		if (weaponsArrayIndex>4) {
-			importedWeapons.weaponName05= weaponsArray[4].name;
-			
-			// Assign weapon damage.
-			importedWeapons.weaponDamage05 = getDamage(weaponsArray[4].damage);
-			
-			// Check for Killing Attack.
-			tempString = weaponsArray[4].text;
-			if (tempString.includes("Killing Attack") || tempString.includes("RKA") || tempString.includes("HKA")) {
-				// importedWeapons.weaponNormalDamage05= "off";
-			} else {
-				importedWeapons.weaponNormalDamage05= "on";
-			};
-			
-			// Get OCV bonus or penalty.
-			tempString = weaponsArray[4].text;
-			importedWeapons.weaponOCV05 = getOCVmodifier(tempString, script_name);
-			
-			// Check for range mod adjustment.
-			tempString = weaponsArray[4].text;
-			if (tempString.includes("vs. Range Modifier")) {
-				tempPosition=tempString.indexOf("vs. Range Modifier");
-				importedWeapons.weaponRangeMod05= parseInt(tempString.substr(tempPosition-3, 2));				
-			} else {
-				importedWeapons.weaponRangeMod05= 0;
-			};
-			
-			// Check for modified STUN multiplier.
-			tempString = weaponsArray[4].text;
-			importedWeapons.weaponStunMod05 = getStunModifier(tempString, script_name);
-			
-			// Check for charges.
-			tempString = weaponsArray[4].end;
-			if (tempString.includes("[")) {
-				importedWeapons.weaponShots05= parseInt(tempString.replace(/[^\d.-]/g, ""));
-			} else {
-				importedWeapons.weaponShots05= 0;
-			};
-			
-			// Get STR minimum.	
-			tempString = weaponsArray[4].text;
-			if ((tempString !== "") && tempString.length) {
-				importedWeapons.weaponStrength05 = getWeaponStrMin(tempString);
-				if (importedWeapons.weaponStrength05 === 0) {
-					importedWeapons.weaponEndurance05 = 0;
+				
+				// Get OCV bonus or penalty.
+				tempString = weaponsArray[importCount].text;
+				importedWeapons["weaponOCV"+ID] = getOCVmodifier(tempString, script_name);
+				
+				// Check for range mod adjustment.
+				tempString = weaponsArray[importCount].text;
+				if (tempString.includes("vs. Range Modifier")) {
+					tempPosition=tempString.indexOf("vs. Range Modifier");
+					importedWeapons["weaponRangeMod"+ID]= parseInt(tempString.substr(tempPosition-3, 2));				
+				} else {
+					importedWeapons["weaponRangeMod"+ID]= 0;
 				}
+				
+				// Check for modified STUN multiplier.
+				tempString = weaponsArray[importCount].text;
+				importedWeapons["weaponStunMod"+ID] = getStunModifier(tempString, script_name);
+				
+				// Check for charges.
+				tempString = weaponsArray[importCount].end;
+				if (tempString.includes("[")) {
+					importedWeapons["weaponShots"+ID] =  parseInt(tempString.replace(/[^\d.-]/g, ""));
+				} else {
+					importedWeapons["weaponShots"+ID] = 0;
+				}
+				
+				// Get STR minimum.	
+				tempString = weaponsArray[importCount].text;
+				if ((tempString !== "") && tempString.length) {
+					importedWeapons["weaponStrengthMin"+ID] = getWeaponStrMin(tempString);
+					importedWeapons["weaponStrength"+ID] = getWeaponStrMin(tempString);
+				}
+				
+				// Check for AoE.
+				tempString = weaponsArray[importCount].text;
+				if (tempString.includes("Area Of Effect")) {
+					importedWeapons["weaponAreaEffect"+ID] = "on";
+				} else {
+					// importedWeapons.weaponAreaEffect01= "off";
+				}
+				
+				// Get weapon mass.
+				if (weaponsArray[importCount].mass !== "") {
+					tempString = weaponsArray[importCount].mass;
+					importedWeapons["weaponMass"+ID] = getItemMass(tempString, script_name);
+				} else {
+					importedWeapons["weaponMass"+ID] = 0;
+				}
+				
+				// Calculate thrown weapon range or assign range without units.
+				importedWeapons["weaponRange"+ID] = getWeaponRange(weaponsArray[importCount].range, character.strength, importedWeapons["weaponMass"+ID], script_name);
 			}
 			
-			// Check for AoE.
-			tempString = weaponsArray[4].text;
-			if (tempString.includes("Area Of Effect")) {
-				importedWeapons.weaponAreaEffect05= "on";
-			}
-			
-			// Get weapon mass.
-			if (weaponsArray[4].mass !== "") {
-				tempString = weaponsArray[4].mass;
-				importedWeapons.weaponMass05 = getItemMass(tempString, script_name);
-			} else {
-				importedWeapons.weaponMass05 = 0;
-			}
-			
-			// Calculate thrown weapon range or assign range without units.
-			importedWeapons.weaponRange05 = getWeaponRange(weaponsArray[4].range, character.strength, importedWeapons.weaponMass05, script_name);
-			
-			importCount++;
 		}
 			
 		// Import weapons.
@@ -2077,266 +796,80 @@
 		// Prepare object of armor defenses. Assign to character sheet Armor List.
 				
 		let importedArmor = new Array();
+		const maxArmor = 4;
 		
 		importCount = 0;
 		
-		if (armorArrayIndex>0) {
+		for (importCount = 0; importCount < maxWeapons; importCount++) {
+		
+			ID = String(importCount+1).padStart(2,'0');
 			
-			importedArmor.armorName01 = armorArray[0].name;
-			
-			// Find resistant protection values.
-			// This needs to be adjusted so that it doesn't pick out other PD/ED stats from elsewhere in the text.
-			tempString = armorArray[0].text;
-			
-			if (tempString.includes("Resistant Protection")) {
-				tempPosition = tempString.indexOf("Resistant Protection");
-				sampleSize = 14;
-				subStringA = tempString.substr(tempPosition+20, sampleSize);
+			if (importCount < armorArrayIndex) {
+				importedArmor["armorName"+ID] = armorArray[importCount].name;
 				
-				if (subStringA.includes("PD")) {
-					tempPosition = subStringA.indexOf("PD");
-					subStringB = subStringA.substr(tempPosition-3, 2);
-					importedArmor.armorPD01 = parseInt(subStringB.replace(/[^\d.-]/g, ""));
-					importedArmor.totalPD01 = importedArmor.armorPD01 + parseInt(character.pd);
-				} else {
-					importedArmor.armorPD01 = 0;
-					importedArmor.totalPD01 = parseInt(character.pd);
+				// Find resistant protection values.
+				// This needs to be adjusted so that it doesn't pick out other PD/ED stats from elsewhere in the text.
+				tempString = armorArray[importCount].text;
+				
+				if (tempString.includes("Resistant Protection")) {
+					tempPosition = tempString.indexOf("Resistant Protection");
+					sampleSize = 14;
+					subStringA = tempString.substr(tempPosition+20, sampleSize);
+					
+					if (subStringA.includes("PD")) {
+						tempPosition = subStringA.indexOf("PD");
+						subStringB = subStringA.substr(tempPosition-3, 2);
+						importedArmor["armorPD"+ID] = parseInt(subStringB.replace(/[^\d.-]/g, ""));
+						importedArmor["totalPD"+ID] = importedArmor["armorPD"+ID] + parseInt(character.pd);
+					} else {
+						importedArmor["armorPD"+ID] = 0;
+						importedArmor["totalPD"+ID] = parseInt(character.pd);
+					};
+					
+					if (subStringA.includes("ED")) {
+						tempPosition = subStringA.indexOf("ED");
+						subStringB = subStringA.substr(tempPosition-3, 2);
+						importedArmor["armorED"+ID] = parseInt(subStringB.replace(/[^\d.-]/g, ""));
+						importedArmor["totalED"+ID] = importedArmor["armorED"+ID] + parseInt(character.ed);
+					} else {
+						importedArmor["armorED"+ID] = 0;
+						importedArmor["totalED"+ID] = parseInt(character.ed);
+					}; 
 				};
 				
-				if (subStringA.includes("ED")) {
-					tempPosition = subStringA.indexOf("ED");
-					subStringB = subStringA.substr(tempPosition-3, 2);
-					importedArmor.armorED01 = parseInt(subStringB.replace(/[^\d.-]/g, ""));
-					importedArmor.totalED01 = importedArmor.armorED01 + parseInt(character.ed);
-				} else {
-					importedArmor.armorED01 = 0;
-					importedArmor.totalED01 = parseInt(character.ed);
-				}; 
-			};
-			
-			// Activation roll
-			tempString = armorArray[0].text;
-			
-			if (tempString.includes("Requires A Roll")) {
-				tempPosition = tempString.indexOf("Requires A Roll");
+				// Activation roll
+				tempString = armorArray[importCount].text;
 				
-				sampleSize = 4;
-				subStringA = tempString.substr(tempPosition+15, sampleSize);
-				subStringB = subStringA.replace(/[^\d]/g, "");
-				importedArmor.armorActivation01 = parseInt(subStringB);
-			}
-			
-			// Armor locations
-			if (tempString.includes("(locations")) {
-				tempPosition = tempString.indexOf("(locations") + 10;
-				secondPosition = tempString.indexOf(")", tempPosition);
-
-				importedArmor.armorLocations01 = tempString.substr(tempPosition, secondPosition - tempPosition);
-				
-			}
-			
-			// Get armor mass.
-			if (armorArray[0].mass !== "") {
-				tempString = armorArray[0].mass;
-				importedArmor.armorMass01 = getItemMass(tempString, script_name);
-			} else {
-				importedArmor.armorMass01 = 0;
-			}
-			
-			importCount++;
-		}
-			
-		// Get Armor 02
-		if (armorArrayIndex>1) {
+				if (tempString.includes("Requires A Roll")) {
+					tempPosition = tempString.indexOf("Requires A Roll");
 					
-			importedArmor.armorName02 = armorArray[1].name;
-			
-			// Find resistant protection values.
-			// This needs to be adjusted so that it doesn't pick out other PD/ED stats from elsewhere in the text.
-			tempString = armorArray[1].text;
-
-			if (tempString.includes("Resistant Protection")) {
-				tempPosition = tempString.indexOf("Resistant Protection");
-				sampleSize = 14;
-				subStringA = tempString.substr(tempPosition+20, sampleSize);
+					sampleSize = 4;
+					subStringA = tempString.substr(tempPosition+15, sampleSize);
+					subStringB = subStringA.replace(/[^\d]/g, "");
+					importedArmor["armorActivation"+ID] = parseInt(subStringB);
+				}
 				
-				if (subStringA.includes("PD")) {
-					tempPosition = subStringA.indexOf("PD");
-					subStringB = subStringA.substr(tempPosition-3, 2);
-					importedArmor.armorPD02 = parseInt(subStringB.replace(/[^\d.-]/g, ""));
-					importedArmor.totalPD02 = importedArmor.armorPD02 + parseInt(character.pd);
-				} else {
-					importedArmor.armorPD02 = 0;
-					importedArmor.totalPD02 = parseInt(character.pd);
-				};
-				
-				if (subStringA.includes("ED")) {
-					tempPosition = subStringA.indexOf("ED");
-					subStringB = subStringA.substr(tempPosition-3, 2);
-					importedArmor.armorED02 = parseInt(subStringB.replace(/[^\d.-]/g, ""));
-					importedArmor.totalED02 = importedArmor.armorED02 + parseInt(character.ed);
-				} else {
-					importedArmor.armorED02 = 0;
-					importedArmor.totalED02 = parseInt(character.ed);
-				}; 
-			};
-			
-			tempString = armorArray[1].text;
-
-			// Activation roll
-			if (tempString.includes("Requires A Roll")) {
-				tempPosition = tempString.indexOf("Requires A Roll");
-				
-				sampleSize = 4;
-				subStringA = tempString.substr(tempPosition+15, sampleSize);
-				subStringB = subStringA.replace(/[^\d]/g, "");
-				importedArmor.armorActivation02 = parseInt(subStringB);
-			}
-			
-			// Armor locations
-			if (tempString.includes("(locations")) {
-				tempPosition = tempString.indexOf("(locations") + 10;
-				secondPosition = tempString.indexOf(")", tempPosition);
-			
-				importedArmor.armorLocations02 = tempString.substr(tempPosition, secondPosition - tempPosition);
-				
-			}
-			
-			// Get armor mass.
-			tempString = armorArray[1].mass;
-			importedArmor.armorMass02  = getItemMass(tempString, script_name);
-			
-			importCount++;
-		}
-				
-		// Get Armor 03					
-		if (armorArrayIndex>2) {
+				// Armor locations
+				if (tempString.includes("(locations")) {
+					tempPosition = tempString.indexOf("(locations") + 10;
+					secondPosition = tempString.indexOf(")", tempPosition);
 					
-			importedArmor.armorName03 = armorArray[2].name;
-			
-			// Find resistant protection values.
-			// This needs to be adjusted so that it doesn't pick out other PD/ED stats from elsewhere in the text.
-			tempString = armorArray[2].text;
-			
-			if (tempString.includes("Resistant Protection")) {
-				tempPosition = tempString.indexOf("Resistant Protection");
-				sampleSize = 14;
-				subStringA = tempString.substr(tempPosition+20, sampleSize);
-				
-				if (subStringA.includes("PD")) {
-					tempPosition = subStringA.indexOf("PD");
-					subStringB = subStringA.substr(tempPosition-3, 2);
-					importedArmor.armorPD03 = parseInt(subStringB.replace(/[^\d.-]/g, ""));
-					importedArmor.totalPD03 = importedArmor.armorPD03 + parseInt(character.pd);
-				} else {
-					importedArmor.armorPD03 = 0;
-					importedArmor.totalPD03 = parseInt(character.pd);
-				};
-				
-				if (subStringA.includes("ED")) {
-					tempPosition = subStringA.indexOf("ED");
-					subStringB = subStringA.substr(tempPosition-3, 2);
-					importedArmor.armorED03 = parseInt(subStringB.replace(/[^\d.-]/g, ""));
-					importedArmor.totalED03 = importedArmor.armorED03 + parseInt(character.ed);
-				} else {
-					importedArmor.armorED03 = 0;
-					importedArmor.totalED03 = parseInt(character.ed);
-				}; 
-			};
-			
-			tempString = armorArray[2].text;
-			
-			// Activation roll
-			if (tempString.includes("Requires A Roll")) {
-				tempPosition = tempString.indexOf("Requires A Roll");
-				
-				sampleSize = 4;
-				subStringA = tempString.substr(tempPosition+15, sampleSize);
-				subStringB = subStringA.replace(/[^\d]/g, "");
-				importedArmor.armorActivation03 = parseInt(subStringB);
-			}
-			
-			// Armor locations
-			if (tempString.includes("(locations")) {
-				tempPosition = tempString.indexOf("(locations") + 10;
-				secondPosition = tempString.indexOf(")", tempPosition);
-			
-				importedArmor.armorLocations03 = tempString.substr(tempPosition, secondPosition - tempPosition);
-				
-			}
-			
-			// Get armor mass.
-			tempString = armorArray[2].mass;
-			importedArmor.armorMass03  = getItemMass(tempString, script_name);
-			
-			importCount++;
-		}
+					importedArmor["armorLocations"+ID] = tempString.substr(tempPosition, secondPosition - tempPosition);
 					
-		// Get Armor 04					
-		if (armorArrayIndex>3) {
-					
-			importedArmor.armorName04 = armorArray[3].name;
-			
-			// Find resistant protection values.
-			// This needs to be adjusted so that it doesn't pick out other PD/ED stats from elsewhere in the text.
-			tempString = armorArray[3].text;
-			
-			if (tempString.includes("Resistant Protection")) {
-				tempPosition = tempString.indexOf("Resistant Protection");
-				sampleSize = 14;
-				subStringA = tempString.substr(tempPosition+20, sampleSize);
+				}
 				
-				if (subStringA.includes("PD")) {
-					tempPosition = subStringA.indexOf("PD");
-					subStringB = subStringA.substr(tempPosition-3, 2);
-					importedArmor.armorPD04 = parseInt(subStringB.replace(/[^\d.-]/g, ""));
-					importedArmor.totalPD04 = importedArmor.armorPD04 + parseInt(character.pd);
+				// Get armor mass.
+				if (armorArray[importCount].mass !== "") {
+					tempString = armorArray[importCount].mass;
+					importedArmor["armorMass"+ID] = getItemMass(tempString, script_name);
 				} else {
-					importedArmor.armorPD04 = 0;
-					importedArmor.totalPD04 = parseInt(character.pd);
-				};
-				
-				if (subStringA.includes("ED")) {
-					tempPosition = subStringA.indexOf("ED");
-					subStringB = subStringA.substr(tempPosition-3, 2);
-					importedArmor.armorED04 = parseInt(subStringB.replace(/[^\d.-]/g, ""));
-					importedArmor.totalED04 = importedArmor.armorED04 + parseInt(character.ed);
-				} else {
-					importedArmor.armorED04 = 0;
-					importedArmor.totalED04 = parseInt(character.ed);
-				}; 
-			};
-			
-			tempString = armorArray[3].text;
-			
-			// Activation roll
-			if (tempString.includes("Requires A Roll")) {
-				tempPosition = tempString.indexOf("Requires A Roll");
-				
-				sampleSize = 4;
-				subStringA = tempString.substr(tempPosition+15, sampleSize);
-				subStringB = subStringA.replace(/[^\d]/g, "");
-				importedArmor.armorActivation04 = parseInt(subStringB);
+					importedArmor["armorMass"+ID] = 0;
+				}
 			}
-			
-			// Armor locations
-			if (tempString.includes("(locations")) {
-				tempPosition = tempString.indexOf("(locations") + 10;
-				secondPosition = tempString.indexOf(")", tempPosition);
-			
-				importedArmor.armorLocations04 = tempString.substr(tempPosition, secondPosition - tempPosition);
-				
-			}
-			
-			// Get armor mass.
-			tempString = armorArray[3].mass;
-			importedArmor.armorMass04  = getItemMass(tempString, script_name);
-			
-			importCount++;
 		}
 		
 		// Import armor.
-							
+		
 		setAttrs(object.id, importedArmor);
 		
 		if(verbose) {
@@ -2357,6 +890,7 @@
 		// Find first shield if any.
 		let shieldFound = false;
 		let importedShield = new Array();
+		let shieldID = "06";
 		
 		for (let i=0; i < equipmentMultipowers.length; i++) {
 			// Get next multipower index.
@@ -2375,18 +909,18 @@
 				}
 				
 				// Get shield name.
-				importedShield.shieldName = multipowerArray[shieldSearchIndex].name.replace("(Multipower)","");
+				importedShield["weaponName"+shieldID] = multipowerArray[shieldSearchIndex].name.replace("(Multipower)","");
 				
 				// Get STR minimum.
 				tempString = multipowerArray[shieldSearchIndex].text;
-				importedShield.shieldStrength = getWeaponStrMin(tempString, script_name);
+				importedShield["weaponStrengthMin"+shieldID] = getWeaponStrMin(tempString, script_name);
 				
 				// Get weapon mass.
 				if (multipowerArray[shieldSearchIndex].mass !== "") {
 					tempString = multipowerArray[shieldSearchIndex].mass;
 					importedShield.shieldMass = getItemMass(tempString, script_name);
 				} else {
-					importedShield.shieldMass5 = 0;
+					importedShield.shieldMass = 0;
 				}
 				
 				// Search for multipower slot that grants DCV.
@@ -2422,7 +956,7 @@
 						if (tempString.includes("DCV")) {
 							foundShieldDCV = true;
 							
-							tempPosition=tempString.indexOf("DCV");
+							tempPosition = tempString.indexOf("DCV");
 							importedShield.shieldDCV = parseInt(tempString.substr(tempPosition-3,3));
 						}
 						
@@ -2440,7 +974,7 @@
 					// Shield is the last multipower in the list.
 					for (let j = shieldSearchIndex; j<multipowerArray.length; j++) {
 							
-						//sendChat(script_name, "Seaching multipower for Attack: "+ tempString+".");
+						// sendChat(script_name, "Seaching multipower for Attack: "+ tempString+".");
 						
 						if ( multipowerArray[j].attack) {
 							foundShieldAttack = true;
@@ -2449,30 +983,39 @@
 							tempString = multipowerArray[j].damage;
 							
 							if (tempString.includes("Killing Attack") || tempString.includes("HKA")) {
-								importedShield.shieldNormalDamage= "off";
+								// importedShield.shieldNormalDamage= "off";
 							} else {
-								importedShield.shieldNormalDamage= "on";
+								importedShield["weaponNormalDamage"+shieldID] = "on";
 							};
 							
 							// Assign weapon damage, making sure the 1/2d6 is a 1d3.
 							tempString = multipowerArray[j].damage;
 							if (tempString.includes("1/2d6")) {
-								importedShield.shieldDamage = tempString.replace(" 1/2d6", "d6+d3");				
+								importedShield["weaponDamage"+shieldID] = tempString.replace(" 1/2d6", "d6+d3");				
 							} else {
-								importedShield.shieldDamage = tempString;
+								importedShield["weaponDamage"+shieldID] = tempString;
 							};
 							
 							// Check for modified STUN multiplier.
 							tempString = multipowerArray[j].text;
 							if (tempString.includes("Increased STUN Multiplier")) {
 								tempPosition = tempString.indexOf("Increased STUN Multiplier");
-								importedShield.shieldStunMod = parseInt(tempString.substr(tempPosition-3, 2));
+								importedShield["weaponStunMod"+shieldID] = parseInt(tempString.substr(tempPosition-3, 2));
 							} else if (tempString.includes("Decreased STUN Multiplier")) {
 								tempPosition = tempString.indexOf("Decreased STUN Multiplier");
-								importedShield.shieldStunMod = parseInt(tempString.substr(tempPosition-3, 2));
+								importedShield["weaponStunMod"+shieldID] = parseInt(tempString.substr(tempPosition-3, 2));
 							} else {
-								importedShield.shieldStunMod = 0;
+								importedShield["weaponStunMod"+shieldID] = 0;
 							};
+							
+							// Get STR minimum.	
+							tempString = multipowerArray[j].text;
+							if ((tempString !== "") && tempString.length) {
+								importedShield["weaponStrengthMin"+shieldID] = getWeaponStrMin(tempString);
+								importedShield["weaponEnhancedBySTR"+shieldID] = "on";
+								importedShield["weaponStrength"+shieldID] = getWeaponStrength(getWeaponStrMin(tempString), strength, script_name);
+								
+							}
 						}
 						
 						// Stop search
@@ -2491,17 +1034,17 @@
 							// Check for Killing Attack.
 							tempString = multipowerArray[j].damage;
 							if (tempString.includes("Killing Attack") || tempString.includes("HKA")) {
-								importedShield.shieldNormalDamage= "off";
+								// importedShield.shieldNormalDamage= "off";
 							} else {
-								importedShield.shieldNormalDamage= "on";
+								importedShield["weaponNormalDamage"+shieldID] = "on";
 							};
 							
 							// Assign weapon damage, making sure the 1/2d6 is a 1d3.
 							tempString = multipowerArray[j].damage;
 							if (tempString.includes("1/2d6")) {
-								importedShield.shieldDamage = tempString.replace(" 1/2d6", "d6+d3");				
+								importedShield["weaponNormalDamage"+shieldID] = tempString.replace(" 1/2d6", "d6+d3");				
 							} else {
-								importedShield.shieldDamage = tempString;
+								importedShield["weaponNormalDamage"+shieldID]= tempString;
 							};
 							
 							// Check for modified STUN multiplier.
@@ -2511,12 +1054,20 @@
 								importedShield.shieldStunMod = parseInt(tempString.substr(tempPosition-3, 2));
 							} else if (tempString.includes("Decreased STUN Multiplier")) {
 								tempPosition=tempString.indexOf("Decreased STUN Multiplier");
-								importedShield.shieldStunMod = parseInt(tempString.substr(tempPosition-3, 2));
+								importedShield["weaponStunMod"+shieldID] = parseInt(tempString.substr(tempPosition-3, 2));
 							} else {
-								importedShield.shieldStunMod = 0;
+								importedShield["weaponStunMod"+shieldID] = 0;
 							};
+							
+							// Get STR minimum.	
+							tempString = multipowerArray[j].text;
+							if ((tempString !== "") && tempString.length) {
+								importedShield["weaponStrengthMin"+shieldID] = getWeaponStrMin(tempString);
+								importedShield["weaponEnhancedBySTR"+shieldID] = "on";
+								importedShield["weaponStrength"+shieldID] = getWeaponStrength(getWeaponStrMin(tempString), strength, script_name);
+							}
 						}
-		
+						
 						// Stop search
 						if (foundShieldAttack) {
 							j=multipowerArray.length;
@@ -2570,10 +1121,6 @@
 						gearTextBox = gearTextBox + multipowerArray[j].text + "\n";
 					}
 				}
-				/* importedShield.treasures = gearTextBox; */
-				
-				// Show the Treasures Gear Tab slide where the multipower equipment will appear.	
-				/* setAttrs(object.id, {gearSlideSelection: 4}); */
 				
 				if(verbose) {
 					if (equipmentMultipowers !== "undefined") {
@@ -2584,6 +1131,7 @@
 		}
 		
 		// Import shield.
+		sendChat(script_name, importedShield);
 		
 		setAttrs(object.id, importedShield);
 		
@@ -7541,12 +6089,31 @@
 	}
 	
 	
+	var getWeaponStrength = function (strengthMin, strengthMax, script_name) {
+		// Returns STR in increments of 5 above strengthMin up to strengthMax.
+		
+		let differenceDC = 0;
+		let strength = strengthMax;
+		
+		if (strengthMax >= strengthMin) {
+			differenceDC = Math.floor( (strengthMax - strengthMin)/5 );
+			if (differenceDC > Math.floor(strengthMin/5)) {
+				// Default is limit of twice starting.
+				differenceDC = Math.floor(strengthMin/5);
+			}
+			strength = strengthMin + 5 * differenceDC;
+		}
+		
+		return strength;
+	}
+	
+	
 	var getDamage = function (damageString, script_name) {
 		// Parses damageString for damage dice.
 		
 		let damage = "0";
 		let lastIndex = 0;
-	
+		
 		// Separate joined dice if present.
 		if ((damageString.match(/d6/g) || []).length > 1) {
 			damageString = damageString.replace("d6", "d6+");
