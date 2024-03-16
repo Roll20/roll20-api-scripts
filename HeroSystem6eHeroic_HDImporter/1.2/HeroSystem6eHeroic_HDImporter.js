@@ -551,15 +551,18 @@
 		// Imports equipment and sets carried weight.
 		// Similar to the way perks and talents are handled, we will parse the imported equipment into temporary arrays.
 		
+		let strength = parseInt(character.strength)||1;
+		let gearTextBox = "";
+		
 		let tempString;
 		let tempPosition;
 		let secondPosition;
 		let subStringA;
 		let subStringB;
 		let sampleSize;
-		let strength = parseInt(character.strength)||1;
 		
-		let gearTextBox = "";
+		// Needed for adjusted damage.
+		let advantage = 0;
 		
 		// Overall array of equipment.
 		let equipmentArray = new Array();
@@ -720,8 +723,12 @@
 			if (importCount < weaponsArrayIndex) {
 				importedWeapons["weaponName"+ID] = weaponsArray[importCount].name;
 				
-				// Assign weapon damage.
-				importedWeapons["weaponDamage"+ID] = getDamage(weaponsArray[importCount].damage);
+				// Assign weapon base damage.
+				importedWeapons["weaponDamage"+ID] = getDamage(weaponsArray[importCount].damage, script_name);
+				
+				// Look for weapon advantages.
+				tempString = weaponsArray[importCount].text;
+				importedWeapons["weaponAdvantage"+ID] = getAdvantage(tempString, script_name);
 				
 				// Check for Killing Attack.
 				tempString = weaponsArray[importCount].text;
@@ -756,11 +763,12 @@
 					importedWeapons["weaponShots"+ID] = 0;
 				}
 				
-				// Get STR minimum.	
+				// Get STR minimum and apply strength.	
 				tempString = weaponsArray[importCount].text;
 				if ((tempString !== "") && tempString.length) {
-					importedWeapons["weaponStrengthMin"+ID] = getWeaponStrMin(tempString);
-					importedWeapons["weaponStrength"+ID] = getWeaponStrMin(tempString);
+					importedWeapons["weaponStrengthMin"+ID] = getWeaponStrMin(tempString, script_name);
+					importedWeapons["weaponEnhancedBySTR"+ID] = ( checkDamageBySTR(tempString, script_name) ? "on" : "0");
+					importedWeapons["weaponStrength"+ID] = ( checkDamageBySTR(tempString, script_name) ? getWeaponStrength(getWeaponStrMin(tempString), strength, script_name) : getWeaponStrMin(tempString, script_name));
 				}
 				
 				// Check for AoE.
@@ -1014,7 +1022,6 @@
 								importedShield["weaponStrengthMin"+shieldID] = getWeaponStrMin(tempString);
 								importedShield["weaponEnhancedBySTR"+shieldID] = "on";
 								importedShield["weaponStrength"+shieldID] = getWeaponStrength(getWeaponStrMin(tempString), strength, script_name);
-								
 							}
 						}
 						
@@ -6097,10 +6104,6 @@
 		
 		if (strengthMax >= strengthMin) {
 			differenceDC = Math.floor( (strengthMax - strengthMin)/5 );
-			if (differenceDC > Math.floor(strengthMin/5)) {
-				// Default is limit of twice starting.
-				differenceDC = Math.floor(strengthMin/5);
-			}
 			strength = strengthMin + 5 * differenceDC;
 		}
 		
@@ -6114,6 +6117,11 @@
 		let damage = "0";
 		let lastIndex = 0;
 		
+		// Remove dice in w/STR since we'll calculated it.
+		if (damageString.includes(" w/STR")) {
+			damageString = damageString.replace(/\([^()]*\)/g, "");
+		}
+		
 		// Separate joined dice if present.
 		if ((damageString.match(/d6/g) || []).length > 1) {
 			damageString = damageString.replace("d6", "d6+");
@@ -6121,11 +6129,11 @@
 			damageString = damageString.substring(0, lastIndex) + "d6" + damageString.substring(lastIndex + 2);
 		}
 		
-		// Look for (xd6 w/STR) and use that.
-		if (damageString.includes(" w/STR")) {
-			damageString = damageString.match(/\(([^)]*)\)/)[1];
-			damageString = damageString.replace(" w/STR", "");
-		}
+		// Look for (xd6 w/STR) and use that. No longer used as of sheet 2.51.
+		// if (damageString.includes(" w/STR")) {
+		// 	damageString = damageString.match(/\(([^)]*)\)/)[1];
+		// 	damageString = damageString.replace(" w/STR", "");
+		// }
 		
 		// Make sure the 1/2d6 is a 1d3.
 		if (damageString.includes(" 1/2d6")) {
@@ -6137,6 +6145,71 @@
 		}
 		
 		return damage;
+	}
+	
+	
+	var checkDamageBySTR = function (damageString, script_name) {
+		damageBySTR = false;
+		
+		if (damageString.includes(" w/STR")) {
+			damageBySTR = true;
+		}
+		
+		return damageBySTR;
+	}
+	
+	
+	var getAdvantage = function (weaponString, script_name) {
+		// See 6E2 98 for a list of advantages that affect weapon damage.
+		let advantage = 0;
+		let searchString = "";
+		
+		weaponString = weaponString.toLowerCase();
+		
+		if (weaponString.includes("armor piercing")) {
+			advantage += 0.25;
+		}
+		
+		if (weaponString.includes("+1 increased stun multiplier")) {
+			advantage += 0.25;
+		} else if (weaponString.includes("+2 increased stun multiplier")) {
+			advantage += 0.50;
+		}
+		
+		if (weaponString.includes("range based on str")) {
+			advantage += 0.25;
+		}
+		
+		searchString = "area of effect";
+		if (weaponString.includes(searchString)) {
+			searchString = weaponString.slice(weaponString.indexOf(searchString) + searchString.length);
+			searchString = searchString.match(/\(([^)]+)\)/)[0];
+			
+			if(verbose) {
+				sendChat(script_name, searchString);
+			}
+			
+			advantage += findAdvantages(searchString);
+		}
+		
+		searchString = "autofire";
+		if (weaponString.includes(searchString)) {
+			searchString = weaponString.slice(weaponString.indexOf(searchString) + searchString.length);
+			searchString = searchString.match(/\(([^)]+)\)/)[0];
+			
+			if(verbose) {
+				sendChat(script_name, searchString);
+			}
+			
+			advantage += findAdvantages(searchString);
+		}
+		
+		// Sheet 2.51 is limited to an advantage of 1.0.
+		if (advantage > 1) {
+			advantage = 1;
+		}
+		
+		return advantage;
 	}
 	
 	
