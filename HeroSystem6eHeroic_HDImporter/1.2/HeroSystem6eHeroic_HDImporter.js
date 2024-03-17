@@ -1160,7 +1160,6 @@
 		/* ***  Import Function: Perks and Talents       *** */
 		/* ************************************************* */
 		
-		// This will be more complicated than complications.
 		// The HDE can export ten of each perks and talents.
 		// Only the first seven total will be used, with perks first.
 		// The rest will be displayed in the text box below complications.
@@ -1440,12 +1439,12 @@
 			powerArrayIndex++;
 		}
 		
-		/* ----------------------------------------------------------------------------------------- */
-		/* Import the first seventeen into the sheet. Then import the remainder as a text field note.
-		/* ----------------------------------------------------------------------------------------- */
+		/* ----------------------------------------------------------------------- */
+		/* Check for the "takes no stun" power and set the sheet option if found.
+		/* ----------------------------------------------------------------------- */
+		
 		let tempCostArray = [0, 0];
 		
-		// Search for sheet option "takes no stun"
 		for (let i = 1; i < powerArrayIndex; i++) {
 			tempString = powerArray[i].text;
 			if (tempString.includes("Takes No STUN")) {
@@ -1455,6 +1454,10 @@
 				importedPowers.edCP = 3*(character.ed-1);
 			}
 		}
+		
+		/* ----------------------------------------------------------------------------------------- */
+		/* Import the first seventeen into the sheet. Then import the remainder as a text field note.
+		/* ----------------------------------------------------------------------------------------- */
 		
 		// This is currently the only function where bonus points are awarded. If this changes, assign to character bonusBenefit.
 		let bonusCP = 0;
@@ -1617,7 +1620,6 @@
 		/* ***  Import Function: Import Skills		    *** */
 		/* ************************************************* */
 		
-		// 
 		// Struct for counting processed skills.
 		
 		let sheetSkillIndexes={
@@ -1627,68 +1629,18 @@
 			languageSkillIndex: 0
 		}
 		
-		// Import Skills 01-10
-		if (typeof character.skills.skill01 !== "undefined") {sheetSkillIndexes = importSkill(object, character, script_name, sheetSkillIndexes, character.skills.skill01);}
-		if (typeof character.skills.skill02 !== "undefined") {sheetSkillIndexes = importSkill(object, character, script_name, sheetSkillIndexes, character.skills.skill02);}
-		if (typeof character.skills.skill03 !== "undefined") {sheetSkillIndexes = importSkill(object, character, script_name, sheetSkillIndexes, character.skills.skill03);}
-		if (typeof character.skills.skill04 !== "undefined") {sheetSkillIndexes = importSkill(object, character, script_name, sheetSkillIndexes, character.skills.skill04);}
-		if (typeof character.skills.skill05 !== "undefined") {sheetSkillIndexes = importSkill(object, character, script_name, sheetSkillIndexes, character.skills.skill05);}
-		if (typeof character.skills.skill06 !== "undefined") {sheetSkillIndexes = importSkill(object, character, script_name, sheetSkillIndexes, character.skills.skill06);}
-		if (typeof character.skills.skill07 !== "undefined") {sheetSkillIndexes = importSkill(object, character, script_name, sheetSkillIndexes, character.skills.skill07);}
-		if (typeof character.skills.skill08 !== "undefined") {sheetSkillIndexes = importSkill(object, character, script_name, sheetSkillIndexes, character.skills.skill08);}
-		if (typeof character.skills.skill09 !== "undefined") {sheetSkillIndexes = importSkill(object, character, script_name, sheetSkillIndexes, character.skills.skill09);}
-		if (typeof character.skills.skill10 !== "undefined") {sheetSkillIndexes = importSkill(object, character, script_name, sheetSkillIndexes, character.skills.skill10);}
+		const maxSkills = 50;
 		
-		// Import Skills 11-20
-		if (typeof character.skills.skill11 !== "undefined") {sheetSkillIndexes = importSkill(object, character, script_name, sheetSkillIndexes, character.skills.skill11);}
-		if (typeof character.skills.skill12 !== "undefined") {sheetSkillIndexes = importSkill(object, character, script_name, sheetSkillIndexes, character.skills.skill12);}
-		if (typeof character.skills.skill13 !== "undefined") {sheetSkillIndexes = importSkill(object, character, script_name, sheetSkillIndexes, character.skills.skill13);}
-		if (typeof character.skills.skill14 !== "undefined") {sheetSkillIndexes = importSkill(object, character, script_name, sheetSkillIndexes, character.skills.skill14);}
-		if (typeof character.skills.skill15 !== "undefined") {sheetSkillIndexes = importSkill(object, character, script_name, sheetSkillIndexes, character.skills.skill15);}
-		if (typeof character.skills.skill16 !== "undefined") {sheetSkillIndexes = importSkill(object, character, script_name, sheetSkillIndexes, character.skills.skill16);}
-		if (typeof character.skills.skill17 !== "undefined") {sheetSkillIndexes = importSkill(object, character, script_name, sheetSkillIndexes, character.skills.skill17);}
-		if (typeof character.skills.skill18 !== "undefined") {sheetSkillIndexes = importSkill(object, character, script_name, sheetSkillIndexes, character.skills.skill18);}
-		if (typeof character.skills.skill19 !== "undefined") {sheetSkillIndexes = importSkill(object, character, script_name, sheetSkillIndexes, character.skills.skill19);}
-		if (typeof character.skills.skill20 !== "undefined") {sheetSkillIndexes = importSkill(object, character, script_name, sheetSkillIndexes, character.skills.skill20);}
+		for (let importCount = 0; importCount < maxSkills; importCount++) {
 		
-		// Import Skills 21-30
-		if (typeof character.skills.skill21 !== "undefined") {sheetSkillIndexes = importSkill(object, character, script_name, sheetSkillIndexes, character.skills.skill21);}
-		if (typeof character.skills.skill22 !== "undefined") {sheetSkillIndexes = importSkill(object, character, script_name, sheetSkillIndexes, character.skills.skill22);}
-		if (typeof character.skills.skill23 !== "undefined") {sheetSkillIndexes = importSkill(object, character, script_name, sheetSkillIndexes, character.skills.skill23);}
-		if (typeof character.skills.skill24 !== "undefined") {sheetSkillIndexes = importSkill(object, character, script_name, sheetSkillIndexes, character.skills.skill24);}
-		if (typeof character.skills.skill25 !== "undefined") {sheetSkillIndexes = importSkill(object, character, script_name, sheetSkillIndexes, character.skills.skill25);}
-		if (typeof character.skills.skill26 !== "undefined") {sheetSkillIndexes = importSkill(object, character, script_name, sheetSkillIndexes, character.skills.skill26);}
-		if (typeof character.skills.skill27 !== "undefined") {sheetSkillIndexes = importSkill(object, character, script_name, sheetSkillIndexes, character.skills.skill27);}
-		if (typeof character.skills.skill28 !== "undefined") {sheetSkillIndexes = importSkill(object, character, script_name, sheetSkillIndexes, character.skills.skill28);}
-		if (typeof character.skills.skill29 !== "undefined") {sheetSkillIndexes = importSkill(object, character, script_name, sheetSkillIndexes, character.skills.skill29);}
-		if (typeof character.skills.skill30 !== "undefined") {sheetSkillIndexes = importSkill(object, character, script_name, sheetSkillIndexes, character.skills.skill30);}
-		
-		// Import Skills 31-40
-		if (typeof character.skills.skill31 !== "undefined") {sheetSkillIndexes = importSkill(object, character, script_name, sheetSkillIndexes, character.skills.skill31);}
-		if (typeof character.skills.skill32 !== "undefined") {sheetSkillIndexes = importSkill(object, character, script_name, sheetSkillIndexes, character.skills.skill32);}
-		if (typeof character.skills.skill33 !== "undefined") {sheetSkillIndexes = importSkill(object, character, script_name, sheetSkillIndexes, character.skills.skill33);}
-		if (typeof character.skills.skill34 !== "undefined") {sheetSkillIndexes = importSkill(object, character, script_name, sheetSkillIndexes, character.skills.skill34);}
-		if (typeof character.skills.skill35 !== "undefined") {sheetSkillIndexes = importSkill(object, character, script_name, sheetSkillIndexes, character.skills.skill35);}
-		if (typeof character.skills.skill36 !== "undefined") {sheetSkillIndexes = importSkill(object, character, script_name, sheetSkillIndexes, character.skills.skill36);}
-		if (typeof character.skills.skill37 !== "undefined") {sheetSkillIndexes = importSkill(object, character, script_name, sheetSkillIndexes, character.skills.skill37);}
-		if (typeof character.skills.skill38 !== "undefined") {sheetSkillIndexes = importSkill(object, character, script_name, sheetSkillIndexes, character.skills.skill38);}
-		if (typeof character.skills.skill39 !== "undefined") {sheetSkillIndexes = importSkill(object, character, script_name, sheetSkillIndexes, character.skills.skill39);}
-		if (typeof character.skills.skill40 !== "undefined") {sheetSkillIndexes = importSkill(object, character, script_name, sheetSkillIndexes, character.skills.skill40);}
-		
-		// Import Skills 41-50
-		if (typeof character.skills.skill41 !== "undefined") {sheetSkillIndexes = importSkill(object, character, script_name, sheetSkillIndexes, character.skills.skill41);}
-		if (typeof character.skills.skill42 !== "undefined") {sheetSkillIndexes = importSkill(object, character, script_name, sheetSkillIndexes, character.skills.skill42);}
-		if (typeof character.skills.skill43 !== "undefined") {sheetSkillIndexes = importSkill(object, character, script_name, sheetSkillIndexes, character.skills.skill43);}
-		if (typeof character.skills.skill44 !== "undefined") {sheetSkillIndexes = importSkill(object, character, script_name, sheetSkillIndexes, character.skills.skill44);}
-		if (typeof character.skills.skill45 !== "undefined") {sheetSkillIndexes = importSkill(object, character, script_name, sheetSkillIndexes, character.skills.skill45);}
-		if (typeof character.skills.skill46 !== "undefined") {sheetSkillIndexes = importSkill(object, character, script_name, sheetSkillIndexes, character.skills.skill46);}
-		if (typeof character.skills.skill47 !== "undefined") {sheetSkillIndexes = importSkill(object, character, script_name, sheetSkillIndexes, character.skills.skill47);}
-		if (typeof character.skills.skill48 !== "undefined") {sheetSkillIndexes = importSkill(object, character, script_name, sheetSkillIndexes, character.skills.skill48);}
-		if (typeof character.skills.skill49 !== "undefined") {sheetSkillIndexes = importSkill(object, character, script_name, sheetSkillIndexes, character.skills.skill49);}
-		if (typeof character.skills.skill50 !== "undefined") {sheetSkillIndexes = importSkill(object, character, script_name, sheetSkillIndexes, character.skills.skill50);}
+			ID = String(importCount+1).padStart(2,'0');
+			
+			if (typeof character.skills["skill"+ID] !== "undefined") {sheetSkillIndexes = importSkill(object, character, script_name, sheetSkillIndexes, character.skills["skill"+ID]);}
+		}
 		
 		return;
 	};
+	
 	
 	/* ------------------------- */
 	/* Import Helper Functions   */
