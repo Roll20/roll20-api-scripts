@@ -1170,6 +1170,7 @@
 		let perksAndTalentsIndex = 0;
 		const maxPerks = 10;
 		const maxTalents = 10;
+		const maxCombinedSheet = 7;
 		
 		let importCount = 0;
 		
@@ -1218,7 +1219,7 @@
 		/* -------------------------------------------------------------------------------------- */
 		
 		importCount = 0;
-		let maxImport = (perksAndTalentsIndex <= 7) ? (perksAndTalentsIndex - 1) : 6;
+		let maxImport = (perksAndTalentsIndex <= maxCombinedSheet) ? perksAndTalentsIndex : maxCombinedSheet;
 		
 		if (perksAndTalentsIndex > 0) {
 			
@@ -1232,7 +1233,7 @@
 			}
 			
 			// Display additional perks and talents in the complications text box.
-			if (perksAndTalentsIndex>7) {
+			if (perksAndTalentsIndex > maxCombinedSheet) {
 				let tempString = "";
 				let i = 7;
 				let extras = 0;
@@ -1439,7 +1440,9 @@
 			powerArrayIndex++;
 		}
 		
-		// Fill out up to seventeen powers on the sheet.
+		/* ----------------------------------------------------------------------------------------- */
+		/* Import the first seventeen into the sheet. Then import the remainder as a text field note.
+		/* ----------------------------------------------------------------------------------------- */
 		let tempCostArray = [0, 0];
 		
 		// Search for sheet option "takes no stun"
@@ -1455,7 +1458,7 @@
 		
 		// This is currently the only function where bonus points are awarded. If this changes, assign to character bonusBenefit.
 		let bonusCP = 0;
-		let maxImport = (powerArrayIndex <= maxPowers) ? (powerArrayIndex - 1) : maxPowers-1;
+		let maxImport = (powerArrayIndex <= maxPowers) ? powerArrayIndex : maxPowers;
 		
 		if (powerArrayIndex > 0) {
 			
@@ -1574,77 +1577,23 @@
 		
 		// Imports the first six complications.
 		let importCount = 0;
+		let ID = "";
+		const maxComplications = 6;
+		var importedComplications = new Object();
 		
-		// Complication 1
-		if ((typeof character.complications.complication01 !== "undefined") && (typeof character.complications.complication01.type !== "undefined")) {
-			let complication01 = {
-				complicationName01: character.complications.complication01.type,
-				complicationText01: character.complications.complication01.text + "\n" + character.complications.complication01.notes,
-				complicationCP01: character.complications.complication01.points
-			}
-			setAttrs(object.id, complication01);
+		/* ------------------------- */
+		/* Read Complications        */
+		/* ------------------------- */
+		
+		for (importCount = 0; importCount < maxComplications; importCount++) {
 			
-			importCount++;
-		}
-		
-		// Complication 2
-		if ((typeof character.complications.complication02 !== "undefined") && (typeof character.complications.complication02.type !== "undefined")) {
-			let complication02 = {
-				complicationName02: character.complications.complication02.type,
-				complicationText02: character.complications.complication02.text + "\n" + character.complications.complication02.notes,
-				complicationCP02: character.complications.complication02.points
-			}
-			setAttrs(object.id, complication02);
+			ID = String(importCount+1).padStart(2,'0');
 			
-			importCount++;
-		}
-		
-		// Complication 3
-		if ((typeof character.complications.complication03 !== "undefined") && (typeof character.complications.complication03.type !== "undefined")) {
-			let complication03 = {
-				complicationName03: character.complications.complication03.type,
-				complicationText03: character.complications.complication03.text + "\n" + character.complications.complication03.notes,
-				complicationCP03: character.complications.complication03.points
+			if ((typeof character.complications["complication"+ID] !== "undefined") && (typeof character.complications["complication"+ID].type !== "undefined")) {			
+				importedComplications["complicationName"+ID] = character.complications["complication"+ID].type;
+				importedComplications["complicationText"+ID] = character.complications["complication"+ID].text + "\n" + character.complications["complication"+ID].notes;
+				importedComplications["complicationCP"+ID] = character.complications["complication"+ID].points;
 			}
-			setAttrs(object.id, complication03);
-			
-			importCount++;
-		}
-		
-		// Complication 4
-		if ((typeof character.complications.complication04 !== "undefined") && (typeof character.complications.complication04.type !== "undefined")) {
-			let complication04 = {
-				complicationName04: character.complications.complication04.type,
-				complicationText04: character.complications.complication04.text + "\n" + character.complications.complication04.notes,
-				complicationCP04: character.complications.complication04.points
-			}
-			setAttrs(object.id, complication04);
-			
-			importCount++;
-		}
-		
-		// Complication 5
-		if ((typeof character.complications.complication05 !== "undefined") && (typeof character.complications.complication05.type !== "undefined")) {
-			let complication05 = {
-				complicationName05: character.complications.complication05.type,
-				complicationText05: character.complications.complication05.text + "\n" + character.complications.complication05.notes,
-				complicationCP05: character.complications.complication05.points
-			}
-			setAttrs(object.id, complication05);
-			
-			importCount++;
-		}
-		
-		// Complication 6
-		if ((typeof character.complications.complication06 !== "undefined") && (typeof character.complications.complication06.type !== "undefined")) {
-			let complication06 = {
-				complicationName06: character.complications.complication06.type,
-				complicationText06: character.complications.complication06.text + "\n" + character.complications.complication06.notes,
-				complicationCP06: character.complications.complication06.points
-			}
-			setAttrs(object.id, complication06);
-			 
-			importCount++;
 		}
 		
 		if(verbose) {
@@ -1654,9 +1603,13 @@
 				sendChat(script_name, "Imported " + importCount + " complications.");
 			}
 		}
+		
+		// Import complications to sheet.
+		setAttrs(object.id, importedComplications);
 			
 		return;
 	};
+	
 	
 	var importAllSkills = function(object, character, script_name) {
 	
