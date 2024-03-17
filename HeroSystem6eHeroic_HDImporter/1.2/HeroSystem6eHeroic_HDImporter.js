@@ -713,7 +713,10 @@
 		// Prepare objects of weapons. Assign to character sheet Weapon List.
 		
 		let importedWeapons = new Array();
+		const maxAdvantage = 1;
 		const maxWeapons = 5;
+		let tempValue = 0;
+		
 		importCount = 0;
 		
 		for (importCount = 0; importCount < maxWeapons; importCount++) {
@@ -728,7 +731,12 @@
 				
 				// Look for weapon advantages.
 				tempString = weaponsArray[importCount].text;
-				importedWeapons["weaponAdvantage"+ID] = getAdvantage(tempString, script_name);
+				tempValue = getAdvantage(tempString, script_name);
+				if (tempValue > maxAdvantage) {
+					importedWeapons["weaponAdvantage"+ID] = maxAdvantage;
+				} else {
+					importedWeapons["weaponAdvantage"+ID] = tempValue;
+				}
 				
 				// Check for Killing Attack.
 				tempString = weaponsArray[importCount].text;
@@ -6162,12 +6170,46 @@
 	var getAdvantage = function (weaponString, script_name) {
 		// See 6E2 98 for a list of advantages that affect weapon damage.
 		let advantage = 0;
+		let temp = 0;
 		let searchString = "";
 		
 		weaponString = weaponString.toLowerCase();
 		
-		if (weaponString.includes("armor piercing")) {
+		searchString = "area of effect";
+		advantage += getSingleAdvantage (weaponString, searchString);
+		
+		searchString = "armor piercing";
+		advantage += getSingleAdvantage (weaponString, searchString);
+		
+		searchString = "autofire";
+		advantage += getSingleAdvantage (weaponString, searchString);
+		
+		searchString = "attack versus alternate defense";
+		advantage += getSingleAdvantage (weaponString, searchString);
+		
+		searchString = "boostable";
+		advantage += getSingleAdvantage (weaponString, searchString);
+		
+		if (weaponString.includes("constant")) {
+			advantage += 0.5;
+		}
+		
+		searchString = "cumulative";
+		advantage += getSingleAdvantage (weaponString, searchString);
+		
+		searchString = "damage over time";
+		advantage += getSingleAdvantage (weaponString, searchString);
+		
+		if (weaponString.includes("does body")) {
+			advantage += 1;
+		}
+		
+		if (weaponString.includes("does knockback")) {
 			advantage += 0.25;
+		}
+		
+		if (weaponString.includes("double knockback")) {
+			advantage += 0.5;
 		}
 		
 		if (weaponString.includes("+1 increased stun multiplier")) {
@@ -6176,37 +6218,51 @@
 			advantage += 0.50;
 		}
 		
+		searchString = "penetrating";
+		advantage += getSingleAdvantage (weaponString, searchString);
+		
 		if (weaponString.includes("range based on str")) {
 			advantage += 0.25;
 		}
 		
-		searchString = "area of effect";
+		if (weaponString.includes("sticky")) {
+			advantage += 0.5;
+		}
+		
+		searchString = "time limit";
+		advantage += getSingleAdvantage (weaponString, searchString);
+		
+		searchString = "transdimensional";
+		advantage += getSingleAdvantage (weaponString, searchString);
+		
+		searchString = "trigger";
+		advantage += getSingleAdvantage (weaponString, searchString);
+		
+		if (weaponString.includes("uncontrolled")) {
+			advantage += 0.5;
+		}
+		
+		searchString = "variable advantage";
+		advantage += getSingleAdvantage (weaponString, searchString);
+		
+		searchString = "variable special effects";
+		advantage += getSingleAdvantage (weaponString, searchString);
+		
+		return advantage;
+	}
+	
+	var getSingleAdvantage = function(weaponString, searchString) {
+		let advantage = 0;
+		
 		if (weaponString.includes(searchString)) {
 			searchString = weaponString.slice(weaponString.indexOf(searchString) + searchString.length);
 			searchString = searchString.match(/\(([^)]+)\)/)[0];
 			
-			if(verbose) {
-				sendChat(script_name, searchString);
+			advantage = findAdvantages(searchString);
+			
+			if (advantage < 0) {
+				advantage = 0;
 			}
-			
-			advantage += findAdvantages(searchString);
-		}
-		
-		searchString = "autofire";
-		if (weaponString.includes(searchString)) {
-			searchString = weaponString.slice(weaponString.indexOf(searchString) + searchString.length);
-			searchString = searchString.match(/\(([^)]+)\)/)[0];
-			
-			if(verbose) {
-				sendChat(script_name, searchString);
-			}
-			
-			advantage += findAdvantages(searchString);
-		}
-		
-		// Sheet 2.51 is limited to an advantage of 1.0.
-		if (advantage > 1) {
-			advantage = 1;
 		}
 		
 		return advantage;
