@@ -1164,312 +1164,68 @@
 		// Only the first seven total will be used, with perks first.
 		// The rest will be displayed in the text box below complications.
 		
+		var importedTalents = new Object();
 		let perksAndTalentsArray = new Array();
 		let perksAndTalentsIndex = 0;
+		const maxPerks = 10;
+		const maxTalents = 10;
+		
+		let importCount = 0;
 		
 		/* ------------------------- */
-		/* Read Perks                     */
+		/* Read Perks                */
 		/* ------------------------- */
 		
-		// Perk 01
-		if ((typeof character.perks.perk01 !== "undefined") && (character.perks.perk01 !== "") && (typeof character.perks.perk01.type !== "undefined")) {
-			perksAndTalentsArray[perksAndTalentsIndex] = {
-				type: character.perks.perk01.type,
-				text: character.perks.perk01.text + "\n" + character.perks.perk01.notes,
-				points: character.perks.perk01.points
-			}
-			
-			perksAndTalentsIndex++;
-		}
+		for (importCount = 0; importCount < maxPerks; importCount++) {
 		
-		// Perk 02
-		if ((typeof character.perks.perk02 !== "undefined") && (character.perks.perk02 !== "") && (typeof character.perks.perk02.type !== "undefined")) {
-			perksAndTalentsArray[perksAndTalentsIndex] = {
-				type: character.perks.perk02.type,
-				text: character.perks.perk02.text + "\n" + character.perks.perk02.notes,
-				points: character.perks.perk02.points
-			}
+			ID = String(importCount+1).padStart(2,'0');
 			
-			perksAndTalentsIndex++;
-		}
-		
-		// Perk 03
-		if ((typeof character.perks.perk03 !== "undefined") && (character.perks.perk03 !== "") && (typeof character.perks.perk03.type !== "undefined")) {
-			perksAndTalentsArray[perksAndTalentsIndex] = {
-				type: character.perks.perk03.type,
-				text: character.perks.perk03.text + "\n" + character.perks.perk03.notes,
-				points: character.perks.perk03.points
+			if ((typeof character.perks["perk"+ID] !== "undefined") && (character.perks["perk"+ID] !== "") && (typeof character.perks["perk"+ID].type !== "undefined")) {
+				perksAndTalentsArray[perksAndTalentsIndex] = {
+					type: character.perks["perk"+ID].type,
+					text: character.perks["perk"+ID].text + "\n" + character.perks["perk"+ID].notes,
+					points: character.perks["perk"+ID].points
+				}
+				
+				perksAndTalentsIndex++;
 			}
-			
-			perksAndTalentsIndex++;
-		}
-		
-		// Perk 04
-		if ((typeof character.perks.perk04 !== "undefined") && (character.perks.perk04 !== "") && (typeof character.perks.perk04.type !== "undefined")) {
-			perksAndTalentsArray[perksAndTalentsIndex] = {
-				type: character.perks.perk04.type,
-				text: character.perks.perk04.text + "\n" + character.perks.perk04.notes,
-				points: character.perks.perk04.points
-			}
-			
-			perksAndTalentsIndex++;
-		}
-		
-		// Perk 05
-		if ((typeof character.perks.perk05 !== "undefined") && (character.perks.perk05 !== "") && (typeof character.perks.perk05.type !== "undefined")) {
-			perksAndTalentsArray[perksAndTalentsIndex] = {
-				type: character.perks.perk05.type,
-				text: character.perks.perk05.text + "\n" + character.perks.perk05.notes,
-				points: character.perks.perk05.points
-			}
-			
-			perksAndTalentsIndex++;
-		}
-		
-		// Perk 06
-		if ((typeof character.perks.perk06 !== "undefined") && (character.perks.perk06 !== "") && (typeof character.perks.perk06.type !== "undefined")) {
-			perksAndTalentsArray[perksAndTalentsIndex] = {
-				type: character.perks.perk06.type,
-				text: character.perks.perk06.text + "\n" + character.perks.perk06.notes,
-				points: character.perks.perk06.points
-			}
-			
-			perksAndTalentsIndex++;
-		}
-		
-		// Perk 07
-		if ((typeof character.perks.perk07 !== "undefined") && (character.perks.perk07 !== "") && (typeof character.perks.perk07.type !== "undefined")) {
-			perksAndTalentsArray[perksAndTalentsIndex] = {
-				type: character.perks.perk07.type,
-				text: character.perks.perk07.text + "\n" + character.perks.perk07.notes,
-				points: character.perks.perk07.points
-			}
-			
-			perksAndTalentsIndex++;
-		}
-		
-		// Perk 08
-		if ((typeof character.perks.perk08 !== "undefined") && (character.perks.perk08 !== "") && (typeof character.perks.perk08.type !== "undefined")) {
-			perksAndTalentsArray[perksAndTalentsIndex] = {
-				type: character.perks.perk08.type,
-				text: character.perks.perk08.text + "\n" + character.perks.perk08.notes,
-				points: character.perks.perk08.points
-			}
-			
-			perksAndTalentsIndex++;
-		}
-		
-		// Perk 09
-		if ((typeof character.perks.perk09 !== "undefined") && (character.perks.perk09 !== "") && (typeof character.perks.perk09.type !== "undefined")) {
-			perksAndTalentsArray[perksAndTalentsIndex] = {
-				type: character.perks.perk09.type,
-				text: character.perks.perk09.text + "\n" + character.perks.perk09.notes,
-				points: character.perks.perk09.points
-			}
-			
-			perksAndTalentsIndex++;
-		}
-		
-		// Perk 10
-		if ((typeof character.perks.perk10 !== "undefined") && (character.perks.perk10 !== "") && (typeof character.perks.perk10.type !== "undefined")) {
-			perksAndTalentsArray[perksAndTalentsIndex] = {
-				type: character.perks.perk10.type,
-				text: character.perks.perk10.text + "\n" + character.perks.perk10.notes,
-				points: character.perks.perk10.points
-			}
-			
-			perksAndTalentsIndex++;
 		}
 		
 		/* ------------------------- */
-		/* Read Talents                   */
+		/* Read Talents              */
 		/* ------------------------- */
 		
-		// Talent 01
-		if ((typeof character.talents.talent01 !== "undefined") && (character.talents.talent01 !== "") && (typeof character.talents.talent01.type !== "undefined")) {
-			perksAndTalentsArray[perksAndTalentsIndex] = {
-				type: character.talents.talent01.type,
-				text: character.talents.talent01.text + "\n" + character.talents.talent01.notes,
-				points: character.talents.talent01.points
-			}
-			
-			perksAndTalentsIndex++;
-		}
+		importCount = 0;
 		
-		// Talent 02
-		if ((typeof character.talents.talent02 !== "undefined") && (character.talents.talent02 !== "") && (typeof character.talents.talent02.type !== "undefined"))  {
-			perksAndTalentsArray[perksAndTalentsIndex] = {
-				type: character.talents.talent02.type,
-				text: character.talents.talent02.text + "\n" + character.talents.talent02.notes,
-				points: character.talents.talent02.points
-			}
-			
-			perksAndTalentsIndex++;
-		}
+		for (importCount = 0; importCount < maxTalents; importCount++) {
 		
-		// Talent 03
-		if ((typeof character.talents.talent03 !== "undefined") && (character.talents.talent03 !== "") && (typeof character.talents.talent03.type !== "undefined"))  {
-			perksAndTalentsArray[perksAndTalentsIndex] = {
-				type: character.talents.talent03.type,
-				text: character.talents.talent03.text + "\n" + character.talents.talent03.notes,
-				points: character.talents.talent03.points
-			}
+			ID = String(importCount+1).padStart(2,'0');
 			
-			perksAndTalentsIndex++;
-		}
-		
-		// Talent 04
-		if ((typeof character.talents.talent04 !== "undefined") && (character.talents.talent04 !== "") && (typeof character.talents.talent04.type !== "undefined"))  {
-			perksAndTalentsArray[perksAndTalentsIndex] = {
-				type: character.talents.talent04.type,
-				text: character.talents.talent04.text + "\n" + character.talents.talent04.notes,
-				points: character.talents.talent04.points
+			if ((typeof character.talents["talent"+ID] !== "undefined") && (character.talents["talent"+ID] !== "") && (typeof character.talents["talent"+ID].type !== "undefined")) {
+				perksAndTalentsArray[perksAndTalentsIndex] = {
+					type: character.talents["talent"+ID].type,
+					text: character.talents["talent"+ID].text + "\n" + character.talents["talent"+ID].notes,
+					points: character.talents["talent"+ID].points
+				}
+				
+				perksAndTalentsIndex++;
 			}
-			
-			perksAndTalentsIndex++;
-		}
-		
-		// Talent 05
-		if ((typeof character.talents.talent05 !== "undefined") && (character.talents.talent05 !== "") && (typeof character.talents.talent05.type !== "undefined"))  {
-			perksAndTalentsArray[perksAndTalentsIndex] = {
-				type: character.talents.talent05.type,
-				text: character.talents.talent05.text + "\n" + character.talents.talent05.notes,
-				points: character.talents.talent05.points
-			}
-			
-			perksAndTalentsIndex++;
-		}
-		
-		// Talent 06
-		if ((typeof character.talents.talent06 !== "undefined") && (character.talents.talent06 !== "") && (typeof character.talents.talent06.type !== "undefined"))  {
-			perksAndTalentsArray[perksAndTalentsIndex] = {
-				type: character.talents.talent06.type,
-				text: character.talents.talent06.text + "\n" + character.talents.talent06.notes,
-				points: character.talents.talent06.points
-			}
-			
-			perksAndTalentsIndex++;
-		}
-		
-		// Talent 07
-		if ((typeof character.talents.talent07 !== "undefined") && (character.talents.talent07 !== "") && (typeof character.talents.talent07.type !== "undefined"))  {
-			perksAndTalentsArray[perksAndTalentsIndex] = {
-				type: character.talents.talent07.type,
-				text: character.talents.talent07.text + "\n" + character.talents.talent07.notes,
-				points: character.talents.talent07.points
-			}
-			
-			perksAndTalentsIndex++;
-		}
-		
-		// Talent 08
-		if ((typeof character.talents.talent08 !== "undefined") && (character.talents.talent08 !== "") && (typeof character.talents.talent08.type !== "undefined"))  {
-			perksAndTalentsArray[perksAndTalentsIndex] = {
-				type: character.talents.talent08.type,
-				text: character.talents.talent08.text + "\n" + character.talents.talent08.notes,
-				points: character.talents.talent08.points
-			}
-			
-			perksAndTalentsIndex++;
-		}
-		
-		// Talent 09
-		if ((typeof character.talents.talent09 !== "undefined") && (character.talents.talent09 !== "") && (typeof character.talents.talent09.type !== "undefined")) {
-			perksAndTalentsArray[perksAndTalentsIndex] = {
-				type: character.talents.talent09.type,
-				text: character.talents.talent09.text + "\n" + character.talents.talent09.notes,
-				points: character.talents.talent09.points
-			}
-			
-			perksAndTalentsIndex++;
-		}
-		
-		// Talent 10
-		if ((typeof character.talents.talent10 !== "undefined") && (character.talents.talent10 !== "") && (typeof character.talents.talent10.type !== "undefined"))  {
-			perksAndTalentsArray[perksAndTalentsIndex] = {
-				type: character.talents.talent10.type,
-				text: character.talents.talent10.text + "\n" + character.talents.talent10.notes,
-				points: character.talents.talent10.points
-			}
-			
-			perksAndTalentsIndex++;
 		}
 		
 		// Import the first seven into the sheet. Then import the remainder as a text field note.
 		
-		let importCount = 0;
+		importCount = 0;
+		let maxImport = (perksAndTalentsIndex <= 7) ? (perksAndTalentsIndex - 1) : 6;
+		
 		if (perksAndTalentsIndex>0) {
 			
-			importCount++;
-			
-			// Prepare Talent01 (Perk or Talent)
-			
-			let importedTalents = {
-				talentName01: perksAndTalentsArray[0].type,
-				talentText01: perksAndTalentsArray[0].text,
-				talentCP01: perksAndTalentsArray[0].points
-			}
-			
-			// Prepare Talent02 (Perk or Talent)
-			if (perksAndTalentsIndex>1) {
-						
-				importCount++;
+			for (importCount = 0; importCount < maxImport; importCount++) {
 				
-				importedTalents.talentName02=perksAndTalentsArray[1].type;
-				importedTalents.talentText02=perksAndTalentsArray[1].text;
-				importedTalents.talentCP02=perksAndTalentsArray[1].points;
-			}
-			
-			// Prepare Talent03 (Perk or Talent)
-			if (perksAndTalentsIndex>2) {
-						
-				importCount++;
+				ID = String(importCount+1).padStart(2,'0');
 				
-				importedTalents.talentName03=perksAndTalentsArray[2].type;
-				importedTalents.talentText03=perksAndTalentsArray[2].text;
-				importedTalents.talentCP03=perksAndTalentsArray[2].points;
-			}
-			
-			// Prepare Talent04 (Perk or Talent)
-			if (perksAndTalentsIndex>3) {
-						
-				importCount++;
-				
-				importedTalents.talentName04=perksAndTalentsArray[3].type;
-				importedTalents.talentText04=perksAndTalentsArray[3].text;
-				importedTalents.talentCP04=perksAndTalentsArray[3].points;
-			}
-			
-			// Prepare Talent05 (Perk or Talent)
-			if (perksAndTalentsIndex>4) {
-						
-				importCount++;
-				
-				importedTalents.talentName05=perksAndTalentsArray[4].type;
-				importedTalents.talentText05=perksAndTalentsArray[4].text;
-				importedTalents.talentCP05=perksAndTalentsArray[4].points;
-			}
-			
-			// Prepare Talent06 (Perk or Talent)
-			if (perksAndTalentsIndex>5) {
-						
-				importCount++;
-				
-				importedTalents.talentName06=perksAndTalentsArray[5].type;
-				importedTalents.talentText06=perksAndTalentsArray[5].text;
-				importedTalents.talentCP06=perksAndTalentsArray[5].points;
-			}
-			
-			// Prepare Talent07 (Perk or Talent)
-			if (perksAndTalentsIndex>6) {
-						
-				importCount++;
-				
-				importedTalents.talentName07=perksAndTalentsArray[6].type;
-				importedTalents.talentText07=perksAndTalentsArray[6].text;
-				importedTalents.talentCP07=perksAndTalentsArray[6].points;
-			
-				// End preparation. Maximum number of perks and talents reached.
+				importedTalents["talentName"+ID] = perksAndTalentsArray[importCount].type;
+				importedTalents["talentText"+ID] = perksAndTalentsArray[importCount].text;
+				importedTalents["talentCP"+ID] = perksAndTalentsArray[importCount].points;
 			}
 			
 			// Display additional perks and talents in the complications text box.
