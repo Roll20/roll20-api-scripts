@@ -3054,7 +3054,7 @@ var attackMaster = (function() {
 	 * Build melee weapon attack macro
 	 */
  
-	var buildMWattkMacros = function( args, senderId, charCS, tableInfo, mwIndex, backstab=false ) {
+	var buildMWattkMacros = function( args, senderId, charCS, tableInfo, mwIndex, backstab=false ) {  // toLowerCase()
 		
 		return new Promise(resolve => {
 			
