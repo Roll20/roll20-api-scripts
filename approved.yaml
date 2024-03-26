@@ -1255,3 +1255,7 @@ pf2guidance:
 velvetgeneration:
   - "Velvet Generation"
   - "Utility"
+
+listattrs:
+  - "ListAttrs"
+  - "Utility"

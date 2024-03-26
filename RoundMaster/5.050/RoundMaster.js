@@ -167,19 +167,14 @@ API_Meta.RoundMaster={offset:Number.MAX_SAFE_INTEGER,lineCount:-1};
  *                    message output relative to turn announcements to make more obvious to players.
  * v5.050  02/02/2024 Automated the delivery of dancing weapons by using "template" dancing effects.
  *                    Added the --dancer command to support this automation
- * v5.051  08/02/2024 Added '$#' as a duration option for statuses which overwrites current duration and
- *                    also runs a '-start' effect.
- * v5.052  20/02/2024 Store dynamic "dancer" effect definitions on character sheet of character wielding
- *                    a dancing weapon, rather than in memory, so re-start rebuild is unnecessary. Added
- *                    more effects in support of newly added magic items.
  **/
  
 var RoundMaster = (function() {
 	'use strict'; 
-	var version = 5.052,
+	var version = 5.050,
 		author = 'Ken L. & RED',
 		pending = null;
-	const lastUpdate = 1708765145;
+	const lastUpdate = 1706890344;
 	
 	var RW_StateEnum = Object.freeze({
 		ACTIVE: 0,
@@ -245,12 +240,12 @@ var RoundMaster = (function() {
 	}; 
 
 	var dbNames = Object.freeze({
-	Effects_DB:		{bio:'<blockquote>Token Marker Effects Macro Library</blockquote><br><br>v6.20 23/02/2024<br><br>This database holds the definitions for all token status effects.  These are macros that optionally are triggered when a status of the same root name is placed on a token (statusname-start), each round it is still on the token (statusname-turn), and when the status countdown reaches zero or the token dies or is deleted (statusname-end)  There are also other possible status conditions such as weaponname-inhand, weaponname-dancing and weaponname-sheathed.  See the <b>RoundMaster API</b> documentation for further information.<br><br><b>Important Note:</b> Effects require a Roll20 Pro membership, and the installation of the ChatSetAttr, Tokenmod and RoundMaster API Scripts, to allow parameter passing between macros, update of character sheet variables, and marking spell effects on tokens.  If you do not have this level of subscription, I highly recommend you get it as a DM, as you get lots of other goodies as well.  If you want to know how to load the API Scripts to your game, the RoLL20 API help here gives guidance, or Richard can help you.<br><br><b>Important Note for DMs:</b> if a monster character sheet has multiple tokens associated with it, and token markers with associated Effects are placed on more than one of those Tokens, any Effect macros will run multiple times and, if changing variables on the Character Sheet using e.g. ChatSetAttr will make the changes multiple times to the same Character Sheet - generally this will cause unexpected results!  If using these Effect macros for Effects that could affect monsters in this way, it is <b>HIGHLY RECOMMENDED</b> that a 1 monster Token : 1 character sheet approach is adopted.',
-					gmnotes:'<blockquote>Change Log:</blockquote><br>v6.20  23/02/2024  Added more effects for new items<br>v6.19  08/02/2024  Added effects for Sword of Wounding<br>v6.18  04/02/2024  Changed the way dancing weapons work by using template effect definitions<br>v6.16  17/10/2023  A number of effect definition fixes<br>v6.15  09/10/2023  Added dragon fear and roper attack effects<br>v6.13  11/07/2023  More effects for powers, spells and items<br>v6.09  03/03/2023  Added more effects for new magic items<br>v6.08  16/12/2022  Added more creature effects, such as poisons<br>v6.07  09/12/2022  Added effects to support the new Creatures database<br>v6.06  14/11/2022  Added effects to support new Race Database & Powers<br><br>v6.04  16/10/2022  Added effect for Spiritual-Hammer-end and for Chromatic-Orb Heat effects<br><br>v6.03  12/10/2022  Changed the Initiative dice roll modification field from "comreact" to the new custom field "init-mod"<br><br>v6.02  07/10/2022  Added new effects to support newly programmed magic items<br><br>v6.01  11/05/2022  Added effects to turn on and off underwater infravision<br><br>v5.8  04/02/2022  Fixed old field references when Raging<br><br>v5.7  17/01/2022  Fixed magical To-Hit adjustments for Chant to work in same way as dmg adjustment<br><br>v5.6  01/01/2022  Added multiple Effect Macros to support MagicMaster spell enhancements<br><br>v5.2-5.5 skipped to bring version numbering in line across all APIs<br><br>v5.1  10/11/2021  Changed to use virtual Token bar field names, so bar allocations can be altered<br><br>v5.0  29/10/2021  First version loaded into roundMaster API<br><br>v4.2.4  03/10/2021  Added Hairy Spider poison v4.2.3  23/05/2021  Added a Timer effect that goes with the Time-Recorder Icon, to tell you when a Timer you set starts and ends.<br><br>v4.2.2  28/03/2021  Added Regeneration every Round for @conregen points<br><br>v4.2.1  25/02/2021  Added end effect for Wandering Monster check, so it recurs every n rounds<br><br>v4.2  23/02/2021  Added effect for Infravision to change night vision settings for token.<br><br>v4.1  17/12/2020  Added effects for Dr Lexicon use of spells, inc. Vampiric Touch & Spectral Hand<br><br>v4.0.3 09/11/2020 Added effects for Cube of Force<br><br>v4.0.2 20/10/2020 Added effects of a Slow spell<br><br>v4.0.1 17/10/2020 Added Qstaff-Dancing-turn to increment a dancing quarterstaff\'s round counter<br><br>v4.0  27/09/2020 Released into the new Version 4 Testbed<br><br>v1.0.1 16/09/2020 Initial full release for Lost & Found<br><br>v0.1 30/08/2020 Initial testing version',
+	Effects_DB:		{bio:'<blockquote>Token Marker Effects Macro Library</blockquote><br><br>v6.16 17/10/2023<br><br>This database holds the definitions for all token status effects.  These are macros that optionally are triggered when a status of the same root name is placed on a token (statusname-start), each round it is still on the token (statusname-turn), and when the status countdown reaches zero or the token dies or is deleted (statusname-end)  There are also other possible status conditions such as weaponname-inhand, weaponname-dancing and weaponname-sheathed.  See the <b>RoundMaster API</b> documentation for further information.<br><br><b>Important Note:</b> Effects require a Roll20 Pro membership, and the installation of the ChatSetAttr, Tokenmod and RoundMaster API Scripts, to allow parameter passing between macros, update of character sheet variables, and marking spell effects on tokens.  If you do not have this level of subscription, I highly recommend you get it as a DM, as you get lots of other goodies as well.  If you want to know how to load the API Scripts to your game, the RoLL20 API help here gives guidance, or Richard can help you.<br><br><b>Important Note for DMs:</b> if a monster character sheet has multiple tokens associated with it, and token markers with associated Effects are placed on more than one of those Tokens, any Effect macros will run multiple times and, if changing variables on the Character Sheet using e.g. ChatSetAttr will make the changes multiple times to the same Character Sheet - generally this will cause unexpected results!  If using these Effect macros for Effects that could affect monsters in this way, it is <b>HIGHLY RECOMMENDED</b> that a 1 monster Token : 1 character sheet approach is adopted.',
+					gmnotes:'<blockquote>Change Log:</blockquote><br>v6.16  17/10/2023  A number of effect definition fixes<br>v6.15  09/10/2023  Added dragon fear and roper attack effects<br>v6.13  11/07/2023  More effects for powers, spells and items<br>v6.09  03/03/2023  Added more effects for new magic items<br>v6.08  16/12/2022  Added more creature effects, such as poisons<br>v6.07  09/12/2022  Added effects to support the new Creatures database<br>v6.06  14/11/2022  Added effects to support new Race Database & Powers<br><br>v6.04  16/10/2022  Added effect for Spiritual-Hammer-end and for Chromatic-Orb Heat effects<br><br>v6.03  12/10/2022  Changed the Initiative dice roll modification field from "comreact" to the new custom field "init-mod"<br><br>v6.02  07/10/2022  Added new effects to support newly programmed magic items<br><br>v6.01  11/05/2022  Added effects to turn on and off underwater infravision<br><br>v5.8  04/02/2022  Fixed old field references when Raging<br><br>v5.7  17/01/2022  Fixed magical To-Hit adjustments for Chant to work in same way as dmg adjustment<br><br>v5.6  01/01/2022  Added multiple Effect Macros to support MagicMaster spell enhancements<br><br>v5.2-5.5 skipped to bring version numbering in line across all APIs<br><br>v5.1  10/11/2021  Changed to use virtual Token bar field names, so bar allocations can be altered<br><br>v5.0  29/10/2021  First version loaded into roundMaster API<br><br>v4.2.4  03/10/2021  Added Hairy Spider poison v4.2.3  23/05/2021  Added a Timer effect that goes with the Time-Recorder Icon, to tell you when a Timer you set starts and ends.<br><br>v4.2.2  28/03/2021  Added Regeneration every Round for @conregen points<br><br>v4.2.1  25/02/2021  Added end effect for Wandering Monster check, so it recurs every n rounds<br><br>v4.2  23/02/2021  Added effect for Infravision to change night vision settings for token.<br><br>v4.1  17/12/2020  Added effects for Dr Lexicon use of spells, inc. Vampiric Touch & Spectral Hand<br><br>v4.0.3 09/11/2020 Added effects for Cube of Force<br><br>v4.0.2 20/10/2020 Added effects of a Slow spell<br><br>v4.0.1 17/10/2020 Added Qstaff-Dancing-turn to increment a dancing quarterstaff\'s round counter<br><br>v4.0  27/09/2020 Released into the new Version 4 Testbed<br><br>v1.0.1 16/09/2020 Initial full release for Lost & Found<br><br>v0.1 30/08/2020 Initial testing version',
 					controlledby:'all',
 					root:'effects-db',
 					avatar:'https://s3.amazonaws.com/files.d20.io/images/2795868/caxnSIYW0gsdv4kOmO294w/thumb.png?1390102911',
-					version:6.2,
+					version:6.17,
 					db:[{name:'3min-geyser-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!rounds --addtotracker 3min-Geyser|-1|[[1d10]]|0|3min Geyser blows'},
 						{name:'5min-geyser-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!rounds --addtotracker 5min-Geyser|-1|[[1d10]]|0|5min Geyser blows'},
 						{name:'AE-Aerial-Combat-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!modattr --charid ^^cid^^ --fb-header ^^cname^^ has finished Aerial Combat --fb-content Loses bonuses to to-hit and damage --strengthhit||-1 --strengthdmg||-4'},
@@ -303,13 +298,6 @@ var RoundMaster = (function() {
 						{name:'Cube-of-Force-turn',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!setattr --silent --charid @{^^cname^^|Cube-user} --repeating_potions_$@{^^cname^^|Cube-row}_potionqty|[[{{[[@{^^cname^^|hp}-([[(1-([[{{[[@{Initiative|round-counter}%10]]},{1}}kl1]] )) *@{^^cname^^|Cube-charges}]])]]},{0}}kh1]]\n!modbattr --silent --charid ^^cid^^ --hp|[[(([[{{[[@{Initiative|round-counter}%10]]},{1}}kl1]])-1)*@{^^cname^^|Cube-charges}]]\n!rounds --edit_status change %% ^^tid^^ %% cube-of-force %% duration %% [[{{@{^^cname^^|hp}},{1}}kh1]] --edit_status change %% ^^tid^^ %% cube-of-force %% direction %% [[([[{{[[{{@{^^cname^^|hp}},{1}}kl1]]},{0}}kh1]])-1]]'},
 						{name:'Curse-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!token-mod --api-as ^^pid^^ --ignore-selected --ids ^^tid^^ --set ^^token_thac0^^|-1\n/w "^^cname^^" ^^tname^^ has recovered from being *Cursed*'},
 						{name:'Curse-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!token-mod --api-as ^^pid^^ --ignore-selected --ids ^^tid^^ --set ^^token_thac0^^|+1\n/w "^^cname^^" ^^tname^^ has been *Cursed*, which affects their attacks and morale'},
-						{name:'Dancer-dancing',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!rounds --addtargetstatus ^^tid^^|^^weapon^^-dancing|^^duration^^|-1|The ^^weapon^^ is Dancing by itself. Use this time wisely!|all-for-one\n!attk --quiet-modweap ^^tid^^|^^weapon^^|^^weaptype^^|sb:0,db:0,+:^^plusChange^^ --attk-hit ^^tid^^|Take an attack with the newly dancing weapon'},
-						{name:'Dancer-dancing-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --dance ^^tid^^|^^weapon^^|stop'},
-						{name:'Dancer-dancing-turn',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --quiet-modweap ^^tid^^|^^weapon^^|^^weaptype^^|+:^^plusChange^^'},
-						{name:'Dancer-inhand',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!rounds --addtargetstatus ^^tid^^|^^weapon^^-inhand|[[^^duration^^+1]]|-1|^^weapon^^ not yet dancing so keep using it|stopwatch'},
-						{name:'Dancer-inhand-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --dance ^^tid^^|^^weapon^^'},
-						{name:'Dancer-inhand-turn',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --quiet-modweap ^^tid^^|^^weapon^^|^^weaptype^^|+:^^plusChange^^'},
-						{name:'Dancer-sheath',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!rounds --deltargetstatus ^^tid^^|^^weapon^^-inhand'},
 						{name:'Dancing-Longbow-dancing',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!rounds --addtargetstatus ^^tid^^|Longbow-is-Dancing|4|-1|The Longbow is Dancing by itself. Use this time wisely!|all-for-one\n!attk --quiet-modweap ^^tid^^|Dancing-Longbow|ranged|sb:0,db:0'},
 						{name:'Dancing-Longbow-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --dance ^^tid^^|Dancing-Longbow'},
 						{name:'Dancing-Longbow-inhand',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!rounds --addtargetstatus ^^tid^^|Dancing-Longbow|4|-1|Longbow not yet dancing so keep using it|stopwatch'},
@@ -324,7 +312,6 @@ var RoundMaster = (function() {
 						{name:'Djinni-Whirlwind-building-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!rounds --target caster|^^tid^^|Djinni-Whirlwind|99|0|Whirlwind now usable as transport or as a weapon|lightning-helix\n!magic --message ^^tid^^|Djinni Whirlwind|The whirlwind has now built to full speed and is usable as transport or as a weapon'},
 						{name:'Dragon-Fear-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!modattr --charid ^^cid^^ --strengthdmg||+2 --strengthhit||+2 --fb-header ^^cname^^ is no longer afraid --fb-content ^^cname^^ has overcome their fear. Their attack and damage rolls are no longer affected by it.'},
 						{name:'Dragon-Fear-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!modattr --charid ^^cid^^ --strengthdmg||-2 --strengthhit||-2 --fb-header ^^cname^^ is afraid! --fb-content ^^cname^^ has seen the dragon and is afraid! ^^cname^^ suffers -2 penalty to both attack and damage rolls'},
-						{name:'Earache-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!modattr --charid ^^cid^^ --strengthhit||+2 --wisdef||+2 --fb-header Pipes of Pain --fb-content ^^cname^^ is no longer suffering from the sound of the Pipes of Pain'},
 						{name:'Enchanted-by-Scabbard-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --quiet-modweap ^^tid^^|@{^^cname^^|Scabbard-Weapon}|Melee|+:-1 --quiet-modweap ^^tid^^|@{^^cname^^|Scabbard-Weapon}|Dmg|+:-1 \n/w "^^cname^^" \\amp{template:default}{{name=Scabbard of Enchanting}}{{=^^tname^^, @{^^cname^^|Scabbard-Weapon} has now lost its additional enchantment from the Scabbard. [Sheath it again](!rounds --target caster|^^tid^^|Scabbard-of-Enchanting|10|-1|Enchanting a Sheathed weapon|stopwatch\\amp#13;!attk --weapon ^^tid^^|Sheath weapon in Scabbard of Enchanting - take new one in hand)}}'},
 						{name:'Enfeeble-monster-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!token-mod --api-as ^^pid^^ --ignore-selected --ids ^^tid^^ --set ^^token_thac0^^|-2 ^^token_thac0_max^^|+2\nThe monster has recovered from being enfeebled'},
 						{name:'Enfeeble-monster-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!token-mod --api-as ^^pid^^ --ignore-selected --ids ^^tid^^ --set ^^token_thac0^^|+2 ^^token_thac0_max^^|-2\nThe monster has been enfeebled'},
@@ -382,7 +369,6 @@ var RoundMaster = (function() {
 						{name:'Philter-of-Persuasiveness-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!modattr --fb-public --fb-header ^^tname^^ Becomes More Persuasive --fb-content ^^tname^^\'s persuasiveness has improved by 5 to be _CUR0_ --chareact|+5'},
 						{name:'Philter-of-Stammering-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!modattr --fb-public --fb-header ^^tname^^ Returns to Normal --fb-content ^^tname^^\'s persuasiveness has returned to _CUR0_ --chareact|+5'},
 						{name:'Philter-of-Stammering-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!modattr --fb-public --fb-header ^^tname^^ Stammers \\amp Stutters --fb-content ^^tname^^ can\'t get their words straight and their persuasiveness has dropped to _CUR0_ --chareact|-5'},
-						{name:'Pipes-of-Pain-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!modattr --charid ^^cid^^ --strengthhit||-2 --wisdef||-2 --fb-header Pipes of Pain --fb-content ^^cname^^ is still suffering from the sound of the Pipes of Pain, with -2 on attack and saving throw rolls. A forget or remove curse is required to end this effect.\n!rounds --target caster|^^tid^^|Earache|99|0|Continuing effect of Pipes of Pain automatically applied|pummeled'},
 						{name:'Poison-A-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'/w "^^cname^^" \\amp{template:default}{{name=Poison Type A}}{{Poison=Save vs. Poison or ^^tname^^ takes **[[15]]HP** of damage from poison. No damage taken if succeed}}'},
 						{name:'Poison-B-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'/w "^^cname^^" \\amp{template:default}{{name=Poison Type B}}{{Poison=Save vs. Poison. If *succeed*, ^^tname^^ takes **[[1d3]]HP** damage. If fail ^^tname^^ takes **[[20]]HP** of damage from poison}}'},
 						{name:'Poison-C-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'/w "^^cname^^" \\amp{template:default}{{name=Poison Type C}}{{Poison=Save vs. Poison. If *succeed*, ^^tname^^ takes **[[2d4]]HP** damage. If *fail* ^^tname^^ takes **[[25]]HP** of damage from poison}}'},
@@ -445,9 +431,6 @@ var RoundMaster = (function() {
 						{name:'Protection-vs-Shape-Changers-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!token-mod --api-as ^^pid^^ --ignore-selected --ids ^^tid^^ --set aura1_radius| '},
 						{name:'Protection-vs-Shape-Changers-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!token-mod --api-as ^^pid^^ --ignore-selected --ids ^^tid^^ --off aura1_square --set aura1_radius|8ft aura1_color|a40316'},
 						{name:'Qstaff-Dancing-turn',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!setattr --name ^^cname^^ --dancing-round|[[(([[@{^^cname^^|dancing-round}]])%4)+1]]'},
-						{name:'Quaals-Feather-Whip-Token-sheathed',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!rounds --removetargetstatus ^^tid^^|Quaals-Feather-Whip'},
-						{name:'Quaals-Feather-Whip-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --dance ^^tid^^|Quaals-Feather-Whip-Token|stop --blank-weapon ^^tid^^|Quaals-Feather-Whip-Token|silent\n!magic --mi-charges ^^tid^^|-1|Quaals-Feather-Whip-Token||charged'},
-						{name:'Quaals-Feather-Whip-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --dance ^^tid^^|Quaals-Feather-Whip-Token\n'},
 						{name:'Quarterstaff-of-Dancing-dancing',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!rounds --addtargetstatus ^^tid^^|Dancing-Quarterstaff|4|-1|The Quarterstaff is Dancing by itself. Use this time wisely!|all-for-one\n!attk --quiet-modweap ^^tid^^|quarterstaff-of-dancing|melee|sb:0 --quiet-modweap ^^tid^^|quarterstaff-of-dancing|dmg|sb:0'},
 						{name:'Quarterstaff-of-Dancing-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --dance ^^tid^^|Quarterstaff-of-Dancing'},
 						{name:'Quarterstaff-of-Dancing-inhand',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!rounds --addtargetstatus ^^tid^^|Quarterstaff-of-Dancing|4|-1|Quarterstaff not yet dancing so keep using it|stopwatch'},
@@ -462,7 +445,6 @@ var RoundMaster = (function() {
 						{name:'Repel-Insects-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!token-mod --api-as ^^pid^^ --ignore-selected --ids ^^tid^^ --set aura1_radius|10ft aura1_color|0ff'},
 						{name:'Ring-of-Blinking-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'/w "^^cname^^" ^^tname^^ has stopped bkinking and their ring needs to recharge for 1 hour before it can be used again\n!rounds --target caster|^^tid^^|Ring-of-Blinking-recharge|60|-1|Ring of Blinking is recharging|stopwatch'},
 						{name:'Ring-of-Blinking-recharge-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'/w "^^cname^^" ^^tname^^\'s Ring of Blinking has recharged and can now be used again\n!magic --mi-charges ^^tid^^|0|Ring-of-Blinking|1\n'},
-						{name:'RoSC-Hypnotized-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!rounds --target caster|^^tid^^|RoSC-Save2Attk|99|0|Make a saving throw vs. spell to attack or be hypnotized again|interdiction'},
 						{name:'Rod-of-Flailing-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!modattr --charid ^^cid^^ --ac|+4 --wisdef||-4 --fb-header ^^tid^^\'s Rod of Flailing charge is expended --fb-content ^^tid^^ looses their +4 bonus to AC and saving throws'},
 						{name:'Rod-of-Flailing-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!modattr --charid ^^cid^^ --ac|-4 --wisdef||+4 --fb-header ^^tid^^ uses Rod of Flailing charge --fb-content ^^tid^^ gains a +4 bonus to AC and saving throws'},
 						{name:'RoperAttack-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!magic --message w|^^tid^^|Roper Poison!|^^cname^^ must **save vs. poison** or immediately [lose strength](!rounds ~~target caster¦^^tid^^¦RoperPoison¦#[[20*2d4]]¦-2¦Feeling weak - lost half strength for each poisoning¦back-pain)'},
@@ -476,10 +458,6 @@ var RoundMaster = (function() {
 						{name:'Scabbard-Enchanting-draw-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --weapon ^^tid^^|Draw your blade from the Scabbard of Enchanting, from next round it will be an additional +1. This round\'s action is now ***Change Weapon*** and you should not do anything else!'},
 						{name:'Scabbard-of-Enchanting-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'/w "^^cname^^" \\amp{template:default}{{name=Scabbard of Enchantment}}{{=The weapon in the *Scabbard of Enchantment* is now improved by +1. [Draw from Scabbard](!rounds --target caster|^^tid^^|Scabbard-Enchanting-draw|1|-1|The weapon from the Scabbard of Enchanting is being enchanted|all-for-one) or leave until the next melee \\amp use the *Scabbard* then to draw it.}}'},
 						{name:'Scabbard-of-Enchanting-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --weapon ^^tid^^|Sheath a blade into the Scabbard of Enchanting, and keep it sheathed for 10 rounds. This round\'s action is now ***Change Weapon*** and you should not do anything else!'},
-						{name:'Scintillating-Colours-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!setattr --silent --charid ^^cid^^ --Scintillating-AC|0'},
-						{name:'Scintillating-Robe-AC-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!round --target caster|^^tid^^|Scintillating-Robe|99|0|Robe is still scintillating|bolt-shield'},
-						{name:'Scintillating-Robe-AC-turn',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!modattr --silent --charid ^^cid^^ --AC|-1 --Scintillating-AC|+1'},
-						{name:'Scintillating-Robe-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!modattr --charid ^^cid^^ --AC|%Scintillating-AC% --fb-header Robe of Scintillating Colours --fb-content The robe stops scintillating and ^^cname^^\'s armour class reduces'},
 						{name:'Scroll-of-Weakness-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!resetattr --charid ^^cid^^ --strength --fb-public --fb-header ^^tname^^ is Feeling Stronger --fb-content ^^tname^^ feels strong again as their strength returns to _CUR0_'},
 						{name:'Scroll-of-Weakness-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!modattr --charid ^^cid^^ --strength|[[ceil(@{^^cname^^|strength}/2)]]|@{^^cname^^|strength} --fb-public --fb-header ^^tname^^ is Feeling Weak! --fb-content ^^tname^^ suddenly feels weak as their strength reduces from @{^^cname^^|strength} to _CUR0_'},
 						{name:'Shield-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!setattr --silent --name ^^cname^^ --^^token_ac^^|@{^^cname^^|Temp-AC}\n/w "^^cname^^" ^^cname^^ loses his magic shield'},
@@ -516,16 +494,21 @@ var RoundMaster = (function() {
 						{name:'Thunderclap-stun-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!rounds --addtargetstatus ^^tid^^|Thunderclap-deaf|[[1d2]]|-1|No longer stunned, but still deafened by the thunderclap|interdiction\n/w gm ^^tname^^ is no longer stunned by the thunderclap, but is still deafened from it'},
 						{name:'Underwater-infravision-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!token-mod --api-as ^^pid^^ --ignore-selected --ids ^^tid^^ --set night_vision|yes night_distance|+60'},
 						{name:'Underwater-infravision-stop',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!token-mod --api-as ^^pid^^ --ignore-selected --ids ^^tid^^ --set night_distance|-60'},
-						{name:'VT-bonus-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!setattr --fb-public --fb-from Effects --fb-header ^^tname^^ looses their vampiric hit point bonus --fb-content ^^tname^^\'s HP return to _CUR0_ as the effects of the Vampiric Touch spell fade away --charid ^^cid^^ --hp|[[{{@{^^cname^^|hp|max}},{@{^^cname^^|hp}}}kl1]]'},
-						{name:'Vampiric-touch-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!rounds --target caster|^^tid^^|VT-bonus|60|-1|Benefiting from stolen health|strong'},
+						{name:'VT-bonus-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!setattr --fb-public --fb-from Effects --fb-header ^^tname^^ looses their vampiric hit point bonus --fb-content ^^tname^^\'s HP return to _CUR0_ as the effects of the Vampiric Touch spell fade away --charid ^^cid^^ --hp|[[{{@{^^cname^^|VT-original-hp}},{@{^^cname^^|hp}}}kl1]]'},
+						{name:'Vampiric-touch-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'/w "^^cname^^" \\amp{template:default}{{name=Vampiric Touch}}{{desc=^^tname^^ has cast Vampiric Touch, but needs to [touch the enemy](!magic --display-ability ^^tid^^|MU-Spells-DB|VT-Attack) as a normal attack to drain their hit points}}'},
+						{name:'Vampiric-touch-turn',type:'',ct:'0',charge:'uncharged',cost:'0',body:'/w "^^cname^^" \\amp{template:default}{{name=Vampiric Touch}}{{desc=^^tname^^ has cast Vampiric Touch, but needs to [touch the enemy](!magic --display-ability ^^tid^^|MU-Spells-DB|VT-Attack) as a normal attack to drain their hit points}}'},
 						{name:'Water-trap-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!roll20AM --audio,play|Glasses breaking\n!roll20AM --audio,play|breaking-window\n!token-mod --api-as ^^pid^^ --ignore-selected --ids @{^^cname^^|water-id} --set layer|objects\n/w gm Read Rm26 notes on Breaking Glass for full description of effects'},
 						{name:'Weak-Ring-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!setattr --silent --charid ^^cid^^ --strength|[[{{[[@{^^cname^^|strength}-1]]},{3}}kh1]] --constitution|[[{{[[@{^^cname^^|constitution}-1]]},{3}}kh1]]\n!rounds --target caster|^^tid^^|^^tid^^|Weak Ring|100|-10||blank'},
 						{name:'WoI-Audible-Illusion-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!magic --message ^^tid^^|Wand of Illusion|Would you like to continue concentrating on the illusion? If so [click here](!magic ~~mi-charges ^^tid^^¦-1¦Wand-of-Illusion\\amp#13;!rounds ~~target caster¦^^tid^^¦WoI Audible Illusion¦10¦-10¦An audible illusion with no visual component cast from a Wand of Illusion¦half-haze)'},
 						{name:'WoI-Audio-Visual-Illusion-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!magic --message ^^tid^^|Wand of Illusion|Would you like to continue concentrating on the illusion? If so [click here](!magic ~~mi-charges ^^tid^^¦-2¦Wand-of-Illusion\\amp#13;!rounds ~~target caster¦^^tid^^¦WoI Audio-Visual Illusion¦10¦-10¦An illusion with both audible and visual components cast from a Wand of Illusion¦lightning-helix)'},
 						{name:'WoI-Visual-Illusion-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!magic --message ^^tid^^|Wand of Illusion|Would you like to continue concentrating on the illusion? If so [click here](!magic ~~mi-charges ^^tid^^¦-1¦Wand-of-Illusion\\amp#13;!rounds ~~target caster¦^^tid^^¦WoI Visual Illusion¦10¦-10¦A visual illusion with no audible component cast from a Wand of Illusion¦ninja-mask)'},
-						{name:'Wounding-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!modattr --silent --charid ^^cid^^ --Wound-count|-1 --HP|-1'},
-						{name:'Wounding-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!modattr --charid ^^cid^^ --Wound-count|+1 --fb-header Sword of Wounding --fb-content Another wound means that ^^cname^^ is now taking _CUR0_ additional points of wound damage per round'},
-						{name:'Wounding-turn',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!modattr --silent --charid ^^cid^^ --HP|-1'},
+						{name:'Dancer-dancing',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!rounds --addtargetstatus ^^tid^^|^^weapon^^-dancing|^^duration^^|-1|The ^^weapon^^ is Dancing by itself. Use this time wisely!|all-for-one\n!attk --quiet-modweap ^^tid^^|^^weapon^^|^^weaptype^^|sb:0,db:0,+:^^plusChange^^ --attk-hit ^^tid^^|Take an attack with the newly dancing weapon'},
+						{name:'Dancer-dancing-turn',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --quiet-modweap ^^tid^^|^^weapon^^|^^weaptype^^|+:^^plusChange^^'},
+						{name:'Dancer-dancing-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --dance ^^tid^^|^^weapon^^|stop'},
+						{name:'Dancer-inhand',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!rounds --addtargetstatus ^^tid^^|^^weapon^^-inhand|[[^^duration^^+1]]|-1|^^weapon^^ not yet dancing so keep using it|stopwatch'},
+						{name:'Dancer-inhand-turn',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --quiet-modweap ^^tid^^|^^weapon^^|^^weaptype^^|+:^^plusChange^^'},
+						{name:'Dancer-inhand-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --dance ^^tid^^|^^weapon^^'},
+						{name:'Dancer-sheath',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!rounds --deltargetstatus ^^tid^^|^^weapon^^-inhand'},
 					]},
 	});
 
@@ -772,10 +755,10 @@ var RoundMaster = (function() {
 
 	var handouts = Object.freeze({
 	RoundMaster_Help:	{name:'RoundMaster Help',
-						 version:1.12,
+						 version:1.11,
 						 avatar:'https://s3.amazonaws.com/files.d20.io/images/257656656/ckSHhNht7v3u60CRKonRTg/thumb.png?1638050703',
 						 bio:'<div style="font-weight: bold; text-align: center; border-bottom: 2px solid black;">'
-							+'<span style="font-weight: bold; font-size: 125%">RoundMaster Help v1.12</span>'
+							+'<span style="font-weight: bold; font-size: 125%">RoundMaster Help v1.11</span>'
 							+'</div>'
 							+'<div style="padding-left: 5px; padding-right: 5px; overflow: hidden;">'
 							+'<h1>RoundMaster API v'+version+'</h1>'
@@ -904,7 +887,6 @@ var RoundMaster = (function() {
 								+'<li>\'>#\' will compare # to the duration of the current status and use the larger</li>'
 								+'<li>\'=#\' (or just the number) will replace the duration of the status with # rounds</li>'
 								+'<li>\'##\' (a literal hash character followed by a number) will add an additional effect of the same name with the specified duration</li>'
-								+'<li>\'$#\' will do the same as =$, but will also trigger any \'-start\' effect associated with the requested status</li>'
 							+'</ul>'
 							+'<p>If a status of the same name does not exist on the identified token, the duration will be applied as normal to a new status for that token.</p>'
 							+'<pre>!rounds --addstatus status|duration|direction|[message]|[marker]</pre>'
@@ -3074,7 +3056,7 @@ var RoundMaster = (function() {
 			return;
 		}
 		var mod;
-		if ('+-<>=#$'.includes(args[1][0])) {
+		if ('+-<>=#'.includes(args[1][0])) {
 			mod = args[1][0];
 			if (mod !=='-' && mod !=='+') {args[1] = args[1].slice(1)};
 		}
@@ -3154,14 +3136,14 @@ var RoundMaster = (function() {
 							effectList[k].duration = duration;
 							break;
 						}
-						if (mod !== '#') duration = effectList[k].duration;
+						duration = effectList[k].duration;
 						effectList[k].direction = direction;
 						effectList[k].msg = msg;
 						return true;
 					}
 				})
 			) {
-				if (!mod || (mod !== '#' && mod !== '$')) return;
+				if (!mod ||  mod !== '#') return;
 			} else if (effectList && Array.isArray(effectList)) {
 			    // RED: v1.204 added the round of last update
 				effectList.push({
@@ -3229,7 +3211,7 @@ var RoundMaster = (function() {
 	/*
 	 * RED: v5.050 added generalised dancing weapon capability
 	 * by parsing skeleton dancing effects and pushing customised
-	 * versions to the character sheet
+	 * versions to the in-RAM database array
 	 */
 	 
 	var doTakeDancerInhand = function(args) {
@@ -3240,24 +3222,26 @@ var RoundMaster = (function() {
 			weapType = args[3] || 'melee',
 			plusChange = args[4] || '+1',
 			duration = args[5] || '4',
-			curToken = (tokenID ? getObj('graphic',tokenID) : undefined),
-			charCS = (curToken ? getObj('character',curToken.get('represents')) : undefined);
+			curToken = getObj('graphic',tokenID);
 			
 		if (!curToken || !weapon) return;
 		
-		if (!abilityLookup( fields.effectlib, weapon+'-inhand', tokenID ).action) {
-
+		if (!abilityLookup( fields.effectlib, weapon+'-inhand' ).action) {
 			_.each(dbNames,dB => {
 				_.each(dB.db,obj => {
 					if (obj.name.toLowerCase().startsWith('dancer') && /\^\^weapon\^\^/im.test(obj.body)) {
-						setAbility( charCS, 
-									obj.name.replace(/dancer/i,weapon), 
-									obj.body.replace(/\^\^weapon\^\^/img,weapon)
-											.replace(/\^\^weapType\^\^/img,weapType)
-											.replace(/\^\^plusChange\^\^/img,plusChange)
-											.replace(/\^\^duration\^\^/img,duration)
-						);
-					};
+						dB.db.push({
+								name:(obj.name.replace(/dancer/i,weapon)),
+								type:'',
+								ct:'0',
+								charge:'uncharged',
+								cost:'0',
+								body:obj.body.replace(/\^\^weapon\^\^/img,weapon)
+										.replace(/\^\^weapType\^\^/img,weapType)
+										.replace(/\^\^plusChange\^\^/img,plusChange)
+										.replace(/\^\^duration\^\^/img,duration)
+						});
+					}
 				});
 			});
 		};
@@ -4384,12 +4368,11 @@ var RoundMaster = (function() {
 	 * the database name.  If can't find a matching ability macro
 	 * then return undefined objects
 	 * RED: v3.025 added a preference for user-defined macros
-	 * RED: v4.035 hold std Effects in data
-	 * RED: v5.051 search character sheet for Effects not found
-	 *             in database
+	 * RED: v4.035 hold std Effects in data, & copy to char sheet 
+	 *      when used to be found if not found elsewhere
 	 **/
 	 
-	var abilityLookup = function( rootDB, abilityName, tokenID ) {
+	var abilityLookup = function( rootDB, abilityName ) {
 		
         abilityName = abilityName.toLowerCase().replace(reIgnore,'').trim();
         rootDB = rootDB.toLowerCase();
@@ -4400,9 +4383,8 @@ var RoundMaster = (function() {
         var dBname,
 			magicDB, magicName,
 			action, abilityObj,
-			found = false,
-			curToken = tokenID ? getObj('graphic',tokenID) : undefined,
-			charCS = curToken ? getObj('character',curToken.get('represents')) : undefined;
+			csDB = false,
+			found = false;
 			
 		filterObjs(function(obj) {
 			if (found) return false;
@@ -4424,19 +4406,6 @@ var RoundMaster = (function() {
 			}
 			dBname = rootDB;
 		}
-		if (!action && !_.isUndefined(charCS)) {
-			filterObjs( obj => {
-				if (found) return false;
-				if (obj.get('type') !== 'ability') return false;
-				if (obj.get('characterid') !== charCS.id) return false; 
-				if (obj.get('name').toLowerCase().replace(reIgnore,'') != abilityName) return false;
-				dBname = magicName;
-				found = true;
-				action = obj.get('action');
-				return true;
-			});
-		};
-				
 		return {dB: dBname.toLowerCase(), action:action};
 	}
 	
@@ -5822,7 +5791,7 @@ var RoundMaster = (function() {
 			bar2 = curToken.get('bar2_value'),
 			bar3 = curToken.get('bar3_value'),
 			ac, acField, thac0, thac0Field, hp, hpField,
-			effectAbility = abilityLookup( fields.effectlib, effect+macro, tid ),
+			effectAbility = abilityLookup( fields.effectlib, effect+macro ),
 			macroBody = effectAbility.action;
 			[ac,acField] = getTokenValues(curToken,fields.Token_AC,fields.AC,fields.MonsterAC);
 			[thac0,thac0Field] = getTokenValues(curToken,fields.Token_Thac0,fields.Thac0_base,fields.MonsterThac0);
@@ -6018,7 +5987,9 @@ var RoundMaster = (function() {
 		if (msg.type !=='api' || (args.indexOf('!rounds') !== 0 && args.indexOf('!tj') !== 0))
 			{return;}
 
-        sendDebug('roundMaster called with '+args);
+//		log('rounds chat: called, cmd = '+args);
+			
+        sendDebug('roundMaster called');
 
 		args = args.split(' --');
 		args.shift();
@@ -6466,7 +6437,7 @@ var RoundMaster = (function() {
 							bar2 = obj.get('bar2_value'),
 							bar3 = obj.get('bar3_value'),
 							ac, acField, thac0,thac0Field, hp, hpField,
-							effectAbility = abilityLookup( fields.effectlib, e.name+'-end', oldID ),
+							effectAbility = abilityLookup( fields.effectlib, e.name+'-end' ),
 							macroBody = effectAbility.action;
 							
 						[ac,acField] = getTokenValues(obj,fields.Token_AC,fields.AC,fields.MonsterAC);

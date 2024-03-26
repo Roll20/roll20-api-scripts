@@ -120,17 +120,14 @@ API_Meta.CommandMaster={offset:Number.MAX_SAFE_INTEGER,lineCount:-1};
  *                     multi-hand parsing issue, clashing with % chance. Added library functions 
  *                     to support different ways of specifying and displaying the class & level 
  *                     on the character sheet. Fixed support for Drag & Drop creature hp ranges.
- * v3.2.0  08/02/2024  Add proficiency list for AD&D1e version. Fix bug in some creature definitions 
- *                     that listed weapons in-hand.
- * v3.2.1  23/02/2024  Improved parseStr() handling of undefined or empty strings without erroring.
  */
  
 var CommandMaster = (function() {
 	'use strict'; 
-	var version = '3.2.1',
+	var version = '3.1.2',
 		author = 'RED',
 		pending = null;
-	const lastUpdate = 1708765145;
+	const lastUpdate = 1706890344;
 
 	/*
 	 * Define redirections for functions moved to the RPGMaster library
@@ -1295,7 +1292,7 @@ var CommandMaster = (function() {
 	 * Function to replace special characters in a string
 	 */
 	 
-	var parseStr=function(str=''){
+	var parseStr=function(str){
 		return replacers.reduce((m, rep) => m.replace(rep[0], rep[1]), str);
 	}
 
@@ -1424,7 +1421,6 @@ var CommandMaster = (function() {
 		var	ProfTable = getTable( charCS, fieldGroups.WPROF ),
 			profs = [], 
 			types = [],
-			list = '',
 			row, wpProf, wpName = '';
 			
 		for (row=ProfTable.table[1]; !_.isUndefined(wpName = ProfTable.tableLookup( fields.WP_name, row, false )); row++) {
@@ -1441,7 +1437,6 @@ var CommandMaster = (function() {
 				if (wpName && wpName.length) types.push( wpName );
 			}
 		}
-		list = profs.map(p => p[0]+p[1]).join();
 		profs= _.chain(profs)
 				.compact()
 				.sort((a,b)=>{
@@ -1463,7 +1458,7 @@ var CommandMaster = (function() {
 				.map( item => '<span style=' + design.grey_button + '>'+item+'</span>')
 				.join('')
 				.value();
-		return {profs:profs, list:list, types:types};
+		return {profs:profs, types:types};
 	}
 
 	/*
@@ -1941,8 +1936,7 @@ var CommandMaster = (function() {
 			setAttr( charCS, fields.Monster_spDef, parseStr(raceData.spdef) || 'Nil' );
 			if (!attrData.hp && hd && hd.length) {
 				hd[2] = ((hpExtra && hpExtra.length >= 2 && parseInt(hpExtra[2])) ? (rollDice( hpExtra[1], hpExtra[2], 0 ) + parseInt(hpExtra[3] || 0)) : parseInt(hd[2] || 0));
-				let res = evalAttr(hd[1]);
-				attrData.hp = rollDice( res, 8, hd[3] ) + hd[2]; 
+				attrData.hp = rollDice( evalAttr(hd[1]), 8, hd[3] ) + hd[2];
 			}
 			setAttr( charCS, fields.Monster_hitDice, (evalAttr(hd[1]||'1')) );
 			setAttr( charCS, fields.Monster_hpExtra, (hd[2]||'0') );
@@ -2019,6 +2013,7 @@ var CommandMaster = (function() {
 				}
 				setAttr( charCS, fields.Lock_imgs, 0 );
 				setAttr( charCS, fields.Trap_imgs, 0 );
+//				log('setCreatureAttrs: AC = '+attrData.cac+', hp = '+attrData.hp);
 				setAttr( charCS, fields.MonsterAC, calcAttr(parseStr(attrData.cac || '10')) );
 				if (attrData.hp) {
 					setAttr( charCS, fields.HP, attrData.hp );
@@ -2193,7 +2188,6 @@ var CommandMaster = (function() {
 						+  '<span style=' + design.grey_button + '>Mastery</span>'
 			}
 			buttons = getProfButtons( selected );
-			setAttr( charCS, fields.ProfList, buttons.list );
 			content += '}}{{desc1=Weapon Proficiencies\n'
 					+  buttons.profs + '\n'
 					+  'Related Weapon Types\n'
@@ -3458,7 +3452,7 @@ var CommandMaster = (function() {
 						if (_.isUndefined(index)) index = Items.tableFind( fields.Items_name, '-' );
 						if (_.isUndefined(index)) index = Items.addTableRow().sortKeys.length - 1;
 						let values = Items.copyValues();
-						let qty = (w.length > 1 ? w[1] : '1').match(reDiceSpec) || ['','1','0','0',''];
+						let qty = (w[1] || '1').match(reDiceSpec) || ['','1','0','0',''];
 						let qtyMod = (qty[3] || '0').match(reMod);
 						qty[3] = ((qtyMod && qtyMod.length >= 2 && parseInt(qtyMod[2])) ? (rollDice( qtyMod[1], qtyMod[2], 0 ) + parseInt(qtyMod[3] || 0)) : parseInt(qty[3] || 0));
 						let qtyVal = (parseInt(qty[2] ? rollDice( qty[1], qty[2], qty[4] ) : qty[1]) || 0) + parseInt(qty[3] || 0);

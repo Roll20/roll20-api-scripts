@@ -122,15 +122,14 @@ API_Meta.CommandMaster={offset:Number.MAX_SAFE_INTEGER,lineCount:-1};
  *                     on the character sheet. Fixed support for Drag & Drop creature hp ranges.
  * v3.2.0  08/02/2024  Add proficiency list for AD&D1e version. Fix bug in some creature definitions 
  *                     that listed weapons in-hand.
- * v3.2.1  23/02/2024  Improved parseStr() handling of undefined or empty strings without erroring.
  */
  
 var CommandMaster = (function() {
 	'use strict'; 
-	var version = '3.2.1',
+	var version = '3.2.0',
 		author = 'RED',
 		pending = null;
-	const lastUpdate = 1708765145;
+	const lastUpdate = 1707473376;
 
 	/*
 	 * Define redirections for functions moved to the RPGMaster library
@@ -1295,7 +1294,7 @@ var CommandMaster = (function() {
 	 * Function to replace special characters in a string
 	 */
 	 
-	var parseStr=function(str=''){
+	var parseStr=function(str){
 		return replacers.reduce((m, rep) => m.replace(rep[0], rep[1]), str);
 	}
 

@@ -88,15 +88,14 @@ API_Meta.InitMaster={offset:Number.MAX_SAFE_INTEGER,lineCount:-1};
  * v3.1.0  02/02/2024  Reworked weapon/attack initiative to use the InHand table where possible (i.e.
  *                     if AttackMaster is loaded) for management of number of attacks per round and
  *                     other aspects that are common to a weapon as opposed to a Weapon Table entry.
- * v3.2.0  23/02/2024  Non-functional release to align release numbers.
  */
 
 var initMaster = (function() {
 	'use strict'; 
-	var version = '3.2.0',
+	var version = '3.1.2',
 		author = 'Richerd @ Damery',
 		pending = null;
-    const lastUpdate = 1708765145;
+    const lastUpdate = 1706890344;
 
 	/*
 	 * Define redirections for functions moved to the RPGMaster library
