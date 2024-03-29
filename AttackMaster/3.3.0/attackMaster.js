@@ -190,7 +190,8 @@ API_Meta.AttackMaster={offset:Number.MAX_SAFE_INTEGER,lineCount:-1};
  *                     Allow filterWeapons() to filter items other than weapons from tables.
  *                     Improve finding of ammo rows when inserting ammo. Allow recovery of 
  *                     cursed ammo. Fix the "Death" button on the Other-Actions menu. Fixed 
- *                     charged powers for hidden in-hand magic items on attack menu.
+ *                     charged powers for hidden in-hand magic items on attack menu. Fixed 
+ *                     taking '-' in-hand in Change Weapon dialog.
  */
  
 var attackMaster = (function() {
@@ -5249,7 +5250,7 @@ var attackMaster = (function() {
 			values[fields.InHand_column[0]][fields.InHand_column[1]] = c;
 			values[fields.InHand_handedness[0]][fields.InHand_handedness[1]] = handedness;
 			values[fields.InHand_db[0]][fields.InHand_db[1]] = weaponDB;
-			values[fields.InHand_type[0]][fields.InHand_type[1]] = (!item.obj ? weaponSpecs[0][2] : item.obj[1].type);
+			values[fields.InHand_type[0]][fields.InHand_type[1]] = (!item || !item.obj ? weaponSpecs[0][2] : item.obj[1].type);
 			values[fields.InHand_dancer[0]][fields.InHand_dancer[1]] = weapData.dancer;
 			
 			switch (args[0].toUpperCase()) {
