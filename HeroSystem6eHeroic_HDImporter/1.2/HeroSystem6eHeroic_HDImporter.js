@@ -41,9 +41,9 @@
 
 (function() {
 	// Constants
-	const versionAPI = "1.2";
-	const versionSheet = "2.52";
-	const needsExporterVersion = "1.0";
+	const versionMod = "1.2";
+	const versionSheet = "2.52"; // Note that a newer sheet will make upgrades as needed.
+	const needsExportedVersion = "1.0";
 	
 	const defaultAttributes = {
 		
@@ -205,15 +205,15 @@
 		// Rudimentary check to see if the JSON is from a HeroSystem6eHeroic format file.
 		if (typeof character.HeroSystem6eHeroic === "undefined") {
 			sendChat(script_name, '<div style="'+style+'">Hero Importer ended early due to a source format error.</div>' );
-			sendChat(script_name, "Please verify that the character file was exported using HeroSystem6eHeroic.hde (version "+needsExporterVersion+")." );
+			sendChat(script_name, "Please verify that the character file was exported using HeroSystem6eHeroic.hde (version "+needsExportedVersion+")." );
 			return;
 		}
 		
 		// Verify that the character was exported with the latest version of HeroSystem6eHeroic.hde. If not, report error and abort.
-		if (character.version !== needsExporterVersion) {
-			//sendChat(script_name, '<div style="'+style+'">Please update HeroSystem6eHeroic.hde <b>' + character.version + '</b> to version //<b>'+needsExporterVersion+'</div>', null, {noarchive:true});
+		if (character.version !== needsExportedVersion) {
+			//sendChat(script_name, '<div style="'+style+'">Please update HeroSystem6eHeroic.hde <b>' + character.version + '</b> to version //<b>'+needsExportedVersion+'</div>', null, {noarchive:true});
 			sendChat(script_name, '<div style="'+style+'">Import of <b>' + character.character_name + '</b> ended early due to version mismatch error.</div>' );
-			sendChat(script_name, "Please download and install the latest version of HeroSystem6eHeroic.hde (version "+needsExporterVersion+") into your Hero Designer export formats folder. Export your character and try HD Importer again." );
+			sendChat(script_name, "Please download and install the latest version of HeroSystem6eHeroic.hde (version "+needsExportedVersion+") into your Hero Designer export formats folder. Export your character and try HD Importer again." );
 			
 			return;
 		}
@@ -279,6 +279,7 @@
 	
 	// END MAIN
 	
+	
 /* **************************************** */
 /* ***  Begin Import Functions          *** */
 /* **************************************** */
@@ -291,7 +292,7 @@
 		
 		// Set sticky note to importer details.
 		let importInfoString = "HDImporter for Roll20\n";
-		importInfoString = importInfoString + "Version: " + versionAPI + "\n";
+		importInfoString = importInfoString + "Version: " + versionMod + "\n";
 		if (typeof character.playerName !== "undefined") {
 			importInfoString = importInfoString + "Player: " + character.playerName + "\n";
 		}
@@ -3293,6 +3294,8 @@
 	
 	
 	const reportReady = (character) => {
+		// From Beyond. Left as-is.
+		//
 		// TODO this is nonsense.  we aren't actually done importing, because notifications in the character sheet are firing for quite a while
 		// after we finish changing things (especially on first import) and we have no way (?) to wait for it to be done.   These are not sheet workers
 		// on which we can wait.
@@ -3512,28 +3515,29 @@
 		}
 		return objects;
 	};
-
-
+	
+	// This section from Beyond is not used in HS6eH_HDImporter, but may be useful later.
+	//
 	// Find an existing repeatable item with the same name, or generate new row ID
-// 	const getOrMakeRowID = (character,repeatPrefix,name) => {
-// 		// Get list of all of the character's attributes
-// 		let attrObjs = findObjs({ _type: "attribute", _characterid: character.get("_id") });
-// 
-// 		let i = 0;
-// 		while (i < attrObjs.length)
-// 		{
-// 			// If this is a feat taken multiple times, strip the number of times it was taken from the name
-// 			let attrName = attrObjs[i].get("current").toString();
-// 			 if (regexIndexOf(attrName, / x[0-9]+$/) !== -1)
-// 			 attrName = attrName.replace(/ x[0-9]+/,"");
-// 
-// 			 if (attrObjs[i].get("name").indexOf(repeatPrefix) !== -1 && attrObjs[i].get("name").indexOf("_name") !== -1 && attrName === name)
-// 			 return attrObjs[i].get("name").substring(repeatPrefix.length,(attrObjs[i].get("name").indexOf("_name")));
-// 			 i++;
-// 			i++;
-// 		}
-// 		return generateRowID();
-// 	};
+	// 	const getOrMakeRowID = (character,repeatPrefix,name) => {
+	// 		// Get list of all of the character's attributes
+	// 		let attrObjs = findObjs({ _type: "attribute", _characterid: character.get("_id") });
+	// 
+	// 		let i = 0;
+	// 		while (i < attrObjs.length)
+	// 		{
+	// 			// If this is a feat taken multiple times, strip the number of times it was taken from the name
+	// 			let attrName = attrObjs[i].get("current").toString();
+	// 			 if (regexIndexOf(attrName, / x[0-9]+$/) !== -1)
+	// 			 attrName = attrName.replace(/ x[0-9]+/,"");
+	// 
+	// 			 if (attrObjs[i].get("name").indexOf(repeatPrefix) !== -1 && attrObjs[i].get("name").indexOf("_name") !== -1 && attrName === name)
+	// 			 return attrObjs[i].get("name").substring(repeatPrefix.length,(attrObjs[i].get("name").indexOf("_name")));
+	// 			 i++;
+	// 			i++;
+	// 		}
+	// 		return generateRowID();
+	// 	};
 
 
 	const generateUUID = (function() {
