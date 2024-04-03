@@ -196,9 +196,14 @@
 					if (check.length < 2100) {
 						// Intended character data length is safely less than the minimum character file size if exported with HDE format version 1.0.
 						// This is likely an error.
-						sendChat(script_name, '<div style="'+style+'">Import command does not appear to contain valid character data.</div>' );
+						sendChat(script_name, '<div style="'+style+'">Hero Importer finished early because the import command does not appear to contain valid character data.</div>' );
+						return;
+					} else if ( (check[0] !== "{") && (check[check.length - 1] !== "}")) {
+						// Improper JSON format.
+						sendChat(script_name, '<div style="'+style+'">Hero Importer finished early because the import command does not appear to contain valid character data.</div>' );
 						return;
 					}
+					
 					importData = v.replace(/[\n\r]/g, '');
 					break;
 					
@@ -1592,7 +1597,11 @@
 					importedPowers["powerType"+ID] = "single";
 				}
 				
-				// 
+				// Set attack checkbox for attacks.
+				importedPowers["powerAttack"+ID] = isAttack(importedPowers["powerEffect"+ID]) ? "on" : 0;
+				
+				// Set power type.
+				importedPowers["powerDamageType"+ID] = getPowerDamageType(importedPowers["powerEffect"+ID]);
 			}
 		}
 		
@@ -2681,6 +2690,35 @@
 	}
 	
 	
+	var isAttack = function (effect) {
+		// For setting the attack state.
+		const attackSet = new Set(["Blast", "Dispel", "Drain", "Entangle", "Healing", "HTH Attack", "HTH Killing Attack", "Mental Blast", "Mental Illusions", "Mind Control", "Mind Link", "Mind Scan", "Ranged Killing Attack", "Telekinesis", "Telepathy", "Transform"]);
+		
+		return attackSet.has(effect) ? true : false;
+	}
+	
+	
+	var getPowerDamageType = function (effect) {
+		// For setting the attack state.
+		const killingSet = new Set(["HTH Killing Attack", "Ranged Killing Attack"]);
+		const normalSet = new Set(["Blast", "HTH Attack"]);
+		const mentalSet = new Set(["Mental Blast", "Mental Illusions", "Mind Control", "Mind Link", "Mind Scan", "Telepathy"]);
+		let damageType = null;
+		
+		if (killingSet.has(effect)) {
+			damageType = "killing";
+		} else if (normalSet.has(effect)) {
+			damageType = "normal";
+		} else if (mentalSet.has(effect)) {
+			damageType = "mental";
+		} else {
+			damageType = "power";
+		}
+		
+		return damageType;
+	}
+	
+	
 	var getPowerBaseCost = function(character, base, effect, text, bonus, option, script_name) {
 		// For ordinary powers, this function simply returns the imported base cost.
 		// For stat modification powers, this function assigns a base cost determined from the characteristic
@@ -3574,7 +3612,7 @@
 		return objects;
 	};
 	
-	// This section from Beyond is not used in HS6eH_HDImporter, but may be useful later.
+	// This section from Beyond is not used in HS6eH_HDImporter, but may be useful in future.
 	//
 	// Find an existing repeatable item with the same name, or generate new row ID
 	// 	const getOrMakeRowID = (character,repeatPrefix,name) => {
