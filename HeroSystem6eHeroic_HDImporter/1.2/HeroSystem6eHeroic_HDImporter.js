@@ -126,9 +126,10 @@
 		sendChat(script_name, '<div style="'+style+'"><h3 style="color :yellow; ">' + script_name + ' Ready!</h3><p>For help enter "!hero --help"</p></div>', null, {noarchive:true});
 	});
 
+
 	on('chat:message', (msg) => {
 		if (msg.type != 'api') return;
-	
+		
 		// Split the message into command and argument(s)
 		let args = msg.content.split(/ --(help|reset|config|imports|import) ?/g);
 		let command = args.shift().substring(1).trim();
@@ -151,6 +152,7 @@
 		for(let i = 0; i < args.length; i+=2) {
 			let k = args[i].trim();
 			let v = args[i+1] != null ? args[i+1].trim() : null;
+			let check = Array.from(v.replace(/\s/g, ''));
 			
 			switch(k) {
 				case 'help':
@@ -191,6 +193,12 @@
 					return;
 					
 				case 'import':
+					if (check.length < 2100) {
+						// Intended character data length is safely less than the minimum character file size if exported with HDE format version 1.0.
+						// This is likely an error.
+						sendChat(script_name, '<div style="'+style+'">Import command does not appear to contain valid character data.</div>' );
+						return;
+					}
 					importData = v.replace(/[\n\r]/g, '');
 					break;
 					
@@ -240,6 +248,11 @@
 		sendChat(script_name, '<div style="'+style+'">Import of <b>' + character.character_name + '</b> started.</div>', null, {noarchive:true});
 		
 		object = null;
+		
+		// Assign a random name if the character doesn't have one.
+		if ((character.character_name).length === 0) {
+			character.character_name = createRandomString(7);
+		}
 		
 		// Remove characters with the same name if overwrite is enabled.
 		if(state[state_name][hero_caller.id].config.overwrite) {
@@ -432,6 +445,17 @@
 		}
 		
 		return;
+	}
+	
+	
+	function createRandomString(length) {
+		// random character name from https://sentry.io/answers/generate-random-string-characters-in-javascript/
+		const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+		let result = "";
+		for (let i = 0; i < length; i++) {
+		result += chars.charAt(Math.floor(Math.random() * chars.length));
+		}
+		return result;
 	}
 	
 	
