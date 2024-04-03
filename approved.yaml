@@ -1259,3 +1259,7 @@ velvetgeneration:
 listattrs:
   - "ListAttrs"
   - "Utility"
+
+showbuttons:
+  - "ShowButtons"
+  - "Utility"
