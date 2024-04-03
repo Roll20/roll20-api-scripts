@@ -124,9 +124,6 @@ var initMaster = (function() {
 	const fixSenderId = (...a) => libRPGMaster.fixSenderId(...a);
 	const getSetPlayerConfig = (...a) => libRPGMaster.getSetPlayerConfig(...a);
 	const getCharacter = (...a) => libRPGMaster.getCharacter(...a);
-	const classObjects = (...a) => libRPGMaster.classObjects(...a);
-	const classAllowedItem = (...a) => libRPGMaster.classAllowedItem(...a);
-	const resolveData = (...a) => libRPGMaster.resolveData(...a);
 	const caster = (...a) => libRPGMaster.caster(...a);
     const sendToWho = (...m) => libRPGMaster.sendToWho(...m);
     const sendPublic = (...m) => libRPGMaster.sendPublic(...m);
@@ -473,8 +470,6 @@ var initMaster = (function() {
 	var spellLevels;
 	var casterLevels;
 	var spellsPerLevel;
-	var reClassSpecs;
-	var reACSpecs;
 	
 	var DBindex = {};
 	var initSelection = {};
@@ -539,7 +534,6 @@ var initMaster = (function() {
 		SPECIFY:	'SPECIFY',
 		CARRY:		'CARRY',
 		SUBMIT:		'SUBMIT',
-		SETMODS:	'SETMODS',
 	});
 	
 	var Caster = Object.freeze({
@@ -610,8 +604,6 @@ var initMaster = (function() {
 	const reIgnore = /[\s\-\_]*/gi;
 	const reRepeatingTable = /^(repeating_.*)_\$(\d+)_.*$/;
 	const reDiceRollSpec = /(?:^\d+$|\d+d\d+)/i;
-	const reClassRaceData = /}}\s*?(?:Class|Race)Data\s*?=.*?{{/im;
-	const reNotAttackData = /}}[\s\w\-]*?(?<!tohit|dmg|ammo|range)data\s*?=(.+?){{/im;
 	
 	var	replacers = [
 			[/\\lbrc;?/g, "{"],
@@ -719,8 +711,6 @@ var initMaster = (function() {
 			spellLevels = RPGMap.spellLevels;
 			casterLevels = RPGMap.casterLevels;
 			spellsPerLevel = RPGMap.spellsPerLevel;
-			reClassSpecs = RPGMap.reClassSpecs;
-			reACSpecs = RPGMap.reACSpecs;
 			flags.noWaitMsg = true;
 			setTimeout( () => {flags.noWaitMsg = false;}, 5000 );
 
@@ -1755,7 +1745,7 @@ var initMaster = (function() {
 		    rowIndex2 = args[4],
 			base = parseInt(state.initMaster.initType == 'group' ? state.initMaster.playerRoll : randomInteger(10)),
 			actions, initiative, count;
-			
+
 		var initSubmit = function( senderId, charCS, args ) {
 			var	initCmd = args[0],
 				tokenID = args[1],
@@ -1783,8 +1773,7 @@ var initMaster = (function() {
 			
 			actions = handleAllWeapons( senderId, charCS, args, base, (rowIndex != -2) );
 
-			if (rowIndex == 0 && (initMenu == MenuType.COMPLEX || initMenu == MenuType.SIMPLE || initMenu == MenuType.WEAPON)) {
-				
+			if (rowIndex == 0 && (initMenu == MenuType.COMPLEX || initMenu == MenuType.SIMPLE)) {
 				var monAttk1 = (attrLookup( charCS, fields.Monster_dmg1 ) || '').split(','),
 					monAttk2 = (attrLookup( charCS, fields.Monster_dmg2 ) || '').split(','),
 					monAttk3 = (attrLookup( charCS, fields.Monster_dmg3 ) || '').split(','),
@@ -1985,28 +1974,7 @@ var initMaster = (function() {
 		let content = fields.attackMaster + ' --checkac ' + tokenID + '|Silent||' + senderId;
 		setTimeout( sendAPI, Math.round(3000+(Math.random()*5000)), content, senderId );
 	};
-	
-	/*
-	 * Handle a player setting modifications to the initiative roll factors
-	 */
-	 
-	var handleAdjustInitMods = function( args, senderId, silent ) {
-		
-		var cmd = args[0],
-			tokenID = args[1],
-			val = args[2],
-			charCS = getCharacter(tokenID);
-			
-		if (!charCS) {
-			sendDebug( 'handleChangeInitMods: tokenID does not represent a character' );
-			sendError( 'Invalid tokenID given' );
-			return;
-		}
-		setAttr( charCS, (cmd === BT.INIT_ADJMOD ? fields.InitModAdjust : fields.InitMultAdjust), val );
-		makeCheckInitMenu( tokenID, charCS, senderId, silent, ('Set initiative speed '+(cmd === BT.INIT_ADJMOD ? 'modifier' : 'multiplier')+' to '+val) );
-		return;
-	};
-	
+
 	/*
 	 * Set up the shape of the spell book.  This is complicated due to
 	 * the 2E sheet L5 MU Spells start out-of-sequence at column 70
@@ -2074,16 +2042,10 @@ var initMaster = (function() {
 			meleeWeap = 0,
 			rangedWeap = 0,
 			shieldWeap = 0,
-			monAttk = parseInt(attrLookup( charCS, fields.Monster_attks, null, null, null, null, false )),
+			monAttk = parseInt(attrLookup( charCS, fields.Monster_attks )) || 0,
 			r = InHandTable.table[1],
 			miNames = [],
 			weapon;
-			
-		if (isNaN(monAttk) || !monAttk) {
-			monAttk  = attrLookup( charCS, fields.Monster_dmg1 ) !== '' ? 1 : 0;
-			monAttk += attrLookup( charCS, fields.Monster_dmg2 ) !== '' ? 1 : 0;
-			monAttk += attrLookup( charCS, fields.Monster_dmg3 ) !== '' ? 1 : 0;
-		};
 			
 		while (!_.isUndefined(weapon = InHandTable.tableLookup( fields.InHand_name, r, false ))) {
 			if (weapon != '-') {
@@ -2417,7 +2379,7 @@ var initMaster = (function() {
 								}
 								let miName = WeaponTable.tableLookup( fields.MW_miName, i ) || '',
 									weapObj = abilityLookup( fields.WeaponDB, miName, charCS ),
-									weapCharged = weapObj.obj && !(['uncharged','cursed','single-uncharged'].includes(weapObj.obj[1].charge.toLowerCase())),
+									weapCharged = weapObj.obj && !(['uncharged','cursed'].includes(weapObj.obj[1].charge.toLowerCase())),
 									charges = weapCharged  ? (WeaponTable.tableLookup( fields.MW_charges, i ) || 1) : 0,
 									exhausted = submitted,
 									qty = '';
@@ -3224,7 +3186,7 @@ var initMaster = (function() {
 //			charCS = getCharacter(tokenID,false),
 		    content = '&{template:'+fields.defaultTemplate+'}{{name=What does ' + tokenName + ' want to do?}}'
 					+ '{{subtitle=' + tokenName + '\'s possible activities}}'
-					+ '{{Section=';
+					+ '{{desc=';
 					
 		content += '[Attack](!init ' + (monster == CharSheet.MONSTER ? '--complex ' : '--weapon ') + tokenID + ')';
 		if (casterLevel( charCS, 'MU' )) {
@@ -3240,8 +3202,7 @@ var initMaster = (function() {
 			content += '[Use Magic Item](!init --mibag ' + tokenID + ')';
 		}
 		content += '[Use Thieving Skills](!init --thief ' + tokenID + ')}}';
-		content += '{{Section1='+otherActions( MenuType.OTHER, tokenID, 0, false )+'}}';
-		content += '{{Section2=[Check Initiative Modifiers](!init --checkinit '+tokenID+'||menu)}}';
+		content += '{{desc1='+otherActions( MenuType.OTHER, tokenID, 0, false )+'}}';
 				
 		sendResponse( charCS, content, senderId, flags.feedbackName, flags.feedbackImg, tokenID );
 		return;
@@ -3272,114 +3233,6 @@ var initMaster = (function() {
 		}
 	}
 
-	/*
-	 * Make a dialog to show factors that affect initiative,
-	 * and allow the player to set a manual modifier
-	 */
-	
-	var makeCheckInitMenu = function( tokenID, charCS, senderId, silent=false, msg='', menu='' ) { //specs
-		
-		const parseTable = {initmod:reClassSpecs.initmod,initmult:reClassSpecs.initmult,rules:reACSpecs.rules},
-			  classes = classObjects( charCS, senderId, parseTable ),
-			  race = (attrLookup( charCS, fields.Race ) || 'human').dbName(),
-			  tokenName = getObj('graphic',tokenID).get('name');
-		var ItemNames = getTableField( charCS, {}, fields.Items_table, fields.Items_name ),
-			ItemNames = getTableField( charCS, ItemNames, fields.Items_table, fields.Items_trueName ),
-			Inits = getTable( charCS, fieldGroups.INIT ),
-			totalMod = 0,
-			totalMult = 1,
-			content = '&{template:'+fields.menuTemplate+'}{{title=Current Initiative Modifiers\n for '+tokenName+'}}'
-					+ (!!msg && msg.length ? '{{Section='+msg+'}}' : '');
-		
-		const assessInit = function( name, mod, mult, remove=false ) {
-			mod = parseFloat(mod);
-			mult = parseFloat(mult);
-			let modFlag = !isNaN(mod) && (mod != 0),
-				multFlag = !isNaN(mult) && (mult != 1);
-			if (!modFlag && !multFlag) return '';
-			let desc = '{{'+name.dispName()+'=';
-			if (modFlag) {
-				totalMod += mod;
-				desc += (mod < 0 ? 'Beneficial' : 'Penalty')+' mod of '+(mod>0 ? '+' : '')+mod+(multFlag ? '\n' : '');
-			}
-			if (multFlag) {
-				totalMult *= mult;
-				desc += (mult > 1 ? 'Beneficial' : 'Penalty')+' speed mult x '+mult;
-			};
-			if (remove) {
-				desc += ' \n[Remove](!init --setmods '+tokenID+'|del|'+name+'|0|1)';
-			}
-			desc += '}}';
-			return desc;
-		};
-		
-		_.each( classes, c => {
-			content += assessInit( c.obj[1].name, c.classData.initmod, c.classData.initmult );
-		});
-		let raceData = resolveData( race, fields.RaceDB, reClassRaceData, charCS, parseTable ).parsed;
-		content += assessInit( race, raceData.initmod, raceData.initmult );
-		
-		let conflict = '',
-			itemClasses = [],
-			itemSuperTypes = [],
-			nameArray = [],
-			item = '';
-		for (let r = 0; !_.isUndefined(item = ItemNames.tableLookup( fields.Items_name, r, false )); r++) {
-			if (item === '-') continue;
-			let trueItem = ItemNames.tableLookup( fields.Items_trueName, r ),
-				itemData = resolveData( trueItem, fields.MagicItemDB, reNotAttackData, charCS, parseTable, r ).parsed,
-				itemObj = abilityLookup( fields.MagicItemDB, trueItem ),
-				addRules = itemData.rules.split('|').map( r => (r[0] === '-' ? '-' : '')+r.dbName() ),
-				specsArray = (!!itemObj.obj ? itemObj.specs() : ['-','-','magic','1H','-']);
-			if (itemObj.obj) {
-				itemSuperTypes = _.uniq(itemSuperTypes.concat(specsArray.map( c => c[4].dbName() ).join('|').split('|')));
-				itemClasses = _.uniq(itemClasses.concat(specsArray.map( c => c[2].dbName() ).join('|').split('|')));
-			};
-			if (itemData.initmod == 0 && itemData.initmult == 1) continue;
-			let	inHand = !itemData.rules || !itemData.rules.includes('+inhand') || !_.isUndefined(getTableField( charCS, {}, fields.InHand_table, fields.InHand_trueName ).tableFind( fields.InHand_trueName, trueItem ));
-			let worn = !itemData.rules || !itemData.rules.includes('+worn') || classAllowedItem( charCS, trueItem, specsArray[0][1].dbName(), specsArray[0][4].dbName(), 'weaps' );
-			let adds = !itemData.rules || (!_.some(itemClasses,c => {conflict=c;return addRules.includes( '-'+c )}) && !_.some(itemSuperTypes,mi => {conflict=mi;return addRules.includes('-'+mi)}));
-			let nameIndex = nameArray.findIndex( (n,i) => n[0] === item );
-			if (nameIndex >= 0) {
-				item += ' '+(++nameArray[nameIndex][1]);
-			} else {
-				nameArray.push([item,1]);
-			};
-			if (!inHand) {content += '{{'+item.dispName()+'=Is not in-hand so does not affect initiative}}';
-			} else if (!worn) {content += '{{'+item.dispName()+'=Is not of a usable type so does not affect initiative}}';
-			} else if (!adds) {content += '{{'+item.dispName()+'=Does not combine with '+conflict+' so does not affect initiative}}';}
-			if (!inHand || !worn || !adds) continue;
-			content += assessInit( item, itemData.initmod, itemData.initmult );
-		};
-
-		for (let r = 0; !_.isUndefined(item = Inits.tableLookup( fields.InitMagic_name, r, false )); r++ ) {
-			if (item === '-') continue;
-			if (item.length === 0) Inits = Inits.delTableRow( r );
-			else content += assessInit( item, Inits.tableLookup( fields.InitMagic_mod, r ), Inits.tableLookup( fields.InitMagic_mult, r ), true );
-		};
-		
-		let modAdj = parseFloat(attrLookup( charCS, fields.InitModAdjust )) || 0,
-			modSign = (modAdj > 0 ? '+' : ''),
-			multAdj = parseFloat(attrLookup( charCS, fields.InitMultAdjust )) || 1;
-		totalMod += modAdj;
-		totalMult *= multAdj;
-		content += '{{Manual Adjustments=[Mod Adjustment](!init --setmods '+tokenID+'|mod|&#63;{What do you want to call this modifier?|adjustment}|&#63;{What modifier should be added to initiative speed (-ve beneficial?&#41;}) and'
-				+  '[Mult Adjustment](!init --setmods '+tokenID+'|mult|&#63;{What do you want to call this multiplier?|adjustment}||&#63;{What multiplier should be applied to the initiative speed (>1 beneficial&#41;?})}}';
-		
-		content += '{{Totals=Mod of **'+(totalMod > 0 ? '+' : '')+totalMod+'** and Mult of **x'+totalMult+'**}}'
-				+  '{{desc=Select button above to set a manual adjustment to these totals.\n'
-				+  '**Modifier** less than 0 is beneficial\n'
-				+  '**Multiplier** greater than 1 is beneficial}}'
-				+  (menu && menu.length ? ('{{desc1=[Return to menu](!init --'+menu+')}}') : '');
-		
-		setAttr( charCS, fields.initMod, totalMod );
-		setAttr( charCS, fields.initMultiplier, totalMult );
-		
-//		log('makeCheckInitMenu: content = '+content);
-		if (!silent) sendResponse( charCS, content, senderId );
-		return {mod:totalMod,mult:totalMult};
-	}
-			
 //------------------------------------- do commands --------------------------------------------
 
 	/**
@@ -3632,136 +3485,6 @@ var initMaster = (function() {
 
     };
 	
-	/*
-	 * Display the dialog describing the factors currently affecting the
-	 * selected character's initiative rolls, including class, race,
-	 * magic items and spells currently in effect. Allow the player
-	 * to set manual adjustments if required.
-	 */
-	 
-	var doShowInitFactors = function( args, selected, senderId ) {
-		
-		if (!args) args = [];
-		
-		if (!args[0] && selected && selected.length) {
-			args[0] = selected[0]._id;
-		} else if (!args[0]) {
-			sendDebug( 'doShowInitFactors: tokenID is invalid' );
-			sendError( 'No token selected' );
-			return;
-		}
-		
-		var tokenID = args[0],
-			silent = (args[1] || '').toLowerCase() === 'silent',
-			menu = args[2],
-			charCS = getCharacter(tokenID);
-			
-		if (!charCS) {
-			sendError( 'Invalid token selected' );
-			return;
-		}
-			
-		makeCheckInitMenu( tokenID, charCS, senderId, silent, '', menu );
-		return;
-	}
-
-	/*
-	 * Handle a spell, power, or other magic affecting the initiative 
-	 * of a character
-	 */
- 
-	var doMagicInitEffect = function( args, selected, senderId, silent ) {
-		
-		if (!args) args = [];
-		
-		if (!args[0] && selected && selected.length) {
-			args[0] = selected[0]._id;
-		} else if (!args[0]) {
-			sendDebug( 'doMagicInitEffect: tokenID is invalid' );
-			sendError( 'No token selected' );
-			return;
-		}
-
-		var tokenID = args[0],
-			cmd = (args[1] || '').toLowerCase(),
-			name = args[2],
-			charCS = getCharacter(tokenID);
-			
-		if (!charCS) {
-			sendError( 'Invalid token selected' );
-			return;
-		}
-		
-		var InitMagic = getTable( charCS, fieldGroups.INIT ),
-			initIndex = InitMagic.tableFind( fields.InitMagic_name, name ),
-			modOp = '=+-*/'.includes((args[3] || ' ')[0]),
-			modEq = (args[3] || ' ')[0] === '=',
-			multOp = '=+-*/'.includes((args[4] || ' ')[0]),
-			multEq = (args[4] || ' ')[0] === '=',
-			modVal = (modOp ? args[3].slice(1) : args[3]) || 0,
-			multVal = (multOp ? args[4].slice(1) : args[4]) || 1,
-			silent = silent || ((args[5] || '').toLowerCase() === 'silent'),
-			values = initValues( InitMagic.fieldGroup ),
-			msg = '';
-			
-/*		if (name.dbName() === 'adjustment') {
-			let curMod = attrLookup( charCS, fields.InitModAdjust ) || 0,
-				curMult = attrLookup( charCS, fields.InitMultAdjust ) || 1;
-			if (cmd.includes('mod')) {
-				if (modOp && !modEq) modVal = String(curMod)+String(args[3]);
-				modVal = evalAttr( modVal );
-				setAttr( charCS, fields.InitModAdjust, modVal );
-				msg = 'Set manual adjustment Initiative modifier to be '+(modVal>0 ? '+' : '')+modVal;
-			};
-			if (cmd.includes('mult')) {
-				if (multOp && !multEq) multVal = String(curMult)+String(args[4]);
-				multVal = evalAttr( multVal );
-				setAttr( charCS, fields.InitMultAdjust, multVal );
-				msg = 'Set manual adjustment Initiative multiplier to be '+multVal;
-			};
-			makeCheckInitMenu( tokenID, charCS, senderId, silent, msg );
-			return;
-		}
-*/		
-		if (_.isUndefined(initIndex) && (modVal !== 0 || multVal !== 1)) {
-			log('doMagicInitEffect: creating a new row');
-			values[fields.InitMagic_name[0]][fields.InitMagic_name[1]] = name;
-			values[fields.InitMagic_mod[0]][fields.InitMagic_mod[1]] = modVal = evalAttr( args[3] || modVal );
-			values[fields.InitMagic_mult[0]][fields.InitMagic_mult[1]] = evalAttr( args[4] || multVal );
-			InitMagic = InitMagic.addTableRow( initIndex, values );
-			msg = 'Added new magic initiative effect *'+name+'* with mod '+(modVal>0 ? '+' : '')+modVal+' and mult x'+multVal;
-
-		} else if (!_.isUndefined(initIndex)) {
-			let curMod = InitMagic.tableLookup( fields.InitMagic_mod, initIndex ),
-				curMult = InitMagic.tableLookup( fields.InitMagic_mult, initIndex );
-			if (modOp && !modEq) modVal = curMod+args[3];
-			if (multOp && !multEq) multVal = curMult+args[4];
-			modVal = evalAttr( modVal );
-			multVal = evalAttr( multVal );
-
-			if (cmd === 'del' || (modVal === 0 && multVal === 1)) {
-				InitMagic = InitMagic.delTableRow( initIndex );
-				msg = 'Initiative effect *'+name+'* has been removed';
-			} else switch (cmd) {
-				case 'mod':
-					InitMagic = InitMagic.tableSet( fields.InitMagic_mod, initIndex, modVal );
-					msg = 'Changed *'+name+'* Initiative modifier to be '+(modVal>0 ? '+' : '')+modVal;
-					break;
-				case 'mult':
-					InitMagic = InitMagic.tableSet( fields.InitMagic_mult, initIndex, multVal );
-					msg = 'Changed *'+name+'* Initiative multiplier to be '+multVal;
-					break;
-				default:
-					InitMagic = InitMagic.tableSet( fields.InitMagic_mod, initIndex, modVal );
-					InitMagic = InitMagic.tableSet( fields.InitMagic_mult, initIndex, multVal );
-					msg = 'Changed *'+name+'* Initiative modifier to be '+(modVal>0 ? '+' : '')+modVal+' and multiplier to be '+multVal;
-					break;
-			};
-		}
-		makeCheckInitMenu( tokenID, charCS, senderId, silent, msg );
-		return;
-	}
-
 	/*
 	 * Make the menu for managing initiative each round, including
 	 * changing initiative type, changing the listed Player Characters,
@@ -4136,7 +3859,7 @@ var initMaster = (function() {
 	 * Handle a button press, and redirect to the correct handler
 	 */
 
-	var doButton = function( args, senderId, selected ) {
+	var doButton = function( args, senderId ) {
 		if (!args)
 			{return;}
 
@@ -4282,13 +4005,6 @@ var initMaster = (function() {
 				// Handle the results of pressing the buttons on the 'Other' menu
 				
 				handleOtherActions( charCS, args, senderId );
-				break;
-				
-			case BT.SETMODS :
-			
-				// Handle using buttons on the Initiative Mods dialog
-				
-				doMagicInitEffect( args, selected, senderId, false );
 				break;
 				
 			case BT.CARRY :
@@ -4443,14 +4159,6 @@ var initMaster = (function() {
 					case 'redo':
 						doRedo(arg,selected,senderId);
 						break;
-					case 'checkinit':
-					case 'check-init':
-						doShowInitFactors(arg,selected,senderId);
-						break;
-					case 'setmods':
-					case 'set-mods':
-						doMagicInitEffect(arg,selected,senderId,false);
-						break;
 					case 'isround':
 						sendWait(senderId,0,'isround');
 						if (isGM) doIsRound(arg,senderId);
@@ -4493,7 +4201,7 @@ var initMaster = (function() {
 						if (isGM) updateHandouts(handouts,false,senderId);
 						break;
 					case 'button':
-						doButton(arg,senderId,selected);
+						doButton(arg,senderId);
 						break;
 					case 'buildmenu':
 						doBuildMenu(arg,senderId);
