@@ -42,8 +42,8 @@
 (function() {
 	// Constants
 	const versionMod = "1.2";
-	const versionSheet = "2.52"; // Note that a newer sheet will make upgrades as needed.
-	const needsExportedVersion = "1.0";
+	const versionSheet = "2.82"; // Note that a newer sheet will make upgrades as well as it can.
+	const needsExportedVersion = new Set(["1.0", "1.2"]);
 	
 	const defaultAttributes = {
 		
@@ -133,11 +133,16 @@
 		let args = msg.content.split(/ --(help|reset|config|imports|import) ?/g);
 		let command = args.shift().substring(1).trim();
 		
+		if (command === "") {
+			return;
+		}
+		
 		hero_caller = getObj('player', msg.playerid);
 		
 		if (command !== 'hero') {
 			return;
 		}
+		
 		let importData = "";
 		if(args.length < 1) { sendHelpMenu(hero_caller); return; }
 		
@@ -195,25 +200,39 @@
 			}
 		}
 		
-		if(importData === '') {
+		if ((importData === '') || (typeof importData === "undefined")) {
 			return;
 		}
 		
-		let json = importData;
-		let character = JSON.parse(json).character;
+		var json = importData;
+		var character = null;
 		
-		// Rudimentary check to see if the JSON is from a HeroSystem6eHeroic format file.
-		if (typeof character.HeroSystem6eHeroic === "undefined") {
-			sendChat(script_name, '<div style="'+style+'">Hero Importer ended early due to a source format error.</div>' );
-			sendChat(script_name, "Please verify that the character file was exported using HeroSystem6eHeroic.hde (version "+needsExportedVersion+")." );
-			return;
+		// Try to catch some bad input. Doesn't currently catch no input.
+		try {
+		  character = JSON.parse(json).character;
+		}
+		
+		catch(error) {
+		  let message = "";
+		  	needsExportedVersion.forEach(function(value) {
+			message += value + ", ";
+		  });
+		  
+		  // Drop the last comma.
+		  message = message.slice(0, -2);
+		  
+		  sendChat(script_name, '<div style="'+style+'">Hero Importer ended early due to a source content error.</div>' );
+		  sendChat(script_name, "Please verify that the character file was exported using HeroSystem6eHeroic.hde (acceptable versions: "+message+"). For help use the command !hero --help.");
+		  return;
 		}
 		
 		// Verify that the character was exported with the latest version of HeroSystem6eHeroic.hde. If not, report error and abort.
-		if (character.version !== needsExportedVersion) {
-			//sendChat(script_name, '<div style="'+style+'">Please update HeroSystem6eHeroic.hde <b>' + character.version + '</b> to version //<b>'+needsExportedVersion+'</div>', null, {noarchive:true});
+		if (needsExportedVersion.has(character.version) === false) {
+			var last; 
+			needsExportedVersion.forEach(k => { last = k });
+			
 			sendChat(script_name, '<div style="'+style+'">Import of <b>' + character.character_name + '</b> ended early due to version mismatch error.</div>' );
-			sendChat(script_name, "Please download and install the latest version of HeroSystem6eHeroic.hde (version "+needsExportedVersion+") into your Hero Designer export formats folder. Export your character and try HD Importer again." );
+			sendChat(script_name, "Please download and install the latest version of HeroSystem6eHeroic.hde (version: "+last+" recommended) into your Hero Designer export formats folder. Export your character and try HD Importer again. For help use the command !hero --help." );
 			
 			return;
 		}
@@ -1270,9 +1289,10 @@
 		/* ***  Import Function: Import Powers           *** */
 		/* ************************************************* */
 		
-		// Imports the first seventeen powers.
+		// Imports twenty powers, which is Sheet v2.81's capacity.
 		
-		const maxPowers = 17;
+		const maxPowers = 20;
+		const overflowPowers = (character.version >= 1.2) ? 10 : 0;
 		
 		let tempString;
 		let tempPosition;
@@ -1306,8 +1326,8 @@
 		/* Read Powers               */
 		/* ------------------------- */
 		
-		for (importCount = 0; importCount < maxPowers; importCount++) {
-		
+		for (importCount; importCount < maxPowers; importCount++) {
+			
 			ID = String(importCount+1).padStart(2,'0');
 			
 			if ((typeof character.powers["power"+ID] !== "undefined") && (typeof character.powers["power"+ID].name !== "undefined")) {
@@ -1416,28 +1436,41 @@
 			}
 		}
 		
-		// Read Power 18
-		if ((typeof character.powers.power18 !== "undefined") && (typeof character.powers.power18.name !== "undefined")) {
-			
-			powerArray[powerArrayIndex]=character.powers.power18;
-			
-			powerArrayIndex++;
-		}
+		// // Read Power 18
+		// if ((typeof character.powers.power18 !== "undefined") && (typeof character.powers.power18.name !== "undefined")) {
+		// 	
+		// 	powerArray[powerArrayIndex]=character.powers.power18;
+		// 	
+		// 	powerArrayIndex++;
+		// }
+		// 
+		// // Read Power 19
+		// if ((typeof character.powers.power19 !== "undefined") && (typeof character.powers.power19.name !== "undefined")) {
+		// 	
+		// 	powerArray[powerArrayIndex]=character.powers.power19;
+		// 	
+		// 	powerArrayIndex++;
+		// }
+		// 
+		// // Read Power 20
+		// if ((typeof character.powers.power20 !== "undefined") && (typeof character.powers.power20.name !== "undefined")) {
+		// 	
+		// 	powerArray[powerArrayIndex]=character.powers.power20;
+		// 	
+		// 	powerArrayIndex++;
+		// }
 		
-		// Read Power 19
-		if ((typeof character.powers.power19 !== "undefined") && (typeof character.powers.power19.name !== "undefined")) {
+		// Powers that don't fit in the sheet's slots will be placed in a text field.
+		for (importCount; importCount < (maxPowers + overflowPowers); importCount++) {
 			
-			powerArray[powerArrayIndex]=character.powers.power19;
+			ID = String(importCount+1).padStart(2,'0');
 			
-			powerArrayIndex++;
-		}
-		
-		// Read Power 20
-		if ((typeof character.powers.power20 !== "undefined") && (typeof character.powers.power20.name !== "undefined")) {
-			
-			powerArray[powerArrayIndex]=character.powers.power20;
-			
-			powerArrayIndex++;
+			if ((typeof character.powers["power"+ID] !== "undefined") && (typeof character.powers["power"+ID].name !== "undefined")) {
+				
+				powerArray[powerArrayIndex]=character.powers["power"+ID];
+				
+				powerArrayIndex++;
+			}
 		}
 		
 		/* ----------------------------------------------------------------------- */
@@ -1457,7 +1490,7 @@
 		}
 		
 		/* ----------------------------------------------------------------------------------------- */
-		/* Import the first seventeen into the sheet. Then import the remainder as a text field note.
+		/* Import the first twenty into the sheet. Then import the remainder as a text field note.
 		/* ----------------------------------------------------------------------------------------- */
 		
 		// This is currently the only function where bonus points are awarded. If this changes, assign to character bonusBenefit.
@@ -1534,16 +1567,17 @@
 				} else {
 					importedPowers["powerType"+ID] = "single";
 				}
+				
+				// 
 			}
 		}
 		
 		// Display additional powers in the complications text box.
-		if (powerArrayIndex>17) {
+		if (powerArrayIndex > maxPowers) {
 			let tempString = "";
-			let i = 17;
 			let extras = 0;
 			
-			for (let i = 17; i < powerArrayIndex; i++) {
+			for (let i = maxPowers; i < powerArrayIndex; i++) {
 				tempString = tempString + powerArray[i].name + "\n";
 				if (powerArray[i].damage !== "") {
 					tempString = tempString + " Damage: " + powerArray[i].damage + "\n";
