@@ -4,8 +4,12 @@
 	"character":{
 		"character_name":"<!--CHARACTER_NAME-->",
 		"character_title":"<!--ALTERNATE_IDS-->",
-		"backgroundText":"<!--QUOTE-->",
+		"backgroundText":"<!--BACKGROUND-->",
 		"historyText":"<!--PERSONALITY-->",
+		"appearance":"<!--APPEARANCE-->",
+		"tactics":"<!--TACTICS-->",
+		"campaignUse":"<!--CAMPAIGN_USE-->",
+		"quote":"<!--QUOTE-->",
 		"height":"<!--HEIGHT-->",
 		"weight":"<!--WEIGHT-->",
 		"eyes":"<!--EYE_COLOR-->",

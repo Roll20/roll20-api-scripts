@@ -152,7 +152,11 @@
 		for(let i = 0; i < args.length; i+=2) {
 			let k = args[i].trim();
 			let v = args[i+1] != null ? args[i+1].trim() : null;
-			let check = Array.from(v.replace(/\s/g, ''));
+			let check;
+			
+			v = cleanQuotes(v, script_name);
+			
+			check = Array.from(v.replace(/\s/g, ''));
 			
 			switch(k) {
 				case 'help':
@@ -1706,6 +1710,43 @@
 	/* ------------------------- */
 	/* Import Helper Functions   */
 	/* ------------------------- */
+	
+	var cleanQuotes = function(inputString, script_name) {	
+		// Look for double quotes in text that shouldn't be there. Remove them.
+		
+		let detailString;
+		let cleanString;
+		let frontMatter;
+		let backMatter;
+		let startPosition;
+		let endPosition;
+		let count = 0;
+		let matches = 0;
+		let engagePosition = inputString.indexOf('\"backgroundText\":\"');
+		let exitPosition = inputString.indexOf('\"height\":') - 10;
+		
+		for (let i = engagePosition; i < exitPosition; i+=1) {
+			startPosition = inputString.indexOf('\":\"', i)+1;
+			endPosition = inputString.indexOf('\", \"', i);
+			detailString = inputString.slice(startPosition+2, endPosition);
+			matches = detailString.match(/["]/g);
+			count = matches ? matches.length : 0;
+			
+			if (matches) {
+				frontMatter = inputString.slice(0, startPosition+2);
+				backMatter = inputString.slice(endPosition+1);
+				cleanString = detailString.replace(/["]+/g, "");
+				inputString = frontMatter + cleanString +  '\"' + backMatter;
+				
+				exitPosition -= count;
+			}
+			
+			i += detailString.length - count;
+		}
+		
+		return inputString;
+	}
+	
 	
 	var importSkill = function(object, character, script_name, sheetSkillIndexes, theSkill) {
 		// Assign skill to general, combat, language, enhancer, etc.
