@@ -4,12 +4,8 @@
 	"character":{
 		"character_name":"<!--CHARACTER_NAME-->",
 		"character_title":"<!--ALTERNATE_IDS-->",
-		"backgroundText":"<!--BACKGROUND-->",
+		"backgroundText":"<!--QUOTE-->",
 		"historyText":"<!--PERSONALITY-->",
-		"appearance":"<!--APPEARANCE-->",
-		"tactics":"<!--TACTICS-->",
-		"campaignUse":"<!--CAMPAIGN_USE-->",
-		"quote":"<!--QUOTE-->",
 		"height":"<!--HEIGHT-->",
 		"weight":"<!--WEIGHT-->",
 		"eyes":"<!--EYE_COLOR-->",
@@ -3271,7 +3267,7 @@
 		"genre":"<!--GENRE-->",
 		"campaign":"<!--CAMPAIGN_NAME-->",
 		"version":"1.2",
-		"HeroSystem6eHeroic":true
+		"HeroSystem6eHeroic":"true"
 	}
 }
 

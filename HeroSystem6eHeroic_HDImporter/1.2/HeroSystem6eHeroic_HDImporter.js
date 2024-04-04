@@ -3644,7 +3644,7 @@
 		let text = '<div style="'+style+'">';
 		//text += makeTitle(script_name + ' Help');
 		text += makeTitle('HD Importer Help');
-		text += '<p>Export a character in <a style="color: orange;" href="https://www.herogames.com/store/product/1-hero-designer/" target="_blank">Hero Designer</a> using the <a style="color: orange;" href="https://github.com/Roll20/roll20-api-scripts/tree/master/HeroSystem6eHeroic_HDImporter/1.0" target="_blank">HeroSystem6eHeroic.hde</a> format.</p>';
+		text += '<p>Export a character in <a style="color: orange;" href="https://www.herogames.com/store/product/1-hero-designer/" target="_blank">Hero Designer</a> using the <a style="color: orange;" href="https://github.com/Roll20/roll20-api-scripts/tree/master/HeroSystem6eHeroic_HDImporter/1.2" target="_blank">HeroSystem6eHeroic.hde</a> format.</p>';
 		text += '<p>Locate and open the exported .txt file in a text editor. Copy its entire contents and paste them into the Roll20 chat window. Hit enter.</p>';
 		text += '<p>For more information see the documentation page in the HDImporter <a style="color: orange;" href="https://github.com/Roll20/roll20-api-scripts/tree/master/HeroSystem6eHeroic_HDImporter" target="_blank">Github</a> repository.</p>';
 		text += '<hr>';
