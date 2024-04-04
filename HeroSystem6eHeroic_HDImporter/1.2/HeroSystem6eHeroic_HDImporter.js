@@ -1551,6 +1551,9 @@
 				// Search for zero, half, or full range modifiers.
 				importedPowers["powerRMod"+ID] = reducedRMod(testObject.testString);
 				
+				// Search for a STUNx mod.
+				importedPowers["powerSTUNx"+ID] = modifiedSTUNx(testObject.testString);
+				
 				// Assign effect dice.
 				importedPowers["powerDice"+ID] = getDamage(powerArray[importCount].damage);
 				
@@ -3016,6 +3019,27 @@
 	}
 	
 	
+	var modifiedSTUNx = function(inputString) {	
+		// Search for a STUNx multiplier.
+		inputString = inputString.toLowerCase();
+		let answer;
+		
+		if (inputString.includes("-2 decreased stun multiplier")) {
+			answer = "-2";
+		} else if (inputString.includes("-1 decreased stun multiplier")) {
+			answer = "-1";
+		} else if (inputString.includes("+1 increased stun multiplier")) {
+			answer = "+1";
+		} else if (inputString.includes("+2 increased stun multiplier")) {
+			answer = "+2";
+		} else {
+			answer = "0";
+		}
+		
+		return answer;
+	}
+	
+	
 	var getWeaponStrMin = function (weaponString, script_name) {
 		// Parse weapon text and look for one of three strings used
 		// by Hero Designer to record a weapon strength minimum.
@@ -3148,32 +3172,42 @@
 		
 		let damage = "0";
 		let lastIndex = 0;
+		let detailString;
+		let startPosition;
+		let endPosition;
 		
-		// Remove dice in w/STR since we'll calculated it.
-		if (damageString.includes(" w/STR")) {
-			damageString = damageString.replace(/\([^()]*\)/g, "");
-		}
-		
-		// Separate joined dice if present.
-		if ((damageString.match(/d6/g) || []).length > 1) {
-			damageString = damageString.replace("d6", "d6+");
-			lastIndex = damageString.lastIndexOf("d6+");
-			damageString = damageString.substring(0, lastIndex) + "d6" + damageString.substring(lastIndex + 2);
-		}
-		
-		// Look for (xd6 w/STR) and use that. No longer used as of sheet 2.51.
-		// if (damageString.includes(" w/STR")) {
-		// 	damageString = damageString.match(/\(([^)]*)\)/)[1];
-		// 	damageString = damageString.replace(" w/STR", "");
-		// }
-		
-		// Make sure the 1/2d6 is a 1d3.
-		if (damageString.includes(" 1/2d6")) {
-			damage = damageString.replace(" 1/2d6", "d6+d3");			
-		} else if (damageString.includes("1/2d6")) {
-			damage = damageString.replace("1/2d6", "d3");
-		} else {
-			damage = damageString;
+		if (damageString.includes("standard effect")) {
+			startPosition = damageString.indexOf("standard effect");
+			endPosition = damageString.indexOf(")", startPosition);
+			detailString = damageString.slice(startPosition+16, endPosition);
+			damage = detailString;
+		} else {	
+			// Remove dice in w/STR since we'll calculated it.
+			if (damageString.includes(" w/STR")) {
+				damageString = damageString.replace(/\([^()]*\)/g, "");
+			}
+			
+			// Separate joined dice if present.
+			if ((damageString.match(/d6/g) || []).length > 1) {
+				damageString = damageString.replace("d6", "d6+");
+				lastIndex = damageString.lastIndexOf("d6+");
+				damageString = damageString.substring(0, lastIndex) + "d6" + damageString.substring(lastIndex + 2);
+			}
+			
+			// Look for (xd6 w/STR) and use that. No longer used as of sheet 2.51.
+			// if (damageString.includes(" w/STR")) {
+			// 	damageString = damageString.match(/\(([^)]*)\)/)[1];
+			// 	damageString = damageString.replace(" w/STR", "");
+			// }
+			
+			// Make sure the 1/2d6 is a 1d3.
+			if (damageString.includes(" 1/2d6")) {
+				damage = damageString.replace(" 1/2d6", "d6+d3");			
+			} else if (damageString.includes("1/2d6")) {
+				damage = damageString.replace("1/2d6", "d3");
+			} else {
+				damage = damageString;
+			}
 		}
 		
 		return damage;
