@@ -42,13 +42,8 @@
 (function() {
 	// Constants
 	const versionMod = "1.2";
-<<<<<<< HEAD
-	const versionSheet = "2.52"; // Note that a newer sheet will make upgrades as needed.
-	const needsExportedVersion = "1.0";
-=======
 	const versionSheet = "2.82"; // Note that a newer sheet will make upgrades as well as it can.
 	const needsExportedVersion = new Set(["1.0", "1.2"]);
->>>>>>> working
 	
 	const defaultAttributes = {
 		
@@ -131,36 +126,24 @@
 		sendChat(script_name, '<div style="'+style+'"><h3 style="color :yellow; ">' + script_name + ' Ready!</h3><p>For help enter "!hero --help"</p></div>', null, {noarchive:true});
 	});
 
-<<<<<<< HEAD
-	on('chat:message', (msg) => {
-		if (msg.type != 'api') return;
-	
-=======
 
 	on('chat:message', (msg) => {
 		if (msg.type != 'api') return;
 		
->>>>>>> working
 		// Split the message into command and argument(s)
 		let args = msg.content.split(/ --(help|reset|config|imports|import) ?/g);
 		let command = args.shift().substring(1).trim();
 		
-<<<<<<< HEAD
-=======
 		if (command === "") {
 			return;
 		}
 		
->>>>>>> working
 		hero_caller = getObj('player', msg.playerid);
 		
 		if (command !== 'hero') {
 			return;
 		}
-<<<<<<< HEAD
-=======
 		
->>>>>>> working
 		let importData = "";
 		if(args.length < 1) { sendHelpMenu(hero_caller); return; }
 		
@@ -169,18 +152,11 @@
 		for(let i = 0; i < args.length; i+=2) {
 			let k = args[i].trim();
 			let v = args[i+1] != null ? args[i+1].trim() : null;
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-			let check = Array.from(v.replace(/\s/g, ''));
->>>>>>> working
-=======
 			let check;
 			
 			v = cleanQuotes(v, script_name);
 			
 			check = Array.from(v.replace(/\s/g, ''));
->>>>>>> working
 			
 			switch(k) {
 				case 'help':
@@ -221,8 +197,6 @@
 					return;
 					
 				case 'import':
-<<<<<<< HEAD
-=======
 					if (check.length < 2100) {
 						// Intended character data length is safely less than the minimum character file size if exported with HDE format version 1.0.
 						// This is likely an error.
@@ -234,7 +208,6 @@
 						return;
 					}
 					
->>>>>>> working
 					importData = v.replace(/[\n\r]/g, '');
 					break;
 					
@@ -244,27 +217,6 @@
 			}
 		}
 		
-<<<<<<< HEAD
-		if(importData === '') {
-			return;
-		}
-		
-		let json = importData;
-		let character = JSON.parse(json).character;
-		
-		// Rudimentary check to see if the JSON is from a HeroSystem6eHeroic format file.
-		if (typeof character.HeroSystem6eHeroic === "undefined") {
-			sendChat(script_name, '<div style="'+style+'">Hero Importer ended early due to a source format error.</div>' );
-			sendChat(script_name, "Please verify that the character file was exported using HeroSystem6eHeroic.hde (version "+needsExportedVersion+")." );
-			return;
-		}
-		
-		// Verify that the character was exported with the latest version of HeroSystem6eHeroic.hde. If not, report error and abort.
-		if (character.version !== needsExportedVersion) {
-			//sendChat(script_name, '<div style="'+style+'">Please update HeroSystem6eHeroic.hde <b>' + character.version + '</b> to version //<b>'+needsExportedVersion+'</div>', null, {noarchive:true});
-			sendChat(script_name, '<div style="'+style+'">Import of <b>' + character.character_name + '</b> ended early due to version mismatch error.</div>' );
-			sendChat(script_name, "Please download and install the latest version of HeroSystem6eHeroic.hde (version "+needsExportedVersion+") into your Hero Designer export formats folder. Export your character and try HD Importer again." );
-=======
 		if ((importData === '') || (typeof importData === "undefined")) {
 			return;
 		}
@@ -279,7 +231,7 @@
 		
 		catch(error) {
 		  let message = "";
-		  	needsExportedVersion.forEach(function(value) {
+			  needsExportedVersion.forEach(function(value) {
 			message += value + ", ";
 		  });
 		  
@@ -298,7 +250,6 @@
 			
 			sendChat(script_name, '<div style="'+style+'">Import of <b>' + character.character_name + '</b> ended early due to version mismatch error.</div>' );
 			sendChat(script_name, "Please download and install the latest version of HeroSystem6eHeroic.hde (version: "+last+" recommended) into your Hero Designer export formats folder. Export your character and try HD Importer again. For help use the command !hero --help." );
->>>>>>> working
 			
 			return;
 		}
@@ -307,14 +258,11 @@
 		
 		object = null;
 		
-<<<<<<< HEAD
-=======
 		// Assign a random name if the character doesn't have one.
 		if ((character.character_name).length === 0) {
 			character.character_name = createRandomString(7);
 		}
 		
->>>>>>> working
 		// Remove characters with the same name if overwrite is enabled.
 		if(state[state_name][hero_caller.id].config.overwrite) {
 			let objects = findObjs({
@@ -530,8 +478,6 @@
 	}
 	
 	
-<<<<<<< HEAD
-=======
 	function createRandomString(length) {
 		// random character name from https://sentry.io/answers/generate-random-string-characters-in-javascript/
 		const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -543,7 +489,6 @@
 	}
 	
 	
->>>>>>> working
 	var applyVersion = function(object, character, script_name, version) {
 		// Set version data to avoid improper sheet auto updates.
 		let version_attributes = {
@@ -1398,16 +1343,10 @@
 		/* ***  Import Function: Import Powers           *** */
 		/* ************************************************* */
 		
-<<<<<<< HEAD
-		// Imports the first seventeen powers.
-		
-		const maxPowers = 17;
-=======
 		// Imports twenty powers, which is Sheet v2.81's capacity.
 		
 		const maxPowers = 20;
 		const overflowPowers = (character.version >= 1.2) ? 10 : 0;
->>>>>>> working
 		
 		let tempString;
 		let tempPosition;
@@ -1430,11 +1369,8 @@
 			powerReducedEND : "standard"
 		}
 		
-<<<<<<< HEAD
-=======
 		var tempObject = new Object(); 
 		
->>>>>>> working
 		// Overall list of powers
 		var importedPowers = new Object();
 		let powerArray = new Array();
@@ -1446,13 +1382,8 @@
 		/* Read Powers               */
 		/* ------------------------- */
 		
-<<<<<<< HEAD
-		for (importCount = 0; importCount < maxPowers; importCount++) {
-		
-=======
 		for (importCount; importCount < maxPowers; importCount++) {
 			
->>>>>>> working
 			ID = String(importCount+1).padStart(2,'0');
 			
 			if ((typeof character.powers["power"+ID] !== "undefined") && (typeof character.powers["power"+ID].name !== "undefined")) {
@@ -1561,30 +1492,6 @@
 			}
 		}
 		
-<<<<<<< HEAD
-		// Read Power 18
-		if ((typeof character.powers.power18 !== "undefined") && (typeof character.powers.power18.name !== "undefined")) {
-			
-			powerArray[powerArrayIndex]=character.powers.power18;
-			
-			powerArrayIndex++;
-		}
-		
-		// Read Power 19
-		if ((typeof character.powers.power19 !== "undefined") && (typeof character.powers.power19.name !== "undefined")) {
-			
-			powerArray[powerArrayIndex]=character.powers.power19;
-			
-			powerArrayIndex++;
-		}
-		
-		// Read Power 20
-		if ((typeof character.powers.power20 !== "undefined") && (typeof character.powers.power20.name !== "undefined")) {
-			
-			powerArray[powerArrayIndex]=character.powers.power20;
-			
-			powerArrayIndex++;
-=======
 		// Powers that don't fit in the sheet's slots will be placed in a text field.
 		for (importCount; importCount < (maxPowers + overflowPowers); importCount++) {
 			
@@ -1596,7 +1503,6 @@
 				
 				powerArrayIndex++;
 			}
->>>>>>> working
 		}
 		
 		/* ----------------------------------------------------------------------- */
@@ -1616,11 +1522,7 @@
 		}
 		
 		/* ----------------------------------------------------------------------------------------- */
-<<<<<<< HEAD
-		/* Import the first seventeen into the sheet. Then import the remainder as a text field note.
-=======
 		/* Import the first twenty into the sheet. Then import the remainder as a text field note.
->>>>>>> working
 		/* ----------------------------------------------------------------------------------------- */
 		
 		// This is currently the only function where bonus points are awarded. If this changes, assign to character bonusBenefit.
@@ -1661,8 +1563,6 @@
 				importedPowers["powerAdvantages"+ID] = findAdvantages(testObject.testString);
 				importedPowers["powerLimitations"+ID] = findLimitations(testObject.testString);
 				importedPowers["powerText"+ID] = powerArray[importCount].text;
-<<<<<<< HEAD
-=======
 				importedPowers["powerAoE"+ID] = isAoE(testObject.testString) ? "on" : 0;
 				
 				// Search for skill roll.
@@ -1678,7 +1578,6 @@
 				
 				// Search for a STUNx mod.
 				importedPowers["powerSTUNx"+ID] = modifiedSTUNx(testObject.testString);
->>>>>>> working
 				
 				// Assign effect dice.
 				importedPowers["powerDice"+ID] = getDamage(powerArray[importCount].damage);
@@ -1715,33 +1614,21 @@
 				} else {
 					importedPowers["powerType"+ID] = "single";
 				}
-<<<<<<< HEAD
-=======
 				
 				// Set attack checkbox for attacks.
 				importedPowers["powerAttack"+ID] = isAttack(importedPowers["powerEffect"+ID]) ? "on" : 0;
 				
 				// Set power type.
 				importedPowers["powerDamageType"+ID] = getPowerDamageType(importedPowers["powerEffect"+ID]);
->>>>>>> working
 			}
 		}
 		
 		// Display additional powers in the complications text box.
-<<<<<<< HEAD
-		if (powerArrayIndex>17) {
-			let tempString = "";
-			let i = 17;
-			let extras = 0;
-			
-			for (let i = 17; i < powerArrayIndex; i++) {
-=======
 		if (powerArrayIndex > maxPowers) {
 			let tempString = "";
 			let extras = 0;
 			
 			for (let i = maxPowers; i < powerArrayIndex; i++) {
->>>>>>> working
 				tempString = tempString + powerArray[i].name + "\n";
 				if (powerArray[i].damage !== "") {
 					tempString = tempString + " Damage: " + powerArray[i].damage + "\n";
@@ -2858,8 +2745,6 @@
 	}
 	
 	
-<<<<<<< HEAD
-=======
 	var isAttack = function (effect) {
 		// For setting the attack state.
 		const attackSet = new Set(["Blast", "Dispel", "Drain", "Entangle", "Healing", "HTH Attack", "HTH Killing Attack", "Mental Blast", "Mental Illusions", "Mind Control", "Mind Link", "Mind Scan", "Ranged Killing Attack", "Telekinesis", "Telepathy", "Transform"]);
@@ -2889,7 +2774,6 @@
 	}
 	
 	
->>>>>>> working
 	var getPowerBaseCost = function(character, base, effect, text, bonus, option, script_name) {
 		// For ordinary powers, this function simply returns the imported base cost.
 		// For stat modification powers, this function assigns a base cost determined from the characteristic
@@ -3101,8 +2985,6 @@
 	}
 	
 	
-<<<<<<< HEAD
-=======
 	var isAoE = function(inputString) {	
 		// Search advantages for any that indicate an Area of Effect power.
 		// Written so as to be able to look for more than just "area" but this may be enough.
@@ -3220,7 +3102,6 @@
 	}
 	
 	
->>>>>>> working
 	var getWeaponStrMin = function (weaponString, script_name) {
 		// Parse weapon text and look for one of three strings used
 		// by Hero Designer to record a weapon strength minimum.
@@ -3353,34 +3234,6 @@
 		
 		let damage = "0";
 		let lastIndex = 0;
-<<<<<<< HEAD
-		
-		// Remove dice in w/STR since we'll calculated it.
-		if (damageString.includes(" w/STR")) {
-			damageString = damageString.replace(/\([^()]*\)/g, "");
-		}
-		
-		// Separate joined dice if present.
-		if ((damageString.match(/d6/g) || []).length > 1) {
-			damageString = damageString.replace("d6", "d6+");
-			lastIndex = damageString.lastIndexOf("d6+");
-			damageString = damageString.substring(0, lastIndex) + "d6" + damageString.substring(lastIndex + 2);
-		}
-		
-		// Look for (xd6 w/STR) and use that. No longer used as of sheet 2.51.
-		// if (damageString.includes(" w/STR")) {
-		// 	damageString = damageString.match(/\(([^)]*)\)/)[1];
-		// 	damageString = damageString.replace(" w/STR", "");
-		// }
-		
-		// Make sure the 1/2d6 is a 1d3.
-		if (damageString.includes(" 1/2d6")) {
-			damage = damageString.replace(" 1/2d6", "d6+d3");			
-		} else if (damageString.includes("1/2d6")) {
-			damage = damageString.replace("1/2d6", "d3");
-		} else {
-			damage = damageString;
-=======
 		let detailString;
 		let startPosition;
 		let endPosition;
@@ -3417,7 +3270,6 @@
 			} else {
 				damage = damageString;
 			}
->>>>>>> working
 		}
 		
 		return damage;
@@ -3942,11 +3794,7 @@
 		return objects;
 	};
 	
-<<<<<<< HEAD
-	// This section from Beyond is not used in HS6eH_HDImporter, but may be useful later.
-=======
 	// This section from Beyond is not used in HS6eH_HDImporter, but may be useful in future.
->>>>>>> working
 	//
 	// Find an existing repeatable item with the same name, or generate new row ID
 	// 	const getOrMakeRowID = (character,repeatPrefix,name) => {
