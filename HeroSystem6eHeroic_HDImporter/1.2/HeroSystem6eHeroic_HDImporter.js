@@ -365,10 +365,16 @@
 		
 		// Set bio-type attributes and experience points.
 		
+		let description = ((character.appearance).length > 0) ? character.appearance : "";
+		description += ((character.backgroundText).length > 0) ? '\n' + '\n' + character.backgroundText : "";
+		description += ((character.historyText).length > 0) ? '\n' + '\n' + character.historyText : "";
+		description += ((character.tactics).length > 0) ? '\n' + '\n' + character.tactics : "";
+		description += ((character.campaignUse).length > 0) ? '\n' + '\n' + character.campaignUse : "";
+		
 		let bio_attributes = {
 			character_title: character.character_title,
-			backgroundText: character.backgroundText,
-			historyText: character.historyText,
+			backgroundText: character.quote,
+			historyText: description,
 			experience: parseInt(character.experience)||0,
 			experienceBenefit: parseInt(character.experienceBenefit)||0
 		}
@@ -1723,7 +1729,7 @@
 		let count = 0;
 		let matches = 0;
 		let engagePosition = inputString.indexOf('\"backgroundText\":\"');
-		let exitPosition = inputString.indexOf('\"height\":') - 10;
+		let exitPosition = inputString.indexOf('\"experience\":') - 10;
 		
 		for (let i = engagePosition; i < exitPosition; i+=1) {
 			startPosition = inputString.indexOf('\":\"', i)+1;
