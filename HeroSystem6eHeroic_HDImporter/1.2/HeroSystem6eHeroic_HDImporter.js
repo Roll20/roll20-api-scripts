@@ -1560,6 +1560,7 @@
 				importedPowers["powerAdvantages"+ID] = findAdvantages(testObject.testString);
 				importedPowers["powerLimitations"+ID] = findLimitations(testObject.testString);
 				importedPowers["powerText"+ID] = powerArray[importCount].text;
+				importedPowers["powerAoE"+ID] = isAoE(testObject.testString) ? "on" : 0;
 				
 				// Assign effect dice.
 				importedPowers["powerDice"+ID] = getDamage(powerArray[importCount].damage);
@@ -2927,6 +2928,27 @@
 		tempString = tempString.replace("-1)","");
 		
 		return limitations;
+	}
+	
+	
+	var isAoE = function(inputString) {
+		// Search advantages for any that indicate an Area of Effect power.
+		inputString = inputString.replace(/\W/g, " ");
+		inputString = inputString.toLowerCase();
+
+		const searchSet = new Set(["area"]);
+		let setOfWords = new Set(inputString.split(" "));
+		let intersection = new Set([...setOfWords].filter(x => searchSet.has(x)));
+		
+		let answer = false;
+		
+		if (intersection.size != 0) {
+			answer = true;
+		}
+		
+		sendChat(script_name, inputString + " " + String(intersection.size));
+		
+		return answer;
 	}
 	
 	
