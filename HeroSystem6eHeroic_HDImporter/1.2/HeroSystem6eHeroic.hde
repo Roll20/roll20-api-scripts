@@ -4,8 +4,8 @@
 	"character":{
 		"character_name":"<!--CHARACTER_NAME-->",
 		"character_title":"<!--ALTERNATE_IDS-->",
-		"height":"<!--HEIGHT-->",
-		"weight":"<!--WEIGHT-->",
+		"height":"<!--HEIGHT_METRIC-->",
+		"weight":"<!--WEIGHT_METRIC-->",
 		"eyes":"<!--EYE_COLOR-->",
 		"hair":"<!--HAIR_COLOR-->",
 		"backgroundText":"<!--BACKGROUND-->",

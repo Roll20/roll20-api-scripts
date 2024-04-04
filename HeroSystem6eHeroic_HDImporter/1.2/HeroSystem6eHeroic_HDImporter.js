@@ -365,15 +365,30 @@
 		
 		// Set bio-type attributes and experience points.
 		
-		let description = ((character.appearance).length > 0) ? character.appearance : "";
-		description += ((character.backgroundText).length > 0) ? '\n' + '\n' + character.backgroundText : "";
-		description += ((character.historyText).length > 0) ? '\n' + '\n' + character.historyText : "";
-		description += ((character.tactics).length > 0) ? '\n' + '\n' + character.tactics : "";
-		description += ((character.campaignUse).length > 0) ? '\n' + '\n' + character.campaignUse : "";
+		let description = "";
+		let quote = "";
+		
+		if (character.version >= 1.2) {
+			quote = character.quote;
+			quote = quote.trim();
+			
+			description += ((character.appearance).length > 0) ? character.appearance : "";
+			description += ((character.backgroundText).length > 0) ? '\n' + '\n' + character.backgroundText : "";
+			description += ((character.historyText).length > 0) ? '\n' + '\n' + character.historyText : "";
+			description += ((character.tactics).length > 0) ? '\n' + '\n' + character.tactics : "";
+			description += ((character.campaignUse).length > 0) ? '\n' + '\n' + character.campaignUse : "";
+			description = description.trim();
+			description += '\n' + '\n' + character.height + " and " + Math.round(Number((character.weight).replace(/[^0-9.]/g,''))) + " kg.";
+		} else {
+			quote = "";
+			
+			description += ((character.historyText).length > 0) ? character.historyText : "";
+			description = description.trim();
+		}
 		
 		let bio_attributes = {
 			character_title: character.character_title,
-			backgroundText: character.quote,
+			backgroundText: quote,
 			historyText: description,
 			experience: parseInt(character.experience)||0,
 			experienceBenefit: parseInt(character.experienceBenefit)||0
