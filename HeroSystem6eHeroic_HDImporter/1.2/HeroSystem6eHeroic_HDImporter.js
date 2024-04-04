@@ -303,7 +303,8 @@
 		importAllSkills(object, character, script_name);
 		
 		// Import Page 4: Powers
-		importPowers(object, character, script_name);
+		// Powers over the sheet maximum will be prepended to excess perks and talents in a text field.
+		character.overflow = importPowers(object, character, script_name);
 		
 		// Import Page 5: Perks and Talents
 		importPerksAndTalents(object, character, script_name);
@@ -379,6 +380,7 @@
 			description += ((character.campaignUse).length > 0) ? '\n' + '\n' + character.campaignUse : "";
 			description = description.trim();
 			description += '\n' + '\n' + character.height + " and " + Math.round(Number((character.weight).replace(/[^0-9.]/g,''))) + " kg.";
+			description = description.trim();
 		} else {
 			quote = "";
 			
@@ -601,7 +603,8 @@
 			// Update treasures in the imported character since this field is used
 			// for additional equipment items.
 			
-			character.treasures = tempString;
+			tempString += character.treasures + '\n' + '\n' + tempString;
+			tempString = tempString.trim();
 			
 			// Place additional maneuvers in the treasures text box.
 			setAttrs(object.id, {treasures: tempString});
@@ -1244,6 +1247,7 @@
 		const maxPerks = 10;
 		const maxTalents = 10;
 		const maxCombinedSheet = 7;
+		let tempString = character.overflow;
 		
 		let importCount = 0;
 		
@@ -1307,13 +1311,12 @@
 			
 			// Display additional perks and talents in the complications text box.
 			if (perksAndTalentsIndex > maxCombinedSheet) {
-				let tempString = "";
 				let i = 7;
 				let extras = 0;
 				
 				for (let i = 7; i<perksAndTalentsIndex; i++) {
-					tempString = tempString + perksAndTalentsArray[i].type + " CP: " + perksAndTalentsArray[i].points + "\n";
-					tempString = tempString + perksAndTalentsArray[i].text + "\n";
+					tempString += perksAndTalentsArray[i].type + " CP: " + perksAndTalentsArray[i].points + "\n";
+					tempString += perksAndTalentsArray[i].text + "\n";
 					extras++;
 				}
 				
@@ -1321,7 +1324,7 @@
 					sendChat(script_name, extras + " perks and talents placed in notes.");
 				}
 				
-				importedTalents.complicationsTextLeft = tempString;	
+				importedTalents.complicationsTextLeft = tempString.trim();	
 			}
 			
 			// Import perks and talents to sheet.
@@ -1623,19 +1626,19 @@
 			}
 		}
 		
-		// Display additional powers in the complications text box.
+		// Display additional powers in the talents text box.
+		tempString = "";
 		if (powerArrayIndex > maxPowers) {
-			let tempString = "";
 			let extras = 0;
 			
 			for (let i = maxPowers; i < powerArrayIndex; i++) {
-				tempString = tempString + powerArray[i].name + "\n";
+				tempString += powerArray[i].name + "\n";
 				if (powerArray[i].damage !== "") {
-					tempString = tempString + " Damage: " + powerArray[i].damage + "\n";
+					tempString += " Damage: " + powerArray[i].damage + "\n";
 				}
-				tempString = tempString + " END: " + powerArray[i].endurance + "\n";
-				tempString = tempString + " Base CP: " + powerArray[i].base + ", " + " Real CP: " + powerArray[i].cost + "\n";
-				tempString = tempString + powerArray[i].text + "\n" + "\n";
+				tempString += " END: " + powerArray[i].endurance + "\n";
+				tempString += " Base CP: " + powerArray[i].base + ", " + " Real CP: " + powerArray[i].cost + "\n";
+				tempString += powerArray[i].text + "\n" + "\n";
 				extras++;
 			}
 			
@@ -1643,7 +1646,7 @@
 				sendChat(script_name, extras + " powers placed in notes.");
 			}
 			
-			importedPowers.complicationsTextRight = tempString;	
+			importedPowers.complicationsTextLeft = tempString;
 		}
 		
 		// Import powers and bonus points to sheet.
@@ -1654,7 +1657,7 @@
 			sendChat(script_name, "Imported " + importCount + " powers.");
 		}		
 		
-		return;
+		return tempString;
 	};
 
 	
@@ -1667,22 +1670,38 @@
 		// Imports the first six complications.
 		let importCount = 0;
 		let ID = "";
+		let tempString = "";
 		const maxComplications = 6;
+		const overflowComplications = (character.version >= 1.2) ? 4 : 0;
 		var importedComplications = new Object();
 		
 		/* ------------------------- */
 		/* Read Complications        */
 		/* ------------------------- */
 		
-		for (importCount = 0; importCount < maxComplications; importCount++) {
+		for (importCount = 0; importCount < maxComplications + overflowComplications; importCount++) {
 			
 			ID = String(importCount+1).padStart(2,'0');
 			
-			if ((typeof character.complications["complication"+ID] !== "undefined") && (typeof character.complications["complication"+ID].type !== "undefined")) {			
-				importedComplications["complicationName"+ID] = character.complications["complication"+ID].type;
-				importedComplications["complicationText"+ID] = character.complications["complication"+ID].text + "\n" + character.complications["complication"+ID].notes;
-				importedComplications["complicationCP"+ID] = character.complications["complication"+ID].points;
+			if (importCount < maxComplications) {
+				if ((typeof character.complications["complication"+ID] !== "undefined") && (typeof character.complications["complication"+ID].type !== "undefined")) {			
+					importedComplications["complicationName"+ID] = character.complications["complication"+ID].type;
+					importedComplications["complicationText"+ID] = character.complications["complication"+ID].text + "\n" + character.complications["complication"+ID].notes;
+					importedComplications["complicationCP"+ID] = character.complications["complication"+ID].points;
+				}
+			} else if (importCount < maxComplications + overflowComplications) {
+				if ((typeof character.complications["complication"+ID] !== "undefined") && (typeof character.complications["complication"+ID].type !== "undefined")) {			
+					tempString += "\n";
+					tempString += character.complications["complication"+ID].type + "\n";
+					tempString += character.complications["complication"+ID].text + "\n";
+					tempString += character.complications["complication"+ID].notes;
+					tempString += String(character.complications["complication"+ID].points) + " CP";
+				}
 			}
+		}
+		
+		if (tempString.length !== 0) {
+			importedComplications.complicationsTextRight = tempString.trim();
 		}
 		
 		if(verbose) {
