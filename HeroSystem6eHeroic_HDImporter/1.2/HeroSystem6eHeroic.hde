@@ -7,8 +7,16 @@
 	"character":{
 		"character_name":"<!--CHARACTER_NAME-->",
 		"character_title":"<!--ALTERNATE_IDS-->",
-		"backgroundText":"<!--BACKGROUND--><!--/BACKGROUND-->",
+		"height":"<!--HEIGHT_METRIC-->",
+		"weight":"<!--WEIGHT_METRIC-->",
+		"eyes":"<!--EYE_COLOR-->",
+		"hair":"<!--HAIR_COLOR-->",
+		"backgroundText":"<!--BACKGROUND-->",
 		"historyText":"<!--PERSONALITY-->",
+		"appearance":"<!--APPEARANCE-->",
+		"tactics":"<!--TACTICS-->",
+		"campaignUse":"<!--CAMPAIGN_USE-->",
+		"quote":"<!--QUOTE-->",
 		"experience":"<!--EARNED_EXP-->",
 		"experienceBenefit":"<!--SPENT_EXP-->",
 		"strength":"<!--STR--><!--VAL--><!--/STR-->",
@@ -3274,8 +3282,12 @@
 		"version":"1.0",
 =======
 		"version":"1.2",
+<<<<<<< HEAD
 >>>>>>> working
 		"HeroSystem6eHeroic":true
+=======
+		"HeroSystem6eHeroic":"true"
+>>>>>>> working
 	}
 }
 

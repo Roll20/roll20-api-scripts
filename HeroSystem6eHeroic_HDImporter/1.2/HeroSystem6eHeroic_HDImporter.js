@@ -170,8 +170,16 @@
 			let k = args[i].trim();
 			let v = args[i+1] != null ? args[i+1].trim() : null;
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 			let check = Array.from(v.replace(/\s/g, ''));
+>>>>>>> working
+=======
+			let check;
+			
+			v = cleanQuotes(v, script_name);
+			
+			check = Array.from(v.replace(/\s/g, ''));
 >>>>>>> working
 			
 			switch(k) {
@@ -409,10 +417,31 @@
 		
 		// Set bio-type attributes and experience points.
 		
+		let description = "";
+		let quote = "";
+		
+		if (character.version >= 1.2) {
+			quote = character.quote;
+			quote = quote.trim();
+			
+			description += ((character.appearance).length > 0) ? character.appearance : "";
+			description += ((character.backgroundText).length > 0) ? '\n' + '\n' + character.backgroundText : "";
+			description += ((character.historyText).length > 0) ? '\n' + '\n' + character.historyText : "";
+			description += ((character.tactics).length > 0) ? '\n' + '\n' + character.tactics : "";
+			description += ((character.campaignUse).length > 0) ? '\n' + '\n' + character.campaignUse : "";
+			description = description.trim();
+			description += '\n' + '\n' + character.height + " and " + Math.round(Number((character.weight).replace(/[^0-9.]/g,''))) + " kg.";
+		} else {
+			quote = "";
+			
+			description += ((character.historyText).length > 0) ? character.historyText : "";
+			description = description.trim();
+		}
+		
 		let bio_attributes = {
 			character_title: character.character_title,
-			backgroundText: character.backgroundText,
-			historyText: character.historyText,
+			backgroundText: quote,
+			historyText: description,
 			experience: parseInt(character.experience)||0,
 			experienceBenefit: parseInt(character.experienceBenefit)||0
 		}
@@ -1815,6 +1844,43 @@
 	/* ------------------------- */
 	/* Import Helper Functions   */
 	/* ------------------------- */
+	
+	var cleanQuotes = function(inputString, script_name) {	
+		// Look for double quotes in text that shouldn't be there. Remove them.
+		
+		let detailString;
+		let cleanString;
+		let frontMatter;
+		let backMatter;
+		let startPosition;
+		let endPosition;
+		let count = 0;
+		let matches = 0;
+		let engagePosition = inputString.indexOf('\"backgroundText\":\"');
+		let exitPosition = inputString.indexOf('\"experience\":') - 10;
+		
+		for (let i = engagePosition; i < exitPosition; i+=1) {
+			startPosition = inputString.indexOf('\":\"', i)+1;
+			endPosition = inputString.indexOf('\", \"', i);
+			detailString = inputString.slice(startPosition+2, endPosition);
+			matches = detailString.match(/["]/g);
+			count = matches ? matches.length : 0;
+			
+			if (matches) {
+				frontMatter = inputString.slice(0, startPosition+2);
+				backMatter = inputString.slice(endPosition+1);
+				cleanString = detailString.replace(/["]+/g, "");
+				inputString = frontMatter + cleanString +  '\"' + backMatter;
+				
+				exitPosition -= count;
+			}
+			
+			i += detailString.length - count;
+		}
+		
+		return inputString;
+	}
+	
 	
 	var importSkill = function(object, character, script_name, sheetSkillIndexes, theSkill) {
 		// Assign skill to general, combat, language, enhancer, etc.
@@ -3788,7 +3854,7 @@
 		let text = '<div style="'+style+'">';
 		//text += makeTitle(script_name + ' Help');
 		text += makeTitle('HD Importer Help');
-		text += '<p>Export a character in <a style="color: orange;" href="https://www.herogames.com/store/product/1-hero-designer/" target="_blank">Hero Designer</a> using the <a style="color: orange;" href="https://github.com/Roll20/roll20-api-scripts/tree/master/HeroSystem6eHeroic_HDImporter/1.0" target="_blank">HeroSystem6eHeroic.hde</a> format.</p>';
+		text += '<p>Export a character in <a style="color: orange;" href="https://www.herogames.com/store/product/1-hero-designer/" target="_blank">Hero Designer</a> using the <a style="color: orange;" href="https://github.com/Roll20/roll20-api-scripts/tree/master/HeroSystem6eHeroic_HDImporter/1.2" target="_blank">HeroSystem6eHeroic.hde</a> format.</p>';
 		text += '<p>Locate and open the exported .txt file in a text editor. Copy its entire contents and paste them into the Roll20 chat window. Hit enter.</p>';
 		text += '<p>For more information see the documentation page in the HDImporter <a style="color: orange;" href="https://github.com/Roll20/roll20-api-scripts/tree/master/HeroSystem6eHeroic_HDImporter" target="_blank">Github</a> repository.</p>';
 		text += '<hr>';
