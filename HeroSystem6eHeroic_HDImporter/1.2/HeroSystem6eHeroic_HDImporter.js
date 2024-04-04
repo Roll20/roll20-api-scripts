@@ -1344,6 +1344,8 @@
 			powerReducedEND : "standard"
 		}
 		
+		var tempObject = new Object(); 
+		
 		// Overall list of powers
 		var importedPowers = new Object();
 		let powerArray = new Array();
@@ -1465,30 +1467,6 @@
 			}
 		}
 		
-		// // Read Power 18
-		// if ((typeof character.powers.power18 !== "undefined") && (typeof character.powers.power18.name !== "undefined")) {
-		// 	
-		// 	powerArray[powerArrayIndex]=character.powers.power18;
-		// 	
-		// 	powerArrayIndex++;
-		// }
-		// 
-		// // Read Power 19
-		// if ((typeof character.powers.power19 !== "undefined") && (typeof character.powers.power19.name !== "undefined")) {
-		// 	
-		// 	powerArray[powerArrayIndex]=character.powers.power19;
-		// 	
-		// 	powerArrayIndex++;
-		// }
-		// 
-		// // Read Power 20
-		// if ((typeof character.powers.power20 !== "undefined") && (typeof character.powers.power20.name !== "undefined")) {
-		// 	
-		// 	powerArray[powerArrayIndex]=character.powers.power20;
-		// 	
-		// 	powerArrayIndex++;
-		// }
-		
 		// Powers that don't fit in the sheet's slots will be placed in a text field.
 		for (importCount; importCount < (maxPowers + overflowPowers); importCount++) {
 			
@@ -1561,6 +1539,11 @@
 				importedPowers["powerLimitations"+ID] = findLimitations(testObject.testString);
 				importedPowers["powerText"+ID] = powerArray[importCount].text;
 				importedPowers["powerAoE"+ID] = isAoE(testObject.testString) ? "on" : 0;
+				
+				// Search for skill roll.
+				tempObject = requiresRoll(testObject.testString);
+				importedPowers["powerActivate"+ID] = tempObject.hasRoll ? "on" : 0;
+				importedPowers["powerSkillRoll"+ID] = tempObject.hasRoll ? tempObject.skillRoll : 18;
 				
 				// Assign effect dice.
 				importedPowers["powerDice"+ID] = getDamage(powerArray[importCount].damage);
@@ -2708,10 +2691,10 @@
 		
 		if (killingSet.has(effect)) {
 			damageType = "killing";
-		} else if (normalSet.has(effect)) {
-			damageType = "normal";
 		} else if (mentalSet.has(effect)) {
 			damageType = "mental";
+		} else if (normalSet.has(effect)) {
+			damageType = "normal";
 		} else {
 			damageType = "power";
 		}
@@ -2931,24 +2914,67 @@
 	}
 	
 	
-	var isAoE = function(inputString) {
+	var isAoE = function(inputString) {	
 		// Search advantages for any that indicate an Area of Effect power.
+		// Written so as to be able to look for more than just "area" but this may be enough.
 		inputString = inputString.replace(/\W/g, " ");
 		inputString = inputString.toLowerCase();
-
+		
 		const searchSet = new Set(["area"]);
 		let setOfWords = new Set(inputString.split(" "));
 		let intersection = new Set([...setOfWords].filter(x => searchSet.has(x)));
-		
 		let answer = false;
 		
 		if (intersection.size != 0) {
 			answer = true;
 		}
 		
-		sendChat(script_name, inputString + " " + String(intersection.size));
-		
 		return answer;
+	}
+	
+	
+	var requiresRoll = function(inputString) {	
+		// Determine if the power as an activation roll and find it if it is simple.
+		let lowerCaseString = inputString.toLowerCase();
+		let detailString;
+		let startPosition;
+		let endPosition;
+		let answer = false;
+		let value = 18;
+		let searchSet = new Set(["skill", "characteristic", "ps", "ks", "ss", "attack", "per"]);
+		let setOfWords;
+		let intersection;
+		
+		if (lowerCaseString.includes("requires a roll")) {
+			
+			answer = true;
+			
+			// Attempt to obtain the skill roll needed if it is a simple activation roll. The others
+			// would require guesses, which means we need to leave the decision to the players.
+			
+			startPosition = lowerCaseString.indexOf("requires a roll");
+			startPosition = lowerCaseString.indexOf("(", startPosition);
+			endPosition = lowerCaseString.indexOf(")", startPosition);
+			detailString = lowerCaseString.slice(startPosition, endPosition);
+			setOfWords = new Set((detailString.replace(/\W/g, " ").split(" ")));
+			intersection = new Set([...setOfWords].filter(x => searchSet.has(x)));
+			
+			if (intersection.size === 0) {
+				endPosition = detailString.indexOf("-", 0);
+				value = detailString.slice(0, endPosition);
+				value = value.replace(/\D/g, '');
+				if (value.length !== 0) {
+					value = Number(value);
+				}
+			}
+		}
+		
+		sendChat(script_name, value.toString());
+		
+		return {
+			"hasRoll": answer,
+			"skillRoll": value
+		}
 	}
 	
 	
