@@ -3085,7 +3085,7 @@
 				}
 				
 				strengthMin = parseInt(strengthString.replace(/\D/g, ""))||defaultStrength;			
-
+				
 			} else if (weaponString.includes("STR Min")) {
 				tempPosition = weaponString.indexOf("STR Min");
 				startParenthesis = weaponString.indexOf("(", tempPosition + 8);
