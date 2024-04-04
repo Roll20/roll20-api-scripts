@@ -1,4 +1,7 @@
 <!--TEMPLATE_NAME-->HeroSystem6eHeroic<!--/TEMPLATE_NAME--><!--TEMPLATE_DESCRIPTION--><p>HeroSystem6eHeroic</p><p>Version 1.0</p><p>Export format for the Roll20 API script HeroSystem6eHeroic_HDImporter, which imports Hero Designer characters into the HeroSystem6eHeroic character sheet.</p><p>For documentation see https://github.com/Roll20/roll20-api-scripts/tree/master/HeroSystem6eHeroic_HDImporter</p><p>By Villain In Glasses (Roll20 ID 633423)</p><!--/TEMPLATE_DESCRIPTION-->
+=======
+<!--TEMPLATE_NAME-->HeroSystem6eHeroic<!--/TEMPLATE_NAME--><!--TEMPLATE_DESCRIPTION--><p>HeroSystem6eHeroic</p><p>Version 1.2</p><p>Export format for the Roll20 API script HeroSystem6eHeroic_HDImporter, which imports Hero Designer characters into the HeroSystem6eHeroic character sheet.</p><p>For documentation see https://github.com/Roll20/roll20-api-scripts/tree/master/HeroSystem6eHeroic_HDImporter</p><p>By Villain In Glasses (Roll20 ID 633423)</p><!--/TEMPLATE_DESCRIPTION-->
+>>>>>>> working
 <!--FILE_EXTENSION-->txt<!--/FILE_EXTENSION-->
 !hero --import {
 	"character":{
@@ -1193,6 +1196,25 @@
 							"text":"<!--DISAD_TEXT-->",
 							"notes":"<!--IFNOTES--><!--DISAD_NOTES--><!--/IFNOTES-->"
 						<!--STOP-->8<!--/STOP-->
+<<<<<<< HEAD
+=======
+					<!--/DISADS-->},
+					"complication09":{<!--DISADS-->
+						<!--START-->9<!--/START-->
+						"type":"<!--DISPLAY-->",
+							"points":"<!--DISAD_COST-->",
+							"text":"<!--DISAD_TEXT-->",
+							"notes":"<!--IFNOTES--><!--DISAD_NOTES--><!--/IFNOTES-->"
+						<!--STOP-->9<!--/STOP-->
+					<!--/DISADS-->},
+					"complication10":{<!--DISADS-->
+						<!--START-->10<!--/START-->
+						"type":"<!--DISPLAY-->",
+							"points":"<!--DISAD_COST-->",
+							"text":"<!--DISAD_TEXT-->",
+							"notes":"<!--IFNOTES--><!--DISAD_NOTES--><!--/IFNOTES-->"
+						<!--STOP-->10<!--/STOP-->
+>>>>>>> working
 					<!--/DISADS-->}
 				<!--/IFDISADS-->},
 		"powers":{
@@ -2155,6 +2177,489 @@
 						"compound":"false"
 					<!--/IF_NOT_COMPOUND_POWER-->
 				<!--STOP-->20<!--/STOP--><!--/POWERS-->
+<<<<<<< HEAD
+=======
+			},
+			"power21":{
+				<!--POWERS--><!--START-->21<!--/START-->
+					<!--IS_LIST-->
+						<!--IS_MP-->
+							"name":"(Multipower) <!--IFNAME--><!--NAME--><!--/IFNAME-->",
+							"base":"<!--BASE_COST-->",
+							"text":"<!--TEXT-->",
+							"cost":"<!--POWER_COST-->",
+							"endurance":"<!--POWER_END-->",
+							"damage":"<!--POWER_DMG--><!--IF_COMPOUND_POWER--><!--COMPONENT_POWERS--><!--POWER_DMG--><!--/COMPONENT_POWERS--><!--/IF_COMPOUND_POWER-->",
+						<!--/IS_MP-->
+					<!--/IS_LIST-->
+					<!--IS_NOT_LIST-->
+						<!--IS_LIST_ITEM-->
+							"name":"(MPSlot<!--LISTPREFIX--> <!--IFNAME--><!--NAME--><!--/IFNAME-->",
+							"base":"<!--BASE_COST-->",
+							"text":"<!--TEXT-->",
+							"cost":"<!--POWER_COST-->",
+							"endurance":"<!--POWER_END-->",
+							"damage":"<!--POWER_DMG--><!--IF_COMPOUND_POWER--><!--COMPONENT_POWERS--><!--POWER_DMG--><!--/COMPONENT_POWERS--><!--/IF_COMPOUND_POWER-->",
+						<!--/IS_LIST_ITEM-->
+					<!--/IS_NOT_LIST-->
+					<!--IS_NOT_LIST-->
+						<!--IS_NOT_LIST_ITEM-->
+							"name":"<!--IFNAME--><!--NAME--><!--/IFNAME-->",
+							"base":"<!--BASE_COST-->",
+							"text":"<!--TEXT-->",
+							"cost":"<!--POWER_COST-->",
+							"endurance":"<!--POWER_END-->",
+							"damage":"<!--POWER_DMG--><!--IF_COMPOUND_POWER--><!--COMPONENT_POWERS--><!--POWER_DMG--><!--/COMPONENT_POWERS--><!--/IF_COMPOUND_POWER-->",
+					<!--/IS_NOT_LIST_ITEM-->
+					<!--/IS_NOT_LIST-->
+					<!--IS_VPP-->
+						"name":"(VPP) <!--IFNAME--><!--NAME--><!--/IFNAME-->",
+						"base":"<!--BASE_COST-->",
+						"text":"<!--TEXT-->",
+						"cost":"<!--POWER_COST-->",
+						"endurance":"<!--POWER_END-->",
+						"damage":"<!--POWER_DMG--><!--IF_COMPOUND_POWER--><!--COMPONENT_POWERS--><!--POWER_DMG--><!--/COMPONENT_POWERS--><!--/IF_COMPOUND_POWER-->",
+					<!--/IS_VPP-->
+					<!--IF_COMPOUND_POWER-->
+						"compound":"true"
+					<!--/IF_COMPOUND_POWER-->
+					<!--IF_NOT_COMPOUND_POWER-->
+						"compound":"false"
+					<!--/IF_NOT_COMPOUND_POWER-->
+				<!--STOP-->21<!--/STOP--><!--/POWERS-->
+			},
+			"power22":{
+				<!--POWERS--><!--START-->22<!--/START-->
+					<!--IS_LIST-->
+						<!--IS_MP-->
+							"name":"(Multipower) <!--IFNAME--><!--NAME--><!--/IFNAME-->",
+							"base":"<!--BASE_COST-->",
+							"text":"<!--TEXT-->",
+							"cost":"<!--POWER_COST-->",
+							"endurance":"<!--POWER_END-->",
+							"damage":"<!--POWER_DMG--><!--IF_COMPOUND_POWER--><!--COMPONENT_POWERS--><!--POWER_DMG--><!--/COMPONENT_POWERS--><!--/IF_COMPOUND_POWER-->",
+						<!--/IS_MP-->
+					<!--/IS_LIST-->
+					<!--IS_NOT_LIST-->
+						<!--IS_LIST_ITEM-->
+							"name":"(MPSlot<!--LISTPREFIX--> <!--IFNAME--><!--NAME--><!--/IFNAME-->",
+							"base":"<!--BASE_COST-->",
+							"text":"<!--TEXT-->",
+							"cost":"<!--POWER_COST-->",
+							"endurance":"<!--POWER_END-->",
+							"damage":"<!--POWER_DMG--><!--IF_COMPOUND_POWER--><!--COMPONENT_POWERS--><!--POWER_DMG--><!--/COMPONENT_POWERS--><!--/IF_COMPOUND_POWER-->",
+						<!--/IS_LIST_ITEM-->
+					<!--/IS_NOT_LIST-->
+					<!--IS_NOT_LIST-->
+						<!--IS_NOT_LIST_ITEM-->
+							"name":"<!--IFNAME--><!--NAME--><!--/IFNAME-->",
+							"base":"<!--BASE_COST-->",
+							"text":"<!--TEXT-->",
+							"cost":"<!--POWER_COST-->",
+							"endurance":"<!--POWER_END-->",
+							"damage":"<!--POWER_DMG--><!--IF_COMPOUND_POWER--><!--COMPONENT_POWERS--><!--POWER_DMG--><!--/COMPONENT_POWERS--><!--/IF_COMPOUND_POWER-->",
+					<!--/IS_NOT_LIST_ITEM-->
+					<!--/IS_NOT_LIST-->
+					<!--IS_VPP-->
+						"name":"(VPP) <!--IFNAME--><!--NAME--><!--/IFNAME-->",
+						"base":"<!--BASE_COST-->",
+						"text":"<!--TEXT-->",
+						"cost":"<!--POWER_COST-->",
+						"endurance":"<!--POWER_END-->",
+						"damage":"<!--POWER_DMG--><!--IF_COMPOUND_POWER--><!--COMPONENT_POWERS--><!--POWER_DMG--><!--/COMPONENT_POWERS--><!--/IF_COMPOUND_POWER-->",
+					<!--/IS_VPP-->
+					<!--IF_COMPOUND_POWER-->
+						"compound":"true"
+					<!--/IF_COMPOUND_POWER-->
+					<!--IF_NOT_COMPOUND_POWER-->
+						"compound":"false"
+					<!--/IF_NOT_COMPOUND_POWER-->
+				<!--STOP-->22<!--/STOP--><!--/POWERS-->
+			},
+			"power23":{
+				<!--POWERS--><!--START-->23<!--/START-->
+					<!--IS_LIST-->
+						<!--IS_MP-->
+							"name":"(Multipower) <!--IFNAME--><!--NAME--><!--/IFNAME-->",
+							"base":"<!--BASE_COST-->",
+							"text":"<!--TEXT-->",
+							"cost":"<!--POWER_COST-->",
+							"endurance":"<!--POWER_END-->",
+							"damage":"<!--POWER_DMG--><!--IF_COMPOUND_POWER--><!--COMPONENT_POWERS--><!--POWER_DMG--><!--/COMPONENT_POWERS--><!--/IF_COMPOUND_POWER-->",
+						<!--/IS_MP-->
+					<!--/IS_LIST-->
+					<!--IS_NOT_LIST-->
+						<!--IS_LIST_ITEM-->
+							"name":"(MPSlot<!--LISTPREFIX--> <!--IFNAME--><!--NAME--><!--/IFNAME-->",
+							"base":"<!--BASE_COST-->",
+							"text":"<!--TEXT-->",
+							"cost":"<!--POWER_COST-->",
+							"endurance":"<!--POWER_END-->",
+							"damage":"<!--POWER_DMG--><!--IF_COMPOUND_POWER--><!--COMPONENT_POWERS--><!--POWER_DMG--><!--/COMPONENT_POWERS--><!--/IF_COMPOUND_POWER-->",
+						<!--/IS_LIST_ITEM-->
+					<!--/IS_NOT_LIST-->
+					<!--IS_NOT_LIST-->
+						<!--IS_NOT_LIST_ITEM-->
+							"name":"<!--IFNAME--><!--NAME--><!--/IFNAME-->",
+							"base":"<!--BASE_COST-->",
+							"text":"<!--TEXT-->",
+							"cost":"<!--POWER_COST-->",
+							"endurance":"<!--POWER_END-->",
+							"damage":"<!--POWER_DMG--><!--IF_COMPOUND_POWER--><!--COMPONENT_POWERS--><!--POWER_DMG--><!--/COMPONENT_POWERS--><!--/IF_COMPOUND_POWER-->",
+					<!--/IS_NOT_LIST_ITEM-->
+					<!--/IS_NOT_LIST-->
+					<!--IS_VPP-->
+						"name":"(VPP) <!--IFNAME--><!--NAME--><!--/IFNAME-->",
+						"base":"<!--BASE_COST-->",
+						"text":"<!--TEXT-->",
+						"cost":"<!--POWER_COST-->",
+						"endurance":"<!--POWER_END-->",
+						"damage":"<!--POWER_DMG--><!--IF_COMPOUND_POWER--><!--COMPONENT_POWERS--><!--POWER_DMG--><!--/COMPONENT_POWERS--><!--/IF_COMPOUND_POWER-->",
+					<!--/IS_VPP-->
+					<!--IF_COMPOUND_POWER-->
+						"compound":"true"
+					<!--/IF_COMPOUND_POWER-->
+					<!--IF_NOT_COMPOUND_POWER-->
+						"compound":"false"
+					<!--/IF_NOT_COMPOUND_POWER-->
+				<!--STOP-->23<!--/STOP--><!--/POWERS-->
+			},
+			"power24":{
+				<!--POWERS--><!--START-->24<!--/START-->
+					<!--IS_LIST-->
+						<!--IS_MP-->
+							"name":"(Multipower) <!--IFNAME--><!--NAME--><!--/IFNAME-->",
+							"base":"<!--BASE_COST-->",
+							"text":"<!--TEXT-->",
+							"cost":"<!--POWER_COST-->",
+							"endurance":"<!--POWER_END-->",
+							"damage":"<!--POWER_DMG--><!--IF_COMPOUND_POWER--><!--COMPONENT_POWERS--><!--POWER_DMG--><!--/COMPONENT_POWERS--><!--/IF_COMPOUND_POWER-->",
+						<!--/IS_MP-->
+					<!--/IS_LIST-->
+					<!--IS_NOT_LIST-->
+						<!--IS_LIST_ITEM-->
+							"name":"(MPSlot<!--LISTPREFIX--> <!--IFNAME--><!--NAME--><!--/IFNAME-->",
+							"base":"<!--BASE_COST-->",
+							"text":"<!--TEXT-->",
+							"cost":"<!--POWER_COST-->",
+							"endurance":"<!--POWER_END-->",
+							"damage":"<!--POWER_DMG--><!--IF_COMPOUND_POWER--><!--COMPONENT_POWERS--><!--POWER_DMG--><!--/COMPONENT_POWERS--><!--/IF_COMPOUND_POWER-->",
+						<!--/IS_LIST_ITEM-->
+					<!--/IS_NOT_LIST-->
+					<!--IS_NOT_LIST-->
+						<!--IS_NOT_LIST_ITEM-->
+							"name":"<!--IFNAME--><!--NAME--><!--/IFNAME-->",
+							"base":"<!--BASE_COST-->",
+							"text":"<!--TEXT-->",
+							"cost":"<!--POWER_COST-->",
+							"endurance":"<!--POWER_END-->",
+							"damage":"<!--POWER_DMG--><!--IF_COMPOUND_POWER--><!--COMPONENT_POWERS--><!--POWER_DMG--><!--/COMPONENT_POWERS--><!--/IF_COMPOUND_POWER-->",
+					<!--/IS_NOT_LIST_ITEM-->
+					<!--/IS_NOT_LIST-->
+					<!--IS_VPP-->
+						"name":"(VPP) <!--IFNAME--><!--NAME--><!--/IFNAME-->",
+						"base":"<!--BASE_COST-->",
+						"text":"<!--TEXT-->",
+						"cost":"<!--POWER_COST-->",
+						"endurance":"<!--POWER_END-->",
+						"damage":"<!--POWER_DMG--><!--IF_COMPOUND_POWER--><!--COMPONENT_POWERS--><!--POWER_DMG--><!--/COMPONENT_POWERS--><!--/IF_COMPOUND_POWER-->",
+					<!--/IS_VPP-->
+					<!--IF_COMPOUND_POWER-->
+						"compound":"true"
+					<!--/IF_COMPOUND_POWER-->
+					<!--IF_NOT_COMPOUND_POWER-->
+						"compound":"false"
+					<!--/IF_NOT_COMPOUND_POWER-->
+				<!--STOP-->24<!--/STOP--><!--/POWERS-->
+			},
+			"power25":{
+				<!--POWERS--><!--START-->25<!--/START-->
+					<!--IS_LIST-->
+						<!--IS_MP-->
+							"name":"(Multipower) <!--IFNAME--><!--NAME--><!--/IFNAME-->",
+							"base":"<!--BASE_COST-->",
+							"text":"<!--TEXT-->",
+							"cost":"<!--POWER_COST-->",
+							"endurance":"<!--POWER_END-->",
+							"damage":"<!--POWER_DMG--><!--IF_COMPOUND_POWER--><!--COMPONENT_POWERS--><!--POWER_DMG--><!--/COMPONENT_POWERS--><!--/IF_COMPOUND_POWER-->",
+						<!--/IS_MP-->
+					<!--/IS_LIST-->
+					<!--IS_NOT_LIST-->
+						<!--IS_LIST_ITEM-->
+							"name":"(MPSlot<!--LISTPREFIX--> <!--IFNAME--><!--NAME--><!--/IFNAME-->",
+							"base":"<!--BASE_COST-->",
+							"text":"<!--TEXT-->",
+							"cost":"<!--POWER_COST-->",
+							"endurance":"<!--POWER_END-->",
+							"damage":"<!--POWER_DMG--><!--IF_COMPOUND_POWER--><!--COMPONENT_POWERS--><!--POWER_DMG--><!--/COMPONENT_POWERS--><!--/IF_COMPOUND_POWER-->",
+						<!--/IS_LIST_ITEM-->
+					<!--/IS_NOT_LIST-->
+					<!--IS_NOT_LIST-->
+						<!--IS_NOT_LIST_ITEM-->
+							"name":"<!--IFNAME--><!--NAME--><!--/IFNAME-->",
+							"base":"<!--BASE_COST-->",
+							"text":"<!--TEXT-->",
+							"cost":"<!--POWER_COST-->",
+							"endurance":"<!--POWER_END-->",
+							"damage":"<!--POWER_DMG--><!--IF_COMPOUND_POWER--><!--COMPONENT_POWERS--><!--POWER_DMG--><!--/COMPONENT_POWERS--><!--/IF_COMPOUND_POWER-->",
+					<!--/IS_NOT_LIST_ITEM-->
+					<!--/IS_NOT_LIST-->
+					<!--IS_VPP-->
+						"name":"(VPP) <!--IFNAME--><!--NAME--><!--/IFNAME-->",
+						"base":"<!--BASE_COST-->",
+						"text":"<!--TEXT-->",
+						"cost":"<!--POWER_COST-->",
+						"endurance":"<!--POWER_END-->",
+						"damage":"<!--POWER_DMG--><!--IF_COMPOUND_POWER--><!--COMPONENT_POWERS--><!--POWER_DMG--><!--/COMPONENT_POWERS--><!--/IF_COMPOUND_POWER-->",
+					<!--/IS_VPP-->
+					<!--IF_COMPOUND_POWER-->
+						"compound":"true"
+					<!--/IF_COMPOUND_POWER-->
+					<!--IF_NOT_COMPOUND_POWER-->
+						"compound":"false"
+					<!--/IF_NOT_COMPOUND_POWER-->
+				<!--STOP-->25<!--/STOP--><!--/POWERS-->
+			},
+			"power26":{
+				<!--POWERS--><!--START-->26<!--/START-->
+					<!--IS_LIST-->
+						<!--IS_MP-->
+							"name":"(Multipower) <!--IFNAME--><!--NAME--><!--/IFNAME-->",
+							"base":"<!--BASE_COST-->",
+							"text":"<!--TEXT-->",
+							"cost":"<!--POWER_COST-->",
+							"endurance":"<!--POWER_END-->",
+							"damage":"<!--POWER_DMG--><!--IF_COMPOUND_POWER--><!--COMPONENT_POWERS--><!--POWER_DMG--><!--/COMPONENT_POWERS--><!--/IF_COMPOUND_POWER-->",
+						<!--/IS_MP-->
+					<!--/IS_LIST-->
+					<!--IS_NOT_LIST-->
+						<!--IS_LIST_ITEM-->
+							"name":"(MPSlot<!--LISTPREFIX--> <!--IFNAME--><!--NAME--><!--/IFNAME-->",
+							"base":"<!--BASE_COST-->",
+							"text":"<!--TEXT-->",
+							"cost":"<!--POWER_COST-->",
+							"endurance":"<!--POWER_END-->",
+							"damage":"<!--POWER_DMG--><!--IF_COMPOUND_POWER--><!--COMPONENT_POWERS--><!--POWER_DMG--><!--/COMPONENT_POWERS--><!--/IF_COMPOUND_POWER-->",
+						<!--/IS_LIST_ITEM-->
+					<!--/IS_NOT_LIST-->
+					<!--IS_NOT_LIST-->
+						<!--IS_NOT_LIST_ITEM-->
+							"name":"<!--IFNAME--><!--NAME--><!--/IFNAME-->",
+							"base":"<!--BASE_COST-->",
+							"text":"<!--TEXT-->",
+							"cost":"<!--POWER_COST-->",
+							"endurance":"<!--POWER_END-->",
+							"damage":"<!--POWER_DMG--><!--IF_COMPOUND_POWER--><!--COMPONENT_POWERS--><!--POWER_DMG--><!--/COMPONENT_POWERS--><!--/IF_COMPOUND_POWER-->",
+					<!--/IS_NOT_LIST_ITEM-->
+					<!--/IS_NOT_LIST-->
+					<!--IS_VPP-->
+						"name":"(VPP) <!--IFNAME--><!--NAME--><!--/IFNAME-->",
+						"base":"<!--BASE_COST-->",
+						"text":"<!--TEXT-->",
+						"cost":"<!--POWER_COST-->",
+						"endurance":"<!--POWER_END-->",
+						"damage":"<!--POWER_DMG--><!--IF_COMPOUND_POWER--><!--COMPONENT_POWERS--><!--POWER_DMG--><!--/COMPONENT_POWERS--><!--/IF_COMPOUND_POWER-->",
+					<!--/IS_VPP-->
+					<!--IF_COMPOUND_POWER-->
+						"compound":"true"
+					<!--/IF_COMPOUND_POWER-->
+					<!--IF_NOT_COMPOUND_POWER-->
+						"compound":"false"
+					<!--/IF_NOT_COMPOUND_POWER-->
+				<!--STOP-->26<!--/STOP--><!--/POWERS-->
+			},
+			"power27":{
+				<!--POWERS--><!--START-->27<!--/START-->
+					<!--IS_LIST-->
+						<!--IS_MP-->
+							"name":"(Multipower) <!--IFNAME--><!--NAME--><!--/IFNAME-->",
+							"base":"<!--BASE_COST-->",
+							"text":"<!--TEXT-->",
+							"cost":"<!--POWER_COST-->",
+							"endurance":"<!--POWER_END-->",
+							"damage":"<!--POWER_DMG--><!--IF_COMPOUND_POWER--><!--COMPONENT_POWERS--><!--POWER_DMG--><!--/COMPONENT_POWERS--><!--/IF_COMPOUND_POWER-->",
+						<!--/IS_MP-->
+					<!--/IS_LIST-->
+					<!--IS_NOT_LIST-->
+						<!--IS_LIST_ITEM-->
+							"name":"(MPSlot<!--LISTPREFIX--> <!--IFNAME--><!--NAME--><!--/IFNAME-->",
+							"base":"<!--BASE_COST-->",
+							"text":"<!--TEXT-->",
+							"cost":"<!--POWER_COST-->",
+							"endurance":"<!--POWER_END-->",
+							"damage":"<!--POWER_DMG--><!--IF_COMPOUND_POWER--><!--COMPONENT_POWERS--><!--POWER_DMG--><!--/COMPONENT_POWERS--><!--/IF_COMPOUND_POWER-->",
+						<!--/IS_LIST_ITEM-->
+					<!--/IS_NOT_LIST-->
+					<!--IS_NOT_LIST-->
+						<!--IS_NOT_LIST_ITEM-->
+							"name":"<!--IFNAME--><!--NAME--><!--/IFNAME-->",
+							"base":"<!--BASE_COST-->",
+							"text":"<!--TEXT-->",
+							"cost":"<!--POWER_COST-->",
+							"endurance":"<!--POWER_END-->",
+							"damage":"<!--POWER_DMG--><!--IF_COMPOUND_POWER--><!--COMPONENT_POWERS--><!--POWER_DMG--><!--/COMPONENT_POWERS--><!--/IF_COMPOUND_POWER-->",
+					<!--/IS_NOT_LIST_ITEM-->
+					<!--/IS_NOT_LIST-->
+					<!--IS_VPP-->
+						"name":"(VPP) <!--IFNAME--><!--NAME--><!--/IFNAME-->",
+						"base":"<!--BASE_COST-->",
+						"text":"<!--TEXT-->",
+						"cost":"<!--POWER_COST-->",
+						"endurance":"<!--POWER_END-->",
+						"damage":"<!--POWER_DMG--><!--IF_COMPOUND_POWER--><!--COMPONENT_POWERS--><!--POWER_DMG--><!--/COMPONENT_POWERS--><!--/IF_COMPOUND_POWER-->",
+					<!--/IS_VPP-->
+					<!--IF_COMPOUND_POWER-->
+						"compound":"true"
+					<!--/IF_COMPOUND_POWER-->
+					<!--IF_NOT_COMPOUND_POWER-->
+						"compound":"false"
+					<!--/IF_NOT_COMPOUND_POWER-->
+				<!--STOP-->27<!--/STOP--><!--/POWERS-->
+			},
+			"power28":{
+				<!--POWERS--><!--START-->28<!--/START-->
+					<!--IS_LIST-->
+						<!--IS_MP-->
+							"name":"(Multipower) <!--IFNAME--><!--NAME--><!--/IFNAME-->",
+							"base":"<!--BASE_COST-->",
+							"text":"<!--TEXT-->",
+							"cost":"<!--POWER_COST-->",
+							"endurance":"<!--POWER_END-->",
+							"damage":"<!--POWER_DMG--><!--IF_COMPOUND_POWER--><!--COMPONENT_POWERS--><!--POWER_DMG--><!--/COMPONENT_POWERS--><!--/IF_COMPOUND_POWER-->",
+						<!--/IS_MP-->
+					<!--/IS_LIST-->
+					<!--IS_NOT_LIST-->
+						<!--IS_LIST_ITEM-->
+							"name":"(MPSlot<!--LISTPREFIX--> <!--IFNAME--><!--NAME--><!--/IFNAME-->",
+							"base":"<!--BASE_COST-->",
+							"text":"<!--TEXT-->",
+							"cost":"<!--POWER_COST-->",
+							"endurance":"<!--POWER_END-->",
+							"damage":"<!--POWER_DMG--><!--IF_COMPOUND_POWER--><!--COMPONENT_POWERS--><!--POWER_DMG--><!--/COMPONENT_POWERS--><!--/IF_COMPOUND_POWER-->",
+						<!--/IS_LIST_ITEM-->
+					<!--/IS_NOT_LIST-->
+					<!--IS_NOT_LIST-->
+						<!--IS_NOT_LIST_ITEM-->
+							"name":"<!--IFNAME--><!--NAME--><!--/IFNAME-->",
+							"base":"<!--BASE_COST-->",
+							"text":"<!--TEXT-->",
+							"cost":"<!--POWER_COST-->",
+							"endurance":"<!--POWER_END-->",
+							"damage":"<!--POWER_DMG--><!--IF_COMPOUND_POWER--><!--COMPONENT_POWERS--><!--POWER_DMG--><!--/COMPONENT_POWERS--><!--/IF_COMPOUND_POWER-->",
+					<!--/IS_NOT_LIST_ITEM-->
+					<!--/IS_NOT_LIST-->
+					<!--IS_VPP-->
+						"name":"(VPP) <!--IFNAME--><!--NAME--><!--/IFNAME-->",
+						"base":"<!--BASE_COST-->",
+						"text":"<!--TEXT-->",
+						"cost":"<!--POWER_COST-->",
+						"endurance":"<!--POWER_END-->",
+						"damage":"<!--POWER_DMG--><!--IF_COMPOUND_POWER--><!--COMPONENT_POWERS--><!--POWER_DMG--><!--/COMPONENT_POWERS--><!--/IF_COMPOUND_POWER-->",
+					<!--/IS_VPP-->
+					<!--IF_COMPOUND_POWER-->
+						"compound":"true"
+					<!--/IF_COMPOUND_POWER-->
+					<!--IF_NOT_COMPOUND_POWER-->
+						"compound":"false"
+					<!--/IF_NOT_COMPOUND_POWER-->
+				<!--STOP-->28<!--/STOP--><!--/POWERS-->
+			},
+			"power29":{
+				<!--POWERS--><!--START-->29<!--/START-->
+					<!--IS_LIST-->
+						<!--IS_MP-->
+							"name":"(Multipower) <!--IFNAME--><!--NAME--><!--/IFNAME-->",
+							"base":"<!--BASE_COST-->",
+							"text":"<!--TEXT-->",
+							"cost":"<!--POWER_COST-->",
+							"endurance":"<!--POWER_END-->",
+							"damage":"<!--POWER_DMG--><!--IF_COMPOUND_POWER--><!--COMPONENT_POWERS--><!--POWER_DMG--><!--/COMPONENT_POWERS--><!--/IF_COMPOUND_POWER-->",
+						<!--/IS_MP-->
+					<!--/IS_LIST-->
+					<!--IS_NOT_LIST-->
+						<!--IS_LIST_ITEM-->
+							"name":"(MPSlot<!--LISTPREFIX--> <!--IFNAME--><!--NAME--><!--/IFNAME-->",
+							"base":"<!--BASE_COST-->",
+							"text":"<!--TEXT-->",
+							"cost":"<!--POWER_COST-->",
+							"endurance":"<!--POWER_END-->",
+							"damage":"<!--POWER_DMG--><!--IF_COMPOUND_POWER--><!--COMPONENT_POWERS--><!--POWER_DMG--><!--/COMPONENT_POWERS--><!--/IF_COMPOUND_POWER-->",
+						<!--/IS_LIST_ITEM-->
+					<!--/IS_NOT_LIST-->
+					<!--IS_NOT_LIST-->
+						<!--IS_NOT_LIST_ITEM-->
+							"name":"<!--IFNAME--><!--NAME--><!--/IFNAME-->",
+							"base":"<!--BASE_COST-->",
+							"text":"<!--TEXT-->",
+							"cost":"<!--POWER_COST-->",
+							"endurance":"<!--POWER_END-->",
+							"damage":"<!--POWER_DMG--><!--IF_COMPOUND_POWER--><!--COMPONENT_POWERS--><!--POWER_DMG--><!--/COMPONENT_POWERS--><!--/IF_COMPOUND_POWER-->",
+					<!--/IS_NOT_LIST_ITEM-->
+					<!--/IS_NOT_LIST-->
+					<!--IS_VPP-->
+						"name":"(VPP) <!--IFNAME--><!--NAME--><!--/IFNAME-->",
+						"base":"<!--BASE_COST-->",
+						"text":"<!--TEXT-->",
+						"cost":"<!--POWER_COST-->",
+						"endurance":"<!--POWER_END-->",
+						"damage":"<!--POWER_DMG--><!--IF_COMPOUND_POWER--><!--COMPONENT_POWERS--><!--POWER_DMG--><!--/COMPONENT_POWERS--><!--/IF_COMPOUND_POWER-->",
+					<!--/IS_VPP-->
+					<!--IF_COMPOUND_POWER-->
+						"compound":"true"
+					<!--/IF_COMPOUND_POWER-->
+					<!--IF_NOT_COMPOUND_POWER-->
+						"compound":"false"
+					<!--/IF_NOT_COMPOUND_POWER-->
+				<!--STOP-->29<!--/STOP--><!--/POWERS-->
+			},
+			"power30":{
+				<!--POWERS--><!--START-->30<!--/START-->
+					<!--IS_LIST-->
+						<!--IS_MP-->
+							"name":"(Multipower) <!--IFNAME--><!--NAME--><!--/IFNAME-->",
+							"base":"<!--BASE_COST-->",
+							"text":"<!--TEXT-->",
+							"cost":"<!--POWER_COST-->",
+							"endurance":"<!--POWER_END-->",
+							"damage":"<!--POWER_DMG--><!--IF_COMPOUND_POWER--><!--COMPONENT_POWERS--><!--POWER_DMG--><!--/COMPONENT_POWERS--><!--/IF_COMPOUND_POWER-->",
+						<!--/IS_MP-->
+					<!--/IS_LIST-->
+					<!--IS_NOT_LIST-->
+						<!--IS_LIST_ITEM-->
+							"name":"(MPSlot<!--LISTPREFIX--> <!--IFNAME--><!--NAME--><!--/IFNAME-->",
+							"base":"<!--BASE_COST-->",
+							"text":"<!--TEXT-->",
+							"cost":"<!--POWER_COST-->",
+							"endurance":"<!--POWER_END-->",
+							"damage":"<!--POWER_DMG--><!--IF_COMPOUND_POWER--><!--COMPONENT_POWERS--><!--POWER_DMG--><!--/COMPONENT_POWERS--><!--/IF_COMPOUND_POWER-->",
+						<!--/IS_LIST_ITEM-->
+					<!--/IS_NOT_LIST-->
+					<!--IS_NOT_LIST-->
+						<!--IS_NOT_LIST_ITEM-->
+							"name":"<!--IFNAME--><!--NAME--><!--/IFNAME-->",
+							"base":"<!--BASE_COST-->",
+							"text":"<!--TEXT-->",
+							"cost":"<!--POWER_COST-->",
+							"endurance":"<!--POWER_END-->",
+							"damage":"<!--POWER_DMG--><!--IF_COMPOUND_POWER--><!--COMPONENT_POWERS--><!--POWER_DMG--><!--/COMPONENT_POWERS--><!--/IF_COMPOUND_POWER-->",
+					<!--/IS_NOT_LIST_ITEM-->
+					<!--/IS_NOT_LIST-->
+					<!--IS_VPP-->
+						"name":"(VPP) <!--IFNAME--><!--NAME--><!--/IFNAME-->",
+						"base":"<!--BASE_COST-->",
+						"text":"<!--TEXT-->",
+						"cost":"<!--POWER_COST-->",
+						"endurance":"<!--POWER_END-->",
+						"damage":"<!--POWER_DMG--><!--IF_COMPOUND_POWER--><!--COMPONENT_POWERS--><!--POWER_DMG--><!--/COMPONENT_POWERS--><!--/IF_COMPOUND_POWER-->",
+					<!--/IS_VPP-->
+					<!--IF_COMPOUND_POWER-->
+						"compound":"true"
+					<!--/IF_COMPOUND_POWER-->
+					<!--IF_NOT_COMPOUND_POWER-->
+						"compound":"false"
+					<!--/IF_NOT_COMPOUND_POWER-->
+				<!--STOP-->30<!--/STOP--><!--/POWERS-->
+>>>>>>> working
 			}
 		},
 		"skills": {
@@ -2767,6 +3272,9 @@
 		"genre":"<!--GENRE-->",
 		"campaign":"<!--CAMPAIGN_NAME-->",
 		"version":"1.0",
+=======
+		"version":"1.2",
+>>>>>>> working
 		"HeroSystem6eHeroic":true
 	}
 }
