@@ -1545,8 +1545,11 @@
 				importedPowers["powerActivate"+ID] = tempObject.hasRoll ? "on" : 0;
 				importedPowers["powerSkillRoll"+ID] = tempObject.hasRoll ? tempObject.skillRoll : 18;
 				
-				// Search for reduced DCV due to concentration.
+				// Search for reduced DCV due to the Concentration limitation.
 				importedPowers["powerDCV"+ID] = reducedDCV(testObject.testString);
+				
+				// Search for zero, half, or full range modifiers.
+				importedPowers["powerRMod"+ID] = reducedRMod(testObject.testString);
 				
 				// Assign effect dice.
 				importedPowers["powerDice"+ID] = getDamage(powerArray[importCount].damage);
@@ -2990,6 +2993,23 @@
 			answer = "half";
 		} else {
 			answer = "full";
+		}
+		
+		return answer;
+	}
+	
+	
+	var reducedRMod = function(inputString) {	
+		// Search for half or zero range modifier advantages.
+		inputString = inputString.toLowerCase();
+		let answer;
+		
+		if (inputString.includes("no range modifier")) {
+			answer = "zero";
+		} else if (inputString.includes("half range modifier")) {
+			answer = "half";
+		} else {
+			answer = "STD";
 		}
 		
 		return answer;
