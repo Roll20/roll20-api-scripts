@@ -1545,6 +1545,9 @@
 				importedPowers["powerActivate"+ID] = tempObject.hasRoll ? "on" : 0;
 				importedPowers["powerSkillRoll"+ID] = tempObject.hasRoll ? tempObject.skillRoll : 18;
 				
+				// Search for reduced DCV due to concentration.
+				importedPowers["powerDCV"+ID] = reducedDCV(testObject.testString);
+				
 				// Assign effect dice.
 				importedPowers["powerDice"+ID] = getDamage(powerArray[importCount].damage);
 				
@@ -2969,12 +2972,27 @@
 			}
 		}
 		
-		sendChat(script_name, value.toString());
-		
 		return {
 			"hasRoll": answer,
 			"skillRoll": value
 		}
+	}
+	
+	
+	var reducedDCV = function(inputString) {	
+		// Search for the Concentration limitation.
+		inputString = inputString.toLowerCase();
+		let answer;
+		
+		if (inputString.includes("0 dcv")) {
+			answer = "zero";
+		} else if (inputString.includes("1/2 dcv")) {
+			answer = "half";
+		} else {
+			answer = "full";
+		}
+		
+		return answer;
 	}
 	
 	
