@@ -294,7 +294,8 @@
 		importCharacteristics(object, character, script_name);
 		
 		// Import Page 2: Martial Arts Maneuvers
-		importManeuvers(object, character, script_name);
+		// Maneuvers over the sheet maximum will be prepended to excess perks and talents in the treasures field.
+		character.overflow = importManeuvers(object, character, script_name);
 		
 		// Import Page 2: Equipment
 		importEquipment(object, character, script_name);
@@ -516,6 +517,7 @@
 		let maneuverArray = new Array();
 		let maneuverArrayIndex = 0;
 		let temp = 0;
+		let tempString = "";
 		const maxManeuvers = 20;
 		const maneuverSlots = 10;
 		let importCount = 0;
@@ -576,7 +578,6 @@
 		
 		// Display additional maneuvers in the treasures text box.
 		if (maneuverArrayIndex > maneuverSlots) {
-			let tempString = "";
 			let extras = 0;
 			
 			for (let i = maneuverSlots; i < maneuverArrayIndex; i++) {
@@ -603,10 +604,6 @@
 				}
 			}
 			
-			// Update treasures in the imported character since this field is used
-			// for additional equipment items.
-			
-			tempString += character.treasures + '\n' + '\n' + tempString;
 			tempString = tempString.trim();
 			
 			// Place additional maneuvers in the treasures text box.
@@ -618,7 +615,7 @@
 			setAttrs(object.id, {gearSlideSelection: 2});
 		}
 		
-		return;
+		return tempString;
 	}
 	
 	
@@ -712,40 +709,44 @@
 		// Write raw details of imported equipment to the treasures slide.
 		if (equipmentArrayIndex > 0) {
 			
-			// Get current contents of the treasures text box.
-			if ((typeof character.treasures !== "undefined") && (character.treasures !== "")) {
-				tempString = character.treasures;
-			} else {
-				tempString = "";
-			}
+			tempString = character.overflow + '\n' + '\n';
 			
+			// Get current contents of the treasures text box.
+			// if ((typeof character.treasures !== "undefined") && (character.treasures !== "")) {
+			// 	tempString = character.treasures;
+			// } else {
+			// 	tempString = "";
+			// }
+			// 
 			// Add equipment to treasures.
 			for (let i = 0; i < equipmentArrayIndex; i++) { 
-				tempString = tempString + equipmentArray[i].name + '\n';
+				tempString += equipmentArray[i].name + '\n';
 				if (equipmentArray[i].damage !== "") {
-					tempString = tempString + "Damage: " + equipmentArray[i].damage  + ", ";
+					tempString += "Damage: " + equipmentArray[i].damage  + ", ";
 				}
 				if (equipmentArray[i].end !== "") {
-					tempString = tempString + "END: " + equipmentArray[i].end  + ", ";
+					tempString += "END: " + equipmentArray[i].end  + ", ";
 				}
 				if (equipmentArray[i].range !== "") {
-					tempString = tempString + "Range: " + equipmentArray[i].range  + ", ";
+					tempString += "Range: " + equipmentArray[i].range  + ", ";
 				}
 				if (equipmentArray[i].text !== "") {
-					tempString = tempString + equipmentArray[i].text;
+					tempString += equipmentArray[i].text;
 				}
 				if (equipmentArray[i].mass !== "") {
-					tempString = tempString + ", Mass: " + equipmentArray[i].mass;
+					tempString += ", Mass: " + equipmentArray[i].mass;
 				}
 				if (i < (equipmentArrayIndex + 2)) {
-					tempString = tempString + '\n' + '\n';
+					tempString += '\n' + '\n';
 				}
 			}
+			
+			tempString = tempString.trim();
 			
 			setAttrs(object.id, {treasures: tempString});
 			
 			// Show the Treasures Gear Tab slide where the multipower equipment will appear.	
-			setAttrs(object.id, {gearSlideSelection: 4});
+			setAttrs(object.id, {gearSlideSelection: 3});
 		}
 		
 		// Prepare object of items that are not weapons or armor. 
