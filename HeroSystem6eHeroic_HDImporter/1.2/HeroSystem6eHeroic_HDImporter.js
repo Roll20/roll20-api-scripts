@@ -1657,7 +1657,7 @@
 			sendChat(script_name, "Imported " + importCount + " powers.");
 		}		
 		
-		return tempString;
+		return tempString.trim();
 	};
 
 	
@@ -1695,7 +1695,7 @@
 					tempString += character.complications["complication"+ID].type + "\n";
 					tempString += character.complications["complication"+ID].text + "\n";
 					tempString += character.complications["complication"+ID].notes;
-					tempString += String(character.complications["complication"+ID].points) + " CP";
+					tempString += String(character.complications["complication"+ID].points) + " CP" + "\n";
 				}
 			}
 		}
