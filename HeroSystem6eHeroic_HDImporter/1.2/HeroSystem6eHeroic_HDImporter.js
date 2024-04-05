@@ -709,15 +709,9 @@
 		// Write raw details of imported equipment to the treasures slide.
 		if (equipmentArrayIndex > 0) {
 			
+			// Get current contents of the treasures text box.
 			tempString = character.overflow + '\n' + '\n';
 			
-			// Get current contents of the treasures text box.
-			// if ((typeof character.treasures !== "undefined") && (character.treasures !== "")) {
-			// 	tempString = character.treasures;
-			// } else {
-			// 	tempString = "";
-			// }
-			// 
 			// Add equipment to treasures.
 			for (let i = 0; i < equipmentArrayIndex; i++) { 
 				tempString += equipmentArray[i].name + '\n';
@@ -1569,7 +1563,7 @@
 				// Find advantages and limitations values.
 				importedPowers["powerAdvantages"+ID] = findAdvantages(testObject.testString);
 				importedPowers["powerLimitations"+ID] = findLimitations(testObject.testString);
-				importedPowers["powerText"+ID] = powerArray[importCount].text;
+				importedPowers["powerText"+ID] = (powerArray[importCount].text).trim();
 				importedPowers["powerAoE"+ID] = isAoE(testObject.testString) ? "on" : 0;
 				
 				// Search for skill roll.
