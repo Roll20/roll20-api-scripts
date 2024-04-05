@@ -515,6 +515,7 @@
 		// Overall list of maneuvers
 		let maneuverArray = new Array();
 		let maneuverArrayIndex = 0;
+		let temp = 0;
 		const maxManeuvers = 20;
 		const maneuverSlots = 10;
 		let importCount = 0;
@@ -553,8 +554,10 @@
 				
 				importedManeuvers["martialManeuverCP"+ID] = maneuverArray[importCount].points;
 				importedManeuvers["martialManeuverPhase"+ID] = maneuverArray[importCount].phase;
-				importedManeuvers["martialManeuverOCV"+ID] = maneuverArray[importCount].ocv;
-				importedManeuvers["martialManeuverDCV"+ID] = maneuverArray[importCount].dcv;
+				temp = Number(maneuverArray[importCount].ocv);
+				importedManeuvers["martialManeuverOCV"+ID] = isNaN(temp) ? 0 : temp;
+				temp = Number(maneuverArray[importCount].dcv);
+				importedManeuvers["martialManeuverDCV"+ID] = isNaN(temp) ? 0 : temp;
 				
 				importCount++;
 			}
