@@ -802,7 +802,7 @@
 				importedWeapons["weaponName"+ID] = weaponsArray[importCount].name;
 				
 				// Assign weapon base damage.
-				importedWeapons["weaponDamage"+ID] = getDamage(weaponsArray[importCount].damage, script_name);
+				importedWeapons["weaponDamage"+ID] = getWeaponDamage(weaponsArray[importCount].damage, script_name);
 				
 				// Look for weapon advantages.
 				tempString = weaponsArray[importCount].text;
@@ -1581,7 +1581,7 @@
 				importedPowers["powerSTUNx"+ID] = modifiedSTUNx(testObject.testString);
 				
 				// Assign effect dice.
-				importedPowers["powerDice"+ID] = getDamage(powerArray[importCount].damage);
+				importedPowers["powerDice"+ID] = getPowerDamage(powerArray[importCount].damage, script_name);
 				
 				// Find and assign power type. Remove export notes from names.
 				tempString = powerArray[importCount].name;
@@ -3246,7 +3246,49 @@
 	}
 	
 	
-	var getDamage = function (damageString, script_name) {
+	var getPowerDamage = function (damageString, script_name) {
+		// Parses damageString for damage dice.
+		
+		let damage = "0";
+		let lastIndex = 0;
+		let detailString;
+		let startPosition;
+		let endPosition;
+		
+		if (damageString.includes("standard effect")) {
+			startPosition = damageString.indexOf("standard effect");
+			endPosition = damageString.indexOf(")", startPosition);
+			detailString = damageString.slice(startPosition+16, endPosition);
+			damage = detailString;
+		} else {	
+			// Separate joined dice if present.
+			if ((damageString.match(/d6/g) || []).length > 1) {
+				damageString = damageString.replace("d6", "d6+");
+				lastIndex = damageString.lastIndexOf("d6+");
+				damageString = damageString.substring(0, lastIndex) + "d6" + damageString.substring(lastIndex + 2);
+			}
+			
+			// Look for (xd6 w/STR) and use that.
+			if (damageString.includes(" w/STR")) {
+				damageString = damageString.match(/\(([^)]*)\)/)[1];
+				damageString = damageString.replace(" w/STR", "");
+			}
+			
+			// Make sure the 1/2d6 is a 1d3.
+			if (damageString.includes(" 1/2d6")) {
+				damage = damageString.replace(" 1/2d6", "d6+d3");			
+			} else if (damageString.includes("1/2d6")) {
+				damage = damageString.replace("1/2d6", "d3");
+			} else {
+				damage = damageString;
+			}
+		}
+		
+		return damage;
+	}
+	
+	
+	var getWeaponDamage = function (damageString, script_name) {
 		// Parses damageString for damage dice.
 		
 		let damage = "0";
@@ -3272,12 +3314,6 @@
 				lastIndex = damageString.lastIndexOf("d6+");
 				damageString = damageString.substring(0, lastIndex) + "d6" + damageString.substring(lastIndex + 2);
 			}
-			
-			// Look for (xd6 w/STR) and use that. No longer used as of sheet 2.51.
-			// if (damageString.includes(" w/STR")) {
-			// 	damageString = damageString.match(/\(([^)]*)\)/)[1];
-			// 	damageString = damageString.replace(" w/STR", "");
-			// }
 			
 			// Make sure the 1/2d6 is a 1d3.
 			if (damageString.includes(" 1/2d6")) {
