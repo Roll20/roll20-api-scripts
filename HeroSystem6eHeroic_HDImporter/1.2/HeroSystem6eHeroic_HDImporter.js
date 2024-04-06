@@ -887,7 +887,7 @@
 		// Prepare object of armor defenses. Assign to character sheet Armor List.
 				
 		let importedArmor = new Array();
-		const maxArmor = 4;
+		const maxArmor = 3; // The 4th will be used for resistant protection.
 		
 		importCount = 0;
 		
@@ -1351,6 +1351,7 @@
 		
 		let tempString;
 		let tempPosition;
+		let tempValue = 0;
 		let endPosition;
 		let subStringA;
 		let subStringB;
@@ -1544,6 +1545,27 @@
 					importedPowers["powerName"+ID] = importedPowers["powerEffect"+ID];
 				} else {
 					importedPowers["powerName"+ID] = powerArray[importCount].name;
+				}
+				
+				// If effect is Resistant Protection fill in Armor Slot 4 with a combination of ED and PD.
+				if (importedPowers["powerEffect"+ID] === "Resistant Protection") {
+					tempValue = getResistantPD(powerArray[importCount].text);
+					if (tempValue > 0) {
+						importedPowers["armorPD04"] = tempValue;
+						importedPowers["totalPD04"] = tempValue + parseInt(character.pd);
+						importedPowers["armorName04"] = importedPowers["powerName"+ID];
+						tempObject = (requiresRoll(powerArray[importCount].text));
+						if (tempObject.hasRoll) {
+							importedPowers["armorActivation04"] = tempObject.skillRoll;
+						}
+					}
+					
+					tempValue = getResistantED(powerArray[importCount].text);
+					if (tempValue > 0) {
+						importedPowers["armorED04"] = tempValue;
+						importedPowers["totalED04"] = tempValue + parseInt(character.ed);
+						importedPowers["armorName04"] = importedPowers["powerName"+ID];
+					}
 				}
 				
 				// Special cases or base cost.
@@ -2767,6 +2789,55 @@
 		const attackSet = new Set(["Blast", "Dispel", "Drain", "Entangle", "Healing", "HTH Attack", "HTH Killing Attack", "Mental Blast", "Mental Illusions", "Mind Control", "Mind Link", "Mind Scan", "Ranged Killing Attack", "Telekinesis", "Telepathy", "Transform"]);
 		
 		return attackSet.has(effect) ? true : false;
+	}
+	
+	
+	var getResistantPD = function (inputString) {
+		// For Armor slot 4.
+		let protection = 0;
+		let startPosition = 0;
+		let endPosition = 0;
+		let tempString = inputString;
+		
+		sendChat(script_name, tempString);
+		
+		if (inputString.includes("PD")) {
+			endPosition = inputString.indexOf("PD");
+			tempString = inputString.slice(startPosition, endPosition);
+			startPosition = tempString.lastIndexOf("+")+1;
+			tempString = inputString.slice(startPosition, endPosition);
+			tempString = tempString.replace(/[^0-9]/g, "");
+			protection = (tempString !== "") ? Number(tempString) : 0;
+			protection = isNaN(protection) ? 0 : protection;
+		} else {
+			protection = 0;
+		}
+		
+		return protection;
+	}
+	
+	
+	var getResistantED = function (inputString) {
+		// For Armor slot 4.
+		let protection = 0;
+		let startPosition = 0;
+		let endPosition = 0;
+		let tempString = inputString;
+		
+		sendChat(script_name, tempString);
+		if (inputString.includes("ED")) {
+			endPosition = inputString.indexOf("ED");
+			tempString = inputString.slice(startPosition, endPosition);
+			startPosition = tempString.lastIndexOf("+")+1;
+			tempString = inputString.slice(startPosition, endPosition);
+			tempString = tempString.replace(/[^0-9]/g, "");
+			protection = (tempString !== "") ? Number(tempString) : 0;
+			protection = isNaN(protection) ? 0 : protection;
+		} else {
+			protection = 0;
+		}
+		
+		return protection;
 	}
 	
 	
