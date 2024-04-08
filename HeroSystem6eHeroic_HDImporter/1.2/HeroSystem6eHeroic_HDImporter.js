@@ -1447,6 +1447,7 @@
 					
 					for (let i=0; i<count; i++) {
 						subStringA = tempString.split("plus")[i];
+						subStringB = (character.powers["power"+ID].damage).split("d6")[i] + "d6";
 						
 						if (subStringA.includes("(Real Cost:")) {
 							subStringB = subStringA.substring(
@@ -1479,7 +1480,7 @@
 							text: subStringA,
 							cost: cost,
 							endurance: character.powers["power"+ID].endurance,
-							damage: character.powers["power"+ID].damage,
+							damage: (subStringB !== undefined) ? subStringB : character.powers["power"+ID].damage,
 							compound: true
 						}
 						
@@ -3391,6 +3392,7 @@
 			if (damageString.includes(" w/STR")) {
 				damageString = damageString.match(/\(([^)]*)\)/)[1];
 				damageString = damageString.replace(" w/STR", "");
+				damageString = damageString.trim();
 			}
 			
 			// Make sure the 1/2d6 is a 1d3.
