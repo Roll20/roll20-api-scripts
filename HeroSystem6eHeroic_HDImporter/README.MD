@@ -1,18 +1,19 @@
 # Hero System 6e Heroic: HD Importer
 A script for importing characters built in or acquired for HERO Designer into Roll20 Hero System 6e Heroic games. 
 
-HD Importer attempts to translate as much of a [HERO Designer](https://www.herogames.com/store/product/1-hero-designer/) character as possible into a Roll20 [HeroSystem6eHeroic](https://github.com/Roll20/roll20-character-sheets/blob/master/HeroSystem6eHeroic/README.md) character sheet. There will invariably be rules, options, or build styles that do not translate well from HERO Designer into Roll20. Nonetheless, this importer should import most of the details of a character. At present, the character sheet has seventeen power slots. Three additional powers if present will be imported as text notes and displayed in the text field below the "Complications" section.
+HD Importer attempts to translate as much of a [HERO Designer](https://www.herogames.com/store/product/1-hero-designer/) character as possible into a Roll20 [HeroSystem6eHeroic](https://github.com/Roll20/roll20-character-sheets/blob/master/HeroSystem6eHeroic/README.md) character sheet. There will invariably be rules, options, or build styles that do not translate well from HERO Designer into Roll20. Nonetheless, this importer should import most of the details of a character. At present, the character sheet has twenty power slots. Ten additional powers if present will be imported as text notes and displayed in the text field below the "Perks and Talents" section.
 
 This script was tested with the following commercial character packs:
 - [Dead Orc Pass](https://www.herogames.com/store/product/910-dead-orc-pass-mini-campaign-book-pdfhdc/)
 - [Kazei 5](https://www.herogames.com/store/product/92-kazei-5-character-pack/)
 - [Monster Hunter International](https://www.herogames.com/store/product/5-monster-hunter-international-character-pack/)
+- [Champions Begins](https://www.herogames.com/store/product/1005-champions-begins-pdfhd/)
 
 # Installation:
 
-From the caimpaign's home page go to Mods page via 'Settings -> Mod (API) Scripts.' 
+From the campaign's home page go to the Mods page via 'Settings -> Mod (API) Scripts.' 
 
-From the Mods page select 'HeroSystem6eHeroic HDImporter' from the Mod Library dropdown list. Alternatively, create new script and copy and paste the contents of HeroSystem6eHeroic_HDImporter.js into the text editing box. Save the script.
+From the Mods page select 'HeroSystem6eHeroic HDImporter' from the Mod Library dropdown list. Alternatively, create a new script and copy and paste the contents of HeroSystem6eHeroic_HDImporter.js into the text editing box. Save the script.
 
 Launch the game.
 
@@ -23,14 +24,14 @@ If HD Importer has started correctly the following notification should appear in
 
 ## HERO Designer
 
-1. Download the export format file [HeroSystem6eHeroic.hde](https://github.com/Roll20/roll20-api-scripts/tree/master/HeroSystem6eHeroic_HDImporter/1.0) from this respository and install it into your HERO Designer folder.
+1. Download the export format file [HeroSystem6eHeroic.hde](https://github.com/Roll20/roll20-api-scripts/tree/master/HeroSystem6eHeroic_HDImporter/1.2) from this repository and install it into your HERO Designer folder.
 2. Create a new character or load a character file into HERO Designer.
 3. Change the export format to HeroSystem6eHeroic.hde via the menu item "Current Character->Export->Set Export Format..."
 4. Select "Current Character->Export->Export to File..." to save the character as a .txt file.
 5. If the character has a profile image, save that as well.
 
 ## Text Editor
-1. Open the exported character file in your favorite text editor.
+1. Open the exported character file in your favorite text editor (Windows NotePad can cause problems).
 2. Copy the entire contents (with cmd-A or ctrl-A).
 
 ## Roll20
@@ -41,12 +42,12 @@ If HD Importer has started correctly the following notification should appear in
 
 ## Sample Character
 The release folder contains two sample character files:
-- `Sample_Character.hdc` is a Hero Designer character, which you may use with Hero Designer for testing and evaulation.
+- `Sample_Character.hdc` is a Hero Designer character, which you may use with Hero Designer for testing and evaluation.
 - `Sample_Character.txt` is the same character exported from Hero Designer using HeroSystem6eHeroic.hde as the export format. 
 
 ## Notes
 
-Quotation marks are used to indicate JSON data values. Please take care when using quotation marks in Hero Designer text fields. The exporter will attempt to remove them, but this may not be fullproof.
+Quotation marks are used to indicate JSON data values. Please take care when using quotation marks in Hero Designer text fields. The exporter will attempt to remove them, but this may not be foolproof.
 
 Hero Designer has fields for height, weight, eye color, hair color, a quote, and tactics notes. This information is not imported since the character sheet does not have corresponding fields.
 
@@ -54,7 +55,7 @@ Weapons, armor, and other equipment is imported as text and shown in the text fi
 
 Powers over the ten-power limit will appear in the text field below Complications. Additional perks and talents will appear in the text field below the Perks and Talents section. These items will not count toward the character's cost.
 
-The base costs of powers that modifiy characteristics are added to the "Bonus" points field in the Tally Bar so that they are not counted twice in the character's total cost.
+The base costs of powers that modify characteristics are added to the "Bonus" points field in the Tally Bar so that they are not counted twice in the character's total cost.
 
 # Help
 Access the in-game help menu by entering the command "!hero --help" into the chat window.
@@ -92,3 +93,5 @@ Apologies to Darci, who played the role of Duncan Idaho.
 Version 1.0 -- Initial release on August 1, 2022.
 
 Version 1.1 -- Updated to accommodate the seventeen power slots now available on the character sheet (May 4, 2023).
+
+Version 1.2 -- Updated to support additional features in Sheet 2.83. Adds support for 20 power slots with 10 extras to-text. Adds more robust input error checking and double quote trouble. Generates armor from Resistant Protection. (April 7, 2024).

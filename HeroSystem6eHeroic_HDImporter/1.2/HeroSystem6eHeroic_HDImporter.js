@@ -1565,6 +1565,30 @@
 						importedPowers["armorED04"] = tempValue;
 						importedPowers["totalED04"] = tempValue + parseInt(character.ed);
 						importedPowers["armorName04"] = importedPowers["powerName"+ID];
+						tempObject = (requiresRoll(powerArray[importCount].text));
+						if (tempObject.hasRoll) {
+							importedPowers["armorActivation04"] = tempObject.skillRoll;
+						}
+					}
+				} else if (importedPowers["powerEffect"+ID] === "Base PD Mod") {
+					if ( (powerArray[importCount].text).includes("Resistant")) {
+						importedPowers["armorPD04"] = parseInt(character.pd);
+						importedPowers["totalPD04"] = parseInt(character.pd);
+						importedPowers["armorName04"] = importedPowers["powerName"+ID];
+						tempObject = (requiresRoll(powerArray[importCount].text));
+						if (tempObject.hasRoll) {
+							importedPowers["armorActivation04"] = tempObject.skillRoll;
+						}
+					}
+				} else if (importedPowers["powerEffect"+ID] === "Base ED Mod") {
+					if ( (powerArray[importCount].text).includes("Resistant")) {
+						importedPowers["armorED04"] = parseInt(character.ed);
+						importedPowers["totalED04"] = parseInt(character.ed);
+						importedPowers["armorName04"] = importedPowers["powerName"+ID];
+						tempObject = (requiresRoll(powerArray[importCount].text));
+						if (tempObject.hasRoll) {
+							importedPowers["armorActivation04"] = tempObject.skillRoll;
+						}
 					}
 				}
 				
@@ -1600,7 +1624,7 @@
 				importedPowers["powerRMod"+ID] = reducedRMod(testObject.testString);
 				
 				// Search for a STUNx mod.
-				importedPowers["powerSTUNx"+ID] = modifiedSTUNx(testObject.testString);
+				importedPowers["powerStunMod"+ID] = modifiedSTUNx(testObject.testString);
 				
 				// Assign effect dice.
 				importedPowers["powerDice"+ID] = getPowerDamage(powerArray[importCount].damage, script_name);
@@ -2505,7 +2529,7 @@
 		let tempString = testObject.testString;
 		let endString = testObject.testEndurance;
 		
-		if ((tempString.includes("Costs Endurance (-1/4)")) && (endString.includes("["))) {
+		if ( ((tempString.includes("Costs Endurance (-1/4)")) || (tempString.includes("Costs Half Endurance"))) && (endString.includes("["))) {
 			testObject.powerReducedEND = "costsENDhalf";
 			tempString = tempString.replace("Costs Endurance (-1/4)", "");
 		} else if ((tempString.includes("Costs Endurance (-1/2)")) && (endString.includes("["))) {
@@ -2571,6 +2595,7 @@
 		return testObject;
 	}
 	
+	
 	var findEffectType = function(tempString) {
 		// Search for and return effect keywords.
 		
@@ -2634,6 +2659,8 @@
 			return "Extra-Dimensional Movement";
 		} else if (tempString.includes("Faster-Than-Light-Travel")) {
 			return "Faster-Than-Light-Travel";
+		} else if (tempString.includes("Resistant")) {
+				return "Resistant Protection";
 		} else if (tempString.includes("Flash")) {
 			return "Flash";
 		} else if (tempString.includes("Flash Defense")) {
@@ -2690,8 +2717,6 @@
 			return "Reflection";
 		} else if (tempString.includes("Regeneration")) {
 			return "Regeneration";
-		} else if (tempString.includes("Resistant")) {
-			return "Resistant Protection";
 		} else if (tempString.includes("Running")) {
 			return "Running";	
 		} else if (tempString.includes("Shape Shift")) {
@@ -2799,9 +2824,15 @@
 		let endPosition = 0;
 		let tempString = inputString;
 		
-		sendChat(script_name, tempString);
-		
-		if (inputString.includes("PD")) {
+		if (inputString.includes("PD/")) {
+			endPosition = inputString.indexOf("PD/");
+			tempString = inputString.slice(startPosition, endPosition);
+			startPosition = tempString.lastIndexOf("+")+1;
+			tempString = inputString.slice(startPosition, endPosition);
+			tempString = tempString.replace(/[^0-9]/g, "");
+			protection = (tempString !== "") ? Number(tempString) : 0;
+			protection = isNaN(protection) ? 0 : protection;
+		} else if (inputString.includes("PD")) {
 			endPosition = inputString.indexOf("PD");
 			tempString = inputString.slice(startPosition, endPosition);
 			startPosition = tempString.lastIndexOf("+")+1;
@@ -2824,8 +2855,25 @@
 		let endPosition = 0;
 		let tempString = inputString;
 		
-		sendChat(script_name, tempString);
-		if (inputString.includes("ED")) {
+		if (inputString.includes("PD/")) {
+			if (inputString.includes("ED")) {
+				endPosition = inputString.indexOf("ED");
+				tempString = inputString.slice(startPosition, endPosition);
+				startPosition = tempString.lastIndexOf("/")+1;
+				tempString = inputString.slice(startPosition, endPosition);
+				tempString = tempString.replace(/[^0-9]/g, "");
+				protection = (tempString !== "") ? Number(tempString) : 0;
+				protection = isNaN(protection) ? 0 : protection;
+			} else if (inputString.includes("ED/")) {
+				endPosition = inputString.indexOf("ED/");
+				tempString = inputString.slice(startPosition, endPosition);
+				startPosition = tempString.lastIndexOf("/")+1;
+				tempString = inputString.slice(startPosition, endPosition);
+				tempString = tempString.replace(/[^0-9]/g, "");
+				protection = (tempString !== "") ? Number(tempString) : 0;
+				protection = isNaN(protection) ? 0 : protection;
+			}
+		} else if (inputString.includes("ED")) {
 			endPosition = inputString.indexOf("ED");
 			tempString = inputString.slice(startPosition, endPosition);
 			startPosition = tempString.lastIndexOf("+")+1;
