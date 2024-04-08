@@ -1,7 +1,7 @@
 # Hero System 6e Heroic: HD Importer
-A script for importing characters built in or acquired for HERO Designer into Roll20 Hero System 6e Heroic games. 
+A script for importing characters built in or acquired for HERO Designer into a Roll20 Hero System 6e Heroic game. 
 
-HD Importer attempts to translate as much of a [HERO Designer](https://www.herogames.com/store/product/1-hero-designer/) character as possible into a Roll20 [HeroSystem6eHeroic](https://github.com/Roll20/roll20-character-sheets/blob/master/HeroSystem6eHeroic/README.md) character sheet. There will invariably be rules, options, or build styles that do not translate well from HERO Designer into Roll20. Nonetheless, this importer should import most of the details of a character. At present, the character sheet has twenty power slots. Ten additional powers if present will be imported as text notes and displayed in the text field below the "Perks and Talents" section.
+HD Importer attempts to translate as much of a [HERO Designer](https://www.herogames.com/store/product/1-hero-designer/) character as possible into a Roll20 [HeroSystem6eHeroic](https://github.com/Roll20/roll20-character-sheets/blob/master/HeroSystem6eHeroic/README.md) character sheet. There will invariably be rules, options, or build styles that do not translate well from HERO Designer into Roll20. Nonetheless, this importer should import most of the details of a character. At present, the character sheet has twenty power slots. Ten additional powers if present will be imported as text and displayed in the text field below the "Perks and Talents" section.
 
 This script was tested with the following commercial character packs:
 - [Dead Orc Pass](https://www.herogames.com/store/product/910-dead-orc-pass-mini-campaign-book-pdfhdc/)
@@ -24,7 +24,7 @@ If HD Importer has started correctly the following notification should appear in
 
 ## HERO Designer
 
-1. Download the export format file [HeroSystem6eHeroic.hde](https://github.com/Roll20/roll20-api-scripts/tree/master/HeroSystem6eHeroic_HDImporter/1.2) from this repository and install it into your HERO Designer folder.
+1. Download the latest export format file [HeroSystem6eHeroic.hde](https://github.com/Roll20/roll20-api-scripts/tree/master/HeroSystem6eHeroic_HDImporter/1.2) from this repository and install it into your HERO Designer folder.
 2. Create a new character or load a character file into HERO Designer.
 3. Change the export format to HeroSystem6eHeroic.hde via the menu item "Current Character->Export->Set Export Format..."
 4. Select "Current Character->Export->Export to File..." to save the character as a .txt file.
@@ -47,13 +47,13 @@ The release folder contains two sample character files:
 
 ## Notes
 
-Quotation marks are used to indicate JSON data values. Please take care when using quotation marks in Hero Designer text fields. The exporter will attempt to remove them, but this may not be foolproof.
+Double quotation marks are used to indicate JSON data values. Please take care when using quotation marks in Hero Designer text fields. The exporter will attempt to remove them, but this may not be foolproof.
 
-Hero Designer has fields for height, weight, eye color, hair color, a quote, and tactics notes. This information is not imported since the character sheet does not have corresponding fields.
+Hero Designer has fields eye color and hair color. This information is not imported since the character sheet does not have corresponding fields.
 
 Weapons, armor, and other equipment is imported as text and shown in the text field in the "Gear" page. HD Importer attempts to fill in the appropriate spaces in the sheet with the items it can identify, but HERO items often have additional information to track. Expect this area to require some degree of human attention.
 
-Powers over the ten-power limit will appear in the text field below Complications. Additional perks and talents will appear in the text field below the Perks and Talents section. These items will not count toward the character's cost.
+Powers over the twenty-power limit will appear in the text field below Complications. Additionally perks and talents may appear in the text field below the Perks and Talents section. These items will not count toward the total CP cost.
 
 The base costs of powers that modify characteristics are added to the "Bonus" points field in the Tally Bar so that they are not counted twice in the character's total cost.
 
@@ -70,11 +70,11 @@ The configuration menu is accessible from the Help Screen or via the chat window
 
 - `Overwrite` : **CAUTION!** If set to true, when importing a new character, HD Importer will overwrite an existing character that has the same name. 
 - `Prefix` : Adds a text label to the beginning of an imported character's name.
-- `Suffix` : Adds a text label to the end of an imporated character's name.
-- `In Player Journal` : Presets the imported character's visiblity to players.
+- `Suffix` : Adds a text label to the end of an imported character's name.
+- `In Player Journal` : Presets the imported character's visibility to players.
 - `Player Control` : Presets the player control assigned to the imported character.
 - `Use Char Maximums` : Presets the sheet option that figures characteristic maximums into point costs.
-- `Literacy Costs CP` : Presets the sheet opttion that literacy costs 1 CP. Most common in Fantasy Hero campaigns.
+- `Literacy Costs CP` : Presets the sheet option that literacy costs 1 CP. Most common in Fantasy Hero campaigns.
 - `Super-Heroic END` : Presets the option for higher endurance costs for strength.
 - `Use Hit Locations` : Presets the sheet option to determine hit locations.
 
@@ -92,6 +92,6 @@ Apologies to Darci, who played the role of Duncan Idaho.
 # Version history
 Version 1.0 -- Initial release on August 1, 2022.
 
-Version 1.1 -- Updated to accommodate the seventeen power slots now available on the character sheet (May 4, 2023).
+Version 1.1 -- Updated to accommodate the seventeen power slots available on the character sheet (May 4, 2023).
 
-Version 1.2 -- Updated to support additional features in Sheet 2.83. Adds support for 20 power slots with 10 extras to-text. Adds more robust input error checking and double quote trouble. Generates armor from Resistant Protection. (April 7, 2024).
+Version 1.2 -- Updated to support additional character sheet features as of Sheet version 2.83. Updated version of Hero Designer export format (HeroSystem6eHeroic.hde to version 1.2). Adds support for 20 power slots with ten extra powers imported to text. Complications increased from seven to ten with additional three sent to text on sheet. All HD description fields now recognized. Generates armor from Resistant Protection. Adds more robust input error checking and avoids more quotation character troubles. Additional HD file pack testing. Bug fixes and 60% reduction in code size (April 7, 2024).

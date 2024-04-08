@@ -1,14 +1,11 @@
-<!--TEMPLATE_NAME-->HeroSystem6eHeroic<!--/TEMPLATE_NAME--><!--TEMPLATE_DESCRIPTION--><p>HeroSystem6eHeroic</p><p>Version 1.0</p><p>Export format for the Roll20 API script HeroSystem6eHeroic_HDImporter, which imports Hero Designer characters into the HeroSystem6eHeroic character sheet.</p><p>For documentation see https://github.com/Roll20/roll20-api-scripts/tree/master/HeroSystem6eHeroic_HDImporter</p><p>By Villain In Glasses (Roll20 ID 633423)</p><!--/TEMPLATE_DESCRIPTION-->
-=======
 <!--TEMPLATE_NAME-->HeroSystem6eHeroic<!--/TEMPLATE_NAME--><!--TEMPLATE_DESCRIPTION--><p>HeroSystem6eHeroic</p><p>Version 1.2</p><p>Export format for the Roll20 API script HeroSystem6eHeroic_HDImporter, which imports Hero Designer characters into the HeroSystem6eHeroic character sheet.</p><p>For documentation see https://github.com/Roll20/roll20-api-scripts/tree/master/HeroSystem6eHeroic_HDImporter</p><p>By Villain In Glasses (Roll20 ID 633423)</p><!--/TEMPLATE_DESCRIPTION-->
->>>>>>> working
 <!--FILE_EXTENSION-->txt<!--/FILE_EXTENSION-->
 !hero --import {
 	"character":{
 		"character_name":"<!--CHARACTER_NAME-->",
 		"character_title":"<!--ALTERNATE_IDS-->",
-		"height":"<!--HEIGHT_METRIC-->",
-		"weight":"<!--WEIGHT_METRIC-->",
+		"height":"<!--HEIGHT-->",
+		"weight":"<!--WEIGHT-->",
 		"eyes":"<!--EYE_COLOR-->",
 		"hair":"<!--HAIR_COLOR-->",
 		"backgroundText":"<!--BACKGROUND-->",
@@ -385,7 +382,7 @@
 		"equipment10":{<!--EQUIPMENT--><!--START-->10<!--/START-->
 			<!--IS_LIST-->
 				<!--IS_MP-->
-					"name":"(Multipower) <!--IFNAME--><!--NAME--><!--/IFNAME-->"
+					"name":"(Multipower) <!--IFNAME--><!--NAME--><!--/IFNAME-->",
 					"text":"<!--EQUIPMENT_TEXT-->",
 					"damage":"<!--EQUIPMENT_DMG--><!--IF_COMPOUND_POWER--><!--COMPONENT_POWERS--><!--POWER_DMG--><!--/COMPONENT_POWERS--><!--/IF_COMPOUND_POWER-->",
 					"end":"<!--EQUIPMENT_END-->",
@@ -1204,8 +1201,6 @@
 							"text":"<!--DISAD_TEXT-->",
 							"notes":"<!--IFNOTES--><!--DISAD_NOTES--><!--/IFNOTES-->"
 						<!--STOP-->8<!--/STOP-->
-<<<<<<< HEAD
-=======
 					<!--/DISADS-->},
 					"complication09":{<!--DISADS-->
 						<!--START-->9<!--/START-->
@@ -1222,7 +1217,6 @@
 							"text":"<!--DISAD_TEXT-->",
 							"notes":"<!--IFNOTES--><!--DISAD_NOTES--><!--/IFNOTES-->"
 						<!--STOP-->10<!--/STOP-->
->>>>>>> working
 					<!--/DISADS-->}
 				<!--/IFDISADS-->},
 		"powers":{
@@ -2185,8 +2179,6 @@
 						"compound":"false"
 					<!--/IF_NOT_COMPOUND_POWER-->
 				<!--STOP-->20<!--/STOP--><!--/POWERS-->
-<<<<<<< HEAD
-=======
 			},
 			"power21":{
 				<!--POWERS--><!--START-->21<!--/START-->
@@ -2667,7 +2659,6 @@
 						"compound":"false"
 					<!--/IF_NOT_COMPOUND_POWER-->
 				<!--STOP-->30<!--/STOP--><!--/POWERS-->
->>>>>>> working
 			}
 		},
 		"skills": {
@@ -3279,15 +3270,8 @@
 		"timeStamp":"<!--TIMESTAMP-->",
 		"genre":"<!--GENRE-->",
 		"campaign":"<!--CAMPAIGN_NAME-->",
-		"version":"1.0",
-=======
 		"version":"1.2",
-<<<<<<< HEAD
->>>>>>> working
-		"HeroSystem6eHeroic":true
-=======
 		"HeroSystem6eHeroic":"true"
->>>>>>> working
 	}
 }
 
