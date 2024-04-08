@@ -31,7 +31,7 @@ If HD Importer has started correctly the following notification should appear in
 5. If the character has a profile image, save that as well.
 
 ## Text Editor
-1. Open the exported character file in your favorite text editor (Windows NotePad can cause problems).
+1. Open the exported character file in your favorite text editor (with some exceptions discussed below).
 2. Copy the entire contents (with cmd-A or ctrl-A).
 
 ## Roll20
