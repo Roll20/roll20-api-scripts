@@ -1344,6 +1344,7 @@
 		const overflowPowers = (character.version >= 1.2) ? 10 : 0;
 		
 		let tempString;
+		let damageString;
 		let tempPosition;
 		let tempValue = 0;
 		let endPosition;
@@ -1439,9 +1440,18 @@
 						sendChat(script_name, "Compound power with " + JSON.stringify(count) + " parts.");
 					}
 					
+					damageString = character.powers["power"+ID].damage
 					for (let i=0; i<count; i++) {
 						subStringA = tempString.split("plus")[i];
-						subStringB = (character.powers["power"+ID].damage).split("d6")[i] + "d6";
+						
+						// Try to separate compound powers that use dice. Won't work if there is a mix with and without.
+						if ( damageString.includes("d6") ) {
+							tempPosition = damageString.indexOf("d6")
+							subStringB = damageString.slice(0, tempPosition);
+							damageString = damageString.slice(tempPosition+2);
+						} else {
+							subStringB = 0;
+						}
 						
 						if (subStringA.includes("(Real Cost:")) {
 							subStringB = subStringA.substring(
@@ -1474,7 +1484,7 @@
 							text: subStringA,
 							cost: cost,
 							endurance: character.powers["power"+ID].endurance,
-							damage: (subStringB !== undefined) ? subStringB : character.powers["power"+ID].damage,
+							damage: (subStringB !== 0) ? subStringB + "d6" : character.powers["power"+ID].damage,
 							compound: true
 						}
 						
@@ -3464,9 +3474,6 @@
 		let endPosition = 0;
 		
 		inputString = inputString.toLowerCase();
-		
-		
-		sendChat(script_name, inputString);
 		
 		if (inputString.includes("(locations")) {
 			startPosition = inputString.indexOf("(locations") + 10;
