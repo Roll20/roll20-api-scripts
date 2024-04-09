@@ -2366,7 +2366,7 @@
 	var importGeneralSkill = function(object, character, script_name, skillObject, generalSkillIndex) {
 		// Identify and import a general skill.
 		
-		let theSkill;
+		var theSkill = {};
 		let attribute = skillObject.attribute;
 		let text = skillObject.text;
 		let type = "none";
@@ -2452,70 +2452,11 @@
 			}
 		}
 		
-		// Import the skill based on the general skill index location.
-		
-		switch (generalSkillIndex) {
-			case 0: theSkill = {skillName01: name, skillType01: type, skillCP01: cost};
-				break;
-			case 1: theSkill = {skillName02: name, skillType02: type, skillCP02: cost};
-				break;
-			case 2: theSkill = {skillName03: name, skillType03: type, skillCP03: cost};
-				break;
-			case 3: theSkill = {skillName04: name, skillType04: type, skillCP04: cost};
-				break;
-			case 4: theSkill = {skillName05: name, skillType05: type, skillCP05: cost};
-				break;
-			case 5: theSkill = {skillName06: name, skillType06: type, skillCP06: cost};
-				break;
-			case 6: theSkill = {skillName07: name, skillType07: type, skillCP07: cost};
-				break;
-			case 7: theSkill = {skillName08: name, skillType08: type, skillCP08: cost};
-				break;
-			case 8: theSkill = {skillName09: name, skillType09: type, skillCP09: cost};
-				break;
-			case 9: theSkill = {skillName10: name, skillType10: type, skillCP10: cost};
-				break;
-			case 10: theSkill = {skillName11: name, skillType11: type, skillCP11: cost};
-				break;
-			case 11: theSkill = {skillName12: name, skillType12: type, skillCP12: cost};
-				break;
-			case 12: theSkill = {skillName13: name, skillType13: type, skillCP13: cost};
-				break;
-			case 13: theSkill = {skillName14: name, skillType14: type, skillCP14: cost};
-				break;
-			case 14: theSkill = {skillName15: name, skillType15: type, skillCP15: cost};
-				break;
-			case 15: theSkill = {skillName16: name, skillType16: type, skillCP16: cost};
-				break;
-			case 16: theSkill = {skillName17: name, skillType17: type, skillCP17: cost};
-				break;
-			case 17: theSkill = {skillName18: name, skillType18: type, skillCP18: cost};
-				break;
-			case 18: theSkill = {skillName19: name, skillType19: type, skillCP19: cost};
-				break;
-			case 19: theSkill = {skillName20: name, skillType20: type, skillCP20: cost};
-				break;
-			case 20: theSkill = {skillName21: name, skillType21: type, skillCP21: cost};
-				break;
-			case 21: theSkill = {skillName22: name, skillType22: type, skillCP22: cost};
-				break;
-			case 22: theSkill = {skillName23: name, skillType23: type, skillCP23: cost};
-				break;
-			case 23: theSkill = {skillName24: name, skillType24: type, skillCP24: cost};
-				break;
-			case 24: theSkill = {skillName25: name, skillType25: type, skillCP25: cost};
-				break;
-			case 25: theSkill = {skillName26: name, skillType26: type, skillCP26: cost};
-				break;
-			case 26: theSkill = {skillName27: name, skillType27: type, skillCP27: cost};
-				break;
-			case 27: theSkill = {skillName28: name, skillType28: type, skillCP28: cost};
-				break;
-			case 28: theSkill = {skillName29: name, skillType29: type, skillCP29: cost};
-				break;
-			
-			default: theSkill = {skillName30: name, skillType30: type, skillCP30: cost};
-		}
+		// Import the skill
+		ID = String(generalSkillIndex+1).padStart(2,'0');
+		theSkill["skillName"+ID] = name;
+		theSkill["skillType"+ID] = type;
+		theSkill["skillCP"+ID] = cost; 
 		
 		setAttrs(object.id, theSkill);
 		
