@@ -3,11 +3,12 @@ A script for importing characters built in or acquired for HERO Designer into a 
 
 HD Importer attempts to translate as much of a [HERO Designer](https://www.herogames.com/store/product/1-hero-designer/) character as possible into a Roll20 [HeroSystem6eHeroic](https://github.com/Roll20/roll20-character-sheets/blob/master/HeroSystem6eHeroic/README.md) character sheet. There will invariably be rules, options, or build styles that do not translate well from HERO Designer into Roll20. Nonetheless, this importer should import most of the details of a character. At present, the character sheet has twenty power slots. Ten additional powers if present will be imported as text and displayed in the text field below the "Perks and Talents" section.
 
-This script was tested with the following commercial character packs:
+This script was tested with the following commercially available character packs:
 - [Dead Orc Pass](https://www.herogames.com/store/product/910-dead-orc-pass-mini-campaign-book-pdfhdc/)
 - [Kazei 5](https://www.herogames.com/store/product/92-kazei-5-character-pack/)
 - [Monster Hunter International](https://www.herogames.com/store/product/5-monster-hunter-international-character-pack/)
 - [Champions Begins](https://www.herogames.com/store/product/1005-champions-begins-pdfhd/)
+- [Narosia HERO Designer Pack](https://www.herogames.com/store/product/544-narosia-hero-designer-character-pack/)
 
 # Installation:
 

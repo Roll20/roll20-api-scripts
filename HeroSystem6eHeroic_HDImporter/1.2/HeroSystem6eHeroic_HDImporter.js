@@ -891,7 +891,7 @@
 		
 		importCount = 0;
 		
-		for (importCount = 0; importCount < maxWeapons; importCount++) {
+		for (importCount = 0; importCount < maxArmor; importCount++) {
 		
 			ID = String(importCount+1).padStart(2,'0');
 			
@@ -941,13 +941,7 @@
 				}
 				
 				// Armor locations
-				if (tempString.includes("(locations")) {
-					tempPosition = tempString.indexOf("(locations") + 10;
-					secondPosition = tempString.indexOf(")", tempPosition);
-					
-					importedArmor["armorLocations"+ID] = tempString.substr(tempPosition, secondPosition - tempPosition);
-					
-				}
+				importedArmor["armorLocations"+ID] = getArmorLocations(tempString, script_name);
 				
 				// Get armor mass.
 				if (armorArray[importCount].mass !== "") {
@@ -1548,7 +1542,7 @@
 					importedPowers["powerName"+ID] = powerArray[importCount].name;
 				}
 				
-				// If effect is Resistant Protection fill in Armor Slot 4 with a combination of ED and PD.
+				// If effect is Resistant Protection create armor in Armor Slot 4 with a combination of ED and PD.
 				if (importedPowers["powerEffect"+ID] === "Resistant Protection") {
 					tempValue = getResistantPD(powerArray[importCount].text);
 					if (tempValue > 0) {
@@ -3458,6 +3452,45 @@
 		}
 		
 		return damageBySTR;
+	}
+	
+	
+	var getArmorLocations = function (inputString, script_name) {
+		// Looks for two location blocks.
+		// Not a complete solution if the armor has different PD/ED.
+		let locations = "";
+		let secondString = "";
+		let startPosition = 0;
+		let endPosition = 0;
+		
+		inputString = inputString.toLowerCase();
+		
+		
+		sendChat(script_name, inputString);
+		
+		if (inputString.includes("(locations")) {
+			startPosition = inputString.indexOf("(locations") + 10;
+			endPosition = inputString.indexOf(")", startPosition);
+			locations = inputString.slice(startPosition, endPosition);
+			secondString = inputString.slice(endPosition+1);
+		} else if (inputString.includes("(loc")) {
+			startPosition = inputString.indexOf("(loc") + 4;
+			endPosition = inputString.indexOf(")", startPosition);
+			locations = inputString.slice(startPosition, endPosition);
+			secondString = inputString.slice(endPosition+1);
+		}
+		
+		if (secondString.includes("(locations")) {
+			startPosition = secondString.indexOf("(locations") + 10;
+			endPosition = secondString.indexOf(")", startPosition);
+			locations += "," + secondString.slice(startPosition, endPosition);
+		} else if (secondString.includes("(loc")) {
+			startPosition = secondString.indexOf("(loc") + 4;
+			endPosition = secondString.indexOf(")", startPosition);
+			locations += "," + secondString.slice(startPosition, endPosition);
+		}
+		
+		return locations;
 	}
 	
 	
