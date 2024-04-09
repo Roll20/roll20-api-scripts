@@ -2380,6 +2380,9 @@
 		} else if (skillObject.text.includes("three pre-defined Skills")) {
 			// Three-group skill.
 			type = "group";
+		} else if ((base === "0") && (cost === "0")) {
+			// Everyman skill.
+			type = "everyman";
 		} else if (text.startsWith("KS") && ((base-levels) === 2)) {
 			// Knowledge Skill
 			type = "ks";
@@ -2457,6 +2460,9 @@
 		theSkill["skillName"+ID] = name;
 		theSkill["skillType"+ID] = type;
 		theSkill["skillCP"+ID] = cost; 
+		if (type === "everyman") {
+			theSkill["skillRollChance"+ID] = "8";
+		}
 		
 		setAttrs(object.id, theSkill);
 		
