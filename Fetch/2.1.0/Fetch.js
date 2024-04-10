@@ -658,10 +658,10 @@ const Fetch = (() => { //eslint-disable-line no-unused-vars
             } else if (!isNaN(parseInt(query))) {
 
                 index = parseInt(query);
-                if (index < 0) {
-                    index = 0;
-                } else if (index >= weightedItems.length) {
-                    index = weightedItems.length - 1;
+                if (index < 1) {
+                    index = 1;
+                } else if (index > weightedItems.length) {
+                    index = weightedItems.length;
                 }
                 return weightedItems[index-1];
             }
