@@ -225,7 +225,7 @@ const Plugger = (() => {
 
     const reconstructOps = (o, msg, msgstate, status, notes) => {
         const runPlugin = c => {
-            const evalstmtrx = /^\s*(?<script>[^(\s]*)\s*\((?<args>.*?)\)(?<!\({&\d+}\))/gi;
+            const evalstmtrx = /^\s*(?<script>[^(\s]*)\s*\((?<args>.*?)\)(?<!\({&\d+}\))$/gi;
             let ret;
             let content = '';
             if (evalstmtrx.test(c)) {
