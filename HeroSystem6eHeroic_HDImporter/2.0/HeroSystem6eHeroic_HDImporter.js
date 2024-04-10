@@ -41,9 +41,9 @@
 
 (function() {
 	// Constants
-	const versionMod = "1.2";
+	const versionMod = "2.0";
 	const versionSheet = "2.84"; // Note that a newer sheet will make upgrades as well as it can.
-	const needsExportedVersion = new Set(["1.0", "1.2"]);
+	const needsExportedVersion = new Set(["1.0", "2.0"]);
 	
 	const defaultAttributes = {
 		

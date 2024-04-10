@@ -1,4 +1,4 @@
-<!--TEMPLATE_NAME-->HeroSystem6eHeroic<!--/TEMPLATE_NAME--><!--TEMPLATE_DESCRIPTION--><p>HeroSystem6eHeroic</p><p>Version 1.2</p><p>Export format for the Roll20 API script HeroSystem6eHeroic_HDImporter, which imports Hero Designer characters into the HeroSystem6eHeroic character sheet.</p><p>For documentation see https://github.com/Roll20/roll20-api-scripts/tree/master/HeroSystem6eHeroic_HDImporter</p><p>By Villain In Glasses (Roll20 ID 633423)</p><!--/TEMPLATE_DESCRIPTION-->
+<!--TEMPLATE_NAME-->HeroSystem6eHeroic<!--/TEMPLATE_NAME--><!--TEMPLATE_DESCRIPTION--><p>HeroSystem6eHeroic</p><p>Version 2.0</p><p>Export format for the Roll20 API script HeroSystem6eHeroic_HDImporter, which imports Hero Designer characters into the HeroSystem6eHeroic character sheet.</p><p>For documentation see https://github.com/Roll20/roll20-api-scripts/tree/master/HeroSystem6eHeroic_HDImporter</p><p>By Villain In Glasses (Roll20 ID 633423)</p><!--/TEMPLATE_DESCRIPTION-->
 <!--FILE_EXTENSION-->txt<!--/FILE_EXTENSION-->
 !hero --import {
 	"character":{
@@ -3270,7 +3270,7 @@
 		"timeStamp":"<!--TIMESTAMP-->",
 		"genre":"<!--GENRE-->",
 		"campaign":"<!--CAMPAIGN_NAME-->",
-		"version":"1.2",
+		"version":"2.0",
 		"HeroSystem6eHeroic":"true"
 	}
 }
