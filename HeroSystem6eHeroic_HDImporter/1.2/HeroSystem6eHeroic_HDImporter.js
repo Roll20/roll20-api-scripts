@@ -887,7 +887,7 @@
 		// Prepare object of armor defenses. Assign to character sheet Armor List.
 				
 		let importedArmor = new Array();
-		const maxArmor = 3; // The 4th will be used for resistant protection.
+		const maxArmor = 4; // The 4th may be overwritten if the character has resistant protection.
 		
 		importCount = 0;
 		
@@ -1350,6 +1350,8 @@
 		let endPosition;
 		let subStringA;
 		let subStringB;
+		let subStringC;
+		let theEffect = "";
 		let sampleSize;
 		let control = 0;
 		let base = 0;
@@ -1454,14 +1456,14 @@
 						}
 						
 						if (subStringA.includes("(Real Cost:")) {
-							subStringB = subStringA.substring(
+							subStringC = subStringA.substring(
 								subStringA.indexOf("(Real Cost:") + 1, 
 								subStringA.lastIndexOf(")")
 							);
 							
-							subStringB = subStringB.replace(/\D/g,"");
+							subStringC = subStringC.replace(/\D/g,"");
 							
-							cost = parseInt(subStringB)||0;
+							cost = parseInt(subStringC)||0;
 							
 						} else {
 							if (i === 0) {
@@ -1543,7 +1545,8 @@
 				ID = String(importCount+1).padStart(2,'0');
 				
 				// Assign power effect type.
-				importedPowers["powerEffect"+ID] = findEffectType(powerArray[importCount].text);
+				theEffect = findEffectType(powerArray[importCount].text);
+				importedPowers["powerEffect"+ID] = theEffect;
 				
 				// If the power does not have a name assign it the effect type.
 				if (powerArray[importCount].name === "") {
@@ -1553,7 +1556,8 @@
 				}
 				
 				// If effect is Resistant Protection create armor in Armor Slot 4 with a combination of ED and PD.
-				if (importedPowers["powerEffect"+ID] === "Resistant Protection") {
+				// Will overwrite equipment if present.
+				if (theEffect === "Resistant Protection") {
 					tempValue = getResistantPD(powerArray[importCount].text);
 					if (tempValue > 0) {
 						importedPowers["armorPD04"] = tempValue;
@@ -1562,6 +1566,8 @@
 						tempObject = (requiresRoll(powerArray[importCount].text));
 						if (tempObject.hasRoll) {
 							importedPowers["armorActivation04"] = tempObject.skillRoll;
+						} else {
+							importedPowers["armorActivation04"] = 18;
 						}
 					}
 					
@@ -1573,9 +1579,14 @@
 						tempObject = (requiresRoll(powerArray[importCount].text));
 						if (tempObject.hasRoll) {
 							importedPowers["armorActivation04"] = tempObject.skillRoll;
+						} else {
+							importedPowers["armorActivation04"] = 18;
 						}
 					}
-				} else if (importedPowers["powerEffect"+ID] === "Base PD Mod") {
+					importedPowers["armorEND04"] = 0;
+					importedPowers["armorLocations04"] = "3-18";
+					importedPowers["armorMass04"] = 0;
+				} else if (theEffect === "Base PD Mod") {
 					if ( (powerArray[importCount].text).includes("Resistant")) {
 						importedPowers["armorPD04"] = parseInt(character.pd);
 						importedPowers["totalPD04"] = parseInt(character.pd);
@@ -1583,9 +1594,11 @@
 						tempObject = (requiresRoll(powerArray[importCount].text));
 						if (tempObject.hasRoll) {
 							importedPowers["armorActivation04"] = tempObject.skillRoll;
+						} else {
+							importedPowers["armorActivation04"] = 18;
 						}
 					}
-				} else if (importedPowers["powerEffect"+ID] === "Base ED Mod") {
+				} else if (theEffect === "Base ED Mod") {
 					if ( (powerArray[importCount].text).includes("Resistant")) {
 						importedPowers["armorED04"] = parseInt(character.ed);
 						importedPowers["totalED04"] = parseInt(character.ed);
@@ -1593,12 +1606,17 @@
 						tempObject = (requiresRoll(powerArray[importCount].text));
 						if (tempObject.hasRoll) {
 							importedPowers["armorActivation04"] = tempObject.skillRoll;
+						} else {
+							importedPowers["armorActivation04"] = 18;
 						}
 					}
+					importedPowers["armorEND04"] = 0;
+					importedPowers["armorLocations04"] = "3-18";
+					importedPowers["armorMass04"] = 0;
 				}
 				
 				// Special cases or base cost.
-				tempCostArray = getPowerBaseCost(character, powerArray[importCount].base, importedPowers["powerEffect"+ID], powerArray[importCount].text, bonusCP, importedPowers.optionTakesNoSTUN, script_name);
+				tempCostArray = getPowerBaseCost(character, powerArray[importCount].base, theEffect, powerArray[importCount].text, bonusCP, importedPowers.optionTakesNoSTUN, script_name);
 				importedPowers["powerBaseCost"+ID] = tempCostArray[0];
 				bonusCP = tempCostArray[1];
 				
@@ -1632,7 +1650,7 @@
 				importedPowers["powerStunMod"+ID] = modifiedSTUNx(testObject.testString);
 				
 				// Assign effect dice.
-				importedPowers["powerDice"+ID] = getPowerDamage(powerArray[importCount].damage, script_name);
+				importedPowers["powerDice"+ID] = getPowerDamage(powerArray[importCount].damage, theEffect, script_name);
 				
 				// Find and assign power type. Remove export notes from names.
 				tempString = powerArray[importCount].name;
@@ -1668,10 +1686,42 @@
 				}
 				
 				// Set attack checkbox for attacks.
-				importedPowers["powerAttack"+ID] = isAttack(importedPowers["powerEffect"+ID]) ? "on" : 0;
+				importedPowers["powerAttack"+ID] = isAttack(theEffect) ? "on" : 0;
 				
 				// Set power type.
-				importedPowers["powerDamageType"+ID] = getPowerDamageType(importedPowers["powerEffect"+ID]);
+				importedPowers["powerDamageType"+ID] = getPowerDamageType(theEffect);
+				
+				// Apply power characteristic mods.
+				switch (theEffect) {
+					case "Running":			importedPowers["runningMod"] = getCharacteristicMod(powerArray[importCount].text, "Running", script_name);
+											break;
+					case "Leaping":			importedPowers["leapingMod"] = getCharacteristicMod(powerArray[importCount].text, "Leaping", script_name);
+											break;
+					case "Swimming":		importedPowers["swimmingMod"] = getCharacteristicMod(powerArray[importCount].text, "Swimming", script_name);
+											break;
+					case "Enhanced STR":	importedPowers["strengthMod"] = getCharacteristicMod(powerArray[importCount].text, "STR", script_name);
+											break;
+					case "Enhanced DEX":	importedPowers["dexterityMod"] = getCharacteristicMod(powerArray[importCount].text, "DEX", script_name);
+											break;
+					case "Enhanced CON":	importedPowers["constitutionMod"] = getCharacteristicMod(powerArray[importCount].text, "CON", script_name);
+											break;
+					case "Enhanced INT":	importedPowers["intelligenceMod"] = getCharacteristicMod(powerArray[importCount].text, "INT", script_name);
+											break;
+					case "Enhanced EGO":	importedPowers["egoMod"] = getCharacteristicMod(powerArray[importCount].text, "EGO", script_name);
+											break;
+					case "Enhanced PRE":	importedPowers["presenceMod"] = getCharacteristicMod(powerArray[importCount].text, "PRE", script_name);
+											break;
+					case "Enhanced OCV":	importedPowers["ocvMod"] = getCharacteristicMod(powerArray[importCount].text, "OCV", script_name);
+											break;
+					case "Enhanced DCV":	importedPowers["dcvMod"] = getCharacteristicMod(powerArray[importCount].text, "PRE", script_name);
+											break;
+					case "Enhanced OMCV":	importedPowers["omcvMod"] = getCharacteristicMod(powerArray[importCount].text, "OMCV", script_name);
+											break;
+					case "Enhanced DMCV":	importedPowers["dmcvMod"] = getCharacteristicMod(powerArray[importCount].text, "DMCV", script_name);
+											break;
+					default:				break;
+				}
+				
 			}
 		}
 		
@@ -2366,7 +2416,7 @@
 	var importGeneralSkill = function(object, character, script_name, skillObject, generalSkillIndex) {
 		// Identify and import a general skill.
 		
-		var theSkill = {};
+		var theSkill = new Object();
 		let attribute = skillObject.attribute;
 		let text = skillObject.text;
 		let type = "none";
@@ -3317,7 +3367,7 @@
 	}
 	
 	
-	var getPowerDamage = function (damageString, script_name) {
+	var getPowerDamage = function (damageString, effect, script_name) {
 		// Parses damageString for damage dice.
 		
 		let damage = "0";
@@ -3325,38 +3375,74 @@
 		let detailString;
 		let startPosition;
 		let endPosition;
+		var diceSet = new Set(["Aid", "Blast", "Dispel", "Drain", "Entangle", "HTH Attack", "HTH Killing Attack", "Ranged Killing Attack", "Healing", "Luck", "Mental Blast", "Mental Illusions", "Mind Control", "Mind Scan", "Telepathy"]);
 		
-		if (damageString.includes("standard effect")) {
-			startPosition = damageString.indexOf("standard effect");
-			endPosition = damageString.indexOf(")", startPosition);
-			detailString = damageString.slice(startPosition+16, endPosition);
-			damage = detailString;
-		} else {	
-			// Separate joined dice if present.
-			if ((damageString.match(/d6/g) || []).length > 1) {
-				damageString = damageString.replace("d6", "d6+");
-				lastIndex = damageString.lastIndexOf("d6+");
-				damageString = damageString.substring(0, lastIndex) + "d6" + damageString.substring(lastIndex + 2);
+		if (diceSet.has(effect)) {
+			if (damageString.includes("standard effect")) {
+				startPosition = damageString.indexOf("standard effect");
+				endPosition = damageString.indexOf(")", startPosition);
+				detailString = damageString.slice(startPosition+16, endPosition);
+				damage = detailString;
+			} else {	
+				// Separate joined dice if present.
+				if ((damageString.match(/d6/g) || []).length > 1) {
+					damageString = damageString.replace("d6", "d6+");
+					lastIndex = damageString.lastIndexOf("d6+");
+					damageString = damageString.substring(0, lastIndex) + "d6" + damageString.substring(lastIndex + 2);
+				}
+				
+				// Look for (xd6 w/STR) and use that.
+				if (damageString.includes(" w/STR")) {
+					damageString = damageString.match(/\(([^)]*)\)/)[1];
+					damageString = damageString.replace(" w/STR", "");
+					damageString = damageString.trim();
+				}
+				
+				// Make sure the 1/2d6 is a 1d3.
+				if (damageString.includes(" 1/2d6")) {
+					damage = damageString.replace(" 1/2d6", "d6+d3");			
+				} else if (damageString.includes("1/2d6")) {
+					damage = damageString.replace("1/2d6", "d3");
+				} else {
+					damage = damageString;
+				}
 			}
-			
-			// Look for (xd6 w/STR) and use that.
-			if (damageString.includes(" w/STR")) {
-				damageString = damageString.match(/\(([^)]*)\)/)[1];
-				damageString = damageString.replace(" w/STR", "");
-				damageString = damageString.trim();
-			}
-			
-			// Make sure the 1/2d6 is a 1d3.
-			if (damageString.includes(" 1/2d6")) {
-				damage = damageString.replace(" 1/2d6", "d6+d3");			
-			} else if (damageString.includes("1/2d6")) {
-				damage = damageString.replace("1/2d6", "d3");
-			} else {
-				damage = damageString;
-			}
+		} else {
+			damage = "0";
 		}
 		
 		return damage;
+	}
+	
+	
+	var getCharacteristicMod = function (inputString, searchString, script_name) {
+		let charMod = 0;
+		let lastIndex = 0;
+		let detailString = "";
+		let startPosition;
+		
+		var leadingSet = new Set(["STR", "DEX", "CON", "INT", "EGO", "PRE", "OCV", "DCV", "OMCV", "DMCV"]);
+		var trailingSet = new Set(["Running", "Leaping", "Swimming", "Flight"]);
+		
+		if (leadingSet.has(searchString)) {
+			endPosition = inputString.indexOf(searchString);
+			detailString = inputString.slice(0, endPosition);
+			startPosition = detailString.includes("+") ? detailString.indexOf("+") : 0;
+			detailString = detailString.slice(startPosition, endPosition);
+			charMod = detailString.replace(/[^0-9]/g, '');
+		} else if (trailingSet.has(searchString)) {
+			startPosition = inputString.indexOf(searchString);
+			detailString = inputString.slice(startPosition + searchString.length);
+			endPosition = detailString.indexOf("m");
+			detailString = detailString.slice(startPosition, endPosition);
+			charMod = detailString.replace(/[^0-9]/g, '');
+		} else {
+			charMod = 0;
+		}
+		
+		sendChat(script_name, charMod);
+		
+		return charMod;
 	}
 	
 	
