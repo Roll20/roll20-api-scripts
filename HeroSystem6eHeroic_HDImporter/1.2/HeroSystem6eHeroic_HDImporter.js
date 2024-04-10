@@ -42,7 +42,7 @@
 (function() {
 	// Constants
 	const versionMod = "1.2";
-	const versionSheet = "2.82"; // Note that a newer sheet will make upgrades as well as it can.
+	const versionSheet = "2.84"; // Note that a newer sheet will make upgrades as well as it can.
 	const needsExportedVersion = new Set(["1.0", "1.2"]);
 	
 	const defaultAttributes = {
@@ -1698,6 +1698,8 @@
 					case "Leaping":			importedPowers["leapingMod"] = getCharacteristicMod(powerArray[importCount].text, "Leaping", script_name);
 											break;
 					case "Swimming":		importedPowers["swimmingMod"] = getCharacteristicMod(powerArray[importCount].text, "Swimming", script_name);
+											break;
+					case "Flight":			importedPowers["flightMod"] = getCharacteristicMod(powerArray[importCount].text, "Flight", script_name);
 											break;
 					case "Enhanced STR":	importedPowers["strengthMod"] = getCharacteristicMod(powerArray[importCount].text, "STR", script_name);
 											break;
@@ -3430,12 +3432,18 @@
 			startPosition = detailString.includes("+") ? detailString.indexOf("+") : 0;
 			detailString = detailString.slice(startPosition, endPosition);
 			charMod = detailString.replace(/[^0-9]/g, '');
+			if (charMod === "") {
+				charMod = 0;
+			}
 		} else if (trailingSet.has(searchString)) {
 			startPosition = inputString.indexOf(searchString);
 			detailString = inputString.slice(startPosition + searchString.length);
-			endPosition = detailString.indexOf("m");
+			endPosition = detailString.includes("m") ? detailString.indexOf("m") : detailString.length;
 			detailString = detailString.slice(startPosition, endPosition);
 			charMod = detailString.replace(/[^0-9]/g, '');
+			if (charMod === "") {
+				charMod = 0;
+			}
 		} else {
 			charMod = 0;
 		}
