@@ -663,7 +663,7 @@ const Fetch = (() => { //eslint-disable-line no-unused-vars
                 } else if (index >= weightedItems.length) {
                     index = weightedItems.length - 1;
                 }
-                return weightedItems[index];
+                return weightedItems[index-1];
             }
         }
 
