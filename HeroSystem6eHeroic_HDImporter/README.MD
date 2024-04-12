@@ -9,6 +9,7 @@ This script was tested with the following commercially available character packs
 - [Monster Hunter International](https://www.herogames.com/store/product/5-monster-hunter-international-character-pack/)
 - [Champions Begins](https://www.herogames.com/store/product/1005-champions-begins-pdfhd/)
 - [Narosia HERO Designer Pack](https://www.herogames.com/store/product/544-narosia-hero-designer-character-pack/)
+- [Extinction Event: Hero Designer Pack](https://www.herogames.com/store/product/1045-extinction-event-hero-designer-pack/)
 
 # Installation:
 

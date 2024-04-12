@@ -1,43 +1,43 @@
 /* HeroSystem6eHeroic_HDImporter.js
- * Hero Designer Importer for the Roll20 Hero System 6e Heroic character sheet
- * Version: 1.2
- * By Villain in Glasses
- * villaininglasses@icloud.com
- * Discord: Villain#0604
- * Roll20: https://app.roll20.net/users/633423/villain-in-glasses
- * Hero Games Forum Thread: 
- * https://www.herogames.com/forums/topic/101627-new-roll20-character-sheet-hero-system-6e-heroic/
- *
- * Purpose: Imports characters created in Hero Designer into a Roll20 HeroSystem6eHeroic campaign.
- *
- * Installation: Paste this script into the API setup area of your Roll20 HeroSystem6eHeroic campaign.
- *
- * Copy "HeroSystem6eHeroic.hde" into your Hero Designer export format folder.
- *
- * Use: from Hero Designer export a character using HeroSystem6eHeroic.hde as the selected format. 
- * This will produce a text file with the name of the character (e.g., myCharacter.txt).
- *
- * Open the exported file in your favorite text editor. Select all of the contents and copy it.
- * Paste the copied text in the chat window of your Roll20 HeroSystem6eHeroic campaign. Hit enter.
- *
- * Commands:
- *   Import character: "!hero --import {character text}"
- *   Help: "!hero --help"
- *   Config: "!hero --config"
- * 
- * Based on BeyondImporter Version O.4.0 by 
- * Robin Kuiper
- * Discord: Atheos#1095
- * Roll20: https://app.roll20.net/users/1226016/robin
- *
- * Matt DeKok
- * Discord: Sillvva#2532
- * Roll20: https://app.roll20.net/users/494585/sillvva
- *
- * Ammo Goettsch
- * Discord: ammo#7063
- * Roll20: https://app.roll20.net/users/2990964/ammo
- */
+	* Hero Designer Importer for the Roll20 Hero System 6e Heroic character sheet
+	* Version: 1.2
+	* By Villain in Glasses
+	* villaininglasses@icloud.com
+	* Discord: Villain#0604
+	* Roll20: https://app.roll20.net/users/633423/villain-in-glasses
+	* Hero Games Forum Thread: 
+	* https://www.herogames.com/forums/topic/101627-new-roll20-character-sheet-hero-system-6e-heroic/
+	*
+	* Purpose: Imports characters created in Hero Designer into a Roll20 HeroSystem6eHeroic campaign.
+	*
+	* Installation: Paste this script into the API setup area of your Roll20 HeroSystem6eHeroic campaign.
+	*
+	* Copy "HeroSystem6eHeroic.hde" into your Hero Designer export format folder.
+	*
+	* Use: from Hero Designer export a character using HeroSystem6eHeroic.hde as the selected format. 
+	* This will produce a text file with the name of the character (e.g., myCharacter.txt).
+	*
+	* Open the exported file in your favorite text editor. Select all of the contents and copy it.
+	* Paste the copied text in the chat window of your Roll20 HeroSystem6eHeroic campaign. Hit enter.
+	*
+	* Commands:
+	*   Import character: "!hero --import {character text}"
+	*   Help: "!hero --help"
+	*   Config: "!hero --config"
+	* 
+	* Based on BeyondImporter Version O.4.0 by 
+	* Robin Kuiper
+	* Discord: Atheos#1095
+	* Roll20: https://app.roll20.net/users/1226016/robin
+	*
+	* Matt DeKok
+	* Discord: Sillvva#2532
+	* Roll20: https://app.roll20.net/users/494585/sillvva
+	*
+	* Ammo Goettsch
+	* Discord: ammo#7063
+	* Roll20: https://app.roll20.net/users/2990964/ammo
+	*/
 
 (function() {
 	// Constants
@@ -226,21 +226,21 @@
 		
 		// Try to catch some bad input. Doesn't currently catch no input.
 		try {
-		  character = JSON.parse(json).character;
+	  	character = JSON.parse(json).character;
 		}
 		
 		catch(error) {
-		  let message = "";
-			  needsExportedVersion.forEach(function(value) {
+	  	let message = "";
+		  	needsExportedVersion.forEach(function(value) {
 			message += value + ", ";
-		  });
-		  
-		  // Drop the last comma.
-		  message = message.slice(0, -2);
-		  
-		  sendChat(script_name, '<div style="'+style+'">Hero Importer ended early due to a source content error.</div>' );
-		  sendChat(script_name, "Please verify that the character file was exported using HeroSystem6eHeroic.hde (acceptable versions: "+message+"). For help use the command !hero --help.");
-		  return;
+	  	});
+	  	
+	  	// Drop the last comma.
+	  	message = message.slice(0, -2);
+	  	
+	  	sendChat(script_name, '<div style="'+style+'">Hero Importer ended early due to a source content error.</div>' );
+	  	sendChat(script_name, "Please verify that the character file was exported using HeroSystem6eHeroic.hde (acceptable versions: "+message+"). For help use the command !hero --help.");
+	  	return;
 		}
 		
 		// Verify that the character was exported with the latest version of HeroSystem6eHeroic.hde. If not, report error and abort.
@@ -1545,7 +1545,7 @@
 				ID = String(importCount+1).padStart(2,'0');
 				
 				// Assign power effect type.
-				theEffect = findEffectType(powerArray[importCount].text);
+				theEffect = findEffectType(powerArray[importCount].text, script_name);
 				importedPowers["powerEffect"+ID] = theEffect;
 				
 				// If the power does not have a name assign it the effect type.
@@ -1561,6 +1561,7 @@
 					tempValue = getResistantPD(powerArray[importCount].text);
 					if (tempValue > 0) {
 						importedPowers["armorPD04"] = tempValue;
+						importedPowers["pdMod"] = tempValue;
 						importedPowers["totalPD04"] = tempValue + parseInt(character.pd);
 						importedPowers["armorName04"] = importedPowers["powerName"+ID];
 						tempObject = (requiresRoll(powerArray[importCount].text));
@@ -1574,6 +1575,7 @@
 					tempValue = getResistantED(powerArray[importCount].text);
 					if (tempValue > 0) {
 						importedPowers["armorED04"] = tempValue;
+						importedPowers["edMod"] = tempValue;
 						importedPowers["totalED04"] = tempValue + parseInt(character.ed);
 						importedPowers["armorName04"] = importedPowers["powerName"+ID];
 						tempObject = (requiresRoll(powerArray[importCount].text));
@@ -1691,35 +1693,49 @@
 				// Set power type.
 				importedPowers["powerDamageType"+ID] = getPowerDamageType(theEffect);
 				
-				// Apply power characteristic mods.
+				// Apply characteristic mods granted by enhancement powers or movement.
+				tempString = powerArray[importCount].text;
 				switch (theEffect) {
-					case "Running":			importedPowers["runningMod"] = getCharacteristicMod(powerArray[importCount].text, "Running", script_name);
+					case "Running":			importedPowers["runningMod"] = getCharacteristicMod(tempString, "Running", script_name);
 											break;
-					case "Leaping":			importedPowers["leapingMod"] = getCharacteristicMod(powerArray[importCount].text, "Leaping", script_name);
+					case "Leaping":			importedPowers["leapingMod"] = getCharacteristicMod(tempString, "Leaping", script_name);
 											break;
-					case "Swimming":		importedPowers["swimmingMod"] = getCharacteristicMod(powerArray[importCount].text, "Swimming", script_name);
+					case "Swimming":		importedPowers["swimmingMod"] = getCharacteristicMod(tempString, "Swimming", script_name);
 											break;
-					case "Flight":			importedPowers["flightMod"] = getCharacteristicMod(powerArray[importCount].text, "Flight", script_name);
+					case "Flight":			importedPowers["flightMod"] = getCharacteristicMod(tempString, "Flight", script_name);
 											break;
-					case "Enhanced STR":	importedPowers["strengthMod"] = getCharacteristicMod(powerArray[importCount].text, "STR", script_name);
+					case "Enhanced STR":	importedPowers["strengthMod"] = getCharacteristicMod(tempString, "STR", script_name);
 											break;
-					case "Enhanced DEX":	importedPowers["dexterityMod"] = getCharacteristicMod(powerArray[importCount].text, "DEX", script_name);
+					case "Enhanced DEX":	importedPowers["dexterityMod"] = getCharacteristicMod(tempString, "DEX", script_name);
 											break;
-					case "Enhanced CON":	importedPowers["constitutionMod"] = getCharacteristicMod(powerArray[importCount].text, "CON", script_name);
+					case "Enhanced CON":	importedPowers["constitutionMod"] = getCharacteristicMod(tempString, "CON", script_name);
 											break;
-					case "Enhanced INT":	importedPowers["intelligenceMod"] = getCharacteristicMod(powerArray[importCount].text, "INT", script_name);
+					case "Enhanced INT":	importedPowers["intelligenceMod"] = getCharacteristicMod(tempString, "INT", script_name);
 											break;
-					case "Enhanced EGO":	importedPowers["egoMod"] = getCharacteristicMod(powerArray[importCount].text, "EGO", script_name);
+					case "Enhanced EGO":	importedPowers["egoMod"] = getCharacteristicMod(tempString, "EGO", script_name);
 											break;
-					case "Enhanced PRE":	importedPowers["presenceMod"] = getCharacteristicMod(powerArray[importCount].text, "PRE", script_name);
+					case "Enhanced PRE":	importedPowers["presenceMod"] = getCharacteristicMod(tempString, "PRE", script_name);
 											break;
-					case "Enhanced OCV":	importedPowers["ocvMod"] = getCharacteristicMod(powerArray[importCount].text, "OCV", script_name);
+					case "Enhanced OCV":	importedPowers["ocvMod"] = getCharacteristicMod(tempString, "OCV", script_name);
 											break;
-					case "Enhanced DCV":	importedPowers["dcvMod"] = getCharacteristicMod(powerArray[importCount].text, "PRE", script_name);
+					case "Enhanced DCV":	importedPowers["dcvMod"] = getCharacteristicMod(tempString, "DCV", script_name);
 											break;
-					case "Enhanced OMCV":	importedPowers["omcvMod"] = getCharacteristicMod(powerArray[importCount].text, "OMCV", script_name);
+					case "Enhanced OMCV":	importedPowers["omcvMod"] = getCharacteristicMod(tempString, "OMCV", script_name);
 											break;
-					case "Enhanced DMCV":	importedPowers["dmcvMod"] = getCharacteristicMod(powerArray[importCount].text, "DMCV", script_name);
+					case "Enhanced DMCV":	importedPowers["dmcvMod"] = getCharacteristicMod(tempString, "DMCV", script_name);
+											break;
+					case "Enhanced PER":	if ( tempString.includes("Sight") ) {
+												importedPowers["perceptionModifierVision"] = getCharacteristicMod(tempString, "PER", script_name);
+											}
+											if ( tempString.includes("Hearing") ) {
+												importedPowers["perceptionModifierHearing"] = getCharacteristicMod(tempString, "PER", script_name);
+											}
+											if ( tempString.includes("Smell") ) {
+												importedPowers["perceptionModifierSmell"] = getCharacteristicMod(tempString, "PER", script_name);
+											}
+											if ( !(tempString.includes("Sight")) && !(tempString.includes("Hearing")) && !(tempString.includes("Smell")) ) {
+												importedPowers["enhancedPerceptionModifier"] = getCharacteristicMod(tempString, "PER", script_name);
+											}
 											break;
 					default:				break;
 				}
@@ -2031,7 +2047,7 @@
 		let enhancer;
 		
 		switch(enhancerString) {
-			  case "Jack of All Trades":
+		  	case "Jack of All Trades":
 				enhancer = {
 					enhancerJack: "on",
 					enhancerJackCP: 3
@@ -2061,8 +2077,8 @@
 					enhancerTravCP: 3
 				}
 				break;
-		  default:
-				  // Well-Connected
+	  	default:
+			  	// Well-Connected
 				enhancer = {
 					enhancerWell: "on",
 					enhancerWellCP: 3
@@ -2600,10 +2616,11 @@
 	}
 	
 	
-	var findEffectType = function(tempString) {
+	var findEffectType = function(tempString, script_name) {
 		// Search for and return effect keywords.
 		
 		let lowerCaseString = tempString.toLowerCase();
+		const talentArray = ["absolute range sense", "absolute time sense", "ambidexterity", "animal friendship", "bump of direction", "combat luck", "combat sense", "danger sense", "deadly blow", "double jointed", "eidetic memory", "environmental movement", "lightning calculator", "lightning reflexes", "lightsleap", "off-hand defense", "perfect pitch", "resistance", "simulate death", "speed reading", "striking appearance", "universal translator", "weaponmaster"];
 		
 		if (lowerCaseString.includes("applied to str")) {
 			return "Base STR Mod";	
@@ -2807,6 +2824,8 @@
 			return "Independent Advantage";
 		} else if (lowerCaseString.includes("worth of") || lowerCaseString.includes("powers") || lowerCaseString.includes("spells") || lowerCaseString.includes("abilities")) {
 			return "To Be Determined";	
+		} else if (talentArray.some(v => lowerCaseString.includes(v))) {
+			return "Talent";
 		} else {
 			return "Unknown Effect";
 		}
@@ -3423,10 +3442,12 @@
 		let detailString = "";
 		let startPosition;
 		
-		var leadingSet = new Set(["STR", "DEX", "CON", "INT", "EGO", "PRE", "OCV", "DCV", "OMCV", "DMCV"]);
+		var leadingSet = new Set(["STR", "DEX", "CON", "INT", "EGO", "PRE", "OCV", "DCV", "OMCV", "DMCV", "PER"]);
 		var trailingSet = new Set(["Running", "Leaping", "Swimming", "Flight"]);
 		
-		if (leadingSet.has(searchString)) {
+		if (inputString.includes("Real Weapon") === true) {
+			charMod = 0;	
+		} else if (leadingSet.has(searchString)) {
 			endPosition = inputString.indexOf(searchString);
 			detailString = inputString.slice(0, endPosition);
 			startPosition = detailString.includes("+") ? detailString.indexOf("+") : 0;
@@ -3447,8 +3468,6 @@
 		} else {
 			charMod = 0;
 		}
-		
-		sendChat(script_name, charMod);
 		
 		return charMod;
 	}
