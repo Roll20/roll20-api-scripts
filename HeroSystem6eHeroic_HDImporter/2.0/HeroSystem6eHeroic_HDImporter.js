@@ -1724,6 +1724,18 @@
 											break;
 					case "Enhanced DMCV":	importedPowers["dmcvMod"] = getCharacteristicMod(tempString, "DMCV", script_name);
 											break;
+					case "Enhanced BODY":	importedPowers["bodyMod"] = getCharacteristicMod(tempString, "BODY", script_name);
+											break;
+					case "Enhanced PD":		importedPowers["pdMod"] = getCharacteristicMod(tempString, "PD", script_name);
+											break;
+					case "Enhanced ED":		importedPowers["edMod"] = getCharacteristicMod(tempString, "ED", script_name);
+											break;
+					case "Enhanced STUN":	importedPowers["stunMod"] = getCharacteristicMod(tempString, "STUN", script_name);
+											break;
+					case "Enhanced END":	importedPowers["endMod"] = getCharacteristicMod(tempString, "END", script_name);
+											break;
+					case "Enhanced REC":	importedPowers["recMod"] = getCharacteristicMod(tempString, "REC", script_name);
+											break;
 					case "Enhanced PER":	if ( tempString.includes("Sight") ) {
 												importedPowers["perceptionModifierVision"] = getCharacteristicMod(tempString, "PER", script_name);
 											}
@@ -2621,6 +2633,8 @@
 		
 		let lowerCaseString = tempString.toLowerCase();
 		const talentArray = ["absolute range sense", "absolute time sense", "ambidexterity", "animal friendship", "bump of direction", "combat luck", "combat sense", "danger sense", "deadly blow", "double jointed", "eidetic memory", "environmental movement", "lightning calculator", "lightning reflexes", "lightsleap", "off-hand defense", "perfect pitch", "resistance", "simulate death", "speed reading", "striking appearance", "universal translator", "weaponmaster"];
+		const skillArray = ["overall"];
+		const senseModifierArray = ["analyze", "concealed", "adjacent", "dimensional", "discriminatory", "increased arc", "microscopic", "penetrative", "range", "rapid", "telescopic", "tracking", "transmit"];
 		
 		if (lowerCaseString.includes("applied to str")) {
 			return "Base STR Mod";	
@@ -2681,7 +2695,7 @@
 		} else if (tempString.includes("Faster-Than-Light-Travel")) {
 			return "Faster-Than-Light-Travel";
 		} else if (tempString.includes("Resistant")) {
-				return "Resistant Protection";
+			return "Resistant Protection";
 		} else if (tempString.includes("Flash")) {
 			return "Flash";
 		} else if (tempString.includes("Flash Defense")) {
@@ -2773,7 +2787,9 @@
 		} else if (tempString.includes("High Range Radio")) {
 			return "HR Radio PER";
 		} else if (tempString.includes("Infrared Perception")) {
-			return "IR Perception";		
+			return "IR Perception";
+		} else if (tempString.includes("IR Perception")) {
+			return "IR Perception";	
 		} else if (tempString.includes("Mental Awareness")) {
 			return "Mental Awareness";	
 		} else if (tempString.includes("Nightvision")) {
@@ -2791,7 +2807,13 @@
 		} else if (tempString.includes("Ultrasonic Perception")) {
 			return "Ultrasonic PER";
 		} else if (tempString.includes("Ultraviolet Perception")) {
-			return "UV Perception";		
+			return "UV Perception";
+		} else if (skillArray.some(v => lowerCaseString.includes(v))) {
+			return "Skill";
+		} else if (talentArray.some(v => lowerCaseString.includes(v))) {
+			return "Talent";
+		} else if (senseModifierArray.some(v => lowerCaseString.includes(v))) {
+			return "Sense Modifier";
 		} else if (tempString.includes("SPD")) {
 			return "Enhanced SPD";		
 		} else if (tempString.includes("PER")) {
@@ -2810,12 +2832,20 @@
 			return "Enhanced PRE";		
 		} else if (tempString.includes("OCV")) {
 			return "Enhanced OCV";		
-		} else if (tempString.includes("DCV")) {
-			return "Enhanced DCV";		
 		} else if (tempString.includes("OMCV")) {
 			return "Enhanced OMCV";		
 		} else if (tempString.includes("DMCV")) {
 			return "Enhanced DMCV";
+		} else if (tempString.includes("PD")) {
+			return "Enhanced PD";
+		} else if (tempString.includes("ED")) {
+			return "Enhanced ED";
+		} else if (tempString.includes("BODY")) {
+			return "Enhanced BODY";
+		} else if (tempString.includes("STUN")) {
+			return "Enhanced STUN";
+		} else if (tempString.includes("REC")) {
+			return "Enhanced REC";
 		} else if (lowerCaseString.includes("sight") || lowerCaseString.includes("hearing") || lowerCaseString.includes("smell") || lowerCaseString.includes("taste") || lowerCaseString.includes("touch") || lowerCaseString.includes("sense")) {
 			return "Enhanced PER";
 		} else if (lowerCaseString.includes("eating") || lowerCaseString.includes("immunity") || lowerCaseString.includes("longevity") || lowerCaseString.includes("safe in") || lowerCaseString.includes("breathing") || lowerCaseString.includes("sleeping")) {
@@ -2824,8 +2854,10 @@
 			return "Independent Advantage";
 		} else if (lowerCaseString.includes("worth of") || lowerCaseString.includes("powers") || lowerCaseString.includes("spells") || lowerCaseString.includes("abilities")) {
 			return "To Be Determined";	
-		} else if (talentArray.some(v => lowerCaseString.includes(v))) {
-			return "Talent";
+		} else if (tempString.includes("DCV")) {
+			return "Enhanced DCV";
+		} else if (tempString.includes("END")) {
+			return "Enhanced END";
 		} else {
 			return "Unknown Effect";
 		}
@@ -3442,7 +3474,7 @@
 		let detailString = "";
 		let startPosition;
 		
-		var leadingSet = new Set(["STR", "DEX", "CON", "INT", "EGO", "PRE", "OCV", "DCV", "OMCV", "DMCV", "PER"]);
+		var leadingSet = new Set(["STR", "DEX", "CON", "INT", "EGO", "PRE", "OCV", "DCV", "OMCV", "DMCV", "PD", "ED", "BODY", "STUN", "END", "REC", "PER"]);
 		var trailingSet = new Set(["Running", "Leaping", "Swimming", "Flight"]);
 		
 		if (inputString.includes("Real Weapon") === true) {
