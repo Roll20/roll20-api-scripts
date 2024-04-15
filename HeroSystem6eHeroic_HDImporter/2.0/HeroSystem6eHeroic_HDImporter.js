@@ -1537,6 +1537,7 @@
 		// This is currently the only function where bonus points are awarded. If this changes, assign to character bonusBenefit.
 		let bonusCP = 0;
 		let maxImport = (powerArrayIndex <= maxPowers) ? powerArrayIndex : maxPowers;
+		const specialArray = ["real weapon", "only works", "only for", "only to", "only applies", "requires a roll", "protects areas"];
 		
 		if (powerArrayIndex > 0) {
 			
@@ -1557,11 +1558,16 @@
 				
 				// If effect is Resistant Protection create armor in Armor Slot 4 with a combination of ED and PD.
 				// Will overwrite equipment if present.
+				tempString = (powerArray[importCount].text).toLowerCase();
+
 				if (theEffect === "Resistant Protection") {
 					tempValue = getResistantPD(powerArray[importCount].text);
 					if (tempValue > 0) {
 						importedPowers["armorPD04"] = tempValue;
-						importedPowers["pdMod"] = tempValue;
+						if ( (specialArray.some(v => tempString.includes(v))) != true) {
+							// We don't want to add overall modifications for special cases.
+							importedPowers["pdMod"] = tempValue;
+						}
 						importedPowers["totalPD04"] = tempValue + parseInt(character.pd);
 						importedPowers["armorName04"] = importedPowers["powerName"+ID];
 						tempObject = (requiresRoll(powerArray[importCount].text));
@@ -1575,7 +1581,10 @@
 					tempValue = getResistantED(powerArray[importCount].text);
 					if (tempValue > 0) {
 						importedPowers["armorED04"] = tempValue;
-						importedPowers["edMod"] = tempValue;
+						if ( (specialArray.some(v => tempString.includes(v))) != true) {
+							// We don't want to add overall modifications for special cases.
+							importedPowers["edMod"] = tempValue;
+						}
 						importedPowers["totalED04"] = tempValue + parseInt(character.ed);
 						importedPowers["armorName04"] = importedPowers["powerName"+ID];
 						tempObject = (requiresRoll(powerArray[importCount].text));
@@ -2819,9 +2828,7 @@
 		} else if (tempString.includes("PER")) {
 			return "Enhanced PER";		
 		} else if (tempString.includes("STR")) {
-			return "Enhanced STR";		
-		} else if (tempString.includes("DEX")) {
-			return "Enhanced DEX";		
+			return "Enhanced STR";				
 		} else if (tempString.includes("CON")) {
 			return "Enhanced CON";		
 		} else if (tempString.includes("INT")) {
@@ -2846,6 +2853,8 @@
 			return "Enhanced STUN";
 		} else if (tempString.includes("REC")) {
 			return "Enhanced REC";
+		} else if (tempString.includes("DEX")) {
+			return "Enhanced DEX";
 		} else if (lowerCaseString.includes("sight") || lowerCaseString.includes("hearing") || lowerCaseString.includes("smell") || lowerCaseString.includes("taste") || lowerCaseString.includes("touch") || lowerCaseString.includes("sense")) {
 			return "Enhanced PER";
 		} else if (lowerCaseString.includes("eating") || lowerCaseString.includes("immunity") || lowerCaseString.includes("longevity") || lowerCaseString.includes("safe in") || lowerCaseString.includes("breathing") || lowerCaseString.includes("sleeping")) {
@@ -3473,12 +3482,15 @@
 		let lastIndex = 0;
 		let detailString = "";
 		let startPosition;
+		let lowerCaseString = inputString.toLowerCase();
 		
+		const specialArray = ["real weapon", "only works", "only for", "only to", "only applies", "requires a roll"];
 		var leadingSet = new Set(["STR", "DEX", "CON", "INT", "EGO", "PRE", "OCV", "DCV", "OMCV", "DMCV", "PD", "ED", "BODY", "STUN", "END", "REC", "PER"]);
 		var trailingSet = new Set(["Running", "Leaping", "Swimming", "Flight"]);
 		
-		if (inputString.includes("Real Weapon") === true) {
-			charMod = 0;	
+		if (specialArray.some(v => lowerCaseString.includes(v))) {
+			// We don't want to add overall modifications for special cases.
+			charMod = 0;
 		} else if (leadingSet.has(searchString)) {
 			endPosition = inputString.indexOf(searchString);
 			detailString = inputString.slice(0, endPosition);

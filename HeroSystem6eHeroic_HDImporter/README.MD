@@ -4,16 +4,21 @@ A script for importing characters built in or acquired for HERO Designer into a 
 HD Importer attempts to translate as much of a [HERO Designer](https://www.herogames.com/store/product/1-hero-designer/) character as possible into a Roll20 [HeroSystem6eHeroic](https://github.com/Roll20/roll20-character-sheets/blob/master/HeroSystem6eHeroic/README.md) character sheet. There will invariably be rules, options, or build styles that do not translate well from HERO Designer into Roll20. Nonetheless, this importer should import most of the details of a character. At present, the character sheet has twenty power slots. Ten additional powers if present will be imported as text and displayed in the text field below the "Perks and Talents" section.
 
 This script was tested with the following commercially available character packs:
+- [Champions Begins](https://www.herogames.com/store/product/1005-champions-begins-pdfhd/)
+- [HERO System Bestiary 6th Edition Character Pack](https://www.herogames.com/store/product/79-hero-system-bestiary-6th-edition-character-pack/)
 - [Dead Orc Pass](https://www.herogames.com/store/product/910-dead-orc-pass-mini-campaign-book-pdfhdc/)
 - [Kazei 5](https://www.herogames.com/store/product/92-kazei-5-character-pack/)
 - [Monster Hunter International](https://www.herogames.com/store/product/5-monster-hunter-international-character-pack/)
-- [Champions Begins](https://www.herogames.com/store/product/1005-champions-begins-pdfhd/)
 - [Narosia HERO Designer Pack](https://www.herogames.com/store/product/544-narosia-hero-designer-character-pack/)
 - [Extinction Event: Hero Designer Pack](https://www.herogames.com/store/product/1045-extinction-event-hero-designer-pack/)
+- [HERO System Martial Arts Character Pack](https://www.herogames.com/store/product/85-hero-system-martial-arts-character-pack/)
+- [Fistful of Fu: Real World Martial Artists](https://www.herogames.com/store/product/1015-fistful-of-fu-real-world-martial-artists-pdf-hdc/)
+- [One-Sheet Encounters - Fallen Angel](https://www.herogames.com/store/product/1044-one-sheet-encounters-fallen-angel-pdf/)
+- [Dragon Bestiary 01 - Black Dragon](https://www.herogames.com/store/product/1080-dragon-bestiary-01-black-dragon-pdfhdc/)
 
 # Installation:
 
-From the campaign's home page go to the Mods page via 'Settings -> Mod (API) Scripts.' 
+From the campaign's home page go to the Mods page via 'Settings -> Mod (API) Scripts.'
 
 From the Mods page select 'HeroSystem6eHeroic HDImporter' from the Mod Library dropdown list. Alternatively, create a new script and copy and paste the contents of HeroSystem6eHeroic_HDImporter.js into the text editing box. Save the script.
 
@@ -26,9 +31,9 @@ If HD Importer has started correctly the following notification should appear in
 
 ## HERO Designer
 
-1. Download the latest export format file [HeroSystem6eHeroic.hde](https://github.com/Roll20/roll20-api-scripts/tree/master/HeroSystem6eHeroic_HDImporter/1.2) from this repository and install it into your HERO Designer folder.
+1. Download the latest export format file [HeroSystem6eHeroic.hde](https://github.com/Roll20/roll20-api-scripts/tree/master/HeroSystem6eHeroic_HDImporter/2.0) from this repository and install it into your HERO Designer folder.
 2. Create a new character or load a character file into HERO Designer.
-3. Change the export format to HeroSystem6eHeroic.hde via the menu item "Current Character->Export->Set Export Format..."
+3. Select the export format HeroSystem6eHeroic.hde via the menu item "Current Character->Export->Set Export Format..."
 4. Select "Current Character->Export->Export to File..." to save the character as a .txt file.
 5. If the character has a profile image, save that as well.
 
@@ -37,7 +42,6 @@ If HD Importer has started correctly the following notification should appear in
 2. Copy the entire contents (with cmd-A or ctrl-A).
 
 ## Roll20
-
 1. Paste the copied text into the chat window of your Roll20 HeroSystem6eHeroic game.
 2. Hit enter. If all goes well you should see a start and finish notification, which for the character "Alena" appears as
 ![HelpMenu](/HeroSystem6eHeroic_HDImporter/images/ImportSuccess.png)
