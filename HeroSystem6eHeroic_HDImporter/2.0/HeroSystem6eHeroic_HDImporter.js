@@ -1238,8 +1238,11 @@
 		let perksAndTalentsIndex = 0;
 		const maxPerks = 10;
 		const maxTalents = 10;
-		const maxCombinedSheet = 7;
-		let tempString = character.overflow;
+		const maxCombinedSheet = 10;
+		let overflowString = character.overflow;
+		let tempString = "";
+		let diceString = "";
+		let tempPosition = 0;
 		
 		let importCount = 0;
 		
@@ -1284,7 +1287,7 @@
 		}
 		
 		/* -------------------------------------------------------------------------------------- */
-		/* Import the first seven into the sheet. Then import the remainder as a text field note.
+		/* Import the first ten into the sheet. Then import the remainder as a text field note.
 		/* -------------------------------------------------------------------------------------- */
 		
 		importCount = 0;
@@ -1299,16 +1302,65 @@
 				importedTalents["talentName"+ID] = perksAndTalentsArray[importCount].type;
 				importedTalents["talentText"+ID] = perksAndTalentsArray[importCount].text;
 				importedTalents["talentCP"+ID] = perksAndTalentsArray[importCount].points;
+				
+				if (typeof importedTalents["talentText"+ID] !== "undefined") {
+					
+					tempString = importedTalents["talentText"+ID];
+					
+					if (tempString.includes("8-")) {
+						importedTalents["talentRollChance"+ID] = 8;
+						importedTalents["talentActivate"+ID] = "on";
+					} else if (tempString.includes("9-")) {
+						importedTalents["talentRollChance"+ID] = 9;
+						importedTalents["talentActivate"+ID] = "on";
+					} else if (tempString.includes("10-")) {
+						importedTalents["talentRollChance"+ID] = 10;
+						importedTalents["talentActivate"+ID] = "on";
+					} else if (tempString.includes("11-")) {
+						importedTalents["talentRollChance"+ID] = 11;
+						importedTalents["talentActivate"+ID] = "on";
+					} else if (tempString.includes("12-")) {
+						importedTalents["talentRollChance"+ID] = 12;
+						importedTalents["talentActivate"+ID] = "on";
+					} else if (tempString.includes("13-")) {
+						importedTalents["talentRollChance"+ID] = 13;
+						importedTalents["talentActivate"+ID] = "on";
+					} else if (tempString.includes("14-")) {
+						importedTalents["talentRollChance"+ID] = 14;
+						importedTalents["talentActivate"+ID] = "on";
+					} else if (tempString.includes("15-")) {
+						importedTalents["talentRollChance"+ID] = 15;
+						importedTalents["talentActivate"+ID] = "on";
+					} else if (tempString.includes("16-")) {
+						importedTalents["talentRollChance"+ID] = 16;
+						importedTalents["talentActivate"+ID] = "on";
+					} else if (tempString.includes("17-")) {
+						importedTalents["talentRollChance"+ID] = 17;
+						importedTalents["talentActivate"+ID] = "on";
+					} else if (tempString.includes("18-")) {
+						importedTalents["talentRollChance"+ID] = 18;
+						importedTalents["talentActivate"+ID] = "on";
+					}
+					
+					if ( tempString.includes("d6") ) {
+						tempPosition = tempString.indexOf("d6")
+						diceString = tempString.slice(0, tempPosition);
+						diceString = diceString.slice(-2).replace(/\D/g,"") + "d6";
+						importedTalents["talentDice"+ID] = diceString;
+					} else {
+						importedTalents["talentDice"+ID] = 0;
+					}
+				}
 			}
 			
 			// Display additional perks and talents in the complications text box.
 			if (perksAndTalentsIndex > maxCombinedSheet) {
-				let i = 7;
+				let i = maxCombinedSheet;
 				let extras = 0;
 				
-				for (let i = 7; i<perksAndTalentsIndex; i++) {
-					tempString += perksAndTalentsArray[i].type + " CP: " + perksAndTalentsArray[i].points + "\n";
-					tempString += perksAndTalentsArray[i].text + "\n";
+				for (let i = maxCombinedSheet; i<perksAndTalentsIndex; i++) {
+					overflowString += perksAndTalentsArray[i].type + " CP: " + perksAndTalentsArray[i].points + "\n";
+					overflowString += perksAndTalentsArray[i].text + "\n";
 					extras++;
 				}
 				
@@ -1316,7 +1368,7 @@
 					sendChat(script_name, extras + " perks and talents placed in notes.");
 				}
 				
-				importedTalents.complicationsTextLeft = tempString.trim();	
+				importedTalents.complicationsTextLeft = overflowString.trim();	
 			}
 			
 			// Import perks and talents to sheet.
