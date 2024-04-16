@@ -1861,15 +1861,16 @@
 		let importCount = 0;
 		let ID = "";
 		let tempString = "";
-		const maxComplications = 6;
-		const overflowComplications = (character.version >= 1.2) ? 4 : 0;
+		let diceString = "";
+		let tempPosition = 0;
+		const maxComplications = 10;
 		var importedComplications = new Object();
 		
 		/* ------------------------- */
 		/* Read Complications        */
 		/* ------------------------- */
 		
-		for (importCount = 0; importCount < maxComplications + overflowComplications; importCount++) {
+		for (importCount = 0; importCount < maxComplications; importCount++) {
 			
 			ID = String(importCount+1).padStart(2,'0');
 			
@@ -1878,20 +1879,92 @@
 					importedComplications["complicationName"+ID] = character.complications["complication"+ID].type;
 					importedComplications["complicationText"+ID] = character.complications["complication"+ID].text + "\n" + character.complications["complication"+ID].notes;
 					importedComplications["complicationCP"+ID] = character.complications["complication"+ID].points;
+					
+					// Type
+					tempString = character.complications["complication"+ID].type;
+					tempString = tempString.toLowerCase();
+					
+					if (tempString.includes("accidental change")) {
+						importedComplications["complicationType"+ID] = "accidental";
+					} else if (tempString.includes("dependence")) {
+						importedComplications["complicationType"+ID] = "dependence";
+					} else if (tempString.includes("dependent")) {
+						importedComplications["complicationType"+ID] = "dependent";
+					} else if (tempString.includes("distinctive")) {
+						importedComplications["complicationType"+ID] = "distinctive";
+					} else if ((tempString.includes("enraged")) || (tempString.includes("berserk")))  {
+						importedComplications["complicationType"+ID] = "enraged";
+					} else if (tempString.includes("hunted")) {
+						importedComplications["complicationType"+ID] = "hunted";
+					} else if (tempString.includes("reputation")) {
+						importedComplications["complicationType"+ID] = "reputation";
+					} else if (tempString.includes("physical")) {
+						importedComplications["complicationType"+ID] = "physical";
+					} else if (tempString.includes("psychological")) {
+						importedComplications["complicationType"+ID] = "psychological";
+					} else if (tempString.includes("rival")) {
+						importedComplications["complicationType"+ID] = "rival";
+					} else if (tempString.includes("social")) {
+						importedComplications["complicationType"+ID] = "social";
+					} else if (tempString.includes("susceptibility")) {
+						importedComplications["complicationType"+ID] = "susceptibility";
+					} else if (tempString.includes("unluck")) {
+						importedComplications["complicationType"+ID] = "unluck";
+					} else if (tempString.includes("vulnerability")) {
+						importedComplications["complicationType"+ID] = "vulnerability";
+					} else {
+						importedComplications["complicationType"+ID] = "custom";
+					}
+					
+					// Activation Roll
+					tempString = character.complications["complication"+ID].text + "\n" + character.complications["complication"+ID].notes;
+					
+					if (tempString.includes("8-")) {
+						importedComplications["complicationRollChance"+ID] = 8;
+						importedComplications["complicationActivate"+ID] = "on";
+					} else if (tempString.includes("9-")) {
+						importedComplications["complicationRollChance"+ID] = 9;
+						importedComplications["complicationActivate"+ID] = "on";
+					} else if (tempString.includes("10-")) {
+						importedComplications["complicationRollChance"+ID] = 10;
+						importedComplications["complicationActivate"+ID] = "on";
+					} else if (tempString.includes("11-")) {
+						importedComplications["complicationRollChance"+ID] = 11;
+						importedComplications["complicationActivate"+ID] = "on";
+					} else if (tempString.includes("12-")) {
+						importedComplications["complicationRollChance"+ID] = 12;
+						importedComplications["complicationActivate"+ID] = "on";
+					} else if (tempString.includes("13-")) {
+						importedComplications["complicationRollChance"+ID] = 13;
+						importedComplications["complicationActivate"+ID] = "on";
+					} else if (tempString.includes("14-")) {
+						importedComplications["complicationRollChance"+ID] = 14;
+						importedComplications["complicationActivate"+ID] = "on";
+					} else if (tempString.includes("15-")) {
+						importedComplications["complicationRollChance"+ID] = 15;
+						importedComplications["complicationActivate"+ID] = "on";
+					} else if (tempString.includes("16-")) {
+						importedComplications["complicationRollChance"+ID] = 16;
+						importedComplications["complicationActivate"+ID] = "on";
+					} else if (tempString.includes("17-")) {
+						importedComplications["complicationRollChance"+ID] = 17;
+						importedComplications["complicationActivate"+ID] = "on";
+					} else if (tempString.includes("18-")) {
+						importedComplications["complicationRollChance"+ID] = 18;
+						importedComplications["complicationActivate"+ID] = "on";
+					}
+					
+					// Dice
+					if ( tempString.includes("d6") ) {
+						tempPosition = tempString.indexOf("d6")
+						diceString = tempString.slice(0, tempPosition);
+						diceString = diceString.slice(-2).replace(/\D/g,"") + "d6";
+						importedComplications["complicationDice"+ID] = diceString;
+					} else {
+						importedComplications["complicationDice"+ID] = 0;
+					}
 				}
-			} else if (importCount < maxComplications + overflowComplications) {
-				if ((typeof character.complications["complication"+ID] !== "undefined") && (typeof character.complications["complication"+ID].type !== "undefined")) {			
-					tempString += "\n";
-					tempString += character.complications["complication"+ID].type + "\n";
-					tempString += character.complications["complication"+ID].text + "\n";
-					tempString += character.complications["complication"+ID].notes;
-					tempString += String(character.complications["complication"+ID].points) + " CP" + "\n";
-				}
-			}
-		}
-		
-		if (tempString.length !== 0) {
-			importedComplications.complicationsTextRight = tempString.trim();
+			} 
 		}
 		
 		if(verbose) {
