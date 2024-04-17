@@ -3695,7 +3695,7 @@
 		let startPosition;
 		let lowerCaseString = inputString.toLowerCase();
 		
-		const specialArray = ["real weapon", "only works", "only for", "only to", "only applies", "only when", "requires a roll"];
+		const specialArray = ["real weapon", "only works", "only for", "only to", "only applies", "only when", "requires a roll", "for up to"];
 		var leadingSet = new Set(["STR", "DEX", "CON", "INT", "EGO", "PRE", "OCV", "DCV", "OMCV", "DMCV", "PD", "ED", "BODY", "STUN", "END", "REC", "PER"]);
 		var trailingSet = new Set(["Running", "Leaping", "Swimming", "Flight"]);
 		
@@ -3724,7 +3724,7 @@
 			charMod = 0;
 		}
 		
-		return charMod;
+		return Math.max(-99, Math.min( (parseInt(charMod)||0), 99));
 	}
 	
 	
