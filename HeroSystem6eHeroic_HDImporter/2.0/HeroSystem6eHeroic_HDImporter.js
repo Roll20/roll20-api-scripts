@@ -788,7 +788,11 @@
 		setAttrs(object.id, importedEquipment);
 		
 		if(verbose) {
-			sendChat(script_name, "Imported "+ imported +" pieces of equipment.");
+			if (imported === 1) {
+				sendChat(script_name, "Imported 1 piece of equipment.");
+			} else {
+				sendChat(script_name, "Imported "+ imported +" pieces of equipment.");
+			}
 		}
 		
 		// Prepare objects of weapons. Assign to character sheet Weapon List.
@@ -890,7 +894,11 @@
 		setAttrs(object.id, importedWeapons);
 		
 		if(verbose) {
-			sendChat(script_name, "Imported "+ imported +" weapons.");
+			if (imported === 1) {
+				sendChat(script_name, "Imported 1 weapon.");
+			} else {
+				sendChat(script_name, "Imported "+ imported +" weapons.");
+			}
 		}
 		
 		// Prepare object of armor defenses. Assign to character sheet Armor List.
@@ -970,7 +978,11 @@
 		setAttrs(object.id, importedArmor);
 		
 		if(verbose) {
-			sendChat(script_name, "Imported " + imported + " pieces of armor.");
+			if (imported === 1) {
+				sendChat(script_name, "Imported 1 piece of armor.");
+			} else {
+				sendChat(script_name, "Imported " + imported + " pieces of armor.");
+			}
 		}
 		
 		// Identify independent multipowers.
@@ -1396,8 +1408,12 @@
 			setAttrs(object.id, importedTalents);
 		}
 		
-		if(verbose) {
-			sendChat(script_name, "Imported " + importCount + " perks and talents.");
+		if (verbose) {
+			if (importCount === 1) {
+				sendChat(script_name, "Imported 1 perk or talent.");
+			} else {
+				sendChat(script_name, "Imported " + importCount + " perks and talents.");
+			}
 		}
 		
 		return;
@@ -1886,7 +1902,11 @@
 		setAttrs(object.id, importedPowers);
 		
 		if(verbose) {
-			sendChat(script_name, "Imported " + importCount + " powers.");
+			if (powerArrayIndex === 1) {
+				sendChat(script_name, "Imported 1 power.");
+			} else {
+				sendChat(script_name, "Imported " + powerArrayIndex + " powers.");
+			}
 		}		
 		
 		return tempString.trim();
