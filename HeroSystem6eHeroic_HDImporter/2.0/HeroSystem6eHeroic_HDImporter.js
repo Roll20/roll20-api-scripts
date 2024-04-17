@@ -96,6 +96,9 @@
 		optionTakesNoSTUN: 0,
 		
 		// Skill levels
+		skillLevels38: 0,
+		skillLevels39: 0,
+		skillLevels40: 0,
 		interactionLevelsCP: 0,
 		intellectLevelsCP: 0,
 		agilityLevelsCP: 0,
@@ -2406,22 +2409,19 @@
 		if (skillObject.text.includes("HTH Combat")) {
 			// Find the number of levels from the CP spent.
 			weaponSkill = {
-				skillLevels38: skillObject.levels,
-				skillCP38: (skillObject.levels)*8
+				skillLevels38: skillObject.levels
 			};
 			
 		} else if (skillObject.text.includes("Ranged Combat")) {
 			// Find the number of levels from the CP spent.
 			weaponSkill = {
-				skillLevels39: skillObject.levels,
-				skillCP39: (skillObject.levels)*8
+				skillLevels39: skillObject.levels
 			};
 			
 		} else if (skillObject.text.includes("All Attacks")) {
 			// Find the number of levels from the CP spent.
 			weaponSkill = {
-				skillLevels40: skillObject.levels,
-				skillCP40: (skillObject.levels)*10
+				skillLevels40: skillObject.levels
 			};
 			
 		} else if (skillObject.text.includes("group") || skillObject.text.includes("single") || (skillObject.display === "Weapon Familiarity") || (skillObject.display === "Penalty Skill Levels") || (skillObject.display === "Combat Skill Levels")) {
