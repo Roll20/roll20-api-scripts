@@ -1660,6 +1660,10 @@
 				tempString = (powerArray[importCount].text).toLowerCase();
 
 				if (theEffect === "Resistant Protection") {
+					if(verbose) {
+						sendChat(script_name, "Added Resistant Protection power to armor.");
+					}
+					
 					tempValue = getResistantPD(powerArray[importCount].text);
 					if (tempValue > 0) {
 						importedPowers["armorPD04"] = tempValue;
@@ -1697,6 +1701,10 @@
 					importedPowers["armorLocations04"] = "3-18";
 					importedPowers["armorMass04"] = 0;
 				} else if (theEffect === "Base PD Mod") {
+					if(verbose) {
+						sendChat(script_name, "Added Resistant PD to armor.");
+					}
+					
 					if ( (powerArray[importCount].text).includes("Resistant")) {
 						importedPowers["armorPD04"] = parseInt(character.pd);
 						importedPowers["totalPD04"] = parseInt(character.pd);
@@ -1709,6 +1717,10 @@
 						}
 					}
 				} else if (theEffect === "Base ED Mod") {
+					if(verbose) {
+						sendChat(script_name, "Added Resistant ED to armor.");
+					}
+					
 					if ( (powerArray[importCount].text).includes("Resistant")) {
 						importedPowers["armorED04"] = parseInt(character.ed);
 						importedPowers["totalED04"] = parseInt(character.ed);
