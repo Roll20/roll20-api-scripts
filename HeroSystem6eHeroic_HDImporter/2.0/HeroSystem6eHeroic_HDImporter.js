@@ -3707,7 +3707,7 @@
 			detailString = inputString.slice(0, endPosition);
 			startPosition = detailString.includes("+") ? detailString.indexOf("+") : 0;
 			detailString = detailString.slice(startPosition, endPosition);
-			charMod = detailString.replace(/[^0-9]/g, '');
+			charMod = detailString.replace(/[^0-9\-]/g, '');
 			if (charMod === "") {
 				charMod = 0;
 			}
@@ -3716,7 +3716,7 @@
 			detailString = inputString.slice(startPosition + searchString.length);
 			endPosition = detailString.includes("m") ? detailString.indexOf("m") : detailString.length;
 			detailString = detailString.slice(startPosition, endPosition);
-			charMod = detailString.replace(/[^0-9]/g, '');
+			charMod = detailString.replace(/[^0-9\-]/g, '');
 			if (charMod === "") {
 				charMod = 0;
 			}
