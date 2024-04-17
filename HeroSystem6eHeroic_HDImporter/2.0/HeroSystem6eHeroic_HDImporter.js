@@ -42,7 +42,7 @@
 (function() {
 	// Constants
 	const versionMod = "2.0";
-	const versionSheet = "2.84"; // Note that a newer sheet will make upgrades as well as it can.
+	const versionSheet = "2.9"; // Note that a newer sheet will make upgrades as well as it can.
 	const needsExportedVersion = new Set(["1.0", "2.0"]);
 	
 	const defaultAttributes = {
@@ -1348,7 +1348,7 @@
 						diceString = diceString.slice(-2).replace(/\D/g,"") + "d6";
 						importedTalents["talentDice"+ID] = diceString;
 					} else {
-						importedTalents["talentDice"+ID] = 0;
+						importedTalents["talentDice"+ID] = "0";
 					}
 				}
 			}
@@ -1917,7 +1917,8 @@
 					}
 					
 					// Activation Roll
-					tempString = character.complications["complication"+ID].text + "\n" + character.complications["complication"+ID].notes;
+					tempString = character.complications["complication"+ID].text + " " + character.complications["complication"+ID].notes;
+					tempString = tempString.toLowerCase();
 					
 					if (tempString.includes("8-")) {
 						importedComplications["complicationRollChance"+ID] = 8;
@@ -1961,7 +1962,7 @@
 						diceString = diceString.slice(-2).replace(/\D/g,"") + "d6";
 						importedComplications["complicationDice"+ID] = diceString;
 					} else {
-						importedComplications["complicationDice"+ID] = 0;
+						importedComplications["complicationDice"+ID] = "0";
 					}
 				}
 			} 
