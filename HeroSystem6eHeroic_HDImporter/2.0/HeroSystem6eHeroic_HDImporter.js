@@ -1340,6 +1340,15 @@
 					} else if (tempString.includes("18-")) {
 						importedTalents["talentRollChance"+ID] = 18;
 						importedTalents["talentActivate"+ID] = "on";
+					} else if (tempString.includes("19-")) {
+						importedTalents["talentRollChance"+ID] = 19;
+						importedTalents["talentActivate"+ID] = "on";
+					} else if (tempString.includes("20-")) {
+						importedTalents["talentRollChance"+ID] = 20;
+						importedTalents["talentActivate"+ID] = "on";
+					} else if (tempString.includes("21-")) {
+						importedTalents["talentRollChance"+ID] = 21;
+						importedTalents["talentActivate"+ID] = "on";
 					}
 					
 					if ( tempString.includes("d6") ) {
@@ -1445,17 +1454,27 @@
 					// Varriable Power Pool found.
 					// The pool needs to be split into control and base parts.
 					tempString = character.powers["power"+ID].text;
-					subStringA = tempString.substring(tempString.indexOf("base") + 4, tempString.indexOf("control cost"));
-					control = parseInt(subStringA.replace(/\D/g, '')) || 0;
-					base = character.powers["power"+ID].base - heroRoundDown(control, 2);
+					subStringA = tempString.toLowerCase();
+					
+					if (subStringA.includes("base")) {
+						subStringA = subStringA.slice(tempString.indexOf("base")-4, tempString.indexOf("base"));
+						subStringA = subStringA.replace(/\D/g, '');
+						base = Number(subStringA);
+					} else {
+						// Error
+						base = 0;
+					}
+					
+					control = Math.round(base/2);
+					
 					character.powers["power"+ID].base = heroRoundDown(control, 2);
 					
 					// Create entry for Control Cost
 					powerArray[powerArrayIndex]={
-						name: character.powers["power"+ID].name,
-						base: heroRoundDown(control, 2),
+						name: character.powers["power"+ID].name + "(control)",
+						base: control.toString(),
 						text: character.powers["power"+ID].text,
-						cost: character.powers["power"+ID].cost - base,
+						cost: control.toString(),
 						endurance: character.powers["power"+ID].endurance,
 						damage: character.powers["power"+ID].damage,
 						compound: false
@@ -1465,9 +1484,9 @@
 					// Create entry for Pool Cost
 					powerArray[powerArrayIndex]={
 						name: character.powers["power"+ID].name,
-						base: base,
+						base: base.toString(),
 						text: JSON.stringify(base) + "-point Power Pool.",
-						cost: base,
+						cost: base.toString(),
 						endurance: character.powers["power"+ID].endurance,
 						damage: character.powers["power"+ID].damage,
 						compound: false
@@ -1589,7 +1608,7 @@
 		// This is currently the only function where bonus points are awarded. If this changes, assign to character bonusBenefit.
 		let bonusCP = 0;
 		let maxImport = (powerArrayIndex <= maxPowers) ? powerArrayIndex : maxPowers;
-		const specialArray = ["real weapon", "only works", "only for", "only to", "only applies", "requires a roll", "protects areas"];
+		const specialArray = ["real weapon", "only works", "only for", "only to", "only applies", "only when", "requires a roll", "protects areas"];
 		
 		if (powerArrayIndex > 0) {
 			
@@ -1738,10 +1757,21 @@
 						importedPowers["powerType"+ID] = "fixedSlot";
 					}
 				} else if (tempString.includes("(VPP)")) {
-					// Remove note from name.
-					importedPowers["powerName"+ID] = tempString.replace("(VPP) ", "");
-					importedPowers["powerType"+ID] = "powerPool";
-					importedPowers["powerEffect"+ID] = "Variable Power Pool";
+					if (tempString.includes("control")) {
+						// Remove notes from name.
+						tempString = tempString.replace("(VPP) ", "");
+						importedPowers["powerName"+ID] = tempString.replace("(control)", "");
+						importedPowers["powerType"+ID] = "powerPool";
+						importedPowers["powerEffect"+ID] = "VPP Control";
+						importedPowers["powerAction"+ID] = "false";
+						importedPowers["powerBaseCost"+ID] = powerArray[importCount].base;
+					} else {
+						// Remove note from name.
+						importedPowers["powerName"+ID] = tempString.replace("(VPP) ", "");
+						importedPowers["powerType"+ID] = "powerPool";
+						importedPowers["powerEffect"+ID] = "VPP Pool";
+						importedPowers["powerAction"+ID] = "false";
+					}
 				} else if (powerArray[importCount].compound === true) {
 					importedPowers["powerType"+ID] = "compound";
 				} else {
@@ -2375,15 +2405,24 @@
 	
 		if (skillObject.text.includes("HTH Combat")) {
 			// Find the number of levels from the CP spent.
-			weaponSkill = {skillLevels38: skillObject.levels};
+			weaponSkill = {
+				skillLevels38: skillObject.levels,
+				skillCP38: (skillObject.levels)*8
+			};
 			
 		} else if (skillObject.text.includes("Ranged Combat")) {
 			// Find the number of levels from the CP spent.
-			weaponSkill = {skillLevels39: skillObject.levels};
+			weaponSkill = {
+				skillLevels39: skillObject.levels,
+				skillCP39: (skillObject.levels)*8
+			};
 			
 		} else if (skillObject.text.includes("All Attacks")) {
 			// Find the number of levels from the CP spent.
-			weaponSkill = {skillLevels40: skillObject.levels};
+			weaponSkill = {
+				skillLevels40: skillObject.levels,
+				skillCP40: (skillObject.levels)*10
+			};
 			
 		} else if (skillObject.text.includes("group") || skillObject.text.includes("single") || (skillObject.display === "Weapon Familiarity") || (skillObject.display === "Penalty Skill Levels") || (skillObject.display === "Combat Skill Levels")) {
 			// Call import weapon skills function.
@@ -2578,6 +2617,7 @@
 		return;
 	}
 	
+	
 	var importGeneralSkill = function(object, character, script_name, skillObject, generalSkillIndex) {
 		// Identify and import a general skill.
 		
@@ -2685,6 +2725,7 @@
 		
 		return generalSkillIndex;
 	}
+	
 	
 	var findEndurance = function(testObject) {
 		// Determine endurance type, advantages, and limitations.
@@ -3417,9 +3458,9 @@
 		} else if (inputString.includes("-1 decreased stun multiplier")) {
 			answer = "-1";
 		} else if (inputString.includes("+1 increased stun multiplier")) {
-			answer = "+1";
+			answer = "1";
 		} else if (inputString.includes("+2 increased stun multiplier")) {
-			answer = "+2";
+			answer = "2";
 		} else {
 			answer = "0";
 		}
@@ -3610,7 +3651,7 @@
 		let startPosition;
 		let lowerCaseString = inputString.toLowerCase();
 		
-		const specialArray = ["real weapon", "only works", "only for", "only to", "only applies", "requires a roll"];
+		const specialArray = ["real weapon", "only works", "only for", "only to", "only applies", "only when", "requires a roll"];
 		var leadingSet = new Set(["STR", "DEX", "CON", "INT", "EGO", "PRE", "OCV", "DCV", "OMCV", "DMCV", "PD", "ED", "BODY", "STUN", "END", "REC", "PER"]);
 		var trailingSet = new Set(["Running", "Leaping", "Swimming", "Flight"]);
 		
