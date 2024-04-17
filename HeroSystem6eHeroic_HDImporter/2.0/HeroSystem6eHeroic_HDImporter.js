@@ -572,7 +572,7 @@
 		setAttrs(object.id, importedManeuvers);
 		
 		if(verbose) {
-			if (importCount === 1) { 
+			if (importCount === 1) {
 				sendChat(script_name, "Imported 1 maneuver.");
 			} else {
 				sendChat(script_name, "Imported " + importCount + " maneuvers.");
@@ -667,6 +667,7 @@
 		// Read equipment
 		const maxEquipment = 16;
 		let importCount = 0;
+		let imported = 0;
 		let ID = "01";
 		
 		// Imports sixteen martial arts maneuvers, skipping empty slots.
@@ -751,6 +752,7 @@
 		
 		let importedEquipment = new Array();
 		importCount = 0;
+		imported = 0;
 		
 		// Prepare Items
 		for (importCount = 0; importCount < maxEquipment; importCount++) {
@@ -758,6 +760,7 @@
 			ID = String(importCount+1).padStart(2,'0');
 			
 			if (importCount < equipmentListArrayIndex) {
+				imported += 1;
 				
 				// Check for charges.
 				if (equipmentListArray[importCount].end != "") {
@@ -785,7 +788,7 @@
 		setAttrs(object.id, importedEquipment);
 		
 		if(verbose) {
-			sendChat(script_name, "Imported "+ importCount +" pieces of equipment.");
+			sendChat(script_name, "Imported "+ imported +" pieces of equipment.");
 		}
 		
 		// Prepare objects of weapons. Assign to character sheet Weapon List.
@@ -796,12 +799,15 @@
 		let tempValue = 0;
 		
 		importCount = 0;
+		imported = 0;
 		
 		for (importCount = 0; importCount < maxWeapons; importCount++) {
 		
 			ID = String(importCount+1).padStart(2,'0');
 			
 			if (importCount < weaponsArrayIndex) {
+				imported += 1;
+				
 				importedWeapons["weaponName"+ID] = weaponsArray[importCount].name;
 				
 				// Assign weapon base damage.
@@ -884,7 +890,7 @@
 		setAttrs(object.id, importedWeapons);
 		
 		if(verbose) {
-			sendChat(script_name, "Imported "+ importCount +" weapons.");
+			sendChat(script_name, "Imported "+ imported +" weapons.");
 		}
 		
 		// Prepare object of armor defenses. Assign to character sheet Armor List.
@@ -893,12 +899,15 @@
 		const maxArmor = 4; // The 4th may be overwritten if the character has resistant protection.
 		
 		importCount = 0;
+		imported = 0;
 		
 		for (importCount = 0; importCount < maxArmor; importCount++) {
 		
 			ID = String(importCount+1).padStart(2,'0');
 			
 			if (importCount < armorArrayIndex) {
+				imported += 1;
+				
 				importedArmor["armorName"+ID] = armorArray[importCount].name;
 				
 				// Find resistant protection values.
@@ -961,7 +970,7 @@
 		setAttrs(object.id, importedArmor);
 		
 		if(verbose) {
-			sendChat(script_name, "Imported " + importCount + " pieces of armor.");
+			sendChat(script_name, "Imported " + imported + " pieces of armor.");
 		}
 		
 		// Identify independent multipowers.
@@ -1892,6 +1901,7 @@
 		
 		// Imports the first six complications.
 		let importCount = 0;
+		let imported = 0;
 		let ID = "";
 		let tempString = "";
 		let diceString = "";
@@ -1997,15 +2007,17 @@
 					} else {
 						importedComplications["complicationDice"+ID] = "0";
 					}
+					
+					imported += 1;
 				}
 			} 
 		}
 		
 		if(verbose) {
-			if (importCount === 1) { 
+			if (imported === 1) { 
 				sendChat(script_name, "Imported 1 complication.");
 			} else {
-				sendChat(script_name, "Imported " + importCount + " complications.");
+				sendChat(script_name, "Imported " + imported + " complications.");
 			}
 		}
 		
