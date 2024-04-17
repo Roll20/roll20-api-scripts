@@ -229,21 +229,21 @@
 		
 		// Try to catch some bad input. Doesn't currently catch no input.
 		try {
-	  	character = JSON.parse(json).character;
+  		character = JSON.parse(json).character;
 		}
 		
 		catch(error) {
-	  	let message = "";
-		  	needsExportedVersion.forEach(function(value) {
+  		let message = "";
+	  		needsExportedVersion.forEach(function(value) {
 			message += value + ", ";
-	  	});
-	  	
-	  	// Drop the last comma.
-	  	message = message.slice(0, -2);
-	  	
-	  	sendChat(script_name, '<div style="'+style+'">Hero Importer ended early due to a source content error.</div>' );
-	  	sendChat(script_name, "Please verify that the character file was exported using HeroSystem6eHeroic.hde (acceptable versions: "+message+"). For help use the command !hero --help.");
-	  	return;
+  		});
+  		
+  		// Drop the last comma.
+  		message = message.slice(0, -2);
+  		
+  		sendChat(script_name, '<div style="'+style+'">Hero Importer ended early due to a source content error.</div>' );
+  		sendChat(script_name, "Please verify that the character file was exported using HeroSystem6eHeroic.hde (acceptable versions: "+message+"). For help use the command !hero --help.");
+  		return;
 		}
 		
 		// Verify that the character was exported with the latest version of HeroSystem6eHeroic.hde. If not, report error and abort.
@@ -2271,7 +2271,7 @@
 		let enhancer;
 		
 		switch(enhancerString) {
-		  	case "Jack of All Trades":
+	  		case "Jack of All Trades":
 				enhancer = {
 					enhancerJack: "on",
 					enhancerJackCP: 3
@@ -2301,8 +2301,8 @@
 					enhancerTravCP: 3
 				}
 				break;
-	  	default:
-			  	// Well-Connected
+  		default:
+		  		// Well-Connected
 				enhancer = {
 					enhancerWell: "on",
 					enhancerWellCP: 3
