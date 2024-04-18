@@ -2706,9 +2706,12 @@
 		} else if (text.startsWith("Science Skill") && ((base-levels) === 3)) {
 			// Science Skill based on INT.
 			type = "intSS";
-		} else if (text.startsWith("AK")) {
+		} else if (text.startsWith("AK") && ((base-levels) === 2)) {
 			// Area Knowledge.
 			type = "ak";
+		} else if (text.startsWith("AK") && ((base-levels) === 3)) {
+			// Area Knowledge Skill based on INT.
+			type = "intAK";
 		} else if (text.startsWith("TF")) {
 			// Transport familiarity.
 			type = "tf";
