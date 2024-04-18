@@ -3648,7 +3648,7 @@
 		let detailString;
 		let startPosition;
 		let endPosition;
-		var diceSet = new Set(["Aid", "Blast", "Dispel", "Drain", "Entangle", "HTH Attack", "HTH Killing Attack", "Ranged Killing Attack", "Healing", "Luck", "Mental Blast", "Mental Illusions", "Mind Control", "Mind Scan", "Telepathy"]);
+		var diceSet = new Set(["Aid", "Blast", "Dispel", "Drain", "Entangle", "HTH Attack", "HTH Killing Attack", "Ranged Killing Attack", "Healing", "Luck", "Mental Blast", "Mental Illusions", "Mind Control", "Mind Scan", "Transform", "Telepathy"]);
 		
 		if (diceSet.has(effect)) {
 			if (damageString.includes("standard effect")) {
