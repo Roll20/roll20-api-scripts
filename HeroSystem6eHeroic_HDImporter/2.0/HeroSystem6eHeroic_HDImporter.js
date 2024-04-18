@@ -2688,6 +2688,18 @@
 		} else if (text.startsWith("KS") && ((base-levels) === 3)) {
 			// Knowledge Skill based on INT.
 			type = "intKS";
+		} else if (text.startsWith("CK") && ((base-levels) === 2)) {
+			// City Knowledge Skill
+			type = "ck";
+		} else if (text.startsWith("CK") && ((base-levels) === 3)) {
+			// City Knowledge Skill based on INT.
+			type = "intCK";
+		} else if (text.startsWith("CuK") && ((base-levels) === 2)) {
+			// Culture Knowledge Skill
+			type = "cuk";
+		} else if (text.startsWith("CuK") && ((base-levels) === 3)) {
+			// Culture Knowledge Skill based on INT.
+			type = "intCuK";
 		} else if (text.startsWith("Science Skill") && ((base-levels) === 2)) {
 			// Science Skill
 			type = "ss";
@@ -2724,8 +2736,11 @@
 		} else if (skillObject.display === "Cramming") {
 			// Special skill.
 			type = "other";
+		} else if (cost === "") {
+			// Empty slot.
+			type = "none";
 		} else {
-			// Most others will be combat.
+			// Best last guess is combat.
 			type = "combat";
 		}
 		
@@ -2740,6 +2755,12 @@
 			} else if ((text !== "") && text.includes("KS: ")) {
 				name = text.replace("KS: ", "");
 				name = name.slice(0, -3);
+			} else if ((text !== "") && text.includes("CK: ")) {
+				name = text.replace("CK: ", "");
+				name = name.slice(0, -3);
+			} else if ((text !== "") && text.includes("CuK: ")) {
+				name = text.replace("CuK: ", "");
+				name = name.slice(0, -4);
 			} else if ((text !== "") && text.includes("SS: ")) {
 				name = text.replace("SS: ", "");
 				name = name.slice(0, -3);
@@ -2756,9 +2777,9 @@
 		
 		// Import the skill
 		ID = String(generalSkillIndex+1).padStart(2,'0');
-		theSkill["skillName"+ID] = name;
+		theSkill["skillName"+ID] = name.trim();
 		theSkill["skillType"+ID] = type;
-		theSkill["skillCP"+ID] = cost; 
+		theSkill["skillCP"+ID] = cost;
 		if (type === "everyman") {
 			theSkill["skillRollChance"+ID] = "8";
 		}
