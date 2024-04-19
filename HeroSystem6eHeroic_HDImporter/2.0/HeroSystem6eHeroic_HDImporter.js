@@ -1654,6 +1654,7 @@
 		// This is currently the only function where bonus points are awarded. If this changes, assign to character bonusBenefit.
 		let bonusCP = 0;
 		let maxImport = (powerArrayIndex <= maxPowers) ? powerArrayIndex : maxPowers;
+		let tempPER = [0, 0, 0, 0];
 		const specialArray = ["real weapon", "only works", "only for", "only to", "only applies", "only when", "requires a roll", "protects areas"];
 		
 		if (powerArrayIndex > 0) {
@@ -1676,7 +1677,7 @@
 				// If effect is Resistant Protection create armor in Armor Slot 4 with a combination of ED and PD.
 				// Will overwrite equipment if present.
 				tempString = (powerArray[importCount].text).toLowerCase();
-
+				
 				if (theEffect === "Resistant Protection") {
 					if(verbose) {
 						sendChat(script_name, "Added Resistant Protection power to armor.");
@@ -1845,6 +1846,10 @@
 				// Apply characteristic mods granted by enhancement powers or movement.
 				tempString = powerArray[importCount].text;
 				switch (theEffect) {
+					case "Base STR Mod":	if (tempString.includes("0 END")) {
+												importedPowers["optionUntiring"] = "on";
+											}
+											break;
 					case "Running":			importedPowers["runningMod"] = getCharacteristicMod(tempString, "Running", script_name);
 											break;
 					case "Leaping":			importedPowers["leapingMod"] = getCharacteristicMod(tempString, "Leaping", script_name);
@@ -1886,16 +1891,20 @@
 					case "Enhanced REC":	importedPowers["recMod"] = getCharacteristicMod(tempString, "REC", script_name);
 											break;
 					case "Enhanced PER":	if ( tempString.includes("Sight") ) {
-												importedPowers["perceptionModifierVision"] = getCharacteristicMod(tempString, "PER", script_name);
+												tempPER[1] = Math.max(tempPER[1], getCharacteristicMod(tempString, "PER", script_name));
+												importedPowers["perceptionModifierVision"] = tempPER[1];
 											}
 											if ( tempString.includes("Hearing") ) {
-												importedPowers["perceptionModifierHearing"] = getCharacteristicMod(tempString, "PER", script_name);
+												tempPER[2] =  Math.max(tempPER[2], getCharacteristicMod(tempString, "PER", script_name));
+												importedPowers["perceptionModifierHearing"] = tempPER[2];
 											}
 											if ( tempString.includes("Smell") ) {
-												importedPowers["perceptionModifierSmell"] = getCharacteristicMod(tempString, "PER", script_name);
+												tempPER[3] =  Math.max(tempPER[3], getCharacteristicMod(tempString, "PER", script_name));
+												importedPowers["perceptionModifierSmell"] = tempPER[3];
 											}
 											if ( !(tempString.includes("Sight")) && !(tempString.includes("Hearing")) && !(tempString.includes("Smell")) ) {
-												importedPowers["enhancedPerceptionModifier"] = getCharacteristicMod(tempString, "PER", script_name);
+												tempPER[0] =  Math.max(tempPER[0], getCharacteristicMod(tempString, "PER", script_name));
+												importedPowers["enhancedPerceptionModifier"] = tempPER[0];
 											}
 											break;
 					default:				break;
@@ -2771,8 +2780,8 @@
 		} else if (attribute === "CON") {
 			// Constitution skill (unusual).
 			type = "con";
-		} else if (skillObject.display === "Cramming") {
-			// Special skill.
+		} else if ((skillObject.display === "Cramming") || (text.toLowerCase().includes("skill"))) {
+			// A special skill or group of undetermined skills.
 			type = "other";
 		} else if (cost === "") {
 			// Empty slot.
@@ -2987,8 +2996,6 @@
 			return "HTH Attack";
 		} else if (tempString.includes("Healing")) {
 			return "Healing";
-		} else if (tempString.includes("Images")) {
-			return "Images";
 		} else if (tempString.includes("Invisibility")) {
 			return "Invisibility";
 		} else if (tempString.includes("Killing Attack - Hand-To-Hand")) {
@@ -3139,6 +3146,8 @@
 			return "Enhanced DCV";
 		} else if (tempString.includes("END")) {
 			return "Enhanced END";
+		} else if (tempString.includes("Images")) {
+			return "Images";
 		} else {
 			return "Unknown Effect";
 		}
