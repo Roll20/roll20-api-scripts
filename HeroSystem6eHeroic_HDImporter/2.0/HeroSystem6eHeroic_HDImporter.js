@@ -1331,13 +1331,10 @@
 					
 					tempString = importedTalents["talentText"+ID];
 					
-					if (tempString.includes("8-")) {
-						importedTalents["talentRollChance"+ID] = 8;
-						importedTalents["talentActivate"+ID] = "on";
-					} else if (tempString.includes("9-")) {
-						importedTalents["talentRollChance"+ID] = 9;
-						importedTalents["talentActivate"+ID] = "on";
-					} else if (tempString.includes("10-")) {
+					
+					// Many of the following roll chances won't be used, but are here for completeness.
+					
+					if (tempString.includes("10-")) {
 						importedTalents["talentRollChance"+ID] = 10;
 						importedTalents["talentActivate"+ID] = "on";
 					} else if (tempString.includes("11-")) {
@@ -1372,6 +1369,27 @@
 						importedTalents["talentActivate"+ID] = "on";
 					} else if (tempString.includes("21-")) {
 						importedTalents["talentRollChance"+ID] = 21;
+						importedTalents["talentActivate"+ID] = "on";
+					} else if (tempString.includes("3-")) {
+						importedTalents["talentRollChance"+ID] = 3;
+						importedTalents["talentActivate"+ID] = "on";
+					} else if (tempString.includes("4-")) {
+						importedTalents["talentRollChance"+ID] = 4;
+						importedTalents["talentActivate"+ID] = "on";
+					} else if (tempString.includes("5-")) {
+						importedTalents["talentRollChance"+ID] = 5;
+						importedTalents["talentActivate"+ID] = "on";
+					} else if (tempString.includes("6-")) {
+						importedTalents["talentRollChance"+ID] = 6;
+						importedTalents["talentActivate"+ID] = "on";
+					} else if (tempString.includes("7-")) {
+						importedTalents["talentRollChance"+ID] = 7;
+						importedTalents["talentActivate"+ID] = "on";
+					} else if (tempString.includes("8-")) {
+						importedTalents["talentRollChance"+ID] = 8;
+						importedTalents["talentActivate"+ID] = "on";
+					} else if (tempString.includes("9-")) {
+						importedTalents["talentRollChance"+ID] = 9;
 						importedTalents["talentActivate"+ID] = "on";
 					}
 					
@@ -1995,13 +2013,9 @@
 					tempString = character.complications["complication"+ID].text + " " + character.complications["complication"+ID].notes;
 					tempString = tempString.toLowerCase();
 					
-					if (tempString.includes("8-")) {
-						importedComplications["complicationRollChance"+ID] = 8;
-						importedComplications["complicationActivate"+ID] = "on";
-					} else if (tempString.includes("9-")) {
-						importedComplications["complicationRollChance"+ID] = 9;
-						importedComplications["complicationActivate"+ID] = "on";
-					} else if (tempString.includes("10-")) {
+					// Most of these roll options will never be used, but are here for completeness.
+					
+					if (tempString.includes("10-")) {
 						importedComplications["complicationRollChance"+ID] = 10;
 						importedComplications["complicationActivate"+ID] = "on";
 					} else if (tempString.includes("11-")) {
@@ -2027,6 +2041,27 @@
 						importedComplications["complicationActivate"+ID] = "on";
 					} else if (tempString.includes("18-")) {
 						importedComplications["complicationRollChance"+ID] = 18;
+						importedComplications["complicationActivate"+ID] = "on";
+					} else if (tempString.includes("3-")) {
+						importedComplications["complicationRollChance"+ID] = 3;
+						importedComplications["complicationActivate"+ID] = "on";
+					} else if (tempString.includes("4-")) {
+						importedComplications["complicationRollChance"+ID] = 4;
+						importedComplications["complicationActivate"+ID] = "on";
+					} else if (tempString.includes("5-")) {
+						importedComplications["complicationRollChance"+ID] = 5;
+						importedComplications["complicationActivate"+ID] = "on";
+					} else if (tempString.includes("6-")) {
+						importedComplications["complicationRollChance"+ID] = 6;
+						importedComplications["complicationActivate"+ID] = "on";
+					} else if (tempString.includes("7-")) {
+						importedComplications["complicationRollChance"+ID] = 7;
+						importedComplications["complicationActivate"+ID] = "on";
+					} else if (tempString.includes("8-")) {
+						importedComplications["complicationRollChance"+ID] = 8;
+						importedComplications["complicationActivate"+ID] = "on";
+					} else if (tempString.includes("9-")) {
+						importedComplications["complicationRollChance"+ID] = 9;
 						importedComplications["complicationActivate"+ID] = "on";
 					}
 					
@@ -2974,6 +3009,8 @@
 			return "Luck";
 		} else if (tempString.includes("Mental Blast")) {
 			return "Mental Blast";
+		} else if (tempString.includes("Transform")) {
+			return "Transform";
 		} else if (tempString.includes("Mental Defense")) {
 			return "Mental Defense";
 		} else if (tempString.includes("Mental Illusions")) {
@@ -2992,6 +3029,8 @@
 			return "Possession";	
 		} else if (tempString.includes("Power Defense")) {
 			return "Power Defense";
+		} else if (tempString.includes("Reach")) {
+			return "Reach";
 		} else if (tempString.includes("Reflection")) {
 			return "Reflection";
 		} else if (tempString.includes("Regeneration")) {
@@ -3018,8 +3057,6 @@
 			return "Telepathy";	
 		} else if (tempString.includes("Teleportation")) {
 			return "Teleportation";	
-		} else if (tempString.includes("Transform")) {
-			return "Transform";
 		} else if (tempString.includes("Tunneling")) {
 			return "Tunneling";	
 		} else if (tempString.includes("Active Sonar")) {
@@ -3110,7 +3147,7 @@
 	
 	var isAttack = function (effect) {
 		// For setting the attack state.
-		const attackSet = new Set(["Blast", "Dispel", "Drain", "Entangle", "Healing", "HTH Attack", "HTH Killing Attack", "Mental Blast", "Mental Illusions", "Mind Control", "Mind Link", "Mind Scan", "Ranged Killing Attack", "Telekinesis", "Telepathy", "Transform"]);
+		const attackSet = new Set(["Blast", "Dispel", "Drain", "Entangle", "Flash", "Healing", "HTH Attack", "HTH Killing Attack", "Mental Blast", "Mental Illusions", "Mind Control", "Mind Link", "Mind Scan", "Ranged Killing Attack", "Telekinesis", "Telepathy", "Transform"]);
 		
 		return attackSet.has(effect) ? true : false;
 	}
@@ -3672,7 +3709,7 @@
 		let detailString;
 		let startPosition;
 		let endPosition;
-		var diceSet = new Set(["Aid", "Blast", "Dispel", "Drain", "Entangle", "HTH Attack", "HTH Killing Attack", "Ranged Killing Attack", "Healing", "Luck", "Mental Blast", "Mental Illusions", "Mind Control", "Mind Scan", "Transform", "Telepathy"]);
+		var diceSet = new Set(["Aid", "Blast", "Dispel", "Drain", "Entangle", "Flash", "HTH Attack", "HTH Killing Attack", "Ranged Killing Attack", "Healing", "Luck", "Mental Blast", "Mental Illusions", "Mind Control", "Mind Scan", "Transform", "Telepathy"]);
 		
 		if (diceSet.has(effect)) {
 			if (damageString.includes("standard effect")) {
