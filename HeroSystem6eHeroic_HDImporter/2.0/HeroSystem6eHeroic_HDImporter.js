@@ -1683,7 +1683,7 @@
 						sendChat(script_name, "Added Resistant Protection power to armor.");
 					}
 					
-					tempValue = getResistantPD(powerArray[importCount].text);
+					tempValue = getResistantPD(powerArray[importCount].text, script_name);
 					if (tempValue > 0) {
 						importedPowers["armorPD04"] = tempValue;
 						if ( (specialArray.some(v => tempString.includes(v))) != true) {
@@ -1700,7 +1700,7 @@
 						}
 					}
 					
-					tempValue = getResistantED(powerArray[importCount].text);
+					tempValue = getResistantED(powerArray[importCount].text, script_name);
 					if (tempValue > 0) {
 						importedPowers["armorED04"] = tempValue;
 						if ( (specialArray.some(v => tempString.includes(v))) != true) {
@@ -3174,7 +3174,7 @@
 	}
 	
 	
-	var getResistantPD = function (inputString) {
+	var getResistantPD = function (inputString, script_name) {
 		// For Armor slot 4.
 		let protection = 0;
 		let startPosition = 0;
@@ -3183,13 +3183,13 @@
 		
 		if (inputString.includes("PD/")) {
 			endPosition = inputString.indexOf("PD/");
-			tempString = inputString.slice(endPosition-2, endPosition);
+			tempString = inputString.slice(endPosition-Math.min(4,endPosition), endPosition);
 			tempString = tempString.replace(/[^0-9]/g, "");
 			protection = (tempString !== "") ? Number(tempString) : 0;
 			protection = isNaN(protection) ? 0 : protection;
 		} else if (inputString.includes("PD")) {
 			endPosition = inputString.indexOf("PD");
-			tempString = inputString.slice(endPosition-2, endPosition);
+			tempString = inputString.slice(endPosition-Math.min(4,endPosition), endPosition);
 			tempString = tempString.replace(/[^0-9]/g, "");
 			protection = (tempString !== "") ? Number(tempString) : 0;
 			protection = isNaN(protection) ? 0 : protection;
@@ -3201,7 +3201,7 @@
 	}
 	
 	
-	var getResistantED = function (inputString) {
+	var getResistantED = function (inputString, script_name) {
 		// For Armor slot 4.
 		let protection = 0;
 		let startPosition = 0;
@@ -3211,20 +3211,20 @@
 		if (inputString.includes("PD/")) {
 			if (inputString.includes("ED")) {
 				endPosition = inputString.indexOf("ED");
-				tempString = inputString.slice(endPosition-2, endPosition);
+				tempString = inputString.slice(endPosition-Math.min(4,endPosition), endPosition);
 				tempString = tempString.replace(/[^0-9]/g, "");
 				protection = (tempString !== "") ? Number(tempString) : 0;
 				protection = isNaN(protection) ? 0 : protection;
 			} else if (inputString.includes("ED/")) {
 				endPosition = inputString.indexOf("ED/");
-				tempString = inputString.slice(endPosition-2, endPosition);
+				tempString = inputString.slice(endPosition-Math.min(4,endPosition), endPosition);
 				tempString = tempString.replace(/[^0-9]/g, "");
 				protection = (tempString !== "") ? Number(tempString) : 0;
 				protection = isNaN(protection) ? 0 : protection;
 			}
 		} else if (inputString.includes("ED")) {
 			endPosition = inputString.indexOf("ED");
-			tempString = inputString.slice(endPosition-2, endPosition);
+			tempString = inputString.slice(endPosition-Math.min(4,endPosition), endPosition);
 			tempString = tempString.replace(/[^0-9]/g, "");
 			protection = (tempString !== "") ? Number(tempString) : 0;
 			protection = isNaN(protection) ? 0 : protection;
