@@ -1966,20 +1966,22 @@
 		let diceString = "";
 		let tempPosition = 0;
 		const maxComplications = 10;
+		const maxOverflow = 10;
+		let overflowString = "";
 		var importedComplications = new Object();
 		
 		/* ------------------------- */
 		/* Read Complications        */
 		/* ------------------------- */
 		
-		for (importCount = 0; importCount < maxComplications; importCount++) {
+		for (importCount = 0; importCount < maxComplications + maxOverflow; importCount++) {
 			
 			ID = String(importCount+1).padStart(2,'0');
 			
 			if (importCount < maxComplications) {
 				if ((typeof character.complications["complication"+ID] !== "undefined") && (typeof character.complications["complication"+ID].type !== "undefined")) {			
 					importedComplications["complicationName"+ID] = character.complications["complication"+ID].type;
-					importedComplications["complicationText"+ID] = character.complications["complication"+ID].text + "\n" + character.complications["complication"+ID].notes;
+					importedComplications["complicationText"+ID] = character.complications["complication"+ID].text + '\n' + character.complications["complication"+ID].notes;
 					importedComplications["complicationCP"+ID] = character.complications["complication"+ID].points;
 					
 					// Type
@@ -2086,8 +2088,18 @@
 					
 					imported += 1;
 				}
-			} 
+			} else if (importCount < maxComplications + maxOverflow) {
+				if ((typeof character.complications["complication"+ID] !== "undefined") && (typeof character.complications["complication"+ID].type !== "undefined")) {			
+					overflowString += character.complications["complication"+ID].type + '\n';
+					overflowString += character.complications["complication"+ID].text + '\n' + character.complications["complication"+ID].notes + '\n';
+					overflowString += "("+character.complications["complication"+ID].points + " points)\n\n";
+					
+					imported += 1;
+				}
+			}
 		}
+		
+		importedComplications["complicationsTextRight"] = overflowString;
 		
 		if(verbose) {
 			if (imported === 1) { 
