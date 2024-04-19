@@ -929,7 +929,7 @@
 					
 					if (subStringA.includes("PD")) {
 						tempPosition = subStringA.indexOf("PD");
-						subStringB = subStringA.substr(tempPosition-3, 2);
+						subStringB = subStringA.slice(tempPosition-3, 2);
 						importedArmor["armorPD"+ID] = parseInt(subStringB.replace(/[^\d.-]/g, ""));
 						importedArmor["totalPD"+ID] = importedArmor["armorPD"+ID] + parseInt(character.pd);
 					} else {
@@ -939,7 +939,7 @@
 					
 					if (subStringA.includes("ED")) {
 						tempPosition = subStringA.indexOf("ED");
-						subStringB = subStringA.substr(tempPosition-3, 2);
+						subStringB = subStringA.slice(tempPosition-3, 2);
 						importedArmor["armorED"+ID] = parseInt(subStringB.replace(/[^\d.-]/g, ""));
 						importedArmor["totalED"+ID] = importedArmor["armorED"+ID] + parseInt(character.ed);
 					} else {
@@ -3183,17 +3183,13 @@
 		
 		if (inputString.includes("PD/")) {
 			endPosition = inputString.indexOf("PD/");
-			tempString = inputString.slice(startPosition, endPosition);
-			startPosition = tempString.lastIndexOf("+")+1;
-			tempString = inputString.slice(startPosition, endPosition);
+			tempString = inputString.slice(endPosition-2, endPosition);
 			tempString = tempString.replace(/[^0-9]/g, "");
 			protection = (tempString !== "") ? Number(tempString) : 0;
 			protection = isNaN(protection) ? 0 : protection;
 		} else if (inputString.includes("PD")) {
 			endPosition = inputString.indexOf("PD");
-			tempString = inputString.slice(startPosition, endPosition);
-			startPosition = tempString.lastIndexOf("+")+1;
-			tempString = inputString.slice(startPosition, endPosition);
+			tempString = inputString.slice(endPosition-2, endPosition);
 			tempString = tempString.replace(/[^0-9]/g, "");
 			protection = (tempString !== "") ? Number(tempString) : 0;
 			protection = isNaN(protection) ? 0 : protection;
@@ -3215,26 +3211,20 @@
 		if (inputString.includes("PD/")) {
 			if (inputString.includes("ED")) {
 				endPosition = inputString.indexOf("ED");
-				tempString = inputString.slice(startPosition, endPosition);
-				startPosition = tempString.lastIndexOf("/")+1;
-				tempString = inputString.slice(startPosition, endPosition);
+				tempString = inputString.slice(endPosition-2, endPosition);
 				tempString = tempString.replace(/[^0-9]/g, "");
 				protection = (tempString !== "") ? Number(tempString) : 0;
 				protection = isNaN(protection) ? 0 : protection;
 			} else if (inputString.includes("ED/")) {
 				endPosition = inputString.indexOf("ED/");
-				tempString = inputString.slice(startPosition, endPosition);
-				startPosition = tempString.lastIndexOf("/")+1;
-				tempString = inputString.slice(startPosition, endPosition);
+				tempString = inputString.slice(endPosition-2, endPosition);
 				tempString = tempString.replace(/[^0-9]/g, "");
 				protection = (tempString !== "") ? Number(tempString) : 0;
 				protection = isNaN(protection) ? 0 : protection;
 			}
 		} else if (inputString.includes("ED")) {
 			endPosition = inputString.indexOf("ED");
-			tempString = inputString.slice(startPosition, endPosition);
-			startPosition = tempString.lastIndexOf("+")+1;
-			tempString = inputString.slice(startPosition, endPosition);
+			tempString = inputString.slice(endPosition-2, endPosition);
 			tempString = tempString.replace(/[^0-9]/g, "");
 			protection = (tempString !== "") ? Number(tempString) : 0;
 			protection = isNaN(protection) ? 0 : protection;
