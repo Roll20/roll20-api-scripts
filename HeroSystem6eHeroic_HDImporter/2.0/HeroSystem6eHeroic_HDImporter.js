@@ -1657,6 +1657,46 @@
 		let tempPER = [0, 0, 0, 0];
 		const specialArray = ["real weapon", "only works", "only for", "only to", "only applies", "only when", "requires a roll", "protects areas"];
 		
+		const characterAdjustments = {
+			strengthMod: 0,
+			dexterityMod: 0,
+			constitutionMod: 0,
+			intelligenceMod: 0,
+			egoMod: 0,
+			presenceMod: 0,
+			spdMod: 0,
+			ocvMod: 0,
+			dcvMod: 0,
+			omcvMod: 0,
+			dmcvMod: 0,
+			pdMod: 0,
+			edMod: 0,
+			bodyMod: 0,
+			stunMod: 0,
+			enduranceMod: 0,
+			recoveryMod: 0,
+			runningMod: 0,
+			leapingMod: 0,
+			swimmingMod: 0,
+			flightMod: 0,
+			enhancedPerceptionModifier: 0,
+			perceptionModifierVision: 0,
+			perceptionModifierHearing: 0,
+			perceptionModifierSmell: 0,
+			armorPD04: 0,
+			armorED04: 0,
+			totalPD04: 0,
+			totalED04: 0,
+			armorActivation04: 18,
+			armorEND04: 0,
+			armorLocations04: "",
+			armorMass04: 0
+		};
+		
+		var charMod = Object.create(characterAdjustments);
+		let pdAddedToTotal = false;
+		let edAddedToTotal = false;
+		
 		if (powerArrayIndex > 0) {
 			
 			for (importCount = 0; importCount < maxImport; importCount++) {
@@ -1672,88 +1712,6 @@
 					importedPowers["powerName"+ID] = importedPowers["powerEffect"+ID];
 				} else {
 					importedPowers["powerName"+ID] = powerArray[importCount].name;
-				}
-				
-				// If effect is Resistant Protection create armor in Armor Slot 4 with a combination of ED and PD.
-				// Will overwrite equipment if present.
-				tempString = (powerArray[importCount].text).toLowerCase();
-				
-				if (theEffect === "Resistant Protection") {
-					if(verbose) {
-						sendChat(script_name, "Added Resistant Protection power to armor.");
-					}
-					
-					tempValue = getResistantPD(powerArray[importCount].text, script_name);
-					if (tempValue > 0) {
-						importedPowers["armorPD04"] = tempValue;
-						if ( (specialArray.some(v => tempString.includes(v))) != true) {
-							// We don't want to add overall modifications for special cases.
-							importedPowers["pdMod"] = tempValue;
-						}
-						importedPowers["totalPD04"] = tempValue + parseInt(character.pd);
-						importedPowers["armorName04"] = importedPowers["powerName"+ID];
-						tempObject = (requiresRoll(powerArray[importCount].text));
-						if (tempObject.hasRoll) {
-							importedPowers["armorActivation04"] = tempObject.skillRoll;
-						} else {
-							importedPowers["armorActivation04"] = 18;
-						}
-					}
-					
-					tempValue = getResistantED(powerArray[importCount].text, script_name);
-					if (tempValue > 0) {
-						importedPowers["armorED04"] = tempValue;
-						if ( (specialArray.some(v => tempString.includes(v))) != true) {
-							// We don't want to add overall modifications for special cases.
-							importedPowers["edMod"] = tempValue;
-						}
-						importedPowers["totalED04"] = tempValue + parseInt(character.ed);
-						importedPowers["armorName04"] = importedPowers["powerName"+ID];
-						tempObject = (requiresRoll(powerArray[importCount].text));
-						if (tempObject.hasRoll) {
-							importedPowers["armorActivation04"] = tempObject.skillRoll;
-						} else {
-							importedPowers["armorActivation04"] = 18;
-						}
-					}
-					importedPowers["armorEND04"] = 0;
-					importedPowers["armorLocations04"] = "3-18";
-					importedPowers["armorMass04"] = 0;
-				} else if (theEffect === "Base PD Mod") {
-					if(verbose) {
-						sendChat(script_name, "Added Resistant PD to armor.");
-					}
-					
-					if ( (powerArray[importCount].text).includes("Resistant")) {
-						importedPowers["armorPD04"] = parseInt(character.pd);
-						importedPowers["totalPD04"] = parseInt(character.pd);
-						importedPowers["armorName04"] = importedPowers["powerName"+ID];
-						tempObject = (requiresRoll(powerArray[importCount].text));
-						if (tempObject.hasRoll) {
-							importedPowers["armorActivation04"] = tempObject.skillRoll;
-						} else {
-							importedPowers["armorActivation04"] = 18;
-						}
-					}
-				} else if (theEffect === "Base ED Mod") {
-					if(verbose) {
-						sendChat(script_name, "Added Resistant ED to armor.");
-					}
-					
-					if ( (powerArray[importCount].text).includes("Resistant")) {
-						importedPowers["armorED04"] = parseInt(character.ed);
-						importedPowers["totalED04"] = parseInt(character.ed);
-						importedPowers["armorName04"] = importedPowers["powerName"+ID];
-						tempObject = (requiresRoll(powerArray[importCount].text));
-						if (tempObject.hasRoll) {
-							importedPowers["armorActivation04"] = tempObject.skillRoll;
-						} else {
-							importedPowers["armorActivation04"] = 18;
-						}
-					}
-					importedPowers["armorEND04"] = 0;
-					importedPowers["armorLocations04"] = "3-18";
-					importedPowers["armorMass04"] = 0;
 				}
 				
 				// Special cases or base cost.
@@ -1843,6 +1801,101 @@
 				// Set power type.
 				importedPowers["powerDamageType"+ID] = getPowerDamageType(theEffect);
 				
+				// If Power's effect is Resistant Protection create armor in Armor Slot 4 with a combination of ED and PD.
+				tempString = (powerArray[importCount].text).toLowerCase();
+				
+				if (theEffect === "Resistant Protection") {
+					if(verbose) {
+						sendChat(script_name, "Created Resistant Protection armor.");
+					}
+					
+					tempValue = getResistantPD(powerArray[importCount].text, script_name);
+					if (tempValue > 0) {
+						charMod.armorPD04 += tempValue;
+						if ( (specialArray.some(v => tempString.includes(v))) != true) {
+							// We don't want to add overall modifications for special cases.
+							charMod.pdMod += tempValue;
+						}
+						if (!pdAddedToTotal) {
+							charMod.totalPD04 = tempValue + parseInt(character.pd);
+							pdAddedToTotal = true;
+						} else {
+							charMod.totalPD04 += tempValue;
+						}
+						charMod.armorName04 = importedPowers["powerName"+ID];
+						charMod.armorLocations04 = "3-18";
+						tempObject = (requiresRoll(powerArray[importCount].text));
+						if (tempObject.hasRoll) {
+							charMod.armorActivation04 = tempObject.skillRoll;
+						} else {
+							charMod.armorActivation04 = 18;
+						}
+					}
+					
+					tempValue = getResistantED(powerArray[importCount].text, script_name);
+					if (tempValue > 0) {
+						charMod.armorED04 += tempValue;
+						if ( (specialArray.some(v => tempString.includes(v))) != true) {
+							// We don't want to add overall modifications for special cases.
+							charMod.edMod += tempValue;
+						}
+						if (!edAddedToTotal) {
+							charMod.totalED04 = tempValue + parseInt(character.ed);
+							edAddedToTotal = true;
+						} else {
+							charMod.totalED04 += tempValue;
+						}
+						charMod.armorName04 = importedPowers["powerName"+ID];
+						charMod.armorLocations04 = "3-18";
+						tempObject = (requiresRoll(powerArray[importCount].text));
+						if (tempObject.hasRoll) {
+							charMod.armorActivation04 = tempObject.skillRoll;
+						} else {
+							charMod.armorActivation04 = 18;
+						}
+					}
+				} else if (theEffect === "Base PD Mod") {
+					if(verbose) {
+						sendChat(script_name, "Added Resistant PD to armor.");
+					}
+					
+					if ( (powerArray[importCount].text).includes("Resistant")) {
+						charMod.armorPD04 += parseInt(character.pd);
+						if (!pdAddedToTotal) {
+							charMod.totalPD04 += parseInt(character.pd);
+							edAddedToTotal = true;
+						}
+						charMod.armorName04 = importedPowers["powerName"+ID];
+						charMod.armorLocations04 = "3-18";
+						tempObject = (requiresRoll(powerArray[importCount].text));
+						if (tempObject.hasRoll) {
+							charMod.armorActivation04 = tempObject.skillRoll;
+						} else {
+							charMod.armorActivation04 = 18;
+						}
+					}	
+				} else if (theEffect === "Base ED Mod") {
+					if(verbose) {
+						sendChat(script_name, "Added Resistant ED to armor.");
+					}
+					
+					if ( (powerArray[importCount].text).includes("Resistant") ) {
+						charMod.armorED04 += parseInt(character.ed);
+						if (!edAddedToTotal) {
+							charMod.totalED04 += parseInt(character.ed);
+							edAddedToTotal = true;
+						}
+						charMod.armorName04 = importedPowers["powerName"+ID];
+						charMod.armorLocations04 = "3-18";
+						tempObject = (requiresRoll(powerArray[importCount].text));
+						if (tempObject.hasRoll) {
+							charMod.armorActivation04 = tempObject.skillRoll;
+						} else {
+							charMod.armorActivation04 = 18;
+						}
+					}	
+				}
+				
 				// Apply characteristic mods granted by enhancement powers or movement.
 				tempString = powerArray[importCount].text;
 				switch (theEffect) {
@@ -1850,61 +1903,57 @@
 												importedPowers["optionUntiring"] = "on";
 											}
 											break;
-					case "Running":			importedPowers["runningMod"] = getCharacteristicMod(tempString, "Running", script_name);
+					case "Running":			charMod.runningMod += getCharacteristicMod(tempString, "Running", script_name);
 											break;
-					case "Leaping":			importedPowers["leapingMod"] = getCharacteristicMod(tempString, "Leaping", script_name);
+					case "Leaping":			charMod.leapingMod += getCharacteristicMod(tempString, "Leaping", script_name);
 											break;
-					case "Swimming":		importedPowers["swimmingMod"] = getCharacteristicMod(tempString, "Swimming", script_name);
+					case "Swimming":		charMod.swimmingMod += getCharacteristicMod(tempString, "Swimming", script_name);
 											break;
-					case "Flight":			importedPowers["flightMod"] = getCharacteristicMod(tempString, "Flight", script_name);
+					case "Flight":			charMod.flightMod += getCharacteristicMod(tempString, "Flight", script_name);
 											break;
-					case "Enhanced STR":	importedPowers["strengthMod"] = getCharacteristicMod(tempString, "STR", script_name);
+					case "Enhanced STR":	charMod.strengthMod += getCharacteristicMod(tempString, "STR", script_name);
 											break;
-					case "Enhanced DEX":	importedPowers["dexterityMod"] = getCharacteristicMod(tempString, "DEX", script_name);
+					case "Enhanced DEX":	charMod.dexterityMod += getCharacteristicMod(tempString, "DEX", script_name);
 											break;
-					case "Enhanced CON":	importedPowers["constitutionMod"] = getCharacteristicMod(tempString, "CON", script_name);
+					case "Enhanced CON":	charMod.constitutionMod += getCharacteristicMod(tempString, "CON", script_name);
 											break;
-					case "Enhanced INT":	importedPowers["intelligenceMod"] = getCharacteristicMod(tempString, "INT", script_name);
+					case "Enhanced INT":	charMod.intelligenceMod += getCharacteristicMod(tempString, "INT", script_name);
 											break;
-					case "Enhanced EGO":	importedPowers["egoMod"] = getCharacteristicMod(tempString, "EGO", script_name);
+					case "Enhanced EGO":	charMod.egoMod += getCharacteristicMod(tempString, "EGO", script_name);
 											break;
-					case "Enhanced PRE":	importedPowers["presenceMod"] = getCharacteristicMod(tempString, "PRE", script_name);
+					case "Enhanced PRE":	charMod.presenceMod += getCharacteristicMod(tempString, "PRE", script_name);
 											break;
-					case "Enhanced OCV":	importedPowers["ocvMod"] = getCharacteristicMod(tempString, "OCV", script_name);
+					case "Enhanced OCV":	charMod.ocvMod += getCharacteristicMod(tempString, "OCV", script_name);
 											break;
-					case "Enhanced DCV":	importedPowers["dcvMod"] = getCharacteristicMod(tempString, "DCV", script_name);
+					case "Enhanced DCV":	charMod.dcvMod += getCharacteristicMod(tempString, "DCV", script_name);
 											break;
-					case "Enhanced OMCV":	importedPowers["omcvMod"] = getCharacteristicMod(tempString, "OMCV", script_name);
+					case "Enhanced OMCV":	charMod.omcvMod += getCharacteristicMod(tempString, "OMCV", script_name);
 											break;
-					case "Enhanced DMCV":	importedPowers["dmcvMod"] = getCharacteristicMod(tempString, "DMCV", script_name);
+					case "Enhanced DMCV":	charMod.dmcvMod += getCharacteristicMod(tempString, "DMCV", script_name);
 											break;
-					case "Enhanced BODY":	importedPowers["bodyMod"] = getCharacteristicMod(tempString, "BODY", script_name);
+					case "Enhanced BODY":	charMod.bodyMod += getCharacteristicMod(tempString, "BODY", script_name);
 											break;
-					case "Enhanced PD":		importedPowers["pdMod"] = getCharacteristicMod(tempString, "PD", script_name);
+					case "Enhanced PD":		charMod.pdMod += getCharacteristicMod(tempString, "PD", script_name);
 											break;
-					case "Enhanced ED":		importedPowers["edMod"] = getCharacteristicMod(tempString, "ED", script_name);
+					case "Enhanced ED":		charMod.edMod += getCharacteristicMod(tempString, "ED", script_name);
 											break;
-					case "Enhanced STUN":	importedPowers["stunMod"] = getCharacteristicMod(tempString, "STUN", script_name);
+					case "Enhanced STUN":	charMod.stunMod += getCharacteristicMod(tempString, "STUN", script_name);
 											break;
-					case "Enhanced END":	importedPowers["endMod"] = getCharacteristicMod(tempString, "END", script_name);
+					case "Enhanced END":	charMod.endMod += getCharacteristicMod(tempString, "END", script_name);
 											break;
-					case "Enhanced REC":	importedPowers["recMod"] = getCharacteristicMod(tempString, "REC", script_name);
+					case "Enhanced REC":	charMod.recMod += getCharacteristicMod(tempString, "REC", script_name);
 											break;
 					case "Enhanced PER":	if ( tempString.includes("Sight") ) {
-												tempPER[1] = Math.max(tempPER[1], getCharacteristicMod(tempString, "PER", script_name));
-												importedPowers["perceptionModifierVision"] = tempPER[1];
+												charMod.perceptionModifierVision += getCharacteristicMod(tempString, "PER", script_name);
 											}
 											if ( tempString.includes("Hearing") ) {
-												tempPER[2] =  Math.max(tempPER[2], getCharacteristicMod(tempString, "PER", script_name));
-												importedPowers["perceptionModifierHearing"] = tempPER[2];
+												charMod.perceptionModifierHearing += getCharacteristicMod(tempString, "PER", script_name);
 											}
 											if ( tempString.includes("Smell") ) {
-												tempPER[3] =  Math.max(tempPER[3], getCharacteristicMod(tempString, "PER", script_name));
-												importedPowers["perceptionModifierSmell"] = tempPER[3];
+												charMod.perceptionModifierSmell += getCharacteristicMod(tempString, "PER", script_name);
 											}
 											if ( !(tempString.includes("Sight")) && !(tempString.includes("Hearing")) && !(tempString.includes("Smell")) ) {
-												tempPER[0] =  Math.max(tempPER[0], getCharacteristicMod(tempString, "PER", script_name));
-												importedPowers["enhancedPerceptionModifier"] = tempPER[0];
+												charMod.enhancedPerceptionModifier += getCharacteristicMod(tempString, "PER", script_name);
 											}
 											break;
 					default:				break;
@@ -1938,7 +1987,10 @@
 		
 		// Import powers and bonus points to sheet.
 		importedPowers.bonusBenefit = bonusCP;
-		setAttrs(object.id, importedPowers);
+		
+		const importedPowersAndMods = Object.assign({}, importedPowers, charMod);
+		setAttrs(object.id, importedPowersAndMods);
+		// setAttrs(object.id, importedPowers);
 		
 		if(verbose) {
 			if (powerArrayIndex === 1) {
@@ -3787,6 +3839,37 @@
 			startPosition = inputString.indexOf(searchString);
 			detailString = inputString.slice(startPosition + searchString.length);
 			endPosition = detailString.includes("m") ? detailString.indexOf("m") : detailString.length;
+			detailString = detailString.slice(startPosition, endPosition);
+			charMod = detailString.replace(/[^0-9\-]/g, '');
+			if (charMod === "") {
+				charMod = 0;
+			}
+		} else {
+			charMod = 0;
+		}
+		
+		// Make sure we don't return something nasty.
+		return isNaN(charMod) ? 0 : Math.max(-99, Math.min( (parseInt(charMod)||0), 99));
+	}
+	
+	
+	var getGrowthMod = function (inputString, searchString, script_name) {
+		let charMod = 0;
+		let lastIndex = 0;
+		let detailString = "";
+		let startPosition;
+		let lowerCaseString = inputString.toLowerCase();
+		
+		const specialArray = ["real weapon", "only works", "only for", "only to", "only applies", "only when", "requires a roll", "for up to"];
+		var leadingSet = new Set(["STR", "DEX", "CON", "INT", "EGO", "PRE", "OCV", "DCV", "OMCV", "DMCV", "PD", "ED", "BODY", "STUN", "END", "REC", "PER","Running", "Leaping", "Swimming", "Flight"]);
+		
+		if (specialArray.some(v => lowerCaseString.includes(v))) {
+			// We don't want to add overall modifications for special cases.
+			charMod = 0;
+		} else if (leadingSet.has(searchString)) {
+			endPosition = inputString.indexOf(searchString);
+			detailString = inputString.slice(0, endPosition);
+			startPosition = detailString.includes("+") ? detailString.indexOf("+") : 0;
 			detailString = detailString.slice(startPosition, endPosition);
 			charMod = detailString.replace(/[^0-9\-]/g, '');
 			if (charMod === "") {
