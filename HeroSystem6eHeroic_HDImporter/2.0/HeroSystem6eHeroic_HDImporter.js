@@ -429,12 +429,12 @@
 			omcv: parseInt(character.omcv)||3,
 			dmcv: parseInt(character.dmcv)||3,
 			speed: parseInt(character.speed)||2,
-			pd: parseInt(character.pd)||2,
-			ed: parseInt(character.ed)||2,
+			pd: parseInt(character.pd)||0,
+			ed: parseInt(character.ed)||0,
 			body: parseInt(character.body)||10,
-			stun: parseInt(character.stun)||20,
-			hiddenSTUN: parseInt(character.stun)||20,
-			endurance: parseInt(character.endurance)||20,
+			stun: parseInt(character.stun)||0,
+			hiddenSTUN: parseInt(character.stun)||0,
+			endurance: parseInt(character.endurance)||0,
 			recovery: parseInt(character.recovery)||4
 		}
 		
@@ -453,9 +453,9 @@
 		// Set movement attributes.
 		
 		let movement_attributes = {
-			running: parseInt(character.running)||12,
-			leaping: parseInt(character.leaping)||4,
-			swimming: parseInt(character.swimming)||4
+			running: parseInt(character.running)||0,
+			leaping: parseInt(character.leaping)||0,
+			swimming: parseInt(character.swimming)||0
 		};
 		
 		setAttrs(object.id, movement_attributes);
@@ -929,7 +929,7 @@
 					
 					if (subStringA.includes("PD")) {
 						tempPosition = subStringA.indexOf("PD");
-						subStringB = subStringA.slice(tempPosition-3, 2);
+						subStringB = subStringA.slice(Math.max(0, tempPosition-3), tempPosition);
 						importedArmor["armorPD"+ID] = parseInt(subStringB.replace(/[^\d.-]/g, ""));
 						importedArmor["totalPD"+ID] = importedArmor["armorPD"+ID] + parseInt(character.pd);
 					} else {
@@ -939,7 +939,7 @@
 					
 					if (subStringA.includes("ED")) {
 						tempPosition = subStringA.indexOf("ED");
-						subStringB = subStringA.slice(tempPosition-3, 2);
+						subStringB = subStringA.slice(Math.max(0, tempPosition-3), tempPosition);
 						importedArmor["armorED"+ID] = parseInt(subStringB.replace(/[^\d.-]/g, ""));
 						importedArmor["totalED"+ID] = importedArmor["armorED"+ID] + parseInt(character.ed);
 					} else {
@@ -1863,7 +1863,7 @@
 						charMod.armorPD04 += parseInt(character.pd);
 						if (!pdAddedToTotal) {
 							charMod.totalPD04 += parseInt(character.pd);
-							edAddedToTotal = true;
+							pdAddedToTotal = true;
 						}
 						charMod.armorName04 = importedPowers["powerName"+ID];
 						charMod.armorLocations04 = "3-18";
@@ -1990,7 +1990,6 @@
 		
 		const importedPowersAndMods = Object.assign({}, importedPowers, charMod);
 		setAttrs(object.id, importedPowersAndMods);
-		// setAttrs(object.id, importedPowers);
 		
 		if(verbose) {
 			if (powerArrayIndex === 1) {
@@ -3038,6 +3037,8 @@
 			return "Duplication";
 		} else if (tempString.includes("Enhanced Senses")) {
 			return "Enhanced Senses";
+		} else if (tempString.includes("Endurance Reserve")) {
+			return "Endurance Reserve";
 		} else if (tempString.includes("Entangle")) {
 			return "Entangle";
 		} else if (tempString.includes("Extra Limb")) {
@@ -3317,6 +3318,9 @@
 		
 		let powerBaseCost = parseInt(base);
 		let bonusCP = parseInt(bonus);
+		let slicePosition = 0;
+		let tempValue = 0;
+		let tempString = "";
 		
 		if (effect === "Base STR Mod") {
 			powerBaseCost = parseInt(character.strength);
@@ -3371,6 +3375,25 @@
 				powerBaseCost = parseInt(character.ed*1);
 				bonusCP = bonusCP + powerBaseCost;
 			}
+		} else if (effect === "Endurance Reserve") {
+			// Special cost due to separate END and REC purchases.
+			slicePosition = text.indexOf("END");
+			tempString = text.slice(Math.max(0, slicePosition-7), slicePosition);
+			
+			tempValue = tempString.replace(/[^0-9\-]/g, '');
+			if (tempValue === "") {
+				tempValue = 0;
+			}
+			powerBaseCost = Math.round(tempValue/4);
+			
+			slicePosition = text.indexOf("REC");
+			tempString = text.slice(Math.max(0, slicePosition-6), slicePosition);
+			
+			tempValue = tempString.replace(/[^0-9\-]/g, '');
+			if (tempValue === "") {
+				tempValue = 0;
+			}
+			powerBaseCost += Math.round(2 * tempValue/3);
 		} else if (effect === "To Be Determined") {
 			// Workaround for when sometimes points reported as base are incorrect.
 			if ((text.match(/^\d+|\d+\b|\d+(?=\w)/g) !== null) && (text.match(/^\d+|\d+\b|\d+(?=\w)/g) !== ""))  {
@@ -3781,11 +3804,15 @@
 				detailString = damageString.slice(startPosition+16, endPosition);
 				damage = detailString;
 			} else {	
-				// Separate joined dice if present.
 				if ((damageString.match(/d6/g) || []).length > 1) {
 					damageString = damageString.replace("d6", "d6+");
 					lastIndex = damageString.lastIndexOf("d6+");
 					damageString = damageString.substring(0, lastIndex) + "d6" + damageString.substring(lastIndex + 2);
+				}
+				
+				// Sometimes the damage string contains extra bits after a comma. Drop that.
+				if (damageString.includes(",")) {
+					damageString = damageString.split(",")[0];
 				}
 				
 				// Look for (xd6 w/STR) and use that.
@@ -3816,7 +3843,8 @@
 		let charMod = 0;
 		let lastIndex = 0;
 		let detailString = "";
-		let startPosition;
+		let startPosition = 0;
+		let endPosition = 0;
 		let lowerCaseString = inputString.toLowerCase();
 		
 		const specialArray = ["real weapon", "only works", "only for", "only to", "only applies", "only when", "requires a roll", "for up to"];
