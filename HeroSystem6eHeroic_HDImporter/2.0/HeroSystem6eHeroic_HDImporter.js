@@ -1659,7 +1659,7 @@
 		let bonusCP = 0;
 		let maxImport = (powerArrayIndex <= maxPowers) ? powerArrayIndex : maxPowers;
 		let tempPER = [0, 0, 0, 0];
-		const specialArray = ["real weapon", "only works", "only for", "only to", "only applies", "only when", "requires a roll", "protects areas"];
+		const specialArray = ["real weapon", "only works", "only for", "only to", "only applies", "only when", "attacks", "requires a roll", "protects areas"];
 		
 		const characterAdjustments = {
 			strengthMod: 0,
@@ -2999,7 +2999,9 @@
 		const senseModifierArray = ["analyze", "concealed", "adjacent", "dimensional", "discriminatory", "increased arc", "microscopic", "penetrative", "range", "rapid", "telescopic", "tracking", "transmit"];
 		
 		if (lowerCaseString.includes("applied to str")) {
-			return "Base STR Mod";	
+			return "Base STR Mod";
+		} else if (lowerCaseString.includes("range based on str") && lowerCaseString.includes("of hka")) {
+			return "HKA Mod";
 		} else if (lowerCaseString.includes("applied to running")) {
 			return "Base Running Mod";	
 		} else if (lowerCaseString.includes("applied to leaping")) {
@@ -3050,8 +3052,6 @@
 			return "Enhanced Senses";
 		} else if (tempString.includes("Endurance Reserve")) {
 			return "Endurance Reserve";
-		} else if (tempString.includes("Entangle")) {
-			return "Entangle";
 		} else if (tempString.includes("Extra Limb")) {
 			return "Extra Limb";
 		} else if (tempString.includes("Extra-Dimensional Movement")) {
@@ -3078,6 +3078,8 @@
 			return "HTH Killing Attack";
 		} else if (tempString.includes("HKA")) {
 			return "HTH Killing Attack";
+		} else if ( (tempString.includes("Images")) && !(lowerCaseString.includes("only to perceive images")) ) {
+			return "Images";
 		} else if (tempString.includes("Killing Attack - Ranged")) {
 			return "Ranged Killing Attack";
 		} else if (tempString.includes("RKA")) {
@@ -3214,16 +3216,16 @@
 			return "Enhanced PER";
 		} else if (lowerCaseString.includes("eating") || lowerCaseString.includes("immunity") || lowerCaseString.includes("longevity") || lowerCaseString.includes("safe in") || lowerCaseString.includes("breathing") || lowerCaseString.includes("sleeping")) {
 			return "Life Support";
-		} else if (lowerCaseString.includes("advantage")) {
-			return "Independent Advantage";
+		} else if (tempString.includes("Entangle")) {
+			return "Entangle";
+		} else if ( (lowerCaseString.includes("advantage")) || (lowerCaseString.includes("area of effect")) ) {
+			return "Naked Advantage";
 		} else if (lowerCaseString.includes("worth of") || lowerCaseString.includes("powers") || lowerCaseString.includes("spells") || lowerCaseString.includes("abilities")) {
 			return "To Be Determined";	
 		} else if (tempString.includes("DCV")) {
 			return "Enhanced DCV";
 		} else if (tempString.includes("END")) {
 			return "Enhanced END";
-		} else if (tempString.includes("Images")) {
-			return "Images";
 		} else {
 			return "Unknown Effect";
 		}
@@ -3868,7 +3870,7 @@
 		let endPosition = 0;
 		let lowerCaseString = inputString.toLowerCase();
 		
-		const specialArray = ["real weapon", "only works", "only for", "only to", "only applies", "only when", "requires a roll", "for up to"];
+		const specialArray = ["real weapon", "only works", "only for", "only to", "only applies", "only when", "attacks", "requires a roll", "for up to"];
 		var leadingSet = new Set(["STR", "DEX", "CON", "INT", "EGO", "PRE", "OCV", "DCV", "OMCV", "DMCV", "PD", "ED", "BODY", "STUN", "END", "REC", "PER"]);
 		var trailingSet = new Set(["Running", "Leaping", "Swimming", "Flight"]);
 		
