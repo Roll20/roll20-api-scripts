@@ -1749,7 +1749,7 @@
 				importedPowers["powerStunMod"+ID] = modifiedSTUNx(testObject.testString);
 				
 				// Assign effect dice.
-				importedPowers["powerDice"+ID] = getPowerDamage(powerArray[importCount].damage, theEffect, script_name);
+				importedPowers["powerDice"+ID] = getPowerDamage(powerArray[importCount].damage, theEffect, character.strength, script_name);
 				
 				// Find and assign power type. Remove export notes from names.
 				tempString = powerArray[importCount].name;
@@ -3787,10 +3787,13 @@
 	}
 	
 	
-	var getPowerDamage = function (damageString, effect, script_name) {
+	var getPowerDamage = function (damageString, effect, strength, script_name) {
 		// Parses damageString for damage dice.
 		
 		let damage = "0";
+		let DC = 0;
+		let strDC = Math.floor(strength/5);
+		let halfDie = (((strength % 5) === 3) || ((strength % 5) === 4)) ? true : false;
 		let lastIndex = 0;
 		let detailString;
 		let startPosition;
@@ -3810,7 +3813,7 @@
 					damageString = damageString.substring(0, lastIndex) + "d6" + damageString.substring(lastIndex + 2);
 				}
 				
-				// Sometimes the damage string contains extra bits after a comma. Drop that.
+				// Sometimes the damage string contains extra bits after a comma. Drop them.
 				if (damageString.includes(",")) {
 					damageString = damageString.split(",")[0];
 				}
@@ -3820,6 +3823,13 @@
 					damageString = damageString.match(/\(([^)]*)\)/)[1];
 					damageString = damageString.replace(" w/STR", "");
 					damageString = damageString.trim();
+				} else if (effect === "HTH Attack") {
+					endPosition = damageString.indexOf("d");
+					detailString = damageString.substring(0,endPosition);
+					DC = parseInt(detailString.replace(/[^0-9]/g, ""))||0;
+					DC += strDC;
+					damageString = DC.toString() + "d6";
+					damageString += halfDie ? "+d3" : "";
 				}
 				
 				// Make sure the 1/2d6 is a 1d3.
