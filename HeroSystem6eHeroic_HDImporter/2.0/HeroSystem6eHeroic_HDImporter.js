@@ -259,6 +259,10 @@
 		
 		sendChat(script_name, '<div style="'+style+'">Import of <b>' + character.character_name + '</b> started.</div>', null, {noarchive:true});
 		
+		if (character.version === "1.0") {
+			sendChat(script_name, "Source exported from HERO Designer using HeroSystem6eHeroic.hde version 1.0");
+		}
+		
 		object = null;
 		
 		// Assign a random name if the character doesn't have one.
@@ -435,7 +439,7 @@
 			stun: parseInt(character.stun)||0,
 			hiddenSTUN: parseInt(character.stun)||0,
 			endurance: parseInt(character.endurance)||0,
-			recovery: parseInt(character.recovery)||4
+			recovery: parseInt(character.recovery)||0
 		}
 		
 		if (character.stun !== "") {
@@ -1943,17 +1947,24 @@
 											break;
 					case "Enhanced REC":	charMod.recMod += getCharacteristicMod(tempString, "REC", script_name);
 											break;
-					case "Enhanced PER":	if ( tempString.includes("Sight") ) {
-												charMod.perceptionModifierVision += getCharacteristicMod(tempString, "PER", script_name);
-											}
-											if ( tempString.includes("Hearing") ) {
-												charMod.perceptionModifierHearing += getCharacteristicMod(tempString, "PER", script_name);
-											}
-											if ( tempString.includes("Smell") ) {
-												charMod.perceptionModifierSmell += getCharacteristicMod(tempString, "PER", script_name);
-											}
-											if ( !(tempString.includes("Sight")) && !(tempString.includes("Hearing")) && !(tempString.includes("Smell")) ) {
+					case "Enhanced PER":	if ( tempString.includes("all Sense") ) {
 												charMod.enhancedPerceptionModifier += getCharacteristicMod(tempString, "PER", script_name);
+												if ( (tempString.includes("except Sight")) || (tempString.includes("but Sight")) ) {
+													charMod.perceptionModifierVision += -getCharacteristicMod(tempString, "PER", script_name);
+												}
+												if ( (tempString.includes("except Hearing")) || (tempString.includes("but Hearing")) ) {
+													charMod.perceptionModifierHearing += -getCharacteristicMod(tempString, "PER", script_name);
+												}
+												if ( (tempString.includes("except Smell")) || (tempString.includes("but Smell")) ) {
+													charMod.perceptionModifierSmell += -getCharacteristicMod(tempString, "PER", script_name);
+												}
+											} else {
+												charMod.perceptionModifierVision += (tempString.includes("Sight")) ? getCharacteristicMod(tempString, "PER", script_name) : 0;
+												charMod.perceptionModifierHearing += (tempString.includes("Hearing")) ? getCharacteristicMod(tempString, "PER", script_name) : 0;
+												charMod.perceptionModifierSmell += (tempString.includes("Smell")) ? getCharacteristicMod(tempString, "PER", script_name) : 0;
+												if ( !(tempString.includes("Sight")) && !(tempString.includes("Hearing")) && !(tempString.includes("Smell")) ) {
+													charMod.enhancedPerceptionModifier += getCharacteristicMod(tempString, "PER", script_name);
+												}
 											}
 											break;
 					default:				break;
@@ -3884,6 +3895,10 @@
 			}
 		} else {
 			charMod = 0;
+		}
+		
+		if (verbose) {
+			sendChat(script_name, "Applied characteristic mod " + searchString + " + " + charMod.toString());
 		}
 		
 		// Make sure we don't return something nasty.
