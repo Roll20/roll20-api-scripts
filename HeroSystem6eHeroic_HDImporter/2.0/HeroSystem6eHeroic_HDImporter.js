@@ -611,7 +611,11 @@
 				}
 			}
 			
-			tempString = tempString.trim();
+			if ( (typeof character.treasures != "undefined") && (character.treasures !== "")) {
+				tempString = character.treasures + '\n' + '\n' + tempString.trim();
+			} else {
+				tempString = tempString.trim();
+			}
 			
 			// Place additional maneuvers in the treasures text box.
 			setAttrs(object.id, {treasures: tempString});
@@ -734,6 +738,11 @@
 				}
 				if (equipmentArray[i].text !== "") {
 					tempString += equipmentArray[i].text;
+					if (equipmentArray[i].notes !== "") {
+						tempString += ", " + equipmentArray[i].notes;
+					}
+				} else if (equipmentArray[i].notes !== "") {
+					tempString += ", " + equipmentArray[i].notes;
 				}
 				if (equipmentArray[i].mass !== "") {
 					tempString += ", Mass: " + equipmentArray[i].mass;
@@ -743,7 +752,11 @@
 				}
 			}
 			
-			tempString = tempString.trim();
+			if ( (typeof character.treasures != "undefined") && (character.treasures !== "")) {
+				tempString = character.treasures + '\n' + '\n' + tempString.trim();
+			} else {
+				tempString = tempString.trim();
+			}
 			
 			setAttrs(object.id, {treasures: tempString});
 			
@@ -916,6 +929,7 @@
 		for (importCount = 0; importCount < maxArmor; importCount++) {
 		
 			ID = String(importCount+1).padStart(2,'0');
+			tempString = "none";
 			
 			if (importCount < armorArrayIndex) {
 				imported += 1;
@@ -924,7 +938,9 @@
 				
 				// Find resistant protection values.
 				// This needs to be adjusted so that it doesn't pick out other PD/ED stats from elsewhere in the text.
-				tempString = armorArray[importCount].text;
+				if (typeof armorArray[importCount].text !== "undefined") {
+					tempString = armorArray[importCount].text;
+				}
 				
 				if (tempString.includes("Resistant Protection")) {
 					tempPosition = tempString.indexOf("Resistant Protection");
@@ -964,7 +980,10 @@
 					importedArmor["armorActivation"+ID] = parseInt(subStringB);
 				}
 				
-				// Armor locations
+				// Armor locations. Sometimes locations are stored in the notes field.
+				if (armorArray[importCount].notes !== "") {
+					tempString += ", " + armorArray[importCount].notes;
+				}
 				importedArmor["armorLocations"+ID] = getArmorLocations(tempString, script_name);
 				
 				// Get armor mass.
@@ -1909,7 +1928,7 @@
 				// Apply characteristic mods granted by enhancement powers or movement.
 				tempString = powerArray[importCount].text;
 				
-				if ( (typeof theString != "undefined") && (theString != "") ) {
+				if ( (typeof tempString != "undefined") && (tempString != "") ) {
 					switch (theEffect) {
 						case "Base STR Mod":	if (tempString.includes("0 END")) {
 													importedPowers["optionUntiring"] = "on";
@@ -3160,7 +3179,7 @@
 				return "Detect";	
 			} else if (tempString.includes("Enhanced Perception")) {
 				return "Enhanced PER";	
-			} else if (tempString.includes("High Range Radio")) {
+			} else if ( (tempString.includes("High Range Radio")) || (tempString.includes("HRRP")) ) {
 				return "HR Radio PER";
 			} else if (tempString.includes("Infrared Perception")) {
 				return "IR Perception";
@@ -4037,8 +4056,6 @@
 	
 	
 	var getArmorLocations = function (inputString, script_name) {
-		// Looks for two location blocks.
-		// Not a complete solution if the armor has different PD/ED.
 		let locations = "";
 		let secondString = "";
 		let startPosition = 0;
@@ -4046,29 +4063,43 @@
 		
 		inputString = inputString.toLowerCase();
 		
-		if (inputString.includes("(locations")) {
-			startPosition = inputString.indexOf("(locations") + 10;
-			endPosition = inputString.indexOf(")", startPosition);
-			locations = inputString.slice(startPosition, endPosition);
-			secondString = inputString.slice(endPosition+1);
-		} else if (inputString.includes("(loc")) {
-			startPosition = inputString.indexOf("(loc") + 4;
-			endPosition = inputString.indexOf(")", startPosition);
-			locations = inputString.slice(startPosition, endPosition);
-			secondString = inputString.slice(endPosition+1);
+		if (inputString.includes("location")) {
+			startPosition = inputString.indexOf("location");
+			locations = inputString.slice(startPosition);
+			if (locations.includes(';')) {
+				endPosition = locations.indexOf(';');
+				locations = locations.slice(0,endPosition);
+			} else if (locations.includes(')')) {
+				endPosition = locations.indexOf(')');
+				locations = locations.slice(0,endPosition);
+			} else {
+				endPosition = Math.min(16, locations.length);
+				locations = locations.slice(0,endPosition);
+			}
+			locations = locations.replace(/[^\d,-]/g, "");
+			if (locations.includes(',')) {
+				locations = locations.replace(',', ", ");
+			}
+		} else if (inputString.includes("loc")) {
+			startPosition = inputString.indexOf("loc");
+			locations = inputString.slice(startPosition);
+			if (locations.includes(';')) {
+				endPosition = locations.indexOf(';');
+				locations = locations.slice(0,endPosition);
+			} else if (locations.includes(')')) {
+				endPosition = locations.indexOf(')');
+				locations = locations.slice(0,endPosition);
+			} else {
+				endPosition = Math.min(11, locations.length);
+				locations = locations.slice(0,endPosition);
+			}
+			locations = locations.replace(/[^\d,-]/g, "");
+			if (locations.includes(',')) {
+				locations = locations.replace(',', ", ");
+			}
 		}
 		
-		if (secondString.includes("(locations")) {
-			startPosition = secondString.indexOf("(locations") + 10;
-			endPosition = secondString.indexOf(")", startPosition);
-			locations += "," + secondString.slice(startPosition, endPosition);
-		} else if (secondString.includes("(loc")) {
-			startPosition = secondString.indexOf("(loc") + 4;
-			endPosition = secondString.indexOf(")", startPosition);
-			locations += "," + secondString.slice(startPosition, endPosition);
-		}
-		
-		return locations;
+		return locations.trim();
 	}
 	
 	

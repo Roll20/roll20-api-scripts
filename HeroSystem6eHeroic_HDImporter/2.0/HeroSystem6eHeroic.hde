@@ -47,7 +47,8 @@
 					"range":"<!--EQUIPMENT_RANGE-->",
 					"mass":"<!--EQUIPMENT_WEIGHT-->",
 					"attack":"<!--IF_ATTACK-->true<!--/IF_ATTACK-->",
-					"defense":"<!--IF_DEFENSE-->true<!--/IF_DEFENSE-->"
+					"defense":"<!--IF_DEFENSE-->true<!--/IF_DEFENSE-->",
+					"notes":"<!--IFNOTES--><!--NOTES--><!--/IFNOTES-->"
 				<!--/IS_MP-->
 			<!--/IS_LIST-->
 			<!--IS_NOT_LIST-->
@@ -59,7 +60,8 @@
 					"range":"<!--EQUIPMENT_RANGE-->",
 					"mass":"<!--EQUIPMENT_WEIGHT-->",
 					"attack":"<!--IF_ATTACK-->true<!--/IF_ATTACK-->",
-					"defense":"<!--IF_DEFENSE-->true<!--/IF_DEFENSE-->"
+					"defense":"<!--IF_DEFENSE-->true<!--/IF_DEFENSE-->",
+					"notes":"<!--IFNOTES--><!--NOTES--><!--/IFNOTES-->"
 				<!--/IS_LIST_ITEM-->
 			<!--/IS_NOT_LIST-->
 			<!--IS_NOT_LIST-->
@@ -71,7 +73,8 @@
 					"range":"<!--EQUIPMENT_RANGE-->",
 					"mass":"<!--EQUIPMENT_WEIGHT-->",
 					"attack":"<!--IF_ATTACK-->true<!--/IF_ATTACK-->",
-					"defense":"<!--IF_DEFENSE-->true<!--/IF_DEFENSE-->"
+					"defense":"<!--IF_DEFENSE-->true<!--/IF_DEFENSE-->",
+					"notes":"<!--IFNOTES--><!--NOTES--><!--/IFNOTES-->"
 				<!--/IS_NOT_LIST_ITEM-->
 			<!--/IS_NOT_LIST-->
 			<!--STOP-->1<!--/STOP--><!--/EQUIPMENT-->},
@@ -85,7 +88,8 @@
 					"range":"<!--EQUIPMENT_RANGE-->",
 					"mass":"<!--EQUIPMENT_WEIGHT-->",
 					"attack":"<!--IF_ATTACK-->true<!--/IF_ATTACK-->",
-					"defense":"<!--IF_DEFENSE-->true<!--/IF_DEFENSE-->"
+					"defense":"<!--IF_DEFENSE-->true<!--/IF_DEFENSE-->",
+					"notes":"<!--IFNOTES--><!--NOTES--><!--/IFNOTES-->"
 				<!--/IS_MP-->
 			<!--/IS_LIST-->
 			<!--IS_NOT_LIST-->
@@ -97,7 +101,8 @@
 					"range":"<!--EQUIPMENT_RANGE-->",
 					"mass":"<!--EQUIPMENT_WEIGHT-->",
 					"attack":"<!--IF_ATTACK-->true<!--/IF_ATTACK-->",
-					"defense":"<!--IF_DEFENSE-->true<!--/IF_DEFENSE-->"
+					"defense":"<!--IF_DEFENSE-->true<!--/IF_DEFENSE-->",
+					"notes":"<!--IFNOTES--><!--NOTES--><!--/IFNOTES-->"
 				<!--/IS_LIST_ITEM-->
 			<!--/IS_NOT_LIST-->
 			<!--IS_NOT_LIST-->
@@ -109,7 +114,8 @@
 					"range":"<!--EQUIPMENT_RANGE-->",
 					"mass":"<!--EQUIPMENT_WEIGHT-->",
 					"attack":"<!--IF_ATTACK-->true<!--/IF_ATTACK-->",
-					"defense":"<!--IF_DEFENSE-->true<!--/IF_DEFENSE-->"
+					"defense":"<!--IF_DEFENSE-->true<!--/IF_DEFENSE-->",
+					"notes":"<!--IFNOTES--><!--NOTES--><!--/IFNOTES-->"
 				<!--/IS_NOT_LIST_ITEM-->
 			<!--/IS_NOT_LIST-->
 			<!--STOP-->2<!--/STOP--><!--/EQUIPMENT-->},
@@ -123,7 +129,8 @@
 					"range":"<!--EQUIPMENT_RANGE-->",
 					"mass":"<!--EQUIPMENT_WEIGHT-->",
 					"attack":"<!--IF_ATTACK-->true<!--/IF_ATTACK-->",
-					"defense":"<!--IF_DEFENSE-->true<!--/IF_DEFENSE-->"
+					"defense":"<!--IF_DEFENSE-->true<!--/IF_DEFENSE-->",
+					"notes":"<!--IFNOTES--><!--NOTES--><!--/IFNOTES-->"
 				<!--/IS_MP-->
 			<!--/IS_LIST-->
 			<!--IS_NOT_LIST-->
@@ -135,7 +142,8 @@
 					"range":"<!--EQUIPMENT_RANGE-->",
 					"mass":"<!--EQUIPMENT_WEIGHT-->",
 					"attack":"<!--IF_ATTACK-->true<!--/IF_ATTACK-->",
-					"defense":"<!--IF_DEFENSE-->true<!--/IF_DEFENSE-->"
+					"defense":"<!--IF_DEFENSE-->true<!--/IF_DEFENSE-->",
+					"notes":"<!--IFNOTES--><!--NOTES--><!--/IFNOTES-->"
 				<!--/IS_LIST_ITEM-->
 			<!--/IS_NOT_LIST-->
 			<!--IS_NOT_LIST-->
@@ -147,7 +155,8 @@
 					"range":"<!--EQUIPMENT_RANGE-->",
 					"mass":"<!--EQUIPMENT_WEIGHT-->",
 					"attack":"<!--IF_ATTACK-->true<!--/IF_ATTACK-->",
-					"defense":"<!--IF_DEFENSE-->true<!--/IF_DEFENSE-->"
+					"defense":"<!--IF_DEFENSE-->true<!--/IF_DEFENSE-->",
+					"notes":"<!--IFNOTES--><!--NOTES--><!--/IFNOTES-->"
 				<!--/IS_NOT_LIST_ITEM-->
 			<!--/IS_NOT_LIST-->
 			<!--STOP-->3<!--/STOP--><!--/EQUIPMENT-->},
@@ -161,7 +170,8 @@
 					"range":"<!--EQUIPMENT_RANGE-->",
 					"mass":"<!--EQUIPMENT_WEIGHT-->",
 					"attack":"<!--IF_ATTACK-->true<!--/IF_ATTACK-->",
-					"defense":"<!--IF_DEFENSE-->true<!--/IF_DEFENSE-->"
+					"defense":"<!--IF_DEFENSE-->true<!--/IF_DEFENSE-->",
+					"notes":"<!--IFNOTES--><!--NOTES--><!--/IFNOTES-->"
 				<!--/IS_MP-->
 			<!--/IS_LIST-->
 			<!--IS_NOT_LIST-->
@@ -173,7 +183,8 @@
 					"range":"<!--EQUIPMENT_RANGE-->",
 					"mass":"<!--EQUIPMENT_WEIGHT-->",
 					"attack":"<!--IF_ATTACK-->true<!--/IF_ATTACK-->",
-					"defense":"<!--IF_DEFENSE-->true<!--/IF_DEFENSE-->"
+					"defense":"<!--IF_DEFENSE-->true<!--/IF_DEFENSE-->",
+					"notes":"<!--IFNOTES--><!--NOTES--><!--/IFNOTES-->"
 				<!--/IS_LIST_ITEM-->
 			<!--/IS_NOT_LIST-->
 			<!--IS_NOT_LIST-->
@@ -185,7 +196,8 @@
 					"range":"<!--EQUIPMENT_RANGE-->",
 					"mass":"<!--EQUIPMENT_WEIGHT-->",
 					"attack":"<!--IF_ATTACK-->true<!--/IF_ATTACK-->",
-					"defense":"<!--IF_DEFENSE-->true<!--/IF_DEFENSE-->"
+					"defense":"<!--IF_DEFENSE-->true<!--/IF_DEFENSE-->",
+					"notes":"<!--IFNOTES--><!--NOTES--><!--/IFNOTES-->"
 				<!--/IS_NOT_LIST_ITEM-->
 			<!--/IS_NOT_LIST-->
 			<!--STOP-->4<!--/STOP--><!--/EQUIPMENT-->},
@@ -199,7 +211,8 @@
 					"range":"<!--EQUIPMENT_RANGE-->",
 					"mass":"<!--EQUIPMENT_WEIGHT-->",
 					"attack":"<!--IF_ATTACK-->true<!--/IF_ATTACK-->",
-					"defense":"<!--IF_DEFENSE-->true<!--/IF_DEFENSE-->"
+					"defense":"<!--IF_DEFENSE-->true<!--/IF_DEFENSE-->",
+					"notes":"<!--IFNOTES--><!--NOTES--><!--/IFNOTES-->"
 				<!--/IS_MP-->
 			<!--/IS_LIST-->
 			<!--IS_NOT_LIST-->
@@ -211,7 +224,8 @@
 					"range":"<!--EQUIPMENT_RANGE-->",
 					"mass":"<!--EQUIPMENT_WEIGHT-->",
 					"attack":"<!--IF_ATTACK-->true<!--/IF_ATTACK-->",
-					"defense":"<!--IF_DEFENSE-->true<!--/IF_DEFENSE-->"
+					"defense":"<!--IF_DEFENSE-->true<!--/IF_DEFENSE-->",
+					"notes":"<!--IFNOTES--><!--NOTES--><!--/IFNOTES-->"
 				<!--/IS_LIST_ITEM-->
 			<!--/IS_NOT_LIST-->
 			<!--IS_NOT_LIST-->
@@ -223,7 +237,8 @@
 					"range":"<!--EQUIPMENT_RANGE-->",
 					"mass":"<!--EQUIPMENT_WEIGHT-->",
 					"attack":"<!--IF_ATTACK-->true<!--/IF_ATTACK-->",
-					"defense":"<!--IF_DEFENSE-->true<!--/IF_DEFENSE-->"
+					"defense":"<!--IF_DEFENSE-->true<!--/IF_DEFENSE-->",
+					"notes":"<!--IFNOTES--><!--NOTES--><!--/IFNOTES-->"
 				<!--/IS_NOT_LIST_ITEM-->
 			<!--/IS_NOT_LIST-->
 			<!--STOP-->5<!--/STOP--><!--/EQUIPMENT-->},
@@ -237,7 +252,8 @@
 					"range":"<!--EQUIPMENT_RANGE-->",
 					"mass":"<!--EQUIPMENT_WEIGHT-->",
 					"attack":"<!--IF_ATTACK-->true<!--/IF_ATTACK-->",
-					"defense":"<!--IF_DEFENSE-->true<!--/IF_DEFENSE-->"
+					"defense":"<!--IF_DEFENSE-->true<!--/IF_DEFENSE-->",
+					"notes":"<!--IFNOTES--><!--NOTES--><!--/IFNOTES-->"
 				<!--/IS_MP-->
 			<!--/IS_LIST-->
 			<!--IS_NOT_LIST-->
@@ -249,7 +265,8 @@
 					"range":"<!--EQUIPMENT_RANGE-->",
 					"mass":"<!--EQUIPMENT_WEIGHT-->",
 					"attack":"<!--IF_ATTACK-->true<!--/IF_ATTACK-->",
-					"defense":"<!--IF_DEFENSE-->true<!--/IF_DEFENSE-->"
+					"defense":"<!--IF_DEFENSE-->true<!--/IF_DEFENSE-->",
+					"notes":"<!--IFNOTES--><!--NOTES--><!--/IFNOTES-->"
 				<!--/IS_LIST_ITEM-->
 			<!--/IS_NOT_LIST-->
 			<!--IS_NOT_LIST-->
@@ -261,7 +278,8 @@
 					"range":"<!--EQUIPMENT_RANGE-->",
 					"mass":"<!--EQUIPMENT_WEIGHT-->",
 					"attack":"<!--IF_ATTACK-->true<!--/IF_ATTACK-->",
-					"defense":"<!--IF_DEFENSE-->true<!--/IF_DEFENSE-->"
+					"defense":"<!--IF_DEFENSE-->true<!--/IF_DEFENSE-->",
+					"notes":"<!--IFNOTES--><!--NOTES--><!--/IFNOTES-->"
 				<!--/IS_NOT_LIST_ITEM-->
 			<!--/IS_NOT_LIST-->
 			<!--STOP-->6<!--/STOP--><!--/EQUIPMENT-->},
@@ -275,7 +293,8 @@
 					"range":"<!--EQUIPMENT_RANGE-->",
 					"mass":"<!--EQUIPMENT_WEIGHT-->",
 					"attack":"<!--IF_ATTACK-->true<!--/IF_ATTACK-->",
-					"defense":"<!--IF_DEFENSE-->true<!--/IF_DEFENSE-->"
+					"defense":"<!--IF_DEFENSE-->true<!--/IF_DEFENSE-->",
+					"notes":"<!--IFNOTES--><!--NOTES--><!--/IFNOTES-->"
 				<!--/IS_MP-->
 			<!--/IS_LIST-->
 			<!--IS_NOT_LIST-->
@@ -287,7 +306,8 @@
 					"range":"<!--EQUIPMENT_RANGE-->",
 					"mass":"<!--EQUIPMENT_WEIGHT-->",
 					"attack":"<!--IF_ATTACK-->true<!--/IF_ATTACK-->",
-					"defense":"<!--IF_DEFENSE-->true<!--/IF_DEFENSE-->"
+					"defense":"<!--IF_DEFENSE-->true<!--/IF_DEFENSE-->",
+					"notes":"<!--IFNOTES--><!--NOTES--><!--/IFNOTES-->"
 				<!--/IS_LIST_ITEM-->
 			<!--/IS_NOT_LIST-->
 			<!--IS_NOT_LIST-->
@@ -299,7 +319,8 @@
 					"range":"<!--EQUIPMENT_RANGE-->",
 					"mass":"<!--EQUIPMENT_WEIGHT-->",
 					"attack":"<!--IF_ATTACK-->true<!--/IF_ATTACK-->",
-					"defense":"<!--IF_DEFENSE-->true<!--/IF_DEFENSE-->"
+					"defense":"<!--IF_DEFENSE-->true<!--/IF_DEFENSE-->",
+					"notes":"<!--IFNOTES--><!--NOTES--><!--/IFNOTES-->"
 				<!--/IS_NOT_LIST_ITEM-->
 			<!--/IS_NOT_LIST-->
 			<!--STOP-->7<!--/STOP--><!--/EQUIPMENT-->},
@@ -313,7 +334,8 @@
 					"range":"<!--EQUIPMENT_RANGE-->",
 					"mass":"<!--EQUIPMENT_WEIGHT-->",
 					"attack":"<!--IF_ATTACK-->true<!--/IF_ATTACK-->",
-					"defense":"<!--IF_DEFENSE-->true<!--/IF_DEFENSE-->"
+					"defense":"<!--IF_DEFENSE-->true<!--/IF_DEFENSE-->",
+					"notes":"<!--IFNOTES--><!--NOTES--><!--/IFNOTES-->"
 				<!--/IS_MP-->
 			<!--/IS_LIST-->
 			<!--IS_NOT_LIST-->
@@ -325,7 +347,8 @@
 					"range":"<!--EQUIPMENT_RANGE-->",
 					"mass":"<!--EQUIPMENT_WEIGHT-->",
 					"attack":"<!--IF_ATTACK-->true<!--/IF_ATTACK-->",
-					"defense":"<!--IF_DEFENSE-->true<!--/IF_DEFENSE-->"
+					"defense":"<!--IF_DEFENSE-->true<!--/IF_DEFENSE-->",
+					"notes":"<!--IFNOTES--><!--NOTES--><!--/IFNOTES-->"
 				<!--/IS_LIST_ITEM-->
 			<!--/IS_NOT_LIST-->
 			<!--IS_NOT_LIST-->
@@ -337,7 +360,8 @@
 					"range":"<!--EQUIPMENT_RANGE-->",
 					"mass":"<!--EQUIPMENT_WEIGHT-->",
 					"attack":"<!--IF_ATTACK-->true<!--/IF_ATTACK-->",
-					"defense":"<!--IF_DEFENSE-->true<!--/IF_DEFENSE-->"
+					"defense":"<!--IF_DEFENSE-->true<!--/IF_DEFENSE-->",
+					"notes":"<!--IFNOTES--><!--NOTES--><!--/IFNOTES-->"
 				<!--/IS_NOT_LIST_ITEM-->
 			<!--/IS_NOT_LIST-->
 			<!--STOP-->8<!--/STOP--><!--/EQUIPMENT-->},
@@ -351,7 +375,8 @@
 					"range":"<!--EQUIPMENT_RANGE-->",
 					"mass":"<!--EQUIPMENT_WEIGHT-->",
 					"attack":"<!--IF_ATTACK-->true<!--/IF_ATTACK-->",
-					"defense":"<!--IF_DEFENSE-->true<!--/IF_DEFENSE-->"
+					"defense":"<!--IF_DEFENSE-->true<!--/IF_DEFENSE-->",
+					"notes":"<!--IFNOTES--><!--NOTES--><!--/IFNOTES-->"
 				<!--/IS_MP-->
 			<!--/IS_LIST-->
 			<!--IS_NOT_LIST-->
@@ -363,7 +388,8 @@
 					"range":"<!--EQUIPMENT_RANGE-->",
 					"mass":"<!--EQUIPMENT_WEIGHT-->",
 					"attack":"<!--IF_ATTACK-->true<!--/IF_ATTACK-->",
-					"defense":"<!--IF_DEFENSE-->true<!--/IF_DEFENSE-->"
+					"defense":"<!--IF_DEFENSE-->true<!--/IF_DEFENSE-->",
+					"notes":"<!--IFNOTES--><!--NOTES--><!--/IFNOTES-->"
 				<!--/IS_LIST_ITEM-->
 			<!--/IS_NOT_LIST-->
 			<!--IS_NOT_LIST-->
@@ -375,7 +401,8 @@
 					"range":"<!--EQUIPMENT_RANGE-->",
 					"mass":"<!--EQUIPMENT_WEIGHT-->",
 					"attack":"<!--IF_ATTACK-->true<!--/IF_ATTACK-->",
-					"defense":"<!--IF_DEFENSE-->true<!--/IF_DEFENSE-->"
+					"defense":"<!--IF_DEFENSE-->true<!--/IF_DEFENSE-->",
+					"notes":"<!--IFNOTES--><!--NOTES--><!--/IFNOTES-->"
 				<!--/IS_NOT_LIST_ITEM-->
 			<!--/IS_NOT_LIST-->
 			<!--STOP-->9<!--/STOP--><!--/EQUIPMENT-->},
@@ -389,7 +416,8 @@
 					"range":"<!--EQUIPMENT_RANGE-->",
 					"mass":"<!--EQUIPMENT_WEIGHT-->",
 					"attack":"<!--IF_ATTACK-->true<!--/IF_ATTACK-->",
-					"defense":"<!--IF_DEFENSE-->true<!--/IF_DEFENSE-->"
+					"defense":"<!--IF_DEFENSE-->true<!--/IF_DEFENSE-->",
+					"notes":"<!--IFNOTES--><!--NOTES--><!--/IFNOTES-->"
 				<!--/IS_MP-->
 			<!--/IS_LIST-->
 			<!--IS_NOT_LIST-->
@@ -401,7 +429,8 @@
 					"range":"<!--EQUIPMENT_RANGE-->",
 					"mass":"<!--EQUIPMENT_WEIGHT-->",
 					"attack":"<!--IF_ATTACK-->true<!--/IF_ATTACK-->",
-					"defense":"<!--IF_DEFENSE-->true<!--/IF_DEFENSE-->"
+					"defense":"<!--IF_DEFENSE-->true<!--/IF_DEFENSE-->",
+					"notes":"<!--IFNOTES--><!--NOTES--><!--/IFNOTES-->"
 				<!--/IS_LIST_ITEM-->
 			<!--/IS_NOT_LIST-->
 			<!--IS_NOT_LIST-->
@@ -413,7 +442,8 @@
 					"range":"<!--EQUIPMENT_RANGE-->",
 					"mass":"<!--EQUIPMENT_WEIGHT-->",
 					"attack":"<!--IF_ATTACK-->true<!--/IF_ATTACK-->",
-					"defense":"<!--IF_DEFENSE-->true<!--/IF_DEFENSE-->"
+					"defense":"<!--IF_DEFENSE-->true<!--/IF_DEFENSE-->",
+					"notes":"<!--IFNOTES--><!--NOTES--><!--/IFNOTES-->"
 				<!--/IS_NOT_LIST_ITEM-->
 			<!--/IS_NOT_LIST-->
 			<!--STOP-->10<!--/STOP--><!--/EQUIPMENT-->},
@@ -427,7 +457,8 @@
 					"range":"<!--EQUIPMENT_RANGE-->",
 					"mass":"<!--EQUIPMENT_WEIGHT-->",
 					"attack":"<!--IF_ATTACK-->true<!--/IF_ATTACK-->",
-					"defense":"<!--IF_DEFENSE-->true<!--/IF_DEFENSE-->"
+					"defense":"<!--IF_DEFENSE-->true<!--/IF_DEFENSE-->",
+					"notes":"<!--IFNOTES--><!--NOTES--><!--/IFNOTES-->"
 				<!--/IS_MP-->
 			<!--/IS_LIST-->
 			<!--IS_NOT_LIST-->
@@ -439,7 +470,8 @@
 					"range":"<!--EQUIPMENT_RANGE-->",
 					"mass":"<!--EQUIPMENT_WEIGHT-->",
 					"attack":"<!--IF_ATTACK-->true<!--/IF_ATTACK-->",
-					"defense":"<!--IF_DEFENSE-->true<!--/IF_DEFENSE-->"
+					"defense":"<!--IF_DEFENSE-->true<!--/IF_DEFENSE-->",
+					"notes":"<!--IFNOTES--><!--NOTES--><!--/IFNOTES-->"
 				<!--/IS_LIST_ITEM-->
 			<!--/IS_NOT_LIST-->
 			<!--IS_NOT_LIST-->
@@ -451,7 +483,8 @@
 					"range":"<!--EQUIPMENT_RANGE-->",
 					"mass":"<!--EQUIPMENT_WEIGHT-->",
 					"attack":"<!--IF_ATTACK-->true<!--/IF_ATTACK-->",
-					"defense":"<!--IF_DEFENSE-->true<!--/IF_DEFENSE-->"
+					"defense":"<!--IF_DEFENSE-->true<!--/IF_DEFENSE-->",
+					"notes":"<!--IFNOTES--><!--NOTES--><!--/IFNOTES-->"
 				<!--/IS_NOT_LIST_ITEM-->
 			<!--/IS_NOT_LIST-->
 			<!--STOP-->11<!--/STOP--><!--/EQUIPMENT-->},
@@ -465,7 +498,8 @@
 					"range":"<!--EQUIPMENT_RANGE-->",
 					"mass":"<!--EQUIPMENT_WEIGHT-->",
 					"attack":"<!--IF_ATTACK-->true<!--/IF_ATTACK-->",
-					"defense":"<!--IF_DEFENSE-->true<!--/IF_DEFENSE-->"
+					"defense":"<!--IF_DEFENSE-->true<!--/IF_DEFENSE-->",
+					"notes":"<!--IFNOTES--><!--NOTES--><!--/IFNOTES-->"
 				<!--/IS_MP-->
 			<!--/IS_LIST-->
 			<!--IS_NOT_LIST-->
@@ -477,7 +511,8 @@
 					"range":"<!--EQUIPMENT_RANGE-->",
 					"mass":"<!--EQUIPMENT_WEIGHT-->",
 					"attack":"<!--IF_ATTACK-->true<!--/IF_ATTACK-->",
-					"defense":"<!--IF_DEFENSE-->true<!--/IF_DEFENSE-->"
+					"defense":"<!--IF_DEFENSE-->true<!--/IF_DEFENSE-->",
+					"notes":"<!--IFNOTES--><!--NOTES--><!--/IFNOTES-->"
 				<!--/IS_LIST_ITEM-->
 			<!--/IS_NOT_LIST-->
 			<!--IS_NOT_LIST-->
@@ -489,7 +524,8 @@
 					"range":"<!--EQUIPMENT_RANGE-->",
 					"mass":"<!--EQUIPMENT_WEIGHT-->",
 					"attack":"<!--IF_ATTACK-->true<!--/IF_ATTACK-->",
-					"defense":"<!--IF_DEFENSE-->true<!--/IF_DEFENSE-->"
+					"defense":"<!--IF_DEFENSE-->true<!--/IF_DEFENSE-->",
+					"notes":"<!--IFNOTES--><!--NOTES--><!--/IFNOTES-->"
 				<!--/IS_NOT_LIST_ITEM-->
 			<!--/IS_NOT_LIST-->
 			<!--STOP-->12<!--/STOP--><!--/EQUIPMENT-->},
@@ -503,7 +539,8 @@
 					"range":"<!--EQUIPMENT_RANGE-->",
 					"mass":"<!--EQUIPMENT_WEIGHT-->",
 					"attack":"<!--IF_ATTACK-->true<!--/IF_ATTACK-->",
-					"defense":"<!--IF_DEFENSE-->true<!--/IF_DEFENSE-->"
+					"defense":"<!--IF_DEFENSE-->true<!--/IF_DEFENSE-->",
+					"notes":"<!--IFNOTES--><!--NOTES--><!--/IFNOTES-->"
 				<!--/IS_MP-->
 			<!--/IS_LIST-->
 			<!--IS_NOT_LIST-->
@@ -515,7 +552,8 @@
 					"range":"<!--EQUIPMENT_RANGE-->",
 					"mass":"<!--EQUIPMENT_WEIGHT-->",
 					"attack":"<!--IF_ATTACK-->true<!--/IF_ATTACK-->",
-					"defense":"<!--IF_DEFENSE-->true<!--/IF_DEFENSE-->"
+					"defense":"<!--IF_DEFENSE-->true<!--/IF_DEFENSE-->",
+					"notes":"<!--IFNOTES--><!--NOTES--><!--/IFNOTES-->"
 				<!--/IS_LIST_ITEM-->
 			<!--/IS_NOT_LIST-->
 			<!--IS_NOT_LIST-->
@@ -527,7 +565,8 @@
 					"range":"<!--EQUIPMENT_RANGE-->",
 					"mass":"<!--EQUIPMENT_WEIGHT-->",
 					"attack":"<!--IF_ATTACK-->true<!--/IF_ATTACK-->",
-					"defense":"<!--IF_DEFENSE-->true<!--/IF_DEFENSE-->"
+					"defense":"<!--IF_DEFENSE-->true<!--/IF_DEFENSE-->",
+					"notes":"<!--IFNOTES--><!--NOTES--><!--/IFNOTES-->"
 				<!--/IS_NOT_LIST_ITEM-->
 			<!--/IS_NOT_LIST-->
 			<!--STOP-->13<!--/STOP--><!--/EQUIPMENT-->},
@@ -541,7 +580,8 @@
 					"range":"<!--EQUIPMENT_RANGE-->",
 					"mass":"<!--EQUIPMENT_WEIGHT-->",
 					"attack":"<!--IF_ATTACK-->true<!--/IF_ATTACK-->",
-					"defense":"<!--IF_DEFENSE-->true<!--/IF_DEFENSE-->"
+					"defense":"<!--IF_DEFENSE-->true<!--/IF_DEFENSE-->",
+					"notes":"<!--IFNOTES--><!--NOTES--><!--/IFNOTES-->"
 				<!--/IS_MP-->
 			<!--/IS_LIST-->
 			<!--IS_NOT_LIST-->
@@ -553,7 +593,8 @@
 					"range":"<!--EQUIPMENT_RANGE-->",
 					"mass":"<!--EQUIPMENT_WEIGHT-->",
 					"attack":"<!--IF_ATTACK-->true<!--/IF_ATTACK-->",
-					"defense":"<!--IF_DEFENSE-->true<!--/IF_DEFENSE-->"
+					"defense":"<!--IF_DEFENSE-->true<!--/IF_DEFENSE-->",
+					"notes":"<!--IFNOTES--><!--NOTES--><!--/IFNOTES-->"
 				<!--/IS_LIST_ITEM-->
 			<!--/IS_NOT_LIST-->
 			<!--IS_NOT_LIST-->
@@ -565,7 +606,8 @@
 					"range":"<!--EQUIPMENT_RANGE-->",
 					"mass":"<!--EQUIPMENT_WEIGHT-->",
 					"attack":"<!--IF_ATTACK-->true<!--/IF_ATTACK-->",
-					"defense":"<!--IF_DEFENSE-->true<!--/IF_DEFENSE-->"
+					"defense":"<!--IF_DEFENSE-->true<!--/IF_DEFENSE-->",
+					"notes":"<!--IFNOTES--><!--NOTES--><!--/IFNOTES-->"
 				<!--/IS_NOT_LIST_ITEM-->
 			<!--/IS_NOT_LIST-->
 			<!--STOP-->14<!--/STOP--><!--/EQUIPMENT-->},
@@ -579,7 +621,8 @@
 					"range":"<!--EQUIPMENT_RANGE-->",
 					"mass":"<!--EQUIPMENT_WEIGHT-->",
 					"attack":"<!--IF_ATTACK-->true<!--/IF_ATTACK-->",
-					"defense":"<!--IF_DEFENSE-->true<!--/IF_DEFENSE-->"
+					"defense":"<!--IF_DEFENSE-->true<!--/IF_DEFENSE-->",
+					"notes":"<!--IFNOTES--><!--NOTES--><!--/IFNOTES-->"
 				<!--/IS_MP-->
 			<!--/IS_LIST-->
 			<!--IS_NOT_LIST-->
@@ -591,7 +634,8 @@
 					"range":"<!--EQUIPMENT_RANGE-->",
 					"mass":"<!--EQUIPMENT_WEIGHT-->",
 					"attack":"<!--IF_ATTACK-->true<!--/IF_ATTACK-->",
-					"defense":"<!--IF_DEFENSE-->true<!--/IF_DEFENSE-->"
+					"defense":"<!--IF_DEFENSE-->true<!--/IF_DEFENSE-->",
+					"notes":"<!--IFNOTES--><!--NOTES--><!--/IFNOTES-->"
 				<!--/IS_LIST_ITEM-->
 			<!--/IS_NOT_LIST-->
 			<!--IS_NOT_LIST-->
@@ -603,7 +647,8 @@
 					"range":"<!--EQUIPMENT_RANGE-->",
 					"mass":"<!--EQUIPMENT_WEIGHT-->",
 					"attack":"<!--IF_ATTACK-->true<!--/IF_ATTACK-->",
-					"defense":"<!--IF_DEFENSE-->true<!--/IF_DEFENSE-->"
+					"defense":"<!--IF_DEFENSE-->true<!--/IF_DEFENSE-->",
+					"notes":"<!--IFNOTES--><!--NOTES--><!--/IFNOTES-->"
 				<!--/IS_NOT_LIST_ITEM-->
 			<!--/IS_NOT_LIST-->
 			<!--STOP-->15<!--/STOP--><!--/EQUIPMENT-->},
@@ -617,7 +662,8 @@
 					"range":"<!--EQUIPMENT_RANGE-->",
 					"mass":"<!--EQUIPMENT_WEIGHT-->",
 					"attack":"<!--IF_ATTACK-->true<!--/IF_ATTACK-->",
-					"defense":"<!--IF_DEFENSE-->true<!--/IF_DEFENSE-->"
+					"defense":"<!--IF_DEFENSE-->true<!--/IF_DEFENSE-->",
+					"notes":"<!--IFNOTES--><!--NOTES--><!--/IFNOTES-->"
 				<!--/IS_MP-->
 			<!--/IS_LIST-->
 			<!--IS_NOT_LIST-->
@@ -629,7 +675,8 @@
 					"range":"<!--EQUIPMENT_RANGE-->",
 					"mass":"<!--EQUIPMENT_WEIGHT-->",
 					"attack":"<!--IF_ATTACK-->true<!--/IF_ATTACK-->",
-					"defense":"<!--IF_DEFENSE-->true<!--/IF_DEFENSE-->"
+					"defense":"<!--IF_DEFENSE-->true<!--/IF_DEFENSE-->",
+					"notes":"<!--IFNOTES--><!--NOTES--><!--/IFNOTES-->"
 				<!--/IS_LIST_ITEM-->
 			<!--/IS_NOT_LIST-->
 			<!--IS_NOT_LIST-->
@@ -641,7 +688,8 @@
 					"range":"<!--EQUIPMENT_RANGE-->",
 					"mass":"<!--EQUIPMENT_WEIGHT-->",
 					"attack":"<!--IF_ATTACK-->true<!--/IF_ATTACK-->",
-					"defense":"<!--IF_DEFENSE-->true<!--/IF_DEFENSE-->"
+					"defense":"<!--IF_DEFENSE-->true<!--/IF_DEFENSE-->",
+					"notes":"<!--IFNOTES--><!--NOTES--><!--/IFNOTES-->"
 				<!--/IS_NOT_LIST_ITEM-->
 			<!--/IS_NOT_LIST-->
 			<!--STOP-->16<!--/STOP--><!--/EQUIPMENT-->}

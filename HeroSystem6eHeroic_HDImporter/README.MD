@@ -1,10 +1,10 @@
 # Hero System 6e Heroic: HD Importer
 A script for importing characters built in or acquired for HERO Designer into a Roll20 Hero System 6e Heroic game. 
 
-HD Importer attempts to translate as much of a [HERO Designer](https://www.herogames.com/store/product/1-hero-designer/) character as possible into a Roll20 [HeroSystem6eHeroic](https://github.com/Roll20/roll20-character-sheets/blob/master/HeroSystem6eHeroic/README.md) character sheet. There will invariably be rules, options, or build styles that do not translate well from HERO Designer into Roll20. Nonetheless, this importer should import most of the details of a character. At present, the character sheet has twenty power slots. Ten additional powers if present will be imported as text and displayed in the text field below the "Perks and Talents" section.
+HD Importer attempts to translate as much of a [HERO Designer](https://www.herogames.com/store/product/1-hero-designer/) character as possible into a Roll20 [HeroSystem6eHeroic](https://github.com/Roll20/roll20-character-sheets/blob/master/HeroSystem6eHeroic/README.md) character sheet. There will invariably be rules, options, or build styles that do not translate well from HERO Designer into Roll20. Nonetheless, this importer should import most of the details of a character. 
 
 This script was tested with the following commercially available character packs (almost 700 character files):
-- [Champions Begins](https://www.herogames.com/store/product/1005-champions-begins-pdfhd/)
+- [Champions Begins (free)](https://www.herogames.com/store/product/1005-champions-begins-pdfhd/)
 - [Dead Orc Pass](https://www.herogames.com/store/product/910-dead-orc-pass-mini-campaign-book-pdfhdc/)
 - [Dragon Bestiary 01 - Black Dragon](https://www.herogames.com/store/product/1080-dragon-bestiary-01-black-dragon-pdfhdc/)
 - [Extinction Event: Hero Designer Pack](https://www.herogames.com/store/product/1045-extinction-event-hero-designer-pack/)
@@ -61,7 +61,7 @@ Hero Designer has entries for eye color and hair color. This information is not 
 
 Weapons, armor, and other equipment are imported as text and shown in the text field in the "Gear" page. HD Importer attempts to fill in the appropriate spaces in the sheet with the items it can identify, but HERO items often have additional information to track. Expect this area to require some degree of human attention.
 
-Powers over the twenty-power limit will appear in the text field next to Perks and Talents. Additionally perks and talents over ten will appear there as well. Likewise, characters with more than ten complications will have these shown in the text field to the right of the Complications section. None of the these overflow items will count toward total CP cost.
+At present, the character sheet has twenty power, ten talent, and ten complication slots. Ten additional entries of each type, if found, will be imported as text and displayed in sheet notes fields. Note that one of the these overflow items will count in the sheet's automatic character point calculations.
 
 Powers that add (or subtract) characteristics, movement, and perception abilities should be applied in the appropriate modifier fields.
 
