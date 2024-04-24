@@ -55,20 +55,24 @@ The release folder contains two sample character files:
 ## Notes
 Double quotation marks are used to indicate JSON data values. Please take care when using quotation marks in Hero Designer text fields. The exporter will attempt to remove them, but this may not be foolproof.
 
-Hero Designer has fields eye color and hair color. This information is not imported since the character sheet does not have corresponding fields.
+Characters exported with the older version of HeroSystem6eHeroic.hde (1.0) will likely work, but (2.0) includes more description text, powers, and complications. Version 2.0 also has corrections for a couple of errors.
 
-Weapons, armor, and other equipment is imported as text and shown in the text field in the "Gear" page. HD Importer attempts to fill in the appropriate spaces in the sheet with the items it can identify, but HERO items often have additional information to track. Expect this area to require some degree of human attention.
+Hero Designer has entries for eye color and hair color. This information is not imported since the character sheet does not have corresponding fields.
 
-Powers over the twenty-power limit will appear in the text field below Complications. Additionally perks and talents may appear in the text field below the Perks and Talents section. These items will not count toward the total CP cost.
+Weapons, armor, and other equipment are imported as text and shown in the text field in the "Gear" page. HD Importer attempts to fill in the appropriate spaces in the sheet with the items it can identify, but HERO items often have additional information to track. Expect this area to require some degree of human attention.
 
-The base costs of powers that modify characteristics are added to the "Bonus" points field in the Tally Bar so that they are not counted twice in the character's total cost.
+Powers over the twenty-power limit will appear in the text field next to Perks and Talents. Additionally perks and talents over ten will appear there as well. Likewise, characters with more than ten complications will have these shown in the text field to the right of the Complications section. None of the these overflow items will count toward total CP cost.
+
+Powers that add (or subtract) characteristics, movement, and perception abilities should be applied in the appropriate modifier fields.
 
 # Help
+
 Access the in-game help menu by entering the command "!hero --help" into the chat window.
 
 ![HelpMenu](/HeroSystem6eHeroic_HDImporter/images/HelpMenu.png)
 
 # Configuration Options
+
 The configuration menu is accessible from the Help Screen or via the chat window command "!hero --config". HD Importer offers a number of options to help organize imported characters and to pre-configure campaign options.
 
 ![HelpMenu](/HeroSystem6eHeroic_HDImporter/images/ConfigMenu.png)
@@ -84,18 +88,21 @@ The configuration menu is accessible from the Help Screen or via the chat window
 - `Use Hit Locations` : Presets the sheet option to determine hit locations.
 
 # Troubleshooting Import Errors
+
 Notepad++ and potentially other text editors may convert double quotes to pairs of single quotes. Check to see if pairs of single quotes exist in your character files. If they do exist, consider using another text editor or try replacing them with double quotes. Thank you to Jim E. for reporting this issue.
 
 # Credit
-Hero-related code and modifications by [Villain in Glasses](https://app.roll20.net/users/633423/villain-in-glasses) (Discord: Villain#0604).
+
+Hero related code and modifications by [Villain in Glasses](https://app.roll20.net/users/633423/villain-in-glasses) (Discord: Villain#0604).
 
 Based on D&D Beyond Importer by [Robin Kuiper](https://app.roll20.net/users/1226016/robin) (Discord: Atheos#1095), [Matt DeKok](https://app.roll20.net/users/494585/sillvva) (Discord: Sillvva#2532), and [Ammo Goeetsch](https://app.roll20.net/users/2990964/ammo) (Discord: ammo#7063).
 
 Apologies to Darci, who played the role of Duncan Idaho.
 
 # Version history
+
 Version 1.0 -- Initial release on August 1, 2022.
 
 Version 1.1 -- Updated to accommodate the seventeen power slots available on the character sheet (May 4, 2023).
 
-Version 1.2 -- Updated to support additional character sheet features as of Sheet version 2.83. Updated version of Hero Designer export format (HeroSystem6eHeroic.hde to version 1.2). Adds support for 20 power slots with ten extra powers imported to text. Complications increased from seven to ten with additional three sent to text on sheet. All HD description fields now recognized. Generates armor from Resistant Protection. Adds more robust input error checking and avoids more quotation character troubles. Additional HD file pack testing. Bug fixes and 60% reduction in code size (April 7, 2024).
+Version 2.0 -- Updated to support additional character sheet features as of Sheet version 2.9. Updated version of Hero Designer export format (HeroSystem6eHeroic.hde to version 2.0). Adds support for 20 power slots with ten extra powers imported to text. Complications increased from seven to ten with up to an additional ten sent to text on the sheet. All HD description fields now recognized. Generates armor from Resistant Protection. Recognizes and applies powers that adjust characteristic and movement abilities. Adds more robust input error checking and avoids more quotation character troubles. Additional HD file pack testing. Bug fixes and 60% reduction in code size. (April 24, 2024)
