@@ -1707,6 +1707,9 @@
 				
 				ID = String(importCount+1).padStart(2,'0');
 				
+				// First fix some known typos.
+				powerArray[importCount].text = fixKnownSpellingErrors(powerArray[importCount].text, script_name);
+				
 				// Assign power effect type.
 				theEffect = findEffectType(powerArray[importCount].text, script_name);
 				importedPowers["powerEffect"+ID] = theEffect;
@@ -1729,7 +1732,6 @@
 				
 				// Get powerReducedEND level and separate endurance limitation or advantage cost.
 				testObject = findEndurance(testObject);
-				
 				importedPowers["powerReducedEND"+ID] = testObject.powerReducedEND;
 				
 				// Find advantages and limitations values.
@@ -1902,74 +1904,75 @@
 				
 				// Apply characteristic mods granted by enhancement powers or movement.
 				tempString = powerArray[importCount].text;
-				switch (theEffect) {
-					case "Base STR Mod":	if (tempString.includes("0 END")) {
-												importedPowers["optionUntiring"] = "on";
-											}
-											break;
-					case "Running":			charMod.runningMod += getCharacteristicMod(tempString, "Running", script_name);
-											break;
-					case "Leaping":			charMod.leapingMod += getCharacteristicMod(tempString, "Leaping", script_name);
-											break;
-					case "Swimming":		charMod.swimmingMod += getCharacteristicMod(tempString, "Swimming", script_name);
-											break;
-					case "Flight":			charMod.flightMod += getCharacteristicMod(tempString, "Flight", script_name);
-											break;
-					case "Enhanced STR":	charMod.strengthMod += getCharacteristicMod(tempString, "STR", script_name);
-											break;
-					case "Enhanced DEX":	charMod.dexterityMod += getCharacteristicMod(tempString, "DEX", script_name);
-											break;
-					case "Enhanced CON":	charMod.constitutionMod += getCharacteristicMod(tempString, "CON", script_name);
-											break;
-					case "Enhanced INT":	charMod.intelligenceMod += getCharacteristicMod(tempString, "INT", script_name);
-											break;
-					case "Enhanced EGO":	charMod.egoMod += getCharacteristicMod(tempString, "EGO", script_name);
-											break;
-					case "Enhanced PRE":	charMod.presenceMod += getCharacteristicMod(tempString, "PRE", script_name);
-											break;
-					case "Enhanced OCV":	charMod.ocvMod += getCharacteristicMod(tempString, "OCV", script_name);
-											break;
-					case "Enhanced DCV":	charMod.dcvMod += getCharacteristicMod(tempString, "DCV", script_name);
-											break;
-					case "Enhanced OMCV":	charMod.omcvMod += getCharacteristicMod(tempString, "OMCV", script_name);
-											break;
-					case "Enhanced DMCV":	charMod.dmcvMod += getCharacteristicMod(tempString, "DMCV", script_name);
-											break;
-					case "Enhanced BODY":	charMod.bodyMod += getCharacteristicMod(tempString, "BODY", script_name);
-											break;
-					case "Enhanced PD":		charMod.pdMod += getCharacteristicMod(tempString, "PD", script_name);
-											break;
-					case "Enhanced ED":		charMod.edMod += getCharacteristicMod(tempString, "ED", script_name);
-											break;
-					case "Enhanced STUN":	charMod.stunMod += getCharacteristicMod(tempString, "STUN", script_name);
-											break;
-					case "Enhanced END":	charMod.endMod += getCharacteristicMod(tempString, "END", script_name);
-											break;
-					case "Enhanced REC":	charMod.recMod += getCharacteristicMod(tempString, "REC", script_name);
-											break;
-					case "Enhanced PER":	if ( tempString.includes("all Sense") ) {
-												charMod.enhancedPerceptionModifier += getCharacteristicMod(tempString, "PER", script_name);
-												if ( (tempString.includes("except Sight")) || (tempString.includes("but Sight")) ) {
-													charMod.perceptionModifierVision += -getCharacteristicMod(tempString, "PER", script_name);
+				if ( (typeof theString != "undefined") && (theString != "") ) {
+					switch (theEffect) {
+						case "Base STR Mod":	if (tempString.includes("0 END")) {
+													importedPowers["optionUntiring"] = "on";
 												}
-												if ( (tempString.includes("except Hearing")) || (tempString.includes("but Hearing")) ) {
-													charMod.perceptionModifierHearing += -getCharacteristicMod(tempString, "PER", script_name);
-												}
-												if ( (tempString.includes("except Smell")) || (tempString.includes("but Smell")) ) {
-													charMod.perceptionModifierSmell += -getCharacteristicMod(tempString, "PER", script_name);
-												}
-											} else {
-												charMod.perceptionModifierVision += (tempString.includes("Sight")) ? getCharacteristicMod(tempString, "PER", script_name) : 0;
-												charMod.perceptionModifierHearing += (tempString.includes("Hearing")) ? getCharacteristicMod(tempString, "PER", script_name) : 0;
-												charMod.perceptionModifierSmell += (tempString.includes("Smell")) ? getCharacteristicMod(tempString, "PER", script_name) : 0;
-												if ( !(tempString.includes("Sight")) && !(tempString.includes("Hearing")) && !(tempString.includes("Smell")) ) {
+												break;
+						case "Running":			charMod.runningMod += getCharacteristicMod(tempString, "Running", script_name);
+												break;
+						case "Leaping":			charMod.leapingMod += getCharacteristicMod(tempString, "Leaping", script_name);
+												break;
+						case "Swimming":		charMod.swimmingMod += getCharacteristicMod(tempString, "Swimming", script_name);
+												break;
+						case "Flight":			charMod.flightMod += getCharacteristicMod(tempString, "Flight", script_name);
+												break;
+						case "Enhanced STR":	charMod.strengthMod += getCharacteristicMod(tempString, "STR", script_name);
+												break;
+						case "Enhanced DEX":	charMod.dexterityMod += getCharacteristicMod(tempString, "DEX", script_name);
+												break;
+						case "Enhanced CON":	charMod.constitutionMod += getCharacteristicMod(tempString, "CON", script_name);
+												break;
+						case "Enhanced INT":	charMod.intelligenceMod += getCharacteristicMod(tempString, "INT", script_name);
+												break;
+						case "Enhanced EGO":	charMod.egoMod += getCharacteristicMod(tempString, "EGO", script_name);
+												break;
+						case "Enhanced PRE":	charMod.presenceMod += getCharacteristicMod(tempString, "PRE", script_name);
+												break;
+						case "Enhanced OCV":	charMod.ocvMod += getCharacteristicMod(tempString, "OCV", script_name);
+												break;
+						case "Enhanced DCV":	charMod.dcvMod += getCharacteristicMod(tempString, "DCV", script_name);
+												break;
+						case "Enhanced OMCV":	charMod.omcvMod += getCharacteristicMod(tempString, "OMCV", script_name);
+												break;
+						case "Enhanced DMCV":	charMod.dmcvMod += getCharacteristicMod(tempString, "DMCV", script_name);
+												break;
+						case "Enhanced BODY":	charMod.bodyMod += getCharacteristicMod(tempString, "BODY", script_name);
+												break;
+						case "Enhanced PD":		charMod.pdMod += getCharacteristicMod(tempString, "PD", script_name);
+												break;
+						case "Enhanced ED":		charMod.edMod += getCharacteristicMod(tempString, "ED", script_name);
+												break;
+						case "Enhanced STUN":	charMod.stunMod += getCharacteristicMod(tempString, "STUN", script_name);
+												break;
+						case "Enhanced END":	charMod.endMod += getCharacteristicMod(tempString, "END", script_name);
+												break;
+						case "Enhanced REC":	charMod.recMod += getCharacteristicMod(tempString, "REC", script_name);
+												break;
+						case "Enhanced PER":	if ( tempString.includes("all Sense") ) {
 													charMod.enhancedPerceptionModifier += getCharacteristicMod(tempString, "PER", script_name);
+													if ( (tempString.includes("except Sight")) || (tempString.includes("but Sight")) ) {
+														charMod.perceptionModifierVision += -getCharacteristicMod(tempString, "PER", script_name);
+													}
+													if ( (tempString.includes("except Hearing")) || (tempString.includes("but Hearing")) ) {
+														charMod.perceptionModifierHearing += -getCharacteristicMod(tempString, "PER", script_name);
+													}
+													if ( (tempString.includes("except Smell")) || (tempString.includes("but Smell")) ) {
+														charMod.perceptionModifierSmell += -getCharacteristicMod(tempString, "PER", script_name);
+													}
+												} else {
+													charMod.perceptionModifierVision += (tempString.includes("Sight")) ? getCharacteristicMod(tempString, "PER", script_name) : 0;
+													charMod.perceptionModifierHearing += (tempString.includes("Hearing")) ? getCharacteristicMod(tempString, "PER", script_name) : 0;
+													charMod.perceptionModifierSmell += (tempString.includes("Smell")) ? getCharacteristicMod(tempString, "PER", script_name) : 0;
+													if ( !(tempString.includes("Sight")) && !(tempString.includes("Hearing")) && !(tempString.includes("Smell")) ) {
+														charMod.enhancedPerceptionModifier += getCharacteristicMod(tempString, "PER", script_name);
+													}
 												}
-											}
-											break;
-					default:				break;
+												break;
+						default:				break;
+					}
 				}
-				
 			}
 		}
 		
@@ -3232,6 +3235,33 @@
 	}
 	
 	
+	var fixKnownSpellingErrors = function(theString, script_name) {
+		// Here we try to catch and correct important typos found in tested commercial sources.
+		// Add to typoList as needed.
+		
+		const typoList = [
+			["Restistant", "Resistant"]
+		];
+		
+		const iMax = 1;
+		let found = false;
+		let i = 0;
+		
+		if ( (typeof theString != "undefined") && (theString != "") ) {
+			while ( (i < iMax) && !found ) {
+				if (theString.includes(typoList[i][0])) {
+					theString = theString.replace(typoList[i][0], typoList[i][1]);
+					found = true;
+				}
+				
+				i++;
+			}
+		}
+		
+		return theString;
+	}
+	
+	
 	var isAttack = function (effect) {
 		// For setting the attack state.
 		const attackSet = new Set(["Blast", "Dispel", "Drain", "Entangle", "Flash", "Healing", "HTH Attack", "HTH Killing Attack", "Mental Blast", "Mental Illusions", "Mind Control", "Mind Link", "Mind Scan", "Ranged Killing Attack", "Telekinesis", "Telepathy", "Transform"]);
@@ -3274,7 +3304,13 @@
 		let endPosition = 0;
 		let tempString = inputString;
 		
-		if (inputString.includes("PD/")) {
+		if (inputString.includes("PD/ED")) {
+			endPosition = inputString.indexOf("PD/ED");
+			tempString = inputString.slice(endPosition-Math.min(3, endPosition), endPosition);
+			tempString = tempString.replace(/[^0-9]/g, "");
+			protection = (tempString !== "") ? Number(tempString) : 0;
+			protection = isNaN(protection) ? 0 : protection;
+		} else if (inputString.includes("PD/")) {
 			if (inputString.includes("ED")) {
 				endPosition = inputString.indexOf("ED");
 				tempString = inputString.slice(endPosition-Math.min(4,endPosition), endPosition);
