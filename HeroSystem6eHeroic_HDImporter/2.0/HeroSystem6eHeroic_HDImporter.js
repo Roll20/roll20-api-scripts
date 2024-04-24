@@ -1811,99 +1811,106 @@
 				tempString = (powerArray[importCount].text).toLowerCase();
 				
 				if (theEffect === "Resistant Protection") {
-					if(verbose) {
-						sendChat(script_name, "Created Resistant Protection armor.");
-					}
-					
-					tempValue = getResistantPD(powerArray[importCount].text, script_name);
-					if (tempValue > 0) {
-						charMod.armorPD04 += tempValue;
-						if ( (specialArray.some(v => tempString.includes(v))) != true) {
-							// We don't want to add overall modifications for special cases.
-							charMod.pdMod += tempValue;
+					if ( (typeof powerArray[importCount].text != "undefined") && (powerArray[importCount].text != "") ) {
+						if(verbose) {
+							sendChat(script_name, "Created Resistant Protection armor.");
 						}
-						if (!pdAddedToTotal) {
-							charMod.totalPD04 = tempValue + parseInt(character.pd);
-							pdAddedToTotal = true;
-						} else {
-							charMod.totalPD04 += tempValue;
+						
+						tempValue = getResistantPD(powerArray[importCount].text, script_name);
+						if (tempValue > 0) {
+							charMod.armorPD04 += tempValue;
+							if ( (specialArray.some(v => tempString.includes(v))) != true) {
+								// We don't want to add overall modifications for special cases.
+								charMod.pdMod += tempValue;
+							}
+							if (!pdAddedToTotal) {
+								charMod.totalPD04 = tempValue + parseInt(character.pd);
+								pdAddedToTotal = true;
+							} else {
+								charMod.totalPD04 += tempValue;
+							}
+							charMod.armorName04 = importedPowers["powerName"+ID];
+							charMod.armorLocations04 = "3-18";
+							tempObject = (requiresRoll(powerArray[importCount].text));
+							if (tempObject.hasRoll) {
+								charMod.armorActivation04 = tempObject.skillRoll;
+							} else {
+								charMod.armorActivation04 = 18;
+							}
 						}
-						charMod.armorName04 = importedPowers["powerName"+ID];
-						charMod.armorLocations04 = "3-18";
-						tempObject = (requiresRoll(powerArray[importCount].text));
-						if (tempObject.hasRoll) {
-							charMod.armorActivation04 = tempObject.skillRoll;
-						} else {
-							charMod.armorActivation04 = 18;
-						}
-					}
-					
-					tempValue = getResistantED(powerArray[importCount].text, script_name);
-					if (tempValue > 0) {
-						charMod.armorED04 += tempValue;
-						if ( (specialArray.some(v => tempString.includes(v))) != true) {
-							// We don't want to add overall modifications for special cases.
-							charMod.edMod += tempValue;
-						}
-						if (!edAddedToTotal) {
-							charMod.totalED04 = tempValue + parseInt(character.ed);
-							edAddedToTotal = true;
-						} else {
-							charMod.totalED04 += tempValue;
-						}
-						charMod.armorName04 = importedPowers["powerName"+ID];
-						charMod.armorLocations04 = "3-18";
-						tempObject = (requiresRoll(powerArray[importCount].text));
-						if (tempObject.hasRoll) {
-							charMod.armorActivation04 = tempObject.skillRoll;
-						} else {
-							charMod.armorActivation04 = 18;
+						
+						tempValue = getResistantED(powerArray[importCount].text, script_name);
+						if (tempValue > 0) {
+							charMod.armorED04 += tempValue;
+							if ( (specialArray.some(v => tempString.includes(v))) != true) {
+								// We don't want to add overall modifications for special cases.
+								charMod.edMod += tempValue;
+							}
+							if (!edAddedToTotal) {
+								charMod.totalED04 = tempValue + parseInt(character.ed);
+								edAddedToTotal = true;
+							} else {
+								charMod.totalED04 += tempValue;
+							}
+							charMod.armorName04 = importedPowers["powerName"+ID];
+							charMod.armorLocations04 = "3-18";
+							tempObject = (requiresRoll(powerArray[importCount].text));
+							if (tempObject.hasRoll) {
+								charMod.armorActivation04 = tempObject.skillRoll;
+							} else {
+								charMod.armorActivation04 = 18;
+							}
 						}
 					}
 				} else if (theEffect === "Base PD Mod") {
-					if(verbose) {
-						sendChat(script_name, "Added Resistant PD to armor.");
+					if ( (typeof powerArray[importCount].text != "undefined") && (powerArray[importCount].text != "") ) {
+						if(verbose) {
+							sendChat(script_name, "Added Resistant PD to armor.");
+						}
+						
+						if ( (powerArray[importCount].text).includes("Resistant")) {
+							charMod.armorPD04 += parseInt(character.pd);
+							if (!pdAddedToTotal) {
+								charMod.totalPD04 += parseInt(character.pd);
+								pdAddedToTotal = true;
+							}
+							charMod.armorName04 = importedPowers["powerName"+ID];
+							charMod.armorLocations04 = "3-18";
+							tempObject = (requiresRoll(powerArray[importCount].text));
+							if (tempObject.hasRoll) {
+								charMod.armorActivation04 = tempObject.skillRoll;
+							} else {
+								charMod.armorActivation04 = 18;
+							}
+						}
 					}
-					
-					if ( (powerArray[importCount].text).includes("Resistant")) {
-						charMod.armorPD04 += parseInt(character.pd);
-						if (!pdAddedToTotal) {
-							charMod.totalPD04 += parseInt(character.pd);
-							pdAddedToTotal = true;
-						}
-						charMod.armorName04 = importedPowers["powerName"+ID];
-						charMod.armorLocations04 = "3-18";
-						tempObject = (requiresRoll(powerArray[importCount].text));
-						if (tempObject.hasRoll) {
-							charMod.armorActivation04 = tempObject.skillRoll;
-						} else {
-							charMod.armorActivation04 = 18;
-						}
-					}	
 				} else if (theEffect === "Base ED Mod") {
-					if(verbose) {
-						sendChat(script_name, "Added Resistant ED to armor.");
+					if ( (typeof powerArray[importCount].text != "undefined") && (powerArray[importCount].text != "") ) {
+						if(verbose) {
+							sendChat(script_name, "Added Resistant ED to armor.");
+						}
+						
+						if ( (powerArray[importCount].text).includes("Resistant") ) {
+							charMod.armorED04 += parseInt(character.ed);
+							if (!edAddedToTotal) {
+								charMod.totalED04 += parseInt(character.ed);
+								edAddedToTotal = true;
+							}
+							charMod.armorName04 = importedPowers["powerName"+ID];
+							charMod.armorLocations04 = "3-18";
+							tempObject = (requiresRoll(powerArray[importCount].text));
+							if (tempObject.hasRoll) {
+								charMod.armorActivation04 = tempObject.skillRoll;
+							} else {
+								charMod.armorActivation04 = 18;
+							}
+						}	
 					}
-					
-					if ( (powerArray[importCount].text).includes("Resistant") ) {
-						charMod.armorED04 += parseInt(character.ed);
-						if (!edAddedToTotal) {
-							charMod.totalED04 += parseInt(character.ed);
-							edAddedToTotal = true;
-						}
-						charMod.armorName04 = importedPowers["powerName"+ID];
-						charMod.armorLocations04 = "3-18";
-						tempObject = (requiresRoll(powerArray[importCount].text));
-						if (tempObject.hasRoll) {
-							charMod.armorActivation04 = tempObject.skillRoll;
-						} else {
-							charMod.armorActivation04 = 18;
-						}
-					}	
 				}
 				
 				// Apply characteristic mods granted by enhancement powers or movement.
 				tempString = powerArray[importCount].text;
+				
 				if ( (typeof theString != "undefined") && (theString != "") ) {
 					switch (theEffect) {
 						case "Base STR Mod":	if (tempString.includes("0 END")) {
@@ -2996,239 +3003,244 @@
 	var findEffectType = function(tempString, script_name) {
 		// Search for and return effect keywords.
 		
-		let lowerCaseString = tempString.toLowerCase();
 		const talentArray = ["absolute range sense", "absolute time sense", "ambidexterity", "animal friendship", "bump of direction", "combat luck", "combat sense", "danger sense", "deadly blow", "double jointed", "eidetic memory", "environmental movement", "lightning calculator", "lightning reflexes", "lightsleap", "off-hand defense", "perfect pitch", "resistance", "simulate death", "speed reading", "striking appearance", "universal translator", "weaponmaster"];
 		const skillArray = ["overall"];
 		const senseModifierArray = ["analyze", "concealed", "adjacent", "dimensional", "discriminatory", "increased arc", "microscopic", "penetrative", "range", "rapid", "telescopic", "tracking", "transmit"];
 		
-		if (lowerCaseString.includes("applied to str")) {
-			return "Base STR Mod";
-		} else if (lowerCaseString.includes("range based on str") && lowerCaseString.includes("of hka")) {
-			return "HKA Mod";
-		} else if (lowerCaseString.includes("applied to running")) {
-			return "Base Running Mod";	
-		} else if (lowerCaseString.includes("applied to leaping")) {
-			return "Base Leaping Mod";	
-		} else if (lowerCaseString.includes("applied to swimming")) {
-			return "Base Swimming Mod";	
-		} else if (lowerCaseString.includes("applied to pd")) {
-			return "Base PD Mod";	
-		} else if (lowerCaseString.includes("applied to ed")) {
-			return "Base ED Mod";	
-		} else if (tempString.includes("Absorption")) {
-			return "Absorption";
-		} else if (tempString.includes("Aid")) {
-			return "Aid"; 
-		} else if (tempString.includes("Automaton")) {
-			return "Automaton";
-		} else if (tempString.includes("Barrier")) {
-			return "Barrier";
-		} else if (tempString.includes("Blast")) {
-			return "Blast";
-		} else if (tempString.includes("Change Environment")) {
-			return "Change Environment";
-		} else if (tempString.includes("Clairsentience")) {
-			return "Clairsentience";
-		} else if (tempString.includes("Clinging")) {
-			return "Clinging";
-		} else if (tempString.includes("Damage Negation")) {
-			return "Damage Negation";
-		} else if (tempString.includes("Damage Reduction")) {
-			return "Damage Reduction";
-		} else if (tempString.includes("Darkness")) {
-			return "Darkness"; 
-		} else if (tempString.includes("Deflection")) {
-			return "Deflection";
-		} else if (tempString.includes("Density Increase")) {
-			return "Density Increase";
-		} else if (tempString.includes("Desolidification")) {
-			return "Desolidification";
-		} else if (tempString.includes("Dispel")) {
-			return "Dispel";
-		} else if (tempString.includes("Does Not Bleed")) {
-			return "Does Not Bleed";
-		} else if (tempString.includes("Drain")) {
-			return "Drain";
-		} else if (tempString.includes("Duplication")) {
-			return "Duplication";
-		} else if (tempString.includes("Enhanced Senses")) {
-			return "Enhanced Senses";
-		} else if (tempString.includes("Endurance Reserve")) {
-			return "Endurance Reserve";
-		} else if (tempString.includes("Extra Limb")) {
-			return "Extra Limb";
-		} else if (tempString.includes("Extra-Dimensional Movement")) {
-			return "Extra-Dimensional Movement";
-		} else if (tempString.includes("Faster-Than-Light-Travel")) {
-			return "Faster-Than-Light-Travel";
-		} else if (tempString.includes("Resistant")) {
-			return "Resistant Protection";
-		} else if (tempString.includes("Flash")) {
-			return "Flash";
-		} else if (tempString.includes("Flash Defense")) {
-			return "Flash Defense";
-		} else if (tempString.includes("Flight")) {
-			return "Flight";
-		} else if (tempString.includes("Growth")) {
-			return "Growth";
-		} else if (tempString.includes("Hand-To-Hand Attack")) {
-			return "HTH Attack";
-		} else if (tempString.includes("Healing")) {
-			return "Healing";
-		} else if (tempString.includes("Invisibility")) {
-			return "Invisibility";
-		} else if (tempString.includes("Killing Attack - Hand-To-Hand")) {
-			return "HTH Killing Attack";
-		} else if (tempString.includes("HKA")) {
-			return "HTH Killing Attack";
-		} else if ( (tempString.includes("Images")) && !(lowerCaseString.includes("only to perceive images")) ) {
-			return "Images";
-		} else if (tempString.includes("Killing Attack - Ranged")) {
-			return "Ranged Killing Attack";
-		} else if (tempString.includes("RKA")) {
-			return "Ranged Killing Attack";
-		} else if (tempString.includes("Knockback Resistance")) {
-			return "Knockback Resistance";
-		} else if (tempString.includes("Leaping")) {
-			return "Leaping";
-		} else if (tempString.includes("Life Support")) {
-			return "Life Support";
-		} else if (tempString.includes("Luck")) {
-			return "Luck";
-		} else if (tempString.includes("Mental Blast")) {
-			return "Mental Blast";
-		} else if (tempString.includes("Transform")) {
-			return "Transform";
-		} else if (tempString.includes("Mental Defense")) {
-			return "Mental Defense";
-		} else if (tempString.includes("Mental Illusions")) {
-			return "Mental Illusions";
-		} else if (tempString.includes("Mind Control")) {
-			return "Mind Control";
-		} else if (tempString.includes("Mind Link")) {
-			return "Mind Link";
-		} else if (tempString.includes("Mind Scan")) {
-			return "Mind Scan";
-		} else if (tempString.includes("Multiform")) {
-			return "Multiform";
-		} else if (tempString.includes("No Hit Locations")) {
-			return "No Hit Locations";
-		} else if (tempString.includes("Possession")) {
-			return "Possession";	
-		} else if (tempString.includes("Power Defense")) {
-			return "Power Defense";
-		} else if (tempString.includes("Reach")) {
-			return "Reach";
-		} else if (tempString.includes("Reflection")) {
-			return "Reflection";
-		} else if (tempString.includes("Regeneration")) {
-			return "Regeneration";
-		} else if (tempString.includes("Running")) {
-			return "Running";	
-		} else if (tempString.includes("Shape Shift")) {
-			return "Shape Shift";
-		} else if (tempString.includes("Shrinking")) {
-			return "Shrinking";
-		} else if (tempString.includes("Stretching")) {
-			return "Stretching";
-		} else if (tempString.includes("Summon")) {
-			return "Summon";
-		} else if (tempString.includes("Swimming")) {
-			return "Swimming";	
-		} else if (tempString.includes("Swinging")) {
-			return "Swinging";
-		} else if (tempString.includes("Takes No STUN")) {
-			return "Takes No STUN";	
-		} else if (tempString.includes("Telekinesis")) {
-			return "Telekinesis";
-		} else if (tempString.includes("Telepathy")) {
-			return "Telepathy";	
-		} else if (tempString.includes("Teleportation")) {
-			return "Teleportation";	
-		} else if (tempString.includes("Tunneling")) {
-			return "Tunneling";	
-		} else if (tempString.includes("Active Sonar")) {
-			return "Active Sonar";
-		} else if (tempString.includes("Detect")) {
-			return "Detect";	
-		} else if (tempString.includes("Enhanced Perception")) {
-			return "Enhanced PER";	
-		} else if (tempString.includes("High Range Radio")) {
-			return "HR Radio PER";
-		} else if (tempString.includes("Infrared Perception")) {
-			return "IR Perception";
-		} else if (tempString.includes("IR Perception")) {
-			return "IR Perception";	
-		} else if (tempString.includes("Mental Awareness")) {
-			return "Mental Awareness";	
-		} else if (tempString.includes("Nightvision")) {
-			return "Nightvision";	
-		} else if (tempString.includes("Radar")) {
-			return "Radar";	
-		} else if (tempString.includes("Radio Perception/Transmission")) {
-			return "Radio PER/Trans";
-		} else if (tempString.includes("Radio Perception")) {
-			return "Radio PER";	
-		} else if (tempString.includes("Spatial Awareness")) {
-			return "Spatial Awareness";	
-		} else if (tempString.includes("Tracking")) {
-			return "Enhanced Sense";
-		} else if (tempString.includes("Ultrasonic Perception")) {
-			return "Ultrasonic PER";
-		} else if (tempString.includes("Ultraviolet Perception")) {
-			return "UV Perception";
-		} else if (skillArray.some(v => lowerCaseString.includes(v))) {
-			return "Skill";
-		} else if (talentArray.some(v => lowerCaseString.includes(v))) {
-			return "Talent";
-		} else if (senseModifierArray.some(v => lowerCaseString.includes(v))) {
-			return "Sense Modifier";
-		} else if (tempString.includes("SPD")) {
-			return "Enhanced SPD";		
-		} else if (tempString.includes("PER")) {
-			return "Enhanced PER";		
-		} else if (tempString.includes("STR")) {
-			return "Enhanced STR";				
-		} else if (tempString.includes("CON")) {
-			return "Enhanced CON";		
-		} else if (tempString.includes("INT")) {
-			return "Enhanced INT";		
-		} else if (tempString.includes("EGO")) {
-			return "Enhanced EGO";		
-		} else if (tempString.includes("PRE")) {
-			return "Enhanced PRE";		
-		} else if (tempString.includes("OCV")) {
-			return "Enhanced OCV";		
-		} else if (tempString.includes("OMCV")) {
-			return "Enhanced OMCV";		
-		} else if (tempString.includes("DMCV")) {
-			return "Enhanced DMCV";
-		} else if (tempString.includes("PD")) {
-			return "Enhanced PD";
-		} else if (tempString.includes("ED")) {
-			return "Enhanced ED";
-		} else if (tempString.includes("BODY")) {
-			return "Enhanced BODY";
-		} else if (tempString.includes("STUN")) {
-			return "Enhanced STUN";
-		} else if (tempString.includes("REC")) {
-			return "Enhanced REC";
-		} else if (tempString.includes("DEX")) {
-			return "Enhanced DEX";
-		} else if (lowerCaseString.includes("sight") || lowerCaseString.includes("hearing") || lowerCaseString.includes("smell") || lowerCaseString.includes("taste") || lowerCaseString.includes("touch") || lowerCaseString.includes("sense")) {
-			return "Enhanced PER";
-		} else if (lowerCaseString.includes("eating") || lowerCaseString.includes("immunity") || lowerCaseString.includes("longevity") || lowerCaseString.includes("safe in") || lowerCaseString.includes("breathing") || lowerCaseString.includes("sleeping")) {
-			return "Life Support";
-		} else if (tempString.includes("Entangle")) {
-			return "Entangle";
-		} else if ( (lowerCaseString.includes("advantage")) || (lowerCaseString.includes("area of effect")) ) {
-			return "Naked Advantage";
-		} else if (lowerCaseString.includes("worth of") || lowerCaseString.includes("powers") || lowerCaseString.includes("spells") || lowerCaseString.includes("abilities")) {
-			return "To Be Determined";	
-		} else if (tempString.includes("DCV")) {
-			return "Enhanced DCV";
-		} else if (tempString.includes("END")) {
-			return "Enhanced END";
+		if ( (typeof tempString != "undefined") && (tempString != "") ) {
+			let lowerCaseString = tempString.toLowerCase();
+			
+			if (lowerCaseString.includes("applied to str")) {
+				return "Base STR Mod";
+			} else if (lowerCaseString.includes("range based on str") && lowerCaseString.includes("of hka")) {
+				return "HKA Mod";
+			} else if (lowerCaseString.includes("applied to running")) {
+				return "Base Running Mod";	
+			} else if (lowerCaseString.includes("applied to leaping")) {
+				return "Base Leaping Mod";	
+			} else if (lowerCaseString.includes("applied to swimming")) {
+				return "Base Swimming Mod";	
+			} else if (lowerCaseString.includes("applied to pd")) {
+				return "Base PD Mod";	
+			} else if (lowerCaseString.includes("applied to ed")) {
+				return "Base ED Mod";	
+			} else if (tempString.includes("Absorption")) {
+				return "Absorption";
+			} else if (tempString.includes("Aid")) {
+				return "Aid"; 
+			} else if (tempString.includes("Automaton")) {
+				return "Automaton";
+			} else if (tempString.includes("Barrier")) {
+				return "Barrier";
+			} else if (tempString.includes("Blast")) {
+				return "Blast";
+			} else if (tempString.includes("Change Environment")) {
+				return "Change Environment";
+			} else if (tempString.includes("Clairsentience")) {
+				return "Clairsentience";
+			} else if (tempString.includes("Clinging")) {
+				return "Clinging";
+			} else if (tempString.includes("Damage Negation")) {
+				return "Damage Negation";
+			} else if (tempString.includes("Damage Reduction")) {
+				return "Damage Reduction";
+			} else if (tempString.includes("Darkness")) {
+				return "Darkness"; 
+			} else if (tempString.includes("Deflection")) {
+				return "Deflection";
+			} else if (tempString.includes("Density Increase")) {
+				return "Density Increase";
+			} else if (tempString.includes("Desolidification")) {
+				return "Desolidification";
+			} else if (tempString.includes("Dispel")) {
+				return "Dispel";
+			} else if (tempString.includes("Does Not Bleed")) {
+				return "Does Not Bleed";
+			} else if (tempString.includes("Drain")) {
+				return "Drain";
+			} else if (tempString.includes("Duplication")) {
+				return "Duplication";
+			} else if (tempString.includes("Enhanced Senses")) {
+				return "Enhanced Senses";
+			} else if (tempString.includes("Endurance Reserve")) {
+				return "Endurance Reserve";
+			} else if (tempString.includes("Extra Limb")) {
+				return "Extra Limb";
+			} else if (tempString.includes("Extra-Dimensional Movement")) {
+				return "Extra-Dimensional Movement";
+			} else if (tempString.includes("Faster-Than-Light-Travel")) {
+				return "Faster-Than-Light-Travel";
+			} else if (tempString.includes("Resistant")) {
+				return "Resistant Protection";
+			} else if (tempString.includes("Flash")) {
+				return "Flash";
+			} else if (tempString.includes("Flash Defense")) {
+				return "Flash Defense";
+			} else if (tempString.includes("Flight")) {
+				return "Flight";
+			} else if (tempString.includes("Growth")) {
+				return "Growth";
+			} else if (tempString.includes("Hand-To-Hand Attack")) {
+				return "HTH Attack";
+			} else if (tempString.includes("Healing")) {
+				return "Healing";
+			} else if (tempString.includes("Invisibility")) {
+				return "Invisibility";
+			} else if (tempString.includes("Killing Attack - Hand-To-Hand")) {
+				return "HTH Killing Attack";
+			} else if (tempString.includes("HKA")) {
+				return "HTH Killing Attack";
+			} else if ( (tempString.includes("Images")) && !(lowerCaseString.includes("only to perceive images")) ) {
+				return "Images";
+			} else if (tempString.includes("Killing Attack - Ranged")) {
+				return "Ranged Killing Attack";
+			} else if (tempString.includes("RKA")) {
+				return "Ranged Killing Attack";
+			} else if (tempString.includes("Knockback Resistance")) {
+				return "Knockback Resistance";
+			} else if (tempString.includes("Leaping")) {
+				return "Leaping";
+			} else if (tempString.includes("Life Support")) {
+				return "Life Support";
+			} else if (tempString.includes("Luck")) {
+				return "Luck";
+			} else if (tempString.includes("Mental Blast")) {
+				return "Mental Blast";
+			} else if (tempString.includes("Transform")) {
+				return "Transform";
+			} else if (tempString.includes("Mental Defense")) {
+				return "Mental Defense";
+			} else if (tempString.includes("Mental Illusions")) {
+				return "Mental Illusions";
+			} else if (tempString.includes("Mind Control")) {
+				return "Mind Control";
+			} else if (tempString.includes("Mind Link")) {
+				return "Mind Link";
+			} else if (tempString.includes("Mind Scan")) {
+				return "Mind Scan";
+			} else if (tempString.includes("Multiform")) {
+				return "Multiform";
+			} else if (tempString.includes("No Hit Locations")) {
+				return "No Hit Locations";
+			} else if (tempString.includes("Possession")) {
+				return "Possession";	
+			} else if (tempString.includes("Power Defense")) {
+				return "Power Defense";
+			} else if (tempString.includes("Reach")) {
+				return "Reach";
+			} else if (tempString.includes("Reflection")) {
+				return "Reflection";
+			} else if (tempString.includes("Regeneration")) {
+				return "Regeneration";
+			} else if (tempString.includes("Running")) {
+				return "Running";	
+			} else if (tempString.includes("Shape Shift")) {
+				return "Shape Shift";
+			} else if (tempString.includes("Shrinking")) {
+				return "Shrinking";
+			} else if (tempString.includes("Stretching")) {
+				return "Stretching";
+			} else if (tempString.includes("Summon")) {
+				return "Summon";
+			} else if (tempString.includes("Swimming")) {
+				return "Swimming";	
+			} else if (tempString.includes("Swinging")) {
+				return "Swinging";
+			} else if (tempString.includes("Takes No STUN")) {
+				return "Takes No STUN";	
+			} else if (tempString.includes("Telekinesis")) {
+				return "Telekinesis";
+			} else if (tempString.includes("Telepathy")) {
+				return "Telepathy";	
+			} else if (tempString.includes("Teleportation")) {
+				return "Teleportation";	
+			} else if (tempString.includes("Tunneling")) {
+				return "Tunneling";	
+			} else if (tempString.includes("Active Sonar")) {
+				return "Active Sonar";
+			} else if (tempString.includes("Detect")) {
+				return "Detect";	
+			} else if (tempString.includes("Enhanced Perception")) {
+				return "Enhanced PER";	
+			} else if (tempString.includes("High Range Radio")) {
+				return "HR Radio PER";
+			} else if (tempString.includes("Infrared Perception")) {
+				return "IR Perception";
+			} else if (tempString.includes("IR Perception")) {
+				return "IR Perception";	
+			} else if (tempString.includes("Mental Awareness")) {
+				return "Mental Awareness";	
+			} else if (tempString.includes("Nightvision")) {
+				return "Nightvision";	
+			} else if (tempString.includes("Radar")) {
+				return "Radar";	
+			} else if (tempString.includes("Radio Perception/Transmission")) {
+				return "Radio PER/Trans";
+			} else if (tempString.includes("Radio Perception")) {
+				return "Radio PER";	
+			} else if (tempString.includes("Spatial Awareness")) {
+				return "Spatial Awareness";	
+			} else if (tempString.includes("Tracking")) {
+				return "Enhanced Sense";
+			} else if (tempString.includes("Ultrasonic Perception")) {
+				return "Ultrasonic PER";
+			} else if (tempString.includes("Ultraviolet Perception")) {
+				return "UV Perception";
+			} else if (skillArray.some(v => lowerCaseString.includes(v))) {
+				return "Skill";
+			} else if (talentArray.some(v => lowerCaseString.includes(v))) {
+				return "Talent";
+			} else if (senseModifierArray.some(v => lowerCaseString.includes(v))) {
+				return "Sense Modifier";
+			} else if (tempString.includes("SPD")) {
+				return "Enhanced SPD";		
+			} else if (tempString.includes("PER")) {
+				return "Enhanced PER";		
+			} else if (tempString.includes("STR")) {
+				return "Enhanced STR";				
+			} else if (tempString.includes("CON")) {
+				return "Enhanced CON";		
+			} else if (tempString.includes("INT")) {
+				return "Enhanced INT";		
+			} else if (tempString.includes("EGO")) {
+				return "Enhanced EGO";		
+			} else if (tempString.includes("PRE")) {
+				return "Enhanced PRE";		
+			} else if (tempString.includes("OCV")) {
+				return "Enhanced OCV";		
+			} else if (tempString.includes("OMCV")) {
+				return "Enhanced OMCV";		
+			} else if (tempString.includes("DMCV")) {
+				return "Enhanced DMCV";
+			} else if (tempString.includes("PD")) {
+				return "Enhanced PD";
+			} else if (tempString.includes("ED")) {
+				return "Enhanced ED";
+			} else if (tempString.includes("BODY")) {
+				return "Enhanced BODY";
+			} else if (tempString.includes("STUN")) {
+				return "Enhanced STUN";
+			} else if (tempString.includes("REC")) {
+				return "Enhanced REC";
+			} else if (tempString.includes("DEX")) {
+				return "Enhanced DEX";
+			} else if (lowerCaseString.includes("sight") || lowerCaseString.includes("hearing") || lowerCaseString.includes("smell") || lowerCaseString.includes("taste") || lowerCaseString.includes("touch") || lowerCaseString.includes("sense")) {
+				return "Enhanced PER";
+			} else if (lowerCaseString.includes("eating") || lowerCaseString.includes("immunity") || lowerCaseString.includes("longevity") || lowerCaseString.includes("safe in") || lowerCaseString.includes("breathing") || lowerCaseString.includes("sleeping")) {
+				return "Life Support";
+			} else if (tempString.includes("Entangle")) {
+				return "Entangle";
+			} else if ( (lowerCaseString.includes("advantage")) || (lowerCaseString.includes("area of effect")) ) {
+				return "Naked Advantage";
+			} else if (lowerCaseString.includes("worth of") || lowerCaseString.includes("powers") || lowerCaseString.includes("spells") || lowerCaseString.includes("abilities")) {
+				return "To Be Determined";	
+			} else if (tempString.includes("DCV")) {
+				return "Enhanced DCV";
+			} else if (tempString.includes("END")) {
+				return "Enhanced END";
+			} else {
+				return "Unknown Effect";
+			}
 		} else {
 			return "Unknown Effect";
 		}
