@@ -3,18 +3,20 @@ A script for importing characters built in or acquired for HERO Designer into a 
 
 HD Importer attempts to translate as much of a [HERO Designer](https://www.herogames.com/store/product/1-hero-designer/) character as possible into a Roll20 [HeroSystem6eHeroic](https://github.com/Roll20/roll20-character-sheets/blob/master/HeroSystem6eHeroic/README.md) character sheet. There will invariably be rules, options, or build styles that do not translate well from HERO Designer into Roll20. Nonetheless, this importer should import most of the details of a character. At present, the character sheet has twenty power slots. Ten additional powers if present will be imported as text and displayed in the text field below the "Perks and Talents" section.
 
-This script was tested with the following commercially available character packs:
+This script was tested with the following commercially available character packs (almost 700 character files):
 - [Champions Begins](https://www.herogames.com/store/product/1005-champions-begins-pdfhd/)
-- [HERO System Bestiary 6th Edition Character Pack](https://www.herogames.com/store/product/79-hero-system-bestiary-6th-edition-character-pack/)
 - [Dead Orc Pass](https://www.herogames.com/store/product/910-dead-orc-pass-mini-campaign-book-pdfhdc/)
+- [Dragon Bestiary 01 - Black Dragon](https://www.herogames.com/store/product/1080-dragon-bestiary-01-black-dragon-pdfhdc/)
+- [Extinction Event: Hero Designer Pack](https://www.herogames.com/store/product/1045-extinction-event-hero-designer-pack/)
+- [Fantasy Hero 6th Edition Character Pack](https://www.herogames.com/store/product/59-fantasy-hero-6th-edition-character-pack/)
+- [Fistful of Fu: Real World Martial Artists](https://www.herogames.com/store/product/1015-fistful-of-fu-real-world-martial-artists-pdf-hdc/)
+- [HERO System Bestiary 6th Edition Character Pack](https://www.herogames.com/store/product/79-hero-system-bestiary-6th-edition-character-pack/)
+- [HERO System Martial Arts Character Pack](https://www.herogames.com/store/product/85-hero-system-martial-arts-character-pack/)
 - [Kazei 5](https://www.herogames.com/store/product/92-kazei-5-character-pack/)
 - [Monster Hunter International](https://www.herogames.com/store/product/5-monster-hunter-international-character-pack/)
 - [Narosia HERO Designer Pack](https://www.herogames.com/store/product/544-narosia-hero-designer-character-pack/)
-- [Extinction Event: Hero Designer Pack](https://www.herogames.com/store/product/1045-extinction-event-hero-designer-pack/)
-- [HERO System Martial Arts Character Pack](https://www.herogames.com/store/product/85-hero-system-martial-arts-character-pack/)
-- [Fistful of Fu: Real World Martial Artists](https://www.herogames.com/store/product/1015-fistful-of-fu-real-world-martial-artists-pdf-hdc/)
 - [One-Sheet Encounters - Fallen Angel](https://www.herogames.com/store/product/1044-one-sheet-encounters-fallen-angel-pdf/)
-- [Dragon Bestiary 01 - Black Dragon](https://www.herogames.com/store/product/1080-dragon-bestiary-01-black-dragon-pdfhdc/)
+- [Villainy Codex IV](https://www.herogames.com/store/product/898-villainy-codex-iv-–-arcana-whero-designer-files-zip/)
 
 # Installation:
 
@@ -30,7 +32,6 @@ If HD Importer has started correctly the following notification should appear in
 # Import a Character:
 
 ## HERO Designer
-
 1. Download the latest export format file [HeroSystem6eHeroic.hde](https://github.com/Roll20/roll20-api-scripts/tree/master/HeroSystem6eHeroic_HDImporter/2.0) from this repository and install it into your HERO Designer folder.
 2. Create a new character or load a character file into HERO Designer.
 3. Select the export format HeroSystem6eHeroic.hde via the menu item "Current Character->Export->Set Export Format..."
@@ -52,7 +53,6 @@ The release folder contains two sample character files:
 - `Sample_Character.txt` is the same character exported from Hero Designer using HeroSystem6eHeroic.hde as the export format. 
 
 ## Notes
-
 Double quotation marks are used to indicate JSON data values. Please take care when using quotation marks in Hero Designer text fields. The exporter will attempt to remove them, but this may not be foolproof.
 
 Hero Designer has fields eye color and hair color. This information is not imported since the character sheet does not have corresponding fields.
@@ -69,7 +69,6 @@ Access the in-game help menu by entering the command "!hero --help" into the cha
 ![HelpMenu](/HeroSystem6eHeroic_HDImporter/images/HelpMenu.png)
 
 # Configuration Options
-
 The configuration menu is accessible from the Help Screen or via the chat window command "!hero --config". HD Importer offers a number of options to help organize imported characters and to pre-configure campaign options.
 
 ![HelpMenu](/HeroSystem6eHeroic_HDImporter/images/ConfigMenu.png)
@@ -85,7 +84,6 @@ The configuration menu is accessible from the Help Screen or via the chat window
 - `Use Hit Locations` : Presets the sheet option to determine hit locations.
 
 # Troubleshooting Import Errors
-
 Notepad++ and potentially other text editors may convert double quotes to pairs of single quotes. Check to see if pairs of single quotes exist in your character files. If they do exist, consider using another text editor or try replacing them with double quotes. Thank you to Jim E. for reporting this issue.
 
 # Credit
