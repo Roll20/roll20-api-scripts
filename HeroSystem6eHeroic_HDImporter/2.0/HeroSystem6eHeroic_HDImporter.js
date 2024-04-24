@@ -1770,10 +1770,6 @@
 						// Remove note from name.
 						importedPowers["powerName"+ID] = tempString.replace("(MPSlot", "");
 						importedPowers["powerType"+ID] = "variableSlot";
-					} else if (powerArray[importCount].text.includes("Unified Power")) {
-						// Remove note from name.
-						importedPowers["powerName"+ID] = tempString.replace("(MPSlot", "");
-						importedPowers["powerType"+ID] = "unified";
 					} else {
 						// Remove note from name.
 						importedPowers["powerName"+ID] = tempString.replace("(MPSlot", "");
@@ -1797,6 +1793,8 @@
 					}
 				} else if (powerArray[importCount].compound === true) {
 					importedPowers["powerType"+ID] = "compound";
+				} else if ( (typeof powerArray[importCount].text != "undefined") && (powerArray[importCount].text != "") && ((powerArray[importCount].text).includes("Unified Power")) ) {
+					importedPowers["powerType"+ID] = "unified";
 				} else {
 					importedPowers["powerType"+ID] = "single";
 				}
