@@ -84,7 +84,7 @@ The configuration menu is accessible from the Help Screen or via the chat window
 - `Player Control` : Presets the player control assigned to the imported character.
 - `Use Char Maximums` : Presets the sheet option that figures characteristic maximums into point costs.
 - `Literacy Costs CP` : Presets the sheet option that literacy costs 1 CP. Most common in Fantasy Hero campaigns.
-- `Super-Heroic END` : Presets the option for higher endurance costs for strength.
+- `Super-Heroic END` : Presets the option for lower endurance costs for strength.
 - `Use Hit Locations` : Presets the sheet option to determine hit locations.
 
 # Troubleshooting Import Errors

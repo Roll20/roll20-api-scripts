@@ -57,8 +57,10 @@
 		// Tally Bar
 		characteristicsCost: 0,
 		
-		// Primary Attributes
+		// Primary Attributes.
+		// We need to define strengthNet for weapons.
 		strength: 10,
+		strengthNet: 10,
 		dexterity: 10,
 		constitution: 10,
 		intelligence: 10,
@@ -413,6 +415,7 @@
 		// Set primary attributes.
 		let primary_attributes = {
 			strength: parseInt(character.strength)||10,
+			strengthNet: parseInt(character.strength)||10,
 			dexterity: parseInt(character.dexterity)||10,
 			constitution: parseInt(character.constitution)||10,
 			intelligence: parseInt(character.intelligence)||10,
@@ -639,7 +642,7 @@
 		// Imports equipment and sets carried weight.
 		// Similar to the way perks and talents are handled, we will parse the imported equipment into temporary arrays.
 		
-		let strength = parseInt(character.strength)||1;
+		const strength = parseInt(character.strength)||10;
 		let gearTextBox = "";
 		
 		let tempString;
@@ -834,62 +837,59 @@
 				// Assign weapon base damage.
 				importedWeapons["weaponDamage"+ID] = getWeaponDamage(weaponsArray[importCount].damage, script_name);
 				
-				// Look for weapon advantages.
 				tempString = weaponsArray[importCount].text;
-				tempValue = getAdvantage(tempString, script_name);
-				if (tempValue > maxAdvantage) {
-					importedWeapons["weaponAdvantage"+ID] = maxAdvantage;
-				} else {
-					importedWeapons["weaponAdvantage"+ID] = tempValue;
+				if ((typeof tempString !== "undefined") && (tempString !== "")) {
+					// Look for weapon advantages.
+					tempValue = getAdvantage(tempString, script_name);
+					if (tempValue > maxAdvantage) {
+						importedWeapons["weaponAdvantage"+ID] = maxAdvantage;
+					} else {
+						importedWeapons["weaponAdvantage"+ID] = tempValue;
+					}
+					
+					// Check for Killing Attack.
+					if (tempString.includes("Killing Attack") || tempString.includes("RKA") || tempString.includes("HKA")) {
+						// importedWeapons.weaponNormalDamage01= "off";
+					} else {
+						importedWeapons["weaponNormalDamage"+ID]= "on";
+					}
+					
+					// Get OCV bonus or penalty.
+					importedWeapons["weaponOCV"+ID] = getOCVmodifier(tempString, script_name);
+					
+					// Check for range mod adjustment.
+					if (tempString.includes("vs. Range Modifier")) {
+						tempPosition=tempString.indexOf("vs. Range Modifier");
+						importedWeapons["weaponRangeMod"+ID]= parseInt(tempString.substr(tempPosition-3, 2));				
+					} else {
+						importedWeapons["weaponRangeMod"+ID]= 0;
+					}
+					
+					// Check for modified STUN multiplier.
+					importedWeapons["weaponStunMod"+ID] = getStunModifier(tempString, script_name);
 				}
-				
-				// Check for Killing Attack.
-				tempString = weaponsArray[importCount].text;
-				if (tempString.includes("Killing Attack") || tempString.includes("RKA") || tempString.includes("HKA")) {
-					// importedWeapons.weaponNormalDamage01= "off";
-				} else {
-					importedWeapons["weaponNormalDamage"+ID]= "on";
-				}
-				
-				// Get OCV bonus or penalty.
-				tempString = weaponsArray[importCount].text;
-				importedWeapons["weaponOCV"+ID] = getOCVmodifier(tempString, script_name);
-				
-				// Check for range mod adjustment.
-				tempString = weaponsArray[importCount].text;
-				if (tempString.includes("vs. Range Modifier")) {
-					tempPosition=tempString.indexOf("vs. Range Modifier");
-					importedWeapons["weaponRangeMod"+ID]= parseInt(tempString.substr(tempPosition-3, 2));				
-				} else {
-					importedWeapons["weaponRangeMod"+ID]= 0;
-				}
-				
-				// Check for modified STUN multiplier.
-				tempString = weaponsArray[importCount].text;
-				importedWeapons["weaponStunMod"+ID] = getStunModifier(tempString, script_name);
 				
 				// Check for charges.
 				tempString = weaponsArray[importCount].end;
-				if (tempString.includes("[")) {
-					importedWeapons["weaponShots"+ID] =  parseInt(tempString.replace(/[^\d.-]/g, ""));
-				} else {
-					importedWeapons["weaponShots"+ID] = 0;
+				if ((typeof tempString !== "undefined") && (tempString !== "")) {
+					if (tempString.includes("[")) {
+						importedWeapons["weaponShots"+ID] =  parseInt(tempString.replace(/[^\d.-]/g, ""));
+					} else {
+						importedWeapons["weaponShots"+ID] = 0;
+					}
 				}
 				
 				// Get STR minimum and apply strength.	
 				tempString = weaponsArray[importCount].text;
-				if ((tempString !== "") && tempString.length) {
+				if ((typeof tempString !== "undefined") && (tempString !== "")) {
 					importedWeapons["weaponStrengthMin"+ID] = getWeaponStrMin(tempString, script_name);
-					importedWeapons["weaponEnhancedBySTR"+ID] = ( checkDamageBySTR(tempString, script_name) ? "on" : "0");
-					importedWeapons["weaponStrength"+ID] = ( checkDamageBySTR(tempString, script_name) ? getWeaponStrength(getWeaponStrMin(tempString), strength, script_name) : getWeaponStrMin(tempString, script_name));
-				}
-				
-				// Check for AoE.
-				tempString = weaponsArray[importCount].text;
-				if (tempString.includes("Area Of Effect")) {
-					importedWeapons["weaponAreaEffect"+ID] = "on";
-				} else {
-					// importedWeapons.weaponAreaEffect01= "off";
+					importedWeapons["weaponEnhancedBySTR"+ID] = ( checkDamageBySTR(tempString, script_name) ? "on" : 0);
+					importedWeapons["weaponStrength"+ID] = ( importedWeapons["weaponEnhancedBySTR"+ID] === "on" ) ? getWeaponStrength(importedWeapons["weaponStrengthMin"+ID], strength, script_name) : Math.min(getWeaponStrMin(tempString, script_name), character.strength);
+					
+					sendChat(script_name, importedWeapons["weaponStrength"+ID].toString());
+					
+					// Check for AoE.
+					importedWeapons["weaponAreaEffect"+ID] = (tempString.includes("Area Of Effect")) ? "on" : 0;
 				}
 				
 				// Get weapon mass.
@@ -1304,7 +1304,7 @@
 			if ((typeof character.perks["perk"+ID] !== "undefined") && (character.perks["perk"+ID] !== "") && (typeof character.perks["perk"+ID].type !== "undefined")) {
 				perksAndTalentsArray[perksAndTalentsIndex] = {
 					type: character.perks["perk"+ID].type,
-					text: character.perks["perk"+ID].text + "\n" + character.perks["perk"+ID].notes,
+					text: character.perks["perk"+ID].text + '\n' + character.perks["perk"+ID].notes,
 					points: character.perks["perk"+ID].points
 				}
 				
@@ -1325,7 +1325,7 @@
 			if ((typeof character.talents["talent"+ID] !== "undefined") && (character.talents["talent"+ID] !== "") && (typeof character.talents["talent"+ID].type !== "undefined")) {
 				perksAndTalentsArray[perksAndTalentsIndex] = {
 					type: character.talents["talent"+ID].type,
-					text: character.talents["talent"+ID].text + "\n" + character.talents["talent"+ID].notes,
+					text: character.talents["talent"+ID].text + '\n' + character.talents["talent"+ID].notes,
 					points: character.talents["talent"+ID].points
 				}
 				
@@ -4073,7 +4073,7 @@
 				endPosition = locations.indexOf(')');
 				locations = locations.slice(0,endPosition);
 			} else {
-				endPosition = Math.min(16, locations.length);
+				endPosition = Math.min(28, locations.length);
 				locations = locations.slice(0,endPosition);
 			}
 			locations = locations.replace(/[^\d,-]/g, "");
