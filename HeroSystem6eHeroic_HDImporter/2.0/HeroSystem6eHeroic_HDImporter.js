@@ -867,6 +867,14 @@
 					
 					// Check for modified STUN multiplier.
 					importedWeapons["weaponStunMod"+ID] = getStunModifier(tempString, script_name);
+					
+					// Get STR minimum and apply strength.	
+					importedWeapons["weaponStrengthMin"+ID] = getWeaponStrMin(tempString, script_name);
+					importedWeapons["weaponEnhancedBySTR"+ID] = ( checkDamageBySTR(tempString, script_name) ? "on" : 0);
+					importedWeapons["weaponStrength"+ID] = ( importedWeapons["weaponEnhancedBySTR"+ID] === "on" ) ? getWeaponStrength(importedWeapons["weaponStrengthMin"+ID], strength, script_name) : Math.min(getWeaponStrMin(tempString, script_name), character.strength);
+					
+					// Check for AoE.
+					importedWeapons["weaponAreaEffect"+ID] = (tempString.includes("Area Of Effect")) ? "on" : 0;
 				}
 				
 				// Check for charges.
@@ -877,19 +885,6 @@
 					} else {
 						importedWeapons["weaponShots"+ID] = 0;
 					}
-				}
-				
-				// Get STR minimum and apply strength.	
-				tempString = weaponsArray[importCount].text;
-				if ((typeof tempString !== "undefined") && (tempString !== "")) {
-					importedWeapons["weaponStrengthMin"+ID] = getWeaponStrMin(tempString, script_name);
-					importedWeapons["weaponEnhancedBySTR"+ID] = ( checkDamageBySTR(tempString, script_name) ? "on" : 0);
-					importedWeapons["weaponStrength"+ID] = ( importedWeapons["weaponEnhancedBySTR"+ID] === "on" ) ? getWeaponStrength(importedWeapons["weaponStrengthMin"+ID], strength, script_name) : Math.min(getWeaponStrMin(tempString, script_name), character.strength);
-					
-					sendChat(script_name, importedWeapons["weaponStrength"+ID].toString());
-					
-					// Check for AoE.
-					importedWeapons["weaponAreaEffect"+ID] = (tempString.includes("Area Of Effect")) ? "on" : 0;
 				}
 				
 				// Get weapon mass.
@@ -985,6 +980,7 @@
 					tempString += ", " + armorArray[importCount].notes;
 				}
 				importedArmor["armorLocations"+ID] = getArmorLocations(tempString, script_name);
+				importedArmor["armorEND"+ID] = getArmorEND(tempString, script_name);
 				
 				// Get armor mass.
 				if (armorArray[importCount].mass !== "") {
@@ -4057,7 +4053,6 @@
 	
 	var getArmorLocations = function (inputString, script_name) {
 		let locations = "";
-		let secondString = "";
 		let startPosition = 0;
 		let endPosition = 0;
 		
@@ -4100,6 +4095,32 @@
 		}
 		
 		return locations.trim();
+	}
+	
+	
+	var getArmorEND = function (inputString, script_name) {
+		let tempString = "";
+		let endurance = 0;
+		let startPosition = 0;
+		let endPosition = 0;
+		
+		inputString = inputString.toLowerCase();
+		
+		if (inputString.includes("end/turn:")) {
+			startPosition = inputString.indexOf("end/turn:") + 9;
+			endPosition = Math.min(inputString.length, startPosition + 2);
+			tempString = inputString.slice(startPosition, endPosition);
+			endurance = parseInt(tempString.replace(/[^\d]/g, ""))||0;
+		} else if (inputString.includes("end/turn")) {
+			endPosition = inputString.indexOf("end/turn");
+			startPosition = Math.max(0, endPosition - 2);
+			tempString = inputString.slice(startPosition, endPosition);
+			endurance = parseInt(tempString.replace(/[^\d]/g, ""))||0;
+		} else {
+			endurance = 0;
+		}
+		
+		return endurance;
 	}
 	
 	
