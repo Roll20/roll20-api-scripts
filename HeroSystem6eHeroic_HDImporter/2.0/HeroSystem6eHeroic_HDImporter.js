@@ -1,6 +1,6 @@
 /* HeroSystem6eHeroic_HDImporter.js
 	* Hero Designer Importer for the Roll20 Hero System 6e Heroic character sheet
-	* Version: 1.2
+	* Version: 2.0
 	* By Villain in Glasses
 	* villaininglasses@icloud.com
 	* Discord: Villain#0604
@@ -14,7 +14,7 @@
 	*
 	* Copy "HeroSystem6eHeroic.hde" into your Hero Designer export format folder.
 	*
-	* Use: from Hero Designer export a character using HeroSystem6eHeroic.hde as the selected format. 
+	* Use: from Hero Designer export a character using HeroSystem6eHeroic.hde found in this repository as the selected format. 
 	* This will produce a text file with the name of the character (e.g., myCharacter.txt).
 	*
 	* Open the exported file in your favorite text editor. Select all of the contents and copy it.

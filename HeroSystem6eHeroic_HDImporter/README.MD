@@ -22,7 +22,7 @@ This script was tested with the following commercially available character packs
 
 From the campaign's home page go to the Mods page via 'Settings -> Mod (API) Scripts.'
 
-From the Mods page select 'HeroSystem6eHeroic HDImporter' from the Mod Library dropdown list. Alternatively, create a new script and copy and paste the contents of HeroSystem6eHeroic_HDImporter.js into the text editing box. Save the script.
+From the Mods page select 'HeroSystem6eHeroic HDImporter' from the Mod Library dropdown list. Version 2.0 is the most recent and recommended version. Alternatively, create a new script and copy and paste the contents of HeroSystem6eHeroic_HDImporter.js into the text editing box. Save the script.
 
 Launch the game.
 
@@ -53,17 +53,19 @@ The release folder contains two sample character files:
 - `Sample_Character.txt` is the same character exported from Hero Designer using HeroSystem6eHeroic.hde as the export format. 
 
 ## Notes
-Double quotation marks are used to indicate JSON data values. Please take care when using quotation marks in Hero Designer text fields. The exporter will attempt to remove them, but this may not be foolproof.
+Double quotation marks are used to indicate JSON data values. Please take care to avoid quotation marks in Hero Designer text fields. Instead use single quotes. The exporter will attempt to remove double quotes, but this may not be foolproof.
 
-Characters exported with the older version of HeroSystem6eHeroic.hde (1.0) will likely work, but (2.0) includes more description text, powers, and complications. Version 2.0 also has corrections for a couple of errors.
+Characters exported with the older version of HeroSystem6eHeroic.hde (1.0) will likely work, but version 2.0 includes more description text, notes, powers, and complications. Version 2.0 also has some fixes for bugs found in 1.0.
 
 Hero Designer has entries for eye color and hair color. This information is not imported since the character sheet does not have corresponding fields.
 
 Weapons, armor, and other equipment are imported as text and shown in the text field in the "Gear" page. HD Importer attempts to fill in the appropriate spaces in the sheet with the items it can identify, but HERO items often have additional information to track. Expect this area to require some degree of human attention.
 
-At present, the character sheet has twenty power, ten talent, and ten complication slots. Ten additional entries of each type, if found, will be imported as text and displayed in sheet notes fields. Note that one of the these overflow items will count in the sheet's automatic character point calculations.
+At present, the character sheet has twenty power, ten talent, and ten complication slots. Ten additional entries of each type, if found, will be imported as text and displayed in sheet notes fields. None of the these overflow items will count in the sheet's automatic character point calculations.
 
 Powers that add (or subtract) characteristics, movement, and perception abilities should be applied in the appropriate modifier fields.
+
+If your campaign uses the optional rule of applying END costs to armor, HD Importer will recognize (X END/Turn) or (END/Turn: X) in equipment notes.
 
 # Help
 
@@ -91,6 +93,8 @@ The configuration menu is accessible from the Help Screen or via the chat window
 
 Notepad++ and potentially other text editors may convert double quotes to pairs of single quotes. Check to see if pairs of single quotes exist in your character files. If they do exist, consider using another text editor or try replacing them with double quotes. Thank you to Jim E. for reporting this issue.
 
+Please submit bug reports, feature requests, and general comments to [Villain in Glasses](https://app.roll20.net/users/633423/villain-in-glasses).
+
 # Credit
 
 Hero related code and modifications by [Villain in Glasses](https://app.roll20.net/users/633423/villain-in-glasses) (Discord: Villain#0604).
@@ -105,4 +109,4 @@ Version 1.0 -- Initial release on August 1, 2022.
 
 Version 1.1 -- Updated to accommodate the seventeen power slots available on the character sheet (May 4, 2023).
 
-Version 2.0 -- Updated to support additional character sheet features as of Sheet version 2.9. Updated version of Hero Designer export format (HeroSystem6eHeroic.hde to version 2.0). Adds support for 20 power slots with ten extra powers imported to text. Complications increased from seven to ten with up to an additional ten sent to text on the sheet. All HD description fields now recognized. Generates armor from Resistant Protection. Recognizes and applies powers that adjust characteristic and movement abilities. Adds more robust input error checking and avoids more quotation character troubles. Additional HD file pack testing. Bug fixes and 60% reduction in code size. (April 24, 2024)
+Version 2.0 -- Updated to support additional character sheet features as of Sheet version 2.9. Updated version of Hero Designer export format (HeroSystem6eHeroic.hde to version 2.0). Adds support for 20 power slots with ten extra powers imported to text. Complications increased from seven to ten with up to an additional ten sent to text on the sheet. All HD description fields now recognized. Generates armor from Resistant Protection. Recognizes and applies powers that adjust characteristic and movement abilities. Adds more robust input error checking and avoids more quotation character troubles. Additional HD file pack testing. Bug fixes and 60% reduction in code size (April 27, 2024).
