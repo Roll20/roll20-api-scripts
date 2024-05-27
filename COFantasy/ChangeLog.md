@@ -1,11 +1,14 @@
 # COFantasy: Historique des changements (depuis la version 1.0)
 ## 3.15
 ### Capacités
+* Hémorragie de Pestrilax.
+* Prise en compte de la capacité Tir double pour les attaques à 2 mains.
 * Défi de la Voie du Duelliste
 * Meilleure prise en charge de la spécialisation du guerrier.
 * Implémentation de la version avancée du drain de force de Dominia.
 
 ### Autres améliorations
+* Ajout du poison paralysant
 * Ajout d'une option --depensePR pour les actions autres que les attaques
 * Ajout d'une commande !cof-recupere-mana.
 * Règle optionnelle pour faire récupérer des points de mana quand on dépense un point de récupération.
