@@ -1,4 +1,4 @@
-//Derni\xE8re modification : sam. 18 mai 2024,  03:02
+//Derni\xE8re modification : ven. 24 mai 2024,  02:53
 // ------------------ generateRowID code from the Aaron ---------------------
 const generateUUID = (function() {
     "use strict";
@@ -1968,8 +1968,7 @@ var COFantasy = COFantasy || function() {
   //Renvoie 1dk + bonus, avec le texte
   //champs val et roll
   //de peut \xEAtre un nombre > 0 ou bien le r\xE9sultat de parseDice
-  function rollDePlus(de, options) {
-    options = options || {};
+  function rollDePlus(de, options = {}) {
     let nbDes = options.nbDes || 1;
     let bonus = options.bonus || 0;
     if (de.dice !== undefined) {
@@ -2066,12 +2065,11 @@ var COFantasy = COFantasy || function() {
         attribute: attr,
         current: attr.get('current'),
         max: attr.get('max'),
+        withWorker: true,
       });
     }
-    token.set(fieldv, val); //On le fait aussi pour forcer la mise \xE0 jour de la barre
     let aset = {
       current: val,
-      withWorker: true
     };
     if (maxVal) aset.max = maxVal;
     attr.setWithWorker(aset);
@@ -4064,6 +4062,7 @@ var COFantasy = COFantasy || function() {
         break;
       case 'paralyseTemp':
       case 'paralyseGoule':
+      case 'poisonParalysant':
         iterTokensOfAttribute(charId, options.pageId, effet, attrName,
           function(token) {
             setState({
@@ -7097,7 +7096,7 @@ var COFantasy = COFantasy || function() {
     let dice = 20;
     if ((estAffaibli(personnage) && !predicateAsBool(personnage, 'insensibleAffaibli')) ||
       getState(personnage, 'immobilise') ||
-      (carac == 'DEX' && getState(personnage, 'encombre')) || 
+      (carac == 'DEX' && getState(personnage, 'encombre')) ||
       attributeAsBool(personnage, 'mortMaisNAbandonnePas'))
       dice = 12;
     else {
@@ -10535,10 +10534,19 @@ var COFantasy = COFantasy || function() {
   // seulement pour l'attaque avec l'arme principale
   // suppose qu'on a calcul\xE9 les armes en main
   function malusAttaqueDeuxArmes(perso, weaponStats) {
-    if (!perso.armeGauche) return;
+    if (!perso.armeGauche || !perso.arme) return;
     if (persoEstPNJ(perso)) return; //On ne rentre pas dans ces d\xE9tails pour les PNJs
     if (predicateAsBool(perso, 'ambidextrie') || predicateAsBool(perso, 'combatADeuxArmesAmeliore')) return;
     if (predicateAsBool(perso, 'coupDeBouclier') && perso.armeGauche.label == predicateAsBool(perso, 'attaqueAuBouclier')) return;
+    if (predicateAsBool(perso, 'tirDouble') && perso.armeGauche.poudre && perso.arme.poudre) return;
+    //L'attaque doit se faire au d12
+    weaponStats.modificateurs += ' avecd12crit';
+  }
+
+  //weaponStats est la stat de l'arme en main gauche
+  function malusAttaqueMainGauche(perso, weaponStats) {
+    if (predicateAsBool(perso, 'ambidextrie')) return;
+    if (predicateAsBool(perso, 'tirDouble') && weaponStats.poudre && (!perso.arme || perso.arme.poudre)) return;
     //L'attaque doit se faire au d12
     weaponStats.modificateurs += ' avecd12crit';
   }
@@ -10641,10 +10649,7 @@ var COFantasy = COFantasy || function() {
       } else if (attackLabel == -2) { //attaque avec l'arme en main gauche
         if (attaquant.armesEnMain === undefined) armesEnMain(attaquant);
         weaponStats = attaquant.armeGauche;
-        if (!predicateAsBool(attaquant, 'ambidextrie')) {
-          //L'attaque doit se faire au d12
-          weaponStats.modificateurs += ' avecd12crit';
-        }
+        malusAttaqueMainGauche(attaquant, weaponStats);
       }
       if (weaponStats === undefined) {
         let arme = armesEnMain(attaquant);
@@ -10653,10 +10658,7 @@ var COFantasy = COFantasy || function() {
           malusAttaqueDeuxArmes(attaquant, weaponStats);
         } else if (attaquant.armeGauche && attaquant.armeGauche.label == attackLabel) {
           weaponStats = attaquant.armeGauche;
-          if (!predicateAsBool(attaquant, 'ambidextrie')) {
-            //L'attaque doit se faire au d12
-            weaponStats.modificateurs += ' avecd12crit';
-          }
+          malusAttaqueMainGauche(attaquant, weaponStats);
         } else weaponStats = getWeaponStats(attaquant, attackLabel);
       }
     }
@@ -13071,8 +13073,10 @@ var COFantasy = COFantasy || function() {
         unlockToken(attaquant, evt);
       } else {
         attBonus -= 5;
-        options.diviseDmg = options.diviseDmg || 1;
-        options.diviseDmg *= 2;
+        if (!options.redo) {
+          options.diviseDmg = options.diviseDmg || 1;
+          options.diviseDmg *= 2;
+        }
         messageAttaqueDM("Attaquant dans le ventre de " + nomPerso(gobant), explications, options, -5, 'moiti\xE9');
       }
     }
@@ -16556,54 +16560,81 @@ var COFantasy = COFantasy || function() {
       typePoison = defPoison.substring(0, index);
       value = defPoison.substring(index + 1);
     }
-    if (typePoison == 'rapide') {
-      attaquant.additionalDmg.push({
-        type: 'poison',
-        value,
-        partialSave: {
-          carac: 'CON',
-          seuil
+    switch (typePoison) {
+      case 'rapide':
+        {
+          attaquant.additionalDmg.push({
+            type: 'poison',
+            value,
+            partialSave: {
+              carac: 'CON',
+              seuil
+            }
+          });
+          break;
         }
-      });
-    } else if (typePoison == 'affaiblissant') {
-      options.effets = options.effets || [];
-      if (value == 0) {
-        options.effets.push({
-          effet: 'poisonAffaiblissant',
-          typeDmg: 'poison',
-          message: messageEffetCombat.poisonAffaiblissant,
-          save: {
-            carac: 'CON',
-            seuil
-          },
-        });
-      } else {
-        let exprDuree = parseDice(value, 'dur\xE9e');
-        let duree = randomInteger(6);
-        if (exprDuree) {
-          if (exprDuree.nbDe <= 0) {
-            if (exprDuree.bonus > 0) duree = exprDuree.bonus;
+      case 'affaiblissant':
+        {
+          options.effets = options.effets || [];
+          if (value == 0) {
+            options.effets.push({
+              effet: 'poisonAffaiblissant',
+              typeDmg: 'poison',
+              message: messageEffetCombat.poisonAffaiblissant,
+              save: {
+                carac: 'CON',
+                seuil
+              },
+            });
           } else {
-            duree = rollDePlus(exprDuree.dice, {
-              nbDes: exprDuree.nbDes,
-              bonus: exprDuree.bonus
-            }).val;
+            let exprDuree = parseDice(value, 'dur\xE9e');
+            let duree = randomInteger(6);
+            if (exprDuree) {
+              if (exprDuree.nbDe <= 0) {
+                if (exprDuree.bonus > 0) duree = exprDuree.bonus;
+              } else {
+                duree = rollDePlus(exprDuree).val;
+              }
+            }
+            options.effets.push({
+              effet: 'poisonAffaiblissantLatent',
+              typeDmg: 'poison',
+              duree,
+              message: messageOfEffetTemp('poisonAffaiblissantLatent'),
+              save: {
+                carac: 'CON',
+                seuil
+              },
+            });
           }
+          break;
         }
-
-        options.effets.push({
-          effet: 'poisonAffaiblissantLatent',
-          typeDmg: 'poison',
-          duree,
-          message: messageOfEffetTemp('poisonAffaiblissantLatent'),
-          save: {
-            carac: 'CON',
-            seuil
-          },
-        });
-      }
-    } else {
-      error("Type de poison " + typePoison + " non reconnu.", poisonAttr);
+      case 'paralysant':
+        {
+          options.effets = options.effets || [];
+          let exprDuree = parseDice(value, 'dur\xE9e');
+          let duree = 1;
+          if (exprDuree) {
+            duree = rollDePlus(exprDuree);
+            if (duree && duree.val > 0) duree = duree.val;
+            else duree = 0;
+          }
+          if (duree) {
+            options.effets.push({
+              effet: 'poisonParalysant',
+              typeDmg: 'poison',
+              duree,
+              message: messageOfEffetTemp('poisonParalysant'),
+              save: {
+                carac: 'CON',
+                seuil
+              },
+            });
+          }
+          break;
+        }
+      default:
+        error("Type de poison " + typePoison + " non reconnu.", poisonAttr);
     }
     explications.push("L'arme est empoisonn\xE9e");
     return defPoison;
@@ -16654,8 +16685,10 @@ var COFantasy = COFantasy || function() {
       if (!options.pasDeDmg && options.contact) {
         if (!options.auto) msgDrain += " et ";
         msgDrain += "DM/2";
-        options.diviseDmg = options.diviseDmg || 1;
-        options.diviseDmg *= 2;
+        if (!options.redo) {
+          options.diviseDmg = options.diviseDmg || 1;
+          options.diviseDmg *= 2;
+        }
       }
       expliquer(msgDrain);
     }
@@ -18072,6 +18105,11 @@ var COFantasy = COFantasy || function() {
     return oldSide;
   }
 
+  function immuniseAuxSaignements(perso) {
+    return predicateAsBool(perso, 'immuniteSaignement') ||
+      predicateAsBool(perso, 'controleSanguin');
+  }
+
   //Met un effet temporaire sur target. L'effet temporaire est sp\xE9cifi\xE9 dans ef
   // - effet : le nom de l'effet
   // - whisper : true si on doit chuchoter l'effet, undefined si on n'affiche pas (mais dans ce cas, target.messages doit \xEAtre d\xE9fini)
@@ -18141,7 +18179,7 @@ var COFantasy = COFantasy || function() {
       }
       return;
     }
-    if (ef.effet == 'saignementsSang' && predicateAsBool(target, 'immuniteSaignement')) {
+    if (ef.effet == 'saignementsSang' && immuniseAuxSaignements(target)) {
       if (ef.whisper !== undefined) {
         if (ef.whisper === true) {
           whisperChar(target.charId, "ne peut pas saigner");
@@ -18230,6 +18268,7 @@ var COFantasy = COFantasy || function() {
           break;
         case 'paralyseTemp':
         case 'paralyseGoule':
+        case 'poisonParalysant':
           setState(target, 'paralyse', true, evt);
           break;
         case 'immobiliseTemp':
@@ -19641,6 +19680,20 @@ var COFantasy = COFantasy || function() {
             if (target.effets) {
               if (effets) effets = effets.concat(target.effets);
               else effets = target.effets;
+            }
+            if (predicateAsBool(attaquant, 'hemorragiePestrilax') && !immuniseAuxSaignements(target)) {
+              if (attributeAsBool(target, 'blessureQuiSaigne')) {
+                let niveauBlessure = getIntValeurOfEffet(target, 'blessureQuiSaigne', 0);
+                target.messages.push("La blessure devient plus importante");
+                setTokenAttr(target, 'blessureQuiSaigneValeur', niveauBlessure + 1, evt);
+              } else {
+                effets = effets || [];
+                effets.push({
+                  effet: 'blessureQuiSaigne',
+                  attaquant,
+                  message: messageEffetCombat.blessureQuiSaigne,
+                });
+              }
             }
             if (effets) {
               effets.forEach(function(ef) {
@@ -29479,6 +29532,7 @@ var COFantasy = COFantasy || function() {
               (effet == 'immobiliseTemp' ||
                 effet == 'paralyseTemp' ||
                 effet == 'paralyseGoule' ||
+                effet == 'poisonParalysant' ||
                 effet == 'ralentiTemp' ||
                 effet == 'toiles')) ||
             (mEffet.entrave && effet != 'paralyseTemp' && effet != 'paralyseGoule' && predicateAsInt(perso, 'voieDeLArchange', 1) > 1 && attributeAsBool(perso, 'formeDAnge'))
@@ -29923,7 +29977,7 @@ var COFantasy = COFantasy || function() {
       if (activer) {
         initiative(selected, evt);
         iterSelected(selected, function(perso) {
-          if (effet == 'blessureQuiSaigne' && predicateAsBool(perso, 'immuniteSaignement')) {
+          if (effet == 'blessureQuiSaigne' && immuniseAuxSaignements(perso)) {
             sendPerso(perso, "ne saigne pas");
             return;
           }
@@ -34916,8 +34970,14 @@ var COFantasy = COFantasy || function() {
     }
     let label = cmd[1];
     let typePoison = cmd[2];
-    if (typePoison != 'rapide' && typePoison != 'affaiblissant') {
-      error("Les seuls type de poison g\xE9r\xE9s sont rapide et affaiblissant, mais pas encore " + typePoison, cmd);
+    switch (typePoison) {
+      case 'rapide':
+      case 'affaiblissant':
+      case 'paralysant':
+        break;
+      default:
+        error("Les seuls type de poison g\xE9r\xE9s sont rapide, affaiblissant et paralysant, mais pas encore " + typePoison, cmd);
+        return;
     }
     let nomMunition;
     let estMunition = label.startsWith('munition_');
@@ -46429,6 +46489,25 @@ var COFantasy = COFantasy || function() {
       prejudiciable: true,
       visible: true
     },
+    poisonAffaiblissantLatent: {
+      activation: "sent qu'un poison commence \xE0 se r\xE9pandre dans ses veines",
+      actif: "est empoisonn\xE9, mais l'effet du poison ne se fait pas encore sentir",
+      actifF: "est empoisonn\xE9e, mais l'effet du poison ne se fait pas encore sentir",
+      fin: "se sent faible",
+      msgSave: "r\xE9sister au poison",
+      prejudiciable: true,
+      seulementVivant: true,
+    },
+    poisonParalysant: {
+      activation: "sent le poison ralentir ses mouvements. Il ne peut plus bouger !",
+      activationf: "sent le poison ralentir ses mouvements. Elle ne peut plus bouger !",
+      actif: "est empoisonn\xE9 et ne peut plus bouger",
+      actifF: "est empoisonn\xE9e et ne peut plus bouger",
+      fin: "peut \xE0 nouveau bouger",
+      msgSave: "r\xE9sister au poison",
+      prejudiciable: true,
+      seulementVivant: true,
+    },
     protectionContreLesProjectiles: {
       activation: "gagne une protection contre les projectiles",
       actif: "est prot\xE9g\xE9 contre les projectiles",
@@ -47196,15 +47275,6 @@ var COFantasy = COFantasy || function() {
       msgSave: "r\xE9sister \xE0 la provocation",
       prejudiciable: true,
     },
-    poisonAffaiblissantLatent: {
-      activation: "sent qu'un poison commence \xE0 se r\xE9pandre dans ses veines",
-      actif: "est empoisonn\xE9, mais l'effet du poison ne se fait pas encore sentir",
-      actifF: "est empoisonn\xE9e, mais l'effet du poison ne se fait pas encore sentir",
-      fin: "se sent faible",
-      msgSave: "r\xE9sister au poison",
-      prejudiciable: true,
-      seulementVivant: true,
-    },
   };
 
   function buildPatternEffets(listeEffets, postfix) {
@@ -47312,10 +47382,23 @@ var COFantasy = COFantasy || function() {
       actif: "attaque \xE0 outrance",
       fin: "attaque normalement",
     },
+    blessureQuiSaigne: {
+      activation: "re\xE7oit une blessure qui saigne",
+      actif: "saigne \xE0 cause d'une blessure",
+      fin: "saigne beaucoup moins",
+      msgSave: "ne plus saigner",
+      prejudiciable: true,
+      dm: true
+    },
     bonusInitEmbuscade: { //Effet interne pour la capacit\xE9 Surveillance
       activation: "a un temps d'avance en cas d'embuscade",
       actif: "a un temps d'avance",
       fin: ""
+    },
+    bonusInitVariable: {
+      activation: "entre en combat",
+      actif: "est en combat",
+      fin: ''
     },
     criDeGuerre: {
       activation: "pousse son cri de guerre",
@@ -47384,11 +47467,6 @@ var COFantasy = COFantasy || function() {
       actif: "est dans une rage berserk",
       fin: "retrouve son calme",
       msgSave: "retrouver son calme",
-    },
-    bonusInitVariable: {
-      activation: "entre en combat",
-      actif: "est en combat",
-      fin: ''
     },
     defiDuelliste: {
       activation: "lance un d\xE9fi",
@@ -47471,14 +47549,6 @@ var COFantasy = COFantasy || function() {
       seulementVivant: true,
       dm: true,
       visible: true
-    },
-    blessureQuiSaigne: {
-      activation: "re\xE7oit une blessure qui saigne",
-      actif: "saigne \xE0 cause d'une blessure",
-      fin: "saigne beaucoup moins",
-      msgSave: "ne plus saigner",
-      prejudiciable: true,
-      dm: true
     },
     poisonAffaiblissant: {
       activation: "sent le poison ralentir ses mouvements",
@@ -47720,6 +47790,16 @@ var COFantasy = COFantasy || function() {
     return effet;
   }
 
+  function getEffectOptions(perso, effet, options) {
+    options = options || {};
+    let optionsAttr = tokenAttribute(perso, effet + 'Options');
+    optionsAttr.forEach(function(oAttr) {
+      parseDmgOptions(oAttr.get('current'), options);
+    });
+    copyDmgOptionsToTarget(perso, options);
+    return options;
+  }
+
   function rollAndDealDmg(perso, dmg, type, effet, attrName, msg, count, evt, options, callback, display) {
     if (options.valeur) {
       let attrsVal = tokenAttribute(perso, options.valeur);
@@ -47893,16 +47973,6 @@ var COFantasy = COFantasy || function() {
             });
         }); //fin sendChat du jet de d\xE9
       }); //fin iterTokensOfAttribute
-  }
-
-  function getEffectOptions(perso, effet, options) {
-    options = options || {};
-    let optionsAttr = tokenAttribute(perso, effet + 'Options');
-    optionsAttr.forEach(function(oAttr) {
-      parseDmgOptions(oAttr.get('current'), options);
-    });
-    copyDmgOptionsToTarget(perso, options);
-    return options;
   }
 
   // gestion des effets qui se d\xE9clenchent \xE0 la fin de chaque tour
@@ -48124,16 +48194,18 @@ var COFantasy = COFantasy || function() {
           });
       }
       if (attributeAsBool(perso, 'blessureQuiSaigne') &&
-        !getState(perso, 'mort') &&
-        !predicateAsBool(perso, 'immuniteSaignement') &&
-        !predicateAsBool(perso, 'controleSanguin')) {
-        let jetSaignement = rollDePlus(6);
+        !getState(perso, 'mort') && !immuniseAuxSaignements(perso)) {
+        let bonus = getIntValeurOfEffet(perso, 'blessureQuiSaigne', 0);
+        let jetSaignement = rollDePlus(6, {
+          bonus
+        });
         let dmgSaignement = {
           type: 'normal',
           total: jetSaignement.val,
           display: jetSaignement.roll
         };
         let optDMSaignements = getEffectOptions(perso, 'blessureQuiSaigne');
+        perso.ignoreTouteRD = true;
         dealDamage(perso, dmgSaignement, [], evt, false, optDMSaignements, undefined,
           function(dmgDisplay, dmgFinal) {
             sendPerso(perso, "saigne. " + onGenre(perso, 'Il', 'Elle') + " perd " + dmgDisplay + " PVs");
@@ -49834,7 +49906,7 @@ var COFantasy = COFantasy || function() {
         else arme = l;
       }
     }
-    if (arme !== undefined && arme !== true) {
+    if (arme && arme !== true) {
       degainerArme(perso, arme, {}, {
         secret: true
       });
