@@ -391,24 +391,28 @@ const ZeroFrame = (() => { //eslint-disable-line no-unused-vars
                 }
             }));
         });
-        [itemsrx, items2rx].forEach(rx => {
+        [itemsrx, items2rx, items3rx, items4rx].forEach((rx,rxIndex) => {
             msg.content = msg.content.replace(rx, ((r, g1, separator) => {
                 let delim = ',';
                 let res;
                 if (msg.inlinerolls.length > g1) {
                     retval = true;
-                    if (/^(?:'[^']+'|"[^"]+"|`[^`]+`)$/.test(separator)) { // enclosed in quotation marks of some sort
-                        delim = separator.slice(1, -1);
-                    } else if (/^(?<deferral>[^'"`])(?:#|\|)(?<deferredtext>.+)$/.test(separator)) { // deferral character is present
-                        res = /^(?<deferral>[^'"`])(?:#|\|)(?<deferredtext>.+)$/.exec(separator);
-                        delim = (/^(?:'[^']+'|"[^"]+"|`[^`]+`)$/.test(res.groups.deferredtext)
-                            ? res.groups.deferredtext.slice(1, -1) // enclosed in quotation marks of some sort
-                            : res.groups.deferredtext)             // not enclosed in quotation marks
-                            .replace(new RegExp(escapeRegExp(res.groups.deferral), 'g'), '')
-                    } else {
-                        delim = separator;
+                    if (rxIndex < 2) {
+                        if (/^(?:'[^']+'|"[^"]+"|`[^`]+`)$/.test(separator)) { // enclosed in quotation marks of some sort
+                            delim = separator.slice(1, -1);
+                        } else if (/^(?<deferral>[^'"`])(?:#|\|)(?<deferredtext>.+)$/.test(separator)) { // deferral character is present
+                            res = /^(?<deferral>[^'"`])(?:#|\|)(?<deferredtext>.+)$/.exec(separator);
+                            delim = (/^(?:'[^']+'|"[^"]+"|`[^`]+`)$/.test(res.groups.deferredtext)
+                                ? res.groups.deferredtext.slice(1, -1) // enclosed in quotation marks of some sort
+                                : res.groups.deferredtext)             // not enclosed in quotation marks
+                                .replace(new RegExp(escapeRegExp(res.groups.deferral), 'g'), '')
+                        } else {
+                            delim = separator;
+                        }
                     }
-                    return msg.parsedinline[g1].getTableValues().join(delim);
+                    return msg.parsedinline[g1].getTableValues().length
+                        ? msg.parsedinline[g1].getTableValues().join(delim)
+                        : msg.parsedinline[g1].value;
                 } else if (lastpass) {
                     retval = true;
                     return '0';
