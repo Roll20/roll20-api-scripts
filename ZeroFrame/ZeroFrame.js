@@ -971,8 +971,8 @@ const ZeroFrame = (() => { //eslint-disable-line no-unused-vars
         preserved.content = preserved.content
             .replace(/(\({&\s*cr\s*}\)|{&\s*cr\s*})/gi, '<br>\n')
             .replace(/(\({&\s*lf\s*}\)|{&\s*lf\s*})/gi, '\n')
-            .replace(/(\({&\s*cr\s*}\)|{&\s*tp\s*})/gi, '{{')
-            .replace(/(\({&\s*cr\s*}\)|{&\s*\/tp\s*})/gi, '}}');
+            .replace(/(\({&\s*tp\s*}\)|{&\s*tp\s*})/gi, '{{')
+            .replace(/(\({&\s*\/tp\s*}\)|{&\s*\/tp\s*})/gi, '}}');
         // check for SIMPLE tag
         if (preserved.content.match(simplerx)) {
             notes.push(`SIMPLE or FLAT tag detected`)
