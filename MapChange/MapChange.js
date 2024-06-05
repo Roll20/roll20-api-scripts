@@ -10,7 +10,7 @@ var MapChange = MapChange || (function() {
     // Name of the person who last modified the script.
     var modifiedBy = "TheWhiteWolves, keithcurtis";
     // Local version of the script.
-    var version = "1.6";
+    var version = "1.7";
     // Set to true to use built in debug statements
     var debug = false;
     // Set to false to turn off notifing the GM when a player moves.
