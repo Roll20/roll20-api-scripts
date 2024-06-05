@@ -6,7 +6,7 @@ var MapChange = MapChange || (function() {
     'use strict';
     // Defaults.
     // Date last modified in unix timestamp format.
-    var lastModified = "1717196400";
+    var lastModified = "1717542000";
     // Name of the person who last modified the script.
     var modifiedBy = "TheWhiteWolves, keithcurtis";
     // Local version of the script.
