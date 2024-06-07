@@ -1,10 +1,10 @@
 /*
 =========================================================
-Name			:	Plugger
-GitHub			:	https://github.com/TimRohr22/Cauldron/tree/master/Plugger
-Roll20 Contact	:	timmaugh
-Version			:	1.0.7
-Last Update		:	6/6/2022
+Name            :   Plugger
+GitHub          :   https://github.com/TimRohr22/Cauldron/tree/master/Plugger
+Roll20 Contact  :   timmaugh
+Version         :   1.0.9
+Last Update     :   17 MAY 2024
 =========================================================
 */
 var API_Meta = API_Meta || {};
@@ -15,10 +15,10 @@ API_Meta.Plugger = { offset: Number.MAX_SAFE_INTEGER, lineCount: -1 };
 
 const Plugger = (() => {
     const apiproject = 'Plugger';
-    const version = '1.0.6';
+    const version = '1.0.9';
     const schemaVersion = 0.1;
     API_Meta[apiproject].version = version;
-    const vd = new Date(1654543510049);
+    const vd = new Date(1715952845199);
     const versionInfo = () => {
         log(`\u0166\u0166 ${apiproject} v${API_Meta[apiproject].version}, ${vd.getFullYear()}/${vd.getMonth() + 1}/${vd.getDate()} \u0166\u0166 -- offset ${API_Meta[apiproject].offset}`);
         if (!state.hasOwnProperty(apiproject) || state[apiproject].version !== schemaVersion) {
@@ -225,7 +225,7 @@ const Plugger = (() => {
 
     const reconstructOps = (o, msg, msgstate, status, notes) => {
         const runPlugin = c => {
-            const evalstmtrx = /^\s*(?<script>[^(\s]*)\s*\((?<args>.*?)\)(?<!\({&\d+}\))/gi;
+            const evalstmtrx = /^\s*(?<script>[^(\s]*)\s*\((?<args>.*?)\)(?<!\({&\d+}\))$/gi;
             let ret;
             let content = '';
             if (evalstmtrx.test(c)) {
@@ -354,11 +354,107 @@ const PluggerPlugins01 = (() => {
     //		VERSION
     // ==================================================
     const apiproject = 'PluggerPlugins01';
-    const version = '0.0.2';
-    const vd = new Date(1620099268834);
+    const version = '0.0.4';
+    const vd = new Date(1715952845199);
     const versionInfo = () => {
         log(`\u0166\u0166 ${apiproject} v${version}, ${vd.getFullYear()}/${vd.getMonth() + 1}/${vd.getDate()} \u0166\u0166 -- offset continues from Plugger`);
         return;
+    };
+
+    const tickSplit = (s, ticks = ["'", "`", '"'], split = ['|', '#'], mark = '--') => {
+        const escapeRegExp = (string) => { return string.replace(/[.*+\-?^${}()|[\]\\]/g, '\\$&'); };
+        let index = 0;
+        let tokens = [];
+        let markrx,
+            openrx,
+            splitrx;
+
+        class ArgToken {
+            constructor(type = '') {
+                this.type = type;
+                this.results = [];
+            }
+        }
+
+        const validate = () => {
+            if (
+                split && Array.isArray(split) && split.length &&
+                ticks && Array.isArray(ticks) && ticks.length &&
+                s && typeof s === 'string' && s.length
+            ) {
+                markrx = new RegExp(`(?:^|\\s+)${escapeRegExp(mark).replace(/\s/g, '\\s')}(.+?)(?:${split.map(s => escapeRegExp(s)).join('|')})`, 'g');
+                openrx = new RegExp(`^\\s+${escapeRegExp(mark).replace(/\s/g, '\\s')}`);
+                splitrx = new RegExp(`^($|${split.map(s => escapeRegExp(s)).join('|')})`);
+                return true;
+            }
+        };
+
+        const getTick = () => {
+            let tick = '';
+            ticks.some(t => {
+                let res;
+                let rx = new RegExp(`^${escapeRegExp(t)}`);
+                if ((res = rx.exec(s.slice(index))) !== null) {
+                    tick = t;
+                    index += res[0].length;
+                    return true;
+                }
+            });
+            return tick;
+        };
+
+        const transition = (tick) => {
+            let res;
+            if (tick) {
+                let tickrx = new RegExp(`^${escapeRegExp(tick)}`);
+                if ((res = tickrx.exec(s.slice(index))) !== null) {
+                    index += res[0].length;
+                }
+            }
+            if (index < s.length) {
+                if ((res = splitrx.exec(s.slice(index))) !== null) {
+                    index += res[0].length;
+                }
+            }
+        };
+
+        const getPart = (token) => {
+            let tick = getTick();
+            let rx;
+            if (tick) {
+                rx = new RegExp(`^.+?(?=$|${escapeRegExp(tick)})`);
+            } else {
+                rx = new RegExp(`^.+?(?=$|${split.map(s => escapeRegExp(s)).join('|')}|\\s+${escapeRegExp(mark).replace(/\s/g, '\\s')})`);
+            }
+            let res = rx.exec(s.slice(index));
+            token.results.push(res[0]);
+            index += res[0].length;
+            if (index < s.length) {
+                transition(tick);
+            }
+        };
+
+        const getArg = () => {
+            let res;
+            markrx.lastIndex = 0;
+            if ((res = markrx.exec(s.slice(index))) === null) {
+                index = s.length;
+                return;
+            }
+            let token = new ArgToken(res[1]);
+            index += markrx.lastIndex;
+            while (index < s.length && !openrx.test(s.slice(index))) {
+                getPart(token);
+            }
+            tokens.push(token);
+        };
+
+        if (validate()) {
+            while (index < s.length) {
+                getArg();
+            }
+            return tokens;
+        }
     };
 
     const listen = (m) => {
@@ -537,10 +633,37 @@ const PluggerPlugins01 = (() => {
         }
     };
 
+    const replace = (m) => {
+        // expected syntax: !replace --source|source text --find|search text 1|replace text 1|i --find|'search text|2'|replace text 2'
+        const escapeRegExp = (string) => { return string.replace(/[.*+\-?^${}()|[\]\\]/g, '\\$&'); };
+
+        let args = tickSplit(m.content);
+        let source;
+        let findargs = args.reduce((m, v) => {
+            if (/^source$/i.test(v.type)) {
+                source = v.results[0] || '';
+            } else if (/^find$/i.test(v.type)) {
+                //m.push(v);
+                if (v.results.length === 2 || (v.results.length > 2 && !/i/i.test(v.results[2]))) {
+                    m.push([new RegExp(escapeRegExp(v.results[0]), 'g'), v.results[1]]);
+                } else if (v.results.length === 3 && /i/i.test(v.results[2])) {
+                    m.push([new RegExp(escapeRegExp(v.results[0]), 'gi'), v.results[1]]);
+                }
+            }
+            return m;
+        }, []);
+
+
+        return findargs.reduce((m, v) => {
+            m = m.replace(...v);
+            return m;
+        }, source);
+    };
+
     on('ready', () => {
         versionInfo();
         try {
-            Plugger.RegisterRule(getDiceByVal, getDiceByPos, filter);
+            Plugger.RegisterRule(getDiceByVal, getDiceByPos, filter, replace);
         } catch (error) {
             log(`ERROR Registering to PlugEval: ${error.message}`);
         }

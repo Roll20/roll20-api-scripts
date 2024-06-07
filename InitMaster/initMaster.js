@@ -85,14 +85,32 @@ API_Meta.InitMaster={offset:Number.MAX_SAFE_INTEGER,lineCount:-1};
  *                     magical multipliers to creature attacks. Fixed issues with magical multipliers
  *                     on off-hand weapon attacks. Implemented optional magical weapon plus effect
  *                     on weapon speed.
+ * v3.1.0  02/02/2024  Reworked weapon/attack initiative to use the InHand table where possible (i.e.
+ *                     if AttackMaster is loaded) for management of number of attacks per round and
+ *                     other aspects that are common to a weapon as opposed to a Weapon Table entry.
+ * v3.2.0  23/02/2024  Non-functional release to align release numbers.
+ * v3.2.1  24/02/2024  Fix init-mod to allow slow to reduce number of attacks
+ * v3.3.0  13/03/2024  Fix major bug with attacking with 2 weapons where one or both are ranged.
+ *                     Change two-weapon attack initiative to select using weapon names, with an 
+ *                     initial default of prime & off-hand. Change initiative to use weapon names
+ *                     with initial defaults of prime hand, while still allowing user-defined
+ *                     weapons. Added init-chosen|max attribute to char sheets if the initiative
+ *                     roll is to be fixed to a specific value. Fixed speed calculations that include
+ *                     multiply '*', divide '/' and parentheses '(' & ')'
+ * v3.4.0  06/04/2024  Fixed creature initiative where creature has both innate and weapon attacks
+ *                     Provide --check-init and --set-mods commands to add and remove modifiers to
+ *                     initiative rolls and record them in a table, with a dialog to show to players.
+ *                     Fixed detection of creature innate attacks where none exist, and count them
+ *                     where correct count field not recorded. Made default attack initiative setting
+ *                     more reliable. Adjusted "Set Round No." default to blank which defaults to +1.
  */
 
 var initMaster = (function() {
 	'use strict'; 
-	var version = '3.0.0',
+	var version = '3.4.0',
 		author = 'Richerd @ Damery',
 		pending = null;
-    const lastUpdate = 1700058244;
+    const lastUpdate = 1712853841;
 
 	/*
 	 * Define redirections for functions moved to the RPGMaster library
@@ -101,6 +119,7 @@ var initMaster = (function() {
 	const getRPGMap = (...a) => libRPGMaster.getRPGMap(...a);
 	const setAttr = (...a) => libRPGMaster.setAttr(...a);
 	const attrLookup = (...a) => libRPGMaster.attrLookup(...a);
+	const evalAttr = (...a) => libRPGMaster.evalAttr(...a);
 	const abilityLookup = (...a) => libRPGMaster.abilityLookup(...a);
 	const getTableField = (...t) => libRPGMaster.getTableField(...t);
 	const getTable = (...t) => libRPGMaster.getTable(...t);
@@ -109,7 +128,11 @@ var initMaster = (function() {
 	const findThePlayer = (...a) => libRPGMaster.findThePlayer(...a);
 	const findCharacter = (...a) => libRPGMaster.findCharacter(...a);
 	const fixSenderId = (...a) => libRPGMaster.fixSenderId(...a);
+	const getSetPlayerConfig = (...a) => libRPGMaster.getSetPlayerConfig(...a);
 	const getCharacter = (...a) => libRPGMaster.getCharacter(...a);
+	const classObjects = (...a) => libRPGMaster.classObjects(...a);
+	const classAllowedItem = (...a) => libRPGMaster.classAllowedItem(...a);
+	const resolveData = (...a) => libRPGMaster.resolveData(...a);
 	const caster = (...a) => libRPGMaster.caster(...a);
     const sendToWho = (...m) => libRPGMaster.sendToWho(...m);
     const sendPublic = (...m) => libRPGMaster.sendPublic(...m);
@@ -138,6 +161,7 @@ var initMaster = (function() {
 		defaultTemplate:	'RPGMdefault',
 		spellTemplate:		'RPGMspell',
 		warningTemplate:	'RPGMwarning',
+		menuTemplate:		'RPGMmenu',
 	}; 
 
 	/*
@@ -148,20 +172,55 @@ var initMaster = (function() {
 	var RPGMap = {};
 	
 	/*
+	 * Define various designs for icons, buttons, etc.
+	 */
+
+	var design = {
+		turncolor: '#D8F9FF',
+		roundcolor: '#363574',
+		statuscolor: '#F0D6FF',
+		statusbgcolor: '#897A87',
+		statusbordercolor: '#430D3D',
+		edit_icon: 'https://s3.amazonaws.com/files.d20.io/images/11380920/W_Gy4BYGgzb7jGfclk0zVA/thumb.png?1439049597',
+		delete_icon: 'https://s3.amazonaws.com/files.d20.io/images/11381509/YcG-o2Q1-CrwKD_nXh5yAA/thumb.png?1439051579',
+		settings_icon: 'https://s3.amazonaws.com/files.d20.io/images/11920672/7a2wOvU1xjO-gK5kq5whgQ/thumb.png?1440940765', 
+		apply_icon: 'https://s3.amazonaws.com/files.d20.io/images/11407460/cmCi3B1N0s9jU6ul079JeA/thumb.png?1439137300',
+		initSelect: 'https://s3.amazonaws.com/files.d20.io/images/349576618/1kS4qRhkJBlDCg0DUR0HiA/thumb.png?1688909231',
+		grey_button: '"display: inline-block; background-color: lightgrey; border: 1px solid black; padding: 4px; color: dimgrey; font-weight: extra-light;"',
+		dark_button: '"display: inline-block; background-color: darkgrey; border: 1px solid black; padding: 4px; color: dimgrey; font-weight: extra-light;"',
+		selected_button: '"display: inline-block; background-color: white; border: 1px solid red; padding: 4px; color: red; font-weight: bold;"',
+		green_button: '"display: inline-block; background-color: white; border: 1px solid lime; padding: 4px; color: darkgreen; font-weight: bold;"',
+		boxed_number: '"display: inline-block; background-color: yellow; border: 1px solid blue; padding: 2px; color: black; font-weight: bold;"'
+	};
+	
+	/*
+	 * Set the default timeout for asynchronous processes
+	 */
+	 
+	var asyncTime = 50;
+	
+	/*
 	 * InitiativeMaster related help handout information.
 	 */
 	
 	var handouts = Object.freeze({
 	InitMaster_Help:	{name:'InitiativeMaster Help',
-						 version:2.05,
+						 version:2.06,
 						 avatar:'https://s3.amazonaws.com/files.d20.io/images/257656656/ckSHhNht7v3u60CRKonRTg/thumb.png?1638050703',
 						 bio:'<div style="font-weight: bold; text-align: center; border-bottom: 2px solid black;">'
-							+'<span style="font-weight: bold; font-size: 125%">InitiativeMaster Help v2.05</span>'
+							+'<span style="font-weight: bold; font-size: 125%">InitiativeMaster Help v2.06</span>'
 							+'</div>'
 							+'<div style="padding-left: 5px; padding-right: 5px; overflow: hidden;">'
 							+'<h1>Initiative Master API v'+version+'</h1>'
 							+'<h4>and later</h4>'
-							+'<p>This API supports initiative for RPGs using the Turn Order and the Tracker window.  The InitiativeMaster API provides functions dealing with all aspects of: managing how initiative is done; rolling for initiative; for "group" and "individual" initiative types providing Character action selection to determine the speed and number of attacks of weapons, the casting time of spells & the usage speed of magic items; supporting initiative for multiple attacks with one or multiple weapons per round; supporting and tracking actions that take multiple rounds; managing the resulting Turn Order; as well as performing the "End of Day" activity.  It works very closely with the <b>RoundMaster API</b> to the extent that InitiativeMaster cannot work without RoundMaster (though the reverse is possible).  InitiativeMaster also works closely with <b>AttackMaster API</b> and <b>MagicMaster API</b> and uses the data configured on the Character Sheet by these other APIs, although it can use manually completed Character Sheets once correctly configured.  As with all RPGMaster series APIs (other than RoundMaster), the correct <b>RPGMaster Library</b> for the D&D game version and Roll20 character sheet type you are using must also be loaded, to provide the correct rule set, parameters and databases for your campaign.</p>'
+							+'<h3><mark style="color:green">New</mark> in this Help Handout</h3>'
+							+'<ul>'
+							+'<li><mark style="color:green">New</mark> Faster initiatives with pre-selected attacks</li>'
+							+'<li><mark style="color:green">New</mark> Manage initiative mods table on each character sheet</li>'
+							+'<li><mark style="color:green">New</mark> --check-init command to show current initiative mods for a token</li>'
+							+'<li><mark style="color:green">New</mark> --set-mods command to add, change or remove initiative mods for a token</li>'
+							+'</ul>'
+							+'<l1>This API supports initiative for RPGs using the Turn Order and the Tracker window.  The InitiativeMaster API provides functions dealing with all aspects of: managing how initiative is done; rolling for initiative; for "group" and "individual" initiative types providing Character action selection to determine the speed and number of attacks of weapons, the casting time of spells & the usage speed of magic items; supporting initiative for multiple attacks with one or multiple weapons per round; supporting and tracking actions that take multiple rounds; managing the resulting Turn Order; as well as performing the "End of Day" activity.  It works very closely with the <b>RoundMaster API</b> to the extent that InitiativeMaster cannot work without RoundMaster (though the reverse is possible).  InitiativeMaster also works closely with <b>AttackMaster API</b> and <b>MagicMaster API</b> and uses the data configured on the Character Sheet by these other APIs, although it can use manually completed Character Sheets once correctly configured.  As with all RPGMaster series APIs (other than RoundMaster), the correct <b>RPGMaster Library</b> for the D&D game version and Roll20 character sheet type you are using must also be loaded, to provide the correct rule set, parameters and databases for your campaign.</p>'
 							+'<h2>Syntax of InitiativeMaster calls</h2>'
 							+'<p>The InitiativeMaster API is called using !init.</p>'
 							+'<pre>!init --help</pre>'
@@ -198,8 +257,8 @@ var initMaster = (function() {
 							+'<p>Creatures using the Innate Monster Attack fields on the AD&D2e Character Sheet Monster tab benefit from an extended syntax for entries in these fields: each field can take</p>'
 							+'<pre>damage dice roll,[Attack name],[speed],[dmg type] </pre>'
 							+'<p>for example <code>1d8,Claw,2,S</code> and <code>2d4+1,Club+1,5,B</code>.  These will result in possible initiative actions for that creature for <b>Claw</b> and <b>Club+1</b>.  If Attack Name is omitted, the dice roll is displayed as the action name instead.  If the Speed is omitted, the Innate attack speed field value is used instead.</p>'
-							+'<h3>Effect of Magic on Initiative</h3>'
-							+'<p>The system can take into account various modifiers applied by spells and/or magic items (e.g. Haste and Slow spells), and the spell, power & magic item macros provided with the <b>MagicMaster API</b> use this functionality when used in conjunction with <b>RoundMaster</b> <i>Effects</i>.  <b>The Character Sheet Setup handout</b> states which Character Sheet fields to enter the modifiers into in order for them to be taken into account.</p>'
+							+'<h3><span style='+design.selected_button+'>New:</span> Effect of Magic on Initiative</h3>'
+							+'<p>The system can take into account various modifiers applied by spells and/or magic items (e.g. Haste and Slow spells), and the spell, power & magic item macros provided with the <b>MagicMaster API</b> use this functionality when used in conjunction with <b>RoundMaster</b> <i>Effects</i>. Mods set, amended or cleared with the provided commands will be stored on the character sheet and can be examined by the player alongside a tag describing each initiative mod.</p>'
 							+'<h3>Multi-attack Initiatives</h3>'
 							+'<p>The system can also create multiple initiative turns for weapons that achieve multiple attacks per round, like bows and daggers, as well as by the class, level and proficiency of the character or any combination of the three as per the D&D game version rules (held in the specific version of the <i>RPGMaster Library</i> you have loaded), including 3 attacks per 2 rounds, or 5 per 2.  Also Fighter and Rogue classes using 2 weapons are catered for, even with those weapons possibly having multiple attacks themselves - the weapon specified by the character as the Primary will achieve its multiple attacks, whereas the secondary weapon will only get the number of attacks specified as per the rules for multiple attacks in the game version you are using.</p>'
 							+'<h3>Multi-round Initiatives</h3>'
@@ -224,11 +283,12 @@ var initMaster = (function() {
 							+'<p>All commands are preceded by !init unless otherwise stated.</p>'
 							+'<h3>1. Manage Initiative type, rolls & party</h3>'
 							+'<pre>--init [party-roll]|[foes-roll]<br>'
-							+'--type < STANDARD / GROUP / INDIVIDUAL ></pre>'
+							+'--type < STANDARD / GROUP / INDIVIDUAL ><br>'
+							+'--init-level < WEAPON / ACTION ></pre>'
 							+'<h3>2. Show group / individual Initiative menus</h3>'
 							+'<pre>--menu [token-id]<br>'
 							+'--monmenu [token-id]</pre>'
-							+'<h3>3. Show action-specific Initiative menus</h3>'
+							+'<h3>3. Show Initiative menus and mods</h3>'
 							+'<pre>--weapon [token-id]<br>'
 							+'--monster [token-id]<br>'
 							+'--complex [token-id]<br>'
@@ -237,7 +297,9 @@ var initMaster = (function() {
 							+'--power [token-id]<br>'
 							+'--mibag [token-id]<br>'
 							+'--thief [token-id]<br>'
-							+'--other [token-id]</pre>'
+							+'--other [token-id]<br>'
+							+'<span style='+design.selected_button+'>New:</span>--check-init [token-id]<br>'
+							+'<span style='+design.selected_button+'>New:</span>--set-mods [token-id]|cmd|[=][+/-]mod|[=][+/-]mult|[SILENT]</pre>'
 							+'<h3>4. Maintain the Turn Order and Rounds</h3>'
 							+'<pre>--maint<br>'
 							+'--check-tracker<br>'
@@ -260,6 +322,7 @@ var initMaster = (function() {
 							+'<p>This command displays a chat menu to specify:</p>'
 							+'<ul>'
 							+'	<li>the type of initiative to do (standard, group or individual),</li>'
+							+'	<li>the level of detail of attack action choices (by weapon or by action),</li>'
 							+'	<li>the initiative rolls for the Party and the Foes (for standard and group initiative),</li>'
 							+'	<li>who is in the Party,</li>'
 							+'	<li>to check if everyone has selected their action for the next round (for group and individual initiative),</li>'
@@ -272,12 +335,17 @@ var initMaster = (function() {
 							+'</table>'
 							+'<p>The type of initiative selected persists between game sessions.</p>'
 							+'<p>Who is in the party can be defined by using API Buttons on the menu to do one of: search all maps in the Campaign for tokens controlled by Players; search just the map the Players are on for tokens controlled by Players; select a number of tokens on any map and add them to the list; or replace the whole list with the selected tokens.</p>'
+							+'<p>The level of detail for initiative selections involving an attack can be selected to be "by weapon" or "by action". E.g. if a <i>Longsword+1,+3 vs Undead</i> has two attack action lines (a +1 attack, and another for +3 vs Undead) in the melee weapon table, the <i>initiative by weapon</i> option will just show 1 option of "Longsword+1,+3 vs Undead" whereas the <i>initiative by action</i> option will offer two initiative options of "Longsword+1" and "Longsword+3 vs Undead". The GM can choose which level of detail is presented to players.</p>'
 							+'<p>Another API button checks to see if the Turn Order contains entries for every token listed as being in the Party, i.e. that everybody has selected their actions for the next round.</p>'
 							+'<p>This menu can appear automatically as each completed round finishes if <b>RoundMaster API</b> is managing the Turn Order and Rounds.  This is useful for standard and group initiative, as the first thing that needs to happen is for the Party & Foe initiative dice rolls to be entered.  It is less useful for this menu to appear for individual initiative, and it can be turned off with an API Button on the menu.</p>'
 							+'<h4>1.2 Set the type of Initiative being used in the Campaign</h4>'
 							+'<pre>--type < STANDARD / GROUP / INDIVIDUAL ></pre>'
 							+'<p>Takes a mandatory initiative type which must be one of those shown.</p>'
 							+'<p>This command sets the initiative type to the specified type without bringing up the complete --init menu.  The type of initiative specified persists between game sessions.</p>'
+							+'<h4>1.3 Set attack initiative level of detail</h4>'
+							+'<pre>--init-level < WEAPON / ACTION ></pre>'
+							+'<p>Takes a mandatory initiative level which must be one of those shown.</p>'
+							+'<p>This command sets the level of detail for players to specify initiative actions for attacks, which can be at the level of weapons in-hand or (where individual weapons have more than one possible attack action) at the level of every possible attack action. See the "--init" command above for more details and an example.</p>'
 							+'<br>'
 							+'<h3>2. Show Group / Individual initiative action selection menus</h3>'
 							+'<h4>2.1 Display a menu of possible actions for the selected Character / NPC</h4>'
@@ -331,6 +399,14 @@ var initMaster = (function() {
 							+'<pre>--other [token-id]</pre>'
 							+'<p>Takes an optional token ID.</p>'
 							+'<p>Displays a menu of other (non-attacking) actions that the Character / NPC / creature can take, namely: Moving (speed 0 as it is an innate ability); Changing Weapon (also speed 0 but takes all round); Doing Nothing (obviously speed 0); and one that allows the Player to enter a description and specify a speed for that action (presumably with the agreement of the DM).</p>'
+							+'<h4>3.10 <span style='+design.selected_button+'>New:</span> View current initiative modifiers</h4>'
+							+'<pre>--check-init [token-id]</pre>'
+							+'<p>Takes an optional token ID.</p>'
+							+'<p>Displays a dialog showing all currently in-play initiative modifiers for the character represented by the identified or selected token. Also provides buttons to add, change or remove modifiers - one for mods that add or subtract to the initiative roll, and one for mods that multiply or reduce the number of attack actions the character can undertake. See the --set-mods command for more information.</p>'
+							+'<h4>3.11 <span style='+design.selected_button+'>New:</span> Add, change or remove modifiers</h4>'
+							+'<pre>--set-mods [token-id] | (DEL / MOD / MULT / BOTH) | name | [[=][+/-]mod] | [[=][+/-]mult] | [SILENT]</pre>'
+							+'<p>Takes an optional token ID, a command specifying the action, the name of the mod, the optional value of an addative modifier optionally preceeded with = or - or +, the optional value of a multiplying modifier optionally preceeded with = or - or +, and an optional "silent" qualifier.</p>'
+							+'<p>Sets, changes, or deletes a named initiative modifier that can have one or both of additive and multiplicative elements. Each of these modifiers can include maths to be evaluated using standard maths operators +, -, *, /, (, ), and ^(#,#,...) for max, and v(#,#,...) for min (commas can be replaced by semi-colons ;). Preceeding a mod or mult value by = will set that value (e.g. =-2 will set the value to -2), or preceeding by + or - without the = will amend the current value by that amount. Including the SILENT argument will not display any outcome, while ommitting it will display the result in a --check-init dialog.</p>'
 							+'<br>'
 							+'<h3>4. Maintain the Turn Order and Rounds</h3>'
 							+'<h4>4.1 Display the DM\'s round maintenance menu</h4>'
@@ -426,6 +502,8 @@ var initMaster = (function() {
 	var spellLevels;
 	var casterLevels;
 	var spellsPerLevel;
+	var reClassSpecs;
+	var reACSpecs;
 	
 	var DBindex = {};
 	var initSelection = {};
@@ -466,7 +544,7 @@ var initMaster = (function() {
 		MON_ATTACK:	'MON_ATTACK',
 		MON_INNATE:	'MON_INNATE',
 		MON_MELEE:	'MON_MELEE',
-		MELEE:		'MELEE',
+		MELEE:		'MW_MELEE',
 		ONEWEAPON:	'ONEWEAPON',
 		TWOWEAPONS:	'TWOWEAPONS',
 		ALLWEAPONS: 'ALLWEAPONS',
@@ -475,7 +553,7 @@ var initMaster = (function() {
 		MW_SECOND:	'MW_SECOND',
 		RW_SECOND:	'RW_SECOND',
 		MON_RANGED:	'MON_RANGED',
-		RANGED:		'RANGED',
+		RANGED:		'RW_RANGED',
 		MU_SPELL:	'MU_SPELL',
 		PR_SPELL:	'PR_SPELL',
 		POWER:		'POWER',
@@ -490,6 +568,7 @@ var initMaster = (function() {
 		SPECIFY:	'SPECIFY',
 		CARRY:		'CARRY',
 		SUBMIT:		'SUBMIT',
+		SETMODS:	'SETMODS',
 	});
 	
 	var Caster = Object.freeze({
@@ -560,6 +639,8 @@ var initMaster = (function() {
 	const reIgnore = /[\s\-\_]*/gi;
 	const reRepeatingTable = /^(repeating_.*)_\$(\d+)_.*$/;
 	const reDiceRollSpec = /(?:^\d+$|\d+d\d+)/i;
+	const reClassRaceData = /}}\s*?(?:Class|Race)Data\s*?=.*?{{/im;
+	const reNotAttackData = /}}[\s\w\-]*?(?<!tohit|dmg|ammo|range)data\s*?=(.+?){{/im;
 	
 	var	replacers = [
 			[/\\lbrc;?/g, "{"],
@@ -583,24 +664,6 @@ var initMaster = (function() {
 			[/\\amp;?/g, "&"],
 		];
 
-	var design = {
-		turncolor: '#D8F9FF',
-		roundcolor: '#363574',
-		statuscolor: '#F0D6FF',
-		statusbgcolor: '#897A87',
-		statusbordercolor: '#430D3D',
-		edit_icon: 'https://s3.amazonaws.com/files.d20.io/images/11380920/W_Gy4BYGgzb7jGfclk0zVA/thumb.png?1439049597',
-		delete_icon: 'https://s3.amazonaws.com/files.d20.io/images/11381509/YcG-o2Q1-CrwKD_nXh5yAA/thumb.png?1439051579',
-		settings_icon: 'https://s3.amazonaws.com/files.d20.io/images/11920672/7a2wOvU1xjO-gK5kq5whgQ/thumb.png?1440940765', 
-		apply_icon: 'https://s3.amazonaws.com/files.d20.io/images/11407460/cmCi3B1N0s9jU6ul079JeA/thumb.png?1439137300',
-		initSelect: 'https://s3.amazonaws.com/files.d20.io/images/349576618/1kS4qRhkJBlDCg0DUR0HiA/thumb.png?1688909231',
-		grey_button: '"display: inline-block; background-color: lightgrey; border: 1px solid black; padding: 4px; color: dimgrey; font-weight: extra-light;"',
-		dark_button: '"display: inline-block; background-color: darkgrey; border: 1px solid black; padding: 4px; color: dimgrey; font-weight: extra-light;"',
-		selected_button: '"display: inline-block; background-color: white; border: 1px solid red; padding: 4px; color: red; font-weight: bold;"',
-		green_button: '"display: inline-block; background-color: white; border: 1px solid lime; padding: 4px; color: darkgreen; font-weight: bold;"',
-		boxed_number: '"display: inline-block; background-color: yellow; border: 1px solid blue; padding: 2px; color: black; font-weight: bold;"'
-	};
-	
 	var initMaster_tmp = (function() {
 		var templates = {
 			button: _.template('<a style="display: inline-block; font-size: 100%; color: black; padding: 3px 3px 3px 3px; margin: 2px 2px 2px 2px; border: 1px solid black; border-radius: 0.5em; font-weight: bold; text-shadow: -1px -1px 1px #FFF, 1px -1px 1px #FFF, -1px 1px 1px #FFF, 1px 1px 1px #FFF; background-color: #C7D0D2;" href="<%= command %>"><%= text %></a>'),
@@ -670,6 +733,8 @@ var initMaster = (function() {
 				{state.initMaster.dmRoll = '';}
 			if (_.isUndefined(state.initMaster.dispRollOnInit))
 				{state.initMaster.dispRollOnInit = true;}
+			if (_.isUndefined(state.initMaster.weapInit))
+				{state.initMaster.weapInit = true;}
 			if (_.isUndefined(state.initMaster.waitTime))
 				{state.initMaster.waitTime = 500;}
 				
@@ -683,6 +748,8 @@ var initMaster = (function() {
 			spellLevels = RPGMap.spellLevels;
 			casterLevels = RPGMap.casterLevels;
 			spellsPerLevel = RPGMap.spellsPerLevel;
+			reClassSpecs = RPGMap.reClassSpecs;
+			reACSpecs = RPGMap.reACSpecs;
 			flags.noWaitMsg = true;
 			setTimeout( () => {flags.noWaitMsg = false;}, 5000 );
 
@@ -722,6 +789,7 @@ var initMaster = (function() {
 		        var player = p;
 		        if (player) {
     		        if (playerIsGM(player.id)) {
+						state.initMaster.gmID = player.id;
 	    	            return player.id;
                     }
 		        }
@@ -729,7 +797,7 @@ var initMaster = (function() {
                 return playerGM.id;
             }
         }
-        return undefined;
+        return state.initMaster.gmID;
     }
 
 	/**
@@ -1026,6 +1094,7 @@ var initMaster = (function() {
 		}
 		
 		if (property == 'current') {
+//			log('setInitVars: pushing action '+attrLookup( charCS, fields.Init_action )+' to second weapon');
 			setAttr( charCS, fields.Weapon_2ndNum, attrLookup( charCS, fields.Weapon_num ) );
 			setAttr( charCS, fields.Init_2ndAction, attrLookup( charCS, fields.Init_action ) );
 			setAttr( charCS, fields.Init_2ndSpeed, attrLookup( charCS, fields.Init_speed ) );
@@ -1035,6 +1104,7 @@ var initMaster = (function() {
 			setAttr( charCS, fields.Init_2nd2Hweapon, attrLookup( charCS, fields.Init_2Hweapon ) );
 		}
 		
+//		log('setInitVars: setting action '+args[3]+' as primary weapon');
 		setAttr( charCS, [fields.Weapon_num[0], property], args[2]);
 		setAttr( charCS, [fields.Init_action[0], property], args[3]);
 		setAttr( charCS, [fields.Init_speed[0], property], args[4]);
@@ -1044,7 +1114,7 @@ var initMaster = (function() {
 		setAttr( charCS, [fields.Init_attacks[0], property], (args[9] || 1));
 		setAttr( charCS, [fields.Init_chosen[0], property], 1);
 		
-		log('setInitVars: init_speed = '+args[4]);
+//		log('setInitVars: init_speed = '+args[4]);
 	};
 
 	/*
@@ -1102,6 +1172,72 @@ var initMaster = (function() {
 		return caster( charCS, casterType ).clv;
 	}
 	
+	/*
+	 * If the InHand table exists, set the number of attacks
+	 * counter for the specified weapon.
+	 */
+	 
+	var setAttkCount = function( charCS, weapon, attkCount ) {
+		let InHandTable = getTableField( charCS, {}, fields.InHand_table, fields.InHand_miName );
+		InHandTable = getTableField( charCS, InHandTable, fields.InHand_table, fields.InHand_attkCount );
+		InHandTable.tableSet( fields.InHand_attkCount, InHandTable.tableFind( fields.InHand_miName, weapon ), attkCount);
+	};
+	
+	/*
+	 * Remember the reference of the initiative weapon
+	 * so the same one is set as default next time
+	 */
+	 
+	var rememberWeapRef = function( charCS, hand, ref ) {
+		if (_.isNull(ref)) ref = undefined;
+//		log('rememberWeapRef: setting hand '+hand+' to be ref = '+ref);
+		setAttr( charCS, [fields.Init_hand[0]+hand,fields.Init_hand[1]], ref );
+	};
+	
+	/*
+	 * Create args for a weapon specification
+	 */
+	 
+	var buildWeaponArgs = function( charCS, cmd, weaponRef ) {
+		
+//		log('buildWeaponArgs: cmd = '+cmd+', weaponRef = '+weaponRef);
+		
+		var fieldObj = {
+				melee: {name:fields.MW_name,miName:fields.MW_miName,styleSpeed:fields.MW_styleSpeed,adj:fields.MW_adj,speed:fields.MW_speed,styleAttks:fields.MW_styleAttks,noAttks:fields.MW_noAttks,preInit:fields.MW_preInit,attkRound:fields.MW_attkRound,attkCount:fields.MW_attkCount,curCount:fields.MW_curCount,twoHanded:fields.MW_twoHanded,type:fields.MW_type},		
+				ranged:{name:fields.RW_name,miName:fields.RW_miName,styleSpeed:fields.RW_styleSpeed,adj:fields.RW_adj,speed:fields.RW_speed,styleAttks:fields.RW_styleAttks,noAttks:fields.RW_noAttks,preInit:fields.RW_preInit,attkRound:fields.RW_attkRound,attkCount:fields.RW_attkCount,curCount:fields.RW_curCount,twoHanded:fields.RW_twoHanded,type:fields.RW_type}
+			},
+			attackCount, attacks,
+			WeaponTables = getTable( charCS, (cmd.includes('MW') ? fieldGroups.MELEE : fieldGroups.RANGED )),
+			attrs = ((cmd.includes('MW')) ? fieldObj.melee : fieldObj.ranged),
+			weaponName = (WeaponTables.tableLookup( attrs.miName, weaponRef ) || WeaponTables.tableLookup( attrs.name, weaponRef ) || ''),
+			weaponType = (WeaponTables.tableLookup( attrs.type, weaponRef ) || ''),
+			speedMult = Math.max(parseFloat(attrLookup( charCS, fields.initMultiplier ) || 1), 0.5),
+			styleSpeed = WeaponTables.tableLookup( attrs.styleSpeed, weaponRef) || 0,
+			weaponPlus = (parseInt(WeaponTables.tableLookup( attrs.adj, weaponRef)) || 0) * -1,
+			weapSpeed = (WeaponTables.tableLookup( attrs.speed, weaponRef) || 0) + ('-+'.includes(styleSpeed[0])?styleSpeed:'+'+styleSpeed) + (state.attackMaster.weapRules.initPlus ? (weaponPlus >= 0 ? '+' : '') + weaponPlus : '+0'),
+			styleNum = WeaponTables.tableLookup( attrs.styleAttks, weaponRef) || 0,
+			attackNum = (WeaponTables.tableLookup( attrs.noAttks, weaponRef ) || 1),
+			attackNum = (styleNum && styleNum != '0') ? '(('+attackNum+')+('+styleNum+'))' : attackNum,
+			preInit = (WeaponTables.tableLookup( attrs.preInit, weaponRef ) || 0),
+			weapSpecial = (proficient( charCS, weaponName, weaponType, '' ) > 0) ? 1 : preInit,
+			twoHanded = (WeaponTables.tableLookup( attrs.twoHanded, weaponRef ) || 0),
+			curRound = WeaponTables.tableLookup( attrs.attkRound, weaponRef ) || 0;
+		if (curRound != state.initMaster.round) {
+			attackCount = WeaponTables.tableLookup( attrs.attkCount, weaponRef ) || 0;
+			WeaponTables = WeaponTables.tableSet( attrs.curCount, weaponRef, attackCount );
+			WeaponTables = WeaponTables.tableSet( attrs.attkRound, weaponRef, state.initMaster.round );
+		} else {
+			attackCount = WeaponTables.tableLookup( attrs.curCount, weaponRef ) || 0;
+		}
+		attackCount = eval( attackCount + '+(' + speedMult + '*' + attackNum + ')' );
+		attacks = Math.floor( attackCount );
+		WeaponTables.tableSet( attrs.attkCount, weaponRef, (attackCount-attacks) );
+		setAttkCount( charCS, WeaponTables.tableLookup( attrs.miName, weaponRef ), (attackCount-attacks) );
+		
+//		log('buildWeaponArgs: name = '+weaponName);
+		
+		return {name:weaponName, speed:weapSpeed, mult:speedMult, attkNum:attackNum, preInit:preInit, attks:attacks, twoHanded:twoHanded, type:weaponType, special:weapSpecial};
+	}	
 
 //----------------------------------- button press handlers ------------------------------------------	
 	/**
@@ -1140,6 +1276,10 @@ var initMaster = (function() {
 				+ '|'+monIndex;
 
 		sendAPI( buildCall, senderId );
+
+		rememberWeapRef(charCS,0,rowIndex);
+		rememberWeapRef(charCS,1,undefined);
+		rememberWeapRef(charCS,2,undefined);
 		return;
 	}
 	
@@ -1155,52 +1295,55 @@ var initMaster = (function() {
 			curRound, attacks, twoHanded,
 			tokenID = args[1],
 			rowIndex = args[2],
-			refIndex = args[3],
-			buildCall = '',
-			WeaponTables = getTable( charCS, fieldGroups.MELEE );
+			refIndex = args[3];
 
 		if (rowIndex == undefined || refIndex == undefined) {
 			throw new Error( 'Invalid button while handling a melee attack initiative selection' );
 		}
-
-		weaponName = (WeaponTables.tableLookup( fields.MW_name, refIndex ) || '');
-		weaponPlus = (parseInt(WeaponTables.tableLookup( fields.MW_adj, refIndex )) || 0) * -1;
-		styleSpeed = WeaponTables.tableLookup( fields.MW_styleSpeed, refIndex) || 0;
-		weapSpeed = (WeaponTables.tableLookup( fields.MW_speed, refIndex) || 0) + ('-+'.includes(styleSpeed[0])?styleSpeed:'+'+styleSpeed) + (state.attackMaster.weapRules.initPlus ? (weaponPlus >= 0 ? '+' : '') + weaponPlus : '+0');
-		speedMult = Math.max(parseFloat(attrLookup( charCS, fields.initMultiplier ) || 1), 1);
-		styleNum = WeaponTables.tableLookup( fields.MW_styleAttks, refIndex) || 0;
-		attackNum = (WeaponTables.tableLookup( fields.MW_noAttks, refIndex ) || 1);
-		attackNum = (styleNum && styleNum != '0') ? '(('+attackNum+')+('+styleNum+'))' : attackNum;
-		preInit = (WeaponTables.tableLookup( fields.MW_preInit, refIndex ) || 0);
-		twoHanded = (WeaponTables.tableLookup( fields.MW_twoHanded, refIndex ) || 0);
-		curRound = WeaponTables.tableLookup( fields.MW_attkRound, refIndex ) || 0;
-		if (curRound != state.initMaster.round) {
-			attackCount = WeaponTables.tableLookup( fields.MW_attkCount, refIndex ) || 0;
-			WeaponTables = WeaponTables.tableSet( fields.MW_curCount, refIndex, attackCount );
-			WeaponTables = WeaponTables.tableSet( fields.MW_attkRound, refIndex, state.initMaster.round );
-		} else {
-			attackCount = WeaponTables.tableLookup( fields.MW_curCount, refIndex ) || 0;
-		}
-		attackCount = eval( attackCount + '+(' + speedMult + '*' + attackNum + ')' );
-		attacks = Math.floor( attackCount );
-		WeaponTables.tableSet( fields.MW_attkCount, refIndex, (attackCount-attacks) );
 		
-		buildCall = '!init --buildMenu ' + senderId 
-				+ '|' + (charType == CharSheet.MONSTER ? MenuType.COMPLEX : MenuType.WEAPON)
-				+ '|' + tokenID
-				+ '|' + rowIndex
-				+ '|with their ' + weaponName
-				+ '|[[' + weapSpeed + ']]'
-				+ '|' + speedMult + '*' + attackNum
-				+ '|' + preInit
-				+ '|' + twoHanded
-				+ '|'
-				+ '|' + attacks;
-				
-		log('handleInitMW: sending command '+buildCall);
+//		log('handleInitMW: rowIndex = '+rowIndex+', refIndex = '+refIndex);
+
+		var weapArgs = buildWeaponArgs( charCS, BT.MELEE, refIndex ),	
+			buildCall = '!init --buildMenu ' + senderId 
+					+ '|' + (charType == CharSheet.MONSTER ? MenuType.COMPLEX : MenuType.WEAPON)
+					+ '|' + tokenID
+					+ '|' + rowIndex
+					+ '|with their ' + weapArgs.name
+					+ '|[[' + weapArgs.speed + ']]'
+					+ '|' + weapArgs.mult + '*' + weapArgs.attkNum
+					+ '|' + weapArgs.preInit
+					+ '|' + weapArgs.twoHanded
+					+ '|'
+					+ '|' + weapArgs.attks;
 				
 		sendAPI( buildCall, senderId );
+		rememberWeapRef(charCS,(weapArgs.twoHanded > 0 ? 2 : 0),rowIndex);
+		rememberWeapRef(charCS,1,undefined);
+		rememberWeapRef(charCS,(weapArgs.twoHanded < 1 ? 2 : 0),undefined);
 		return;
+	}
+	
+	/**
+	* Handle the Two Weapons button being selected on the weapons menu
+	**/
+	
+	var handleTwoWeapons = function( charCS, args, senderId ) {
+		
+		var command = args[0],
+			tokenID = args[1],
+			rowIndex = args[2],
+			rowIndex2 = args[3],
+			refIndex = args[4],
+			refIndex2 = args[5],
+			weapon, weaponRef;
+			
+		if (rowIndex == rowIndex2)
+			{return;}
+
+		let weapArgs = buildWeaponArgs( charCS, ((rowIndex%2) > 0 ? BT.MELEE : BT.RANGED), refIndex );
+		setInitVars( charCS, [MenuType.MW_PRIME,tokenID,refIndex,('with their '+weapArgs.name),evalAttr(weapArgs.speed),(weapArgs.mult+'*'+weapArgs.attkNum),weapArgs.preInit,'1','0',weapArgs.attks], 'current');
+		args[0] = ((rowIndex2%2) > 0 ? BT.MELEE : BT.RANGED);
+		handleSecondWeapon( charCS, args, senderId );
 	}
 	
 	/**
@@ -1213,68 +1356,22 @@ var initMaster = (function() {
 			tokenID = args[1],
 			rowIndex = args[2],
 			refIndex = args[3],
-			WeaponTables = getTable( charCS, fieldGroups.MELEE ),
-			weaponName, weapSpeed, weaponPlus, styleSpeed,
-			speedMult, attackNum, styleNum,
-			attackCount, attacks, curRound,
-			buildCall, preInit;
+			buildCall;
 			
 		if (rowIndex > 0) {
-			speedMult = Math.max(parseFloat(attrLookup( charCS, fields.initMultiplier ) || 1), 1);
-		    if (command != BT.RW_PRIME) {
-    			weaponName = (WeaponTables.tableLookup( fields.MW_name, refIndex ) || '');
-				weaponPlus = (parseInt(WeaponTables.tableLookup( fields.MW_adj, refIndex)) || 0) * -1;
-				styleSpeed = WeaponTables.tableLookup( fields.MW_styleSpeed, refIndex) || 0;
-				weapSpeed = (WeaponTables.tableLookup( fields.MW_speed, refIndex) || 0) + ('-+'.includes(styleSpeed[0])?styleSpeed:'+'+styleSpeed) + (state.attackMaster.weapRules.initPlus ? (weaponPlus >= 0 ? '+' : '') + weaponPlus : '+0');
-				styleNum = WeaponTables.tableLookup( fields.MW_styleAttks, refIndex) || 0;
-				attackNum = (WeaponTables.tableLookup( fields.MW_noAttks, refIndex ) || 1);
-				attackNum = (styleNum && styleNum != '0') ? ('(('+attackNum+')+('+styleNum+'))') : attackNum;
-				preInit = (WeaponTables.tableLookup( fields.MW_preInit, refIndex ) || 0);
-				curRound = WeaponTables.tableLookup( fields.MW_attkRound, refIndex ) || 0;
-				if (curRound != state.initMaster.round) {
-					attackCount = WeaponTables.tableLookup( fields.MW_attkCount, refIndex ) || 0;
-					WeaponTables = WeaponTables.tableSet( fields.MW_curCount, refIndex, attackCount );
-					WeaponTables = WeaponTables.tableSet( fields.MW_attkRound, refIndex, state.initMaster.round );
-				} else {
-					attackCount = WeaponTables.tableLookup( fields.MW_curCount, refIndex ) || 0;
-				}
-				attackCount = eval( attackCount + '+(' + speedMult + '*' + attackNum + ')' );
-				attacks = Math.floor( attackCount );
-				WeaponTables.tableSet( fields.MW_attkCount, refIndex, (attackCount-attacks) );
-            } else {
-    			weaponName = (WeaponTables.tableLookup( fields.RW_name, refIndex ) || '');
-				weaponPlus = (parseInt(WeaponTables.tableLookup( fields.RW_adj, refIndex)) || 0) * -1;
-				styleSpeed = WeaponTables.tableLookup( fields.RW_styleSpeed, refIndex) || 0;
-				weapSpeed = (WeaponTables.tableLookup( fields.RW_speed, refIndex) || 0) + ('-+'.includes(styleSpeed[0])?styleSpeed:'+'+styleSpeed) + (state.attackMaster.weapRules.initPlus ? (weaponPlus >= 0 ? '+' : '') + weaponPlus : '+0');
-				styleNum = WeaponTables.tableLookup( fields.RW_styleAttks, refIndex) || 0;
-				attackNum = (WeaponTables.tableLookup( fields.RW_noAttks, refIndex ) || 1);
-				attackNum = (styleNum && styleNum != '0') ? '(('+attackNum+')+('+styleNum+'))' : attackNum;
-				preInit = (WeaponTables.tableLookup( fields.RW_preInit, refIndex ) || 0);
-				curRound = WeaponTables.tableLookup( fields.RW_attkRound, refIndex ) || 0;
-				if (curRound != state.initMaster.round) {
-					attackCount = WeaponTables.tableLookup( fields.RW_attkCount, refIndex ) || 0;
-					WeaponTables = WeaponTables.tableSet( fields.RW_curCount, refIndex, attackCount );
-					WeaponTables = WeaponTables.tableSet( fields.RW_attkRound, refIndex, state.initMaster.round );
-				} else {
-					attackCount = WeaponTables.tableLookup( fields.RW_curCount, refIndex ) || 0;
-				}
-				attackCount = eval( attackCount + '+(' + speedMult + '*' + attackNum + ')' );
-				attacks = Math.floor( attackCount );
-				WeaponTables.tableSet( fields.RW_attkCount, refIndex, (attackCount-attacks) );
-            }
+			let weapArgs = buildWeaponArgs( charCS, command, refIndex );	
 
 			buildCall = '!init --buildMenu ' + senderId 
 					+ '|' + MenuType.MW_PRIME
 					+ '|' + tokenID
 					+ '|' + rowIndex
-					+ '|with their ' + weaponName
-					+ '|[[' + weapSpeed + ']]'
-					+ '|' + speedMult + '*' + attackNum
-					+ '|' + preInit
+					+ '|with their ' + weapArgs.name
+					+ '|[[' + weapArgs.speed + ']]'
+					+ '|' + weapArgs.mult + '*' + weapArgs.attkNum
+					+ '|' + weapArgs.preInit
 					+ '|1'
 					+ '|0'
-					+ '|' + attacks;
-					
+					+ '|' + weapArgs.attks;
 		} else {
 			buildCall = '!init --buildMenu ' + senderId 
 					+ '|' + MenuType.MW_MELEE
@@ -1289,8 +1386,10 @@ var initMaster = (function() {
 					+ '|0';
 		}
 		sendAPI( buildCall, senderId );
+		rememberWeapRef(charCS,0,rowIndex);
+		rememberWeapRef(charCS,1,undefined);
+		rememberWeapRef(charCS,2,undefined,senrId);
 		return;
-		
 	}
 	
 	/**
@@ -1305,14 +1404,10 @@ var initMaster = (function() {
 			rowIndex2 = args[3],
 			refIndex = args[4],
 			refIndex2 = args[5],
-			WeaponTables = getTable( charCS, fieldGroups.MELEE ),
-			weapon, weaponRef,
-			weaponName, weapSpeed, weaponPlus, styleSpeed,
-			speedMult, attackNum, styleNum,
-			attackCount, attacks, curRound,
-			buildCall, preInit;
+			weapon, weaponRef;
 			
-		if (rowIndex == rowIndex2)
+
+			if (rowIndex == rowIndex2)
 			{return;}
 
 		if (parseInt(rowIndex2,10) > 0) {
@@ -1322,62 +1417,24 @@ var initMaster = (function() {
 		    weapon = rowIndex;
 		    weaponRef = refIndex;
 		}
-		speedMult = Math.max(parseFloat(attrLookup( charCS, fields.initMultiplier ) || 1), 1);
-		if (command != BT.RW_SECOND) {
-			weaponName = (WeaponTables.tableLookup( fields.MW_name, weaponRef ) || '');
-			styleSpeed = WeaponTables.tableLookup( fields.MW_styleSpeed, weaponRef) || 0;
-			weaponPlus = (parseInt(WeaponTables.tableLookup( fields.MW_adj, weaponRef)) || 0) * -1;
-			weapSpeed = (WeaponTables.tableLookup( fields.MW_speed, weaponRef) || 0) + ('-+'.includes(styleSpeed[0])?styleSpeed:'+'+styleSpeed) + (state.attackMaster.weapRules.initPlus ? (weaponPlus >= 0 ? '+' : '') + weaponPlus : '+0');
-			styleNum = WeaponTables.tableLookup( fields.MW_styleAttks, weaponRef) || 0;
-			attackNum = (WeaponTables.tableLookup( fields.MW_noAttks, weaponRef ) || 1);
-			attackNum = (styleNum && styleNum != '0') ? '(('+attackNum+')+('+styleNum+'))' : attackNum;
-			preInit = (WeaponTables.tableLookup( fields.MW_preInit, weaponRef ) || 0);
-			curRound = WeaponTables.tableLookup( fields.MW_attkRound, weaponRef ) || 0;
-			if (curRound != state.initMaster.round) {
-				attackCount = WeaponTables.tableLookup( fields.MW_attkCount, weaponRef ) || 0;
-				WeaponTables = WeaponTables.tableSet( fields.MW_curCount, weaponRef, attackCount );
-				WeaponTables = WeaponTables.tableSet( fields.MW_attkRound, weaponRef, state.initMaster.round );
-			} else {
-				attackCount = WeaponTables.tableLookup( fields.MW_curCount, weaponRef ) || 0;
-			}
-			attackCount = eval( attackCount + '+(' + speedMult + '*' + attackNum + ')' );
-			attacks = Math.floor( attackCount );
-			WeaponTables.tableSet( fields.MW_attkCount, weaponRef, (attackCount-attacks) );
-		} else {
-			weaponName = (WeaponTables.tableLookup( fields.RW_name, weaponRef ) || '');
-			styleSpeed = WeaponTables.tableLookup( fields.RW_styleSpeed, weaponRef) || 0;
-			weaponPlus = (parseInt(WeaponTables.tableLookup( fields.RW_adj, weaponRef)) || 0) * -1;
-			weapSpeed = (WeaponTables.tableLookup( fields.RW_speed, weaponRef) || 0) + ('-+'.includes(styleSpeed[0])?styleSpeed:'+'+styleSpeed) + (state.attackMaster.weapRules.initPlus ? (weaponPlus >= 0 ? '+' : '') + weaponPlus : '+0');
-			styleNum = WeaponTables.tableLookup( fields.RW_styleAttks, weaponRef) || 0;
-			attackNum = (WeaponTables.tableLookup( fields.RW_noAttks, weaponRef ) || 1);
-			attackNum = (styleNum && styleNum != '0') ? '(('+attackNum+')+('+styleNum+'))' : attackNum;
-			preInit = (WeaponTables.tableLookup( fields.MW_preInit, weaponRef ) || 0);
-			curRound = WeaponTables.tableLookup( fields.RW_attkRound, weaponRef ) || 0;
-			if (curRound != state.initMaster.round) {
-				attackCount = WeaponTables.tableLookup( fields.RW_attkCount, weaponRef ) || 0;
-				WeaponTables = WeaponTables.tableSet( fields.RW_curCount, weaponRef, attackCount );
-				WeaponTables = WeaponTables.tableSet( fields.RW_attkRound, weaponRef, state.initMaster.round );
-			} else {
-				attackCount = WeaponTables.tableLookup( fields.RW_curCount, weaponRef ) || 0;
-			}
-			attackCount = eval( attackCount + '+(' + speedMult + '*' + attackNum + ')' );
-			attacks = Math.floor( attackCount );
-			WeaponTables.tableSet( fields.RW_attkCount, weaponRef, (attackCount-attacks) );
-		}
-			
-		buildCall = '!init --buildMenu ' + senderId 
-				+ '|' + MenuType.MW_SECOND
-				+ '|' + tokenID
-				+ '|' + weapon
-				+ '|with their ' + weaponName
-				+ '|[[' + weapSpeed + ']]'
-				+ '|' + speedMult + '*' + attackNum
-				+ '|' + preInit
-				+ '|1'
-				+ '|' + (rowIndex2 > 0 ? rowIndex : rowIndex2)
-				+ '|' + attacks;
+		
+		var weapArgs = buildWeaponArgs( charCS, command, weaponRef ),	
+			buildCall = '!init --buildMenu ' + senderId 
+					+ '|' + MenuType.MW_SECOND
+					+ '|' + tokenID
+					+ '|' + weapon
+					+ '|with their ' + weapArgs.name
+					+ '|[[' + weapArgs.speed + ']]'
+					+ '|' + weapArgs.mult + '*' + weapArgs.attkNum
+					+ '|' + weapArgs.preInit
+					+ '|1'
+					+ '|' + (rowIndex2 > 0 ? rowIndex : rowIndex2)
+					+ '|' + weapArgs.attks;
 				
 		sendAPI( buildCall, senderId );
+		rememberWeapRef(charCS,0,rowIndex2);
+		rememberWeapRef(charCS,1,rowIndex);
+		rememberWeapRef(charCS,2,undefined);
 		
 		return;
 	}
@@ -1398,48 +1455,23 @@ var initMaster = (function() {
 			throw new Error( 'Invalid button while handling a ranged attack initiative selection' );
 		}
 		
-		var	WeaponTables = getTable( charCS, fieldGroups.RANGED ),
-			weaponName = (WeaponTables.tableLookup( fields.RW_name, refIndex ) || ''),
-			weaponType = (WeaponTables.tableLookup( fields.RW_type, refIndex ) || ''),
-			weaponPlus = (parseInt(WeaponTables.tableLookup( fields.RW_adj, refIndex)) || 0) * -1,
-			styleSpeed = WeaponTables.tableLookup( fields.RW_styleSpeed, refIndex) || 0,
-			weapSpeed = (WeaponTables.tableLookup( fields.RW_speed, refIndex) || 0) + ('-+'.includes(styleSpeed[0])?styleSpeed:'+'+styleSpeed) + (state.attackMaster.weapRules.initPlus ? (weaponPlus >= 0 ? '+' : '') + weaponPlus : '+0'),
-			speedMult = Math.max(parseFloat(attrLookup( charCS, fields.initMultiplier ) || 1), 1),
-			styleNum = WeaponTables.tableLookup( fields.RW_styleAttks, refIndex) || 0,
-			attackNum = (WeaponTables.tableLookup( fields.RW_noAttks, refIndex ) || 1),
-			preInit = (WeaponTables.tableLookup( fields.MW_preInit, refIndex ) || 0),
-			weapSpecial = (proficient( charCS, weaponName, weaponType, '' ) > 0) ? 1 : preInit,
-			twoHanded = (WeaponTables.tableLookup( fields.MW_twoHanded, refIndex ) || 0),
-			buildCall = '',
-			attackCount, attacks, curRound;
-			
-		attackNum = (styleNum && styleNum != '0') ? '(('+attackNum+')+('+styleNum+'))' : attackNum;
-		curRound = WeaponTables.tableLookup( fields.RW_attkRound, refIndex ) || 0;
-		if (curRound != state.initMaster.round) {
-			attackCount = WeaponTables.tableLookup( fields.RW_attkCount, refIndex ) || 0;
-			WeaponTables = WeaponTables.tableSet( fields.RW_curCount, refIndex, attackCount );
-			WeaponTables = WeaponTables.tableSet( fields.RW_attkRound, refIndex, state.initMaster.round );
-		} else {
-			attackCount = WeaponTables.tableLookup( fields.RW_curCount, refIndex ) || 0;
-		}
-		
-		attackCount = eval( attackCount + '+(' + speedMult + '*' + attackNum + ')' );
-		attacks = Math.floor( attackCount );
-		WeaponTables.tableSet( fields.RW_attkCount, refIndex, (attackCount-attacks) );
-
-		buildCall = '!init --buildMenu ' + senderId 
-				+ '|' + (charType == CharSheet.MONSTER ? MenuType.COMPLEX : MenuType.WEAPON)
-				+ '|' + tokenID
-				+ '|' + rowIndex
-				+ '|with their ' + weaponName
-				+ '|[[' + weapSpeed + ']]'
-				+ '|' + speedMult + '*' + attackNum
-				+ '|' + weapSpecial
-				+ '|' + twoHanded
-				+ '|0'
-				+ '|' + attacks;
+		var weapArgs = buildWeaponArgs( charCS, BT.RANGED, refIndex ),
+			buildCall = '!init --buildMenu ' + senderId 
+					+ '|' + (charType == CharSheet.MONSTER ? MenuType.COMPLEX : MenuType.WEAPON)
+					+ '|' + tokenID
+					+ '|' + rowIndex
+					+ '|with their ' + weapArgs.name
+					+ '|[[' + weapArgs.speed + ']]'
+					+ '|' + weapArgs.mult + '*' + weapArgs.attkNum
+					+ '|' + weapArgs.special
+					+ '|' + weapArgs.twoHanded
+					+ '|0'
+					+ '|' + weapArgs.attks;
 
 		sendAPI( buildCall, senderId );
+		rememberWeapRef(charCS,(weapArgs.twoHanded > 0 ? 2 : 0),rowIndex);
+		rememberWeapRef(charCS,1,undefined);
+		rememberWeapRef(charCS,(weapArgs.twoHanded < 1 ? 2 : 0),undefined);
 		return;
 	}
 	
@@ -1683,82 +1715,58 @@ var initMaster = (function() {
 		    initMenu = args[3],
 		    rowIndex2 = args[4],
 			tokenName = getObj('graphic',tokenID).get('name'),
-			row = parseInt(fields.MW_table[1]),
 			entry = 0,
-			speedMult = Math.max(parseFloat(attrLookup( charCS, fields.initMultiplier ) || 1), 1),
-			init_Mod = parseInt(attrLookup( charCS, fields.initMod ) || 0),
 			hands = parseInt(attrLookup( charCS, fields.Equip_handedness ) || 2)+entry,
 			noDancing = parseInt(attrLookup( charCS, fields.Equip_dancing ) || 0),
 			attacks = [new Set()],
 			weapons = [],
-//    		content = fields.roundMaster,
-//			round = state.initMaster.round,
-			WeaponTable, weapon, dancing, speed, 
-			actionNum, attackCount, actions, initiative, i;
-
-		WeaponTable = getTableField( charCS, {}, fields.MW_table, fields.MW_name );
-		WeaponTable = getTableField( charCS, WeaponTable, fields.MW_table, fields.MW_speed );
-		WeaponTable = getTableField( charCS, WeaponTable, fields.MW_table, fields.MW_noAttks );
-		WeaponTable = getTableField( charCS, WeaponTable, fields.MW_table, fields.MW_attkCount );
-		WeaponTable = getTableField( charCS, WeaponTable, fields.MW_table, fields.MW_dancing );
-		
-		do {
-			weapon = WeaponTable.tableLookup( fields.MW_name, row, false );
-			dancing = parseInt(WeaponTable.tableLookup( fields.MW_dancing, row ));
+			InHandTable = getTableField( charCS, {}, fields.InHand_table, fields.InHand_miName );
+			InHandTable = getTableField( charCS, InHandTable, fields.InHand_table, fields.InHand_attkCount );
 			
-			if (_.isUndefined(weapon)) {break;}
-			if (weapon != '-' && (!onlyDancing || (!isNaN(dancing) && dancing != 0))) {
-				weapons.push(weapon);
-				speed = parseInt(WeaponTable.tableLookup( fields.MW_speed, row, '0' ));
-				actionNum = WeaponTable.tableLookup( fields.MW_noAttks, row, '1' );
-				attackCount = WeaponTable.tableLookup( fields.MW_attkCount, row, '0' );
-				attackCount = eval( attackCount + '+(' + speedMult + '*' + actionNum + ')' );
-				actions = Math.floor( attackCount );
-				WeaponTable.tableSet( fields.MW_attkCount, row, (attackCount-actions));
-				initiative = base+speed+init_Mod;
-				attacks.push({init:initiative,ignore:0,action:('with their '+(!!dancing ? 'dancing ' : '')+weapon),msg:(' rate '+actionNum+', speed '+speed+', modifier '+init_Mod)});
-				for (i=2; i<=actions; i++) {
-					initiative += speed;
-					attacks.push({init:initiative,ignore:0,action:('with their '+(!!dancing ? 'dancing ' : '')+weapon),msg:(' rate '+actionNum+', speed '+speed+', modifier '+init_Mod)});
+		var calcAttks = function( fieldGroup ) {
+			
+			var WeaponTable = getTable( charCS, fieldGroup ),
+				row = parseInt(WeaponTable.table[1]),
+				speedMult = Math.max(parseFloat(attrLookup( charCS, fields.initMultiplier ) || 1), 0.5),
+				init_Mod = parseInt(attrLookup( charCS, fields.initMod ) || 0),
+				prefix = fieldGroup.prefix;
+			
+			do {
+				var weapon = WeaponTable.tableLookup( fields[prefix+'name'], row, false ),
+					weapMI = WeaponTable.tableLookup( fields[prefix+'miName'], row ),
+					dancing= parseInt(WeaponTable.tableLookup( fields[prefix+'dancing'], row ));
+				
+				if (_.isUndefined(weapon)) return;
+				if (weapon != '-' && (!onlyDancing || (!isNaN(dancing) && dancing != 0))) {
+					let speed = parseInt(WeaponTable.tableLookup( fields[prefix+'speed'], row, '0' )),
+						actionNum = WeaponTable.tableLookup( fields[prefix+'noAttks'], row, '1' ),
+						attackCount = WeaponTable.tableLookup( fields[prefix+'attkCount'], row, '0' );
+					attackCount = eval( attackCount + '+(' + speedMult + '*' + actionNum + ')' );
+					let actions = Math.floor( attackCount );
+					WeaponTable = WeaponTable.tableSet( fields[prefix+'attkCount'], row, (attackCount-actions));
+					InHandTable = InHandTable.tableSet(fields.InHand_attkCount, InHandTable.tableFind( fields.InHand_miName, weapMI ), (attackCount-actions));
+					let initiative = base+speed+init_Mod;
+					if (!weapons.includes(weapMI.dbName())) {
+						attacks.push({init:initiative,ignore:0,action:('with their '+(!!dancing ? 'dancing ' : '')+weapon),msg:(' rate '+actionNum+', speed '+speed+', modifier '+init_Mod)});
+						for (let i=2; i<=actions; i++) {
+							initiative += speed;
+							attacks.push({init:initiative,ignore:0,action:('with their '+(!!dancing ? 'dancing ' : '')+weapon),msg:(' rate '+actionNum+', speed '+speed+', modifier '+init_Mod)});
+						}
+						weapons.push(weapMI.dbName());
+					}
+					entry++;
 				}
-				entry++;
-			}
-			row++;
-		} while (entry < hands+noDancing);
-		
-		WeaponTable = getTableField( charCS, {}, fields.RW_table, fields.RW_name );
-		WeaponTable = getTableField( charCS, WeaponTable, fields.RW_table, fields.RW_speed );
-		WeaponTable = getTableField( charCS, WeaponTable, fields.RW_table, fields.RW_noAttks );
-		WeaponTable = getTableField( charCS, WeaponTable, fields.RW_table, fields.RW_dancing );
-		row = fields.RW_table[1];
-		
-		do {
-			weapon = WeaponTable.tableLookup( fields.RW_name, row, false );
-			dancing = parseInt(WeaponTable.tableLookup( fields.RW_dancing, row ));
-			if (_.isUndefined(weapon)) {break;}
-			if (weapon != '-' && !weapons.includes(weapon) && (!onlyDancing || (!isNaN(dancing) && dancing != 0))) {
+				row++;
+			} while (!_.isUndefined(weapon));
+			return;
+		};
+			
+		calcAttks( fieldGroups.MELEE );
+		calcAttks( fieldGroups.RANGED );
 
-				speed = parseInt(WeaponTable.tableLookup( fields.RW_speed, row, '0' ));
-				actionNum = WeaponTable.tableLookup( fields.RW_noAttks, row, '1' );
-				attackCount = WeaponTable.tableLookup( fields.RW_attkCount, row, '0' );
-				attackCount = eval( attackCount + '+(' + speedMult + '*' + actionNum + ')' );
-				actions = Math.floor( attackCount );
-				WeaponTable.tableSet( fields.RW_attkCount, row, (attackCount-actions));
-				initiative = base+speed+init_Mod;
-				attacks.push({init:initiative,ignore:0,action:('with their '+(dancing ? 'dancing ' : '')+weapon),msg:(' rate '+actionNum+', speed '+speed+', modifier '+init_Mod)});
-				for (i=2; i<=actions; i++) {
-					initiative += speed;
-					attacks.push({init:initiative,ignore:0,action:('with their '+(dancing ? 'dancing ' : '')+weapon),msg:(' rate '+actionNum+', speed '+speed+', modifier '+init_Mod)});
-				}
-				entry++;
-			}
-			row++;
-		} while (entry < hands+noDancing);
-		
 		if (entry > 0) {
 			setAttr( charCS, fields.Prev_round, 0 );
 			setAttr( charCS, [fields.Prev_round[0] + tokenID, fields.Prev_round[1]], state.initMaster.round, null, null, null, true );
-//			buildMenu( initMenu, charCS, MenuState.DISABLED, args, senderId );
 		}
 		return attacks;
 	}
@@ -1776,7 +1784,7 @@ var initMaster = (function() {
 		    rowIndex2 = args[4],
 			base = parseInt(state.initMaster.initType == 'group' ? state.initMaster.playerRoll : randomInteger(10)),
 			actions, initiative, count;
-
+			
 		var initSubmit = function( senderId, charCS, args ) {
 			var	initCmd = args[0],
 				tokenID = args[1],
@@ -1785,7 +1793,7 @@ var initMaster = (function() {
 				rowIndex2 = args[4],
 				base = parseInt(state.initMaster.initType == 'group' ? state.initMaster.playerRoll : randomInteger(10)),
 				init_Mod = parseInt(attrLookup( charCS, fields.initMod )) || 0,
-				init_Mult = Math.max(parseFloat(attrLookup( charCS, fields.initMultiplier ) || 1),1),
+				init_Mult = Math.max((parseFloat(attrLookup( charCS, fields.initMultiplier )) || 1),0.5),
 				actions, initiative, count,
 				curToken = getObj('graphic',tokenID),
 				charName = charCS.get('name'),
@@ -1793,6 +1801,9 @@ var initMaster = (function() {
 				submitVal = attrLookup( charCS, fields.Init_submitVal ),
 				content = fields.roundMaster;
 
+			if (init_Mult !== 1) {
+				sendFeedback( '&{template:RPGMwarning}{{name=init_mod not 1}}{{desc='+charCS.get('name')+' has an init_mod of '+init_Mult+'}}');
+			}
 
 			if (rowIndex < 0 && !submitVal) {
 				sendParsedMsg( tokenID, Init_Messages.doneInit, senderId, flags.feedbackName );
@@ -1801,8 +1812,8 @@ var initMaster = (function() {
 			
 			actions = handleAllWeapons( senderId, charCS, args, base, (rowIndex != -2) );
 
-			if (rowIndex == 0 && (initMenu == MenuType.COMPLEX || initMenu == MenuType.SIMPLE)) {
-//				buildMenu( initMenu, charCS, MenuState.DISABLED, args, senderId );
+			if (rowIndex == 0 && (initMenu == MenuType.COMPLEX || initMenu == MenuType.SIMPLE || initMenu == MenuType.WEAPON)) {
+				
 				var monAttk1 = (attrLookup( charCS, fields.Monster_dmg1 ) || '').split(','),
 					monAttk2 = (attrLookup( charCS, fields.Monster_dmg2 ) || '').split(','),
 					monAttk3 = (attrLookup( charCS, fields.Monster_dmg3 ) || '').split(','),
@@ -1847,7 +1858,7 @@ var initMaster = (function() {
 				var	fighterClass = (attrLookup( charCS, fields.Fighter_class ) || ''),
 					weapAttk = [MenuType.WEAPON,MenuType.TWOWEAPONS,MenuType.MW_MELEE,MenuType.MW_PRIME,MenuType.MW_SECOND].includes(initMenu),
 					init_Mod = parseInt(attrLookup( charCS, fields.initMod )) || 0,
-					init_Mult = Math.max(parseFloat(attrLookup( charCS, fields.initMultiplier ) || 1),1),
+					init_Mult = Math.max(parseFloat(attrLookup( charCS, fields.initMultiplier ) || 1),0.5),
 					init_Done = parseInt(attrLookup( charCS, fields.Init_done ), 10),
 					init_speed = Math.max((parseInt(attrLookup( charCS, fields.Init_speed )) || 0),0),
 					init_multSpeed = weapAttk ? init_speed/init_Mult : init_speed,
@@ -1855,8 +1866,9 @@ var initMaster = (function() {
 					init_actionnum = attrLookup( charCS, fields.Init_actNum ),
 					init_attacks = parseInt(attrLookup( charCS, fields.Init_attacks ) || 1),
 					init_preinit = attrLookup( charCS, fields.Init_preInit ),
+					init_fixinit = parseInt(attrLookup( charCS, fields.Init_fixInit ) || '0'),
+					preinit = init_fixinit || eval( init_preinit ),
 					weapno = attrLookup( charCS, fields.Weapon_num ),
-					preinit = eval( init_preinit ),
 					twoHanded = attrLookup( charCS, fields.Init_2Hweapon ),
 					round = state.initMaster.round;
 					
@@ -1866,7 +1878,7 @@ var initMaster = (function() {
 						init_multSpeed2 = weapAttk ? init_speed2/init_Mult : init_speed2,
 						init_action2 = attrLookup( charCS, fields.Init_2ndAction ),
 						init_actionnum2 = attrLookup( charCS, fields.Init_2ndActNum ),
-						preinit2 = false,
+						preinit2 = init_fixinit,
 						init_attacks2 = parseInt(attrLookup( charCS, fields.Init_2ndAttacks ));
 					if (isNaN(init_attacks2)) init_attacks2 = 1;
 					if (flags.twoWeapSingleAttk && init_attacks2 > 1) {
@@ -1894,7 +1906,6 @@ var initMaster = (function() {
 					return;
 				}
 				
-//				buildMenu( initMenu, charCS, MenuState.DISABLED, args, senderId );
 				if (initMenu != MenuType.TWOWEAPONS) {
 					setAttr( charCS, fields.Weapon_num, -1 );
 					setAttr( charCS, fields.Weapon_2ndNum, -1 );
@@ -1902,24 +1913,34 @@ var initMaster = (function() {
 
 				if (initMenu != MenuType.TWOWEAPONS || init_speed2 >= init_speed || preinit) {
 					
+					if (preinit && preinit !== 1) {
+						base = preinit > 0 ? (preinit - 1) : preinit;
+						preinit = 0;
+					}
+					
 					if (init_attacks >= 1) {
 						initiative = (preinit ? 0 : base+Math.round(init_multSpeed)+init_Mod);
-						actions.push({init:initiative,ignore:0,action:init_action,msg:(' rate '+init_actionnum+', speed '+init_speed+(weapAttk ? ('/'+init_Mult) : '')+', modifier '+init_Mod)});
+						actions.push({init:initiative,ignore:0,action:init_action,msg:(' rate '+init_actionnum+', speed '+init_speed+(weapAttk ? ('/'+init_Mult) : '')+', modifier '+init_Mod+(init_fixinit?', roll magically set to '+(init_fixinit-1) : ''))});
 					}
 					if (initMenu == MenuType.TWOWEAPONS && (init_attacks2 >= 1)) {
 						initiative = base + Math.round(init_multSpeed2) + init_Mod;
-						actions.push({init:initiative,ignore:0,action:init_action2,msg:(' rate '+init_actionnum2+', speed '+init_speed2+(weapAttk ? ('/'+init_Mult) : '')+', modifier '+init_Mod)});
+						actions.push({init:initiative,ignore:0,action:init_action2,msg:(' rate '+init_actionnum2+', speed '+init_speed2+(weapAttk ? ('/'+init_Mult) : '')+', modifier '+init_Mod+(init_fixinit?', roll magically set to '+(init_fixinit-1) : ''))});
 					}
 
 				} else {
 					
+					if (preinit2 && preinit2 !== 1) {
+						base = preinit2 > 0 ? (preinit2 - 1) : preinit2;
+						preinit2 = 0;
+					}
+					
 					if (init_attacks2 >= 1) {
 						initiative = (preinit2 ? 0 : base+Math.round(init_multSpeed2)+init_Mod);
-						actions.push({init:initiative,ignore:0,action:init_action2,msg:(' rate '+init_actionnum2+', speed '+init_speed2+(weapAttk ? ('/'+init_Mult) : '')+', modifier '+init_Mod)});
+						actions.push({init:initiative,ignore:0,action:init_action2,msg:(' rate '+init_actionnum2+', speed '+init_speed2+(weapAttk ? ('/'+init_Mult) : '')+', modifier '+init_Mod+(init_fixinit?', roll magically set to '+(init_fixinit-1) : ''))});
 					}
 					if (init_attacks >= 1) {
 						initiative = base+Math.round(init_multSpeed)+init_Mod;
-						actions.push({init:initiative,ignore:0,action:init_action,msg:(' rate '+init_actionnum+', speed '+init_speed+(weapAttk ? ('/'+init_Mult) : '')+', modifier '+init_Mod)});
+						actions.push({init:initiative,ignore:0,action:init_action,msg:(' rate '+init_actionnum+', speed '+init_speed+(weapAttk ? ('/'+init_Mult) : '')+', modifier '+init_Mod+(init_fixinit?', roll magically set to '+(init_fixinit-1) : ''))});
 					}
 					
 				}
@@ -1945,7 +1966,7 @@ var initMaster = (function() {
 			});
 			sendAPI( content, senderId );
 			
-			content = '&{template:'+fields.defaultTemplate+'}{{name='+tokenName+'\'s Initiative}}'
+			content = '&{template:'+fields.menuTemplate+'}{{name='+tokenName+'\'s Initiative}}'
 			if (init_attacks < 1) {
 				count++;
 				content += '{{desc='+tokenName+'\'s action '+init_action+' at a rate of '+init_actionnum+' does not result in an action this round}}';
@@ -1988,12 +2009,33 @@ var initMaster = (function() {
 		if (page !== tracker) Campaign().set('initiativepage', page);
 		sendAPI('!rounds --start always');
 		
-		setTimeout( initSubmit, 500, senderId, charCS, args );
+		setTimeout( initSubmit, 0, senderId, charCS, args );
 		
 		let content = fields.attackMaster + ' --checkac ' + tokenID + '|Silent||' + senderId;
-		setTimeout( sendAPI, Math.round(3000+(Math.random()*5000)), content, senderId );
+		setTimeout( sendAPI, Math.round(60000+(Math.random()*60000)), content, senderId );
 	};
-
+	
+	/*
+	 * Handle a player setting modifications to the initiative roll factors
+	 */
+	 
+	var handleAdjustInitMods = function( args, senderId, silent ) {
+		
+		var cmd = args[0],
+			tokenID = args[1],
+			val = args[2],
+			charCS = getCharacter(tokenID);
+			
+		if (!charCS) {
+			sendDebug( 'handleChangeInitMods: tokenID does not represent a character' );
+			sendError( 'Invalid tokenID given' );
+			return;
+		}
+		setAttr( charCS, (cmd === BT.INIT_ADJMOD ? fields.InitModAdjust : fields.InitMultAdjust), val );
+		makeCheckInitMenu( tokenID, charCS, senderId, silent, ('Set initiative speed '+(cmd === BT.INIT_ADJMOD ? 'modifier' : 'multiplier')+' to '+val) );
+		return;
+	};
+	
 	/*
 	 * Set up the shape of the spell book.  This is complicated due to
 	 * the 2E sheet L5 MU Spells start out-of-sequence at column 70
@@ -2038,10 +2080,10 @@ var initMaster = (function() {
 	 */
 	 
 	var checkForPowers = function( charCS ) {
-		var item = attrLookup( charCS, fields.Powers_name, fields.Powers_table, 0, fields.PowersBaseCol+0 );
+		var item = attrLookup( charCS, fields.Powers_name, fields.Powers_table, 0, fields.PowersBaseCol+0, false, false );
 		for (let r = 0; !_.isUndefined(item); r++) {
 			for (let c = 0; c<fields.PowersCols && !_.isUndefined(item); c++) {
-				item = attrLookup( charCS, fields.Powers_name, fields.Powers_table, r, fields.PowersBaseCol+c );
+				item = attrLookup( charCS, fields.Powers_name, fields.Powers_table, r, fields.PowersBaseCol+c, false, false );
 				if (item && item.length && item != '-') {return true;}
 			}
 		}
@@ -2053,25 +2095,59 @@ var initMaster = (function() {
 	 */
 	 
 	var countWeaponsInHand = function( charCS ) {
-		var InHandTable = getTable( charCS, fieldGroups.INHAND ),
+		var InHandTable = getTableField( charCS, {}, fields.InHand_table, fields.InHand_name ),
+			InHandTable = getTableField( charCS, InHandTable, fields.InHand_table, fields.InHand_miName ),
+			InHandTable = getTableField( charCS, InHandTable, fields.InHand_table, fields.InHand_type ),
+			WeapTable = getTableField( charCS, {}, fields.MW_table, fields.MW_name ),
+			WeapTable = getTableField( charCS, WeapTable, fields.MW_table, fields.MW_miName ),
 			meleeWeap = 0,
 			rangedWeap = 0,
 			shieldWeap = 0,
-			monAttk = parseInt(attrLookup( charCS, fields.Monster_attks )) || 0,
+			monAttk = parseInt(attrLookup( charCS, fields.Monster_attks, null, null, null, null, false )),
 			r = InHandTable.table[1],
+			miNames = [],
 			weapon;
 			
-		while (weapon = !_.isUndefined(InHandTable.tableLookup( fields.InHand_name, r, false ))) {
+		if (isNaN(monAttk) || !monAttk) {
+			monAttk  = (String(attrLookup( charCS, fields.Monster_dmg1 ) || '') !== '') ? 1 : 0;
+			monAttk += (String(attrLookup( charCS, fields.Monster_dmg2 ) || '') !== '') ? 1 : 0;
+			monAttk += (String(attrLookup( charCS, fields.Monster_dmg3 ) || '') !== '') ? 1 : 0;
+		};
+			
+		while (!_.isUndefined(weapon = InHandTable.tableLookup( fields.InHand_name, r, false ))) {
 			if (weapon != '-') {
-				weapon = InHandTable.tableLookup( fields.InHand_miName, r );
-				let dB = InHandTable.tableLookup( fields.InHand_db, r );
-				let weapObj = abilityLookup( dB, weapon, charCS );
-				if (weapObj.obj) {
-					let weapSpecs = weapObj.specs(/}}\s*?specs\s*?=(.*?){{/im);
-					if (_.some(weapSpecs, spec => spec[2].toLowerCase().includes('shield'))) shieldWeap++;
-					else if (_.some(weapSpecs, spec => spec[2].toLowerCase().includes('melee'))) meleeWeap++;
-					if (_.some(weapSpecs, spec => spec[2].toLowerCase().includes('ranged'))) rangedWeap++;
+				let miName = InHandTable.tableLookup( fields.InHand_miName, r );
+				if (miName && !miNames.includes(miName.dbName())) {
+					miNames.push(miName.dbName());
+					let type = (InHandTable.tableLookup( fields.InHand_type, r ) || '').toLowerCase();
+					if (!type || !type.length) {
+						let weapObj = abilityLookup( fields.WeaponDB, (InHandTable.tableLookup( fields.InHand_miName, r ) || weapon) ).obj;
+						if (weapObj) type = weapObj[1].type;
+					}
+					if (type.includes('shield')) shieldWeap++;
+					else if (type.includes('melee')) meleeWeap++;
+					if (type.includes('ranged')) rangedWeap++;
 				}
+			}
+			r++;
+		}
+		r = WeapTable.table[1];
+		while (!_.isUndefined(weapon = WeapTable.tableLookup( fields.MW_name, r, false ))) {
+			if (miNames.includes(weapon.dbName())) {
+				miNames.push(weapon.dbName());
+				let miName = WeapTable.tableLookup( fields.MW_miName, r );
+				if (!miName && !miName.length) meleeWeap++;
+			}
+			r++;
+		}
+		WeapTable = getTableField( charCS, {}, fields.RW_table, fields.RW_name );
+		WeapTable = getTableField( charCS, WeapTable, fields.RW_table, fields.RW_miName );
+		r = WeapTable.table[1];
+		while (!_.isUndefined(weapon = WeapTable.tableLookup( fields.RW_name, r, false ))) {
+			if (miNames.includes(weapon.dbName())) {
+				miNames.push(weapon.dbName());
+				let miName = WeapTable.tableLookup( fields.RW_miName, r );
+				if (!miName && !miName.length) rangedWeap++;
 			}
 			r++;
 		}
@@ -2089,12 +2165,12 @@ var initMaster = (function() {
 		switch (initMenu.toUpperCase()) {
 		
 		case MenuType.SIMPLE :
-				makeMonsterMenu( Monster.SIMPLE, charCS, selected, args, senderId );
-				break;
+//				makeMonsterMenu( Monster.SIMPLE, charCS, selected, args, senderId );
+//				break;
 				
 		case MenuType.COMPLEX :
-				makeMonsterMenu( Monster.COMPLEX, charCS, selected, args, senderId );
-				break;
+//				makeMonsterMenu( Monster.COMPLEX, charCS, selected, args, senderId );
+//				break;
 				
 		case MenuType.WEAPON :
 		case MenuType.MIATTK :
@@ -2212,19 +2288,22 @@ var initMaster = (function() {
 					powerList = {},
 					magicName, miName, miQty;
 					
+				ItemsTable = getTableField( charCS, ItemsTable, fields.Items_table, fields.Items_trueName );
 				ItemsTable = getTableField( charCS, ItemsTable, fields.Items_table, fields.Items_qty );
 				for (let r = MagicTable.table[1]; !_.isUndefined(magicName = MagicTable.tableLookup( fields.Magic_name, r, false )); r++) {
 					if (magicName != '-') {
 						miName = MagicTable.tableLookup( fields.Magic_miName, r );
-						miQty = ItemsTable.tableLookup( fields.Items_qty, ItemsTable.tableFind( fields.Items_name, miName ) );
+						let itemRow = ItemsTable.tableFind( fields.Items_trueName, miName );
+						miQty = ItemsTable.tableLookup( fields.Items_qty, itemRow );
+						miName = ItemsTable.tableLookup( fields.Items_name, itemRow ) || 'Miagic Item';
 						if (!powerList[miName]) powerList[miName] = {};
-						powerList[miName][magicName] = [r,miQty];
+						powerList[miName][magicName] = [r,(isNaN(parseInt(miQty)) ? 1 : miQty)];
 					}
 				}
 				if (_.size(powerList)) content += '{{Section1=**Magic Items in-hand**}}';
 
 				_.each(powerList, (p,n) => {
-					content += '{{'+n+'=';
+					content += '{{'+n.dispName()+'=';
 					_.each(p, (q,m) => {
 						content += (buttonID == charButton ? '<span style=' + design.selected_button + '>' : (submitted || (q[1] <= 0) ? '<span style=' + design.grey_button + '>' : '['));
 						content += q[1] + ' ' + m;
@@ -2241,7 +2320,7 @@ var initMaster = (function() {
 			} finally {
 				setTimeout(() => {
 					resolve([content,buttonID]);
-				}, 10);
+				}, asyncTime);
 			}
 		});
 
@@ -2300,7 +2379,7 @@ var initMaster = (function() {
 					} finally {
 						setTimeout(() => {
 							resolveMon(content);
-						}, 10);
+						}, asyncTime);
 					}
 				});
 			};
@@ -2317,12 +2396,12 @@ var initMaster = (function() {
 	 * Make weapon button lists
 	 */
 	
-	async function makeWeaponButtons( tokenID, senderId, charButton, submitted, MWcmd, RWcmd, show2H, showDancing, showInHand ) {
+	async function makeWeaponButtons( tokenID, senderId, charButton, submitted, MWcmd, RWcmd, show2H=true, showDancing=true, showInHand=true, showWeapons=false ) {
 		
 		try {
-			if (_.isUndefined(show2H) || _.isNull(show2H)) {show2H = true};
-			if (_.isUndefined(showDancing) || _.isNull(showDancing)) {showDancing = true};
-			if (_.isUndefined(showInHand) || _.isNull(showInHand)) {showInHand = true};
+//			if (_.isUndefined(show2H) || _.isNull(show2H)) {show2H = true};
+//			if (_.isUndefined(showDancing) || _.isNull(showDancing)) {showDancing = true};
+//			if (_.isUndefined(showInHand) || _.isNull(showInHand)) {showInHand = true};
 
 			var charCS = getCharacter( tokenID,false ),
 				weapName,
@@ -2334,6 +2413,7 @@ var initMaster = (function() {
 				header = true,
 				errFlag = false,
 				content = '',
+				weapList = [],
 				dancingWeapons = '',
 				ItemsTable  = getTableField( charCS, {}, fields.Items_table, fields.Items_name );
 
@@ -2351,6 +2431,7 @@ var initMaster = (function() {
 							WeaponTable = getTableField( charCS, WeaponTable, fields.MW_table, fields.MW_twoHanded );
 							WeaponTable = getTableField( charCS, WeaponTable, fields.MW_table, fields.MW_dancing );
 							WeaponTable = getTableField( charCS, WeaponTable, fields.MW_table, fields.MW_charges );
+							WeaponTable = getTableField( charCS, WeaponTable, fields.MW_table, fields.MW_hand );
 						let a = fields.MW_table[1];
 						for (let i = a; i < (fields.MWrows + a); i++) {
 							let w = (1 - (a * 2)) + (i * 2),
@@ -2365,12 +2446,17 @@ var initMaster = (function() {
 								}
 								let miName = WeaponTable.tableLookup( fields.MW_miName, i ) || '',
 									weapObj = abilityLookup( fields.WeaponDB, miName, charCS ),
-									weapCharged = weapObj.obj && !(['uncharged','cursed'].includes(weapObj.obj[1].charge.toLowerCase())),
+									weapCharged = weapObj.obj && !(['uncharged','cursed','single-uncharged'].includes(weapObj.obj[1].charge.toLowerCase())),
 									charges = weapCharged  ? (WeaponTable.tableLookup( fields.MW_charges, i ) || 1) : 0,
 									exhausted = submitted,
 									qty = '';
+								if (showWeapons && miName && miName.length) {
+									if (weapList.includes(miName.dbName())) continue;
+									weapList.push(miName.dbName());
+									weapName = miName;
+								}
 								if (charges) {
-									let itemIndex = ItemsTable.tableFind( fields.Items_name, miName );
+									let itemIndex = attrLookup( charCS, fields.InHand_index, fields.InHand_table, WeaponTable.tableLookup( fields.MW_hand, i ));
 									qty = _.isUndefined(itemIndex) ? 0 : ItemsTable.tableLookup( fields.Items_qty, itemIndex ) || 0;
 									exhausted = qty < charges;
 									qty = String(qty) + ' ';
@@ -2391,7 +2477,7 @@ var initMaster = (function() {
 					} finally {
 						setTimeout(() => {
 							resolveMelee(content);
-						}, 10);
+						}, asyncTime);
 					}
 				});
 			};
@@ -2448,7 +2534,7 @@ var initMaster = (function() {
 					} finally {
 						setTimeout(() => {
 							resolveRanged(content);
-						}, 10);
+						}, asyncTime);
 					}
 				});
 			};
@@ -2482,7 +2568,7 @@ var initMaster = (function() {
 				
 			tokenName = getObj( 'graphic', tokenID ).get('name');
 			
-			content = '&{template:'+fields.defaultTemplate+'}{{name=What is ' + tokenName + ' doing?}}'
+			content = '&{template:'+fields.menuTemplate+'}{{name=What is ' + tokenName + ' doing?}}'
 					+ '{{subtitle=Initiative for Complex Monster Attacks}}'
 					+ '{{desc=**Innate weapons**\n';
 					
@@ -2537,17 +2623,104 @@ var initMaster = (function() {
 				monsterLevel = Math.ceil((monsterHD + Math.ceil(monsterHPplus/4)) / (monsterInt != 0 ? 1 : 2)),
 				hands = parseInt(attrLookup( charCS, fields.Equip_handedness ) || 2 ),
 				weapCount = countWeaponsInHand( charCS ),
-				shieldStyle = attrLookup( charCS, fields.Init_2ndShield ) || 0,
+				shieldStyle = (weapCount.melee > 0 && weapCount.shield > 0 && ((attrLookup( charCS, fields.Init_2ndShield ) || 0) > 0)) ? weapCount.shield : 0,
 				inHandMIs = '',
-				weaponButtons,buttonID,content;
+				weaponButtons,buttonID,content,
+				primeHand, primeRef, offHand, offRef, bothHands, bothRef;
+
+			var getRef = function( charCS, hand, forceFind=false ) {
+				var ref = attrLookup(charCS,[fields.Init_hand[0]+hand,fields.Init_hand[1]],null,null,null,false,false);
+				if (forceFind || _.isNaN(ref) || ref == '') ref = undefined;
+//				log('getRef: hand '+hand+' has ref '+ref+', which is index '+(_.isUndefined(ref) ? 'undefined' : ((ref%2) > 0 ? ((ref-(1+(fields.MW_table[1]*2)))/2) : ((ref-(2+(fields.RW_table[1]*2)))/2))));
+//				if (ref%2 > 0) {
+//					log('getRef: equation = (('+ref+'-(1+('+fields.MW_table[1]+'*2)))/2) = (('+ref+'-('+(1+(fields.MW_table[1]*2))+')/2) = ('+(ref-(1+(fields.MW_table[1]*2)))+'/2)');
+//				}
+				var MW_handFields = getTableField( charCS, {}, fields.MW_table, fields.MW_hand ),
+					MW_handFields = getTableField( charCS, MW_handFields, fields.MW_table, fields.MW_miName ),
+					MW_handFields = getTableField( charCS, MW_handFields, fields.MW_table, fields.MW_name ),
+					RW_handFields = getTableField( charCS, {}, fields.RW_table, fields.RW_hand ),
+					RW_handFields = getTableField( charCS, RW_handFields, fields.RW_table, fields.RW_miName ),
+					RW_handFields = getTableField( charCS, RW_handFields, fields.RW_table, fields.RW_name ),
+					InHandField = getTableField( charCS, {}, fields.InHand_table, fields.InHand_miName ),
+					InHandField = getTableField( charCS, InHandField, fields.InHand_table, fields.InHand_name ),
+					index;
+
+				let miName = (InHandField.tableLookup( fields.InHand_miName, hand ) || InHandField.tableLookup( fields.InHand_name, hand ) || '');
+
+				if (!_.isUndefined(ref) && !!miName && miName.dbName().length) {
+					index = ((ref%2) > 0 ? ((ref-(1+(fields.MW_table[1]*2)))/2) : ((ref-(2+(fields.RW_table[1]*2)))/2));
+//					log('getRef: hand '+hand+' is predefined '+miName+', '+(ref%2 ? 'MW' : 'RW')+' table index = '+index+', button ref = '+ref);
+					return [index,ref];
+				}
+				
+				if (!_.isUndefined(index = MW_handFields.tableFind( fields.MW_hand, hand ))) {
+					ref = (1 - (fields.MW_table[1] * 2)) + (index * 2);
+//					log('getRef: found hand '+hand+' at melee row '+index+', ref '+ref);
+				} else if (!_.isUndefined(index = RW_handFields.tableFind( fields.RW_hand, hand ))) {
+					ref = (2 - (fields.RW_table[1] * 2)) + (index * 2);
+//					log('getRef: found hand '+hand+' at ranged row '+index+', ref '+ref);
+				} else {
+					if (!!miName && miName.dbName().length && miName !== '-') {
+						if (!_.isUndefined(index = MW_handFields.tableFind( fields.MW_miName, miName ))) {
+							ref = (1 - (fields.MW_table[1] * 2)) + (index * 2);
+//							log('getRef: found miName '+miName+' at melee row '+index+', ref '+ref);
+						} else if (!_.isUndefined(index = RW_handFields.tableFind( fields.RW_miName, miName ))) {
+							ref = (2 - (fields.RW_table[1] * 2)) + (index * 2);
+//							log('getRef: found miName '+miName+' at ranged row '+index+', ref '+ref);
+						} else if (!_.isUndefined(index = MW_handFields.tableFind( fields.MW_name, miName ))) {
+							ref = (1 - (fields.MW_table[1] * 2)) + (index * 2);
+//							log('getRef: found name '+miName+' at melee row '+index+', ref '+ref);
+						} else if (!_.isUndefined(index = RW_handFields.tableFind( fields.RW_name, miName ))) {
+							ref = (2 - (fields.RW_table[1] * 2)) + (index * 2);
+//							log('getRef: found name '+miName+' at ranged row '+index+', ref '+ref);
+						};
+					};
+				};
+				if (!forceFind) rememberWeapRef(charCS,hand,ref);
+//				log('getRef: hand '+hand+' is '+miName+', '+(ref%2 ? 'MW' : 'RW')+' table index = '+index+', button ref = '+ref);
+				return [index,ref];
+			};
 
 			if (!curToken) {
 				throw new Error( 'The token_id does not represent a valid token' );
 			}
-				
+			
+			if (weapCount.melee + weapCount.ranged + shieldStyle) {
+				[primeHand,primeRef] = getRef(charCS,0);
+				[offHand,offRef] = getRef(charCS,1);
+				[bothHands,bothRef] = getRef(charCS,2);
+			}
+			let isPrime = !_.isUndefined(primeHand),
+				isOff = !_.isUndefined(offHand),
+				isBoth = !_.isUndefined(bothHands);
+			
+//			log('makeWeaponMenu: isBoth = '+isBoth+', isPrime = '+isPrime+', offHand = '+offHand);
+//			log('makeWeaponMenu: weapCount.monster = '+weapCount.monster+', melee = '+weapCount.melee+', ranged = '+weapCount.ranged+', shields = '+weapCount.shield);
+//			if (weapCount.monster < 1 && (!charButton || !charButton.length || charButton == -1)) {
+			if (((weapCount.melee + weapCount.ranged + shieldStyle) > 0) && (!charButton || !charButton.length || charButton == -1)) {
+				charButton = isBoth ? bothRef : (isPrime ? primeRef : (isOff ? offRef : charButton));
+				let charHand = isBoth ? bothHands : (isPrime ? primeHand : offHand);
+//				log('makeWeaponMenu: '+(charHand ? '' : 'not ')+'dealing with single weapon pre-select, with charHand = '+charHand);
+				if (!_.isUndefined(charHand)) {
+					if ((charButton%2)>0) {
+						handleInitMW( CharSheet.CHARACTER, charCS, [BT.MELEE,tokenID,charButton,charHand], senderId );
+					} else {
+						handleInitRW( CharSheet.CHARACTER, charCS, [BT.MELEE,tokenID,charButton,charHand], senderId );
+					}
+					return;
+				}
+			};
+			if (weapCount.monster > 0 && (!charButton || !charButton.length || charButton == -1)) {
+//				log('makeWeaponMenu: dealing with monster preselected attack');
+				charButton = 0;
+				monButton = weapCount.monster > 1 ? 0 : 1;
+				handleInitMonster( Monster.COMPLEX, charCS, [BT.MON_INNATE,tokenID,charButton,monButton], senderId );
+				return;
+			};
+
 			tokenName = curToken.get('name');
 			
-			content = '&{template:'+fields.defaultTemplate+'}{{name=What is ' + tokenName + ' doing?}}'
+			content = '&{template:'+fields.menuTemplate+'}{{name=What is ' + tokenName + ' doing?}}'
 					+ '{{subtitle=Initiative for Weapon Attacks}}';
 					
 			// Insert buttons for powers of Magic Items that are in-hand
@@ -2556,16 +2729,18 @@ var initMaster = (function() {
 			content += inHandMIs;
 			charButton = isMIattk ? undefined : charButton;
 			
-			if (weapCount.melee > 1 || (weapCount.melee > 0 && weapCount.shield > 0 && shieldStyle > 0) || weapCount.monster > 1 || ((weapCount.melee+weapCount.ranged) > 0 && weapCount.monster > 0)) {
-				if (fighterLevel || rogueLevel || monsterLevel) {
-					let refIndex = (charButton%2) ? (baseMW==0?((charButton-1)/2):((charButton-3)/2)) : ((baseRW==0)?((charButton-2)/2):((charButton-4)/2))
-					content += '{{Fighter\'s & Rogue\'s Option=';
-					content += submitted ? '<span style=' + design.grey_button + '>' : '[';
-					content += 'Two Weapons';
-					content += (submitted) ? '</span>' : '](!init --button ' + BT.TWOWEAPONS + '|' + tokenID + '|' + charButton + '|' + refIndex + ')';
-					content += '}}';
+			if (weapCount.melee > 1 || (weapCount.melee > 0 && shieldStyle > 0) || weapCount.monster > 1 || ((weapCount.melee+weapCount.ranged) > 0 && weapCount.monster > 0)) {
+				if ((fighterLevel || rogueLevel || monsterLevel) && isPrime && isOff) {
+//					log('makeWeaponMenu: passing to twoWeapons offHand = '+offHand+', and offRef = '+offRef);
+					if (offRef == primeRef) [offHand,offRef] = getRef(charCS,0,true);
+					content += '{{Fighter\'s & Rogue\'s Option='
+							+  (submitted ? ('<span style=' + design.grey_button + '>') : '[')
+							+  'Two Weapons'
+							+  (submitted ? '</span>' : ('](!init --button ' + BT.TWOWEAPONS + '|' + tokenID + '|' + offRef + '|' + primeRef + '|' + offHand + '|' + primeHand + ')'))
+							+  '}}';
 				}
 				if (hands > 2 || weapCount.monster > 1) {
+//					log('makeWeaponMenu: hands = '+hands+', & weapCount.monster = '+weapCount.monster+', so showing All Weapons button');
 					content += '{{Many Hands Option='
 							+  (-2 == charButton ? '<span style=' + design.selected_button + '>' : (submitted ? '<span style=' + design.grey_button + '>' : '['))
 							+  'All Weapons'
@@ -2577,7 +2752,7 @@ var initMaster = (function() {
 			content += '{{desc=';
 
 			content += await makeMonAttkButtons( tokenID, charCS, senderId, charButton, monButton, submitted );
-			content += await makeWeaponButtons( tokenID, senderId, charButton, submitted, BT.MELEE, BT.RANGED );
+			content += await makeWeaponButtons( tokenID, senderId, charButton, submitted, BT.MELEE, BT.RANGED, true, true, true, state.initMaster.weapInit );
 
 			content += MIandPowers( tokenID, submitted ) + '}}'
 					+ '{{desc1=' + otherActions( MenuType.WEAPON, tokenID, charButton, submitted ) + '}}'
@@ -2614,12 +2789,12 @@ var initMaster = (function() {
 				
 			tokenName = getObj( 'graphic', tokenID ).get('name');
 			
-			content = '&{template:'+fields.defaultTemplate+'}{{name=What is ' + tokenName + ' doing?}}'
+			content = '&{template:'+fields.menuTemplate+'}{{name=What is ' + tokenName + ' doing?}}'
 					+ '{{subtitle=Initiative for Two Weapon Attacks}}'
 					+ '{{desc=**Choose Secondary Weapon**\n'
 					+ 'or go back to [One Weapon](!init --button ' + BT.ONEWEAPON + '|' + tokenID + '|-1|-1)}}';
 					
-			content += '{{desc1=' + await makeWeaponButtons( tokenID, senderId, -1, submitted, BT.MW_PRIME, BT.RW_PRIME, false );
+			content += '{{desc1=' + await makeWeaponButtons( tokenID, senderId, -1, submitted, BT.MW_PRIME, BT.RW_PRIME, false, null, null, state.initMaster.weapInit );
 
 			content += '}}{{desc2=Select two weapons above, then '
 					+ '<span style=' + design.grey_button + '>Submit</span>}}';
@@ -2648,6 +2823,8 @@ var initMaster = (function() {
 			twoHanded,
 			dancing,
 			tokenName,
+			weapMI,
+			weaponList = [],
 			highlight,
             content,
 			dancingWeapons = '',
@@ -2657,10 +2834,11 @@ var initMaster = (function() {
 			WeaponTable = getTableField( charCS, {}, fields.MW_table, fields.MW_name );
 			WeaponTable = getTableField( charCS, WeaponTable, fields.MW_table, fields.MW_twoHanded, '', 0 );
 			WeaponTable = getTableField( charCS, WeaponTable, fields.MW_table, fields.MW_dancing, '', 0 );
+			WeaponTable = getTableField( charCS, WeaponTable, fields.MW_table, fields.MW_miName, '', 0 );
             
 		tokenName = getObj( 'graphic', tokenID ).get('name');
 		
-		content = '&{template:'+fields.defaultTemplate+'}{{name=What is ' + tokenName + ' doing?}}'
+		content = '&{template:'+fields.menuTemplate+'}{{name=What is ' + tokenName + ' doing?}}'
 				+ '{{subtitle=Initiative for Two Weapon Attacks}}'
 				+ '{{desc=**Choose '+(charButton2>0 ? 'New ' : '')+'<span style='+design.green_button+'>Primary Weapon**</span>\n'
 				+ 'Change by reselecting\n'
@@ -2685,15 +2863,21 @@ var initMaster = (function() {
 			        content += '**1H Melee weapons**\n';
 			        header = false;
 			    }
-//				highlight = submitted ? design.dark_button : ((charButton == w) ? design.green_button : design.selected_button);
+				weapMI = (WeaponTable.tableLookup( fields.MW_miName, i ) || weapName);
+				if (state.initMaster.weapInit) {
+					if (weapMI && weaponList.includes(weapMI.dbName())) continue;
+					weaponList.push(weapMI.dbName());
+				} else {
+					weapMI = weapName;
+				}
 				highlight = (charButton == w) ? design.green_button : ((charButton2 == w) ? design.selected_button : design.dark_button);
 				content += (!submitted) ? '[' : '';
 				content += ((w == charButton || w == charButton2 || submitted) ? ('<span style=' + highlight + '>') : '');
-				content += weapName;
+				content += weapMI;
 				content += (w == charButton || w == charButton2 || submitted) ? '</span>' : '';
 				content += (!submitted) ? ('](!init --button ' + BT.MW_SECOND + '|' + tokenID + '|' + charButton + '|' + w + '|' + ((charButton-(1-(a*2)))/2) + '|' + i + ')') : '';
 			} else if ((weapName != '-') && dancing) {
-				dancingWeapons += '<span style='+(submitted ? design.grey_button : design.green_button)+'>'+weapName+'</span>';
+				dancingWeapons += '<span style='+(submitted ? design.grey_button : design.green_button)+'>'+weapMI+'</span>';
 			}
 		}
 
@@ -2706,8 +2890,10 @@ var initMaster = (function() {
 		WeaponTable = getTableField( charCS, {}, fields.RW_table, fields.RW_name );
 		WeaponTable = getTableField( charCS, WeaponTable, fields.RW_table, fields.RW_twoHanded, '', 1 );
 		WeaponTable = getTableField( charCS, WeaponTable, fields.RW_table, fields.RW_dancing, '', 0 );
+		WeaponTable = getTableField( charCS, WeaponTable, fields.RW_table, fields.RW_miName, '', '' );
 		
 		a = fields.RW_table[1];
+		weaponList = [];
 		for (i = a; i < (fields.RWrows + a); i++) {
 			w = (2 - (a * 2)) + (i * 2);
 			weapName = WeaponTable.tableLookup( fields.RW_name, i );
@@ -2719,15 +2905,21 @@ var initMaster = (function() {
 			        content += '**1H Ranged weapons**\n';
 			        header = false;
 			    }
-//				highlight = submitted ? design.grey_button : ((charButton == w) ? design.green_button : design.selected_button);
+				weapMI = (WeaponTable.tableLookup( fields.RW_miName, i ) || weapName);
+				if (state.initMaster.weapInit) {
+					if (weapMI && weaponList.includes(weapMI.dbName())) continue;
+					weaponList.push(weapMI.dbName());
+				} else {
+					weapMI = weapName;
+				}
 				highlight = (charButton == w) ? design.green_button : ((charButton2 == w) ? design.selected_button : design.grey_button);
 				content += (!submitted) ? '[' : '';
 				content += ((w == charButton || w == charButton2 || submitted) ? ('<span style=' + highlight + '>') : '');
-				content += weapName;
+				content += weapMI;
 				content += (w == charButton || w == charButton2 || submitted) ? '</span>' : '';
 				content += (!submitted) ? ('](!init --button ' + BT.RW_SECOND + '|' + tokenID + '|' + charButton + '|' + w + '|' + (charButton-((2-(a*2))/2)) + '|' + i + ')') : '';
-			} else if ((weapName != '-') && dancing && !dancingWeapons.includes(weapName)) {
-				dancingWeapons += '<span style='+(submitted ? design.dark_button : design.green_button)+'>'+weapName+'</span>';
+			} else if ((weapName != '-') && dancing && !dancingWeapons.includes(weapMI)) {
+				dancingWeapons += '<span style='+(submitted ? design.dark_button : design.green_button)+'>'+weapMI+'</span>';
 			}
 		};
 		
@@ -2768,7 +2960,7 @@ var initMaster = (function() {
 
 			tokenName = getObj( 'graphic', tokenID ).get('name');
 			
-			content = '&{template:'+fields.defaultTemplate+'}{{name=What Spell is ' + tokenName + ' planning to cast?}}'
+			content = '&{template:'+fields.menuTemplate+'}{{name=What Spell is ' + tokenName + ' planning to cast?}}'
 					+ '{{subtitle=Initiative for ' + spellCasterType + ' spells}}'
 					+ '{{desc=';
 
@@ -2787,7 +2979,7 @@ var initMaster = (function() {
 				while (levelSpells[l].spells > 0) {
 					c = levelSpells[l].base;
 					for (w = 1; (w <= fields.SpellsCols) && (levelSpells[l].spells > 0); w++) {
-						spellName = attrLookup( charCS, fields.Spells_name, fields.Spells_table, r, c );
+						spellName = attrLookup( charCS, fields.Spells_name, fields.Spells_table, r, c, false, false );
 						if (_.isUndefined(spellName)) {
 							levelSpells[l].spells = 0;
 							break;
@@ -2849,7 +3041,7 @@ var initMaster = (function() {
 				
 			tokenName = getObj( 'graphic', tokenID ).get('name');
 			
-			content = '&{template:'+fields.defaultTemplate+'}{{name=What Magic Item is ' + tokenName + ' planning to use?}}'
+			content = '&{template:'+fields.menuTemplate+'}{{name=What Magic Item is ' + tokenName + ' planning to use?}}'
 					+ '{{subtitle=All ' + tokenName + '\'s Magic Items}}';
 					
 			// build the in-hand Magic Item Powers list
@@ -2922,7 +3114,7 @@ var initMaster = (function() {
 				
 			tokenName = getObj( 'graphic', tokenID ).get('name');
 			
-			content = '&{template:'+fields.defaultTemplate+'}{{name=What Power is ' + tokenName + ' planning to use?}}'
+			content = '&{template:'+fields.menuTemplate+'}{{name=What Power is ' + tokenName + ' planning to use?}}'
 					+ '{{subtitle=All available Powers}}'
 					+ '{{desc=';
 
@@ -2932,7 +3124,7 @@ var initMaster = (function() {
 				c = fields.PowersBaseCol;
 				for (w = 1; w <= fields.PowersCols; w++) {
 					qty = attrLookup( charCS, fields.Spells_castValue, fields.Powers_table, r, c );
-					powerName = attrLookup( charCS, fields.Powers_name, fields.Powers_table, r, c );
+					powerName = attrLookup( charCS, fields.Powers_name, fields.Powers_table, r, c, false, false );
 					if (_.isUndefined(powerName)) {break;}
 					if (powerName != '-') {
 						content += (buttonID == charButton ? '<span style=' + design.selected_button + '>' : (submitted || !qty ? '<span style=' + design.grey_button + '>' : '['));
@@ -3033,7 +3225,7 @@ var initMaster = (function() {
 
 			// build the thieving skills list
 			
-			content = '&{template:'+fields.defaultTemplate+'}{{name=What Thieving ability is ' + tokenName + ' planning to use?}}'
+			content = '&{template:'+fields.menuTemplate+'}{{name=What Thieving ability is ' + tokenName + ' planning to use?}}'
 					+ '{{subtitle=' + tokenName + '\'s thieving abilities}}'
 					+ '{{desc=';
 					
@@ -3070,10 +3262,10 @@ var initMaster = (function() {
 		var tokenID = args[1],
 			tokenName = getObj( 'graphic', tokenID ).get('name'),
 //			charCS = getCharacter(tokenID,false),
-		    content = '&{template:'+fields.defaultTemplate+'}{{name=What does ' + tokenName + ' want to do?}}'
+		    content = '&{template:'+fields.menuTemplate+'}{{name=What does ' + tokenName + ' want to do?}}'
 					+ '{{subtitle=' + tokenName + '\'s possible activities}}'
-					+ '{{desc=';
-		
+					+ '{{Section=';
+					
 		content += '[Attack](!init ' + (monster == CharSheet.MONSTER ? '--complex ' : '--weapon ') + tokenID + ')';
 		if (casterLevel( charCS, 'MU' )) {
 			content += '[Cast MU Spell](!init --muspell ' + tokenID + ')';
@@ -3087,8 +3279,9 @@ var initMaster = (function() {
 		if (checkForMIs(charCS)) {
 			content += '[Use Magic Item](!init --mibag ' + tokenID + ')';
 		}
-		content += '[Use Thieving Skills](!init --thief ' + tokenID + ')}}'
-				+  '{{desc1='+otherActions( MenuType.OTHER, tokenID, 0, false )+'}}';
+		content += '[Use Thieving Skills](!init --thief ' + tokenID + ')}}';
+		content += '{{Section1='+otherActions( MenuType.OTHER, tokenID, 0, false )+'}}';
+		content += '{{Section2=[Check Initiative Modifiers](!init --checkinit '+tokenID+'||menu)}}';
 				
 		sendResponse( charCS, content, senderId, flags.feedbackName, flags.feedbackImg, tokenID );
 		return;
@@ -3102,7 +3295,7 @@ var initMaster = (function() {
 				tokenName = getObj( 'graphic', tokenID ).get('name'),
 				dancers = await makeWeaponButtons( tokenID, senderId, -1, submitted, '', '', true, true, false ),
 
-				content = '&{template:'+fields.defaultTemplate+'}{{name=What does ' + tokenName + ' want to do?}}'
+				content = '&{template:'+fields.menuTemplate+'}{{name=What does ' + tokenName + ' want to do?}}'
 						+ '{{subtitle=' + tokenName + '\'s possible activities}}'
 						+ '{{desc='+ otherActions( MenuType.OTHER, tokenID, charButton, submitted )
 						+ (dancers.length ? '\n'+dancers : '')
@@ -3119,6 +3312,114 @@ var initMaster = (function() {
 		}
 	}
 
+	/*
+	 * Make a dialog to show factors that affect initiative,
+	 * and allow the player to set a manual modifier
+	 */
+	
+	var makeCheckInitMenu = function( tokenID, charCS, senderId, silent=false, msg='', menu='' ) { //specs
+		
+		const parseTable = {initmod:reClassSpecs.initmod,initmult:reClassSpecs.initmult,rules:reACSpecs.rules},
+			  classes = classObjects( charCS, senderId, parseTable ),
+			  race = (attrLookup( charCS, fields.Race ) || 'human').dbName(),
+			  tokenName = getObj('graphic',tokenID).get('name');
+		var ItemNames = getTableField( charCS, {}, fields.Items_table, fields.Items_name ),
+			ItemNames = getTableField( charCS, ItemNames, fields.Items_table, fields.Items_trueName ),
+			Inits = getTable( charCS, fieldGroups.INIT ),
+			totalMod = 0,
+			totalMult = 1,
+			content = '&{template:'+fields.menuTemplate+'}{{title=Current Initiative Modifiers\n for '+tokenName+'}}'
+					+ (!!msg && msg.length ? '{{Section='+msg+'}}' : '');
+		
+		const assessInit = function( name, mod, mult, remove=false ) {
+			mod = parseFloat(mod);
+			mult = parseFloat(mult);
+			let modFlag = !isNaN(mod) && (mod != 0),
+				multFlag = !isNaN(mult) && (mult != 1);
+			if (!modFlag && !multFlag) return '';
+			let desc = '{{'+name.dispName()+'=';
+			if (modFlag) {
+				totalMod += mod;
+				desc += (mod < 0 ? 'Beneficial' : 'Penalty')+' mod of '+(mod>0 ? '+' : '')+mod+(multFlag ? '\n' : '');
+			}
+			if (multFlag) {
+				totalMult *= mult;
+				desc += (mult > 1 ? 'Beneficial' : 'Penalty')+' speed mult x '+mult;
+			};
+			if (remove) {
+				desc += ' \n[Remove](!init --setmods '+tokenID+'|del|'+name+'|0|1)';
+			}
+			desc += '}}';
+			return desc;
+		};
+		
+		_.each( classes, c => {
+			content += assessInit( c.obj[1].name, c.classData.initmod, c.classData.initmult );
+		});
+		let raceData = resolveData( race, fields.RaceDB, reClassRaceData, charCS, parseTable ).parsed;
+		content += assessInit( race, raceData.initmod, raceData.initmult );
+		
+		let conflict = '',
+			itemClasses = [],
+			itemSuperTypes = [],
+			nameArray = [],
+			item = '';
+		for (let r = 0; !_.isUndefined(item = ItemNames.tableLookup( fields.Items_name, r, false )); r++) {
+			if (item === '-') continue;
+			let trueItem = ItemNames.tableLookup( fields.Items_trueName, r ),
+				itemData = resolveData( trueItem, fields.MagicItemDB, reNotAttackData, charCS, parseTable, r ).parsed,
+				itemObj = abilityLookup( fields.MagicItemDB, trueItem ),
+				addRules = itemData.rules.split('|').map( r => (r[0] === '-' ? '-' : '')+r.dbName() ),
+				specsArray = (!!itemObj.obj ? itemObj.specs() : ['-','-','magic','1H','-']);
+			if (itemObj.obj) {
+				itemSuperTypes = _.uniq(itemSuperTypes.concat(specsArray.map( c => c[4].dbName() ).join('|').split('|')));
+				itemClasses = _.uniq(itemClasses.concat(specsArray.map( c => c[2].dbName() ).join('|').split('|')));
+			};
+			if (itemData.initmod == 0 && itemData.initmult == 1) continue;
+			let	inHand = !itemData.rules || !itemData.rules.includes('+inhand') || !_.isUndefined(getTableField( charCS, {}, fields.InHand_table, fields.InHand_trueName ).tableFind( fields.InHand_trueName, trueItem ));
+			let worn = !itemData.rules || !itemData.rules.includes('+worn') || classAllowedItem( charCS, trueItem, specsArray[0][1].dbName(), specsArray[0][4].dbName(), 'weaps' );
+			let adds = !itemData.rules || (!_.some(itemClasses,c => {conflict=c;return addRules.includes( '-'+c )}) && !_.some(itemSuperTypes,mi => {conflict=mi;return addRules.includes('-'+mi)}));
+			let nameIndex = nameArray.findIndex( (n,i) => n[0] === item );
+			if (nameIndex >= 0) {
+				item += ' '+(++nameArray[nameIndex][1]);
+			} else {
+				nameArray.push([item,1]);
+			};
+			if (!inHand) {content += '{{'+item.dispName()+'=Is not in-hand so does not affect initiative}}';
+			} else if (!worn) {content += '{{'+item.dispName()+'=Is not of a usable type so does not affect initiative}}';
+			} else if (!adds) {content += '{{'+item.dispName()+'=Does not combine with '+conflict+' so does not affect initiative}}';}
+			if (!inHand || !worn || !adds) continue;
+			content += assessInit( item, itemData.initmod, itemData.initmult );
+		};
+
+		for (let r = 0; !_.isUndefined(item = Inits.tableLookup( fields.InitMagic_name, r, false )); r++ ) {
+			if (item === '-') continue;
+			if (item.length === 0) Inits = Inits.delTableRow( r );
+			else content += assessInit( item, Inits.tableLookup( fields.InitMagic_mod, r ), Inits.tableLookup( fields.InitMagic_mult, r ), true );
+		};
+		
+		let modAdj = parseFloat(attrLookup( charCS, fields.InitModAdjust )) || 0,
+			modSign = (modAdj > 0 ? '+' : ''),
+			multAdj = parseFloat(attrLookup( charCS, fields.InitMultAdjust )) || 1;
+		totalMod += modAdj;
+		totalMult *= multAdj;
+		content += '{{Manual Adjustments=[Mod Adjustment](!init --setmods '+tokenID+'|mod|&#63;{What do you want to call this modifier?|adjustment}|&#63;{What modifier should be added to initiative speed (-ve beneficial?&#41;}) and'
+				+  '[Mult Adjustment](!init --setmods '+tokenID+'|mult|&#63;{What do you want to call this multiplier?|adjustment}||&#63;{What multiplier should be applied to the initiative speed (>1 beneficial&#41;?})}}';
+		
+		content += '{{Totals=Mod of **'+(totalMod > 0 ? '+' : '')+totalMod+'** and Mult of **x'+totalMult+'**}}'
+				+  '{{desc=Select button above to set a manual adjustment to these totals.\n'
+				+  '**Modifier** less than 0 is beneficial\n'
+				+  '**Multiplier** greater than 1 is beneficial}}'
+				+  (menu && menu.length ? ('{{desc1=[Return to menu](!init --'+menu+')}}') : '');
+		
+		setAttr( charCS, fields.initMod, totalMod );
+		setAttr( charCS, fields.initMultiplier, totalMult );
+		
+//		log('makeCheckInitMenu: content = '+content);
+		if (!silent) sendResponse( charCS, content, senderId );
+		return {mod:totalMod,mult:totalMult};
+	}
+			
 //------------------------------------- do commands --------------------------------------------
 
 	/**
@@ -3127,7 +3428,7 @@ var initMaster = (function() {
 	var showHelp = function() {
 
 	var handoutIDs = getHandoutIDs();
-	var content = '&{template:'+fields.defaultTemplate+'}{{title=InitiativeMaster Help}}{{InitMaster Help=For help on !init commands [**Click Here**]('+fields.journalURL+handoutIDs.InitiativeMasterHelp+')}}{{Character Sheet Setup=For help on setting up character sheets for use with RPGMaster APIs, [**Click Here**]('+fields.journalURL+handoutIDs.RPGMasterCharSheetSetup+')}}{{RPGMaster Templates=For help using RPGMaster Roll Templates, [**Click Here**]('+fields.journalURL+handoutIDs.RPGMasterLibraryHelp+')}}';
+	var content = '&{template:'+fields.menuTemplate+'}{{title=InitiativeMaster Help}}{{InitMaster Help=For help on !init commands [**Click Here**]('+fields.journalURL+handoutIDs.InitiativeMasterHelp+')}}{{Character Sheet Setup=For help on setting up character sheets for use with RPGMaster APIs, [**Click Here**]('+fields.journalURL+handoutIDs.RPGMasterCharSheetSetup+')}}{{RPGMaster Templates=For help using RPGMaster Roll Templates, [**Click Here**]('+fields.journalURL+handoutIDs.RPGMasterLibraryHelp+')}}';
 
 		sendFeedback(content,flags.feedbackName,flags.feedbackImg); 
 	}; 
@@ -3236,7 +3537,7 @@ var initMaster = (function() {
 		setAttr( charCS, fields.Init_chosen, 1 );
 		setAttr( charCS, fields.Init_done, 0 );
 
-		content = '&{template:'+fields.defaultTemplate+'}'
+		content = '&{template:'+fields.menuTemplate+'}'
 				+ '{{name=What is ' + getObj( 'graphic', tokenID ).get('name') + ' doing?}}'
 				+ '{{subtitle=Continue Long Action}}'
 				+ '{{desc=Continue ' + init_action + ' for '
@@ -3286,7 +3587,7 @@ var initMaster = (function() {
 		
 		if (!initMenu)
 			{return;}
-
+			
 		if (!args) args = [];
 			
 		if (selected && selected.length) {
@@ -3304,7 +3605,7 @@ var initMaster = (function() {
 			isGM = playerIsGM(senderId),
 			charID, charCS, foe,
 			initRoll, init_carry;
-
+			
 		if (!(charCS = getCharacter( tokenID ))) {
 			if (initSelection[senderId] && initSelection[senderId].length) {
 				(initSelection[senderId] || [0]).shift();
@@ -3315,7 +3616,6 @@ var initMaster = (function() {
 				return;
 			}
 		}
-		
 		foe = charCS.get('controlledby').length == 0;
 		initRoll = foe ? state.initMaster.dmRoll : state.initMaster.playerRoll;
 		
@@ -3326,7 +3626,6 @@ var initMaster = (function() {
 			sendParsedMsg( tokenID, Init_Messages.notYet, null, flags.feedbackName );
 			return;
 		}
-
 		var content = '',
 		    charName = charCS.get('name'),
 			tokenName = curToken.get('name'),
@@ -3353,7 +3652,6 @@ var initMaster = (function() {
 				toFront(initMarkers[page][senderId]);
 			}
 		}
-
 		if (!init_submitVal) {
 
 			sendParsedMsg( tokenID, Init_Messages.doneInit, senderId, flags.feedbackName );
@@ -3361,7 +3659,6 @@ var initMaster = (function() {
 		};
 		
 		init_carry = parseInt(attrLookup( charCS, fields.Init_carry ) || 0);
-
 		if (init_carry !== 0) {
 
 			doCarryOver( tokenID, charCS, initMenu, senderId );
@@ -3370,12 +3667,141 @@ var initMaster = (function() {
 
         args.unshift(initMenu);
 		args[2] = -1;
-		
 		buildMenu( initMenu, charCS, MenuState.ENABLED, args, senderId );
 		return;
 
     };
 	
+	/*
+	 * Display the dialog describing the factors currently affecting the
+	 * selected character's initiative rolls, including class, race,
+	 * magic items and spells currently in effect. Allow the player
+	 * to set manual adjustments if required.
+	 */
+	 
+	var doShowInitFactors = function( args, selected, senderId ) {
+		
+		if (!args) args = [];
+		
+		if (!args[0] && selected && selected.length) {
+			args[0] = selected[0]._id;
+		} else if (!args[0]) {
+			sendDebug( 'doShowInitFactors: tokenID is invalid' );
+			sendError( 'No token selected' );
+			return;
+		}
+		
+		var tokenID = args[0],
+			silent = (args[1] || '').toLowerCase() === 'silent',
+			menu = args[2],
+			charCS = getCharacter(tokenID);
+			
+		if (!charCS) {
+			sendError( 'Invalid token selected' );
+			return;
+		}
+			
+		makeCheckInitMenu( tokenID, charCS, senderId, silent, '', menu );
+		return;
+	}
+
+	/*
+	 * Handle a spell, power, or other magic affecting the initiative 
+	 * of a character
+	 */
+ 
+	var doMagicInitEffect = function( args, selected, senderId, silent ) {
+		
+		if (!args) args = [];
+		
+		if (!args[0] && selected && selected.length) {
+			args[0] = selected[0]._id;
+		} else if (!args[0]) {
+			sendDebug( 'doMagicInitEffect: tokenID is invalid' );
+			sendError( 'No token selected' );
+			return;
+		}
+
+		var tokenID = args[0],
+			cmd = (args[1] || '').toLowerCase(),
+			name = args[2],
+			charCS = getCharacter(tokenID);
+			
+		if (!charCS) {
+			sendError( 'Invalid token selected' );
+			return;
+		}
+		
+		var InitMagic = getTable( charCS, fieldGroups.INIT ),
+			initIndex = InitMagic.tableFind( fields.InitMagic_name, name ),
+			modOp = '=+-*/'.includes((args[3] || ' ')[0]),
+			modEq = (args[3] || ' ')[0] === '=',
+			multOp = '=+-*/'.includes((args[4] || ' ')[0]),
+			multEq = (args[4] || ' ')[0] === '=',
+			modVal = (modOp ? args[3].slice(1) : args[3]) || 0,
+			multVal = (multOp ? args[4].slice(1) : args[4]) || 1,
+			silent = silent || ((args[5] || '').toLowerCase() === 'silent'),
+			values = initValues( InitMagic.fieldGroup ),
+			msg = '';
+			
+/*		if (name.dbName() === 'adjustment') {
+			let curMod = attrLookup( charCS, fields.InitModAdjust ) || 0,
+				curMult = attrLookup( charCS, fields.InitMultAdjust ) || 1;
+			if (cmd.includes('mod')) {
+				if (modOp && !modEq) modVal = String(curMod)+String(args[3]);
+				modVal = evalAttr( modVal );
+				setAttr( charCS, fields.InitModAdjust, modVal );
+				msg = 'Set manual adjustment Initiative modifier to be '+(modVal>0 ? '+' : '')+modVal;
+			};
+			if (cmd.includes('mult')) {
+				if (multOp && !multEq) multVal = String(curMult)+String(args[4]);
+				multVal = evalAttr( multVal );
+				setAttr( charCS, fields.InitMultAdjust, multVal );
+				msg = 'Set manual adjustment Initiative multiplier to be '+multVal;
+			};
+			makeCheckInitMenu( tokenID, charCS, senderId, silent, msg );
+			return;
+		}
+*/		
+		if (_.isUndefined(initIndex) && (modVal !== 0 || multVal !== 1)) {
+			log('doMagicInitEffect: creating a new row');
+			values[fields.InitMagic_name[0]][fields.InitMagic_name[1]] = name;
+			values[fields.InitMagic_mod[0]][fields.InitMagic_mod[1]] = modVal = evalAttr( args[3] || modVal );
+			values[fields.InitMagic_mult[0]][fields.InitMagic_mult[1]] = evalAttr( args[4] || multVal );
+			InitMagic = InitMagic.addTableRow( initIndex, values );
+			msg = 'Added new magic initiative effect *'+name+'* with mod '+(modVal>0 ? '+' : '')+modVal+' and mult x'+multVal;
+
+		} else if (!_.isUndefined(initIndex)) {
+			let curMod = InitMagic.tableLookup( fields.InitMagic_mod, initIndex ),
+				curMult = InitMagic.tableLookup( fields.InitMagic_mult, initIndex );
+			if (modOp && !modEq) modVal = curMod+args[3];
+			if (multOp && !multEq) multVal = curMult+args[4];
+			modVal = evalAttr( modVal );
+			multVal = evalAttr( multVal );
+
+			if (cmd === 'del' || (modVal === 0 && multVal === 1)) {
+				InitMagic = InitMagic.delTableRow( initIndex );
+				msg = 'Initiative effect *'+name+'* has been removed';
+			} else switch (cmd) {
+				case 'mod':
+					InitMagic = InitMagic.tableSet( fields.InitMagic_mod, initIndex, modVal );
+					msg = 'Changed *'+name+'* Initiative modifier to be '+(modVal>0 ? '+' : '')+modVal;
+					break;
+				case 'mult':
+					InitMagic = InitMagic.tableSet( fields.InitMagic_mult, initIndex, multVal );
+					msg = 'Changed *'+name+'* Initiative multiplier to be '+multVal;
+					break;
+				default:
+					InitMagic = InitMagic.tableSet( fields.InitMagic_mod, initIndex, modVal );
+					InitMagic = InitMagic.tableSet( fields.InitMagic_mult, initIndex, multVal );
+					msg = 'Changed *'+name+'* Initiative modifier to be '+(modVal>0 ? '+' : '')+modVal+' and multiplier to be '+multVal;
+					break;
+			};
+		}
+		makeCheckInitMenu( tokenID, charCS, senderId, silent, msg );
+		return;
+	}
+
 	/*
 	 * Make the menu for managing initiative each round, including
 	 * changing initiative type, changing the listed Player Characters,
@@ -3383,21 +3809,21 @@ var initMaster = (function() {
 	 * Initiative as per the AD&D2e DMG 
 	 */
 	 
-	var doInitDiceRoll = function( args, msg='', senderId ) {
+	var doInitDiceRoll = function( args, msg='', senderId ) {   // button
 		
-		var playerRoll = args[0] || NaN,
-			dmRoll = args[1] || NaN,
+		var playerRoll = parseInt(args[0] || NaN),
+			dmRoll = parseInt(args[1] || NaN),
 			cmd = (args[2] || '').toLowerCase(),
 			argStr = (args[0] || '') + '|' + (args[1] || ''),
 			charStr = _.pluck(state.initMaster.playerChars,'name').join(', '),
-			content = '&{template:'+fields.defaultTemplate+'}'
+			content = '&{template:'+fields.menuTemplate+'}'
 					+ '{{name=Initiative Dice Rolls}}'
 					+ '{{subtitle=For Standard & Group Initiative}}'
 					+ (msg.length ? ('{{ ='+msg+'\n}}') : '' )
-					+ '{{  =Current Player Characters\n**'+charStr+'**\n\n'
+					+ '{{Section=Current Player Characters\n**'+charStr+'**\n\n'
 					+ '[PCs all maps](!init --list-pcs all|'+argStr+') [PCs this map](!init --list-pcs map|'+argStr+') '
 					+ '[Add selected to PCs](!init --list-pcs add|'+argStr+') [Replace with selected PCs](!init --list-pcs replace|'+argStr+')}}'
-					+ '{{   =Initiative type is currently\n'
+					+ '{{Section1=Initiative type is currently\n'
 					+ ((state.initMaster.initType == 'standard') ? ('<span style='+design.selected_button+'>Standard</span> ') : '[Standard](!init --type standard|'+argStr+') ')
 					+ ((state.initMaster.initType == 'group') ? ('<span style='+design.selected_button+'>Group</span> ') : '[Group](!init --type group|'+argStr+') ')
 					+ ((state.initMaster.initType == 'individual') ? ('<span style='+design.selected_button+'>Individual</span>') : '[Individual](!init --type individual|'+argStr+')')
@@ -3407,17 +3833,21 @@ var initMaster = (function() {
 			state.initMaster.dmRoll = dmRoll;
 			args[2] = '';
 //			doInitRoll( args, true, senderId );
-			content +='{{desc=Ask a Player to roll 1d10 and also roll 1d10 as DM, then enter the values below\n'
+			content +='{{Section2=Ask a Player to roll 1d10 and also roll 1d10 as DM, then enter the values below\n'
 					+ '['+(isNaN(playerRoll) ? ('Enter Party Roll') : ('<span style='+design.selected_button+'>Party Rolled '+playerRoll+'</span>'))+'](!init --roll &#63;{Enter 1d10 roll|&#124;1&#124;2&#124;3&#124;4&#124;5&#124;6&#124;7&#124;8&#124;9&#124;10}|'+dmRoll+'|menu)'
 					+ '['+(isNaN(dmRoll) ? ('Enter Foes Roll') : ('<span style='+design.selected_button+'>DM Rolled '+dmRoll+'</span>'))+'](!init --roll '+playerRoll+'|&#63;{Enter 1d10 roll|&#124;1&#124;2&#124;3&#124;4&#124;5&#124;6&#124;7&#124;8&#124;9&#124;10}|menu)'
 					+ '}}';
 		};
+		content += '{{section3=Choose Attack Initiative detail level\n'
+				+  (state.initMaster.weapInit ? ('<span style='+design.selected_button+'>By Weapon</span> ') : '[By Weapon](!init --init-level weapon) ')
+				+  (!state.initMaster.weapInit ? ('<span style='+design.selected_button+'>By Action</span> ') : '[By Action](!init --init-level action) ')
+				+  '}}';
 		if (state.initMaster.initType !== 'standard') {
-			content +='{{desc1=Check that all Characters have specified what they are doing\n'
+			content +='{{Section4=Check that all Characters have specified what they are doing\n'
 					+ '[Check Tracker Complete](!init --check-tracker roll|'+argStr+')}}';
 		};
 		if (cmd == 'disptoggle') state.initMaster.dispRollOnInit = !state.initMaster.dispRollOnInit;
-		content += '{{desc2=['+(state.initMaster.dispRollOnInit ? ('<span style='+design.selected_button+'>Auto-displaying</span>') : 'Auto-display')+'](!init --init '+args[0]+'|'+args[1]+'|dispToggle) on new round}}';
+		content += '{{Section5=['+(state.initMaster.dispRollOnInit ? ('<span style='+design.selected_button+'>Auto-displaying</span>') : 'Auto-display')+'](!init --init '+args[0]+'|'+args[1]+'|dispToggle) on new round}}';
 		
 		if (cmd != 'rounds' || state.initMaster.dispRollOnInit) {
 			sendFeedback( content,flags.feedbackName,flags.feedbackImg );
@@ -3568,7 +3998,7 @@ var initMaster = (function() {
 			args.shift();
 			doInitDiceRoll( args, msg, senderId );
 		} else {
-			let content = '&{template:'+fields.defaultTemplate+'}{{name=Check Tracker}}{{desc=' + msg +'}}'
+			let content = '&{template:'+fields.menuTemplate+'}{{name=Check Tracker}}{{desc=' + msg +'}}'
 					+ (tokenList.length ? '{{desc1=[Check again](!init --check-tracker)}}' : '');
 			sendFeedback( content,flags.feedbackName,flags.feedbackImg );
 		}
@@ -3587,13 +4017,13 @@ var initMaster = (function() {
 		var tokenID = (selected && selected[0]) ? selected[0].id : '',
 			tokenName = tokenID ? getObj('graphic',tokenID).get('name') : '';
 		
-		var	content = '&{template:'+fields.defaultTemplate+'}{{name=Initiative Maintenance Menu}}'
+		var	content = '&{template:'+fields.menuTemplate+'}{{name=Initiative Maintenance Menu}}'
 					+ '{{desc=**Turn Order**\n'
 					+ '[Start/Pause](!rounds --start&#13;&#47;w gm Tracker started/paused)\n'
 					+ '[Start Melee](!rounds --clearonround on --clear&#13;&#47;w gm Started Melee, Tracker will clear each round ready for next initiative)'
 						+ '[Stop-melee](!rounds --clearonround off&#13;&#47;w gm Stopped Melee, Tracker will not clear each round, but will cycle round)'
 						+ '[Re-start](!rounds --sort&#13;&#47;w gm Tracker restarted at start of current round)\n'
-					+ '[Set round no.](!rounds --reset &#63;{To round number?|1}&#13;/w gm Turn Order set to round &#63;{To round number?})'
+					+ '[Set round no.](!rounds --reset &#63;{To round number?}&#13;/w gm Turn Order set to round &#63;{To round number?})'
 						+ '[Clear Turn Order](!rounds --clear&#13;&#47;w gm Tracker cleared)'
 						+ '[Remove Tokens from Tracker](!rounds --removefromtracker&#13;&#47;w gm Cleared all entries for selected tokens from the Tracker)\n'
 					+ '**Status Markers**\n'
@@ -3659,7 +4089,7 @@ var initMaster = (function() {
 		}
 
 		names = _.pluck(state.initMaster.playerChars,'name');
-		content = '&{template:'+fields.defaultTemplate+'}{{name=End of Day}}';
+		content = '&{template:'+fields.menuTemplate+'}{{name=End of Day}}';
 		if (rest || night || foes) {
 			content += '{{desc=The following characters have '+(night ? 'overnighted ' : 'rested ')+(cost < 0 ? 'and earned ' : ' at a cost of ')+cost+' gp}}{{desc1=';
 			if (foes) content += '\nAll NPCs & monsters';
@@ -3679,7 +4109,7 @@ var initMaster = (function() {
 				if (rest) restStr += ' --rest '+obj.id+'|long';
 				if (!foes) content += tokenName+'\n';
 				if (night) {
-					sendResponse( charObj,'&{template:'+fields.defaultTemplate+'}{{name=End of Day}}'
+					sendResponse( charObj,'&{template:'+fields.menuTemplate+'}{{name=End of Day}}'
 										+ '{{desc='+tokenName+' has made arrangements for the night '+(cost < 0 ? 'and today earned' : 'at a cost of')
 										+ ' '+Math.abs(cost)+'gp, and can now rest}}', null, flags.feedbackName, flags.feedbackImg, obj.id);
 				}
@@ -3746,7 +4176,7 @@ var initMaster = (function() {
 	 * Handle a button press, and redirect to the correct handler
 	 */
 
-	var doButton = function( args, senderId ) {
+	var doButton = function( args, senderId, selected ) {
 		if (!args)
 			{return;}
 
@@ -3796,6 +4226,9 @@ var initMaster = (function() {
 			case BT.TWOWEAPONS :
 			
 				// Handle switching to the twoWeaponsMenu for fighters
+				
+				handleTwoWeapons( charCS, args, senderId );
+				break;
 				
 			case BT.MW_PRIME :
 			case BT.RW_PRIME :
@@ -3891,6 +4324,13 @@ var initMaster = (function() {
 				handleOtherActions( charCS, args, senderId );
 				break;
 				
+			case BT.SETMODS :
+			
+				// Handle using buttons on the Initiative Mods dialog
+				
+				doMagicInitEffect( args, selected, senderId, false );
+				break;
+				
 			case BT.CARRY :
 
 				// Handle a Carry situation (action longer than 1 round)
@@ -3972,7 +4412,7 @@ var initMaster = (function() {
 			selected = msg.selected,
 			roundsExists = apiCommands.rounds && apiCommands.rounds.exists,
 			isGM = (playerIsGM(senderId) || state.initMaster.debug === senderId),
-			t = 0;
+			t = 10;
 			
 		var doInitCmd = function( e, selected, senderId ) {
 			var arg = e, i=arg.indexOf(' '), cmd, argString;
@@ -3993,6 +4433,10 @@ var initMaster = (function() {
 					case 'maint':
 						if (isGM) doMaintMenu(arg,selected);
 						break;
+					case 'init-level':
+						if (isGM) {
+							state.initMaster.weapInit = (arg[0].toLowerCase() == 'weapon');
+						}
 					case 'init':
 						if (isGM) doInitDiceRoll(arg,'',senderId);
 						break;
@@ -4039,6 +4483,14 @@ var initMaster = (function() {
 					case 'redo':
 						doRedo(arg,selected,senderId);
 						break;
+					case 'checkinit':
+					case 'check-init':
+						doShowInitFactors(arg,selected,senderId);
+						break;
+					case 'setmods':
+					case 'set-mods':
+						doMagicInitEffect(arg,selected,senderId,false);
+						break;
 					case 'isround':
 						sendWait(senderId,0,'isround');
 						if (isGM) doIsRound(arg,senderId);
@@ -4081,7 +4533,7 @@ var initMaster = (function() {
 						if (isGM) updateHandouts(handouts,false,senderId);
 						break;
 					case 'button':
-						doButton(arg,senderId);
+						doButton(arg,senderId,selected);
 						break;
 					case 'buildmenu':
 						doBuildMenu(arg,senderId);
@@ -4148,11 +4600,12 @@ var initMaster = (function() {
 		if (senderMod.length > 1) senderId = fixSenderId( [senderMod[1]], selected, senderId );
 		
 		if (!flags.noWaitMsg) {
-			sendWait(senderId,state.initMaster.waitTime,'initMaster');
+			sendWait(senderId,1,'initMaster');
 		}
 		
 		_.each(args, function(e) {
-			setTimeout( doInitCmd, ((isGM ? 1 : 10)*t++), e, selected, senderId );
+			if (isGM) doInitCmd( e, selected, senderId );
+			else setTimeout( doInitCmd, (asyncTime*t++), e, selected, senderId );
      	});
 	};
 	

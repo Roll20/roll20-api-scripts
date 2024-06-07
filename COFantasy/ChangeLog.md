@@ -1,15 +1,28 @@
 # COFantasy: Historique des changements (depuis la version 1.0)
 ## 3.15
 ### Capacités
+* Hémorragie de Pestrilax.
+* Prise en compte de la capacité Tir double pour les attaques à 2 mains.
+* Défi de la Voie du Duelliste
 * Meilleure prise en charge de la spécialisation du guerrier.
 * Implémentation de la version avancée du drain de force de Dominia.
 
 ### Autres améliorations
+* Ajout du poison paralysant
+* Ajout d'une option --depensePR pour les actions autres que les attaques
+* Ajout d'une commande !cof-recupere-mana.
+* Règle optionnelle pour faire récupérer des points de mana quand on dépense un point de récupération.
+* Implémentation de prédicats pour les bonus en RD et aux caractéristiques.
+* Prise en compte des émissaires du dragon pour les ancres.
+* Amélioration de la gestion des utilisations de points de chance pour des attaques complexes.
+* Réinitialisation des options d'attaque à la fin d'un combat
+* Synchronisation des barres de tokens quand on le pose : Roll20 ne le fait plus correctement.
 * Extension des mécanismes d'escaliers pour Invincible.
 * Ajout d'un bonus magique pour absorber un coup ou un sort quand le bouclier est magique.
 * Prise en charge de plusieurs casque à mettre depuis le statut
 
 ### Correction de bugs
+* Correction d'un bug pour les conditions d'attaque sur les attributs.
 * Correction pour les armes en main des mooks
 * Ne pas demander qu'un PNJ ait un prédicat pour se battre à 2 armes sans malus.
 

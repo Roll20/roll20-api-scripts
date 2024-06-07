@@ -116,14 +116,22 @@ API_Meta.CommandMaster={offset:Number.MAX_SAFE_INTEGER,lineCount:-1};
  *                     reviewed weapons, spells & powers.
  * v3.0.0  01/10/2023  Added support for other character sheets & game systems.
  *                     Moved parseData() to library.
+ * v3.1.0  16/12/2023  Modified to support AD&D1e character sheet and rule set. Fixed weapon 
+ *                     multi-hand parsing issue, clashing with % chance. Added library functions 
+ *                     to support different ways of specifying and displaying the class & level 
+ *                     on the character sheet. Fixed support for Drag & Drop creature hp ranges.
+ * v3.2.0  08/02/2024  Add proficiency list for AD&D1e version. Fix bug in some creature definitions 
+ *                     that listed weapons in-hand.
+ * v3.2.1  23/02/2024  Improved parseStr() handling of undefined or empty strings without erroring.
+ * v3.3.0  18/03/2024  Non-functional sequencing release to synchronise versions
  */
  
 var CommandMaster = (function() {
 	'use strict'; 
-	var version = '3.0.0',
+	var version = '3.3.0',
 		author = 'RED',
 		pending = null;
-	const lastUpdate = 1700058244;
+	const lastUpdate = 1711471190;
 
 	/*
 	 * Define redirections for functions moved to the RPGMaster library
@@ -146,9 +154,14 @@ var CommandMaster = (function() {
 	const findThePlayer = (...a) => libRPGMaster.findThePlayer(...a);
 	const findCharacter = (...a) => libRPGMaster.findCharacter(...a);
 	const fixSenderId = (...a) => libRPGMaster.fixSenderId(...a);
+	const calcAttr = (...a) => libRPGMaster.calcAttr(...a);
+	const rollDice = (...a) => libRPGMaster.rollDice(...a);
+	const evalAttr = (...a) => libRPGMaster.evalAttr(...a);
 	const getCharacter = (...a) => libRPGMaster.getCharacter(...a);
 	const classObjects = (...a) => libRPGMaster.classObjects(...a);
 	const characterLevel = (...a) => libRPGMaster.characterLevel(...a);
+	const updateClassLevel = (...a) => libRPGMaster.updateClassLevel(...a);
+	const displayClassLevel = (...a) => libRPGMaster.displayClassLevel(...a);
 	const addMIspells = (...a) => libRPGMaster.addMIspells(...a);
 	const getMagicList = (...a) => libRPGMaster.getMagicList(...a);
 	const handleCheckSaves = (...a) => libRPGMaster.handleCheckSaves(...a);
@@ -190,7 +203,7 @@ var CommandMaster = (function() {
 	 * custom user databases and db entries to give priority to.
 	 */
 
-//	const stdDB = ['MU_Spells_DB','PR_Spells_DB','Powers_DB','MI_DB','MI_DB_Ammo','MI_DB_Armour','MI_DB_Light','MI_DB_Potions','MI_DB_Rings','MI_DB_Scrolls_Books','MI_DB_Wands_Staves_Rods','MI_DB_Weapons','Attacks_DB','Class_DB','Race-DB','Race-DB-Creatures'];
+//	const stdDB = ['MU_Spells_DB','PR_Spells_DB','Powers_DB','MI_DB','MI_DB_Ammo','MI_DB_Armour','MI_DB_Equipment','MI_DB_Potions','MI_DB_Rings','MI_DB_Scrolls_Books','MI_DB_Wands_Staves_Rods','MI_DB_Weapons','Attacks_DB','Class_DB','Race-DB','Race-DB-Creatures'];
 	
 	/*
 	 * Handle for the Database Index, used for rapid access to the character 
@@ -775,6 +788,7 @@ var CommandMaster = (function() {
 	var clTypeLists;
 	var miTypeLists;
 	var spTypeLists;
+	var classMap;
 	var reSpellSpecs;
 	var reClassSpecs;
 	var reAttr;
@@ -840,6 +854,8 @@ var CommandMaster = (function() {
 		RESET_CONTAINER:	'RESET_CONTAINER',
 		TRAPTYPE:			'TRAPTYPE',
 		LOCKTYPE:			'LOCKTYPE',
+		SET_CLASS:			'SET_CLASS',
+		SET_CLASS_TYPE:		'SET_CLASS_TYPE',
 		REVIEW_CLASS:		'REVIEW_CLASS',
 		REVIEW_RACE:		'REVIEW_RACE',
 		REVIEW_STYLE:		'REVIEW_STYLE',
@@ -950,7 +966,7 @@ var CommandMaster = (function() {
 		both:		{field:'both',def:'',re:/[\[,\s]both:([\s\w\-\+\:]+?)[,\]]/i},
 		others:		{field:'other',def:'',re:/[\[,\s]others:([\s\w\-\+\:\|]+?)[,\]]/i},
 		items:		{field:'items',def:'',re:/[\[,\s]items:([\s\w\-\+\:\|]+?)[,\]]/i},
-		hand:		{field:'chance',def:3,re:/[\[,\s]\hand:(\d+)[,\s\]]/i},
+		hand:		{field:'hand',def:3,re:/[\[,\s]\hand:(\d+)[,\s\]]/i},
 		cl:			{field:'spell',def:'',re:/[\[,\s]cl:(PR|MU|PW|WP|AC|MI)[,\s\]]/i},
 		sp:			{field:'speed',def:0,re:/[\[,\s]sp:([d\d\+\-]+?)[,\s\]]/i},
 		qty:		{field:'qty',def:1,re:/[\[,\s]qty:([d\d\+\-]+?)[,\s\]]/i},
@@ -1101,6 +1117,7 @@ var CommandMaster = (function() {
 			clTypeLists = RPGMap.clTypeLists;
 			miTypeLists = RPGMap.miTypeLists;
 			spTypeLists = RPGMap.spTypeLists;
+			classMap = RPGMap.classMap;
 			reSpellSpecs = RPGMap.reSpellSpecs;
 			reClassSpecs = RPGMap.reClassSpecs;
 			reAttr = RPGMap.reAttr;
@@ -1225,6 +1242,7 @@ var CommandMaster = (function() {
 				var player = p;
 				if (player) {
 					if (playerIsGM(player.id)) {
+						state.CommandMaster.gmID = player.id;
 						return player.id;
 					}
 				}
@@ -1232,7 +1250,7 @@ var CommandMaster = (function() {
 				return playerGM.id;
 			}
 		}
-		return undefined;
+		return state.CommandMaster.gmID;
 	}
 	
 /* ------------------------------------------------ Database & Handout Functions -------------------------------------------- */
@@ -1279,7 +1297,7 @@ var CommandMaster = (function() {
 	 * Function to replace special characters in a string
 	 */
 	 
-	var parseStr=function(str){
+	var parseStr=function(str=''){
 		return replacers.reduce((m, rep) => m.replace(rep[0], rep[1]), str);
 	}
 
@@ -1408,6 +1426,7 @@ var CommandMaster = (function() {
 		var	ProfTable = getTable( charCS, fieldGroups.WPROF ),
 			profs = [], 
 			types = [],
+			list = '',
 			row, wpProf, wpName = '';
 			
 		for (row=ProfTable.table[1]; !_.isUndefined(wpName = ProfTable.tableLookup( fields.WP_name, row, false )); row++) {
@@ -1424,6 +1443,7 @@ var CommandMaster = (function() {
 				if (wpName && wpName.length) types.push( wpName );
 			}
 		}
+		list = profs.map(p => p[0]+p[1]).join();
 		profs= _.chain(profs)
 				.compact()
 				.sort((a,b)=>{
@@ -1445,7 +1465,7 @@ var CommandMaster = (function() {
 				.map( item => '<span style=' + design.grey_button + '>'+item+'</span>')
 				.join('')
 				.value();
-		return {profs:profs, types:types};
+		return {profs:profs, list:list, types:types};
 	}
 
 	/*
@@ -1595,7 +1615,7 @@ var CommandMaster = (function() {
 	 * Calculate/roll an attribute value that has a range
 	 * Always tries to create a 3 dice bell curve for the value
 	 **/
-	 
+/*	 
 	var calcAttr = function( attr='3:18' ) {
 		let attrRange = attr.split(':'),
 			low = parseInt(attrRange[0]),
@@ -1786,7 +1806,7 @@ var CommandMaster = (function() {
 	/**
 	 * A function to calculate an internal dice roll
 	 */
-		
+/*		
 	var rollDice = function( count, dice, reroll ) {
 		count = parseInt(count || 1);
 		dice = parseInt(dice || 8);
@@ -1807,7 +1827,7 @@ var CommandMaster = (function() {
 	 * Evaluating ranges, and doing maths using eval()
 	 */
 	 
-	var evalAttr = function(v) { 
+/*	var evalAttr = function(v) { 
 		function reRoll(m,n,p,r) { return rollDice(n,p,r); };
 		var handoutIDs = getHandoutIDs(),
 			orig = v;
@@ -1817,6 +1837,7 @@ var CommandMaster = (function() {
 			  reMinMax = /[Mthmaxin\.\,\(\)\d\+\-\*\/]+/g;
 		
 		try {
+			v = String(v);
 			if (!v || !v.length) {
 				return '';
 			} else {
@@ -1850,7 +1871,7 @@ var CommandMaster = (function() {
 
 	var setCreatureAttrs = function( cmd, charCS, senderId, creature, token, qualifier=[] ) { 
 	
-		var raceData, attrData, rawData,
+		var raceData, attrData,
 			raceDesc, i,
 			tokenObj = getObj('graphic',token._id),
 			isReset = cmd.toUpperCase() === BT.RESET_CONTAINER,
@@ -1877,7 +1898,8 @@ var CommandMaster = (function() {
 		
 		if (creature && creature.trim().length) {
 			
-			[raceData,attrData,rawData] = resolveData( creature, fields.RaceDB, /}}\s*?racedata\s*?=\s*\[(.*?)\],?{{/im, qualifier );
+			let dataObj = resolveData( creature, fields.RaceDB, /}}\s*?racedata\s*?=\s*\[(.*?)\],?{{/im, null, null, null, qualifier );
+			raceData = dataObj.parsed; attrData = dataObj.attrs; // rawData = dataObj.raw;
 			if (!raceData || !attrData) return;
 			setAttr( charCS, fields.Race, creature );
 		}
@@ -1885,6 +1907,11 @@ var CommandMaster = (function() {
 		if (isCreature) {
 			
 			if (!creature || !creature.trim().length) return;
+
+			classLevels.forEach( c => {
+				setAttr( charCS, c[0], '' );
+				setAttr( charCS, c[1], '' );
+			});
 
 			let hd = attrData.hd.match(/(\(.+?\)|\d+)(?:d\d+)?([-+]\d+(?:d\d+)?(?:[-+]\d+)?)?(?:r(\d+))?/i) || ['','1','0',''];
 			let hpExtra = (hd[2] || '0').match(/([-+]\d+)(?:d(\d+))?([-+]\d+)?/);
@@ -1916,20 +1943,18 @@ var CommandMaster = (function() {
 			setAttr( charCS, fields.Monster_spDef, parseStr(raceData.spdef) || 'Nil' );
 			if (!attrData.hp && hd && hd.length) {
 				hd[2] = ((hpExtra && hpExtra.length >= 2 && parseInt(hpExtra[2])) ? (rollDice( hpExtra[1], hpExtra[2], 0 ) + parseInt(hpExtra[3] || 0)) : parseInt(hd[2] || 0));
-				attrData.hp = rollDice( evalAttr(hd[1]), 8, hd[3] ) + hd[2];
+				let res = evalAttr(hd[1]);
+				attrData.hp = rollDice( res, 8, hd[3] ) + hd[2]; 
 			}
 			setAttr( charCS, fields.Monster_hitDice, (evalAttr(hd[1]||'1')) );
 			setAttr( charCS, fields.Monster_hpExtra, (hd[2]||'0') );
 			setAttr( charCS, fields.Monster_hdReroll, (hd[3]||'') );
 			if (attrData.hp) {
+				attrData.hp = evalAttr(attrData.hp);
 				setAttr( charCS, fields.HP, attrData.hp );
 				setAttr( charCS, fields.MaxHP, attrData.hp );
 			}
-			setAttr( charCS, fields.Fighter_level, '' );
-			setAttr( charCS, fields.Wizard_level, '' );
-			setAttr( charCS, fields.Priest_level, '' );
-			setAttr( charCS, fields.Rogue_level, '' );
-			setAttr( charCS, fields.Psion_level, '' );
+			
 			if (attrData.lv) {
 				let classData = (attrData.cl || 'F:Warrior').split('/').map( c => c.split(':') );
 				let levels = attrData.lv.split('/');
@@ -1996,7 +2021,6 @@ var CommandMaster = (function() {
 				}
 				setAttr( charCS, fields.Lock_imgs, 0 );
 				setAttr( charCS, fields.Trap_imgs, 0 );
-//				log('setCreatureAttrs: AC = '+attrData.cac+', hp = '+attrData.hp);
 				setAttr( charCS, fields.MonsterAC, calcAttr(parseStr(attrData.cac || '10')) );
 				if (attrData.hp) {
 					setAttr( charCS, fields.HP, attrData.hp );
@@ -2171,6 +2195,7 @@ var CommandMaster = (function() {
 						+  '<span style=' + design.grey_button + '>Mastery</span>'
 			}
 			buttons = getProfButtons( selected );
+			setAttr( charCS, fields.ProfList, buttons.list );
 			content += '}}{{desc1=Weapon Proficiencies\n'
 					+  buttons.profs + '\n'
 					+  'Related Weapon Types\n'
@@ -3230,7 +3255,7 @@ var CommandMaster = (function() {
 			{sendError('Invalid type specified when adding powers',msg_orig[senderId]);return;}
 			
 		var tokenID, tokenObj, charCS, content, found = false,
-			classes, race, raceObj, parsedData, parsedAttr, raceData,
+			classes, race, raceObj, dataObj, parsedData,
 			racePowers = [], abAction = [], powers = [[],[]],
 			spellType = type.toLowerCase(),
 			typeText = {AB:'Actions',PW:'Powers',MU:'Wizard Spells',PR:'Priest Spells'};
@@ -3309,8 +3334,9 @@ var CommandMaster = (function() {
 		
 			powers = (type !== 'AB') ? getClassPowers( charCS, senderId, powers, type ) : powers;
 			race = attrLookup( charCS, fields.Race ) || 'human';
-			[parsedData,parsedAttr,raceData] = resolveData( race, fields.RaceDB, /}}\s*RaceData\s*=(.*?){{/im );
-			[racePowers,powers,abAction] = getRacePowers( racePowers, powers, abAction, type, raceData, reSpellSpecs );
+			dataObj = resolveData( race, fields.RaceDB, /}}\s*RaceData\s*=(.*?){{/im );
+			parsedData = dataObj.parsed;
+			[racePowers,powers,abAction] = getRacePowers( racePowers, powers, abAction, type, dataObj.raw, reSpellSpecs );
 
 			if (type === 'AB') {
 				let roller = '',   // state.MagicMaster.gmRolls ? 'GM-Roll-' : '',
@@ -3319,13 +3345,14 @@ var CommandMaster = (function() {
 				if (lock) {
 					let	lockObj = abilityLookup( fields.AbilitiesDB, lock, charCS );
 					if (lockObj.obj) {
-						[parsedData,parsedAttr,raceData] = resolveData( lock, fields.AbilitiesDB, /abilitydata=([^\{]*)/im );
+						dataObj = resolveData( lock, fields.AbilitiesDB, /abilitydata=([^\{]*)/im );
+						parsedData = dataObj.parsed;
 						racePowers.push(lock);
 						powers[1].push(lock);
 						abAction.push(parsedData.action == '1');
 						setImgs(tokenObj,charCS,parsedData,(lock !== oldLock));
 						setVars(charCS,parsedData,'lvar',fields.Lock_varPrefix[0],fields.Lock_vars,(lock !== oldLock));
-						[racePowers,powers,abAction] = getRacePowers( racePowers, powers, abAction, type, raceData, reSpellSpecs );
+						[racePowers,powers,abAction] = getRacePowers( racePowers, powers, abAction, type, dataObj.raw, reSpellSpecs );
 					};
 				};
 						
@@ -3335,14 +3362,15 @@ var CommandMaster = (function() {
 				if (trap) {
 					let	trapObj = abilityLookup( fields.AbilitiesDB, trap, charCS );
 					if (trapObj.obj) {
-						[parsedData,parsedAttr,raceData] = resolveData( roller+trap, fields.AbilitiesDB, /abilitydata=([^\{]*)/im );
+						dataObj = resolveData( roller+trap, fields.AbilitiesDB, /abilitydata=([^\{]*)/im );
+						parsedData = dataObj.parsed;
 						racePowers.push(trap);
 						powers[1].push(trap);
 						abAction.push(parsedData.action == '1');
 						setImgs(tokenObj,charCS,parsedData,(trap !== oldTrap));
 						setVars(charCS,parsedData,'tvar',fields.Trap_varPrefix[0],fields.Trap_vars,(trap !== oldTrap));
 						setAttr(charCS,fields.Trap_magical,(1+parseInt(parsedData.magical)));
-						[racePowers,powers,abAction] = getRacePowers( racePowers, powers, abAction, type, raceData, reSpellSpecs );
+						[racePowers,powers,abAction] = getRacePowers( racePowers, powers, abAction, type, dataObj.raw, reSpellSpecs );
 					} else {
 						log('handleAddAllPowers: not found trap "'+trap+'"');
 					}
@@ -3405,10 +3433,9 @@ var CommandMaster = (function() {
 					content = '';
 				
 				var getWeaps = function( charCS, dB, name, type ) {
-					var parsedData,parsedAttr,rawData,
+					var rawData = resolveData( name, dB, /}}\s*(?:Class|Race)Data\s*=(.*?){{/im ).raw,
 						age = parseInt(attrLookup( charCS, fields.AgeVal )),
 						weapons = [];
-					[parsedData,parsedAttr,rawData] = resolveData( name, dB, /}}\s*(?:Class|Race)Data\s*=(.*?){{/im );
 					_.each( rawData, d => {
 						let weap = parseData( d[0], reEquipSpecs );
 //						log('getWeaps: name = '+name+', weap.age = '+weap.age+', age = '+age+', age >= (parseInt(weap.age) || 0) = '+(age >= (parseInt(weap.age) || 0)));
@@ -3433,7 +3460,7 @@ var CommandMaster = (function() {
 						if (_.isUndefined(index)) index = Items.tableFind( fields.Items_name, '-' );
 						if (_.isUndefined(index)) index = Items.addTableRow().sortKeys.length - 1;
 						let values = Items.copyValues();
-						let qty = (w[1] || '1').match(reDiceSpec) || ['','1','0','0',''];
+						let qty = (w.length > 1 ? w[1] : '1').match(reDiceSpec) || ['','1','0','0',''];
 						let qtyMod = (qty[3] || '0').match(reMod);
 						qty[3] = ((qtyMod && qtyMod.length >= 2 && parseInt(qtyMod[2])) ? (rollDice( qtyMod[1], qtyMod[2], 0 ) + parseInt(qtyMod[3] || 0)) : parseInt(qty[3] || 0));
 						let qtyVal = (parseInt(qty[2] ? rollDice( qty[1], qty[2], qty[4] ) : qty[1]) || 0) + parseInt(qty[3] || 0);
@@ -3522,7 +3549,7 @@ var CommandMaster = (function() {
 			value = args[2],
 			isLock = cmd !== BT.TRAPTYPE,
 			msg = '',
-			raceData, attrData,
+			attrData,
 			charCS = getCharacter(tokenID);
 			
 		if (!charCS) {
@@ -3537,7 +3564,7 @@ var CommandMaster = (function() {
 		} else {
 			setAttr( charCS, (isLock ? fields.Old_lock : fields.Old_trap), (isLock ? fields.Container_lock : fields.Container_trap));
 			setAttr( charCS, (isLock ? fields.Container_lock : fields.Container_trap), value );
-			[raceData,attrData] = resolveData( value, fields.AbilitiesDB, /}}\s*?abilitydata\s*?=\s*\[(.*?)\],?{{/im );
+			attrData = resolveData( value, fields.AbilitiesDB, /}}\s*?abilitydata\s*?=\s*\[(.*?)\],?{{/im ).attrs;
 			if (attrData.cac) setAttr( charCS, fields.MonsterAC, calcAttr(parseStr(attrData.cac || '10')) );
 			if (attrData.hp) {
 				setAttr( charCS, fields.HP, attrData.hp );
@@ -3721,6 +3748,11 @@ var CommandMaster = (function() {
 						let baseThac0val,
 							container = cmd === BT.CONTAINER,
 							isResetContainer = cmd === BT.RESET_CONTAINER;
+//							classes = [fields.Fighter_class,fields.Wizard_class,fields.Priest_class,fields.Rogue_class,fields.Psion_class];
+							
+//						if (fields.GameVersion === 'AD&D1e') {
+//							classes.fill(classLevels.find(c => !attrLookup( charCS, c[0], null, null, null, false, '' ) && !parseInt(attrLookup( charCS, c[1], null, null, null, false, '0' )))[0]);
+//						};
 						
 						switch (cmd.toUpperCase()) {
 						case BT.CLASS_F:
@@ -3798,6 +3830,7 @@ var CommandMaster = (function() {
 								handleCheckWeapons( token._id, charCS );
 							}
 							handleCheckSaves( null, senderId, [token], true );
+							displayClassLevel( charCS );
 						};
 						parseDesc( charCS, senderId );
 					} catch (e) {
@@ -4352,14 +4385,14 @@ var CommandMaster = (function() {
 						if (isNaN(thac0val) || String(thac0val).trim() == '') thac0val = 20;
 						if (isNaN(monsterThac0val) || String(monsterThac0val).trim() == '') monsterThac0val = 20;
 						if (isNaN(baseThac0val) || String(baseThac0val).trim() == '') baseThac0val = 20;
-
+						
 						ACval = (!ACval || !monsterACval) ? (ACval + monsterACval) : Math.min(monsterACval,ACval);
 						thac0val = Math.min(monsterThac0val,thac0val,baseThac0val,handleGetBaseThac0( charCS ));
 
 						if (AC) {
 							AC.set('current',ACval);
 						} else {
-							AC = createObj('attribute', {characterid:charCS.id, name:fields.AC[0], current:ACval});
+							AC = createObj('attribute', {characterid:charCS.id, name:fields.AC[0], current:ACval, max:''});
 						}
 						if (thac0) {
 							thac0.set('current',thac0val);
@@ -4379,7 +4412,7 @@ var CommandMaster = (function() {
 							curToken.set('bar2_link',((!!bar2obj && cmd !== BT.AB_TOKEN_NONE) ? bar2obj.id : ''));
 							curToken.set('bar3_link',((!!bar3obj && cmd !== BT.AB_TOKEN_NONE) ? bar3obj.id : ''));
 						}
-
+						
 						curToken.set({bar1_value:(!!bar1obj ? bar1obj.get('current') : ''),bar1_max:(!!bar1obj ? bar1obj.get('max') : '')});
 						curToken.set({bar2_value:(!!bar2obj ? bar2obj.get('current') : ''),bar2_max:(!!bar2obj ? bar2obj.get('max') : '')});
 						curToken.set({bar3_value:(!!bar3obj ? bar3obj.get('current') : ''),bar3_max:(!!bar3obj ? bar3obj.get('max') : '')});
@@ -4555,6 +4588,47 @@ var CommandMaster = (function() {
 		makeChangeImagesMenu( args, senderId, storeMsg);
 		return;
 	}
+	
+	/*
+	 * handle setting a class if converting a sheet with an 
+	 * undefined character class set on it.
+	 */
+	 
+	var handleConvertClass = function( args, selected, senderId ) {
+		
+		var cmd = args[0],
+			charID = args[1],
+			sheetIndex = args[2],
+			curClass = args[3],
+			curLevel = args[4],
+			newClass = args[5],
+			charCS = getObj( 'character', charID ),
+			classObj, baseClass, classIndex;
+			
+		if (!charCS) {
+			sendError('handleConvertClass: invalid character ID');
+			return;
+		}
+		if (cmd === BT.SET_CLASS) {
+			classObj = abilityLookup( fields.ClassDB, newClass );
+			baseClass = clTypeLists[classObj.type];
+		} else {
+			baseClass = newClass;
+			newClass = curClass;
+		};
+		if (baseClass) {
+			classIndex = primeClasses.map(c => c.toLowerCase()).indexOf(baseClass.type);
+		}
+		if (!baseClass || classIndex < 0) {
+			LibFunctions.sendError('Defined class '+newClass+' is of an undefined type. Check definition in Class-DB');
+		} else {
+			setAttr( charCS, classLevels[classIndex][0], newClass );
+			setAttr( charCS, classLevels[classIndex][1], curLevel );
+			setAttr( charCS, classMap[sheetIndex][0], newClass );
+		}
+	};
+			
+			
 	
 // ------------------------------------------------------------- Command Action Functions ---------------------------------------------
 
@@ -5000,6 +5074,7 @@ var CommandMaster = (function() {
 			sendFeedback(messages.convMsg + '{{Section2=Do you wish to continue?\n[Yes Please](!cmd --conv-spells '+args[0]+'|true) or [No I don\'t want to do this!](!cmd --abilities)}}');
 		} else {
 //			sendFeedback( messages.waitMsg );
+			updateClassLevel( charCS );
 			setTimeout( () => {
 				spells2Convert( args, selected );
 				makeConvertSpellsMenu( [], selected, senderId );
@@ -5030,6 +5105,7 @@ var CommandMaster = (function() {
 			sendFeedback(messages.convMsg + '{{Section2=Do you wish to continue?\n[Yes Please](!cmd --conv-items '+args[0]+'|true) or [No I don\'t want to do this!](!cmd --abilities)}}');
 		} else {
 //			sendFeedback( messages.waitMsg );
+			updateClassLevel( charCS );
 			setTimeout( () => {
 				makeConvertItemsMenu( [], selected, senderId );
 			}, 50);
@@ -5159,6 +5235,12 @@ var CommandMaster = (function() {
 		case BT.REVIEW_RACE:
 		
 			makeClassReviewDialogue( args, selected, isGM );
+			break;
+			
+		case BT.SET_CLASS:
+		case BT.SET_CLASS_TYPE:
+		
+			handleConvertClass( args, selected, senderId );
 			break;
 			
 		case BT.TOKEN_IMG:

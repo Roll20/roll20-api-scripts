@@ -1255,3 +1255,19 @@ pf2guidance:
 velvetgeneration:
   - "Velvet Generation"
   - "Utility"
+
+listattrs:
+  - "ListAttrs"
+  - "Utility"
+
+showbuttons:
+  - "ShowButtons"
+  - "Utility"
+
+relatedtokenmovement:
+  - "Related Token Movement"
+  - "Utility"
+
+DrD2LinkedTenacity:
+  - "DrD2LinkedTenacity"
+  - "Utility"
