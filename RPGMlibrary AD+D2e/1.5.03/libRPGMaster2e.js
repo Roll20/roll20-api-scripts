@@ -6303,19 +6303,21 @@ const libRPGMaster = (() => { // eslint-disable-line no-unused-vars
 					if (!isGM && trueName && trueName.length && (name.dbName() === trueName.dbName())) {
 						abObj.obj[1].body = abObj.obj[1].body.replace(/{{\s*?Looks\s?Like\s*=/img,'{{Appearance=');
 					}
-					if (trueName && trueName.length && name.dbName() !== trueName.dbName()) {
-						let cmd = '{{GM Info=[Reveal Now](!magic --button GM-ResetSingleMI|'+charCS.id+'|'+name
-								+ ' --message gm|'+charCS.id+'|Revealing '+trueName.dispName()+'|The item '+trueName.dispName()+' which was hidden as '+name.dispName()+' has been revealed)';
-						if (/{{\s*GM\s?Info\s*=/im.test(abObj.obj[1].body)) {
-							abObj.obj[1].body = abObj.obj[1].body.replace(/{{\s*GM\s?Info\s*=([^\[])/im,(cmd + ' $1'));
-						} else {
-							abObj.obj[1].body += cmd + '}}';
+					if (charCS) {
+						if (trueName && trueName.length && name.dbName() !== trueName.dbName()) {
+							let cmd = '{{GM Info=[Reveal Now](!magic --button GM-ResetSingleMI|'+charCS.id+'|'+name
+									+ ' --message gm|'+charCS.id+'|Revealing '+trueName.dispName()+'|The item '+trueName.dispName()+' which was hidden as '+name.dispName()+' has been revealed)';
+							if (/{{\s*GM\s?Info\s*=/im.test(abObj.obj[1].body)) {
+								abObj.obj[1].body = abObj.obj[1].body.replace(/{{\s*GM\s?Info\s*=([^\[])/im,(cmd + ' $1'));
+							} else {
+								abObj.obj[1].body += cmd + '}}';
+							}
 						}
+						abObj.obj[0] = LibFunctions.setAbility( charCS, name, abObj.obj[1].body );
+						LibFunctions.setAttr( charCS, [fields.CastingTimePrefix[0]+name,'current'], abObj.obj[1].ct );
+						LibFunctions.setAttr( charCS, [fields.CastingTimePrefix[0]+name,'max'], abObj.obj[1].charge );
+						abObj.dB = charCS.get('name');
 					}
-					abObj.obj[0] = LibFunctions.setAbility( charCS, name, abObj.obj[1].body );
-					LibFunctions.setAttr( charCS, [fields.CastingTimePrefix[0]+name,'current'], abObj.obj[1].ct );
-					LibFunctions.setAttr( charCS, [fields.CastingTimePrefix[0]+name,'max'], abObj.obj[1].charge );
-					abObj.dB = charCS.get('name');
 				}
 				return abObj;
 			}
@@ -8158,7 +8160,6 @@ const libRPGMaster = (() => { // eslint-disable-line no-unused-vars
 												}
 											});
 										} else if (mods[m[1]]) {
-											allMods = false;
 											if (m[1] != 'att') {
 												addedText += xlate[m[1]]+': '+m[2]+', ';
 												if ('+-'.includes(m[2][0]) && !setFlags[m[1]]) {

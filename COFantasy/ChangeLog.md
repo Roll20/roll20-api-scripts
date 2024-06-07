@@ -1,6 +1,56 @@
 # COFantasy: Historique des changements (depuis la version 1.0)
+## 3.15
+### Capacités
+* Hémorragie de Pestrilax.
+* Prise en compte de la capacité Tir double pour les attaques à 2 mains.
+* Défi de la Voie du Duelliste
+* Meilleure prise en charge de la spécialisation du guerrier.
+* Implémentation de la version avancée du drain de force de Dominia.
+
+### Autres améliorations
+* Ajout du poison paralysant
+* Ajout d'une option --depensePR pour les actions autres que les attaques
+* Ajout d'une commande !cof-recupere-mana.
+* Règle optionnelle pour faire récupérer des points de mana quand on dépense un point de récupération.
+* Implémentation de prédicats pour les bonus en RD et aux caractéristiques.
+* Prise en compte des émissaires du dragon pour les ancres.
+* Amélioration de la gestion des utilisations de points de chance pour des attaques complexes.
+* Réinitialisation des options d'attaque à la fin d'un combat
+* Synchronisation des barres de tokens quand on le pose : Roll20 ne le fait plus correctement.
+* Extension des mécanismes d'escaliers pour Invincible.
+* Ajout d'un bonus magique pour absorber un coup ou un sort quand le bouclier est magique.
+* Prise en charge de plusieurs casque à mettre depuis le statut
+
+### Correction de bugs
+* Correction d'un bug pour les conditions d'attaque sur les attributs.
+* Correction pour les armes en main des mooks
+* Ne pas demander qu'un PNJ ait un prédicat pour se battre à 2 armes sans malus.
+
+## 3.14
+### Capacités
+* Général de la campagne Vengeance.
+* Meilleure prise en charge de l'ambidextrie du voleur et du combat à deux armes amélioré.
+* Massacrer la piétaille
+* Ajout de la Voie de prestige du loup-garou.
+* Amélioration de la prise en charge du rang 1 de la Voie du prédateur.
+* Amélioration de la prise en chagre de la capacité Exemplaire du chevalier.
+* Utilisation d'un prédicat pour As de la gachette.
+* Amélioration de la prise en charge du tir double.
+
+### Autres améliorations
+* Amélioration de la présentation des armes à dégainer quand un personnage combat à deux armes.
+* Les PNJ avec une seule arme visible la dégainent automatiquement quand on pose le token.
+
+### Corrections de bugs
+* Correction d'un bug qui faisait planter en cas d'interposition du golem.
+
 ## 3.13
 ### Capacités
+* Support pour la démolition et les pièges explosifs.
+* Amélioration du support des tirs de semonce.
+* Attaque en meute pour un joueur gobelin.
+* Attaque bondissante du druide
+* Charge du barbare (avec le déplacement)
 * Vitalité épique.
 * Pluie de flèches de la Voie d'Arwendée.
 * Rangs 1 à 4 de la Voie du guérisseur.
@@ -8,6 +58,12 @@
 * Expertise (rang 1 de la Voie de prestige spécialisée)
 
 ### Autres améliorations
+* Possibilité d'utiliser des prédicats comme valeurs limites des limitations par jour ou par combat.
+* Possibilité de faire un déplacement automatique avant une attaque
+* Possibilité que la peur paralyse.
+* Ajout d'une commande !cof-clean-global-state.
+* Ajout d'une action pour relacher une cible agrippée.
+* Ajout d'une option --succes à !cof-jet
 * Possibilité d'utiliser les options de triche avec les --if
 * Ajout d'un prédicat pour les armes de l'été.
 * Ajout d'un effet armeGlacee.
@@ -16,6 +72,8 @@
 * Ajout d'un prédicat pour l'immnunité aux dégâts magiques.
 
 ### Corrections de bugs
+* Correction d'un bug avec le lien épique.
+* Activation correcte de l'attaque en traître.
 * Activation de Ignorer la douleur sur les attaques automatiques.
 * Dépense de mana quand on dépasse les limites journalières
 

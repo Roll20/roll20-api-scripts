@@ -1,0 +1,15 @@
+{
+  "name": "ShowButtons",
+  "script": "ShowButtons.js",
+  "version": "1.0.1",
+  "description": "ShowButtons allows you to programmatically control what buttons show as 'token actions' when you've selected a token. This is helpful, for instance, if you have a shapeshifting character who has certain actions available to them in one form, and certain other actions available in another form./r/rHistorically, control over the character (or being a GM) has been required for this script to function, however with the v1.0.1 update, players may be granted the ability to act on characters they don't control. This is helpful for situations where you might have one character casting a spell on another character in the party, granting the target certain abilities./r/rFor more information and for syntax, see the original forum thread: [ShowButtons Forum Thread](https://app.roll20.net/forum/post/11429784/script-showbuttons-show-slash-hide-token-action-buttons-without-opening-character-sheet-or-collections-tab/)",
+  "authors": "timmaugh",
+  "roll20userid": "5962076",
+  "useroptions": [],
+  "dependencies": [ "Messenger" ],
+  "modifies": {
+    "state.ShowButtons": "read, write"
+  },
+  "conflicts": [],
+  "previousversions": []
+} 
