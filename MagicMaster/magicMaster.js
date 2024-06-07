@@ -30,141 +30,7 @@ API_Meta.MagicMaster={offset:Number.MAX_SAFE_INTEGER,lineCount:-1};
  * The goal of this script is to create and automate aspects of magic spell & item
  * discovery, storage & use, initially for the ADnD 2e game in Roll20
  * 
- * v0.001-v2.042       Removed previous change history - see v2.048 for detail
- * v2.043  01/01/2022  Prioritise user-defined database items over provided ones
- *                     Add spell weapons to the provided weapons database (e.g. Ice Knife)
- *                     Add all remaining spells from the PHB to the databases
- * v2.044  08/01/2022  Added index of database ability objects to improve performance.
- * v2.045  14/01/2022  Fixes to multiclass spell level calculation and non-MU/non-Priest
- *                     spellcaster spell numbers, and force container type when adding items.
- * v2.046  23/01/2022  Fixed illegal characters not rendered by One-Click installation
- *                     Corrected definitions of Spear and Lightning-Bolt
- *                     Added menu for adding Spells & Powers to magic items
- * v2.047  02/02/2022  Added --config command and menu for DM to alter some API behavior
- *                     Fixed Shocking Bracers LB error & enhanced Rage power
- *                     Multiple weapon and magic item definition updates
- * v2.048  24/02/2022  Fixed bug with prioritising user-defined database entries
- * v3.050  27/02/2022  Added Class-DB as a standard database.  Added Class Powers to
- *                     Powers-DB. Updated abilityLookup()
- *                     to cope with missing databases and abilities that were previously indexed.
- *                     Fixed multiple Magic Item issues, esp. Spell Storing MIs.
- *                     Restricted spellcasters to allowed spells (configurable via --config menu).
- *                     Split Weapon & Armour DBs to AttackMaster. 
- * v3.051  10/03/2022  Make database load an asynchronous process to eliminate invalid
- *                     "infinite loop" errors.  Introduced "Creature" character class.
- *                     Fixed issues with handling manual updates to Character Sheet tables.
- *                     Added support for Attacks-DB. Synchronised DB Indexing between APIs 
- *                     to ensure all DBs loaded before indexing.
- * v3.060  28/03/2022  Moved all Table Mgt, Ability Mgt, Chat Mgt, Database Mgt to a
- *                     shared library
- * v3.061  25/04/2022  Fixed all errors found in 3.060, and moved all game-specific and 
- *                     character sheet specific data structures to RPG-specific shared library
- * v3.062  16/05/2022  Added function to configure output by player so players can choose their
- *                     own output type.
- * v3.063  18/05/2022  Updated menu & item display to use RPGM roll templates.  Improved error 
- *                     message for character classes that cast spells at levels they've not 
- *                     yet attained.
- * v3.064  14/07/2022  Removed whispers from database entries and changed to direct to
- *                     appropriate player programmatically so that GM can test locally
- * v0.3.65 19/07/2022  Converted to use revised internal database structures
- * v0.3.66 17/09/2022  Optionally allow semi-colon as an escape character terminator. Updated dB
- *                     functions to copy items used by a character to their sheet so can be moved 
- *                     to new campaigns easily. Added more RPGMaster common functions to library. 
- *                     Moved help handouts to Library. Support editing martial MIs and other MIs 
- *                     separately. Improved handling of MIs with spells & powers. Support only 
- *                     showing item types when searching containers. Allow spell name as parameter 
- *                     for --cast-again. Improved menu processing for viewing & using MIs. Added 
- *                     renaming, auto-reveal, and type-only containers to --GM-edit-MI menu. Added 
- *                     --tidy command to remove attributes and ability macros no longer needed on 
- *                     specified Character Sheets. Updated --help command to display handouts. 
- *                     Added --extract-db command to generate a Character Sheet version of a database 
- *                     if GM wants it.
- * v1.3.00 17/09/2022  Brought version numbering in line with other APIs. First release using 
- *                     RPGMaster RPG-version-specific Library.
- * v1.3.01 07/10/2022  Allow spells to be set as powers, and fix clashes between MIs that use the 
- *                     same powers and spells, and improve CS --tidy function
- * v1.3.02 09/10/2022  Support spell level absorbing magic items, and spells as weapons. Fixed 
- *                     regular expression for database Specs parsing
- * v1.3.03 11/11/2022  Add a button to the Memorise Powers menu to memorise all currently valid powers.
- *                     Fixed some error messages. Added response to --index-db command. Added
- *                     config option for restricting powers to valid level or not.
- * v1.3.04 24/11/2022  Skipped, to keep in line with versions of other APIs
- * v1.3.05 24/11/2022  Added new --level-change command to allow level-drain by creatures.
- * v1.4.01 28/11/2022  Support for the extended Creatures database & fighting styles. Extended String
- *                     prototype with dbName() method.
- * v1.4.02 13/11/2022  Added ability to specify "cast as level" in Class/Race/Creature powers
- * v1.4.03 24/01/2023  Fixed bugs in getting class/race default power uses per day, and in 
- *                     finding blank/extended rows in the Items table to store items in.
- * v1.4.04 24/01/2023  Added support for configurable default token bar mapping. Added separate 
- *                     Ammo list to Change MI menu (appears if AttackMaster is not loaded).
- * v1.4.05 02/03/2023  Moved character level parsing to library. Added charge type override to
- *                     --mi-charges command. If casting level of MI powers/spells not specified
- *                     default to that of character. Fix removeMIpowers() to deal with spaces.
- *                     Added 'perm-' charge type qualifier to prevent any MI from disappearing at
- *                     zero charges. Add destination command to --message syntax. Add --mi-rest
- *                     command to reset single MI or single MI power.
- * v1.4.06 08/04/2023  Fixed bug with item search introduced by v1.4.05.  Added magic item bag 
- *                     creation to support Bags of Holding, and MIs that contain other MIs. Fixed 
- *                     inconsistencies with hyphenated item names and spell / power storing items.
- * v1.4.07 15/04/2023  Added 'discharging' and 'cursed-uncharged' item types which do not divide. Added 
- *                     ability for items to store spells as powers using --store-spells command.
- *                     Added current qty of currently selected MI to MIct|max attribute (itemQty field)
- *                     on the character sheet.
- * v1.4.08 16/04/2023  Fixed issues with hiding and revealing cursed items. Added alphabeticised lists 
- *                     and item review to the GM Add Items menu.
- * v1.5.01 17/05/2023  Added 'qty:' data tag to specify initial quantity of any item. Added support 
- *                     for 'Looks Like' template tag supporting auto-hiding of items. Added 'st:' 
- *                     data tag to specify displayed type of a hidden item. Added RPGM config options 
- *                     for 'Allow Any Power', 'alpha lists' & 'auto-hide items'. Added the 
- *                     'single-uncharged' item charge type to designate uncursed uncharged items that 
- *                     do not stack or divide when looted or stored, and perhaps discharge 
- *                     unconventionally. Moved getShownType() to library so can be used from 
- *                     other APIs. Improved tidying of MI ability macros on character sheets. Added 
- *                     auto-hiding of items with the 'Looks Like' template tag. Return to GM Add Items 
- *                     dialog if GM is reviewing MI spells. Use a GM whisper when GM is viewing the 
- *                     description of a spell or item a character has just used. Default casting level 
- *                     of a power to that of the caster if level is not specified in definition. Extended 
- *                     --mi-power and --mi-rest commands to support powers able to drain multiple charges 
- *                     and set new maximums per day. Fixed --tidy command and auto-tidying of character 
- *                     sheets. Prevented --tidy from accidentally tidying any db character sheet that 
- *                     had been dropped as a token. Allow --message to take a character ID or a token ID 
- *                     to send the message to
- * v1.5.02 24/05/2023  Fixed tableLookup() reference for storing spells in spell-storing MIs. Fixed use
- *                     of alphabetical lists in the GM's Add Items dialog.
- * v1.5.03 08/06/2023  Fixed error where a self-hidden item name does not have a db definition.
- * v2.1.0  21/07/2023  Extend the --mem-spell command with -ADD and -ANY command qualifiers that give 
- *                     players the ability to add additional spells to a spell storing MI, and/or 
- *                     change the existing spells. Weaponised spells cast from spell-storing MIs now 
- *                     restrict the "Change Weapon" lists to only include weponised spells from the MI.
- *                     Made many more functions asynchronous to multi-thread. Fixed bug setting non-MU 
- *                     and non-PR spell-casters to incorrectly have MU or PR spell level. Fixed issue 
- *                     of trying to display non-hyphenated abilities from char sheet. Fixed container 
- *                     type not updating when items are stored in it to become searchable.
- * v2.2.0  21/07/2023  Implemented The Aaron's API_Meta error handling. Added senderId override capability 
- *                     as id immediately after !magic & before 1st --cmd. Added –learn command to run a 
- *                     “learn a spell” process for wizards. Added –find-traps command to support finding 
- *                     traps separately from –search command, and allow it on non-type 4 containers.
- *                     Moved reACspecs, reSpellSpecs & reClassSpecs to library. Added Skill-based roll 
- *                     configuration option switching GM-rolled thieving actions (Find Traps) with player 
- *                     rolled. Converted some messages to use new sendMsgToWho() function to improve 
- *                     message addressing. Several bug fixes. Fixed checkValidSpell() and changeMIspells() 
- *                     to support new –learn command. Support better management of Magic Item spells, 
- *                     using similar approach as to Powers. Removed potential setTimeout() issues with 
- *                     asynchronous use of variable values – passed as parameters instead. Improved 
- *                     --search processing to ensure works for both search & store. Fixed button case error.
- * v2.3.0  19/09/2023  Fixed spell-storing magic item issue with '-ADD' and '-ANY' capabilities. Added 
- *                     '-CHANGE' capability to spell-storing MIs. Added 'store' and 'lvl' attributes to 
- *                     MI data definitions to set the 'add', 'any' and 'change' status (defaults to 'none'), 
- *                     and to restrict the number of spell levels stored (defaults to 99).Extend 
- *                     handleAddAllPowers() to also deal with MU & PR spells at all levels, and made it 
- *                     asynchronous. Fixed checking valid spells & valid powers. Use stored spell 
- *                     row/column data to build item-specific spell lists. Ensure that --change-attr 
- *                     command rounds correctly for odd/even scores.
- * v2.3.1  19/10/2023  For --extract-db if multiple databases start with the supplied name, ask which to extract
- * v2.3.2  25/10/2023  Fixed hyphenation of reviewed weapons, items, spells & powers. Changed behavior of 
- *                     menu to memorise spells & powers so more intuitive.
- * v2.3.3  05/11/2023  Fixed issue with case mismatch on looking up SpellsPerLevel.
- * v2.3.4  12/11/2023  Fixed issue with level at which Powers are cast.
+ * v0.1.0 to v2.3.4    For earlier change log see earlier versions
  * v3.0.0  31/10/2023  Added support for other character sheets and game systems.  Corrected how the 
  *                     casting level of spells used as powers are calculated. Fixed storing items in 
  *                     type 6 or 7 containers. Added query: attribute to magic items to add Roll Queries 
@@ -208,14 +74,25 @@ API_Meta.MagicMaster={offset:Number.MAX_SAFE_INTEGER,lineCount:-1};
  *                     command to support the new [show more...] and {{hide#=...}} syntax of RPGMspell & 
  *                     RPGMdefault templates. On token death, save current container type & set to 6 
  *                     (force inanimate), but reset to original if revived.
+ * v3.4.1  23/05/2024  Fixed errors in renaming magic items using the GM-edit-mi menu.
+ * v3.5.0  06/05/2024  Updated --level-change to support "fixed class" where does not ask for classes.
+ *                     Allow configuration option to "grey out" spell & item action buttons when viewing
+ *                     (rather than using). Add "splitable" items which can be split when picked up but 
+ *                     do not stack (e.g. used for paper, parchment & papyrus) except for renamed items 
+ *                     which can't do this. Fix spell storing items that have an "-ADD" postfix allowing 
+ *                     the player/character to add spells. Fix magic item rev: attribute to correctly use
+ *                     'manual', 'view', or 'use'. Support renaming of items picked up that are not 
+ *                     stackable and the container already contains that item name. Fix handling of use 
+ *                     of --mi-charges with "=#" for setting the quantity to an absolute number. Support 
+ *                     RPGM maths operators for numbers passed to --mi-charges.
  */
  
 var MagicMaster = (function() {
 	'use strict';
-	var version = '3.4.0',
+	var version = '3.5.0',
 		author = 'RED',
 		pending = null;
-	const lastUpdate = 1712853841;
+	const lastUpdate = 1717750563;
 		
 	/*
 	 * Define redirections for functions moved to the RPGMaster library
@@ -314,23 +191,51 @@ var MagicMaster = (function() {
 	var RPGMap = {};
 	
 	/*
+	 * set design strings for common icons and button colours before they
+	 * are used.
+	 */
+	
+	const design = {
+		turncolor: '#D8F9FF',
+		roundcolor: '#363574',
+		statuscolor: '#F0D6FF',
+		statusbgcolor: '#897A87',
+		statusbordercolor: '#430D3D',
+		edit_icon: 'https://s3.amazonaws.com/files.d20.io/images/11380920/W_Gy4BYGgzb7jGfclk0zVA/thumb.png?1439049597',
+		delete_icon: 'https://s3.amazonaws.com/files.d20.io/images/11381509/YcG-o2Q1-CrwKD_nXh5yAA/thumb.png?1439051579',
+		settings_icon: 'https://s3.amazonaws.com/files.d20.io/images/11920672/7a2wOvU1xjO-gK5kq5whgQ/thumb.png?1440940765', 
+		apply_icon: 'https://s3.amazonaws.com/files.d20.io/images/11407460/cmCi3B1N0s9jU6ul079JeA/thumb.png?1439137300',
+		bag_icon: 'https://s3.amazonaws.com/files.d20.io/images/335981697/ocKqy1UIfPMSD-TYEO6oXA/thumb.png?1680722832',
+		info_msg: '<div style="color:green;font-weight:bold;border:2px solid black;background-color:white;border-radius:1em;padding:1em;">',
+		grey_button: '"display: inline-block; background-color: lightgrey; border: 1px solid black; padding: 4px; color: dimgrey; font-weight: extra-light;"',
+		dark_button: '"display: inline-block; background-color: lightgrey; border: 1px solid black; padding: 4px; color: black; font-weight: normal;"',
+		selected_button: '"display: inline-block; background-color: white; border: 1px solid red; padding: 4px; color: red; font-weight: bold;"',
+		green_button: '"display: inline-block; background-color: white; border: 1px solid lime; padding: 4px; color: darkgreen; font-weight: bold;"',
+		boxed_number: '"display: inline-block; background-color: yellow; border: 1px solid blue; padding: 2px; color: black; font-weight: bold;"',
+		success_box: '"display: inline-block; background-color: yellow; border: 1px solid lime; padding: 2px; color: green; font-weight: bold;"',
+		failure_box: '"display: inline-block; background-color: yellow; border: 1px solid red; padding: 2px; color: maroon; font-weight: bold;"',
+		grey_action: '&lt;span style="display: inline-block; background-color: lightgrey; border: 1px solid black; padding: 4px; color: dimgrey; font-weight: extra-light;"&gt;$1&lt;/span&gt;'
+	};
+	
+	/*
 	 * MagicMaster related help handout information.
 	 */
 	
 	const handouts = Object.freeze({
 	MagicMaster_Help:	{name:'MagicMaster Help',
-						 version:3.06,
+						 version:3.07,
 						 avatar:'https://s3.amazonaws.com/files.d20.io/images/257656656/ckSHhNht7v3u60CRKonRTg/thumb.png?1638050703',
 						 bio:'<div style="font-weight: bold; text-align: center; border-bottom: 2px solid black;">'
-							+'<span style="font-weight: bold; font-size: 125%">MagicMaster Help v3.06</span>'
+							+'<span style="font-weight: bold; font-size: 125%">MagicMaster Help v3.07</span>'
 							+'</div>'
 							+'<div style="padding-left: 5px; padding-right: 5px; overflow: hidden;">'
 							+'<h1>MagicMaster API v'+version+'</h1>'
 							+'<h4>and later</h4>'
-							+'<h3><mark style="color:green">New</mark> in this Help Handout</h3>'
-							+'<ul>'
-							+'<li><mark style="color:green">New</mark> --query-qty command to set "spellcharges|current" attribute</li>'
-							+'</ul>'
+							+'<h3><span style='+design.selected_button+'>New:</span>  in this Help Handout</h3>'
+							+'<p><span style='+design.selected_button+'>Update:</span> Added RPGM maths processor to many numerical command parameters</p>'
+							+'<p><span style='+design.selected_button+'>Update:</span> On viewing a spell or an item description, action buttons are disabled</p>'
+							+'<p><span style='+design.selected_button+'>Update:</span> Fixed --add-mi when replacing an item to also replace in-hand weapons and worn rings</p>'
+							+'<p><span style='+design.selected_button+'>Update:</span> Extended optional parameters for --level-change</p>'
 							+'<p>The MagicMaster API provides functions to manage all types of magic, including Wizard & Priest spell use and effects; Character, NPC & Monster Powers; and discovery, looting, use and cursing of Magic Items.  All magical aspects can work with the <b>RoundMaster API</b> to implement token markers that show and measure durations, and produce actual effects that can change token or character sheet attributes temporarily for the duration of the spell or permanently if so desired.  They can also work with the <b>InitiativeMaster API</b> to provide menus of initiative choices and correctly adjust individual initiative rolls, including effects of Haste and Slow and similar spells.  This API can also interact with the <b>MoneyMaster API</b> (under development) to factor in the passing of time, the cost of spell material use, the cost of accommodation for resting, and the cost of training for leveling up as a spell caster (Wizard, Priest or any other).</p>'
 							+'<h2>Syntax of MagicMaster calls</h2>'
 							+'<p>The MagicMaster API is called using !magic (or the legacy command !mibag).</p>'
@@ -354,6 +259,20 @@ var MagicMaster = (function() {
 							+'<p>To overcome this, or when output is being misdirected for any other reason, a <b>Controlling Player Override Syntax</b> (otherwise known as a <i>SenderId Override</i>) has been introduced (for RPGMaster Suite APIs only, I\'m afraid), with the following command format:</p>'
 							+'<pre>!magic [sender_override_id] --cmd1 args1... --cmd2 args2...</pre>'
 							+'<p>The optional <i>sender_override_id</i> (don\'t include the [...], that\'s just the syntax for "optional") can be a Roll20 player_id, character_id or token_id. The API will work out which it is. If a player_id, the commands output will be sent to that player when player output is appropriate, even if that player is not on-line (i.e. no-one will get it if they are not on-line). If a character_id or token_id, the API will look for a controlling player <i>who is on-line</i> and send appropriate output to them - if no controlling players are on-line, or the token/character is controlled by the GM, the GM will receive all output. If the ID passed does not represent a player, character or token, or if no ID is provided, the API will send appropriate output to whichever player Roll20 tells the API to send it to.</p>'
+							+'<br>'
+							+'<h3><span style='+design.selected_button+'>New:</span> Doing Maths for Numeric Values</h3>'
+							+'<p>Roll20 provides many excellent maths functions for commands made to the chat window and contained in API button strings. However, it is not always possible to use the Roll20 maths using the [[...]] syntax to achieve what you want. RPGMaster provides an alternative set of maths functions to help resolve these issues. Formulas can be entered for many numeric values required by RPGMaster commands using the supported syntax. <b><i>However:</i></b> this syntax does not work for anything other than RPGMaster commands as of writing (this might be a future develpment).</p>'
+							+'<p>The square brackets [[...]] are not required. The syntax follows normal maths presedent with a few additional operators to support range calculations and dice rolls:</p>'
+							+'<table>'
+								+'<tr><th scope="row">+-*/</th><td>The standard maths operators work as expected</td></tr>'
+								+'<tr><th scope="row">(...)</th><td>Parentheses can be used to define the order of calculation as normal</td></tr>'
+								+'<tr><th scope="row">^(#,#,#,...)</th><td>This will resolve to the maximum value in the list, and each # can also be a calculation (semi-colons can be used instead of commas)</td></tr>'
+								+'<tr><th scope="row">v(#,#,#,...)</th><td>This will resolve to the minimum value in the list, and each # can also be a calculation (semi-colons can be used instead of commas)</td></tr>'
+								+'<tr><th scope="row">c(...)</th><td>This will resolve to the ceiling (the number rounded up) of the result of the contained calculation</td></tr>'
+								+'<tr><th scope="row">f(...)</th><td>This will resolve to the floor (the number rounded down) of the result of the contained calculation</td></tr>'
+								+'<tr><th scope="row">#d#r#</th><td>Dice roll specifications can be included in the maths with optional reroll values anywhere in the calculation, and the numbers can be calculations</td></tr>'
+								+'<tr><th scope="row">#:#</th><td>A different feature is the range calculation - this will derive a number in the range between the two numbers (inclusive), but will try to do so using the equivalent to 3 dice if possible - e.g. 3:18 would make the equivalent of rolling 3d6, 7:34 will resolve to 4+(3d10), 7:35 will resolve to 4+1d11+2d10. A range can be used anywhere in the calculation, and the numbers can themselves be calculations</td></tr>'
+							+'</table>'
 							+'<br>'
 							+'<h3>Using Character Sheet Ability/Action buttons</h3>'
 							+'<p>The most common approach for the Player to run these commands is to use Ability macros on their Character Sheets which are flagged to appear as Token Action Buttons: Ability macros & Token Action Buttons are standard Roll20 functionality, refer to the Roll20 Help Centre for information on creating and using these.</p>'
@@ -395,16 +314,16 @@ var MagicMaster = (function() {
 							+'<h3>1.Spell and Power management</h3>'
 							+'<pre>--spellmenu [token_id]|[MU/PR/POWER]<br>'
 							+'--mem-spell (MU/PR/POWER)|[token_id]<br>'
-							+'--view-spell (MU/PR/POWER)|[token_id]<br>'
+							+'<span style='+design.selected_button+'>Update:</span>--view-spell (MU/PR/POWER)|[token_id]<br>'
 							+'--cast-spell (MU/PR/POWER/MI)|[token_id]|[casting_level]|[casting_name]<br>'
 							+'--cast-again (MU/PR/POWER)|token_id|[spell_name]<br>'
 							+'--mem-all-powers token_id</pre>'
 							+'<h3>2.Magic Item management</h3>'
 							+'<pre>--mimenu [token_id]<br>'
 							+'--edit-mi [token_id]<br>'
-							+'--view-mi [token_id]<br>'
+							+'<span style='+design.selected_button+'>Update:</span>--view-mi [token_id]<br>'
 							+'--use-mi [token_id]<br>'
-							+'--add-mi [token_id]|(mi-to-replace/row#)|mi-to-add|quantity|hand#|[NOCURSE]|[SILENT]<br>'
+							+'<span style='+design.selected_button+'>Update:</span>--add-mi [token_id]|(mi-to-replace/row#)|mi-to-add|quantity|hand#|[NOCURSE]|[SILENT]<br>'
 							+'--mi-charges token_id|value|[mi_name]|[maximum]|[charge_override]<br>'
 							+'--mi-power token_id|power_name|mi_name|[casting-level]<br>'
 							+'--store-spells token_id|mi-name<br>'
@@ -416,11 +335,11 @@ var MagicMaster = (function() {
 							+'<pre>!rounds --target CASTER|caster_token_id|caster_token_id|spell_name|duration|increment|[msg]|[marker]<br>'
 							+'!rounds --target (SINGLE/AREA)|caster_token_id|target_token_id|spell_name|duration|increment|[msg]|[marker]<br>'
 							+'--touch token_id|effect-name|duration|per-round|message|marker<br>'
-							+'--level-change [token_id]|[# of levels]<br>'
+							+'<span style='+design.selected_button+'>Update:</span>--level-change [token_id]|[# of levels]|[HP change]|[class]<br>'
 							+'--change-attr [token_id]|change|[field]|[SILENT]<br>'
 							+'--rest [token_id]|[SHORT/LONG]|[MU/PR/MU-PR/POWER/MI/MI-POWER]|[timescale]<br>'
 							+'--mi-rest [token_id]|mi_name|[charges]|[power_name]<br>'
-							+'<mark style="color:green">New</mark> --query-qty [token_id]|(MU/PR/POWER/MI/MIPOWER)|item|[SILENT]</pre>'
+							+'--query-qty [token_id]|(MU/PR/POWER/MI/MIPOWER)|item|[SILENT]</pre>'
 							+'<h3>4.Treasure & Item container management</h3>'
 							+'<pre>--gm-edit-mi [token_id]<br>'
 							+'--find-traps token_id|pick_id|put_id<br>'
@@ -460,10 +379,10 @@ var MagicMaster = (function() {
 							+'<p>Initially displays a menu for memorising Level 1 spells (the only level for powers), with buttons to: choose a spell from the Level 1 spell book on the character sheet; review the chosen spell; and one for each memorising slot the Character has at this level.  Other buttons to memorise or remove spells become available when spells or slots are chosen.  Another button goes to the next available level with slots.  When a granted power is memorised to a slot, a quantity per day can be specified: -1 will grant unlimited uses of the power per day.  Memorising any other type of spell is limited to 1 use per slot.</p>'
 							+'<p>Depending on the settings on the <b>--config</b> menu, the character will be limited to memorising spells and powers allowed to their character class and level.</p>'
 							+'<p>MI-MU and MI-PR have a special function: these are used to cast memorised spells into the named spell-storing magic item (if no item is named, the last item selected by the Character running the command will be used instead), such as a Ring-of-Spell-Storing.  Magic Item spells are stored in an unused level of the Character Sheet.  This command displays both all memorised spells and all spell-storing magic item spell slots, and allows a memorised spell to be selected, a slot (for the same spell name) to be selected, and the spell cast from one to the other.  Spells can only be replaced by the same spell that was in the slot previously (unless this is the first time spells have been stored in a blank spell-storing item).</p>'
-							+'<h3>1.3 View the memorised spells or granted powers</h3>'
+							+'<h3>1.3 <span style='+design.selected_button+'>Updated:</span> View the memorised spells or granted powers</h3>'
 							+'<pre>--view-spell (MU/PR/POWER/MI-MU/MI-PR/MI-POWER)|[token_id]|[mi-name]</pre>'
 							+'<p>Takes a mandatory spell type, an optional token ID, and an optional magic item name. If token ID is not specified, uses the selected token.</p>'
-							+'<p>Displays a menu of all levels of memorised spells of the selected type (there is only 1 level of powers).  Spells that have already been cast appear as greyed out buttons, and can\'t be selected.  Spells that are still available to cast that day can be selected and this runs the spell or power macro from the relevant database without consuming the spell, so that the Player can see the specs.</p>'
+							+'<p>Displays a menu of all levels of memorised spells of the selected type (there is only 1 level of powers).  Spells that have already been cast appear as greyed out buttons, and can\'t be selected.  Spells that are still available to cast that day can be selected and this runs the spell or power macro from the relevant database without consuming the spell, so that the Player can see the specs. Action buttons on the macro are "greyed out" and can\'t be selected, with the exception of [View...] buttons on spell-storing items which will display the stored spells/powers if selected (again without consuming them).</p>'
 							+'<p>Adding MI- before any of the types of spell views the spells or powers available for the specified magic item, or the last Magic Item used by the Character if no magic item name is provided.  Generally this version of the command is only called from API Buttons from the magic item\'s ability macro.</p>'
 							+'<h3>1.4 Cast a memorised spell or use a granted power</h3>'
 							+'<pre>--cast-spell (MU/PR/POWER/MI/MI-POWER)|[token_id]|[casting_level]|[casting_name]|[CHARGED]|[mi-name]</pre>'
@@ -492,25 +411,26 @@ var MagicMaster = (function() {
 							+'<p>Displays a menu similar to editing memorised spells.  At the top are buttons to choose different types of magic items which have macros in the magic item databases. If the optional item type is MARTIAL, only weapons, ammo and armour are listed; if ALL is specified, lists of all items are shown; otherwise only non-MARTIAL items are listed.  The slots available in the bag are shown (with their current contents) and, when magic items and/or slots are chosen buttons become selectable below to store, review, or remove magic items in/from the bag.</p>'
 							+'<p>Storing a magic item will ask for a number - either a quantity or a number of charges.  Magic Items can be of various types: Charged (is used up when reaches 0), Uncharged (a number is a pure quantity that is not consumed), Recharging (regains charges after each long rest), Rechargable (is not used up when reaches 0, stays in bag and can be recharged when the DM allows), Self-charging (recharge at a rate per round determined by the item) and can also be Cursed - more under section 4.</p>'
 							+'<p>This menu is generally used when Magic Item & treasure containers (such as Treasure Chests and NPCs/monsters with treasure) have not been set up in a campaign as lootable, and provides a means of giving found magic items to characters. The DM just tells the Player that they have found a magic item, and the Player adds it to their Character Sheet using this command (more likely accessed via the Magic Item menu).</p>'
-							+'<h3>2.3 View a character\'s Magic Item Bag</h3>'
+							+'<h3>2.3 <span style='+design.selected_button+'>Updated:</span> View a character\'s Magic Item Bag</h3>'
 							+'<pre>--view-mi [token_id]</pre>'
 							+'<p>Takes an optional token ID as an argument. If token ID is not specified, uses the selected token.</p>'
-							+'<p>Displays a menu of items in the character\'s magic item bag, with the quantity possessed or the number of charges.  Pressing a button displays the named Magic Item specs without using any charges so that the Player can review the specifications of that item.  Items for which all charges have been consumed are greyed out, and cannot be viewed as the character can no longer use them.  They will become viewable again if they gain charges.</p>'
+							+'<p>Displays a menu of items in the character\'s magic item bag, with the quantity possessed or the number of charges.  Pressing a button displays the named Magic Item specs without using any charges so that the Player can review the specifications of that item. Action buttons on the item macro are "greyed out" and can\'t be selected, with the exception of [View...] buttons on spell-storing items which will display the stored spells/powers if selected (again without consuming them). Items for which all charges have been consumed are greyed out, and cannot be viewed as the character can no longer use them.  They will become viewable again if they gain charges.</p>'
 							+'<h3>2.4 Use a Magic Item from the bag</h3>'
 							+'<pre>--use-mi [token_id]</pre>'
 							+'<p>Takes an optional token ID as an argument. If token ID is not specified, uses the selected token.</p>'
 							+'<p>Displays a similar menu as for viewing the contents of the Magic Item Bag, but when an item is selected, a button is enabled that uses the Magic Item and consumes a charge.  Other buttons specified in the item macro might use additional charges to perform additional effects.  See section 3.</p>'
 							+'<p>Items with 0 quantity or charges left are greyed out and cannot be selected, unless they have abilities to regain charges such as "spell absorbing" items.  When a Charged Item reaches 0 charges left, it is removed from the character\'s Magic Item Bag automatically.</p>'
-							+'<h3>2.5 Add an Item to a Character / Container</h3>'
+							+'<h3>2.5 <span style='+design.selected_button+'>Updated:</span> Add an Item to a Character / Container</h3>'
 							+'<pre>--add-mi [token_id]|(mi-to-replace/row#)|mi-to-add|[quantity]|[hand#]|[NOCURSE]|[SILENT]</pre>'
-							+'<p>Takes an optional token ID (if not provided, uses selected token), then either the name of the item to be replaced or the row number of the item in the equipment list, the name of the item to add, the quantity to add (defaults to 1), optionally a hand number to use to take in-hand (0=prime hand,1=offhand,2=both,3 onwards for other hands), optionally NOCURSE if replacement of cursed items is possible, and optionally SILENT to not trigger messages, menus or dialogs.</p>'
-							+'<p>This command can be used to add a named item from the databases to a character, NPC, creature or other container without going through other dialogs to select the item. It will add the item to a numbered row in the equipment list or, more usefully, replace a named item that already exists in the list (or \'-\' to find an empty row). If the item is one that can be taken in-hand (e.g. a weapon or a shield, or a magic item like a wand or staff), the optional \'hand number\' can be used to specify which hand to take it in - if blank or the item is not one that can be held the item will not be taken in-hand. If the item to be replaced is cursed, it <i>will not be replaced</i> and an error message will be displayed unless the NOCURSE option is used. Finally, the command will pop up the edit-mi dialog or the gm-edit-mi dialog (if NOCURSE is specified) showing the resulting equipment list unless the SILENT flag is also used.</p>'
+							+'<p>Takes an optional token ID (if not provided, uses selected token), then either the name of the item to be replaced or the row number of the item in the equipment list, the name of the item to add, the quantity to add (defaults to quantity of replaced item, or 1), optionally a hand number to use to take in-hand, optionally NOCURSE if replacement of cursed items is possible, and optionally SILENT to not trigger messages, menus or dialogs.</p>'
+							+'<p>This command can be used to add a named item from the databases to a character, NPC, creature or other container without going through other dialogs to select the item. It will add the item to a numbered row in the equipment list or, more usefully, replace a named item that already exists in the list (or \'-\' to find an empty row). If the item is one that can be taken in-hand (e.g. a weapon or a shield, or a magic item like a wand or staff), the optional \'hand number\' can be used to specify which hand to take it in. 0=prime hand,1=offhand,2=both,3 onwards for other hands, or just \'=\' (or blank) means replace in-hand if mi-to-replace is in-hand or worn as a ring - if the item is not one that can be held the item will not be taken in-hand. If the item to be replaced is cursed, it <i>will not be replaced</i> and an error message will be displayed unless the NOCURSE option is used. Finally, the command will pop up the edit-mi dialog or the gm-edit-mi dialog (if NOCURSE is specified) showing the resulting equipment list unless the SILENT flag is also used.</p>'
+							+'<p>The quantity can be a number to set the amount of the item to add. If preceeded by an operator (such as \'+\', \'-\', \'*\', or \'/\'), the quantity will modify the quantity of the item replaced (up to the maximum quantity of the replaced item). If the quantity is just \'=\' the quantity will set to the same as the replaced item, or 1 for an added item, or if the item to be replaced is not found and quantity is \'=\', the item will not be added.</p>'
 							+'<h3>2.6 Add, set or deduct Magic Item charges</h3>'
-							+'<pre>--mi-charges token_id|[+/-]value|[mi_name]|[maximum]|[charge_override]</pre>'
+							+'<pre>--mi-charges token_id|[+/-/0]value|[mi_name]|[maximum]|[charge_override]</pre>'
 							+'<p>Takes a mandatory token ID, a mandatory value preceeded by an optional + or -, an optional magic item name, an optional maximum value, and an optional magic item charge type override as arguments.</p>'
 							+'<p>Does not display anything but alters the number of current or recoverable charges on an item.  By default, alters the last magic item used by the character, or will affect the named magic item.  Warning: a character can have two items of the same name, and there is no guarantee which will be affected if the name is used.</p>'
 							+'<p>Remember: using a Charged, Recharging, Rechargeable or Self-Charging Magic Item will automatically use 1 charge on use (unless the ItemData specification includes the field <b>c:0</b>, in which case no charges will automatically be deducted on use). If the c: tag is not used, or is anything other than 0, then charges will be deducted (default 1 charge) on use of the item.  In addition, that one charge deduction always happens - if an effect of a Magic Item uses 2 charges, only 1 more needs to be deducted.</p>'
-							+'<p><b>Note:</b> \'-\' reduces <i>current</i> remaining charges, \'+\' adds to the <i>maximum</i> recoverable charges, and no + or - sets the <i>maximum</i> recoverable charges.  This command <i>cannot</i> be used to increase the current remaining charges <i>unless</i> the item is of type <i>absorbing</i>.</p>'
+							+'<p><b>Note:</b> \'-\' reduces <i>current</i> remaining charges, \'+\' adds to the <i>maximum</i> recoverable charges, no + or - sets the <i>maximum</i> recoverable charges, and \'0\' (or starting with 0 e.g. \'01\') the item will <i>recharge</i> to the set or current maximum.  This command <i>cannot</i> otherwise be used to increase the current remaining charges <i>unless</i> the item is of type <i>absorbing</i>.</p>'
 							+'<p>Using minus \'-\' before the value will deduct charges from the current quantity/charges: e.g. if using an optional power of the item that uses more than 1 charge.  Using + before the value will add the value to the number of recoverable charges (overnight or rechargeable to), up to any specified maximum (often used for magic items that regain variable numbers of charges overnight).  Just using the value without + or - will just set the number of recoverable charges to the given value.  This command is not required to recharge self-charging items but can be used to change the maximum number of charges they will self-charge up to.</p>'
 							+'<p><b>Absorbing items</b> can gain charges in use from other sources, so the <b>--mi-charges</b> command works differently: \'-\' reduces <i>both current and maximum charges</i> and \'+\' only increases <i>current charges</i> (but only to maximum and not beyond). Using neither \'-\' or \'+\' will set the <i>current</i> charges (but, again, only up to the maximum).</p>'
 							+'<p>The <i>charge-override</i> can be used to temporarily change the charge behaviour of the magic item. Specifying an override will cause the magic item to behave as if its charging type was that of the override only for this call.  Thus charges could be deducted from an <i>uncharged</i> item by overriding by <i>rechargeable</i> or <i>charged</i>.</p>'
@@ -570,10 +490,10 @@ var MagicMaster = (function() {
 							+'<p>To use this command, add it as part of a spell, power or MI macro in the appropriate database, before or after the body of the macro text (it does not matter which, as long as it is on a separate line in the macro - the Player will not see the command).  Then include in the macro (in a place the Player will see it and be able to click it) an API Button call [Button name](~Selected|To-Hit-Spell) which will run the Ability "To-Hit-Spell" on the Character\'s sheet (which has just been newly written there or updated by the <b>--touch</b> command).</p>'
 							+'<p>Thus, when the Player casts the Character\'s spell, power or MI, they can then press the API Button when the macro runs and the attack roll will be made.  If successful, the Player can then use the button that appears to mark the target token and apply the spell effect to the target.</p>'
 							+'<p>See the RoundMaster API documentation for further information on targeting, marking and effects.</p>'
-							+'<h3>3.3 Change the Experience Level</h3>'
-							+'<pre>--level-change [token_id]|[# of levels]</pre>'
-							+'<p>Takes an optional Token ID (if not specified, uses the selected token), and an optional number of levels (plus or minus: if not specified assumes -1).</p>'
-							+'<p>Mainly used for attacks and spell-like effects that drain levels from opponents, this command undertakes all the calculations and Character Sheet updates that can automatically be done when a character or creature changes experience level. Saving throw targets are reassessed, weapon attacks per round recalculated, numbers of memorised spells changed, Race & Class powers checked for level appropriateness, etc. Asks for number of hit points to reduce or add to current and maximum values. If the character is multi- or dual-class, asks which class to add/drain levels to/from and the hit points for each.</p>'
+							+'<h3>3.3 <span style='+design.selected_button+'>Update:</span> Change the Experience Level</h3>'
+							+'<pre>--level-change [token_id]|[# of levels]|[HP change]|[class]</pre>'
+							+'<p>Takes an optional Token ID (if not specified, uses the selected token), an optional number of levels (plus or minus: if not specified assumes -1), an optional total number of HP gained or lost, and an optional class to apply the level change to.</p>'
+							+'<p>Mainly used for attacks and spell-like effects that drain levels from opponents, this command undertakes all the calculations and Character Sheet updates that can automatically be done when a character or creature changes experience level. Saving throw targets are reassessed, weapon attacks per round recalculated, numbers of memorised spells changed, Race & Class powers checked for level appropriateness, etc. If this is a single class character or a creature, the optional class parameter will be ignored and the single class/monster HD applied. If the HP change is not specified for a single class character, then the appropriate HP dice will be rolled and changed (Tip: it\'s better to put in a roll query to ask the player for the HP to change by). If the character is multi- or dual-class, it will either use the class specified, or asks the player which class to add/drain levels to/from and the hit points for each.</p>'
 							+'<h3>3.4 Change an Attribute Value</h3>'
 							+'<pre>--change-attr [token_id]|change|[STRENGTH/DEXTERITY/CONSTITUTION/INTELLIGENCE/WISDOM/CHARISMA]</pre>'
 							+'<p>Takes an optional Token ID (if not specified, uses the selected token), and a mandatory change value (plus, minus, or zero), and an optional attribute name (defaults to STRENGTH)</p>'
@@ -626,19 +546,20 @@ var MagicMaster = (function() {
 							+'<p>Takes a mandatory token ID of the character\'s token, mandatory token ID of the token to check for traps, mandatory token ID of the token doing the checking.</p>'
 							+'<p>This command will check a token for any traps. If the container represented by the token was created using the <i>Drag & Drop</i> container system (see <b>CommandMaster API</b> documentaion for details of the <i>Drag & Drop</i> container system) this command will start the selected container\'s <i>"Find & Remove Traps"</i> programmed sequence, with a (small) chance of the trap (if any) being triggered. If the trap is successfully removed, the container may still be locked but will no longer be trapped. If the token represents any other type of character, container, creature or object a standard <i>"Find/Remove Traps"</i> sequence will ensue, resulting in the party (and the GM) being alerted to the success or otherwise of the outcome.</p>'
 							+'<p>In either case, the default approach to the <i>Find Traps</i> roll is that the GM is asked to make it - being presented with a drop-down list of options that includes (a) just rolling 1d100 against the character\'s chance, (b) forcing a successful roll (e.g. if they were meant to find it), and (c) forcing a failure to find a trap (e.g. if there is no trap to be found). The GM can use the <b>!magic --config</b> command to change this action so that the player always rolls to <i>Find Traps</i>, though this might result in an indication for a (non-<i>Drag & Drop</i>) container indicating success for a container that is not trapped!</p>'
-							+'<h3>4.3 Searching/Storing tokens with Items and Treasure</h3>'
+							+'<h3>4.3 <span style='+design.selected_button+'>Update:</span> Searching/Storing tokens with Items and Treasure</h3>'
 							+'<pre>--search token_id|pick_id|put_id</pre>'
 							+'<p>Takes a mandatory token ID of the character\'s token, mandatory token ID of the token to search and pick up items from, mandatory token ID of the token to put picked up items into.</p>'
-							+'<p>This command can be used to pick the pockets of an NPC or even another Player Character, as well as to loot magic item and treasure containers such as Chests and dead bodies.  It can also be used for putting stuff away, storing items from the character\'s Magic Item Bag into a container, for instance if the MI Bag is getting too full (it is limited to the number of items specified via the --gm-edit-mi menu, though similar items can be stacked). The effect of this command depends on the type of the container: intelligent characters, NPCs and creatures (even if only with animal intelligence of 1) are considered sentient unless they are dead (Hit Points equal to or less than zero). The trapped container status is set by any <i>Drag & Drop</i> container, or via the GM\'s [Add Items] button or <b>!magic --gm-edit-mi</b> command. All other containers (tokens with character sheets) are considered inanimate and untrapped. Any status status can also be overridden if so desired by resetting the container type using the <i>Add Items</i> dialog to set the type to a different value - a sentient creature can be forced to be inanimate (i.e. does not need a <i>pick pockets</i> roll), and visa-versa (e.g. luggage Terry Pratchett style).</p>'
+							+'<p>This command can be used to pick the pockets of an NPC or even another Player Character, as well as to loot magic item and treasure containers such as Chests and dead bodies.  It can also be used for putting stuff away, storing items from the character\'s Magic Item Bag into a container, for instance if the MI Bag is getting too full (it is limited to the number of items specified via the --gm-edit-mi menu, though similar items can be stacked). The effect of this command depends on the type of the container: intelligent characters, NPCs and creatures (even if only with animal intelligence of 1) are considered sentient unless they are dead (Hit Points equal to or less than zero). The trapped container status is set by any <i>Drag & Drop</i> container, or via the GM\'s [Add Items] button or <b>!magic --gm-edit-mi</b> command. All other containers (tokens with character sheets) are considered inanimate and untrapped. Any status can also be overridden if so desired by resetting the container type using the <i>Add Items</i> dialog to set the type to a different value - a sentient creature can be forced to be inanimate (i.e. does not need a <i>pick pockets</i> roll), and visa-versa (e.g. luggage Terry Pratchett style).</p>'
 							+'<table>'
 							+'	<tr><th scope="row">Inanimate container:</th><td>a message is shown to the Player saying the container is empty or the items in the container are displayed, and the character doing the search (associated with the put_id token ID) can pick them up and store them in their own Magic Item Bag or, if storing, put items from their character into the container.</td></tr>'
 							+'	<tr><th scope="row">Sentient Creature:</th><td>if searching, a Pick Pockets check is undertaken - the Player is asked to roll a dice and enter the result (or Roll20 can do it for them), which is compared to the Pick Pockets score on their character sheet.  If successful, a message is displayed in the same way as an Inanimate object.  If unsuccessful, a further check is made against the level of the being targeted to see if they notice, and the DM is informed either way.  The DM can then take whatever action they believe is needed. Of course, you can always freely <i>give/store</i> items to another creature.</td></tr>'
 							+'	<tr><th scope="row">Trapped container:</th><td>Traps can be as simple or as complex as the DM desires.  Traps may be nothing more than a lock that requires a Player to say they have a specific key, or a combination that has to be chosen from a list, and nothing happens if it is wrong other than the items in the container not being displayed.  Or setting a trap off can have damaging consequences for the character searching or the whole party.  It can just be a /whisper gm message to let the DM know that the trapped container has been searched.  Searching a trapped container with this command calls an ability macro called "Trap-@{container_name|version}" on the container\'s character sheet: if this does not exist, it calls an ability macro just called "Trap".  The first version allows the Trap macro to change the behaviour on subsequent calls to the Trap functionality (if using the ChatSetAttr API to change the version attribute), for instance to allow the chest to open normally once the trap has been defused or expended.  This functionality requires confidence in Roll20 macro programming.<br><b>Important Note:</b> all Character Sheets representing Trapped containers <b><u><i>must</i></u></b> have their <i>\'ControlledBy\'</i> value (found under the [Edit] button at the top right of each sheet) set to <i>\'All Players\'</i>.  Otherwise, Players will not be able to run the macros contained in them that operate the trap!</td></tr>'
 							+'</table>'
+							+'<p><span style='+design.selected_button+'>New:</span> <b>Note:</b> Some items are not stackable - they are single items with charges such as a wand or rod, or a spell-storing item which must retain its uniqueness so the spells remain associated. However, it is also the case that non-stackable items like these need to have unique names in the container to retain their unique identity. Thus, when a second copy of a non-stackable item is picked up or put away into a container that already contains another item with the same name, the player will be asked to provide a new unique name for the item (which cannot be the same as any other magic item, even those not in the container - sorry, you can\'t turn that <i>ring of protection+1</i> into a <i>ring of wishes</i>!). Once the item is stored with this new name, it will work in all respects like the item it is, just with a different name.</p>'
 							+'<h3>4.4 Looting and storing without searching a container</h3>'
 							+'<pre>--pickorput token_id|pick_id|put_id|[SHORT/LONG]</pre>'
 							+'<p>Takes a mandatory token ID for the Player\'s character, a mandatory token ID for the token to pick items from, a mandatory token ID for the token to put items in to, and an optional argument specifying whether to use a long or a short menu.</p>'
-							+'<p>This command displays a menu from which items on the character sheet associated with the Pick token can be selected to put in the character sheet associated with the Put token.  The Player\'s character\'s token can be either the Put token (if picking up items from a container) or the Pick token (if storing items from their sheet into the container).  The other token can be another Player Character (useful for one character giving a magic item to another character) or any other selectable token with a character sheet.  No traps or sentient being checks are made by this command - this allows the DM to allow Players to bypass the searching functionality when looting a container or storing items in it.  Note: the Player\'s Magic Item menu (accessed via the <b>--mimenu</b> command) does not have an option to loot without searching.</p>'
+							+'<p>This command displays a menu from which items on the character sheet associated with the Pick token can be selected to put in the character sheet associated with the Put token.  The Player character\'s token can be either the Put token (if picking up items from a container) or the Pick token (if storing items from their sheet into the container).  The other token can be another Player Character (useful for one character giving a magic item to another character) or any other selectable token with a character sheet.  No traps or sentient being checks are made by this command - this allows the DM to allow Players to bypass the searching functionality when looting a container or storing items in it.  Note: the Player\'s Magic Item menu (accessed via the <b>--mimenu</b> command) does not have an option to loot without searching.</p>'
 							+'<p>There are two forms of this menu - the Long form displays all items in the container as individual buttons for the Player to select from, and a single button to store the item: this is generally OK when looting containers with not much in them.  The Short form of the menu shows only two buttons: one button which, when clicked, brings up a pick list of all the items in the Pick container, and another button to store the item in the Put container: this is generally best for when a character is storing something from their character sheet items into a chest or other container, or giving an MI to another character, as a character\'s sheet often has many items in it which can make a Long menu very long.  Each type of menu has a button on it to switch to the other type of menu without re-issuing the command.  If not specified in the command, the type of menu the Player last used in this campaign is remembered and used by the system.</p>'
 							+'<br>'
 							+'<h2>5.Light source management</h2>'
@@ -814,6 +735,9 @@ var MagicMaster = (function() {
 		MI_POWER:			'MI_POWER',
 		MI_POWER_USED:		'MI_POWER_USED',
 		MI_POWER_CHARGE_USED:'MI_POWER_CHARGE_USED',
+		LEVEL_CHANGE:		'LEVEL_CHANGE',
+		LEFTRING:			'LEFTRING',
+		RIGHTRING:			'RIGHTRING',
 		MU_SPELL:			'MU_SPELL',
 		MU_TO_STORE:		'MU_TO_STORE',
 		MU_TO_STORE_ANY:	'MU_TO_STORE_ANY',
@@ -893,6 +817,8 @@ var MagicMaster = (function() {
 		MISTORE_PRSPELL:	'MISTORE_PRSPELL',
 		MISTORE_MUSPELL_ANY:'MISTORE_MUSPELL_ANY',
 		MISTORE_PRSPELL_ANY:'MISTORE_PRSPELL_ANY',
+		MISTORE_MUSPELL_ADD:'MISTORE_MUSPELL_ADD',
+		MISTORE_PRSPELL_ADD:'MISTORE_PRSPELL_ADD',
 		VIEW_MUSPELL:		'VIEW_MUSPELL',
 		VIEW_PRSPELL:		'VIEW_PRSPELL',
 		VIEW_POWER:			'VIEW_POWER',
@@ -951,6 +877,7 @@ var MagicMaster = (function() {
 	const reRepeatingTable = /^(repeating_.*)_\$(\d+)_.*$/;
 	const reItemData = /}}[\s\w\-]*?(?<!tohit|dmg|ammo|range)data\s*?=\s*?\[.+?\][\s,]*?{{/im;
 	const reDataCharges = /}}[\s\w\-]*?(?<!tohit|dmg|ammo|range)data\s*?=\s*?\[[^\]]*?,?\s*?c:(\d+?)[,\s\]]/im;
+	const reActionButton = /(?<!}}\w+?=)\[(?!view)([^\]]+)\]\([^\)]+\)/img;
 	
 	const dbReplacers = [
 			[/\\amp;?/gm, "&"],
@@ -1005,26 +932,10 @@ var MagicMaster = (function() {
 			[/</gm,"\\\\lt;"]
 		];
 
-	const design = {
-		turncolor: '#D8F9FF',
-		roundcolor: '#363574',
-		statuscolor: '#F0D6FF',
-		statusbgcolor: '#897A87',
-		statusbordercolor: '#430D3D',
-		edit_icon: 'https://s3.amazonaws.com/files.d20.io/images/11380920/W_Gy4BYGgzb7jGfclk0zVA/thumb.png?1439049597',
-		delete_icon: 'https://s3.amazonaws.com/files.d20.io/images/11381509/YcG-o2Q1-CrwKD_nXh5yAA/thumb.png?1439051579',
-		settings_icon: 'https://s3.amazonaws.com/files.d20.io/images/11920672/7a2wOvU1xjO-gK5kq5whgQ/thumb.png?1440940765', 
-		apply_icon: 'https://s3.amazonaws.com/files.d20.io/images/11407460/cmCi3B1N0s9jU6ul079JeA/thumb.png?1439137300',
-		bag_icon: 'https://s3.amazonaws.com/files.d20.io/images/335981697/ocKqy1UIfPMSD-TYEO6oXA/thumb.png?1680722832',
-		info_msg: '<div style="color:green;font-weight:bold;border:2px solid black;background-color:white;border-radius:1em;padding:1em;">',
-		grey_button: '"display: inline-block; background-color: lightgrey; border: 1px solid black; padding: 4px; color: dimgrey; font-weight: extra-light;"',
-		dark_button: '"display: inline-block; background-color: lightgrey; border: 1px solid black; padding: 4px; color: black; font-weight: normal;"',
-		selected_button: '"display: inline-block; background-color: white; border: 1px solid red; padding: 4px; color: red; font-weight: bold;"',
-		green_button: '"display: inline-block; background-color: white; border: 1px solid lime; padding: 4px; color: darkgreen; font-weight: bold;"',
-		boxed_number: '"display: inline-block; background-color: yellow; border: 1px solid blue; padding: 2px; color: black; font-weight: bold;"',
-		success_box: '"display: inline-block; background-color: yellow; border: 1px solid lime; padding: 2px; color: green; font-weight: bold;"',
-		failure_box: '"display: inline-block; background-color: yellow; border: 1px solid red; padding: 2px; color: maroon; font-weight: bold;"',
-	};
+	const	splitable = ['charged','uncharged','splitable','cursed','change-each','cursed+change-each'];
+	const	stackable = ['charged','uncharged','cursed','change-each','cursed+change-each'];
+	const	recharging = ['recharging','cursed+recharging','absorbing','cursed+absorbing'];
+
 	
 	var apiCommands = {},
 		slotCounts = {},
@@ -1109,6 +1020,8 @@ var MagicMaster = (function() {
 				{state.MagicMaster.autoHide = false;}
 			if (_.isUndefined(state.MagicMaster.reveal))
 				{state.MagicMaster.reveal = false;}
+			if (_.isUndefined(state.MagicMaster.viewActions))
+				{state.MagicMaster.viewActions = false;}
 			if (_.isUndefined(state.MagicMaster.gmRolls))
 				{state.MagicMaster.gmRolls = true;}
 			if (_.isUndefined(state.MagicMaster.debug))
@@ -1463,6 +1376,7 @@ var MagicMaster = (function() {
 			break;
 			
 		case 'cursed':
+		case 'splitable':
 		case 'uncharged':
 		case 'single-uncharged':
 		case 'cursed+uncharged':
@@ -2775,7 +2689,9 @@ var MagicMaster = (function() {
 					i = fields.Items_table[1],
 					isGM = playerIsGM(senderId),
 					slotsUsed = 0,
-					qty, maxQty, mi, miText, type, makeGrey, Items, rows, maxSize, content = '';
+					renamed, miObj,
+					qty, maxQty, mi, miText, type, makeGrey, Items, rows, maxSize,
+					content = '';
 				
 				if (!_.isUndefined(pickID)) {
 					charCS = getCharacter(pickID);
@@ -2801,11 +2717,12 @@ var MagicMaster = (function() {
 					type = Items.tableLookup( fields.Items_type, i ).toLowerCase();
 					makeGrey = (!type.includes('selfchargeable') && !type.includes('absorbing') && disable0 && qty == 0);
 					if (mi.length > 0 && (includeEmpty || mi != '-')) {
-						let miObj = abilityLookup( fields.MagicItemDB, mi, charCS, true );
+						miObj = abilityLookup( fields.MagicItemDB, mi, charCS, true );
+						renamed = !miObj.dB.toLowerCase().includes('-db');
 						makeGrey = makeGrey || (!showMagic && (!miObj.obj || miObj.obj[1].type.toLowerCase().includes('magic')));
 						if (showTypes && miObj.obj) {
 							miText = getShownType( miObj, i, resolveData( trueMI, fields.MagicItemDB, reItemData, charCS, {itemType:reSpellSpecs.itemType}, i ).parsed.itemType );
-							if (!['charged','uncharged','cursed','change-last','change-each','changing','cursed+change-last','discharging','cursed+discharging'].includes(type)) {
+							if (!['charged','uncharged','splitable','cursed','change-last','change-each','changing','cursed+change-last','discharging','cursed+discharging'].includes(type)) {
 								qty = Math.min(qty,1);
 							}
 						}
@@ -2814,7 +2731,10 @@ var MagicMaster = (function() {
 						if (mi != '-') slotsUsed++;
 						if (isView && mi.replace(reIgnore,'').length) {
 							if (Items.tableLookup( fields.Items_reveal, i ) == 'view') mi = trueMI;
-							let miObj = getAbility( fields.MagicItemDB, mi, charCS, false, isGM, trueMI, i );
+							let hide = !miObj.obj ? '' : resolveData( mi, fields.MagicItemDB, reItemData, charCS, {hide:reSpellSpecs.hide}, i ).parsed.hide,
+								reveal = (mi !== trueMI) && !!miObj.obj && hide && hide.length && hide !== 'hide';
+							miObj = getAbility( fields.MagicItemDB, mi, charCS, false, isGM, (reveal ? mi : trueMI), i );
+							if (!state.MagicMaster.viewActions && !renamed && miObj.obj) miObj.obj[0].set('action',miObj.obj[0].get('action').replace(reActionButton,design.grey_action) );
 							extension = '&#13;'+sendToWho(charCS,senderId,false,true)+(miObj.api ? '&#13;' : '')+'&#37;{'+miObj.dB+'|'+mi.hyphened()+'}';
 						}
 						content += (i == MIrowref || makeGrey) ? '</span>' : '](!magic --button '+ cmd +'|'+ tokenID +'|'+ i + extension +')';
@@ -2976,9 +2896,7 @@ var MagicMaster = (function() {
 		} else if (isMI) {
 			spellType = 'MI';
 			buttonList = 'EmptyList,' + attrLookup( charCS, [fields.ItemMUspellsList[0]+miName, fields.ItemMUspellsList[1]] ) || '';
-			log('makeSpellList: initial MU buttonList = '+buttonList);
 			buttonList += ',' + attrLookup( charCS, [fields.ItemPRspellsList[0]+miName, fields.ItemPRspellsList[1]]) || '';
-			log('makeSpellList: next PR buttonList = '+buttonList);
 			buttonList = buttonList.dbName().split(',');
 			let miObj = abilityLookup( fields.MagicItemDB, miName, charCS );
 			if (miObj.obj) {
@@ -2990,7 +2908,6 @@ var MagicMaster = (function() {
 			rows = rows.join().split(',').filter(r=>!!r);
 			cols.push((attrLookup( charCS, [fields.MIspellCols[0]+miName+'-mu',fields.MIspellCols[1]] ) || ''),(attrLookup( charCS, [fields.MIspellCols[0]+miName+'-pr',fields.MIspellCols[1]] ) || ''));
 			cols = cols.join().split(',').filter(c=>!!c);
-			log('makeSpellList: rows = '+rows+', cols = '+cols);
 			if (rows.length && cols.length) {
 				_.each( cols, (c,k) => {
 					let r = rows[k];
@@ -3056,6 +2973,7 @@ var MagicMaster = (function() {
 									spellTables[w] = spellTables[w].tableSet( fields.Spells_db,r,magicDB );
 								}
 								spell = getAbility( magicDB, spellName, charCS );
+								if (!state.MagicMaster.viewActions) spell.obj[0].set('action',spell.obj[0].get('action').replace(reActionButton,design.grey_action) );
 								extension = `${!learn ? '' : ` --message ${tokenID}|Learn Spell|Try to &#91;Learn this spell&#93;&#40;!magic ~~learn-spell ${tokenID}¦${spellName}&#41;`}&#13;${(spell.api ? '' : toWho)}&#37;{${spell.dB}|${spellName}}`;
 							}
 							content += (buttonID == selectedButton ? '<span style=' + design.selected_button + '>' : ((submitted || disabled || (lv > maxLevel)) ? '<span style=' + design.grey_button + '>' : '['));
@@ -3165,6 +3083,7 @@ var MagicMaster = (function() {
 		
 		if (selectedSpell) {
 			spell = getAbility( magicDB, spellToDisplay, charCS );
+			if (!state.MagicMaster.viewActions) spell.obj[0].set('action',spell.obj[0].get('action').replace(reActionButton,design.grey_action) );
 			content += '...Optionally [Review '+spellToDisplay+'](!magic --button '+reviewCmd+'|'+tokenID+'|'+level+'|'+spellRow+'|'+spellCol+'|'+spellToMemorise 
 					+  '&#13;'+(spell.api ? '' : sendToWho(charCS,senderId,false,true))+'&#37;{'+spell.dB+'|'+spellToDisplay.hyphened()+'})}}';
 		} else {
@@ -3293,20 +3212,21 @@ var MagicMaster = (function() {
 		var	content = '&{template:'+fields.menuTemplate+'}{{name=Store Spell in '+tokenName+'\'s Magic Items}}'
 					+ '{{subtitle=Storing ' + (isMU ? 'MU' : 'PR') + ' spells}}'
 					+ '{{desc=**1.Choose a spell to store**\n'+memSpells+'}}'
-					+ '{{desc1=**2.'+(isAny ? 'Optionally c' : 'C')+'hoose where to store it**\n'+storedSpells+'}}';
+					+ '{{desc1=**2.'+(isAny ? 'Optionally c' : 'C')+'hoose where to store it**\n'+(storedSpells || 'No spells currently stored')+'}}';
 
 		if (spellButton >= 0) {
 			spellName = attrLookup( charCS, fields.Spells_name, fields.Spells_table, spellRow, spellCol ) || '-';
 		}
 		if (MIbutton >= 0) {
 			MIspellName = attrLookup( charCS, (oldVer ? fields.Spells_macro : fields.Spells_msg), fields.Spells_table, MIrow, MIcol ) || '-';
+			if ((isAdd || isAny) && MIspellName === '-') MIbutton = -1;
 		}
-		var canStore = isAny || isChange || (spellName.dbName() == MIspellName.dbName());
+		var canStore = isAny || isChange || (isAdd && MIspellName === '-') || (spellName.dbName() == MIspellName.dbName());
 		
 		content += '{{desc2=3.Once both spell and '+(isAny ? 'optionally ' : '')+'slot selected\n'
-				+  ((canStore && (spellButton >= 0) && (isAny || MIbutton >= 0)) ? '[' : '<span style='+design.grey_button+'>')
-				+  (isAny && MIbutton < 0 ? 'Add ' : 'Store ')+spellName
-				+  ((canStore && (spellButton >= 0)) ? ((isAny && MIbutton<0) ? ('](!magic --button ADD_TO_SPELLS|'+tokenID+'|'+item+'|'+command+'|1|STORE-MI-SPELL|'+spellName+'|'+wisLevel+'||'+MIspellName+'|'+spellRow+'|'+spellCol+')')
+				+  ((canStore && (spellButton >= 0) && (isAdd || isAny || MIbutton >= 0)) ? '[' : '<span style='+design.grey_button+'>')
+				+  ((isAdd || isAny) && MIbutton < 0 ? 'Add ' : 'Store ')+spellName
+				+  ((canStore && (spellButton >= 0)) ? (((isAdd || isAny) && MIbutton<0) ? ('](!magic --button ADD_TO_SPELLS|'+tokenID+'|'+item+'|'+command+'|1|STORE-MI-SPELL|'+spellName+'|'+wisLevel+'||'+MIspellName+'|'+spellRow+'|'+spellCol+')')
 																			  : ('](!magic --button '+(isMU ? BT.MISTORE_MUSPELL : BT.MISTORE_PRSPELL)+extra+'|'+tokenID+'|'+MIbutton+'|'+MIrow+'|'+MIcol+'|'+spellButton+'|'+spellRow+'|'+spellCol+')'))
 													 : '</span>')
 				+  ((spellButton >= 0 && MIbutton >= 0 && !canStore) ? ' Spells don\'t match. Must be the same\n' : '')
@@ -3450,6 +3370,7 @@ var MagicMaster = (function() {
 			return content;
 		}
 		
+		var title = isMI ? attrLookup( charCS, fields.ItemChosen ) : curToken.get('name');
 		if (isPower) {
 			levelLimit = 1;
 			magicType = 'POWER';
@@ -3475,9 +3396,9 @@ var MagicMaster = (function() {
 			magicDB = fields.PR_SpellsDB;
 		}
 		
-		content = '&{template:'+fields.menuTemplate+'}{{name=View '+curToken.get('name')+'\'s currently memorised '+magicWord+'s}}'
+		content = '&{template:'+fields.menuTemplate+'}{{name=View '+title+'\'s currently memorised '+magicWord+'s}}'
 				+ '{{subtitle=' + tableType + '}}'
-				+ '{{desc=' + (makeSpellList( senderId, tokenID, viewCmd, spellButton, true ))[0];
+				+ '{{desc=' + ((makeSpellList( senderId, tokenID, viewCmd, spellButton, true ))[0] || 'No '+magicWord+'s currently memorised');
 
 		content += '}}{{desc1=Select the '+magicWord+' above that you want to view the details of.  It will not be cast and will remain in your memorised '+magicWord+' list.}}';
 		sendResponse( charCS, content, senderId, flags.feedbackName, flags.feedbackImg, tokenID );
@@ -3630,7 +3551,12 @@ var MagicMaster = (function() {
 					if ((shortMenu && isView && reveal == 'view') || (!isView && reveal == 'use')) {
 						displayMI = trueMI.hyphened();
 					}
-					let magicItem = getAbility( fields.MagicItemDB, displayMI, charCS, false, isGM, trueMI, MIrowref );
+					let miObj = abilityLookup( fields.MagicItemDB, displayMI, charCS, true ),
+						hide = resolveData( displayMI, fields.MagicItemDB, reItemData, charCS, {hide:reSpellSpecs.hide}, MIrowref ).parsed.hide,
+						showDesc = (displayMI !== trueMI) && hide && hide.length && hide !== 'hide',
+						renamed = !abilityLookup( fields.MagicItemDB, displayMI ).obj,
+						magicItem = getAbility( fields.MagicItemDB, displayMI, charCS, false, isGM, (showDesc ? displayMI : trueMI), MIrowref );
+					if (!state.MagicMaster.viewActions && isView && !renamed && !!magicItem.obj) magicItem.obj[0].set('action',magicItem.obj[0].get('action').replace(reActionButton,design.grey_action) );
 					content += '['+actionText+' '+selectedMI+'](!magic --button '+ submitAction +'|'+ tokenID +'|'+ MIrowref
 																+'&#13;'+(magicItem.api ? '' : sendToWho(charCS,senderId,false,true))+'&#37;{'+magicItem.dB+'|'+(displayMI.hyphened())+'})';
 				} else {
@@ -3736,6 +3662,9 @@ var MagicMaster = (function() {
 				if (!magicItem.obj) {
 					sendResponse( charCS, 'Can\'t find '+selectedMI+' in the Magic Item database', senderId, flags.feedbackName, flags.feedbackImg, tokenID );
 					return;
+				} else {
+					let renamed = !abilityLookup( fields.MagicItemDB, displayMI ).obj;
+					if (!state.MagicMaster.viewActions && isView && !renamed && !!magicItem.obj) magicItem.obj[0].set('action',magicItem.obj[0].get('action').replace(reActionButton,design.grey_action) );
 				}
 			}
 			
@@ -4014,7 +3943,9 @@ var MagicMaster = (function() {
 			};
 			
 			var reviewItem = ((cmd !== 'GM-MItoStore' && chosenSlot) ? slotActualName : itemName),
-				reviewObj  = ((cmd !== 'GM-MItoStore' && chosenSlot) ? slotObj : itemObj);
+				reviewObj  = ((cmd !== 'GM-MItoStore' && chosenSlot) ? slotObj : itemObj),
+				renamed = !abilityLookup( fields.MagicItemDB, reviewItem ).obj;
+			if (!state.MagicMaster.viewActions && reviewObj && reviewObj.obj && !renamed) reviewObj.obj[0].set('action',reviewObj.obj[0].get('action').replace(reActionButton,design.grey_action) );
 			
 			content += '{{desc3=**3. '+selectableBoth+(chosenBoth ? ('Store '+itemName+'](!magic --button GM-StoreMI|'+tokenID+'|'+MIrowref+'|'+MItoStore+'|&#91;[?{Quantity?|'+initQty+'}]&#93;||'+queries+')') : ('Store'+(chosenSlot ? ('d '+slotActualName) : itemName)+'</span>'))+' **'
 					+  ' or '+hideableBoth+(hideAvail ? ('Hide '+slotName+' as '+itemName+'](!magic --button GM-HideMI|'+tokenID+'|'+MIrowref+'|'+MItoStore+')') : ((hiddenMI ? ('Hidden as '+slotName) : ('Hide Item'+(chosenMI?(' as '+itemName):'')))+'</span>'))+'<br>'
@@ -4022,7 +3953,7 @@ var MagicMaster = (function() {
 					+  '{{desc4=1. Or select MI from above ^\n'
 					+  '<table width="100%"><tr><td>'
 					+  selectableSlot+'Rename '+slotName+(chosenSlot ? ('](!magic --button GM-RenameMI|'+tokenID+'|'+MIrowref+'|'+MItoStore+'|?{What name should '+slotName+' now have?}) ') : '</span> ')+'<br>'
-					+  selectableSlot+(!slotCursed ? 'Change Type' : 'Remove Curse')+(chosenSlot ? ('](!magic --button GM-ChangeMItype|'+tokenID+'|'+MIrowref+'|'+MItoStore+'|'+(slotCursed ? 'removeCurse' : ('?{Currently '+slotType+'. What type should '+slotName+' now be?|charged|uncharged|recharging|rechargeable|selfchargeable|absorbing|discharging|cursed|cursed+charged|cursed+recharging|cursed+rechargeable|cursed+selfchargeable|cursed+absorbing|cursed+discharging}'))+') ') : '</span> ')+'<br>'
+					+  selectableSlot+(!slotCursed ? 'Change Type' : 'Remove Curse')+(chosenSlot ? ('](!magic --button GM-ChangeMItype|'+tokenID+'|'+MIrowref+'|'+MItoStore+'|'+(slotCursed ? 'removeCurse' : ('?{Currently '+slotType+'. What type should '+slotName+' now be?|charged|uncharged|splitable|recharging|rechargeable|selfchargeable|absorbing|discharging|cursed|cursed+charged|cursed+recharging|cursed+rechargeable|cursed+selfchargeable|cursed+absorbing|cursed+discharging}'))+') ') : '</span> ')+'<br>'
 					+  selectableSlot+'Change displayed charges'+(chosenSlot ? ('](!magic --button GM-ChangeDispCharges|'+tokenID+'|'+MIrowref+'|'+MItoStore+'|?{How many displayed charges should '+slotName+' now have (currently '+slotQty+'&#41;?|'+slotQty+'}) ') : '</span> ')+'<br>'
 					+  selectableSlot+'Change actual charges'+(chosenSlot ? ('](!magic --button GM-ChangeActCharges|'+tokenID+'|'+MIrowref+'|'+MItoStore+'|?{How many actual charges should '+slotActualName+' now have (currently '+slotActualQty+'&#41;?|'+slotActualQty+'}) ') : '</span> ')+'<br>'
 					+  storableSlot+'Store Spells/Powers in MI'+((spellStoring && chosenSlot) ? ('](!magic --store-spells '+tokenID+'|'+slotActualName+'|||GM-EDIT-MI) ') : '</span> ')+'</td>'
@@ -4148,8 +4079,8 @@ var MagicMaster = (function() {
 					if (mi != lowerMI) continue;
 					miTrueName = (putItems.tableLookup(fields.Items_trueName,i) || '').dbName() || '-';
 					if (mi != pickedTrueMI) continue;
-					miType = (putItems.tableLookup(fields.Items_type,i) || '').dbName() || '-';
-					if (miType != pickedType) continue;
+					miType = (putItems.tableLookup(fields.Items_type,i) || '') || '-';
+					if (miType.dbName() != pickedType || !stackable.includes(miType.toLowerCase())) continue;
 					putRow = i;
 					break;
 				}
@@ -4304,7 +4235,7 @@ var MagicMaster = (function() {
 					+ '}}{{desc1=';
 				
 		_.each( classes, c => {
-			content += 'Level '+c.level+' ['+(c.classData.name || c.name)+'](!magic --level-change '+tokenID+'|'+drainLevels+'|'+c.base+'|'+args[3]+'|&#63;{How many HP to '+(drainLevels > 0 ? 'add' : 'deduct')+'|'+totalHP+'})\n';
+			content += 'Level '+c.level+' ['+(c.classData.name || c.name)+'](!magic --button '+BT.LEVEL_CHANGE+'|'+tokenID+'|'+drainLevels+'|'+c.base+'|'+args[3]+'|&#63;{How many HP to '+(drainLevels > 0 ? 'add' : 'deduct')+'|'+totalHP+'})\n';
 		});
 		content += '}}';
 		sendResponse( getCharacter(tokenID), content );
@@ -4616,10 +4547,8 @@ var MagicMaster = (function() {
 					muSpellList = (attrLookup( charCS, [valueField[0]+scrollName, valueField[1]] ) || '').split(',');
 					muSpellList.splice( nameIndex, 1 );
 					setValue( charCS, [valueField[0]+scrollName, valueField[1]], muSpellList.join(',') );
-					return !muSpellList.length;
-				} else {
-					return true;
 				}
+				return !muSpellList.filter(t => t.length).length;
 			};
 			
 		if (!charCS) {
@@ -5108,7 +5037,8 @@ var MagicMaster = (function() {
 		
 		var tokenID = args[0],
 			drainLevels = parseInt(args[1]) || -1,
-			classChosen = args[2] || '',
+			fixedClass = args[6] || '',
+			classChosen = args[2] || fixedClass,
 			totalLevels = parseInt(args[3]) || drainLevels,
 			hitPoints = Math.abs(parseInt(args[4]) || 0),
 			totalHP = parseInt(args[5]) || 0,
@@ -5116,8 +5046,15 @@ var MagicMaster = (function() {
 			charCS = getCharacter(tokenID),
 			increment = drainLevels > 0 ? 1 : -1,
 			classes = classObjects( charCS, senderId ),
-			levelField;
+			levelField, hd;
 			
+		if (classes && classes.length === 1) {
+			classChosen = classes[0].base;
+			if (!hitPoints) {
+				hitPoints = evalAttr(classes[0].classData.hd.replace(/(\d+)(d.+)/i,'(('+String(drainLevels)+'*$1)$2)'));
+				loopCount = 1;
+			}
+		}
 		if (!classChosen) {
 			makeLevelDrainMenu( args, classes, senderId, msg, totalHP );
 			return;
@@ -5141,18 +5078,19 @@ var MagicMaster = (function() {
 				levelField = fields.Monster_hitDice;
 			}
 		}
-		setAttr( charCS, levelField, ((parseInt(attrLookup( charCS, levelField ) || 1) || 1) + increment) );
-		setAttr( charCS, fields.HP, ((parseInt(attrLookup( charCS, fields.HP ) || 0) || 0) + (hitPoints * increment)) );
-		setAttr( charCS, fields.MaxHP, ((parseInt(attrLookup( charCS, fields.MaxHP ) || 0) || 0) + (hitPoints * increment)) );
+		setAttr( charCS, levelField, Math.max(0,((parseInt(attrLookup( charCS, levelField ) || 1) || 1) + increment)) );
+		setAttr( charCS, fields.HP,((parseInt(attrLookup( charCS, fields.HP ) || 0) || 0) + (hitPoints * increment)) );
+		setAttr( charCS, fields.MaxHP, Math.max(0,((parseInt(attrLookup( charCS, fields.MaxHP ) || 0) || 0) + (hitPoints * increment))) );
 		totalHP += hitPoints;
 		if (--loopCount > 0) {
-			handleLevelDrain( [tokenID,(drainLevels - increment),'',totalLevels,0,totalHP], senderId, 'Successfully '+(increment > 0 ? 'boosted' : 'drained')+' '+classChosen+' class by 1 level' );
+			handleLevelDrain( [tokenID,(drainLevels-increment),'',totalLevels,0,totalHP,fixedClass], senderId, 'Successfully '+(increment > 0 ? 'boosted' : 'drained')+' '+classChosen+' class by 1 level' );
 		} else {
 			handleMemAllPowers( [BT.MEMALL_POWERS,tokenID,1,-1,-1,'',''], senderId, true );
 			handleCheckWeapons( tokenID, charCS );
 			handleCheckSaves( null, null, [getObj('graphic',tokenID)], true );
 			let content = '&{template:'+fields.warningTemplate+'}{{title=Change in Level}}{{desc=Successfully '+(increment > 0 ? 'boosted' : 'drained')+' '+classChosen
-						+ ' class by one level, which in total makes '+totalLevels+' across all classes, and recalculated all saves, reassessed all weapon use and reset usable powers.'
+						+ ' class by '+(fixedClass ? (totalLevels+' levels') : ('one level, which in total makes '+totalLevels+' across all classes'))
+						+ ', and recalculated all saves, reassessed all weapon use and reset usable powers.'
 						+ ' A total of '+totalHP+'HP have been '+(increment > 0 ? 'gained' : 'lost')+'}}';
 			sendResponse( charCS, content );
 		}
@@ -5367,7 +5305,7 @@ var MagicMaster = (function() {
 			MIcVal = 1;
 			
 		if (MIdb.obj) {
-			miData = resolveData( MIname, fields.MagicItemDB, reItemData, charCS, null, MIrowref ).parsed;
+			miData = resolveData( MIname, fields.MagicItemDB, reItemData, charCS, {charges:reSpellSpecs.charges,changeTo:reSpellSpecs.changeTo,zero:reSpellSpecs.zero}, MIrowref ).parsed;
 			MIcVal = miData.charges;
 			MIchangeTo = miData.changeTo;
 		}
@@ -5431,6 +5369,9 @@ var MagicMaster = (function() {
 				MIqtyObj.set('current',(MIqty-charges));
 				MIqtyObj.set('max',(MImaxQty-charges));
 			}
+			if ((MIqty-charges) == 0) {
+				sendAPI(fields.attackMaster + ' --blankweapon '+tokenID+'|'+MItrueName+'|silent',senderId);
+			}
 			break;
 			
 		case 'recharging':
@@ -5450,7 +5391,10 @@ var MagicMaster = (function() {
 		setAttr( charCS, fields.ItemQty, MIqtyObj.get('current') );
 		
 		if (MIqty > charges) checkForBag( charCS, MItrueName, MIrowref );
-		
+		if ((MIqty - charges == 0) && miData.zero && miData.zero.length) {
+			sendAPI( parseStr(miData.zero).replace(/@{\s*selected\s*\|\s*token_id\s*}/ig,tokenID)
+										   .replace(/{\s*selected\s*\|/ig,'{'+charCS.get('name')+'|'), null, 'magic use-mi');
+		}
 		if (action.includes('USE') && (MIreveal == 'view' || MIreveal == 'use')) {
 			MIname = MItables.tableLookup( fields.Items_trueName, MIrowref );
 			MItables = MItables.tableSet( fields.Items_name, MIrowref, MIname );
@@ -6026,18 +5970,20 @@ var MagicMaster = (function() {
 	async function handlePickOrPut( args, senderId ) {
 
 		var tokenID = args[1],
+			fromRowRef = args[2],
 			fromID = args[3],
 			toID = args[4],
-			fromRowRef = args[2],
 			toRowRef = args[5],
 			qty = args[6],
 			expenditure = args[7],
+			newName = (args[8] || '').hyphened(),
 			charCS = getCharacter( tokenID ),
 			fromCS = getCharacter( fromID ),
 			toCS = getCharacter( toID ),
 			parseTable = {
 				itemName:reSpellSpecs.itemType,
 				hide:reSpellSpecs.hide,
+				reveal:reSpellSpecs.reveal,
 				pick:reSpellSpecs.pick,
 				put:reSpellSpecs.put,
 			};
@@ -6058,16 +6004,19 @@ var MagicMaster = (function() {
 			toSlotName = toMIbag.tableLookup( fields.Items_name, toRowRef, false ),
 			toMIvalues = initValues( toMIbag.fieldGroup ),
 			toSlotTrueName, toSlotType, toSlotQty, toSlotCharges, toSlotTrueType,
-			fromSlotType = (fromMIbag.tableLookup( fields.Items_type, fromRowRef ) || '').toLowerCase(),
-			fromSlotTrueType = (fromMIbag.tableLookup( fields.Items_trueType, fromRowRef ) || fromSlotType).toLowerCase(),
 			MIname = fromMIbag.tableLookup( fields.Items_name, fromRowRef ),
 			MItrueName = fromMIbag.tableLookup( fields.Items_trueName, fromRowRef ),
+			fromTrueName = MItrueName,
+			fromSlotType = (fromMIbag.tableLookup( fields.Items_type, fromRowRef ) || '').toLowerCase(),
+			fromSlotTrueType = (fromMIbag.tableLookup( fields.Items_trueType, fromRowRef ) || fromSlotType).toLowerCase(),
 			MItrueObj = getAbility( fields.MagicItemDB, MItrueName, fromCS ),
 			MIdata = resolveData( MItrueName, fields.MagicItemDB, reItemData, fromCS, parseTable, fromRowRef ).parsed,
 			showType = parseInt(attrLookup( fromCS, fields.ItemContainerHide )),
-			hide = (MIdata.hide === 'hide') || (!MIdata.hide.length && (MIname === MItrueName) && state.MagicMaster.autoHide && !!MItrueObj.obj && reLooksLike.test(MItrueObj.obj[1].body)) ;
+			hide = (MIdata.hide.length && MIdata.hide !== 'nohide' && MIdata.hide !== 'reveal') || (!MIdata.hide.length && (MIname === MItrueName) && state.MagicMaster.autoHide && !!MItrueObj.obj && reLooksLike.test(MItrueObj.obj[1].body)),
+			rev = hide ? (MIdata.reveal || '') : '',
+			pickPutText = (tokenID === fromID) ? 'put away' : 'pick up';
 			
-		if (hide) MIname = getShownType( MItrueObj, fromRowRef, MIdata.itemType );
+		if (hide) MIname = (!MIdata.hide.length || MIdata.hide === 'hide') ? getShownType( MItrueObj, fromRowRef, MIdata.itemType ) : MIdata.hide;
 		
 		if (!_.isUndefined(toSlotName)) {
 			toSlotType = toMIbag.tableLookup( fields.Items_type, toRowRef );
@@ -6101,16 +6050,14 @@ var MagicMaster = (function() {
 			MItrueSpeed = fromMIbag.tableLookup( fields.Items_trueSpeed, fromRowRef ),
 			MItype = fromMIbag.tableLookup( fields.Items_type, fromRowRef ),
 			MIcost  = parseFloat( (fromMIbag.tableLookup( fields.Items_cost, fromRowRef ) || 0), 10),
-			MIreveal = fromMIbag.tableLookup( fields.Items_reveal, fromRowRef ),
+			MIreveal = rev || fromMIbag.tableLookup( fields.Items_reveal, fromRowRef ),
 			MItrueType = fromMIbag.tableLookup( fields.Items_trueType, fromRowRef ),
 			MItext = MIname,
-			splitable = ['charged','uncharged','cursed','change-each','cursed+change-each'],
-			recharging = ['recharging','cursed+recharging','absorbing','cursed+absorbing'],
 			slotInc = 1,
-			finalQty, finalCharges, pickQty, charges, content;
+			finalQty, finalCharges, pickQty, charges, content, MIobj;
 			
 		if (showType) {
-			let MIobj = abilityLookup( fields.MagicItemDB, MIname, fromCS );
+			MIobj = abilityLookup( fields.MagicItemDB, MIname, fromCS );
 			MItext = !MIobj.obj ? MItext : getShownType( MIobj, fromRowRef, MIdata.itemType );
 		}
 			
@@ -6159,11 +6106,11 @@ var MagicMaster = (function() {
 		finalQty = pickQty;
 		finalCharges = charges;
 		
-		if (splitable.includes(fromSlotType) && stdEqual( toSlotName, MIname ) && stdEqual( toSlotType, MItype ) && stdEqual( toSlotTrueName, MItrueName )) {
+		if (stackable.includes(fromSlotType) && stdEqual( toSlotName, MIname ) && stdEqual( toSlotType, MItype ) && stdEqual( toSlotTrueName, MItrueName )) {
 			finalQty = (parseInt(finalQty)||0) + (parseInt(toSlotQty)||0);
 			finalCharges = (parseInt(finalCharges)||0) + (parseInt(toSlotCharges)||0);
 			slotInc = 0;
-		} else if (toSlotType != '' && (toSlotName != '-')) {
+		} else if (toSlotType !== '' && (toSlotName !== '-')) {
 			content = messages.slotFull;
 			content += '{{[Choose another slot](!magic --pickorput|'+tokenID+'|'+fromRowRef+'|'+fromID+'|'+toID+'|-1)}}';
 			sendParsedMsg( tokenID, content, senderId );
@@ -6191,6 +6138,30 @@ var MagicMaster = (function() {
 			spendMoney( toCS, expenditure, fromCS );
 		}
 		
+		let dupRow = toMIbag.tableFind( fields.Items_name, newName || MIname ) || toMIbag.tableFind( fields.Items_trueName, newName || MItrueName );
+			
+		if (!_.isUndefined(dupRow) && dupRow !== toRowRef) {
+			content = '&{template:'+fields.menuTemplate+'}{{name=Duplicate Item}}'
+					+ '{{desc=The item you have selected to '+pickPutText+' is not stackable with an item of the same name already stored}}'
+					+ '{{desc1=[Choose a new name](!magic --button POPrename|'+tokenID+'|'+fromRowRef+'|'+fromID+'|'+toID+'|'+toRowRef+'|'+qty+'|'+expenditure+'|?{What new name do you want to give '+MIname+'?}) for '+MIname
+					+ ' or [Choose something else](!magic --pickorput '+tokenID+'|'+fromID+'|'+toID+')}}';
+			sendResponse( charCS, content, senderId, flags.feedbackName, flags.feedbackImg, tokenID );
+			return;
+		} else if (!_.isUndefined(newName) && newName.length) {
+			if (!MIobj || !MIobj.obj) {
+				MIobj = abilityLookup( fields.MagicItemDB, MIname, fromCS );
+			}
+			if (MIname === MItrueName) MItrueName = newName;
+			if (MIobj.obj) {
+				MIobj.obj[0].set('name',newName);
+				let key = 'ababzzqqrst',
+					oldDispName = MIname.replace(/-/g,' '),
+					action = MIobj.obj[1].body.replace(new RegExp(MIname,'img'),key).replace(new RegExp(oldDispName,'img'),args[8]).replace(new RegExp(key,'img'),newName);
+				setAbility( toCS, newName, action );
+			}
+			MIname = newName;
+		};
+		
 		toMIvalues[fields.Items_name[0]][fields.Items_name[1]] = MIname;
 		toMIvalues[fields.Items_trueName[0]][fields.Items_trueName[1]] = MItrueName;
 		toMIvalues[fields.Items_qty[0]][fields.Items_qty[1]] = finalQty;
@@ -6204,11 +6175,13 @@ var MagicMaster = (function() {
 		toMIbag.addTableRow( toRowRef, toMIvalues );
 		slotCounts[toCS.id] += slotInc;
 		
-		let MIobj = abilityLookup( fields.MagicItemDB, MItrueName, fromCS );
-		if (MIobj.obj) {
-			setAbility( toCS, MItrueName, MIobj.obj[1].body );
-		} else {
-			log('handlePickOrPut: storing '+MItrueName+' to '+toCS.get('name')+', ability not found in any database or '+fromCS.get('name'));
+		if (!newName || !newName.length || MItrueName !== MIname) {
+			MIobj = abilityLookup( fields.MagicItemDB, fromTrueName, fromCS );
+			if (MIobj.obj) {
+				setAbility( toCS, MItrueName, MIobj.obj[1].body );
+			} else {
+				log('handlePickOrPut: storing '+MItrueName+' to '+toCS.get('name')+', ability not found in any database or '+fromCS.get('name'));
+			}
 		}
 		
 		let containerType = (parseInt(attrLookup(toCS, fields.ItemContainerType) || 0) || 0);
@@ -6361,6 +6334,7 @@ var MagicMaster = (function() {
 			replace = (MIchosen || '').split('/'),
 			MIchosen = replace[0],
 			MIreplace = replace[1],
+			isRing = MIrowref === '=',
 			repQty = '0',
 			qtyOp = isNaN(parseInt(MIqty[0])) && MIqty[0] !== '=',
 			reMIspecs = {
@@ -6369,18 +6343,20 @@ var MagicMaster = (function() {
 				speed:reSpellSpecs.speed,
 				type:reSpellSpecs.recharge,
 				itemType:reSpellSpecs.itemType,
+				hide:reSpellSpecs.hide,
 				reveal:reSpellSpecs.reveal,
 				pick:reSpellSpecs.pick,
 			},
 			magicItem = getAbility( fields.MagicItemDB, MIchosen, charCS, null, null, null, (isNaN(MIrowref) ? '' : MIrowref) ),
 			miData = resolveData( MIchosen, fields.MagicItemDB, reItemData, charCS, reMIspecs, (isNaN(MIrowref) ? '' : MIrowref) ).parsed,
 			MImaxQty = 0;
-
-		if (MIqty[0] === '=') MIqty.slice(1);
+			
+		if (MIqty[0] === '=') MIqty = MIqty.slice(1);
 		
 		if (MIreplace) {
 			MIrowref = MItables.tableFind( fields.Items_trueName, MIreplace );
-			if (qtyOp) repQty = (_.isUndefined(MIrowref) ? '1' : String(MItables.tableLookup( fields.Items_qty, MIrowref )));
+			if (!MIqty.length && MIreplace !== '-' && _.isUndefined(MIrowref)) return;  // If args[4] === '=' but MIreplace cannot be found (e.g. last dose of a potion) don't create a new entry.
+			if (qtyOp || !MIqty.length) repQty = (_.isUndefined(MIrowref) ? '1' : String(MItables.tableLookup( fields.Items_qty, MIrowref )));
 		};
 		if (inHand && isNaN(parseInt(MIrowref))) MIrowref = MItables.tableFind( fields.Items_trueName, MIchosen );
 		if (isNaN(parseInt(MIrowref)) || MIrowref<0) MIrowref = MItables.tableFind( fields.Items_name, '-' );
@@ -6388,11 +6364,11 @@ var MagicMaster = (function() {
 			MItables = MItables.addTableRow();
 			MIrowref = MItables.sortKeys.length-1;
 		}
-		MIqty = Math.floor(evalAttr(qtyOp ? repQty+MIqty : MIqty) || 0);
+		MIqty = Math.floor(evalAttr(qtyOp ? repQty+MIqty : (!MIqty.length ? repQty : MIqty)) || 0);
 		if (!qtyOp && MIqty == 0) {
-			MIqty = (parseInt(miData.qty) || 0);
+			MIqty = (parseInt(evalAttr(miData.qty)) || 0);
 		};
-		MImaxQty = qtyOp ? MIqty : (parseInt(miData.maxQty) || MIqty);
+		MImaxQty = qtyOp ? MIqty : (parseInt(evalAttr(miData.maxQty)) || MIqty);
 		MIqty = Math.min( MIqty, MImaxQty );
 		
 		var slotName = MItables.tableLookup( fields.Items_name, MIrowref ),
@@ -6417,7 +6393,10 @@ var MagicMaster = (function() {
 
 		if (!stdEqual(slotName,slotTrueName)) await moveMIspells( senderId, charCS, null, slotTrueName );
 
-		if (GMonly && state.MagicMaster.autoHide && reLooksLike.test(magicItem.obj[1].body)) {
+		if (miData.hide && !['hide','nohide','reveal'].includes(miData.hide)) {
+			MIdisplayName = miData.hide;
+			getAbility( fields.MagicItemDB, MIdisplayName, charCS, true, true, MIchosen );		
+		} else if (GMonly && (state.MagicMaster.autoHide || (miData.hide && miData.hide === 'hide')) && reLooksLike.test(magicItem.obj[1].body)) {
 			MIdisplayName = getShownType( magicItem, MIrowref, miData.itemType );
 			getAbility( fields.MagicItemDB, MIdisplayName, charCS, true, true, MIchosen );
 		} else {
@@ -6436,6 +6415,14 @@ var MagicMaster = (function() {
 		values[fields.Items_reveal[0]][fields.Items_reveal[1]] = (miData.reveal.toLowerCase() !== 'manual' ? miData.reveal : '');
 		
 		MItables.addTableRow( MIrowref, values );
+		
+		if (isRing) {
+			let ringHand = ((attrLookup( charCS, fields.Equip_leftTrueRing ) === MIreplace) ? BT.LEFTRING : ((attrLookup( charCS, fields.Equip_rightTrueRing ) === MIreplace) ? BT.RIGHTRING : undefined));
+			if (!_.isUndefined(ringHand)) {
+				let cmdStr = (fields.attackMaster + ' --button ' + ringHand + (GMonly ? '-NOCURSE' : '') + '|' + tokenID + '|' + MIrowref + '|SILENT');
+				sendAPI( cmdStr, senderId );
+			}
+		};
 		
 		if (slotName && slotName !== '-') {
 			removeMIability( charCS, slotName, MItables );
@@ -6459,7 +6446,7 @@ var MagicMaster = (function() {
 		sendAPI( (fields.initMaster+' --checkinit '+tokenID+'|silent'), senderId );
 
 		if (silent) {
-			if (tokenID && inHand) sendAPI( (fields.attackMaster + ' --button ' + (['PRIMARY','OFFHAND','BOTH','HAND'][Math.min(hand,3)]) + '-NOCURSE|' + tokenID + '|' + MIchosen + '|' + hand + '||Silent'), senderId );
+			if (tokenID && inHand && !isRing) sendAPI( (fields.attackMaster + ' --button ' + (['PRIMARY','OFFHAND','BOTH','HAND'][Math.min(hand,3)]) + '-NOCURSE|' + tokenID + '|' + MIchosen + '|' + hand + '||Silent'), senderId );
 			sendWait(senderId,0);
 			return;
 		}
@@ -6495,9 +6482,14 @@ var MagicMaster = (function() {
 			item = getAbility( fields.MagicItemDB, MIoldName, charCS, null, null, null, MIrowref );			// Check if this should actually be an abilityLookup()
 			if (!item.obj) return;
 			item.obj[0].set('name',MInewName);
-			setAbility( charCS, MInewName, item.obj[0].get('action').replace(new RegExp(MIoldName,'ig'),MInewName).replace(new RegExp(MIoldName.replace(/-/g,' '),'ig'),args[4]) );
+			let key = 'ababzzqqrst',
+				oldDispName = MIoldName.replace(/-/g,' '),
+				action = item.obj[1].body.replace(new RegExp(MIoldName,'img'),key).replace(new RegExp(oldDispName,'img'),args[4]).replace(new RegExp(key,'img'),MInewName);
+			setAbility( charCS, MInewName, action );
+
 			Items = Items.tableSet( fields.Items_name, MIrowref, MInewName );
 			Items = Items.tableSet( fields.Items_trueName, MIrowref, MInewName );
+
 			let MUspellObj = attrLookup( charCS, [fields.ItemMUspellsList[0]+MIhyphenOld, null] ),
 				PRspellObj = attrLookup( charCS, [fields.ItemPRspellsList[0]+MIhyphenOld, null] ),
 				powerObj = attrLookup( charCS, [fields.ItemPowersList[0]+MIhyphenOld, null] );
@@ -6535,7 +6527,7 @@ var MagicMaster = (function() {
 				});
 			}
 			filterObjs( obj => {
-				if (obj.get('_type') !== 'attribute' && obj.get('_characterid') !== charCS.id) return false;
+				if (obj.get('_type') !== 'attribute' || obj.get('_characterid') !== charCS.id) return false;
 				let objName = obj.get('name');
 				if (objName.startsWith(fields.ItemVar[0]+MIhyphenOld)+'+'+MIrowref) {
 					obj.set('name',objName.replace( MIhyphenOld, MInewName ));
@@ -6681,7 +6673,7 @@ var MagicMaster = (function() {
 			MItrueName = Items.tableLookup( fields.Items_trueName, MIrowref );
 			
 		if (newType === 'removeCurse') {
-			let curType = Items.tableLookup( fields.Items_type, MIrowref );
+			Items = Items.tableSet( fields.Items_trueType, MIrowref, Items.tableLookup( fields.Items_type, MIrowref ).replace(/cursed\+/i,'').replace(/cursed/i,'uncharged') );
 			newType = Items.tableLookup( fields.Items_type, MIrowref ).replace(/cursed\+/i,'').replace(/cursed/i,'uncharged');
 		}
 			
@@ -7109,7 +7101,7 @@ var MagicMaster = (function() {
 					if (objName.startsWith(fields.MIpowerPrefix[0])) foundName = objName.substring(fields.MIpowerPrefix[0].length);
 					if (objName.startsWith(fields.Prev_round[0])) foundName = objName;
 					if (objName.startsWith(fields.ItemVar[0])) foundName = objName.substring(fields.ItemVar[0].length,objName.lastIndexOf('+'));
-					return (!!foundName && !namesList[charID].includes(foundName));
+					return (!!foundName && !namesList[charID].some(elem => foundName.dbName().includes(elem.dbName())));
 				} else {
 					let dbItem = false;
 					let attack = objName.startsWith('Do-not-use');
@@ -7211,7 +7203,7 @@ var MagicMaster = (function() {
 	 
 	var handleShowMore = function( args, senderId ) {
 		
-		sendAPI( showMoreObj[args[1]], senderId );
+		sendAPI( showMoreObj[args[1]], senderId, '', true );
 		showMoreObj[args[1]] = undefined;
 	};
 		
@@ -7605,6 +7597,8 @@ var MagicMaster = (function() {
 		if (!_.isUndefined(inHandRow = InHand.tableFind( fields.InHand_trueName, MItrueName ))) {
 			InHand = InHand.tableSet( fields.InHand_name, inHandRow, MItrueName );
 		}
+		if (MItrueName.trueCompare(attrLookup( charCS, fields.Equip_leftTrueRing ))) setAttr( charCS, fields.Equip_leftRing, MItrueName );
+		if (MItrueName.trueCompare(attrLookup( charCS, fields.Equip_rightTrueRing ))) setAttr( charCS, fields.Equip_rightRing, MItrueName );
 		if (reveal.toLowerCase() !== 'silent') {
 			if (reveal && reveal.length) {
 				item = abilityLookup( fields.MagicItemDB, MItrueName, charCS );
@@ -7629,6 +7623,7 @@ var MagicMaster = (function() {
 	 
 	var doChangeCharges = function( args, selected, senderId ) {
 		
+		sendWait( senderId, 0 );
 		if (!args) return;
 		if (!args[0] && args[1] && selected && selected.length) {
 			args[0] = selected[0]._id;
@@ -7702,7 +7697,7 @@ var MagicMaster = (function() {
 			i = 1+(parseInt( Items.tableLookup(fields.Items_qty, r) ) || 0);
 			m = (!isNaN(maxCharges)) ? maxCharges : (parseInt( Items.tableLookup(fields.Items_trueQty, r) ) || 0);
 			if (charges != 0 && i < m) {
-				sendAPI('!rounds --target caster|'+tokenID+'|'+MIname+'-recharge|'+charges+'|-1|'+MIname+' is recharging|stopwatch');
+				sendAPI('!rounds --target-nosave caster|'+tokenID+'|'+MIname+'-recharge|'+charges+'|-1|'+MIname+' is recharging|stopwatch');
 			} else {
 				i = m;
 			}
@@ -8162,15 +8157,30 @@ var MagicMaster = (function() {
 			return;
 		}
 		
-		var miRowRef = args[1],
+		var tokenID = args[0],
+			miRowRef = args[1],
 			miChosen = args[2],
 			miQty = args[3] || 0,
-			miInHand = args[4],
-			isGM = (args[5] || '').toUpperCase() === 'NOCURSE';
+			miInHand = (args[4] || '='),
+			isGM = (args[5] || '').toUpperCase() === 'NOCURSE',
+			hand = '',
+			charCS = getCharacter(tokenID);
 			
+		if (!charCS) {
+			sendDebug('doAddItem: invalid ID argument');
+			sendResponseError(senderId,'Invalid token specified');
+			return;
+		};
+		
+		if (miRowRef.length && isNaN(miRowRef) && miInHand === '=') {
+			hand = getTableField( charCS, {}, fields.InHand_table, fields.InHand_trueName ).tableFind( fields.InHand_trueName, miRowRef );
+			miInHand = _.isUndefined(hand) ? '' : hand;
+			hand = (miRowRef === attrLookup( charCS, fields.Equip_leftTrueRing) || miRowRef === attrLookup( charCS, fields.Equip_rightTrueRing )) ? '=' : '';
+		};
+		
 		args.unshift('');
-		args[2] = !isNaN(miInHand) ? 'inhand/'+miInHand : (!isNaN(miRowRef) ? miRowRef : '');
-		args[3] = !isNaN(miRowRef) ? miRowRef : miChosen+'/'+miRowRef;
+		args[2] = String(miInHand).length && !isNaN(miInHand) ? 'inhand/'+miInHand : (String(miRowRef).length && !isNaN(miRowRef) ? miRowRef : hand);
+		args[3] = String(miRowRef).length && !isNaN(miRowRef) ? miRowRef : miChosen+'/'+miRowRef;
 		args.splice(5,2);
 		
 		handleStoreMI( args, isGM, senderID );
@@ -8233,6 +8243,11 @@ var MagicMaster = (function() {
 			state.MagicMaster.reveal = value;
 			msg = value ? 'Hidden items revealed when used' : 'GM reveals hidden items manually';
 			reSpellSpecs.reveal.def = value ? 'use' : '';
+			break;
+			
+		case 'view-action':
+			state.MagicMaster.viewActions = value;
+			msg = value ? 'Item/Spell action buttons active when viewing' : 'Item/Spell action buttons greyed out when viewing';
 			break;
 			
 		case 'alpha-lists':
@@ -8330,7 +8345,7 @@ var MagicMaster = (function() {
 					+ '<tr><td>Menu plain</td><td><a style= "width: 16px; height: 16px; border: none; background: none" title="Tabulated Menus" href="!magic --options menudisplay|plain">'+(config.menuPlain ? '\u2705' : '\u2B1C')+'</a></td></tr>'
 					+ '<tr><td>Menu dark</td><td><a style= "width: 16px; height: 16px; border: none; background: none" title="Dark Mode Menus" href="!magic --options menudisplay|dark">'+(config.menuDark ? '\u2705' : '\u2B1C')+'</a></td></tr>'
 					+ '</table></div>';
-		sendAPI( content, senderId );
+		sendAPI( content, senderId, '', true );
 		return;
 	}
 	
@@ -8396,7 +8411,7 @@ var MagicMaster = (function() {
 			return;
 		};
 		
-		handleLevelDrain( args, senderId );	
+		handleLevelDrain( [args[0],args[1],'','',args[2],'',args[3]], senderId );	
 	}
 
 	/**
@@ -9106,6 +9121,8 @@ var MagicMaster = (function() {
 		case BT.MISTORE_PRSPELL:
 		case BT.MISTORE_MUSPELL_ANY:
 		case BT.MISTORE_PRSPELL_ANY:
+		case BT.MISTORE_MUSPELL_ADD:
+		case BT.MISTORE_PRSPELL_ADD:
 		
 			handleStoreMIspell( args, senderId );
 			break;
@@ -9118,6 +9135,12 @@ var MagicMaster = (function() {
 		case BT.MI_POWER_CHARGE_USED:
 		
 			handleSelectMIpower( args, false, senderId );
+			break;
+			
+		case BT.LEVEL_CHANGE:
+		
+			args.shift();
+			handleLevelDrain( args, senderId );
 			break;
 			
 		case 'CHOOSE_SPELLS':
@@ -9157,6 +9180,7 @@ var MagicMaster = (function() {
 			
 		case 'POPQTY' :
 		case 'POPBUY' :
+		case 'POPRENAME' :
 		case 'POPSUBMIT' :
 		case BT.POP_STORE :
 			
@@ -9589,9 +9613,11 @@ var MagicMaster = (function() {
 						break;
 					case 'hsq':
 					case 'handshake':
+						sendWait( senderId, 0 );
 						doHsQueryResponse(arg);
 						break;
 					case 'hsr':
+						sendWait( senderId, 0 );
 						doHandleHsResponse(arg);
 						break;
 					case 'button':
@@ -9661,7 +9687,7 @@ var MagicMaster = (function() {
 		
 		var isGM = (playerIsGM(senderId) || state.MagicMaster.debug === senderId);
 			
-		if (!flags.noWaitMsg) sendWait(senderId,1,'magicMaster');
+		if (!flags.noWaitMsg) sendWait(senderId,50,'magicMaster');
 		
 		_.each(args, function(e) {
 			setTimeout( doMagicCmd, (1*t++), e, selected, senderId, isGM );
