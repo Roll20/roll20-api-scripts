@@ -84,7 +84,8 @@ API_Meta.MagicMaster={offset:Number.MAX_SAFE_INTEGER,lineCount:-1};
  *                     'manual', 'view', or 'use'. Support renaming of items picked up that are not 
  *                     stackable and the container already contains that item name. Fix handling of use 
  *                     of --mi-charges with "=#" for setting the quantity to an absolute number. Support 
- *                     RPGM maths operators for numbers passed to --mi-charges.
+ *                     RPGM maths operators for numbers passed to --mi-charges. Fixed stacking of looted
+ *                     items.
  */
  
 var MagicMaster = (function() {
@@ -4077,10 +4078,10 @@ var MagicMaster = (function() {
 					mi = (putItems.tableLookup(fields.Items_name,i) || '').dbName() || '-';
 					if (_.isUndefined(mi)) break;
 					if (mi != lowerMI) continue;
-					miTrueName = (putItems.tableLookup(fields.Items_trueName,i) || '').dbName() || '-';
-					if (mi != pickedTrueMI) continue;
-					miType = (putItems.tableLookup(fields.Items_type,i) || '') || '-';
-					if (miType.dbName() != pickedType || !stackable.includes(miType.toLowerCase())) continue;
+					miTrueName = (putItems.tableLookup(fields.Items_trueName,i) || '').dbName() ||'-';
+					if (miTrueName != pickedTrueMI) continue;
+					miType = (putItems.tableLookup(fields.Items_type,i) || pickedType);
+					if (miType.dbName() !== '' && (miType.dbName() !== pickedType || !stackable.includes(miType.toLowerCase()))) continue;
 					putRow = i;
 					break;
 				}
@@ -5967,7 +5968,7 @@ var MagicMaster = (function() {
 	 * qty -1 means not yet chosen, cost -1 means not yet agreed or no cost
 	**/
 
-	async function handlePickOrPut( args, senderId ) {
+	async function handlePickOrPut( args, senderId ) { // set
 
 		var tokenID = args[1],
 			fromRowRef = args[2],
@@ -6019,9 +6020,9 @@ var MagicMaster = (function() {
 		if (hide) MIname = (!MIdata.hide.length || MIdata.hide === 'hide') ? getShownType( MItrueObj, fromRowRef, MIdata.itemType ) : MIdata.hide;
 		
 		if (!_.isUndefined(toSlotName)) {
-			toSlotType = toMIbag.tableLookup( fields.Items_type, toRowRef );
+			toSlotType = (toMIbag.tableLookup( fields.Items_type, toRowRef ) || fromSlotType).toLowerCase();
 			toSlotTrueName = toMIbag.tableLookup( fields.Items_trueName, toRowRef );
-			toSlotTrueType = toMIbag.tableLookup( fields.Items_trueType, toRowRef );
+			toSlotTrueType = (toMIbag.tableLookup( fields.Items_trueType, toRowRef ) || fromSlotTrueType).toLowerCase();
 			toSlotQty = parseInt((toMIbag.tableLookup( fields.Items_qty, toRowRef ) || 0),10);
 			toSlotCharges = parseInt((toMIbag.tableLookup( fields.Items_trueQty, toRowRef ) || 0),10);
 		} else {
@@ -6031,7 +6032,7 @@ var MagicMaster = (function() {
 			toSlotTrueType = toSlotType;
 		}
 
-		var sameMI = (MItrueName.toLowerCase() === toSlotTrueName.toLowerCase()) && (toSlotType === fromSlotType) && (toSlotTrueType === fromSlotTrueType),
+		var sameMI = (MItrueName.toLowerCase() === toSlotTrueName.toLowerCase()) && (toSlotType === fromSlotType || !toSlotType.dbName()) && (toSlotTrueType === fromSlotTrueType || !toSlotTrueType.dbName()),
 			toSlotEmpty = toSlotName === '-';
 
 		if (((toSlotType && toSlotType.includes('cursed')) || (toSlotTrueType && toSlotTrueType.includes('cursed'))) && !sameMI && !toSlotEmpty) {
@@ -6054,6 +6055,7 @@ var MagicMaster = (function() {
 			MItrueType = fromMIbag.tableLookup( fields.Items_trueType, fromRowRef ),
 			MItext = MIname,
 			slotInc = 1,
+			isStackable = (stackable.includes(fromSlotType) && stdEqual( toSlotName, MIname ) && stdEqual( toSlotType, MItype ) && stdEqual( toSlotTrueName, MItrueName )),
 			finalQty, finalCharges, pickQty, charges, content, MIobj;
 			
 		if (showType) {
@@ -6106,7 +6108,7 @@ var MagicMaster = (function() {
 		finalQty = pickQty;
 		finalCharges = charges;
 		
-		if (stackable.includes(fromSlotType) && stdEqual( toSlotName, MIname ) && stdEqual( toSlotType, MItype ) && stdEqual( toSlotTrueName, MItrueName )) {
+		if (isStackable) {
 			finalQty = (parseInt(finalQty)||0) + (parseInt(toSlotQty)||0);
 			finalCharges = (parseInt(finalCharges)||0) + (parseInt(toSlotCharges)||0);
 			slotInc = 0;
@@ -6140,7 +6142,7 @@ var MagicMaster = (function() {
 		
 		let dupRow = toMIbag.tableFind( fields.Items_name, newName || MIname ) || toMIbag.tableFind( fields.Items_trueName, newName || MItrueName );
 			
-		if (!_.isUndefined(dupRow) && dupRow !== toRowRef) {
+		if (!isStackable && !_.isUndefined(dupRow) && dupRow !== toRowRef) {
 			content = '&{template:'+fields.menuTemplate+'}{{name=Duplicate Item}}'
 					+ '{{desc=The item you have selected to '+pickPutText+' is not stackable with an item of the same name already stored}}'
 					+ '{{desc1=[Choose a new name](!magic --button POPrename|'+tokenID+'|'+fromRowRef+'|'+fromID+'|'+toID+'|'+toRowRef+'|'+qty+'|'+expenditure+'|?{What new name do you want to give '+MIname+'?}) for '+MIname
@@ -6152,7 +6154,7 @@ var MagicMaster = (function() {
 				MIobj = abilityLookup( fields.MagicItemDB, MIname, fromCS );
 			}
 			if (MIname === MItrueName) MItrueName = newName;
-			if (MIobj.obj) {
+			if (MIobj.obj && MIobj.obj[0]) {
 				MIobj.obj[0].set('name',newName);
 				let key = 'ababzzqqrst',
 					oldDispName = MIname.replace(/-/g,' '),
