@@ -1,6 +1,6 @@
 const SmartAoE = (() => {
     const scriptName = "SmartAoE";
-    const version = '0.29';
+    const version = '0.30';
     const schemaVersion = '0.1';
     
     var cardParameters = {};
@@ -695,8 +695,8 @@ const SmartAoE = (() => {
                     //Centered on Caster, PF circle
                     ability = createObj('ability', {characterid: charID, name: '5ft-PF-Circle-Caster', action: '!smartaoe {{\n  --aoeType|PFcircle, float\n  --controlTokName|self\n  --radius|5ft\n  --minGridArea|0.5\n --forceIntersection|0\n  --fx|burn-fire\n}}', istokenaction: false});
                     ability = createObj('ability', {characterid: charID, name: '10ft-PF-Circle-Caster', action: '!smartaoe {{\n  --aoeType|PFcircle, float\n  --controlTokName|self\n  --radius|10ft\n  --minGridArea|0.5\n  --forceIntersection|0\n  --fx|burn-fire\n}}', istokenaction: false});
-                    ability = createObj('ability', {characterid: charID, name: '15ft-PF-PF-Circle-Caster', action: '!smartaoe {{\n  --aoeType|PFcircle, float\n  --controlTokName|self\n  --radius|15ft\n  --minGridArea|0.5\n  --forceIntersection|0\n  --fx|burn-fire\n}}', istokenaction: false});
-                    ability = createObj('ability', {characterid: charID, name: '20ft-PF-PF-Circle-Caster', action: '!smartaoe {{\n  --aoeType|PFcircle, float\n  --controlTokName|self\n  --radius|20ft\n  --minGridArea|0.5\n  --forceIntersection|0\n  --fx|burn-fire\n}}', istokenaction: false});
+                    ability = createObj('ability', {characterid: charID, name: '15ft-PF-Circle-Caster', action: '!smartaoe {{\n  --aoeType|PFcircle, float\n  --controlTokName|self\n  --radius|15ft\n  --minGridArea|0.5\n  --forceIntersection|0\n  --fx|burn-fire\n}}', istokenaction: false});
+                    ability = createObj('ability', {characterid: charID, name: '20ft-PF-Circle-Caster', action: '!smartaoe {{\n  --aoeType|PFcircle, float\n  --controlTokName|self\n  --radius|20ft\n  --minGridArea|0.5\n  --forceIntersection|0\n  --fx|burn-fire\n}}', istokenaction: false});
                     ability = createObj('ability', {characterid: charID, name: '30ft-PF-Circle-Caster', action: '!smartaoe {{\n  --aoeType|PFcircle, float\n  --controlTokName|self\n  --radius|30ft\n  --minGridArea|0.5\n  --forceIntersection|0\n  --fx|burn-fire\n}}', istokenaction: false});
                     ability = createObj('ability', {characterid: charID, name: '40ft-PF-Circle-Caster', action: '!smartaoe {{\n  --aoeType|PFcircle, float\n  --controlTokName|self\n  --radius|40ft\n  --minGridArea|0.5\n  --forceIntersection|0\n  --fx|burn-fire\n}}', istokenaction: false});
                     //Lines

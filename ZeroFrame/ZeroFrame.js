@@ -3,8 +3,8 @@
 Name            : ZeroFrame
 GitHub          : https://github.com/TimRohr22/Cauldron/tree/master/ZeroFrame
 Roll20 Contact  : timmaugh
-Version         : 1.1.7
-Last Update     : 12/18/2023
+Version         : 1.1.9
+Last Update     : 29 MAY 2024
 =========================================================
 */
 var API_Meta = API_Meta || {};
@@ -16,9 +16,9 @@ const ZeroFrame = (() => { //eslint-disable-line no-unused-vars
     //		VERSION
     // ==================================================
     const apiproject = 'ZeroFrame';
-    API_Meta[apiproject].version = '1.1.7';
+    API_Meta[apiproject].version = '1.1.9';
     const schemaVersion = 0.2;
-    const vd = new Date(1702924051886);
+    const vd = new Date(1716992852189);
     let stateReady = false;
     const checkInstall = () => {
         if (!state.hasOwnProperty(apiproject) || state[apiproject].version !== schemaVersion) {
@@ -280,7 +280,7 @@ const ZeroFrame = (() => { //eslint-disable-line no-unused-vars
     //      REGEX MANAGEMENT
     // ==================================================
     const escapeRegExp = (string) => { return string.replace(/[.*+\-?^${}()|[\]\\]/g, '\\$&'); };
-    const getfirst = (cmd, ...args) => {
+    const getFirst = (cmd, ...args) => {
         // pass in objects of form: {type: 'text', rx: /regex/}
         // return object of form  : {regex exec object with property 'type': 'text'}
 
@@ -297,6 +297,23 @@ const ZeroFrame = (() => { //eslint-disable-line no-unused-vars
     };
     const getConfigItem = e => {
         return state[apiproject].config[e];
+    };
+
+    // ==================================================
+    //      UTILITIES
+    // ==================================================
+    const getPageForPlayer = (playerid) => {
+        let player = getObj('player', playerid);
+        if (playerIsGM(playerid)) {
+            return player.get('lastpage') || Campaign().get('playerpageid');
+        }
+
+        let psp = Campaign().get('playerspecificpages');
+        if (psp[playerid]) {
+            return psp[playerid];
+        }
+
+        return Campaign().get('playerpageid');
     };
 
     // ==================================================
@@ -320,7 +337,7 @@ const ZeroFrame = (() => { //eslint-disable-line no-unused-vars
 
         while (index < preserved.content.length) {
             c = preserved.content.slice(index);
-            ores = getfirst(c, outertm, innertm, inlineclosetm, eostm);
+            ores = getFirst(c, outertm, innertm, inlineclosetm, eostm);
             switch (ores.type) {
                 case 'eos':
                     index = preserved.content.length;
@@ -357,28 +374,140 @@ const ZeroFrame = (() => { //eslint-disable-line no-unused-vars
         // replace inline rolls tagged with .value
         const valuerx = /\$\[\[(?<rollnumber>\d+)]]\.value/gi;
         const value2rx = /\({&(?<rollnumber>\d+)}\)\.value/gi;
+        const itemsrx = /\$\[\[(?<rollnumber>\d+)]]\.items\((?<separator>(?:'[^']+'|"[^"]+"|`[^`]+`|(?:[^'"`](?:#|\|))(?:'[^']+'|"[^"]+"|`[^`]+`|[^'"`)][^)]*)|[^'"`)][^#\|)]?[^)]*))\)/gi;
+        const items2rx = /\({&(?<rollnumber>\d+)}\)\.items\((?<separator>(?:'[^']+'|"[^"]+"|`[^`]+`|(?:[^'"`](?:#|\|))(?:'[^']+'|"[^"]+"|`[^`]+`|[^'"`)][^)]*)|[^'"`)][^#\|)]?[^)]*))\)/gi;
+        const items3rx = /\$\[\[(?<rollnumber>\d+)]]\.items(?=[^(])/gi;
+        const items4rx = /\({&(?<rollnumber>\d+)}\)\.items(?=[^(])/gi;
         let retval = false;
-        msg.content = msg.content.replace(valuerx, ((r, g1) => {
-            retval = true;
-            if (msg.inlinerolls.length > g1) {
-                return msg.parsedinline[g1].value;
-            } else if (lastpass) {
-                return '0';
-            } else {
-                return r;
-            }
-        }));
-        msg.content = msg.content.replace(value2rx, ((r, g1) => {
-            if (msg.inlinerolls.length > g1) {
+        [valuerx, value2rx].forEach(rx => {
+            msg.content = msg.content.replace(rx, ((r, g1) => {
                 retval = true;
-                return msg.parsedinline[g1].value;
-            } else if (lastpass) {
-                retval = true;
-                return '0';
-            } else {
-                return r;
-            }
-        }));
+                if (msg.inlinerolls.length > g1) {
+                    return msg.parsedinline[g1].value;
+                } else if (lastpass) {
+                    return '0';
+                } else {
+                    return r;
+                }
+            }));
+        });
+        [itemsrx, items2rx, items3rx, items4rx].forEach((rx,rxIndex) => {
+            msg.content = msg.content.replace(rx, ((r, g1, separator) => {
+                let delim = ',';
+                let res;
+                if (msg.inlinerolls.length > g1) {
+                    retval = true;
+                    if (rxIndex < 2) {
+                        if (/^(?:'[^']+'|"[^"]+"|`[^`]+`)$/.test(separator)) { // enclosed in quotation marks of some sort
+                            delim = separator.slice(1, -1);
+                        } else if (/^(?<deferral>[^'"`])(?:#|\|)(?<deferredtext>.+)$/.test(separator)) { // deferral character is present
+                            res = /^(?<deferral>[^'"`])(?:#|\|)(?<deferredtext>.+)$/.exec(separator);
+                            delim = (/^(?:'[^']+'|"[^"]+"|`[^`]+`)$/.test(res.groups.deferredtext)
+                                ? res.groups.deferredtext.slice(1, -1) // enclosed in quotation marks of some sort
+                                : res.groups.deferredtext)             // not enclosed in quotation marks
+                                .replace(new RegExp(escapeRegExp(res.groups.deferral), 'g'), '')
+                        } else {
+                            delim = separator;
+                        }
+                    }
+                    return msg.parsedinline[g1].getTableValues().length
+                        ? msg.parsedinline[g1].getTableValues().join(delim)
+                        : msg.parsedinline[g1].value;
+                } else if (lastpass) {
+                    retval = true;
+                    return '0';
+                } else {
+                    return r;
+                }
+            }));
+
+        });
+        [items3rx, items4rx].forEach(rx => {
+            msg.content = msg.content.replace(rx, ((r, g1) => {
+                let delim = ', ';
+                let res;
+                if (msg.inlinerolls.length > g1) {
+                    retval = true;
+                    return msg.parsedinline[g1].getTableValues().join(delim);
+                } else if (lastpass) {
+                    retval = true;
+                    return '0';
+                } else {
+                    return r;
+                }
+            }));
+
+        });
+
+        //msg.content = msg.content.replace(valuerx, ((r, g1) => {
+        //    retval = true;
+        //    if (msg.inlinerolls.length > g1) {
+        //        return msg.parsedinline[g1].value;
+        //    } else if (lastpass) {
+        //        return '0';
+        //    } else {
+        //        return r;
+        //    }
+        //}));
+        //msg.content = msg.content.replace(value2rx, ((r, g1) => {
+        //    if (msg.inlinerolls.length > g1) {
+        //        retval = true;
+        //        return msg.parsedinline[g1].value;
+        //    } else if (lastpass) {
+        //        retval = true;
+        //        return '0';
+        //    } else {
+        //        return r;
+        //    }
+        //}));
+        //msg.content = msg.content.replace(itemsrx, ((r, g1, separator) => {
+        //    let delim = ',';
+        //    let res;
+        //    if (msg.inlinerolls.length > g1) {
+        //        retval = true;
+        //        if (/^(?:'[^']+'|"[^"]+"|`[^`]+`)$/.test(separator)) { // enclosed in quotation marks of some sort
+        //            delim = separator.slice(1, -1);
+        //        } else if (/^(?<deferral>[^'"`])(?:#|\|)(?<deferredtext>.+)$/.test(separator)) { // deferral character is present
+        //            res = /^(?<deferral>[^'"`])(?:#|\|)(?<deferredtext>.+)$/.exec(separator);
+        //            delim = (/^(?:'[^']+'|"[^"]+"|`[^`]+`)$/.test(res.groups.deferredtext)
+        //                ? res.groups.deferredtext.slice(1, -1) // enclosed in quotation marks of some sort
+        //                : res.groups.deferredtext)             // not enclosed in quotation marks
+        //                .replace(new RegExp(escapeRegExp(res.groups.deferral),'g'),'')
+        //        } else {
+        //            delim = separator;
+        //        }
+        //        return msg.parsedinline[g1].getTableValues().join(delim);
+        //    } else if (lastpass) {
+        //        retval = true;
+        //        return '0';
+        //    } else {
+        //        return r;
+        //    }
+        //}));
+        //msg.content = msg.content.replace(items2rx, ((r, g1, separator) => {
+        //    let delim = ',';
+        //    let res;
+        //    if (msg.inlinerolls.length > g1) {
+        //        retval = true;
+        //        if (/^(?:'[^']+'|"[^"]+"|`[^`]+`)$/.test(separator)) { // enclosed in quotation marks of some sort
+        //            delim = separator.slice(1, -1);
+        //        } else if (/^(?<deferral>[^'"`])(?:#|\|)(?<deferredtext>.+)$/.test(separator)) { // deferral character is present
+        //            res = /^(?<deferral>[^'"`])(?:#|\|)(?<deferredtext>.+)$/.exec(separator);
+        //            delim = (/^(?:'[^']+'|"[^"]+"|`[^`]+`)$/.test(res.groups.deferredtext)
+        //                ? res.groups.deferredtext.slice(1, -1) // enclosed in quotation marks of some sort
+        //                : res.groups.deferredtext)             // not enclosed in quotation marks
+        //                .replace(new RegExp(escapeRegExp(res.groups.deferral), 'g'), '')
+        //        } else {
+        //            delim = separator;
+        //        }
+        //        return msg.parsedinline[g1].getTableValues().join(delim);
+        //    } else if (lastpass) {
+        //        retval = true;
+        //        return '0';
+        //    } else {
+        //        return r;
+        //    }
+        //}));
         return retval;
     };
     const getLoopRolls = (msg, preserved, preservedstate) => {
@@ -396,6 +525,206 @@ const ZeroFrame = (() => { //eslint-disable-line no-unused-vars
             preservedstate.runloop = true;
         }
     };
+    const handleInit = (msg, preserved, preservedstate) => {
+        if (!preserved.initArray || !preserved.initArray.length) { return; }
+        class TrackerEntry {
+            constructor(id,val,pgid,custom='') {
+                this.id = id;
+                this.pr = `${val}`;
+                this.custom = custom;
+                this._pageid = pgid;
+            }
+        }
+        let parsed = libInline.getRollData(msg);
+        let to = JSON.parse(Campaign().get('turnorder'));
+
+        preserved.initArray.forEach(e => {
+            if (!e[1].token || !e[1].token.id || parsed.length <= e[0]) { return; }
+            let newentry = new TrackerEntry(e[1].token.id, parsed[e[0]].value, e[1].token.get('pageid'));
+            let oldentry;
+            switch (e[1].type) {
+                case 'new':
+                    to.push(newentry);
+                    break;
+                case 'value':
+                    oldentry = to.filter(te => te.id === e[1].token.id && te.pr === e[1].value)[0];
+                    if (oldentry && oldentry.id) {
+                        Object.assign(oldentry, newentry);
+                    } else {
+                        to.push(newentry);
+                    }
+                    break;
+                case 'index':
+                    oldentry = to.filter(te => te.id === e[1].token.id)[Math.max(0,parseInt(e[1].value)-1)];
+                    if (oldentry && oldentry.id) {
+                        Object.assign(oldentry, newentry);
+                    } else {
+                        to.push(newentry);
+                    }
+                    break;
+                default:
+                    oldentry = to.filter(te => te.id === e[1].token.id)[0];
+                    if (oldentry && oldentry.id) {
+                        Object.assign(oldentry, newentry);
+                    } else {
+                        to.push(newentry);
+                    }
+            }
+        });
+        Campaign().set({ turnorder: JSON.stringify(to) });
+        delete preserved.initArray;
+    };
+    const customTracker = (preserved) => {
+        let res,
+            index = 0,
+            rollcount = 0,
+            trackerindexarray = [],
+            initArray = [],
+            inlineopenrx = /(?<!\$)\[\[/,
+            inlinecloserx = /]]/,
+            trackerrx = /{&\s*tracker(?:\s+([^}]+)){0,1}}/i,
+            trackertm = { rx: trackerrx, type: 'tracker' },
+            opentm = { rx: inlineopenrx, type: 'open' },
+            closetm = { rx: inlinecloserx, type: 'close' },
+            eostm = { rx: /$/, type: 'eos' };
+
+        const assertStart = rx => new RegExp(`^${rx.source}`, rx.flags);
+
+        const getToken = (info, fromto = {}) => {
+            const checkControl = (t) => {
+                if (playerIsGM(preserved.playerid)) { return true; }
+                let cby = t.get('represents').length
+                    ? findObjs({ id: t.get('represents') })[0].get('controlledby')
+                    : t.get('controlledby');
+                return cby.split(',').reduce((m, p) => {
+                    return m || p === 'all' || p === preserved.playerid;
+                }, false);
+            };
+            let pgid = getPageForPlayer(preserved.playerid);
+            let tokens = [];
+            if (fromto && fromto.type) { // from turn order, only
+                tokens = JSON.parse(Campaign().get('turnorder'))
+                    .filter(e => playerIsGM(preserved.playerid) || e._pageid === pgid)
+                    .map(e => {
+                        e.token = getObj('graphic', e.id);
+                        return e;
+                    })
+                    .filter(e => checkControl(e.token))
+                    .filter(e => {
+                        if (e.token.id === info || e.token.get('name') === info) { return true; }
+                        let c = (findObjs({ type: 'character', id: e.token.get('represents') })[0] || { get: () => { return undefined; } });
+                        return c.id === info || c.get('name') === info;
+                    })
+                    .filter((e, i) => {
+                        if (fromto.type === 'value') {
+                            return e.pr === fromto.value;
+                        } else if (fromto.type === 'index') {
+                            return i === parseInt(fromto.value)-1;
+                        }
+                        return true;
+                    })
+                    .map(e => e.token);
+                if (!tokens.length) {
+                    fromto.type = 'new';
+                }
+            }
+            if (!tokens.length) {
+                tokens = [
+                    ...findObjs({ type: 'graphic', subtype: 'token', id: info }),
+                    ...findObjs({ type: 'graphic', subtype: 'card', id: info }),
+                    ...findObjs({ type: 'graphic', subtype: 'token', name: info, pageid: pgid }),
+                    ...findObjs({ type: 'graphic', subtype: 'token', pageid: pgid })
+                        .filter(t => t.get('represents').length && findObjs({ type: 'character', id: t.get('represents') })[0].get('name') === info)
+                ].filter(checkControl);
+                if (!tokens.length) {
+                    tokens = findObjs({ type: 'graphic', subtype: 'token', name: info });
+                    if (tokens.length > 1 || !checkControl(tokens[0])) {
+                        tokens = [];
+                    }
+                }
+            }
+            return tokens[0];
+        };
+
+        const getTrackerRecord = (query) => {
+            let partsrx = /^([^@|+|#]+){0,1}(@(.+)|#(\d+)|\+){0,1}/;
+            let res = partsrx.exec(query);
+            let ret = {};
+            if (res[2] === '+') { // add new turn
+                ret.type = 'new';
+            } else if (res[3]) { // current tracker value
+                ret.type = 'value';
+                ret.value = res[3];
+            } else if (res[4]) { // index of turn for multi-turn token
+                ret.type = 'index';
+                ret.value = res[4];
+            }
+            if (!res[1]) { // no token identifier
+                if (preserved.selected && preserved.selected.length) {
+                    ret.token = getToken(preserved.selected[0]._id);
+                }
+            } else {
+                if (ret.type && ['value', 'index'].includes(ret.type)) {
+                    ret.token = getToken(res[1], ret);
+                } else {
+                    ret.token = getToken(res[1]);
+                }
+            }
+            return ret;
+        };
+        const openRoll = (index) => {
+            let testSet = [trackertm, opentm, closetm, eostm];
+            let res;
+            let tokens = [];
+            let tags = [];
+
+            res = getFirst(preserved.content.slice(index), ...testSet);
+            index += res.index;
+            while (!['eos', 'close'].includes(res.type)) {
+                if (res.type === 'open') {
+                    index += res[0].length;
+                    index = openRoll(index);
+                } else if (res.type === 'tracker') {
+                    tags.push(index);
+                    if (!res[1]) {
+                        if (preserved.selected && preserved.selected.length) {
+                            tokens.push(getTrackerRecord(preserved.selected[0]._id));
+                        }
+                    } else {
+                        res[1].split(/\s*,\s*/).forEach(t => tokens.push(getTrackerRecord(t)));
+                    }
+                    index += res[0].length;
+                }
+                res = getFirst(preserved.content.slice(index), ...testSet);
+                index += res.index;
+            }
+
+            if (res.type === 'close') {
+                trackerindexarray.push(...tags);
+                initArray.push(...tokens.map(t => [rollcount, t]));
+                rollcount++;
+                index += res[0].length;
+            }
+            return index;
+        };
+
+        while (index < preserved.content.length) {
+            res = getFirst(preserved.content.slice(index), opentm, eostm);
+            index += res.index;
+            if (res.type === 'open') {
+                index += res[0].length;
+                index = openRoll(index);
+            } else {
+                index = preserved.content.length;
+            }
+        }
+
+        trackerindexarray.sort((a, b) => b - a).forEach(t => {
+            preserved.content = `${preserved.content.slice(0, t)}${preserved.content.slice(t).replace(assertStart(trackerrx), '')}`;
+        });
+        preserved.initArray = initArray;
+    };
+
     // ==================================================
     //      GLOBAL DEFINITIONS
     // ==================================================
@@ -485,6 +814,7 @@ const ZeroFrame = (() => { //eslint-disable-line no-unused-vars
             log(`  CONT: ${preserved.content}`);
             log(`  DEFS: ${JSON.stringify(preserved.definitions || [])}`);
         }
+        handleInit(msg, preserved, preservedstate);
         getLoopRolls(msg, preserved, preservedstate);
         preserved.content = msg.content.replace(/(<br\/>)?\n/g, '({&br})');
         if (!preserved.rolltemplate && msg.rolltemplate && msg.rolltemplate.length) preserved.rolltemplate = msg.rolltemplate;
@@ -543,6 +873,15 @@ const ZeroFrame = (() => { //eslint-disable-line no-unused-vars
             getValues(preserved);
 
         });
+        // custom roll marker (open/close)
+        preserved.content = preserved.content.replace(/(\({&\s*r\s*}\)|{&\s*r\s*})/gim, m => {
+            preservedstate.runloop = true;
+            return '[[';
+        });
+        preserved.content = preserved.content.replace(/(\({&\s*\/r\s*}\)|{&\s*\/r\s*})/gim, m => {
+            preservedstate.runloop = true;
+            return ']]'
+        });
 
         // see if we're done
         if (preservedstate.runloop) {
@@ -559,8 +898,13 @@ const ZeroFrame = (() => { //eslint-disable-line no-unused-vars
                         return `${Array(m.length - 1).join(`\\`)}${m.slice(-1)}`;
                     }
                 });
+                // custom roll marker (open/close)
+                preserved.content = preserved.content.replace(/(\({&\s*r\s*}\)|{&\s*r\s*})/gim, '[[');
+                preserved.content = preserved.content.replace(/(\({&\s*\/r\s*}\)|{&\s*\/r\s*})/gim, ']]');
                 // convert nested inline rolls to value
                 nestedInline(preserved);
+                // look for {&tracker} tags
+                customTracker(preserved);
                 // replace other inline roll markers with ({&#}) formation
                 preserved.content = preserved.content.replace(/\$\[\[(\d+)]]/g, `({&$1})`);
                 // properly format rolls that would normally fail in the API (but work in chat)
@@ -623,6 +967,12 @@ const ZeroFrame = (() => { //eslint-disable-line no-unused-vars
                 return `&{template:${template}}`;
             });
         }
+        // line break replacements
+        preserved.content = preserved.content
+            .replace(/(\({&\s*cr\s*}\)|{&\s*cr\s*})/gi, '<br>\n')
+            .replace(/(\({&\s*lf\s*}\)|{&\s*lf\s*})/gi, '\n')
+            .replace(/(\({&\s*tp\s*}\)|{&\s*tp\s*})/gi, '{{')
+            .replace(/(\({&\s*\/tp\s*}\)|{&\s*\/tp\s*})/gi, '}}');
         // check for SIMPLE tag
         if (preserved.content.match(simplerx)) {
             notes.push(`SIMPLE or FLAT tag detected`)

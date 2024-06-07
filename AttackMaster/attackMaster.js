@@ -158,14 +158,50 @@ API_Meta.AttackMaster={offset:Number.MAX_SAFE_INTEGER,lineCount:-1};
  * v3.0.0  13/11/2023  Added support for other character sheets. Moved parseData() to library.
  *                     Added magical weapon plus weapon speed configuration option and 
  *                     corrected documentation of possible command options.
+ * v3.1.0  01/12/2023  Moved the configuration menu to the library. Added the AD&D1e AR Adjust
+ *                     table to the weapons tables to support that rule set version.  Added 
+ *                     configuration flags for critical hits/misses and natural 20/1 being 
+ *                     automatic hits and misses. Undid use of delTableRow for filtering 
+ *                     weapons for now as did not seem to work well. Generalised how insertAmmo()
+ *                     works for varied rule-sets. Improved scanForArmour() to support new 
+ *                     sheets/tokens better.
+ * v3.1.1  17/12 2023  Moved reWeapSpecs & reACSpecs to library to support generalisation of 
+ *                     resolveData() and allow inheritance for item and spell DB objects.
+ *                     Further improvements to scanForArmour() and doCheckAC().
+ * v3.1.2  20/12/2023  Use resolveData() to allow weapons, armour & other equipment & MIs
+ *                     to use inheritance. Fix AC calculation display so that AC items all 
+ *                     use currently selected damage type. Implemented special message for cursed
+ *                     rings. Clarified variable names regards specs vs. data. Implemented 
+ *                     double-plus (+:++#) for ranged weapons meaning plus applies to both
+ *                     to-hit and dmg calculations (otherwise just affect to-hit). Any weapon,
+ *                     even if not currently in-hand, can now be made to "leap from a character's
+ *                     equipment" and start dancing using the --dance command.
+ * v3.2.0  08/02/2024  Enable weapon type and supertype overrides so that swordType queries can 
+ *                     set proficiency correctly. New recharge types 'enable' and 'disable' 
+ *                     which are uncharged but allow c: charge comparisons to support enable 
+ *                     and disable of weapon attack rows. Reintroduce support for effects on 
+ *                     '-inhand' in such a way as not to clash with new dancing weapons type.
+ * v3.2.1  11/02/2024  Link weapon tables to InHand table by storing the row number. Use this
+ *                     to reveal hidden weapons on an attack if "reveal on use" set. Improve
+ *                     parseStr() to handle undefined or empty strings without erroring. Fixed
+ *                     ad-hoc dancing weapons.
+ * v3.3.0  26/02/2024  Fixed weaponQuery to interrogate hidden items correctly to assess if they
+ *                     should be in the list. Add new function to build a save wih a custom target.
+ *                     Allow filterWeapons() to filter items other than weapons from tables.
+ *                     Improve finding of ammo rows when inserting ammo. Allow recovery of 
+ *                     cursed ammo. Fix the "Death" button on the Other-Actions menu. Fixed 
+ *                     charged powers for hidden in-hand magic items on attack menu.
+ * v3.4.0  27/03/2024  Modified reItemData to accept space or comma after a data section. Fix 
+ *                     attack macro build for weapons that don't have a +: tohit attribute
+ *                     specified. Fixed weapon proficiency with complex innate weapons and spells
  */
  
 var attackMaster = (function() {
 	'use strict'; 
-	var version = '3.0.0',
+	var version = '3.4.0',
 		author = 'Richard @ Damery',
 		pending = null;
-    const lastUpdate = 1700058244;
+    const lastUpdate = 1712853841;
 
 	/*
 	 * Define redirections for functions moved to the RPGMaster library
@@ -207,6 +243,8 @@ var attackMaster = (function() {
 	const resolveData = (...a) => libRPGMaster.resolveData(...a);
 	const handleGetBaseThac0 = (...a) => libRPGMaster.handleGetBaseThac0(...a);
 	const creatureAttkDefs = (...a) => libRPGMaster.creatureAttkDefs(...a);
+	const getSetPlayerConfig = (...a) => libRPGMaster.getSetPlayerConfig(...a);
+	const makeConfigMenu = (...a) => libRPGMaster.makeConfigMenu(...a);
     const sendToWho = (...m) => libRPGMaster.sendToWho(...m);
     const sendPublic = (...m) => libRPGMaster.sendPublic(...m);
     const sendAPI = (...m) => libRPGMaster.sendAPI(...m);
@@ -229,6 +267,7 @@ var attackMaster = (function() {
 	
 	var fields = {
 		defaultTemplate:    'RPGMdefault',
+		menuTemplate:		'RPGMmenu',
 		targetTemplate:		'RPGMattack',
 		weaponTemplate:		'RPGMweapon',
 		warningTemplate:	'RPGMwarning',
@@ -238,11 +277,26 @@ var attackMaster = (function() {
 	};
 
 	/*
-	 * List of the "standard" RPGMaster databases to support identification of 
-	 * custom user databases and db entries to give priority to.
+	 * Define various designs for icons, buttons, etc.
 	 */
 
-//	const stdDB = ['MU_Spells_DB','PR_Spells_DB','Powers_DB','MI_DB','MI_DB_Ammo','MI_DB_Armour','MI_DB_Light','MI_DB_Potions','MI_DB_Rings','MI_DB_Scrolls_Books','MI_DB_Wands_Staves_Rods','MI_DB_Weapons','Attacks_DB','Class_DB','Race_DB','Race_DB_Creatures'];
+	const design = Object.freeze ({
+		turncolor: '#D8F9FF',
+		roundcolor: '#363574',
+		statuscolor: '#F0D6FF',
+		statusbgcolor: '#897A87',
+		statusbordercolor: '#430D3D',
+		edit_icon: 'https://s3.amazonaws.com/files.d20.io/images/11380920/W_Gy4BYGgzb7jGfclk0zVA/thumb.png?1439049597',
+		delete_icon: 'https://s3.amazonaws.com/files.d20.io/images/11381509/YcG-o2Q1-CrwKD_nXh5yAA/thumb.png?1439051579',
+		settings_icon: 'https://s3.amazonaws.com/files.d20.io/images/11920672/7a2wOvU1xjO-gK5kq5whgQ/thumb.png?1440940765', 
+		apply_icon: 'https://s3.amazonaws.com/files.d20.io/images/11407460/cmCi3B1N0s9jU6ul079JeA/thumb.png?1439137300',
+		info_msg: '<div style="color:green;font-weight:bold;border:2px solid black;background-color:white;border-radius:1em;padding:1em;">',
+		grey_button: '"display: inline-block; background-color: lightgrey; border: 1px solid black; padding: 4px; color: dimgrey; font-weight: extra-light;"',
+		dark_button: '"display: inline-block; background-color: lightgrey; border: 1px solid black; padding: 4px; color: black; font-weight: normal;"',
+		selected_button: '"display: inline-block; background-color: white; border: 1px solid red; padding: 4px; color: red; font-weight: bold;"',
+		green_button: '"display: inline-block; background-color: white; border: 1px solid lime; padding: 4px; color: darkgreen; font-weight: bold;"',
+		boxed_number: '"display: inline-block; background-color: yellow; border: 1px solid blue; padding: 2px; color: black; font-weight: bold;"'
+	});
 	
 	/*
 	 * Handle for reference to database data relevant to MagicMaster.
@@ -273,10 +327,10 @@ var attackMaster = (function() {
 
 	const handouts = Object.freeze({
 	AttackMaster_Help:	{name:'AttackMaster Help',
-						 version:3.00,
+						 version:3.03,
 						 avatar:'https://s3.amazonaws.com/files.d20.io/images/257656656/ckSHhNht7v3u60CRKonRTg/thumb.png?1638050703',
 						 bio:'<div style="font-weight: bold; text-align: center; border-bottom: 2px solid black;">'
-							+'<span style="font-weight: bold; font-size: 125%">AttackMaster Help v3.00</span>'
+							+'<span style="font-weight: bold; font-size: 125%">AttackMaster Help v3.03</span>'
 							+'</div>'
 							+'<div style="padding-left: 5px; padding-right: 5px; overflow: hidden;">'
 							+'<h1>Attack Master API v'+version+'</h1>'
@@ -339,8 +393,16 @@ var attackMaster = (function() {
 							+'<p>Many magic items have AC qualities, such as Bracers of Defence and Rings of Protection, and if the <b>MagicMaster API</b> is used these are also taken into account - invalid combinations will also be prevented, such as Rings of Protection with magical armour.  If allocated to a Token Circle, the calculated AC is compared to the displayed Token AC and any difference highlighted - this may be due to magical effects currently in place, for instance - the highlight allows the Player to review why this might be.</p>'
 							+'<h3>Saves</h3>'
 							+'<p>The corollary to attacks is saves.  The system provides two menus: one to access, review, update and make saving throws and the appropriate modifiers; and the other to make attribute checks, again with the appropriate modifiers.</p>'
-							+'<p>For each menu, the initial menu presented shows the saving throw and attribute tables from the Character Sheet (always the one from the Character tab rather than the Monster Tab - monster saving throws should be copied to both).  Each type of save or attribute check has a button to make the saving throw: the system will perform the roll and display the result with an indication of success or failure.  The menu also shows buttons to add a situational adjustment (as per the AD&D 2e PHB) and to modify the saving throw table, either automatically (taking into account race, class, level and magic items) or manually.</p>'
+							+'<p>For each menu, the initial menu presented shows the saving throw and attribute tables from the Character Sheet (always the one from the Character tab rather than the Monster Tab - monster saving throws should be copied to both).  Each type of save or attribute check has a button to make the saving throw: the system (or the player - see below) will perform the roll and display the result with an indication of success or failure.  The menu also shows buttons to add a situational adjustment (as per the AD&D 2e PHB) and to modify the saving throw table, either automatically (taking into account race, class, level and magic items) or manually.</p>'
+							+'<p><span style='+design.selected_button+'>New:</span> You can change the way the roll is made using the <i>[PC Rolls]</i> and <i>[You Roll]</i> buttons at the bottom of the saving throw and attribute check menus. If <i>[You Roll]</i> is selected, the player will be presented with a Roll20 Roll Query to enter the result of the roll (though just submitting the dice specification displayed will roll the dice). The option chosen is remembered between game sessions within that campaign.</p>'
 							+'<p>The easiest way to set the correct saving throws for each type of save, based on class, level & race, is to use the <b>CommandMaster API</b> Character Sheet setup commands.</p>'
+							+'<h3><span style='+design.selected_button+'>New:</span> Rogue Skill Checks</h3>'
+							+'<p>In a similar way to <i>saves</i> and <i>attribute checks</i>, it is possible to make checks against Rogue skills, such as picking pockets and climbing walls. The initial dialog presented shows a button for each possible check that can be made, and a current target percentage to roll below for success. Clicking any of the buttons will make the named check. <u><b>However:</b></u> Some of the checks should be made by the GM. The GM can set a configuration item to allow players to make all checks <i>or for the results of certain checks to only go to the GM.</i> If a check only displays the result to the GM, the players will receive a message to this effect.</p>'
+							+'<p>Rolls will either be made automatically or once the player enters a dice roll result (see below). Each result, wherever it is displayed, will also describe how it was calculated and what the implications of the result are for the character. The GM can configure a <i>critical success</i> factor to be 5%, 1% or not allowed (see <b>--config</b> command), which will be taken into account in the calculation. If the natural dice roll achieves a critical success, the skill check will automatically succeed, even for characters who would not normally get any chance of success.</p>'
+							+'<p>An additional button is provided on the initial dialog to add a <i>situational modifier</i> with various types listed, or just a general value. Select the appropriate modifier and enter any value prompted for. Any entered modifier will apply to only the next skill check roll, and will apply to any roll made regardless of appropriateness.</p>'
+							+'<p>Another button, <i>[Manually Update]</i>, will allow the player to check & modify the elements that go to make up each skill check.</p>'
+							+'<p>Finally, as for saving throws and attribute checks, buttons are provided for <i>[PC Rolls]</i> and <i>[You Roll]</i> which have the same effects of allowing an automatic roll to take place or for the player to make each roll.</p>'
+							+'<p><b>Note:</b> There are additional commands provided in the <i>MagicMaster API</i> to find traps and to loot containers or other creatures which will prompt "find traps", "remove traps" and "pick pockets" rolls as required. If using these functions on <i>Drag & Drop</i> creatures and containers, the appropriate processes and checks will occur (including asking the GM to make checks as appropriate if the GM has set that RPGMaster configuration) without having to use this dialog.</p>'
 							+'<br>'
 							+'<h2>Command Index</h2>'
 							+'<h3>1. Menus</h3>'
@@ -361,11 +423,14 @@ var attackMaster = (function() {
 							+'<h3>4. Ammunition Management</h3>'
 							+'<pre>--ammo [token_id]<br>'
 							+'--setammo [token_id] | ammo_name | [ [+/-]cur_qty / = ] | [ [+/-]max_qty / = ] | [ SILENT ]</pre>'
-							+'<h3>5. Armour Class and Saving Throws</h3>'
+							+'<h3>5. Armour Class, Saving Throws and Skill Checks</h3>'
 							+'<pre>--edit-armour [token_id]<br>'
 							+'--checkac [token_id] | [ SILENT ] | [SADJ / PADJ / BADJ]<br>'
 							+'--save [token_id] | [situation-mod]<br>'
-							+'--attr-check [token_id] | [situation-mod] | [message] | [DCval]</pre>'
+							+'<span style='+design.selected_button+'>New:</span> --build-save [token_id] | save-type | save-value | [macro-name]<br>'
+							+'--attr-check [token_id] | [situation-mod] | [message] | [DCval]<br>'
+							+'<span style='+design.selected_button+'>New:</span> --theive [token_id]<br>'
+							+'<span style='+design.selected_button+'>New:</span> --set-thieving [token_id]</pre>'
 							+'<h3>6. Other Commands</h3>'
 							+'<pre>--help<br>'
 							+'--config [PROF/ALL-WEAPS/WEAP-CLASS/ALL-ARMOUR/MASTER-RANGE/DM-TARGET] | [TRUE/FALSE]<br>'
@@ -385,7 +450,7 @@ var attackMaster = (function() {
 							+'<h3>1.2 Display a menu of other actions</h3>'
 							+'<pre>--other-menu [token_id]</pre>'
 							+'<p>Takes an optional token ID - if not specified uses selected token</p>'
-							+'<p>Displays a Chat menu with buttons for: saving throws and saving throw management; managing character classes and levels (if the <b>CommandMaster API</b> is loaded) and managing light sources for the character\'s token (if Dynamic Lighting is being used) (requires <b>MagicMaster API</b> to work).  If the GM uses the menu, two further options appear: mark the token selected as Dead (which also marks the body as an inanimate object that can be looted); and the ability to adjust damage for the selected token for any arbitrary reason, which can also be noted.</p>'
+							+'<p>Displays a Chat menu with buttons for: saving throws and saving throw management; ability checks; rogue skill checks; managing character classes and levels (if the <b>CommandMaster API</b> is loaded) and managing light sources for the character\'s token (if Dynamic Lighting is being used) (requires <b>MagicMaster API</b> to work).  If the GM uses the menu, two further options appear: mark the token selected as Dead (which also marks the body as an inanimate object that can be looted); and the ability to adjust damage for the selected token for any arbitrary reason, which can also be noted.</p>'
 							+'<h2>2. Attacking Commands</h2>'
 							+'<h3>2.1 Attack an opponent with a weapon</h3>'
 							+'<pre>--attk-hit [token_id] | [message] | [monster weap1] | [monster weap2] | [monster weap3]<br>'
@@ -401,9 +466,9 @@ var attackMaster = (function() {
 							+'<p>The attack menu also has buttons that allow the Player or GM to change the default attack type made: Roll20 rolls, Player rolls, or a targeted attack.  It also has a button to turn 3D dice on or off. This configuration is held by Player for each Campaign, and preserved between sessions of game play.</p>'
 							+'<p>The optional message is displayed as part of the display of the damage done on a successful hit.  If a monster, the message can be three concatenated messages separated by \'$$\'.  The message can include API Buttons if needed.  The following characters must be replaced (escaped) using these replacements:</p>'
 							+'<table>'
-							+'	<tr><th scope="row">Character</th><td>?</td><td>[</td><td>]</td><td>@</td><td>-</td><td>|</td><td>:</td><td>&</td><td>{</td><td>}</td></tr>'
-							+'	<tr><th scope="row">Substitute</th><td>^</td><td>&lt;&lt;</td><td>&gt;&gt;</td><td>`</td><td>~</td><td>&amp;#124;</td><td> </td><td>&amp;amp;</td><td>&amp;#123;</td><td>&amp;#125;</td></tr>'
-							+'	<tr><th scope="row">Alternative</th><td>\\ques;</td><td>\\lbrak;</td><td>\\rbrak;</td><td>\\at;</td><td>\\dash;</td><td>\\vbar;</td><td>\\clon;</td><td>\\amp;</td><td>\\lbrc;</td><td>\\rbrc;</td></tr>'
+							+'	<tr><th scope="row">Character</th><td>?</td><td>[</td><td>]</td><td>@</td><td>-</td><td>|</td><td>:</td><td>&</td><td>{</td><td>}</td><td>(</td><td>)</td></tr>'
+							+'	<tr><th scope="row">Substitute</th><td>^</td><td>&lt;&lt;</td><td>&gt;&gt;</td><td>`</td><td>~</td><td>¦</td><td> </td><td>&amp;amp;</td><td>&amp;#123;</td><td>&amp;#125;</td><td>&amp;#40;</td><td>&amp;#41;</td></tr>'
+							+'	<tr><th scope="row">Alternative</th><td>\\ques;</td><td>\\lbrak;</td><td>\\rbrak;</td><td>\\at;</td><td>\\dash;</td><td>\\vbar;</td><td>\\clon;</td><td>\\amp;</td><td>\\lbrc;</td><td>\\rbrc;</td><td>\\lpar;</td><td>\\rpar;</td></tr>'
 							+'</table>'
 							+'<br>'
 							+'<h3>2.2 Use two weapons to attack</h3>'
@@ -472,11 +537,11 @@ var attackMaster = (function() {
 							+'<li>Either parameter can be an = by itself.  In this instance, the corresponding value is set to the other corresponding value (after any modification) i.e. putting = for cur_qty sets the current quantity held to be the maximum possible, or putting = for max_qty sets the maximum possible to be the current quantity.  Putting = for both does nothing.</li>'
 							+'<li>No value can go below 0, and the current quantity will be constrained at or below the maximum quantity.</li></ul>'
 							+'<p>So, for example, this command will set the maximum quantity to 10 and set the current quantity to be equal to it:</p>'
-							+'<pre>!attk -setammo @{selected|token_id}|Flight-Arrow+1|=|10|silent</pre>'
+							+'<pre>!attk --setammo @{selected|token_id}|Flight-Arrow+1|=|10|silent</pre>'
 							+'<p>If the "Silent" parameter is not specified, then the Ammunition Recovery chat menu will display with the amended values once complete, and a message is displayed with the changes that occurred.</p>'
 							+'<p><b>Note:</b> if more than one ammo item of the same name is listed in the items table (see [RPGMaster CharSheet Setup] handout), only the first item found will be amended.  If no item of that name is found, nothing happens and no menus or messages are displayed.</p>'
 							+'<br>'
-							+'<h2>5. Armour Class and Saving Throws</h2>'
+							+'<h2>5. Armour Class, Saving Throws and Skill Checks</h2>'
 							+'<h3>5.1 Edit Armour</h3>'
 							+'<pre>--edit-armour [token_id]<br>'
 							+'--edit-armor [token_id]</pre>'
@@ -501,11 +566,23 @@ var attackMaster = (function() {
 							+'<p>The first form shows all the possible saves that can be made, the saving throw that needs to be achieved to make the save, and any modifiers that apply to this particular character.  There are buttons to modify the saving throw table and the modifiers, to apply a "situational modifier" to immediate saving throws (the "situational modifier" only applies to current rolls and is not remembered), and/or to check the current saving throw table automatically (taking into account race, class, level, and magic items on their person).  Also, each type of saving throw can actually be made by clicking the buttons provided.  Doing so effectively runs the second form of the command.</p>'
 							+'<p>The situational modifier can optionally be passed in as a value with the command call if so desired, instead of selecting via the button on the menu.</p>'
 							+'<p>Running the second form of the command (or selecting to make a saving throw from the first form\'s menu) will execute the saving throw (as a dice roll if this is specified instead of a straight value) of the specified type, using the data in the character\'s saving throw table to assess success or failure, displaying the outcome and the calculation behind it in the chat window.</p>'
-							+'<h3>5.4 Attribute Checks</h3>'
+							+'<h3>5.4 <span style='+design.selected_button+'>New:</span> Build Custom Save</h3>'
+							+'<pre>--build-save [token_id] | save-type | save-value | [macro-name]</pre>'
+							+'<p>Takes an optional token ID (if not specified uses selected token), a type of save (which can be anything and not restricted to standard save types), not sensitive to case), the value to exceed to succeed the save, and an optional name for the macro to build on the character sheet.</p>'
+							+'<p>This command builds an ability macro on the character sheet represented by the supplied or selected token. The macro will be to make the named saving throw (the name has no significance) and the specified value to exceed with a d20 dice roll for the represented character to succeed in making the saving throw. The character sheet ability macro will be named using either the provided macro-name, which if not provided will default to <i>Do-not-use-</i>save-type<i>-save</i>. The saving throw can then simply be run using the chat window command <b>%{character-name|macro-name}</b>.</p>'
+							+'<h3>5.5 Attribute Checks</h3>'
 							+'<pre>--attr-check [token_id] | [situation-mod] | [message] | [DCval]</pre>'
 							+'<p>Takes an optional token ID (defaults to the selected token), an optional situational modifier, an optional message to display as the last action, and an optional "DC value".</p>'
 							+'<p>This command presents a menu which can be used to perform attribute checks for the character. The menu displays the character\'s attribute values and the currently applicable modifiers for attribute checks. Each line has a button which will run the Attribute Check roll and display success or failure. As for the Saving Throw table, buttons also exist to set a situational modifier and to check the modifiers against current magic items in use and magic in effect.</p>'
 							+'<p>A DC value parameter is provided to emulate attribute check modifiers for D&D 3e and later, though as these checks and modifiers work very differently this is not a direct equivalence. If a DC value is set as a parameter, 10 minus the DC value is added to all the modifiers.</p>'
+							+'<h3>5.6 <span style='+design.selected_button+'>New:</span> Make a Rogue Skill Check</h3>'
+							+'<pre>--theive [token_id]<br>'
+							+'--set-thieving [token_id]</pre>'
+							+'<p>Each takes an optional token ID (if not specified uses selected token).'
+							+'<p><b>Note:</b> this dialog may best be used by the GM for many of the included rogue skill checks. Check with your GM for the approapriate approach.</p>'
+							+'<p>This command provides an alternative route to making a rogue skill check, rather than using the facilities provided on the character sheet. It works in a very similar way to the Attribute Check dialog (see above). Clicking any of the skill buttons will run an appropriate macro to make the check. Alternatively, you can use the dialog to view the required target and roll your own dice.</p>'
+							+'<p>The dialog also provides a button to set a modifier to the roll, which might be required by the specific situation the character finds themself in. This modifier will be temporary, only being in effect for the next skill check.</p>'
+							+'<p>A button at the bottom of the dialog provides access to another dialog to maintain the rogue skills table on the character sheet (also accessed via the <i>--set-thieving</i> command). Select any of the numbers in the table to change it. The number of "points" usable at the rogue\'s level is automatically maintained and the points used in the table are calculated and checked against the allowed number. <b>Note:</b> this is a very wide dialog (as the table is wide) and it is advised to drag the chat window edge to temporarily make it wider and, when finished, return the chat window to your desired width.</p>'
 							+'<br>'
 							+'<h2>6.Other commands</h2>'
 							+'<h3>6.1 Display help on these commands</h3>'
@@ -525,6 +602,9 @@ var attackMaster = (function() {
 							+'	<tr><th scope="row">ALL-ARMOUR</th><td>All armour types allowed for all classes</td><td>Armour not allowed to a class not included in AC calculations</td></tr>'
 							+'	<tr><th scope="row">MASTER-RANGE</th><td>Ranged weapon Mastery gives double damage at Point Blank range</td><td>Ranged weapon Mastery not allowed, as per PHB</td></tr>'
 							+'	<tr><th scope="row">DM-TARGET</th><td>Only the DM can do Targeted Attacks</td><td>All players can use Targeted Attacks</td></tr>'
+							+'	<tr><th scope="row">ROGUE-CRIT</th><td>Strict rogue skill checks</td><td>Some level of critical success can apply</td></tr>'
+							+'	<tr><th scope="row">ROGUE-CRIT-VAL</th><td>If allowed rogue skill critical success is 1%</td><td>If allowed rogue skill critical success is 5%</td></tr>'
+							+'	<tr><th scope="row">GM-ROLLS</th><td>GM makes/sees relevant skill checks</td><td>Player makes/sees relevant skill checks</td></tr>'
 							+'</table>'
 							+'<h3>6.3 Check database completeness & integrity</h3>'
 							+'<pre>--check-db [ db-name ]</pre>'
@@ -563,6 +643,8 @@ var attackMaster = (function() {
 	var clTypeLists;
 	var spTypeLists;
 	var reSpellSpecs;
+	var reWeapSpecs;
+	var reACSpecs;
 	var spellLevels;
 	var classLevels;
 	var rangedWeapMods;
@@ -571,6 +653,8 @@ var attackMaster = (function() {
 	var classSaveMods;
 	var raceSaveMods;
 	var saveFormat;
+	var rogueSkills;
+	var thiefSkillFactors;
 	var defaultNonProfPenalty;
 	var classNonProfPenalty;
 	var raceToHitMods;
@@ -596,6 +680,7 @@ var attackMaster = (function() {
 		noneLeft: '&{template:'+fields.warningTemplate+'}{{name=^^cname^^\'s\nMagic Item Bag}}{{desc=Whoops! It seems you have none of these left... Recover some you\'ve used or buy some more.}}',
 		targetAttkDisabled: '&{template:'+fields.warningTemplate+'}{{name=^^cname^^\'s\nWeapons}}{{desc=The DM has not enabled targeted attacks for players.}}',
 		cursedWeapon: '&{template:'+fields.warningTemplate+'}{{name=^^cname^^\'s\nMagic Item Bag}}{{desc=Oh no!  You try changing weapon, but the previous weapon seems to be back in your hand...  Perhaps you need a *Remove Curse* spell or equivalent to be rid of it!}}',
+		cursedRing: '&{template:'+fields.warningTemplate+'}{{name=^^cname^^\'s\nMagic Item Bag}}{{desc=Oh no!  You try changing rings, but the previous ring seems to be back on your finger...  Perhaps you need a *Remove Curse* spell or equivalent to be rid of it!}}',
 	});
 	
 	const MenuState = Object.freeze({
@@ -616,6 +701,11 @@ var attackMaster = (function() {
 	    PRIMARY: 2,
 	    SECONDARY: 4,
 	    NOPENALTY: ['ranger'],
+	});
+	
+	const SkillRoll = Object.freeze({
+		PCROLLS: 'PCROLLS',
+		YOUROLL: 'YOUROLL',
 	});
 	
 	const BT = Object.freeze({
@@ -667,12 +757,17 @@ var attackMaster = (function() {
 		HAND_NOCURSE:			'HAND-NOCURSE',
 		LEFTRING:				'LEFTRING',
 		RIGHTRING:				'RIGHTRING',
+		LEFTRING_NOCURSE:		'LEFTRING-NOCURSE',
+		RIGHTRING_NOCURSE:		'RIGHTRING-NOCURSE',
 		NOHANDS:				'NOHANDS',
 		AUTO_ADD:				'AUTO_ADD',
 		AUTO_DELETE:			'AUTO_DELETE',
 		AMMO:					'AMMO',
 		SAVES:					'SAVES',
 		ATTR_CHECK:				'ATTR_CHECK',
+		SET_SKILL_ROLL:			'SET_SKILL_ROLL',
+		SET_SAVE_ROLL:			'SET_SAVE_ROLL',
+		SET_ATTR_ROLL:			'SET_ATTR_ROLL',
 	});
 
 	const reIgnore = /[\s\-\_\(\)]*/gi;
@@ -719,95 +814,17 @@ var attackMaster = (function() {
 		];
 
 	const reRepeatingTable = /^(repeating_.*)_\$(\d+)_.*$/;
-//	const reDiceRollSpec = /[^\ddrcsf<>\.\*\/\[\]+-]+/i;
 	const reDiceRollSpec = /(?:^\d+$|\d+d\d+)/i;
+	const reWeapon = /}}\s*specs=\s*?(\[.*?(?:melee|ranged|magic).*?\])\s*?{{/im;
+	const reWeapData = /weapdata\s*?=\s*?(\[.*?\])/im;
+	const reToHitData = /}}\s*ToHitData\s*=(.*?){{/im;
+	const reDmgData = /}}\s*DmgData\s*=(.*?){{/im;
+	const reAmmoData = /}}\s*?ammodata\s*?=.*?(?:\n.*?)*{{/im;
+	const reRangeData = /}}\s*?rangedata\s*?=.*?(?:\n.*?)*{{/im;
+	const reACData = /}}\s*acdata\s*=(.*?){{/im;
+	const reRingData = /(?:ring|ac)data\s*?=\s*?(\[.*?\])/im;
+	const reItemData = /}}[\s\w\-]*?(?<!tohit|dmg|ammo|range)data\s*?=\s*?\[.*?\][\s,]*?{{/im;
 	
-
-	const reWeapSpecs = Object.freeze ({
-		name: 		{field:'name',def:'-',re:/[\[,\s]w:([\s\w\-\+\:\|]+?)[,\]]/i},
-		type: 		{field:'type',def:'',re:/[\[,\s]t:([\s\w\-\+\:\|]+?)[,\]]/i},
-		superType: 	{field:'superType',def:'',re:/[\[,\s]st:([\s\w\-\+\:\|]+?)[,\]]/i},
-		strBonus:	{field:'strBonus',def:'0',re:/[\[,\s]sb:([01])/i},
-		dexBonus:	{field:'dexBonus',def:'1',re:/[\[,\s]db:([01])/i},
-		adj:		{field:'adj',def:0,re:/[\[,\s]\+:(=?[+-]?\d+?[d.]?\d*?)[,\]]/i},
-		equip:		{field:'equip',def:0,re:/[\[,\s]equip:(.+?)[,\]]/i},
-		noAttks:	{field:'noAttks',def:1,re:/[\[,\s]n:([+-]?[\d.\/]+)[,\]]/i},
-		profLevel:	{field:'profLevel',def:0,re:/[\[,\s]pl:(=?[+\-]?[+\-\d\/]+)[,\]]/i},
-		dancingProf:{field:'dancingProf',def:0,re:/[\[,\s]dp:(=?[+-]?[\d\/]+)[,\]]/i},
-		preInit:	{field:'preInit',def:0,re:/[\[,\s]pre:([01])/i},
-		critHit:	{field:'critHit',def:20,re:/[\[,\s]ch:([+-]?\d+?)[,\]]/i},
-		critMiss:	{field:'critMiss',def:1,re:/[\[,\s]cm:([+-]?\d+?)[,\]]/i},
-		size:		{field:'size',def:'',re:/[\[,\s]sz:([tsmlh])/i},
-		charges:	{field:'charges',def:'',re:/[\[,\s]c:(\d*)/i},
-		level:		{field:'level',def:'',re:/[\[,\s]lv:(\d*):?(\d*)/i},
-		validLevel:	{field:'validLevel',def:'',re:/[\[,\s]vlv:(\d*):?(\d*)/i},
-		castLevel:	{field:'castLevel',def:'',re:/[\[,\s]clv:(\d*):?(\d*)/i},
-		muLevel:	{field:'muLevel',def:'',re:/[\[,\s]mulv:(\d*):?(\d*)/i},
-		prLevel:	{field:'prLevel',def:'',re:/[\[,\s]prlv:(\d*)(?:\:(\d*))?/i},
-		range:		{field:'range',def:'',re:/[\[,\s]r:(=?[+-]?[\s\w\+\-\d\/]+)[,\]]/i},
-		dmgType:	{field:'dmgType',def:'SPB',re:/[\[,\s]ty:([spb]+)[,\]]/i},
-		speed:		{field:'speed',def:0,re:/[\[,\s]sp:(=?[+-]?[d\d\+\-]+?)[,\]]/i},
-		dmgSM:		{field:'dmgSM',def:0,re:/[\[,\s]sm:(=?[+-]?.*?)[,\]]/i},
-		dmgL:		{field:'dmgL',def:0,re:/[\[,\s]l:(=?[+-]?.*?)[,\]]/i},
-		qty:		{field:'qty',def:0,re:/[\[,\s]qty:(=?[+\-]?\d+)[,\]]/i},
-		maxQty:		{field:'maxQty',def:0,re:/[\[,\s]maxQty:(=?[+\-]?\d+)[,\]]/i},
-		reuse:		{field:'reuse',def:0,re:/[\[,\s]ru:\s*?([+-]?\d)\s*?[,\]]/i},
-		weight:		{field:'weight',def:1,re:/[\[,\s]wt:(\d+?)[,\]]/i},	
-		allowed:	{field:'allowed',def:'',re:/[\[,\s]allow:([\d,\s]+?)[,\]]/i},
-		banned:		{field:'banned',def:'',re:/[\[,\s]ban:([\d,\s]+?)[,\]]/i},
-		message:	{field:'message',def:'',re:/[\[,\s]msg:(.+?)[,\]]/i},
-		on:			{field:'on',def:'',re:/[\[,\s]on:(.+?)[,\]]/i},
-		off:		{field:'off',def:'',re:/[\[,\s]off:(.+?)[,\]]/i},
-		chargeType:	{field:'chargeType',def:'',re:/[\[,\s]rc:(.+?)[,\]]/i},
-		power:		{field:'power',def:'',re:/[\[,\s]pw:(.+?)[,\]]/i},
-		cmd:		{field:'cmd',def:'',re:/[\[,\s]cmd:(.+?)[,\]]/i},
-		desc:		{field:'desc',def:'',re:/[\[,\s]desc:(.+?)[,\]]/i},
-		touch:		{field:'touch',def:'0',re:/[\[,\s]touch:([01])[,\]]/i},
-		magicThac0:	{field:'magicThac0',def:'',re:/[\[,\s]thac0:(.+?)[,\]]/i},
-	});
-	
-	const reACSpecs = Object.freeze ({
-		name: 		{field:'name',def:'',re:/[\[,\s]a:([\s\w\-\+\,\:]+?)[,\]]/i},
-		type: 		{field:'type',def:'',re:/[\[,\s]t:([\s\w\-\+\,\:]+?)[,\]]/i},
-		superType: 	{field:'superType',def:'',re:/[\[,\s]st:([\s\w\-\+\,\:]+?)[,\]]/i},
-		dexBonus:	{field:'dexBonus',def:0,re:/[\[,\s]db:([+-]?[01])/i},
-		ac:			{field:'ac',def:'',re:/[\[,\s]ac:([-+]?\d+?)[,\s\]]/i},
-		adj:		{field:'adj',def:0,re:/[\[,\s]\+:(=?[+-]?\d+?)[,\s\]]/i},
-		size:		{field:'size',def:'',re:/[\[,\s]sz:([tsmlh])/i},
-		madj:		{field:'madj',def:0,re:/[\[,\s]\+m:(=?[+-]?\d+?)[,\]]/i},
-		sadj:		{field:'sadj',def:0,re:/[\[,\s]\+s:(=?[+-]?\d+?)[,\]]/i},
-		padj:		{field:'padj',def:0,re:/[\[,\s]\+p:(=?[+-]?\d+?)[,\]]/i},
-		badj:		{field:'badj',def:0,re:/[\[,\s]\+b:(=?[+-]?\d+?)[,\]]/i},
-		weight:		{field:'weight',def:1,re:/[\[,\s]wt:(\d+?)[,\]]/i},		
-		rules:		{field:'rules',def:'',re:/[\[,\s]rules:([^{,\]]+?)[,\]]/i},
-		allowed:	{field:'allowed',def:'',re:/[\[,\s]allow:([\d,\s]+?)[,\]]/i},
-		banned:		{field:'banned',def:'',re:/[\[,\s]ban:([\d,\s]+?)[,\]]/i},
-		racname:	{field:'racname',def:'',re:/[\[,\s]rac:([\s\w\-\+\(\)]+?)[,\]]/i},
-		ppa:		{field:'ppa',def:'0',re:/[\[,\s]ppa:([-+]?\d+?)[,\s\]]/i},
-		ola:		{field:'ola',def:'0',re:/[\[,\s]ola:([-+]?\d+?)[,\s\]]/i},
-		rta:		{field:'rta',def:'0',re:/[\[,\s]rta:([-+]?\d+?)[,\s\]]/i},
-		msa:		{field:'msa',def:'0',re:/[\[,\s]msa:([-+]?\d+?)[,\s\]]/i},
-		hsa:		{field:'hsa',def:'0',re:/[\[,\s]hsa:([-+]?\d+?)[,\s\]]/i},
-		dna:		{field:'dna',def:'0',re:/[\[,\s]dna:([-+]?\d+?)[,\s\]]/i},
-		cwa:		{field:'cwa',def:'0',re:/[\[,\s]cwa:([-+]?\d+?)[,\s\]]/i},
-		rla:		{field:'rla',def:'0',re:/[\[,\s]rla:([-+]?\d+?)[,\s\]]/i},
-		iba:		{field:'iba',def:'0',re:/[\[,\s]iba:([-+]?\d+?)[,\s\]]/i},
-	});
-/*	
-	const reSpellSpecs = Object.freeze ({
-		name:		{field:'name',def:'-',re:/[\[,\s]w:([\s\w\-\+]+?)[,\]]/i},
-		type:		{field:'spell',def:'',re:/[\[,\s]cl:(PR|MU|PW)[,\s\]]/i},
-		speed:		{field:'speed',def:0,re:/[\[,\s]sp:([d\d\+\-]+?)[,\s\]]/i},
-		level:		{field:'level',def:1,re:/[\[,\s]lv:(\d+?)[,\s\]]/i},
-		perDay:		{field:'perDay',def:1,re:/[\[,\s]pd:(\d+?)[,\s\]]/i},
-		cost:		{field:'cost',def:0,re:/[\[,\s]gp:(\d+?\.?\d*?)[,\s\]]/i},
-		recharge:	{field:'type',def:'uncharged',re:/[\[,\s]rc:([-\w]+?)[,\s\]]/i},
-		on:			{field:'on',def:'',re:/[\[,\s]on:(.+?)[,\]]/i},
-		off:		{field:'off',def:'',re:/[\[,\s]off:(.+?)[,\]]/i},
-		allowed:	{field:'allowed',def:'',re:/[\[,\s]allow:([\d,\s]+?)[,\]]/i},
-		banned:		{field:'banned',def:'',re:/[\[,\s]ban:([\d,\s]+?)[,\]]/i},
-	});
-*/
 	const reRangeMods = Object.freeze ({
 		near:		{field:'N',def:'-5',re:/[\[,\s]N:([-\+\d]+?)[,\]]/i},
 		pointblank:	{field:'PB',def:'2',re:/[\[,\s]PB:([-\+\d]+?)[,\]]/i},
@@ -847,24 +864,6 @@ var attackMaster = (function() {
 		ammol:		{field:'ammol',def:'0',re:/[\[,\s]ammol:([-+]?\d+?)[,\s\]]/i},
 	});
 
-	const design = Object.freeze ({
-		turncolor: '#D8F9FF',
-		roundcolor: '#363574',
-		statuscolor: '#F0D6FF',
-		statusbgcolor: '#897A87',
-		statusbordercolor: '#430D3D',
-		edit_icon: 'https://s3.amazonaws.com/files.d20.io/images/11380920/W_Gy4BYGgzb7jGfclk0zVA/thumb.png?1439049597',
-		delete_icon: 'https://s3.amazonaws.com/files.d20.io/images/11381509/YcG-o2Q1-CrwKD_nXh5yAA/thumb.png?1439051579',
-		settings_icon: 'https://s3.amazonaws.com/files.d20.io/images/11920672/7a2wOvU1xjO-gK5kq5whgQ/thumb.png?1440940765', 
-		apply_icon: 'https://s3.amazonaws.com/files.d20.io/images/11407460/cmCi3B1N0s9jU6ul079JeA/thumb.png?1439137300',
-		info_msg: '<div style="color:green;font-weight:bold;border:2px solid black;background-color:white;border-radius:1em;padding:1em;">',
-		grey_button: '"display: inline-block; background-color: lightgrey; border: 1px solid black; padding: 4px; color: dimgrey; font-weight: extra-light;"',
-		dark_button: '"display: inline-block; background-color: lightgrey; border: 1px solid black; padding: 4px; color: black; font-weight: normal;"',
-		selected_button: '"display: inline-block; background-color: white; border: 1px solid red; padding: 4px; color: red; font-weight: bold;"',
-		green_button: '"display: inline-block; background-color: white; border: 1px solid lime; padding: 4px; color: darkgreen; font-weight: bold;"',
-		boxed_number: '"display: inline-block; background-color: yellow; border: 1px solid blue; padding: 2px; color: black; font-weight: bold;"'
-	});
-	
 	const silent = true;
 
 	var apiCommands = {};
@@ -941,15 +940,19 @@ var attackMaster = (function() {
 			if (!state.magicMaster)
 				{state.magicMaster = {};}
 			if (_.isUndefined(state.attackMaster.weapRules))
-				{state.attackMaster.weapRules = {prof:true,allowAll:false,classBan:false,allowArmour:false,masterRange:false,dmTarget:false,initPlus:true};}
+				{state.attackMaster.weapRules = {prof:true,allowAll:false,classBan:false,criticals:true,naturals:true,allowArmour:false,masterRange:false,dmTarget:false,initPlus:true};}
 			if (_.isUndefined(state.attackMaster.fancy))
 				{state.attackMaster.fancy = true;}
 			if (!state.attackMaster.twoWeapons)
 				{state.attackMaster.twoWeapons = {};}
-			if (!state.magicMaster.playerConfig)
-				{state.magicMaster.playerConfig={};}
+			if (!state.attackMaster.thieveCrit)
+				{state.attackMaster.thieveCrit = 0;}
+			if (!state.MagicMaster.playerConfig)
+				{state.MagicMaster.playerConfig={};}
 			if (_.isUndefined(state.attackMaster.debug))
 				{state.attackMaster.debug = false;}
+			if (_.isUndefined(state.attackMaster.gmID))
+				{state.attackMaster.gmID = undefined;}
 				
 			log('-=> AttackMaster v'+version+' <=-  ['+(new Date(lastUpdate*1000))+']');
 			
@@ -967,6 +970,8 @@ var attackMaster = (function() {
 			classSaveMods = RPGMap.classSaveMods;
 			raceSaveMods = RPGMap.raceSaveMods;
 			saveFormat = RPGMap.saveFormat;
+			rogueSkills = RPGMap.rogueSkills;
+			thiefSkillFactors = RPGMap.thiefSkillFactors;
 			defaultNonProfPenalty = RPGMap.defaultNonProfPenalty;
 			classNonProfPenalty = RPGMap.classNonProfPenalty;
 			raceToHitMods = RPGMap.raceToHitMods;
@@ -975,6 +980,8 @@ var attackMaster = (function() {
 			weapMultiAttks = RPGMap.weapMultiAttks;
 			punchWrestle = RPGMap.punchWrestle;
 			reSpellSpecs = RPGMap.reSpellSpecs;
+			reWeapSpecs = RPGMap.reWeapSpecs;
+			reACSpecs = RPGMap.reACSpecs;
 			DBindex = undefined;
 			flags.noWaitMsg = true;
 			setTimeout( () => {flags.noWaitMsg = false}, 5000 );
@@ -985,7 +992,6 @@ var attackMaster = (function() {
 			setTimeout( () => issueHandshakeQuery('cmd'), 20);
 			setTimeout( () => updateHandouts(handouts,true,findTheGM()), 30);
 			setTimeout( cmdMasterRegister, 40 );
-			
 			setTimeout( () => updateDBindex(false), 90); // checking the DB indexing
 		} catch (e) {
 			log('AttackMaster Initialisation: JavaScript '+e.name+': '+e.message+' while initialising the API');
@@ -1100,6 +1106,7 @@ var attackMaster = (function() {
 		        var player = p;
 		        if (player) {
     		        if (playerIsGM(player.id)) {
+						state.attackMaster.gmID;
 	    	            return player.id;
                     }
 		        }
@@ -1107,7 +1114,7 @@ var attackMaster = (function() {
                 return playerGM.id;
             }
         }
-        return undefined;
+        return state.attackMaster.gmID;
     }
 	
 /* ------------------------- Character Sheet Database Management ------------------------- */
@@ -1179,7 +1186,7 @@ var attackMaster = (function() {
 	 * Function to replace special characters in a string
 	 */
 	 
-	var parseStr=function(str,replaced=replacers){
+	var parseStr=function(str='',replaced=replacers){
 		return replaced.reduce((m, rep) => m.replace(rep[0], rep[1]), str);
 	}
 
@@ -1187,7 +1194,7 @@ var attackMaster = (function() {
 	 * Get the configuration for the player who's ID is passed in
 	 * or, if the config is passed back in, set it in the state variable
 	 **/
-	 
+/*	 
 	var getSetPlayerConfig = function( playerID, configObj ) {
 		
 		if (!state.MagicMaster.playerConfig[playerID]) {
@@ -1318,7 +1325,7 @@ var attackMaster = (function() {
 				content += (i == MIrowref || makeGrey) ? ('<span style=' + (i == MIrowref ? design.selected_button : design.grey_button) + '>') : '['; 
 				content += (mi != '-' ? (qty + ' ' + mi.replace(/\-/g,' ')) : '-');
 				if (isView) {
-					let miObj = getAbility( fields.MagicItemDB, mi, charCS );
+					let miObj = getAbility( fields.MagicItemDB, mi, charCS, null, null, null, i );
 					extension = '&#13;'+(miObj.api ? '' : sendToWho(charCS,senderId,false,true))+' &#37;{'+miObj.dB+'|'+(mi.hyphened())+'}';
 				}
 				content += (i == MIrowref || makeGrey) ? '</span>' : '](!attk '+viewCmd+' --button '+cmd+'|' + tokenID + '|' + i + extension + ')';
@@ -1375,29 +1382,6 @@ var attackMaster = (function() {
 		weaponMod = _.find( mods, elem => [wt,wst].includes(elem[0].dbName()));
 		if (_.isUndefined(weaponMod)) {return 0;}
 		return weaponMod[1];
-	}
-	
-	/*
-	 * Parse a data string for attribute settings
-	 */
-/*	 
-	var parseData = function( attributes, reSpecs, def=true ) {
-		
-		var parsedData = {},
-			val;
-
-		_.each( reSpecs, spec => {
-			val = attributes.match(spec.re);
-			if (!!val && val.length>1 && val[1].length) {
-				parsedData[spec.field] = (val.length == 3 && val[2]) ? [val[1],val[2]] : val[1];
-//			} else if (!def) {
-//				parsedData[spec.field] = undefined;
-//			} else {
-			} else if (def) {
-				parsedData[spec.field] = spec.def;
-			}
-		});
-		return parsedData;
 	}
 	
 	/*
@@ -1855,24 +1839,6 @@ var attackMaster = (function() {
 		}
 	}
 		
-    /**
-     * Find and return total level of a character
-     **/
-/*    
-    var characterLevel = function( charCS ) {
-        var level = parseInt((attrLookup( charCS, fields.Total_level ) || 0),10);
-		if (!level) {
-			level = parseInt((attrLookup( charCS, fields.Fighter_level ) || 0),10)
-                  + parseInt((attrLookup( charCS, fields.Wizard_level ) || 0),10)
-                  + parseInt((attrLookup( charCS, fields.Priest_level ) || 0),10)
-                  + parseInt((attrLookup( charCS, fields.Rogue_level ) || 0),10)
-                  + parseInt((attrLookup( charCS, fields.Psion_level ) || 0),10)
-				  + (parseInt((attrLookup( charCS, fields.Monster_hitDice ) || 0),10)
-					+ ((parseInt((attrLookup( charCS, fields.Monster_hpExtra ) || 0),10) >= 3) ? 1 : 0));
-		}
-        return level;
-    }
-	
 	/**
 	 * Test a dataset to see if level constraints have 
 	 * been set for it
@@ -1914,6 +1880,7 @@ var attackMaster = (function() {
 				
 				var itemName,
 					itemTable = getTableField( charCS, {}, fields.Items_table, fields.Items_name ),
+					itemTable = getTableField( charCS, itemTable, fields.Items_table, fields.Items_trueName ),
 					itemTable = getTableField( charCS, itemTable, fields.Items_table, fields.Items_qty ),
 					weaponList = (type == 'ring') ? ['-,-'] : ['-,-','Touch,-2','Punch-Wrestle,-2.5'],
 					spellFields = {mu:{table:fields.MUSpellNo_table,spells:fields.MUSpellNo_memable,spec:fields.MUSpellNo_specialist,misc:fields.MUSpellNo_misc},
@@ -1925,15 +1892,16 @@ var attackMaster = (function() {
 					for (let r = fields.Items_table[1]; !_.isUndefined(itemName = itemTable.tableLookup( fields.Items_name, r, false )); r++) {
 
 						if (itemTable.tableLookup( fields.Items_qty, r, 0 ) <= 0) continue;
+						let itemTrueName = itemTable.tableLookup( fields.Items_trueName, r ) || itemName;
 						let nameMatch = itemName.dbName();
 						if (itemList.includes(nameMatch)) continue;
-						let mi = abilityLookup( fields.MagicItemDB, itemName, charCS );
+						let mi = abilityLookup( fields.MagicItemDB, itemTrueName, charCS );
 						if (!mi.obj) continue;
 						let specs = mi.obj[1].body;
 						if (type == 'ring') {
 							let weaponSpecs = mi.hands(/}}\s*Specs=\s*?(\[.*?ring(?:,|\|).*?\])\s*?{{/im) || [];
 							if (_.some(weaponSpecs, (w) => {
-								return ((!state.attackMaster.weapRules.classBan || classAllowedItem( charCS, nameMatch, w[1], w[4], 'ac' )))
+								return ((!state.attackMaster.weapRules.classBan || classAllowedItem( charCS, itemTrueName, w[1], w[4], 'ac' )))
 							})) {
 								weaponList.push(itemName+','+r);
 								itemList.push(nameMatch);
@@ -1942,19 +1910,19 @@ var attackMaster = (function() {
 						} else {
 							let weaponSpecs = mi.hands(/}}\s*Specs=\s*?(\[.*?[-,\|\s](?:melee|ranged|magic)[-,\|\s].*?\])\s*?{{/im) || [];
 							if (_.some(weaponSpecs, (w) => ((w[3]==handed || (anyHand && w[3]>=anyHand && w[3]<=handed))
-										&& (!state.attackMaster.weapRules.classBan || classAllowedItem( charCS, nameMatch, w[1], w[4], 'weaps' ))))) {
+										&& (!state.attackMaster.weapRules.classBan || classAllowedItem( charCS, itemTrueName, w[1], w[4], 'weaps' ))))) {
 								weaponList.push(itemName+','+r);
 								itemList.push(nameMatch);
 								continue;
 							}
 							let shieldSpecs = mi.hands(/}}\s*Specs=\s*?(\[.*?shield(?:,|\|).*?\])\s*?{{/im) || [];
 							if (_.some(shieldSpecs, (s) => ((s[3]==handed || (anyHand && s[3]>=anyHand && s[3]<=handed))
-										&& (state.attackMaster.weapRules.allowArmour || classAllowedItem( charCS, nameMatch, s[1], s[4], 'ac' ))))) {
+										&& (state.attackMaster.weapRules.allowArmour || classAllowedItem( charCS, itemTrueName, s[1], s[4], 'ac' ))))) {
 								weaponList.push(itemName+','+r);
 								itemList.push(nameMatch);
 								continue;
 							}
-							let lightSpecs = mi.hands(/}}\s*Specs=\s*?(\[.*?light(?:,|\|).*?\])\s*?{{/im) || [];
+							let lightSpecs = mi.hands(/}}\s*Specs=\s*?(\[.*?(?:light|equipment)(?:,|\|).*?\])\s*?{{/im) || [];
 							if (_.some(lightSpecs, (s) => (s[3]==handed || (anyHand && s[3]>=anyHand && s[3]<=handed)))) {
 								weaponList.push(itemName+','+r);
 								itemList.push(nameMatch);
@@ -1965,7 +1933,7 @@ var attackMaster = (function() {
 				};
 				if (type !== 'ring') {
 					_.each (spellLevels, (level,k) => {
-						if (k === 'pm' || (type === 'mispells' && k !== 'mi')) return;
+						if ((type !== 'mispells' && (k === 'mi' || k === 'pm')) ||  (type === 'mispells' && k !== 'mi' && k !== 'pm')) return;
 						_.each (level, (l,n) => {
 							let totalSpells = 100,
 								s = 0;
@@ -2021,6 +1989,8 @@ var attackMaster = (function() {
 		wname = wname ? wname.dbName() : '-';
         wt = wt ? wt.dbName() : '';
         wst = wst ? wst.dbName() : '';
+		
+//		log('proficient: wname = '+wname+', wt = '+wt+', wst = '+wst);
         
 		var i = fields.WP_table[1],
 			prof = getCharNonProfs( charCS ),
@@ -2039,7 +2009,7 @@ var attackMaster = (function() {
 				wpName = wpName.dbName();
 				wpType = (!!wpType ? wpType.dbName() : '');
 				
-				let typeTest = (wpName && wpName.length && wt.includes(wpName)),
+				let typeTest = (wpName && wpName.length && (wt.includes(wpName) || wt.includes('innate')) ),
 					superTypeTest = (wpType && (wst.includes(wpType))),
 					nameTest = (wpName && wpName.length && wname.includes(wpName)) || false;
 					
@@ -2118,14 +2088,14 @@ var attackMaster = (function() {
 	 * weapons InHand and in Quiver
 	 */
 
-	var filterWeapons = function( tokenID, charCS, InHand, Quiver, Weapons, table, sheathed=[] ) {
+	var filterWeapons = function( tokenID, charCS, InHand, Quiver, Weapons, table, sheathed=[], itemDB=fields.WeaponDB ) {
 		
 		var i, base, weapTableField, WeaponTable, weapName,
 		    curToken = getObj('graphic',tokenID),
 			isWeap = false,
 		    CheckTable = InHand,
 		    checkTableField = fields.InHand_trueName;
-
+			
 		switch (table.toUpperCase()) {
 		case 'WEAP':
 			weapTableField = fields.Weap_miName;
@@ -2153,20 +2123,16 @@ var attackMaster = (function() {
 		WeaponTable = Weapons[table];
 		i = WeaponTable.table[1]-1;
 		while(!_.isUndefined(weapName = WeaponTable.tableLookup( weapTableField, ++i, false ))) {
-			let innateAttk = isWeap && /(?:Creature|Innate)\s*(?:Attk|Attack)\s*(\d)\s*(\w)/i.test(WeaponTable.tableLookup(fields.Weap_message, i));
-			if (!innateAttk && _.isUndefined(CheckTable.tableFind( checkTableField, weapName )) && (!isWeap || _.isUndefined(Quiver.tableFind( fields.Quiver_trueName, weapName )))) {
-				WeaponTable = WeaponTable.delTableRow( i-- );
-				if (!sheathed.includes(weapName)) {
+			let innateAttk = isWeap && weapName.length > 0 && /(?:Creature|Innate)\s*(?:Attk|Attack)\s*(\d)\s*(\w)/i.test(WeaponTable.tableLookup(fields.Weap_message, i));
+			if (!weapName || !weapName.length || (!innateAttk && _.isUndefined(CheckTable.tableFind( checkTableField, weapName )) && (!isWeap || _.isUndefined(Quiver.tableFind( fields.Quiver_trueName, weapName ))))) {
+				WeaponTable = WeaponTable.addTableRow( i );
+				if (weapName && weapName.length && !sheathed.includes(weapName)) {
 					sheathed.push(weapName);
 					sendAPImacro(curToken,'',weapName,'-sheath');
-					let weapon = getAbility(fields.MagicItemDB, weapName, charCS, false),
-						weapData = (weapon.obj ? (weapon.obj[1].body.match(/weapdata\s*?=\s*?(\[.*?\])/im)) : undefined);
-					if (weapData) {
-						weapData = parseData(weapData[1], reSpellSpecs, false, charCS, weapon);
-						if (weapData.off) {
-							sendAPI( parseStr(weapData.off).replace(/@{\s*selected\s*\|\s*token_id\s*}/ig,tokenID)
-														   .replace(/{\s*selected\s*\|/ig,'{'+charCS.get('name')+'|'), null, 'attk filterWeapons');
-						};
+					let weapData = resolveData( weapName, itemDB, reItemData, charCS, {off:reWeapSpecs.off} ).parsed;
+					if (weapData && weapData.off) {
+						sendAPI( parseStr(weapData.off).replace(/@{\s*selected\s*\|\s*token_id\s*}/ig,tokenID)
+													   .replace(/{\s*selected\s*\|/ig,'{'+charCS.get('name')+'|'), null, 'attk filterWeapons');
 					};
 				};
 			};
@@ -2181,6 +2147,8 @@ var attackMaster = (function() {
 	var setAttackTableRow = function( charCS, group, weapon, weapData, proficiency, values ) {
 		
 		_.each( weapData, (val,key) => {
+			
+			if (_.isUndefined(val)) return;
 
 			if (key == 'dmgType') {
 				if (_.isUndefined(fields[group+'slash']) || _.isUndefined(fields[group+'pierce']) || _.isUndefined(fields[group+'bludgeon'])) return;
@@ -2191,6 +2159,7 @@ var attackMaster = (function() {
 			} else {
 				if (_.isUndefined(fields[group+key])) return;
 				let property = fields[group+key];
+				if (_.isUndefined(values[property[0]])) return;
 				if (key != 'noAttks') {
 					values[property[0]][property[1]]=val;
 				} else {
@@ -2206,22 +2175,23 @@ var attackMaster = (function() {
 	 * but avoid duplicates by searching tableInfo ammoTypes
 	 */
 	
-	var insertAmmo = function( charCS, ammoTrueName, ammoSpecs, rangeSpecs, tableInfo, ammoType, sb, miIndex, weap1e=false ) {
- 
-		var ammoData, ammoTest, specType, specSuperType, values, dispValues, ammoRow, qty, qtySet,
+	var insertAmmo = function( charCS, ammoTrueName, ammoDataArray, rangeDataArray, tableInfo, ammoType, sb, miIndex, dispValues ) {
+		
+		var ammoData, ammoTest, parsedAmmoData, specType, specSuperType, values, ammoRow, qty, qtySet,
 			typeCheck = ammoType.dbName(),
-			ammo1e = fields.GameVersion === 'AD&D1e' && !weap1e && !_.isUndefined(tableInfo.WEAP);
+			ammo1e = (_.isUndefined(dispValues) || _.isNull(dispValues));
 
 		if (tableInfo.ammoTypes.includes(ammoTrueName+'-'+ammoType)) {return tableInfo;}
 		tableInfo.ammoTypes.push(ammoTrueName+'-'+ammoType);
  
-		for (let w=0; w<ammoSpecs.length; w++) {
-			ammoData = ammoSpecs[w][0];
+		for (let w=0; w<ammoDataArray.length; w++) {
+			ammoData = ammoDataArray[w][0];
 			specType = (ammoData.match(/[\[,\s]t:([\s\w\-\+\:\|]+?)[,\]]/i) || ['','unknown'])[1].dbName();
 			specSuperType = (ammoData.match(/[\[,\s]st:([\s\w\-\+\:\|]+?)[,\]]/i) || ['','unknown'])[1].dbName();
 			let clv = ammoData.match(/[\[,\s]clv:([-\+]?\d+?)[,\]]/i),
 				mulv = ammoData.match(/[\[,\s]mulv:([-\+]?\d+?)[,\]]/i),
 				prlv = ammoData.match(/[\[,\s]prlv:([-\+]?\d+?)[,\]]/i);
+
 			ammoTest = (!clv  || (parseInt(attrLookup( charCS, fields.CastingLevel)) || 1) >= parseInt((clv || ['','0'])[1]))
 					&& (!mulv || (parseInt(attrLookup( charCS, fields.MU_CastingLevel)) || 1) >= parseInt((mulv || ['','0'])[1]))
 					&& (!prlv || (parseInt(attrLookup( charCS, fields.PR_CastingLevel)) || 1) >= parseInt((prlv || ['','0'])[1]));
@@ -2234,12 +2204,16 @@ var attackMaster = (function() {
 
 				values = initValues( tableInfo.AMMO.fieldGroup );
 				values[fields.Ammo_name[0]][fields.Ammo_name[1]]='Unknown ammo';
-				values = setAttackTableRow( charCS, tableInfo.AMMO.fieldGroup, ammoTrueName, parseData( ammoData, reWeapSpecs, true, charCS, ammoTrueName ), null, values );
+				parsedAmmoData = parseData( ammoData, reWeapSpecs, true, charCS, ammoTrueName );
+				values = setAttackTableRow( charCS, tableInfo.AMMO.fieldGroup, ammoTrueName, parsedAmmoData, null, values );
 
-				if (ammo1e) {
-					dispValues = initValues( tableInfo.WEAP.fieldGroup );
-					dispValues[fields.Weap_name[0]][fields.Weap_name[1]]='Unknown ammo';
-					dispValues = setAttackTableRow( charCS, tableInfo.WEAP.fieldGroup, ammoTrueName, parseData( ammoData, reWeapSpecs, true, charCS, ammoTrueName ), null, dispValues );
+				if (!_.isUndefined(tableInfo.WEAP)) {
+					if (ammo1e) {
+						dispValues = initValues( tableInfo.WEAP.fieldGroup );
+						dispValues[fields.Weap_name[0]][fields.Weap_name[1]]='Unknown ammo';
+					};
+					
+					dispValues = setAttackTableRow( charCS, tableInfo.WEAP.fieldGroup, ammoTrueName, resolveData( ammoTrueName, fields.WeaponDB, reAmmoData, charCS, {}, miIndex, [], ammo1e ).parsed, null, dispValues );
 				};
 
 				if (!sb) values[fields.Ammo_strBonus[0]][fields.Ammo_strBonus[1]] = 0;
@@ -2257,19 +2231,32 @@ var attackMaster = (function() {
 					values[fields.Ammo_qty[0]][fields.Ammo_qty[1]]=Math.min(qty,miQty);
 					values[fields.Ammo_maxQty[0]][fields.Ammo_maxQty[1]] = Math.min(qty,miQty);
 				}
-				values[fields.Ammo_attkAdj[0]][fields.Ammo_attkAdj[1]]=((rangeSpecs[w] || rangeSpecs[0])[0].match(/[\[,\s]\+:\s*?([+-]?\d+?)\s*?[,\]]/i) || ['',''])[1];
-				values[fields.Ammo_range[0]][fields.Ammo_range[1]]=((rangeSpecs[w] || rangeSpecs[0])[0].match(/[\[,\s]r:(=?[+-]?[\s\w\+\-\d\/]+)[,\]]/i) || ['',''])[1];
+				values[fields.Ammo_attkAdj[0]][fields.Ammo_attkAdj[1]]=((rangeDataArray[w] || rangeDataArray[0])[0].match(/[\[,\s]\+:\s*?([+-]?\d+?)\s*?[,\]]/i) || ['',''])[1];
+				values[fields.Ammo_range[0]][fields.Ammo_range[1]]=((rangeDataArray[w] || rangeDataArray[0])[0].match(/[\[,\s]r:(=?[+-]?[\s\w\+\-\d\/]+)[,\]]/i) || ['',''])[1];
 				values[fields.Ammo_type[0]][fields.Ammo_type[1]]=ammoType;
 				values[fields.Ammo_miName[0]][fields.Ammo_miName[1]]=ammoTrueName;
+				values[fields.Ammo_miIndex[0]][fields.Ammo_miIndex[1]]=miIndex;
 				
-				tableInfo.AMMO = tableInfo.AMMO.addTableRow( tableInfo.AMMO.tableFind( fields.Ammo_name, '-' ), values );
+				do {
+					ammoRow = tableInfo.AMMO.tableFind( fields.Ammo_name, parsedAmmoData.name );
+				} while (!_.isUndefined(ammoRow) && (tableInfo.AMMO.tableLookup( fields.Ammo_miName, ammoRow ) !== ammoTrueName));
+				if (_.isUndefined(ammoRow)) ammoRow = tableInfo.AMMO.tableFind( fields.Ammo_name, '-' );
+				tableInfo.AMMO = tableInfo.AMMO.addTableRow( ammoRow, values );
 				
-				if (ammo1e) {
+				if (!_.isUndefined(tableInfo.WEAP)) {
 					dispValues[fields.Weap_dmgBonus[0]][fields.Weap_dmgBonus[1]] = dispValues[fields.Weap_adj[0]][fields.Weap_adj[1]];
-					dispValues[fields.Weap_qty[0]][fields.Weap_qty[1]] = values[fields.Ammo_qty[0]][fields.Ammo_qty[1]];
+					dispValues[fields.Weap_ammo[0]][fields.Weap_ammo[1]] = values[fields.Ammo_qty[0]][fields.Ammo_qty[1]];
+					dispValues[fields.Weap_ammoMax[0]][fields.Weap_ammoMax[1]] = values[fields.Ammo_maxQty[0]][fields.Ammo_maxQty[1]];
 					dispValues[fields.Weap_miName[0]][fields.Weap_miName[1]] = ammoTrueName;
-					dispValues[fields.Weap_category[0]][fields.Weap_category[1]] = 'AMMO';
-					tableInfo.WEAP = tableInfo.WEAP.addTableRow( (ammoRow = tableInfo.WEAP.tableFind( fields.Weap_name, '-' )), dispValues );
+					dispValues[fields.Weap_range[0]][fields.Weap_range[1]]=values[fields.Ammo_range[0]][fields.Ammo_range[1]];
+					if (ammo1e) {
+						dispValues[fields.Weap_dmgType[0]][fields.Weap_dmgType[1]] = parsedAmmoData.dmgType;
+						dispValues[fields.Weap_category[0]][fields.Weap_category[1]] = 'AMMO';
+						ammoRow = tableInfo.WEAP.tableFind( fields.Weap_name, [dispValues[fields.Weap_name[0]][fields.Weap_name[1]],'-'] );
+					} else {
+						ammoRow = tableInfo.WEAP.tableFind( fields.Weap_name, dispValues[fields.Weap_name[0]][fields.Weap_name[1]] );
+					};
+					tableInfo.WEAP = tableInfo.WEAP.addTableRow( ammoRow, dispValues );
 				};
 			}
 		}
@@ -2292,40 +2279,39 @@ var attackMaster = (function() {
 			ammoSuperTypeCheck = new RegExp('[\[,\s]st:\\s*?'+weaponSuperType+'\\s*?[,\\]]', 'i'),
 			rangeTypeCheck = new RegExp( '[\[,\s]t:\\s*?'+weaponType+'\\s*?[,\\]]','i' ),
 		    rangeSuperTypeCheck = new RegExp( '[\[,\s]t:\\s*?'+weaponSuperType+'\\s*?[,\\]]','i' ),
-			attrs, sortKeys, ammoName, ammoTrueName, ammo, ammoSpecs, rangeSpecs, t;
+			attrs, sortKeys, ammoName, ammoTrueName, ammo, ammoData, rangeData, t;
 			
 		while (!_.isUndefined(ammoName = MagicItems.tableLookup(fields.Items_name,++miIndex,false))) {
 		    ammoTrueName = MagicItems.tableLookup(fields.Items_trueName,miIndex) || ammoName;
 			let ammoMatch;
 			ammo = abilityLookup( fields.MagicItemDB, ammoTrueName, charCS );
-    		ammoSpecs = rangeSpecs = [];
+    		ammoData = rangeData = [];
 
 			if (ammo.obj) {
-				ammoMatch = ammo.data(/}}\s*?ammodata\s*?=.*?(?:\n.*?)*{{/im);
+				ammoMatch = resolveData( ammoTrueName, fields.WeaponDB, reAmmoData, charCS, reWeapSpecs, miIndex ).raw;
 				if (ammoMatch && ammoMatch[0] && ammoMatch[0][0]) {
-					ammoSpecs = ammoMatch.filter(elem => ammoTypeCheck.test(elem[0].dbName()));
-					if (!ammoSpecs.length) {
-						ammoSpecs = ammoMatch.filter(elem => ammoSuperTypeCheck.test(elem[0].dbName()));
+					ammoData = ammoMatch.filter(elem => ammoTypeCheck.test(elem[0].dbName()));
+					if (!ammoData.length) {
+						ammoData = ammoMatch.filter(elem => ammoSuperTypeCheck.test(elem[0].dbName()));
 						t = weaponSuperType;
 					} else {
 						t = weaponType;
 					}
 				}
-				if (ammoSpecs && ammoSpecs.length) {
+				if (ammoData && ammoData.length) {
 					if (!tableInfo.ammoTypes.includes(ammoTrueName+'-'+t)) {
-						ammoMatch = ammo.data(/}}\s*?rangedata\s*?=.*?(?:\n.*?)*{{/im);
+						ammoMatch = resolveData( ammoTrueName, fields.WeaponDB, reRangeData, charCS, reWeapSpecs, miIndex ).raw;
 						if (ammoMatch && ammoMatch[0]) {
-																		
-							rangeSpecs = ammoMatch.filter(elem => rangeTypeCheck.test(elem[0].dbName()));
-							if (!rangeSpecs.length) {
+							rangeData = ammoMatch.filter(elem => rangeTypeCheck.test(elem[0].dbName()));
+							if (!rangeData.length) {
 																			  
-								rangeSpecs = ammoMatch.filter(elem => rangeSuperTypeCheck.test(elem[0].dbName()));
+								rangeData = ammoMatch.filter(elem => rangeSuperTypeCheck.test(elem[0].dbName()));
 							}
 						}
-						if (!!rangeSpecs.length) {
+						if (!!rangeData.length) {
 							if (inQuiver) {
 								blankWeapon( charCS, tableInfo, ['AMMO'], ammoTrueName );
-								tableInfo = insertAmmo( charCS, ammoTrueName, ammoSpecs, rangeSpecs, tableInfo, t, sb, miIndex );
+								tableInfo = insertAmmo( charCS, ammoTrueName, ammoData, rangeData, tableInfo, t, sb, miIndex );
 							}
 							let values = initValues( Quiver.fieldGroup );
 							values[fields.Quiver_name[0]][fields.Quiver_name[1]] = ammoName;
@@ -2366,19 +2352,32 @@ var attackMaster = (function() {
 		var weaponDB = InHandTable.tableLookup( fields.InHand_db, handIndex ),
 			weaponName = InHandTable.tableLookup( fields.InHand_name, handIndex ),
 			weaponTrueName = InHandTable.tableLookup( fields.InHand_trueName, handIndex, weaponName ),
-			item = getAbility(weaponDB, weaponTrueName, charCS),
-			weaponSpecs = item.specs(/}}\s*specs=\s*?(\[.*?(?:melee|ranged|magic).*?\])\s*?{{/im) || [],
-			toHitSpecs = item.data(/}}\s*ToHitData\s*=(.*?){{/im) || [],
-			dmgSpecs = item.data(/}}\s*DmgData\s*=(.*?){{/im) || [],
-			ammoSpecs = item.data(/}}\s*AmmoData\s*=(.*?){{/im) || [],
+			weaponRow = InHandTable.tableLookup( fields.InHand_index, handIndex ),
+			weaponAttkCount = InHandTable.tableLookup( fields.InHand_attkCount, handIndex ),
+			item = abilityLookup(weaponDB, weaponTrueName, charCS),
+			weaponSpecs = item.specs(reWeapon) || [],
+			toHitSpecs = resolveData( weaponTrueName, weaponDB, reToHitData, charCS, reWeapSpecs, weaponRow ).raw,
+			dmgSpecs = resolveData( weaponTrueName, weaponDB, reDmgData, charCS, reWeapSpecs, weaponRow ).raw,
+			ammoSpecs = resolveData( weaponTrueName, weaponDB, reAmmoData, charCS, reWeapSpecs, weaponRow ).raw,
+			weapParsed = resolveData( weaponTrueName, weaponDB, reWeapData, charCS, {message:reWeapSpecs.message,cmd:reWeapSpecs.cmd}, weaponRow ).parsed,
 			re = /[\s\-]*?/gi,
 			minSpec = parseInt(weapDef[0]) || 0,
 			maxSpec = _.isUndefined(weapDef[1]) ? ((_.isUndefined(weapDef[0]) || !weapDef[0] || isNaN(weapDef[0]) || !weapDef[0]) ? weaponSpecs.length : (minSpec+1)) : ((parseInt(weapDef[1]) || (weaponSpecs.length-1))+1),
 			tempObj, values, dispValues, group,
-			wt, wst, dmg,
-			rowWeap, weapRow, weap1e = false,
+			wt, wst, dmg, weapRow, weap1e = false,
 			dancingProf;
 			
+		var parseARadj = function( dispVals, vals ) {
+			var valArray = vals.aradj.split('|'),
+				fillVal = valArray[0] || 0;
+			for (let i=valArray.length; i<=10; i++) valArray.unshift(fillVal);
+			for (let i=0; i<=10; i++) {
+				if (_.isUndefined(dispVals[fields[fields.ThacAdjPrefix[0]+i][0]])) continue;
+				dispVals[fields[fields.ThacAdjPrefix[0]+i][0]][fields[fields.ThacAdjPrefix[0]+i][1]] = valArray[i] || 0;
+			};
+			return dispVals;
+		}
+		
 		blankWeapon( charCS, tableInfo, ['MELEE','RANGED','DMG','AMMO','MAGIC','WEAP'], weaponTrueName );
 		
 		if (!!hand) {
@@ -2386,15 +2385,16 @@ var attackMaster = (function() {
 		}
 		
 		for (let i=0; i<Math.min(weaponSpecs.length,toHitSpecs.length); i++) {
-			let weapon = weaponSpecs[i],
-				toHit = toHitSpecs[i][0],
-				innate = weapon[2].toLowerCase().includes('innate'),
-				proficiency = innate ? 0 : proficient( charCS, weaponTrueName, weapon[1], weapon[4] );
+			let weapon = weaponSpecs[i];
 				
 			if ((noOfHands == 0) || (weapon[3].toUpperCase().includes(noOfHands+'H'))) {
-				
-				let weapData = parseData( toHit, reWeapSpecs ),
-					attk2H = noOfHands == 2 ? 1 : 0;
+				let toHit = toHitSpecs[i][0],
+					innate = weapon[2].toLowerCase().includes('innate'),
+					weapData = parseData( toHit, reWeapSpecs ),
+					attk2H = noOfHands == 2 ? 1 : 0,
+					weapType = weapData.type || weapon[1],
+					weapSuperType = weapData.superType || weapon[4],
+					proficiency = innate ? 0 : proficient( charCS, weaponTrueName, weapType, weapSuperType );
 					
 				if (!levelTest( charCS, weapData )) continue;
 				
@@ -2408,13 +2408,20 @@ var attackMaster = (function() {
 					values[fields.MW_name[0]][fields.MW_name[1]]='Unknown weapon';
 					
 					values = setAttackTableRow( charCS, tableInfo.MELEE.fieldGroup, weapon, weapData, proficiency, values );
-					if (!_.isUndefined( tableInfo.WEAP )) dispValues = setAttackTableRow( charCS, tableInfo.WEAP.fieldGroup, weapon, weapData, proficiency, dispValues );
+					if (!_.isUndefined( tableInfo.WEAP )) {
+						dispValues = setAttackTableRow( charCS, tableInfo.WEAP.fieldGroup, weapon, weapData, proficiency, dispValues );
+					}
 					values[fields.MW_miName[0]][fields.MW_miName[1]]=weaponTrueName;
 					values[fields.MW_twoHanded[0]][fields.MW_twoHanded[1]]=attk2H;
 					values[fields.MW_profLevel[0]][fields.MW_profLevel[1]]=Math.min(proficiency,1);
-					values[fields.MW_type[0]][fields.MW_type[1]]=innate ? 'innate|'+weapon[1] : weapon[1];
-					values[fields.MW_superType[0]][fields.MW_superType[1]]=weapon[4];
+					values[fields.MW_type[0]][fields.MW_type[1]]=(innate ? 'innate|'+weapType : weapType);
+//					log('addWeapon: set MWtype to be '+(innate ? 'innate|'+weapType : weapType));
+					values[fields.MW_superType[0]][fields.MW_superType[1]]=weapSuperType;
 					values[fields.MW_dancing[0]][fields.MW_dancing[1]]=(dancing?1:0);
+					values[fields.MW_attkCount[0]][fields.MW_attkCount[1]]=weaponAttkCount;
+					values[fields.MW_hand[0]][fields.MW_hand[1]]=handIndex;
+					if (!values[fields.MW_message[0]][fields.MW_message[1]]) values[fields.MW_message[0]][fields.MW_message[1]] = weapParsed.message;
+					if (!values[fields.MW_cmd[0]][fields.MW_cmd[1]]) values[fields.MW_cmd[0]][fields.MW_cmd[1]] = weapParsed.cmd;
 					dancingProf = parseInt(values[fields.MW_dancingProf[0]][fields.MW_dancingProf[1]]);
 					if (isNaN(dancingProf)) {
 						values[fields.MW_dancingProf[0]][fields.MW_dancingProf[1]]=proficiency;
@@ -2422,24 +2429,28 @@ var attackMaster = (function() {
 						values[fields.MW_noAttks[0]][fields.MW_noAttks[1]] = getAttksPerRound(charCS, 
 														 dancingProf, 
 														 weapon,
-														 values[fields.MW_noAttks[0]][fields.MW_noAttks[1]] );
+														 weapData.noAttks );
 					}
 					if (_.isUndefined( weapRow = tableInfo.MELEE.tableFind( fields.MW_name, '-', false ))) weapRow = tableInfo.MELEE.sortKeys.length;
 					tableInfo.MELEE.addTableRow( weapRow, values );
 						
 					if (dmgSpecs && i<dmgSpecs.length && !_.isUndefined(dmg=dmgSpecs[i][0])) {
 						values = setAttackTableRow( charCS, tableInfo.DMG.fieldGroup, weapon, parseData( dmg, reWeapSpecs ), proficiency, initValues( tableInfo.DMG.fieldGroup ) );
-						values[fields.Dmg_type[0]][fields.Dmg_type[1]]=innate ? 'innate' : weapon[1];
-						values[fields.Dmg_superType[0]][fields.Dmg_superType[1]]=weapon[4];
+						values[fields.Dmg_type[0]][fields.Dmg_type[1]]=innate ? 'innate' : weapType;
+						values[fields.Dmg_superType[0]][fields.Dmg_superType[1]]=weapSuperType;
 						values[fields.Dmg_miName[0]][fields.Dmg_miName[1]]=weaponTrueName;
 						values[fields.Dmg_specialist[0]][fields.Dmg_specialist[1]]=(proficiency>=1)?1:0;
 						
 						tableInfo.DMG.addTableRow( weapRow, values );
 						if (!_.isUndefined( tableInfo.WEAP )) {
 							weap1e = true;
-							dispValues = setAttackTableRow( charCS, tableInfo.WEAP.fieldGroup, weapon, parseData( dmg, reWeapSpecs ), proficiency, dispValues );
+							dispValues = setAttackTableRow( charCS, tableInfo.WEAP.fieldGroup, weapon, parseData( dmg, reWeapSpecs, false ), proficiency, dispValues );
 							dispValues[fields.Weap_miName[0]][fields.Weap_miName[1]]=weaponTrueName;
+							dispValues[fields.Weap_profFlag[0]][fields.Weap_profFlag[1]]=proficiency>=0 ? 0 : 1;
+							dispValues[fields.Weap_dmgType[0]][fields.Weap_dmgType[1]]=weapData.dmgType;
+							dispValues[fields.Weap_qty[0]][fields.Weap_qty[1]]=1;
 							dispValues[fields.Weap_category[0]][fields.Weap_category[1]]='MELEE';
+							dispValues = parseARadj( dispValues, weapData );
 							tableInfo.WEAP.addTableRow( tableInfo.WEAP.tableFind( fields.Weap_name, '-', false ), dispValues );
 						};
 					} else {
@@ -2447,14 +2458,17 @@ var attackMaster = (function() {
 					}
 
 				} else if (weapon[2].toLowerCase().includes('ranged') && i >= minSpec && i < maxSpec) {
-
 					values = setAttackTableRow( charCS, tableInfo.RANGED.fieldGroup, weapon, weapData, proficiency, initValues( tableInfo.RANGED.fieldGroup ) );
 					values[fields.RW_miName[0]][fields.RW_miName[1]]=weaponTrueName;
 					values[fields.RW_twoHanded[0]][fields.RW_twoHanded[1]]=attk2H;
 					values[fields.RW_profLevel[0]][fields.RW_profLevel[1]]=Math.min(proficiency,0);
-					values[fields.RW_type[0]][fields.RW_type[1]]=innate ? 'innate|'+weapon[1] : weapon[1];
-					values[fields.RW_superType[0]][fields.RW_superType[1]]=weapon[4];
+					values[fields.RW_type[0]][fields.RW_type[1]]=innate ? 'innate|'+weapType : weapType;
+					values[fields.RW_superType[0]][fields.RW_superType[1]]=weapSuperType;
 					values[fields.RW_dancing[0]][fields.RW_dancing[1]]=(dancing?1:0);
+					values[fields.RW_attkCount[0]][fields.RW_attkCount[1]]=weaponAttkCount;
+					values[fields.RW_hand[0]][fields.RW_hand[1]]=handIndex;
+					if (!values[fields.RW_message[0]][fields.RW_message[1]]) values[fields.RW_message[0]][fields.RW_message[1]] = weapParsed.message;
+					if (!values[fields.RW_cmd[0]][fields.RW_cmd[1]]) values[fields.RW_cmd[0]][fields.RW_cmd[1]] = weapParsed.cmd;
 					dancingProf = parseInt(values[fields.RW_dancingProf[0]][fields.RW_dancingProf[1]]);
 					if (isNaN(dancingProf)) {
 						values[fields.RW_dancingProf[0]][fields.RW_dancingProf[1]]=proficiency;
@@ -2462,23 +2476,31 @@ var attackMaster = (function() {
 						values[fields.RW_noAttks[0]][fields.RW_noAttks[1]] = getAttksPerRound(charCS, 
 														 dancingProf, 
 														 weapon,
-														 values[fields.RW_noAttks[0]][fields.RW_noAttks[1]] );
+														 weapData.noAttks );
 					}
 
 					if (_.isUndefined( weapRow = tableInfo.RANGED.tableFind( fields.RW_name, '-', false ))) weapRow = tableInfo.RANGED.sortKeys.length;
 					tableInfo.RANGED.addTableRow( weapRow, values );
-					if (fields.GameVersion === 'AD&D1e' && !weap1e && (!ammoSpecs || !ammoSpecs.length)) {
+					if (!_.isUndefined( tableInfo.WEAP ) && !weap1e && (!ammoSpecs || !ammoSpecs.length)) {
 						dispValues = setAttackTableRow( charCS, tableInfo.WEAP.fieldGroup, weapon, weapData, proficiency, dispValues );
 						dispValues[fields.Weap_miName[0]][fields.Weap_miName[1]]=weaponTrueName;
+						dispValues[fields.Weap_profFlag[0]][fields.Weap_profFlag[1]]=proficiency>=0 ? 0 : 1;
+						dispValues[fields.Weap_dmgType[0]][fields.Weap_dmgType[1]]=weapData.dmgType;
+						dispValues[fields.Weap_qty[0]][fields.Weap_qty[1]]=1;
 						dispValues[fields.Weap_category[0]][fields.Weap_category[1]]='RANGED';
+						dispValues = parseARadj( dispValues, weapData );
 						tableInfo.WEAP.addTableRow( tableInfo.WEAP.tableFind( fields.Weap_name, '-', false ), dispValues );
 					};
 					let attkStrBonus = values[fields.RW_strBonus[0]][fields.RW_strBonus[1]];
-					if (ammoSpecs && ammoSpecs.length) {
-						let rangeSpecs = item.data(/}}\s*RangeData\s*=(.*?){{/im) || [];
+					if (ammoSpecs && ammoSpecs.length && ammoSpecs[0].length && ammoSpecs[0][0].trim().length) {
+						let rangeSpecs = resolveData( weaponTrueName, weaponDB, /}}\s*RangeData\s*=(.*?){{/im, charCS, {}, weaponRow ).raw;
 						if (rangeSpecs && rangeSpecs.length) {
 							if (!weaponDB.startsWith(fields.WeaponDB)) lineNo = NaN;
-							tableInfo = insertAmmo( charCS, weaponTrueName, ammoSpecs, rangeSpecs, tableInfo, weapon[1], attkStrBonus, lineNo, weap1e );
+							if (!_.isUndefined( tableInfo.WEAP )) {
+								dispValues[fields.Weap_dmgType[0]][fields.Weap_dmgType[1]]=weapData.dmgType;
+								dispValues[fields.Weap_profFlag[0]][fields.Weap_profFlag[1]]=proficiency>=0 ? '0' : '1';
+							}
+							tableInfo = insertAmmo( charCS, weaponTrueName, ammoSpecs, rangeSpecs, tableInfo, weapType, attkStrBonus, lineNo, dispValues );
 							values = initValues( fieldGroups.QUIVER.prefix );
 							values[fields.Quiver_name[0]][fields.Quiver_name[1]] = weaponName;
 							values[fields.Quiver_trueName[0]][fields.Quiver_trueName[1]] = weaponTrueName;
@@ -2488,15 +2510,13 @@ var attackMaster = (function() {
 						}
 
 					} else {
-						[tableInfo,Quiver] = addAmmo( charCS, tableInfo, Quiver, weapon[1], weapon[4], attkStrBonus, true );
+						[tableInfo,Quiver] = addAmmo( charCS, tableInfo, Quiver, weapType, weapSuperType, attkStrBonus, true );
 					}
-
 				} else if (weapon[2].toLowerCase().includes('magic')) {
-					
 					values = setAttackTableRow( charCS, tableInfo.MAGIC.fieldGroup, weapon, weapData, proficiency, initValues( tableInfo.MAGIC.fieldGroup ) );
 					values[fields.Magic_miName[0]][fields.Magic_miName[1]]=weaponTrueName;
-					values[fields.Magic_type[0]][fields.Magic_type[1]]=innate ? 'innate' : weapon[1];
-					values[fields.Magic_superType[0]][fields.Magic_superType[1]]=weapon[4];
+					values[fields.Magic_type[0]][fields.Magic_type[1]]=innate ? 'innate' : weapType;
+					values[fields.Magic_superType[0]][fields.Magic_superType[1]]=weapSuperType;
 					tableInfo.MAGIC.addTableRow( tableInfo.MAGIC.tableFind( fields.Magic_name, '-', false ), values );
 				}
 			}
@@ -2521,12 +2541,13 @@ var attackMaster = (function() {
 			weaponTrueName = attrLookup( charCS, fields.Items_trueName, fields.Items_table, lineNo ) || weaponName,
 			weap = abilityLookup(fields.WeaponDB, weaponName, charCS),
 			weaponSpecs = weap.specs(/}}\s*Specs\s*=(.*?){{/im) || [],
-			ammoSpecs = weap.data(/}}\s*ammodata\s*=(.*?){{/im) || [];
+			ammoData = resolveData( weaponTrueName, fields.WeaponDB, reAmmoData, charCS, {type:reWeapSpecs.type}, lineNo ).raw,
+			toHitData = resolveData( weaponTrueName, fields.WeaponDB, reToHitData, charCS, {type:reWeapSpecs.type}, lineNo ).parsed;
 			
 		for (let i=0; i<weaponSpecs.length; i++) {
 			let weapon = weaponSpecs[i];
 			if (weapon[2].toLowerCase().includes('ranged')) {
-				if (ammoSpecs && ammoSpecs.length) {
+				if (ammoData && ammoData.length) {
 					let values = initValues( Quiver.fieldGroup );
 					values[fields.Quiver_name[0]][fields.Quiver_name[1]] = weaponName;
 					values[fields.Quiver_trueName[0]][fields.Quiver_trueName[1]] = weaponTrueName;
@@ -2534,7 +2555,7 @@ var attackMaster = (function() {
 					Quiver.addTableRow( Quiver.index, values );
 					Quiver.index++;
 				} else {
-					[weaponInfo, Quiver] = addAmmo( charCS, weaponInfo, Quiver, weapon[1], weapon[4], 0, false );
+					[weaponInfo, Quiver] = addAmmo( charCS, weaponInfo, Quiver, (toHitData.type || weapon[1]), weapon[4], 0, false );
 				}
 			}
 		}
@@ -2630,7 +2651,7 @@ var attackMaster = (function() {
 	 * of each type
 	 */
 	 
-	var scanForArmour = function( charCS ) {
+	var scanForArmour = function( charCS, dmgType='nadj' ) {
 		
 		var Items = getTableField( charCS, {}, fields.Items_table, fields.Items_trueName ),
 			i = Items.table[1]-1,
@@ -2640,22 +2661,25 @@ var attackMaster = (function() {
 			itemName, itemTrueName,
 			acValues = {armour:{name:'Clothes',magic:false,specs:['','Clothes','armour','0H','cloth'],data:{ac:10,adj:0,madj:0,rules:'',ppa:0,ola:0,rta:0,msa:0,hsa:0,dna:0,cwa:0,rla:0,iba:0}}},
 			dexBonus = parseInt(attrLookup( charCS, fields.Dex_acBonus ) || 0),
-			itemDef, itemSpecs, itemData;
+			monsterAC = attrLookup( charCS, fields.MonsterAC, null, null, null, false, false ),
+			itemDef, itemSpecs, itemData, itemCharge;
 			
-		if ((attrLookup( charCS, fields.MonsterAC ) || '').length) {
-			let monsterAC = attrLookup( charCS, fields.MonsterAC );
+		if (monsterAC && monsterAC.length) {
 			acValues = {armour:{name:'Monster',magic:false,specs:['','Monster','armour','0H','skin'],data:{ac:monsterAC,adj:0,madj:0,rules:'',ppa:0,ola:0,rta:0,msa:0,hsa:0,dna:0,cwa:0,rla:0,iba:0}}};
 		}
 		if ((attrLookup( charCS, fields.Gender ) || '').toLowerCase() === 'container') return {acValues: acValues, msgs: armourMsg, dexFlag: !noDex};
 		
 		Items = getTableField( charCS, Items, fields.Items_table, fields.Items_name );
+		Items = getTableField( charCS, Items, fields.Items_table, fields.Items_type );
+		Items = getTableField( charCS, Items, fields.Items_table, fields.Items_trueType );
 		while (!_.isUndefined(itemName = Items.tableLookup( fields.Items_name, ++i, false ))) {
 			itemTrueName = Items.tableLookup( fields.Items_trueName, i ) || itemName;
 			if (itemName.length && itemName != '-') {
-				itemDef = abilityLookup( fields.MagicItemDB, itemName, charCS, true );
+				itemCharge = (Items.tableLookup( fields.Items_trueType, i ) || Items.tableLookup( fields.Items_type, i ) || '').toLowerCase();
+				itemDef = abilityLookup( fields.MagicItemDB, itemTrueName, charCS, true );
 				if (itemDef.obj) {
 					itemSpecs = itemDef.specs(/}}\s*Specs\s*=(.*?(?:armou?r|shield|helm|barding|protection).*?){{/im) || [];
-					itemData = itemDef.data(/}}\s*acdata\s*=(.*?){{/im) || [];
+					itemData = resolveData( itemTrueName, fields.MagicItemDB, reACData, charCS, {}, i ).raw;
 					
 					for (let i=0; i<Math.min(itemSpecs.length,itemData.length); i++) {
 						let	acData = parseData( itemData[i][0], reACSpecs, true, charCS, itemTrueName );
@@ -2678,10 +2702,10 @@ var attackMaster = (function() {
 							armourMsg.push(itemName+' is not currently in hand');
 						} else {
 							let ac = parseInt(acData.ac || 10),
-								adj = ((parseInt(acData.adj || 0) + parseInt(acData.madj || 0) + parseInt(acData.sadj || 0) + parseInt(acData.padj || 0) + parseInt(acData.badj || 0))/5),
+								adj = (parseInt(acData.adj || 0) + (dmgType !== 'nadj' ? parseInt(acData[dmgType] || 0) : 0)),
 								dexAdj = Math.floor(dexBonus * parseFloat(Math.max((acData.dexBonus || 1),0))),
 								diff;
-							if (itemClass.includes('totalac')) {
+							if (itemSpecs[i][2].includes('totalac')) {
 								itemClass = 'armour';
 								if (totalFlag) {
 									diff = (acValues.armour.data.ac - acValues.armour.data.adj - (acValues.armour.data.db*dexBonus)) - (ac - adj - dexAdj);
@@ -2711,7 +2735,7 @@ var attackMaster = (function() {
 										diff = 1;
 									} else {
 										let data = acValues[itemClass].data,
-											itemAdj = (parseInt(data.adj || 0) + parseInt(data.madj || 0) + parseInt(data.sadj || 0) + parseInt(data.padj || 0) + parseInt(data.badj || 0))/5;
+											itemAdj = (parseInt(data.adj || 0) + (dmgType !== 'nadj' ? parseInt(data[dmgType] || 0) : 0));
 										diff = (parseInt(data.ac || 10) - itemAdj - (parseFloat(data.db || 1)*dexBonus)) - (ac - adj - dexAdj);
 									}
 								}
@@ -2721,18 +2745,20 @@ var attackMaster = (function() {
 							}
 							
 							if (!_.isUndefined(diff)) {
-								if (diff < 0) {
+								let itemCursed = (itemCharge || '').includes('cursed');
+								let classCursed = acValues[itemClass] && (acValues[itemClass].charge || '').includes('cursed');
+								if (diff < 0 && (!itemCursed || classCursed)) {
 									armourMsg.push(itemName+' is not the best '+itemClass+' available');
-								} else if (diff == 0) {
+								} else if (diff == 0 && (!itemCursed || classCursed)) {
 									armourMsg.push(itemName+' is no better than other '+itemClass+'s');
-								} else {
-									if (acValues[itemClass] && acValues[itemClass].name) {
+								} else if (acValues[itemClass] && !classCursed && itemCursed && diff <= 0) {
+									armourMsg.push('Oh! You do not seem to be wearing '+acValues[itemClass].name+'...');
+								} 
+								if ((!classCursed && itemCursed) || diff > 0) {
+									if (diff > 0 && acValues[itemClass] && acValues[itemClass].name) {
 										armourMsg.push(acValues[itemClass].name+' is not the best '+itemClass+' available');
 									}
-									acValues[itemClass] = {};
-									acValues[itemClass].name = itemName;
-									acValues[itemClass].specs = itemSpecs[i];
-									acValues[itemClass].data = acData;
+									acValues[itemClass] = {name:itemName, row:i, specs:itemSpecs[i], charge:(itemCharge || ''), data:acData};
 									
 									if (itemClass === 'armour') {
 										acValues.armour.magic = parseInt(acData.adj||0)!=0;
@@ -2782,6 +2808,15 @@ var attackMaster = (function() {
 	var getToHitRoll = function( attkMacro ) {
 		var rollSpec = attkMacro.match(/}}\s*Specs\s*=\s*\[\s*\w[\s\|\w\-]*?\s*?,\s*?\w[\s\|\w\-]*?\w\s*?,\s*?(\d+d\d+)\s*?,\s*?\w[\s\|\w\-]*?\w\s*?\]/im);
 		return rollSpec ? rollSpec[1] : fields.toHitRoll;
+	};
+	
+	/*
+	 * Parse a dice spec to find the max possible roll for defaultStatus
+	 */
+	 
+	var maxDiceRoll = function( diceRoll ) {
+		var rollData = diceRoll.match(/(\d+)d(\d+)/i)||fields.ToHitRoll.match(/(\d+)d(\d+)/i)||['1d20',1,20];
+		return {min:(parseInt(rollData[1])||1), max:((parseInt(rollData[1]) * parseInt(rollData[2]))||20)};
 	};
 	
 	/*
@@ -3022,12 +3057,11 @@ var attackMaster = (function() {
 	 * Build melee weapon attack macro
 	 */
  
-	var buildMWattkMacros = function( args, senderId, charCS, tableInfo, mwIndex, backstab=false ) {
+	var buildMWattkMacros = function( args, senderId, charCS, tableInfo, mwIndex, backstab=false ) {  // toLowerCase()
 		
 		return new Promise(resolve => {
 			
 			try {
-				
 				var tokenID		= args[1],
 					attkType	= args[2],
 					dmgMsg		= parseStr(args[5] || attrLookup( charCS, fields.Dmg_specials ) || ''),
@@ -3042,14 +3076,13 @@ var attackMaster = (function() {
 					mwNumber    = mwIndex + (fields.MW_table[1]==0 ? 1 : 2),
 					weaponName 	= tableInfo.MELEE.tableLookup( fields.MW_name, mwIndex ),
 					miName		= tableInfo.MELEE.tableLookup( fields.MW_miName, mwIndex ),
+					miRowref	= attrLookup( charCS, fields.InHand_index, fields.InHand_table, tableInfo.MELEE.tableLookup( fields.MW_hand, mwIndex ) ),
 					dancing		= tableInfo.MELEE.tableLookup( fields.MW_dancing, mwIndex ),
-					attkAdj 	= tableInfo.MELEE.tableLookup( fields.MW_adj, mwIndex ),
+					attkAdj 	= (tableInfo.MELEE.tableLookup( fields.MW_adj, mwIndex ) || '0').replace(/^[+-]([+-])/,'$1'),
 					attkStyleAdj= tableInfo.MELEE.tableLookup( fields.MW_styleAdj, mwIndex ),
 					strBonus 	= tableInfo.MELEE.tableLookup( fields.MW_strBonus, mwIndex ),
 					mwType 		= tableInfo.MELEE.tableLookup( fields.MW_type, mwIndex ),
 					mwSuperType = tableInfo.MELEE.tableLookup( fields.MW_superType, mwIndex ),
-					critHit 	= Math.min((tableInfo.MELEE.tableLookup( fields.MW_critHit, mwIndex )||20),(tableInfo.MELEE.tableLookup( fields.MW_styleCH, mwIndex )||20)),
-					critMiss 	= Math.max((tableInfo.MELEE.tableLookup( fields.MW_critMiss, mwIndex )||1),(tableInfo.MELEE.tableLookup( fields.MW_styleCM, mwIndex )||1)),
 					slashWeap	= parseInt(tableInfo.MELEE.tableLookup( fields.MW_slash, mwIndex )),
 					pierceWeap	= parseInt(tableInfo.MELEE.tableLookup( fields.MW_pierce, mwIndex )),
 					bludgeonWeap= parseInt(tableInfo.MELEE.tableLookup( fields.MW_bludgeon, mwIndex )),
@@ -3061,7 +3094,8 @@ var attackMaster = (function() {
 					weapCharge  = tableInfo.MELEE.tableLookup( fields.MW_chargeType, mwIndex ) || (weapObj.obj ? weapObj.obj[1].charge.toLowerCase() : '' ),
 					weapCharged = (!(['uncharged','cursed','cursed+uncharged','single-uncharged'].includes(weapCharge)) ? weapCharge  : ''),
 					weapTypeTxt = (slashWeap?'S':'')+(pierceWeap?'P':'')+(bludgeonWeap?'B':''),
-					dmgAdj 		= tableInfo.DMG.tableLookup( fields.Dmg_adj, mwIndex ),
+					dmgName		= tableInfo.DMG.tableLookup( fields.Dmg_name, mwIndex ) || miName,
+					dmgAdj 		= tableInfo.DMG.tableLookup( fields.Dmg_adj, mwIndex ) || '0',
 					dmgStyleAdj = tableInfo.DMG.tableLookup( fields.Dmg_styleAdj, mwIndex ),
 					dmgSM 		= tableInfo.DMG.tableLookup( fields.Dmg_dmgSM, mwIndex ),
 					dmgSMstyle	= tableInfo.DMG.tableLookup( fields.Dmg_styleSM, mwIndex ),
@@ -3088,6 +3122,8 @@ var attackMaster = (function() {
 					twoWeapPenalty = (ranger || primeWeapon < 1) ? 0 : (-1*(((mwIndex*2)+(fields.MW_table[1]==0?1:3)) == primeWeapon ? Math.floor(twPen) : Math.floor((10*twPen)%10))),
 					proficiency = dancing != 1 ? proficient( charCS, weaponName, mwType, mwSuperType ) : tableInfo.MELEE.tableLookup( fields.MW_dancingProf, mwIndex ),
 					race		= raceMods( charCS, mwType, mwSuperType ),
+					arAdjust	= (tableInfo.MELEE.tableLookup( fields.MW_aradj, mwIndex ) || '0|0|0|0|0|0|0|0|0').split('|'),
+					arVal 		= '[[0+(@{Target|Select Target|'+fields.BaseAC[0]+(fields.BaseAC[1] === 'max' ? '|max' : '')+'}&{noerror})]]',
 					tokenACname = getTokenValue( curToken, fields.Token_AC, fields.AC, fields.MonsterAC, fields.Thac0_base ).barName,
 					tokenAC 	= (tokenACname ? ('[[0+(@{Target|Select Target|'+tokenACname+'}&{noerror})]]') : ''),
 					tokenHPname = getTokenValue( curToken, fields.Token_HP, fields.HP, null, fields.Thac0_base ).barName,
@@ -3105,13 +3141,16 @@ var attackMaster = (function() {
 					pierceACtxt	= pierceWeap ? 'Pierce' : '',
 					bludgeonACtxt= bludgeonWeap ? 'Bludgeon' : '',
 					attkMacro	= '',
-					attkMacroDef, dmgMacroDef, qualifier;
+					attkMacroDef, dmgMacroDef, qualifier, arTable;
 					
 				var parseMWattkMacro = function( args, charCS, attkType, macro ) {
 					
 					var	toHitRoll = getToHitRoll( macro ),
 						dmgSMroll = dmgSM,
-						dmgLroll  = dmgL;
+						dmgLroll  = dmgL,
+						minMaxRoll= maxDiceRoll(toHitRoll),
+						critHit	  = Math.min((tableInfo.MELEE.tableLookup( fields.MW_critHit, mwIndex )||minMaxRoll.max),(tableInfo.MELEE.tableLookup( fields.MW_styleCH, mwIndex )||minMaxRoll.max)),
+						critMiss  = Math.max((tableInfo.MELEE.tableLookup( fields.MW_critMiss, mwIndex )||minMaxRoll.min),(tableInfo.MELEE.tableLookup( fields.MW_styleCM, mwIndex )||minMaxRoll.min));
 
 					if (attkType.toUpperCase() == Attk.ROLL) {
 						toHitRoll = ('?{Roll To-Hit Dice|'+toHitRoll+'}');
@@ -3151,6 +3190,12 @@ var attackMaster = (function() {
 										 .replace( /\^\^pierceWeap\^\^/gi , pierceWeap )
 										 .replace( /\^\^bludgeonWeap\^\^/gi , bludgeonWeap )
 										 .replace( /\^\^weapType\^\^/gi , weapTypeTxt )
+										 .replace( /\^\^armorRating\^\^/gi , arVal )
+										 .replace( /\^\^arAdjVals\^\^/gi , arAdjust )
+										 .replace( /\^\^arSlash\^\^/gi , arSlash )
+										 .replace( /\^\^arPierce\^\^/gi , arPierce )
+										 .replace( /\^\^arBludgeon\^\^/gi , arBludgeon )
+										 .replace( /\^\^arTable\^\^/gi , arTable )
 										 .replace( /\^\^ACvsNoMods\^\^/gi , ACnoMods )
 										 .replace( /\^\^ACvsSlash\^\^/gi , ACslash )
 										 .replace( /\^\^ACvsPierce\^\^/gi , ACpierce )
@@ -3181,13 +3226,24 @@ var attackMaster = (function() {
 					return macro;
 				};
 				
-				var attkType = args[2],
-					abilityType = attkType.toUpperCase(),
-					abilityRoot = 'MW-' + (abilityType == Attk.TARGET ? 'Targeted-Attk' : 'ToHit');
-					
+				arTable = '<table width="100%"; table-layout="fixed";><tr width="100%" style="border-collapse:collapse; border:medium solid black; text-align:center;">';
+				for (let i=2; i<arAdjust.length+2; i++) arTable += '<th style="border-collapse:collapse; border:medium solid black; text-align:center;">'+i+'</th>';
+				arTable += '</tr><tr width="100%" style="border-collapse:collapse; border:medium solid black; text-align:center;">';
+				for (let i=0; i<arAdjust.length; i++) arTable += '<td style="border-collapse:collapse; border:medium solid black; text-align:center;">'+arAdjust[i]+'</td>';
+				arTable += '</tr></table>';
+				
 				attkMsg = attkMsg.split('$$')[0];
 				dmgMsg = dmgMsg.split('$$')[0];
-								   
+				for (let j=arAdjust.length; j<=10; j++) arAdjust.unshift(arAdjust[0]);
+				arAdjust = arAdjust.join('|');
+
+				var attkType = args[2],
+					abilityType = attkType.toUpperCase(),
+					abilityRoot = 'MW-' + (abilityType == Attk.TARGET ? 'Targeted-Attk' : 'ToHit'),
+					arSlash = slashWeap ? ('[[('+arVal+'[AR Adjust='+arAdjust+'])]]') : '',
+					arPierce = pierceWeap ? ('[[('+arVal+'[AR Adjust='+arAdjust+'])]]') : '',
+					arBludgeon = bludgeonWeap ? ('[[('+arVal+'[AR Adjust='+arAdjust+'])]]') : '';
+					
 				attkMacroDef = abilityLookup( fields.AttacksDB, abilityRoot+'-'+miName, charCS, silent );
 				qualifier = '-'+miName;
 				if (!attkMacroDef.obj) {
@@ -3219,7 +3275,6 @@ var attackMaster = (function() {
 				if (!(errFlag = !attkMacroDef.obj)) {
 					dmgMacroDef = abilityLookup( fields.AttacksDB, (backstab ? ('MW-Backstab-DmgSM'+qualifier) : ('MW-DmgSM'+qualifier)), charCS, silent );
 					if (!dmgMacroDef.obj) dmgMacroDef = abilityLookup( fields.AttacksDB, (backstab ? 'MW-Backstab-DmgSM' : 'MW-DmgSM'), charCS );
-//					dmgCharges = (dmgCharges == '' ? 0 : dmgCharges);
 					attkMacro = dmgCharged && dmgCharges ? ('\n!magic --mi-charges '+tokenID+'|-'+dmgCharges+'|'+miName+'||'+dmgCharged) : ''; 
 					attkMacro += weapDmgCmd ? ('\n' + weapDmgCmd) : '';
 					attkMacro += touchDmg ? ('\n!attk --blank-weapon '+tokenID+'|'+miName+'|silent') : '';
@@ -3228,7 +3283,6 @@ var attackMaster = (function() {
 					setAbility( charCS, 'Do-not-use-DmgSM-MW'+mwNumber, (parseMWattkMacro(args, charCS, attkType, addDmgMsg( dmgMacroDef.obj[1].body, dmgMsg, weapDmgMsg ))+attkMacro));
 					dmgMacroDef = abilityLookup( fields.AttacksDB, (backstab ? ('MW-Backstab-DmgL'+qualifier) : ('MW-DmgL'+qualifier)), charCS, silent );
 					if (!dmgMacroDef.obj) dmgMacroDef = abilityLookup( fields.AttacksDB, (backstab ? 'MW-Backstab-DmgL' : 'MW-DmgL'), charCS );
-//					dmgCharges = (dmgCharges == '' ? 0 : dmgCharges);
 					attkMacro = dmgCharged && dmgCharges ? ('\n!magic --mi-charges '+tokenID+'|-'+dmgCharges+'|'+miName+'||'+dmgCharged) : ''; 
 					attkMacro += weapDmgCmd ? ('\n' + weapDmgCmd) : '';
 					attkMacro += touchDmg ? ('\n!attk --blank-weapon '+tokenID+'|'+miName+'|silent') : '';
@@ -3237,10 +3291,10 @@ var attackMaster = (function() {
 					setAbility( charCS, 'Do-not-use-DmgL-MW'+mwNumber, (parseMWattkMacro(args, charCS, attkType, addDmgMsg( dmgMacroDef.obj[1].body, dmgMsg, weapDmgMsg ))+attkMacro));
 					hitCharges = (hitCharges == '' ? 1 : hitCharges);
 					attkMacro = weapCharged && hitCharges ? ('\n!magic --mi-charges '+tokenID+'|-'+hitCharges+'|'+miName+'||'+weapCharged) : ''; 
+					attkMacro += ((weaponName !== miName) && (attrLookup( charCS, fields.Items_reveal, fields.Items_table, miRowref ) || '').toLowerCase() == 'use') ? ('\n!magic --button GM-ResetSingleMI|'+tokenID+'|'+miRowref+'|silent') : '';
 					attkMacro += weapCmd ? ('\n' + weapCmd) : '';
 					attkMacro += touchWeap ? ('\n!attk --blank-weapon '+tokenID+'|'+miName+'|silent') : '';
 					if (abilityType == Attk.TARGET) {
-//						dmgCharges = (dmgCharges == '' ? 0 : dmgCharges);
 						let dmgMacro = dmgCharged && dmgCharges ? ('!magic --mi-charges '+tokenID+'|-'+dmgCharges+'|'+miName+'||'+dmgCharged+'\n') : ''; 
 						weapDmgCmd = weapDmgCmd.replace(/@{target\|.*?\|?token_id}/igm,'@{target|Select Target|token_id}');
 						dmgMacro += weapDmgCmd ? (weapDmgCmd + '\n') : '';
@@ -3290,28 +3344,29 @@ var attackMaster = (function() {
 			rwNumber    = rwIndex + (fields.RW_table[1]==0 ? 1 : 2),
 			weaponName 	= tableInfo.RANGED.tableLookup( fields.RW_name, rwIndex ),
 			miName		= tableInfo.RANGED.tableLookup( fields.RW_miName, rwIndex ),
+			miRowref	= attrLookup( charCS, fields.InHand_index, fields.InHand_table, tableInfo.RANGED.tableLookup( fields.RW_hand, rwIndex ) ),
 			dancing		= tableInfo.RANGED.tableLookup( fields.RW_dancing, rwIndex ),
-			attkAdj 	= tableInfo.RANGED.tableLookup( fields.RW_adj, rwIndex ),
+			attkAdj 	= tableInfo.RANGED.tableLookup( fields.RW_adj, rwIndex ) || '0',
+			weapDmgAdj	= /^[+-][+-]/.test(attkAdj),
 			attkStyleAdj= tableInfo.RANGED.tableLookup( fields.RW_styleAdj, rwIndex ),
 			weapStrBonus= tableInfo.RANGED.tableLookup( fields.RW_strBonus, rwIndex ),
 			weapDexBonus= tableInfo.RANGED.tableLookup( fields.RW_dexBonus, rwIndex ),
 			rwType 		= tableInfo.RANGED.tableLookup( fields.RW_type, rwIndex ),
 			rwSuperType = tableInfo.RANGED.tableLookup( fields.RW_superType, rwIndex ),
-			critHit 	= Math.min((tableInfo.RANGED.tableLookup( fields.RW_critHit, rwIndex )||20),(tableInfo.RANGED.tableLookup( fields.RW_styleCH, rwIndex )||20)),
-			critMiss 	= Math.min((tableInfo.RANGED.tableLookup( fields.RW_critMiss, rwIndex )||20),(tableInfo.RANGED.tableLookup( fields.RW_styleCM, rwIndex )||20)),
 			touchWeap	= tableInfo.RANGED.tableLookup( fields.RW_touch, rwIndex ) === '1',
 			weapCmd		= parseStr(tableInfo.RANGED.tableLookup( fields.RW_cmd, rwIndex ) || ''),
 			weapMsg		= tableInfo.RANGED.tableLookup( fields.RW_message, rwIndex ),
 			hitCharges	= tableInfo.RANGED.tableLookup( fields.RW_charges, rwIndex ),
 			styleRangeMods=tableInfo.RANGED.tableLookup(fields.RW_styleRangeMods, rwIndex ),
-			weapObj		= abilityLookup( fields.WeaponDB, miName, charCS ),
-			weapCharged = (weapObj.obj ? !(['uncharged','cursed','cursed+uncharged','single-uncharged'].includes(weapObj.obj[1].charge.toLowerCase())) : false),
+			weapChgType = tableInfo.RANGED.tableLookup(fields.RW_chargeType, rwIndex ) || 'uncharged',
+			weapCharged = !(['uncharged','cursed','cursed+uncharged','single-uncharged'].includes(weapChgType)),
 			slashWeap	= parseInt(tableInfo.RANGED.tableLookup( fields.RW_slash, rwIndex )),
 			pierceWeap	= parseInt(tableInfo.RANGED.tableLookup( fields.RW_pierce, rwIndex )),
 			bludgeonWeap= parseInt(tableInfo.RANGED.tableLookup( fields.RW_bludgeon, rwIndex )),
 			weapTypeTxt = (slashWeap?'S':'')+(pierceWeap?'P':'')+(bludgeonWeap?'B':''),
 			ammoName    = tableInfo.AMMO.tableLookup( fields.Ammo_name, ammoIndex ),
 			ammoMIname  = tableInfo.AMMO.tableLookup( fields.Ammo_miName, ammoIndex ),
+			ammoRowref	= tableInfo.AMMO.tableLookup( fields.Ammo_miIndex, ammoIndex ),
 			dmgAdj 		= tableInfo.AMMO.tableLookup( fields.Ammo_adj, ammoIndex ),
 			dmgStyleAdj = tableInfo.AMMO.tableLookup( fields.Ammo_styleAdj, ammoIndex ),
 			dmgSM 		= tableInfo.AMMO.tableLookup( fields.Ammo_dmgSM, ammoIndex ),
@@ -3326,6 +3381,7 @@ var attackMaster = (function() {
 			ammoCmd		= parseStr(tableInfo.AMMO.tableLookup( fields.Ammo_cmd, ammoIndex ) || ''),
 			ammoMsg		= tableInfo.AMMO.tableLookup( fields.Ammo_message, ammoIndex ),
 			ammoObj		= abilityLookup( fields.WeaponDB, ammoMIname, charCS ),
+			weapObj		= abilityLookup( fields.WeaponDB, miName, charCS ),
 			ammoChgType = weapObj.obj ? weapObj.obj[1].charge.toLowerCase() : '',
 			ammoCharged	= !(['uncharged','recharging','self-charging'].includes(ammoChgType) || ammoChgType.includes('cursed')),
 			strHit 		= parseInt(attrLookup( charCS, fields.Strength_hit ) || 0),
@@ -3340,10 +3396,11 @@ var attackMaster = (function() {
 			magicDmgAdj = attrLookup( charCS, fields.Magic_dmgAdj ) || 0,
 			primeWeapon = attrLookup( charCS, fields.Primary_weapon ) || 0,
 			twPen		= Math.min(parseFloat(attrLookup( charCS, fields.TwoWeapStylePenalty ) || 9.9), classes.map(c => parseFloat(c.classData.twoWeapPen)).reduce((prev,cur) => (Math.min(prev,cur)))),
-//			twoWeapPenalty = (ranger || primeWeapon < 1) ? 0 : (-1*(((rwIndex*2)+(fields.RW_table[1]==0?2:4)) == primeWeapon ? Math.floor(twPen) : Math.floor((10*twPen)%10))),
 			twoWeapPenalty = (ranger || primeWeapon < 1) ? 0 : (((rwIndex*2)+(fields.RW_table[1]==0?2:4)) == primeWeapon ? Math.floor(twPen) : Math.floor((10*twPen)%10)),
 			proficiency = dancing != 1 ? proficient( charCS, weaponName, rwType, rwSuperType ) : tableInfo.RANGED.tableLookup( fields.RW_dancingProf, rwIndex ),
 			race		= raceMods( charCS, rwType, rwSuperType ),
+			arAdjust	= (tableInfo.RANGED.tableLookup( fields.RW_aradj, rwIndex ) || '0|0|0|0|0|0|0|0|0').split('|'),
+			arVal 		= '[[0+(@{Target|Select Target|'+fields.BaseAC[0]+(fields.BaseAC[1] === 'max' ? '|max' : '')+'}&{noerror})]]',
 			tokenACname = getTokenValue( curToken, fields.Token_AC, fields.AC, fields.MonsterAC, fields.Thac0_base ).barName,
 			tokenAC 	= (tokenACname ? ('[[((0+(@{Target|Select Target|'+tokenACname+'}&{noerror}))+((0+(@{Target|Select Target|'+fields.StdAC[0]+'|max}&{noerror}))-(0+(@{Target|Select Target|'+fields.StdAC[0]+'}&{noerror}))))]]') : ''),
 			tokenHPname = getTokenValue( curToken, fields.Token_HP, fields.HP, null, fields.Thac0_base ).barName,
@@ -3371,10 +3428,25 @@ var attackMaster = (function() {
 			missileACsTxt		= slashWeap ? 'S' : '',
 			missileACpTxt		= pierceWeap ? 'P' : '',
 			missileACbTxt		= bludgeonWeap ? 'B' : '',
-			attkMacro, attkMacroDef, qualifier;
+			attkMacro, attkMacroDef, qualifier, arTable;
+
+		arTable = '<table width="100%"; table-layout="fixed";><tr width="100%" style="border-collapse:collapse; border:medium solid black; text-align:center;">';
+		for (let i=2; i<arAdjust.length+2; i++) arTable += '<th style="border-collapse:collapse; border:medium solid black; text-align:center;">'+i+'</th>';
+		arTable += '</tr><tr width="100%" style="border-collapse:collapse; border:medium solid black; text-align:center;">';
+		for (let i=0; i<arAdjust.length; i++) arTable += '<td style="border-collapse:collapse; border:medium solid black; text-align:center;">'+arAdjust[i]+'</td>';
+		arTable += '</tr></table>';
+				
 		styleRangeMods = parseData( (styleRangeMods.replace(/=/g,':').replace(/\|/,',') || ''), reRangeMods );
 		attkMsg = attkMsg.split('$$')[0];
 		dmgMsg = dmgMsg.split('$$')[0];								   
+		for (let j=arAdjust.length; j<=10; j++) arAdjust.unshift(arAdjust[0]);
+		arAdjust = arAdjust.join('|');
+		
+		if (weapDmgAdj) attkAdj = attkAdj.slice(1);
+		
+		var arSlash = slashWeap ? ('[[('+arVal+'[AR Adjust='+arAdjust+'])]]') : '',
+			arPierce = pierceWeap ? ('[[('+arVal+'[AR Adjust='+arAdjust+'])]]') : '',
+			arBludgeon = bludgeonWeap ? ('[[('+arVal+'[AR Adjust='+arAdjust+'])]]') : '';
 
 		var parseRWattkMacro = function( args, charCS, attkType, range, attkMacro ) {
 
@@ -3382,6 +3454,9 @@ var attackMaster = (function() {
 				rangeMods = attkMacro.match(/}}\s*RangeMods\s*=\s*(\[[-\w\d\+\,\:]+?\])\s*{{/im),
 				dmgSMroll = dmgSM,
 				dmgLroll  = dmgL,
+				minMaxRoll= maxDiceRoll(toHitRoll),
+				critHit   = Math.min((tableInfo.RANGED.tableLookup( fields.RW_critHit, rwIndex )||minMaxRoll.max),(tableInfo.RANGED.tableLookup( fields.RW_styleCH, rwIndex )||minMaxRoll.max)),
+				critMiss  = Math.max((tableInfo.RANGED.tableLookup( fields.RW_critMiss, rwIndex )||minMaxRoll.min),(tableInfo.RANGED.tableLookup( fields.RW_styleCM, rwIndex )||minMaxRoll.min)),
 				rangeMod;
 				
 			if (attkType == Attk.ROLL) {
@@ -3389,6 +3464,7 @@ var attackMaster = (function() {
 				dmgSMroll = '?{Roll Damage vs TSM|'+dmgSM+'}';
 				dmgLroll  = '?{Roll Damage vs LH|'+dmgL+'}';
 			}
+
 			rangeMods = parseData( ((rangeMods && !_.isNull(rangeMods)) ? rangeMods[1] : ''), reRangeMods );
 			rangeMod = Math.max((attrLookup( charCS, [fields.RWrange_mod[0]+range, fields.RWrange_mod[1]] ) || rangeMods[range]),styleRangeMods[range]);
 				
@@ -3401,7 +3477,7 @@ var attackMaster = (function() {
 								 .replace( /\^\^tid\^\^/gi , tokenID )
 								 .replace( /\^\^pid\^\^/gi , senderId )
 								 .replace( /\^\^toHitRoll\^\^/gi , toHitRoll )
-								 .replace( /\^\^weapAttkAdj\^\^/gi , attkAdj )
+								 .replace( /\^\^weapAttkAdj\^\^/gi , weapDmgAdj ? 0 : attkAdj )
 								 .replace( /\^\^weapStyleAdj\^\^/gi , attkStyleAdj )
 								 .replace( /\^\^dexMissile\^\^/gi , dexMissile )
 								 .replace( /\^\^weapDexBonus\^\^/gi , weapDexBonus )
@@ -3414,7 +3490,7 @@ var attackMaster = (function() {
 								 .replace( /\^\^magicAttkAdj\^\^/gi , magicHitAdj )
 								 .replace( /\^\^twoWeapPenalty\^\^/gi , twoWeapPenalty )
 								 .replace( /\^\^rangeMod\^\^/gi , rangeMod )
-								 .replace( /\^\^ammoDmgAdj\^\^/gi , dmgAdj )
+								 .replace( /\^\^ammoDmgAdj\^\^/gi , (dmgAdj + (weapDmgAdj ? attkAdj : '')))
 								 .replace( /\^\^ammoStyleDmgAdj\^\^/gi , dmgStyleAdj )
 								 .replace( /\^\^magicDmgAdj\^\^/gi , magicDmgAdj )
 								 .replace( /\^\^strDmgBonus\^\^/gi , strDmg )
@@ -3426,6 +3502,12 @@ var attackMaster = (function() {
 								 .replace( /\^\^pierceWeap\^\^/gi , pierceWeap )
 								 .replace( /\^\^bludgeonWeap\^\^/gi , bludgeonWeap )
 								 .replace( /\^\^weapType\^\^/gi , weapTypeTxt )
+								 .replace( /\^\^armorRating\^\^/gi , arVal )
+								 .replace( /\^\^arAdjVals\^\^/gi , arAdjust )
+								 .replace( /\^\^arSlash\^\^/gi , arSlash )
+								 .replace( /\^\^arPierce\^\^/gi , arPierce )
+								 .replace( /\^\^arBludgeon\^\^/gi , arBludgeon )
+								 .replace( /\^\^arTable\^\^/gi , arTable )
 								 .replace( /\^\^ACvsNoMods\^\^/gi , ACnoMods )
 								 .replace( /\^\^ACvsSlash\^\^/gi , ACslash )
 								 .replace( /\^\^ACvsPierce\^\^/gi , ACpierce )
@@ -3493,7 +3575,7 @@ var attackMaster = (function() {
 					return;
 				}
 
-				attkMacro = (dmgCharges && (dmgCharges != 0)) ? ('\n!attk --setammo '+tokenID+'|'+ammoName+'|-'+dmgCharges+'|'+(ammoCharged ? '=' : '+0')+'|SILENT') : ''; 
+				attkMacro = (dmgCharges && (dmgCharges != 0)) ? ('\n!attk --setammo '+tokenID+'|'+ammoName+'|-'+dmgCharges+'|'+(ammoCharged ? ('-'+dmgCharges) : '+0')+'|SILENT') : ''; 
 				attkMacro += ammoCmd ? ('\n'+ammoCmd) : '';
 				attkMacro += touchAmmo ? ('\n!attk --blank-weapon '+tokenID+'|'+miName+'|silent') : '';
 				setAbility( charCS, 'Do-not-use-DmgSM-RW'+rwNumber+'-'+dist, parseRWattkMacro(args, charCS, abilityType, dist, addDmgMsg( macroDef.obj[1].body, dmgMsg, ammoMsg ))+attkMacro);
@@ -3527,16 +3609,16 @@ var attackMaster = (function() {
 					attkMacro += '\n!attk --quiet-modweap '+tokenID+'|'+miName+'|AMMO|qty:=0 --setammo '+tokenID+'|'+ammoName+'|1|=|SILENT'; 
 					break;
 				case '3':
-//					attkMacro += '\n!magic --mi-charges '+tokenID+'|-'+hitCharges+'|'+miName; 
-//					attkMacro += '\n!attk --quiet-modweap '+tokenID+'|'+miName+'|AMMO|qty:=1 --setammo '+tokenID+'|'+ammoName+'|0|=|SILENT'; 
 					attkMacro += '\n!attk --quiet-modweap '+tokenID+'|'+miName+'|AMMO|qty:+1 --quiet-modweap '+tokenID+'|'+ammoName+'|AMMO|qty:-2';
 					break;
 				default: 
-					attkMacro += '\n!attk --setammo '+tokenID+'|'+ammoName+'|-1|+0|SILENT'; 
+					attkMacro += '\n!attk --setammo '+tokenID+'|'+ammoName+'|-1|'+(ammoCharged ? '-1' : '+0')+'|SILENT'; 
 					break;
 				};
-				attkMacro += ((weapCharged && hitCharges) ? ('\n!magic --mi-charges '+tokenID+'|-'+hitCharges+'|'+miName) : ''); 
+				attkMacro += ((weapCharged && hitCharges) ? ('\n!magic --mi-charges '+tokenID+'|-'+hitCharges+'|'+miName+'|'+weapChgType) : ''); 
 				if (abilityType === Attk.TARGET) weapCmd = weapCmd.replace(/@{target\|.*?\|?token_id}/igm,'@{target|Select Target|token_id}');
+				attkMacro += ((weaponName !== miName) && (attrLookup( charCS, fields.Items_reveal, fields.Items_table, miRowref ) || '').toLowerCase() == 'use') ? ('\n!magic --button GM-ResetSingleMI|'+tokenID+'|'+miRowref+'|silent') : '';
+				attkMacro += ((ammoName !== ammoMIname) && (attrLookup( charCS, fields.Items_reveal, fields.Items_table, ammoRowref ) || '').toLowerCase() == 'use') ? ('\n!magic --button GM-ResetSingleMI|'+tokenID+'|'+ammoRowref+'|silent') : '';
 				attkMacro += weapCmd ? ('\n'+weapCmd) : '';
 				attkMacro += touchWeap ? ('\n!attk --blank-weapon '+tokenID+'|'+miName+'|silent') : '';
 				setAbility( charCS, 'Do-not-use-Attk-RW'+rwNumber+'-'+dist, attkMacro );
@@ -3579,24 +3661,71 @@ var attackMaster = (function() {
 	 * Dynamically build the ability macro for a saving throw
 	 */
 	 
-	var buildSaveRoll = function( tokenID, charCS, sitMod, DCval, saveType, saveObj, isGM, attr=false ) {
+	var buildSaveRoll = function( tokenID, charCS, sitMod, DCval, saveType, saveObj, isGM, whoRolls, attr=false ) {
+		
+		var save;
+		if (!_.isObject(saveObj)) {
+			save = saveObj;
+			saveObj = saveFormat.Saves[saveType];
+		} else {
+			save = parseInt(attrLookup( charCS, saveObj.save ) || 0);
+		}
 		
 		sitMod = parseInt(sitMod);
-		var curToken = getObj('graphic',tokenID),
-			name = curToken.get('name'),
-			save = parseInt(attrLookup( charCS, saveObj.save ) || 0),
+		var name = getObj('graphic',tokenID).get('name'),
 			saveMod = parseInt(attrLookup( charCS, saveObj.mod ) || 0),
 			saveAdj = parseInt(attrLookup( charCS, fields.Magic_saveAdj ) || 0),
 			calcResult = attr ?  (save+saveMod+sitMod+DCval+saveAdj) : (save-saveMod-sitMod-saveAdj),
+			roll = ((whoRolls === SkillRoll.PCROLLS) ? saveObj.roll : '?{Enter the roll result (or submit to roll)|'+saveObj.roll+'}'),
 			content = (isGM ? '/w gm ' : '')
-					+ '&{template:'+fields.defaultTemplate+'}{{name='+name+' Save vs '+saveType.dispName()+'}}'
-					+ '{{Saving Throw=Rolling [['+saveObj.roll+'cf<'+(calcResult-1)+'cs>'+calcResult+']] vs. [[0+'+calcResult+']] target}}'
+					+ '&{template:'+fields.menuTemplate+'}{{name='+name+' Save vs '+saveType.dispName()+'}}'
+					+ '{{Saving Throw=Rolling [['+roll+'cf<'+(calcResult-1)+'cs>'+calcResult+']] vs. [[0+'+calcResult+']] target}}'
 					+ '{{Result=Saving Throw'+(attr ? '<=' : '>=')+calcResult+'}}'
-//					+ '{{desc=**'+name+'\'s target**[[0+'+save+']] base save vs. '+saveType+' with '+(attr ? ('DC'+(10-DCval)+' and ') : '')+'[[0+'+saveMod+']] improvement from race, class & Magic Items, '
 					+ '{{desc=**'+name+'\'s target**[[0+'+save+']] base save vs. '+saveType+' with [[0+'+saveMod+']] improvement from race, class & Magic Items, '
 					+ '[[0+'+saveAdj+']] improvement from current magic effects, and [[0+'+sitMod+']] adjustment for the situation}}';
 		
 		setAbility(charCS,'Do-not-use-'+saveType+'-save',content);
+		return;
+	}
+					  
+	/*
+	 * Dynamically build the ability macro for a saving throw
+	 */
+	 
+	var buildRogueRoll = function( tokenID, charCS, sitMod, skillType, skillObj, isGM, whoRolls ) {
+		
+		var target;
+		if (!_.isObject(skillObj)) {
+			target = skillObj;
+			skillObj = rogueSkills[skillType];
+		} else {
+			target = parseInt(attrLookup( charCS, skillObj.save ) || 0);
+		}
+		
+		sitMod = parseInt(sitMod);
+		target = Math.max(state.attackMaster.thieveCrit,(sitMod+target));
+		var	name = getObj('graphic',tokenID).get('name'),
+			roll = ((whoRolls === SkillRoll.PCROLLS) ? skillObj.roll : '?{Enter the roll result (or submit to roll)|'+skillObj.roll+'}'),
+			skillMods =	skillObj.factors.map((mod,i) => {
+							let val = attrLookup( charCS, [mod,'current'] ) || 0;
+							return val + ' from ' + thiefSkillFactors[i].toLowerCase();
+						}),
+			content = ((isGM || (state.MagicMaster.gmRolls && skillObj.gmrolls)) ? '/w gm ' : '')
+					+ '&{template:'+fields.menuTemplate+'}{{name='+name+' Skill check vs '+skillObj.name.dispName()+'}}'
+					+ '{{Skill Check=Rolling [['+roll+'cf<'+Math.max(0,target-1)+'cs>'+target+']]<br>vs. [[0+'+target+']] target}}'
+					+ '{{Result=Skill Check<='+target+'}}'
+					+ (skillObj.success ? '{{Success='+skillObj.success+'}}' : '')
+					+ (skillObj.failure ? '{{Failure='+skillObj.failure+'}}' : '') 
+					+ '{{desc=**'+name+'\'s target**[[0+'+target+']] made up of '+skillMods.join(', ')+', and [[0+'+sitMod+']] adjustment for the situation.'
+					+ ((state.attackMaster.thieveCrit > 0) ? ('<br><b>Note:</b> a critical success roll of '+state.attackMaster.thieveCrit+'% applies to skill checks (set by GM in RPGM config)') : '')
+					+ '}}';
+			if (!isGM && state.MagicMaster.gmRolls && skillObj.gmrolls) {
+				content += '\n&{template:'+fields.messageTemplate+'}'
+						+  '{{title='+name+' Skill check<br>vs '+skillObj.name.dispName()+'}}'
+						+  '{{desc=The GM is making this roll and will let you know the outcome}}';
+			};
+		
+		setAbility(charCS,'Do-not-use-'+skillObj.name.replace(/_/g,'-')+'-check',content);
 		return;
 	}
 					  
@@ -3802,7 +3931,7 @@ var attackMaster = (function() {
 				charName = charCS.get('name'),
 				targetStr = (attkType === Attk.TARGET) ? '&#64;{target|Select Opponent|token_id}' : '',
 				diceRoll = (attkType === Attk.ROLL) ? ('&#63;{Roll To Hit|'+fields.ToHitRoll+'}') : fields.ToHitRoll,
-				content = '&{template:'+fields.defaultTemplate+'}{{name=How is ' + tokenName + ' attacking?}}';
+				content = '&{template:'+fields.menuTemplate+'}{{name=How is ' + tokenName + ' attacking?}}';
 
 			if ( monsterAttk1 || monsterAttk2 || monsterAttk3 ) {
 
@@ -3847,50 +3976,49 @@ var attackMaster = (function() {
 					magicList[miName][weaponName] = magicIndex;
 				}
 			}
-			_.each( magicList, (item,name) => {
-				magicWeaps += '{{' + name + ' =';
-				_.each( item, (i,power) => {
-					let	itemIndex = Items.tableFind( fields.Items_name, name);
-					let	charges = Magic.tableLookup( fields.Magic_charges, i );
-					let	weapObj = abilityLookup( fields.MagicItemDB, name, charCS );
-					let	weapCharge  = Magic.tableLookup( fields.Magic_chargeType, i ) || (weapObj.obj ? weapObj.obj[1].charge.toLowerCase() : 'uncharged' );
-					let	weapCharged = !(['uncharged','cursed','cursed+uncharged','single-uncharged'].includes(weapCharge));
-					let	magicPower = Magic.tableLookup( fields.Magic_power, i ) || '';
-					let	magicName = Magic.tableLookup( fields.Magic_desc, i ) || magicPower;
-					let	castLevel = Magic.tableLookup( fields.Magic_level, i ) || caster( charCS, 'PW' ).clv;
+			_.each( magicList, (item,miName) => {
+				let	itemIndex = Items.tableFind( fields.Items_trueName, miName) || Items.tableFind( fields.Items_name, miName);
+				let	weapObj = abilityLookup( fields.MagicItemDB, miName, charCS );
+				if (!_.isUndefined(itemIndex)) {
+					let name = Items.tableLookup( fields.Items_name, itemIndex );
 					let	miQty = Items.tableLookup( fields.Items_qty, itemIndex );
-					if (!_.isUndefined(itemIndex) && weapCharged && (miQty - (!charges ? 1 : charges)) < 0) {
-						magicWeaps += '<span style=' + design.grey_button + '>' + miQty + ' ' + power + '</span>';
-					} else {
-						let magicLib, abilityName,
-							magicMsg = Magic.tableLookup( fields.Magic_message, i ),
-							magicCmd = Magic.tableLookup( fields.Magic_cmd, i );
+					magicWeaps += '{{' + name.dispName() + ' =';
+					_.each( item, (i,power) => {
+						let	charges = Magic.tableLookup( fields.Magic_charges, i ) || 1;
+						let	weapCharge  = Magic.tableLookup( fields.Magic_chargeType, i ) || (weapObj.obj ? weapObj.obj[1].charge.toLowerCase() : 'uncharged' );
+						let	weapCharged = !(['uncharged','cursed','cursed+uncharged','single-uncharged'].includes(weapCharge));
+						let	magicPower = Magic.tableLookup( fields.Magic_power, i ) || '';
+						let	magicName = Magic.tableLookup( fields.Magic_desc, i ) || magicPower;
+						let	castLevel = Magic.tableLookup( fields.Magic_level, i ) || caster( charCS, 'PW' ).clv;
+						if (weapCharged && (miQty - charges) < 0) {
+							magicWeaps += '<span style=' + design.grey_button + '>' + miQty + ' ' + power + '</span>';
+						} else {
+							let magicLib, abilityName,
+								magicMsg = Magic.tableLookup( fields.Magic_message, i ),
+								magicCmd = Magic.tableLookup( fields.Magic_cmd, i );
 							magicWeaps += '['+((weapCharged ? miQty+' ' : '')+power)+'](!magic';
-						if (magicMsg) {
-							magicWeaps += ' --message '+tokenID+'|'+power+'|'+magicMsg;
+							if (magicMsg) magicWeaps += ' --message '+tokenID+'|'+power+'|'+magicMsg;
+							if (weapCharged && charges != 0) magicWeaps += ' --mi-charges '+tokenID+'|-'+charges+'|'+miName+'||'+weapCharge;
+							if (magicName) {
+								magicLib = findPower( charCS, magicName );
+								abilityName = magicLib.obj ? magicLib.obj[1].name : magicName;
+								magicLib = getAbility( magicLib.dB, abilityName, charCS );
+								if (magicLib.obj) setAbility(charCS, abilityName, magicLib.obj[1].body.replace(/@{selected\|(?:mu-|pr-)?casting-level}/img,castLevel));
+								let cmdStr = magicPower ? (' --button '+BT.MI_POWER_CHARGE_USED+'|'+tokenID+'|'+magicName+'|'+miName+'|'+castLevel) 
+														 : (magicLib.obj ? (' --message gm|'+tokenID+'|'+miName+'|'+charName+' is using the item action ['+power+']\\lpar;!\\cr;&&w gm %%\\lbrc;'+magicLib.dB +'¦'+ magicLib.obj[1].name +'\\rbrc;\\rpar;. Select '+charName+'\'s token before pressing to see the effects') : '');
+								magicWeaps += cmdStr;
+							}
+							if (magicCmd) {
+								magicWeaps += '&#13;'+parseStr(magicCmd);
+							}
+							if (magicName && magicLib.obj && !magicPower) {
+								magicWeaps += '&#13;'+((magicLib.api ? '' : sendToWho(charCS,senderId,false,true))+'&#37;{'+magicLib.dB +'|'+ (magicLib.obj[1].name.hyphened()) +'}');
+							}
+							magicWeaps += ') ';
 						}
-						if (weapCharged && charges != 0) {
-							magicWeaps += ' --mi-charges '+tokenID+'|-'+charges+'|'+name+'||'+weapCharge;
-						}
-						if (magicName) {
-							magicLib = findPower( charCS, magicName );
-							abilityName = magicLib.obj ? magicLib.obj[1].name : magicName;
-							magicLib = getAbility( magicLib.dB, abilityName, charCS );
-							if (magicLib.obj) setAbility(charCS, abilityName, magicLib.obj[1].body.replace(/@{selected\|(?:mu-|pr-)?casting-level}/img,castLevel));
-							let cmdStr = magicPower ? (' --button '+BT.MI_POWER_CHARGE_USED+'|'+tokenID+'|'+magicName+'|'+name+'|'+castLevel) 
-													 : (magicLib.obj ? (' --message gm|'+tokenID+'|'+name+'|'+charName+' is using the item action ['+power+']\\lpar;!\\cr;&&w gm %%\\lbrc;'+magicLib.dB +'¦'+ magicLib.obj[1].name +'\\rbrc;\\rpar;. Select '+charName+'\'s token before pressing to see the effects') : '');
-							magicWeaps += cmdStr;
-						}
-						if (magicCmd) {
-							magicWeaps += '&#13;'+parseStr(magicCmd);
-						}
-						if (magicName && magicLib.obj && !magicPower) {
-							magicWeaps += '&#13;'+((magicLib.api ? '' : sendToWho(charCS,senderId,false,true))+'&#37;{'+magicLib.dB +'|'+ (magicLib.obj[1].name.hyphened()) +'}');
-						}
-						magicWeaps += ') ';
-					}
-				});
-				magicWeaps += '}}';
+					});
+					magicWeaps += '}}';
+				};
 			});
 			
 			// Build the Melee Weapons list
@@ -3904,17 +4032,19 @@ var attackMaster = (function() {
 						title = true;
 					}
 					let miName = Weapons.tableLookup( fields.MW_miName, weaponIndex ),
-						itemIndex = Items.tableFind( fields.Items_name, miName),
+						itemIndex = Items.tableFind( fields.Items_trueName, miName),
 						charges = tableInfo.MELEE.tableLookup( fields.MW_charges, weaponIndex ),
 						weapObj = abilityLookup( fields.WeaponDB, miName, charCS ),
 						weapCharge  = tableInfo.MELEE.tableLookup( fields.MW_chargeType, weaponIndex ) || (weapObj.obj ? weapObj.obj[1].charge.toLowerCase() : 'uncharged' ),
 						weapCharged = !(['uncharged','cursed','cursed+uncharged','single-uncharged'].includes(weapCharge)),
+						enabling = ['enable','disable'].includes(weapCharge),
 						miQty = Items.tableLookup( fields.Items_qty, itemIndex );
+//					if (miQty <= 0 || (!_.isUndefined(itemIndex) && weapCharged && (miQty - (!charges ? 1 : charges)) < 0)) {
 					if (!_.isUndefined(itemIndex) && weapCharged && (miQty - (!charges ? 1 : charges)) < 0) {
-						meleeWeaps += '<span style=' + design.grey_button + '>' + miQty + ' ' + weaponName + '</span>';
+						meleeWeaps += '<span style=' + design.grey_button + '>' + (enabling ? '' : miQty) + ' ' + weaponName + '</span>';
 					} else {
 						if (errFlag = await buildMWattkMacros( args, senderId, charCS, tableInfo, weaponIndex, backstab )) return;
-						weaponName = (weapCharged ? miQty+' ' : '')+weaponName;
+						weaponName = ((weapCharged && !enabling) ? miQty+' ' : '')+weaponName;
 						if (tableInfo.MELEE.tableLookup( fields.MW_dancing, weaponIndex ) == '1') {
 							dancingMeleeWeaps += '['+weaponName+'](~'+charName+'|Do-not-use-Attk-MW'+(weaponIndex+weaponOffset)+') ';
 						} else {
@@ -3938,10 +4068,10 @@ var attackMaster = (function() {
 							title = true;
 						}
 						let	miName = tableInfo.RANGED.tableLookup( fields.RW_miName, weaponIndex ),
-							itemIndex = Items.tableFind( fields.Items_name, miName),
+							itemIndex = Items.tableFind( fields.Items_trueName, miName),
 							charges = tableInfo.RANGED.tableLookup( fields.RW_charges, weaponIndex ),
 							weapObj = abilityLookup( fields.WeaponDB, miName, charCS ),
-							weapCharged = (weapObj.obj ? !(['uncharged','cursed','cursed+uncharged','single-uncharged'].includes(weapObj.obj[1].charge.toLowerCase())) : false),
+							weapCharged = (weapObj.obj ? !(['uncharged','cursed','cursed+uncharged','single-uncharged','enable','disable'].includes(weapObj.obj[1].charge.toLowerCase())) : false),
 							miQty = Items.tableLookup( fields.Items_qty, itemIndex ),
 							valid = (!weapCharged || ((miQty-charges) >= 0));
 						weapButton = '{{'+(weapCharged ? '**'+miQty+'** ' : '')+weaponName+'=';
@@ -4019,7 +4149,7 @@ var attackMaster = (function() {
 		var curToken = getObj('graphic',tokenID),
 			tokenName = curToken.get('name'),
 			charCS = getCharacter(tokenID),
-			content = '&{template:'+fields.defaultTemplate+'}{{name=Change '+tokenName+'\'s Ammo}}'
+			content = '&{template:'+fields.menuTemplate+'}{{name=Change '+tokenName+'\'s Ammo}}'
 					+ '{{desc='+tokenName+' did have [['+oldQty+']] ***'+ammo+'***, and now has [['+newQty+']]}}'
 					+ '{{desc1=A possible total [['+newMax+']] ***'+ammo+'*** are now available}}';
 
@@ -4046,12 +4176,13 @@ var attackMaster = (function() {
 			itemIndex = fields.Items_table[1]-1,
 			itemTable = fields.Items_table,
 			itemName = fields.Items_name,
+			itemTrueName = fields.Items_trueName,
 			itemQty = fields.Items_qty,
 			itemMax = fields.Items_trueQty,
 			checkAmmo = false,
 			reuse = 0,
 			Items,
-			content = '&{template:'+fields.defaultTemplate+'}{{name=Change '+tokenName+'\'s Ammunition}}'
+			content = '&{template:'+fields.menuTemplate+'}{{name=Change '+tokenName+'\'s Ammunition}}'
 					+ '{{desc=The current quantity is displayed with the maximum you used to have.'
 					+ 'To change the amount of any ammo listed, click the ammo name and enter the *change* (plus or minus).'
 					+ 'The maximum will be set to the final current quantity, reflecting your new total. '
@@ -4059,28 +4190,30 @@ var attackMaster = (function() {
 					+ '{{desc1=';
 		do {
 			Items = getTableField( charCS, {}, itemTable, itemName );
+			Items = getTableField( charCS, {}, itemTable, itemTrueName );
 			Items = getTableField( charCS, Items, itemTable, itemQty );
 			Items = getTableField( charCS, Items, itemTable, itemMax );
 			while (!_.isUndefined(ammoName = Items.tableLookup(itemName,++itemIndex,false))) {
-				let ammo = abilityLookup( fields.MagicItemDB, ammoName, charCS ),
-					ammoData, ammoMatch;
-				if (checkAmmo || !_.isUndefined(ammo.obj)) {
-					if (ammo.obj && ammo.obj[1]) ammoData = ammo.obj[1].body;
-					if (checkAmmo || (ammoData && ammoData.length && reAmmo.test(ammoData))) {
+				if (ammoName === '-') continue;
+				let ammoMIname = Items.tableLookup(itemTrueName,itemIndex),
+					ammo = abilityLookup( fields.MagicItemDB, ammoMIname, charCS ),
+					ammoData = resolveData( ammoMIname, fields.MagicItemDB, reAmmoData, charCS, reWeapSpecs, itemIndex ).parsed,
+					ammoMatch;
+				if (checkAmmo || !_.isUndefined(ammo.obj) ) {
+//					if (ammo.obj && ammo.obj[1]) ammoData = ammo.obj[1].body;
+					if (checkAmmo || (ammoData && ammoData.name && ammoData.name.length)) {
 						if (!title) {
 							content += '<table><tr><td>Now</td><td>Max</td><td>Ammo Name</td></tr>';
 							title = true;
 						}
-						if (ammoData && ammoData.length) {
-							reuse = parseInt((ammoData.match(reReuse) || [0,0])[1]);
-							breakable = (reuse != 0) || (ammo.ct && ammo.ct[0] && ['charged','discharging'].includes((ammo.ct[0].get('max') || '').toLowerCase()));
-						}
+						reuse = parseInt(ammoData.reuse) || 0;
+						breakable = (reuse != 0) || (ammo.ct && ammo.ct[0] && ['charged','discharging','change-each','cursed+charged','cursed+discharging','cursed+change-each'].includes((ammo.ct[0].get('max') || '').toLowerCase()));
 						qty = Items.tableLookup(itemQty,itemIndex) || 0;
 						maxQty = Items.tableLookup(itemMax,itemIndex) || qty;
 						content += '<tr><td>[['+qty+']]</td><td>[['+maxQty+']]</td>'
 								+  '<td>'+(breakable ? '<span style=' + design.grey_button + '>' : '[')
 								+  ammoName
-								+  (breakable ? '</span>' : '](!attk --button '+BT.AMMO+'|'+tokenID+'|'+ammoName.replace(/[\(\)]/g,'')+'|?{How many do you recover?|0}|=)') + '</td></tr>';
+								+  (breakable ? '</span>' : '](!attk --button '+BT.AMMO+'|'+tokenID+'|'+ammoMIname.replace(/[\(\)]/g,'')+'|?{How many do you recover?|0}|=)') + '</td></tr>';
 					}
 				}
 			}
@@ -4120,7 +4253,7 @@ var attackMaster = (function() {
 			tokenName = getObj('graphic',tokenID).get('name'),
 			handedness = (hands == 2 ? '' : (hands + ' ')) + prefHand,
 		
-			content = '&{template:'+fields.defaultTemplate+'}{{name=Change '+tokenName+'\'s Handedness}}'
+			content = '&{template:'+fields.menuTemplate+'}{{name=Change '+tokenName+'\'s Handedness}}'
 					+ '{{desc=You can change the number of hands to any number, which affects the number of weapons that can be wielded.  Handedness can also be set, but currently has little effect}}'
 					+ '{{desc1=**'+tokenName+' currently is '+handedness+'**\n'
 					+ '[Number of Hands](!attk --button '+BT.NOHANDS+'|'+tokenID+'|?{Number of Hands}|'+prefHand+')'
@@ -4173,7 +4306,7 @@ var attackMaster = (function() {
 			both = InHandTable.tableLookup( fields.InHand_name, i );
 			extraHands = InHandTable.tableLookup( fields.InHand_handedness, i++ );
 			
-			content = '&{template:'+fields.defaultTemplate+'}{{name=Change '+tokenName+'\'s weapon}}'
+			content = '&{template:'+fields.menuTemplate+'}{{name=Change '+tokenName+'\'s weapon}}'
 					+ (msg && msg.length ? '{{Section1=**'+msg+'**}}' : '')
 					+ '{{Section2=Select Primary or Off Hand to hold a one-handed weapon or shield.'
 					+ ' Select Both Hands to hold a two handed weapon and set AC to Shieldless}}'
@@ -4262,7 +4395,7 @@ var attackMaster = (function() {
 				selected = !!selectedMI && selectedMI.length > 0,
 				remove = (selectedMI.toLowerCase() == 'remove'),
 				bagSlot = !!MIrowref && MIrowref >= 0,
-				content = '&{template:'+fields.defaultTemplate+'}{{name=Edit Magic Item Bag}}';
+				content = '&{template:'+fields.menuTemplate+'}{{name=Edit Magic Item Bag}}';
 
 			if (!menuType) {
 				playerConfig = getSetPlayerConfig( senderId );
@@ -4275,7 +4408,7 @@ var attackMaster = (function() {
 			var shortMenu = menuType == 'short';
 
 			if (selected && !remove) {
-				magicItem = getAbility( fields.MagicItemDB, selectedMI, charCS );
+				magicItem = getAbility( fields.MagicItemDB, selectedMI, charCS, null, null, null, MIrowref );
 				if (_.isUndefined(magicItem)) {log('makeEditBagMenu: magicItem is undefined!'); return;} else
 				if (!magicItem.obj) {
 					sendResponse( charCS, 'Can\'t find '+itemName+' in the Magic Item database', senderId,flags.feedbackName,flags.feedbackImg,tokenID );
@@ -4374,6 +4507,10 @@ var attackMaster = (function() {
 		
 		var tokenID = args[0],
 			dmgType = (args[2] || 'nadj').toLowerCase(),
+			isNorm = dmgType === 'nadj',
+			isSlash = dmgType === 'sadj',
+			isPierce = dmgType === 'padj',
+			isBash = dmgType === 'badj',
 			curToken = getObj('graphic',tokenID),
 			charCS = getCharacter(tokenID),
 			tokenName = curToken.get('name'),
@@ -4381,7 +4518,7 @@ var attackMaster = (function() {
 			AC = getACvalues(tokenID),
 			monsterAC = attrLookup( charCS, fields.MonsterAC ) || 10,
 			monSpecial = (/\[(.+?)\]/.exec(monsterAC) || ['',''])[1],
-			content = '&{template:'+fields.defaultTemplate+'}{{name=Current Armour for '+tokenName+'}}';
+			content = '&{template:'+fields.menuTemplate+'}{{name=Current Armour for '+tokenName+'}}';
 
 		if (currentAC != finalAC) {
 			content += '{{AC=<span style='+design.green_button+'>'+finalAC+'</span>'
@@ -4390,13 +4527,13 @@ var attackMaster = (function() {
 		} else if (dmgAdj.armoured.sadj != 0 || dmgAdj.armoured.padj != 0 || dmgAdj.armoured.badj != 0) {
 			content += '{{AC=';
 			args[2]='nadj';
-			content += (dmgType == 'nadj'?'<span style='+design.selected_button+'>':'[')+'Standard:'+(finalAC+dmgAdj.armoured[dmgType]-dmgAdj.armoured.nadj)+(dmgType=='nadj'?'</span>':'](!attk --checkac '+args.join('|')+')');
+			content += (isNorm?'<span style='+design.selected_button+'>':'[')+'Standard:'+(finalAC+dmgAdj.armoured[dmgType]-dmgAdj.armoured.nadj)+(isNorm?'</span>':'](!attk --checkac '+args.join('|')+')');
 			args[2]='sadj';
-			content += (dmgType == 'sadj'?'<span style='+design.selected_button+'>':'[')+'Slash:'+(finalAC+dmgAdj.armoured[dmgType]-dmgAdj.armoured.sadj)+(dmgType=='sadj'?'</span>':'](!attk --checkac '+args.join('|')+')');
+			content += (isSlash?'<span style='+design.selected_button+'>':'[')+'Slash:'+(finalAC+dmgAdj.armoured[dmgType]-dmgAdj.armoured.sadj)+(isSlash?'</span>':'](!attk --checkac '+args.join('|')+')');
 			args[2]='padj';
-			content += (dmgType == 'padj'?'<span style='+design.selected_button+'>':'[')+'Pierce:'+(finalAC+dmgAdj.armoured[dmgType]-dmgAdj.armoured.padj)+(dmgType=='padj'?'</span>':'](!attk --checkac '+args.join('|')+')');
+			content += (isPierce?'<span style='+design.selected_button+'>':'[')+'Pierce:'+(finalAC+dmgAdj.armoured[dmgType]-dmgAdj.armoured.padj)+(isPierce?'</span>':'](!attk --checkac '+args.join('|')+')');
 			args[2]='badj';
-			content += (dmgType == 'badj'?'<span style='+design.selected_button+'>':'[')+'Bludgeon:'+(finalAC+dmgAdj.armoured[dmgType]-dmgAdj.armoured.badj)+(dmgType=='badj'?'</span>':'](!attk --checkac '+args.join('|')+')');
+			content += (isBash?'<span style='+design.selected_button+'>':'[')+'Bludgeon:'+(finalAC+dmgAdj.armoured[dmgType]-dmgAdj.armoured.badj)+(isBash?'</span>':'](!attk --checkac '+args.join('|')+')');
 		} else {
 			content += '{{AC=<span style='+design.selected_button+'>'+finalAC+'</span>';
 		}
@@ -4408,8 +4545,8 @@ var attackMaster = (function() {
 		_.each( acValues, (e,k) => {
 			if (k != 'armour' && k != 'shield') {
 				let acObj = abilityLookup( fields.MagicItemDB, e.name, charCS, silent ),
-					acAdj = (parseInt(e.data.adj) || 0) + (parseInt(e.data.sadj) || 0) + (parseInt(e.data.padj) || 0) + (parseInt(e.data.badj) || 0) + (parseInt(e.data.madj) || 0);
-				content += '{{'+(acObj.obj ? getShownType( acObj ) : e.specs[2])+'='+e.name.dispName();
+					acAdj = (parseInt(e.data.adj) || 0) + (isSlash?(parseInt(e.data.sadj) || 0):(isPierce?(parseInt(e.data.padj) || 0):(isBash?(parseInt(e.data.badj) || 0):0)));
+				content += '{{'+(acObj.obj ? getShownType( acObj, e.row ) : e.specs[2])+'='+e.name.dispName();
 				if (!(/[+-]\d+?/.test(e.name))) content += (acAdj >= 0 ? ' +' : ' ') + acAdj;
 				content += '}}';
 			}
@@ -4473,7 +4610,8 @@ var attackMaster = (function() {
 			isGM = playerIsGM(senderId),
 			playerConfig = getSetPlayerConfig( senderId ),
 			manUpdate = playerConfig && playerConfig.manualCheckSaves,
-			content = '&{template:'+fields.defaultTemplate+'}{{name=Roll a Saving Throw for '+name+'}}'
+			whoRolls = ((!_.isUndefined(playerConfig.skillRoll)) ? playerConfig.skillRoll : SkillRoll.PCROLLS),
+			content = '&{template:'+fields.menuTemplate+'}{{name=Roll a Saving Throw for '+name+'}}'
 					+ (msg && msg.length ? '{{Section='+msg+'}}' : '')
 					+ '{{desc=<table>'
 					+ '<thead>'
@@ -4502,12 +4640,17 @@ var attackMaster = (function() {
 				+  '{{desc2=['+(!manUpdate ? '<span style=' + design.selected_button +'>' : '')+'Auto-check Saving Throws'+(!manUpdate ? '</span>' : '')+'](!attk --check-saves '+tokenID+') to set saves using Race, Class, Level & MI data, or\n'
 				+  '['+(manUpdate ? '<span style=' + design.selected_button +'>' : '')+'Manually check Saving Throws'+(manUpdate ? '</span>' : '') + '](!attk --setSaves '+tokenID+'|||save) to manually change numbers}}';
 					
-		let saveNotes = attrLookup( charCS, fields.SaveNotes );
+		let saveNotes = attrLookup( charCS, fields.SaveNotes ),
+			argString = args.join('|');
 		if (saveNotes) {
 			content += '{{desc3=**Notes**\n'+saveNotes+'}}';
 		}
+		content += '{{desc4=<div style="text-align: center"><table width="100%"><tr><td colspan="2" width="100%">**Change Dice Action**</td></tr><tr>'
+				+  '<td width="50%">'+((whoRolls === SkillRoll.PCROLLS) ? ('<span style=' + design.selected_button + '>') : '[') + 'PC rolls' + ((whoRolls === SkillRoll.PCROLLS) ? '</span>' : '](!attk --button '+BT.SET_SAVE_ROLL+'|'+senderId+'|'+SkillRoll.PCROLLS+'|'+argString+')</td>')
+				+  '<td width="50%">'+((whoRolls === SkillRoll.YOUROLL) ? ('<span style=' + design.selected_button + '>') : '[') + 'You roll' + ((whoRolls === SkillRoll.YOUROLL) ? '</span>' : '](!attk --button '+BT.SET_SAVE_ROLL+'|'+senderId+'|'+SkillRoll.YOUROLL+'|'+argString+')</td>')
+				+  '</tr></table></div>}}';
 
-		_.each( saveFormat.Saves, (saveObj,saveType) => buildSaveRoll( tokenID, charCS, sitMod, null, saveType, saveObj, isGM ));
+		_.each( saveFormat.Saves, (saveObj,saveType) => buildSaveRoll( tokenID, charCS, sitMod, null, saveType, saveObj, isGM, whoRolls ));
 					
 		sendResponse( charCS, content, senderId,flags.feedbackName,flags.feedbackImg,tokenID );
 	}
@@ -4533,7 +4676,8 @@ var attackMaster = (function() {
 			isGM = playerIsGM(senderId),
 			playerConfig = getSetPlayerConfig( senderId ),
 			manUpdate = playerConfig && playerConfig.manualCheckSaves,
-			content = '&{template:'+fields.defaultTemplate+'}{{name=Roll an Attribute Check for '+name+'}}'
+			whoRolls = ((!_.isUndefined(playerConfig.skillRoll)) ? playerConfig.skillRoll : SkillRoll.PCROLLS),
+			content = '&{template:'+fields.menuTemplate+'}{{name=Roll an Attribute Check for '+name+'}}'
 					+ (msg && msg.length ? '{{Section='+msg+'}}' : '');
 					
 		var listSaves = function( descNo, title, obj ) {
@@ -4548,35 +4692,93 @@ var attackMaster = (function() {
 				let target = parseInt(attrLookup(charCS,saveObj.save)) || 0;
 				txt += '<tr>'
 					+  '<td>['+save.dispName()+'](~'+charName+'|Do-not-use-'+save+'-save)</td>'
-//					+  '<td>'+(target != 0 ? '[['+target+']]' : '')+'</td>'
 					+  '<td>[['+target+']]</td>'
 					+  '<td>[['+mod+'+'+sitMod+'+'+DCval+']]</td>'
 					+  '</tr>';
 			});
 			txt += '</table>}}';
-			_.each( obj, (saveObj,saveType) => buildSaveRoll( tokenID, charCS, sitMod, DCval, saveType, saveObj, isGM, true ));
+			_.each( obj, (saveObj,saveType) => buildSaveRoll( tokenID, charCS, sitMod, DCval, saveType, saveObj, isGM, whoRolls, true ));
 			return txt;
 		};
 
 		content += listSaves( 1, 'Attribute', saveFormat.Attributes );
 		content += listSaves( 2, 'Check',	  saveFormat.Checks );
 
-		content += '{{desc7=Select a button above to roll an attribute check or '
+		content += '{{desc6=Select a button above to roll an attribute check or '
 				+  'optionally ['+(sitMod ? ('Situational Mod = '+sitMod) : 'Add Situational Modifier')+'](!attk --attr-check '+tokenID+'|?{Specify amount, + is beneficial, - is a penalty}|Situational Modifier set|'+(10-DCval)+')'
-//				+  ' and/or ['+(DCval ? ('DC'+(10-DCval)+' set') : 'Select a DC value')+'](!attk --attr-check '+tokenID+'|'+sitMod+'|DC value set|?{Enter value: DC}) before making the roll}}'
 				+  ' before making the roll}}'
-				+  '{{desc8=['+(!manUpdate ? '<span style=' + design.selected_button +'>' : '')+'Auto-check Saving Throws'+(!manUpdate ? '</span>' : '')+'](!attk --check-saves '+tokenID+'|'+BT.ATTR_CHECK+') to set saves using Race, Class, Level & MI data, or\n'
+				+  '{{desc7=['+(!manUpdate ? '<span style=' + design.selected_button +'>' : '')+'Auto-check Saving Throws'+(!manUpdate ? '</span>' : '')+'](!attk --check-saves '+tokenID+'|'+BT.ATTR_CHECK+') to set saves using Race, Class, Level & MI data, or\n'
 				+  '['+(manUpdate ? '<span style=' + design.selected_button +'>' : '')+'Manually check Saving Throws'+(manUpdate ? '</span>' : '') + '](!attk --setSaves '+tokenID+'||||attr-check) to manually change numbers}}';
 					
-		let saveNotes = attrLookup( charCS, fields.SaveNotes );
+		let saveNotes = attrLookup( charCS, fields.SaveNotes ),
+			argString = args.join('|');
 		if (saveNotes) {
-			content += '{{desc9=**Notes**\n'+saveNotes+'}}';
+			content += '{{desc8=**Notes**\n'+saveNotes+'}}';
 		}
+		content += '{{desc9=<div style="text-align: center"><table width="100%"><tr><td colspan="2" width="100%">**Change Dice Action**</td></tr><tr>'
+				+  '<td width="50%">'+((whoRolls === SkillRoll.PCROLLS) ? ('<span style=' + design.selected_button + '>') : '[') + 'PC rolls' + ((whoRolls === SkillRoll.PCROLLS) ? '</span>' : '](!attk --button '+BT.SET_ATTR_ROLL+'|'+senderId+'|'+SkillRoll.PCROLLS+'|'+argString+')</td>')
+				+  '<td width="50%">'+((whoRolls === SkillRoll.YOUROLL) ? ('<span style=' + design.selected_button + '>') : '[') + 'You roll' + ((whoRolls === SkillRoll.YOUROLL) ? '</span>' : '](!attk --button '+BT.SET_ATTR_ROLL+'|'+senderId+'|'+SkillRoll.YOUROLL+'|'+argString+')</td>')
+				+  '</tr></table></div>}}';
 
-//		_.each( saveFormat.Attributes, (saveObj,saveType) => buildSaveRoll( tokenID, charCS, sitMod, DCval, saveType, saveObj, isGM, true ));
-//		_.each( saveFormat.Checks, 	   (saveObj,saveType) => buildSaveRoll( tokenID, charCS, sitMod, DCval, saveType, saveObj, isGM, true ));
-					
 		sendResponse( charCS, content, senderId,flags.feedbackName,flags.feedbackImg,tokenID );
+	}
+	
+	/*
+	 * Make a menu for thieving skills
+	 */
+	 
+	var makeRogueCheckMenu = function( args, senderId ) {
+		
+		var tokenID = args[0],
+			sitMod = (parseInt((args[1] || 0),10) || 0),
+			msg = args[2] || '',
+			curToken = getObj('graphic',tokenID),
+			charCS  = getCharacter( tokenID ),
+			name =  curToken.get('name'),
+			charName = charCS.get('name'),
+			isGM = playerIsGM(senderId),
+			playerConfig = getSetPlayerConfig( senderId ),
+			whoRolls = ((!_.isUndefined(playerConfig.skillRoll)) ? playerConfig.skillRoll : SkillRoll.PCROLLS),
+			content = '&{template:'+fields.menuTemplate+'}{{name=Roll a Thieving Skill Check for '+name+'}}'
+					+ (msg && msg.length ? '{{Section='+msg+'}}' : '')
+					+ '{{desc=You may need to ask the GM to make this roll'
+					+ '<table>'
+					+ '<thead>'
+						+ '<th width="50%">Skill</th><th width="25%">Target</th>'
+					+ '</thead>';
+					
+		_.each( rogueSkills, (skillObj) => {
+			content += '<tr>'
+					+  '<td>['+skillObj.name.dispName()+'](~'+charName+'|Do-not-use-'+skillObj.name.replace(/_/g,'-')+'-check)</td>'
+					+  '<td>[[0+'+attrLookup(charCS,skillObj.save)+']]</td>'
+					+  '</tr>';
+		});
+				
+		content += '</table>}}'
+				+  '{{desc1=Select a button above to roll a skill check or '
+				+  '[Add Situational Modifier](!attk --thieve '+tokenID+'|?{What type of adjustment might be needed? + is beneficial, - is a penalty'
+															 +'&#124;Non-Standard Tools,?{Enter DM\'s adjustment for Non-Standard Thieves Tools + is beneficial - is a penalty&amp;#124;0&amp;#125;&amp;#124;Non-Standard Tools'
+															 +'&#124;Difficult Lock or Trap,?{Enter DM\'s adjustment for lock/trap difficulty + is beneficial - is a penalty&amp;#124;0&amp;#125;&amp;#124;Difficult Lock or Trap'
+															 +'&#124;Difficulty of Hiding,?{Enter DM\'s adjustment for ease or difficulty of hiding in shadows + is beneficial - is a penalty&amp;#124;0&amp;#125;&amp;#124;Difficulty of Hiding'
+															 +'&#124;Barriers to Hearing,?{Enter DM\'s adjustment for barriers to Detecting Noise + is beneficial - is a penalty&amp;#124;0&amp;#125;&amp;#124;Barriers to Hearing'
+															 +'&#124;Difficulty of Climb,?{{Enter DM\'s adjustment for ease or difficulty of climb + is beneficial - is a penalty&amp;#124;0&amp;#125;&amp;#124;Difficulty of Climb'
+															 +'&#124;Indecipherable Language,?{{Enter DM\'s adjustment for the difficulty of this language + is beneficial - is a penalty&amp;#124;0&amp;#125;&amp;#124;Indecipherable Language'
+															 +'&#124;DM adjustment,?{Ask DM for value of adjustment + is beneficial - is a penalty&amp;#124;0&amp;#125;&amp;#124;DM adjustment'
+															 +'&#124;None of the above,0})'
+				+  'currently [['+sitMod+']], '
+				+  'such as ***non-standard thieves tools, unusual difficulty of trap/climb*** etc. before making the roll}}'
+				+  '{{desc2=[Manually Update](!attk --set-thieving '+tokenID+') rogue skill values}}';
+				
+		let argString = args.join('|');
+					
+		content += '{{desc3=<div style="text-align: center"><table width="100%"><tr><td colspan="2" width="100%">**Change Dice Action**</td></tr><tr>'
+				+  '<td width="50%">'+((whoRolls === SkillRoll.PCROLLS) ? ('<span style=' + design.selected_button + '>') : '[') + 'PC rolls' + ((whoRolls === SkillRoll.PCROLLS) ? '</span>' : '](!attk --button '+BT.SET_SKILL_ROLL+'|'+senderId+'|'+SkillRoll.PCROLLS+'|'+argString+')</td>')
+				+  '<td width="50%">'+((whoRolls === SkillRoll.YOUROLL) ? ('<span style=' + design.selected_button + '>') : '[') + 'You roll' + ((whoRolls === SkillRoll.YOUROLL) ? '</span>' : '](!attk --button '+BT.SET_SKILL_ROLL+'|'+senderId+'|'+SkillRoll.YOUROLL+'|'+argString+')</td>')
+				+  '</tr></table></div>}}';
+
+		sendResponse( charCS, content, senderId, flags.feedbackName, flags.feedbackImg, tokenID );
+
+		_.each( rogueSkills, (skillObj,skillType) => buildRogueRoll( tokenID, charCS, sitMod, skillType, skillObj, isGM, whoRolls ));
 	}
 	
 	/*
@@ -4590,7 +4792,7 @@ var attackMaster = (function() {
 			curToken = getObj('graphic',tokenID),
 			charCS = getCharacter( tokenID ),
 			name = curToken.get('name'),
-			content = '&{template:'+fields.defaultTemplate+'}{{name=Set '+name+'\'s Saving Throws}}'
+			content = '&{template:'+fields.menuTemplate+'}{{name=Set '+name+'\'s Saving Throws}}'
 					+ ((msg && msg.length) ? '{{Section='+msg+'}}' : '')
 					+ '{{desc=<table><tr>'
 						+ '<td>Save</td><td>Base</td><td>Mod</td>'
@@ -4624,6 +4826,80 @@ var attackMaster = (function() {
 	}
 	
 	/*
+	 * Make a menu for updating rogue skills manually
+	 */
+	 
+	var makeModRogueSkillsMenu = function( args, senderId, msg ) {
+		
+		var tokenID = args[0],
+			curToken = getObj('graphic',tokenID),
+			charCS = getCharacter( tokenID ),
+			name = curToken.get('name'),
+			classes = classObjects( charCS, senderId ),
+			rogue = _.find( classes, c => c.base === 'rogue' ),
+			startPts = 0,
+			ptsPerLevel = 0,
+			levelPoints = 0,
+			totalLevelPoints = 0,
+			content = '&{template:'+fields.menuTemplate+'}{{name=Set '+name+'\'s Saving Throws}}'
+					+ '{{Section='+((msg && msg.length) ? msg : 'Drag chat window wider to see table')+'}}'
+					+ '{{Section1=Current thieve\'s armour is <span style='+design.green_button+'>'+attrLookup(charCS,fields.Armor_name)+'</span>}}'
+					+ '{{desc=<table width="100%"; table-layout="fixed";><tr width="100%"><th width="23%">Skill</th>';
+					
+		var dispSkill = function( skill, type, field ) {
+			let val = attrLookup(charCS,field) || 0;
+			if (isNaN(val)) val = 0;
+			if (type.dbName() === 'level') levelPoints += parseInt(val);
+			return ('<td>['+(attrLookup(charCS,field) || 0)+'](!attk --set-rogue-skill '+tokenID+'|'+skill+'|'+type+'|'+field[0]+'|?{Check vs '+skill+' '+type+'?|'+val+'})</td>');
+		};
+		
+		if (rogue) {
+			if (!isNaN(rogue.classData.roguePts) && (rogue.classData.roguePts != 0)) {
+				startPts = parseInt(rogue.classData.roguePts);
+				ptsPerLevel = (parseFloat(rogue.classData.roguePts) * 100) % 100;
+			} else {
+				switch (rogue.charClass) {
+				case 'bard':
+					startPts = 20;
+					ptsPerLevel = 15;
+					break;
+				case 'assassin':
+					startPts = 40;
+					ptsPerLevel = 20;
+					break;
+				default:
+					startPts = 60;
+					ptsPerLevel = 30;
+					break;
+				};
+			};
+			totalLevelPoints = (startPts - ptsPerLevel) + (ptsPerLevel * rogue.level);
+			setAttr( charCS, fields.RogueLevelPts, ((startPts-ptsPerLevel)+'+('+ptsPerLevel+'*@{'+fields.Rogue_level[0]+')}'));
+		};
+		
+		_.each( thiefSkillFactors, factor => {
+			content += '<th width="11%">'+factor+'</th>';
+		});
+		content += '</tr>';
+					
+		_.each( rogueSkills, skillObj => {
+			content += '<tr><th scope="row">' + skillObj.name.dispName() + '</th>';
+			_.each( skillObj.factors, (skillFactor,i) => {
+				content += dispSkill( skillObj.name, thiefSkillFactors[i], [skillFactor,'current'] );
+			});
+			content += '</tr>';
+		});
+		
+		let over = (totalLevelPoints < levelPoints);
+		content	+= '</table>}}'
+				+  '{{desc1='+(over ? '<span style='+design.selected_button+'>' : '')+'Total Level points remaining = [['+(totalLevelPoints - levelPoints)+']]'+(over ? '</span>' : '')+'}}'
+				+  '{{desc8=Select a button above to set the Skill Factor}}'
+				+  '{{desc9=Return to [Roll Thieving Skill](!attk --thieve '+tokenID+') menu}}';
+		
+		sendResponse(charCS,content,senderId,flags.feedbackName,flags.feedbackImg,tokenID);
+	}
+	
+	/*
 	 * Make a menu for accessing the attack API capabilities
 	 */
 	 
@@ -4632,7 +4908,7 @@ var attackMaster = (function() {
 		var tokenID = args[1],
 			tokenName = getObj('graphic',tokenID).get('name'),
 			charCS = getCharacter(tokenID),
-			content = '&{template:'+fields.defaultTemplate+'}{{name='+tokenName+'\'s Attack Actions}}'
+			content = '&{template:'+fields.menuTemplate+'}{{name='+tokenName+'\'s Attack Actions}}'
 					+ '{{desc=[Attack (Roll20 rolls)](!attk --attk-menu-hit '+tokenID+')\n'
 					+ '[Attack (You roll)](!attk --attk-roll '+tokenID+')\n'
 					+ (!state.attackMaster.weapRules.dmTarget || playerIsGM(senderId) ? '[Targeted Attack](!attk --attk-target '+tokenID+')\n' : '')
@@ -4655,69 +4931,26 @@ var attackMaster = (function() {
 			isGM = playerIsGM(senderId),
 			tokenName = getObj('graphic',tokenID).get('name'),
 			charCS = getCharacter(tokenID),
-			content = '&{template:'+fields.defaultTemplate+'}{{name='+tokenName+'\'s Other Actions}}'
+			checkForMIbag = attrLookup( charCS, fields.ItemContainerType ) || 1,
+			content = '&{template:'+fields.menuTemplate+'}{{name='+tokenName+'\'s Other Actions}}'
 					+ '{{subtitle=Maintenance}}'
 					+ '{{desc=[Saving Throws](!attk --save '+tokenID+')\n'
 					+ '[Attribute Check](!attk --attr-check '+tokenID+')\n'
+					+ '[Rogue Skill Check](!attk --thieve '+tokenID+')\n'
 					+ ((apiCommands.cmd && apiCommands.cmd.exists) ? ('[Manage Character Class](!cmd --class-menu '+tokenID+')\n') : ('<span style='+design.grey_button+'>Manage Character Class</span>'))
-					+ (isGM ? ('[Death](!setattr --fb-header &#64;{selected|token_name} Has Died --fb-content Making _CHARNAME_ as dead --charid &#64;{selected|character_id} --Check-for-MIBag|[&#91;&#64;{selected|Check-for-MIBag}%2&#93;]&#13;'
-									+ '!token-mod --ignore-selected --ids &#64;{selected|token_id} --set statusmarkers|dead)\n') : '')
-					+ ((apiCommands.magic && apiCommands.magic.exists) ? ('[Manage Light Sources](!magic --lightsources &#64;{selected|token_id})\n') : ('<span style='+design.grey_button+'>Manage Light Sources</span>'))
-					+ ((apiCommands.money && apiCommands.money.exists) ? ('[Manage Money](!money --money-menu &#64;{selected|token_id})\n') : ('<span style='+design.grey_button+'>Manage Money</span>'))
-					+ ((apiCommands.money && apiCommands.money.exists) ? ('[Out-of-Campaign activities](!money --training &#64;{selected|token_id})\n') : ('<span style='+design.grey_button+'>Out-of-Campaign activities</span>'))
-					+ (isGM ? '[Adjust Damage](!setattr --silent --charid &#64;{selected|character_id} --strengthdmg||&#63;{Damage adjustment?} --strnotes|\'Dmg bonus: &#63;{Damage adjustment?|0} because &#63;{Why?}\'&#13;'
-						+ '&#47;w gm **&#64;{Selected|Token_name}\'s new damage adjustment is [&#91;&#63;{Damage adjustment?|0}&#93;] because of &#63;{Why?}.**  Previous damage adjustment was &#91;[0+&#64;{selected|strengthdmg|max}]&#93;.)\n' : '')
+					+ (isGM ? ('[Death](!token-mod --ignore-selected --ids '+tokenID+' --set statusmarkers|dead tint_color|rgb&#40;1.0,1.0,1.0&#41; &#13;'
+									  +'!rounds --removetargetstatus '+tokenID+'|ALL &#13;'
+									  +'!setattr --fb-header &#64;{selected|token_name} Has Died --fb-content Making _CHARNAME_ as dead --charid '+charCS.id+' --Check-for-MIBag|[&#91;'+checkForMIbag+'%2&#93;])\n') : '')
+					+ ((apiCommands.magic && apiCommands.magic.exists) ? ('[Manage Light Sources](!magic --lightsources '+tokenID+')\n') : ('<span style='+design.grey_button+'>Manage Light Sources</span>'))
+					+ ((apiCommands.money && apiCommands.money.exists) ? ('[Manage Money](!money --money-menu '+tokenID+')\n') : ('<span style='+design.grey_button+'>Manage Money</span>'))
+					+ ((apiCommands.money && apiCommands.money.exists) ? ('[Out-of-Campaign activities](!money --training '+tokenID+')\n') : ('<span style='+design.grey_button+'>Out-of-Campaign activities</span>'))
+					+ (isGM ? '[Adjust Damage](!setattr --silent --charid '+charCS.id+' --strengthdmg||&#63;{Damage adjustment?} --strnotes|\'Dmg bonus: &#63;{Damage adjustment?|0} because &#63;{Why?}\'&#13;'
+						+ '&#47;w gm **'+tokenName+'\'s new damage adjustment is [&#91;&#63;{Damage adjustment?|0}&#93;] because of &#63;{Why?}.**  Previous damage adjustment was &#91;[0+&#64;{selected|strengthdmg|max}]&#93;.)\n' : '')
 					+'}}';
 		sendResponse( charCS, content, senderId,flags.feedbackName,flags.feedbackImg,tokenID );
 		return;
 	}
 	
-	/*
-	 * Make a configuration menu to allow the DM to select:
-	 * - strict mode: follow the rules precisely,
-	 * - house rules mode: follow "old fogies" house rules
-	 * - no restrictions: allow anything goes
-	 */
-	 
-	var makeConfigMenu = function( args, msg='' ) {
-		
-		var configButtons = function( flag, txtOn, cmdOn, txtOff, cmdOff ) {
-			var	buttons = '<td>'
-						+ (flag ? ('['+txtOn+']('+cmdOn+')</td><td><span style='+design.selected_button+'>'+txtOff+'</span>')
-								 : ('<span style='+design.selected_button+'>'+txtOn+'</span></td><td>['+txtOff+']('+cmdOff+')'))
-						+ '</td>';
-				return buttons;
-			};
-					
-		var content = '&{template:'+fields.defaultTemplate+'}{{name=Configure RPGMaster}}{{subtitle=AttackMaster}}'
-					+ (msg.length ? '{{ ='+msg+'}}' : '')
-					+ '{{desc=Select which configuration you wish for this campaign using the toggle buttons below.}}'
-					+ '{{desc1=<table>';
-				
-		content += '<tr><td>Menus</td>'+configButtons(state.MagicMaster.fancy, 'Plain menus', '!magic --config fancy-menus|false', 'Fancy menus', '!magic --config fancy-menus|true')+'</tr>'
-				+  '<tr><td>Player Targeted Attks</td>'+configButtons(!state.attackMaster.weapRules.dmTarget, 'Not Allowed', '!attk --config dm-target|true', 'Allowed by All', '!attk --config dm-target|false')+'</tr>'
-				+  '<tr><td>Allowed weapons</td>'+configButtons(state.attackMaster.weapRules.allowAll, 'Restrict Usage', '!attk --config all-weaps|false', 'All Can Use Any', '!attk --config all-weaps|true')+'</tr>'
-				+  (state.attackMaster.weapRules.allowAll ? '' : ('<tr><td>Restrict weapons</td>'+configButtons(!state.attackMaster.weapRules.classBan, 'Strict Denial', '!attk --config weap-class|true', 'Apply Penalty', '!attk --config weap-class|false')+'</tr>'))
-				+  '<tr><td>Weapon Speed</td>'+configButtons(!state.attackMaster.weapRules.initPlus, 'Plus affects speed', '!attk --config weap-plus|true', 'Magic Plus Ignored', '!attk --config weap-plus|false')+'</tr>'
-				+  '<tr><td>Allowed Armour</td>'+configButtons(state.attackMaster.weapRules.allowArmour, 'Strict Denial', '!attk --config all-armour|false', 'All Can Use Any', '!attk --config all-armour|true')+'</tr>'
-				+  '<tr><td>Non-Prof Penalty</td>'+configButtons(!state.attackMaster.weapRules.prof, 'Class Penalty', '!attk --config prof|true', 'Character Sheet', '!attk --config prof|false')+'</tr>'
-				+  '<tr><td>Ranged Mastery</td>'+configButtons(state.attackMaster.weapRules.masterRange, 'Not Allowed', '!attk --config master-range|false', 'Mastery Allowed', '!attk --config master-range|true')+'</tr>';
-		if (apiCommands['magic']) {
-			content += '<tr><td>Specialist Wizards</td>'+configButtons(!state.MagicMaster.spellRules.specMU, 'Specified in Rules', '!magic --config specialist-rules|true', 'Allow Any Specialist', '!magic --config specialist-rules|false')+'</tr>'
-					+  '<tr><td>Spells per Level</td>'+configButtons(!state.MagicMaster.spellRules.strictNum, 'Strict by Rules', '!magic --config spell-num|true', 'Allow to Set Misc', '!magic --config spell-num|false')+'</tr>'
-					+  '<tr><td>Spell Schools</td>'+configButtons(state.MagicMaster.spellRules.allowAll, 'Strict by Rules', '!magic --config all-spells|false', 'All Can Use Any', '!magic --config all-spells|true')+'</tr>'
-					+  '<tr><td>Powers by Level</td>'+configButtons(state.MagicMaster.spellRules.allowAnyPower, 'Strict by Rules', '!magic --config all-powers|false', 'All Can Use Any', '!magic --config all-powers|true')+'</tr>'
-					+  '<tr><td>Custom Objects</td>'+configButtons(!state.MagicMaster.spellRules.denyCustom, 'External Only', '!magic --config custom-spells|true', 'All Items Allowed', '!magic --config custom-spells|false')+'</tr>'
-					+  '<tr><td>Auto-Hide Items</td>'+configButtons(state.MagicMaster.spellRules.autoHide, 'GM Hide Manually', '!magic --config auto-hide|false', 'Auto-Hide if Possible', '!magic --config auto-hide|true')+'</tr>'
-					+  '<tr><td>Alphabetic Lists</td>'+configButtons(state.MagicMaster.spellRules.alphaLists, 'Alphabetic', '!magic --config alpha-lists|true', 'Not Alphabetic', '!magic --config alpha-lists|false')+'</tr>'
-					+  '<tr><td>Skill-Based Chance</td>'+configButtons(!state.MagicMaster.gmRolls, 'GM rolls', '!magic --config gm-rolls|true', 'Player rolls', '!magic --config gm-rolls|false')+'</tr>';
-		}
-		content += (apiCommands['cmd'] ? ('<tr><td colspan="2">[Set Default Token Bars](!cmd --button '+BT.AB_ASK_TOKENBARS+'|)</td></tr>') : '')
-				+  '</table>}}';
-		sendFeedback( content,flags.feedbackName,flags.feedbackImg );
-		return;
-	}
-		
 // --------------------------------------------------------------- Button press Handlers ----------------------------------------------
 
 	/*
@@ -4764,13 +4997,14 @@ var attackMaster = (function() {
 
 		if (!isMI) {
 			ammoIndex = Ammo.tableFind( fields.Ammo_name, ammoName );
+			if (isNaN(ammoIndex)) ammoIndex = Ammo.tableFind( fields.Ammo_miName, ammoName );
 			ammoMIname = Ammo.tableLookup( fields.Ammo_miName, ammoIndex) || ammoMIname;
 		} else {
 			ammoIndex = Ammo.tableFind( fields.Ammo_miName, ammoName ) || Ammo.tableFind( fields.Ammo_name, ammoName );
 		}
-		miIndex = MagicItems.tableFind( fields.Items_name, ammoMIname );
+		miIndex = MagicItems.tableFind( fields.Items_trueName, ammoMIname ) || MagicItems.tableFind( fields.Items_name, ammoMIname );
 		if (!isNaN(ammoIndex)) useAmmoQty = Ammo.tableLookup( fields.Ammo_setQty, ammoIndex ) != 0;
-			
+		
 		ammoQ = parseInt(Ammo.tableLookup( fields.Ammo_qty, ammoIndex )) || 0;
 		ammoM = parseInt(Ammo.tableLookup( fields.Ammo_maxQty, ammoIndex )) || ammoQ;
 		
@@ -4781,12 +5015,13 @@ var attackMaster = (function() {
 			miQ = parseInt(MagicItems.tableLookup( fields.Items_qty, miIndex )) || 0;
 			miM = parseInt(MagicItems.tableLookup( fields.Items_trueQty, miIndex )) || miQ;
 		}
+		
 		maxQty = isNaN(setMax) ? miM : (changeMax ? Math.max(miM + setMax,0) : setMax);
 		qty = isNaN(setQty) ? (qtyToMax ? maxQty : Math.min(miQ,maxQty)) : ((!changeQty) ? (maxToQty ? setQty : Math.min(setQty,maxQty)) : (maxToQty ? Math.max(miQ + setQty,0) : Math.min(Math.max(miQ + setQty,0),maxQty)));
 		if (maxToQty) {
 			maxQty = qty;
 		}
-
+		
 		if (!useAmmoQty) {
 			ammoQ = qty;
 			ammoM = maxQty;
@@ -4797,8 +5032,21 @@ var attackMaster = (function() {
 		if (!isNaN(miIndex)) {
 			MagicItems.tableSet( fields.Items_qty, miIndex, qty );
 			MagicItems.tableSet( fields.Items_trueQty, miIndex, maxQty );
-			miName = MagicItems.tableLookup( fields.Items_name, miIndex );
-		
+			
+			let change = (miM-maxQty);
+			if (MagicItems.tableLookup( fields.Items_type, miIndex ).toLowerCase().startsWith('chang')) {
+				let changeTo = resolveData( ammoMIname, fields.MagicItemDB, reItemData, charCS, {changeTo:reWeapSpecs.changeTo}, miIndex ).parsed.changeTo;
+				if (changeTo) {
+					let changeRow = MagicItems.tableFind( fields.Items_trueName, changeTo );
+					if ((change > 0) && _.isUndefined(changeRow)) {
+						sendAPI( fields.magicMaster+' --button STORE-MI|'+tokenID+'||'+changeTo+'|'+change+'|silent' );
+					} else {
+						MagicItems.tableSet( fields.Items_qty, changeRow, (parseInt(MagicItems.tableLookup( fields.Items_qty, changeRow ) || 0)+change) );
+						MagicItems.tableSet( fields.Items_trueQty, changeRow, (parseInt(MagicItems.tableLookup( fields.Items_trueQty, changeRow ) || 0)+change) );
+					};
+				};
+			};
+
 			if (maxQty == 0) {
 				ammoDef = abilityLookup( fields.WeaponDB, ammoMIname, charCS );
 				if (ammoDef.obj && ammoDef.obj[1] && (['charged','rechargeable','discharging'].includes((ammoDef.obj[1].charge || '').toLowerCase()))) {
@@ -4807,7 +5055,7 @@ var attackMaster = (function() {
 				}
 			}
 			ammoIndex = Ammo.table[1]-1;
-			while(!_.isUndefined(ammoMIname = Ammo.tableLookup(fields.Ammo_miName, ++ammoIndex, false))) {
+			while(!_.isUndefined(miName = Ammo.tableLookup(fields.Ammo_miName, ++ammoIndex, false))) {
 				if (ammoMIname == miName) {
 					Ammo.tableSet( fields.Ammo_qty, ammoIndex, ammoQ );
 					Ammo.tableSet( fields.Ammo_maxQty, ammoIndex, ammoM );
@@ -4816,6 +5064,7 @@ var attackMaster = (function() {
 		} else if (!isNaN(ammoIndex) && ammoIndex >= -1) {
 			Ammo.tableSet( fields.Ammo_qty, ammoIndex, ammoQ );
 			Ammo.tableSet( fields.Ammo_maxQty, ammoIndex, ammoM );
+		log('handleAmmoChange: item '+ammoMIname+' not found as item, so set ammo qty = '+ammoQ+'/'+ammoM);
 		}
 		if (!silent) {
 			makeAmmoMenu( args, senderId );
@@ -4852,7 +5101,7 @@ var attackMaster = (function() {
 	 * hogging the processing power...
 	 */
 	 
-	async function handleChangeWeapon ( args, senderId, silent=false, noCurse=false ) {
+	async function handleChangeWeapon ( args, senderId, silent=false, noCurse=false ) {  // .obj
 
 		try {
 			var cmd = (args[0] || '').replace('-NOCURSE',''),
@@ -4878,9 +5127,10 @@ var attackMaster = (function() {
 				isGM = playerIsGM(senderId),
 				weaponDB = fields.WeaponDB,
 				cursed = false,
+				weaponSpecs = ['-','-','melee','1','-'],
 				lentLeftID, lentRightID, lentBothID,
-				weapon, trueWeapon, weaponSpecs, weaponToHit, weaponQty, weapData,
-				item, i, hand, index, sheathed;
+				weapon, trueWeapon, weaponToHit, weaponQty, weapData,
+				item, i, hand, index, sheathed, oldWeaponDB;
 				
 			weaponInfo.MELEE = getTable( charCS, fieldGroups.MELEE );
 			weaponInfo.DMG = getTable( charCS, fieldGroups.DMG );
@@ -4889,6 +5139,19 @@ var attackMaster = (function() {
 			weaponInfo.MAGIC = getTable( charCS, fieldGroups.MAGIC );
 			if (!_.isUndefined( fieldGroups.WEAP )) weaponInfo.WEAP = getTable( charCS, fieldGroups.WEAP );
 			weaponInfo.ammoTypes = [];
+			
+			// Check if selection is a number or a item name
+			
+			if (selection === '-') {
+				r = Items.tableFind( fields.Items_name, '-' );
+				if (isNaN(r)) {
+					Items = Items.addTableRow();
+					r = Items.sortKeys.length - 1;
+				}
+			}
+			if (isNaN(r)) r = Items.tableFind( fields.Items_trueName, selection );
+			if (isNaN(r)) throw new Error('handleChangeWeapon: Can\'t find weapon '+selection);
+			if (!(/\d+(?::\d+)?/.test(selection))) selection = String(r);
 				
 			// First, check there are enough rows in the InHand table
 			
@@ -4957,12 +5220,13 @@ var attackMaster = (function() {
 					return;
 				};
 				weaponSpecs = item.specs(/}}\s*Specs\s*=(.*?){{/im);
-				weaponToHit = item.data(/}}\s*ToHitData\s*=(.*?){{/im);
-				weaponSpecs = weaponToHit ? weaponSpecs.slice(0,weaponToHit.length) : undefined;
-				handedness = row < 2 ? 1 : (weaponSpecs ? weaponSpecs.reduce((hands, weapon) => Math.max( hands, (parseInt(weapon[3])||1) ), 1) : 1);
-//				if (twoHanded) handedness = Math.min(handedness,2);
+				weaponToHit = resolveData( trueWeapon, weaponDB, reToHitData, charCS, {name:reWeapSpecs.name}, r).raw;
+				weaponSpecs = (weaponToHit && weaponToHit.length) ? weaponSpecs.slice(0,weaponToHit.length) : ['-','-','melee','1','-'];
+				handedness = row < 2 ? 1 : weaponSpecs.reduce((hands, weapon) => Math.max( hands, (parseInt(weapon[3])||1) ), 1);
 				if (twoHanded) handedness = Math.max(handedness,2);
 			}
+			
+			oldWeaponDB = InHandTable.tableLookup( fields.InHand_db, row ) || fields.WeaponDB;
 			
 			// Next, blank the quiver table
 			
@@ -4975,6 +5239,10 @@ var attackMaster = (function() {
 				setAttr( charCS, fields.Equip_lentHands, 0 );
 				sendAPI('!attk --lend-a-hand '+tokenID+'|'+lentBothID+'|'+lentHands+'|'+BT.BOTH, null, 'attk handleChangeWeapon');
 			}
+			
+			// Check if this is a dancing weapon
+			
+			weapData = resolveData( trueWeapon, weaponDB, reItemData, charCS, {on:reWeapSpecs.on,dancer:reWeapSpecs.dancer}, r ).parsed;
 
 			// Then add the weapon to the InHand table
 			
@@ -4984,6 +5252,8 @@ var attackMaster = (function() {
 			values[fields.InHand_column[0]][fields.InHand_column[1]] = c;
 			values[fields.InHand_handedness[0]][fields.InHand_handedness[1]] = handedness;
 			values[fields.InHand_db[0]][fields.InHand_db[1]] = weaponDB;
+			values[fields.InHand_type[0]][fields.InHand_type[1]] = (!item || !item.obj ? weaponSpecs[0][2] : item.obj[1].type);
+			values[fields.InHand_dancer[0]][fields.InHand_dancer[1]] = weapData.dancer;
 			
 			switch (args[0].toUpperCase()) {
 			case BT.BOTH:
@@ -5008,7 +5278,6 @@ var attackMaster = (function() {
 			// If weapon requires more than 1 hand, blank the following rows that
 			// represent hands holding this weapon
 			
-//			i = twoHanded ? 2 : handedness;
 			i = handedness;
 			hand = row;
 			while (i>1) {
@@ -5016,7 +5285,7 @@ var attackMaster = (function() {
 				i--;
 			}
 			
-			if (!silent) setTimeout(() => makeChangeWeaponMenu( args, senderId, 'Now using '+weapon+'. ' ), 50);
+			if (!silent) setTimeout(() => makeChangeWeaponMenu( args, senderId, 'Now using '+weapon+'. ' ), 5);
 			
 			// Next add the new weapon to the weapon tables and 
 			// at the same time check every weapon InHand for ammo to 
@@ -5027,23 +5296,23 @@ var attackMaster = (function() {
 			// Then remove any weapons or ammo from the weapon tables that 
 			// are not currently inHand (in the InHand or Quiver tables)
 
-			sheathed = filterWeapons( tokenID, charCS, InHandTable, Quiver, weaponInfo, 'MELEE', [] );
-			sheathed = filterWeapons( tokenID, charCS, InHandTable, Quiver, weaponInfo, 'RANGED', sheathed );
-			sheathed = filterWeapons( tokenID, charCS, InHandTable, Quiver, weaponInfo, 'DMG', sheathed );
-			sheathed = filterWeapons( tokenID, charCS, InHandTable, Quiver, weaponInfo, 'AMMO', sheathed );
-			sheathed = filterWeapons( tokenID, charCS, InHandTable, Quiver, weaponInfo, 'MAGIC', sheathed );
-			if (!_.isUndefined( weaponInfo.WEAP )) sheathed = filterWeapons( tokenID, charCS, InHandTable, Quiver, weaponInfo, 'WEAP', sheathed );
+			sheathed = filterWeapons( tokenID, charCS, InHandTable, Quiver, weaponInfo, 'MELEE', [], oldWeaponDB );
+			sheathed = filterWeapons( tokenID, charCS, InHandTable, Quiver, weaponInfo, 'RANGED', sheathed, oldWeaponDB );
+			sheathed = filterWeapons( tokenID, charCS, InHandTable, Quiver, weaponInfo, 'DMG', sheathed, oldWeaponDB );
+			sheathed = filterWeapons( tokenID, charCS, InHandTable, Quiver, weaponInfo, 'AMMO', sheathed, oldWeaponDB );
+			sheathed = filterWeapons( tokenID, charCS, InHandTable, Quiver, weaponInfo, 'MAGIC', sheathed, oldWeaponDB );
+			if (!_.isUndefined( weaponInfo.WEAP )) sheathed = filterWeapons( tokenID, charCS, InHandTable, Quiver, weaponInfo, 'WEAP', sheathed, oldWeaponDB );
 			
-			sendAPImacro(curToken,'',trueWeapon,'-inhand');
-			
-			if (item && item.obj) {
-				weapData = item.obj[1].body.match(/weapdata\s*?=\s*?(\[.*?\])/im);
-				if (weapData) {
-					weapData = parseData(weapData[1], reSpellSpecs, false);
-					if (weapData.on) {
-						sendAPI( parseStr(weapData.on).replace(/@{\s*selected\s*\|\s*token_id\s*}/ig,tokenID)
-													  .replace(/{\s*selected\s*\|/ig,'{'+charCS.get('name')+'|'), null, 'attk handleChangeWeapon 2');
-					};
+			if (!weapData.dancer && !weapData.on) {
+				sendAPImacro(curToken,'',trueWeapon,'-inhand');	
+			} else {
+				if (weapData.dancer) {
+					sendAPI( fields.roundMaster+' --dancer inhand|'+tokenID+'|'+trueWeapon+'|'+weaponSpecs[0][2]+'|'+weapData.dancer );
+				};
+				if (weapData.on) {
+					setTimeout(() => sendAPI( parseStr(weapData.on).replace(/@{\s*selected\s*\|\s*token_id\s*}/ig,tokenID)
+												  .replace(/{\s*selected\s*\|/ig,'{'+charCS.get('name')+'|'),
+						null, 'attk handleChangeWeapon 2'), 2000);
 				};
 			};
 			
@@ -5053,6 +5322,9 @@ var attackMaster = (function() {
 			
 			checkCurrentStyles( charCS, InHandTable );
 			doCheckAC( [tokenID], senderId, [], true );
+			setAttr( charCS, [fields.Init_hand[0]+'0',fields.Init_hand[1]], '' );
+			setAttr( charCS, [fields.Init_hand[0]+'1',fields.Init_hand[1]], '' );
+			setAttr( charCS, [fields.Init_hand[0]+'2',fields.Init_hand[1]], '' );
 			
 			return;
 		} catch (e) {
@@ -5066,7 +5338,9 @@ var attackMaster = (function() {
 	 
 	var handleChangeRings = function( args, senderId, silent=false ) {
 		
-		var left = args[0] == BT.LEFTRING,
+		var noCurse = args[0].toUpperCase().includes('-NOCURSE'),
+			cmd = args[0].replace('-NOCURSE',''),
+			left = cmd == BT.LEFTRING,
 			tokenID = args[1],
 			selection = args[2],
 			charCS = getCharacter(tokenID),
@@ -5076,10 +5350,19 @@ var attackMaster = (function() {
 			item, trueItem, ringData;
 			
 		if (ring != '-') {
-			trueItem = getAbility(fields.MagicItemDB, trueRing, charCS, false);
-			ringData = trueItem.obj[1].body.match(/(?:ring|ac)data\s*?=\s*?(\[.*?\])/im);
-			if (ringData) {
-				ringData = parseData(ringData[1], reSpellSpecs, false);
+			if (!noCurse) {
+				let Items = getTable( charCS, fieldGroups.MI );
+				let ringRow = Items.tableFind( fields.Items_trueName, trueRing );
+				if (!_.isUndefined(ringRow)) {
+					let ringType = Items.tableLookup( fields.Items_trueType, ringRow );
+					if (ringType.toLowerCase().includes('cursed')) {
+						args[0] += '-NOCURSE';
+						sendParsedMsg(tokenID,messages.cursedRing + '{{desc9=I have a means to [change it anyway](!attk --button '+args.join('|')+')}}',senderId);
+						return;
+					}
+				};
+						
+				ringData = resolveData( trueRing, fields.MagicItemDB, reRingData, charCS, {}, ringRow, [], false ).parsed;
 				if (ringData.off) {
 					sendAPI( parseStr(ringData.off).replace(/@{\s*selected\s*\|\s*token_id\s*}/ig,tokenID)
 												   .replace(/{\s*selected\s*\|/ig,'{'+charName+'|'), null, 'attk handleChangeRings 1');
@@ -5089,27 +5372,25 @@ var attackMaster = (function() {
 		if (!isNaN(selection)) {
 			ring = attrLookup( charCS, fields.Items_name, fields.Items_table, selection ) || '-';
 			trueRing = attrLookup( charCS, fields.Items_trueName, fields.Items_table, selection ) || ring;
-			item = getAbility(fields.MagicItemDB, ring, charCS, true);
-			trueItem = getAbility(fields.MagicItemDB, trueRing, charCS, true);
+			item = getAbility(fields.MagicItemDB, ring, charCS, true, null, null, selection);
+			trueItem = getAbility(fields.MagicItemDB, trueRing, charCS, true, null, null, selection);
 			if (!item.obj || !trueItem.obj) {
 				sendDebug('handleChangeRings not found '+ring+' or '+trueRing);
 				return;
 			};
 			setAttr( charCS, (left ? fields.Equip_leftRing : fields.Equip_rightRing), ring );
 			setAttr( charCS, (left ? fields.Equip_leftTrueRing : fields.Equip_rightTrueRing), trueRing );
-			ringData = trueItem.obj[1].body.match(/(?:ring|ac)data\s*?=\s*?(\[.*?\])/im);
-			if (ringData) {
-				ringData = parseData(ringData[1], reSpellSpecs, false);
-				if (ringData.on) {
-					sendAPI( parseStr(ringData.on).replace(/@{\s*selected\s*\|\s*token_id\s*}/ig,tokenID)
-												  .replace(/{\s*selected\s*\|/ig,'{'+charName+'|'), null, 'attk handleChangeRings 2');
-				};
+			ringData = resolveData( trueRing, fields.MagicItemDB, reRingData, charCS, {}, selection, [], false ).parsed;
+			if (ringData.on) {
+				sendAPI( parseStr(ringData.on).replace(/@{\s*selected\s*\|\s*token_id\s*}/ig,tokenID)
+											  .replace(/{\s*selected\s*\|/ig,'{'+charName+'|'), null, 'attk handleChangeRings 2');
 			};
 		} else {
 			ring = 'no ring';
 			setAttr( charCS, (left ? fields.Equip_leftRing : fields.Equip_rightRing), '-' );
 			setAttr( charCS, (left ? fields.Equip_leftTrueRing : fields.Equip_rightTrueRing), '-' );
 		}
+		args[0] = cmd;
 		doCheckAC( [tokenID], senderId, [], true );
 		if (!silent) setTimeout(() => makeChangeWeaponMenu( args, senderId, 'Now using '+ring+'. ' ), 50);
 		return;
@@ -5119,7 +5400,7 @@ var attackMaster = (function() {
 	 * Handle the addition or removal of autonomous weapons, such as 
 	 * dancing weapons*/
 	 
-	async function handleDancingWeapons ( args, senderId ) {
+	async function handleDancingWeapons ( args, senderId, selected ) {
 		
 		try {
 			var isAdd = (args[0] == BT.AUTO_ADD),
@@ -5130,26 +5411,43 @@ var attackMaster = (function() {
 				charCS = getCharacter(tokenID),
 				noHands = parseInt(attrLookup(charCS,fields.Equip_handedness)) || 2,
 				dancing = parseInt(attrLookup(charCS,fields.Equip_dancing)) || 0,
-				MagicItems = getTableField( charCS, {}, fields.Items_table, fields.Items_name ),
+				Items = getTable( charCS, fieldGroups.MI ),
 				weaponInfo = {},
 				InHandTable = getTable(charCS, fieldGroups.INHAND),
 				Quiver = getTable(charCS, fieldGroups.QUIVER),
-				i = InHandTable.tableFind( fields.InHand_name, weapon ),
-				weaponIndex = MagicItems.tableFind( fields.Items_name, weapon ),
+				i = InHandTable.tableFind( fields.InHand_trueName, weapon ),
+				rocket = _.isUndefined(i),
+				weaponName, weaponType, weaponIndex, dancer, attkCount,
 				slotName, handedness, weap, weaponSpecs, values, msg, sheathed;
-
+				
 			weaponInfo.MELEE = getTable( charCS, fieldGroups.MELEE );
 			weaponInfo.DMG = getTable( charCS, fieldGroups.DMG );
 			weaponInfo.RANGED = getTable( charCS, fieldGroups.RANGED );
 			weaponInfo.AMMO = getTable( charCS, fieldGroups.AMMO );
 			weaponInfo.ammoTypes = [];
 
+			if (rocket) {
+				weaponIndex = Items.tableFind( fields.Items_trueName, weapon );
+				weaponName = Items.tableLookup( fields.Items_name, weaponIndex );
+				weaponType = Items.tableLookup( fields.Items_type, weaponIndex );
+				handedness = 0;
+				dancer = resolveData( weapon, fields.WeaponDB, reItemData, charCS, {dancer:reWeapSpecs.dancer}, weaponIndex ).parsed.dancer;
+				attkCount = resolveData( weapon, fields.WeaponDB, reToHitData, charCS, {noAttks:reWeapSpecs.noAttks}, weaponIndex ).parsed.noAttks;
+			} else {
+				weaponIndex = InHandTable.tableLookup( fields.InHand_index, i );
+				weaponName = InHandTable.tableLookup( fields.InHand_name, i );
+				weaponType = InHandTable.tableLookup( fields.InHand_type, i );
+				handedness = InHandTable.tableLookup( fields.InHand_handedness, i );
+				dancer = InHandTable.tableLookup( fields.InHand_dancer, i );
+				attkCount = InHandTable.tableLookup( fields.InHand_attkCount, i );
+			}
+			
 			if (_.isUndefined(weaponIndex)) {
-				log('handleDancingWeapons unable to find '+weapon);
-				sendDebug('handleDancingWeapons unable to find '+weapon);
+				sendError('handleDancingWeapons unable to find '+weapon);
 				return;
 			}
-			if (!_.isUndefined(i)) {
+			
+			if (!rocket) {
 				InHandTable.addTableRow( i );
 			}
 			
@@ -5163,25 +5461,29 @@ var attackMaster = (function() {
 				weap = abilityLookup( fields.WeaponDB, weapon, charCS );
 				weaponSpecs = weap.specs(/}}\s*Specs\s*=(.*?){{/im);
 				values = initValues(fieldGroups.INHAND.prefix),
-				values[fields.InHand_handedness[0]][fields.InHand_handedness[1]] = handedness = weaponSpecs ? (parseInt(weaponSpecs[0][3]) || 1) : 1;
-				values[fields.InHand_name[0]][fields.InHand_name[1]] = weapon;
-				values[fields.InHand_trueName[0]][fields.InHand_trueName[1]] = (attrLookup( charCS, fields.Items_trueName, fields.Items_table, weaponIndex ) || weapon);
+				values[fields.InHand_handedness[0]][fields.InHand_handedness[1]] = handedness;
+				values[fields.InHand_name[0]][fields.InHand_name[1]] = weaponName;
+				values[fields.InHand_trueName[0]][fields.InHand_trueName[1]] = weapon;
 				values[fields.InHand_index[0]][fields.InHand_index[1]] = weaponIndex;
+				values[fields.InHand_db[0]][fields.InHand_db[1]] = fields.WeaponDB;
+				values[fields.InHand_type[0]][fields.InHand_type[1]] = weaponType;
+				values[fields.InHand_dancer[0]][fields.InHand_dancer[1]] = dancer;
+				values[fields.InHand_attkCount[0]][fields.InHand_attkCount[1]] = attkCount;
 				
-				InHandTable = checkInHandRows( charCS, InHandTable, noHands+dancing+1 );
+				i = noHands + dancing;
+				InHandTable = checkInHandRows( charCS, InHandTable, i+1 );
 				
-				i = InHandTable.sortKeys.length;
 				do {
-					slotName = InHandTable.tableLookup( fields.InHand_name, --i );
-				} while (slotName != '-' && i > fields.InHand_table[1] );
-				if (slotName != '-') {
+					slotName = InHandTable.tableLookup( fields.InHand_name, ++i, false );
+				} while (!_.isUndefined(slotName) && slotName != '-');
+				if (_.isUndefined(slotName)) {
 					sendError('Unable to add '+weapon+' as a Dancing weapon' );
 				} else {
-					InHandTable.addTableRow( i, values );
+					InHandTable = InHandTable.addTableRow( i, values );
 				}
 				setAttr( charCS, fields.Equip_dancing, (dancing+1) );
-				sendPublic( getObj('graphic',tokenID).get('name')+' lets go of their '+weapon+' which continues to fight by itself' );
-				msg = weapon+' has started *Dancing!* and will automatically be added to Initiative rolls';
+				if (!rocket) sendPublic( getObj('graphic',tokenID).get('name')+' lets go of their '+weapon+' which continues to fight by itself' );
+				msg = weapon+(rocket ? ' leaps out of your equipment and starts attacking by itself!' : ' has started *Dancing!* and will automatically be added to Initiative rolls');
 			}
 			[weaponInfo,Quiver] = await updateAttackTables( charCS, senderId, InHandTable, Quiver, weaponInfo, i, weaponIndex, handedness );
 			sheathed = filterWeapons( tokenID, charCS, InHandTable, Quiver, weaponInfo, 'MELEE', [] );
@@ -5191,7 +5493,7 @@ var attackMaster = (function() {
 			if (!_.isUndefined( weaponInfo.WEAP )) sheathed = filterWeapons( tokenID, charCS, InHandTable, Quiver, weaponInfo, 'AMMO', sheathed );
 
 			if (isAdd) sendAPImacro(curToken,'',weapon,'-dancing');
-			setTimeout(() => makeChangeWeaponMenu( args, senderId, msg ), 50);
+			setTimeout(() => (rocket ? doAttk([tokenID,msg],senderId,Attk.USER,selected) : makeChangeWeaponMenu( args, senderId, msg )), 50);
 		} catch (e) {
 			sendCatchError('AttackMaster',msg_orig[senderId],e);
 		}
@@ -5236,6 +5538,7 @@ var attackMaster = (function() {
 									|| attkName.dbName() == weapon
 									|| (typeName.dbName().split('|').includes(weapon))
 									|| (superType.dbName().includes(weapon))) {
+
 					weapIndex = i;
 					_.each( weapData, (val,key) => {
 						var oldVal, ranges, rangeMod;
@@ -5332,7 +5635,7 @@ var attackMaster = (function() {
 				msg = 'Weapon '+weapon+' not found, so no primary weapon set';
 			}
 		}
-		msg = '&{template:'+fields.defaultTemplate+'}{{name=Setting Primary Weapon}}'
+		msg = '&{template:'+fields.menuTemplate+'}{{name=Setting Primary Weapon}}'
 			+ '{{desc='+msg+'.}}';
 		sendResponse(charCS,msg,senderId,flags.feedbackName,flags.feedbackImg,tokenID);
 		return;
@@ -5560,7 +5863,7 @@ var attackMaster = (function() {
 		}
 		if (isNaN(MIrowref) || MIrowref<0) {
 			sendDebug('handleRemoveMI: invalid row reference passed');
-			sendError('Internal miMaster error');
+			sendError('Internal attackMaster error');
 			return;
 		}
 		
@@ -5581,6 +5884,37 @@ var attackMaster = (function() {
 		return;
 	};
 	
+	/*
+	 * Handle a user selection of who rolls dice for skill and save checks
+	 */
+	 
+	var handleChooseRoller = function( args ) {
+		
+		var cmd = args[0],
+			senderId = args[1],
+			whoRolls = args[2],
+			playerConfig = getSetPlayerConfig( senderId ),
+			args = args.slice(3);
+			
+		playerConfig.skillRoll = whoRolls;
+		getSetPlayerConfig( senderId, playerConfig );
+		switch (cmd) {
+		case BT.SET_SKILL_ROLL:
+			makeRogueCheckMenu( args, senderId );
+			break;
+		case BT.SET_SAVE_ROLL:
+			makeSavingThrowMenu( args, senderId );
+			break;
+		case BT.SET_ATTR_ROLL:
+			makeAttributeCheckMenu( args, senderId );
+			break;
+		default:
+			sendDebug('handleChooseRoller: invalid command '+cmd);
+			sendError('Internal attackMaster error');
+			break;
+		};
+	}
+	
 // ------------------------------------------------------------- Command Action Functions ---------------------------------------------
 
 	/**
@@ -5590,7 +5924,7 @@ var attackMaster = (function() {
 	var showHelp = function() {
 		
 		var handoutIDs = getHandoutIDs();
-		var content = '&{template:'+fields.defaultTemplate+'}{{title=AttackMaster Help}}{{AttackMaster Help=For help on using AttackMaster, and the !attk commands, [**Click Here**]('+fields.journalURL+handoutIDs.AttackMasterHelp+')}}{{Weapons & Armour DB Help=For help on the Weapons, Ammo and Armour databases, [**Click Here**]('+fields.journalURL+handoutIDs.WeaponArmourDatabaseHelp+')}}{{Attacks Database=For help on using and adding Attack Templates and the Attacks Database, [**Click Here**]('+fields.journalURL+handoutIDs.AttacksDatabaseHelp+')}}{{Class Database=For help on using and adding to the Class Database, [**Click Here**]('+fields.journalURL+handoutIDs.ClassRaceDatabaseHelp+')}}{{Character Sheet Setup=For help on setting up character sheets for use with RPGMaster APIs, [**Click Here**]('+fields.journalURL+handoutIDs.RPGMasterCharSheetSetup+').}}{{RPGMaster Templates=For help using RPGMaster Roll Templates, [**Click Here**]('+fields.journalURL+handoutIDs.RPGMasterLibraryHelp+')}}';
+		var content = '&{template:'+fields.menuTemplate+'}{{title=AttackMaster Help}}{{AttackMaster Help=For help on using AttackMaster, and the !attk commands, [**Click Here**]('+fields.journalURL+handoutIDs.AttackMasterHelp+')}}{{Weapons & Armour DB Help=For help on the Weapons, Ammo and Armour databases, [**Click Here**]('+fields.journalURL+handoutIDs.WeaponArmourDatabaseHelp+')}}{{Attacks Database=For help on using and adding Attack Templates and the Attacks Database, [**Click Here**]('+fields.journalURL+handoutIDs.AttacksDatabaseHelp+')}}{{Class Database=For help on using and adding to the Class Database, [**Click Here**]('+fields.journalURL+handoutIDs.ClassRaceDatabaseHelp+')}}{{Character Sheet Setup=For help on setting up character sheets for use with RPGMaster APIs, [**Click Here**]('+fields.journalURL+handoutIDs.RPGMasterCharSheetSetup+').}}{{RPGMaster Templates=For help using RPGMaster Roll Templates, [**Click Here**]('+fields.journalURL+handoutIDs.RPGMasterLibraryHelp+')}}';
 		
 		sendFeedback(content,flags.feedbackName,flags.feedbackImg); 
 	};
@@ -5607,14 +5941,12 @@ var attackMaster = (function() {
 				
 			if (dbName && dbName.length) {
 				let dbLabel = dbName.replace(/-/g,'_');
-				if (!dbNames[dbLabel]) {
-					let dbList = Object.keys(dbNames).filter(k => k.startsWith(dbLabel));
-					if (dbList && dbList.length) {
-						sendFeedback('&{template:'+fields.messageTemplate+'}{{title=Extract Database}}{{desc=Multiple databases start with '+dbName+'. [Select the one you want](!magic --extract-db ?{Choose which to extract|'+dbList.join('|')+'}) }}',senderId);
-						return;
-					} else {
-						sendError('Not found database '+dbName);
-					}
+				let dbList = Object.keys(dbNames).filter(k => k.startsWith(dbLabel));
+				if (dbList && dbList.length > 1) {
+					sendFeedback('&{template:'+fields.messageTemplate+'}{{title=Extract Database}}{{desc=Multiple databases start with '+dbName+'. [Select the one you want](!magic --extract-db ?{Choose which to extract|'+dbList.join('|')+'}) }}',senderId);
+					return;
+				} else if (!dbList || !dbList.length || !dbNames[dbLabel]) {
+					sendError('Not found database '+dbName);
 				} else {
 					log('Updating database '+dbName);
 					sendFeedback('Updating database '+dbName,flags.feedbackName,flags.feedbackImg);
@@ -5809,7 +6141,7 @@ var attackMaster = (function() {
 		args.unshift('');
 		handleModWeapon( args, silent );
 		if (!silent) {
-			let content = '&{template:'+fields.defaultTemplate+'}{{name=Weapon Specification Changed}}'
+			let content = '&{template:'+fields.menuTemplate+'}{{name=Weapon Specification Changed}}'
 						+ '{{desc='+getObj('graphic',tokenID).get('name')+'\'s '+weaponName+' has had a modification}}';
 			sendResponse( charCS, content, senderId,flags.feedbackName,flags.feedbackImg, tokenID );
 		} else {
@@ -5920,7 +6252,7 @@ var attackMaster = (function() {
 	var doChangeWeapon = function( args, senderId, selected ) {
 		
 		if (!args) {args = [];}
-
+		
 		if (!args[0] && selected && selected.length) {
 			args[0] = selected[0]._id;
 		} else if (!args[0]) {
@@ -5999,7 +6331,7 @@ var attackMaster = (function() {
         };
 
         args.unshift((args[2] || '').toUpperCase()=='STOP' ? BT.AUTO_DELETE : BT.AUTO_ADD);
-		handleDancingWeapons( args, senderId );
+		handleDancingWeapons( args, senderId, selected );
 		return;
 	}
 	
@@ -6050,6 +6382,15 @@ var attackMaster = (function() {
 		
 		silent = silent || _.isUndefined(weapTable.INHAND.tableFind( fields.InHand_name, weapon )) || _.isUndefined(weapTable.INHAND.tableFind( fields.InHand_trueName, weapon ));
 		
+		let inhandRow = weapTable.INHAND.tableFind( fields.InHand_trueName, weapon ) || weapTable.INHAND.tableFind( fields.InHand_name, weapon ),
+			itemRow = _.isUndefined(inhandRow) ? undefined : weapTable.INHAND.tableLookup( fields.InHand_index, inhandRow ),
+			cmd = resolveData( weapon, fields.MagicItemDB, reItemData, charCS, {off:reWeapSpecs.off}, itemRow ).parsed.off;
+			
+		silent = silent || _.isUndefined(inhandRow);
+		if (!_.isUndefined(inhandRow) && cmd && cmd.length) {
+			sendAPI( parseStr(cmd).replace(/@{\s*selected\s*\|\s*token_id\s*}/ig,tokenID)
+										   .replace(/{\s*selected\s*\|/ig,'{'+charCS.get('name')+'|'), null, 'attk doBlankWeapon');
+		};
 		blankWeapon( charCS, weapTable, _.keys(weapTable), weapon );
 		
 		if (!silent) {
@@ -6125,13 +6466,14 @@ var attackMaster = (function() {
 			silent = silent || (silentCmd.toLowerCase().trim() == 'silent');
 			senderId = args[3] || senderId;
 			
-			var armourInfo = scanForArmour( charCS ),
+			var armourInfo = scanForArmour( charCS, dmgType ),
 				acValues = armourInfo.acValues,
 				armourMsgs = armourInfo.msgs,
 				dexBonus = !armourInfo.dexFlag ? 0 : parseInt(attrLookup( charCS, fields.Dex_acBonus ) || 0) * -1,
 				styleBonus =  parseInt(attrLookup(charCS,fields.Armour_styleMod) || 0),
 				baseAC = (parseInt(acValues.armour.data.ac || 10) - parseInt(acValues.armour.data.adj || 0)),
-				prevAC = parseInt(attrLookup( charCS, fields.Armour_normal )),
+				newAC = isNaN(parseInt(attrLookup( charCS, fields.Armour_normal ))),
+				prevAC = parseInt(attrLookup( charCS, fields.Armour_normal ) || 10),
 				dmgAdj = {armoured:{adj:0,madj:0,sadj:0,padj:0,badj:0,nadj:0},
 						  sless:{adj:0,madj:0,sadj:0,padj:0,badj:0,nadj:0},
 						  aless:{adj:0,madj:0,sadj:0,padj:0,badj:0,nadj:0}},
@@ -6140,25 +6482,56 @@ var attackMaster = (function() {
 				armourlessDexBonus = dexBonus,
 				shieldlessDexBonus = dexBonus,
 				armourlessAC = 10,
+				otherNo = 1,
+				is1e = fields.GameVersion === 'AD&D1e',
 				ac, currentAC;
 				
 			_.each( acValues, (e,k) => {
-				if (k == 'armour') return;
-				if (!k.toLowerCase().includes('protection') || !magicArmour) {
+				if (k !== 'armour') {
 					dmgAdj.armoured = _.mapObject(dmgAdj.armoured, (d,a) => {return d + parseInt(e.data[a] || 0)});
 					armouredDexBonus *= parseFloat(e.data.db || 1);
-					if (k == 'shield') {
+					if (k === 'shield') {
 						dmgAdj.armoured.adj += parseInt(e.data.ac || 1);
 					} else {
 						dmgAdj.sless = _.mapObject(dmgAdj.sless, (d,a) => {return d + parseInt(e.data[a] || 0)});
 						shieldlessDexBonus *= parseFloat(e.data.db || 1);
-					}
+						dmgAdj.aless = _.mapObject(dmgAdj.aless, (d,a) => {;return d + parseInt(e.data[a] || 0)});
+						armourlessDexBonus *= parseFloat(e.data.db || 1);
+					};
 				}
-				if (k != 'shield') {
-					dmgAdj.aless = _.mapObject(dmgAdj.aless, (d,a) => {;return d + parseInt(e.data[a] || 0)});
-					armourlessDexBonus *= parseFloat(e.data.db || 1);
-				}
+
+				if (is1e) {
+					switch (k) {
+					case 'armour':
+						setAttr( charCS, fields.Armor_name, e.name );
+						setAttr( charCS, [fields.Armor_name[0]+fields.Armor_ac,fields.Armor_name[1]], (e.data.ac || armourlessAC) );
+						setAttr( charCS, [fields.Armor_name[0]+fields.Armor_base,fields.Armor_name[1]], (e.data.ar || e.data.ac || armourlessAC) );
+						setAttr( charCS, [fields.Armor_name[0]+fields.Armor_magic,fields.Armor_name[1]], (e.data.adj || 0) );
+						break;
+					case 'shield':
+						setAttr( charCS, fields.Armor_shield, e.name );
+						setAttr( charCS, [fields.Armor_shield[0]+fields.Armor_ac,fields.Armor_shield[1],'0',true], ('+'+(e.data.ac || 1)) );
+						setAttr( charCS, [fields.Armor_shield[0]+fields.Armor_base,fields.Armor_shield[1],'0',true], ('+'+(e.data.ar || e.data.ac || 1)) );
+						setAttr( charCS, [fields.Armor_shield[0]+fields.Armor_magic,fields.Armor_shield[1],'0',true], e.data.adj || 0 );
+						break;
+					case 'helm':
+						setAttr( charCS, fields.Armor_helmet, e.name );
+						setAttr( charCS, [fields.Armor_helmet[0]+fields.Armor_ac,fields.Armor_helmet[1]], (e.data.ac || 0) );
+						setAttr( charCS, [fields.Armor_helmet[0]+fields.Armor_base,fields.Armor_helmet[1]], (e.data.ar || e.data.ac || 0) );
+						setAttr( charCS, [fields.Armor_helmet[0]+fields.Armor_magic,fields.Armor_helmet[1]], (e.data.adj || 0) );
+						break;
+					default:
+						let postFix = (otherNo === 1 ? '' : otherNo);
+						setAttr( charCS, [fields.Armor_other[0]+postFix,fields.Armor_other[1]], e.name );
+						setAttr( charCS, [fields.Armor_other[0]+postFix+fields.Armor_ac,fields.Armor_other[1]], e.data.ac || 0 );
+						setAttr( charCS, [fields.Armor_other[0]+postFix+fields.Armor_base,fields.Armor_other[1]], e.data.ar || e.data.ac || 0 );
+						setAttr( charCS, [fields.Armor_other[0]+postFix+fields.Armor_magic,fields.Armor_other[1]], e.data.adj || 0 );
+						otherNo++;
+						break;
+					};
+				};
 			});
+
 			dmgAdj.armoured.adj += dmgAdj.armoured[dmgType];
 			dmgAdj.sless.adj += dmgAdj.sless[dmgType];
 			baseAC -= parseInt(acValues.armour.data[dmgType] || 0);
@@ -6173,7 +6546,7 @@ var attackMaster = (function() {
 			if (styleBonus) {
 				acValues.styleBonus = {name:('Fighting Style Bonus '+styleBonus),specs:['',('Fighting Style Bonus '+dexBonus),'Style','0H','Style'],data:{adj:styleBonus}};
 			}
-			
+			setAttr( charCS, fields.BaseAC, (parseInt(acValues.armour.data.ac || 10)) );
 			setAttr( charCS, fields.Armour_normal, (baseAC - dmgAdj.armoured.adj - dexBonus - styleBonus) );
 			setAttr( charCS, fields.Armour_missile, (baseAC - dmgAdj.armoured.adj - dexBonus - styleBonus - dmgAdj.armoured.madj) );
 			setAttr( charCS, fields.Armour_surprised, (baseAC - dmgAdj.armoured.adj) );
@@ -6198,7 +6571,7 @@ var attackMaster = (function() {
 			
 			ac = (baseAC - dmgAdj.armoured.adj - dexBonus - styleBonus);
 			currentAC = getTokenValue(curToken,fields.Token_AC,fields.AC,fields.MonsterAC,fields.Thac0_base);
-			currentAC.val = ((isNaN(currentAC.val) || isNaN(prevAC)) ? ac : (currentAC.val + ac - prevAC));
+			currentAC.val = ((isNaN(currentAC.val) || newAC) ? ac : (currentAC.val + ac - prevAC));
 			if (currentAC.barName.startsWith('bar')) {
 				if (currentAC.val != ac) {
 					curToken.set(currentAC.barName+'_max',ac);
@@ -6222,7 +6595,6 @@ var attackMaster = (function() {
 			let csVersion = String(attrLookup(charCS,fields.csVersion) || fields.csVersion[2] || 4.17).match(/(\d+)\.?(\d*)/);
 			let modTag = (csVersion[1] >= 4 && (!csVersion[2] || csVersion[2] >= 17)) ? fields.Armor_mod_417 : fields.Armor_mod_416;
 			
-			
 			setAttr( charCS, [fields.Pick_Pockets[0]+modTag,fields.Pick_Pockets[1]], acValues.armour.data.ppa );
 			setAttr( charCS, [fields.Open_Locks[0]+modTag,fields.Open_Locks[1]], acValues.armour.data.ola );
 			setAttr( charCS, [fields.Find_Traps[0]+modTag,fields.Find_Traps[1]], acValues.armour.data.rta );
@@ -6232,7 +6604,7 @@ var attackMaster = (function() {
 			setAttr( charCS, [fields.Climb_Walls[0]+modTag,fields.Climb_Walls[1]], acValues.armour.data.cwa );
 			setAttr( charCS, [fields.Read_Languages[0]+modTag,fields.Read_Languages[1]], acValues.armour.data.rla );
 			setAttr( charCS, [fields.Legend_Lore[0]+modTag,fields.Legend_Lore[1]], acValues.armour.data.iba );
-			setAttr( charCS, fields.Armor_name, (acValues.armour.data.racname || 'No armor'));
+			if (!is1e) setAttr( charCS, fields.Armor_name, (acValues.armour.data.racname || 'No armor'));
 
 			if ((silentCmd !== 'quiet') && (!silent || ((ac != prevAC) && !magicItem))) {
 				makeACDisplay( args, senderId, ac, dmgAdj, acValues, armourMsgs );
@@ -6343,6 +6715,108 @@ var attackMaster = (function() {
 	}
 	
 	/*
+	 * Make a saving throw macro on the character sheet with
+	 * a custom save target.
+	 */
+	 
+	var doBuildCustomSave = function( args, senderId, selected, isGM ) {
+
+		if (!args) args = [];
+		if (!args[0] && selected && selected.length) {
+			args[0] = selected[0]._id;
+		} else if (!args[0]) {
+			sendDebug('doBuildCustomSaves: no token specified');
+			sendError('No token selected');
+			return;
+		}
+		
+		var tokenID = args[0],
+			saveType = (args[1] || 'Spell').dbName(),
+			saveVal = args[2] || 20,
+			saveName = args[3] || 'Do-not-use-'+saveType+'-save',
+			charCS = getCharacter( tokenID );
+			
+		saveType = saveType[0].toUpperCase() + saveType.slice(1);
+		
+		if (!charCS) {
+			sendDebug('doBuildCustomSave: invalid tokenID passed as args[0]');
+			sendError('Invalid attackMaster arguments');
+			return;
+		}
+		if (!saveFormat.Saves[saveType] || !parseInt(saveVal)) {
+			sendDebug('doBuildCustomSave: invalid save specs');
+			sendError('Invalid attackMaster arguments');
+			return;
+		}
+		buildSaveRoll( tokenID, charCS, 0, null, saveType, saveVal, isGM );
+	};
+	
+	/*
+	 * Handle making a rogue skills check
+	 */
+	 
+	var doThieving = function( args, senderId, selected, doCheck=true ) {
+		
+		if (!args) args = [];
+		if (!args[0] && selected && selected.length) {
+			args[0] = selected[0]._id;
+		} else if (!args[0]) {
+			sendDebug('doThieving: no token specified');
+			sendError('No token selected');
+			return;
+		}
+		var tokenID = args[0],
+			charCS = getCharacter( tokenID );
+			
+		if (!charCS) {
+			sendDebug('doThieving: invalid tokenID passed as args[0]');
+			sendError('Invalid token selected');
+			return;
+		}
+		if (!doCheck) {
+			makeModRogueSkillsMenu( args, senderId );
+		} else {
+			makeRogueCheckMenu( args, senderId );
+		}
+		return;
+	}
+	
+	/*
+	 * Modify a rogue skill factor
+	 */
+	 
+	var doModThievingSkill = function( args, senderId ) {
+		
+		var tokenID = args[0],
+			skill = args[1] || '',
+			type = args[2] || '',
+			field = args[3],
+			val = args[4],
+			charCS = getCharacter(tokenID),
+			skillObj = rogueSkills[skill.dbName()],
+			modObj, msg;
+			
+		if (!charCS) {
+			sendDebug('doThieving: invalid tokenID passed as args[0]');
+			sendError('Invalid token selected');
+			return;
+		}
+		if (_.isUndefined(skillObj)) {
+			sendDebug('doModThievingSkill: invalid skill name "'+skill+'" passed as args[1]');
+			sendError('Invalid rogue skill name');
+			return;
+		}
+		if (!skillObj.factors.includes(field.toLowerCase())) {
+			sendDebug('doModThievingSkill: invalid field name "'+field+'" passed as args[3]');
+			sendError('Invalid field name');
+			return;
+		}
+		setAttr( charCS, [field,'current','',true], val );
+		makeModRogueSkillsMenu( args, senderId, ('Set '+skill.dispName()+' '+type+' mod to '+val) );
+	};
+		
+	
+	/*
 	 * Display a menu to change the number of hands.  If the 'hands' 
 	 * value has a '+' or '-' change the number by the value.  Min is 0
 	 */
@@ -6425,8 +6899,8 @@ var attackMaster = (function() {
 		currentHands = Math.max(((parseInt(attrLookup( toChar, fields.Equip_lentHands )) || 0) + noHands), 0);
 		setAttr( toChar, fields.Equip_lentHands, currentHands );
 		if (noHands > 0) {
-			sendResponse( toChar, '&{template:'+fields.defaultTemplate+'}{{name=Working Together}}{{desc='+getObj('graphic',fromID).get('name')+' has lent '+noHands+' hand(s) to you so you can work together}}', null,flags.feedbackName,flags.feedbackImg, toID );
-			sendResponse( fromChar, '&{template:'+fields.defaultTemplate+'}{{name=Working Together}}{{desc=you have lent '+noHands+' hand(s) to '+getObj('graphic',toID).get('name')+' so you can work together}}', senderId,flags.feedbackName,flags.feedbackImg, fromID );
+			sendResponse( toChar, '&{template:'+fields.messageTemplate+'}{{name=Working Together}}{{desc='+getObj('graphic',fromID).get('name')+' has lent '+noHands+' hand(s) to you so you can work together}}', null,flags.feedbackName,flags.feedbackImg, toID );
+			sendResponse( fromChar, '&{template:'+fields.messageTemplate+'}{{name=Working Together}}{{desc=you have lent '+noHands+' hand(s) to '+getObj('graphic',toID).get('name')+' so you can work together}}', senderId,flags.feedbackName,flags.feedbackImg, fromID );
 		}
 		if (noHands < 0) {
 			currentHands += (parseInt(attrLookup( toChar, fields.Equip_handedness )) || 2);
@@ -6445,10 +6919,10 @@ var attackMaster = (function() {
 					}
 				}
 			}
-			sendResponse( toChar, '&{template:'+fields.defaultTemplate+'}{{name=Working Together}}'
+			sendResponse( toChar, '&{template:'+fields.messageTemplate+'}{{name=Working Together}}'
 								 +'{{desc='+getObj('graphic',fromID).get('name')+' is no longer lending you their hands'
 								 +(droppedWeapons.length ? (', and you have had to drop '+droppedWeapons.join(', ')) : '')+'}}', null,flags.feedbackName,flags.feedbackImg, toID );
-			sendResponse( fromChar, '&{template:'+fields.defaultTemplate+'}{{name=Working Together}}{{desc=You are no longer lending hand(s) to '+getObj('graphic',toID).get('name')
+			sendResponse( fromChar, '&{template:'+fields.messageTemplate+'}{{name=Working Together}}{{desc=You are no longer lending hand(s) to '+getObj('graphic',toID).get('name')
 									+'}}',senderId,flags.feedbackName,flags.feedbackImg,fromID);
 		}
 		return;
@@ -6534,6 +7008,16 @@ var attackMaster = (function() {
 			msg = value ? 'Weapon magical adjustment alters weapon speed' : 'Weapon speed not affected by magical adjustment';
 			break;
 			
+		case 'criticals':
+			state.attackMaster.weapRules.criticals = value;
+			msg = value ? 'Force hit/miss on critical hit/fumble roll' : 'Hit success only depends on roll value';
+			break;
+			
+		case 'naturals':
+			state.attackMaster.weapRules.naturals = value;
+			msg = value ? 'Force hit/miss on natural max/min roll' : 'Hit success only depends on roll value. Ignore naturals';
+			break;
+			
 		case 'all-armour':
 			state.attackMaster.weapRules.allowArmour = value;
 			msg = value ? 'All classes can use any armour' : 'Class armour restricted to rules';
@@ -6547,6 +7031,14 @@ var attackMaster = (function() {
 		case 'dm-target':
 			state.attackMaster.weapRules.dmTarget = value;
 			msg = value ? 'Players are not allowed to use Targeted attacks' : 'Players can use Targeted attacks';
+			break;
+			
+		case 'rogue-crit':
+			state.attackMaster.thieveCrit = (value ? 1 : 0);
+			break;
+			
+		case 'rogue-crit-val':
+			state.attackMaster.thieveCrit = (value ? 5 : 1);
 			break;
 			
 		default:
@@ -6581,7 +7073,7 @@ var attackMaster = (function() {
         } else {
             playerName = 'GM';
         }
-        content = '&{template:'+fields.defaultTemplate+'}{{name='+playerName+'\'s RPGMaster options}}';
+        content = '&{template:'+fields.messageTemplate+'}{{name='+playerName+'\'s RPGMaster options}}';
 
         switch (opt.toLowerCase()) {
         
@@ -6696,6 +7188,8 @@ var attackMaster = (function() {
 			
 		case BT.LEFTRING :
 		case BT.RIGHTRING :
+		case BT.LEFTRING_NOCURSE :
+		case BT.RIGHTRING_NOCURSE :
 		
 			handleChangeRings( args, senderId );
 			break;
@@ -6753,6 +7247,12 @@ var attackMaster = (function() {
 		case BT.ATTR_CHECK :
 			args.shift();
 			makeAttributeCheckMenu( args, senderId );
+			break;
+			
+		case BT.SET_SKILL_ROLL :
+		case BT.SET_SAVE_ROLL :
+		case BT.SET_ATTR_ROLL :
+			handleChooseRoller( args );
 			break;
 			
 		default :
@@ -6867,7 +7367,7 @@ var attackMaster = (function() {
 			senderId = findThePlayer(msg.who),
 			selected = msg.selected,
 			isGM = (playerIsGM(senderId) || state.attackMaster.debug === senderId),
-			t = 0;
+			t = 2;
 			
 		msg_orig[senderId] = msg;
 			
@@ -6972,6 +7472,18 @@ var attackMaster = (function() {
 					case 'setsaves':
 						doModSaves(arg,senderId,selected);
 						break;
+					case 'build-save':
+						doBuildCustomSave(arg,senderId,selected,isGM);
+						break;
+					case 'thieve':
+						doThieving(arg,senderId,selected);
+						break;
+					case 'set-thieving':
+						doThieving(arg,senderId,selected,false);
+						break;
+					case 'set-rogue-skill':
+						doModThievingSkill(arg,senderId);
+						break;
 					case 'menu':
 						doMenu(arg,senderId,selected);
 						break;
@@ -7033,8 +7545,6 @@ var attackMaster = (function() {
 					}
 				}
 			} catch (err) {
-//				log('attackMaster JavaScript '+err.name+': '+err.message+' while processing cmd '+cmd+' '+argString);
-//				sendDebug('attackMaster handleChatMsg: JavaScript '+err.name+': '+err.message+' while processing cmd '+cmd+' '+argString);
 				sendCatchError('AttackMaster',msg_orig[senderId],err,('!attk --'+e));
 			}
 		};
@@ -7076,7 +7586,7 @@ var attackMaster = (function() {
 		} else {
 			sendDebug('senderId is defined as ' + getObj('player',senderId).get('_displayname'));
 		};
-		if (!flags.noWaitMsg) sendWait(senderId,100,'attkMaster');
+		if (!flags.noWaitMsg) sendWait(senderId,1,'attkMaster');
 		
 		_.each(args, function(e) {
 			setTimeout( doAttkCmd, (1*t++), e, selected, senderId, isGM );
@@ -7112,7 +7622,6 @@ var attackMaster = (function() {
 	var handleNewToken = function(obj,prev) {
 		
 		try {
-//			log('attk handleNewToken: called');
 			if (!obj)
 				{return;}
 				

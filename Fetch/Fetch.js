@@ -3,8 +3,8 @@
 Name			:	Fetch
 GitHub			:	https://github.com/TimRohr22/Cauldron/tree/master/Fetch
 Roll20 Contact  :	timmaugh
-Version			:   2.0.9
-Last Update		:	8/4/2023
+Version			:   2.1.0
+Last Update		:	02 APR 2024
 =========================================================
 */
 var API_Meta = API_Meta || {};
@@ -13,12 +13,12 @@ API_Meta.Fetch = { offset: Number.MAX_SAFE_INTEGER, lineCount: -1 };
 
 const Fetch = (() => { //eslint-disable-line no-unused-vars
     const apiproject = 'Fetch';
-    const version = '2.0.9';
+    const version = '2.1.0';
     const apilogo = 'https://i.imgur.com/jeIkjvS.png';
     const apilogoalt = 'https://i.imgur.com/boYO3cf.png';
     const schemaVersion = 0.2;
     API_Meta[apiproject].version = version;
-    const vd = new Date(1691176175905);
+    const vd = new Date(1712082743073);
     const versionInfo = () => {
         log(`\u0166\u0166 ${apiproject} v${API_Meta[apiproject].version}, ${vd.getFullYear()}/${vd.getMonth() + 1}/${vd.getDate()} \u0166\u0166 -- offset ${API_Meta[apiproject].offset}`);
         if (!state.hasOwnProperty(apiproject) || state[apiproject].version !== schemaVersion) { //eslint-disable-line no-prototype-builtins
@@ -454,6 +454,9 @@ const Fetch = (() => { //eslint-disable-line no-unused-vars
         let c = simpleObj(Campaign());
         let p = getPagesForAllPlayers();
 
+        c.sheetname = Campaign().sheetName;
+        c.nodeversion = Campaign().nodeVersion;
+
         c.currentpages = Object.keys(p).map(k => `${k}:${p[k]}`).join(',');
         c.currentpagesname = Object.keys(p).map(k => `${getObjName(k,'player')}:${getObjName(p[k],'page')}`).join(',');
         return c;
@@ -472,6 +475,43 @@ const Fetch = (() => { //eslint-disable-line no-unused-vars
         return findObjs({ type: 'page', id: query })[0] ||
             findObjs({ type: 'page' }).filter(p => { return p.get('name') === query; })[0];
     };
+    const getHandout = (query, pid) => {
+        let handout;
+        if (typeof query !== 'string') return handout;
+        let qrx = new RegExp(escapeRegExp(query), 'i');
+
+        let handoutsIControl = findObjs({ type: 'handout' });
+
+        handoutsIControl = playerIsGM(pid) || manageState.get('playerscanids') ? handoutsIControl : handoutsIControl.filter(ho => {
+            return [...ho.get('inplayerjournals').split(','), ...ho.get('controlledby').split(',')].reduce((m, p) => {
+                return m || p === 'all' || p === pid;
+            }, false)
+        });
+        handout = handoutsIControl.filter(ho => ho.id === query)[0] ||
+            handoutsIControl.filter(ho => ho.get('name') === query)[0] ||
+            handoutsIControl.filter(ho => {
+                qrx.lastIndex = 0;
+                return qrx.test(ho.get('name'));
+            })[0];
+        return handout;
+    };
+    const getTag = (oid, otype, query, pid) => {
+        let obj = getObjOrNull(otype, oid);
+        if (!obj.id) {
+            if (otype === 'character') {
+                obj = getChar(oid, pid);
+            } else if (otype === 'handout') {
+                obj = getHandout(oid, pid);
+            }
+        }
+        let tags = JSON.parse(obj.get('tags') || JSON.stringify([]));
+        if (!tags.length || !tags.map(t=>t.toLowerCase()).includes(query.toLowerCase())) {
+            return { is: 'no', count: 0 };
+        } else {
+            return { is: 'yes', count: tags.filter(t => t === query).length };
+        }
+    };
+
     const decomposeStatuses = (list = '') => {
         return list.split(/\s*,\s*/g).filter(s => s.length)
             .reduce((m, s) => {
@@ -498,9 +538,9 @@ const Fetch = (() => { //eslint-disable-line no-unused-vars
     }
 
     const tokenStatuses = {};
-    const getStatus = (t, query, msgId) => {
+    const getStatus = (t, pgid, query, msgId) => {
         let token, rxret, status, index, modindex, statusblock;
-        token = getToken(t);
+        token = getToken(t, pgid);
         if (!token) return;
         token = simpleObj(token);
         if (token && !token.hasOwnProperty('id')) token.id = token._id; 
@@ -566,6 +606,68 @@ const Fetch = (() => { //eslint-disable-line no-unused-vars
         }
         return retval;
     };
+    const getCard = (info) => {
+        let card = findObjs({ type: 'card', id: info })[0] ||
+            findObjs({ type: 'card', name: info })[0] ||
+            findObjs({ id: (findObjs({ type: 'graphic', subtype: 'card', id: info })[0] || { get: () => '' }).get('cardid') })[0];
+        return card;
+    };
+    const getTable = (query, pid) => {
+        let table;
+        if (typeof query !== 'string') return table;
+        let qrx = new RegExp(escapeRegExp(query), 'i');
+
+        let tablesIControl = findObjs({ type: 'rollabletable' });
+
+        tablesIControl = playerIsGM(pid) || manageState.get('playerscanids') ? tablesIControl : tablesIControl.filter(tbl => tbl.get('showplayers'));
+        table = tablesIControl.filter(tbl => tbl.id === query)[0] ||
+            tablesIControl.filter(tbl => tbl.get('name') === query)[0] ||
+            tablesIControl.filter(tbl => {
+                qrx.lastIndex = 0;
+                return qrx.test(tbl.get('name'));
+            })[0];
+        if (table && table.id) {
+            table = simpleObj(table);
+            let items = findObjs({ type: 'tableitem', rollabletableid: table.id });
+            table.totalweight = items.reduce((m, v) => m += v.get('weight'), 0);
+        }
+        return table;
+    };
+    const getTableItems = (query, tbl, pid) => {
+        let table;
+        if (typeof tbl === 'string') {
+            table = getTable(tbl, pid);
+        } else {
+            table = tbl;
+        }
+        if (table && table.id) {
+            let allitems = findObjs({ type: 'tableitem', rollabletableid: table.id });
+            let item = allitems.filter(ti => ti.id === query)[0] ||
+                allitems.filter(ti => ti.get('name') === query)[0];
+
+            if (item && item.id) { return item; }
+
+            let weightedItems = allitems.reduce((m, v) => {
+                m = [...m, ...new Array(v.get('weight')).fill().map(e => v)];
+                return m;
+            }, []);
+            let index;
+            if (['1dw', '1dweight'].includes(query.toLowerCase())) {
+                index = randomInteger(weightedItems.length) - 1;
+                return weightedItems[index];
+            } else if (!isNaN(parseInt(query))) {
+
+                index = parseInt(query);
+                if (index < 1) {
+                    index = 1;
+                } else if (index > weightedItems.length) {
+                    index = weightedItems.length;
+                }
+                return weightedItems[index-1];
+            }
+        }
+
+    };
     const getToken = (info, pgid = '') => {
         let lightvals = {
             base: {},
@@ -576,6 +678,12 @@ const Fetch = (() => { //eslint-disable-line no-unused-vars
             findObjs({ type: 'graphic', subtype: 'token', name: info, pageid: pgid })[0] ||
             findObjs({ type: 'graphic', subtype: 'token', pageid: pgid })
                 .filter(t => t.get('represents').length && findObjs({ type: 'character', id: t.get('represents') })[0].get('name') === info)[0];
+        if (!token) {
+            let tokensOfName = findObjs({ type: 'graphic', subtype: 'token', name: info });
+            if (tokensOfName.length === 1) {
+                token = tokensOfName[0];
+            }
+        }
         if (token && token.id) {
             if (typeof checkLightLevel !== 'undefined' && checkLightLevel.hasOwnProperty('isLitBy') && typeof checkLightLevel.isLitBy === 'function') {
                 lightvals.base = checkLightLevel.isLitBy(token);
@@ -625,377 +733,448 @@ const Fetch = (() => { //eslint-disable-line no-unused-vars
         if (c) return c.get('controlledby');
     };
     const tokenProps = {
-        id: { refersto: '_id', permissionsreq: 'any', dataval: (d) => d },
-        tid: { refersto: '_id', permissionsreq: 'any', dataval: (d) => d },
-        token_id: { refersto: '_id', permissionsreq: 'any', dataval: (d) => d },
-        token_name: { refersto: 'name', permissionsreq: 'any', dataval: (d) => d },
-        page_id: { refersto: '_pageid', permissionsreq: 'any', dataval: (d) => d },
-        pageid: { refersto: '_pageid', permissionsreq: 'any', dataval: (d) => d },
-        pid: { refersto: '_pageid', permissionsreq: 'any', dataval: (d) => d },
-        token_page_id: { refersto: '_pageid', permissionsreq: 'any', dataval: (d) => d },
-        token_pageid: { refersto: '_pageid', permissionsreq: 'any', dataval: (d) => d },
-        token_pid: { refersto: '_pageid', permissionsreq: 'any', dataval: (d) => d },
-        page: { refersto: '_pageid', permissionsreq: 'any', dataval: d => getObjName(d, 'page') },
-        page_name: { refersto: '_pageid', permissionsreq: 'any', dataval: d => getObjName(d, 'page') },
-        sub: { refersto: '_subtype', permissionsreq: 'any', dataval: (d) => d },
-        subtype: { refersto: '_subtype', permissionsreq: 'any', dataval: (d) => d },
-        type: { refersto: '_type', permissionsreq: 'any', dataval: (d) => d },
-        token_type: { refersto: '_type', permissionsreq: 'any', dataval: (d) => d },
-        adv_fow_view_distance: { refersto: 'adv_fow_view_distance', permissionsreq: 'any', dataval: (d) => d },
-        aura1: { refersto: 'aura1_color', permissionsreq: 'any', dataval: (d) => d },
-        aura1_color: { refersto: 'aura1_color', permissionsreq: 'any', dataval: (d) => d },
-        aura1_radius: { refersto: 'aura1_radius', permissionsreq: 'any', dataval: (d) => d },
-        radius1: { refersto: 'aura1_radius', permissionsreq: 'any', dataval: (d) => d },
-        aura1_square: { refersto: 'aura1_square', permissionsreq: 'any', dataval: (d) => d },
-        square1: { refersto: 'aura1_square', permissionsreq: 'any', dataval: (d) => d },
-        aura2: { refersto: 'aura2_color', permissionsreq: 'any', dataval: (d) => d },
-        aura2_color: { refersto: 'aura2_color', permissionsreq: 'any', dataval: (d) => d },
-        aura2_radius: { refersto: 'aura2_radius', permissionsreq: 'any', dataval: (d) => d },
-        radius2: { refersto: 'aura2_radius', permissionsreq: 'any', dataval: (d) => d },
-        aura2_square: { refersto: 'aura2_square', permissionsreq: 'any', dataval: (d) => d },
-        square2: { refersto: 'aura2_square', permissionsreq: 'any', dataval: (d) => d },
-        bar_location: { refersto: 'bar_location', permissionsreq: 'any', dataval: (d) => d },
-        bar_loc: { refersto: 'bar_location', permissionsreq: 'any', dataval: (d) => d },
-        bar1_link: { refersto: 'bar1_link', permissionsreq: 'any', dataval: (d) => d },
-        link1: { refersto: 'bar1_link', permissionsreq: 'any', dataval: (d) => d },
-        bar1_name: { refersto: 'bar1_link', permissionsreq: 'any', dataval: d => /^sheetattr_/.test(d) ? d.replace(/^sheetattr_/, '') : getObjName(d, 'attribute') },
-        name1: { refersto: 'bar1_link', permissionsreq: 'any', dataval: d => /^sheetattr_/.test(d) ? d.replace(/^sheetattr_/, '') : getObjName(d, 'attribute') },
-        bar1_max: { refersto: 'bar1_max', permissionsreq: 'any', dataval: (d) => d },
-        max1: { refersto: 'bar1_max', permissionsreq: 'any', dataval: (d) => d },
-        bar1: { refersto: 'bar1_value', permissionsreq: 'any', dataval: (d) => d },
-        bar1_current: { refersto: 'bar1_value', permissionsreq: 'any', dataval: (d) => d },
-        bar1_value: { refersto: 'bar1_value', permissionsreq: 'any', dataval: (d) => d },
-        bar2_link: { refersto: 'bar2_link', permissionsreq: 'any', dataval: (d) => d },
-        link2: { refersto: 'bar2_link', permissionsreq: 'any', dataval: (d) => d },
-        bar2_name: { refersto: 'bar2_link', permissionsreq: 'any', dataval: d => /^sheetattr_/.test(d) ? d.replace(/^sheetattr_/, '') : getObjName(d, 'attribute') },
-        name2: { refersto: 'bar2_link', permissionsreq: 'any', dataval: d => /^sheetattr_/.test(d) ? d.replace(/^sheetattr_/, '') : getObjName(d, 'attribute') },
-        bar2_max: { refersto: 'bar2_max', permissionsreq: 'any', dataval: (d) => d },
-        max2: { refersto: 'bar2_max', permissionsreq: 'any', dataval: (d) => d },
-        bar2: { refersto: 'bar2_value', permissionsreq: 'any', dataval: (d) => d },
-        bar2_current: { refersto: 'bar2_value', permissionsreq: 'any', dataval: (d) => d },
-        bar2_value: { refersto: 'bar2_value', permissionsreq: 'any', dataval: (d) => d },
-        bar3_link: { refersto: 'bar3_link', permissionsreq: 'any', dataval: (d) => d },
-        link3: { refersto: 'bar3_link', permissionsreq: 'any', dataval: (d) => d },
-        bar3_name: { refersto: 'bar3_link', permissionsreq: 'any', dataval: d => /^sheetattr_/.test(d) ? d.replace(/^sheetattr_/, '') : getObjName(d, 'attribute') },
-        name3: { refersto: 'bar3_link', permissionsreq: 'any', dataval: d => /^sheetattr_/.test(d) ? d.replace(/^sheetattr_/, '') : getObjName(d, 'attribute') },
-        bar3_max: { refersto: 'bar3_max', permissionsreq: 'any', dataval: (d) => d },
-        max3: { refersto: 'bar3_max', permissionsreq: 'any', dataval: (d) => d },
-        bar3: { refersto: 'bar3_value', permissionsreq: 'any', dataval: (d) => d },
-        bar3_current: { refersto: 'bar3_value', permissionsreq: 'any', dataval: (d) => d },
-        bar3_value: { refersto: 'bar3_value', permissionsreq: 'any', dataval: (d) => d },
-        bright_light_distance: { refersto: 'bright_light_distance', permissionsreq: 'any', dataval: (d) => d },
-        cardid: { refersto: '_cardid', permissionsreq: 'any', dataval: (d) => d },
-        cid: { refersto: '_cardid', permissionsreq: 'any', dataval: (d) => d },
-        cardname: { refersto: '_cardid', permissionsreq: 'any', dataval: (d) => getObjName(d, 'card') },
-        deckid: { refersto: '_cardid', permissionsreq: 'any', dataval: (d) => getObjOrNull('card', d).get('deckid') },
-        deckname: { refersto: '_cardid', permissionsreq: 'any', dataval: (d) => getObjOrNull('deck', getObjOrNull('card', d).get('deckid')).get('name') },
+        id: { refersto: '_id', dataval: (d) => d },
+        tid: { refersto: '_id', dataval: (d) => d },
+        token_id: { refersto: '_id', dataval: (d) => d },
+        token_name: { refersto: 'name', dataval: (d) => d },
+        page_id: { refersto: '_pageid', dataval: (d) => d },
+        pageid: { refersto: '_pageid', dataval: (d) => d },
+        pid: { refersto: '_pageid', dataval: (d) => d },
+        token_page_id: { refersto: '_pageid', dataval: (d) => d },
+        token_pageid: { refersto: '_pageid', dataval: (d) => d },
+        token_pid: { refersto: '_pageid', dataval: (d) => d },
+        page: { refersto: '_pageid', dataval: d => getObjName(d, 'page') },
+        page_name: { refersto: '_pageid', dataval: d => getObjName(d, 'page') },
+        sub: { refersto: '_subtype', dataval: (d) => d },
+        subtype: { refersto: '_subtype', dataval: (d) => d },
+        type: { refersto: '_type', dataval: (d) => d },
+        token_type: { refersto: '_type', dataval: (d) => d },
+        adv_fow_view_distance: { refersto: 'adv_fow_view_distance', dataval: (d) => d },
+        aura1: { refersto: 'aura1_color', dataval: (d) => d },
+        aura1_color: { refersto: 'aura1_color', dataval: (d) => d },
+        aura1_radius: { refersto: 'aura1_radius', dataval: (d) => d },
+        radius1: { refersto: 'aura1_radius', dataval: (d) => d },
+        aura1_square: { refersto: 'aura1_square', dataval: (d) => d },
+        square1: { refersto: 'aura1_square', dataval: (d) => d },
+        aura2: { refersto: 'aura2_color', dataval: (d) => d },
+        aura2_color: { refersto: 'aura2_color', dataval: (d) => d },
+        aura2_radius: { refersto: 'aura2_radius', dataval: (d) => d },
+        radius2: { refersto: 'aura2_radius', dataval: (d) => d },
+        aura2_square: { refersto: 'aura2_square', dataval: (d) => d },
+        square2: { refersto: 'aura2_square', dataval: (d) => d },
+        bar_location: { refersto: 'bar_location', dataval: (d) => d },
+        bar_loc: { refersto: 'bar_location', dataval: (d) => d },
+        bar1_link: { refersto: 'bar1_link', dataval: (d) => d },
+        link1: { refersto: 'bar1_link', dataval: (d) => d },
+        bar1_name: { refersto: 'bar1_link', dataval: d => /^sheetattr_/.test(d) ? d.replace(/^sheetattr_/, '') : getObjName(d, 'attribute') },
+        name1: { refersto: 'bar1_link', dataval: d => /^sheetattr_/.test(d) ? d.replace(/^sheetattr_/, '') : getObjName(d, 'attribute') },
+        bar1_max: { refersto: 'bar1_max', dataval: (d) => d },
+        max1: { refersto: 'bar1_max', dataval: (d) => d },
+        bar1: { refersto: 'bar1_value', dataval: (d) => d },
+        bar1_current: { refersto: 'bar1_value', dataval: (d) => d },
+        bar1_value: { refersto: 'bar1_value', dataval: (d) => d },
+        bar2_link: { refersto: 'bar2_link', dataval: (d) => d },
+        link2: { refersto: 'bar2_link', dataval: (d) => d },
+        bar2_name: { refersto: 'bar2_link', dataval: d => /^sheetattr_/.test(d) ? d.replace(/^sheetattr_/, '') : getObjName(d, 'attribute') },
+        name2: { refersto: 'bar2_link', dataval: d => /^sheetattr_/.test(d) ? d.replace(/^sheetattr_/, '') : getObjName(d, 'attribute') },
+        bar2_max: { refersto: 'bar2_max', dataval: (d) => d },
+        max2: { refersto: 'bar2_max', dataval: (d) => d },
+        bar2: { refersto: 'bar2_value', dataval: (d) => d },
+        bar2_current: { refersto: 'bar2_value', dataval: (d) => d },
+        bar2_value: { refersto: 'bar2_value', dataval: (d) => d },
+        bar3_link: { refersto: 'bar3_link', dataval: (d) => d },
+        link3: { refersto: 'bar3_link', dataval: (d) => d },
+        bar3_name: { refersto: 'bar3_link', dataval: d => /^sheetattr_/.test(d) ? d.replace(/^sheetattr_/, '') : getObjName(d, 'attribute') },
+        name3: { refersto: 'bar3_link', dataval: d => /^sheetattr_/.test(d) ? d.replace(/^sheetattr_/, '') : getObjName(d, 'attribute') },
+        bar3_max: { refersto: 'bar3_max', dataval: (d) => d },
+        max3: { refersto: 'bar3_max', dataval: (d) => d },
+        bar3: { refersto: 'bar3_value', dataval: (d) => d },
+        bar3_current: { refersto: 'bar3_value', dataval: (d) => d },
+        bar3_value: { refersto: 'bar3_value', dataval: (d) => d },
+        bright_light_distance: { refersto: 'bright_light_distance', dataval: (d) => d },
+        cardid: { refersto: '_cardid', dataval: (d) => d },
+        cid: { refersto: '_cardid', dataval: (d) => d },
+        card_back: { refersto: '_cardid', dataval: (d) => getObjOrNull('card', d).get('card_back') },
+        cardname: { refersto: '_cardid', dataval: (d) => getObjName(d, 'card') },
+        deckid: { refersto: '_cardid', dataval: (d) => getObjOrNull('card', d).get('deckid') },
+        deckname: { refersto: '_cardid', dataval: (d) => getObjOrNull('deck', getObjOrNull('card', d).get('deckid')).get('name') },
 
-        checklight_isbright: { refersto: 'checklight_isbright', permissionsreq: 'any', dataval: (d) => d },
-        checklight_total: { refersto: 'checklight_total', permissionsreq: 'any', dataval: (d) => d },
+        checklight_isbright: { refersto: 'checklight_isbright', dataval: (d) => d },
+        checklight_total: { refersto: 'checklight_total', dataval: (d) => d },
 
-        compact_bar: { refersto: 'compact_bar', permissionsreq: 'any', dataval: (d) => d },
-        player: { refersto: 'controlledby', permissionsreq: 'any', dataval: (d, s) => getControlledByList(s, d).split(/\s*,\s*/).filter(a => a.toLowerCase() !== 'all' && getObj('player', a))[0] },
-        player_name: { refersto: 'controlledby', permissionsreq: 'any', dataval: (d, s) => getControlledByList(s, d).split(/\s*,\s*/).filter(a => a.toLowerCase() !== 'all').map(a => getObjName(a, 'player')).filter(a => a)[0] },
-        token_cby: { refersto: 'controlledby', permissionsreq: 'any', dataval: (d, s) => getControlledByList(s, d) },
-        token_controlledby: { refersto: 'controlledby', permissionsreq: 'any', dataval: (d, s) => getControlledByList(s, d) },
-        token_cby_names: { refersto: 'controlledby', permissionsreq: 'any', dataval: (d, s) => getObjName(getControlledByList(s, d), 'playerlist') },
-        token_controlledby_names: { refersto: 'controlledby', permissionsreq: 'any', dataval: (d, s) => getObjName(getControlledByList(s, d), 'playerlist') },
-        token_cby_name: { refersto: 'controlledby', permissionsreq: 'any', dataval: (d, s) => getObjName(getControlledByList(s, d), 'playerlist') },
-        token_controlledby_name: { refersto: 'controlledby', permissionsreq: 'any', dataval: (d, s) => getObjName(getControlledByList(s, d), 'playerlist') },
-        currentside: { refersto: 'currentSide', permissionsreq: 'any', dataval: (d) => d },
-        curside: { refersto: 'currentSide', permissionsreq: 'any', dataval: (d) => d },
-        side: { refersto: 'currentSide', permissionsreq: 'any', dataval: (d) => d },
-        dim_light_opacity: { refersto: 'dim_light_opacity', permissionsreq: 'any', dataval: (d) => d },
-        directional_bright_light_center: { refersto: 'directional_bright_light_center', permissionsreq: 'any', dataval: (d) => d },
-        directional_bright_light_total: { refersto: 'directional_bright_light_total', permissionsreq: 'any', dataval: (d) => d },
-        directional_low_light_center: { refersto: 'directional_low_light_center', permissionsreq: 'any', dataval: (d) => d },
-        directional_low_light_total: { refersto: 'directional_low_light_total', permissionsreq: 'any', dataval: (d) => d },
-        emits_bright: { refersto: 'emits_bright_light', permissionsreq: 'any', dataval: (d) => d },
-        emits_bright_light: { refersto: 'emits_bright_light', permissionsreq: 'any', dataval: (d) => d },
-        emits_low: { refersto: 'emits_low_light', permissionsreq: 'any', dataval: (d) => d },
-        emits_low_light: { refersto: 'emits_low_light', permissionsreq: 'any', dataval: (d) => d },
-        fliph: { refersto: 'fliph', permissionsreq: 'any', dataval: (d) => d },
-        flipv: { refersto: 'flipv', permissionsreq: 'any', dataval: (d) => d },
-        gmnotes: { refersto: 'gmnotes', permissionsreq: 'gm', dataval: (d) => unescape(d) },
-        has_bright_light_vision: { refersto: 'has_bright_light_vision', permissionsreq: 'any', dataval: (d) => d },
-        has_directional_bright_light: { refersto: 'has_directional_bright_light', permissionsreq: 'any', dataval: (d) => d },
-        has_directional_low_light: { refersto: 'has_directional_low_light', permissionsreq: 'any', dataval: (d) => d },
-        has_limit_field_of_night_vision: { refersto: 'has_limit_field_of_night_vision', permissionsreq: 'any', dataval: (d) => d },
-        has_limit_field_of_vision: { refersto: 'has_limit_field_of_vision', permissionsreq: 'any', dataval: (d) => d },
-        has_night_vision: { refersto: 'has_night_vision', permissionsreq: 'any', dataval: (d) => d },
-        has_nv: { refersto: 'has_night_vision', permissionsreq: 'any', dataval: (d) => d },
-        nv_has: { refersto: 'has_night_vision', permissionsreq: 'any', dataval: (d) => d },
-        height: { refersto: 'height', permissionsreq: 'any', dataval: (d) => d },
-        img: { refersto: 'imgsrc', permissionsreq: 'any', dataval: (d) => `<img src="${d}">` },
-        imgsrc: { refersto: 'imgsrc', permissionsreq: 'any', dataval: (d) => d },
-        imgsrc_short: { refersto: 'imgsrc', permissionsreq: 'any', dataval: (d) => d.slice(0, Math.max(d.indexOf(`?`), 0) || d.length) },
-        drawing: { refersto: 'isdrawing', permissionsreq: 'any', dataval: (d) => d },
-        isdrawing: { refersto: 'isdrawing', permissionsreq: 'any', dataval: (d) => d },
-        lastmove: { refersto: 'lastmove', permissionsreq: 'any', dataval: (d) => d },
-        lastx: { refersto: 'lastmove', permissionsreq: 'any', dataval: d => d.split(/\s*,\s*/)[0] || '' },
-        lasty: { refersto: 'lastmove', permissionsreq: 'any', dataval: d => d.split(/\s*,\s*/)[1] || '' },
-        layer: { refersto: 'layer', permissionsreq: 'gm', dataval: (d) => d },
-        left: { refersto: 'left', permissionsreq: 'any', dataval: (d) => d },
-        light_angle: { refersto: 'light_angle', permissionsreq: 'any', dataval: (d) => d },
-        light_dimradius: { refersto: 'light_dimradius', permissionsreq: 'any', dataval: (d) => d },
-        light_hassight: { refersto: 'light_hassight', permissionsreq: 'any', dataval: (d) => d },
-        light_losangle: { refersto: 'light_losangle', permissionsreq: 'any', dataval: (d) => d },
-        light_multiplier: { refersto: 'light_multiplier', permissionsreq: 'any', dataval: (d) => d },
-        light_otherplayers: { refersto: 'light_otherplayers', permissionsreq: 'any', dataval: (d) => d },
-        light_radius: { refersto: 'light_radius', permissionsreq: 'any', dataval: (d) => d },
-        light_sensitivity_multiplier: { refersto: 'light_sensitivity_multiplier', permissionsreq: 'any', dataval: (d) => d },
-        light_sensitivity_mult: { refersto: 'light_sensitivity_multiplier', permissionsreq: 'any', dataval: (d) => d },
-        limit_field_of_night_vision_center: { refersto: 'limit_field_of_night_vision_center', permissionsreq: 'any', dataval: (d) => d },
-        limit_field_of_night_vision_total: { refersto: 'limit_field_of_night_vision_total', permissionsreq: 'any', dataval: (d) => d },
-        limit_field_of_vision_center: { refersto: 'limit_field_of_vision_center', permissionsreq: 'any', dataval: (d) => d },
-        limit_field_of_vision_total: { refersto: 'limit_field_of_vision_total', permissionsreq: 'any', dataval: (d) => d },
-        low_light_distance: { refersto: 'low_light_distance', permissionsreq: 'any', dataval: (d) => d },
-        night_vision_distance: { refersto: 'night_vision_distance', permissionsreq: 'any', dataval: (d) => d },
-        nv_dist: { refersto: 'night_vision_distance', permissionsreq: 'any', dataval: (d) => d },
-        nv_distance: { refersto: 'night_vision_distance', permissionsreq: 'any', dataval: (d) => d },
-        night_vision_effect: { refersto: 'night_vision_effect', permissionsreq: 'any', dataval: (d) => d },
-        nv_effect: { refersto: 'night_vision_effect', permissionsreq: 'any', dataval: (d) => d },
-        night_vision_tint: { refersto: 'night_vision_tint', permissionsreq: 'any', dataval: (d) => d },
-        nv_tint: { refersto: 'night_vision_tint', permissionsreq: 'any', dataval: (d) => d },
-        playersedit_aura1: { refersto: 'playersedit_aura1', permissionsreq: 'any', dataval: (d) => d },
-        playersedit_aura2: { refersto: 'playersedit_aura2', permissionsreq: 'any', dataval: (d) => d },
-        playersedit_bar1: { refersto: 'playersedit_bar1', permissionsreq: 'any', dataval: (d) => d },
-        playersedit_bar2: { refersto: 'playersedit_bar2', permissionsreq: 'any', dataval: (d) => d },
-        playersedit_bar3: { refersto: 'playersedit_bar3', permissionsreq: 'any', dataval: (d) => d },
-        playersedit_name: { refersto: 'playersedit_name', permissionsreq: 'any', dataval: (d) => d },
-        represents: { refersto: 'represents', permissionsreq: 'any', dataval: (d) => d },
-        reps: { refersto: 'represents', permissionsreq: 'any', dataval: (d) => d },
-        represents_name: { refersto: 'represents', permissionsreq: 'any', dataval: d => getObjName(d, 'character') },
-        reps_name: { refersto: 'represents', permissionsreq: 'any', dataval: d => getObjName(d, 'character') },
-        rotation: { refersto: 'rotation', permissionsreq: 'any', dataval: (d) => d },
-        showname: { refersto: 'showname', permissionsreq: 'any', dataval: (d) => d },
-        showplayers_aura1: { refersto: 'showplayers_aura1', permissionsreq: 'any', dataval: (d) => d },
-        showplayers_aura2: { refersto: 'showplayers_aura2', permissionsreq: 'any', dataval: (d) => d },
-        showplayers_bar1: { refersto: 'showplayers_bar1', permissionsreq: 'any', dataval: (d) => d },
-        showplayers_bar2: { refersto: 'showplayers_bar2', permissionsreq: 'any', dataval: (d) => d },
-        showplayers_bar3: { refersto: 'showplayers_bar3', permissionsreq: 'any', dataval: (d) => d },
-        showplayers_name: { refersto: 'showplayers_name', permissionsreq: 'any', dataval: (d) => d },
-        show_tooltip: { refersto: 'show_tooltip', permissionsreq: 'any', dataval: (d) => d },
-        sides: { refersto: 'sides', permissionsreq: 'any', dataval: (d) => d },
-        sidecount: { refersto: 'sides', permissionsreq: 'any', dataval: (d) => ('' || d).split(`|`).length },
-        sidescount: { refersto: 'sides', permissionsreq: 'any', dataval: (d) => ('' || d).split(`|`).length },
-        markers: { refersto: 'statusmarkers', permissionsreq: 'any', dataval: (d) => d },
-        statusmarkers: { refersto: 'statusmarkers', permissionsreq: 'any', dataval: (d) => d },
-        tint: { refersto: 'tint_color', permissionsreq: 'any', dataval: (d) => d },
-        tint_color: { refersto: 'tint_color', permissionsreq: 'any', dataval: (d) => d },
-        tooltip: { refersto: 'tooltip', permissionsreq: 'any', dataval: (d) => d },
-        top: { refersto: 'top', permissionsreq: 'any', dataval: (d) => d },
-        tracker: { refersto: 'tracker', permissionsreq: 'any', dataval: (d) => d },
-        tracker_offset: { refersto: 'tracker_offset', permissionsreq: 'any', dataval: (d) => d },
-        width: { refersto: 'width', permissionsreq: 'any', dataval: (d) => d }
+        compact_bar: { refersto: 'compact_bar', dataval: (d) => d },
+        player: { refersto: 'controlledby', dataval: (d, s) => getControlledByList(s, d).split(/\s*,\s*/).filter(a => a.toLowerCase() !== 'all' && getObj('player', a))[0] },
+        player_name: { refersto: 'controlledby', dataval: (d, s) => getControlledByList(s, d).split(/\s*,\s*/).filter(a => a.toLowerCase() !== 'all').map(a => getObjName(a, 'player')).filter(a => a)[0] },
+        token_cby: { refersto: 'controlledby', dataval: (d, s) => getControlledByList(s, d) },
+        token_controlledby: { refersto: 'controlledby', dataval: (d, s) => getControlledByList(s, d) },
+        token_cby_names: { refersto: 'controlledby', dataval: (d, s) => getObjName(getControlledByList(s, d), 'playerlist') },
+        token_controlledby_names: { refersto: 'controlledby', dataval: (d, s) => getObjName(getControlledByList(s, d), 'playerlist') },
+        token_cby_name: { refersto: 'controlledby', dataval: (d, s) => getObjName(getControlledByList(s, d), 'playerlist') },
+        token_controlledby_name: { refersto: 'controlledby', dataval: (d, s) => getObjName(getControlledByList(s, d), 'playerlist') },
+        currentside: { refersto: 'currentSide', dataval: (d) => d },
+        curside: { refersto: 'currentSide', dataval: (d) => d },
+        side: { refersto: 'currentSide', dataval: (d) => d },
+        dim_light_opacity: { refersto: 'dim_light_opacity', dataval: (d) => d },
+        directional_bright_light_center: { refersto: 'directional_bright_light_center', dataval: (d) => d },
+        directional_bright_light_total: { refersto: 'directional_bright_light_total', dataval: (d) => d },
+        directional_low_light_center: { refersto: 'directional_low_light_center', dataval: (d) => d },
+        directional_low_light_total: { refersto: 'directional_low_light_total', dataval: (d) => d },
+        emits_bright: { refersto: 'emits_bright_light', dataval: (d) => d },
+        emits_bright_light: { refersto: 'emits_bright_light', dataval: (d) => d },
+        emits_low: { refersto: 'emits_low_light', dataval: (d) => d },
+        emits_low_light: { refersto: 'emits_low_light', dataval: (d) => d },
+        fliph: { refersto: 'fliph', dataval: (d) => d },
+        flipv: { refersto: 'flipv', dataval: (d) => d },
+        gmnotes: { refersto: 'gmnotes', dataval: (d) => unescape(d) },
+        has_bright_light_vision: { refersto: 'has_bright_light_vision', dataval: (d) => d },
+        has_directional_bright_light: { refersto: 'has_directional_bright_light', dataval: (d) => d },
+        has_directional_low_light: { refersto: 'has_directional_low_light', dataval: (d) => d },
+        has_limit_field_of_night_vision: { refersto: 'has_limit_field_of_night_vision', dataval: (d) => d },
+        has_limit_field_of_vision: { refersto: 'has_limit_field_of_vision', dataval: (d) => d },
+        has_night_vision: { refersto: 'has_night_vision', dataval: (d) => d },
+        has_nv: { refersto: 'has_night_vision', dataval: (d) => d },
+        nv_has: { refersto: 'has_night_vision', dataval: (d) => d },
+        height: { refersto: 'height', dataval: (d) => d },
+        img: { refersto: 'imgsrc', dataval: (d) => `<img src="${d}">` },
+        imgsrc: { refersto: 'imgsrc', dataval: (d) => d },
+        imgsrc_short: { refersto: 'imgsrc', dataval: (d) => d.slice(0, Math.max(d.indexOf(`?`), 0) || d.length) },
+        drawing: { refersto: 'isdrawing', dataval: (d) => d },
+        isdrawing: { refersto: 'isdrawing', dataval: (d) => d },
+        lastmove: { refersto: 'lastmove', dataval: (d) => d },
+        lastx: { refersto: 'lastmove', dataval: d => d.split(/\s*,\s*/)[0] || '' },
+        lasty: { refersto: 'lastmove', dataval: d => d.split(/\s*,\s*/)[1] || '' },
+        layer: { refersto: 'layer', dataval: (d) => d },
+        left: { refersto: 'left', dataval: (d) => d },
+        light_angle: { refersto: 'light_angle', dataval: (d) => d },
+        light_dimradius: { refersto: 'light_dimradius', dataval: (d) => d },
+        light_hassight: { refersto: 'light_hassight', dataval: (d) => d },
+        light_losangle: { refersto: 'light_losangle', dataval: (d) => d },
+        light_multiplier: { refersto: 'light_multiplier', dataval: (d) => d },
+        light_otherplayers: { refersto: 'light_otherplayers', dataval: (d) => d },
+        light_radius: { refersto: 'light_radius', dataval: (d) => d },
+        light_sensitivity_multiplier: { refersto: 'light_sensitivity_multiplier', dataval: (d) => d },
+        light_sensitivity_mult: { refersto: 'light_sensitivity_multiplier', dataval: (d) => d },
+        limit_field_of_night_vision_center: { refersto: 'limit_field_of_night_vision_center', dataval: (d) => d },
+        limit_field_of_night_vision_total: { refersto: 'limit_field_of_night_vision_total', dataval: (d) => d },
+        limit_field_of_vision_center: { refersto: 'limit_field_of_vision_center', dataval: (d) => d },
+        limit_field_of_vision_total: { refersto: 'limit_field_of_vision_total', dataval: (d) => d },
+        low_light_distance: { refersto: 'low_light_distance', dataval: (d) => d },
+        night_vision_distance: { refersto: 'night_vision_distance', dataval: (d) => d },
+        nv_dist: { refersto: 'night_vision_distance', dataval: (d) => d },
+        nv_distance: { refersto: 'night_vision_distance', dataval: (d) => d },
+        night_vision_effect: { refersto: 'night_vision_effect', dataval: (d) => d },
+        nv_effect: { refersto: 'night_vision_effect', dataval: (d) => d },
+        night_vision_tint: { refersto: 'night_vision_tint', dataval: (d) => d },
+        nv_tint: { refersto: 'night_vision_tint', dataval: (d) => d },
+        playersedit_aura1: { refersto: 'playersedit_aura1', dataval: (d) => d },
+        playersedit_aura2: { refersto: 'playersedit_aura2', dataval: (d) => d },
+        playersedit_bar1: { refersto: 'playersedit_bar1', dataval: (d) => d },
+        playersedit_bar2: { refersto: 'playersedit_bar2', dataval: (d) => d },
+        playersedit_bar3: { refersto: 'playersedit_bar3', dataval: (d) => d },
+        playersedit_name: { refersto: 'playersedit_name', dataval: (d) => d },
+        represents: { refersto: 'represents', dataval: (d) => d },
+        reps: { refersto: 'represents', dataval: (d) => d },
+        represents_name: { refersto: 'represents', dataval: d => getObjName(d, 'character') },
+        reps_name: { refersto: 'represents', dataval: d => getObjName(d, 'character') },
+        rotation: { refersto: 'rotation', dataval: (d) => d },
+        showname: { refersto: 'showname', dataval: (d) => d },
+        showplayers_aura1: { refersto: 'showplayers_aura1', dataval: (d) => d },
+        showplayers_aura2: { refersto: 'showplayers_aura2', dataval: (d) => d },
+        showplayers_bar1: { refersto: 'showplayers_bar1', dataval: (d) => d },
+        showplayers_bar2: { refersto: 'showplayers_bar2', dataval: (d) => d },
+        showplayers_bar3: { refersto: 'showplayers_bar3', dataval: (d) => d },
+        showplayers_name: { refersto: 'showplayers_name', dataval: (d) => d },
+        show_tooltip: { refersto: 'show_tooltip', dataval: (d) => d },
+        sides: { refersto: 'sides', dataval: (d) => d },
+        sidecount: { refersto: 'sides', dataval: (d) => ('' || d).split(`|`).length },
+        sidescount: { refersto: 'sides', dataval: (d) => ('' || d).split(`|`).length },
+        markers: { refersto: 'statusmarkers', dataval: (d) => d },
+        statusmarkers: { refersto: 'statusmarkers', dataval: (d) => d },
+        tint: { refersto: 'tint_color', dataval: (d) => d },
+        tint_color: { refersto: 'tint_color', dataval: (d) => d },
+        tooltip: { refersto: 'tooltip', dataval: (d) => d },
+        top: { refersto: 'top', dataval: (d) => d },
+        tracker: { refersto: 'tracker', dataval: (d) => d },
+        tracker_offset: { refersto: 'tracker_offset', dataval: (d) => d },
+        width: { refersto: 'width', dataval: (d) => d }
     };
     const charProps = {
-        char_id: { refersto: '_id', permissionsreq: 'any', dataval: (d) => d },
-        character_id: { refersto: '_id', permissionsreq: 'any', dataval: (d) => d },
-        char_name: { refersto: 'name', permissionsreq: 'any', dataval: (d) => d },
-        character_name: { refersto: 'name', permissionsreq: 'any', dataval: (d) => d },
-        char_type: { refersto: '_type', permissionsreq: 'any', dataval: (d) => d },
-        character_type: { refersto: '_type', permissionsreq: 'any', dataval: (d) => d },
-        avatar: { refersto: 'avatar', permissionsreq: 'any', dataval: (d) => d },
-        char_img: { refersto: 'avatar', permissionsreq: 'any', dataval: (d) => `<img src="${d}">` },
-        character_img: { refersto: 'avatar', permissionsreq: 'any', dataval: (d) => `<img src="${d}">` },
-        archived: { refersto: 'archived', permissionsreq: 'any', dataval: (d) => d },
-        inplayerjournals: { refersto: 'inplayerjournals', permissionsreq: 'any', dataval: (d) => d },
-        inplayerjournals_name: { refersto: 'inplayerjournals', permissionsreq: 'any', dataval: (d) => getObjName(d, 'playerlist') },
-        inplayerjournals_names: { refersto: 'inplayerjournals', permissionsreq: 'any', dataval: (d) => getObjName(d, 'playerlist') },
-        character_controlledby: { refersto: 'controlledby', permissionsreq: 'any', dataval: (d) => d },
-        character_cby: { refersto: 'controlledby', permissionsreq: 'any', dataval: (d) => d },
-        player: { refersto: 'controlledby', permissionsreq: 'any', dataval: (d) => d.split(/\s*,\s*/).filter(a => a.toLowerCase() !== 'all' && getObj('player', a))[0] },
-        player_name: { refersto: 'controlledby', permissionsreq: 'any', dataval: (d) => d.split(/\s*,\s*/).filter(a => a.toLowerCase() !== 'all').map(a => getObjName(a, 'player')).filter(a => a)[0] },
-        char_cby: { refersto: 'controlledby', permissionsreq: 'any', dataval: (d) => d },
-        char_controlledby: { refersto: 'controlledby', permissionsreq: 'any', dataval: (d) => d },
-        character_controlledby_name: { refersto: 'controlledby', permissionsreq: 'any', dataval: (d) => getObjName(d, 'playerlist') },
-        character_cby_name: { refersto: 'controlledby', permissionsreq: 'any', dataval: (d) => getObjName(d, 'playerlist') },
-        char_cby_name: { refersto: 'controlledby', permissionsreq: 'any', dataval: (d) => getObjName(d, 'playerlist') },
-        char_controlledby_name: { refersto: 'controlledby', permissionsreq: 'any', dataval: (d) => getObjName(d, 'playerlist') },
-        character_controlledby_names: { refersto: 'controlledby', permissionsreq: 'any', dataval: (d) => getObjName(d, 'playerlist') },
-        character_cby_names: { refersto: 'controlledby', permissionsreq: 'any', dataval: (d) => getObjName(d, 'playerlist') },
-        char_cby_names: { refersto: 'controlledby', permissionsreq: 'any', dataval: (d) => getObjName(d, 'playerlist') },
-        char_controlledby_names: { refersto: 'controlledby', permissionsreq: 'any', dataval: (d) => getObjName(d, 'playerlist') },
-        defaulttoken: { refersto: '_defaulttoken', permissionsreq: 'any', dataval: (d) => d }
+        char_id: { refersto: '_id', dataval: (d) => d },
+        character_id: { refersto: '_id', dataval: (d) => d },
+        char_name: { refersto: 'name', dataval: (d) => d },
+        character_name: { refersto: 'name', dataval: (d) => d },
+        char_type: { refersto: '_type', dataval: (d) => d },
+        character_type: { refersto: '_type', dataval: (d) => d },
+        avatar: { refersto: 'avatar', dataval: (d) => d },
+        char_img: { refersto: 'avatar', dataval: (d) => `<img src="${d}">` },
+        character_img: { refersto: 'avatar', dataval: (d) => `<img src="${d}">` },
+        archived: { refersto: 'archived', dataval: (d) => d },
+        inplayerjournals: { refersto: 'inplayerjournals', dataval: (d) => d },
+        inplayerjournals_name: { refersto: 'inplayerjournals', dataval: (d) => getObjName(d, 'playerlist') },
+        inplayerjournals_names: { refersto: 'inplayerjournals', dataval: (d) => getObjName(d, 'playerlist') },
+        character_controlledby: { refersto: 'controlledby', dataval: (d) => d },
+        character_cby: { refersto: 'controlledby', dataval: (d) => d },
+        player: { refersto: 'controlledby', dataval: (d) => d.split(/\s*,\s*/).filter(a => a.toLowerCase() !== 'all' && getObj('player', a))[0] },
+        player_name: { refersto: 'controlledby', dataval: (d) => d.split(/\s*,\s*/).filter(a => a.toLowerCase() !== 'all').map(a => getObjName(a, 'player')).filter(a => a)[0] },
+        char_cby: { refersto: 'controlledby', dataval: (d) => d },
+        char_controlledby: { refersto: 'controlledby', dataval: (d) => d },
+        character_controlledby_name: { refersto: 'controlledby', dataval: (d) => getObjName(d, 'playerlist') },
+        character_cby_name: { refersto: 'controlledby', dataval: (d) => getObjName(d, 'playerlist') },
+        char_cby_name: { refersto: 'controlledby', dataval: (d) => getObjName(d, 'playerlist') },
+        char_controlledby_name: { refersto: 'controlledby', dataval: (d) => getObjName(d, 'playerlist') },
+        character_controlledby_names: { refersto: 'controlledby', dataval: (d) => getObjName(d, 'playerlist') },
+        character_cby_names: { refersto: 'controlledby', dataval: (d) => getObjName(d, 'playerlist') },
+        char_cby_names: { refersto: 'controlledby', dataval: (d) => getObjName(d, 'playerlist') },
+        char_controlledby_names: { refersto: 'controlledby', dataval: (d) => getObjName(d, 'playerlist') },
+        defaulttoken: { refersto: '_defaulttoken', dataval: (d) => d },
+        tags: { refersto: 'tags', dataval: (d) => JSON.parse(d).join(',') }
     };
     const playerProps = { // $(player.player_color)
-        player_id: { refersto: '_id', permissionsreq: 'any', dataval: (d) => d },
-        player_name: { refersto: '_displayname', permissionsreq: 'any', dataval: (d) => d },
-        displayname: { refersto: '_displayname', permissionsreq: 'any', dataval: (d) => d },
-        display_name: { refersto: '_displayname', permissionsreq: 'any', dataval: (d) => d },
-        player_type: { refersto: '_type', permissionsreq: 'any', dataval: (d) => d },
-        color: { refersto: 'color', permissionsreq: 'any', dataval: (d) => d },
-        lastpage: { refersto: '_lastpage', permissionsreq: 'any', dataval: (d) => d },
-        last_page: { refersto: '_lastpage', permissionsreq: 'any', dataval: (d) => d },
-        lastpagename: { refersto: '_lastpage', permissionsreq: 'any', dataval: (d) => getObjName(d, 'page') },
-        last_page_name: { refersto: '_lastpage', permissionsreq: 'any', dataval: (d) => getObjName(d, 'page') },
-        current_page: { refersto: 'currentpage', permissionsreq: 'any', dataval: (d) => d },
-        currentpage: { refersto: 'currentpage', permissionsreq: 'any', dataval: (d) => d },
-        currentpagename: { refersto: 'currentpage', permissionsreq: 'any', dataval: (d) => getObjName(d, 'page') },
-        current_page_name: { refersto: 'currentpage', permissionsreq: 'any', dataval: (d) => getObjName(d, 'page') },
-        macrobar: { refersto: '_macrobar', permissionsreq: 'any', dataval: (d) => d },
-        online: { refersto: '_online', permissionsreq: 'any', dataval: (d) => d },
-        roll20id: { refersto: '_d20userid', permissionsreq: 'any', dataval: (d) => d },
-        roll20_id: { refersto: '_d20userid', permissionsreq: 'any', dataval: (d) => d },
-        r20id: { refersto: '_d20userid', permissionsreq: 'any', dataval: (d) => d },
-        r20_id: { refersto: '_d20userid', permissionsreq: 'any', dataval: (d) => d },
-        showmacrobar: { refersto: 'showmacrobar', permissionsreq: 'any', dataval: (d) => d },
-        show_macrobar: { refersto: 'showmacrobar', permissionsreq: 'any', dataval: (d) => d },
-        speakingas: { refersto: 'speakingas', permissionsreq: 'any', dataval: (d) => d },
-        speaking_as: { refersto: 'speakingas', permissionsreq: 'any', dataval: (d) => d },
-        userid: { refersto: '_d20userid', permissionsreq: 'any', dataval: (d) => d },
-        user_id: { refersto: '_d20userid', permissionsreq: 'any', dataval: (d) => d }
+        player_id: { refersto: '_id', dataval: (d) => d },
+        player_name: { refersto: '_displayname', dataval: (d) => d },
+        displayname: { refersto: '_displayname', dataval: (d) => d },
+        display_name: { refersto: '_displayname', dataval: (d) => d },
+        player_type: { refersto: '_type', dataval: (d) => d },
+        color: { refersto: 'color', dataval: (d) => d },
+        lastpage: { refersto: '_lastpage', dataval: (d) => d },
+        last_page: { refersto: '_lastpage', dataval: (d) => d },
+        lastpagename: { refersto: '_lastpage', dataval: (d) => getObjName(d, 'page') },
+        last_page_name: { refersto: '_lastpage', dataval: (d) => getObjName(d, 'page') },
+        current_page: { refersto: 'currentpage', dataval: (d) => d },
+        currentpage: { refersto: 'currentpage', dataval: (d) => d },
+        currentpagename: { refersto: 'currentpage', dataval: (d) => getObjName(d, 'page') },
+        current_page_name: { refersto: 'currentpage', dataval: (d) => getObjName(d, 'page') },
+        macrobar: { refersto: '_macrobar', dataval: (d) => d },
+        online: { refersto: '_online', dataval: (d) => d },
+        roll20id: { refersto: '_d20userid', dataval: (d) => d },
+        roll20_id: { refersto: '_d20userid', dataval: (d) => d },
+        r20id: { refersto: '_d20userid', dataval: (d) => d },
+        r20_id: { refersto: '_d20userid', dataval: (d) => d },
+        showmacrobar: { refersto: 'showmacrobar', dataval: (d) => d },
+        show_macrobar: { refersto: 'showmacrobar', dataval: (d) => d },
+        speakingas: { refersto: 'speakingas', dataval: (d) => d },
+        speaking_as: { refersto: 'speakingas', dataval: (d) => d },
+        userid: { refersto: '_d20userid', dataval: (d) => d },
+        user_id: { refersto: '_d20userid', dataval: (d) => d }
     };
     const pageProps = { // @(page.pagename)
-        page_id: { refersto: '_id', permissionsreq: 'any', dataval: (d) => d },
-        page_name: { refersto: 'name', permissionsreq: 'any', dataval: (d) => d },
-        page_type: { refersto: '_type', permissionsreq: 'any', dataval: (d) => d },
-        adv_fow_enabled: { refersto: 'adv_fow_enabled', permissionsreq: 'any', dataval: (d) => d },
-        adv_fow_dim_reveals: { refersto: 'adv_fow_dim_reveals', permissionsreq: 'any', dataval: (d) => d },
-        adv_fow_show_grid: { refersto: 'adv_fow_show_grid', permissionsreq: 'any', dataval: (d) => d },
-        archived: { refersto: 'archived', permissionsreq: 'any', dataval: (d) => d },
-        background_color: { refersto: 'background_color', permissionsreq: 'any', dataval: (d) => d },
-        bg_color: { refersto: 'background_color', permissionsreq: 'any', dataval: (d) => d },
-        daylight_mode_enabled: { refersto: 'daylight_mode_enabled', permissionsreq: 'any', dataval: (d) => d },
-        daylightmodeopacity: { refersto: 'daylightModeOpacity', permissionsreq: 'any', dataval: (d) => d },
-        daylight_mode_opacity: { refersto: 'daylightModeOpacity', permissionsreq: 'any', dataval: (d) => d },
-        diagonaltype: { refersto: 'diagonaltype', permissionsreq: 'any', dataval: (d) => d },
-        diagonal_type: { refersto: 'diagonaltype', permissionsreq: 'any', dataval: (d) => d },
-        diagonal: { refersto: 'diagonaltype', permissionsreq: 'any', dataval: (d) => d },
-        dynamic_lighting_enabled: { refersto: 'dynamic_lighting_enabled', permissionsreq: 'any', dataval: (d) => d },
-        explorer_mode: { refersto: 'explorer_mode', permissionsreq: 'any', dataval: (d) => d },
-        fogopacity: { refersto: 'fog_opacity', permissionsreq: 'any', dataval: (d) => d },
-        fog_opacity: { refersto: 'fog_opacity', permissionsreq: 'any', dataval: (d) => d },
-        force_lighting_refresh: { refersto: 'force_lighting_refresh', permissionsreq: 'any', dataval: (d) => d },
-        gridcolor: { refersto: 'gridcolor', permissionsreq: 'any', dataval: (d) => d },
-        grid_color: { refersto: 'gridcolor', permissionsreq: 'any', dataval: (d) => d },
-        grid_labels: { refersto: 'gridlabels', permissionsreq: 'any', dataval: (d) => d },
-        gridlabels: { refersto: 'gridlabels', permissionsreq: 'any', dataval: (d) => d },
-        gridopacity: { refersto: 'grid_opacity', permissionsreq: 'any', dataval: (d) => d },
-        grid_opacity: { refersto: 'grid_opacity', permissionsreq: 'any', dataval: (d) => d },
-        gridtype: { refersto: 'grid_type', permissionsreq: 'any', dataval: (d) => d },
-        grid_type: { refersto: 'grid_type', permissionsreq: 'any', dataval: (d) => d },
-        height: { refersto: 'height', permissionsreq: 'any', dataval: (d) => d },
-        jukeboxtrigger: { refersto: 'jukeboxtrigger', permissionsreq: 'any', dataval: (d) => d },
-        jukebox_trigger: { refersto: 'jukeboxtrigger', permissionsreq: 'any', dataval: (d) => d },
-        lightupdatedrop: { refersto: 'lightupdatedrop', permissionsreq: 'any', dataval: (d) => d },
-        lightenforcelos: { refersto: 'lightenforcelos', permissionsreq: 'any', dataval: (d) => d },
-        lightrestrictmove: { refersto: 'lightrestrictmove', permissionsreq: 'any', dataval: (d) => d },
-        lightglobalillum: { refersto: 'lightglobalillum', permissionsreq: 'any', dataval: (d) => d },
-        scale_number: { refersto: 'scale_number', permissionsreq: 'any', dataval: (d) => d },
-        scale_units: { refersto: 'scale_units', permissionsreq: 'any', dataval: (d) => d },
-        showdarkness: { refersto: 'showdarkness', permissionsreq: 'any', dataval: (d) => d },
-        show_darkness: { refersto: 'showdarkness', permissionsreq: 'any', dataval: (d) => d },
-        showgrid: { refersto: 'showgrid', permissionsreq: 'any', dataval: (d) => d },
-        show_grid: { refersto: 'showgrid', permissionsreq: 'any', dataval: (d) => d },
-        showlighting: { refersto: 'showlighting', permissionsreq: 'any', dataval: (d) => d },
-        show_lighting: { refersto: 'showlighting', permissionsreq: 'any', dataval: (d) => d },
-        snapping_increment: { refersto: 'snapping_increment', permissionsreq: 'any', dataval: (d) => d },
-        width: { refersto: 'width', permissionsreq: 'any', dataval: (d) => d },
-        zorder: { refersto: '_zorder', permissionsreq: 'any', dataval: (d) => d }
+        page_id: { refersto: '_id', dataval: (d) => d },
+        page_name: { refersto: 'name', dataval: (d) => d },
+        page_type: { refersto: '_type', dataval: (d) => d },
+        adv_fow_enabled: { refersto: 'adv_fow_enabled', dataval: (d) => d },
+        adv_fow_dim_reveals: { refersto: 'adv_fow_dim_reveals', dataval: (d) => d },
+        adv_fow_show_grid: { refersto: 'adv_fow_show_grid', dataval: (d) => d },
+        archived: { refersto: 'archived', dataval: (d) => d },
+        background_color: { refersto: 'background_color', dataval: (d) => d },
+        bg_color: { refersto: 'background_color', dataval: (d) => d },
+        daylight_mode_enabled: { refersto: 'daylight_mode_enabled', dataval: (d) => d },
+        daylightmodeopacity: { refersto: 'daylightModeOpacity', dataval: (d) => d },
+        daylight_mode_opacity: { refersto: 'daylightModeOpacity', dataval: (d) => d },
+        diagonaltype: { refersto: 'diagonaltype', dataval: (d) => d },
+        diagonal_type: { refersto: 'diagonaltype', dataval: (d) => d },
+        diagonal: { refersto: 'diagonaltype', dataval: (d) => d },
+        dynamic_lighting_enabled: { refersto: 'dynamic_lighting_enabled', dataval: (d) => d },
+        explorer_mode: { refersto: 'explorer_mode', dataval: (d) => d },
+        fogopacity: { refersto: 'fog_opacity', dataval: (d) => d },
+        fog_opacity: { refersto: 'fog_opacity', dataval: (d) => d },
+        force_lighting_refresh: { refersto: 'force_lighting_refresh', dataval: (d) => d },
+        gridcolor: { refersto: 'gridcolor', dataval: (d) => d },
+        grid_color: { refersto: 'gridcolor', dataval: (d) => d },
+        grid_labels: { refersto: 'gridlabels', dataval: (d) => d },
+        gridlabels: { refersto: 'gridlabels', dataval: (d) => d },
+        gridopacity: { refersto: 'grid_opacity', dataval: (d) => d },
+        grid_opacity: { refersto: 'grid_opacity', dataval: (d) => d },
+        gridtype: { refersto: 'grid_type', dataval: (d) => d },
+        grid_type: { refersto: 'grid_type', dataval: (d) => d },
+        height: { refersto: 'height', dataval: (d) => d },
+        jukeboxtrigger: { refersto: 'jukeboxtrigger', dataval: (d) => d },
+        jukebox_trigger: { refersto: 'jukeboxtrigger', dataval: (d) => d },
+        lightupdatedrop: { refersto: 'lightupdatedrop', dataval: (d) => d },
+        lightenforcelos: { refersto: 'lightenforcelos', dataval: (d) => d },
+        lightrestrictmove: { refersto: 'lightrestrictmove', dataval: (d) => d },
+        lightglobalillum: { refersto: 'lightglobalillum', dataval: (d) => d },
+        path: { refersto: 'path', dataval: (d) => d },
+        placement: { refersto: 'placement', dataval: (d) => d },
+        scale_number: { refersto: 'scale_number', dataval: (d) => d },
+        scale_units: { refersto: 'scale_units', dataval: (d) => d },
+        showdarkness: { refersto: 'showdarkness', dataval: (d) => d },
+        show_darkness: { refersto: 'showdarkness', dataval: (d) => d },
+        showgrid: { refersto: 'showgrid', dataval: (d) => d },
+        show_grid: { refersto: 'showgrid', dataval: (d) => d },
+        showlighting: { refersto: 'showlighting', dataval: (d) => d },
+        show_lighting: { refersto: 'showlighting', dataval: (d) => d },
+        snapping_increment: { refersto: 'snapping_increment', dataval: (d) => d },
+        use_auto_wrapper: { refersto: 'useAutoWrapper', dataval: (d) => d },
+        width: { refersto: 'width', dataval: (d) => d },
+        wrapper: { refersto: 'wrapperColor', dataval: (d) => d },
+        wrapper_auto_color: { refersto: 'wrapperAutoColor', dataval: (d) => d },
+        wrapper_color: { refersto: 'wrapperColor', dataval: (d) => d },
+        zorder: { refersto: '_zorder', dataval: (d) => d }
     };
     const campaignProps = { // @(campaign.prop)
-        campaign_id: { refersto: '_id', permissionsreq: 'any', dataval: (d) => d },
-        campaign_type: { refersto: '_type', permissionsreq: 'any', dataval: (d) => d },
-        id: { refersto: '_id', permissionsreq: 'any', dataval: (d) => d },
-        type: { refersto: '_type', permissionsreq: 'any', dataval: (d) => d },
-        turnorder: { refersto: 'turnorder', permissionsreq: 'any', dataval: (d) => d },
-        initiativepage: { refersto: 'initiativepage', permissionsreq: 'any', dataval: (d) => d },
-        pageid: { refersto: 'playerpageid', permissionsreq: 'any', dataval: (d) => d },
-        page_id: { refersto: 'playerpageid', permissionsreq: 'any', dataval: (d) => d },
-        playerpageid: { refersto: 'playerpageid', permissionsreq: 'any', dataval: (d) => d },
-        playerpage_id: { refersto: 'playerpageid', permissionsreq: 'any', dataval: (d) => d },
-        pagename: { refersto: 'playerpageid', permissionsreq: 'any', dataval: (d) => getObjName(d, 'page') },
-        page_name: { refersto: 'playerpageid', permissionsreq: 'any', dataval: (d) => getObjName(d, 'page') },
-        playerpagename: { refersto: 'playerpageid', permissionsreq: 'any', dataval: (d) => getObjName(d, 'page') },
-        playerpage_name: { refersto: 'playerpageid', permissionsreq: 'any', dataval: (d) => getObjName(d, 'page') },
-        playerspecificpages: { refersto: 'playerspecificpages', permissionsreq: 'any', dataval: (d) => Object.keys(d).map(k => `${k}:${d[k]}`).join(',') },
-        playerspecificpagesname: { refersto: 'playerspecificpages', permissionsreq: 'any', dataval: (d) => Object.keys(d).map(k => `${getObjName(k, 'player')}:${getObjName(d[k], 'page')}`).join(',') },
-        playerspecificpages_name: { refersto: 'playerspecificpages', permissionsreq: 'any', dataval: (d) => Object.keys(d).map(k => `${getObjName(k, 'player')}:${getObjName(d[k], 'page')}`).join(',') },
-        currentpages: { refersto: 'currentpages', permissionsreq: 'any', dataval: (d) => d },
-        currentpagesname: { refersto: 'currentpagesname', permissionsreq: 'any', dataval: (d) => d },
-        journalfolder: { refersto: '_journalfolder', permissionsreq: 'any', dataval: (d) => d },
-        jukeboxfolder: { refersto: '_jukeboxfolder', permissionsreq: 'any', dataval: (d) => d },
-        jukeboxplaylistplaying: { refersto: '_jukeboxplaylistplaying', permissionsreq: 'any', dataval: (d) => d },
-        token_markers: { refersto: '_token_markers', permissionsreq: 'any', dataval: (d) => d },
-        markers: { refersto: '_token_markers', permissionsreq: 'any', dataval: (d) => d }
+        campaign_id: { refersto: '_id', dataval: (d) => d },
+        campaign_type: { refersto: '_type', dataval: (d) => d },
+        id: { refersto: '_id', dataval: (d) => d },
+        type: { refersto: '_type', dataval: (d) => d },
+        turnorder: { refersto: 'turnorder', dataval: (d) => d },
+        initiativepage: { refersto: 'initiativepage', dataval: (d) => d },
+        nodeversion: { refersto: 'nodeversion', dataval: (d) => d },
+        pageid: { refersto: 'playerpageid', dataval: (d) => d },
+        page_id: { refersto: 'playerpageid', dataval: (d) => d },
+        playerpageid: { refersto: 'playerpageid', dataval: (d) => d },
+        playerpage_id: { refersto: 'playerpageid', dataval: (d) => d },
+        pagename: { refersto: 'playerpageid', dataval: (d) => getObjName(d, 'page') },
+        page_name: { refersto: 'playerpageid', dataval: (d) => getObjName(d, 'page') },
+        playerpagename: { refersto: 'playerpageid', dataval: (d) => getObjName(d, 'page') },
+        playerpage_name: { refersto: 'playerpageid', dataval: (d) => getObjName(d, 'page') },
+        playerspecificpages: { refersto: 'playerspecificpages', dataval: (d) => Object.keys(d).map(k => `${k}:${d[k]}`).join(',') },
+        playerspecificpagesname: { refersto: 'playerspecificpages', dataval: (d) => Object.keys(d).map(k => `${getObjName(k, 'player')}:${getObjName(d[k], 'page')}`).join(',') },
+        playerspecificpages_name: { refersto: 'playerspecificpages', dataval: (d) => Object.keys(d).map(k => `${getObjName(k, 'player')}:${getObjName(d[k], 'page')}`).join(',') },
+        currentpages: { refersto: 'currentpages', dataval: (d) => d },
+        currentpagesname: { refersto: 'currentpagesname', dataval: (d) => d },
+        sheetname: { refersto: 'sheetname', dataval: (d) => d },
+        journalfolder: { refersto: '_journalfolder', dataval: (d) => d },
+        jukeboxfolder: { refersto: '_jukeboxfolder', dataval: (d) => d },
+        jukeboxplaylistplaying: { refersto: '_jukeboxplaylistplaying', dataval: (d) => d },
+        token_markers: { refersto: '_token_markers', dataval: (d) => d },
+        markers: { refersto: '_token_markers', dataval: (d) => d }
     };
     const markerProps = { // derived from the Campaign object
-        marker_id: { refersto: 'tag', permissionsreq: 'any', dataval: (d) => d },
-        marker_name: { refersto: 'name', permissionsreq: 'any', dataval: (d) => d },
-        tag: { refersto: 'tag', permissionsreq: 'any', dataval: (d) => d },
-        url: { refersto: 'url', permissionsreq: 'any', dataval: (d) => d },
-        html: { refersto: 'html', permissionsreq: 'any', dataval: (d) => d }
+        marker_id: { refersto: 'tag', dataval: (d) => d },
+        marker_name: { refersto: 'name', dataval: (d) => d },
+        tag: { refersto: 'tag', dataval: (d) => d },
+        url: { refersto: 'url', dataval: (d) => d },
+        html: { refersto: 'html', dataval: (d) => d }
     };
     const statusProps = { // derived from a Token object
-        status_id: { refersto: 'tag', permissionsreq: 'any', dataval: (d) => d },
-        status_name: { refersto: 'name', permissionsreq: 'any', dataval: (d) => d },
-        num: { refersto: 'num', permissionsreq: 'any', dataval: (d) => d },
-        number: { refersto: 'num', permissionsreq: 'any', dataval: (d) => d },
-        value: { refersto: 'num', permissionsreq: 'any', dataval: (d) => d },
-        val: { refersto: 'num', permissionsreq: 'any', dataval: (d) => d },
-        html: { refersto: 'html', permissionsreq: 'any', dataval: (d) => d },
-        tag: { refersto: 'tag', permissionsreq: 'any', dataval: (d) => d },
-        url: { refersto: 'url', permissionsreq: 'any', dataval: (d) => d },
-        is: { refersto: 'is', permissionsreq: 'any', dataval: (d) => d },
-        count: { refersto: 'count', permissionsreq: 'any', dataval: (d) => d }
+        status_id: { refersto: 'tag', dataval: (d) => d },
+        status_name: { refersto: 'name', dataval: (d) => d },
+        num: { refersto: 'num', dataval: (d) => d },
+        number: { refersto: 'num', dataval: (d) => d },
+        value: { refersto: 'num', dataval: (d) => d },
+        val: { refersto: 'num', dataval: (d) => d },
+        html: { refersto: 'html', dataval: (d) => d },
+        tag: { refersto: 'tag', dataval: (d) => d },
+        url: { refersto: 'url', dataval: (d) => d },
+        is: { refersto: 'is', dataval: (d) => d },
+        count: { refersto: 'count', dataval: (d) => d }
+    };
+    const tagProps = {
+        count: { refersto: 'count', dataval: (d) => d },
+        is: { refersto: 'is', dataval: (d) => d }
     };
     const textProps = {
-        id: { refersto: '_id', permissionsreq: 'any', dataval: (d) => d },
-        type: { refersto: '_type', permissionsreq: 'any', dataval: (d) => d },
-        color: { refersto: 'color', permissionsreq: 'any', dataval: (d) => d },
-        cby: { refersto: 'controlledby', permissionsreq: 'any', dataval: (d) => d },
-        controlledby: { refersto: 'controlledby', permissionsreq: 'any', dataval: (d) => d },
-        cby_names: { refersto: 'controlledby', permissionsreq: 'any', dataval: (d) => getObjName(d, 'playerlist') },
-        controlledby_names: { refersto: 'controlledby', permissionsreq: 'any', dataval: (d) => getObjName(d, 'playerlist') },
-        cby_name: { refersto: 'controlledby', permissionsreq: 'any', dataval: (d) => getObjName(d, 'playerlist') },
-        controlledby_name: { refersto: 'controlledby', permissionsreq: 'any', dataval: (d) => getObjName(d, 'playerlist') },
-        font_family: { refersto: 'font_family', permissionsreq: 'any', dataval: (d) => d },
-        font_size: { refersto: 'font_size', permissionsreq: 'any', dataval: (d) => d },
-        height: { refersto: 'height', permissionsreq: 'any', dataval: (d) => d },
-        layer: { refersto: 'layer', permissionsreq: 'gm', dataval: (d) => d },
-        left: { refersto: 'left', permissionsreq: 'any', dataval: (d) => d },
-        page_id: { refersto: '_pageid', permissionsreq: 'any', dataval: (d) => d },
-        pageid: { refersto: '_pageid', permissionsreq: 'any', dataval: (d) => d },
-        pid: { refersto: '_pageid', permissionsreq: 'any', dataval: (d) => d },
-        page: { refersto: '_pageid', permissionsreq: 'any', dataval: d => getObjName(d, 'page') },
-        page_name: { refersto: '_pageid', permissionsreq: 'any', dataval: d => getObjName(d, 'page') },
-        player: { refersto: 'controlledby', permissionsreq: 'any', dataval: (d) => d.split(/\s*,\s*/).filter(a => a.toLowerCase() !== 'all' && getObj('player', a))[0] },
-        player_name: { refersto: 'controlledby', permissionsreq: 'any', dataval: (d, s) => getControlledByList(s, d).split(/\s*,\s*/).filter(a => a.toLowerCase() !== 'all').map(a => getObjName(a, 'player')).filter(a => a)[0] },
-        rotation: { refersto: 'rotation', permissionsreq: 'any', dataval: (d) => d },
-        text: { refersto: 'text', permissionsreq: 'any', dataval: (d) => d },
-        top: { refersto: 'top', permissionsreq: 'any', dataval: (d) => d },
-        width: { refersto: 'width', permissionsreq: 'any', dataval: (d) => d }
+        id: { refersto: '_id', dataval: (d) => d },
+        type: { refersto: '_type', dataval: (d) => d },
+        color: { refersto: 'color', dataval: (d) => d },
+        cby: { refersto: 'controlledby', dataval: (d) => d },
+        controlledby: { refersto: 'controlledby', dataval: (d) => d },
+        cby_names: { refersto: 'controlledby', dataval: (d) => getObjName(d, 'playerlist') },
+        controlledby_names: { refersto: 'controlledby', dataval: (d) => getObjName(d, 'playerlist') },
+        cby_name: { refersto: 'controlledby', dataval: (d) => getObjName(d, 'playerlist') },
+        controlledby_name: { refersto: 'controlledby', dataval: (d) => getObjName(d, 'playerlist') },
+        font_family: { refersto: 'font_family', dataval: (d) => d },
+        font_size: { refersto: 'font_size', dataval: (d) => d },
+        height: { refersto: 'height', dataval: (d) => d },
+        layer: { refersto: 'layer', dataval: (d) => d },
+        left: { refersto: 'left', dataval: (d) => d },
+        page_id: { refersto: '_pageid', dataval: (d) => d },
+        pageid: { refersto: '_pageid', dataval: (d) => d },
+        pid: { refersto: '_pageid', dataval: (d) => d },
+        page: { refersto: '_pageid', dataval: d => getObjName(d, 'page') },
+        page_name: { refersto: '_pageid', dataval: d => getObjName(d, 'page') },
+        player: { refersto: 'controlledby', dataval: (d) => d.split(/\s*,\s*/).filter(a => a.toLowerCase() !== 'all' && getObj('player', a))[0] },
+        player_name: { refersto: 'controlledby', dataval: (d, s) => getControlledByList(s, d).split(/\s*,\s*/).filter(a => a.toLowerCase() !== 'all').map(a => getObjName(a, 'player')).filter(a => a)[0] },
+        rotation: { refersto: 'rotation', dataval: (d) => d },
+        text: { refersto: 'text', dataval: (d) => d },
+        top: { refersto: 'top', dataval: (d) => d },
+        width: { refersto: 'width', dataval: (d) => d }
     };
     const pathProps = {
-        id: { refersto: '_id', permissionsreq: 'any', dataval: (d) => d },
-        type: { refersto: '_type', permissionsreq: 'any', dataval: (d) => d },
-        cby: { refersto: 'controlledby', permissionsreq: 'any', dataval: (d, s) => getControlledByList(s, d) },
-        controlledby: { refersto: 'controlledby', permissionsreq: 'any', dataval: (d, s) => getControlledByList(s, d) },
-        cby_names: { refersto: 'controlledby', permissionsreq: 'any', dataval: (d) => getObjName(d, 'playerlist') },
-        controlledby_names: { refersto: 'controlledby', permissionsreq: 'any', dataval: (d) => getObjName(d, 'playerlist') },
-        cby_name: { refersto: 'controlledby', permissionsreq: 'any', dataval: (d) => getObjName(d, 'playerlist') },
-        controlledby_name: { refersto: 'controlledby', permissionsreq: 'any', dataval: (d) => getObjName(d, 'playerlist') },
-        fill: { refersto: 'fill', permissionsreq: 'any', dataval: (d) => d },
-        height: { refersto: 'height', permissionsreq: 'any', dataval: (d) => d },
-        layer: { refersto: 'layer', permissionsreq: 'gm', dataval: (d) => d },
-        left: { refersto: 'left', permissionsreq: 'any', dataval: (d) => d },
-        page_id: { refersto: '_pageid', permissionsreq: 'any', dataval: (d) => d },
-        pageid: { refersto: '_pageid', permissionsreq: 'any', dataval: (d) => d },
-        pid: { refersto: '_pageid', permissionsreq: 'any', dataval: (d) => d },
-        page: { refersto: '_pageid', permissionsreq: 'any', dataval: d => getObjName(d, 'page') },
-        page_name: { refersto: '_pageid', permissionsreq: 'any', dataval: d => getObjName(d, 'page') },
-        path: { refersto: 'path', permissionsreq: 'any', dataval: (d) => d },
-        player: { refersto: 'controlledby', permissionsreq: 'any', dataval: (d) => d.split(/\s*,\s*/).filter(a => a.toLowerCase() !== 'all' && getObj('player', a))[0] },
-        player_name: { refersto: 'controlledby', permissionsreq: 'any', dataval: (d, s) => getControlledByList(s, d).split(/\s*,\s*/).filter(a => a.toLowerCase() !== 'all').map(a => getObjName(a, 'player')).filter(a => a)[0] },
-        rotation: { refersto: 'rotation', permissionsreq: 'any', dataval: (d) => d },
-        scalex: { refersto: 'scaleX', permissionsreq: 'any', dataval: (d) => d },
-        scaley: { refersto: 'scaleY', permissionsreq: 'any', dataval: (d) => d },
-        stroke: { refersto: 'stroke', permissionsreq: 'any', dataval: (d) => d },
-        stroke_width: { refersto: 'stroke_width', permissionsreq: 'any', dataval: (d) => d },
-        top: { refersto: 'top', permissionsreq: 'any', dataval: (d) => d },
-        width: { refersto: 'width', permissionsreq: 'any', dataval: (d) => d }
+        id: { refersto: '_id', dataval: (d) => d },
+        type: { refersto: '_type', dataval: (d) => d },
+        cby: { refersto: 'controlledby', dataval: (d, s) => getControlledByList(s, d) },
+        controlledby: { refersto: 'controlledby', dataval: (d, s) => getControlledByList(s, d) },
+        cby_names: { refersto: 'controlledby', dataval: (d) => getObjName(d, 'playerlist') },
+        controlledby_names: { refersto: 'controlledby', dataval: (d) => getObjName(d, 'playerlist') },
+        cby_name: { refersto: 'controlledby', dataval: (d) => getObjName(d, 'playerlist') },
+        controlledby_name: { refersto: 'controlledby', dataval: (d) => getObjName(d, 'playerlist') },
+        fill: { refersto: 'fill', dataval: (d) => d },
+        height: { refersto: 'height', dataval: (d) => d },
+        layer: { refersto: 'layer', dataval: (d) => d },
+        left: { refersto: 'left', dataval: (d) => d },
+        page_id: { refersto: '_pageid', dataval: (d) => d },
+        pageid: { refersto: '_pageid', dataval: (d) => d },
+        pid: { refersto: '_pageid', dataval: (d) => d },
+        page: { refersto: '_pageid', dataval: d => getObjName(d, 'page') },
+        page_name: { refersto: '_pageid', dataval: d => getObjName(d, 'page') },
+        path: { refersto: 'path', dataval: (d) => d },
+        player: { refersto: 'controlledby', dataval: (d) => d.split(/\s*,\s*/).filter(a => a.toLowerCase() !== 'all' && getObj('player', a))[0] },
+        player_name: { refersto: 'controlledby', dataval: (d, s) => getControlledByList(s, d).split(/\s*,\s*/).filter(a => a.toLowerCase() !== 'all').map(a => getObjName(a, 'player')).filter(a => a)[0] },
+        rotation: { refersto: 'rotation', dataval: (d) => d },
+        scalex: { refersto: 'scaleX', dataval: (d) => d },
+        scaley: { refersto: 'scaleY', dataval: (d) => d },
+        stroke: { refersto: 'stroke', dataval: (d) => d },
+        stroke_width: { refersto: 'stroke_width', dataval: (d) => d },
+        top: { refersto: 'top', dataval: (d) => d },
+        width: { refersto: 'width', dataval: (d) => d }
+    };
+    const cardProps = {
+        id: { refersto: '_id', dataval: (d) => d },
+        type: { refersto: '_type', dataval: (d) => d },
+        deckid: { refersto: '_deckid', dataval: (d) => d },
+        name: { refersto: 'name', dataval: (d) => d },
+        avatar: { refersto: 'avatar', dataval: (d) => d },
+        img: { refersto: 'avatar', dataval: (d) => `<img src="${d}">` },
+        imgsrc: { refersto: 'avatar', dataval: (d) => d },
+        imgsrc_short: { refersto: 'avatar', dataval: (d) => d.slice(0, Math.max(d.indexOf(`?`), 0) || d.length) },
+        card_back: { refersto: 'card_back', dataval: (d) => d },
+        is_removed: { refersto: 'is_removed', dataval: (d) => d },
+        tooltip: { refersto: 'tooltip', dataval: (d) => d }
+    };
+    const handoutProps = {
+        id: { refersto: '_id', dataval: (d) => d },
+        type: { refersto: '_type', dataval: (d) => d },
+        name: { refersto: 'name', dataval: (d) => d },
+        archived: { refersto: 'archived', dataval: (d) => d },
+
+        avatar: { refersto: 'avatar', dataval: (d) => d },
+        img: { refersto: 'avatar', dataval: (d) => `<img src="${d}">` },
+        imgsrc: { refersto: 'avatar', dataval: (d) => d },
+        imgsrc_short: { refersto: 'avatar', dataval: (d) => d.slice(0, Math.max(d.indexOf(`?`), 0) || d.length) },
+
+        controlledby: { refersto: 'controlledby', dataval: (d) => d },
+        controlledby_name: { refersto: 'controlledby', dataval: (d) => getObjName(d, 'playerlist') },
+        controlledby_names: { refersto: 'controlledby', dataval: (d) => getObjName(d, 'playerlist') },
+        player: { refersto: 'controlledby', dataval: (d) => d.split(/\s*,\s*/).filter(a => a.toLowerCase() !== 'all' && getObj('player', a))[0] },
+        player_name: { refersto: 'controlledby', dataval: (d) => d.split(/\s*,\s*/).filter(a => a.toLowerCase() !== 'all').map(a => getObjName(a, 'player')).filter(a => a)[0] },
+
+        inplayerjournals: { refersto: 'inplayerjournals', dataval: (d) => d },
+        inplayerjournals_name: { refersto: 'inplayerjournals', dataval: (d) => getObjName(d, 'playerlist') },
+        inplayerjournals_names: { refersto: 'inplayerjournals', dataval: (d) => getObjName(d, 'playerlist') },
+        tags: { refersto: 'tags', dataval: (d) => JSON.parse(d).join(',') }
+    };
+    const tableProps = {
+        id: { refersto: '_id', dataval: (d) => d },
+        type: { refersto: '_type', dataval: (d) => d },
+        name: { refersto: 'name', dataval: (d) => d },
+        showplayers: { refersto: 'showplayers', dataval: (d) => d },
+        totalweight: { refersto: 'totalweight', dataval: (d) => d }
+    };
+    const tableItemProps = {
+        id: { refersto: '_id', dataval: (d) => d },
+        type: { refersto: '_type', dataval: (d) => d },
+        name: { refersto: 'name', dataval: (d) => d },
+
+        avatar: { refersto: 'avatar', dataval: (d) => d },
+        img: { refersto: 'avatar', dataval: (d) => `<img src="${d}">` },
+        imgsrc: { refersto: 'avatar', dataval: (d) => d },
+        imgsrc_short: { refersto: 'avatar', dataval: (d) => d.slice(0, Math.max(d.indexOf(`?`), 0) || d.length) },
+
+        weight: { refersto: 'weight', dataval: (d) => d }
+    };
+    const deckProps = {
+
     };
 
     const condensereturn = (funcret, status, notes) => {
@@ -1064,7 +1243,12 @@ const Fetch = (() => { //eslint-disable-line no-unused-vars
             player: playerProps,
             status: statusProps,
             text: textProps,
-            path: pathProps
+            path: pathProps,
+            tag: tagProps,
+            card: cardProps,
+            handout: handoutProps,
+            rollabletable: tableProps,
+            tableitem: tableItemProps
         };
         const getPropertyValue = (source, objtype, item, def = '') => {
             let propObj = propContainers[objtype.toLowerCase()];
@@ -1143,9 +1327,36 @@ const Fetch = (() => { //eslint-disable-line no-unused-vars
                         source = simpleObj(getMarker(prop));
                         retval = getPropertyValue(source, obj, (identikey || 'html'), def);
                         break;
+                    case 'card':
+                        source = simpleObj(getCard(prop));
+                        retval = getPropertyValue(source, obj, identikey, def);
+                        break;
                     case 'campaign':
                         source = getCampaign();
                         retval = getPropertyValue(source, obj, prop, def);
+                        break;
+                    case 'handout':
+                        presource = simpleObj(getHandout(prop) || {});
+                        if (identikey.toLowerCase() === 'is') { // handout with is
+                            if (subprop) {
+                                source = getTag(presource._id, 'handout', subprop, msg.playerid);
+                                retval = getPropertyValue(source, 'tag', identikey, def);
+                            }
+                        } else {
+                            source = presource;
+                            retval = getPropertyValue(source, obj, identikey, def);
+                        }
+                        break;
+                    case 'table':
+                        presource = simpleObj(getTable(prop, msg.playerid));
+                        if (presource && presource.id) {
+                            if (presource.hasOwnProperty(identikey)) {
+                                retval = getPropertyValue(presource, 'rollabletable', identikey, def);
+                            } else {
+                                source = simpleObj(getTableItems(identikey, presource));
+                                retval = getPropertyValue(source, 'tableitem', (subprop || 'name'), def);
+                            }
+                        }
                         break;
                     case 'selected':
                         if (!msg.selected) { // selected but no token => default
@@ -1161,20 +1372,48 @@ const Fetch = (() => { //eslint-disable-line no-unused-vars
                                     retval = getPropertyValue(source, 'token', prop, def);
                                 } else if (prop.toLowerCase() === 'status') { // selected with status
                                     if (identikey &&
-                                        getMarker(/(?<marker>.+?)(?:\?(?<index>\d+|all\+?))?$/.exec(identikey.toLowerCase())[1]).name &&
+                                        (getMarker(/(?<marker>.+?)(?:\?(?<index>\d+|all\+?))?$/.exec(identikey.toLowerCase())[1]) || {}).name &&
                                         Object.keys(statusProps).includes((subprop || 'value').toLowerCase())) {
-                                        presource = simpleObj(getToken(msg.selected[0]._id));
+                                        presource = simpleObj(getToken(msg.selected[0]._id, getPageID(msg.playerid)));
                                         if (presource && !presource.hasOwnProperty('id')) presource.id = presource._id;
                                         if (!tokenStatuses.hasOwnProperty(presource.id) || tokenStatuses[presource.id].msgId !== msgId) {// eslint-disable-line no-prototype-builtins
                                             tokenStatuses[presource.id] = new StatusBlock({ token: presource, msgId: msgId });
                                         }
-                                        source = getStatus(msg.selected[0]._id, identikey, msgId);
+                                        source = getStatus(msg.selected[0]._id, getPageID(msg.playerid), identikey, msgId);
                                         retval = getPropertyValue(source, prop, (subprop || 'value'), def);
+                                    }
+                                }/* else if (prop.toLowerCase() === 'tagged') { // selected with tagged
+                                    if (identikey && Object.keys(tagProps).includes((subprop || 'is').toLowerCase())) {
+                                        presource = simpleObj(getToken(msg.selected[0]._id));
+                                        if (presource && !presource.hasOwnProperty('id')) presource.id = presource._id;
+                                        if (presource.represents) {
+                                            source = getTag(presource.id, 'character', identikey, msg.playerid);
+                                            retval = getPropertyValue(source, 'tag', (subprop || 'is'), def);
+                                        }
+                                    }
+                                }*/ else if (prop.toLowerCase() === 'is') { // selected with is
+                                    if (identikey) {
+                                        if ((getMarker(/(?<marker>.+?)(?:\?(?<index>\d+|all\+?))?$/.exec(identikey.toLowerCase())[1]) || {}).name) { // is with status
+                                            presource = simpleObj(getToken(msg.selected[0]._id, getPageID(msg.playerid)));
+                                            if (presource && !presource.hasOwnProperty('id')) presource.id = presource._id;
+                                            if (!tokenStatuses.hasOwnProperty(presource.id) || tokenStatuses[presource.id].msgId !== msgId) {// eslint-disable-line no-prototype-builtins
+                                                tokenStatuses[presource.id] = new StatusBlock({ token: presource, msgId: msgId });
+                                            }
+                                            source = getStatus(msg.selected[0]._id, getPageID(msg.playerid), identikey, msgId);
+                                            retval = getPropertyValue(source, 'status', 'is', def);
+                                        } else { // is with tag
+                                            presource = simpleObj(getToken(msg.selected[0]._id));
+                                            if (presource && !presource.hasOwnProperty('id')) presource.id = presource._id;
+                                            if (presource.represents) {
+                                                source = getTag(presource.id, 'character', identikey, msg.playerid);
+                                                retval = getPropertyValue(source, 'tag', 'is', def);
+                                            }
+                                        }
                                     }
                                 } else { // selected with character prop/attribute/ability
                                     source = simpleObj(getChar(msg.selected[0]._id, msg.playerid));
                                     if (Object.keys(charProps).includes(prop.toLowerCase())) { // selected + character prop
-                                        retval = getPropertyValue(simpleObj(source), 'character', prop, def);
+                                        retval = getPropertyValue(source, 'character', prop, def);
                                     } else { // selected + character attribute or ability
                                         retval = getCharacterAttribute(source, type, prop, identikey, def);
                                     }
@@ -1195,15 +1434,43 @@ const Fetch = (() => { //eslint-disable-line no-unused-vars
                                 retval = getPropertyValue(source, 'token', prop, def);
                             } else if (prop.toLowerCase() === 'status') { // tracker with status
                                 if (identikey &&
-                                    getMarker(/(?<marker>.+?)(?:\?(?<index>\d+|all\+?))?$/.exec(identikey.toLowerCase())[1]).name &&
+                                    (getMarker(/(?<marker>.+?)(?:\?(?<index>\d+|all\+?))?$/.exec(identikey.toLowerCase())[1]) || {}).name &&
                                     Object.keys(statusProps).includes((subprop || 'value').toLowerCase())) {
                                     presource = simpleObj(getToken(presource.id, presource._pageid));
                                     if (presource && !presource.hasOwnProperty('id')) presource.id = presource._id; 
                                     if (!tokenStatuses.hasOwnProperty(presource.id) || tokenStatuses[presource.id].msgId !== msgId) { 
                                         tokenStatuses[presource.id] = new StatusBlock({ token: presource, msgId: msgId });
                                     }
-                                    source = getStatus(presource.id, identikey, msgId);
+                                    source = getStatus(presource.id, getPageID(msg.playerid), identikey, msgId);
                                     retval = getPropertyValue(source, prop, (subprop || 'value'), def);
+                                }
+                            }/* else if (prop.toLowerCase() === 'tagged') { // tracker with tagged
+                                if (identikey && Object.keys(tagProps).includes((subprop || 'is').toLowerCase())) {
+                                    presource = simpleObj(getToken(presource.id, presource._pageid));
+                                    if (presource && !presource.hasOwnProperty('id')) presource.id = presource._id;
+                                    if (presource.represents) {
+                                        source = getTag(presource.id, 'character', identikey, msg.playerid);
+                                        retval = getPropertyValue(source, 'tag', (subprop || 'is'), def);
+                                    }
+                                }
+                            }*/ else if (prop.toLowerCase() === 'is') { // tracker with is
+                                if (identikey) {
+                                    if ((getMarker(/(?<marker>.+?)(?:\?(?<index>\d+|all\+?))?$/.exec(identikey.toLowerCase())[1]) || {}).name) { // is with status
+                                        presource = simpleObj(getToken(presource.id, presource._pageid));
+                                        if (presource && !presource.hasOwnProperty('id')) presource.id = presource._id;
+                                        if (!tokenStatuses.hasOwnProperty(presource.id) || tokenStatuses[presource.id].msgId !== msgId) {
+                                            tokenStatuses[presource.id] = new StatusBlock({ token: presource, msgId: msgId });
+                                        }
+                                        source = getStatus(msg.selected[0]._id, getPageID(msg.playerid), identikey, msgId);
+                                        retval = getPropertyValue(source, 'status', 'is', def);
+                                    } else { // is with tag
+                                        presource = simpleObj(getToken(presource.id, presource._pageid));
+                                        if (presource && !presource.hasOwnProperty('id')) presource.id = presource._id;
+                                        if (presource.represents) {
+                                            source = getTag(presource.id, 'character', identikey, msg.playerid);
+                                            retval = getPropertyValue(source, 'tag', 'is', def);
+                                        }
+                                    }
                                 }
                             } else {                                                        // tracker with character prop/attribute/ability
                                 source = simpleObj(getChar(presource.id, msg.playerid));
@@ -1219,21 +1486,49 @@ const Fetch = (() => { //eslint-disable-line no-unused-vars
                         selsource = simpleObj(findObjs({ id: obj })[0] || {});
                         if (selsource.type && ['text', 'path'].includes(selsource.type)) { // text objects and paths
                             retval = getPropertyValue(selsource, selsource.type, prop, def);
-                        } else { // graphics/tokens/cards
+                        } else { // graphics/tokens/cards/status/character
                             if (Object.keys(tokenProps).includes(prop.toLowerCase())) {        // token property
                                 source = simpleObj(getToken(obj, getPageID(msg.playerid)));
                                 retval = getPropertyValue(source, 'token', prop, def);
                             } else if (prop.toLowerCase() === 'status') { // status
                                 if (identikey &&
-                                    getMarker(/(?<marker>.+?)(?:\?(?<index>\d+|all\+?))?$/.exec(identikey.toLowerCase())[1]).name &&
+                                    (getMarker(/(?<marker>.+?)(?:\?(?<index>\d+|all\+?))?$/.exec(identikey.toLowerCase())[1]) || {}).name &&
                                     Object.keys(statusProps).includes((subprop || 'value').toLowerCase())) {
-                                    presource = simpleObj(getToken(obj));
+                                    presource = simpleObj(getToken(obj, getPageID(msg.playerid)));
                                     if (presource && !presource.hasOwnProperty('id')) presource.id = presource._id;
                                     if (!tokenStatuses.hasOwnProperty(presource.id) || tokenStatuses[presource.id].msgId !== msgId) {
                                         tokenStatuses[presource.id] = new StatusBlock({ token: presource, msgId: msgId });
                                     }
-                                    source = getStatus(obj, identikey, msgId);
+                                    source = getStatus(obj, getPageID(msg.playerid), identikey, msgId);
                                     retval = getPropertyValue(source, prop, (subprop || 'value'), def);
+                                }
+                            }/* else if (prop.toLowerCase() === 'tagged') { // tagged
+                                if (identikey && Object.keys(tagProps).includes((subprop || 'is').toLowerCase())) {
+                                    presource = simpleObj(getChar(obj, msg.playerid) || getChar((simpleObj(getToken(obj, getPageID(msg.playerid))) || {}).represents, msg.playerid));
+                                    if (presource && !presource.hasOwnProperty('id')) presource.id = presource._id;
+                                    if (presource) {
+                                        source = getTag(presource.id, 'character', identikey, msg.playerid);
+                                        retval = getPropertyValue(source, 'tag', (subprop || 'is'), def);
+                                    }
+                                }
+                            }*/ else if (prop.toLowerCase() === 'is') { // is
+                                if (identikey) {
+                                    if ((getMarker(/(?<marker>.+?)(?:\?(?<index>\d+|all\+?))?$/.exec(identikey.toLowerCase())[1]) || {}).name) { // is with status
+                                        presource = simpleObj(getToken(obj, getPageID(msg.playerid)));
+                                        if (presource && !presource.hasOwnProperty('id')) presource.id = presource._id;
+                                        if (!tokenStatuses.hasOwnProperty(presource.id) || tokenStatuses[presource.id].msgId !== msgId) {// eslint-disable-line no-prototype-builtins
+                                            tokenStatuses[presource.id] = new StatusBlock({ token: presource, msgId: msgId });
+                                        }
+                                        source = getStatus(obj, getPageID(msg.playerid), identikey, msgId);
+                                        retval = getPropertyValue(source, 'status', 'is', def);
+                                    } else { // is with tag
+                                        presource = simpleObj(getChar(obj, msg.playerid) || getChar((simpleObj(getToken(obj, getPageID(msg.playerid))) || {}).represents, msg.playerid));
+                                        if (presource && !presource.hasOwnProperty('id')) presource.id = presource._id;
+                                        if (presource) {
+                                            source = getTag(presource.id, 'character', identikey, msg.playerid);
+                                            retval = getPropertyValue(source, 'tag', 'is', def);
+                                        }
+                                    }
                                 }
                             } else { // character property or attribute or ability
                                 source = simpleObj(getChar(obj, msg.playerid) || getChar((simpleObj(getToken(obj, getPageID(msg.playerid))) || {}).represents, msg.playerid));

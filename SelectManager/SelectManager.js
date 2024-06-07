@@ -1,10 +1,10 @@
 /*
 =========================================================
-Name			:	SelectManager
-GitHub			:   https://github.com/TimRohr22/Cauldron/tree/master/SelectManager
-Roll20 Contact	:	timmaugh && TheAaron
-Version			:	1.1.7
-Last Update		:	10/02/2023
+Name            :   SelectManager
+GitHub          :   https://github.com/TimRohr22/Cauldron/tree/master/SelectManager
+Roll20 Contact  :   timmaugh && TheAaron
+Version         :   1.1.8
+Last Update     :   05 APRIL 2024
 =========================================================
 */
 var API_Meta = API_Meta || {};
@@ -16,12 +16,12 @@ const SelectManager = (() => { //eslint-disable-line no-unused-vars
     //		VERSION
     // ==================================================
     const apiproject = 'SelectManager';
-    const version = '1.1.7';
-    const schemaVersion = 0.3;
+    const version = '1.1.8';
+    const schemaVersion = 0.4;
     const apilogo = 'https://i.imgur.com/ewyOzMU.png';
     const apilogoalt = 'https://i.imgur.com/3U8c9rE.png'
     API_Meta[apiproject].version = version;
-    const vd = new Date(1696262152950);
+    const vd = new Date(1712321265957);
     const versionInfo = () => {
         log(`\u0166\u0166 ${apiproject} v${API_Meta[apiproject].version}, ${vd.getFullYear()}/${vd.getMonth() + 1}/${vd.getDate()} \u0166\u0166 -- offset ${API_Meta[apiproject].offset}`);
         if (!state.hasOwnProperty(apiproject) || state[apiproject].version !== schemaVersion) {
@@ -44,6 +44,10 @@ const SelectManager = (() => { //eslint-disable-line no-unused-vars
                     state[apiproject].settings.knownsenders = ['CRL'];
                     state[apiproject].defaults.knownsenders = ['CRL'];
                 /* falls through */
+                case 0.3:
+                    state[apiproject].settings.show04message = true;
+                    state[apiproject].defaults.show04message = true;
+                /* falls through */
                 case 'UpdateSchemaVersion':
                     state[apiproject].version = schemaVersion;
                     break;
@@ -54,12 +58,14 @@ const SelectManager = (() => { //eslint-disable-line no-unused-vars
                         settings: {
                             autoinsert: ['selected'],
                             playerscanids: false,
-                            knownsenders: ['CRL']
+                            knownsenders: ['CRL'],
+                            show03message: true
                         },
                         defaults: {
                             autoinsert: ['selected'],
                             playerscanids: false,
-                            knownsenders: ['CRL']
+                            knownsenders: ['CRL'],
+                            show03message: true
                         }
                     };
                     break;
@@ -287,6 +293,12 @@ const SelectManager = (() => { //eslint-disable-line no-unused-vars
         },
         inlineEmphasis: {
             'font-weight': 'bold'
+        },
+        button: {
+            'background-color': theme.primaryColor,
+            'border-radius': '6px',
+            'min-width': '25px',
+            'padding': '6px 8px'
         }
     }
     const msgbox = ({
@@ -312,7 +324,12 @@ const SelectManager = (() => { //eslint-disable-line no-unused-vars
             msgbox({ title: 'GM Rights Required', msg: 'You must be a GM to perform that operation', whisperto: recipient });
             return;
         }
-        let cfgrx = /^(\+|-)(selected|who|playerid|playerscanids)$/i;
+        let cfgrx = /^(\+|-)(selected|who|playerid|playerscanids|acknowledge(\d+))$/i;
+        let changeObj = {
+            '+': 'enabled',
+            '-': 'disabled',
+            'a': 'acknowledged'
+        };
         let res;
         let cfgTrack = {};
         let message;
@@ -331,9 +348,12 @@ const SelectManager = (() => { //eslint-disable-line no-unused-vars
                         manageState.set('autoinsert', manageState.get('autoinsert').filter(e => e !== res[2].toLowerCase()));
                         cfgTrack[res[2]] = res[1];
                     }
+                } else if (/^acknowledge\d+$/i.test(res[2])) {
+                    manageState.set(`show${res[3]}message`, false);
+                    cfgTrack[`Schema ${res[3]} Message`] = 'a';
                 }
             });
-            let changes = Object.keys(cfgTrack).map(k => `${html.span(k, localCSS.inlineEmphasis)}: ${cfgTrack[k] === '+' ? 'enabled' : 'disabled'}`).join('<br>');
+            let changes = Object.keys(cfgTrack).map(k => `${html.span(k, localCSS.inlineEmphasis)}: ${changeObj[cfgTrack[k]]}`).join('<br>');
             msgbox({ title: `SelectManager Config Changed`, msg: `You have made the following changes to the SelectManager configuration:<br>${changes}`, whisperto: recipient });
         } else {
             cfgTrack.playerscanids = `${html.span('playerscanids', localCSS.inlineEmphasis)}: ${manageState.get('playerscanids') ? 'enabled' : 'disabled'}`;
@@ -341,6 +361,59 @@ const SelectManager = (() => { //eslint-disable-line no-unused-vars
             message = `SelectManager is currently configured as follows:<br>${cfgTrack.playerscanids}<br>${cfgTrack.autoinsert}`;
             msgbox({ title: 'SelectManager Configuration', msg: message, whisperto: recipient });
         }
+    };
+
+    const issueVersionUpdateMessages = () => {
+        let allCommands = [...findObjs({ type: 'macro' }), ...findObjs({ type: 'ability' })];
+
+        const show04Message = () => {
+            let affected = allCommands.filter(o => {
+                let cmd = o.get('action');
+                let locSelrx = /{&\s*(?:select|inject)\s+([^}]+?)\s*}/gi;
+                let found = false;
+                let res;
+                let items;
+                while (!found && (res = locSelrx.exec(cmd)) && res) {
+                    found = !!(res[1].split(/\s*,\s*/)
+                        .filter(item => oldmarkerrx.test(item)).length);
+                        // .filter(item => /^(\+|-)/.test(item) && !/^(\+|-)(@.*|#.*|\*.*|((bar|max)(1|2|3){1})|((aura|color)(1|2){0,1})|layer|tip|gmnotes|type|pc|npc|pt|side)(\s|<|>|=|~|!|$)/.test(item)).length);
+                }
+                return found;
+            });
+
+            if (affected.length) {
+                let listAffected = affected.map(a => `<li>${a.get('name')} (${a.get('type') === 'ability' ? `ability for ${getObj('character', a.get('characterid')).get('name')}` : 'macro'})</li>`).join('');
+                let message = html.p(`A small portion of SelectManager syntax is changing. A previous update made it possible to use status markers (either their presence or value) as a ` +
+                    `condition for virtually selecting that token. For instance, testing a token for the presence of a status marker named "noble" would look like:<br><br><b>+noble</b>`) +
+                    html.p(`This syntax allowed for "collisions" -- a situation where a marker might bear the name of one of the other keywords SelectManager looks for as ways to test the tokens: aura, bar1, npc, etc. ` +
+                    `For instance, if you were playing in a game that had a status marker named "npc", then would the syntax <b>+npc</b> refer to the presence of the marker, or to the internal test ` +
+                    `SelectManager uses to determine if a token is an npc?`) +
+                    html.p(`With the v1.1.8 update, SelectManager can now use a similar syntax to test a token for the presence of character tags, increasing the possibility of these collisions (i.e., a tag ` +
+                        `and a marker both named "noble"). Because of this, the syntax to test for a status marker is getting an update to allow for greater specificity. Going forward, ` +
+                        `to test for a status marker on a token, you should simply preface the marker name with an asterisk (&ast;) immediately following the "+" (for "should have") or "-" ` +
+                        `(for "should not have"):<br><br><b>+&ast;noble</b><br><b>+&ast;noble > 2</b>`) +
+                    html.p(`The previous syntax is still available for now, but is no longer supported and will be removed at some point in the future. You should take a moment to update commands ` +
+                        `in your game that utilize the previous construction (without an asterisk). A quick scan of character abilities and macros in this game shows that the following list ` +
+                        `might be commands where you have utilized the previous syntax:` +
+                        `<ul>${listAffected}</ul>`);
+                //const button = ({ elem: elem = '', label: label = '', char: char = '', type: type = '%', css: css = Messenger.Css.button } = {}) => {
+
+                let button = Messenger.Button({ elem: `!smconfig +acknowledge04`, type: '!', label: `Don't Show Again`, css: localCSS.button, noarchive: true });
+                msgbox({ title: 'SelectManager Syntax Update', msg: message, whisperto: 'gm', btn: button });
+
+                // TODO: make sure chat message has opt-out for not getting the message again
+            } else {
+                manageState.set('show04message', false);
+            }
+        };
+
+        const messageSettings = {
+            show04message: show04Message
+        };
+
+        Object.keys(messageSettings).forEach(k => {
+            if (manageState.get(k)) { messageSettings[k](); }
+        });
     };
 
     const maintrigger = `${apiproject}-main`;
@@ -373,7 +446,7 @@ const SelectManager = (() => { //eslint-disable-line no-unused-vars
         return array
             .filter(o => typeof o !== 'undefined' && !set.has(o[prop]) && set.add(o[prop]));
     };
-    let markerrx;
+    let oldmarkerrx;
     const decomposeStatuses = (list = '') => {
         return list.split(/\s*,\s*/g).filter(s => s.length)
             .reduce((m, s) => {
@@ -568,6 +641,16 @@ const SelectManager = (() => { //eslint-disable-line no-unused-vars
                     comp = [tksetting.is === 'yes', true];
                 }
                 break;
+            case 'tag':
+                if (t.get('represents') && t.get('represents').length) {
+                    let char = getObj('character', t.get('represents'));
+                    if (char) { // testing presence of attribute
+                        tksetting = JSON.parse(char.get('tags'));
+                        test = '=';
+                        comp = [tksetting.includes(c.ident), true];
+                    }
+                }
+                break;
             case 'attribute':
                 if (t.get('represents') && t.get('represents').length) {
                     attrres = /^(?<attr>[^.|#?]+?)(?:(?:\.|\?|#|\|)(?<attrval>current|cur|c|max|m))?\s*$/i.exec(c.ident);
@@ -642,7 +725,7 @@ const SelectManager = (() => { //eslint-disable-line no-unused-vars
     }
     const injectrx = /(\()?{&\s*inject\s+([^}]+?)\s*}((?<=\({&\s*inject\s+([^}]+?)\s*})\)|\1)/gi;
     const selectrx = /(\()?{&\s*select\s+([^}]+?)\s*}((?<=\({&\s*select\s+([^}]+?)\s*})\)|\1)/gi;
-    const criteriarx = /^(?<musthave>\+|-)(?<attr>@)?(?<typeitem>[^\s><=!~]+)(?:\s*$|\s*(?<test>>=|<=|~|!~|=|!=|<|>|in(?=\s+\[[^\]]+\]))?\s*(?<value>.+\s*)$)/;
+    const criteriarx = /^(?<musthave>\+|-)(?<attr>@|\*|#)?(?<typeitem>[^\s><=!~]+)(?:\s*$|\s*(?<test>>=|<=|~|!~|=|!=|<|>|in(?=\s+\[[^\]]+\]))\s*(?<value>.+)$)/;
     const typeitemrx = /^(?<type>bar|max|aura|color|layer|tip|gmnotes|type|pc|npc|pt|side)(?<ident>1|2|3)?(?<!bar|max|aura3|color3|layer1|layer2|layer3|tip1|tip2|tip3|gmnotes1|gmnotes2|gmnotes3|type1|type2|type3|pc1|pc2|pc3|npc1|npc2|npc3|pt1|pt2|pt3|side1|side2|side3)$/i;
     const inject = (msg, status, msgId/*, notes*/) => {
         const layerCriteria = (criteria) => {
@@ -708,19 +791,19 @@ const SelectManager = (() => { //eslint-disable-line no-unused-vars
                             if (critres.groups.attr && critres.groups.attr === '@') {
                                 newcriteria.type = 'attribute';
                                 newcriteria.ident = (critres.groups.typeitem || '');
-                            } else if (markerrx.test(v)) {
+                            } else if (critres.groups.attr && critres.groups.attr === '*') {
                                 newcriteria.type = 'marker';
-                                newcriteria.ident = critres.groups.typeitem;
+                                newcriteria.ident = (critres.groups.typeitem || '');
+                            } else if (critres.groups.attr && critres.groups.attr === '#') {
+                                newcriteria.type = 'tag';
+                                newcriteria.ident = (critres.groups.typeitem || '');
                             } else if (typeitemrx.test(critres.groups.typeitem)) {
                                 let ti_res = typeitemrx.exec(critres.groups.typeitem);
                                 newcriteria.type = ti_res.groups.type;
                                 newcriteria.ident = ti_res.groups.ident;
-                                //} else if (critres.groups.typeitem.toLowerCase() === 'gmnotes') {
-                                //    newcriteria.type = 'gmnotes';
-                                //} else if (critres.groups.typeitem.toLowerCase() === 'tip') {
-                                //    newcriteria.type = 'tip';
-                                //} else if (critres.groups.typeitem.toLowerCase() === 'layer') {
-                                //    newcriteria.type = 'layer';
+                            } else if (oldmarkerrx.test(v)) {
+                                newcriteria.type = 'marker';
+                                newcriteria.ident = critres.groups.typeitem;
                             } else {
                                 m.selections.push(v);
                             }
@@ -768,7 +851,7 @@ const SelectManager = (() => { //eslint-disable-line no-unused-vars
 
     const dispatchForSelected = (trigger, i) => {
         if (preservedMsgObj[trigger].selected.length > i) {
-            sendChat(preservedMsgObj[trigger].chatspeaker, `!${trigger}${i} ${preservedMsgObj[trigger].dsmsg.replace(/{&\s*i\s*((\+|-)\s*([\d]+)){0,1}}/gi, ((m, g1, op, val) => { return !g1 ? i : op === '-' ? parseInt(i) - parseInt(val) : parseInt(i) + parseInt(val); }))}`);
+            sendChat(preservedMsgObj[trigger].chatSpeaker, `!${trigger}${i} ${preservedMsgObj[trigger].dsmsg.replace(/{&\s*i\s*((\+|-)\s*([\d]+)){0,1}}/gi, ((m, g1, op, val) => { return !g1 ? i : op === '-' ? parseInt(i) - parseInt(val) : parseInt(i) + parseInt(val); }))}`);
         }
         if (preservedMsgObj[trigger].selected.length <= i + 1) {
             setTimeout(() => { delete preservedMsgObj[trigger] }, 10000);
@@ -790,7 +873,7 @@ const SelectManager = (() => { //eslint-disable-line no-unused-vars
             playerid: preservedMsgObj[maintrigger].playerid,
             dsmsg: ''
         };
-        preservedMsgObj[apitrigger].chatspeaker = getTheSpeaker(preservedMsgObj[apitrigger]).chatSpeaker;
+        preservedMsgObj[apitrigger].chatSpeaker = getTheSpeaker(preservedMsgObj[apitrigger]).chatSpeaker;
         let fsres = fsrx.exec(msg.content);
         switch (fsres[2] || '++') {
             case '+-':
@@ -822,7 +905,7 @@ const SelectManager = (() => { //eslint-disable-line no-unused-vars
         }
         dispatchForSelected(apitrigger, 0);
         //preservedMsgObj[apitrigger].selected.forEach((t, i) => {
-        //    sendChat(chatspeaker, `!${apitrigger}${i} ${dsmsg.replace(/{&\s*i\s*((\+|-)\s*([\d]+)){0,1}}/gi, ((m, g1, op, val) => { return !g1 ? i : op === '-' ? parseInt(i) - parseInt(val) : parseInt(i) + parseInt(val); }))}`);
+        //    sendChat(chatSpeaker, `!${apitrigger}${i} ${dsmsg.replace(/{&\s*i\s*((\+|-)\s*([\d]+)){0,1}}/gi, ((m, g1, op, val) => { return !g1 ? i : op === '-' ? parseInt(i) - parseInt(val) : parseInt(i) + parseInt(val); }))}`);
         //});
         //setTimeout(() => { delete preservedMsgObj[apitrigger] }, 10000);
     };
@@ -1035,7 +1118,9 @@ const SelectManager = (() => { //eslint-disable-line no-unused-vars
         css = Messenger.Css();
         HE = Messenger.HE;
 
-        markerrx = new RegExp(`^(\\+|-)(${libTokenMarkers.getOrderedList().map(o => o.name).join('|')})`);
+        oldmarkerrx = new RegExp(`^(\\+|-)(${libTokenMarkers.getOrderedList().map(o => o.name).join('|')})`);
+
+        issueVersionUpdateMessages();
 
         scriptisplugin = (typeof ZeroFrame !== `undefined`);
         if (typeof ZeroFrame !== 'undefined') {

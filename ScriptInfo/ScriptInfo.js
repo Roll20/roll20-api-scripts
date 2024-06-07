@@ -1,10 +1,10 @@
 /*
 =========================================================
-Name            :   ScriptInfo
-GitHub          :   
-Roll20 Contact  :   timmaugh
-Version			:   0.0.3
-Last Update		:   3/31/2023
+Name            :  ScriptInfo
+GitHub          :  
+Roll20 Contact  :  timmaugh
+Version         :  0.0.3
+Last Update     :  05 APRIL 2024
 =========================================================
 */
 var API_Meta = API_Meta || {};
@@ -13,9 +13,9 @@ API_Meta.ScriptInfo = { offset: Number.MAX_SAFE_INTEGER, lineCount: -1 };
 
 const ScriptInfo = (() => { // eslint-disable-line no-unused-vars
     const ScriptInfo = 'ScriptInfo';
-    const scriptVersion = '0.0.2';
+    const scriptVersion = '0.0.3';
     API_Meta[ScriptInfo].version = scriptVersion;
-    const vd = new Date(1680266411490);
+    const vd = new Date(1716993288422);
     const logsig = () => {
         state.houseofmod = state.houseofmod || {};
         state.houseofmod.siglogged = state.houseofmod.siglogged || false;
@@ -26,18 +26,18 @@ const ScriptInfo = (() => { // eslint-disable-line no-unused-vars
         ) {
             const logsig =
                 "\n" +
-                "             ________________________               \n" +
-                "            ╱                 ______ ╲              \n" +
-                "           ╱                    _____ ╲             \n" +
-                "          ╱                       ____ ╲            \n" +
-                "         ╱______________________________╲           \n" +
-                "             ┃ _____          _____ ┃               \n" +
-                "             ┃ ┃_┃_┃    MOD   ┃_┃_┃ ┃               \n" +
-                "             ┃ ┃_┃_┃   _____  ┃_┃_┃ ┃               \n" +
-                "             ┃         ┃   ┃        ┃               \n" +
-                "             ┃         ┃  o┃        ┃               \n" +
-                "_____________┃_________┃___┃________┃_______________\n" +
-                "                                                    \n";
+                "             ________________________              \n" +
+                "            ╱                 ______ ╲             \n" +
+                "           ╱                    _____ ╲            \n" +
+                "          ╱                       ____ ╲           \n" +
+                "         ╱______________________________╲          \n" +
+                "             | _____          _____ |              \n" +
+                "             | |_|_|    MOD   |_|_| |              \n" +
+                "             | |_|_|   _____  |_|_| |              \n" +
+                "             |         |   |        |              \n" +
+                "             |         |  o|        |              \n" +
+                "_____________|_________|___|________|______________\n" +
+                "                                                   \n";
             log(`${logsig}`);
             state.houseofmod.siglogged = true;
             state.houseofmod.sigtime = Date.now();

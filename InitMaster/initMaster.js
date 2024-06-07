@@ -2618,6 +2618,7 @@ var initMaster = (function() {
 					};
 				};
 				if (!forceFind) rememberWeapRef(charCS,hand,ref);
+//				log('getRef: hand '+hand+' is '+miName+', '+(ref%2 ? 'MW' : 'RW')+' table index = '+index+', button ref = '+ref);
 				return [index,ref];
 			};
 
@@ -2647,6 +2648,7 @@ var initMaster = (function() {
 				}
 			};
 			if (weapCount.monster > 0 && (!charButton || !charButton.length || charButton == -1)) {
+//				log('makeWeaponMenu: dealing with monster preselected attack');
 				charButton = 0;
 				monButton = weapCount.monster > 1 ? 0 : 1;
 				handleInitMonster( Monster.COMPLEX, charCS, [BT.MON_INNATE,tokenID,charButton,monButton], senderId );
@@ -2674,6 +2676,7 @@ var initMaster = (function() {
 							+  '}}';
 				}
 				if (hands > 2 || weapCount.monster > 1) {
+//					log('makeWeaponMenu: hands = '+hands+', & weapCount.monster = '+weapCount.monster+', so showing All Weapons button');
 					content += '{{Many Hands Option='
 							+  (-2 == charButton ? '<span style=' + design.selected_button + '>' : (submitted ? '<span style=' + design.grey_button + '>' : '['))
 							+  'All Weapons'

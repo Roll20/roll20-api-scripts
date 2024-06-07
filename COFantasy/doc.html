@@ -127,6 +127,7 @@ tr {line-height: 25px;}
                 <li><a class="text-info" href="#Reset_state">Purger les variables d'état du jeu</a></li>
               </ul>
               <li><a href="#pathfinder">Conversion depuis Pathfinder</a></li>
+              <li><a href="#index_predicats">Index des prédicats</a></li>
             </ol>
           </div>
         </div>
@@ -136,7 +137,7 @@ tr {line-height: 25px;}
           <div class="decalage">
             <h3 class="text-info" id="token_personnages">1.1 Tokens et personnages</h3>
             <div class="decalage">
-              <p>Ces scripts ont été écrits pour fonctionner avec les fiches de personnages développées par <a href="https://github.com/Roll20/roll20-character-sheets/tree/master/ChroniquesOubliees">Natha</a>.</p>
+              <p>Ces scripts ont été écrits pour fonctionner avec les fiches de personnages développées par <a href="https://github.com/Roll20/roll20-character-sheets/tree/master/ChroniquesOubliees">Natha</a> (<a href="https://raw.githack.com/Roll20/roll20-character-sheets/master/ChroniquesOubliees/doc.html">documentation de la fiche</a>).</p>
               <p><img class="img-fluid" src="https://i.imgur.com/rF0Qxht.png" data-href="https://i.imgur.com/rF0Qxht.png"></p>
               <figcaption>A choisir pendant la création de la partie sur Roll20.</figcaption>
             </div>
@@ -170,6 +171,7 @@ tr {line-height: 25px;}
               <p>Il est aussi possible d'associer des prédicats à des attaques. Ces prédicats sont pris en compte quand ses attaques sont des armes, et ce que ces armes sont tenues en main. Cela permet de coder une grande variété d'effets magiques des armes. Attention, cela ne fonctionne pas pour les mooks avec les prédicats <code>animeAPartirDExistant</code>, <code>intercepter</code>, <code>lienEpique</code>, <code>attaqueEnTraitre</code>, <code>sansPeur</code>, <code>immuniteSaignement</code>, et <code>controleSanguin</code>.</p>
               <p><img class="img-fluid" src="images/mordante.jpg"></p>
               <figcaption>Une épée +1 affûtée avec le prédicat enchainement (actif pour toute attaque, tant que cette épée est en main).</figcaption>
+              <p>Les prédicats à valeur numériques ne se cumulent pas : le script prend la plus grande valeur, si le prédicat apparaît plusieurs fois. Pour les autres prédicats, en général, l'ensemble des prédicats est pris comme un seul prédicat, si cela est possible. Sinon, un seul prédicat est utilisé, les autres sont ignorés.</p>
             </div>
             <h3 class="text-info" id="methode_selection_groupes">1.4 Méthodes de sélection de groupes</h3>
             <div class="decalage">
@@ -197,6 +199,12 @@ tr {line-height: 25px;}
                 <li>Les points de mana sont dépensés en ajoutant l'option <code>--mana X</code> à une action ou dans les options d'une attaque. Toutes les capacités implémentées dans la documentation donnent par défaut le coût en mana selon les règles de base.</li>
                 <li>Même un sort qui ne coûte pas de mana devrait utiliser <code>--mana 0</code>. Cela permet au script de dissiper automatiquement un effet généré par un lanceur de sort mis hors de combat.</li>
                 <li>Une option d'affichage disponible via <code>!cof-options</code> permet de demander au script d'afficher explicitement dans le chat toute dépense de PM effectuée par un personnage.</li>
+              </ul>
+              <h4>Récupérer de la mana</h4>
+              <ul>
+                <li> Faire passer une nuit de repos remet les points de mana au maximum.</li>
+                <li> Une option règle de jeu (accessible avec <code>!cof-options</code>) permet de récupérer de la mana quand on dépense 1 PR pour se reposer (il faut spécifier un dé de mana sur la fiche).</li>
+                <li> La commande <code>!cof-recupere-mana <i>m</i></code> permet de récupérer <i>m</i> points de mana. <i>m</i> peut être un nombre positif ou une expression de dé simple.</li>
               </ul>
               <h4>Système de base (COF p. 79)</h4>
               <p>Le support des effets supplémentaires à disposition du lanceur de sort sont gérées via l'utilisation d'options sur les commandes utilisées.</p>
@@ -383,7 +391,7 @@ tr {line-height: 25px;}
                   </li>
                   <li><code>--if <i>condition</i></code> <i>options</i> <code>--endif</code>: permet de ne prendre en compte des options que si certaines conditions sont réalisées. Il est possible d'utiliser un <code>--else</code> pour activer des options quand les conditions ne sont pas réalisées. Attention, les options qui modifient une option précédente (comme <code>--valeur</code>) doivent apparaître au même niveau que l'option qu'elles modifient. Comme les conditions peuvent dépendre du dé d'attaque, un certain nombre d'options ne sont pas affectées par cette conditionnelle : tempeteDeMana, les options d'aoe (ligne, cone, disque, target), avecd12, avantage, auto, demiAuto, test, pointsVitaux, tempsRecharge, sortilege, bonusCritique, disparition, affute, munition, tirDouble, semonce, tirDeBarrage, poudre, traquenard, feinte, magique, tranchant, percant, contondant, pasDeDmg. Ne pas hésiter à me demander si vous aviez besoin que l'une de ces options puissent être conditionnelle.</li>
                   <li><code>--ifSaveFails <i>carac seuil</i></code> <i>options</i> <code> --endif</code> : comme <code>--if</code>, mais fait réaliser une jet de sauvegarde à la cible (comme avec <code>--save</code>), et si le test est raté, applique les options qui suivent. Un <code>--else</code> permet de choisir des options à appliquer quand le test est réussi. À utiliser seulement si on ne peut pas se contenter d'un <code>--save</code>, car ça marche moins bien.</li>
-                  <li><code>--decrAttribute <i>nom</i></code> : l'attaque n'est possible que si l'attribut existe et si sa valeur est strictement positive. L'attaque diminue cette valeur de 1. Si cette option est utilisée à l'intérieur d'un <code>--if</code>, alors l'option se contente de diminuer l'attribut (on peut savoir si la valeur est positive grâce à <code>--if etat <i>nom</i></code>).</li>
+                  <li><code>--decrAttribute <i>nom</i></code> : l'attaque n'est possible que si l'attribut existe et si sa valeur est strictement positive. L'attaque diminue cette valeur de 1. On peut preciser une valeur plus grande après le nom de l'attribut (<code>--decrAttribute <i>nom</i> <i>d</i></code> teste si la valeur est supérieure à <i>d</i> et la diminue de <i>d</i>). Si cette option est utilisée à l'intérieur d'un <code>--if</code>, alors l'option se contente de diminuer l'attribut (on peut savoir si la valeur est positive grâce à <code>--if etat <i>nom</i></code>).</li>
                   <li><code>--decrLimitePredicatParTour <i>nom</i></code> : l'attaque n'est possible que si un prédicat <i>nom</i> existe et si elle n'a pas été utilisée plus de fois dans le tour que la valeur de ce prédicat. L'attaque augmente ce nombre de 1.</li>
                   <li><code>--tempsRecharge <i>effet</i> <i>duree</i></code> : l'attaque n'est possible que si l'effet est inactif sur l'attaquant, et de plus active l'effet sur l'attaquant pour la durée indiquée si l'attaque est possible. Il existe un effet temporaire générique, <code>rechargeGen(<i>desc</i>)</code> que vous pouvez utiliser si aucun effet existant ne correspond pour votre attaque.</li>
                   <li><code>--etat <i>e</i></code>: si l'attaque touche, la cible passe dans l'état <i>e</i>. Il est aussi possible de spécifier une caractéristique et un seuil (comme pour <code>!cof-set-state</code>) pour faire afficher à chaque tour une action permettant de se libérer de l'état.</li>
@@ -545,7 +553,7 @@ tr {line-height: 25px;}
                   <li>Enfin, en fin de combat, si le personnage possède un prédicat <code>armeParDefaut</code>, le script va lui faire dégainer l'arme dont le label est la valeur du prédicat. Donc si le prédicat n'a pas de label associé, le personnage va rengainer son arme.</li>
                 </ul>
                 <p>Dans tous les cas, si le personnage dégaine une arme à 2 mains, le script fait enlever le bouclier, et il le fait remettre si on passe d'une arme à 2 mains à une arme à 1 main.</p>
-                <p>Il existe un prédicat <code>DEF</code> qui permet d'ajouter sa valeur à la défense d'un personnage. C'est particulièrement utile pour coder une arme de parade. Par exemple avec<code>DEF:2</code> dans les prédicats de l'arme, elle augmentera la défense de <i>2</i> quand elle sera portée. <p>
+                <p>Il existe un prédicat <code>bonus_DEF</code> qui permet d'ajouter sa valeur à la défense d'un personnage. C'est particulièrement utile pour coder une arme de parade. Par exemple avec<code>bonus_DEF:2</code> dans les prédicats de l'arme, elle augmentera la défense de <i>2</i> quand elle sera portée. <p>
                 </p>
               </div>
               <h4 class="text-secondary" id="degainer">Couvert :<code>!cof-bonus-couvert <i>b</i></code></h4>
@@ -797,6 +805,7 @@ tr {line-height: 25px;}
                     <li><code>--limiteParCombat</code> : même effet que la limite par jour. Si aucun argument n'est donné, la limite est de une fois par combat.  Attention, il faut un lanceur auquel appliquer la limite par combat !</li>
                     <li><code>--tempsRecharge <i>effet</i> <i>duree</i></code> : l'action n'est possible que si l'effet est inactif sur le personnage qui génère l'effet, et de plus active l'effet sur celui-ci pour la durée indiquée. Il existe un effet temporaire générique, <code>rechargeGen(<i>desc</i>)</code> que vous pouvez utiliser si aucun effet existant ne correspond.</li>
                     <li><code>--dose <i>nom</i></code>: définie une ressource nommée <code>dose_<i>nom</i></code>, dont la valeur doit être positive. Utile par exemple pour les parchemins, les potions ou les baguettes.</li>
+                    <li><code>--depensePR</code>: demande de dépenser un point de récupération. Si un premier argument est ajouté, on enlève ce nombre aux PR au lieu de 1. Si un second argument est précisé, on enlève ce second argument aux PV quand le personnage n'a plus de PR.</li>
                     <li><code>--portee <i>id d</i></code> : impose aux cibles de l'effet d'être à moins de <i>d</i> mètres du token <i>id</i>. Si <code>--lanceur</code> est précisé, inutile de donner <i>id</i>.</li>
                     <li><code>--puissant</code> : lance la version puissante de l'effet</li>
                     <li><code>--puissant oui</code> : idem</li>
@@ -1026,7 +1035,7 @@ tr {line-height: 25px;}
                     <strong>Plus vite que son ombre</strong> : ajouter un prédicat <code>plusViteQueSonOmbre</code>. On peut associer un nombre à ce prédicat pour modifier le bonus à l'initiative, ou bien lui donner la valeur <code>arbalete</code> pour activer le bonus sur les arbalètes au lieu des armes à poudre.
                   </li>
                   <li><strong>Cadence de tir</strong> : pas de support</li>
-                  <li><strong>Tir double</strong> : utiliser l'option <code>--tirDouble</code> si deux tirs sur une même cible. Si les deux armes sont différentes, rajouter le label de la deuxième arme après l'option (si le label est <i>l2</i>, cela donne <code>--tirDouble <i>l2</i></code>). Si vous avez une pétoire dans la main droite et l'autre dans la main gauche, vous pouvez par exemple utiliser l'action <code>#Attaque -1 --tirDouble -2</code>. Attention, il faut faire 2 undo pour annuler une attaque de tir double réussie.</li>
+                  <li><strong>Tir double</strong> : ajouter un prédicat <code>tirDouble</code> pour ne pas avoir le malus à l'attaque avec une arme à poudre dans chaque main. Si le personnage veut faire 2 tirs sur la même cible, il peut utiliser l'option <code>--tirDouble</code>. Si les deux armes sont différentes, rajouter le label de la deuxième arme après l'option (si le label est <i>l2</i>, cela donne <code>--tirDouble <i>l2</i></code>). Si vous avez une pétoire dans la main droite et l'autre dans la main gauche, vous pouvez par exemple utiliser l'action <code>#Attaque -1 --tirDouble -2</code>. Attention, il faut faire 2 undo pour annuler une attaque de tir double réussie.</li>
                   <li><strong>As de la gâchette</strong> : ajouter un <a href=#predicats>prédicat</a> <code>asDeLaGachette</code> sur la fiche.</li>
                   <li><strong>Dextérité héroïque</strong> : reporter le bonus sur la fiche</li>
                 </ol>
@@ -1044,7 +1053,7 @@ tr {line-height: 25px;}
                 <h4 class="text-secondary">Voie de la brute</h4>
                 <ol>
                   <li><strong>Argument de taille</strong> : ajouter le bonus de PV sur la fiche. Ajouter un <a href=#predicats>prédicat</a> <code>argumentDeTaille</code>. Le script devrait automatiquement tenir compte de cette capacité pour les tests de négociation, persuasion et intimidation. Pour s'assurer que la bonne compétence est utilisée, vous pouvez ajouter ces noms au handout de compétence (voir la partie sur les <a class="text-info" href="#jet_caracteristiques">jet de caractéristiques</a>, le handout <code>Compétences</code>) ou sur les fiches de personnages.</li>
-                  <li><strong>Tour de force</strong> : ajouter un <a href=#predicats>prédicat</a> <code>tourDeForce</code>. Le script ajoutera systématique un bouton lors de tous les tests de FOR du personnage. Au MJ de décider s'il peut être utilisé ou non.</li>
+                  <li><strong>Tour de force</strong> : ajouter un <a href=#predicats>prédicat</a> <code>tourDeForce</code>.</li>
                   <li><strong>Attaque brutale</strong> : faire l'attaque avec les options <code>--bonusAttaque -2 --plus 1d6</code></li>
                   <li><strong>Briseur d'os</strong> : ajouter un <a href=#predicats>prédicat</a> <code>briseurDOs</code>. Cela va automatiquement affecter les chances de coups critique au contact.</li>
                   <li><strong>Force héroïque</strong> : reporter sur la fiche.</li>
@@ -1282,7 +1291,7 @@ tr {line-height: 25px;}
                   <li><strong>6eme sens</strong> : ajouter le bonus en DEF divers et initiative diver, ajouter une compétence <code>vigilance</code>, de valeur 2*rang (le bonus aux jet de surprise).</li>
                   <li><strong>Détection de l'invisible</strong> : <code>!cof-effet-temp detectionDeLInvisible [[5+@{selected|CHA}]] --mana 0</code>.</li>
                   <li><strong>Clairvoyance</strong> : <code>!cof-lancer-sort peut voir et entendre à distance --mana 1</code></li>
-                  <li><strong>Prescience</strong> : ajouter un <a href=#predicats>prédicat</a> <code>prescience</code> (on peut y associer un nombre pour avoir plus d'une prescience par tour). Si le personnage était sur la carte au moment de lancer le combat, il se verra proposer un bouton pour utiliser sa prescience à la fin de chaque tour. Attention, en l'état, il est impossible d'annuler l'utilisation de ce bouton. De plus, ce bouton ne fera rien si le script a été interrompu depuis le début du tour (interruption de la partie, redémarrage du script, etc...).</li>
+                  <li><strong>Prescience</strong> : ajouter un <a href=#predicats>prédicat</a> <code>prescience</code> (on peut y associer un nombre pour avoir plus d'une prescience par combat). Si le personnage était sur la carte au moment de lancer le combat, il se verra proposer un bouton pour utiliser sa prescience à la fin de chaque tour. Attention, en l'état, il est impossible d'annuler l'utilisation de ce bouton. De plus, ce bouton ne fera rien si le script a été interrompu depuis le début du tour (interruption de la partie, redémarrage du script, etc...).</li>
                   <li><strong>Hyperconscience</strong> : reporter sur la fiche.</li>
                 </ol>
                 <h4 class="text-secondary">Voie de l'envoûteur</h4>
@@ -1888,7 +1897,7 @@ tr {line-height: 25px;}
                 <ol>
                   <li><strong>Monture loyale</strong> : ajouter un <a href=#predicats>prédicat</a> <code>montureLoyale</code>. Pour la monture, il faut faire un personnage avec un <a href=#predicats>prédicat</a> <code>monture</code>. Pour monter sur la monture, utiliser <code>!cof-en-selle @{selected|token_id} nom_de_la_monture</code>, et pour en descendre, il suffit de faire la même commande (utiliser une ability "token action" rend cela assez facile à l'usage).</li>
                   <li><strong>Tir en mouvement</strong> : pas de support particulier.</li>
-                  <li><strong>Tir fatal</strong> : ajouter un prédicat <code>tirFatal</code>. Pour tenir compte du bonus supplémentaire avec le rang dans la voie, ajouter un <a href=#predicats>prédicat</a> <code>voieDeLArcEtDuCheval</code> de valeur le rang atteint dans cette voie. Si vous souhaitez que cette capacité s'applique à une autre classe d'arme que les arcs, vous pouvez associer ce nom au prédicat <code>tirfatal</code> (attention, sans accent). Par exemple, pour les arbalètes, <code>tirFatal:arbalete</code>.</li>
+                  <li><strong>Tir fatal</strong> : ajouter un prédicat <code>tirFatal</code>. Pour tenir compte du bonus supplémentaire avec le rang dans la voie, ajouter un <a href=#predicats>prédicat</a> <code>voieDeLArcEtDuCheval</code> de valeur le rang atteint dans cette voie. Si vous souhaitez que cette capacité s'applique à une autre classe d'arme que les arcs, vous pouvez associer ce nom au prédicat <code>tirFatal</code> (attention, sans accent). Par exemple, pour les arbalètes, <code>tirFatal:arbalete</code>.</li>
                 </ol>
                 <h4 class="text-secondary">Voie du dirigeant</h4>
                 <ol>
@@ -2114,7 +2123,7 @@ tr {line-height: 25px;}
                 <ol>
                   <li><strong>Forme d'ange</strong> : <code>!cof-effet-temp formeDAnge [[5+@{selected|SAG}]] --mana 0</code>. Le MJ devra gérer l'aspect en vol.</li>
                   <li><strong>Soins améliorés</strong> : utiliser un prédicat <code>voieDeLArchange</code> avec comme valeur le rang dans la voie.</li>
-                  <li><strong>Épée céleste</strong> : rien à faire si le prédicat <code>voieDeLArchange</code> a la bonne valeur. Si le personnage n'a pas déjà la capacité Arme d'argent, ajouter une attaque pour cette arme, avec le modificateur <code>armeDArgent</code> et l'option <code>--si etat armeDArgent</code>.</li>
+                  <li><strong>Épée céleste</strong> : rien à faire si le prédicat <code>voieDeLArchange</code> a la bonne valeur. Si le personnage n'a pas déjà la capacité Arme d'argent, ajouter une attaque pour cette arme, avec le modificateur <code>armeDArgent</code> et l'option <code>--si etat armeDArgent</code>. Si vous souhaitez que cette arme soit dégainée par défaut, vous pouvez ajouter <code>--degainer <i>L</i></code> à la commande de la forme d'ange (<i>L</i> est le label de l'attaque).</li>
                 </ol>
                 <h4 class="text-secondary">Voie de l'archer arcanique</h4>
                 <ol>
@@ -2208,6 +2217,11 @@ tr {line-height: 25px;}
                   <li><strong>Vent des lames</strong> : pas de support du script, simplement ajouter les attaques adaptées sur la fiche</li>
                   <li><strong>Attaque en mouvement</strong> : pas de support du script.</li>
                   <li><strong>Danse des lames</strong> : <code>!cof-effet-combat danseDesLames</code>. Pour l'attaque gratuite supplémentaire, on peut faire <code>#Attaque -1 --si etat danseDesLames --avecd12crit</code>.</li>
+                </ol>
+                <h4 class="text-secondary">Voie du duelliste</h4>
+                <ol>
+                  <li><strong>Vives lames</strong> : reporter la caractéristique choisie sur la fiche.</li>
+                  <li><strong>Défi</strong> : <code>!cof-defi-duelliste @{selected|token_id} @{target|token_id} 2</code>.</li>
                 </ol>
                 <h4 class="text-secondary">Voie du familier fantastique</h4>
                 <ol>
@@ -2457,6 +2471,7 @@ tr {line-height: 25px;}
                   <li><strong>Foudres du temps</strong> : <code>!cof-effet-chaque-d20 foudresDuTemps</code> permet d'activer les foudres du temps. On peut donner un argument pour remplacer la valeur par défaut (13) par un autre jet de dés. Un deuxième argument permet de faire sortir la foudre pour tout jet entre les deux valeurs. Par exemple <code>!cof-effet-chaque-d20 foudresDuTemps 13 14</code> fait venir la foudre pour tout jet de 13 ou 14. Si votre jeu contient un son (ou playlist) nommé <code>Foudre</code> (avec la majuscule), le son sera joué à chaque fois que la foudre frappera. Finalement, <code>!cof-effet-chaque-d20 foudresDuTemps fin</code> met fin aux foudres du temps.</li>
                   <li><strong>Frénésie</strong> : Ajouter un <a href=#predicats>prédicat</a> <code>frenesie</code> avec comme valeur le nombre de PV en-dessous duquel la créature devient frénétique (+2 aus jets d'attaque).</li>
                   <li><strong>Général</strong> (pour la campagne Vengeance) : Ajouter au général un <a href=#predicats>prédicat</a> <code>generalVengeance</code>, et aux gardes d'élite un prédicat <code>gardeEliteVengeance</code>.</li>
+                  <li><strong>Hémorragie</strong> (Invincible) : ajouter un prédicat <code>hemorragiePestrilax</code>.</li>
                   <li><strong>Hors de portée</strong> : ajouter un <a href=#predicats>prédicat</a> <code>horsDePortee</code></li>
                   <li><strong>Huile de fort assaut</strong> : <code>!cof-effet-temp dmgArme(<i>L</i>) 10 --valeur 1d6</code> où <i>L</i> est le label de l'arme qu'on veut enduire d'huile de fort assaut.</li>
                   <li><strong>Hurlement</strong> : Pour les chiens infernaux, <code>!cof-peur [[10+?{Nombre de chiens?}]] 2d4 --titre Hurlement --immuniseSiResiste hurlement --disque 50 --saufAllies</code>, et pour les fantômes, <code>!cof-peur 12 1d6 --titre Hurlement terrible --immuniseSiResiste hurlement --disque 10 --saufAllies</code>.</li>
@@ -2477,11 +2492,11 @@ tr {line-height: 25px;}
                   <li><strong>Noyade (plante carnivore)</strong> : il existe un effet de combat nommé <code>noyade</code> (pas de durée, il dure par défaut tout le combat) qui fait perdre 1d6 PV par tour, sauf à réussir un test de CON difficulté 15, et qui impose un malus de -3 aux attaques et aux DMs.</li>
                   <li><strong>Ondes corruptrices</strong> (Anathazerïn) : Pour simplement le premier effet, faire <code>!cof-effet ondesCorruptrices 2</code>, puis pour augmeter l'effet <code>!cof-effet ondesCorruptrices +2</code>. L'effet peut être annulé avec <code>!cof-effet ondesCorruptrices 0</code>. Pour le porteur du bouclier de Grabuge, on peut mettre un <a href=#predicats>prédicat</a> <code>porteurDuBouclierDeGrabuge</code>.</li>
                   <li><strong>Paralysie des goules</strong> : ajouter à l'attaque de morsure <code>--effet paralyseGoule [[1d6]] --save CON 10</code>.</li>
-                  <li><strong>Perte de substance</strong> (Invincible) : Ajouter pour tous les personnages concernés un <a href=#predicats>prédicat</a> <code>perteDeSubstance</code>. Le changement de jour va augmenter un compteur, à condition que les tokens des joueurs soient sur la page, et soit on ne sélectionne aucun token quand on lance la commande de changement de jour, soit on sélectionne au moins tous les tokens des joueurs. Le test de CHA n'est pas automatisé, mais le script en rappelle la difficulté. Pour les ancres, ajouter un prédicat <code>ancreInvincible</code> (par exemple dans les prédicats de l'arme). Pour la réduction des dégâts, ajouter au dragon un prédicat <code>dragonInvincible</code>. Pour les DM indirects, il faudra gérer à la main la réduction de DM.</li>
+                  <li><strong>Perte de substance</strong> (Invincible) : Ajouter pour tous les personnages concernés un <a href=#predicats>prédicat</a> <code>perteDeSubstance</code>. Le changement de jour va augmenter un compteur, à condition que les tokens des joueurs soient sur la page, et soit on ne sélectionne aucun token quand on lance la commande de changement de jour, soit on sélectionne au moins tous les tokens des joueurs. Le test de CHA n'est pas automatisé, mais le script en rappelle la difficulté. Pour les ancres, ajouter un prédicat <code>ancreInvincible</code> (par exemple dans les prédicats de l'arme). Pour la réduction des dégâts, ajouter au dragon un prédicat <code>dragonInvincible</code>. Pour la réduction des dégâts contre les émissaires du dragon, ajouter à ces derniers un prédicat <code>emissaireDuDragonInvincible</code>. Pour les DM indirects, il faudra gérer à la main la réduction de DM.</li>
                   <li><strong>Phylactère de canalisation</strong> : ajouter un prédicat <code>phylacterePositif</code> pour un phylactère de canalisation positive, ou <code>phylactereNegatif</code> pour un phylactère de canalisation négative. Associez à ce prédicat la valeur ajoutée pour chaque PM dépensé (nécessite l'utilisation du prédicat <code>deCanalisation</code>). Une valeur de <code>1d4</code> semble adaptée pour le phylactère de canalisation de Pathfinder 1.</li>
                   <li><strong>Piqûres d'insectes</strong> : Rajouter un <a href=#predicats>prédicat</a> <code>piquresDInsectes</code> avec comme valeur la résistance aux dégâts à distance appropriée</li>
                   <li>
-                    <strong>Poison</strong> : pour enduire une arme de label <i>L</i> de poison, utiliser <code>!cof-enduire-poison <i>L type force save</i></code>. Pour l'instant, <i>type</i> ne peut être que <code>rapide</code> ou <code>affaiblissant</code>. Pour un poison rapide, <i>force</i> est une expression pour les dégâts (typiquement, <code>2d6</code>), pour un poison affaiblissant c'est une expression indiquant au bout de combien de tours le poison fait effet (si c'est 0, alors l'affaiblissement ne dure que pendant un combat, sinon c'est une durée en heures, à gérer par le MJ). <i>save</i> est la difficulté du jet de CON pour résister au poison. On peut rajouter deux arguments optionnels :
+                    <strong>Poison</strong> : pour enduire une arme de label <i>L</i> de poison, utiliser <code>!cof-enduire-poison <i>L type force save</i></code>. Pour l'instant, <i>type</i> ne peut être que <code>rapide</code>, <code>affaiblissant</code> ou <code>paralysant</code>. Pour un poison rapide, <i>force</i> est une expression pour les dégâts (typiquement, <code>2d6</code>), pour un poison affaiblissant c'est une expression indiquant au bout de combien de tours le poison fait effet (si c'est 0, alors l'affaiblissement ne dure que pendant un combat, sinon c'est une durée en heures, à gérer par le MJ), et pour un poison paralysant, c'est la durée de la paralysie en tours. <i>save</i> est la difficulté du jet de CON pour résister au poison. On peut rajouter deux arguments optionnels :
                     <ul>
                       <li><code>--testINT</code> <i>n</i>: fixe la difficulté du jet d'INT pour réussir à poser le poison. La difficulté par défaut est 14.</li>
                       <li><code>--dose</code> <i>nom</i>: indique une ressource dans laquelle on puise pour enduire de poison. Il faudra que le personnage ait un attribut de nom <code>dose_<i>nom</i></code> avec comme valeur le nombre de doses possédées.</li>
@@ -2492,6 +2507,7 @@ tr {line-height: 25px;}
                       <li><strong>poisonAffaiblissant</strong> est un effet qui rend affaibli pendant tout un combat.</li>
                       <li><strong>poisonAffaiblissantLong</strong>, le même effet mais sans limite de durée (à gérer par le MJ).</li>
                       <li><strong>poisonAffaiblissantLatent</strong> est un effet à durée en tours. Quand l'effet prend fin, le personnage devient empoisonné et affaibli.</li>
+                      <li><strong>poisonParalysant</strong> est un effet à durée en tours, qui paralyse.</li>
                     </ul>
                   </li>
                   <li><strong>Potion de sang de l'Arbre-Coeur</strong> : <code>!cof-effet sangDeLArbreCoeur true</code>, à enlever quand les 24h sont passées.</li>
@@ -3056,12 +3072,246 @@ tr {line-height: 25px;}
               <div class="decalage">
                 <p>Il existe un support basique des fiches Roll20 venant du système Pathfinder 1. La fonction <code>!cof-pathfinder1</code> se lance en sélectionnant un ou plusieurs tokens liés à des fiches Pathfinder (par exemple obtenues en achetant des aventures Pathfinder sur le marketplace de Roll20). L'effet est d'une part de transformer une partie des attributs de la fiche en attributs compris par la fiche COF et le script COFantasy, de changer un peu le token associé à la fiche, mais surtout d'effacer les attributs inutiles pour COF. En effet, le script est relativement sensible au nombre total d'attributs en jeu, et les fiches Pathfinder ont tendence à en avoir vraiment beaucoup. Tout ce qui n'est pas compris par le script se retrouve dans un attribut <code>Attributs Pathfinder</code>. Mais le mieux est de compléter la fiche COF en se basant sur la fiche Pathfinder ouverte dans une autre partie.</p>
               </div>
-              <h2 class="text-primary" id="statistiques">9. Statistiques</h2>
+              <!--
+              <h2 class="text-primary" id="statistiques">Statistiques</h2>
               <div class="decalage">
                 <p>Il est possible d'activer la collecte de statistiques en utilisant la commande <code>!cof-demarrer-statistiques</code>.</p>
                 <p>On peut arrêter la collecte avec <code>!cof-arreter-statistiques</code>, et la mettre en pause avec <code>!cof-pause-statistiques</code>.<br />
                 Si on redémarre après une mise en pause, on reprend les statistiques comme elles étaient au moment de la pause. Si on redémarre des statistiques en court, cela remet les statistiques à zéro.
                 </p>
+              </div>
+              -->
+              <h2 class="text-primary" id="index_predicats">9. Index des prédicats</h2>
+              <div class="decalage">
+                <ul>
+                  <li><strong>actionDegainer<i>n</i></strong> : labels d'attaques, séparés par des <code>-</code>, propose de dégainer ce ou ces labels en premier, dans l'ordre du numéro <i>n</i> (partant de 1).</li>
+                  <li><strong>adaptable</strong> : entier, bonus aux tests de caractéristique en combat, si le script a reconnu un test raté de même caractéristique au tour précédent.</li>
+                  <li><strong>agripper</strong> : booléen, le personnage peut agripper une cible si le jet d'attaque est 15 ou plus.</li>
+                  <li><strong>ambidextrie</strong> : booléen, permet d'attaquer avec l'arme en main gauche sans malus.</li>
+                  <li><strong>ameFeline</strong> : entier, bonus en acrobatie, course, escalade, saut et initiative.</li>
+                  <li><strong>animal</strong> : booléen, le personnage est un animal. </li>
+                  <li><strong>anneauProtection</strong> : booléen, annule les effets critiques des attaques.</li>
+                  <li><strong>arcDeMaitre</strong> : booléen, augmente la portée des arcs de 20 m.</li>
+                  <li><strong>argumentDeTaille</strong> : booléen, augmente les tests de CHA des alliés de la valeur du mod. de FOR du personnage.</li>
+                  <li><strong>armeDeGrand</strong> : booléen, seulement pour les armes à deux mains, ndique qu'une arme peut être portée à une main quand agrandi.</li>
+                  <li><strong>armeDePredilection</strong> : type d'arme, donne un bonus en attaque de +1 pour ce type d'arme.</li>
+                  <li><strong>armeParDefaut</strong> : label, arme tenue en main par défaut, toujours dégaînée à la fin d'un combat.</li>
+                  <li><strong>armureDeVent</strong> : entier, augmente la DEF de cette valeur si le personnage ne porte pas d'armure.</li>
+                  <li><strong>armureLourdeGuerrier</strong> : booléen, annule les effets critiques des attaques si le personnage porte une armure de DEF au moins 7.</li>
+                  <li><strong>armureProtection</strong> : booléen, annule les effets critiques des attaques si le personnage porte une armure.</li>
+                  <li><strong>attaqueAuBouclier</strong> : label, propose d'utiliser l'attaque de ce label comme attaque au bouclier.</li>
+                  <li><strong>attaqueEnMeute</strong> : booléen ou entier (2 par défaut), bonus à l'attaque quand le personnage attaque la même cible qu'un allié.</li>
+                  <li><strong>attaqueEnTraitre</strong> : booléen, propose une attaque en traître quand un allié touche un adversaire au contact.</li>
+                  <li><strong>attaqueSournoise</strong> : entier, nombre de d6 à ajouter pour les DM d'attaques sournoises.</li>
+                  <li><strong>attributsDeStatut</strong> : nom, spécifie un attribut qui doit être afficher avec le statt d'un personnage. On peut spécifier plusieurs attributs en ayant plusieur prédicats <code>attributsDeStatut</code>.</li>
+                  <li><strong>asDeLaGachette</strong> : booléen, augmente les DM des arbalètes et armes à poudre de 1d6 si le jet d'attaque atteint 25.</li>
+                  <li><strong>aucuneActionCombat</strong> : booléen, le personnage ne rentre pas en combat.</li>
+                  <li><strong>batarde</strong> : expression de dés, seulement pour les prédicats des armes à 1 mains : dés de DM quand l'arme est portée à 2 mains.</li>
+                  <li><strong>blessureSanglante</strong> : booléen ou entier (1 par défaut), les blessures infligées par le personnage saignent.La valeur est la durée du saignement</li>
+                  <li><strong>bonusAttaqueBouclier</strong> : entier, bonus pour le jet d'absorber un coup.</li>
+                  <li><strong>bonus_CHA</strong> : entier, ajoute la valeur au mod de CHA.</li>
+                  <li><strong>bonus_CON</strong> : entier, ajoute la valeur au mod de CON.</li>
+                  <li><strong>bonus_DEF</strong> : entier, valeur ajoutée à la DEF.</li>
+                  <li><strong>bonus_DEF(anneau)</strong> : entier, valeur ajoutée à la DEF.</li>
+                  <li><strong>bonus_DEX</strong> : entier, ajoute la valeur au mod de DEX.</li>
+                  <li><strong>bonus_FOR</strong> : entier, ajoute la valeur au mod de FOR.</li>
+                  <li><strong>bonus_INT</strong> : entier, ajoute la valeur au mod d'INT.</li>
+                  <li><strong>bonus_RD</strong> : possibilité d'avoir la même chose que dans la case RD. Cela s'ajoute et se cumule à la RD. Attention d'utiliser la syntaxe avec <code>::</code> si ce bonus contient un <code>:</code> ou une <code>,</code>.</li>
+                  <li><strong>bonus_SAG</strong> : entier, ajoute la valeur au mod de SAG.</li>
+                  <li><strong>bonusFeinte</strong> : entier (5 par défaut), valeur du bonus à l'attaque en cas de feinte réussie.</li>
+                  <li><strong>bonusSaveContre_<i>type</i></strong> : entier, bonus aux saves de contre les effets ou DM de ce type.</li>
+                  <li><strong>bonusTests_<i>nom</i></strong> : entier, ajoute la valeur aux tests de compétence caractéristique <i>nom</i> ou de compétence <i>nom</i>.</li>
+                  <li><strong>bonusTousTests</strong> : entier, ajoute la valeur aux tests de caractéristique.</li>
+                  <li><strong>botteMortelle</strong> : booléen, ajoute 2d6 de DM si le jet d'attaque dépasse de 10 la DEF de la cible.</li>
+                  <li><strong>bouclierDeLaFoi</strong> : entier, bonus à la DEF quand le personnage porte un bouclier.</li>
+                  <li><strong>bouclierProtection</strong> : booléen, annule les effets critiques des attaques si le personnage porte un bouclier.</li>
+                  <li><strong>bouclierPsi</strong> : booléen, augmente de 5 la DEF contre les attaques mentales et divise par 2 les DM des attaques mentales.</li>
+                  <li><strong>briseurDOs</strong> : booléen, augmente les chances de critique des attaques au contact, et applique un effet d'os brisés   a la cible en cas de critique.</li>
+                  <li><strong>bucheron</strong> : booléen, augmente les DM des armes à 2 mains de 1d6 contre les créatures grandes, et 2d6 contre les créatures énormes.</li>
+                  <li><strong>cavalierEmerite</strong> : entier, s'ajoute à l'attaque au contact quand le personnage est sur une monture.</li>
+                  <li><strong>champion</strong> : booléen, touche automatiquement et ajoute 1d6 aux DM sur un résultat de 15 ou plus au dé d'attaque.</li>
+                  <li><strong>charge</strong> : entier (défaut 1), indique que l'arme doit être rechargée (ainsi que le nombre de charge, si on associe un nombre).</li>
+                  <li><strong>chasseurDeSorciere</strong> : booléen, ajoute 2 aux DM et à la DEF contre les nécromanciens.</.li>
+                  <li><strong>chasseurEmerite</strong> : booléen, rajoute +2 à l'attaque et aux DM contre les animaux.</li>
+                  <li><strong>chimiste</strong> : booléen, indique que le personnage n'a pas besoin de lancer de dé de poudre pour les attaques avec une arme à poudre.</li>
+                  <li><strong>coefPVMana</strong> : entier (défaut 1), multiplie la valeur de conversion entre mana et PV pour la brûlure de mana</li>
+                  <li><strong>combatADeuxArmes</strong> : booléen, propose de dégaîner une arme en main gauche.</li>
+                  <li><strong>combatADeuxArmesAmeliore</strong> : booléen, permet d'attaquer avec 2 armes sans malus.</li>
+                  <li><strong>combatEnPhalange</strong> : booléen, ajoute un bonus en attaque et en DEF en fonction du nombre d'alliés au contact.</li>
+                  <li><strong>combatKinetique</strong> : booléen, ajoute 3 à la RD tant que le personnage est conscient de l'attaque.</li>
+                  <li><strong>combattreLaCorruption</strong> : booléen ou entier (1 par défaut), bonus à l'attaque et aux DM contre les cibles corrompues.</li>
+                  <li><strong>connaissanceDuPoison</strong> : booléen, permet d'enduire une arme de poison sans avoir à faire de jet.</li>
+                  <li><strong>controleLoupGarou</strong> : entier, bonus au jet de lycanthrope pour éviter la transformation.</li>
+                  <li><strong>controleSanguin</strong> : booléen, immunise au poison et aux effets de saignement, et divise par 2 les DM de vampirisation.</li>
+                  <li><strong>controleDuMetabolisme</strong> : booléen, ajoute le mod. de CHA aux tests de CON et à l'initiative.</li>
+                  <li><strong>corrompu</strong> : booléen, le personnage est corronpu (utilise pour la voie du chasseur de corruption).</li>
+                  <li><strong>courage</strong> : entier, bonus ajouté pour résister aux effets de peur.</li>
+                  <li><strong>creatureArtificielle</strong> : booléen, immunise au poison, à l'asphyxie et aux maladies.</li>
+                  <li><strong>crocEnJambe</strong> : booléen, fait tomber les adversaires sur un jet de dé d'attaque de 17-20. Passe à 19-20 contre des adversaires quadrupèdes.</li>
+                  <li><strong>DEF_magie</strong> : entier, augmente la défense contre les sortilèges.</li>
+                  <li><strong>defDeriveeDe</strong> : nom de personnage, la valeur de défense est égale à celle du personnage du prédicat.</li>
+                  <li><strong>defenseIntuitive</strong> : booléen, ajoute la SAG à la DEF.</li>
+                  <li><strong>defierLaMort</strong> : booléen, fait lancer un dé pour garder 1 PV quand le personnage devrait mourir.</li>
+                  <li><strong>dentellesEtRapiere</strong> : entier, s'ajoute à la DEF contre les attaques aux contact, mais seulement quand le personnage ne porte pas d'armure.</li>
+                  <li><strong>devierLesCoups</strong> : booléen ou entier (1 par défaut), nombre maximum de fois par tour où on propose de dévier un coup.</li>
+                  <li><strong>difficulteOmbreMouvante</strong> : entier (10 par défaut), difficulté du jet de DEX pour passer dans les ombres. Cela peut permettre de tenir compte de l'environnement.</li>
+                  <li><strong>diviseEffet_<i>type</i></strong> : booléen, divise par 2 les effets associés à des DM du type.</li>
+                  <li><strong>drainDeSang</strong> : booléen, le personnage est soigné de la moitié des DM des effets de saignement qu'il provoque.</li>
+                  <li><strong>durACuire</strong> : booléen, laisee un tour d'actions après être arrivé à 0 PV avant de mourir.</li>
+                  <li><strong>eclaire</strong> : entier, le personage fait de la lumière, et la valeur du prédicat est le rayon d'illumination.</li>
+                  <li><strong>eclaireFaible</strong> : entier, si le personage fait de la lumière, donne le rayon à partir duquel la lumière devient faible.</li>
+                  <li><strong>ecuyer</strong> : booléen, augmente de 1 les chances de critique.</li>
+                  <li><strong>ecuyerDe</strong> : nom de personnage, soigne chaque nuit les alliés du chevalier.</li>
+                  <li><strong>enchainement</strong> : booléen, propose une attaque gratuite sur une cible au contact quand le personnage tue une autre cible.</li>
+                  <li><strong>energieImpie</strong> : booléen, permet de bénéficier d'energie impie (bonus aux DM et aux soins) quand le personnage draine des PVs.</li>
+                  <li><strong>ennemiJure</strong> : race ou type de créature, donne un bonus de 1d6 DM et ajute le mod de SAG à l'attaque contre les créatures de ce type. Il est possible d'utiliser un nom inventé, qu'il faut alors rajouter en prédicats sur les créatures concernées.</li>
+                  <li><strong>entrerEnCombatAvec</strong> : nom de token, fait rentrer en combat à chaque fois que ce token entre en combat.</li>
+                  <li><strong>espritVide</strong> : booléen ou entier (3 par défaut), augmente l'initiative.</li>
+                  <li><strong>esquiveAcrobatique</strong> : booléen, propose des esquives acrobatiques.</li>
+                  <li><strong>esquiveDeLaMagie</strong> : booléen, propose des jets pour esquiver la magie, et réduit les DM même si le jet est raté.</li>
+                  <li><strong>esquiveFatale</strong> : booléen ou entier (1 par défaut), propose des esquives fatales, et limite le nombre d'esquives fatales par combat.</li>
+                  <li><strong>esquiveVoleur</strong> : entier, bonus à la DEF.</li>
+                  <li><strong>exemplaire</strong> : booléen, propose aux alliés de relancer des attaques.</li>
+                  <li><strong>expertDuCombat</strong> : entier, contrôle les capacités d'expert du combat.</li>
+                  <li><strong>expertiseSpecialisee</strong> : caractéristique, compétence ou mot clé, ajoute 5 aux jets pour une caractéristique, 10 aux jet pour une compétence, et 2 pour la furie du berserk,</li>
+                  <li><strong>exsangue</strong> : booléen, permet de continuer à agir à 0 PV, jusqu'à la prochaine blessure.</li>
+                  <li><strong>familier</strong> : nom de personnage, nom du personnage représentant le familier qui donne un bonus en initiative.</li>
+                  <li><strong>formeHybrideSuperieure</strong> : booléan, augmente les effets de <code>formeHybride</code>.</li>
+                  <li><strong>frappeChirurgicale</strong> : booléen, ajoute le mod. d'INT aux chances de coups critiques avec l'arme en main droite, au contact.</li>
+                  <li><strong>frappeDuVide</strong> : booléen, rajoute +2 à l'attaque et 1d6 aux DM de la première attaque si l'arme était au fourreau. De plus, fait automatiquement rengainer l'arme à la fin du combat.</li>
+                  <li><strong>fureurDrakonide</strong> : booléen, augmente l'attaque et les DM de 1 quand le personnage est sous la moitié de ses PV max ou qu'il a reçu un coup critique.</li>
+                  <li><strong>graceFeline</strong> : booléen, ajoute le mod. de CHA à l'initiative et à la défense.</li>
+                  <li><strong>graceFelineVoleur</strong> : booléen, ajoute le charisme aux jets de déplacement (course, escalade, saut).</li>
+                  <li><strong>grosMonstreGrosseArme</strong> : booléen, augmente la catégorie de dé des armes à deux main au contact contre les grosses créatures.</li>
+                  <li><strong>grosseTete</strong> : booléen, remplace le mod. de FOR par le mod. d'INT pour les tests.</li>
+                  <li><strong>guetteur</strong> : nom de personnage, nom du personnage représentant le compagnon qui donne un bonus en perception.</li>
+                  <li><strong>hachesEtMarteaux</strong> : booléen, ajoute un bonus de 1 en attaque est DM pour les haches et les marteaux.</li>
+                  <li><strong>hausserLeTon</strong> : booléen, capacité Hausser le ton de la Voie du champion.</li>
+                  <li><strong>hemorragiePestrilax</strong> : booléen, les attaques qui font des dégâts font saigner la cible.</li>
+                  <li><strong>humanoide</strong> : booléen, le personnage est humanoïde.</li>
+                  <li><strong>ignorerLaDouleur</strong> : booléen, permet de reporter les DM d'une attaque à la fin du combat.</li>
+                  <li><strong>immunite_<i>x</i></strong> : booléen, empêche de mettre le personnage dans l'état ou effet temporaire nommé <i>x</i>. On peut aussi immuniser aux effets de pétrification avec <i>x</i>=petrification, ou contre la desctruction des mort-vivants avec <i>x</i>=destruction.</li>
+                  <li><strong>immuniteAbsorptionVampire</strong> : booléen, immunise aux attaque de drain venant des vampires (ayant un prédicat <code>vampire</code>.</li>
+                  <li><strong>immuniteAuxSournoises</strong> : booléen, annule les DM d'effets de type sournoise.</li>
+                  <li><strong>immuniteSaignement</strong> : booléen, immunise aux effets de saignement.</li>
+                  <li><strong>increvable</strong> : booléen, permet de se relever une fois par combat après avoir été mis à 0 PV.</li>
+                  <li><strong>increvableHumain</strong> : booléen, propose un jet pour éviter une attaque qui mettrait à 0 PV.</li>
+                  <li><strong>initiativeDeriveeDe</strong> : nom de personnage, l'initiative est celle de ce personnage.</li>
+                  <li><strong>insecte</strong> : booléen, le personnage est un insecte. </li>
+                  <li><strong>insignifiant</strong> : booléen, bonus de +2 en DEF contre les créature grandes et +4 en DEF contre celles encore plus grandes.</li>
+                  <li><strong>instinctDeSurvieHumain</strong> : booléen, les DM qui amènent à 0 PV sont divisés par 2.</li>
+                  <li><strong>intelligenceDuCombat</strong> : booléen, ajoute le mod d'INT à l'initiative et à la DEF. </li>
+                  <li><strong>intercepter</strong> : booléen, propose d'intercepter les attaques sur les alliés au contact. </li>
+                  <li><strong>interventionDivine</strong> : booléen, autorise l'utilisation de la commande <code>!cof-intervention-divine</code> une fois par combat.</li>
+                  <li><strong>invulnerable</strong> : booléen, divise par 2 les dégâts élémentaires. </li>
+                  <li><strong>joliCoup</strong> : booléen, ignore les obstacles pour les attaques à distance.</li>
+                  <li><strong>kiai</strong> : entier, nombre de kiaï que le personnage peut pousser dans un combat (avec un délai de 1d6 tours entre chaque).</li>
+                  <li><strong>laissezLeMoi</strong> : booléen, rajoute 1d6 aux DM contre les chefs.</li>
+                  <li><strong>liberateurDAnathazerin</strong> : booléen, augmente l'attaque de 2 et les DM de 2d6 contre les elfes noirs et les insectes, et donne un bonus de +2 pour résister aux poisons.</li>
+                  <li><strong>liberateurDeDorn</strong> : booléen, augmente la défense de 2, l'attaque de 2 et les DM de 2d6 contre les géants.</li>
+                  <li><strong>liberateurDeKerserac</strong> : booléen, augmente l'attaque de 2 et les DM de 1d6 contre les géants, les insectes et les elfes noirs.</li>
+                  <li><strong>liberteDAction</strong> : booléen, immunise à tout ce qui entrave le mouvement.</li>
+                  <li><strong>lienEpique</strong> : nom, le personnage est en lien épique avec les personnages ayant le même prédicat (bonus de 1d6 aux DM s'ils attaquent la même cible).</li>
+                  <li><strong>loupParmiLesLoups</strong> : entier, bonus aux DM contre les humanoïdes.</li>
+                  <li><strong>lycanthrope</strong> : booléen, le personnage est un lycanthrope. Propose un jet pour résister à la transformation.</li>
+                  <li><strong>lycanthropeEventre</strong> : booléen, permet léventration des lycanthropes.</li>
+                  <li><strong>magieDeCombat</strong> : booléen ou entier (1 par défaut), bonus aux chances de critique des sorts.</li>
+                  <li><strong>magieEnArmure</strong> : entier, valeur d'armure (moyenne entre DEF et malus d'armure) en dessous de laquelle le personnage peut faire de la magie sans pénalité.</li>
+                  <li><strong>magieEnArmureFacilitee</strong> : booléen, diminue la valeur d'armure de <code>magieEnArmure</code> pour déterminer le malus aux jets pour lancer des sorts en armure.</li>
+                  <li><strong>marcheSylvestre</strong> : booléen, immunise aux effets de conditions hostiles et donne +2 en attaque et en défense en terrain difficile. </li>
+                  <li><strong>mauvais</strong> : booléen, le personnage est mauvais, ce qui signifie normalement, démon, mort-vivant ou élémentaire (impacte la protection contre le mal).</li>
+                  <li><strong>memePasMal</strong> : booléen, reporte les DM des coups critiques et donne un bonus aux DMs. </li>
+                  <li><strong>monture</strong> : booléen, indique que le personnage est une monture, il est donc possible de monter dessus (avec <code>!cof-en-selle</code>).</li>
+                  <li><strong>montureLoyale</strong> : booléen, augmente la défense et l'attaque de 1 quand le personnage est sur une monture.</li>
+                  <li><strong>montureMagique</strong> : booléen, soigne automatiquement la monture pendant les repos longs.</li>
+                  <li><strong>morsureDuSerpent</strong> : booléen, augmente les chances de critique au contact. </li>
+                  <li><strong>mortDemandeConfirmation</strong> : booléen, indique que la mort du personnage ne peut être effective qu'une fois que le MJ l'aura confirmée (ce qui lui permet par exemple de prendre le temps de décrire cette mort).</li>
+                  <li><strong>mortVivant</strong> : booléen, indique que le personnage est un mort-vivant.</li>
+                  <li><strong>natureNourriciereBaies</strong> : booléen, permet de trouver des baies magiques si le jet de nature nourricière est assez haut.</li>
+                  <li><strong>nbDesFeinte</strong> : entier (2 par défaut), nombre de dés à ajouter aux DM des feintes réussies.</li>
+                  <li><strong>necromancien</strong> : booléen, le personnage est un nécromancien ou une sorcière.</li>
+                  <li><strong>nonVivant</strong> : booléen, le personnage n'est pas vivant (élémentaire, golem ou autre).</li>
+                  <li><strong>ordreDuChevalierDragon</strong> : booléen, augmente de 5 les jets de persuasion et d'intimidation quand le personnage est sur une monture.</li>
+                  <li><strong>pacifisme</strong> : booléen, augmente la DEF de 5 tant que le personnage n'a pas attaqué dans un combat. </li>
+                  <li><strong>pacteSanglant</strong> : entier, propose un bouton pour augmenter la DEF de cette valeur, en échange d'une dépense de PV (1d4 pour 3 ou moins, 2d4 sinon).</li>
+                  <li><strong>paradeAuBouclier</strong> : booléen, propose un bouton pour les parades au bouclier.</li>
+                  <li><strong>paradeDeProjectiles</strong> : booléen, propose un jet pour parer les projectiles. </li>
+                  <li><strong>pasDuVent</strong> : entier, bonus à l'initiative. </li>
+                  <li><strong>peauDePierre</strong> : booléen, augmente la DEF de la valeur de CON.</li>
+                  <li><strong>perception</strong> : entier, bonus aux jets de perception.</li>
+                  <li><strong>petiteTaille</strong> : booléen, bonus de +2 en discrétion et +1 en DEF, et le personnage est considéré de taille petit.</li>
+                  <li><strong>petitVeinard</strong> : booléen ou entier (1 par défaut), propose de relancer des jets ce nombre de fois pas combat maximum.</li>
+                  <li><strong>piquresDInsectes</strong> : entier, diminue les DM des attaques à distance de ce nombre, si le personnage porte une armure de DEF au moins 5.</li>
+                  <li><strong>pirouettes</strong> : entier, augmente la DEF si le personnage a un malud d'armure inféreur ou égal à 3.</li>
+                  <li><strong>plusViteQueSonOmbre</strong> : booléen ou entier (par défaut 10), augmente l'initiative si le personnage à une arme à poudre chargée en main. On peut aussi spécifier un autre type d'armes, comme les arbalète, en associant ce nom à la valeur du prédicat.</li>
+                  <li><strong>poudrePuissante</strong> : booléen, augmente de 10 la portée et de 2 les DM des armes à poudre.</li>
+                  <li><strong>prescience</strong> : booléen ou entier (défaut 1), propose de refaire le tour. Le nombre associé indique le nombre de fois que le personnage peut faire ça par combat.</li>
+                  <li><strong>proprioception</strong> : booléen, immunise aux effets de douleur et de peur,</li>
+                  <li><strong>protectionContreLesProjectiles</strong> : entier, valeur de la RD apportée par l'effet temporaire de même nom</li>
+                  <li><strong>prouesse</strong> : booléen, propose un bouton pour les prouesses de guerrier.</li>
+                  <li><strong>PVPartagesAvec</strong> : nom de personnage, nom du personnage avec lequel on partage les PVs.</li>
+                  <li><strong>quadrupede</strong> : booléen, le personnage marche sur 4 pattes ou plus.</li>
+                  <li><strong>radarMental</strong> : entier, bonus aux jets de surprise contre les créatures vivantes. Si le prédicat est présent annule les malus liées à la condition aveugle contre les créatures vivantes.</li>
+                  <li><strong>rageDuBerserkAmelioree</strong> : booléen, divise par 2 les malus de rage. </li>
+                  <li><strong>rapideCommeSonOmbre</strong> : booléen ou entier (3 par défaut), bonus à la discrétion et à l'initiative.</li>
+                  <li><strong>RD_critique</strong> : entier, s'ajoute à la RD contre les coups critiques des casques.</li>
+                  <li><strong>reduireLaDistance</strong> : booléen, augmente la défense contre les grandes créatures (2 à 4, selon la taille).</li>
+                  <li><strong>reflexesFelins</strong> : entier, bonus aux esquives et à l'initiative.</li>
+                  <li><strong>resistanceA_nonMagique</strong> : booléen, divise par 2 les DM non magiques.</li>
+                  <li><strong>resistanceA_<i>type</i></strong> : booléen, divise par 2 les DM du type.</li>
+                  <li><strong>resistanceALaMagieBarbare</strong> : booléen, propose un jet pour résister à la magie.</li>
+                  <li><strong>riposte</strong> : booléen, capacité Riposte de la Voie du champion.</li>
+                  <li><strong>riposteGuerrier</strong> : booléen, propose un jet de riposte au personnage.</li>
+                  <li><strong>sangFroid</strong> : booléen, réduit les DM quand l'ogre prend sur lui pour éviter une réaction violente.</li>
+                  <li><strong>sansPeur</strong> : booléen, immunise aux effets de peur et donne un bonus de 2+CHA aux alliés en vue pour résister aux effets de peur.</li>
+                  <li><strong>scienceDuCritique</strong> : booléen, augmente de 1 les chances de critique.</li>
+                  <li><strong>secondSouffle</strong> : booléen ou entier, propose un jet de récupération de PV une fois par combat, appliqué automatiquement à la fin du combat si pas utilisé. Si on met un entier, on soigne avec cette valeur à la place de CON + niveau.</li>
+                  <li><strong>sensAffutes</strong> : booléen, ajoute la sagesse aux dégâts des arcs et à l'initiative.</li>
+                  <li><strong>sergent</strong> : booléen, une fois par combat, ignore une attaque qui aurait dû le mettre à 0 PV.</li>
+                  <li><strong>sournoisesParTour</strong> : entier (1 par défaut), nombre maximum d'effets d'attaques sournoises par tour pour le personnage.</li>
+                  <li><strong>specialisationGuerrier</strong> : booléen ou entier (2 par défaut), donne un bonus aux DM pour l'arme de prédilection.</li>
+                  <li><strong>siphonDesAmes</strong> : booléen ou entier, fait récupérer 1d6 PV quand une créature meurt dans les 20 mètres. Si une valeur est précisée, elle est ajoutée à ce dé.</i>
+                  <li><strong>siphonDesAmesPrioritaire</strong> : entier, indique une priorité pour le siphon des âmes, si plusieurs personnages peuvent siphoner une âme. Le personnage ayant un prédicat siphonDesAmesPrioritaire de plus haute valeur sera prioritaire : il absorbera l'âme (et bénéficiera du soin) s'il n'est pas au maximum de PV. Si il est au maximum de PV, on passe au personnage suivant dans l'ordre des priorités. Un personnage n'ayant pas ce prédicat est dernier sur cette liste.</li>
+                  <li><strong>surveillance</strong> : nom d'un token, ajoute +5 aux tests contre la surprise si le token est présent. Et augmente l'initiative de 5 dans ces cas.</li>
+                  <li><strong>techniqueDuSabre</strong> : entier, bonus aux DM pour le combat au sabre, katana ou vivelame. Ce bonus ne se cumule qu'à moitié avec le mod. de FOR.</li>
+                  <li><strong>tenacite</strong> : booléen, donne un bonus de +2 puis +5 contre un adversaire que le personnage n'a pas réussi à toucher.</li>
+                  <li><strong>tirDeSemonce</strong> : booléan, propose un tir de semonce au tour suivant un tir raté.</li>
+                  <li><strong>tirDouble</strong> : booléan, quand le personnage attaque avec une arme à poudre dans chaque main, il utilise un d20 par défaut.</li>
+                  <li><strong>tirFatal</strong> : booléen ou nom de type d'arme (par défaut, arc), augmente les chance de coup critique du mod. de SAG pour les armes de ce type. De plus les DM des coups critiques pour ces attaques sont augmentées de 1 ou 2 d6 (selon la valeur du prédicat <code>voieDeLArcEtDuCheval</code>).</li>
+                  <li><strong>tirParabolique</strong> : booléen, augmente la portée des armes à distance (comme la capacité tir parabolique).</li>
+                  <li><strong>tirPrecis</strong> : entier, ajouté aux DM quand la cible est à moins de 5xDEX mètres.</li>
+                  <li><strong>tokenFormeDArbre</strong> : url d'une image, l'image utilisée pour la forme d'arbre.</li> 
+                  <li><strong>tourDeForce</strong> : booléen, propose de sacrifier des PV pour rajouter un bonus aux tests de force ratés.</li>
+                  <li><strong>toutPetit</strong> : booléen, ajoute 5 aux jets de discrétion et 2 en DEF.</li>
+                  <li><strong>traquenard</strong> : booléen, permet la bonne utilisation de l'option d'attaque <code>--traquenard</code>.</li>
+                  <li><strong>tropPetit</strong> : booléen, change les d6 de DM en d4.</li>
+                  <li><strong>vampire</strong> : booléen, le personnage est un vampire.</li>
+                  <li><strong>ventreMou</strong> : booléen, réduit la RD fixe des grandes créatures.</li>
+                  <li><strong>vetementsSacres</strong> : entier, bonus à la DEF quand le personnage ne porte pas d'armure.</li>
+                  <li><strong>vieArtificielle</strong> : booléan, divise les soins par 2.</li>
+                  <li><strong>violenceCiblee</strong> : booléen, permet d'emmagasiner et d'utliser des points de violence.</li>
+                  <li><strong>visionDansLeNoir</strong> : entier, le personnage voit dans le noir jusqu'à la distance indiquée par le prédicat, en mètres.</li>
+                  <li><strong>vitaliteEpique</strong> : booléan, multiplie par 2 les soins reçus.</li>
+                  <li><strong>vitesseDuFelin</strong> : entier, bonus à l'initiative et aux jets de course, d'escalade, et de saut.</li>
+                  <li><strong>voieDeLaConjuration</strong> : entier, rang dans la Voie de la conjuration. Contrôle les conjurations de prédateurs et la conjuration d'armées.</li>
+                  <li><strong>voieDeLaMagieElementaire</strong> : entier, on utilise 2 fois cette valeur pour la valeur de la protection des éléments.</li>
+                  <li><strong>voieDeLArchange</strong> : entier, rang dans la Voie de l'archange. contrôle l'utilisation de la forme d'ange.</li>
+                  <li><strong>voieDeLArcEtDuCheval</strong> : entier (3 par défaut), ocntrôle le nombre de d6 rajoutés par le ir fatal en cas de critique.</li>
+                  <li><strong>voieDeLaTelekinesie</strong> : entier (2 par défaut), bonus de DEF accordé par l'effet <code>champDeProtection</code>.</li>
+                  <li><strong>voieDeLaSurvie</strong> : entier, contrôle le nombre de plantes trouvées avec Nature nourricière.</li>
+                  <li><strong>voieDeLHonneur</strong> : entier, bonus aux DM par défaut des défis.</li>
+                  <li><strong>voieDesElixirs</strong> : entier, rang dans la voie des élixirs, contrôle les élixirs proposés à la création, leur nombre total maximum et la puissance de certains d'entre eux.</li>
+                  <li><strong>voieDesMutations</strong> : entier, bonus de défense de la cuirasse de la voie des mutations.</li>
+                  <li><strong>voieDesRunes</strong> : entier, rang dans la voie des runes, définit le bonus à la DEF et contrôle les runes proposées à la création et la puissance de certaines d'entre elles.</li>
+                  <li><strong>voieDesSoins</strong> : entier, rang dans la voie des soins, limite le nombre total de soins légers et de soins modérés par jour.</li>
+                  <li><strong>voieDesVegetaux</strong> : entier (1 par défaut), bonus de DEF de la peau d'écorce.</li>
+                  <li><strong>voieDuGuerisseur</strong> : entier, bonus aux soins legers, soins modérés et soins de groupe.</li>
+                  <li><strong>voieDuMeneurDHomme</strong> : entier (2 par défaut), RD appliquée en cas d'interception (minimum 2).</li>
+                  <li><strong>voieDuMetal</strong> : entier, bonus aux DM de l'arme enflammée du forgesort.</li>
+                  <li><strong>voieDuSoldat</strong> : entier, limite le bonus de la posture de combat.</li>
+                  <li><strong>voieOutreTombe</strong> : entier (1 par défaut), maximum de combies ocntrôlés à la fois.</li>
+                  <li><strong>volant</strong> : booléen, le personnage peut voler. Cela influe sur la possibilité de croc-en-jambe, la possibilité d'échapper à une armée de morts, ...</li>
+                </ul>
               </div>
             </div>
           </div>

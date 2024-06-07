@@ -168,7 +168,7 @@ const DungeonAlchemistImporter = (() => {
       y2 -= yCenter;
 
       let open = wall.open;
-      if (typeof(open) === 'undefined') open = false;
+      if (typeof (open) === 'undefined') open = false;
 
       var doorObj = {
         pageid: page.get("_id"),
@@ -179,8 +179,8 @@ const DungeonAlchemistImporter = (() => {
         isLocked: false,
         isSecret: false,
         path: {
-          handle0: {x: x1, y: y1},
-          handle1: {x: x2, y: y2},
+          handle0: { x: x1, y: y1 },
+          handle1: { x: x2, y: y2 },
         },
         controller_by: map.get("_id"),
       };
@@ -199,7 +199,7 @@ const DungeonAlchemistImporter = (() => {
         ["M", x1, y1],
         ["L", x2, y2],
       ];
-  
+
       // different wall types have different colors - we use a color scheme compatible with WOTC modules and DoorKnocker
       let color = "#0000ff";
       let barrierType = "wall";
@@ -236,43 +236,50 @@ const DungeonAlchemistImporter = (() => {
 
   const createLight = (page, light, originalGridSize, gridSize) => {
 
-	const x = light.position.x * gridSize / originalGridSize;
-	const y = light.position.y * gridSize / originalGridSize;
-
-	
-	const range = light.range * 1.0;
-	let dim_radius = range;
-	let bright_radius = range / 2;
-	
-	// convert to the local scale value
-	const scale_number = page.get("scale_number");
-  //log("Go from dim_radius " + dim_radius + " which has range " + range + " to per tile " + (dim_radius/originalGridSize) + " from original grid size " + originalGridSize + " and scale_number is " + scale_number);
-	dim_radius *= scale_number / originalGridSize;
-	bright_radius *= scale_number / originalGridSize;
+    const x = light.position.x * gridSize / originalGridSize;
+    const y = light.position.y * gridSize / originalGridSize;
 
 
-	var newObj = createObj('graphic',{
-		imgsrc: clearURL,
-		subtype: 'token',
-		name: '',
-		aura1_radius: 0.5,
-		aura1_color: "#" + light.color.substring(0, 6),
+    const range = light.range * 1.0;
+    let bright_radius = range / 2;
+    let dim_radius = bright_radius * 2;
 
-		// UDL
-		emits_bright_light: true,
-		emits_low_light: true,
-		bright_light_distance: bright_radius,
-		low_light_distance: dim_radius,
+    // convert to the local scale value
+    const scale_number = page.get("scale_number");
+    //log("Go from dim_radius " + dim_radius + " which has range " + range + " to per tile " + (dim_radius/originalGridSize) + " from original grid size " + originalGridSize + " and scale_number is " + scale_number);
+    dim_radius *= scale_number / originalGridSize;
+    bright_radius *= scale_number / originalGridSize;
+    const color_string = light.color.substring(0, 7);
+    //log("Range: " + range + ", dim radius: " + dim_radius + ", bright radius: " + bright_radius + ", color: " + color_string);
 
-		width:70,
-		height:70,
-		top: y,
-		left: x,
-		layer: "walls",
-		pageid: page.get("_id")
-	  });
+    bright_radius = parseInt(Math.round(bright_radius));
+    dim_radius = parseInt(Math.round(dim_radius));
 
-    //log("New obj light distance: " + newObj.get("bright_light_distance") + " / " + newObj.get("low_light_distance"));
+    var newObj = createObj('graphic', {
+      imgsrc: clearURL,
+      subtype: 'token',
+      name: 'shizzle',
+      aura1_radius: 0.5,
+      aura1_color: color_string,
+      lightColor: color_string,
+
+      // UDL
+      emits_bright_light: true,
+      emits_low_light: true,
+      low_light_distance: dim_radius,
+      bright_light_distance: bright_radius,
+      //low_distance: dim_radius,
+
+      //light_radius: bright_radius,
+      //light_dimradius: dim_radius,
+
+      width: 70,
+      height: 70,
+      top: y,
+      left: x,
+      layer: "walls",
+      pageid: page.get("_id")
+    });
   };
 
   const getMap = (page, msg) => {
@@ -307,7 +314,7 @@ const DungeonAlchemistImporter = (() => {
       );
       return null;
     }
-	else {
+    else {
       return getObj("graphic", selected[0]._id);
     }
   };
@@ -331,6 +338,18 @@ const DungeonAlchemistImporter = (() => {
     });
   };
 
+  const parseVector2i = (s) => {
+    // support both the old and new serialization of DA
+    if (typeof (s.x) === 'undefined') {
+      const arr = s.split(' ');
+      return {
+        x: parseInt(arr[0]),
+        y: parseInt(arr[1]),
+      };
+    }
+    else return s;
+  }
+
   const handleInput = (msg) => {
     if (
       "api" === msg.type &&
@@ -347,7 +366,7 @@ const DungeonAlchemistImporter = (() => {
 
         // determine the version
         let version = data.version;
-        if (typeof(version) === 'undefined') version = 1;
+        if (typeof (version) === 'undefined') version = 1;
 
         // load the player
         const player = getObj("player", msg.playerid);
@@ -375,7 +394,7 @@ const DungeonAlchemistImporter = (() => {
         if (map === null) return;
 
         // resize the map properly
-        resizeMap(gridSize, data.grid, page, map);
+        resizeMap(gridSize, parseVector2i(data.grid), page, map);
 
 
         // spawn the walls & lights
