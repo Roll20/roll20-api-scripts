@@ -85,7 +85,7 @@ API_Meta.MagicMaster={offset:Number.MAX_SAFE_INTEGER,lineCount:-1};
  *                     stackable and the container already contains that item name. Fix handling of use 
  *                     of --mi-charges with "=#" for setting the quantity to an absolute number. Support 
  *                     RPGM maths operators for numbers passed to --mi-charges. Fixed stacking of looted
- *                     items.
+ *                     items. Added container self-heal capability on version change.
  */
  
 var MagicMaster = (function() {
@@ -840,6 +840,8 @@ var MagicMaster = (function() {
 		POP_STORE:			'POPsubmit',
 		PICKMI_OPTION:		'PICKMI_OPTION',
 		PUTMI_OPTION:		'PUTMI_OPTION',
+		LOCKTYPE:			'LOCKTYPE',
+		TRAPTYPE:			'TRAPTYPE',
 		POWER:				'POWER',
 		USE_POWER:			'USE_POWER',
 		USE_MI:				'USE_MI',
@@ -1454,7 +1456,7 @@ var MagicMaster = (function() {
 			
 			if (csv < curVer) {
 				if (csv < 2.1) {
-					log('updateACS: updating '+charName);
+//					log('updateACS: updating '+charName);
 					for (let c=1; c<=fields.MaxSpellCol; c++) {
 						await updateCSspellCol( charCS, charName, c, senderId );
 					}
@@ -1489,7 +1491,7 @@ var MagicMaster = (function() {
 		};
 		for (const charCS of CSarray) {
 			let delay = Math.round(10000+(Math.random() * 10000));
-			log('updateCharSheets: '+charCS.get('name')+' is in the list, delay = '+delay);
+//			log('updateCharSheets: '+charCS.get('name')+' is in the list, delay = '+delay);
 			setTimeout( updateACS, delay, charCS, curVer, senderId );
 		}
 	};
@@ -7883,6 +7885,13 @@ var MagicMaster = (function() {
 			if (findTraps && findTraps.length) {
 				sendAPImacro( senderId, putID, pickID, findTraps[0].get('name') );
 				sendWait(senderId,0);
+				if (csVer(pickCS) < 3.5 && ((attrLookup( pickCS, fields.Gender ) || '').dbName() === 'container')) {
+					let lock = (attrLookup( pickCS, fields.Container_lock ) || ''),
+						trap = (attrLookup( pickCS, fields.Container_trap ) || '');
+					sendAPI( fields.commandMaster + ' --button '+BT.LOCKTYPE+'|'+pickID+'|'+lock+'|silent' );
+					sendAPI( fields.commandMaster + ' --button '+BT.TRAPTYPE+'|'+pickID+'|'+trap+'|silent' );
+					setAttr( pickCS, fields.msVersion, '3.5' );
+				}
 				return;
 			}
 		}
@@ -7901,6 +7910,7 @@ var MagicMaster = (function() {
 		content = '&{template:RPGMdefault}{{title=Find Traps}}{{desc=Do you want to search '+pickName+' for traps? Your chance of success would appear to be [['+chance+']]%, but that might alter with circumstance}}{{desc1=[Yes]('+(state.MagicMaster.gmRolls ? ('!magic --display-ability gm|'+putID+'|'+putCS.id+'|GM-Roll-Magic-FindTrap|gm{Find Traps Roll? Chance is '+chance+'%/1d100,[[1d100]]/Succeed,[[1d'+chance+']]/Fail,[['+chance+'+1d'+(99-chance)+']]}') : ('~'+putName+'|Magic-FindTrap'))+') or [No](!magic --message '+tokenID+'|Not Finding Traps|OK, having thought about your chance of success, you decide to let someone else have a go...)}}';
 		setAttr( charCS, fields.PlayerID, senderId );
 		sendResponse( charCS, content, senderId );
+
 	};
 
 	/**
@@ -7943,6 +7953,14 @@ var MagicMaster = (function() {
 		if (!pickCS && !!pickToken) {
 			doFindTraps( args, senderId );
 			return;
+		}
+		
+		if (csVer(containerCS) < 3.5 && ((attrLookup( containerCS, fields.Gender ) || '').dbName() === 'container')) {
+			let lock = (attrLookup( containerCS, fields.Container_lock ) || ''),
+				trap = (attrLookup( containerCS, fields.Container_trap ) || '');
+			sendAPI( fields.commandMaster + ' --button '+BT.LOCKTYPE+'|'+containerID+'|'+lock+'|silent' );
+			sendAPI( fields.commandMaster + ' --button '+BT.TRAPTYPE+'|'+containerID+'|'+trap+'|silent' );
+			setAttr( containerCS, fields.msVersion, '3.5' );
 		}
 		
 		setAttr( charCS, ['target-level', 'current'], characterLevel(pickCS) );
