@@ -67,6 +67,28 @@ This script as written is optimized for the D&D 5th Edition by Roll20 sheet, but
 
 - **dragon.** Three-fivey goodness!
 
+- **gate3**. For folks who like the GOTY based on D&D.
+
+- **choices**. A second style, suitable for for the same crowd.
+
+- **roll20light**. for when you want your notes to have the feeling of authority
+
+- **roll20dark**. As above, but.... dark
+
+- **news**. Extra! Extra! Read all about it! You can even see the ink bleeding through from the other side of the newsprint.
+
+- **treasure**. For listing all that loot.
+
+- **vault**. A comforting style for sheltered people.
+
+- **path**. A style that works well with PF2 Adventure Paths
+
+- **osrblue**. Gygax-approved. Maybe. The graph paper even has yellowed edges
+
+- **scroll2**. An alternative to scroll, thats even scrollier.
+
+- **roman**. Bonus style! This was added in a previous version, but was only documented mid-thread.
+
 *--help* Displays help.
 
 *--config* Returns a configuration dialog box that allows you to set which sheet's roll template to use, and to toggle the 'Send to Players' footer.
@@ -92,3 +114,6 @@ Default Template, D&D 5th Edition by Roll20, 5e Shaped, Pathfinder by Roll20, Pa
 - 1.1.4 Added better coordination with Reporter. Handouts can now support a Reporter report and display the desired notes in the same handout.
 - 0.2.0 Added custom templates, and configured base script to return in-line text links instead of Roll20 Big Pink Buttons.
 - 0.2.1 Fixed parsing bug and added two new templates - wizard and dragon
+- 0.2.2 Minor tweaks. Corrected catch line in API_Meta
+- 0.2.3 Minor fix to roman template
+- 0.2.4 Added 10 new templates
