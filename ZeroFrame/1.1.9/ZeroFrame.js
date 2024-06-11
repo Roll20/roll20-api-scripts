@@ -391,28 +391,24 @@ const ZeroFrame = (() => { //eslint-disable-line no-unused-vars
                 }
             }));
         });
-        [itemsrx, items2rx, items3rx, items4rx].forEach((rx,rxIndex) => {
+        [itemsrx, items2rx].forEach(rx => {
             msg.content = msg.content.replace(rx, ((r, g1, separator) => {
                 let delim = ',';
                 let res;
                 if (msg.inlinerolls.length > g1) {
                     retval = true;
-                    if (rxIndex < 2) {
-                        if (/^(?:'[^']+'|"[^"]+"|`[^`]+`)$/.test(separator)) { // enclosed in quotation marks of some sort
-                            delim = separator.slice(1, -1);
-                        } else if (/^(?<deferral>[^'"`])(?:#|\|)(?<deferredtext>.+)$/.test(separator)) { // deferral character is present
-                            res = /^(?<deferral>[^'"`])(?:#|\|)(?<deferredtext>.+)$/.exec(separator);
-                            delim = (/^(?:'[^']+'|"[^"]+"|`[^`]+`)$/.test(res.groups.deferredtext)
-                                ? res.groups.deferredtext.slice(1, -1) // enclosed in quotation marks of some sort
-                                : res.groups.deferredtext)             // not enclosed in quotation marks
-                                .replace(new RegExp(escapeRegExp(res.groups.deferral), 'g'), '')
-                        } else {
-                            delim = separator;
-                        }
+                    if (/^(?:'[^']+'|"[^"]+"|`[^`]+`)$/.test(separator)) { // enclosed in quotation marks of some sort
+                        delim = separator.slice(1, -1);
+                    } else if (/^(?<deferral>[^'"`])(?:#|\|)(?<deferredtext>.+)$/.test(separator)) { // deferral character is present
+                        res = /^(?<deferral>[^'"`])(?:#|\|)(?<deferredtext>.+)$/.exec(separator);
+                        delim = (/^(?:'[^']+'|"[^"]+"|`[^`]+`)$/.test(res.groups.deferredtext)
+                            ? res.groups.deferredtext.slice(1, -1) // enclosed in quotation marks of some sort
+                            : res.groups.deferredtext)             // not enclosed in quotation marks
+                            .replace(new RegExp(escapeRegExp(res.groups.deferral), 'g'), '')
+                    } else {
+                        delim = separator;
                     }
-                    return msg.parsedinline[g1].getTableValues().length
-                        ? msg.parsedinline[g1].getTableValues().join(delim)
-                        : msg.parsedinline[g1].value;
+                    return msg.parsedinline[g1].getTableValues().join(delim);
                 } else if (lastpass) {
                     retval = true;
                     return '0';
@@ -873,15 +869,6 @@ const ZeroFrame = (() => { //eslint-disable-line no-unused-vars
             getValues(preserved);
 
         });
-        // custom roll marker (open/close)
-        preserved.content = preserved.content.replace(/(\({&\s*r\s*}\)|{&\s*r\s*})/gim, m => {
-            preservedstate.runloop = true;
-            return '[[';
-        });
-        preserved.content = preserved.content.replace(/(\({&\s*\/r\s*}\)|{&\s*\/r\s*})/gim, m => {
-            preservedstate.runloop = true;
-            return ']]'
-        });
 
         // see if we're done
         if (preservedstate.runloop) {
@@ -971,8 +958,8 @@ const ZeroFrame = (() => { //eslint-disable-line no-unused-vars
         preserved.content = preserved.content
             .replace(/(\({&\s*cr\s*}\)|{&\s*cr\s*})/gi, '<br>\n')
             .replace(/(\({&\s*lf\s*}\)|{&\s*lf\s*})/gi, '\n')
-            .replace(/(\({&\s*tp\s*}\)|{&\s*tp\s*})/gi, '{{')
-            .replace(/(\({&\s*\/tp\s*}\)|{&\s*\/tp\s*})/gi, '}}');
+            .replace(/(\({&\s*cr\s*}\)|{&\s*tp\s*})/gi, '{{')
+            .replace(/(\({&\s*cr\s*}\)|{&\s*\/tp\s*})/gi, '}}');
         // check for SIMPLE tag
         if (preserved.content.match(simplerx)) {
             notes.push(`SIMPLE or FLAT tag detected`)

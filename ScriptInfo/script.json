@@ -1,7 +1,7 @@
 {
   "name": "ScriptInfo",
   "script": "ScriptInfo.js",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "# ScriptInfo \r\rScriptInfo helps you troubleshoot script errors or to get help with odd script behavior. ScriptInfo will give you a report of installed scripts and their versions, as well as what line each script starts on. \r\rThe version of a script is important if you need to ask for help regarding an unexpected or odd behavior, and lets the community or the script author verify you are on the correct version (or at least a version that should deliver the sort of behavior you expect). \r\rLine numbers are important because when your game's sandbox spins up, all of the scripts are collected into a single, long file of javascript code. If your sandbox errors out due to a problem with the execution of a script, it will report a line number. However, that line number will be between 1 and the total number of script lines in your game, so how do you know where that error originated? With ScriptInfo, you can run a different report to learn that an error on line X represents line Y of script Z. For a simple example, imagine you have 10 scripts installed (ScriptA, ScriptB, ScriptC, etc.), each consisting of 100 lines of code. You get an error that lists line #304 as where the error occurred. ScriptInfo would tell you that line #304 represents line 4 of ScriptD\r\r## Limitations \r\rScriptInfo interrogates a particular object in javascript that script authors must opt-in to use. If a script does not report to this object, ScriptInfo will not be able to get the information it needs, though it will still be able to tell you basic information (such as that an error occurred so-many-lines after a given script and/or so-many-lines before a given script). Many of the more widely used scripts available in the one-click do make use of this centralized reporting object, including TokenMod (as well as the rest of The Arcane Scriptomancer's scripts: RecursiveTables, GroupInit, etc.), ScriptCards, Reporter, Supernotes, Spawn, SmartAoE, and all of the metascripts.\r\r## Usage \r\rTo get the report of all scripts, use the command: \r\r!scriptinfo \r\rTo get a report of one or more lines, use the same handle, followed by the line numbers you wish to know about, each separated by a space: \r\r!scriptinfo 2549\r\r!scriptinfo 180 2021 15024\r\rTo get a report of the size of your state (broken out by each key), use: \r\r!stateinfo \r\rFor more information, see the original thread in the Mod Script forum:\r\r[ScriptInfo Forum Thread](https://app.roll20.net/forum/post/11309751/script-scriptinfo-reports-scripts-versions-and-locations-of-errors-to-help-you-troubleshoot-or-to-help-you-get-help/)",
   "authors": "timmaugh",
   "roll20userid": "5962076",
@@ -11,6 +11,7 @@
   "conflicts": [],
   "previousversions": [
     "0.0.1",
-    "0.0.2"
+    "0.0.2",
+    "0.0.3"
   ]
 }
