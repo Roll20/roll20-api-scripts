@@ -167,6 +167,13 @@ const DungeonAlchemistImporter = (() => {
       y1 -= yCenter;
       y2 -= yCenter;
 
+      // we need to invert, but only if the version is larger than 2,
+      // because for version 2 we already inverted it ourself in DA
+      if (version >= 3) {
+        y1 = -y1;
+        y2 = -y2;
+      }
+
       let open = wall.open;
       if (typeof (open) === 'undefined') open = false;
 
@@ -258,10 +265,9 @@ const DungeonAlchemistImporter = (() => {
     var newObj = createObj('graphic', {
       imgsrc: clearURL,
       subtype: 'token',
-      name: 'shizzle',
       aura1_radius: 0.5,
-      aura1_color: color_string,
-      lightColor: color_string,
+      //aura1_color: color_string,
+      //lightColor: color_string,
 
       // UDL
       emits_bright_light: true,

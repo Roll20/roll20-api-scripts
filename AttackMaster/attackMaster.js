@@ -32,129 +32,7 @@ API_Meta.AttackMaster={offset:Number.MAX_SAFE_INTEGER,lineCount:-1};
  * However, until Roll20 re-instates 3d dice rolling from APIs, development
  * will concentrate on other aspects of melee combat, such as AC management
  * 
- * v0.001  17/12/2020  Initial creation from MIBag.js
- * v0.002-1.042        Early development - see previous version files
- * v2.043  26/02/2022  Added one character able to "lend a hand" to another character to 
- *                     cooperate on using weapons (or other objects) that require more than 2 hands.
- *                     Added Class-DB to expose all rules relating to
- *                     a character's class, and allow them to be altered or new classes defined.
- * v2.044  02/03/2022  Created the Attacks-DB to expose attack calculations and enable DMs and game
- *                     creators to alter them as needed for their campaigns and rule sets.
- *                     Added full AC and Attack support for damage types Slash, Pierce & Bludgeon.
- *                     Added support for v. fast & v. slow weapon types.  Fixed proficiency calculation
- *                     for weapons with multiple types & supertypes.
- * v2.045  06/03/2022  Added saving throw data to Class specs using method that can also apply
- *                     to other database items.  Updated --check-saves function to include MIs
- *                     that affect saves.  Make database updates asynchronous to avoid invalid
- *                     "infinite loop" errors.  Synchronised DB indexing between APIs to ensure
- *                     all DBs loaded before indexed. Added Creature character class.
- *                     Fixed handling of manual Character Sheet table entries.
- * v2.046  29/03/2022  Some weapon updates (e.g. Oil Flask & Shortsword).
- *                     Updated Help text. Ignore '()' in item names. Added a 'dark text' version of
- *                     a grayed out button. Optimised tableSet() & setAttr(). Added process to ensure
- *                     all characters have AC vs. dmg type from first load. Improved table fieldGroup
- *                     handling. Fixed ammo handling for multi-class & innate ranged weapons. Made
- *                     attack macro build asynchronous. Fixed handling of breakable ammo. Fixed
- *                     intermittent addTableRow() issue if not using getTable(). Fixed taking
- *                     a multi-class weapon in-hand.  Fixed item cost lookup processing.
- * v2.047  04/04/2022  Fixed weapon lists that could sometimes include ammo as a weapon that can 
- *                     be taken in-hand. 
- * v2.048  26/04/2022  Fixed error introduced by v2.047 which ignored oil flasks as a weapon
- * v2.049  22/05/2022  Added float values as possible arguments for --mod-weapon
- * v2.050  28/03/2022  Moved all Table Mgt, Ability Mgt, Chat Mgt, Database Mgt to a
- *                     shared library
- * v2.051  25/04/2022  Fixed all errors found in 2.050, and moved all game-specific and 
- *                     character sheet specific data structures to RPG-specific shared library
- * v2.052  16/05/2022  Added management of rings on hands to Change Weapon menu.  Fixed class
- *                     proficiency in Innate weapons to always be true.
- * v2.060  31/05/2022  Introduced RPGM template processing in library functions
- * v2.061  12/07/2022  Extensive re-engineering to support flexible game rules
- * v0.2.62 18/07/2022  Converted to use revised internal database structures
- * v0.2.63 16/09/2022  Added optional use of a semi-colon to terminate escaped characters in 
- *                     commands. Added preinit flag for weapons that get an attack before initiative.
- *                     Added msg option to weapon database definitions. Added twp option to Class 
- *                     to specify calss two weapon penalty. Changed table management to use table 
- *                     objects and methods from RPGM Library. Fixed error handling in spawned 
- *                     processes. Added Punch & Wrestle attacks. Change --help to 
- *                     provide a menu of links to help handouts
- * v1.3.00 17/09/2022  First release of RPGMaster AttackMaster using the RPGMaster Library.
- * v1.3.01 04/10/2022  Fixed bugs in rings that execute 'on:' and 'off:' commands
- * v1.3.02 14/10/2022  Added support for "weaponised" spells - spells that act exactly 
- *                     like weapons (and spells). Fixed regular expressions for database 
- *                     Specs parsing.
- * v1.3.03 19/10/2022  Extended the Ability object with new methods - .data() and .hands()
- *                     Added Race database parsing & use. Fixed error in taking a weapon
- *                     in hand that can be either 1 or 2 handed (such as a Bastard Sword).
- * v1.3.04 15/11/2022  Fixed sub-race to-hit bonus calculation. Fix Melee damage posting.
- * v1.4.01 26/11/2022  Added Fighting Style database and implementation. Improved the way
- *                     Situational Modifiers are shown & applied for saves. Fixed targeted 
- *                     attack failure on certain armour types. Fixed help menu. Extended
- *                     String prototype with dbName() method.  Added support for creature 
- *                     database.
- * v1.4.02 16/12/2022  Specify weapons and armour for creatures with probability of
- *                     different sets. Also added ammo reuse type 2: becomes only possible
- *                     ammo of several for that weapon e.g. spitting snake venom, and
- *                     type 3: reduces in qty by 1, and all other ammo for same weapon
- *                     increases qty b 1.
- * v1.4.03 15/01/2023  Allow creature innate attack specs to be either of
- *                      attk_name,dmg_roll,speed,type or dmg_roll,attk_name,speed,type
- *                     Fixed error in parsing the class & race dBs for attks/r
- * v1.4.04 21/01/2023  Fixed error in attack calculations if effects were in play that 
- *                     altered token Thac0 bar.  Added support for configurable default 
- *                     token bars. Added ammo range '=' qualifier which forces literal
- *                     ranges without multiplication. Given Ammo its own list on Edit 
- *                     weapons & armour dialogue. Changed attack calcs to show changes
- *                     to token thac0 as magic-adjust to the To-Hit calc.
- * v1.4.05 02/03/2023  Added character attribute checks to saving throw functions. Added
- *                     magical attacks by MIs to Attack menu. Allow MIs with magical
- *                     attacks (item class Magic) to be taken in-hand with Change Weapon.
- *                     Fix parseData() error handling. Moved character level parsing to
- *                     library. Fixed dataset level constraints test. Fixed weapon blanking
- *                     by using dbName() comparison. Added "successcmd" as tag in targeted
- *                     attacks that have magical charges expended on successful hit. Fixed 
- *                     Targeted attack type (i.e. S,P & B) specific calculations for -ve ACs.
- * v1.4.06 06/04/2023  Fixed bug in manual Update Saves dialog which prevented changes. Fixed
- *                     Change Weapon dialog to put rings in correct hand. Fixed issues with 
- *                     inconsistencies in hyphenated item names & spell storing items.
- * v1.4.07 15/04/2023  Added 'discharging' item type which is charged but does not divide.
- * v1.5.01 19/05/2023  Fixed issues with checking AC for TotalAC item types. Added data 
- *                     attribute to suppress a character's dexterity bonus. Added warning
- *                     if trying to change weapon when holding a cursed weapon. Support 
- *                     weapons and magic item attacks that use multiple power charges. Added 
- *                     ac combination rules to MI database data specifications. Fixed ac 
- *                     support for magic helms. Support the item charge type 'single-uncharged' 
- *                     for charged items with non-standard discharging mechanisms. Display 
- *                     the ac mod effect of each valid item on the Check AC dialog. Fix 
- *                     --mod-weap command selection of specified weapons for mod-ing.
- * v1.5.02 31/05/2023  Fixed bug with calculation of magic hit adjustment, which was treating
- *                     numbers as strings.
- * v1.5.03 16/07/2023  Fixed bug with reselecting a weapon from the weapon-in-hand list on
- *                     the Change Weapon dialog
- * v2.1.0  21/07/2023  Recoded insertAmmo() to use setAttkTableRow() ensuring consistent 
- *                     data parsing & weapon table construction. Made many more functions
- *                     asynchronous to multi-thread. Added support for AD&D2e Char Sheet v4.17.
- *                     Added AC rule '+inhand' meaning the item must be in-hand to have an
- *                     effect on armour class (e.g. Defender Sword). Fixed issue with ru:3 
- *                     reusable ammo-changing items. Fixed issue with calculating saving 
- *                     throw table for high levels. Fixed issue with version-checking
- *                     characters not originating from AD&D2e character sheets.
- * v2.2.0  21/07/2023  Implemented The Aaron's API_Meta error handling. Added senderId 
- *                     override capability as id immediately after !magic & before 1st --cmd.
- *                     reSpellSpecs & reClassSpecs moved to library. Update adding/removing 
- *                     magic items from MI bag to support bag items and other changes. Added 
- *                     Skill-based roll configuration option switching GM-rolled thieving 
- *                     actions (Find Traps) with player rolled. Removed potential setTimeout() 
- *                     issues with asynchronous use of variable values – passed as parameters 
- *                     instead.
- * v2.3.0  30/09/2023  Fixed bugs in non-proficient weapon penalties for classes & races.
- * v2.3.1  18/10/2023  Added parsing a ^^pid^^ tag in attack macros and cmd: code. Use base 
- *                     range specs for ranged ammo if matching index not found. On --extract-db 
- *                     if multiple db start with supplied name, ask which to extract. Added
- *                     support for a creature to-hit modifier as parameter 5 of the monster 
- *                     attack spec.
- * v2.3.2  27/10/2023  Fixed hyphenation of reviewed weapons, spells & powers.
- * v2.3.3  30/10/2023  Fixed magical attacks clash with ranged weapon attacks on Attacks dialog.
- *                     Silenced invalid Style search logs.
+ * v0.1.0 to v2.3.3    For change logs see earlier versions
  * v3.0.0  13/11/2023  Added support for other character sheets. Moved parseData() to library.
  *                     Added magical weapon plus weapon speed configuration option and 
  *                     corrected documentation of possible command options.
@@ -194,14 +72,25 @@ API_Meta.AttackMaster={offset:Number.MAX_SAFE_INTEGER,lineCount:-1};
  * v3.4.0  27/03/2024  Modified reItemData to accept space or comma after a data section. Fix 
  *                     attack macro build for weapons that don't have a +: tohit attribute
  *                     specified. Fixed weapon proficiency with complex innate weapons and spells
+ * v3.4.1  17/05/2024  Corrected default ToHit dice spec in getToHitRoll(). Replaced MIrowref
+ *                     lookup with itemIndex in attack commands as may be wrong at time of attack.
+ * v3.5.0  26/05/2024  Added table for saving throw modifiers to make them more traceable and 
+ *                     explainable, along with the --set-savemod command to add, change and 
+ *                     remove mods. Corrected default ToHit dice spec in getToHitRoll(). Replaced 
+ *                     MIrowref lookup with itemIndex in attack commands as may be wrong at time 
+ *                     of attack. Added ^^distPB^^, ^^distS^^, ^^distM^^,  and ^^distL^^ tags to 
+ *                     Ranged Weapon attack macro templates to display range distances. Add an 
+ *                     optional fail command to saving throw macros, to support targeted saves 
+ *                     provided by RoundMaster. Add automatic saves on natural 20 & fail on 1, 
+ *                     switchable as a configuration option
  */
  
 var attackMaster = (function() {
 	'use strict'; 
-	var version = '3.4.0',
+	var version = '3.5.0',
 		author = 'Richard @ Damery',
 		pending = null;
-    const lastUpdate = 1712853841;
+    const lastUpdate = 1717750563;
 
 	/*
 	 * Define redirections for functions moved to the RPGMaster library
@@ -327,14 +216,18 @@ var attackMaster = (function() {
 
 	const handouts = Object.freeze({
 	AttackMaster_Help:	{name:'AttackMaster Help',
-						 version:3.03,
+						 version:3.04,
 						 avatar:'https://s3.amazonaws.com/files.d20.io/images/257656656/ckSHhNht7v3u60CRKonRTg/thumb.png?1638050703',
 						 bio:'<div style="font-weight: bold; text-align: center; border-bottom: 2px solid black;">'
-							+'<span style="font-weight: bold; font-size: 125%">AttackMaster Help v3.03</span>'
+							+'<span style="font-weight: bold; font-size: 125%">AttackMaster Help v3.04</span>'
 							+'</div>'
 							+'<div style="padding-left: 5px; padding-right: 5px; overflow: hidden;">'
 							+'<h1>Attack Master API v'+version+'</h1>'
 							+'<h4>and later</h4>'
+							+'<h3><span style='+design.selected_button+'>New:</span> in this Help Handout</h3>'
+							+'<p><span style='+design.selected_button+'>New:</span> Saving Throw mods character sheet table</p>'
+							+'<p><span style='+design.selected_button+'>New:</span> --set-savemod command to add, change and remove saving throw mods</p>'
+							+'<p><span style='+design.selected_button+'>New:</span> --savemod-count command to increment or decrement a mod duration</p>'
 							+'<p>AttackMaster API provides functions to manage weapons, armour & shields, including taking weapons in hand and using them to attack.  It uses rules (defined in the <b>RPGMaster Library</b>) to the full extent, taking into account: ranged weapon ammo management with ranges varying appropriately and range penalties/bonuses applied; Strength & Dexterity bonuses where appropriate; any magic bonuses to attacks that are in effect (if used with <b>RoundMaster API</b> effects); penalties & bonuses for non-proficiency, proficiency, specialisation & mastery; penalties for non-Rangers attacking with two weapons; use of 1-handed, 2-handed or many-handed weapons and restrictions on the number of weapons & shields that can be held at the same time; support for <i>Fighting Styles</i> as defined in <i>The Complete Fighter\'s Handbook;</i> plus many other features.  This API works best with the databases provided with the RPGMaster series APIs (or added by yourself in custom databases), which hold the data for automatic definition of weapons and armour.  However, some attack commands will generally work with manual entry of weapons onto the character sheet.  The <b>CommandMaster API</b> can be used by the GM to easily manage weapon proficiencies.</p>'
 							+'<p>Specification for weapons, armour & shields are implemented as ability macros in specific database character sheets.  This API comes with a wide selection of weapon and armour macros, held in databases in the RPGMaster Library for the specific game version you are playing.  If the <b>MagicMaster API</b> is also loaded, it provides many more specifications for standard and magic items that are beneficial to melee actions and armour class.  The GM can add to the provided items in the databases using standard Roll20 Character Sheet editing, following the instructions provided in the relevant Database Help handout.</p>'
 							+'<p><b><u>Note:</u></b> For some aspects of the APIs to work, the <b>ChatSetAttr API</b> and the <b>Tokenmod API</b>, both from the Roll20 Script Library, must be loaded.  It is also <i>highly recommended</i> to load all the other RPGMaster series APIs: <b>RoundMaster, InitiativeMaster, MagicMaster and CommandMaster</b> as well as the mandatory game version specific <b>RPGMaster Library</b>.  This will provide the most immersive game-support environment</p>'
@@ -354,6 +247,20 @@ var attackMaster = (function() {
 							+'<p>To overcome this, or when output is being misdirected for any other reason, a <b>Controlling Player Override Syntax</b> (otherwise known as a <i>SenderId Override</i>) has been introduced (for RPGMaster Suite APIs only, I\'m afraid), with the following command format:</p>'
 							+'<pre>!attk [sender_override_id] --cmd1 args1... --cmd2 args2...</pre>'
 							+'<p>The optional <i>sender_override_id</i> (don\'t include the [...], that\'s just the syntax for "optional") can be a Roll20 player_id, character_id or token_id. The API will work out which it is. If a player_id, the commands output will be sent to that player when player output is appropriate, even if that player is not on-line (i.e. no-one will get it if they are not on-line). If a character_id or token_id, the API will look for a controlling player <i>who is on-line</i> and send appropriate output to them - if no controlling players are on-line, or the token/character is controlled by the GM, the GM will receive all output. If the ID passed does not represent a player, character or token, or if no ID is provided, the API will send appropriate output to whichever player Roll20 tells the API to send it to.</p>'
+							+'<br>'
+							+'<h3><span style='+design.selected_button+'>New:</span> Doing Maths for Numeric Values</h3>'
+							+'<p>Roll20 provides many excellent maths functions for commands made to the chat window and contained in API button strings. However, it is not always possible to use the Roll20 maths using the [[...]] syntax to achieve what you want. RPGMaster provides an alternative set of maths functions to help resolve these issues. Formulas can be entered for many numeric values required by RPGMaster commands using the supported syntax. <b><i>However:</i></b> this syntax does not work for anything other than RPGMaster commands as of writing (this might be a future develpment).</p>'
+							+'<p>The square brackets [[...]] are not required. The syntax follows normal maths presedent with a few additional operators to support range calculations and dice rolls:</p>'
+							+'<table>'
+								+'<tr><th scope="row">+-*/</th><td>The standard maths operators work as expected</td></tr>'
+								+'<tr><th scope="row">(...)</th><td>Parentheses can be used to define the order of calculation as normal</td></tr>'
+								+'<tr><th scope="row">^(#,#,#,...)</th><td>This will resolve to the maximum value in the list, and each # can also be a calculation (semi-colons can be used instead of commas)</td></tr>'
+								+'<tr><th scope="row">v(#,#,#,...)</th><td>This will resolve to the minimum value in the list, and each # can also be a calculation (semi-colons can be used instead of commas)</td></tr>'
+								+'<tr><th scope="row">c(...)</th><td>This will resolve to the ceiling (the number rounded up) of the result of the contained calculation</td></tr>'
+								+'<tr><th scope="row">f(...)</th><td>This will resolve to the floor (the number rounded down) of the result of the contained calculation</td></tr>'
+								+'<tr><th scope="row">#d#r#</th><td>Dice roll specifications can be included in the maths with optional reroll values anywhere in the calculation, and the numbers can be calculations</td></tr>'
+								+'<tr><th scope="row">#:#</th><td>A different feature is the range calculation - this will derive a number in the range between the two numbers (inclusive), but will try to do so using the equivalent to 3 dice if possible - e.g. 3:18 would make the equivalent of rolling 3d6, 7:34 will resolve to 4+(3d10), 7:35 will resolve to 4+1d11+2d10. A range can be used anywhere in the calculation, and the numbers can themselves be calculations</td></tr>'
+							+'</table>'
 							+'<br>'
 							+'<h3>Using Character Sheet Ability/Action buttons</h3>'
 							+'<p>The most common approach for the Player to run these commands is to use Ability macros on their Character Sheets which are flagged to appear as Token Action Buttons: Ability macros & Token Action Buttons are standard Roll20 functionality, refer to the Roll20 Help Centre for information on creating and using these.</p>'
@@ -394,9 +301,10 @@ var attackMaster = (function() {
 							+'<h3>Saves</h3>'
 							+'<p>The corollary to attacks is saves.  The system provides two menus: one to access, review, update and make saving throws and the appropriate modifiers; and the other to make attribute checks, again with the appropriate modifiers.</p>'
 							+'<p>For each menu, the initial menu presented shows the saving throw and attribute tables from the Character Sheet (always the one from the Character tab rather than the Monster Tab - monster saving throws should be copied to both).  Each type of save or attribute check has a button to make the saving throw: the system (or the player - see below) will perform the roll and display the result with an indication of success or failure.  The menu also shows buttons to add a situational adjustment (as per the AD&D 2e PHB) and to modify the saving throw table, either automatically (taking into account race, class, level and magic items) or manually.</p>'
-							+'<p><span style='+design.selected_button+'>New:</span> You can change the way the roll is made using the <i>[PC Rolls]</i> and <i>[You Roll]</i> buttons at the bottom of the saving throw and attribute check menus. If <i>[You Roll]</i> is selected, the player will be presented with a Roll20 Roll Query to enter the result of the roll (though just submitting the dice specification displayed will roll the dice). The option chosen is remembered between game sessions within that campaign.</p>'
+							+'<p>You can change the way the roll is made using the <i>[PC Rolls]</i> and <i>[You Roll]</i> buttons at the bottom of the saving throw and attribute check menus. If <i>[You Roll]</i> is selected, the player will be presented with a Roll20 Roll Query to enter the result of the roll (though just submitting the dice specification displayed will roll the dice). The option chosen is remembered between game sessions within that campaign.</p>'
 							+'<p>The easiest way to set the correct saving throws for each type of save, based on class, level & race, is to use the <b>CommandMaster API</b> Character Sheet setup commands.</p>'
-							+'<h3><span style='+design.selected_button+'>New:</span> Rogue Skill Checks</h3>'
+							+'<p><span style='+design.selected_button+'>New:</span> When combined with the RPGM MagicMaster and RoundMaster APIs, magical effects of spells and magic items can automatically adjust saving throws depending on the properties of the spell or item.</p>'
+							+'<h3>Rogue Skill Checks</h3>'
 							+'<p>In a similar way to <i>saves</i> and <i>attribute checks</i>, it is possible to make checks against Rogue skills, such as picking pockets and climbing walls. The initial dialog presented shows a button for each possible check that can be made, and a current target percentage to roll below for success. Clicking any of the buttons will make the named check. <u><b>However:</b></u> Some of the checks should be made by the GM. The GM can set a configuration item to allow players to make all checks <i>or for the results of certain checks to only go to the GM.</i> If a check only displays the result to the GM, the players will receive a message to this effect.</p>'
 							+'<p>Rolls will either be made automatically or once the player enters a dice roll result (see below). Each result, wherever it is displayed, will also describe how it was calculated and what the implications of the result are for the character. The GM can configure a <i>critical success</i> factor to be 5%, 1% or not allowed (see <b>--config</b> command), which will be taken into account in the calculation. If the natural dice roll achieves a critical success, the skill check will automatically succeed, even for characters who would not normally get any chance of success.</p>'
 							+'<p>An additional button is provided on the initial dialog to add a <i>situational modifier</i> with various types listed, or just a general value. Select the appropriate modifier and enter any value prompted for. Any entered modifier will apply to only the next skill check roll, and will apply to any roll made regardless of appropriateness.</p>'
@@ -427,10 +335,12 @@ var attackMaster = (function() {
 							+'<pre>--edit-armour [token_id]<br>'
 							+'--checkac [token_id] | [ SILENT ] | [SADJ / PADJ / BADJ]<br>'
 							+'--save [token_id] | [situation-mod]<br>'
-							+'<span style='+design.selected_button+'>New:</span> --build-save [token_id] | save-type | save-value | [macro-name]<br>'
+							+'--build-save [token_id] | save-type | save-value | [macro-name]<br>'
 							+'--attr-check [token_id] | [situation-mod] | [message] | [DCval]<br>'
-							+'<span style='+design.selected_button+'>New:</span> --theive [token_id]<br>'
-							+'<span style='+design.selected_button+'>New:</span> --set-thieving [token_id]</pre>'
+							+'<span style='+design.selected_button+'>New:</span> --set-savemod [token_id]|cmd|name|spell|save_spec|[save_count]|[round_count]|[fail_cmd]<br>'
+							+'<span style='+design.selected_button+'>New:</span> --savemod-count [token_id]|[+/-]count<br>'
+							+'--theive [token_id]<br>'
+							+'--set-thieving [token_id]</pre>'
 							+'<h3>6. Other Commands</h3>'
 							+'<pre>--help<br>'
 							+'--config [PROF/ALL-WEAPS/WEAP-CLASS/ALL-ARMOUR/MASTER-RANGE/DM-TARGET] | [TRUE/FALSE]<br>'
@@ -566,7 +476,7 @@ var attackMaster = (function() {
 							+'<p>The first form shows all the possible saves that can be made, the saving throw that needs to be achieved to make the save, and any modifiers that apply to this particular character.  There are buttons to modify the saving throw table and the modifiers, to apply a "situational modifier" to immediate saving throws (the "situational modifier" only applies to current rolls and is not remembered), and/or to check the current saving throw table automatically (taking into account race, class, level, and magic items on their person).  Also, each type of saving throw can actually be made by clicking the buttons provided.  Doing so effectively runs the second form of the command.</p>'
 							+'<p>The situational modifier can optionally be passed in as a value with the command call if so desired, instead of selecting via the button on the menu.</p>'
 							+'<p>Running the second form of the command (or selecting to make a saving throw from the first form\'s menu) will execute the saving throw (as a dice roll if this is specified instead of a straight value) of the specified type, using the data in the character\'s saving throw table to assess success or failure, displaying the outcome and the calculation behind it in the chat window.</p>'
-							+'<h3>5.4 <span style='+design.selected_button+'>New:</span> Build Custom Save</h3>'
+							+'<h3>5.4 Build Custom Save</h3>'
 							+'<pre>--build-save [token_id] | save-type | save-value | [macro-name]</pre>'
 							+'<p>Takes an optional token ID (if not specified uses selected token), a type of save (which can be anything and not restricted to standard save types), not sensitive to case), the value to exceed to succeed the save, and an optional name for the macro to build on the character sheet.</p>'
 							+'<p>This command builds an ability macro on the character sheet represented by the supplied or selected token. The macro will be to make the named saving throw (the name has no significance) and the specified value to exceed with a d20 dice roll for the represented character to succeed in making the saving throw. The character sheet ability macro will be named using either the provided macro-name, which if not provided will default to <i>Do-not-use-</i>save-type<i>-save</i>. The saving throw can then simply be run using the chat window command <b>%{character-name|macro-name}</b>.</p>'
@@ -575,7 +485,21 @@ var attackMaster = (function() {
 							+'<p>Takes an optional token ID (defaults to the selected token), an optional situational modifier, an optional message to display as the last action, and an optional "DC value".</p>'
 							+'<p>This command presents a menu which can be used to perform attribute checks for the character. The menu displays the character\'s attribute values and the currently applicable modifiers for attribute checks. Each line has a button which will run the Attribute Check roll and display success or failure. As for the Saving Throw table, buttons also exist to set a situational modifier and to check the modifiers against current magic items in use and magic in effect.</p>'
 							+'<p>A DC value parameter is provided to emulate attribute check modifiers for D&D 3e and later, though as these checks and modifiers work very differently this is not a direct equivalence. If a DC value is set as a parameter, 10 minus the DC value is added to all the modifiers.</p>'
-							+'<h3>5.6 <span style='+design.selected_button+'>New:</span> Make a Rogue Skill Check</h3>'
+							+'<h3>5.6 <span style='+design.selected_button+'>New:</span> Set Save/Check Modifiers</h3>'
+							+'<pre>--set-savemod [token_id]|cmd|name|spell/item|save_spec|[save_count]|[round_count]|[fail_cmd]</pre>'
+							+'<p>Takes an optional token ID (defaults to the selected token), a mandatory command, a mandatory mod name, a mandatory spell or item name, a mandaroty save modifier specification, an optional number of saveing throw checks, an optional number of rounds duration, and an optional command to execute on saving throw failure.</p>'
+							+'<p>Adds, modifies or deletes one or any number of named saving throw or attribute check modifiers that can apply to a specified number of throws and/or a limited number of rounds, or just continue indefinately until cancelled. A command can also be specified to enact if the throw or check fails. If multiple mods with different names are specified, they will all be applied according to their save-specs, and on failure all specified fail commands will be executed.</p>'
+							+'<p>The <i>cmd</i> can be one of ADD, DEL, DELSPELL, DELALL, or a bespoke command type of XXX=YYY, where YYY is the 3-letter short form specifying a type of existing base save type (par, poi, dea, rod, sta, wan, pet, pol, bre, or spe), and XXX is a new 3-letter specification for the named modifier. This bespoke saving throw type will be based on the base type specified, modified by the save-spec. A button will be added to the creature\'s saving throw table, allowing bespoke saves to be made by the creature. E.g. a <i>Bless</i> spell provides an improved save vs. Fear effects so the spell adds a \'Fear\' button to the saving throw table of each creature Blessed for the duration of the spell.</p>'
+							+'<p>The <i>save-spec</i> defines the saving throw(s) that are affected by the modification - multiple saving throw and attribute check types can be specified, as mods or overrides. The format is:</p>'
+							+'<table>'
+								+'<tr><th>svXXX:[=][+/-]#</th><td>The effect on various saving throws or attribute checks, specified by XXX, + being beneficial and - being a penalty</td></tr>'
+								+'<tr><th>XXX</th><td>This can be \'par\', \'poi\', \'dea\', \'rod\', \'sta\', \'wan\', \'pet\', \'pol\', \'bre\', or \'spe\' (or the bespoke 3-letter code) for saves, or \'str\', \'con\', \'dex\', \'int\', \'wis\', or \'chr\' for attributes, or \'sav\' for all saves, \'atr\' for all attributes, or \'all\' for everything</td></tr>'
+							+'</table>'
+							+'<h3>5.7 <span style='+design.selected_button+'>New:</span> Increment/Decrement Save Count</h3>'
+							+'<pre>--savemod-count [token_id]|[+/-]count</pre>'
+							+'<p>Takes an optional token ID (defaults to the selected token), and a mandatory count preceeded by an optional + or -.</p>'
+							+'<p>Saving throw and attribute check modifiers which have durations set using the <i>-set-savemod</i> command have their duration in rounds decremented as the round number increments (requires use of the RoundMaster and InitMaster APIs and the Turn Order tracker, or use of the InitMaster <i>--maint</i> command). The duration in throws/checks reduces as throws/checks are made. However, the number of throws/checks can also be changed using this command.</p>'
+							+'<h3>5.8 Make a Rogue Skill Check</h3>'
 							+'<pre>--theive [token_id]<br>'
 							+'--set-thieving [token_id]</pre>'
 							+'<p>Each takes an optional token ID (if not specified uses selected token).'
@@ -1990,16 +1914,18 @@ var attackMaster = (function() {
         wt = wt ? wt.dbName() : '';
         wst = wst ? wst.dbName() : '';
 		
-//		log('proficient: wname = '+wname+', wt = '+wt+', wst = '+wst);
-        
 		var i = fields.WP_table[1],
+			classObjs = classObjects( charCS, findTheGM() ),
 			prof = getCharNonProfs( charCS ),
 			WeaponProfs = getTable( charCS, fieldGroups.WPROF ),
 			allowedWeap = state.attackMaster.weapRules.allowAll || classAllowedItem( charCS, wname, wt, wst, 'weaps' ),
 			spec, wpName, wpType,
-			isType, isSuperType, isSameName, isSpecialist, isMastery;
+			isInnate = wt.includes('innate'),
+			isType = isInnate, isSuperType=false, isSameName=false, isSpecialist=false, isMastery=false;
 			
-		isType = isSuperType = isSameName = isSpecialist = isMastery = false;
+//		isType = isSuperType = isSameName = isSpecialist = isMastery = false;
+		
+		if (classObjs[0].base === 'creature') return 0;
 		
 		if (allowedWeap) {
 			do {
@@ -2009,7 +1935,7 @@ var attackMaster = (function() {
 				wpName = wpName.dbName();
 				wpType = (!!wpType ? wpType.dbName() : '');
 				
-				let typeTest = (wpName && wpName.length && (wt.includes(wpName) || wt.includes('innate')) ),
+				let typeTest = (wpName && wpName.length && wt.includes(wpName) ),
 					superTypeTest = (wpType && (wst.includes(wpType))),
 					nameTest = (wpName && wpName.length && wname.includes(wpName)) || false;
 					
@@ -2132,6 +2058,7 @@ var attackMaster = (function() {
 					let weapData = resolveData( weapName, itemDB, reItemData, charCS, {off:reWeapSpecs.off} ).parsed;
 					if (weapData && weapData.off) {
 						sendAPI( parseStr(weapData.off).replace(/@{\s*selected\s*\|\s*token_id\s*}/ig,tokenID)
+													   .replace(/@{\s*selected\s*\|\s*character_id\s*}/ig,charCS.id)
 													   .replace(/{\s*selected\s*\|/ig,'{'+charCS.get('name')+'|'), null, 'attk filterWeapons');
 					};
 				};
@@ -2806,8 +2733,8 @@ var attackMaster = (function() {
 	 */
 	 
 	var getToHitRoll = function( attkMacro ) {
-		var rollSpec = attkMacro.match(/}}\s*Specs\s*=\s*\[\s*\w[\s\|\w\-]*?\s*?,\s*?\w[\s\|\w\-]*?\w\s*?,\s*?(\d+d\d+)\s*?,\s*?\w[\s\|\w\-]*?\w\s*?\]/im);
-		return rollSpec ? rollSpec[1] : fields.toHitRoll;
+		var rollSpec = attkMacro.match(/}}\s*Specs\s*=\s*\[\s*\w[\s\|\w\-]*?\s*,\s*\w[\s\|\w\-]*?\w\s*,\s*(\d+d\d+)\s*,\s*\w[\s\|\w\-]*?\w\s*\]/im);
+		return rollSpec ? rollSpec[1] : fields.ToHitRoll;
 	};
 	
 	/*
@@ -2872,8 +2799,8 @@ var attackMaster = (function() {
 					monsterDmg1 = (attrLookup( charCS, fields.Monster_dmg1 ) || '0').split(','),
 					monsterDmg2 = (attrLookup( charCS, fields.Monster_dmg2 ) || '0').split(','),
 					monsterDmg3 = (attrLookup( charCS, fields.Monster_dmg3 ) || '0').split(','),
-					magicHitAdj = parseInt(attrLookup( charCS, fields.Magic_hitAdj ) || 0) + thac0 - parseInt(getTokenValue(curToken,fields.Token_Thac0,fields.Thac0_base,fields.MonsterThac0,fields.Thac0_base).val || 20),
-					magicDmgAdj = parseInt(attrLookup( charCS, fields.Magic_dmgAdj ) || 0),
+					magicHitAdj = parseInt(attrLookup( charCS, fields.Magical_hitAdj ) || 0) + thac0 - parseInt(getTokenValue(curToken,fields.Token_Thac0,fields.Thac0_base,fields.MonsterThac0,fields.Thac0_base).val || 20),
+					magicDmgAdj = parseInt(attrLookup( charCS, fields.Magical_dmgAdj ) || 0),
 					strHit 		= parseInt(attrLookup( charCS, fields.Strength_hit ) || 0),
 					strDmg 		= parseInt(attrLookup( charCS, fields.Strength_dmg ) || 0),
 					ACnoMods	= '[[0+@{Target|Select Target|'+fields.StdAC[0]+'}&{noerror}]]',
@@ -3090,7 +3017,7 @@ var attackMaster = (function() {
 					weapCmd		= parseStr(tableInfo.MELEE.tableLookup( fields.MW_cmd, mwIndex ) || ''),
 					weapMsg		= tableInfo.MELEE.tableLookup( fields.MW_message, mwIndex ),
 					hitCharges  = tableInfo.MELEE.tableLookup( fields.MW_charges, mwIndex ),
-					weapObj		= abilityLookup( fields.WeaponDB, miName, charCS ),
+					weapObj		= abilityLookup( fields.WeaponDB, miName, charCS, true ),
 					weapCharge  = tableInfo.MELEE.tableLookup( fields.MW_chargeType, mwIndex ) || (weapObj.obj ? weapObj.obj[1].charge.toLowerCase() : '' ),
 					weapCharged = (!(['uncharged','cursed','cursed+uncharged','single-uncharged'].includes(weapCharge)) ? weapCharge  : ''),
 					weapTypeTxt = (slashWeap?'S':'')+(pierceWeap?'P':'')+(bludgeonWeap?'B':''),
@@ -3114,8 +3041,8 @@ var attackMaster = (function() {
 								+ (((attrLookup( charCS, fields.Wizard_class ) || '').toUpperCase() == 'BARD') ? parseInt(attrLookup( charCS, fields.Wizard_level ) || 0) : 0),
 					fighterType = attrLookup( charCS, fields.Fighter_class ) || '',
 					ranger		= fighterType.toUpperCase() == 'RANGER' || fighterType.toUpperCase() == 'MONSTER' || _.some(classes, c => parseFloat(c.classData.twoWeapPen == 0)),
-					magicHitAdj = parseInt(attrLookup( charCS, fields.Magic_hitAdj ) || 0) + thac0 - parseInt(getTokenValue(curToken,fields.Token_Thac0,fields.Thac0_base,fields.MonsterThac0,fields.Thac0_base).val || 20), 
-					magicDmgAdj = attrLookup( charCS, fields.Magic_dmgAdj ) || 0,
+					magicHitAdj = parseInt(attrLookup( charCS, fields.Magical_hitAdj ) || 0) + thac0 - parseInt(getTokenValue(curToken,fields.Token_Thac0,fields.Thac0_base,fields.MonsterThac0,fields.Thac0_base).val || 20), 
+					magicDmgAdj = attrLookup( charCS, fields.Magical_dmgAdj ) || 0,
 					thac0		= parseInt(handleGetBaseThac0( charCS, tableInfo.MELEE.tableLookup( fields.MW_magicThac0, mwIndex ) || thac0)),
 					primeWeapon = attrLookup( charCS, fields.Primary_weapon ) || 0,
 					twPen		= Math.min(parseFloat(attrLookup( charCS, fields.TwoWeapStylePenalty ) || 9.9), classes.map(c => parseFloat(c.classData.twoWeapPen)).reduce((prev,cur) => (Math.min(prev,cur)))),
@@ -3291,7 +3218,7 @@ var attackMaster = (function() {
 					setAbility( charCS, 'Do-not-use-DmgL-MW'+mwNumber, (parseMWattkMacro(args, charCS, attkType, addDmgMsg( dmgMacroDef.obj[1].body, dmgMsg, weapDmgMsg ))+attkMacro));
 					hitCharges = (hitCharges == '' ? 1 : hitCharges);
 					attkMacro = weapCharged && hitCharges ? ('\n!magic --mi-charges '+tokenID+'|-'+hitCharges+'|'+miName+'||'+weapCharged) : ''; 
-					attkMacro += ((weaponName !== miName) && (attrLookup( charCS, fields.Items_reveal, fields.Items_table, miRowref ) || '').toLowerCase() == 'use') ? ('\n!magic --button GM-ResetSingleMI|'+tokenID+'|'+miRowref+'|silent') : '';
+					attkMacro += ((weaponName !== miName) && (attrLookup( charCS, fields.Items_reveal, fields.Items_table, miRowref ) || '').toLowerCase() === 'use') ? ('\n!magic --button GM-ResetSingleMI|'+tokenID+'|'+miRowref+'|silent') : '';
 					attkMacro += weapCmd ? ('\n' + weapCmd) : '';
 					attkMacro += touchWeap ? ('\n!attk --blank-weapon '+tokenID+'|'+miName+'|silent') : '';
 					if (abilityType == Attk.TARGET) {
@@ -3324,7 +3251,7 @@ var attackMaster = (function() {
 	 * of the 6 possible ranges: Near, PB, S, M, L, Far
 	 */
 	 
-	var buildRWattkMacros = function( args, senderId, charCS, tableInfo ) {
+	var buildRWattkMacros = function( args, senderId, charCS, tableInfo, ranges ) {
 		
 		var tokenID 	= args[1],
 			attkType 	= args[2],
@@ -3380,8 +3307,8 @@ var attackMaster = (function() {
 			touchAmmo	= tableInfo.AMMO.tableLookup( fields.Ammo_touch, ammoIndex ) === '1',
 			ammoCmd		= parseStr(tableInfo.AMMO.tableLookup( fields.Ammo_cmd, ammoIndex ) || ''),
 			ammoMsg		= tableInfo.AMMO.tableLookup( fields.Ammo_message, ammoIndex ),
-			ammoObj		= abilityLookup( fields.WeaponDB, ammoMIname, charCS ),
-			weapObj		= abilityLookup( fields.WeaponDB, miName, charCS ),
+			ammoObj		= abilityLookup( fields.WeaponDB, ammoMIname, charCS, true ),
+			weapObj		= abilityLookup( fields.WeaponDB, miName, charCS, true ),
 			ammoChgType = weapObj.obj ? weapObj.obj[1].charge.toLowerCase() : '',
 			ammoCharged	= !(['uncharged','recharging','self-charging'].includes(ammoChgType) || ammoChgType.includes('cursed')),
 			strHit 		= parseInt(attrLookup( charCS, fields.Strength_hit ) || 0),
@@ -3391,9 +3318,9 @@ var attackMaster = (function() {
 						+ (((attrLookup( charCS, fields.Wizard_class ) || '').toUpperCase() == 'BARD') ? parseInt(attrLookup( charCS, fields.Wizard_level ) || 0) : 0),
 			fighterType = attrLookup( charCS, fields.Fighter_class ) || '',
 			ranger		= fighterType.toUpperCase() == 'RANGER' || fighterType.toUpperCase() == 'MONSTER',
-			magicHitAdj = parseInt(attrLookup( charCS, fields.Magic_hitAdj ) || 0) + thac0 - parseInt(getTokenValue(curToken,fields.Token_Thac0,fields.Thac0_base,fields.MonsterThac0,fields.Thac0_base).val || 20), 
+			magicHitAdj = parseInt(attrLookup( charCS, fields.Magical_hitAdj ) || 0) + thac0 - parseInt(getTokenValue(curToken,fields.Token_Thac0,fields.Thac0_base,fields.MonsterThac0,fields.Thac0_base).val || 20), 
 			thac0		= parseInt(handleGetBaseThac0( charCS, tableInfo.RANGED.tableLookup( fields.RW_magicThac0, rwIndex ) || thac0)),
-			magicDmgAdj = attrLookup( charCS, fields.Magic_dmgAdj ) || 0,
+			magicDmgAdj = attrLookup( charCS, fields.Magical_dmgAdj ) || 0,
 			primeWeapon = attrLookup( charCS, fields.Primary_weapon ) || 0,
 			twPen		= Math.min(parseFloat(attrLookup( charCS, fields.TwoWeapStylePenalty ) || 9.9), classes.map(c => parseFloat(c.classData.twoWeapPen)).reduce((prev,cur) => (Math.min(prev,cur)))),
 			twoWeapPenalty = (ranger || primeWeapon < 1) ? 0 : (((rwIndex*2)+(fields.RW_table[1]==0?2:4)) == primeWeapon ? Math.floor(twPen) : Math.floor((10*twPen)%10)),
@@ -3534,6 +3461,10 @@ var attackMaster = (function() {
 								 .replace( /\^\^targetACfield\^\^/gi , tokenAC )
 								 .replace( /\^\^targetAC\^\^/gi , tokenAC )
 								 .replace( /\^\^targetACmissile\^\^/gi , missileACnoMods )
+								 .replace( /\^\^distPB\^\^/gi , (ranges.length >= 4 ? ranges[0] : Math.min(ranges[0],30) ))
+								 .replace( /\^\^distS\^\^/gi , (ranges.length >= 4 ? ranges[1] : ranges[0]) )
+								 .replace( /\^\^distM\^\^/gi , (ranges.length >= 4 ? ranges[2] : ranges[Math.min(1,ranges.length-1)]) )
+								 .replace( /\^\^distL\^\^/gi , (ranges.length >= 4 ? ranges[3] : ranges[Math.min(2,ranges.length-1)]) )
 								 .replace( /\^\^range\^\^/gi , range )
 								 .replace( /\^\^rangeN\^\^/gi , (range == 'N' ? 1 : 0) )
 								 .replace( /\^\^rangePB\^\^/gi , (range == 'PB' ? 1 : 0) )
@@ -3660,8 +3591,8 @@ var attackMaster = (function() {
 	/*
 	 * Dynamically build the ability macro for a saving throw
 	 */
-	 
-	var buildSaveRoll = function( tokenID, charCS, sitMod, DCval, saveType, saveObj, isGM, whoRolls, attr=false ) {
+ 
+	var buildSaveRoll = function( tokenID, charCS, sitMod, DCval, saveType, saveObj, isGM, whoRolls, attr=false, failCmd ) {
 		
 		var save;
 		if (!_.isObject(saveObj)) {
@@ -3679,10 +3610,14 @@ var attackMaster = (function() {
 			roll = ((whoRolls === SkillRoll.PCROLLS) ? saveObj.roll : '?{Enter the roll result (or submit to roll)|'+saveObj.roll+'}'),
 			content = (isGM ? '/w gm ' : '')
 					+ '&{template:'+fields.menuTemplate+'}{{name='+name+' Save vs '+saveType.dispName()+'}}'
-					+ '{{Saving Throw=Rolling [['+roll+'cf<'+(calcResult-1)+'cs>'+calcResult+']] vs. [[0+'+calcResult+']] target}}'
+					+ '{{Saving Throw=Rolling [[([['+roll+'cf<'+(calcResult-1)+'cs>'+calcResult+']][Dice Roll])]] vs. [[([[0+'+calcResult+']][Target])]] target}}'
 					+ '{{Result=Saving Throw'+(attr ? '<=' : '>=')+calcResult+'}}'
+					+ (failCmd ? ('{{failcmd='+failCmd+'}}{{fumblecmd='+failCmd+'}}') : '')
 					+ '{{desc=**'+name+'\'s target**[[0+'+save+']] base save vs. '+saveType+' with [[0+'+saveMod+']] improvement from race, class & Magic Items, '
-					+ '[[0+'+saveAdj+']] improvement from current magic effects, and [[0+'+sitMod+']] adjustment for the situation}}';
+					+ '[[0+'+saveAdj+']] improvement from current magic effects, and [[0+'+sitMod+']] adjustment for the situation}}'
+					+ (!state.attackMaster.weapRules.naturals ? '' : '{{crit_roll=Saving Throw'+(attr ? '<=1' : '>=20')+'}}{{crit=Natural 20!}}')
+					+ (!state.attackMaster.weapRules.naturals ? '' : '{{fumble_roll=Saving Throw'+(attr ? '>=20' : '<=1')+'}}{{fumble=Natural 1!}}')
+					+ '\n!attk --savemod-count @{selected|token_id}|-1';
 		
 		setAbility(charCS,'Do-not-use-'+saveType+'-save',content);
 		return;
@@ -3735,7 +3670,7 @@ var attackMaster = (function() {
 	 * Create range buttons for a ranged weapon attack to add into a menu.
 	**/
 
-	var makeRangeButtons = function( args, senderId, charCS, tableInfo, diceRoll, targetStr ) {
+	var makeRangeButtons = function( args, senderId, charCS, tableInfo, diceRoll, targetStr ) {  
 
 		return new Promise(resolve => {
 			
@@ -3797,14 +3732,14 @@ var attackMaster = (function() {
 					proficiency = dancing != 1 ? proficient( charCS, wname, wt, wst ) : tableInfo.RANGED.tableLookup( fields.RW_dancingProf, weaponIndex );
 					specialist = proficiency > 0;
 					
-					errFlag = buildRWattkMacros( args, senderId, charCS, tableInfo );
-					
 					ranges = adjustRange( ranges, tableInfo.RANGED.tableLookup( fields.RW_range, weaponIndex ) );
 					ranges = adjustRange( ranges.join('/'), tableInfo.RANGED.tableLookup( fields.RW_styleRange, weaponIndex ) );
 					
 					// Test for if ranges need *10 (assume 1st range (PB or short) is never >= 100 yds or < 10)
 					if (ranges[0] < 10 && !lowRange) ranges = ranges.map(x => x * 10);
 						
+					errFlag = buildRWattkMacros( args, senderId, charCS, tableInfo, ranges );
+					
 					// Make the range always start with Short (assume 4 or more ranges start with Point Blank)
 					if (ranges.length >= 4) {
 						specRange = ranges.shift();
@@ -3978,7 +3913,7 @@ var attackMaster = (function() {
 			}
 			_.each( magicList, (item,miName) => {
 				let	itemIndex = Items.tableFind( fields.Items_trueName, miName) || Items.tableFind( fields.Items_name, miName);
-				let	weapObj = abilityLookup( fields.MagicItemDB, miName, charCS );
+				let	weapObj = abilityLookup( fields.MagicItemDB, miName, charCS, true );
 				if (!_.isUndefined(itemIndex)) {
 					let name = Items.tableLookup( fields.Items_name, itemIndex );
 					let	miQty = Items.tableLookup( fields.Items_qty, itemIndex );
@@ -4009,7 +3944,7 @@ var attackMaster = (function() {
 								magicWeaps += cmdStr;
 							}
 							if (magicCmd) {
-								magicWeaps += '&#13;'+parseStr(magicCmd);
+								magicWeaps += '&#13;'+parseStr(magicCmd).replace(/(?:@|&#64;){selected\|MIrowref}/ig,String(itemIndex));
 							}
 							if (magicName && magicLib.obj && !magicPower) {
 								magicWeaps += '&#13;'+((magicLib.api ? '' : sendToWho(charCS,senderId,false,true))+'&#37;{'+magicLib.dB +'|'+ (magicLib.obj[1].name.hyphened()) +'}');
@@ -4034,7 +3969,7 @@ var attackMaster = (function() {
 					let miName = Weapons.tableLookup( fields.MW_miName, weaponIndex ),
 						itemIndex = Items.tableFind( fields.Items_trueName, miName),
 						charges = tableInfo.MELEE.tableLookup( fields.MW_charges, weaponIndex ),
-						weapObj = abilityLookup( fields.WeaponDB, miName, charCS ),
+						weapObj = abilityLookup( fields.WeaponDB, miName, charCS, true ),
 						weapCharge  = tableInfo.MELEE.tableLookup( fields.MW_chargeType, weaponIndex ) || (weapObj.obj ? weapObj.obj[1].charge.toLowerCase() : 'uncharged' ),
 						weapCharged = !(['uncharged','cursed','cursed+uncharged','single-uncharged'].includes(weapCharge)),
 						enabling = ['enable','disable'].includes(weapCharge),
@@ -4070,9 +4005,9 @@ var attackMaster = (function() {
 						let	miName = tableInfo.RANGED.tableLookup( fields.RW_miName, weaponIndex ),
 							itemIndex = Items.tableFind( fields.Items_trueName, miName),
 							charges = tableInfo.RANGED.tableLookup( fields.RW_charges, weaponIndex ),
-							weapObj = abilityLookup( fields.WeaponDB, miName, charCS ),
+							weapObj = abilityLookup( fields.WeaponDB, miName, charCS, true ),
 							weapCharged = (weapObj.obj ? !(['uncharged','cursed','cursed+uncharged','single-uncharged','enable','disable'].includes(weapObj.obj[1].charge.toLowerCase())) : false),
-							miQty = Items.tableLookup( fields.Items_qty, itemIndex ),
+							miQty = _.isUndefined(itemIndex) ? charges : Items.tableLookup( fields.Items_qty, itemIndex ),
 							valid = (!weapCharged || ((miQty-charges) >= 0));
 						weapButton = '{{'+(weapCharged ? '**'+miQty+'** ' : '')+weaponName+'=';
 						weaponType = tableInfo.RANGED.tableLookup( fields.RW_type, weaponIndex ).dbName();
@@ -4597,12 +4532,14 @@ var attackMaster = (function() {
 	 * Make a menu for saving throws, and to maintain the 
 	 * saving throws table
 	 */
-	 
+
 	var makeSavingThrowMenu = function( args, senderId ) {
 		
 		var tokenID = args[0],
 			sitMod = (parseInt((args[1] || 0),10) || 0),
 			msg = args[2] || '',
+			saveType = (args[3] || '').dbName(),
+			targetArgs = args.slice(4).join('|'),
 			curToken = getObj('graphic',tokenID),
 			charCS  = getCharacter( tokenID ),
 			name =  curToken.get('name'),
@@ -4611,6 +4548,8 @@ var attackMaster = (function() {
 			playerConfig = getSetPlayerConfig( senderId ),
 			manUpdate = playerConfig && playerConfig.manualCheckSaves,
 			whoRolls = ((!_.isUndefined(playerConfig.skillRoll)) ? playerConfig.skillRoll : SkillRoll.PCROLLS),
+			SaveMods = getTable( charCS, fieldGroups.SAVES ),
+			modName = '-',
 			content = '&{template:'+fields.menuTemplate+'}{{name=Roll a Saving Throw for '+name+'}}'
 					+ (msg && msg.length ? '{{Section='+msg+'}}' : '')
 					+ '{{desc=<table>'
@@ -4618,13 +4557,31 @@ var attackMaster = (function() {
 						+ '<th width="50%">Save</th><th width="25%">Base</th><th width="25%">Mod</th>'
 					+ '</thead>';
 					
+		if (!targetArgs || !targetArgs.length) targetArgs = SaveMods.tableLookup( fields.SaveMod_cmd, SaveMods.tableFind( fields.SaveMod_cmd, /.+/ ));
+		if (targetArgs && targetArgs.length && targetArgs[0] !== '!') targetArgs = '!rounds --gm-target caster|'+tokenID+'|'+targetArgs;
+
 		_.each( saveFormat.Saves, (saveObj,save) => {
+			if (saveType && saveType.length && save.dbName() !== saveType) return;
 			content += '<tr>'
 					+  '<td>['+save+'](~'+charName+'|Do-not-use-'+save+'-save)</td>'
 					+  '<td>[[0+'+attrLookup(charCS,saveObj.save)+']]</td>'
 					+  '<td>[[0+'+attrLookup(charCS,saveObj.mod)+'+'+sitMod+']]</td>'
 					+  '</tr>';
+			buildSaveRoll( tokenID, charCS, sitMod, null, save, saveObj, isGM, whoRolls, false, targetArgs );
 		});
+		for (let modRow = SaveMods.table[1]; !_.isUndefined(modName = SaveMods.tableLookup( fields.SaveMod_name, modRow, false )); modRow++) {
+			if (modName === '-' || !SaveMods.tableLookup( fields.SaveMod_basis, modRow, false )) continue;
+			if (saveType && saveType.length && modName.dbName() !== saveType) continue;
+			let save = [SaveMods.tableLookup( fields.SaveMod_saveField, modRow ),'current'],
+				mod = [SaveMods.tableLookup( fields.SaveMod_modField, modRow ),'current'],
+				roll = SaveMods.tableLookup( fields.SaveMod_roll, modRow );
+			content += '<tr>'
+					+  '<td>['+modName+'](~'+charName+'|Do-not-use-'+modName.hyphened()+'-save)</td>'
+					+  '<td>[[0+'+attrLookup(charCS,save)+']]</td>'
+					+  '<td>[[0+'+attrLookup(charCS,mod)+'+'+sitMod+']]</td>'
+					+  '</tr>';
+			buildSaveRoll( tokenID, charCS, sitMod, null, modName, {save:save,mod:mod,roll:roll}, isGM, whoRolls, false, targetArgs );
+		};
 				
 		content += '</table>}}'
 				+  '{{desc1=Select a button above to roll a saving throw or '
@@ -4650,8 +4607,6 @@ var attackMaster = (function() {
 				+  '<td width="50%">'+((whoRolls === SkillRoll.YOUROLL) ? ('<span style=' + design.selected_button + '>') : '[') + 'You roll' + ((whoRolls === SkillRoll.YOUROLL) ? '</span>' : '](!attk --button '+BT.SET_SAVE_ROLL+'|'+senderId+'|'+SkillRoll.YOUROLL+'|'+argString+')</td>')
 				+  '</tr></table></div>}}';
 
-		_.each( saveFormat.Saves, (saveObj,saveType) => buildSaveRoll( tokenID, charCS, sitMod, null, saveType, saveObj, isGM, whoRolls ));
-					
 		sendResponse( charCS, content, senderId,flags.feedbackName,flags.feedbackImg,tokenID );
 	}
 	
@@ -5048,7 +5003,7 @@ var attackMaster = (function() {
 			};
 
 			if (maxQty == 0) {
-				ammoDef = abilityLookup( fields.WeaponDB, ammoMIname, charCS );
+				ammoDef = abilityLookup( fields.WeaponDB, ammoMIname, charCS, true );
 				if (ammoDef.obj && ammoDef.obj[1] && (['charged','rechargeable','discharging'].includes((ammoDef.obj[1].charge || '').toLowerCase()))) {
 					MagicItems.tableSet( fields.Items_name, miIndex, '-' );
 					MagicItems.tableSet( fields.Items_trueName, miIndex, '-' );
@@ -5064,7 +5019,6 @@ var attackMaster = (function() {
 		} else if (!isNaN(ammoIndex) && ammoIndex >= -1) {
 			Ammo.tableSet( fields.Ammo_qty, ammoIndex, ammoQ );
 			Ammo.tableSet( fields.Ammo_maxQty, ammoIndex, ammoM );
-		log('handleAmmoChange: item '+ammoMIname+' not found as item, so set ammo qty = '+ammoQ+'/'+ammoM);
 		}
 		if (!silent) {
 			makeAmmoMenu( args, senderId );
@@ -5311,7 +5265,8 @@ var attackMaster = (function() {
 				};
 				if (weapData.on) {
 					setTimeout(() => sendAPI( parseStr(weapData.on).replace(/@{\s*selected\s*\|\s*token_id\s*}/ig,tokenID)
-												  .replace(/{\s*selected\s*\|/ig,'{'+charCS.get('name')+'|'),
+																   .replace(/@{\s*selected\s*\|\s*character_id\s*}/ig,charCS.id)
+																   .replace(/{\s*selected\s*\|/ig,'{'+charCS.get('name')+'|'),
 						null, 'attk handleChangeWeapon 2'), 2000);
 				};
 			};
@@ -5342,7 +5297,8 @@ var attackMaster = (function() {
 			cmd = args[0].replace('-NOCURSE',''),
 			left = cmd == BT.LEFTRING,
 			tokenID = args[1],
-			selection = args[2],
+			selection = parseInt(args[2]),
+			silent = silent || (args[3] || '').toUpperCase() === 'SILENT',
 			charCS = getCharacter(tokenID),
 			charName = charCS.get('name'),
 			ring = attrLookup( charCS, (left ? fields.Equip_leftRing : fields.Equip_rightRing) ) || '-',
@@ -5365,7 +5321,8 @@ var attackMaster = (function() {
 				ringData = resolveData( trueRing, fields.MagicItemDB, reRingData, charCS, {}, ringRow, [], false ).parsed;
 				if (ringData.off) {
 					sendAPI( parseStr(ringData.off).replace(/@{\s*selected\s*\|\s*token_id\s*}/ig,tokenID)
-												   .replace(/{\s*selected\s*\|/ig,'{'+charName+'|'), null, 'attk handleChangeRings 1');
+												   .replace(/@{\s*selected\s*\|\s*character_id\s*}/ig,charCS.id)
+												   .replace(/{\s*selected\s*\|/ig,'{'+charName+'|'), senderId, 'attk handleChangeRings 1');
 				};
 			};
 		};
@@ -5383,7 +5340,8 @@ var attackMaster = (function() {
 			ringData = resolveData( trueRing, fields.MagicItemDB, reRingData, charCS, {}, selection, [], false ).parsed;
 			if (ringData.on) {
 				sendAPI( parseStr(ringData.on).replace(/@{\s*selected\s*\|\s*token_id\s*}/ig,tokenID)
-											  .replace(/{\s*selected\s*\|/ig,'{'+charName+'|'), null, 'attk handleChangeRings 2');
+											  .replace(/@{\s*selected\s*\|\s*character_id\s*}/ig,charCS.id)
+											  .replace(/{\s*selected\s*\|/ig,'{'+charName+'|'), senderId, 'attk handleChangeRings 2');
 			};
 		} else {
 			ring = 'no ring';
@@ -5986,7 +5944,7 @@ var attackMaster = (function() {
 	 * Display a menu of attack options
 	 */
 	 
-	var doMenu= function(args,senderId,selected) {
+	var doMenu = function(args,senderId,selected) {
 		if (!args) args = [];
 		if (!args[0] && selected && selected.length) {
 			args[0] = selected[0]._id;
@@ -6389,7 +6347,8 @@ var attackMaster = (function() {
 		silent = silent || _.isUndefined(inhandRow);
 		if (!_.isUndefined(inhandRow) && cmd && cmd.length) {
 			sendAPI( parseStr(cmd).replace(/@{\s*selected\s*\|\s*token_id\s*}/ig,tokenID)
-										   .replace(/{\s*selected\s*\|/ig,'{'+charCS.get('name')+'|'), null, 'attk doBlankWeapon');
+								  .replace(/@{\s*selected\s*\|\s*character_id\s*}/ig,charCS.id)
+								  .replace(/{\s*selected\s*\|/ig,'{'+charCS.get('name')+'|'), senderId, 'attk doBlankWeapon');
 		};
 		blankWeapon( charCS, weapTable, _.keys(weapTable), weapon );
 		
@@ -6715,6 +6674,119 @@ var attackMaster = (function() {
 	}
 	
 	/*
+	 * Set a temporary save mod for a character, e.g. due
+	 * to a spell
+	 */
+	 
+	var doSetSaveMod = function( args, selected, senderId ) {
+		
+		if (!args) args = [];
+		if (!args[0] && selected && selected.length) {
+			args[0] = selected[0]._id;
+		} else if (!args[0]) {
+			sendDebug('doModSaves: no token specified');
+			sendError('No token selected');
+			return;
+		}
+		var tokenID = args[0],
+			cmd = args[1] || '', 		// fea=spe
+			name = args[2] || '-',		// Fear
+			spell = args[3] || '',		// Bless
+			saveSpec = args[4] || '',	// svfea:+2
+			saves = args[5] || NaN,		//
+			rounds = args[6] || NaN,	// 6
+			targetCmd = args.slice(7).join('|'),
+			silent = true, 				//	(args[7] || 'silent').toLowerCase() !== 'silent',
+			charCS = getCharacter(tokenID),
+			modRow;
+			
+		if (silent) sendWait( senderId, 0 );
+			
+		if (!charCS || !cmd) {
+			sendError('Invalid AttackMaster command syntax');
+			return;
+		}
+		var SaveMods = getTable( charCS, fieldGroups.SAVES ),
+			values = initValues( fieldGroups.SAVES.prefix );
+			
+		if (cmd.toLowerCase() === 'delall') {
+			for (modRow = SaveMods.table[1]; !_.isUndefined(SaveMods.tableLookup( fields.SaveMod_name, modRow, false )); modRow++) {
+				SaveMods = SaveMods.addTableRow( modRow );
+			};
+		} else if (cmd.toLowerCase() === 'delspell') {
+			while (!_.isUndefined(modRow = SaveMods.tableFind( fields.SaveMod_spellName, spell ))) {
+//				saveFormat.Saves = _.omit( saveFormat.Saves, SaveMods.tableLookup( fields.SaveMod_name, modRow ));
+				SaveMods = SaveMods.addTableRow( modRow );
+			};
+		} else {
+			modRow = SaveMods.tableFind( fields.SaveMod_name, name );
+			if (cmd.toLowerCase() !== 'del') {
+				values[fields.SaveMod_name[0]][fields.SaveMod_name[1]] = name;
+				values[fields.SaveMod_spellName[0]][fields.SaveMod_spellName[1]] = spell;
+				values[fields.SaveMod_saveSpec[0]][fields.SaveMod_saveSpec[1]] = parseStr(saveSpec);
+				values[fields.SaveMod_saveCount[0]][fields.SaveMod_saveCount[1]] = parseInt(saves) || '';
+				values[fields.SaveMod_round[0]][fields.SaveMod_round[1]] = Number.isNaN(rounds) ? '' : (state.initMaster.round + parseInt(rounds));
+				values[fields.SaveMod_curRound[0]][fields.SaveMod_curRound[1]] = Number.isNaN(rounds) ? '' : state.initMaster.round;
+				values[fields.SaveMod_basis[0]][fields.SaveMod_basis[1]] = '';
+				values[fields.SaveMod_cmd[0]][fields.SaveMod_cmd[1]] = targetCmd;
+				if (cmd.includes('=')) {
+					cmd = cmd.split('=');
+					let basis = _.find(saveFormat.Saves, f => f.tag === cmd[1]);
+					if (basis) {
+						values[fields.SaveMod_basis[0]][fields.SaveMod_basis[1]] = cmd[1];
+						values[fields.SaveMod_tag[0]][fields.SaveMod_tag[1]] = cmd[0];
+						values[fields.SaveMod_modField[0]][fields.SaveMod_modField[1]] = cmd[0]+'mod';
+						values[fields.SaveMod_saveField[0]][fields.SaveMod_saveField[1]] = basis.save[0];
+						values[fields.SaveMod_index[0]][fields.SaveMod_index[1]] = basis.index;
+						values[fields.SaveMod_roll[0]][fields.SaveMod_roll[1]] = basis.roll;
+					}
+				}
+			}
+			if(_.isUndefined(modRow)) modRow = SaveMods.tableFind( fields.SaveMod_name, '-' );
+			SaveMods = SaveMods.addTableRow( modRow, values );
+//			log('doSetSaveMod: mod '+name+' has been set as '+SaveMods.tableLookup( fields.SaveMod_saveSpec, modRow ));
+		}
+		if (!silent) doCheckSaves( [args[0], '', 'nomenu'], senderId, selected );
+
+		return;
+	};
+	
+	/*
+	 * Increment or decrement the number of saves completed
+	 * with save mods from the SaveMod table
+	 */
+	 
+	var doIncDecSaveModCount = function( args, selected, senderId ) {
+		
+		if (!args) args = [];
+		if (!args[0] && selected && selected.length) {
+			args[0] = selected[0]._id;
+		} else if (!args[0]) {
+			sendDebug('doModSaves: no token specified');
+			sendError('No token selected');
+			return;
+		}
+		var tokenID = args[0],
+			change = parseInt(args[1]) || 0,
+			charCS = getCharacter( tokenID ),
+			name;
+			
+		if (!charCS) {
+			sendError('Invalid AttackMaster command syntax');
+			return;
+		}
+		var SaveMods = getTableField( charCS, {}, fields.SaveMod_table, fields.SaveMod_name ),
+			SaveMods = getTableField( charCS, SaveMods, fields.SaveMod_table, fields.SaveMod_saveCount );
+		
+		for (let modRow = SaveMods.table[1]; !_.isUndefined( name = SaveMods.tableLookup( fields.SaveMod_name, modRow, false )); modRow++) {
+			let saveCount = SaveMods.tableLookup( fields.SaveMod_saveCount, modRow );
+			if (name === '-' || name === '' || saveCount === '' || Number.isNaN(parseInt(saveCount))) continue;
+			SaveMods = SaveMods.tableSet( fields.SaveMod_saveCount, modRow, ((parseInt(saveCount) || 0) + change) );
+		}
+		return;
+	}
+		
+	/*
 	 * Make a saving throw macro on the character sheet with
 	 * a custom save target.
 	 */
@@ -6733,8 +6805,10 @@ var attackMaster = (function() {
 		var tokenID = args[0],
 			saveType = (args[1] || 'Spell').dbName(),
 			saveVal = args[2] || 20,
-			saveName = args[3] || 'Do-not-use-'+saveType+'-save',
-			charCS = getCharacter( tokenID );
+			targetArgs = args.slice(5).join('|'),
+			charCS = getCharacter( tokenID ),
+			playerConfig = getSetPlayerConfig( senderId ),
+			whoRolls = ((!_.isUndefined(playerConfig.skillRoll)) ? playerConfig.skillRoll : SkillRoll.PCROLLS);
 			
 		saveType = saveType[0].toUpperCase() + saveType.slice(1);
 		
@@ -6748,7 +6822,9 @@ var attackMaster = (function() {
 			sendError('Invalid attackMaster arguments');
 			return;
 		}
-		buildSaveRoll( tokenID, charCS, 0, null, saveType, saveVal, isGM );
+		target = targetArgs.length ? (fields.roundMaster + ' --target caster|'+tokenID+'|'+saveType+'|'+targetArgs) : '';
+		
+		buildSaveRoll( tokenID, charCS, 0, null, saveType, saveVal, isGM, whoRRolls, false, target );
 	};
 	
 	/*
@@ -7124,7 +7200,7 @@ var attackMaster = (function() {
 					+ '<tr><td>Menu plain</td><td><a style= "width: 16px; height: 16px; border: none; background: none" title="Tabulated Menus" href="!attk --options menudisplay|plain">'+(config.menuPlain ? '\u2705' : '\u2B1C')+'</a></td></tr>'
 					+ '<tr><td>Menu dark</td><td><a style= "width: 16px; height: 16px; border: none; background: none" title="Dark Mode Menus" href="!attk --options menudisplay|dark">'+(config.menuDark ? '\u2705' : '\u2B1C')+'</a></td></tr>'
 					+ '</table></div>';
-		sendAPI( content, senderId );
+		sendAPI( content, senderId, '', true );
 		return;
 	}
 
@@ -7475,6 +7551,12 @@ var attackMaster = (function() {
 					case 'build-save':
 						doBuildCustomSave(arg,senderId,selected,isGM);
 						break;
+					case 'set-savemod':
+						doSetSaveMod(arg,selected,senderId);
+						break;
+					case 'savemod-count':
+						doIncDecSaveModCount(arg,selected,senderId);
+						break;
 					case 'thieve':
 						doThieving(arg,senderId,selected);
 						break;
@@ -7586,7 +7668,7 @@ var attackMaster = (function() {
 		} else {
 			sendDebug('senderId is defined as ' + getObj('player',senderId).get('_displayname'));
 		};
-		if (!flags.noWaitMsg) sendWait(senderId,1,'attkMaster');
+		if (!flags.noWaitMsg) sendWait(senderId,50,'attkMaster');
 		
 		_.each(args, function(e) {
 			setTimeout( doAttkCmd, (1*t++), e, selected, senderId, isGM );

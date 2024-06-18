@@ -3,8 +3,8 @@
 Name			:	Fetch
 GitHub			:	https://github.com/TimRohr22/Cauldron/tree/master/Fetch
 Roll20 Contact  :	timmaugh
-Version			:   2.1.0
-Last Update		:	02 APR 2024
+Version			:   2.1.1
+Last Update		:	14 JUN 2024
 =========================================================
 */
 var API_Meta = API_Meta || {};
@@ -13,12 +13,12 @@ API_Meta.Fetch = { offset: Number.MAX_SAFE_INTEGER, lineCount: -1 };
 
 const Fetch = (() => { //eslint-disable-line no-unused-vars
     const apiproject = 'Fetch';
-    const version = '2.1.0';
+    const version = '2.1.1';
     const apilogo = 'https://i.imgur.com/jeIkjvS.png';
     const apilogoalt = 'https://i.imgur.com/boYO3cf.png';
     const schemaVersion = 0.2;
     API_Meta[apiproject].version = version;
-    const vd = new Date(1712082743073);
+    const vd = new Date(1718394151411);
     const versionInfo = () => {
         log(`\u0166\u0166 ${apiproject} v${API_Meta[apiproject].version}, ${vd.getFullYear()}/${vd.getMonth() + 1}/${vd.getDate()} \u0166\u0166 -- offset ${API_Meta[apiproject].offset}`);
         if (!state.hasOwnProperty(apiproject) || state[apiproject].version !== schemaVersion) { //eslint-disable-line no-prototype-builtins
@@ -796,13 +796,16 @@ const Fetch = (() => { //eslint-disable-line no-unused-vars
         cid: { refersto: '_cardid', dataval: (d) => d },
         card_back: { refersto: '_cardid', dataval: (d) => getObjOrNull('card', d).get('card_back') },
         cardname: { refersto: '_cardid', dataval: (d) => getObjName(d, 'card') },
-        deckid: { refersto: '_cardid', dataval: (d) => getObjOrNull('card', d).get('deckid') },
-        deckname: { refersto: '_cardid', dataval: (d) => getObjOrNull('deck', getObjOrNull('card', d).get('deckid')).get('name') },
 
         checklight_isbright: { refersto: 'checklight_isbright', dataval: (d) => d },
         checklight_total: { refersto: 'checklight_total', dataval: (d) => d },
 
         compact_bar: { refersto: 'compact_bar', dataval: (d) => d },
+        currentside: { refersto: 'currentSide', dataval: (d) => d },
+        curside: { refersto: 'currentSide', dataval: (d) => d },
+        side: { refersto: 'currentSide', dataval: (d) => d },
+        deckid: { refersto: '_cardid', dataval: (d) => getObjOrNull('card', d).get('deckid') },
+        deckname: { refersto: '_cardid', dataval: (d) => getObjOrNull('deck', getObjOrNull('card', d).get('deckid')).get('name') },
         player: { refersto: 'controlledby', dataval: (d, s) => getControlledByList(s, d).split(/\s*,\s*/).filter(a => a.toLowerCase() !== 'all' && getObj('player', a))[0] },
         player_name: { refersto: 'controlledby', dataval: (d, s) => getControlledByList(s, d).split(/\s*,\s*/).filter(a => a.toLowerCase() !== 'all').map(a => getObjName(a, 'player')).filter(a => a)[0] },
         token_cby: { refersto: 'controlledby', dataval: (d, s) => getControlledByList(s, d) },
@@ -811,9 +814,6 @@ const Fetch = (() => { //eslint-disable-line no-unused-vars
         token_controlledby_names: { refersto: 'controlledby', dataval: (d, s) => getObjName(getControlledByList(s, d), 'playerlist') },
         token_cby_name: { refersto: 'controlledby', dataval: (d, s) => getObjName(getControlledByList(s, d), 'playerlist') },
         token_controlledby_name: { refersto: 'controlledby', dataval: (d, s) => getObjName(getControlledByList(s, d), 'playerlist') },
-        currentside: { refersto: 'currentSide', dataval: (d) => d },
-        curside: { refersto: 'currentSide', dataval: (d) => d },
-        side: { refersto: 'currentSide', dataval: (d) => d },
         dim_light_opacity: { refersto: 'dim_light_opacity', dataval: (d) => d },
         directional_bright_light_center: { refersto: 'directional_bright_light_center', dataval: (d) => d },
         directional_bright_light_total: { refersto: 'directional_bright_light_total', dataval: (d) => d },
@@ -886,6 +886,7 @@ const Fetch = (() => { //eslint-disable-line no-unused-vars
         showplayers_name: { refersto: 'showplayers_name', dataval: (d) => d },
         show_tooltip: { refersto: 'show_tooltip', dataval: (d) => d },
         sides: { refersto: 'sides', dataval: (d) => d },
+        sides_short: { refersto: 'sides', dataval: (d) => ('' || d).split(`|`).map(side => decodeURIComponent(side).slice(0, Math.max(side.indexOf(`?`), 0) || side.length)).join(`|`)},
         sidecount: { refersto: 'sides', dataval: (d) => ('' || d).split(`|`).length },
         sidescount: { refersto: 'sides', dataval: (d) => ('' || d).split(`|`).length },
         markers: { refersto: 'statusmarkers', dataval: (d) => d },

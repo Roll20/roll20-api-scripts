@@ -31,56 +31,7 @@ API_Meta.InitMaster={offset:Number.MAX_SAFE_INTEGER,lineCount:-1};
  * rolling, modifying and tracking, initially for the ADnD 2e game in Roll20.
  * Designed to be used with the roundMaster !rm API Script
  * 
- * v0.001  30/11/2020  Initial creation 
- * v0.002-0.012        Development
- * v0.012-2.046        Early releases of RPGMaster series APIs
- * v2.050  28/03/2022  Moved all Table Mgt, Ability Mgt, Chat Mgt, Database Mgt to a
- *                     shared RPGM rule-set-specific library
- * v2.051  25/04/2022  Moved all game-specific and character sheet-specific data structures
- *                     to the RPGM library api.  Fixed display of initiative menus to GM if
- *                     GM performs a function on any token.  Added "silent mode" to --redo 
- *                     to support RoundMaster clearing the turn order and resetting token 
- *                     initiative status.
- * v0.2.52 20/07/2022  Converted to use revised internal database structures
- * v0.2.53 16/09/2022  Updated to use RPGMaster Roll Templates. Allow command escape characters
- *                     to optionally be terminated by semi-colons. Moved all functions common 
- *                     to RPGMaster APIs to the RPGMaster Library API. Converted to use table 
- *                     objects and methods provided by the RPGMaster Library. Added "preinit" 
- *                     weapon flag for weapons that automatically get an attack before 
- *                     initiative, such as a Scimitar of Speed. Change --help to 
- *                     provide a menu of links to help handouts
- * v1.3.00 17/09/2022  First release of RPGMaster InitiativeMaster using the RPGMaster Library.
- * v1.3.01 10/10/2022  Fixed initiative for classes that have multi-class spell casting
- * v1.3.02 21/10/2022  Gray out attack initiative buttons for weapons without charges
- * v1.3.03 31/10/2022  Fixed bug in Initiative Redo command
- * v1.4.01 28/11/2022  Deal with fighting styles. Extended String prototype with dbName() method.
- * v1.4.05 02/03/2023  Add initiative selection for in-hand magical item attacks to the Attack
- *                     and Magic Item initiative menus
- * v1.4.06 09/04/2023  Non-functional update release to maintain version sequence.
- * v1.4.07 16/04/2023  Non-functional update release to maintain version sequence.
- * v1.5.01 19/05/2023  Removed CheckAC call from initiative submission in an attempt to
- *                     speed up multi-user experience. Fixed weapon menu display of creature
- *                     attack descriptions. Fixed castingClass returned by caster() function 
- *                     to be toUpperCase(). Made initiative processing much more asynchronous 
- *                     to improve user response.
- * v2.1.0  06/06/2023  Made many more functions asynchronous to multi-thread. Added GM multi-token
- *                     initiative loop, popping up the menu for each selected token in turn.
- *                     Fixed issues with player-character list used for standard initiative and
- *                     tracker checking. Automatically open turn order tracker & start 
- *                     roundMaster API if not already active whenever initiative is done.
- * v2.2.0  21/07/2023  Implemented The Aaron's API_Meta error handling. Added senderId override 
- *                     capability as id immediately after !magic & before 1st --cmd. Removed 
- *                     potential setTimeout() issues with asynchronous use of variable values – 
- *                     passed as parameters instead.
- * v2.3.0  29/09/2023  Moved caster() to library. Support the new spell-speed override attribute 
- *                     (e.g. dragons always cast spells at 1 segment). Fixed two-weapon attack speeds
- *                     where one weapon has less than one attack per round. Fixed the creature 
- *                     attack descriptions when using "All Innate Attacks" button.
- * v2.3.1  19/10/2023  Fixed handling of weapons with pre-initiative flag set when used in a 
- *                     two-weapon attack. Fixed ranged weapon initiative error introduced in 2.3.0
- * v2.3.2  31/10/2023  Improved handling of "Please wait..." messages when interacting with
- *                     RoundMaster.
- * v2.3.3  05/11/2023  Non-functional release to align release numbers.
+ * v0.1.0 to v2.3.3    See previous versions for earlier change log
  * v3.0.0  15/11/2023  Added support for other character sheets and game systems. Added support for 
  *                     magical multipliers to creature attacks. Fixed issues with magical multipliers
  *                     on off-hand weapon attacks. Implemented optional magical weapon plus effect
@@ -103,14 +54,18 @@ API_Meta.InitMaster={offset:Number.MAX_SAFE_INTEGER,lineCount:-1};
  *                     Fixed detection of creature innate attacks where none exist, and count them
  *                     where correct count field not recorded. Made default attack initiative setting
  *                     more reliable. Adjusted "Set Round No." default to blank which defaults to +1.
+ * v3.4.1  20/05/2024  Fixed error in initiative mods table when specifying =# for override mods.
+ * v3.5.0  06/05/2024  Added 'fix' command to --set-mods which overrides the calculated initiative roll
+ *                     for the specified character sheet. Set both the character sheet and token 
+ *                     prev_round to be the round number held in the state variable.
  */
 
 var initMaster = (function() {
 	'use strict'; 
-	var version = '3.4.0',
+	var version = '3.5.0',
 		author = 'Richerd @ Damery',
 		pending = null;
-    const lastUpdate = 1712853841;
+    const lastUpdate = 1717750563;
 
 	/*
 	 * Define redirections for functions moved to the RPGMaster library
@@ -205,20 +160,17 @@ var initMaster = (function() {
 	
 	var handouts = Object.freeze({
 	InitMaster_Help:	{name:'InitiativeMaster Help',
-						 version:2.06,
+						 version:2.07,
 						 avatar:'https://s3.amazonaws.com/files.d20.io/images/257656656/ckSHhNht7v3u60CRKonRTg/thumb.png?1638050703',
 						 bio:'<div style="font-weight: bold; text-align: center; border-bottom: 2px solid black;">'
-							+'<span style="font-weight: bold; font-size: 125%">InitiativeMaster Help v2.06</span>'
+							+'<span style="font-weight: bold; font-size: 125%">InitiativeMaster Help v2.07</span>'
 							+'</div>'
 							+'<div style="padding-left: 5px; padding-right: 5px; overflow: hidden;">'
 							+'<h1>Initiative Master API v'+version+'</h1>'
 							+'<h4>and later</h4>'
 							+'<h3><mark style="color:green">New</mark> in this Help Handout</h3>'
 							+'<ul>'
-							+'<li><mark style="color:green">New</mark> Faster initiatives with pre-selected attacks</li>'
-							+'<li><mark style="color:green">New</mark> Manage initiative mods table on each character sheet</li>'
-							+'<li><mark style="color:green">New</mark> --check-init command to show current initiative mods for a token</li>'
-							+'<li><mark style="color:green">New</mark> --set-mods command to add, change or remove initiative mods for a token</li>'
+							+'<li><mark style="color:green">New</mark> FIX command for --set-mods to fix initiative roll to a value</li>'
 							+'</ul>'
 							+'<l1>This API supports initiative for RPGs using the Turn Order and the Tracker window.  The InitiativeMaster API provides functions dealing with all aspects of: managing how initiative is done; rolling for initiative; for "group" and "individual" initiative types providing Character action selection to determine the speed and number of attacks of weapons, the casting time of spells & the usage speed of magic items; supporting initiative for multiple attacks with one or multiple weapons per round; supporting and tracking actions that take multiple rounds; managing the resulting Turn Order; as well as performing the "End of Day" activity.  It works very closely with the <b>RoundMaster API</b> to the extent that InitiativeMaster cannot work without RoundMaster (though the reverse is possible).  InitiativeMaster also works closely with <b>AttackMaster API</b> and <b>MagicMaster API</b> and uses the data configured on the Character Sheet by these other APIs, although it can use manually completed Character Sheets once correctly configured.  As with all RPGMaster series APIs (other than RoundMaster), the correct <b>RPGMaster Library</b> for the D&D game version and Roll20 character sheet type you are using must also be loaded, to provide the correct rule set, parameters and databases for your campaign.</p>'
 							+'<h2>Syntax of InitiativeMaster calls</h2>'
@@ -257,7 +209,7 @@ var initMaster = (function() {
 							+'<p>Creatures using the Innate Monster Attack fields on the AD&D2e Character Sheet Monster tab benefit from an extended syntax for entries in these fields: each field can take</p>'
 							+'<pre>damage dice roll,[Attack name],[speed],[dmg type] </pre>'
 							+'<p>for example <code>1d8,Claw,2,S</code> and <code>2d4+1,Club+1,5,B</code>.  These will result in possible initiative actions for that creature for <b>Claw</b> and <b>Club+1</b>.  If Attack Name is omitted, the dice roll is displayed as the action name instead.  If the Speed is omitted, the Innate attack speed field value is used instead.</p>'
-							+'<h3><span style='+design.selected_button+'>New:</span> Effect of Magic on Initiative</h3>'
+							+'<h3>Effect of Magic on Initiative</h3>'
 							+'<p>The system can take into account various modifiers applied by spells and/or magic items (e.g. Haste and Slow spells), and the spell, power & magic item macros provided with the <b>MagicMaster API</b> use this functionality when used in conjunction with <b>RoundMaster</b> <i>Effects</i>. Mods set, amended or cleared with the provided commands will be stored on the character sheet and can be examined by the player alongside a tag describing each initiative mod.</p>'
 							+'<h3>Multi-attack Initiatives</h3>'
 							+'<p>The system can also create multiple initiative turns for weapons that achieve multiple attacks per round, like bows and daggers, as well as by the class, level and proficiency of the character or any combination of the three as per the D&D game version rules (held in the specific version of the <i>RPGMaster Library</i> you have loaded), including 3 attacks per 2 rounds, or 5 per 2.  Also Fighter and Rogue classes using 2 weapons are catered for, even with those weapons possibly having multiple attacks themselves - the weapon specified by the character as the Primary will achieve its multiple attacks, whereas the secondary weapon will only get the number of attacks specified as per the rules for multiple attacks in the game version you are using.</p>'
@@ -298,8 +250,8 @@ var initMaster = (function() {
 							+'--mibag [token-id]<br>'
 							+'--thief [token-id]<br>'
 							+'--other [token-id]<br>'
-							+'<span style='+design.selected_button+'>New:</span>--check-init [token-id]<br>'
-							+'<span style='+design.selected_button+'>New:</span>--set-mods [token-id]|cmd|[=][+/-]mod|[=][+/-]mult|[SILENT]</pre>'
+							+'--check-init [token-id]<br>'
+							+'<span style='+design.selected_button+'>Updated:</span>--set-mods [token-id]|cmd|name|[=][+/-]mod|[=][+/-]mult|[SILENT]</pre>'
 							+'<h3>4. Maintain the Turn Order and Rounds</h3>'
 							+'<pre>--maint<br>'
 							+'--check-tracker<br>'
@@ -399,14 +351,14 @@ var initMaster = (function() {
 							+'<pre>--other [token-id]</pre>'
 							+'<p>Takes an optional token ID.</p>'
 							+'<p>Displays a menu of other (non-attacking) actions that the Character / NPC / creature can take, namely: Moving (speed 0 as it is an innate ability); Changing Weapon (also speed 0 but takes all round); Doing Nothing (obviously speed 0); and one that allows the Player to enter a description and specify a speed for that action (presumably with the agreement of the DM).</p>'
-							+'<h4>3.10 <span style='+design.selected_button+'>New:</span> View current initiative modifiers</h4>'
+							+'<h4>3.10 View current initiative modifiers</h4>'
 							+'<pre>--check-init [token-id]</pre>'
 							+'<p>Takes an optional token ID.</p>'
 							+'<p>Displays a dialog showing all currently in-play initiative modifiers for the character represented by the identified or selected token. Also provides buttons to add, change or remove modifiers - one for mods that add or subtract to the initiative roll, and one for mods that multiply or reduce the number of attack actions the character can undertake. See the --set-mods command for more information.</p>'
-							+'<h4>3.11 <span style='+design.selected_button+'>New:</span> Add, change or remove modifiers</h4>'
-							+'<pre>--set-mods [token-id] | (DEL / MOD / MULT / BOTH) | name | [[=][+/-]mod] | [[=][+/-]mult] | [SILENT]</pre>'
+							+'<h4>3.11 <span style='+design.selected_button+'>Updated:</span> Add, change or remove modifiers</h4>'
+							+'<pre>--set-mods [token-id] | (DEL / FIX / MOD / MULT / BOTH) | name | [[=][+/-]mod] | [[=][+/-]mult] | [SILENT]</pre>'
 							+'<p>Takes an optional token ID, a command specifying the action, the name of the mod, the optional value of an addative modifier optionally preceeded with = or - or +, the optional value of a multiplying modifier optionally preceeded with = or - or +, and an optional "silent" qualifier.</p>'
-							+'<p>Sets, changes, or deletes a named initiative modifier that can have one or both of additive and multiplicative elements. Each of these modifiers can include maths to be evaluated using standard maths operators +, -, *, /, (, ), and ^(#,#,...) for max, and v(#,#,...) for min (commas can be replaced by semi-colons ;). Preceeding a mod or mult value by = will set that value (e.g. =-2 will set the value to -2), or preceeding by + or - without the = will amend the current value by that amount. Including the SILENT argument will not display any outcome, while ommitting it will display the result in a --check-init dialog.</p>'
+							+'<p>Sets, fixes, changes, or deletes a named initiative modifier that can have one or both of additive and multiplicative elements. Each of these modifiers can include maths to be evaluated using standard maths operators +, -, *, /, (, ), and ^(#,#,...) for max, and v(#,#,...) for min (commas can be replaced by semi-colons ;). Preceeding a mod or mult value by = will set that value (e.g. =-2 will set the value to -2), or preceeding by + or - without the = will amend the current value by that amount. The FIX command will cause the named modifier to <i>override all other modifiers and the initiative dice roll</i> and set future initiative rolls to the value of <i>mod</i> (until DEL or a different command is used for the same name of modifier). Including the SILENT argument will not display any outcome, while ommitting it will display the result in a --check-init dialog.</p>'
 							+'<br>'
 							+'<h3>4. Maintain the Turn Order and Rounds</h3>'
 							+'<h4>4.1 Display the DM\'s round maintenance menu</h4>'
@@ -504,6 +456,7 @@ var initMaster = (function() {
 	var spellsPerLevel;
 	var reClassSpecs;
 	var reACSpecs;
+	var reWeapSpecs;
 	
 	var DBindex = {};
 	var initSelection = {};
@@ -750,6 +703,7 @@ var initMaster = (function() {
 			spellsPerLevel = RPGMap.spellsPerLevel;
 			reClassSpecs = RPGMap.reClassSpecs;
 			reACSpecs = RPGMap.reACSpecs;
+			reWeapSpecs = RPGMap.reWeapSpecs;
 			flags.noWaitMsg = true;
 			setTimeout( () => {flags.noWaitMsg = false;}, 5000 );
 
@@ -1785,6 +1739,8 @@ var initMaster = (function() {
 			base = parseInt(state.initMaster.initType == 'group' ? state.initMaster.playerRoll : randomInteger(10)),
 			actions, initiative, count;
 			
+		makeCheckInitMenu( tokenID, charCS, senderId, true );
+
 		var initSubmit = function( senderId, charCS, args ) {
 			var	initCmd = args[0],
 				tokenID = args[1],
@@ -1888,7 +1844,7 @@ var initMaster = (function() {
 					args[3] = args[4];
 				}
 				
-				setAttr( charCS, fields.Prev_round, 0 );
+				setAttr( charCS, fields.Prev_round, state.initMaster.round );
 				setAttr( charCS, [fields.Prev_round[0] + tokenID, fields.Prev_round[1]], state.initMaster.round, null, null, null, true );
 				setAttr( charCS, fields.Init_chosen, 0 );
 				setAttr( charCS, fields.Init_done, -1 );
@@ -2283,11 +2239,12 @@ var initMaster = (function() {
 			try {
 				var content = '',
 					inHandTitle = false,
-					MagicTable = getTable( charCS, fieldGroups.MAGIC ),
+					MagicTable = getTableField( charCS, {}, fields.Magic_table, fields.Magic_name ),
 					ItemsTable = getTableField( charCS, {}, fields.Items_table, fields.Items_name ),
 					powerList = {},
 					magicName, miName, miQty;
 					
+				MagicTable = getTableField( charCS, MagicTable, fields.Magic_table, fields.Magic_miName );
 				ItemsTable = getTableField( charCS, ItemsTable, fields.Items_table, fields.Items_trueName );
 				ItemsTable = getTableField( charCS, ItemsTable, fields.Items_table, fields.Items_qty );
 				for (let r = MagicTable.table[1]; !_.isUndefined(magicName = MagicTable.tableLookup( fields.Magic_name, r, false )); r++) {
@@ -2330,73 +2287,57 @@ var initMaster = (function() {
 	 * Make monster attack buttons 
 	 */
 	 
-	async function makeMonAttkButtons( tokenID, charCS, senderId, charButton, monButton, submitted ) {
+	var makeMonAttkButtons = function( tokenID, charCS, senderId, charButton, monButton, submitted ) {
 		
+		var errFlag = false;
 		try {
-			var content = '';
 			
-			var makeAttkButtons = function() {
+			creatureAttkDefs( charCS );
 			
-				return new Promise(resolveMon => {
-					var errFlag = false;
-					try {
-						
-						creatureAttkDefs( charCS );
-						
-						var content = '',
-							monAttk1 = attrLookup( charCS, fields.Monster_dmg1 ),
-							monAttk2 = attrLookup( charCS, fields.Monster_dmg2 ),
-							monAttk3 = attrLookup( charCS, fields.Monster_dmg3 );
-						
-						if ((monAttk1 && monAttk2) || (monAttk1 && monAttk3) || (monAttk2 && monAttk3)) {
-							content += ((0 == charButton && 0 == monButton) ? '<span style=' + design.selected_button + '>' : (submitted ? '<span style=' + design.grey_button + '>' : '['));
-							content += 'All Innate Attks';
-							content += (((0 == charButton && 0 == monButton) || submitted) ? '</span>' : '](!init --button ' + BT.MON_INNATE + '|' + tokenID + '|0|0)\n');
-						}
-						if (monAttk1) {
-							monAttk1 = monAttk1.split(',');
-							content += ((0 == charButton && 1 == monButton) ? '<span style=' + design.selected_button + '>' : (submitted ? '<span style=' + design.grey_button + '>' : '['));
-							content += 'Creature '+ (monAttk1.length > 1 && reDiceRollSpec.test(monAttk1[0]) ? monAttk1[1] : monAttk1[0]);
-							content += (((0 == charButton && 1 == monButton) || submitted) ? '</span>' : '](!init --button ' + BT.MON_INNATE + '|' + tokenID + '|0|1)\n');
-						}
-						if (monAttk2) {
-							monAttk2 = monAttk2.split(',');
-							content += ((0 == charButton && 2 == monButton) ? '<span style=' + design.selected_button + '>' : (submitted ? '<span style=' + design.grey_button + '>' : '['));
-				//			content += 'Monster '+monAttk2[0];
-							content += 'Creature '+ (monAttk2.length > 1 && reDiceRollSpec.test(monAttk2[0]) ? monAttk2[1] : monAttk2[0]);
-							content += (((0 == charButton && 2 == monButton) || submitted) ? '</span>' : '](!init --button ' + BT.MON_INNATE + '|' + tokenID + '|0|2)\n');
-						}
-						if (monAttk3) {
-							monAttk3 = monAttk3.split(',');
-							content += ((0 == charButton && 3 == monButton) ? '<span style=' + design.selected_button + '>' : (submitted ? '<span style=' + design.grey_button + '>' : '['));
-				//			content += 'Monster '+monAttk3[0];
-							content += 'Creature '+ (monAttk3.length > 1 && reDiceRollSpec.test(monAttk3[0]) ? monAttk3[1] : monAttk3[0]);
-							content += (((0 == charButton && 3 == monButton) || submitted) ? '</span>' : '](!init --button ' + BT.MON_INNATE + '|' + tokenID + '|0|3)\n');
-						}
-						
-					} catch (e) {
-						sendCatchError('InitMaster',msg_orig[senderId],e);
-					} finally {
-						setTimeout(() => {
-							resolveMon(content);
-						}, asyncTime);
-					}
-				});
-			};
+			var content = '',
+				monAttk1 = attrLookup( charCS, fields.Monster_dmg1 ),
+				monAttk2 = attrLookup( charCS, fields.Monster_dmg2 ),
+				monAttk3 = attrLookup( charCS, fields.Monster_dmg3 );
 			
-			content = makeAttkButtons();
-			return content;
+			if ((monAttk1 && monAttk2) || (monAttk1 && monAttk3) || (monAttk2 && monAttk3)) {
+				content += ((0 == charButton && 0 == monButton) ? '<span style=' + design.selected_button + '>' : (submitted ? '<span style=' + design.grey_button + '>' : '['));
+				content += 'All Innate Attks';
+				content += (((0 == charButton && 0 == monButton) || submitted) ? '</span>' : '](!init --button ' + BT.MON_INNATE + '|' + tokenID + '|0|0)\n');
+			}
+			if (monAttk1) {
+				monAttk1 = monAttk1.split(',');
+				content += ((0 == charButton && 1 == monButton) ? '<span style=' + design.selected_button + '>' : (submitted ? '<span style=' + design.grey_button + '>' : '['));
+				content += 'Creature '+ (monAttk1.length > 1 && reDiceRollSpec.test(monAttk1[0]) ? monAttk1[1] : monAttk1[0]);
+				content += (((0 == charButton && 1 == monButton) || submitted) ? '</span>' : '](!init --button ' + BT.MON_INNATE + '|' + tokenID + '|0|1)\n');
+			}
+			if (monAttk2) {
+				monAttk2 = monAttk2.split(',');
+				content += ((0 == charButton && 2 == monButton) ? '<span style=' + design.selected_button + '>' : (submitted ? '<span style=' + design.grey_button + '>' : '['));
+				content += 'Creature '+ (monAttk2.length > 1 && reDiceRollSpec.test(monAttk2[0]) ? monAttk2[1] : monAttk2[0]);
+				content += (((0 == charButton && 2 == monButton) || submitted) ? '</span>' : '](!init --button ' + BT.MON_INNATE + '|' + tokenID + '|0|2)\n');
+			}
+			if (monAttk3) {
+				monAttk3 = monAttk3.split(',');
+				content += ((0 == charButton && 3 == monButton) ? '<span style=' + design.selected_button + '>' : (submitted ? '<span style=' + design.grey_button + '>' : '['));
+				content += 'Creature '+ (monAttk3.length > 1 && reDiceRollSpec.test(monAttk3[0]) ? monAttk3[1] : monAttk3[0]);
+				content += (((0 == charButton && 3 == monButton) || submitted) ? '</span>' : '](!init --button ' + BT.MON_INNATE + '|' + tokenID + '|0|3)\n');
+			}
+			
+			content += ((content && content.length) ? '\n' : '');
+			
 		} catch (e) {
 			sendCatchError('InitMaster',msg_orig[senderId],e);
+		} finally {
+			return content;
 		}
-	}
+	};
 
 	
 	/*
 	 * Make weapon button lists
 	 */
 	
-	async function makeWeaponButtons( tokenID, senderId, charButton, submitted, MWcmd, RWcmd, show2H=true, showDancing=true, showInHand=true, showWeapons=false ) {
+	async function makeWeaponButtons( tokenID, senderId, charButton, submitted, MWcmd, RWcmd, show2H=true, showDancing=true, showInHand=true, showWeapons=false, MWtable, RWtable ) {
 		
 		try {
 //			if (_.isUndefined(show2H) || _.isNull(show2H)) {show2H = true};
@@ -2421,17 +2362,20 @@ var initMaster = (function() {
 				
 			// build the character Melee Weapon list
 
-			var meleeWeaps = function(senderId) {
+			var meleeWeaps = function(senderId, WeaponTable) {
 				var errFlag = false;
 				return new Promise(resolveMelee => {
 					try {
-						var content = '',
+						var content = '';
+						
+						if (_.isUndefined(WeaponTable)) {
 							WeaponTable = getTableField( charCS, {}, fields.MW_table, fields.MW_name );
 							WeaponTable = getTableField( charCS, WeaponTable, fields.MW_table, fields.MW_miName );
 							WeaponTable = getTableField( charCS, WeaponTable, fields.MW_table, fields.MW_twoHanded );
 							WeaponTable = getTableField( charCS, WeaponTable, fields.MW_table, fields.MW_dancing );
 							WeaponTable = getTableField( charCS, WeaponTable, fields.MW_table, fields.MW_charges );
 							WeaponTable = getTableField( charCS, WeaponTable, fields.MW_table, fields.MW_hand );
+						}
 						let a = fields.MW_table[1];
 						for (let i = a; i < (fields.MWrows + a); i++) {
 							let w = (1 - (a * 2)) + (i * 2),
@@ -2444,17 +2388,17 @@ var initMaster = (function() {
 									content += '**Melee Weapons**\n';
 									header = false;
 								}
-								let miName = WeaponTable.tableLookup( fields.MW_miName, i ) || '',
-									weapObj = abilityLookup( fields.WeaponDB, miName, charCS ),
-									weapCharged = weapObj.obj && !(['uncharged','cursed','single-uncharged'].includes(weapObj.obj[1].charge.toLowerCase())),
-									charges = weapCharged  ? (WeaponTable.tableLookup( fields.MW_charges, i ) || 1) : 0,
-									exhausted = submitted,
-									qty = '';
+								let miName = WeaponTable.tableLookup( fields.MW_miName, i ) || '';
 								if (showWeapons && miName && miName.length) {
 									if (weapList.includes(miName.dbName())) continue;
 									weapList.push(miName.dbName());
 									weapName = miName;
 								}
+								let	weapData = resolveData( miName, fields.WeaponDB, reNotAttackData, charCS, {chargeType:reWeapSpecs.chargeType} ),
+									weapCharged = weapData.chargeType && !(['uncharged','cursed','single-uncharged'].includes(weapData.chargeType.toLowerCase())),
+									charges = weapCharged  ? (WeaponTable.tableLookup( fields.MW_charges, i ) || 1) : 0,
+									exhausted = submitted,
+									qty = '';
 								if (charges) {
 									let itemIndex = attrLookup( charCS, fields.InHand_index, fields.InHand_table, WeaponTable.tableLookup( fields.MW_hand, i ));
 									qty = _.isUndefined(itemIndex) ? 0 : ItemsTable.tableLookup( fields.Items_qty, itemIndex ) || 0;
@@ -2484,17 +2428,19 @@ var initMaster = (function() {
 
 			// build the character Ranged Weapons list ****
 			
-			var rangedWeaps = function(senderId) {
+			var rangedWeaps = function(senderId,WeaponTable) {
 				var errFlag = false;
 				return new Promise(resolveRanged => {
 					try {
-						var content = '',
+						var content = '';
+						
+						if (_.isUndefined(WeaponTable)) {
 							WeaponTable = getTableField( charCS, {}, fields.RW_table, fields.RW_name );
 							WeaponTable = getTableField( charCS, WeaponTable, fields.RW_table, fields.RW_miName, '', 1 );
 							WeaponTable = getTableField( charCS, WeaponTable, fields.RW_table, fields.RW_charges, '', 1 );
 							WeaponTable = getTableField( charCS, WeaponTable, fields.RW_table, fields.RW_twoHanded, '', 1 );
 							WeaponTable = getTableField( charCS, WeaponTable, fields.RW_table, fields.RW_dancing, '', 0 );
-
+						}
 						let a = fields.RW_table[1];
 						for (let i = a; i < (fields.RWrows + a); i++) {
 							let w = (2 - (a * 2)) + (i * 2),
@@ -2508,8 +2454,8 @@ var initMaster = (function() {
 									header = false;
 								}
 								let miName = WeaponTable.tableLookup( fields.RW_miName, i ) || '',
-									weapObj = abilityLookup( fields.WeaponDB, miName, charCS ),
-									weapCharged = weapObj.obj && !(['uncharged','cursed'].includes(weapObj.obj[1].charge.toLowerCase())),
+									weapData = resolveData( miName, fields.WeaponDB, reNotAttackData, charCS, {chargeType:reWeapSpecs.chargeType} ),
+									weapCharged = weapData.chargeType && !(['uncharged','cursed','single-uncharged'].includes(weapData.chargeType.toLowerCase())),
 									charges = weapCharged  ? WeaponTable.tableLookup( fields.RW_charges, i ) : 0,
 									exhausted = submitted,
 									qty = '';
@@ -2539,8 +2485,8 @@ var initMaster = (function() {
 				});
 			};
 			
-			content += await meleeWeaps(senderId);
-			content += await rangedWeaps(senderId);
+			content += await meleeWeaps(senderId,MWtable);
+			content += await rangedWeaps(senderId,RWtable);
 
 			if (dancingWeapons.length) {
 				content += '**Dancing weapons**\nAutomatic Initiative\n' + dancingWeapons;
@@ -2574,7 +2520,7 @@ var initMaster = (function() {
 					
 			// add buttons for innate monster attack abilities using the monster initiative modifier
 			
-			content += await makeMonAttkButtons( tokenID, charCS, senderId, charButton, monButton, submitted );
+			content += makeMonAttkButtons( tokenID, charCS, senderId, charButton, monButton, submitted );
 
 			if (complex) {
 				content += '\n'+await makeWeaponButtons( tokenID, senderId, charButton, submitted, BT.MON_MELEE, BT.MON_RANGED );
@@ -2601,10 +2547,9 @@ var initMaster = (function() {
     * Highlight buttons specified with a number (-1 means no highlight)
     */
 
-	async function makeWeaponMenu(charCS,submitted,args,senderId) {
-
+	async function makeWeaponMenu(charCS,submitted,args,senderId) { 
+	
 		try {
-
 			var isMIattk = args[0] == MenuType.MIATTK,
 				tokenID = args[1],
 				charButton = args[2],
@@ -2628,51 +2573,47 @@ var initMaster = (function() {
 				weaponButtons,buttonID,content,
 				primeHand, primeRef, offHand, offRef, bothHands, bothRef;
 
+			var MW_handFields = getTableField( charCS, {}, fields.MW_table, fields.MW_hand ),
+				MW_handFields = getTableField( charCS, MW_handFields, fields.MW_table, fields.MW_miName ),
+				MW_handFields = getTableField( charCS, MW_handFields, fields.MW_table, fields.MW_name ),
+				MW_handFields = getTableField( charCS, MW_handFields, fields.MW_table, fields.MW_twoHanded ),
+				MW_handFields = getTableField( charCS, MW_handFields, fields.MW_table, fields.MW_dancing ),
+				MW_handFields = getTableField( charCS, MW_handFields, fields.MW_table, fields.MW_charges ),
+				RW_handFields = getTableField( charCS, {}, fields.RW_table, fields.RW_hand ),
+				RW_handFields = getTableField( charCS, RW_handFields, fields.RW_table, fields.RW_miName ),
+				RW_handFields = getTableField( charCS, RW_handFields, fields.RW_table, fields.RW_name ),
+				RW_handFields = getTableField( charCS, RW_handFields, fields.RW_table, fields.RW_charges, '', 1 ),
+				RW_handFields = getTableField( charCS, RW_handFields, fields.RW_table, fields.RW_twoHanded, '', 1 ),
+				RW_handFields = getTableField( charCS, RW_handFields, fields.RW_table, fields.RW_dancing, '', 0 ),
+				InHandField = getTableField( charCS, {}, fields.InHand_table, fields.InHand_miName ),
+				InHandField = getTableField( charCS, InHandField, fields.InHand_table, fields.InHand_name ),
+				index;
+
 			var getRef = function( charCS, hand, forceFind=false ) {
 				var ref = attrLookup(charCS,[fields.Init_hand[0]+hand,fields.Init_hand[1]],null,null,null,false,false);
 				if (forceFind || _.isNaN(ref) || ref == '') ref = undefined;
-//				log('getRef: hand '+hand+' has ref '+ref+', which is index '+(_.isUndefined(ref) ? 'undefined' : ((ref%2) > 0 ? ((ref-(1+(fields.MW_table[1]*2)))/2) : ((ref-(2+(fields.RW_table[1]*2)))/2))));
-//				if (ref%2 > 0) {
-//					log('getRef: equation = (('+ref+'-(1+('+fields.MW_table[1]+'*2)))/2) = (('+ref+'-('+(1+(fields.MW_table[1]*2))+')/2) = ('+(ref-(1+(fields.MW_table[1]*2)))+'/2)');
-//				}
-				var MW_handFields = getTableField( charCS, {}, fields.MW_table, fields.MW_hand ),
-					MW_handFields = getTableField( charCS, MW_handFields, fields.MW_table, fields.MW_miName ),
-					MW_handFields = getTableField( charCS, MW_handFields, fields.MW_table, fields.MW_name ),
-					RW_handFields = getTableField( charCS, {}, fields.RW_table, fields.RW_hand ),
-					RW_handFields = getTableField( charCS, RW_handFields, fields.RW_table, fields.RW_miName ),
-					RW_handFields = getTableField( charCS, RW_handFields, fields.RW_table, fields.RW_name ),
-					InHandField = getTableField( charCS, {}, fields.InHand_table, fields.InHand_miName ),
-					InHandField = getTableField( charCS, InHandField, fields.InHand_table, fields.InHand_name ),
-					index;
 
 				let miName = (InHandField.tableLookup( fields.InHand_miName, hand ) || InHandField.tableLookup( fields.InHand_name, hand ) || '');
 
 				if (!_.isUndefined(ref) && !!miName && miName.dbName().length) {
 					index = ((ref%2) > 0 ? ((ref-(1+(fields.MW_table[1]*2)))/2) : ((ref-(2+(fields.RW_table[1]*2)))/2));
-//					log('getRef: hand '+hand+' is predefined '+miName+', '+(ref%2 ? 'MW' : 'RW')+' table index = '+index+', button ref = '+ref);
 					return [index,ref];
 				}
 				
 				if (!_.isUndefined(index = MW_handFields.tableFind( fields.MW_hand, hand ))) {
 					ref = (1 - (fields.MW_table[1] * 2)) + (index * 2);
-//					log('getRef: found hand '+hand+' at melee row '+index+', ref '+ref);
 				} else if (!_.isUndefined(index = RW_handFields.tableFind( fields.RW_hand, hand ))) {
 					ref = (2 - (fields.RW_table[1] * 2)) + (index * 2);
-//					log('getRef: found hand '+hand+' at ranged row '+index+', ref '+ref);
 				} else {
 					if (!!miName && miName.dbName().length && miName !== '-') {
 						if (!_.isUndefined(index = MW_handFields.tableFind( fields.MW_miName, miName ))) {
 							ref = (1 - (fields.MW_table[1] * 2)) + (index * 2);
-//							log('getRef: found miName '+miName+' at melee row '+index+', ref '+ref);
 						} else if (!_.isUndefined(index = RW_handFields.tableFind( fields.RW_miName, miName ))) {
 							ref = (2 - (fields.RW_table[1] * 2)) + (index * 2);
-//							log('getRef: found miName '+miName+' at ranged row '+index+', ref '+ref);
 						} else if (!_.isUndefined(index = MW_handFields.tableFind( fields.MW_name, miName ))) {
 							ref = (1 - (fields.MW_table[1] * 2)) + (index * 2);
-//							log('getRef: found name '+miName+' at melee row '+index+', ref '+ref);
 						} else if (!_.isUndefined(index = RW_handFields.tableFind( fields.RW_name, miName ))) {
 							ref = (2 - (fields.RW_table[1] * 2)) + (index * 2);
-//							log('getRef: found name '+miName+' at ranged row '+index+', ref '+ref);
 						};
 					};
 				};
@@ -2694,13 +2635,9 @@ var initMaster = (function() {
 				isOff = !_.isUndefined(offHand),
 				isBoth = !_.isUndefined(bothHands);
 			
-//			log('makeWeaponMenu: isBoth = '+isBoth+', isPrime = '+isPrime+', offHand = '+offHand);
-//			log('makeWeaponMenu: weapCount.monster = '+weapCount.monster+', melee = '+weapCount.melee+', ranged = '+weapCount.ranged+', shields = '+weapCount.shield);
-//			if (weapCount.monster < 1 && (!charButton || !charButton.length || charButton == -1)) {
 			if (((weapCount.melee + weapCount.ranged + shieldStyle) > 0) && (!charButton || !charButton.length || charButton == -1)) {
 				charButton = isBoth ? bothRef : (isPrime ? primeRef : (isOff ? offRef : charButton));
 				let charHand = isBoth ? bothHands : (isPrime ? primeHand : offHand);
-//				log('makeWeaponMenu: '+(charHand ? '' : 'not ')+'dealing with single weapon pre-select, with charHand = '+charHand);
 				if (!_.isUndefined(charHand)) {
 					if ((charButton%2)>0) {
 						handleInitMW( CharSheet.CHARACTER, charCS, [BT.MELEE,tokenID,charButton,charHand], senderId );
@@ -2731,7 +2668,6 @@ var initMaster = (function() {
 			
 			if (weapCount.melee > 1 || (weapCount.melee > 0 && shieldStyle > 0) || weapCount.monster > 1 || ((weapCount.melee+weapCount.ranged) > 0 && weapCount.monster > 0)) {
 				if ((fighterLevel || rogueLevel || monsterLevel) && isPrime && isOff) {
-//					log('makeWeaponMenu: passing to twoWeapons offHand = '+offHand+', and offRef = '+offRef);
 					if (offRef == primeRef) [offHand,offRef] = getRef(charCS,0,true);
 					content += '{{Fighter\'s & Rogue\'s Option='
 							+  (submitted ? ('<span style=' + design.grey_button + '>') : '[')
@@ -2751,8 +2687,8 @@ var initMaster = (function() {
 			
 			content += '{{desc=';
 
-			content += await makeMonAttkButtons( tokenID, charCS, senderId, charButton, monButton, submitted );
-			content += await makeWeaponButtons( tokenID, senderId, charButton, submitted, BT.MELEE, BT.RANGED, true, true, true, state.initMaster.weapInit );
+			content += makeMonAttkButtons( tokenID, charCS, senderId, charButton, monButton, submitted );
+			content += await makeWeaponButtons( tokenID, senderId, charButton, submitted, BT.MELEE, BT.RANGED, true, true, true, state.initMaster.weapInit, MW_handFields, RW_handFields );
 
 			content += MIandPowers( tokenID, submitted ) + '}}'
 					+ '{{desc1=' + otherActions( MenuType.WEAPON, tokenID, charButton, submitted ) + '}}'
@@ -3327,24 +3263,35 @@ var initMaster = (function() {
 			ItemNames = getTableField( charCS, ItemNames, fields.Items_table, fields.Items_trueName ),
 			Inits = getTable( charCS, fieldGroups.INIT ),
 			totalMod = 0,
+			eqModFlag = false,
 			totalMult = 1,
+			eqMultFlag = false,
 			content = '&{template:'+fields.menuTemplate+'}{{title=Current Initiative Modifiers\n for '+tokenName+'}}'
 					+ (!!msg && msg.length ? '{{Section='+msg+'}}' : '');
 		
 		const assessInit = function( name, mod, mult, remove=false ) {
-			mod = parseFloat(mod);
-			mult = parseFloat(mult);
+			let eqMod = mod[0] === '=',
+				eqMult = mult[0] === '=';
+
+			mod = parseFloat( eqMod ? mod.slice(1) : mod );
+			if (eqMod && !isNaN(mod)) totalMod = eqModFlag ? Math.min(mod,totalMod) : mod;
+			eqModFlag = eqModFlag || eqMod;
+
+			mult = parseFloat( eqMult ? mult.slice(1) : mult );
+			if (eqMult && !isNaN(mult)) totalMult = eqMultFlag ? Math.max(mult,totalMult) : mult;
+			eqMultFlag = eqMultFlag || eqMult;
+			
 			let modFlag = !isNaN(mod) && (mod != 0),
 				multFlag = !isNaN(mult) && (mult != 1);
 			if (!modFlag && !multFlag) return '';
 			let desc = '{{'+name.dispName()+'=';
 			if (modFlag) {
-				totalMod += mod;
-				desc += (mod < 0 ? 'Beneficial' : 'Penalty')+' mod of '+(mod>0 ? '+' : '')+mod+(multFlag ? '\n' : '');
+				if (!eqMod) totalMod += mod;
+				desc += (eqMod ? 'Overriding ' : '')+(mod < 0 ? 'Beneficial' : 'Penalty')+' mod of '+(mod>0 ? '+' : '')+mod+(multFlag ? '\n' : '');
 			}
 			if (multFlag) {
-				totalMult *= mult;
-				desc += (mult > 1 ? 'Beneficial' : 'Penalty')+' speed mult x '+mult;
+				if (!eqMult) totalMult *= mult;
+				desc += (eqMult ? 'Overriding ' : '')+(mult > 1 ? 'Beneficial' : 'Penalty')+' speed mult x '+mult;
 			};
 			if (remove) {
 				desc += ' \n[Remove](!init --setmods '+tokenID+'|del|'+name+'|0|1)';
@@ -3352,6 +3299,8 @@ var initMaster = (function() {
 			desc += '}}';
 			return desc;
 		};
+		
+		setAttr( charCS, fields.Init_fixInit, '' );
 		
 		_.each( classes, c => {
 			content += assessInit( c.obj[1].name, c.classData.initmod, c.classData.initmult );
@@ -3394,8 +3343,13 @@ var initMaster = (function() {
 
 		for (let r = 0; !_.isUndefined(item = Inits.tableLookup( fields.InitMagic_name, r, false )); r++ ) {
 			if (item === '-') continue;
-			if (item.length === 0) Inits = Inits.delTableRow( r );
-			else content += assessInit( item, Inits.tableLookup( fields.InitMagic_mod, r ), Inits.tableLookup( fields.InitMagic_mult, r ), true );
+			if (item.length === 0) {
+				Inits = Inits.delTableRow( r );
+			} else if (Inits.tableLookup( fields.InitMagic_cmd, r ) === 'fix') {
+				let fixMod = Inits.tableLookup( fields.InitMagic_mod, r );
+				setAttr( charCS, fields.Init_fixInit, fixMod );
+				content += '{{'+item.dispName()+'=Fixed initiative of '+fixMod+'}}';
+			} else content += assessInit( item, Inits.tableLookup( fields.InitMagic_mod, r ), Inits.tableLookup( fields.InitMagic_mult, r ), true );
 		};
 		
 		let modAdj = parseFloat(attrLookup( charCS, fields.InitModAdjust )) || 0,
@@ -3735,67 +3689,52 @@ var initMaster = (function() {
 		var InitMagic = getTable( charCS, fieldGroups.INIT ),
 			initIndex = InitMagic.tableFind( fields.InitMagic_name, name ),
 			modOp = '=+-*/'.includes((args[3] || ' ')[0]),
-			modEq = (args[3] || ' ')[0] === '=',
+			modEq = (args[3] || ' ')[0] === '=' ? '=' : '',
 			multOp = '=+-*/'.includes((args[4] || ' ')[0]),
-			multEq = (args[4] || ' ')[0] === '=',
+			multEq = (args[4] || ' ')[0] === '=' ? '=' : '',
 			modVal = (modOp ? args[3].slice(1) : args[3]) || 0,
 			multVal = (multOp ? args[4].slice(1) : args[4]) || 1,
 			silent = silent || ((args[5] || '').toLowerCase() === 'silent'),
 			values = initValues( InitMagic.fieldGroup ),
 			msg = '';
 			
-/*		if (name.dbName() === 'adjustment') {
-			let curMod = attrLookup( charCS, fields.InitModAdjust ) || 0,
-				curMult = attrLookup( charCS, fields.InitMultAdjust ) || 1;
-			if (cmd.includes('mod')) {
-				if (modOp && !modEq) modVal = String(curMod)+String(args[3]);
-				modVal = evalAttr( modVal );
-				setAttr( charCS, fields.InitModAdjust, modVal );
-				msg = 'Set manual adjustment Initiative modifier to be '+(modVal>0 ? '+' : '')+modVal;
-			};
-			if (cmd.includes('mult')) {
-				if (multOp && !multEq) multVal = String(curMult)+String(args[4]);
-				multVal = evalAttr( multVal );
-				setAttr( charCS, fields.InitMultAdjust, multVal );
-				msg = 'Set manual adjustment Initiative multiplier to be '+multVal;
-			};
-			makeCheckInitMenu( tokenID, charCS, senderId, silent, msg );
-			return;
-		}
-*/		
 		if (_.isUndefined(initIndex) && (modVal !== 0 || multVal !== 1)) {
-			log('doMagicInitEffect: creating a new row');
+			modVal = evalAttr( args[3] || modVal );
+			multVal = evalAttr( args[4] || multVal );
+			msg = 'Added new magic initiative effect *'+name+'* with mod '+(modVal>0 ? '+' : '')+modVal+' and mult '+'x'+multVal;
+			values[fields.InitMagic_cmd[0]][fields.InitMagic_cmd[1]] = cmd;
 			values[fields.InitMagic_name[0]][fields.InitMagic_name[1]] = name;
-			values[fields.InitMagic_mod[0]][fields.InitMagic_mod[1]] = modVal = evalAttr( args[3] || modVal );
-			values[fields.InitMagic_mult[0]][fields.InitMagic_mult[1]] = evalAttr( args[4] || multVal );
+			values[fields.InitMagic_mod[0]][fields.InitMagic_mod[1]] = modVal;
+			values[fields.InitMagic_mult[0]][fields.InitMagic_mult[1]] = multVal;
 			InitMagic = InitMagic.addTableRow( initIndex, values );
-			msg = 'Added new magic initiative effect *'+name+'* with mod '+(modVal>0 ? '+' : '')+modVal+' and mult x'+multVal;
-
+			
 		} else if (!_.isUndefined(initIndex)) {
 			let curMod = InitMagic.tableLookup( fields.InitMagic_mod, initIndex ),
 				curMult = InitMagic.tableLookup( fields.InitMagic_mult, initIndex );
-			if (modOp && !modEq) modVal = curMod+args[3];
-			if (multOp && !multEq) multVal = curMult+args[4];
-			modVal = evalAttr( modVal );
-			multVal = evalAttr( multVal );
+			modVal = evalAttr( modEq ? args[3] : (modOp ? curMod+args[3] : modVal) );
+			multVal = evalAttr( multEq ? args[3] : (multOp ? curMult+args[3] : multVal) );
 
 			if (cmd === 'del' || (modVal === 0 && multVal === 1)) {
 				InitMagic = InitMagic.delTableRow( initIndex );
 				msg = 'Initiative effect *'+name+'* has been removed';
-			} else switch (cmd) {
+			} else {
+				InitMagic = InitMagic.tableSet( fields.InitMagic_cmd, initIndex, cmd );
+				switch (cmd) {
+				case 'fix':
 				case 'mod':
 					InitMagic = InitMagic.tableSet( fields.InitMagic_mod, initIndex, modVal );
-					msg = 'Changed *'+name+'* Initiative modifier to be '+(modVal>0 ? '+' : '')+modVal;
+					msg = (cmd === 'fix' ? (name+' fixes initiative to be ') : ('Changed *'+name+'* Initiative modifier to be '))+(modVal>0 ? '+' : '')+modVal;
 					break;
 				case 'mult':
 					InitMagic = InitMagic.tableSet( fields.InitMagic_mult, initIndex, multVal );
-					msg = 'Changed *'+name+'* Initiative multiplier to be '+multVal;
+					msg = 'Changed *'+name+'* Initiative multiplier to be '+'x'+multVal;
 					break;
 				default:
 					InitMagic = InitMagic.tableSet( fields.InitMagic_mod, initIndex, modVal );
 					InitMagic = InitMagic.tableSet( fields.InitMagic_mult, initIndex, multVal );
 					msg = 'Changed *'+name+'* Initiative modifier to be '+(modVal>0 ? '+' : '')+modVal+' and multiplier to be '+multVal;
 					break;
+				};
 			};
 		}
 		makeCheckInitMenu( tokenID, charCS, senderId, silent, msg );
@@ -4600,7 +4539,7 @@ var initMaster = (function() {
 		if (senderMod.length > 1) senderId = fixSenderId( [senderMod[1]], selected, senderId );
 		
 		if (!flags.noWaitMsg) {
-			sendWait(senderId,1,'initMaster');
+			sendWait(senderId,50,'initMaster');
 		}
 		
 		_.each(args, function(e) {

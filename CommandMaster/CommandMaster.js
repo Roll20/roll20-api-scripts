@@ -124,14 +124,16 @@ API_Meta.CommandMaster={offset:Number.MAX_SAFE_INTEGER,lineCount:-1};
  *                     that listed weapons in-hand.
  * v3.2.1  23/02/2024  Improved parseStr() handling of undefined or empty strings without erroring.
  * v3.3.0  18/03/2024  Non-functional sequencing release to synchronise versions
+ * v3.4.0  18/03/2024  Non-functional sequencing release to synchronise versions
+ * v3.5.0  18/03/2024  Non-functional sequencing release to synchronise versions
  */
  
 var CommandMaster = (function() {
 	'use strict'; 
-	var version = '3.3.0',
+	var version = '3.5.0',
 		author = 'RED',
 		pending = null;
-	const lastUpdate = 1711471190;
+	const lastUpdate = 1717750563;
 
 	/*
 	 * Define redirections for functions moved to the RPGMaster library
@@ -196,15 +198,9 @@ var CommandMaster = (function() {
 		defaultTemplate:    'RPGMdefault',
 		warningTemplate:	'RPGMwarning',
 		menuTemplate:		'RPGMmenu',
+		messageTemplate:	'RPGMmessage',
 	};
 
-	/*
-	 * List of the "standard" RPGMaster databases to support identification of 
-	 * custom user databases and db entries to give priority to.
-	 */
-
-//	const stdDB = ['MU_Spells_DB','PR_Spells_DB','Powers_DB','MI_DB','MI_DB_Ammo','MI_DB_Armour','MI_DB_Equipment','MI_DB_Potions','MI_DB_Rings','MI_DB_Scrolls_Books','MI_DB_Wands_Staves_Rods','MI_DB_Weapons','Attacks_DB','Class_DB','Race-DB','Race-DB-Creatures'];
-	
 	/*
 	 * Handle for the Database Index, used for rapid access to the character 
 	 * sheet ability fields used to hold database items.
@@ -1476,7 +1472,7 @@ var CommandMaster = (function() {
 	var ClassPowers = function( charCS ) {
 		
 		var powers = [],
-			content = '&{template:'+fields.defaultTemplate+'}{{name='+charCS.get('name')+'\'s Powers}}'
+			content = '&{template:'+fields.menuTemplate+'}{{name='+charCS.get('name')+'\'s Powers}}'
 					+ '{{desc='+charCS.get('name')+' has been granted the following powers (if any)}}';
 		
 		for (const c in classLevels) {
@@ -1893,7 +1889,7 @@ var CommandMaster = (function() {
 			let content = ((await handleAddAllItems( token._id, charCS, senderId, 'wp' )
 						  + await handleAddAllItems( token._id, charCS, senderId, 'ac' )
 						  + await handleAddAllItems( token._id, charCS, senderId, 'mi' )) || '').trim();
-			if (content && content.length) sendFeedback( '&{template:'+fields.defaultTemplate+'}{{title=Items added to '+charCS.get('name')+'}}' + content );
+			if (content && content.length) sendFeedback( '&{template:'+fields.menuTemplate+'}{{title=Items added to '+charCS.get('name')+'}}' + content );
 		}
 		
 		if (creature && creature.trim().length) {
@@ -2107,7 +2103,7 @@ var CommandMaster = (function() {
 			
 			let spellList = getMagicList( rootDB, spTypeLists, listType, senderId );
 				
-			content = '&{template:'+fields.defaultTemplate+'}{{name=Grant Spells}}{{ ='+(msg||'')+'}}{{'+desc+'='+curSpells+'}}'
+			content = '&{template:'+fields.menuTemplate+'}{{name=Grant Spells}}{{ ='+(msg||'')+'}}{{'+desc+'='+curSpells+'}}'
 					+ '{{desc=1. [Choose](!cmd --button CHOOSE_'+cmd+'|'+level+'|&#63;{Choose which spell|'+spellList+'}) a '+word+'\n';
 					
 			if (spell) {
@@ -2170,7 +2166,7 @@ var CommandMaster = (function() {
 				buttons, weapObj,
 				weapons = getMagicList( fields.WeaponDB, miTypeLists, 'weapon', senderId ),
 				styles = getMagicList( fields.StylesDB, miTypeLists, 'style', senderId ),
-				content = '&{template:' + fields.defaultTemplate + '}{{name=Grant Weapon Proficiencies}}{{ ='+(msg||'')+'}}'
+				content = '&{template:' + fields.menuTemplate + '}{{name=Grant Weapon Proficiencies}}{{ ='+(msg||'')+'}}'
 						+ '{{  =['+((weapon && !style) ? weapon : 'Choose Weapon')+'](!cmd --button CHOOSE_PROF|&#63;{Choose which Weapon?|'+weapons+'})'
 						+ 'or ['+((weapon && style) ? weapon+' Style' : 'Choose Style')+'](!cmd --button CHOOSE_PROF|&#63;{Choose which Style?|'+styles+'})'
 						+ 'or make [All Owned Weapons](!cmd --set-all-prof PROFICIENT) proficient\n'
@@ -2313,7 +2309,7 @@ var CommandMaster = (function() {
 				base = 'Human';
 			}
 			
-			let content = '&{template:'+fields.defaultTemplate+'}{{name=Review & Set\nRace and Classes}}'
+			let content = '&{template:'+fields.menuTemplate+'}{{name=Review & Set\nRace and Classes}}'
 						+ (msg ? ('='+msg) : '')
 						+ '{{desc=Drop down lists show Races, Creatures, Containers and Classes defined in the Databases.  If not shown in a list, choose "Other" and it can be typed in at the next prompt.  Any class *can* be in any class field (even if not in the list for that field), especially to support multi-class characters.  Classes not found in the Class database will get the defaults for the field: Unrecognised Classes in the *Wizard* or *Priest* lines default to Wizard or Priest spellcasting rules.}}'
 						+ '{{desc1=Currently a'+('aeiouAEIOU'.includes(race[0])?'n':'')+' **'+race+'**\nChange to\n'
@@ -2366,11 +2362,11 @@ var CommandMaster = (function() {
 		if (def.obj) {
 			content = def.obj[1].body;
 			if (classMenu && isGM) {
-				content += '\n/w gm &{template:'+fields.defaultTemplate+'}{{name=Return to '+type+' Menu}}'
+				content += '\n/w gm &{template:'+fields.menuTemplate+'}{{name=Return to '+type+' Menu}}'
 						+  '{{desc=[Return to '+type+' Menu](!cmd --button '+BT.AB_CLASSES+')}}';
 			};
 		} else {
-			content = '&{template:'+fields.defaultTemplate+'}{{name='+chosen+'}}'
+			content = '&{template:'+fields.menuTemplate+'}{{name='+chosen+'}}'
 					+ '{{desc=This '+type+' has not been defined in the API '+dB+'.'
 					+ ' It will gain the defaults of the "'+base+'" base class.}}'
 					+ '{{desc1=Optionally [Display '+base+' '+type+' Definition](!cmd --button '+(isClass ? BT.REVIEW_CLASS : BT.REVIEW_RACE)+'|'+base+'|'+base+'|'+classMenu+')}}'
@@ -2518,7 +2514,7 @@ var CommandMaster = (function() {
 			dm = _.some( tokens, t => (!t.get('showplayers_name') || (!t.get('represents') || !getObj('character',t.get('represents')).get('controlledby').trim().length)));
 		}
 			
-		content = '&{template:'+fields.defaultTemplate+'}{{name=Assign Abilities}}'
+		content = '&{template:'+fields.menuTemplate+'}{{name=Assign Abilities}}'
 				+ '{{desc=Click a button to add an Ability Action Button to the character sheets of the selected tokens.  More than one token can be selected at the same time.}}'
 				+ '{{desc1=<table><tr><td style="width:100px;">Ability</td><td>Description</td></tr>';
 				
@@ -2579,7 +2575,7 @@ var CommandMaster = (function() {
 	var makeAskReplace = function( args ) {
 		args.shift();
 		var buttonName = args[1],
-			content = '&{template:'+fields.defaultTemplate+'}{{name=Replace existing '+buttonName+' Abilities?}}'
+			content = '&{template:'+fields.menuTemplate+'}{{name=Replace existing '+buttonName+' Abilities?}}'
 					+ '{{desc=The selected ability already exists on one or more of the selected token(s).  Replacing or Removing them is NOT recommended.'
 					+ ' Selecting *Do Nothing* will still add the ability to those tokens that do not have it.   Are you sure you want to replace or remove existing abilities?}}'
 					+ '{{desc1=[ Replace ]('+fields.commandMaster+' --button '+BT.AB_REPLACE+'|'+args.join('|')+'|replace)'
@@ -2596,7 +2592,7 @@ var CommandMaster = (function() {
 	 */
 	 
 	var makeCheckReplace = function( args, charName, abilityName ) {
-		var content = '&{template:'+fields.defaultTemplate+'}{{name=Replace '+charName+' '+abilityName+' Ability String?}}'
+		var content = '&{template:'+fields.menuTemplate+'}{{name=Replace '+charName+' '+abilityName+' Ability String?}}'
 					+ '{{desc=The ability **'+abilityName+'** on character sheet **'+charName+'** has the string '+args[1]+' which will be replaced with '+args[2]+'.'
 					+ '  Are you sure you want to replace this string in this ability?}}'
 					+ '{{desc1=[ Yes ]('+fields.commandMaster+' --button '+BT.STR_REPLACE+'|'+args[1]+'|'+args[2]+'|true|true)'
@@ -2672,7 +2668,7 @@ var CommandMaster = (function() {
 				sendWait(findTheGM(),0);
 				return;
 			}
-			var	content = '&{template:'+fields.defaultTemplate+'}{{name=Detected Possible Problems}}'
+			var	content = '&{template:'+fields.menuTemplate+'}{{name=Detected Possible Problems}}'
 						+ '{{Section1=**Player Names**\n'+illegalPlayers+'}}'
 						+ '{{Section3=**Character Names**\n'+illegalChars+'}}'
 						+ '{{Section4=**Token Names**\n'+illegalTokens+'}}'
@@ -2801,7 +2797,7 @@ var CommandMaster = (function() {
 			});
 			miList = _.chain(miList.filter(mi => !!mi.name)).sortBy('name').uniq(true).value();
 
-			content = '&{template:'+fields.defaultTemplate+'}{{name=Unknown Items}}';
+			content = '&{template:'+fields.menuTemplate+'}{{name=Unknown Items}}';
 			if (!miList.length) {
 				content += '{{Section1=All equipment is fully specified and supported by the RPGMaster databases. Use *Attk Menu / Change Weapon* dialogue (or *!attk --weapon* command)'
 						+  'to take weapons in-hand ready to do attacks.}}';
@@ -2955,14 +2951,14 @@ var CommandMaster = (function() {
 			};
 
 			if (!(spells2Conv.mu.length || spells2Conv.pr.length || spells2Conv.pw.length)) {
-				content = '&{template:'+fields.defaultTemplate+'}{{title=All Spells & Powers Converted}}'
+				content = '&{template:'+fields.menuTemplate+'}{{title=All Spells & Powers Converted}}'
 						+ '{{desc=All spells and powers have been moved to their spellbooks and checked against the RPGMaster databases for validity. '
 						+ 'They now need to memorise (or re-memorise) their spells for the day and their powers using the appropriate menus, dialogues and commands provided by RPGMaster.}}';
 				sendFeedback( content );
 				return;
 			};
 			
-			content = '&{template:'+fields.defaultTemplate+'}{{name=Unknown Spells}}'
+			content = '&{template:'+fields.menuTemplate+'}{{name=Unknown Spells}}'
 					+ (msg && msg.length ? '{{Section='+msg+'}}' : '')
 					+ '{{Section1=The spells listed below have not been found in the RPGMaster databases. Select a spell from the list, and a replacement using the spell '
 					+ 'lists.  The spell can be converted using the [Convert] button. Unknown spells are not guaranteed to work with the APIs, '
@@ -3006,7 +3002,7 @@ var CommandMaster = (function() {
 	 */
 	 
 	var makeMsg = function(title,msg) {
-		var content = '&{template:'+fields.defaultTemplate+'}{{name='+title+'}}'
+		var content = '&{template:'+fields.messageTemplate+'}{{name='+title+'}}'
 					+ '{{desc='+msg+'}}';
 	   sendFeedback(content,flags.feedbackName,flags.feedbackImg);
 	   return;
@@ -3020,7 +3016,7 @@ var CommandMaster = (function() {
 		
 		var menuType = args[1];
 	 
-		var content = '&{template:'+fields.defaultTemplate+'}{{name=Manage Token Bars}}'
+		var content = '&{template:'+fields.menuTemplate+'}{{name=Manage Token Bars}}'
 					+ '{{Section=Use the following buttons to manage the mapping and values represented by token bars}}'
 					+ '{{Section1=Current default mappings are:\n'
 					+ '<span style="color:green">bar1 (green)</span> = '+state.RPGMaster.tokenFields[0]+'\n'
@@ -3042,7 +3038,7 @@ var CommandMaster = (function() {
 	 
 	 var makeTokenBarDisplay = function(tokenID,abMenu) {
 	 
-		var content = '&{template:'+fields.defaultTemplate+'}{{name=Default Token Bars}}{{desc=The following fields have been set as the default fields for the token bars. '
+		var content = '&{template:'+fields.menuTemplate+'}{{name=Default Token Bars}}{{desc=The following fields have been set as the default fields for the token bars. '
 					+ 'These will be set when using the [Set Token Bars] button, and for *Drag & Drop* creatures. Note that previously vacant bars have been set to recommended '
 					+ 'values: in order for RPGMaster spell efects to work best (especially for spells vs. creature mobs) , default token bars should include **Thac0_base, AC & HP**.}}'
 					+ '{{desc1=<span style="color:green">bar1 (green)</span> = '+state.RPGMaster.tokenFields[0]+'\n'
@@ -3071,7 +3067,7 @@ var CommandMaster = (function() {
 		if (!!def.obj) {
 			args[0] = BT.SPELLCONV_MENU;
 			let content = def.obj[1].body
-						+ '&#13;&#47;w gm &{template:'+fields.defaultTemplate+'}{{name=Spell convertion menu}}'
+						+ '&#13;&#47;w gm &{template:'+fields.messageTemplate+'}{{name=Spell convertion menu}}'
 						+  '{{desc=[Return to Spell Conversion Menu](!cmd --button '+args.join('|')+')}}';
 			sendFeedback( content );
 		};
@@ -3149,7 +3145,7 @@ var CommandMaster = (function() {
 
 		args[0] = isPower ? 'POWERS' : (isMU ? 'MUSPELLS' : 'PRSPELLS');
 		cmdStr = args.join('|');
-		content = '&{template:'+fields.defaultTemplate+'}{{name=Return to Menu}}'
+		content = '&{template:'+fields.messageTemplate+'}{{name=Return to Menu}}'
 				+ '{{desc=[Return to Menu](!cmd --add-spells '+cmdStr+') or do something else}}';
 		sendFeedback(content,flags.feedbackName,flags.feedbackImg);
 	}
@@ -3234,7 +3230,7 @@ var CommandMaster = (function() {
 				for (const l in spellLevels.pr) {
 					if (l != 0) setAttr( charCS, [fields.Spellbook[0]+spellLevels.pr[l].book,fields.Spellbook[1]], (spellBook[l] || ['']).sort().join('|') );
 				}
-				sendFeedback( '&{template:'+fields.defaultTemplate+'}{{name='+charCS.get('name')+'\'s priest spells have been set at all levels}}'
+				sendFeedback( '&{template:'+fields.menuTemplate+'}{{name='+charCS.get('name')+'\'s priest spells have been set at all levels}}'
 							+ '{{Major Spheres=*'+majorSpheres.join(', ')+'*}}{{Minor Spheres=*'+minorSpheres.join(', ')+'*}}',flags.feedbackName,flags.feedbackImg);
 			});
 			args[2] = '';
@@ -3329,7 +3325,7 @@ var CommandMaster = (function() {
 
 			tokenObj = getObj('graphic',tokenID);
 
-			if (!silent) content = '&{template:'+fields.defaultTemplate+'}{{name='+charCS.get('name')+'\'s '+typeText[type]+'}}'
+			if (!silent) content = '&{template:'+fields.menuTemplate+'}{{name='+charCS.get('name')+'\'s '+typeText[type]+'}}'
 								 + '{{Section1='+charCS.get('name')+' has been granted the following '+typeText[type]+' (if any)}}';
 		
 			powers = (type !== 'AB') ? getClassPowers( charCS, senderId, powers, type ) : powers;
@@ -3709,7 +3705,7 @@ var CommandMaster = (function() {
 	var handleReviewProf = function( args, selected ) {
 		
 		var cmdStr = args.join('|'),
-			content = '&{template:'+fields.defaultTemplate+'}{{name=Return to Menu}}'
+			content = '&{template:'+fields.messageTemplate+'}{{name=Return to Menu}}'
 				+ '{{desc=[Return to Menu](!cmd --add-profs '+cmdStr+') or do something else}}';
 		setTimeout( sendFeedback, 2000, content,flags.feedbackName,flags.feedbackImg );
 	}
@@ -3928,14 +3924,14 @@ var CommandMaster = (function() {
 				return;
 			}
 			
-			if (ability && value) {
+/*			if (ability && value) {
 				let abObj = abilityLookup( dB, value );
 				if (!abObj.obj) {
 					sendError('Class/Race '+value+' not found in any Class or Race database',msg_orig[senderId]);
 					return;
 				}
 			};
-		
+*/		
 			if (tokenID) {
 				errFlag = await setClassAndRace( cmd, args, {_id:tokenID}, value, senderId, qualifier );
 			} else {
@@ -4151,7 +4147,7 @@ var CommandMaster = (function() {
 			var abMenu = args[1],
 				setLevel = parseInt(args[2] || 0),
 				raceMods,
-				content = '&{template:'+fields.defaultTemplate+'}{{name=Set Base Saves}}'
+				content = '&{template:'+fields.menuTemplate+'}{{name=Set Base Saves}}'
 						+ '{{=Based on their level(s) and race(s), base saves have been set to}}';
 			
 			_.each( selected, curToken => {
@@ -4253,7 +4249,7 @@ var CommandMaster = (function() {
 			tokens.push(curToken.get('name'));
 		});
 		tokens.filter(t => !!t).sort();
-		sendFeedback('&{template:'+fields.defaultTemplate+'}'
+		sendFeedback('&{template:'+fields.menuTemplate+'}'
 					+'{{name=Token Ownership}}'
 					+'{{desc=The following tokens are now '+(cmd == BT.AB_PC ? 'Player' : 'DM')+' controlled}}'
 					+'{{desc1='+tokens.join(', ')+'}}'
@@ -4312,7 +4308,7 @@ var CommandMaster = (function() {
 				return;
 			};
 			if (cmd === BT.AB_ASK_TOKENBARS) {
-				sendFeedback( '&{template:'+fields.defaultTemplate+'}{{name=Set Default Token Bars}}'
+				sendFeedback( '&{template:'+fields.menuTemplate+'}{{name=Set Default Token Bars}}'
 							+ '{{desc=You are about to set the default token bars to:\n'
 							+ '<span style="color:green">Bar1 (green)</span> = '+getBarName( curToken, charCS, 'bar1' )+'\n'
 							+ '<span style="color:blue">Bar2 (blue)</span> = '+getBarName( curToken, charCS, 'bar2' )+'\n'
@@ -4452,7 +4448,7 @@ var CommandMaster = (function() {
 		}
 		
 		if (!silent) {
-			content = '&{template:'+fields.defaultTemplate+'}{{name=Setting Token Circles}}';
+			content = '&{template:'+fields.menuTemplate+'}{{name=Setting Token Circles}}';
 			if (cmd === BT.AB_TOKEN_NONE) {
 				content += '{{desc=Bar 1, 2 & 3 links set to \"None\"\n'
 						+  '<span style="color:green">Bar1 (green)</span> value set to '+state.RPGMaster.tokenFields[0]+'\n'
@@ -4638,7 +4634,7 @@ var CommandMaster = (function() {
 
 	var showHelp = function() {
 		var handoutIDs = getHandoutIDs();
-		var content = '&{template:'+fields.defaultTemplate+'}{{title=CommandMaster Help}}{{CommandMaster Help=For help on using CommandMaster, and the !cmd commands, [**Click Here**]('+fields.journalURL+handoutIDs.CommandMasterHelp+')}}{{Class Database=For help on using and adding to the Class Database, [**Click Here**]('+fields.journalURL+handoutIDs.ClassRaceDatabaseHelp+')}}{{Character Sheet Setup=For help on setting up character sheets for use with RPGMaster APIs, [**Click Here**]('+fields.journalURL+handoutIDs.RPGMasterCharSheetSetup+')}}{{RPGMaster Templates=For help using RPGMaster Roll Templates, [**Click Here**]('+fields.journalURL+handoutIDs.RPGMasterLibraryHelp+')}}';
+		var content = '&{template:'+fields.menuTemplate+'}{{title=CommandMaster Help}}{{CommandMaster Help=For help on using CommandMaster, and the !cmd commands, [**Click Here**]('+fields.journalURL+handoutIDs.CommandMasterHelp+')}}{{Class Database=For help on using and adding to the Class Database, [**Click Here**]('+fields.journalURL+handoutIDs.ClassRaceDatabaseHelp+')}}{{Character Sheet Setup=For help on setting up character sheets for use with RPGMaster APIs, [**Click Here**]('+fields.journalURL+handoutIDs.RPGMasterCharSheetSetup+')}}{{RPGMaster Templates=For help using RPGMaster Roll Templates, [**Click Here**]('+fields.journalURL+handoutIDs.RPGMasterLibraryHelp+')}}';
 
 		sendFeedback(content,flags.feedbackName,flags.feedbackImg); 
 	};
@@ -4921,7 +4917,7 @@ var CommandMaster = (function() {
 			});
 			players.push('All,all');
 			
-			content = '&{template:'+fields.defaultTemplate+'}{{name=Character Check}}'
+			content = '&{template:'+fields.menuTemplate+'}{{name=Character Check}}'
 					+ '{{=Listed below are the PC, NPC & Creature Character Sheets in this Campaign, and who controls them.\n'
 					+ 'Only Character Sheets with a Character Class, Level or Monster Hit Dice are displayed.\n'
 					+ 'Review and correct any using the buttons provided}}'
@@ -5431,7 +5427,7 @@ var CommandMaster = (function() {
 			selected = msg.selected,
 			isGM = (playerIsGM(senderId) || state.CommandMaster.debug === senderId),
 			changedCmds = false,
-			t = 0,
+			t = 2,
 			curToken, npc, val;
 			
 		var doCommandCmd = function( e, selected, senderId, isGM ) {
@@ -5582,7 +5578,7 @@ var CommandMaster = (function() {
 			sendDebug('senderId is defined as ' + getObj('player',senderId).get('_displayname'));
 		};
 		
-		if (!flags.noWaitMsg) sendWait(senderId,500,'commandMaster');
+		if (!flags.noWaitMsg) sendWait(senderId,50,'commandMaster');
 		
 		_.each(args, function(e) {
 			setTimeout( doCommandCmd, (1*t++), e, selected, senderId, isGM );

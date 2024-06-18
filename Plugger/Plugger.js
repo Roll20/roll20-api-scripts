@@ -1,10 +1,10 @@
 /*
 =========================================================
-Name			:	Plugger
-GitHub			:	https://github.com/TimRohr22/Cauldron/tree/master/Plugger
-Roll20 Contact	:	timmaugh
-Version			:	1.0.8
-Last Update		:	05 APRIL 2024
+Name            :   Plugger
+GitHub          :   https://github.com/TimRohr22/Cauldron/tree/master/Plugger
+Roll20 Contact  :   timmaugh
+Version         :   1.0.9
+Last Update     :   17 MAY 2024
 =========================================================
 */
 var API_Meta = API_Meta || {};
@@ -15,10 +15,10 @@ API_Meta.Plugger = { offset: Number.MAX_SAFE_INTEGER, lineCount: -1 };
 
 const Plugger = (() => {
     const apiproject = 'Plugger';
-    const version = '1.0.8';
+    const version = '1.0.9';
     const schemaVersion = 0.1;
     API_Meta[apiproject].version = version;
-    const vd = new Date(1712322138494);
+    const vd = new Date(1715952845199);
     const versionInfo = () => {
         log(`\u0166\u0166 ${apiproject} v${API_Meta[apiproject].version}, ${vd.getFullYear()}/${vd.getMonth() + 1}/${vd.getDate()} \u0166\u0166 -- offset ${API_Meta[apiproject].offset}`);
         if (!state.hasOwnProperty(apiproject) || state[apiproject].version !== schemaVersion) {
@@ -354,8 +354,8 @@ const PluggerPlugins01 = (() => {
     //		VERSION
     // ==================================================
     const apiproject = 'PluggerPlugins01';
-    const version = '0.0.3';
-    const vd = new Date(1620099268834);
+    const version = '0.0.4';
+    const vd = new Date(1715952845199);
     const versionInfo = () => {
         log(`\u0166\u0166 ${apiproject} v${version}, ${vd.getFullYear()}/${vd.getMonth() + 1}/${vd.getDate()} \u0166\u0166 -- offset continues from Plugger`);
         return;
@@ -382,7 +382,7 @@ const PluggerPlugins01 = (() => {
                 ticks && Array.isArray(ticks) && ticks.length &&
                 s && typeof s === 'string' && s.length
             ) {
-                markrx = new RegExp(`\\s+${escapeRegExp(mark).replace(/\s/g, '\\s')}(.+?)(?:${split.map(s => escapeRegExp(s)).join('|')})`, 'g');
+                markrx = new RegExp(`(?:^|\\s+)${escapeRegExp(mark).replace(/\s/g, '\\s')}(.+?)(?:${split.map(s => escapeRegExp(s)).join('|')})`, 'g');
                 openrx = new RegExp(`^\\s+${escapeRegExp(mark).replace(/\s/g, '\\s')}`);
                 splitrx = new RegExp(`^($|${split.map(s => escapeRegExp(s)).join('|')})`);
                 return true;
