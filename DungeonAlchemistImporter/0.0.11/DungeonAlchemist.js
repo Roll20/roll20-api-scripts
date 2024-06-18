@@ -265,9 +265,10 @@ const DungeonAlchemistImporter = (() => {
     var newObj = createObj('graphic', {
       imgsrc: clearURL,
       subtype: 'token',
+      name: 'shizzle',
       aura1_radius: 0.5,
-      //aura1_color: color_string,
-      //lightColor: color_string,
+      aura1_color: color_string,
+      lightColor: color_string,
 
       // UDL
       emits_bright_light: true,
