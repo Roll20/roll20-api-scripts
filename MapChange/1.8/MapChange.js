@@ -75,20 +75,20 @@ var MapChange = MapChange || (function() {
         // Get a reference to the state.
         var st = state.MapChange;
         // Check if the settings need updating from the global config.
-        //if (gc && gc.lastsaved && gc.lastsaved > st.gcUpdated) {
+        if (gc && gc.lastsaved && gc.lastsaved > st.gcUpdated) {
             // Get the last saved time.
             //st.gcUpdated = gc.lastsaved;
             // Get the debug setting from the global config.
-            st.config.debug = gc['Debug Mode'] == 'true';
+            st.config.debug = gc['Debug Mode'] == "true";
             // Get the gmNotify setting from the global config.
-            st.config.gmNotify = gc['GM Notification'] == 'true';
+            st.config.gmNotify = gc['GM Notification'] == "true";
             // Get the marker setting from the global config.
             st.config.marker = gc['Marker'] || "[GM]";
             // Get the hide marker setting from the global config.
             st.config.hideMarker = gc['Hide Marker'] || "[Hide]";
             // Get the invertedMarker setting from the global config.
-            st.config.invertedMarker = gc['Inverted Marker'] == 'true';
-        //}
+            st.config.invertedMarker = gc['Inverted Marker'] == "true";
+        }
         // Debug
         if (st.config.debug) {
             log("Global Config");
