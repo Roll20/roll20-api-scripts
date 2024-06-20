@@ -6,11 +6,11 @@ var MapChange = MapChange || (function() {
     'use strict';
     // Defaults.
     // Date last modified in unix timestamp format.
-    var lastModified = "1717542000";
+    var lastModified = "1718838000";
     // Name of the person who last modified the script.
     var modifiedBy = "TheWhiteWolves, keithcurtis";
     // Local version of the script.
-    var version = "1.7";
+    var version = "1.8";
     // Set to true to use built in debug statements
     var debug = false;
     // Set to false to turn off notifing the GM when a player moves.
@@ -75,22 +75,24 @@ var MapChange = MapChange || (function() {
         // Get a reference to the state.
         var st = state.MapChange;
         // Check if the settings need updating from the global config.
-        if (gc && gc.lastsaved && gc.lastsaved > st.gcUpdated) {
+        //if (gc && gc.lastsaved && gc.lastsaved > st.gcUpdated) {
             // Get the last saved time.
-            st.gcUpdated = gc.lastsaved;
+            //st.gcUpdated = gc.lastsaved;
             // Get the debug setting from the global config.
-            st.config.debug = gc['Debug Mode'] == true;
+            st.config.debug = gc['Debug Mode'] == 'true';
             // Get the gmNotify setting from the global config.
-            st.config.gmNotify = gc['GM Notification'] == true;
+            st.config.gmNotify = gc['GM Notification'] == 'true';
             // Get the marker setting from the global config.
             st.config.marker = gc['Marker'] || "[GM]";
             // Get the hide marker setting from the global config.
             st.config.hideMarker = gc['Hide Marker'] || "[Hide]";
             // Get the invertedMarker setting from the global config.
-            st.config.invertedMarker = gc['Inverted Marker'] == true;
-        }
+            st.config.invertedMarker = gc['Inverted Marker'] == 'true';
+        //}
         // Debug
         if (st.config.debug) {
+            log("Global Config");
+            log(gc)
             log("State Config:");
             log(st.config);
         }
@@ -1280,8 +1282,6 @@ var MapChange = MapChange || (function() {
 
 on("ready", function() {
     'use strict';
-    log("globalconfig: ")
-    log(globalconfig)
     // Load in the global config settings.
     MapChange.CheckInstall();
     // If it is then log out the map construction.
