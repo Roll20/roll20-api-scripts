@@ -1,8 +1,11 @@
 {
     "name": "Related Token Movement",
     "script": "Related Token Movement.js",
-    "version": "0.1",
-    "description": "Related Token Movement - is a simple script that allows linking up the movement of several tokens with each other.\r\rInstructions:\r!rtm create ID - creates a link between selected token and the token with specified ID. Before exectuing command, token must be selected (multiple selections are supported). ID must not contain spaces and HTML elements.\r!rtm switch - alters the state of the selected token's link, allowing to ignore its movement and movement of other tokens on it. Before exectuing command, token must be selected (multiple selections are supported).\r!rtm delete - removes the links of the selected token. Before exectuing command, token must be selected (multiple selections are supported).\r\rLink between tokens is maintained through the use of GMNotes of the tokens. Entries contained there are saved with respective formatting.\r\r\r(RU) Related Token Movement - это простой скрипт, позволяющий связать движение нескольких токенов между собой.\r\rКоманды:\r!rtm create ID - создаёт связь между выбранным токеном и другими, имеющими такой же ID. Перед вводом токен должен быть выбран (поддерживается мноественный выбор). ID не должен содержать пробелы и элементы HTML.\r!rtm switch - переключает состояние связи токена, позволяя, при необходимости, игнорировать его передвижение и влияние передвижения других связанных токенов на него. Перед вводом токен должен быть выбран (поддерживается мноественный выбор).\r!rtm delete - удаляет связь токена с другими.Перед вводом токен должен быть выбран (поддерживается мноественный выбор).\r\rСвязь между токенами поддерживается через GMNotes токенов. Записи, находящиеся там, сохраняются вместе с форматированием.",
+    "version": "0.2",
+    "description": "Related Token Movement - is a simple script that allows linking up the movement of several tokens with each other.\r\rInstructions:\r!rtm create ID - creates a link between selected token and the token with specified ID. Before exectuing command, token must be selected (multiple selections are supported). ID must not contain spaces and HTML elements.\r!rtm switch - alters the state of the selected token's link, allowing to ignore its movement and movement of other tokens on it. Before exectuing command, token must be selected (multiple selections are supported).\r!rtm delete - removes the links of the selected token. Before exectuing command, token must be selected (multiple selections are supported).\r!rtm macro - Create a macro to manage.\r\rLink between tokens is maintained through the use of GMNotes of the tokens. Entries contained there are saved with respective formatting.",
     "authors": "nPocTo_4eJI",
-    "roll20userid": "6453048"
+    "roll20userid": "6453048",
+    "previousversions": [
+      "0.1"
+    ]
 }
