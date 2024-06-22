@@ -127,14 +127,15 @@ API_Meta.RoundMaster={offset:Number.MAX_SAFE_INTEGER,lineCount:-1};
  *                    "duration" and "direction" as well as save mods. Addition of '#' to RPGM maths to 
  *                    represent number of creatures targeted with a --target multi. Fix support of ^^duration^^
  *                    tag in effects.
+ * v5.056  22/06/2024 Added --state-extract & --state-load functions to support migration to JumpGate
  **/
  
 var RoundMaster = (function() {
 	'use strict'; 
-	var version = 5.055,
+	var version = 5.056,
 		author = 'Ken L. & RED',
 		pending = null;
-	const lastUpdate = 1717750563;
+	const lastUpdate = 1719059275;
 	
 	var RW_StateEnum = Object.freeze({
 		ACTIVE: 0,
@@ -794,18 +795,19 @@ var RoundMaster = (function() {
 
 	var handouts = Object.freeze({
 	RoundMaster_Help:	{name:'RoundMaster Help',
-						 version:1.13,
+						 version:1.14,
 						 avatar:'https://s3.amazonaws.com/files.d20.io/images/257656656/ckSHhNht7v3u60CRKonRTg/thumb.png?1638050703',
 						 bio:'<div style="font-weight: bold; text-align: center; border-bottom: 2px solid black;">'
-							+'<span style="font-weight: bold; font-size: 125%">RoundMaster Help v1.13</span>'
+							+'<span style="font-weight: bold; font-size: 125%">RoundMaster Help v1.14</span>'
 							+'</div>'
 							+'<div style="padding-left: 5px; padding-right: 5px; overflow: hidden;">'
 							+'<h1>RoundMaster API v'+version+'</h1>'
-							+'<p><span style='+design.selected_button+'>New:</span> RPGM maths for duration & direction of --target</p>'
-							+'<p><span style='+design.selected_button+'>New:</span> Saving throw mods & prompts for --target commands</p>'
-							+'<p><span style='+design.selected_button+'>New:</span> <b>--target multi</b> to target status changes for multiple tokens</p>'
-							+'<p><span style='+design.selected_button+'>New:</span> <b>--target-nosave</b> and <b>--target-save</b> to deny/force GM <i>confirm</i></p>'
-							+'<p><span style='+design.selected_button+'>New:</span> <b>--nosave on/off</b> configures --target-nosave behaviour</p>'
+							+'<p><span style='+design.selected_button+'>New for v5.056:</span> <b>--state-extract</b> & <b>--state-load</b> support campaign copying</p>'
+							+'<p><span style='+design.selected_button+'>New for v5.055:</span> RPGM maths for duration & direction of --target</p>'
+							+'<p><span style='+design.selected_button+'>New for v5.055:</span> Saving throw mods & prompts for --target commands</p>'
+							+'<p><span style='+design.selected_button+'>New for v5.055:</span> <b>--target multi</b> to target status changes for multiple tokens</p>'
+							+'<p><span style='+design.selected_button+'>New for v5.055:</span> <b>--target-nosave</b> and <b>--target-save</b> to deny/force GM <i>confirm</i></p>'
+							+'<p><span style='+design.selected_button+'>New for v5.055:</span> <b>--nosave on/off</b> configures --target-nosave behaviour</p>'
 							+'<p>RoundMaster is an API for the Roll20 RPG-DS.  Its purpose is to extend the functionality of the Turn Tracker capability already built in to Roll20.  It is one of several other similar APIs available on the platform that support the Turn Tracker and manage token and character statuses related to the passing of time: the USP of this one is the full richness of its functionality and the degree of user testing that has occurred over a 12 month period.</p>'
 							+'<p>RoundMaster is based on the much older TrackerJacker API, and many thanks to Ken L. for creating TrackerJacker.  However, roundMaster is a considerable fix and extension to TrackerJacker, suited to many different applications in many different RPG scenarios.  RoundMaster is also the first release as part of the wider RPGMaster series of APIs for Roll20, composed of <b>RoundMaster, CommandMaster, InitiativeMaster, AttackMaster, MagicMaster</b> and <b>MoneyMaster</b> - other than RoundMaster (which is generic) these initially support only the AD&D2e RPG.</p>'
 							+'<p><b><u>Note:</u></b> For some aspects of the APIs to work, the <b>ChatSetAttr API</b> and the <b>Tokenmod API</b>, both from the Roll20 Script Library, must be loaded.  It is also <i>highly recommended</i> to load all the other RPGMaster series APIs listed above.  This will provide the most immersive game-support environment</p>'
@@ -873,6 +875,8 @@ var RoundMaster = (function() {
 							+'--deltargetstatus tokenID|status(es) / ALL<br>'
 							+'--delglobalstatus status(es) / ALL<br>'
 							+'--movestatus<br>'
+							+'--state-extract<br>'
+							+'--state-load [RPGM/ALL/API-Name]<br>'
 							+'--disptokenstatus [tokenID]<br>'
 							+'--dancer cmd|tokenID|weapon|[plusChange]|[duration]<br>'
 							+'--listmarkers<br>'
@@ -1010,6 +1014,17 @@ var RoundMaster = (function() {
 							+'<p>Works the same as removetargetstatus command, except that it does not run any effect macros.</p>'
 							+'<pre>!rounds --movestatus</pre>'
 							+'<p>For each of the selected tokens in turn, searches for tokens in the whole campaign with the same name and representing the same character sheet, and moves all existing statuses and markers from all the found tokens to the selected token (removing any duplicates).  This supports Players moving from one Roll20 map to another and, indeed, roundMaster detects page changes and automatically runs this command for all tokens on the new page controlled by the Players who have moved to the new page.</p>'
+							+'<pre>!rounds --state-extract<br>'
+							+'!rounds --state-load [RPGM/ALL/API-Name][|API-Name2|API-Name3|...]</pre>'
+							+'<p><span style='+design.selected_button+'>New for v5.056:</span> These commands extract the current Roll20 <i>state variable</i> for the current campaign to a character sheet called "StatusMule", ready to be copied or transmogrified to a new (identical) campaign, and then provide the ability to load all or part of the <i>state variable</i> into the copy campaign. This provides support for Roll20 upgrades, such as <b><i>JumpGate</i></b>.</p>'
+							+'<p>The <i>--state-extract</i> command does not take any arguments, and extracts the whole Roll20 <i>state variable</i> for the current campaign in JSON text form to the "State" ability on the character sheet "StatusMule".</p>'
+							+'<p>The <i>--state-load</i> command takes one text argument, which can be:</p>'
+							+'<table>'
+							+'<tr><th>RPGM</th><td>Loads only the parts of the state variable relevant to the currently installed RPGMaster Mods - including RoundMaster</td></tr>'
+							+'<tr><th>ALL</th><td>Loads the whole state variable for all installed Mods (See Note below)</td></tr>'
+							+'<tr><th>API-names</th><td>Loads the state variables for the named API/Mod(s). Additional names can be separated with pipes "|" (See note below).</td></tr>'
+							+'</table>'
+							+'<p><b>Note:</b> Individual API / Mod names are case sensitive (except for RPGM API names, which are checked & corrected automatically). <i><u>No guarantee is given<u> for the validity or effect of loading non-RPGM API / Mod state variables.</i> You should only load non-RPGM state variables to a copy of a campaign you are prepared to loose if the load does not work properly.</p>'
 							+'<pre>!rounds --disptokenstatus [tokenID]</pre>'
 							+'<p>Shows the statuses on the specified token to the DM using the same display format as used in the Turn Announcement.</p>'
 							+'<pre>!rounds --dancer [INHAND/REBUILD]|tokenID|weapon|[plusChange]|[duration]</pre>'
