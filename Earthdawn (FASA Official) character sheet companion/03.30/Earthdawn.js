@@ -1766,7 +1766,8 @@ Earthdawn.parseInt2 = function ( i, silent ) {
       return x || 0;
 */
   try {
-    if(( i === undefined ) || ( i === null ) || (i === "" )) return 0;      // if it is an empty string, just quietly return a zero.
+    if(( i === undefined ) || ( i === null ) || (i === "" ) || (i === false)) return 0;      // if it is an empty string, just quietly return a zero.
+    else if( i === true ) return 1;
     let x = parseInt( i );
     if( isNaN( x )) {
       if( !silent )
@@ -1899,7 +1900,7 @@ Earthdawn.safeString = function( str )  {
         // This checks for undefined, writes an error message, and substitutes a default value.
         //
         // Rats. Can't test for NaN here, because use same routine for string and numbers. But NaN fails as well.
-Earthdawn.set = function( obj, type, val, dflt )  {     // type is "current" or "max"
+Earthdawn.set = function( obj, type, val, dflt )  {     // type is often "current" or "max" for attributes, but could be name, bar3_value, bar3_max, or even status_xxx.
   'use strict';
   try {
 // log( "set   " + obj.get("name") + "    val " + val);
@@ -3316,8 +3317,12 @@ Step/Action Dice Table
           armortype;
           ssa[ 1 ] = Earthdawn.safeString( ssa[ 1 ] ).toLowerCase();
         switch ( ssa[ 1 ] ) {
+          case "sk": {
+            let cls = Earthdawn.getAttrBN( this.charID, pre + "Class", "General");
+            if( cls !== "General" )
+              this.misc[ "skillClass" ] = cls;
+          }
           case "t":
-          case "sk":
           case "skc":
           case "nac": {
             this.misc[ "result" ] = (this.misc[ "result" ] || 0) + this.getValue( pre + "Result-Mods");
@@ -3350,8 +3355,8 @@ Step/Action Dice Table
               this.misc[ "Special" ] = special;
             if( special.startsWith( "Recovery" )) {
               this.bFlags |= Earthdawn.flags.Recovery;
-              if( special === "Recovery-Woodskin" )
-                this.misc[ "Recovery-Woodskin" ] = true;
+              if( special === "Recovery-WoodSkin" )
+                this.misc[ "Recovery-WoodSkin" ] = true;
               if (Earthdawn.getAttrBN( this.charID, "NPC", "1") != Earthdawn.charType.mook) {
                 let aobj = Earthdawn.findOrMakeObj({ _type: 'attribute', _characterid: this.charID, name: "Recovery-Tests" }, 0, 2);
                 if( (aobj.get( "current" ) || 0) <= 0) {
@@ -3368,7 +3373,7 @@ Step/Action Dice Table
 
             switch( special ) {
               case "Recovery":
-              case "Recovery-Woodskin": this.misc[ "headcolor" ] = "recovery";      break;
+              case "Recovery-WoodSkin": this.misc[ "headcolor" ] = "recovery";      break;
               case "Initiative":        this.misc[ "headcolor" ] = "initrep";       break;
               case "Knockdown":         this.misc[ "headcolor" ] = "knockdown";     break;
               default:
@@ -3911,7 +3916,7 @@ Step/Action Dice Table
           // We have a request to display a menu in the chat window.
           // attrib, damage, editspell2: (dur, MenuAddExtraThread, AddExtraThread, MenuRemoveExtraThread, RemoveExtraThread),
           // fxSet: (sequnce of submenus), gmstate / gmspecial, grimoire, help, languages, link, linkAdd1, linkAdd2, linkRemove, linkRemoveHalf,
-          // oppmnvr, RolltypeEdit, skills, spells, stateEdit, status, talents.
+          // oppmnvr, RolltypeEdit, RolltypeMulti, skills, spells, stateEdit, status, talents.
     this.ChatMenu = function( ssa )  {
       'use strict';
       let edParse = this;
@@ -4999,7 +5004,7 @@ Step/Action Dice Table
                           if( Array.isArray( v ) ) {    // This is best practices for building Roll20 nested chat menu queries. 
                                                         // The innermost query can be of the form ?{}. Inner queires must call Earthdawn.constant for pipe, comma, and braseClose. 
                             str = "?{What do you want to do with array \'" + k + "\'|" 
-                                + "Never mind, nothing|Delete|Add Elements, arrayAdd: " 
+                                + "Delete|Add Elements, arrayAdd: " 
                                   + "?{Add Where (F for first. L for last. or after a zero based index number)" + Earthdawn.constant( "braceClose", 2 ) + ": "
                                   + "?{Add What type of element"
                                     + Earthdawn.constant( "pipe", 2 ) + "Number" + Earthdawn.constant( "comma", 2 ) 
@@ -5013,7 +5018,7 @@ Step/Action Dice Table
                                 +"|Set to Empty, change}";
                             tip = "This routine can not do anything with arrays yet except delete them, or set them to empty.";
                           } else {
-                            str = "?{What do you want to do with object|Edit|Into object " + k + ",In|Delete|Never mind,nothing}";
+                            str = "?{What do you want to do with object|Edit|Into object " + k + ",In|Delete}";
                             tip = "Make this object the current object, so that you can manipulate (edit or delete) its properties.";
                           }
                           break;
@@ -5121,6 +5126,47 @@ Step/Action Dice Table
                   log( ssa );
           } } }
             break;    // end stateEdit
+          case "rolltypemulti": {     // ssa[ 2 ] = state.Earthdawn.Rolltype.NPC, Others are ether exceptionIs or exceptionWouldBe entries.
+//cdd 
+            let except = ssa[ 2 ].endsWith( ".NPC" ) ? state.Earthdawn.Rolltype.NPC.Exceptions : state.Earthdawn.Rolltype.PC.Exceptions,
+                wkey, wname, dname,
+                s = "Do you want to: ";
+            for( let i = 3; i < ssa.length; ++i ) {
+              let tip;
+              switch( ssa[ i ].toLowerCase() ) {
+                case "skillexceptionis":
+                  tip = "This display exception is setup by skill type: Knowledge or Artisan. Exceptions can also be setup by skill name.";
+                case "exceptionis":
+                  if( tip === undefined ) tip = "This display exception is setup by skill name. They can also be setup by skill type: Knowledge or Artisan.";
+                  wname = ssa[ ++i ];
+                  if( wname in except ) {
+                    dname = except[ wname ][ "name" ];
+                    s += "Edit display exception for " 
+                      + Earthdawn.makeButton( dname, "!Earthdawn~ ChatMenu: RolltypeEdit: " + ssa[ 2 ] + ": " + wname
+                      + ": ?{Edit display exception for '" + dname + "'|Change to Public, exceptionEdit: Public|Change to GM Only, exceptionEdit: GM Only"
+                      + "| Change to Player and GM, exceptionEdit: Player and GM|Delete exception, exceptionDelete}"
+                      , tip, Earthdawn.Colors.action, Earthdawn.Colors.actionfg ) + ".";
+                  } else
+                    this.chat( "Earthdawn rolltypeMulti data mismatch Error. " + wname + " not found.", Earthdawn.whoFrom.apiWarning  );
+                break;
+                case "skillexceptionwouldbe":
+                case "exceptionwouldbe":
+                  tip = "You can setup rolltype exceptions for Knowledge and Artisan skills ether by name or type.";
+                  wname = ssa[ ++i ];
+                  s += "Create a display exception for " 
+                    + Earthdawn.makeButton( wname, "!Earthdawn~ ChatMenu: RolltypeEdit: " + ssa[ 2 ] + ": " + wname
+                    + ": ?{Create a display exception for '" + wname
+                    + "'|Public, exceptionAdd: Public|GM Only, exceptionAdd: GM Only|Player and GM, exceptionAdd: Player and GM}"
+                    , tip, Earthdawn.Colors.action, Earthdawn.Colors.actionfg ) + ".";
+                break;
+                default:
+                  this.chat( "Earthdawn rolltypeMulti Error. Unknown command " + ssa[ i ], Earthdawn.whoFrom.apiWarning  );
+                  log( ssa );
+            } }
+            this.chat( s.trim(), Earthdawn.whoTo.player | Earthdawn.whoFrom.api | Earthdawn.whoFrom.noArchive, "gmStateEdit" );
+
+// cdd
+          } break;  // end RolltypeMulti
           case "status": {      // Called from a macro Token action. Visible when any character is selected.
             let           basic = true;
 
@@ -5675,8 +5721,8 @@ Step/Action Dice Table
           currDmg += dmg;
           if( bRecovery ) {
             if( currDmg < 0 ) {     // If all damage has been healed, we have to know whether this is a wood skin test or not, since those are handled differently. 
-              if( "Recovery-Woodskin" in this.misc )
-                recMsg += " Wood Skin added " + (dmg * -1) + Earthdawn.addIcon( "damage", "l" ) + " Health. New damage value " + currDmg + ".";
+              if( "Recovery-WoodSkin" in this.misc )
+                recMsg += " Wood Skin added " + (dmg * -1) + Earthdawn.addIcon( "damagehealth", "l" ) + " Health. New damage value " + currDmg + ".";
               else {   // We know this is NOT woodskin and we have negative damage, have the leftover heal stun damage.
                   recMsg += " recovered " + ((dmg - currDmg) * -1) + Earthdawn.addIcon( "damage", "l" ) + " damage. New value 0.";
                   bStun = true;
@@ -5734,6 +5780,7 @@ Step/Action Dice Table
           }
           newMsg += ".<br>Takes wound " + currWound;
         } // end wound
+// cdd todo. If stun would have caused a wound, set harried until end of round. 
 
         if( currDmg >= Earthdawn.getAttrBN( this.charID, "Damage-Death-Rating", 25 )) {
           newMsg += ".<br>Character is DEAD";
@@ -5748,8 +5795,10 @@ Step/Action Dice Table
             newMsg += ".  Need to make a Knockdown Test";
             gmMsg   += " TN " + ( dmg - WoundThreshold ) + "<br>" +
                       Earthdawn.makeButton( "Knockdown",
-                    "!Earthdawn~ CharID:" + this.charID + "~ TargetNum: " + ( dmg - WoundThreshold )
-                    + ": Adjust-TN-Auto: Adjust-TN-Misc~ foreach~ modValue: ?{Modification|0} ~ K-ask: @{" + cname + "|KarmaGlobalMode}@{"
+                    "!Earthdawn~ " + (( this.tokenInfo !== undefined && this.tokenInfo.tokenObj !== undefined) 
+                    ? "setToken: " + this.tokenInfo.tokenObj.get( "id" ) : "charID: " + this.charID )
+                    + "~ TargetNum: " + ( dmg - WoundThreshold )
+                    + ": Adjust-TN-Auto: Adjust-TN-Misc~ modValue: ?{Modification|0} ~ K-ask: @{" + cname + "|KarmaGlobalMode}@{"
                     + cname + "|Str-Karma-Ask}: @{" + getAttrByName( this.charID, "character_name") + "|DPGlobalMode}@{"
                     + cname + "|Str-DP-Ask}~ Value: Knockdown: Adjust-All-Tests-Total: Defensive: Resistance~ Roll"
                     ,"Make a standard Knockdown test.", Earthdawn.Colors.action, Earthdawn.Colors.actionfg );
@@ -5763,16 +5812,18 @@ Step/Action Dice Table
                   rid = Earthdawn.repeatSection( 2, att.get( "name") );
 //log( "Talent Found " + pre + " " + name + " "  + code +" " + rid + " " + cname);
                 gmMsg += Earthdawn.makeButton( name + " test",
-                        "!Earthdawn~ CharID:" + po.charID + "~ TargetNum: " + ( dmg - WoundThreshold )
-                        + ": Adjust-TN-Auto: Adjust-TN-Misc~ foreach:sct:ust:c~ modValue: ?{Modification|0} ~ K-ask: @{" + cname + "|KarmaGlobalMode}@{"
+                        "!Earthdawn~ " + (( po.tokenInfo !== undefined && po.tokenInfo.tokenObj !== undefined) 
+                        ? "setToken: " + po.tokenInfo.tokenObj.get( "id" ) : "charID: " + po.charID )
+                        + "~ TargetNum: " + ( dmg - WoundThreshold )
+                        + ": Adjust-TN-Auto: Adjust-TN-Misc~ modValue: ?{Modification|0} ~ K-ask: @{" + cname + "|KarmaGlobalMode}@{"
                         + cname + "|" + pre + "Karma-Ask}: @{" + cname + "|DPGlobalMode}@{"
                         + cname + "|" + pre + "DP-Ask}~ Action: "+ code  +":" + rid
                         ,"Make a Knockdown test.", Earthdawn.Colors.action, Earthdawn.Colors.actionfg );
               }
             }); // End for each attribute.
         } }
-
-        if(gmMsg && npc == Earthdawn.charType.pc){  //gm message is sent separately to GM for NPCs and appended for PCs
+      
+        if(gmMsg && npc == Earthdawn.charType.pc) {  //gm message is sent separately to GM for NPCs and appended for PCs
           newMsg += gmMsg;
           gmMsg = "";
         }
@@ -6243,9 +6294,39 @@ log( cnt);
 
 
 
+          // ParseObj.findAllPagesAnyPlayterIsOn()
+          //
+          // Returns an array of pageIDs. 
+          // if testOnline is false then list is of all pages, whether players are online or not. Otherwise it is only online players. Defaults to true.
+    this.findAllPagesAnyPlayterIsOn = function( testOnline )  {
+      'use strict';
+      try {
+        if( testOnline === undefined || testOnline ) testOnline = true;   // testOnline defaults to true. Set to native boolean so don't have to convert each loop.
+        else testOnline = false;
+        let pgs = Campaign().get( "playerspecificpages" ),            // object of pages that have players on them. 
+            players = findObjs({ _type: "player", _online: true }),   // array of online players. 
+            ret = [ Campaign().get( "playerpageid" ) ];               // the all players page.
+        if( pgs )
+          Object.entries( pgs ).forEach(([key, val]) => {
+            if(( testOnline || ( key in players )) && ( !( key in ret)))    // If page is not already in ret, and page is an online player, add it to the list.
+              ret.push( val );
+          });
+        players.forEach( function( item ) {
+          'use strict';
+          if( playerIsGM( item.get( "_id" )) && !ret.includes( item.get( "_lastpage" )))   // if player is gm and last page they visited is not already in ret, add it. 
+            ret.push( item.get( "_lastpage" ));
+        });
+        return ret;
+      } catch(err) { Earthdawn.errorLog( "ED.findAllPagesAnyPlayterIsOn() error caught: " + err, this ); }
+    };     // End ParseObj.findAllPagesAnyPlayterIsOn
+
+
+
           // ParseObj.FindPageOfPlayer()
           //
           // Returns pageID of page this player is on. 
+          //
+          // Note that Jun 2024 I think the only routine that called this now calls findAllPagesAnyPlayerIsOn instead. So routine might be useless.
     this.FindPageOfPlayer = function( playerID )  {
       'use strict';
       try {
@@ -6256,7 +6337,7 @@ log( cnt);
         else    // player is on the all players page. 
           ret = Campaign().get( "playerpageid" );
         return ret;
-      } catch(err) { Earthdawn.errorLog( "ED.FindPageOfPlayer() error caught: " + err, playerID ); }
+      } catch(err) { Earthdawn.errorLog( "ED.FindPageOfPlayer() error caught: " + err, this ); }
     };     // End ParseObj.FindPageOfPlayer
 
 
@@ -6269,18 +6350,18 @@ log( cnt);
       let edParse = this;
       try {
         this.tokenIDs = [];
-        let bst   = false,      // Do we want all selected tokens?
+        let bst = false,      // Do we want all selected tokens?
           bsct  = false,      // Do we want all selected character tokens?
           bust  = false,      // Do we want to look in unselected tokens if we can't find with the above?
           binmt = false,      // Do we want to ignore all selected tokens that do not match the character ID?
-          btuc  = false,    // Token Unique Character - Ignore all except the first token for each unique character.
+          btuc  = false,      // Token Unique Character - Ignore all except the first token for each unique character.
           bc    = false,      // Do we want character (if found nothing else)?
-          flag = 0,           // Instead of doing a ForEachToken loop:  1 - return a list of tokens.
+          flag  = 0,          // Instead of doing a ForEachToken loop:  1 - return a list of tokens.
           mooks = false,      // Do we want to ignore all selected non-mooks?
           notMooks = false,   // Do we want to ignore all selected mooks?
           PCs   = false,      // Do we want to ignore all selected NPCs?
           NPCs  = false,      // Do we want to ignore all selected PCs?
-          notPCs = false,   // Do we want to ignore all selected non-PCs?
+          notPCs = false,     // Do we want to ignore all selected non-PCs?
           objarr = [];
 
         for ( let i = 1; i < ssa.length; i++) {
@@ -6381,9 +6462,12 @@ log( cnt);
           if( bust && ((objarr.length || 0) < 1 )) {
             let CharObj = getObj("character", this.charID);
             if ((typeof CharObj != 'undefined') && ( this.edClass.msg !== undefined )) {
-              let page = this.FindPageOfPlayer( this.edClass.msg.playerid );
-              let tkns = findObjs({ _pageid: page, _type: "graphic",  _subtype: "token", represents: this.charID });
-              _.each( tkns, function (TokObj) {                   // Check all tokens on the page.
+              let pages = this.findAllPagesAnyPlayterIsOn(),
+                  tkns = [];
+              pages.forEach(( page ) => {
+                tkns = _.union( tkns, findObjs({ _pageid: page, _type: "graphic",  _subtype: "token", represents: this.charID }));
+              });
+              _.each( tkns, function( TokObj ) {                   // Check all tokens found
                 if( btuc && objarr.length > 0 )
                   return;
                 let TokenName = TokObj.get("name");
@@ -6422,7 +6506,7 @@ log( cnt);
             edParse.tokenInfo = edpS1;
             edParse.charID = edpS2;
             return ret;
-          } else {
+          } else {    // This is the more normal case. Call all the rest of the command line, with each token found.
             let miscsave = _.clone( edParse.misc );     // Otherwise this gets passed by reference and all copies end up sharing the same object. So save a clone, and explicitly clone the clone back in.
             this.indexToken = 0;
             _.each( objarr, function ( obj ) {
@@ -7461,8 +7545,6 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
                   ++fnd;
                   let itm = itma[ 1 ].replace( "\[", "").replace( "\]", "" );   // remove brackets from code.
                   if( itm !== "0^u" ) {   // Unset with value 0 is already in array.
-
-
                     let kernals = itm.split( "^" ),
                       kb = kernals[ 1 ],
                       kb2 = kb;
@@ -7480,7 +7562,7 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
                           valid[ 0 ].attrib = kernals[ 0 ];   //If we are in this loop, i.e. there is a submenu, but it is not "0^u", we should update the default unset attrib
                         else
                           valid.push({ level: Earthdawn.parseInt2( kernals[ 0 ]), attrib: Earthdawn.parseInt2( kernals[ 0 ]), badge: kb2, marker: mark });
-//                        log("test " + JSON.stringify(valid));
+// log("test " + JSON.stringify(valid));
               } } } }
               if( !fnd ) {      // A classic submenu was not found, so we seem to have a freeform numeric input.
                 valid.push({ level: 0, attrib: 0, badge: true, marker: mark });
@@ -7508,7 +7590,7 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
                 this.chat( "Earthdawn: Markerset Warning. Unable to parse " + JSON.stringify( mia[ i ] ), Earthdawn.whoFrom.apiWarning );
           } // end make list of validValues and validBadges
           valid = _.sortBy( valid, "level" );
-//log( marker); log(mi); log( JSON.stringify( valid));
+//log(mi); log( JSON.stringify( valid));
 
           if( ssa.length > 1 ) {    // This section sets level and adjust. See the declarations above and the comments at the top of the routine.
             if( ssa.length > 2 ) {
@@ -7555,7 +7637,7 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
           if( level > 0 && neg )
             level *= -1;
               // at this point level is -1111 for unset, 0 for set, or a badge between 1 and 9. Adjust might be set, which will modify these these.
-
+//log("level " + level);
 
               // Given a potential level value, see if it is one of the expected values. If so return that valid item.
               // If not, find the closest one.
@@ -7623,7 +7705,6 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
             else
               setObj = findMenu( level );
           }
-//log( setObj);
           if( !setObj ) {
             this.chat( "Earthdawn: Markerset error. level is undefined.", Earthdawn.whoFrom.apiWarning );
             return;
@@ -7633,13 +7714,15 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
 //log( "level: " + level + "  setObj: " + JSON.stringify( setObj ));
           if( "marker" in setObj )
             Earthdawn.set( this.tokenInfo.tokenObj, "status_" + setObj[ "marker" ], setObj.badge );
+//log( "have set 'status_" + setObj[ "marker" ] + "' to " + setObj.badge );
 
                     // If this character has not already been done, also change the character sheet.
           if( ssa[ 0 ] !== "sheetDirect" && !dupChar && ( attrib != undefined ) && !(mook && attrib === "condition-Health" )) {
+//log("setting att. old is");
             let attribute = Earthdawn.findOrMakeObj({ _type: 'attribute', _characterid: this.charID, name: attrib }, 0);
+//log(attribute);
             if( attribute[ "current" ] != setObj.attrib )
               Earthdawn.setWithWorker( attribute, "current", setObj.attrib );
-//log( "set attrib " + setObj.attrib);
           } // End update the attribute.
 
                   // See if any other menu items share this attribute, and if so, unset those.
@@ -7663,6 +7746,7 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
             else if( code === "defensive" )
               this.MarkerSet( [ "m", "aggressive", "u" ] );
         } } // End tokeninfo type is "Token"
+//log("end MarkerSet");
       } catch(err) { Earthdawn.errorLog( "ParseObj.MarkerSet() error caught: " + err, po ); }
     } // End ParseObj.MarkerSet( ssa )
 
@@ -7783,15 +7867,15 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
           case "newday":      // Recovery tests and Karma reset.   Some systems karma must be bought.
             try {
               let recov = Earthdawn.findOrMakeObj({ _type: 'attribute', _characterid: this.charID, name: "Recovery-Tests" });
-              let rt = (Earthdawn.parseInt2(recov.get( "max" )) || 2) + Earthdawn.parseInt2(Earthdawn.getAttrBN( this.charID, "Misc-NewDayRecoveryOffset", "0", true));
+              let rt = (Earthdawn.parseInt2(recov.get( "max" )) || 2) + Earthdawn.getAttrBN( this.charID, "Misc-NewDayRecoveryOffset", "0", true);
 //log(rt);
               Earthdawn.setWithWorker( recov, "current", rt.toString());           // set recovery tests available today to max.
-
-//              if( state.Earthdawn.gED && state.Earthdawn.edition == "4" ) {
               let karmaObj = Earthdawn.findOrMakeObj({ _type: 'attribute', _characterid: this.charID, name: "Karma" }, 0),
-                  kparam = ( ssa.length > 2 ) ? Earthdawn.parseInt2( ssa[ 2 ] ) : Earthdawn.getAttrBN( this.charID, "Misc-KarmaRitual", "-1", true),   // V3.19 and later karmaritual is passed.
+                  kparam  = ( ssa.length > 2 ) ? ssa[ 2 ] : Earthdawn.getAttrBN( this.charID, "Misc-KarmaRitual", "-1"),   // V3.19 and later karmaritual is passed.
+                  dpparam = ( ssa.length > 3 ) ? ssa[ 3 ] : Earthdawn.getAttrBN( this.charID, "Misc-DPRitual", "-1"),
                   add;
-              switch ( kparam ) {
+
+              switch ( Earthdawn.parseInt2( kparam )) {
                 case -1:      // set karma to it's max value
                   add = karmaObj.get( "max" );
                   break;
@@ -7822,30 +7906,32 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
                 } break;
                 default :     // We were passed the number of karma to add. 
                   if( isNaN( kparam ) || ( kparam < 0))
-                    this.chat( "ED.funcMisc.NewDay Warning, invalid parameter " + kparam + ".", Earthdawn.whoTo.player | Earthdawn.whoFrom.api | Earthdawn.whoFrom.apiWarning)
+                    this.chat( "ED.funcMisc.NewDay Warning, invalid karma parameter " + kparam + ".", Earthdawn.whoTo.player | Earthdawn.whoFrom.api | Earthdawn.whoFrom.apiWarning)
                   else
                     add = kparam;
               };
               let newKarma = Math.min( Earthdawn.parseInt2( karmaObj.get( "max" )), Earthdawn.parseInt2(karmaObj.get( "current" )) + Earthdawn.parseInt2( add ))
-                    + Earthdawn.parseInt2(Earthdawn.getAttrBN( this.charID, "Misc-NewDayKarmaOffset", "0", true));
+                    + Earthdawn.getAttrBN( this.charID, "Misc-NewDayKarmaOffset", "0", true);
               Earthdawn.setWithWorker( karmaObj, "current", newKarma.toString());
-              this.chat( "New Day: Karma and Recovery tests reset.", this.WhoSendTo() | Earthdawn.whoFrom.character );
-//              }     // Note: Don't set DP to max! that is not done on a mere new day.
-// Note, we no longer need special code for older editions. 
-//              else {    // 1879, or ED edition other than 4th.   Buy Karma.
-//                let newKarma = Earthdawn.getAttrBN( this.charID, "Karma_max", "0", true ) - Earthdawn.getAttrBN( this.charID, "Karma", "0", true );
-// CDD ToDo This uses semi-obsolete code so needs to be rewritten once karma is moved to sheetworker, and hopefully the sheetworker will catch the karma changing.
-/*
-                this.chat( Earthdawn.makeButton( "Buy Karma?", "!Earthdawn~ charID: " + this.charID + "~ Misc: Add: Karma: ?{How many Karma to buy|" + newKarma + "}"
-                      + "~ Record: ?{Posting Date|" + today.getFullYear() + "-" + (today.getMonth() +1) + "-" + today.getDate()
-                      + "}: : LP: ?{How many " + ( state.Earthdawn.gED ? "LP" : "AP" ) +" does that cost|" + newKarma * 10 + "}",
-                      "Did you do a karma ritual and want to buy karma?", Earthdawn.Colors.param, Earthdawn.Colors.paramfg ),
-                      Earthdawn.whoTo.player | Earthdawn.whoFrom.character | Earthdawn.whoFrom.noArchive );
-*/
-//                this.chat( "New Day: " + Earthdawn.makeButton( "Buy Karma?", "!Earthdawn~ charID: " + this.charID + "~ Misc: Add: Karma: ?{How many Karma to buy|" + newKarma + "}",
-//                      "Did you do a karma ritual and want to buy karma?", Earthdawn.Colors.param, Earthdawn.Colors.paramfg ),
-//                      Earthdawn.whoTo.player | Earthdawn.whoFrom.character | Earthdawn.whoFrom.noArchive );
-//              }
+
+              add = 0;
+              switch ( Earthdawn.parseInt2( dpparam )) {
+                case -1:      // set Add questor tier to their current devotion pool
+                  add = Earthdawn.getAttrBN( this.charID, "IsQuestor", "0", true);
+                  break;
+                default :     // We were passed the number of karma to add. 
+                  if( isNaN( dpparam ) || ( dpparam < 0))
+                    this.chat( "ED.funcMisc.NewDay Warning, invalid DP parameter " + dpparam + ".", Earthdawn.whoTo.player | Earthdawn.whoFrom.api | Earthdawn.whoFrom.apiWarning)
+                  else
+                    add = dpparam;
+              };
+              let added = "";
+              if( add > 0 ) {
+                let newDP = Math.min( Earthdawn.getAttrBN( this.charID, "DP_max", "0", true), Earthdawn.getAttrBN( this.charID, "DP", "0", true) + Earthdawn.parseInt2( add ));
+                Earthdawn.setWithWorker( karmaObj, "current", newDP.toString());
+                added = " " + add + " added to DP.";
+              }
+              this.chat( "New Day: Karma and Recovery tests reset." + added, this.WhoSendTo() | Earthdawn.whoFrom.character );
             } catch(err) { Earthdawn.errorLog( "ED.funcMisc.NewDay error caught: " + err, po ); }
             break;
           case "resetchars":      // reset all selected tokens to full health, karma, Recovery Tests, and no modifications or status markers.
@@ -8584,7 +8670,7 @@ log("Record Obsolete code. If you see this except on an 1879 sheet, please repor
                 else
                   po.edClass.countFail++;
                 if( po.misc[ "Special" ] === "Knockdown" ) {
-//                  po.setWW( "condition-KnockedDown", "1" );
+//                  po.setWW( "condition-KnockedDown", "1" );     // MarkerSet does this now.
                   po.MarkerSet( ["r", "knocked", "s"] );
                   po.misc[ "endNoteFail" ]="Character Knocked Down";
                 }
@@ -8857,30 +8943,43 @@ log("Record Obsolete code. If you see this except on an 1879 sheet, please repor
             whoString = "public";
             Earthdawn.errorLog( "ED.rollFormat invalid recipents value: " + recipients, po );
         }
-        let k, bis = 0,
-            lt = "!Earthdawn~ ChatMenu: RolltypeEdit: state.Earthdawn.Rolltype." + (bpc ? "PC" : "NPC" ) + ": ";
-        if( "exceptionIs" in this.misc ) {
-          k = this.misc[ "exceptionIs" ];
-          let  e = bpc ? state.Earthdawn.Rolltype.PC.Exceptions : state.Earthdawn.Rolltype.NPC.Exceptions;
-          if( k in e ) {
-            bis |= 0x01;
-            lt += this.misc[ "exceptionIs" ] + ": "
-                +"?{Edit display exception for '" + this.misc[ "exceptionIs" ][ "name" ]
-                + "'|Never Mind, nothing|Change to Public, exceptionEdit: Public|Change to GM Only, exceptionEdit: GM Only"
-                + "| Change to Player and GM, exceptionEdit: Player and GM|Delete exception, exceptionDelete}"
-          } else 
-            edParse.chat( "Warning! Earthdawn internal data mismatch in rollFormat. key '" + k+ "' not found in exceptions.", Earthdawn.whoFrom.apiError);
-        } else if ( "exceptionWouldBe" in this.misc ) {
-          bis |= 0x02;
-          lt += this.misc[ "exceptionWouldBe" ][ "name" ] + ":?{Create a display exception for '" + this.misc[ "exceptionWouldBe" ][ "name" ] 
-              + "'|Never mind, nothing|Public, exceptionAdd: Public|GM Only, exceptionAdd: GM Only|Player and GM, exceptionAdd: Player and GM}";
-        }
+        let k, bis = 0, lt;
+        if(( "skillExceptionIs" in this.misc) || ( "skillExceptionWouldBe" in this.misc )) {    // This is a knowledge or Artisan skill, which have special rolltype catagories. Send user to a special menu to ask which he wants. to set/edit.
+          bis |= 0x04;
+          lt = "!Earthdawn~ ChatMenu: RolltypeMulti: state.Earthdawn.Rolltype." + (bpc ? "PC" : "NPC" );
+          if( "skillExceptionIs" in this.misc )
+            lt += ": skillExceptionIs: " + this.misc[ "skillExceptionIs" ];
+          if( "skillExceptionWouldBe" in this.misc )
+            lt += ": skillExceptionWouldBe: " + this.misc[ "skillExceptionWouldBe" ];
+          if( "exceptionIs" in this.misc )
+            lt += ": exceptionIs: " + this.misc[ "exceptionIs" ];
+          if( "exceptionWouldBe" in this.misc )
+            lt += ": exceptionWouldBe: " + this.misc[ "exceptionWouldBe" ];
+        } else {    // only one possible exception (talent name), not two (skill class).
+          lt = "!Earthdawn~ ChatMenu: RolltypeEdit: state.Earthdawn.Rolltype." + (bpc ? "PC" : "NPC" ) + ": ";
+          if( "exceptionIs" in this.misc ) {
+            k = this.misc[ "exceptionIs" ];
+            let  e = bpc ? state.Earthdawn.Rolltype.PC.Exceptions : state.Earthdawn.Rolltype.NPC.Exceptions;
+            if( k in e ) {
+              bis |= 0x01;
+              lt += k + ": "
+                  +"?{Edit display exception for '" + k
+                  + "'|Change to Public, exceptionEdit: Public|Change to GM Only, exceptionEdit: GM Only"
+                  + "| Change to Player and GM, exceptionEdit: Player and GM|Delete exception, exceptionDelete}"
+            } else 
+              edParse.chat( "Warning! Earthdawn internal data mismatch in rollFormat. key '" + k+ "' not found in exceptions.", Earthdawn.whoFrom.apiError);
+          } else if ( "exceptionWouldBe" in this.misc ) {
+            bis |= 0x02;
+            lt += this.misc[ "exceptionWouldBe" ] + ":?{Create a display exception for '" + this.misc[ "exceptionWouldBe" ]
+                + "'|Public, exceptionAdd: Public|GM Only, exceptionAdd: GM Only|Player and GM, exceptionAdd: Player and GM}";
+        } }
+// cdd
+// test for knowledge and/or artisan, and add a dropdown to change for all of those instead of name.
         if( bis )
           sectMain.append( "span", Earthdawn.makeButton(
               Earthdawn.addIcon( whoString, "small" ), lt, 
-              "This message is being sent to '" + whoString + (( "whoReason" in this.misc) ? "' due to " + this.misc[ "whoReason" ] : ""), 
-              "white" ),
-            { class:  "sheet-rolltemplate-floatRight sheet-rolltemplate-RollTypeButton" });
+              "This message is being sent to '" + whoString + (( "whoReason" in this.misc) ? "' due to " + this.misc[ "whoReason" ] : ""), "white" ),
+              { class:  "sheet-rolltemplate-floatRight sheet-rolltemplate-RollTypeButton" });
         else if( state.Earthdawn.Rolltype.Override )
           sectMain.append( "span", Earthdawn.makeButton( " ! ", "!Earthdawn~ ChatMenu: RolltypeEdit: state.Earthdawn.Rolltype: : Display",
               "Override is on and being sent to '" + state.Earthdawn.Rolltype.Override + "'" ),
@@ -8890,7 +8989,6 @@ log("Record Obsolete code. If you see this except on an 1879 sheet, please repor
               + this.misc[ "reason" ] + ((bsub || !sh ) ? "" : "  --  " + new HtmlBuilder( "span", sh, { class: "sheet-rolltemplate-subheadertext" })),       // Main Header
               {class : ("sheet-rolltemplate-header" + (("headcolor" in this.misc) ?
               " sheet-rolltemplate-header-" + Earthdawn.safeString( this.misc[ "headcolor" ] ).toLowerCase() : "" )) });      // The headers give the right colored thick line at bottom. 
-// log(sectMain);
 
         if( bsub )      // This is a subheader. If it was short enough it would have been appended to the main header.
           sectMain.append("", sh, { class: "sheet-rolltemplate-subheadertext"});
@@ -9247,7 +9345,6 @@ log("Record Obsolete code. If you see this except on an 1879 sheet, please repor
           bodyMain.append( (( ++linenum % 2) ? ".odd" : ".even"), this.misc[ "endNoteFail" ]);
             if( playerCard ) playerCardNix.push( bodyMain._children.length );
         }
-
         if(("cButtons" in this.misc) && this.misc[ "cButtons" ].length > 0) {
           let tName;
           for( let i = 0; i < this.misc[ "cButtons" ].length; ++i ) {
@@ -10727,8 +10824,8 @@ log("Record Obsolete code. If you see this except on an 1879 sheet, please repor
               T_Strain_max is set by the sheetworker and is used in a ~Strain: @{T_STrain_max}. It is either equal to T_Strain or to a query with T_Strain as default
               T_StrainAdvanced is a drop-down that right now is either "" (fixed strain) or "Ask". This will become much more complex in the future, especially for 1879. 
               T_StrainAdvanced_max is the formula to be displayed to the user
-              Example Strains from ED and 1879:
-                Strain: 6
+              Example Strains from ED and 1879: (ones marked with * are currently supported. All others are not yet supported but will be in the future. 
+               *Strain: 6
                 Strain: 2 + target count
                 Strain: 4 + TMD
                 Strain: 4 + 1 per Spellcasting Test success
@@ -11536,23 +11633,36 @@ log("Record Obsolete code. If you see this except on an 1879 sheet, please repor
               this.misc[ "whoReason" ] = "Token is on the GM layer.";
             } else {  // Token is not on gm layer. Check for exceptions, and then default.
               let bpc = (Earthdawn.getAttrBN( this.charID, "NPC", "1") == Earthdawn.charType.pc);
+              let except = bpc ? state.Earthdawn.Rolltype.PC.Exceptions : state.Earthdawn.Rolltype.NPC.Exceptions;
               let rn;                    // first, lets see if we can find a rolltype or a reason to check. 
+              if( "skillClass" in this.misc ) {     // check skill class first, but if there is a named exception, this class exception will be overriden.
+                let rnc = Earthdawn.matchString( this.misc[ "skillClass" ] );    // striped and lowercased
+                if( rnc in except ) {
+                  rt = except[ rnc ][ "display" ];
+                  this.misc[ "skillExceptionIs" ] = rnc;
+                  this.misc[ "whoReason" ] = "an exception for " + this.misc[ "skillClass" ] + " skills.";
+                } else
+                  this.misc[ "skillExceptionWouldBe" ] = this.misc[ "skillClass" ];
+              }
               if( "rollName" in this.misc )
                 rn = this.misc[ "rollName" ];
               else if( "reason" in this.misc )      // Note that right now we are testing all reasons. We might have to narrow it down. 
                 rn = this.misc[ "reason" ];
               if( rn ) {
                 let rnc = Earthdawn.matchString( rn );    // striped and lowercased
-                let except = bpc ? state.Earthdawn.Rolltype.PC.Exceptions : state.Earthdawn.Rolltype.NPC.Exceptions;
                 if( rnc in except ) {
-                  rt = except [ rnc ][ "display" ];
+                  rt = except[ rnc ][ "display" ];
                   this.misc[ "exceptionIs" ] = rnc;
                   this.misc[ "whoReason" ] = "an exception for this name.";
-                } else {        // no exception, use the default. 
-                  rt = bpc ? state.Earthdawn.Rolltype.PC.Default : state.Earthdawn.Rolltype.NPC.Default
-                  this.misc[ "exceptionWouldBe" ] = { key: rnc, name: rn }
-                  this.misc[ "whoReason" ] = "Default for " + (bpc ? "PCs." : "NPCs.");
-            } } } // end exceptions or default.
+                } else        // no exception, use the default.
+                  this.misc[ "exceptionWouldBe" ] = rn;
+              }
+//cdd
+              if( rt === undefined ) {
+                rt = bpc ? state.Earthdawn.Rolltype.PC.Default : state.Earthdawn.Rolltype.NPC.Default
+                this.misc[ "whoReason" ] = "Default for " + (bpc ? "PCs." : "NPCs.");
+              }
+            } // end exceptions or default.
           } else if( state.Earthdawn.Rolltype.Override === "Sheet" ) {    // use the old system where things are controled on a per talent basis by the player.
             if( "RollType" in this.misc )           // Option was "Ask" and we got an rolltype that way.
               rt = this.misc[ "RollType"];    // ?{Who should be able to see the results|Public, |Player & GM,pgm|GM Only,/w gm}
@@ -11579,7 +11689,7 @@ log("Record Obsolete code. If you see this except on an 1879 sheet, please repor
               ret = Earthdawn.whoTo.gm;
             else if(( r === "controlling only") || r.endsWith("plr" ))
               ret = Earthdawn.whoTo.player;
-          } }
+        } }
       } catch(err) { Earthdawn.errorLog( "ED.WhoSendTo() error caught: " + err, this ); }
       return ret;
     } // End ParseObj.WhoSendTo()
