@@ -975,6 +975,7 @@ Earthdawn.buildPre = function ( code2, rowID, lowercase ) {
       case "MSG": ret = "repeating_message_"      + rowID + "_" + ( lowercase ? code.toLowerCase() : code ) + "_";  break;  // Does not have RowID
       case "MSK": ret = "repeating_masks_"        + rowID + "_" + ( lowercase ? code.toLowerCase() : code ) + "_";  break;
       case "NAC": ret = "repeating_knacks_"       + rowID + "_" + ( lowercase ? code.toLowerCase() : code ) + "_";  break;
+      case "NSM": ret = "repeatingknacksummary"   + rowID + "_" + ( lowercase ? code.toLowerCase() : code ) + "_";  break;
       case "PER": ret = "repeating_personality"   + rowID + "_" + ( lowercase ? code.toLowerCase() : code ) + "_";  break;  // Does not have RowID
       case "SKC": ret = "repeating_skills_"       + rowID + "_" + ( lowercase ? "sk" : "SK" ) + "_";          break;  // Obsolete. v2.0 and greater skill artistic charisma code uses all attributes of skill artistic.
       case "SK":  ret = "repeating_skills_"       + rowID + "_" + ( lowercase ? code.toLowerCase() : code ) + "_";  break;
@@ -1023,7 +1024,8 @@ Earthdawn.codeToName = function ( code, silent ) {
       case "MSG":   return "Message";       // unused as name. 
       case "MSK":   return "Mask";          // unused as name.
       case "NAC":   return "Knack";
-      case "Per":   return "Personality";   // unused as name.
+      case "NSM":   return "Knack Summary";
+      case "PER":   return "Personality";   // unused as name.
       case "SKC":       // Obsolete. 
       case "SKK":       // Obsolete.
       case "SKAC":      // Obsolete.
@@ -5617,7 +5619,7 @@ Step/Action Dice Table
           bStrain = false,
           bStrainSilent = false,
           bVerbose = false,
-          bStun = (this.bFlags & Earthdawn.flags.RecoveryStun);
+          bStun = (this.bFlags & Earthdawn.flags.RecoveryStun);   // true if RecoveryStun, or if we get the stun flag below.
         for( let ind = 0; ind < ssa.length; ++ind) {    // Loop though getting any expected parameter, which may show up in various orders.
           if( isNaN( ssa[ ind ] )) {
             switch ( Earthdawn.safeString( ssa[ ind ] ).toUpperCase() ) {
@@ -5777,7 +5779,8 @@ Step/Action Dice Table
           }
           newMsg += ".<br>Takes wound " + currWound;
         } // end wound
-// cdd todo. If stun would have caused a wound, set harried until end of round. 
+// cdd todo. If stun would have caused a wound, set harried until end of round and still check for knockdown.
+// this.MarkerSet( ["d", "harried", "++"] );      // set harried until end of round.
 
         if( currDmg >= Earthdawn.getAttrBN( this.charID, "Damage-Death-Rating", 25 )) {
           newMsg += ".<br>Character is DEAD";
@@ -5787,6 +5790,9 @@ Step/Action Dice Table
           this.MarkerSet( ["d", "healthunconscious", "s"] );
         } else {
           this.MarkerSet( ["d", "healthunconscious", "u"] );
+// cdd
+//log("damage");
+//log(dmg)
           if( dmg >= (WoundThreshold + 5)) {     // Character is wounded and need to make a Knockdown test
             let cname = getAttrByName( this.charID, "character_name" );
             newMsg += ".  Need to make a Knockdown Test";
@@ -7453,7 +7459,8 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
           //        If starts with a "t" than toggle it from set to unset or visa versa, or if more than two valid values, to the next value in the sequence.
           //        If starts with a "z", expect a numeric value, except in this specific case, a zero means unset.
           //        If 1 - 9, or A-I set the marker with the number as a badge.
-          //            Note: there is a weird thing in linking a token where it is better to have no digits in the menu. thus A-I substitute for 1-9.           //                  If ++, --, ++n, or --n then adjust from current level.
+          //            Note: there is a weird thing in linking a token where it is better to have no digits in the menu. thus A-I substitute for 1-9.
+          //        If ++, --, ++n, or --n then adjust from current level.
           //  NOTE: if the marker status collection has a submenu, it is important to pass exactly values in the submenu, IE: u for unset, b for 2, etc.
           //  Example: [ "", "aggressive", "Set"] or [ "", "sentry-gun", "Off"].
     this.MarkerSet = function( ssa )  {
