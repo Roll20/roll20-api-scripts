@@ -33,7 +33,7 @@
 // Define a Name-space
 var Earthdawn = Earthdawn || {};
             // define any name-space constants
-Earthdawn.Version = "3.30";       // This is the version number of this API file.
+Earthdawn.Version = "3.301";       // This is the version number of this API file.
                                   // state.Earthdawn.sheetVersion is the version number of the html file being used and might or might not be the same as the API version. 
                                   // Each individual sheets edition_max is the sheetVersion that sheet has been updated to.
                                   // So if a getAttrBN( "edition_max" ) is < sheetVersion, then the sheet is in the process of updating. 
@@ -975,6 +975,7 @@ Earthdawn.buildPre = function ( code2, rowID, lowercase ) {
       case "MSG": ret = "repeating_message_"      + rowID + "_" + ( lowercase ? code.toLowerCase() : code ) + "_";  break;  // Does not have RowID
       case "MSK": ret = "repeating_masks_"        + rowID + "_" + ( lowercase ? code.toLowerCase() : code ) + "_";  break;
       case "NAC": ret = "repeating_knacks_"       + rowID + "_" + ( lowercase ? code.toLowerCase() : code ) + "_";  break;
+      case "NSM": ret = "repeatingknacksummary"   + rowID + "_" + ( lowercase ? code.toLowerCase() : code ) + "_";  break;
       case "PER": ret = "repeating_personality"   + rowID + "_" + ( lowercase ? code.toLowerCase() : code ) + "_";  break;  // Does not have RowID
       case "SKC": ret = "repeating_skills_"       + rowID + "_" + ( lowercase ? "sk" : "SK" ) + "_";          break;  // Obsolete. v2.0 and greater skill artistic charisma code uses all attributes of skill artistic.
       case "SK":  ret = "repeating_skills_"       + rowID + "_" + ( lowercase ? code.toLowerCase() : code ) + "_";  break;
@@ -1023,7 +1024,8 @@ Earthdawn.codeToName = function ( code, silent ) {
       case "MSG":   return "Message";       // unused as name. 
       case "MSK":   return "Mask";          // unused as name.
       case "NAC":   return "Knack";
-      case "Per":   return "Personality";   // unused as name.
+      case "NSM":   return "Knack Summary";
+      case "PER":   return "Personality";   // unused as name.
       case "SKC":       // Obsolete. 
       case "SKK":       // Obsolete.
       case "SKAC":      // Obsolete.
@@ -5127,7 +5129,6 @@ Step/Action Dice Table
           } } }
             break;    // end stateEdit
           case "rolltypemulti": {     // ssa[ 2 ] = state.Earthdawn.Rolltype.NPC, Others are ether exceptionIs or exceptionWouldBe entries.
-//cdd 
             let except = ssa[ 2 ].endsWith( ".NPC" ) ? state.Earthdawn.Rolltype.NPC.Exceptions : state.Earthdawn.Rolltype.PC.Exceptions,
                 wkey, wname, dname,
                 s = "Do you want to: ";
@@ -5164,8 +5165,6 @@ Step/Action Dice Table
                   log( ssa );
             } }
             this.chat( s.trim(), Earthdawn.whoTo.player | Earthdawn.whoFrom.api | Earthdawn.whoFrom.noArchive, "gmStateEdit" );
-
-// cdd
           } break;  // end RolltypeMulti
           case "status": {      // Called from a macro Token action. Visible when any character is selected.
             let           basic = true;
@@ -5620,7 +5619,7 @@ Step/Action Dice Table
           bStrain = false,
           bStrainSilent = false,
           bVerbose = false,
-          bStun = (this.bFlags & Earthdawn.flags.RecoveryStun);
+          bStun = (this.bFlags & Earthdawn.flags.RecoveryStun);   // true if RecoveryStun, or if we get the stun flag below.
         for( let ind = 0; ind < ssa.length; ++ind) {    // Loop though getting any expected parameter, which may show up in various orders.
           if( isNaN( ssa[ ind ] )) {
             switch ( Earthdawn.safeString( ssa[ ind ] ).toUpperCase() ) {
@@ -5780,7 +5779,8 @@ Step/Action Dice Table
           }
           newMsg += ".<br>Takes wound " + currWound;
         } // end wound
-// cdd todo. If stun would have caused a wound, set harried until end of round. 
+// cdd todo. If stun would have caused a wound, set harried until end of round and still check for knockdown.
+// this.MarkerSet( ["d", "harried", "++"] );      // set harried until end of round.
 
         if( currDmg >= Earthdawn.getAttrBN( this.charID, "Damage-Death-Rating", 25 )) {
           newMsg += ".<br>Character is DEAD";
@@ -5790,6 +5790,9 @@ Step/Action Dice Table
           this.MarkerSet( ["d", "healthunconscious", "s"] );
         } else {
           this.MarkerSet( ["d", "healthunconscious", "u"] );
+// cdd
+//log("damage");
+//log(dmg)
           if( dmg >= (WoundThreshold + 5)) {     // Character is wounded and need to make a Knockdown test
             let cname = getAttrByName( this.charID, "character_name" );
             newMsg += ".  Need to make a Knockdown Test";
@@ -7456,7 +7459,8 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
           //        If starts with a "t" than toggle it from set to unset or visa versa, or if more than two valid values, to the next value in the sequence.
           //        If starts with a "z", expect a numeric value, except in this specific case, a zero means unset.
           //        If 1 - 9, or A-I set the marker with the number as a badge.
-          //            Note: there is a weird thing in linking a token where it is better to have no digits in the menu. thus A-I substitute for 1-9.           //                  If ++, --, ++n, or --n then adjust from current level.
+          //            Note: there is a weird thing in linking a token where it is better to have no digits in the menu. thus A-I substitute for 1-9.
+          //        If ++, --, ++n, or --n then adjust from current level.
           //  NOTE: if the marker status collection has a submenu, it is important to pass exactly values in the submenu, IE: u for unset, b for 2, etc.
           //  Example: [ "", "aggressive", "Set"] or [ "", "sentry-gun", "Off"].
     this.MarkerSet = function( ssa )  {
@@ -8973,8 +8977,6 @@ log("Record Obsolete code. If you see this except on an 1879 sheet, please repor
             lt += this.misc[ "exceptionWouldBe" ] + ":?{Create a display exception for '" + this.misc[ "exceptionWouldBe" ]
                 + "'|Public, exceptionAdd: Public|GM Only, exceptionAdd: GM Only|Player and GM, exceptionAdd: Player and GM}";
         } }
-// cdd
-// test for knowledge and/or artisan, and add a dropdown to change for all of those instead of name.
         if( bis )
           sectMain.append( "span", Earthdawn.makeButton(
               Earthdawn.addIcon( whoString, "small" ), lt, 
@@ -11657,7 +11659,6 @@ log("Record Obsolete code. If you see this except on an 1879 sheet, please repor
                 } else        // no exception, use the default.
                   this.misc[ "exceptionWouldBe" ] = rn;
               }
-//cdd
               if( rt === undefined ) {
                 rt = bpc ? state.Earthdawn.Rolltype.PC.Default : state.Earthdawn.Rolltype.NPC.Default
                 this.misc[ "whoReason" ] = "Default for " + (bpc ? "PCs." : "NPCs.");
