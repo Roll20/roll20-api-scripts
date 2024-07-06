@@ -27,8 +27,8 @@ const ScriptCards = (() => { // eslint-disable-line no-unused-vars
 	*/
 
 	const APINAME = "ScriptCards";
-	const APIVERSION = "2.7.25";
-	const NUMERIC_VERSION = "207250"
+	const APIVERSION = "2.7.25a";
+	const NUMERIC_VERSION = "207251"
 	const APIAUTHOR = "Kurt Jaegers";
 	const debugMode = false;
 
@@ -2464,6 +2464,7 @@ const ScriptCards = (() => { // eslint-disable-line no-unused-vars
 			case "-ne": if (left !== right) return true; break;
 			case "-nei": if (left.toString().toLowerCase() !== right.toString().toLowerCase()) return true; break;
 			case "-inc": if (left.toString().toLowerCase().indexOf(right.toString().toLowerCase()) >= 0) return true; break;
+			case "-ninc": if (left.toString().toLowerCase().indexOf(right.toString().toLowerCase()) < 0) return true; break;
 			case "-csinc": if (left.toString().indexOf(right.toString()) >= 0) return true; break;
 			case "-csninc": if (left.toString().indexOf(right.toString()) < 0) return true; break;
 		}
