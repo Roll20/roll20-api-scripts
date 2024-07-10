@@ -1271,3 +1271,7 @@ relatedtokenmovement:
 DrD2LinkedTenacity:
   - "DrD2LinkedTenacity"
   - "Utility"
+
+faeruncalendar:
+  - "Faerun Calendar"
+  - "Utility"
