@@ -1,7 +1,7 @@
 {
     "$schema": "https://github.com/Roll20/roll20-api-scripts/master/_Example%20Script%20-%20Check%20for%20formatting%20details/script.schema.json",
-    "name": "Faerun-Calendar",
-    "script": "encounter.js",
+    "name": "Faerun Calendar",
+    "script": "calendar.js",
     "version": "1.0",
     "description": "Faerûn Calendar for Roll20. Check the [Wiki](https://github.com/Julexar/Faerun-Calendar/wiki) for more Info.",
     "authors": "Julexar",
