@@ -1,49 +1,49 @@
 /* HeroSystem6eHeroic_HDImporter.js
-	* Hero Designer Importer for the Roll20 Hero System 6e Heroic character sheet
-	* Version: 2.0
-	* By Villain in Glasses
-	* villaininglasses@icloud.com
-	* Discord: Villain#0604
-	* Roll20: https://app.roll20.net/users/633423/villain-in-glasses
-	* Hero Games Forum Thread: 
-	* https://www.herogames.com/forums/topic/101627-new-roll20-character-sheet-hero-system-6e-heroic/
-	*
-	* Purpose: Imports characters created in Hero Designer into a Roll20 HeroSystem6eHeroic campaign.
-	*
-	* Installation: Paste this script into the API setup area of your Roll20 HeroSystem6eHeroic campaign.
-	*
-	* Copy "HeroSystem6eHeroic.hde" into your Hero Designer export format folder.
-	*
-	* Use: from Hero Designer export a character using HeroSystem6eHeroic.hde found in this repository as the selected format. 
-	* This will produce a text file with the name of the character (e.g., myCharacter.txt).
-	*
-	* Open the exported file in your favorite text editor. Select all of the contents and copy it.
-	* Paste the copied text in the chat window of your Roll20 HeroSystem6eHeroic campaign. Hit enter.
-	*
-	* Commands:
-	*   Import character: "!hero --import {character text}"
-	*   Help: "!hero --help"
-	*   Config: "!hero --config"
-	* 
-	* Based on BeyondImporter Version O.4.0 by 
-	* Robin Kuiper
-	* Discord: Atheos#1095
-	* Roll20: https://app.roll20.net/users/1226016/robin
-	*
-	* Matt DeKok
-	* Discord: Sillvva#2532
-	* Roll20: https://app.roll20.net/users/494585/sillvva
-	*
-	* Ammo Goettsch
-	* Discord: ammo#7063
-	* Roll20: https://app.roll20.net/users/2990964/ammo
-	*/
+* Hero Designer Importer for the Roll20 Hero System 6e Heroic character sheet
+* Version: 2.1
+* By Villain in Glasses
+* villaininglasses@icloud.com
+* Discord: Villain#0604
+* Roll20: https://app.roll20.net/users/633423/villain-in-glasses
+* Hero Games Forum Thread: 
+* https://www.herogames.com/forums/topic/101627-new-roll20-character-sheet-hero-system-6e-heroic/
+*
+* Purpose: Imports characters created in Hero Designer into a Roll20 HeroSystem6eHeroic campaign.
+*
+* Installation: Paste this script into the API setup area of your Roll20 HeroSystem6eHeroic campaign.
+*
+* Copy "HeroSystem6eHeroic.hde" into your Hero Designer export format folder.
+*
+* Use: from Hero Designer export a character using HeroSystem6eHeroic.hde found in this repository as the selected format. 
+* This will produce a text file with the name of the character (e.g., myCharacter.txt).
+*
+* Open the exported file in your favorite text editor. Select all of the contents and copy it.
+* Paste the copied text in the chat window of your Roll20 HeroSystem6eHeroic campaign. Hit enter.
+*
+* Commands:
+*   Import character: "!hero --import {character text}"
+*   Help: "!hero --help"
+*   Config: "!hero --config"
+* 
+* Based on BeyondImporter Version O.4.0 by 
+* Robin Kuiper
+* Discord: Atheos#1095
+* Roll20: https://app.roll20.net/users/1226016/robin
+*
+* Matt DeKok
+* Discord: Sillvva#2532
+* Roll20: https://app.roll20.net/users/494585/sillvva
+*
+* Ammo Goettsch
+* Discord: ammo#7063
+* Roll20: https://app.roll20.net/users/2990964/ammo
+*/
 
 (function() {
 	// Constants
-	const versionMod = "2.0";
-	const versionSheet = "2.9"; // Note that a newer sheet will make upgrades as well as it can.
-	const needsExportedVersion = new Set(["1.0", "2.0"]);
+	const versionMod = "2.1";
+	const versionSheet = "3.14"; // Note that a newer sheet will make upgrades as well as it can.
+	const needsExportedVersion = new Set(["1.0", "2.0", "2.1"]); // HeroSystem6eHeroic.hde versions allowed.
 	
 	const defaultAttributes = {
 		
@@ -231,21 +231,21 @@
 		
 		// Try to catch some bad input. Doesn't currently catch no input.
 		try {
-  		character = JSON.parse(json).character;
+		  character = JSON.parse(json).character;
 		}
 		
 		catch(error) {
-  		let message = "";
-	  		needsExportedVersion.forEach(function(value) {
+		  let message = "";
+			  needsExportedVersion.forEach(function(value) {
 			message += value + ", ";
-  		});
-  		
-  		// Drop the last comma.
-  		message = message.slice(0, -2);
-  		
-  		sendChat(script_name, '<div style="'+style+'">Hero Importer ended early due to a source content error.</div>' );
-  		sendChat(script_name, "Please verify that the character file was exported using HeroSystem6eHeroic.hde (acceptable versions: "+message+"). For help use the command !hero --help.");
-  		return;
+		  });
+		  
+		  // Drop the last comma.
+		  message = message.slice(0, -2);
+		  
+		  sendChat(script_name, '<div style="'+style+'">Hero Importer ended early due to a source content error.</div>' );
+		  sendChat(script_name, "Please verify that the character file was exported using HeroSystem6eHeroic.hde (acceptable versions: "+message+"). For help use the command !hero --help.");
+		  return;
 		}
 		
 		// Verify that the character was exported with the latest version of HeroSystem6eHeroic.hde. If not, report error and abort.
@@ -263,7 +263,11 @@
 		
 		if (character.version === "1.0") {
 			sendChat(script_name, "Source exported from HERO Designer using HeroSystem6eHeroic.hde version 1.0");
-		}
+		} 
+		
+		// else if (character.version === "2.0") {
+		// 	sendChat(script_name, "Source exported from HERO Designer using HeroSystem6eHeroic.hde version 2.0");
+		// }
 		
 		object = null;
 		
@@ -864,6 +868,9 @@
 					} else {
 						importedWeapons["weaponRangeMod"+ID]= 0;
 					}
+					
+					// Check for thrown weapon property.
+					importedWeapons["rangeBasedOnStr"+ID] = (tempString.includes("Range Based On STR")) ? "on" : 0;
 					
 					// Check for modified STUN multiplier.
 					importedWeapons["weaponStunMod"+ID] = getStunModifier(tempString, script_name);
@@ -1674,7 +1681,7 @@
 		let bonusCP = 0;
 		let maxImport = (powerArrayIndex <= maxPowers) ? powerArrayIndex : maxPowers;
 		let tempPER = [0, 0, 0, 0];
-		const specialArray = ["real weapon", "only works", "only for", "only to", "only applies", "only when", "attacks", "requires a roll", "protects areas"];
+		const specialArray = ["real weapon", "only works",  "only against", "only for", "only to", "only applies", "only when", "attacks", "requires a roll", "protects areas"];
 		
 		const characterAdjustments = {
 			strengthMod: 0,
@@ -2412,7 +2419,7 @@
 		let enhancer;
 		
 		switch(enhancerString) {
-	  		case "Jack of All Trades":
+			  case "Jack of All Trades":
 				enhancer = {
 					enhancerJack: "on",
 					enhancerJackCP: 3
@@ -2442,8 +2449,8 @@
 					enhancerTravCP: 3
 				}
 				break;
-  		default:
-		  		// Well-Connected
+		  default:
+				  // Well-Connected
 				enhancer = {
 					enhancerWell: "on",
 					enhancerWellCP: 3
@@ -2820,6 +2827,9 @@
 		} else if (skillObject.text.includes("three pre-defined Skills")) {
 			// Three-group skill.
 			type = "group";
+		} else if ((base === "0") && (cost === "0") && skillObject.text.includes("11-")) {
+			// Everyman professional skill.
+			type = "everymanPS";
 		} else if ((base === "0") && (cost === "0")) {
 			// Everyman skill.
 			type = "everyman";
@@ -3045,6 +3055,8 @@
 				return "Automaton";
 			} else if (tempString.includes("Barrier")) {
 				return "Barrier";
+			} else if (tempString.includes("Mental Blast")) {
+				return "Mental Blast";
 			} else if (tempString.includes("Blast")) {
 				return "Blast";
 			} else if (tempString.includes("Change Environment")) {
@@ -3117,8 +3129,6 @@
 				return "Life Support";
 			} else if (tempString.includes("Luck")) {
 				return "Luck";
-			} else if (tempString.includes("Mental Blast")) {
-				return "Mental Blast";
 			} else if (tempString.includes("Transform")) {
 				return "Transform";
 			} else if (tempString.includes("Mental Defense")) {
