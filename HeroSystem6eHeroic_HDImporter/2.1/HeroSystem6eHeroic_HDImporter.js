@@ -42,7 +42,7 @@
 (function() {
 	// Constants
 	const versionMod = "2.1";
-	const versionSheet = "3.14"; // Note that a newer sheet will make upgrades as well as it can.
+	const versionSheet = "3.15"; // Note that a newer sheet will make upgrades as well as it can.
 	const needsExportedVersion = new Set(["1.0", "2.0", "2.1"]); // HeroSystem6eHeroic.hde versions allowed.
 	
 	const defaultAttributes = {
@@ -262,12 +262,10 @@
 		sendChat(script_name, '<div style="'+style+'">Import of <b>' + character.character_name + '</b> started.</div>', null, {noarchive:true});
 		
 		if (character.version === "1.0") {
-			sendChat(script_name, "Source exported from HERO Designer using HeroSystem6eHeroic.hde version 1.0");
-		} 
-		
-		// else if (character.version === "2.0") {
-		// 	sendChat(script_name, "Source exported from HERO Designer using HeroSystem6eHeroic.hde version 2.0");
-		// }
+			sendChat(script_name, "Exported from HERO Designer with \n HeroSystem6eHeroic.hde v1.0. \n Version 2.1 is recommended.");
+		} else if (character.version === "2.0") {
+			sendChat(script_name, "Exported from HERO Designer with \n HeroSystem6eHeroic.hde v2.0. \n Version 2.1 is recommended.");
+		}
 		
 		object = null;
 		
