@@ -532,6 +532,8 @@
 		let maneuverArrayIndex = 0;
 		let temp = 0;
 		let tempString = "";
+		let diceString = "";
+		let tempPosition = 0;
 		const maxManeuvers = 20;
 		const maneuverSlots = 10;
 		let importCount = 0;
@@ -572,8 +574,61 @@
 				importedManeuvers["martialManeuverPhase"+ID] = maneuverArray[importCount].phase;
 				temp = Number(maneuverArray[importCount].ocv);
 				importedManeuvers["martialManeuverOCV"+ID] = isNaN(temp) ? 0 : temp;
-				temp = Number(maneuverArray[importCount].dcv);
-				importedManeuvers["martialManeuverDCV"+ID] = isNaN(temp) ? 0 : temp;
+				
+				tempString = maneuverArray[importCount].effect.toLowerCase();
+				if ( tempString.includes("weapon") ) {
+					if ( tempString.includes("strike") ) {
+						importedManeuvers["martialManeuverType"+ID] = "weaponAttack";
+						
+						tempString = maneuverArray[importCount].effect;
+						
+						if ( tempString.includes("DC") ) {
+							tempPosition = tempString.indexOf("DC");
+							diceString = tempString.slice(0, tempPosition);
+							diceString = diceString.slice(-3).replace(/[^0-9.-]/g, '');
+							importedManeuvers["martialManeuverDC"+ID] = Math.max(-2, Math.min(2, parseInt(diceString)||0));
+						}
+					} else if ( tempString.includes("block") ) {
+						importedManeuvers["martialManeuverType"+ID] = "weaponBlock";
+					} else {
+						importedManeuvers["martialManeuverType"+ID] = "weaponContest";
+					}
+				} else {
+					if ( tempString.includes("strike") ) {
+						importedManeuvers["martialManeuverType"+ID] = "attack";
+					} else if ( tempString.includes("hka") ) {
+						importedManeuvers["martialManeuverType"+ID] = "attack";
+						importedManeuvers["martialManeuverNormal"+ID] = "0";
+					} else if ( tempString.includes("block") ) {
+						importedManeuvers["martialManeuverType"+ID] = "block";
+					} else if ( tempString.includes("dodge") ) {
+						importedManeuvers["martialManeuverType"+ID] = "dodge";
+					} else {
+						importedManeuvers["martialManeuverType"+ID] = "contest";
+					}
+					
+					// Damage or STR adds.
+					if ( tempString.includes("d6") ) {
+						tempPosition = tempString.indexOf("d6");
+						diceString = tempString.slice(0, tempPosition);
+						diceString = diceString.slice(-2).replace(/\D/g,"") + "d6";
+						
+						if (tempString.includes("d3")) {
+							diceString += "+1d3";
+						} else if (tempString.includes("+1")) {
+							diceString += "+1";
+						} else if (tempString.includes("-1")) {
+							diceString += "-1";
+						}
+						
+						importedManeuvers["martialManeuverDamage"+ID] = diceString;
+					} else if ( tempString.includes("str") ) {
+						tempPosition = tempString.indexOf("str");
+						diceString = tempString.slice(0, tempPosition);
+						diceString = diceString.slice(-3).replace(/\D/g,"");
+						importedManeuvers["martialManeuverStrMod"+ID] = parseInt(diceString)||0;
+					}
+				}
 				
 				importCount++;
 			}
@@ -844,7 +899,7 @@
 				tempString = weaponsArray[importCount].text;
 				if ((typeof tempString !== "undefined") && (tempString !== "")) {
 					// Look for weapon advantages.
-					tempValue = getAdvantage(tempString, script_name);
+					tempValue = findDamageAdvantages(tempString, script_name);
 					if (tempValue > maxAdvantage) {
 						importedWeapons["weaponAdvantage"+ID] = maxAdvantage;
 					} else {
@@ -1759,8 +1814,14 @@
 				// Find advantages and limitations values.
 				importedPowers["powerAdvantages"+ID] = findAdvantages(testObject.testString);
 				importedPowers["powerLimitations"+ID] = findLimitations(testObject.testString);
-				importedPowers["powerText"+ID] = (powerArray[importCount].text).trim();
+				importedPowers["powerDamageAdvantage"+ID] = findDamageAdvantages(testObject.testString, script_name); 
 				importedPowers["powerAoE"+ID] = isAoE(testObject.testString) ? "on" : 0;
+				
+				// Power descriptions
+				importedPowers["powerText"+ID] = (powerArray[importCount].text).trim();
+				if (character.version >= 2.1) {
+					importedPowers["powerText"+ID] += '\n'+'\n'+(powerArray[importCount].notes).trim();
+				}
 				
 				// Search for skill roll.
 				tempObject = requiresRoll(testObject.testString);
@@ -4134,7 +4195,7 @@
 	}
 	
 	
-	var getAdvantage = function (weaponString, script_name) {
+	var findDamageAdvantages = function (weaponString, script_name) {
 		// See 6E2 98 for a list of advantages that affect weapon damage.
 		let advantage = 0;
 		let temp = 0;
