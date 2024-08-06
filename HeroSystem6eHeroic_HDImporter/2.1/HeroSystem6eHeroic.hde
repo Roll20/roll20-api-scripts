@@ -702,7 +702,7 @@
 						"points":"<!--MANEUVER_COST-->",
 						"phase":"<!--MANEUVER_PHASE-->",
 						"ocv":"<!--MANEUVER_OCV-->",
-						"dcv":"<!--MANEUVER_OCV-->",
+						"dcv":"<!--MANEUVER_DCV-->",
 						"effect":"<!--MANEUVER_EFFECT-->",
 						"notes":"<!--NOTES-->"
 					<!--STOP-->1<!--/STOP-->
@@ -715,7 +715,7 @@
 						"points":"<!--MANEUVER_COST-->",
 						"phase":"<!--MANEUVER_PHASE-->",
 						"ocv":"<!--MANEUVER_OCV-->",
-						"dcv":"<!--MANEUVER_OCV-->",
+						"dcv":"<!--MANEUVER_DCV-->",
 						"effect":"<!--MANEUVER_EFFECT-->",
 						"notes":"<!--NOTES-->"
 					<!--STOP-->2<!--/STOP-->
@@ -728,7 +728,7 @@
 						"points":"<!--MANEUVER_COST-->",
 						"phase":"<!--MANEUVER_PHASE-->",
 						"ocv":"<!--MANEUVER_OCV-->",
-						"dcv":"<!--MANEUVER_OCV-->",
+						"dcv":"<!--MANEUVER_DCV-->",
 						"effect":"<!--MANEUVER_EFFECT-->",
 						"notes":"<!--NOTES-->"
 					<!--STOP-->3<!--/STOP-->
@@ -741,7 +741,7 @@
 						"points":"<!--MANEUVER_COST-->",
 						"phase":"<!--MANEUVER_PHASE-->",
 						"ocv":"<!--MANEUVER_OCV-->",
-						"dcv":"<!--MANEUVER_OCV-->",
+						"dcv":"<!--MANEUVER_DCV-->",
 						"effect":"<!--MANEUVER_EFFECT-->",
 						"notes":"<!--NOTES-->"
 					<!--STOP-->4<!--/STOP-->
@@ -754,7 +754,7 @@
 						"points":"<!--MANEUVER_COST-->",
 						"phase":"<!--MANEUVER_PHASE-->",
 						"ocv":"<!--MANEUVER_OCV-->",
-						"dcv":"<!--MANEUVER_OCV-->",
+						"dcv":"<!--MANEUVER_DCV-->",
 						"effect":"<!--MANEUVER_EFFECT-->",
 						"notes":"<!--NOTES-->"
 					<!--STOP-->5<!--/STOP-->
@@ -767,7 +767,7 @@
 						"points":"<!--MANEUVER_COST-->",
 						"phase":"<!--MANEUVER_PHASE-->",
 						"ocv":"<!--MANEUVER_OCV-->",
-						"dcv":"<!--MANEUVER_OCV-->",
+						"dcv":"<!--MANEUVER_DCV-->",
 						"effect":"<!--MANEUVER_EFFECT-->",
 						"notes":"<!--NOTES-->"
 					<!--STOP-->6<!--/STOP-->
@@ -780,7 +780,7 @@
 						"points":"<!--MANEUVER_COST-->",
 						"phase":"<!--MANEUVER_PHASE-->",
 						"ocv":"<!--MANEUVER_OCV-->",
-						"dcv":"<!--MANEUVER_OCV-->",
+						"dcv":"<!--MANEUVER_DCV-->",
 						"effect":"<!--MANEUVER_EFFECT-->",
 						"notes":"<!--NOTES-->"
 					<!--STOP-->7<!--/STOP-->
@@ -793,7 +793,7 @@
 						"points":"<!--MANEUVER_COST-->",
 						"phase":"<!--MANEUVER_PHASE-->",
 						"ocv":"<!--MANEUVER_OCV-->",
-						"dcv":"<!--MANEUVER_OCV-->",
+						"dcv":"<!--MANEUVER_DCV-->",
 						"effect":"<!--MANEUVER_EFFECT-->",
 						"notes":"<!--NOTES-->"
 					<!--STOP-->8<!--/STOP-->
@@ -806,7 +806,7 @@
 						"points":"<!--MANEUVER_COST-->",
 						"phase":"<!--MANEUVER_PHASE-->",
 						"ocv":"<!--MANEUVER_OCV-->",
-						"dcv":"<!--MANEUVER_OCV-->",
+						"dcv":"<!--MANEUVER_DCV-->",
 						"effect":"<!--MANEUVER_EFFECT-->",
 						"notes":"<!--NOTES-->"
 					<!--STOP-->9<!--/STOP-->
@@ -819,7 +819,7 @@
 						"points":"<!--MANEUVER_COST-->",
 						"phase":"<!--MANEUVER_PHASE-->",
 						"ocv":"<!--MANEUVER_OCV-->",
-						"dcv":"<!--MANEUVER_OCV-->",
+						"dcv":"<!--MANEUVER_DCV-->",
 						"effect":"<!--MANEUVER_EFFECT-->",
 						"notes":"<!--NOTES-->"
 					<!--STOP-->10<!--/STOP-->
@@ -832,7 +832,7 @@
 						"points":"<!--MANEUVER_COST-->",
 						"phase":"<!--MANEUVER_PHASE-->",
 						"ocv":"<!--MANEUVER_OCV-->",
-						"dcv":"<!--MANEUVER_OCV-->",
+						"dcv":"<!--MANEUVER_DCV-->",
 						"effect":"<!--MANEUVER_EFFECT-->",
 						"notes":"<!--NOTES-->"
 					<!--STOP-->11<!--/STOP-->
@@ -845,7 +845,7 @@
 						"points":"<!--MANEUVER_COST-->",
 						"phase":"<!--MANEUVER_PHASE-->",
 						"ocv":"<!--MANEUVER_OCV-->",
-						"dcv":"<!--MANEUVER_OCV-->",
+						"dcv":"<!--MANEUVER_DCV-->",
 						"effect":"<!--MANEUVER_EFFECT-->",
 						"notes":"<!--NOTES-->"
 					<!--STOP-->12<!--/STOP-->

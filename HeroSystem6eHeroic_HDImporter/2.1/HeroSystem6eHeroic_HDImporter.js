@@ -574,6 +574,8 @@
 				importedManeuvers["martialManeuverPhase"+ID] = maneuverArray[importCount].phase;
 				temp = Number(maneuverArray[importCount].ocv);
 				importedManeuvers["martialManeuverOCV"+ID] = isNaN(temp) ? 0 : temp;
+				temp = Number(maneuverArray[importCount].dcv);
+				importedManeuvers["martialManeuverDCV"+ID] = isNaN(temp) ? 0 : temp;
 				
 				tempString = maneuverArray[importCount].effect.toLowerCase();
 				if ( tempString.includes("weapon") ) {
