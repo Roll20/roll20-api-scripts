@@ -32,7 +32,7 @@ If HD Importer has started correctly the following notification should appear in
 # Import a Character:
 
 ## HERO Designer
-1. Download the latest export format file [HeroSystem6eHeroic.hde](https://github.com/Roll20/roll20-api-scripts/tree/master/HeroSystem6eHeroic_HDImporter/2.0) from this repository and install it into your HERO Designer folder.
+1. Download the latest export format file [HeroSystem6eHeroic.hde](https://github.com/Roll20/roll20-api-scripts/tree/master/HeroSystem6eHeroic_HDImporter/2.1) from this repository and install it into your HERO Designer folder.
 2. Create a new character or load a character file into HERO Designer.
 3. Select the export format HeroSystem6eHeroic.hde via the menu item "Current Character->Export->Set Export Format..."
 4. Select "Current Character->Export->Export to File..." to save the character as a .txt file.
@@ -55,7 +55,7 @@ The release folder contains two sample character files:
 ## Notes
 Double quotation marks are used to indicate JSON data values. Please take care to avoid quotation marks in Hero Designer text fields. Instead use single quotes. The exporter will attempt to remove double quotes, but this may not be foolproof.
 
-Characters exported with the older version of HeroSystem6eHeroic.hde (1.0) will likely work, but version 2.0 includes more description text, notes, powers, and complications. Version 2.0 also has some fixes for bugs found in 1.0.
+Characters exported with the older version of HeroSystem6eHeroic.hde (1.0 and 2.0) should work, but version 2.1 supports more content and has fixes for bugs present in the earlier versions.
 
 Hero Designer has entries for eye color and hair color. This information is not imported since the character sheet does not have corresponding fields.
 
@@ -109,4 +109,6 @@ Version 1.0 -- Initial release on August 1, 2022.
 
 Version 1.1 -- Updated to accommodate the seventeen power slots available on the character sheet (May 4, 2023).
 
-Version 2.0 -- Updated to support additional character sheet features as of Sheet version 2.9. Updated version of Hero Designer export format (HeroSystem6eHeroic.hde to version 2.0). Adds support for 20 power slots with ten extra powers imported to text. Complications increased from seven to ten with up to an additional ten sent to text on the sheet. All HD description fields now recognized. Generates armor from Resistant Protection. Recognizes and applies powers that adjust characteristic and movement abilities. Adds more robust input error checking and avoids more quotation character troubles. Additional HD file pack testing. Bug fixes and 60% reduction in code size (April 27, 2024).
+Version 2.0 -- Updated to support additional character sheet features as of sheet version 2.9. Updated version of Hero Designer export format (HeroSystem6eHeroic.hde to version 2.0). Adds support for 20 power slots with ten extra powers imported to text. Complications increased from seven to ten with up to an additional ten sent to text on the sheet. All HD description fields now recognized. Generates armor from Resistant Protection. Recognizes and applies powers that adjust characteristic and movement abilities. Adds more robust input error checking and avoids more quotation character troubles. Additional HD file pack testing. Bug fixes and 60% reduction in code size (April 27, 2024).
+
+Version 2.1 -- Updated to support additional character sheet features as of sheet version 3.16. Expands support for martial arts maneuvers. Recognizes power notes and scans powers for damage advantages. Adds the everyman PS skill. Bug fixes (August 9, 2024).
