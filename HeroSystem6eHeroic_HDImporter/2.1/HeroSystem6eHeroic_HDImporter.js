@@ -42,7 +42,7 @@
 (function() {
 	// Constants
 	const versionMod = "2.1";
-	const versionSheet = "3.15"; // Note that a newer sheet will make upgrades as well as it can.
+	const versionSheet = "3.16"; // Note that a newer sheet will make upgrades as well as it can.
 	const needsExportedVersion = new Set(["1.0", "2.0", "2.1"]); // HeroSystem6eHeroic.hde versions allowed.
 	
 	const defaultAttributes = {
@@ -262,9 +262,9 @@
 		sendChat(script_name, '<div style="'+style+'">Import of <b>' + character.character_name + '</b> started.</div>', null, {noarchive:true});
 		
 		if (character.version === "1.0") {
-			sendChat(script_name, "Exported from HERO Designer with \n HeroSystem6eHeroic.hde v1.0. \n Version 2.1 is recommended.");
+			sendChat(script_name, "Exported from HERO Designer with \n HeroSystem6eHeroic.hde v1.0. \n Version 2.1 supports additional content.");
 		} else if (character.version === "2.0") {
-			sendChat(script_name, "Exported from HERO Designer with \n HeroSystem6eHeroic.hde v2.0. \n Version 2.1 is recommended.");
+			sendChat(script_name, "Exported from HERO Designer with \n HeroSystem6eHeroic.hde v2.0. \n Version 2.1 supports additional content.");
 		}
 		
 		object = null;
@@ -924,7 +924,7 @@
 						importedWeapons["weaponRangeMod"+ID]= 0;
 					}
 					
-					// Check for thrown weapon property.
+					// Check for the thrown weapon advantage.
 					importedWeapons["rangeBasedOnStr"+ID] = (tempString.includes("Range Based On STR")) ? "on" : 0;
 					
 					// Check for modified STUN multiplier.
@@ -4249,8 +4249,11 @@
 		searchString = "penetrating";
 		advantage += getSingleAdvantage (weaponString, searchString);
 		
-		if (weaponString.includes("range based on str")) {
+		// Check for the ranged advantage.
+		if (weaponString.includes("range based on str (+1/4)")) {
 			advantage += 0.25;
+		} else if (weaponString.includes("ranged (+1/2)")) {
+			advantage += 0.50;
 		}
 		
 		if (weaponString.includes("sticky")) {
