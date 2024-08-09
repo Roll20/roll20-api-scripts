@@ -22,7 +22,7 @@ This script was tested with the following commercially available character packs
 
 From the campaign's home page go to the Mods page via 'Settings -> Mod (API) Scripts.'
 
-From the Mods page select 'HeroSystem6eHeroic HDImporter' from the Mod Library dropdown list. Version 2.0 is the most recent and recommended version. Alternatively, create a new script and copy and paste the contents of HeroSystem6eHeroic_HDImporter.js into the text editing box. Save the script.
+From the Mods page select 'HeroSystem6eHeroic HDImporter' from the Mod Library dropdown list. Version 2.1 is the most recent and recommended version. Alternatively, create a new script and copy and paste the contents of HeroSystem6eHeroic_HDImporter.js into the text editing box. Save the script.
 
 Launch the game.
 
@@ -111,4 +111,4 @@ Version 1.1 -- Updated to accommodate the seventeen power slots available on the
 
 Version 2.0 -- Updated to support additional character sheet features as of sheet version 2.9. Updated version of Hero Designer export format (HeroSystem6eHeroic.hde to version 2.0). Adds support for 20 power slots with ten extra powers imported to text. Complications increased from seven to ten with up to an additional ten sent to text on the sheet. All HD description fields now recognized. Generates armor from Resistant Protection. Recognizes and applies powers that adjust characteristic and movement abilities. Adds more robust input error checking and avoids more quotation character troubles. Additional HD file pack testing. Bug fixes and 60% reduction in code size (April 27, 2024).
 
-Version 2.1 -- Updated to support additional character sheet features as of sheet version 3.16. Expands support for martial arts maneuvers. Recognizes power notes and scans powers for damage advantages. Adds the everyman PS skill. Bug fixes (August 9, 2024).
+Version 2.1 -- Updated to support additional character sheet features as of sheet version 3.16. Updated version of Hero Designer export format (HeroSystem6eHeroic.hde to version 2.1). Expands support for martial arts maneuvers. Recognizes power notes and scans powers for damage advantages. Adds the everyman PS skill. Bug fixes (August 9, 2024).
