@@ -118,7 +118,7 @@ class MultiWorldCalendar {
 						case 'setday':
 							const day = parseInt(args[2]);
 
-							if (isNaN(day)) return sendChat('Multi-World Calendar', 'Please input a valid number for the day.');
+							if (isNaN(day)) return sendChat('Multi-World Calendar', '/w gm Syntax Error! Please input a valid number for the day.');
 
 							setDay(day);
 							chkAlarms();
@@ -127,7 +127,7 @@ class MultiWorldCalendar {
 						case 'setmonth':
 							const month = args[2];
 
-							if (!monthNames[mwcal.world].includes(month)) return sendChat('Multi-World Calendar', 'Please input a valid month.');
+							if (!monthNames[mwcal.world].includes(month)) return sendChat('Multi-World Calendar', '/w gm Syntax Error! Please input a valid month.');
 
 							setMonth(month);
 							chkAlarms();
@@ -136,7 +136,7 @@ class MultiWorldCalendar {
 						case 'setyear':
 							const year = parseInt(args[2]);
 
-							if (isNaN(year)) return sendChat('Multi-World Calendar', 'Please input a valid number for the year.');
+							if (isNaN(year)) return sendChat('Multi-World Calendar', '/w gm Syntax Error! Please input a valid number for the year.');
 
 							setYear(year);
 							chkAlarms();
@@ -146,7 +146,7 @@ class MultiWorldCalendar {
 							const hour = parseInt(args[3]);
 							const minute = parseInt(args[5]);
 
-							if (isNaN(hour) || isNaN(minute)) return sendChat('Multi-World Calendar', 'Please input a valid number for the time.');
+							if (isNaN(hour) || isNaN(minute)) return sendChat('Multi-World Calendar', '/w gm Syntax Error! Please input a valid number for the time.');
 
 							setHour(hour);
 							setMinute(minute);
@@ -157,8 +157,8 @@ class MultiWorldCalendar {
 							const amount = parseInt(args[2]);
 							const type = args[3];
 
-							if (isNaN(amount)) return sendChat('Multi-World Calendar', 'Please input a valid number for the amount.');
-							if (!['Short Rest', 'Long Rest', 'Hour', 'Minute', 'Day', 'Week', 'Month', 'Year'].includes(type)) return sendChat('Multi-World Calendar', 'Please input a valid type.');
+							if (isNaN(amount)) return sendChat('Multi-World Calendar', '/w gm Syntax Error! Please input a valid number for the amount.');
+							if (!['Short Rest', 'Long Rest', 'Hour', 'Minute', 'Day', 'Week', 'Month', 'Year'].includes(type)) return sendChat('Multi-World Calendar', '/w gm Syntax Error! Please input a valid type.');
 
 							advance(amount, type);
 							chkAlarms();
@@ -186,6 +186,8 @@ class MultiWorldCalendar {
 							}
 						break;
 						case 'world':
+							if (!args[2] || !mwcal.worlds.find(w => w.toLowerCase() === args[2].toLowerCase())) return sendChat('Multi-World Calendar', '/w gm Invalid World! Please input a valid world.');
+
 							setWorld(args[2]);
 							chkAlarms();
 							calendarMenu();
@@ -230,7 +232,13 @@ class MultiWorldCalendar {
 							alarmMenu(num);
 						break;
 						case 'new':
-							createAlarm(args[2], args[4], args[6], args[8]);
+						    if (args[3] === '' || args[3] === ' ') return sendChat('Multi-World Calendar', '/w gm Invalid Syntax! The name of a created Alarm may not be empty!');
+						    let date = args[5].split('.');
+						    if (!date || isNaN(parseInt(date[0])) || isNaN(parseInt(date[1])) || isNaN(parseInt(date[0]))) return sendChat('Multi-World Calendar', '/w gm Invalid Syntax! The Date must be formatted correctly and must contain numbers!');
+						    let time = args[7].split(':');
+						    if (!time || isNaN(parseInt(time[0])) || isNaN(parseInt(time[1]))) return sendChat('Multi-World Calendar', '/w gm Invalid Syntax! The Time must be formatted correctly and must contain numbers!');
+						    
+							createAlarm(args[3], args[5], args[7], args[9]);
 						break;
 						case 'delete':
 							deleteAlarm(args[2]);
@@ -238,6 +246,7 @@ class MultiWorldCalendar {
 						break;
 						case 'reset':
 							setAlarmDefaults();
+							sendChat('Multi-World Calendar', '/w gm Successfully reset all existing Alarms!');
 							alarmMenu();
 						break;
 					}
@@ -347,13 +356,13 @@ function setMWCalDefaults() {
 }
 
 function setAlarmDefaults() {
-	state.alarms = {
-		faerun: [],
-		eberron: [],
-		greyhawk: [],
-		modern: [],
-		talDorei: []
-	};
+	state.alarms = [
+		[],
+		[],
+		[],
+		[],
+		[]
+	];
 
 	log('Multi-World Calendar - Successfully registered Alarm Defaults!');
 }
@@ -1183,9 +1192,10 @@ function alarmMenu(num) {
     const list = [];
     
     if (isNaN(num)) {
-        if (!state.alarms[mwcal.world]) {
+        if (state.alarms[mwcal.world].length === 0) {
 			sendChat('Multi-World Calendar', `/w gm <div ${mwcal.style.divMenu}>` + //--
 				`<div ${mwcal.style.header}>Alarm Menu</div>` + //--
+				`<div ${mwcal.style.sub}>${mwcal.worlds[mwcal.world]}</div>` + //--
 				`<div ${mwcal.style.arrow}></div>` + //--
 				`<div ${mwcal.style.divButton}>No Alarms set</div>` + //--
 				`<br><br>` + //--
@@ -1199,9 +1209,11 @@ function alarmMenu(num) {
 			}
 
 			const alarmList = list.join('|');
+			log(alarmList);
 
 			sendChat('Multi-World Calendar', `/w gm <div ${mwcal.style.divMenu}>` + //--
 				`<div ${mwcal.style.header}>Alarm Menu</div>` + //--
+				`<div ${mwcal.style.sub}>${mwcal.worlds[mwcal.world]}</div>` + //--
 				`<div ${mwcal.style.arrow}></div>` + //--
 				`<table>` + //--
 				`<tr><td ${mwcal.style.tdReg}>Alarm: </td><td ${mwcal.style.tdReg}><a ${mwcal.style.buttonMedium}" href="!alarm --?{Alarm?|${alarmList}}">Not selected</a></td></tr>` + //--
@@ -1219,6 +1231,7 @@ function alarmMenu(num) {
     		if (!state.alarms[mwcal.world]) {
     			sendChat('Multi-World Calendar', `/w gm <div ${mwcal.style.divMenu}>` + //--
     				`<div ${mwcal.style.header}>Alarm Menu</div>` + //--
+    				`<div ${mwcal.style.sub}>${mwcal.worlds[mwcal.world]}</div>` + //--
     				`<div ${mwcal.style.arrow}></div>` + //--
     				`<div ${mwcal.style.divButton}>No Alarms set</div>` + //--
     				`<br><br>` + //--
@@ -1235,6 +1248,7 @@ function alarmMenu(num) {
     
     			sendChat('Multi-World Calendar', `/w gm <div ${mwcal.style.divMenu}>` + //--
     				`<div ${mwcal.style.header}>Alarm Menu</div>` + //--
+    				`<div ${mwcal.style.sub}>${mwcal.worlds[mwcal.world]}</div>` + //--
     				`<div ${mwcal.style.arrow}></div>` + //--
     				`<table>` + //--
     				`<tr><td ${mwcal.style.tdReg}>Alarm: </td><td ${mwcal.style.tdReg}><a ${mwcal.style.buttonMedium}" href="!alarm --?{Alarm?|${alarmList}}">Not selected</a></td></tr>` + //--
@@ -1293,14 +1307,10 @@ function createAlarm(title, date, time, message) {
 		message: message
 	};
 
-	state.alarms[mwcal.world].push(alarm);
+	(state.alarms[mwcal.world]).push(alarm);
 
-	sendChat('Multi-World Calendar' `/w gm Alarm #${state.alarms[mwcal.world].length - 1} created!\n` + //--
-		`Title: ${title}\n` + //--
-		`Date: ${date}\n` + //--
-		`Time: ${time}\n` + //--
-		`Message: ${message}`
-	);
+	sendChat('Multi-World Calendar', `/w gm Alarm #${state.alarms[mwcal.world].length - 1} created!`)
+	sendChat('Multi-World Calendar', `/w gm Title: ${title}, Date: ${date}, Time: ${time}, Message: ${message}`);
 
 	alarmMenu(state.alarms[mwcal.world].length - 1);
 }
@@ -1308,7 +1318,7 @@ function createAlarm(title, date, time, message) {
 function setTitle(num, title) {
 	state.alarms[mwcal.world][num].title = title;
 
-	sendChat('Multi-World Calendar', `/w gm Alarm #${num} title set to \"${title}\"`);
+	sendChat('Multi-World Calendar', `/w gm Alarm #${num} title set to "${title}"`);
 }
 
 function setDate(num, date) {
