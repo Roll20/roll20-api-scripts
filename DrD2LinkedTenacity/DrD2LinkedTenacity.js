@@ -2,7 +2,7 @@
 // By:       nesuprachy
 // Contact:  https://app.roll20.net/users/11071738/nesuprachy
 //
-// This script tracks changes made to the 'tenacity_current' attribute and propagates them to other sheets linked via the 'npc_owner' attribute.
+// This script tracks changes made to the `tenacity_current` attribute and propagates them to other sheets linked via the `npc_owner` attribute.
 // Uses ChatSetAttr mod to change attributes from chat https://github.com/Roll20/roll20-api-scripts/tree/master/ChatSetAttr#readme
 
 var DrD2LinkedTenacity = DrD2LinkedTenacity || (function() {
@@ -15,7 +15,7 @@ var DrD2LinkedTenacity = DrD2LinkedTenacity || (function() {
         log(`-=> DrD2LinkedTenacity v${version} <=-  [${new Date(lastUpdate*1000)}]`);
     },
 
-    handleAttribute = function (obj, prev, isMax) {
+    handleTenacityAttribute = function (obj, prev, isMax) {
         if(obj.get('name') === 'tenacity_current') {
             var prevVal, newVal = 0;
             if(isMax){
@@ -73,8 +73,8 @@ var DrD2LinkedTenacity = DrD2LinkedTenacity || (function() {
     },
 
     registerEventHandlers = function () {
-        on('change:attribute:current', function(obj, prev){handleAttribute(obj, prev, false)});
-        on('change:attribute:max', function(obj, prev){handleAttribute(obj, prev, true)});
+        on('change:attribute:current', function(obj, prev){handleTenacityAttribute(obj, prev, false)});
+        on('change:attribute:max', function(obj, prev){handleTenacityAttribute(obj, prev, true)});
     };
     
     return {
