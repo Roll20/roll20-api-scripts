@@ -15,7 +15,7 @@ var DrD2StatusMarkers = DrD2StatusMarkers || (function() {
     const relevantAttributes = ['body_scarred', 'spirit_scarred', 'influence_scarred', 'danger', 'advantages'];
         
     checkInstall = function () {
-        log(`-=> DrD2StatusMarkers v${version} <=-  [${new Date(lastUpdate*1000)}]`);
+        log(`-=> DrD2StatusMarkers v${version} <=-  [${new Date(lastUpdate)}]`);
     },
 
     handleMarkerAttributes = function (obj, prev) {
