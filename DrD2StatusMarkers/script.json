@@ -1,0 +1,16 @@
+{
+    "name": "DrD2StatusMarkers",
+    "script": "DrD2StatusMarkers.js",
+    "version": "0.1.0",
+    "previousversions": [],
+    "description": "Designed for use only with the Draci Doupe II sheet.\n\nThis script sets token markers based on relevant attributes and vice versa.\nWorks with the DrD2 token marker set, icons must be named `RED`, `BLU`, `GRN`, `VIO`, `BLK`.",
+    "authors": "nesuprachy",
+    "roll20userid": "11071738",
+    "useroptions": [],
+    "dependencies": ["TokenMod, ChatSetAttr"],
+    "modifies": {
+        "attribute.current": "read,write",
+        "attribute.characterid": "read"
+    },
+    "conflicts": []
+}
