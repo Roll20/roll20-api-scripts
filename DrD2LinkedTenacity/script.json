@@ -1,7 +1,7 @@
 {
     "name": "DrD2LinkedTenacity",
     "script": "DrD2LinkedTenacity.js",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "previousversions": [],
     "description": "Designed for use only with the Draci Doupe II sheet.\n\nThis script tracks changes made to the `tenacity_current` attribute and propagates them to other sheets linked via the `npc_owner` attribute.",
     "authors": "nesuprachy",
