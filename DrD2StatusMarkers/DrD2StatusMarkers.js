@@ -107,31 +107,31 @@ var DrD2StatusMarkers = DrD2StatusMarkers || (function() {
             //log(`${marker}, ${color}, ${level}`);
             switch (color) {
                 case 'RED':
-                    sendChat('API', `!setattr --charid ${charId} --body_scarred|${level} --silent --nocreate`, null, {noarchive:true} );
+                    sendChat('API', `!setattr --charid ${charId} --body_scarred|${level} --mute --nocreate`, null, {noarchive:true} );
                     break;
                 case 'BLU':
-                    sendChat('API', `!setattr --charid ${charId} --spirit_scarred|${level} --silent --nocreate`, null, {noarchive:true} );
+                    sendChat('API', `!setattr --charid ${charId} --spirit_scarred|${level} --mute --nocreate`, null, {noarchive:true} );
                     break;
                 case 'GRN':
-                    sendChat('API', `!setattr --charid ${charId} --influence_scarred|${level} --silent --nocreate`, null, {noarchive:true} );
+                    sendChat('API', `!setattr --charid ${charId} --influence_scarred|${level} --mute --nocreate`, null, {noarchive:true} );
                     break;
                 case 'VIO':
-                    sendChat('API', `!setattr --charid ${charId} --danger|${level} --silent --nocreate`, null, {noarchive:true} );
+                    sendChat('API', `!setattr --charid ${charId} --danger|${level} --mute --nocreate`, null, {noarchive:true} );
                     break;
                 case 'BLK':
-                    sendChat('API', `!setattr --charid ${charId} --advantages|${level} --silent --nocreate`, null, {noarchive:true} );
+                    sendChat('API', `!setattr --charid ${charId} --advantages|${level} --mute --nocreate`, null, {noarchive:true} );
                     break;
                 default:
                     break;
             }
             if(!(newVals.length)) {
-                sendChat('API', `!setattr --charid ${charId} --body_scarred|0 --spirit_scarred|0 --influence_scarred|0 --danger|0 --advantages|0 --silent --nocreate`, null, {noarchive:true} );
+                sendChat('API', `!setattr --charid ${charId} --body_scarred|0 --spirit_scarred|0 --influence_scarred|0 --danger|0 --advantages|0 --mute --nocreate`, null, {noarchive:true} );
             }else {
-                if(!(newVals.some(str => str.includes('RED')))) {sendChat('API', `!setattr --charid ${charId} --body_scarred|0 --silent --nocreate`, null, {noarchive:true} );}
-                if(!(newVals.some(str => str.includes('BLU')))) {sendChat('API', `!setattr --charid ${charId} --spirit_scarred|0 --silent --nocreate`, null, {noarchive:true} );}
-                if(!(newVals.some(str => str.includes('GRN')))) {sendChat('API', `!setattr --charid ${charId} --influence_scarred|0 --silent --nocreate`, null, {noarchive:true} );}
-                if(!(newVals.some(str => str.includes('VIO')))) {sendChat('API', `!setattr --charid ${charId} --danger|0 --silent --nocreate`, null, {noarchive:true} );}
-                if(!(newVals.some(str => str.includes('BLK')))) {sendChat('API', `!setattr --charid ${charId} --advantages|0 --silent --nocreate`, null, {noarchive:true} );}
+                if(!(newVals.some(str => str.includes('RED')))) {sendChat('API', `!setattr --charid ${charId} --body_scarred|0 --mute --nocreate`, null, {noarchive:true} );}
+                if(!(newVals.some(str => str.includes('BLU')))) {sendChat('API', `!setattr --charid ${charId} --spirit_scarred|0 --mute --nocreate`, null, {noarchive:true} );}
+                if(!(newVals.some(str => str.includes('GRN')))) {sendChat('API', `!setattr --charid ${charId} --influence_scarred|0 --mute --nocreate`, null, {noarchive:true} );}
+                if(!(newVals.some(str => str.includes('VIO')))) {sendChat('API', `!setattr --charid ${charId} --danger|0 --mute --nocreate`, null, {noarchive:true} );}
+                if(!(newVals.some(str => str.includes('BLK')))) {sendChat('API', `!setattr --charid ${charId} --advantages|0 --mute --nocreate`, null, {noarchive:true} );}
             }
         }
     },
