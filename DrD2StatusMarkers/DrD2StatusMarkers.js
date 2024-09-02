@@ -3,6 +3,7 @@
 // Contact:  https://app.roll20.net/users/11071738/nesuprachy
 //
 // This script sets token markers based on relevant attributes and vice versa
+// Works with the DrD2 token marker set, icons must be named `RED`, `BLU`, `GRN`, `VIO`, `BLK`
 // Uses TokenMod to set token markers from chat https://wiki.roll20.net/Script:Token_Mod
 // Uses ChatSetAttr mod to change attributes from chat https://github.com/Roll20/roll20-api-scripts/tree/master/ChatSetAttr#readme
 
