@@ -8,7 +8,7 @@
 var DrD2LinkedTenacity = DrD2LinkedTenacity || (function() {
     'use strict';
     
-    const version = '0.1.0';
+    const version = '0.1.1';
     const lastUpdate = 1725266705016;
         
     checkInstall = function () {
