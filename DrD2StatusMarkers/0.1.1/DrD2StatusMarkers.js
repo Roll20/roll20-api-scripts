@@ -9,9 +9,9 @@
 var DrD2StatusMarkers = DrD2StatusMarkers || (function() {
     'use strict';
     
-    const version = '0.1.2';
-    const lastUpdate = 1725975609706;
-    const markerAttributes = ['body_scarred', 'spirit_scarred', 'influence_scarred', 'danger', 'advantages', 'companion_bond_scarred'];
+    const version = '0.1.1';
+    const lastUpdate = 1725386405067;
+    const markerAttributes = ['body_scarred', 'spirit_scarred', 'influence_scarred', 'danger', 'advantages'];
         
     checkInstall = function () {
         log(`-=> DrD2StatusMarkers v${version} <=- [${new Date(lastUpdate)}]`);
@@ -41,9 +41,6 @@ var DrD2StatusMarkers = DrD2StatusMarkers || (function() {
                     break;
                 case markerAttributes[4]:
                     color = 'BLK';
-                    break;
-                case markerAttributes[5]:
-                    color = 'GRY';
                     break;
                 default:
                     break;
