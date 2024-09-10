@@ -1,7 +1,7 @@
 {
   "name": "MetaScriptToolbox",
   "script": "MetaScriptToolbox.js",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "The MetaScriptToolbox is a script that packages the entire suite of metascripts (and their supporting libraries). It does not have a direct interface, but only serves to make sure you have the latest versions of the included metascripts, as well as notifying you should a new metascript be added to the toolbox.",
   "authors": "timmaugh",
   "roll20userid": "5962076",
@@ -9,5 +9,7 @@
   "useroptions": [],
   "modifies": {},
   "conflicts": [],
-  "previousversions": []
+  "previousversions": [
+    "0.0.1"
+  ]
 }
