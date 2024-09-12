@@ -3,7 +3,7 @@
     "script": "DrD2StatusMarkers.js",
     "version": "0.1.2",
     "previousversions": ["0.1.0", "0.1.1"],
-    "description": "Designed for use only with the Draci Doupe II sheet.\n\nThis script sets token markers based on relevant sheet attributes.\nWorks with the DrD2 token marker set, icons must be named `RED`, `BLU`, `GRN`, `VIO`, `BLK`.",
+    "description": "Designed for use only with the Draci Doupe II sheet.\n\nThis script sets token markers based on relevant sheet attributes.\nWorks with the DrD2 token marker set, icons must be named `RED`, `BLU`, `GRN`, `VIO`, `BLK`, `GRY`.\nYou can download the token marker set [here](https://raw.githubusercontent.com/nesuprachy/roll20-character-sheets/Draci-doupe-II/Draci%20doupe%20II/assets/DrD2-token_markers.zip).",
     "authors": "nesuprachy",
     "roll20userid": "11071738",
     "useroptions": [],
