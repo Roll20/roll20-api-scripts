@@ -47,7 +47,7 @@ If HD Importer has started correctly the following notification should appear in
 2. Hit enter. If all goes well you should see a start and finish notification, which for the character "Alena" appears as
 ![HelpMenu](/HeroSystem6eHeroic_HDImporter/images/ImportSuccess.png)
 
-## Sample Character
+## Sample Characters
 The release folder contains two test and evaluation characters for use in HERO Designer (HDC) and Roll20 (TXT).
 - `Sample_Character.hdc` is the fae wizard Darci.
 - `Sample_Character_MA.hdc` is the doctor and martial arts swordsman Henkle.
