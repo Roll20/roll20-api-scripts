@@ -1,4 +1,4 @@
-<!--TEMPLATE_NAME-->HeroSystem6eHeroic<!--/TEMPLATE_NAME--><!--TEMPLATE_DESCRIPTION--><p>HeroSystem6eHeroic</p><p>Version 2.0</p><p>Export format for the Roll20 API script HeroSystem6eHeroic_HDImporter, which imports Hero Designer characters into the HeroSystem6eHeroic character sheet.</p><p>For documentation see https://github.com/Roll20/roll20-api-scripts/tree/master/HeroSystem6eHeroic_HDImporter</p><p>By Villain In Glasses (Roll20 ID 633423)</p><!--/TEMPLATE_DESCRIPTION-->
+<!--TEMPLATE_NAME-->HeroSystem6eHeroic<!--/TEMPLATE_NAME--><!--TEMPLATE_DESCRIPTION--><p>HeroSystem6eHeroic</p><p>Version 2.2</p><p>Export format for the Roll20 API script HeroSystem6eHeroic_HDImporter, which imports Hero Designer characters into the HeroSystem6eHeroic character sheet.</p><p>For documentation see https://github.com/Roll20/roll20-api-scripts/tree/master/HeroSystem6eHeroic_HDImporter</p><p>By Villain In Glasses (Roll20 ID 633423)</p><!--/TEMPLATE_DESCRIPTION-->
 <!--FILE_EXTENSION-->txt<!--/FILE_EXTENSION-->
 !hero --import {
 	"character":{
@@ -994,7 +994,7 @@
 					<!--START-->1<!--/START-->
 						"type":"<!--DISPLAY-->",
 						"points":"<!--PERK_COST-->",
-						"text":"<!--IFNAME--><!--NAME--><!--/IFNAME--><!--PERK_TEXT-->",
+						"text":"<!--IFNAME--><!--NAME--> <!--/IFNAME--><!--PERK_TEXT-->",
 						"notes":"<!--IFNOTES--><!--PERK_NOTES--><!--/IFNOTES-->"
 					<!--STOP-->1<!--/STOP-->
 				<!--/PERKS-->},
@@ -1003,7 +1003,7 @@
 					<!--START-->2<!--/START-->
 						"type":"<!--DISPLAY-->",
 						"points":"<!--PERK_COST-->",
-						"text":"<!--IFNAME--><!--NAME--><!--/IFNAME--><!--PERK_TEXT-->",
+						"text":"<!--IFNAME--><!--NAME--> <!--/IFNAME--><!--PERK_TEXT-->",
 						"notes":"<!--IFNOTES--><!--PERK_NOTES--><!--/IFNOTES-->"
 					<!--STOP-->2<!--/STOP-->
 				<!--/PERKS-->},
@@ -1012,7 +1012,7 @@
 					<!--START-->3<!--/START-->
 						"type":"<!--DISPLAY-->",
 						"points":"<!--PERK_COST-->",
-						"text":"<!--IFNAME--><!--NAME--><!--/IFNAME--><!--PERK_TEXT-->",
+						"text":"<!--IFNAME--><!--NAME--> <!--/IFNAME--><!--PERK_TEXT-->",
 						"notes":"<!--IFNOTES--><!--PERK_NOTES--><!--/IFNOTES-->"
 					<!--STOP-->3<!--/STOP-->
 				<!--/PERKS-->},
@@ -1021,7 +1021,7 @@
 					<!--START-->4<!--/START-->
 						"type":"<!--DISPLAY-->",
 						"points":"<!--PERK_COST-->",
-						"text":"<!--IFNAME--><!--NAME--><!--/IFNAME--><!--PERK_TEXT-->",
+						"text":"<!--IFNAME--><!--NAME--> <!--/IFNAME--><!--PERK_TEXT-->",
 						"notes":"<!--IFNOTES--><!--PERK_NOTES--><!--/IFNOTES-->"
 					<!--STOP-->4<!--/STOP-->
 				<!--/PERKS-->},
@@ -1030,7 +1030,7 @@
 					<!--START-->5<!--/START-->
 						"type":"<!--DISPLAY-->",
 						"points":"<!--PERK_COST-->",
-						"text":"<!--IFNAME--><!--NAME--><!--/IFNAME--><!--PERK_TEXT-->",
+						"text":"<!--IFNAME--><!--NAME--> <!--/IFNAME--><!--PERK_TEXT-->",
 						"notes":"<!--IFNOTES--><!--PERK_NOTES--><!--/IFNOTES-->"
 					<!--STOP-->5<!--/STOP-->
 				<!--/PERKS-->},
@@ -1039,7 +1039,7 @@
 					<!--START-->6<!--/START-->
 						"type":"<!--DISPLAY-->",
 						"points":"<!--PERK_COST-->",
-						"text":"<!--IFNAME--><!--NAME--><!--/IFNAME--><!--PERK_TEXT-->",
+						"text":"<!--IFNAME--><!--NAME--> <!--/IFNAME--><!--PERK_TEXT-->",
 						"notes":"<!--IFNOTES--><!--PERK_NOTES--><!--/IFNOTES-->"
 					<!--STOP-->6<!--/STOP-->
 				<!--/PERKS-->},
@@ -1048,7 +1048,7 @@
 					<!--START-->7<!--/START-->
 						"type":"<!--DISPLAY-->",
 						"points":"<!--PERK_COST-->",
-						"text":"<!--IFNAME--><!--NAME--><!--/IFNAME--><!--PERK_TEXT-->",
+						"text":"<!--IFNAME--><!--NAME--> <!--/IFNAME--><!--PERK_TEXT-->",
 						"notes":"<!--IFNOTES--><!--PERK_NOTES--><!--/IFNOTES-->"
 					<!--STOP-->7<!--/STOP-->
 				<!--/PERKS-->},
@@ -1057,7 +1057,7 @@
 					<!--START-->8<!--/START-->
 						"type":"<!--DISPLAY-->",
 						"points":"<!--PERK_COST-->",
-						"text":"<!--IFNAME--><!--NAME--><!--/IFNAME--><!--PERK_TEXT-->",
+						"text":"<!--IFNAME--><!--NAME--> <!--/IFNAME--><!--PERK_TEXT-->",
 						"notes":"<!--IFNOTES--><!--PERK_NOTES--><!--/IFNOTES-->"
 					<!--STOP-->8<!--/STOP-->
 				<!--/PERKS-->},
@@ -1066,7 +1066,7 @@
 					<!--START-->9<!--/START-->
 						"type":"<!--DISPLAY-->",
 						"points":"<!--PERK_COST-->",
-						"text":"<!--IFNAME--><!--NAME--><!--/IFNAME--><!--PERK_TEXT-->",
+						"text":"<!--IFNAME--><!--NAME--> <!--/IFNAME--><!--PERK_TEXT-->",
 						"notes":"<!--IFNOTES--><!--PERK_NOTES--><!--/IFNOTES-->"
 					<!--STOP-->9<!--/STOP-->
 				<!--/PERKS-->},
@@ -1075,7 +1075,7 @@
 					<!--START-->10<!--/START-->
 						"type":"<!--DISPLAY-->",
 						"points":"<!--PERK_COST-->",
-						"text":"<!--IFNAME--><!--NAME--><!--/IFNAME--><!--PERK_TEXT-->",
+						"text":"<!--IFNAME--><!--NAME--> <!--/IFNAME--><!--PERK_TEXT-->",
 						"notes":"<!--IFNOTES--><!--PERK_NOTES--><!--/IFNOTES-->"
 					<!--STOP-->10<!--/STOP-->
 				<!--/PERKS-->}
@@ -1086,7 +1086,7 @@
 					<!--START-->1<!--/START-->
 						"type":"<!--DISPLAY-->",
 							"points":"<!--TALENT_COST-->",
-							"text":"<!--IFNAME--><!--NAME--><!--/IFNAME-->
+							"text":"<!--IFNAME--><!--NAME--> <!--/IFNAME-->
 							<!--TALENT_TEXT-->",
 							"notes":"<!--IFNOTES--><!--TALENT_NOTES--><!--/IFNOTES-->"
 					<!--STOP-->1<!--/STOP-->
@@ -1096,7 +1096,7 @@
 					<!--START-->2<!--/START-->
 						"type":"<!--DISPLAY-->",
 							"points":"<!--TALENT_COST-->",
-							"text":"<!--IFNAME--><!--NAME--><!--/IFNAME-->
+							"text":"<!--IFNAME--><!--NAME--> <!--/IFNAME-->
 							<!--TALENT_TEXT-->",
 							"notes":"<!--IFNOTES--><!--TALENT_NOTES--><!--/IFNOTES-->"
 					<!--STOP-->2<!--/STOP-->
@@ -1106,7 +1106,7 @@
 					<!--START-->3<!--/START-->
 						"type":"<!--DISPLAY-->",
 							"points":"<!--TALENT_COST-->",
-							"text":"<!--IFNAME--><!--NAME--><!--/IFNAME-->",
+							"text":"<!--IFNAME--><!--NAME--> <!--/IFNAME-->",
 							"notes":"<!--IFNOTES--><!--TALENT_NOTES--><!--/IFNOTES-->"
 					<!--STOP-->3<!--/STOP-->
 				<!--/TALENTS-->},
@@ -1115,7 +1115,7 @@
 					<!--START-->4<!--/START-->
 						"type":"<!--DISPLAY-->",
 							"points":"<!--TALENT_COST-->",
-							"text":"<!--IFNAME--><!--NAME--><!--/IFNAME-->
+							"text":"<!--IFNAME--><!--NAME--> <!--/IFNAME-->
 							<!--TALENT_TEXT-->",
 							"notes":"<!--IFNOTES--><!--TALENT_NOTES--><!--/IFNOTES-->"
 					<!--STOP-->4<!--/STOP-->
@@ -1125,7 +1125,7 @@
 					<!--START-->5<!--/START-->
 						"type":"<!--DISPLAY-->",
 							"points":"<!--TALENT_COST-->",
-							"text":"<!--IFNAME--><!--NAME--><!--/IFNAME-->
+							"text":"<!--IFNAME--><!--NAME--> <!--/IFNAME-->
 							<!--TALENT_TEXT-->",
 							"notes":"<!--IFNOTES--><!--TALENT_NOTES--><!--/IFNOTES-->"
 					<!--STOP-->5<!--/STOP-->
@@ -1135,7 +1135,7 @@
 					<!--START-->6<!--/START-->
 						"type":"<!--DISPLAY-->",
 							"points":"<!--TALENT_COST-->",
-							"text":"<!--IFNAME--><!--NAME--><!--/IFNAME-->
+							"text":"<!--IFNAME--><!--NAME--> <!--/IFNAME-->
 							<!--TALENT_TEXT-->",
 							"notes":"<!--IFNOTES--><!--TALENT_NOTES--><!--/IFNOTES-->"
 					<!--STOP-->6<!--/STOP-->
@@ -1145,7 +1145,7 @@
 					<!--START-->7<!--/START-->
 						"type":"<!--DISPLAY-->",
 							"points":"<!--TALENT_COST-->",
-							"text":"<!--IFNAME--><!--NAME--><!--/IFNAME-->
+							"text":"<!--IFNAME--><!--NAME--> <!--/IFNAME-->
 							<!--TALENT_TEXT-->",
 							"notes":"<!--IFNOTES--><!--TALENT_NOTES--><!--/IFNOTES-->"
 					<!--STOP-->7<!--/STOP-->
@@ -1155,7 +1155,7 @@
 					<!--START-->8<!--/START-->
 						"type":"<!--DISPLAY-->",
 							"points":"<!--TALENT_COST-->",
-							"text":"<!--IFNAME--><!--NAME--><!--/IFNAME-->
+							"text":"<!--IFNAME--><!--NAME--> <!--/IFNAME-->
 							<!--TALENT_TEXT-->",
 							"notes":"<!--IFNOTES--><!--TALENT_NOTES--><!--/IFNOTES-->"
 					<!--STOP-->8<!--/STOP-->
@@ -1165,7 +1165,7 @@
 					<!--START-->9<!--/START-->
 						"type":"<!--DISPLAY-->",
 							"points":"<!--TALENT_COST-->",
-							"text":"<!--IFNAME--><!--NAME--><!--/IFNAME-->
+							"text":"<!--IFNAME--><!--NAME--> <!--/IFNAME-->
 							<!--TALENT_TEXT-->",
 							"notes":"<!--IFNOTES--><!--TALENT_NOTES--><!--/IFNOTES-->"
 					<!--STOP-->9<!--/STOP-->
@@ -1175,7 +1175,7 @@
 					<!--START-->10<!--/START-->
 						"type":"<!--DISPLAY-->",
 							"points":"<!--TALENT_COST-->",
-							"text":"<!--IFNAME--><!--NAME--><!--/IFNAME-->
+							"text":"<!--IFNAME--><!--NAME--> <!--/IFNAME-->
 							<!--TALENT_TEXT-->",
 							"notes":"<!--IFNOTES--><!--TALENT_NOTES--><!--/IFNOTES-->"
 					<!--STOP-->10<!--/STOP-->
@@ -3518,7 +3518,7 @@
 		"timeStamp":"<!--TIMESTAMP-->",
 		"genre":"<!--GENRE-->",
 		"campaign":"<!--CAMPAIGN_NAME-->",
-		"version":"2.1",
+		"version":"2.2",
 		"HeroSystem6eHeroic":"true"
 	}
 }

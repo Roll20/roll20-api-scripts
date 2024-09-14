@@ -1,6 +1,6 @@
 /* HeroSystem6eHeroic_HDImporter.js
 * Hero Designer Importer for the Roll20 Hero System 6e Heroic character sheet
-* Version: 2.1
+* Version: 2.2
 * By Villain in Glasses
 * villaininglasses@icloud.com
 * Discord: Villain#0604
@@ -43,7 +43,7 @@
 	// Constants
 	const versionMod = "2.2";
 	const versionSheet = "3.16"; // Note that a newer sheet will make upgrades as well as it can.
-	const needsExportedVersion = new Set(["1.0", "2.0", "2.1"]); // HeroSystem6eHeroic.hde versions allowed.
+	const needsExportedVersion = new Set(["1.0", "2.0", "2.1", "2.2"]); // HeroSystem6eHeroic.hde versions allowed.
 	
 	const defaultAttributes = {
 		
@@ -262,9 +262,9 @@
 		sendChat(script_name, '<div style="'+style+'">Import of <b>' + character.character_name + '</b> started.</div>', null, {noarchive:true});
 		
 		if (character.version === "1.0") {
-			sendChat(script_name, "Exported from HERO Designer with \n HeroSystem6eHeroic.hde v1.0. \n Version 2.1 supports additional content.");
+			sendChat(script_name, "Exported from HERO Designer with \n HeroSystem6eHeroic.hde v1.0. \n Version 2.2 supports additional content.");
 		} else if (character.version === "2.0") {
-			sendChat(script_name, "Exported from HERO Designer with \n HeroSystem6eHeroic.hde v2.0. \n Version 2.1 supports additional content.");
+			sendChat(script_name, "Exported from HERO Designer with \n HeroSystem6eHeroic.hde v2.0. \n Version 2.2 supports additional content.");
 		}
 		
 		object = null;
@@ -1360,9 +1360,14 @@
 			ID = String(importCount+1).padStart(2,'0');
 			
 			if ((typeof character.perks["perk"+ID] !== "undefined") && (character.perks["perk"+ID] !== "") && (typeof character.perks["perk"+ID].type !== "undefined")) {
+				tempString = character.perks["perk"+ID].text;
+				if (typeof character.perks["perk"+ID].notes !== "undefined") {
+					tempString += '\n'+'\n'+character.perks["perk"+ID].notes;
+				}
+				
 				perksAndTalentsArray[perksAndTalentsIndex] = {
 					type: character.perks["perk"+ID].type,
-					text: character.perks["perk"+ID].text + '\n' + character.perks["perk"+ID].notes,
+					text: (typeof tempString !== "undefined") ? tempString.trim() : "",
 					points: character.perks["perk"+ID].points
 				}
 				
@@ -1380,10 +1385,15 @@
 		
 			ID = String(importCount+1).padStart(2,'0');
 			
-			if ((typeof character.talents["talent"+ID] !== "undefined") && (character.talents["talent"+ID] !== "") && (typeof character.talents["talent"+ID].type !== "undefined")) {
+			if ((typeof character.talents["talent"+ID] !== "undefined") && (character.talents["talent"+ID] !== "") && (typeof character.talents["talent"+ID].type !== "undefined")) {				
+				tempString = character.talents["talent"+ID].text;
+				if (typeof character.talents["talent"+ID].notes !== "undefined") {
+					tempString += '\n'+'\n'+character.talents["talent"+ID].notes;
+				}
+				
 				perksAndTalentsArray[perksAndTalentsIndex] = {
 					type: character.talents["talent"+ID].type,
-					text: character.talents["talent"+ID].text + '\n' + character.talents["talent"+ID].notes,
+					text: (typeof tempString !== "undefined") ? tempString.trim() : "",
 					points: character.talents["talent"+ID].points
 				}
 				
@@ -1818,10 +1828,11 @@
 				importedPowers["powerAoE"+ID] = isAoE(testObject.testString) ? "on" : 0;
 				
 				// Power descriptions
-				importedPowers["powerText"+ID] = (powerArray[importCount].text).trim();
-				if ( (character.version >= 2.1) && (typeof powerArray[importCount].notes !== "undefined") ) {
-					importedPowers["powerText"+ID] += '\n'+'\n'+(powerArray[importCount].notes).trim();
+				tempString = powerArray[importCount].text;
+				if ( (character.version >= 2.1) && (typeof powerArray[importCount].notes !== "undefined") && (powerArray[importCount].notes !== "") ) {
+					tempString += '\n'+'\n'+powerArray[importCount].notes;
 				}
+				importedPowers["powerText"+ID] = (typeof tempString !== "undefined") ? tempString.trim() : "";
 				
 				// Search for skill roll.
 				tempObject = requiresRoll(testObject.testString);
@@ -2134,8 +2145,13 @@
 			if (importCount < maxComplications) {
 				if ((typeof character.complications["complication"+ID] !== "undefined") && (typeof character.complications["complication"+ID].type !== "undefined")) {			
 					importedComplications["complicationName"+ID] = character.complications["complication"+ID].type;
-					importedComplications["complicationText"+ID] = character.complications["complication"+ID].text + '\n' + character.complications["complication"+ID].notes;
 					importedComplications["complicationCP"+ID] = character.complications["complication"+ID].points;
+					
+					tempString = character.complications["complication"+ID].text;
+					if (typeof character.complications["complication"+ID].notes !== "undefined") {
+						tempString += '\n'+'\n'+character.complications["complication"+ID].notes;
+					}
+					importedComplications["complicationText"+ID] = (typeof tempString !== "undefined") ? tempString.trim() : "";
 					
 					// Type
 					tempString = character.complications["complication"+ID].type;
