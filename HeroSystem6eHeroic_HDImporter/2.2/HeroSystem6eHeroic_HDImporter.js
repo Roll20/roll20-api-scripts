@@ -2378,6 +2378,10 @@
 			// use prepared slots on the character sheet.
 			sheetSkillIndexes.combatSkillIndex = importWeaponSkill(object, character, script_name, theSkill, sheetSkillIndexes.combatSkillIndex);
 			
+		} else if (theSkill.display === "Mental Combat Skill Levels"){
+			// Import mental CSLs. Variation of weapon CSLs.
+			sheetSkillIndexes.combatSkillIndex = importWeaponSkill(object, character, script_name, theSkill, sheetSkillIndexes.combatSkillIndex);
+			
 		} else if (theSkill.display === "Penalty Skill Levels") {
 			// Import penalty skill levels.
 			sheetSkillIndexes.combatSkillIndex = importWeaponSkill(object, character, script_name, theSkill, sheetSkillIndexes.combatSkillIndex);
@@ -2695,7 +2699,7 @@
 				skillLevels40: skillObject.levels
 			};
 			
-		} else if (skillObject.text.includes("group") || skillObject.text.includes("single") || (skillObject.display === "Weapon Familiarity") || (skillObject.display === "Penalty Skill Levels") || (skillObject.display === "Combat Skill Levels")) {
+		} else if (skillObject.text.includes("group") || skillObject.text.includes("single") || (skillObject.display === "Weapon Familiarity") || (skillObject.display === "Penalty Skill Levels") || (skillObject.display === "Combat Skill Levels") || (skillObject.display === "Mental Combat Skill Levels")) {
 			// Call import weapon skills function.
 			
 			// Determine type
@@ -2733,9 +2737,34 @@
 						break;
 					default: 'none';
 				}
+			} else if (skillObject.display === "Mental Combat Skill Levels") {
+				// Determine mental combat skill levels
+				name = skillObject.text;
+				
+				name = name.replace("with all", "w/");
+				name = name.replace("with a", "w/");
+				name = name.replace(" single", "");
+				name = name.replace("group of Mental Powers", "Mental Group");
+				
+				levelCost = parseInt(cost/levels);
+				switch (levelCost) {
+					case 1: type = 'MCSL1';
+						break;
+					case 3: type = 'MCSL3';
+						break;
+					case 6: type = 'MCSL6';
+						break;
+					default: 'none';
+				}
 			} else {
 				// Determine combat skill levels	
-				name = skillObject.text.replace("with", "w/");
+				name = skillObject.text;
+				
+				name = name.replace("with all", "w/");
+				name = name.replace("with any", "w/");
+				name = name.replace("with a", "w/");
+				name = name.replace("small group of attacks", "small group");
+				name = name.replace("large group of attacks", "large group");
 				
 				levelCost = parseInt(cost/levels);
 				switch (levelCost) {
@@ -3005,6 +3034,9 @@
 				name = name.slice(0, -3);
 			} else if ((text !== "") && text.includes("Defense Maneuver")) {
 				name = text.replace("Defense Maneuver", "DEF Maneuver");
+			} else if ((text !== "") && text.includes("Computer Programming")) {
+				name = text.replace("Programming", "Prog.");
+				name = name.slice(0, -3);
 			} else if (skillObject.display !== "") {
 				name = skillObject.display;
 			}
