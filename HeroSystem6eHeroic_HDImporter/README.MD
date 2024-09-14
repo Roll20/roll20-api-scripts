@@ -113,4 +113,4 @@ Version 2.0 -- Updated to support additional character sheet features as of shee
 
 Version 2.1 -- Updated to support additional character sheet features as of sheet version 3.16. Updated version of Hero Designer export format (HeroSystem6eHeroic.hde to version 2.1). Expands support for martial arts maneuvers. Recognizes power notes and scans powers for damage advantages. Adds the everyman PS skill. Added a second sample character with martial arts skills. Bug fixes (August 9, 2024).
 
-Version 2.2 -- Fix for compound power import failure. Minor update to HeroSystem6eHeroic.hde (version 2.2). Improved formatting of text in powers, talents, and complications (September 14, 2024).
+Version 2.2 -- Fix for compound power import failure. Recognizes Mental Combat Skill Levels and assigns levels and costs. Minor update to HeroSystem6eHeroic.hde (version 2.2). Improved formatting of text in powers, talents, and complications (September 14, 2024).
