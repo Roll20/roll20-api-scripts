@@ -42,7 +42,7 @@
 (function() {
 	// Constants
 	const versionMod = "2.2";
-	const versionSheet = "3.16"; // Note that a newer sheet will make upgrades as well as it can.
+	const versionSheet = "3.23"; // Note that a newer sheet will make upgrades as well as it can.
 	const needsExportedVersion = new Set(["1.0", "2.0", "2.1", "2.2"]); // HeroSystem6eHeroic.hde versions allowed.
 	
 	const defaultAttributes = {
@@ -3003,6 +3003,8 @@
 			} else if ((text !== "") && text.includes("PS: ")) {
 				name = text.replace("PS: ", "");
 				name = name.slice(0, -3);
+			} else if ((text !== "") && text.includes("Defense Maneuver")) {
+				name = text.replace("Defense Maneuver", "DEF Maneuver");
 			} else if (skillObject.display !== "") {
 				name = skillObject.display;
 			}
