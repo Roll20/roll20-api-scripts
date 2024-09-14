@@ -3,8 +3,8 @@
 Name			:	APILogic
 GitHub			:	https://github.com/TimRohr22/Cauldron/tree/master/APILogic
 Roll20 Contact	:	timmaugh
-Version			:	2.0.8
-Last Update		:	26 Jan 2023
+Version			:	2.0.9
+Last Update		:	5 SEP 2024
 =========================================================
 */
 var API_Meta = API_Meta || {};
@@ -18,9 +18,9 @@ const APILogic = (() => {
     //		VERSION
     // ==================================================
     const apiproject = 'APILogic';
-    API_Meta[apiproject].version = '2.0.8';
+    API_Meta[apiproject].version = '2.0.9';
     const schemaVersion = 0.1;
-    const vd = new Date(1674771283027);
+    const vd = new Date(1725559091022);
     const versionInfo = () => {
         log(`\u0166\u0166 ${apiproject} v${API_Meta[apiproject].version}, ${vd.getFullYear()}/${vd.getMonth() + 1}/${vd.getDate()} \u0166\u0166 -- offset ${API_Meta[apiproject].offset}`);
         if (!state.hasOwnProperty(apiproject) || state[apiproject].version !== schemaVersion) {
@@ -76,14 +76,14 @@ const APILogic = (() => {
         elserx = /(\()?{&\s*else\s*(?=})/i,
         endrx = /(\()?{&\s*end\s*}((?<=\({&\s*end\s*})\)|\1)/i;
     // FORMERLY in IFTREEPARSER =============================
-    const groupopenrx = /^\s*(?<negation>!?)\s*\(\s*/,
+    const groupopenrx = /^\s*(?<negation>!?)\s*\((?!{&\d+}\))\s*/,
         namerx = /^\[(?<groupname>[^\s]+?)]\s*/i,
         comprx = /^(?<operator>(?:>=|<=|~|!~|=|!=|<|>))\s*/,
         operatorrx = /^(?<operator>(?:&&|\|\|))\s*/,
         groupendrx = /^\)\s*/,
         ifendrx = /^\s*}/,
         ifendparenrx = /^\s*}\)/,
-        textrx = /^(?<negation>!?)\s*(`|'|"?)(?<argtext>.+?)\2\s*(?=!=|!~|>=|<=|[=~><]|&&|\|\||\)|})/;
+        textrx = /^(?<negation>!?)\s*(`|'|"?)(?<argtext>\({&\d+}\)|.+?)\2\s*(?=!=|!~|>=|<=|[=~><]|&&|\|\||\)|})/;
     // TOKEN MARKERS ========================================
     const iftm = { rx: ifrx, type: 'if' },
         elseiftm = { rx: elseifrx, type: 'elseif' },
@@ -583,7 +583,9 @@ const APILogic = (() => {
                 item.metavalue = true;
                 switch (item.type) {
                     case 'text':
-                        item.groups.argtext = item.groups.argtext.replace(/\$\[\[(\d+)]]/g, ((r, g1) => o.parsedinline[g1].value || 0));
+                        item.groups.argtext = item.groups.argtext
+                            .replace(/\$\[\[(\d+)]]/g, ((r, g1) => o.parsedinline[g1].value || 0))
+                            .replace(/\({&(\d+)}\)/, ((r, g1) => o.parsedinline[g1].value || 0));
                         if (grouplib.hasOwnProperty(item.groups.argtext)) {
                             if (grouplib[item.groups.argtext]) item.value = true;
                             else {
@@ -619,6 +621,8 @@ const APILogic = (() => {
             let logcolor = 'lightseagreen';
             let groupname = '';
             let negate = false;
+            let res;
+            c.memo = c.hasOwnProperty("memo") ? c.memo : { value: false, next: '||' };
             nestlog(`CONDITIONS TEST BEGINS`, c.indent, logcolor, msgstate.logging);
             let o = c.tokens.reduce((m, v, i) => {
                 if ((!m.value && m.next === '&&') || (m.value && m.next === '||')) {
@@ -628,22 +632,24 @@ const APILogic = (() => {
                         nestlog(`==AND-GROUP DETECTED: ${v.name || 'no name'}`, c.indent, logcolor, msgstate.logging);
                         groupname = v.name;
                         negate = v.negate;
-                        v = areConditionsTruthy({ tokens: v.contents, indent: c.indent + 1 });
+                        res = areConditionsTruthy({ tokens: v.contents, indent: c.indent + 1, memo: { ...m } });
+                        v.value = res.value;
                         if (groupname) {
                             grouplib[groupname] = v.value;
                         }
                         if (negate) v.value = !v.value;
                     } else {
                         nestlog(`==AND-CONDITION DETECTED: lhs>${v.contents[0]} type>${v.type} rhs>${v.contents[1] || ''}`, c.indent, logcolor, msgstate.logging);
-                        v = resolveCondition(v);
+                        ret = resolveCondition(v);
+                        v.value = ret.value;
                     }
                     nestlog(`==VALUE: ${v.value}`, c.indent, logcolor, msgstate.logging);
                     m.value = m.next === '&&' ? m.value && v.value : m.value || v.value;
                 }
-                nestlog(`==LOOP END MEMO VALUE: ${m.value}, ${m.next}`, c.indent, logcolor, msgstate.logging);
                 m.next = v.next;
+                nestlog(`==LOOP END MEMO VALUE: ${m.value}, ${m.next}`, c.indent, logcolor, msgstate.logging);
                 return m;
-            }, { value: false, next: '||' });
+            }, c.memo);
 
             nestlog(`CONDITIONS TEST ENDS: Conditions are ${o.value}, ${o.next}`, c.indent, logcolor, msgstate.logging);
             return o;

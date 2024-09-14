@@ -1,6 +1,14 @@
 # COFantasy: Historique des changements (depuis la version 1.0)
 ## 3.15
 ### Capacités
+* Implémentaion d'un prédicat pour Autorité naturelle.
+* Armure de feu
+* Au dessus de la mêlée.
+* Transformation régénéatrice.
+* Implémentation des capacité de forme animale.
+* Vent des âmes de la Voie de Morn
+* Phénix, de la Voie du guérisseur.
+* Possibilité d'avoir un lien de sang vers plus d'un personnage
 * Hémorragie de Pestrilax.
 * Prise en compte de la capacité Tir double pour les attaques à 2 mains.
 * Défi de la Voie du Duelliste
@@ -8,6 +16,10 @@
 * Implémentation de la version avancée du drain de force de Dominia.
 
 ### Autres améliorations
+* Prise en compte de decrcAttribute pour les actions montrées.
+* Ajout d'un effet temporaire générique.
+* Les cadavres réanimés sont considérés comme chair à canon du nécromancien s'il possède cette capacité.
+* Ajout de la possibilité de drainer de la mana.
 * Ajout du poison paralysant
 * Ajout d'une option --depensePR pour les actions autres que les attaques
 * Ajout d'une commande !cof-recupere-mana.

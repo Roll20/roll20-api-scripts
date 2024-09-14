@@ -1275,3 +1275,11 @@ DrD2LinkedTenacity:
 faeruncalendar:
   - "Faerun Calendar"
   - "Utility"
+
+DrD2StatusMarkers:
+  - "DrD2StatusMarkers"
+  - "Utility"
+
+SheetDefaults:
+  - "SheetDefaults"
+  - "Utility"

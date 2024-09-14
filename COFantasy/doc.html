@@ -99,7 +99,8 @@ tr {line-height: 25px;}
               <li data-toggle="collapse" data-target="#autres_capacites"><a href="#Autres_capacités">Autres capacités</a></li>
               <ul id="autres_capacites" class="collapse">
                 <li><a class="text-info" href="#Capacites_raciales">Voies et capacités raciales</a></li>
-                <li><a class="text-info" href="#Prestige">Voies de prestige et capacités épiques</a></li>
+                <li><a class="text-info" href="#Prestige">Voies de prestige</a></li>
+                <li><a class="text-info" href="#Epique">Capacités épiques</a></li>
                 <li><a class="text-info" href="#Créatures">Voies de créature</a></li>
                 <li><a class="text-info" href="#Sorts">Autres sorts</a></li>
                 <li><a class="text-info" href="#Capacites_diverses">Capacités diverses</a></li>
@@ -364,6 +365,7 @@ tr {line-height: 25px;}
                   <li><code>--demiAuto</code> : si l'attaque rate, on considère juste que les saves partiels sont automatiquemet réussi. Ça signifie en général que la cible prend au moins la moitié des dégâts.</li>
                   <li><code>--dmSiRate <i>dmg</i></code> : si l'attaque rate, la cible est quand même touchée et se voit infliger <i>dmg</i> dégâts.</li>
                   <li><code>--toucheDoubleDmg</code> : si l'attaque rate, elle inflige les dégâts normaux, et si elle touche, elle double les dégâts de base. Pas cumulable avec <code>dmSiRate</code> ou <code>demiAuto</code>.</li>
+                  <li><code>--draineMana <i>d</i></code> : si l'attaque touche, elle enlève <i>d</i> points de mana. <i>d</i> peut être un nombre une expression de dés simple, comme <code>1d4+1</code>.</li>
                   <li><code>--save <i>carac seuil</i></code> : même effet que <code>--psave</code>, mais pour annuler le dernier <code>--effet</code> ou <code>etat</code> (aucun effet sur les DM). Si on rajoute un argument <code>demiDuree</code> au save, alors la réussite du save ne fait que diviser par 2 sa durée.</li>
                   <li><code>--saveDM <i>carac seuil</i></code> : même effet que <code>--psave</code>, mais pour annuler l'ensemble des dégâts.</li>
                   <li><code>--saveParTour <i>carac seuil</i></code> : même effet que <code>--save</code>, mais donne droit à un jet à la fin de chaque tour au lieu d'un jet au moment de l'attaque.</li>
@@ -831,6 +833,7 @@ tr {line-height: 25px;}
                     <li><code>--montreActions</code> : affiche les actions du tours de la cible après avoir appliqué l'effet. Utile si les actions du tours dépendent de cet effet, pour afficher une liste à jour.</li>
                     <li><code>--degainer <i>L</i></code> : le lanceur dégaine l'arme de label <i>L</i>.</li>
                   </ul>
+                  <p> Il existe un effet temporaire générique sans message, pour avoir des timers associés à des personnages : <code>effetTempGenerique</code>. Vous pouvez décider du message à la création avec l'option <code>--activation</code>, du message de statut avec <code>--actif</code> et du message de fin avec <code>--fin</code>.</p>
                   <p><code>!cof-boire-alcool</code> et <code>!cof-desaouler</code> permettent de faire varier le niveau d'ébriété. Par exemple, pour tester si le niveau d'ébriété augmente après avoir bu un certain nombre de verres, on peut utiliser la macro <code>!cof-boire-alcool --save CON [[10+?{Nombre de verres}]]</code>.
                 </div>
                 <h4 class="text-secondary">Effets retardés</h4>
@@ -866,6 +869,7 @@ tr {line-height: 25px;}
                   <li><code>--immuniseSiResiste <i>nom</i></code> : la personne qui résiste à cet effet de peur est ensuite immunisé pour la journée aux effets de peur ayant la même option (avec le même <i>nom</i>).</li>
                 </ul>
                 Noter qu'un prédicat <code>courage</code> permet d'obtenir un bonus (égal à la valeur du prédicat) au jet pour résister à la peur.
+                <p><code>!cof-changer-de-forme</code> permet de gérer des changements de forme. Le seul argument nécessaire est le nom de la forme, qui doit corresondre au nom d'une des fiches en jeu. Après le changement, le personnage utilisera les caractéristiques, les attaques, les actions et les prédicats de cette fiche. On peut garder certaines caractéristiques en utilisant l'option <code>--gardeCarac</code>, et garder le meilleur avec <code>--gardeCaracSiMeilleure</code>. L'option <code>--utiliserAttaqueMagique</code> permet d'utiliser l'attaque magique du personnage si elle est plus forte que le score d'attaque de la créature. Une option <code>--augmentePVs</code> augmente les PV de ceux de la nouvelle forme divisés par 10. À noter que les prédicats sont toujours ajoutés, ils ne remplacent pas ceux de la fiche d'origine. Le personnage garde toujours ses PV et PM d'origine.</p>
               </div>
               <h3 class="text-info" id="consommables">2.6 Consommables <code>!cof-consommables</code></h3>
               <div class="decalage">
@@ -1100,7 +1104,7 @@ tr {line-height: 25px;}
                   <li><strong>Intelligence du combat</strong> : ajouter un <a href=#predicats>prédicat</a> <code>intelligenceDuCombat</code>.</li>
                   <li><strong>Feinte</strong> : faire une attaque avec l'option <code>--feinte</code> pour profiter des effets de feinte au tour suivant. Par défaut, le bonus à l'attaque suivante est de +5 (règles de base), mais vous pouvez spécifier un bonus différent (par exemple 10 pour les règles de la boîte d'initiation) avec un <a href=#predicats>prédicat</a> <code>bonusFeinte</code> (la valeur du prédicat remplace le bonus de +5 par défaut). Il est aussi possible de changer le nombre de dés de dégât bonus en utilisant un prédicat<code>nbDesFeinte</code>.</li>
                   <li><strong>Attaque flamboyante</strong> : faire une attaque avec le modificateur <code>attaqueFlamboyante</code>. Le plus pratique pour l'utilisation avec différentes armes, est d'ajouter à la liste des <a href="#actions_du_tour">actions du tour</a> une action de titre <code>Attaque flamboyante</code> et de code <code>#Attaque -1 --attaqueFlamboyante</code>. Attention, afin de garder un intérêt à la feinte quand on dispose de cette attaque, j'ai choisi de rajouter encore le mod. de charisme aux DM en cas d'attaque flamboyante suivant une feinte réussie. Si cela ne vous convient pas, vous pouvez à la place de cette option ajouter <code>--bonusAttaque [[@{selected|CHA}]] --plus [[@{selected|CHA}]]</code>.</li>
-                  <li><strong>Botte mortelle</strong> : ajoutez un <a href=#predicats>prédicat</a> <code>botteMortelle</code>.</li>
+                  <li><strong>Botte mortelle</strong> : ajoutez un <a href=#predicats>prédicat</a> <code>botteMortelle</code>. J'ai une règle maison qui permet de mieux profiter des feintes avec les bottes mortelles : je donne +1d6 par tranche de 5 du jet d'attaque au-dessus de la défense, quand le barde attaque après une feinte. Pour utiliser cette règle, ajoutez un prédicat <code>botteMortelleEtFeinte</code>.</li>
                 </ol>
                 <h4 class="text-secondary">Voie du musicien</h4>
                 <ol>
@@ -1198,7 +1202,7 @@ tr {line-height: 25px;}
                 <h4 class="text-secondary">Voie de la noblesse</h4>
                 <ol>
                   <li><strong>Éduqué</strong> : pas de support particulier, juste reporter les bonus sur la fiche.</li>
-                  <li><strong>Autorité naturelle</strong> : simplement reporter sur la fiche les bonus d'init et de DEF, et ajouter la capacité intimider.</li>
+                  <li><strong>Autorité naturelle</strong> : ajouter un prédicat <code>autoriteNaturelle</code>. Le nom de la compétence utilisée pour donner des ordres est <code>commander</code>.</li>
                   <li><strong>Écuyer</strong> : 
                     <ul>
                       <li> Pour le bonus au critique, ajouter un <a href=#predicats>prédicat</a> <code>ecuyer</code>. </li>
@@ -1223,7 +1227,7 @@ tr {line-height: 25px;}
                   </li>
                   <li><strong>Le guetteur</strong> : Si elle n'est pas déjà présente dans votre handout de compétences, ajouter au druide une compétence <code>perception</code> (valeur 0 pour le moment). Créer un personnage et un token pour l'oiseau. Ajouter au druide un <a href=#predicats>prédicat</a> <code>guetteur</code> de valeur le nom exact de l'oiseau (sur la fiche, attention à utiliser la symtaxe avec <code>::</code> si le nom comporte des espaces). Ajouter de même un <a href=#predicats>prédicat</a> <code>PVPartagesAvec</code> de valeur le nom de l'oiseau. Ajouter aussi à l'oiseau un <a href=#predicats>prédicat</a> <code>PVPartagesAvec</code> de valeur le nom du druide. Pour le faire agir en même temps que le druide, ajoutez aussi à l'oiseau un prédicat <code>initiativeDeriveeDe</code> de valeur le nom du druide. Pour l'attaque, ajouter sur la fiche une attaque de contact faisant 1d4 DM, avec dans les options <code>--attaqueMagiqueDe <i>nom de personnage du druide</i></code>. Si vous souhaitez que le guetteur rentre en combat en même temps que le druide, ajoutez au druide un prédicat nommé <code>entrerEnCombatAvec</code>, de valeur le nom du token de l'oiseau.</li>
                   <li><strong>Masque du prédateur</strong> : <code>!cof-effet-temp masqueDuPredateur [[5+@{selected|SAG}]] --mana 2</code></li>
-                  <li><strong>Forme animale</strong> : pas d'autre support que <code>!cof-lancer-sort se transforme en ?{Transformation en ?} --mana 3</code></li>
+                  <li><strong>Forme animale</strong> : <code>!cof-changer-de-forme ?{Transformation en ?} --gardeCarac DEF --mana @{selected|token_id} 3</code>. Si vous avez prévu une fiche pour l'animal choisi (le nom de la fiche doit correspondre à l'animal), alors le token du personnage devrait devenir celui de cette fiche, et les tests de caractéristiques tenir compte de la fiche. Par défaut, les attaques et action de l'animal seront affichées, mais aucune attaque ou action du personnage original ne sera affichée quand il est transformé, sauf s'il possède un prédicat <code>actionsPossiblesTransforme</code>, de valeur le label d'une action (pas d'une attaque). Vous pouvez mettre plusieurs actions en les séparant par une virgule (et dans ce cas, utiliser la syntaxe du prédicat avec <code>::</code>).</li>
                 </ol>
                 <h4 class="text-secondary">Voie du fauve</h4>
                 <ol>
@@ -1323,7 +1327,7 @@ tr {line-height: 25px;}
                       <li>Objet de sort : <code>#Attaque Dédoublement --toucher [[@{selected|ATKMAG}]] --pasDeDmg --portee 20 --sortilege --effet dedoublement [[5+@{selected|CHA}]]</code></li>
                     </ul>
                   </li>
-                  <li><strong>Tueur fantasmagorique</strong> : <code>!cof-tueur-fantasmagorique @{selected|token_id} @{target|token_id} --portee 20 --mana 3</code>. Attention, j'en ai fait une interprétation un peu personnelle : au lieu de ne pas pouvoir toucher les cibles de niveau supérieur au lanceur, les cible de niveau supérieur gagnent un bonus de 5 par niveau au dessus de celui du lanceur pour résister au tueur fantasmagorique. Et ceux de niveau inférieur un malus de 1 par niveau de différence. Si cette interprétation ne vous convient pas, n'hésitez pas à me demander des changements.</li>
+                  <li><strong>Tueur fantasmagorique</strong> : <code>!cof-tueur-fantasmagorique @{selected|token_id} @{target|token_id} --portee 20 --mana 3</code>. Attention, j'en ai fait une interprétation un peu personnelle : au lieu de ne pas pouvoir toucher les cibles de niveau supérieur au lanceur, les cible de niveau supérieur gagnent un bonus de 5 par niveau au dessus de celui du lanceur pour résister au tueur fantasmagorique. Et ceux de niveau inférieur un malus de 1 par niveau de différence. Si cette interprétation ne vous convient pas, n'hésitez pas à me demander des changements. Il est possible d'immuniser un personnage au tueur fantasmagorique avec un prédictat <code>immunite_tueurFantasmagorique</code>.</li>
                 </ol>
                 <h4 class="text-secondary">Voie de l'invocation</h4>
                 <ol>
@@ -2109,7 +2113,7 @@ tr {line-height: 25px;}
                   <li><strong>Se faire discret</strong> : ajouter les jets sur la fiche, ou bien des compétences <code>mentir</code> et <code>deguisement</code> de valeur 5, à utiliser avec <code>!cof-jet</code>.</li>
                 </ol>
               </div>
-              <h3 class="text-info" id="Prestige">4.2 Voies de prestige et capacités épiques</h3>
+              <h3 class="text-info" id="Prestige">4.2 Voies de prestige</h3>
               <div class="decalage">
                 <h4 class="text-secondary">Voie d'Arwendée</h4>
                 <ol>
@@ -2150,11 +2154,20 @@ tr {line-height: 25px;}
                   <li><strong>Lycanthropie</strong> : <code>!cof-effet-temp lycanthropie [[5*@{selected|SAG}]]</code>. Si vous souhaitez un changement d'image du token, utilisez un <a href="https://wiki.roll20.net/Multi-sided_Token">token à plusieurs faces</a>. Dans la liste des faces, en partant de 0, on note <i>n</i> le numéro de la face qui contient l'image de loup-garou. Ajoutez alors <code>--tokenSide <i>n</i></code> à la commande. Par exemple, si la première face est l'image normale du personnage, et la seconde face celle d'un loup-garou, on pourra utiliser <code>!cof-effet-temp lycanthropie [[5*@{selected|SAG}]] --tokenSide 1</code>.</li>
                   <li><strong>Éventration</strong> : ajouter un prédicat <code>lycanthropeEventre</code>.</li>
                 </ol>
+                <h4 class="text-secondary">Voie de Fortur</h4>
+                <ol>
+                  <li><strong>Sans peur</strong> : Ajouter un prédicat <code>sansPeur</code>, utilisé quand on essaiera de faire peur à un <a href="#allie">allié</a>.</li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li><strong>Claquer des mains</strong> : <code>!cof-explosion Claquer des mains --auto --limiteParCombat 1 claquerDesMains --dm 1 --sortilege --disque 10 --etat etourdi --saveParTour CON 12</code> </li>
+                </ol>
                 <h4 class="text-secondary">Voie de Morn</h4>
                 <ol>
                   <li><strong>Secrets de l'au-delà</strong> : <code>!cof-effet-temp secretsDeLAuDela 1 --mana 0</code></li>
                   <li><strong>Souffle de vie</strong> : <code>!cof-soin @{selected|token_id} @{target|token_id} souffleDeVie --mana 0</code></li>
                   <li><strong>Souffle de mort</strong> : faire une attaque magique, de portée 20 m (la portée par défaut pour les sorts, mais rien n'est spécifié dans le texte), de dégâts 2d8+INT. Ajoutez <code>auto</code> dans les modificateurs. Pour les options, <code>--disque 10 souffleDeMort --effet souffleDeMort 1 --save CON 10 --mana 1</code>.</li>
+                  <li><strong>Vent des âmes</strong> : <code>!cof-effet-temp ventDesAmes @{selected|SAG} --lanceur @{selected|token_id} --target @{target|token_id} --mana 2</code>.</li>
                 </ol>
                 <h4 class="text-secondary">Voie de Prestige du Loup-garou</h4>
                 <p>Créer une fiche pour la forme de loup, avec son propre token. En cas de transfornation, simplement remplacer le token du personnage par le token de la forme de loup, en mettant à jour les états et les PVs. Pour résister à une transformation, utiliser <code>!cof-jet SAG 18 --predicat controleLoupGarou --nom Résister --succes évite de se transformer en loup</code>. Un prédicat <code>lycanthrope</code> proposera automatiquement le jet en cas d'encaissement de critique.</p>
@@ -2188,6 +2201,13 @@ tr {line-height: 25px;}
                 <h4 class="text-secondary">Voie des vermines</h4>
                 <ol>
                   <li><strong>Nuée de criquets</strong> : ajouter une attaque magique, de portée 20 m, type Sortilege, modificateur <code>pasDeDmg</code> et options <code>--effet nueeDeCriquets [[5+@{selected|SAG}]]</code>. Pas de support particulier pour les DM de zone qui détruisent la nuée (enlever l'attribut <code>nueeDeCriquets</code> sur la cible dans ce cas).</li>
+                </ol>
+                <h4 class="text-secondary">Voie du changeur de forme</h4>
+                <ol>
+                  <li><strong>Forme animale supérieure</strong> : <code>!cof-changer-de-forme ?{Transformation en ?}</code>. Si vous avez prévu une fiche pour l'animal choisi (le nom de la fiche doit correspondre à l'animal), alors le token du personnage devrait devenir celui de cette fiche, et les tests de caractéristiques tenir compte de la fiche. Par défaut, les attaques et action de l'animal seront affichées, mais aucune attaque ou action du personnage original ne sera affichée quand il est transformé, sauf s'il possède un prédicat <code>actionsPossiblesTransforme</code>, de valeur le label d'une action (pas d'une attaque). Vous pouvez mettre plusieurs actions en les séparant par une virgule (et dans ce cas, utiliser la syntaxe du prédicat avec <code>::</code>).</li>
+                  <li><strong>Transformation rapide</strong> : pas de support du script.</li>
+                  <li><strong>Grande forme animale</strong> : comme pour la forme animale supérieure, mais avec l'option <code>--gardeCarac DEF</code>.</li>
+                  <li><strong>Transformation régénératrice</strong> : ajouter une prédicat <code>transformationRegeneratrice</code>.</li>
                 </ol>
                 <h4 class="text-secondary">Voie du chasseur de corruption</h4>
                 <p>Pour savoir si une cible est corrompue, le script va utiliser un <a href=#predicats>prédicat</a> <code>corrompu</code> qu'il appartient au MJ d'ajouter pour les créatures selon ses critères.</p>
@@ -2258,6 +2278,7 @@ tr {line-height: 25px;}
                   <li><strong>Immunité</strong> : utilisez <code>!cof-immunite-guerisseur [[1d6+@{selected|SAG}]] --mana 0 --target @{target|token_id}</code> dans les actions du tour. Si utilisé directement dans le chat, ajoutez <code>--lanceur @{selected|token_id}</code>.</li>
                   <li><strong>Soins rapides</strong> : pas de support au niveau du script.</li>
                   <li><strong>Zone de vie</strong> : <code>!cof-zone-de-vie [[1d6+@{selected|SAG}]] --mana 1 --limiteParJour 3 --lanceur @{selected|token_id}</code>. Cela devrait respecter le sort, sauf pour le moment où le soin prend effet : c'est au début de chaque tour du prêtre.</li>
+                  <li><strong>Phénix</strong> : ajouter un prédicat <code>phenix</code>.</li>
                 </ol>
                 <h4 class="text-secondary">Voie du guerrier-mage</h4>
                 <p>Penser à utiliser l'option <code>--magieEnArmure</code> pour le lancement des sorts affectés.</p>
@@ -2312,8 +2333,12 @@ tr {line-height: 25px;}
                   <li><strong>Ventre mou</strong> : ajouter un <a href=#predicats>prédicat</a> <code>ventreMou</code>. Cela va diminuer la RD fixe de 3 maximum pour une créature grande, 6 maximum pour une créature énorme et 10 maximum pour une créature colossale.</li>
                   <li><strong>Bûcheron</strong> : ajouter un <a href=#predicats>prédicat</a> <code>bucheron</code>.</li>
                 </ol>
-                <h4 class="text-secondary">Capacités épiques</h4>
+              </div>
+              <h3 class="text-info" id="Epique">4.3 Capacités épiques</h3>
+              <div class="decalage">
                 <ul>
+                  <li><strong>Au dessus de la mêlée</strong> : ajouter un prédicat <code>auDessusDeLaMelee</code>.</li>
+                  <li><strong>Grande forme animale</strong> : <code>!cof-changer-de-forme ?{Transformation en ?} --mana  @{selected|token_id} 4 --gardeCaracSiMeilleure DEF --utiliserAttaqueMagique</code>. Il faut prévoir des fiches pour les formes que le lanceur de sorts va prendre.</li>
                   <li><strong>Libérateur de Dorn</strong> : ajouter un prédicat <code>liberateurDeDorn</code>.</li>
                   <li><strong>Libérateur de Kerserac</strong> : ajouter un prédicat <code>liberateurDeKerserac</code>.</li>
                   <li><strong>Libérateur d'Anathazerïn</strong> : ajouter un prédicat <code>liberateurDAnathazerin</code>. La capacité donne le bonus de +2 quel que soit le poison.</li>
@@ -2321,7 +2346,7 @@ tr {line-height: 25px;}
                   <li><strong>Vitalité épique</strong> : ajouter un <a href=#predicats>prédicat</a> <code>vitaliteEpique</code>. Pas de support pour le coup mortel ou la régénération horaire. Attention, si vous utlisez <code>!cof-soin</code> pour cette régénération, les soins seront aussi doublés.</li>
                 </ul>
               </div>
-              <h3 class="text-info" id="Créatures">4.3 Voies de créatures</h3>
+              <h3 class="text-info" id="Créatures">4.4 Voies de créatures</h3>
               <div class="decalage">
                 <h4 class="text-secondary">Voie du champion</h4>
                 <ol>
@@ -2415,12 +2440,13 @@ tr {line-height: 25px;}
                   <li><strong>Assassinat</strong> : rajouter <code>--if etatCible surpris --etat mort --save CON 15 --endif</code> à l'Attaque mortelle.</li>
                 </ol>
               </div>
-              <h3 class="text-info" id="Sorts">4.4 Autres sorts</h3>
+              <h3 class="text-info" id="Sorts">4.5 Autres sorts</h3>
               <div class="decalage">
                 Sorts qui ne sont pas dans des voies, mais peuvent venir du grimoire (dans le compagnon) ou d'effets de parchemins.
                 <ul>
                   <li><strong>Animation des objets</strong> : <code>!cof-animation-des-objets @{selected|token_id} ?{Taille d'objet|tabouret ou coffret,1|chaise ou coffre,2|meuble bas ou table,4|grande table,7|grosse armoire,10}</code> On peut ajouter un troisième argument, <code>@{target|token_id}</code> pour animer un token d'objet sur la carte.</li>
                   <li><strong>Armure d'eau</strong> : <code>!cof-effet-combat armureDEau</code>. Le script automatise l'immunité aux étreintes (pas aux enveloppements) et à la capacité Agripper des créatures volantes.</li>
+                  <li><strong>Armure de feu</strong> : <code>!cof-effet armureDeFeu --messageMJ L'armure de feu va durer [[5+@{selected|INT}]] minutes --mana @{selected|token_id} 1</code>.
                   <li><strong>Choc</strong> : Faire une attaque de portée 20 m, de type Sortilège, DM contondants, portée 20 m, et avec les options <code>--etat renverse --save FOR 10</code>.</li>
                   <li><strong>Coup au but</strong> : <code>!cof-effet-temp bonusAttaqueTemp 1 --valeur 10 --lanceur @{selected|token_id} --portee 10 --mana 0 --target @{target|token_id}</code>.</li>
                   <li><strong>Force de géant</strong> : <code>!cof-effet-temp forceDeGeant 10</code>. Le bonus est de 2 par défaut, mais peut être modifié en utilisant l'option <code>--valeur</code>.</li>
@@ -2432,7 +2458,7 @@ tr {line-height: 25px;}
                   <li><strong>Toiles</strong> : <code>!cof-effet-temp toiles [[5+@{selected|SAG}]] --saveActifParTour FOR [[10+@{selected|SAG}]] --lanceur @{selected|token_id} --disque @{target|token_id} 5 20 --saufAllies --mana 0</code>.</li>
                 </ul>
               </div>
-              <h3 class="text-info" id="Capacites_diverses">4.5 Capacités diverses</h3>
+              <h3 class="text-info" id="Capacites_diverses">4.6 Capacités diverses</h3>
               <div class="decalage">
                 <ul>
                   <li><strong>Absorption d'énergie</strong> (spectres et vampires) : ajouter un <a href=#predicats>prédicat</a> <code>absorptionEnergie</code> de valeur la valeur du soin accordé à l'attaquant à chaque fois qu'il endommage une cible (5 par défaut, si vous ne mettez aucune valeur). Pour l'absorption des vampires, ajouter un prédicat <code>vampire</code>.</li>
@@ -2510,6 +2536,7 @@ tr {line-height: 25px;}
                       <li><strong>poisonParalysant</strong> est un effet à durée en tours, qui paralyse.</li>
                     </ul>
                   </li>
+                  <li><strong>Poison drow (carreaux d'arbalète)</strong> : Ajouter les options <code>--plus 0 --poison --effet effetRetarde(assommeTemp) [[1d6]] --valeur [[6 * 1d6]] --save CON 12</code>.</li>
                   <li><strong>Potion de sang de l'Arbre-Coeur</strong> : <code>!cof-effet sangDeLArbreCoeur true</code>, à enlever quand les 24h sont passées.</li>
                   <li><strong>Protection contre les souffles</strong> et dégâts de zone : ajouter un <a href=#predicats>prédicat</a> <code>protectionDMZone</code>. Pour une protection contre un seul élément (feu, froid, etc), ajouter <code>_</code> et le nom de l'élément. Par exemple, contre le feu, on aura un prédicat <code>protectionDMZone_feu</code>. On peut aussi avoir une protection contre les souffles de dragons uniquement, mais qui annule les DM en cas de succès au test de DEX, avec le prédicat <code>protectionSouffleDeDragon</code>. On peut aussi donner une RD contre les souffles de dragons avec un prédicat numérique <code>rdSouffleDeDragon</code>.</li>
                   <li><strong>Putréfaction</strong> : ajouter à l'attaque <code>--effet putrefaction 5 --save CON 14</code> (pour les données des momies)</li>
@@ -3123,6 +3150,7 @@ tr {line-height: 25px;}
                   <li><strong>bonusTests_<i>nom</i></strong> : entier, ajoute la valeur aux tests de compétence caractéristique <i>nom</i> ou de compétence <i>nom</i>.</li>
                   <li><strong>bonusTousTests</strong> : entier, ajoute la valeur aux tests de caractéristique.</li>
                   <li><strong>botteMortelle</strong> : booléen, ajoute 2d6 de DM si le jet d'attaque dépasse de 10 la DEF de la cible.</li>
+                  <li><strong>botteMortelleEtFeinte</strong> : booléen, change le comportement de botte mortelle quand le coup est donné après une feinte : le bonus devient 1d6 par tranche de 5 au-dessus de la défense de l'adversaire.</li>
                   <li><strong>bouclierDeLaFoi</strong> : entier, bonus à la DEF quand le personnage porte un bouclier.</li>
                   <li><strong>bouclierProtection</strong> : booléen, annule les effets critiques des attaques si le personnage porte un bouclier.</li>
                   <li><strong>bouclierPsi</strong> : booléen, augmente de 5 la DEF contre les attaques mentales et divise par 2 les DM des attaques mentales.</li>
@@ -3140,6 +3168,7 @@ tr {line-height: 25px;}
                   <li><strong>combatEnPhalange</strong> : booléen, ajoute un bonus en attaque et en DEF en fonction du nombre d'alliés au contact.</li>
                   <li><strong>combatKinetique</strong> : booléen, ajoute 3 à la RD tant que le personnage est conscient de l'attaque.</li>
                   <li><strong>combattreLaCorruption</strong> : booléen ou entier (1 par défaut), bonus à l'attaque et aux DM contre les cibles corrompues.</li>
+                  <li><strong>commandant</strong> : booléen, divise par 2 tous les dégâts reçus si au moins 4 créatures sous ses ordres sont à moins de 10 mètres de lui.</li>
                   <li><strong>connaissanceDuPoison</strong> : booléen, permet d'enduire une arme de poison sans avoir à faire de jet.</li>
                   <li><strong>controleLoupGarou</strong> : entier, bonus au jet de lycanthrope pour éviter la transformation.</li>
                   <li><strong>controleSanguin</strong> : booléen, immunise au poison et aux effets de saignement, et divise par 2 les DM de vampirisation.</li>
@@ -3147,6 +3176,7 @@ tr {line-height: 25px;}
                   <li><strong>corrompu</strong> : booléen, le personnage est corronpu (utilise pour la voie du chasseur de corruption).</li>
                   <li><strong>courage</strong> : entier, bonus ajouté pour résister aux effets de peur.</li>
                   <li><strong>creatureArtificielle</strong> : booléen, immunise au poison, à l'asphyxie et aux maladies.</li>
+                  <li><strong>critiqueEpiqueSorts</strong> : booléen, augmente de 2 les chances de critique des sorts et de 1d6 les dégâts critiques des sorts.</li>
                   <li><strong>crocEnJambe</strong> : booléen, fait tomber les adversaires sur un jet de dé d'attaque de 17-20. Passe à 19-20 contre des adversaires quadrupèdes.</li>
                   <li><strong>DEF_magie</strong> : entier, augmente la défense contre les sortilèges.</li>
                   <li><strong>defDeriveeDe</strong> : nom de personnage, la valeur de défense est égale à celle du personnage du prédicat.</li>
@@ -3241,11 +3271,13 @@ tr {line-height: 25px;}
                   <li><strong>perception</strong> : entier, bonus aux jets de perception.</li>
                   <li><strong>petiteTaille</strong> : booléen, bonus de +2 en discrétion et +1 en DEF, et le personnage est considéré de taille petit.</li>
                   <li><strong>petitVeinard</strong> : booléen ou entier (1 par défaut), propose de relancer des jets ce nombre de fois pas combat maximum.</li>
+                  <li><strong>peutEnrager</strong> : booléen, le personnage devient enragé s'il subit un critique ou passe sous la moitié de ses PV max.</li>
                   <li><strong>piquresDInsectes</strong> : entier, diminue les DM des attaques à distance de ce nombre, si le personnage porte une armure de DEF au moins 5.</li>
                   <li><strong>pirouettes</strong> : entier, augmente la DEF si le personnage a un malud d'armure inféreur ou égal à 3.</li>
                   <li><strong>plusViteQueSonOmbre</strong> : booléen ou entier (par défaut 10), augmente l'initiative si le personnage à une arme à poudre chargée en main. On peut aussi spécifier un autre type d'armes, comme les arbalète, en associant ce nom à la valeur du prédicat.</li>
                   <li><strong>poudrePuissante</strong> : booléen, augmente de 10 la portée et de 2 les DM des armes à poudre.</li>
                   <li><strong>prescience</strong> : booléen ou entier (défaut 1), propose de refaire le tour. Le nombre associé indique le nombre de fois que le personnage peut faire ça par combat.</li>
+                  <li><strong>prescienceParJour</strong> : comme <code>prescience</code>, mais limité à une fois par jour.</li>
                   <li><strong>proprioception</strong> : booléen, immunise aux effets de douleur et de peur,</li>
                   <li><strong>protectionContreLesProjectiles</strong> : entier, valeur de la RD apportée par l'effet temporaire de même nom</li>
                   <li><strong>prouesse</strong> : booléen, propose un bouton pour les prouesses de guerrier.</li>

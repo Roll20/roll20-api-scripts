@@ -5,24 +5,25 @@
 var RecursiveTable = RecursiveTable || (function() {
 	'use strict';
 
-	var version = '0.2.5',
-	lastUpdate = 1571360894,
+	var version = '0.2.6',
+	lastUpdate = 1724517302,
 	schemaVersion = 0.1,
 	clearURL = 'https://s3.amazonaws.com/files.d20.io/images/4277467/iQYjFOsYC5JsuOPUCI9RGA/thumb.png?1401938659',
 	defaults = {
 		maxdepth: 10,
 		delimiter: ', ',
-        echo: false,
-        prefix: '',
-        suffix: '',
+    echo: false,
+    prefix: '',
+    suffix: '',
 		dropempty: true,
 		sort: false,
 		prefaceuniquespace: false,
 		showicons: false,
 		iconlabel: true,
 		emptydefault: '',
-        iconscale: '5em',
-		who: ''
+    iconscale: '5em',
+		who: '',
+		desc: false
 	},
 	regex = {
 		rtCmd: /^(!rt)(?:\[([^\]]*)\])?(?:\s+|$)/,
@@ -181,7 +182,9 @@ var RecursiveTable = RecursiveTable || (function() {
                         `${_h.bold('PrefaceUniqueSpace')} -- Causes the final message to have a unique number of spaces inserted after each ${_h.code(ch('{')+ch('{'))}. This is useful if you${ch("'")}re building Roll Templates and might have multiple lines with the same label. ${_h.bold('Default: off (Boolean)')}`,
                         `${_h.bold('ShowIcons')} -- Adds table avatars as inline icons, if they exist. ${_h.bold('Default: off (Boolean)')}`,
                         `${_h.bold('IconLabel')} -- When table icons are shown, the text for the row is shown as a label below it. ${_h.bold('Default: on (Boolean)')}`,
-                        `${_h.bold('IconScale')} -- When table icons are shown, they are restricted to the provided scale. Any valid CSS size setting will work. ${_h.bold('Default: 5em')}`
+                        `${_h.bold('IconScale')} -- When table icons are shown, they are restricted to the provided scale. Any valid CSS size setting will work. ${_h.bold('Default: 5em')}`,
+                        `${_h.bold('Desc')} -- Removes the senders name in the chat; handy if you are using the /desc command. ${_h.bold('Default: off (Boolean)')}`
+                        
                     ),
 
                     _h.section('Examples'),
@@ -261,7 +264,10 @@ var RecursiveTable = RecursiveTable || (function() {
 						default:
 					}
 					break;
-			}
+        case 'desc': // New case for desc:on
+          m['desc'] = getAsBoolean(a, false); 
+          break;
+    }
 
 			m[c]=a;
 			return m;
@@ -427,16 +433,22 @@ var RecursiveTable = RecursiveTable || (function() {
 		.then((subs)=>{
 			msg.content= _.reduce(subs,(m,v,k)=>m.replace(k,v),msg.content);
 
-            let prefixer=(opts.prefaceuniquespace ? makePrefixer(' ') : _.identity);
+      let prefixer=(opts.prefaceuniquespace ? makePrefixer(' ') : _.identity);
 			msg.content=(msg.content||'[EMPTY]').replace(/(?:\{\{)([^=]*)(?:=)/g,(full,match)=>`{{${prefixer(match)}=`);
             
 			if(_.has(msg,'rolltemplate') && _.isString(msg.rolltemplate) && msg.rolltemplate.length){
 				msg.content = msg.content.replace(/\{\{/,'&{template:'+msg.rolltemplate+'} {{');
 			}
-            if(opts.echo && !(/^\/w\s+gm\s+/.test(msg.content) && playerIsGM(msg.playerid))){
-               sendChat(`${msg.who} [echo]`,`/w "${opts.who}" ${msg.content.replace(/^\/w\s+(?:"[^"]*"|'[^']'|\S+)\s*/,'')}`);
-            }
-			sendChat(msg.who||'[BLANK]',msg.content);
+      if(opts.echo && !(/^\/w\s+gm\s+/.test(msg.content) && playerIsGM(msg.playerid))){
+         sendChat(`${msg.who} [echo]`,`/w "${opts.who}" ${msg.content.replace(/^\/w\s+(?:"[^"]*"|'[^']'|\S+)\s*/,'')}`);
+      }
+
+      if (opts.desc) {
+          sendChat('', msg.content); // Sends message without showing who sent it
+      } else {
+          sendChat(msg.who||'[BLANK]', msg.content);
+      }
+
 		})
 		.catch((e)=>{
 			let eRoll=HE(msg.content);
@@ -477,7 +489,7 @@ var RecursiveTable = RecursiveTable || (function() {
 				`<div style="margin: .1em 1em 1em 1em;"><code>${msg_orig.content}</code></div>`+
 				`<div>Please <a class="showtip tipsy" title="The Aaron's profile on Roll20." style="color:blue; text-decoration: underline;" href="https://app.roll20.net/users/104025/the-aaron">send me this information</a> so I can make sure this doesn't happen again (triple click for easy select in most browsers.):</div>`+
 				`<div style="font-size: .6em; line-height: 1em;margin:.1em .1em .1em 1em; padding: .1em .3em; color: #666666; border: 1px solid #999999; border-radius: .2em; background-color: white;">`+
-				JSON.stringify({msg: msg_orig, stack: e.stack})+
+				HE(JSON.stringify({msg: msg_orig, stack: e.stack}))+
 				`</div>`+
 				`</div>`
 			);

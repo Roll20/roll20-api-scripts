@@ -3,8 +3,8 @@
 Name            :   MetaScriptToolbox
 GitHub          :   
 Roll20 Contact  :   timmaugh
-Version         :   0.0.1
-Last Update     :   8/8/2023
+Version         :   0.0.2
+Last Update     :   6 SEP 2024
 =========================================================
 */
 var API_Meta = API_Meta || {};
@@ -13,10 +13,10 @@ API_Meta.MetaScriptToolbox = { offset: Number.MAX_SAFE_INTEGER, lineCount: -1 };
 
 const MetaScriptToolbox = (() => { // eslint-disable-line no-unused-vars
     const apiproject = 'MetaScriptToolbox';
-    const version = '0.0.1';
+    const version = '0.0.2';
     const schemaVersion = 0.1;
     API_Meta[apiproject].version = version;
-    const vd = new Date(1655476169424);
+    const vd = new Date(1725630209434);
     const versionInfo = () => {
         log(`\u0166\u0166 ${apiproject} v${API_Meta[apiproject].version}, ${vd.getFullYear()}/${vd.getMonth() + 1}/${vd.getDate()} \u0166\u0166 -- offset ${API_Meta[apiproject].offset}`);
     };
@@ -152,37 +152,37 @@ const MetaScriptToolbox = (() => { // eslint-disable-line no-unused-vars
         let reqs = [
             {
                 name: 'ZeroFrame',
-                version: `1.1.6`,
+                version: `1.2.2`,
                 mod: typeof ZeroFrame !== 'undefined' ? ZeroFrame : undefined,
                 checks: [['RegisterMetaOp', 'function']],
             },
             {
                 name: 'APILogic',
-                version: `2.0.8`,
+                version: `2.0.9`,
                 mod: typeof APILogic !== 'undefined' ? APILogic : undefined,
                 checks: [],
             },
             {
                 name: 'Fetch',
-                version: `2.0.9`,
+                version: `2.1.1`,
                 mod: typeof Fetch !== 'undefined' ? Fetch : undefined,
                 checks: [],
             },
             {
                 name: 'SelectManager',
-                version: `1.1.0`,
+                version: `1.1.8`,
                 mod: typeof SelectManager !== 'undefined' ? SelectManager : undefined,
                 checks: [['GetPlayerID', 'function'], ['GetSelected', 'function'], ['GetWho', 'function']],
             },
             {
                 name: 'Muler',
-                version: `2.0.1`,
+                version: `2.0.2`,
                 mod: typeof Muler !== 'undefined' ? Muler : undefined,
                 checks: [],
             },
             {
                 name: 'Plugger',
-                version: `1.0.6`,
+                version: `1.0.9`,
                 mod: typeof Plugger !== 'undefined' ? Plugger : undefined,
                 checks: [],
             },
@@ -221,7 +221,7 @@ const MetaScriptToolbox = (() => { // eslint-disable-line no-unused-vars
             },
             {
                 name: 'Messenger',
-                version: `1.0.0`,
+                version: `1.0.1`,
                 mod: typeof Messenger !== 'undefined' ? Messenger : undefined,
                 checks: [['Button', 'function'], ['MsgBox', 'function'], ['HE', 'function'], ['Html', 'function'], ['Css', 'function']]
             }

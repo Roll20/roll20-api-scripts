@@ -126,14 +126,15 @@ API_Meta.CommandMaster={offset:Number.MAX_SAFE_INTEGER,lineCount:-1};
  * v3.3.0  18/03/2024  Non-functional sequencing release to synchronise versions
  * v3.4.0  18/03/2024  Non-functional sequencing release to synchronise versions
  * v3.5.0  18/03/2024  Non-functional sequencing release to synchronise versions
+ * v3.5.1  03/08/2024  Fix scaling of container images to match page.
  */
  
 var CommandMaster = (function() {
 	'use strict'; 
-	var version = '3.5.0',
+	var version = '3.5.1',
 		author = 'RED',
 		pending = null;
-	const lastUpdate = 1717750563;
+	const lastUpdate = 1722695673;
 
 	/*
 	 * Define redirections for functions moved to the RPGMaster library
@@ -1209,7 +1210,7 @@ var CommandMaster = (function() {
 			state.CommandMaster.debug = false;
 		}
 	};
-
+	
 // -------------------------------------------- utility functions ----------------------------------------------
 
 	/**
@@ -1327,28 +1328,6 @@ var CommandMaster = (function() {
 		return (cmdSpec ? parseStr('!'+api+' '+cmdSpec.cmd+' '+cmdSpec.params) : 'Undefined');
 	}
 
-	/*
-	 * Parse a data string for attribute settings
-	 */
-/*	 
-	var parseData = function( attributes, reSpecs, def=true ) {
-		
-		var parsedData = {},
-			val;
-
-		_.each( reSpecs, spec => {
-			val = attributes.match(spec.re);
-			if (!!val && val.length>1 && val[1].length) {
-				parsedData[spec.field] = val[1];
-			} else if (!def) {
-				parsedData[spec.field] = undefined;
-			} else {
-				parsedData[spec.field] = spec.def;
-			}
-		});
-		return parsedData;
-	}
-	
 	/*
 	 * Find any abilities that match the definition passed in
 	 */
@@ -1607,34 +1586,6 @@ var CommandMaster = (function() {
 		});
 	};
 	
-	/**
-	 * Calculate/roll an attribute value that has a range
-	 * Always tries to create a 3 dice bell curve for the value
-	 **/
-/*	 
-	var calcAttr = function( attr='3:18' ) {
-		let attrRange = attr.split(':'),
-			low = parseInt(attrRange[0]),
-			high = parseInt(attrRange[1]);
-		if (high && !isNaN(low) && !isNaN(high)) {
-			let range = high - (low - 1);
-			if (range === 2) {
-				return low - 1 + randomInteger(2);
-			} else if (range === 3) {
-				return low - 2 + randomInteger(2) + randomInteger(2);
-			} else if (range === 5) {
-				return low - 2 + randomInteger(3) + randomInteger(3);
-			} else if ((range-2)%3 === 0) {
-				return low - 3 + randomInteger(Math.ceil(range/3)+1) + randomInteger(Math.floor(range/3)+1) + randomInteger(Math.floor(range/3)+1);
-			} else if ((range-1)%3 === 0) {
-				return low - 3 + randomInteger(Math.ceil(range/3)) + randomInteger(Math.ceil(range/3)) + randomInteger(Math.ceil(range/3));
-			} else if ((range)%3 === 0) {
-				return low - 3 + randomInteger((range/3)+1) + randomInteger((range/3)+1) + randomInteger(range/3);
-			}
-		}
-		return attr;
-	}
-	
 	/*
 	 * Set up container variables
 	 */
@@ -1657,6 +1608,18 @@ var CommandMaster = (function() {
 	
 	var setImgs = function(tokenObj,charCS,parsedData,change=false) {
 		
+		const convertFt = {
+					ft:		1,
+					m:		3,
+					km:		3280,
+					mi:		5280,
+					in:		(1/12),
+					cm:		(1/30),
+					un:		1,
+					hex:	1,
+					sq:		1,
+		};
+		
 		var parseImgs = function(charCS,data,field,prefix,total,change) {
 			var i;
 			for (i=1; (!_.isUndefined(data[prefix+i]) && data[prefix+i].trim().length) && i <= 9; i++) {
@@ -1675,6 +1638,11 @@ var CommandMaster = (function() {
 		parseImgs(charCS,parsedData,fields.Lock_imgPrefix[0],fields.Token_lockImgPrefix[0],fields.Lock_imgs,change);
 		parseImgs(charCS,parsedData,fields.Trap_imgPrefix[0],fields.Token_trapImgPrefix[0],fields.Trap_imgs,change);
 		
+		let pageObj = getObj('page',tokenObj.get('_pageid')),
+			scale = pageObj.get('scale_number'),
+			ftSize = convertFt[pageObj.get('scale_units')] || 1,
+			pixelRatio = scale * ftSize / 5;
+		
 		let curClosed = [attrLookup( charCS, fields.Token_closedImg ),attrLookup( charCS, fields.Token_closedImgW ),attrLookup( charCS, fields.Token_closedImgH )],
 			curOpen = [attrLookup( charCS, fields.Token_openImg ),attrLookup( charCS, fields.Token_openImgW ),attrLookup( charCS, fields.Token_openImgH )],
 			closedImg = (parsedData.cimg || (!curClosed[0] ? design.closed_img : curClosed.join('|'))).split('|'),
@@ -1682,11 +1650,11 @@ var CommandMaster = (function() {
 
 		if (change) {
 			setAttr( charCS, fields.Token_closedImg, getCleanImgsrc(closedImg[0]) );
-			setAttr( charCS, fields.Token_closedImgW, (closedImg[1] || 70) );
-			setAttr( charCS, fields.Token_closedImgH, (closedImg[2] || closedImg[1] || 70) );
+			setAttr( charCS, fields.Token_closedImgW, ((closedImg[1] || 70)/pixelRatio) );
+			setAttr( charCS, fields.Token_closedImgH, ((closedImg[2] || closedImg[1] || 70)/pixelRatio) );
 			setAttr( charCS, fields.Token_openImg, getCleanImgsrc(openImg[0]) );
-			setAttr( charCS, fields.Token_openImgW, (openImg[1] || 70) );
-			setAttr( charCS, fields.Token_openImgH, (openImg[2] || openImg[1] || 70) );
+			setAttr( charCS, fields.Token_openImgW, ((openImg[1] || 70)/pixelRatio) );
+			setAttr( charCS, fields.Token_openImgH, ((openImg[2] || openImg[1] || 70)/pixelRatio) );
 		} else {
 			closedImg = !curClosed[0] ? design.closed_img.split('|') : curClosed;
 		}
@@ -1798,67 +1766,6 @@ var CommandMaster = (function() {
 			charCS.set( "gmnotes", bio+GMbio );
 		})
 	}
-	
-	/**
-	 * A function to calculate an internal dice roll
-	 */
-/*		
-	var rollDice = function( count, dice, reroll ) {
-		count = parseInt(count || 1);
-		dice = parseInt(dice || 8);
-		reroll = parseInt(reroll || 0);
-		let total = 0,
-			roll;
-		for (let d=0; d<count; d++) {
-			do {
-				roll = randomInteger(dice);
-			} while (roll <= (reroll || 0));
-			total += roll;
-		}
-		return total;
-	}
-	
-	/**
-	 * Evaluate a numeric attribute value, including rolling dice,
-	 * Evaluating ranges, and doing maths using eval()
-	 */
-	 
-/*	var evalAttr = function(v) { 
-		function reRoll(m,n,p,r) { return rollDice(n,p,r); };
-		var handoutIDs = getHandoutIDs(),
-			orig = v;
-		const rePar = /\([\d\+\-\*\/]+?\)/g,
-			  reRange = /\d+\:\d+/g,
-			  reDice = /(\d+)d(\d+)(?:r(\d+))?/ig,
-			  reMinMax = /[Mthmaxin\.\,\(\)\d\+\-\*\/]+/g;
-		
-		try {
-			v = String(v);
-			if (!v || !v.length) {
-				return '';
-			} else {
-				v = v.replace(/;/g,',')
-					 .replace(/\^\(/g,'Math.max(')
-					 .replace(/v\(/g,'Math.min(')
-					 .replace(/\-\-/g,'+')
-					 .replace(/\+\-/g,'-');
-				do {
-					do {
-						do{
-							while (rePar.test(v)) v = v.replace(rePar,eval).replace(/\-\-/g,'+').replace(/\+\-/g,'-');
-							v = v.replace(reRange,calcAttr).replace(/\-\-/g,'+').replace(/\+\-/g,'-');
-						} while (rePar.test(v) || reRange.test(v));
-						v = v.replace(reDice,reRoll).replace(/\-\-/g,'+').replace(/\+\-/g,'-');
-					} while (rePar.test(v) || reRange.test(v) || reDice.test(v));
-					v = v.replace(reMinMax,eval).replace(/\-\-/g,'+').replace(/\+\-/g,'-');
-				} while (rePar.test(v) || reRange.test(v) || reDice.test(v));
-				return v;
-			};
-		} catch {
-			sendError('Invalid attribute value given: calculating "'+orig+'" but only **\'+ - &#42; / ( ) : d ^ v ,\'** can be used. Current evaluation is '+v+'. See **[CommandMaster Help]('+fields.journalURL+handoutIDs.CommandMasterHelp+')** for allowed Creature attribute specification formats.');
-			return v;
-		};
-	};
 	
 	/**
 	 * Set creature/monster attributes if specified in the 
@@ -3543,6 +3450,7 @@ var CommandMaster = (function() {
 		var cmd = args[0],
 			tokenID = args[1],
 			value = args[2],
+			silent = (args[3] || '').toLowerCase() === 'silent',
 			isLock = cmd !== BT.TRAPTYPE,
 			msg = '',
 			attrData,
@@ -3552,6 +3460,8 @@ var CommandMaster = (function() {
 			sendError('No token selected, or the selected token does not represent a container',msg_orig[senderId]);
 			return;
 		};
+		
+		if (silent) sendWait(senderId,0);
 		
 		var abObj = abilityLookup( fields.AbilitiesDB, value, charCS );
 		if (!abObj.obj) {
@@ -3567,10 +3477,10 @@ var CommandMaster = (function() {
 				setAttr( charCS, fields.MaxHP, attrData.hp );
 			}
 			handleSetTokenBars( [BT.AB_TOKEN_NONE], [{_id:tokenID}], senderId, true );
-			await handleAddAllPowers(args, 'AB', [{_id:tokenID}], senderId);
+			await handleAddAllPowers(args, 'AB', [{_id:tokenID}], senderId, silent);
 			parseDesc( charCS, senderId );
 		}
-		makeChangeImagesMenu( [tokenID], senderId, msg );
+		if (!silent) makeChangeImagesMenu( [tokenID], senderId, msg );
 		return;
 	};
 

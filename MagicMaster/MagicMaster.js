@@ -86,14 +86,15 @@ API_Meta.MagicMaster={offset:Number.MAX_SAFE_INTEGER,lineCount:-1};
  *                     of --mi-charges with "=#" for setting the quantity to an absolute number. Support 
  *                     RPGM maths operators for numbers passed to --mi-charges. Fixed stacking of looted
  *                     items. Added container self-heal capability on version change.
+ * v3.5.1  02/08/2024  Fixed storing an item to a character sheet of security type 7 (Force Sentient)
  */
  
 var MagicMaster = (function() {
 	'use strict';
-	var version = '3.5.0',
+	var version = '3.5.1',
 		author = 'RED',
 		pending = null;
-	const lastUpdate = 1717750563;
+	const lastUpdate = 1722615657;
 		
 	/*
 	 * Define redirections for functions moved to the RPGMaster library
@@ -7998,10 +7999,11 @@ var MagicMaster = (function() {
 				MIBagSecurity = 1;
 			}
 		}
+		
 		if (!search && MIBagSecurity < 0) {
 			sendParsedMsg( putID, messages.noStoring, senderId );
 			return;
-		} else if (MIBagSecurity < 4 && (!search || MIBagSecurity < 2 || hp <= 0 || intelligence <= 0)) {
+		} else if ((MIBagSecurity < 4 || MIBagSecurity == 7) && (!search || MIBagSecurity < 2 || hp <= 0 || intelligence <= 0)) {
 			doPickOrPut( msg, senderId );
 		} else if (MIBagSecurity < 4) {
 			// target is a creature that might detect any snooping.

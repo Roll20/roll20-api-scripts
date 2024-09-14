@@ -1,0 +1,15 @@
+{
+  "name": "SheetDefaults",
+  "script": "SheetDefaults.js",
+  "version": "1.0.0",
+  "description": "SheetDefaults helps correct situations where Applying Default values doesn't work in D&D 5E 2014 games (formerly the D&D 5E by Roll20 sheet). If you notice that Apply Defaults doesn't work in your game, run this script to clean up corrupted attributes. This script accepts values for the whisper type (wtype), damage type (dtype), and roll type (rtype)./r/rFor more information and for syntax, see the original forum thread: [SheetDefaults Forum Thread](https://app.roll20.net/forum/permalink/12030906/)",
+  "authors": "timmaugh",
+  "roll20userid": "5962076",
+  "useroptions": [],
+  "dependencies": [ "Messenger" ],
+  "modifies": {
+    "state.SheetDefaults": "read, write"
+  },
+  "conflicts": [],
+  "previousversions": []
+} 
