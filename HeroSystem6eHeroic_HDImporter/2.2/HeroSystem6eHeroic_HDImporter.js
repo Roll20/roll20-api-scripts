@@ -265,6 +265,8 @@
 			sendChat(script_name, "Exported from HERO Designer with \n HeroSystem6eHeroic.hde v1.0. \n Version 2.2 supports additional content.");
 		} else if (character.version === "2.0") {
 			sendChat(script_name, "Exported from HERO Designer with \n HeroSystem6eHeroic.hde v2.0. \n Version 2.2 supports additional content.");
+		} else if (character.version === "2.1") {
+			sendChat(script_name, "Exported from HERO Designer with \n HeroSystem6eHeroic.hde v2.1. \n Version 2.2 is available.");
 		}
 		
 		object = null;
