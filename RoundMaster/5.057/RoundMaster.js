@@ -4800,21 +4800,27 @@ var RoundMaster = (function() {
 	 *
 	 * TODO make the rotation rate a field variable
 	 */
+
 	var animateTracker = function() {
-		if (!flags.animating) 
-			{return;}
 		
-		if (flags.rw_state === RW_StateEnum.ACTIVE) {
+		if (!flags.animating) {
+			return;
+		}
+		if (flags.rw_state == RW_StateEnum.ACTIVE) {
+//			log('doAnimateTracker: Active');
 			if (state.roundMaster.rotation) {
 				var graphic = findTrackerGraphic();
-				graphic.set('rotation',parseInt(graphic.get('rotation'))+fields.rotation_degree);
+				graphic.set('rotation',(parseInt(graphic.get('rotation'))+parseInt(fields.rotation_degree)));
+//				log('doAnimateTracker: Rotating');
 			}
 			setTimeout(function() {animateTracker();},500);
-		} else if (flags.rw_state === RW_StateEnum.PAUSED 
-				|| flags.rw_state === RW_StateEnum.FROZEN) {
-			setTimeout(function() {animateTracker();},500);
+		} else if (flags.rw_state == RW_StateEnum.PAUSED 
+				|| flags.rw_state == RW_StateEnum.FROZEN) {
+//			log('doAnimateTracker: Paused or Frozen');
+			setTimeout(function() {animateTracker();},1000);
 		} else {
-			flags.animating = false;
+			log('doAnimateTracker: Stopped or undefined');
+//			flags.animating = false;
 		}
 	}; 
 	
@@ -5164,10 +5170,8 @@ var RoundMaster = (function() {
 		}
 		
 		updateTurnorderMarker();
-		if (!flags.animating) {
-			flags.animating = state.roundMaster.rotation;
-			animateTracker();
-		}
+		flags.animating = state.roundMaster.rotation;
+		animateTracker();
 	}; 
 	
 	/**
