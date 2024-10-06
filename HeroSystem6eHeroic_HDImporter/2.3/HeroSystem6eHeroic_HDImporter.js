@@ -628,7 +628,7 @@
 						tempPosition = tempString.indexOf("str");
 						diceString = tempString.slice(0, tempPosition);
 						diceString = diceString.slice(-3).replace(/\D/g,"");
-						importedManeuvers["martialManeuverStrMod"+ID] = parseInt(diceString)||0;
+						importedManeuvers["martialManeuverStrMod"+ID] = (parseInt(diceString)||0) - (parseInt(character.strength)||0);
 					}
 				}
 				
