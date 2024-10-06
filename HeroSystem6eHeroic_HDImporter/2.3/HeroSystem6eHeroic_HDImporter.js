@@ -1,6 +1,6 @@
 /* HeroSystem6eHeroic_HDImporter.js
 * Hero Designer Importer for the Roll20 Hero System 6e Heroic character sheet
-* Version: 2.2
+* Version: 2.3
 * By Villain in Glasses
 * villaininglasses@icloud.com
 * Discord: Villain#0604
@@ -736,6 +736,9 @@
 		let multipowerArray = new Array();
 		let multipowerArrayIndex = 0;
 		
+		// Weapon States
+		let weaponStates = "KKKKKNOOOOOO";
+		
 		// Read equipment
 		const maxEquipment = 16;
 		let importCount = 0;
@@ -910,9 +913,11 @@
 					
 					// Check for Killing Attack.
 					if (tempString.includes("Killing Attack") || tempString.includes("RKA") || tempString.includes("HKA")) {
-						// importedWeapons.weaponNormalDamage01= "off";
+						// importedWeapons["weaponNormalDamage"+ID] = "off";
 					} else {
 						importedWeapons["weaponNormalDamage"+ID]= "on";
+						weaponStates = setCharAt(weaponStates, importCount, 'N');
+						importedWeapons["weaponType"+ID]= "normal";
 					}
 					
 					// Get OCV bonus or penalty.
@@ -966,7 +971,8 @@
 		}
 			
 		// Import weapons.
-				
+		importedWeapons.weaponStates = weaponStates;
+		
 		setAttrs(object.id, importedWeapons);
 		
 		if(verbose) {
@@ -4499,11 +4505,17 @@
 	}
 	
 	
+	function setCharAt(str,index,chr) {
+		// Replace a single character in a string.
+		if(index > str.length-1) return str;
+		return str.substring(0,index) + chr + str.substring(index+1);
+	}
+	
+	
 /* **************************************** */
 /* ***  END Importing Functions         *** */
 /* **************************************** */
 	
-	// TEST
 	const createSingleWriteQueue = (attributes) => {
 		// this is the list of trigger attributes that will trigger class recalculation, as of 5e OGL 2.5 October 2018
 		// (see on... handler that calls update_class in sheet html)
