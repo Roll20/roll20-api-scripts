@@ -385,7 +385,7 @@ const PluggerPlugins01 = (() => {
                 cmd && typeof cmd === 'string' && cmd.length
             ) {
                 markbase = `\\s+${escapeRegExp(mark).replace(/\s/g, '\\s')}`;
-                markrx = new RegExp(`${markbase}(.+?)(?:${split.map(s => escapeRegExp(s)).join('|')}|${markbase}|$)`, 'g');
+                markrx = new RegExp(`${markbase}(.+?)(?:${split.map(s => escapeRegExp(s)).join('|')}|(?=${markbase})|$)`, 'g');
                 openrx = new RegExp(`^${markbase}`);
                 splitrx = new RegExp(`^($|${split.map(s => escapeRegExp(s)).join('|')})`);
                 return true;
