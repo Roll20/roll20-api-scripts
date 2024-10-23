@@ -2051,11 +2051,12 @@ Earthdawn.timeStamp = function ()  {
 Earthdawn.tokenRefresh = function ( obj ) {     // token object
   'use strict';
   try {
-    if( obj && obj.get( "name" )) {   // Ignore any token without a name (probably not a real token. 
+//    if( obj && obj.get( "name" )) {   // Ignore any token without a name (probably not a real token.   Don't do this. name is often blank. 
+    if( obj && obj.get( "_subtype" ) === "token") {
 //log( "refreshing token " + obj.get("name"));
       let rep = obj.get( "represents" );
       if( rep && rep != "" ) {
-        let ch = getObj( "character", rep)
+        let ch = getObj( "character", rep );
         if( ch ) {
           let ED = new Earthdawn.EDclass();
           let edParse = new ED.ParseObj( ED );
@@ -10283,23 +10284,24 @@ log("Record Obsolete code. If you see this except on an 1879 sheet, please repor
                 else {
                   let ci = bi3[ i ].split( "," ),     // typically of the form: "Cast, pre" or "Cast, code, Rid"
                       code, rid, pre;
-                  if( ci[ 1 ].trim().startsWith( "repeating_" ) ) {    // we have a pre
-                    pre = ci[ 1 ];
-                    rid = Earthdawn.repeatSection( 2, ci [ 1 ]);
-                    code = Earthdawn.repeatSection( 3, ci[ 1 ]);
-                  } else if( ci[ 1 ] === "noRid" ) {    // This is just to keep it from going into the else.
-                    pre = code = rid = undefined;
-                  } else if( Earthdawn.codeToName( ci[ 1 ], true ) && ci.length > 2 ) {   // we have a code, and a rid
-                    code = ci[ 1 ];
-                    rid = ci[ 2 ];
-                    pre = Earthdawn.buildPre( code, rid);
-                  } else {            // we probably just have a rid so assume "T"
-                    code = "T";
-                    rid = ci[ 1 ];
-                    pre = Earthdawn.buildPre( code, rid);
-                  }
+                  if( ci.length > 1 ) {
+                    if( Earthdawn.safeString( ci[ 1 ] ).trim().startsWith( "repeating_" ) ) {    // we have a pre
+                      pre = ci[ 1 ];
+                      rid = Earthdawn.repeatSection( 2, ci [ 1 ]);
+                      code = Earthdawn.repeatSection( 3, ci[ 1 ]);
+                    } else if( ci[ 1 ] === "noRid" ) {    // This is just to keep it from going into the else.
+                      pre = code = rid = undefined;
+                    } else if( Earthdawn.codeToName( ci[ 1 ], true ) && ci.length > 2 ) {   // we have a code, and a rid
+                      code = ci[ 1 ];
+                      rid = ci[ 2 ];
+                      pre = Earthdawn.buildPre( code, rid);
+                    } else {            // we probably just have a rid so assume "T"
+                      code = "T";
+                      rid = ci[ 1 ];
+                      pre = Earthdawn.buildPre( code, rid);
+                  } }
                   let sendon = (code === "T") ? rid : pre;    // if it is a talent, just send the rowID, otherwise send on the entire pre from which the code and rid can be derived.
-                  switch( ci[ 0 ].trim() ) {
+                  switch( Earthdawn.safeString( ci[ 0 ] ).trim() ) {
                     case "Cast":
                       t += Earthdawn.makeButton( Earthdawn.getAttrBN( po.charID, pre + "Name", "")
                           , "!Earthdawn~ charID: " + po.charID + "~ Target:" + spellseq.spelldata.Casting + "~ ForEach: inmt~ " + getKask( pre ) 
@@ -10339,6 +10341,10 @@ log("Record Obsolete code. If you see this except on an 1879 sheet, please repor
                     case "RankMissing":
                       t += "Spellcasting Talent Missing!";
                       break;
+                    case "reset":     // We might get a reset inside a txt.
+                      t += Earthdawn.makeButton( "Reset", "!Earthdawn~ charID: " + po.charID + "~ ForEach: inmt~ Spell: " + ssa[ 1 ] + ": Reset: " + ssa[ ssa.length -1 ],
+                          "Press this button to Reset the Spell Sequence.", "param2");
+                      break;
                     case "Weave":
                       t += Earthdawn.makeButton( Earthdawn.getAttrBN( po.charID, pre + "Name", ""), "!Earthdawn~ charID: " + po.charID + "~ ForEach: inmt~ " + getKask( pre ) 
                           + " Spell: " + ssa[ 1 ] + ": Weave: " + sendon + ": "+ssa[ ssa.length -1 ], "Weave using this Talent." + sp2, "param");
@@ -10352,6 +10358,8 @@ log("Record Obsolete code. If you see this except on an 1879 sheet, please repor
                       t += Earthdawn.makeButton( Earthdawn.getAttrBN( po.charID, pre + "Name", ""), "!Earthdawn~ charID: " + po.charID + "~ ForEach: inmt~ " + getKask( pre ) 
                           + "Spell: " + ssa[ 1 ] + ": Effect: " + sendon + ": " + ssa[ ssa.length -1 ], "Effect Test using this Talent, or directly with WIL." + sp2, "param");
                       break;
+                    default: 
+                      t += Earthdawn.safeString( ci[ 0 ] ).trim() + ": ";
               } } }
               break;    // end wv, cst, fx.
                         // continuing switch (what)
@@ -10500,9 +10508,9 @@ Range : 20 yards"
             case "Circle":  txtfx = addit( txtfx, "CircleMissing" );  break;
             case "Rank":    txtfx = addit( txtfx, "RankMissing" );  break; 
             case "Wil":     txtfx = addit( txtfx, wilselect );  break;
-            default:        txtfx = Earthdawn.getAttrBN( po.charID, presp + "Effect", "None") + " " + addit( txtfx, "reset" );
+            default:        txtfx = addit( txtfx, Earthdawn.getAttrBN( po.charID, presp + "Effect", "None") );
+                            txtfx = addit( txtfx, "reset" );  break;
           }
-
 
             // Main Spell() switch statement. 
         switch( ssa[ 2 ] ) {
