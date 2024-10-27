@@ -1097,6 +1097,7 @@ Earthdawn.constantAlt = function( what ) {
 Earthdawn.constantButton = function( what, nestingLevel ) {   
   'use strict';
   try {
+    if( nestingLevel === undefined ) nestingLevel = 1;
     let s, r = "&";
     switch ( Earthdawn.safeString( what.trim().toLowerCase() )) {    // For this upper half, we want to return html codes.
           // These will eventually be converted to the real symbols later, but not until after they get  past some chat command steps.
