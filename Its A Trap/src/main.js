@@ -121,7 +121,7 @@ var ItsATrap = (() => {
    * @param {Graphic} token
    */
   function _checkTrapInteractions(token) {
-    if(token.iatIgnoreToken)
+    if(ignoreTokens[token.id])
       return;
 
     // Objects on the GM layer don't set off traps.
@@ -649,10 +649,11 @@ var ItsATrap = (() => {
   // This is to prevent a bug related to dropping default tokens for characters
   // to the VTT, which sometimes caused traps to trigger as though the dropped
   // token has move.
+  let ignoreTokens = {};
   on('add:graphic', token => {
-    token.iatIgnoreToken = true;
+    ignoreTokens[token.id] = true;
     setTimeout(() => {
-      delete token.iatIgnoreToken;
+      delete ignoreTokens[token.id];
     }, 1000);
   });
 
