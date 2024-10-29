@@ -42,7 +42,7 @@
 (function() {
 	// Constants
 	const versionMod = "2.3";
-	const versionSheet = "3.41"; // Note that a newer sheet will make upgrades as well as it can.
+	const versionSheet = "3.51"; // Note that a newer sheet will make upgrades as well as it can.
 	const needsExportedVersion = new Set(["1.0", "2.0", "2.1", "2.2"]); // HeroSystem6eHeroic.hde versions allowed.
 	
 	const defaultAttributes = {
@@ -956,6 +956,17 @@
 					}
 				}
 				
+				// Calculate thrown weapon range or assign range without units.
+				importedWeapons["weaponRange"+ID] = getWeaponRange(weaponsArray[importCount].range, character.strength, importedWeapons["weaponMass"+ID], script_name);
+				
+				// Check for max range in notes.
+				if (weaponsArray[importCount].notes !== "") {
+					tempString = weaponsArray[importCount].notes;
+					importedWeapons["weaponRange"+ID] = getWeaponMaxRange(tempString, script_name);
+				} else {
+					importedWeapons["weaponRange"+ID] = 0;
+				}
+				
 				// Get weapon mass.
 				if (weaponsArray[importCount].mass !== "") {
 					tempString = weaponsArray[importCount].mass;
@@ -963,9 +974,6 @@
 				} else {
 					importedWeapons["weaponMass"+ID] = 0;
 				}
-				
-				// Calculate thrown weapon range or assign range without units.
-				importedWeapons["weaponRange"+ID] = getWeaponRange(weaponsArray[importCount].range, character.strength, importedWeapons["weaponMass"+ID], script_name);
 			}
 			
 		}
@@ -4180,8 +4188,38 @@
 	}
 	
 	
+	var getWeaponMaxRange = function (inputString, script_name) {
+		let outcome = "";
+		let startPosition = 0;
+		let endPosition = 0;
+		
+		inputString = inputString.toLowerCase();
+		
+		if (inputString.includes("max range")) {
+			startPosition = inputString.indexOf("max range");
+			outcome = inputString.slice(startPosition);
+			if (outcome.includes(';')) {
+				endPosition = outcome.indexOf(';');
+				outcome = outcome.slice(0, endPosition);
+			} else if (outcome.includes(')')) {
+				endPosition = outcome.indexOf(')');
+				outcome = outcome.slice(0, endPosition);
+			} else {
+				endPosition = Math.min(16, outcome.length);
+				outcome = outcome.slice(0, endPosition);
+			}
+			outcome = outcome.replace(/[^\d,-]/g, "");
+			if (outcome.includes(',')) {
+				outcome = outcome.replace(',', ", ");
+			}
+		}
+		
+		return outcome.trim();
+	}
+	
+	
 	var getArmorLocations = function (inputString, script_name) {
-		let locations = "";
+		let outcome = "";
 		let startPosition = 0;
 		let endPosition = 0;
 		
@@ -4189,41 +4227,41 @@
 		
 		if (inputString.includes("location")) {
 			startPosition = inputString.indexOf("location");
-			locations = inputString.slice(startPosition);
-			if (locations.includes(';')) {
-				endPosition = locations.indexOf(';');
-				locations = locations.slice(0,endPosition);
-			} else if (locations.includes(')')) {
-				endPosition = locations.indexOf(')');
-				locations = locations.slice(0,endPosition);
+			outcome = inputString.slice(startPosition);
+			if (outcome.includes(';')) {
+				endPosition = outcome.indexOf(';');
+				outcome = outcome.slice(0, endPosition);
+			} else if (outcome.includes(')')) {
+				endPosition = outcome.indexOf(')');
+				outcome = outcome.slice(0, endPosition);
 			} else {
-				endPosition = Math.min(28, locations.length);
-				locations = locations.slice(0,endPosition);
+				endPosition = Math.min(28, outcome.length);
+				outcome = outcome.slice(0, endPosition);
 			}
-			locations = locations.replace(/[^\d,-]/g, "");
-			if (locations.includes(',')) {
-				locations = locations.replace(',', ", ");
+			outcome = outcome.replace(/[^\d,-]/g, "");
+			if (outcome.includes(',')) {
+				outcome = outcome.replace(',', ", ");
 			}
 		} else if (inputString.includes("loc")) {
 			startPosition = inputString.indexOf("loc");
-			locations = inputString.slice(startPosition);
-			if (locations.includes(';')) {
-				endPosition = locations.indexOf(';');
-				locations = locations.slice(0,endPosition);
-			} else if (locations.includes(')')) {
-				endPosition = locations.indexOf(')');
-				locations = locations.slice(0,endPosition);
+			outcome = inputString.slice(startPosition);
+			if (outcome.includes(';')) {
+				endPosition = outcome.indexOf(';');
+				outcome = outcome.slice(0, endPosition);
+			} else if (outcome.includes(')')) {
+				endPosition = outcome.indexOf(')');
+				outcome = outcome.slice(0, endPosition);
 			} else {
-				endPosition = Math.min(11, locations.length);
-				locations = locations.slice(0,endPosition);
+				endPosition = Math.min(11, outcome.length);
+				outcome = outcome.slice(0, endPosition);
 			}
-			locations = locations.replace(/[^\d,-]/g, "");
-			if (locations.includes(',')) {
-				locations = locations.replace(',', ", ");
+			outcome = outcome.replace(/[^\d,-]/g, "");
+			if (outcome.includes(',')) {
+				outcome = outcome.replace(',', ", ");
 			}
 		}
 		
-		return locations.trim();
+		return outcome.trim();
 	}
 	
 	

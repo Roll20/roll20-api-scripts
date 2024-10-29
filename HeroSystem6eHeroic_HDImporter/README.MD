@@ -65,7 +65,17 @@ At present, the character sheet has twenty power, ten talent, and ten complicati
 
 Powers that add (or subtract) characteristics, movement, and perception abilities should be applied in the appropriate modifier fields.
 
-If your campaign uses the optional rule of applying END costs to armor, HD Importer will recognize (X END/Turn) or (END/Turn: X) in equipment notes.
+> [!TIP]
+> HD Importer will recognize the following key phrases if added to a piece of equipment's notes and attempt to automatically apply the value given.
+
+### (Max Range: X)
+A weapon's maximum range.
+
+### (locations: U-V, X-Y, Z) or (loc U-V)
+Armor locations
+
+### (X END/Turn) or (END/Turn: X)
+If your campaign uses the optional rule of applying END costs to armor, HD Importer will automatically apply the value X.
 
 # Help
 
@@ -114,3 +124,5 @@ Version 2.0 -- Updated to support additional character sheet features as of shee
 Version 2.1 -- Updated to support additional character sheet features as of sheet version 3.16. Updated version of Hero Designer export format (HeroSystem6eHeroic.hde to version 2.1). Expands support for martial arts maneuvers. Recognizes power notes and scans powers for damage advantages. Adds the everyman PS skill. Added a second sample character with martial arts skills. Bug fixes (August 9, 2024).
 
 Version 2.2 -- Fix for compound power import failure. Recognizes Mental Combat Skill Levels and assigns levels and costs. Minor update to HeroSystem6eHeroic.hde (version 2.2). Improved formatting of text in powers, talents, and complications (September 14, 2024).
+
+Version 2.3 --
