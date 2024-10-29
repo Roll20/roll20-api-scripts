@@ -1,9 +1,9 @@
 {
     "name": "Triggered Cleanup",
     "script": "Triggered Cleanup.js",
-    "version": "1.0",
+    "version": "1.1",
     "previousversions": [],
-    "description": "Originally designed for a specific table, this script was made with one-offs and LC/Westmarches in mind.  Many APIs find difficulties in running scripts when numerous tokens are left on a table.  This script removes all tokens linked to a character sheet when using the command [!cleanup] in the chat.  It also deletes tokens when the linked character sheet is deleted.  It will ignore any tokens on a map that has the word [bullpen] in the name (not case-sensitive)",
+    "description": "Originally designed for a specific table, this script was made with one-offs and LCs/Westmarches in mind.  Many APIs find difficulties in running scripts when numerous tokens are left on a table.  This script removes all tokens linked to a character sheet when using the command [!cleanup] in the chat.  It also deletes tokens when the linked character sheet is deleted.  It will ignore any tokens on a map that has the word [bullpen] in the name (not case-sensitive)",
     "authors": "Jeffrey Simons",
     "roll20userid": "4069317",
     "useroptions": [],
