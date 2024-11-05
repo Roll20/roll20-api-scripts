@@ -3007,31 +3007,31 @@
 		} else if ((base === "0") && (cost === "0")) {
 			// Everyman skill.
 			type = "everyman";
-		} else if (text.startsWith("KS") && ((base-levels) === 2)) {
+		} else if (text.startsWith("KS") && ((base-levels) <= 2)) {
 			// Knowledge Skill
 			type = "ks";
 		} else if (text.startsWith("KS") && ((base-levels) === 3)) {
 			// Knowledge Skill based on INT.
 			type = "intKS";
-		} else if (text.startsWith("CK") && ((base-levels) === 2)) {
+		} else if (text.startsWith("CK") && ((base-levels) <= 2)) {
 			// City Knowledge Skill
 			type = "ck";
 		} else if (text.startsWith("CK") && ((base-levels) === 3)) {
 			// City Knowledge Skill based on INT.
 			type = "intCK";
-		} else if (text.startsWith("CuK") && ((base-levels) === 2)) {
+		} else if (text.startsWith("CuK") && ((base-levels) <= 2)) {
 			// Culture Knowledge Skill
 			type = "cuk";
 		} else if (text.startsWith("CuK") && ((base-levels) === 3)) {
 			// Culture Knowledge Skill based on INT.
 			type = "intCuK";
-		} else if (text.startsWith("Science Skill") && ((base-levels) === 2)) {
+		} else if (text.startsWith("Science Skill") && ((base-levels) <= 2)) {
 			// Science Skill
 			type = "ss";
 		} else if (text.startsWith("Science Skill") && ((base-levels) === 3)) {
 			// Science Skill based on INT.
 			type = "intSS";
-		} else if (text.startsWith("AK") && ((base-levels) === 2)) {
+		} else if (text.startsWith("AK") && ((base-levels) <= 2)) {
 			// Area Knowledge.
 			type = "ak";
 		} else if (text.startsWith("AK") && ((base-levels) === 3)) {
