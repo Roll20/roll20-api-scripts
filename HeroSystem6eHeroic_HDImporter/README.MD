@@ -66,13 +66,10 @@ At present, the character sheet has twenty power, ten talent, and ten complicati
 Powers that add (or subtract) characteristics, movement, and perception abilities should be applied in the appropriate modifier fields.
 
 > [!TIP]
-> HD Importer will recognize the following key phrases if added to a piece of equipment's notes and attempt to automatically apply the value given.
+> HD Importer will recognize the following key phrases if added to a piece of equipment's notes and attempts to automatically apply the value given (parentheses are not strictly required).
 
-### (Max Range: X)
+### (Max Range: Xm) or (max range X)
 A weapon's maximum range.
-
-### (locations: U-V, X-Y, Z) or (loc U-V)
-Armor locations
 
 ### (X END/Turn) or (END/Turn: X)
 If your campaign uses the optional rule of applying END costs to armor, HD Importer will automatically apply the value X.

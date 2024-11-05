@@ -712,6 +712,7 @@
 		let subStringA;
 		let subStringB;
 		let sampleSize;
+		let itemNumber;
 		
 		// Needed for adjusted damage.
 		let advantage = 0;
@@ -745,7 +746,7 @@
 		let imported = 0;
 		let ID = "01";
 		
-		// Imports sixteen martial arts maneuvers, skipping empty slots.
+		// Imports sixteen piece of equipment, skipping empty slots.
 		
 		for (importCount = 1; importCount <= maxEquipment; importCount++) {
 			
@@ -860,8 +861,25 @@
 				
 				// Get item mass.
 				if (equipmentListArray[importCount].mass !== "") {
+					
+					// Check for additional copies in notes.
+					if (equipmentListArray[importCount].notes !== "") {
+						tempString = equipmentListArray[importCount].notes;
+						
+						if (tempString.includes("number of items")) {
+							// Get the number of copies and amend the equipment text.
+							itemNumber = getItemNumber(tempString);
+							importedEquipment["equipText"+ID] += " (" + (itemNumber).toString() + ")";
+						} else {
+							itemNumber = 1;
+						}
+					} else {
+						itemNumber = 1;
+					}
+					
+					// Multiply the base mass by the number of copies.
 					tempString = equipmentListArray[importCount].mass;
-					importedEquipment["equipMass"+ID] = getItemMass(tempString, script_name);
+					importedEquipment["equipMass"+ID] = itemNumber * getItemMass(tempString, script_name);
 				} else {
 					importedEquipment["equipMass"+ID] = 0;
 				}
@@ -970,14 +988,40 @@
 				// Get weapon mass.
 				if (weaponsArray[importCount].mass !== "") {
 					tempString = weaponsArray[importCount].mass;
-					importedWeapons["weaponMass"+ID] = getItemMass(tempString, script_name);
+					tempValue = getItemMass(tempString, script_name);
+					importedWeapons["weaponMass"+ID] = tempValue;
+					
+					// Check for a note on additional copies.
+					if (weaponsArray[importCount].notes !== "") {
+						tempString = weaponsArray[importCount].notes;
+						
+						if (tempString.includes("number of items")) {
+							if (equipmentListArrayIndex < maxEquipment) {
+								itemNumber = getItemNumber(tempString);
+								
+								// Fill in ammunition quantity if it hasn't already been assigned.
+								if (importedWeapons["weaponShots"+ID] === 0) {
+									importedWeapons["weaponShots"+ID] = itemNumber;
+								}
+								
+								// Assign copies to an open equipment slot. ID changes to the equipment slot.
+								equipmentListArrayIndex++;
+								ID = String(equipmentListArrayIndex).padStart(2,'0');
+								
+								tempString = weaponsArray[importCount].name;
+								tempString += " (" + (itemNumber-1).toString() + ")";
+								
+								importedWeapons["equipText"+ID] = tempString;
+								importedWeapons["equipMass"+ID] = (itemNumber-1) * tempValue;
+							}
+						}
+					}
 				} else {
 					importedWeapons["weaponMass"+ID] = 0;
 				}
-			}
-			
+			}	
 		}
-			
+		
 		// Import weapons.
 		importedWeapons.weaponStates = weaponStates;
 		
@@ -2402,11 +2446,19 @@
 			
 		} else if (theSkill.display === ("Weapon Familiarity")) {
 			// Weapon familiarity skill line.
-			// There should be only one line since Hero Designer lumps them together.
+			// There will probably be only one line since Hero Designer lumps them together.
 			// We need to break them up.
 			let tempString = theSkill.text;
 			tempString = tempString.replace(/\s\s+/g, " ");
+			
+			// Special skillsets to rename.
+			tempString = tempString.replace("Thrown Knives, Axes, and Darts", "Thrown Weapons");
+			tempString = tempString.replace("Javelins and Thrown Spears", "Thrown Spears");
+			tempString = tempString.replace("Axes, Maces, Hammers, and Picks", "Hafted Weapons");
+			
+			// Drop WF:
 			tempString = tempString.replace("WF: ", "");
+			
 			let weaponFamArrayLength = (tempString.split(",").length - 1);
 			let weaponFamArray = new Array(weaponFamArrayLength);
 			
@@ -2939,8 +2991,8 @@
 		let attribute = skillObject.attribute;
 		let text = skillObject.text;
 		let type = "none";
-		let base = skillObject.base;
-		let levels = skillObject.levels;
+		let base = parseInt(skillObject.base);
+		let levels = parseInt(skillObject.levels);
 		let cost = skillObject.cost;
 		
 		if (skillObject.display === ("Skill Levels")) {
@@ -2991,6 +3043,33 @@
 		} else if (text.startsWith("PS")) {
 			// Professional skill.
 			type = "ps";
+		} else if (text.includes("Survival") || text.includes("Gambling")) {
+			// Special skills.
+			if (text.includes("8-")) {
+				// It is not clear if a familiarity skill should be odd or even from the costs.
+				if (base === 1) {
+					type = "sp2";
+				} else if (base === 2) {
+					type = "sp4";
+				} else {
+					type = "sp6";
+				}
+			} else {	
+				if ((base-levels*2) === 1) {
+					type = "sp1";
+				} else if ((base-levels*2) === 2) {
+					type = "sp2";
+				} else if ((base-levels*2) === 3) {
+					type = "sp3";
+				} else if ((base-levels*2) === 4) {
+					type = "sp4";
+				} else if ((base-levels*2) === 5) {
+					type = "sp5";
+				} else {
+					// Default of six-point skills unless there is call for higher.
+					type = "sp6";
+				}
+			}
 		} else if (attribute === "INT") {
 			// Intellect skill.
 			type = "int";
@@ -4215,6 +4294,25 @@
 		}
 		
 		return outcome.trim();
+	}
+	
+	
+	var getItemNumber = function (inputString, script_name) {
+		let outcome = "";
+		let startPosition = 0;
+		let endPosition = 0;
+		
+		inputString = inputString.toLowerCase();
+		
+		if (inputString.includes("number of items")) {
+			endPosition = inputString.indexOf("number of items");
+			startPosition = Math.max(endPosition - 3, 1);
+			outcome = inputString.slice(startPosition, endPosition);
+			outcome = outcome.replace(/[^\d,-]/g, "");
+			outcome = parseInt(outcome)||0;
+		}
+		
+		return outcome;
 	}
 	
 	
