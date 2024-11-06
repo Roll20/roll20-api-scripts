@@ -533,6 +533,7 @@
 		let temp = 0;
 		let tempString = "";
 		let diceString = "";
+		let tempValue = 0;
 		let tempPosition = 0;
 		const maxManeuvers = 20;
 		const maneuverSlots = 10;
@@ -884,8 +885,9 @@
 					}
 					
 					// Multiply the base mass by the number of copies.
-					tempString = equipmentListArray[importCount].mass;
-					importedEquipment["equipMass"+ID] = itemNumber * getItemMass(tempString, script_name);
+					tempValue = itemNumber * getItemMass(equipmentListArray[importCount].mass, script_name);
+					tempValue = Math.round(10*tempValue)/10;
+					importedEquipment["equipMass"+ID] = tempValue;
 				} else {
 					importedEquipment["equipMass"+ID] = 0;
 				}
@@ -908,7 +910,6 @@
 		let importedWeapons = new Array();
 		const maxAdvantage = 1;
 		const maxWeapons = 5;
-		let tempValue = 0;
 		
 		importCount = 0;
 		imported = 0;
@@ -1016,9 +1017,10 @@
 								
 								tempString = weaponsArray[importCount].name;
 								tempString += " (" + (itemNumber-1).toString() + ")";
-								
 								importedWeapons["equipText"+ID] = tempString;
-								importedWeapons["equipMass"+ID] = (itemNumber-1) * tempValue;
+								tempValue = (itemNumber-1) * tempValue;
+								tempValue = Math.round(10*tempValue)/10;
+								importedWeapons["equipMass"+ID] = tempValue;
 							}
 						}
 					}
@@ -3165,6 +3167,8 @@
 	
 	
 	var removeEnhancerText = function(name) {
+		// Here a .replace() function doesn't work because the text to be removed is
+		// of the form "xx- (x Active Points)."
 		let startPosition;
 		let endPosition;
 		let subStringA;
@@ -4339,7 +4343,7 @@
 	
 	
 	var getItemNumber = function (inputString, script_name) {
-		let outcome = "";
+		let outcome = "1";
 		let startPosition = 0;
 		let endPosition = 0;
 		
@@ -4350,10 +4354,9 @@
 			startPosition = Math.max(endPosition - 3, 1);
 			outcome = inputString.slice(startPosition, endPosition);
 			outcome = outcome.replace(/[^\d,-]/g, "");
-			outcome = parseInt(outcome)||0;
 		}
 		
-		return outcome;
+		return parseInt(outcome)||1;
 	}
 	
 	
