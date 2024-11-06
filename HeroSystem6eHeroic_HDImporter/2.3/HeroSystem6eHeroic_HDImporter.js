@@ -42,7 +42,7 @@
 (function() {
 	// Constants
 	const versionMod = "2.3";
-	const versionSheet = "3.51"; // Note that a newer sheet will make upgrades as well as it can.
+	const versionSheet = "3.71"; // Note that a newer sheet will make upgrades as well as it can.
 	const needsExportedVersion = new Set(["1.0", "2.0", "2.1", "2.2"]); // HeroSystem6eHeroic.hde versions allowed.
 	
 	const defaultAttributes = {
@@ -561,12 +561,18 @@
 		while ( (importCount < maneuverSlots) && (importCount < maneuverArrayIndex) ) {
 			if (importCount < maneuverArrayIndex) {
 				ID = String(importCount+1).padStart(2,'0');
+				tempString = maneuverArray[importCount].name;
 				
-				if ( maneuverArray[importCount].name.length > nameMax) {
-					importedManeuvers["martialManeuverName"+ID] = maneuverArray[importCount].name.slice(0, nameMax);
+				if ( tempString.includes("Weapon Element") ) {
+					tempString = tempString.replace("Weapon Element", "Element");
+				}
+				
+				if ( tempString.length > nameMax) {
+					tempString = tempString.slice(0, nameMax);
+					importedManeuvers["martialManeuverName"+ID] = tempString;
 					importedManeuvers["martialManeuverEffect"+ID] = maneuverArray[importCount].name + '\n' + maneuverArray[importCount].effect;
 				} else {
-					importedManeuvers["martialManeuverName"+ID] = maneuverArray[importCount].name;
+					importedManeuvers["martialManeuverName"+ID] = tempString;
 					importedManeuvers["martialManeuverEffect"+ID] = maneuverArray[importCount].effect;
 				}
 				
@@ -3099,10 +3105,16 @@
 			type = "combat";
 		}
 		
+		// Remove unwanted text from skills influenced by enhancers.
+		if (text.includes("Active Points")) {
+			text = removeEnhancerText(text);
+		}
+		
 		// Try to find the best name of the skill. 
 		// It may be in .name, .text, or .display.
 		
 		let name = skillObject.name;
+		
 		if (name === "") {
 			if ((text !== "") && text.includes("AK: ")) {
 				name = text.replace("AK: ", "");
@@ -3149,6 +3161,35 @@
 		generalSkillIndex++;
 		
 		return generalSkillIndex;
+	}
+	
+	
+	var removeEnhancerText = function(name) {
+		let startPosition;
+		let endPosition;
+		let subStringA;
+		let subStringB;
+		
+		if (name.includes("Active Points")) {
+			// Split the name into two parts on each side of Active Points.
+			startPosition = name.indexOf("Active Points");
+			endPosition = startPosition+13;
+			subStringA = name.slice(0, startPosition);
+			subStringB = name.slice(endPosition);
+			
+			// Remove text "XY- (Z " at the end of subStringA.
+			endPosition = subStringA.lastIndexOf('(') - 3;
+			subStringA = subStringA.slice(0,endPosition);
+			
+			// Remove the first ')' in subStringB.
+			startPosition = subStringB.indexOf(')');
+			subStringB = subStringB.slice(startPosition);
+			
+			// Join the subStrings to make a new name.
+			name = subStringA + subStringB;
+		}
+		
+		return name;
 	}
 	
 	
