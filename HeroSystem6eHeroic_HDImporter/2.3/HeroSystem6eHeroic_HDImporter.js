@@ -1016,7 +1016,11 @@
 								ID = String(equipmentListArrayIndex).padStart(2,'0');
 								
 								tempString = weaponsArray[importCount].name;
-								tempString += " (" + (itemNumber-1).toString() + ")";
+								
+								if (itemNumber > 2) {
+									tempString += " (" + (itemNumber-1).toString() + ")";
+								}
+								
 								importedWeapons["equipText"+ID] = tempString;
 								tempValue = (itemNumber-1) * tempValue;
 								tempValue = Math.round(10*tempValue)/10;
