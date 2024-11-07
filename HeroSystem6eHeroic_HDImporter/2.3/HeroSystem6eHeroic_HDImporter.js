@@ -2649,9 +2649,7 @@
 		// Determine fluency.
 		if (tempString.includes("native")) {
 			fluency = "native";
-		} else if (cost == 0) {
-			fluency = "native";
-		} else if ((cost == 1) && (tempString.includes("literate"))) {
+		} else if (cost === 0) {
 			fluency = "native";
 		} else if (tempString.includes("basic")) {
 			fluency = "basic";
@@ -2663,6 +2661,8 @@
 			fluency = "idiomatic";
 		} else if (tempString.includes("imitate")) {
 			fluency = "imitate";
+		} else if ((cost === 1) && (tempString.includes("literate"))) {
+			fluency = "native";
 		} else {
 			fluency = "none";
 		}
