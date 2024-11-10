@@ -2997,7 +2997,7 @@
 		} else if (text.startsWith("PS")) {
 			// Professional skill.
 			type = "ps";
-		} else if (text.includes("Survival") || text.includes("Gambling")) {
+		} else if (text.includes("Survival") || text.includes("Gambling") || text.includes("Forgery")) {
 			// Special skills.
 			if (text.includes("8-")) {
 				// It is not clear if a familiarity skill should be odd or even from the costs.
