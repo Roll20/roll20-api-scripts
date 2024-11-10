@@ -43,7 +43,7 @@
 	// Constants
 	const versionMod = "2.3";
 	const versionSheet = "3.71"; // Note that a newer sheet will make upgrades as well as it can.
-	const needsExportedVersion = new Set(["1.0", "2.0", "2.1", "2.2"]); // HeroSystem6eHeroic.hde versions allowed.
+	const needsExportedVersion = new Set(["1.0", "2.0", "2.1", "2.2", "2.3"]); // HeroSystem6eHeroic.hde versions allowed.
 	
 	const defaultAttributes = {
 		
@@ -262,11 +262,13 @@
 		sendChat(script_name, '<div style="'+style+'">Import of <b>' + character.character_name + '</b> started.</div>', null, {noarchive:true});
 		
 		if (character.version === "1.0") {
-			sendChat(script_name, "Exported from HERO Designer with \n HeroSystem6eHeroic.hde v1.0. \n Version 2.2 supports additional content.");
+			sendChat(script_name, "Exported from HERO Designer with \n HeroSystem6eHeroic.hde v1.0. \n Version 2.3 supports additional content.");
 		} else if (character.version === "2.0") {
-			sendChat(script_name, "Exported from HERO Designer with \n HeroSystem6eHeroic.hde v2.0. \n Version 2.2 supports additional content.");
+			sendChat(script_name, "Exported from HERO Designer with \n HeroSystem6eHeroic.hde v2.0. \n Version 2.3 supports additional content.");
 		} else if (character.version === "2.1") {
-			sendChat(script_name, "Exported from HERO Designer with \n HeroSystem6eHeroic.hde v2.1. \n Version 2.2 is available.");
+			sendChat(script_name, "Exported from HERO Designer with \n HeroSystem6eHeroic.hde v2.1. \n Version 2.3 supports additional content.");
+		} else if (character.version === "2.2") {
+			sendChat(script_name, "Exported from HERO Designer with \n HeroSystem6eHeroic.hde v2.2. \n Version 2.3 supports additional content.");
 		}
 		
 		object = null;
@@ -565,7 +567,7 @@
 				tempString = maneuverArray[importCount].name;
 				
 				if ( tempString.includes("Weapon Element") ) {
-					tempString = tempString.replace("Weapon Element", "Element");
+					tempString = tempString.replace("Weapon Element", "WE");
 				}
 				
 				if ( tempString.length > nameMax) {
@@ -748,14 +750,14 @@
 		let weaponStates = "KKKKKNOOOOOO";
 		
 		// Read equipment
-		const maxEquipment = 16;
+		const maxGear = (character.version >= parseFloat("2.3")||0) ? 42 : 16;
 		let importCount = 0;
 		let imported = 0;
 		let ID = "01";
 		
-		// Imports sixteen piece of equipment, skipping empty slots.
+		// Imports either 42 or 16 pieces of equipment (for version < 2.3), skipping empty slots.
 		
-		for (importCount = 1; importCount <= maxEquipment; importCount++) {
+		for (importCount = 1; importCount <= maxGear; importCount++) {
 			
 			ID = String(importCount).padStart(2,'0');
 			
@@ -835,7 +837,7 @@
 			
 			setAttrs(object.id, {treasures: tempString});
 			
-			// Show the Treasures Gear Tab slide where the multipower equipment will appear.	
+			// Show the Treasures Gear Tab slide where details of equipment will appear.	
 			setAttrs(object.id, {gearSlideSelection: 3});
 		}
 		
@@ -843,6 +845,7 @@
 		// Assign to character sheet Equipment List.
 		
 		let importedEquipment = new Array();
+		const maxEquipment = 16;
 		importCount = 0;
 		imported = 0;
 		
@@ -909,14 +912,15 @@
 		
 		let importedWeapons = new Array();
 		const maxAdvantage = 1;
-		const maxWeapons = 5;
+		const maxWeapons = 10;
 		
 		importCount = 0;
 		imported = 0;
 		
 		for (importCount = 0; importCount < maxWeapons; importCount++) {
-		
-			ID = String(importCount+1).padStart(2,'0');
+			
+			// Weapons 6-10 are numbered 11-15 within the Set A/B framework of the sheet.
+			ID = (importCount < 5) ? String(importCount+1).padStart(2,'0') : String(importCount+6).padStart(2,'0');
 			
 			if (importCount < weaponsArrayIndex) {
 				imported += 1;
@@ -1003,7 +1007,7 @@
 						tempString = weaponsArray[importCount].notes;
 						
 						if (tempString.includes("number of items")) {
-							if (equipmentListArrayIndex < maxEquipment) {
+							if (equipmentListArrayIndex < maxGear) {
 								itemNumber = getItemNumber(tempString);
 								
 								// Fill in ammunition quantity if it hasn't already been assigned.
@@ -1048,16 +1052,17 @@
 		}
 		
 		// Prepare object of armor defenses. Assign to character sheet Armor List.
-				
+		
 		let importedArmor = new Array();
-		const maxArmor = 4; // The 4th may be overwritten if the character has resistant protection.
+		const maxArmor = 8; // The 8th piece will be overwritten if the character has resistant protection.
 		
 		importCount = 0;
 		imported = 0;
 		
 		for (importCount = 0; importCount < maxArmor; importCount++) {
-		
-			ID = String(importCount+1).padStart(2,'0');
+			
+			// Armor pieces 5-8 are numbered 11-14 within the Set A/B framework of the sheet.
+			ID = (importCount < 4) ? String(importCount+1).padStart(2,'0') : String(importCount+7).padStart(2,'0');
 			tempString = "none";
 			
 			if (importCount < armorArrayIndex) {
@@ -1156,7 +1161,7 @@
 		
 		for (let i=0; i < equipmentMultipowers.length; i++) {
 			// Get next multipower index.
-			shieldSearchIndex=equipmentMultipowers[i];
+			shieldSearchIndex = equipmentMultipowers[i];
 			tempString = multipowerArray[shieldSearchIndex].name;
 			tempString = tempString.toLowerCase();
 			
@@ -1235,9 +1240,6 @@
 				if (i+2 > equipmentMultipowers.length) {
 					// Shield is the last multipower in the list.
 					for (let j = shieldSearchIndex; j<multipowerArray.length; j++) {
-							
-						// sendChat(script_name, "Seaching multipower for Attack: "+ tempString+".");
-						
 						if ( multipowerArray[j].attack) {
 							foundShieldAttack = true;
 							
@@ -1971,7 +1973,7 @@
 				// Set power type.
 				importedPowers["powerDamageType"+ID] = getPowerDamageType(theEffect);
 				
-				// If Power's effect is Resistant Protection create armor in Armor Slot 4 with a combination of ED and PD.
+				// If Power's effect is Resistant Protection create armor in Armor Slot 8 (14) with a combination of ED and PD.
 				tempString = (powerArray[importCount].text).toLowerCase();
 				
 				if (theEffect === "Resistant Protection") {
@@ -1982,47 +1984,47 @@
 						
 						tempValue = getResistantPD(powerArray[importCount].text, script_name);
 						if (tempValue > 0) {
-							charMod.armorPD04 += tempValue;
+							charMod.armorPD14 += tempValue;
 							if ( (specialArray.some(v => tempString.includes(v))) != true) {
 								// We don't want to add overall modifications for special cases.
 								charMod.pdMod += tempValue;
 							}
 							if (!pdAddedToTotal) {
-								charMod.totalPD04 = tempValue + parseInt(character.pd);
+								charMod.totalPD14 = tempValue + parseInt(character.pd);
 								pdAddedToTotal = true;
 							} else {
-								charMod.totalPD04 += tempValue;
+								charMod.totalPD14 += tempValue;
 							}
-							charMod.armorName04 = importedPowers["powerName"+ID];
-							charMod.armorLocations04 = "3-18";
+							charMod.armorName14 = importedPowers["powerName"+ID];
+							charMod.armorLocations14 = "3-18";
 							tempObject = (requiresRoll(powerArray[importCount].text));
 							if (tempObject.hasRoll) {
-								charMod.armorActivation04 = tempObject.skillRoll;
+								charMod.armorActivation14 = tempObject.skillRoll;
 							} else {
-								charMod.armorActivation04 = 18;
+								charMod.armorActivation14 = 18;
 							}
 						}
 						
 						tempValue = getResistantED(powerArray[importCount].text, script_name);
 						if (tempValue > 0) {
-							charMod.armorED04 += tempValue;
+							charMod.armorED14 += tempValue;
 							if ( (specialArray.some(v => tempString.includes(v))) != true) {
 								// We don't want to add overall modifications for special cases.
 								charMod.edMod += tempValue;
 							}
 							if (!edAddedToTotal) {
-								charMod.totalED04 = tempValue + parseInt(character.ed);
+								charMod.totalED14 = tempValue + parseInt(character.ed);
 								edAddedToTotal = true;
 							} else {
-								charMod.totalED04 += tempValue;
+								charMod.totalED14 += tempValue;
 							}
-							charMod.armorName04 = importedPowers["powerName"+ID];
-							charMod.armorLocations04 = "3-18";
+							charMod.armorName14 = importedPowers["powerName"+ID];
+							charMod.armorLocations14 = "3-18";
 							tempObject = (requiresRoll(powerArray[importCount].text));
 							if (tempObject.hasRoll) {
-								charMod.armorActivation04 = tempObject.skillRoll;
+								charMod.armorActivation14 = tempObject.skillRoll;
 							} else {
-								charMod.armorActivation04 = 18;
+								charMod.armorActivation14 = 18;
 							}
 						}
 					}
@@ -2033,18 +2035,18 @@
 						}
 						
 						if ( (powerArray[importCount].text).includes("Resistant")) {
-							charMod.armorPD04 += parseInt(character.pd);
+							charMod.armorPD14 += parseInt(character.pd);
 							if (!pdAddedToTotal) {
-								charMod.totalPD04 += parseInt(character.pd);
+								charMod.totalPD14 += parseInt(character.pd);
 								pdAddedToTotal = true;
 							}
-							charMod.armorName04 = importedPowers["powerName"+ID];
-							charMod.armorLocations04 = "3-18";
+							charMod.armorName14 = importedPowers["powerName"+ID];
+							charMod.armorLocations14 = "3-18";
 							tempObject = (requiresRoll(powerArray[importCount].text));
 							if (tempObject.hasRoll) {
-								charMod.armorActivation04 = tempObject.skillRoll;
+								charMod.armorActivation14 = tempObject.skillRoll;
 							} else {
-								charMod.armorActivation04 = 18;
+								charMod.armorActivation14 = 18;
 							}
 						}
 					}
@@ -2055,18 +2057,18 @@
 						}
 						
 						if ( (powerArray[importCount].text).includes("Resistant") ) {
-							charMod.armorED04 += parseInt(character.ed);
+							charMod.armorED14 += parseInt(character.ed);
 							if (!edAddedToTotal) {
-								charMod.totalED04 += parseInt(character.ed);
+								charMod.totalED14 += parseInt(character.ed);
 								edAddedToTotal = true;
 							}
-							charMod.armorName04 = importedPowers["powerName"+ID];
-							charMod.armorLocations04 = "3-18";
+							charMod.armorName14 = importedPowers["powerName"+ID];
+							charMod.armorLocations14 = "3-18";
 							tempObject = (requiresRoll(powerArray[importCount].text));
 							if (tempObject.hasRoll) {
-								charMod.armorActivation04 = tempObject.skillRoll;
+								charMod.armorActivation14 = tempObject.skillRoll;
 							} else {
-								charMod.armorActivation04 = 18;
+								charMod.armorActivation14 = 18;
 							}
 						}	
 					}
@@ -2628,8 +2630,10 @@
 		// This function is called when a skill is identified as an enhancer.
 		// The skills' text will determine which enhancer it is.
 		// let languages;
-
-		let language;
+		
+		var ID = String(languageIndex+41).padStart(2,'0');
+		var language = new Object();
+		
 		let name = languageObject.name;
 		let tempString = languageObject.text;
 		if (name === "") {
@@ -2649,8 +2653,10 @@
 		// Determine fluency.
 		if (tempString.includes("native")) {
 			fluency = "native";
-		} else if (cost === 0) {
+		} else if ( tempString.includes("idiomatic") && (cost < 2)) {
 			fluency = "native";
+		} else if ( tempString.includes("imitate") && (cost < 3)) {
+			fluency = "nativePlus";
 		} else if (tempString.includes("basic")) {
 			fluency = "basic";
 		} else if (tempString.includes("completely")) {
@@ -2661,8 +2667,6 @@
 			fluency = "idiomatic";
 		} else if (tempString.includes("imitate")) {
 			fluency = "imitate";
-		} else if ((cost === 1) && (tempString.includes("literate"))) {
-			fluency = "native";
 		} else {
 			fluency = "none";
 		}
@@ -2676,72 +2680,10 @@
 		}
 		
 		// Assign this language to the character sheet.
-		
-		switch(languageIndex) {
-			case 0:
-				language = {
-					skillName41: name,
-					skillFluency41: fluency,
-					skillLiteracy41: literacy
-				}
-				break;
-			case 1:
-				language = {
-					skillName42: name,
-					skillFluency42: fluency,
-					skillLiteracy42: literacy
-				}
-				break;
-			case 2:
-				language = {
-					skillName43: name,
-					skillFluency43: fluency,
-					skillLiteracy43: literacy
-				}
-				break;
-			case 3:
-				language = {
-					skillName44: name,
-					skillFluency44: fluency,
-					skillLiteracy44: literacy
-				}
-				break;
-			case 4:
-				language = {
-					skillName45: name,
-					skillFluency45: fluency,
-					skillLiteracy45: literacy
-				}
-				break;
-			case 5:
-				language = {
-					skillName46: name,
-					skillFluency46: fluency,
-					skillLiteracy46: literacy
-				}
-				break;
-			case 6:
-				language = {
-					skillName47: name,
-					skillFluency47: fluency,
-					skillLiteracy47: literacy
-				}
-				break;
-			case 7:
-				language = {
-					skillName48: name,
-					skillFluency48: fluency,
-					skillLiteracy48: literacy
-				}
-				break;
-			default:
-				// Last language slot available.
-				language = {
-					skillName49: name,
-					skillFluency49: fluency,
-					skillLiteracy49: literacy
-				}
-		}
+		language["skillName"+ID] = name;
+		language["skillFluency"+ID] = fluency;
+		language["skillLiteracy"+ID] = literacy;
+		language["skillCP"+ID] = cost;
 		
 		setAttrs(object.id, language);
 		
