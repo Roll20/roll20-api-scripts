@@ -773,13 +773,13 @@
 						multipowerArray[multipowerArrayIndex]=equipmentArray[equipmentArrayIndex];
 						multipowerArrayIndex++;	
 						
-					} else if ((equipmentArray[equipmentArrayIndex].defense !== "") && (equipmentArray[equipmentArrayIndex].defense === "true")) {
+					} else if ((equipmentArray[equipmentArrayIndex].defense !== "") && (equipmentArray[equipmentArrayIndex].defense === "true") && (equipmentArray[equipmentArrayIndex].notes.toLowerCase().includes("equipment") !== true)) {
 						// If the item is a defense add it to the armor list.
 						// This will need to be updated for shields.
 						armorArray[armorArrayIndex]=equipmentArray[equipmentArrayIndex];
 						armorArrayIndex++;
 						
-					} else if ((equipmentArray[equipmentArrayIndex].attack !== "") && (equipmentArray[equipmentArrayIndex].damage !== "") && (equipmentArray[equipmentArrayIndex].attack === "true")) {
+					} else if ((equipmentArray[equipmentArrayIndex].attack !== "") && (equipmentArray[equipmentArrayIndex].damage !== "") && (equipmentArray[equipmentArrayIndex].attack === "true") && (equipmentArray[equipmentArrayIndex].notes.toLowerCase().includes("equipment") !== true) ) {
 						// If the item is a damage attack add it to the weapon list.
 						weaponsArray[weaponsArrayIndex]=equipmentArray[equipmentArrayIndex];
 						weaponsArrayIndex++;
@@ -2955,9 +2955,9 @@
 		} else if (skillObject.text.includes("three pre-defined Skills")) {
 			// Three-group skill.
 			type = "group";
-		} else if ((base === "0") && (cost === "0") && skillObject.text.includes("11-")) {
-			// Everyman professional skill.
-			type = "everymanPS";
+		} else if (text.startsWith("PS")) {
+			// Professional skill.
+			type = (cost === "0") ? "everymanPS" : "ps";
 		} else if ((base === "0") && (cost === "0")) {
 			// Everyman skill.
 			type = "everyman";
@@ -2994,9 +2994,6 @@
 		} else if (text.startsWith("TF")) {
 			// Transport familiarity.
 			type = "tf";
-		} else if (text.startsWith("PS")) {
-			// Professional skill.
-			type = "ps";
 		} else if (text.includes("Survival") || text.includes("Gambling") || text.includes("Forgery")) {
 			// Special skills.
 			if (text.includes("8-")) {
