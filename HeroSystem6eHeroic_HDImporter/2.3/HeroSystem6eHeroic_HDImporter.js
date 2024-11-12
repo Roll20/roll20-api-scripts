@@ -42,7 +42,7 @@
 (function() {
 	// Constants
 	const versionMod = "2.3";
-	const versionSheet = "3.71"; // Note that a newer sheet will make upgrades as well as it can.
+	const versionSheet = "3.8"; // Note that a newer sheet will make upgrades as well as it can.
 	const needsExportedVersion = new Set(["1.0", "2.0", "2.1", "2.2", "2.3"]); // HeroSystem6eHeroic.hde versions allowed.
 	
 	const defaultAttributes = {
@@ -660,19 +660,22 @@
 		if (maneuverArrayIndex > maneuverSlots) {
 			let extras = 0;
 			
+			tempString = "Additional Maneuvers \n";
+			
 			for (let i = maneuverSlots; i < maneuverArrayIndex; i++) {
-				tempString = tempString + maneuverArray[i].name + "\n";
-				tempString = tempString + "CP: " + maneuverArray[i].points + "\n";
+				tempString += maneuverArray[i].name + '\n';
+				tempString += '\t' + "CP: " + maneuverArray[i].points + "  ";
 				if (maneuverArray[i].ocv !== "") {
-					tempString = tempString + "OCV: " + maneuverArray[i].ocv + "\n";
+					tempString += "OCV: " + maneuverArray[i].ocv + "  ";
 				}
 				if (maneuverArray[i].dcv !== "") {
-					tempString = tempString + "DCV: " + maneuverArray[i].dcv + "\n";
+					tempString += "DCV: " + maneuverArray[i].dcv + "  ";
 				}
 				if (maneuverArray[i].phase !== "") {
-					tempString = tempString + "Phase: " + maneuverArray[i].phase + "\n";
+					tempString += "Phase: " + maneuverArray[i].phase + '\n';
 				}
-				tempString = tempString + maneuverArray[i].effect + "\n" + "\n";
+				tempString += '\t' + maneuverArray[i].effect;
+				tempString += "\n \n";
 				extras++;
 			}
 			
@@ -684,8 +687,8 @@
 				}
 			}
 			
-			if ( (typeof character.treasures != "undefined") && (character.treasures !== "")) {
-				tempString = character.treasures + '\n' + '\n' + tempString.trim();
+			if ( (typeof character.treasures !== "undefined") && (character.treasures !== "")) {
+				tempString = character.treasures + "\n \n" + tempString.trim();
 			} else {
 				tempString = tempString.trim();
 			}
@@ -750,7 +753,7 @@
 		let weaponStates = "KKKKKNOOOOOO";
 		
 		// Read equipment
-		const maxGear = (character.version >= parseFloat("2.3")||0) ? 42 : 16;
+		const maxGear = (character.version >= parseFloat("2.3")||0) ? 50 : 16;
 		let importCount = 0;
 		let imported = 0;
 		let ID = "01";
@@ -835,17 +838,17 @@
 				tempString = tempString.trim();
 			}
 			
-			setAttrs(object.id, {treasures: tempString});
-			
-			// Show the Treasures Gear Tab slide where details of equipment will appear.	
-			setAttrs(object.id, {gearSlideSelection: 3});
+			setAttrs(object.id, {
+				treasures: tempString,
+				gearSlideSelection: 3
+			});
 		}
 		
 		// Prepare object of items that are not weapons or armor. 
 		// Assign to character sheet Equipment List.
 		
 		let importedEquipment = new Array();
-		const maxEquipment = 16;
+		const maxEquipment = 32;
 		importCount = 0;
 		imported = 0;
 		
@@ -888,7 +891,7 @@
 					}
 					
 					// Multiply the base mass by the number of copies.
-					tempValue = itemNumber * getItemMass(equipmentListArray[importCount].mass, script_name);
+					tempValue = itemNumber * getItemMass(equipmentListArray[importCount].mass, script_name, 2);
 					tempValue = Math.round(10*tempValue)/10;
 					importedEquipment["equipMass"+ID] = tempValue;
 				} else {
@@ -999,7 +1002,7 @@
 				// Get weapon mass.
 				if (weaponsArray[importCount].mass !== "") {
 					tempString = weaponsArray[importCount].mass;
-					tempValue = getItemMass(tempString, script_name);
+					tempValue = getItemMass(tempString, script_name, 1);
 					importedWeapons["weaponMass"+ID] = tempValue;
 					
 					// Check for a note on additional copies.
@@ -1124,7 +1127,7 @@
 				// Get armor mass.
 				if (armorArray[importCount].mass !== "") {
 					tempString = armorArray[importCount].mass;
-					importedArmor["armorMass"+ID] = getItemMass(tempString, script_name);
+					importedArmor["armorMass"+ID] = getItemMass(tempString, script_name, 1);
 				} else {
 					importedArmor["armorMass"+ID] = 0;
 				}
@@ -1185,7 +1188,7 @@
 				// Get weapon mass.
 				if (multipowerArray[shieldSearchIndex].mass !== "") {
 					tempString = multipowerArray[shieldSearchIndex].mass;
-					importedShield.shieldMass = getItemMass(tempString, script_name);
+					importedShield.shieldMass = getItemMass(tempString, script_name, 1);
 				} else {
 					importedShield.shieldMass = 0;
 				}
@@ -1977,15 +1980,15 @@
 				tempString = (powerArray[importCount].text).toLowerCase();
 				
 				if (theEffect === "Resistant Protection") {
-					if ( (typeof powerArray[importCount].text != "undefined") && (powerArray[importCount].text != "") ) {
+					if ( (typeof powerArray[importCount].text !== "undefined") && (powerArray[importCount].text !== "") ) {
 						if(verbose) {
 							sendChat(script_name, "Created Resistant Protection armor.");
 						}
 						
 						tempValue = getResistantPD(powerArray[importCount].text, script_name);
 						if (tempValue > 0) {
-							charMod.armorPD14 += tempValue;
-							if ( (specialArray.some(v => tempString.includes(v))) != true) {
+							charMod.armorPD14 = tempValue;
+							if ( (specialArray.some(v => tempString.includes(v))) !== true) {
 								// We don't want to add overall modifications for special cases.
 								charMod.pdMod += tempValue;
 							}
@@ -1993,7 +1996,7 @@
 								charMod.totalPD14 = tempValue + parseInt(character.pd);
 								pdAddedToTotal = true;
 							} else {
-								charMod.totalPD14 += tempValue;
+								charMod.totalPD14 = tempValue;
 							}
 							charMod.armorName14 = importedPowers["powerName"+ID];
 							charMod.armorLocations14 = "3-18";
@@ -2007,8 +2010,8 @@
 						
 						tempValue = getResistantED(powerArray[importCount].text, script_name);
 						if (tempValue > 0) {
-							charMod.armorED14 += tempValue;
-							if ( (specialArray.some(v => tempString.includes(v))) != true) {
+							charMod.armorED14 = tempValue;
+							if ( (specialArray.some(v => tempString.includes(v))) !== true) {
 								// We don't want to add overall modifications for special cases.
 								charMod.edMod += tempValue;
 							}
@@ -2016,7 +2019,7 @@
 								charMod.totalED14 = tempValue + parseInt(character.ed);
 								edAddedToTotal = true;
 							} else {
-								charMod.totalED14 += tempValue;
+								charMod.totalED14 = tempValue;
 							}
 							charMod.armorName14 = importedPowers["powerName"+ID];
 							charMod.armorLocations14 = "3-18";
@@ -2029,15 +2032,15 @@
 						}
 					}
 				} else if (theEffect === "Base PD Mod") {
-					if ( (typeof powerArray[importCount].text != "undefined") && (powerArray[importCount].text != "") ) {
+					if ( (typeof powerArray[importCount].text !== "undefined") && (powerArray[importCount].text !== "") ) {
 						if(verbose) {
 							sendChat(script_name, "Added Resistant PD to armor.");
 						}
 						
 						if ( (powerArray[importCount].text).includes("Resistant")) {
-							charMod.armorPD14 += parseInt(character.pd);
+							charMod.armorPD14 = parseInt(character.pd);
 							if (!pdAddedToTotal) {
-								charMod.totalPD14 += parseInt(character.pd);
+								charMod.totalPD14 = parseInt(character.pd);
 								pdAddedToTotal = true;
 							}
 							charMod.armorName14 = importedPowers["powerName"+ID];
@@ -2051,15 +2054,15 @@
 						}
 					}
 				} else if (theEffect === "Base ED Mod") {
-					if ( (typeof powerArray[importCount].text != "undefined") && (powerArray[importCount].text != "") ) {
+					if ( (typeof powerArray[importCount].text !== "undefined") && (powerArray[importCount].text !== "") ) {
 						if(verbose) {
 							sendChat(script_name, "Added Resistant ED to armor.");
 						}
 						
 						if ( (powerArray[importCount].text).includes("Resistant") ) {
-							charMod.armorED14 += parseInt(character.ed);
+							charMod.armorED14 = parseInt(character.ed);
 							if (!edAddedToTotal) {
-								charMod.totalED14 += parseInt(character.ed);
+								charMod.totalED14 = parseInt(character.ed);
 								edAddedToTotal = true;
 							}
 							charMod.armorName14 = importedPowers["powerName"+ID];
@@ -4532,13 +4535,14 @@
 	}
 	
 	
-	var getItemMass = function(massString, script_name) {
-		// Remove units from mass and round to one decimal.
+	var getItemMass = function(massString, script_name, decimalPlaces) {
+		// Remove units from mass and round to one or two decimal places.
 		let mass = 0;
+		let roundingFactor = (decimalPlaces === 1) ? 10 : 100;
 		
 		if (massString !== "") {
 			massString = parseFloat(massString.replace(/[^\d.-]/g, ""));
-			mass = Math.round(10*massString)/10;
+			mass = Math.round(roundingFactor*massString)/roundingFactor;
 		}
 		
 		return mass;
