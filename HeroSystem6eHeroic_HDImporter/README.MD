@@ -68,16 +68,16 @@ Powers that add (or subtract) characteristics, movement, and perception abilitie
 > [!TIP]
 > HD Importer will recognize the following key phrases if added to a piece of equipment's notes and attempts to automatically apply the values given.
 
-*"(locations x-y, z)" or "(loc x, y-z)"*
+#### "(locations x-y, z)" or "(loc x, y-z)"
 If HD Importer finds the keyword "locations" it will assign the list "x-y, z" to a piece of armor's locations. End the list with closed parentheses ")" or a semicolon ";".
 
-*"Equipment"*
+#### "Equipment"
 A weapon with the "equipment" keyword will be imported as a piece of equipment, not a weapon. Useful for ordinary items built with attack powers.
 
-*"Max Range: XYZm" or "max range XYZ"*
+#### "Max Range: XYZm" or "max range XYZ"
 HD Importer will fill in a weapon's maximum range with XYZ.
 
-*"X END/Turn" or "END/Turn: X"*
+#### "X END/Turn" or "END/Turn: X"
 If your campaign uses the optional rule of applying END costs to armor, HD Importer will automatically apply the value X.
 
 # Help
