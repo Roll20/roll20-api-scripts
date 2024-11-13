@@ -55,7 +55,7 @@ The release folder contains two test and evaluation characters for use in HERO D
 ## Notes
 Double quotation marks are used to indicate JSON data values. Please take care to avoid quotation marks in Hero Designer text fields. Instead use single quotes. The exporter will attempt to remove double quotes, but this may not be foolproof.
 
-Characters exported with older versions of HeroSystem6eHeroic.hde (1.0, 2.0, and 2.1) will work, but those exported with the latest version (2.2) will have more content and may benefit from bug fixes.
+Characters exported with older versions of HeroSystem6eHeroic.hde (1.0, 2.0, 2.1, and 2.2) will work, but those exported with the latest version (2.3) will have more content and may benefit from bug fixes.
 
 Hero Designer has entries for eye color and hair color. This information is not imported since the character sheet does not have corresponding fields.
 
@@ -66,12 +66,18 @@ At present, the character sheet has twenty power, ten talent, and ten complicati
 Powers that add (or subtract) characteristics, movement, and perception abilities should be applied in the appropriate modifier fields.
 
 > [!TIP]
-> HD Importer will recognize the following key phrases if added to a piece of equipment's notes and attempts to automatically apply the value given (parentheses are not strictly required).
+> HD Importer will recognize the following key phrases if added to a piece of equipment's notes and attempts to automatically apply the values given.
 
-### (Max Range: Xm) or (max range X)
-A weapon's maximum range.
+### "(locations x-y, z)" or "(loc x, y-z)"
+If HD Importer finds the keyword "locations" it will assign the list "x-y, z" to a piece of armor's locations. End the list with closed parentheses ")" or a semicolon ";".
 
-### (X END/Turn) or (END/Turn: X)
+### "Equipment"
+A weapon with the "equipment" keyword will be imported as a piece of equipment, not a weapon. Useful for ordinary items built with attack powers.
+
+### "Max Range: XYZm" or "max range XYZ"
+HD Importer will fill in a weapon's maximum range with XYZ.
+
+### "X END/Turn" or "END/Turn: X"
 If your campaign uses the optional rule of applying END costs to armor, HD Importer will automatically apply the value X.
 
 # Help
@@ -122,4 +128,4 @@ Version 2.1 -- Updated to support additional character sheet features as of shee
 
 Version 2.2 -- Fix for compound power import failure. Recognizes Mental Combat Skill Levels and assigns levels and costs. Minor update to HeroSystem6eHeroic.hde (version 2.2). Improved formatting of text in powers, talents, and complications (September 14, 2024).
 
-Version 2.3 --
+Version 2.3 -- This version is up to date with Sheet Version 3.80. Adds special intelligence skill types with variable base cost (SPx). Adds "Native +" language skill assignment for native languages updated imitate dialects. Doubles the number of armor, weapons, and equipment imported to account for the new "A/B" sets feature of the sheet. Recognizes additional copies of weapons purchased with the quantity feature of HD. Adds recognition of the keywords and key phrases "Max Range XYZ" and "Equipment." HeroSystem6eHeroic.hde (version 2.3) updated to 50 equipment slots (November 13, 2024). 
