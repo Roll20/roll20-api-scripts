@@ -3,8 +3,8 @@
 Name            :   Plugger
 GitHub          :   https://github.com/TimRohr22/Cauldron/tree/master/Plugger
 Roll20 Contact  :   timmaugh
-Version         :   1.0.9
-Last Update     :   17 MAY 2024
+Version         :   1.0.10
+Last Update     :   8 OCT 2024
 =========================================================
 */
 var API_Meta = API_Meta || {};
@@ -15,10 +15,10 @@ API_Meta.Plugger = { offset: Number.MAX_SAFE_INTEGER, lineCount: -1 };
 
 const Plugger = (() => {
     const apiproject = 'Plugger';
-    const version = '1.0.9';
+    const version = '1.0.10';
     const schemaVersion = 0.1;
     API_Meta[apiproject].version = version;
-    const vd = new Date(1715952845199);
+    const vd = new Date(1728392407761);
     const versionInfo = () => {
         log(`\u0166\u0166 ${apiproject} v${API_Meta[apiproject].version}, ${vd.getFullYear()}/${vd.getMonth() + 1}/${vd.getDate()} \u0166\u0166 -- offset ${API_Meta[apiproject].offset}`);
         if (!state.hasOwnProperty(apiproject) || state[apiproject].version !== schemaVersion) {
@@ -361,13 +361,14 @@ const PluggerPlugins01 = (() => {
         return;
     };
 
-    const tickSplit = (s, ticks = ["'", "`", '"'], split = ['|', '#'], mark = '--') => {
+    const tickSplit = (cmd, ticks = ["'", "`", '"'], split = ['|', '#'], mark = '--') => {
         const escapeRegExp = (string) => { return string.replace(/[.*+\-?^${}()|[\]\\]/g, '\\$&'); };
         let index = 0;
         let tokens = [];
         let markrx,
             openrx,
-            splitrx;
+            splitrx,
+            markbase;
 
         class ArgToken {
             constructor(type = '') {
@@ -380,10 +381,12 @@ const PluggerPlugins01 = (() => {
             if (
                 split && Array.isArray(split) && split.length &&
                 ticks && Array.isArray(ticks) && ticks.length &&
-                s && typeof s === 'string' && s.length
+                mark && typeof mark === 'string' && mark.length &&
+                cmd && typeof cmd === 'string' && cmd.length
             ) {
-                markrx = new RegExp(`(?:^|\\s+)${escapeRegExp(mark).replace(/\s/g, '\\s')}(.+?)(?:${split.map(s => escapeRegExp(s)).join('|')})`, 'g');
-                openrx = new RegExp(`^\\s+${escapeRegExp(mark).replace(/\s/g, '\\s')}`);
+                markbase = `\\s+${escapeRegExp(mark).replace(/\s/g, '\\s')}`;
+                markrx = new RegExp(`${markbase}(.+?)(?:${split.map(s => escapeRegExp(s)).join('|')}|(?=${markbase})|$)`, 'g');
+                openrx = new RegExp(`^${markbase}`);
                 splitrx = new RegExp(`^($|${split.map(s => escapeRegExp(s)).join('|')})`);
                 return true;
             }
@@ -394,7 +397,7 @@ const PluggerPlugins01 = (() => {
             ticks.some(t => {
                 let res;
                 let rx = new RegExp(`^${escapeRegExp(t)}`);
-                if ((res = rx.exec(s.slice(index))) !== null) {
+                if ((res = rx.exec(cmd.slice(index))) !== null) {
                     tick = t;
                     index += res[0].length;
                     return true;
@@ -407,12 +410,12 @@ const PluggerPlugins01 = (() => {
             let res;
             if (tick) {
                 let tickrx = new RegExp(`^${escapeRegExp(tick)}`);
-                if ((res = tickrx.exec(s.slice(index))) !== null) {
+                if ((res = tickrx.exec(cmd.slice(index))) !== null) {
                     index += res[0].length;
                 }
             }
-            if (index < s.length) {
-                if ((res = splitrx.exec(s.slice(index))) !== null) {
+            if (index < cmd.length) {
+                if ((res = splitrx.exec(cmd.slice(index))) !== null) {
                     index += res[0].length;
                 }
             }
@@ -422,14 +425,14 @@ const PluggerPlugins01 = (() => {
             let tick = getTick();
             let rx;
             if (tick) {
-                rx = new RegExp(`^.+?(?=$|${escapeRegExp(tick)})`);
+                rx = new RegExp(`^.*?(?=$|${escapeRegExp(tick)})`);
             } else {
-                rx = new RegExp(`^.+?(?=$|${split.map(s => escapeRegExp(s)).join('|')}|\\s+${escapeRegExp(mark).replace(/\s/g, '\\s')})`);
+                rx = new RegExp(`^.+?(?=$|${split.map(s => escapeRegExp(s)).join('|')}|${markbase})`);
             }
-            let res = rx.exec(s.slice(index));
+            let res = rx.exec(cmd.slice(index));
             token.results.push(res[0]);
             index += res[0].length;
-            if (index < s.length) {
+            if (index < cmd.length) {
                 transition(tick);
             }
         };
@@ -437,20 +440,20 @@ const PluggerPlugins01 = (() => {
         const getArg = () => {
             let res;
             markrx.lastIndex = 0;
-            if ((res = markrx.exec(s.slice(index))) === null) {
-                index = s.length;
+            if ((res = markrx.exec(cmd.slice(index))) === null) {
+                index = cmd.length;
                 return;
             }
             let token = new ArgToken(res[1]);
             index += markrx.lastIndex;
-            while (index < s.length && !openrx.test(s.slice(index))) {
+            while (index < cmd.length && !openrx.test(cmd.slice(index))) {
                 getPart(token);
             }
             tokens.push(token);
         };
 
         if (validate()) {
-            while (index < s.length) {
+            while (index < cmd.length) {
                 getArg();
             }
             return tokens;

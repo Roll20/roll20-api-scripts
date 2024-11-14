@@ -128,14 +128,15 @@ API_Meta.RoundMaster={offset:Number.MAX_SAFE_INTEGER,lineCount:-1};
  *                    represent number of creatures targeted with a --target multi. Fix support of ^^duration^^
  *                    tag in effects.
  * v5.056  22/06/2024 Added --state-extract & --state-load functions to support migration to JumpGate
+ * v5.057  20/09/2024 Corrected --addStatus to accept saving throw and other extensions to args.
  **/
  
 var RoundMaster = (function() {
 	'use strict'; 
-	var version = 5.056,
+	var version = 5.057,
 		author = 'Ken L. & RED',
 		pending = null;
-	const lastUpdate = 1719059275;
+	const lastUpdate = 1726905793;
 	
 	var RW_StateEnum = Object.freeze({
 		ACTIVE: 0,
@@ -3966,7 +3967,7 @@ var RoundMaster = (function() {
         if (!args)
             {return;}
 
-		if (args.length <4 || args.length > 6) {
+		if (args.length <4) {
             sendDebug('doPlayerTargetStatus: Invalid number of arguments');
 			sendError('Invalid status item syntax');
 			return;
@@ -3994,14 +3995,14 @@ var RoundMaster = (function() {
 			{return;}
 		if (!selection) {
             sendDebug('doPlayerAddStatus: Selection undefined');
-			sendResponseError('Invalid selection');
+			sendResponseError(senderId,'Invalid selection');
 			return;
 		}
 		
 		// RED: v1.204 extended arguments to optionally include the marker
-		if (args.length <3 || args.length > 5) {
+		if (args.length <3) {
             sendDebug('doPlayerAddStatus: Invalid number of arguments');
-			sendResponseError('Invalid status item syntax');
+			sendResponseError(senderId,'Invalid status item syntax');
 			return;
 		}
 		var mod;
@@ -4035,7 +4036,7 @@ var RoundMaster = (function() {
 
 		if (isNaN(duration) || isNaN(direction)) {
             sendDebug('doPlayerAddStatus: duration or direction not a number.  Duration "' + duration + '", direction "' + direction + '"');
-			sendResponseError('Invalid status item syntax');
+			sendResponseError(senderId,'Invalid status item syntax');
 			return;
 		}
 		
@@ -4799,21 +4800,27 @@ var RoundMaster = (function() {
 	 *
 	 * TODO make the rotation rate a field variable
 	 */
+
 	var animateTracker = function() {
-		if (!flags.animating) 
-			{return;}
 		
-		if (flags.rw_state === RW_StateEnum.ACTIVE) {
+		if (!flags.animating) {
+			return;
+		}
+		if (flags.rw_state == RW_StateEnum.ACTIVE) {
+//			log('doAnimateTracker: Active');
 			if (state.roundMaster.rotation) {
 				var graphic = findTrackerGraphic();
-				graphic.set('rotation',parseInt(graphic.get('rotation'))+fields.rotation_degree);
+				graphic.set('rotation',(parseInt(graphic.get('rotation'))+parseInt(fields.rotation_degree)));
+//				log('doAnimateTracker: Rotating');
 			}
 			setTimeout(function() {animateTracker();},500);
-		} else if (flags.rw_state === RW_StateEnum.PAUSED 
-				|| flags.rw_state === RW_StateEnum.FROZEN) {
-			setTimeout(function() {animateTracker();},500);
+		} else if (flags.rw_state == RW_StateEnum.PAUSED 
+				|| flags.rw_state == RW_StateEnum.FROZEN) {
+//			log('doAnimateTracker: Paused or Frozen');
+			setTimeout(function() {animateTracker();},1000);
 		} else {
-			flags.animating = false;
+			log('doAnimateTracker: Stopped or undefined');
+//			flags.animating = false;
 		}
 	}; 
 	
@@ -5163,10 +5170,8 @@ var RoundMaster = (function() {
 		}
 		
 		updateTurnorderMarker();
-		if (!flags.animating) {
-			flags.animating = state.roundMaster.rotation;
-			animateTracker();
-		}
+		flags.animating = state.roundMaster.rotation;
+		animateTracker();
 	}; 
 	
 	/**
@@ -6061,7 +6066,7 @@ var RoundMaster = (function() {
 			if (!dbCS || !dbCS[0]) {
 			    log(obj.name+' not found.  Creating version '+obj.version);
 				if (!silent) sendFeedback(obj.name+' not found.  Creating version '+obj.version);
-				dbCS = createObj('handout',{name:obj.name,inplayerjournals:senderId});
+				dbCS = createObj('handout',{name:obj.name,inplayerjournals:(senderId || '')});
 				dbCS.set('notes',obj.bio);
 				dbCS.set('avatar',obj.avatar);
 			} else {
