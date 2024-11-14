@@ -68,17 +68,13 @@ Powers that add (or subtract) characteristics, movement, and perception abilitie
 > [!TIP]
 > HD Importer will recognize the following key phrases if added to a piece of equipment's notes and attempts to automatically apply the values given.
 
-#### "(locations x-y, z)" or "(loc x, y-z)"
-If HD Importer finds the keyword "locations" it will assign the list "x-y, z" to a piece of armor's locations. End the list with closed parentheses ")" or a semicolon ";".
+- `(locations x-y, z)" or "(loc x, y-z)` : `If HD Importer finds the keyword "locations" it will assign the list "x-y, z" to a piece of armor's locations. End the list with closed parentheses ")" or a semicolon ";".
 
-#### "Equipment"
-A weapon with the "equipment" keyword will be imported as a piece of equipment, not a weapon. Useful for ordinary items built with attack powers.
+- `Equipment` : A weapon with the "equipment" keyword will be imported as a piece of equipment, not a weapon. Useful for ordinary items built with attack powers.
 
-#### "Max Range: XYZm" or "max range XYZ"
-HD Importer will fill in a weapon's maximum range with XYZ.
+- `Max Range: XYZm" or "max range XYZ` : HD Importer will fill in a weapon's maximum range with XYZ.
 
-#### "X END/Turn" or "END/Turn: X"
-If your campaign uses the optional rule of applying END costs to armor, HD Importer will automatically apply the value X.
+- `X END/Turn" or "END/Turn: X` : If your campaign uses the optional rule of applying END costs to armor, HD Importer will automatically apply the value X.
 
 # Help
 
@@ -128,4 +124,4 @@ Version 2.1 -- Updated to support additional character sheet features as of shee
 
 Version 2.2 -- Fix for compound power import failure. Recognizes Mental Combat Skill Levels and assigns levels and costs. Minor update to HeroSystem6eHeroic.hde (version 2.2). Improved formatting of text in powers, talents, and complications (September 14, 2024).
 
-Version 2.3 -- This version is up to date with Sheet Version 3.80. Adds special intelligence skill types with variable base cost (SPx). Adds "Native +" language skill assignment for native languages updated imitate dialects. Doubles the number of armor, weapons, and equipment imported to account for the new "A/B" sets feature of the sheet. Recognizes additional copies of weapons purchased with the quantity feature of HD. Adds recognition of the keywords and key phrases "Max Range XYZ" and "Equipment." HeroSystem6eHeroic.hde (version 2.3) updated to 50 equipment slots (November 13, 2024). 
+Version 2.3 -- This version is up to date with Sheet Version 3.80. Adds special intelligence skill types with variable base cost (SPx). Adds "Native +" language skill assignment for native languages updated to imitate dialects. Doubles the number of armor, weapons, and equipment imported to account for the new "A/B" sets feature of the sheet. Recognizes additional copies of weapons purchased with the quantity feature of HD. Adds recognition of the keywords and key phrases "Max Range XYZ" and "Equipment." HeroSystem6eHeroic.hde (version 2.3) updated to 50 equipment slots (November 13, 2024). 
