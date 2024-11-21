@@ -1,7 +1,7 @@
 ﻿# HEROLLER: CARE AND KEEPING
 
 # Introduction
-Hero Roller (or, heroll, for short), works with the Hero character sheet. It takes a command line of arguments to describe the Hero power you want to use, then spits out all of the parameters that the roll would produce in game... hopefully in a visually appealing package.
+Hero Roller (or, heroll, for short), works with HERO 6th Edition Character sheets (*Hero System 6e* and *Hero System 6e Heroic*). It takes a command line of arguments to describe the Hero power you want to use, then spits out all of the parameters that the roll would produce in game... hopefully in a visually appealing package.
 
 ## Arguments Are... Our Friends
 Each argument is detected by a the presence of a space followed by a double dash in the command line. The following example is 3.5d6 (effectively, 3d6+1d3) with a designation of the normal mechanic and a name of "Doom Smack".
