@@ -1,0 +1,3 @@
+Improved efficiency by reorganizing when certain calls were made.
+
+Found that two findObjs calls were performed with every chat entry.  This should now only trigger when the API command is used.
