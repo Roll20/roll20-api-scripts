@@ -1,8 +1,12 @@
+/* globals PathMath VecMath TokenCollisions HtmlBuilder CharSheetUtils KABOOM AreasOfEffect */
+var API_Meta = API_Meta||{}; //eslint-disable-line no-var
+API_Meta.ItsATrap={offset:Number.MAX_SAFE_INTEGER,lineCount:-1};
+{try{throw new Error('');}catch(e){API_Meta.ItsATrap.offset=(parseInt(e.stack.split(/\n/)[1].replace(/^.*:(\d+):.*$/,'$1'),10)-4);}}
+API_Meta.ItsATrap.version = '3.13.2';
 /**
  * Initialize the state for the It's A Trap script.
  */
 (() => {
-  'use strict';
 
   /**
    * The ItsATrap state data.
@@ -35,8 +39,7 @@
 /**
  * The main interface and bootstrap script for It's A Trap.
  */
-var ItsATrap = (() => {
-  'use strict';
+const ItsATrap = (() => {
 
   const REMOTE_ACTIVATE_CMD = '!itsATrapRemoteActivate';
 
@@ -45,6 +48,24 @@ var ItsATrap = (() => {
 
   // The installed trap theme that is being used.
   let curTheme = 'default';
+
+  let isJumpgate = ()=>{
+    if(['jumpgate'].includes(Campaign().get('_release'))) {
+      isJumpgate = () => true;
+    } else {
+      isJumpgate = () => false;
+    }
+    return isJumpgate();
+  };
+
+  const getPath = (id) => {
+    let path;
+    if(isJumpgate()){
+      path = getObj('pathv2',id);
+    }
+    return path || getObj('path',id);
+  };
+
 
   /**
    * Activates a trap.
@@ -129,7 +150,7 @@ var ItsATrap = (() => {
         if (_.isArray(effect.triggerPaths)) {
           triggerDist = _.chain(effect.triggerPaths)
           .map(pathId => {
-            let path = getObj('path', pathId);
+            let path = getPath(pathId);
             if(path)
               return getSearchDistance(token, path);
             else
@@ -189,12 +210,12 @@ var ItsATrap = (() => {
   function _checkTrapActivations(theme, token) {
     let collisions = getTrapCollisions(token);
     _.find(collisions, collision => {
-      let trap = collision.other;
+      let trap = collision?.other;
 
       let trapEffect = new TrapEffect(trap, token);
 
       // Skip if the trap is disabled or if it has no activation area.
-      if(trap.get('status_interdiction'))
+      if(!trap || trap.get('status_interdiction'))
         return false;
 
       // Should this trap ignore the token?
@@ -266,7 +287,7 @@ var ItsATrap = (() => {
     let scale = page.get('scale_number');
     let pixelDist;
 
-    if(token2.get('_type') === 'path') {
+    if(/^path/.test(token2.get('_type'))) {
       let path = token2;
       pixelDist = PathMath.distanceToPoint(p1, path);
     }
@@ -329,7 +350,7 @@ var ItsATrap = (() => {
           else
             pathsToTraps[id] = [trap];
 
-          return getObj('path', id);
+          return getPath(id);
         })
         .compact()
         .value();
@@ -361,7 +382,7 @@ var ItsATrap = (() => {
     return _.chain(TokenCollisions.getCollisions(token, traps, {detailed: true}))
     .map(collision => {
       // Convert path collisions back into trap token collisions.
-      if(collision.other.get('_type') === 'path') {
+      if(/^path/.test(collision.other.get('_type'))) {
         let pathId = collision.other.get('_id');
         return _.map(pathsToTraps[pathId], trap => {
           return {
@@ -414,7 +435,7 @@ var ItsATrap = (() => {
     // Case 1: One or more closed paths define the blast areas.
     if(effect.effectShape instanceof Array) {
       _.each(effect.effectShape, pathId => {
-        let path = getObj('path', pathId);
+        let path = getPath(pathId);
         if(path) {
           _.each(otherTokens, token => {
             if(TokenCollisions.isOverlapping(token, path))
@@ -530,7 +551,7 @@ var ItsATrap = (() => {
 
     if(effect.effectShape instanceof Array)
       _.each(effect.effectShape, pathId => {
-        let path = getObj('path', pathId);
+        let path = getPath(pathId);
         if (path) {
           path.set('layer', layer);
           toOrder(path);
@@ -580,7 +601,7 @@ var ItsATrap = (() => {
 
     if(_.isArray(effect.triggerPaths)) {
       _.each(effect.triggerPaths, pathId => {
-        let path = getObj('path', pathId);
+        let path = getPath(pathId);
         if (path) {
           path.set('layer', layer);
           toOrder(path);
@@ -609,7 +630,7 @@ var ItsATrap = (() => {
     let interval = setInterval(() => {
       let theme = getTheme();
       if(theme) {
-        log(`--- Initialized It's A Trap! v3.13.2, using theme '${getTheme().name}' ---`);
+        log(`--- Initialized It's A Trap! v3.13.3, using theme '${getTheme().name}' ---`);
         clearInterval(interval);
       }
       else if(numRetries > 0)
@@ -708,8 +729,16 @@ var ItsATrap = (() => {
  * The configured JSON properties of a trap. This can be extended to add
  * additional properties for system-specific themes.
  */
-var TrapEffect = (() => {
-  'use strict';
+const TrapEffect = (() => {
+
+  let isJumpgate = ()=>{
+    if(['jumpgate'].includes(Campaign().get('_release'))) {
+      isJumpgate = () => true;
+    } else {
+      isJumpgate = () => false;
+    }
+    return isJumpgate();
+  };
 
   const DEFAULT_FX = {
     maxParticles: 100,
@@ -1165,7 +1194,7 @@ var TrapEffect = (() => {
         if(VecMath.dist(p1, p2) > 0) {
           let segments = [[p1, p2]];
           let pathJson = PathMath.segmentsToPath(segments);
-          let path = createObj('path', _.extend(pathJson, {
+          let path = createObj( (isJumpgate() ? 'pathv2' : 'path'), _.extend(pathJson, {
             _pageid: this._trap.get('_pageid'),
             layer: 'objects',
             stroke: '#ff0000'
@@ -1329,7 +1358,6 @@ var TrapEffect = (() => {
  * A small library for checking if a token has line of sight to other tokens.
  */
 var LineOfSight = (() => {
-  'use strict';
 
   /**
    * Gets the point for a token.
@@ -1396,7 +1424,6 @@ var LineOfSight = (() => {
  * hand-crafting the JSON for them.
  */
 var ItsATrapCreationWizard = (() => {
-  'use strict';
   const DISPLAY_WIZARD_CMD = '!ItsATrap_trapCreationWizard_showMenu';
   const MODIFY_CORE_PROPERTY_CMD = '!ItsATrap_trapCreationWizard_modifyTrapCore';
   const MODIFY_THEME_PROPERTY_CMD = '!ItsATrap_trapCreationWizard_modifyTrapTheme';
@@ -2276,7 +2303,6 @@ var ItsATrapCreationWizard = (() => {
  * @abstract
  */
 var TrapTheme = (() => {
-  'use strict';
 
   /**
    * The name of the theme used to register it.
@@ -2428,7 +2454,6 @@ var TrapTheme = (() => {
  * @abstract
  */
 var D20TrapTheme = (() => {
-  'use strict';
 
   return class D20TrapTheme extends TrapTheme {
 
@@ -2758,7 +2783,6 @@ var D20TrapTheme = (() => {
  * @abstract
  */
 var D20TrapTheme4E = (() => {
-  'use strict';
 
   return class D20TrapTheme4E extends D20TrapTheme {
 
@@ -2946,7 +2970,6 @@ var D20TrapTheme4E = (() => {
  * @implements TrapTheme
  */
 (() => {
-  'use strict';
 
   class DefaultTheme {
 
@@ -2988,7 +3011,6 @@ var D20TrapTheme4E = (() => {
 })();
 
 ItsATrap.Chat = (() => {
-  'use strict';
 
   /**
    * Broadcasts a message spoken by the script's configured announcer.
@@ -3032,3 +3054,5 @@ ItsATrap.Chat = (() => {
     whisperGM
   };
 })();
+
+{try{throw new Error('');}catch(e){API_Meta.ItsATrap.lineCount=(parseInt(e.stack.split(/\n/)[1].replace(/^.*:(\d+):.*$/,'$1'),10)-API_Meta.ItsATrap.offset);}}
