@@ -100,7 +100,7 @@ const TokenCollisions = (() => { //eslint-disable-line no-unused-vars
   function _getLastMovePts(token) {
     let move = token.get('lastmove').split(',');
     let coords = _.map(move, x => {
-      return Math.abs(parseInt(x));
+      return parseInt(x);
     });
 
     let pts = _.map(_.range(coords.length/2), i => {
