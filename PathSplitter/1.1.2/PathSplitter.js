@@ -26,8 +26,12 @@ API_Meta.PathSplitter.version = '1.1.2';
 
 (() => {
 
+  const DEFAULT_SPLIT_COLOR = '#ff00ff';
+  const MAKE_MACROS = true;
+
   const PATHSPLIT_CMD = '!pathSplit';
   const PATHJOIN_CMD = '!pathJoin';
+  const PATHCLOSE_CMD = '!pathClose';
   const PATHSPLIT_COLOR_CMD = '!pathSplitColor';
   const EPSILON = 0.001;
 
@@ -64,7 +68,7 @@ API_Meta.PathSplitter.version = '1.1.2';
 
   // Initialize the script's state if it hasn't already been initialized.
   state.PathSplitter = state.PathSplitter || {
-    splitPathColor: '#ff00ff' // pink
+    splitPathColor: DEFAULT_SPLIT_COLOR // pink
   };
 
 
@@ -112,6 +116,52 @@ API_Meta.PathSplitter.version = '1.1.2';
   const ptDist = (p1,p2) => Math.sqrt(Math.pow(p2[0]-p1[0],2)+Math.pow(p2[1]-p1[1],2));
 
   const reverseSegs = (segs) => [...segs.map(seg=>seg.reverse())].reverse();
+
+  function closePath(path1){
+    let segments = PathMath.toSegments(path1);
+    let len = segments.length;
+
+    let _pageid = path1.get('_pageid');
+    let controlledby = path1.get('controlledby');
+    let fill = path1.get('fill');
+    let layer = path1.get('layer');
+    let stroke = path1.get('stroke');
+    let stroke_width = path1.get('stroke_width');
+    let pathExtra = {
+        _pageid,
+        controlledby,
+        fill,
+        layer,
+        stroke,
+        stroke_width
+    };
+
+    if(isJumpgate()){
+      switch(path1.get('shape')){
+        case 'free':
+          pathExtra.shape='free'; // force back to freehand
+          break;
+        case 'pol':
+        case 'eli':
+        case 'rec':
+          break;
+      }
+    }
+
+    // add closing segment
+    segments.push(
+      [segments[len-1][1],segments[0][0]]
+    );
+
+    let pathData = {
+      ...PathMath.segmentsToPath(segments),
+      ...pathExtra
+    };
+    let path = createObj(isJumpgate() ? 'pathv2' : 'path', pathData);
+    if(path){
+      path1.remove();
+    }
+  }
 
   function joinPaths(path1,path2){
     let p1Segments = PathMath.toSegments(path1);
@@ -226,12 +276,12 @@ API_Meta.PathSplitter.version = '1.1.2';
 
     const ptSame = (p1,p2)=> p1[0]===p2[0] && p1[1]===p2[1] && p1[2]===p2[2] ;
 
-    if(isJumpgate()){
-      // remove zero length lines
-      segmentPaths = segmentPaths
-        .map(segs=> segs.filter(s => !ptSame(s[0],s[1])))
-        .filter(segs => segs.length);
+    // remove zero length lines
+    segmentPaths = segmentPaths
+      .map(segs=> segs.filter(s => !ptSame(s[0],s[1])))
+      .filter(segs => segs.length);
 
+    if(isJumpgate()){
       switch(mainPath.get('shape')){
         case 'free':
           pathExtra.shape='free'; // force back to freehand
@@ -278,41 +328,63 @@ API_Meta.PathSplitter.version = '1.1.2';
   }
 
   on('ready', () => {
-    let macro = findObjs({
-      _type: 'macro',
-      name: 'Pathsplitter'
-    })[0];
+    if(MAKE_MACROS){
+      let macro = findObjs({
+        _type: 'macro',
+        name: 'Pathsplitter'
+      })[0];
 
-    if(!macro) {
-      findObjs({
-        _type: 'player'
-      })
-      .filter( player => playerIsGM(player.id))
-      .forEach( gm => {
-        createObj('macro', {
-          _playerid: gm.get('_id'),
-          name: 'Pathsplitter',
-          action: PATHSPLIT_CMD
+      if(!macro) {
+        findObjs({
+          _type: 'player'
+        })
+        .filter( player => playerIsGM(player.id))
+        .forEach( gm => {
+          createObj('macro', {
+            _playerid: gm.get('_id'),
+            name: 'Pathsplitter',
+            action: PATHSPLIT_CMD
+          });
         });
-      });
-    }
-    let macro2 = findObjs({
-      _type: 'macro',
-      name: 'Pathjoiner'
-    })[0];
+      }
 
-    if(!macro2) {
-      findObjs({
-        _type: 'player'
-      })
-      .filter( player => playerIsGM(player.id))
-      .forEach( gm => {
-        createObj('macro', {
-          _playerid: gm.get('_id'),
-          name: 'Pathjoiner',
-          action: PATHJOIN_CMD
+      let macro2 = findObjs({
+        _type: 'macro',
+        name: 'Pathjoiner'
+      })[0];
+
+      if(!macro2) {
+        findObjs({
+          _type: 'player'
+        })
+        .filter( player => playerIsGM(player.id))
+        .forEach( gm => {
+          createObj('macro', {
+            _playerid: gm.get('_id'),
+            name: 'Pathjoiner',
+            action: PATHJOIN_CMD
+          });
         });
-      });
+      }
+
+      let macro3 = findObjs({
+        _type: 'macro',
+        name: 'Pathcloser'
+      })[0];
+
+      if(!macro3) {
+        findObjs({
+          _type: 'player'
+        })
+        .filter( player => playerIsGM(player.id))
+        .forEach( gm => {
+          createObj('macro', {
+            _playerid: gm.get('_id'),
+            name: 'Pathcloser',
+            action: PATHCLOSE_CMD
+          });
+        });
+      }
     }
   });
 
@@ -337,9 +409,12 @@ API_Meta.PathSplitter.version = '1.1.2';
       try {
         let selected = msg.selected;
         if(!selected || selected.length !== 2 || ! /^path/.test(selected[0]._type) ||  ! /^path/.test(selected[1]._type) ) {
-          let msg = `Two paths must be selected: the one you want to split, and the splitting path (color: <span style="background: ${state.PathSplitter.splitPathColor}; width: 16px; height: 16px; padding: 0.2em; font-weight: bold;">${state.PathSplitter.splitPathColor}</span>).`;
+          let num = selected?.length || 0;
+          let types = (selected?.map(o=>o._type)||[]).join(", ");
+
+          let msg = `Two paths must be selected: the one you want to split, and the splitting path (color: <span style="background: ${state.PathSplitter.splitPathColor}; width: 16px; height: 16px; padding: 0.2em; font-weight: bold;">${state.PathSplitter.splitPathColor}</span>).  Selected: (${num}): ${types}`;
           sendChat('Pathsplitter', msg);
-          throw new Error('Two paths must be selected.');
+          throw new Error(msg);
         }
 
         let path1 = getObj(selected[0]._type,selected[0]._id);
@@ -374,15 +449,38 @@ API_Meta.PathSplitter.version = '1.1.2';
       try {
         let selected = msg.selected;
         if(!selected || selected.length !== 2 || ! /^path/.test(selected[0]._type) ||  ! /^path/.test(selected[1]._type) ) {
-          let msg = `Two paths must be selected: the one you want to join.`;
+          let num = selected?.length || 0;
+          let types = (selected?.map(o=>o._type)||[]).join(", ");
+
+          let msg = `Two paths must be selected for joining.  Selected: (${num}): ${types}`;
           sendChat('Pathsplitter', msg);
-          throw new Error('Two paths must be selected.');
+          throw new Error(msg);
         }
 
         let path1 = getObj(selected[0]._type,selected[0]._id);
         let path2 = getObj(selected[1]._type,selected[1]._id);
 
         joinPaths(path1,path2);
+      }
+      catch(err) {
+        log('!pathSplit ERROR: ' + err.message);
+        log(err.stack);
+      }
+    } else if(msg.type === 'api' && msg.content === PATHCLOSE_CMD) {
+      try {
+        let selected = msg.selected;
+        if(!selected || selected.length !== 1 || ! /^path/.test(selected[0]._type) ) {
+          let num = selected?.length || 0;
+          let types = (selected?.map(o=>o._type)||[]).join(", ");
+
+          let msg = `One path must be selected for closing.  Selected: (${num}): ${types}`;
+          sendChat('Pathsplitter', msg);
+          throw new Error(msg);
+        }
+
+        let path1 = getObj(selected[0]._type,selected[0]._id);
+
+        closePath(path1);
       }
       catch(err) {
         log('!pathSplit ERROR: ' + err.message);
