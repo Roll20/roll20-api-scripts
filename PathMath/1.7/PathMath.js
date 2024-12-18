@@ -1168,13 +1168,13 @@ const PathMath = (() => {
         let pts = [];
         let isFirst = true;
         _.each(segments, function(segment) {
-            let p1 = segment[0];
+            let p1 = [segment[0][0],segment[0][1]];
             if(isFirst) {
                 isFirst = false;
                 pts.push(p1);
             }
 
-            let p2 = segment[1];
+            let p2 = [segment[1][0],segment[1][1]];
 
             left = Math.min(left, p1[0], p2[0]);
             right = Math.max(right, p1[0], p2[0]);
