@@ -148,9 +148,16 @@ API_Meta.PathSplitter.version = '1.1.2';
       }
     }
 
+    let p1 = [...segments[len-1][1]];
+    let p2 = [...segments[0][0]];
+    let mp = [(p1[0]+p2[0])/2, (p1[1]+p2[1])/2,1];
+
     // add closing segment
+    segments.unshift(
+      [mp,p2]
+    );
     segments.push(
-      [segments[len-1][1],segments[0][0]]
+      [p1,mp]
     );
 
     let pathData = {
