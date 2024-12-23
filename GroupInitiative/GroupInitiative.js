@@ -10,7 +10,7 @@ const GroupInitiative = (() => { // eslint-disable-line no-unused-vars
   const scriptName = "GroupInitiative";
   const version = '0.9.37';
   API_Meta.GroupInitiative.version = version;
-  const lastUpdate = 1734981382;
+  const lastUpdate = 1734981538;
   const schemaVersion = 1.3;
 
   const isString = (s)=>'string'===typeof s || s instanceof String;
@@ -957,7 +957,7 @@ const GroupInitiative = (() => { // eslint-disable-line no-unused-vars
     ),
     turnOrderCommands: (/*context*/) => _h.section('Commands for Turn Order Management',
       _h.paragraph(
-        `The Turn Order is an integral part of initiative, so GroupInitiative provides some methodes for manipulating it.`
+        `The Turn Order is an integral part of initiative, so GroupInitiative provides some methods for manipulating it.`
       ),
       _h.inset(
         _h.font.command(
