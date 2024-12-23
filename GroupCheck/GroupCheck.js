@@ -1,5 +1,5 @@
 // GroupCheck version 1.13
-// Last Updated: 2024-12-18
+// Last Updated: 2024-12-23
 // A script to roll checks for many tokens at once with one command.
 var API_Meta = API_Meta||{}; //eslint-disable-line no-var
 API_Meta.GroupCheck={offset:Number.MAX_SAFE_INTEGER,lineCount:-1};
