@@ -6,6 +6,13 @@
   "roll20userid": "104025",
   "patreon": "https://www.patreon.com/shdwjk",
   "dependencies": [],
+  "modifies": {
+    "state.GroupInitiative": "read,write",
+    "campaign.turnorder": "read,write",
+    "graphic.represents": "read",
+    "attribute.current": "read",
+    "attribute.max": "read"
+  },
   "conflicts": [],
   "script": "GroupInitiative.js",
   "useroptions": [],
