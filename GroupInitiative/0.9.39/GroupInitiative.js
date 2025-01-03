@@ -8,9 +8,9 @@ API_Meta.GroupInitiative={offset:Number.MAX_SAFE_INTEGER,lineCount:-1};
 const GroupInitiative = (() => { // eslint-disable-line no-unused-vars
 
   const scriptName = "GroupInitiative";
-  const version = '0.9.40';
+  const version = '0.9.39';
   API_Meta.GroupInitiative.version = version;
-  const lastUpdate = 1735433392;
+  const lastUpdate = 1735335074;
   const schemaVersion = 1.3;
 
   const isString = (s)=>'string'===typeof s || s instanceof String;
@@ -213,49 +213,47 @@ const GroupInitiative = (() => { // eslint-disable-line no-unused-vars
   };
 
   const formatDieRoll = function(rollData) {
-    const critFail = rollData.rolls.reduce((m,r)=> m || r.rolls.includes(1),false);
-    const critSuccess = rollData.rolls.reduce((m,r)=> m || r.rolls.includes(r.sides),false);
-    const highlight = ( (critFail && critSuccess)
-        ? '#4A57ED'
-        : ( critFail
-          ? '#B31515'
-          : ( critSuccess
-            ? '#3FB315'
-            : '#FEF68E'
+    let critFail = _.reduce(rollData.rolls,function(m,r){
+      return m || _.contains(r.rolls,1);
+    },false),
+      critSuccess = _.reduce(rollData.rolls,function(m,r){
+        return m || _.contains(r.rolls,r.sides);
+      },false),
+      highlight = ( (critFail && critSuccess) ?
+        '#4A57ED' :
+        ( critFail ?
+          '#B31515' :
+          ( critSuccess ?
+            '#3FB315' :
+            '#FEF68E'
           )
         )
-      );
-
-    const HH = (a)=>HE(HE(a));
-    const HDie = (n,m) => n===m ? '#00ff00' : (n===1 ? '#ff0000' : '#ffffff'); 
-    const HR = (n,m) => `<span style="font-weight:bold;color:${HDie(n,m)};">${n}</span>`;
-    const HDiscard = () => '#999999';
-    const HD = (n,m) => `<span style="color: ${HDiscard(n,m)};">${n}</span>`;
-    const HRolls = rollData.rolls.reduce((m,rs)=>({
-        r:[...m.r,...rs.rolls.map(n=>HR(n,rs.sides))],
-        d:[...m.d,...rs.discards.map(n=>HD(n,rs.sides))]
-    }),{r:[],d:[]});
-
-    const b = (text)=>`<span style="font-weight:bold;">${text}</span>`;
-    const block = (text,style)=>`<span style="display:block;${style}">${text}</span>`;
-    const LabelBlock = (label) => block(label,`font-size:1em;`);
-    const FormulaBlock = (formula,bonus) => block(`${b(formula)} ${bonus}`,`font-size:.8em;`);
-    const ResultBlock = (result) => block(block(result,`display:inline-block;background:#fef68e;color:#404040;font-weight:bold;padding: .1em .2em; border:3px solid ${highlight};border-radius:.5em;min-width:2em;font-size:2em;`));
-    const RollsBlock = (rolls,bonus) => block(`${b('(')}${[...rolls.r,...rolls.d].join(',')}${b(')')} ${bonus}`,`font-size:1.5em;`);
-    const popup = (label,formula,bonus,result,rolls) => block(`${LabelBlock(label)}${FormulaBlock(formula,bonus)}${ResultBlock(result)}${RollsBlock(rolls,bonus)}`,`font-color:white`);
-
-    let bonus = `${(rollData.bonus>=0 ? '+' :'-')} ${b(Math.abs(rollData.bonus))}`;
-    let popText = popup(
-      rollData.source.label,
-      rollData.source.formula,
-      bonus,
-      rollData.total,
-      HRolls);
+      ),
+      dicePart = _.reduce(rollData.rolls, function(m,r){
+        _.reduce(r.rolls,function(dm,dr){
+          let dielight=( 1 === dr ?
+            '#ff0000' :
+            ( r.sides === dr ?
+              '#00ff00' :
+              'white'
+            )
+          );
+          dm.push('<span style="font-weight:bold;color:'+dielight+';">'+dr+'</span>');
+          return dm;
+        },m);
+        return m;
+      },[]).join(' + ');
 
     return '<span class="inlinerollresult showtip tipsy" style="min-width:1em;display: inline-block; border: 2px solid '+
       highlight+
       '; background-color: #FEF68E;color: #404040; font-weight:bold;padding: 0px 3px;cursor: help"'+
-      ' title="'+HH(popText)+'">'+
+      ' title="'+
+      HE(HE(
+        '<span style="color:white;">'+
+        dicePart+' [init] '+
+        (rollData.bonus>=0 ? '+' :'-')+' <span style="font-weight:bold;">'+Math.abs(rollData.bonus)+'</span> [bonus]'+
+        '</span>'
+      ))+'">'+
       rollData.total+
       '</span>';
   };
@@ -363,14 +361,13 @@ const GroupInitiative = (() => { // eslint-disable-line no-unused-vars
     CHARACTER: 'character',
     BONUS: 'bonus',
     FILTER: 'filter',
-    ROLLADJ: 'roll-adjustment',
-    LABEL: 'label'
+    ROLLADJ: 'roll-adjustment'
   };
 
   const statAdjustments = {
     'filter-sheet': {
       type: adjustments.FILTER,
-      func: async (t,c,v) => c?.get('charactersheetname') === v,
+      func: async (t,c,v) => c.get('charactersheetname') === v,
       desc: 'Forces calculations only for specific character sheets.'
     },
     'filter-status': {
@@ -397,11 +394,6 @@ const GroupInitiative = (() => { // eslint-disable-line no-unused-vars
       type: adjustments.ROLLADJ,
       func: async (t,c,v) => ({die_mod:v}),
       desc: 'Applies the given die mod to the roll.'
-    },
-    'label': {
-      type: adjustments.LABEL,
-      func: async (t,c,v) => ({label:v}),
-      desc: 'Attaches a label to the rule for use in reporting.'
     },
     'bonus': {
       type: adjustments.BONUS,
@@ -749,10 +741,6 @@ const GroupInitiative = (() => { // eslint-disable-line no-unused-vars
       },
       'roll-die-mod': {
         'background-color': '#0099cc'
-      },
-      'label': {
-        'color': '#000000',
-        'background-color': '#ffff00'
       },
       'computed': {
         'background-color': '#a61c00'
@@ -1268,8 +1256,8 @@ const findInitiativeBonus = async (charObj, token) => {
   let bonus = '';
   let rolladj = {};
 
-  const GetBonuses = async (group, index) => {
-    let cachedRollAdj = {index};
+  const GetBonuses = async (group) => {
+    let cachedRollAdj = {};
     let bonusPromises = group.map( async (details) => {
       let stat=getAttrByName(charObj.id, details.attribute, details.type||'current');
 
@@ -1319,7 +1307,6 @@ const findInitiativeBonus = async (charObj, token) => {
                 memo = 0; // necessary to select this stat group
               }
               break;
-            case adjustments.LABEL:
             case adjustments.ROLLADJ:{
                 let adj = await func(token,charObj,details.attribute);
                 cachedRollAdj = {...cachedRollAdj,...adj};
@@ -1346,8 +1333,8 @@ const findInitiativeBonus = async (charObj, token) => {
   };
 
 
-  for(let i = 0; i<state[scriptName].bonusStatGroups.length; ++i){
-    let found = await GetBonuses(state[scriptName].bonusStatGroups[i],i);
+  for(const group of state[scriptName].bonusStatGroups){
+    let found = await GetBonuses(group);
 
     if(found){
       break;
@@ -1396,9 +1383,7 @@ const makeRollsForIDs = async (ids,options={}) => {
       if(options.manualBonus){
         g.roll.push( options.manualBonus );
       }
-      g.label = rolladj.label||(rolladj.hasOwnProperty('index') ? `Rule #${rolladj.index+1}` : `No Matching Rule`);
-      g.formula = initFunc(g,rolladj);
-      g.roll.push(g.formula );
+      g.roll.push( initFunc(g,rolladj) );
       return g;
     });
 
@@ -1410,9 +1395,11 @@ const makeRollsForIDs = async (ids,options={}) => {
   let initRolls = _.map(rollSetup,function(rs,i){
     return {
       index: i,
-      label: rs.label,
-      formula: rs.formula,
-      roll: `[[(${rs.roll.filter(r=>isString(r) && r.length).join(`) + (`)})]]`.replace(/\[\[\[/g, "[[ [")
+      roll: ('[[('+ _.reject(rs.roll,function(r){
+        return _.isString(r) && _.isEmpty(r);
+      })
+        .join(') + (')+')]]')
+      .replace(/\[\[\[/g, "[[ [")
     };
   });
 
@@ -1426,11 +1413,8 @@ const makeRollsForIDs = async (ids,options={}) => {
         sorters[state[scriptName].config.sortOption].func(
           turnorder.concat(
             _.chain(rollSetup)
-            .map(function(s,i){
-              s.rollResults={
-                ...turnEntries.shift(),
-                source: initRolls[i]
-              };
+            .map(function(s){
+              s.rollResults=turnEntries.shift();
               return s;
             })
             .tap(announcers[state[scriptName].config.announcer].func)
@@ -1471,8 +1455,7 @@ const makeRollsForIDs = async (ids,options={}) => {
             if('R' === rs.type) {
               m.push({
                 sides: rs.sides,
-                rolls: _.pluck(rs.results.filter(r=>true!==r.d),'v'),
-                discards: _.pluck(rs.results.filter(r=>true===r.d),'v')
+                rolls: _.pluck(rs.results.filter(r=>true!==r.d),'v')
               });
             }
             return m;
