@@ -1,8 +1,8 @@
 /*
 =========================================================
 Name			:	Hero Roller (heroll)
-Version			:	1.3.1
-Last Update		:	11/20/2024
+Version			:	1.3.2
+Last Update		:	1/8/2025
 GitHub			:	https://github.com/Roll20/roll20-api-scripts/tree/master/HeroRoller
 Roll20 Contact	:	timmaugh for general questions.
                     villain-in-glasses (Roll20 Id 633423) for HeroSystem6eHeroic-related questions.
@@ -29,7 +29,7 @@ const HeRoll = (() => {
   const apiproject = 'HeRoll';
   API_Meta[apiproject].version = '1.3.1';
   const schemaVersion = 0.1;
-  const vd = new Date(1732167196095);
+  const vd = new Date(1736361939000);
   
   const versionInfo = () => {
     log(`\u0166\u0166 ${apiproject} v${API_Meta[apiproject].version}, ${vd.getFullYear()}/${vd.getMonth() + 1}/${vd.getDate()} \u0166\u0166 -- offset ${API_Meta[apiproject].offset}`);
@@ -488,6 +488,7 @@ const HeRoll = (() => {
     if (sheet === "HeroSystem6eHeroic") {
       // Query attributes in HeroSystem6eHeroic translated to HeroSystem6e.
       // Some CVs included for possible future use.
+      
       switch (attr) {
         case "radio_target":  translatedAttr = "targetSelection";
                               break;
@@ -549,12 +550,16 @@ const HeRoll = (() => {
           default:    retValue = 1;
         }
       }
+      return Number(retValue);
+      
     } else {
-      // HeroSystem6e default query.
-      retValue = getAttrByName(charid, attr)||defvalue;
+      // The default query assumes the sheet is HeroSystem6e, however, the sheet could be anything. Heroll will create attributes that don't exist.
+      
+      retAttr = findObjs({ type: 'attribute', characterid: charid, name: attr })[0] || createObj("attribute", { name: attr, current: defvalue, characterid: charid });
+      retAttr.currval = retAttr.get('current') || defvalue;
+      
+      return retAttr.currval;
     }
-    
-    return Number(retValue);
   };
   
   
@@ -1263,7 +1268,7 @@ const HeRoll = (() => {
       if (thisRoller.parameters.mechanic === "k") kbbasedice++;
       let kbx = Math.max(0, kbbasedice + thisRoller.parameters.kbdicemod);
       Object.assign(thisRoller.theResult.kbroll, getCountsFromArray(getDice(kbx, 6)));
-      log("Knockback Roll: " + JSON.stringify(thisRoller.theResult.kbroll));
+      // log("Knockback Roll: " + JSON.stringify(thisRoller.theResult.kbroll));
       for (let i = 1; i < 7; i++) {
         thisRoller.theResult.knockback += (thisRoller.theResult.kbroll[i] * i);
       }
