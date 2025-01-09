@@ -2055,6 +2055,7 @@ var QuestTracker = QuestTracker || (function () {
 		const adjustLocation = (location) => {
 			if (WEATHER.enviroments.hasOwnProperty(location)) {
 				QUEST_TRACKER_WeatherLocation = location;
+				saveQuestTrackerData();
 			} else return;
 		};
 		return {
