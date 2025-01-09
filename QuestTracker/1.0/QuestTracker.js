@@ -3392,6 +3392,11 @@ var QuestTracker = QuestTracker || (function () {
 					.join('');
 				return dropdownString;
 			},
+			returnCurrentLocation: (key) => {
+				const { WEATHER } = getCalendarAndWeatherData();
+				if (WEATHER.enviroments && WEATHER.enviroments[key]) return WEATHER.enviroments[key].name;
+				else return "Unknown Location";
+			},
 			buildCalenderDropdown: () => {
 				const dropdownString = Object.entries(CALENDARS)
 					.map(([key, value]) => `|${value.name},${key}`)
@@ -3489,7 +3494,7 @@ var QuestTracker = QuestTracker || (function () {
 					<tr><td colspan=2><strong>Lunar Phase</strong></td></tr>
 					<tr><td colspan=2><small>${Calendar.getLunarPhase(QUEST_TRACKER_currentDate)}</small></td></tr>
 					<tr><td colspan=2><strong>Location</strong></td></tr>
-					<tr><td><small>${QUEST_TRACKER_WeatherLocation}</small></td><td><a style="${styles.button}" href="!qt-date action=adjustlocation|${returnto}new=?{Change Location{${locationDropdown}}">Change</a></td></tr>
+					<tr><td><small>${H.returnCurrentLocation(QUEST_TRACKER_WeatherLocation)}</small></td><td><a style="${styles.button}" href="!qt-date action=adjustlocation|${returnto}new=?{Change Location{${locationDropdown}}">Change</a></td></tr>
 					<tr><td><strong>Temperature</strong></td><td>${temperatureDisplay}</td></tr>
 					<tr><td colspan=2><small>${QUEST_TRACKER_CURRENT_WEATHER['scaleDescriptions']['temperature']}</small></td></tr>
 					<tr><td><strong>Precipitation</strong></td><td>${precipitationDisplay}</td></tr>
