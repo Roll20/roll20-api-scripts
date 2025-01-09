@@ -4269,7 +4269,7 @@ var QuestTracker = QuestTracker || (function () {
 			menu += `<br><a style="${styles.button}" href="!qt-date action=modify|menu=true|unit=day|new=-1">Day</a>
 					&nbsp;<a style="${styles.button}" href="!qt-date action=modify|menu=true|unit=week|new=-1">Week</a>
 					&nbsp;<a style="${styles.button}" href="!qt-date action=modify|menu=true|unit=month|new=-1">Month</a>
-					&nbsp;<a style="${styles.button}" href="!qt-date action=modify|unit=year|new=-1">Year</a>
+					&nbsp;<a style="${styles.button}" href="!qt-date action=modify|menu=true|unit=year|new=-1">Year</a>
 					<br><strong>Custom</strong>
 					<br><a style="${styles.button}" href="!qt-date action=modify|menu=true|unit=day|new=-?{Enter number of Days}">Day</a>
 					&nbsp;<a style="${styles.button}" href="!qt-date action=modify|menu=true|unit=week|new=-?{Enter number of Weeks}">Week</a>
