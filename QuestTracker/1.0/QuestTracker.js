@@ -2077,11 +2077,11 @@ var QuestTracker = QuestTracker || (function () {
 		const vars = {
 			DEFAULT_PAGE_UNIT: 70,
 			AVATAR_SIZE: 70,
-			TEXT_FONT_SIZE: 10,
+			TEXT_FONT_SIZE: 14,
 			PAGE_HEADER_WIDTH: 700,
 			PAGE_HEADER_HEIGHT: 150,
-			ROUNDED_RECT_WIDTH: 320,
-			ROUNDED_RECT_HEIGHT: 80,
+			ROUNDED_RECT_WIDTH: 280,
+			ROUNDED_RECT_HEIGHT: 60,
 			ROUNDED_RECT_CORNER_RADIUS: 10,
 			VERTICAL_SPACING: 100,
 			HORIZONTAL_SPACING: 160,
@@ -2596,7 +2596,8 @@ var QuestTracker = QuestTracker || (function () {
 					layer: layer,
 					imgsrc: imgsrc,
 					tooltip: trimmedText,
-					controlledby: ''
+					controlledby: '',
+					gmnotes: questId
 				});
 				if (avatarObj) {
 					H.storeQuestRef(questId, 'avatar', avatarObj.id);
