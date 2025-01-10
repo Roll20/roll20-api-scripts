@@ -162,7 +162,8 @@ var QuestTracker = QuestTracker || (function () {
 		state.QUEST_TRACKER.historicalWeather = QUEST_TRACKER_HISTORICAL_WEATHER;
 		state.QUEST_TRACKER.weatherDescription = QUEST_TRACKER_WEATHER_DESCRIPTION;
 		state.QUEST_TRACKER.weather = QUEST_TRACKER_WEATHER;
-		state.QUEST_TRACKER.imperialMeasurements = QUEST_TRACKER_imperialMeasurements
+		state.QUEST_TRACKER.imperialMeasurements = QUEST_TRACKER_imperialMeasurements;
+		state.QUEST_TRACKER.TreeObjRef = QUEST_TRACKER_TreeObjRef;
 	};
 	const initializeQuestTrackerState = (forced = false) => {
 		if (!state.QUEST_TRACKER || Object.keys(state.QUEST_TRACKER).length === 0 || forced) {
@@ -175,7 +176,7 @@ var QuestTracker = QuestTracker || (function () {
 				rumoursByLocation: {},
 				generations: {},
 				readableJSON: true,
-				QUEST_TRACKER_TreeObjRef: {},
+				TreeObjRef: {},
 				jumpGate: true,
 				events: {},
 				calenderType: 'gregorian',
@@ -2143,6 +2144,7 @@ var QuestTracker = QuestTracker || (function () {
 				} else {
 					QUEST_TRACKER_TreeObjRef[questId][type] = objRef;
 				}
+				saveQuestTrackerData();
 			},
 			replaceImageSize: (imgsrc) => {
 				return imgsrc.replace(/\/(med|original|max|min)\.(gif|jpg|jpeg|bmp|webp|png)(\?.*)?$/i, '/thumb.$2$3');
@@ -2597,7 +2599,12 @@ var QuestTracker = QuestTracker || (function () {
 					imgsrc: imgsrc,
 					tooltip: trimmedText,
 					controlledby: '',
-					gmnotes: questId
+					gmnotes: `
+						[Open Quest](!qt-menu action=quest|id=${questId})
+						[Toggle Visibilty](!qt-quest action=update|field=hidden|current=${questId}|old=${questData.hidden}|new=${questData.hidden ? 'false ' : 'true'})
+						[Change Status](!qt-quest action=update|field=status|current=${questId}|new=?{Change Status|Unknown,1|Discovered,2|Started,3|Ongoing,4|Completed,5|Completed By Someone Else,6|Failed,7|Time ran out,8|Ignored,9})
+					`,
+					name: `${questData.name || 'No description available.'}`
 				});
 				if (avatarObj) {
 					H.storeQuestRef(questId, 'avatar', avatarObj.id);
@@ -2638,9 +2645,13 @@ var QuestTracker = QuestTracker || (function () {
 				const pageId = pageObj.id;
 				if (!QUEST_TRACKER_TreeObjRef[questId] || !QUEST_TRACKER_TreeObjRef[questId].text) return;
 				const textObjId = QUEST_TRACKER_TreeObjRef[questId].text;
-				const textObj = getObj('text', textObjId);
+				const textObj = getObj('text', textObjId);				
 				if (textObj) {
 					const questData = QUEST_TRACKER_globalQuestData[questId];
+					if (!questData) {
+						errorCheck(152, 'msg', null,`Quest data for "${questId}" is missing.`);
+						return;
+					}
 					const isHidden = questData.hidden || false;
 					const textLayer = isHidden ? 'gmlayer' : 'objects';
 					const x = textObj.get('left');
@@ -2700,8 +2711,6 @@ var QuestTracker = QuestTracker || (function () {
 		};
 		const updateQuestVisibility = (questId, makeHidden) => {
 			if (!QUEST_TRACKER_TreeObjRef[questId]) return;
-			const questData = QUEST_TRACKER_globalQuestData[questId];
-			if (!questData) return;
 			const pageId = findObjs({ type: 'page', name: QUEST_TRACKER_pageName })[0].id;
 			if (typeof makeHidden === 'string') makeHidden = makeHidden.toLowerCase() === 'true';
 			const targetLayer = makeHidden ? 'gmlayer' : 'map';
