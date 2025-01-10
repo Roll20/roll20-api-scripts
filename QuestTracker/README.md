@@ -453,9 +453,11 @@ Quests are organised into quest groups on the Quest Tree page, they are ordered 
 
 ### Quest Images
 
-Quest can have images which are tokens. These are set manually using the rollable table, they have the questID in the GM Notes so can be used with tokenMod in order to trigger quest action, such as changing it's status.
+Quest can have images which are tokens. These are set manually using the rollable table; they will not how unles it is directly pulled from your own roll20 library (no external or using premium assets)
 
-I will develop a macro for this use and include it soon.
+### Compatability with Supernotes
+
+Simply use the command **!gmnote** (create it as a token macro) when selecting a quest token and it will open up an small menu with quick functionality with the main interface. actioning any of these commands will open up the full quest interface afterwards. I highly recomend using **!gmnote --config** to toggle off the footer buttons when you set it up.
 
 ## FAQ
 
@@ -479,7 +481,9 @@ Yes, that is a workaround to having relationships between quest groups and it *c
 
 ## Updates
 
-#### 2026-01-09
+#### 2025-01-10
+* **v1.0.1** Various small fixes. Made Compatable with Supernotes Mod
+#### 2025-01-09
 * **v1.0** Official Release
 #### 2025-01-08
 * **v0.9.2** Fixed quest dropdown to deal with single quests without a dropdown. Also an ungrouped quest which get assigned a relasionship to a quest within a quest group automatically now gets assigned to that quest group.
