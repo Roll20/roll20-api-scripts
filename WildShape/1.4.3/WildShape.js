@@ -2364,7 +2364,9 @@ var WildShape = WildShape || (function() {
         });
 
         log(WS_API.NAME + ' v' + WS_API.VERSION + " Ready! WildUtils v" + UTILS.VERSION);
-        UTILS.chat("API v" + WS_API.VERSION + " Ready! command: " + WS_API.CMD.ROOT);
+
+        // Chat message only appears on debug mode.
+        if(state[WS_API.STATENAME][WS_API.DATA_CONFIG].ENABLE_DEBUG) UTILS.chat("API v" + WS_API.VERSION + " Ready! command: " + WS_API.CMD.ROOT);
     }
     
     return {
