@@ -51,16 +51,19 @@ on('ready', () => {
 			"startingWeekday": "Thursday",
 			"dateFormat": "{day}{ordinal} of {month}, {year}",
 			"lunarCycle": {
-				"baselineNewMoon": "1970-01-07",
-				"cycleLength": 29.53059,
-				"phases": [
-					{ "name": "New Moon", "start": 0, "end": 1 },
-					{ "name": "Waxing Crescent", "start": 1, "end": 7.4 },
-					{ "name": "First Quarter", "start": 7.4, "end": 14.8 },
-					{ "name": "Waxing Gibbous", "start": 14.8, "end": 22.1 },
-					{ "name": "Full Moon", "start": 22.1, "end": 29.5 },
-					{ "name": "Waning Crescent", "start": 29.5, "end": 29.53059 }
-				]
+				"moon": {
+					"name": "Moon",
+					"baselineNewMoon": "1970-01-07",
+					"cycleLength": 29.53059,
+					"phases": [
+						{ "name": "New Moon", "start": 0, "end": 1 },
+						{ "name": "Waxing Crescent", "start": 1, "end": 7.4 },
+						{ "name": "First Quarter", "start": 7.4, "end": 14.8 },
+						{ "name": "Waxing Gibbous", "start": 14.8, "end": 22.1 },
+						{ "name": "Full Moon", "start": 22.1, "end": 29.5 },
+						{ "name": "Waning Crescent", "start": 29.5, "end": 29.53059 }
+					]
+				}
 			},
 			"climates": {
 				"northern temperate": {
@@ -322,19 +325,22 @@ on('ready', () => {
 			"startingWeekday": "First Day",
 			"dateFormat": "{day}{ordinal} of {month}, {year}",
 			"lunarCycle": {
-				"baselineNewMoon": "1372-01-01",
-				"cycleLength": 30.4375,
-				"phases": [
-					{ "name": "New Moon", "start": 0, "end": 3.8 },
-					{ "name": "Young", "start": 3.8, "end": 7.6 },
-					{ "name": "Waxing Crescent", "start": 7.6, "end": 11.4 },
-					{ "name": "Waxing Quarter", "start": 11.4, "end": 15.2 },
-					{ "name": "Waxing Gibbous", "start": 15.2, "end": 19.0 },
-					{ "name": "Full Moon", "start": 19.0, "end": 22.8 },
-					{ "name": "Waning Gibbous", "start": 22.8, "end": 26.6 },
-					{ "name": "Waning Quarter", "start": 26.6, "end": 29.0 },
-					{ "name": "Waning Crescent", "start": 29.0, "end": 30.4375 }
-				]
+				"selune": {
+					"name": "Selûne",
+					"baselineNewMoon": "1372-01-01",
+					"cycleLength": 30.4375,
+					"phases": [
+						{ "name": "New Moon", "start": 0, "end": 3.8 },
+						{ "name": "Young", "start": 3.8, "end": 7.6 },
+						{ "name": "Waxing Crescent", "start": 7.6, "end": 11.4 },
+						{ "name": "Waxing Quarter", "start": 11.4, "end": 15.2 },
+						{ "name": "Waxing Gibbous", "start": 15.2, "end": 19.0 },
+						{ "name": "Full Moon", "start": 19.0, "end": 22.8 },
+						{ "name": "Waning Gibbous", "start": 22.8, "end": 26.6 },
+						{ "name": "Waning Quarter", "start": 26.6, "end": 29.0 },
+						{ "name": "Waning Crescent", "start": 29.0, "end": 30.4375 }
+					]
+				}
 			},
 			"climates": {
 				"Icewind Dale": {
@@ -584,18 +590,21 @@ on('ready', () => {
 			"startingWeekday": "Vasárnap",
 			"dateFormat": "{day}{ordinal} of {month}, {year}",
 			"lunarCycle": {
-				"baselineNewMoon": "735-01-15",
-				"cycleLength": 28,
-				"phases": [
-					{ "name": "Full Moon", "start": 0, "end": 1 },
-					{ "name": "Waning Gibbous", "start": 2, "end": 7 },
-					{ "name": "Left Half", "start": 8, "end": 8 },
-					{ "name": "Waning Crescent", "start": 9, "end": 14 },
-					{ "name": "New Moon", "start": 15, "end": 15 },
-					{ "name": "Waxing Crescent", "start": 16, "end": 21 },
-					{ "name": "Right Half", "start": 22, "end": 22 },
-					{ "name": "Waxing Gibbous", "start": 23, "end": 28 }
-				]
+				"ghostmoon": {
+					"name": "The Ghost Moon",
+					"baselineNewMoon": "735-01-15",
+					"cycleLength": 28,
+					"phases": [
+						{ "name": "Full Moon", "start": 0, "end": 1 },
+						{ "name": "Waning Gibbous", "start": 2, "end": 7 },
+						{ "name": "Left Half", "start": 8, "end": 8 },
+						{ "name": "Waning Crescent", "start": 9, "end": 14 },
+						{ "name": "New Moon", "start": 15, "end": 15 },
+						{ "name": "Waxing Crescent", "start": 16, "end": 21 },
+						{ "name": "Right Half", "start": 22, "end": 22 },
+						{ "name": "Waxing Gibbous", "start": 23, "end": 28 }
+					]
+				}
 			},
 			"climates": {
 				"barovian standard": {
@@ -641,14 +650,17 @@ on('ready', () => {
 			"startingWeekday": "Moonday",
 			"dateFormat": "{day}{ordinal} of {month}, {year}",
 			"lunarCycle": {
-				"baselineNewMoon": "4712-01-12",
-				"cycleLength": 29.5,
-				"phases": [
-					{ "name": "New Moon", "start": 0, "end": 7.375 },
-					{ "name": "First Quarter", "start": 7.375, "end": 14.75 },
-					{ "name": "Full Moon", "start": 14.75, "end": 22.125 },
-					{ "name": "Last Quarter", "start": 22.125, "end": 29.5 }
-				]
+				"somal": {
+					"name": "Somal",
+					"baselineNewMoon": "4712-01-12",
+					"cycleLength": 29.5,
+					"phases": [
+						{ "name": "New Moon", "start": 0, "end": 7.375 },
+						{ "name": "First Quarter", "start": 7.375, "end": 14.75 },
+						{ "name": "Full Moon", "start": 14.75, "end": 22.125 },
+						{ "name": "Last Quarter", "start": 22.125, "end": 29.5 }
+					]
+				}
 			},
 			"climates": {
 				"northern temperate": {
@@ -891,14 +903,28 @@ on('ready', () => {
 			"startingWeekday": "Starday",
 			"dateFormat": "{day}{ordinal} of {month}, {year}",
 			"lunarCycle": {
-				"baselineNewMoon": "591-01-01",
-				"cycleLength": 28,
-				"phases": [
-					{ "name": "New Moon", "start": 0, "end": 7 },
-					{ "name": "First Quarter", "start": 7, "end": 14 },
-					{ "name": "Full Moon", "start": 14, "end": 21 },
-					{ "name": "Last Quarter", "start": 21, "end": 28 }
-				]
+				"luna": {
+					"name": "Luna",
+					"baselineNewMoon": "591-01-01",
+					"cycleLength": 28,
+					"phases": [
+						{ "name": "New Moon", "start": 0, "end": 7 },
+						{ "name": "First Quarter", "start": 7, "end": 14 },
+						{ "name": "Full Moon", "start": 14, "end": 21 },
+						{ "name": "Last Quarter", "start": 21, "end": 28 }
+					]
+				},
+				"celene": {
+					"name": "Celene",
+					"baselineNewMoon": "591-02-15",
+					"cycleLength": 91,
+					"phases": [
+						{ "name": "New Moon", "start": 0, "end": 22.75 },
+						{ "name": "First Quarter", "start": 22.75, "end": 45.5 },
+						{ "name": "Full Moon", "start": 45.5, "end": 68.25 },
+						{ "name": "Last Quarter", "start": 68.25, "end": 91 }
+					]
+				}
 			},
 			"climates": {
 				"northern temperate": {
@@ -1135,15 +1161,31 @@ on('ready', () => {
 			"daysOfWeek": ["Miresen", "Grissen", "Whelsen", "Conthsen", "Folsen", "Yulisen"],
 			"defaultDate": "835-01-01",
 			"lunarCycle": {
-				"baselineNewMoon": "835-01-01",
-				"cycleLength": 29.5,
-				"phases": [
-					{ "name": "New Moon", "start": 0, "end": 3.6 },
-					{ "name": "Waxing Crescent", "start": 3.6, "end": 7.4 },
-					{ "name": "First Quarter", "start": 7.4, "end": 14.8 },
-					{ "name": "Waxing Gibbous", "start": 14.8, "end": 22.1 },
-					{ "name": "Full Moon", "start": 22.1, "end": 29.5 }
-				]
+				"catha": {
+					"name": "Catha",
+					"baselineNewMoon": "835-01-01",
+					"cycleLength": 29.5,
+					"phases": [
+						{ "name": "New Moon", "start": 0, "end": 3.6 },
+						{ "name": "Waxing Crescent", "start": 3.6, "end": 7.4 },
+						{ "name": "First Quarter", "start": 7.4, "end": 14.8 },
+						{ "name": "Waxing Gibbous", "start": 14.8, "end": 22.1 },
+						{ "name": "Full Moon", "start": 22.1, "end": 29.5 }
+					]
+				},
+				"ruidus": {
+					"name": "Ruidus",
+					"baselineNewMoon": "835-01-01",
+					"cycleLength": 327,
+					"phases": [
+						{ "name": "Dormant Glow", "start": 0, "end": 60 },
+						{ "name": "Rising Flare", "start": 60, "end": 120 },
+						{ "name": "Subtle Radiance", "start": 120, "end": 163.5 },
+						{ "name": "Burning Apex", "start": 163.5, "end": 200 },
+						{ "name": "Fading Glimmer", "start": 200, "end": 260 },
+						{ "name": "Vanishing Ember", "start": 260, "end": 327 }
+					]
+				}
 			},
 			"climates": {
 				"northern temperate": {
@@ -1358,6 +1400,530 @@ on('ready', () => {
 				"7-21": "Wildmother's Grace",
 				"9-5": "Day of the Harvest",
 				"11-1": "Duscar's End"
+			}
+		},
+		"galifar": {
+			"name": "Galifar",
+			"months": [
+				{ "id": 1, "name": "Zarantyr", "days": 28 },
+				{ "id": 2, "name": "Olarune", "days": 28 },
+				{ "id": 3, "name": "Therendor", "days": 28 },
+				{ "id": 4, "name": "Eyre", "days": 28 },
+				{ "id": 5, "name": "Dravago", "days": 28 },
+				{ "id": 6, "name": "Nymm", "days": 28 },
+				{ "id": 7, "name": "Lharvion", "days": 28 },
+				{ "id": 8, "name": "Barrakas", "days": 28 },
+				{ "id": 9, "name": "Rhaan", "days": 28 },
+				{ "id": 10, "name": "Sypheros", "days": 28 },
+				{ "id": 11, "name": "Aryth", "days": 28 },
+				{ "id": 12, "name": "Vult", "days": 28 }
+			],
+			"daysOfWeek": ["Sul", "Mol", "Zol", "Wir", "Zor", "Far", "Sar"],
+			"defaultDate": "998-01-01",
+			"lunarCycle": {
+				"eyre": {
+					"name": "Eyre",
+					"baselineNewMoon": "998-01-01",
+					"cycleLength": 28,
+					"phases": [
+						{ "name": "New Moon", "start": 0, "end": 7 },
+						{ "name": "First Quarter", "start": 7, "end": 14 },
+						{ "name": "Full Moon", "start": 14, "end": 21 },
+						{ "name": "Last Quarter", "start": 21, "end": 28 }
+					]
+				},
+				"lurthir": {
+					"name": "Lurthir",
+					"baselineNewMoon": "998-01-01",
+					"cycleLength": 91,
+					"phases": [
+						{ "name": "New Moon", "start": 0, "end": 15 },
+						{ "name": "First Quarter", "start": 15, "end": 45 },
+						{ "name": "Full Moon", "start": 45, "end": 75 },
+						{ "name": "Last Quarter", "start": 75, "end": 91 }
+					]
+				}
+			},
+			"climates": {
+				"northern temperate": {
+					"seasons": ["Winter", "Spring", "Summer", "Autumn"],
+					"modifiers": {
+						"temperature": { "Winter": -10, "Spring": 5, "Summer": 7.5, "Autumn": 2.5 },
+						"precipitation": { "Winter": 5, "Spring": 5, "Summer": -2.5, "Autumn": 2.5 },
+						"wind": { "Winter": 5, "Spring": 3, "Summer": 2, "Autumn": 3 },
+						"humid": { "Winter": 7.5, "Spring": 10, "Summer": 5, "Autumn": 7.5 },
+						"visibility": { "Winter": -5, "Spring": 0, "Summer": 5, "Autumn": 0 },
+						"cloudy": { "Winter": 5, "Spring": 7, "Summer": -2, "Autumn": 0 }
+					},
+					"seasonStart": { "Winter": 12, "Spring": 3, "Summer": 6, "Autumn": 9 }
+				},
+				"southern temperate": {
+					"seasons": ["Summer", "Autumn", "Winter", "Spring"],
+					"modifiers": {
+						"temperature": { "Summer": 7.5, "Autumn": 2.5, "Winter": -10, "Spring": 5 },
+						"precipitation": { "Summer": 2.5, "Autumn": 7.5, "Winter": 2.5, "Spring": 7.5 },
+						"wind": { "Summer": 3, "Autumn": 5, "Winter": 7, "Spring": 5 },
+						"humid": { "Summer": 5, "Autumn": 7.5, "Winter": 7.5, "Spring": 10 },
+						"visibility": { "Summer": 5, "Autumn": 0, "Winter": -5, "Spring": 0 },
+						"cloudy": { "Summer": -2.5, "Autumn": 0, "Winter": 5, "Spring": 2.5 }
+					},
+					"seasonStart": { "Summer": 12, "Autumn": 3, "Winter": 6, "Spring": 9 }
+				},
+				"northern tropical": {
+					"seasons": ["Wet", "Dry"],
+					"modifiers": {
+						"temperature": { "Wet": 2.5, "Dry": 5 },
+						"precipitation": { "Wet": 10, "Dry": -10 },
+						"wind": { "Wet": 5, "Dry": 2.5 },
+						"humid": { "Wet": 10, "Dry": 5 },
+						"visibility": { "Wet": 5, "Dry": 10 },
+						"cloudy": { "Wet": 10, "Dry": 5 }
+					},
+					"seasonStart": { "Wet": 5, "Dry": 11 }
+				},
+				"southern tropical": {
+					"seasons": ["Wet", "Dry"],
+					"modifiers": {
+						"temperature": { "Wet": 2.5, "Dry": 5 },
+						"precipitation": { "Wet": 10, "Dry": -10 },
+						"wind": { "Wet": 5, "Dry": 3 },
+						"humid": { "Wet": 10, "Dry": 5 },
+						"visibility": { "Wet": 5, "Dry": 10 },
+						"cloudy": { "Wet": 10, "Dry": 5 }
+					},
+					"seasonStart": { "Wet": 11, "Dry": 5 }
+				},
+				"northern polar": {
+					"seasons": ["Polar Day", "Polar Night"],
+					"modifiers": {
+						"temperature": { "Polar Day": -15, "Polar Night": -20 },
+						"precipitation": { "Polar Day": -2.5, "Polar Night": 0 },
+						"wind": { "Polar Day": 10, "Polar Night": 15 },
+						"humid": { "Polar Day": 5, "Polar Night": 10 },
+						"visibility": { "Polar Day": 0, "Polar Night": 5 },
+						"cloudy": { "Polar Day": 5, "Polar Night": 10 }
+					},
+					"seasonStart": { "Polar Day": 5, "Polar Night": 11 }
+				},
+				"southern polar": {
+					"seasons": ["Polar Day", "Polar Night"],
+					"modifiers": {
+						"temperature": { "Polar Day": -15, "Polar Night": -20 },
+						"precipitation": { "Polar Day": -2.5, "Polar Night": 0 },
+						"wind": { "Polar Day": 10, "Polar Night": 15 },
+						"humid": { "Polar Day": 5, "Polar Night": 10 },
+						"visibility": { "Polar Day": 0, "Polar Night": 5 },
+						"cloudy": { "Polar Day": 5, "Polar Night": 10 }
+					},
+					"seasonStart": { "Polar Day": 11, "Polar Night": 5 }
+				},
+				"northern desert": {
+					"seasons": ["Hot", "Cool"],
+					"modifiers": {
+						"temperature": { "Hot": 20, "Cool": 10 },
+						"precipitation": { "Hot": -20, "Cool": -15 },
+						"wind": { "Hot": 10, "Cool": 15 },
+						"humid": { "Hot": -5, "Cool": 0 },
+						"visibility": { "Hot": 0, "Cool": 5 },
+						"cloudy": { "Hot": -2.5, "Cool": 2.5 }
+					},
+					"seasonStart": { "Hot": 4, "Cool": 10 }
+				},
+				"northern equatorial": {
+					"seasons": ["Wet", "Dry"],
+					"modifiers": {
+						"temperature": { "Wet": 10, "Dry": 17.5 },
+						"precipitation": { "Wet": 15, "Dry": 10 },
+						"wind": { "Wet": 5, "Dry": 5 },
+						"humid": { "Wet": 10, "Dry": 5 },
+						"visibility": { "Wet": -2.5, "Dry": 5 },
+						"cloudy": { "Wet": 10, "Dry": 5 }
+					},
+					"seasonStart": { "Wet": 3, "Dry": 9 }
+				},
+				"northern tundra": {
+					"seasons": ["Summer", "Winter"],
+					"modifiers": {
+						"temperature": { "Summer": -5, "Winter": -15 },
+						"precipitation": { "Summer": -5, "Winter": 5 },
+						"wind": { "Summer": 10, "Winter": 15 },
+						"humid": { "Summer": 10, "Winter": 5 },
+						"visibility": { "Summer": 5, "Winter": -2.5 },
+						"cloudy": { "Summer": 5, "Winter": 10 }
+					},
+					"seasonStart": { "Summer": 6, "Winter": 12 }
+				},
+				"northern mountain": {
+					"seasons": ["Winter", "Spring", "Summer", "Autumn"],
+					"modifiers": {
+						"temperature": { "Winter": -15, "Spring": -5, "Summer": 5, "Autumn": 0 },
+						"precipitation": { "Winter": 10, "Spring": 15, "Summer": 5, "Autumn": 5 },
+						"wind": { "Winter": 20, "Spring": 15, "Summer": 10, "Autumn": 15 },
+						"humid": { "Winter": 10, "Spring": 15, "Summer": 10, "Autumn": 10 },
+						"visibility": { "Winter": -5, "Spring": 0, "Summer": 5, "Autumn": 0 },
+						"cloudy": { "Winter": 10, "Spring": 15, "Summer": 5, "Autumn": 10 }
+					},
+					"seasonStart": { "Winter": 12, "Spring": 3, "Summer": 6, "Autumn": 9 }
+				},
+				"equatorial": {
+					"seasons": ["Wet", "Dry"],
+					"modifiers": {
+						"temperature": { "Wet": 7.5, "Dry": 5 },
+						"precipitation": { "Wet": 15, "Dry": -5 },
+						"wind": { "Wet": 5, "Dry": 5 },
+						"humid": { "Wet": 15, "Dry": 10 },
+						"visibility": { "Wet": -5, "Dry": 5 },
+						"cloudy": { "Wet": 10, "Dry": 5 }
+					},
+					"seasonStart": { "Wet": 1, "Dry": 7 }
+				},
+				"southern continental": {
+					"seasons": ["Summer", "Autumn", "Winter", "Spring"],
+					"modifiers": {
+						"temperature": { "Summer": 10, "Autumn": 0, "Winter": -10, "Spring": 0 },
+						"precipitation": { "Summer": 10, "Autumn": 5, "Winter": -5, "Spring": 0 },
+						"wind": { "Summer": 10, "Autumn": 15, "Winter": 20, "Spring": 15 },
+						"humid": { "Summer": 10, "Autumn": 15, "Winter": 10, "Spring": 15 },
+						"visibility": { "Summer": 5, "Autumn": 10, "Winter": 0, "Spring": 5 },
+						"cloudy": { "Summer": 5, "Autumn": 10, "Winter": 15, "Spring": 10 }
+					},
+					"seasonStart": { "Summer": 12, "Autumn": 3, "Winter": 6, "Spring": 9 }
+				},
+				"southern mediterranean": {
+					"seasons": ["Summer", "Autumn", "Winter", "Spring"],
+					"modifiers": {
+						"temperature": { "Summer": 10, "Autumn": 5, "Winter": -5, "Spring": 5 },
+						"precipitation": { "Summer": -5, "Autumn": 5, "Winter": 7.5, "Spring": 5 },
+						"wind": { "Summer": 5, "Autumn": 10, "Winter": 15, "Spring": 10 },
+						"humid": { "Summer": 10, "Autumn": 20, "Winter": 25, "Spring": 20 },
+						"visibility": { "Summer": 5, "Autumn": 10, "Winter": 10, "Spring": 10 },
+						"cloudy": { "Summer": 10, "Autumn": 20, "Winter": 25, "Spring": 20 }
+					},
+					"seasonStart": { "Summer": 12, "Autumn": 3, "Winter": 6, "Spring": 9 }
+				},
+				"southern desert": {
+					"seasons": ["Hot", "Cool"],
+					"modifiers": {
+						"temperature": { "Hot": 20, "Cool": 10 },
+						"precipitation": { "Hot": -20, "Cool": -15 },
+						"wind": { "Hot": 10, "Cool": 15 },
+						"humid": { "Hot": -5, "Cool": 0 },
+						"visibility": { "Hot": 0, "Cool": 5 },
+						"cloudy": { "Hot": -2.5, "Cool": 2.5 }
+					},
+					"seasonStart": { "Hot": 10, "Cool": 4 }
+				},
+				"southern equatorial": {
+					"seasons": ["Wet", "Dry"],
+					"modifiers": {
+						"temperature": { "Wet": 10, "Dry": 17.5 },
+						"precipitation": { "Wet": 15, "Dry": 10 },
+						"wind": { "Wet": 5, "Dry": 5 },
+						"humid": { "Wet": 10, "Dry": 5 },
+						"visibility": { "Wet": -2.5, "Dry": 5 },
+						"cloudy": { "Wet": 10, "Dry": 5 }
+					},
+					"seasonStart": { "Wet": 9, "Dry": 3 }
+				},
+				"southern tundra": {
+					"seasons": ["Summer", "Winter"],
+					"modifiers": {
+						"temperature": { "Summer": -5, "Winter": -15 },
+						"precipitation": { "Summer": -5, "Winter": 5 },
+						"wind": { "Summer": 10, "Winter": 15 },
+						"humid": { "Summer": 10, "Winter": 5 },
+						"visibility": { "Summer": 5, "Winter": -2.5 },
+						"cloudy": { "Summer": 5, "Winter": 10 }
+					},
+					"seasonStart": { "Summer": 12, "Winter": 6 }
+				},
+				"southern mountain": {
+					"seasons": ["Summer", "Autumn", "Winter", "Spring"],
+					"modifiers": {
+						"temperature": { "Winter": -15, "Spring": -5, "Summer": 5, "Autumn": 0 },
+						"precipitation": { "Winter": 10, "Spring": 15, "Summer": 5, "Autumn": 5 },
+						"wind": { "Winter": 20, "Spring": 15, "Summer": 10, "Autumn": 15 },
+						"humid": { "Winter": 10, "Spring": 15, "Summer": 10, "Autumn": 10 },
+						"visibility": { "Winter": -5, "Spring": 0, "Summer": 5, "Autumn": 0 },
+						"cloudy": { "Winter": 10, "Spring": 15, "Summer": 5, "Autumn": 10 }
+					},
+					"seasonStart": { "Summer": 12, "Autumn": 3, "Winter": 6, "Spring": 9 }
+				}
+			},
+			"significantDays": {
+				"1-1": "Day of Renewal",
+				"2-14": "Feast of Olarune",
+				"4-15": "Therendor’s Bloom",
+				"6-28": "Day of Nymm's Zenith",
+				"8-15": "Lharvion’s Light",
+				"10-31": "Night of Sypheros",
+				"12-28": "Vult's Last Light"
+			}
+		},
+		"krynn": {
+			"name": "Krynn",
+			"months": [
+				{ "id": 1, "name": "Aelmont", "days": 30 },
+				{ "id": 2, "name": "Rannmont", "days": 30 },
+				{ "id": 3, "name": "Mishamont", "days": 30 },
+				{ "id": 4, "name": "Chislmont", "days": 30 },
+				{ "id": 5, "name": "Bran", "days": 30 },
+				{ "id": 6, "name": "Corij", "days": 30 },
+				{ "id": 7, "name": "Argon", "days": 30 },
+				{ "id": 8, "name": "Sirrimont", "days": 30 },
+				{ "id": 9, "name": "Reorxmont", "days": 30 },
+				{ "id": 10, "name": "Hiddumont", "days": 30 },
+				{ "id": 11, "name": "Brammermont", "days": 30 },
+				{ "id": 12, "name": "Phoenix", "days": 30 }
+			],
+			"daysOfWeek": ["Borelsday", "Argensday", "Paltorsday", "Urday", "Nuitarsday"],
+			"defaultDate": "351-01-01",
+			"lunarCycle": {
+				"solinari": {
+					"name": "Solinari",
+					"baselineNewMoon": "351-01-01",
+					"cycleLength": 36,
+					"phases": [
+						{ "name": "New Moon", "start": 0, "end": 9 },
+						{ "name": "First Quarter", "start": 9, "end": 18 },
+						{ "name": "Full Moon", "start": 18, "end": 27 },
+						{ "name": "Last Quarter", "start": 27, "end": 36 }
+					]
+				},
+				"lunitari": {
+					"name": "Lunitari",
+					"baselineNewMoon": "351-01-01",
+					"cycleLength": 28,
+					"phases": [
+						{ "name": "New Moon", "start": 0, "end": 7 },
+						{ "name": "First Quarter", "start": 7, "end": 14 },
+						{ "name": "Full Moon", "start": 14, "end": 21 },
+						{ "name": "Last Quarter", "start": 21, "end": 28 }
+					]
+				},
+				"nuitari": {
+					"name": "Nuitari",
+					"baselineNewMoon": "351-01-01",
+					"cycleLength": 8,
+					"phases": [
+						{ "name": "New Moon", "start": 0, "end": 2 },
+						{ "name": "First Quarter", "start": 2, "end": 4 },
+						{ "name": "Full Moon", "start": 4, "end": 6 },
+						{ "name": "Last Quarter", "start": 6, "end": 8 }
+					]
+				}
+			},
+			"climates": {
+				"northern temperate": {
+					"seasons": ["Winter", "Spring", "Summer", "Autumn"],
+					"modifiers": {
+						"temperature": { "Winter": -10, "Spring": 5, "Summer": 7.5, "Autumn": 2.5 },
+						"precipitation": { "Winter": 5, "Spring": 5, "Summer": -2.5, "Autumn": 2.5 },
+						"wind": { "Winter": 5, "Spring": 3, "Summer": 2, "Autumn": 3 },
+						"humid": { "Winter": 7.5, "Spring": 10, "Summer": 5, "Autumn": 7.5 },
+						"visibility": { "Winter": -5, "Spring": 0, "Summer": 5, "Autumn": 0 },
+						"cloudy": { "Winter": 5, "Spring": 7, "Summer": -2, "Autumn": 0 }
+					},
+					"seasonStart": { "Winter": 12, "Spring": 3, "Summer": 6, "Autumn": 9 }
+				},
+				"southern temperate": {
+					"seasons": ["Summer", "Autumn", "Winter", "Spring"],
+					"modifiers": {
+						"temperature": { "Summer": 7.5, "Autumn": 2.5, "Winter": -10, "Spring": 5 },
+						"precipitation": { "Summer": 2.5, "Autumn": 7.5, "Winter": 2.5, "Spring": 7.5 },
+						"wind": { "Summer": 3, "Autumn": 5, "Winter": 7, "Spring": 5 },
+						"humid": { "Summer": 5, "Autumn": 7.5, "Winter": 7.5, "Spring": 10 },
+						"visibility": { "Summer": 5, "Autumn": 0, "Winter": -5, "Spring": 0 },
+						"cloudy": { "Summer": -2.5, "Autumn": 0, "Winter": 5, "Spring": 2.5 }
+					},
+					"seasonStart": { "Summer": 12, "Autumn": 3, "Winter": 6, "Spring": 9 }
+				},
+				"northern tropical": {
+					"seasons": ["Wet", "Dry"],
+					"modifiers": {
+						"temperature": { "Wet": 2.5, "Dry": 5 },
+						"precipitation": { "Wet": 10, "Dry": -10 },
+						"wind": { "Wet": 5, "Dry": 2.5 },
+						"humid": { "Wet": 10, "Dry": 5 },
+						"visibility": { "Wet": 5, "Dry": 10 },
+						"cloudy": { "Wet": 10, "Dry": 5 }
+					},
+					"seasonStart": { "Wet": 5, "Dry": 11 }
+				},
+				"southern tropical": {
+					"seasons": ["Wet", "Dry"],
+					"modifiers": {
+						"temperature": { "Wet": 2.5, "Dry": 5 },
+						"precipitation": { "Wet": 10, "Dry": -10 },
+						"wind": { "Wet": 5, "Dry": 3 },
+						"humid": { "Wet": 10, "Dry": 5 },
+						"visibility": { "Wet": 5, "Dry": 10 },
+						"cloudy": { "Wet": 10, "Dry": 5 }
+					},
+					"seasonStart": { "Wet": 11, "Dry": 5 }
+				},
+				"northern polar": {
+					"seasons": ["Polar Day", "Polar Night"],
+					"modifiers": {
+						"temperature": { "Polar Day": -15, "Polar Night": -20 },
+						"precipitation": { "Polar Day": -2.5, "Polar Night": 0 },
+						"wind": { "Polar Day": 10, "Polar Night": 15 },
+						"humid": { "Polar Day": 5, "Polar Night": 10 },
+						"visibility": { "Polar Day": 0, "Polar Night": 5 },
+						"cloudy": { "Polar Day": 5, "Polar Night": 10 }
+					},
+					"seasonStart": { "Polar Day": 5, "Polar Night": 11 }
+				},
+				"southern polar": {
+					"seasons": ["Polar Day", "Polar Night"],
+					"modifiers": {
+						"temperature": { "Polar Day": -15, "Polar Night": -20 },
+						"precipitation": { "Polar Day": -2.5, "Polar Night": 0 },
+						"wind": { "Polar Day": 10, "Polar Night": 15 },
+						"humid": { "Polar Day": 5, "Polar Night": 10 },
+						"visibility": { "Polar Day": 0, "Polar Night": 5 },
+						"cloudy": { "Polar Day": 5, "Polar Night": 10 }
+					},
+					"seasonStart": { "Polar Day": 11, "Polar Night": 5 }
+				},
+				"northern desert": {
+					"seasons": ["Hot", "Cool"],
+					"modifiers": {
+						"temperature": { "Hot": 20, "Cool": 10 },
+						"precipitation": { "Hot": -20, "Cool": -15 },
+						"wind": { "Hot": 10, "Cool": 15 },
+						"humid": { "Hot": -5, "Cool": 0 },
+						"visibility": { "Hot": 0, "Cool": 5 },
+						"cloudy": { "Hot": -2.5, "Cool": 2.5 }
+					},
+					"seasonStart": { "Hot": 4, "Cool": 10 }
+				},
+				"northern equatorial": {
+					"seasons": ["Wet", "Dry"],
+					"modifiers": {
+						"temperature": { "Wet": 10, "Dry": 17.5 },
+						"precipitation": { "Wet": 15, "Dry": 10 },
+						"wind": { "Wet": 5, "Dry": 5 },
+						"humid": { "Wet": 10, "Dry": 5 },
+						"visibility": { "Wet": -2.5, "Dry": 5 },
+						"cloudy": { "Wet": 10, "Dry": 5 }
+					},
+					"seasonStart": { "Wet": 3, "Dry": 9 }
+				},
+				"northern tundra": {
+					"seasons": ["Summer", "Winter"],
+					"modifiers": {
+						"temperature": { "Summer": -5, "Winter": -15 },
+						"precipitation": { "Summer": -5, "Winter": 5 },
+						"wind": { "Summer": 10, "Winter": 15 },
+						"humid": { "Summer": 10, "Winter": 5 },
+						"visibility": { "Summer": 5, "Winter": -2.5 },
+						"cloudy": { "Summer": 5, "Winter": 10 }
+					},
+					"seasonStart": { "Summer": 6, "Winter": 12 }
+				},
+				"northern mountain": {
+					"seasons": ["Winter", "Spring", "Summer", "Autumn"],
+					"modifiers": {
+						"temperature": { "Winter": -15, "Spring": -5, "Summer": 5, "Autumn": 0 },
+						"precipitation": { "Winter": 10, "Spring": 15, "Summer": 5, "Autumn": 5 },
+						"wind": { "Winter": 20, "Spring": 15, "Summer": 10, "Autumn": 15 },
+						"humid": { "Winter": 10, "Spring": 15, "Summer": 10, "Autumn": 10 },
+						"visibility": { "Winter": -5, "Spring": 0, "Summer": 5, "Autumn": 0 },
+						"cloudy": { "Winter": 10, "Spring": 15, "Summer": 5, "Autumn": 10 }
+					},
+					"seasonStart": { "Winter": 12, "Spring": 3, "Summer": 6, "Autumn": 9 }
+				},
+				"equatorial": {
+					"seasons": ["Wet", "Dry"],
+					"modifiers": {
+						"temperature": { "Wet": 7.5, "Dry": 5 },
+						"precipitation": { "Wet": 15, "Dry": -5 },
+						"wind": { "Wet": 5, "Dry": 5 },
+						"humid": { "Wet": 15, "Dry": 10 },
+						"visibility": { "Wet": -5, "Dry": 5 },
+						"cloudy": { "Wet": 10, "Dry": 5 }
+					},
+					"seasonStart": { "Wet": 1, "Dry": 7 }
+				},
+				"southern continental": {
+					"seasons": ["Summer", "Autumn", "Winter", "Spring"],
+					"modifiers": {
+						"temperature": { "Summer": 10, "Autumn": 0, "Winter": -10, "Spring": 0 },
+						"precipitation": { "Summer": 10, "Autumn": 5, "Winter": -5, "Spring": 0 },
+						"wind": { "Summer": 10, "Autumn": 15, "Winter": 20, "Spring": 15 },
+						"humid": { "Summer": 10, "Autumn": 15, "Winter": 10, "Spring": 15 },
+						"visibility": { "Summer": 5, "Autumn": 10, "Winter": 0, "Spring": 5 },
+						"cloudy": { "Summer": 5, "Autumn": 10, "Winter": 15, "Spring": 10 }
+					},
+					"seasonStart": { "Summer": 12, "Autumn": 3, "Winter": 6, "Spring": 9 }
+				},
+				"southern mediterranean": {
+					"seasons": ["Summer", "Autumn", "Winter", "Spring"],
+					"modifiers": {
+						"temperature": { "Summer": 10, "Autumn": 5, "Winter": -5, "Spring": 5 },
+						"precipitation": { "Summer": -5, "Autumn": 5, "Winter": 7.5, "Spring": 5 },
+						"wind": { "Summer": 5, "Autumn": 10, "Winter": 15, "Spring": 10 },
+						"humid": { "Summer": 10, "Autumn": 20, "Winter": 25, "Spring": 20 },
+						"visibility": { "Summer": 5, "Autumn": 10, "Winter": 10, "Spring": 10 },
+						"cloudy": { "Summer": 10, "Autumn": 20, "Winter": 25, "Spring": 20 }
+					},
+					"seasonStart": { "Summer": 12, "Autumn": 3, "Winter": 6, "Spring": 9 }
+				},
+				"southern desert": {
+					"seasons": ["Hot", "Cool"],
+					"modifiers": {
+						"temperature": { "Hot": 20, "Cool": 10 },
+						"precipitation": { "Hot": -20, "Cool": -15 },
+						"wind": { "Hot": 10, "Cool": 15 },
+						"humid": { "Hot": -5, "Cool": 0 },
+						"visibility": { "Hot": 0, "Cool": 5 },
+						"cloudy": { "Hot": -2.5, "Cool": 2.5 }
+					},
+					"seasonStart": { "Hot": 10, "Cool": 4 }
+				},
+				"southern equatorial": {
+					"seasons": ["Wet", "Dry"],
+					"modifiers": {
+						"temperature": { "Wet": 10, "Dry": 17.5 },
+						"precipitation": { "Wet": 15, "Dry": 10 },
+						"wind": { "Wet": 5, "Dry": 5 },
+						"humid": { "Wet": 10, "Dry": 5 },
+						"visibility": { "Wet": -2.5, "Dry": 5 },
+						"cloudy": { "Wet": 10, "Dry": 5 }
+					},
+					"seasonStart": { "Wet": 9, "Dry": 3 }
+				},
+				"southern tundra": {
+					"seasons": ["Summer", "Winter"],
+					"modifiers": {
+						"temperature": { "Summer": -5, "Winter": -15 },
+						"precipitation": { "Summer": -5, "Winter": 5 },
+						"wind": { "Summer": 10, "Winter": 15 },
+						"humid": { "Summer": 10, "Winter": 5 },
+						"visibility": { "Summer": 5, "Winter": -2.5 },
+						"cloudy": { "Summer": 5, "Winter": 10 }
+					},
+					"seasonStart": { "Summer": 12, "Winter": 6 }
+				},
+				"southern mountain": {
+					"seasons": ["Summer", "Autumn", "Winter", "Spring"],
+					"modifiers": {
+						"temperature": { "Winter": -15, "Spring": -5, "Summer": 5, "Autumn": 0 },
+						"precipitation": { "Winter": 10, "Spring": 15, "Summer": 5, "Autumn": 5 },
+						"wind": { "Winter": 20, "Spring": 15, "Summer": 10, "Autumn": 15 },
+						"humid": { "Winter": 10, "Spring": 15, "Summer": 10, "Autumn": 10 },
+						"visibility": { "Winter": -5, "Spring": 0, "Summer": 5, "Autumn": 0 },
+						"cloudy": { "Winter": 10, "Spring": 15, "Summer": 5, "Autumn": 10 }
+					},
+					"seasonStart": { "Summer": 12, "Autumn": 3, "Winter": 6, "Spring": 9 }
+				}
+			},
+			"significantDays": {
+				"1-1": "New Year's Day",
+				"4-15": "Festival of Mishakal",
+				"8-25": "Night of the Eye",
+				"12-30": "End of the Year Feast"
 			}
 		}
 	};

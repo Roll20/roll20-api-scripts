@@ -357,7 +357,7 @@ I can add additional Calendars into the module if you were to provide the detail
 
 #### Lunar Cycles
 
-Each calendar includes options for tracking lunar phases. The lunar cycle will display key phases, such as the below and are setting specific. There are no current plans to incorporate multiple moons at this time for settings such as Dragonlance.
+Each calendar includes options for tracking lunar phases. The lunar cycle will display key phases, such as the below and are setting specific. Each Calander can have multiple moons and their lunar cycle including their custom phases is displayed along with the weather.
 
 * New Moon
 * Waxing Crescent
@@ -481,6 +481,8 @@ Yes, that is a workaround to having relationships between quest groups and it *c
 
 ## Updates
 
+#### 2025-01-10
+* **v1.0.2** Added Krynn (Dragonlance) and Galifar (Eberon) Calanders. also expanded to allow for multiple moons and different cycles. Added the smaller and secondary moons to both Exandria and Grekhawk calander.
 #### 2025-01-10
 * **v1.0.1** Various small fixes. Made Compatable with Supernotes Mod
 #### 2025-01-09

@@ -1908,20 +1908,21 @@ var QuestTracker = QuestTracker || (function () {
 			}
 			saveQuestTrackerData();
 		};
-		const getLunarPhase = (date) => {
+		const getLunarPhase = (date, moonId) => {
 			const calendar = CALENDARS[QUEST_TRACKER_calenderType];
-			if (!calendar.lunarCycle) return null;
-			const lunarCycle = calendar.lunarCycle;
-			const baselineDate = new Date(lunarCycle.baselineNewMoon);
+			if (errorCheck(153, 'exists', calendar.lunarCycle, `calendar.lunarCycle`)) return;
+			if (errorCheck(154, 'exists', calendar.lunarCycle[moonId], `calendar.lunarCycle[${moonId}]`)) return;
+			const { baselineNewMoon, cycleLength, phases, name } = calendar.lunarCycle[moonId];
+			const baselineDate = new Date(baselineNewMoon);
 			const currentDate = new Date(date);
 			const daysSinceBaseline = (currentDate - baselineDate) / (1000 * 60 * 60 * 24);
-			const phase = (daysSinceBaseline % lunarCycle.cycleLength + lunarCycle.cycleLength) % lunarCycle.cycleLength;
-			for (const { name, start, end } of lunarCycle.phases) {
+			const phase = (daysSinceBaseline % cycleLength + cycleLength) % cycleLength;
+			for (const { name: phaseName, start, end } of phases) {
 				if (phase >= start && phase < end) {
-					return name;
+					return `${name}: ${phaseName}`;
 				}
 			}
-			return "Unknown Phase";
+			return `${name}: Unknown Phase`;
 		};
 		const describeWeather = () => {
 			const L = {
@@ -3419,7 +3420,24 @@ var QuestTracker = QuestTracker || (function () {
 					.map((climate) => `|${climate.charAt(0).toUpperCase() + climate.slice(1)},${climate}`)
 					.join("");
 				return dropdownString;
-			} 
+			},
+			hasMultipleMoons: (l) => {
+				if (Object.keys(l).length > 1) return true;
+				else return false;
+			},
+			lunarPhases: () => {
+				const calendar = CALENDARS[QUEST_TRACKER_calenderType];
+				if (errorCheck(155, 'exists', calendar.lunarCycle, `calendar.lunarCycle`)) return;
+				const currentDate = QUEST_TRACKER_currentDate;
+				let output = `<tr><td colspan=2><strong>Lunar Phase${H.hasMultipleMoons(calendar.lunarCycle) ? 's' : ''}</strong></td></tr>`;
+				for (const moonId in calendar.lunarCycle) {
+					if (calendar.lunarCycle.hasOwnProperty(moonId)) {
+						const phase = Calendar.getLunarPhase(currentDate, moonId);
+						output += `<tr><td colspan=2><small>${phase}</small></td></tr>`;
+					}
+				}
+				return output;
+			}
 		};
 		const buildWeather = (isMenu = false, isHome = false) => {
 			const FromValue = {
@@ -3495,14 +3513,14 @@ var QuestTracker = QuestTracker || (function () {
 			const cloudCoverDisplay = QUEST_TRACKER_CURRENT_WEATHER['rolls']['cloudCover'];
 			const visibilityDisplay = QUEST_TRACKER_imperialMeasurements['wind'] ? visibilityValue['imperial']['distance']  + visibilityValue['metric']['unit'] : visibilityValue['metric']['unit'] + visibilityValue['imperial']['unit'];
 			const locationDropdown = H.buildLocationDropdown();
+			const LunarPhaseDisplay = H.lunarPhases();
 			const returnto = isMenu ? "menu=true|" : isHome ? "home=true|" : "";
 			let menu = `
 				<table style="width:100%;">
 					<tr><td>&nbsp;</td><td>&nbsp;</td></tr>
+					${LunarPhaseDisplay}
 					<tr><td colspan=2><strong>Weather</strong></td></tr>
 					<tr><td colspan=2><small>${QUEST_TRACKER_CURRENT_WEATHER['weatherType']}</small></td></tr>
-					<tr><td colspan=2><strong>Lunar Phase</strong></td></tr>
-					<tr><td colspan=2><small>${Calendar.getLunarPhase(QUEST_TRACKER_currentDate)}</small></td></tr>
 					<tr><td colspan=2><strong>Location</strong></td></tr>
 					<tr><td><small>${H.returnCurrentLocation(QUEST_TRACKER_WeatherLocation)}</small></td><td><a style="${styles.button}" href="!qt-date action=adjustlocation|${returnto}new=?{Change Location{${locationDropdown}}">Change</a></td></tr>
 					<tr><td><strong>Temperature</strong></td><td>${temperatureDisplay}</td></tr>
@@ -3757,7 +3775,7 @@ var QuestTracker = QuestTracker || (function () {
 			}
 		};
 		const generateGMMenu = () => {
-			let menu = `<div style="${styles.menu}"><h3 style="margin-bottom: 10px;">Calendar</h3>`;
+			let menu = `<div style="${styles.menu}"><h3 style="margin-bottom: 10px;">Calendarr</h3>`;
 			menu += `<br>${Calendar.formatDateFull()}<br>( ${QUEST_TRACKER_currentDate} )`;
 			if (QUEST_TRACKER_WEATHER && QUEST_TRACKER_CURRENT_WEATHER !== null) {
 				menu += buildWeather({ isMenu: true });
