@@ -1,0 +1,15 @@
+{
+    "name": "CalenderData",
+    "script": "CalenderData.js",
+    "version": "1.0",
+    "previousversions": [],
+    "description": "This is a script which doesnt do anything by itself, but defines the following state variables, which are used by other programs, specifically QuestTracker. state.CalenderData.CALENDARS &  state.CalenderData.WEATHER.",
+    "authors": "Boli",
+    "roll20userid": "3714078",
+    "useroptions": [],
+    "dependencies": [],
+    "modifies": {
+        "state.CalenderData": "read,write"
+    },
+    "conflicts": []
+}

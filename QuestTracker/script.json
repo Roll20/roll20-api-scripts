@@ -1,0 +1,21 @@
+{
+    "name": "QuestTracker",
+    "script": "QuestTracker.js",
+    "version": "1.0",
+    "previousversions": [],
+    "description": "# Quest Tracker Quest Tracker is a comprehensive tool for managing quests, rumors, and events in a tabletop RPG setting. It integrates seamlessly with Roll20 to provide detailed tracking and visualization of game elements, making it ideal for GMs and players who want to streamline their campaigns. ### Features - **Quest Management:**  - Create, edit, and remove quests.  - Track quest statuses (e.g., \"Started\", \"Completed\", \"Failed\").  - Group quests into logical categories. - **Rumor Handling:**  - Add and manage rumors by location or quest. - Generate rumors dynamically.   - Associate rumors with quest progression. - **Event Scheduling:** - Schedule events with repeatable options.   - Adjust events based on in-game calendars. - **Weather and Climate Integration:** - Dynamic weather generation based on in-game conditions.   - Detailed descriptions of current weather conditions. - **Calender Integration:** - Track Leap years   - Different Calander types, e.g. Harpto, Gregorian etc. - **Visual Quest Tree:** - Display quests and relationships as a tree diagram. - Automatically handle mutually exclusive relationships. ### Getting Started - Access all features through an intuitive graphical user interface. simply type **!qt** into chat. - Navigate through menus to manage quests, rumors, and events seamlessly. ## More Information? [See the README](https://github.com/Roll20/roll20-api-scripts/blob/master/QuestTracker/README.md) ## Contributing Contributions are welcome! Please submit pull requests or report issues on the GitHub repository: [GitHub Repository](https://github.com/boli32/QuestTracker) ## Credits - **Author:** Steven Wrighton (Boli) - **Contact:** [Roll20 Profile](https://app.roll20.net/users/3714078/boli) - **License:** MIT",
+    "authors": "Boli",
+    "roll20userid": "3714078",
+    "useroptions": [],
+    "dependencies": ["CalenderData"],
+    "modifies": {
+        "chat": "read, write",
+        "layer": "read, write",
+        "paths": "read, write",
+        "graphic": "read, write",
+        "text": "read, write",
+        "token": "read, write",
+        "state.QUEST_TRACKER": "read, write"
+    },
+    "conflicts": []
+}
