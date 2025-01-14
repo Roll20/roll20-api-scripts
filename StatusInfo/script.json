@@ -1,9 +1,9 @@
 {
     "name": "StatusInfo",
     "script": "StatusInfo.js",
-    "version": "0.3.11",
-    "previousversions": ["0.3.2", "0.3.4", "0.3.6", "0.3.8", "0.3.10"],
-    "description": "All info and latest version on \n\n https://github.com/RobinKuiper/Roll20APIScripts/tree/master/StatusInfo",
+    "version": "0.3.12",
+    "previousversions": ["0.3.2", "0.3.4", "0.3.6", "0.3.8", "0.3.10", "0.3.11"],
+    "description": "All info and latest version on \n\n https://github.com/RobinKuiper/Roll20APIScripts/tree/master/StatusInfo\n\nThis script is compatible with the D&D 2024 Character Sheet.",
     "authors": "Robin Kuiper",
     "roll20userid": "1226016",
     "patreon": "https://www.patreon.com/robinkuiper",
