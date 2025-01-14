@@ -13,6 +13,7 @@ var QuestTracker = QuestTracker || (function () {
 			if (state.CalenderData.CALENDARS) CALENDARS = state.CalenderData.CALENDARS;
 			if (state.CalenderData.WEATHER) WEATHER = state.CalenderData.WEATHER;
 		}
+		Object.assign(CALENDARS, state.QUEST_TRACKER.calendar);
 		return { CALENDARS, WEATHER };
 	};
 	const { CALENDARS, WEATHER } = getCalendarAndWeatherData();
@@ -39,10 +40,12 @@ var QuestTracker = QuestTracker || (function () {
 	let QUEST_TRACKER_globalQuestArray = [];
 	let QUEST_TRACKER_globalRumours = {};
 	let QUEST_TRACKER_Events = {};
+	let QUEST_TRACKER_Calendar = {};
 	let QUEST_TRACKER_QuestHandoutName = "QuestTracker Quests";
 	let QUEST_TRACKER_RumourHandoutName = "QuestTracker Rumours";
 	let QUEST_TRACKER_EventHandoutName = "QuestTracker Events";
 	let QUEST_TRACKER_WeatherHandoutName = "QuestTracker Weather";
+	let QUEST_TRACKER_CalendarHandoutName = "QuestTracker Calendar";
 	let QUEST_TRACKER_rumoursByLocation = {};
 	let QUEST_TRACKER_readableJSON = true;
 	let QUEST_TRACKER_pageName = "Quest Tree Page";
@@ -102,6 +105,7 @@ var QuestTracker = QuestTracker || (function () {
 		QUEST_TRACKER_questGrid = state.QUEST_TRACKER.questGrid || [];
 		QUEST_TRACKER_jumpGate = state.QUEST_TRACKER.jumpGate || true;
 		QUEST_TRACKER_Events = state.QUEST_TRACKER.events || {};
+		QUEST_TRACKER_Calendar = state.QUEST_TRACKER.calendar || {};
 		QUEST_TRACKER_calenderType = state.QUEST_TRACKER.calenderType || 'gregorian';
 		QUEST_TRACKER_currentDate = state.QUEST_TRACKER.currentDate || CALENDARS[QUEST_TRACKER_calenderType]?.defaultDate
 		QUEST_TRACKER_defaultDate = state.QUEST_TRACKER.defaultDate || CALENDARS[QUEST_TRACKER_calenderType]?.defaultDate
@@ -150,6 +154,7 @@ var QuestTracker = QuestTracker || (function () {
 		state.QUEST_TRACKER.questGrid = QUEST_TRACKER_questGrid;
 		state.QUEST_TRACKER.jumpGate = QUEST_TRACKER_jumpGate;
 		state.QUEST_TRACKER.events = QUEST_TRACKER_Events;
+		state.QUEST_TRACKER.calendar = QUEST_TRACKER_Calendar;
 		state.QUEST_TRACKER.currentDate = QUEST_TRACKER_currentDate;
 		state.QUEST_TRACKER.defaultDate = QUEST_TRACKER_defaultDate;
 		state.QUEST_TRACKER.calenderType = QUEST_TRACKER_calenderType;
@@ -179,6 +184,7 @@ var QuestTracker = QuestTracker || (function () {
 				TreeObjRef: {},
 				jumpGate: true,
 				events: {},
+				calendar: {},
 				calenderType: 'gregorian',
 				currentDate: CALENDARS[QUEST_TRACKER_calenderType]?.defaultDate,
 				defaultDate: CALENDARS[QUEST_TRACKER_calenderType]?.defaultDate,
@@ -208,16 +214,16 @@ var QuestTracker = QuestTracker || (function () {
 			};
 			if (!findObjs({ type: 'rollabletable', name: QUEST_TRACKER_ROLLABLETABLE_QUESTS })[0]) {
 				const tableQuests = createObj('rollabletable', { name: QUEST_TRACKER_ROLLABLETABLE_QUESTS });
-				tableQuests.set('showplayers', false); // Hide table from players
+				tableQuests.set('showplayers', false);
 			}
 			if (!findObjs({ type: 'rollabletable', name: QUEST_TRACKER_ROLLABLETABLE_QUESTGROUPS })[0]) {
 				const tableQuestGroups = createObj('rollabletable', { name: QUEST_TRACKER_ROLLABLETABLE_QUESTGROUPS });
-				tableQuestGroups.set('showplayers', false); // Hide table from players
+				tableQuestGroups.set('showplayers', false);
 			}
 			let locationTable = findObjs({ type: 'rollabletable', name: QUEST_TRACKER_ROLLABLETABLE_LOCATIONS })[0];
 			if (!locationTable) {
 				locationTable = createObj('rollabletable', { name: QUEST_TRACKER_ROLLABLETABLE_LOCATIONS });
-				locationTable.set('showplayers', false); // Hide table from players
+				locationTable.set('showplayers', false);
 				createObj('tableitem', {
 					_rollabletableid: locationTable.id,
 					name: 'Everywhere',
@@ -235,6 +241,9 @@ var QuestTracker = QuestTracker || (function () {
 			}
 			if (!findObjs({ type: 'handout', name: QUEST_TRACKER_WeatherHandoutName })[0]) {
 				createObj('handout', { name: QUEST_TRACKER_WeatherHandoutName });
+			}
+			if (!findObjs({ type: 'handout', name: QUEST_TRACKER_CalendarHandoutName })[0]) {
+				createObj('handout', { name: QUEST_TRACKER_CalendarHandoutName });
 			}
 			Utils.sendGMMessage("QuestTracker has been initialized.");
 		}
@@ -358,6 +367,9 @@ var QuestTracker = QuestTracker || (function () {
 				case 'quest':
 					handoutName = QUEST_TRACKER_QuestHandoutName;
 					break;
+				case 'calendar':
+					handoutName = QUEST_TRACKER_CalendarHandoutName;
+					break;
 				default:
 					return;
 			}
@@ -384,12 +396,14 @@ var QuestTracker = QuestTracker || (function () {
 					case 'weather':
 						updatedData = QUEST_TRACKER_HISTORICAL_WEATHER;
 						break;
-					case 'weatherevents':
-						updatedData = QUEST_TRACKER_Events;
+					case 'calendar':
+						updatedData = QUEST_TRACKER_Calendar;
 						break;
-					default:
+					case 'quest':
 						updatedData = QUEST_TRACKER_globalQuestData;
 						break;
+					default:
+						return;
 				}
 				const updatedContent = QUEST_TRACKER_readableJSON 
 					? JSON.stringify(updatedData, null, 2)
@@ -406,9 +420,17 @@ var QuestTracker = QuestTracker || (function () {
 							case 'event':
 								QUEST_TRACKER_Events = JSON.parse(cleanedContent);
 								break;
-							default:
+							case 'weather':
+								QUEST_TRACKER_HISTORICAL_WEATHER = JSON.parse(cleanedContent);
+								break;
+							case 'calendar':
+								QUEST_TRACKER_Calendar = JSON.parse(cleanedContent);
+								break;
+							case 'quest':
 								QUEST_TRACKER_globalQuestData = JSON.parse(cleanedContent);
 								break;
+							default:
+								return;
 						}
 					}
 				});
@@ -425,7 +447,7 @@ var QuestTracker = QuestTracker || (function () {
 			updateHandoutField('rumour');
 			updateHandoutField('event');
 			updateHandoutField('weather');
-			updateHandoutField('weatherdescription');
+			updateHandoutField('calendar');
 		};
 		const toggleWeather = (value) => {
 			QUEST_TRACKER_WEATHER = (value === 'true');
@@ -481,8 +503,7 @@ var QuestTracker = QuestTracker || (function () {
 			importData: (handoutName, dataType) => {
 				let handout = findObjs({ type: 'handout', name: handoutName })[0];
 				if (!handout) {
-					errorCheck(7, 'msg', null,`${dataType} handout "${handoutName}" not found. Please create it.`);
-					return;
+					createObj('handout', { name: handoutName });
 				}
 				handout.get('gmnotes', (notes) => {
 					const cleanedContent = Utils.stripJSONContent(notes);
@@ -533,9 +554,9 @@ var QuestTracker = QuestTracker || (function () {
 						} else if (dataType === 'Weather') {
 							parsedData = Utils.normalizeKeys(parsedData);
 							QUEST_TRACKER_HISTORICAL_WEATHER = parsedData;
-						} else if (dataType === 'Weather Description') {
+						} else if (dataType === 'Calendar') {
 							parsedData = Utils.normalizeKeys(parsedData);
-							QUEST_TRACKER_WEATHER_DESCRIPTION = parsedData;
+							QUEST_TRACKER_Calendar = parsedData;
 						}
 						saveQuestTrackerData();
 						Utils.sendGMMessage(`${dataType} handout "${handoutName}" Imported.`);
@@ -599,6 +620,11 @@ var QuestTracker = QuestTracker || (function () {
 				});
 				saveQuestTrackerData();
 				Utils.updateHandoutField('quest');
+			},
+			refreshCalendarData: () => {
+				Object.keys(CALENDARS).forEach(key => delete CALENDARS[key]);
+				Object.assign(CALENDARS, state.CalenderData.CALENDARS);
+				Object.assign(CALENDARS, state.QUEST_TRACKER.calendar);
 			}
 		};
 		const fullImportProcess = () => {
@@ -606,10 +632,12 @@ var QuestTracker = QuestTracker || (function () {
 			H.importData(QUEST_TRACKER_RumourHandoutName, 'Rumour');
 			H.importData(QUEST_TRACKER_EventHandoutName, 'Events');
 			H.importData(QUEST_TRACKER_WeatherHandoutName, 'Weather');
+			H.importData(QUEST_TRACKER_CalendarHandoutName, 'Calendar');
 			H.syncQuestRollableTable();
 			Quest.cleanUpLooseEnds();
 			H.cleanUpDataFields();
 			Quest.populateQuestsToAutoAdvance();
+			H.refreshCalendarData();
 		};
 		return {
 			fullImportProcess

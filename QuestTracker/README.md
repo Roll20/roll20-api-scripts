@@ -353,8 +353,6 @@ The module includes several pre-configured calendars:
 * **Greyhawk (Original and 2024 Default setting)**
 * **Exandria (Critical Role)**
 
-I can add additional Calendars into the module if you were to provide the details and JSON object.
-
 #### Lunar Cycles
 
 Each calendar includes options for tracking lunar phases. The lunar cycle will display key phases, such as the below and are setting specific. Each Calander can have multiple moons and their lunar cycle including their custom phases is displayed along with the weather.
@@ -393,7 +391,231 @@ Select a calendar type from the configuration menu. The system will automaticall
 
 ***Warning: Changing the calendar type resets the current date to the default date for the chosen calendar.***
 
-### Setting Events
+## Adding Custom Calenders
+
+
+Users can add custom calanders by editing the **QuestTracker Calendar** Handout; as with other QuestTracker handouts all data is stored in the GM Notes field; the structure used is below as an example along with explanations for each field. 
+
+*NOTE: it is very easy to mess this object up, so be careful. use a ![JSON Validator](https://jsonlint.com/) to confirm it is a valid object before refreshing the JSON files in the configuration settings.* 
+
+```
+{
+  "mythic": {
+    "name": "Mythic Calendar",
+    "months": [
+      { "id": 1, "name": "Primus", "days": 30 },
+      { "id": 2, "name": "Secundus", "days": 30 },
+      { "id": 3, "name": "Tertius", "days": 30 },
+      { "id": 4, "name": "Quartus", "days": 30 },
+      { "id": 5, "name": "Quintus", "days": 30 },
+      { "id": 6, "name": "Sextus", "days": 30 },
+      { "id": 7, "name": "Septimus", "days": 30 },
+      { "id": 8, "name": "Octavus", "days": 30 },
+      { "id": 9, "name": "Nonus", "days": 30 },
+      { "id": 10, "name": "Decimus", "days": 30 }
+    ],
+    "daysOfWeek": [ "Day 1", "Day 2", "Day 3", "Day 4", "Day 5", "Day 6", "Day 7" ],
+    "defaultDate": "0001-01-01",
+    "startingWeekday": "Day 1",
+    "dateFormat": "{day}{ordinal} of {month}, {year}",
+    "significantDays": {
+      "1-1": "New Era Day",
+      "10-30": "Harvest Festival"
+    },
+    "lunarCycle": {
+      "mystara": {
+        "name": "Mystara",
+        "baselineNewMoon": "0001-01-01",
+        "cycleLength": 28,
+        "phases": [
+          { "name": "New Moon", "start": 0, "end": 7 },
+          { "name": "First Quarter", "start": 7, "end": 14 },
+          { "name": "Full Moon", "start": 14, "end": 21 },
+          { "name": "Last Quarter", "start": 21, "end": 28 }
+        ]
+      }
+    },
+    "climates": {
+      "mythic region": {
+        "seasons": [ "Spring", "Summer", "Autumn", "Winter" ],
+        "modifiers": {
+          "temperature": { "Spring": 10, "Summer": 20, "Autumn": 15, "Winter": 0 },
+          "precipitation": { "Spring": 15, "Summer": 10, "Autumn": 5, "Winter": 10 },
+          "wind": { "Spring": 5, "Summer": 5, "Autumn": 10, "Winter": 15 },
+          "humid": { "Spring": 20, "Summer": 15, "Autumn": 10, "Winter": 5 },
+          "visibility": { "Spring": 10, "Summer": 20, "Autumn": 15, "Winter": 5 },
+          "cloudy": { "Spring": 15, "Summer": 10, "Autumn": 20, "Winter": 25 }
+        },
+        "seasonStart": { "Spring": 3, "Summer": 6, "Autumn": 9, "Winter": 12 }
+      }
+    }
+  }
+}
+```
+
+### Variables and Usage
+
+#### `name`
+**Type**: `String`
+
+- **Description**: The name of the calendar.
+- **Example Value**: `"Mythic Calendar"`
+- **Usage**: Used as a display name for the calendar system.
+
+---
+
+#### `months`
+**Type**: `Array<Object>`
+
+- **Description**: Defines the months in the calendar year.
+- **Structure**:
+  ```json
+  { "id": Number, "name": String, "days": Number }
+  ```
+- **Fields**:
+  - `id`: Unique identifier for the month.
+  - `name`: Name of the month.
+  - `days`: Number of days in the month.
+- **Example**:
+  ```json
+  [
+    { "id": 1, "name": "Primus", "days": 30 },
+    { "id": 2, "name": "Secundus", "days": 30 }
+  ]
+  ```
+- **Usage**: Determines the structure of the year and is used to calculate dates.
+
+---
+
+#### `daysOfWeek`
+**Type**: `Array<String>`
+
+- **Description**: Defines the days of the week.
+- **Example Value**: `["Day 1", "Day 2", "Day 3"]`
+- **Usage**: Provides names for weekdays, enabling mapping of days within a week.
+
+---
+
+#### `defaultDate`
+**Type**: `String`
+
+- **Description**: The initial date of the calendar system.
+- **Example Value**: `"0001-01-01"`
+- **Usage**: Acts as a reference point for date calculations.
+
+---
+
+#### `startingWeekday`
+**Type**: `String`
+
+- **Description**: The name of the first weekday in the calendar.
+- **Example Value**: `"Day 1"`
+- **Usage**: Determines which day of the week the calendar starts on.
+
+---
+
+#### `dateFormat`
+**Type**: `String`
+
+- **Description**: The format for displaying dates.
+- **Example Value**: `"{day}{ordinal} of {month}, {year}"`
+- **Usage**: Configures how dates are rendered.
+
+---
+
+#### `significantDays`
+**Type**: `Object`
+
+- **Description**: Highlights specific dates with special events or names.
+- **Structure**:
+  ```json
+  "<month>-<day>": String
+  ```
+- **Example**:
+  ```json
+  {
+    "1-1": "New Era Day",
+    "10-30": "Harvest Festival"
+  }
+  ```
+- **Usage**: Used to mark and describe important days.
+
+---
+
+#### `lunarCycle`
+**Type**: `Object`
+
+- **Description**: Defines the phases and duration of lunar cycles.
+- **Structure**:
+  ```json
+  {
+    "<moon_name>": {
+      "name": String,
+      "baselineNewMoon": String,
+      "cycleLength": Number,
+      "phases": Array<Object>
+    }
+  }
+  ```
+- **Fields**:
+  - `name`: Name of the moon.
+  - `baselineNewMoon`: Reference date for the new moon.
+  - `cycleLength`: Length of the lunar cycle in days.
+  - `phases`: Array of phase definitions.
+- **Example**:
+  ```json
+  {
+    "mystara": {
+      "name": "Mystara",
+      "baselineNewMoon": "0001-01-01",
+      "cycleLength": 28,
+      "phases": [
+        { "name": "New Moon", "start": 0, "end": 7 },
+        { "name": "Full Moon", "start": 14, "end": 21 }
+      ]
+    }
+  }
+  ```
+- **Usage**: Tracks moon phases for gameplay or storytelling.
+
+---
+
+#### `climates`
+**Type**: `Object`
+
+- **Description**: Defines seasonal and climate data for regions.
+- **Structure**:
+  ```json
+  {
+    "<region>": {
+      "seasons": Array<String>,
+      "modifiers": Object,
+      "seasonStart": Object
+    }
+  }
+  ```
+- **Fields**:
+  - `seasons`: List of seasons.
+  - `modifiers`: Environmental modifiers (temperature, precipitation, etc.).
+  - `seasonStart`: Month identifiers marking the start of each season.
+- **Example**:
+  ```json
+  {
+    "mythic region": {
+      "seasons": ["Spring", "Summer"],
+      "modifiers": {
+        "temperature": { "Spring": 10, "Summer": 20 }
+      },
+      "seasonStart": { "Spring": 3, "Summer": 6 }
+    }
+  }
+  ```
+- **Usage**: Provides seasonal and environmental context.
+
+*NOTE: Keeping values between -20 and 20 will allow the weather module to perform correctly.*
+
+
+## Event Module
 
 Navigate to the "Events" section in the configuration menu. Add, edit, or remove events as needed. Assign dates for recurring or one-time events.
 
@@ -481,6 +703,8 @@ Yes, that is a workaround to having relationships between quest groups and it *c
 
 ## Updates
 
+#### 2025-01-14
+* **v1.0.3** Allowed for users to add their own custom calanders
 #### 2025-01-13
 * **v1.0.2** Added Krynn (Dragonlance) and Galifar (Eberon) Calanders. also expanded to allow for multiple moons and different cycles. Added the smaller and secondary moons to both Exandria and Grekhawk calander.
 #### 2025-01-10
