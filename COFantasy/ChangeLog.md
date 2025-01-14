@@ -16,6 +16,8 @@
 * Implémentation de la version avancée du drain de force de Dominia.
 
 ### Autres améliorations
+* Possibilité d'avoir des escaliers (ou portails) automatiques.
+* Ajout d'options --finEtat et --finEffet pour les attaques.
 * Prise en compte de decrcAttribute pour les actions montrées.
 * Ajout d'un effet temporaire générique.
 * Les cadavres réanimés sont considérés comme chair à canon du nécromancien s'il possède cette capacité.
