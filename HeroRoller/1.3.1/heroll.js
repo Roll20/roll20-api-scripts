@@ -468,6 +468,8 @@ const HeRoll = (() => {
     // First, identify the sheet as either the original supers (HeroSystem6e) or heroic (HeroSystem6eHeroic).
     let sheet = getAttrByName(charid, 'sheet_name')||"HeroSystem6e";
     
+    // log( JSON.stringify( Campaign().get('sheetName')) ); // Undefined. When/if this works a sheet's ID won't need a custom attribute.
+    
     let attrDefaultTable = {
       "radio_target": -1,
       "OCV": 0,
