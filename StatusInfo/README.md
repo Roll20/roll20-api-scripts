@@ -14,7 +14,7 @@
 ---
 
 ```
-LATEST UPDATE: It now allows you to create and edit conditions, export/import the config, and add/remove/toggle condition(s) to/from token(s), see below.
+LATEST UPDATE: Updated to work with the D&D 2024 sheet.
 ```
 
 StatusInfo works nicely together with [Tokenmod](https://app.roll20.net/forum/post/4225825/script-update-tokenmod-an-interface-to-adjusting-properties-of-a-token-from-a-macro-or-the-chat-area/?pageforid=4225825#post-4225825) and my own [DeathTracker](https://github.com/RobinKuiper/Roll20APIScripts/tree/master/DeathTracker) and [InspirationTracker](https://github.com/RobinKuiper/Roll20APIScripts/tree/master/InspirationTracker) scripts.

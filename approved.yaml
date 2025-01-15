@@ -1283,3 +1283,11 @@ DrD2StatusMarkers:
 SheetDefaults:
   - "SheetDefaults"
   - "Utility"
+
+CalenderData:
+  - "CalenderData"
+  - "Utility"
+
+QuestTracker:
+  - "QuestTracker"
+  - "Utility"
