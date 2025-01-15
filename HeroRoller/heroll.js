@@ -491,23 +491,23 @@ const HeRoll = (() => {
 			
 			switch (attr) {
 				case "radio_target":	translatedAttr = "targetSelection";
-															break;
-				case "OCV": 					translatedAttr = "ocvNet";
-															break;
-				case "ocv_base":			translatedAttr = "ocv";
-															break;
-				case "DCV": 					translatedAttr = "dcvNet";
-															break;
-				case "dcv_base":			translatedAttr = "dcv";
-															break;
-				case "DMCV":					translatedAttr = "dmcvNet";
-															break;
+										break;
+				case "OCV": 			translatedAttr = "ocvNet";
+										break;
+				case "ocv_base":		translatedAttr = "ocv";
+										break;
+				case "DCV": 			translatedAttr = "dcvNet";
+										break;
+				case "dcv_base":		translatedAttr = "dcv";
+										break;
+				case "DMCV":			translatedAttr = "dmcvNet";
+										break;
 				case "dmcv_base": 		translatedAttr = "dmcv";
-															break;
-				case "OMCV":					translatedAttr = "omcvNet";
-															break;
+										break;
+				case "OMCV":			translatedAttr = "omcvNet";
+										break;
 				case "omcv_base": 		translatedAttr = "omcv";
-															break;
+										break;
 			}
 			
 			retValue = getAttrByName(charid, translatedAttr)||defvalue;
@@ -516,37 +516,37 @@ const HeRoll = (() => {
 				// Translate location ID from HS6eH to HS6e.
 				switch (retValue) {
 					case 1: 		retValue = 1;
-											break;
+									break;
 					case 2: 		retValue = 8;
-											break;
+									break;
 					case 3: 		retValue = 9;
-											break;
+									break;
 					case 4: 		retValue = 17;
-											break;
+									break;
 					case 5: 		retValue = 10;
-											break;
+									break;
 					case 6: 		retValue = 11;
-											break;
+									break;
 					case 7: 		retValue = 12;
-											break;
+									break;
 					case 8: 		retValue = 13;
-											break;
+									break;
 					case 9: 		retValue = 14;
-											break;
+									break;
 					case 10:		retValue = 15;
-											break;
+									break;
 					case 11:		retValue = 16;
-											break;
+									break;
 					case 12:		retValue = 3;
-											break;
+									break;
 					case 13:		retValue = 4;
-											break;
+									break;
 					case 14:		retValue = 5;
-											break;
+									break;
 					case 15:		retValue = 6;
-											break;
+									break;
 					case 16:		retValue = 7;
-											break;
+									break;
 					default:		retValue = 1;
 				}
 			}
@@ -574,39 +574,39 @@ const HeRoll = (() => {
 			
 			switch (value) {
 				case 1: 		value = 1;
-										break;
+								break;
 				case 2: 		value = 1;
-										break;
+								break;
 				case 3: 		value = 12;
-										break;
+								break;
 				case 4: 		value = 13;
-										break;
+								break;
 				case 5: 		value = 14;
-										break;
+								break;
 				case 6: 		value = 15;
-										break;
+								break;
 				case 7: 		value = 16;
-										break;
+								break;
 				case 8: 		value = 2;
-										break;
+								break;
 				case 9: 		value = 3;
-										break;
+								break;
 				case 10:		value = 5;
-										break;
+								break;
 				case 11:		value = 6;
-										break;
+								break;
 				case 12:		value = 7;
-										break;
+								break;
 				case 13:		value = 8;
-										break;
+								break;
 				case 14:		value = 9;
-										break;
+								break;
 				case 15:		value = 10;
-										break;
+								break;
 				case 16:		value = 11;
-										break;
+								break;
 				case 17:		value = 4;
-										break;
+								break;
 				default:		value = 1;
 			}
 		}
@@ -1046,7 +1046,7 @@ const HeRoll = (() => {
 			__DIEPOOL_TALL_VIS__: "block",						// whether the die pool in the tall format should be visible (block for tall; none for sidecar)
 			__RES_MULT_VIS__: "none",							// visibility for the Results Bar (with Location), used for hit-location multiples (block; none)
 			__BODY_MULT__: "1",									// BODY multiplier (multiplied against the BODY remaining after defenses are applied)
-			__STUN_MULT__: "1",									// STUN multiplier (multiplied agianst the STUN remaining after defenses) -- could be NStun if it is a Normal mechanic attack
+			__STUN_MULT__: "1",									// STUN multiplier (multiplied against the STUN remaining after defenses) -- could be NStun if it is a Normal mechanic attack
 			__RES_BODY__: "",									// BODY rolled on the dice
 			__RES_STUN__: "",									// STUN rolled on the dice
 			__RES_KB__: "",										// KB done by attack
