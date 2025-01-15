@@ -2366,7 +2366,7 @@ var WildShape = WildShape || (function() {
         log(WS_API.NAME + ' v' + WS_API.VERSION + " Ready! WildUtils v" + UTILS.VERSION);
 
         // Chat message only appears on debug mode.
-        UTILS.debugChat("API v" + WS_API.VERSION + " Ready! command: " + WS_API.CMD.ROOT
+        UTILS.debugChat("API v" + WS_API.VERSION + " Ready! command: " + WS_API.CMD.ROOT);
     }
     
     return {
