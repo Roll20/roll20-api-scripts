@@ -4480,7 +4480,6 @@ var QuestTracker = QuestTracker || (function () {
 			switch (action) {
 				case 'add':
 					if (errorCheck(65, 'exists', quest,'quest')) return;
-					log(quest)
 					if (errorCheck(66, 'exists', QUEST_TRACKER_globalQuestData[quest],`QUEST_TRACKER_globalQuestData[${quest}]`)) return;
 					switch (type) {
 						case 'mutuallyexclusive':
