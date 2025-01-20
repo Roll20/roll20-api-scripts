@@ -254,7 +254,8 @@ Quests are stored in a hierarchical JSON format, supporting complex relationship
 * **Description:** A short description of the quest; it will be the tooltip on the Quest Tree page.
 * **Status:** The status of the quest, this is stored in a rollable table as a 'weight'.
 * **Hidden:** This quest is completely hidden from the Players when displayed on the page, the relasionships of this quest are also hidden. If you do not use the Quest Tree page there no difference betwene a hidden quest or a visible one (e.g. rumours from hidden quests are still shown), by default quests start out as hidden.
-* **Quest Group:** This is to help you organise your quests better, relasionships can only be formed by quests within their own quest group.
+* **Quest Group:** This is to help you organise your quests better, relationships can only be formed by quests within their own quest group.
+* **Linked Handout:** Either by adding the Handout ID manually, or by choosing Auto you can link Quest Handouts to the Quests. (Handouts are matched on the Quest name vs the Handout name. There is some wiggle room as it uses Levenshtein Distance as a matching mechanic, if one is not found it will create a handout)
 * **AutoAdvance:** Simply add a Date (YYYY-MM-DD) into one of the status fields and when that date occurs the quest will autoadvance to that specific status; it will then clear this field. There are no checks to make sure things go in the correct order it is up to you to maintain your own quests.
 * **Icon:** (potentially a future UI implimentation) This is actually a hidden field as I have currently not built a UI for it, but on the rollable table you can upload an icon for the quest which will appear as a token on the Quest Tree Page. This is important as it will allow you to use tokenmod commands to trigger a quest change in state using the questID in the GM Notes field of said token.
 
@@ -703,6 +704,12 @@ Yes, that is a workaround to having relationships between quest groups and it *c
 
 ## Updates
 
+#### 2025-xx-xx
+* **v1.1** Release of v1.1; significant changes to quest interaction and display.
+  * Added the ability to disable quests, disabled quests and all their 'full children' quests will no longer show on the Quest Tree Builder Page 
+  * Quests can now be linked to handouts
+  * GMnote menu expanded to include link to handout
+  * Quest Triggers significantly expanded so quests now interact with each other much more.
 #### 2025-01-14
 * **v1.0.3** Allowed for users to add their own custom calanders
 #### 2025-01-13
