@@ -702,47 +702,50 @@ Yes, you can carefully edit the qt-quest-groups rollable table, although this is
 ### I've noticed you can create quest relationships and then move them into separate quest groups, this results in weirdness on the Quest Tree Page
 Yes, that is a workaround to having relationships between quest groups and it *can* result in a very pretty Quest Tree Page, but without a lot of trial and error the Quest Tree Page is not designed to work with this in mind. I left this in as the only other option would be to wipe all relasionships when you add a quest to a quest group which would cause more frustration.
 
+### How does 'auto' work when linking quests to handouts?
+This actually works using a 'Damerau–Levenshtein distance' compare. It essentially tries to match the Quest Name with a handout name and will take more 'fuzzy' matches; essentially allowing for a self correction of typos... to a certain extent. if it fails it will create a blank handout and automatically link to it.
+
+### Can you link multiple quests to the same Handout?
+
+Yes, there is no restriction on this should you wish to combine handouts.
+
+
+
 ## Updates
 
 #### 2025-xx-xx
-* **v1.1** Release of v1.1; significant changes to quest interaction and display.
+* Release of **v1.1**; significant changes to quest interaction and display.
   * Added the ability to disable quests, disabled quests and all their 'full children' quests will no longer show on the Quest Tree Builder Page 
   * Quests can now be linked to handouts
   * GMnote menu expanded to include link to handout
   * Quest Triggers significantly expanded so quests now interact with each other much more.
-#### 2025-01-14
-* **v1.0.3** Allowed for users to add their own custom calanders
-#### 2025-01-13
-* **v1.0.2** Added Krynn (Dragonlance) and Galifar (Eberon) Calanders. also expanded to allow for multiple moons and different cycles. Added the smaller and secondary moons to both Exandria and Grekhawk calander.
-#### 2025-01-10
-* **v1.0.1** Various small fixes. Made Compatable with Supernotes Mod
-#### 2025-01-09
-* **v1.0** Official Release
-#### 2025-01-08
-* **v0.9.2** Fixed quest dropdown to deal with single quests without a dropdown. Also an ungrouped quest which get assigned a relasionship to a quest within a quest group automatically now gets assigned to that quest group.
-* **v0.9.1.7.2** Adjusted font and rectangle size on quest tree page
-#### 2025-01-07
-* **v0.9.1.7.1** Swapped DELETE for CONFIRM in a popup
-* **v0.9.1.7** Removed JumpGate Toggle and where it was used (paths fixed now), kept variable in case it is needed later.
-* **v0.9.1.6** If a rollable table needs to be created, it is now hidden from players.
-* **v0.9.1.5** Added Switches to toggle between Imperial or Metric Weather Measurements.
-* **v0.9.1.4** Fixed Allias Date Advance to show cut down description.
-#### 2025-01-06
-* **v0.9.1.3** Fixed Climate modifiers and adjusted bellcurve
-#### 2025-01-03
-* **v0.9.1.2** Disabled Quest Relationship buttons when no quests available.
-* **v0.9.1.1** Fixed Quest Group Dropdown Menu
-* **v0.9.1** Adjusted climate values and streamlined climate values
-#### 2025-01-02
-* **v0.9.0.1** Fixed rumour filtering issue
-#### 2024-12-19
-* **v0.9** Initial Upload
+  * 
+
+### 2025-01-14 Stable Release V1.0.3
+
+ * **v1.0.3** Allowed for users to add their own custom calanders (2025-01-14)
+ * **v1.0.2** Added Krynn (Dragonlance) and Galifar (Eberon) Calanders. also expanded to allow for multiple moons and different cycles. Added the smaller and secondary moons to both Exandria and Grekhawk calander. (2025-01-13)
+ * **v1.0.1** Various small fixes. Made Compatable with Supernotes Mod (2025-01-10)
+ * **v1.0** Official Release (2025-01-09)
+ * **v0.9.2** Fixed quest dropdown to deal with single quests without a dropdown. Also an ungrouped quest which get assigned a relasionship to a quest within a quest group automatically now gets assigned to that quest group. (2025-01-08)
+ * **v0.9.1.7.2** Adjusted font and rectangle size on quest tree page
+ * **v0.9.1.7.1** Swapped DELETE for CONFIRM in a popup (2025-01-07)
+ * **v0.9.1.7** Removed JumpGate Toggle and where it was used (paths fixed now), kept variable in case it is needed later. (2025-01-07)
+* **v0.9.1.6** If a rollable table needs to be created, it is now hidden from players. (2025-01-07)
+ * **v0.9.1.5** Added Switches to toggle between Imperial or Metric Weather Measurements. (2025-01-07)
+* **v0.9.1.4** Fixed Allias Date Advance to show cut down description. (2025-01-07)
+* **v0.9.1.3** Fixed Climate modifiers and adjusted bellcurve (2025-01-06)
+* **v0.9.1.2** Disabled Quest Relationship buttons when no quests available. (2025-01-03)
+* **v0.9.1.1** Fixed Quest Group Dropdown Menu (2025-01-03)
+* **v0.9.1** Adjusted climate values and streamlined climate values (2025-01-03)
+* **v0.9.0.1** Fixed rumour filtering issue (2025-01-02)
+* **v0.9** Initial Upload (2024-12-19)
 
 ## Contributing
 
-Contributions are welcome! Please submit pull requests or report issues on the GitHub repository:
+Contributions are welcome! Please report issues on the GitHub repository and tag me @boli32
 
-[GitHub Repository](https://github.com/boli32/QuestTracker)
+[GitHub Repository](https://github.com/Roll20/roll20-api-scripts/issues)
 
 ## Credits
 
