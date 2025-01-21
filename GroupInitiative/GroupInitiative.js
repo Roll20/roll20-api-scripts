@@ -10,7 +10,7 @@ const GroupInitiative = (() => { // eslint-disable-line no-unused-vars
   const scriptName = "GroupInitiative";
   const version = '0.9.41';
   API_Meta.GroupInitiative.version = version;
-  const lastUpdate = 1737313521;
+  const lastUpdate = 1737482748;
   const schemaVersion = 1.3;
 
   const isString = (s)=>'string'===typeof s || s instanceof String;
@@ -1394,7 +1394,7 @@ const makeRollsForIDs = async (ids,options={}) => {
       g.roll.push(bonus);
 
       if(options.manualBonus){
-        g.roll.push( options.manualBonus );
+        g.roll.push( `${options.manualBonus}`.trim() );
       }
       g.label = rolladj.label||(rolladj.hasOwnProperty('index') ? `Rule #${rolladj.index+1}` : `No Matching Rule`);
       g.formula = initFunc(g,rolladj);
