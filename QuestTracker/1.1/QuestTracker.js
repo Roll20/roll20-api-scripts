@@ -13,7 +13,7 @@ var QuestTracker = QuestTracker || (function () {
 			if (state.CalenderData.CALENDARS) CALENDARS = state.CalenderData.CALENDARS;
 			if (state.CalenderData.WEATHER) WEATHER = state.CalenderData.WEATHER;
 		}
-		Object.assign(CALENDARS, state.QUEST_TRACKER.calendar);
+		if (state.QUEST_TRACKER?.calendar) Object.assign(CALENDARS, state.QUEST_TRACKER.calendar);
 		return { CALENDARS, WEATHER };
 	};
 	const { CALENDARS, WEATHER } = getCalendarAndWeatherData();
@@ -42,6 +42,7 @@ var QuestTracker = QuestTracker || (function () {
 	let QUEST_TRACKER_Events = {};
 	let QUEST_TRACKER_Calendar = {};
 	let QUEST_TRACKER_Triggers = {};
+	let QUEST_TRACKER_TriggerConversion = false;
 	let QUEST_TRACKER_QuestHandoutName = "QuestTracker Quests";
 	let QUEST_TRACKER_RumourHandoutName = "QuestTracker Rumours";
 	let QUEST_TRACKER_EventHandoutName = "QuestTracker Events";
@@ -65,6 +66,8 @@ var QuestTracker = QuestTracker || (function () {
 	let QUEST_TRACKER_Location = 'northern temperate';
 	let QUEST_TRACKER_WeatherLocation = 'plains';
 	let QUEST_TRACKER_CURRENT_WEATHER = "";
+	let QUEST_TRACKER_FILTER = {};
+	let QUEST_TRACKER_FILTER_Visbility = false;
 	let QUEST_TRACKER_imperialMeasurements = {
 		temperature: false,
 		precipitation: false,
@@ -109,12 +112,15 @@ var QuestTracker = QuestTracker || (function () {
 		QUEST_TRACKER_Events = state.QUEST_TRACKER.events || {};
 		QUEST_TRACKER_Calendar = state.QUEST_TRACKER.calendar || {};
 		QUEST_TRACKER_Triggers = state.QUEST_TRACKER.triggers || {};
+		QUEST_TRACKER_TriggerConversion = state.QUEST_TRACKER.triggerConversion || false;
 		QUEST_TRACKER_calenderType = state.QUEST_TRACKER.calenderType || 'gregorian';
 		QUEST_TRACKER_currentDate = state.QUEST_TRACKER.currentDate || CALENDARS[QUEST_TRACKER_calenderType]?.defaultDate
 		QUEST_TRACKER_defaultDate = state.QUEST_TRACKER.defaultDate || CALENDARS[QUEST_TRACKER_calenderType]?.defaultDate
 		QUEST_TRACKER_Location = state.QUEST_TRACKER.location || 'northern temperate';
 		QUEST_TRACKER_WeatherLocation = state.QUEST_TRACKER.weatherLocation || 'plains';
 		QUEST_TRACKER_currentWeekdayName = state.QUEST_TRACKER.currentWeekdayName || 'Thursday';
+		QUEST_TRACKER_FILTER = state.QUEST_TRACKER.filter || {};
+		QUEST_TRACKER_FILTER_Visbility = state.QUEST_TRACKER.filterVisibility || false;
 		QUEST_TRACKER_WEATHER_TRENDS = state.QUEST_TRACKER.weatherTrends || {
 			dry: 0,
 			wet: 0,
@@ -159,6 +165,7 @@ var QuestTracker = QuestTracker || (function () {
 		state.QUEST_TRACKER.events = QUEST_TRACKER_Events;
 		state.QUEST_TRACKER.calendar = QUEST_TRACKER_Calendar;
 		state.QUEST_TRACKER.triggers = QUEST_TRACKER_Triggers;
+		state.QUEST_TRACKER.triggerConversion = QUEST_TRACKER_TriggerConversion;
 		state.QUEST_TRACKER.currentDate = QUEST_TRACKER_currentDate;
 		state.QUEST_TRACKER.defaultDate = QUEST_TRACKER_defaultDate;
 		state.QUEST_TRACKER.calenderType = QUEST_TRACKER_calenderType;
@@ -173,6 +180,8 @@ var QuestTracker = QuestTracker || (function () {
 		state.QUEST_TRACKER.weather = QUEST_TRACKER_WEATHER;
 		state.QUEST_TRACKER.imperialMeasurements = QUEST_TRACKER_imperialMeasurements;
 		state.QUEST_TRACKER.TreeObjRef = QUEST_TRACKER_TreeObjRef;
+		state.QUEST_TRACKER.filter = QUEST_TRACKER_FILTER;
+		state.QUEST_TRACKER.filterVisibility = QUEST_TRACKER_FILTER_Visbility;
 	};
 	const initializeQuestTrackerState = (forced = false) => {
 		if (!state.QUEST_TRACKER || Object.keys(state.QUEST_TRACKER).length === 0 || forced) {
@@ -190,6 +199,7 @@ var QuestTracker = QuestTracker || (function () {
 				events: {},
 				calendar: {},
 				triggers: {},
+				triggerConversion: false,
 				calenderType: 'gregorian',
 				currentDate: CALENDARS[QUEST_TRACKER_calenderType]?.defaultDate,
 				defaultDate: CALENDARS[QUEST_TRACKER_calenderType]?.defaultDate,
@@ -215,7 +225,9 @@ var QuestTracker = QuestTracker || (function () {
 					precipitation: false,
 					wind: true,
 					visibility: true
-				}
+				},
+				filter: {},
+				filterVisibility: false
 			};
 			if (!findObjs({ type: 'rollabletable', name: QUEST_TRACKER_ROLLABLETABLE_QUESTS })[0]) {
 				const tableQuests = createObj('rollabletable', { name: QUEST_TRACKER_ROLLABLETABLE_QUESTS });
@@ -278,7 +290,7 @@ var QuestTracker = QuestTracker || (function () {
 			}
 		};
 		const sendGMMessage = (message) => {
-			sendChat('Quest Tracker', `/w gm ${message}`);
+			sendChat('Quest Tracker', `/w gm ${message}`, null, { noarchive: true });
 		};
 		const sendMessage = (message) => {
 			sendChat('Quest Tracker', `${message}`);
@@ -483,6 +495,10 @@ var QuestTracker = QuestTracker || (function () {
 			QUEST_TRACKER_imperialMeasurements[type] = (value === 'true');
 			saveQuestTrackerData();
 		};
+		const toggleFilterVisibility = (value) => {
+			QUEST_TRACKER_FILTER_Visbility = (value === 'true');
+			saveQuestTrackerData();
+		};
 		const sanitizeString = (input) => {
 			if (typeof input !== 'string') {
 				Utils.sendGMMessage('Error: Expected a string input.');
@@ -512,6 +528,7 @@ var QuestTracker = QuestTracker || (function () {
 			toggleJumpGate,
 			toggleVerboseError,
 			toggleImperial,
+			toggleFilterVisibility,
 			sanitizeString,
 			inputAlias
 		};
@@ -665,6 +682,59 @@ var QuestTracker = QuestTracker || (function () {
 			fullImportProcess
 		};
 	})(); 
+	const Triggers = (() => {
+		const H = {
+			generateNewTriggerId: () => {
+				const triggers = QUEST_TRACKER_Triggers;
+				const allTriggerIds = [];
+				Object.values(triggers.quests).forEach(questTriggers => {
+					allTriggerIds.push(...Object.keys(questTriggers));
+				});
+				Object.values(triggers.dates).forEach(dateTriggers => {
+					allTriggerIds.push(...Object.keys(dateTriggers));
+				});
+				const highestTriggerNumber = allTriggerIds.reduce((max, id) => {
+					const match = id.match(/^trigger_(\d+)$/);
+					if (match) {
+						const number = parseInt(match[1], 10);
+						return number > max ? number : max;
+					}
+					return max;
+				}, 0);
+				const newTriggerNumber = highestTriggerNumber + 1;
+				return `trigger_${newTriggerNumber}`;
+			}
+		};
+		const convertAutoAdvanceToTriggers = () => {
+			if (QUEST_TRACKER_TriggerConversion) return;
+			let triggersConverted = false;
+			if (!QUEST_TRACKER_Triggers.quests) QUEST_TRACKER_Triggers.quests = {};
+			if (!QUEST_TRACKER_Triggers.dates) QUEST_TRACKER_Triggers.dates = {};
+			for (const [questId, questData] of Object.entries(QUEST_TRACKER_QuestData)) {
+				if (questData.autoadvance) {
+					for (const [status, date] of Object.entries(questData.autoadvance)) {
+						const newTriggerId = generateNewTriggerId();
+						if (!QUEST_TRACKER_Triggers.dates[date]) QUEST_TRACKER_Triggers.dates[date] = {};
+						QUEST_TRACKER_Triggers.dates[date][newTriggerId] = {
+							quest_id: questId,
+							change: {
+								type: "status",
+								value: status
+							}
+						};
+					}
+					delete questData.autoadvance;
+					triggersConverted = true;
+				}
+			}
+			QUEST_TRACKER_TriggerConversion = true;
+			if (triggersConverted) errorCheck(176, 'msg', null,`Autoadvance converted to Triggers (v1.1 update), please see the ![README](https://github.com/Roll20/roll20-api-scripts/blob/master/QuestTracker/README.md) for more details.`);
+			saveQuestTrackerData();
+		};
+		return {
+			convertAutoAdvanceToTriggers
+		};
+	})();
 	const Quest = (() => {
 		const H = {
 			traverseConditions: (conditions, callback) => {
@@ -3100,7 +3170,7 @@ var QuestTracker = QuestTracker || (function () {
 	const Menu = (() => {
 		const styles = {
 			menu: 'background-color: #fff; border: 1px solid #000; padding: 5px; border-radius: 5px; overflow: hidden;',
-			button: 'background-color: #000; border: 1px solid #292929 ; border-radius: 3px; padding: 2px; color: #fff; text-align: center;',
+			button: 'margin-top: 1px; display: inline-block; background-color: #000; border: 1px solid #292929 ; border-radius: 3px; padding: 2px; color: #fff; text-align: center;',
 			buttonDisabled: 'pointer-events: none; background-color: #666; border: 1px solid #292929; border-radius: 3px; padding: 2px; text-align: center; color: #000000;',
 			smallButton: 'display: inline-block; width: 12px; height:16px;',
 			smallButtonMagnifier: 'display: inline-block; width: 16px; height:16px; background-color:#fff;',
@@ -3121,7 +3191,9 @@ var QuestTracker = QuestTracker || (function () {
 			overflow: 'overflow: hidden; margin:1px',
 			rumour: 'text-overflow: ellipsis;overflow: hidden;width: 165px;display: block;word-break: break-all;white-space: nowrap;',
 			link: 'color: #007bff; text-decoration: underline; cursor: pointer;',
-			questlink: 'color: #000000; text-decoration: none; cursor: pointer; background-color: #FFFFFF;',
+			questlink: 'color: #007bff; text-decoration: none; cursor: pointer; background-color: #FFFFFF;',
+			filterlink: 'color: #007bff; text-decoration: none; cursor: pointer; background-color: #FFFFFF; padding:0px;',
+			paddedfilterlink: 'color: #007bff; text-decoration: none; cursor: pointer; background-color: #FFFFFF; padding:5px;',
 			treeStyle: 'display: inline-block; position: relative; text-align: center; margin-top: 0px;',
 			questBox50: 'display: inline-block; width: 15px; height: 6px; padding: 5px; border: 1px solid #000; border-radius: 5px; background-color: #f5f5f5; text-align: center; position: relative; margin-right: 20px;',
 			verticalLineStyle: 'position: absolute; width: 2px; background-color: black;',
@@ -3193,77 +3265,6 @@ var QuestTracker = QuestTracker || (function () {
 				}
 				menu += `</ul>`;
 				return menu;
-			},
-			generateQuestList: (groupName, quests) => {
-				let menu = `<h4 style="margin-top: 20px;">${groupName} Quests</h4>`;
-				Object.keys(quests).sort((a, b) => a - b).forEach(weight => {
-					menu += `<h5>${statusMapping[weight]}</h5><ul style="${styles.list}">`;
-					quests[weight].forEach(quest => {
-						let questData = QUEST_TRACKER_globalQuestData[quest.id];
-						if (questData) {
-							questData = Object.keys(questData).reduce((acc, key) => {
-								acc[key.toLowerCase()] = questData[key];
-								return acc;
-							}, {});
-							let disabledStatus = (questData.disabled ?? false) ? ` ${styles.strikethrough}` : ``;
-							if (questData.name) {
-								menu += `
-								<li style="${styles.overflow}">
-									<span style="${styles.floatLeft}${disabledStatus}"><small>${questData.name}</small></span>
-									<span style="${styles.floatRight}">
-										<a style="${styles.button}" href="!qt-menu action=quest|id=${quest.id}">Inspect</a>
-										<a style="${styles.button} ${styles.smallButton}" href="!qt-quest action=removequest|id=${quest.id}|confirmation=?{Type DELETE into this field to confirm deletion of this quest|}">-</a>
-									</span>
-								</li>`;
-							} else {
-								errorCheck(149, 'msg', handout,'Quest data for "${quest.id}" is missing or incomplete.')
-							}
-						}
-					});
-					menu += `</ul>`;
-				});
-				return menu;
-			},
-			formatAutocompleteListWithDates: (fieldName, questId, statusMapping) => {
-				let questData = QUEST_TRACKER_globalQuestData[questId];
-				let fieldData = questData[fieldName] || {};
-				let isDropdownDisabled = Object.keys(statusMapping).length === 0;
-				let buttonStyle = isDropdownDisabled ? `${styles.buttonDisabled}` : `${styles.button}`;
-				let spanOrAnchor = isDropdownDisabled ? `span` : `a`;
-				let fieldDataLowercaseKeys = Object.keys(fieldData).reduce((acc, key) => {
-					acc[key.toLowerCase()] = fieldData[key];
-					return acc;
-				}, {});
-				let tableRows = Object.keys(statusMapping).map(statusKey => {
-					let statusName = statusMapping[statusKey];
-					let dateValue = fieldDataLowercaseKeys[statusName.toLowerCase()] || "No Date";
-					let changeDateContent = `?{Change Date for ${statusName}|${dateValue}}`;
-					if (fieldDataLowercaseKeys[statusName.toLowerCase()]) {
-						return `
-							<tr>
-								<td>${statusName}<br><small>${dateValue}</small></td>
-								<td style="${styles.smallButtonContainer}">
-									<${spanOrAnchor} style="${buttonStyle} ${styles.smallButton}" href="!qt-quest action=update|field=${fieldName}|current=${questId}|old=${statusName}|new=${changeDateContent}">c</${spanOrAnchor}>
-								</td>
-								<td style="${styles.smallButtonContainer}">
-									<a style="${styles.button} ${styles.smallButton}" href="!qt-quest action=remove|field=${fieldName}|current=${questId}|old=${statusName}|new=${dateValue}">-</a>
-								</td>
-							</tr>`;
-					} else {
-						return `
-							<tr>
-								<td>${statusName}<br><small>${dateValue}</small></td>
-								<td colspan="2" style="${styles.smallButtonContainer}">
-									<${spanOrAnchor} style="${buttonStyle} ${styles.smallButton}" href="!qt-quest action=add|field=${fieldName}|current=${questId}|old=${statusName}|new=?{Add Date for ${statusName}}">+</${spanOrAnchor}>
-								</td>
-							</tr>`;
-					}
-				}).join('');
-				return `
-					<h4 style="${styles.bottomBorder} ${styles.topMargin}">${fieldName.charAt(0).toUpperCase() + fieldName.slice(1)}</h4><br>
-					<table style="width:100%;">
-						${tableRows}
-					</table>`;
 			},
 			calculateStartingGroupNum: (conditions, isInLogicGroup = false) => {
 				let count = 0;
@@ -3595,7 +3596,7 @@ var QuestTracker = QuestTracker || (function () {
 			displayQuestHandout: (questId) => {
 				let quest = QUEST_TRACKER_globalQuestData[questId];
 				if (errorCheck(159, 'exists', quest, `quest`)) return;
-				let html = `<h4 style="${styles.bottomBorder} ${styles.topMargin}">Linked Handout</h4><br>`;
+				let html = `<h4 style="${styles.bottomBorder} ${styles.topMargin}">Linked Handout</h4>`;
 				let linkHandoutURL = `!qt-quest action=linkhandout|current=${questId}|key=?{How to Link|Auto Link,AUTO|Manual Link,?{Key&#125;`;
 				if (!quest.handout) {
 					html += `
@@ -3618,6 +3619,166 @@ var QuestTracker = QuestTracker || (function () {
 					</span>`;
 				}
 				return html;
+			},
+			applyFilter: (filter, questData) => {
+				if (!filter || Object.keys(filter).length === 0) return true;
+				if (!questData) return false;
+
+				return Object.entries(filter).every(([key, value]) => {
+					if (key === 'group') {
+						if (value === undefined || (Array.isArray(value) && value.length === 0)) return true;
+						if (Array.isArray(value)) return value.map(String).includes(String(questData.group));
+						return false;
+					} else if (['handout', 'disabled', 'hidden'].includes(key)) {
+						if (value === undefined) return true;
+						if (value === true) return !!questData[key];
+						if (value === false) return !questData[key];
+					} else if (Array.isArray(value)) {
+						return value.includes(questData[key]);
+					} else if (typeof value === 'boolean') {
+						return questData[key] === value;
+					} else {
+						return `${questData[key]}` === `${value}`;
+					}
+				});
+			},
+			renderQuestList: (quests, groupBy) => {
+				let menu = '';
+				const groupedQuests = groupBy
+					? quests.reduce((acc, quest) => {
+						let groupKey;
+						if (groupBy === 'handout') {
+							groupKey = quest.handout ? 'Linked Handout' : 'No Handout Linked';
+						} else if (groupBy === 'disabled') {
+							groupKey = quest.disabled === true || quest.disabled === 'true' ? 'Disabled' : 'Enabled';
+						} else if (groupBy === 'visibility') {
+							groupKey = quest.visibility === true || quest.visibility === 'true' ? 'Hidden' : 'Visible';
+						} else if (groupBy === 'group') {
+							groupKey = H.getQuestGroupNameByWeight(quest.group) || 'Ungrouped';
+						} else {
+							groupKey = quest[groupBy] || 'Ungrouped';
+						}
+						if (!acc[groupKey]) acc[groupKey] = [];
+						acc[groupKey].push(quest);
+						return acc;
+					  }, {})
+					: { All: quests };
+				Object.keys(groupedQuests).forEach(groupKey => {
+					menu += groupBy ? `<h4>${groupKey}</h4>` : '';
+					const sortedQuests = groupedQuests[groupKey].sort((a, b) => {
+						const nameA = (a.name || '').toLowerCase();
+						const nameB = (b.name || '').toLowerCase();
+						return nameA.localeCompare(nameB);
+					});
+					menu += '<ul>';
+					sortedQuests.forEach(quest => {
+						menu += `
+							<li style="${styles.overflow}">
+								<span style="${styles.floatLeft}"><small>${quest.name || 'Unnamed Quest'}</small></span>
+								<span style="${styles.floatRight}">
+									<a style="${styles.button}" href="!qt-menu action=quest|id=${quest.id}">Inspect</a>
+									<a style="${styles.button} ${styles.smallButton}" href="!qt-quest action=removequest|id=${quest.id}|confirmation=?{Type DELETE into this field to confirm deletion of this quest|}">-</a>
+								</span>
+							</li>`;
+					});
+					menu += '</ul>';
+				});
+				return menu;
+			},
+			generateFilterLinks: (filterKey, filterValue, label) => {
+				if (filterValue === true || filterValue === false) {
+					const displayValue = filterValue ? 'True' : 'False';
+					const toggleValue = filterValue ? 'false' : 'true';
+					return `
+						<li>${label} [<small>${displayValue}</small>]
+							<small>
+								<a style="${styles.filterlink}" href="!qt-filter action=modify|key=${filterKey}|value=${toggleValue}">Change</a>
+								<a style="${styles.filterlink}" href="!qt-filter action=modify|key=${filterKey}|value=">Clear</a>
+							</small>
+						</li>`;
+				} else {
+					return `
+						<li>${label}
+							<small>
+								<a style="${styles.filterlink}" href="!qt-filter action=modify|key=${filterKey}|value=true">Show</a>
+								<a style="${styles.filterlink}" href="!qt-filter action=modify|key=${filterKey}|value=false">Hide</a>
+							</small>
+						</li>`;
+				}
+			},
+			buildGroupByDropdown: (currentGroupBy) => {
+				const options = [
+					{ label: 'Group', value: 'group' },
+					{ label: 'Visibility', value: 'visibility' },
+					{ label: 'Handout', value: 'handout' },
+					{ label: 'Disabled', value: 'disabled' }
+				];
+				return options
+					.filter(option => option.value !== currentGroupBy)
+					.map(option => `|${option.label},${option.value}`)
+					.join('');
+			},
+			showFilterMenu: () => {
+				const questGroupsTable = findObjs({ type: 'rollabletable', name: QUEST_TRACKER_ROLLABLETABLE_QUESTGROUPS })[0];
+				if (errorCheck(171, 'exists', questGroupsTable, 'questGroupsTable')) return;
+				const questGroups = findObjs({ type: 'tableitem', rollabletableid: questGroupsTable.id }) || [];
+				const filteredGroups = Array.isArray(QUEST_TRACKER_FILTER.filter?.group)
+					? QUEST_TRACKER_FILTER.filter.group
+					: [];
+				let groupList = `
+					<br><strong>Quest Groups</strong>
+					<ul>
+					${!filteredGroups || filteredGroups.length === 0 ? '<small>All quest groups currently visible</small>' : ''}
+				`;
+				groupList += questGroups
+					.map(group => {
+						const groupName = group.get('name');
+						const groupWeight = parseInt(group.get('weight'), 10);
+						const isFiltered = Array.isArray(filteredGroups) && filteredGroups.includes(groupWeight);
+						const action = isFiltered ? 'remove' : 'add';
+						const actionText = isFiltered ? 'hide' : 'show';
+						return `
+							<li>${groupName}
+								<small>
+									<a style="${styles.filterlink}" href="!qt-filter action=${action}|key=group|value=${groupWeight}">${actionText}</a>
+								</small>
+							</li>`;
+					})
+					.join('');
+				groupList += `</ul>`;
+				const hasFilters = Object.keys(QUEST_TRACKER_FILTER.filter || {}).length > 0 || QUEST_TRACKER_FILTER.groupBy;
+				const filterDisabled = QUEST_TRACKER_FILTER.filter?.disabled;
+				const filterHidden = QUEST_TRACKER_FILTER.filter?.hidden;
+				const filterHandout = QUEST_TRACKER_FILTER.filter?.handout;
+				const currentGroupBy = QUEST_TRACKER_FILTER.groupBy || null;
+				const groupByDropdown = H.buildGroupByDropdown(currentGroupBy);
+				let menu = `
+					<div style="${styles.menu}">
+						<span style="${styles.floatRight}">
+							<a style="${styles.paddedfilterlink}" href="!qt-filter action=togglevisibility|value=${QUEST_TRACKER_FILTER_Visbility === true ? 'false' : 'true'}">${QUEST_TRACKER_FILTER_Visbility === true ? 'Hide' : 'Show'}</a>
+							${hasFilters ? `<a style="${styles.paddedfilterlink}" href="!qt-filter action=clear">Clear</a>` : ''}
+						</span>
+						<h3>Filters</h3>
+				`;
+				if (QUEST_TRACKER_FILTER_Visbility) {
+					menu += `
+						<ul>
+							${!Object.keys(QUEST_TRACKER_FILTER.filter || {}).length ? '<small>No filters applied</small>' : ''}
+							${H.generateFilterLinks('disabled', filterDisabled, 'Disabled')}
+							${H.generateFilterLinks('hidden', filterHidden, 'Hidden')}
+							${H.generateFilterLinks('handout', filterHandout, 'Handout')}
+						</ul>
+						${groupList}
+						<br><strong>Group by</strong>
+						<small>
+							<a style="${styles.filterlink}" href="!qt-filter action=modify|key=groupBy|value=?{Choose${groupByDropdown}}">${currentGroupBy || 'add'}</a>
+							${currentGroupBy ? ` | <a style="${styles.filterlink}" href="!qt-filter action=resetGrouping|key=groupBy|value=">Clear</a>` : ''}
+						</small>
+					`;
+				}
+				menu += `</div>`;
+				menu = menu.replace(/[\r\n]/g, '');
+				return menu;
 			}
 		};
 		const buildWeather = (isMenu = false, isHome = false) => {
@@ -3977,39 +4138,31 @@ var QuestTracker = QuestTracker || (function () {
 			Utils.sendGMMessage(menu);
 		};
 		const showAllQuests = () => {
+			QUEST_TRACKER_FILTER.filter = QUEST_TRACKER_FILTER.filter || {};
+			QUEST_TRACKER_FILTER.groupBy = QUEST_TRACKER_FILTER.groupBy || null;
 			let menu = `<div style="${styles.menu}"><h3 style="margin-bottom: 10px;">All Quests</h3>`;
+			menu += H.showFilterMenu() + "<br>";
 			if (Object.keys(QUEST_TRACKER_globalQuestData).length === 0) {
 				menu += `
-					<p>There doesn't seem to be any Quests, you need to create a quest or Import from the Handouts.</p>
+					<p>There doesn't seem to be any Quests. You need to create a quest or Import from the Handouts.</p>
 				`;
 			} else {
-				let groupedQuestsByGroup = {};
-				QUEST_TRACKER_globalQuestArray.forEach(quest => {
-					let questData = QUEST_TRACKER_globalQuestData[quest.id];
-					if (questData) {
-						questData = Object.keys(questData).reduce((acc, key) => {
-							acc[key.toLowerCase()] = questData[key];
-							return acc;
-						}, {});
-						const group = H.getQuestGroupNameByWeight(questData.group) || 'Ungrouped';
-						const visibilityGroup = questData.hidden ? 'hidden' : 'visible';
-						if (!groupedQuestsByGroup[group]) {
-							groupedQuestsByGroup[group] = {
-								visible: {},
-								hidden: {}
-							};
+				const filteredQuests = QUEST_TRACKER_globalQuestArray
+					.map(quest => {
+						const questData = QUEST_TRACKER_globalQuestData[quest.id];
+						if (questData) {
+							const normalizedData = Object.keys(questData).reduce((acc, key) => {
+								acc[key.toLowerCase()] = questData[key];
+								return acc;
+							}, {});
+							return H.applyFilter(QUEST_TRACKER_FILTER.filter, normalizedData)
+								? { ...quest, ...normalizedData }
+								: null;
 						}
-						if (!groupedQuestsByGroup[group][visibilityGroup][quest.weight]) {
-							groupedQuestsByGroup[group][visibilityGroup][quest.weight] = [];
-						}
-						groupedQuestsByGroup[group][visibilityGroup][quest.weight].push(quest);
-					}
-				});
-				Object.keys(groupedQuestsByGroup).forEach(group => {
-					menu += `<h3 style="margin-top: 20px;">${group}</h3>`;
-					menu += H.generateQuestList('Visible', groupedQuestsByGroup[group].visible);
-					menu += H.generateQuestList('Hidden', groupedQuestsByGroup[group].hidden);
-				});
+						return null;
+					})
+					.filter(Boolean);
+				menu += H.renderQuestList(filteredQuests, QUEST_TRACKER_FILTER.groupBy);
 			}
 			menu += `
 				<br><hr>
@@ -4021,7 +4174,7 @@ var QuestTracker = QuestTracker || (function () {
 				<br><hr>
 				<a style="${styles.button}" href="!qt-menu action=main">Back to Main Menu</a>
 			</div>`;
-			menu = menu.replace(/[\r\n]/g, ''); 
+			menu = menu.replace(/[\r\n]/g, '');
 			Utils.sendGMMessage(menu);
 		};
 		const showAllRumours = () => {
@@ -4228,29 +4381,30 @@ var QuestTracker = QuestTracker || (function () {
 					<h4 style="${styles.bottomBorder} ${styles.topMargin}">Relationships</h4>
 					${relationshipsHtml}
 					${relationshipMenuHtml}
-					<h4 style="${styles.bottomBorder} ${styles.topMargin}">Status</h4><br>
+					<h4 style="${styles.bottomBorder} ${styles.topMargin}">Status</h4>
 					<span>${statusName}</span>
 					<span style="${styles.floatRight}">
 						<a style="${styles.button}" href="!qt-quest action=update|field=status|current=${questId}|new=?{Change Status${Object.keys(statusMapping).map(key => `|${statusMapping[key]},${key}`).join('')}}">Change</a>
 					</span>
-					<h4 style="${styles.bottomBorder} ${styles.topMargin}">Hidden</h4><br>
+					<h4 style="${styles.bottomBorder} ${styles.topMargin}">Hidden</h4>
 					<span>${hiddenStatus}</span>
 					<span style="${styles.floatRight}">
 						<a style="${styles.button}" href="!qt-quest action=update|field=hidden|current=${questId}|old=${hiddenStatusTorF}|new=${hiddenStatusTorF_reverse}">Change</a>
 					</span>
-					<h4 style="${styles.bottomBorder} ${styles.topMargin}">Disabled</h4><br>
+					<h4 style="${styles.bottomBorder} ${styles.topMargin}">Disabled</h4>
 					<span>${disabledStatus}</span>
 					<span style="${styles.floatRight}">
 						<a style="${styles.button}" href="!qt-quest action=update|field=disabled|current=${questId}|old=${disabledStatusTorF}|new=${disabledStatusTorF_reverse}">Change</a>
 					</span>
-					<h4 style="${styles.bottomBorder} ${styles.topMargin}">Quest Group</h4><br>
+					<h4 style="${styles.bottomBorder} ${styles.topMargin}">Quest Group</h4>
 					<span>${questGroup}</span>
 					<span style="${styles.floatRight}">
 						<a style="${styles.button}" href="!qt-quest action=update|field=group|current=${questId}|new=${validQuestGrouping}">Adjust</a>
 					</span>
-					${H.formatAutocompleteListWithDates('autoadvance', questId, statusMapping)}
 					<br><hr>
-					<a style="${styles.button}" href="!qt-menu action=allquests">Show All Quests</a> <a style="${styles.button}" href="!qt-menu action=main">Back to Main Menu</a>
+					<a style="${styles.button}" href="!qt-menu action=triggers">Triggers</a>
+					&nbsp;<a style="${styles.button}" href="!qt-menu action=allquests">All Quests</a>
+					&nbsp;<a style="${styles.button}" href="!qt-menu action=main">Main Menu</a>
 				</div>`;
 			menu = menu.replace(/[\r\n]/g, '');
 			Utils.sendGMMessage(menu);
@@ -4509,6 +4663,85 @@ var QuestTracker = QuestTracker || (function () {
 				</div>`;
 			menu = menu.replace(/[\r\n]/g, ''); 
 			Utils.sendGMMessage(menu);
+		};
+		const manageFilter = ({ action, key, value }) => {
+			if (!QUEST_TRACKER_FILTER.filter) QUEST_TRACKER_FILTER.filter = {};
+			switch (action) {
+				case 'add': {
+					if (key === 'group') {
+						const groups = Array.isArray(QUEST_TRACKER_FILTER.filter.group)
+							? [...QUEST_TRACKER_FILTER.filter.group]
+							: [];
+						const groupValue = parseInt(value, 10);
+						if (!groups.includes(groupValue)) {
+							groups.push(groupValue);
+						}
+						QUEST_TRACKER_FILTER.filter.group = [...new Set(groups)].sort((a, b) => a - b);
+					}
+					break;
+				}
+				case 'remove': {
+					if (key === 'group') {
+						const groups = Array.isArray(QUEST_TRACKER_FILTER.filter.group)
+							? [...QUEST_TRACKER_FILTER.filter.group]
+							: [];
+						const groupValue = parseInt(value, 10);
+						QUEST_TRACKER_FILTER.filter.group = groups.filter(group => group !== groupValue);
+					}
+					break;
+				}
+				case 'modify': {
+					if (key === 'groupBy') {
+						if (value === null || value === undefined) {
+							QUEST_TRACKER_FILTER.groupBy = null;
+						} else {
+							const validGroupByOptions = ['group', 'visibility', 'handout', 'disabled', null];
+							if (!validGroupByOptions.includes(value)) {
+								errorCheck(167, 'msg', null, `Invalid value for groupBy: ${value}`);
+								return;
+							}
+							QUEST_TRACKER_FILTER.groupBy = value;
+						}
+					} else if (value === null || value === undefined) {
+						delete QUEST_TRACKER_FILTER.filter[key];
+					} else {
+						const normalizedValue =
+							value === 'true' ? true : value === 'false' ? false : value;
+						QUEST_TRACKER_FILTER.filter[key] = normalizedValue;
+					}
+					break;
+				}
+				case 'clear': {
+					QUEST_TRACKER_FILTER.filter = {};
+					QUEST_TRACKER_FILTER.groupBy = null;
+					break;
+				}
+				case 'resetGrouping': {
+					QUEST_TRACKER_FILTER.groupBy = null;
+					break;
+				}
+				case 'sort': {
+					QUEST_TRACKER_FILTER.sortBy = value || null;
+					QUEST_TRACKER_FILTER.sortOrder = 'asc';
+					break;
+				}
+				default:
+					errorCheck(164, 'msg', null, `Unknown filter action: ${action}`);
+					return;
+			}
+			saveQuestTrackerData();
+		};
+		const showAllTriggers = () => {
+			let menu = `<div style="${styles.menu}"><h3 style="margin-bottom: 10px;">All Quest Triggers</h3>`;
+			menu += `<p>This menu displays all the triggers currently associated with quests in the game.</p>`;
+			
+			menu += `<br><hr>
+				<a style="${styles.button}" href="!qt-menu action=allquests">All Quests</a>
+				&nbsp;
+				<a style="${styles.button} ${styles.floatRight}" href="!qt-menu action=main">Back to Main Menu</a>
+			</div>`;
+			menu = menu.replace(/[\r\n]/g, ''); 
+			Utils.sendGMMessage(menu);
 		}
 		return {
 			generateGMMenu,
@@ -4524,7 +4757,9 @@ var QuestTracker = QuestTracker || (function () {
 			manageQuestGroups,
 			adminMenu,
 			adjustDate,
-			buildWeather
+			buildWeather,
+			manageFilter,
+			showAllTriggers
 		};
 	})();
 	const handleInput = (msg) => {
@@ -4571,7 +4806,7 @@ var QuestTracker = QuestTracker || (function () {
 					}, 500);
 					break;
 				case 'removehandout':
-					if (errorCheck(161, 'exists', current,'current')) return;
+					if (errorCheck(162, 'exists', current,'current')) return;
 					Quest.removeHandout(current);
 					setTimeout(() => {
 						Menu.showQuestDetails(current);
@@ -4889,132 +5124,190 @@ var QuestTracker = QuestTracker || (function () {
 				Menu.showEventDetails(eventid);
 			} else if (action === 'adjustdate') {
 				Menu.adjustDate();
+			} else if (action === 'triggers') {
+				Menu.showAllTriggers();
 			} else errorCheck(120, 'msg', null,`Unknown menu action: ${action}`);
-		} else if (command === '!qt-date') {
-			const { action, field, current, old, new: newItem, unit = 'day', date, eventid, menu = false, home = false} = params;
-			if (errorCheck(121, 'exists', action,'action')) return;
+		} else if (command === '!qt-filter') {
+			const { action, key, value, sortOrder } = params;
 			switch (action) {
-				case 'set':
-					if (errorCheck(122, 'exists', newItem)) return;
-					if (errorCheck(145, 'date', newItem)) return;
-					Calendar.modifyDate({type: 'set', newDate: newItem});
-					if (menu) {
-						setTimeout(() => {
-							Menu.adjustDate();
-						}, 500);
-					}
-					break;
-				case 'addevent':
-					Calendar.addEvent();
-					setTimeout(() => {
-						Menu.showAllEvents();
-					}, 500);
-					break;
-				case 'removeevent':
-					if (errorCheck(123, 'exists', eventid, 'eventid')) return;
-					Calendar.removeEvent(eventid);
-					setTimeout(() => {
-						Menu.showAllEvents();
-					}, 500);
-					break;
-				case 'update':
-					if (field === 'date') {
-						if (errorCheck(125, 'date', newItem)) return;
-					}
-					Calendar.manageEventObject({ action, field, current, old, newItem, date});
-					setTimeout(() => {
-						Menu.showEventDetails(current);
-					}, 500);
-					break;
-				case 'setcalender':
-					if (errorCheck(126, 'exists', newItem, 'newItem')) return;
-					Calendar.setCalender(newItem);
-					setTimeout(() => {
-						Menu.adminMenu();
-					}, 500);
-					break;
-				case 'setclimate':
-					if (errorCheck(127, 'exists', newItem, 'newItem')) return;
-					Calendar.setClimate(newItem);
-					setTimeout(() => {
-						Menu.adminMenu();
-					}, 500);
-					break;
-				case 'adjustlocation':
-					if (errorCheck(128, 'exists', newItem, 'newItem')) return;
-					Calendar.adjustLocation(newItem);
-					if (menu) {
-						setTimeout(() => {
-							Menu.adjustDate();
-						}, 500);
-					}
-					else if (home) {
-						setTimeout(() => {
-							Menu.generateGMMenu();
-						}, 500);
-					}
-					break;
-				case 'settrend':
-					if (errorCheck(129, 'exists', newItem, 'newItem')) return;
-					if (errorCheck(130, 'number', newItem, 'newItem')) return;
-					const num = Math.trunc(newItem);
-					if (num <= 0) return;
-					Calendar.setWeatherTrend(field, num);
-					setTimeout(() => {
-						Menu.adminMenu();
-					}, 500);
-					break;
-				case 'forcetrend':
-					if (errorCheck(131, 'exists', field, 'field')) return;
-					Calendar.forceWeatherTrend(field);
-					setTimeout(() => {
-						Menu.adminMenu();
-					}, 500);
-					break;
 				case 'modify':
-					if (errorCheck(132, 'exists', newItem, 'newItem')) return;
-					if (errorCheck(133, 'number', newItem, 'newItem')) return;
-					if (errorCheck(134, 'exists', unit, 'unit')) return;
-					const number = Math.trunc(newItem);
-					if (QUEST_TRACKER_WEATHER) {
-						switch (unit.toLowerCase()) {
-							case "years":
-								if (number > 1) number = 1;
-								break;
-							case "days":
-								if (number > 500) number = 500;
-								break;
-							case "weeks":
-								if (number > 60) number = 60;
-								break;
-							case "months":
-								if (number > 15) number = 15;
-								break;
-							default:
-								break;
+					if (errorCheck(165, 'exists', key, 'key')) return;
+					if (key === 'groupBy') {
+						const validGroupByOptions = ['group', 'visibility', 'handout', 'disabled', null];
+						if (!validGroupByOptions.includes(value)) {
+							errorCheck(167, 'msg', null, `Invalid value for groupBy: ${value}`);
+							return;
 						}
 					}
-					Calendar.modifyDate({type: unit, amount: number});
-					if (menu) {
-						setTimeout(() => {
-							Menu.adjustDate();
-						}, 500);
+					Menu.manageFilter({ action, key, value });
+					setTimeout(() => {
+						Menu.showAllQuests();
+					}, 500);
+					break;
+				case 'add':
+				case 'remove':
+					if (errorCheck(173, 'exists', key, 'key')) return;
+					if (key !== 'group') {
+						errorCheck(174, 'msg', null, `Invalid key for action: ${key}`);
+						return;
 					}
-					else if (home) {
-						setTimeout(() => {
-							Menu.generateGMMenu();
-						}, 500);
+					if (errorCheck(175, 'exists', value, 'value')) return;
+					Menu.manageFilter({ action, key, value });
+					setTimeout(() => {
+						Menu.showAllQuests();
+					}, 500);
+					break;
+				case 'clear':
+				case 'resetGrouping':
+					Menu.manageFilter({ action, key, value });
+					setTimeout(() => {
+						Menu.showAllQuests();
+					}, 500);
+					break;
+				case 'sort':
+					if (errorCheck(168, 'exists', key, 'key')) return;
+					if (key !== 'sortBy') {
+						errorCheck(169, 'msg', null, `Invalid sort key: ${key}`);
+						return;
 					}
-					else {
-						setTimeout(() => {
-							Menu.buildWeather();
-						}, 500);
-					}
+					manageFilter({ action, key, value, sortOrder });
+					break;
+				case 'togglevisibility':
+					if (errorCheck(170, 'exists', value, 'value')) return;
+					Utils.toggleFilterVisibility(value);
+					setTimeout(() => {
+						Menu.showAllQuests();
+					}, 500);
 					break;
 				default:
-					errorCheck(136, 'msg', null,`Unknown date command: ${params.action}`);
+					errorCheck(172, 'msg', null, `Unknown menu action: ${action}`);
 					break;
 			}
+		} else if (command === '!qt-date') {
+					const { action, field, current, old, new: newItem, unit = 'day', date, eventid, menu = false, home = false} = params;
+					if (errorCheck(121, 'exists', action,'action')) return;
+					switch (action) {
+						case 'set':
+							if (errorCheck(122, 'exists', newItem)) return;
+							if (errorCheck(145, 'date', newItem)) return;
+							Calendar.modifyDate({type: 'set', newDate: newItem});
+							if (menu) {
+								setTimeout(() => {
+									Menu.adjustDate();
+								}, 500);
+							}
+							break;
+						case 'addevent':
+							Calendar.addEvent();
+							setTimeout(() => {
+								Menu.showAllEvents();
+							}, 500);
+							break;
+						case 'removeevent':
+							if (errorCheck(123, 'exists', eventid, 'eventid')) return;
+							Calendar.removeEvent(eventid);
+							setTimeout(() => {
+								Menu.showAllEvents();
+							}, 500);
+							break;
+						case 'update':
+							if (field === 'date') {
+								if (errorCheck(125, 'date', newItem)) return;
+							}
+							Calendar.manageEventObject({ action, field, current, old, newItem, date});
+							setTimeout(() => {
+								Menu.showEventDetails(current);
+							}, 500);
+							break;
+						case 'setcalender':
+							if (errorCheck(126, 'exists', newItem, 'newItem')) return;
+							Calendar.setCalender(newItem);
+							setTimeout(() => {
+								Menu.adminMenu();
+							}, 500);
+							break;
+						case 'setclimate':
+							if (errorCheck(127, 'exists', newItem, 'newItem')) return;
+							Calendar.setClimate(newItem);
+							setTimeout(() => {
+								Menu.adminMenu();
+							}, 500);
+							break;
+						case 'adjustlocation':
+							if (errorCheck(128, 'exists', newItem, 'newItem')) return;
+							Calendar.adjustLocation(newItem);
+							if (menu) {
+								setTimeout(() => {
+									Menu.adjustDate();
+								}, 500);
+							}
+							else if (home) {
+								setTimeout(() => {
+									Menu.generateGMMenu();
+								}, 500);
+							}
+							break;
+						case 'settrend':
+							if (errorCheck(129, 'exists', newItem, 'newItem')) return;
+							if (errorCheck(130, 'number', newItem, 'newItem')) return;
+							const num = Math.trunc(newItem);
+							if (num <= 0) return;
+							Calendar.setWeatherTrend(field, num);
+							setTimeout(() => {
+								Menu.adminMenu();
+							}, 500);
+							break;
+						case 'forcetrend':
+							if (errorCheck(131, 'exists', field, 'field')) return;
+							Calendar.forceWeatherTrend(field);
+							setTimeout(() => {
+								Menu.adminMenu();
+							}, 500);
+							break;
+						case 'modify':
+							if (errorCheck(132, 'exists', newItem, 'newItem')) return;
+							if (errorCheck(133, 'number', newItem, 'newItem')) return;
+							if (errorCheck(134, 'exists', unit, 'unit')) return;
+							const number = Math.trunc(newItem);
+							if (QUEST_TRACKER_WEATHER) {
+								switch (unit.toLowerCase()) {
+									case "years":
+										if (number > 1) number = 1;
+										break;
+									case "days":
+										if (number > 500) number = 500;
+										break;
+									case "weeks":
+										if (number > 60) number = 60;
+										break;
+									case "months":
+										if (number > 15) number = 15;
+										break;
+									default:
+										break;
+								}
+							}
+							Calendar.modifyDate({type: unit, amount: number});
+							if (menu) {
+								setTimeout(() => {
+									Menu.adjustDate();
+								}, 500);
+							}
+							else if (home) {
+								setTimeout(() => {
+									Menu.generateGMMenu();
+								}, 500);
+							}
+							else {
+								setTimeout(() => {
+									Menu.buildWeather();
+								}, 500);
+							}
+							break;
+						default:
+							errorCheck(136, 'msg', null,`Unknown date command: ${params.action}`);
+							break;
+					}
 		} else if (command === '!qt-import') {
 			Import.fullImportProcess();
 		} else if (command === '!qt-config') {
@@ -5126,6 +5419,7 @@ var QuestTracker = QuestTracker || (function () {
 		Import,
 		Calendar,
 		Quest,
+		Triggers,
 		Rumours,
 		QuestPageBuilder,
 		Menu,

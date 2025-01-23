@@ -719,7 +719,7 @@ Yes, there is no restriction on this should you wish to combine handouts.
   * Quests can now be linked to handouts
   * GMnote menu expanded to include link to handout
   * Quest Triggers significantly expanded so quests now interact with each other much more.
-  * 
+  * QuestTracker Chat is no longer archived
 
 ### 2025-01-14 Stable Release V1.0.3
 
