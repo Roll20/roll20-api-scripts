@@ -13,7 +13,7 @@ var QuestTracker = QuestTracker || (function () {
 			if (state.CalenderData.CALENDARS) CALENDARS = state.CalenderData.CALENDARS;
 			if (state.CalenderData.WEATHER) WEATHER = state.CalenderData.WEATHER;
 		}
-		Object.assign(CALENDARS, state.QUEST_TRACKER.calendar);
+		if (state.QUEST_TRACKER?.calendar) Object.assign(CALENDARS, state.QUEST_TRACKER.calendar);
 		return { CALENDARS, WEATHER };
 	};
 	const { CALENDARS, WEATHER } = getCalendarAndWeatherData();
