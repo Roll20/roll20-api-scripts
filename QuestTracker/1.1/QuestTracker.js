@@ -703,36 +703,298 @@ var QuestTracker = QuestTracker || (function () {
 				}, 0);
 				const newTriggerNumber = highestTriggerNumber + 1;
 				return `trigger_${newTriggerNumber}`;
+			},
+			generateNewEffectId: () => {
+				const triggers = QUEST_TRACKER_Triggers;
+				const allIds = [];
+				Object.values(triggers.quests).forEach(questTriggers => {
+					Object.values(questTriggers).forEach(trigger => {
+						if (trigger.effects) {
+							allIds.push(...Object.keys(trigger.effects));
+						}
+					});
+				});
+				Object.values(triggers.dates).forEach(dateTriggers => {
+					Object.values(dateTriggers).forEach(trigger => {
+						if (trigger.effects) {
+							allIds.push(...Object.keys(trigger.effects));
+						}
+					});
+				});
+				const highestIdNumber = allIds.reduce((max, id) => {
+					const match = id.match(/^effect_(\d+)$/);
+					if (match) {
+						const number = parseInt(match[1], 10);
+						return number > max ? number : max;
+					}
+					return max;
+				}, 0);
+				const newIdNumber = highestIdNumber + 1;
+				return `effect_${newIdNumber}`;
+			},
+			initializeTriggersStructure: () => {
+				if (!QUEST_TRACKER_Triggers.quests) QUEST_TRACKER_Triggers.quests = {};
+				if (!QUEST_TRACKER_Triggers.dates) QUEST_TRACKER_Triggers.dates = {};
+			},
+			locateTrigger: (triggerId) => {
+				for (const [date, triggers] of Object.entries(QUEST_TRACKER_Triggers.dates)) {
+					if (triggers[triggerId]) {
+						return `QUEST_TRACKER_Triggers.dates.${date}.${triggerId}`;
+					}
+				}
+				for (const [questId, triggers] of Object.entries(QUEST_TRACKER_Triggers.quests)) {
+					if (triggers[triggerId]) {
+						return `QUEST_TRACKER_Triggers.quests.${questId}.${triggerId}`;
+					}
+				}
+				return null;
+			},
+			locateEffect: (effectId) => {
+				for (const [date, triggers] of Object.entries(QUEST_TRACKER_Triggers.dates)) {
+					for (const [triggerId, trigger] of Object.entries(triggers)) {
+						if (trigger.effects && trigger.effects[effectId]) {
+							return `QUEST_TRACKER_Triggers.dates.${date}.${triggerId}.effects.${effectId}`;
+						}
+					}
+				}
+				for (const [questId, triggers] of Object.entries(QUEST_TRACKER_Triggers.quests)) {
+					for (const [triggerId, trigger] of Object.entries(triggers)) {
+						if (trigger.effects && trigger.effects[effectId]) {
+							return `QUEST_TRACKER_Triggers.quests.${questId}.${triggerId}.effects.${effectId}`;
+						}
+					}
+				}
+				return null;
 			}
 		};
 		const convertAutoAdvanceToTriggers = () => {
 			if (QUEST_TRACKER_TriggerConversion) return;
 			let triggersConverted = false;
-			if (!QUEST_TRACKER_Triggers.quests) QUEST_TRACKER_Triggers.quests = {};
-			if (!QUEST_TRACKER_Triggers.dates) QUEST_TRACKER_Triggers.dates = {};
+			H.initializeTriggersStructure();
 			for (const [questId, questData] of Object.entries(QUEST_TRACKER_QuestData)) {
 				if (questData.autoadvance) {
 					for (const [status, date] of Object.entries(questData.autoadvance)) {
-						const newTriggerId = generateNewTriggerId();
+						const newTriggerId = H.generateNewTriggerId();
+						const newEffectId = H.generateNewEffectId();
 						if (!QUEST_TRACKER_Triggers.dates[date]) QUEST_TRACKER_Triggers.dates[date] = {};
 						QUEST_TRACKER_Triggers.dates[date][newTriggerId] = {
+							name: "Converted Trigger",
+							enabled: true,
 							quest_id: questId,
-							change: {
-								type: "status",
-								value: status
+							change: { type: 'status', value: status },
+							effects: {
+								[newEffectId]: {
+									quest_id: questId,
+									change: { type: 'status', value: status }
+								}
 							}
 						};
+						triggersConverted = true;
 					}
 					delete questData.autoadvance;
-					triggersConverted = true;
 				}
 			}
 			QUEST_TRACKER_TriggerConversion = true;
-			if (triggersConverted) errorCheck(176, 'msg', null,`Autoadvance converted to Triggers (v1.1 update), please see the ![README](https://github.com/Roll20/roll20-api-scripts/blob/master/QuestTracker/README.md) for more details.`);
+			if (triggersConverted) {
+				errorCheck(176, 'msg', null, `Autoadvance converted to Triggers (v1.1 update).`);
+			}
+			saveQuestTrackerData();
+		};
+		const addTrigger = () => {
+			const newTriggerId = H.generateNewTriggerId();
+			H.initializeTriggersStructure();
+			if (!QUEST_TRACKER_Triggers.quests['quest_0']) QUEST_TRACKER_Triggers.quests['quest_0'] = {};
+			QUEST_TRACKER_Triggers.quests['quest_0'][newTriggerId] = {
+				name: "New Trigger",
+				enabled: false,
+				action: { type: null, effect: null },
+				effects: {}
+			};
+			saveQuestTrackerData();
+		};
+		const initializeTrigger = (type, input) => {
+			H.initializeTriggersStructure();
+			if (type !== 'quest' && type !== 'date') {
+				errorCheck(202, 'msg', null, `Invalid type: ${type}. Use 'quest' or 'date'.`);
+				return;
+			}
+			const sourceType = type === 'quest' ? 'date' : 'quest';
+			const sourcePath = H.locateTrigger(input);
+			if (!sourcePath || !sourcePath.startsWith(`QUEST_TRACKER_Triggers.${sourceType}s`)) {
+				errorCheck(201, 'msg', null, `${sourceType === 'quest' ? 'Quest' : 'Date'} trigger not found for input: ${input}`);
+				return;
+			}
+			const source = eval(sourcePath);
+			const targetStructure = type === 'quest' ? QUEST_TRACKER_Triggers.quests : QUEST_TRACKER_Triggers.dates;
+			if (!targetStructure[input]) targetStructure[input] = {};
+			for (const [triggerId, triggerData] of Object.entries(source)) {
+				targetStructure[input][triggerId] = {
+					name: triggerData.name || "New Trigger",
+					...triggerData,
+					...(type === 'quest' ? { action: { type: null, effect: null } } : { quest_id: input }),
+					...(type === 'quest' ? { quest_id: null } : { action: null })
+				};
+			}
+			const sourceStructure = sourceType === 'date' ? QUEST_TRACKER_Triggers.dates : QUEST_TRACKER_Triggers.quests;
+			delete sourceStructure[input];
+			saveQuestTrackerData();
+		};
+		const toggleTrigger = (field, triggerId, value) => {
+			H.initializeTriggersStructure();
+			const triggerPath = H.locateTrigger(triggerId);
+			if (errorCheck(203, 'exists', triggerPath, 'triggerPath')) return;
+			const trigger = eval(triggerPath);
+			switch (field) {
+				case 'enabled':
+					trigger.enabled = !!value;
+					break;
+				case 'name':
+					if (typeof value !== 'string' || value.trim() === '') {
+						errorCheck(204, 'msg', null, `Invalid name value: ${value}. Must be a non-empty string.`);
+						return;
+					}
+					trigger.name = value.trim();
+					break;
+				default:
+					errorCheck(205, 'msg', null, `Invalid field: ${field}. Use 'enabled' or 'name'.`);
+					return;
+			}
+			saveQuestTrackerData();
+		};
+		const manageTriggerAction = (triggerId, { part, value }) => {
+			H.initializeTriggersStructure();
+			const triggerPath = H.locateTrigger(triggerId);
+			if (errorCheck(192, 'exists', triggerPath, 'triggerPath')) return;
+			const trigger = eval(triggerPath);
+			switch (part) {
+				case 'quest_id':
+					trigger.quest_id = value;
+					break;
+				case 'triggering_field':
+					trigger.change.type = value;
+					break;
+				case 'triggering_value':
+					trigger.change.value = value;
+					break;
+				case 'date':
+					if (!triggerPath.startsWith('QUEST_TRACKER_Triggers.dates')) {
+						errorCheck(193, 'msg', null, `Cannot set a date on a non-date trigger.`);
+						return;
+					}
+					trigger.date = value;
+					break;
+				default:
+					errorCheck(194, 'msg', null, `Invalid part: ${part}.`);
+					return;
+			}
+			saveQuestTrackerData();
+		};
+		const manageTriggerEffects = ({ action, value = {}, id = null }) => {
+			H.initializeTriggersStructure();
+			const effectPath = H.locateEffect(id);
+			if (!effectPath && action !== 'add') {
+				errorCheck(195, 'msg', null, `Effect with ID ${id} not found.`);
+				return;
+			}
+			let effects, effect;
+			if (effectPath) {
+				const effectKeyPath = effectPath.split('.effects.')[0];
+				effects = eval(effectKeyPath);
+				effect = eval(effectPath);
+			}
+			switch (action) {
+				case 'add': {
+					if (errorCheck(196, 'exists', effects, 'effects')) return;
+					const newEffectId = H.generateNewEffectId();
+					effects[newEffectId] = {
+						quest_id: null, // Default values for a new effect
+						change: { type: null, value: null },
+						...value // Override with provided values, if any
+					};
+					break;
+				}
+				case 'remove': {
+					if (errorCheck(197, 'exists', effect, 'effect')) return;
+					delete effects[id];
+					break;
+				}
+				case 'edit': {
+					if (errorCheck(198, 'exists', effect, 'effect')) return;
+					effects[id] = { ...effect, ...value };
+					break;
+				}
+				default:
+					errorCheck(199, 'msg', null, `Invalid action: ${action}. Use 'add', 'remove', or 'edit'.`);
+					return;
+			}
+			saveQuestTrackerData();
+		};
+		const deleteTrigger = (triggerId) => {
+			H.initializeTriggersStructure();
+			const triggerPath = H.locateTrigger(triggerId);
+			if (errorCheck(177, 'exists', triggerPath, 'triggerPath')) return;
+			const parentPath = triggerPath.substring(0, triggerPath.lastIndexOf('.'));
+			const triggers = eval(parentPath);
+			const triggerKey = triggerId;
+			delete triggers[triggerKey];
+			if (Object.keys(triggers).length === 0) {
+				const grandparentPath = parentPath.substring(0, parentPath.lastIndexOf('.'));
+				const parentKey = parentPath.split('.').pop();
+				const parentObject = eval(grandparentPath);
+				delete parentObject[parentKey];
+			}
+			saveQuestTrackerData();
+		};
+		const checkTrigger = (type, id, field = null, newValue = null) => {
+			H.initializeTriggersStructure();
+			let triggers = null;
+			switch (type) {
+				case 'date':
+					triggers = QUEST_TRACKER_Triggers.dates[id];
+					break;
+				case 'quest':
+					triggers = QUEST_TRACKER_Triggers.quests[id];
+					break;
+				default:
+					errorCheck(190, 'msg', null, `Invalid type: ${type}. Use 'date' or 'quest'.`);
+					return;
+			}
+			if (!triggers) return;
+			for (const [triggerId, trigger] of Object.entries(triggers)) {
+				if (
+					type === 'date' || 
+					(type === 'quest' && trigger.change.type === field && trigger.change.value === newValue)
+				) {
+					Quest.manageQuestObject({
+						action: 'update',
+						field: trigger.change.type,
+						current: trigger.quest_id,
+						newItem: trigger.change.value
+					});
+					const triggerPath = H.locateTrigger(triggerId);
+					if (errorCheck(191, 'exists', triggerPath, 'triggerPath')) continue;
+					const parentPath = triggerPath.substring(0, triggerPath.lastIndexOf('.'));
+					const triggersParent = eval(parentPath);
+					delete triggersParent[triggerId];
+					if (Object.keys(triggersParent).length === 0) {
+						const grandparentPath = parentPath.substring(0, parentPath.lastIndexOf('.'));
+						const parentKey = parentPath.split('.').pop();
+						const grandparent = eval(grandparentPath);
+						delete grandparent[parentKey];
+					}
+				}
+			}
 			saveQuestTrackerData();
 		};
 		return {
-			convertAutoAdvanceToTriggers
+			convertAutoAdvanceToTriggers,
+			addTrigger,
+			initializeTrigger,
+			toggleTrigger,
+			manageTriggerAction,
+			manageTriggerEffects,
+			deleteTrigger,
+			checkTrigger
 		};
 	})();
 	const Quest = (() => {
@@ -1023,8 +1285,7 @@ var QuestTracker = QuestTracker || (function () {
 				description: 'Description',
 				relationships: {},
 				hidden: true,
-				disabled: false,
-				autoadvance: {}
+				disabled: false
 			};
 			const questTable = findObjs({ type: 'rollabletable', name: QUEST_TRACKER_ROLLABLETABLE_QUESTS })[0];
 			QUEST_TRACKER_globalQuestData[newQuestId] = defaultQuestData;
@@ -4167,9 +4428,11 @@ var QuestTracker = QuestTracker || (function () {
 			menu += `
 				<br><hr>
 				<span style="${styles.floatRight}">
-					<a style="${styles.button}" href="!qt-menu action=manageQuestGroups">Quest Groups</a>
+					<a style="${styles.button}" href="!qt-menu action=triggers">Triggers</a>
 					&nbsp;
-					<a style="${styles.button}" href="!qt-quest action=addquest">Add New Quest</a>
+					<a style="${styles.button}" href="!qt-menu action=manageQuestGroups">Groups</a>
+					&nbsp;
+					<a style="${styles.button}" href="!qt-quest action=addquest">Add New</a>
 				</span>
 				<br><hr>
 				<a style="${styles.button}" href="!qt-menu action=main">Back to Main Menu</a>
@@ -4734,12 +4997,17 @@ var QuestTracker = QuestTracker || (function () {
 		const showAllTriggers = () => {
 			let menu = `<div style="${styles.menu}"><h3 style="margin-bottom: 10px;">All Quest Triggers</h3>`;
 			menu += `<p>This menu displays all the triggers currently associated with quests in the game.</p>`;
-			
 			menu += `<br><hr>
 				<a style="${styles.button}" href="!qt-menu action=allquests">All Quests</a>
 				&nbsp;
 				<a style="${styles.button} ${styles.floatRight}" href="!qt-menu action=main">Back to Main Menu</a>
 			</div>`;
+			menu = menu.replace(/[\r\n]/g, ''); 
+			Utils.sendGMMessage(menu);
+		};
+		const showTrigger = (triggerId) => {
+			let menu = `<div style="${styles.menu}"><h3 style="margin-bottom: 10px;">Edit Trigger</h3>`;
+			menu += `<p>This is a trigger for </p>`;
 			menu = menu.replace(/[\r\n]/g, ''); 
 			Utils.sendGMMessage(menu);
 		}
@@ -5183,131 +5451,189 @@ var QuestTracker = QuestTracker || (function () {
 					errorCheck(172, 'msg', null, `Unknown menu action: ${action}`);
 					break;
 			}
-		} else if (command === '!qt-date') {
-					const { action, field, current, old, new: newItem, unit = 'day', date, eventid, menu = false, home = false} = params;
-					if (errorCheck(121, 'exists', action,'action')) return;
-					switch (action) {
-						case 'set':
-							if (errorCheck(122, 'exists', newItem)) return;
-							if (errorCheck(145, 'date', newItem)) return;
-							Calendar.modifyDate({type: 'set', newDate: newItem});
-							if (menu) {
-								setTimeout(() => {
-									Menu.adjustDate();
-								}, 500);
+		} else if (command === '!qt-trigger') {
+			const { action, triggerId, effectId = null, field, value } = params;
+			switch (action) {
+				case 'add':
+					Triggers.addTrigger();
+					setTimeout(() => {
+						Menu.showAllTriggers();
+					}, 500);
+					break;
+				case 'edit':
+					if (errorCheck(183, 'exists', triggerId, 'triggerId')) return;
+					if (errorCheck(184, 'exists', field, 'field')) return;
+					if (!['enabled', 'action', 'effects'].includes(field)) {
+						errorCheck(185, 'msg', null, `Invalid field: ${field}. Valid fields are 'enabled', 'action', 'effects'.`);
+						return;
+					}
+					switch (field) {
+						case 'enabled':
+						case 'name':
+							Triggers.toggleTrigger(field, triggerId, value);
+							break;
+						case 'action':
+							Triggers.manageTriggerAction(triggerId, { key: field, value });
+							break;
+						case 'effects':
+							if (!effectId && ['remove', 'edit'].includes(value?.key)) {
+								errorCheck(186, 'msg', null, `Effect ID is required for '${value?.key}' action.`);
+								return;
 							}
-							break;
-						case 'addevent':
-							Calendar.addEvent();
-							setTimeout(() => {
-								Menu.showAllEvents();
-							}, 500);
-							break;
-						case 'removeevent':
-							if (errorCheck(123, 'exists', eventid, 'eventid')) return;
-							Calendar.removeEvent(eventid);
-							setTimeout(() => {
-								Menu.showAllEvents();
-							}, 500);
-							break;
-						case 'update':
-							if (field === 'date') {
-								if (errorCheck(125, 'date', newItem)) return;
-							}
-							Calendar.manageEventObject({ action, field, current, old, newItem, date});
-							setTimeout(() => {
-								Menu.showEventDetails(current);
-							}, 500);
-							break;
-						case 'setcalender':
-							if (errorCheck(126, 'exists', newItem, 'newItem')) return;
-							Calendar.setCalender(newItem);
-							setTimeout(() => {
-								Menu.adminMenu();
-							}, 500);
-							break;
-						case 'setclimate':
-							if (errorCheck(127, 'exists', newItem, 'newItem')) return;
-							Calendar.setClimate(newItem);
-							setTimeout(() => {
-								Menu.adminMenu();
-							}, 500);
-							break;
-						case 'adjustlocation':
-							if (errorCheck(128, 'exists', newItem, 'newItem')) return;
-							Calendar.adjustLocation(newItem);
-							if (menu) {
-								setTimeout(() => {
-									Menu.adjustDate();
-								}, 500);
-							}
-							else if (home) {
-								setTimeout(() => {
-									Menu.generateGMMenu();
-								}, 500);
-							}
-							break;
-						case 'settrend':
-							if (errorCheck(129, 'exists', newItem, 'newItem')) return;
-							if (errorCheck(130, 'number', newItem, 'newItem')) return;
-							const num = Math.trunc(newItem);
-							if (num <= 0) return;
-							Calendar.setWeatherTrend(field, num);
-							setTimeout(() => {
-								Menu.adminMenu();
-							}, 500);
-							break;
-						case 'forcetrend':
-							if (errorCheck(131, 'exists', field, 'field')) return;
-							Calendar.forceWeatherTrend(field);
-							setTimeout(() => {
-								Menu.adminMenu();
-							}, 500);
-							break;
-						case 'modify':
-							if (errorCheck(132, 'exists', newItem, 'newItem')) return;
-							if (errorCheck(133, 'number', newItem, 'newItem')) return;
-							if (errorCheck(134, 'exists', unit, 'unit')) return;
-							const number = Math.trunc(newItem);
-							if (QUEST_TRACKER_WEATHER) {
-								switch (unit.toLowerCase()) {
-									case "years":
-										if (number > 1) number = 1;
-										break;
-									case "days":
-										if (number > 500) number = 500;
-										break;
-									case "weeks":
-										if (number > 60) number = 60;
-										break;
-									case "months":
-										if (number > 15) number = 15;
-										break;
-									default:
-										break;
-								}
-							}
-							Calendar.modifyDate({type: unit, amount: number});
-							if (menu) {
-								setTimeout(() => {
-									Menu.adjustDate();
-								}, 500);
-							}
-							else if (home) {
-								setTimeout(() => {
-									Menu.generateGMMenu();
-								}, 500);
-							}
-							else {
-								setTimeout(() => {
-									Menu.buildWeather();
-								}, 500);
-							}
+							Triggers.manageTriggerEffects(triggerId, { effectId, key: value.key, value: value.value });
 							break;
 						default:
-							errorCheck(136, 'msg', null,`Unknown date command: ${params.action}`);
-							break;
+							errorCheck(186, 'msg', null, `Invalid field: ${field}`);
+							return;
 					}
+					setTimeout(() => {
+						Menu.showTrigger(triggerId);
+					}, 500);
+					break;
+				case 'delete':
+					if (errorCheck(186, 'exists', triggerId, 'triggerId')) return;
+					Triggers.deleteTrigger(triggerId);
+					setTimeout(() => {
+						Menu.showAllTriggers();
+					}, 500);
+					break;
+				case 'toggle':
+					if (errorCheck(187, 'exists', triggerId, 'triggerId')) return;
+
+					Triggers.toggleTrigger(triggerId, value);
+					setTimeout(() => {
+						Menu.showTrigger(triggerId);
+					}, 500);
+					break;
+				default:
+					errorCheck(189, 'msg', null, `Unknown action: ${action}`);
+					break;
+			}
+		} else if (command === '!qt-date') {
+			const { action, field, current, old, new: newItem, unit = 'day', date, eventid, menu = false, home = false} = params;
+			if (errorCheck(121, 'exists', action,'action')) return;
+			switch (action) {
+				case 'set':
+					if (errorCheck(122, 'exists', newItem)) return;
+					if (errorCheck(145, 'date', newItem)) return;
+					Calendar.modifyDate({type: 'set', newDate: newItem});
+					if (menu) {
+						setTimeout(() => {
+							Menu.adjustDate();
+						}, 500);
+					}
+					break;
+				case 'addevent':
+					Calendar.addEvent();
+					setTimeout(() => {
+						Menu.showAllEvents();
+					}, 500);
+					break;
+				case 'removeevent':
+					if (errorCheck(123, 'exists', eventid, 'eventid')) return;
+					Calendar.removeEvent(eventid);
+					setTimeout(() => {
+						Menu.showAllEvents();
+					}, 500);
+					break;
+				case 'update':
+					if (field === 'date') {
+						if (errorCheck(125, 'date', newItem)) return;
+					}
+					Calendar.manageEventObject({ action, field, current, old, newItem, date});
+					setTimeout(() => {
+						Menu.showEventDetails(current);
+					}, 500);
+					break;
+				case 'setcalender':
+					if (errorCheck(126, 'exists', newItem, 'newItem')) return;
+					Calendar.setCalender(newItem);
+					setTimeout(() => {
+						Menu.adminMenu();
+					}, 500);
+					break;
+				case 'setclimate':
+					if (errorCheck(127, 'exists', newItem, 'newItem')) return;
+					Calendar.setClimate(newItem);
+					setTimeout(() => {
+						Menu.adminMenu();
+					}, 500);
+					break;
+				case 'adjustlocation':
+					if (errorCheck(128, 'exists', newItem, 'newItem')) return;
+					Calendar.adjustLocation(newItem);
+					if (menu) {
+						setTimeout(() => {
+							Menu.adjustDate();
+						}, 500);
+					}
+					else if (home) {
+						setTimeout(() => {
+							Menu.generateGMMenu();
+						}, 500);
+					}
+					break;
+				case 'settrend':
+					if (errorCheck(129, 'exists', newItem, 'newItem')) return;
+					if (errorCheck(130, 'number', newItem, 'newItem')) return;
+					const num = Math.trunc(newItem);
+					if (num <= 0) return;
+					Calendar.setWeatherTrend(field, num);
+					setTimeout(() => {
+						Menu.adminMenu();
+					}, 500);
+					break;
+				case 'forcetrend':
+					if (errorCheck(131, 'exists', field, 'field')) return;
+					Calendar.forceWeatherTrend(field);
+					setTimeout(() => {
+						Menu.adminMenu();
+					}, 500);
+					break;
+				case 'modify':
+					if (errorCheck(132, 'exists', newItem, 'newItem')) return;
+					if (errorCheck(133, 'number', newItem, 'newItem')) return;
+					if (errorCheck(134, 'exists', unit, 'unit')) return;
+					const number = Math.trunc(newItem);
+					if (QUEST_TRACKER_WEATHER) {
+						switch (unit.toLowerCase()) {
+							case "years":
+								if (number > 1) number = 1;
+								break;
+							case "days":
+								if (number > 500) number = 500;
+								break;
+							case "weeks":
+								if (number > 60) number = 60;
+								break;
+							case "months":
+								if (number > 15) number = 15;
+								break;
+							default:
+								break;
+						}
+					}
+					Calendar.modifyDate({type: unit, amount: number});
+					if (menu) {
+						setTimeout(() => {
+							Menu.adjustDate();
+						}, 500);
+					}
+					else if (home) {
+						setTimeout(() => {
+							Menu.generateGMMenu();
+						}, 500);
+					}
+					else {
+						setTimeout(() => {
+							Menu.buildWeather();
+						}, 500);
+					}
+					break;
+				default:
+					errorCheck(136, 'msg', null,`Unknown date command: ${params.action}`);
+					break;
+			}
 		} else if (command === '!qt-import') {
 			Import.fullImportProcess();
 		} else if (command === '!qt-config') {
