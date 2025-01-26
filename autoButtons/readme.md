@@ -5,6 +5,13 @@
 For documentation and support please visit Roll20:
 ### [autoButtons thread on Roll20](https://app.roll20.net/forum/permalink/10766392/)
 
+## v0.9.0
+- Added baseSize scale setting
+- Added DnD2024 Beacon support
+
+## v0.8.9:
+- Added MathOps dependency due to sandbox security changes breaking original methods
+
 ## v0.8.x:
 ### Changes:
 - Added API meta data
