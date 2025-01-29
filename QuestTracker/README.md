@@ -29,6 +29,9 @@ Quest Tracker is a comprehensive tool for managing quests, rumors, and events in
   - Display quests and relationships as a tree diagram.
   - Automatically handle mutually exclusive relationships.
 
+- **Triggers:**
+  - Automatically change Quest's after certain triggers have been met, such as Date or status changes.
+
 ### Getting Started
 
 1. **Installation:**
@@ -266,6 +269,53 @@ Quests are stored in a hierarchical JSON format, supporting complex relationship
 * If the + buttons are shaded grey and cannot be selected it means there are no valid quests to add, quests need to be in the same quest group and not already be selected in a relasionship
 * Quest Relationships work on a AND and OR functionality and you can put them within relasionship groups in order to visualise the prerequisities; as you can see in the more complex quest tree; five quests are its prerequisites (under AND) but 4 of them are separated into two groups of OR functionality, the grouped quests are also mutually exclusive with each other (note the red line).
 * The Quest diagram is generated automatically and only works on a quest by quest basis (so no futher back); if you come across any failures within rendering please make sure you raise this as an issue. note: before you do this drag the chat window wider, as most issues are resolved with this.
+
+### v1.1 Changes
+
+As of V1.1 the quest page has been revamped; autoadvance section has been removed and replaced with a new **Triggers Module**
+
+![New Layout](https://raw.githubusercontent.com/boli32/QuestTracker/refs/heads/main/img/newQuestLayout.png)
+
+If an image has been added to the quest rollable table it will now show in this page adding a splash of colour to the page
+
+![Linking Handouts](https://raw.githubusercontent.com/boli32/QuestTracker/refs/heads/main/img/linkedHandout.png)
+
+Handouts can be linked to the quest, it will attempt to do so automatcially by searching for a handout with the same name as the quest, if this fails it will create a blank handout. You can link to a handout manually by using the objectID of the handout (link to the Handout and examine it's URL)
+
+### Filters
+
+![Filters](https://raw.githubusercontent.com/boli32/QuestTracker/refs/heads/main/img/filters_open.png)
+
+The 'All Quests' page has also had a revamp as well allowing for filters, these filters can be cleared or hidden allowing for a better experiance when dealing with dozens of quests
+
+## Triggers Module (new to v1.1)
+
+The previous 'autoadvance' has had a major revamp and is not a full module; you can create 'triggers' which can adjust your quests allowing for a more automated way of navigating things
+
+![alltriggers](https://raw.githubusercontent.com/boli32/QuestTracker/refs/heads/main/img/alltriggers.png)
+
+* **Date Trigger** - When the Date advances to this date, or goes beyond it this trigger will fire, this is most similar to the old autoadvance
+* **Quest Trigger** - When a quest changes, either toggling quest visibility, their enabled/disabled status or more commonly the status of a quest changes this trigger will fire
+* **Reaction Trigger** - This is a unique trigger as it triggers when another trigger fires. Technically you coud do the same using additional effects; but I have included it as there may be times you want to use it to organise your triggers better
+
+|||
+|:-------------------------:|:-------------------------:
+|![questTrigger](https://raw.githubusercontent.com/boli32/QuestTracker/refs/heads/main/img/leavingWaterdeep.png)|![reactionTrigger](https://raw.githubusercontent.com/boli32/QuestTracker/refs/heads/main/img/banditattack.png)|
+
+
+
+After each trigger fires it generates 'effects' these are currently only limited to quests and allows you to automatically change the state (disabled/enabled) visibility (hidden or not) or status of a quest. The most common examples I can see for this are:
+* Automatically disabling quests down a mutually exclusive branch once a certain quest is started
+* Starting a new quest once another has finished (and making it visible to the players)
+* Have a quest start automticlly at a certain date; say the day of a Festival.
+
+You can have multiple effects with each trigger allowing for one change to have more than one consequence.
+
+**Once a trigger fires, it and all associated triggers with it will be automatically deleted.**
+
+### Future Plans
+
+I plan to expand the triggers somewhat, and allow the names and descriptions of quests to be adjusted by triggers; changing 'The Feast of the Moon' quest to 'Dragon Attack' once the true scale of things occur.
 
 ## Weather Module
 
@@ -709,16 +759,38 @@ This actually works using a 'Damerau–Levenshtein distance' compare. It essenti
 
 Yes, there is no restriction on this should you wish to combine handouts.
 
+### Wait, I have autoadvance all filled in from v1.0, do I have to redo it?
+
+No, there is a script in place to convert all autoadvance triggers into the new Trigger Module; although this is difficult to test it *should* work...
 
 
 ## Updates
 
-#### 2025-xx-xx
+#### 2025-02-04
 * Release of **v1.1**; significant changes to quest interaction and display.
+- **Questbuilder Module**
   * Added the ability to disable quests, disabled quests and all their 'full children' quests will no longer show on the Quest Tree Builder Page 
-  * Quests can now be linked to handouts
+  * Questbuilder toggles visibility correctly now.
   * GMnote menu expanded to include link to handout
+- **Quest Module**
+  * Quests can now be linked to handouts
+  * Filters can now be applied to the Quest List
+  * original Autoadvance removed, instead a new Triggers Module was added
+  * Image Icons (from rollable table) are now shown on the Inspect Quest
+- **NEW Triggers Module**
   * Quest Triggers significantly expanded so quests now interact with each other much more.
+  * Quest Triggers can triggr from:
+    * Changes to a quest's Status, Disabled or Hidden fields
+    * The Date advancing
+    * Other Triggers firing
+  * Triggers can change other quests:
+    * Status
+    * Visibility
+    * State (Enabled/Disabled) 
+  * Triggers are auomatically removed once fired
+- **Weather Module**
+    * Tweaked the Bellcurve calculation to allow for a global change and moved the projected average for wind down (-15) and visibility up (+15), along with adjusted descriptions. This should make adventuring parties less likely to be adventuring in 'gale force winds'.
+- **Other Quality of Life Changes**
   * QuestTracker Chat is no longer archived
 
 ### 2025-01-14 Stable Release V1.0.3
