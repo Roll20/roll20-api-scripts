@@ -4022,7 +4022,7 @@ var QuestTracker = QuestTracker || (function () {
 					}
 				});
 			},
-			renderQuestList: (quests, groupBy) => {
+			renderQuestList: (quests, groupBy, type = 'quest') => {
 				let menu = '';
 				const groupedQuests = groupBy
 					? quests.reduce((acc, quest) => {
@@ -4051,16 +4051,33 @@ var QuestTracker = QuestTracker || (function () {
 						return nameA.localeCompare(nameB);
 					});
 					menu += '<ul>';
-					sortedQuests.forEach(quest => {
+					if (type === 'quest') {
+						sortedQuests.forEach(quest => {
+							menu += `
+								<li style="${styles.overflow}">
+									<span style="${styles.floatLeft}"><small>${quest.name || 'Unnamed Quest'}</small></span>
+									<span style="${styles.floatRight}">
+										<a style="${styles.button}" href="!qt-menu action=quest|id=${quest.id}">Inspect</a>
+										<a style="${styles.button} ${styles.smallButton}" href="!qt-quest action=removequest|id=${quest.id}|confirmation=?{Type DELETE into this field to confirm deletion of this quest|}">-</a>
+									</span>
+								</li>`;
+						});
+					}
+					else {
+						sortedQuests.forEach(quest => {
 						menu += `
 							<li style="${styles.overflow}">
-								<span style="${styles.floatLeft}"><small>${quest.name || 'Unnamed Quest'}</small></span>
+								<span style="${styles.floatLeft}">
+									${quest.name || 'Unnamed Quest'}
+									<br>
+									<small>${quest.rumourCount} rumour${quest.rumourCount === 1 ? '' : 's'}</small>
+								</span>
 								<span style="${styles.floatRight}">
-									<a style="${styles.button}" href="!qt-menu action=quest|id=${quest.id}">Inspect</a>
-									<a style="${styles.button} ${styles.smallButton}" href="!qt-quest action=removequest|id=${quest.id}|confirmation=?{Type DELETE into this field to confirm deletion of this quest|}">-</a>
+									<a style="${styles.button}" href="!qt-menu action=showQuestRumours|questId=${quest.id}">Show</a>
 								</span>
 							</li>`;
-					});
+						});
+					}
 					menu += '</ul>';
 				});
 				return menu;
@@ -4674,7 +4691,7 @@ var QuestTracker = QuestTracker || (function () {
 					})
 					.filter(Boolean)
 					.sort((a, b) => a.name.localeCompare(b.name));
-				menu += H.renderQuestList(filteredQuests, QUEST_TRACKER_RUMOUR_FILTER.groupBy);
+				menu += H.renderQuestList(filteredQuests, QUEST_TRACKER_RUMOUR_FILTER.groupBy, 'rumour');
 			}
 			menu += `
 				<br><hr>
@@ -4703,7 +4720,7 @@ var QuestTracker = QuestTracker || (function () {
 					}, 0);
 					menu += `
 					<tr>
-						<td>${status}<br><small>${rumourCount} rumours</small></td>
+						<td>${status}<br><small>${rumourCount} rumour${rumourCount === 1 ? '' : 's'}</small></td>
 						<td style="${styles.floatRight}">
 							<a style="${styles.button}" href="!qt-menu action=showRumourDetails|questId=${questId}|status=${status.toLowerCase()}">Show</a>
 						</td>
@@ -4762,20 +4779,15 @@ var QuestTracker = QuestTracker || (function () {
 			});
 			const questRumours = QUEST_TRACKER_globalRumours[questId] || {};
 			const rumoursByStatus = questRumours[statusId.toLowerCase()] || {};
-			Object.keys(locationMapping).forEach(sanitizedLocationName => {
-				const { originalName, weight } = locationMapping[sanitizedLocationName];
-				const locationRumours = rumoursByStatus[sanitizedLocationName] || {};
+			locationMapping.forEach(({ originalName, sanitizedName, weight }) => {
+				const locationRumours = rumoursByStatus[sanitizedName] || {};
 				menu += `<h4>${originalName}</h4><table style="width:100%;">`;
 				if (Object.keys(locationRumours).length > 0) {
 					Object.keys(locationRumours).forEach(rumourId => {
 						const rumourText = locationRumours[rumourId];
 						let trimmedRumourText = String(rumourText).substring(0, 50);
-						let rumourTextSanitized = rumourText
-							.replace(/"/g, '&quot;')
-							.replace(/%NEWLINE%|<br>/g, ' | ');
-						let rumourInputSanitized = rumourText
-							.replace(/"/g, '&quot;')
-							.replace(/<br>/g, '%NEWLINE%');
+						let rumourTextSanitized = rumourText.replace(/"/g, '&quot;').replace(/%NEWLINE%|<br>/g, ' | ');
+						let rumourInputSanitized = rumourText.replace(/"/g, '&quot;').replace(/<br>/g, '%NEWLINE%');
 						menu += `
 						<tr>
 							<td><small style="${styles.rumour}">${trimmedRumourText}</small></td>
@@ -4791,10 +4803,7 @@ var QuestTracker = QuestTracker || (function () {
 						</tr>`;
 					});
 				} else {
-					menu += `
-					<tr>
-						<td colspan="3"><small>No rumours</small></td>
-					</tr>`;
+					menu += `<tr><td colspan="3"><small>No rumours</small></td></tr>`;
 				}
 				menu += `
 				<tr style="border-top: 1px solid #ddd">
