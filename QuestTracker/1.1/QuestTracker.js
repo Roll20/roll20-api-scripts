@@ -67,6 +67,7 @@ var QuestTracker = QuestTracker || (function () {
 	let QUEST_TRACKER_WeatherLocation = 'plains';
 	let QUEST_TRACKER_CURRENT_WEATHER = "";
 	let QUEST_TRACKER_FILTER = {};
+	let QUEST_TRACKER_RUMOUR_FILTER = {};
 	let QUEST_TRACKER_FILTER_Visbility = false;
 	let QUEST_TRACKER_imperialMeasurements = {
 		temperature: false,
@@ -119,6 +120,7 @@ var QuestTracker = QuestTracker || (function () {
 		QUEST_TRACKER_WeatherLocation = state.QUEST_TRACKER.weatherLocation || 'plains';
 		QUEST_TRACKER_currentWeekdayName = state.QUEST_TRACKER.currentWeekdayName || 'Thursday';
 		QUEST_TRACKER_FILTER = state.QUEST_TRACKER.filter || {};
+		QUEST_TRACKER_RUMOUR_FILTER = state.QUEST_TRACKER.rumourFilter || {};
 		QUEST_TRACKER_FILTER_Visbility = state.QUEST_TRACKER.filterVisibility || false;
 		QUEST_TRACKER_WEATHER_TRENDS = state.QUEST_TRACKER.weatherTrends || {
 			dry: 0,
@@ -179,6 +181,7 @@ var QuestTracker = QuestTracker || (function () {
 		state.QUEST_TRACKER.imperialMeasurements = QUEST_TRACKER_imperialMeasurements;
 		state.QUEST_TRACKER.TreeObjRef = QUEST_TRACKER_TreeObjRef;
 		state.QUEST_TRACKER.filter = QUEST_TRACKER_FILTER;
+		state.QUEST_TRACKER.rumourFilter = QUEST_TRACKER_RUMOUR_FILTER;
 		state.QUEST_TRACKER.filterVisibility = QUEST_TRACKER_FILTER_Visbility;
 	};
 	const initializeQuestTrackerState = (forced = false) => {
@@ -224,6 +227,7 @@ var QuestTracker = QuestTracker || (function () {
 					visibility: true
 				},
 				filter: {},
+				rumourFilter: {},
 				filterVisibility: false
 			};
 			if (!findObjs({ type: 'rollabletable', name: QUEST_TRACKER_ROLLABLETABLE_QUESTS })[0]) {
@@ -4061,23 +4065,23 @@ var QuestTracker = QuestTracker || (function () {
 				});
 				return menu;
 			},
-			generateFilterLinks: (filterKey, filterValue, label) => {
+			generateFilterLinks: (filterKey, filterValue, label, menuType) => {
 				if (filterValue === true || filterValue === false) {
 					const displayValue = filterValue ? 'True' : 'False';
 					const toggleValue = filterValue ? 'false' : 'true';
 					return `
 						<li>${label} [<small>${displayValue}</small>]
 							<small>
-								<a style="${styles.filterlink}" href="!qt-filter action=modify|key=${filterKey}|value=${toggleValue}">Change</a>
-								<a style="${styles.filterlink}" href="!qt-filter action=modify|key=${filterKey}|value=">Clear</a>
+								<a style="${styles.filterlink}" href="!qt-filter action=modify|key=${filterKey}|value=${toggleValue}|menu=${menuType}">Change</a>
+								<a style="${styles.filterlink}" href="!qt-filter action=modify|key=${filterKey}|value=|menu=${menuType}">Clear</a>
 							</small>
 						</li>`;
 				} else {
 					return `
 						<li>${label}
 							<small>
-								<a style="${styles.filterlink}" href="!qt-filter action=modify|key=${filterKey}|value=true">Show</a>
-								<a style="${styles.filterlink}" href="!qt-filter action=modify|key=${filterKey}|value=false">Hide</a>
+								<a style="${styles.filterlink}" href="!qt-filter action=modify|key=${filterKey}|value=true|menu=${menuType}">Show</a>
+								<a style="${styles.filterlink}" href="!qt-filter action=modify|key=${filterKey}|value=false|menu=${menuType}">Hide</a>
 							</small>
 						</li>`;
 				}
@@ -4094,12 +4098,13 @@ var QuestTracker = QuestTracker || (function () {
 					.map(option => `|${option.label},${option.value}`)
 					.join('');
 			},
-			showFilterMenu: () => {
+			showFilterMenu: (menuType = 'quest') => {
+				const FILTER = menuType === 'rumour' ? QUEST_TRACKER_RUMOUR_FILTER : QUEST_TRACKER_FILTER;
 				const questGroupsTable = findObjs({ type: 'rollabletable', name: QUEST_TRACKER_ROLLABLETABLE_QUESTGROUPS })[0];
 				if (errorCheck(171, 'exists', questGroupsTable, 'questGroupsTable')) return;
 				const questGroups = findObjs({ type: 'tableitem', rollabletableid: questGroupsTable.id }) || [];
-				const filteredGroups = Array.isArray(QUEST_TRACKER_FILTER.filter?.group)
-					? QUEST_TRACKER_FILTER.filter.group
+				const filteredGroups = Array.isArray(FILTER.filter?.group)
+					? FILTER.filter.group
 					: [];
 				let groupList = `
 					<br><strong>Quest Groups</strong>
@@ -4116,41 +4121,44 @@ var QuestTracker = QuestTracker || (function () {
 						return `
 							<li>${groupName}
 								<small>
-									<a style="${styles.filterlink}" href="!qt-filter action=${action}|key=group|value=${groupWeight}">${actionText}</a>
+									<a style="${styles.filterlink}" href="!qt-filter action=${action}|key=group|value=${groupWeight}|menu=${menuType}">${actionText}</a>
 								</small>
 							</li>`;
 					})
 					.join('');
 				groupList += `</ul>`;
-				const hasFilters = Object.keys(QUEST_TRACKER_FILTER.filter || {}).length > 0 || QUEST_TRACKER_FILTER.groupBy;
-				const filterDisabled = QUEST_TRACKER_FILTER.filter?.disabled;
-				const filterHidden = QUEST_TRACKER_FILTER.filter?.hidden;
-				const filterHandout = QUEST_TRACKER_FILTER.filter?.handout;
-				const currentGroupBy = QUEST_TRACKER_FILTER.groupBy || null;
+				const hasFilters = Object.keys(FILTER.filter || {}).length > 0 || FILTER.groupBy;
+				const filterDisabled = FILTER.filter?.disabled;
+				const filterHidden = FILTER.filter?.hidden;
+				const filterHandout = FILTER.filter?.handout;
+				const currentGroupBy = FILTER.groupBy || null;
 				const groupByDropdown = H.buildGroupByDropdown(currentGroupBy);
 				let menu = `
 					<div style="${styles.menu}">
 						<span style="${styles.floatRight}">
-							<a style="${styles.paddedfilterlink}" href="!qt-filter action=togglevisibility|value=${QUEST_TRACKER_FILTER_Visbility === true ? 'false' : 'true'}">${QUEST_TRACKER_FILTER_Visbility === true ? 'Hide' : 'Show'}</a>
-							${hasFilters ? `<a style="${styles.paddedfilterlink}" href="!qt-filter action=clear">Clear</a>` : ''}
+							<a style="${styles.paddedfilterlink}" href="!qt-filter action=togglevisibility|value=${QUEST_TRACKER_FILTER_Visbility === true ? 'false' : 'true'}|menu=${menuType}">${QUEST_TRACKER_FILTER_Visbility === true ? 'Hide' : 'Show'}</a>
+							${hasFilters ? `<a style="${styles.paddedfilterlink}" href="!qt-filter action=clear|menu=${menuType}">Clear</a>` : ''}
 						</span>
 						<h3>Filters</h3>
 				`;
 				if (QUEST_TRACKER_FILTER_Visbility) {
-					menu += `
-						<ul>
-							${!Object.keys(QUEST_TRACKER_FILTER.filter || {}).length ? '<small>No filters applied</small>' : ''}
-							${H.generateFilterLinks('disabled', filterDisabled, 'Disabled')}
-							${H.generateFilterLinks('hidden', filterHidden, 'Hidden')}
-							${H.generateFilterLinks('handout', filterHandout, 'Handout')}
-						</ul>
-						${groupList}
-						<br><strong>Group by</strong>
-						<small>
-							<a style="${styles.filterlink}" href="!qt-filter action=modify|key=groupBy|value=?{Choose${groupByDropdown}}">${currentGroupBy || 'add'}</a>
-							${currentGroupBy ? ` | <a style="${styles.filterlink}" href="!qt-filter action=resetGrouping|key=groupBy|value=">Clear</a>` : ''}
-						</small>
-					`;
+					if (menuType === 'quest') {
+						menu += `
+							<ul>
+								${!Object.keys(FILTER.filter || {}).length ? '<small>No filters applied</small>' : ''}
+								${H.generateFilterLinks('disabled', filterDisabled, 'Disabled', menuType)}
+								${H.generateFilterLinks('hidden', filterHidden, 'Hidden', menuType)}
+								${H.generateFilterLinks('handout', filterHandout, 'Handout', menuType)}
+							</ul>
+							${groupList}
+							<br><strong>Group by</strong>
+							<small>
+								<a style="${styles.filterlink}" href="!qt-filter action=modify|key=groupBy|value=?{Choose${groupByDropdown}}|menu=${menuType}">${currentGroupBy || 'add'}</a>
+								${currentGroupBy ? ` | <a style="${styles.filterlink}" href="!qt-filter action=resetGrouping|key=groupBy|value=|menu=${menuType}">Clear</a>` : ''}
+							</small>
+						`;
+					}
+					else menu += groupList;
 				}
 				menu += `</div>`;
 				menu = menu.replace(/[\r\n]/g, '');
@@ -4599,7 +4607,7 @@ var QuestTracker = QuestTracker || (function () {
 			QUEST_TRACKER_FILTER.filter = QUEST_TRACKER_FILTER.filter || {};
 			QUEST_TRACKER_FILTER.groupBy = QUEST_TRACKER_FILTER.groupBy || null;
 			let menu = `<div style="${styles.menu}"><h3 style="margin-bottom: 10px;">All Quests</h3>`;
-			menu += H.showFilterMenu() + "<br>";
+			menu += H.showFilterMenu('quest') + "<br>";
 			if (Object.keys(QUEST_TRACKER_globalQuestData).length === 0) {
 				menu += `
 					<p>There doesn't seem to be any Quests. You need to create a quest or Import from the Handouts.</p>
@@ -4638,39 +4646,45 @@ var QuestTracker = QuestTracker || (function () {
 			Utils.sendGMMessage(menu);
 		};
 		const showAllRumours = () => {
+			QUEST_TRACKER_RUMOUR_FILTER.filter = QUEST_TRACKER_RUMOUR_FILTER.filter || {};
+			QUEST_TRACKER_RUMOUR_FILTER.groupBy = QUEST_TRACKER_RUMOUR_FILTER.groupBy || null;
 			let menu = `<div style="${styles.menu}"><h3 style="margin-bottom: 10px;">All Rumours</h3>`;
-			menu += `<p>This menu displays all the rumours currently associated with quests in the game. Use the options below to navigate through the locations and statuses to add new rumours or modify existing ones.</p>`;
+			menu += H.showFilterMenu('rumour') + "<br>";
+			menu += `<p>This menu displays all the rumours currently associated with quests. Use the options below to filter, navigate through locations, and modify rumours.</p>`;
 			if (Object.keys(QUEST_TRACKER_globalQuestData).length === 0) {
-				menu += `
-					<p>There are no quests available. You need to create a quest or import quests from the handouts.</p>
-				`;
+				menu += `<p>There are no quests available. You need to create quests or import from handouts.</p>`;
 			} else {
-				Object.keys(QUEST_TRACKER_globalQuestData).forEach(questId => {
-					let rumourCount = 0;
-					let questRumours = QUEST_TRACKER_globalRumours[questId] || {};
-					Object.keys(questRumours).forEach(status => {
-						let locationRumours = questRumours[status] || {};
-						Object.keys(locationRumours).forEach(location => {
-							rumourCount += Object.keys(locationRumours[location] || {}).length;
-						});
-					});
-					let questData = QUEST_TRACKER_globalQuestData[questId] || {};
-					let questName = questData.name || `Quest: ${questId}`;
-					menu += `<div style="${styles.column}">
-						<span style="${styles.floatLeft}">${questName}<br><small>${rumourCount} rumours</small></span>
-						<span style="${styles.floatRight}">
-							<a style="${styles.button}" href="!qt-menu action=showQuestRumours|questId=${questId}">Show</a>
-						</span>
-					</div>`;
-				});
+				const filteredQuests = Object.keys(QUEST_TRACKER_globalQuestData)
+					.map(questId => {
+						const questData = QUEST_TRACKER_globalQuestData[questId] || {};
+						const normalizedData = Object.keys(questData).reduce((acc, key) => {
+							acc[key.toLowerCase()] = questData[key];
+							return acc;
+						}, {});
+						if (!H.applyFilter(QUEST_TRACKER_RUMOUR_FILTER.filter, normalizedData)) return null;
+						const questRumours = QUEST_TRACKER_globalRumours[questId] || {};
+						let rumourCount = Object.values(questRumours)
+							.reduce((sum, statusRumours) => sum + Object.values(statusRumours)
+								.reduce((locSum, locationRumours) => locSum + Object.keys(locationRumours).length, 0), 0);
+						return {
+							id: questId,
+							name: questData.name || `Quest: ${questId}`,
+							rumourCount
+						};
+					})
+					.filter(Boolean)
+					.sort((a, b) => a.name.localeCompare(b.name));
+				menu += H.renderQuestList(filteredQuests, QUEST_TRACKER_RUMOUR_FILTER.groupBy);
 			}
 			menu += `
 				<br><hr>
-				<a style="${styles.button}" href="!qt-menu action=manageRumourLocations">Rumour Locations</a>
-				&nbsp;
-				<a style="${styles.button} ${styles.floatRight}" href="!qt-menu action=main">Back to Main Menu</a>
+				<span style="${styles.floatRight}">
+					<a style="${styles.button}" href="!qt-menu action=manageRumourLocations">Manage Locations</a>
+					&nbsp;
+					<a style="${styles.button}" href="!qt-menu action=main">Back to Main</a>
+				</span>
 			</div>`;
-			menu = menu.replace(/[\r\n]/g, ''); 
+			menu = menu.replace(/[\r\n]/g, '');
 			Utils.sendGMMessage(menu);
 		};
 		const showQuestRumourByStatus = (questId) => {
@@ -4736,15 +4750,15 @@ var QuestTracker = QuestTracker || (function () {
 				return;
 			}
 			const locationItems = findObjs({ type: 'tableitem', rollabletableid: locationTable.id });
-			const locationMapping = {};
-			locationItems.forEach(location => {
-				const locationName = location.get('name');
-				const sanitizedLocationName = Utils.sanitizeString(locationName.toLowerCase());
-				locationMapping[sanitizedLocationName] = { 
-					originalName: locationName, 
-					sanitizedName: sanitizedLocationName,
-					weight: location.get('weight')
-				};
+			let locationMapping = locationItems.map(location => ({
+				originalName: location.get('name'),
+				sanitizedName: Utils.sanitizeString(location.get('name').toLowerCase()),
+				weight: location.get('weight')
+			}));
+			locationMapping.sort((a, b) => {
+				if (a.sanitizedName === 'everywhere') return -1;
+				if (b.sanitizedName === 'everywhere') return 1;
+				return a.originalName.localeCompare(b.originalName);
 			});
 			const questRumours = QUEST_TRACKER_globalRumours[questId] || {};
 			const rumoursByStatus = questRumours[statusId.toLowerCase()] || {};
@@ -4878,15 +4892,22 @@ var QuestTracker = QuestTracker || (function () {
 				return;
 			}
 			let locationItems = findObjs({ type: 'tableitem', rollabletableid: locationTable.id });
+			let everywhereLocation = locationItems.find(loc => loc.get('name').toLowerCase() === 'everywhere');
+			let otherLocations = locationItems
+				.filter(loc => loc.get('name').toLowerCase() !== 'everywhere')
+				.sort((a, b) => a.get('name').localeCompare(b.get('name')));
 			let uniqueLocations = new Set();
-			locationItems.sort((a, b) => a.get('weight') - b.get('weight')).forEach(location => {
+			if (everywhereLocation) {
+				otherLocations.unshift(everywhereLocation);
+			}
+			otherLocations.forEach(location => {
 				let locationName = location.get('name');
 				let locationKey = locationName.toLowerCase();
 				let locationId = location.get('weight');
 				if (!uniqueLocations.has(locationKey)) {
 					uniqueLocations.add(locationKey);
 					let rumourCount = QUEST_TRACKER_rumoursByLocation[locationKey] ? Object.keys(QUEST_TRACKER_rumoursByLocation[locationKey]).length : 0;
-					let showButtons = !(locationId === 1 || locationName.toLowerCase() === 'everywhere');
+					let showButtons = !(locationId === 1 || locationKey === 'everywhere');
 					menu += `<li style="${styles.column}">
 								<span style="${styles.floatLeft}">${locationName}<br><small>${rumourCount} Rumours</small></span>
 								<span style="${styles.floatRight}">`;
@@ -5124,65 +5145,59 @@ var QuestTracker = QuestTracker || (function () {
 			menu = menu.replace(/[\r\n]/g, ''); 
 			Utils.sendGMMessage(menu);
 		};
-		const manageFilter = ({ action, key, value }) => {
-			if (!QUEST_TRACKER_FILTER.filter) QUEST_TRACKER_FILTER.filter = {};
+		const manageFilter = ({ action, key, value, menu = 'quest' }) => {
+			const FILTER = menu === 'rumour' ? QUEST_TRACKER_RUMOUR_FILTER : QUEST_TRACKER_FILTER;
+			if (!FILTER.filter) FILTER.filter = {};
 			switch (action) {
 				case 'add': {
 					if (key === 'group') {
-						const groups = Array.isArray(QUEST_TRACKER_FILTER.filter.group)
-							? [...QUEST_TRACKER_FILTER.filter.group]
-							: [];
 						const groupValue = parseInt(value, 10);
-						if (!groups.includes(groupValue)) {
-							groups.push(groupValue);
-						}
-						QUEST_TRACKER_FILTER.filter.group = [...new Set(groups)].sort((a, b) => a - b);
+						FILTER.filter.group = [groupValue];
 					}
 					break;
 				}
 				case 'remove': {
 					if (key === 'group') {
-						const groups = Array.isArray(QUEST_TRACKER_FILTER.filter.group)
-							? [...QUEST_TRACKER_FILTER.filter.group]
+						const groups = Array.isArray(FILTER.filter.group)
+							? [...FILTER.filter.group]
 							: [];
 						const groupValue = parseInt(value, 10);
-						QUEST_TRACKER_FILTER.filter.group = groups.filter(group => group !== groupValue);
+						FILTER.filter.group = groups.filter(group => group !== groupValue);
 					}
 					break;
 				}
 				case 'modify': {
 					if (key === 'groupBy') {
 						if (value === null || value === undefined) {
-							QUEST_TRACKER_FILTER.groupBy = null;
+							FILTER.groupBy = null;
 						} else {
 							const validGroupByOptions = ['group', 'visibility', 'handout', 'disabled', null];
 							if (!validGroupByOptions.includes(value)) {
 								errorCheck(167, 'msg', null, `Invalid value for groupBy: ${value}`);
 								return;
 							}
-							QUEST_TRACKER_FILTER.groupBy = value;
+							FILTER.groupBy = value;
 						}
 					} else if (value === null || value === undefined) {
-						delete QUEST_TRACKER_FILTER.filter[key];
+						delete FILTER.filter[key];
 					} else {
-						const normalizedValue =
-							value === 'true' ? true : value === 'false' ? false : value;
-						QUEST_TRACKER_FILTER.filter[key] = normalizedValue;
+						const normalizedValue = value === 'true' ? true : value === 'false' ? false : value;
+						FILTER.filter[key] = normalizedValue;
 					}
 					break;
 				}
 				case 'clear': {
-					QUEST_TRACKER_FILTER.filter = {};
-					QUEST_TRACKER_FILTER.groupBy = null;
+					FILTER.filter = {};
+					FILTER.groupBy = null;
 					break;
 				}
 				case 'resetGrouping': {
-					QUEST_TRACKER_FILTER.groupBy = null;
+					FILTER.groupBy = null;
 					break;
 				}
 				case 'sort': {
-					QUEST_TRACKER_FILTER.sortBy = value || null;
-					QUEST_TRACKER_FILTER.sortOrder = 'asc';
+					FILTER.sortBy = value || null;
+					FILTER.sortOrder = 'asc';
 					break;
 				}
 				default:
@@ -5769,10 +5784,13 @@ var QuestTracker = QuestTracker || (function () {
 				Menu.showAllTriggers();
 			} else if (action === 'showTriggerDetails') {
 				Menu.showTrigger(id);
-			} else errorCheck(120, 'msg', null,`Unknown menu action: ${action}`);
-		
+			} else errorCheck(120, 'msg', null,`Unknown menu action: ${action}`);	
 		} else if (command === '!qt-filter') {
-			const { action, key, value, sortOrder } = params;
+			const { action, key, value, sortOrder, menu } = params;
+			const menuActions = {
+				quest: () => Menu.showAllQuests(),
+				rumour: () => Menu.showAllRumours()
+			};
 			switch (action) {
 				case 'modify':
 					if (errorCheck(165, 'exists', key, 'key')) return;
@@ -5783,9 +5801,9 @@ var QuestTracker = QuestTracker || (function () {
 							return;
 						}
 					}
-					Menu.manageFilter({ action, key, value });
+					Menu.manageFilter({ action, key, value, menu });
 					setTimeout(() => {
-						Menu.showAllQuests();
+						menuActions[menu]();
 					}, 500);
 					break;
 				case 'add':
@@ -5796,31 +5814,23 @@ var QuestTracker = QuestTracker || (function () {
 						return;
 					}
 					if (errorCheck(175, 'exists', value, 'value')) return;
-					Menu.manageFilter({ action, key, value });
+					Menu.manageFilter({ action, key, value, menu });
 					setTimeout(() => {
-						Menu.showAllQuests();
+						menuActions[menu]();
 					}, 500);
 					break;
 				case 'clear':
 				case 'resetGrouping':
-					Menu.manageFilter({ action, key, value });
+					Menu.manageFilter({ action, key, value, menu });
 					setTimeout(() => {
-						Menu.showAllQuests();
+						menuActions[menu]();
 					}, 500);
-					break;
-				case 'sort':
-					if (errorCheck(168, 'exists', key, 'key')) return;
-					if (key !== 'sortBy') {
-						errorCheck(169, 'msg', null, `Invalid sort key: ${key}`);
-						return;
-					}
-					manageFilter({ action, key, value, sortOrder });
 					break;
 				case 'togglevisibility':
 					if (errorCheck(170, 'exists', value, 'value')) return;
 					Utils.toggleFilterVisibility(value);
 					setTimeout(() => {
-						Menu.showAllQuests();
+						menuActions[menu]();
 					}, 500);
 					break;
 				default:
