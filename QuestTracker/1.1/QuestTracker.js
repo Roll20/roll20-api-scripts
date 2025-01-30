@@ -5683,7 +5683,7 @@ var QuestTracker = QuestTracker || (function () {
 						Menu.manageRumourLocations();
 					}, 500);
 					break;
-				case 'editGroupName':
+				case 'editLocationName':
 					if (errorCheck(104, 'exists', newItem, 'newItem')) return;
 					if (errorCheck(105, 'exists', locationId, 'locationId')) return;
 					Rumours.manageRumourLocation('update', newItem, locationId);
