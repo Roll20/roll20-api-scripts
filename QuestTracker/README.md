@@ -29,6 +29,9 @@ Quest Tracker is a comprehensive tool for managing quests, rumors, and events in
   - Display quests and relationships as a tree diagram.
   - Automatically handle mutually exclusive relationships.
 
+- **Triggers:**
+  - Automatically change Quest's after certain triggers have been met, such as Date or status changes.
+
 ### Getting Started
 
 1. **Installation:**
@@ -254,7 +257,8 @@ Quests are stored in a hierarchical JSON format, supporting complex relationship
 * **Description:** A short description of the quest; it will be the tooltip on the Quest Tree page.
 * **Status:** The status of the quest, this is stored in a rollable table as a 'weight'.
 * **Hidden:** This quest is completely hidden from the Players when displayed on the page, the relasionships of this quest are also hidden. If you do not use the Quest Tree page there no difference betwene a hidden quest or a visible one (e.g. rumours from hidden quests are still shown), by default quests start out as hidden.
-* **Quest Group:** This is to help you organise your quests better, relasionships can only be formed by quests within their own quest group.
+* **Quest Group:** This is to help you organise your quests better, relationships can only be formed by quests within their own quest group.
+* **Linked Handout:** Either by adding the Handout ID manually, or by choosing Auto you can link Quest Handouts to the Quests. (Handouts are matched on the Quest name vs the Handout name. There is some wiggle room as it uses Levenshtein Distance as a matching mechanic, if one is not found it will create a handout)
 * **AutoAdvance:** Simply add a Date (YYYY-MM-DD) into one of the status fields and when that date occurs the quest will autoadvance to that specific status; it will then clear this field. There are no checks to make sure things go in the correct order it is up to you to maintain your own quests.
 * **Icon:** (potentially a future UI implimentation) This is actually a hidden field as I have currently not built a UI for it, but on the rollable table you can upload an icon for the quest which will appear as a token on the Quest Tree Page. This is important as it will allow you to use tokenmod commands to trigger a quest change in state using the questID in the GM Notes field of said token.
 
@@ -265,6 +269,53 @@ Quests are stored in a hierarchical JSON format, supporting complex relationship
 * If the + buttons are shaded grey and cannot be selected it means there are no valid quests to add, quests need to be in the same quest group and not already be selected in a relasionship
 * Quest Relationships work on a AND and OR functionality and you can put them within relasionship groups in order to visualise the prerequisities; as you can see in the more complex quest tree; five quests are its prerequisites (under AND) but 4 of them are separated into two groups of OR functionality, the grouped quests are also mutually exclusive with each other (note the red line).
 * The Quest diagram is generated automatically and only works on a quest by quest basis (so no futher back); if you come across any failures within rendering please make sure you raise this as an issue. note: before you do this drag the chat window wider, as most issues are resolved with this.
+
+### v1.1 Changes
+
+As of V1.1 the quest page has been revamped; autoadvance section has been removed and replaced with a new **Triggers Module**
+
+![New Layout](https://raw.githubusercontent.com/boli32/QuestTracker/refs/heads/main/img/newQuestLayout.png)
+
+If an image has been added to the quest rollable table it will now show in this page adding a splash of colour to the page
+
+![Linking Handouts](https://raw.githubusercontent.com/boli32/QuestTracker/refs/heads/main/img/linkedHandout.png)
+
+Handouts can be linked to the quest, it will attempt to do so automatcially by searching for a handout with the same name as the quest, if this fails it will create a blank handout. You can link to a handout manually by using the objectID of the handout (link to the Handout and examine it's URL)
+
+### Filters
+
+![Filters](https://raw.githubusercontent.com/boli32/QuestTracker/refs/heads/main/img/filters_open.png)
+
+The 'All Quests' page has also had a revamp as well allowing for filters, these filters can be cleared or hidden allowing for a better experiance when dealing with dozens of quests
+
+## Triggers Module (new to v1.1)
+
+The previous 'autoadvance' has had a major revamp and is not a full module; you can create 'triggers' which can adjust your quests allowing for a more automated way of navigating things
+
+![alltriggers](https://raw.githubusercontent.com/boli32/QuestTracker/refs/heads/main/img/alltriggers.png)
+
+* **Date Trigger** - When the Date advances to this date, or goes beyond it this trigger will fire, this is most similar to the old autoadvance
+* **Quest Trigger** - When a quest changes, either toggling quest visibility, their enabled/disabled status or more commonly the status of a quest changes this trigger will fire
+* **Reaction Trigger** - This is a unique trigger as it triggers when another trigger fires. Technically you coud do the same using additional effects; but I have included it as there may be times you want to use it to organise your triggers better
+
+|||
+|:-------------------------:|:-------------------------:
+|![questTrigger](https://raw.githubusercontent.com/boli32/QuestTracker/refs/heads/main/img/leavingWaterdeep.png)|![reactionTrigger](https://raw.githubusercontent.com/boli32/QuestTracker/refs/heads/main/img/banditattack.png)|
+
+
+
+After each trigger fires it generates 'effects' these are currently only limited to quests and allows you to automatically change the state (disabled/enabled) visibility (hidden or not) or status of a quest. The most common examples I can see for this are:
+* Automatically disabling quests down a mutually exclusive branch once a certain quest is started
+* Starting a new quest once another has finished (and making it visible to the players)
+* Have a quest start automticlly at a certain date; say the day of a Festival.
+
+You can have multiple effects with each trigger allowing for one change to have more than one consequence.
+
+**Once a trigger fires, it and all associated triggers with it will be automatically deleted.**
+
+### Future Plans
+
+I plan to expand the triggers somewhat, and allow the names and descriptions of quests to be adjusted by triggers; changing 'The Feast of the Moon' quest to 'Dragon Attack' once the true scale of things occur.
 
 ## Weather Module
 
@@ -701,41 +752,72 @@ Yes, you can carefully edit the qt-quest-groups rollable table, although this is
 ### I've noticed you can create quest relationships and then move them into separate quest groups, this results in weirdness on the Quest Tree Page
 Yes, that is a workaround to having relationships between quest groups and it *can* result in a very pretty Quest Tree Page, but without a lot of trial and error the Quest Tree Page is not designed to work with this in mind. I left this in as the only other option would be to wipe all relasionships when you add a quest to a quest group which would cause more frustration.
 
+### How does 'auto' work when linking quests to handouts?
+This actually works using a 'Damerau–Levenshtein distance' compare. It essentially tries to match the Quest Name with a handout name and will take more 'fuzzy' matches; essentially allowing for a self correction of typos... to a certain extent. if it fails it will create a blank handout and automatically link to it.
+
+### Can you link multiple quests to the same Handout?
+
+Yes, there is no restriction on this should you wish to combine handouts.
+
+### Wait, I have autoadvance all filled in from v1.0, do I have to redo it?
+
+No, there is a script in place to convert all autoadvance triggers into the new Trigger Module; although this is difficult to test it *should* work...
+
+
 ## Updates
 
-#### 2025-01-14
-* **v1.0.3** Allowed for users to add their own custom calanders
-#### 2025-01-13
-* **v1.0.2** Added Krynn (Dragonlance) and Galifar (Eberon) Calanders. also expanded to allow for multiple moons and different cycles. Added the smaller and secondary moons to both Exandria and Grekhawk calander.
-#### 2025-01-10
-* **v1.0.1** Various small fixes. Made Compatable with Supernotes Mod
-#### 2025-01-09
-* **v1.0** Official Release
-#### 2025-01-08
-* **v0.9.2** Fixed quest dropdown to deal with single quests without a dropdown. Also an ungrouped quest which get assigned a relasionship to a quest within a quest group automatically now gets assigned to that quest group.
-* **v0.9.1.7.2** Adjusted font and rectangle size on quest tree page
-#### 2025-01-07
-* **v0.9.1.7.1** Swapped DELETE for CONFIRM in a popup
-* **v0.9.1.7** Removed JumpGate Toggle and where it was used (paths fixed now), kept variable in case it is needed later.
-* **v0.9.1.6** If a rollable table needs to be created, it is now hidden from players.
-* **v0.9.1.5** Added Switches to toggle between Imperial or Metric Weather Measurements.
-* **v0.9.1.4** Fixed Allias Date Advance to show cut down description.
-#### 2025-01-06
-* **v0.9.1.3** Fixed Climate modifiers and adjusted bellcurve
-#### 2025-01-03
-* **v0.9.1.2** Disabled Quest Relationship buttons when no quests available.
-* **v0.9.1.1** Fixed Quest Group Dropdown Menu
-* **v0.9.1** Adjusted climate values and streamlined climate values
-#### 2025-01-02
-* **v0.9.0.1** Fixed rumour filtering issue
-#### 2024-12-19
-* **v0.9** Initial Upload
+#### 2025-02-04
+* Release of **v1.1**; significant changes to quest interaction and display.
+- **Questbuilder Module**
+  * Added the ability to disable quests, disabled quests and all their 'full children' quests will no longer show on the Quest Tree Builder Page 
+  * Questbuilder toggles visibility correctly now.
+  * GMnote menu expanded to include link to handout
+- **Quest Module**
+  * Quests can now be linked to handouts
+  * Filters can now be applied to the Quest List
+  * original Autoadvance removed, instead a new Triggers Module was added
+  * Image Icons (from rollable table) are now shown on the Inspect Quest
+- **NEW Triggers Module**
+  * Quest Triggers significantly expanded so quests now interact with each other much more.
+  * Quest Triggers can triggr from:
+    * Changes to a quest's Status, Disabled or Hidden fields
+    * The Date advancing
+    * Other Triggers firing
+  * Triggers can change other quests:
+    * Status
+    * Visibility
+    * State (Enabled/Disabled) 
+  * Triggers are auomatically removed once fired
+- **Weather Module**
+    * Tweaked the Bellcurve calculation to allow for a global change and moved the projected average for wind down (-15) and visibility up (+15), along with adjusted descriptions. This should make adventuring parties less likely to be adventuring in 'gale force winds'.
+- **Other Quality of Life Changes**
+  * QuestTracker Chat is no longer archived
+
+### 2025-01-14 Stable Release V1.0.3
+
+ * **v1.0.3** Allowed for users to add their own custom calanders (2025-01-14)
+ * **v1.0.2** Added Krynn (Dragonlance) and Galifar (Eberon) Calanders. also expanded to allow for multiple moons and different cycles. Added the smaller and secondary moons to both Exandria and Grekhawk calander. (2025-01-13)
+ * **v1.0.1** Various small fixes. Made Compatable with Supernotes Mod (2025-01-10)
+ * **v1.0** Official Release (2025-01-09)
+ * **v0.9.2** Fixed quest dropdown to deal with single quests without a dropdown. Also an ungrouped quest which get assigned a relasionship to a quest within a quest group automatically now gets assigned to that quest group. (2025-01-08)
+ * **v0.9.1.7.2** Adjusted font and rectangle size on quest tree page
+ * **v0.9.1.7.1** Swapped DELETE for CONFIRM in a popup (2025-01-07)
+ * **v0.9.1.7** Removed JumpGate Toggle and where it was used (paths fixed now), kept variable in case it is needed later. (2025-01-07)
+* **v0.9.1.6** If a rollable table needs to be created, it is now hidden from players. (2025-01-07)
+ * **v0.9.1.5** Added Switches to toggle between Imperial or Metric Weather Measurements. (2025-01-07)
+* **v0.9.1.4** Fixed Allias Date Advance to show cut down description. (2025-01-07)
+* **v0.9.1.3** Fixed Climate modifiers and adjusted bellcurve (2025-01-06)
+* **v0.9.1.2** Disabled Quest Relationship buttons when no quests available. (2025-01-03)
+* **v0.9.1.1** Fixed Quest Group Dropdown Menu (2025-01-03)
+* **v0.9.1** Adjusted climate values and streamlined climate values (2025-01-03)
+* **v0.9.0.1** Fixed rumour filtering issue (2025-01-02)
+* **v0.9** Initial Upload (2024-12-19)
 
 ## Contributing
 
-Contributions are welcome! Please submit pull requests or report issues on the GitHub repository:
+Contributions are welcome! Please report issues on the GitHub repository and tag me @boli32
 
-[GitHub Repository](https://github.com/boli32/QuestTracker)
+[GitHub Repository](https://github.com/Roll20/roll20-api-scripts/issues)
 
 ## Credits
 

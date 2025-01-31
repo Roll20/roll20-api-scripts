@@ -1,4 +1,4 @@
-// Github:	 https://github.com/boli32/QuestTracker/blob/main/QuestTracker.js
+// Github:	 https://github.com/Roll20/roll20-api-scripts/tree/master/CalenderData
 // By:		 Boli (Steven Wrighton): Professional Software Developer, Enthusiatic D&D Player since 1993.
 // Contact:	 https://app.roll20.net/users/3714078/boli
 // Readme	 https://github.com/boli32/QuestTracker/blob/main/README.md 
@@ -16139,52 +16139,52 @@ on('ready', () => {
 			},
 			"wind": {
 				"0": {
-					"description": "Completely calm, an unnatural stillness in the air."
+					"description": "Completely calm, no movement in the air."
 				},
 				"5": {
-					"description": "Barely perceptible breeze, air feels eerily still."
+					"description": "Still air, indistinguishable from calm conditions."
 				},
 				"10": {
-					"description": "Gentle stirrings, slight movement in the air."
+					"description": "Barely perceptible movement, no noticeable effect."
 				},
 				"15": {
-					"description": "Very light breeze, barely noticeable and pleasant."
+					"description": "Faint air currents, only detectable with sensitive instruments."
 				},
 				"20": {
-					"description": "Light breeze, occasional rustling of leaves."
+					"description": "Minimal movement, not strong enough to rustle leaves."
 				},
 				"25": {
-					"description": "Noticeable breeze, light objects may shift slightly."
+					"description": "Slight stirrings, barely enough to move small particles."
 				},
 				"30": {
-					"description": "Fresh breeze, tree branches show slight movement."
+					"description": "Extremely light breeze, slight movement in smoke."
 				},
 				"35": {
-					"description": "Moderate breeze, pleasant but noticeable resistance while walking."
+					"description": "Very gentle air movement, only felt in an open field."
 				},
 				"40": {
-					"description": "Brisk wind, small branches begin to sway."
+					"description": "Soft breeze, barely enough to move thin grass."
 				},
 				"45": {
-					"description": "Strong breeze, noticeable movement of larger branches."
+					"description": "Light breeze, small leaves begin to flutter."
 				},
 				"50": {
-					"description": "Blustery wind, significant movement of objects outdoors."
+					"description": "Noticeable breeze, small objects might shift slightly."
 				},
 				"60": {
-					"description": "Gale force, walking becomes difficult, minor damage possible."
+					"description": "Fresh breeze, tree leaves sway, noticeable wind resistance while walking."
 				},
 				"70": {
-					"description": "Strong gale, structural damage to weak buildings and trees likely."
+					"description": "Strong wind, difficult to walk against, small branches sway."
 				},
 				"80": {
-					"description": "Severe storm, hazardous conditions with potential widespread damage."
+					"description": "Severe windstorm, large branches move, walking becomes challenging."
 				},
 				"90": {
-					"description": "Violent storm, extreme danger and widespread destruction likely."
+					"description": "Very strong storm winds, debris begins to fly, structures may take damage."
 				},
 				"100": {
-					"description": "Hurricane force, catastrophic devastation expected."
+					"description": "Extreme hurricane-force winds, widespread devastation likely."
 				}
 			},
 			"precipitation": {
