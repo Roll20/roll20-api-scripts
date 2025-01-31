@@ -4050,8 +4050,8 @@ var QuestTracker = QuestTracker || (function () {
 						const nameB = (b.name || '').toLowerCase();
 						return nameA.localeCompare(nameB);
 					});
-					menu += '<ul>';
 					if (type === 'quest') {
+						menu += '<ul>';
 						sortedQuests.forEach(quest => {
 							menu += `
 								<li style="${styles.overflow}">
@@ -4064,6 +4064,8 @@ var QuestTracker = QuestTracker || (function () {
 						});
 					}
 					else {
+						const totalRumours = quests.reduce((sum, quest) => sum + quest.rumourCount, 0);
+						menu += `<h4>Total: ${totalRumours} rumour${totalRumours === 1 ? '' : 's'}</h4><ul>`;
 						sortedQuests.forEach(quest => {
 						menu += `
 							<li style="${styles.overflow}">
