@@ -154,7 +154,7 @@ var QuestTracker = QuestTracker || (function () {
 		}
 	};
 	const checkVersion = () => {
-		if (!QUEST_TRACKER_TriggerConversion) Utils.sendGMMessage("API Updated; make sure you run Check Version in Configuration.")
+		if (!QUEST_TRACKER_TriggerConversion) Triggers.convertAutoAdvanceToTriggers();
 	}
 	const saveQuestTrackerData = () => {
 		state.QUEST_TRACKER.verboseErrorLogging = QUEST_TRACKER_verboseErrorLogging;
@@ -503,10 +503,6 @@ var QuestTracker = QuestTracker || (function () {
 			QUEST_TRACKER_FILTER_Visbility = (value === 'true');
 			saveQuestTrackerData();
 		};
-		const checkVersion = () => {
-			if (!QUEST_TRACKER_TriggerConversion) {Triggers.convertAutoAdvanceToTriggers()}
-			sendGMMessage("All checks done; your system is updated the newest version.");
-		};
 		const sanitizeString = (input) => {
 			if (typeof input !== 'string') {
 				Utils.sendGMMessage('Error: Expected a string input.');
@@ -569,8 +565,7 @@ var QuestTracker = QuestTracker || (function () {
 			toggleFilterVisibility,
 			sanitizeString,
 			inputAlias,
-			getNestedProperty,
-			checkVersion
+			getNestedProperty
 		};
 	})(); 
 	const Import = (() => {
@@ -6158,7 +6153,7 @@ var QuestTracker = QuestTracker || (function () {
 					Menu.adminMenu();
 				}, 500);
 			} else if (action === 'checkVersion'){
-				Utils.checkVersion();
+				checkVersion();
 				setTimeout(() => {
 					Menu.adminMenu();
 				}, 500);
