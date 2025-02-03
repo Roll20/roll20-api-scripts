@@ -113,8 +113,8 @@ var QuestTracker = QuestTracker || (function () {
 		QUEST_TRACKER_Events = state.QUEST_TRACKER.events || {};
 		QUEST_TRACKER_Calendar = state.QUEST_TRACKER.calendar || {};
 		QUEST_TRACKER_Triggers = state.QUEST_TRACKER.triggers || {};
-		QUEST_TRACKER_RumourConversion = state.QUEST_TRACKER.rumourConversion || false;
 		QUEST_TRACKER_TriggerConversion = state.QUEST_TRACKER.triggerConversion || false;
+		QUEST_TRACKER_RumourConversion = state.QUEST_TRACKER.rumourConversion || false;
 		QUEST_TRACKER_calenderType = state.QUEST_TRACKER.calenderType || 'gregorian';
 		QUEST_TRACKER_currentDate = state.QUEST_TRACKER.currentDate || CALENDARS[QUEST_TRACKER_calenderType]?.defaultDate
 		QUEST_TRACKER_defaultDate = state.QUEST_TRACKER.defaultDate || CALENDARS[QUEST_TRACKER_calenderType]?.defaultDate
@@ -155,6 +155,10 @@ var QuestTracker = QuestTracker || (function () {
 			visibility: true
 		}
 	};
+	const checkVersion = () => {
+		if (!QUEST_TRACKER_TriggerConversion) Triggers.convertAutoAdvanceToTriggers();
+		if (!QUEST_TRACKER_RumourConversion) Rumours.convertRumoursToNewFormat();
+	}
 	const saveQuestTrackerData = () => {
 		state.QUEST_TRACKER.verboseErrorLogging = QUEST_TRACKER_verboseErrorLogging;
 		state.QUEST_TRACKER.globalQuestData = QUEST_TRACKER_globalQuestData;
@@ -330,52 +334,6 @@ var QuestTracker = QuestTracker || (function () {
 			}
 			const jsonContent = content.substring(start, end + 1).trim();
 			return jsonContent;
-		};
-		const sanitizeInput = (input, type) => {
-			if (input === undefined || input === null) {
-				Utils.sendGMMessage(`Error: Input is undefined or null.`);
-				return null;
-			}
-			switch (type) {
-				case 'STRING':
-					if (typeof input !== 'string') {
-						errorCheck(1, 'msg', null,`Expected a string, but received "${typeof input}`);
-						return null;
-					}
-					return input.replace(/<[^>]*>/g, '').replace(/["<>]/g, '').replace(/(\r\n|\n|\r)/g, '%NEWLINE%');
-				case 'ARRAY':
-					if (!Array.isArray(input)) {
-						errorCheck(2, 'msg', null,`Expected an array, but received "${typeof input}`);
-						return [sanitizeInput(input, 'STRING')];
-					}
-					return input.map(item => sanitizeInput(item, H.checkType(item))).filter(item => item !== null);
-				case 'DATE':
-					return /^\d{4}-\d{2}-\d{2}$/.test(input) ? input : null;
-				case 'BOOLEAN':
-					return typeof input === 'boolean' ? input : input === 'true' || input === 'false' ? input === 'true' : null;
-				case 'INT':
-					return Number.isInteger(Number(input)) ? Number(input) : null;
-				case 'OBJECT':
-					if (typeof input !== 'object' || Array.isArray(input)) {
-						errorCheck(3, 'msg', null,`Expected an object, but received "${typeof input}`);
-						return null;
-					}
-					const sanitizedObject = {};
-					for (const key in input) {
-						if (input.hasOwnProperty(key)) {
-							const sanitizedKey = sanitizeInput(key, 'STRING');
-							const fieldType = H.checkType(input[key]);
-							const sanitizedValue = sanitizeInput(input[key], fieldType);
-							if (sanitizedKey !== null && sanitizedValue !== null) {
-								sanitizedObject[sanitizedKey] = sanitizedValue;
-							}
-						}
-					}
-					return sanitizedObject;
-				default:
-					errorCheck(4, 'msg', null,`Unsupported type "${type}`);
-					return null;
-			}
 		};
 		const updateHandoutField = (dataType = 'quest') => {
 			let handoutName;
@@ -555,7 +513,6 @@ var QuestTracker = QuestTracker || (function () {
 			sendMessage,
 			normalizeKeys,
 			stripJSONContent,
-			sanitizeInput,
 			roll20MacroSanitize,
 			updateHandoutField,
 			togglereadableJSON,
@@ -810,7 +767,7 @@ var QuestTracker = QuestTracker || (function () {
 			if (QUEST_TRACKER_TriggerConversion) return;
 			let triggersConverted = false;
 			initializeTriggersStructure();
-			for (const [questId, questData] of Object.entries(QUEST_TRACKER_QuestData)) {
+			for (const [questId, questData] of Object.entries(QUEST_TRACKER_globalQuestData)) {
 				if (questData.autoadvance) {
 					for (const [status, date] of Object.entries(questData.autoadvance)) {
 						const newTriggerId = H.generateNewTriggerId();
@@ -1185,6 +1142,10 @@ var QuestTracker = QuestTracker || (function () {
 							}
 						});
 					});
+					break;
+				}
+				case "rumour": {
+					log(id)
 					break;
 				}
 			}
@@ -3347,20 +3308,21 @@ var QuestTracker = QuestTracker || (function () {
 			getNewRumourId: () => {
 				const existingRumourIds = [];
 				Object.values(QUEST_TRACKER_globalRumours).forEach(quest => {
-					Object.values(quest).forEach(category => {
-						Object.values(category).forEach(location => {
+					Object.values(quest).forEach(status => {
+						Object.values(status).forEach(location => {
 							Object.keys(location).forEach(rumourId => {
-								const match = rumourId.match(/^rumour_(\d+)$/);
-								if (match) {
-									existingRumourIds.push(parseInt(match[1], 10));
+								if (location[rumourId] && typeof location[rumourId] === "object") {
+									const match = rumourId.match(/^rumour_(\d+)$/);
+									if (match) {
+										existingRumourIds.push(parseInt(match[1], 10));
+									}
 								}
 							});
 						});
 					});
 				});
 				const highestRumourNumber = existingRumourIds.length > 0 ? Math.max(...existingRumourIds) : 0;
-				const newRumourId = `rumour_${highestRumourNumber + 1}`;
-				return newRumourId;
+				return `rumour_${highestRumourNumber + 1}`;
 			},
 			getNewLocationId: (locationTable) => {
 				let locationItems = findObjs({ type: 'tableitem', rollabletableid: locationTable.id });
@@ -3371,52 +3333,71 @@ var QuestTracker = QuestTracker || (function () {
 				return newWeight;
 			},
 			removeRumours: (locationTable, locationid) => {
-				const locationObject = findObjs({ type: 'tableitem', rollabletableid: locationTable.id }).find(item => item.get('weight') == locationid);
+				const locationObject = findObjs({ type: 'tableitem', rollabletableid: locationTable.id })
+					.find(item => item.get('weight') == locationid);
 				if (!locationObject) return;
 				const cleanData = Utils.sanitizeString(locationObject.get('name')).toLowerCase();
-				Object.keys(QUEST_TRACKER_globalRumours).forEach(questId => {
-					const questRumours = QUEST_TRACKER_globalRumours[questId] || {};
-					Object.keys(questRumours).forEach(status => {
-						const statusRumours = questRumours[status] || {};
+				Object.entries(QUEST_TRACKER_globalRumours).forEach(([questId, questRumours]) => {
+					Object.entries(questRumours).forEach(([status, statusRumours]) => {
 						if (statusRumours[cleanData]) {
-							Object.keys(statusRumours[cleanData]).forEach(rumourKey => {
+							Object.entries(statusRumours[cleanData]).forEach(([rumourKey, rumourData]) => {
+								if (rumourData && typeof rumourData === "object") {
+									delete statusRumours[cleanData][rumourKey];
+								}
 							});
-							delete statusRumours[cleanData];
+							if (Object.keys(statusRumours[cleanData]).length === 0) {
+								delete statusRumours[cleanData]; // Remove location if empty
+							}
 						}
 					});
 				});
 				Utils.updateHandoutField('rumour');
 				calculateRumoursByLocation();
 			},
-			initializeRumourStructure: () => {
-				if (!QUEST_TRACKER_globalRumours) QUEST_TRACKER_globalRumours = {};
-				Object.entries(QUEST_TRACKER_globalRumours).forEach(([questId, questData]) => {
-					if (!questData || typeof questData !== "object") QUEST_TRACKER_globalRumours[questId] = {};
-					Object.entries(questData).forEach(([status, locations]) => {
-						if (!locations || typeof locations !== "object") QUEST_TRACKER_globalRumours[questId][status] = {};
-						Object.entries(locations).forEach(([location, rumours]) => {
-							if (!rumours || typeof rumours !== "object") QUEST_TRACKER_globalRumours[questId][status][location] = {};
-						});
-					});
-				});
-			},
 			saveData: () => {
 				saveQuestTrackerData();
 				Utils.updateHandoutField('rumours');
+			},
+			findRumourLocation: (rumourId) => {
+				const locationTable = findObjs({ type: 'rollabletable', name: QUEST_TRACKER_ROLLABLETABLE_LOCATIONS })[0];
+				if (!locationTable) {
+					log("Error: Locations table not found.");
+					return null;
+				}
+				const locationItems = findObjs({ type: 'tableitem', rollabletableid: locationTable.id });
+				let locationMapping = locationItems.reduce((acc, location) => {
+					acc[Utils.sanitizeString(location.get('name').toLowerCase())] = location.get('weight');
+					return acc;
+				}, {});
+				for (const [questId, questRumours] of Object.entries(QUEST_TRACKER_globalRumours)) {
+					for (const [status, statusRumours] of Object.entries(questRumours)) {
+						for (const [location, locationRumours] of Object.entries(statusRumours)) {
+							if (locationRumours[rumourId]) {
+								const locationId = locationMapping[location] || null;
+								return {
+									questId,
+									status,
+									locationId,
+									once: locationRumours[rumourId].once || false
+								};
+							}
+						}
+					}
+				}
+				return null;
 			}
 		};
 		const convertRumoursToNewFormat = () => {
 			if (QUEST_TRACKER_RumourConversion) return;
 			let rumoursConverted = false;
-			H.initializeRumourStructure();
 			for (const [questId, questData] of Object.entries(QUEST_TRACKER_globalRumours)) {
 				for (const [status, locations] of Object.entries(questData)) {
 					for (const [location, rumours] of Object.entries(locations)) {
 						for (const [rumourId, rumourText] of Object.entries(rumours)) {
 							QUEST_TRACKER_globalRumours[questId][status][location][rumourId] = {
 								text: rumourText,
-								type: "background", 
-								enabled: true 
+								type: "background",
+								once: false
 							};
 							rumoursConverted = true;
 						}
@@ -3441,10 +3422,16 @@ var QuestTracker = QuestTracker || (function () {
 				if (questRumours[relevantStatus]) {
 					Object.keys(questRumours[relevantStatus] || {}).forEach(location => {
 						let locationRumours = questRumours[relevantStatus][location] || {};
-						if (!rumoursByLocation[location]) rumoursByLocation[location] = [];
+						if (!rumoursByLocation[location]) rumoursByLocation[location] = {};
 						Object.keys(locationRumours).forEach(rumourKey => {
-							const rumourText = locationRumours[rumourKey];
-							rumoursByLocation[location].push(rumourText);
+							const rumourObject = locationRumours[rumourKey];
+							if (rumourObject && typeof rumourObject === "object") {
+								const rumourType = rumourObject.type || 'background';
+								if (!rumoursByLocation[location][rumourType]) {
+									rumoursByLocation[location][rumourType] = {};
+								}
+								rumoursByLocation[location][rumourType][rumourKey] = rumourObject.text;
+							}
 						});
 					});
 				}
@@ -3453,43 +3440,50 @@ var QuestTracker = QuestTracker || (function () {
 			saveQuestTrackerData();
 		};
 		const sendRumours = (locationId, numberOfRumours) => {
-			let allRumours = [];
 			let locationTable = findObjs({ type: 'rollabletable', name: QUEST_TRACKER_ROLLABLETABLE_LOCATIONS })[0];
-			if (errorCheck(41, 'exists', locationTable,`locationTable`)) return;
+			if (errorCheck(41, 'exists', locationTable, `locationTable`)) return;
 			let locationItems = findObjs({ type: 'tableitem', rollabletableid: locationTable.id });
 			let location = locationItems.find(loc => loc.get('weight').toString() === locationId.toString());
-			if (errorCheck(42, 'exists', location,`location`)) return;
+			if (errorCheck(42, 'exists', location, `location`)) return;
 			const normalizedLocationId = Utils.sanitizeString(location.get('name')).toLowerCase();
-			if (normalizedLocationId === 'everywhere') {
-				allRumours = Object.values(QUEST_TRACKER_rumoursByLocation['everywhere'] || {}).map((rumour, index) => `${index}|${Utils.sanitizeInput(rumour, 'STRING')}`);
-			} else {
-				const locationRumoursObj = QUEST_TRACKER_rumoursByLocation[normalizedLocationId] || {};
-				const everywhereRumoursObj = QUEST_TRACKER_rumoursByLocation['everywhere'] || {};
-				const locationRumours = Object.values(locationRumoursObj).map(rumour => Utils.sanitizeInput(rumour, 'STRING'));
-				const everywhereRumours = Object.values(everywhereRumoursObj).map(rumour => Utils.sanitizeInput(rumour, 'STRING'));
-				locationRumours.forEach((rumour, index) => {
-					for (let i = 0; i < 3; i++) {
-						allRumours.push(`${index}|${rumour}`);
-					}
-				});
-				everywhereRumours.forEach((rumour, index) => {
-					allRumours.push(`${locationRumours.length + index}|${rumour}`);
-				});
+			const locationRumours = QUEST_TRACKER_rumoursByLocation[normalizedLocationId] || { background: {}, priority: {} };
+			const everywhereRumours = QUEST_TRACKER_rumoursByLocation['everywhere'] || { background: {}, priority: {} };
+			let priorityList = [
+				...Object.entries(locationRumours.priority || {}),
+				...Object.entries(everywhereRumours.priority || {})
+			];
+			let backgroundList = [
+				...Object.entries(locationRumours.background || {}),
+				...Object.entries(everywhereRumours.background || {})
+			];
+			let priorityCount = Math.min(Math.ceil(numberOfRumours / 2), priorityList.length);
+			let backgroundCount = Math.min(numberOfRumours - priorityCount, backgroundList.length);
+			if (priorityList.length < priorityCount) {
+				backgroundCount = Math.min(numberOfRumours - priorityList.length, backgroundList.length);
+				priorityCount = priorityList.length;
 			}
-			if (allRumours.length === 0) {
+			const shuffleArray = (array) => array.sort(() => Math.random() - 0.5);
+			priorityList = shuffleArray(priorityList).slice(0, priorityCount);
+			backgroundList = shuffleArray(backgroundList).slice(0, backgroundCount);
+			const selectedRumours = [...priorityList, ...backgroundList];
+			if (selectedRumours.length === 0) {
 				Utils.sendGMMessage(`No rumours available for this location.`);
 				return;
 			}
-			let selectedRumours = [];
-			while (selectedRumours.length < numberOfRumours && allRumours.length > 0) {
-				let randomIndex = Math.floor(Math.random() * allRumours.length);
-				let selectedRumour = allRumours[randomIndex];
-				let [rumourKey, rumourText] = selectedRumour.split('|', 2);
-				selectedRumours.push(rumourText);
-				allRumours = allRumours.filter(rumour => !rumour.startsWith(`${rumourKey}|`));
-			}
-			selectedRumours.forEach(rumour => {
-				Utils.sendDescMessage(rumour);
+			selectedRumours.forEach(([rumourId, rumourText]) => {
+				Utils.sendDescMessage(rumourText);
+				Triggers.checkTriggers('rumour', rumourId);
+				const rumourDetails = H.findRumourLocation(rumourId);
+				if (rumourDetails.once) {
+					manageRumourObject({
+						action: 'remove',
+						questId: rumourDetails.questId,
+						newItem: '',
+						status: rumourDetails.status,
+						location: parseInt(rumourDetails.locationId, 10),
+						rumourId: rumourId
+					});
+				}
 			});
 		};
 		const getLocationNameById = (locationId) => {
@@ -3505,11 +3499,28 @@ var QuestTracker = QuestTracker || (function () {
 			Object.keys(QUEST_TRACKER_globalRumours[questId]).forEach(status => {
 				const statusRumours = QUEST_TRACKER_globalRumours[questId][status] || {};
 				Object.keys(statusRumours).forEach(location => {
-					delete statusRumours[location];
+					const locationRumours = statusRumours[location];
+					if (locationRumours && typeof locationRumours === 'object') {
+						Object.keys(locationRumours).forEach(rumourType => {
+							if (locationRumours[rumourType] && typeof locationRumours[rumourType] === 'object') {
+								Object.keys(locationRumours[rumourType]).forEach(rumourKey => {
+									delete locationRumours[rumourType][rumourKey]; // Remove each rumour
+								});
+							}
+						});
+					}
+					if (Object.keys(locationRumours.background || {}).length === 0 &&
+						Object.keys(locationRumours.priority || {}).length === 0) {
+						delete statusRumours[location];
+					}
 				});
-				delete QUEST_TRACKER_globalRumours[questId][status];
+				if (Object.keys(statusRumours).length === 0) {
+					delete QUEST_TRACKER_globalRumours[questId][status];
+				}
 			});
-			delete QUEST_TRACKER_globalRumours[questId];
+			if (Object.keys(QUEST_TRACKER_globalRumours[questId]).length === 0) {
+				delete QUEST_TRACKER_globalRumours[questId];
+			}
 			Utils.updateHandoutField('rumour');
 			calculateRumoursByLocation();
 		};
@@ -3549,29 +3560,49 @@ var QuestTracker = QuestTracker || (function () {
 					break;
 			}
 		};
-		const manageRumourObject = ({ action, questId, newItem = '', status, location, rumourId = ''}) => {
-			let locationString = getLocationNameById(location)
+		const manageRumourObject = ({ action, questId, newItem = '', status, location, rumourId = '', type = 'background' }) => {
+			let locationString = getLocationNameById(location);
 			const sanitizedLocation = locationString ? Utils.sanitizeString(locationString.toLowerCase()) : '';
 			if (!QUEST_TRACKER_globalRumours[questId]) QUEST_TRACKER_globalRumours[questId] = {};
 			if (!QUEST_TRACKER_globalRumours[questId][status]) QUEST_TRACKER_globalRumours[questId][status] = {};
 			const questRumours = QUEST_TRACKER_globalRumours[questId];
 			const statusRumours = questRumours[status];
+			if (!statusRumours[sanitizedLocation]) {
+				statusRumours[sanitizedLocation] = {};
+			}
 			switch (action) {
-				case 'add':
-					if (!statusRumours[sanitizedLocation]) {
-						statusRumours[sanitizedLocation] = {};
-					}
+				case 'add': {
 					const newRumourKey = rumourId === '' ? H.getNewRumourId() : rumourId;
-					statusRumours[sanitizedLocation][newRumourKey] = newItem;
+					statusRumours[sanitizedLocation][newRumourKey] = {
+						text: newItem,
+						type: type,
+						once: false
+					};
 					break;
-				case 'remove':
-					if (statusRumours[sanitizedLocation] && statusRumours[sanitizedLocation][rumourId]) {
+				}
+				case 'remove': {
+					if (statusRumours[sanitizedLocation][rumourId]) {
 						delete statusRumours[sanitizedLocation][rumourId];
 						if (Object.keys(statusRumours[sanitizedLocation]).length === 0) {
 							delete statusRumours[sanitizedLocation];
 						}
 					}
 					break;
+				}
+				case 'changeType': {
+					const rumourObj = statusRumours[sanitizedLocation][rumourId];
+					if (rumourObj) {
+						rumourObj.type = rumourObj.type === 'priority' ? 'background' : 'priority';
+					}
+					break;
+				}
+				case 'toggleOnce': {
+					const rumourObj = statusRumours[sanitizedLocation][rumourId];
+					if (rumourObj) {
+						rumourObj.once = !rumourObj.once;
+					}
+					break;
+				}
 				default:
 					break;
 			}
@@ -3585,7 +3616,8 @@ var QuestTracker = QuestTracker || (function () {
 			getLocationNameById,
 			removeAllRumoursForQuest,
 			getAllLocations,
-			manageRumourObject
+			manageRumourObject,
+			convertRumoursToNewFormat
 		};
 	})();
 	const Menu = (() => {
@@ -3595,7 +3627,6 @@ var QuestTracker = QuestTracker || (function () {
 			buttonDisabled: 'pointer-events: none; background-color: #666; border: 1px solid #292929; border-radius: 3px; padding: 2px; text-align: center; color: #000000;',
 			spanInline: 'display: inline-block; margin-top: 1px;',
 			smallButton: 'display: inline-block; width: 12px; height:16px;',
-			smallButtonMagnifier: 'display: inline-block; width: 16px; height:16px; background-color:#fff;',
 			smallButtonContainer: 'text-align:center; width: 20px; padding:1px',
 			smallButtonAdd: 'text-align:right; width: 20px; padding:1px margin-right:1px',
 			smallerText: 'font-size: smaller',
@@ -3611,7 +3642,7 @@ var QuestTracker = QuestTracker || (function () {
 			floatRight: 'float: right;',
 			floatClearRight: 'float: right; clear: right;',
 			overflow: 'overflow: hidden; margin:1px',
-			rumour: 'text-overflow: ellipsis;overflow: hidden;width: 165px;display: block;word-break: break-all;white-space: nowrap;',
+			rumour: 'text-overflow: ellipsis;overflow: hidden;width: 120px;display: block;word-break: break-all;white-space: nowrap;',
 			link: 'color: #007bff; text-decoration: underline; cursor: pointer;',
 			questlink: 'color: #007bff; text-decoration: none; cursor: pointer; background-color: #FFFFFF;',
 			filterlink: 'color: #007bff; text-decoration: none; cursor: pointer; background-color: #FFFFFF; padding:0px;',
@@ -3668,8 +3699,10 @@ var QuestTracker = QuestTracker || (function () {
 						let locationName = location.get('name');
 						let locationKey = Utils.sanitizeString(locationName).toLowerCase();
 						let locationWeight = location.get('weight');
-						let rumourCount = QUEST_TRACKER_rumoursByLocation[locationKey] ? Object.keys(QUEST_TRACKER_rumoursByLocation[locationKey]).length : 0;
-						let everywhereRumourCount = QUEST_TRACKER_rumoursByLocation['everywhere'] ? Object.keys(QUEST_TRACKER_rumoursByLocation['everywhere']).length : 0;
+						let locationRumours = QUEST_TRACKER_rumoursByLocation[locationKey] || {};
+						let rumourCount = Object.keys(locationRumours).length;
+						let everywhereRumours = QUEST_TRACKER_rumoursByLocation['everywhere'] || {};
+						let everywhereRumourCount = Object.keys(everywhereRumours).length;
 						let displayRumourCount = locationKey !== 'everywhere' && everywhereRumourCount > 0
 							? `${rumourCount} (+${everywhereRumourCount})`
 							: `${rumourCount}`;
@@ -4104,22 +4137,21 @@ var QuestTracker = QuestTracker || (function () {
 									</span>
 								</li>`;
 						});
-					}
-					else {
+					} else {
 						const totalRumours = quests.reduce((sum, quest) => sum + quest.rumourCount, 0);
 						menu += `<h4>Total: ${totalRumours} rumour${totalRumours === 1 ? '' : 's'}</h4><ul>`;
 						sortedQuests.forEach(quest => {
-						menu += `
-							<li style="${styles.overflow}">
-								<span style="${styles.floatLeft}">
-									${quest.name || 'Unnamed Quest'}
-									<br>
-									<small>${quest.rumourCount} rumour${quest.rumourCount === 1 ? '' : 's'}</small>
-								</span>
-								<span style="${styles.floatRight}">
-									<a style="${styles.button}" href="!qt-menu action=showQuestRumours|questId=${quest.id}">Show</a>
-								</span>
-							</li>`;
+							menu += `
+								<li style="${styles.overflow}">
+									<span style="${styles.floatLeft}">
+										${quest.name || 'Unnamed Quest'}
+										<br>
+										<small>${quest.rumourCount} rumour${quest.rumourCount === 1 ? '' : 's'}</small>
+									</span>
+									<span style="${styles.floatRight}">
+										<a style="${styles.button}" href="!qt-menu action=showQuestRumours|questId=${quest.id}">Show</a>
+									</span>
+								</li>`;
 						});
 					}
 					menu += '</ul>';
@@ -4725,8 +4757,11 @@ var QuestTracker = QuestTracker || (function () {
 						if (!H.applyFilter(QUEST_TRACKER_RUMOUR_FILTER.filter, normalizedData)) return null;
 						const questRumours = QUEST_TRACKER_globalRumours[questId] || {};
 						let rumourCount = Object.values(questRumours)
-							.reduce((sum, statusRumours) => sum + Object.values(statusRumours)
-								.reduce((locSum, locationRumours) => locSum + Object.keys(locationRumours).length, 0), 0);
+							.reduce((sum, statusRumours) => 
+								sum + Object.values(statusRumours)
+									.reduce((locSum, locationRumours) =>
+										locSum + Object.keys(locationRumours).length,
+									0), 0);
 						return {
 							id: questId,
 							name: questData.name || `Quest: ${questId}`,
@@ -4752,7 +4787,7 @@ var QuestTracker = QuestTracker || (function () {
 			let questData = QUEST_TRACKER_globalQuestData[questId];
 			const questDisplayName = questData && questData.name ? questData.name : `Quest: ${questId}`;
 			let menu = `<div style="${styles.menu}"><h3 style="margin-bottom: 10px;">Rumours for ${questDisplayName}</h3>`;
-			menu += `<p>${questData.description}</p>`;
+			menu += `<p>${questData.description || "No description available."}</p>`;
 			const questRumours = QUEST_TRACKER_globalRumours[questId] || {};
 			const allStatuses = Object.values(statusMapping);
 			if (allStatuses.length > 0) {
@@ -4789,7 +4824,7 @@ var QuestTracker = QuestTracker || (function () {
 				</span>
 				<br><hr>
 			</div>`;
-			menu = menu.replace(/[\r\n]/g, ''); 
+			menu = menu.replace(/[\r\n]/g, '');
 			Utils.sendGMMessage(menu);
 		};
 		const showRumourDetails = (questId, statusId) => {
@@ -4797,7 +4832,7 @@ var QuestTracker = QuestTracker || (function () {
 			const questDisplayName = questData && questData.name ? questData.name : `Quest: ${questId}`;
 			const statusName = statusMapping[statusId] || statusId;
 			let menu = `<div style="${styles.menu}"><h3 style="margin-bottom: 10px;">Rumours for ${questDisplayName}</h3><h3>Status: ${statusName}</h3>`;
-			menu += `<p>This menu displays all the rumours currently associated with ${questDisplayName} under the status "${statusName}". Use the options below to update, add, or remove rumours.</p><p>To add new lines into the rumours use &#37;NEWLINE&#37;. To add in quotation marks you need to use &amp;quot;.</p><br><hr>`;
+			menu += `<p>This menu displays all the rumours currently associated with ${questDisplayName} under the status "${statusName}". Use the options below to update, add, or remove rumours.</p><p>To add new lines into the rumours use &#37;NEWLINE&#37;. To add in quotation marks you need to use &amp;quot;.</p><ul><li>Hover over 👁 to view full rumour Text<li>b = background rumour, toggle to a priority rumour.<li>∞ measn this can be shown multiple times, '1' means it is deleted after being shown only once.</ul><br><hr>`;
 			const locationTable = findObjs({ type: 'rollabletable', name: QUEST_TRACKER_ROLLABLETABLE_LOCATIONS })[0];
 			if (!locationTable) {
 				menu += `
@@ -4827,32 +4862,38 @@ var QuestTracker = QuestTracker || (function () {
 				const locationRumours = rumoursByStatus[sanitizedName] || {};
 				menu += `<h4>${originalName}</h4><table style="width:100%;">`;
 				if (Object.keys(locationRumours).length > 0) {
-					Object.keys(locationRumours).forEach(rumourId => {
-						const rumourText = locationRumours[rumourId];
-						let trimmedRumourText = String(rumourText).substring(0, 50);
-						let rumourTextSanitized = rumourText.replace(/"/g, '&quot;').replace(/%NEWLINE%|<br>/g, ' | ');
-						let rumourInputSanitized = rumourText.replace(/"/g, '&quot;').replace(/<br>/g, '%NEWLINE%');
+					Object.entries(locationRumours).forEach(([rumourId, rumourData]) => {
+						const trimmedRumourText = String(rumourData.text).substring(0, 50);
+						const rumourTextSanitized = rumourData.text.replace(/"/g, '&quot;').replace(/%NEWLINE%|<br>/g, ' | ');
+						const rumourInputSanitized = rumourData.text.replace(/"/g, '&quot;').replace(/<br>/g, '%NEWLINE%');
+						const rumourType = rumourData.type || "background"; 
 						menu += `
 						<tr>
 							<td><small style="${styles.rumour}">${trimmedRumourText}</small></td>
 							<td style="${styles.smallButtonContainer}">
-								<img style="${styles.button} ${styles.smallButtonMagnifier}" src="https://s3.amazonaws.com/files.d20.io/images/408852025/dSbfzo-MbnFFePocX86p-w/max.png" width="12px" height="12px" title="${rumourTextSanitized}">
+								<span class=icon style="${styles.button} ${styles.smallButton}" width="12px" height="12px" title="${rumourTextSanitized}">👁</span>
 							</td>
 							<td style="${styles.smallButtonContainer}">
 								<a style="${styles.button} ${styles.smallButton}" href="!qt-rumours action=update|questid=${questId}|status=${statusId.toLowerCase()}|location=${weight}|rumourid=${rumourId}|new=?{Update Rumour|${rumourInputSanitized}}">c</a>
 							</td>
 							<td style="${styles.smallButtonContainer}">
-								<a style="${styles.button} ${styles.smallButton} ${styles.marginRight}" href="!qt-rumours action=remove|questid=${questId}|status=${statusId.toLowerCase()}|location=${weight}|rumourid=${rumourId}">-</a>
+								<a style="${styles.button} ${styles.smallButton}" href="!qt-rumours action=remove|questid=${questId}|status=${statusId.toLowerCase()}|location=${weight}|rumourid=${rumourId}">-</a>
+							</td>
+							<td style="${styles.smallButtonContainer}">
+								<a style="${styles.button} ${styles.smallButton}" href="!qt-rumours action=changeType|questid=${questId}|status=${statusId.toLowerCase()}|location=${weight}|rumourid=${rumourId}">${rumourType === 'priority' ? 'p' : 'b'}</a>
+							</td>
+							<td style="${styles.smallButtonContainer}">
+								<a style="${styles.button} ${styles.smallButton}" href="!qt-rumours action=toggleOnce|questid=${questId}|status=${statusId.toLowerCase()}|location=${weight}|rumourid=${rumourId}">${rumourData.once ? '1' : '∞'}</a>
 							</td>
 						</tr>`;
 					});
 				} else {
-					menu += `<tr><td colspan="3"><small>No rumours</small></td></tr>`;
+					menu += `<tr><td colspan="6"><small>No rumours</small></td></tr>`;
 				}
 				menu += `
 				<tr style="border-top: 1px solid #ddd">
 					<td></td>
-					<td colspan="3" style="${styles.smallButtonAdd}">
+					<td colspan="5" style="${styles.smallButtonAdd}">
 						<a style="${styles.button} ${styles.smallButton}" href="!qt-rumours action=add|questid=${questId}|status=${statusId.toLowerCase()}|location=${weight}|new=?{Enter New Rumour}">+</a>
 					</td>
 				</tr>
@@ -4869,7 +4910,7 @@ var QuestTracker = QuestTracker || (function () {
 				</span>
 				<br><hr>
 			</div>`;
-			menu = menu.replace(/[\r\n]/g, ''); 
+			menu = menu.replace(/[\r\n]/g, '');
 			Utils.sendGMMessage(menu);
 		};
 		const showQuestDetails = (questId) => {
@@ -5024,6 +5065,7 @@ var QuestTracker = QuestTracker || (function () {
 			// menu += `<br><a style="${styles.button} ${styles.floatClearRight}" href="!qt-config action=togglejumpgate|value=${QUEST_TRACKER_jumpGate === true ? 'false' : 'true'}">Toggle JumpGate (${QUEST_TRACKER_jumpGate === true ? 'on' : 'off'})</a>`;
 			menu += `<br><a style="${styles.button} ${styles.floatClearRight}" href="!qt-config action=toggleVerboseErrors|value=${QUEST_TRACKER_verboseErrorLogging === true ? 'false' : 'true'}">Toggle Verbose Errors (${QUEST_TRACKER_verboseErrorLogging === true ? 'on' : 'off'})</a>`;
 			menu += `<br clear=all><h4>Data</h4><a style="${styles.button} ${styles.floatClearRight}" href="!qt-import">${RefreshImport} JSON Data</a>`;
+			menu += `<br><a style="${styles.button} ${styles.floatClearRight}" href="!qt-config action=checkVersion">Check Version</a>`;
 			menu += `<br><a style="${styles.button} ${styles.floatClearRight}" href="!qt-config action=reset|confirmation=?{Are you sure? This will also clear all historical weather data. Type CONFIRM to continue|}">Reset to Defaults</a>`;
 			menu += `<br clear=all><h4>Quest Tree</h4><a style="${styles.button} ${styles.floatClearRight}" href="!qt-questtree action=build">Build Quest Tree Page</a>`;
 			menu += `<br><h4>Calander</h4><a style="${styles.button} ${styles.floatClearRight}" href="!qt-date action=setcalender|new=?{Choose Calender${calenderDropdown}}">Calendar: ${CALENDARS[QUEST_TRACKER_calenderType]?.name || "Unknown Calendar"}</a>`;
@@ -5720,7 +5762,9 @@ var QuestTracker = QuestTracker || (function () {
 					if (errorCheck(94, 'exists', questid, 'questid')) return;
 					if (action === 'add') {
 						if (errorCheck(95, 'exists', newItem, 'newItem')) return;
-						Rumours.manageRumourObject({ action: 'add', questId: questid, newItem, status, location });
+						let cleanedItem = newItem.replace(/[\r\n]/g, '');
+						cleanedItem = cleanedItem.replace(/<br\s*\/?>/g, '%NEWLINE%');
+						Rumours.manageRumourObject({ action: 'add', questId: questid, newItem: cleanedItem, status, location });
 						setTimeout(() => {
 							Menu.showRumourDetails(questid, status);
 						}, 500);
@@ -5728,8 +5772,10 @@ var QuestTracker = QuestTracker || (function () {
 						if (errorCheck(96, 'exists', newItem, 'newItem')) return;
 						if (errorCheck(97, 'exists', rumourid, 'rumourid')) return;
 						if (errorCheck(98, 'exists', QUEST_TRACKER_globalRumours[questid], `QUEST_TRACKER_globalRumours[${questid}]`)) return;
+						let cleanedItem = newItem.replace(/[\r\n]/g, '');
+						cleanedItem = cleanedItem.replace(/<br\s*\/?>/g, '%NEWLINE%');
 						Rumours.manageRumourObject({ action: 'remove', questId: questid, newItem: '', status, location, rumourId: rumourid });
-						Rumours.manageRumourObject({ action: 'add', questId: questid, newItem, status, location, rumourId: rumourid });
+						Rumours.manageRumourObject({ action: 'add', questId: questid, newItem: cleanedItem, status, location, rumourId: rumourid });
 						setTimeout(() => {
 							Menu.showRumourDetails(questid, status);
 						}, 500);
@@ -5743,6 +5789,26 @@ var QuestTracker = QuestTracker || (function () {
 							Menu.showRumourDetails(questid, status);
 						}, 500);
 					}
+					break;
+				case 'toggleOnce':
+					if (errorCheck(225, 'exists', questid, 'questid')) return;
+					if (errorCheck(226, 'exists', status, 'status')) return;
+					if (errorCheck(227, 'exists', location, 'location')) return;
+					if (errorCheck(228, 'exists', rumourid, 'rumourid')) return;
+					Rumours.manageRumourObject({ action: 'toggleOnce', questId: questid, status, location, rumourId: rumourid });
+					setTimeout(() => {
+						Menu.showRumourDetails(questid, status);
+					}, 500);
+					break;
+				case 'changeType':
+					if (errorCheck(229, 'exists', questid, 'questid')) return;
+					if (errorCheck(230, 'exists', status, 'status')) return;
+					if (errorCheck(231, 'exists', location, 'location')) return;
+					if (errorCheck(232, 'exists', rumourid, 'rumourid')) return;
+					Rumours.manageRumourObject({ action: 'changeType', questId: questid, status, location, rumourId: rumourid });
+					setTimeout(() => {
+						Menu.showRumourDetails(questid, status);
+					}, 500);
 					break;
 				case 'addLocation':
 					if (errorCheck(103, 'exists', newItem, 'newItem')) return;
@@ -6190,6 +6256,11 @@ var QuestTracker = QuestTracker || (function () {
 				setTimeout(() => {
 					Menu.adminMenu();
 				}, 500);
+			} else if (action === 'checkVersion'){
+				checkVersion();
+				setTimeout(() => {
+					Menu.adminMenu();
+				}, 500);
 			}
 		} else if (command === '!qt-questtree') {
 			const { action, value } = params;
@@ -6261,7 +6332,8 @@ var QuestTracker = QuestTracker || (function () {
 		Menu,
 		errorCheck,
 		initializeQuestTrackerState,
-		getCalendarAndWeatherData
+		getCalendarAndWeatherData,
+		checkVersion
 	};
 })();
 on('ready', function () {
@@ -6270,6 +6342,7 @@ on('ready', function () {
 	if (!CALENDARS || !WEATHER) return;
 	QuestTracker.initializeQuestTrackerState();
 	QuestTracker.loadQuestTrackerData();
+	QuestTracker.checkVersion();
 	on('chat:message', function(msg) {
 		QuestTracker.handleInput(msg);
 	});
