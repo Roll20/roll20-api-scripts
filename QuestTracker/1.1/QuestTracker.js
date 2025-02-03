@@ -153,6 +153,9 @@ var QuestTracker = QuestTracker || (function () {
 			visibility: true
 		}
 	};
+	const checkVersion = () => {
+		if (!QUEST_TRACKER_TriggerConversion) Utils.sendGMMessage("API Updated; make sure you run Check Version in Configuration.")
+	}
 	const saveQuestTrackerData = () => {
 		state.QUEST_TRACKER.verboseErrorLogging = QUEST_TRACKER_verboseErrorLogging;
 		state.QUEST_TRACKER.globalQuestData = QUEST_TRACKER_globalQuestData;
@@ -500,6 +503,10 @@ var QuestTracker = QuestTracker || (function () {
 			QUEST_TRACKER_FILTER_Visbility = (value === 'true');
 			saveQuestTrackerData();
 		};
+		const checkVersion = () => {
+			if (!QUEST_TRACKER_TriggerConversion) {Triggers.convertAutoAdvanceToTriggers()}
+			sendGMMessage("All checks done; your system is updated the newest version.");
+		};
 		const sanitizeString = (input) => {
 			if (typeof input !== 'string') {
 				Utils.sendGMMessage('Error: Expected a string input.');
@@ -562,7 +569,8 @@ var QuestTracker = QuestTracker || (function () {
 			toggleFilterVisibility,
 			sanitizeString,
 			inputAlias,
-			getNestedProperty
+			getNestedProperty,
+			checkVersion
 		};
 	})(); 
 	const Import = (() => {
@@ -806,7 +814,7 @@ var QuestTracker = QuestTracker || (function () {
 			if (QUEST_TRACKER_TriggerConversion) return;
 			let triggersConverted = false;
 			initializeTriggersStructure();
-			for (const [questId, questData] of Object.entries(QUEST_TRACKER_QuestData)) {
+			for (const [questId, questData] of Object.entries(QUEST_TRACKER_globalQuestData)) {
 				if (questData.autoadvance) {
 					for (const [status, date] of Object.entries(questData.autoadvance)) {
 						const newTriggerId = H.generateNewTriggerId();
@@ -4982,6 +4990,7 @@ var QuestTracker = QuestTracker || (function () {
 			// menu += `<br><a style="${styles.button} ${styles.floatClearRight}" href="!qt-config action=togglejumpgate|value=${QUEST_TRACKER_jumpGate === true ? 'false' : 'true'}">Toggle JumpGate (${QUEST_TRACKER_jumpGate === true ? 'on' : 'off'})</a>`;
 			menu += `<br><a style="${styles.button} ${styles.floatClearRight}" href="!qt-config action=toggleVerboseErrors|value=${QUEST_TRACKER_verboseErrorLogging === true ? 'false' : 'true'}">Toggle Verbose Errors (${QUEST_TRACKER_verboseErrorLogging === true ? 'on' : 'off'})</a>`;
 			menu += `<br clear=all><h4>Data</h4><a style="${styles.button} ${styles.floatClearRight}" href="!qt-import">${RefreshImport} JSON Data</a>`;
+			menu += `<br><a style="${styles.button} ${styles.floatClearRight}" href="!qt-config action=checkVersion">Check Version</a>`;
 			menu += `<br><a style="${styles.button} ${styles.floatClearRight}" href="!qt-config action=reset|confirmation=?{Are you sure? This will also clear all historical weather data. Type CONFIRM to continue|}">Reset to Defaults</a>`;
 			menu += `<br clear=all><h4>Quest Tree</h4><a style="${styles.button} ${styles.floatClearRight}" href="!qt-questtree action=build">Build Quest Tree Page</a>`;
 			menu += `<br><h4>Calander</h4><a style="${styles.button} ${styles.floatClearRight}" href="!qt-date action=setcalender|new=?{Choose Calender${calenderDropdown}}">Calendar: ${CALENDARS[QUEST_TRACKER_calenderType]?.name || "Unknown Calendar"}</a>`;
@@ -6148,6 +6157,11 @@ var QuestTracker = QuestTracker || (function () {
 				setTimeout(() => {
 					Menu.adminMenu();
 				}, 500);
+			} else if (action === 'checkVersion'){
+				Utils.checkVersion();
+				setTimeout(() => {
+					Menu.adminMenu();
+				}, 500);
 			}
 		} else if (command === '!qt-questtree') {
 			const { action, value } = params;
@@ -6219,7 +6233,8 @@ var QuestTracker = QuestTracker || (function () {
 		Menu,
 		errorCheck,
 		initializeQuestTrackerState,
-		getCalendarAndWeatherData
+		getCalendarAndWeatherData,
+		checkVersion
 	};
 })();
 on('ready', function () {
@@ -6228,6 +6243,7 @@ on('ready', function () {
 	if (!CALENDARS || !WEATHER) return;
 	QuestTracker.initializeQuestTrackerState();
 	QuestTracker.loadQuestTrackerData();
+	QuestTracker.checkVersion();
 	on('chat:message', function(msg) {
 		QuestTracker.handleInput(msg);
 	});
