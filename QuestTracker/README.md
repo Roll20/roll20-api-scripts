@@ -766,6 +766,9 @@ No, there is a script in place to convert all autoadvance triggers into the new 
 
 ## Updates
 
+#### 2025-xx-xx
+* Release of **v1.2**; Rumours Module has been overhauled
+
 #### 2025-02-04
 * Release of **v1.1**; significant changes to quest interaction and display.
 - **Questbuilder Module**
