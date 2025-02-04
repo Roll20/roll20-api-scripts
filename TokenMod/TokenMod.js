@@ -10,7 +10,7 @@ const TokenMod = (() => { // eslint-disable-line no-unused-vars
     const scriptName = "TokenMod";
     const version = '0.8.82';
     API_Meta.TokenMod.version = version;
-    const lastUpdate = 1738640677;
+    const lastUpdate = 1738641373;
     const schemaVersion = 0.4;
 
     const fields = {
@@ -2049,7 +2049,7 @@ const TokenMod = (() => { // eslint-disable-line no-unused-vars
                     _h.paragraph(`Anything else is considered false.`),
 
                     _h.subhead(`${_h.code('isdrawing')} split properties: ${_h.code('disableSnapping')} and ${_h.code('disableTokenMenu')} (Jumpgate)`),
-                    _h.paragraph( `On Jumpgate, these two properties control the individual facets of what was hadnled by ${_h.code('isdrawing')}.  You can set ${_h.code('disableSnapping')} to true to prevent a graphic from snapping to the page's grid lines while still retaining the bubbles and token menu:`),
+                    _h.paragraph( `On Jumpgate, these two properties control the individual facets of what was handled by ${_h.code('isdrawing')}.  You can set ${_h.code('disableSnapping')} to true to prevent a graphic from snapping to the page's grid lines while still retaining the bubbles and token menu:`),
                     _h.inset(
                         _h.pre('!token-mod --set disableSnapping|yes')
                     ),
