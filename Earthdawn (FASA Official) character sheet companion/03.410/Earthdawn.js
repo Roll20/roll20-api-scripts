@@ -1352,15 +1352,17 @@ Earthdawn.keywordCheck = function( klist ) {
   try {
     let ret = 0, swith = false;
     if( klist && arguments.length > 1 ) {
-      let kl = Earthdawn.safeString( klist ).replace( /[^\w\,\-]/g, "").toLowerCase();      // strip out whitespace (and everything that is not a word, comma or hyphen), lowercased.
+      let kl = Earthdawn.matchString( klist, true, true );      // strip out whitespace (and everything that is not a word, comma or hyphen), lowercased.
+    if( kl.slice( 0, 1 ) != "," ) kl = "," + kl;
+    if( kl.slice( -1   ) != "," ) kl = kl + ",";
       for( let i = 1; i < arguments.length; ++i ) {
         if((( typeof arguments[ i ] ) === "boolean" ) && arguments[ i ] )
           swith = true      // Next argument is tested for "starts with"
         else {
-          let a = Earthdawn.matchString( arguments[ i ], true ).toLowerCase();    // Strip out every non-word character except hyphen. 
+          let a = Earthdawn.matchString( arguments[ i ], true );    // Strip out every non-word character except hyphen. 
           if((  swith && kl.includes( "," + a )) ||           // this first half is testing if it starts with this argument (starts at a comma, but does not need to end with a comma). 
              ( !swith && kl.includes( "," + a + "," )))       // This second half is testing for an exact match (starts and ends with a comma).
-            ret += 1 << (i - 1);
+            ret += (1 << (i - 1));
           swith = false;
       } }
     }
@@ -1370,8 +1372,8 @@ Earthdawn.keywordCheck = function( klist ) {
 
 
 
-Earthdawn.matchString = function( str, hyphen ) {   // return this string with everything that is not a /W or a hyphen stripped out, and lower cased. Used to test for matches.
-  return Earthdawn.safeString( str ).replace(( hyphen ?  /[^\w\-]/g : /\W/g ), "").toLowerCase();
+Earthdawn.matchString = function( str, allowHyphen, allowComma ) {   // return this string with everything that is not a /W or a hyphen stripped out, and lower cased. Used to test for matches.
+  return Earthdawn.safeString( str ).replace(( allowHyphen ? ( allowComma ? /[^\w\,\-]/g : /[^\w\-]/g) : /\W/g ), "").toLowerCase();
 }
 
 
@@ -3214,7 +3216,7 @@ Step/Action Dice Table
                   step += 3;
                   this.misc[ "Resistance" ] = true;   // Resistance is depreciated 8/22
             }   }
-            let kwc = this.keyword( pre, "Movebased", "Visionbased" );
+            let kwc = this.keyword( pre, "Movebased", "Visionbased", "Notvisionbased" );
             if(( kwc & 0x01 ) || ( Earthdawn.getAttrBN( this.charID, pre + "MoveBased", "0" ) == "1" )) {
               let tstep = Earthdawn.getAttrBN( this.charID, "condition-ImpairedMovement", "0" );
               if( tstep > 0 ) {
@@ -3227,6 +3229,14 @@ Step/Action Dice Table
                 step -= tstep;
                 this.misc[ "VisionBased" ] = (tstep == 2) ? "Partial" : "Full";
             } }
+/*
+            if(( kwc & 0x04 ) || ( Earthdawn.getAttrBN( this.charID, pre + "VisionBased", "0" ) == "1" )) {    // VisionBased depreciated 8/22
+              let tstep = Earthdawn.getAttrBN( this.charID, "condition-Darkness", "0" );
+              if( tstep > 0 ) {
+                step -= tstep;
+                this.misc[ "VisionBased" ] = (tstep == 2) ? "Partial" : "Full";
+            } }
+*/
             this.misc[ "sayTotalSuccess" ] = Earthdawn.getAttrBN( this.charID, pre + "sayTotalSuccess", "0" ) == "1";
           } break;
           case "ska":
@@ -6183,8 +6193,15 @@ Step/Action Dice Table
 //              log( Earthdawn.safeRowID( this.charID, "ENC", "abcdefghIJKLMN" ));
 //              log( Earthdawn.safeRowID( this.charID, "T", "abcdefghIJKLMN" ));
 //              log( Earthdawn.safeRowID( this.charID, "T", "abcdefghijklmn" ));
-              log( this.buildPre( "T", "-OHilz3DBgt5hryGJnSg" ));
-              log( this.buildPre( "repeating_talents_-OHilz3DBgt5hryGJnSg_T_Name" ));
+//              log( this.buildPre( "T", "-OHilz3DBgt5hryGJnSg" ));
+//              log( this.buildPre( "repeating_talents_-OHilz3DBgt5hryGJnSg_T_Name" ));
+              log(1 << (1 - 1));
+              log(1 << (2 - 1));
+              log(1 << (3 - 1));
+              log( Earthdawn.keywordCheck( ", test1 , test 2 , test 3 ,", "test1" ));
+              log( Earthdawn.keywordCheck( ", test1 , test 2 , test 3, ", "test2" ));
+              log( Earthdawn.keywordCheck( ", test1 , test 2 , test 3 ", "test 3" ));
+              log( Earthdawn.keywordCheck( ", test1 , test 2 , test 3 ,", "test2", "test 3" ));
 // Findtest, finddebug, cdd tttt
             } catch(err) { Earthdawn.errorLog( "ED Test error caught: " + err, po ); }
           log( Earthdawn.timeStamp() + "Test Done" );
@@ -7245,7 +7262,7 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
           Earthdawn.set( TokenObj, "bar2_max",   Earthdawn.getAttrBN( edParse.charID, "Wounds_max", "8" ));
           Earthdawn.set( TokenObj, "bar3_value", Earthdawn.getAttrBN( edParse.charID, "Damage", "0" ));
           Earthdawn.set( TokenObj, "bar3_max",   Earthdawn.getAttrBN( edParse.charID, "Damage_max", "20" ));
-          if( !linkOnly ) {
+          if( !linkOnly && s ) {
             if( s.showname != undefined )         Earthdawn.set( TokenObj, "showname", s.showname, false );
             if( s.showplayers_name != undefined ) Earthdawn.set( TokenObj, "showplayers_name", s.showplayers_name, false );
             if( s.bar_location != undefined )     Earthdawn.set( TokenObj, "bar_location", s.bar_location, null );
@@ -8158,44 +8175,58 @@ Get these in pairs, char sheet attrib and token status, get them ORed, then figu
                     }) // End ForEach character
                     this.chat( count + " character sheets updated." );
                   } break
-                  case "linking":
+                  case "linking": {
+                      if( !("linking" in state.Earthdawn ))         state.Earthdawn.linking = {};
+                      if( !("PC"      in state.Earthdawn.linking )) state.Earthdawn.linking.PC = {};
+                      if( !("NPC"     in state.Earthdawn.linking )) state.Earthdawn.linking.NPC = {};
+                      let pcUndef  = _.isEmpty( state.Earthdawn.linking.PC ),
+                          npcUndef = _.isEmpty( state.Earthdawn.linking.NPC );
                     this.chat( "Token Linking options for " + Earthdawn.makeButton("PCs", "!Earthdawn~ Misc: State: LinkingDetail: PC: "
-                        + "?{Show nameplate to GM and controler|undefined|true,1|false,0}: ?{Show nameplate to all players|undefined|true,1|false,0}"
-                        + ": ?{bar location|undefined|above,null|overlap_top|overlap_bottom|below}"
+                        + "?{Show nameplate to GM and controler|undefined|true,1|false,0}: "
+                        + "?{Show nameplate to all players|undefined|true,1|false,0}: "
+                        + "?{bar location|undefined|above,null|overlap_top|overlap_bottom|below}"
                         + ": ?{compact_bar|undefined|Standard,null|compact}"
                         , "Change the linking options for PCs (for example whether or not nameplates are automatically shown)", "param")
-                        + "  showname=" + state.Earthdawn.linking.PC.showname + "  showplayers_name=" + state.Earthdawn.linking.PC.showplayers_name
-                        + "  bar_location=" + state.Earthdawn.linking.PC.bar_location + "  compact_bar=" + state.Earthdawn.linking.PC.compact_bar
+                        + "  showname=" + ( pcUndef ? "undefined" : state.Earthdawn.linking.PC.showname ) 
+                        + "  showplayers_name=" + ( pcUndef ? "undefined" : state.Earthdawn.linking.PC.showplayers_name )
+                        + "  bar_location=" + ( pcUndef ? "undefined" : state.Earthdawn.linking.PC.bar_location )
+                        + "  compact_bar=" + ( pcUndef ? "undefined" : state.Earthdawn.linking.PC.compact_bar )
                         + "   Token Linking Options for " + Earthdawn.makeButton("NPCs", "!Earthdawn~ Misc: State: LinkingDetail: NPC: "
-                        + "?{Show nameplate to GM and controler|undefined|true,1|false,0}: ?{Show nameplate to all players|undefined|true,1|false,0}"
+                        + "?{Show nameplate to GM and controler|undefined|true,1|false,0}: "
+                        + "?{Show nameplate to all players|undefined|true,1|false,0}"
                         + ": ?{bar location|undefined|above,null|overlap_top|overlap_bottom|below}"
                         + ": ?{compact_bar|undefined|Standard,null|compact}"
                         , "Change the linking options for NPCs (for example whether or not nameplates are automatically shown)", "param")
-                        + "  showname=" + state.Earthdawn.linking.NPC.showname + "  showplayers_name=" + state.Earthdawn.linking.NPC.showplayers_name
-                        + "  bar_location=" + state.Earthdawn.linking.NPC.bar_location + "  compact_bar=" + state.Earthdawn.linking.NPC.compact_bar 
+                        + "  showname=" + ( npcUndef ? "undefined" : state.Earthdawn.linking.NPC.showname )
+                        + "  showplayers_name=" + ( npcUndef ? "undefined" : state.Earthdawn.linking.NPC.showplayers_name )
+                        + "  bar_location=" + ( npcUndef ? "undefined" : state.Earthdawn.linking.NPC.bar_location )
+                        + "  compact_bar=" + ( npcUndef ? "undefined" :  state.Earthdawn.linking.NPC.compact_bar )
                         + "  Values that are undefined are unchanged during linking."
                         , Earthdawn.whoTo.gm | Earthdawn.whoFrom.noArchive);
-                       break;
+                  }
                       break;
-                    case "linkingdetail":
-                      if( ssa.length > 7 ) {
-                        let s;
-                        if( ssa[ 3 ] === "PC" )
-                          s = state.Earthdawn.linking.PC;
-                        else
-                          s = state.Earthdawn.linking.NPC;
-                        s.showname          = (ssa[ 4 ] == "undefined") ? undefined : ( Earthdawn.parseInt2( ssa[ 4 ] ) ? true: false);
-                        s.showplayers_name  = (ssa[ 5 ] == "undefined") ? undefined : ( Earthdawn.parseInt2( ssa[ 5 ] ) ? true: false);
-                        s.bar_location      = (ssa[ 6 ] == "undefined") ? undefined : (( ssa[ 6 ] == "null") ? null: ssa[ 6 ]);
-                        s.compact_bar       = (ssa[ 7 ] == "undefined") ? undefined : (( ssa[ 7 ] == "null") ? null: ssa[ 7 ]);
-                        this.chat( "New values for " + ssa[ 3 ]
-                        + "  showname=" + s.showname + "  showplayers_name=" + s.showplayers_name + "  bar_location=" + s.bar_location + "  compact_bar=" + s.compact_bar 
-                        , Earthdawn.whoTo.gm | Earthdawn.whoFrom.noArchive);
-                      } else {
-                        Earthdawn.errorLog( "ED.funcMisc.State.linkingDetail() invalid arguments: ", po );
-                        log( ssa );
-                      }
-                      break;
+                  case "linkingdetail":
+                    if( !("linking" in state.Earthdawn ))         state.Earthdawn.linking = {};
+                    if( !("PC"      in state.Earthdawn.linking )) state.Earthdawn.linking.PC = {};
+                    if( !("NPC"     in state.Earthdawn.linking )) state.Earthdawn.linking.NPC = {};
+                    if( ssa.length > 7 ) {
+                      let s;
+                      if( ssa[ 3 ] === "PC" )
+                        s = state.Earthdawn.linking.PC;
+                      else
+                        s = state.Earthdawn.linking.NPC;
+                      s.showname          = (ssa[ 4 ] == "undefined") ? undefined : ( Earthdawn.parseInt2( ssa[ 4 ] ) ? true: false);
+                      s.showplayers_name  = (ssa[ 5 ] == "undefined") ? undefined : ( Earthdawn.parseInt2( ssa[ 5 ] ) ? true: false);
+                      s.bar_location      = (ssa[ 6 ] == "undefined") ? undefined : (( ssa[ 6 ] == "null") ? null: ssa[ 6 ]);
+                      s.compact_bar       = (ssa[ 7 ] == "undefined") ? undefined : (( ssa[ 7 ] == "null") ? null: ssa[ 7 ]);
+                      this.chat( "New values for " + ssa[ 3 ]
+                      + "  showname=" + s.showname + "  showplayers_name=" + s.showplayers_name + "  bar_location=" + s.bar_location + "  compact_bar=" + s.compact_bar 
+                      , Earthdawn.whoTo.gm | Earthdawn.whoFrom.noArchive);
+                    } else {
+                      Earthdawn.errorLog( "ED.funcMisc.State.linkingDetail() invalid arguments: ", po );
+                      log( ssa );
+                    }
+                    break;
                   case "logstartup":
                     state.Earthdawn.logStartup = Earthdawn.parseInt2( ssa[ 3 ] ) ? true: false;
                     logging = true;
