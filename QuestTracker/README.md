@@ -768,6 +768,18 @@ No, there is a script in place to convert all autoadvance triggers into the new 
 
 #### 2025-xx-xx
 * Release of **v1.2**; Rumours Module has been overhauled
+- **Rumours Module**
+  * Rumours are stored differently now, when you first upgrade to v1.2 a script will run converting you to be v1.2 compliant.
+  * Rumours can be set as 'Priority' or 'Background' where priority rumours will aim to make up at least half of the rumours shown to players
+  * Rumours can now also be set to be shown only once and then deleted afterwards
+  * Rumours can now count as trigger events; such as changing a quest to be 'discovered' after the rumour is shown to players.
+  * Given how rumours are stored, there is a shortcut on the rumours page to automatically create a Rumour Trigger.
+  * The Rumours page has had a redesign using symbols as buttons removing reliance on external images. and rather than a truncated rumour the rumour # is shown instead. (As before you can hover over the eye symbol to read the rumour in full)
+- **Triggers Module**
+  * Added 'Script' triggers which can be triggered from a button press (or a link within a handout), thee bypss checks and just run through the Effect List.
+  * Homepage now has an 'Automtion' section which links direct to Triggers. Script triggers can be set a 'active' and they will appear here.
+- **Events Module**
+  * Added Enable/Disable flag so events can be toggled on or off.
 
 #### 2025-02-04
 * Release of **v1.1**; significant changes to quest interaction and display.
