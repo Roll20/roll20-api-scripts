@@ -778,8 +778,12 @@ No, there is a script in place to convert all autoadvance triggers into the new 
 - **Triggers Module**
   * Added 'Script' triggers which can be triggered from a button press (or a link within a handout), thee bypss checks and just run through the Effect List.
   * Homepage now has an 'Automtion' section which links direct to Triggers. Script triggers can be set a 'active' and they will appear here.
+  * Events can now be enabled/disabled through triggers.
+  * Events can now trigger... well Triggers.
+  * There is a couple of version scripts which run if you have triggers set up in the old version automatically converting them to the new data structure.
 - **Events Module**
   * Added Enable/Disable flag so events can be toggled on or off.
+  * Events can trigger
 
 #### 2025-02-04
 * Release of **v1.1**; significant changes to quest interaction and display.

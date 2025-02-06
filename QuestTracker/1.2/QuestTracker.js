@@ -42,9 +42,12 @@ var QuestTracker = QuestTracker || (function () {
 	let QUEST_TRACKER_Calendar = {};
 	let QUEST_TRACKER_Triggers = {};
 	let QUEST_TRIGGER_DeleteList = [];
-	let QUEST_TRACKER_TriggerConversion = false;
-	let QUEST_TRACKER_RumourConversion = false;
-	let QUEST_TRACKER_EventConversion = false;
+	let QUEST_TRACKER_versionChecking = {
+		TriggerConversion: false,
+		RumourConversion: false,
+		EventConversion: false,
+		EffectConversion: false
+	}
 	let QUEST_TRACKER_QuestHandoutName = "QuestTracker Quests";
 	let QUEST_TRACKER_RumourHandoutName = "QuestTracker Rumours";
 	let QUEST_TRACKER_EventHandoutName = "QuestTracker Events";
@@ -114,9 +117,12 @@ var QuestTracker = QuestTracker || (function () {
 		QUEST_TRACKER_Events = state.QUEST_TRACKER.events || {};
 		QUEST_TRACKER_Calendar = state.QUEST_TRACKER.calendar || {};
 		QUEST_TRACKER_Triggers = state.QUEST_TRACKER.triggers || {};
-		QUEST_TRACKER_TriggerConversion = state.QUEST_TRACKER.triggerConversion || false;
-		QUEST_TRACKER_RumourConversion = state.QUEST_TRACKER.rumourConversion || false;
-		QUEST_TRACKER_EventConversion = state.QUEST_TRACKER.eventConversion || false;
+		QUEST_TRACKER_versionChecking = state.QUEST_TRACKER.versionChecking || {
+			TriggerConversion: false,
+			RumourConversion: false,
+			EventConversion: false,
+			EffectConversion: false
+		}
 		QUEST_TRACKER_calenderType = state.QUEST_TRACKER.calenderType || 'gregorian';
 		QUEST_TRACKER_currentDate = state.QUEST_TRACKER.currentDate || CALENDARS[QUEST_TRACKER_calenderType]?.defaultDate
 		QUEST_TRACKER_defaultDate = state.QUEST_TRACKER.defaultDate || CALENDARS[QUEST_TRACKER_calenderType]?.defaultDate
@@ -158,10 +164,11 @@ var QuestTracker = QuestTracker || (function () {
 		}
 	};
 	const checkVersion = () => {
-		if (!QUEST_TRACKER_TriggerConversion) Triggers.convertAutoAdvanceToTriggers();
-		if (!QUEST_TRACKER_RumourConversion) Rumours.convertRumoursToNewFormat();
-		if (!QUEST_TRACKER_EventConversion) Calendar.convertEventsToNewFormat()
-	}
+		if (!QUEST_TRACKER_versionChecking.TriggerConversion) Triggers.convertAutoAdvanceToTriggers();
+		if (!QUEST_TRACKER_versionChecking.RumourConversion) Rumours.convertRumoursToNewFormat();
+		if (!QUEST_TRACKER_versionChecking.EventConversion) Calendar.convertEventsToNewFormat();
+		if (!QUEST_TRACKER_versionChecking.EffectConversion) Triggers.convertEffectsToNewFormat();
+	};
 	const saveQuestTrackerData = () => {
 		state.QUEST_TRACKER.verboseErrorLogging = QUEST_TRACKER_verboseErrorLogging;
 		state.QUEST_TRACKER.globalQuestData = QUEST_TRACKER_globalQuestData;
@@ -174,9 +181,7 @@ var QuestTracker = QuestTracker || (function () {
 		state.QUEST_TRACKER.events = QUEST_TRACKER_Events;
 		state.QUEST_TRACKER.calendar = QUEST_TRACKER_Calendar;
 		state.QUEST_TRACKER.triggers = QUEST_TRACKER_Triggers;
-		state.QUEST_TRACKER.triggerConversion = QUEST_TRACKER_TriggerConversion;
-		state.QUEST_TRACKER.rumourConversion = QUEST_TRACKER_RumourConversion;
-		state.QUEST_TRACKER.eventConversion = QUEST_TRACKER_EventConversion;
+		state.QUEST_TRACKER.versionChecking = QUEST_TRACKER_versionChecking;
 		state.QUEST_TRACKER.currentDate = QUEST_TRACKER_currentDate;
 		state.QUEST_TRACKER.defaultDate = QUEST_TRACKER_defaultDate;
 		state.QUEST_TRACKER.calenderType = QUEST_TRACKER_calenderType;
@@ -210,9 +215,12 @@ var QuestTracker = QuestTracker || (function () {
 				events: {},
 				calendar: {},
 				triggers: {},
-				triggerConversion: false,
-				rumourConversion: false,
-				eventConversion: false,
+				versionChecking: {
+					TriggerConversion: false,
+					RumourConversion: false,
+					EventConversion: false,
+					EffectConversion: false
+				},
 				calenderType: 'gregorian',
 				currentDate: CALENDARS[QUEST_TRACKER_calenderType]?.defaultDate,
 				defaultDate: CALENDARS[QUEST_TRACKER_calenderType]?.defaultDate,
@@ -731,6 +739,7 @@ var QuestTracker = QuestTracker || (function () {
 					date: QUEST_TRACKER_Triggers.dates,
 					reaction: QUEST_TRACKER_Triggers.reactions,
 					rumour: QUEST_TRACKER_Triggers.rumours,
+					event: QUEST_TRACKER_Triggers.events,
 					script: QUEST_TRACKER_Triggers.scripts,
 				};
 				return structures[type] || null;
@@ -740,6 +749,7 @@ var QuestTracker = QuestTracker || (function () {
 					'quests.null',
 					'dates.null',
 					'reactions.null',
+					'events.null',
 					'rumours.null',
 				];
 				targets.forEach((path) => {
@@ -758,18 +768,35 @@ var QuestTracker = QuestTracker || (function () {
 				const trigger = Utils.getNestedProperty(QUEST_TRACKER_Triggers, triggerPath.replace("QUEST_TRACKER_Triggers.", ""));
 				if (!trigger || !trigger.effects || Object.keys(trigger.effects).length === 0) return;
 				Object.entries(trigger.effects).forEach(([effectId, effect]) => {
-					const { questid, type, value } = effect;
-					Quest.manageQuestObject({
-						action: "update",
-						field: type,
-						current: questid,
-						old: null,
-						newItem: value,
-					});
+					const { id, type, value, effectType = "quest" } = effect;
+					switch (effectType) {
+						case "quest":
+							Quest.manageQuestObject({
+								action: "update",
+								field: type,
+								current: id,
+								old: null,
+								newItem: value,
+							});
+							break;
+						case "event":
+							Calendar.manageEventObject({
+								action: "update",
+								field: type,
+								current: id,
+								old: null,
+								newItem: value,
+								date: null
+							});
+							break;
+						default:
+							log(`Unhandled effectType: ${effectType} for effect ${effectId}`);
+							break;
+					}
 				});
 				Triggers.checkTriggers("reaction", triggerId);
 				QUEST_TRIGGER_DeleteList.push(triggerId);
-			},
+			}
 		};
 		const initializeTriggersStructure = () => {
 			if (!QUEST_TRACKER_Triggers.quests) QUEST_TRACKER_Triggers.quests = {};
@@ -777,9 +804,10 @@ var QuestTracker = QuestTracker || (function () {
 			if (!QUEST_TRACKER_Triggers.reactions) QUEST_TRACKER_Triggers.reactions = {};
 			if (!QUEST_TRACKER_Triggers.rumours) QUEST_TRACKER_Triggers.rumours = {};
 			if (!QUEST_TRACKER_Triggers.scripts) QUEST_TRACKER_Triggers.scripts = {};
+			if (!QUEST_TRACKER_Triggers.events) QUEST_TRACKER_Triggers.events = {};
 		};
 		const convertAutoAdvanceToTriggers = () => {
-			if (QUEST_TRACKER_TriggerConversion) return;
+			if (QUEST_TRACKER_versionChecking.TriggerConversion) return;
 			let triggersConverted = false;
 			initializeTriggersStructure();
 			for (const [questId, questData] of Object.entries(QUEST_TRACKER_globalQuestData)) {
@@ -805,9 +833,56 @@ var QuestTracker = QuestTracker || (function () {
 					delete questData.autoadvance;
 				}
 			}
-			QUEST_TRACKER_TriggerConversion = true;
+			QUEST_TRACKER_versionChecking.TriggerConversion = true;
 			if (triggersConverted) {
 				errorCheck(176, 'msg', null, `Autoadvance converted to Triggers (v1.1 update).`);
+			}
+			H.saveData();
+		};
+		const convertEffectsToNewFormat = () => {
+			if (QUEST_TRACKER_versionChecking.EffectConversion) return;
+			let effectsConverted = false;
+			initializeTriggersStructure();
+			for (const [triggerCategory, triggers] of Object.entries(QUEST_TRACKER_Triggers)) {
+				if (triggerCategory === "scripts") {
+					for (const [triggerId, trigger] of Object.entries(triggers)) {
+						if (trigger.effects) {
+							for (const [effectId, effect] of Object.entries(trigger.effects)) {
+								if (!effect.effectType) {
+									trigger.effects[effectId] = {
+										id: effect.questid || null,
+										type: effect.type || null,
+										value: effect.value || null,
+										effectType: "quest"
+									};
+									effectsConverted = true;
+								}
+							}
+						}
+					}
+				} else {
+					for (const [parentId, triggerGroup] of Object.entries(triggers)) {
+						for (const [triggerId, trigger] of Object.entries(triggerGroup)) {
+							if (trigger.effects) {
+								for (const [effectId, effect] of Object.entries(trigger.effects)) {
+									if (!effect.effectType) {
+										trigger.effects[effectId] = {
+											id: effect.questid || null,
+											type: effect.type || null,
+											value: effect.value || null,
+											effectType: "quest"
+										};
+										effectsConverted = true;
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+			QUEST_TRACKER_versionChecking.EffectConversion = true;
+			if (effectsConverted) {
+				errorCheck(238, 'msg', null, `Effects converted to new format. (v1.2 update)`);
 			}
 			H.saveData();
 		};
@@ -842,7 +917,8 @@ var QuestTracker = QuestTracker || (function () {
 				case 'quest': sourceType = 'date'; break;
 				case 'date': sourceType = 'quest'; break;
 				case 'reaction': sourceType = 'rumour'; break;
-				case 'rumour': sourceType = 'script'; break;
+				case 'rumour': sourceType = 'event'; break;
+				case 'event': sourceType = 'script'; break;
 				default: sourceType = 'reaction';
 			}
 			const sourcePath = locateItem(input, 'trigger');
@@ -857,6 +933,7 @@ var QuestTracker = QuestTracker || (function () {
 				case 'date': targetStructure = QUEST_TRACKER_Triggers.dates; break;
 				case 'reaction': targetStructure = QUEST_TRACKER_Triggers.reactions; break;
 				case 'rumour': targetStructure = QUEST_TRACKER_Triggers.rumours; break;
+				case 'event': targetStructure = QUEST_TRACKER_Triggers.events; break;
 				case 'script': targetStructure = QUEST_TRACKER_Triggers.scripts; break;
 			}
 			if (type === 'script') {
@@ -879,12 +956,24 @@ var QuestTracker = QuestTracker || (function () {
 				};
 			}
 			switch (type) {
-				case 'quest': break;
-				case 'date': delete targetStructure[triggerId].action; break;
-				case 'reaction': delete targetStructure[triggerId].action; delete targetStructure[triggerId].dateKey; break;
-				case 'rumour': delete targetStructure[triggerId].action; delete targetStructure[triggerId].dateKey; delete targetStructure[triggerId].questId; break;
-				case 'script': delete targetStructure[triggerId].action; delete targetStructure[triggerId].dateKey; delete targetStructure[triggerId].questId; break;
-				default: delete targetStructure[triggerId].active;
+				case 'quest':
+					break;
+				case 'date': 
+					if (targetStructure[triggerId]?.action) delete targetStructure[triggerId].action; 
+					break;
+				case 'reaction': 
+					if (targetStructure[triggerId]?.action) delete targetStructure[triggerId].action; 
+					if (targetStructure[triggerId]?.dateKey) delete targetStructure[triggerId].dateKey;
+					break;
+				case 'rumour':
+				case 'event':
+				case 'script':
+					if (targetStructure[triggerId]?.action) delete targetStructure[triggerId].action;
+					if (targetStructure[triggerId]?.dateKey) delete targetStructure[triggerId].dateKey;
+					if (targetStructure[triggerId]?.questId) delete targetStructure[triggerId].questId;
+					break;
+				default:
+					if (targetStructure[triggerId]?.active) delete targetStructure[triggerId].active;
 			}
 			if (sourceParent && sourceParent[triggerId]) {
 				delete sourceParent[triggerId];
@@ -1087,6 +1176,7 @@ var QuestTracker = QuestTracker || (function () {
 				case 'date': targetStructure = QUEST_TRACKER_Triggers.dates; break;
 				case 'reaction': targetStructure = QUEST_TRACKER_Triggers.reactions; break;
 				case 'rumour': targetStructure = QUEST_TRACKER_Triggers.rumours; break;
+				case 'event': targetStructure = QUEST_TRACKER_Triggers.events; break;
 				case 'script': targetStructure = QUEST_TRACKER_Triggers.scripts; break;
 				default: return;
 			}
@@ -1094,7 +1184,7 @@ var QuestTracker = QuestTracker || (function () {
 			const targetParent = targetStructure[targetParentKey] || (targetStructure[targetParentKey] = {});
 			targetParent[triggerId] = {
 				...sourceTrigger,
-				...(field === 'quest' ? { action: sourceTrigger.action || { type: null, effect: null } } : {}),
+				...(field === 'quest' ? { action: sourceTrigger?.action || { type: null, effect: null } } : {}),
 				...(field === 'date' ? { dateKey: value || 'null' } : {})
 			};
 			delete sourceParent[triggerId];
@@ -1105,6 +1195,7 @@ var QuestTracker = QuestTracker || (function () {
 					case 'dates': sourceStructure = QUEST_TRACKER_Triggers.dates; break;
 					case 'reactions': sourceStructure = QUEST_TRACKER_Triggers.reactions; break;
 					case 'rumours': sourceStructure = QUEST_TRACKER_Triggers.rumours; break;
+					case 'events': sourceStructure = QUEST_TRACKER_Triggers.events; break;
 					case 'scripts': sourceStructure = QUEST_TRACKER_Triggers.scripts; break;
 					default: return;
 				}
@@ -1142,9 +1233,10 @@ var QuestTracker = QuestTracker || (function () {
 			switch (action) {
 				case "add":
 					trigger.effects[newEffectId] = {
-						questid: null,
+						id: null,
 						type: null,
-						value: null
+						value: null,
+						effectType: 'quest'
 					};
 					break;
 				case "delete":
@@ -1210,6 +1302,14 @@ var QuestTracker = QuestTracker || (function () {
 					});
 					break;
 				}
+			case "event": {
+					Object.entries(QUEST_TRACKER_Triggers.events).forEach(([rumourTriggerId, events]) => {
+						Object.entries(events).forEach(([triggerId, trigger]) => {
+							if (trigger.enabled) H.fireTrigger(triggerId);
+						});
+					});
+					break;
+				}
 				case "script": {
 					Object.entries(QUEST_TRACKER_Triggers.scripts).forEach(([TriggerId, trigger]) => {
 						if (trigger.enabled) H.fireTrigger(TriggerId);
@@ -1232,6 +1332,7 @@ var QuestTracker = QuestTracker || (function () {
 		return {
 			initializeTriggersStructure,
 			convertAutoAdvanceToTriggers,
+			convertEffectsToNewFormat,
 			addTrigger,
 			addRumourTrigger,
 			initializeTrigger,
@@ -2700,7 +2801,7 @@ var QuestTracker = QuestTracker || (function () {
 			} else return;
 		};
 		const convertEventsToNewFormat = () => {
-			if (QUEST_TRACKER_EventConversion) return;
+			if (QUEST_TRACKER_versionChecking.EventConversion) return;
 			let eventsConverted = false;
 			if (!QUEST_TRACKER_Events || typeof QUEST_TRACKER_Events !== "object") return;
 			Object.entries(QUEST_TRACKER_Events).forEach(([eventID, event]) => {
@@ -2709,7 +2810,7 @@ var QuestTracker = QuestTracker || (function () {
 					eventsConverted = true;
 				}
 			});
-			QUEST_TRACKER_EventConversion = true; 
+			QUEST_TRACKER_versionChecking.EventConversion = true; 
 			if (eventsConverted) {
 				errorCheck(237, 'msg', null, `Events converted to include 'enabled' field (v1.2 update).`);
 				Utils.updateHandoutField("event");
@@ -2888,7 +2989,7 @@ var QuestTracker = QuestTracker || (function () {
 						if (typeof prereq === "string") {
 							prereqId = prereq;
 						} else if (typeof prereq === "object" && prereq.conditions) {
-							prereqId = prereq.conditions[0]; // Simplification
+							prereqId = prereq.conditions[0];
 						}
 						return calculateInitialLevels(prereqId, new Set(visited)) + 1;
 					});
@@ -3436,7 +3537,7 @@ var QuestTracker = QuestTracker || (function () {
 								}
 							});
 							if (Object.keys(statusRumours[cleanData]).length === 0) {
-								delete statusRumours[cleanData]; // Remove location if empty
+								delete statusRumours[cleanData];
 							}
 						}
 					});
@@ -3478,7 +3579,7 @@ var QuestTracker = QuestTracker || (function () {
 			}
 		};
 		const convertRumoursToNewFormat = () => {
-			if (QUEST_TRACKER_RumourConversion) return;
+			if (QUEST_TRACKER_versionChecking.RumourConversion) return;
 			let rumoursConverted = false;
 			for (const [questId, questData] of Object.entries(QUEST_TRACKER_globalRumours)) {
 				for (const [status, locations] of Object.entries(questData)) {
@@ -3494,7 +3595,7 @@ var QuestTracker = QuestTracker || (function () {
 					}
 				}
 			}
-			QUEST_TRACKER_RumourConversion = true;
+			QUEST_TRACKER_versionChecking.RumourConversion = true;
 			if (rumoursConverted) errorCheck(225, 'msg', null, `Rumours converted to new format (v1.2 update).`);
 			H.saveData();
 		};
@@ -3594,7 +3695,7 @@ var QuestTracker = QuestTracker || (function () {
 						Object.keys(locationRumours).forEach(rumourType => {
 							if (locationRumours[rumourType] && typeof locationRumours[rumourType] === 'object') {
 								Object.keys(locationRumours[rumourType]).forEach(rumourKey => {
-									delete locationRumours[rumourType][rumourKey]; // Remove each rumour
+									delete locationRumours[rumourType][rumourKey];
 								});
 							}
 						});
@@ -3949,6 +4050,9 @@ var QuestTracker = QuestTracker || (function () {
 			},
 			getQuestName: (questId) => {
 				return QUEST_TRACKER_globalQuestData[questId]?.name.replace(/[{}|&?]/g, '') || 'Unnamed Quest';
+			},
+			getEventName: (eventId) => {
+				return QUEST_TRACKER_Events[eventId]?.name.replace(/[{}|&?]/g, '') || 'Unnamed Event';
 			},
 			relationshipMenu: (questId) => {
 				const quest = QUEST_TRACKER_globalQuestData[questId];
@@ -4381,15 +4485,27 @@ var QuestTracker = QuestTracker || (function () {
 						return { questName, questId: quest.id };
 					})
 					.sort((a, b) => a.questName.localeCompare(b.questName));
-
 				if (sortedQuests.length === 0) return null;
 				if (sortedQuests.length === 1) return sortedQuests[0].questId;
-
 				const allQuests = sortedQuests
 					.map(quest => `${quest.questName},${quest.questId}`)
 					.join('|');
-
 				return `?{Select Quest|${allQuests}}`;
+			},
+			createEventDropdown: () => {
+				const sortedEvents = Object.entries(QUEST_TRACKER_Events)
+					.map(([eventId, event]) => {
+						const eventName = Utils.roll20MacroSanitize(H.getEventName(eventId));
+						return { eventName, eventId };
+					})
+					.sort((a, b) => a.eventName.localeCompare(b.eventName));
+				if (sortedEvents.length === 0) return null;
+				if (sortedEvents.length === 1) return sortedEvents[0].eventId;
+				const allEvents = sortedEvents
+					.map(event => `${event.eventName},${event.eventId}`)
+					.join('|');
+
+				return `?{Select Event|${allEvents}}`;
 			},
 			createTriggerDropdown: (current) => {
 				const allTriggers = [];
@@ -4430,6 +4546,8 @@ var QuestTracker = QuestTracker || (function () {
 				switch (actionType?.toLowerCase()) {
 					case "hidden":
 						return `?{Visibility Changes to|True,true|False,false}`;
+					case "enabled":
+						return `?{Enabled Changes to|True,true|False,false}`;
 					case "disabled":
 						return `?{State Changes to|False,false|True,true}`;
 					case "status": {
@@ -5433,7 +5551,7 @@ var QuestTracker = QuestTracker || (function () {
 			Triggers.initializeTriggersStructure();
 			const scriptTriggers = [];
 			const allTriggers = [];
-			Object.entries(QUEST_TRACKER_Triggers.scripts).forEach(([triggerId, trigger]) => {
+			Object.entries(QUEST_TRACKER_Triggers.scripts || {}).forEach(([triggerId, trigger]) => {
 				scriptTriggers.push({ 
 					id: triggerId, 
 					name: trigger.name || 'Unnamed Script Trigger', 
@@ -5441,49 +5559,28 @@ var QuestTracker = QuestTracker || (function () {
 					enabled: trigger.enabled
 				});
 			});
-			Object.entries(QUEST_TRACKER_Triggers.quests).forEach(([questId, triggers]) => {
-				Object.entries(triggers).forEach(([triggerId, trigger]) => {
-					allTriggers.push({ 
-						id: triggerId, 
-						name: trigger.name || 'Unnamed Trigger', 
-						type: 'quest', 
-						parent: H.getQuestName(questId) || 'Unknown Quest' 
-					});
-				});
-			});
-			Object.entries(QUEST_TRACKER_Triggers.dates).forEach(([date, triggers]) => {
-				Object.entries(triggers).forEach(([triggerId, trigger]) => { 
-					allTriggers.push({ 
-						id: triggerId, 
-						name: trigger.name || 'Unnamed Trigger', 
-						type: 'date', 
-						parent: date 
-					});
-				});
-			});
-			Object.entries(QUEST_TRACKER_Triggers.reactions).forEach(([reactionParentId, triggers]) => {
-				Object.entries(triggers).forEach(([triggerId, trigger]) => {
-					allTriggers.push({ 
-						id: triggerId, 
-						name: trigger.name || 'Unnamed Reaction', 
-						type: 'reaction', 
-						parent: reactionParentId || 'Unknown Trigger' 
-					});
-				});
-			});
-			Object.entries(QUEST_TRACKER_Triggers.rumours).forEach(([rumourParentId, triggers]) => {
-				Object.entries(triggers).forEach(([triggerId, trigger]) => {
-					allTriggers.push({ 
-						id: triggerId, 
-						name: trigger.name || 'Unnamed Rumour', 
-						type: 'rumour', 
-						parent: rumourParentId || 'Unknown Rumour' 
+			const triggerTypes = {
+				quests: { type: 'quest', getParent: H.getQuestName, defaultParent: 'Unknown Quest' },
+				dates: { type: 'date', getParent: (date) => date, defaultParent: 'Unknown Date' },
+				reactions: { type: 'reaction', getParent: (parentId) => parentId, defaultParent: 'Unknown Trigger' },
+				rumours: { type: 'rumour', getParent: (parentId) => parentId, defaultParent: 'Unknown Rumour' },
+				events: { type: 'event', getParent: H.getEventName, defaultParent: 'Unknown Event' } // ✅ Added event category
+			};
+			Object.entries(triggerTypes).forEach(([category, { type, getParent, defaultParent }]) => {
+				Object.entries(QUEST_TRACKER_Triggers[category] || {}).forEach(([parentId, triggers]) => {
+					Object.entries(triggers).forEach(([triggerId, trigger]) => {
+						allTriggers.push({ 
+							id: triggerId,
+							name: trigger.name || `Unnamed ${type.charAt(0).toUpperCase() + type.slice(1)}`,
+							type,
+							parent: getParent(parentId) || defaultParent
+						});
 					});
 				});
 			});
 			allTriggers.sort((a, b) => a.name.localeCompare(b.name));
 			let menu = `<div style="${styles.menu}"><h3 style="margin-bottom: 10px;">All Triggers</h3>`;
-			menu += `<p>This menu displays all the triggers currently associated with quests, dates, reactions, and scripts.</p>`;
+			menu += `<p>This menu displays all the triggers currently associated with quests, dates, reactions, events, and scripts.</p>`;
 			if (scriptTriggers.length > 0) {
 				menu += `<h4>Scripts</h4><ul style="${styles.list}">`;
 				scriptTriggers.forEach(trigger => {
@@ -5526,7 +5623,9 @@ var QuestTracker = QuestTracker || (function () {
 										? trigger.parent 
 										: trigger.type === 'rumour'
 										? cleanRumour
-										: `Triggered by: ${H.getTriggerName(trigger.parent)}`
+										: trigger.type === 'event'
+										? trigger.parent
+										: H.getTriggerName(trigger.parent)
 								}</small>
 							</span>
 							<span style="${styles.floatRight}">
@@ -5553,8 +5652,8 @@ var QuestTracker = QuestTracker || (function () {
 			Triggers.initializeTriggersStructure();
 			const triggerPath = Triggers.locateItem(triggerId, 'trigger');
 			const trigger = Utils.getNestedProperty(QUEST_TRACKER_Triggers, triggerPath.replace('QUEST_TRACKER_Triggers.', ''));
-			const currentType = triggerPath.match(/QUEST_TRACKER_Triggers\.(quests|dates|reactions|rumours|scripts)/)?.[1].replace(/s$/, '');
-			const typeOptions = ['quest', 'date', 'reaction', 'rumour', 'script']
+			const currentType = triggerPath.match(/QUEST_TRACKER_Triggers\.(quests|dates|reactions|rumours|scripts|events)/)?.[1].replace(/s$/, '');
+			const typeOptions = ['quest', 'date', 'reaction', 'rumour', 'script', 'event']
 				.filter(type => type !== currentType)
 				.map(type => `${type.charAt(0).toUpperCase() + type.slice(1)},${type}`)
 				.join('|');
@@ -5597,6 +5696,13 @@ var QuestTracker = QuestTracker || (function () {
 					const cleanRumour = triggerPathParts[2].replace(/^rumour_(\d+)$/, 'Rumour #$1');
 					activationSection += `<a style="${styles.button}" href="!qt-trigger action=prompt|triggerid=${triggerId}|field=rumour|value=?{Provide Rumour ID}">${triggerPathParts[2] === "null" ? `Set Rumour ID` : `${cleanRumour}`}</a>`;
 					break;
+				case 'event':
+					if (H.createEventDropdown(triggerId) !== null) {
+						activationSection += `<a style="${styles.button}" href="!qt-trigger action=prompt|triggerid=${triggerId}|field=event|value=${H.createEventDropdown(triggerId)}">${triggerPathParts[2] === "null" || H.getEventName(triggerPathParts[2]) === null ? `Set Event` : `${H.getEventName(triggerPathParts[2])}`}</a>`;
+					} else {
+						activationSection += `<span style="${styles.buttonDisabled} ${styles.spanInline}">No Event Set</span>`;
+					}
+					break;
 				case 'script':
 					activationSection += `<p>This script trigger executes when activated.</p>`;
 					break;
@@ -5604,30 +5710,64 @@ var QuestTracker = QuestTracker || (function () {
 			effectsSection = `<table width=100%>`;
 			if (trigger.effects && Object.keys(trigger.effects).length > 0) {
 				Object.entries(trigger.effects).forEach(([effectId, effect]) => {
-					const effectQuestName = effect.questid === null ? 'Choose Quest' : H.getQuestName(effect.questid);
+					const effectQuestName = effect.id === null ? 'Choose Quest' : H.getQuestName(effect.id);
+					const effectEventName = effect.id === null ? 'Choose Event' : H.getEventName(effect.id);
 					const effectType = effect.type === null ? 'Choose Field' : effect.type.charAt(0).toUpperCase() + effect.type.slice(1);
 					const effectValue = effect.value === null ? 'Choose Value' : effect.type === "status" ? statusMapping[effect.value] : effect.value.charAt(0).toUpperCase() + effect.value.slice(1);
+					const effectCat = effect.effectType.charAt(0).toUpperCase() + effect.effectType.slice(1);
+					const effectCatToggle = effect.effectType === "quest" ? "event" : "quest";
 					effectsSection += `
 						<tr>
 							<td>&nbsp;</td>
-							<td>Quest</td>
-							<td><a style="${styles.button}" href="!qt-trigger action=modifyeffect|triggerid=${triggerId}|effectid=${effectId}|field=questid|value=${H.createQuestDropdown()}">${effectQuestName}</a></td>
-						</tr>
-						<tr>
-							<td>&nbsp;</td>
-							<td>Type</td>
-							<td><a style="${styles.button}" href="!qt-trigger action=modifyeffect|triggerid=${triggerId}|effectid=${effectId}|field=type|value=${dropdownType}">${effectType}</a></td>
-						</tr>
-						<tr>
-							<td>&nbsp;</td>
-							<td>Value</td>
-							<td>${effect.type !== null ? `<a style="${styles.button}" href="!qt-trigger action=modifyeffect|triggerid=${triggerId}|effectid=${effectId}|field=value|value=${H.effectDropdown(effect.type)}">${effectValue}</a>` : `<span style="${styles.buttonDisabled} ${styles.spanInline}">${effectValue}</span>`}</td>
-						</tr>
-						<tr>
-							<td><a style="${styles.button}" href="!qt-trigger action=removeeffect|triggerid=${triggerId}|effectid=${effectId}">Delete</a></td>
-							<td colspan=2>&nbsp;</td>
-						</tr>
-					`;
+							<td>Effect</td>
+							<td><a style="${styles.button}" href="!qt-trigger action=modifyeffect|triggerid=${triggerId}|effectid=${effectId}|field=effectType|value=${effectCatToggle}">${effectCat}</a></td>
+						</tr>`;
+					if (effect.effectType === "event") {
+						effectsSection += `
+							<tr>
+								<td>&nbsp;</td>
+								<td>Event</td>
+								<td><a style="${styles.button}" href="!qt-trigger action=modifyeffect|triggerid=${triggerId}|effectid=${effectId}|field=id|value=${H.createEventDropdown()}">${effectEventName}</a></td>
+							</tr>
+							<tr>
+								<td>&nbsp;</td>
+								<td>Type</td>
+								<td><a style="${styles.button}" href="!qt-trigger action=modifyeffect|triggerid=${triggerId}|effectid=${effectId}|field=type|value=enabled">${effect.type === null ? 'Choose Type' : 'Enabled'}</a></td>
+							</tr>
+							<tr>
+								<td>&nbsp;</td>
+								<td>Value</td>
+								<td>${effect.type !== null ? `<a style="${styles.button}" href="!qt-trigger action=modifyeffect|triggerid=${triggerId}|effectid=${effectId}|field=value|value=${H.effectDropdown(effect.type)}">${effectValue}</a>` : `<span style="${styles.buttonDisabled} ${styles.spanInline}">${effectValue}</span>`}</td>
+							</tr>
+							<tr>
+								<td><a style="${styles.button}" href="!qt-trigger action=removeeffect|triggerid=${triggerId}|effectid=${effectId}">Delete</a></td>
+								<td colspan=2>&nbsp;</td>
+							</tr>
+						`;
+					}
+					else {
+						effectsSection += `
+							<tr>
+								<td>&nbsp;</td>
+								<td>Quest</td>
+								<td><a style="${styles.button}" href="!qt-trigger action=modifyeffect|triggerid=${triggerId}|effectid=${effectId}|field=id|value=${H.createQuestDropdown()}">${effectQuestName}</a></td>
+							</tr>
+							<tr>
+								<td>&nbsp;</td>
+								<td>Type</td>
+								<td><a style="${styles.button}" href="!qt-trigger action=modifyeffect|triggerid=${triggerId}|effectid=${effectId}|field=type|value=${dropdownType}">${effectType}</a></td>
+							</tr>
+							<tr>
+								<td>&nbsp;</td>
+								<td>Value</td>
+								<td>${effect.type !== null ? `<a style="${styles.button}" href="!qt-trigger action=modifyeffect|triggerid=${triggerId}|effectid=${effectId}|field=value|value=${H.effectDropdown(effect.type)}">${effectValue}</a>` : `<span style="${styles.buttonDisabled} ${styles.spanInline}">${effectValue}</span>`}</td>
+							</tr>
+							<tr>
+								<td><a style="${styles.button}" href="!qt-trigger action=removeeffect|triggerid=${triggerId}|effectid=${effectId}">Delete</a></td>
+								<td colspan=2>&nbsp;</td>
+							</tr>
+						`;
+					}
 				});
 			}
 			effectsSection += `
@@ -6148,7 +6288,7 @@ var QuestTracker = QuestTracker || (function () {
 					break;
 				case 'changetype':
 					if (errorCheck(213, 'exists', triggerid, 'triggerid')) return;
-					if (!['quest', 'date', 'reaction', 'rumour', 'script'].includes(newType)) {
+					if (!['quest', 'date', 'reaction', 'rumour', 'script', 'event'].includes(newType)) {
 						errorCheck(206, 'msg', null, `Invalid type: ${newType}. Valid types are 'quest', 'date', 'reaction', 'rumour', or 'script'.`);
 						return;
 					}
@@ -6186,7 +6326,7 @@ var QuestTracker = QuestTracker || (function () {
 					if (errorCheck(214, 'exists', field, 'field')) return;
 					if (errorCheck(215, 'exists', value, 'value')) return;
 					if (field === "date") if (errorCheck(216, 'date', value)) return;
-					if (!["quest", "date", "reaction", "rumour", "script"].includes(field)) {
+					if (!["quest", "date", "reaction", "rumour", "script", "event"].includes(field)) {
 						errorCheck(216, 'msg', null, `Invalid field: ${field}. Use 'quest', 'date', 'reaction', 'rumour', or 'script'.`);
 						return;
 					}
