@@ -762,14 +762,39 @@ var QuestTracker = QuestTracker || (function () {
 					if (current[lastKey] && Object.keys(current[lastKey]).length === 0) delete current[lastKey];
 				});
 			},
+			deleteEffectTriggers: (triggerId) => {
+				Object.entries(QUEST_TRACKER_Triggers).forEach(([category, parentObjects]) => {
+					if (category === "scripts") {
+						Object.entries(parentObjects).forEach(([scriptTriggerId, scriptTrigger]) => {
+							if (!scriptTrigger.effects) return;
+							Object.entries(scriptTrigger.effects).forEach(([effectId, effect]) => {
+								if (effect.effecttype === "trigger" && effect.id === triggerId) {
+									manageEffect(scriptTriggerId, effectId, "delete");
+								}
+							});
+						});
+						return;
+					}
+					Object.entries(parentObjects).forEach(([parentId, triggers]) => {
+						Object.entries(triggers).forEach(([triggerKey, trigger]) => {
+							if (!trigger.effects) return;
+							Object.entries(trigger.effects).forEach(([effectId, effect]) => {
+								if (effect.effecttype === "trigger" && effect.id === triggerId) {
+									manageEffect(triggerKey, effectId, "delete");
+								}
+							});
+						});
+					});
+				});
+			},
 			fireTrigger: (triggerId) => {
 				const triggerPath = Triggers.locateItem(triggerId, "trigger");
 				if (!triggerPath) return;
 				const trigger = Utils.getNestedProperty(QUEST_TRACKER_Triggers, triggerPath.replace("QUEST_TRACKER_Triggers.", ""));
 				if (!trigger || !trigger.effects || Object.keys(trigger.effects).length === 0) return;
 				Object.entries(trigger.effects).forEach(([effectId, effect]) => {
-					const { id, type, value, effectType = "quest" } = effect;
-					switch (effectType) {
+					const { id, type, value, effecttype = "quest" } = effect;
+					switch (effecttype) {
 						case "quest":
 							Quest.manageQuestObject({
 								action: "update",
@@ -789,15 +814,14 @@ var QuestTracker = QuestTracker || (function () {
 								date: null
 							});
 							break;
-						default:
-							log(`Unhandled effectType: ${effectType} for effect ${effectId}`);
+						case "trigger":
+							deleteTrigger(id);
 							break;
 					}
 				});
-				Triggers.checkTriggers("reaction", triggerId);
 				QUEST_TRIGGER_DeleteList.push(triggerId);
 			}
-		};
+		}
 		const initializeTriggersStructure = () => {
 			if (!QUEST_TRACKER_Triggers.quests) QUEST_TRACKER_Triggers.quests = {};
 			if (!QUEST_TRACKER_Triggers.dates) QUEST_TRACKER_Triggers.dates = {};
@@ -1126,6 +1150,7 @@ var QuestTracker = QuestTracker || (function () {
 				if (Object.keys(parentObject).length === 0) delete QUEST_TRACKER_Triggers[category][parentKey];
 				if (Object.keys(QUEST_TRACKER_Triggers[category]).length === 0) delete QUEST_TRACKER_Triggers[category];
 			}
+			H.deleteEffectTriggers(triggerId);
 			Object.entries(QUEST_TRACKER_Triggers.reactions).forEach(([reactionParent, reactionTriggers]) => {
 				Object.entries(reactionTriggers).forEach(([reactionTriggerId, reactionTrigger]) => {
 					if (reactionTrigger.action === triggerId) deleteTrigger(reactionTriggerId);
@@ -1250,17 +1275,17 @@ var QuestTracker = QuestTracker || (function () {
 						const triggerDate = new Date(dateKey);
 						if (triggerDate <= currentDate) {
 							Object.entries(triggers).forEach(([triggerId, trigger]) => {
-								if (trigger.enabled) H.fireTrigger(triggerId);
+								if (trigger.enabled && (!id || triggerId === id)) H.fireTrigger(triggerId);
 							});
 						}
 					});
 					break;
 				}
 				case "quest": {
-					const questTriggers = QUEST_TRACKER_Triggers.quests[id];
-					if (!questTriggers || Object.keys(questTriggers).length === 0) return;
+					const questTriggers = QUEST_TRACKER_Triggers.quests[id] || {};
 					Object.entries(questTriggers).forEach(([triggerId, trigger]) => {
 						if (!trigger.enabled || !trigger.action) return;
+						if (id && triggerId !== id) return;
 						const { type, effect } = trigger.action;
 						switch (type) {
 							case "hidden":
@@ -1282,36 +1307,47 @@ var QuestTracker = QuestTracker || (function () {
 				}
 				case "reaction": {
 					Object.entries(QUEST_TRACKER_Triggers.reactions).forEach(([reactionTriggerId, reactions]) => {
+						if (id && reactionTriggerId !== id) return;
 						Object.entries(reactions).forEach(([triggerId, trigger]) => {
-							if (trigger.enabled && trigger.action === id) H.fireTrigger(triggerId);
+							if (trigger.enabled && (!id || triggerId === id)) H.fireTrigger(triggerId);
 						});
 					});
 					break;
 				}
 				case "rumour": {
 					Object.entries(QUEST_TRACKER_Triggers.rumours).forEach(([rumourTriggerId, rumours]) => {
+						if (id && rumourTriggerId !== id) return;
 						Object.entries(rumours).forEach(([triggerId, trigger]) => {
-							if (trigger.enabled) H.fireTrigger(triggerId);
+							if (trigger.enabled && (!id || triggerId === id)) H.fireTrigger(triggerId);
 						});
 					});
 					break;
 				}
-			case "event": {
-					Object.entries(QUEST_TRACKER_Triggers.events).forEach(([rumourTriggerId, events]) => {
+				case "event": {
+					Object.entries(QUEST_TRACKER_Triggers.events).forEach(([eventTriggerId, events]) => {
+						if (id && eventTriggerId !== id) return;
 						Object.entries(events).forEach(([triggerId, trigger]) => {
-							if (trigger.enabled) H.fireTrigger(triggerId);
+							if (trigger.enabled && (!id || triggerId === id)) H.fireTrigger(triggerId);
 						});
 					});
 					break;
 				}
 				case "script": {
-					Object.entries(QUEST_TRACKER_Triggers.scripts).forEach(([TriggerId, trigger]) => {
-						if (trigger.enabled) H.fireTrigger(TriggerId);
+					Object.entries(QUEST_TRACKER_Triggers.scripts).forEach(([triggerId, trigger]) => {
+						if (trigger.enabled && (!id || triggerId === id)) H.fireTrigger(triggerId);
 					});
 					break;
 				}
 			}
-			if (QUEST_TRIGGER_DeleteList.length > 0) QUEST_TRIGGER_DeleteList.forEach(id => deleteTrigger(id));
+			if (QUEST_TRIGGER_DeleteList.length > 0) {
+				QUEST_TRIGGER_DeleteList = QUEST_TRIGGER_DeleteList.filter(triggerId => {
+					if (!id || triggerId === id) {
+						deleteTrigger(triggerId);
+						return false;
+					}
+					return true; 
+				});
+			}
 		};
 		const removeQuestsFromTriggers = (questId) => {
 			Triggers.initializeTriggersStructure();
@@ -4503,33 +4539,24 @@ var QuestTracker = QuestTracker || (function () {
 			},
 			createTriggerDropdown: (current) => {
 				const allTriggers = [];
-				Object.entries(QUEST_TRACKER_Triggers.quests).forEach(([questId, triggers]) => {
-					Object.entries(triggers).forEach(([triggerId, trigger]) => {
-						if (triggerId !== current) {
-							allTriggers.push(`${trigger.name || 'Unnamed Trigger'},${triggerId}`);
-						}
+				const collectTriggers = (category, label = "Trigger") => {
+					Object.entries(category).forEach(([parentId, triggers]) => {
+						Object.entries(triggers).forEach(([triggerId, trigger]) => {
+							if (triggerId !== current) {
+								allTriggers.push(`${trigger.name || `Unnamed ${label}`},${triggerId}`);
+							}
+						});
 					});
-				});
-				Object.entries(QUEST_TRACKER_Triggers.dates).forEach(([date, triggers]) => {
-					Object.entries(triggers).forEach(([triggerId, trigger]) => {
-						if (triggerId !== current) {
-							allTriggers.push(`${trigger.name || 'Unnamed Trigger'},${triggerId}`);
-						}
-					});
-				});
-				Object.entries(QUEST_TRACKER_Triggers.reactions).forEach(([reactionParent, triggers]) => {
-					Object.entries(triggers).forEach(([triggerId, trigger]) => {
-						if (triggerId !== current) {
-							allTriggers.push(`${trigger.name || 'Unnamed Reaction'},${triggerId}`);
-						}
-					});
-				});
-				Object.entries(QUEST_TRACKER_Triggers.rumours).forEach(([rumourParent, triggers]) => {
-					Object.entries(triggers).forEach(([triggerId, trigger]) => {
-						if (triggerId !== current) {
-							allTriggers.push(`${trigger.name || 'Unnamed Rumour'},${triggerId}`);
-						}
-					});
+				};
+				collectTriggers(QUEST_TRACKER_Triggers.quests, "Quest Trigger");
+				collectTriggers(QUEST_TRACKER_Triggers.dates, "Date Trigger");
+				collectTriggers(QUEST_TRACKER_Triggers.reactions, "Reaction Trigger");
+				collectTriggers(QUEST_TRACKER_Triggers.rumours, "Rumour Trigger");
+				collectTriggers(QUEST_TRACKER_Triggers.events, "Event Trigger");
+				Object.entries(QUEST_TRACKER_Triggers.scripts).forEach(([triggerId, trigger]) => {
+					if (triggerId !== current) {
+						allTriggers.push(`${trigger.name || "Unnamed Script"},${triggerId}`);
+					}
 				});
 				if (allTriggers.length === 0) return null;
 				if (allTriggers.length === 1) return allTriggers[0].split(',')[1];
@@ -4555,12 +4582,16 @@ var QuestTracker = QuestTracker || (function () {
 				}
 			},
 			getTriggerName: (triggerId) => {
-				for (const category of ["quests", "dates", "reactions", "rumours"]) {
+				const categories = ["quests", "dates", "reactions", "rumours", "events"];
+				for (const category of categories) {
 					for (const [parentId, triggers] of Object.entries(QUEST_TRACKER_Triggers[category] || {})) {
 						if (triggers[triggerId]) {
 							return triggers[triggerId].name || "Unnamed Trigger";
 						}
 					}
+				}
+				if (QUEST_TRACKER_Triggers.scripts && QUEST_TRACKER_Triggers.scripts[triggerId]) {
+					return QUEST_TRACKER_Triggers.scripts[triggerId].name || "Unnamed Script";
 				}
 				return "Unnamed Trigger";
 			}
@@ -5597,10 +5628,10 @@ var QuestTracker = QuestTracker || (function () {
 				});
 				menu += `</ul><br><hr>`;
 			}
-			if (allTriggers.length === 0) {
+			if (allTriggers.length + scriptTriggers.length === 0) {
 				menu += `<p>No triggers found. Click 'Add Trigger' to create one.</p>`;
 			} else {
-				menu += `<h4>Triggers</h4><ul style="${styles.list}">`;
+				if (allTriggers.length !== 0) menu += `<h4>Triggers</h4><ul style="${styles.list}">`;
 				allTriggers.forEach(trigger => {
 					const cleanRumour = trigger.type === 'rumour' 
 						? trigger.parent.replace(/^rumour_(\d+)$/, 'Rumour #$1') 
@@ -5630,7 +5661,8 @@ var QuestTracker = QuestTracker || (function () {
 				});
 				menu += `</ul>`;
 			}
-			menu += `<br><hr>
+			if (allTriggers.length !== 0) menu += `<br><hr>`;
+			menu += `
 				<span style="${styles.floatRight}">
 					<a style="${styles.button}" href="!qt-trigger action=add">Add Trigger</a>
 					&nbsp;
@@ -5709,58 +5741,76 @@ var QuestTracker = QuestTracker || (function () {
 					const effectType = effect.type === null ? 'Choose Field' : effect.type.charAt(0).toUpperCase() + effect.type.slice(1);
 					const effectValue = effect.value === null ? 'Choose Value' : effect.type === "status" ? statusMapping[effect.value] : effect.value.charAt(0).toUpperCase() + effect.value.slice(1);
 					const effectCat = effect.effecttype.charAt(0).toUpperCase() + effect.effecttype.slice(1);
-					const effectCatToggle = effect.effecttype === "quest" ? "event" : "quest";
+					const effectCatToggle = `?{Choose Effect Type|Quest,quest|Event,event|Trigger,trigger}`;
 					effectsSection += `
 						<tr>
 							<td>&nbsp;</td>
 							<td>Effect</td>
 							<td><a style="${styles.button}" href="!qt-trigger action=modifyeffect|triggerid=${triggerId}|effectid=${effectId}|field=effecttype|value=${effectCatToggle}">${effectCat}</a></td>
 						</tr>`;
-					if (effect.effecttype === "event") {
-						effectsSection += `
-							<tr>
-								<td>&nbsp;</td>
-								<td>Event</td>
-								<td><a style="${styles.button}" href="!qt-trigger action=modifyeffect|triggerid=${triggerId}|effectid=${effectId}|field=id|value=${H.createEventDropdown()}">${effectEventName}</a></td>
-							</tr>
-							<tr>
-								<td>&nbsp;</td>
-								<td>Type</td>
-								<td><a style="${styles.button}" href="!qt-trigger action=modifyeffect|triggerid=${triggerId}|effectid=${effectId}|field=type|value=enabled">${effect.type === null ? 'Choose Type' : 'Enabled'}</a></td>
-							</tr>
-							<tr>
-								<td>&nbsp;</td>
-								<td>Value</td>
-								<td>${effect.type !== null ? `<a style="${styles.button}" href="!qt-trigger action=modifyeffect|triggerid=${triggerId}|effectid=${effectId}|field=value|value=${H.effectDropdown(effect.type)}">${effectValue}</a>` : `<span style="${styles.buttonDisabled} ${styles.spanInline}">${effectValue}</span>`}</td>
-							</tr>
-							<tr>
-								<td><a style="${styles.button}" href="!qt-trigger action=removeeffect|triggerid=${triggerId}|effectid=${effectId}">Delete</a></td>
-								<td colspan=2>&nbsp;</td>
-							</tr>
-						`;
-					}
-					else {
-						effectsSection += `
-							<tr>
-								<td>&nbsp;</td>
-								<td>Quest</td>
-								<td><a style="${styles.button}" href="!qt-trigger action=modifyeffect|triggerid=${triggerId}|effectid=${effectId}|field=id|value=${H.createQuestDropdown()}">${effectQuestName}</a></td>
-							</tr>
-							<tr>
-								<td>&nbsp;</td>
-								<td>Type</td>
-								<td><a style="${styles.button}" href="!qt-trigger action=modifyeffect|triggerid=${triggerId}|effectid=${effectId}|field=type|value=${dropdownType}">${effectType}</a></td>
-							</tr>
-							<tr>
-								<td>&nbsp;</td>
-								<td>Value</td>
-								<td>${effect.type !== null ? `<a style="${styles.button}" href="!qt-trigger action=modifyeffect|triggerid=${triggerId}|effectid=${effectId}|field=value|value=${H.effectDropdown(effect.type)}">${effectValue}</a>` : `<span style="${styles.buttonDisabled} ${styles.spanInline}">${effectValue}</span>`}</td>
-							</tr>
-							<tr>
-								<td><a style="${styles.button}" href="!qt-trigger action=removeeffect|triggerid=${triggerId}|effectid=${effectId}">Delete</a></td>
-								<td colspan=2>&nbsp;</td>
-							</tr>
-						`;
+					switch(effectCat) {
+						case 'Event':
+							effectsSection += `
+								<tr>
+									<td>&nbsp;</td>
+									<td>Event</td>
+									<td><a style="${styles.button}" href="!qt-trigger action=modifyeffect|triggerid=${triggerId}|effectid=${effectId}|field=id|value=${H.createEventDropdown()}">${effectEventName}</a></td>
+								</tr>
+								<tr>
+									<td>&nbsp;</td>
+									<td>Type</td>
+									<td><a style="${styles.button}" href="!qt-trigger action=modifyeffect|triggerid=${triggerId}|effectid=${effectId}|field=type|value=enabled">${effect.type === null ? 'Choose Type' : 'Enabled'}</a></td>
+								</tr>
+								<tr>
+									<td>&nbsp;</td>
+									<td>Value</td>
+									<td>${effect.type !== null ? `<a style="${styles.button}" href="!qt-trigger action=modifyeffect|triggerid=${triggerId}|effectid=${effectId}|field=value|value=${H.effectDropdown(effect.type)}">${effectValue}</a>` : `<span style="${styles.buttonDisabled} ${styles.spanInline}">${effectValue}</span>`}</td>
+								</tr>
+								<tr>
+									<td><a style="${styles.button}" href="!qt-trigger action=removeeffect|triggerid=${triggerId}|effectid=${effectId}">Delete</a></td>
+									<td colspan=2>&nbsp;</td>
+								</tr>
+								<tr>
+									<td colspan=3><hr></td>
+								</tr>
+							`;
+							break;
+						case 'Quest':
+							effectsSection += `
+								<tr>
+									<td>&nbsp;</td>
+									<td>Quest</td>
+									<td><a style="${styles.button}" href="!qt-trigger action=modifyeffect|triggerid=${triggerId}|effectid=${effectId}|field=id|value=${H.createQuestDropdown()}">${effectQuestName}</a></td>
+								</tr>
+								<tr>
+									<td>&nbsp;</td>
+									<td>Type</td>
+									<td><a style="${styles.button}" href="!qt-trigger action=modifyeffect|triggerid=${triggerId}|effectid=${effectId}|field=type|value=${dropdownType}">${effectType}</a></td>
+								</tr>
+								<tr>
+									<td>&nbsp;</td>
+									<td>Value</td>
+									<td>${effect.type !== null ? `<a style="${styles.button}" href="!qt-trigger action=modifyeffect|triggerid=${triggerId}|effectid=${effectId}|field=value|value=${H.effectDropdown(effect.type)}">${effectValue}</a>` : `<span style="${styles.buttonDisabled} ${styles.spanInline}">${effectValue}</span>`}</td>
+								</tr>
+								<tr>
+									<td><a style="${styles.button}" href="!qt-trigger action=removeeffect|triggerid=${triggerId}|effectid=${effectId}">Delete</a></td>
+									<td colspan=2>&nbsp;</td>
+								</tr>
+							`;
+							break;
+						case 'Trigger':
+							effectsSection += `
+								<tr>
+									<td>&nbsp;</td>
+									<td>Delete Trigger</td>
+									<td><a style="${styles.button}" href="!qt-trigger action=modifyeffect|triggerid=${triggerId}|effectid=${effectId}|field=id|value=${H.createTriggerDropdown(triggerId)}">${effect.id === null ? `Set Trigger` : `${H.getTriggerName(effect.id)}`}</a></td>
+								</tr>
+									<tr>
+									<td><a style="${styles.button}" href="!qt-trigger action=removeeffect|triggerid=${triggerId}|effectid=${effectId}">Delete</a></td>
+									<td colspan=2>&nbsp;</td>
+								</tr>
+							`;
+							break
 					}
 				});
 			}
