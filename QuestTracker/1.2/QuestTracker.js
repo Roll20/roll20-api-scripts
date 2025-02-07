@@ -848,12 +848,12 @@ var QuestTracker = QuestTracker || (function () {
 					for (const [triggerId, trigger] of Object.entries(triggers)) {
 						if (trigger.effects) {
 							for (const [effectId, effect] of Object.entries(trigger.effects)) {
-								if (!effect.effectType) {
+								if (!effect.effecttype) {
 									trigger.effects[effectId] = {
 										id: effect.questid || null,
 										type: effect.type || null,
 										value: effect.value || null,
-										effectType: "quest"
+										effecttype: "quest"
 									};
 									effectsConverted = true;
 								}
@@ -865,12 +865,12 @@ var QuestTracker = QuestTracker || (function () {
 						for (const [triggerId, trigger] of Object.entries(triggerGroup)) {
 							if (trigger.effects) {
 								for (const [effectId, effect] of Object.entries(trigger.effects)) {
-									if (!effect.effectType) {
+									if (!effect.effecttype) {
 										trigger.effects[effectId] = {
 											id: effect.questid || null,
 											type: effect.type || null,
 											value: effect.value || null,
-											effectType: "quest"
+											effecttype: "quest"
 										};
 										effectsConverted = true;
 									}
@@ -1230,7 +1230,7 @@ var QuestTracker = QuestTracker || (function () {
 						id: null,
 						type: null,
 						value: null,
-						effectType: 'quest'
+						effecttype: 'quest'
 					};
 					break;
 				case "delete":
@@ -5673,7 +5673,7 @@ var QuestTracker = QuestTracker || (function () {
 					}
 					activationSection += `<br>
 						<a style="${styles.button}" href="!qt-trigger action=action|triggerid=${triggerId}|type=${dropdownType}">${actionType ? actionType : 'Choose Type'}</a>
-						${actionType ? `<br><a style="${styles.button}" href="!qt-trigger action=effect|triggerid=${triggerId}|type=${dropdownEffect}">${effectText}</a>` : `<br><span style="${styles.buttonDisabled} ${styles.spanInline}">${effectText}</span>`}
+						${actionType ? `<br><a style="${styles.button}" href="!qt-trigger action=effect|triggerid=${triggerId}|type=${dropdownEffect}">${actionType === "Status" ? statusMapping[effectText] : effectText}</a>` : `<br><span style="${styles.buttonDisabled} ${styles.spanInline}">${effectText}</span>`}
 					`;
 					break;
 				case 'date':
@@ -5708,15 +5708,15 @@ var QuestTracker = QuestTracker || (function () {
 					const effectEventName = effect.id === null ? 'Choose Event' : H.getEventName(effect.id);
 					const effectType = effect.type === null ? 'Choose Field' : effect.type.charAt(0).toUpperCase() + effect.type.slice(1);
 					const effectValue = effect.value === null ? 'Choose Value' : effect.type === "status" ? statusMapping[effect.value] : effect.value.charAt(0).toUpperCase() + effect.value.slice(1);
-					const effectCat = effect.effectType.charAt(0).toUpperCase() + effect.effectType.slice(1);
-					const effectCatToggle = effect.effectType === "quest" ? "event" : "quest";
+					const effectCat = effect.effecttype.charAt(0).toUpperCase() + effect.effecttype.slice(1);
+					const effectCatToggle = effect.effecttype === "quest" ? "event" : "quest";
 					effectsSection += `
 						<tr>
 							<td>&nbsp;</td>
 							<td>Effect</td>
-							<td><a style="${styles.button}" href="!qt-trigger action=modifyeffect|triggerid=${triggerId}|effectid=${effectId}|field=effectType|value=${effectCatToggle}">${effectCat}</a></td>
+							<td><a style="${styles.button}" href="!qt-trigger action=modifyeffect|triggerid=${triggerId}|effectid=${effectId}|field=effecttype|value=${effectCatToggle}">${effectCat}</a></td>
 						</tr>`;
-					if (effect.effectType === "event") {
+					if (effect.effecttype === "event") {
 						effectsSection += `
 							<tr>
 								<td>&nbsp;</td>
