@@ -1109,26 +1109,35 @@ var QuestTracker = QuestTracker || (function () {
 		const deleteTrigger = (triggerId) => {
 			initializeTriggersStructure();
 			const triggerPath = locateItem(triggerId, 'trigger');
-			if (errorCheck(177, 'exists', triggerPath, 'triggerPath')) return;
-			if (Array.isArray(QUEST_TRIGGER_DeleteList)) {
-				const index = QUEST_TRIGGER_DeleteList.indexOf(triggerId);
-				if (index !== -1) QUEST_TRIGGER_DeleteList.splice(index, 1);
-			} else if (typeof QUEST_TRIGGER_DeleteList === 'object') {
-				delete QUEST_TRIGGER_DeleteList[triggerId];
+			if (!triggerPath) {
+				log(`Invalid trigger ID: ${triggerId} not found in triggers.`);
+				return;
 			}
 			const pathParts = triggerPath.split('.');
-			const parentPath = pathParts.slice(0, -1).join('.');
+			const category = pathParts[1];
+			const parentKey = pathParts[2];
 			const triggerKey = pathParts[pathParts.length - 1];
-			if (triggerPath.startsWith("QUEST_TRACKER_Triggers.scripts")) {
-				delete QUEST_TRACKER_Triggers.scripts[triggerKey];
+			if (category === "scripts") {
+				if (QUEST_TRACKER_Triggers.scripts[triggerKey]) {
+					delete QUEST_TRACKER_Triggers.scripts[triggerKey];
+					if (Object.keys(QUEST_TRACKER_Triggers.scripts).length === 0) {
+						delete QUEST_TRACKER_Triggers.scripts;
+					}
+				}
 			} else {
-				const triggers = eval(parentPath);
-				delete triggers[triggerKey];
-				if (Object.keys(triggers).length === 0) {
-					const grandparentPath = parentPath.substring(0, parentPath.lastIndexOf('.'));
-					const parentKey = parentPath.split('.').pop();
-					const parentObject = eval(grandparentPath);
-					delete parentObject[parentKey];
+				let parentObject = QUEST_TRACKER_Triggers[category]?.[parentKey];
+				if (!parentObject) {
+					log(`Parent object not found for trigger ID: ${triggerId}`);
+					return;
+				}
+				if (parentObject[triggerKey]) {
+					delete parentObject[triggerKey];
+				}
+				if (Object.keys(parentObject).length === 0) {
+					delete QUEST_TRACKER_Triggers[category][parentKey];
+				}
+				if (Object.keys(QUEST_TRACKER_Triggers[category]).length === 0) {
+					delete QUEST_TRACKER_Triggers[category];
 				}
 			}
 			Object.entries(QUEST_TRACKER_Triggers.reactions).forEach(([reactionParent, reactionTriggers]) => {
@@ -1144,6 +1153,13 @@ var QuestTracker = QuestTracker || (function () {
 			for (const [type, category] of Object.entries(QUEST_TRACKER_Triggers)) {
 				if (type === "scripts" && field === "trigger" && category[itemId]) {
 					return `QUEST_TRACKER_Triggers.scripts.${itemId}`;
+				}
+				if (type === "dates" && field === "trigger") {
+					for (const [dateKey, dateTriggers] of Object.entries(category)) {
+						if (dateTriggers[itemId]) {
+							return `QUEST_TRACKER_Triggers.dates.${dateKey}.${itemId}`;
+						}
+					}
 				}
 				for (const [parentId, items] of Object.entries(category)) {
 					if (field === 'trigger' && items[itemId]) {
