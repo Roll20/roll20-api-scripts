@@ -58,14 +58,17 @@ API_Meta.InitMaster={offset:Number.MAX_SAFE_INTEGER,lineCount:-1};
  * v3.5.0  06/05/2024  Added 'fix' command to --set-mods which overrides the calculated initiative roll
  *                     for the specified character sheet. Set both the character sheet and token 
  *                     prev_round to be the round number held in the state variable.
+ * v4.0.1  21/09/2024  Silenced "Gathering data" on silent --setMods command. Fixed thievish armour
+ *                     on initiative to use the same spelling & types as on the latest AD&D2e character
+ *                     sheet. 
  */
 
 var initMaster = (function() {
 	'use strict'; 
-	var version = '3.5.0',
+	var version = '4.0.1',
 		author = 'Richerd @ Damery',
 		pending = null;
-    const lastUpdate = 1717750563;
+    const lastUpdate = 1738351019;
 
 	/*
 	 * Define redirections for functions moved to the RPGMaster library
@@ -166,8 +169,8 @@ var initMaster = (function() {
 							+'<span style="font-weight: bold; font-size: 125%">InitiativeMaster Help v2.07</span>'
 							+'</div>'
 							+'<div style="padding-left: 5px; padding-right: 5px; overflow: hidden;">'
-							+'<h1>Initiative Master API v'+version+'</h1>'
-							+'<h4>and later</h4>'
+							+'<h1>Initiative Master API Help</h1>'
+							+'<h4>for InitMaster v'+version+' and later</h4>'
 							+'<h3><mark style="color:green">New</mark> in this Help Handout</h3>'
 							+'<ul>'
 							+'<li><mark style="color:green">New</mark> FIX command for --set-mods to fix initiative roll to a value</li>'
@@ -183,15 +186,7 @@ var initMaster = (function() {
 							+'<p>Commands can be stacked in the call, for example:</p>'
 							+'<pre>!init --list-pcs  ALL  --init </pre>'
 							+'<p>When specifying the commands in this document, parameters enclosed in square brackets [like this] are optional: the square brackets are not included when calling the command with an optional parameter, they are just for description purposes in this document.  Parameters that can be one of a small number of options have those options listed, separated by forward slash \'/\', meaning at least one of those listed must be provided (unless the parameter is also specified in [] as optional): again, the slash \'/\' is not part of the command.  Parameters in UPPERCASE are literal, and must be spelt as shown (though their case is actually irrelevant).<\p>'
-							+'<h3>Overriding the Controlling Player</h3>'
-							+'<p>When a command is sent to Roll20 APIs / Mods, Roll20 tries to work out which player or character sent the command and tells the API its findings. The API then uses this information to direct any output appropriately. However, when it is the API itself that is sending commands, such as from a <i>{{successcmd=...}}</i> or <i>{{failcmd=...}}</i> sequence in a RPGMdefault Roll Template, Roll20 sees the API as the originator of the command and sends output to the GM by default. This is not always the desired result.</p>'
-							+'<p>To overcome this, or when output is being misdirected for any other reason, a <b>Controlling Player Override Syntax</b> (otherwise known as a <i>SenderId Override</i>) has been introduced (for RPGMaster Suite APIs only, I\'m afraid), with the following command format:</p>'
-							+'<pre>!init [sender_override_id] --cmd1 args1... --cmd2 args2...</pre>'
-							+'<p>The optional <i>sender_override_id</i> (don\'t include the [...], that\'s just the syntax for "optional") can be a Roll20 player_id, character_id or token_id. The API will work out which it is. If a player_id, the commands output will be sent to that player when player output is appropriate, even if that player is not on-line (i.e. no-one will get it if they are not on-line). If a character_id or token_id, the API will look for a controlling player <i>who is on-line</i> and send appropriate output to them - if no controlling players are on-line, or the token/character is controlled by the GM, the GM will receive all output. If the ID passed does not represent a player, character or token, or if no ID is provided, the API will send appropriate output to whichever player Roll20 tells the API to send it to.</p>'
-							+'<br>'
-							+'<h3>Using Character Sheet Ability/Action buttons</h3>'
-							+'<p>The most common approach for the Player to run these commands is to use Ability macros on their Character Sheets which are flagged to appear as Token Action Buttons: Ability macros & Token Action Buttons are standard Roll20 functionality, refer to the Roll20 Help Centre for information on creating and using these.</p>'
-							+'<p>In fact, the simplest configuration is to provide only Token Action Buttons for the menu commands: <b>--menu</b> and <b>--monmenu</b>.  From these, most other commands can be accessed.  If using the <b>CommandMaster API</b>, its character sheet setup functions can be used to add all the necessary and/or desired Ability Macros and Token Action Buttons to any Character Sheet.</p>'
+							+'[General API Help]'
 							+'<h2>How Initiative Master API works</h2>'
 							+'<p>The Initiative Master API ("InitMaster") provides commands that allow the DM to set and manage the type of initiative to be used in the campaign, and for Players to undertake initiative rolls.  The API uses data on the Character Sheet represented by a selected token to show menus of actions that can be taken: these commands are often added to the Character Sheet as Ability Macros that can be shown as Token Actions (see Roll20 Help Centre for how to achieve this, or the <b>CommandMaster API</b> documentation).  The API displays resulting Turn Order token names with action priorities in the Turn Order Tracker window (standard Roll20 functionality - see Roll20 documentation & Help Centre).</p>'
 							+'<p><b>Note:</b> Use the <b>--maint</b> command to display the Maintenance Menu and start the <b>RoundMaster API</b> using the <b>Start / Pause</b> button (at the top of the displayed menu) before using the Turn Order Tracker.  The top entry in the Turn Order Tracker window should change from showing a "Stopped" symbol, and change to a "Play".'
@@ -675,7 +670,7 @@ var initMaster = (function() {
 			if (_.isUndefined(state.initMaster.changedRound))
 				{state.initMaster.changedRound = false;}
 			if (!state.initMaster.dailyCost)
-				{state.initMaster.dailyCost = '?{What costs?|Camping 1sp,0.1|Inn D&B&B 2gp,2|Inn B&B 1gp,1|Set other amount,?{How many GP - fractions OK?&#125;|No charge,0}';}
+				{state.initMaster.dailyCost = '?{What costs?|Camping 1sp,0.1|Inn D&B&B 2gp,2|Inn B&B 1gp,1|No charge,0|Set other amount,&#63;&#123;How many GP - fractions OK?&#125;}';}
 			if (!state.initMaster.playerChars)
 				{state.initMaster.playerChars = getPlayerCharList();}
 			if (!state.initMaster.initType)
@@ -930,15 +925,19 @@ var initMaster = (function() {
 	 */ 
 	var sendDebug = function(msg) {
 	    if (!!state.initMaster.debug) {
-	        var player = getObj('player',state.initMaster.debug),
-	            to;
-    		if (player) {
-	    		to = '/w "' + player.get('_displayname') + '" ';
-		    } else 
-		    	{throw ('sendDebug could not find player');}
-		    if (!msg)
-		        {msg = 'No debug msg';}
-    		sendChat('Init Debug',to + '<span style="color: red; font-weight: bold;">'+msg+'</span>',null,{noarchive:!flags.archive, use3d:false}); 
+			if (playerIsGM(state.initMaster.debug)) {
+				log('InitMaster Debug: '+msg);
+			} else {
+				var player = getObj('player',state.initMaster.debug),
+					to;
+				if (player) {
+					to = '/w "' + player.get('_displayname') + '" ';
+				} else 
+					{throw ('sendDebug could not find player');}
+				if (!msg)
+					{msg = 'No debug msg';}
+				sendChat('Init Debug',to + '<span style="color: red; font-weight: bold;">'+msg+'</span>',null,{noarchive:!flags.archive, use3d:false}); 
+			};
 	    };
 	}; 
 	
@@ -2618,7 +2617,6 @@ var initMaster = (function() {
 					};
 				};
 				if (!forceFind) rememberWeapRef(charCS,hand,ref);
-//				log('getRef: hand '+hand+' is '+miName+', '+(ref%2 ? 'MW' : 'RW')+' table index = '+index+', button ref = '+ref);
 				return [index,ref];
 			};
 
@@ -2648,7 +2646,6 @@ var initMaster = (function() {
 				}
 			};
 			if (weapCount.monster > 0 && (!charButton || !charButton.length || charButton == -1)) {
-//				log('makeWeaponMenu: dealing with monster preselected attack');
 				charButton = 0;
 				monButton = weapCount.monster > 1 ? 0 : 1;
 				handleInitMonster( Monster.COMPLEX, charCS, [BT.MON_INNATE,tokenID,charButton,monButton], senderId );
@@ -2676,7 +2673,6 @@ var initMaster = (function() {
 							+  '}}';
 				}
 				if (hands > 2 || weapCount.monster > 1) {
-//					log('makeWeaponMenu: hands = '+hands+', & weapCount.monster = '+weapCount.monster+', so showing All Weapons button');
 					content += '{{Many Hands Option='
 							+  (-2 == charButton ? '<span style=' + design.selected_button + '>' : (submitted ? '<span style=' + design.grey_button + '>' : '['))
 							+  'All Weapons'
@@ -3122,8 +3118,7 @@ var initMaster = (function() {
 			// find armour type
 			
 			armourType = (attrLookup( charCS, fields.Armor_name ) || 'leather' ).toLowerCase();
-			switch (armourType.toLowerCase()) {
-				case 'no armour':
+			switch (armourType.toLowerCase().replace('armour','armor')) {
 				case 'no armor':
 				case 'none':
 					armourMod = fields.Armor_mod_none;
@@ -3131,13 +3126,18 @@ var initMaster = (function() {
 					
 				case 'light':
 				case 'leather':
+				case 'leather armor':
 					armourMod = fields.Armor_mod_leather;
 					break;
 
 				case 'studded':
 				case 'padded':
+				case 'studded armor':
+				case 'padded armor':
 				case 'studded leather':
 				case 'padded leather':
+				case 'studded leather armor':
+				case 'padded leather armor':
 					armourMod = fields.Armor_mod_studded;
 					break;
 					
@@ -3370,7 +3370,11 @@ var initMaster = (function() {
 		setAttr( charCS, fields.initMultiplier, totalMult );
 		
 //		log('makeCheckInitMenu: content = '+content);
-		if (!silent) sendResponse( charCS, content, senderId );
+		if (!silent) {
+			sendResponse( charCS, content, senderId );
+		} else {
+			sendWait( senderId, 0, 'init' );
+		}
 		return {mod:totalMod,mult:totalMult};
 	}
 			
@@ -4030,7 +4034,8 @@ var initMaster = (function() {
 		names = _.pluck(state.initMaster.playerChars,'name');
 		content = '&{template:'+fields.menuTemplate+'}{{name=End of Day}}';
 		if (rest || night || foes) {
-			content += '{{desc=The following characters have '+(night ? 'overnighted ' : 'rested ')+(cost < 0 ? 'and earned ' : ' at a cost of ')+cost+' gp}}{{desc1=';
+			cost = parseFloat(cost) || 0;
+			content += '{{desc=The following characters have '+(night ? 'overnighted ' : 'rested ')+(cost < 0 ? 'and earned ' : ' at a cost of ')+Math.abs(cost)+' gp}}{{desc1=';
 			if (foes) content += '\nAll NPCs & monsters';
 			filterObjs( function(obj) {
 				if (!names.length) return false;
@@ -4055,7 +4060,6 @@ var initMaster = (function() {
 				names = _.without(names,tokenName);
 				setAttr( charObj, fields.Timespent, '1' );
 				setAttr( charObj, fields.CharDay, state.moneyMaster.inGameDay );
-				cost = parseFloat(cost) || 0;
 				if (cost == 0) return true;
 				setAttr( charObj, fields.Money_copper, ((parseInt(attrLookup( charObj, fields.Money_copper )||0)||0) - Math.floor((cost*100)%10)) );
 				setAttr( charObj, fields.Money_silver, ((parseInt(attrLookup( charObj, fields.Money_silver )||0)||0) - Math.floor((cost*10)%10)) );
@@ -4351,7 +4355,7 @@ var initMaster = (function() {
 			selected = msg.selected,
 			roundsExists = apiCommands.rounds && apiCommands.rounds.exists,
 			isGM = (playerIsGM(senderId) || state.initMaster.debug === senderId),
-			t = 10;
+			t = 2;
 			
 		var doInitCmd = function( e, selected, senderId ) {
 			var arg = e, i=arg.indexOf(' '), cmd, argString;

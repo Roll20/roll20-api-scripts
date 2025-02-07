@@ -129,14 +129,20 @@ API_Meta.RoundMaster={offset:Number.MAX_SAFE_INTEGER,lineCount:-1};
  *                    tag in effects.
  * v5.056  22/06/2024 Added --state-extract & --state-load functions to support migration to JumpGate
  * v5.057  20/09/2024 Corrected --addStatus to accept saving throw and other extensions to args.
+ * v5.058  22/09/2024 Added feedback to console if invalid token or drawing selected as target for
+ *                    status. Added feedback to GM if confirming a status change. Updated effects to 
+ *                    use new AttackMaster --set-mods command to record mods, with GM controlled conversion
+ *                    function. dumpState() function and --dumpState command added to diagnose problems
+ *                    with Roll20 state variable. More and better error trapping & type conversion.
+ *                    Made doAddStatus() & doRemoveStatus() asynchronous.
  **/
  
 var RoundMaster = (function() {
 	'use strict'; 
-	var version = 5.057,
+	var version = 5.058,
 		author = 'Ken L. & RED',
 		pending = null;
-	const lastUpdate = 1726905793;
+	const lastUpdate = 1738351019;
 	
 	var RW_StateEnum = Object.freeze({
 		ACTIVE: 0,
@@ -203,14 +209,17 @@ var RoundMaster = (function() {
 		ItemWandsList:		['spellmem12','current'],
 		ItemDMList:			['spellmem13','current'],
 	}; 
+	
+	var dbNames;
 
-	var dbNames = Object.freeze({
-	Effects_DB:		{bio:'<blockquote>Token Marker Effects Macro Library</blockquote><br><br>v6.25 07/06/2024<br><br>This database holds the definitions for all token status effects.  These are macros that optionally are triggered when a status of the same root name is placed on a token (statusname-start), each round it is still on the token (statusname-turn), and when the status countdown reaches zero or the token dies or is deleted (statusname-end)  There are also other possible status conditions such as weaponname-inhand, weaponname-dancing and weaponname-sheathed.  See the <b>RoundMaster API</b> documentation for further information.<br><br><b>Important Note:</b> Effects require a Roll20 Pro membership, and the installation of the ChatSetAttr, Tokenmod and RoundMaster API Scripts, to allow parameter passing between macros, update of character sheet variables, and marking spell effects on tokens.  If you do not have this level of subscription, I highly recommend you get it as a DM, as you get lots of other goodies as well.  If you want to know how to load the API Scripts to your game, the RoLL20 API help here gives guidance, or Richard can help you.<br><br><b>Important Note for DMs:</b> if a monster character sheet has multiple tokens associated with it, and token markers with associated Effects are placed on more than one of those Tokens, any Effect macros will run multiple times and, if changing variables on the Character Sheet using e.g. ChatSetAttr will make the changes multiple times to the same Character Sheet - generally this will cause unexpected results!  If using these Effect macros for Effects that could affect monsters in this way, it is <b>HIGHLY RECOMMENDED</b> that a 1 monster Token : 1 character sheet approach is adopted.',
-					gmnotes:'<blockquote>Change Log:</blockquote><br>v6.25 07/06/2024 More updates to use latest features such as # duration and direction<br>v6.24 27/04/2024 Updated effects affecting saves to use --set-savemod<br>v6.22-3 04/04/2024 Added more MI effects<br>v6.21  25/02/2024  Fixed Slow spell effects<br>v6.20  23/02/2024  Added more effects for new items<br>v6.19  08/02/2024  Added effects for Sword of Wounding<br>v6.18  04/02/2024  Changed the way dancing weapons work by using template effect definitions<br>v6.16  17/10/2023  A number of effect definition fixes<br>v6.15  09/10/2023  Added dragon fear and roper attack effects<br>v6.13  11/07/2023  More effects for powers, spells and items<br>v6.09  03/03/2023  Added more effects for new magic items<br>v6.08  16/12/2022  Added more creature effects, such as poisons<br>v6.07  09/12/2022  Added effects to support the new Creatures database<br>v6.06  14/11/2022  Added effects to support new Race Database & Powers<br><br>v6.04  16/10/2022  Added effect for Spiritual-Hammer-end and for Chromatic-Orb Heat effects<br><br>v6.03  12/10/2022  Changed the Initiative dice roll modification field from "comreact" to the new custom field "init-mod"<br><br>v6.02  07/10/2022  Added new effects to support newly programmed magic items<br><br>v6.01  11/05/2022  Added effects to turn on and off underwater infravision<br><br>v5.8  04/02/2022  Fixed old field references when Raging<br><br>v5.7  17/01/2022  Fixed magical To-Hit adjustments for Chant to work in same way as dmg adjustment<br><br>v5.6  01/01/2022  Added multiple Effect Macros to support MagicMaster spell enhancements<br><br>v5.2-5.5 skipped to bring version numbering in line across all APIs<br><br>v5.1  10/11/2021  Changed to use virtual Token bar field names, so bar allocations can be altered<br><br>v5.0  29/10/2021  First version loaded into roundMaster API<br><br>v4.2.4  03/10/2021  Added Hairy Spider poison v4.2.3  23/05/2021  Added a Timer effect that goes with the Time-Recorder Icon, to tell you when a Timer you set starts and ends.<br><br>v4.2.2  28/03/2021  Added Regeneration every Round for @conregen points<br><br>v4.2.1  25/02/2021  Added end effect for Wandering Monster check, so it recurs every n rounds<br><br>v4.2  23/02/2021  Added effect for Infravision to change night vision settings for token.<br><br>v4.1  17/12/2020  Added effects for Dr Lexicon use of spells, inc. Vampiric Touch & Spectral Hand<br><br>v4.0.3 09/11/2020 Added effects for Cube of Force<br><br>v4.0.2 20/10/2020 Added effects of a Slow spell<br><br>v4.0.1 17/10/2020 Added Qstaff-Dancing-turn to increment a dancing quarterstaff\'s round counter<br><br>v4.0  27/09/2020 Released into the new Version 4 Testbed<br><br>v1.0.1 16/09/2020 Initial full release for Lost & Found<br><br>v0.1 30/08/2020 Initial testing version',
+	var effectsDB = Object.freeze({
+	v6Effects:	{
+		Effects_DB:	{bio:'<blockquote>Legacy Token Marker Effects Macro Library</blockquote><br><br>v6.28 26/01/2025<br><br>This database holds the definitions for all token status effects.  These are macros that optionally are triggered when a status of the same root name is placed on a token (statusname-start), each round it is still on the token (statusname-turn), and when the status countdown reaches zero or the token dies or is deleted (statusname-end)  There are also other possible status conditions such as weaponname-inhand, weaponname-dancing and weaponname-sheathed.  See the <b>RoundMaster API</b> documentation for further information.<br><br><b>Important Note:</b> Effects require a Roll20 Pro membership, and the installation of the ChatSetAttr, Tokenmod and RoundMaster API Scripts, to allow parameter passing between macros, update of character sheet variables, and marking spell effects on tokens.  If you do not have this level of subscription, I highly recommend you get it as a DM, as you get lots of other goodies as well.  If you want to know how to load the API Scripts to your game, the RoLL20 API help here gives guidance, or Richard can help you.<br><br><b>Important Note for DMs:</b> if a monster character sheet has multiple tokens associated with it, and token markers with associated Effects are placed on more than one of those Tokens, any Effect macros will run multiple times and, if changing variables on the Character Sheet using e.g. ChatSetAttr will make the changes multiple times to the same Character Sheet - generally this will cause unexpected results!  If using these Effect macros for Effects that could affect monsters in this way, it is <b>HIGHLY RECOMMENDED</b> that a 1 monster Token : 1 character sheet approach is adopted.',
+					gmnotes:'<blockquote>Change Log:</blockquote><br>v6.28 26/01/2025 Corrected errors in potions of heroism and super-heroism<br>v6.27 20/12/2024 Added effect for Magical-Vestment spell<br>v6.26 24/09/2024 Stored as the legacy version to support conversion to new AttackMaster --set-mods command. Also added Incite-Rage effect<br>v6.25 07/06/2024 More updates to use latest features such as # duration and direction<br>v6.24 27/04/2024 Updated effects affecting saves to use --set-savemod<br>v6.22-3 04/04/2024 Added more MI effects<br>v6.21  25/02/2024  Fixed Slow spell effects<br>v6.20  23/02/2024  Added more effects for new items<br>v6.19  08/02/2024  Added effects for Sword of Wounding<br>v6.18  04/02/2024  Changed the way dancing weapons work by using template effect definitions<br>v6.16  17/10/2023  A number of effect definition fixes<br>v6.15  09/10/2023  Added dragon fear and roper attack effects<br>v6.13  11/07/2023  More effects for powers, spells and items<br>v6.09  03/03/2023  Added more effects for new magic items<br>v6.08  16/12/2022  Added more creature effects, such as poisons<br>v6.07  09/12/2022  Added effects to support the new Creatures database<br>v6.06  14/11/2022  Added effects to support new Race Database & Powers<br><br>v6.04  16/10/2022  Added effect for Spiritual-Hammer-end and for Chromatic-Orb Heat effects<br><br>v6.03  12/10/2022  Changed the Initiative dice roll modification field from "comreact" to the new custom field "init-mod"<br><br>v6.02  07/10/2022  Added new effects to support newly programmed magic items<br><br>v6.01  11/05/2022  Added effects to turn on and off underwater infravision<br><br>v5.8  04/02/2022  Fixed old field references when Raging<br><br>v5.7  17/01/2022  Fixed magical To-Hit adjustments for Chant to work in same way as dmg adjustment<br><br>v5.6  01/01/2022  Added multiple Effect Macros to support MagicMaster spell enhancements<br><br>v5.2-5.5 skipped to bring version numbering in line across all APIs<br><br>v5.1  10/11/2021  Changed to use virtual Token bar field names, so bar allocations can be altered<br><br>v5.0  29/10/2021  First version loaded into roundMaster API<br><br>v4.2.4  03/10/2021  Added Hairy Spider poison v4.2.3  23/05/2021  Added a Timer effect that goes with the Time-Recorder Icon, to tell you when a Timer you set starts and ends.<br><br>v4.2.2  28/03/2021  Added Regeneration every Round for @conregen points<br><br>v4.2.1  25/02/2021  Added end effect for Wandering Monster check, so it recurs every n rounds<br><br>v4.2  23/02/2021  Added effect for Infravision to change night vision settings for token.<br><br>v4.1  17/12/2020  Added effects for Dr Lexicon use of spells, inc. Vampiric Touch & Spectral Hand<br><br>v4.0.3 09/11/2020 Added effects for Cube of Force<br><br>v4.0.2 20/10/2020 Added effects of a Slow spell<br><br>v4.0.1 17/10/2020 Added Qstaff-Dancing-turn to increment a dancing quarterstaff\'s round counter<br><br>v4.0  27/09/2020 Released into the new Version 4 Testbed<br><br>v1.0.1 16/09/2020 Initial full release for Lost & Found<br><br>v0.1 30/08/2020 Initial testing version',
 					controlledby:'all',
 					root:'effects-db',
 					avatar:'https://s3.amazonaws.com/files.d20.io/images/2795868/caxnSIYW0gsdv4kOmO294w/thumb.png?1390102911',
-					version:6.25,
+					version:6.28,
 					db:[{name:'3min-geyser-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!rounds --addtotracker 3min-Geyser|-1|[[1d10]]|0|3min Geyser blows'},
 						{name:'5min-geyser-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!rounds --addtotracker 5min-Geyser|-1|[[1d10]]|0|5min Geyser blows'},
 						{name:'AE-Aerial-Combat-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!modattr --charid ^^cid^^ --fb-header ^^cname^^ has finished Aerial Combat --fb-content Loses bonuses to to-hit and damage --strengthhit||-1 --strengthdmg||-4'},
@@ -339,6 +348,8 @@ var RoundMaster = (function() {
 						{name:'Incendiary-Cloud-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!delattr --silent --charid ^^cid^^ --incendiary-count'},
 						{name:'Incendiary-Cloud-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!setattr --silent --charid ^^cid^^ --incendiary-count|-2|10'},
 						{name:'Incendiary-Cloud-turn',type:'',ct:'0',charge:'uncharged',cost:'0',body:'/w "^^cname^^" \\amp{template:default}{{name=Incendiary Cloud}}{{This round, the cloud does @{^^cname^^|mu-casting-level}d[[({ [[({ @{^^cname^^|incendiary-count}, @{^^cname^^|incendiary-count|max} }kl1)]], 0}kh1)]]HP [incendiary damage](!\\amp#13;\\amp#47;r @{^^cname^^|mu-casting-level}d[[({ [[({ @{^^cname^^|incendiary-count}, @{^^cname^^|incendiary-count|max} }kl1)]], 0}kh1 )]] incendiary damage). Click button to make the roll}}\n!modattr --silent --charid ^^cid^^ --incendiary-count|+2|-2'},
+						{name:'Incite-Rage-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!modattr --fb-public --charid ^^cid^^ --fb-from Effects --fb-header ^^cname^^ is no longer enraged --thac0-base|+2 --strengthdmg||[[-2]] --fb-content ^^cname^^\'s Thac0 and damage have lost the benefits of rage'},
+						{name:'Incite-Rage-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!modattr --fb-public --charid ^^cid^^ --fb-from Effects --fb-header ^^cname^^ is Raging! --thac0-base|-2 --strengthdmg||2 --fb-content ^^cname^^\'s Thac0 has been improved by 2 and any damage will have +2 added'},
 						{name:'Increasing-Strength-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!magic --change-attr ^^tid^^|+[[{{18-@{^^cname^^|strength}},{1}}kl1]]|strength|silent --change-attr ^^tid^^|+[[{{18-@{^^cname^^|constitution}},{1}}kl1]]|constitution|silent\n!rounds --target-nosave caster|^^tid^^|Increasing-Strength_Ring-Effect|100|-10|The ring is having an unknown effect|spanner'},
 						{name:'Increasing-Weakness-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!magic --change-attr ^^tid^^|[[{{3-@{^^cname^^|strength}},{-1}}kh1]]|strength|silent --change-attr ^^tid^^|[[{{3-@{^^cname^^|constitution}},{-1}}kh1]]|constitution|silent\n!rounds --target-nosave caster|^^tid^^|Increasing-Weakness_Ring-Effect|100|-10|The ring is having an unknown effect|spanner'},
 						{name:'Infested-with-Vermin-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!init --set-mods ^^tid^^|del|Infested by Vermin|||silent\n/w "^^cname^^" \\amp{template:default}{{name=Itching \\amp Scratching}}{{Oooo... That\'s better! The itching and scratching seem to have stopped}}'},
@@ -363,6 +374,8 @@ var RoundMaster = (function() {
 						{name:'Longbow-is-Dancing-turn',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --quiet-modweap ^^tid^^|Dancing-Longbow|ranged|+:+1'},
 						{name:'Luck-bonus-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-savemod ^^tid^^|del|Luck bonus|Luck bonus'},
 						{name:'Luck-bonus-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-savemod ^^tid^^|add|Luck Bonus|Luck Bonus|svall:+1\n/w "^^cname^^" \\amp{template:default}{{name=Luck Bonus}}{{Has a luck bonus on saves and checks of +1 while in the area of effect.}}'},
+						{name:'Magical-Vestment-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!token-mod --ignore-selected --ids ^^tid^^ --set ^^token_ac^^|@{^^cname^^|mv-old^^tid^^}'},
+						{name:'Magical-Vestment-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!setattr --silent --charid ^^cid^^ --mv-old^^tid^^|@{^^cname^^|AC}\n!token-mod --ignore-selected --ids ^^tid^^ --set ^^token_ac^^|[[5-floor((@{^^cname^^|pr-casting-level}-5)/3)]]'},
 						{name:'Melfs-Acid-Arrow-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!magic --message w|^^tid^^|Melfs Acid Arrow|^^cname^^ takes a final [2d4](!token-mod --api-as ^^pid^^ ~~ignore-selected ~~ids ^^tid^^ ~~set ^^token_hp^^¦-\\amp#91;[\\amp#63;{How much acid damage is done?¦2d4}]\\amp#93; ~~report character:gm¦\\amp#34;^^cname^^ takes a final {^^token_hp^^:abschange} hp of acid damage\\amp#34; all¦\\amp#34;The acid eats away at ^^cname^^ for the last time\\amp#34;) hp acid damage'},
 						{name:'Melfs-Acid-Arrow-turn',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!magic --message c|^^tid^^|Melfs Acid Arrow|^^cname^^ takes [2d4](!token-mod --api-as ^^pid^^ ~~ignore-selected ~~ids ^^tid^^ ~~set ^^token_hp^^|-\\amp#91;[\\amp#63;{How much acid damage is done?¦2d4}]\\amp#93; ~~report character:gm¦\\amp#34;^^cname^^ takes an additional {^^token_hp^^:abschange} hp of acid damage\\amp#34; all¦\\amp#34;The acid eats away at ^^cname^^\\amp#34;) hp additional acid damage'},
 						{name:'Mesmerized-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!rounds --target-nosave single|^^tid^^|Mesmerised still|[[10*2d6]]|-10|Still mesmerized even though the snake has looked elsewhere|chained-heart'},
@@ -394,21 +407,21 @@ var RoundMaster = (function() {
 						{name:'Poison-O-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'/w "^^cname^^" \\amp{template:default}{{name=Poison Type O}}{{Poison=[Save vs. Poison](!rounds --target caster|^^tid^^|Paralysed|99|0|Paralysed by poison type O for [[2d6]] hours|padlock|svpoi\\clon;+0) or ^^tname^^ becomes *paralysed* by poison. No damage taken if succeed}}'},
 						{name:'Poison-P-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'/w "^^cname^^" \\amp{template:default}{{name=Poison Type P}}{{Poison=[Save vs. Poison](!rounds --target caster|^^tid^^|Debilitated|99|0|Debilitated by poison type P for [[1d3]] days|back-pain|svpoi\\clon;+0) or ^^tname^^ becomes *debilitated* by poison}}{{Effect=Debilitating poisons weaken the character for 1d3 days. All of the character\'s ability scores are reduced by half during this time. All appropriate adjustments to attack rolls, damage, Armor Class, etc., from the lowered ability scores are applied during the course of the illness. In addition, the character moves at one-half his normal movement rate. Finally, the character cannot heal by normal or magical means until the poison is neutralized or the duration of the debilitation is elapsed.}}{{Saved=No damage taken if save}}'},
 						{name:'Poison-Snake-1-4-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'/w "^^cname^^" \\amp{template:default}{{name=Snake Poison 1-4}}{{Poison=[Save vs. Poison](!rounds --target caster|^^tid^^|Paralysed|99|0|Incapacitatedby poison type P for [[2d4]] days|back-pain|svpoi\\clon;+3) at +3 bonus or ^^tname^^ becomes *incapacitated* by poison}}{{Effect=Incapacitating poisons weaken the character for 2 to 8 days. All of the character\'s ability scores are reduced by half during this time. All appropriate adjustments to attack rolls, damage, Armor Class, etc., from the lowered ability scores are applied during the course of the illness. In addition, the character moves at one-half his normal movement rate. Finally, the character cannot heal by normal or magical means until the poison is neutralized or the duration of the debilitation is elapsed.}}{{Saved=Only takes the damage from the bite}}'},
-						{name:'Poison-Snake-12-14-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'/w "^^cname^^" \\amp{template:default}{{name=Snake Poison 12-14}}{{Poison=[Save vs. Poison](!attk --set-savemod ^^tid^^|add|Snake|Poison|svpoi\\clon;+0|1||!magic ~~message ^^tid^^|Poison|Oh dear.. ^^tname^^ failed and takes [[3d4]]HP of damage from the poison --save ^^tid^^|||poison) or ^^tname^^ takes **3d4 HP** of damage from poison. If succeed only takes the damage from the bite}}'},
+						{name:'Poison-Snake-12-14-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'/w "^^cname^^" \\amp{template:default}{{name=Snake Poison 12-14}}{{Poison=[Save vs. Poison](!attk --set-savemod ^^tid^^|add|Snake|Poison|svpoi\\clon;;+0|1||!magic ~~message ^^tid^^|Poison|Oh dear.. ^^tname^^ failed and takes [[3d4]]HP of damage from the poison --save ^^tid^^|||poison) or ^^tname^^ takes **3d4 HP** of damage from poison. If succeed only takes the damage from the bite}}'},
 						{name:'Poison-Snake-15-17-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'/w "^^cname^^" \\amp{template:default}{{name=Snake Poison 15-17}}{{Poison=[Save vs. Poison](!rounds --target caster|^^tid^^|Paralysed|99|0|Incapacitatedby poison type P for [[1d4]] days|back-pain|svpoi\\clon;-1) at -1 penalty or ^^tname^^ becomes *incapacitated* by poison}}{{Effect=Incapacitating poisons weaken the character for 1 to 4 days. All of the character\'s ability scores are reduced by half during this time. All appropriate adjustments to attack rolls, damage, Armor Class, etc., from the lowered ability scores are applied during the course of the illness. In addition, the character moves at one-half his normal movement rate. Finally, the character cannot heal by normal or magical means until the poison is neutralized or the duration of the debilitation is elapsed.}}{{Saved=Only takes the damage from the bite}}'},
 						{name:'Poison-Snake-18-19-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'/w "^^cname^^" \\amp{template:default}{{name=Snake Poison 18-19}}{{Poison=[Save vs. Poison](!rounds --target caster|^^tid^^|Paralysed|99|0|Incapacitatedby poison type P for [[1d12]] days|back-pain|svpoi\\clon;-2) at -2 penalty or ^^tname^^ becomes *incapacitated* by poison}}{{Effect=Incapacitating poisons weaken the character for 1 to 12 days. All of the character\'s ability scores are reduced by half during this time. All appropriate adjustments to attack rolls, damage, Armor Class, etc., from the lowered ability scores are applied during the course of the illness. In addition, the character moves at one-half his normal movement rate. Finally, the character cannot heal by normal or magical means until the poison is neutralized or the duration of the debilitation is elapsed.}}{{Saved=Only takes the damage from the bite}}'},
 						{name:'Poison-Snake-20-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'/w "^^cname^^" \\amp{template:default}{{name=Snake Poison 20}}{{Poison=[Save vs. Poison](!attk --set-savemod ^^tid^^|add|Snake|Poison|svpoi\\clon;-3|1||!magic ~~message ^^tid^^|Poison|Oh dear.. ^^tname^^ seems to be dead --save ^^tid^^|||poison) at -3 penalty}}{{Succeed=^^tname^^ only takes the damage from the bite}}{{Fail=^^tname^^ immediately **dies** from poisoning (and takes damage from the bite...)}}'},
 						{name:'Poison-Snake-5-6-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'/w "^^cname^^" \\amp{template:default}{{name=Poison Type N}}{{Poison=[Save vs. Poison](!attk --set-savemod ^^tid^^|add|Snake|Poison|svpoi\\clon;+2|1||!magic ~~message ^^tid^^|Poison|Oh dear.. ^^tname^^ seems to be dead --save ^^tid^^|||poison) at +2 bonus}}{{Succeed=^^tname^^ only takes the damage from the bite}}{{Fail=^^tname^^ immediately **dies** from poisoning (and takes damage from the bite...)}}'},
 						{name:'Poison-Snake-7-11-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'/w "^^cname^^" \\amp{template:default}{{name=Snake Poison 7-11}}{{Poison=[Save vs. Poison](!attk --set-savemod ^^tid^^|add|Snake|Poison|svpoi\\clon;+1|1||!magic ~~message ^^tid^^|Poison|Oh dear.. ^^tname^^ failed and takes [[2d4]]HP of damage from the poison --save ^^tid^^|||poison) at +1 bonus or ^^tname^^ takes **2d4 HP** of damage from poison. If succeed only takes the damage from the bite}}'},
 						{name:'Potion-of-Arms-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --change-hands ^^tid^^|-[[2*@{^^cname^^|Potion-of-Arms-doses}]]\n!delattr --charid ^^cid^^ --silent --Potion-of-Arms-doses'},
-						{name:'Potion-of-Heroism-1-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!magic --level-change ^^tid^^|-1|fighter||[[{ {(@{^^cname^^|hp}-@{^^cname^^|pot-heroism-hp})},{0}}kh1]]||fighter --message public|^^tid^^|Potion of Heroism|^^tname^^ loses their improved abilities as a fighter, and returns to their normal self\n!delattr --silent --charid ^^cid^^ --pot-heroism-hp'},
-						{name:'Potion-of-Heroism-1-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!setattr --charid ^^cid^^ --silent --pot-heroism-hp|@{^^cname^^|hp}\n!magic --level-change ^^tid^^|1|fighter||[[1d10+3]]||fighter --message public|^^tid^^|Potion of Heroism|With a masterful fighting career, ^^tname^^ drinks a potion and is now suddenly a Level [[@{^^cname^^|level-class1}+1]] Fighter'},
-						{name:'Potion-of-Heroism-2-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!magic --level-change ^^tid^^|-2|fighter||[[{ {(@{^^cname^^|hp}-@{^^cname^^|pot-heroism-hp})},{0}}kh1]]||fighter --message public|^^tid^^|Potion of Heroism|^^tname^^ loses their improved abilities as a fighter, and returns to their normal self\n!delattr --silent --charid ^^cid^^ --pot-heroism-hp'},
-						{name:'Potion-of-Heroism-2-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!setattr --charid ^^cid^^ --silent --pot-heroism-hp|@{^^cname^^|hp}\n!magic --level-change ^^tid^^|2|fighter||[[2d10+2]]||fighter --message public|^^tid^^|Potion of Heroism|With a masterful fighting career, ^^tname^^ drinks a potion and is now suddenly a Level [[@{^^cname^^|level-class1}+2]] Fighter'},
-						{name:'Potion-of-Heroism-3-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!magic --level-change ^^tid^^|-3|fighter||[[{ {(@{^^cname^^|hp}-@{^^cname^^|pot-heroism-hp})},{0}}kh1]]||fighter --message public|^^tid^^|Potion of Heroism|^^tname^^ loses their improved abilities as a fighter, and returns to their normal self\n!delattr --silent --charid ^^cid^^ --pot-heroism-hp'},
-						{name:'Potion-of-Heroism-3-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!setattr --charid ^^cid^^ --silent --pot-heroism-hp|@{^^cname^^|hp}\n!magic --level-change ^^tid^^|3|fighter||[[3d10+1]]||fighter --message public|^^tid^^|Potion of Heroism|With a masterful fighting career, ^^tname^^ drinks a potion and is now suddenly a Level [[@{^^cname^^|level-class1}+3]] Fighter'},
-						{name:'Potion-of-Heroism-4-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!magic --level-change ^^tid^^|-4|fighter||[[{ {(@{^^cname^^|hp}-@{^^cname^^|pot-heroism-hp})},{0}}kh1]]||fighter --message public|^^tid^^|Potion of Heroism|^^tname^^ loses their improved abilities as a fighter, and returns to their normal self\n!delattr --silent --charid ^^cid^^ --pot-heroism-hp'},
-						{name:'Potion-of-Heroism-4-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!setattr --charid ^^cid^^ --silent --pot-heroism-hp|@{^^cname^^|hp}\n!magic --level-change ^^tid^^|4|fighter||[[4d10]]||fighter --message public|^^tid^^|Potion of Heroism|With a masterful fighting career, ^^tname^^ drinks a potion and is now suddenly a Level [[@{^^cname^^|level-class1}+4]] Fighter'},
+						{name:'Potion-of-Heroism-1-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!magic --level-change ^^tid^^|-1|[[{ {(@{^^cname^^|hp}-@{^^cname^^|pot-heroism-hp})},{0}}kh1]]|fighter --message public|^^tid^^|Potion of Heroism|^^tname^^ loses their improved abilities as a fighter, and returns to their normal self'},
+						{name:'Potion-of-Heroism-1-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!setattr --charid ^^cid^^ --silent --pot-heroism-hp|@{^^cname^^|hp}\n!magic --level-change ^^tid^^|1|[[1d10+3]]|fighter --message public|^^tid^^|Potion of Heroism|With a masterful fighting career, ^^tname^^ drinks a potion and is now suddenly a Level [[@{^^cname^^|level-class1}+1]] Fighter'},
+						{name:'Potion-of-Heroism-2-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!magic --level-change ^^tid^^|-2|[[{ {(@{^^cname^^|hp}-@{^^cname^^|pot-heroism-hp})},{0}}kh1]]|fighter --message public|^^tid^^|Potion of Heroism|^^tname^^ loses their improved abilities as a fighter, and returns to their normal self'},
+						{name:'Potion-of-Heroism-2-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!setattr --charid ^^cid^^ --silent --pot-heroism-hp|@{^^cname^^|hp}\n!magic --level-change ^^tid^^|2|[[2d10+2]]|fighter --message public|^^tid^^|Potion of Heroism|With a masterful fighting career, ^^tname^^ drinks a potion and is now suddenly a Level [[@{^^cname^^|level-class1}+2]] Fighter'},
+						{name:'Potion-of-Heroism-3-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!magic --level-change ^^tid^^|-3|[[{ {(@{^^cname^^|hp}-@{^^cname^^|pot-heroism-hp})},{0}}kh1]]|fighter --message public|^^tid^^|Potion of Heroism|^^tname^^ loses their improved abilities as a fighter, and returns to their normal self'},
+						{name:'Potion-of-Heroism-3-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!setattr --charid ^^cid^^ --silent --pot-heroism-hp|@{^^cname^^|hp}\n!magic --level-change ^^tid^^|3|[[3d10+1]]|fighter --message public|^^tid^^|Potion of Heroism|With a masterful fighting career, ^^tname^^ drinks a potion and is now suddenly a Level [[@{^^cname^^|level-class1}+3]] Fighter'},
+						{name:'Potion-of-Heroism-4-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!magic --level-change ^^tid^^|-4|[[{ {(@{^^cname^^|hp}-@{^^cname^^|pot-heroism-hp})},{0}}kh1]]|fighter --message public|^^tid^^|Potion of Heroism|^^tname^^ loses their improved abilities as a fighter, and returns to their normal self'},
+						{name:'Potion-of-Heroism-4-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!setattr --charid ^^cid^^ --silent --pot-heroism-hp|@{^^cname^^|hp}\n!magic --level-change ^^tid^^|4|[[4d10]]|fighter --message public|^^tid^^|Potion of Heroism|With a masterful fighting career, ^^tname^^ drinks a potion and is now suddenly a Level [[@{^^cname^^|level-class1}+4]] Fighter'},
 						{name:'Prayer-ally-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!token-mod --api-as ^^pid^^ --ignore-selected --ids ^^tid^^ --set ^^token_thac0^^|+1\n!modattr --silent --name ^^cname^^ --strengthdmg||-1\n!attk --set-savemod ^^tid^^|delspell|Ally|Prayer\n/w "^^cname^^" ^^tname^^ loses the benefit of *Prayer*'},
 						{name:'Prayer-ally-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!token-mod --api-as ^^pid^^ --ignore-selected --ids ^^tid^^ --set ^^token_thac0^^|-1\n!modattr --silent --name ^^cname^^ --strengthdmg||+1\n!attk --set-savemod ^^tid^^|add|Ally|Prayer|svsav:+1||^duration^^\n/w "^^cname^^" ^^tname^^ gains the benefit of *Prayer*, with improved saves, attacks and damage'},
 						{name:'Prayer-foe-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!token-mod --api-as ^^pid^^ --ignore-selected --ids ^^tid^^ --set ^^token_thac0^^|-1\n!modattr --silent --name ^^cname^^ --strengthdmg||+1\n!attk --set-savemod ^^tid^^|delspell|Foe|Prayer\n/w "^^cname^^" ^^tname^^ loses the impact of *Prayer*'},
@@ -509,16 +522,16 @@ var RoundMaster = (function() {
 						{name:'Suffocating-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'\\amp{template:default}{{title=^^cname^^ Suffocates}}{{desc="argh! i can\'t breathe..." ^^cname^^ dies of suffocation by the Rug of Smothering}}'},
 						{name:'Sunlight-1-toHit-Penalty-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!token-mod --api-as ^^pid^^ --ignore-selected --ids ^^tid^^ --set ^^token_thac0^^|-1'},
 						{name:'Sunlight-1-toHit-Penalty-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!token-mod --api-as ^^pid^^ --ignore-selected --ids ^^tid^^ --set ^^token_thac0^^|+1'},
-						{name:'Super-heroism-2-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!magic --level-change ^^tid^^|-2|fighter||[[{ {(@{^^cname^^|hp}-@{^^cname^^|pot-heroism-hp})},{0}}kh1]]||fighter --message public|^^tid^^|Potion of Super Heroism|^^tname^^ loses their improved abilities as a fighter, and returns to their normal self\n!delattr --silent --charid ^^cid^^ --pot-heroism-hp'},
-						{name:'Super-heroism-2-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!setattr --charid ^^cid^^ --silent --pot-heroism-hp|@{^^cname^^|hp}\n!magic --level-change ^^tid^^|2|fighter||[[1d10+4]]||fighter --message public|^^tid^^|Potion of Super Heroism|With a masterful fighting career, ^^tname^^ drinks a potion and is now suddenly a Level [[@{^^cname^^|level-class1}+2]] Fighter'},
-						{name:'Super-heroism-3-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!magic --level-change ^^tid^^|-3|fighter||[[{ {(@{^^cname^^|hp}-@{^^cname^^|pot-heroism-hp})},{0}}kh1]]||fighter --message public|^^tid^^|Potion of Super Heroism|^^tname^^ loses their improved abilities as a fighter, and returns to their normal self\n!delattr --silent --charid ^^cid^^ --pot-heroism-hp'},
-						{name:'Super-heroism-3-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!setattr --charid ^^cid^^ --silent --pot-heroism-hp|@{^^cname^^|hp}\n!magic --level-change ^^tid^^|3|fighter||[[2d10+3]]||fighter --message public|^^tid^^|Potion of Super Heroism|With a masterful fighting career, ^^tname^^ drinks a potion and is now suddenly a Level [[@{^^cname^^|level-class1}+3]] Fighter'},
-						{name:'Super-heroism-4-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!magic --level-change ^^tid^^|-4|fighter||[[{ {(@{^^cname^^|hp}-@{^^cname^^|pot-heroism-hp})},{0}}kh1]]||fighter --message public|^^tid^^|Potion of Super Heroism|^^tname^^ loses their improved abilities as a fighter, and returns to their normal self\n!delattr --silent --charid ^^cid^^ --pot-heroism-hp'},
-						{name:'Super-heroism-4-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!setattr --charid ^^cid^^ --silent --pot-heroism-hp|@{^^cname^^|hp}\n!magic --level-change ^^tid^^|4|fighter||[[3d10+2]]||fighter --message public|^^tid^^|Potion of Super Heroism|With a masterful fighting career, ^^tname^^ drinks a potion and is now suddenly a Level [[@{^^cname^^|level-class1}+4]] Fighter'},
-						{name:'Super-heroism-5-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!magic --level-change ^^tid^^|-5|fighter||[[{ {(@{^^cname^^|hp}-@{^^cname^^|pot-heroism-hp})},{0}}kh1]]||fighter --message public|^^tid^^|Potion of Super Heroism|^^tname^^ loses their improved abilities as a fighter, and returns to their normal self\n!delattr --silent --charid ^^cid^^ --pot-heroism-hp'},
-						{name:'Super-heroism-5-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!setattr --charid ^^cid^^ --silent --pot-heroism-hp|@{^^cname^^|hp}\n!magic --level-change ^^tid^^|5|fighter||[[4d10+1]]||fighter --message public|^^tid^^|Potion of Super Heroism|With a masterful fighting career, ^^tname^^ drinks a potion and is now suddenly a Level [[@{^^cname^^|level-class1}+5]] Fighter'},
-						{name:'Super-heroism-6-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!magic --level-change ^^tid^^|-6|fighter||[[{ {(@{^^cname^^|hp}-@{^^cname^^|pot-heroism-hp})},{0}}kh1]]||fighter --message public|^^tid^^|Potion of Super Heroism|^^tname^^ loses their improved abilities as a fighter, and returns to their normal self\n!delattr --silent --charid ^^cid^^ --pot-heroism-hp'},
-						{name:'Super-heroism-6-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!setattr --charid ^^cid^^ --silent --pot-heroism-hp|@{^^cname^^|hp}\n!magic --level-change ^^tid^^|6|fighter||[[5d10]]||fighter --message public|^^tid^^|Potion of Super Heroism|With a masterful fighting career, ^^tname^^ drinks a potion and is now suddenly a Level [[@{^^cname^^|level-class1}+6]] Fighter'},
+						{name:'Super-heroism-2-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!magic --level-change ^^tid^^|-2|[[{ {(@{^^cname^^|hp}-@{^^cname^^|pot-heroism-hp})},{0}}kh1]]|fighter --message public|^^tid^^|Potion of Super Heroism|^^tname^^ loses their improved abilities as a fighter, and returns to their normal self'},
+						{name:'Super-heroism-2-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!setattr --charid ^^cid^^ --silent --pot-heroism-hp|@{^^cname^^|hp}\n!magic --level-change ^^tid^^|2|[[1d10+4]]|fighter --message public|^^tid^^|Potion of Super Heroism|With a masterful fighting career, ^^tname^^ drinks a potion and is now suddenly a Level [[@{^^cname^^|level-class1}+2]] Fighter'},
+						{name:'Super-heroism-3-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!magic --level-change ^^tid^^|-3|[[{ {(@{^^cname^^|hp}-@{^^cname^^|pot-heroism-hp})},{0}}kh1]]|fighter --message public|^^tid^^|Potion of Super Heroism|^^tname^^ loses their improved abilities as a fighter, and returns to their normal self'},
+						{name:'Super-heroism-3-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!setattr --charid ^^cid^^ --silent --pot-heroism-hp|@{^^cname^^|hp}\n!magic --level-change ^^tid^^|3|[[2d10+3]]|fighter --message public|^^tid^^|Potion of Super Heroism|With a masterful fighting career, ^^tname^^ drinks a potion and is now suddenly a Level [[@{^^cname^^|level-class1}+3]] Fighter'},
+						{name:'Super-heroism-4-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!magic --level-change ^^tid^^|-4|[[{ {(@{^^cname^^|hp}-@{^^cname^^|pot-heroism-hp})},{0}}kh1]]|fighter --message public|^^tid^^|Potion of Super Heroism|^^tname^^ loses their improved abilities as a fighter, and returns to their normal self'},
+						{name:'Super-heroism-4-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!setattr --charid ^^cid^^ --silent --pot-heroism-hp|@{^^cname^^|hp}\n!magic --level-change ^^tid^^|4|[[3d10+2]]|fighter --message public|^^tid^^|Potion of Super Heroism|With a masterful fighting career, ^^tname^^ drinks a potion and is now suddenly a Level [[@{^^cname^^|level-class1}+4]] Fighter'},
+						{name:'Super-heroism-5-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!magic --level-change ^^tid^^|-5|[[{ {(@{^^cname^^|hp}-@{^^cname^^|pot-heroism-hp})},{0}}kh1]]|fighter --message public|^^tid^^|Potion of Super Heroism|^^tname^^ loses their improved abilities as a fighter, and returns to their normal self'},
+						{name:'Super-heroism-5-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!setattr --charid ^^cid^^ --silent --pot-heroism-hp|@{^^cname^^|hp}\n!magic --level-change ^^tid^^|5|[[4d10+1]]|fighter --message public|^^tid^^|Potion of Super Heroism|With a masterful fighting career, ^^tname^^ drinks a potion and is now suddenly a Level [[@{^^cname^^|level-class1}+5]] Fighter'},
+						{name:'Super-heroism-6-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!magic --level-change ^^tid^^|-6|[[{ {(@{^^cname^^|hp}-@{^^cname^^|pot-heroism-hp})},{0}}kh1]]|fighter --message public|^^tid^^|Potion of Super Heroism|^^tname^^ loses their improved abilities as a fighter, and returns to their normal self'},
+						{name:'Super-heroism-6-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!setattr --charid ^^cid^^ --silent --pot-heroism-hp|@{^^cname^^|hp}\n!magic --level-change ^^tid^^|6|[[5d10]]|fighter --message public|^^tid^^|Potion of Super Heroism|With a masterful fighting career, ^^tname^^ drinks a potion and is now suddenly a Level [[@{^^cname^^|level-class1}+6]] Fighter'},
 						{name:'Symbol-Pain-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!token-mod --api-as ^^pid^^ --ignore-selected --ids ^^tid^^ --set ^^token_thac0^^|-4\n!magic --change-attr ^^tid^^|+2|dexterity|silent\n/w "^^cname^^" ^^tname^^ is no longer wracked with pain and the penalties to attacks and dexterity are lifted'},
 						{name:'Symbol-Pain-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!token-mod --api-as ^^pid^^ --ignore-selected --ids ^^tid^^ --set ^^token_thac0^^|+4\n!magic --change-attr ^^tid^^|-2|dexterity|silent\n/w "^^cname^^" ^^tname^^ is wracked with pain and suffers a -4 penalty to attacks and -2 penalty to dexterity'},
 						{name:'Tashas-UHL-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!modattr --silent --name ^^cname^^ --strength|2\n/w "^^cname^^" ^^cname^^ stops laughing and regains strength'},
@@ -548,6 +561,359 @@ var RoundMaster = (function() {
 						{name:'Wounding-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!modattr --charid ^^cid^^ --Wound-count|+1 --fb-header Sword of Wounding --fb-content Another wound means that ^^cname^^ is now taking _CUR0_ additional points of wound damage per round'},
 						{name:'Wounding-turn',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!modattr --silent --charid ^^cid^^ --HP|-1'},
 					]},
+				},
+
+
+	v7Effects:	{
+		Effects_DB:	{bio:'<blockquote>Token Marker Effects Macro Library</blockquote><br><br>v7.02 26/01/2025<br><br>This database holds the definitions for all token status effects.  These are macros that optionally are triggered when a status of the same root name is placed on a token (statusname-start), each round it is still on the token (statusname-turn), and when the status countdown reaches zero or the token dies or is deleted (statusname-end)  There are also other possible status conditions such as weaponname-inhand, weaponname-dancing and weaponname-sheathed.  See the <b>RoundMaster API</b> documentation for further information.<br><br><b>Important Note:</b> Effects require a Roll20 Pro membership, and the installation of the ChatSetAttr, Tokenmod and RoundMaster API Scripts, to allow parameter passing between macros, update of character sheet variables, and marking spell effects on tokens.  If you do not have this level of subscription, I highly recommend you get it as a DM, as you get lots of other goodies as well.  If you want to know how to load the API Scripts to your game, the RoLL20 API help here gives guidance, or Richard can help you.<br><br><b>Important Note for DMs:</b> if a monster character sheet has multiple tokens associated with it, and token markers with associated Effects are placed on more than one of those Tokens, any Effect macros will run multiple times and, if changing variables on the Character Sheet using e.g. ChatSetAttr will make the changes multiple times to the same Character Sheet - generally this will cause unexpected results!  If using these Effect macros for Effects that could affect monsters in this way, it is <b>HIGHLY RECOMMENDED</b> that a 1 monster Token : 1 character sheet approach is adopted.',
+					gmnotes:'<blockquote>Change Log:</blockquote><br>v7.02 26/01/2025 Corrected errors in potions of heroism and super-heroism<br>v7.01 06/07/2024 Converted all effects to use new AttackMaster --set-mods function<br>v6.25 07/06/2024 More updates to use latest features such as # duration and direction<br>v6.24 27/04/2024 Updated effects affecting saves to use --set-savemod<br>v6.22-3 04/04/2024 Added more MI effects<br>v6.21  25/02/2024  Fixed Slow spell effects<br>v6.20  23/02/2024  Added more effects for new items<br>v6.19  08/02/2024  Added effects for Sword of Wounding<br>v6.18  04/02/2024  Changed the way dancing weapons work by using template effect definitions<br>v6.16  17/10/2023  A number of effect definition fixes<br>v6.15  09/10/2023  Added dragon fear and roper attack effects<br>v6.13  11/07/2023  More effects for powers, spells and items<br>v6.09  03/03/2023  Added more effects for new magic items<br>v6.08  16/12/2022  Added more creature effects, such as poisons<br>v6.07  09/12/2022  Added effects to support the new Creatures database<br>v6.06  14/11/2022  Added effects to support new Race Database & Powers<br><br>v6.04  16/10/2022  Added effect for Spiritual-Hammer-end and for Chromatic-Orb Heat effects<br><br>v6.03  12/10/2022  Changed the Initiative dice roll modification field from "comreact" to the new custom field "init-mod"<br><br>v6.02  07/10/2022  Added new effects to support newly programmed magic items<br><br>v6.01  11/05/2022  Added effects to turn on and off underwater infravision<br><br>v5.8  04/02/2022  Fixed old field references when Raging<br><br>v5.7  17/01/2022  Fixed magical To-Hit adjustments for Chant to work in same way as dmg adjustment<br><br>v5.6  01/01/2022  Added multiple Effect Macros to support MagicMaster spell enhancements<br><br>v5.2-5.5 skipped to bring version numbering in line across all APIs<br><br>v5.1  10/11/2021  Changed to use virtual Token bar field names, so bar allocations can be altered<br><br>v5.0  29/10/2021  First version loaded into roundMaster API<br><br>v4.2.4  03/10/2021  Added Hairy Spider poison v4.2.3  23/05/2021  Added a Timer effect that goes with the Time-Recorder Icon, to tell you when a Timer you set starts and ends.<br><br>v4.2.2  28/03/2021  Added Regeneration every Round for @conregen points<br><br>v4.2.1  25/02/2021  Added end effect for Wandering Monster check, so it recurs every n rounds<br><br>v4.2  23/02/2021  Added effect for Infravision to change night vision settings for token.<br><br>v4.1  17/12/2020  Added effects for Dr Lexicon use of spells, inc. Vampiric Touch & Spectral Hand<br><br>v4.0.3 09/11/2020 Added effects for Cube of Force<br><br>v4.0.2 20/10/2020 Added effects of a Slow spell<br><br>v4.0.1 17/10/2020 Added Qstaff-Dancing-turn to increment a dancing quarterstaff\'s round counter<br><br>v4.0  27/09/2020 Released into the new Version 4 Testbed<br><br>v1.0.1 16/09/2020 Initial full release for Lost & Found<br><br>v0.1 30/08/2020 Initial testing version',
+					controlledby:'all',
+					root:'effects-db',
+					avatar:'https://s3.amazonaws.com/files.d20.io/images/2795868/caxnSIYW0gsdv4kOmO294w/thumb.png?1390102911',
+					version:7.02,
+					db:[{name:'3min-geyser-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!rounds --addtotracker 3min-Geyser|-1|[[1d10]]|0|3min Geyser blows'},
+						{name:'5min-geyser-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!rounds --addtotracker 5min-Geyser|-1|[[1d10]]|0|5min Geyser blows'},
+						{name:'AE-Aerial-Combat-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attr --set-mods ^^tid^^|del|Aerial Combat|Air Elemental|thac0\n!magic --message ^^tid^^|^^cname^^ finishes Aerial Combat|No longer has bonus to-hit or damage'},
+						{name:'AE-Aerial-Combat-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|add|Aerial Combat|Air Elemental|thac0+:+1,dmg+:+4\n!magic --message ^^tid^^|^^cname^^ is undertaking Aerial Combat|Gains +1 bonus to-hit and +4 bonus to damage'},
+						{name:'Affected-by-Chill-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!modattr --silent --charid ^^cid^^ --strengthhit||+0.5\n!magic --message ^^tid^^|Chill Touch|^^tname^^ will regain their attack effectiveness'},
+						{name:'Affected-by-Chill-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!modattr --silent --charid ^^cid^^ --strengthhit||-0.5\n!magic --message ^^tid^^|Chill Touch|^^tname^^ will suffer an impact to their attack success for *every other* chill touch'},
+						{name:'Aid-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'/w "^^cname^^" ^^cname^^\'s *Aid* has come to an end, and Thac0, saves \\amp HP return to normal\n!attk --set-mods ^^tid^^|delspell|Aid|Aid'},
+						{name:'Aid-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'/w "^^cname^^" ^^cname^^ gains *Aid* from a Priest\'s god, improving Thac0, saves and HP\n!attk --set-mods ^^tid^^|add|Thac0 bonus|Aid|thac0+:+1||^^duration^^ --set-mods ^^tid^^|add|HP bonus|Aid|hp+:[[1d8]]||^^duration^^ --set-mods ^^tid^^|fea=spe|Fear|Aid|svfea:+1||^^duration^^'},
+						{name:'Armour-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-acmod ^^tid^^|DelSpell|Armour Spell|Armour Spell\n/w "^^cname^^" ^^tname^^\'s AC has returned to normal as the Armour spell has ended.'},
+						{name:'Armour-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-acmod ^^tid^^|Add|Armour Spell|Armour Spell|ac:6,rules:-Shield Spell¦-Protection Ring\n/w "^^cname^^" ^^tname^^\'s AC has been made AC6 (adjusted by deterity to AC[[6+@{^^cname^^|dexdefense}]]) by the Armour spell. Once taken [[8+@{^^cname^^|level-class2}]]HP, end the spell using the [End Armour](!rounds --removetargetstatus ^^tid^^|armour) button'},
+						{name:'Armour-turn',type:'',ct:'0',charge:'uncharged',cost:'0',body:'/w "^^cname^^" Has ^^tname^^ taken [[8+@{^^cname^^|level-class2}]]HP yet? If so, end the spell using the [End Armour](!rounds --removetargetstatus ^^tid^^|armour) button.'},
+						{name:'Attk1-Interval-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!setattr --silent --charid ^^cid^^ --monsterdmg|@{^^cname^^|monsterdmg|max}'},
+						{name:'Attk1-Interval-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!setattr --silent --charid ^^cid^^ --monsterdmg|\'\'|@{^^cname^^|monsterdmg}'},
+						{name:'Attk2-Interval-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!setattr --silent --charid ^^cid^^ --monsterdmg2|@{^^cname^^|monsterdmg2|max}'},
+						{name:'Attk2-Interval-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!setattr --silent --charid ^^cid^^ --monsterdmg2|\'\'|@{^^cname^^|monsterdmg2}'},
+						{name:'Attk3-Interval-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!setattr --silent --charid ^^cid^^ --monsterdmg3|@{^^cname^^|monsterdmg3|max}'},
+						{name:'Attk3-Interval-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!setattr --silent --charid ^^cid^^ --monsterdmg3|\'\'|@{^^cname^^|monsterdmg3}'},
+						{name:'Bad-Luck-1-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|delSpell|Bad Luck|Bad Luck\n!magic --message p|^^tid^^|^^cname^^\'s Luck Has Changed|^^cname^^ is no longer suffering from bad luck, and attack rolls and saving throws have returned to normal.'},
+						{name:'Bad-Luck-1-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|add|Bad Luck|Bad Luck|svall:-1,thac0+:-1\n!magic --message p|^^tid^^|^^cname^^ is Suffering Bad Luck|^^cname^^ starts to suffer bad luck on attack rolls and saving throws. An automatic penalty of -1 is applied to both.'},
+						{name:'Barkskin-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|delspell|not magic|Barkskin\n/w "^^cname^^" ^^cname^^\'s AC and saves return to normal as Barkskin fades'},
+						{name:'Barkskin-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|Add|Barkskin|Barkskin|ac:[[6-floor(@{^^cname^^|casting-level}/4)]],svpar:+1,svpoi:+1,svdea:+1,svrod:+1,svsta:+1 svwan:+1,svpol:+1,svpet:+1,svbre:+1||^^duration^^\n/w "^^cname^^" ^^cname^^\'s saves and AC might have improved as they get Barkskin'},
+						{name:'Bestow-Curse-51-75-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|delspell|Curse 51-75|Bestow Curse\n!magic --message w|^^tid^^|Cursed|^^cname^^ is no longer cursed: penalty of 4 to thac0 \\amp saves has been reversed'},
+						{name:'Bestow-Curse-51-75-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|Add|Curse 51-75|Bestow Curse|thac0+:-4,svall:-4||^^duration^^\n!magic --message w|^^tid^^|Cursed|^^tname^^ is cursed: Thac0 and saves suffer a penalty of 4'},
+						{name:'Bigbys-Fist-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --blankweapon ^^tid^^|Bigbys-Clenched-Fist|silent'},
+						{name:'Bless-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'/w "^^cname^^" ^^tname^^\'s Bless has expired and their Thac0 has returned to normal\n!attk --set-mods ^^tid^^|delspell|Fear|Bless'},
+						{name:'Bless-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'/w "^^cname^^" ^^tname^^ has been blessed and their Thac0 and saves have improved\n!attk --set-mods ^^tid^^|Add|Bless|Bless|thac0+:1||6 --set-savemod ^^tid^^|fea=spe|Fear|Bless|svfea:+1||6'},
+						{name:'Blindness-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!init --setmods ^^tid^^|mod|Blindness|-2||silent\n!attk --set-mods ^^tid^^|delspell|Blindness|Blindness\n/w "^^cname^^" ^^tname^^ has recovered from blindness and no longer suffers from penalties to attacks, AC and initiative'},
+						{name:'Blindness-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!init --setmods ^^tid^^|mod|Blindness|+2||silent\n!attk --set-mods ^^tid^^|add|Blindness|Blindness|thac0+:-4,+:-4,svall:-4\n/w "^^cname^^" ^^tname^^ has been blinded and suffers 4 penalty to attacks, saves \\amp AC, and 2 penalty to initiative'},
+						{name:'Blood-Frenzy-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!init --setmods ^^tid^^|both|Blood Frenzy|+2|-2|silent\n/w "^^cname^^" ^^cname^^ is back to normal'},
+						{name:'Blood-Frenzy-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!init --setmods ^^tid^^|both|Blood Frenzy|-2|+2|silent\n/w "^^cname^^" Being in a *blood frenzy*, ^^cname^^ moves twice as fast and has twice the number of attacks'},
+						{name:'Blowing-Horn-of-Fog-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!rounds --target caster|^^tid^^|Horn of Fog|[[2d4]]|-1|Fog persists obscuring all sight inc infravision beyond 2 feet|half-haze'},
+						{name:'Blowing-Horn-of-Fog-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!rounds --aoe ^^tid^^|square|feet|0|10|10|black'},
+						{name:'Blowing-Horn-of-Fog-turn',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!rounds --aoe ^^tid^^|square|feet|0|10|10|black'},
+						{name:'Bolas-Entanglement-turn',type:'',ct:'0',charge:'uncharged',cost:'0',body:'/w "^^cname^^" Have you made a successful strength check? [Yes](!rounds --removetargetstatus ^^tid^^|Bolas Entanglement)'},
+						{name:'Boots-of-Dancing-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!magic --message ^^tid^^|Boots of Dancing|^^cname^^\'s feet have stopped dancing (for the moment?). AC and Saves penalties are reversed\n!attk --set-mods ^^tid^^|delspell|Boots of Dancing|Boots of Dancing'},
+						{name:'Boots-of-Dancing-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!magic --message ^^tid^^|Boots of Dancing|^^cname^^\'s feet have started to dance, but not in a helpful way. AC penalty of 4, and Saving Throws at penalty of 6.\n!attk --set-mods ^^tid^^|add|AC \\amp Save Penalty|Boots of Dancing|+:-4,svall:-6'},
+						{name:'Boots-of-Flying-turn',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!magic --mi-charges ^^tid^^|-1|Boots-of-Flying||recharging'},
+						{name:'Bravery-1-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-savemod ^^tid^^|fea=spe|Fear|Bravery|svfea:+4|1|480'},
+						{name:'Bravery-2-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-savemod ^^tid^^|fea=spe|Fear|Bravery|svfea:+3|1|480'},
+						{name:'Bravery-3-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-savemod ^^tid^^|fea=spe|Fear|Bravery|svfea:+2|1|480'},
+						{name:'Bravery-4-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-savemod ^^tid^^|fea=spe|Fear|Bravery|svfea:+1|1|480'},
+						{name:'CO-Heat-vs-Creature-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|del|Heat vs Creature|Chromatic Orb\n!magic --message ^^tid^^|Chromatic Orb|^^tname^^ is no longer hot and their Thac0 and AC return to normal'},
+						{name:'CO-Heat-vs-Creature-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|add|Heat vs Creature|Chromatic Orb|thac0+:-1,+:-1\n!magic --message ^^tid^^|Chromatic Orb Heat|^^tname^^ is weakened by heat and suffers a penalty of 1 to Thac0 and AC'},
+						{name:'CO-Heat-vs-PC-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!magic --change-attr ^^tid^^|+1|strength --change-attr ^^tid^^|+1|dexterity\n/w "^^cname^^" \\amp{template:default}{{name=Suffering from Heat}}{{^^cname^^ is no longer hot, and strength and dexterity no longer suffer a heat penalty}}'},
+						{name:'CO-Heat-vs-PC-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!magic --change-attr ^^tid^^|-1|strength --change-attr ^^tid^^|-1|dexterity\n/w "^^cname^^" \\amp{template:default}{{name=Suffering from Heat}}{{^^cname^^ is suffering from overheating, and strength and dexterity are both impacted by a penalty}}'},
+						{name:'Candle-of-Invocation-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!magic --level-change ^^tid^^|-2\n/w "^^cname^^" ^^tname^^ is no longer benefiting from the patronage of the gods of his alignment, and loses the temporarily 2 levels.'},
+						{name:'Candle-of-Invocation-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!magic --level-change ^^tid^^|2\n/w "^^cname^^" ^^tname^^ is benefiting from the patronage of the gods of his alignment, and is temporarily 2 levels higher.'},
+						{name:'Candle-of-Invocation-turn',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!magic --mi-charges ^^tid^^|-1|candle-of-invocation'},
+						{name:'Chant-ally-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|delspell|Ally|Chant\n/w "^^cname^^" The saves, attacks \\amp damage done by ^^tname^^ returns to normal as *Chant* ends'},
+						{name:'Chant-ally-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|Add|Ally|Chant|dmg+:1,thac0+:1,svsav:+1|||\n/w "^^cname^^" The saves, attacks \\amp damage done by ^^tname^^ are improved by *Chant*'},
+						{name:'Chant-foe-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|delspell|Foe|Chant\n/w "^^cname^^" The saves, attacks \\amp damage done by ^^tname^^ returns to normal as *Chant* ends'},
+						{name:'Chant-foe-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|add|Foe|Chant|dmg+:-1,thac0+:-1,svsav:-1\n/w "^^cname^^" The saves, attacks \\amp damage done by ^^tname^^ are hindered by *Chant*'},
+						{name:'Chill-Touch-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --blank-weapon ^^tid^^|Chill-Touch|silent'},
+						{name:'Cloud-Giant-Strength-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!resetattr --silent --name ^^cname^^ --strength\n/w "^^cname^^" ^^cname^^ returns to their normal strength'},
+						{name:'Cloud-Giant-Strength-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!setattr --silent --name ^^cname^^ --strength|23|@{^^cname^^|strength}\n/w "^^cname^^" ^^cname^^ gains enormous strength'},
+						{name:'Colossal-Excavation-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!rounds --target caster|^^tid^^|Resting after excavation|5|-1|Exhaused from excavation so resting|sleepy\n!magic --mi-charges ^^tid^^|-1|Spade-of-Colossal-Excavation||recharging'},
+						{name:'Constrict-turn',type:'',ct:'0',charge:'uncharged',cost:'0',body:'/w "^^cname^^" \\amp{template:default}{{name=Constriction Damage}}{{Free=Once ^^tname^^ [breaks free](!rounds --removetargetstatus ^^tid^^|Giant Constrict) click here}}\n!token-mod --api-as ^^pid^^ --ignore-selected --ids ^^tid^^ --set ^^token_hp^^|-[[1d3]] --report all|"{name} takes {^^token_hp^^:abschange} more damage from contriction"'},
+						{name:'Cube-of-Force-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!setattr --silent --charid @{^^cname^^|Cube-user} --repeating_potions_$@{^^cname^^|Cube-row}_potionqty|@{^^cname^^|hp}\n!token-mod --api-as ^^pid^^ --ignore-selected --ids ^^tid^^ --set layer|gmlayer'},
+						{name:'Cube-of-Force-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!modbattr --silent --charid @{^^cname^^|Cube-user} --repeating_potions_$@{^^cname^^|Cube-row}_potionqty|[[1-@{^^cname^^|Cube-charges}]]\n!modbattr --silent --charid ^^cid^^ --hp|[[1-@{^^cname^^|Cube-charges}]] \n!rounds --edit_status change %% ^^tid^^ %% cube-of-force %% duration %% [[{{[[@{^^cname^^|hp}-@{^^cname^^|Cube-charges}]]},{1}}kh1]] --edit_status change %% ^^tid^^ %% cube-of-force %% direction %% [[([[{{[[{{[[@{^^cname^^|hp}-@{^^cname^^|Cube-charges}]]},{1}}kl1]]},{0}}kh1]])-1]]'},
+						{name:'Cube-of-Force-turn',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!setattr --silent --charid @{^^cname^^|Cube-user} --repeating_potions_$@{^^cname^^|Cube-row}_potionqty|[[{{[[@{^^cname^^|hp}-([[(1-([[{{[[@{Initiative|round-counter}%10]]},{1}}kl1]] )) *@{^^cname^^|Cube-charges}]])]]},{0}}kh1]]\n!modbattr --silent --charid ^^cid^^ --hp|[[(([[{{[[@{Initiative|round-counter}%10]]},{1}}kl1]])-1)*@{^^cname^^|Cube-charges}]]\n!rounds --edit_status change %% ^^tid^^ %% cube-of-force %% duration %% [[{{@{^^cname^^|hp}},{1}}kh1]] --edit_status change %% ^^tid^^ %% cube-of-force %% direction %% [[([[{{[[{{@{^^cname^^|hp}},{1}}kl1]]},{0}}kh1]])-1]]'},
+						{name:'Curse-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!token-mod --api-as ^^pid^^ --ignore-selected --ids ^^tid^^ --set ^^token_thac0^^|-1\n/w "^^cname^^" ^^tname^^ has recovered from being *Cursed*'},
+						{name:'Curse-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|add|Curse|Curse|thac0+:-1\n/w "^^cname^^" ^^tname^^ has been *Cursed*, which affects their attacks and morale'},
+						{name:'Dancer-dancing',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!rounds --addtargetstatus ^^tid^^|^^weapon^^-dancing|^^duration^^|-1|The ^^weapon^^ is Dancing by itself. Use this time wisely!|all-for-one\n!attk --quiet-modweap ^^tid^^|^^weapon^^|^^weaptype^^|sb:0,db:0,+:^^plusChange^^ --attk-hit ^^tid^^|Take an attack with the newly dancing weapon'},
+						{name:'Dancer-dancing-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --dance ^^tid^^|^^weapon^^|stop'},
+						{name:'Dancer-dancing-turn',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --quiet-modweap ^^tid^^|^^weapon^^|^^weaptype^^|+:^^plusChange^^'},
+						{name:'Dancer-inhand',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!rounds --addtargetstatus ^^tid^^|^^weapon^^-inhand|[[^^duration^^+1]]|-1|^^weapon^^ not yet dancing so keep using it|stopwatch'},
+						{name:'Dancer-inhand-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --dance ^^tid^^|^^weapon^^'},
+						{name:'Dancer-inhand-turn',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --quiet-modweap ^^tid^^|^^weapon^^|^^weaptype^^|+:^^plusChange^^'},
+						{name:'Dancer-sheath',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!rounds --deltargetstatus ^^tid^^|^^weapon^^-inhand'},
+						{name:'Dancing-Longbow-dancing',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!rounds --addtargetstatus ^^tid^^|Longbow-is-Dancing|4|-1|The Longbow is Dancing by itself. Use this time wisely!|all-for-one\n!attk --quiet-modweap ^^tid^^|Dancing-Longbow|ranged|sb:0,db:0'},
+						{name:'Dancing-Longbow-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --dance ^^tid^^|Dancing-Longbow'},
+						{name:'Dancing-Longbow-inhand',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!rounds --addtargetstatus ^^tid^^|Dancing-Longbow|4|-1|Longbow not yet dancing so keep using it|stopwatch'},
+						{name:'Dancing-Longbow-sheath',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!rounds --deltargetstatus ^^tid^^|Dancing-Longbow'},
+						{name:'Dancing-Longbow-turn',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --quiet-modweap ^^tid^^|Dancing-Longbow|ranged|+:+1'},
+						{name:'Dancing-Quarterstaff-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --dance ^^tid^^|Quarterstaff-of-Dancing|stop'},
+						{name:'Dancing-Quarterstaff-turn',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --quiet-modweap ^^tid^^|quarterstaff-of-dancing|melee|+:+1 --quiet-modweap ^^tid^^|quarterstaff-of-dancing|dmg|+:+1'},
+						{name:'Deafness-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!init --setmods ^^tid^^|mod|Deafness|-1||silent\n/w "^^cname^^" ^^tname^^ has recovered from deafness and no longer suffers an initiative penalty'},
+						{name:'Deafness-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!init --setmods ^^tid^^|mod|Deafness|+1||silent\n/w "^^cname^^" ^^tname^^ has been deafened and suffers an initiative penalty, as well as other effects'},
+						{name:'Delayed-blast-fireball-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'/w "^^cname^^" \\amp{template:default}{{name=Delayed Blast Fireball}}{{The fireball finally explodes. Click [Explode](!rounds --aoe \\amp#64;{target|Select Fireball Seed|token_id}|circle|feet|0|40||fire|true) and select the fireball seed you placed earlier, then click [Damage](!\\amp#13;\\amp#47;r [[([[({10, @{^^cname^^|mu-casting-level} }kl1)]] + [[([[({10, @{^^cname^^|mu-casting-level} }kl1)]]d6)]])]] damage from delayed-blast fireball) to see how much damage it does}}'},
+						{name:'Divine-Favour-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'/w "^^cname^^" ^^cname^^\'s Divine Favour has run its course, and their Thac0 returns to normal\n!token-mod --api-as ^^pid^^ {{\n --ignore-selected\n --ids ^^tid^^\n --set ^^token_thac0^^|+4\n}}'},
+						{name:'Divine-Favour-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'/w "^^cname^^" ^^cname^^ has been granted a Divine Favour and their Thac0 has improved by 4!\n!attk --set-mods ^^tid^^|add|Divine Favour|Divine Favour|thac0+:4'},
+						{name:'Djinni-Whirlwind-building-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!rounds --target caster|^^tid^^|Djinni-Whirlwind|99|0|Whirlwind now usable as transport or as a weapon|lightning-helix\n!magic --message ^^tid^^|Djinni Whirlwind|The whirlwind has now built to full speed and is usable as transport or as a weapon'},
+						{name:'Dragon-Fear-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|Del|Fear|Dragon Fear\n!magic --message ^^tid^^|^^tname^^ is no longer afraid|^^tname^^ has overcome their fear. Their attack and damage rolls are no longer affected by it.'},
+						{name:'Dragon-Fear-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|add|Fear|Dragon Fear|dmg+:-2,thac0+:-2\n!magic --message ^^tid^^|^^tname^^ is afraid!|^^tname^^ has seen the dragon and is afraid! ^^tname^^ suffers -2 penalty to both attack and damage rolls'},
+						{name:'Earache-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!magic ^^tid^^|Pipes of Pain|^^tname^^ is no longer suffering from the sound of the Pipes of Pain\n!attk| --set-mods ^^tid^^|delspell|pain|Pipes of Pain'},
+						{name:'Earache-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|add|Earache|Pipes of Pain|thac0+:-2,svall:-2\n!magic ^^tid^^|Pipes of Pain|^^tname^^ is still suffering from the sound of the Pipes of Pain, with -2 on attack and saving throw rolls. A *forget* or *remove curse* is required to end this effect.\n'},
+						{name:'Eating-Heroes-Feast-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!rounds --addtargetstatus ^^tid^^|Heroes Feast|720|-1|Blessed, +1 to attk, immune to poison, fear, hopelessness, panic|angel-outfit'},
+						{name:'Enchanted-by-Scabbard-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --quiet-modweap ^^tid^^|@{^^cname^^|Scabbard-Weapon}|Melee|+:-1 --quiet-modweap ^^tid^^|@{^^cname^^|Scabbard-Weapon}|Dmg|+:-1 \n/w "^^cname^^" \\amp{template:default}{{name=Scabbard of Enchanting}}{{=^^tname^^, @{^^cname^^|Scabbard-Weapon} has now lost its additional enchantment from the Scabbard. [Sheath it again](!rounds --target caster|^^tid^^|Scabbard-of-Enchanting|10|-1|Enchanting a Sheathed weapon|stopwatch\\amp#13;!attk --weapon ^^tid^^|Sheath weapon in Scabbard of Enchanting - take new one in hand)}}'},
+						{name:'Enfeeble-monster-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|Del|Enfeeble Monster|Enfeeble Monster\nThe monster has recovered from being enfeebled'},
+						{name:'Enfeeble-monster-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|Add|Enfeeble Monster|Enfeeble Monster|thac0+:-2\nThe monster has been enfeebled'},
+						{name:'Enraged-by-Scarab-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|DelSpell|Scarab Rage|Scarab of Enraging Enemies\n/w gm ^^tname^^ thac0, damage \\amp AC return to normal'},
+						{name:'Enraged-by-Scarab-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|Add|Scarab Rage|Scarab of Enraging Enemies|thac0+:1,dmg+:2,+:3\n/w gm ^^tname^^ thac0 -1, dmg +2, AC -3'},
+						{name:'Exhausted-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|Del|Exhausted|Rage\n!magic --message ^^tid^^|^^tname^^\'s Rage|^^tname^^ has recovered from Exhaustion'},
+						{name:'Exhausted-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|Add|Exhausted|Rage|thac0+:-2,+:-2,dmg+:-2\n!magic --message p|^^tid^^|^^tname^^ is now Exhausted|Having raged, ^^tname^^ is now exhausted and suffers -2 penalties to attacks, damage and AC for a turn'},
+						{name:'Faerie-fire-darkness-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|Del|Darkness|Faerie Fire\n^^tname^^ has lost that glow and is now harder to aim at'},
+						{name:'Faerie-fire-darkness-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|Add|Darkness|Faerie Fire|+:-2\n^^tname^^ is surrounded by Faerie Fire, and becomes much easier to hit'},
+						{name:'Faerie-fire-twilight-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|Del|Twilight|Faerie Fire\n^^tname^^ has lost that glow and is now harder to aim at'},
+						{name:'Faerie-fire-twilight-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|Add|Twilight|Faerie Fire|+:-1\n^^tname^^ is surrounded by Faerie Fire, and becomes easier to hit'},
+						{name:'Fire-Giant-Strength-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!resetattr --silent --name ^^cname^^ --strength\n/w "^^cname^^" ^^cname^^ returns to their normal strength'},
+						{name:'Fire-Giant-Strength-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!setattr --silent --name ^^cname^^ --strength|22|@{^^cname^^|strength}\n/w "^^cname^^" ^^cname^^ gains enormous strength'},
+						{name:'Flame-walk-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-savemod ^^tid^^|delspell|Magic Fire|Flame-walk'},
+						{name:'Flame-walk-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-savemod ^^tid^^|mfi=spe|Magic Fire|Flame-walk|svmfi:+2||^^duration^^'},
+						{name:'Flaming-oil-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!token-mod --api-as ^^pid^^ --ignore-selected --ids ^^tid^^ --set layer|gmlayer '},
+						{name:'Follow-the-Standard-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|Del|Follow the Standard|Follow the Standard'},
+						{name:'Follow-the-Standard-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|Add|Follow the Standard|Follow the Standard|thac0+:1'},
+						{name:'Foresight-caster-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|delspell|Foresight|Foresight\n/w "^^cname^^" ^^tname^^\'s AC has changed as a result of losing *foresight*'},
+						{name:'Foresight-caster-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|add|Foresight|Foresight|thac0+:2\n/w "^^cname^^" ^^tname^^\'s AC has been improved by *foresight*\n'},
+						{name:'Frost-Giant-Strength-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!resetattr --silent --name ^^cname^^ --strength\n/w "^^cname^^" ^^cname^^ returns to their normal strength'},
+						{name:'Frost-Giant-Strength-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!setattr --silent --name ^^cname^^ --strength|21|@{^^cname^^|strength}\n/w "^^cname^^" ^^cname^^ gains enormous strength'},
+						{name:'GS-acid-dmg-turn',type:'',ct:'0',charge:'uncharged',cost:'0',body:'/w "^^cname^^" ^^cname^^ takes [[1d10]] HP of acid damage from the burning on their feet!'},
+						{name:'Gem-of-Brightness-Light-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!magic --light ^^tid^^|@{^^cname^^|lightsource}'},
+						{name:'Gem-of-Brightness-Light-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!token-mod --api-as ^^pid^^ --ignore-selected --ids ^^tid^^ --set emits_bright_light|no emits_low_light|yes has_directional_bright_light|no has_directional_dim_light|yes bright_light_distance|0 low_light_distance|10 directional_dim_light_center|0 directional_dim_light_total|15'},
+						{name:'Giant-Constrict-turn',type:'',ct:'0',charge:'uncharged',cost:'0',body:'/w "^^cname^^" \\amp{template:default}{{name=Constriction Damage}}{{Free=Once ^^tname^^ [breaks free](!rounds --removetargetstatus ^^tid^^|Giant Constrict) click here}}\n!token-mod --api-as ^^pid^^ --ignore-selected --ids ^^tid^^ --set ^^token_hp^^|-[[2d4]] --report all|"{name} takes {^^token_hp^^:abschange} more damage from contriction"'},
+						{name:'Giant-Sea-Constrict-turn',type:'',ct:'0',charge:'uncharged',cost:'0',body:'/w "^^cname^^" \\amp{template:default}{{name=Constriction Damage}}{{Free=Once ^^tname^^ [breaks free](!rounds --removetargetstatus ^^tid^^|Giant Sea Constrict) click here}}\n!token-mod --api-as ^^pid^^ --ignore-selected --ids ^^tid^^ --set ^^token_hp^^|-[[3d6]] --report all|"{name} takes {^^token_hp^^:abschange} more damage from contriction"'},
+						{name:'Giant-Snake-Poison-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'/w "^^cname^^" \\amp{template:default}{{name=Giant Snake Poison}}{{Poison=Save vs. Poison}}{{Succeed=^^tname^^ takes only damage from bite.}}{{Fail=^^tname^^ immediately **dies** from poisoning (and takes the damage from the bite...)}}'},
+						{name:'Glitterdust-glitter-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'/w "^^cname^^" ^^tname^^ has recovered from Glitterdust sparkle which fades away'},
+						{name:'Glitterdust-glitter-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!rounds --target-nosave caster|^^tid^^|Blindness|[[1d4+1]]|-1|Blinded by Glitterdust, -4 on attk, save \\amp AC|bleeding-eye\n/w "^^cname^^" As well as being blinded, ^^tname^^ is also covered in glitter until it fades'},
+						{name:'Hairy-Spider-Poison-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|Del|Poison|Hairy Spider\n!magic --change-attr ^^tid^^|+3|dexterity|silent'},
+						{name:'Hairy-Spider-Poison-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|Add|Poison|Hairy Spider|+:-1,thac0+:-1\n!magic --change-attr ^^tid^^|-3|dexterity|silent'},
+						{name:'Harp-Suggestion-Recharging',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!magic --mi-rest ^^tid^^|Harp-of-Charming|1|Suggestion'},
+						{name:'Haste-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!init --setmods ^^tid^^|del|Haste|0|1|silent\n/w "^^cname^^" One year older, ^^cname^^ is back to normal'},
+						{name:'Haste-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!init --setmods ^^tid^^|both|Haste|=-2|=2|silent\n/w "^^cname^^" Being *Hasted*, ^^cname^^ moves twice as fast and has twice the number of attacks\n'},
+						{name:'Heroes-Feast-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'/w "^^cname^^" The effects of Heroes Feast have worn off, and ^^tname^^ returns to normal\n!attk --set-mods ^^tid^^|delspell|Immune|Heroes Feast'},
+						{name:'Heroes-Feast-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-savemod ^^tid^^|fea=spe|Immune to fear|Heroes Feast|svfea:+0|||!magic ~~message ^^tid^^|Immunity|^^tname^^ is *immune* to fear thanks to having a *Heroes Feast* --set-savemod ^^tid^^|add|Immune to poison|Heroes Feast|svpoi:+0|||!magic ~~message ^^tid^^|Immunity|^^tname^^ is *immune* to poison thanks to having a *Heroes Feast* --set-mods ^^tid^^|Improved attacks|Heroes Feast|thac0+:1\n/w "^^cname^^" Having eaten a Heroes Feast, ^^tname^^ gains benefits to attacks as well as other bonuses'},
+						{name:'Heway-poison-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'/w "^^cname^^" \\amp{template:default}{{name=Water Poisoned by Heway}}{{Save=Save vs. Poison at +2 bonus}}{{Succeed=Take 15HP damage}}{{Fail=30HP damage \\amp paralysed for 1d6 hours}}\n/w gm \\amp{template:default}{{name=Heway Poison Paralysation}}{{=If creature failed to save, press [Paralysed](!rounds --target-nosave caster|^^tid^^|Paralysis|\\amp#91;[60*1d6]\\amp#93;|-1|Paralysed by water poisoned by a Heway snake|padlock) to add a status marker}}'},
+						{name:'Hill-Giant-Strength-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!resetattr --silent --name ^^cname^^ --strength\n/w "^^cname^^" ^^cname^^ returns to their normal strength'},
+						{name:'Hill-Giant-Strength-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!setattr --silent --name ^^cname^^ --strength|19|@{^^cname^^|strength}\n/w "^^cname^^" ^^cname^^ gains enormous strength'},
+						{name:'Incendiary-Cloud-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!delattr --silent --charid ^^cid^^ --incendiary-count'},
+						{name:'Incendiary-Cloud-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!setattr --silent --charid ^^cid^^ --incendiary-count|-2|10'},
+						{name:'Incendiary-Cloud-turn',type:'',ct:'0',charge:'uncharged',cost:'0',body:'/w "^^cname^^" \\amp{template:default}{{name=Incendiary Cloud}}{{This round, the cloud does @{^^cname^^|mu-casting-level}d[[({ [[({ @{^^cname^^|incendiary-count}, @{^^cname^^|incendiary-count|max} }kl1)]], 0}kh1)]]HP [incendiary damage](!\\amp#13;\\amp#47;r @{^^cname^^|mu-casting-level}d[[({ [[({ @{^^cname^^|incendiary-count}, @{^^cname^^|incendiary-count|max} }kl1)]], 0}kh1 )]] incendiary damage). Click button to make the roll}}\n!modattr --silent --charid ^^cid^^ --incendiary-count|+2|-2'},
+						{name:'Increasing-Strength-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!magic --change-attr ^^tid^^|+[[{{18-@{^^cname^^|strength}},{1}}kl1]]|strength|silent --change-attr ^^tid^^|+[[{{18-@{^^cname^^|constitution}},{1}}kl1]]|constitution|silent\n!rounds --target-nosave caster|^^tid^^|Increasing-Strength_Ring-Effect|100|-10|The ring is having an unknown effect|spanner'},
+						{name:'Increasing-Weakness-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!magic --change-attr ^^tid^^|[[{{3-@{^^cname^^|strength}},{-1}}kh1]]|strength|silent --change-attr ^^tid^^|[[{{3-@{^^cname^^|constitution}},{-1}}kh1]]|constitution|silent\n!rounds --target-nosave caster|^^tid^^|Increasing-Weakness_Ring-Effect|100|-10|The ring is having an unknown effect|spanner'},
+						{name:'Incite-Rage-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|DelSpell|Rage|Rage'},
+						{name:'Incite-Rage-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|Add|Rage|Rage|thac0+:2,dmg+:2'},
+						{name:'Infested-with-Vermin-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!init --set-mods ^^tid^^|del|Infested by Vermin|||silent\n/w "^^cname^^" \\amp{template:default}{{name=Itching \\amp Scratching}}{{Oooo... That\'s better! The itching and scratching seem to have stopped}}'},
+						{name:'Infested-with-Vermin-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!init --set-mods ^^tid^^|fix|Infested by Vermin|+51||silent\n/w "^^cname^^" \\amp{template:default}{{name=Itching \\amp Scratching}}{{Your robe seems to be infested with biting insects - fleas, mosquitos, ants, and other sorts. You can\'t stop itching \\amp scratching, to the extent that you are only 50% effective!}}'},
+						{name:'Infravision-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!token-mod --api-as ^^pid^^ --ignore-selected --ids ^^tid^^ --off has_night_vision\n/w "^^cname^^" "Who turned out the lights?" ^^tname^^ no longer has night vision.'},
+						{name:'Infravision-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!token-mod --api-as ^^pid^^ --ignore-selected --ids ^^tid^^ --on has_night_vision --set night_distance|60\n/w "^^cname^^" ^^tname^^ has gained 60ft infravision, which brightens up their night!'},
+						{name:'Invisibility-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|del|Invisibility|Invisibility\n/w "^^cname^^" Becoming visible means ^^tname^^\'s AC and saves return to normal'},
+						{name:'Invisibility-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|add|Invisibility|Invisibility|svsav:+4,+:4\n/w "^^cname^^" Being invisible improves ^^tname^^\'s AC and saves by 4'},
+						{name:'Invulnerability-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|del|Invulnerability|Potion of Invulnerability\n/w "^^cname^^" ^^tname^^ is no longer invulnerable-ish'},
+						{name:'Invulnerability-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|add|Invulnerability|Potion of Invulnerability|svsav:+2,+:2\n/w "^^cname^^" \\amp{template:default}{{name=Potion of Invulnerability}}{{^^tname^^ becomes invulnerable to normal attacks from many creatures (but not all, and not magical attacks), and in any case gains a benefit of 2 on AC and saves}}'},
+						{name:'Irritate-Rash-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!rounds --target single|^^tid^^|^^tid^^|Rash|99|0|Broken out in Rash all over, Charisma \\amp Dexterity reducing|radioactive'},
+						{name:'Irritation-Itch-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!rounds --target-nosave caster|^^tid^^|Irritation-Squirm|3|-1|Twisting \\amp squirming penalties attk 2 \\amp AC 4|screaming\n!attk --set-mods ^^tid^^|add|Squirming|Irritation|thac0+:-2,+:-2\n/w "^^cname^^" As a consequence of not spending a round itching, ^^tname^^ squirms and twists in discomfort with consequential impact on AC and Thac0'},
+						{name:'Irritation-Itch-turn',type:'',ct:'0',charge:'uncharged',cost:'0',body:'/w gm \\amp{template:default}{{name=Irritation Itch}}{{Has ^^tname^^ stopped to scratch the itch? [Yes](!rounds --deltargetstatus ^^tid^^|Irritation-Itch)}}'},
+						{name:'Irritation-Rash-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!rounds --target-nosave caster|^^tid^^|Irritation Disease|99|-1|Covered in an ugly rash: Chr -1pd for 4 days; Dex -1 after 1wk|radioactive\n/w ^^cname^^ ^^tname^^ has caught some type of disease which affects Charisma (-1 per day for 4 days) and potentially Dexterity (-1 after 1 week) - apply all effects manually'},
+						{name:'Irritation-Squirm-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|del|Squirming|Irritation\n/w "^^cname^^" The itch receeds, and ^^tname^^\'s AC and Thac0 return to normal'},
+						{name:'Light-duration-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'/w gm **Delete the light spell token** - the light spell has ended'},
+						{name:'Light-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|del|Blinded|Light\n/w "^^cname^^" ^^tname^^ has recovered from blindness and no longer suffers from penalties to attacks, saves and AC'},
+						{name:'Light-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|add|Blinded|Light|svall:-4,+:-4,thac0+:-4||^^duration^^\n/w "^^cname^^" ^^tname^^ has been blinded by light and suffers 4 penalty to attacks \\amp AC \\amp saves'},
+						{name:'Lightbringer-mace-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!token-mod --api-as ^^pid^^ --ignore-selected --ids ^^tid^^ --off emits_bright_light emits_low_light\n/w "^^cname^^" ^^cname^^ has commanded his mace to go dark'},
+						{name:'Lightbringer-mace-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!token-mod --api-as ^^pid^^ --ignore-selected --ids ^^tid^^ --on emits_bright_light emits_low_light --set bright_light_distance|15 low_light_distance|15\n/w "^^cname^^" ^^cname^^\'s mace now shines as bright as a torch.'},
+						{name:'Longbow-is-Dancing-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --dance ^^tid^^|Dancing-Longbow|stop'},
+						{name:'Longbow-is-Dancing-turn',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --quiet-modweap ^^tid^^|Dancing-Longbow|ranged|+:+1'},
+						{name:'Luck-bonus-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-savemod ^^tid^^|del|Luck bonus|Luck bonus'},
+						{name:'Luck-bonus-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-savemod ^^tid^^|add|Luck Bonus|Luck Bonus|svall:+1\n/w "^^cname^^" \\amp{template:default}{{name=Luck Bonus}}{{Has a luck bonus on saves and checks of +1 while in the area of effect.}}'},
+						{name:'Magical-Vestment-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-acmod ^^tid^^|Del|Magical Vestment Spell|Magical Vestment Spell'},
+						{name:'Magical-Vestment-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-acmod ^^tid^^|Add|Magical Vestment Spell|Magical Vestment Spell|ac:[[5-floor((@{^^cname^^|pr-casting-level}-5)/3)]],rules:-Armour Spell¦-Shield Spell¦-Protection Ring'},
+						{name:'Melfs-Acid-Arrow-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!magic --message w|^^tid^^|Melfs Acid Arrow|^^cname^^ takes a final [2d4](!token-mod --api-as ^^pid^^ ~~ignore-selected ~~ids ^^tid^^ ~~set ^^token_hp^^¦-\\amp#91;[\\amp#63;{How much acid damage is done?¦2d4}]\\amp#93; ~~report character:gm¦\\amp#34;^^cname^^ takes a final {^^token_hp^^:abschange} hp of acid damage\\amp#34; all¦\\amp#34;The acid eats away at ^^cname^^ for the last time\\amp#34;) hp acid damage'},
+						{name:'Melfs-Acid-Arrow-turn',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!magic --message c|^^tid^^|Melfs Acid Arrow|^^cname^^ takes [2d4](!token-mod --api-as ^^pid^^ ~~ignore-selected ~~ids ^^tid^^ ~~set ^^token_hp^^|-\\amp#91;[\\amp#63;{How much acid damage is done?¦2d4}]\\amp#93; ~~report character:gm¦\\amp#34;^^cname^^ takes an additional {^^token_hp^^:abschange} hp of acid damage\\amp#34; all¦\\amp#34;The acid eats away at ^^cname^^\\amp#34;) hp additional acid damage'},
+						{name:'Mesmerized-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!rounds --target-nosave single|^^tid^^|Mesmerised still|[[10*2d6]]|-10|Still mesmerized even though the snake has looked elsewhere|chained-heart'},
+						{name:'Nauseous-2-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|Del|Nauseous|Ghast Stench\n/w "^^cname^^" ^^tname^^ is no longer feeling nauseous, so is no longer subject to a penalty of 2 on attacks'},
+						{name:'Nauseous-2-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|Add|Nauseous|Ghast Stench|thac0+:-2\n/w "^^cname^^" ^^tname^^ is feeling very nauseous and is now at a -2 penalty to hit on attacks'},
+						{name:'Numbed-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!init --setmods ^^tid^^|mult|Numbed by cold||1|silent\n!attk --set-mods ^^tid^^|delspell|Numbed|Numbed by Cold\n/w ^^cname^^ ^^tname^^ has warmed up somewhat and can now move and attack more like normal'},
+						{name:'Numbed-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!init --setmods ^^tid^^|mult|Numbed by cold||=0.5|silent\n!attk --set-mods ^^tid^^|add|Numbed|Numbed by Cold|thac0+:-2\n/w ^^cname^^ ^^tname^^ has been numbed by cold and is moving slower and finding it more difficult to hit things...'},
+						{name:'Oil-fire-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'/w "^^cname^^" \\amp{template:default}{{name=Oil Fire Damage Round 2}}{{Damage=^^tname^^ takes another [1d6](!\\amp#13;\\amp#47;roll 1d6)HP of fire damage from the burning oil}}'},
+						{name:'Oil-of-Fumbling-turn',type:'',ct:'0',charge:'uncharged',cost:'0',body:'/w "^^cname^^" \\amp{template:default}{{name=Oil of Fumbling}}{{desc=Anything ^^tname^^ holds seems incredibly slippery! ^^tname^^ has a 50% chance of dropping anything held, including weapons, spell components, scroll being read, the sandwich they are about to take a bite out of...}}{{desc1=Roll [d6](!\\amp#13;\\amp#47;r 1d6cf\\lt3cs\\gt4) to check if ^^tname^^ drops what they are holding}}'},
+						{name:'Ottos-irresistable-dance-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|delspell|dancing|Ottos Irresistable Dance\n/w ^^cname^^ \\amp{template:default}{{name=Otto\'s Irresistable Dance}}{{^^tname^^ has enjoyed dancing, but it\'s now time to stop. You can take a shield in-hand again if you want}}'},
+						{name:'Ottos-irresistable-dance-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|add|dancing|Ottos Irresistable Dance|svall:=-20,thac0+:-4\n/w ^^cname^^ \\amp{template:default}{{name=Otto\'s Irresistable Dance}}{{Section=^^tname^^ has an irresistable urge to dance! If you have any shields in-hand, drop them now as they have no effect while dancing}}'},
+						{name:'Philter-of-Persuasiveness-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!modattr --fb-public --fb-header ^^tname^^ Returns to Normal --fb-content ^^tname^^\'s persuasiveness has returned to _CUR0_ --chareact|-5'},
+						{name:'Philter-of-Persuasiveness-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!modattr --fb-public --fb-header ^^tname^^ Becomes More Persuasive --fb-content ^^tname^^\'s persuasiveness has improved by 5 to be _CUR0_ --chareact|+5'},
+						{name:'Philter-of-Stammering-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!modattr --fb-public --fb-header ^^tname^^ Returns to Normal --fb-content ^^tname^^\'s persuasiveness has returned to _CUR0_ --chareact|+5'},
+						{name:'Philter-of-Stammering-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!modattr --fb-public --fb-header ^^tname^^ Stammers \\amp Stutters --fb-content ^^tname^^ can\'t get their words straight and their persuasiveness has dropped to _CUR0_ --chareact|-5'},
+						{name:'Pipes-of-Pain-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!rounds --target-nosave caster|^^tid^^|Earache|99|0|Continuing effect of Pipes of Pain automatically applied|pummeled'},
+						{name:'Poison-A-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'/w "^^cname^^" \\amp{template:default}{{name=Poison Type A}}{{Poison=[Save vs. Poison](!attk --set-savemod ^^tid^^|add|Type A|Poison|svpoi\\clon;+0|1||!magic ~~message ^^tid^^|Poison|Oh dear.. ^^tname^^ failed and takes [[15]]HP of damage from the poison --save ^^tid^^|||poison) or ^^tname^^ takes **[[15]]HP** of damage from poison. No damage taken if succeed}}'},
+						{name:'Poison-B-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'/w "^^cname^^" \\amp{template:default}{{name=Poison Type B}}{{Poison=[Save vs. Poison](!attk --set-savemod ^^tid^^|add|Tyep B|Poison|svpoi\\clon;+0|1||!magic ~~message ^^tid^^|Poison|Oh dear.. ^^tname^^ failed and takes [[20]]HP of damage from the poison --save ^^tid^^|||poison). If *succeed*, ^^tname^^ takes **[[1d3]]HP** damage. If fail ^^tname^^ takes **[[20]]HP** of damage from poison}}'},
+						{name:'Poison-C-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'/w "^^cname^^" \\amp{template:default}{{name=Poison Type C}}{{Poison=[Save vs. Poison](!attk --set-savemod ^^tid^^|add|Type C|Poison|svpoi\\clon;+0|1||!magic ~~message ^^tid^^|Poison|Oh dear.. ^^tname^^ failed and takes [[25]]HP of damage from the poison --save ^^tid^^|||poison). If *succeed*, ^^tname^^ takes **[[2d4]]HP** damage. If *fail* ^^tname^^ takes **[[25]]HP** of damage from poison}}'},
+						{name:'Poison-D-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'/w "^^cname^^" \\amp{template:default}{{name=Poison Type D}}{{Poison=[Save vs. Poison](!attk --set-savemod ^^tid^^|add|Type D|Poison|svpoi\\clon;+0|1||!magic ~~message ^^tid^^|Poison|Oh dear.. ^^tname^^ failed and takes [[30]]HP of damage from the poison --save ^^tid^^|||poison). If *succeed*, ^^tname^^ takes **[[2d6]]HP** damage. If *fail* ^^tname^^ takes **[[30]]HP** of damage from poison}}'},
+						{name:'Poison-G-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'/w "^^cname^^" \\amp{template:default}{{name=Poison Type G}}{{Poison=[Save vs. Poison](!attk --set-savemod ^^tid^^|add|Type G|Poison|svpoi\\clon;+0|1||!magic ~~message ^^tid^^|Poison|Oh dear.. ^^tname^^ failed and takes [[20]]HP of damage from the poison --save ^^tid^^|||poison). If *succeed*, ^^tname^^ takes **[[10]]HP** damage. If *fail* ^^tname^^ takes **[[20]]HP** of damage from poison}}'},
+						{name:'Poison-H-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'/w "^^cname^^" \\amp{template:default}{{name=Poison Type H}}{{Poison=[Save vs. Poison](!attk --set-savemod ^^tid^^|add|Type H|Poison|svpoi\\clon;+0|1||!magic ~~message ^^tid^^|Poison|Oh dear.. ^^tname^^ failed and takes [[20]]HP of damage from the poison --save ^^tid^^|||poison). If *succeed*, ^^tname^^ takes **[[10]]HP** damage. If *fail* ^^tname^^ takes **[[20]]HP** of damage from poison}}'},
+						{name:'Poison-I-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'/w "^^cname^^" \\amp{template:default}{{name=Poison Type I}}{{Poison=[Save vs. Poison](!attk --set-savemod ^^tid^^|add|Type I|Poison|svpoi\\clon;+0|1||!magic ~~message ^^tid^^|Poison|Oh dear.. ^^tname^^ failed and takes [[30]]HP of damage from the poison --save ^^tid^^|||poison). If *succeed*, ^^tname^^ takes **[[15]]HP** damage. If *fail* ^^tname^^ takes **[[30]]HP** of damage from poison}}'},
+						{name:'Poison-J-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'/w "^^cname^^" \\amp{template:default}{{name=Poison Type J}}{{Poison=[Save vs. Poison](!attk --set-savemod ^^tid^^|add|Type J|Poison|svpoi\\clon;+0|1||!magic ~~message ^^tid^^|Poison|Oh dear.. ^^tname^^ failed and immediately ***dies*** from the poison --save ^^tid^^|||poison). If *succeed*, ^^tname^^ takes **[[20]]HP** damage. If *fail* ^^tname^^ immediately **dies** from poisoning}}'},
+						{name:'Poison-K-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'/w "^^cname^^" \\amp{template:default}{{name=Poison Type K}}{{Poison=[Save vs. Poison](!attk --set-savemod ^^tid^^|add|Type K|Poison|svpoi\\clon;+0|1||!magic ~~message ^^tid^^|Poison|Oh dear.. ^^tname^^ failed and takes [[5]]HP of damage from the poison --save ^^tid^^|||poison) or ^^tname^^ takes **[[5HP]]** of damage from poison. If save no damage is taken}}'},
+						{name:'Poison-L-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'/w "^^cname^^" \\amp{template:default}{{name=Poison Type L}}{{Poison=[Save vs. Poison](!attk --set-savemod ^^tid^^|add|Type L|Poison|svpoi\\clon;+0|1||!magic ~~message ^^tid^^|Poison|Oh dear.. ^^tname^^ failed and takes [[10]]HP of damage from the poison --save ^^tid^^|||poison) or ^^tname^^ takes **[[10]]HP** of damage from poison. No damage taken if succeed}}'},
+						{name:'Poison-M-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'/w "^^cname^^" \\amp{template:default}{{name=Poison Type M}}{{Poison=[Save vs. Poison](!attk --set-savemod ^^tid^^|add|Type M|Poison|svpoi\\clon;+0|1||!magic ~~message ^^tid^^|Poison|Oh dear.. ^^tname^^ failed and takes [[20]]HP of damage from the poison --save ^^tid^^|||poison). If *succeed*, ^^tname^^ takes **[[5]]HP** damage. If *fail* ^^tname^^ takes **[[20]]HP** of damage from poison}}'},
+						{name:'Poison-N-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'/w "^^cname^^" \\amp{template:default}{{name=Poison Type N}}{{Poison=[Save vs. Poison](!attk --set-savemod ^^tid^^|add|Type N|Poison|svpoi\\clon;+0|1||!magic ~~message ^^tid^^|Poison|Oh dear.. ^^tname^^ failed and immediately ***dies*** from the poison --save ^^tid^^|||poison). If *succeed*, ^^tname^^ takes **[[25]]HP** damage. If *fail* ^^tname^^ immediately **dies** from poisoning}}'},
+						{name:'Poison-O-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'/w "^^cname^^" \\amp{template:default}{{name=Poison Type O}}{{Poison=[Save vs. Poison](!rounds --target caster|^^tid^^|Paralysed|99|0|Paralysed by poison type O for [[2d6]] hours|padlock|svpoi\\clon;+0) or ^^tname^^ becomes *paralysed* by poison. No damage taken if succeed}}'},
+						{name:'Poison-P-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'/w "^^cname^^" \\amp{template:default}{{name=Poison Type P}}{{Poison=[Save vs. Poison](!rounds --target caster|^^tid^^|Debilitated|99|0|Debilitated by poison type P for [[1d3]] days|back-pain|svpoi\\clon;+0) or ^^tname^^ becomes *debilitated* by poison}}{{Effect=Debilitating poisons weaken the character for 1d3 days. All of the character\'s ability scores are reduced by half during this time. All appropriate adjustments to attack rolls, damage, Armor Class, etc., from the lowered ability scores are applied during the course of the illness. In addition, the character moves at one-half his normal movement rate. Finally, the character cannot heal by normal or magical means until the poison is neutralized or the duration of the debilitation is elapsed.}}{{Saved=No damage taken if save}}'},
+						{name:'Poison-Snake-1-4-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'/w "^^cname^^" \\amp{template:default}{{name=Snake Poison 1-4}}{{Poison=[Save vs. Poison](!rounds --target caster|^^tid^^|Paralysed|99|0|Incapacitatedby poison type P for [[2d4]] days|back-pain|svpoi\\clon;+3) at +3 bonus or ^^tname^^ becomes *incapacitated* by poison}}{{Effect=Incapacitating poisons weaken the character for 2 to 8 days. All of the character\'s ability scores are reduced by half during this time. All appropriate adjustments to attack rolls, damage, Armor Class, etc., from the lowered ability scores are applied during the course of the illness. In addition, the character moves at one-half his normal movement rate. Finally, the character cannot heal by normal or magical means until the poison is neutralized or the duration of the debilitation is elapsed.}}{{Saved=Only takes the damage from the bite}}'},
+						{name:'Poison-Snake-12-14-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'/w "^^cname^^" \\amp{template:default}{{name=Snake Poison 12-14}}{{Poison=[Save vs. Poison](!attk --set-savemod ^^tid^^|add|Snake|Poison|svpoi\\clon;+0|1||!magic ~~message ^^tid^^|Poison|Oh dear.. ^^tname^^ failed and takes [[3d4]]HP of damage from the poison --save ^^tid^^|||poison) or ^^tname^^ takes **3d4 HP** of damage from poison. If succeed only takes the damage from the bite}}'},
+						{name:'Poison-Snake-15-17-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'/w "^^cname^^" \\amp{template:default}{{name=Snake Poison 15-17}}{{Poison=[Save vs. Poison](!rounds --target caster|^^tid^^|Paralysed|99|0|Incapacitatedby poison type P for [[1d4]] days|back-pain|svpoi\\clon;-1) at -1 penalty or ^^tname^^ becomes *incapacitated* by poison}}{{Effect=Incapacitating poisons weaken the character for 1 to 4 days. All of the character\'s ability scores are reduced by half during this time. All appropriate adjustments to attack rolls, damage, Armor Class, etc., from the lowered ability scores are applied during the course of the illness. In addition, the character moves at one-half his normal movement rate. Finally, the character cannot heal by normal or magical means until the poison is neutralized or the duration of the debilitation is elapsed.}}{{Saved=Only takes the damage from the bite}}'},
+						{name:'Poison-Snake-18-19-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'/w "^^cname^^" \\amp{template:default}{{name=Snake Poison 18-19}}{{Poison=[Save vs. Poison](!rounds --target caster|^^tid^^|Paralysed|99|0|Incapacitatedby poison type P for [[1d12]] days|back-pain|svpoi\\clon;-2) at -2 penalty or ^^tname^^ becomes *incapacitated* by poison}}{{Effect=Incapacitating poisons weaken the character for 1 to 12 days. All of the character\'s ability scores are reduced by half during this time. All appropriate adjustments to attack rolls, damage, Armor Class, etc., from the lowered ability scores are applied during the course of the illness. In addition, the character moves at one-half his normal movement rate. Finally, the character cannot heal by normal or magical means until the poison is neutralized or the duration of the debilitation is elapsed.}}{{Saved=Only takes the damage from the bite}}'},
+						{name:'Poison-Snake-20-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'/w "^^cname^^" \\amp{template:default}{{name=Snake Poison 20}}{{Poison=[Save vs. Poison](!attk --set-savemod ^^tid^^|add|Snake|Poison|svpoi\\clon;-3|1||!magic ~~message ^^tid^^|Poison|Oh dear.. ^^tname^^ seems to be dead --save ^^tid^^|||poison) at -3 penalty}}{{Succeed=^^tname^^ only takes the damage from the bite}}{{Fail=^^tname^^ immediately **dies** from poisoning (and takes damage from the bite...)}}'},
+						{name:'Poison-Snake-5-6-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'/w "^^cname^^" \\amp{template:default}{{name=Poison Type N}}{{Poison=[Save vs. Poison](!attk --set-savemod ^^tid^^|add|Snake|Poison|svpoi\\clon;+2|1||!magic ~~message ^^tid^^|Poison|Oh dear.. ^^tname^^ seems to be dead --save ^^tid^^|||poison) at +2 bonus}}{{Succeed=^^tname^^ only takes the damage from the bite}}{{Fail=^^tname^^ immediately **dies** from poisoning (and takes damage from the bite...)}}'},
+						{name:'Poison-Snake-7-11-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'/w "^^cname^^" \\amp{template:default}{{name=Snake Poison 7-11}}{{Poison=[Save vs. Poison](!attk --set-savemod ^^tid^^|add|Snake|Poison|svpoi\\clon;+1|1||!magic ~~message ^^tid^^|Poison|Oh dear.. ^^tname^^ failed and takes [[2d4]]HP of damage from the poison --save ^^tid^^|||poison) at +1 bonus or ^^tname^^ takes **2d4 HP** of damage from poison. If succeed only takes the damage from the bite}}'},
+						{name:'Potion-of-Arms-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --change-hands ^^tid^^|-[[2*@{^^cname^^|Potion-of-Arms-doses}]]\n!delattr --charid ^^cid^^ --silent --Potion-of-Arms-doses'},
+						{name:'Potion-of-Heroism-1-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!magic --level-change ^^tid^^|-1|[[{ {(@{^^cname^^|hp}-@{^^cname^^|pot-heroism-hp})},{0}}kh1]]|fighter --message public|^^tid^^|Potion of Heroism|^^tname^^ loses their improved abilities as a fighter, and returns to their normal self'},
+						{name:'Potion-of-Heroism-1-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!setattr --charid ^^cid^^ --silent --pot-heroism-hp|@{^^cname^^|hp}\n!magic --level-change ^^tid^^|1|[[1d10+3]]|fighter --message public|^^tid^^|Potion of Heroism|With a masterful fighting career, ^^tname^^ drinks a potion and is now suddenly a Level [[@{^^cname^^|level-class1}+1]] Fighter'},
+						{name:'Potion-of-Heroism-2-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!magic --level-change ^^tid^^|-2|[[{ {(@{^^cname^^|hp}-@{^^cname^^|pot-heroism-hp})},{0}}kh1]]|fighter --message public|^^tid^^|Potion of Heroism|^^tname^^ loses their improved abilities as a fighter, and returns to their normal self'},
+						{name:'Potion-of-Heroism-2-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!setattr --charid ^^cid^^ --silent --pot-heroism-hp|@{^^cname^^|hp}\n!magic --level-change ^^tid^^|2|[[2d10+2]]|fighter --message public|^^tid^^|Potion of Heroism|With a masterful fighting career, ^^tname^^ drinks a potion and is now suddenly a Level [[@{^^cname^^|level-class1}+2]] Fighter'},
+						{name:'Potion-of-Heroism-3-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!magic --level-change ^^tid^^|-3|[[{ {(@{^^cname^^|hp}-@{^^cname^^|pot-heroism-hp})},{0}}kh1]]|fighter --message public|^^tid^^|Potion of Heroism|^^tname^^ loses their improved abilities as a fighter, and returns to their normal self'},
+						{name:'Potion-of-Heroism-3-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!setattr --charid ^^cid^^ --silent --pot-heroism-hp|@{^^cname^^|hp}\n!magic --level-change ^^tid^^|3|[[3d10+1]]|fighter --message public|^^tid^^|Potion of Heroism|With a masterful fighting career, ^^tname^^ drinks a potion and is now suddenly a Level [[@{^^cname^^|level-class1}+3]] Fighter'},
+						{name:'Potion-of-Heroism-4-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!magic --level-change ^^tid^^|-4|[[{ {(@{^^cname^^|hp}-@{^^cname^^|pot-heroism-hp})},{0}}kh1]]|fighter --message public|^^tid^^|Potion of Heroism|^^tname^^ loses their improved abilities as a fighter, and returns to their normal self'},
+						{name:'Potion-of-Heroism-4-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!setattr --charid ^^cid^^ --silent --pot-heroism-hp|@{^^cname^^|hp}\n!magic --level-change ^^tid^^|4|[[4d10]]|fighter --message public|^^tid^^|Potion of Heroism|With a masterful fighting career, ^^tname^^ drinks a potion and is now suddenly a Level [[@{^^cname^^|level-class1}+4]] Fighter'},
+						{name:'Prayer-ally-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|delspell|Ally|Prayer\n/w "^^cname^^" ^^tname^^ loses the benefit of *Prayer*'},
+						{name:'Prayer-ally-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|Add|Ally|Prayer|thac0+:1,dmg+:1,svsav:+1||^^duration^^\n/w "^^cname^^" ^^tname^^ gains the benefit of *Prayer*, with improved saves, attacks and damage'},
+						{name:'Prayer-foe-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|delspell|Foe|Prayer\n/w "^^cname^^" ^^tname^^ loses the impact of *Prayer*'},
+						{name:'Prayer-foe-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|Add|Foe|Prayer|thac0+:-1,dmg+:-1,svsav:-1||^^duration^^\n/w "^^cname^^" ^^tname^^ bears the penalties of *Prayer*, with worse saves, attacks and damage'},
+						{name:'Produce-Flame-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --blank-weapon ^^tid^^|Produce Flame|silent'},
+						{name:'Prot-from-Evil-10ft-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!token-mod --api-as ^^pid^^ --ignore-selected --ids ^^tid^^ --set aura1_radius| '},
+						{name:'Prot-from-Evil-10ft-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!token-mod --api-as ^^pid^^ --ignore-selected --ids ^^tid^^ --set aura1_radius|10ft aura1_color|0ff'},
+						{name:'Prot-from-Good-10ft-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!token-mod --api-as ^^pid^^ --ignore-selected --ids ^^tid^^ --set aura1_radius| '},
+						{name:'Prot-from-Good-10ft-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!token-mod --api-as ^^pid^^ --ignore-selected --ids ^^tid^^ --set aura1_radius|10ft aura1_color|0ff'},
+						{name:'Prot-vs-Lightning-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-savemod ^^tid^^|delspell|Electricity|Prot-vs-Lightning'},
+						{name:'Prot-vs-Lightning-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-savemod ^^tid^^|elc=spe|Electricity|Prot-vs-Lightning|svelc:+4||^^duration^^\n!attk --set-savemod ^^tid^^|elb=bre|Elec Breath|Prot-vs-Lightning|svelb:+4||^^duration^^'},
+						{name:'Protection-vs-Acid-turn',type:'',ct:'0',charge:'uncharged',cost:'0',body:'/w "^^cname^^" \\amp{template:default}{{name=Protection vs Acid}}{{desc=If taken 20 Hit Dice of damage, [End Protection](!rounds --removetargetstatus ^^tid^^|Protection-vs-Acid)}}'},
+						{name:'Protection-vs-Cold-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!token-mod --api-as ^^pid^^ --ignore-selected --ids ^^tid^^ --set aura1_radius| '},
+						{name:'Protection-vs-Cold-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!token-mod --api-as ^^pid^^ --ignore-selected --ids ^^tid^^ --off aura1_square --set aura1_radius|10ft aura1_color|b4d8fc'},
+						{name:'Protection-vs-Electricity-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!token-mod --api-as ^^pid^^ --ignore-selected --ids ^^tid^^ --set aura1_radius| '},
+						{name:'Protection-vs-Electricity-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!token-mod --api-as ^^pid^^ --ignore-selected --ids ^^tid^^ --off aura1_square --set aura1_radius|10ft aura1_color|b4d8fc'},
+						{name:'Protection-vs-Elementals-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!token-mod --api-as ^^pid^^ --ignore-selected --ids ^^tid^^ --set aura1_radius| '},
+						{name:'Protection-vs-Elementals-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!token-mod --api-as ^^pid^^ --ignore-selected --ids ^^tid^^ --off aura1_square --set aura1_radius|10ft aura1_color|faf214'},
+						{name:'Protection-vs-Fiends-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!token-mod --api-as ^^pid^^ --ignore-selected --ids ^^tid^^ --set aura1_radius| '},
+						{name:'Protection-vs-Fiends-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!token-mod --api-as ^^pid^^ --ignore-selected --ids ^^tid^^ --off aura1_square --set aura1_radius|8ft aura1_color|0ff'},
+						{name:'Protection-vs-Fire-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!token-mod --api-as ^^pid^^ --ignore-selected --ids ^^tid^^ --set aura1_radius| '},
+						{name:'Protection-vs-Fire-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!token-mod --api-as ^^pid^^ --ignore-selected --ids ^^tid^^ --off aura1_square --set aura1_radius|15ft aura1_color|3f7fbf'},
+						{name:'Protection-vs-Gas-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!token-mod --api-as ^^pid^^ --ignore-selected --ids ^^tid^^ --set aura1_radius| '},
+						{name:'Protection-vs-Gas-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!token-mod --api-as ^^pid^^ --ignore-selected --ids ^^tid^^ --off aura1_square --set aura1_radius|4ft aura1_color|f214fa'},
+						{name:'Protection-vs-Lycanthropes-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!token-mod --api-as ^^pid^^ --ignore-selected --ids ^^tid^^ --set aura1_radius| '},
+						{name:'Protection-vs-Lycanthropes-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!token-mod --api-as ^^pid^^ --ignore-selected --ids ^^tid^^ --off aura1_square --set aura1_radius|8ft aura1_color|a40316'},
+						{name:'Protection-vs-Magic-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!token-mod --api-as ^^pid^^ --ignore-selected --ids ^^tid^^ --set aura1_radius| '},
+						{name:'Protection-vs-Magic-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!token-mod --api-as ^^pid^^ --ignore-selected --ids ^^tid^^ --off aura1_square --set aura1_radius|4ft aura1_color|5beaf9'},
+						{name:'Protection-vs-Petrification-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!token-mod --api-as ^^pid^^ --ignore-selected --ids ^^tid^^ --set aura1_radius| '},
+						{name:'Protection-vs-Petrification-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!token-mod --api-as ^^pid^^ --ignore-selected --ids ^^tid^^ --off aura1_square --set aura1_radius|4ft aura1_color|e7f95b'},
+						{name:'Protection-vs-Plants-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!token-mod --api-as ^^pid^^ --ignore-selected --ids ^^tid^^ --set aura1_radius| '},
+						{name:'Protection-vs-Plants-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!token-mod --api-as ^^pid^^ --ignore-selected --ids ^^tid^^ --off aura1_square --set aura1_radius|4ft aura1_color|0ff'},
+						{name:'Protection-vs-Shape-Changers-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!token-mod --api-as ^^pid^^ --ignore-selected --ids ^^tid^^ --set aura1_radius| '},
+						{name:'Protection-vs-Shape-Changers-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!token-mod --api-as ^^pid^^ --ignore-selected --ids ^^tid^^ --off aura1_square --set aura1_radius|8ft aura1_color|a40316'},
+						{name:'Qstaff-Dancing-turn',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!setattr --name ^^cname^^ --dancing-round|[[(([[@{^^cname^^|dancing-round}]])%4)+1]]'},
+						{name:'Quaals-Feather-Whip-Token-sheath',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!rounds --removetargetstatus ^^tid^^|Quaals-Feather-Whip'},
+						{name:'Quaals-Feather-Whip-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --dance ^^tid^^|Quaals-Feather-Whip-Token|stop --blank-weapon ^^tid^^|Quaals-Feather-Whip-Token|silent\n!magic --mi-charges ^^tid^^|-1|Quaals-Feather-Whip-Token||charged'},
+						{name:'Quaals-Feather-Whip-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --dance ^^tid^^|Quaals-Feather-Whip-Token\n'},
+						{name:'Quarterstaff-of-Dancing-dancing',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!rounds --addtargetstatus ^^tid^^|Dancing-Quarterstaff|4|-1|The Quarterstaff is Dancing by itself. Use this time wisely!|all-for-one\n!attk --quiet-modweap ^^tid^^|quarterstaff-of-dancing|melee|sb:0 --quiet-modweap ^^tid^^|quarterstaff-of-dancing|dmg|sb:0'},
+						{name:'Quarterstaff-of-Dancing-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --dance ^^tid^^|Quarterstaff-of-Dancing'},
+						{name:'Quarterstaff-of-Dancing-inhand',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!rounds --addtargetstatus ^^tid^^|Quarterstaff-of-Dancing|4|-1|Quarterstaff not yet dancing so keep using it|stopwatch'},
+						{name:'Quarterstaff-of-Dancing-sheath',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!rounds --deltargetstatus ^^tid^^|Quarterstaff-of-Dancing'},
+						{name:'Quarterstaff-of-Dancing-turn',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --quiet-modweap ^^tid^^|quarterstaff-of-dancing|melee|+:+1 --quiet-modweap ^^tid^^|quarterstaff-of-dancing|dmg|+:+1\nUpdating the quarterstaff +1 to attk \\amp dmg'},
+						{name:'Rage-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|DelSpell|Rage|Rage\n!rounds --addtargetstatus ^^tid^^|Exhausted|10|-1|Exhausted - 2 worse on attk,dmg,ac|radioactive'},
+						{name:'Rage-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|Add|Rage|Rage|thac0+:2,+:2,dmg+:2,hpt+:15 --set-savemod ^^tid^^|rag=spe|Spell vs Rage|Rage|svrag:+0|||!magic ~~message ^^tid^^|Immunities|Rage makes ^^tname^^ immune to *Sleep, Charm, Fear, Confusion, Level Drain, Maze, Stun, Imprisonment, Feeblemind* and *Hold* spells.'},
+						{name:'Ray-of-Enfeeblement-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!setattr --silent --name ^^cname^^ --strength|@{^^cname^^|strength|max}\n/w "^^cname^^" ^^tname^^ has recovered from enfeeblement'},
+						{name:'Ray-of-Enfeeblement-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!setattr --silent --name ^^cname^^ --strength|5|@{^^cname^^|strength}\n/w "^^cname^^" ^^tname^^ has been enfeebled, with impact on strength affecting hits and damage!\n'},
+						{name:'Regeneration-turn',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!token-mod --api-as ^^pid^^ --ignore-selected --ids ^^tid^^ --set ^^token_hp^^|+[[@{^^cname^^|conregen}]]! --report control|"{name} regenerates {^^token_hp^^:change} HP"'},
+						{name:'Repel-Insects-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!token-mod --api-as ^^pid^^ --ignore-selected --ids ^^tid^^ --set aura1_radius| '},
+						{name:'Repel-Insects-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!token-mod --api-as ^^pid^^ --ignore-selected --ids ^^tid^^ --set aura1_radius|10ft aura1_color|0ff'},
+						{name:'Resting-after-excavation-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!magic --mi-charges ^^tid^^|01|Spade-of-Colossal-Excavation --message ^^tid^^|Spade of Colossal Excavation|You feel rested and can now do up to another 10 roundsof excavation work if you need to'},
+						{name:'Ring-Shocking-Grasp-Recharge-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!magic --mi-charges ^^tid^^|0|Ring-of-Shocking-Grasp|3 --message ^^tid^^|Ring of Shocking Grasp|The *Ring of Shocking Grasp* has recharged and can now be taken in-hand again to attack with'},
+						{name:'Ring-of-Blinking-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'/w "^^cname^^" ^^tname^^ has stopped bkinking and their ring needs to recharge for 1 hour before it can be used again\n!rounds --target caster|^^tid^^|Ring-of-Blinking-recharge|60|-1|Ring of Blinking is recharging|stopwatch'},
+						{name:'Ring-of-Blinking-recharge-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'/w "^^cname^^" ^^tname^^\'s Ring of Blinking has recharged and can now be used again\n!magic --mi-charges ^^tid^^|0|Ring-of-Blinking|1\n'},
+						{name:'RoSC-Hypnotized-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!rounds --target caster|^^tid^^|RoSC-Save2Attk|99|0|Make a saving throw vs. spell to attack or be hypnotized again|interdiction'},
+						{name:'Rod-of-Flailing-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!magic ^^tid^^|^^tname^^\'s Rod of Flailing charge is expended|^^tname^^ looses their +4 bonus to AC and saving throws\n!attk --set-mods ^^tid^^|del|Rod of Flailing|Rod of Flailing'},
+						{name:'Rod-of-Flailing-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!magic --message ^^tid^^|^^tname^^ uses a Rod of Flailing charge|^^tname^^ gains a +4 bonus to AC and saving throws\n!attk --set-mods ^^tid^^|add|Rod of Flailing|Rod of Flailing|svsav:+4,+:4'},
+						{name:'Rope-of-Constriction-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!modattr --charid ^^cid^^ --hp|-[[2d6]] --fb-header Rope of Constriction --fb-content The rope tightens around ^^tname^^\'s neck! ^^tname^^ has taken _TCUR0_ points of constriction damage.'},
+						{name:'Rope-of-Constriction-turn',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!modattr --charid ^^cid^^ --hp|-[[2d6]] --fb-header Rope of Constriction --fb-content The rope tightens even more around ^^tname^^\'s neck! ^^tname^^ has taken another _TCUR0_ points of constriction damage.'},
+						{name:'RoperAttack-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!magic --message w|^^tid^^|Roper Poison!|^^cname^^ must [**save vs. poison**](!rounds ~~target caster¦^^tid^^¦RoperPoison¦#[[20*2d4]]¦-2¦Feeling weak - lost half strength for each poisoning¦back-pain¦svpoi\\clon;+0) or immediately lose strength'},
+						{name:'RoperAttack-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!magic --message w|^^tid^^|^^cname^^ is Entangled!|^^cname^^ has been ensnared in the tenticle that has attacked them and is being pulled towards the creature...'},
+						{name:'RoperBite-turn',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!magic --message w|^^tid^^|Roper Bite|^^cname^^ takes damage this round from the bite of the Roper who has reeled you in unless the GM agrees that you break free --message gm|^^tid^^|Roper Bite|^^cname^^ takes [[5d4]] points of damage from the Roper bite. If they [break free](!rounds ~~removetargetstatus ^^tid^^¦RoperBite) click the button\n'},
+						{name:'RoperPoison-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!magic --change-attr ^^tid^^|*2|Strength|false'},
+						{name:'RoperPoison-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!magic --change-attr ^^tid^^|/2|Strength|false'},
+						{name:'RoperStrand-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!magic --message w|^^tid^^|Roper Bite|^^cname^^ takes damage this round from the bite of the Roper who has reeled you in unless the GM agrees that you break free --message gm|^^tid^^|Roper Bite|^^cname^^ takes [[5d4]] points of damage from the Roper bite. If they [break free](!rounds ~~removetargetstatus ^^tid^^¦RoperBite) click the button \n!rounds --target-nosave caster|^^tid^^|RoperBite|#99|0|You are still trapped by the roper and taking damage|arrowed'},
+						{name:'RoperStrand-turn',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!magic --message w|^^tid^^|Being Dragged|^^cname^^ is being dragged towards the creature. Have you broken free yet? [Yes](!rounds ~~deltargetstatus ^^tid^^¦RoperStrand)'},
+						{name:'Scabbard-Enchanting-draw-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --quiet-modweap ^^tid^^|@{^^cname^^|Equip-InHand}|Melee|+:+1 --quiet-modweap ^^tid^^|@{^^cname^^|Equip-InHand}|Dmg|+:+1\n!setattr --silent --charid ^^cid^^ --Scabbard-Weapon|@{^^cname^^|Equip-InHand}\n!rounds --target-nosave caster|^^tid^^|Enchanted-by-Scabbard|10|-1|Your blade has been improved by +1 by the Scabbard of Enchantment|all-for-one\n/w "^^cname^^" \\amp{template:default}{{name=Scabbard of Enchanting}}{{=^^tname^^, @{^^cname^^|Equip-InHand} is now an additional +1. [Sheath another blade](!rounds --target-nosave caster|^^tid^^|Scabbard-of-Enchanting|10|-1|Enchanting a Sheathed weapon|stopwatch)}}\n'},
+						{name:'Scabbard-Enchanting-draw-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --weapon ^^tid^^|Draw your blade from the Scabbard of Enchanting, from next round it will be an additional +1. This round\'s action is now ***Change Weapon*** and you should not do anything else!'},
+						{name:'Scabbard-of-Enchanting-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'/w "^^cname^^" \\amp{template:default}{{name=Scabbard of Enchantment}}{{=The weapon in the *Scabbard of Enchantment* is now improved by +1. [Draw from Scabbard](!rounds --target caster|^^tid^^|Scabbard-Enchanting-draw|1|-1|The weapon from the Scabbard of Enchanting is being enchanted|all-for-one) or leave until the next melee \\amp use the *Scabbard* then to draw it.}}'},
+						{name:'Scabbard-of-Enchanting-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --weapon ^^tid^^|Sheath a blade into the Scabbard of Enchanting, and keep it sheathed for 10 rounds. This round\'s action is now ***Change Weapon*** and you should not do anything else!'},
+						{name:'Scarab-Insanity-turn',type:'',ct:'0',charge:'uncharged',cost:'0',body:'/w gm \\amp{template:default}{{name=Scarab of Insanity}}{{desc=Affected by a *scarab of insanity*. Do [[1d10]] of:\n[[1]] Wander away for duration of spell unless prevented\n[[2-6]] Stand confused for 1 round then roll again\n[[7-10]] Attack nearest creature for 1 round then roll again}}'},
+						{name:'Scintillating-Colours-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!setattr --silent --charid ^^cid^^ --Scintillating-AC|0'},
+						{name:'Scintillating-Robe-AC-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!round --target-nosave caster|^^tid^^|Scintillating-Robe|99|0|Robe is still scintillating|bolt-shield'},
+						{name:'Scintillating-Robe-AC-turn',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|mod|Colours Building|Robe of Scintillating Colours|+:1'},
+						{name:'Scintillating-Robe-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|delspell|Colours Building|Robe of Scintillating Colours\n!magic --message ^^tid^^|Robe of Scintillating Colours|The robe stops scintillating and ^^tname^^\'s armour class reduces'},
+						{name:'Scroll-of-Weakness-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!magic --change-attr ^^tid^^|*2|Strength|false'},
+						{name:'Scroll-of-Weakness-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!magic --change-attr ^^tid^^|/2|Strength|false'},
+						{name:'Sertens-Immunity-casting-turn',type:'',ct:'0',charge:'uncharged',cost:'0',body:'/w "^^cname^^" \\amp{template:default}{{name=Serten\'s Spell Immunity}}{{Another creature can now recieve [Serten\'s Spell Immunity](!rounds --target-nosave single|^^tid^^|\\amp#64;{target|Who to give immunity to?|token_id}|Sertens-Immunity|@{^^cname^^|spell-duration}|-1|Better saves against many spells - see PHB p192|white-tower). Click the button and target them}}'},
+						{name:'Sertens-Immunity-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-savemod ^^tid^^|delspell||Sertens Immunity'},
+						{name:'Sertens-Immunity-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-savemod ^^tid^^|w13=spe|wiz 1-3|Sertens Immunity|svw13:+9| --set-savemod ^^tid^^|w46=spe|wiz 4-6|Sertens Immunity|svw46:+7| --set-savemod ^^tid^^|w78=spe|wiz 7-8|Sertens Immunity|svw78:+5| --set-savemod ^^tid^^|p13=spe|prist 1-3|Sertens Immunity|svp13:+7| --set-savemod ^^tid^^|p46=spe|priest 4-6|Sertens Immunity|svp46:+5| --set-savemod ^^tid^^|p78=spe|priest 7|Sertens Immunity|svp78:+3|'},
+						{name:'Shield-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|delspell|Shield Spell|Shield Spell\n/w "^^cname^^" ^^tname^^ loses their magic shield'},
+						{name:'Shield-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|add|Shield Spell|Shield Spell|ac:3,rules:-Armour Spell||^^duration^^\n/w "^^cname^^" ^^tname^^ is shielded by magic.'},
+						{name:'Slow-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|delspell|Slow Spell|Slow Spell\n!setattr --silent --name ^^cname^^ --dexreact|@{^^cname^^|norm_dexreact} --dexmissile|@{^^cname^^|norm_dexmissile} --dexdefense|@{^^cname^^|norm_dexdefense}\n!init --setmods ^^tid^^|del|Slow|0|1|silent\n/w "^^cname^^" ^^tname^^ is moving at their normal speed again, and their AC and attacks have returned to normal'},
+						{name:'Slow-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|add|Slow Spell|Slow Spell|+:\n-[[4+[[abs([[{{@{^^cname^^|dexdefense}},{0}}kl1]])]]]],thac0+:-4\n!setattr --silent --name ^^cname^^ --norm_dexreact|@{^^cname^^|dexreact} --norm_dexmissile|@{^^cname^^|dexmissile} --norm_dexdefense|@{^^cname^^|dexdefense} --dexreact|[[{{@{^^cname^^|dexreact}},{0}}kl1]] --dexmissile|[[{{@{^^cname^^|dexmissile}},{0}}kl1]] --dexdefense|[[{{@{^^cname^^|dexdefense}},{0}}kh1]]\n!init --setmods ^^tid^^|both|Slow|=2|=0.5|silent\n/w "^^cname^^" ^^tname^^ is moving in slow motion, with worse AC and attacks '},
+						{name:'Snake-Poison-3-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'/w "^^cname^^" ^^cname^^ takes [[2d4]]hp of damage from the poison injected by the snake that bit them.\n/w gm ^^cname^^ takes [[2d4]]hp of damage from the poison injected by the snake that bit them.'},
+						{name:'Something-wrong-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!rounds --addtargetstatus ^^tid^^|GS-Acid-dmg|99|0|Take acid damage to feet|tread'},
+						{name:'Spectral-hand-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|delspell|Improved Touch|Spectral Hand\n!magic --message ^^tid^^|^^tname^^\'s Spectral Hand fades away|They can no longer cast L1-4 touch spells at a distance, and Thac0 returns to normal'},
+						{name:'Spectral-hand-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|add|Improved Touch|Spectral Hand|thac0+:2\n!magic --message ^^tid^^|^^tname^^ uses Spectral Hand|By doing so, they can cast L1-4 touch spells at a distance at +2, so Thac0 has improved'},
+						{name:'Spiritual-Hammer-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --blank-weapon ^^tid^^|Spiritual-Hammer|silent'},
+						{name:'Stone-Giant-Strength-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!resetattr --silent --name ^^cname^^ --strength\n^^cname^^ returns to their normal strength'},
+						{name:'Stone-Giant-Strength-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!setattr --silent --name ^^cname^^ --strength|20|@{^^cname^^|strength}\n^^cname^^ gains enormous strength'},
+						{name:'Stoneskin-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!setattr --charid ^^cid^^ --silent --duration|^^duration^^\n/w "^^cname^^" set number of attacks that can be absorbed to ^^duration^^'},
+						{name:'Stoneskin-turn',type:'',ct:'0',charge:'uncharged',cost:'0',body:'/w "^^cname^^" Click [Absorb Attack](!modattr --charid ^^cid^^ --duration|-1 --fb-header Stoneskin --fb-content Another attack absorbed. Can take _CUR0_ more attacks) and don\'t take any damage, but only if the attack is physical. Once reports zero attacks left, click [End Stoneskin](!rounds --removetargetstatus ^^tid^^|stoneskin) button.'},
+						{name:'Storm-Giant-Strength-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!resetattr --silent --name ^^cname^^ --strength\n/w "^^cname^^" ^^cname^^ returns to their normal strength'},
+						{name:'Storm-Giant-Strength-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!setattr --silent --name ^^cname^^ --strength|24|@{^^cname^^|strength}\n/w "^^cname^^" ^^cname^^ gains enormous strength'},
+						{name:'Strength-Drain-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!setattr --silent --charid ^^cid^^ --strength|@{^^cname^^|strength|max}\n/w "^^cname^^" ^^tname^^ is feeling somewhat stronger, back to their normal self... perhaps...'},
+						{name:'Stun-Dart-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!rounds --target caster|^^tid^^|slow|4|-1|Slowly recovering from the effects of the Stun Dart gas, penalty of 4 to attks \\amp AC, slower initiative \\amp no dex bonuses|snail'},
+						{name:'Suffocating-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'\\amp{template:default}{{title=^^cname^^ Suffocates}}{{desc="argh! i can\'t breathe..." ^^cname^^ dies of suffocation by the Rug of Smothering}}'},
+						{name:'Sunlight-1-toHit-Penalty-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|del|To-Hit penalty|Sunlight'},
+						{name:'Sunlight-1-toHit-Penalty-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|add|To-Hit penalty|Sunlight|thac0+:-1'},
+						{name:'Super-heroism-2-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!magic --level-change ^^tid^^|-2|[[{ {(@{^^cname^^|hp}-@{^^cname^^|pot-heroism-hp})},{0}}kh1]]|fighter --message public|^^tid^^|Potion of Super Heroism|^^tname^^ loses their improved abilities as a fighter, and returns to their normal self'},
+						{name:'Super-heroism-2-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!setattr --charid ^^cid^^ --silent --pot-heroism-hp|@{^^cname^^|hp}\n!magic --level-change ^^tid^^|2|[[1d10+4]]|fighter --message public|^^tid^^|Potion of Super Heroism|With a masterful fighting career, ^^tname^^ drinks a potion and is now suddenly a Level [[@{^^cname^^|level-class1}+2]] Fighter'},
+						{name:'Super-heroism-3-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!magic --level-change ^^tid^^|-3|[[{ {(@{^^cname^^|hp}-@{^^cname^^|pot-heroism-hp})},{0}}kh1]]|fighter --message public|^^tid^^|Potion of Super Heroism|^^tname^^ loses their improved abilities as a fighter, and returns to their normal self'},
+						{name:'Super-heroism-3-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!setattr --charid ^^cid^^ --silent --pot-heroism-hp|@{^^cname^^|hp}\n!magic --level-change ^^tid^^|3|[[2d10+3]]|fighter --message public|^^tid^^|Potion of Super Heroism|With a masterful fighting career, ^^tname^^ drinks a potion and is now suddenly a Level [[@{^^cname^^|level-class1}+3]] Fighter'},
+						{name:'Super-heroism-4-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!magic --level-change ^^tid^^|-4|[[{ {(@{^^cname^^|hp}-@{^^cname^^|pot-heroism-hp})},{0}}kh1]]|fighter --message public|^^tid^^|Potion of Super Heroism|^^tname^^ loses their improved abilities as a fighter, and returns to their normal self'},
+						{name:'Super-heroism-4-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!setattr --charid ^^cid^^ --silent --pot-heroism-hp|@{^^cname^^|hp}\n!magic --level-change ^^tid^^|4|[[3d10+2]]|fighter --message public|^^tid^^|Potion of Super Heroism|With a masterful fighting career, ^^tname^^ drinks a potion and is now suddenly a Level [[@{^^cname^^|level-class1}+4]] Fighter'},
+						{name:'Super-heroism-5-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!magic --level-change ^^tid^^|-5|[[{ {(@{^^cname^^|hp}-@{^^cname^^|pot-heroism-hp})},{0}}kh1]]|fighter --message public|^^tid^^|Potion of Super Heroism|^^tname^^ loses their improved abilities as a fighter, and returns to their normal self'},
+						{name:'Super-heroism-5-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!setattr --charid ^^cid^^ --silent --pot-heroism-hp|@{^^cname^^|hp}\n!magic --level-change ^^tid^^|5|[[4d10+1]]|fighter --message public|^^tid^^|Potion of Super Heroism|With a masterful fighting career, ^^tname^^ drinks a potion and is now suddenly a Level [[@{^^cname^^|level-class1}+5]] Fighter'},
+						{name:'Super-heroism-6-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!magic --level-change ^^tid^^|-6|[[{ {(@{^^cname^^|hp}-@{^^cname^^|pot-heroism-hp})},{0}}kh1]]|fighter --message public|^^tid^^|Potion of Super Heroism|^^tname^^ loses their improved abilities as a fighter, and returns to their normal self'},
+						{name:'Super-heroism-6-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!setattr --charid ^^cid^^ --silent --pot-heroism-hp|@{^^cname^^|hp}\n!magic --level-change ^^tid^^|6|[[5d10]]|fighter --message public|^^tid^^|Potion of Super Heroism|With a masterful fighting career, ^^tname^^ drinks a potion and is now suddenly a Level [[@{^^cname^^|level-class1}+6]] Fighter'},
+						{name:'Symbol-Pain-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|del|Pain|Symbol\n!magic --change-attr ^^tid^^|+2|dexterity|silent\n/w "^^cname^^" ^^tname^^ is no longer wracked with pain and the penalties to attacks and dexterity are lifted'},
+						{name:'Symbol-Pain-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|add|Pain|Symbol|thac0+:-4\n!magic --change-attr ^^tid^^|-2|dexterity|silent\n/w "^^cname^^" ^^tname^^ is wracked with pain and suffers a -4 penalty to attacks and -2 penalty to dexterity'},
+						{name:'Tashas-UHL-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!modattr --silent --name ^^cname^^ --strength|2\n/w "^^cname^^" ^^cname^^ stops laughing and regains strength'},
+						{name:'Tashas-UHL-monster-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|delspell|Laughing|Tashas UHL\n/w "^^cname^^" The monster regains strength as they stop laughing'},
+						{name:'Tashas-UHL-monster-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|add|Laughing|Tashas UHL|thac0:-2\n/w "^^cname^^" The monster loses strength as they laugh so hard!'},
+						{name:'Tashas-UHL-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!modattr --silent --name ^^cname^^ --strength|-2\n/w "^^cname^^" ^^cname^^ loses strength as they laugh so hard!'},
+						{name:'Thunderclap-stun-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!rounds --addtargetstatus ^^tid^^|Deafness|[[1d2]]|-1|No longer stunned, but still deafened by the thunderclap|interdiction\n/w gm ^^tname^^ is no longer stunned by the thunderclap, but is still deafened from it'},
+						{name:'Underwater-infravision-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!token-mod --api-as ^^pid^^ --ignore-selected --ids ^^tid^^ --set night_distance|-60'},
+						{name:'Underwater-infravision-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!token-mod --api-as ^^pid^^ --ignore-selected --ids ^^tid^^ --set night_vision|yes night_distance|+60'},
+						{name:'VT-bonus-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attr --set-mods ^^tid^^|delspell|Bonus HP|Vampiric Touch\n!magic --message ^^tid^^|^^tname^^ looses their vampiric hit point bonus|^^tname^^\'s HP may reduce as the effects of the Vampiric Touch spell fade away'},
+						{name:'Water-trap-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!roll20AM --audio,play|Glasses breaking\n!roll20AM --audio,play|breaking-window\n!token-mod --api-as ^^pid^^ --ignore-selected --ids @{^^cname^^|water-id} --set layer|objects\n/w gm Read Rm26 notes on Breaking Glass for full description of effects'},
+						{name:'Weak-Ring-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!setattr --silent --charid ^^cid^^ --strength|[[{{[[@{^^cname^^|strength}-1]]},{3}}kh1]] --constitution|[[{{[[@{^^cname^^|constitution}-1]]},{3}}kh1]]\n!rounds --target caster|^^tid^^|^^tid^^|Weak Ring|100|-10||blank'},
+						{name:'Weakened-by-Chill-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!magic --change-attr ^^tid^^|+1|Strength --message ^^tid^^|Chill Touch|^^tname^^ has regained a point of Strength or increased exceptional percentage'},
+						{name:'Weakened-by-Chill-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!magic --change-attr ^^tid^^|-1|Strength --message ^^tid^^|Chill Touch|^^tname^^ has lost a point of strength (or a decrease in exceptional percentage strength)'},
+						{name:'Wings-Flying-12-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'/w "^^cname^^" \\amp{template:default}{{name=Wings of Flying}}{{=Cannot fly anymore - ^^cname^^ is totally exhausted and now needs to rest}}\n!rounds --target-nosave caster|^^tid^^|Wings-Flying-resting|60|-1|Must now rest by sleeping, lying down or sitting|sleepy)}}'},
+						{name:'Wings-Flying-15-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'/w "^^cname^^" \\amp{template:default}{{name=Wings of Flying}}{{=Continue Flying? [Yes](!rounds --target-nosave caster|^^tid^^|Wings-Flying-12|20|-1|Flying at a speed of up to 12|fluffy-wing) or [No](!rounds --target-nosave caster|^^tid^^|Wings-Flying-resting|60|-1|Must now rest by sleeping, lying down or sitting|sleepy)}}'},
+						{name:'Wings-Flying-18-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'/w "^^cname^^" \\amp{template:default}{{name=Wings of Flying}}{{=Continue Flying? [Yes](!rounds --target-nosave caster|^^tid^^|Wings-Flying-15|20|-1|Flying at a speed of up to 15|fluffy-wing) or [No](!rounds --target-nosave caster|^^tid^^|Wings-Flying-resting|60|-1|Must now rest by sleeping, lying down or sitting|sleepy)}}'},
+						{name:'Wings-Flying-25-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'/w "^^cname^^" \\amp{template:default}{{name=Wings of Flying}}{{=Continue Flying? [Yes](!rounds --target-nosave caster|^^tid^^|Wings-Flying-18|10|-1|Flying at a speed of up to 18|fluffy-wing) or [No](!rounds --target-nosave caster|^^tid^^|Wings-Flying-resting|60|-1|Must now rest by sleeping, lying down or sitting|sleepy)}}'},
+						{name:'Wings-Flying-32-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'/w "^^cname^^" \\amp{template:default}{{name=Wings of Flying}}{{=Continue Flying? [Yes](!rounds --target-nosave caster|^^tid^^|Wings-Flying-25|10|-1|Flying at a speed of up to 25|fluffy-wing) or [No](!rounds --target-nosave caster|^^tid^^|Wings-Flying-resting|60|-1|Must now rest by sleeping, lying down or sitting|sleepy)}}'},
+						{name:'Wings-Flying-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'/w "^^cname^^" \\amp{template:default}{{name=Wings of Flying}}{{=Continue Flying? [Yes](!rounds --target-nosave caster|^^tid^^|Wings-Flying-32|10|-1|Flying at a speed of up to 32|fluffy-wing) or [No](!rounds --target-nosave caster|^^tid^^|Wings-Flying-quiet-walking|60|-1|Not resting but can only walk slowly and take it easy|snail)}}'},
+						{name:'Wings-Flying-resting-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'/w "^^cname^^" \\amp{template:default}{{name=Wings of Flying}}{{=^^cname^^ has finished resting and can now participate in normal activities}}'},
+						{name:'WoI-Audible-Illusion-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!magic --message ^^tid^^|Wand of Illusion|Would you like to continue concentrating on the illusion? If so [click here](!magic ~~mi-charges ^^tid^^¦-1¦Wand-of-Illusion\\amp#13;!rounds ~~target-nosave caster¦^^tid^^¦WoI Audible Illusion¦10¦-10¦An audible illusion with no visual component cast from a Wand of Illusion¦half-haze)'},
+						{name:'WoI-Audio-Visual-Illusion-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!magic --message ^^tid^^|Wand of Illusion|Would you like to continue concentrating on the illusion? If so [click here](!magic ~~mi-charges ^^tid^^¦-2¦Wand-of-Illusion\\amp#13;!rounds ~~target-nosave caster¦^^tid^^¦WoI Audio-Visual Illusion¦10¦-10¦An illusion with both audible and visual components cast from a Wand of Illusion¦lightning-helix)'},
+						{name:'WoI-Visual-Illusion-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!magic --message ^^tid^^|Wand of Illusion|Would you like to continue concentrating on the illusion? If so [click here](!magic ~~mi-charges ^^tid^^¦-1¦Wand-of-Illusion\\amp#13;!rounds ~~target-nosave caster¦^^tid^^¦WoI Visual Illusion¦10¦-10¦A visual illusion with no audible component cast from a Wand of Illusion¦ninja-mask)'},
+						{name:'Wounding-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!modattr --silent --charid ^^cid^^ --Wound-count|-1 --HP|-1'},
+						{name:'Wounding-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!modattr --charid ^^cid^^ --Wound-count|+1 --fb-header Sword of Wounding --fb-content Another wound means that ^^cname^^ is now taking _CUR0_ additional points of wound damage per round'},
+						{name:'Wounding-turn',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!token-mod --api-as ^^pid^^ --ignore-selected --ids ^^tid^^ --set ^^token_hp^^|-1'},
+					]},
+				},
 	});
 
 	const dbTypeLists = {
@@ -796,19 +1162,18 @@ var RoundMaster = (function() {
 
 	var handouts = Object.freeze({
 	RoundMaster_Help:	{name:'RoundMaster Help',
-						 version:1.14,
+						 version:1.15,
 						 avatar:'https://s3.amazonaws.com/files.d20.io/images/257656656/ckSHhNht7v3u60CRKonRTg/thumb.png?1638050703',
 						 bio:'<div style="font-weight: bold; text-align: center; border-bottom: 2px solid black;">'
 							+'<span style="font-weight: bold; font-size: 125%">RoundMaster Help v1.14</span>'
 							+'</div>'
 							+'<div style="padding-left: 5px; padding-right: 5px; overflow: hidden;">'
-							+'<h1>RoundMaster API v'+version+'</h1>'
+							+'<h1>RoundMaster API Help<h1>'
+							+'<h4>for RoundMaster v'+version+' and later</h4>'
+							+'<p><span style='+design.selected_button+'>New for v5.058:</span> Improved feedback for GM</p>'
+							+'<p><span style='+design.selected_button+'>New for v5.058:</span> Added support to migrate to new Universal Mods Table</p>'
+							+'<p><span style='+design.selected_button+'>New for v5.057:</span> Fixes to bugs in <b>--addStatus</b> and related commands</p>'
 							+'<p><span style='+design.selected_button+'>New for v5.056:</span> <b>--state-extract</b> & <b>--state-load</b> support campaign copying</p>'
-							+'<p><span style='+design.selected_button+'>New for v5.055:</span> RPGM maths for duration & direction of --target</p>'
-							+'<p><span style='+design.selected_button+'>New for v5.055:</span> Saving throw mods & prompts for --target commands</p>'
-							+'<p><span style='+design.selected_button+'>New for v5.055:</span> <b>--target multi</b> to target status changes for multiple tokens</p>'
-							+'<p><span style='+design.selected_button+'>New for v5.055:</span> <b>--target-nosave</b> and <b>--target-save</b> to deny/force GM <i>confirm</i></p>'
-							+'<p><span style='+design.selected_button+'>New for v5.055:</span> <b>--nosave on/off</b> configures --target-nosave behaviour</p>'
 							+'<p>RoundMaster is an API for the Roll20 RPG-DS.  Its purpose is to extend the functionality of the Turn Tracker capability already built in to Roll20.  It is one of several other similar APIs available on the platform that support the Turn Tracker and manage token and character statuses related to the passing of time: the USP of this one is the full richness of its functionality and the degree of user testing that has occurred over a 12 month period.</p>'
 							+'<p>RoundMaster is based on the much older TrackerJacker API, and many thanks to Ken L. for creating TrackerJacker.  However, roundMaster is a considerable fix and extension to TrackerJacker, suited to many different applications in many different RPG scenarios.  RoundMaster is also the first release as part of the wider RPGMaster series of APIs for Roll20, composed of <b>RoundMaster, CommandMaster, InitiativeMaster, AttackMaster, MagicMaster</b> and <b>MoneyMaster</b> - other than RoundMaster (which is generic) these initially support only the AD&D2e RPG.</p>'
 							+'<p><b><u>Note:</u></b> For some aspects of the APIs to work, the <b>ChatSetAttr API</b> and the <b>Tokenmod API</b>, both from the Roll20 Script Library, must be loaded.  It is also <i>highly recommended</i> to load all the other RPGMaster series APIs listed above.  This will provide the most immersive game-support environment</p>'
@@ -857,12 +1222,12 @@ var RoundMaster = (function() {
 							+'--addToTracker name|tokenID/-1|priority|[qualifier]|[message]|[detail]<br>'
 							+'--removefromtracker name|tokenID/-1|[retain]</pre>'
 							+'<h3>2.	Token Status Marker commands</h3>'
-							+'<pre><span style='+design.selected_button+'>Update:</span> --addstatus status|duration|direction|[message]|[marker]|[savemod]<br>'
-							+'<span style='+design.selected_button+'>Update:</span> --addtargetstatus tokenID|status|duration|direction|[message]|[marker]|[savemod]<br>'
+							+'<pre><span style='+design.selected_button+'>Fix:</span> --addstatus status|duration|direction|[message]|[marker]|[savemod]<br>'
+							+'<span style='+design.selected_button+'>Fix:</span> --addtargetstatus tokenID|status|duration|direction|[message]|[marker]|[savemod]<br>'
 							+'--edit<br>'
-							+'<span style='+design.selected_button+'>Update:</span> --target[-save/-nosave] CASTER/MULTI|casterID|status|duration|direction|[message]|[marker]|[savemod]<br>'
-							+'<span style='+design.selected_button+'>Update:</span> --target[-save/-nosave] SINGLE/AREA|casterID|targetID|status|duration|direction|[message]|[marker]|[savemod]<br>'
-							+'<span style='+design.selected_button+'>New:</span> --nosave (ON/OFF)<br>'
+							+'--target[-save/-nosave] CASTER/MULTI|casterID|status|duration|direction|[message]|[marker]|[savemod]<br>'
+							+'--target[-save/-nosave] SINGLE/AREA|casterID|targetID|status|duration|direction|[message]|[marker]|[savemod]<br>'
+							+'--nosave (ON/OFF)<br>'
 							+'--gm-target CASTER|casterID|status|duration|direction|[message]|[marker]<br>'
 							+'--gm-target SINGLE/AREA|casterID|targetID|status|duration|direction|[message]|[marker]<br>'
 							+'--aoe tokenID|[shape]|[units]|[range]|[length]|[width]|[image]|[confirmed]<br>'
@@ -934,7 +1299,7 @@ var RoundMaster = (function() {
 								+'<li><i>Player-text</i> if provided is the text that will be shown to the Player instead of the Effect/status name e.g. for slow acting poisons or delayed effect spells where the player should not be aware of the precise nature.</li>'
 								+'<li><i>Differentiator</i> if provided just makes this Effect/status different from any other with the same Effect-name and Player-text. This will only be needed in very limited circumstances that perhaps requires the same effect to be applied twice due to two different status applications. It is only ever displayed to the DM.</p>'
 							+'</ul>'
-							+'<h3><span style='+design.selected_button+'>New:</span> Maths for numbers</h3>'
+							+'<h3>Maths for numbers</h3>'
 							+'<p>The <i>duration</i> and <i>direction</i> values (as well as any numbers in a save specification) can use Roll20 maths using the [[...]] syntax. However, sometimes it is not possible or desirable to calculate the value using Roll20 maths, especially when using the <b>--target multi</b> command with maths including the number of targeted tokens using the # attribute. RoundMaster provides an alternative maths capability as follows:</p>'
 							+'<table>'
 								+'<tr><th scope="row">+-*/</th><td>Standard operators can be used to do maths</td></tr>'
@@ -959,22 +1324,22 @@ var RoundMaster = (function() {
 							+'<p>If a status of the same name does not exist on the identified token, the duration will be applied as normal to a new status for that token.</p>'
 							+'<h3>Commands</h3>'
 							+'<pre>!rounds --addstatus status|duration|direction|[message]|[marker]|[savemod]</pre>'
-							+'<p><span style='+design.selected_button+'>Update:</span> Adds a status and a marker for that status to the currently selected token(s) (unless an optional <i>savemod</i> is specified, see below).  The status has the name given in the status parameter, with the format described above, and will be given the duration specified (or a modified duration as stated above) which will be changed by direction each round.  Thus setting a duration of 8 and direction of -1 will decrement the duration by 1 each round for 8 rounds.  If the duration gets to 0 the status and token marker will be removed automatically.  direction can be any number - including a positive one meaning duration will increase.  Each Turn Announcement for the turn of a token with one or more statuses will display the effect-name/status (or the Player Text if specified), the duration and direction, and the message, if specified.  The specified marker will be applied to the token - if it is not specified, or is not a valid token marker name, the option will be given to pick one from a menu in the chat window (which can be declined).</p>'
+							+'<p><span style='+design.selected_button+'>Fix:</span> Adds a status and a marker for that status to the currently selected token(s) (unless an optional <i>savemod</i> is specified, see below).  The status has the name given in the status parameter, with the format described above, and will be given the duration specified (or a modified duration as stated above) which will be changed by direction each round.  Thus setting a duration of 8 and direction of -1 will decrement the duration by 1 each round for 8 rounds.  If the duration gets to 0 the status and token marker will be removed automatically.  direction can be any number - including a positive one meaning duration will increase.  Each Turn Announcement for the turn of a token with one or more statuses will display the effect-name/status (or the Player Text if specified), the duration and direction, and the message, if specified.  The specified marker will be applied to the token - if it is not specified, or is not a valid token marker name, the option will be given to pick one from a menu in the chat window (which can be declined).</p>'
 							+'<p>For player-characters, when the duration reaches 9 or less the duration will be counted-down by a number appearing on the marker.  For NPCs this number does not appear (so that Players don\'t see the remaining duration for statuses on NPCs), but the remaining duration does appear for DM only on the status message below the Turn Announcement on the NPCs turn. Turn announcement durations and status count-downs can also be surpressed for player characters by specifying a <i>direction</i> value of less than -1 and a <i>duration</i> suitably multiplied to achieve the same outcome. For example, the spell <i>fly</i> has an uncertain duration and perhaps the player should not be aware of what it is: multiplying the <i>duration</i> by 10 and setting the <i>direction</i> as -10 per round means that the turn announcement will not show the players the remaining duration of the status, and the final count of the duration will be from "10" down to "0" so the status count-down on the token will never display! Alternatively, if you want to give the player just a small hint of it coming to an end, multiplying the duration by 5 and setting the direction to -5 will display one count-down of "5" on the token before dropping to "0" and removing the status (perhaps a bit misleading), or x 2 and -2 will show "8", "6", "4", "2", then remove the status.</p>'
-							+'<p><span style='+design.selected_button+'>New:</span> If also using the RPGMaster AttackMaster API, a <i>savemod</i> can optionally be specified, with the form <i>svXXX:[+/-]#</i>, where XXX is the type of saving throw to be made - one of \'par\', \'poi\', \'dea\', \'rod\', \'sta\', \'wan\', \'pet\', \'pol\', \'bre\', \'spe\' for paralysis, poison, death, rod, staff, wand, petrification, polymorph, breath, or spell respectively. The subsequent value (optinally preceeded by plus or minus) is the modifier to the saving throw (usually +0). If a savemod is added to the command call, a status marker will not immediately be applied, but a prompt will appear for the user of the command to ask the player(s) who control the selected token(s) to make the appropriate saving throw - the saving throw modifier will automatically be applied to this saving throw, and the status set automatically if the saving throw is failed: if the save is successfully made, the status is not applied. If AttackMaster is not loaded then the savemod parameter will be ignored.</p>'
+							+'<p>If also using the RPGMaster AttackMaster API, a <i>savemod</i> can optionally be specified, with the form <i>svXXX:[+/-]#</i>, where XXX is the type of saving throw to be made - one of \'par\', \'poi\', \'dea\', \'rod\', \'sta\', \'wan\', \'pet\', \'pol\', \'bre\', \'spe\' for paralysis, poison, death, rod, staff, wand, petrification, polymorph, breath, or spell respectively. The subsequent value (optinally preceeded by plus or minus) is the modifier to the saving throw (usually +0). If a savemod is added to the command call, a status marker will not immediately be applied, but a prompt will appear for the user of the command to ask the player(s) who control the selected token(s) to make the appropriate saving throw - the saving throw modifier will automatically be applied to this saving throw, and the status set automatically if the saving throw is failed: if the save is successfully made, the status is not applied. If AttackMaster is not loaded then the savemod parameter will be ignored.</p>'
 							+'<p>If a Player other than the DM uses this command, the DM will be asked to confirm the setting of the status and marker.  This allows the DM to make any decisions on effectiveness.</p>'
 							+'<p>The API-held Effects database and any GM-supplied additional Effects databases will be searched in three ways: when a status marker is set, any Ability Macro with the name Effect-name-start (where Effect-name is from the command using the syntax described above) is run.  Each round when it is the turn of a token with the status marker set, the Ability Macro with the name Effect-name-turn is run.  And when the status ends (duration reaches 0) or the status is removed using --removestatus, or the token has the Dead marker set or is deleted, an Ability Macro with the name Effect-name-end is run.  See the Effects database documentation for full information on effect macros and the options and parameters that can be used in them.</p>'
 							+'<pre>!rounds --addtargetstatus tokenID|status|duration|direction|[message]|[marker]|[savemod]</pre>'
-							+'<p><span style='+design.selected_button+'>Update:</span> This command is identical to addstatus, except for the addition of a tokenID.  Instead of using a selected token or tokens to apply the status to, this applies the status to the specified token. The optional savemod parameter also works in the same way.</p>'
+							+'<p><span style='+design.selected_button+'>Fix:</span> This command is identical to addstatus, except for the addition of a tokenID.  Instead of using a selected token or tokens to apply the status to, this applies the status to the specified token. The optional savemod parameter also works in the same way.</p>'
 							+'<pre>!rounds --edit</pre>'
 							+'<p>This command brings up a menu in the chat window showing the current status(es) set on the selected token(s), with the ability to remove or edit them.  Against each named status, a spanner icon opens another menu to edit the selected status name, duration, direction, message and marker on all the selected token(s), and also allows this status to be set as a favourite.  A bin icon will remove the status from all the selected token(s), and run any status-end macros, if any.</p>'
 							+'<pre>!rounds --target[-save/-nosave] CASTER/MULTI|casterID|casterID|status|duration|direction|[message]|[marker]|[savemod]<br>'
 							+'!rounds --target[-save/-nosave] SINGLE/AREA|casterID|targetID|status|duration|direction|[message]|[marker]|[savemod]</pre>'
-							+'<p><span style='+design.selected_button+'>Update:</span> This command targets a status on a token or a series of tokens.  If a version using CASTER is called, it acts identically to the addtargetstatus command, using the casterID as the target token.  If the SINGLE version is called, the targetID is used.  If the AREA version is used, after applying the status to the targetID token, the system asks in the chat window if the status is to be applied to another target and, if confirmed, asks for the next target to be selected, repeating this process after each targeting and application. If the MULTI version is used, the player is prompted to select multiple tokens and then confirm the selection with a button in the chat window.  In each case, it applies the status (with the format defined above), effect macro and marker to the specified token(s) in the same way as <i>--addtargetstatus</i>, including prompting a saving throw if using AttackMaster API and a savemod is specified.</p>'
+							+'<p>This command targets a status on a token or a series of tokens.  If a version using CASTER is called, it acts identically to the addtargetstatus command, using the casterID as the target token.  If the SINGLE version is called, the targetID is used.  If the AREA version is used, after applying the status to the targetID token, the system asks in the chat window if the status is to be applied to another target and, if confirmed, asks for the next target to be selected, repeating this process after each targeting and application. If the MULTI version is used, the player is prompted to select multiple tokens and then confirm the selection with a button in the chat window.  In each case, it applies the status (with the format defined above), effect macro and marker to the specified token(s) in the same way as <i>--addtargetstatus</i>, including prompting a saving throw if using AttackMaster API and a savemod is specified.</p>'
 							+'<p><b>Note:</b> the MULTI version of the command temporarily modifies every token on the same Roll20 page as the casterID token, and the character sheets they represent, to set the player who controls the casterID token as a controller for every token, so that the player can select any or all tokens. The command also temporarily changes any GM-controlled or uncontrolled tokens so they do not "have sight" in a dynamic lighting situation - this is so the player does not see anything they shouldn\'t and so that "Explorer Mode" continues to work correctly. Once the player has finished selection and clicks the button in the chat window to confirm the selection <i>(or in fact does any other command)</i> all control and sight returns to the same as it was before the command.</p>'
-							+'<p><span style='+design.selected_button+'>New:</span> The behaviour of the --target command can be affected by using the qualifiers <i>-save</i> and <i>-nosave</i>. --target-save will force the GM to always be prompted for a confirmation of the setting of the status <i>even if it is the GM who has made the --target-save call</i>. This allows the GM to ensure a saving throw or other check is made before the status is confirmed as applying to the token. --target-nosave does the opposite: even if it is a player that has made the --target-nosave command call, the GM will <i><b>not</b></i> be prompted to confirm the status, which will always be applied immediately in a similar fashion to --gm-target.  However, the --target-nosave behaviour can be overridden using the --nosave configuration command - see below - whereas --gm-target cannot be overriden.</p>'
+							+'<p>The behaviour of the --target command can be affected by using the qualifiers <i>-save</i> and <i>-nosave</i>. --target-save will force the GM to always be prompted for a confirmation of the setting of the status <i>even if it is the GM who has made the --target-save call</i>. This allows the GM to ensure a saving throw or other check is made before the status is confirmed as applying to the token. --target-nosave does the opposite: even if it is a player that has made the --target-nosave command call, the GM will <i><b>not</b></i> be prompted to confirm the status, which will always be applied immediately in a similar fashion to --gm-target.  However, the --target-nosave behaviour can be overridden using the --nosave configuration command - see below - whereas --gm-target cannot be overriden.</p>'
 							+'<pre>!rounds --nosave (ON/OFF)</pre>'
-							+'<p><span style='+design.selected_button+'>New:</span> As described under the --target-nosave command, the default situation for --target-nosave is to <i>not</i> present the GM with the option to confirm the application of a status to a token. The --nosave command can alter this behaviour: --nosave OFF will make --target-nosave behave in the same way as --target, asking the GM for confirmation if issued by a player, but not if issued by the GM. The --target-nosave behaviour can be restored by using --nosave ON.</p>'
+							+'<p>As described under the --target-nosave command, the default situation for --target-nosave is to <i>not</i> present the GM with the option to confirm the application of a status to a token. The --nosave command can alter this behaviour: --nosave OFF will make --target-nosave behave in the same way as --target, asking the GM for confirmation if issued by a player, but not if issued by the GM. The --target-nosave behaviour can be restored by using --nosave ON.</p>'
 							+'<pre>!rounds --gm-target CASTER|casterID|casterID|status|duration|direction|[message]|[marker]<br>'
 							+'!rounds --gm-target SINGLE/AREA|casterID|targetID|status|duration|direction|[message]|[marker]</pre>'
 							+'<p>These commands work identically to the --target commands, with the exception that if used by a player, the player will temporarily be given GM privilidges and the GM will not be asked to confirm the status targeting. <b>Use carefully</b> as this may not give the GM the opportunity to do saving throws or other retaliatory actions.</p>'
@@ -1017,7 +1382,7 @@ var RoundMaster = (function() {
 							+'<p>For each of the selected tokens in turn, searches for tokens in the whole campaign with the same name and representing the same character sheet, and moves all existing statuses and markers from all the found tokens to the selected token (removing any duplicates).  This supports Players moving from one Roll20 map to another and, indeed, roundMaster detects page changes and automatically runs this command for all tokens on the new page controlled by the Players who have moved to the new page.</p>'
 							+'<pre>!rounds --state-extract<br>'
 							+'!rounds --state-load [RPGM/ALL/API-Name][|API-Name2|API-Name3|...]</pre>'
-							+'<p><span style='+design.selected_button+'>New for v5.056:</span> These commands extract the current Roll20 <i>state variable</i> for the current campaign to a character sheet called "StatusMule", ready to be copied or transmogrified to a new (identical) campaign, and then provide the ability to load all or part of the <i>state variable</i> into the copy campaign. This provides support for Roll20 upgrades, such as <b><i>JumpGate</i></b>.</p>'
+							+'<p>These commands extract the current Roll20 <i>state variable</i> for the current campaign to a character sheet called "StatusMule", ready to be copied or transmogrified to a new (identical) campaign, and then provide the ability to load all or part of the <i>state variable</i> into the copy campaign. This provides support for Roll20 upgrades, such as <b><i>JumpGate</i></b>.</p>'
 							+'<p>The <i>--state-extract</i> command does not take any arguments, and extracts the whole Roll20 <i>state variable</i> for the current campaign in JSON text form to the "State" ability on the character sheet "StatusMule".</p>'
 							+'<p>The <i>--state-load</i> command takes one text argument, which can be:</p>'
 							+'<table>'
@@ -1297,12 +1662,28 @@ var RoundMaster = (function() {
 		}
 		return hash;
 	}; 
+	
+	var dumpState = function( ) {
+		
+			let size=JSON.stringify(state.roundMaster).length;
+			Object.keys(state.roundMaster).forEach((k)=>{
+				let kjson=JSON.stringify(state.roundMaster[k]),
+					ksize = kjson.length;
+				log(`roundMaster.${k}: Size: ${(ksize/1024).toFixed(3)}kb Percent: ${((ksize/size)*100).toFixed(1)}% >>>>> ${kjson}`);
+			});
+			log(`Total: Size: ${(size/1024).toFixed(3)}kb Percent: 100.0%`);
+
+	}
 
 	/**
 	 * Init
 	 */
 	var init = function() {
 		try {
+			
+//			var newInstall = true;
+//			state.roundMaster = {};
+			var newInstall = _.isUndefined(state.roundMaster);
 			if (!state.roundMaster)
 				{state.roundMaster = {};}
 			if (!state.roundMaster.effects)
@@ -1311,6 +1692,8 @@ var RoundMaster = (function() {
 				{state.roundMaster.statuses = [];}
 			if (!state.roundMaster.favs)
 				{state.roundMaster.favs = {};}
+			if (!state.roundMaster.dbNames)
+				{state.roundMaster.dbNames = newInstall ? 'v7Effects' : 'v6Effects';}
 			if (!state.roundMaster.viewer) {
 				state.roundMaster.viewer = {};
 				state.roundMaster.viewer.is_set = false;
@@ -1345,6 +1728,13 @@ var RoundMaster = (function() {
 			if (initLib) {
 				flags.canSetRoundCounter = (initLib.length > 0);
 			}
+			
+			// RED: v5.058 support legacy & new Effect libraries
+			dbNames = effectsDB[state.roundMaster.dbNames];
+//			dbNames = effectsDB.v7Effects;
+//			state.roundMaster.dbNames = 'v7Effects';
+
+			log('roundMaster init: dbNames version = '+(dbNames && dbNames.Effects_DB && dbNames.Effects_DB.version ? dbNames.Effects_DB.version : 'undefined'));
 			
 			// RED: Forced an update of the Turnorder so that the state of the
 			// RoundMaster is correctly displayed on startup
@@ -1639,10 +2029,11 @@ var RoundMaster = (function() {
 	var evalAttr = function(v) { 
 		function reRoll(m,n,p,r) { return rollDice(n,p,r); };
 		var orig = String(v);
-		const rePar = /\([\d\+\-\*\/\.]+?\)/g,
-			  reRange = /\d+\:\d+/g,
-			  reDice = /(\d+)d(\d+)(?:r(\d+))?/ig,
-			  reMinMax = /[Mthmaxinflorce\s\.\,\(\)\d\+\-\*\/]+/g;
+		var loopCount = 0;
+		const rePar = /(?<!(?:min|max|floor|ceil))\([\d\+\-\*\/\.\s]+?\)/i,
+			  reRange = /\d+\:\d+/,
+			  reDice = /(\d+)d(\d+)(?:r(\d+))?/i,
+			  reMinMax = /Math\.(?:min|max|floor|ceil)\([\d\+\-\*\/\.\s\,]+\)/i;
 		
 		try {
 			v = String(v);
@@ -1662,6 +2053,10 @@ var RoundMaster = (function() {
 				do {
 					do {
 						do{
+							if (loopCount++ >= 30) {
+								log('evalAttr: loop count exceeded, returning '+v);
+								return v;
+							}
 							while (rePar.test(v)) v = v.replace(rePar,eval).replace(/\-\-/g,'+').replace(/\+\-/g,'-');
 //									log('evalAttr: after parEval v = '+v);
 							v = v.replace(reRange,calcAttr).replace(/\-\-/g,'+').replace(/\+\-/g,'-');
@@ -1670,10 +2065,10 @@ var RoundMaster = (function() {
 						v = v.replace(reDice,reRoll).replace(/\-\-/g,'+').replace(/\+\-/g,'-');
 //								log('evalAttr: after diceRoll v = '+v);
 					} while (rePar.test(v) || reRange.test(v) || reDice.test(v));
-//							log('evalAttr: minmax match = '+[...v.matchAll(reMinMax)]);
+//							log('evalAttr: minmax match = '+v.match(reMinMax));
 					v = v.replace(reMinMax,eval).replace(/\-\-/g,'+').replace(/\+\-/g,'-');
 //							log('evalAttr: after minMax v = '+v);
-				} while (rePar.test(v) || reRange.test(v) || reDice.test(v));
+				} while (rePar.test(v) || reRange.test(v) || reDice.test(v) || reMinMax.test(v));
 //						log('evalAttr: after calculations returning '+v);
 				return v;
 			};
@@ -1704,10 +2099,13 @@ var RoundMaster = (function() {
 	 
 	var grantTokenAccess = function( playerId, pageId, grant=false, objList={} ) {
 		
+//		log('grantTokenAccess: called by '+(playerIsGM(playerId) ? 'the GM so skipping' : ('by player '+getObj('player',playerId).get('_displayname'))));
+		
 		if (playerIsGM(playerId)) return;
 		if (_.isUndefined(objList.sighted)) objList.sighted = [];
 		if (_.isUndefined(objList.blind)) objList.blind = [];
 		if (grant) {
+//			log('grantTokenAccess: granting access');
 			var tempList = filterObjs( obj => {
 				if (obj.get('_type') !== 'graphic' || obj.get('_subtype') !== 'token' || obj.get('_pageid') !== pageId || !obj.get('represents')) return false;
 				let charObj = getObj('character',obj.get('represents'));
@@ -1727,6 +2125,7 @@ var RoundMaster = (function() {
 				charObj.set('controlledby',controllers+','+playerId);
 			});
 		} else {
+//			log('grantTokenAccess: revoking access');
 			_.each( objList.sighted, obj => {
 				let charObj = getObj('character',obj.get('represents'));
 				charObj.set('controlledby',charObj.get('controlledby').split(',').filter((pid) => pid !== playerId).join(','));
@@ -1904,7 +2303,7 @@ var RoundMaster = (function() {
 					sendAPImacro( curToken, statusArgs.msg, statusArgs.name, change, '-turn' );
 				}
 			}
-			if (gstatus.marker && isPlayer)
+			if (!_.isUndefined(gstatus) && gstatus.marker && isPlayer)
 				{content += makeStatusDisplay(e,false);}
 			else
 				{hcontent += makeStatusDisplay(e,true);}
@@ -2321,7 +2720,7 @@ var RoundMaster = (function() {
 			+'; box-shadow: rgba(0,0,0,0.4) 3px 3px; border-radius: 1em; text-align: center;">'
 			+ '<table width="100%">' 
 			+ '<tr>'
-			+ (markerdef.length ? ('<td><div style="width: 21px; height: 21px;"><img src="'+markerdef[0].url+'"></img></div></td>'):'')
+			+ ((markerdef && markerdef.length) ? ('<td><div style="width: 21px; height: 21px;"><img src="'+markerdef[0].url+'"></img></div></td>'):'')
 			+ '<td width="100%">'+(/_([^_]+)_?/.exec(statusArgs.name) || ['',statusArgs.name])[1] + ' ' + (dir === 0 ? '': (dur <= 0 ? '<span style="color: red;">Expiring</span>':((!isGM && dir < -1) ? '' : dur)))
 			+ (dir===0 ? '<span style="font-size: larger; color: blue;">\u221E</span>' : (dir > 0 ? '<span style="color: green;">\u25B2(+'+dir+')</span>':'<span style="color: red;">\u25BC'+((!isGM && dir < -1) ? '' : ('('+dir+')'))+'</span>'))
 			+ ((statusArgs.msg) ? ('<br><span style="color: #000">' + getFormattedRoll(parseStr(statusArgs.msg)) + '</span>'):'')+'</td>'
@@ -3140,7 +3539,7 @@ var RoundMaster = (function() {
 			+ 'Name: ' + '<span style="color:'+design.statuscolor+';">'+fav.name+'</span>'
 			+ '<br>Marker: ' + (!!markerdef.length ? ('<img src="'+markerdef[0].url+'"></img>'):'none')
 			+ '<br>Duration: ' + fav.duration
-			+ '<br>Direction: ' + fav.direction + (fav.msg ? ('<br>Message: ' + fav.msg):'')
+			+ '<br>Direction: ' + fav.direction + (fav.msg ? ('<br>Message: ' + parseStr(fav.msg)):'')
 			+ '<br><br><span style="font-style: normal;">Status placed on the following:</span><br>' ;
 
 		content += midcontent; 
@@ -3217,7 +3616,7 @@ var RoundMaster = (function() {
 			+ '<br>Marker: ' + (markerdef ? ('<img src="'+markerdef[0].url+'"></img>'):'none')
 			+ '<br>Duration: ' + duration
 			+ '<br>Direction: ' + direction 
-			+ (msg ? ('<br>Message: ' + msg):'')
+			+ (msg ? ('<br>Message: ' + parseStr(msg)):'')
 			+ (marker ? '':('<br><div style="text-align: center;">'+RoundMaster_tmp.getTemplate({command: '!rounds --dispmarker '+name+ ' %% fav', text: 'Choose Marker'},'button')+'</div>')); 
 		content += '</div>'; 
 
@@ -3282,21 +3681,128 @@ var RoundMaster = (function() {
 		}
 //		args = args.join('|');
 		sendDebug('doAddTargetStatus: Target is ' + target.get('name'));
-		doAddStatus(args,target,senderId);
+		doAddStatus(args,[{_id:target.id}],senderId);
 		return;
 	}
 
 	/**
 	 * Add turn item
 	 */
-	var doAddStatus = function(args,selection,senderId) {
-    	if (!args) 
+	async function doAddStatus(args,selection,senderId) {
+		
+		var content = '<div style="font-weight: bold; background-color: '+design.statusbgcolor+'; border: 2px solid #000; box-shadow: rgba(0,0,0,0.4) 3px 3px; border-radius: 0.5em;">'
+			+ '<div style="text-align: center; color: '+design.statuscolor+'; border-bottom: 2px solid black;">'
+					+ '<span style="font-weight: bold; font-size: 120%">Add Status</span>'
+				+ '</div>';
+		
+		var updateEffects = function( e ) {
+			return new Promise(resolve => {
+				try {
+					curToken = getObj('graphic', e._id);
+//					log('doAddStatus: dealing with token '+(!curToken ? 'undefined' : curToken.get('name')));
+					if (!curToken || curToken.get('_subtype') !== 'token' || curToken.get('isdrawing')) {
+//						log('Selected target token is '+((!curToken || curToken.get('_subtype') !== 'token') ? 'not valid' : 'marked as a drawing'));
+						return;
+					}
+					effectId = e._id;
+					
+					effectList = state.roundMaster.effects[effectId];
+					
+					if (_.find(effectList,function(elem,k) {
+							if (elem.name.toLowerCase() === effect.toLowerCase()) {
+								switch (mod || ' ') {
+								case '+':
+								case '-':
+									effectList[k].duration += duration;
+									break;
+								case '<':
+									effectList[k].duration = Math.min(effectList[k].duration,duration);
+									break;
+								case '>':
+									effectList[k].duration = Math.max(effectList[k].duration,duration);
+									break;
+								case '#':
+									effectList.push({
+										name: effect,
+										duration: duration,
+										direction: direction,
+										round: state.roundMaster.round,
+										msg: msg,
+										index: effectList[k].index + 1,
+									});
+									break;
+								default:
+									effectList[k].duration = duration;
+									break;
+								}
+								if (mod !== '#') duration = effectList[k].duration;
+								effectList[k].direction = direction;
+								effectList[k].msg = msg;
+								return true;
+							}
+						})
+					) {
+		//				log('doAddStatus: '+curToken.get('name')+' is a duplicate with mod '+mod);
+						if (!mod || (mod !== '#' && mod !== '$')) return;
+					} else if (effectList && Array.isArray(effectList)) {
+						// RED: v1.204 added the round of last update
+						effectList.push({
+							name: effect,
+							duration: duration,
+							direction: direction,
+							round: state.roundMaster.round,
+							msg: msg,
+							index: 0,
+						});
+		//				log('doAddStatus: '+curToken.get('name')+' added to existing effect list');
+					} else {
+						// RED: v1.204 added the round of last update
+						state.roundMaster.effects[effectId] = effectList = new Array({
+							name: effect,
+							duration: duration,
+							direction: direction,
+							round: state.roundMaster.round,
+							msg: msg,
+							index: 0,
+						});
+		//				log('doAddStatus: '+curToken.get('name')+' added to a new effect list');
+					}
+					updateGlobalStatus(effect,undefined,1);
+
+					// RED: v1.301 when adding a new effect marker
+					// run the relevant effect-start macro if it exists
+					// NOTE: if multiple tokens for same character sheet,
+					// This will apply the macro multiple times
+					// TODO Add list of cid to status and stop duplication
+					setTimeout( sendAPImacro, (500*apiCallNo++), curToken, msg, effect, duration, '-start' );
+
+					midcontent += '<div style="width: 40px; height 40px; display: inline-block;"><img src="'+curToken.get('imgsrc')+'" title="'+curToken.get('name')+'"></div>'; 
+//					log('doAddStatus: added '+curToken.get('name')+' to midcontent');
+				} catch (err) {
+					sendCatchError('AttackMaster',msg_orig[senderId],err);
+					var errFlag = true;
+				} finally {
+					setTimeout(() => {
+						resolve(errFlag);
+					}, 1);
+				};
+			});
+		};
+
+		if (!args) 
 			{return;}
 		if (!selection) {
 		    sendDebug('doAddStatus: selection undefined');
 			sendError('Invalid selection');
 			return;
 		}
+/*		if (selection.length > 8) {
+			sendResponse( senderId, content + '<br>Too many tokens selected. A maximum of 8 tokens at a time can have a status set</div>' );
+			return;
+		}
+*/
+
+//		log('doAddStatus: type of selection = '+(typeof selection)+', _.size(selection) = '+(selection ? _.size(selection) : 'undefined'));
 
 		if (args.length <3) {
 		    sendDebug('doAddStatus: wrong number of args');
@@ -3305,15 +3811,19 @@ var RoundMaster = (function() {
 		}
 		args[1] = String(args[1]);
 		args[2] = String(args[2]);
-		var mod;
+		var mod, 
+			duration = args[1],
+			direction = args[2];
 		if ('+-<>=#$'.includes(args[1][0])) {
 			mod = args[1][0];
-			if (mod !=='-' && mod !=='+') {args[1] = args[1].slice(1)};
+			if (mod !=='-' && mod !=='+') {duration = args[1].slice(1)};
 		}
+		duration = parseInt(evalAttr(duration.replace(/#/g,String(_.size(selection)))));
+		direction = parseInt(evalAttr(direction.replace(/#/g,String(_.size(selection)))));
 		var isGM = playerIsGM(senderId),
-			effect = args[0].trim(),
-			duration = parseInt(evalAttr(args[1].replace(/#/g,String(selection.length)))),
-			direction = parseInt(evalAttr(args[2].replace(/#/g,String(selection.length)))),
+			effect = evalAttr(args[0].trim()),
+//			duration = parseInt(evalAttr(args[1].replace(/#/g,String(selection.length)))),
+//			direction = parseInt(evalAttr(args[2].replace(/#/g,String(selection.length)))),
 			msg = (args[3] || '').trim(),
 			marker = (args[4] || '').trim().toLowerCase(),
 			saveSpec = (args[5] || ''),
@@ -3354,8 +3864,8 @@ var RoundMaster = (function() {
 			effectId,
 			effectList,
 			status,
-			content = '',
-			midcontent = '';
+			midcontent = '',
+			apiCallNo = 0;
 			
 		if (saveSpec && saveSpec.length && 'undefined' !== typeof attackMaster) {
 			let names = [],
@@ -3367,9 +3877,11 @@ var RoundMaster = (function() {
 //			log('doAddStatus: spec = '+spec+', save = '+save+', map = '+save.map(s => xlateSave[s[1]]).join(' and '));
 			_.each(selection,function(e) {
 				curToken = getObj('graphic', e._id);
-				if (!curToken || curToken.get('_subtype') !== 'token' || curToken.get('isdrawing'))
-					{return;}
-				sendRmAPI( fields.attackMaster + ' --set-savemod '+e._id+'|add|'+playerEffectName+'|'+playerEffectName+'|'+saveSpec+'|'+save.length+'||'+args.slice(0,5).join('|') );
+				if (!curToken || curToken.get('_subtype') !== 'token' || curToken.get('isdrawing')) {
+//					log('Selected target token is '+((!curToken || curToken.get('_subtype') !== 'token') ? 'not valid' : 'marked as a drawing'));
+					return;
+				}
+				setTimeout( sendRmAPI, (200*apiCallNo), (fields.attackMaster + ' --set-savemod '+e._id+'|add|'+playerEffectName+'|'+playerEffectName+'|'+saveSpec+'|'+save.length+'|1|'+args.slice(0,5).join('|') ));
 				names.push(curToken.get('name'));
 			});
 			if (names.length) {
@@ -3379,94 +3891,18 @@ var RoundMaster = (function() {
 			};
 			return;
 		}
+		
+		apiCallNo = 0;
 
-		_.each(selection,function(e) {
-			curToken = getObj('graphic', e._id);
-			if (!curToken || curToken.get('_subtype') !== 'token' || curToken.get('isdrawing'))
-				{return;}
-			effectId = e._id;
-			
-			effectList = state.roundMaster.effects[effectId];
-			
-			if (_.find(effectList,function(elem,k) {
-					if (elem.name.toLowerCase() === effect.toLowerCase()) {
-						switch (mod || ' ') {
-						case '+':
-						case '-':
-							effectList[k].duration += duration;
-							break;
-						case '<':
-							effectList[k].duration = Math.min(effectList[k].duration,duration);
-							break;
-						case '>':
-							effectList[k].duration = Math.max(effectList[k].duration,duration);
-							break;
-						case '#':
-							effectList.push({
-								name: effect,
-								duration: duration,
-								direction: direction,
-								round: state.roundMaster.round,
-								msg: msg,
-								index: effectList[k].index + 1,
-							});
-							break;
-						default:
-							effectList[k].duration = duration;
-							break;
-						}
-						if (mod !== '#') duration = effectList[k].duration;
-						effectList[k].direction = direction;
-						effectList[k].msg = msg;
-						return true;
-					}
-				})
-			) {
-				if (!mod || (mod !== '#' && mod !== '$')) return;
-			} else if (effectList && Array.isArray(effectList)) {
-			    // RED: v1.204 added the round of last update
-				effectList.push({
-					name: effect,
-					duration: duration,
-					direction: direction,
-					round: state.roundMaster.round,
-					msg: msg,
-					index: 0,
-				});
-			} else {
-			    // RED: v1.204 added the round of last update
-				state.roundMaster.effects[effectId] = effectList = new Array({
-					name: effect,
-					duration: duration,
-					direction: direction,
-					round: state.roundMaster.round,
-					msg: msg,
-					index: 0,
-				});
-			}
-			updateGlobalStatus(effect,undefined,1);
-
-			// RED: v1.301 when adding a new effect marker
-			// run the relevant effect-start macro if it exists
-			// NOTE: if multiple tokens for same character sheet,
-			// This will apply the macro multiple times
-			// TODO Add list of cid to status and stop duplication
-   			sendAPImacro( curToken, msg, effect, duration, '-start' );
-
-			midcontent += '<div style="width: 40px; height 40px; display: inline-block;"><img src="'+curToken.get('imgsrc')+'" title="'+curToken.get('name')+'"></div>'; 
-		});
+		_.each( selection, e => updateEffects(e) );
 
 		if ('' === midcontent)
 			{midcontent = '<div style="font-style: italic; text-align: center; font-size: 125%; ">None</div>';}
 
 
-		content += '<div style="font-weight: bold; background-color: '+design.statusbgcolor+'; border: 2px solid #000; box-shadow: rgba(0,0,0,0.4) 3px 3px; border-radius: 0.5em;">'
-			+ '<div style="text-align: center; color: '+design.statuscolor+'; border-bottom: 2px solid black;">'
-					+ '<span style="font-weight: bold; font-size: 120%">Add Status</span>'
-				+ '</div>'
-			+ 'Name: ' + '<span style="color:'+design.statuscolor+';">'+playerEffectName+'</span>'
+		content += 'Name: ' + '<span style="color:'+design.statuscolor+';">'+playerEffectName+'</span>'
 			+ '<br>Duration: ' + duration
-			+ '<br>Direction: ' + direction + (msg ? ('<br>Message: ' + msg):'')
+			+ '<br>Direction: ' + direction + (msg ? ('<br>Message: ' + parseStr(msg)):'')
 			+ '<br><br><span style="font-style: normal;">Status placed on the following:</span><br>' ;
 		content += midcontent; 
 
@@ -3510,7 +3946,7 @@ var RoundMaster = (function() {
 
 			_.each(dbNames,dB => {
 				_.each(dB.db,obj => {
-					if (obj.name.toLowerCase().startsWith('dancer') && /\^\^weapon\^\^/im.test(obj.body)) {
+					if (!!obj && obj.name.toLowerCase().startsWith('dancer') && /\^\^weapon\^\^/im.test(obj.body)) {
 						setAbility( charCS, 
 									obj.name.replace(/dancer/i,weapon), 
 									obj.body.replace(/\^\^weapon\^\^/img,weapon)
@@ -3560,7 +3996,7 @@ var RoundMaster = (function() {
 	/**
 	 * Remove a status from the selected tokens
 	 */
-	var doRemoveStatus = function(args,selection,endMacro,allTokens=false) {
+	async function doRemoveStatus(args,selection,endMacro,allTokens=false) {
 		if (!args || (!selection && !allTokens)) {
 			sendError('Invalid selection');
 			return;
@@ -3574,50 +4010,68 @@ var RoundMaster = (function() {
 			effectId,
 			removedStatus,
 			content = '',
-			midcontent = ''; 
+			midcontent = '',
+			delCount = 0;; 
 			
-		var rejectEffects = function( args, curToken, effects ) {
-			let maxIndex = _.chain(effects).filter(elem => args.includes(elem.name.toLowerCase().replace(/\s/g,'-'))).sortBy('duration').first().value();
-			effects = _.reject(effects,function(elem) {
-				if ((elem.index === (maxIndex ? maxIndex.index : 0) && args.includes(elem.name.toLowerCase().replace(/\s/g,'-'))) || args.includes('all')) {
-				    // RED: v2.003 changed '==='' comparison of strings to 'includes()' comparison
-				    // so that multiple effects can be removed at the same time
-					found = true;
-					midcontent += '<div style="width: 40px; height 40px; display: inline-block;"><img src="'+curToken.get('imgsrc')+'" title="'+curToken.get('name')+'"></div>'; 
-					if (endMacro) {
-						// RED: v1.301 when removing the status marker
-						// run the relevant effect-end macro if it exists
-						// RED: v3.010 if using the new --deletestatus command,
-						// so endMacro is false, don't trigger the -end effect
-						sendAPImacro( curToken, elem.msg, elem.name, 0, '-end' );
-					}
-					removedStatus = updateGlobalStatus(elem.name,undefined,-1);
-					toRemove.push(removedStatus); 
-					return true;
+		var rejectEffects = function( args, curToken, effects, imgContent ) {
+			
+			var errFlag = false;
+			
+			return new Promise(resolve => {
+				
+				try {
+					let maxIndex = _.chain(effects).filter(elem => args.includes(elem.name.toLowerCase().replace(/\s/g,'-'))).sortBy('duration').first().value();
+					effects = _.reject(effects,function(elem) {
+						if ((elem.index === (maxIndex ? maxIndex.index : 0) && args.includes(elem.name.toLowerCase().replace(/\s/g,'-'))) || args.includes('all')) {
+							// RED: v2.003 changed '==='' comparison of strings to 'includes()' comparison
+							// so that multiple effects can be removed at the same time
+							found = true;
+							imgContent += '<div style="width: 40px; height 40px; display: inline-block;"><img src="'+curToken.get('imgsrc')+'" title="'+curToken.get('name')+'"></div>'; 
+							if (endMacro) {
+								// RED: v1.301 when removing the status marker
+								// run the relevant effect-end macro if it exists
+								// RED: v3.010 if using the new --deletestatus command,
+								// so endMacro is false, don't trigger the -end effect
+								setTimeout( sendAPImacro, 300*delCount++, curToken, elem.msg, elem.name, 0, '-end' );
+							}
+							removedStatus = updateGlobalStatus(elem.name,undefined,-1);
+							toRemove.push(removedStatus); 
+							return true;
+						}
+						return false;
+					});
+					setStatusEffects(curToken,effects);
+					// Remove markers
+					return imgContent;
+				} catch (e) {
+					log('AttackMaster buildMonsterAttkMacros: JavaScript '+e.name+': '+e.message+' while processing monster '+charName);
+					sendDebug('AttackMaster buildMonsterAttkMacros: JavaScript '+e.name+': '+e.message+' while processing monster '+charName);
+					sendCatchError('AttackMaster',msg_orig[senderId],e);
+					errFlag = true;
+				} finally {
+					setTimeout(() => {
+						resolve(imgContent);
+					}, 10);
 				}
-				return false;
 			});
-			setStatusEffects(curToken,effects);
-			// Remove markers
 		};
 		
 		args = args.toLowerCase().replace(/\s/g,'-').split('|');
 		
 		if (allTokens) {
-			
-			_.each(allEffects, (effects,tokenID) => {
+			for (const tokenID in allEffects) {
 				curToken = getObj('graphic', tokenID);
 				if (!curToken || curToken.get('_subtype') !== 'token' || curToken.get('isdrawing')) return;
-				rejectEffects( args, curToken, effects );
-			});
+				midcontent = await rejectEffects( args, curToken, allEffects[tokenID], midcontent );
+			};
 		} else if (selection && selection.length) {
-			_.each(selection, function(e) {
+			for (const e of selection) {
 				effectId = e._id || e.id;
 				curToken = getObj('graphic', effectId);
 				if (!curToken || curToken.get('_subtype') !== 'token' || curToken.get('isdrawing')) return;
 				effects = state.roundMaster.effects[effectId];
-				rejectEffects( args, curToken, effects );
-			});
+				midcontent = await rejectEffects( args, curToken, effects, midcontent );
+			};
 		};
 
 		if ('' === midcontent) midcontent = '<div style="font-style: italic; text-align: center; font-size: 125%; ">None</div>';
@@ -4005,15 +4459,23 @@ var RoundMaster = (function() {
 			sendResponseError(senderId,'Invalid status item syntax');
 			return;
 		}
-		var mod;
-
+		args[1] = String(args[1]);
+		args[2] = String(args[2]);
+		var mod, 
+			duration = args[1],
+			direction = args[2];
+//		log('doAddStatus: args[1] = '+args[1]);
 		if ('+-<>=#$'.includes(args[1][0])) {
 			mod = args[1][0];
-			if (mod !=='-' && mod !=='+') {args[1] = args[1].slice(1)};
+			if (mod !=='-' && mod !=='+') {duration = args[1].slice(1)};
 		}
+		duration = parseInt(evalAttr(duration.replace(/#/g,String(selection.length))));
+		direction = parseInt(evalAttr(direction.replace(/#/g,String(selection.length))));
+//		log('doPlayerAddStatus: args[1] = '+args[1]+', mod = '+mod+', duration = '+duration);
+
 		var name = args[0],
-			duration = parseInt(args[1]),
-			direction = parseInt(args[2]),
+//			duration = parseInt(args[1]),
+//			direction = parseInt(args[2]),
 			msg = args[3],
 			marker = args[4],
 			saveSpec = args[5] || '',
@@ -4043,10 +4505,12 @@ var RoundMaster = (function() {
 		if(saveSpec && 'undefined' !== typeof attackMaster) {
 			_.each(selection,function(e) {
 				curToken = getObj('graphic', e._id);
-				if (!curToken || curToken.get('_subtype') !== 'token' || curToken.get('isdrawing'))
-					{return;}
+				if (!curToken || curToken.get('_subtype') !== 'token' || curToken.get('isdrawing')) {
+//					log('Selected target token is '+((!curToken || curToken.get('_subtype') !== 'token') ? 'not valid' : 'marked as a drawing'));
+					return;
+				};
 				sendRmAPI( fields.attackMaster + ' --set-savemod '+e._id+'|add|'+name+'|'+name+'|'+saveSpec+'|1||'+args.slice(0,5).join('|') );
-				content = '&{template:default}{{name=Save Required}}{{ =Ask '+curToken.get('name')+' to make a saving throw. If it is failed a status of *"'+name+'"* will automatically be set}}';
+				content = '&{template:default}{{name=Save Required}}{{ =Ask '+curToken.get('name')+' to make the appropriate saving throw. If it is failed a status of *"'+name+'"* will automatically be set}}';
 				playerIsGM(senderId) ? sendFeedback(content) : sendResponse(senderId,content);
 			});
 			return;
@@ -4062,7 +4526,8 @@ var RoundMaster = (function() {
 
 	    // RED: v1.204 added the round of last update
 		statusArgs.name = name;
-		statusArgs.duration = duration;
+//		statusArgs.duration = duration;
+		statusArgs.duration = (!mod ? duration : mod+duration);
 		statusArgs.direction = direction;
 		statusArgs.round = state.roundMaster.round;
 		statusArgs.msg = msg;
@@ -4075,7 +4540,7 @@ var RoundMaster = (function() {
 		    statusArgs.marker = marker;
 		}
 
-		statusArgsString = name + ' @ ' + duration + ' @ ' + direction + ' @ ' + msg + ' @ ' + statusArgs.marker; 
+		statusArgsString = statusArgs.name + ' @ ' + statusArgs.duration + ' @ ' + statusArgs.direction + ' @ ' + statusArgs.msg + ' @ ' + statusArgs.marker; 
 
 		hashes.push(genHash(d.getTime()*Math.random(),pending));
 		hashes.push(genHash(d.getTime()*Math.random(),pending));
@@ -4141,7 +4606,7 @@ var RoundMaster = (function() {
 			+ 'Name: ' + '<span style="color:'+design.statuscolor+';">'+name+'</span>'
 			+ '<br>Marker: ' + (markerdef ? markerdef.getHTML():'none')
 			+ '<br>Duration: ' + duration
-			+ '<br>Direction: ' + direction + (msg ? ('<br>Message: ' + msg):'')
+			+ '<br>Direction: ' + direction + (msg ? ('<br>Message: ' + parseStr(msg)):'')
 			+ '<br><br><span style="font-style: normal;">Status requested to be placed on the following:</span><br>'; 
 		content += midcontent; 
 		content += (markerdef ? '': (
@@ -4226,6 +4691,7 @@ var RoundMaster = (function() {
 			}
 			*/
 			sendResponse(args.senderId,'<span style="color: green; font-weight: bold;">Status application for \''+(/_(.+)_?/.exec(statusArgs.name) || ['',statusArgs.name])[1]+'\' accepted</span>'); 
+			sendFeedback('<span style="color: green; font-weight: bold;">Status application for \''+(/_(.+)_?/.exec(statusArgs.name) || ['',statusArgs.name])[1]+'\' accepted</span>'); 
 
 			_.each(args.hlist,function(e) {
 				clearPending(e) ;
@@ -4249,7 +4715,6 @@ var RoundMaster = (function() {
 		addPending(pr_confirm,hashes[0]);
 		addPending(pr_reject,hashes[1]); 
 
-
 		markerdef = libTokenMarkers.getStatuses(statusArgs.marker);
 		markerdef = !!markerdef.length ? markerdef[0] : undefined;
 
@@ -4261,7 +4726,7 @@ var RoundMaster = (function() {
 			+ '<br>Name: ' + '<span style="color:'+design.statuscolor+';">'+statusArgs.name+'</span>'
 			+ '<br>Marker: ' + (markerdef ? ('<img src="'+markerdef.url+'"></img>'):'none')
 			+ '<br>Duration: ' + statusArgs.duration
-			+ '<br>Direction: ' + statusArgs.direction + (statusArgs.msg ? ('<br>Message: ' + statusArgs.msg):'')
+			+ '<br>Direction: ' + statusArgs.direction + (statusArgs.msg ? ('<br>Message: ' + parseStr(statusArgs.msg)):'')
 			+ '<br><br><span style="font-style: normal;">Status requested to be placed on the following:</span><br>'; 
 		content += midcontent; 
 
@@ -4714,7 +5179,7 @@ var RoundMaster = (function() {
 		});
 		if (!action) {
 			if (_.some(dbNames,dB => !!(abilityObj = _.find(dB.db,obj => obj.name.toLowerCase().replace(reIgnore,'') == abilityName)))) {
-				action = parseStr(abilityObj.body);
+				action = !_.isUndefined(abilityObj) ? parseStr(abilityObj.body) : '';
 			}
 			dBname = rootDB;
 		}
@@ -4800,23 +5265,18 @@ var RoundMaster = (function() {
 	 *
 	 * TODO make the rotation rate a field variable
 	 */
-
 	var animateTracker = function() {
+		if (!flags.animating) 
+			{return;}
 		
-		if (!flags.animating) {
-			return;
-		}
 		if (flags.rw_state == RW_StateEnum.ACTIVE) {
-//			log('doAnimateTracker: Active');
 			if (state.roundMaster.rotation) {
 				var graphic = findTrackerGraphic();
 				graphic.set('rotation',(parseInt(graphic.get('rotation'))+parseInt(fields.rotation_degree)));
-//				log('doAnimateTracker: Rotating');
 			}
 			setTimeout(function() {animateTracker();},500);
 		} else if (flags.rw_state == RW_StateEnum.PAUSED 
 				|| flags.rw_state == RW_StateEnum.FROZEN) {
-//			log('doAnimateTracker: Paused or Frozen');
 			setTimeout(function() {animateTracker();},1000);
 		} else {
 			log('doAnimateTracker: Stopped or undefined');
@@ -4881,7 +5341,7 @@ var RoundMaster = (function() {
 		}
 		
 		_.each(_.sortBy(dbObj.db,'name'),function( item ) {
-			if (!foundItems.includes(item.name)) {
+			if (!!item && !foundItems.includes(item.name)) {
 				foundItems.push(item.name);
 				item.body = parseStr(item.body,dbReplacers);
 				errFlag = errFlag || !setAbility( dbCS, item.name, item.body );
@@ -6053,7 +6513,30 @@ var RoundMaster = (function() {
 		sendFeedback(doneMsgDiv + 'States for '+loadState+' loaded from the StatusMule character sheet.</div>');
 		return;
 	}
+	
+	/**
+	 * Switch the Effects database between new and legacy
+	 **/
+	 
+	var doSetEffectsDB = function(args) {
 		
+		var dbVer = args[0];
+		
+		if (!dbVer || !dbVer.length) {
+			dbVer = dbNames.Effects_DB.version < 7 ? 'v7' : 'v6';
+		};
+		
+		if (!['v6','v7'].includes(dbVer)) {
+			sendError('Invalid Effects database version. Must be "v6" or "v7"');
+			return;
+		};
+		state.roundMaster.dbNames = dbVer === 'v6' ? 'v6Effects' : 'v7Effects';
+		dbNames = effectsDB[state.roundMaster.dbNames];
+		
+		sendFeedback(doneMsgDiv + 'Now using '+dbVer+' effects database.</div>');
+		sendRmAPI('!attk --update-effects');
+		return;
+	};
 	
 	/**
 	 * Update or create the help handouts
@@ -6062,7 +6545,7 @@ var RoundMaster = (function() {
 	var updateHandouts = function(silent,senderId) {
 		
 		_.each(handouts,(obj,k) => {
-			let dbCS = findObjs({ type:'handout', name:obj.name },{caseInsensitive:true});
+			let dbCS = findObjs({ _type:'handout', name:obj.name },{caseInsensitive:true});
 			if (!dbCS || !dbCS[0]) {
 			    log(obj.name+' not found.  Creating version '+obj.version);
 				if (!silent) sendFeedback(obj.name+' not found.  Creating version '+obj.version);
@@ -6262,7 +6745,7 @@ var RoundMaster = (function() {
 		    cid = curToken.get('represents'),
 		    words;
 			
-		sendDebug( 'msg is ' + msg );
+		sendDebug( 'sendAPImacro: msg is ' + msg + ', effect is ' + effect + macro );
 			
 		if (msg.length && msg.length > 0) {
 		    words = msg.split(' ');
@@ -6407,15 +6890,19 @@ var RoundMaster = (function() {
 	 */ 
 	var sendDebug = function(msg) {
 	    if (!!state.roundMaster.debug) {
-	        var player = getObj('player',state.roundMaster.debug),
-	            to;
-    		if (player) {
-	    		to = '/w "' + player.get('_displayname') + '" ';
-		    } else 
-		    	{throw ('sendDebug could not find player');}
-		    if (!msg)
-		        {msg = 'No debug msg';}
-    		sendChat('RM Debug',to + '<span style="color: red; font-weight: bold;">'+msg+'</span>',null,{noarchive:!flags.archive, use3d:false}); 
+			if (playerIsGM(state.roundMaster.debug)) {
+				log('RoundMaster Debug: '+msg);
+			} else {
+				var player = getObj('player',state.roundMaster.debug),
+					to;
+				if (player) {
+					to = '/w "' + player.get('_displayname') + '" ';
+				} else 
+					{throw ('sendDebug could not find player');}
+				if (!msg)
+					{msg = 'No debug msg';}
+				sendChat('RM Debug',to + '<span style="color: red; font-weight: bold;">'+msg+'</span>',null,{noarchive:!flags.archive, use3d:false}); 
+			};
 	    };
 	}; 
 	
@@ -6448,7 +6935,7 @@ var RoundMaster = (function() {
 			senderId = msg.playerid,
 			selected = msg.selected,
 			isGM = (playerIsGM(senderId) || state.roundMaster.debug === senderId),
-			t = 2;
+			t = 0;
 			
 		var checkPlayersLive = function( charCS ) {
 			let playerID, controlledBy = (!charCS ? '' : charCS.get('controlledby'));
@@ -6671,6 +7158,9 @@ var RoundMaster = (function() {
 				case 's_marker':
 						if (isGM) doShowMarkers();
 						break;
+				case 'set-effectdb':
+						if (isGM) doSetEffectsDB(arg);
+						break;
 				case 'sort':
 						// RED: v1.202 Added the ability to re-sort the turnorder after
 						// the start of the round, & reset the round to start
@@ -6731,11 +7221,15 @@ var RoundMaster = (function() {
 							log('setsight: invalid object id');
 						}
 						break;
+				case 'dumpstate':
+						dumpState();
+						break;
 				default:
 						sendFeedback('<span style="color: red;">Invalid command " <b>'+msg.content+'</b> "</span>');
 						showHelp();
 						break;
 				}
+//				dumpState();
 			} catch (err) {
 				log('RoundMaster handleChatMsg: JavaScript '+err.name+': '+err.message+' while processing command '+cmd+' '+argString);
 				sendDebug('RoundMaster handleChatMsg: JavaScript '+err.name+': '+err.message+' while processing command '+cmd+' '+argString);
@@ -6788,7 +7282,8 @@ var RoundMaster = (function() {
 				isGM = true;
 			}
 		} else {
-			sendDebug('senderId is defined as ' + getObj('player',senderId).get('_displayname') + ' who is '+(playerIsGM(senderId)? '' : 'not')+' GM');
+			isGM = playerIsGM(senderId);
+			sendDebug('senderId is defined as ' + getObj('player',senderId).get('_displayname') + ' who is '+(isGM ? '' : 'not')+' GM');
 		};
 		
 		_.each(args, function(e) {
