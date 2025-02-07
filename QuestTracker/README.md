@@ -1,321 +1,336 @@
 # Quest Tracker
-Quest Tracker is a comprehensive tool for managing quests, rumors, and events in a tabletop RPG setting. It integrates seamlessly with Roll20 to provide detailed tracking and visualization of game elements, making it ideal for GMs and players who want to streamline their campaigns.
+Quest Tracker is a comprehensive tool for managing quests, rumours, and events in a tabletop RPG setting. Designed for Roll20, it streamlines quest tracking, automates relationships, and integrates seamlessly with in-game calendars and weather systems. Whether you’re a GM running a sandbox campaign or a player tracking multiple storylines, Quest Tracker provides a clear, interactive framework to manage everything.
 
 ### Features
 
-- **Quest Management:**
-  - Create, edit, and remove quests.
-  - Track quest statuses (e.g., "Started", "Completed", "Failed").
-  - Group quests into logical categories.
+- **Quest Management**
+  - Create, edit, and delete quests.
+  - Track quest progression with statuses like Started, Completed, Ignored, Failed.
+  - Organize quests into structured categories.
 
-- **Rumor Handling:**
-  - Add and manage rumors by location or quest.
-  - Generate rumors dynamically.
-  - Associate rumors with quest progression.
+- **Rumour System**
+  - Add, modify, and dynamically generate rumours.
+  - Associate rumours with quests and locations.
+  - Trigger quests based on discovered rumours.
 
-- **Event Scheduling:**
-  - Schedule events with repeatable options.
-  - Adjust events based on in-game calendars.
+- **Event Scheduling**
+  - Set one-time or recurring events.
+  - Link events to calendar dates.
+  - Adjust events dynamically based on in-game timelines.
 
-- **Weather and Climate Integration:**
-  - Dynamic weather generation based on in-game conditions.
-  - Detailed descriptions of current weather conditions.
- 
-- **Calender Integration:**
-  - Track Leap years
-  - Different Calander types, e.g. Harpto, Gregorian etc.
-    
-- **Visual Quest Tree:**
-  - Display quests and relationships as a tree diagram.
-  - Automatically handle mutually exclusive relationships.
+- **Weather & Climate Integration**
+  - Procedural weather generation based on in-game seasons.
+  - Regional climate variations and forced weather trends.
+  - Immersive weather descriptions tied to game locations.
 
-- **Triggers:**
-  - Automatically change Quest's after certain triggers have been met, such as Date or status changes.
+- **Calendar Integration**
+  - Supports multiple calendar systems (Harptos, Gregorian, etc.).
+  - Leap years, lunar cycles, and seasonal changes.
+  - Customizable calendars for homebrew settings.
+
+- **Visual Quest Tree**
+  - Displays quest relationships in a tree format.
+  - Handles complex dependencies, including mutually exclusive quests.
+
+- **Trigger System**
+  - Automate quest state changes based on dates, quest progression, or external triggers.
+  - Chain triggers to create cascading effects across events and quests.
+
 
 ### Getting Started
 
-1. **Installation:**
-   Install CalanderData first, once you see this in the log: "CalenderData initialized in state.CalenderData.CALENDARS & state.CalenderData.WEATHER" you know QuestTracker is ready to be installed it and load into the game it will initialise.
+- **Installation**
+  - Quest Tracker is now available as a one-click install on Roll20. Simply enable it from the API Scripts menu in your game settings. The required CalendarData module will be installed automatically.
 
-3. **Usage:**
-   - Access all features through an intuitive graphical user interface. simply type **!qt** into chat.
-   - Navigate through menus to manage quests, rumors, and events seamlessly.
+- **Initialization**
+  - Once installed, Quest Tracker will initialize automatically. You’ll see a confirmation message in the API log when it’s ready.
 
-## Rumours Module
-The rumours module provides a flexible framework for dynamically integrating narrative elements into your campaign. It connects directly to quests, locations, and events, allowing for automated storytelling and background interactions.
+- **Usage**
+  - Type !qt in the chat to open the main Quest Tracker menu.
+  - Use the interface to manage quests, rumours, events, and weather.
+  - Navigate through intuitive menus to update quest statuses, schedule events, and track campaign progress.
 
-### Module Architecture
 
-#### Data Structures
+## Quest Module
 
-Rumours are structured hierarchically by quest, status, and location. Example structure:
+The Quest Module is the core of Quest Tracker, providing a structured way to manage quests, track their progression, and define relationships. Designed for Roll20, it offers a flexible and automated approach to managing quest dependencies, statuses, and triggers within sandbox-style RPG campaigns.
+
+### Core Features
+* **Create, Edit, and Delete Quests** – Manage quests directly from an intuitive UI.
+* **Track Quest Status** – Automatically update and display quest progress.
+Define Prerequisites & Dependencies – Control quest unlocks based on player actions.
+* **Mutually Exclusive Quests** – Prevent conflicting quests from being active simultaneously.
+* **Quest Triggers** – Automate quest progression when specific conditions are met.
+* **Visual Quest Tree** – Display quest relationships dynamically.
+
+
+### Quest Statuses
+Each quest has a status that defines its current state. The following statuses are available:
+
+* **Unknown** – The quest exists in the world but is undiscovered by the players. Rumours can still reference unknown quests.
+* **Discovered** – The quest has been revealed but is not yet active.
+* **Started** – The players have accepted the quest.
+* **Ongoing** – The quest is actively being pursued.
+* **Completed** – The players have successfully finished the quest.
+* **Completed by Someone Else** – Another party has resolved the quest.
+* **Failed** – The players were unable to complete the quest.
+* **Time Ran Out** – A timed event expired before the quest was completed.
+* **Ignored** – The players chose not to follow up on the quest.
+
+> Future Plans: Statuses are currently hardcoded, but a system for custom user-defined statuses may be added based on feedback.
+
+### Quest Relationships
+
+Quests can have prerequisites, dependencies, and exclusivity rules that shape the campaign's progression.
+
+#### Quest Prerequisites
+Define conditions that must be met before a quest becomes available. Conditions can include:
+
+* Completing or failing another quest.
+* Discovering specific rumours or events.
+* Reaching a specific in-game date.
+
+#### Mutually Exclusive Quests
+* Prevents quests from being completed simultaneously (e.g., supporting one faction over another).
+* Once a mutually exclusive quest is completed, its conflicting quests are automatically disabled.
+* Mutually exclusive quests are visually highlighted in the Quest Tree.
+
+>Note: The system does not rigidly enforce quest logic—it provides a guideline for DMs rather than strict enforcement.
+
+
+### Quest Data Structure
+Quest data is stored in JSON format, supporting nested relationships for complex branching questlines.
+
+#### Example Quest JSON:
 ```
 {
   "quest_1": {
-    "unknown": {},
-    "discovered": {
-      "everywhere": {
-        "rumour_1": "This is a rumour text"
-      },
-      "general_store": {
-        "rumour_2": "Wonderings of goings on",
-        "rumour_4": "Gossip"
-      }
-    }
-  },
-  "quest_2": {
-    "unknown": {
-      "the_boathouse": {
-        "rumour_3": "Dave is skimming from the books"
-      }
-    }
-  }
-}
-```
-#### Hierarchy:
-
-* quest: The ID of the associated quest.
-* status: The state of the rumour (e.g., unknown, discovered).
-* location: The in-game location where the rumour is tied.
-* rumour_id: Unique identifier for the specific rumour.
-* description: The text of the rumour.
-
-#### Storage:
-
-Rumours are stored in handout files within Roll20.
-
-These files can be imported using Configuration > Refresh/Import JSON data from the module's graphical interface.
-
-The JSON data structure must follow the hierarchical format described above.
-
-#### Locations:
-
-Rumours tied to specific locations are triggered when players interact with those areas.
-
-### Core Functionalities
-
-#### Adding and Editing Rumours
-
-Rumours are managed directly through the graphical interface, providing an intuitive way to organize and modify them:
-
-#### Show All Rumours
-
-Navigate to the "Show All Rumours" panel to view rumours linked to a specific quest. Select the relevant quest and choose the status (unknown, discovered, etc.) to which you want to add or edit rumours.
-
-#### Location-Specific Actions
-
-![Rumour Screen](https://raw.githubusercontent.com/boli32/QuestTracker/refs/heads/main/img/rumours.png)
-
-Under each location, buttons allow for streamlined rumour management:
-
-* "+" Add a Rumour: Add a new rumour to the specified location and status.
-* "c" Change: Edit the existing rumour text.
-* "-" Remove: Delete the rumour from the selected location.
-
-##### Viewing Full Rumour Text
-* Hover over the magnifying glass icon to see the full rumour text. The displayed text will truncate if it exceeds the visible area.
-
-#### Formatting Tips
-* Use %NEWLINE% to insert line breaks within rumour text.
-* Use &quot; to include quotation marks in rumour descriptions.
-
-### Rumour Locations Management
-
-Navigate to "All Rumours > Rumour Locations" to manage locations associated with rumours.
-
-![Rumour Management Screen](https://raw.githubusercontent.com/boli32/QuestTracker/refs/heads/main/img/rumourManagement.png)
-
-Buttons provide streamlined location management:
-* "+" Add a Location: Create a new location to associate with rumours.
-* "c" Change: Edit the name or properties of an existing location.
-* "-" Remove: Delete a location, with a confirmation prompt to ensure that all rumours under the location are not removed unintentionally.
-
-#### Quest Status Changes
-
-Different quest statuses trigger distinct sets of rumours.
-
-*Example: A quest in the discovered status may have rumours tied to general_store, while the same quest in the completed status has no active rumours.*
-
-#### Location-Based Differentiation
-
-The same quest and status can yield different rumours depending on the location.
-
-*Example: In everywhere, a rumour might say "A strange light in the forest," while in general_store, it could suggest "A missing person was last seen here."*
-
-### How to Show?
-
-This is stright-forward; simply choose the location the players are in, and select how many (random) rumours will be shown in chat. 'Eeverywhere' is a global location and rumours will be chosen from either the selected location OR everywhere.
-
-![Show Button](https://raw.githubusercontent.com/boli32/QuestTracker/refs/heads/main/img/show_rumours.png)
-
-![Rumour Display](https://raw.githubusercontent.com/boli32/QuestTracker/refs/heads/main/img/rumour_display.png)
-
-### Error Handling:
-
-Ensure rumour_id fields are unique to prevent overwrites.
-Validate linked quest and location IDs to maintain data integrity.
-
-## QUEST Module
-
-The QUEST Module is a core component of the Quest Tracker system for Roll20. It provides robust quest management features, allowing game masters to dynamically control quest progression, relationships, and status changes, all integrated seamlessly into sandbox-style RPG campaigns.
-
-### Quest Management
-- Create, update, and delete quests using an intuitive graphical interface.
-- Track quest statuses:
-  - **Unknown:** The Quest is unknown at this point. it is worth noting rumours can exists for quests within this state.
-  - **Discovered:** The quest has been discovered but not necessarily active or accepted.
-  - **Started:** The quest is currently in progress, and has been accepted
-  - **Ongoing:** The quest is currently ongoing.
-  - **Completed:** The quest has been completed.
-  - **Completed by Someone Else:** Another band of adventurers perhaps?
-  - **Failed:** The quest was not completed as intended.
-  - **Time ran out:** The arbitary time has run out on the quest
-  - **Ignored:** The clues have not been followed or the PCs have clearly ignored this quest
-
-As you can see whilst these statuses are at this time hard coded ine, there is a lot of room to wiggle in how you define a quest's status.
-Depending on feedback I may allow these statuses to be user specific, although it is a fair amount of work.
-
-### Prerequisites and Dependencies
-- Define quest prerequisites to unlock quests based on player actions or story progression.
-- Establish mutually exclusive relationships between quests to enforce narrative constraints.
-- Auto-advance quests based on time-sensitive conditions.
-
-None of these quest relasionships rules are rigidly enforced within the code; but will allow you as the DM to follow a basic story logic, as well as offer a more visual way for the players to understand what is happening if they try to support one faction over another.
-
-### Data Structure
-
-Quests are stored in a hierarchical JSON format, supporting complex relationships. Example:
-
-```json
-"quest_1": {
     "name": "Primary Quest",
-    "description": "This is a Primary Quest",
+    "description": "The village elders seek help.",
     "relationships": {
       "logic": "AND",
       "conditions": [
         "quest_4",
         {
           "logic": "OR",
-          "conditions": [
-            "quest_2",
-            "quest_3"
-          ]
-        },
-        {
-          "logic": "OR",
-          "conditions": [
-            "quest_7",
-            "quest_9"
-          ]
+          "conditions": ["quest_2", "quest_3"]
         }
       ],
-      "mutually_exclusive": []
+      "mutually_exclusive": ["quest_6"]
     },
     "hidden": false,
-    "autoadvance": {
-      "unknown": "1970-01-01"
-    },
-    "group": "6",
-    "level": 3
-  },
-  "quest_8": {
-    "name": "Secondary Quest",
-    "description": "There are more quests here?",
-    "relationships": {
-      "logic": "AND",
-      "conditions": [
-        "quest_12"
-      ]
-    },
-    "hidden": false,
-    "autoadvance": {},
-    "level": 1,
-    "group": "6"
-  },
-  "quest_11": {
-    "name": "Another Quest?",
-    "description": "Clearly this game has a lot of quests.",
-    "relationships": {
-      "logic": "AND",
-      "conditions": [
-        "quest_4"
-      ],
-      "mutually_exclusive": [
-        "quest_12"
-      ]
-    },
-    "hidden": false,
-    "autoadvance": {},
-    "group": "6",
-    "level": 2
+    "disabled": false,
+    "group": 1,
+    "level": 3,
+    "handout": "-bioDFNigEOnCVInecv"
   }
+}
+
 ```
 
-### Quest Features
+#### Key Quest Properties
+* *name* – The quest title (not required to be unique).
+* *description* – A tooltip or short summary of the quest.
+* *relationships* - A nested logical statement defining the quest's relationships - two levels max
+* *hidden* - This will render the quest as hidden to the players on the QuestTree Builder Page
+* *disabled* - This will stp this rendering at all on the QuestTree Builder Page
+* *group* - This is the ID for the Quest group the Quest is part of.
+* *level* - This is an value created by QuestTree Builder Page to assist in building the page
+* *handout* - the Roll20 Object refernce to the linked handout
 
-* **Name:** The name of the quest, defaults to 'New Quest' and it is does not need to be unique.
-* **Description:** A short description of the quest; it will be the tooltip on the Quest Tree page.
-* **Status:** The status of the quest, this is stored in a rollable table as a 'weight'.
-* **Hidden:** This quest is completely hidden from the Players when displayed on the page, the relasionships of this quest are also hidden. If you do not use the Quest Tree page there no difference betwene a hidden quest or a visible one (e.g. rumours from hidden quests are still shown), by default quests start out as hidden.
-* **Quest Group:** This is to help you organise your quests better, relationships can only be formed by quests within their own quest group.
-* **Linked Handout:** Either by adding the Handout ID manually, or by choosing Auto you can link Quest Handouts to the Quests. (Handouts are matched on the Quest name vs the Handout name. There is some wiggle room as it uses Levenshtein Distance as a matching mechanic, if one is not found it will create a handout)
-* **AutoAdvance:** Simply add a Date (YYYY-MM-DD) into one of the status fields and when that date occurs the quest will autoadvance to that specific status; it will then clear this field. There are no checks to make sure things go in the correct order it is up to you to maintain your own quests.
-* **Icon:** (potentially a future UI implimentation) This is actually a hidden field as I have currently not built a UI for it, but on the rollable table you can upload an icon for the quest which will appear as a token on the Quest Tree Page. This is important as it will allow you to use tokenmod commands to trigger a quest change in state using the questID in the GM Notes field of said token.
+### Navigating the Quest UI
 
-### Navigating the UI
+The Quest Page provides a structured way to view and edit quests.
 
-![A standard quest page](https://raw.githubusercontent.com/boli32/QuestTracker/refs/heads/main/img/quest_page.png) ![An Extensive Quest](https://raw.githubusercontent.com/boli32/QuestTracker/refs/heads/main/img/extensive_quest.png)
+![New Quest Layout](https://raw.githubusercontent.com/boli32/QuestTracker/refs/heads/main/img/newQuestLayout.png)
 
-* If the + buttons are shaded grey and cannot be selected it means there are no valid quests to add, quests need to be in the same quest group and not already be selected in a relasionship
-* Quest Relationships work on a AND and OR functionality and you can put them within relasionship groups in order to visualise the prerequisities; as you can see in the more complex quest tree; five quests are its prerequisites (under AND) but 4 of them are separated into two groups of OR functionality, the grouped quests are also mutually exclusive with each other (note the red line).
-* The Quest diagram is generated automatically and only works on a quest by quest basis (so no futher back); if you come across any failures within rendering please make sure you raise this as an issue. note: before you do this drag the chat window wider, as most issues are resolved with this.
+#### Relationship Tree Diagram
+* AND / OR Logic – Nest quests into logic groups to show prerequisites visually.
+* Mutually Exclusive Paths – Displayed with red lines to indicate quest conflicts.
+* Dynamic Updates – The tree auto-generates based on quest data.
 
-### v1.1 Changes
+![Relationship Tree Diagram](https://raw.githubusercontent.com/boli32/QuestTracker/refs/heads/main/img/extensive_quest.png)
 
-As of V1.1 the quest page has been revamped; autoadvance section has been removed and replaced with a new **Triggers Module**
+> Tip: If relationships don’t display correctly, try widening the chat window before reporting an issue.
 
-![New Layout](https://raw.githubusercontent.com/boli32/QuestTracker/refs/heads/main/img/newQuestLayout.png)
+## Rumours Module
 
-If an image has been added to the quest rollable table it will now show in this page adding a splash of colour to the page
+The Rumours Module dynamically integrates narrative elements into your campaign, allowing for player-driven discovery of world events, quest hints, and faction gossip. Rumours are linked to quests, locations, and events, ensuring they evolve alongside the campaign.
 
-![Linking Handouts](https://raw.githubusercontent.com/boli32/QuestTracker/refs/heads/main/img/linkedHandout.png)
+### Core Features
+- **Dynamic Rumour Generation** – Create, edit, and manage rumours directly from the UI.
+- **Quest-Linked Rumours** – Rumours can be tied to quest progress, appearing when certain conditions are met.
+- **Location-Based Rumours** – Players hear different information depending on where they are.
+- **Priority & Background Rumours** – Control the likelihood of specific rumours being shared.
+- **Single-Use Rumours** – Option to have rumours disappear after being revealed.
+- **Rumour-Triggered Events** – Displaying a rumour can trigger a quest or event progression.
+### Module Architecture
 
-Handouts can be linked to the quest, it will attempt to do so automatcially by searching for a handout with the same name as the quest, if this fails it will create a blank handout. You can link to a handout manually by using the objectID of the handout (link to the Handout and examine it's URL)
+#### Data Structures
 
-### Filters
+Rumours are structured hierarchically by **quest**, **status**, and **location**. Example structure:
+```
+{
+  "quest_1": {
+    "unknown": {},
+    "discovered": {
+      "everywhere": {
+        "rumour_1": "A shadowy figure was seen near the ruins."
+      },
+      "general_store": {
+        "rumour_2": "A merchant claims to have seen strange lights in the forest."
+      }
+    }
+  },
+  "quest_2": {
+    "unknown": {
+      "the_boathouse": {
+        "rumour_3": "A dockworker is skimming off the books."
+      }
+    }
+  }
+}
+
+```
+#### Key Elements:
+* *quest* – The associated quest ID.
+* *status* – The quest state (unknown, discovered, ongoing, etc.).
+* *location* – Where the rumour can be heard.
+* *rumour_id* – A unique identifier for the rumour.
+* *description* – The actual rumour text.
+
+### Managing Rumours
+
+Rumours are stored in Roll20 handouts and managed through the UI. You can import and refresh JSON data from the Configuration Menu.
+
+#### Viewing Rumours
+
+Navigate to Show All Rumours to browse rumours tied to a quest. Use filters to display unknown, discovered, or ongoing rumours.
+
+
+![Rumours Interface](https://raw.githubusercontent.com/boli32/QuestTracker/refs/heads/main/img/rumoursinterface.png)
+
+#### UI Buttons
+
+* **Add** (+) – Create a new rumour at a location.
+* **View Rumour** (👁) - Hover over this icon to see the rumour.
+* **Change** (c) – Edit an existing rumour.
+* **Remove** (-) – Delete a rumour from a location.
+* **Priority** - (b or p) - Toggle between a priority rumour or a background rumour.
+* **Frequency** (∞ or 1) - Toggle Betqween the rumour being only shown once, or any number of times   
+* **Add Trigger** (T) - Add a trigger to this rumour when it is shown.
+
+#### Location-Based Rumours
+Rumours tied to specific locations appear when players interact with those areas. You can also define global rumours ("everywhere") that can be heard across multiple locations.
+
+### Showing Rumours to Players
+
+To reveal rumours in chat:
+
+1. Select the location where the players are.
+2. Choose the number of random rumours to display.
+3. Press Show Rumours – the selected rumours will be sent to chat.
+
+> Everywhere is a global rumour pool. If no valid rumours exist for the selected location, the system will pull from this pool.
+
+#### Example Display:
+
+![Show Button](https://raw.githubusercontent.com/boli32/QuestTracker/refs/heads/main/img/show_rumours.png)
+
+![Rumour Display](https://raw.githubusercontent.com/boli32/QuestTracker/refs/heads/main/img/rumour_display.png)
+
+#### Formatting Tips
+* Use %NEWLINE% to insert line breaks within rumour text.
+* Use &quot; to include quotation marks in rumour descriptions.
+
+### Advanced Features
+
+#### Priority Rumours & Background Rumours
+
+* *Priority rumours* ensure important information is shown first.
+* *Background rumours* add depth but have a lower chance of appearing.
+
+#### One-Time Rumours
+
+Rumours can be set to disappear after being shown, ensuring they don’t repeat.
+
+#### Rumours as Triggers
+
+A rumour can be linked to triggers that change a quest’s state when revealed (e.g., a rumour about bandits can mark a quest as discovered when heard).
+
+### Error Handling
+* Ensure rumour IDs are unique to prevent overwrites.
+* Validate quest and location IDs to maintain consistency.
+
+
+## Filters
 
 ![Filters](https://raw.githubusercontent.com/boli32/QuestTracker/refs/heads/main/img/filters_open.png)
 
-The 'All Quests' page has also had a revamp as well allowing for filters, these filters can be cleared or hidden allowing for a better experiance when dealing with dozens of quests
+All Quests and all rumours have a filters section at the top allowing for better navigation.
 
-## Triggers Module (new to v1.1)
 
-The previous 'autoadvance' has had a major revamp and is not a full module; you can create 'triggers' which can adjust your quests allowing for a more automated way of navigating things
+## Quest Tree Page
 
-![alltriggers](https://raw.githubusercontent.com/boli32/QuestTracker/refs/heads/main/img/alltriggers.png)
+![View of a Quest Tree](https://raw.githubusercontent.com/boli32/QuestTracker/refs/heads/main/img/questtree.png)
 
-* **Date Trigger** - When the Date advances to this date, or goes beyond it this trigger will fire, this is most similar to the old autoadvance
-* **Quest Trigger** - When a quest changes, either toggling quest visibility, their enabled/disabled status or more commonly the status of a quest changes this trigger will fire
-* **Reaction Trigger** - This is a unique trigger as it triggers when another trigger fires. Technically you coud do the same using additional effects; but I have included it as there may be times you want to use it to organise your triggers better
+### How to Generate the Quest Tree
+1. Ensure the Quest Tree Page exists in your Roll20 game.
+2. Open Configuration and select Generate Quest Tree Page.
+
+### Automatic vs. Manual Updates
+
+* The Quest Tree updates automatically for:
+  * Quest visibility changes
+  * Quest status updates
+  * Quest name or description changes
+* Manual Refresh Required for:
+  * Adding new quests
+  * Changing quest relationships
+
+This is to prevent performance issues in large quest trees.
+
+### Quest Images
+
+Quest can have images which are tokens. These are set manually using the rollable table; they will not how unles it is directly pulled from your own roll20 library (no external or using premium assets)
+
+### Compatability with Supernotes
+
+Simply use the command **!gmnote** (create it as a token macro) when selecting a quest token and it will open up an small menu with quick functionality with the main interface. actioning any of these commands will open up the full quest interface afterwards. I highly recomend using **!gmnote --config** to toggle off the footer buttons when you set it up.
+
+
+## Triggers Module
+
+The Triggers Module automates quest changes based on time, quest progression, or external events.
+
+* **Date Trigger** – Triggers after or on a certain date
+* **Quest Trigger**  – Changes quest status when another quest updates.
+* **Reaction Trigger** – Fires when another trigger activates (useful for event chains).
+* **Script Trigger** – Manually trigger effects via button presses or handout links.
+* **Event Trigger** - Triggers once an event happens
+
+All Triggers can have certain 'Effects' once pressed
+
+* **Quest**
+  * Change Status
+  * Toggle State (Disabled / Enabled)
+  * Toggle Visibility (Hidden, Visible)
+* **Event**
+  *  Toggle State (Disabled / Enabled) 
+
+
+#### Example Uses:
+
+* Auto-disable quests in a mutually exclusive faction conflict.
+* Reveal quests when a related quest completes.
+* Time-based quest starts (e.g., a festival event).
+
+Once a trigger fires, it is automatically deleted, ensuring quests progress naturally.
 
 |||
 |:-------------------------:|:-------------------------:
 |![questTrigger](https://raw.githubusercontent.com/boli32/QuestTracker/refs/heads/main/img/leavingWaterdeep.png)|![reactionTrigger](https://raw.githubusercontent.com/boli32/QuestTracker/refs/heads/main/img/banditattack.png)|
 
-
-
-After each trigger fires it generates 'effects' these are currently only limited to quests and allows you to automatically change the state (disabled/enabled) visibility (hidden or not) or status of a quest. The most common examples I can see for this are:
-* Automatically disabling quests down a mutually exclusive branch once a certain quest is started
-* Starting a new quest once another has finished (and making it visible to the players)
-* Have a quest start automticlly at a certain date; say the day of a Festival.
-
-You can have multiple effects with each trigger allowing for one change to have more than one consequence.
-
-**Once a trigger fires, it and all associated triggers with it will be automatically deleted.**
-
-### Future Plans
-
-I plan to expand the triggers somewhat, and allow the names and descriptions of quests to be adjusted by triggers; changing 'The Feast of the Moon' quest to 'Dragon Attack' once the true scale of things occur.
 
 ## Weather Module
 
@@ -338,7 +353,7 @@ Weather is determined by six key values; each value is rated on a scale of 0 to 
 
 Users can select a specific climate configuration, which adjusts weather values based on predefined modifiers. These modifiers vary between -20 to +20 and are season-dependent, linked to the Calendar Module. For instance:
 
-*Icewind Dale (Forgotten Realms): During the "Long Winter" season, the temperature adjustment is -20, the maximum possible adjustment.*
+> Icewind Dale (Forgotten Realms): During the "Long Winter" season, the temperature adjustment is -20, the maximum possible adjustment.*
 
 ### Daily Adjustments
 
@@ -688,49 +703,8 @@ There are also quick commands available for date adjustments. These commands pro
 
 ![Cut Down Weather](https://raw.githubusercontent.com/boli32/QuestTracker/refs/heads/main/img/calander_cut.png)
 
-## Quest Tree Page Module
 
-### Overview
 
-The Quest Tree Page provides a visual representation of quests and their relationships.
-
-### How to Create the Quest Tree Page:
-
-Make sure the page **Quest Tree Page** is created, this script will not create this page automatically. Once this is done, navigate to the configuration menu. Press the "Generate Quest Tree Page" button
-
-### Automated Updates
-
-The Quest Tree Page will be updated sporadically but often you may need to refresh the page by pressing the button again.
-
-#### When it is updated automatically
-
-* Quest Visibility
-* Quest Status
-* Quest Name: 
-* Quest Description: 
-
-#### When it is *not* updated automatically
-
-* Changes to relasionship data
-* adding or deleting new quests
-
-This is intentional as the calculations to create such a page can get increasingly complex, and recalculating new quests and relationship is something which needs to be done irregually. Also, I cannot see a need for this to be updated on the fly.
-  
-### Quest Visibility
-
-Quests that are marked as hidden are not shown on the quest tree, although it can become obvious if entire sections are missing or ther is a 'quest shaped gap' in the viible tree. When a quest is hidden all of their connections are also hidden, this can result in edge cases where there is no obvious connection between quests as the interveneing quests are hidden. You need to keep this in mind when designing Quest Trees.
-
-### Quest Groups
-
-Quests are organised into quest groups on the Quest Tree page, they are ordered in their creation order, this order is seen in the UI.
-
-### Quest Images
-
-Quest can have images which are tokens. These are set manually using the rollable table; they will not how unles it is directly pulled from your own roll20 library (no external or using premium assets)
-
-### Compatability with Supernotes
-
-Simply use the command **!gmnote** (create it as a token macro) when selecting a quest token and it will open up an small menu with quick functionality with the main interface. actioning any of these commands will open up the full quest interface afterwards. I highly recomend using **!gmnote --config** to toggle off the footer buttons when you set it up.
 
 ## FAQ
 
@@ -766,7 +740,7 @@ No, there is a script in place to convert all autoadvance triggers into the new 
 
 ## Updates
 
-#### 2025-xx-xx
+#### 2025-02-11
 * Release of **v1.2**; Rumours Module has been overhauled
 - **Rumours Module**
   * Rumours are stored differently now, when you first upgrade to v1.2 a script will run converting you to be v1.2 compliant.
@@ -783,7 +757,7 @@ No, there is a script in place to convert all autoadvance triggers into the new 
   * There is a couple of version scripts which run if you have triggers set up in the old version automatically converting them to the new data structure.
 - **Events Module**
   * Added Enable/Disable flag so events can be toggled on or off.
-  * Events can trigger
+  * Events can activate Triggers and be manipulted by them.
 
 #### 2025-02-04
 * Release of **v1.1**; significant changes to quest interaction and display.
@@ -847,4 +821,3 @@ Contributions are welcome! Please report issues on the GitHub repository and tag
 ---
 
 Thank you for using Quest Tracker. Happy gaming!
-
