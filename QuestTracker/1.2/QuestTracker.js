@@ -815,7 +815,14 @@ var QuestTracker = QuestTracker || (function () {
 							});
 							break;
 						case "trigger":
-							deleteTrigger(id);
+							switch(type){
+								case 'delete':
+									deleteTrigger(id);
+									break;
+								case 'active':
+									Triggers.toggleTrigger(type, id, value);
+									break;
+							}							
 							break;
 					}
 				});
@@ -3217,10 +3224,7 @@ var QuestTracker = QuestTracker || (function () {
 							prereqId = prereq.conditions[0];
 						}
 						const prereqPosition = questPositions[prereqId];
-						if (!prereqPosition) {
-							errorCheck(38, 'msg', null,`Position data for prerequisite "${prereqId}" is missing.`);
-							return;
-						}
+						if (!prereqPosition) return;
 						const endX = prereqPosition.x + offsetX;
 						const endY = prereqPosition.y + vars.PAGE_HEADER_HEIGHT + vars.VERTICAL_SPACING;
 						const endPos = {
@@ -5738,7 +5742,6 @@ var QuestTracker = QuestTracker || (function () {
 				Object.entries(trigger.effects).forEach(([effectId, effect]) => {
 					const effectQuestName = effect.id === null ? 'Choose Quest' : H.getQuestName(effect.id);
 					const effectEventName = effect.id === null ? 'Choose Event' : H.getEventName(effect.id);
-					const effectType = effect.type === null ? 'Choose Field' : effect.type.charAt(0).toUpperCase() + effect.type.slice(1);
 					const effectValue = effect.value === null ? 'Choose Value' : effect.type === "status" ? statusMapping[effect.value] : effect.value.charAt(0).toUpperCase() + effect.value.slice(1);
 					const effectCat = effect.effecttype.charAt(0).toUpperCase() + effect.effecttype.slice(1);
 					const effectCatToggle = `?{Choose Effect Type|Quest,quest|Event,event|Trigger,trigger}`;
@@ -5766,16 +5769,10 @@ var QuestTracker = QuestTracker || (function () {
 									<td>Value</td>
 									<td>${effect.type !== null ? `<a style="${styles.button}" href="!qt-trigger action=modifyeffect|triggerid=${triggerId}|effectid=${effectId}|field=value|value=${H.effectDropdown(effect.type)}">${effectValue}</a>` : `<span style="${styles.buttonDisabled} ${styles.spanInline}">${effectValue}</span>`}</td>
 								</tr>
-								<tr>
-									<td><a style="${styles.button}" href="!qt-trigger action=removeeffect|triggerid=${triggerId}|effectid=${effectId}">Delete</a></td>
-									<td colspan=2>&nbsp;</td>
-								</tr>
-								<tr>
-									<td colspan=3><hr></td>
-								</tr>
 							`;
 							break;
 						case 'Quest':
+							const effectType = effect.type === null ? 'Choose Field' : effect.type.charAt(0).toUpperCase() + effect.type.slice(1);
 							effectsSection += `
 								<tr>
 									<td>&nbsp;</td>
@@ -5792,26 +5789,38 @@ var QuestTracker = QuestTracker || (function () {
 									<td>Value</td>
 									<td>${effect.type !== null ? `<a style="${styles.button}" href="!qt-trigger action=modifyeffect|triggerid=${triggerId}|effectid=${effectId}|field=value|value=${H.effectDropdown(effect.type)}">${effectValue}</a>` : `<span style="${styles.buttonDisabled} ${styles.spanInline}">${effectValue}</span>`}</td>
 								</tr>
-								<tr>
-									<td><a style="${styles.button}" href="!qt-trigger action=removeeffect|triggerid=${triggerId}|effectid=${effectId}">Delete</a></td>
-									<td colspan=2>&nbsp;</td>
-								</tr>
 							`;
 							break;
 						case 'Trigger':
+							const triggerDropdownType = "?{Choose Type|Toggle Active Status,active|Delete Trigger,delete}";
+							const triggerEffectType = effect.type === null ? 'Choose Field' : effect.type.charAt(0).toUpperCase() + effect.type.slice(1);
+							const triggerEffectValue = effect.value === null ? 'Choose Value' : effect.value.charAt(0).toUpperCase() + effect.value.slice(1);
+							const triggerEffectDropdown = `?{Choose|Activate,true|Deactivate,false}`;
 							effectsSection += `
 								<tr>
 									<td>&nbsp;</td>
-									<td>Delete Trigger</td>
+									<td>Trigger</td>
 									<td><a style="${styles.button}" href="!qt-trigger action=modifyeffect|triggerid=${triggerId}|effectid=${effectId}|field=id|value=${H.createTriggerDropdown(triggerId)}">${effect.id === null ? `Set Trigger` : `${H.getTriggerName(effect.id)}`}</a></td>
 								</tr>
-									<tr>
-									<td><a style="${styles.button}" href="!qt-trigger action=removeeffect|triggerid=${triggerId}|effectid=${effectId}">Delete</a></td>
-									<td colspan=2>&nbsp;</td>
+								<tr>
+									<td>&nbsp;</td>
+									<td>Type</td>				
+									<td><a style="${styles.button}" href="!qt-trigger action=modifyeffect|triggerid=${triggerId}|effectid=${effectId}|field=type|value=${triggerDropdownType}">${triggerEffectType}</a></td>
+								</tr>`;
+							if (effect.type === 'active' ) effectsSection += `
+								<tr>
+									<td>&nbsp;</td>
+									<td>Value</td>
+									<td><a style="${styles.button}" href="!qt-trigger action=modifyeffect|triggerid=${triggerId}|effectid=${effectId}|field=value|value=${triggerEffectDropdown}">${triggerEffectValue}</a></td>
 								</tr>
 							`;
-							break
+							break;
 					}
+					effectsSection += `
+						<tr>
+							<td><a style="${styles.button}" href="!qt-trigger action=removeeffect|triggerid=${triggerId}|effectid=${effectId}">Delete</a></td>
+							<td colspan=2>&nbsp;</td>
+						</tr>`;
 				});
 			}
 			effectsSection += `
