@@ -4774,20 +4774,33 @@ var QuestTracker = QuestTracker || (function () {
 				traverseLogicTree: (conditions, depth = 0, columnOffset = 0, depthMap = {}, parentLogic = 'AND') => {
 					if (!depthMap[depth]) depthMap[depth] = [];
 					let column = columnOffset;
-					conditions.forEach((condition) => {
+					conditions.forEach((condition, index) => {
 						if (typeof condition === 'string') {
-							depthMap[depth].push({ type: 'quest', value: condition, logic: parentLogic, depth, column });
+							depthMap[depth].push({
+								type: 'quest',
+								value: condition,
+								logic: parentLogic,
+								depth,
+								column,
+								endColumn: column + 1
+							});
 							column++;
 						} else if (typeof condition === 'object' && condition.logic) {
+							const nextDepth = depth + 1;
 							const subColumnsStart = column;
 							const subColumnsEnd = column + condition.conditions.length - 1;
-							const nextDepth = depth + 1;
 							l.traverseLogicTree(condition.conditions, nextDepth, column, depthMap, condition.logic);
-							depthMap[depth].push({ type: 'logic', logic: condition.logic, conditions: condition.conditions.map(cond => (typeof cond === 'string' ? cond : cond.conditions)), depth, column: subColumnsStart, endColumn: subColumnsEnd, });
+							depthMap[depth].push({
+								type: 'logic',
+								logic: condition.logic,
+								conditions: condition.conditions.map(cond => (typeof cond === 'string' ? cond : cond.conditions)),
+								depth,
+								column: subColumnsStart,
+								endColumn: subColumnsEnd + 1
+							});
 							column = subColumnsEnd + 1;
 						}
 					});
-					questLayers = depthMap;
 					return { depthMap };
 				},
 				connectHorizontalLines: (depthMap, instructionsPerColumn) => {
@@ -4839,11 +4852,21 @@ var QuestTracker = QuestTracker || (function () {
 					}
 				},
 				addOrIndicators: (elements, instructionsPerColumn, depth) => {
-					elements.forEach((element) => {
-						if (element.type === 'logic' && element.logic === 'OR' && l.checkMutualExclusivity(element.conditions)) {
-							for (let col = element.column; col < element.endColumn; col++) {
-								if (!instructionsPerColumn[col]) instructionsPerColumn[col] = [];
-								instructionsPerColumn[col].push({ type: 'r', depth, center: false });
+					elements.forEach((element, index) => {
+						if (element.logic === 'OR' && element.type === 'quest') {
+							const orGroup = elements.filter(e => e.logic === 'OR' && e.depth === element.depth);
+							const conditionIds = orGroup.map(e => e.value.toLowerCase());
+							let isMutuallyExclusive = conditionIds.every(q => {
+								const quest = QUEST_TRACKER_globalQuestData[q];
+								return quest && quest.relationships && conditionIds.some(other => quest.relationships.mutually_exclusive?.includes(other));
+							});
+							if (isMutuallyExclusive) {
+								const startColumn = Math.min(...orGroup.map(e => e.column));
+								const endColumn = Math.max(...orGroup.map(e => e.column));
+								for (let col = startColumn; col < endColumn; col++) {
+									if (!instructionsPerColumn[col]) instructionsPerColumn[col] = [];
+									instructionsPerColumn[col].push({ type: 'r', depth, center: false });
+								}
 							}
 						}
 					});
