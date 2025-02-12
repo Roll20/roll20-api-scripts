@@ -103,6 +103,7 @@ var QuestTracker = QuestTracker || (function () {
 	let QUEST_TRACKER_HISTORICAL_WEATHER = {};
 	let QUEST_TRACKER_WEATHER_DESCRIPTION = {};
 	let QUEST_TRACKER_WEATHER = true;
+	let QUEST_TRACKER_CACHED_QUEST_TREE = false;
 	const loadQuestTrackerData = () => {
 		initializeQuestTrackerState();
 		QUEST_TRACKER_verboseErrorLogging = state.QUEST_TRACKER.verboseErrorLogging || true;
@@ -161,7 +162,8 @@ var QuestTracker = QuestTracker || (function () {
 			precipitation: false,
 			wind: true,
 			visibility: true
-		}
+		};
+		QUEST_TRACKER_CACHED_QUEST_TREE = state.QUEST_TRACKER.cachedQuestTree || false;
 	};
 	const checkVersion = () => {
 		if (!QUEST_TRACKER_versionChecking.TriggerConversion) Triggers.convertAutoAdvanceToTriggers();
@@ -199,6 +201,7 @@ var QuestTracker = QuestTracker || (function () {
 		state.QUEST_TRACKER.filter = QUEST_TRACKER_FILTER;
 		state.QUEST_TRACKER.rumourFilter = QUEST_TRACKER_RUMOUR_FILTER;
 		state.QUEST_TRACKER.filterVisibility = QUEST_TRACKER_FILTER_Visbility;
+		state.QUEST_TRACKER.cachedQuestTree = QUEST_TRACKER_CACHED_QUEST_TREE;
 	};
 	const initializeQuestTrackerState = (forced = false) => {
 		if (!state.QUEST_TRACKER || Object.keys(state.QUEST_TRACKER).length === 0 || forced) {
@@ -249,7 +252,8 @@ var QuestTracker = QuestTracker || (function () {
 				},
 				filter: {},
 				rumourFilter: {},
-				filterVisibility: false
+				filterVisibility: false,
+				cachedQuestTree: false
 			};
 			if (!findObjs({ type: 'rollabletable', name: QUEST_TRACKER_ROLLABLETABLE_QUESTS })[0]) {
 				const tableQuests = createObj('rollabletable', { name: QUEST_TRACKER_ROLLABLETABLE_QUESTS });
@@ -2976,141 +2980,104 @@ var QuestTracker = QuestTracker || (function () {
 						return '#CCCCCC';
 				}
 			},
-			buildDAG: (questData, vars) => {
+			buildDAG: (questData, vars, forcedRebuild = false) => {
+				if (!questData || typeof questData !== 'object' || Object.keys(questData).length === 0) return {};
 				const questPositions = {};
+				const levelMap = {};
+				const parentChildMap = {};
+				const childParentMap = {};
+				const mutuallyExclusiveClusters = {};
 				const groupMap = {};
-				const mutualExclusivityClusters = [];
-				const visitedForClusters = new Set();
-				const enabledQuests = Object.keys(questData).filter((questId) => !questData[questId]?.disabled);
-				function findMutualExclusivityCluster(startQuestId) {
-					const cluster = new Set();
-					const stack = [startQuestId];
-					while (stack.length > 0) {
-						const questId = stack.pop();
-						if (!cluster.has(questId)) {
-							cluster.add(questId);
-							visitedForClusters.add(questId);
-							const mutuallyExclusiveQuests =
-								questData[questId]?.relationships?.mutually_exclusive || [];
-							mutuallyExclusiveQuests.forEach((meQuestId) => {
-								if (!cluster.has(meQuestId) && enabledQuests.includes(meQuestId)) {
-									stack.push(meQuestId);
-								}
-							});
-						}
-					}
-					return cluster;
-				}
-				enabledQuests.forEach((questId) => {
-					if (!visitedForClusters.has(questId)) {
-						const cluster = findMutualExclusivityCluster(questId);
-						mutualExclusivityClusters.push(cluster);
-					}
-				});
-				const questIdToClusterIndex = {};
-				mutualExclusivityClusters.forEach((cluster, index) => {
-					cluster.forEach((questId) => {
-						questIdToClusterIndex[questId] = index;
+				const occupiedSpaces = {};
+				const xOffsetTracker = {};
+				const identifyQuestGroups = () => {
+					Object.keys(questData).forEach(questId => {
+						const group = questData[questId]?.group || "default";
+						if (!groupMap[group]) groupMap[group] = [];
+						groupMap[group].push(questId);
 					});
-				});
-				const calculateInitialLevels = (questId, visited = new Set()) => {
-					if (visited.has(questId)) return questData[questId].level || 0;
-					visited.add(questId);
-					const prereqs = questData[questId]?.relationships?.conditions || [];
-					if (prereqs.length === 0) {
-						questData[questId].level = 0;
-						return 0;
-					}
-					const prereqLevels = prereqs.map((prereq) => {
-						let prereqId;
-						if (typeof prereq === "string") {
-							prereqId = prereq;
-						} else if (typeof prereq === "object" && prereq.conditions) {
-							prereqId = prereq.conditions[0];
-						}
-						return calculateInitialLevels(prereqId, new Set(visited)) + 1;
-					});
-					const level = Math.max(...prereqLevels);
-					questData[questId].level = level;
-					return level;
 				};
-				enabledQuests.forEach((questId) => calculateInitialLevels(questId));
-				enabledQuests.forEach((questId) => {
-					const group = questData[questId]?.group || "Default Group";
-					if (!groupMap[group]) groupMap[group] = [];
-					groupMap[group].push(questId);
-				});
-				const groupWidths = {};
-				const groupOrder = Object.keys(groupMap);
-				Object.entries(groupMap).forEach(([groupName, groupQuests]) => {
-					const levels = {};
-					groupQuests.forEach((questId) => {
-						const level = questData[questId].level;
-						if (!levels[level]) levels[level] = [];
-						levels[level].push(questId);
-					});
-					const sortedLevels = Object.keys(levels).map(Number).sort((a, b) => a - b);
-					let maxLevelWidth = 0;
-					sortedLevels.forEach((level) => {
-						let questsAtLevel = levels[level];
-						const totalQuests = questsAtLevel.length;
-						const clustersAtLevel = {};
-						questsAtLevel.forEach((questId) => {
-							const clusterIndex = questIdToClusterIndex[questId] || null;
-							if (clusterIndex !== null) {
-								if (!clustersAtLevel[clusterIndex]) clustersAtLevel[clusterIndex] = new Set();
-								clustersAtLevel[clusterIndex].add(questId);
-							} else {
-								if (!clustersAtLevel["no_cluster"]) clustersAtLevel["no_cluster"] = new Set();
-								clustersAtLevel["no_cluster"].add(questId);
-							}
+				const buildParentChildRelationships = () => {
+					Object.keys(questData).forEach(questId => {
+						const prereqs = questData[questId]?.relationships?.conditions || [];
+						prereqs.forEach(prereq => {
+							const prereqId = typeof prereq === "string" ? prereq : prereq?.conditions?.[0];
+							if (!prereqId) return;
+							if (!parentChildMap[prereqId]) parentChildMap[prereqId] = [];
+							parentChildMap[prereqId].push(questId);
+							if (!childParentMap[questId]) childParentMap[questId] = [];
+							childParentMap[questId].push(prereqId);
 						});
-						const arrangedQuests = [];
-						Object.values(clustersAtLevel).forEach((cluster) => {
-							arrangedQuests.push(...Array.from(cluster));
+					});
+				};
+				const calculateQuestLevels = () => {
+					function assignLevel(questId, depth = 0) {
+						if (!questId || !questData[questId]) return;
+						if (typeof levelMap[questId] === "number" && levelMap[questId] >= depth) return;
+						if (isNaN(depth)) return;
+						levelMap[questId] = depth;
+						(parentChildMap[questId] || []).forEach(childId => {
+							if (!questData[childId]) return;
+							assignLevel(childId, depth + 1);
 						});
-						levels[level] = arrangedQuests;
-						const levelWidth =
-							arrangedQuests.length * vars.ROUNDED_RECT_WIDTH +
-							(arrangedQuests.length - 1) * vars.HORIZONTAL_SPACING;
-						maxLevelWidth = Math.max(maxLevelWidth, levelWidth);
+					}
+					Object.keys(levelMap).forEach(q => delete levelMap[q]);
+					Object.keys(questData).forEach(questId => {
+						if (!childParentMap[questId]) assignLevel(questId, 0);
 					});
-					groupWidths[groupName] = maxLevelWidth;
-				});
-				const totalTreeWidth = groupOrder.reduce((sum, groupName, index) => {
-					return sum + groupWidths[groupName] + (index > 0 ? vars.GROUP_SPACING : 0);
-				}, 0);
-				let cumulativeGroupWidth = -totalTreeWidth / 2;
-				groupOrder.forEach((groupName) => {
-					const groupQuests = groupMap[groupName];
-					const levels = {};
-					groupQuests.forEach((questId) => {
-						const level = questData[questId].level;
-						if (!levels[level]) levels[level] = [];
-						levels[level].push(questId);
+					Object.keys(questData).forEach(questId => {
+						if (typeof levelMap[questId] !== "number") assignLevel(questId, 0);
 					});
-					const sortedLevels = Object.keys(levels).map(Number).sort((a, b) => a - b);
-					sortedLevels.forEach((level) => {
-						let questsAtLevel = levels[level];
-						const totalQuests = questsAtLevel.length;
-						const arrangedQuests = levels[level];
-						const levelWidth =
-							arrangedQuests.length * vars.ROUNDED_RECT_WIDTH +
-							(arrangedQuests.length - 1) * vars.HORIZONTAL_SPACING;
-						const levelStartX = cumulativeGroupWidth + (groupWidths[groupName] - levelWidth) / 2;
-						arrangedQuests.forEach((questId, index) => {
-							const x =
-								levelStartX + index * (vars.ROUNDED_RECT_WIDTH + vars.HORIZONTAL_SPACING);
+				};
+				const arrangeQuestPositions = () => {
+					if (Object.keys(questPositions).length > 0) return;
+					const occupiedSpaces = {};
+					const levels = [...new Set(Object.values(levelMap))].sort((a, b) => a - b);
+					levels.forEach(level => {
+						const questsAtLevel = Object.keys(levelMap).filter(q => levelMap[q] === level);
+						if (!occupiedSpaces[level]) occupiedSpaces[level] = new Set();
+						let xOffset = 0;
+						questsAtLevel.forEach((questId, index) => {
+							while (occupiedSpaces[level].has(xOffset)) xOffset += vars.ROUNDED_RECT_WIDTH + vars.HORIZONTAL_SPACING;
+							const x = xOffset;
 							const y = level * (vars.ROUNDED_RECT_HEIGHT + vars.VERTICAL_SPACING);
-							questPositions[questId] = {
-								x: x,
-								y: y,
-								group: groupName,
-							};
+							questPositions[questId] = { x, y };
+							occupiedSpaces[level].add(x);
+							xOffset += vars.ROUNDED_RECT_WIDTH + vars.HORIZONTAL_SPACING;
 						});
 					});
-					cumulativeGroupWidth += groupWidths[groupName] + vars.GROUP_SPACING;
-				});
+				};
+				const centerParentsOverChildren = () => {
+					const occupiedSpaces = {};
+					Object.keys(parentChildMap).forEach(parentId => {
+						const children = parentChildMap[parentId] || [];
+						if (children.length > 0) {
+							const childXPositions = children.map(child => questPositions[child]?.x || 0);
+							if (childXPositions.length === 0) return;
+							const minX = Math.min(...childXPositions);
+							const maxX = Math.max(...childXPositions);
+							let parentX = (minX + maxX) / 2;
+							const parentY = levelMap[parentId] * (vars.ROUNDED_RECT_HEIGHT + vars.VERTICAL_SPACING);
+							if (!occupiedSpaces[levelMap[parentId]]) occupiedSpaces[levelMap[parentId]] = new Set();
+							while (occupiedSpaces[levelMap[parentId]].has(parentX)) parentX += vars.ROUNDED_RECT_WIDTH + vars.HORIZONTAL_SPACING;
+							occupiedSpaces[levelMap[parentId]].add(parentX);
+							questPositions[parentId] = { x: parentX, y: parentY };
+						}
+					});
+				};
+				const saveQuestPositions = () => {
+					Object.keys(questData).forEach(questId => {
+						questData[questId].position = questPositions[questId];
+					});
+					QUEST_TRACKER_CACHED_QUEST_TREE = true;
+					Utils.updateHandoutField('quest');
+				};
+				identifyQuestGroups();
+				buildParentChildRelationships();
+				calculateQuestLevels();
+				arrangeQuestPositions();
+				centerParentsOverChildren();
+				saveQuestPositions();
 				return questPositions;
 			}
 		};
@@ -3438,7 +3405,7 @@ var QuestTracker = QuestTracker || (function () {
 				}
 			}
 		};
-		const buildQuestTreeOnPage = () => {
+		const buildQuestTreeOnPage = (forcedRebuild = false) => {
 			let questTreePage = findObjs({ _type: 'page', name: QUEST_TRACKER_pageName })[0];
 			if (!questTreePage) {
 				errorCheck(40, 'msg', null,`Page "${QUEST_TRACKER_pageName}" not found. Please create the page manually.`);
@@ -3446,7 +3413,7 @@ var QuestTracker = QuestTracker || (function () {
 			}
 			H.adjustPageSettings(questTreePage);
 			H.clearPageObjects(questTreePage.id, () => {
-				const questPositions = H.buildDAG(QUEST_TRACKER_globalQuestData, vars);
+				const questPositions = H.buildDAG(QUEST_TRACKER_globalQuestData, vars, forcedRebuild);
 				H.adjustPageSizeToFitPositions(questTreePage, questPositions);
 				H.buildPageHeader(questTreePage);
 				QUEST_TRACKER_TreeObjRef = {};
@@ -6639,14 +6606,14 @@ var QuestTracker = QuestTracker || (function () {
 				}, 500);
 			}
 		} else if (command === '!qt-questtree') {
-			const { action, value } = params;
+			const { action, value, force = false } = params;
 			if (errorCheck(142, 'exists', action, 'action')) return;
 			switch (action) {
 				case 'build':
-					QuestPageBuilder.buildQuestTreeOnPage();
+					QuestPageBuilder.buildQuestTreeOnPage(force === true || force === 'true');
 					break;
 				default:
-					errorCheck(143, 'msg', null,`Unknown action: ${action}`);
+					errorCheck(143, 'msg', null, `Unknown action: ${action}`);
 					break;
 			}
 		} 
