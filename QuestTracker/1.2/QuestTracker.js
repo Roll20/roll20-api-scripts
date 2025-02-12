@@ -2890,7 +2890,8 @@ var QuestTracker = QuestTracker || (function () {
 			DEFAULT_STATUS_COLOR: '#000000',
 			QUESTICON_WIDTH: 305,
 			GROUP_SPACING: 800,
-			QUESTICON_HEIGHT: 92
+			QUESTICON_HEIGHT: 92,
+			PAGE_X_OFFSET: 360
 		};
 		const H = {
 			adjustPageSettings: (page) => {
@@ -3090,7 +3091,7 @@ var QuestTracker = QuestTracker || (function () {
 						errorCheck(32, 'msg', null,`Quest data for "${questId}" is missing.`);
 						return;
 					}
-					const x = position.x + totalWidth / 2;
+					const x = position.x + vars.PAGE_X_OFFSET;
 					const y = position.y + vars.PAGE_HEADER_HEIGHT + vars.VERTICAL_SPACING;
 					const isHidden = questData.hidden || false;
 					D.drawQuestGraphics(questId, questData, page.id, x, y, isHidden);
@@ -3132,7 +3133,7 @@ var QuestTracker = QuestTracker || (function () {
 						errorCheck(35, 'msg', null,`Quest data for "${questId}" is missing.`);
 						return;
 					}
-					const x = position.x + totalWidth / 2;
+					const x = position.x + vars.PAGE_X_OFFSET;
 					const y = position.y + vars.PAGE_HEADER_HEIGHT + vars.VERTICAL_SPACING;
 					const isHidden = questData.hidden || false;
 					const textLayer = isHidden ? 'gmlayer' : 'objects';
@@ -3154,7 +3155,7 @@ var QuestTracker = QuestTracker || (function () {
 			drawQuestConnections: (pageId, questPositions) => {
 				const page = getObj('page', pageId);
 				const pageWidth = page.get('width') * vars.DEFAULT_PAGE_UNIT;
-				const offsetX = pageWidth / 2;
+				const offsetX = vars.PAGE_X_OFFSET;
 				const incomingPaths = {};
 				Object.entries(questPositions).forEach(([questId, position]) => {
 					const questData = QUEST_TRACKER_globalQuestData[questId];
@@ -3269,7 +3270,7 @@ var QuestTracker = QuestTracker || (function () {
 			drawMutuallyExclusiveConnections: (pageId, questPositions) => {
 				const page = getObj('page', pageId);
 				const pageWidth = page.get('width') * vars.DEFAULT_PAGE_UNIT;
-				const offsetX = pageWidth / 2;
+				const offsetX = vars.PAGE_X_OFFSET;
 				const mutualExclusions = [];
 				Object.entries(QUEST_TRACKER_globalQuestData).forEach(([questId, questData]) => {
 					const mutuallyExclusiveWith = questData.relationships?.mutually_exclusive || [];
