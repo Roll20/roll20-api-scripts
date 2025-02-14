@@ -2981,106 +2981,238 @@ var QuestTracker = QuestTracker || (function () {
 						return '#CCCCCC';
 				}
 			},
-			buildDAG: (questData, vars, forcedRebuild = false) => {
-				if (!questData || typeof questData !== 'object' || Object.keys(questData).length === 0) return {};
-				const questPositions = {};
-				const levelMap = {};
-				const parentChildMap = {};
-				const childParentMap = {};
-				const mutuallyExclusiveClusters = {};
-				const groupMap = {};
-				const occupiedSpaces = {};
-				const xOffsetTracker = {};
-				const identifyQuestGroups = () => {
-					Object.keys(questData).forEach(questId => {
-						const group = questData[questId]?.group || "default";
-						if (!groupMap[group]) groupMap[group] = [];
-						groupMap[group].push(questId);
-					});
-				};
-				const buildParentChildRelationships = () => {
-					Object.keys(questData).forEach(questId => {
-						const prereqs = questData[questId]?.relationships?.conditions || [];
-						prereqs.forEach(prereq => {
-							const prereqId = typeof prereq === "string" ? prereq : prereq?.conditions?.[0];
-							if (!prereqId) return;
-							if (!parentChildMap[prereqId]) parentChildMap[prereqId] = [];
-							parentChildMap[prereqId].push(questId);
-							if (!childParentMap[questId]) childParentMap[questId] = [];
-							childParentMap[questId].push(prereqId);
-						});
-					});
-				};
-				const calculateQuestLevels = () => {
-					function assignLevel(questId, depth = 0) {
-						if (!questId || !questData[questId]) return;
-						if (typeof levelMap[questId] === "number" && levelMap[questId] >= depth) return;
-						if (isNaN(depth)) return;
-						levelMap[questId] = depth;
-						(parentChildMap[questId] || []).forEach(childId => {
-							if (!questData[childId]) return;
-							assignLevel(childId, depth + 1);
-						});
-					}
-					Object.keys(levelMap).forEach(q => delete levelMap[q]);
-					Object.keys(questData).forEach(questId => {
-						if (!childParentMap[questId]) assignLevel(questId, 0);
-					});
-					Object.keys(questData).forEach(questId => {
-						if (typeof levelMap[questId] !== "number") assignLevel(questId, 0);
-					});
-				};
-				const arrangeQuestPositions = () => {
-					if (Object.keys(questPositions).length > 0) return;
-					const occupiedSpaces = {};
-					const levels = [...new Set(Object.values(levelMap))].sort((a, b) => a - b);
-					levels.forEach(level => {
-						const questsAtLevel = Object.keys(levelMap).filter(q => levelMap[q] === level);
-						if (!occupiedSpaces[level]) occupiedSpaces[level] = new Set();
-						let xOffset = 0;
-						questsAtLevel.forEach((questId, index) => {
-							while (occupiedSpaces[level].has(xOffset)) xOffset += vars.ROUNDED_RECT_WIDTH + vars.HORIZONTAL_SPACING;
-							const x = xOffset;
-							const y = level * (vars.ROUNDED_RECT_HEIGHT + vars.VERTICAL_SPACING);
-							questPositions[questId] = { x, y };
-							occupiedSpaces[level].add(x);
-							xOffset += vars.ROUNDED_RECT_WIDTH + vars.HORIZONTAL_SPACING;
-						});
-					});
-				};
-				const centerParentsOverChildren = () => {
-					const occupiedSpaces = {};
-					Object.keys(parentChildMap).forEach(parentId => {
-						const children = parentChildMap[parentId] || [];
-						if (children.length > 0) {
-							const childXPositions = children.map(child => questPositions[child]?.x || 0);
-							if (childXPositions.length === 0) return;
-							const minX = Math.min(...childXPositions);
-							const maxX = Math.max(...childXPositions);
-							let parentX = (minX + maxX) / 2;
-							const parentY = levelMap[parentId] * (vars.ROUNDED_RECT_HEIGHT + vars.VERTICAL_SPACING);
-							if (!occupiedSpaces[levelMap[parentId]]) occupiedSpaces[levelMap[parentId]] = new Set();
-							while (occupiedSpaces[levelMap[parentId]].has(parentX)) parentX += vars.ROUNDED_RECT_WIDTH + vars.HORIZONTAL_SPACING;
-							occupiedSpaces[levelMap[parentId]].add(parentX);
-							questPositions[parentId] = { x: parentX, y: parentY };
-						}
-					});
-				};
-				const saveQuestPositions = () => {
-					Object.keys(questData).forEach(questId => {
-						questData[questId].position = questPositions[questId];
-					});
-					QUEST_TRACKER_CACHED_QUEST_TREE = true;
-					Utils.updateHandoutField('quest');
-				};
-				identifyQuestGroups();
-				buildParentChildRelationships();
-				calculateQuestLevels();
-				arrangeQuestPositions();
-				centerParentsOverChildren();
-				saveQuestPositions();
-				return questPositions;
-			}
+			
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+buildDAG: (questData, vars, forcedRebuild = false) => {
+    if (!questData || typeof questData !== 'object' || Object.keys(questData).length === 0) return {};
+
+    // Data Structures
+    const questPositions = {};
+    const parentChildMap = {};
+    const childParentMap = {};
+    const layers = [];
+    const nodeLayerMap = {};
+    const dummyNodes = [];
+    let dummyNodeId = 0;
+
+    // Step 1: Cycle Removal
+    function removeCycles() {
+        const visited = new Set();
+        const stack = new Set();
+        const reversedEdges = [];
+
+        function visit(node) {
+            if (stack.has(node)) {
+                return true; // Cycle detected
+            }
+            if (visited.has(node)) {
+                return false;
+            }
+            visited.add(node);
+            stack.add(node);
+            const children = parentChildMap[node] || [];
+            for (const child of children) {
+                if (visit(child)) {
+                    reversedEdges.push([child, node]);
+                    // Reverse the edge
+                    parentChildMap[child] = parentChildMap[child] || [];
+                    parentChildMap[child].push(node);
+                    childParentMap[node] = childParentMap[node] || [];
+                    childParentMap[node].push(child);
+                }
+            }
+            stack.delete(node);
+            return false;
+        }
+
+        for (const node in questData) {
+            visit(node);
+        }
+
+        // Remove reversed edges from original maps
+        for (const [from, to] of reversedEdges) {
+            parentChildMap[to] = parentChildMap[to].filter(child => child !== from);
+            if (parentChildMap[to].length === 0) {
+                delete parentChildMap[to];
+            }
+            childParentMap[from] = childParentMap[from].filter(parent => parent !== to);
+            if (childParentMap[from].length === 0) {
+                delete childParentMap[from];
+            }
+        }
+    }
+
+    // Step 2: Layer Assignment
+    function assignLayers() {
+        const inDegree = {};
+        const zeroInDegree = [];
+
+        // Initialize in-degree count
+        for (const node in questData) {
+            inDegree[node] = (childParentMap[node] || []).length;
+            if (inDegree[node] === 0) {
+                zeroInDegree.push(node);
+            }
+        }
+
+        // Kahn's algorithm for topological sorting
+        while (zeroInDegree.length > 0) {
+            const node = zeroInDegree.shift();
+            const layer = nodeLayerMap[node] || 0;
+            layers[layer] = layers[layer] || [];
+            layers[layer].push(node);
+            const children = parentChildMap[node] || [];
+            for (const child of children) {
+                inDegree[child]--;
+                if (inDegree[child] === 0) {
+                    zeroInDegree.push(child);
+                    nodeLayerMap[child] = layer + 1;
+                }
+            }
+        }
+    }
+
+    // Step 3: Crossing Reduction
+    function reduceCrossings() {
+        const barycenter = (layer, nodeOrder) => {
+            const positions = {};
+            nodeOrder.forEach((node, index) => {
+                positions[node] = index;
+            });
+            const barycenters = {};
+            for (const node of nodeOrder) {
+                const parents = childParentMap[node] || [];
+                if (parents.length > 0) {
+                    const avg = parents.reduce((sum, p) => sum + (positions[p] || 0), 0) / parents.length;
+                    barycenters[node] = avg;
+                } else {
+                    barycenters[node] = positions[node];
+                }
+            }
+            return barycenters;
+        };
+
+        const sortByBarycenter = (layer, nodeOrder) => {
+            const barycenters = barycenter(layer, nodeOrder);
+            nodeOrder.sort((a, b) => barycenters[a] - barycenters[b]);
+        };
+
+        for (let i = 1; i < layers.length; i++) {
+            sortByBarycenter(i, layers[i]);
+        }
+    }
+
+    // Step 4: Coordinate Assignment
+    function assignCoordinates() {
+        const layerHeights = layers.map(layer => layer.length);
+        const maxLayerHeight = Math.max(...layerHeights);
+        const layerY = [];
+        let currentY = 0;
+
+        for (let i = 0; i < layers.length; i++) {
+            layerY[i] = currentY;
+            currentY += vars.ROUNDED_RECT_HEIGHT + vars.VERTICAL_SPACING;
+        }
+
+        for (let i = 0; i < layers.length; i++) {
+            const layer = layers[i];
+            const totalWidth = layer.length * (vars.ROUNDED_RECT_WIDTH + vars.HORIZONTAL_SPACING);
+            let currentX = -totalWidth / 2;
+
+            for (const node of layer) {
+                questPositions[node] = {
+                    x: currentX,
+                    y: layerY[i]
+                };
+                currentX += vars.ROUNDED_RECT_WIDTH + vars.HORIZONTAL_SPACING;
+            }
+        }
+    }
+
+    // Build Parent-Child Relationships
+    function buildRelationships() {
+        for (const questId in questData) {
+            const prereqs = questData[questId]?.relationships?.conditions || [];
+            for (const prereq of prereqs) {
+                const prereqId = typeof prereq === 'string' ? prereq : prereq?.conditions?.[0];
+                if (!prereqId) continue;
+                parentChildMap[prereqId] = parentChildMap[prereqId] || [];
+                parentChildMap[prereqId].push(questId);
+                childParentMap[questId] = childParentMap[questId] || [];
+                childParentMap[questId].push(prereqId);
+            }
+        }
+    }
+
+    // Main Execution
+    buildRelationships();
+    removeCycles();
+    assignLayers();
+    reduceCrossings();
+    assignCoordinates();
+
+    return questPositions;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 		};
 		const D = {
 			drawQuestTreeFromPositions: (page, questPositions, callback) => {
@@ -5324,7 +5456,7 @@ var QuestTracker = QuestTracker || (function () {
 			menu += `<br clear=all><h4>Data</h4><a style="${styles.button} ${styles.floatClearRight}" href="!qt-import">${RefreshImport} JSON Data</a>`;
 			menu += `<br><a style="${styles.button} ${styles.floatClearRight}" href="!qt-config action=checkVersion">Check Version</a>`;
 			menu += `<br><a style="${styles.button} ${styles.floatClearRight}" href="!qt-config action=reset|confirmation=?{Are you sure? This will also clear all historical weather data. Type CONFIRM to continue|}">Reset to Defaults</a>`;
-			menu += `<br clear=all><h4>Quest Tree</h4><a style="${styles.button} ${styles.floatClearRight}" href="!qt-questtree action=build">Build Quest Tree Page</a>`;
+			menu += `<br clear=all><h4>Quest Tree</h4><a style="${styles.button} ${styles.floatClearRight}" href="!qt-questtree action=build|force=true">Build Quest Tree Page</a>`;
 			menu += `<br><h4>Calander</h4><a style="${styles.button} ${styles.floatClearRight}" href="!qt-date action=setcalender|new=?{Choose Calender${calenderDropdown}}">Calendar: ${CALENDARS[QUEST_TRACKER_calenderType]?.name || "Unknown Calendar"}</a>`;
 			menu += `<br clear=all><h4>Weather</h4><br><a style="${styles.button} ${styles.floatClearRight}" href="!qt-config action=toggleWeather|value=${QUEST_TRACKER_WEATHER === true ? 'false' : 'true'}">Toggle Weather (${QUEST_TRACKER_WEATHER === true ? 'on' : 'off'})</a>`;
 			if (QUEST_TRACKER_WEATHER) {
