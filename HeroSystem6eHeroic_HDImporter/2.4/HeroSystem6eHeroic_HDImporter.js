@@ -58,7 +58,7 @@
 		characteristicsCost: 0,
 		
 		// Primary Attributes.
-		// We need to define strengthNet for weapons.
+		// We need strengthNet for weapons and vehicles.
 		size: 0,
 		strength: 10,
 		strengthNet: 10,
@@ -351,34 +351,51 @@
 		/* ***  Import Function: Characteristics         *** */
 		/* ************************************************* */
 		
+		// Set sheet type from template type.
+		let isVehicle = false;
+		
+		if (typeof character.template !== "undefined") {
+			isVehicle = ( (character.template === "builtIn.Vehicle6E.hdt") || (character.template === "builtIn.Vehicle.hdt") ) ? true : false;
+		}
+		
+		let template_attributes = {
+			useVehicleAttributes: isVehicle ? "on" : 0,
+			sheetAttributes: isVehicle ? "vehicle" : "standard",
+			sheetHealthDisplay: isVehicle ? "vehicle" : "standard"
+		}
+		
+		setAttrs(object.id, template_attributes);
+		
 		// Set sticky note to importer details.
 		let importInfoString = "HDImporter for Roll20\n";
-		importInfoString = importInfoString + "Version: " + versionMod + "\n";
+		importInfoString += "Version: " + versionMod + "\n";
 		if (typeof character.playerName !== "undefined") {
-			importInfoString = importInfoString + "Player: " + character.playerName + "\n";
+			importInfoString += "Player: " + character.playerName + "\n";
 		}
 		if (typeof character.gmName !== "undefined") {
-			importInfoString = importInfoString + "GM: " + character.gmName + "\n";
+			importInfoString += "GM: " + character.gmName + "\n";
 		}
 		if (typeof character.genre !== "undefined") {
-			importInfoString = importInfoString + "Genre: " + character.genre + "\n";
+			importInfoString += "Genre: " + character.genre + "\n";
 		}
 		if (typeof character.campaign !== "undefined") {
-			importInfoString = importInfoString + "Campaign: " + character.campaign + "\n";
+			importInfoString += "Campaign: " + character.campaign + "\n";
 		}
 		if (typeof character.versionHD !== "undefined") {
-			importInfoString = importInfoString + "Hero Designer version: " + character.versionHD + "\n";
+			importInfoString += "Hero Designer version: " + character.versionHD + "\n";
 		}
-		importInfoString = importInfoString + "HeroSystem6eHeroic.hde version: " + character.version + "\n";
+		importInfoString += "HeroSystem6eHeroic.hde version: " + character.version + "\n";
 		if (typeof character.characterFile !== "undefined") {
-			importInfoString = importInfoString + "Original file: " + character.characterFile + "\n";
+			importInfoString += "Original file: " + character.characterFile + "\n";
+		}
+		if (typeof character.template !== "undefined") {
+			importInfoString += "Template: " + character.template + "\n";
 		}
 		if (typeof character.timeStamp !== "undefined") {
-			importInfoString = importInfoString + "Export date: \n  " + character.timeStamp + "\n";
+			importInfoString += "Export date: \n  " + character.timeStamp + "\n";
 		}
 		
 		setAttrs(object.id, {portraitStickyNote: importInfoString});
-		
 		
 		// Set sticky window as visible portrait.
 		setAttrs(object.id, {portraitSelection: 2});
