@@ -1636,6 +1636,7 @@
 		/* ************************************************* */
 		
 		// Imports twenty powers, which is Sheet v2.81's capacity.
+		// If the character is a vehicle, autofills up to two each of propulsion and reserve systems.
 		
 		const maxPowers = 20;
 		const overflowPowers = (character.version >= 1.2) ? 10 : 0;
@@ -1674,6 +1675,15 @@
 		
 		let importCount = 0;
 		
+		// Vehicle-specific
+		let isVehicle = false;
+		let propulsionSystems = 0;
+		let reserveSystems = 0;
+		
+		if (typeof character.template !== "undefined") {
+			isVehicle = ( (character.template === "builtIn.Vehicle6E.hdt") || (character.template === "builtIn.Vehicle.hdt") ) ? true : false;
+		}
+		
 		/* ------------------------- */
 		/* Read Powers               */
 		/* ------------------------- */
@@ -1687,7 +1697,7 @@
 				tempString = character.powers["power"+ID].name;
 				
 				if (tempString.includes("(VPP)")) {
-					// Varriable Power Pool found.
+					// Variable Power Pool found.
 					// The pool needs to be split into control and base parts.
 					tempString = character.powers["power"+ID].text;
 					subStringA = tempString.toLowerCase();
@@ -3265,7 +3275,17 @@
 			} else if (lowerCaseString.includes("applied to pd")) {
 				return "Base PD Mod";	
 			} else if (lowerCaseString.includes("applied to ed")) {
-				return "Base ED Mod";	
+				return "Base ED Mod";
+			} else if (tempString.includes("Killing Attack - Hand-To-Hand")) {
+				return "HTH Killing Attack";
+			} else if (tempString.includes("HKA")) {
+				return "HTH Killing Attack";
+			} else if (tempString.includes("Killing Attack - Ranged")) {
+				return "Ranged Killing Attack";
+			} else if (tempString.includes("RKA")) {
+				return "Ranged Killing Attack";
+			} else if (tempString.includes("Blast")) {
+				return "Blast";
 			} else if (tempString.includes("Absorption")) {
 				return "Absorption";
 			} else if (tempString.includes("Aid")) {
@@ -3276,8 +3296,6 @@
 				return "Barrier";
 			} else if (tempString.includes("Mental Blast")) {
 				return "Mental Blast";
-			} else if (tempString.includes("Blast")) {
-				return "Blast";
 			} else if (tempString.includes("Change Environment")) {
 				return "Change Environment";
 			} else if (tempString.includes("Clairsentience")) {
@@ -3330,16 +3348,8 @@
 				return "Healing";
 			} else if (tempString.includes("Invisibility")) {
 				return "Invisibility";
-			} else if (tempString.includes("Killing Attack - Hand-To-Hand")) {
-				return "HTH Killing Attack";
-			} else if (tempString.includes("HKA")) {
-				return "HTH Killing Attack";
 			} else if ( (tempString.includes("Images")) && !(lowerCaseString.includes("only to perceive images")) ) {
 				return "Images";
-			} else if (tempString.includes("Killing Attack - Ranged")) {
-				return "Ranged Killing Attack";
-			} else if (tempString.includes("RKA")) {
-				return "Ranged Killing Attack";
 			} else if (tempString.includes("Knockback Resistance")) {
 				return "Knockback Resistance";
 			} else if (tempString.includes("Leaping")) {
