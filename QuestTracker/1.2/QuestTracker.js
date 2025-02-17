@@ -1,7 +1,7 @@
-// Github:	 https://github.com/boli32/QuestTracker/blob/main/QuestTracker.js
+// Github:	 https://github.com/Roll20/roll20-api-scripts/tree/master/QuestTracker/
 // By:		 Boli (Steven Wrighton): Professional Software Developer, Enthusiatic D&D Player since 1993.
 // Contact:	 https://app.roll20.net/users/3714078/boli
-// Readme	 https://github.com/boli32/QuestTracker/blob/main/README.md 
+// Readme	 https://github.com/Roll20/roll20-api-scripts/blob/master/QuestTracker/README.md
 
 
 var QuestTracker = QuestTracker || (function () {
