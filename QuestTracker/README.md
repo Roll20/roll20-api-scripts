@@ -298,6 +298,20 @@ Quest can have images which are tokens. These are set manually using the rollabl
 
 Simply use the command **!gmnote** (create it as a token macro) when selecting a quest token and it will open up an small menu with quick functionality with the main interface. actioning any of these commands will open up the full quest interface afterwards. I highly recomend using **!gmnote --config** to toggle off the footer buttons when you set it up.
 
+### Manually adjustments of Quest Positions.
+
+```
+ "position": {
+      "x": 4960,
+      "y": 0,
+      "manual": false
+    }
+```
+Under each quest, there is a manual option to adjust the placement of the quests. If manual is set to true, the Quest Tracker script will use the specified positions rather than the calculated ones. Running the command **!qt-import** will load these variables into the environment.
+
+> Note: It is advisable to build the entire quest structure for a campaign before making these final changes, as you may find stray quests placed in undesirable positions. The manual tweaks are best used as a 'finishing' tool.
+
+
 
 ## Triggers Module
 
@@ -462,7 +476,7 @@ Select a calendar type from the configuration menu. The system will automaticall
 
 Users can add custom calanders by editing the **QuestTracker Calendar** Handout; as with other QuestTracker handouts all data is stored in the GM Notes field; the structure used is below as an example along with explanations for each field. 
 
-*NOTE: it is very easy to mess this object up, so be careful. use a ![JSON Validator](https://jsonlint.com/) to confirm it is a valid object before refreshing the JSON files in the configuration settings.* 
+> NOTE: it is very easy to mess this object up, so be careful. use a ![JSON Validator](https://jsonlint.com/) to confirm it is a valid object before refreshing the JSON files in the configuration settings. 
 
 ```
 {
@@ -678,7 +692,7 @@ Users can add custom calanders by editing the **QuestTracker Calendar** Handout;
   ```
 - **Usage**: Provides seasonal and environmental context.
 
-*NOTE: Keeping values between -20 and 20 will allow the weather module to perform correctly.*
+> NOTE: Keeping values between -20 and 20 will allow the weather module to perform correctly.
 
 
 ## Event Module
@@ -739,6 +753,11 @@ No, there is a script in place to convert all autoadvance triggers into the new 
 
 
 ## Updates
+
+#### 2024-02-18
+* Release of **v1.2.1**;
+  * The Quest Tree has been overhauled on the back end so quests are placed better
+  * Added option to maually edit the positioning
 
 #### 2025-02-11
 * Release of **v1.2**; Rumours Module has been overhauled
