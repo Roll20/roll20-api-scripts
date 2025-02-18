@@ -27,8 +27,8 @@ const ScriptCards = (() => { // eslint-disable-line no-unused-vars
 	*/
 
 	const APINAME = "ScriptCards";
-	const APIVERSION = "2.7.35";
-	const NUMERIC_VERSION = "207350"
+	const APIVERSION = "2.7.35a";
+	const NUMERIC_VERSION = "207351"
 	const APIAUTHOR = "Kurt Jaegers";
 	const debugMode = false;
 
@@ -442,7 +442,11 @@ const ScriptCards = (() => { // eslint-disable-line no-unused-vars
 
 				const handleAbilityTrigger = (eventName, replacementGenerator) => {
 					on(eventName, (obj, prev) => {
-						const abilities = findObjs({ type: "ability", _characterid: triggerCharID, name: eventName });
+						var newEventName = eventName;
+						if (eventName == "change:attribute") {
+							newEventName = eventName + ":" + prev.name
+						}
+						const abilities = findObjs({ type: "ability", _characterid: triggerCharID, name: newEventName });
 						if (Array.isArray(abilities) && abilities.length > 0) {
 							const replacement = replacementGenerator(obj, prev);
 							abilities.forEach(ability => {
