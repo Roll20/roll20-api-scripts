@@ -1819,7 +1819,7 @@
 		/* Check for the "takes no stun" power and set the sheet option if found.
 		/* ----------------------------------------------------------------------- */
 		
-		let tempCostArray = [0, 0];
+		let tempValuesArray = [0, 0];
 		
 		for (let i = 1; i < powerArrayIndex; i++) {
 			tempString = powerArray[i].text;
@@ -1902,6 +1902,7 @@
 				testObject.theEndurance = powerArray[importCount].endurance;
 				testObject.theEffect = findEffectType(powerArray[importCount].text, script_name);
 				testObject.theBase = powerArray[importCount].base;
+				testObject.slotType = (powerArray[importCount].cost.includes('v')) ? "variableSlot" : ( (powerArray[importCount].cost.includes('f')) ? "fixedSlot" : "single");
 				
 				if (importCount > sheetCapacity) {
 					// Add to overflow powers list
@@ -1917,20 +1918,21 @@
 					propulsionSystems += 1;
 					sheetCapacity += 1;
 					
-					importedPowers[(propulsionSystems === 1) ? "primaryPropulsionLabel" : "secondaryPropulsionLabel"] = testObject.theName;
+					importedPowers[(propulsionSystems === 1) ? "primaryPropulsionLabel" : "secondaryPropulsionLabel"] = testObject.theName.replace(/\([^)]*\)/g, "");
 					importedPowers[(propulsionSystems === 1) ? "primaryPropulsionMode" : "secondaryPropulsionMode"] = testObject.theEffect.toLowerCase();
+					importedPowers[(propulsionSystems === 1) ? "primaryPropulsionSlotType" : "secondaryPropulsionSlotType"] = testObject.slotType;
 					
 					// Endurance
 					testObject = findPropulsionEndurance(testObject);
 					importedPowers[(propulsionSystems === 1) ? "primaryPropulsionCostsEND" : "secondaryPropulsionCostsEND"] = testObject.powerReducedEND;
 					
 					// Propulsion mode and attribute values
-					tempCostArray = getPropulsionDetails(testObject);
-					importedPowers[(propulsionSystems === 1) ? "primaryPropulsionMode" : "secondaryPropulsionMode"] = tempCostArray[0];
-					importedPowers[(propulsionSystems === 1) ? "primaryPropulsion" : "secondaryPropulsion"] = tempCostArray[1];
-					importedPowers[(propulsionSystems === 1) ? "primaryPropulsionAdds" : "secondaryPropulsionAdds"] = tempCostArray[2];
-					importedPowers[(propulsionSystems === 1) ? "primaryFTLvelocty" : "secondaryFTLvelocty"] = tempCostArray[3];
-					importedPowers[(propulsionSystems === 1) ? "primaryInstantFTL" : "secondaryInstantFTL"] = (tempCostArray[4] ? "on" : 0);
+					tempValuesArray = getPropulsionDetails(testObject);
+					importedPowers[(propulsionSystems === 1) ? "primaryPropulsionMode" : "secondaryPropulsionMode"] = tempValuesArray[0];
+					importedPowers[(propulsionSystems === 1) ? "primaryPropulsion" : "secondaryPropulsion"] = tempValuesArray[1];
+					importedPowers[(propulsionSystems === 1) ? "primaryPropulsionAdds" : "secondaryPropulsionAdds"] = tempValuesArray[2];
+					importedPowers[(propulsionSystems === 1) ? "primaryFTLvelocty" : "secondaryFTLvelocty"] = tempValuesArray[3];
+					importedPowers[(propulsionSystems === 1) ? "primaryInstantFTL" : "secondaryInstantFTL"] = (tempValuesArray[4] ? "on" : 0);
 					
 					// Noncombat multiple
 					importedPowers[(propulsionSystems === 1) ? "primaryNoncombatMultiple" : "secondaryNoncombatMultiple"] = findNoncombatMultiple(testObject.theText);
@@ -1939,21 +1941,25 @@
 					importedPowers[(propulsionSystems === 1) ? "primaryPropulsionAdv" : "secondaryPropulsionAdv"] = findAdvantages(testObject.theText);
 					importedPowers[(propulsionSystems === 1) ? "primaryPropulsionLimitations" : "secondaryPropulsionLimitations"] = findLimitations(testObject.theText);
 					
+					// Description text
 					importedPowers[(propulsionSystems === 1) ? "primaryPropulsionText" : "secondaryPropulsionText"] = testObject.theText;
+					
 				} else if (isVehicle && (testObject.theEffect === "Endurance Reserve") && (reserveSystems < 2)) {
 					// Import vehicle END Reserve
 					reserveSystems += 1;
 					sheetCapacity += 1;
 					
 					importedPowers[(reserveSystems === 1) ? "mainReserveLabel" : "auxiliaryReserveLabel"] = testObject.theName;
-					tempCostArray = getReserveParameters(testObject.theText);
-					importedPowers[(reserveSystems === 1) ? "mainReserveEND" : "auxiliaryReserveEND"] = tempCostArray[0];
-					importedPowers[(reserveSystems === 1) ? "currentMainEND" : "currentAuxiliaryEND"] = tempCostArray[0];
-					importedPowers[(reserveSystems === 1) ? "currentMainEND_max" : "currentAuxiliaryEND_max"] = tempCostArray[0];
-					importedPowers[(reserveSystems === 1) ? "mainReserveREC" : "auxiliaryReserveREC"] = tempCostArray[1];
+					tempValuesArray = getReserveParameters(testObject.theText);
+					importedPowers[(reserveSystems === 1) ? "mainReserveEND" : "auxiliaryReserveEND"] = tempValuesArray[0];
+					importedPowers[(reserveSystems === 1) ? "currentMainEND" : "currentAuxiliaryEND"] = tempValuesArray[0];
+					importedPowers[(reserveSystems === 1) ? "currentMainEND_max" : "currentAuxiliaryEND_max"] = tempValuesArray[0];
+					importedPowers[(reserveSystems === 1) ? "mainReserveREC" : "auxiliaryReserveREC"] = tempValuesArray[1];
 					importedPowers[(reserveSystems === 1) ? "mainReserveLIM" : "auxiliaryReserveLIM"] = findLimitations(testObject.theText);
 					
+					// Description text
 					importedPowers[(reserveSystems === 1) ? "mainReserveText" : "auxiliaryReserveText"] = testObject.theText;
+					
 				} else {
 					// All other powers
 					ID = String(importCount+1-reserveSystems-propulsionSystems).padStart(2,'0');
@@ -1962,9 +1968,9 @@
 					importedPowers["powerEffect"+ID] = testObject.theEffect;
 					
 					// Special cases or base cost.
-					tempCostArray = getPowerBaseCost(character, powerArray[importCount].base, testObject.theEffect, testObject.theText, bonusCP, importedPowers.optionTakesNoSTUN, script_name);
-					importedPowers["powerBaseCost"+ID] = tempCostArray[0];
-					bonusCP = tempCostArray[1];
+					tempValuesArray = getPowerBaseCost(character, powerArray[importCount].base, testObject.theEffect, testObject.theText, bonusCP, importedPowers.optionTakesNoSTUN, script_name);
+					importedPowers["powerBaseCost"+ID] = tempValuesArray[0];
+					bonusCP = tempValuesArray[1];
 					
 					// Get powerReducedEND level and separate endurance limitation or advantage cost.
 					testObject = findEndurance(testObject);
@@ -3306,6 +3312,7 @@
 		let theAdds = 0;
 		let ftlVelocity = 10;
 		let isInstant = false;
+		let slotType = "single";
 		
 		if (theEffect === "Running") {
 			// Might not be called
