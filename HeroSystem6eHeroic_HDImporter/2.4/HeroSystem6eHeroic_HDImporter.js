@@ -1631,11 +1631,12 @@
 		/* ***  Import Function: Import Powers           *** */
 		/* ************************************************* */
 		
-		// Imports twenty powers, which is Sheet v2.81's capacity.
+		// Imports twenty powers, which is Sheet v4.45's capacity.
 		// If the character is a vehicle, autofills up to two each of propulsion and reserve systems.
 		
-		const maxPowers = 20;
-		const overflowPowers = (character.version >= 1.2) ? 10 : 0;
+		const maxPowers = 30;
+		let sheetCapacity = 20;
+		let overflowPowers = (typeof character.complicationsTextLeft !== "undefined") ? character.complicationsTextLeft : "";
 		
 		let tempString;
 		let damageString;
@@ -1671,6 +1672,7 @@
 		var importedPowers = new Object();
 		let powerArray = new Array();
 		let powerArrayIndex = 0;
+		let extras = 0;
 		
 		let importCount = 0;
 		
@@ -1680,7 +1682,7 @@
 		const isVehicle = (typeof character.template !== "undefined") ? character.template.includes("Vehicle") : false;
 		
 		/* ------------------------- */
-		/* Read Powers               */
+		/* Read All Powers           */
 		/* ------------------------- */
 		
 		for (importCount; importCount < maxPowers; importCount++) {
@@ -1813,19 +1815,6 @@
 			}
 		}
 		
-		// Powers that don't fit in the sheet's slots will be placed in a text field.
-		for (importCount; importCount < (maxPowers + overflowPowers); importCount++) {
-			
-			ID = String(importCount+1).padStart(2,'0');
-			
-			if ((typeof character.powers["power"+ID] !== "undefined") && (typeof character.powers["power"+ID].name !== "undefined")) {
-				
-				powerArray[powerArrayIndex]=character.powers["power"+ID];
-				
-				powerArrayIndex++;
-			}
-		}
-		
 		/* ----------------------------------------------------------------------- */
 		/* Check for the "takes no stun" power and set the sheet option if found.
 		/* ----------------------------------------------------------------------- */
@@ -1843,13 +1832,13 @@
 		}
 		
 		/* ----------------------------------------------------------------------------------------- */
-		/* Import the first twenty into the sheet. Then import the remainder as a text field note.
+		/* Import the powers up to powerCapacity, which may grow if a vehicle.
 		/* ----------------------------------------------------------------------------------------- */
 		
-		// This is currently the only function where bonus points are awarded. If this changes, assign to character bonusBenefit.
 		let bonusCP = 0;
 		let maxImport = (powerArrayIndex <= maxPowers) ? powerArrayIndex : maxPowers;
 		let tempPER = [0, 0, 0, 0];
+		
 		const specialArray = ["real weapon", "only works",  "only against", "only for", "only to", "only applies", "only when", "attacks", "requires a roll", "protects areas"];
 		const propulsionArray = new Set(["Running", "Ground Movement", "Swimming", "Leaping", "Flight", "FTL Travel", "Teleportation", "Extra-Dimensional MV", "Clinging", "Swinging"]);
 		
@@ -1897,7 +1886,7 @@
 			
 			importCount = 0;
 			
-			while (importCount < maxImport) {
+			while (importCount < powerArrayIndex) {
 				
 				// First fix some known typos.
 				powerArray[importCount].text = fixKnownSpellingErrors(powerArray[importCount].text, script_name);
@@ -1914,9 +1903,19 @@
 				testObject.theEffect = findEffectType(powerArray[importCount].text, script_name);
 				testObject.theBase = powerArray[importCount].base;
 				
-				if (isVehicle && propulsionArray.has(testObject.theEffect) && (propulsionSystems < 2)) {
+				if (importCount > sheetCapacity) {
+					// Add to overflow powers list
+					overflowPowers += powerArray[importCount].name + "\n";
+					overflowPowers += (powerArray[importCount].damage !== "") ? " Damage: " + powerArray[importCount].damage + "\n" : "";
+					overflowPowers += " END: " + powerArray[importCount].endurance + "\n";
+					overflowPowers += " Base CP: " + powerArray[importCount].base + ", " + " Real CP: " + powerArray[importCount].cost + "\n";
+					overflowPowers += powerArray[importCount].text + "\n" + "\n";
+					extras += 1;
+					
+				} else if (isVehicle && propulsionArray.has(testObject.theEffect) && (propulsionSystems < 2)) {
 					// Import vehicle propulsion system
 					propulsionSystems += 1;
+					sheetCapacity += 1;
 					
 					importedPowers[(propulsionSystems === 1) ? "primaryPropulsionLabel" : "secondaryPropulsionLabel"] = testObject.theName;
 					importedPowers[(propulsionSystems === 1) ? "primaryPropulsionMode" : "secondaryPropulsionMode"] = testObject.theEffect.toLowerCase();
@@ -1944,6 +1943,7 @@
 				} else if (isVehicle && (testObject.theEffect === "Endurance Reserve") && (reserveSystems < 2)) {
 					// Import vehicle END Reserve
 					reserveSystems += 1;
+					sheetCapacity += 1;
 					
 					importedPowers[(reserveSystems === 1) ? "mainReserveLabel" : "auxiliaryReserveLabel"] = testObject.theName;
 					tempCostArray = getReserveParameters(testObject.theText);
@@ -2223,27 +2223,13 @@
 			}
 		}
 		
-		// Display additional powers in the talents text box.
-		tempString = "";
-		if (powerArrayIndex > maxPowers) {
-			let extras = 0;
-			
-			for (let i = maxPowers; i < powerArrayIndex; i++) {
-				tempString += powerArray[i].name + "\n";
-				if (powerArray[i].damage !== "") {
-					tempString += " Damage: " + powerArray[i].damage + "\n";
-				}
-				tempString += " END: " + powerArray[i].endurance + "\n";
-				tempString += " Base CP: " + powerArray[i].base + ", " + " Real CP: " + powerArray[i].cost + "\n";
-				tempString += powerArray[i].text + "\n" + "\n";
-				extras++;
-			}
+		// Overflow powers to talent notes.
+		if ( (extras > 0) && (character.version >= 1.2) ) {
+			importedPowers.complicationsTextLeft = overflowPowers;
 			
 			if(verbose) {
 				sendChat(script_name, extras + " powers placed in notes.");
 			}
-			
-			importedPowers.complicationsTextLeft = tempString;
 		}
 		
 		// Import powers and bonus points to sheet.
@@ -2260,7 +2246,7 @@
 			}
 		}		
 		
-		return tempString.trim();
+		return overflowPowers.trim();
 	};
 
 	
