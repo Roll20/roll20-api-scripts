@@ -90,9 +90,6 @@
 		CurrentBODY: 10,
 		CurrentSTUN: 20,
 		CurrentEND: 20,
-		gearCurrentBODY: 10,
-		gearCurrentSTUN: 20,
-		gearCurrentEND: 20,
 		
 		// Make characteristic maximums default to no.
 		useCharacteristicMaximums: 0,
@@ -352,7 +349,7 @@
 		/* ************************************************* */
 		
 		// Set sheet type from template type.
-		const isVehicle = (typeof character.template !== "undefined") ? character.template.includes("Vehicle") : false;
+		const isVehicle = (typeof character.template !== "undefined") ? ( character.template.includes("Vehicle") || ( (character.size > 0) && !character.template.includes("Base"))) : false;
 		
 		let template_attributes = {
 			useVehicleAttributes: isVehicle ? "on" : 0,
@@ -385,7 +382,7 @@
 			importInfoString += "Original file: " + character.characterFile + "\n";
 		}
 		if (typeof character.template !== "undefined") {
-			importInfoString += "Template: " + character.template + "\n";
+			importInfoString += (character.template.includes(".hdt")) ? "Template: " + character.template + "\n" : "Template: not found\n";
 		}
 		if (typeof character.timeStamp !== "undefined") {
 			importInfoString += "Export date: \n  " + character.timeStamp + "\n";
@@ -496,13 +493,11 @@
 		}
 		
 		// Set status attributes to starting values
+		// CurrentBODY: character.body + parseInt(character.size)||0,
 		let health_attributes = {
 			CurrentBODY: character.body,
 			CurrentSTUN: character.stun,
-			CurrentEND: character.endurance,
-			gearCurrentBODY: character.body,
-			gearCurrentSTUN: character.stun,
-			gearCurrentEND: character.endurance
+			CurrentEND: character.endurance
 		}
 		
 		setAttrs(object.id, health_attributes);
@@ -1634,7 +1629,7 @@
 		// Imports twenty powers, which is Sheet v4.45's capacity.
 		// If the character is a vehicle, autofills up to two each of propulsion and reserve systems.
 		
-		const maxPowers = 30;
+		const maxPowers = 40;
 		let sheetCapacity = 20;
 		let overflowPowers = (typeof character.complicationsTextLeft !== "undefined") ? character.complicationsTextLeft : "";
 		
@@ -1679,7 +1674,7 @@
 		// Vehicle-specific
 		let propulsionSystems = 0;
 		let reserveSystems = 0;
-		const isVehicle = (typeof character.template !== "undefined") ? character.template.includes("Vehicle") : false;
+		const isVehicle = (typeof character.template !== "undefined") ? ( character.template.includes("Vehicle") || ( (character.size > 0) && !character.template.includes("Base"))) : false;
 		
 		/* ------------------------- */
 		/* Read All Powers           */
