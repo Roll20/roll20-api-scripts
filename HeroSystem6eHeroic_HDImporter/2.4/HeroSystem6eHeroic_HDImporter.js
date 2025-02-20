@@ -1694,7 +1694,7 @@
 				tempString = character.powers["power"+ID].name;
 				
 				if (tempString.includes("(VPP)")) {
-					// Variable Power Pool found.
+					// Varriable Power Pool found.
 					// The pool needs to be split into control and base parts.
 					tempString = character.powers["power"+ID].text;
 					subStringA = tempString.toLowerCase();
@@ -1796,13 +1796,15 @@
 						// Create entry for compound power
 						powerArray[powerArrayIndex]={
 							name: character.powers["power"+ID].name,
-							base: base,
+							base: base.toString(),
 							text: subStringA,
-							cost: cost,
+							cost: cost.toString(),
 							endurance: character.powers["power"+ID].endurance,
 							damage: (subStringB !== 0) ? subStringB + "d6" : character.powers["power"+ID].damage,
 							compound: true
 						}
+						
+						// sendChat(script_name, JSON.stringify(powerArray[powerArrayIndex]));
 						
 						powerArrayIndex++;
 					}
@@ -1902,7 +1904,7 @@
 				testObject.theEndurance = powerArray[importCount].endurance;
 				testObject.theEffect = findEffectType(powerArray[importCount].text, script_name);
 				testObject.theBase = powerArray[importCount].base;
-				testObject.slotType = (powerArray[importCount].cost.includes('v')) ? "variableSlot" : ( (powerArray[importCount].cost.includes('f')) ? "fixedSlot" : "single");
+				testObject.slotType = (powerArray[importCount].cost.includes("v")) ? "variableSlot" : ( (powerArray[importCount].cost.includes("f")) ? "fixedSlot" : "single");
 				
 				if (importCount > sheetCapacity) {
 					// Add to overflow powers list
