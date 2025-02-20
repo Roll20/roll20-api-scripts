@@ -5960,9 +5960,6 @@
 }
 
 <!--REG_REPLACE--><!--REGSTRING-->\\<!--/REGSTRING--><!--REPSTRING-->/<!--/REPSTRING--><!--/REG_REPLACE-->
-<!--REG_REPLACE--><!--REGSTRING-->Flight (\d*)"<!--/REGSTRING--><!--REPSTRING-->Flight $1m<!--/REPSTRING--><!--/REG_REPLACE-->
-<!--REG_REPLACE--><!--REGSTRING-->within (\d*)"<!--/REGSTRING--><!--REPSTRING-->within $1m<!--/REPSTRING--><!--/REG_REPLACE-->
-<!--REG_REPLACE--><!--REGSTRING-->Range \((\d*)"\)<!--/REGSTRING--><!--REPSTRING-->Range \($1m\)<!--/REPSTRING--><!--/REG_REPLACE-->
 <!--REG_REPLACE--><!--REGSTRING-->(?<=[^\^\t:])(")(?=[^\>\}\]\:\n][^\n])<!--/REGSTRING--><!--REPSTRING-->''<!--/REPSTRING--><!--/REG_REPLACE-->
 <!--REG_REPLACE--><!--REGSTRING-->(\n)+<!--/REGSTRING--><!--REPSTRING--> <!--/REPSTRING--><!--/REG_REPLACE-->
 <!--REG_REPLACE--><!--REGSTRING-->(\t)+<!--/REGSTRING--><!--REPSTRING--> <!--/REPSTRING--><!--/REG_REPLACE-->

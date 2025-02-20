@@ -377,7 +377,7 @@
 		if (typeof character.versionHD !== "undefined") {
 			importInfoString += "Hero Designer version: " + character.versionHD + "\n";
 		}
-		importInfoString += "HeroSystem6eHeroic.hde version: " + character.version + "\n";
+		importInfoString += "HeroSystem6eHeroic.hde: v" + character.version + "\n";
 		if (typeof character.characterFile !== "undefined") {
 			importInfoString += "Original file: " + character.characterFile + "\n";
 		}
@@ -385,7 +385,7 @@
 			importInfoString += (character.template.includes(".hdt")) ? "Template: " + character.template + "\n" : "Template: not found\n";
 		}
 		if (typeof character.timeStamp !== "undefined") {
-			importInfoString += "Export date: \n  " + character.timeStamp + "\n";
+			importInfoString += "Export date: \n  " + character.timeStamp;
 		}
 		
 		setAttrs(object.id, {portraitStickyNote: importInfoString});
@@ -1946,7 +1946,7 @@
 					reserveSystems += 1;
 					sheetCapacity += 1;
 					
-					importedPowers[(reserveSystems === 1) ? "mainReserveLabel" : "auxiliaryReserveLabel"] = testObject.theName;
+					importedPowers[(reserveSystems === 1) ? "mainReserveLabel" : "auxiliaryReserveLabel"] = testObject.theName.replace(/\([^)]*\)/g, "");
 					tempValuesArray = getReserveParameters(testObject.theText);
 					importedPowers[(reserveSystems === 1) ? "mainReserveEND" : "auxiliaryReserveEND"] = tempValuesArray[0];
 					importedPowers[(reserveSystems === 1) ? "CurrentMainEND" : "CurrentAuxiliaryEND"] = tempValuesArray[0];
@@ -4304,6 +4304,14 @@
 		let detailString = "";
 		let startPosition = 0;
 		let endPosition = 0;
+		const regex = /''/g;
+		let usedGameInches = inputString.search(/''/g);
+		
+		// Convert game inches to meters.
+		if (usedGameInches) {
+			inputString = inputString.replace(/''/g, "m");
+		}
+		
 		let lowerCaseString = inputString.toLowerCase();
 		
 		const specialArray = ["real weapon", "only works", "only for", "only to", "only applies", "only when", "attacks", "requires a roll", "for up to"];
@@ -4319,18 +4327,20 @@
 			startPosition = detailString.includes("+") ? detailString.indexOf("+") : 0;
 			detailString = detailString.slice(startPosition, endPosition);
 			charMod = detailString.replace(/[^0-9\-]/g, '');
-			if (charMod === "") {
-				charMod = 0;
-			}
 		} else if (trailingSet.has(searchString)) {
 			startPosition = inputString.indexOf(searchString);
 			detailString = inputString.slice(startPosition + searchString.length);
 			endPosition = detailString.includes("m") ? detailString.indexOf("m") : detailString.length;
-			detailString = detailString.slice(startPosition, endPosition);
+			detailString = detailString.slice(0, endPosition);
 			charMod = detailString.replace(/[^0-9\-]/g, '');
-			if (charMod === "") {
-				charMod = 0;
+			
+			if (usedGameInches) {
+				charMod *= 2;
 			}
+		}
+		
+		if (charMod === "") {
+			charMod = 0;
 		}
 		
 		if (verbose) {
@@ -4350,11 +4360,16 @@
 		let detailString = "";
 		let startPosition = 0;
 		let endPosition = 0;
-		const specialString = "m total";
-		let lowerCaseString = inputString.toLowerCase();
+		const regex = /''/g;
+		let usedGameInches = inputString.search(/''/g);
 		
-		// var leadingSet = new Set(["Ground Movement"]);
+		const specialString = "m total";
 		var trailingSet = new Set(["Running", "Leaping", "Swimming", "Flight", "Swinging", "Ground Movement", "Teleportation"]);
+		
+		// Convert game inches to meters.
+		if (usedGameInches) {
+			inputString = inputString.replace(/''/g, "m");
+		}
 		
 		if (inputString.includes(specialString)) {
 			endPosition = inputString.indexOf(specialString);
@@ -4366,12 +4381,16 @@
 			startPosition = inputString.indexOf(searchString);
 			detailString = inputString.slice(startPosition + searchString.length);
 			endPosition = detailString.includes("m") ? detailString.indexOf("m") : detailString.length;
-			detailString = detailString.slice(startPosition, endPosition);
+			detailString = detailString.slice(0, endPosition);
 			theMove = detailString.replace(/[^0-9\-]/g, '');
 		}
 		
 		if (theMove === '') {
 			theMove = 0;
+		}
+		
+		if (usedGameInches) {
+			theMove *= 2;
 		}
 		
 		if (verbose) {
