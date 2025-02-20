@@ -42,7 +42,7 @@
 (function() {
 	// Constants
 	const versionMod = "2.4";
-	const versionSheet = "3.8"; // Note that a newer sheet will make upgrades as well as it can.
+	const versionSheet = "4.45"; // Note that a newer sheet will make upgrades as well as it can.
 	const needsExportedVersion = new Set(["1.0", "2.0", "2.1", "2.2", "2.3", "2.4"]); // HeroSystem6eHeroic.hde versions allowed.
 	
 	const defaultAttributes = {
@@ -96,9 +96,9 @@
 		optionTakesNoSTUN: 0,
 		
 		// Skill levels
-		skillLevels38: 0,
-		skillLevels39: 0,
-		skillLevels40: 0,
+		skillLevels73: 0,
+		skillLevels74: 0,
+		skillLevels75: 0,
 		interactionLevelsCP: 0,
 		intellectLevelsCP: 0,
 		agilityLevelsCP: 0,
@@ -2767,19 +2767,20 @@
 		if (skillObject.text.includes("HTH Combat")) {
 			// Find the number of levels from the CP spent.
 			weaponSkill = {
-				skillLevels38: skillObject.levels
+				skillLevels73: skillObject.levels
 			};
 			
 		} else if (skillObject.text.includes("Ranged Combat")) {
 			// Find the number of levels from the CP spent.
 			weaponSkill = {
-				skillLevels39: skillObject.levels
+				skillLevels74: skillObject.levels
 			};
 			
-		} else if (skillObject.text.includes("All Attacks")) {
+		} else if (skillObject.text.includes("All Attacks") || skillObject.text.includes("All Combat")) {
 			// Find the number of levels from the CP spent.
+			
 			weaponSkill = {
-				skillLevels40: skillObject.levels
+				skillLevels75: skillObject.levels
 			};
 			
 		} else if (skillObject.text.includes("group") || skillObject.text.includes("single") || (skillObject.display === "Weapon Familiarity") || (skillObject.display === "Penalty Skill Levels") || (skillObject.display === "Combat Skill Levels") || (skillObject.display === "Mental Combat Skill Levels")) {
@@ -2868,65 +2869,111 @@
 				case 0:
 					// Weapon skill slot 1.
 					weaponSkill = {
-						skillName31: name,
-						skillType31: type,
-						skillLevels31: levels,
-						skillCP31: cost
+						skillName61: name,
+						skillType61: type,
+						skillLevels61: levels,
+						skillCP61: cost
 					}
 					break;
 				case 1:
 					// Weapon skill slot 2.
 					weaponSkill = {
-						skillName32: name,
-						skillType32: type,
-						skillLevels32: levels,
-						skillCP32: cost
+						skillName62: name,
+						skillType62: type,
+						skillLevels62: levels,
+						skillCP62: cost
 					}
 					break;
 				case 2:
 					// Weapon skill slot 3.
 					weaponSkill = {
-						skillName33: name,
-						skillType33: type,
-						skillLevels33: levels,
-						skillCP33: cost
+						skillName63: name,
+						skillType63: type,
+						skillLevels63: levels,
+						skillCP63: cost
 					}
 					break;
 				case 3:
 					// Weapon skill slot 4.
 					weaponSkill = {
-						skillName34: name,
-						skillType34: type,
-						skillLevels34: levels,
-						skillCP34: cost
+						skillName64: name,
+						skillType64: type,
+						skillLevels64: levels,
+						skillCP64: cost
 					}
 					break;
 				case 4:
 					// Weapon skill slot 5.
 					weaponSkill = {
-						skillName35: name,
-						skillType35: type,
-						skillLevels35: levels,
-						skillCP35: cost
+						skillName65: name,
+						skillType65: type,
+						skillLevels65: levels,
+						skillCP65: cost
 					}
 					break;
 				case 5:
 					// Weapon skill slot 6.
 					weaponSkill = {
-						skillName36: name,
-						skillType36: type,
-						skillLevels36: levels,
-						skillCP36: cost
+						skillName66: name,
+						skillType66: type,
+						skillLevels66: levels,
+						skillCP66: cost
 					}
 					break;
 				case 6:
-					// Last weapon skill slot available.
+					// Weapon skill slot 7.
 					weaponSkill = {
-						skillName37: name,
-						skillType37: type,
-						skillLevels37: levels,
-						skillCP37: cost
+						skillName67: name,
+						skillType67: type,
+						skillLevels67: levels,
+						skillCP67: cost
 					}
+					break;
+				case 7:
+					// Weapon skill slot 8.
+					weaponSkill = {
+						skillName68: name,
+						skillType68: type,
+						skillLevels68: levels,
+						skillCP68: cost
+					}
+					break;
+				case 8:
+					// Weapon skill slot 9.
+					weaponSkill = {
+						skillName69: name,
+						skillType69: type,
+						skillLevels69: levels,
+						skillCP69: cost
+					}
+					break;
+				case 9:
+					// Weapon skill slot 10.
+					weaponSkill = {
+						skillName70: name,
+						skillType70: type,
+						skillLevels70: levels,
+						skillCP70: cost
+					}
+					break;
+				case 10:
+					// Weapon skill slot 11.
+					weaponSkill = {
+						skillName71: name,
+						skillType71: type,
+						skillLevels71: levels,
+						skillCP71: cost
+					}
+					break;
+				case 11:
+					// Last available
+					weaponSkill = {
+						skillName72: name,
+						skillType72: type,
+						skillLevels72: levels,
+						skillCP72: cost
+					}
+					break;
 			}
 			weaponSkillIndex++;
 		}
