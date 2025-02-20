@@ -1629,7 +1629,7 @@
 		// Imports twenty powers, which is Sheet v4.45's capacity.
 		// If the character is a vehicle, autofills up to two each of propulsion and reserve systems.
 		
-		const maxPowers = 40;
+		const maxPowers = 50;
 		let sheetCapacity = 20;
 		let overflowPowers = (typeof character.complicationsTextLeft !== "undefined") ? character.complicationsTextLeft : "";
 		
