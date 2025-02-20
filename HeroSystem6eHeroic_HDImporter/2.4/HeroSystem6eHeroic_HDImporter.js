@@ -2623,10 +2623,10 @@
 			// Groups of three skills will be a challenge.
 			
 			if (theSkill.text.includes("three pre-defined Skills")) {
-				// This type of skill level is recorded along with general skills.
+				// A group skill level, which is recorded along with general skills.
 				sheetSkillIndexes.generalSkillIndex = importGeneralSkill(object, character, script_name, theSkill, sheetSkillIndexes.generalSkillIndex);
-			} else if (parseInt(theSkill.cost/theSkill.levels) === 3) {
-				// This type of skill level is recorded along with general skills.
+			} else if (theSkill.cost/theSkill.levels <= 3) {
+				// Group or single skill level, which is recorded along with general skills.
 				
 				sheetSkillIndexes.generalSkillIndex = importGeneralSkill(object, character, script_name, theSkill, sheetSkillIndexes.generalSkillIndex);
 			} else {
@@ -2944,63 +2944,51 @@
 	
 	var importSkillLevels = function(object, character, script_name, skillObject) {
 		
+		let skillLevel = {};
+		
 		if (skillObject.text.includes("all Intellect Skills")) {
 			// The broad group skill level is ambiguous.
 			// By default we will guess intellect as the most common.
 			
 			if (skillObject.name.includes("nteract")) {
 				// Look at name to see if player added interaction label.
-				let skillLevel = {
-					interactionLevels: skillObject.levels,
-					interactionLevelsCP: skillObject.levels*4
-				}
+				skillLevel.interactionLevels = skillObject.levels;
+				skillLevel.interactionLevelsCP = skillObject.levels*4;
 				
 				if(verbose) {
 					sendChat(script_name, "Found interaction group levels.");
 				}
-				setAttrs(object.id, skillLevel);
 			} else if (skillObject.name.includes("ntellect")) {
 				// Look at name to see if player added intellect label.
-				let skillLevel = {
-					intellectLevels: skillObject.levels,
-					intellectLevelsCP: skillObject.levels*4
-				}
+				skillLevel.intellectLevels = skillObject.levels;
+				skillLevel.intellectLevelsCP = skillObject.levels*4;
 				
 				if(verbose) {
 					sendChat(script_name, "Found intellect group levels.");
 				}
-				setAttrs(object.id, skillLevel);
 			} else {
 				// Assume intellect.
-				let skillLevel = {
-					intellectLevels: skillObject.levels,
-					intellectLevelsCP: skillObject.levels*4
-				}
+				skillLevel.intellectLevels = skillObject.levels;
+				skillLevel.intellectLevelsCP = skillObject.levels*4;
 				
 				if(verbose) {
 					sendChat(script_name, "Found broad group levels. Assuming intellect.");
 				}
-				setAttrs(object.id, skillLevel);
 			}
 		} else if (skillObject.text.includes("all Agility Skills")) {
-			let skillLevel = {
-				agilityLevels: skillObject.levels,
-				agilityLevelsCP: skillObject.levels*6
-			}
-			setAttrs(object.id, skillLevel);
+			skillLevel.agilityLevels = skillObject.levels;
+			skillLevel.agilityLevelsCP = skillObject.levels*6;
+			
 		} else if (skillObject.text.includes("all Non-Combat Skills")) {
-			let skillLevel = {
-				noncombatLevels: skillObject.levels,
-				noncombatLevelsCP: skillObject.levels*10
-			}
-			setAttrs(object.id, skillLevel);
+			skillLevel.noncombatLevels = skillObject.levels;
+			skillLevel.noncombatLevelsCP = skillObject.levels*10;
+			
 		} else if (skillObject.text.includes("Overall")) {
-			let skillLevel = {
-				overallLevels: skillObject.levels,
-				overallLevelsCP: skillObject.levels*12
-			}
-			setAttrs(object.id, skillLevel);
+			skillLevel.overallLevels = skillObject.levels;
+			skillLevel.overallLevelsCP = skillObject.levels*12;
 		} 
+		
+		setAttrs(object.id, skillLevel);
 		
 		return;
 	}
@@ -3017,7 +3005,10 @@
 		let levels = parseInt(skillObject.levels);
 		let cost = skillObject.cost;
 		
-		if (skillObject.display === ("Skill Levels")) {
+		if ( (skillObject.display === ("Skill Levels")) && (base/levels < 3)) {
+			// Single skill.
+			type = "other";
+		} else if (skillObject.display === ("Skill Levels")) {
 			// Three-group skill.
 			type = "group";
 		} else if (skillObject.text.includes("three pre-defined Skills")) {
