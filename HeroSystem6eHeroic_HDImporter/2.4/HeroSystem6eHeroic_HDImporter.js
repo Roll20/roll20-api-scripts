@@ -411,7 +411,7 @@
 			description += ((character.tactics).length > 0) ? '\n' + '\n' + character.tactics : "";
 			description += ((character.campaignUse).length > 0) ? '\n' + '\n' + character.campaignUse : "";
 			description = description.trim();
-			description += '\n' + '\n' + character.height + " and " + Math.round(Number((character.weight).replace(/[^0-9.]/g,''))) + " kg.";
+			description += (isVehicle) ? "" : '\n' + '\n' + character.height + " and " + Math.round(Number((character.weight).replace(/[^0-9.]/g,''))) + " kg.";
 			description = description.trim();
 		} else {
 			quote = "";
@@ -1954,8 +1954,8 @@
 					importedPowers[(reserveSystems === 1) ? "mainReserveLabel" : "auxiliaryReserveLabel"] = testObject.theName;
 					tempValuesArray = getReserveParameters(testObject.theText);
 					importedPowers[(reserveSystems === 1) ? "mainReserveEND" : "auxiliaryReserveEND"] = tempValuesArray[0];
-					importedPowers[(reserveSystems === 1) ? "currentMainEND" : "currentAuxiliaryEND"] = tempValuesArray[0];
-					importedPowers[(reserveSystems === 1) ? "currentMainEND_max" : "currentAuxiliaryEND_max"] = tempValuesArray[0];
+					importedPowers[(reserveSystems === 1) ? "CurrentMainEND" : "CurrentAuxiliaryEND"] = tempValuesArray[0];
+					importedPowers[(reserveSystems === 1) ? "CurrentMainEND_max" : "CurrentAuxiliaryEND_max"] = tempValuesArray[0];
 					importedPowers[(reserveSystems === 1) ? "mainReserveREC" : "auxiliaryReserveREC"] = tempValuesArray[1];
 					importedPowers[(reserveSystems === 1) ? "mainReserveLIM" : "auxiliaryReserveLIM"] = findLimitations(testObject.theText);
 					
