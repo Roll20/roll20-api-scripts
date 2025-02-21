@@ -2001,7 +2001,7 @@
 					importedPowers["powerStunMod"+ID] = modifiedSTUNx(testObject.theText);
 					
 					// Assign effect dice.
-					importedPowers["powerDice"+ID] = getPowerDamage(powerArray[importCount].damage, theEffect, character.strength, script_name);
+					importedPowers["powerDice"+ID] = getPowerDamage(powerArray[importCount].damage, testObject.theEffect, character.strength, script_name);
 					
 					// Find and assign power type. Remove export notes from names.
 					tempString = powerArray[importCount].name;
@@ -2046,15 +2046,15 @@
 					}
 					
 					// Set attack checkbox for attacks.
-					importedPowers["powerAttack"+ID] = isAttack(theEffect) ? "on" : 0;
+					importedPowers["powerAttack"+ID] = isAttack(testObject.theEffect) ? "on" : 0;
 					
 					// Set power type.
-					importedPowers["powerDamageType"+ID] = getPowerDamageType(theEffect);
+					importedPowers["powerDamageType"+ID] = getPowerDamageType(testObject.theEffect);
 					
 					// If Power's effect is Resistant Protection create armor in Armor Slot 8 (14) with a combination of ED and PD.
 					tempString = (powerArray[importCount].text).toLowerCase();
 					
-					if (theEffect === "Resistant Protection") {
+					if (testObject.theEffect === "Resistant Protection") {
 						if ( (typeof powerArray[importCount].text !== "undefined") && (powerArray[importCount].text !== "") ) {
 							if(verbose) {
 								sendChat(script_name, "Created Resistant Protection armor.");
@@ -2106,7 +2106,7 @@
 								}
 							}
 						}
-					} else if (theEffect === "Base PD Mod") {
+					} else if (testObject.theEffect === "Base PD Mod") {
 						if ( (typeof powerArray[importCount].text !== "undefined") && (powerArray[importCount].text !== "") ) {
 							if(verbose) {
 								sendChat(script_name, "Added Resistant PD to armor.");
@@ -2128,7 +2128,7 @@
 								}
 							}
 						}
-					} else if (theEffect === "Base ED Mod") {
+					} else if (testObject.theEffect === "Base ED Mod") {
 						if ( (typeof powerArray[importCount].text !== "undefined") && (powerArray[importCount].text !== "") ) {
 							if(verbose) {
 								sendChat(script_name, "Added Resistant ED to armor.");
@@ -2156,7 +2156,7 @@
 					tempString = powerArray[importCount].text;
 					
 					if ( (typeof tempString != "undefined") && (tempString != "") ) {
-						switch (theEffect) {
+						switch (testObject.theEffect) {
 							case "Base STR Mod":	if (tempString.includes("0 END")) {
 														importedPowers["optionUntiring"] = "on";
 													}
