@@ -3485,6 +3485,8 @@
 				return "Duplication";
 			} else if (tempString.includes("Enhanced Senses")) {
 				return "Enhanced Senses";
+			} else if (tempString.includes("Entangle")) {
+				return "Entangle";
 			} else if (tempString.includes("Endurance Reserve")) {
 				return "Endurance Reserve";
 			} else if (tempString.includes("Extra Limb")) {
@@ -3643,8 +3645,6 @@
 				return "Enhanced PER";
 			} else if (lowerCaseString.includes("eating") || lowerCaseString.includes("immunity") || lowerCaseString.includes("longevity") || lowerCaseString.includes("safe in") || lowerCaseString.includes("breathing") || lowerCaseString.includes("sleeping")) {
 				return "Life Support";
-			} else if (tempString.includes("Entangle")) {
-				return "Entangle";
 			} else if ( (lowerCaseString.includes("advantage")) || (lowerCaseString.includes("area of effect")) ) {
 				return "Naked Advantage";
 			} else if (lowerCaseString.includes("worth of") || lowerCaseString.includes("powers") || lowerCaseString.includes("spells") || lowerCaseString.includes("abilities")) {
@@ -4298,9 +4298,9 @@
 		let strDC = Math.floor(strength/5);
 		let halfDie = (((strength % 5) === 3) || ((strength % 5) === 4)) ? true : false;
 		let lastIndex = 0;
-		let detailString;
-		let startPosition;
-		let endPosition;
+		let detailString = "";
+		let startPosition = 0;
+		let endPosition = 0;
 		var diceSet = new Set(["Aid", "Blast", "Dispel", "Drain", "Entangle", "Flash", "HTH Attack", "HTH Killing Attack", "Ranged Killing Attack", "Healing", "Luck", "Mental Blast", "Mental Illusions", "Mind Control", "Mind Scan", "Transform", "Telepathy"]);
 		
 		if (diceSet.has(effect)) {
@@ -4308,7 +4308,7 @@
 				startPosition = damageString.indexOf("standard effect");
 				endPosition = damageString.indexOf(")", startPosition);
 				detailString = damageString.slice(startPosition+16, endPosition);
-				damage = detailString;
+				damage = detailString.replace("points", "CP");
 			} else {	
 				if ((damageString.match(/d6/g) || []).length > 1) {
 					damageString = damageString.replace("d6", "d6+");
@@ -4327,9 +4327,21 @@
 					damageString = damageString.replace(" w/STR", "");
 					damageString = damageString.trim();
 				} else if (effect === "HTH Attack") {
+					if (damageString.includes("1/2d6")) {
+						
+						damageString = damageString.replace("1/2d6", "d6");
+						
+						if (halfDie) {
+							halfDie = false;
+							DC = 1;
+						} else {
+							halfDie = true;
+						}
+					}
+					
 					endPosition = damageString.indexOf("d");
 					detailString = damageString.substring(0,endPosition);
-					DC = parseInt(detailString.replace(/[^0-9]/g, ""))||0;
+					DC += parseInt(detailString.replace(/[^0-9]/g, ""))||0;
 					DC += strDC;
 					damageString = DC.toString() + "d6";
 					damageString += halfDie ? "+d3" : "";
