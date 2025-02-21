@@ -2698,7 +2698,7 @@
 		// The skills' text will determine which enhancer it is.
 		// let languages;
 		
-		var ID = String(languageIndex+41).padStart(2,'0');
+		var ID = String(languageIndex+76).padStart(2,'0');
 		var language = new Object();
 		
 		let name = languageObject.name;
@@ -2934,12 +2934,15 @@
 					}
 					break;
 				case 7:
-					// Weapon skill slot 8.
+					// Weapon skill slot 8. Existence triggers few languages shown sheet option.
 					weaponSkill = {
 						skillName68: name,
 						skillType68: type,
 						skillLevels68: levels,
-						skillCP68: cost
+						skillCP68: cost,
+						optionFewerLanguages: "on",
+						combatSkillsExtension: "true",
+						languageSkillsExtension: "false"
 					}
 					break;
 				case 8:
