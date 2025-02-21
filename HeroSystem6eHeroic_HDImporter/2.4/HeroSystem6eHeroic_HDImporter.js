@@ -1686,6 +1686,10 @@
 			
 			if ((typeof character.powers["power"+ID] !== "undefined") && (typeof character.powers["power"+ID].name !== "undefined")) {
 				
+				if (character.powers["power"+ID].name.length === 0) {
+					character.powers["power"+ID].name = "Power";
+				}
+				
 				tempString = character.powers["power"+ID].name;
 				
 				if (tempString.includes("(VPP)")) {
