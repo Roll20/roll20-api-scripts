@@ -22,7 +22,7 @@ This script was tested with the following commercially available character packs
 
 From the campaign's home page go to the Mods page via 'Settings -> Mod (API) Scripts.'
 
-From the Mods page select 'HeroSystem6eHeroic HDImporter' from the Mod Library dropdown list. Version 2.1 is the most recent and recommended version. Alternatively, create a new script and copy and paste the contents of HeroSystem6eHeroic_HDImporter.js into the text editing box. Save the script.
+From the Mods page select 'HeroSystem6eHeroic HDImporter' from the Mod Library dropdown list. Version 2.4 is the most recent and recommended version. Alternatively, create a new script and copy and paste the contents of HeroSystem6eHeroic_HDImporter.js into the text editing box. Save the script.
 
 Launch the game.
 
@@ -48,20 +48,21 @@ If HD Importer has started correctly the following notification should appear in
 ![HelpMenu](/HeroSystem6eHeroic_HDImporter/images/ImportSuccess.png)
 
 ## Sample Characters
-The release folder contains two test and evaluation characters for use in HERO Designer (HDC) and Roll20 (TXT).
+The [release folder](/HeroSystem6eHeroic_HDImporter/2.4/) contains three test and evaluation characters for use in HERO Designer (HDC) and Roll20 (TXT).
 - `Sample_Character.hdc` is the fae wizard Darci.
 - `Sample_Character_MA.hdc` is the doctor and martial arts swordsman Henkle.
+- `Sample_Vehicle.hdc` is the planetary exploration vehicle HEAT-V.
 
 ## Notes
 Double quotation marks are used to indicate JSON data values. Please take care to avoid quotation marks in Hero Designer text fields. Instead use single quotes. The exporter will attempt to remove double quotes, but this may not be foolproof.
 
-Characters exported with older versions of HeroSystem6eHeroic.hde (1.0, 2.0, 2.1, and 2.2) will work, but those exported with the latest version (2.3) will have more content and may benefit from bug fixes.
+Characters exported with older versions of HeroSystem6eHeroic.hde (1.0, 2.0, 2.1, 2.2, and 2.3) will work, but those exported with the latest version (2.4) will have more content and may benefit from bug fixes. Version 2.4 is the first to support vehicles.
 
 Hero Designer has entries for eye color and hair color. This information is not imported since the character sheet does not have corresponding fields.
 
 Weapons, armor, and other equipment are imported as text and shown in the text field in the "Gear" page. HD Importer attempts to fill in the appropriate spaces in the sheet with the items it can identify, but HERO items often have additional information to track. Expect this area to require some degree of human attention.
 
-At present, the character sheet has twenty power, ten talent, and ten complication slots. Ten additional entries of each type, if found, will be imported as text and displayed in sheet notes fields. None of the these overflow items will count in the sheet's automatic character point calculations.
+At present, the character sheet has twenty power, ten talent, and ten complication slots. Up to thirty additional powers and ten talents or complications, if found, will be imported as text and displayed in sheet notes fields. None of the these overflow items will count in the sheet's automatic character point calculations.
 
 Powers that add (or subtract) characteristics, movement, and perception abilities should be applied in the appropriate modifier fields.
 
@@ -124,4 +125,6 @@ Version 2.1 -- Updated to support additional character sheet features as of shee
 
 Version 2.2 -- Fix for compound power import failure. Recognizes Mental Combat Skill Levels and assigns levels and costs. Minor update to HeroSystem6eHeroic.hde (version 2.2). Improved formatting of text in powers, talents, and complications (September 14, 2024).
 
-Version 2.3 -- This version is up to date with Sheet Version 3.80. Adds special intelligence skill types with variable base cost (SPx). Adds "Native +" language skill assignment for native languages updated to imitate dialects. Doubles the number of armor, weapons, and equipment imported to account for the new "A/B" sets feature of the sheet. Recognizes additional copies of weapons purchased with the quantity feature of HD. Adds recognition of the keywords and key phrases "Max Range XYZ" and "Equipment." HeroSystem6eHeroic.hde (version 2.3) updated to 50 equipment slots (November 13, 2024). 
+Version 2.3 -- This version is up to date with Sheet Version 3.80. Adds special intelligence skill types with variable base cost (SPx). Adds "Native +" language skill assignment for native languages updated to imitate dialects. Doubles the number of armor, weapons, and equipment imported to account for the new "A/B" sets feature of the sheet. Recognizes additional copies of weapons purchased with the quantity feature of HD. Adds recognition of the keywords and key phrases "Max Range XYZ" and "Equipment." HeroSystem6eHeroic.hde (version 2.3) updated to 50 equipment slots (November 13, 2024).
+
+Version 2.4 -- Supports vehicles, which were introduced in sheet version 4.45. Vehicle characters have special power blocks for up to two endurance reserves and two propulsion systems, which increases imported powers up to 24. While the base capacity for general powers remains twenty, up to thirty more will be imported and displayed in the Talents text box (requires HeroSystem6eHeroic.hde v2.4). Introduces the Size attribute. Supports the expanded general and combat skill capacities of the sheet (February 21, 2025).
