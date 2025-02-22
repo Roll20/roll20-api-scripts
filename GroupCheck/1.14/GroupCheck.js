@@ -43,7 +43,7 @@ const GroupCheck = (() => {
             `<table style="width:100%">${content}</table>` +
             (freetext ? `<div style="text-align:center;margin-bottom:4px">${freetext}</div>` : "") +
             "</div>";
-          },
+        },
         makeRow = (pic, name, roll1, roll2, isLast) => {
           return `<tr${isLast ? "" :` style="border-bottom: 1px solid ${getTheme().rowSeparator}"`}>` +
             makeName(pic, name) +
