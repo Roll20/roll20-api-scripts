@@ -53,16 +53,19 @@ The [release folder](/HeroSystem6eHeroic_HDImporter/2.4/) contains three test an
 - `Sample_Character_MA.hdc` is the doctor and martial arts swordsman Henkle.
 - `Sample_Vehicle.hdc` is the planetary exploration vehicle HEAT-V.
 
-## Notes
-Double quotation marks are used to indicate JSON data values. Please take care to avoid quotation marks in Hero Designer text fields. Instead use single quotes. The exporter will attempt to remove double quotes, but this may not be foolproof.
+## Vehicles
+While twenty powers is typically sufficient for most heroic characters, it is easy to create vehicles with far more, particularly for science-fiction settings. Sensors, life support systems, and the like can really up. I suggest following the Star HERO source book's examples, which use Variable Power Pools for sensors and other systems. Some powers can easily be described as custom talents as well.
+
+## General Notes
+Try to avoid double quotation marks, which JSON files use for data values. If you would like to use them in your Hero Designer files, consider using single quotes instead. During the export process, Hero Designer will attempt to remove double quotes, but it may not catch them all.
 
 Characters exported with older versions of HeroSystem6eHeroic.hde (1.0, 2.0, 2.1, 2.2, and 2.3) will work, but those exported with the latest version (2.4) will have more content and may benefit from bug fixes. Version 2.4 is the first to support vehicles.
 
 Hero Designer has entries for eye color and hair color. This information is not imported since the character sheet does not have corresponding fields.
 
-Weapons, armor, and other equipment are imported as text and shown in the text field in the "Gear" page. HD Importer attempts to fill in the appropriate spaces in the sheet with the items it can identify, but HERO items often have additional information to track. Expect this area to require some degree of human attention.
+Weapons, armor, and other equipment are imported as text and shown in the text field in the "Gear" page. HD Importer attempts to fill in the appropriate spaces in the sheet with the items it can identify, but HERO items often have additional information to track. Expect this area to require some degree of attention.
 
-At present, the character sheet has twenty power, ten talent, and ten complication slots. Up to thirty additional powers and ten talents or complications, if found, will be imported as text and displayed in sheet notes fields. None of the these overflow items will count in the sheet's automatic character point calculations.
+At present, the character sheet has twenty power, ten talent, and ten complication slots. Up to thirty additional powers and ten talents and complications, if found, will be imported as text and displayed in sheet notes fields. None of these overflow items will count in the sheet's automatic character point calculations.
 
 Powers that add (or subtract) characteristics, movement, and perception abilities should be applied in the appropriate modifier fields.
 
