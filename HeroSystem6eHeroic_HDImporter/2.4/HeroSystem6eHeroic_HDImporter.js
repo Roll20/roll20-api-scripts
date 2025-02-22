@@ -459,7 +459,7 @@
 			speed: parseInt(character.speed)||2,
 			pd: parseInt(character.pd)||0,
 			ed: parseInt(character.ed)||0,
-			body: parseInt(character.body)||10,
+			body: (parseInt(character.body)||10) - (parseInt(character.size)||0),
 			stun: parseInt(character.stun)||0,
 			hiddenSTUN: parseInt(character.stun)||0,
 			endurance: parseInt(character.endurance)||0,
@@ -479,7 +479,6 @@
 		}
 		
 		// Set movement attributes.
-		
 		let movement_attributes = {
 			running: parseInt(character.running)||0,
 			leaping: parseInt(character.leaping)||0,
@@ -493,7 +492,6 @@
 		}
 		
 		// Set status attributes to starting values
-		// CurrentBODY: character.body + parseInt(character.size)||0,
 		let health_attributes = {
 			CurrentBODY: character.body,
 			CurrentSTUN: character.stun,
@@ -4370,14 +4368,8 @@
 		let detailString = "";
 		let startPosition = 0;
 		let endPosition = 0;
-		const regex = /''/g;
-		let usedGameInches = inputString.search(/''/g);
-		
-		// Convert game inches to meters.
-		if (usedGameInches) {
-			inputString = inputString.replace(/''/g, "m");
-		}
-		
+		const inches = String.fromCharCode(39,39);
+		let usedGameInches = false;
 		let lowerCaseString = inputString.toLowerCase();
 		
 		const specialArray = ["real weapon", "only works", "only for", "only to", "only applies", "only when", "attacks", "requires a roll", "for up to"];
@@ -4392,17 +4384,20 @@
 			detailString = inputString.slice(0, endPosition);
 			startPosition = detailString.includes("+") ? detailString.indexOf("+") : 0;
 			detailString = detailString.slice(startPosition, endPosition);
-			charMod = detailString.replace(/[^0-9\-]/g, '');
+			charMod = parseInt(detailString.replace(/[^0-9\-]/g, '')||0);
 		} else if (trailingSet.has(searchString)) {
+			
+			// Convert game inches to meters.
+			if (inputString.includes(inches)) {
+				inputString = inputString.replace(inches, "m");
+				usedGameInches = true;
+			}
+			
 			startPosition = inputString.indexOf(searchString);
 			detailString = inputString.slice(startPosition + searchString.length);
 			endPosition = detailString.includes("m") ? detailString.indexOf("m") : detailString.length;
 			detailString = detailString.slice(0, endPosition);
-			charMod = detailString.replace(/[^0-9\-]/g, '');
-			
-			if (usedGameInches) {
-				charMod *= 2;
-			}
+			charMod = parseInt(detailString.replace(/[^0-9\-]/g, '')||0) * (usedGameInches ? 2 : 1);
 		}
 		
 		if (charMod === "") {
@@ -4414,7 +4409,7 @@
 		}
 		
 		// Make sure we don't return something nasty.
-		return isNaN(charMod) ? 0 : Math.max(-99, Math.min( (parseInt(charMod)||0), 99));
+		return isNaN(charMod) ? 0 : Math.max(-99, Math.min(charMod, 99));
 	}
 	
 	
@@ -4426,16 +4421,11 @@
 		let detailString = "";
 		let startPosition = 0;
 		let endPosition = 0;
-		const regex = /''/g;
-		let usedGameInches = inputString.search(/''/g);
+		const inches = String.fromCharCode(39,39);
+		let usedGameInches = false;
 		
 		const specialString = "m total";
 		var trailingSet = new Set(["Running", "Leaping", "Swimming", "Flight", "Swinging", "Ground Movement", "Teleportation"]);
-		
-		// Convert game inches to meters.
-		if (usedGameInches) {
-			inputString = inputString.replace(/''/g, "m");
-		}
 		
 		if (inputString.includes(specialString)) {
 			endPosition = inputString.indexOf(specialString);
@@ -4444,19 +4434,18 @@
 			detailString = inputString.slice(startPosition, endPosition);
 			theMove = detailString.replace(/[^0-9\-]/g, '');
 		} else if (trailingSet.has(searchString)) {
+			
+			// Convert game inches to meters.
+			if (inputString.includes(inches)) {
+				inputString = inputString.replace(inches, "m");
+				usedGameInches = true;
+			}
+			
 			startPosition = inputString.indexOf(searchString);
 			detailString = inputString.slice(startPosition + searchString.length);
 			endPosition = detailString.includes("m") ? detailString.indexOf("m") : detailString.length;
 			detailString = detailString.slice(0, endPosition);
-			theMove = detailString.replace(/[^0-9\-]/g, '');
-		}
-		
-		if (theMove === '') {
-			theMove = 0;
-		}
-		
-		if (usedGameInches) {
-			theMove *= 2;
+			theMove = parseInt(detailString.replace(/[^0-9\-]/g, '')||0) * (usedGameInches ? 2 : 1);
 		}
 		
 		if (verbose) {
@@ -4464,7 +4453,7 @@
 		}
 		
 		// Make sure we don't return something nasty.
-		return [isNaN(theMove) ? 0 : Math.max(0, Math.min( (parseInt(theMove)||0), 999)), theAdds];
+		return [isNaN(theMove) ? 0 : Math.max(0, Math.min( theMove, 999)), theAdds];
 	}
 	
 	
