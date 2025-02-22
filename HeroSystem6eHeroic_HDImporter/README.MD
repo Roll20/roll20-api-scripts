@@ -54,7 +54,7 @@ The [release folder](/HeroSystem6eHeroic_HDImporter/2.4/) contains three test an
 - `Sample_Vehicle.hdc` is the planetary exploration vehicle HEAT-V.
 
 ## Vehicles
-While twenty powers is typically sufficient for most heroic characters, it is easy to create vehicles with far more, particularly for science-fiction settings. Sensors, life support systems, and the like can really up. I suggest following the Star HERO source book's examples, which use Variable Power Pools for sensors and other systems. Some powers can easily be described as custom talents as well.
+While twenty powers is typically sufficient for most heroic characters, it is easy to create vehicles with far more, particularly for science-fiction settings. Sensors, life support systems, and the like can really add up. To avoid running out of space, I suggest following the Star HERO source book's examples, which use Variable Power Pools for sensors and other systems. Some powers can easily be described as custom talents as well.
 
 ## General Notes
 Try to avoid double quotation marks, which JSON files use for data values. If you would like to use them in your Hero Designer files, consider using single quotes instead. During the export process, Hero Designer will attempt to remove double quotes, but it may not catch them all.
