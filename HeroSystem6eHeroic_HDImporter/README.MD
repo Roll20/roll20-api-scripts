@@ -56,6 +56,8 @@ The [release folder](/HeroSystem6eHeroic_HDImporter/2.4/) contains three test an
 ## Vehicles
 While twenty powers is typically sufficient for most heroic characters, it is easy to create vehicles with far more, particularly for science-fiction settings. Sensors, life support systems, and the like can really add up. To avoid running out of space, I suggest following the Star HERO source book's examples, which use Variable Power Pools for sensors and other systems. Some powers can easily be described as custom talents as well.
 
+Another point to make about vehicles is that HD Importer ignores the default ground and swimming movement attributes. The sheet refunds these movement attributes by default. That said, HD Importer will count these starting values in the total movement value of ground or swimming powers if added to a vehicle.
+
 ## General Notes
 Try to avoid double quotation marks, which JSON files use for data values. If you would like to use them in your Hero Designer files, consider using single quotes instead. During the export process, Hero Designer will attempt to remove double quotes, but it may not catch them all.
 
