@@ -44,6 +44,7 @@
 	const versionMod = "2.4";
 	const versionSheet = "4.45"; // Note that a newer sheet will make upgrades as well as it can.
 	const needsExportedVersion = new Set(["1.0", "2.0", "2.1", "2.2", "2.3", "2.4"]); // HeroSystem6eHeroic.hde versions allowed.
+	const designerVersion = "20220801";
 	
 	const defaultAttributes = {
 		
@@ -1641,8 +1642,8 @@
 		let subStringC;
 		let theEffect = "";
 		let sampleSize;
-		let control = 0;
 		let base = 0;
+		let control = 0;
 		let active = 0;
 		let cost = 0;
 		let advantages = 0;
@@ -1694,8 +1695,8 @@
 					// Varriable Power Pool found.
 					// The pool needs to be split into control and base parts.
 					tempString = character.powers["power"+ID].text;
-					subStringA = tempString.toLowerCase();
 					
+					subStringA = tempString.toLowerCase();
 					if (subStringA.includes("base")) {
 						subStringA = subStringA.slice(tempString.indexOf("base")-4, tempString.indexOf("base"));
 						subStringA = subStringA.replace(/\D/g, '');
@@ -1705,9 +1706,15 @@
 						base = 0;
 					}
 					
-					control = Math.round(base/2);
-					
-					character.powers["power"+ID].base = heroRoundDown(control, 2);
+					subStringA = tempString.toLowerCase();
+					if (subStringA.includes("control cost")) {
+						subStringA = subStringA.slice(tempString.indexOf("control cost")-4, tempString.indexOf("control cost"));
+						subStringA = subStringA.replace(/\D/g, '');
+						control = Number(subStringA);
+					} else {
+						// Error
+						control = 0;
+					}
 					
 					// Create entry for Control Cost
 					powerArray[powerArrayIndex]={
@@ -1723,7 +1730,7 @@
 					
 					// Create entry for Pool Cost
 					powerArray[powerArrayIndex]={
-						name: character.powers["power"+ID].name,
+						name: character.powers["power"+ID].name + "(pool)",
 						base: base.toString(),
 						text: JSON.stringify(base) + "-point Power Pool.",
 						cost: base.toString(),
@@ -1887,8 +1894,9 @@
 			
 			while (importCount < powerArrayIndex) {
 				
-				// First fix some known typos.
+				// First fix some known errors from source material.
 				powerArray[importCount].text = fixKnownSpellingErrors(powerArray[importCount].text, script_name);
+				powerArray[importCount].text = fixKnownDesignerErrors(powerArray[importCount].text, character.versionHD, script_name);
 				
 				// Power descriptions
 				tempString = powerArray[importCount].text;
@@ -2023,14 +2031,15 @@
 						if (tempString.includes("control")) {
 							// Remove notes from name.
 							tempString = tempString.replace("(VPP) ", "");
-							importedPowers["powerName"+ID] = tempString.replace("(control)", "");
+							importedPowers["powerName"+ID] = tempString.replace("(control)", " [C]");
 							importedPowers["powerType"+ID] = "powerPool";
 							importedPowers["powerEffect"+ID] = "VPP Control";
 							importedPowers["powerAction"+ID] = "false";
 							importedPowers["powerBaseCost"+ID] = powerArray[importCount].base;
 						} else {
 							// Remove note from name.
-							importedPowers["powerName"+ID] = tempString.replace("(VPP) ", "");
+							tempString = tempString.replace("(VPP) ", "");
+							importedPowers["powerName"+ID] = tempString.replace("(pool)", " [P]");
 							importedPowers["powerType"+ID] = "powerPool";
 							importedPowers["powerEffect"+ID] = "VPP Pool";
 							importedPowers["powerAction"+ID] = "false";
@@ -3687,6 +3696,42 @@
 	}
 	
 	
+	var fixKnownDesignerErrors = function(inputString, sourceVersion, scrip_name) {
+		let limitation = 0;
+		let startPosition = 0;
+		let endPosition = 0;
+		let tempString = "";
+		let replaceString = "";
+		let outputString = inputString;
+		
+		let advantage = 0;
+		let multiple = "0";
+		
+		if (sourceVersion === designerVersion) {
+			if (inputString.includes("Cumulative")) {
+				startPosition = inputString.indexOf("Cumulative");
+				endPosition = inputString.indexOf(')', startPosition);
+				replaceString = inputString.slice(startPosition,endPosition);
+				
+				tempString = replaceString.slice(-7);
+				tempString = tempString.replace('*','');
+				advantage = findAdvantages(tempString+')');
+				
+				if (advantage <= 1.75) {
+					multiple = (2 ** ((advantage-0.25)/0.25)).toString();
+				} else {
+					multiple = (125 * 2 ** ((advantage - 1.75)/0.25 - 1)).toString();
+				}
+				
+				tempString = "Cumulative (" + multiple + "x; " + tempString;
+				outputString = inputString.replace(replaceString, tempString);
+			}
+		}
+		
+		return outputString;
+	}
+	
+	
 	var isAttack = function (effect) {
 		// For setting the attack state.
 		const attackSet = new Set(["Blast", "Dispel", "Drain", "Entangle", "Flash", "Healing", "HTH Attack", "HTH Killing Attack", "Mental Blast", "Mental Illusions", "Mind Control", "Mind Link", "Mind Scan", "Ranged Killing Attack", "Telekinesis", "Telepathy", "Transform"]);
@@ -3698,7 +3743,6 @@
 	var getResistantPD = function (inputString, script_name) {
 		// For Armor slot 4.
 		let protection = 0;
-		let startPosition = 0;
 		let endPosition = 0;
 		let tempString = inputString;
 		
@@ -3921,6 +3965,8 @@
 		let advantages = 0;
 		
 		// Find half-integers. Replace larger ones first.
+		advantages = advantages + ((tempString.match(/\+6 1\/2\)/g) || []).length)*6.5;
+		tempString = tempString.replace("+6 1/2)","");
 		advantages = advantages + ((tempString.match(/\+5 1\/2\)/g) || []).length)*5.5;
 		tempString = tempString.replace("+5 1/2)","");
 		advantages = advantages + ((tempString.match(/\+4 1\/2\)/g) || []).length)*4.5;
@@ -3935,6 +3981,8 @@
 		tempString = tempString.replace("+1/2)","");
 		
 		// Find three-quarter integers. Replace larger ones first.
+		advantages = advantages + ((tempString.match(/\+6 3\/4\)/g) || []).length)*6.75;
+		tempString = tempString.replace("+6 3/4)","");
 		advantages = advantages + ((tempString.match(/\+5 3\/4\)/g) || []).length)*5.75;
 		tempString = tempString.replace("+5 3/4)","");
 		advantages = advantages + ((tempString.match(/\+4 3\/4\)/g) || []).length)*4.75;
@@ -3949,6 +3997,8 @@
 		tempString = tempString.replace("+3/4)","");
 		
 		// Find quarter integers. Replace larger ones first.
+		advantages = advantages + ((tempString.match(/\+6 1\/4\)/g) || []).length)*6.25;
+		tempString = tempString.replace("+6 1/4)","");
 		advantages = advantages + ((tempString.match(/\+5 1\/4\)/g) || []).length)*5.25;
 		tempString = tempString.replace("+5 1/4)","");
 		advantages = advantages + ((tempString.match(/\+4 1\/4\)/g) || []).length)*4.25;
@@ -3963,6 +4013,8 @@
 		tempString = tempString.replace("+1/4)","");
 		
 		// Find whole integers. Replace larger ones first.
+		advantages = advantages + ((tempString.match(/\+7\)/g) || []).length)*7;
+		tempString = tempString.replace("+7)","");
 		advantages = advantages + ((tempString.match(/\+6\)/g) || []).length)*6;
 		tempString = tempString.replace("+6)","");
 		advantages = advantages + ((tempString.match(/\+5\)/g) || []).length)*5;
