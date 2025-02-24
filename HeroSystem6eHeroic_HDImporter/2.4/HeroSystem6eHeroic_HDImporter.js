@@ -884,24 +884,23 @@
 				
 				importedEquipment["equipText"+ID] = equipmentListArray[importCount].name;
 				
-				// Get item mass.
-				if (equipmentListArray[importCount].mass !== "") {
+				// Check for additional copies in notes.
+				if (equipmentListArray[importCount].notes !== "") {
+					tempString = equipmentListArray[importCount].notes;
 					
-					// Check for additional copies in notes.
-					if (equipmentListArray[importCount].notes !== "") {
-						tempString = equipmentListArray[importCount].notes;
-						
-						if (tempString.includes("number of items")) {
-							// Get the number of copies and amend the equipment text.
-							itemNumber = getItemNumber(tempString);
-							importedEquipment["equipText"+ID] += " (" + (itemNumber).toString() + ")";
-						} else {
-							itemNumber = 1;
-						}
+					if (tempString.includes("number of items")) {
+						// Get the number of copies and amend the equipment text.
+						itemNumber = getItemNumber(tempString);
+						importedEquipment["equipText"+ID] += " (" + (itemNumber).toString() + ")";
 					} else {
 						itemNumber = 1;
 					}
-					
+				} else {
+					itemNumber = 1;
+				}
+				
+				// Get item mass.
+				if (equipmentListArray[importCount].mass !== "") {
 					// Multiply the base mass by the number of copies.
 					tempValue = itemNumber * getItemMass(equipmentListArray[importCount].mass, script_name, 2);
 					tempValue = Math.round(10*tempValue)/10;
