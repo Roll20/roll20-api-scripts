@@ -766,9 +766,16 @@
 		
 		// Read equipment
 		const maxGear = (character.version >= parseFloat("2.3")||0) ? 50 : 16;
+		const maxPowers = (character.version >= parseFloat("2.4")||0) ? 50 : 30;
 		let importCount = 0;
 		let imported = 0;
 		let ID = "01";
+		
+		// Power to Gear conversion
+		var tempEquipment = {};
+		
+		const attackArray = new Set(["HTH Killing Attack", "Ranged Killing Attack", "Blast", "Mental Blast", "Drain", "Entangle", "Flash", "HTH Attack"]);
+		const defenseArray = new Set(["Resistant Protection", "Base PD Mod", "Base ED Mod"]);
 		
 		// Imports either 42 or 16 pieces of equipment (for version < 2.3), skipping empty slots.
 		
@@ -778,36 +785,84 @@
 			
 			if ((typeof character.equipment["equipment"+ID] !== "undefined") && (typeof character.equipment["equipment"+ID].name !== "undefined")) {
 				
-				equipmentArray[equipmentArrayIndex]=character.equipment["equipment"+ID];
+				equipmentArray[equipmentArrayIndex] = character.equipment["equipment"+ID];
 				
 				tempString = equipmentArray[equipmentArrayIndex].name;
 				
 				if ((tempString !== "") && tempString.length) {
 					if ((equipmentArray[equipmentArrayIndex].name.includes("Multipower")) || (equipmentArray[equipmentArrayIndex].name.includes("MPSlot"))) {
 						// Then place in multipower array.
-						multipowerArray[multipowerArrayIndex]=equipmentArray[equipmentArrayIndex];
+						multipowerArray[multipowerArrayIndex] = equipmentArray[equipmentArrayIndex];
 						multipowerArrayIndex++;	
 						
 					} else if ((equipmentArray[equipmentArrayIndex].defense !== "") && (equipmentArray[equipmentArrayIndex].defense === "true") && (equipmentArray[equipmentArrayIndex].notes.toLowerCase().includes("equipment") !== true)) {
 						// If the item is a defense add it to the armor list.
-						// This will need to be updated for shields.
-						armorArray[armorArrayIndex]=equipmentArray[equipmentArrayIndex];
+						armorArray[armorArrayIndex] = equipmentArray[equipmentArrayIndex];
 						armorArrayIndex++;
 						
 					} else if ((equipmentArray[equipmentArrayIndex].attack !== "") && (equipmentArray[equipmentArrayIndex].damage !== "") && (equipmentArray[equipmentArrayIndex].attack === "true") && (equipmentArray[equipmentArrayIndex].notes.toLowerCase().includes("equipment") !== true) ) {
 						// If the item is a damage attack add it to the weapon list.
-						weaponsArray[weaponsArrayIndex]=equipmentArray[equipmentArrayIndex];
+						weaponsArray[weaponsArrayIndex] = equipmentArray[equipmentArrayIndex];
 						weaponsArrayIndex++;
 						
 					} else {
 						// If the item is not an attack or defense add it to the equipment list.
-						equipmentListArray[equipmentListArrayIndex]=equipmentArray[equipmentArrayIndex];
+						equipmentListArray[equipmentListArrayIndex] = equipmentArray[equipmentArrayIndex];
 						equipmentListArrayIndex++;
 					}
 				}
 				
 				equipmentArrayIndex++;
-			}	
+			}
+		}
+		
+		// Fill in additional equipment slots with armor, weapon, and equipment powers.
+		for (importCount = 1; importCount <= maxPowers; importCount++) {
+			
+			ID = String(importCount).padStart(2,'0');
+			
+			if ((typeof character.powers["power"+ID] !== "undefined") && (typeof character.powers["power"+ID].name !== "undefined")) {
+				
+				tempEquipment = {
+					name: "power",
+					text: "none",
+					damage: "0",
+					end: "0",
+					range: "0",
+					mass: "0",
+					attack: "false",
+					defense: "false",
+					notes: ""
+				};
+				
+				tempEquipment.name = (character.powers["power"+ID].name.length === 0) ? "Power" : character.powers["power"+ID].name.replace(/\([^)]*\)/g, "").trim();
+				tempEquipment.text = character.powers["power"+ID].text;
+				tempEquipment.damage = character.powers["power"+ID].damage;
+				tempEquipment.end = character.powers["power"+ID].endurance;
+				tempString = findEffectType(tempEquipment.text, script_name);
+				tempEquipment.attack = attackArray.has(tempString) ? "true" : "false";
+				tempEquipment.defense = defenseArray.has(tempString) ? "true" : "false";
+				tempValue = (tempEquipment.text.includes("No Range") || tempString.includes("HTH")) ? 0 : 10 * parseInt(character.powers["power"+ID].base)||0;
+				tempEquipment.range = tempValue.toString();
+				tempEquipment.notes = character.powers["power"+ID].notes;
+				
+				if ((tempEquipment.defense === "true") && (tempEquipment.notes.toLowerCase().includes("equipment") !== true)) {
+					// If the item is a defense add it to the armor list.
+					armorArray[armorArrayIndex] = tempEquipment;
+					armorArrayIndex++;
+					
+				} else if ((tempEquipment.damage !== "") && (tempEquipment.attack === "true") && (tempEquipment.notes.toLowerCase().includes("equipment") !== true) ) {
+					// If the item is a damage attack add it to the weapon list.
+					weaponsArray[weaponsArrayIndex] = tempEquipment;
+					weaponsArrayIndex++;	
+					
+				} else if ( character.powers["power"+ID].notes.toLowerCase().includes("equipment") ) {
+					// If the item is not an attack or defense add it to the equipment list.
+					equipmentListArray[equipmentListArrayIndex] = tempEquipment;
+					equipmentListArrayIndex++;
+					
+				}
+			}
 		}
 		
 		// Write raw details of imported equipment to the treasures slide.
@@ -981,9 +1036,16 @@
 					importedWeapons["weaponStunMod"+ID] = getStunModifier(tempString, script_name);
 					
 					// Get STR minimum and apply strength.	
-					importedWeapons["weaponStrengthMin"+ID] = getWeaponStrMin(tempString, script_name);
+					tempValue = getWeaponStrMin(tempString, script_name);
+					importedWeapons["weaponStrengthMin"+ID] = tempValue;
 					importedWeapons["weaponEnhancedBySTR"+ID] = ( checkDamageBySTR(tempString, script_name) ? "on" : 0);
-					importedWeapons["weaponStrength"+ID] = ( importedWeapons["weaponEnhancedBySTR"+ID] === "on" ) ? getWeaponStrength(importedWeapons["weaponStrengthMin"+ID], strength, script_name) : Math.min(getWeaponStrMin(tempString, script_name), character.strength);
+					importedWeapons["weaponStrength"+ID] = ( importedWeapons["weaponEnhancedBySTR"+ID] === "on" ) ? getWeaponStrength(importedWeapons["weaponStrengthMin"+ID], strength, script_name) : Math.min(tempValue, character.strength);
+					
+					if (tempValue === 0) {
+						// Likely a power being used as a weapon.
+						importedWeapons["weaponEndMod"+ID] = parseInt(weaponsArray[importCount].end)||0;
+						// importedWeapons["weaponRange"+ID] = parseInt(weaponsArray[importCount].range)||0;
+					}
 					
 					// Check for AoE.
 					importedWeapons["weaponAreaEffect"+ID] = (tempString.includes("Area Of Effect")) ? "on" : 0;
@@ -994,6 +1056,12 @@
 				if ((typeof tempString !== "undefined") && (tempString !== "")) {
 					if (tempString.includes("[")) {
 						importedWeapons["weaponShots"+ID] =  parseInt(tempString.replace(/[^\d.-]/g, ""));
+					} else if (weaponsArray[importCount].text.includes("Charges")) {
+						tempString = weaponsArray[importCount].text;
+						tempValue = tempString.indexOf("Charges");
+						tempString = tempString.slice(tempValue-Math.min(4, tempValue), tempValue);
+						tempValue = Number(tempString.replace(/[^0-9]/g, ""));
+						importedWeapons["weaponShots"+ID] = isNaN(tempValue) ? 0 : tempValue;
 					} else {
 						importedWeapons["weaponShots"+ID] = 0;
 					}
@@ -1003,12 +1071,8 @@
 				importedWeapons["weaponRange"+ID] = getWeaponRange(weaponsArray[importCount].range, character.strength, importedWeapons["weaponMass"+ID], script_name);
 				
 				// Check for max range in notes.
-				if (weaponsArray[importCount].notes !== "") {
-					tempString = weaponsArray[importCount].notes;
-					importedWeapons["weaponRange"+ID] = getWeaponMaxRange(tempString, script_name);
-				} else {
-					importedWeapons["weaponRange"+ID] = 0;
-				}
+				tempValue = (weaponsArray[importCount].notes !== "") ?  getWeaponMaxRange(weaponsArray[importCount].notes, script_name) : 0;
+				importedWeapons["weaponRange"+ID] = (tempValue !== 0) ? tempValue : parseInt(weaponsArray[importCount].range)||0;
 				
 				// Get weapon mass.
 				if (weaponsArray[importCount].mass !== "") {
@@ -1172,8 +1236,9 @@
 		let shieldFound = false;
 		let importedShield = new Array();
 		let shieldID = "06";
+		let i, j;
 		
-		for (let i=0; i < equipmentMultipowers.length; i++) {
+		for (i=0; i < equipmentMultipowers.length; i++) {
 			// Get next multipower index.
 			shieldSearchIndex = equipmentMultipowers[i];
 			tempString = multipowerArray[shieldSearchIndex].name;
@@ -1209,7 +1274,7 @@
 				
 				if (i+2 > equipmentMultipowers.length) {
 					// Shield is the last multipower in the list.
-					for (let j = shieldSearchIndex; j<multipowerArray.length; j++) {
+					for (j = shieldSearchIndex; j<multipowerArray.length; j++) {
 						tempString = multipowerArray[j].text;
 						
 						//sendChat(script_name, "Seaching multipower for DCV: "+ tempString+".");
@@ -1229,7 +1294,7 @@
 				} else {
 					// There is another multipower after the shield. Search slots up to that multipower.
 					
-					for (let j = shieldSearchIndex; j<equipmentMultipowers[i+1]; j++) {
+					for (j = shieldSearchIndex; j<equipmentMultipowers[i+1]; j++) {
 						tempString = multipowerArray[j].text;
 						
 						//sendChat(script_name, "Seaching multipower for DCV: "+ tempString+".");
@@ -1303,7 +1368,7 @@
 				} else {
 					// There is another multipower after the shield. Search slots up to that multipower.
 					
-					for (let j = shieldSearchIndex; j<equipmentMultipowers[i+1]; j++) {
+					for (j = shieldSearchIndex; j<equipmentMultipowers[i+1]; j++) {
 						
 						if ( multipowerArray[j].attack) {
 							foundShieldAttack = true;
@@ -1355,7 +1420,7 @@
 				// The multipower is not named a shield or buckler. Send a summary to the text box.
 				if (i+2 > equipmentMultipowers.length) {
 					// Item is the last multipower in the list.
-					for (let j = shieldSearchIndex; j<multipowerArray.length; j++) {
+					for (j = shieldSearchIndex; j<multipowerArray.length; j++) {
 						tempString = multipowerArray[j].name;
 						if (tempString.includes("Multipower")) {
 							tempString = tempString.replace("(Multipower) ","");
@@ -1627,7 +1692,7 @@
 		// Imports twenty powers, which is Sheet v4.45's capacity.
 		// If the character is a vehicle, autofills up to two each of propulsion and reserve systems.
 		
-		const maxPowers = 50;
+		const maxPowers = (character.version >= parseFloat("2.4")||0) ? 50 : 30;
 		let sheetCapacity = 20;
 		let overflowPowers = (typeof character.complicationsTextLeft !== "undefined") ? character.complicationsTextLeft : "";
 		
@@ -2056,107 +2121,6 @@
 					
 					// Set power type.
 					importedPowers["powerDamageType"+ID] = getPowerDamageType(testObject.theEffect);
-					
-					// If Power's effect is Resistant Protection create armor in Armor Slot 8 (14) with a combination of ED and PD.
-					tempString = (powerArray[importCount].text).toLowerCase();
-					
-					if (testObject.theEffect === "Resistant Protection") {
-						if ( (typeof powerArray[importCount].text !== "undefined") && (powerArray[importCount].text !== "") ) {
-							if(verbose) {
-								sendChat(script_name, "Created Resistant Protection armor.");
-							}
-							
-							tempValue = getResistantPD(powerArray[importCount].text, script_name);
-							if (tempValue > 0) {
-								charMod.armorPD14 = tempValue;
-								if ( (specialArray.some(v => tempString.includes(v))) !== true) {
-									// We don't want to add overall modifications for special cases.
-									charMod.pdMod += tempValue;
-								}
-								if (!pdAddedToTotal) {
-									charMod.totalPD14 = tempValue + parseInt(character.pd);
-									pdAddedToTotal = true;
-								} else {
-									charMod.totalPD14 = tempValue;
-								}
-								charMod.armorName14 = importedPowers["powerName"+ID];
-								charMod.armorLocations14 = "3-18";
-								tempObject = (requiresRoll(powerArray[importCount].text));
-								if (tempObject.hasRoll) {
-									charMod.armorActivation14 = tempObject.skillRoll;
-								} else {
-									charMod.armorActivation14 = 18;
-								}
-							}
-							
-							tempValue = getResistantED(powerArray[importCount].text, script_name);
-							if (tempValue > 0) {
-								charMod.armorED14 = tempValue;
-								if ( (specialArray.some(v => tempString.includes(v))) !== true) {
-									// We don't want to add overall modifications for special cases.
-									charMod.edMod += tempValue;
-								}
-								if (!edAddedToTotal) {
-									charMod.totalED14 = tempValue + parseInt(character.ed);
-									edAddedToTotal = true;
-								} else {
-									charMod.totalED14 = tempValue;
-								}
-								charMod.armorName14 = importedPowers["powerName"+ID];
-								charMod.armorLocations14 = "3-18";
-								tempObject = (requiresRoll(powerArray[importCount].text));
-								if (tempObject.hasRoll) {
-									charMod.armorActivation14 = tempObject.skillRoll;
-								} else {
-									charMod.armorActivation14 = 18;
-								}
-							}
-						}
-					} else if (testObject.theEffect === "Base PD Mod") {
-						if ( (typeof powerArray[importCount].text !== "undefined") && (powerArray[importCount].text !== "") ) {
-							if(verbose) {
-								sendChat(script_name, "Added Resistant PD to armor.");
-							}
-							
-							if ( (powerArray[importCount].text).includes("Resistant")) {
-								charMod.armorPD14 = parseInt(character.pd);
-								if (!pdAddedToTotal) {
-									charMod.totalPD14 = parseInt(character.pd);
-									pdAddedToTotal = true;
-								}
-								charMod.armorName14 = importedPowers["powerName"+ID];
-								charMod.armorLocations14 = "3-18";
-								tempObject = (requiresRoll(powerArray[importCount].text));
-								if (tempObject.hasRoll) {
-									charMod.armorActivation14 = tempObject.skillRoll;
-								} else {
-									charMod.armorActivation14 = 18;
-								}
-							}
-						}
-					} else if (testObject.theEffect === "Base ED Mod") {
-						if ( (typeof powerArray[importCount].text !== "undefined") && (powerArray[importCount].text !== "") ) {
-							if(verbose) {
-								sendChat(script_name, "Added Resistant ED to armor.");
-							}
-							
-							if ( (powerArray[importCount].text).includes("Resistant") ) {
-								charMod.armorED14 = parseInt(character.ed);
-								if (!edAddedToTotal) {
-									charMod.totalED14 = parseInt(character.ed);
-									edAddedToTotal = true;
-								}
-								charMod.armorName14 = importedPowers["powerName"+ID];
-								charMod.armorLocations14 = "3-18";
-								tempObject = (requiresRoll(powerArray[importCount].text));
-								if (tempObject.hasRoll) {
-									charMod.armorActivation14 = tempObject.skillRoll;
-								} else {
-									charMod.armorActivation14 = 18;
-								}
-							}	
-						}
-					}
 					
 					// Apply characteristic mods granted by enhancement powers or movement.
 					tempString = powerArray[importCount].text;
@@ -3501,10 +3465,10 @@
 				return "Extra-Dimensional MV";
 			} else if (tempString.includes("Faster-Than-Light Travel")) {
 				return "FTL Travel";
-			} else if (tempString.includes("Flash")) {
-				return "Flash";
 			} else if (tempString.includes("Flash Defense")) {
 				return "Flash Defense";
+			} else if (tempString.includes("Flash")) {
+				return "Flash";
 			} else if (tempString.includes("Resistant")) {
 				return "Resistant Protection";
 			} else if (tempString.includes("Flight")) {
@@ -4616,7 +4580,7 @@
 			}
 		}
 		
-		return outcome.trim();
+		return parseInt(outcome.trim())||0;
 	}
 	
 	

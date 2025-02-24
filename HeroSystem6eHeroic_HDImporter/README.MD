@@ -76,7 +76,7 @@ Powers that add (or subtract) characteristics, movement, and perception abilitie
 
 - `(locations x-y, z) or (loc x, y-z)` : If HD Importer finds the keyword "locations" it will assign the list "x-y, z" to a piece of armor's locations. End the list with closed parentheses ")" or a semicolon ";".
 
-- `Equipment` : A weapon with the "equipment" keyword will be imported as a piece of equipment, not a weapon. Useful for ordinary items built with attack powers.
+- `Equipment` : A weapon with the "equipment" keyword will be imported as a piece of equipment, not a weapon. Useful for ordinary items built with attack powers. HD Importer will also copy any power with this keyword as a piece of equipment as well.
 
 - `Max Range: XYZm or max range XYZ` : HD Importer will fill in a weapon's maximum range with XYZ.
 
