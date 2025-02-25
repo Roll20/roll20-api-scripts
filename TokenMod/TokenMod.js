@@ -8,9 +8,9 @@ API_Meta.TokenMod={offset:Number.MAX_SAFE_INTEGER,lineCount:-1};
 const TokenMod = (() => { // eslint-disable-line no-unused-vars
 
     const scriptName = "TokenMod";
-    const version = '0.8.81';
+    const version = '0.8.82';
     API_Meta.TokenMod.version = version;
-    const lastUpdate = 1736302467;
+    const lastUpdate = 1738641373;
     const schemaVersion = 0.4;
 
     const fields = {
@@ -32,6 +32,8 @@ const TokenMod = (() => { // eslint-disable-line no-unused-vars
             light_otherplayers: {type: 'boolean'},
             light_hassight: {type: 'boolean'},
             isdrawing: {type: 'boolean'},
+            disableSnapping: {type: 'boolean'},
+            disableTokenMenu: {type: 'boolean'},
             flipv: {type: 'boolean'},
             fliph: {type: 'boolean'},
             aura1_square: {type: 'boolean'},
@@ -153,7 +155,11 @@ const TokenMod = (() => { // eslint-disable-line no-unused-vars
             lightcolor: "lightColor", // fix for case issue
             light_color: "lightColor", // fix for case issue
             lockmovement: "lockMovement", // fix for case issue
-            lock_movement: "lockMovement" // fix for case issue
+            lock_movement: "lockMovement", // fix for case issue
+            disablesnapping: "disableSnapping", 
+            disabletokenmenu: "disableTokenMenu",
+            disable_snapping: "disableSnapping", 
+            disable_token_menu: "disableTokenMenu"
         };
 
     const reportTypes = [
@@ -2008,6 +2014,8 @@ const TokenMod = (() => { // eslint-disable-line no-unused-vars
                             _h.cell('light_otherplayers'),
                             _h.cell('light_hassight'),
                             _h.cell('isdrawing'),
+                            _h.cell('disableSnapping'),
+                            _h.cell('disableTokenMenu'),
                             _h.cell('flipv'),
                             _h.cell('fliph'),
                             _h.cell('aura1_square'),
@@ -2032,12 +2040,38 @@ const TokenMod = (() => { // eslint-disable-line no-unused-vars
                     _h.inset(
                         _h.pre('!token-mod --set showname|yes isdrawing|no')
                     ),
+
                     _h.paragraph(`The following are considered true values: ${_h.code('1')}, ${_h.code('on')}, ${_h.code('yes')}, ${_h.code('true')}, ${_h.code('sure')}, ${_h.code('yup')}`),
 
                     _h.subhead("Probabilistic Booleans"),
                     _h.paragraph(`TokenMod accepts the following probabilistic values which are true some of the time and false otherwise: ${_h.code('couldbe')} (true 1 in 8 times) , ${_h.code('sometimes')} (true 1 in 4 times) , ${_h.code('maybe')} (true 1 in 2 times), ${_h.code('probably')} (true 3 in 4 times), ${_h.code('likely')} (true 7 in 8 times)`),
 
                     _h.paragraph(`Anything else is considered false.`),
+
+                    _h.subhead(`${_h.code('isdrawing')} split properties: ${_h.code('disableSnapping')} and ${_h.code('disableTokenMenu')} (Jumpgate)`),
+                    _h.paragraph( `On Jumpgate, these two properties control the individual facets of what was handled by ${_h.code('isdrawing')}.  You can set ${_h.code('disableSnapping')} to true to prevent a graphic from snapping to the page's grid lines while still retaining the bubbles and token menu:`),
+                    _h.inset(
+                        _h.pre('!token-mod --set disableSnapping|yes')
+                    ),
+                    _h.paragraph( `Setting ${_h.code('disableTokenmenu')} to true will hide the token menu while still snapping the graphic to the grid:`),
+                    _h.inset(
+                        _h.pre('!token-mod --set disableTokenMenu|yes')
+                    ),
+                    _h.paragraph( `Setting ${_h.code('isdrawing')} on Jumpgate will set both ${_h.code('disableSnapping')} and ${_h.code('disableTokenMenu')}.  These two commands have the same effect:`),
+                    _h.inset(
+                        _h.pre('!token-mod --set isdrawing|yes'),
+                        _h.pre('!token-mod --set disableSnapping|yes disableTokenMenu|yes')
+                    ),
+                    _h.paragraph( `If not on Jumpgate, setting either ${_h.code('disableSnapping')} or ${_h.code('disableTokenMenu')} will be the same as setting ${_h.code('isdrawing')}. These will all be the same if not on Jumpgate:`),
+                    _h.inset(
+                        _h.pre('!token-mod --set isdrawing|yes'),
+                        _h.pre('!token-mod --set disableTokenMenu|yes'),
+                        _h.pre('!token-mod --set disableSnapping|yes')
+                    ),
+                    _h.paragraph( `If setting both, be sure to set the one that is more important to you second as it will set ${_h.code('isdrawing')}. In this example, if not on Jumpgate, you'll end up with snapping and token menus:`),
+                    _h.inset(
+                        _h.pre('!token-mod --set disableSnapping|no disableTokenMenu|yes')
+                    ),
 
                     _h.subhead("Updated Dynamic Lighting"),
                     _h.paragraph(`${_h.code("has_bright_light_vision")} is the UDL version of ${_h.bold("light_hassight")}. It controls if a token can see at all, and must be turned on for a token to use UDL.  You can also use the alias ${_h.code("bright_vision")}.`),

@@ -3,7 +3,7 @@
     "script": "CalenderData.js",
     "version": "1.0",
     "previousversions": [],
-    "description": "This is a script which doesnt do anything by itself, but defines the following state variables, which are used by other programs, specifically QuestTracker. state.CalenderData.CALENDARS &  state.CalenderData.WEATHER.",
+    "description": "# Calender Data\nThis is a script which doesnt do anything by itself, but defines the following state variables, which are used by other programs, specifically **QuestTracker**. \r\r Yes, I am fully aware I have spelt 'Calendar' wrong; but it's too late to change this.\n## More Information?\n[See the README](https://github.com/Roll20/roll20-api-scripts/blob/master/QuestTracker/README.md)\n## Contributing\nContributions are welcome! Please submit pull requests or report issues on the GitHub repository: [GitHub Repository](https://github.com/Roll20/roll20-api-scripts/issues)",
     "authors": "Boli",
     "roll20userid": "3714078",
     "useroptions": [],

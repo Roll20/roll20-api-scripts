@@ -8,9 +8,9 @@ API_Meta.GroupInitiative={offset:Number.MAX_SAFE_INTEGER,lineCount:-1};
 const GroupInitiative = (() => { // eslint-disable-line no-unused-vars
 
   const scriptName = "GroupInitiative";
-  const version = '0.9.40';
+  const version = '0.9.41';
   API_Meta.GroupInitiative.version = version;
-  const lastUpdate = 1735433392;
+  const lastUpdate = 1737482748;
   const schemaVersion = 1.3;
 
   const isString = (s)=>'string'===typeof s || s instanceof String;
@@ -370,17 +370,17 @@ const GroupInitiative = (() => { // eslint-disable-line no-unused-vars
   const statAdjustments = {
     'filter-sheet': {
       type: adjustments.FILTER,
-      func: async (t,c,v) => c?.get('charactersheetname') === v,
+      func: async (t,c,v) => c && isFunction(c.get) && c.get('charactersheetname') === v,
       desc: 'Forces calculations only for specific character sheets.'
     },
     'filter-status': {
       type: adjustments.FILTER,
-      func: async (t,c,v) => t.get(`status_${v}`) !== false,
+      func: async (t,c,v) => t && isFunction(t.get) && t.get(`status_${v}`) !== false,
       desc: 'Forces calculations only for tokens with a given status marker.'
     },
     'filter-tooltip': {
       type: adjustments.FILTER,
-      func: async (t,c,v) => t.get(`tooltip`).toLowerCase().split(/[^a-zA-Z0-9:#|-]+/).includes(v),
+      func: async (t,c,v) => t && isFunction(t.get) && (t.get(`tooltip`)||'').toLowerCase().split(/[^a-zA-Z0-9:#|-]+/).includes(v),
       desc: 'Forces calculations only for tokens with a tooltip containing the given word.'
     },
     'roll-die-count': {
@@ -460,21 +460,21 @@ const GroupInitiative = (() => { // eslint-disable-line no-unused-vars
     'token_bar': {
       type: adjustments.TOKEN,
       func: async function(t,idx) {
-        return parseFloat(t.get(`bar${idx}_value`))||0;
+        return parseFloat(t && isFunction(t.get) && t.get(`bar${idx}_value`))||0;
       },
       desc: 'Takes the bonus from the numbered bar on the token. Use 1, 2, or 3.  Defaults to 0 in the absense of a number.'
     },
     'token_bar_max': {
       type: adjustments.TOKEN,
       func: async function(t,idx) {
-        return parseFloat(t.get(`bar${idx}_max`))||0;
+        return parseFloat(t && isFunction(t.get) && t.get(`bar${idx}_max`))||0;
       },
       desc: 'Takes the bonus from the max value of the numbered bar on the token. Use 1, 2, or 3.  Defaults to 0 in the absense of a number.'
     },
     'token_aura': {
       type: adjustments.TOKEN,
       func: async function(t,idx) {
-        return parseFloat(t.get(`aura${idx}_radius`))||0;
+        return parseFloat(t && isFunction(t.get) && t.get(`aura${idx}_radius`))||0;
       },
       desc: 'Takes the bonus from the radius of the token aura. Use 1 or 2.  Defaults to 0 in the absense of a number.'
     }
@@ -1394,7 +1394,7 @@ const makeRollsForIDs = async (ids,options={}) => {
       g.roll.push(bonus);
 
       if(options.manualBonus){
-        g.roll.push( options.manualBonus );
+        g.roll.push( `${options.manualBonus}`.trim() );
       }
       g.label = rolladj.label||(rolladj.hasOwnProperty('index') ? `Rule #${rolladj.index+1}` : `No Matching Rule`);
       g.formula = initFunc(g,rolladj);
