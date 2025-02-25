@@ -728,8 +728,9 @@
 		// Similar to the way perks and talents are handled, we will parse the imported equipment into temporary arrays.
 		
 		const strength = parseInt(character.strength)||10;
-		let gearTextBox = "";
+		const isVehicle = (typeof character.template !== "undefined") ? ( character.template.includes("Vehicle") || ( (character.size > 0) && !character.template.includes("Base"))) : false;
 		
+		let gearTextBox = "";
 		let tempString;
 		let tempPosition;
 		let secondPosition;
@@ -775,7 +776,7 @@
 		var tempEquipment = {};
 		
 		const attackArray = new Set(["HTH Killing Attack", "Ranged Killing Attack", "Blast", "Mental Blast", "Drain", "Entangle", "Flash", "HTH Attack"]);
-		const defenseArray = new Set(["Resistant Protection", "Base PD Mod", "Base ED Mod"]);
+		const defenseArray = new Set(["Resistant Protection", "Resistant", "Base PD Mod", "Base ED Mod"]);
 		
 		// Imports either 42 or 16 pieces of equipment (for version < 2.3), skipping empty slots.
 		
@@ -1152,59 +1153,67 @@
 				// This needs to be adjusted so that it doesn't pick out other PD/ED stats from elsewhere in the text.
 				if (typeof armorArray[importCount].text !== "undefined") {
 					tempString = armorArray[importCount].text;
-				}
-				
-				if (tempString.includes("Resistant Protection")) {
-					tempPosition = tempString.indexOf("Resistant Protection");
-					sampleSize = 14;
-					subStringA = tempString.substr(tempPosition+20, sampleSize);
 					
-					if (subStringA.includes("PD")) {
-						tempPosition = subStringA.indexOf("PD");
-						subStringB = subStringA.slice(Math.max(0, tempPosition-3), tempPosition);
-						importedArmor["armorPD"+ID] = parseInt(subStringB.replace(/[^\d.-]/g, ""));
-						importedArmor["totalPD"+ID] = importedArmor["armorPD"+ID] + parseInt(character.pd);
+					if (tempString.includes("Resistant Protection") || tempString.includes("Resistant")) {
+						if (tempString.includes("applied to PD")) {
+							importedArmor["armorPD"+ID] = parseInt(character.pd);
+							importedArmor["totalPD"+ID] = parseInt(character.pd);
+						} else if (tempString.includes("PD")) {
+							tempPosition = tempString.indexOf("PD");
+							sampleSize = 4;
+							subStringA = tempString.slice(Math.max(0, tempPosition-sampleSize), tempPosition);	
+							tempValue = parseInt(subStringA.replace(/[^\d.-]/g, ""))||0;
+							importedArmor["armorPD"+ID] = tempValue + (isVehicle ? (parseInt(character.pd)||0) : 0);
+							importedArmor["totalPD"+ID] = tempValue + parseInt(character.pd);
+						} else {
+							importedArmor["armorPD"+ID] = 0;
+							importedArmor["totalPD"+ID] = parseInt(character.pd)||0;
+						}
+						
+						if (tempString.includes("applied to PD")) {
+							importedArmor["armorED"+ID] = parseInt(character.ed);
+							importedArmor["totalED"+ID] = parseInt(character.ed);
+						} else if (tempString.includes("ED")) {
+							tempPosition = tempString.indexOf("ED");
+							sampleSize = 4;
+							subStringA = tempString.slice(Math.max(0, tempPosition-sampleSize), tempPosition);
+							tempValue = parseInt(subStringA.replace(/[^\d.-]/g, ""))||0;
+							importedArmor["armorED"+ID] = tempValue + (isVehicle ? (parseInt(character.ed)||0) : 0);
+							importedArmor["totalED"+ID] = tempValue + parseInt(character.ed)||0;
+						} else {
+							importedArmor["armorED"+ID] = 0;
+							importedArmor["totalED"+ID] = parseInt(character.ed);
+						}
+					} else if ( tempString.includes("Base PD Mod") || tempString.includes("Base ED Mod") ) {
+						
+					}
+					
+					// Activation roll
+					tempString = armorArray[importCount].text;
+					
+					if (tempString.includes("Requires A Roll")) {
+						tempPosition = tempString.indexOf("Requires A Roll");
+						
+						sampleSize = 4;
+						subStringA = tempString.substr(tempPosition+15, sampleSize);
+						subStringB = subStringA.replace(/[^\d]/g, "");
+						importedArmor["armorActivation"+ID] = parseInt(subStringB);
+					}
+					
+					// Armor locations. Sometimes locations are stored in the notes field.
+					if (armorArray[importCount].notes !== "") {
+						tempString += ", " + armorArray[importCount].notes;
+					}
+					importedArmor["armorLocations"+ID] = getArmorLocations(tempString, script_name);
+					importedArmor["armorEND"+ID] = getArmorEND(tempString, script_name);
+					
+					// Get armor mass.
+					if (armorArray[importCount].mass !== "") {
+						tempString = armorArray[importCount].mass;
+						importedArmor["armorMass"+ID] = getItemMass(tempString, script_name, 1);
 					} else {
-						importedArmor["armorPD"+ID] = 0;
-						importedArmor["totalPD"+ID] = parseInt(character.pd);
-					};
-					
-					if (subStringA.includes("ED")) {
-						tempPosition = subStringA.indexOf("ED");
-						subStringB = subStringA.slice(Math.max(0, tempPosition-3), tempPosition);
-						importedArmor["armorED"+ID] = parseInt(subStringB.replace(/[^\d.-]/g, ""));
-						importedArmor["totalED"+ID] = importedArmor["armorED"+ID] + parseInt(character.ed);
-					} else {
-						importedArmor["armorED"+ID] = 0;
-						importedArmor["totalED"+ID] = parseInt(character.ed);
-					}; 
-				};
-				
-				// Activation roll
-				tempString = armorArray[importCount].text;
-				
-				if (tempString.includes("Requires A Roll")) {
-					tempPosition = tempString.indexOf("Requires A Roll");
-					
-					sampleSize = 4;
-					subStringA = tempString.substr(tempPosition+15, sampleSize);
-					subStringB = subStringA.replace(/[^\d]/g, "");
-					importedArmor["armorActivation"+ID] = parseInt(subStringB);
-				}
-				
-				// Armor locations. Sometimes locations are stored in the notes field.
-				if (armorArray[importCount].notes !== "") {
-					tempString += ", " + armorArray[importCount].notes;
-				}
-				importedArmor["armorLocations"+ID] = getArmorLocations(tempString, script_name);
-				importedArmor["armorEND"+ID] = getArmorEND(tempString, script_name);
-				
-				// Get armor mass.
-				if (armorArray[importCount].mass !== "") {
-					tempString = armorArray[importCount].mass;
-					importedArmor["armorMass"+ID] = getItemMass(tempString, script_name, 1);
-				} else {
-					importedArmor["armorMass"+ID] = 0;
+						importedArmor["armorMass"+ID] = 0;
+					}
 				}
 			}
 		}
