@@ -1,7 +1,7 @@
 # Hero System 6e Heroic: HD Importer
 A script for importing characters built in or acquired for HERO Designer into a Roll20 Hero System 6e Heroic game. 
 
-HD Importer attempts to translate as much of a [HERO Designer](https://www.herogames.com/store/product/1-hero-designer/) character as possible into a Roll20 [HeroSystem6eHeroic](https://github.com/Roll20/roll20-character-sheets/blob/master/HeroSystem6eHeroic/README.md) character sheet. There will invariably be rules, options, or build styles that do not translate well from HERO Designer into Roll20. Nonetheless, this importer should import most of the details of a character. 
+*HD Importer* attempts to translate as much of a [HERO Designer](https://www.herogames.com/store/product/1-hero-designer/) character as possible into a Roll20 [HeroSystem6eHeroic](https://github.com/Roll20/roll20-character-sheets/blob/master/HeroSystem6eHeroic/README.md) character sheet. There will invariably be rules, options, or build styles that do not translate well from HERO Designer into Roll20. Nonetheless, this importer should import most of the details of a character. 
 
 This script was tested with the following commercially available character packs (almost 700 character files):
 - [Champions Begins (free)](https://www.herogames.com/store/product/1005-champions-begins-pdfhd/)
@@ -26,7 +26,7 @@ From the Mods page select 'HeroSystem6eHeroic HDImporter' from the Mod Library d
 
 Launch the game.
 
-If HD Importer has started correctly the following notification should appear in chat when your Roll20 campaign starts up for the first time:
+If *HD Importer* has started correctly the following notification should appear in chat when your Roll20 campaign starts up for the first time:
 ![HelpMenu](/HeroSystem6eHeroic_HDImporter/images/ScriptReady.png)
 
 # Import a Character:
@@ -56,7 +56,7 @@ The [release folder](/HeroSystem6eHeroic_HDImporter/2.4/) contains three test an
 ## Vehicles
 While twenty powers is typically sufficient for most heroic characters, it is easy to create vehicles with far more, particularly for science-fiction settings. Sensors, life support systems, and the like can really add up. To avoid running out of space, I suggest following the Star HERO source book's examples, which use Variable Power Pools for sensors and other systems. Some powers can easily be described as custom talents or skills as well. If you want further detail on your vehicle sheet, consider defining various system powers in a VPP as equipment. These will be imported as equipment in the gear section, with power details printed in the adjacent text box.
 
-Another point to make about vehicles is that HD Importer ignores the default ground and swimming movement attributes. The sheet refunds these movement attributes by default. That said, HD Importer will count these starting values in the total movement value of ground or swimming powers if added to a vehicle.
+Another point to make about vehicles is that *HD Importer* ignores the default ground and swimming movement attributes. The sheet refunds these movement attributes by default. That said, HD Importer will count these starting values in the total movement value of ground or swimming powers if added to a vehicle.
 
 ## General Notes
 Try to avoid double quotation marks, which JSON files use for data values. If you would like to use them in your Hero Designer files, consider using single quotes instead. During the export process, Hero Designer will attempt to remove double quotes, but it may not catch them all.
@@ -65,22 +65,24 @@ Characters exported with older versions of HeroSystem6eHeroic.hde (1.0, 2.0, 2.1
 
 Hero Designer has entries for eye color and hair color. This information is not imported since the character sheet does not have corresponding fields.
 
-Weapons, armor, and other equipment are imported as text and shown in the text field in the "Gear" page. HD Importer attempts to fill in the appropriate spaces in the sheet with the items it can identify, but HERO items often have additional information to track. Expect this area to require some degree of attention.
+Attack powers and resistant defense powers will be imported as powers *and* as weapons and armor on the gear page. This feature is useful for vehicles, monsters, and superheroic characters that don't rely on equipment.
+
+*HD Importer* attempts to fill in the appropriate spaces in the sheet with the items it can identify, but HERO items often have additional information to track. Details on weapons, armor, and other equipment appear in the text field in the "Gear" page. 
 
 At present, the character sheet has twenty power, ten talent, and ten complication slots. Up to thirty additional powers and ten talents and complications, if found, will be imported as text and displayed in sheet notes fields. None of these overflow items will count in the sheet's automatic character point calculations.
 
 Powers that add (or subtract) characteristics, movement, and perception abilities should be applied in the appropriate modifier fields.
 
 > [!TIP]
-> HD Importer will recognize the following key phrases if added to a piece of equipment's notes and attempts to automatically apply the values given.
+> *HD Importer* will recognize the following key phrases if added to a piece of equipment's notes and attempts to automatically apply the values given.
 
-- `(locations x-y, z) or (loc x, y-z)` : If HD Importer finds the keyword "locations" it will assign the list "x-y, z" to a piece of armor's locations. End the list with closed parentheses ")" or a semicolon ";".
+- `(locations x-y, z) or (loc x, y-z)` : If *HD Importer* finds the keyword "locations" it will assign the list "x-y, z" to a piece of armor's locations. End the list with closed parentheses ")" or a semicolon ";".
 
 - `Equipment` : A weapon with the "equipment" keyword will be imported as a piece of equipment, not a weapon. Useful for ordinary items built with attack powers. HD Importer will also copy any power with this keyword as a piece of equipment as well.
 
-- `Max Range: XYZm or max range XYZ` : HD Importer will fill in a weapon's maximum range with XYZ.
+- `Max Range: XYZm or max range XYZ` : *HD Importer* will fill in a weapon's maximum range with XYZ.
 
-- `X END/Turn or END/Turn: X` : If your campaign uses the optional rule of applying END costs to armor, HD Importer will automatically apply the value X.
+- `X END/Turn or END/Turn: X` : If your campaign uses the optional rule of applying END costs to armor, *HD Importer* will automatically apply the value X.
 
 # Help
 
@@ -90,11 +92,11 @@ Access the in-game help menu by entering the command "!hero --help" into the cha
 
 # Configuration Options
 
-The configuration menu is accessible from the Help Screen or via the chat window command "!hero --config". HD Importer offers a number of options to help organize imported characters and to pre-configure campaign options.
+The configuration menu is accessible from the Help Screen or via the chat window command "!hero --config".* *HD Importer* offers a number of options to help organize imported characters and to pre-configure campaign options.
 
 ![HelpMenu](/HeroSystem6eHeroic_HDImporter/images/ConfigMenu.png)
 
-- `Overwrite` : **CAUTION!** If set to true, when importing a new character, HD Importer will overwrite an existing character that has the same name. 
+- `Overwrite` : **CAUTION!** If set to true, when importing a new character, *HD Importer* will overwrite an existing character that has the same name. 
 - `Prefix` : Adds a text label to the beginning of an imported character's name.
 - `Suffix` : Adds a text label to the end of an imported character's name.
 - `In Player Journal` : Presets the imported character's visibility to players.
@@ -114,7 +116,7 @@ Please submit bug reports, feature requests, and general comments to [Villain in
 
 Hero related code and modifications by [Villain in Glasses](https://app.roll20.net/users/633423/villain-in-glasses) (Discord: Villain#0604).
 
-Based on D&D Beyond Importer by [Robin Kuiper](https://app.roll20.net/users/1226016/robin) (Discord: Atheos#1095), [Matt DeKok](https://app.roll20.net/users/494585/sillvva) (Discord: Sillvva#2532), and [Ammo Goeetsch](https://app.roll20.net/users/2990964/ammo) (Discord: ammo#7063).
+Based on *D&D Beyond Importer* by [Robin Kuiper](https://app.roll20.net/users/1226016/robin) (Discord: Atheos#1095), [Matt DeKok](https://app.roll20.net/users/494585/sillvva) (Discord: Sillvva#2532), and [Ammo Goeetsch](https://app.roll20.net/users/2990964/ammo) (Discord: ammo#7063).
 
 Apologies to Darci, who played the role of Duncan Idaho.
 
@@ -132,4 +134,4 @@ Version 2.2 -- Fix for compound power import failure. Recognizes Mental Combat S
 
 Version 2.3 -- This version is up to date with Sheet Version 3.80. Adds special intelligence skill types with variable base cost (SPx). Adds "Native +" language skill assignment for native languages updated to imitate dialects. Doubles the number of armor, weapons, and equipment imported to account for the new "A/B" sets feature of the sheet. Recognizes additional copies of weapons purchased with the quantity feature of HD. Adds recognition of the keywords and key phrases "Max Range XYZ" and "Equipment." HeroSystem6eHeroic.hde (version 2.3) updated to 50 equipment slots (November 13, 2024).
 
-Version 2.4 -- Supports vehicles, which were introduced in sheet version 4.42. Vehicle characters have special power sections for up to two endurance reserves and two propulsion systems, which increases imported powers up to 24. While the base capacity for general powers remains twenty, up to thirty more will be imported and displayed in the Talents text box (requires HeroSystem6eHeroic.hde v2.4). Introduces the Size attribute. Supports the expanded general and combat skill capacities of the sheet (February 21, 2025).
+Version 2.4 -- Supports vehicles, which were introduced in sheet version 4.42. Vehicle characters have special power sections for up to two endurance reserves and two propulsion systems, which increases imported powers up to 24. While the base capacity for general powers remains twenty, up to thirty more will be imported and displayed in the Talents text box (requires HeroSystem6eHeroic.hde v2.4). Introduces the Size attribute. Supports the expanded general and combat skill capacities of the sheet. Imports armor and weapon-like powers as equipment (February 24, 2025).

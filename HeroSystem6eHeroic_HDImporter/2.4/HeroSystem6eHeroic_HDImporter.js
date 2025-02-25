@@ -838,11 +838,11 @@
 				
 				tempEquipment.name = (character.powers["power"+ID].name.length === 0) ? "Power" : character.powers["power"+ID].name.replace(/\([^)]*\)/g, "").trim();
 				tempEquipment.text = character.powers["power"+ID].text;
-				tempEquipment.damage = character.powers["power"+ID].damage;
 				tempEquipment.end = character.powers["power"+ID].endurance;
 				tempString = findEffectType(tempEquipment.text, script_name);
 				tempEquipment.attack = attackArray.has(tempString) ? "true" : "false";
 				tempEquipment.defense = defenseArray.has(tempString) ? "true" : "false";
+				tempEquipment.damage = getPowerDamage(character.powers["power"+ID].damage, tempString, character.strength, script_name);
 				tempValue = (tempEquipment.text.includes("No Range") || tempString.includes("HTH")) ? 0 : 10 * parseInt(character.powers["power"+ID].base)||0;
 				tempEquipment.range = tempValue.toString();
 				tempEquipment.notes = character.powers["power"+ID].notes;
@@ -1010,11 +1010,15 @@
 						importedWeapons["weaponAdvantage"+ID] = tempValue;
 					}
 					
-					// Check for Killing Attack.
+					// Assign weapon type
 					if (tempString.includes("Killing Attack") || tempString.includes("RKA") || tempString.includes("HKA")) {
-						// importedWeapons["weaponNormalDamage"+ID] = "off";
+						importedWeapons["weaponDamageType"+ID] = "killing";
+					} else if (tempString.includes("Mental Blast") || tempString.includes("Drain") || tempString.includes("Entangle") || tempString.includes("Flash")) {
+						importedWeapons["weaponDamageType"+ID] = "power";
+						weaponStates = setCharAt(weaponStates, importCount, 'P');
+						importedWeapons["weaponType"+ID]= "power";
 					} else {
-						importedWeapons["weaponNormalDamage"+ID]= "on";
+						importedWeapons["weaponDamageType"+ID] = "normal";
 						weaponStates = setCharAt(weaponStates, importCount, 'N');
 						importedWeapons["weaponType"+ID]= "normal";
 					}
@@ -1299,8 +1303,6 @@
 					for (j = shieldSearchIndex; j<equipmentMultipowers[i+1]; j++) {
 						tempString = multipowerArray[j].text;
 						
-						//sendChat(script_name, "Seaching multipower for DCV: "+ tempString+".");
-						
 						if (tempString.includes("DCV")) {
 							foundShieldDCV = true;
 							
@@ -1327,11 +1329,13 @@
 							// Check for Killing Attack.
 							tempString = multipowerArray[j].damage;
 							
-							if (tempString.includes("Killing Attack") || tempString.includes("HKA")) {
-								// importedShield.shieldNormalDamage= "off";
+							// Assign weapon type
+							if (tempString.includes("Killing Attack") || tempString.includes("RKA") || tempString.includes("HKA")) {
+								importedShield["weaponDamageType"+shieldID] = "killing";
 							} else {
-								importedShield["weaponNormalDamage"+shieldID] = "on";
-							};
+								importedShield["weaponDamageType"+shieldID] = "normal";
+								importedShield["weaponType"+shieldID]= "normal";
+							}
 							
 							// Assign weapon damage, making sure the 1/2d6 is a 1d3.
 							tempString = multipowerArray[j].damage;
@@ -1339,7 +1343,7 @@
 								importedShield["weaponDamage"+shieldID] = tempString.replace(" 1/2d6", "d6+d3");				
 							} else {
 								importedShield["weaponDamage"+shieldID] = tempString;
-							};
+							}
 							
 							// Check for modified STUN multiplier.
 							tempString = multipowerArray[j].text;
@@ -1351,7 +1355,7 @@
 								importedShield["weaponStunMod"+shieldID] = parseInt(tempString.substr(tempPosition-3, 2));
 							} else {
 								importedShield["weaponStunMod"+shieldID] = 0;
-							};
+							}
 							
 							// Get STR minimum.	
 							tempString = multipowerArray[j].text;
@@ -1376,20 +1380,23 @@
 							foundShieldAttack = true;
 							
 							// Check for Killing Attack.
+							
 							tempString = multipowerArray[j].damage;
-							if (tempString.includes("Killing Attack") || tempString.includes("HKA")) {
-								// importedShield.shieldNormalDamage= "off";
+							// Assign weapon type
+							if (tempString.includes("Killing Attack") || tempString.includes("RKA") || tempString.includes("HKA")) {
+								importedShield["weaponDamageType"+shieldID] = "killing";
 							} else {
-								importedShield["weaponNormalDamage"+shieldID] = "on";
-							};
+								importedShield["weaponDamageType"+shieldID] = "normal";
+								importedShield["weaponType"+shieldID]= "normal";
+							}
 							
 							// Assign weapon damage, making sure the 1/2d6 is a 1d3.
 							tempString = multipowerArray[j].damage;
 							if (tempString.includes("1/2d6")) {
-								importedShield["weaponNormalDamage"+shieldID] = tempString.replace(" 1/2d6", "d6+d3");				
+								importedShield["weaponDamage"+shieldID] = tempString.replace(" 1/2d6", "d6+d3");				
 							} else {
-								importedShield["weaponNormalDamage"+shieldID]= tempString;
-							};
+								importedShield["weaponDamage"+shieldID] = tempString;
+							}
 							
 							// Check for modified STUN multiplier.
 							tempString = multipowerArray[j].text;
@@ -1401,7 +1408,7 @@
 								importedShield["weaponStunMod"+shieldID] = parseInt(tempString.substr(tempPosition-3, 2));
 							} else {
 								importedShield["weaponStunMod"+shieldID] = 0;
-							};
+							}
 							
 							// Get STR minimum.	
 							tempString = multipowerArray[j].text;
