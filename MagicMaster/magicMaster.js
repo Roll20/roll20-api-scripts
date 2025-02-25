@@ -92,14 +92,15 @@ API_Meta.MagicMaster={offset:Number.MAX_SAFE_INTEGER,lineCount:-1};
  *                     not in a database. Improved error checking and type conversion. Corrected speed
  *                     of items to use inheritance via resolveData(). Improved --message command resolution
  *                     of selected vs. id token selection. Added new MI-DB-Treasure database.
+ * v4.0.2  25/02/2025  Fixed error when using GM's [Add Items] or --gm-edit-mi to hide an item as another item.
  */
  
 var MagicMaster = (function() {
 	'use strict';
-	var version = '4.0.1',
+	var version = '4.0.2',
 		author = 'RED',
 		pending = null;
-	const lastUpdate = 1738351019;
+	const lastUpdate = 1740502257;
 		
 	/*
 	 * Define redirections for functions moved to the RPGMaster library
@@ -6686,7 +6687,7 @@ var MagicMaster = (function() {
 		
 		Items = Items.tableSet( fields.Items_name, MIrowref, MIchosen );
 		Items = Items.tableSet( fields.Items_trueType, MIrowref, Items.tableLookup( fields.Items_type, MIrowref ) );
-		reveal = resolveData( Items.tableLookup( fields.Item_trueName, MIrowref ), fields.MagicItemDB, reItemData, charCS, {reveal:reSpellSpecs.reveal} ).parsed.reveal;
+		reveal = resolveData( Items.tableLookup( fields.Items_trueName, MIrowref ), fields.MagicItemDB, reItemData, charCS, {reveal:reSpellSpecs.reveal} ).parsed.reveal;
 		Items = Items.tableSet( fields.Items_reveal, MIrowref, (reveal.toLowerCase() !== 'manual' ? reveal : ''));
 		
 		newItem = abilityLookup( fields.MagicItemDB, MIchosen, charCS );
