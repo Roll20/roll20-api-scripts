@@ -51,7 +51,7 @@ If HD Importer has started correctly the following notification should appear in
 The [release folder](/HeroSystem6eHeroic_HDImporter/2.4/) contains three test and evaluation characters for use in HERO Designer (HDC) and Roll20 (TXT).
 - `Sample_Character.hdc` is the fae wizard Darci.
 - `Sample_Character_MA.hdc` is the doctor and martial arts swordsman Henkle.
-- `Sample_Vehicle.hdc` is the planetary exploration vehicle HEAT-V.
+- `Sample_Vehicle.hdc` is the near-future armored personnel carrier *Chariot*.
 
 ## Vehicles
 While twenty powers is typically sufficient for most heroic characters, it is easy to create vehicles with far more, particularly for science-fiction settings. Sensors, life support systems, and the like can really add up. To avoid running out of space, I suggest following the Star HERO source book's examples, which use Variable Power Pools for sensors and other systems. Some powers can easily be described as custom talents or skills as well. If you want further detail on your vehicle sheet, consider defining various system powers in a VPP as equipment. These will be imported as equipment in the gear section, with power details printed in the adjacent text box.

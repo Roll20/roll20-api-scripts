@@ -1023,12 +1023,7 @@
 					importedWeapons["weaponOCV"+ID] = getOCVmodifier(tempString, script_name);
 					
 					// Check for range mod adjustment.
-					if (tempString.includes("vs. Range Modifier")) {
-						tempPosition=tempString.indexOf("vs. Range Modifier");
-						importedWeapons["weaponRangeMod"+ID]= parseInt(tempString.substr(tempPosition-3, 2));				
-					} else {
-						importedWeapons["weaponRangeMod"+ID]= 0;
-					}
+					importedWeapons["weaponRangeMod"+ID] = getRangeModifier(tempString, script_name);
 					
 					// Check for the thrown weapon advantage.
 					importedWeapons["rangeBasedOnStr"+ID] = (tempString.includes("Range Based On STR")) ? "on" : 0;
@@ -1184,8 +1179,6 @@
 							importedArmor["armorED"+ID] = 0;
 							importedArmor["totalED"+ID] = parseInt(character.ed);
 						}
-					} else if ( tempString.includes("Base PD Mod") || tempString.includes("Base ED Mod") ) {
-						
 					}
 					
 					// Activation roll
@@ -4877,27 +4870,61 @@
 		// Parse weapon string for OCV modifier or penalty.
 		let ocvModifier = 0;
 		let tempPosition;
-		let subString;
+		let subString = "";
+		let searchString = "";
+		let found = true;
 		
 		// First, remove Range Modifier OCV if present.
 		weaponString = weaponString.replace("OCV modifier","");
 		
 		// Then search for OCV bonus.
-		if ((weaponString !== "") && (weaponString.includes("OCV"))) {
-			tempPosition = weaponString.indexOf("OCV");
-			subString = weaponString.slice(0, tempPosition);
-			
-			// If there is a modifier before the OCV entry, drop characters up to that point.
-			if (subString.includes(")")) {
-				tempPosition = subString.lastIndexOf(")");
-				subString = subString.substr(tempPosition);
+		if (weaponString !== "") {
+			if (weaponString.includes("OCV")) {
+				searchString = "OCV";
+			} else if (weaponString.includes("with any single attack")) {
+				searchString = "with any single attack";
+			} else {
+				found = false;
 			}
 			
-			subString = subString.replace(/[^\d-]/g, "");
-			ocvModifier = parseInt(subString);				
+			if (found) {
+				tempPosition = weaponString.indexOf(searchString);
+				subString = weaponString.slice(Math.max(0, tempPosition-4), tempPosition);
+				subString = subString.replace(/[^\d-]/g, "");
+				ocvModifier = parseInt(subString);
+			}
 		} 
 		
 		return ocvModifier;
+	}
+	
+	var getRangeModifier = function(weaponString, script_name) {
+		// Parse weapon string for OCV modifier or penalty.
+		let rangeMod = 0;
+		let tempPosition;
+		let subString = "";
+		let searchString = "";
+		let found = true;
+		
+		// Then search for OCV bonus.
+		if (weaponString !== "") {
+			if (weaponString.includes("vs. Range Modifier")) {
+				searchString = "vs. Range Modifier";
+			} else if (weaponString.includes("to offset RMod")) {
+				searchString = "to offset RMod";
+			} else {
+				found = false;
+			}
+			
+			if (found) {
+				tempPosition = weaponString.indexOf(searchString);
+				subString = weaponString.slice(Math.max(0, tempPosition-4), tempPosition);
+				subString = subString.replace(/[^\d-]/g, "");
+				rangeMod = parseInt(subString);
+			}
+		} 
+		
+		return rangeMod;
 	}
 	
 	
