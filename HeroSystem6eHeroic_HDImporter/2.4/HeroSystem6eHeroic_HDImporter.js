@@ -3657,6 +3657,8 @@
 		// Add to typoList as needed.
 		
 		const typoList = [
+			["leaping", "Leaping"],
+			["Runniing", "Running"],
 			["Restistant", "Resistant"]
 		];
 		
