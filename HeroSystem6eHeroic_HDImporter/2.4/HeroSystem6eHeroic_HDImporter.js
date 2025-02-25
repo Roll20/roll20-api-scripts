@@ -527,7 +527,7 @@
 			validateMay23: 1,
 			
 			// Show the Treasures slide where equipment will appear.	
-			gearSlideSelection : "gearTreasures"
+			gearSlideSelection: "gearTreasures"
 		}
 		
 		setAttrs(object.id, version_attributes);
@@ -707,11 +707,6 @@
 			
 			// Place additional maneuvers in the treasures text box.
 			setAttrs(object.id, {treasures: tempString});
-		}
-		
-		// Make the Maneuver window visible.
-		if (importCount>0) {
-			setAttrs(object.id, {gearSlideSelection: 2});
 		}
 		
 		return tempString;
@@ -907,8 +902,7 @@
 			}
 			
 			setAttrs(object.id, {
-				treasures: tempString,
-				gearSlideSelection: 3
+				treasures: tempString
 			});
 		}
 		
@@ -1011,16 +1005,24 @@
 					}
 					
 					// Assign weapon type
-					if (tempString.includes("Killing Attack") || tempString.includes("RKA") || tempString.includes("HKA")) {
-						importedWeapons["weaponDamageType"+ID] = "killing";
-					} else if (tempString.includes("Mental Blast") || tempString.includes("Drain") || tempString.includes("Entangle") || tempString.includes("Flash")) {
+					if (tempString.includes("Mental Blast") || tempString.includes("Drain") || tempString.includes("Entangle") || tempString.includes("Flash") || tempString.includes("Alternate Defense")) {
 						importedWeapons["weaponDamageType"+ID] = "power";
+						if (importCount <= 5) {
+							importedWeapons["weaponType"+ID] = "power";
+						}
 						weaponStates = setCharAt(weaponStates, importCount, 'P');
-						importedWeapons["weaponType"+ID]= "power";
+					} else if (tempString.includes("Killing Attack") || tempString.includes("RKA") || tempString.includes("HKA")) {
+						importedWeapons["weaponDamageType"+ID] = "killing";
+						if (importCount <= 5) {
+							importedWeapons["weaponType"+ID] = "killing";
+						}
+						weaponStates = setCharAt(weaponStates, importCount, 'K');
 					} else {
 						importedWeapons["weaponDamageType"+ID] = "normal";
+						if (importCount <= 5) {
+							importedWeapons["weaponType"+ID] = "normal";
+						}
 						weaponStates = setCharAt(weaponStates, importCount, 'N');
-						importedWeapons["weaponType"+ID]= "normal";
 					}
 					
 					// Get OCV bonus or penalty.
@@ -1134,7 +1136,6 @@
 		let importedArmor = new Array();
 		const maxArmor = 8; // The 8th piece will be overwritten if the character has resistant protection.
 		
-		importCount = 0;
 		imported = 0;
 		
 		for (importCount = 0; importCount < maxArmor; importCount++) {
@@ -1213,6 +1214,16 @@
 					}
 				}
 			}
+		}
+		
+		// Add vehicle standard armor.
+		if ( isVehicle && (imported === 0) ) {
+			imported += 1;
+			importedArmor["armorName01"] = "Resistant Defense";
+			importedArmor["armorPD01"] = parseInt(character.pd);
+			importedArmor["totalPD01"] = parseInt(character.pd);
+			importedArmor["armorED01"] = parseInt(character.ed);
+			importedArmor["totalED01"] = parseInt(character.ed);
 		}
 		
 		// Import armor.
@@ -3474,12 +3485,10 @@
 				return "Extra-Dimensional MV";
 			} else if (tempString.includes("Faster-Than-Light Travel")) {
 				return "FTL Travel";
-			} else if (tempString.includes("Flash Defense")) {
+			} else if (tempString.includes("Flash Defense") && !(tempString.includes("PD")) && !(tempString.includes("ED"))) {
 				return "Flash Defense";
-			} else if (tempString.includes("Flash")) {
+			} else if (tempString.includes("Flash") && !(tempString.includes("Defense"))) {
 				return "Flash";
-			} else if (tempString.includes("Resistant")) {
-				return "Resistant Protection";
 			} else if (tempString.includes("Flight")) {
 				return "Flight";
 			} else if (tempString.includes("Ground Movement")) {
@@ -3504,7 +3513,7 @@
 				return "Luck";
 			} else if (tempString.includes("Transform")) {
 				return "Transform";
-			} else if (tempString.includes("Mental Defense")) {
+			} else if (tempString.includes("Mental Defense") && !(tempString.includes("PD")) && !(tempString.includes("ED"))) {
 				return "Mental Defense";
 			} else if (tempString.includes("Mental Illusions")) {
 				return "Mental Illusions";
@@ -3520,7 +3529,7 @@
 				return "No Hit Locations";
 			} else if (tempString.includes("Possession")) {
 				return "Possession";	
-			} else if (tempString.includes("Power Defense")) {
+			} else if (tempString.includes("Power Defense") && !(tempString.includes("PD")) && !(tempString.includes("ED"))) {
 				return "Power Defense";
 			} else if (tempString.includes("Reach")) {
 				return "Reach";
@@ -3528,6 +3537,8 @@
 				return "Reflection";
 			} else if (tempString.includes("Regeneration")) {
 				return "Regeneration";
+			} else if (tempString.includes("Resistant")) {
+				return "Resistant Protection";
 			} else if (tempString.includes("Running")) {
 				return "Running";	
 			} else if (tempString.includes("Shape Shift")) {
