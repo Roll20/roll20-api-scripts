@@ -91,6 +91,8 @@
 		CurrentBODY: 10,
 		CurrentSTUN: 20,
 		CurrentEND: 20,
+		CurrentMainEND: 0,
+		CurrentAuxiliaryEND: 0,
 		
 		// Make characteristic maximums default to no.
 		useCharacteristicMaximums: 0,
@@ -1742,7 +1744,7 @@
 			theEndurance: 0,
 			theBase: 0,
 			powerReducedEND : "standard"
-		}
+		};
 		
 		var tempObject = new Object(); 
 		
@@ -1957,15 +1959,7 @@
 			enhancedPerceptionModifier: 0,
 			perceptionModifierVision: 0,
 			perceptionModifierHearing: 0,
-			perceptionModifierSmell: 0,
-			armorPD04: 0,
-			armorED04: 0,
-			totalPD04: 0,
-			totalED04: 0,
-			armorActivation04: 18,
-			armorEND04: 0,
-			armorLocations04: "",
-			armorMass04: 0
+			perceptionModifierSmell: 0
 		};
 		
 		var charMod = Object.create(characterAdjustments);
@@ -2064,8 +2058,13 @@
 					bonusCP = tempValuesArray[1];
 					
 					// Get powerReducedEND level and separate endurance limitation or advantage cost.
-					testObject = findEndurance(testObject);
-					importedPowers["powerReducedEND"+ID] = testObject.powerReducedEND;
+					
+					if (testObject.theText.includes("Multipower")) {
+						importedPowers["powerReducedEND"+ID] = "noEnd";
+					} else {
+						testObject = findEndurance(testObject);
+						importedPowers["powerReducedEND"+ID] = testObject.powerReducedEND;
+					}
 					
 					// Find advantages and limitations values.
 					importedPowers["powerAdvantages"+ID] = findAdvantages(testObject.theText);
@@ -2145,7 +2144,7 @@
 					// Apply characteristic mods granted by enhancement powers or movement.
 					tempString = powerArray[importCount].text;
 					
-					if ( (typeof tempString != "undefined") && (tempString != "") ) {
+					if ( (typeof tempString !== "undefined") && (tempString !== "") && (!importedPowers["powerEffect"+ID].includes("Multipower")) ) {
 						switch (testObject.theEffect) {
 							case "Base STR Mod":	if (tempString.includes("0 END")) {
 														importedPowers["optionUntiring"] = "on";
@@ -3301,9 +3300,9 @@
 		} else if (tempString.includes("Increased Endurance Cost (x10 END; -4)")) {
 			testObject.powerReducedEND = "increasedENDx10";
 			tempString = tempString.replace("Increased Endurance Cost (x10 END; -4)", "");
-		} else if (endString == "") {
+		} else if (endString === "") {
 			testObject.powerReducedEND = "noEND";
-		} else if (endString == 0) {
+		} else if (endString === 0) {
 			testObject.powerReducedEND = "noEND";
 		} else {
 			testObject.powerReducedEND = "standardEND";
@@ -3599,6 +3598,8 @@
 				return "Talent";
 			} else if (senseModifierArray.some(v => lowerCaseString.includes(v))) {
 				return "Sense Modifier";
+			} else if (tempString.includes("Ego Attack")) {
+				return "Ego Attack";
 			} else if (tempString.includes("SPD")) {
 				return "Enhanced SPD";		
 			} else if (tempString.includes("PER")) {
@@ -4011,7 +4012,6 @@
 		advantages = advantages + ((tempString.match(/\+2\)/g) || []).length)*2;
 		tempString = tempString.replace("+2)","");
 		advantages = advantages + ((tempString.match(/\+1\)/g) || []).length)*1;
-		tempString = tempString.replace("+1)","");
 		
 		return advantages;
 	}
@@ -4075,7 +4075,6 @@
 		limitations = limitations + ((tempString.match(/-2\)/g) || []).length)*2;
 		tempString = tempString.replace("-2)","");
 		limitations = limitations + ((tempString.match(/-1\)/g) || []).length)*1;
-		tempString = tempString.replace("-1)","");
 		
 		return limitations;
 	}
