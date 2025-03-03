@@ -1172,7 +1172,7 @@
 							importedArmor["totalPD"+ID] = parseInt(character.pd)||0;
 						}
 						
-						if (tempString.includes("applied to PD")) {
+						if (tempString.includes("applied to ED")) {
 							importedArmor["armorED"+ID] = parseInt(character.ed);
 							importedArmor["totalED"+ID] = parseInt(character.ed);
 						} else if (tempString.includes("ED")) {
@@ -2061,6 +2061,7 @@
 					
 					if (testObject.theText.includes("Multipower")) {
 						importedPowers["powerReducedEND"+ID] = "noEnd";
+						testObject.theEffect = "Multipower";
 					} else {
 						testObject = findEndurance(testObject);
 						importedPowers["powerReducedEND"+ID] = testObject.powerReducedEND;
@@ -2144,8 +2145,9 @@
 					// Apply characteristic mods granted by enhancement powers or movement.
 					tempString = powerArray[importCount].text;
 					
-					if ( (typeof tempString !== "undefined") && (tempString !== "") && (!importedPowers["powerEffect"+ID].includes("Multipower")) ) {
+					if ( (typeof tempString !== "undefined") && (tempString !== "") ) {
 						switch (testObject.theEffect) {
+							case "Multipower":		break;
 							case "Base STR Mod":	if (tempString.includes("0 END")) {
 														importedPowers["optionUntiring"] = "on";
 													}
@@ -3039,8 +3041,8 @@
 		let attribute = skillObject.attribute;
 		let text = skillObject.text;
 		let type = "none";
-		let base = parseInt(skillObject.base);
-		let levels = parseInt(skillObject.levels);
+		let base = parseInt(skillObject.base)||0;
+		let levels = parseInt(skillObject.levels)||0;
 		let cost = skillObject.cost;
 		
 		if ( (skillObject.display === ("Skill Levels")) && (base/levels < 3)) {
@@ -3222,11 +3224,11 @@
 			subStringB = name.slice(endPosition);
 			
 			// Remove text "XY- (Z " at the end of subStringA.
-			endPosition = subStringA.lastIndexOf('(') - 3;
+			endPosition = subStringA.lastIndexOf('(') - 1;
 			subStringA = subStringA.slice(0,endPosition);
 			
 			// Remove the first ')' in subStringB.
-			startPosition = subStringB.indexOf(')');
+			startPosition = subStringB.indexOf(')') + 1;
 			subStringB = subStringB.slice(startPosition);
 			
 			// Join the subStrings to make a new name.
@@ -4898,7 +4900,9 @@
 		
 		// Then search for OCV bonus.
 		if (weaponString !== "") {
-			if (weaponString.includes("OCV")) {
+			if (weaponString.includes("with OCV")) {
+				searchString = "with OCV";
+			} else if (weaponString.includes("OCV")) {
 				searchString = "OCV";
 			} else if (weaponString.includes("with any single attack")) {
 				searchString = "with any single attack";
@@ -4910,7 +4914,7 @@
 				tempPosition = weaponString.indexOf(searchString);
 				subString = weaponString.slice(Math.max(0, tempPosition-4), tempPosition);
 				subString = subString.replace(/[^\d-]/g, "");
-				ocvModifier = parseInt(subString);
+				ocvModifier = parseInt(subString)||0;
 			}
 		} 
 		
