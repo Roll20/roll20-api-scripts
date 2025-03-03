@@ -1,7 +1,7 @@
 # GroupCheck
 This is an API script meant to run checks for several tokens at once. You can specify the type of check to run and it will roll it once for every selected token. Note that you **will** have to configure the script and import the right types of checks before you can use it. This script has been updated to work with both legacy and Beacon (D&D 2024) sheets.
 
-## 1.15 Update: This script must be run on the "Experimental" API server.
+## 1.15 Update: For use on D&D2024, this script must be run on the "Experimental" API server.
 
 ## Basic usage
 Having configured some checks, you can call the script using the following syntax
