@@ -772,9 +772,6 @@
 		// Power to Gear conversion
 		var tempEquipment = {};
 		
-		const attackArray = new Set(["HTH Killing Attack", "Ranged Killing Attack", "Blast", "Mental Blast", "Drain", "Entangle", "Flash", "HTH Attack"]);
-		const defenseArray = new Set(["Resistant Protection", "Resistant", "Base PD Mod", "Base ED Mod"]);
-		
 		// Imports either 42 or 16 pieces of equipment (for version < 2.3), skipping empty slots.
 		
 		for (importCount = 1; importCount <= maxGear; importCount++) {
@@ -837,8 +834,8 @@
 				tempEquipment.text = character.powers["power"+ID].text;
 				tempEquipment.end = character.powers["power"+ID].endurance;
 				tempString = findEffectType(tempEquipment.text, script_name);
-				tempEquipment.attack = attackArray.has(tempString) ? "true" : "false";
-				tempEquipment.defense = defenseArray.has(tempString) ? "true" : "false";
+				tempEquipment.attack = isAttack(tempString) ? "true" : "false";
+				tempEquipment.defense = isDefense(tempString) ? "true" : "false";
 				tempEquipment.damage = getPowerDamage(character.powers["power"+ID].damage, tempString, character.strength, script_name);
 				tempValue = (tempEquipment.text.includes("No Range") || tempString.includes("HTH")) ? 0 : 10 * parseInt(character.powers["power"+ID].base)||0;
 				tempEquipment.range = tempValue.toString();
@@ -1006,24 +1003,25 @@
 						importedWeapons["weaponAdvantage"+ID] = tempValue;
 					}
 					
+					sendChat(script_name, findEffectType(tempString));
+					
 					// Assign weapon type
-					if (tempString.includes("Mental Blast") || tempString.includes("Drain") || tempString.includes("Entangle") || tempString.includes("Flash") || tempString.includes("Alternate Defense")) {
-						importedWeapons["weaponDamageType"+ID] = "power";
-						if (importCount <= 5) {
-							importedWeapons["weaponType"+ID] = "power";
-						}
-						weaponStates = setCharAt(weaponStates, importCount, 'P');
-					} else if (tempString.includes("Killing Attack") || tempString.includes("RKA") || tempString.includes("HKA")) {
+					if (isKillingAttack( findEffectType(tempString) )) {
 						importedWeapons["weaponDamageType"+ID] = "killing";
-						if (importCount <= 5) {
-							importedWeapons["weaponType"+ID] = "killing";
-						}
+						importedWeapons["weaponType"+ID] = "killing";
 						weaponStates = setCharAt(weaponStates, importCount, 'K');
+					} else if (isPowerAttack( findEffectType(tempString) )) {
+						importedWeapons["weaponDamageType"+ID] = "power";
+						importedWeapons["weaponType"+ID] = "power";
+						weaponStates = setCharAt(weaponStates, importCount, 'P');
+					} else if (isMentalAttack( findEffectType(tempString) )) {
+						importedWeapons["weaponDamageType"+ID] = "mental";
+						importedWeapons["weaponType"+ID] = "power";
+						weaponStates = setCharAt(weaponStates, importCount, 'P');
 					} else {
+						// Blast, HTH Attack, Telekinesis
 						importedWeapons["weaponDamageType"+ID] = "normal";
-						if (importCount <= 5) {
-							importedWeapons["weaponType"+ID] = "normal";
-						}
+						importedWeapons["weaponType"+ID] = "normal";
 						weaponStates = setCharAt(weaponStates, importCount, 'N');
 					}
 					
@@ -3436,8 +3434,6 @@
 				return "Ranged Killing Attack";
 			} else if (tempString.includes("RKA")) {
 				return "Ranged Killing Attack";
-			} else if (tempString.includes("Blast")) {
-				return "Blast";
 			} else if (tempString.includes("Absorption")) {
 				return "Absorption";
 			} else if (tempString.includes("Aid")) {
@@ -3448,6 +3444,8 @@
 				return "Barrier";
 			} else if (tempString.includes("Mental Blast")) {
 				return "Mental Blast";
+			} else if (tempString.includes("Blast")) {
+				return "Blast";
 			} else if (tempString.includes("Change Environment")) {
 				return "Change Environment";
 			} else if (tempString.includes("Clairsentience")) {
@@ -3721,10 +3719,42 @@
 	
 	
 	var isAttack = function (effect) {
-		// For setting the attack state.
+		// For setting the attack state or to identify equipment powers.
 		const attackSet = new Set(["Blast", "Dispel", "Drain", "Entangle", "Flash", "Healing", "HTH Attack", "HTH Killing Attack", "Mental Blast", "Mental Illusions", "Mind Control", "Mind Link", "Mind Scan", "Ranged Killing Attack", "Telekinesis", "Telepathy", "Transform"]);
 		
 		return attackSet.has(effect) ? true : false;
+	}
+	
+	
+	var isKillingAttack = function (effect) {
+		// For setting the attack state or to identify equipment powers.
+		const attackSet = new Set(["HTH Killing Attack", "Ranged Killing Attack"]);
+		
+		return attackSet.has(effect) ? true : false;
+	}
+	
+	
+	var isMentalAttack = function (effect) {
+		// For setting the attack state or to identify equipment powers.
+		const attackSet = new Set(["Mental Blast", "Mental Illusions", "Mind Control", "Mind Link", "Mind Scan", "Telepathy"]);
+		
+		return attackSet.has(effect) ? true : false;
+	}
+	
+	
+	var isPowerAttack = function (effect) {
+		// For setting the attack state or to identify equipment powers.
+		const attackSet = new Set(["Dispel", "Drain", "Entangle", "Flash", "Healing", "Transform"]);
+		
+		return attackSet.has(effect) ? true : false;
+	}
+	
+	
+	var isDefense = function (effect) {
+		// For identifying equipment powers.
+		const defenseSet = new Set(["Resistant Protection", "Resistant", "Base PD Mod", "Base ED Mod"]);
+		
+		return defenseSet.has(effect) ? true : false;
 	}
 	
 	
