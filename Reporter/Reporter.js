@@ -1,3 +1,7 @@
+//NEEDED CHANGES
+// https://app.roll20.net/private_message/m/6013942/reporter-api/#message-6014434
+// Referende the disabled Dev copy. I think I started making Jumpgate 5e2024 changes.
+
 // Reporter
 // Last Updated: 2021-03-26
 // A script to report token and character calls in a list.
@@ -29,21 +33,22 @@ on('ready', function () {
 
 
 on('ready', () => {
-    const version = '1.1.8'; //version number set here
+    const version = '1.1.9'; //version number set here
     log('-=> Reporter v' + version + ' is loaded. Internal commands of !RPping, !RPpage-mod, !RPechochat, and !RPchangelayer are used in code.');
     //sendChat('Reporter', '/w gm Ready');
 
     const L = (o) => Object.keys(o).forEach(k => log(`${k} is ${o[k]}`));
     const tokenChar = '<span style="color: #fff; font-weight: bold; background-color: #b30000; padding:0px 2px; margin-right:3px;">T</span>';
     const characterChar = '<span style="color: #fff; font-weight: bold; background-color: #004080; padding:0px 2px; margin-right:3px;">C</span>';
-    const GMChar = '<span style="color: #000; font-weight: bold; background-color: lightgreen; padding:0px 2px; margin-right:3px;">GM</span>';
-    const TKChar = '<span style="color: #000; font-weight: bold; background-color: orange; padding:0px 2px; margin-right:3px;">TK</span>';
-    const DLChar = '<span style="color: #000; font-weight: bold; background-color: yellow; padding:0px 2px; margin-right:3px;">DL</span>';
-    const MPChar = '<span style="color: #000; font-weight: bold; background-color: lightsteelblue; padding:0px 2px; margin-right:3px;">MP</span>';
+    const GMChar = '<span style="color: #CBE1EE; font-weight: bold; background-color: #0b7bb8; padding:0px 2px; margin-right:3px;border-radius:2px;">GM</span>';
+    const TKChar = '<span style="color: #CBDCD2; font-weight: bold; background-color: #106837; padding:0px 2px; margin-right:3px;border-radius:2px;">TK</span>';
+    const DLChar = '<span style="color: #eee; font-weight: bold; background-color: #cc8900; padding:0px 2px; margin-right:3px;border-radius:2px;">DL</span>';
+    const MPChar = '<span style="color: #F1C5DF; font-weight: bold; background-color: #e7339d; padding:0px 2px; margin-right:3px;border-radius:2px;">MP</span>';
     const menuChar = `<a href='!report --menu' style='float:right; decoration:none; background-color: transparent; border: none; color: #fff; padding:0px 2px; font-family: pictos; margin-top:1px; margin-right:1px; !important'>l</a>`;
     const printChar = '<span style="color: #000">P</a>';
     const printButtonStyle = "'float:right; color: #000; font-weight:bold; color: white;text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000; font-family: pictos; border:none; background-color: transparent; padding:0px 2px; margin-right:3px !important'";
-    const notesButtonStyle = "'float:right; color: white; font-size: smaller; border:none; background-color: #999; padding:0px 2px; margin-right:3px !important'";
+    const notesButtonStyle = "'float:right; color: white; font-size: smaller; font-weight:bold; border:none; background-color: #999; padding:0px 2px; margin-right:3px; border-radius:2px; !important'";
+    const rowButtonStyle = "'float:right; font-size: smaller; border:none; display:inline-block; overflow: hidden; !important'";
     const buttonStyle = "'background-color: transparent;padding: 0px;color: #ce0f69;display: inline-block;border: none; !important'";
     const headerButtonStyle = '"background-color: #ccc; padding: 0px 3px; border-radius:2px;color: black; display: inline-block;border: none; !important"';
     const openHeader = "<div style='font-weight:bold; color:#fff; background-color:#404040; margin-right:3px; padding:3px;'>"
@@ -58,10 +63,33 @@ on('ready', () => {
         return '<a style = ' + buttonStyle + ' href="' + link + '">' + name + '</a>';
     }
 
+
+function toDeci(fraction) {
+    if(undefined === fraction){return "0 or undefined"};
+    fraction = fraction.toString();
+    var result,wholeNum=0, frac, deci=0;
+    if(fraction.search('/') >=0){
+        if(fraction.search('-') >=0){
+            wholeNum = fraction.split('-');
+            frac = wholeNum[1];
+            wholeNum = parseInt(wholeNum,10);
+        }else{
+            frac = fraction;
+        }
+        if(fraction.search('/') >=0){
+            frac =  frac.split('/');
+            deci = parseInt(frac[0], 10) / parseInt(frac[1], 10);
+        }
+        result = wholeNum+deci;
+    }else{
+        result = fraction
+    }
+
+    return result;
+}
+
+
     let actionButtons = [];
-
-
-
 
     L({ sheet });
 
@@ -337,8 +365,10 @@ on('ready', () => {
         bar2_maxI: (a, b) => (a.token.get('bar2_max').toString().toLowerCase() > b.token.get('bar2_max').toString().toLowerCase() ? -1 : 0),
         bar3_max: (a, b) => (a.token.get('bar3_max').toString().toLowerCase() < b.token.get('bar3_max').toString().toLowerCase() ? -1 : 0),
         bar3_maxI: (a, b) => (a.token.get('bar3_max').toString().toLowerCase() > b.token.get('bar3_max').toString().toLowerCase() ? -1 : 0),
-        cr: (a, b) => (eval(getAttrByName(a.character.get('_id'), "npc_challenge")) < eval(getAttrByName(b.character.get('_id'), "npc_challenge")) ? -1 : 0),
-        crI: (a, b) => (eval(getAttrByName(a.character.get('_id'), "npc_challenge")) > eval(getAttrByName(b.character.get('_id'), "npc_challenge")) ? -1 : 0)
+        currentside: (a, b) => (a.token.get('currentSide').toString().toLowerCase()*1 < b.token.get('currentSide').toString().toLowerCase()*1 ? -1 : 0),
+        currentsideI: (a, b) => (a.token.get('currentSide').toString().toLowerCase()*1 > b.token.get('currentSide').toString().toLowerCase()*1 ? -1 : 0),
+        cr: (a, b) => toDeci((getAttrByName(a.character.get('_id'), "npc_challenge")) < toDeci(getAttrByName(b.character.get('_id'), "npc_challenge")) ? -1 : 0),
+        crI: (a, b) => toDeci((getAttrByName(a.character.get('_id'), "npc_challenge")) > toDeci(getAttrByName(b.character.get('_id'), "npc_challenge")) ? -1 : 0)
     };
 
     //cleanup(getAttrByName(o.character.get('_id'), "CR"))).toString().toLowerCase()
@@ -629,6 +659,7 @@ on('ready', () => {
                 source = ((keywords.includes("source|false")) ? false : true);
                 isPrintbutton = ((keywords.includes("printbutton|true")) ? true : false);
                 isTokenNotesButton = ((keywords.includes("tokennotesbutton|true")) ? true : false);
+                isTokenNotesRow = ((keywords.includes("tokennotesrow|true")) ? true : false);
                 isTokenImageButton = ((keywords.includes("tokenbutton|true")) ? true : false);
                 isCharNotesButton = ((keywords.includes("charnotesbutton|true")) ? true : false);
                 isBioButton = ((keywords.includes("biobutton|true")) ? true : false);
@@ -782,13 +813,9 @@ customTitle = keywords.match(/minimal\|.*?$/).toString().split("|")[1];
                     character: getObj('character', t.get('represents'))
                 }))
                 .filter(o => undefined !== o.character);
-            //test for empty set, then for sheet type of first found sheet
-            /*            if (TCData.length > 0) {
-                            if (getAttrByName(TCData[0].character.get('_id'), 'text_proficiency')) {
-                                sheet = "Pathfinder Second Edition by Roll20";
-                            }
-                        }
-            */
+
+
+
             let filterTCData = TCData;
             let newTCData = [];
 
@@ -832,6 +859,9 @@ customTitle = keywords.match(/minimal\|.*?$/).toString().split("|")[1];
                     TCData = filterTCData
                 }
             });
+
+            //log("Number of tokens after filtering = " + TCData.length); 
+            
 
 if (scrolling){
         openReport = "<div style='max-height:" + scrolling +"px; overflow-x:hidden; color: #000; border: 1px solid #000; background-color: #fff; box-shadow: 0 0 3px #000; display: block; text-align: left; font-size: 13px; padding: 5px; margin-bottom: 0.25em; font-family: sans-serif; white-space: pre-wrap;'>";
@@ -1025,7 +1055,13 @@ if (sidebar){
                             case "bar3_maxI":
                                 sorter = TCSort.bar3_maxI;
                                 break;
-                            case "cr":
+                             case "currentside":
+                                sorter = TCSort.currentside;
+                                break;
+                             case "currentsideI":
+                                sorter = TCSort.currentsideI;
+                                break;
+                           case "cr":
                                 sorter = TCSort.cr;
                                 break;
                             case "crI":
@@ -1126,6 +1162,7 @@ if (sidebar){
                             characterSheet = ((characterSheetButton) ? "</i> <a title = '" + tc.character.get('name') + "' style = " + buttonStyle + "href='http://journal.roll20.net/character/" + tc.character.get('_id') + "'><b>" + linkBox + "</b></a>" : characterSheet); //" <a style = " + buttonStyle + "href='http://journal.roll20.net/character/" + tc.character.get('_id') + "'>&#128442;</a>"
                             printButton = ((isPrintbutton) ? "<a style = " + printButtonStyle + "title = 'print to chat' href='!RPechochat --" + tc.token.get('name') + "'>w</a>" : "");
                             tokenNotesButton = ((isTokenNotesButton) ? "<a style = " + notesButtonStyle + "title = 'token notes'  href='" + noteRecipient + notesHandout + " --id" + tc.token.get('_id') + "'>T</a>" : "");
+                            tokenNotesRow = ((isTokenNotesRow) ? "<a style = " + rowButtonStyle + "title = 'token notes'  href='" + noteRecipient + notesHandout + " --id" + tc.token.get('_id') + "'><img src ='https://files.d20.io/images/30616033/HzIFwCZvFUEhv0D5E3Nk6A/thumb.png'style = 'float:right; width:100px; background-repeat: repeat-x; height:10px; !important'></a>" : "");
                             charNotesButton = ((isCharNotesButton) ? "<a style = " + notesButtonStyle + " href='" + noteRecipient + notesHandout + " --charnote --id" + tc.token.get('_id') + "'>C</a>" : "");
                             bioButton = ((isBioButton) ? "<a style = " + notesButtonStyle + "title = 'bio' href='" + noteRecipient + notesHandout + " --bio --id" + tc.token.get('_id') + "'>B</a>" : "");
                             avatarButton = ((isAvatarButton) ? "<a style = " + notesButtonStyle + "title = 'avatar'  href='" + noteRecipient + notesHandout + " --avatar --id" + tc.token.get('_id') + "'>A</a>" : "");
@@ -1136,7 +1173,7 @@ if (sidebar){
 
 
 
-                            noteButtons = tokenImageButton + tokenNotesButton + charNotesButton + bioButton + avatarButton + tooltipButton + imageButton;
+                            noteButtons = tokenNotesRow + tokenImageButton + tokenNotesButton + charNotesButton + bioButton + avatarButton + tooltipButton + imageButton;
 
                             if (compact === false) {
                                 tokenGraphicHeight = 37;
@@ -1196,11 +1233,13 @@ if (sidebar){
                             }
 
 
+
                             if (allLayers === true) {
                                 lines = lines + "<div style='background-color: #eee; margin-top:6px; min-height:" + tokenGraphicHeight + "px; padding: 0px 5px;'><div style = 'float:left;'><a style = " + buttonStyle + " href='!RPpingall " + tc.token.get('_id') + "'><img style = 'height:" + tokenGraphicHeight + "px;float:left;margin-right:5px;margin-bottom:-5px;' src='" + tc.token.get('imgsrc') + "'></img></a></div>" + printButton + noteButtons + "<b>" + specificLayer(tc.token.get('_id')) + "<a style = " + buttonStyle + " href='!RPpinggm " + tc.token.get('_id') + "'>" + tc.token.get('name') + "</a></b>" + differentName + characterSheet + secondline + "</div>";
                             } else {
                                 lines = lines + "<div style='background-color: #eee; margin-top:6px; min-height:" + tokenGraphicHeight + "px; padding: 0px 5px;'><div style = 'float:left;'><a style = " + buttonStyle + " href='!RPpingall " + tc.token.get('_id') + "'><img style = 'height:" + tokenGraphicHeight + "px;float:left;margin-right:5px;margin-bottom:-5px;' src='" + tc.token.get('imgsrc') + "'></img></a></div>" + printButton + noteButtons + "<b><a style = " + buttonStyle + " href='!RPpinggm " + tc.token.get('_id') + "'>" + tc.token.get('name') + "</a></b>" + differentName + characterSheet + secondline + "</div>";
                             }
+
 
                             if (attributes[0].match(/^[t|c]\|/)) {
                                 attributes.forEach(a => {
@@ -1423,7 +1462,7 @@ if (sidebar){
         if (msg.type == "api" && msgTxt.match(cmdName)) {
             let args = msg.content.split(/\s+/);
             let token_ID = args[1];
-            //log('token id is ' + token_ID);
+
             token = getObj('graphic', token_ID);
             if (token) {
                 page = getObj('page', token.get('_pageid'));
@@ -1441,7 +1480,7 @@ if (sidebar){
         };
 
     });
-    //log("-=> !RPping command loaded (!RPping) <=-")
+
 
 
     //##################################
