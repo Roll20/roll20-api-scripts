@@ -42,7 +42,7 @@
 (function() {
 	// Constants
 	const versionMod = "2.4";
-	const versionSheet = "4.5"; // Note that a newer sheet will make upgrades as well as it can.
+	const versionSheet = "4.51"; // Note that a newer sheet will make upgrades as well as it can.
 	const needsExportedVersion = new Set(["1.0", "2.0", "2.1", "2.2", "2.3", "2.4"]); // HeroSystem6eHeroic.hde versions allowed.
 	const designerVersion = "20220801";
 	
@@ -836,7 +836,10 @@
 				tempString = findEffectType(tempEquipment.text, script_name);
 				tempEquipment.attack = isAttack(tempString) ? "true" : "false";
 				tempEquipment.defense = isDefense(tempString) ? "true" : "false";
-				tempEquipment.damage = getPowerDamage(character.powers["power"+ID].damage, tempString, character.strength, script_name);
+				tempEquipment.damage = getWeaponDamage(character.powers["power"+ID].damage, script_name);
+				if (tempEquipment.damage === "0") {
+					tempEquipment.damage = getPowerDamage(character.powers["power"+ID].damage, tempString, character.strength, script_name);
+				}
 				tempValue = (tempEquipment.text.includes("No Range") || tempString.includes("HTH")) ? 0 : 10 * parseInt(character.powers["power"+ID].base)||0;
 				tempEquipment.range = tempValue.toString();
 				tempEquipment.notes = character.powers["power"+ID].notes;
@@ -3422,6 +3425,10 @@
 				return "Base PD Mod";	
 			} else if (lowerCaseString.includes("applied to ed")) {
 				return "Base ED Mod";
+			} else if (tempString.includes("Aid")) {
+				return "Aid";
+			} else if ( (tempString.includes("Dispel")) && !(lowerCaseString.includes("difficult to dispel")) ) {
+				return "Dispel";
 			} else if (tempString.includes("Killing Attack - Hand-To-Hand")) {
 				return "HTH Killing Attack";
 			} else if (tempString.includes("HKA")) {
@@ -3432,8 +3439,6 @@
 				return "Ranged Killing Attack";
 			} else if (tempString.includes("Absorption")) {
 				return "Absorption";
-			} else if (tempString.includes("Aid")) {
-				return "Aid"; 
 			} else if (tempString.includes("Automaton")) {
 				return "Automaton";
 			} else if (tempString.includes("Barrier")) {
@@ -3460,8 +3465,6 @@
 				return "Density Increase";
 			} else if (tempString.includes("Desolidification")) {
 				return "Desolidification";
-			} else if ( (tempString.includes("Dispel")) && !(lowerCaseString.includes("difficult to dispel")) ) {
-				return "Dispel";
 			} else if (tempString.includes("Does Not Bleed")) {
 				return "Does Not Bleed";
 			} else if (tempString.includes("Drain")) {
@@ -3656,8 +3659,7 @@
 		const typoList = [
 			["leaping", "Leaping"],
 			["Runniing", "Running"],
-			["Restistant", "Resistant"],
-			["Stanima", "Stamina"]
+			["Restistant", "Resistant"]
 		];
 		
 		const iMax = 1;
@@ -3717,7 +3719,7 @@
 	
 	var isAttack = function (effect) {
 		// For setting the attack state or to identify equipment powers.
-		const attackSet = new Set(["Blast", "Dispel", "Drain", "Entangle", "Flash", "Healing", "HTH Attack", "HTH Killing Attack", "Mental Blast", "Mental Illusions", "Mind Control", "Mind Link", "Mind Scan", "Ranged Killing Attack", "Telekinesis", "Telepathy", "Transform"]);
+		const attackSet = new Set(["Aid", "Blast", "Dispel", "Drain", "Entangle", "Flash", "Healing", "HTH Attack", "HTH Killing Attack", "Mental Blast", "Mental Illusions", "Mind Control", "Mind Link", "Mind Scan", "Ranged Killing Attack", "Telekinesis", "Telepathy", "Transform"]);
 		
 		return attackSet.has(effect) ? true : false;
 	}
@@ -3741,7 +3743,7 @@
 	
 	var isPowerAttack = function (effect) {
 		// For setting the attack state or to identify equipment powers.
-		const attackSet = new Set(["Dispel", "Drain", "Entangle", "Flash", "Healing", "Transform"]);
+		const attackSet = new Set(["Aid", "Dispel", "Drain", "Entangle", "Flash", "Healing", "Transform"]);
 		
 		return attackSet.has(effect) ? true : false;
 	}
