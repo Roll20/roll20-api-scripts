@@ -42,7 +42,7 @@
 (function() {
 	// Constants
 	const versionMod = "2.4";
-	const versionSheet = "4.45"; // Note that a newer sheet will make upgrades as well as it can.
+	const versionSheet = "4.5"; // Note that a newer sheet will make upgrades as well as it can.
 	const needsExportedVersion = new Set(["1.0", "2.0", "2.1", "2.2", "2.3", "2.4"]); // HeroSystem6eHeroic.hde versions allowed.
 	const designerVersion = "20220801";
 	
@@ -1003,8 +1003,6 @@
 						importedWeapons["weaponAdvantage"+ID] = tempValue;
 					}
 					
-					sendChat(script_name, findEffectType(tempString));
-					
 					// Assign weapon type
 					if (isKillingAttack( findEffectType(tempString) )) {
 						importedWeapons["weaponDamageType"+ID] = "killing";
@@ -1892,8 +1890,6 @@
 							compound: true
 						}
 						
-						// sendChat(script_name, JSON.stringify(powerArray[powerArrayIndex]));
-						
 						powerArrayIndex++;
 					}
 				} else {
@@ -2186,9 +2182,9 @@
 													break;
 							case "Enhanced STUN":	charMod.stunMod += getCharacteristicMod(tempString, "STUN", script_name);
 													break;
-							case "Enhanced END":	charMod.endMod += getCharacteristicMod(tempString, "END", script_name);
+							case "Enhanced END":	charMod.enduranceMod += getCharacteristicMod(tempString, "END", script_name);
 													break;
-							case "Enhanced REC":	charMod.recMod += getCharacteristicMod(tempString, "REC", script_name);
+							case "Enhanced REC":	charMod.recoveryMod += getCharacteristicMod(tempString, "REC", script_name);
 													break;
 							case "Enhanced PER":	if ( tempString.includes("all Sense") ) {
 														charMod.enhancedPerceptionModifier += getCharacteristicMod(tempString, "PER", script_name);
@@ -3660,7 +3656,8 @@
 		const typoList = [
 			["leaping", "Leaping"],
 			["Runniing", "Running"],
-			["Restistant", "Resistant"]
+			["Restistant", "Resistant"],
+			["Stanima", "Stamina"]
 		];
 		
 		const iMax = 1;
@@ -4440,7 +4437,7 @@
 		let usedGameInches = false;
 		let lowerCaseString = inputString.toLowerCase();
 		
-		const specialArray = ["real weapon", "only works", "only for", "only to", "only applies", "only when", "attacks", "requires a roll", "for up to"];
+		const specialArray = ["usable by other", "real weapon", "only works", "only for", "only to", "only applies", "only when", "attacks", "requires a roll", "for up to"];
 		var leadingSet = new Set(["STR", "DEX", "CON", "INT", "EGO", "PRE", "OCV", "DCV", "OMCV", "DMCV", "PD", "ED", "BODY", "STUN", "END", "REC", "PER"]);
 		var trailingSet = new Set(["Running", "Leaping", "Swimming", "Flight", "Swinging"]);
 		
@@ -4451,8 +4448,8 @@
 			endPosition = inputString.indexOf(searchString);
 			detailString = inputString.slice(0, endPosition);
 			startPosition = detailString.includes("+") ? detailString.indexOf("+") : 0;
-			detailString = detailString.slice(startPosition, endPosition);
-			charMod = parseInt(detailString.replace(/[^0-9\-]/g, '')||0);
+			detailString = detailString.slice(startPosition);
+			charMod = parseInt(detailString.replace(/[^0-9\-]/g, ''))||0;
 		} else if (trailingSet.has(searchString)) {
 			
 			// Convert game inches to meters.
@@ -4465,19 +4462,17 @@
 			detailString = inputString.slice(startPosition + searchString.length);
 			endPosition = detailString.includes("m") ? detailString.indexOf("m") : detailString.length;
 			detailString = detailString.slice(0, endPosition);
-			charMod = parseInt(detailString.replace(/[^0-9\-]/g, '')||0) * (usedGameInches ? 2 : 1);
+			charMod = (parseInt(detailString.replace(/[^0-9\-]/g, ''))||0) * (usedGameInches ? 2 : 1);
 		}
 		
-		if (charMod === "") {
-			charMod = 0;
-		}
+		// Make sure we don't return something nasty.
+		charMod = ( isNaN(charMod) || (charMod === "") || (typeof charMod === "undefined")) ? 0 : Math.max(-99, Math.min(charMod, 99));
 		
 		if (verbose) {
 			sendChat(script_name, "Applied characteristic mod " + searchString + " + " + charMod.toString());
 		}
 		
-		// Make sure we don't return something nasty.
-		return isNaN(charMod) ? 0 : Math.max(-99, Math.min(charMod, 99));
+		return charMod;
 	}
 	
 	
