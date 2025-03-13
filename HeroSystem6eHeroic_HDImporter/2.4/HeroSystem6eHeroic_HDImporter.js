@@ -1044,10 +1044,9 @@
 					importedWeapons["weaponEnhancedBySTR"+ID] = ( checkDamageBySTR(tempString, script_name) ? "on" : 0);
 					importedWeapons["weaponStrength"+ID] = ( importedWeapons["weaponEnhancedBySTR"+ID] === "on" ) ? getWeaponStrength(importedWeapons["weaponStrengthMin"+ID], strength, script_name) : Math.min(tempValue, character.strength);
 					
-					if (tempValue === 0) {
-						// Likely a power being used as a weapon.
+					// If the weapon does not use STR, use the listed END.
+					if ( importedWeapons["weaponEnhancedBySTR"+ID] === 0) {
 						importedWeapons["weaponEndMod"+ID] = parseInt(weaponsArray[importCount].end)||0;
-						// importedWeapons["weaponRange"+ID] = parseInt(weaponsArray[importCount].range)||0;
 					}
 					
 					// Check for AoE.
@@ -1074,7 +1073,7 @@
 				importedWeapons["weaponRange"+ID] = getWeaponRange(weaponsArray[importCount].range, character.strength, importedWeapons["weaponMass"+ID], script_name);
 				
 				// Check for max range in notes.
-				tempValue = (weaponsArray[importCount].notes !== "") ?  getWeaponMaxRange(weaponsArray[importCount].notes, script_name) : 0;
+				tempValue = (weaponsArray[importCount].notes !== "") ? getWeaponMaxRange(weaponsArray[importCount].notes, script_name) : 0;
 				importedWeapons["weaponRange"+ID] = (tempValue !== 0) ? tempValue : parseInt(weaponsArray[importCount].range)||0;
 				
 				// Get weapon mass.
@@ -2204,7 +2203,7 @@
 														charMod.perceptionModifierVision += (tempString.includes("Sight")) ? getCharacteristicMod(tempString, "PER", script_name) : 0;
 														charMod.perceptionModifierHearing += (tempString.includes("Hearing")) ? getCharacteristicMod(tempString, "PER", script_name) : 0;
 														charMod.perceptionModifierSmell += (tempString.includes("Smell")) ? getCharacteristicMod(tempString, "PER", script_name) : 0;
-														if ( !(tempString.includes("Sight")) && !(tempString.includes("Hearing")) && !(tempString.includes("Smell")) ) {
+														if ( !(tempString.includes("Sight")) && !(tempString.includes("Hearing")) && !(tempString.includes("Smell")) && !(tempString.includes("Touch")) ) {
 															charMod.enhancedPerceptionModifier += getCharacteristicMod(tempString, "PER", script_name);
 														}
 													}
@@ -5089,6 +5088,7 @@
 		let optionLiteracyButton = makeButton(state[state_name][playerid].config.literacy, '!hero --config literacy|'+!state[state_name][playerid].config.literacy, buttonStyle);
 		let optionSuperENDButton = makeButton(state[state_name][playerid].config.superEND, '!hero --config superEND|'+!state[state_name][playerid].config.superEND, buttonStyle);
 		let optionLocationsButton = makeButton(state[state_name][playerid].config.locations, '!hero --config locations|'+!state[state_name][playerid].config.locations, buttonStyle);
+		let optionDamageCap = makeButton(state[state_name][playerid].config.damageCap, '!hero --config damageCap|'+!state[state_name][playerid].config.damageCap, buttonStyle);
 	
 		let listItems = [
 			'<span style="float: left; margin-top: 6px;">Overwrite:</span> '+overwriteButton+'<br /><small style="clear: both; display: inherit; color: white;">CAUTION: overwrites an existing character sheet that has a matching character name.</small>',
@@ -5124,7 +5124,8 @@
 			'<span style="float: left; margin-top: 6px;">Use Char Maximums:</span> ' + optionMaximumsButton,
 			'<span style="float: left; margin-top: 6px;">Literacy Costs CP:</span> ' + optionLiteracyButton,
 			'<span style="float: left; margin-top: 6px;">Super-Heroic END:</span> ' + optionSuperENDButton,
-			'<span style="float: left; margin-top: 6px;">Use Hit Locations:</span> ' + optionLocationsButton
+			'<span style="float: left; margin-top: 6px;">Use Hit Locations:</span> ' + optionLocationsButton,
+			'<span style="float: left; margin-top: 6px;">Limit Weapon DMG:</span> ' + optionDamageCap
 		]
 	
 		let sheetList = '<hr><b>Character Sheet</b>'+makeList(sheetListItems, 'overflow: hidden; list-style: none; padding: 0; margin: 0;', 'overflow: hidden; margin-top: 5px;');
@@ -5164,6 +5165,13 @@
 			defaultAttributes.optionHitLocationSystem = "on";
 		} else {
 			defaultAttributes.optionHitLocationSystem = 0;
+		}
+		
+		// Set hit location system option
+		if(state[state_name][playerid].config.damageCap){
+			defaultAttributes.optionWeaponDamageCap = "on";
+		} else {
+			defaultAttributes.optionWeaponDamageCap = 0;
 		}
 	
 		let resetButton = makeButton('Reset', '!hero --reset', altButtonStyle + ' margin: auto; width: 90%; display: block; float: none;');
@@ -5368,7 +5376,8 @@
 			maximums: false,
 			literacy: false,
 			superEND: false,
-			locations: false
+			locations: false,
+			damageCap: false
 		};
 	
 		let playerObjects = findObjs({
