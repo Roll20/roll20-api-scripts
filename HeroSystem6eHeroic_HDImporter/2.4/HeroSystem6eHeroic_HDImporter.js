@@ -837,7 +837,7 @@
 				tempEquipment.attack = isAttack(tempString) ? "true" : "false";
 				tempEquipment.defense = isDefense(tempString) ? "true" : "false";
 				tempEquipment.damage = getWeaponDamage(character.powers["power"+ID].damage, script_name);
-				if (tempEquipment.damage === "0") {
+				if ( (tempEquipment.damage === "0") || (tempEquipment.damage.includes("STR")) ) {
 					tempEquipment.damage = getPowerDamage(character.powers["power"+ID].damage, tempString, character.strength, script_name);
 				}
 				tempValue = (tempEquipment.text.includes("No Range") || tempString.includes("HTH")) ? 0 : 10 * parseInt(character.powers["power"+ID].base)||0;
@@ -3830,7 +3830,7 @@
 	var getPowerDamageType = function (effect) {
 		// For setting the attack state.
 		const killingSet = new Set(["HTH Killing Attack", "Ranged Killing Attack"]);
-		const normalSet = new Set(["Blast", "HTH Attack"]);
+		const normalSet = new Set(["Blast", "HTH Attack", "Telekinesis"]);
 		const mentalSet = new Set(["Mental Blast", "Mental Illusions", "Mind Control", "Mind Link", "Mind Scan", "Telepathy"]);
 		let damageType = null;
 		
@@ -4423,6 +4423,14 @@
 				} else {
 					damage = damageString;
 				}
+			}
+		} else if (effect === "Telekinesis") {
+			damageString = damageString.replace(/[^0-9.]/g,'');
+			if ((typeof damageString !== "undefined") && (damageString !== "")) {
+				damageString = parseInt(damageString)||0;
+				damage = Math.floor(damageString/5).toString() + "d6" + (((damageString % 5) > 2) ? "+d3" : "");
+			} else {
+				damage = "0";
 			}
 		} else {
 			damage = "0";
