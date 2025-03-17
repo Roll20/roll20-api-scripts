@@ -1041,7 +1041,7 @@
 					// Get STR minimum and apply strength.	
 					tempValue = getWeaponStrMin(tempString, script_name);
 					importedWeapons["weaponStrengthMin"+ID] = tempValue;
-					importedWeapons["weaponEnhancedBySTR"+ID] = ( checkDamageBySTR(tempString, script_name) ? "on" : 0);
+					importedWeapons["weaponEnhancedBySTR"+ID] = checkDamageBySTR(tempString, script_name) ? "on" : 0;
 					importedWeapons["weaponStrength"+ID] = ( importedWeapons["weaponEnhancedBySTR"+ID] === "on" ) ? getWeaponStrength(importedWeapons["weaponStrengthMin"+ID], strength, script_name) : Math.min(tempValue, character.strength);
 					
 					// If the weapon does not use STR, use the listed END.
@@ -3386,7 +3386,9 @@
 		// Reported as a power of 2.
 		let exponent = 1;
 		
-		if (inputString.includes("x4 Noncombat")) {
+		if (inputString.includes("no Noncombat movement")) {
+			exponent = 0;
+		} else if (inputString.includes("x4 Noncombat")) {
 			exponent = 2;
 		} else if (inputString.includes("x8 Noncombat")) {
 			exponent = 3;
@@ -3404,7 +3406,9 @@
 		// Search for and return effect keywords.
 		
 		const talentArray = ["absolute range sense", "absolute time sense", "ambidexterity", "animal friendship", "bump of direction", "combat luck", "combat sense", "danger sense", "deadly blow", "double jointed", "eidetic memory", "environmental movement", "lightning calculator", "lightning reflexes", "lightsleap", "off-hand defense", "perfect pitch", "resistance", "simulate death", "speed reading", "striking appearance", "universal translator", "weaponmaster"];
-		const skillArray = ["overall"];
+		
+		const skillArray = ["acrobatics", "acting", "analyze", "animal handler", "breakfall", "bribery", "bugging", "bureaucratics", "charm", "climbing", "combat driving", "combat piloting", "combat skill levels", "computer programming", "concealment", "contortionist", "conversation", "cramming", "criminology", "cryptology", "deduction", "defense maneuver", "demolitions", "disguise", "electronics", "fast draw", "forensic medicine", "forgery", "gambling", "high society", "interrogation", "inventor", "language", "lipreading", "lockpicking", "mechanics", "mimicry", "navigation", "oratory", "paramedics", "persuasion", "riding", "security systems", "shadowing", "sleight of hand", "stealth", "streetwise", "survival", "systems operations", "tactics", "teamwork", "tracking", "trading", "two-weapon fighting", "ventriloquism", "weapon familiarity", "weaponsmith", "overall"];
+		
 		const senseModifierArray = ["analyze", "concealed", "adjacent", "dimensional", "discriminatory", "increased arc", "microscopic", "penetrative", "range", "rapid", "telescopic", "tracking", "transmit"];
 		
 		if ( (typeof tempString != "undefined") && (tempString != "") ) {
@@ -4592,10 +4596,10 @@
 	}
 	
 	
-	var checkDamageBySTR = function (damageString, script_name) {
+	var checkDamageBySTR = function (inputString, script_name) {
 		damageBySTR = false;
 		
-		if (damageString.includes(" w/STR")) {
+		if ( inputString.includes(" w/STR") || (findEffectType(inputString) === "HTH Attack") ) {
 			damageBySTR = true;
 		}
 		
@@ -4955,21 +4959,23 @@
 		let searchString = "";
 		let found = true;
 		
-		// Then search for OCV bonus.
 		if (weaponString !== "") {
 			if (weaponString.includes("vs. Range Modifier")) {
 				searchString = "vs. Range Modifier";
 			} else if (weaponString.includes("to offset RMod")) {
 				searchString = "to offset RMod";
+			} else if (weaponString.includes("to offset Range")) {
+				searchString = "to offset Range";
 			} else {
 				found = false;
 			}
 			
+			// Then search for OCV bonus.
 			if (found) {
 				tempPosition = weaponString.indexOf(searchString);
 				subString = weaponString.slice(Math.max(0, tempPosition-4), tempPosition);
 				subString = subString.replace(/[^\d-]/g, "");
-				rangeMod = parseInt(subString);
+				rangeMod = parseInt(subString)||0;
 			}
 		} 
 		
@@ -5124,8 +5130,8 @@
 			'<span style="float: left; margin-top: 6px;">Use Char Maximums:</span> ' + optionMaximumsButton,
 			'<span style="float: left; margin-top: 6px;">Literacy Costs CP:</span> ' + optionLiteracyButton,
 			'<span style="float: left; margin-top: 6px;">Super-Heroic END:</span> ' + optionSuperENDButton,
-			'<span style="float: left; margin-top: 6px;">Use Hit Locations:</span> ' + optionLocationsButton,
-			'<span style="float: left; margin-top: 6px;">Limit Weapon DMG:</span> ' + optionDamageCap
+			'<span style="float: left; margin-top: 6px;">Limit Weapon DMG:</span> ' + optionDamageCap,
+			'<span style="float: left; margin-top: 6px;">Use Hit Locations:</span> ' + optionLocationsButton
 		]
 	
 		let sheetList = '<hr><b>Character Sheet</b>'+makeList(sheetListItems, 'overflow: hidden; list-style: none; padding: 0; margin: 0;', 'overflow: hidden; margin-top: 5px;');

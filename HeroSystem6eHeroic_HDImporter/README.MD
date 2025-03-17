@@ -3,11 +3,12 @@ A script for importing characters built in or acquired for HERO Designer into a 
 
 *HD Importer* attempts to translate as much of a [HERO Designer](https://www.herogames.com/store/product/1-hero-designer/) character as possible into a Roll20 [HeroSystem6eHeroic](https://github.com/Roll20/roll20-character-sheets/blob/master/HeroSystem6eHeroic/README.md) character sheet. There will invariably be rules, options, or build styles that do not translate well from HERO Designer into Roll20. Nonetheless, this importer should import most of the details of a character. 
 
-This script was tested with the following commercially available character packs (almost 700 character files):
+This script was tested with the following commercially available character packs (more than 700 characters):
 - [Champions Begins (free)](https://www.herogames.com/store/product/1005-champions-begins-pdfhd/)
 - [Dead Orc Pass](https://www.herogames.com/store/product/910-dead-orc-pass-mini-campaign-book-pdfhdc/)
 - [Dragon Bestiary 01 - Black Dragon](https://www.herogames.com/store/product/1080-dragon-bestiary-01-black-dragon-pdfhdc/)
 - [Extinction Event: Hero Designer Pack](https://www.herogames.com/store/product/1045-extinction-event-hero-designer-pack/)
+- [Fantasy Hero Complete](https://www.herogames.com/store/product/507-fantasy-hero-complete-pdf/)
 - [Fantasy Hero 6th Edition Character Pack](https://www.herogames.com/store/product/59-fantasy-hero-6th-edition-character-pack/)
 - [Fistful of Fu: Real World Martial Artists](https://www.herogames.com/store/product/1015-fistful-of-fu-real-world-martial-artists-pdf-hdc/)
 - [HERO System Bestiary 6th Edition Character Pack](https://www.herogames.com/store/product/79-hero-system-bestiary-6th-edition-character-pack/)
