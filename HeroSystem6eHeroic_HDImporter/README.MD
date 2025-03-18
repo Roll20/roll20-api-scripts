@@ -47,20 +47,24 @@ If *HD Importer* has started correctly the following notification should appear 
 1. Paste the copied text into the chat window of your Roll20 HeroSystem6eHeroic game.
 2. Hit enter. If all goes well you should see a start and finish notification, which for the character "Alena" appears as
 ![HelpMenu](/HeroSystem6eHeroic_HDImporter/images/ImportSuccess.png)
+3. (Optional) Open the new Roll20 character and click the `Edit` button in the upper right corner of the window to apply the character's profile image file.
 
 ## Sample Characters
-The [release folder](/HeroSystem6eHeroic_HDImporter/2.4/) contains three test and evaluation characters for use in HERO Designer (HDC) and Roll20 (TXT).
-- `Sample_Character.hdc` is the fae wizard Darci.
-- `Sample_Character_MA.hdc` is the doctor and martial arts swordsman Henkle.
-- `Sample_Vehicle.hdc` is the near-future armored personnel carrier *Chariot*.
+The [release folder](/HeroSystem6eHeroic_HDImporter/2.4/) contains four test and evaluation characters for use in HERO Designer (HDC) and Roll20 (TXT).
+- `Sample_Character.hdc` is the fae wizard *Darci*.
+- `Sample_Character_MA.hdc` is the doctor and martial arts swordsman *Henkle*.
+- `Sample_Vehicle_APC.hdc` is the near-future armored personnel carrier *Chariot*.
+- `Sample_Vehicle_BB.hdc` is the time machine *Blue Box*.
 
 ## Vehicles
-While twenty powers is typically sufficient for most heroic characters, it is easy to create vehicles with far more, particularly for science-fiction settings. Sensors, life support systems, and the like can really add up. To avoid running out of space, I suggest following the Star HERO source book's examples, which use Variable Power Pools for sensors and other systems. Some powers can easily be described as custom talents or skills as well. If you want further detail on your vehicle sheet, consider defining various system powers in a VPP as equipment. These will be imported as equipment in the gear section, with power details printed in the adjacent text box.
+While twenty powers is typically sufficient for most heroic characters, it is easy to create vehicles with far more, particularly for science-fiction settings. Sensors, life support systems, and the like can really add up. To avoid running out of space, I suggest following the Star HERO source book's examples, which use Variable Power Pools for sensors and other systems. Some powers can easily be described as custom talents or skills as well. See the sample character file Sample_Vehicle_BB.hdc in this repository. 
+
+If you want to import more details to your vehicle sheets, consider defining various system powers as equipment. These will be imported as sheet equipment in the gear section, with power details printed in the adjacent text box.
 
 Another point to make about vehicles is that *HD Importer* ignores the default ground and swimming movement attributes. The sheet refunds these movement attributes by default. That said, HD Importer will count these starting values in the total movement value of ground or swimming powers if added to a vehicle.
 
 ## General Notes
-Try to avoid double quotation marks, which JSON files use for data values. If you would like to use them in your Hero Designer files, consider using single quotes instead. During the export process, Hero Designer will attempt to remove double quotes, but it may not catch them all.
+Try to avoid double quotation marks, which JSON files use for data values. If you would like to use quotation marks in your Hero Designer files, consider using single quotes instead. During the export process, Hero Designer will attempt to fix errant double quotes, but it may not catch them all.
 
 Characters exported with older versions of HeroSystem6eHeroic.hde (1.0, 2.0, 2.1, 2.2, and 2.3) will work, but those exported with the latest version (2.4) will have more content and may benefit from bug fixes. Version 2.4 is the first to support vehicles.
 
@@ -105,11 +109,12 @@ The configuration menu is accessible from the Help Screen or via the chat window
 - `Use Char Maximums` : Presets the sheet option that figures characteristic maximums into point costs.
 - `Literacy Costs CP` : Presets the sheet option that literacy costs 1 CP. Most common in Fantasy Hero campaigns.
 - `Super-Heroic END` : Presets the option for lower endurance costs for strength.
+- `Limit Weapon DMG` : Presets the option to limit enhanced weapon damage to twice base values.
 - `Use Hit Locations` : Presets the sheet option to determine hit locations.
 
 # Troubleshooting Import Errors
 
-Notepad++ and potentially other text editors may convert double quotes to pairs of single quotes. Check to see if pairs of single quotes exist in your character files. If they do exist, consider using another text editor or try replacing them with double quotes. Thank you to Jim E. for reporting this issue.
+Notepad++ and potentially other text editors may convert double quotes to pairs of single quotes. Try using your app's search function to see if pairs of single quotes exist in your character files. If they do exist, please use another text editor. Thank you to Jim E. for reporting this issue.
 
 Please submit bug reports, feature requests, and general comments to [Villain in Glasses](https://app.roll20.net/users/633423/villain-in-glasses).
 
