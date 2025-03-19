@@ -4449,7 +4449,7 @@
 		let usedGameInches = false;
 		let lowerCaseString = inputString.toLowerCase();
 		
-		const specialArray = ["usable by other", "real weapon", "only works", "only for", "only to", "only applies", "only when", "attacks", "requires a roll", "for up to"];
+		const specialArray = ["limited", "usable by other", "real weapon", "only works", "only for", "only to", "only applies", "only when", "attacks", "requires a roll", "for up to"];
 		var leadingSet = new Set(["STR", "DEX", "CON", "INT", "EGO", "PRE", "OCV", "DCV", "OMCV", "DMCV", "PD", "ED", "BODY", "STUN", "END", "REC", "PER"]);
 		var trailingSet = new Set(["Running", "Leaping", "Swimming", "Flight", "Swinging"]);
 		
