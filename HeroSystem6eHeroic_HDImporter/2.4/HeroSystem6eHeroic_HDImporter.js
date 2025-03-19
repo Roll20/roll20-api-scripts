@@ -764,6 +764,8 @@
 		let importCount = 0;
 		let imported = 0;
 		let ID = "01";
+		let isEquipment = false;
+		let isIgnored = false;
 		
 		// Power to Gear conversion
 		var tempEquipment = {};
@@ -779,6 +781,8 @@
 				equipmentArray[equipmentArrayIndex] = character.equipment["equipment"+ID];
 				
 				tempString = equipmentArray[equipmentArrayIndex].name;
+				isEquipment = equipmentArray[equipmentArrayIndex].notes.toLowerCase().includes("[equipment]");
+				isIgnored = equipmentArray[equipmentArrayIndex].notes.toLowerCase().includes("[ignore]");
 				
 				if ((tempString !== "") && tempString.length) {
 					if ((equipmentArray[equipmentArrayIndex].name.includes("Multipower")) || (equipmentArray[equipmentArrayIndex].name.includes("MPSlot"))) {
@@ -786,17 +790,17 @@
 						multipowerArray[multipowerArrayIndex] = equipmentArray[equipmentArrayIndex];
 						multipowerArrayIndex++;	
 						
-					} else if ((equipmentArray[equipmentArrayIndex].defense !== "") && (equipmentArray[equipmentArrayIndex].defense === "true") && (equipmentArray[equipmentArrayIndex].notes.toLowerCase().includes("equipment") !== true)) {
+					} else if ((equipmentArray[equipmentArrayIndex].defense !== "") && (equipmentArray[equipmentArrayIndex].defense === "true") && (! isEquipment) && (! isIgnored) ) {
 						// If the item is a defense add it to the armor list.
 						armorArray[armorArrayIndex] = equipmentArray[equipmentArrayIndex];
 						armorArrayIndex++;
 						
-					} else if ((equipmentArray[equipmentArrayIndex].attack !== "") && (equipmentArray[equipmentArrayIndex].damage !== "") && (equipmentArray[equipmentArrayIndex].attack === "true") && (equipmentArray[equipmentArrayIndex].notes.toLowerCase().includes("equipment") !== true) ) {
+					} else if ((equipmentArray[equipmentArrayIndex].attack !== "") && (equipmentArray[equipmentArrayIndex].damage !== "") && (equipmentArray[equipmentArrayIndex].attack === "true") && (! isEquipment) && (! isIgnored) ) {
 						// If the item is a damage attack add it to the weapon list.
 						weaponsArray[weaponsArrayIndex] = equipmentArray[equipmentArrayIndex];
 						weaponsArrayIndex++;
 						
-					} else {
+					} else if (! isIgnored) {
 						// If the item is not an attack or defense add it to the equipment list.
 						equipmentListArray[equipmentListArrayIndex] = equipmentArray[equipmentArrayIndex];
 						equipmentListArrayIndex++;
@@ -814,47 +818,51 @@
 			
 			if ((typeof character.powers["power"+ID] !== "undefined") && (typeof character.powers["power"+ID].name !== "undefined")) {
 				
-				tempEquipment = {
-					name: "power",
-					text: "none",
-					damage: "0",
-					end: "0",
-					range: "0",
-					mass: "0",
-					attack: "false",
-					defense: "false",
-					notes: ""
-				};
+				isIgnored = character.powers["power"+ID].notes.toLowerCase().includes("[ignore]");
 				
-				tempEquipment.name = (character.powers["power"+ID].name.length === 0) ? "Power" : character.powers["power"+ID].name.replace(/\([^)]*\)/g, "").trim();
-				tempEquipment.text = character.powers["power"+ID].text;
-				tempEquipment.end = character.powers["power"+ID].endurance;
-				tempString = findEffectType(tempEquipment.text, script_name);
-				tempEquipment.attack = isAttack(tempString) ? "true" : "false";
-				tempEquipment.defense = isDefense(tempString) ? "true" : "false";
-				tempEquipment.damage = getWeaponDamage(character.powers["power"+ID].damage, script_name);
-				if ( (tempEquipment.damage === "0") || (tempEquipment.damage.includes("STR")) ) {
-					tempEquipment.damage = getPowerDamage(character.powers["power"+ID].damage, tempString, character.strength, script_name);
-				}
-				tempValue = (tempEquipment.text.includes("No Range") || tempString.includes("HTH")) ? 0 : 10 * parseInt(character.powers["power"+ID].base)||0;
-				tempEquipment.range = tempValue.toString();
-				tempEquipment.notes = character.powers["power"+ID].notes;
-				
-				if ((tempEquipment.defense === "true") && (tempEquipment.notes.toLowerCase().includes("equipment") !== true)) {
-					// If the item is a defense add it to the armor list.
-					armorArray[armorArrayIndex] = tempEquipment;
-					armorArrayIndex++;
+				if (! isIgnored) {
+					tempEquipment = {
+						name: "power",
+						text: "none",
+						damage: "0",
+						end: "0",
+						range: "0",
+						mass: "0",
+						attack: "false",
+						defense: "false",
+						notes: ""
+					};
 					
-				} else if ((tempEquipment.damage !== "") && (tempEquipment.attack === "true") && (tempEquipment.notes.toLowerCase().includes("equipment") !== true) ) {
-					// If the item is a damage attack add it to the weapon list.
-					weaponsArray[weaponsArrayIndex] = tempEquipment;
-					weaponsArrayIndex++;	
+					tempEquipment.name = (character.powers["power"+ID].name.length === 0) ? "Power" : character.powers["power"+ID].name.replace(/\([^)]*\)/g, "").trim();
+					tempEquipment.text = character.powers["power"+ID].text;
+					tempEquipment.end = character.powers["power"+ID].endurance;
+					tempString = findEffectType(tempEquipment.text, script_name);
+					tempEquipment.attack = isAttack(tempString) ? "true" : "false";
+					tempEquipment.defense = isDefense(tempString) ? "true" : "false";
+					tempEquipment.damage = getWeaponDamage(character.powers["power"+ID].damage, script_name);
+					if ( (tempEquipment.damage === "0") || (tempEquipment.damage.includes("STR")) ) {
+						tempEquipment.damage = getPowerDamage(character.powers["power"+ID].damage, tempString, character.strength, script_name);
+					}
+					tempValue = (tempEquipment.text.includes("No Range") || tempString.includes("HTH")) ? 0 : 10 * parseInt(character.powers["power"+ID].base)||0;
+					tempEquipment.range = tempValue.toString();
+					tempEquipment.notes = character.powers["power"+ID].notes;
 					
-				} else if ( character.powers["power"+ID].notes.toLowerCase().includes("equipment") ) {
-					// If the item is not an attack or defense add it to the equipment list.
-					equipmentListArray[equipmentListArrayIndex] = tempEquipment;
-					equipmentListArrayIndex++;
-					
+					if ((tempEquipment.defense === "true") && (tempEquipment.notes.toLowerCase().includes("equipment") !== true)) {
+						// If the item is a defense add it to the armor list.
+						armorArray[armorArrayIndex] = tempEquipment;
+						armorArrayIndex++;
+						
+					} else if ((tempEquipment.damage !== "") && (tempEquipment.attack === "true") && (tempEquipment.notes.toLowerCase().includes("equipment") !== true) ) {
+						// If the item is a damage attack add it to the weapon list.
+						weaponsArray[weaponsArrayIndex] = tempEquipment;
+						weaponsArrayIndex++;	
+						
+					} else if ( character.powers["power"+ID].notes.toLowerCase().includes("equipment") ) {
+						// If the item is not an attack or defense add it to the equipment list.
+						equipmentListArray[equipmentListArrayIndex] = tempEquipment;
+						equipmentListArrayIndex++;
+						
+					}
 				}
 			}
 		}
