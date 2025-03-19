@@ -87,9 +87,9 @@ Powers that add (or subtract) characteristics, movement, and perception abilitie
 
 - `X END/Turn or END/Turn: X` : If your campaign uses the optional rule of applying END costs to armor, *HD Importer* will automatically apply the value X.
 
-- `[Equipment]` : An item or power with the `[equipment]` keyword will be imported to the Gear Page as a piece of equipment, not armor or as a weapon. Useful for ordinary items built with attack powers.
+- `(Equipment)` : An item or power with the "(Equipment)" keyword will be imported to the Gear Page as a piece of equipment, not armor or as a weapon. Useful for ordinary items built with attack powers.
 
-- `[Ignore]` : An item or power with the `[Ignore]` keyword will not be imported to the Gear Page. 
+- `(Ignore)` : An item or power with the "(Ignore)" keyword will not be imported to the Gear Page. 
 
 # Help
 

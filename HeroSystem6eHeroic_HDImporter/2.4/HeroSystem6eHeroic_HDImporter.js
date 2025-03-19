@@ -781,8 +781,8 @@
 				equipmentArray[equipmentArrayIndex] = character.equipment["equipment"+ID];
 				
 				tempString = equipmentArray[equipmentArrayIndex].name;
-				isEquipment = equipmentArray[equipmentArrayIndex].notes.toLowerCase().includes("[equipment]");
-				isIgnored = equipmentArray[equipmentArrayIndex].notes.toLowerCase().includes("[ignore]");
+				isEquipment = equipmentArray[equipmentArrayIndex].notes.toLowerCase().includes("(equipment)");
+				isIgnored = equipmentArray[equipmentArrayIndex].notes.toLowerCase().includes("(ignore)");
 				
 				if ((tempString !== "") && tempString.length) {
 					if ((equipmentArray[equipmentArrayIndex].name.includes("Multipower")) || (equipmentArray[equipmentArrayIndex].name.includes("MPSlot"))) {
@@ -818,7 +818,7 @@
 			
 			if ((typeof character.powers["power"+ID] !== "undefined") && (typeof character.powers["power"+ID].name !== "undefined")) {
 				
-				isIgnored = character.powers["power"+ID].notes.toLowerCase().includes("[ignore]");
+				isIgnored = character.powers["power"+ID].notes.toLowerCase().includes("(ignore)");
 				
 				if (! isIgnored) {
 					tempEquipment = {
