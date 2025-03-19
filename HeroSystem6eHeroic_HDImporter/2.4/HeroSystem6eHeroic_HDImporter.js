@@ -460,19 +460,12 @@
 			omcv: parseInt(character.omcv)||3,
 			dmcv: parseInt(character.dmcv)||3,
 			speed: parseInt(character.speed)||2,
-			pd: parseInt(character.pd)||0,
-			ed: parseInt(character.ed)||0,
+			pd: parseInt(character.pd)||2,
+			ed: parseInt(character.ed)||2,
 			body: (parseInt(character.body)||10) - (parseInt(character.size)||0),
-			stun: parseInt(character.stun)||0,
-			hiddenSTUN: parseInt(character.stun)||0,
-			endurance: parseInt(character.endurance)||0,
-			recovery: parseInt(character.recovery)||0
-		}
-		
-		if (character.stun !== "") {
-			combat_attributes.stun = parseInt(character.stun);
-		} else {
-			combat_attributes.stun = 0;
+			stun: parseInt(character.stun)||20,
+			endurance: parseInt(character.endurance)||20,
+			recovery: parseInt(character.recovery)||4
 		}
 		
 		setAttrs(object.id, combat_attributes);
@@ -483,9 +476,9 @@
 		
 		// Set movement attributes.
 		let movement_attributes = {
-			running: parseInt(character.running)||0,
-			leaping: parseInt(character.leaping)||0,
-			swimming: parseInt(character.swimming)||0
+			running: parseInt(character.running)||12,
+			leaping: parseInt(character.leaping)||4,
+			swimming: parseInt(character.swimming)||4
 		};
 		
 		setAttrs(object.id, movement_attributes);
@@ -496,9 +489,10 @@
 		
 		// Set status attributes to starting values
 		let health_attributes = {
-			CurrentBODY: character.body,
-			CurrentSTUN: character.stun,
-			CurrentEND: character.endurance
+			CurrentBODY: parseInt(character.body)||20,
+			CurrentSTUN: parseInt(character.stun)||20,
+			CurrentEND: parseInt(character.endurance)||20,
+			hiddenSTUN: parseInt(character.stun)||20
 		}
 		
 		setAttrs(object.id, health_attributes);
@@ -726,6 +720,8 @@
 		
 		const strength = parseInt(character.strength)||10;
 		const isVehicle = (typeof character.template !== "undefined") ? ( character.template.includes("Vehicle") || ( (character.size > 0) && !character.template.includes("Base"))) : false;
+		const characterPD = parseInt(character.pd)||2;
+		const characterED = parseInt(character.ed)||2;
 		
 		let gearTextBox = "";
 		let tempString;
@@ -1156,33 +1152,33 @@
 					
 					if (tempString.includes("Resistant Protection") || tempString.includes("Resistant")) {
 						if (tempString.includes("applied to PD")) {
-							importedArmor["armorPD"+ID] = parseInt(character.pd);
-							importedArmor["totalPD"+ID] = parseInt(character.pd);
+							importedArmor["armorPD"+ID] = characterPD;
+							importedArmor["totalPD"+ID] = characterED;
 						} else if (tempString.includes("PD")) {
 							tempPosition = tempString.indexOf("PD");
 							sampleSize = 4;
 							subStringA = tempString.slice(Math.max(0, tempPosition-sampleSize), tempPosition);	
 							tempValue = parseInt(subStringA.replace(/[^\d.-]/g, ""))||0;
-							importedArmor["armorPD"+ID] = tempValue + (isVehicle ? (parseInt(character.pd)||0) : 0);
-							importedArmor["totalPD"+ID] = tempValue + parseInt(character.pd);
+							importedArmor["armorPD"+ID] = tempValue + (isVehicle ? characterPD : 0);
+							importedArmor["totalPD"+ID] = tempValue + characterPD;
 						} else {
 							importedArmor["armorPD"+ID] = 0;
-							importedArmor["totalPD"+ID] = parseInt(character.pd)||0;
+							importedArmor["totalPD"+ID] = characterPD;
 						}
 						
 						if (tempString.includes("applied to ED")) {
-							importedArmor["armorED"+ID] = parseInt(character.ed);
-							importedArmor["totalED"+ID] = parseInt(character.ed);
+							importedArmor["armorED"+ID] = characterED;
+							importedArmor["totalED"+ID] = characterED;
 						} else if (tempString.includes("ED")) {
 							tempPosition = tempString.indexOf("ED");
 							sampleSize = 4;
 							subStringA = tempString.slice(Math.max(0, tempPosition-sampleSize), tempPosition);
 							tempValue = parseInt(subStringA.replace(/[^\d.-]/g, ""))||0;
-							importedArmor["armorED"+ID] = tempValue + (isVehicle ? (parseInt(character.ed)||0) : 0);
-							importedArmor["totalED"+ID] = tempValue + parseInt(character.ed)||0;
+							importedArmor["armorED"+ID] = tempValue + (isVehicle ? characterED : 0);
+							importedArmor["totalED"+ID] = tempValue + characterED;
 						} else {
 							importedArmor["armorED"+ID] = 0;
-							importedArmor["totalED"+ID] = parseInt(character.ed);
+							importedArmor["totalED"+ID] = characterED;
 						}
 					}
 					
@@ -1220,10 +1216,10 @@
 		if ( isVehicle && (imported === 0) ) {
 			imported += 1;
 			importedArmor["armorName01"] = "Resistant Defense";
-			importedArmor["armorPD01"] = parseInt(character.pd);
-			importedArmor["totalPD01"] = parseInt(character.pd);
-			importedArmor["armorED01"] = parseInt(character.ed);
-			importedArmor["totalED01"] = parseInt(character.ed);
+			importedArmor["armorPD01"] = characterPD;
+			importedArmor["totalPD01"] = characterPD;
+			importedArmor["armorED01"] = characterED;
+			importedArmor["totalED01"] = characterED;
 		}
 		
 		// Import armor.
@@ -1914,8 +1910,8 @@
 			if (tempString.includes("Takes No STUN")) {
 				importedPowers.optionTakesNoSTUN = "on";
 				
-				importedPowers.pdCP = 3*(character.pd-1);
-				importedPowers.edCP = 3*(character.ed-1);
+				importedPowers.pdCP = 3*(characterPD-1);
+				importedPowers.edCP = 3*(characterED-1);
 			}
 		}
 		
@@ -3854,6 +3850,9 @@
 		// and also awards those points as bonus points so that the character is not charged twice.
 		// For 'to be determined' powers the function attempts to parse the base cost from the power's text.
 		
+		const characterPD = parseInt(character.pd)||2;
+		const characterED = parseInt(character.ed)||2;
+		
 		let powerBaseCost = parseInt(base);
 		let bonusCP = parseInt(bonus);
 		let slicePosition = 0;
@@ -3875,43 +3874,43 @@
 		} else if (effect === "Base Defense Mod") {
 			if (option === "on") {
 				// Determine pd cost. If character has takes No STUN triple cost over the base 2.
-				if ((option === "on") && (character.pd > 1)) {
-					powerBaseCost = parseInt(1 + (character.pd - 1)*3);
-					bonusCP = bonusCP + powerBaseCost;
+				if ((option === "on") && (characterPD > 1)) {
+					powerBaseCost = 1 + 3*(characterPD - 1);
+					bonusCP += powerBaseCost;
 				} else {
-					powerBaseCost = parseInt(character.pd*1);
-					bonusCP = bonusCP + powerBaseCost;
+					powerBaseCost = characterPD;
+					bonusCP += powerBaseCost;
 				}
 				
 				// Add ed cost. If character has takes No STUN triple cost over the base 2.
-				if ((option === "on") && (character.ed > 1)) {
-					powerBaseCost = powerBaseCost + parseInt(1 + (character.ed - 1)*3);
-					bonusCP = bonusCP + powerBaseCost;
+				if ((option === "on") && (characterED > 1)) {
+					powerBaseCost += 1 + 3*(characterED - 1);
+					bonusCP += powerBaseCost;
 				} else {
-					powerBaseCost = powerBaseCost + parseInt(character.ed*1);
-					bonusCP = bonusCP + powerBaseCost;
+					powerBaseCost += characterED;
+					bonusCP += powerBaseCost;
 				}
 			} else {
-				powerBaseCost = parseInt(character.pd*1) + parseInt(character.ed*1);
-				bonusCP = bonusCP + powerBaseCost;
+				powerBaseCost = characterPD + characterED;
+				bonusCP += powerBaseCost;
 			}
 		} else if (effect === "Base PD Mod") {
 			// If character has takes No STUN triple cost over the base 2.
-			if ((option === "on") && (character.pd > 1)) {
-				powerBaseCost = parseInt(1 + (character.pd - 1)*3);
-				bonusCP = bonusCP + powerBaseCost;
+			if ((option === "on") && (characterPD > 1)) {
+				powerBaseCost = 1 + 3*(characterPD - 1);
+				bonusCP += powerBaseCost;
 			} else {
-				powerBaseCost = parseInt(character.pd*1);
-				bonusCP = bonusCP + powerBaseCost;
+				powerBaseCost = characterPD;
+				bonusCP += powerBaseCost;
 			}
 		} else if (effect === "Base ED Mod") {
 			// If character has takes No STUN triple cost over the base 2.
-			if ((option === "on") && (character.ed > 1)) {
-				powerBaseCost = parseInt(1 + (character.ed - 1)*3);
-				bonusCP = bonusCP + powerBaseCost;
+			if ((option === "on") && (characterED > 1)) {
+				powerBaseCost = 3*(characterED - 1);
+				bonusCP += powerBaseCost;
 			} else {
-				powerBaseCost = parseInt(character.ed*1);
-				bonusCP = bonusCP + powerBaseCost;
+				powerBaseCost = characterED;
+				bonusCP += powerBaseCost;
 			}
 		} else if (effect === "Endurance Reserve") {
 			// Special cost due to separate END and REC purchases.
