@@ -79,7 +79,7 @@ At present, the character sheet has twenty power, ten talent, and ten complicati
 Powers that add (or subtract) characteristics, movement, and perception abilities should be applied in the appropriate modifier fields.
 
 > [!TIP]
-> *HD Importer* will recognize the following key phrases if added to a piece of equipment's notes and attempts to automatically apply the values given.
+> *HD Importer* will recognize the following keywords and phrases if added to power and equipment notes and attempts to automatically apply the values given.
 
 - `(locations x-y, z) or (loc x, y-z)` : If *HD Importer* finds the keyword "locations" it will assign the list "x-y, z" to a piece of armor's locations. End the list with closed parentheses ")" or a semicolon ";".
 
