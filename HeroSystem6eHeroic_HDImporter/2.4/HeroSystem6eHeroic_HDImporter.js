@@ -2740,7 +2740,7 @@
 		}
 		
 		// Assign this language to the character sheet.
-		language["skillName"+ID] = name;
+		language["skillName"+ID] = name.trim();
 		language["skillFluency"+ID] = fluency;
 		language["skillLiteracy"+ID] = literacy;
 		language["skillCP"+ID] = cost;
