@@ -1717,6 +1717,8 @@
 		// If the character is a vehicle, autofills up to two each of propulsion and reserve systems.
 		
 		const maxPowers = (character.version >= parseFloat("2.4")||0) ? 50 : 30;
+		const characterPD = parseInt(character.pd)||2;
+		const characterED = parseInt(character.ed)||2;
 		let sheetCapacity = 20;
 		let overflowPowers = (typeof character.complicationsTextLeft !== "undefined") ? character.complicationsTextLeft : "";
 		
