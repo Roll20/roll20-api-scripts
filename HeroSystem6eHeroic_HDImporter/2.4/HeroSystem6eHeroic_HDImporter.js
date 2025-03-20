@@ -476,9 +476,9 @@
 		
 		// Set movement attributes.
 		let movement_attributes = {
-			running: parseInt(character.running)||12,
-			leaping: parseInt(character.leaping)||4,
-			swimming: parseInt(character.swimming)||4
+			running: parseInt(character.running)||0,
+			leaping: parseInt(character.leaping)||0,
+			swimming: parseInt(character.swimming)||0
 		};
 		
 		setAttrs(object.id, movement_attributes);
