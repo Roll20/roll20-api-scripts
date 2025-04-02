@@ -1,5 +1,4 @@
 (() => {
-  'use strict';
 
   const MENU_CMD = '!areasOfEffectShowMenu';
   const ADD_EFFECT_CMD = '!areasOfEffectAddEffect';
@@ -13,6 +12,8 @@
   const EXPORT_STATE_CMD = '!areasOfEffectExportState';
   const IMPORT_STATE_CMD = '!areasOfEffectImportState';
 
+  const getPathObj = (id) => getObj('path',id) ?? getObj('pathv2',id);
+
   function _AddEffectCmd(msg) {
     let argv = bshields.splitArgs(msg.content);
     let player = getObj('player', msg.playerid);
@@ -22,8 +23,8 @@
     _.each(msg.selected, item => {
       if(item._type === 'graphic')
         graphic = getObj('graphic', item._id);
-      if(item._type === 'path')
-        path = getObj('path', item._id);
+      if(['path','pathv2'].includes(item._type))
+        path = getPathObj( item._id);
     });
 
     if(graphic && path)
@@ -41,8 +42,8 @@
     let name = argv.slice(1).join('_');
     let path;
     _.each(msg.selected, item => {
-      if(item._type === 'path')
-        path = getObj('path', item._id);
+      if(['path','pathv2'].includes(item._type))
+        path = getPathObj( item._id);
     });
 
     if(path)

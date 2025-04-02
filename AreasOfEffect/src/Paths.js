@@ -1,11 +1,19 @@
 (() => {
-  'use strict';
 
+    let isJumpgate = ()=>{
+      if(['jumpgate'].includes(Campaign().get('_release'))) {
+        isJumpgate = () => true;
+      } else {
+        isJumpgate = () => false;
+      }
+      return isJumpgate();
+    };
 
   /**
    * Module for constructing Paths from which areas of effect are generated.
    */
   AreasOfEffect.Paths = class {
+    
     /**
      * Creates a line segment path between two tokens.
      * @private
@@ -18,7 +26,7 @@
       let p2 = [ token2.get('left'), token2.get('top') ];
       let segment = [ p1, p2 ];
       let pathJson = PathMath.segmentsToPath([segment]);
-      return createObj('path', _.extend(pathJson, {
+      return createObj(isJumpgate() ? 'pathv2' : 'path', _.extend(pathJson, {
         _pageid: token1.get('_pageid'),
         layer: 'objects',
         stroke: '#ff0000'
@@ -47,7 +55,7 @@
       // Produce a list of segments representing the square of furthest origin points
       // for the blast's center.
       let gridDist = tokenRadius + radiusPixels/2;
-      var square = new PathMath.Polygon([
+      const square = new PathMath.Polygon([
         [p1[0] - gridDist, p1[1] - gridDist, 1],
         [p1[0] + gridDist, p1[1] - gridDist, 1],
         [p1[0] + gridDist, p1[1] + gridDist, 1],
@@ -75,7 +83,7 @@
       // Produce the path for the blast.
       let blastSeg = [origin, VecMath.add(origin, [radiusPixels/2, 0, 0])];
       let pathJson = PathMath.segmentsToPath([blastSeg]);
-      return createObj('path', _.extend(pathJson, {
+      return createObj(isJumpgate() ? 'pathv2' : 'path', _.extend(pathJson, {
         _pageid: token.get('_pageid'),
         layer: 'objects',
         stroke: '#ff0000'
@@ -116,7 +124,7 @@
       // Produce the path for the line/cone.
       let segment = [p1, p2];
       let pathJson = PathMath.segmentsToPath([segment]);
-      return createObj('path', _.extend(pathJson, {
+      return createObj(isJumpgate() ? 'pathv2' : 'path', _.extend(pathJson, {
         _pageid: token.get('_pageid'),
         layer: 'objects',
         stroke: '#ff0000'
@@ -143,7 +151,7 @@
 
       let segment = [ p1, p2 ];
       let pathJson = PathMath.segmentsToPath([segment]);
-      return createObj('path', _.extend(pathJson, {
+      return createObj(isJumpgate() ? 'pathv2' : 'path', _.extend(pathJson, {
         _pageid: token.get('_pageid'),
         layer: 'objects',
         stroke: '#ff0000'
