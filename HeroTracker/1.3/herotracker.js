@@ -1,12 +1,12 @@
 // Name:          HeroTracker, version 1.3
 // Author:        Darren,
 //                Villain in Glasses (HeroSystem6e_Heroic compatibility)
-// Last Updated:  4/01/2025
+// Last Updated:  4/02/2025
 //
 // --------------------------------------------------------------------------------------------
 // - Change Log
 // --------------------------------------------------------------------------------------------
-// - 04/01/2025 ViG - Added translation layer for HeroSystem6e_Heroic attributes.
+// - 04/02/2025 ViG - Added translation layer for HeroSystem6e_Heroic attributes.
 // - 02/19/2022 eepjr24 - Adding back to one click after update by Steve K. to fix turn order
 // -                      bug. See inline for fix location.
 // -
@@ -59,7 +59,7 @@ var HeroTracker = HeroTracker || {
 
   write: function (s, who, style, from) {
     "use strict";
-
+   
     if (who) {
       who = "/w " + who.split(" ", 1)[0] + " ";
     }
@@ -75,7 +75,7 @@ var HeroTracker = HeroTracker || {
 
   handleTrackerMessage: function (argv, msg) {
     "use strict";
-
+   
     var gm;
     var pageid = Campaign().get("playerpageid");
     var who = msg.who;
@@ -92,24 +92,24 @@ var HeroTracker = HeroTracker || {
     var segment;
     var start;
     var random;
-
+   
     gm = playerIsGM(msg.playerid);
-
+   
     // parse command parameters
-
+   
     if (msg.selected) {
       tokens = _.reject(msg.selected, (o) => o._type !== "graphic");
     }
-
+   
     //		tokens = msg.selected;
     msg = msg.content;
-
+   
     argv.splice(0, 1); // remove !HeroTracker
-
+   
     if (argv.length === 0) {
       return HeroTracker.showTrackerHelp(who);
     }
-
+   
     while (argv.length > 0) {
       switch (argv[0]) {
         case "--id":
@@ -119,12 +119,12 @@ var HeroTracker = HeroTracker || {
           token_id = argv[1];
           argv.splice(0, 2);
           break;
-
+        
         case "--add":
           add = 1;
           argv.splice(0, 1);
           break;
-
+        
         case "--remove":
           if (gm) {
             remove = 1;
@@ -133,7 +133,7 @@ var HeroTracker = HeroTracker || {
           }
           argv.splice(0, 1);
           break;
-
+        
         case "--tag":
           if (argv.length < 2) {
             return HeroTracker.write("--tag parameter must be followed by a string", who, "", "HeroTracker");
@@ -141,7 +141,7 @@ var HeroTracker = HeroTracker || {
           tag = argv[1];
           argv.splice(0, 2);
           break;
-
+       
         case "--speed":
           if (argv.length < 2) {
             return HeroTracker.write("--speed parameter must be followed by a number", who, "", "HeroTracker");
@@ -152,7 +152,7 @@ var HeroTracker = HeroTracker || {
           }
           argv.splice(0, 2);
           break;
-
+        
         case "--dex":
           if (argv.length < 2) {
             return HeroTracker.write("--dex parameter must be followed by a number", who, "", "HeroTracker");
@@ -163,7 +163,7 @@ var HeroTracker = HeroTracker || {
           }
           argv.splice(0, 2);
           break;
-
+       
         case "--segment":
           if (argv.length < 2) {
             return HeroTracker.write("--segment parameter must be followed by a number", who, "", "HeroTracker");
@@ -174,12 +174,12 @@ var HeroTracker = HeroTracker || {
           }
           argv.splice(0, 2);
           break;
-
+       
         case "--back":
           back = 1;
           argv.splice(0, 1);
           break;
-
+       
         case "--speed_field":
           if (argv.length < 2) {
             return HeroTracker.write("--speed_field parameter requires an attribute name", who, "", "HeroTracker");
@@ -187,7 +187,7 @@ var HeroTracker = HeroTracker || {
           speed_field = argv[1];
           argv.splice(0, 2);
           break;
-
+       
         case "--dex_field":
           if (argv.length < 2) {
             return HeroTracker.write("--dex_field parameter requires an attribute name", who, "", "HeroTracker");
@@ -195,50 +195,50 @@ var HeroTracker = HeroTracker || {
           dex_field = argv[1];
           argv.splice(0, 2);
           break;
-
+       
         case "--help":
           return HeroTracker.showTrackerHelp(who);
           break;
-
+       
         case "--start":
           start = 1;
           argv.splice(0, 1);
           break;
-
+       
         // hidden option used for testing
         case "--random":
           random = 1;
           argv.splice(0, 1);
           break;
-
+       
         default:
           return HeroTracker.write("unknown parameter", who, "", "HeroTracker");
           break;
       }
     }
-
+   
     // we have parsed all chat parameters
-
+   
     // only the gm can to a 'back' action
     if (back === 1 && !gm) {
       return HeroTracker.write("only a gm can do the 'back' action", who, "", "HeroTracker");
     }
-
+   
     // can't do more than one action: add, remove, back
     if (add + remove + back > 1) {
       return HeroTracker.write("can't do more than one action: 'add', 'remove', 'back'", who, "", "HeroTracker");
     }
-
+   
     // must have a token or tag to add or remove or what are we even doing here?
     if (add + remove === 1 && token_id === "" && tag === "" && (tokens === undefined || tokens.length === 0)) {
       return HeroTracker.write("nothing selected", who, "", "HeroTracker");
     }
-
+   
     // cannot specify both a token id and a tag
     if (!token_id == "" && tag == "") {
       return HeroTracker.write("can't specify both a token id and a tag", who, "", "HeroTracker");
     }
-
+   
     // if we are doing an "add", we must have a speed or a segment.
     // if we have selected tokens, we can get the token's speed attribute.
     // but if we have no selected tokens, a speed or segment must have
@@ -246,24 +246,24 @@ var HeroTracker = HeroTracker || {
     if (add == 1 && !speed && !segment && (tokens == undefined || tokens.length == 0)) {
       return HeroTracker.write("no speed or segment specified", who, "", "HeroTracker");
     }
-
+   
     // cannot specify both a specified token id and a tag
     if (token_id !== "" && tag !== "") {
       return HeroTracker.write("can't specify both a token id and a tag", who, "", "HeroTracker");
     }
-
+   
     // cannot specify both a speed and a segment
     if (speed && segment) {
       return HeroTracker.write("can't specify both a speed and a segment", who, "", "HeroTracker");
     }
-
+   
     // ok.  error checking done.
-
+   
     if (add === 1) {
       if (!gm) sendChat("HeroTracker", "/w gm " + who + " add");
-
+     
       Campaign().set("initiativepage", true); // display initiative tracker
-
+     
       if (tag !== "") {
         // add custom tag to tracker
         HeroTracker.addToTracker("-1", speed ? speed : 0, dex ? dex : 0, segment, tag, who);
@@ -280,6 +280,13 @@ var HeroTracker = HeroTracker || {
           c = t.get("represents");
         }
         if (c) {
+          
+          // Check for alternate sheet.
+          if ( (getAttrByName(c, 'sheet_name')||"HeroSystem6e") === "HeroSystem6eHeroic") {
+            speed_field = "speedNet";
+            dex_field = "dexterityNet";
+          }
+          
           s = speed ? speed : getAttrByName(c, speed_field);
           d = dex ? dex : getAttrByName(c, dex_field);
           HeroTracker.removeFromTracker(token_id);
@@ -292,16 +299,23 @@ var HeroTracker = HeroTracker || {
           var c; // character_id
           var s; // speed attribute
           var d; // dex attribute
-
+         
           t = getObj("graphic", obj._id);
-
+         
           if (t) {
             if (t.get("pageid") !== pageid)
               return HeroTracker.write("token is not on the player page", who, "", "HeroTracker");
             c = t.get("represents");
           }
-
+          
           if (c) {
+            
+            // Check for alternate sheet.
+            if ( (getAttrByName(c, 'sheet_name')||"HeroSystem6e") === "HeroSystem6eHeroic") {
+              speed_field = "speedNet";
+              dex_field = "dexterityNet";
+            }
+            
             s = speed ? speed : getAttrByName(c, speed_field);
             if (!s) return HeroTracker.write("could not find attribute: " + speed_field, who, "", "HeroTracker");
             d = dex ? dex : getAttrByName(c, dex_field);
@@ -312,10 +326,10 @@ var HeroTracker = HeroTracker || {
         });
       }
     }
-
+   
     if (remove === 1) {
       if (!gm) sendChat("HeroTracker", "/w gm " + who + " remove");
-
+     
       if (token_id === "") {
         // remove a token specified with the --id parameter
         HeroTracker.removeFromTracker(token_id);
@@ -326,15 +340,15 @@ var HeroTracker = HeroTracker || {
         });
       }
     }
-
+   
     if (back === 1) {
       HeroTracker.backTrack(who);
     }
-
+   
     if (random === 1) {
       HeroTracker.randomize();
     }
-
+   
     if (start === 1) {
       HeroTracker.startTurn();
     }
@@ -342,11 +356,11 @@ var HeroTracker = HeroTracker || {
 
   showTrackerHelp: function (who) {
     "use strict";
-
+   
     if (who) {
       who = "/w " + who.split(" ", 1)[0] + " ";
     }
-
+   
     sendChat(
       "HeroTracker",
       who +
@@ -474,10 +488,10 @@ var HeroTracker = HeroTracker || {
 
   addToTracker: function (token_id, speed, dex, segment, custom, who) {
     ("use strict");
-
+   
     var turnorder;
     var tiebreaker = 0;
-
+   
     /*
 		HeroTracker.write("token_id: " + token_id, who, "", "HeroTracker" );
 		HeroTracker.write("speed: " + speed, who, "", "HeroTracker" );
@@ -488,19 +502,19 @@ var HeroTracker = HeroTracker || {
 
     if (speed) speed = parseInt(speed);
     if (dex) dex = parseInt(dex);
-
+   
     // compute the tiebreaker value
     if (dex > 0) tiebreaker = 1 - dex / 100;
-
+   
     turnorder = JSON.parse(Campaign().get("turnorder") || "[]");
-
+   
     if (token_id === "") {
       token_id = "-1";
     } // if no token id is present, set to -1 to use the custom arg
-
+   
     const token = token_id !== "-1" ? getObj("graphic", token_id) : undefined;
     const page_id = token ? token.get("pageid") : undefined;
-
+   
     // if a segment was provided, we skip speed and dex entirely
     if (segment) {
       var i = HeroTracker.getSortIndex(turnorder, segment);
@@ -510,7 +524,7 @@ var HeroTracker = HeroTracker || {
       return;
     }
     // handle speeds greater than 12
-
+   
     while (speed > 12) {
       var i;
       for (var s = 1; s <= 12; s++) {
@@ -520,7 +534,7 @@ var HeroTracker = HeroTracker || {
       }
       speed = speed - 12;
     }
-
+   
     for (var s = 1; s <= 12; s++) {
       var i;
       var p = Math.round((s + tiebreaker + 0.00001) * 100) / 100;
@@ -530,22 +544,22 @@ var HeroTracker = HeroTracker || {
         turnorder.splice(i, 0, { id: token_id, pr: p, custom: custom, _pageid: page_id });
       }
     }
-
+   
     Campaign().set("turnorder", JSON.stringify(turnorder));
   },
 
   getSortIndex: function (turnorder, pr) {
     "use strict";
-
+   
     // if the current turnorder is zero or one entry, we always
     // add to the end of the array.
     if (turnorder.length <= 1) {
       return turnorder.length;
     }
-
+   
     // new entries are NEVER added to the top of the list
     var a = 1; // start the second entry
-
+   
     // if the current top of the list is greater than the entry
     // we're trying to add, we will want to skip down to the
     // turn break.
@@ -555,29 +569,29 @@ var HeroTracker = HeroTracker || {
         if (turnorder[a].pr < turnorder[a - 1].pr) break;
         else a++;
       } while (turnorder.length > a);
-
+     
       // if we're at the end of the list, append the entry to the end
       if (turnorder.length === a) return a;
     }
-
+   
     // we should be sitting at the top of the turn break.
     // now we scan down to find our insert point.
     do {
       if (turnorder[a].pr > pr) break;
       else a++;
     } while (turnorder.length > a);
-
+   
     return a;
   },
 
   removeFromTracker: function (token_id) {
     "use strict";
-
+   
     var turnorder;
-
+   
     if (Campaign().get("turnorder") == "") return;
     else turnorder = JSON.parse(Campaign().get("turnorder"));
-
+   
     for (var i = 0; i < turnorder.length; ) {
       if (turnorder[i]["id"] === token_id) {
         turnorder.splice(i, 1);
@@ -585,36 +599,36 @@ var HeroTracker = HeroTracker || {
         i++;
       }
     }
-
+   
     Campaign().set("turnorder", JSON.stringify(turnorder));
   },
 
   backTrack: function () {
     "use strict";
-
+   
     var turnorder;
     var turn;
-
+   
     turnorder = JSON.parse(Campaign().get("turnorder") || "[]");
-
+   
     if (turnorder.length <= 1) return;
-
+   
     turnorder.splice(0, 0, turnorder.pop());
-
+   
     Campaign().set("turnorder", JSON.stringify(turnorder));
   },
 
   newTurnSort: function (a, b) {
     "use strict";
-
+   
     const aFloat = parseFloat(a.pr) || 0;
     const bFloat = parseFloat(b.pr) || 0;
     const cFloat = Math.round((aFloat - bFloat + 0.00001) * 100) / 100;
-
+   
     if (cFloat === 0.0) return -1;
     if (12.0 <= aFloat && 12.0 > bFloat) return -1;
     if (12.0 > aFloat && 12.0 <= bFloat) return 1;
-
+   
     return cFloat;
   },
 
@@ -636,11 +650,11 @@ var HeroTracker = HeroTracker || {
 
   handleChatMessage: function (msg) {
     "use strict";
-
+   
     if (msg.type !== "api") {
       return;
     }
-
+   
     if (
       msg.content === "!herotracker" ||
       msg.content.indexOf("!herotracker ") === 0 ||
