@@ -1,5 +1,7 @@
 # Areas of Effect
 
+_v1.7.0 Updates_
+* Added PathV2 support on Jumpgate
 _v1.6.1 Updates_
 * Fixed unicode icons in chat menu.
 

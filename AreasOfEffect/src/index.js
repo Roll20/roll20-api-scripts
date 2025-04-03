@@ -1,5 +1,4 @@
-var AreasOfEffect = (() => {
-  'use strict';
+const  AreasOfEffect = (() => {
 
   /**
    * A saved area of effect graphic.
@@ -85,7 +84,7 @@ var AreasOfEffect = (() => {
     * https://wiki.roll20.net/API:Cookbook#getCleanImgsrc
     */
    function _getCleanImgsrc(imgsrc) {
-     var parts = imgsrc.match(/(.*\/images\/.*)(thumb|med|original|max)(.*)$/);
+     const parts = imgsrc.match(/(.*\/images\/.*)(thumb|med|original|max)(.*)$/);
      if(parts)
        return parts[1]+'thumb'+parts[3];
      throw new Error('Only images that you have uploaded to your library ' +
