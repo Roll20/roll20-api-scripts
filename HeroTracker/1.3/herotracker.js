@@ -1,12 +1,12 @@
 // Name:          HeroTracker, version 1.3
 // Author:        Darren,
-//                Villain in Glasses (HeroSystem6e_Heroic compatibility)
+//                Villain in Glasses (HeroSystem6eHeroic compatibility)
 // Last Updated:  4/02/2025
 //
 // --------------------------------------------------------------------------------------------
 // - Change Log
 // --------------------------------------------------------------------------------------------
-// - 04/02/2025 ViG - Added translation layer for HeroSystem6e_Heroic attributes.
+// - 04/02/2025 ViG - Added translation layer for HeroSystem6eHeroic attributes.
 // - 02/19/2022 eepjr24 - Adding back to one click after update by Steve K. to fix turn order
 // -                      bug. See inline for fix location.
 // -
@@ -85,8 +85,8 @@ var HeroTracker = HeroTracker || {
     var remove = 0;
     var back = 0;
     var tag = "";
-    var speed_field = "SPD";
-    var dex_field = "DEX";
+    var speed_field = "SPD"; // HeroSystem6e default
+    var dex_field = "DEX"; // HeroSystem6e default
     var speed; // if undefined, get value from the token
     var dex; // if undefined, get value from the token
     var segment;
@@ -281,10 +281,10 @@ var HeroTracker = HeroTracker || {
         }
         if (c) {
           
-          // Check for alternate sheet.
+          // Check if alternate sheet. Translate attributes.
           if ( (getAttrByName(c, 'sheet_name')||"HeroSystem6e") === "HeroSystem6eHeroic") {
-            speed_field = "speedNet";
-            dex_field = "dexterityNet";
+            speed_field = translateAttribute(speed_field);
+            dex_field = translateAttribute(dex_field);
           }
           
           s = speed ? speed : getAttrByName(c, speed_field);
@@ -310,10 +310,10 @@ var HeroTracker = HeroTracker || {
           
           if (c) {
             
-            // Check for alternate sheet.
+            // Check if alternate sheet. Translate attributes.
             if ( (getAttrByName(c, 'sheet_name')||"HeroSystem6e") === "HeroSystem6eHeroic") {
-              speed_field = "speedNet";
-              dex_field = "dexterityNet";
+              speed_field = translateAttribute(speed_field);
+              dex_field = translateAttribute(dex_field);
             }
             
             s = speed ? speed : getAttrByName(c, speed_field);
@@ -330,7 +330,7 @@ var HeroTracker = HeroTracker || {
     if (remove === 1) {
       if (!gm) sendChat("HeroTracker", "/w gm " + who + " remove");
      
-      if (token_id === "") {
+      if (token_id !== "") {
         // remove a token specified with the --id parameter
         HeroTracker.removeFromTracker(token_id);
       } else {
@@ -353,7 +353,7 @@ var HeroTracker = HeroTracker || {
       HeroTracker.startTurn();
     }
   },
-
+ 
   showTrackerHelp: function (who) {
     "use strict";
    
@@ -671,6 +671,31 @@ var HeroTracker = HeroTracker || {
     on("chat:message", HeroTracker.handleChatMessage);
   },
 };
+
+function translateAttribute(attribute) {
+  // HeroSystem6e to HeroSystem6eHeroic attribute name translator.
+  
+  let newAttribute = attribute;
+  
+  switch (attribute.toLowerCase()) {
+      case "str": newAttribute = "strengthNet";
+       break;
+      case "dex": newAttribute = "dexterityNet";
+       break;
+      case "con": newAttribute = "constitutionNet";
+       break;
+      case "int": newAttribute = "intelligenceNet";
+       break;
+      case "ego": newAttribute = "egoNet";
+       break;
+      case "pre": newAttribute = "presenceNet";
+       break;
+      case "spd": newAttribute = "speedNet";
+       break;
+  }
+  
+  return newAttribute;
+}
 
 on("ready", function () {
   HeroTracker.registerHeroTracker();
