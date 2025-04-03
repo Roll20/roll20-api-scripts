@@ -8,13 +8,13 @@ module.exports = function(grunt) {
         src: [
           'src/index.js',
           'src/Commands.js',
-            'src/Macros.js',
-            'src/Wizard.js',
+          'src/Macros.js',
+          'src/Wizard.js',
           'src/Paths.js',
           'src/State.js',
           'src/utils/index.js',
-            'src/utils/Chat.js',
-            'src/utils/Menu.js'
+          'src/utils/Chat.js',
+          'src/utils/Menu.js'
         ],
         dest: '<%= pkg.version %>/<%= pkg.script %>'
       }
@@ -25,7 +25,7 @@ module.exports = function(grunt) {
       },
       options: {
         eqeqeq: true,
-        esversion: 6,
+        esversion: 11,
         freeze: true,
         globals: {
           // Symbols defined by API scripts
@@ -38,6 +38,7 @@ module.exports = function(grunt) {
 
           // Symbols defined by Roll20
           _: false,
+          Campaign: false,
           createObj: false,
           findObjs: false,
           getObj: false,
@@ -51,7 +52,7 @@ module.exports = function(grunt) {
         },
         nonbsp: true,
         nonew: true,
-        strict: true,
+        strict: false,
         undef: true,
         unused: true
       }
