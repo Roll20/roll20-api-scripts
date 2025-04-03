@@ -1,13 +1,14 @@
 // Name:          HeroTracker, version 1.3
 // Author:        Darren,
 //                Villain in Glasses (HeroSystem6eHeroic compatibility)
-// Last Updated:  4/02/2025
+// Last Updated:  4/03/2025
 //
 // --------------------------------------------------------------------------------------------
 // - Change Log
 // --------------------------------------------------------------------------------------------
 // - 04/02/2025 ViG - Added translation layer for HeroSystem6eHeroic attributes.
-//                    Bug fixes and json help edits.
+//                    Bug fixes and json help edits. 
+//                    In-game help text styling for improved dark mode contrast.
 // - 02/19/2022 eepjr24 - Adding back to one click after update by Steve K. to fix turn order
 // -                      bug. See inline for fix location.
 // -
@@ -220,7 +221,7 @@ var HeroTracker = HeroTracker || {
    
     // we have parsed all chat parameters
    
-    // only the gm can to a 'back' action
+    // only the gm can do a 'back' action
     if (back === 1 && !gm) {
       return HeroTracker.write("only a gm can do the 'back' action", who, "", "HeroTracker");
     }
@@ -233,11 +234,6 @@ var HeroTracker = HeroTracker || {
     // must have a token or tag to add or remove or what are we even doing here?
     if (add + remove === 1 && token_id === "" && tag === "" && (tokens === undefined || tokens.length === 0)) {
       return HeroTracker.write("nothing selected", who, "", "HeroTracker");
-    }
-   
-    // cannot specify both a token id and a tag
-    if (!token_id == "" && tag == "") {
-      return HeroTracker.write("can't specify both a token id and a tag", who, "", "HeroTracker");
     }
    
     // if we are doing an "add", we must have a speed or a segment.
