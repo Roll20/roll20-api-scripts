@@ -7,6 +7,7 @@
 // - Change Log
 // --------------------------------------------------------------------------------------------
 // - 04/02/2025 ViG - Added translation layer for HeroSystem6eHeroic attributes.
+//                    Bug fixes and json help edits.
 // - 02/19/2022 eepjr24 - Adding back to one click after update by Steve K. to fix turn order
 // -                      bug. See inline for fix location.
 // -
@@ -366,120 +367,120 @@ var HeroTracker = HeroTracker || {
       who +
         " " +
         '<div style="border: 1px solid black; background-color: white; padding: 3px 3px;">' +
-        '<div style="font-weight: bold; border-bottom: 1px solid black;font-size: 130%;">' +
+        '<div style="color: royalblue; font-weight: bold; border-bottom: 1px solid black;font-size: 130%;">' +
         "HeroTracker" +
         "</div>" +
         '<div style="padding-left:10px;padding-right:10px;margin-top:10px;margin-bottom:3px">' +
-        '<p style="padding-top: 5px;">HeroTracker implements the turn sequence of the Hero Games system.  ' +
+        '<p style="color: black; padding-top: 5px;">HeroTracker implements the turn sequence of the Hero Games system.  ' +
         "The Hero Games system utilizes a segment chart with 12 phases. A character &" +
         "apos;s speed " +
         "determines how many and on which phases he/she gets to act. HeroTracker will add a token to the " +
         "Roll20 tracker multiple times to simulate this mechanic.</p>" +
         "</div>" +
-        '<p style="font-size: 120%;margin-top:20px"><b>Syntax</b></p>' +
+        '<p style="color: royalblue; font-size: 120%;margin-top:20px"><b>Syntax</b></p>' +
         '<div style="padding-left:10px;">' +
-        "<p><b>!herotracker</b> &" +
+        '<p style="color: black;"><b>!herotracker</b> &' +
         "lt;parms&" +
         "gt;</p>" +
-        "<p><b>!ht</b> &" +
+        '<p style="color: black"><b>!ht</b> &' +
         "lt;parms&" +
         "gt;</p>" +
         "</div>" +
-        '<p style="font-size: 120%;margin-top:20px"><b>Parameters</b></p>' +
+        '<p style="color: royalblue; font-size: 120%;margin-top:20px"><b>Parameters</b></p>' +
         '<div style="padding-left: 10px;padding-right:20px">' +
         "<ul>" +
-        "<li>" +
+        '<li style="color: black; border-top: 1px solid #ccc;">' +
         "<b>--help</b>" +
         "</li> " +
-        '<li style="border-top: 1px solid #ccc;">' +
+        '<li style="color: black; border-top: 1px solid #ccc;">' +
         "<b>--add</b>" +
         "</li> " +
-        '<li style="border-top: 1px solid #ccc;">' +
+        '<li style="color: black; border-top: 1px solid #ccc;">' +
         "<b>--remove</b>" +
         "</li> " +
-        '<li style="border-top: 1px solid #ccc;">' +
+        '<li style="color: black; border-top: 1px solid #ccc;">' +
         "<b>--id</b> &" +
         "lt;token_id&" +
         "gt;" +
         "</li> " +
-        '<li style="border-top: 1px solid #ccc;">' +
+        '<li style="color: black; border-top: 1px solid #ccc;">' +
         "<b>--tag</b> &" +
         "lt;label&" +
         "gt;" +
         "</li> " +
-        '<li style="border-top: 1px solid #ccc;">' +
+        '<li style="color: black; border-top: 1px solid #ccc;">' +
         "<b>--speed</b> &" +
         "lt;number&" +
         "gt;" +
         "</li> " +
-        '<li style="border-top: 1px solid #ccc;">' +
+        '<li style="color: black; border-top: 1px solid #ccc;">' +
         "<b>--dex</b> &" +
         "lt;number&" +
         "gt;" +
         "</li> " +
-        '<li style="border-top: 1px solid #ccc;">' +
+        '<li style="color: black; border-top: 1px solid #ccc;">' +
         "<b>--segment</b> &" +
         "lt;number&" +
         "gt;" +
         "</li> " +
-        '<li style="border-top: 1px solid #ccc;">' +
+        '<li style="color: black; border-top: 1px solid #ccc;">' +
         "<b>--speed_field</b> &" +
         "lt;name&" +
         "gt;" +
         "</li> " +
-        '<li style="border-top: 1px solid #ccc;">' +
+        '<li style="color: black; border-top: 1px solid #ccc;">' +
         "<b>--dex_field</b> &" +
         "lt;name&" +
         "gt;" +
         "</li> " +
-        '<li style="border-top: 1px solid #ccc;">' +
+        '<li style="color: black; border-top: 1px solid #ccc;">' +
         "<b>--back</b>" +
         "</li> " +
-        '<li style="border-top: 1px solid #ccc">' +
+        '<li style="color: black; border-top: 1px solid #ccc">' +
         "<b>--start</b>" +
         "</li> " +
         "</ul>" +
         "</div>" +
         '<div style="padding-left: 10px; padding-right: 10px">' +
-        '<p style="padding-top: 5px">To add tokens to the initiative tracker, select one or more tokens and then enter the chat command:</p>' +
-        "<p><b>!ht --add</b></p>" +
-        '<p style="padding-top: 5px; border-top: 1px solid #ccc;">To remove entries, select one or more tokens and enter the chat command: </p>' +
-        "<p><b>!ht --remove</b></p>" +
-        '<p style="padding-top: 5px; border-top: 1px solid #ccc;">Alternately, you can specify a single token by its ID rather than selecting it.  ' +
+        '<p style="color: black; padding-top: 5px;">To add tokens to the initiative tracker, select one or more tokens and then enter the chat command:</p>' +
+        '<p style="color: black;"><b>!ht --add</b></p>' +
+        '<p style="color: black; padding-top: 5px; border-top: 1px solid #ccc;">To remove entries, select one or more tokens and enter the chat command: </p>' +
+        '<p style="color: black;"><b>!ht --remove</b></p>' +
+        '<p style="color: black; padding-top: 5px; border-top: 1px solid #ccc;">Alternately, you can specify a single token by its ID rather than selecting it.  ' +
         "For example, to add a specific token, selected or not, enter this chat command: </p>" +
-        "<p><b>!ht --add --id -L9sBx-soK0CQzQYCiFA --speed 5</b></p>" +
-        '<p style="padding-top: 5px; border-top: 1px solid #ccc;">You can also add a static label to the tracker by entering this chat command: </p>' +
-        "<p><b>!ht --tag GAS-EFFECT --speed 4</b></p>" +
-        '<p style="padding-top: 5px; border-top: 1px solid #ccc;">When adding a token, the speed and dex will be automatically derived from the ' +
+        '<p style="color: black;"><b>!ht --add --id -L9sBx-soK0CQzQYCiFA --speed 5</b></p>' +
+        '<p style="color: black; padding-top: 5px; border-top: 1px solid #ccc;">You can also add a static label to the tracker by entering this chat command: </p>' +
+        '<p style="color: black;"><b>!ht --tag GAS-EFFECT --speed 4</b></p>' +
+        '<p style="color: black; padding-top: 5px; border-top: 1px solid #ccc;">When adding a token, the speed and dex will be automatically derived from the ' +
         "token&" +
-        "apos;s attributes.  However, you can override this by specifying your own speed and dex: </p>" +
-        "<p><b>!ht --add --speed 6 --dex 18</b></p>" +
-        '<p style="padding-top: 5px; border-top: 1px solid #ccc;">You can add a token or label to just one segment by using this chat command:</p>' +
-        "<p><b>!ht --add --tag POST --segment 13</b></p>" +
-        '<p style="padding-top: 5px; border-top: 1px solid #ccc;">Because the tracker can end up with a great many entries, it would normally create ' +
+        "apos;s attributes. However, you can override this by specifying your own speed and dex: </p>" +
+        '<p style="color: black;"><b>!ht --add --speed 6 --dex 18</b></p>' +
+        '<p style="color: black; padding-top: 5px; border-top: 1px solid #ccc;">You can add a token or label to just one segment by using this chat command:</p>' +
+        '<p style="color: black;"><b>!ht --add --tag POST --segment 13</b></p>' +
+        '<p style="color: black; padding-top: 5px; border-top: 1px solid #ccc;">Because the tracker can end up with a great many entries, it would normally create ' +
         "a cumbersome problem to cycle through the entire list should you accidentally move past a turn that isn&" +
         "apos;t complete.  As such, HeroTracker " +
         "includes an option to rollback the tracker one turn: </p>" +
-        "<p><b>!ht --back</b></p>" +
-        '<p style="padding-top: 5px; border-top: 1px solid #ccc;">Hero System begins a turn at segment 12.  You can sort the tracker, ' +
+        '<p style="color: black;"><b>!ht --back</b></p>' +
+        '<p style="color: black; padding-top: 5px; border-top: 1px solid #ccc;">Hero System begins a turn at segment 12. You can sort the tracker, ' +
         "with segment 12 at the top of the order, by using this command: </p>" +
-        "<p><b>!ht --start</b></p>" +
-        '<p style="padding-top: 5px; border-top: 1px solid #ccc;">HeroTracker uses dex to break ties by appending a decimal value to the ' +
+        '<p style="color: black;"><b>!ht --start</b></p>' +
+        '<p style="color: black; padding-top: 5px; border-top: 1px solid #ccc;">HeroTracker uses dex to break ties by appending a decimal value to the ' +
         "token&" +
-        "apos;s speed.  The value is just the dex subtracted from 100.  If you do not want to use this feature, you can specify a dex " +
+        "apos;s speed. The value is just the dex subtracted from 100.  If you do not want to use this feature, you can specify a dex " +
         "of zero using this command:</p>" +
-        "<p><b>!ht --add --dex 0</b></p>" +
-        '<p style="padding-top: 5px; border-top: 1px solid #ccc;">By default, HeroTracker uses the character sheet fields <b>SPD</b> and <b>DEX</b> ' +
-        "to derive the speed and dex values.  You can override and choose your own field names using the parameters <b>--speed_field</b> and <b>--dex_field</b>.  " +
+        '<p style="color: black;"><b>!ht --add --dex 0</b></p>' +
+        '<p style="color: black; padding-top: 5px; border-top: 1px solid #ccc;">By default, HeroTracker uses the character sheet fields <b>SPD</b> and <b>DEX</b> ' +
+        "to derive the speed and dex values. You can override and choose your own field names using the parameters <b>--speed_field</b> and <b>--dex_field</b>.  " +
         "This can also be used for characters that use a different attribute to break ties, such as ego based characters.  The command would look like this:</p>" +
-        "<p><b>!ht --add --dex_field EGO</b></p>" +
+        '<p style="color: black;"><b>!ht --add --dex_field EGO</b></p>' +
         "</div>" +
-        '<p style="font-size: 120%;margin-top:20px"><b>Notes</b></p>' +
+        '<p style="color: royalblue; font-size: 120%;margin-top:20px"><b>Notes</b></p>' +
         '<div style="padding-left: 15px; padding-right: 10px"</div>' +
-        "<p>The speed and dex of a selected token will be derived from the " +
+        '<p style="color: black;">The speed and dex of a selected token will be derived from the ' +
         "token&" +
         "apos;s attributes <b>SPD</b> and <b>DEX</b> respectively.</p>" +
-        "<p>If you specify a single token using the <b>--id</b> parameter, or create a custom label using " +
+        '<p style="color: black;">If you specify a single token using the <b>--id</b> parameter, or create a custom label using ' +
         "the <b>--tag</b> parameter, you must also provide a speed or segment, and optionally a dex.</p>" +
         "</div>" +
         "</div>"
