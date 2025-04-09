@@ -93,14 +93,16 @@ API_Meta.MagicMaster={offset:Number.MAX_SAFE_INTEGER,lineCount:-1};
  *                     of items to use inheritance via resolveData(). Improved --message command resolution
  *                     of selected vs. id token selection. Added new MI-DB-Treasure database.
  * v4.0.2  25/02/2025  Fixed error when using GM's [Add Items] or --gm-edit-mi to hide an item as another item.
+ * v4.0.3  05/04/2025  Fixed error in memorize spells dialog misdisplaying spells with empty (as opposed to
+ *                     undefined) strings.
  */
  
 var MagicMaster = (function() {
 	'use strict';
-	var version = '4.0.2',
+	var version = '4.0.3',
 		author = 'RED',
 		pending = null;
-	const lastUpdate = 1740502257;
+	const lastUpdate = 1743865263;
 		
 	/*
 	 * Define redirections for functions moved to the RPGMaster library
@@ -1446,7 +1448,6 @@ var MagicMaster = (function() {
 			
 			if (csv < curVer) {
 				if (csv < 2.1) {
-//					log('updateACS: updating '+charName);
 					for (let c=1; c<=fields.MaxSpellCol; c++) {
 						await updateCSspellCol( charCS, charName, c, senderId );
 					}
@@ -1481,7 +1482,6 @@ var MagicMaster = (function() {
 		};
 		for (const charCS of CSarray) {
 			let delay = Math.round(10000+(Math.random() * 10000));
-//			log('updateCharSheets: '+charCS.get('name')+' is in the list, delay = '+delay);
 			setTimeout( updateACS, delay, charCS, curVer, senderId );
 		}
 	};
@@ -1784,12 +1784,9 @@ var MagicMaster = (function() {
 		if (itemName.length) {
 			setAttr( charCS, fields.ItemChosen, itemName );
 			let item = abilityLookup( fields.MagicItemDB, itemName );
-//			log('setCaster: cmd = '+args[0].toUpperCase()+', cmd test = '+(args[0].toLowerCase().includes('mi'))+', !!item.obj = '+!!item.obj+', charge = '+((!!item.obj && item.obj[1].charge) ? item.obj[1].charge.toLowerCase() : 'undefined')+' so '+((!!item.obj && item.obj[1].charge) ? chargedList.includes(item.obj[1].charge.toLowerCase()) : false));
 			if (args[0].toLowerCase().includes('mi') && !!item.obj && !!item.obj[1].charge) {
-//				log('setCaster: testing charge = '+chargedList.includes(item.obj[1].charge.toLowerCase()));
 				if (chargedList.includes(item.obj[1].charge.toLowerCase())) {
 					args[0] = BT.MI_SCROLL;
-//					log('setCaster: cmd changed to '+args[0]);
 				}
 			};
 		};
@@ -3169,10 +3166,8 @@ var MagicMaster = (function() {
 				}
 				selected = (r == spellRow && c == spellCol);
 				spellName = spellTables[w].tableLookup( fields.Spells_name, r, false );
-				if (_.isUndefined(spellName)) {
-					spellTables[w].addTableRow( r );
-					spellName = '-';
-				}
+				if (_.isUndefined(spellName)) spellTables[w].addTableRow( r );
+				if (!spellName) spellName = '-';
 				spellValue = parseInt((spellTables[w].tableLookup( fields.Spells_castValue, r )),10);
 				content += (selected ? ('<span style=' + design.selected_button + '>') : ('['+(spellValue == 0 ? ('<span style=' + design.dark_button + '>') : '')));
 				if (isPower && spellName != '-') {
@@ -3389,14 +3384,11 @@ var MagicMaster = (function() {
 
 		if (spellButton >= 0) {
 			spellName = attrLookup( charCS, fields.Spells_name, fields.Spells_table, spellRow, spellCol ) || '-';
-//			log('makeCastSpellMenu: spellName = '+spellName);
 			if (spellName.replace(reIgnore,'').length) {
 				spell = getAbility( magicDB, spellName, charCS );
 				learnText = (learn ? '&#123;{Learn=Try to [Learn this spell]&#40;!magic --learn-spell '+tokenID+'|'+spellName+'&#41;&#125;&#125;' : '');
-//				log('makeCastSpellMenu: get spell '+spell.obj[1].name+', learnText = '+learnText);
 			} else {
 				spellButton = -1;
-//				log('makeCastSpellMenu: rejected invalid spellName');
 			}
 		} else {
 			spellName = '';
@@ -3407,8 +3399,6 @@ var MagicMaster = (function() {
 				+ (((spellButton < 0) || submitted) ? '</span>' : '](!magic --button '+ storeCmd +'|'+ tokenID +'|'+ spellButton +'|'+ spellRow +'|'+ spellCol +'|'+ charged
 				+'&#13;'+(spell.api ? '' : sendToWho(charCS,senderId,false,true))+'&#37;{' + spell.dB + '|' + spellName.hyphened() + '}' + learnText + ')' )
 				+ '}}';
-				
-//		log('makeCastSpellMenu: content = '+content);
 				
 		sendResponse( charCS, content, senderId, flags.feedbackName, flags.feedbackImg, tokenID );
 		return;
@@ -3651,7 +3641,6 @@ var MagicMaster = (function() {
 					};
 					content += '['+actionText+' '+displayMI+'](!magic --button '+ submitAction +'|'+ tokenID +'|'+ MIrowref
 																+'&#13;'+(magicItem.api ? '' : sendToWho(charCS,senderId,false,true))+'&#37;{'+magicItem.dB+'|'+(changedMI.hyphened())+'})';
-//					log('makeViewUseMI: use button = '+content);
 				} else {
 					content	+= '<span style='+design.grey_button+'>'+actionText+' Magic Item</span>';
 				}
@@ -6731,9 +6720,7 @@ var MagicMaster = (function() {
 			return;
 		}
 		var putCmd = resolveData( slotTrueName, fields.MagicItemDB, reItemData, charCS, {put:reSpellSpecs.put}, MIrowref ).parsed.put;
-//		log('handleRemoveMI: putCmd exists = '+!!putCmd+' && '+putCmd.length);
 		if (!!putCmd && !!putCmd.length) {
-//			log('handleRemoveMI: found put command = '+putCmd+'\nWhich parses to '+parseStr(putCmd).replace(/@{\s*selected\s*\|\s*token_id\s*}/ig,tokenID).replace(/{\s*selected\s*\|/ig,'{'+charCS.get('name')+'|'));
 			pickPutCmd( putCmd, tokenID, charCS, 'magic handleRemoveMI' );
 		};
 		
@@ -8109,7 +8096,6 @@ var MagicMaster = (function() {
 				sendWait(senderId,0);
 			} else {
 				sendDebug('doSearchForMIs: Not found trapMacro');
-//				log('doSearchForMIs: Not found trapMacro');
 				MIBagSecurity = 1;
 			}
 		}
