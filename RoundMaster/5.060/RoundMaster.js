@@ -135,9 +135,10 @@ API_Meta.RoundMaster={offset:Number.MAX_SAFE_INTEGER,lineCount:-1};
  *                    function. dumpState() function and --dumpState command added to diagnose problems
  *                    with Roll20 state variable. More and better error trapping & type conversion.
  *                    Made doAddStatus() & doRemoveStatus() asynchronous.
- * v5.059  08/02/2025 Fixed v7 Slow-Start effect. Added a semi-colon as an alternative separator for
- *                    targeted save definitions, to allow Drag & Drop creature definitions to work.
- *                    Added new effects to support powers and abilities of new Drag & Drop creatures.
+ * v5.059  08/02/2025 Fixed v7 Slow-Start effect.
+ * v5.060  11/04/2025 Added a semi-colon as an alternative separator for targeted save definitions, to allow
+ *                    Drag & Drop creature definitions to work. Added new effects to support powers and 
+ *                    abilities of new Drag & Drop creatures.
  **/
  
 var RoundMaster = (function() {
