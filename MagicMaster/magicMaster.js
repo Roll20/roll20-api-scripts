@@ -95,14 +95,16 @@ API_Meta.MagicMaster={offset:Number.MAX_SAFE_INTEGER,lineCount:-1};
  * v4.0.2  25/02/2025  Fixed error when using GM's [Add Items] or --gm-edit-mi to hide an item as another item.
  * v4.0.3  05/04/2025  Fixed error in memorize spells dialog misdisplaying spells with empty (as opposed to
  *                     undefined) strings.
+ * v4.0.4  08/04/2025  Added ability for --message command to take any number of variables as arguments (after
+ *                     API call argument) referenced by ^^#^^
  */
  
 var MagicMaster = (function() {
 	'use strict';
-	var version = '4.0.3',
+	var version = '4.0.4',
 		author = 'RED',
 		pending = null;
-	const lastUpdate = 1743865263;
+	const lastUpdate = 1744360269;
 		
 	/*
 	 * Define redirections for functions moved to the RPGMaster library
@@ -234,16 +236,17 @@ var MagicMaster = (function() {
 	
 	const handouts = Object.freeze({
 	MagicMaster_Help:	{name:'MagicMaster Help',
-						 version:3.07,
+						 version:3.08,
 						 avatar:'https://s3.amazonaws.com/files.d20.io/images/257656656/ckSHhNht7v3u60CRKonRTg/thumb.png?1638050703',
 						 bio:'<div style="font-weight: bold; text-align: center; border-bottom: 2px solid black;">'
-							+'<span style="font-weight: bold; font-size: 125%">MagicMaster Help v3.07</span>'
+							+'<span style="font-weight: bold; font-size: 125%">MagicMaster Help v3.08</span>'
 							+'</div>'
 							+'<div style="padding-left: 5px; padding-right: 5px; overflow: hidden;">'
 							+'<h1>MagicMaster API v'+version+'</h1>'
 							+'<h4>and later</h4>'
 							+'<br>'
 							+'<h3><span style='+design.selected_button+'>New:</span>  in this Help Handout</h3>'
+							+'<p><span style='+design.selected_button+'>New:</span> --message command can now take variables as additional parameters</p>'
 							+'<p><span style='+design.selected_button+'>New:</span> Non-stacking duplicate items picked up offer option for default rename to make unique</p>'
 							+'<br>'
 							+'<p>The MagicMaster API provides functions to manage all types of magic, including Wizard & Priest spell use and effects; Character, NPC & Monster Powers; and discovery, looting, use and cursing of Magic Items.  All magical aspects can work with the <b>RoundMaster API</b> to implement token markers that show and measure durations, and produce actual effects that can change token or character sheet attributes temporarily for the duration of the spell or permanently if so desired.  They can also work with the <b>InitiativeMaster API</b> to provide menus of initiative choices and correctly adjust individual initiative rolls, including effects of Haste and Slow and similar spells.  This API can also interact with the <b>MoneyMaster API</b> (under development) to factor in the passing of time, the cost of spell material use, the cost of accommodation for resting, and the cost of training for leveling up as a spell caster (Wizard, Priest or any other).</p>'
@@ -331,7 +334,7 @@ var MagicMaster = (function() {
 							+'--light token_id|(NONE/WEAPON/TORCH/HOODED/CONTLIGHT/BULLSEYE/BEACON)</pre>'
 							+'<h3>6.Other commands</h3>'
 							+'<pre>--help<br>'
-							+'--message [who|][token_id]|title|message|[command]<br>'
+							+'--message [who|][token_id]|title|message|[command]|[var1]|[var2]...<br>'
 							+'--display-ability [who|][token_id]|database|db_item|[dice_roll1]|[dice_roll2]|[target_id]<br>'
 							+'--tidy [token_id]|[SILENT]<br>'
 							+'--config [FANCY-MENUS/SPECIALIST-RULES/SPELL-NUM/ALL-SPELLS/ALL-POWERS/CUSTOM-SPELLS/AUTO-HIDE/ALPHA-LISTS/GM-ROLLS] | [TRUE/FALSE]<br>'
@@ -567,9 +570,9 @@ var MagicMaster = (function() {
 							+'<h3>6.1 Display help on these commands</h3>'
 							+'<pre>--help</pre>'
 							+'<p>This command does not take any arguments.  It displays the mandatory and optional arguments, and a brief description of each command.</p>'
-							+'<h3>6.2 Display a formatted message in chat</h3>'
-							+'<pre>--message [who|][token_id]|title|message|[command]</pre>'
-							+'<p>This command takes an optional parameter stating who to send the message to, which defaults to depending on who owns the character represented by the token, an optional token_id which defaults to a selected token, a title for the message which can be an empty string, the message to display, and an optional API command string to be sent at the same time that the message is sent (can use standard & extended escape characters).</p>'
+							+'<h3>6.2 <span style='+design.selected_button+'>Updated:</span> Display a formatted message in chat</h3>'
+							+'<pre>--message [who|][token_id]|title|message|[command]|[var1]|[var2]...</pre>'
+							+'<p>This command takes an optional parameter stating who to send the message to, which defaults to depending on who owns the character represented by the token, an optional token_id which defaults to a selected token, a title for the message which can be an empty string, the message to display, an optional API command string to be sent at the same time that the message is sent (can use standard & extended escape characters), and any number of values.</p>'
 							+'<p>The "who" parameter can be one of:</p>'
 							+'<table>'
 							+'	<tr><th scope="row">gm</th><td>Send only to the GM</td></tr>'
@@ -579,6 +582,7 @@ var MagicMaster = (function() {
 							+'	<tr><th scope="row">standard</th><td>Check which players/GMs control the character represented by the token. If the GM controls, or no-one, or the controlling player is not on-line, or the token does not represent a character, send to the GM; otherise make public.</td></tr>'
 							+'	<tr><th scope="row">Anything else</th><td>Same as Standard</td></tr>'
 							+'</table>'
+							+'<p>The values submitted as <i>var1, var2</i> etc can be referenced inside the message or the command by using the syntax ^^#^^, where # is the argument number: with <i>var1</i> being argument 5. Arguments 0 through 4 refer to the previous arguments in the expression. This syntax is useful to, for instance, use the result of a dice roll in both the body of the message and the command.</p>'
 							+'<h3>6.3 Display a database item or Character Sheet ability</h3>'
 							+'<pre>--display-ability [who|][token_id]|database|db_item|[dice_roll1]|[dice_roll2]|[target_id]</pre>'
 							+'<p>This command takes an optional parameter stating who to send the output to, which defaults to depending on who owns the character represented by the token, an optional token_id which defaults to a selected token, the mandatory name or ID of a database or character sheet, the mandatory name of a database item or character sheet ability macro, two optional dice roll results (or Roll20 in-line roll specifications), and an optional token_id of a target token.</p>'
@@ -8854,9 +8858,12 @@ var MagicMaster = (function() {
 		}	
 		
 		var msg = '&{template:'+fields.messageTemplate+'}{{name=' + (args[2] || '') + '}}{{desc=' + parseStr(args[3] || '',msgReplacers) + '}}';
+		const reVals = /\^\^(\d+)\^\^/;
+		const valRes = ( a, v ) => args[v] || '';
 		const reAttrs = /\^\^([^\|\^]+)\|?(max|current)?\|?([^\|\^]+)?\^\^/i;
 		const attrRes = ( a, v, m = 'current', d = '0' ) => attrLookup( charCS, [v,m,d] ) || '';
 		
+		while (reVals.test(msg)) msg = msg.replace(reVals,valRes);
 		if (!!charCS) while (reAttrs.test(msg)) msg = msg.replace(reAttrs,attrRes);
 		
 		switch (cmd.toLowerCase()) {
@@ -8880,6 +8887,7 @@ var MagicMaster = (function() {
 			break;
 		}
 		if (args[4] && args[4].length && args[4][0] === '!') {
+			while (reVals.test(args[4])) args[4] = args[4].replace(reVals,valRes);
 			sendAPI( parseStr(args[4],msgReplacers), senderId );
 		}
 	}
