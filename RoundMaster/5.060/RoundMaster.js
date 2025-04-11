@@ -143,7 +143,7 @@ API_Meta.RoundMaster={offset:Number.MAX_SAFE_INTEGER,lineCount:-1};
  
 var RoundMaster = (function() {
 	'use strict'; 
-	var version = 5.059,
+	var version = 5.060,
 		author = 'Ken L. & RED',
 		pending = null;
 	const lastUpdate = 1744360269;
