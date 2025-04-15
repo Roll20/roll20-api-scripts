@@ -1,8 +1,8 @@
 {
     "name": "ScriptCards",
     "script": "scriptcards.js",
-    "version": "2.7.35",
-    "previousversions": ["2.7.31","2.7.27","2.7.25","2.7.10","2.7.8","2.6.6","2.6.2","2.4.9","2.4.3","2.3.9","2.3.5","2.3.4","2.2.9","2.2.4","2.2.0","2.1.19","2.1.11","2.1.7","2.0.2","1.7.7","1.7.6","1.6.4","1.6.2","1.4.10","1.4.0","1.3.9","1.3.1","1.1.19","1.0.9","1.0.0","0.0.15","0.0.11","0.0.5"],
+    "version": "3.0.0",
+    "previousversions": ["2.7.35","2.7.31","2.7.27","2.7.25","2.7.10","2.7.8","2.6.6","2.6.2","2.4.9","2.4.3","2.3.9","2.3.5","2.3.4","2.2.9","2.2.4","2.2.0","2.1.19","2.1.11","2.1.7","2.0.2","1.7.7","1.7.6","1.6.4","1.6.2","1.4.10","1.4.0","1.3.9","1.3.1","1.1.19","1.0.9","1.0.0","0.0.15","0.0.11","0.0.5"],
     "description": "**ScriptCards** allows you to create powerful macros utilizing a built-in scripting language to output nicely formatted display cards for PC and NPC actions, spells, abilities, statistics, or almost any other purpose you can come up with.\n\n Please see the Roll20 API Scripts WIKI for detailed documentation, and the Roll20 API Forum Thread for the most recent details and discussion\n\nScriptCards was designed as a spiritual successor to the PowerCards API script, and addresses some of the often requested abilities that the structure of PowerCards precludes, such as true variables, looping and branching, and the ability to make formatting changes based on conditional results. The default output format for ScriptCards is similar to the power blocks from the official D&D 4E products, but the format works well for any system. ScriptCards are output to the chat window with full HTML/CSS formatting. There is no game-system specific requirements for ScriptCards.",
     "authors": "Kurt Jaegers",
     "patreon": "https://www.patreon.com/KurtJaegers",
