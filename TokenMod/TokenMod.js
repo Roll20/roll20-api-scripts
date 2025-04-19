@@ -10,7 +10,7 @@ const TokenMod = (() => { // eslint-disable-line no-unused-vars
     const scriptName = "TokenMod";
     const version = '0.8.84';
     API_Meta.TokenMod.version = version;
-    const lastUpdate = 1745071815;
+    const lastUpdate = 1745072349;
     const schemaVersion = 0.4;
 
     const fields = {
@@ -2203,7 +2203,7 @@ const TokenMod = (() => { // eslint-disable-line no-unused-vars
         setBarPermission: (/* context*/) => _h.join(
                     _h.subhead('Bar Permission'),
                     _h.inset(
-                        _h.paragraph(`Bar Permission specifes who sees numbers overlaid on the bar.  To not show any numbers, you can set it to ${_h.code('hidden')} or ${_h.code('none')}.  To only show it to editors (the default), you can set it to ${_h.code('editor')} or leave the field blank.  To make the numbers visible to everyone, you can set it to ${_h.code('everyone')} or ${_h.code('all')}.  Any other value is ignored.`),
+                        _h.paragraph(`Bar Permission specifies who sees numbers overlaid on the bar.  To not show any numbers, you can set it to ${_h.code('hidden')} or ${_h.code('none')}.  To only show it to editors (the default), you can set it to ${_h.code('editor')} or leave the field blank.  To make the numbers visible to everyone, you can set it to ${_h.code('everyone')} or ${_h.code('all')}.  Any other value is ignored.`),
                         _h.minorhead('Available Bar Permission Properties:'),
                         _h.inset(
                             _h.grid(
