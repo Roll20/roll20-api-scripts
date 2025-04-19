@@ -96,7 +96,8 @@ API_Meta.MagicMaster={offset:Number.MAX_SAFE_INTEGER,lineCount:-1};
  * v4.0.3  05/04/2025  Fixed error in memorize spells dialog misdisplaying spells with empty (as opposed to
  *                     undefined) strings.
  * v4.0.4  08/04/2025  Added ability for --message command to take any number of variables as arguments (after
- *                     API call argument) referenced by ^^#^^
+ *                     API call argument) referenced by ^^#^^. Fixed removeMIability() which was deleting
+ *                     across all sheets rather than just selected sheet.
  */
  
 var MagicMaster = (function() {
@@ -104,7 +105,7 @@ var MagicMaster = (function() {
 	var version = '4.0.4',
 		author = 'RED',
 		pending = null;
-	const lastUpdate = 1744360269;
+	const lastUpdate = 1745087741;
 		
 	/*
 	 * Define redirections for functions moved to the RPGMaster library
@@ -2538,7 +2539,8 @@ var MagicMaster = (function() {
 	
 		if (!Items.tableFind( fields.Items_name, itemName ) && !Items.tableFind( fields.Items_trueName, itemName )) {
 			let MIobjs = filterObjs( obj => {
-				if (obj.type !== 'ability' && obj.type !== 'attribute') return false;
+				if (obj.get('_type') !== 'ability' && obj.get('_type') !== 'attribute') return false;
+				if (obj.get('_characterid') !== charCS.id) return false;
 				return (obj.name === itemName || obj.name.startsWith(fields.ItemVar[0]+itemName.hyphened()));
 			});
 			if (MIobjs) _.each(MIobjs,MIobj => MIobj.remove());
