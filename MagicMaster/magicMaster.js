@@ -98,14 +98,16 @@ API_Meta.MagicMaster={offset:Number.MAX_SAFE_INTEGER,lineCount:-1};
  * v4.0.4  08/04/2025  Added ability for --message command to take any number of variables as arguments (after
  *                     API call argument) referenced by ^^#^^. Fixed removeMIability() which was deleting
  *                     across all sheets rather than just selected sheet.
+ * v4.0.5  27/04/2025  Fixed character sheet corruption caused by remove() behaviour with open references.
+ *                     Fixed error in removeMIability() due to incorrect object name reference.
  */
  
 var MagicMaster = (function() {
 	'use strict';
-	var version = '4.0.4',
+	var version = '4.0.5',
 		author = 'RED',
 		pending = null;
-	const lastUpdate = 1745087741;
+	const lastUpdate = 1745769447;
 		
 	/*
 	 * Define redirections for functions moved to the RPGMaster library
@@ -2240,8 +2242,8 @@ var MagicMaster = (function() {
 	var removeMIpowers = function( charCS, MIname, powerList, powerValues ) {
 
 		var powerName,
-			attrObj,
 			PowersTable = [],
+			removeList = [],
 			r, c, i=0;
 			
 		powerValues = powerValues.split(',');
@@ -2250,7 +2252,7 @@ var MagicMaster = (function() {
 		while (powerList.length > 0) {
 			powerName = powerList.shift();
 			powerName = powerName.replace(/\s/g,'-');
-			attrObj = attrLookup( charCS, [fields.MIpowerPrefix[0]+MIname+'-'+powerName, null] );
+			let attrObj = attrLookup( charCS, [fields.MIpowerPrefix[0]+MIname+'-'+powerName, null] );
 			if (!attrObj) attrObj = attrLookup( charCS, [fields.MIpowerPrefix[0]+powerName, null] );
 			if (attrObj) {
 				r = attrObj.get('current');
@@ -2262,10 +2264,11 @@ var MagicMaster = (function() {
 					powerValues[i] = PowersTable[c].tableLookup( fields.Powers_castMax, r ) + '.' + PowersTable[c].tableLookup( fields.Powers_storedLevel, r );
 					PowersTable[c].addTableRow( r );
 				}
-				attrObj.remove();
+				removeList.push(attrObj);
 				i++;
 			}
 		}
+		_.each(removeList,r => r.remove());
 		return powerValues.join();
 	}
 	
@@ -2276,19 +2279,23 @@ var MagicMaster = (function() {
 	 
 	var removeMIspells = function( charCS, MIname, spellType, spellList, spellValues ) {
 
-		var attrObj,
+		var removeList = [],
 			SpellsTable = [],
-			spellQty, r, c, altSpellRow, i=0,
+			spellQty, r, c, altSpellRow, i=0, spellRows, spellCols,
 			attrName = fields.MIspellPrefix[0]+(MIname.replace(/\s/g,'-'))+'-'+(spellType.toLowerCase()),
-			spellRCobj = attrLookup( charCS, [attrName,null] ),
-			base = shapeSpellbook( charCS, 'MI' )[1].base;
-			
-		if (!spellRCobj) return undefined;
-		
-		var	spellRows = spellRCobj.get(fields.MIspellRows[1]).split(','),
-			spellCols = spellRCobj.get(fields.MIspellCols[1]).split(','),
+			base = shapeSpellbook( charCS, 'MI' )[1].base,
 			altSpellTable = getLvlTable( charCS, fieldGroups.ALTWIZ, fields.MIspellLevel );
 			
+		{
+			let spellRCobj = attrLookup( charCS, [attrName,null] );
+
+			if (!spellRCobj) return undefined;
+			
+			spellRows = spellRCobj.get(fields.MIspellRows[1]).split(',');
+			spellCols = spellRCobj.get(fields.MIspellCols[1]).split(',');
+			removeList.push(spellRCobj);
+		}
+		
 		spellValues = spellValues.split(',');
 		spellList = spellList.split(',');
 		while (spellRows.length > 0 && spellCols.length > 0) {
@@ -2308,7 +2315,7 @@ var MagicMaster = (function() {
 			};
 			i++;
 		}
-		spellRCobj.remove();
+		_.each(removeList,r => r.remove());
 		return spellValues.join();
 	};
 	
@@ -2332,6 +2339,7 @@ var MagicMaster = (function() {
 					doMU = type === 'MU' || type === 'ALL',
 					doPR = type === 'PR' || type === 'ALL',
 					doPW = type === 'PW' || type === 'ALL',
+					removeList = [],
 					error = false;
 					
 				if (notFrom || update) {
@@ -2342,49 +2350,55 @@ var MagicMaster = (function() {
 					addMIspells( toCS, MIobj.obj[1] );
 					oldCS = toCS;
 				}
-				var MUspellObj = attrLookup( oldCS, [fields.ItemMUspellsList[0]+MIname, null] ),
-					PRspellObj = attrLookup( oldCS, [fields.ItemPRspellsList[0]+MIname, null] ),
-					powerObj = attrLookup( oldCS, [fields.ItemPowersList[0]+MIname, null] ),
-					MUspellList = (!!MUspellObj ? (MUspellObj.get(fields.ItemMUspellsList[1]) || '') : ''),
-					PRspellList = (!!PRspellObj ? (PRspellObj.get(fields.ItemPRspellsList[1]) || '') : ''),
-					powerList = (!!powerObj ? (powerObj.get(fields.ItemPowersList[1]) || '') : ''),
-					MUlistField = [fields.ItemMUspellValues[0]+MIname, fields.ItemMUspellValues[1]],
-					PRlistField = [fields.ItemPRspellValues[0]+MIname, fields.ItemPRspellValues[1]],
-					PWlistField = [fields.ItemPowerValues[0]+MIname, fields.ItemPowerValues[1]],
-					MUspellValues = attrLookup( oldCS, MUlistField ),
-					PRspellValues = attrLookup( oldCS, PRlistField ),
-					powerValues = attrLookup( oldCS, PWlistField ),
-					saveLists = (MUspellList && MUspellList.length) || (PRspellList && PRspellList.length) || (powerList && MUspellList.length),
-					queries = (resolveData(itemName,fields.MagicItemDB,reItemData,(fromCS || toCS),{query:reClassSpecs.query}).parsed.query || '').split('$$'),
-					miSpellValues;
-					
-				if (!notFrom && toCS && saveLists) {
-					setAttr( toCS, [fields.ItemMUspellsList[0]+MIname, fields.ItemMUspellsList[1]], MUspellList );
-					setAttr( toCS, [fields.ItemPRspellsList[0]+MIname, fields.ItemPRspellsList[1]], PRspellList );
-					setAttr( toCS, [fields.ItemPowersList[0]+MIname, fields.ItemPowersList[1]], powerList );
-				}
-				
-				if (doMU && MUspellList.length) {
-					setAttr( oldCS, MUlistField, (miSpellValues = notFrom ? MUspellValues : changeMIspells( fromCS, itemName, 'MU', 'REMOVE', MUspellList, MUspellValues)));
-					if (toCS) {
-						setAttr( toCS, MUlistField, changeMIspells( toCS, itemName, 'MU', 'ADD', MUspellList, miSpellValues ));
+				if (doMU) {
+					let MUspellObj = attrLookup( oldCS, [fields.ItemMUspellsList[0]+MIname, null] ),
+						MUspellList = (!!MUspellObj ? (MUspellObj.get(fields.ItemMUspellsList[1]) || '') : ''),
+						MUlistField = [fields.ItemMUspellValues[0]+MIname, fields.ItemMUspellValues[1]],
+						MUspellValues = attrLookup( oldCS, MUlistField );
+						
+					if (MUspellList.length) {
+						let miSpellValues;
+						if (!notFrom && toCS) setAttr( toCS, [fields.ItemMUspellsList[0]+MIname, fields.ItemMUspellsList[1]], MUspellList );
+						setAttr( oldCS, MUlistField, (miSpellValues = notFrom ? MUspellValues : changeMIspells( fromCS, itemName, 'MU', 'REMOVE', MUspellList, MUspellValues)));
+						if (toCS) {
+							setAttr( toCS, MUlistField, changeMIspells( toCS, itemName, 'MU', 'ADD', MUspellList, miSpellValues ));
+						}
 					}
-					if (del && !notFrom && !fromCS.get('name').startsWith('MI-DB')) MUspellObj.remove();
-				}
-				if (doPR && PRspellList.length) {
-					setAttr( oldCS, PRlistField, (miSpellValues = notFrom ? PRspellValues : changeMIspells( fromCS, itemName, 'PR', 'REMOVE', PRspellList, PRspellValues )));
-					if (toCS) {
-						setAttr( toCS, PRlistField, changeMIspells( toCS, itemName, 'PR', 'ADD', PRspellList, miSpellValues ));
+					if (del && !notFrom && !fromCS.get('name').startsWith('MI-DB')) removeList.push(MUspellObj);
+				};
+				if (doPR) {
+					let PRspellObj = attrLookup( oldCS, [fields.ItemPRspellsList[0]+MIname, null] ),
+						PRspellList = (!!PRspellObj ? (PRspellObj.get(fields.ItemPRspellsList[1]) || '') : ''),
+						PRlistField = [fields.ItemPRspellValues[0]+MIname, fields.ItemPRspellValues[1]],
+						PRspellValues = attrLookup( oldCS, PRlistField );
+						
+					if (PRspellList.length) {
+						let miSpellValues;
+						if (!notFrom && toCS) setAttr( toCS, [fields.ItemPRspellsList[0]+MIname, fields.ItemPRspellsList[1]], PRspellList );
+						setAttr( oldCS, PRlistField, (miSpellValues = notFrom ? PRspellValues : changeMIspells( fromCS, itemName, 'PR', 'REMOVE', PRspellList, PRspellValues )));
+						if (toCS) {
+							setAttr( toCS, PRlistField, changeMIspells( toCS, itemName, 'PR', 'ADD', PRspellList, miSpellValues ));
+						}
 					}
-					if (del && !notFrom && !fromCS.get('name').startsWith('MI-DB')) PRspellObj.remove();
+					if (del && !notFrom && !fromCS.get('name').startsWith('MI-DB')) removeList.push(PRspellObj);
 				}
-				if (doPW && powerList.length) {
-					setAttr( oldCS, PWlistField, (miSpellValues = notFrom ? powerValues : removeMIpowers( fromCS, itemName, powerList, powerValues )));
-					if (toCS) {
-						setAttr( toCS, PWlistField, changeMIspells( toCS, itemName, 'POWER', 'ADD', powerList, miSpellValues ));
+				if (doPW) {
+					let powerObj = attrLookup( oldCS, [fields.ItemPowersList[0]+MIname, null] ),
+						powerList = (!!powerObj ? (powerObj.get(fields.ItemPowersList[1]) || '') : ''),
+						PWlistField = [fields.ItemPowerValues[0]+MIname, fields.ItemPowerValues[1]],
+						powerValues = attrLookup( oldCS, PWlistField );
+						
+					if (powerList.length) {
+						let miSpellValues;
+						if (!notFrom && toCS) setAttr( toCS, [fields.ItemPowersList[0]+MIname, fields.ItemPowersList[1]], powerList );
+						setAttr( oldCS, PWlistField, (miSpellValues = notFrom ? powerValues : removeMIpowers( fromCS, itemName, powerList, powerValues )));
+						if (toCS) {
+							setAttr( toCS, PWlistField, changeMIspells( toCS, itemName, 'POWER', 'ADD', powerList, miSpellValues ));
+						}
 					}
-					if (del && !notFrom && !fromCS.get('name').startsWith('MI-DB')) powerObj.remove();
+					if (del && !notFrom && !fromCS.get('name').startsWith('MI-DB')) removeList.push(powerObj);
 				}
+				var	queries = (resolveData(itemName,fields.MagicItemDB,reItemData,(fromCS || toCS),{query:reClassSpecs.query}).parsed.query || '').split('$$');
 				if (queries && queries.length && itemName && !notFrom && !update) {
 					let fromRow = getTableField( fromCS, {}, fields.Items_table, fields.Items_trueName ).tableFind( fields.Items_trueName, itemName ),
 						toRow = toCS ? getTableField( toCS, {}, fields.Items_table, fields.Items_trueName ).tableFind( fields.Items_trueName, itemName ) : 0;
@@ -2395,10 +2409,11 @@ var MagicMaster = (function() {
 							let fromField = [fields.ItemVar[0]+MIname+'+'+fromRow+'-'+q.split('=')[0],fields.ItemVar[1]];		// Needs row reference
 							let toField = [fields.ItemVar[0]+MIname+'+'+toRow+'-'+q.split('=')[0],fields.ItemVar[1]];			// ditto
 							if (toCS && !isNaN(toRow)) setAttr( toCS, toField, (attrLookup( fromCS, fromField ) || '') );
-							if (!_.isUndefined(varObj = attrLookup( fromCS, [fromField[0],null] ))) varObj.remove();
+							if (!_.isUndefined(varObj = attrLookup( fromCS, [fromField[0],null] ))) removeList.push(varObj);
 						});
 					};
 				};
+				_.each(removeList.filter(r => !!r),r => r.remove());
 					
 			} catch (e) {
 				log('MagicMaster moveMIspells: '+e.name+': '+e.message+' while processing item '+itemName);
@@ -2541,7 +2556,7 @@ var MagicMaster = (function() {
 			let MIobjs = filterObjs( obj => {
 				if (obj.get('_type') !== 'ability' && obj.get('_type') !== 'attribute') return false;
 				if (obj.get('_characterid') !== charCS.id) return false;
-				return (obj.name === itemName || obj.name.startsWith(fields.ItemVar[0]+itemName.hyphened()));
+				return (obj.get('name') === itemName || obj.get('name').startsWith(fields.ItemVar[0]+itemName.hyphened()));
 			});
 			if (MIobjs) _.each(MIobjs,MIobj => MIobj.remove());
 		}
