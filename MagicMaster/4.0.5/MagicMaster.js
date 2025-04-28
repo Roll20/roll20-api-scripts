@@ -7256,6 +7256,68 @@ var MagicMaster = (function() {
 	};
 	
 	/*
+	 * Copy a character to a new character sheet e.g. to dump corrupted attributes
+	 */
+	 
+	var handleCleanCS = function( charCS, silent=false ) {
+		
+		var newCS = createObj( 'character', {
+						name: (charCS.get('name')),
+						avatar: charCS.get('avatar'),
+						inplayerjournals: charCS.get('inplayerjournals'),
+						controlledby: charCS.get('controlledby')
+			});
+		charCS.get('bio', function(bio) {
+			newCS.set('bio',bio);
+		});
+		charCS.get('gmnotes',function(gmnotes) {
+			newCS.set('gmnotes',gmnotes);
+		});
+		
+		var objList = filterObjs( obj => {
+				let type = obj.get('type');
+				if (type === 'graphic' && obj.get('subtype') === 'token') {
+					if (obj.get('represents') !== charCS.id) return false;
+					obj.set('represents',newCS.id);
+					return false;
+				}
+				if (type !== 'attribute' && type !== 'ability') return false;
+				if (obj.get('characterid') !== charCS.id) return false;
+				if (obj.get('name').length && obj.get('name') != 'Untitled') {
+					if (type !== 'ability') {
+						createObj( 'attribute', {
+							characterid: newCS.id,
+							name: obj.get('name'),
+							current: obj.get('current'),
+							max: obj.get('max')
+						});
+					} else {
+						createObj( 'ability', {
+							characterid: newCS.id,
+							name: obj.get('name'),
+							description: obj.get('description'),
+							action: obj.get('action'),
+							istokenaction: obj.get('istokenaction')
+						});
+					};
+				};
+				return true;
+			});
+		
+		// Remove all objects on objList
+		// then remove charCS
+		
+		for (const obj of objList) {
+			obj.remove();
+		}
+		charCS.remove();
+		
+		if (!silent) sendFeedback('&{template:'+fields.messageTemplate+'}{{name='+newCS.get('name')+' has been cleaned}}{{desc=The character sheet for '+newCS.get('name')+' has been cleaned of any corrupted attributes or abilities.}}');
+		
+		return newCS;
+	}
+			
+	/*
 	 * Handle changes to the Strength of a character, which is not 
 	 * a linear progression due to Exceptional Strength
 	 */
@@ -9731,6 +9793,9 @@ var MagicMaster = (function() {
 						break;
 					case 'tidy':
 						doTidyCS(arg,selected);
+						break;
+					case 'clean':
+						doCleanCS(arg,selected);
 						break;
 					case 'message':
 						doMessage(arg,selected,senderId);
