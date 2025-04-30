@@ -100,14 +100,16 @@ API_Meta.MagicMaster={offset:Number.MAX_SAFE_INTEGER,lineCount:-1};
  *                     across all sheets rather than just selected sheet.
  * v4.0.5  27/04/2025  Fixed character sheet corruption caused by remove() behaviour with open references.
  *                     Fixed error in removeMIability() due to incorrect object name reference.
+ * v4.0.6  30/04/2025  Enhanced the fix in removeMIability() to deal with corrupted attributes.
+ *                     Added the !magic --clean function to clean away corrupted attributes & abilities.
  */
  
 var MagicMaster = (function() {
 	'use strict';
-	var version = '4.0.5',
+	var version = '4.0.6',
 		author = 'RED',
 		pending = null;
-	const lastUpdate = 1745769447;
+	const lastUpdate = 1746009684;
 		
 	/*
 	 * Define redirections for functions moved to the RPGMaster library
@@ -2556,7 +2558,7 @@ var MagicMaster = (function() {
 			let MIobjs = filterObjs( obj => {
 				if (obj.get('_type') !== 'ability' && obj.get('_type') !== 'attribute') return false;
 				if (obj.get('_characterid') !== charCS.id) return false;
-				return (obj.get('name') === itemName || obj.get('name').startsWith(fields.ItemVar[0]+itemName.hyphened()));
+				return ((obj.get('name') || '') === itemName || (obj.get('name') || '').startsWith(fields.ItemVar[0]+itemName.hyphened()));
 			});
 			if (MIobjs) _.each(MIobjs,MIobj => MIobj.remove());
 		}
@@ -8999,7 +9001,41 @@ var MagicMaster = (function() {
 		return;
 	}
 		
+	/*
+	 * Create a clean new character sheet for a selected token, dropping 
+	 * all illegal or badly formatted attributes, but keeping everything
+	 * else. Note: the object ID of the character sheet will change as 
+	 * a totally new sheet object is created and valid objects transferred
+	 * to it.
+	 */
+	 
+	var doCleanCS = function( args, selected ) {
+		
+		if (!args) args=[];
+		if (!args[0] && selected && selected.length) {
+			args[0] = selected[0]._id;
+		} else if (!args[0]) {
+			sendDebug('doCopyCS: Invalid arguments');
+			sendResponseError(senderId,'Valid token not specified');
+			return;
+		};
 
+		var tokenID = args[0],
+			silent = (args[1] || '').toUpperCase() === 'SILENT',
+			curToken = getObj( 'graphic', tokenID ),
+			charCS = getCharacter( tokenID );
+			
+		if (!curToken || !charCS) {
+			sendDebug('doCopyCS: Invalid tokenID: ' + tokenID);
+			sendResponseError(senderId,'Invalid token specified');
+			return;
+		}
+		
+		handleCleanCS( charCS, silent );
+		handleCStidy( [curToken], false );
+		return;
+	}
+		
 	/*
 	 * check for correct syntax of a 'write database' command, then
 	 * call the function to write the specified character sheet database
