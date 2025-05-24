@@ -1,0 +1,15 @@
+{
+  "name": "Daggerheart Fear Points Tracker",
+  "script": "feartracker.js",
+  "version": "1.0",
+  "previousversions": [],
+  "description": "Tracks Fear Points for a specific character in Daggerheart-style games, using chat card visuals with a max cap and no token dependency.\n\tUse commands like `!fear +1`, `!fear -1`, `!fear show`, or `!fear set 5`.\n\tAutomatically creates the attribute `fear_points` if it doesn't exist.\n\tCustomize max value and character name directly in the script.\n\tStyled output for immersive chat cards.",
+  "authors": "Kim Jacobsen",
+  "roll20userid": "4642624",
+  "patreon": "",
+  "tipeee": "",
+  "useroptions": [],
+  "dependencies": [],
+  "modifies": ["attribute:read", "attribute:write"],
+  "conflicts": []
+}
