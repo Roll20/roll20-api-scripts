@@ -2,15 +2,12 @@
   "name": "GameAssist",
   "script": "GameAssist.js",
   "version": "0.1.1.0",
-  "previousversions": ["0.1.0.6d2"],
+  "previousversions": ["0.1.1.0"],
   "description": "GameAssist is a modular Roll20 API automation suite designed for D&D 5E (2014 Character Sheet).\n\nCommands:\n\t!ga-enable <ModuleName>\n\t!ga-disable <ModuleName>\n\t!ga-config list|set|get|modules\n\nCore modules include CritFumble, NPCManager, ConcentrationTracker, NPCHPRoller (TokenMod required for most features).\n\nFeatures:\n\t- Modular loader: enable/disable modules in real time\n\t- Priority task queue and watchdog reset\n\t- In-chat config and live toggling\n\t- Compatibility audit for common scripts\n\nInstallation:\n\t1. Requires Roll20 Pro subscription (API access).\n\t2. (Strongly recommended) Install TokenMod API.\n\t3. Add GameAssist.js via One-Click or copy into API scripts panel.\n\nFor full documentation, see the GitHub repo: https://github.com/Mord-Eagle/GameAssist\n\nPlease report bugs or request features via GitHub Issues.",
   "authors": "Mord Eagle",
-  "roll20userid": "Mord Eagle",
+  "roll20userid": "10646976",
   "dependencies": ["TokenMod"],
-  "modifies": [
-    "graphic.bar1_value:write",
-    "graphic.statusmarkers:write"
-  ],
+  "modifies": [],
   "conflicts": [
     "Other scripts that modify NPC HP or use bar1_value"
   ],
