@@ -10,6 +10,11 @@
   "tipeee": "",
   "useroptions": [],
   "dependencies": [],
-  "modifies": ["attribute:read", "attribute:write"],
+  "modifies": {
+    "attribute": [
+      "read",
+      "write"
+    ]
+  },
   "conflicts": []
 }
