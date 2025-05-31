@@ -1,9 +1,9 @@
 {
   "name": "GameAssist",
   "script": "GameAssist.js",
-  "version": "0.1.1.0",
-  "previousversions": [],
-  "description": "GameAssist is a modular Roll20 API automation suite designed for D&D 5E (2014 Character Sheet).\n\nCommands:\n\t!ga-enable <ModuleName>\n\t!ga-disable <ModuleName>\n\t!ga-config list|set|get|modules\n\nCore modules include CritFumble, NPCManager, ConcentrationTracker, NPCHPRoller (TokenMod required for most features).\n\nFeatures:\n\t- Modular loader: enable/disable modules in real time\n\t- Priority task queue and watchdog reset\n\t- In-chat config and live toggling\n\t- Compatibility audit for common scripts\n\nInstallation:\n\t1. Requires Roll20 Pro subscription (API access).\n\t2. (Strongly recommended) Install TokenMod API.\n\t3. Add GameAssist.js via One-Click or copy into API scripts panel.\n\nFor full documentation, see the GitHub repo: https://github.com/Mord-Eagle/GameAssist\n\nPlease report bugs or request features via GitHub Issues.",
+  "version": "0.1.1.1",
+  "previousversions": ["0.1.1.0"],
+  "description": "GameAssist is a modular Roll20 API framework for the 5E 2014 sheet.\n\nCore commands (GM only):\n  • !ga-status – live metrics\n  • !ga-enable <Module>\n  • !ga-disable <Module>\n  • !ga-config …\n\nBundled modules: CritFumble, NPCManager, ConcentrationTracker, NPCHPRoller.\nTokenMod is strongly recommended.\n\n## Changelog\n• 0.1.1.1 – Quiet-startup flag, newline-safe logging\n• 0.1.1.0 – Initial public release.",
   "authors": "Mord Eagle",
   "roll20userid": "10646976",
   "dependencies": ["TokenMod"],
