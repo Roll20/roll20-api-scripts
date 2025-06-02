@@ -1,5 +1,5 @@
 /*
- * Version 0.1.15
+ * Version 0.2.0
  * Made By Robin Kuiper
  * Skype: RobinKuiper.eu
  * Discord: Atheos#1095
@@ -174,14 +174,14 @@ var Concentration = Concentration || (function() {
             character_name = msg.content.match(/meta__character.+?>(.*?)</)[1];
             spell_name = msg.content.match(/header__title.+?>(.*?)</)[1];
         } else {
-            character_name = msg.content.match(/charname=([^\n{}]*[^"\n{}])/);            
+            character_name = msg.content.match(/charname=([^\n{}]*[^"\n{}])/);
             character_name = RegExp.$1;
-            spell_name = msg.content.match(/name=([^\n{}]*[^"\n{}])/);  
+            spell_name = msg.content.match(/name=([^\n{}]*[^"\n{}])/);
             spell_name = RegExp.$1;
         }
 
         let player = getObj('player', msg.playerid),
-            characterid = findObjs({ name: character_name, _type: 'character' }).shift().get('id'),                 
+            characterid = findObjs({ name: character_name, _type: 'character' }).shift().get('id'),
             represented_tokens = findObjs({ represents: characterid, _type: 'graphic' }),
             message,
             target = state[state_name].config.send_reminder_to;
@@ -218,7 +218,7 @@ var Concentration = Concentration || (function() {
 
     handleStatusMarkerChange = (obj, prev) => {
         const marker = state[state_name].config.statusmarker
-        
+
         if(!obj.get('status_'+marker)){
             removeMarker(obj.get('represents'));
         }
@@ -228,7 +228,7 @@ var Concentration = Concentration || (function() {
         if(checked.includes(obj.get('represents'))){ return false; }
 
         let bar = 'bar'+state[state_name].config.bar+'_value',
-            target = state[state_name].config.send_reminder_to, 
+            target = state[state_name].config.send_reminder_to,
             marker = state[state_name].config.statusmarker;
 
         if(prev && obj.get('status_'+marker) && obj.get(bar) < prev[bar]){
