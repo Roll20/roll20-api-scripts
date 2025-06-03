@@ -1229,4 +1229,3 @@ GameAssist.register('ConcentrationTracker', function() {
 
 })();
 
-
