@@ -3,12 +3,9 @@
   "script": "GameAssist.js",
   "version": "0.1.1.1",
   "previousversions": ["0.1.1.0"],
-  "description": "GameAssist is a modular Roll20 API automation suite for D&D 5E (2014 Character Sheet). It streamlines DM workflow with hot-reload modules for crit fumbles, NPC death markers, concentration checks, and automatic HP rolling, all managed by a stable event queue and in-chat config. Requires TokenMod and several rollable tables (see README). Use !ga-enable, !ga-disable, and !ga-config to manage modules in-game. Full setup, documentation, and troubleshooting: github.com/Mord-Eagle/GameAssist.",
+  "description": "GameAssist is a modular Roll20 API automation suite for D&D 5E (2014 Character Sheet). It streamlines DM workflow with hot-reload modules for crit fumbles, NPC death markers, concentration checks, and automatic HP rolling, all managed by a stable event queue and in-chat config. Requires TokenMod and several rollable tables (see README) for some features. Use !ga-enable, !ga-disable, and !ga-config to manage modules in-game. Full setup, documentation, and troubleshooting: github.com/Mord-Eagle/GameAssist.",
   "authors": "Mord Eagle",
   "roll20userid": "10646976",
-  "dependencies": {
-    "TokenMod": ["any"]
-  },
   "modifies": [],
   "conflicts": [
     "Other scripts that modify NPC HP or use bar1_value"
