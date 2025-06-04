@@ -129,14 +129,11 @@ export class ChatSetAttr {
 
   private getTargets(msg: Roll20ChatMessage, flags: Option[]): Roll20Character[] {
     const target = this.targetFromOptions(flags);
-    log(`[ChatSetAttr] Target strategy: ${target}`);
     if (!target) {
       return [];
     }
     const targetStrategy = this.getTargetStrategy(target);
-    log(`[ChatSetAttr] Target message: ${msg.selected}`);
     const targets = this.getTargetsFromOptions(target, flags, msg.selected);
-    log(`[ChatSetAttr] Targets: ${targets.join(", ")}`);
     const [validTargets, { messages, errors }] = targetStrategy.parse(targets, msg.playerid);
     this.messages.push(...messages);
     this.errors.push(...errors);

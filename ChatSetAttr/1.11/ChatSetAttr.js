@@ -1327,12 +1327,10 @@ var ChatSetAttr = function() {
       output += this.createHeader();
       output += this.createContent();
       output += this.closeWrapper();
-      log(`Output: ${output}`);
       sendChat(this.from, output, void 0, { noarchive });
     }
     createWhisper() {
       if (this.whisper === false) {
-        log(`ChatOutput: Not sending as whisper`);
         return ``;
       }
       if (this.playerID === "GM") {
