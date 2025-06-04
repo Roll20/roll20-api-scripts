@@ -1,4 +1,4 @@
-import type { ErrorResponse } from "../classes/ErrorManager";
+import type { ErrorResponse } from "src/classes/APIWrapper";
 
 export function filterByPermission(
   playerID: string,

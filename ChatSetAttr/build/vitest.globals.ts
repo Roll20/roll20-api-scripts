@@ -8,20 +8,6 @@ interface Roll20Object {
   set(property: string, value: any): void;
 }
 
-interface ChatMessage {
-  type: string;
-  content: string;
-  playerid: string;
-  who: string;
-  selected?: Array<{_id: string}>;
-}
-
-interface Token {
-  id: string;
-  represents: string;
-  get(property: string): string;
-}
-
 // Mock Roll20 API classes
 export class MockObject implements Roll20Object {
   id: string = "";
@@ -42,6 +28,38 @@ export class MockObject implements Roll20Object {
     (this as any)[attr] = value;
   }
 }
+
+export class MockToken extends MockObject {
+  _type: string = "graphic";
+  represents: string;
+  _pageid: string;
+  _id: string;
+  constructor(attributes: Record<string, any>) {
+    super(attributes);
+    this.represents = attributes.represents || "";
+    this._pageid = attributes._pageid || "";
+    this._id = attributes._id || `token_${Date.now()}_${Math.floor(Math.random() * 10000)}`;
+  }
+  get(prop: string): string {
+    if (prop === "represents") return this.represents;
+    if (prop === "_pageid") return this._pageid;
+    if (prop === "_id") return this._id;
+    return super.get(prop);
+  }
+  set(prop: string, value: any): void {
+    if (prop === "represents") {
+      this.represents = value;
+    } else if (prop === "_pageid") {
+      this._pageid = value;
+    } else if (prop === "_id") {
+      console.warn("Setting _id is not allowed");
+      return;
+    }
+    else {
+      super.set(prop, value);
+    }
+  }
+};
 
 // Helper class for attributes used in tests
 export type AttributeProps = {
@@ -146,12 +164,12 @@ declare global {
   var globalconfig: Record<string, any>;
   var attributes: MockAttribute[];
   var characters: MockCharacter[];
-  var selectedTokens: Token[];
+  var selectedTokens: MockToken[];
   var returnObjects: any[];
   var watchers: Record<string, Function[]>;
   var trigger: (event: string, ...args: any[]) => void;
   var inputQueue: string[];
-  var executeCommand: (command: string, selectedIds?: string[], options?: ExecuteCommandOptions) => ChatMessage;
+  var executeCommand: (command: string, selectedIds?: string[], options?: ExecuteCommandOptions) => Roll20ChatMessage;
   var setupTestEnvironment: () => void;
 }
 
@@ -254,11 +272,13 @@ global.createObj = vi.fn((type: string, props: Record<string, any>) => {
     return newChar;
   }
   if (type === "graphic") {
-    const newToken = {
-      id: props.id,
-      represents: props.represents,
-      get: (prop: string): string => prop === "represents" ? props.represents : ""
-    };
+    const newToken = new MockToken({
+      represents: props.represents || "",
+      _pageid: props._pageid || "",
+      _id: props._id || `token_${Date.now()}_${Math.floor(Math.random() * 10000)}`,
+      controlledby: props.controlledby || "all",
+      ...props
+    });
     global.selectedTokens.push(newToken);
     return newToken;
   }
@@ -278,7 +298,7 @@ global.on = vi.fn((event, callback) => {
 });
 
 // Helper function to execute a chat command
-global.executeCommand = (command: string, selectedIds: string[] = [], options: ExecuteCommandOptions = {}): ChatMessage => {
+global.executeCommand = (command: string, selectedIds: string[] = [], options: ExecuteCommandOptions = {}): Roll20ChatMessage => {
   const { attributes, selectedTokens, inputQueue } = global;
   const { playerId = "gm123", playerName = "GM", whisperTo = "" } = options;
 
@@ -295,9 +315,16 @@ global.executeCommand = (command: string, selectedIds: string[] = [], options: E
   });
 
   // Replace all @{...} with the respective attribute values
-  command = command.replace(/@\{([^|}]+)\|([^}]+)\}/g, (_, charId, attrName) => {
-    const attr = attributes.find(a => a._characterid === charId && a.name === attrName);
-    return attr?.current ? attr.current : "";
+  command = command.replace(/@\{(?:([^|}]+)\|)?([^}]+)\}/g, (_, identifier, attrName) => {
+    if (identifier) {
+      // Format: @{characterid|attrName}
+      const attr = attributes.find(a => a._characterid === identifier && a.name === attrName);
+      return attr?.current ? attr.current : "";
+    } else {
+      // Format: @{attrName} (use first matching attribute)
+      const attr = attributes.find(a => a.name === attrName);
+      return attr?.current ? attr.current : "";
+    }
   });
 
   // Replace all ?{...} with values from our input queue
@@ -305,26 +332,64 @@ global.executeCommand = (command: string, selectedIds: string[] = [], options: E
     return inputQueue.length > 0 ? inputQueue.shift() || "0" : "0";
   });
 
-  // Evaluate formulas in [[...]]
-  command = command.replace(/\[\[([^\]]+)\]\]/g, (_, formula) => {
+  const inlinerolls: RollResult = [];
+
+  // Replace all inline rolls
+
+  command = command.replace(/\[\[([^\]]+)\]\]/g, (whole, inline: string) => {
+    let expression = inline.trim();
+    const rollsData: RollData = {
+      expression: inline,
+      results: {
+        resultType: "sum",
+        rolls: [],
+        total: 0,
+        type: "V",
+      },
+      rollid: `roll_${Date.now()}_${Math.floor(Math.random() * 10000)}`,
+      signature: "test_signature",
+    };
+    // find all dice notation in the inline roll
+    const diceNotation = inline.matchAll(/(\d+)?d(\d+)/g);
+    for (const match of diceNotation) {
+      const numDice = parseInt(match[1] || "1", 10);
+      const numSides = parseInt(match[2], 10);
+      if (isNaN(numDice) || isNaN(numSides) || numDice <= 0 || numSides <= 0) {
+        continue; // Invalid roll format, skip
+      }
+      // Calculate average value for the roll
+      const averageValue = Math.round(numSides / 2);
+      const totalValue = numDice * averageValue;
+      rollsData.results!.rolls.push({
+        dice: numDice,
+        results: Array.from({ length: numDice }).map(() => ({ v: averageValue })),
+        sides: numSides,
+        type: "R",
+      });
+      expression = expression.replace(match[0], totalValue.toString());
+    }
+    // resolve total
     try {
-      // Use Function constructor to safely evaluate the formula
-      const result = new Function(`return (${formula});`)();
-      return result.toString();
+      const total = eval(expression);
+      rollsData.results!.total = total;
+      inlinerolls.push(rollsData);
+      // replace the inline roll with a reference to the inlinerolls array
+      const index = inlinerolls.length - 1;
+      return `$[[${index}]]`;
     } catch (error) {
-      // If evaluation fails, return the original formula
-      console.log(`Failed to evaluate formula: ${formula}`, error);
-      return formula;
+      console.error("Error evaluating inline roll expression:", expression, error);
+      return whole;
     }
   });
 
   // Create the message object
-  const msg: ChatMessage = {
+  const msg: Roll20ChatMessage = {
     type: command.startsWith("!") ? "api" : "general",
     content: command,
     playerid: playerId,
     who: whisperTo ? `${playerName} -> ${whisperTo}` : playerName,
-    selected: selectedIds.map(id => ({ _id: id }))
+    selected: selectedIds.map(id => ({ _id: id })) as any as Roll20Graphic["properties"][],
+    inlinerolls,
   };
 
   // Notify subscribers first (this simulates the Roll20 event system)

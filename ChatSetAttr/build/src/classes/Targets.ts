@@ -173,6 +173,10 @@ export class TargetByID implements TargetIdentifier {
     messages.push(...response.messages ?? []);
     errors.push(...response.errors ?? []);
 
+    if (validTargets.length === 0 && targets.length > 0) {
+      errors.push("No valid targets found with the provided IDs.");
+    }
+
     return [validTargets, { messages, errors }];
   }
 };

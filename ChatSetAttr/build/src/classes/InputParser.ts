@@ -76,7 +76,9 @@ export class InputParser {
 
   constructor() {};
 
-  public parse(input: string): ParseResult {
+  public parse(message: Roll20ChatMessage): ParseResult {
+    log(`InputParser.parse: message: ${JSON.stringify(message)}`);
+    let input = this.processInlineRolls(message);
     for (const command of this.commands) {
       const commandString = `${this.commandPrefix}${command}`;
       if (input.startsWith(commandString)) {
@@ -84,6 +86,7 @@ export class InputParser {
       }
       const regex = new RegExp(`(${this.commandPrefix}${command}.*)${this.commandSuffix}`);
       const match = input.match(regex);
+      log(`InputParser.parse: command: ${command}, match: ${JSON.stringify(match)}`);
       if (match) {
         return this.parseAPICommand(command, match[1], CommandType.INLINE);
       }
@@ -179,4 +182,28 @@ export class InputParser {
     const noQuotes = this.stripQuotes(noSlashes);
     return noQuotes;
   }
+
+  private processInlineRolls(message: Roll20ChatMessage): string {
+    const { inlinerolls } = message;
+    if (!inlinerolls || Object.keys(inlinerolls).length === 0) {
+      return message.content;
+    }
+    let content = this.removeRollTemplates(message.content);
+    for (const key in inlinerolls) {
+      const roll = inlinerolls[key];
+      if (roll.results && roll.results.total !== undefined) {
+        const rollValue = roll.results.total;
+        content = content.replace(`$[[${key}]]`, rollValue.toString());
+      } else {
+        content = content.replace(`$[[${key}]]`, "");
+      }
+    }
+    return content;
+  }
+
+  private removeRollTemplates(input: string): string {
+    return input.replace(/{{[^}[\]]+\$\[\[(\d+)\]\].*?}}/g, (_, number) => {
+      return `$[[${number}]]`;
+    });
+  };
 };

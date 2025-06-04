@@ -39,7 +39,7 @@ export class ChatSetAttr {
       command,
       flags,
       attributes
-    } = this.InputParser.parse(msg.content);
+    } = this.InputParser.parse(msg);
 
     // #region Command
     if (commandType === CommandType.NONE || !command) {
@@ -57,6 +57,11 @@ export class ChatSetAttr {
 
     // #region Targets
     const targets = this.getTargets(msg, flags);
+    if (targets.length === 0 && actualCommand !== Commands.SET_ATTR_CONFIG) {
+      this.errors.push(`No valid targets found for command ${actualCommand}.`);
+      this.sendMessages();
+      return;
+    }
 
     // #region Act
     TimerManager.start("chatsetattr", 8000, this.sendDelayMessage);
@@ -73,6 +78,7 @@ export class ChatSetAttr {
     }
     const isMuted = flags.some(flag => flag.name === Flags.MUTE);
     if (isMuted) {
+      this.messages = [];
       this.errors = [];
     }
     if (response.errors.length > 0 || response.messages.length > 0) {
@@ -123,11 +129,14 @@ export class ChatSetAttr {
 
   private getTargets(msg: Roll20ChatMessage, flags: Option[]): Roll20Character[] {
     const target = this.targetFromOptions(flags);
+    log(`[ChatSetAttr] Target strategy: ${target}`);
     if (!target) {
       return [];
     }
     const targetStrategy = this.getTargetStrategy(target);
+    log(`[ChatSetAttr] Target message: ${msg.selected}`);
     const targets = this.getTargetsFromOptions(target, flags, msg.selected);
+    log(`[ChatSetAttr] Targets: ${targets.join(", ")}`);
     const [validTargets, { messages, errors }] = targetStrategy.parse(targets, msg.playerid);
     this.messages.push(...messages);
     this.errors.push(...errors);
@@ -208,7 +217,7 @@ export class ChatSetAttr {
   private sendMessages(feedback?: Feedback | null) {
     const sendErrors = this.errors.length > 0;
     const from = feedback?.sender || "ChatSetAttr";
-    const whisper = feedback?.whisper || true;
+    const whisper = feedback?.whisper ?? true;
     if (sendErrors) {
       const header = "ChatSetAttr Error";
       const content = this.errors.map(error => error.startsWith("<") ? error : `<p>${error}</p>`).join("");
@@ -217,12 +226,11 @@ export class ChatSetAttr {
         content,
         from,
         type: "error",
-        whisper: true
+        whisper,
       });
       error.send();
       this.errors = [];
       this.messages = [];
-      return;
     }
     const sendMessage = this.messages.length > 0 || feedback;
     if (!sendMessage) {
@@ -259,7 +267,7 @@ export class ChatSetAttr {
     const publicFlag = flags.find(flag => flag.name === Flags.FB_PUBLIC);
     const header = headerFlag?.value;
     const sender = fromFlag?.value;
-    const whisper = publicFlag?.value === "false" ? false : true;
+    const whisper = publicFlag === undefined;
     return {
       header,
       sender,

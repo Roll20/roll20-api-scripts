@@ -39,7 +39,6 @@ class SubscriptionManager {
 
   public publish(event: string, ...args: any[]) {
     if (!this.subscriptions.has(event)) {
-      log(`event publish unsuccessful: ${event} - no subscribers`);
       return;
     }
     const callbacks = this.subscriptions.get(event);

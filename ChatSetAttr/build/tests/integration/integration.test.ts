@@ -509,7 +509,9 @@ describe("Modern ChatSetAttr Integration Tests", () => {
 
   describe("Configuration Options", () => {
     const originalConfig = {
-      ...state.ChatSetAttr
+      playersCanModify: false,
+      playersCanEvaluate: false,
+      useWorkers: false
     };
 
     afterEach(() => {
@@ -525,7 +527,7 @@ describe("Modern ChatSetAttr Integration Tests", () => {
         expect(state.ChatSetAttr.playersCanModify).toBe(!originalConfig.playersCanModify);
         expect(sendChat).toHaveBeenCalledWith(
           "ChatSetAttr",
-          expect.stringMatching(new RegExp(/playersCanModify.*ON/, "g")),
+          expect.stringMatching(new RegExp(/ON.*playersCanModify/, "g")),
           undefined,
           expect.anything()
         );
@@ -537,7 +539,7 @@ describe("Modern ChatSetAttr Integration Tests", () => {
         expect(state.ChatSetAttr.playersCanEvaluate).toBe(!originalConfig.playersCanEvaluate);
         expect(sendChat).toHaveBeenCalledWith(
           "ChatSetAttr",
-          expect.stringMatching(new RegExp(/playersCanEvaluate.*ON/, "g")),
+          expect.stringMatching(new RegExp(/ON.*playersCanEvaluate/, "g")),
           undefined,
           expect.anything()
         );
@@ -553,7 +555,7 @@ describe("Modern ChatSetAttr Integration Tests", () => {
         expect(state.ChatSetAttr.useWorkers).toBe(!originalUseWorkers);
         expect(sendChat).toHaveBeenCalledWith(
           "ChatSetAttr",
-          expect.stringMatching(new RegExp(/useWorkers.*ON/, "g")),
+          expect.stringMatching(new RegExp(/ON.*useWorkers/, "g")),
           undefined,
           expect.anything()
         );
@@ -569,7 +571,7 @@ describe("Modern ChatSetAttr Integration Tests", () => {
         expect(state.ChatSetAttr.useWorkers).toBe(!originalUseWorkers);
         expect(sendChat).toHaveBeenCalledWith(
           "ChatSetAttr",
-          expect.stringMatching(new RegExp(/useWorkers.*ON/, "g")),
+          expect.stringMatching(new RegExp(/ON.*useWorkers/, "g")),
           undefined,
           expect.anything()
         );
@@ -587,7 +589,13 @@ describe("Modern ChatSetAttr Integration Tests", () => {
         const strength = attributes.find(a => a._characterid === "char1" && a.name === "Strength");
         expect(strength).toBeUndefined();
 
-        expect(sendChat).not.toHaveBeenCalled();
+        expect(sendChat).toHaveBeenCalled();
+        expect(sendChat).toHaveBeenCalledWith(
+          "ChatSetAttr",
+          expect.stringMatching(/No valid targets found/),
+          undefined,
+          expect.anything()
+        )
       });
     });
   });
@@ -743,7 +751,7 @@ describe("Modern ChatSetAttr Integration Tests", () => {
 
         expect(sendChat).toHaveBeenCalledWith(
           "ChatSetAttr",
-          expect.stringMatching(/ChatSetAttr Error/) && expect.stringMatching(/NewAttribute does not exist for character/),
+          expect.stringMatching(/ChatSetAttr Error/) && expect.stringMatching(/NewAttribute<\/strong> does not exist for character/),
           undefined,
           expect.anything()
         );
@@ -1022,6 +1030,176 @@ describe("Modern ChatSetAttr Integration Tests", () => {
         expect(attackBonus!.current).toBe("5");
       });
     });
+
+    it("should handle deleting all repeating attributes on a rowid by index", async () => {
+      // Arrange - Create repeating inventory items
+      createObj("character", { id: "char1", name: "Character 1" });
+
+      // Create first inventory item with multiple attributes
+      createObj("attribute", {
+        _characterid: "char1",
+        name: "repeating_inventory_-abc123_itemname",
+        current: "Potion of Healing"
+      });
+      createObj("attribute", {
+        _characterid: "char1",
+        name: "repeating_inventory_-abc123_itemcount",
+        current: "3"
+      });
+      createObj("attribute", {
+        _characterid: "char1",
+        name: "repeating_inventory_-abc123_itemweight",
+        current: "0.5"
+      });
+
+      // Create second inventory item
+      createObj("attribute", {
+        _characterid: "char1",
+        name: "repeating_inventory_-def456_itemname",
+        current: "Longsword"
+      });
+      createObj("attribute", {
+        _characterid: "char1",
+        name: "repeating_inventory_-def456_itemweight",
+        current: "3"
+      });
+
+      // Set up the reporder
+      createObj("attribute", {
+        _characterid: "char1",
+        name: "_reporder_repeating_inventory",
+        current: "-abc123,-def456"
+      });
+
+      // Create token representing character
+      createObj("graphic", { id: "token1", represents: "char1" });
+
+      // Verify initial setup
+      const firstItemName = attributes.find(a =>
+        a._characterid === "char1" &&
+        a.name.includes("itemname") &&
+        a.current === "Potion of Healing"
+      );
+      expect(firstItemName).toBeDefined();
+
+      // Act - Delete entire first row ($0 index) including all its attributes
+      executeCommand("!delattr --sel --repeating_inventory_-abc123", ["token1"]);
+
+      // Wait for the operation to complete
+      await vi.waitFor(() => {
+        // Assert - First item should be completely deleted (all attributes)
+        const firstItemName = attributes.find(a =>
+          a._characterid === "char1" &&
+          a.name.includes("repeating_inventory_-abc123")
+        );
+        expect(firstItemName).toBeUndefined();
+
+        const firstItemCount = attributes.find(a =>
+          a._characterid === "char1" &&
+          a.name.includes("repeating_inventory_-abc123_itemcount")
+        );
+        expect(firstItemCount).toBeUndefined();
+
+        const firstItemWeight = attributes.find(a =>
+          a._characterid === "char1" &&
+          a.name.includes("repeating_inventory_-abc123_itemweight")
+        );
+        expect(firstItemWeight).toBeUndefined();
+
+        // Second item should still exist
+        const secondItemName = attributes.find(a =>
+          a._characterid === "char1" &&
+          a.name.includes("itemname") &&
+          a.current === "Longsword"
+        );
+        expect(secondItemName).toBeDefined();
+      });
+    });
+
+    it("should handle deleting all repeating attributes on a rowid by index", async () => {
+      // Arrange - Create repeating inventory items
+      createObj("character", { id: "char1", name: "Character 1" });
+
+      // Create first inventory item with multiple attributes
+      createObj("attribute", {
+        _characterid: "char1",
+        name: "repeating_inventory_-abc123_itemname",
+        current: "Potion of Healing"
+      });
+      createObj("attribute", {
+        _characterid: "char1",
+        name: "repeating_inventory_-abc123_itemcount",
+        current: "3"
+      });
+      createObj("attribute", {
+        _characterid: "char1",
+        name: "repeating_inventory_-abc123_itemweight",
+        current: "0.5"
+      });
+
+      // Create second inventory item
+      createObj("attribute", {
+        _characterid: "char1",
+        name: "repeating_inventory_-def456_itemname",
+        current: "Longsword"
+      });
+      createObj("attribute", {
+        _characterid: "char1",
+        name: "repeating_inventory_-def456_itemweight",
+        current: "3"
+      });
+
+      // Set up the reporder
+      createObj("attribute", {
+        _characterid: "char1",
+        name: "_reporder_repeating_inventory",
+        current: "-abc123,-def456"
+      });
+
+      // Create token representing character
+      createObj("graphic", { id: "token1", represents: "char1" });
+
+      // Verify initial setup
+      const firstItemName = attributes.find(a =>
+        a._characterid === "char1" &&
+        a.name.includes("itemname") &&
+        a.current === "Potion of Healing"
+      );
+      expect(firstItemName).toBeDefined();
+
+      // Act - Delete entire first row ($0 index) including all its attributes
+      executeCommand("!delattr --sel --repeating_inventory_$0", ["token1"]);
+
+      // Wait for the operation to complete
+      await vi.waitFor(() => {
+        // Assert - First item should be completely deleted (all attributes)
+        const firstItemName = attributes.find(a =>
+          a._characterid === "char1" &&
+          a.name.includes("repeating_inventory_-abc123")
+        );
+        expect(firstItemName).toBeUndefined();
+
+        const firstItemCount = attributes.find(a =>
+          a._characterid === "char1" &&
+          a.name.includes("repeating_inventory_-abc123_itemcount")
+        );
+        expect(firstItemCount).toBeUndefined();
+
+        const firstItemWeight = attributes.find(a =>
+          a._characterid === "char1" &&
+          a.name.includes("repeating_inventory_-abc123_itemweight")
+        );
+        expect(firstItemWeight).toBeUndefined();
+
+        // Second item should still exist
+        const secondItemName = attributes.find(a =>
+          a._characterid === "char1" &&
+          a.name.includes("itemname") &&
+          a.current === "Longsword"
+        );
+        expect(secondItemName).toBeDefined();
+      });
+    });
   });
 
   describe("Delayed Processing", () => {
@@ -1085,6 +1263,165 @@ describe("Modern ChatSetAttr Integration Tests", () => {
           expect.objectContaining({
             noarchive: true,
           })
+        );
+      });
+    });
+  });
+
+  describe("Inline Roll Processing", () => {
+    it("should process simple inline rolls in attribute values", async () => {
+      // Arrange
+      createObj("character", { id: "char1", name: "Character 1" });
+      createObj("graphic", { id: "token1", represents: "char1" });
+
+      // Act - use executeCommand directly with just the content string
+      executeCommand("!setattr --sel --food|[[1d4]]", ["token1"]);
+
+      // Assert
+      await vi.waitFor(() => {
+        const foodAttr = attributes.find(a => a._characterid === "char1" && a.name === "food");
+        expect(foodAttr).toBeDefined();
+        expect(foodAttr!.current).toBe("2");
+      });
+    });
+
+    it("should process inline rolls in both value and max", async () => {
+      // Arrange
+      createObj("character", { id: "char1", name: "Character 1" });
+
+      // Act
+      executeCommand("!setattr --charid char1 --strength|[[1d6+2]]|[[2d8]]");
+
+      // Assert
+      await vi.waitFor(() => {
+        const strengthAttr = attributes.find(a => a._characterid === "char1" && a.name === "strength");
+        expect(strengthAttr).toBeDefined();
+        expect(strengthAttr!.current).toBe("5");
+        expect(strengthAttr!.max).toBe("8");
+      });
+    });
+
+    it("should process multiple inline rolls within a single attribute value", async () => {
+      // Arrange
+      createObj("character", { id: "char1", name: "Character 1" });
+
+      // Act
+      executeCommand("!setattr --charid char1 --damage|[[1d6]]+[[1d8]]+3");
+
+      // Assert
+      await vi.waitFor(() => {
+        const damageAttr = attributes.find(a => a._characterid === "char1" && a.name === "damage");
+        expect(damageAttr).toBeDefined();
+        expect(damageAttr!.current).toBe("3+4+3");
+      });
+    });
+
+    it("should evaluate expressions with inline rolls", async () => {
+      // Arrange
+      createObj("character", { id: "char1", name: "Character 1" });
+
+      // Act
+      executeCommand("!setattr --charid char1 --evaluate --damage|[[1d6]]+[[1d8]]+3");
+
+      // Assert
+      await vi.waitFor(() => {
+        const damageAttr = attributes.find(a => a._characterid === "char1" && a.name === "damage");
+        expect(damageAttr).toBeDefined();
+        expect(damageAttr!.current).toBe("10"); // 3+4+3 = 10 (evaluated)
+      });
+    });
+
+    it("should process complex templates with embedded inline commands", async () => {
+      // Arrange
+      createObj("character", { id: "char1", name: "Character 1" });
+      createObj("attribute", { _characterid: "char1", name: "sanity", current: "50" });
+      createObj("attribute", { _characterid: "char1", name: "corruption", current: "5" });
+
+      // Act
+      executeCommand("&{template:default} {{name=Cthulhu}} !modattr --silent --charid char1 --sanity|-{{Sanity damage=[[2d10+2]]}} --corruption|{{Corruption=Corruption increases by [[1]]}}!!! {{description=Text}}");
+
+      // Assert
+      await vi.waitFor(() => {
+        const sanityAttr = attributes.find(a => a._characterid === "char1" && a.name === "sanity");
+        const corruptionAttr = attributes.find(a => a._characterid === "char1" && a.name === "corruption");
+
+        expect(sanityAttr).toBeDefined();
+        expect(sanityAttr!.current).toBe("38"); // 50-12=38
+
+        expect(corruptionAttr).toBeDefined();
+        expect(corruptionAttr!.current).toBe("6"); // 5+1=6
+      });
+    });
+
+    it("should handle nested inline rolls with mixed content", async () => {
+      // Arrange
+      createObj("character", { id: "char1", name: "Character 1" });
+
+      // Act
+      executeCommand("!setattr --charid char1 --total|[[2d10]] --bonus|[[3d6]]");
+
+      // Assert
+      await vi.waitFor(() => {
+        const totalAttr = attributes.find(a => a._characterid === "char1" && a.name === "total");
+        expect(totalAttr).toBeDefined();
+        expect(totalAttr!.current).toBe("10");
+        const bonusAttr = attributes.find(a => a._characterid === "char1" && a.name === "bonus");
+        expect(bonusAttr).toBeDefined();
+        expect(bonusAttr!.current).toBe("9");
+      });
+    });
+
+    it("should handle inline rolls in repeating attributes", async () => {
+      // Arrange
+      createObj("character", { id: "char1", name: "Character 1" });
+
+      // Act
+      executeCommand("!setattr --charid char1 --repeating_attacks_-CREATE_damage|[[2d6]]+3");
+
+      // Assert
+      await vi.waitFor(() => {
+        const damageAttr = attributes.find(a => a._characterid === "char1" && a.name.includes("repeating_attacks") && a.name.includes("damage"));
+        expect(damageAttr).toBeDefined();
+        expect(damageAttr!.current).toBe("6+3");
+      });
+    });
+
+    it("should handle inline rolls combined with attribute references", async () => {
+      // Arrange
+      createObj("character", { id: "char1", name: "Character 1" });
+      createObj("attribute", { _characterid: "char1", name: "level", current: "5" });
+
+      // Act
+      executeCommand("!setattr --charid char1 --evaluate --formula|@{level}+[[1d6]]");
+
+      // Assert
+      await vi.waitFor(() => {
+        const formulaAttr = attributes.find(a => a._characterid === "char1" && a.name === "formula");
+        expect(formulaAttr).toBeDefined();
+        expect(formulaAttr!.current).toBe("8");
+      });
+    });
+
+    it("should process inline rolls in feedback parameter values", async () => {
+      // Arrange
+      createObj("character", { id: "char1", name: "Character 1" });
+      vi.mocked(sendChat).mockClear();
+
+      // Act
+      executeCommand("!setattr --charid char1 --fb-header Action Result: [[1d20]] --strength|15");
+
+      // Assert
+      await vi.waitFor(() => {
+        const strengthAttr = attributes.find(a => a._characterid === "char1" && a.name === "strength");
+        expect(strengthAttr).toBeDefined();
+        expect(strengthAttr!.current).toBe("15");
+
+        expect(sendChat).toHaveBeenCalled();
+        expect(sendChat).toHaveBeenCalledWith(
+          "ChatSetAttr",
+          expect.stringMatching(/Action Result: 10/),
+          undefined,
+          expect.anything()
         );
       });
     });

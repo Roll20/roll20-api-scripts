@@ -91,9 +91,9 @@ describe("Modern ChatSetAttr Configuration Tests", () => {
       expect(sendChat).toHaveBeenCalledWith(
         "ChatSetAttr",
         expect.stringContaining("Current configuration:")
-        && expect.stringMatching(/playersCanModify.*ON/)
-        && expect.stringMatching(/playersCanEvaluate.*OFF/)
-        && expect.stringMatching(/useWorkers.*ON/),
+        && expect.stringMatching(/ON.*playersCanModify/)
+        && expect.stringMatching(/OFF.*playersCanEvaluate/)
+        && expect.stringMatching(/ON.*useWorkers/),
         undefined,
         expect.objectContaining({ noarchive: true })
       );

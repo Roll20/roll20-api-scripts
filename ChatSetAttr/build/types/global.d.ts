@@ -819,6 +819,137 @@ declare function Campaign(): Roll20Campaign;
  */
 declare function createObj<T extends keyof Roll20ObjectTypeToInstance>(type: T, attributes: Partial<Roll20ObjectTypeToInstance[T]["properties"]>): Roll20ObjectTypeToInstance[T];
 
+/** Type definition for roll results */
+
+/**
+ * Represents the result of an individual die roll.
+ */
+type IndividualDieResult = {
+  /** The value rolled on the die */
+  v: number;
+  /** Optional: true if this die was dropped (e.g., due to keep highest/lowest) */
+  d?: boolean;
+};
+
+/**
+ * Describes modifications applied to a roll, like keeping a certain number of dice.
+ */
+type RollModsKeep = {
+  /** How many dice to keep */
+  count: number;
+  /** "h" for highest, "l" for lowest */
+  end: "h" | "l";
+};
+
+/**
+ * Represents modifications that can be applied to a roll or group of rolls.
+ */
+type RollMods = {
+  /** Optional: Specifies how many dice to keep (highest or lowest) */
+  keep?: RollModsKeep;
+  // Potentially other types of modifications could be added here
+};
+
+/**
+ * Represents a standard dice roll (e.g., "1d20", "2d6kh1").
+ */
+type StandardRoll = {
+  /** Discriminator for a regular roll */
+  type: "R";
+  /** Number of dice rolled */
+  dice: number;
+  /** Number of sides on each die */
+  sides: number;
+  /** Array of results for each die */
+  results: IndividualDieResult[];
+  /** Optional: modifications like keep highest/lowest */
+  mods?: RollMods;
+};
+
+/**
+ * Represents a modifier in a roll expression (e.g., "+2", "-1").
+ */
+type ModifierRoll = {
+  /** Discriminator for a modifier */
+  type: "M";
+  /** The modifier expression string (e.g., "+2") */
+  expr: string;
+};
+
+/**
+ * Represents an item within the results of a group roll.
+ * This usually corresponds to the total of a sub-roll within the group.
+ */
+type GroupResultItem = {
+  /** The value of this sub-result */
+  v: number;
+  /** Optional: true if this sub-result was dropped from the group's final total */
+  d?: boolean;
+};
+
+/**
+ * Represents a group of rolls (e.g., "{1d20, 2d8}kh1").
+ * The `rolls` property here contains an array of sub-groups,
+ * each sub-group containing an array of StandardRolls.
+ */
+type GroupRoll = {
+  /** Discriminator for a group roll */
+  type: "G";
+  /** The type of result for the group (e.g., "sum") */
+  resultType: string;
+  /**
+   * `rolls` is an array of "sub-roll groups". Each sub-roll group is an array of StandardRolls.
+   * For example, in "{1d6, 1d8}", `rolls` would be `[[StandardRollFor1d6], [StandardRollFor1d8]]`.
+   */
+  rolls: StandardRoll[][];
+  /** Results of each sub-roll group before final selection (e.g., keep highest) */
+  results: GroupResultItem[];
+  /** Optional: modifications applied to the group result (e.g., keep highest sub-total) */
+  mods?: RollMods;
+};
+
+/**
+ * A union type representing any item that can appear in the `rolls` array
+ * of the main `Results` object. It can be a standard roll, a modifier, or a group roll.
+ */
+type RollItem = StandardRoll | ModifierRoll | GroupRoll;
+
+/**
+ * Contains the detailed results of a single roll expression.
+ */
+type Results = {
+  /** Overall result type (e.g., "sum") */
+  resultType: string;
+  /** Array of individual roll components (dice, modifiers, groups) */
+  rolls: RollItem[];
+  /** The final total of the roll expression */
+  total: number;
+  /** Type of the overall result object (seems to be consistently "V") */
+  type: "V";
+};
+
+/**
+ * Represents a single complete roll entry, including the expression,
+ * its parsed results, an ID, and a signature.
+ */
+type RollData = {
+  /** The original roll expression (e.g., "2d20+5") */
+  expression: string;
+  /** The detailed breakdown and total of the roll */
+  results: Results;
+  /** A unique identifier for this roll */
+  rollid: string;
+  /** A signature, likely for verification or tracking */
+  signature: string;
+};
+
+/**
+ * Represents a complete roll result, including the original expression,
+ * parsed results, and any inline rolls that were part of the message.
+ */
+
+type RollResult = RollData[];
+
 /** Type definition for a chat message object */
 type Roll20ChatMessage = {
   /** The display name of the player or character that sent the message */
@@ -832,7 +963,7 @@ type Roll20ChatMessage = {
   /** The original text of the roll (for rollresult or gmrollresult types) */
   origRoll?: string;
   /** Array of objects containing information about all inline rolls in the message */
-  inlinerolls?: Array<Record<string, any>>;
+  inlinerolls?: RollResult;
   /** The name of the template specified (when content contains roll templates) */
   rolltemplate?: string;
   /** The player ID of the person the whisper is sent to (for whisper type) */

@@ -36,7 +36,6 @@ var ChatSetAttr = function() {
     }
     publish(event, ...args) {
       if (!this.subscriptions.has(event)) {
-        log(`event publish unsuccessful: ${event} - no subscribers`);
         return;
       }
       const callbacks = this.subscriptions.get(event);
@@ -101,7 +100,7 @@ var ChatSetAttr = function() {
         _characterid: character == null ? void 0 : character.id
       };
       const newAttr = createObj("attribute", newObjProps);
-      await APIWrapper.setAttribute(character.id, name, value2, max);
+      await APIWrapper.setAttribute(character, name, value2, max);
       globalSubscribeManager.publish("add", newAttr);
       globalSubscribeManager.publish("change", newAttr, newAttr);
       messages.push(`Created attribute <strong>${name}</strong> with value <strong>${value2}</strong> for character <strong>${character == null ? void 0 : character.get("name")}</strong>.`);
@@ -112,12 +111,18 @@ var ChatSetAttr = function() {
       const messages = [];
       const attr = await APIWrapper.getAttribute(character, name);
       if (!attr) {
-        errors.push(`updateAttribute: Attribute ${name} does not exist for character with ID ${character == null ? void 0 : character.id}.`);
+        errors.push(`Attribute <strong>${name}</strong> does not exist for character <strong>${character.get("name")}</strong>.`);
         return [{ messages, errors }];
       }
       const oldAttr = JSON.parse(JSON.stringify(attr));
-      await APIWrapper.setAttribute(character.id, name, value2, max);
-      messages.push(`Setting <strong>${name}</strong> to <strong>${value2}</strong> for character <strong>${character == null ? void 0 : character.get("name")}</strong>.`);
+      await APIWrapper.setAttribute(character, name, value2, max);
+      if (value2 && max) {
+        messages.push(`Setting <strong>${name}</strong> to <strong>${value2}</strong> and <strong>${name}_max</strong> to <strong>${max}</strong> for character <strong>${character == null ? void 0 : character.get("name")}</strong>.`);
+      } else if (value2) {
+        messages.push(`Setting <strong>${name}</strong> to <strong>${value2}</strong> for character <strong>${character == null ? void 0 : character.get("name")}</strong>, max remains unchanged.`);
+      } else if (max) {
+        messages.push(`Setting <strong>${name}_max</strong> to <strong>${max}</strong> for character <strong>${character == null ? void 0 : character.get("name")}</strong>, current remains unchanged.`);
+      }
       globalSubscribeManager.publish("change", { name, current: value2, max }, { name, current: oldAttr.value, max: oldAttr.max });
       return [{ messages, errors }];
     }
@@ -152,18 +157,18 @@ var ChatSetAttr = function() {
         });
       }
     }
-    static async setAttribute(characterID, attr, value2, max) {
+    static async setAttribute(character, attr, value2, max) {
       if (state.ChatSetAttr.useWorkers) {
-        await APIWrapper.setWithWorker(characterID, attr, value2, max);
+        await APIWrapper.setWithWorker(character.id, attr, value2, max);
         return;
       }
       if (value2) {
-        const newValue = await setSheetItem(characterID, attr, value2, "current");
-        log(`setAttribute: Setting ${attr} to ${JSON.stringify(newValue)} for character with ID ${characterID}.`);
+        await setSheetItem(character.id, attr, value2, "current");
+        log(`Setting <strong>${attr}</strong> to <strong>${value2}</strong> for character with ID <strong>${character.get("name")}</strong>.`);
       }
       if (max) {
-        const newMax = await setSheetItem(characterID, attr, max, "max");
-        log(`setAttribute: Setting ${attr} max to ${JSON.stringify(newMax)} for character with ID ${characterID}.`);
+        await setSheetItem(character.id, attr, max, "max");
+        log(`Setting <strong>${attr}</strong> max to <strong>${max}</strong> for character <strong>${character.get("name")}</strong>.`);
       }
     }
     static async setAttributesOnly(character, attributes) {
@@ -173,7 +178,7 @@ var ChatSetAttr = function() {
       for (const [key, value2] of entries) {
         const attribute = await APIWrapper.getAttribute(character, key);
         if (!(attribute == null ? void 0 : attribute.value)) {
-          errors.push(`setAttribute: ${key} does not exist for character with ID ${character == null ? void 0 : character.id}.`);
+          errors.push(`Attribute <strong>${key}</strong> does not exist for character <strong>${character.get("name")}</strong>.`);
           return [{ messages, errors }];
         }
         const stringValue = value2.value ? value2.value.toString() : void 0;
@@ -208,15 +213,41 @@ var ChatSetAttr = function() {
       const errors = [];
       const messages = [];
       for (const attribute of attributes) {
+        const { section, repeatingID, attribute: attrName } = APIWrapper.extractRepeatingDetails(attribute) || {};
+        if (section && repeatingID && !attrName) {
+          return APIWrapper.deleteRepeatingRow(character, section, repeatingID);
+        }
         const attr = await APIWrapper.getAttr(character, attribute);
         if (!attr) {
-          errors.push(`deleteAttributes: Attribute ${attribute} does not exist for character with ID ${character == null ? void 0 : character.id}.`);
+          errors.push(`Attribute <strong>${attribute}</strong> does not exist for character <strong>${character.get("name")}</strong>.`);
           continue;
         }
         const oldAttr = JSON.parse(JSON.stringify(attr));
         attr.remove();
         globalSubscribeManager.publish("destroy", oldAttr);
-        messages.push(`Attribute ${attribute} deleted for character with ID ${character == null ? void 0 : character.id}.`);
+        messages.push(`Attribute <strong>${attribute}</strong> deleted for character <strong>${character.get("name")}</strong>.`);
+      }
+      return [{ messages, errors }];
+    }
+    static async deleteRepeatingRow(character, section, repeatingID) {
+      const errors = [];
+      const messages = [];
+      const repeatingAttrs = findObjs({
+        _type: "attribute",
+        _characterid: character.id
+      }).filter((attr) => {
+        const name = attr.get("name");
+        return name.startsWith(`repeating_${section}_${repeatingID}_`);
+      });
+      if (repeatingAttrs.length === 0) {
+        errors.push(`No repeating attributes found for section <strong>${section}</strong> and ID <strong>${repeatingID}</strong> for character <strong>${character.get("name")}</strong>.`);
+        return [{ messages, errors }];
+      }
+      for (const attr of repeatingAttrs) {
+        const oldAttr = JSON.parse(JSON.stringify(attr));
+        attr.remove();
+        globalSubscribeManager.publish("destroy", oldAttr);
+        messages.push(`Repeating attribute <strong>${attr.get("name")}</strong> deleted for character <strong>${character.get("name")}</strong>.`);
       }
       return [{ messages, errors }];
     }
@@ -227,7 +258,7 @@ var ChatSetAttr = function() {
         const attr = await APIWrapper.getAttribute(character, attribute);
         const value2 = attr == null ? void 0 : attr.value;
         if (!value2) {
-          errors.push(`resetAttributes: Attribute ${attribute} does not exist for character with ID ${character == null ? void 0 : character.id}.`);
+          errors.push(`Attribute <strong>${attribute}</strong> does not exist for character <strong>${character.get("name")}</strong>.`);
           continue;
         }
         const max = attr.max;
@@ -235,9 +266,9 @@ var ChatSetAttr = function() {
           continue;
         }
         const oldAttr = JSON.parse(JSON.stringify(attr));
-        APIWrapper.setAttribute(character.id, attribute, max);
+        APIWrapper.setAttribute(character, attribute, max);
         globalSubscribeManager.publish("change", attr, oldAttr);
-        messages.push(`Attribute ${attribute} reset for character with ID ${character == null ? void 0 : character.id}.`);
+        messages.push(`Attribute <strong>${attribute}</strong> reset for character <strong>${character.get("name")}</strong>.`);
       }
       return [{ messages, errors }];
     }
@@ -246,13 +277,10 @@ var ChatSetAttr = function() {
     static extractRepeatingDetails(attributeName) {
       const [, section, repeatingID, ...attributeParts] = attributeName.split("_");
       const attribute = attributeParts.join("_");
-      if (!section || !repeatingID || !attribute) {
-        return null;
-      }
       return {
-        section,
-        repeatingID,
-        attribute
+        section: section || void 0,
+        repeatingID: repeatingID || void 0,
+        attribute: attribute || void 0
       };
     }
     static hasRepeatingAttributes(attributes) {
@@ -309,7 +337,9 @@ var ChatSetAttr = function() {
     optionPrefix = "--";
     constructor() {
     }
-    parse(input) {
+    parse(message) {
+      log(`InputParser.parse: message: ${JSON.stringify(message)}`);
+      let input = this.processInlineRolls(message);
       for (const command of this.commands) {
         const commandString = `${this.commandPrefix}${command}`;
         if (input.startsWith(commandString)) {
@@ -317,6 +347,7 @@ var ChatSetAttr = function() {
         }
         const regex = new RegExp(`(${this.commandPrefix}${command}.*)${this.commandSuffix}`);
         const match = input.match(regex);
+        log(`InputParser.parse: command: ${command}, match: ${JSON.stringify(match)}`);
         if (match) {
           return this.parseAPICommand(command, match[1], CommandType.INLINE);
         }
@@ -402,6 +433,28 @@ var ChatSetAttr = function() {
       const noSlashes = this.stripBackslashes(str);
       const noQuotes = this.stripQuotes(noSlashes);
       return noQuotes;
+    }
+    processInlineRolls(message) {
+      const { inlinerolls } = message;
+      if (!inlinerolls || Object.keys(inlinerolls).length === 0) {
+        return message.content;
+      }
+      let content = this.removeRollTemplates(message.content);
+      for (const key in inlinerolls) {
+        const roll = inlinerolls[key];
+        if (roll.results && roll.results.total !== void 0) {
+          const rollValue = roll.results.total;
+          content = content.replace(`$[[${key}]]`, rollValue.toString());
+        } else {
+          content = content.replace(`$[[${key}]]`, "");
+        }
+      }
+      return content;
+    }
+    removeRollTemplates(input) {
+      return input.replace(/{{[^}[\]]+\$\[\[(\d+)\]\].*?}}/g, (_, number) => {
+        return `$[[${number}]]`;
+      });
     }
   }
   function convertCamelToKebab(camel) {
@@ -617,6 +670,9 @@ var ChatSetAttr = function() {
           deltaCurrent = this.replaceMarks(deltaCurrent);
           deltaMax = this.replaceMarks(deltaMax);
         }
+        if (hasRepeating) {
+          deltaName = this.parseRepeating(deltaName);
+        }
         if (this.parse) {
           deltaCurrent = this.parseDelta(deltaCurrent);
           deltaMax = this.parseDelta(deltaMax);
@@ -630,10 +686,7 @@ var ChatSetAttr = function() {
           deltaMax = this.modifyDelta(deltaMax, deltaName, true);
         }
         if (this.constrain) {
-          deltaCurrent = this.constrainDelta(deltaCurrent, deltaMax);
-        }
-        if (hasRepeating) {
-          deltaName = this.parseRepeating(deltaName);
+          deltaCurrent = this.constrainDelta(deltaCurrent, deltaMax, deltaName);
         }
         final[deltaName] = {
           value: deltaCurrent.toString()
@@ -680,7 +733,6 @@ var ChatSetAttr = function() {
           return value;
         }
       } catch (error) {
-        this.errors.push(`Error evaluating expression ${value}`);
         return value;
       }
     }
@@ -691,9 +743,11 @@ var ChatSetAttr = function() {
         return delta;
       }
       const current = isMax ? attribute.get("max") : attribute.get("current");
-      if (delta === void 0 || delta === null) {
-        this.errors.push(`Attribute ${name} has no value to modify.`);
-        return current;
+      if (delta === void 0 || delta === null || delta === "") {
+        if (!isMax) {
+          this.errors.push(`Attribute ${name} has no value to modify.`);
+        }
+        return "";
       }
       const deltaAsNumber = Number(delta);
       const currentAsNumber = Number(current);
@@ -704,7 +758,9 @@ var ChatSetAttr = function() {
       let modified = deltaAsNumber + currentAsNumber;
       return modified.toString();
     }
-    constrainDelta(value2, max) {
+    constrainDelta(value2, maxDelta, name) {
+      const attribute = this.attributes.find((attr) => attr.get("name") === name);
+      const max = maxDelta ? maxDelta : attribute == null ? void 0 : attribute.get("max");
       const valueAsNumber = Number(value2);
       const maxAsNumber = max === "" ? Infinity : Number(max);
       if (isNaN(valueAsNumber) || isNaN(maxAsNumber)) {
@@ -724,7 +780,7 @@ var ChatSetAttr = function() {
     parseRepeating(name) {
       var _a;
       const { section, repeatingID, attribute } = APIWrapper.extractRepeatingDetails(name) ?? {};
-      if (!section || !attribute) {
+      if (!section) {
         this.errors.push(`Invalid repeating attribute name: ${name}`);
         return name;
       }
@@ -736,7 +792,9 @@ var ChatSetAttr = function() {
       if (matches) {
         const index = Number(matches[0].slice(1));
         const repeatingID2 = (_a = this.repeating.repeatingOrders[section]) == null ? void 0 : _a[index];
-        if (repeatingID2) {
+        if (repeatingID2 && !attribute) {
+          return `repeating_${section}_${repeatingID2}`;
+        } else if (repeatingID2) {
           return `repeating_${section}_${repeatingID2}_${attribute}`;
         }
       }
@@ -746,20 +804,45 @@ var ChatSetAttr = function() {
     replacePlaceholders(message) {
       const entries = Object.entries(this.delta);
       const finalEntries = Object.entries(this.final);
-      const newMessage = message.replace(/_NAME(\d+)_/g, (_, index) => {
-        const attr = entries[parseInt(index, 10)];
+      const newMessage = message.replace(/_NAME(\d+)_/g, (match, index) => {
+        if (index > entries.length - 1) {
+          this.errors.push(`Invalid index ${index} in _NAME${index}_ placeholder.`);
+          return match;
+        }
+        const actualIndex = parseInt(index, 10);
+        const attr = entries[actualIndex];
         return attr[0] ?? "";
-      }).replace(/_TCUR(\d+)_/g, (_, index) => {
-        const attr = entries[parseInt(index, 10)];
+      }).replace(/_TCUR(\d+)_/g, (match, index) => {
+        if (index > entries.length - 1) {
+          this.errors.push(`Invalid index ${index} in _NAME${index}_ placeholder.`);
+          return match;
+        }
+        const actualIndex = parseInt(index, 10);
+        const attr = entries[actualIndex];
         return attr[1].value ?? "";
-      }).replace(/_TMAX(\d+)_/g, (_, index) => {
-        const attr = entries[parseInt(index, 10)];
+      }).replace(/_TMAX(\d+)_/g, (match, index) => {
+        if (index > entries.length - 1) {
+          this.errors.push(`Invalid index ${index} in _NAME${index}_ placeholder.`);
+          return match;
+        }
+        const actualIndex = parseInt(index, 10);
+        const attr = entries[actualIndex];
         return attr[1].max ?? "";
-      }).replace(/_CUR(\d+)_/g, (_, index) => {
-        const attr = finalEntries[parseInt(index, 10)];
+      }).replace(/_CUR(\d+)_/g, (match, index) => {
+        if (index > entries.length - 1) {
+          this.errors.push(`Invalid index ${index} in _NAME${index}_ placeholder.`);
+          return match;
+        }
+        const actualIndex = parseInt(index, 10);
+        const attr = finalEntries[actualIndex];
         return attr[1].value ?? "";
-      }).replace(/_MAX(\d+)_/g, (_, index) => {
-        const attr = finalEntries[parseInt(index, 10)];
+      }).replace(/_MAX(\d+)_/g, (match, index) => {
+        if (index > entries.length - 1) {
+          this.errors.push(`Invalid index ${index} in _NAME${index}_ placeholder.`);
+          return match;
+        }
+        const actualIndex = parseInt(index, 10);
+        const attr = finalEntries[actualIndex];
         return attr[1].max ?? "";
       }).replace(/_CHARNAME_/g, this.character.get("name") ?? "");
       return newMessage;
@@ -790,14 +873,15 @@ var ChatSetAttr = function() {
         const [createResponse] = await createMethod(target, processedValues);
         errors.push(...createResponse.errors ?? []);
         if (useFeedback && content) {
+          processor.errors = [];
           const messageContent = processor.replacePlaceholders(content);
           messages.push(messageContent);
+          errors.push(...processor.errors);
         } else {
           messages.push(...createResponse.messages ?? []);
         }
         await asyncTimeout(20);
       }
-      log(`SetAttrCommand executed with messages: ${JSON.stringify(messages)}`);
       if (errors.length > 0) {
         return {
           messages: [],
@@ -1014,7 +1098,7 @@ var ChatSetAttr = function() {
     });
     createMessageRow(property, description, value2) {
       const indicatorStyle = value2 ? this.messageRowIndicatorStyleOn : this.messageRowIndicatorStyleOff;
-      return `<div style="${this.messageRowStyle}"><span style="font-weight: bold;">${property}</span>: ${description}<span style="${indicatorStyle}">${value2 ? "ON" : "OFF"}</span></div>`;
+      return `<div style="${this.messageRowStyle}"><span style="${indicatorStyle}">${value2 ? "ON" : "OFF"}</span><span style="font-weight: bold;">${property}</span>: ${description}</div>`;
     }
   }
   function filterByPermission(playerID, characters) {
@@ -1151,6 +1235,9 @@ var ChatSetAttr = function() {
       const [validTargets, response] = filterByPermission(playerID, targetsByID);
       messages.push(...response.messages ?? []);
       errors.push(...response.errors ?? []);
+      if (validTargets.length === 0 && targets.length > 0) {
+        errors.push("No valid targets found with the provided IDs.");
+      }
       return [validTargets, { messages, errors }];
     }
   }
@@ -1240,11 +1327,12 @@ var ChatSetAttr = function() {
       output += this.createHeader();
       output += this.createContent();
       output += this.closeWrapper();
-      log(`ChatOutput: ${output}`);
+      log(`Output: ${output}`);
       sendChat(this.from, output, void 0, { noarchive });
     }
     createWhisper() {
-      if (!this.whisper) {
+      if (this.whisper === false) {
+        log(`ChatOutput: Not sending as whisper`);
         return ``;
       }
       if (this.playerID === "GM") {
@@ -1328,7 +1416,7 @@ var ChatSetAttr = function() {
         command,
         flags,
         attributes
-      } = this.InputParser.parse(msg.content);
+      } = this.InputParser.parse(msg);
       if (commandType === CommandType.NONE || !command) {
         return;
       }
@@ -1340,6 +1428,11 @@ var ChatSetAttr = function() {
         return;
       }
       const targets = this.getTargets(msg, flags);
+      if (targets.length === 0 && actualCommand !== Commands.SET_ATTR_CONFIG) {
+        this.errors.push(`No valid targets found for command ${actualCommand}.`);
+        this.sendMessages();
+        return;
+      }
       TimerManager.start("chatsetattr", 8e3, this.sendDelayMessage);
       const response = await commandHandler.execute(flags, targets, attributes, msg);
       TimerManager.stop("chatsetattr");
@@ -1352,6 +1445,7 @@ var ChatSetAttr = function() {
       }
       const isMuted = flags.some((flag) => flag.name === Flags.MUTE);
       if (isMuted) {
+        this.messages = [];
         this.errors = [];
       }
       if (response.errors.length > 0 || response.messages.length > 0) {
@@ -1396,11 +1490,14 @@ var ChatSetAttr = function() {
     }
     getTargets(msg, flags) {
       const target = this.targetFromOptions(flags);
+      log(`[ChatSetAttr] Target strategy: ${target}`);
       if (!target) {
         return [];
       }
       const targetStrategy = this.getTargetStrategy(target);
+      log(`[ChatSetAttr] Target message: ${msg.selected}`);
       const targets = this.getTargetsFromOptions(target, flags, msg.selected);
+      log(`[ChatSetAttr] Targets: ${targets.join(", ")}`);
       const [validTargets, { messages, errors }] = targetStrategy.parse(targets, msg.playerid);
       this.messages.push(...messages);
       this.errors.push(...errors);
@@ -1474,7 +1571,7 @@ var ChatSetAttr = function() {
     sendMessages(feedback) {
       const sendErrors = this.errors.length > 0;
       const from = (feedback == null ? void 0 : feedback.sender) || "ChatSetAttr";
-      const whisper = (feedback == null ? void 0 : feedback.whisper) || true;
+      const whisper = (feedback == null ? void 0 : feedback.whisper) ?? true;
       if (sendErrors) {
         const header2 = "ChatSetAttr Error";
         const content2 = this.errors.map((error2) => error2.startsWith("<") ? error2 : `<p>${error2}</p>`).join("");
@@ -1483,12 +1580,11 @@ var ChatSetAttr = function() {
           content: content2,
           from,
           type: "error",
-          whisper: true
+          whisper
         });
         error.send();
         this.errors = [];
         this.messages = [];
-        return;
       }
       const sendMessage = this.messages.length > 0 || feedback;
       if (!sendMessage) {
@@ -1523,7 +1619,7 @@ var ChatSetAttr = function() {
       const publicFlag = flags.find((flag) => flag.name === Flags.FB_PUBLIC);
       const header = headerFlag == null ? void 0 : headerFlag.value;
       const sender = fromFlag == null ? void 0 : fromFlag.value;
-      const whisper = (publicFlag == null ? void 0 : publicFlag.value) === "false" ? false : true;
+      const whisper = publicFlag === void 0;
       return {
         header,
         sender,

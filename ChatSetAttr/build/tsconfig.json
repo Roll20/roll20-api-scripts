@@ -3,7 +3,6 @@
     "target": "ES2024",
     "useDefineForClassFields": true,
     "module": "ES2022",
-    "lib": [],
     "skipLibCheck": true,
     "baseUrl": "./",
 
@@ -22,6 +21,5 @@
     "noUncheckedSideEffectImports": true
   },
   "files": [ "types/global.d.ts" ],
-  "types": [],
   "include": ["src", "tests"]
 }

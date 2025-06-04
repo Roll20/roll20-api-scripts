@@ -189,6 +189,9 @@ export class AttrProcessor {
         deltaCurrent = this.replaceMarks(deltaCurrent);
         deltaMax = this.replaceMarks(deltaMax);
       }
+      if (hasRepeating) {
+        deltaName = this.parseRepeating(deltaName);
+      }
       if (this.parse) {
         deltaCurrent = this.parseDelta(deltaCurrent);
         deltaMax = this.parseDelta(deltaMax);
@@ -202,10 +205,7 @@ export class AttrProcessor {
         deltaMax = this.modifyDelta(deltaMax, deltaName, true);
       }
       if (this.constrain) {
-        deltaCurrent = this.constrainDelta(deltaCurrent, deltaMax);
-      }
-      if (hasRepeating) {
-        deltaName = this.parseRepeating(deltaName);
+        deltaCurrent = this.constrainDelta(deltaCurrent, deltaMax, deltaName);
       }
       final[deltaName] = {
         value: deltaCurrent.toString(),
@@ -256,7 +256,6 @@ export class AttrProcessor {
         return value;
       }
     } catch (error) {
-      this.errors.push(`Error evaluating expression ${value}`);
       return value;
     }
   };
@@ -268,9 +267,11 @@ export class AttrProcessor {
       return delta; // Return delta value if attribute not found
     }
     const current = isMax ? attribute.get("max") : attribute.get("current");
-    if (delta === undefined || delta === null) {
-      this.errors.push(`Attribute ${name} has no value to modify.`);
-      return current; // Return original value if no value is found
+    if (delta === undefined || delta === null || delta === "") {
+      if (!isMax) {
+        this.errors.push(`Attribute ${name} has no value to modify.`);
+      }
+      return ""; // Return original value if no value is found
     }
     const deltaAsNumber = Number(delta);
     const currentAsNumber = Number(current);
@@ -282,7 +283,9 @@ export class AttrProcessor {
     return modified.toString();
   };
 
-  private constrainDelta(value: string, max: string): string {
+  private constrainDelta(value: string, maxDelta: string, name: string): string {
+    const attribute = this.attributes.find(attr => attr.get("name") === name);
+    const max = maxDelta ? maxDelta : attribute?.get("max");
     const valueAsNumber = Number(value);
     const maxAsNumber = max === "" ? Infinity : Number(max);
     if (isNaN(valueAsNumber) || isNaN(maxAsNumber)) {
@@ -303,7 +306,7 @@ export class AttrProcessor {
 
   private parseRepeating(name: string): string {
     const { section, repeatingID, attribute } = APIWrapper.extractRepeatingDetails(name) ?? {};
-    if (!section || !attribute) {
+    if (!section) {
       this.errors.push(`Invalid repeating attribute name: ${name}`);
       return name; // Return original name if invalid
     }
@@ -315,7 +318,9 @@ export class AttrProcessor {
     if (matches) {
       const index = Number(matches[0].slice(1));
       const repeatingID = this.repeating.repeatingOrders[section]?.[index];
-      if (repeatingID) {
+      if (repeatingID && !attribute) {
+        return `repeating_${section}_${repeatingID}`;
+      } else if (repeatingID) {
         return `repeating_${section}_${repeatingID}_${attribute}`;
       }
     }
@@ -329,24 +334,49 @@ export class AttrProcessor {
     const entries = Object.entries(this.delta);
     const finalEntries = Object.entries(this.final);
     const newMessage = message
-      .replace(/_NAME(\d+)_/g, (_, index) => {
-        const attr = entries[parseInt(index, 10)];
+      .replace(/_NAME(\d+)_/g, (match, index) => {
+        if (index > entries.length - 1) {
+          this.errors.push(`Invalid index ${index} in _NAME${index}_ placeholder.`);
+          return match; // Return original match if index is invalid
+        }
+        const actualIndex = parseInt(index, 10);
+        const attr = entries[actualIndex];
         return attr[0] ?? "";
       })
-      .replace(/_TCUR(\d+)_/g, (_, index) => {
-        const attr = entries[parseInt(index, 10)];
+      .replace(/_TCUR(\d+)_/g, (match, index) => {
+        if (index > entries.length - 1) {
+          this.errors.push(`Invalid index ${index} in _NAME${index}_ placeholder.`);
+          return match; // Return original match if index is invalid
+        }
+        const actualIndex = parseInt(index, 10);
+        const attr = entries[actualIndex];
         return attr[1].value ?? "";
       })
-      .replace(/_TMAX(\d+)_/g, (_, index) => {
-        const attr = entries[parseInt(index, 10)];
+      .replace(/_TMAX(\d+)_/g, (match, index) => {
+        if (index > entries.length - 1) {
+          this.errors.push(`Invalid index ${index} in _NAME${index}_ placeholder.`);
+          return match; // Return original match if index is invalid
+        }
+        const actualIndex = parseInt(index, 10);
+        const attr = entries[actualIndex];
         return attr[1].max ?? "";
       })
-      .replace(/_CUR(\d+)_/g, (_, index) => {
-        const attr = finalEntries[parseInt(index, 10)];
+      .replace(/_CUR(\d+)_/g, (match, index) => {
+        if (index > entries.length - 1) {
+          this.errors.push(`Invalid index ${index} in _NAME${index}_ placeholder.`);
+          return match; // Return original match if index is invalid
+        }
+        const actualIndex = parseInt(index, 10);
+        const attr = finalEntries[actualIndex];
         return attr[1].value ?? "";
       })
-      .replace(/_MAX(\d+)_/g, (_, index) => {
-        const attr = finalEntries[parseInt(index, 10)];
+      .replace(/_MAX(\d+)_/g, (match, index) => {
+        if (index > entries.length - 1) {
+          this.errors.push(`Invalid index ${index} in _NAME${index}_ placeholder.`);
+          return match; // Return original match if index is invalid
+        }
+        const actualIndex = parseInt(index, 10);
+        const attr = finalEntries[actualIndex];
         return attr[1].max ?? "";
       })
       .replace(/_CHARNAME_/g, this.character.get("name") ?? "");

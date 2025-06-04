@@ -92,7 +92,7 @@ export class APIWrapper {
       _characterid: character?.id,
     };
     const newAttr = createObj("attribute", newObjProps);
-    await APIWrapper.setAttribute(character.id, name, value, max);
+    await APIWrapper.setAttribute(character, name, value, max);
     globalSubscribeManager.publish("add", newAttr);
     // This is how the previous script was doing it
     globalSubscribeManager.publish("change", newAttr, newAttr);
@@ -110,12 +110,18 @@ export class APIWrapper {
     const messages: string[] = [];
     const attr = await APIWrapper.getAttribute(character, name)
     if (!attr) {
-      errors.push(`updateAttribute: Attribute ${name} does not exist for character with ID ${character?.id}.`);
+      errors.push(`Attribute <strong>${name}</strong> does not exist for character <strong>${character.get("name")}</strong>.`);
       return [{ messages, errors }];
     }
     const oldAttr = JSON.parse(JSON.stringify(attr));
-    await APIWrapper.setAttribute(character.id, name, value, max);
-    messages.push(`Setting <strong>${name}</strong> to <strong>${value}</strong> for character <strong>${character?.get("name")}</strong>.`);
+    await APIWrapper.setAttribute(character, name, value, max);
+    if (value && max) {
+      messages.push(`Setting <strong>${name}</strong> to <strong>${value}</strong> and <strong>${name}_max</strong> to <strong>${max}</strong> for character <strong>${character?.get("name")}</strong>.`);
+    } else if (value) {
+      messages.push(`Setting <strong>${name}</strong> to <strong>${value}</strong> for character <strong>${character?.get("name")}</strong>, max remains unchanged.`);
+    } else if (max) {
+      messages.push(`Setting <strong>${name}_max</strong> to <strong>${max}</strong> for character <strong>${character?.get("name")}</strong>, current remains unchanged.`);
+    }
     globalSubscribeManager.publish("change", { name, current: value, max }, { name, current: oldAttr.value, max: oldAttr.max });
     return [{ messages, errors }];
   };
@@ -164,22 +170,22 @@ export class APIWrapper {
   };
 
   private static async setAttribute(
-    characterID: string,
+    character: Roll20Character,
     attr: string,
     value?: string,
     max?: string
   ): Promise<void> {
     if (state.ChatSetAttr.useWorkers) {
-      await APIWrapper.setWithWorker(characterID, attr, value, max);
+      await APIWrapper.setWithWorker(character.id, attr, value, max);
       return;
     }
     if (value) {
-      const newValue = await setSheetItem(characterID, attr, value, "current");
-      log(`setAttribute: Setting ${attr} to ${JSON.stringify(newValue)} for character with ID ${characterID}.`);
+      await setSheetItem(character.id, attr, value, "current");
+      log(`Setting <strong>${attr}</strong> to <strong>${value}</strong> for character with ID <strong>${character.get("name")}</strong>.`);
     }
     if (max) {
-      const newMax = await setSheetItem(characterID, attr, max, "max");
-      log(`setAttribute: Setting ${attr} max to ${JSON.stringify(newMax)} for character with ID ${characterID}.`);
+      await setSheetItem(character.id, attr, max, "max");
+      log(`Setting <strong>${attr}</strong> max to <strong>${max}</strong> for character <strong>${character.get("name")}</strong>.`);
     }
   };
 
@@ -193,7 +199,7 @@ export class APIWrapper {
     for (const [key, value] of entries) {
       const attribute = await APIWrapper.getAttribute(character, key);
       if (!attribute?.value) {
-        errors.push(`setAttribute: ${key} does not exist for character with ID ${character?.id}.`);
+        errors.push(`Attribute <strong>${key}</strong> does not exist for character <strong>${character.get("name")}</strong>.`);
         return [{ messages, errors }];
       }
       const stringValue = value.value ? value.value.toString() : undefined;
@@ -237,15 +243,46 @@ export class APIWrapper {
     const errors: string[] = [];
     const messages: string[] = [];
     for (const attribute of attributes) {
+      const { section, repeatingID, attribute: attrName } = APIWrapper.extractRepeatingDetails(attribute) || {};
+      if (section && repeatingID && !attrName) {
+        return APIWrapper.deleteRepeatingRow(character, section, repeatingID);
+      }
       const attr = await APIWrapper.getAttr(character, attribute);
       if (!attr) {
-        errors.push(`deleteAttributes: Attribute ${attribute} does not exist for character with ID ${character?.id}.`);
+        errors.push(`Attribute <strong>${attribute}</strong> does not exist for character <strong>${character.get("name")}</strong>.`);
         continue;
       }
       const oldAttr = JSON.parse(JSON.stringify(attr));
       attr.remove();
       globalSubscribeManager.publish("destroy", oldAttr);
-      messages.push(`Attribute ${attribute} deleted for character with ID ${character?.id}.`);
+      messages.push(`Attribute <strong>${attribute}</strong> deleted for character <strong>${character.get("name")}</strong>.`);
+    }
+    return [{ messages, errors }];
+  };
+
+  public static async deleteRepeatingRow(
+    character: Roll20Character,
+    section: string,
+    repeatingID: string
+  ): Promise<[ErrorResponse]> {
+    const errors: string[] = [];
+    const messages: string[] = [];
+    const repeatingAttrs = findObjs<"attribute">({
+      _type: "attribute",
+      _characterid: character.id,
+    }).filter(attr => {
+      const name = attr.get("name");
+      return name.startsWith(`repeating_${section}_${repeatingID}_`);
+    });
+    if (repeatingAttrs.length === 0) {
+      errors.push(`No repeating attributes found for section <strong>${section}</strong> and ID <strong>${repeatingID}</strong> for character <strong>${character.get("name")}</strong>.`);
+      return [{ messages, errors }];
+    }
+    for (const attr of repeatingAttrs) {
+      const oldAttr = JSON.parse(JSON.stringify(attr));
+      attr.remove();
+      globalSubscribeManager.publish("destroy", oldAttr);
+      messages.push(`Repeating attribute <strong>${attr.get("name")}</strong> deleted for character <strong>${character.get("name")}</strong>.`);
     }
     return [{ messages, errors }];
   };
@@ -260,7 +297,7 @@ export class APIWrapper {
       const attr = await APIWrapper.getAttribute(character, attribute);
       const value = attr?.value;
       if (!value) {
-        errors.push(`resetAttributes: Attribute ${attribute} does not exist for character with ID ${character?.id}.`);
+        errors.push(`Attribute <strong>${attribute}</strong> does not exist for character <strong>${character.get("name")}</strong>.`);
         continue;
       }
       const max = attr.max;
@@ -268,9 +305,9 @@ export class APIWrapper {
         continue;
       }
       const oldAttr = JSON.parse(JSON.stringify(attr));
-      APIWrapper.setAttribute(character.id, attribute, max);
+      APIWrapper.setAttribute(character, attribute, max);
       globalSubscribeManager.publish("change", attr, oldAttr);
-      messages.push(`Attribute ${attribute} reset for character with ID ${character?.id}.`);
+      messages.push(`Attribute <strong>${attribute}</strong> reset for character <strong>${character.get("name")}</strong>.`);
     }
     return [{ messages, errors }];
   };
@@ -281,13 +318,10 @@ export class APIWrapper {
   public static extractRepeatingDetails(attributeName: string) {
     const [, section, repeatingID, ...attributeParts] = attributeName.split("_");
     const attribute = attributeParts.join("_");
-    if (!section || !repeatingID || !attribute) {
-      return null;
-    }
     return {
-      section,
-      repeatingID,
-      attribute,
+      section: section || undefined,
+      repeatingID: repeatingID || undefined,
+      attribute: attribute || undefined,
     };
   };
 

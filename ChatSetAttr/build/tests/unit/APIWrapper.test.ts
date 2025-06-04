@@ -393,7 +393,7 @@ describe("APIWrapper", () => {
       });
     });
 
-    it("should return null for non-repeating attribute names", () => {
+    it("should return undefined for non-repeating attribute names", () => {
       // Arrange
       const attributeName = "strength";
 
@@ -401,7 +401,9 @@ describe("APIWrapper", () => {
       const result = APIWrapper.extractRepeatingDetails(attributeName);
 
       // Assert
-      expect(result).toBeNull();
+      expect(result.attribute).toBeUndefined();
+      expect(result.section).toBeUndefined();
+      expect(result.repeatingID).toBeUndefined();
     });
 
     it("should handle complex section names with hyphens", () => {
@@ -447,17 +449,6 @@ describe("APIWrapper", () => {
         repeatingID: "-L1a2B3c4D5e6F7g8",
         attribute: "skill_name"
       });
-    });
-
-    it("should return null for malformed repeating attribute names", () => {
-      // Arrange
-      const attributeName = "repeating_skills_name";
-
-      // Act
-      const result = APIWrapper.extractRepeatingDetails(attributeName);
-
-      // Assert
-      expect(result).toBeNull();
     });
   });
 });

@@ -69,12 +69,13 @@ export class ChatOutput {
     output += this.createHeader();
     output += this.createContent();
     output += this.closeWrapper();
-    log(`ChatOutput: ${output}`);
+    log(`Output: ${output}`);
     sendChat(this.from, output, undefined, { noarchive });
   };
 
   private createWhisper() {
-    if (!this.whisper) {
+    if (this.whisper === false) {
+      log(`ChatOutput: Not sending as whisper`);
       return ``;
     }
     if (this.playerID === "GM") {

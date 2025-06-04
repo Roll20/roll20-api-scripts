@@ -55,16 +55,16 @@ export class SetAttrCommand implements CommandStrategy {
       // messages.push(createResponse.messages[0] ?? "");
 
       if (useFeedback && content) {
+        processor.errors = [];
         const messageContent = processor.replacePlaceholders(content);
         messages.push(messageContent);
+        errors.push(...processor.errors);
       } else {
         messages.push(...createResponse.messages ?? []);
       }
 
       await asyncTimeout(20);
     }
-
-    log(`SetAttrCommand executed with messages: ${JSON.stringify(messages)}`);
 
     if (errors.length > 0) {
       return {
@@ -348,8 +348,8 @@ export class ConfigCommand implements CommandStrategy {
   private createMessageRow(property: string, description: string, value: boolean): string {
     const indicatorStyle = value ? this.messageRowIndicatorStyleOn : this.messageRowIndicatorStyleOff;
     return `<div style="${this.messageRowStyle}">`
-    + `<span style="font-weight: bold;">${property}</span>: ${description}`
     + `<span style="${indicatorStyle}">${value ? "ON" : "OFF"}</span>`
+    + `<span style="font-weight: bold;">${property}</span>: ${description}`
     + `</div>`;
   };
 }
