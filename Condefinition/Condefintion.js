@@ -745,7 +745,7 @@ on('ready', () =>
     }
 
 
-    const version = '0.0.0b12';
+    const version = '1.0.0';
     log('Condefinitions v' + version + ' is ready! --offset ' + API_Meta.Condefinition.offset + ' for the D&D 5th Edition by Roll20 Sheet.');
     loadConditionsFromHandout();
 
