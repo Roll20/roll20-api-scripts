@@ -1,5 +1,5 @@
 /*
- * Version 0.1.14
+ * Version 0.1.15
  * Made By Robin Kuiper
  * Skype: RobinKuiper.eu
  * Discord: Atheos#1095
@@ -41,6 +41,10 @@ var Concentration = Concentration || (function() {
             handleConcentrationSpellCast(msg);
         }
 
+        if(state[state_name].config.auto_add_concentration_marker && msg && msg.type && msg.type === 'advancedroll' && /data\-chip=concentration/g.test(msg.content)){
+            handleConcentrationSpellCast(msg, true);
+        }
+
         if (msg.type != 'api') return;
 
         // Split the message into command and argument(s)
@@ -79,39 +83,36 @@ var Concentration = Concentration || (function() {
                         sendAdvantageMenu();
                     break;
 
-                    case 'toggle-advantage': {
-                            let id = args[0];
+                    case 'toggle-advantage':
+                        let id = args[0];
 
-                            if(state[state_name].advantages[id]){
-                                state[state_name].advantages[id] = !state[state_name].advantages[id];
-                            }else{
-                                state[state_name].advantages[id] = true;
-                            }
-
-                            sendAdvantageMenu();
+                        if(state[state_name].advantages[id]){
+                            state[state_name].advantages[id] = !state[state_name].advantages[id];
+                        }else{
+                            state[state_name].advantages[id] = true;
                         }
+
+                        sendAdvantageMenu();
                     break;
 
-                    case 'roll': {
-                            let represents = args[0],
-                                DC = parseInt(args[1], 10),
-                                con_save_mod = parseInt(args[2], 10),
-                                name = args[3],
-                                target = args[4];
+                    case 'roll':
+                        let represents = args[0],
+                            DC = parseInt(args[1], 10),
+                            con_save_mod = parseInt(args[2], 10),
+                            name = args[3],
+                            target = args[4];
 
-                            roll(represents, DC, con_save_mod, name, target, false);
-                        }
+                        roll(represents, DC, con_save_mod, name, target, false);
                     break;
 
-                    case 'advantage': {
-                        let represents_a = args[0],
+                    case 'advantage':
+                    let represents_a = args[0],
                         DC_a = parseInt(args[1], 10),
                         con_save_mod_a = parseInt(args[2], 10),
                         name_a = args[3],
                         target_a = args[4];
 
                         roll(represents_a, DC_a, con_save_mod_a, name_a, target_a, true);
-                      }
                     break;
 
                     default:
@@ -138,7 +139,7 @@ var Concentration = Concentration || (function() {
     },
 
     addConcentration = (token, playerid, spell) => {
-        const marker = state[state_name].config.statusmarker;
+        const marker = state[state_name].config.statusmarker
         let character = getObj('character', token.get('represents'));
         if((token.get('controlledby').split(',').includes(playerid) || token.get('controlledby').split(',').includes('all')) ||
             (character && (character.get('controlledby').split(',').includes(playerid) || character.get('controlledby').split(',').includes('all'))) ||
@@ -146,9 +147,9 @@ var Concentration = Concentration || (function() {
                 if(!token.get('status_'+marker)){
                     let target = state[state_name].config.send_reminder_to;
                     if(target === 'character'){
-                        target = character.get('name');
+                        target = createWhisperName(character_name);
                     }else if(target === 'everyone'){
-                        target = '';
+                        target = ''
                     }
 
                     let message;
@@ -164,13 +165,21 @@ var Concentration = Concentration || (function() {
         }
     },
 
-    handleConcentrationSpellCast = (msg) => {
-        const marker = state[state_name].config.statusmarker;
+    handleConcentrationSpellCast = (msg, is2024=false) => {
+        const marker = state[state_name].config.statusmarker
 
-        let character_name = msg.content.match(/charname=([^\n{}]*[^"\n{}])/);            
-        character_name = RegExp.$1;
-        let spell_name = msg.content.match(/name=([^\n{}]*[^"\n{}])/);  
-        spell_name = RegExp.$1;
+        let character_name, spell_name;
+
+        if(is2024) {
+            character_name = msg.content.match(/meta__character.+?>(.*?)</)[1];
+            spell_name = msg.content.match(/header__title.+?>(.*?)</)[1];
+        } else {
+            character_name = msg.content.match(/charname=([^\n{}]*[^"\n{}])/);            
+            character_name = RegExp.$1;
+            spell_name = msg.content.match(/name=([^\n{}]*[^"\n{}])/);  
+            spell_name = RegExp.$1;
+        }
+
         let player = getObj('player', msg.playerid),
             characterid = findObjs({ name: character_name, _type: 'character' }).shift().get('id'),                 
             represented_tokens = findObjs({ represents: characterid, _type: 'graphic' }),
@@ -183,7 +192,7 @@ var Concentration = Concentration || (function() {
             represents: characterid,
             _type: 'graphic',
             _pageid: player.get('lastpage')
-        };
+        }
         search_attributes['status_'+marker] = true;
         let is_concentrating = (findObjs(search_attributes).length > 0);
 
@@ -199,23 +208,23 @@ var Concentration = Concentration || (function() {
         }
 
         if(target === 'character'){
-            target = character_name;
+            target = createWhisperName(character_name);
         }else if(target === 'everyone'){
-            target = '';
+            target = ''
         }
 
         makeAndSendMenu(message, '', target);
     },
 
-    handleStatusMarkerChange = (obj /*, prev */) => {
-        const marker = state[state_name].config.statusmarker;
+    handleStatusMarkerChange = (obj, prev) => {
+        const marker = state[state_name].config.statusmarker
         
         if(!obj.get('status_'+marker)){
             removeMarker(obj.get('represents'));
         }
     },
 
-    handleGraphicChange = (obj, prev) => {
+    handleGraphicChange = async (obj, prev) => {
         if(checked.includes(obj.get('represents'))){ return false; }
 
         let bar = 'bar'+state[state_name].config.bar+'_value',
@@ -225,12 +234,12 @@ var Concentration = Concentration || (function() {
         if(prev && obj.get('status_'+marker) && obj.get(bar) < prev[bar]){
             let calc_DC = Math.floor((prev[bar] - obj.get(bar))/2),
                 DC = (calc_DC > 10) ? calc_DC : 10,
-                con_save_mod = parseInt(getAttrByName(obj.get('represents'), state[state_name].config.bonus_attribute, 'current')) || 0,
+                con_save_mod = parseInt(await getSheetItem(obj.get('represents'), state[state_name].config.bonus_attribute)) || 0,
                 chat_text;
 
             if(target === 'character'){
                 chat_text = "Make a Concentration Check - <b>DC " + DC + "</b>.";
-                target = obj.get('name');
+                target = createWhisperName(obj.get('name'));
             }else if(target === 'everyone'){
                 chat_text = '<b>'+obj.get('name')+'</b> must make a Concentration Check - <b>DC ' + DC + '</b>.';
                 target = '';
@@ -259,15 +268,11 @@ var Concentration = Concentration || (function() {
     },
 
     roll = (represents, DC, con_save_mod, name, target, advantage) => {
-        // Bound the crit success and fail targets so negatives stop wrecking the roll --Oosh
-        const criticalFail = Math.max(DC-con_save_mod-1, 0),
-            criticalSuccess = Math.max(DC-con_save_mod, 0),
-            rollString = `[[1d20cf<${criticalFail}cs>${criticalSuccess} + (${con_save_mod})]]`;
-        sendChat(script_name, rollString, results => {
+        sendChat(script_name, '[[1d20cf<'+(DC-con_save_mod-1)+'cs>'+(DC-con_save_mod-1)+'+'+con_save_mod+']]', results => {
             let title = 'Concentration Save <br> <b style="font-size: 10pt; color: gray;">'+name+'</b>',
                 advantageRollResult;
-            // Error check the results object and debug for any future issues --Oosh
-            let rollresult = results ? results[0].inlinerolls[0].results.rolls[0].results[0].v : `Roll error! DC: "${DC}", con_sav_mod: "${con_save_mod}"`;
+
+            let rollresult = results[0].inlinerolls[0].results.rolls[0].results[0].v;
             let result = rollresult;
 
             if(advantage){
@@ -304,7 +309,7 @@ var Concentration = Concentration || (function() {
                     <span style="border: 1px solid '+result_color+'; padding-bottom: 2px; padding-top: 4px;">[['+result+'+'+con_save_mod+']]</span><br><br> \
                     '+result_text+' \
                 </b> \
-            </div>';
+            </div>'
             makeAndSendMenu(contents, title, target);
 
             if(target !== '' && target !== 'gm'){
@@ -323,6 +328,10 @@ var Concentration = Concentration || (function() {
         });
     },
 
+    createWhisperName = (name) => {
+        return name.split(' ').shift();
+    },
+
     ucFirst = (string) => {
         return string.charAt(0).toUpperCase() + string.slice(1);
     },
@@ -330,8 +339,8 @@ var Concentration = Concentration || (function() {
     sendConfigMenu = (first, message) => {
         let markerDropdown = '?{Marker';
         markers.forEach((marker) => {
-            markerDropdown += '|'+ucFirst(marker).replace('-', ' ')+','+marker;
-        });
+            markerDropdown += '|'+ucFirst(marker).replace('-', ' ')+','+marker
+        })
         markerDropdown += '}';
 
         let markerButton = makeButton(state[state_name].config.statusmarker, '!' + state[state_name].config.command + ' config statusmarker|'+markerDropdown, styles.button + styles.float.right),
@@ -349,8 +358,8 @@ var Concentration = Concentration || (function() {
                 '<span style="'+styles.float.left+'">Statusmarker:</span> ' + markerButton,
                 '<span style="'+styles.float.left+'">HP Bar:</span> ' + barButton,
                 '<span style="'+styles.float.left+'">Send Reminder To:</span> ' + sendToButton,
-                '<span style="'+styles.float.left+'">Auto Add Con. Marker: <p style="font-size: 8pt;">Works only for 5e OGL Sheet.</p></span> ' + addConMarkerButton,
-                '<span style="'+styles.float.left+'">Auto Roll Save:</span> ' + autoRollButton
+                '<span style="'+styles.float.left+'">Auto Add Con. Marker: <p style="font-size: 8pt;">Works only for 5e OGL and 2024 Sheets.</p></span> ' + addConMarkerButton,
+                '<span style="'+styles.float.left+'">Auto Roll Save:</span> ' + autoRollButton,
             ],
 
             resetButton = makeButton('Reset', '!' + state[state_name].config.command + ' reset', styles.button + styles.fullWidth),
@@ -362,7 +371,7 @@ var Concentration = Concentration || (function() {
         }*/
 
         if(state[state_name].config.auto_roll_save){
-            listItems.push('<span style="'+styles.float.left+'">Bonus Attribute:</span> ' + bonusAttrButton);
+            listItems.push('<span style="'+styles.float.left+'">Bonus Attribute:</span> ' + bonusAttrButton)
         }
 
         if(!state[state_name].config.auto_roll_save){
@@ -396,9 +405,9 @@ var Concentration = Concentration || (function() {
         makeAndSendMenu(menu_text, 'Advantage Menu', 'gm');
     },
 
-    makeAndSendMenu = (contents, title, whisper /*, callback */) => {
+    makeAndSendMenu = (contents, title, whisper, callback) => {
         title = (title && title != '') ? makeTitle(title) : '';
-        whisper = (whisper && whisper !== '') ? `/w "${whisper}" ` : '';
+        whisper = (whisper && whisper !== '') ? '/w ' + whisper + ' ' : '';
         sendChat(script_name, whisper + '<div style="'+styles.menu+styles.overflow+'">'+title+contents+'</div>', null, {noarchive:true});
     },
 
@@ -419,14 +428,12 @@ var Concentration = Concentration || (function() {
         return list;
     },
 
-/*
     pre_log = (message) => {
         log('---------------------------------------------------------------------------------------------');
         if(!message){ return; }
         log(message);
         log('---------------------------------------------------------------------------------------------');
     },
-    */
 
     checkInstall = () => {
         if(!_.has(state, state_name)){
@@ -435,15 +442,13 @@ var Concentration = Concentration || (function() {
         setDefaults();
 
         log(script_name + ' Ready! Command: !'+state[state_name].config.command);
-        if(state[state_name].config.debug){ makeAndSendMenu(script_name + ' Ready! Debug On.', '', 'gm'); }
+        if(state[state_name].config.debug){ makeAndSendMenu(script_name + ' Ready! Debug On.', '', 'gm') }
     },
 
     registerEventHandlers = () => {
         on('chat:message', handleInput);
         on('change:graphic:bar'+state[state_name].config.bar+'_value', handleGraphicChange);
         on('change:graphic:statusmarkers', handleStatusMarkerChange);
-        // Add tokenMod observer so changes made with TM will trigger a conc. check --Oosh
-        if (typeof(TokenMod) === 'object') TokenMod.ObserveTokenChange(handleGraphicChange);
     },
 
     setDefaults = (reset) => {
@@ -456,7 +461,7 @@ var Concentration = Concentration || (function() {
                 auto_add_concentration_marker: true,
                 auto_roll_save: true,
                 advantage: false,
-                bonus_attribute: 'constitution_save_bonus',
+                bonus_attribute: 'constitution_save_mod',
                 show_roll_button: true
             },
             advantages: {}
@@ -506,7 +511,7 @@ var Concentration = Concentration || (function() {
     return {
         CheckInstall: checkInstall,
         RegisterEventHandlers: registerEventHandlers
-    };
+    }
 })();
 
 on('ready',function() {

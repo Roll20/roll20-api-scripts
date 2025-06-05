@@ -1,0 +1,27 @@
+{
+  "name": "GameAssist",
+  "script": "GameAssist.js",
+  "version": "0.1.1.1",
+  "previousversions": ["0.1.1.0"],
+  "description": "GameAssist is a modular Roll20 API framework for the 5E 2014 sheet.\n\nCore commands (GM only):\n  • !ga-status – live metrics\n  • !ga-enable <Module>\n  • !ga-disable <Module>\n  • !ga-config …\n\nBundled modules: CritFumble, NPCManager, ConcentrationTracker, NPCHPRoller.\nTokenMod is strongly recommended.\n\n## Changelog\n• 0.1.1.1 – Quiet-startup flag, newline-safe logging\n• 0.1.1.0 – Initial public release.",
+  "authors": "Mord Eagle",
+  "roll20userid": "10646976",
+  "dependencies": ["TokenMod"],
+  "modifies": [],
+  "conflicts": [
+    "Other scripts that modify NPC HP or use bar1_value"
+  ],
+  "useroptions": [],
+  "commands": [
+    "!ga-enable",
+    "!ga-disable",
+    "!ga-config",
+    "!npc-hp-all",
+    "!npc-hp-selected",
+    "!npc-death-report",
+    "!concentration",
+    "!cc",
+    "!critfail",
+    "!critfumble"
+  ]
+}

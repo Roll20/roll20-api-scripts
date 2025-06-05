@@ -129,6 +129,10 @@ Roll20 Thread: https://app.roll20.net/forum/post/6349145/script-combattracker
 ---
 
 #### Changelog
+
+**v0.3.0**
+* Implemented Beacon compatibility
+
 **v0.2.5**
 * Fixed a "bug" where the marker wouldn't show on the first turn when initiative is not rolled with CT.
 * Toggle auto skip turn when timer runs out.

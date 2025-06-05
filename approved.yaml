@@ -1291,3 +1291,7 @@ CalenderData:
 QuestTracker:
   - "QuestTracker"
   - "Utility"
+
+GameAssist:
+  - "GameAssist"
+  - "Utility"
