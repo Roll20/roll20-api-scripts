@@ -1295,3 +1295,8 @@ QuestTracker:
 GameAssist:
   - "GameAssist"
   - "Utility"
+
+Condefinition: 
+  - "Condefinition"
+  - "Utility"
+  
