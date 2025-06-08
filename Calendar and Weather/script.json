@@ -1,0 +1,12 @@
+{
+    "name": "Calendar and Weather",
+    "script": "Calendar and Weather.js",
+    "version": "1.0",
+    "previousversions": "",
+    "description": "An entirely customizable weather and calendar mod in english and french",
+    "authors": "Maïlare",
+    "roll20userid": "3234089",
+    "dependencies": "",
+    "modifies": "",
+    "conflicts": ""
+}
