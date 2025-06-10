@@ -1,9 +1,15 @@
 on('ready', () => {
-    // Chat Style - Customize here
-    const chatStyle = 'border:1px solid #000; background-color:#926239; padding:5px; border-radius:5px; height: fit-content;';
-    
-    // 🌦️ Weather Config with all climates - You can customize if you have your own matrice
-    const WeatherConfig = {
+  // Styles
+  const chatStyle = 'background-color:#926239; border:1px solid #000; border-radius:8px; padding:8px; width:100%; height:fit-content; font-size:1.1em;';
+  const hr = '<hr style="border:1px solid #352716;">';
+  const styleTitle = 'text-align:center; font-size:1.5em; font-weight:bold;';
+  const styleSection = 'font-size:1.3em; font-weight:bold; margin-top:8px;';
+  const styleCenter = 'text-align:center;';
+  const btnStyle = 'background-color:#574530; border:1px solid #352716; border-radius:4px; padding:2px 8px; font-size:0.9em; color:#fff; text-decoration:none; margin:2px; display:inline-block;';
+  const btnGroup = (html) => `<div style="${styleCenter}">${html}</div>`;
+
+  // Configurations
+  const WeatherConfig = {
     windForce: {
       "1": { speed: [0, 11], chance: 55, name: "Slight Breeze" },
       "2": { speed: [12, 38], chance: 25, name: "Nice Breeze" },
@@ -83,727 +89,493 @@ on('ready', () => {
         }
       }
     }
-    };
-    
-    // 📅 Calendar Config - You can customized it
-    const CalendarConfig = {
+  };
+
+  const CalendarConfig = {
     days: ["Rilmor", "Eretor", "Nauri", "Neldir", "Veltor", "Eltor", "Mernach"],
     months: [
-      { name: "Juras", length: 31 },
-      { name: "Fevnir", length: 28 },
-      { name: "Morsir", length: 31 },
-      { name: "Avalis", length: 30 },
-      { name: "Maï", length: 31 },
-      { name: "Jurn", length: 30 },
-      { name: "Jullirq", length: 31 },
-      { name: "Aors", length: 31 },
-      { name: "Septibir", length: 30 },
-      { name: "Octors", length: 31 },
-      { name: "Noval", length: 30 },
-      { name: "Devenir", length: 31 }
+      { name: "Juras", length: 31 }, { name: "Fevnir", length: 28 }, { name: "Morsir", length: 31 },
+      { name: "Avalis", length: 30 }, { name: "Maï", length: 31 }, { name: "Jurn", length: 30 },
+      { name: "Jullirq", length: 31 }, { name: "Aors", length: 31 }, { name: "Septibir", length: 30 },
+      { name: "Octors", length: 31 }, { name: "Noval", length: 30 }, { name: "Devenir", length: 31 }
     ],
-    seasons: [ //If you want to modify the season name, do it further down in the code in the translations 
+    seasons: [
       { name: "spring", months: [2, 3, 4] },
       { name: "summer", months: [5, 6, 7] },
       { name: "fall", months: [8, 9, 10] },
       { name: "winter", months: [11, 0, 1] }
     ]
-    };
-    
-    // 🌘 Moon Config - You can customized it (you can add moons respecting the defined format)
-    const MoonConfig = {
+  };
+
+  const MoonConfig = {
     moons: [
-      {
-        name: "Lunara",
-        cycle: 28,
-        phases: ["New", "Crescent", "First Quarter", "Gibbous", "Full", "Gibbous Waning", "Last Quarter", "Crescent Waning"]
-      },
-      {
-        name: "Virell",
-        cycle: 35,
-        phases: ["New", "First Quarter", "Full", "Last Quarter"]
-      }
+      { name: "Lunara", cycle: 28, phases: ["New", "Crescent", "First Quarter", "Gibbous", "Full", "Gibbous Waning", "Last Quarter", "Crescent Waning"] },
+      { name: "Virell", cycle: 35, phases: ["New", "First Quarter", "Full", "Last Quarter"] }
     ]
-    };
-    
-    // Localization + helpers remain unchanged from earlier (t, tClimate, etc.)
-    // Localization Strings
-    const i18n = {
+  };
+
+  // Translations
+  const i18n = {
     en: {
-      climateNames: {
-        temperate: "Temperate",
-        desert: "Desert",
-        jungle: "Jungle",
-        cold: "Cold"
-      },
+      climateNames: { temperate: "Temperate", desert: "Desert", jungle: "Jungle", cold: "Cold" },
       moonPhases: {
-        "New": "New",
-        "Crescent": "Crescent",
-        "First Quarter": "First Quarter",
-        "Gibbous": "Gibbous",
-        "Full": "Full",
-        "Gibbous Waning": "Gibbous Waning",
-        "Last Quarter": "Last Quarter",
-        "Crescent Waning": "Crescent Waning"
+        "New": "New", "Crescent": "Crescent", "First Quarter": "First Quarter", "Gibbous": "Gibbous",
+        "Full": "Full", "Gibbous Waning": "Gibbous Waning", "Last Quarter": "Last Quarter", "Crescent Waning": "Crescent Waning"
       },
-      windDirections: {
-        north: "North",
-        south: "South",
-        east: "East",
-        west: "West"
-      },
+      windDirections: { north: "North", south: "South", east: "East", west: "West" },
       windForces: {
-        "Slight Breeze": "Slight Breeze",
-        "Nice Breeze": "Nice Breeze",
-        "Strong Wind": "Strong Wind",
-        "Storm": "Storm",
-        "Violent Storm": "Violent Storm",
-        "Hurricane": "Hurricane"
+        "Slight Breeze": "Slight Breeze", "Nice Breeze": "Nice Breeze", "Strong Wind": "Strong Wind",
+        "Storm": "Storm", "Violent Storm": "Violent Storm", "Hurricane": "Hurricane", "Manual": "Manual Wind"
       },
-      seasonNames: { // Modify the seasons names here for english
-        spring: "Spring",
-        summer: "Summer",
-        fall: "Autumn",
-        winter: "Winter"
-      },
-      date: "Date",
-      season: "Season",
-      moon: "Moon Phases",
-      weather: "Weather Report",
-      climate: "Climate",
-      temperature: "Temperature",
-      humidity: "Humidity",
-      wind: "Wind",
-      precipitation: "Precipitation",
-      clear: "Clear",
-      rain: "Rain",
-      snow: "Snow",
-      thunderstorm: "Thunderstorm",
-      windFrom: "from",
-      manual: "Manual Weather Mode",
-      generate: "Generate Weather",
-      setDay: "Set Day",
-      setYear: "Set Year",
-      saveProfile: "Save Current",
-      loadProfile: "Load",
-      exportProfile: "Export to Handout"
+      seasonNames: { spring: "Spring", summer: "Summer", fall: "Autumn", winter: "Winter" },
+      date: "Date", season: "Season", moon: "Moon Phases", weather: "Weather Report", climate: "Climate",
+      temperature: "Temperature", humidity: "Humidity", wind: "Wind", precipitation: "Precipitation",
+      clear: "Clear", rain: "Rain", snow: "Snow", thunderstorm: "Thunderstorm", windFrom: "from",
+      manual: "Manual Weather Mode", generate: "Generate Weather", setDay: "Set Day", setYear: "Set Year",
+      saveProfile: "Save Current", loadProfile: "Load", exportProfile: "Export to handout", importProfile: "Import from handout", month: "Month",
+      language: "Language", profiles: "Profiles", manualMode: "Manual Mode", type: "Type", temp: "Temp",
+      windSpeed: "Wind", back: "Back", yes: "Yes", no: "No", humidityShort: "Humidity"
     },
     fr: {
-      climateNames: {
-        temperate: "Tempéré",
-        desert: "Désertique",
-        jungle: "Jungle",
-        cold: "Froid"
-      },
+      climateNames: { temperate: "Tempéré", desert: "Désertique", jungle: "Jungle", cold: "Froid" },
       moonPhases: {
-        "New": "Nouvelle lune",
-        "Crescent": "Premier croissant",
-        "First Quarter": "Premier quartier",
-        "Gibbous": "Gibbeuse croissante",
-        "Full": "Pleine lune",
-        "Gibbous Waning": "Gibbeuse décroissante",
-        "Last Quarter": "Dernier quartier",
-        "Crescent Waning": "Dernier croissant"
+        "New": "Nouvelle Lune", "Crescent": "Premier Croissant", "First Quarter": "Premier Quartier",
+        "Gibbous": "Gibbeuse Croissante", "Full": "Pleine Lune", "Gibbous Waning": "Gibbeuse Décroissante",
+        "Last Quarter": "Dernier Quartier", "Crescent Waning": "Dernier Croissant"
       },
-      windDirections: {
-        north: "Nord",
-        south: "Sud",
-        east: "Est",
-        west: "Ouest"
-      },
+      windDirections: { north: "Nord", south: "Sud", east: "Est", west: "Ouest" },
       windForces: {
-        "Slight Breeze": "Brise légère",
-        "Nice Breeze": "Brise agréable",
-        "Strong Wind": "Vent fort",
-        "Storm": "Tempête",
-        "Violent Storm": "Tempête violente",
-        "Hurricane": "Ouragan"
+        "Slight Breeze": "Brise Légère", "Nice Breeze": "Belle Brise", "Strong Wind": "Vent Fort",
+        "Storm": "Tempête", "Violent Storm": "Tempête Violente", "Hurricane": "Ouragan", "Manual": "Vent Manuel"
       },
-      seasonNames: { // Modify the seasons names here for french
-        spring: "Floreas",
-        summer: "Solarios",
-        fall: "Mornevent",
-        winter: "Hilveris"
-      },
-      date: "Date",
-      season: "Saison",
-      moon: "Phases lunaires",
-      weather: "Météo du jour",
-      climate: "Climat",
-      temperature: "Température",
-      humidity: "Humidité",
-      wind: "Vent",
-      precipitation: "Précipitations",
-      clear: "Clair",
-      rain: "Pluie",
-      snow: "Neige",
-      thunderstorm: "Orage",
-      windFrom: "de",
-      manual: "Mode météo manuel",
-      generate: "Générer la météo",
-      setDay: "Définir le jour",
-      setYear: "Définir l'année",
-      saveProfile: "Sauvegarder",
-      loadProfile: "Charger",
-      exportProfile: "Exporter vers un handout"
+      seasonNames: { spring: "Printemps", summer: "Été", fall: "Automne", winter: "Hiver" },
+      date: "Date", season: "Saison", moon: "Phases Lunaires", weather: "Météo", climate: "Climat",
+      temperature: "Température", humidity: "Humidité", wind: "Vent", precipitation: "Précipitations",
+      clear: "Clair", rain: "Pluie", snow: "Neige", thunderstorm: "Orage", windFrom: "depuis le",
+      manual: "Mode Météo Manuel", generate: "Générer la Météo", setDay: "Définir le Jour", setYear: "Définir l'Année",
+      saveProfile: "Sauvegarder", loadProfile: "Charger", exportProfile: "Exporter vers un handout", importProfile: "Importer depuis un handout", month: "Mois",
+      language: "Langue", profiles: "Profils", manualMode: "Mode Manuel", type: "Type", temp: "Temp",
+      windSpeed: "Vent", back: "Retour", yes: "Oui", no: "Non", humidityShort: "Humidité"
     }
-    };
-    
-    // Language Helpers
-    const lang = () => state.WeatherMod?.language || 'en';
-    const t = (key) => i18n[lang()]?.[key] || key;
-    const tClimate = (key) => i18n[lang()].climateNames?.[key] || key;
-    const tPhase = (phase) => i18n[lang()].moonPhases?.[phase] || phase;
-    const tWindDir = (dir) => i18n[lang()].windDirections?.[dir] || dir;
-    const tWindForce = (force) => i18n[lang()].windForces?.[force] || force;
-    const tSeason = (season) => i18n[lang()].seasonNames?.[season] || season;
-    
-    const formatDate = () => {
-      const c = state.WeatherMod.calendar;
-      const dayName = CalendarConfig.days[(c.day - 1) % CalendarConfig.days.length];
-      const monthName = CalendarConfig.months[c.month].name;
-    
-      if (lang() === 'fr') {
-        return `${dayName} ${c.day} ${monthName} ${c.year}`;
-      } else {
-        return `${monthName} ${c.day}, ${c.year} (${dayName})`;
-      }
-    };
-    
-    // 🌍 Climate icons
-    const climateIcons = {
-      temperate: "🌳",
-      desert: "🏜️",
-      jungle: "🌴",
-      cold: "❄️"
-    };
-    
-    // 🍂 Season icons
-    const seasonIcons = {
-      spring: "🌼",
-      summer: "☀️",
-      fall: "🍂",
-      winter: "❄️"
-    };
-    
-    // 🌘 Moon phase icons
-    const moonIcons = {
-      "New": "🌑",
-      "Crescent": "🌒",
-      "First Quarter": "🌓",
-      "Gibbous": "🌔",
-      "Full": "🌕",
-      "Gibbous Waning": "🌖",
-      "Last Quarter": "🌗",
-      "Crescent Waning": "🌘"
-    };
-    
-    // ☀️ Sky/weather condition icons
-    const skyIcons = {
-      clear: "☀️",
-      rain: "🌧️",
-      snow: "❄️",
-      thunderstorm: "⛈️"
-    };
-    
-    // 🌡️ Temperature icon by interval
-    const tempIcon = (temp) => {
-      if (temp < -10) return "🧊";
-      if (temp < 0 && temp >= -10) return "🥶";
-      if (temp < 10 && temp >= 0) return "❄️";
-      if (temp < 20 && temp >= 10) return "🌤️";
-      if (temp < 30 && temp >= 20) return "☀️";
-      if (temp < 40 && temp >= 30) return "🔥";
-      if (temp >= 40) return "🌋";
-      return "❓";
-    };
-    
-    // 💧 Humidity icon by interval
-    const humidityIcon = (humidity) => {
-      if (humidity < 20) return "🌵";
-      if (humidity < 40 && humidity >= 20) return "💨";
-      if (humidity < 60 && humidity >= 40) return "🌤️";
-      if (humidity < 80 && humidity >= 60) return "💧";
-      if (humidity >= 80) return "🌫️";
-      return "❓";
-    };
-    
-    // 💨 Wind speed icon by interval
-    const windSpeedIcon = (speed) => {
-      if (speed <= 5 && speed >= 0) return "🌬️";
-      if (speed <= 20 && speed > 5) return "🍃";
-      if (speed <= 40 && speed > 20) return "💨";
-      if (speed <= 70 && speed > 40) return "🌪️";
-      if (speed <= 100 && speed > 70) return "🌬️🌩️";
-      if (speed > 100) return "🌀";
-      return "❓";
-    };
-    
-    // Clears old GM messages by inserting a visual separator
-    const clearOldWeatherMessages = () => {
-        sendChat("WeatherMod", "/w gm <div style='margin:5px 0; border-top:2px dotted #926239;'></div>");
-    };
-    
-    // Initialize default campaign state
-    if (!state.WeatherMod) {
-        state.WeatherMod = {
-            language: 'fr',
-            selectedClimate: 'temperate',
-            calendar: {
-                day: 17,
-                month: 10,
-                year: 3533,
-                totalDays: 0
-            },
-            settings: {
-                useManualWeather: false,
-                manualWeather: {
-                type: "clear",
-                windDirection: "north",
-                temperature: 20,
-                windSpeed: 10
-                }
-            },
-            profiles: {}
-        };
-    }
-    
-    // Advance the calendar by one day
-    const advanceDay = () => {
-        const c = state.WeatherMod.calendar;
-        c.day++;
-        c.totalDays++;
-        const monthData = CalendarConfig.months[c.month];
-        if (c.day > monthData.length) {
-        c.day = 1;
-        c.month++;
-        if (c.month >= CalendarConfig.months.length) {
-            c.month = 0;
-            c.year++;
-        }
-        }
-    };
-    
-    // Determine the current season from the month
-    const getSeason = () => {
-        const monthIndex = state.WeatherMod.calendar.month;
-        const season = CalendarConfig.seasons.find(s => s.months.includes(monthIndex));
-        return season ? season.name : 'spring'; // valeur par défaut
-    };
+  };
 
-    
-    // Calculate the current moon phases
-    const getMoonPhases = (day) => {
-        return MoonConfig.moons.map(moon => {
-        const phaseIndex = Math.floor((day % moon.cycle) / moon.cycle * moon.phases.length);
-        return `${moon.name}: ${tPhase(moon.phases[phaseIndex])}`;
-        });
-    };
-    
-    // Select a weighted random key from a table
-    const randomWeighted = (table) => {
-        const total = Object.values(table).reduce((a, b) => a + b, 0);
-        let roll = randomInteger(total);
-        for (let key in table) {
-        roll -= table[key];
-        if (roll <= 0) return key;
-        }
-        return Object.keys(table)[0];
-    };
-    
-    // Pick a random number from a list of min-max ranges
-    const randomRangeFromList = (ranges) => {
-        const [min, max] = ranges[Math.floor(Math.random() * ranges.length)];
-        return randomInteger(max - min + 1) + min - 1;
-    };
-    
-    // 🌦 Generate the weather report (manual or randomized)
-    const generateWeather = () => {
-    const s = state.WeatherMod.settings;
+  // Translation functions
+  const lang = () => state.WeatherMod?.language || 'en';
+  const t = (key) => i18n[lang()]?.[key] || key;
+  const tClimate = (key) => i18n[lang()].climateNames?.[key] || key;
+  const tPhase = (key) => i18n[lang()].moonPhases?.[key] || key;
+  const tWindDir = (key) => i18n[lang()].windDirections?.[key] || key;
+  const tWindForce = (key) => i18n[lang()].windForces?.[key] || key;
+  const tSeason = (key) => i18n[lang()].seasonNames?.[key] || key;
+
+  // Icons
+  const climateIcons = { temperate: "🌳", desert: "🏜️", jungle: "🌴", cold: "❄️" };
+  const seasonIcons = { spring: "🌼", summer: "☀️", fall: "🍂", winter: "❄️" };
+  const moonIcons = {
+    "New": "🌑", "Crescent": "🌒", "First Quarter": "🌓", "Gibbous": "🌔", "Full": "🌕",
+    "Gibbous Waning": "🌖", "Last Quarter": "🌗", "Crescent Waning": "🌘"
+  };
+  const skyIcons = { clear: "☀️", rain: "🌧️", snow: "❄️", thunderstorm: "⛈️" };
+
+  const tempIcon = (t) => t < -10 ? "🧊" : t < 0 ? "🥶" : t < 10 ? "❄️" : t < 20 ? "🌤️" : t < 30 ? "☀️" : t < 40 ? "🔥" : "🌋";
+  const humidityIcon = (h) => h < 20 ? "🌵" : h < 40 ? "💨" : h < 60 ? "🌤️" : h < 80 ? "💧" : "🌫️";
+  const windSpeedIcon = (s) => s <= 5 ? "🌬️" : s <= 20 ? "🍃" : s <= 40 ? "💨" : s <= 70 ? "🌪️" : s <= 100 ? "🌬️🌩️" : "🌀";
+
+  // Utility functions
+  const getSeason = () => {
+    const m = state.WeatherMod.calendar.month;
+    return CalendarConfig.seasons.find(s => s.months.includes(m))?.name || "spring";
+  };
+
+  const getMoonPhases = (day) => MoonConfig.moons.map(m => {
+    const idx = Math.floor((day % m.cycle) / m.cycle * m.phases.length);
+    return `${m.name}: ${m.phases[idx]}`;
+  });
+
+  const randomWeighted = (table) => {
+    const total = Object.values(table).reduce((a, b) => a + b, 0);
+    let roll = randomInteger(total);
+    for (const key in table) {
+      roll -= table[key];
+      if (roll <= 0) return key;
+    }
+  };
+
+  const randomRangeFromList = (ranges) => {
+    const [min, max] = ranges[Math.floor(Math.random() * ranges.length)];
+    return randomInteger(max - min + 1) + min - 1;
+  };
+
+  const clearOldWeatherMessages = () => {
+    sendChat("WeatherMod", `<div style="margin:5px 0; border-top:2px dotted #926239;"></div>`);
+  };
+
+  // Build the full weather report HTML
+  const buildFullWeatherReportHTML = () => {
+    const c = state.WeatherMod.calendar;
+    const dayName = CalendarConfig.days[(c.day - 1) % CalendarConfig.days.length];
+    const monthName = CalendarConfig.months[c.month].name;
     const season = getSeason();
+    const s = state.WeatherMod.settings;
     const climate = WeatherConfig.climates[state.WeatherMod.selectedClimate];
-    if (!climate) return '⚠ Invalid climate';
-    
+
+    let temp, humidity, windSpeed, windOrigin, windForce, precipType, precipStrength;
+
     if (s.useManualWeather) {
-        return `
-            <b>${t('temperature')}:</b> ${s.manualWeather.temperature}°C<br>
-            <b>${t('wind')}:</b> ${s.manualWeather.windSpeed} km/h ${t('windFrom')} ${tWindDir(s.manualWeather.windDirection)}<br>
-            <b>${t('precipitation')}:</b> ${t(s.manualWeather.type)}
-        `;
-    }
-    
-    const humidity = randomInteger(climate.humidity[1] - climate.humidity[0]) + climate.humidity[0];
-    const windOrigin = randomWeighted(climate.windChances);
-    const windForceKey = randomWeighted(
-        Object.fromEntries(Object.entries(WeatherConfig.windForce).map(([k, v]) => [k, v.chance]))
-    );
-    const windForce = WeatherConfig.windForce[windForceKey];
-    const windSpeed = randomInteger(windForce.speed[1] - windForce.speed[0]) + windForce.speed[0];
-    const temperature = randomRangeFromList(climate.temperature[season]);
-    const precipType = randomWeighted(climate.precipitation[season]);
-    
-    let precipStrength = '';
-    if (precipType === 'rain') {
-        precipStrength = (temperature <= 0)
-            ? `❄️ ${t('snow')} (${randomWeighted(WeatherConfig.precipitationStrength.snow)})`
-            : `🌧️ ${t('rain')} (${randomWeighted(WeatherConfig.precipitationStrength.rain)})`;
-    } else if (precipType === 'thunderstorm') {
-        precipStrength = `⛈️ ${t('thunderstorm')} (${randomWeighted(WeatherConfig.precipitationStrength.thunderstorm)})`;
+      temp = s.manualWeather.temperature;
+      windSpeed = s.manualWeather.windSpeed;
+      windOrigin = s.manualWeather.windDirection;
+      precipType = s.manualWeather.type;
+      humidity = s.manualWeather.humidity !== undefined ? s.manualWeather.humidity : "-";
+      windForce = { name: tWindForce("Manual") };
+      precipStrength = `${skyIcons[precipType] || ""} ${t(precipType)}`;
     } else {
+      humidity = randomInteger(climate.humidity[1] - climate.humidity[0]) + climate.humidity[0];
+      windOrigin = randomWeighted(climate.windChances);
+      const forceKey = randomWeighted(Object.fromEntries(Object.entries(WeatherConfig.windForce).map(([k, v]) => [k, v.chance])));
+      windForce = WeatherConfig.windForce[forceKey];
+      windSpeed = randomInteger(windForce.speed[1] - windForce.speed[0]) + windForce.speed[0];
+      temp = randomRangeFromList(climate.temperature[season]);
+      precipType = randomWeighted(climate.precipitation[season]);
+
+      if (precipType === 'rain') {
+        precipStrength = (temp <= 0)
+          ? `❄️ ${t('snow')} (${randomWeighted(WeatherConfig.precipitationStrength.snow)})`
+          : `🌧️ ${t('rain')} (${randomWeighted(WeatherConfig.precipitationStrength.rain)})`;
+      } else if (precipType === 'thunderstorm') {
+        precipStrength = `⛈️ ${t('thunderstorm')} (${randomWeighted(WeatherConfig.precipitationStrength.thunderstorm)})`;
+      } else {
         precipStrength = `☀️ ${t('clear')}`;
-    }
-    
-    return `
-        <b>${t('climate')}:</b> ${climateIcons[state.WeatherMod.selectedClimate] || ""} ${tClimate(state.WeatherMod.selectedClimate)}<br>
-        <b>${t('season')}:</b> ${seasonIcons[season] || ""} ${tSeason(season)}<br>
-        <b>${t('temperature')}:</b> ${temperature}°C<br>
-        <b>${t('humidity')}:</b> ${humidity}%<br>
-        <b>${t('wind')}:</b> ${tWindForce(windForce.name)} (${windSpeed} km/h) ${t('windFrom')} ${tWindDir(windOrigin)}<br>
-        <b>${t('precipitation')}:</b> ${precipStrength}
-        `;
-    };
-
-    const buildFullWeatherReportHTML = () => {
-        const c = state.WeatherMod.calendar;
-        const dayName = CalendarConfig.days[(c.day - 1) % CalendarConfig.days.length];
-        const monthName = CalendarConfig.months[c.month].name;
-        const season = getSeason();
-        const s = state.WeatherMod.settings;
-        const climate = WeatherConfig.climates[state.WeatherMod.selectedClimate];
-
-        let temperature, humidity, windSpeed, windOrigin, windForceKey, windForce, precipType, precipStrength;
-
-        if (s.useManualWeather) {
-            temperature = s.manualWeather.temperature;
-            windSpeed = s.manualWeather.windSpeed;
-            windOrigin = s.manualWeather.windDirection;
-            precipType = s.manualWeather.type;
-            humidity = "-";
-            windForce = { name: tWindForce("Manual") };
-            precipStrength = `${skyIcons[precipType] || ""} ${t(precipType)}`;
-        } else {
-            humidity = randomInteger(climate.humidity[1] - climate.humidity[0]) + climate.humidity[0];
-            windOrigin = randomWeighted(climate.windChances);
-            windForceKey = randomWeighted(
-            Object.fromEntries(Object.entries(WeatherConfig.windForce).map(([k, v]) => [k, v.chance]))
-            );
-            windForce = WeatherConfig.windForce[windForceKey];
-            windSpeed = randomInteger(windForce.speed[1] - windForce.speed[0]) + windForce.speed[0];
-            if (climate.temperature && climate.temperature[season]) {
-            temperature = randomRangeFromList(climate.temperature[season]);
-            } else {
-            log(`⚠️ Température manquante pour le climat "${state.WeatherMod.selectedClimate}" et la saison "${season}"`);
-            temperature = 0;
-            }
-            precipType = randomWeighted(climate.precipitation[season]);
-
-            if (precipType === 'rain') {
-            precipStrength = (temperature <= 0)
-                ? `❄️ ${t('snow')} (${randomWeighted(WeatherConfig.precipitationStrength.snow)})`
-                : `🌧️ ${t('rain')} (${randomWeighted(WeatherConfig.precipitationStrength.rain)})`;
-            } else if (precipType === 'thunderstorm') {
-            precipStrength = `⛈️ ${t('thunderstorm')} (${randomWeighted(WeatherConfig.precipitationStrength.thunderstorm)})`;
-            } else {
-            precipStrength = `☀️ ${t('clear')}`;
-            }
-        }
-
-        const moon = getMoonPhases(c.totalDays)
-            .map(m => {
-            const [name, phase] = m.split(": ");
-            return `${moonIcons[phase] || "🌑"} ${name}: ${tPhase(phase)}`;
-            })
-            .join("<br>");
-
-        let output = `<div style="${chatStyle}">`;
-        output += `<div><b>📅 ${t('date')}:</b> ${lang() === 'fr' ? `${dayName} ${c.day} ${monthName} ${c.year}` : `${monthName} ${c.day}, ${c.year} (${dayName})`}</div>`;
-        output += `<div><b>🗓 ${t('season')}:</b> ${seasonIcons[season] || ""} ${tSeason(season)}</div>`;
-        output += `<hr><div><b>🌘 ${t('moon')}:</b><br>${moon}</div>`;
-        output += `<hr><div><b>🌦 ${t('weather')}:</b></div>`;
-        output += `<div><b>${t('climate')}:</b> ${climateIcons[state.WeatherMod.selectedClimate] || ""} ${tClimate(state.WeatherMod.selectedClimate)}</div>`;
-        output += `<div><b>${t('season')}:</b> ${seasonIcons[season] || ""} ${tSeason(season)}</div>`;
-        output += `<div><b>${t('temperature')}:</b> ${temperature}°C ${tempIcon(temperature)}</div>`;
-        output += `<div><b>${t('humidity')}:</b> ${humidity}${humidity !== "-" ? "%" : ""} ${humidity !== "-" ? humidityIcon(humidity) : ""}</div>`;
-        output += `<div><b>${t('wind')}:</b> ${tWindForce(windForce.name)} (${windSpeed} km/h) ${t('windFrom')} ${tWindDir(windOrigin)} ${windSpeedIcon(windSpeed)}</div>`;
-        output += `<div><b>${t('precipitation')}:</b> ${precipStrength}</div>`;
-        output += `</div>`;
-
-        return output;
-    };
-    
-    // Display full weather report to the GM
-    const displayFullReport = () => {
-        clearOldWeatherMessages();
-        const output = buildFullWeatherReportHTML();
-        sendChat("WeatherMod", `/w gm ${output}`);
-    };
-
-    // Display report for players
-    const showWeatherToPlayers = () => {
-        const output = buildFullWeatherReportHTML();
-        sendChat("WeatherMod", output); // public message
-    };
-    
-    // GM Menu: Weather Control Panel
-    const showGMMenu = () => {
-        clearOldWeatherMessages();
-
-        const s = state.WeatherMod;
-        const c = s.calendar;
-        const set = s.settings;
-        const manual = set.manualWeather;
-
-        // Buttons
-        const climates = Object.keys(WeatherConfig.climates).map(climate =>
-            `[${climateIcons[climate] || ""} ${tClimate(climate)}](!weather setgm climate ${climate})`
-        ).join("&nbsp;&nbsp;");
-
-        const months = CalendarConfig.months.map((m, i) =>
-            `[${m.name}](!weather setgm month ${i})`
-        ).join("&nbsp;&nbsp;");
-
-        const weatherTypes = ['clear', 'rain', 'snow', 'thunderstorm'].map(type =>
-            `[${skyIcons[type] || ""} ${t(type)}](!weather setgm weathertype ${type})`
-        ).join("&nbsp;&nbsp;");
-
-        const windDirs = ['north', 'east', 'south', 'west'].map(dir =>
-            `[${tWindDir(dir)}](!weather setgm winddir ${dir})`
-        ).join("&nbsp;&nbsp;");
-
-        // Message build
-        let output = `<div style="${chatStyle}">`;
-        output += `<div style="text-align:center; font-size:1.2em;"><b>⚙️ GM Weather Menu</b></div><hr>`;
-
-        // Date
-        output += `<b>📅 ${t('date')}:</b> ${lang() === 'fr'
-            ? `${CalendarConfig.days[(c.day - 1) % CalendarConfig.days.length]} ${c.day} ${CalendarConfig.months[c.month].name} ${c.year}`
-            : `${CalendarConfig.months[c.month].name} ${c.day}, ${c.year} (${CalendarConfig.days[(c.day - 1) % CalendarConfig.days.length]})`}<br>`;
-
-        output += `<div style="margin:2px 0; text-align:center;">
-            [${t('setDay')}](!weather setgm day ?{${t('setDay')}|${c.day}})&nbsp;&nbsp;
-            [${t('setYear')}](!weather setgm year ?{${t('setYear')}|${c.year}})
-        </div>`;
-
-        output += `<div style="margin:2px 0; text-align:center;">${months}</div><hr>`;
-
-        // Climate
-        output += `<b>🌍 ${t('climate')}:</b> ${climateIcons[s.selectedClimate] || ""} ${tClimate(s.selectedClimate)}<br>`;
-        output += `<div style="margin:2px 0; text-align:center;">${climates}</div><hr>`;
-
-        // Manual mode
-        output += `<b>🛠 ${t('manual')}:</b> [${set.useManualWeather ? "🟢 On" : "🔴 Off"}](!weather setgm manual ${set.useManualWeather ? "off" : "on"})<br>`;
-
-        if (set.useManualWeather) {
-            output += `<hr><b>☁️ ${t('precipitation')}:</b>`;
-            output += `<div style="margin:2px 0; text-align:center;">${weatherTypes}</div>`;
-
-            output += `<b>🌡 ${t('temperature')}:</b> 
-            [${tempIcon(manual.temperature)} ${manual.temperature}°C](!weather setgm temp ?{${t('temperature')}|${manual.temperature}})<br>`;
-
-            output += `<b>💨 ${t('wind')}:</b> 
-            [${windSpeedIcon(manual.windSpeed)} ${manual.windSpeed} km/h](!weather setgm windspeed ?{${t('wind')}|${manual.windSpeed}})<br>`;
-
-            output += `<b>${t('windFrom')}:</b> 
-            <div style="margin:2px 0; text-align:center;">${windDirs}</div>`;
-        }
-
-        // Profiles
-        output += `<hr><b>💾 Profiles:</b>`;
-        output += `<div style="margin:2px 0; text-align:center;">
-            [${t('saveProfile')}](!weather save ?{Profile name})&nbsp;&nbsp;
-            [${t('loadProfile')}](!weather load ?{Profile name})&nbsp;&nbsp;
-            [${t('exportProfile')}](!weather export ?{Profile name})
-        </div>`;
-
-        // Language
-        output += `<hr><div style="margin:2px 0; text-align:center;">
-            🌐 Language: [EN](!weather lang en)&nbsp;&nbsp;[FR](!weather lang fr)
-        </div>`;
-
-        // Generate
-        output += `<hr><div style="margin:2px 0; text-align:center;">
-            [🌦 ${t('generate')}](!weather report)
-        </div>`;
-
-        output += `<hr><div style="text-align:center;">
-            [📣 ${t('weather')} → Players](!weather showplayers)
-        </div>`;
-
-        output += `</div>`;
-
-        sendChat("WeatherMod", `/w gm ${output}`);
-    };
-
-
-    // Save the current weather setup
-    const saveWeatherProfile = (name) => {
-        if (!name) return;
-        state.WeatherMod.profiles[name] = {
-            language: state.WeatherMod.language,
-            selectedClimate: state.WeatherMod.selectedClimate,
-            calendar: { ...state.WeatherMod.calendar },
-            settings: JSON.parse(JSON.stringify(state.WeatherMod.settings))
-        };
-    };
-    
-    // Load a saved weather profile
-    const loadWeatherProfile = (name) => {
-        if (!name || !state.WeatherMod.profiles[name]) return;
-        const data = state.WeatherMod.profiles[name];
-        state.WeatherMod.language = data.language;
-        state.WeatherMod.selectedClimate = data.selectedClimate;
-        state.WeatherMod.calendar = { ...data.calendar };
-        state.WeatherMod.settings = JSON.parse(JSON.stringify(data.settings));
-    };
-    
-    // Export a profile to a Roll20 handout
-    const exportProfileToHandout = (name) => {
-      const profile = state.WeatherMod.profiles[name];
-      if (!profile) return;
-    
-      const html = `
-        <b>📋 Weather Profile:</b> ${name}<br>
-        <b>🌍 Climate:</b> ${tClimate(profile.selectedClimate)}<br>
-        <b>📆 Date:</b> ${profile.calendar.day} / ${CalendarConfig.months[profile.calendar.month].name} / ${profile.calendar.year}<br>
-        <b>🌐 Language:</b> ${profile.language}<br>
-        <b>⚙️ Manual Weather:</b> ${profile.settings.useManualWeather ? "Yes" : "No"}<br>
-        ${profile.settings.useManualWeather ? `
-          <b>🌡 Temp:</b> ${profile.settings.manualWeather.temperature}°C<br>
-          <b>💨 Wind:</b> ${profile.settings.manualWeather.windSpeed} km/h from ${tWindDir(profile.settings.manualWeather.windDirection)}<br>
-          <b>☁️ Type:</b> ${t(profile.settings.manualWeather.type)}<br>
-        ` : ''}
-      `;
-    
-      let handout = findObjs({ type: "handout", name: `WeatherProfile_${name}` })[0];
-      if (!handout) {
-        handout = createObj("handout", { name: `WeatherProfile_${name}` });
       }
-      handout.set({ notes: html });
-    };
-    
-    // Handle weather-related API commands
-    on('chat:message', (msg) => {
-        if (msg.type !== 'api' || !playerIsGM(msg.playerid)) return;
-        
-        const args = msg.content.trim().split(" ");
-        const command = args[0];
-        const subcommand = args[1];
-        
-        if (command !== '!weather') return;
-        
-        switch (subcommand) {
-            case 'report':
-            displayFullReport();
-            break;
-        
-            case 'next':
-            case 'next-day':
-                advanceDay();
-                displayFullReport();
-                break;
-        
-            case 'menu':
-                showGMMenu();
-                break;
-        
-            case 'lang': {
-                const langCode = args[2];
-                if (langCode && ['en', 'fr'].includes(langCode)) {
-                    state.WeatherMod.language = langCode;
-                    sendChat('WeatherMod', `/w gm 🌐 Language set to: ${langCode === 'fr' ? 'Français' : 'English'}`);
-                } else {
-                    sendChat('WeatherMod', `/w gm ⚠️ Invalid language. Use 'en' or 'fr'.`);
-                }
-                break;
-            }
-        
-            case 'setgm': {
-                const param = args[2];
-                const value = args.slice(3).join(" ");
-                const s = state.WeatherMod;
-                const manual = s.settings.manualWeather;
-            
-                switch (param) {
-                    case 'climate':
-                    if (value in WeatherConfig.climates) s.selectedClimate = value;
-                    break;
-                    case 'manual':
-                    s.settings.useManualWeather = (value === 'on');
-                    break;
-                    case 'weathertype':
-                    manual.type = value;
-                    break;
-                    case 'winddir':
-                    manual.windDirection = value;
-                    break;
-                    case 'temp': {
-                    const temp = parseInt(value, 10);
-                    if (!isNaN(temp)) manual.temperature = temp;
-                    break;
-                    }
-                    case 'windspeed': {
-                    const wind = parseInt(value, 10);
-                    if (!isNaN(wind)) manual.windSpeed = wind;
-                    break;
-                    }
-                    case 'day': {
-                    const day = parseInt(value, 10);
-                    if (!isNaN(day)) s.calendar.day = day;
-                    break;
-                    }
-                    case 'month': {
-                    const month = parseInt(value, 10);
-                    if (!isNaN(month)) s.calendar.month = month;
-                    break;
-                    }
-                    case 'year': {
-                    const year = parseInt(value, 10);
-                    if (!isNaN(year)) s.calendar.year = year;
-                    break;
-                    }
-                }
-            
-                showGMMenu();
-                break;
-            }
-        
-            case 'save': {
-                const saveName = args.slice(2).join(" ").trim();
-                if (!saveName) {
-                    sendChat('WeatherMod', `/w gm ⚠️ Provide a name to save: !weather save MyScene`);
-                } else {
-                    saveWeatherProfile(saveName);
-                    sendChat('WeatherMod', `/w gm ✅ Saved profile: <b>${saveName}</b>`);
-                }
-                break;
-            }
-        
-            case 'load': {
-                const loadName = args.slice(2).join(" ").trim();
-                if (!loadName) {
-                    sendChat('WeatherMod', `/w gm ⚠️ Provide a name to load: !weather load MyScene`);
-                } else {
-                    loadWeatherProfile(loadName);
-                    sendChat('WeatherMod', `/w gm 📂 Loaded profile: <b>${loadName}</b>`);
-                    showGMMenu();
-                }
-                break;
-            }
-        
-            case 'export': {
-                const exportName = args.slice(2).join(" ").trim();
-                if (!exportName) {
-                    sendChat('WeatherMod', `/w gm ⚠️ Provide a name to export: !weather export MyScene`);
-                } else {
-                    exportProfileToHandout(exportName);
-                    sendChat('WeatherMod', `/w gm 📝 Exported to handout: <b>WeatherProfile_${exportName}</b>`);
-                }
-                break;
-            }
+    }
 
-            case 'showplayers':
-                showWeatherToPlayers();
-                break;
+    const moon = getMoonPhases(c.totalDays).map(m => {
+      const [name, phase] = m.split(": ");
+      return `${moonIcons[phase] || "🌑"} ${name}: ${tPhase(phase)}`;
+    }).join("<br>");
+
+    let html = `<div style="${chatStyle}">`;
+    html += `<div style="${styleTitle}">${t('weather')}</div>`;
+    html += `<div><b>${t('date')}:</b> ${lang() === 'fr' ? `${dayName} ${c.day} ${monthName} ${c.year}` : `${monthName} ${c.day}, ${c.year} (${dayName})`}</div>`;
+    html += `<div style="${styleSection}">${t('season')}:</div> ${seasonIcons[season]} ${tSeason(season)}`;
+    html += `${hr}<div style="${styleSection}">${t('moon')}:</div><div>${moon}</div>${hr}`;
+    html += `<div style="${styleSection}">${t('climate')}:</div> ${climateIcons[state.WeatherMod.selectedClimate]} ${tClimate(state.WeatherMod.selectedClimate)}`;
+    html += `<div><b>${t('temperature')}:</b> ${temp}°C ${tempIcon(temp)}</div>`;
+    html += `<div><b>${t('humidity')}:</b> ${humidity}${humidity !== "-" ? "%" : ""} ${humidity !== "-" ? humidityIcon(humidity) : ""}</div>`;
+    html += `<div><b>${t('wind')}:</b> ${tWindForce(windForce.name)} (${windSpeed} km/h) ${t('windFrom')} ${tWindDir(windOrigin)} ${windSpeedIcon(windSpeed)}</div>`;
+    html += `<div><b>${t('precipitation')}:</b> ${precipStrength}</div>`;
+    html += `</div>`;
+    return html;
+  };
+
+  const displayFullReport = () => {
+    clearOldWeatherMessages();
+    sendChat("WeatherMod", `/w gm ${buildFullWeatherReportHTML()}`);
+  };
+
+  const showWeatherToPlayers = () => {
+    sendChat("WeatherMod", buildFullWeatherReportHTML());
+  };
+
+  // Styled menus
+  const showGMMainMenu = () => {
+    const s = state.WeatherMod;
+    const climates = Object.keys(WeatherConfig.climates).map(climate =>
+      `<a style="${btnStyle}" href="!weather setgm climate ${climate}">${climateIcons[climate]} ${tClimate(climate)}</a>`
+    ).join(" ");
+
+    const html = `<div style="${chatStyle}">
+      <div style="${styleTitle}">${t('weather')}</div>${hr}
+      <div style="${styleSection}">${t('climate')}:</div> ${climateIcons[s.selectedClimate]} ${tClimate(s.selectedClimate)}<br>
+      ${btnGroup(climates)}${hr}
+      <div style="${styleSection}">${t('language')}:</div> ${s.language.toUpperCase()}<br>
+      ${btnGroup(`<a style="${btnStyle}" href="!weather lang en">EN</a> <a style="${btnStyle}" href="!weather lang fr">FR</a>`)}${hr}
+      ${btnGroup(`<a style="${btnStyle}" href="!weather menu-date">📅 ${t('date')}</a>`)}
+      ${btnGroup(`<a style="${btnStyle}" href="!weather menu-manual">🛠 ${t('manual')}</a>`)}
+      ${btnGroup(`<a style="${btnStyle}" href="!weather menu-profiles">💾 ${t('profiles')}</a>`)}
+      ${btnGroup(`<a style="${btnStyle}" href="!weather report">🌦 ${t('generate')}</a>`)}
+      ${btnGroup(`<a style="${btnStyle}" href="!weather showplayers">📣 ${t('weather')} → Players</a>`)}
+    </div>`;
+    sendChat("WeatherMod", `/w gm ${html}`);
+  };
+
+  const showDateMenu = () => {
+    const c = state.WeatherMod.calendar;
+    const months = CalendarConfig.months.map((m, i) =>
+      `<a style="${btnStyle}" href="!weather setgm month ${i}">${m.name}</a>`
+    ).join(" ");
+    const html = `<div style="${chatStyle}">
+      <div style="${styleTitle}">${t('date')}</div>${hr}
+      ${btnGroup(`<a style="${btnStyle}" href="!weather setgm day ?{${t('setDay')}|${c.day}}">${t('setDay')}</a> <a style="${btnStyle}" href="!weather setgm year ?{${t('setYear')}|${c.year}}">${t('setYear')}</a>`)}
+      ${hr}${btnGroup(months)}${hr}
+      ${btnGroup(`<a style="${btnStyle}" href="!weather menu">⬅️ ${t('back')}</a>`)}
+    </div>`;
+    sendChat("WeatherMod", `/w gm ${html}`);
+  };
+
+  const showManualWeatherMenu = () => {
+    const manual = state.WeatherMod.settings.manualWeather;
+    const weatherTypes = ['clear', 'rain', 'snow', 'thunderstorm'].map(type =>
+      `<a style="${btnStyle}" href="!weather setgm weathertype ${type}">${skyIcons[type]} ${t(type)}</a>`
+    ).join(" ");
+    const windDirs = ['north', 'east', 'south', 'west'].map(dir =>
+      `<a style="${btnStyle}" href="!weather setgm winddir ${dir}">${tWindDir(dir)}</a>`
+    ).join(" ");
+
+    const html = `<div style="${chatStyle}">
+      <div style="${styleTitle}">${t('manual')}</div>${hr}
+      <div style="${styleSection}">${t('manualMode')}:</div> <a style="${btnStyle}" href="!weather setgm manual ${state.WeatherMod.settings.useManualWeather ? "off" : "on"}">${state.WeatherMod.settings.useManualWeather ? "🟢" : "🔴"} ${state.WeatherMod.settings.useManualWeather ? t('yes') : t('no')}</a><br><br>
+      <div style="${styleSection}">${t('precipitation')}:</div>${btnGroup(weatherTypes)}<br>
+      <div><b>${t('temperature')}:</b> <a style="${btnStyle}" href="!weather setgm temp ?{${t('temperature')}|${manual.temperature}}">${manual.temperature}°C</a></div>
+      <div><b>${t('windSpeed')}:</b> <a style="${btnStyle}" href="!weather setgm windspeed ?{${t('wind')}|${manual.windSpeed}}">${manual.windSpeed} km/h</a></div>
+      <div><b>${t('windFrom')}:</b> ${btnGroup(windDirs)}</div>
+      <div><b>${t('humidityShort')}:</b> <a style="${btnStyle}" href="!weather setgm humidity ?{${t('humidity')}|${manual.humidity !== undefined ? manual.humidity : 50}}">${manual.humidity !== undefined ? manual.humidity : 50}%</a></div>
+      ${hr}${btnGroup(`<a style="${btnStyle}" href="!weather menu">⬅️ ${t('back')}</a>`)}
+    </div>`;
+    sendChat("WeatherMod", `/w gm ${html}`);
+  };
+
+  const showProfilesMenu = () => {
+    const html = `<div style="${chatStyle}">
+      <div style="${styleTitle}">${t('profiles')}</div>${hr}
+      ${btnGroup(`
+        <a style="${btnStyle}" href="!weather save ?{Profile name}">${t('saveProfile')}</a><br>
+        <a style="${btnStyle}" href="!weather load ?{Profile name}">${t('loadProfile')}</a><br>
+        <a style="${btnStyle}" href="!weather export ?{Profile name}">${t('exportProfile')}</a><br>
+        <a style="${btnStyle}" href="!weather import ?{Profile name}">${t('importProfile')}</a><br>`)}
+      ${hr}${btnGroup(`<a style="${btnStyle}" href="!weather menu">⬅️ ${t('back')}</a>`)}
+    </div>`;
+    sendChat("WeatherMod", `/w gm ${html}`);
+  };
+
+  // Weather profiles
+  const saveWeatherProfile = (name) => {
+    if (!name) return;
+    state.WeatherMod.profiles[name] = {
+      language: state.WeatherMod.language,
+      selectedClimate: state.WeatherMod.selectedClimate,
+      calendar: { ...state.WeatherMod.calendar },
+      settings: JSON.parse(JSON.stringify(state.WeatherMod.settings))
+    };
+  };
+
+  const loadWeatherProfile = (name) => {
+    if (!name || !state.WeatherMod.profiles[name]) return;
+    const data = state.WeatherMod.profiles[name];
+    state.WeatherMod.language = data.language;
+    state.WeatherMod.selectedClimate = data.selectedClimate;
+    state.WeatherMod.calendar = { ...data.calendar };
+    state.WeatherMod.settings = JSON.parse(JSON.stringify(data.settings));
+  };
+
+  // Import a weather profile from a handout
+  const importProfileFromHandout = (name) => {
+    const handout = findObjs({ type: "handout", name: `WeatherProfile_${name}` })[0];
+    if (!handout) {
+      sendChat('WeatherMod', `/w gm [${name}] Handout not found / Handout introuvable.`);
+      return;
+    }
+    handout.get('notes', (notes) => {
+      // Try to extract JSON from the handout notes (between <pre>...</pre> or after a marker)
+      let jsonMatch = notes.match(/<pre>([\s\S]+?)<\/pre>/) || notes.match(/<!--JSON-->([\s\S]+)$/);
+      let json;
+      if (jsonMatch) {
+        try {
+          json = JSON.parse(jsonMatch[1]);
+        } catch (e) {
+          sendChat('WeatherMod', `/w gm Error: Invalid JSON in handout / JSON invalide dans le handout.`);
+          return;
         }
+      } else {
+        sendChat('WeatherMod', `/w gm No JSON found in handout / Aucun JSON trouvé dans le handout.`);
+        return;
+      }
+      // Save imported profile
+      state.WeatherMod.profiles[name] = json;
+      sendChat('WeatherMod', `/w gm Profile "${name}" imported from handout / Profil "${name}" importé depuis le handout.`);
+      showGMMainMenu();
     });
+  };
+
+  // Export profile to handout
+  const exportProfileToHandout = (name) => {
+    const profile = state.WeatherMod.profiles[name];
+    if (!profile) return;
+
+    // Save JSON in <pre> for easy import
+    const html = `
+      <b>${t('profiles')}:</b> ${name}<br>
+      <b>${t('climate')}:</b> ${tClimate(profile.selectedClimate)}<br>
+      <b>${t('date')}:</b> ${profile.calendar.day} ${CalendarConfig.months[profile.calendar.month].name} ${profile.calendar.year}<br>
+      <b>${t('language')}:</b> ${profile.language}<br>
+      <b>${t('manualMode')}:</b> ${profile.settings.useManualWeather ? t('yes') : t('no')}<br>
+      ${profile.settings.useManualWeather ? `
+        <b>${t('type')}:</b> ${t(profile.settings.manualWeather.type)}<br>
+        <b>${t('temp')}:</b> ${profile.settings.manualWeather.temperature}°C<br>
+        <b>${t('windSpeed')}:</b> ${profile.settings.manualWeather.windSpeed} km/h ${t('windFrom')} ${tWindDir(profile.settings.manualWeather.windDirection)}<br>
+        <b>${t('humidityShort')}:</b> ${profile.settings.manualWeather.humidity !== undefined ? profile.settings.manualWeather.humidity : 50}%<br>
+      ` : ''}
+      <hr>
+      <b>JSON:</b>
+      <pre>${JSON.stringify(profile, null, 2)}</pre>
+      <!--JSON-->${JSON.stringify(profile)}
+    `;
+
+    let handout = findObjs({ type: "handout", name: `WeatherProfile_${name}` })[0];
+    if (!handout) {
+      handout = createObj("handout", { name: `WeatherProfile_${name}` });
+    }
+    handout.set({ notes: html });
+  };
+
+  // Advance one day
+  const advanceDay = () => {
+    const c = state.WeatherMod.calendar;
+    c.day++;
+    c.totalDays++;
+    const max = CalendarConfig.months[c.month].length;
+    if (c.day > max) {
+      c.day = 1;
+      c.month++;
+      if (c.month >= CalendarConfig.months.length) {
+        c.month = 0;
+        c.year++;
+      }
+    }
+  };
+
+  // State initialization
+  if (!state.WeatherMod) {
+    state.WeatherMod = {
+      language: 'fr',
+      selectedClimate: 'temperate',
+      calendar: { day: 1, month: 0, year: 1000, totalDays: 0 },
+      settings: {
+        useManualWeather: false,
+        manualWeather: { type: "clear", windDirection: "north", temperature: 20, windSpeed: 10, humidity: 50 }
+      },
+      profiles: {}
+    };
+  }
+
+  // Chat commands
+  on('chat:message', (msg) => {
+    if (msg.type !== 'api' || !playerIsGM(msg.playerid)) return;
+
+    const args = msg.content.trim().split(" ");
+    const command = args[0];
+    const subcommand = args[1];
+    const value = args.slice(2).join(" ");
+
+    if (command !== '!weather') return;
+
+    switch (subcommand) {
+      case 'report': displayFullReport(); break;
+      case 'showplayers': showWeatherToPlayers(); break;
+      case 'menu': showGMMainMenu(); break;
+      case 'menu-date': showDateMenu(); break;
+      case 'menu-manual': showManualWeatherMenu(); break;
+      case 'menu-profiles': showProfilesMenu(); break;
+      
+      case 'next':
+      case 'next-day':
+        advanceDay();
+        displayFullReport();
+        break;
+
+      case 'lang':
+        if (['en', 'fr'].includes(args[2])) {
+          state.WeatherMod.language = args[2];
+          sendChat("WeatherMod", `/w gm ${t('language')} : ${args[2].toUpperCase()}`);
+        } else {
+          sendChat("WeatherMod", `/w gm ${t('language')}: en, fr`);
+        }
+        break;
+
+      case 'setgm': {
+        const param = args[2];
+        const val = args.slice(3).join(" ");
+        const s = state.WeatherMod;
+        const manual = s.settings.manualWeather;
+
+        switch (param) {
+          case 'climate':
+            if (val in WeatherConfig.climates) s.selectedClimate = val;
+            break;
+          case 'manual':
+            s.settings.useManualWeather = (val === 'on');
+            break;
+          case 'weathertype':
+            manual.type = val;
+            break;
+          case 'winddir':
+            manual.windDirection = val;
+            break;
+          case 'temp':
+            const tval = parseInt(val, 10);
+            if (!isNaN(tval)) manual.temperature = tval;
+            break;
+          case 'windspeed':
+            const wval = parseInt(val, 10);
+            if (!isNaN(wval)) manual.windSpeed = wval;
+            break;
+          case 'humidity':
+            const hval = parseInt(val, 10);
+            if (!isNaN(hval)) manual.humidity = hval;
+            break;
+          case 'day':
+            const d = parseInt(val, 10);
+            if (!isNaN(d)) s.calendar.day = d;
+            break;
+          case 'month':
+            const m = parseInt(val, 10);
+            if (!isNaN(m)) s.calendar.month = m;
+            break;
+          case 'year':
+            const y = parseInt(val, 10);
+            if (!isNaN(y)) s.calendar.year = y;
+            break;
+        }
+        showGMMainMenu();
+        break;
+      }
+
+      case 'save':
+        if (!value.trim()) {
+          sendChat('WeatherMod', `/w gm ${t('saveProfile')} : !weather save MonProfil`);
+        } else {
+          saveWeatherProfile(value.trim());
+          sendChat('WeatherMod', `/w gm ${t('saveProfile')}: <b>${value.trim()}</b>`);
+        }
+        break;
+
+      case 'load':
+        if (!value.trim()) {
+          sendChat('WeatherMod', `/w gm ${t('loadProfile')} : !weather load MonProfil`);
+        } else {
+          loadWeatherProfile(value.trim());
+          sendChat('WeatherMod', `/w gm ${t('loadProfile')}: <b>${value.trim()}</b>`);
+          showGMMainMenu();
+        }
+        break;
+
+      case 'export':
+        if (!value.trim()) {
+          sendChat('WeatherMod', `/w gm ${t('exportProfile')} : !weather export MonProfil`);
+        } else {
+          exportProfileToHandout(value.trim());
+          sendChat('WeatherMod', `/w gm ${t('exportProfile')}: <b>WeatherProfile_${value.trim()}</b>`);
+        }
+        break;
+
+      case 'import':
+        if (!value.trim()) {
+          sendChat('WeatherMod', `/w gm ${t('importProfile')} : !weather import MonProfil`);
+        } else {
+          importProfileFromHandout(value.trim());
+          showGMMainMenu();
+        }
+        break;
+    }
+  });
 });
