@@ -19,7 +19,7 @@ API_Meta.dltool = {
 }
 /* globals checkLightLevel */
 on('ready', () => {
-    const version = '1.0.9';
+    const version = '1.0.8';
     log('-=> Dynamic Lighting Tool v' + version + ' is loaded. Base command is !dltool');
 
     if (!_.has(state, 'DLTool')) {
