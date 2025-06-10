@@ -1,5 +1,5 @@
 // =============================
-// === GameAssist v0.1.1.1 ===
+// === GameAssist v0.1.1.2 ===
 // === Author: Mord Eagle ===
 // =============================
 // Released under the MIT License (see https://opensource.org/licenses/MIT)
@@ -24,7 +24,7 @@
 (() => {
     'use strict';
 
-    const VERSION      = '0.1.1.1';
+    const VERSION      = '0.1.1.2';
     const STATE_KEY    = 'GameAssist';
     const MODULES      = {};
     let   READY        = false;
@@ -425,7 +425,7 @@
         GameAssist.log('Status', status);
     }, 'Core', { gmOnly: true });
 
-    // ————— CRITFUMBLE MODULE v0.2.4.8 —————
+    // ————— CRITFUMBLE MODULE v0.2.4.9 —————
     GameAssist.register('CritFumble', function() {
         // ─── Module Setup ──────────────────────────────────────────────────────────────
         const modState = getState('CritFumble');
@@ -486,14 +486,20 @@
         }
 
         function sendConfirmMenu(who) {
-            const buttons = [
-                `[Confirm-Crit-Martial](!Confirm-Crit-Martial)`,
-                `[Confirm-Crit-Magic](!Confirm-Crit-Magic)`
-            ].join(' ');
-            sendTemplateMessage(who, `${emoji('❓')} Confirm Critical Miss`, [
-                { label: "Choose Confirmation Type", value: buttons }
-            ]);
-        }
+    const confirmButtons = [
+        `[Confirm-Crit-Martial](!Confirm-Crit-Martial)`,
+        `[Confirm-Crit-Magic](!Confirm-Crit-Magic)`
+    ].join(' ');
+
+    // Send to player
+    sendTemplateMessage(who, `${emoji('❓')} Confirm Critical Miss`, [
+        { label: "Choose Confirmation Type", value: confirmButtons }
+    ]);
+    // Also send to GM
+    sendTemplateMessage('gm', `${emoji('❓')} Confirm Critical Miss for ${who}!`, [
+        { label: "Choose Confirmation Type", value: confirmButtons }
+    ]);
+}
 
         function sendFumbleMenu(who) {
             sendConfirmMenu(who);
@@ -553,16 +559,21 @@
             executeTableRoll(table);
         }
 
-        function hasNaturalOne(inlinerolls=[]) {
-            return inlinerolls.some(group=>{
-                if (!group.results||!Array.isArray(group.results.rolls)) return false;
-                return group.results.rolls.some(roll=>{
-                    if (roll.type!=='R'||roll.sides!==20) return false;
-                    const results = Array.isArray(roll.results)? roll.results : [roll.results];
-                    return results.some(r=> (r.r===true||r.r===undefined) && r.v===1 );
-                });
-            });
+        function hasNaturalOne(inlinerolls) {
+    for (const group of inlinerolls) {
+        if (!group || !group.results || !Array.isArray(group.results.rolls)) continue;
+        for (const roll of group.results.rolls) {
+            // Only look at d20 dice rolls
+            if (roll.type !== 'R' || roll.sides !== 20 || !Array.isArray(roll.results)) continue;
+            for (const result of roll.results) {
+                // Defensive: result must have .v (value); .r is not always present
+                if (typeof result.v !== 'number') continue;
+                if (result.v === 1) return true;
+            }
         }
+    }
+    return false;
+}
 
         function showManualTriggerMenu() {
             const players = Object.values(modState.runtime.activePlayers);
@@ -587,7 +598,7 @@
 
         function showHelpMessage(who) {
             sendTemplateMessage(who, "📘 CritFumble Help", [
-                { label: "Version",     value: "v0.2.4.8" },
+                { label: "Version",     value: "v0.2.4.9" },
                 { label: "Commands",    value: "`!critfail`, `!critfumble help`, `!critfumble-<type>`, `!confirm-crit-martial`, `!confirm-crit-magic`" },
                 { label: "Description", value: "Auto-detects critical misses and prompts attacker with a fumble menu; GM can also manually trigger via `!critfail`." },
                 { label: "Valid Types", value: Object.keys(FUMBLE_TABLES).join(', ') }
@@ -642,7 +653,7 @@
         }
 
         GameAssist.onEvent('chat:message', handleRoll, 'CritFumble');
-        GameAssist.log('CritFumble','v0.2.4.8 Ready: Auto fumble detection + !critfail','INFO',{startup:true});
+        GameAssist.log('CritFumble','v0.2.4.9 Ready: Auto fumble detection + !critfail','INFO',{startup:true});
     }, {
         enabled: true,
         events:   ['chat:message'],
@@ -1228,5 +1239,3 @@ GameAssist.register('ConcentrationTracker', function() {
     });
 
 })();
-
-
