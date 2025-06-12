@@ -5,7 +5,7 @@
     "description": "An entirely customizable weather and calendar mod in english and french / Un mod pour le calendrier et la météo entièrement personnalisable en anglais et en français.",
     "authors": "Maïlare",
     "roll20userid": "3234089",
-    "dependencies": "",
-    "modifies": "",
-    "conflicts": ""
+    "dependencies": [],
+    "modifies":[],
+    "conflicts": []
 }
