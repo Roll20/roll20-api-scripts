@@ -1299,4 +1299,7 @@ GameAssist:
 Condefinition: 
   - "Condefinition"
   - "Utility"
-  
+
+CalendarandWeather:
+  - "Calendar and Weather"
+  - "Utility"
