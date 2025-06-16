@@ -705,7 +705,7 @@ on('ready', () =>
         ""
     )
 
-    let configMessage = `<br>` +
+        const getConfigMessage = () => `<br>` +
         `Condefinition uses a lot of Regular Expressions (search code) to find and apply token markers and definitions. It reads these from a handout called Condefinitions. This handout has all of the code needed to define the conditions in a code block. You can edit the names, the definitions, the search code and the name of the corresponding token marker. The edited text must be clean plain text wrapped in code tags using the Code style button in the editor. Most users will only need to change the name of the token marker to match their chosen set.<BR><BR>If you don't feel comfortable editing the other code, or do so and make a mistake which breaks the handout, you can reset to the default using the buttons in the configuration panel. The script contains defaults for the 2014 and 2024 rule sets, using the default token markers provided by Roll20. I original wrote this script using my own Marketplace set, so if you have installed my "Easy to Read Token Markers" set, then there are also buttons that set defaults for those. This Marketplace set is honestly for my own convenience, and the script does not require this set in any way.` + `<BR><BR>` +
         `<div style=${buttonMenuStyle}>` +
         `<B>Generic Token Markers</B>` + `<br>` +
@@ -719,6 +719,7 @@ on('ready', () =>
         makeGenericButton("Update Conditions", "!condef-loadconditions") + `<br><br>` +
 
         makeGenericButton("Open Help Handout", getHandoutURL("Help: Condefinition")) + `</div>`;
+
 
 
 
@@ -745,7 +746,7 @@ on('ready', () =>
     }
 
 
-    const version = '1.0.0';
+    const version = '1.0.1';
     log('Condefinitions v' + version + ' is ready! --offset ' + API_Meta.Condefinition.offset + ' for the D&D 5th Edition by Roll20 Sheet.');
     loadConditionsFromHandout();
 
@@ -823,7 +824,7 @@ on('ready', () =>
             writeConditionsToHandoutMultilinePlainText(defaultConditionsArray);
             loadConditionsFromHandout();
             createHandoutIfMissing("Condefinitions", helpHTML);
-            sendMessage(configMessage, "Condefinition Configuration");
+            sendMessage(getConfigMessage(), "Condefinition Configuration");
             return;
         }
 
@@ -1086,7 +1087,7 @@ Blinded</pre>`;
         {
     createHandoutIfMissing("Help: Condefinition", helpHTML, "", "https://s3.amazonaws.com/files.d20.io/images/442783616/hDkduTWDpcVEKomHnbb6AQ/med.png");
 
-            sendMessage(configMessage, "Condefinition Configuration");
+            sendMessage(getConfigMessage(), "Condefinition Configuration");
             return;
         }
 
