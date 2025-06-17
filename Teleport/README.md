@@ -26,7 +26,7 @@ Now, on the objects layer, test this by dragging any token over one of the telep
 
 ## Cross-Page Teleport
 
-To set up cross-page teleport, you must create teleport tokens on each page you want to link by way of teleport, and then use the Global Teleport Pad List to link them, similar to how you did in the **Beginning Setup**. You also must make sure that player tokens for each player you want to teleport exist in the target pages. Preferably, they should be on the GM layer. If you don't have player tokens on the target page, the teleport or auto-teleport will fail. Currently, the API has trouble with creating tokens on target pages (specifically to do with images from the Roll20 Marketplace), so **Teleport** doesn't try and make a player token on the target page at this point.
+To set up cross-page teleport, you must create teleport tokens on each page you want to link by way of teleport, and then use the Global Teleport Pad List to link them, similar to how you did in the **Beginning Setup**. The latest version, 1.2.4, of **Teleport** now will first look for an existing token on a target page, will try and create one if there is not one, and if you have Experimental set on your sandbox will even do this with tokens from the Marketplace.
 
 ## Some warnings:
 
