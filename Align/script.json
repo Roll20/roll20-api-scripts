@@ -1,0 +1,16 @@
+{
+  "name": "Align",
+  "script": "Align.js",
+  "version": "1.0.0",
+  "description": "Visually align, distribute, snap, stack, and scatter tokens on the VTT with a chat menu interface. Features include grid snapping, spacing control, z-index sorting, random scatter, undo, and edge protection.",
+  "authors": "Keith Curtis",
+  "roll20userid": "162065",  // Replace with your Roll20 user ID
+  "dependencies": [],
+  "modifies": {
+    "graphics": "read,write",
+    "pages": "read,write",
+    "player": "read"
+  },
+  "conflicts": [],
+	"previousversions": ["1.0.0"]
+}
