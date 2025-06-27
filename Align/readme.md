@@ -26,7 +26,7 @@ This script works with Classic or Jumpgate and doesn't care which sheet you are 
 
 Type `!align` in chat to open the full interactive menu. From there, click buttons to perform actions on your selected tokens.
 
-[Menu](https://files.d20.io/images/446536354/ZcErtHUDuROwGFr58CM40w/original.png)
+[Menu](https://files.d20.io/images/446536354/ZcErtHUDuROwGFr58CM40w/original.png?1750997487)
 
 You can also use commands directly:
 
