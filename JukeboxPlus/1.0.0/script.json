@@ -1,0 +1,15 @@
+{
+  "name": "Jukebox Plus",
+  "script": "jukebox-plus.js",
+  "version": "1.0.0",
+  "description": "A powerful Jukebox UI and controller for Roll20. Organize tracks by album or playlist, play multiple tracks, loop, create randomized mixes, tag tracks, and announce them in chat.",
+  "author": "Keith Curtis",
+  "roll20userid": "162065",
+  "dependencies": [],
+  "modifies": {
+    "jukeboxtrack": "read,write",
+    "state": "read, write",
+  },
+  "conflicts": [],
+	"previousversions": ["1.0.0"]
+}
