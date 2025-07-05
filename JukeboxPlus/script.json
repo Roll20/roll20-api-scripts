@@ -2,7 +2,7 @@
   "name": "Jukebox Plus",
   "script": "JukeboxPlus.js",
   "version": "1.0.0",
-  "description": "Jukebox Plus lets you organize and control music tracks by albums or playlists. Type !jb help in chat for full documentation.",
+  "description": "Jukebox Plus gives you a powerful interface for managing Roll20 audio. Organize tracks into custom albums, tag them, add descriptions and images, and play them using intuitive controls. Features include batch loop/stop/play, Now Playing view, color or image tagging, Announce-to-chat, Mix Mode with random accents, keyword search, playlist support, and full backup/restore tools. Type `!jb` in chat to open the interface.",
   "authors": "Keith Curtis",
   "roll20userid": "162065",
   "dependencies": [],
