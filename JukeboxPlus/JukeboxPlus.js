@@ -787,7 +787,7 @@ const buildTrackRow = (track) =>
           `<span style="${css.albumTag}">
             <a href="!jb jump album ${encodeURIComponent(name)}" title="Jump to album view" style="text-decoration:none; color:inherit;">${esc(name)}</a>
             &nbsp;|&nbsp;
-            <a href="!jb edit ${track.id} albums remove ${esc(name)}" style="${css.tagRemove}" title="Remove from album">x</a>
+            <a href="!jb edit ${track.id} albums remove ${encodeURIComponent(name)}" ...>x</a>
           </span>`
         ).join(' ')
       }
