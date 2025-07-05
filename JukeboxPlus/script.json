@@ -7,8 +7,7 @@
   "roll20userid": "162065",
   "dependencies": [],
   "modifies": {
-    "jukeboxtrack": "read, write",
-    "state": "read, write"
+    "jukeboxtrack": "read, write"
   },
   "conflicts": [],
 	"previousversions": ["1.0.0"]
