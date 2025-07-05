@@ -49,7 +49,8 @@ on('ready', () =>
 
 
 
-// ✅ Ensure mixSession is present (without disrupting existing state)
+// Ensure mixSession is present (without disrupting existing state)
+// Is separate from initial state declaration to protect users from breaking changes.
 if (!state[STATE_KEY].mixSession) {
     state[STATE_KEY].mixSession = {
         active: false,
@@ -246,10 +247,13 @@ if (!state[STATE_KEY].mixSession) {
     let css = data.settings.mode === 'light' ? cssLight : cssDark;
     let icons = data.settings.mode === 'light' ? iconSetLight : iconSetDark;
 
+
+// Initiatlizes the ID of the currently scheduled timeout used for managing the Mix playback mode.
 let mixTimeoutId = null;
 
 
 
+// Renders the help documentation view in the Jukebox Plus handout, styled according to current theme mode.
     const renderHelpView = () =>
     {
         const handout = findObjs(
@@ -261,6 +265,7 @@ let mixTimeoutId = null;
 
         const css = data.settings.mode === 'light' ? cssLight : cssDark;
 
+//HTML that displays the help documentation
 const helpHTML = `
   <div style="${css.header}">
     Jukebox Plus — Help
@@ -270,51 +275,53 @@ const helpHTML = `
 
     <div style="${css.trackTitle}">Getting Started</div>
     <div style="${css.descHelp}">
-Jukebox Plus lets you organize and control music tracks by <strong>albums</strong> or <strong>playlists</strong>.
-Use the toggle buttons in the sidebar to switch between views. Tracks are displayed on the right, and control
-buttons appear for each one.
+      Jukebox Plus lets you organize and control music tracks by <strong>albums</strong> or <strong>playlists</strong>.
+      Use the toggle buttons in the sidebar to switch between views. Tracks are displayed on the right, and control
+      buttons appear for each one.
     </div>
-<br><br>
+    <br><br>
 
     <div style="${css.trackTitle}">Header Buttons</div>
     <div style="${css.descHelp}">
-At the top right of the interface:
-</div>
- <span style="${css.trackCount}">10 tracks</span>
-<div style = "${css.headerButtonContainer}float:none;">Play All 
-    <a style="${css.headerSubButton}">Together</a>
-    <a style="${css.headerSubButton}">In Order</a>
-    <a style="${css.headerSubButton}">Loop</a>
-    <a style="${css.headerSubButton}">Mix</a>
-</div>
-<div style = "${css.headerButtonContainer}float:none;">Loop All
-    <a style="${css.headerSubButton}">Off</a>
-    <a style="${css.headerSubButton}">On</a>
-</div>
+      At the top right of the interface:
+    </div>
+    <span style="${css.trackCount}">10 tracks</span>
+    <div style="${css.headerButtonContainer}float:none;">
+      Play All 
+      <a style="${css.headerSubButton}">Together</a>
+      <a style="${css.headerSubButton}">In Order</a>
+      <a style="${css.headerSubButton}">Loop</a>
+      <a style="${css.headerSubButton}">Mix</a>
+    </div>
+    <div style="${css.headerButtonContainer}float:none;">
+      Loop All
+      <a style="${css.headerSubButton}">Off</a>
+      <a style="${css.headerSubButton}">On</a>
+    </div>
     <a style="${css.headerButton}float:none;">Stop All</a>
     <a style="${css.headerButton}float:none;">Find</a>
-<a style="${css.headerButton}float:none;">Help</a>
+    <a style="${css.headerButton}float:none;">Help</a>
 
-<br><br>
+    <br><br>
     <div style="${css.descHelp}">
 
-    <b>Play All</b><br>
-    <div style = "margin-left:15px">
-         <b>Together</b> — Plays all visible tracks simultaneously. Limited to the first five visible.<br>
-         <b>In order</b> — Plays all visible tracks one after the other.<br>
-         <b>Loop</b> — Plays all visible tracks one after the other, then starts over.<br>
-         <b>Mix</b> — Plays all looping tracks continuously, and all other tracks at random intervals. Use to create a custom soundscape. Stopped by <b>StopAll</b><br>
-    </div>
+      <b>Play All</b><br>
+      <div style="margin-left:15px">
+        <b>Together</b> — Plays all visible tracks simultaneously. Limited to the first five visible.<br>
+        <b>In order</b> — Plays all visible tracks one after the other.<br>
+        <b>Loop</b> — Plays all visible tracks one after the other, then starts over.<br>
+        <b>Mix</b> — Plays all looping tracks continuously, and all other tracks at random intervals. Use to create a custom soundscape. Stopped by <b>StopAll</b><br>
+      </div>
 
-    <b>Loop</b><br>
-    <div style = "margin-left:15px">
+      <b>Loop</b><br>
+      <div style="margin-left:15px">
         <b>Off</b> — Disables loop mode for all visible tracks<br>
         <b>On</b> — Enables loop mode for all visible tracks<br>
-    </div>
-    
-    <b>Stop All</b> — Stops all currently playing tracks. Also use to stop a Mix.<br>
-    <b>Find</b> — Search all track names and descriptions for the keyword. All matching tracks will be assigned to a temporary album called <b>Found</b>. You can then switch to the Found album to quickly view the results. To clear the results, simply delete the Found album using the Utility panel.<br>If you input "d" as the search term, it will create a temporary album of any duplicate tracks, grouped by name.<br>
-    <b>Help</b> — Displays this help page. Click <b>Return to Player</b> to return.
+      </div>
+      
+      <b>Stop All</b> — Stops all currently playing tracks. Also use to stop a Mix.<br>
+      <b>Find</b> — Search all track names and descriptions for the keyword. All matching tracks will be assigned to a temporary album called <b>Found</b>. You can then switch to the Found album to quickly view the results. To clear the results, simply delete the Found album using the Utility panel.<br>If you input "d" as the search term, it will create a temporary album of any duplicate tracks, grouped by name.<br>
+      <b>Help</b> — Displays this help page. Click <b>Return to Player</b> to return.
     </div>
 
     <br><br>
@@ -322,127 +329,143 @@ At the top right of the interface:
     <div style="${css.trackTitle}">Sidebar: Navigation & Now Playing</div>
     <br>
     <div style="${css.descHelp}">
-    <b>View Mode Toggle</b><br>
-The left sidebar lists all albums or playlists, depending on the current view mode. Clicking a name switches the view.
-<br>
-<div style="display:block; width:250px;"><a style="${css.albumSelectedLink}display:inline-block;">Albums</a> <a style="${css.playlistSelectedLink}display:inline-block;">Playlists</a></div>
-<div style="${css.descHelp}">
-These buttons let you switch between organizing by:
-<br>
-<b>Album</b> tags or by manual <b>Playlists</b>. Albums are groupings of tracks that you define through Jukebox Plus. You can make as many of these as you like, and any track may belong to multiple albums.
-<b>Playlists</b> are managed by the Roll20 Jukebox interface. You can view and play them here, but you cannot move them about.
-</div>
-<div style="${css.descHelp}">
-At the bottom of the list is:<br>
-<a style="${css.albumSelectedLink}width:130px;">Now Playing</a> Choosing this filters the list to show only tracks currently playing.
-</div>
-<br><br>
+      <b>View Mode Toggle</b><br>
+      The left sidebar lists all albums or playlists, depending on the current view mode. Clicking a name switches the view.
+      <br>
+      <div style="display:block; width:250px;">
+        <a style="${css.albumSelectedLink}display:inline-block;">Albums</a> 
+        <a style="${css.playlistSelectedLink}display:inline-block;">Playlists</a>
+      </div>
+      <div style="${css.descHelp}">
+        These buttons let you switch between organizing by:
+        <br>
+        <b>Album</b> tags or by manual <b>Playlists</b>. Albums are groupings of tracks that you define through Jukebox Plus. You can make as many of these as you like, and any track may belong to multiple albums.
+        <b>Playlists</b> are managed by the Roll20 Jukebox interface. You can view and play them here, but you cannot move them about.
+      </div>
+      <div style="${css.descHelp}">
+        At the bottom of the list is:<br>
+        <a style="${css.albumSelectedLink}width:130px;">Now Playing</a> Choosing this filters the list to show only tracks currently playing.
+      </div>
+      <br><br>
 
-    <div style="${css.trackTitle}">Track Controls</div>
-    <div style="${css.descHelp}">
-Each track shows these control buttons:<br>
+      <div style="${css.trackTitle}">Track Controls</div>
+      <div style="${css.descHelp}">
+        Each track shows these control buttons:<br>
 
-<div style = "margin-left:15px">
-    <img src="${icons.play}" width="20" height="20"> <strong>Play</strong>: Start the track.<br>
-    <img src="${icons.loop}" width="20" height="20"> <strong>Loop</strong>: Toggle loop mode for the track.<br>
-    <img src="${icons.isolate}" width="20" height="20"> <strong>Isolate</strong>: Stops all others and plays only this one.<br>
-    <img src="${icons.stop}" width="20" height="20"> <strong>Stop</strong>: Stops this track.<br>
-    <a style="${css.announceButton}">➤</a> <strong>Announce</strong>: Sends the track name and description to the chat window.<br>
-</div>
-<br><br>
+        <div style="margin-left:15px">
+          <img src="${icons.play}" width="20" height="20"> <strong>Play</strong>: Start the track.<br>
+          <img src="${icons.loop}" width="20" height="20"> <strong>Loop</strong>: Toggle loop mode for the track.<br>
+          <img src="${icons.isolate}" width="20" height="20"> <strong>Isolate</strong>: Stops all others and plays only this one.<br>
+          <img src="${icons.stop}" width="20" height="20"> <strong>Stop</strong>: Stops this track.<br>
+          <a style="${css.announceButton}">➤</a> <strong>Announce</strong>: Sends the track name and description to the chat window.<br>
+        </div>
+        <br><br>
 
-<div style="${css.trackTitle}">Track Info and Management</div>
-<div style="${css.descHelp}">
-<b>Edit</b> — Click the track description "edit" link to create a description.<br>
-<div style = "margin-left:15px">
-    Description special characters:<br>
-    "---" to insert a line break.<br>
-    "*italic*" surround a word in single asterisks to have it display in italic<br>
-    "**bold**" surround a word in double asterisks to have it display in bold<br>
-    "!d" or "!desc" to include the description of the track when you announce it. Default is title only.<br>
-    "!a" or "!announce" to have a track announce itself automatically whenever you play it. Default is manual announcement only.
-</div>
-<br>
-<b>Tags</b> — Each track has a Playlist tag, and the ability to add album tags. <span style="${css.playlistTag}">Playlist</span> tags are in blue, and <span style="${css.albumTag}">album</span> tags are in red. Click <span style="${css.albumTag}">+ Add</span> to add a track to an Album. Click a Playlist or Album tag to jump immediately to that Playlist or Album. Click the "x" in an Album tag to remove the track from that Album: <span style="${css.albumTag}">Album name | x</span><br>
-<b>Image Area</b> — Click the image area to submit a valid image URL or a hexadecimal color code, such as "#00ff00". You can also enter a common CSS color name such as "red".<br>
-If you submit an image URL, the image will display here next to the title, or in the chat tab while Announcing a track. The URL can come from your Roll20 image library or any valid image host.<br>
-If you submit a valid color code or name, the square will turn that color, and that color will be used when Announcing a track.
+        <div style="${css.trackTitle}">Track Info and Management</div>
+        <div style="${css.descHelp}">
+          <b>Edit</b> — Click the track description "edit" link to create a description.<br>
+          <div style="margin-left:15px">
+            Description special characters:<br>
+            "---" to insert a line break.<br>
+            "*italic*" surround a word in single asterisks to have it display in italic<br>
+            "**bold**" surround a word in double asterisks to have it display in bold<br>
+            "!d" or "!desc" to include the description of the track when you announce it. Default is title only.<br>
+            "!a" or "!announce" to have a track announce itself automatically whenever you play it. Default is manual announcement only.
+          </div>
+          <br>
+          <b>Tags</b> — Each track has a Playlist tag, and the ability to add album tags. <span style="${css.playlistTag}">Playlist</span> tags are in blue, and <span style="${css.albumTag}">album</span> tags are in red. Click <span style="${css.albumTag}">+ Add</span> to add a track to an Album. Click a Playlist or Album tag to jump immediately to that Playlist or Album. Click the "x" in an Album tag to remove the track from that Album: <span style="${css.albumTag}">Album name | x</span><br>
+          <b>Image Area</b> — Click the image area to submit a valid image URL or a hexadecimal color code, such as "#00ff00". You can also enter a common CSS color name such as "red".<br>
+          If you submit an image URL, the image will display here next to the title, or in the chat tab while Announcing a track. The URL can come from your Roll20 image library or any valid image host.<br>
+          If you submit a valid color code or name, the square will turn that color, and that color will be used when Announcing a track.
+        </div>
+        <br>
+        <br>
+
+        <div style="${css.trackTitle}">Utility Panel</div>
+        <div style="${css.descHelp}">
+          Click <div style="display: inline-block; width: 100px; text-align:left;">
+            <a style="${css.settingsButton}">Settings ▾</a>
+          </div> to expand the utility tools. Includes:
+          <br>
+          <div style="margin-left:15px">
+            <div style="width: 170px; text-align:left;">
+              <div style="${css.utilityContainer}">Edit Albums:</strong>
+                <a style="${css.utilitySubButton}">–</a>
+                <a style="${css.utilitySubButton}">+</a>
+                <a style="${css.utilitySubButton}">✎</a>
+              </div>
+            </div>
+
+            These buttons change the name of an album, add a new album, or remove the currently selected album. There is no verification, so use with care.
+            <br>
+
+            <div style="width: 170px; text-align:left;">
+              <div style="${css.utilityContainer}">A—Z</strong>
+                <a style="${css.utilitySubButton}">albums</a>
+                <a style="${css.utilitySubButton}">tracks</a>
+              </div>
+            </div>
+            These buttons alphabetize Albums, or Tracks within an Album.
+
+            <div style="width: 170px; text-align:left;">
+              <div style="${css.utilityContainer}">Mode:</strong>
+                <a style="${css.utilitySubButton}">dark</a>
+                <a style="${css.utilitySubButton}">light</a>
+              </div>
+            </div>
+
+            These buttons switch between light and dark mode.
+
+            <div style="width: 170px; text-align:left;">
+              <a style="${css.utilityButton}">↻ Refresh</a>
+            </div> Rebuilds the interface if something breaks.
+
+            <div style="width: 170px; text-align:left;">
+              <div style="${css.utilityContainer}">Backup</strong>
+                <a style="${css.utilitySubButton}">make</a>
+                <a style="${css.utilitySubButton}">restore</a>
+              </div>
+            </div>
+            These buttons create a backup handout of the custom data you have entered: playlists, descriptions, and images. Higher numbered handouts are later backups. You can restore from a backup if your data gets screwed up, or you can transmogrify or copy the handout to a new game and restore from there. This is a useful way to move your customizations from game to game. Use with caution — Roll20 stores tracks by ID number which are different in every game, and the script tries hard to match title to ID. If you have multiple tracks with the same name or have renamed a track, this may not perform as expected.
+          </div>
+          <br><br>
+
+          <div style="${css.trackTitle}">Find</div>
+          <div style="${css.descHelp}">
+            Use the <code>!jb find keyword</code> command to search all track names and descriptions for the keyword.
+            All matching tracks will be assigned to a temporary album called <b>Found</b>. You can then switch to the Found album to quickly view the results. To clear the results, simply delete the Found album using the utility panel.
+          </div>
+          <br><br>
+
+          <div style="${css.trackTitle}">Useful Macros</div>
+          <div style="${css.descHelp}">
+            Here are some chat commands that can be used in macros:<br>
+            <div style="margin-left:15px">
+              <code>!jb</code> — Puts a link to this handout in chat<br>
+              <code>!jb play TrackName</code> — play the named track<br>
+              <code>!jb stopall</code> — stops all audio<br>
+              <code>!jb loopall</code> — sets loop mode on all visible tracks<br>
+              <code>!jb unloopall</code> — disables loop mode on all tracks<br>
+              <code>!jb jump album AlbumName</code> — switch to a specific album<br>
+              <code>!jb help</code> — open this help screen<br>
+              <code>!jb find keyword</code> search for tracks by keyword in name or description<br>
+            </div>
+            You can also discover commands by pressing a button, clicking in the chat window, and pressing the up arrow to see what was sent.
+          </div>
+          <br><br><br><br><br>
+        </div>
+      </div>
     </div>
-<br>
-<br>
-
-<div style="${css.trackTitle}">Utility Panel</div>
-<div style="${css.descHelp}">
-Click <div style="display: inline-block; width: 100px; text-align:left;"><a style="${css.settingsButton}">Settings ▾</a></div> to expand the utility tools. Includes:
-<br>
-<div style = "margin-left:15px">
-    <div style="width: 170px; text-align:left;">
-    <div style="${css.utilityContainer}">Edit Albums:</strong>
-    <a style="${css.utilitySubButton}">–</a>
-    <a style="${css.utilitySubButton}">+</a>
-    <a style="${css.utilitySubButton}">✎</a>
-</div></div>
-
-These buttons change the name of an album, add a new album, or remove the currently selected album. There is no verification, so use with care.
-<br>
-
-<div style="width: 170px; text-align:left;">
-<div style="${css.utilityContainer}">A—Z</strong>
-<a  style="${css.utilitySubButton}">albums</a>
-<a  style="${css.utilitySubButton}">tracks</a>
-</div></div>
-These buttons alphabetize Albums, or Tracks within an Album.
-
-
-<div style="width: 170px; text-align:left;">
-<div style="${css.utilityContainer}">Mode:</strong>
-<a  style="${css.utilitySubButton}">dark</a>
-<a  style="${css.utilitySubButton}">light</a>
-</div></div>
-
-These buttons switch between light and dark mode.
-
-<div style="width: 170px; text-align:left;"><a style="${css.utilityButton}">↻ Refresh</a></div> Rebuilds the interface if something breaks.
-
-<div style="width: 170px; text-align:left;">
-<div style="${css.utilityContainer}">Backup</strong>
-<a style="${css.utilitySubButton}">make</a>
-<a style="${css.utilitySubButton}">restore</a>
-</div></div>
-These buttons create a backup handout of the custom data you have entered: playlists, descriptions, and images. Higher numbered handouts are later backups. You can restore from a backup if your data gets screwed up, or you can transmogrify or copy the handout to a new game and restore from there. This is a useful way to move your customizations from game to game. Use with caution — Roll20 stores tracks by ID number which are different in every game, and the script tries hard to match title to ID. If you have multiple tracks with the same name or have renamed a track, this may not perform as expected.
-</div>
-<br><br>
-
-    <div style="${css.trackTitle}">Find</div>
-    <div style="${css.descHelp}">
-Use the <code>!jb find keyword</code> command to search all track names and descriptions for the keyword.
-All matching tracks will be assigned to a temporary album called <b>Found</b>. You can then switch to the Found album to quickly view the results. To clear the results, simply delete the Found album using the utility panel.
-    </div>
-<br><br>
-
-    <div style="${css.trackTitle}">Useful Macros</div>
-    <div style="${css.descHelp}">
-Here are some chat commands that can be used in macros:<br>
-<div style = "margin-left:15px">
-    <code>!jb</code> — Puts a link to this handout in chat<br>
-    <code>!jb play TrackName</code> — play the named track<br>
-    <code>!jb stopall</code> — stops all audio<br>
-    <code>!jb loopall</code> — sets loop mode on all visible tracks<br>
-    <code>!jb unloopall</code> — disables loop mode on all tracks<br>
-    <code>!jb jump album AlbumName</code> — switch to a specific album<br>
-    <code>!jb help</code> — open this help screen<br>
-    <code>!jb find keyword</code> search for tracks by keyword in name or description<br>
-</div>
-    You can also discover commands by pressing a button, clicking in the chat window, and pressing the up arrow to see what was sent.
-</div>
-<br><br><br><br><br></div>
+  </div>
 `;
+
 
 
 
         handout.set('notes', helpHTML);
     };
 
+// Sends a styled message to chat, supporting optional titles and clickable links using markdown-style [label](command) syntax.
     function sendStyledMessage(titleOrMessage, messageOrUndefined, isPublic = false)
     {
         let title, message;
@@ -476,6 +499,7 @@ Here are some chat commands that can be used in macros:<br>
         });
     }
 
+// Formats user-entered text with basic markup for bold, italics, code, and line breaks, and highlights shorthand commands like !a and !d.
 const renderFormattedText = (text) => {
   if(!text) return '';
   return esc(text)
@@ -488,6 +512,7 @@ const renderFormattedText = (text) => {
 };
 
 
+// Escapes special characters for safe use in Roll20 query prompts (e.g. `?{}` and pipe-delimited lists).
 const escapeForRoll20Query = (str) => {
   if (!str) return '';
   return str
@@ -503,6 +528,7 @@ const escapeForRoll20Query = (str) => {
 
 
 
+// Escapes HTML special characters and replaces double slashes with <br> for safe HTML rendering.
     const esc = (s) => s.replace(/[&<>"']/g, c => (
         {
             '&': '&amp;',
@@ -546,6 +572,7 @@ const cssNamedColors = new Set([
 
 
 
+// Holds the state for sequential track playback, including track order, current position, active status, and loop mode.
 let sequentialPlayState = {
     trackIds: [],
     currentIndex: -1,
@@ -553,6 +580,8 @@ let sequentialPlayState = {
     loop: false // <--- New!
 };
 
+
+// Returns the list of tracks currently visible based on view mode (albums, playlists, now playing) and sorting preferences.
 const getVisibleTrackList = () => {
     const getPlaylistTracks = () =>
     {
@@ -705,6 +734,8 @@ const getVisibleTrackList = () => {
         syncPlaylists();
     };
 
+
+// Builds the full HTML row for a single track, including controls, tags, and image display.
 const buildTrackRow = (track) =>
 {
     const isHexColor = /^#(?:[0-9a-fA-F]{3}){1,2}$/.test(track.image || '');
@@ -802,6 +833,7 @@ const buildTrackRow = (track) =>
 
     
     
+// Returns an object with boolean flags indicating special playback options based on keywords in the track's description.
 const getTrackFlags = (track) => {
     const desc = (track.description || '').toLowerCase();
     return {
@@ -810,6 +842,7 @@ const getTrackFlags = (track) => {
     };
 };
 
+// Returns a sorted list of album names, ensuring the special 'Found' album is always listed last.
 const getSortedAlbumNames = () => {
     let albumNames = data.albumSortOrder?.length
         ? data.albumSortOrder.filter(name => data.albums.hasOwnProperty(name))
@@ -822,6 +855,7 @@ const getSortedAlbumNames = () => {
 };
 
 
+// Rebuilds the entire UI and updates the handout based on current settings and track states.
 const updateInterface = () =>
 {
     css = data.settings.mode === 'light' ? cssLight : cssDark;
@@ -1054,7 +1088,7 @@ const trackList = getVisibleTrackList().map(buildTrackRow).join('');
 };
 
 
-
+// Finds or creates the Jukebox Plus handout and sends a clickable link to it in chat.
     const sendHandoutLink = () =>
     {
         let handout = findObjs(
@@ -1080,6 +1114,8 @@ const trackList = getVisibleTrackList().map(buildTrackRow).join('');
 
     };
 
+
+// Handles auto-playing the next track in sequence when one finishes during sequential playback.
 on('change:jukeboxtrack', (obj, prev) => {
     if (!sequentialPlayState.active) return;
 
@@ -1120,7 +1156,18 @@ on('change:jukeboxtrack', (obj, prev) => {
 });
 
 
+// Updates the UI to reflect play state changes when a track stops naturally outside of sequential playback.
+on('change:jukeboxtrack', (obj, prev) => {
+    if (sequentialPlayState.active) return;
 
+    if (prev.softstop === false && obj.get('softstop') === true && !obj.get('loop')) {
+        obj.set('playing', false);  // Clear playing state so icon updates correctly
+        updateInterface();
+        log("Track finished naturally, UI updated");
+    }
+});
+
+// Handles all chat commands starting with !jb, parsing arguments and executing the matching command logic.
     on('chat:message', (msg) =>
     {
         if(msg.type !== 'api' || !msg.content.startsWith('!jb')) return;
@@ -1136,12 +1183,14 @@ on('change:jukeboxtrack', (obj, prev) => {
                 .find(t => t.title === idOrName);
         };
 
-        if(command === '')
+    // Sends a link to the Jukebox Plus handout when no specific command is given
+       if(command === '')
         {
             sendHandoutLink();
             return;
         }
 
+    // Shows or hides the help view depending on argument ('help' or 'help close')
         if(command === 'help')
         {
             const sub = args[0]?.toLowerCase();
@@ -1158,6 +1207,7 @@ on('change:jukeboxtrack', (obj, prev) => {
         }
 
 
+    // Controls playback of a single track: play, stop, loop toggle, or isolate (stop others)
         if(["play", "loop", "stop", "isolate"].includes(command))
         {
             const idOrName = args.join(' ')
@@ -1208,6 +1258,7 @@ sendStyledMessage(
         }
 
 
+    // Plays all tracks currently visible in the view, up to a maximum of 5 simultaneously
 if(command === 'playall')
 {
     const trackList = (() =>
@@ -1257,6 +1308,7 @@ if(command === 'playall')
     updateInterface();
 }
 
+    // Plays all visible tracks sequentially, starting from the first one
 if (command === 'playall-seq') {
     const visibleTracks = getVisibleTrackList();
     const max = 20;
@@ -1285,6 +1337,7 @@ if (command === 'playall-seq') {
 }
 
 
+    // Plays all visible tracks sequentially in a loop, restarting after last track ends
 if(command === 'playall-seq-loop') {
     const visibleTracks = getVisibleTrackList(); // Same display order used by updateInterface
 
@@ -1318,6 +1371,7 @@ if(command === 'playall-seq-loop') {
 // Global timer variable, declared once outside the command handler
 let mixAccentTimer = null;
 
+    // Starts a "mix" mode: plays looping tracks continuously and plays non-looping tracks randomly at intervals
 if (command === 'mix') {
     if (args[0] === 'stop') {
         sendStyledMessage('Info', 'Use !jb stopall to stop all playback including mix mode.');
@@ -1388,6 +1442,7 @@ if (command === 'mix') {
 }
 
 
+    // Stops all playing tracks and cancels any active mix timer
 if (command === 'stopall') {
     getAllTracks().forEach(t => t.set('playing', false));
 
@@ -1404,6 +1459,7 @@ if (command === 'stopall') {
 
 
 
+    // Toggles loop state for all tracks in current album or playlist view
         else if(command === 'loopall' || command === 'unloopall')
         {
             const trackList = (() =>
@@ -1434,6 +1490,7 @@ if (command === 'stopall') {
             updateInterface();
         }
 
+    // Forces a refresh of track data from Roll20's jukebox and updates the interface
         if(command === 'refresh')
         {
             syncTracks();
@@ -1441,6 +1498,7 @@ if (command === 'stopall') {
             sendStyledMessage('Track data refreshed.');
         }
 
+    // Creates a backup of all track, album, and playlist data into a new archived handout
         if(command === 'backup')
         {
             const backupData = {
@@ -1505,6 +1563,7 @@ archived: true
         }
 
 
+    // Restores track, album, and playlist data from a named backup handout
         if(command === 'restore')
         {
             const backupName = args.join(' ')
@@ -1594,6 +1653,7 @@ archived: true
             });
         }
 
+    // Removes a track from saved data by ID
 if(command === 'delete-track') {
     const id = args.join(' ').trim();
     const track = data.tracks[id];
@@ -1606,6 +1666,7 @@ if(command === 'delete-track') {
     }
 }
 
+    // Announces a track with formatted message including image/color/description based on flags
 if (command === 'announce') {
     const idOrName = args.join(' ').trim();
     const track = findTrackByIdOrName(idOrName);
@@ -1680,6 +1741,7 @@ if (command === 'announce') {
 
 
 
+    // Switches view mode between albums and playlists
         if(command === 'view')
         {
             const mode = args[0];
@@ -1690,6 +1752,7 @@ if (command === 'announce') {
             }
         }
 
+    // Sets view to show only currently playing tracks
         if(command === 'view' && args[0] === 'nowplaying')
         {
             data.settings.nowPlayingOnly = true;
@@ -1697,12 +1760,14 @@ if (command === 'announce') {
         }
 
 
+    // Resets view to show all tracks
         if(command === 'view' && args[0] === 'all')
         {
             data.settings.nowPlayingOnly = false;
             updateInterface();
         }
 
+    // Changes selected album in album view, given URL encoded album name
 if(command === 'jump' && args[0] === 'album')
 {
     const encodedName = args.slice(1).join(' ').trim();
@@ -1720,6 +1785,7 @@ if(command === 'jump' && args[0] === 'album')
     }
 }
 
+    // Changes selected playlist in playlist view, given URL encoded playlist name
         if(command === 'jump-playlist')
         {
             const name = decodeURIComponent(args.join(' ')
@@ -1737,6 +1803,7 @@ if(command === 'jump' && args[0] === 'album')
             updateInterface();
         }
 
+    // Sorts albums alphabetically and updates the album order
 if (command === 'sort-albums') {
     const sorted = Object.keys(data.albums).sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
     data.albumSortOrder = sorted;
@@ -1744,6 +1811,7 @@ if (command === 'sort-albums') {
     updateInterface();
 }
 
+    // Sorts tracks alphabetically and updates track order
 if (command === 'sort-tracks') {
     const sorted = Object.values(data.tracks)
         .map(t => t.title)
@@ -1754,6 +1822,7 @@ if (command === 'sort-tracks') {
 }
 
 
+    // Edits a field (image, description, albums) of a specified track
 if(command === 'edit')
 {
     const idOrName = args.shift();
@@ -1821,6 +1890,7 @@ if(command === 'edit')
 
 
 
+    // Adds a new album to the album list and selects it
         if(command === 'add' && args[0] === 'album')
         {
             const albumName = args.slice(1)
@@ -1836,6 +1906,7 @@ updateInterface();
             }
         }
 
+    // Adds a new album and assigns the specified track to it
         if(command === 'add-album-and-assign')
         {
             const trackId = args.shift();
@@ -1876,6 +1947,7 @@ if (!data.albums[albumName]) {
             updateInterface();
         }
 
+    // Removes an album and cleans up all tracks that reference it
         if(command === 'remove-album')
         {
             const name = args.join(' ')
@@ -1914,6 +1986,7 @@ if (!data.albums[albumName]) {
             }
         }
 
+    // Renames an album and updates all references to it in tracks and sorting
         if(command === 'rename-album')
         {
             const knownAlbums = Object.keys(data.albums)
@@ -1980,6 +2053,7 @@ data.albumSortOrder = data.albumSortOrder.map(n => n === oldName ? newName : n);
             updateInterface();
         }
 
+    // Finds tracks by a search term, marking matches into a special 'Found' or 'Duplicates' album
 if (command === 'find') {
     const searchTerm = args.join(' ').toLowerCase().trim();
 
@@ -2071,11 +2145,16 @@ data.trackOrder = duplicates
     sendStyledMessage('Find Tracks', `Found ${matches.length} track${matches.length !== 1 ? 's' : ''} matching "${searchTerm}"`, false);
 }
 
+
+    // Toggles the visibility of the settings pane
         if(command === 'toggle-settings')
         {
             data.settings.settingsExpanded = !data.settings.settingsExpanded;
             updateInterface();
         }
+
+
+    // Changes the interface mode between 'light' and 'dark'
         if(command === 'mode')
         {
             const theme = args[0]?.toLowerCase();
@@ -2091,6 +2170,7 @@ data.trackOrder = duplicates
         }
 
 
+    // Selects an album or playlist, updating the current view
         if(command === 'select')
         {
             const type = args.shift();
