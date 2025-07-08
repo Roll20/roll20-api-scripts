@@ -1307,3 +1307,11 @@ CalendarandWeather:
 Align:
   - "Align"
   - "Utility"
+
+JukeboxPlus:
+  - "JukeboxPlus"
+  - "Utility"
+
+isBeacon:
+  - "isBeacon"
+  - "Utility"
