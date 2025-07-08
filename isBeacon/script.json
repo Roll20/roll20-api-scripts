@@ -1,0 +1,13 @@
+{
+  "name": "isBeacon",
+  "script": "isBeacon.js",
+  "version": "0.0.1",
+  "description": "isBeacon provides a single point for detecting which sheet a character is using. The script exposes a single function (named <code>isBeacon()</code>) and allows a scripter to pass a sheet name, a character name, a character ID, or the token ID of a token which represents a character. The function returns <code>true</code> if the associated sheet is a Beacon sheet, or <code>false</code> if it is legacy. This is for use by scripters as a tool they can leverage to include with their own scripts as a dependency.",
+  "authors": "timmaugh, The Aaron",
+  "roll20userid": "5962076, 104025",
+  "useroptions": [],
+  "dependencies": [],
+  "modifies": [],
+  "conflicts": [],
+  "previousversions": []
+}
