@@ -23,6 +23,9 @@ Condefinition reads incoming roll templates and looks for imposed conditions and
 - The Concentration condition marker also tracks concentration and prompts for a Constitution Save when damaged.
 
 - Compatible with Classic and Jumpgate VTT, and the 2014 or 2024 D&D sheets. Advanced configuration requires JavaScript knowledge.
+  
+-  **Condition Sync** compliant
+
 
 ### What it can't do
 
@@ -110,6 +113,8 @@ Condition definitions are stored in a handout named **Condefinitions** and consi
 4. **Line 4:** Name of the token marker
 
 To update, save the handout and click **Update Conditions** in chat. Use the **Code** style when pasting definitions.
+
+Instructions are given in the configuration handout on how to make this **Condition Sync** compliant. Typically, this means just pressing a button to make it happen.
 
 **Tip:** Duplicate the handout before editing, in case you need to roll back.
 
