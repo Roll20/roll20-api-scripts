@@ -8,5 +8,5 @@
 	  "dependencies": [ "TokenMod", "GroupCheck", "libTokenMarkers" ],
   	"modifies": {},
 	"conflicts": [],
-	"previousversions": ["1.0.0", "1.0.1", "1.0.1"]
+	"previousversions": ["1.0.0", "1.0.1", "1.0.2"]
 }
