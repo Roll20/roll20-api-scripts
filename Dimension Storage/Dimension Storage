@@ -1,0 +1,162 @@
+/**
+* Storage Management
+ *   !storageconfig — Opens the configuration menu.
+
+*Configuration Commands
+*    !setbagmax [number] — Sets the max weight for the Dimension Bag.
+*    !setsackmax [number] — Sets the max weight for the Sack.
+*    !setholemax — Resets the Moveable Hole to unlimited weight.
+*    !setcoins [comma-separated values] — Updates the order of coin types (e.g., !setcoins PP, GP, SP, CP).
+*    !setcolor [color name or hex] — Changes the text color for item quantity.
+
+*Storage Commands
+*    !dimensionbag add "Bag Name" [quantity] [item] [weight] — Adds an item to a Dimension Bag.
+*    !dimensionbag remove "Bag Name" [quantity] [item] — Removes an item from a Dimension Bag.
+*    !sack add "Sack Name" [quantity] [item] [weight] — Adds an item to a Sack.
+*    !sack remove "Sack Name" [quantity] [item] — Removes an item from a Sack.
+*    !hole add "Hole Name" [quantity] [item] [weight] — Adds an item to a Moveable Hole.
+*    !hole remove "Hole Name" [quantity] [item] — Removes an item from a Moveable Hole.
+*Each storage type has its own max weight (except the hole, which is unlimited).
+*/
+on('ready', () => {
+    let CONFIG = {
+        bagMaxWeight: 500,
+        sackMaxWeight: 900,
+        holeMaxWeight: Infinity,
+        coinOrder: ['PP', 'GP', 'EP', 'SP', 'CP'],
+        quantityColor: 'blue'
+    };
+
+    const showConfigMenu = () => {
+        let menu = `/w gm &{template:default} ` +
+            `{{name=Storage Configuration}} ` +
+            `{{Bag Max Weight=[${CONFIG.bagMaxWeight}](!setbagmax ?{New Max Weight})}} ` +
+            `{{Sack Max Weight=[${CONFIG.sackMaxWeight}](!setsackmax ?{New Max Weight})}} ` +
+            `{{Hole Max Weight=[Unlimited](!setholemax)}} ` +
+            `{{Coin Order=[${CONFIG.coinOrder.join(', ')}](!setcoins ?{Enter Coins Separated by Commas})}} ` +
+            `{{Quantity Color=[${CONFIG.quantityColor}](!setcolor ?{Enter Color Name or Hex})}}`;
+        sendChat('Storage', menu);
+    };
+
+    on('chat:message', (msg) => {
+        if (msg.type !== 'api') return;
+
+        if (msg.content === '!storageconfig') {
+            showConfigMenu();
+            return;
+        }
+
+        let match;
+        if (match = msg.content.match(/^!setbagmax (\d+)$/)) {
+            CONFIG.bagMaxWeight = parseInt(match[1], 10);
+        } else if (match = msg.content.match(/^!setsackmax (\d+)$/)) {
+            CONFIG.sackMaxWeight = parseInt(match[1], 10);
+        } else if (match = msg.content.match(/^!setcoins (.+)$/)) {
+            CONFIG.coinOrder = match[1].split(',').map(c => c.trim());
+        } else if (match = msg.content.match(/^!setcolor (.+)$/)) {
+            CONFIG.quantityColor = match[1];
+        } else {
+            return;
+        }
+        showConfigMenu();
+    });
+
+    const getOrCreateHandout = (handoutName) => {
+        let handout = findObjs({ type: 'handout', name: handoutName })[0];
+        if (!handout) {
+            handout = createObj('handout', { 
+                name: handoutName, 
+                inplayerjournals: 'all',
+                notes: '<b>Total Weight: 0 lbs</b><br><br>'
+            });
+        }
+        return handout;
+    };
+
+    const parseHandoutContent = (notes) => {
+        let items = {};
+        (notes || '').split('<br>').forEach(line => {
+            let match = line.match(/<b>(.+?)<\/b>: <span style='color:(.*?)'>(\d+)<\/span> \((.*?) lbs\)/);
+            if (match) {
+                let [, item, , quantity, weight] = match;
+                items[item] = { quantity: parseInt(quantity, 10), weight: parseFloat(weight) };
+            }
+        });
+        return items;
+    };
+
+    const updateHandout = (handoutName, items) => {
+        let totalWeight = Object.entries(items).reduce((sum, [_, { quantity, weight }]) => sum + (quantity * weight), 0);
+        let sortedItems = Object.entries(items).sort(([a], [b]) => {
+            let aIndex = CONFIG.coinOrder.indexOf(a);
+            let bIndex = CONFIG.coinOrder.indexOf(b);
+            if (aIndex !== -1 && bIndex !== -1) return aIndex - bIndex;
+            if (aIndex !== -1) return -1;
+            if (bIndex !== -1) return 1;
+            return a.localeCompare(b);
+        });
+
+        let content = `<b>Total Weight: ${totalWeight.toFixed(2)} lbs</b><br><br>`;
+        sortedItems.forEach(([item, { quantity, weight }]) => {
+            content += `<b>${item}</b>: <span style='color:${CONFIG.quantityColor}'>${quantity}</span> (${weight} lbs)<br>`;
+        });
+
+        let handout = getOrCreateHandout(handoutName);
+        handout.set('notes', content);
+    };
+
+    const addItem = (count, item, weight, handoutName, maxWeight) => {
+        let handout = getOrCreateHandout(handoutName);
+        handout.get('notes', (notes) => {
+            let items = parseHandoutContent(notes);
+            count = parseInt(count, 10);
+            weight = parseFloat(weight);
+            let currentWeight = Object.entries(items).reduce((sum, [_, { quantity, weight }]) => sum + (quantity * weight), 0);
+            if (currentWeight + (count * weight) > maxWeight) {
+                sendChat(handoutName, `&{template:default} {{name=${handoutName}}} {{Warning=The ${handoutName} is overloaded and its contents are lost.}}`);
+                return;
+            }
+            items[item] = items[item] || { quantity: 0, weight };
+            items[item].quantity += count;
+            updateHandout(handoutName, items);
+        });
+    };
+
+    const removeItem = (count, item, handoutName) => {
+        let handout = getOrCreateHandout(handoutName);
+        handout.get('notes', (notes) => {
+            let items = parseHandoutContent(notes);
+            count = parseInt(count, 10);
+            if (!items[item] || items[item].quantity < count) {
+                sendChat(handoutName, `/w gm &{template:default} {{name=${handoutName}}} {{Warning=Not enough ${item} to remove!}}`);
+                return;
+            }
+            items[item].quantity -= count;
+            if (items[item].quantity <= 0) delete items[item];
+            updateHandout(handoutName, items);
+        });
+    };
+
+    on('chat:message', (msg) => {
+        if (msg.type !== 'api') return;
+        let args = msg.content.match(/^!(dimensionbag|sack|hole) (add|remove) "(.+?)" (.+)$/);
+        if (!args) return;
+
+        let type = args[1];
+        let action = args[2];
+        let storageName = args[3];
+        let commandArgs = args[4].split(' ');
+        let maxWeight = type === 'dimensionbag' ? CONFIG.bagMaxWeight : type === 'sack' ? CONFIG.sackMaxWeight : CONFIG.holeMaxWeight;
+
+        if (action === 'add' && commandArgs.length >= 3) {
+            let count = commandArgs.shift();
+            let weight = commandArgs.pop();
+            let item = commandArgs.join(' ');
+            addItem(count, item, weight, storageName, maxWeight);
+        } else if (action === 'remove' && commandArgs.length >= 2) {
+            let count = commandArgs.shift();
+            let item = commandArgs.join(' ');
+            removeItem(count, item, storageName);
+        }
+    });
+});
