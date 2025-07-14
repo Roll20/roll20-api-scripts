@@ -1,8 +1,8 @@
 {
 	"name":"HeroSystem6eHeroic HDImporter",
 	"script":"HeroSystem6eHeroic_HDImporter.js",
-	"version":"2.3",
-	"description":"HDImporter imports HERO Designer-created heroes, villains, monsters, and other characters into a HeroSystem6eHeroic Roll20 campaign. The characters must be exported from Hero Designer using the format HeroSystem6eHeroic.hde, which is a companion file in the HD Importer repository. To use, open an exported character text file and paste the contents into chat and hit enter. Full sheet instructions in the [README](https://github.com/Roll20/roll20-api-scripts/tree/master/HeroSystem6eHeroic_HDImporter). Based on BeyondImporter Version O.4.0 by Robin Kuiper, Matt DeKok, and Ammo Goettsch",
+	"version":"2.4",
+	"description":"HDImporter imports HERO Designer-created heroes, villains, monsters, vehicles, and other characters into a HeroSystem6eHeroic Roll20 campaign. The characters must be exported from Hero Designer using the format HeroSystem6eHeroic.hde, which is a companion file in the HD Importer repository. To use, open an exported character text file and paste the contents into chat and hit enter. Full sheet instructions in the [README](https://github.com/Roll20/roll20-api-scripts/tree/master/HeroSystem6eHeroic_HDImporter). Based on BeyondImporter Version O.4.0 by Robin Kuiper, Matt DeKok, and Ammo Goettsch",
 	"authors": "Villain In Glasses",
 	"roll20userid":"633423",
 	"useroptions":[],
@@ -13,6 +13,6 @@
 	},
 	"conflicts":[],
 	"previousVersions":[
-	"1.0, 1.1, 2.0, 2.1, 2.2"
+	"1.0, 1.1, 2.0, 2.1, 2.2, 2.3"
 	]
 }

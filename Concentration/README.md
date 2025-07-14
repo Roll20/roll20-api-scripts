@@ -78,3 +78,6 @@ If you use the 5e OGL character sheet, it can also automaticly add the concentra
 
 **25-04-2018 - 0.1.5**
 * Correct whisper target on spell cast concentration check.
+
+**02-06-2024 - 0.2.0**
+* Updated to work with Beacon sheets

@@ -1291,3 +1291,27 @@ CalenderData:
 QuestTracker:
   - "QuestTracker"
   - "Utility"
+
+GameAssist:
+  - "GameAssist"
+  - "Utility"
+
+Condefinition: 
+  - "Condefinition"
+  - "Utility"
+
+CalendarandWeather:
+  - "Calendar and Weather"
+  - "Utility"
+
+Align:
+  - "Align"
+  - "Utility"
+
+JukeboxPlus:
+  - "JukeboxPlus"
+  - "Jukebox"
+
+isBeacon:
+  - "isBeacon"
+  - "Utility"

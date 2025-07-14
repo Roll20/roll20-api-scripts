@@ -93,14 +93,23 @@ API_Meta.MagicMaster={offset:Number.MAX_SAFE_INTEGER,lineCount:-1};
  *                     of items to use inheritance via resolveData(). Improved --message command resolution
  *                     of selected vs. id token selection. Added new MI-DB-Treasure database.
  * v4.0.2  25/02/2025  Fixed error when using GM's [Add Items] or --gm-edit-mi to hide an item as another item.
+ * v4.0.3  05/04/2025  Fixed error in memorize spells dialog misdisplaying spells with empty (as opposed to
+ *                     undefined) strings.
+ * v4.0.4  08/04/2025  Added ability for --message command to take any number of variables as arguments (after
+ *                     API call argument) referenced by ^^#^^. Fixed removeMIability() which was deleting
+ *                     across all sheets rather than just selected sheet.
+ * v4.0.5  27/04/2025  Fixed character sheet corruption caused by remove() behaviour with open references.
+ *                     Fixed error in removeMIability() due to incorrect object name reference.
+ * v4.0.6  30/04/2025  Enhanced the fix in removeMIability() to deal with corrupted attributes.
+ *                     Added the !magic --clean function to clean away corrupted attributes & abilities.
  */
  
 var MagicMaster = (function() {
 	'use strict';
-	var version = '4.0.2',
+	var version = '4.0.6',
 		author = 'RED',
 		pending = null;
-	const lastUpdate = 1740502257;
+	const lastUpdate = 1746009684;
 		
 	/*
 	 * Define redirections for functions moved to the RPGMaster library
@@ -232,16 +241,17 @@ var MagicMaster = (function() {
 	
 	const handouts = Object.freeze({
 	MagicMaster_Help:	{name:'MagicMaster Help',
-						 version:3.07,
+						 version:3.08,
 						 avatar:'https://s3.amazonaws.com/files.d20.io/images/257656656/ckSHhNht7v3u60CRKonRTg/thumb.png?1638050703',
 						 bio:'<div style="font-weight: bold; text-align: center; border-bottom: 2px solid black;">'
-							+'<span style="font-weight: bold; font-size: 125%">MagicMaster Help v3.07</span>'
+							+'<span style="font-weight: bold; font-size: 125%">MagicMaster Help v3.08</span>'
 							+'</div>'
 							+'<div style="padding-left: 5px; padding-right: 5px; overflow: hidden;">'
 							+'<h1>MagicMaster API v'+version+'</h1>'
 							+'<h4>and later</h4>'
 							+'<br>'
 							+'<h3><span style='+design.selected_button+'>New:</span>  in this Help Handout</h3>'
+							+'<p><span style='+design.selected_button+'>New:</span> --message command can now take variables as additional parameters</p>'
 							+'<p><span style='+design.selected_button+'>New:</span> Non-stacking duplicate items picked up offer option for default rename to make unique</p>'
 							+'<br>'
 							+'<p>The MagicMaster API provides functions to manage all types of magic, including Wizard & Priest spell use and effects; Character, NPC & Monster Powers; and discovery, looting, use and cursing of Magic Items.  All magical aspects can work with the <b>RoundMaster API</b> to implement token markers that show and measure durations, and produce actual effects that can change token or character sheet attributes temporarily for the duration of the spell or permanently if so desired.  They can also work with the <b>InitiativeMaster API</b> to provide menus of initiative choices and correctly adjust individual initiative rolls, including effects of Haste and Slow and similar spells.  This API can also interact with the <b>MoneyMaster API</b> (under development) to factor in the passing of time, the cost of spell material use, the cost of accommodation for resting, and the cost of training for leveling up as a spell caster (Wizard, Priest or any other).</p>'
@@ -329,7 +339,7 @@ var MagicMaster = (function() {
 							+'--light token_id|(NONE/WEAPON/TORCH/HOODED/CONTLIGHT/BULLSEYE/BEACON)</pre>'
 							+'<h3>6.Other commands</h3>'
 							+'<pre>--help<br>'
-							+'--message [who|][token_id]|title|message|[command]<br>'
+							+'--message [who|][token_id]|title|message|[command]|[var1]|[var2]...<br>'
 							+'--display-ability [who|][token_id]|database|db_item|[dice_roll1]|[dice_roll2]|[target_id]<br>'
 							+'--tidy [token_id]|[SILENT]<br>'
 							+'--config [FANCY-MENUS/SPECIALIST-RULES/SPELL-NUM/ALL-SPELLS/ALL-POWERS/CUSTOM-SPELLS/AUTO-HIDE/ALPHA-LISTS/GM-ROLLS] | [TRUE/FALSE]<br>'
@@ -565,9 +575,9 @@ var MagicMaster = (function() {
 							+'<h3>6.1 Display help on these commands</h3>'
 							+'<pre>--help</pre>'
 							+'<p>This command does not take any arguments.  It displays the mandatory and optional arguments, and a brief description of each command.</p>'
-							+'<h3>6.2 Display a formatted message in chat</h3>'
-							+'<pre>--message [who|][token_id]|title|message|[command]</pre>'
-							+'<p>This command takes an optional parameter stating who to send the message to, which defaults to depending on who owns the character represented by the token, an optional token_id which defaults to a selected token, a title for the message which can be an empty string, the message to display, and an optional API command string to be sent at the same time that the message is sent (can use standard & extended escape characters).</p>'
+							+'<h3>6.2 <span style='+design.selected_button+'>Updated:</span> Display a formatted message in chat</h3>'
+							+'<pre>--message [who|][token_id]|title|message|[command]|[var1]|[var2]...</pre>'
+							+'<p>This command takes an optional parameter stating who to send the message to, which defaults to depending on who owns the character represented by the token, an optional token_id which defaults to a selected token, a title for the message which can be an empty string, the message to display, an optional API command string to be sent at the same time that the message is sent (can use standard & extended escape characters), and any number of values.</p>'
 							+'<p>The "who" parameter can be one of:</p>'
 							+'<table>'
 							+'	<tr><th scope="row">gm</th><td>Send only to the GM</td></tr>'
@@ -577,6 +587,7 @@ var MagicMaster = (function() {
 							+'	<tr><th scope="row">standard</th><td>Check which players/GMs control the character represented by the token. If the GM controls, or no-one, or the controlling player is not on-line, or the token does not represent a character, send to the GM; otherise make public.</td></tr>'
 							+'	<tr><th scope="row">Anything else</th><td>Same as Standard</td></tr>'
 							+'</table>'
+							+'<p>The values submitted as <i>var1, var2</i> etc can be referenced inside the message or the command by using the syntax ^^#^^, where # is the argument number: with <i>var1</i> being argument 5. Arguments 0 through 4 refer to the previous arguments in the expression. This syntax is useful to, for instance, use the result of a dice roll in both the body of the message and the command.</p>'
 							+'<h3>6.3 Display a database item or Character Sheet ability</h3>'
 							+'<pre>--display-ability [who|][token_id]|database|db_item|[dice_roll1]|[dice_roll2]|[target_id]</pre>'
 							+'<p>This command takes an optional parameter stating who to send the output to, which defaults to depending on who owns the character represented by the token, an optional token_id which defaults to a selected token, the mandatory name or ID of a database or character sheet, the mandatory name of a database item or character sheet ability macro, two optional dice roll results (or Roll20 in-line roll specifications), and an optional token_id of a target token.</p>'
@@ -1446,7 +1457,6 @@ var MagicMaster = (function() {
 			
 			if (csv < curVer) {
 				if (csv < 2.1) {
-//					log('updateACS: updating '+charName);
 					for (let c=1; c<=fields.MaxSpellCol; c++) {
 						await updateCSspellCol( charCS, charName, c, senderId );
 					}
@@ -1481,7 +1491,6 @@ var MagicMaster = (function() {
 		};
 		for (const charCS of CSarray) {
 			let delay = Math.round(10000+(Math.random() * 10000));
-//			log('updateCharSheets: '+charCS.get('name')+' is in the list, delay = '+delay);
 			setTimeout( updateACS, delay, charCS, curVer, senderId );
 		}
 	};
@@ -1784,12 +1793,9 @@ var MagicMaster = (function() {
 		if (itemName.length) {
 			setAttr( charCS, fields.ItemChosen, itemName );
 			let item = abilityLookup( fields.MagicItemDB, itemName );
-//			log('setCaster: cmd = '+args[0].toUpperCase()+', cmd test = '+(args[0].toLowerCase().includes('mi'))+', !!item.obj = '+!!item.obj+', charge = '+((!!item.obj && item.obj[1].charge) ? item.obj[1].charge.toLowerCase() : 'undefined')+' so '+((!!item.obj && item.obj[1].charge) ? chargedList.includes(item.obj[1].charge.toLowerCase()) : false));
 			if (args[0].toLowerCase().includes('mi') && !!item.obj && !!item.obj[1].charge) {
-//				log('setCaster: testing charge = '+chargedList.includes(item.obj[1].charge.toLowerCase()));
 				if (chargedList.includes(item.obj[1].charge.toLowerCase())) {
 					args[0] = BT.MI_SCROLL;
-//					log('setCaster: cmd changed to '+args[0]);
 				}
 			};
 		};
@@ -2238,8 +2244,8 @@ var MagicMaster = (function() {
 	var removeMIpowers = function( charCS, MIname, powerList, powerValues ) {
 
 		var powerName,
-			attrObj,
 			PowersTable = [],
+			removeList = [],
 			r, c, i=0;
 			
 		powerValues = powerValues.split(',');
@@ -2248,7 +2254,7 @@ var MagicMaster = (function() {
 		while (powerList.length > 0) {
 			powerName = powerList.shift();
 			powerName = powerName.replace(/\s/g,'-');
-			attrObj = attrLookup( charCS, [fields.MIpowerPrefix[0]+MIname+'-'+powerName, null] );
+			let attrObj = attrLookup( charCS, [fields.MIpowerPrefix[0]+MIname+'-'+powerName, null] );
 			if (!attrObj) attrObj = attrLookup( charCS, [fields.MIpowerPrefix[0]+powerName, null] );
 			if (attrObj) {
 				r = attrObj.get('current');
@@ -2260,10 +2266,11 @@ var MagicMaster = (function() {
 					powerValues[i] = PowersTable[c].tableLookup( fields.Powers_castMax, r ) + '.' + PowersTable[c].tableLookup( fields.Powers_storedLevel, r );
 					PowersTable[c].addTableRow( r );
 				}
-				attrObj.remove();
+				removeList.push(attrObj);
 				i++;
 			}
 		}
+		_.each(removeList,r => r.remove());
 		return powerValues.join();
 	}
 	
@@ -2274,19 +2281,23 @@ var MagicMaster = (function() {
 	 
 	var removeMIspells = function( charCS, MIname, spellType, spellList, spellValues ) {
 
-		var attrObj,
+		var removeList = [],
 			SpellsTable = [],
-			spellQty, r, c, altSpellRow, i=0,
+			spellQty, r, c, altSpellRow, i=0, spellRows, spellCols,
 			attrName = fields.MIspellPrefix[0]+(MIname.replace(/\s/g,'-'))+'-'+(spellType.toLowerCase()),
-			spellRCobj = attrLookup( charCS, [attrName,null] ),
-			base = shapeSpellbook( charCS, 'MI' )[1].base;
-			
-		if (!spellRCobj) return undefined;
-		
-		var	spellRows = spellRCobj.get(fields.MIspellRows[1]).split(','),
-			spellCols = spellRCobj.get(fields.MIspellCols[1]).split(','),
+			base = shapeSpellbook( charCS, 'MI' )[1].base,
 			altSpellTable = getLvlTable( charCS, fieldGroups.ALTWIZ, fields.MIspellLevel );
 			
+		{
+			let spellRCobj = attrLookup( charCS, [attrName,null] );
+
+			if (!spellRCobj) return undefined;
+			
+			spellRows = spellRCobj.get(fields.MIspellRows[1]).split(',');
+			spellCols = spellRCobj.get(fields.MIspellCols[1]).split(',');
+			removeList.push(spellRCobj);
+		}
+		
 		spellValues = spellValues.split(',');
 		spellList = spellList.split(',');
 		while (spellRows.length > 0 && spellCols.length > 0) {
@@ -2306,7 +2317,7 @@ var MagicMaster = (function() {
 			};
 			i++;
 		}
-		spellRCobj.remove();
+		_.each(removeList,r => r.remove());
 		return spellValues.join();
 	};
 	
@@ -2330,6 +2341,7 @@ var MagicMaster = (function() {
 					doMU = type === 'MU' || type === 'ALL',
 					doPR = type === 'PR' || type === 'ALL',
 					doPW = type === 'PW' || type === 'ALL',
+					removeList = [],
 					error = false;
 					
 				if (notFrom || update) {
@@ -2340,49 +2352,55 @@ var MagicMaster = (function() {
 					addMIspells( toCS, MIobj.obj[1] );
 					oldCS = toCS;
 				}
-				var MUspellObj = attrLookup( oldCS, [fields.ItemMUspellsList[0]+MIname, null] ),
-					PRspellObj = attrLookup( oldCS, [fields.ItemPRspellsList[0]+MIname, null] ),
-					powerObj = attrLookup( oldCS, [fields.ItemPowersList[0]+MIname, null] ),
-					MUspellList = (!!MUspellObj ? (MUspellObj.get(fields.ItemMUspellsList[1]) || '') : ''),
-					PRspellList = (!!PRspellObj ? (PRspellObj.get(fields.ItemPRspellsList[1]) || '') : ''),
-					powerList = (!!powerObj ? (powerObj.get(fields.ItemPowersList[1]) || '') : ''),
-					MUlistField = [fields.ItemMUspellValues[0]+MIname, fields.ItemMUspellValues[1]],
-					PRlistField = [fields.ItemPRspellValues[0]+MIname, fields.ItemPRspellValues[1]],
-					PWlistField = [fields.ItemPowerValues[0]+MIname, fields.ItemPowerValues[1]],
-					MUspellValues = attrLookup( oldCS, MUlistField ),
-					PRspellValues = attrLookup( oldCS, PRlistField ),
-					powerValues = attrLookup( oldCS, PWlistField ),
-					saveLists = (MUspellList && MUspellList.length) || (PRspellList && PRspellList.length) || (powerList && MUspellList.length),
-					queries = (resolveData(itemName,fields.MagicItemDB,reItemData,(fromCS || toCS),{query:reClassSpecs.query}).parsed.query || '').split('$$'),
-					miSpellValues;
-					
-				if (!notFrom && toCS && saveLists) {
-					setAttr( toCS, [fields.ItemMUspellsList[0]+MIname, fields.ItemMUspellsList[1]], MUspellList );
-					setAttr( toCS, [fields.ItemPRspellsList[0]+MIname, fields.ItemPRspellsList[1]], PRspellList );
-					setAttr( toCS, [fields.ItemPowersList[0]+MIname, fields.ItemPowersList[1]], powerList );
-				}
-				
-				if (doMU && MUspellList.length) {
-					setAttr( oldCS, MUlistField, (miSpellValues = notFrom ? MUspellValues : changeMIspells( fromCS, itemName, 'MU', 'REMOVE', MUspellList, MUspellValues)));
-					if (toCS) {
-						setAttr( toCS, MUlistField, changeMIspells( toCS, itemName, 'MU', 'ADD', MUspellList, miSpellValues ));
+				if (doMU) {
+					let MUspellObj = attrLookup( oldCS, [fields.ItemMUspellsList[0]+MIname, null] ),
+						MUspellList = (!!MUspellObj ? (MUspellObj.get(fields.ItemMUspellsList[1]) || '') : ''),
+						MUlistField = [fields.ItemMUspellValues[0]+MIname, fields.ItemMUspellValues[1]],
+						MUspellValues = attrLookup( oldCS, MUlistField );
+						
+					if (MUspellList.length) {
+						let miSpellValues;
+						if (!notFrom && toCS) setAttr( toCS, [fields.ItemMUspellsList[0]+MIname, fields.ItemMUspellsList[1]], MUspellList );
+						setAttr( oldCS, MUlistField, (miSpellValues = notFrom ? MUspellValues : changeMIspells( fromCS, itemName, 'MU', 'REMOVE', MUspellList, MUspellValues)));
+						if (toCS) {
+							setAttr( toCS, MUlistField, changeMIspells( toCS, itemName, 'MU', 'ADD', MUspellList, miSpellValues ));
+						}
 					}
-					if (del && !notFrom && !fromCS.get('name').startsWith('MI-DB')) MUspellObj.remove();
-				}
-				if (doPR && PRspellList.length) {
-					setAttr( oldCS, PRlistField, (miSpellValues = notFrom ? PRspellValues : changeMIspells( fromCS, itemName, 'PR', 'REMOVE', PRspellList, PRspellValues )));
-					if (toCS) {
-						setAttr( toCS, PRlistField, changeMIspells( toCS, itemName, 'PR', 'ADD', PRspellList, miSpellValues ));
+					if (del && !notFrom && !fromCS.get('name').startsWith('MI-DB')) removeList.push(MUspellObj);
+				};
+				if (doPR) {
+					let PRspellObj = attrLookup( oldCS, [fields.ItemPRspellsList[0]+MIname, null] ),
+						PRspellList = (!!PRspellObj ? (PRspellObj.get(fields.ItemPRspellsList[1]) || '') : ''),
+						PRlistField = [fields.ItemPRspellValues[0]+MIname, fields.ItemPRspellValues[1]],
+						PRspellValues = attrLookup( oldCS, PRlistField );
+						
+					if (PRspellList.length) {
+						let miSpellValues;
+						if (!notFrom && toCS) setAttr( toCS, [fields.ItemPRspellsList[0]+MIname, fields.ItemPRspellsList[1]], PRspellList );
+						setAttr( oldCS, PRlistField, (miSpellValues = notFrom ? PRspellValues : changeMIspells( fromCS, itemName, 'PR', 'REMOVE', PRspellList, PRspellValues )));
+						if (toCS) {
+							setAttr( toCS, PRlistField, changeMIspells( toCS, itemName, 'PR', 'ADD', PRspellList, miSpellValues ));
+						}
 					}
-					if (del && !notFrom && !fromCS.get('name').startsWith('MI-DB')) PRspellObj.remove();
+					if (del && !notFrom && !fromCS.get('name').startsWith('MI-DB')) removeList.push(PRspellObj);
 				}
-				if (doPW && powerList.length) {
-					setAttr( oldCS, PWlistField, (miSpellValues = notFrom ? powerValues : removeMIpowers( fromCS, itemName, powerList, powerValues )));
-					if (toCS) {
-						setAttr( toCS, PWlistField, changeMIspells( toCS, itemName, 'POWER', 'ADD', powerList, miSpellValues ));
+				if (doPW) {
+					let powerObj = attrLookup( oldCS, [fields.ItemPowersList[0]+MIname, null] ),
+						powerList = (!!powerObj ? (powerObj.get(fields.ItemPowersList[1]) || '') : ''),
+						PWlistField = [fields.ItemPowerValues[0]+MIname, fields.ItemPowerValues[1]],
+						powerValues = attrLookup( oldCS, PWlistField );
+						
+					if (powerList.length) {
+						let miSpellValues;
+						if (!notFrom && toCS) setAttr( toCS, [fields.ItemPowersList[0]+MIname, fields.ItemPowersList[1]], powerList );
+						setAttr( oldCS, PWlistField, (miSpellValues = notFrom ? powerValues : removeMIpowers( fromCS, itemName, powerList, powerValues )));
+						if (toCS) {
+							setAttr( toCS, PWlistField, changeMIspells( toCS, itemName, 'POWER', 'ADD', powerList, miSpellValues ));
+						}
 					}
-					if (del && !notFrom && !fromCS.get('name').startsWith('MI-DB')) powerObj.remove();
+					if (del && !notFrom && !fromCS.get('name').startsWith('MI-DB')) removeList.push(powerObj);
 				}
+				var	queries = (resolveData(itemName,fields.MagicItemDB,reItemData,(fromCS || toCS),{query:reClassSpecs.query}).parsed.query || '').split('$$');
 				if (queries && queries.length && itemName && !notFrom && !update) {
 					let fromRow = getTableField( fromCS, {}, fields.Items_table, fields.Items_trueName ).tableFind( fields.Items_trueName, itemName ),
 						toRow = toCS ? getTableField( toCS, {}, fields.Items_table, fields.Items_trueName ).tableFind( fields.Items_trueName, itemName ) : 0;
@@ -2393,10 +2411,11 @@ var MagicMaster = (function() {
 							let fromField = [fields.ItemVar[0]+MIname+'+'+fromRow+'-'+q.split('=')[0],fields.ItemVar[1]];		// Needs row reference
 							let toField = [fields.ItemVar[0]+MIname+'+'+toRow+'-'+q.split('=')[0],fields.ItemVar[1]];			// ditto
 							if (toCS && !isNaN(toRow)) setAttr( toCS, toField, (attrLookup( fromCS, fromField ) || '') );
-							if (!_.isUndefined(varObj = attrLookup( fromCS, [fromField[0],null] ))) varObj.remove();
+							if (!_.isUndefined(varObj = attrLookup( fromCS, [fromField[0],null] ))) removeList.push(varObj);
 						});
 					};
 				};
+				_.each(removeList.filter(r => !!r),r => r.remove());
 					
 			} catch (e) {
 				log('MagicMaster moveMIspells: '+e.name+': '+e.message+' while processing item '+itemName);
@@ -2537,8 +2556,9 @@ var MagicMaster = (function() {
 	
 		if (!Items.tableFind( fields.Items_name, itemName ) && !Items.tableFind( fields.Items_trueName, itemName )) {
 			let MIobjs = filterObjs( obj => {
-				if (obj.type !== 'ability' && obj.type !== 'attribute') return false;
-				return (obj.name === itemName || obj.name.startsWith(fields.ItemVar[0]+itemName.hyphened()));
+				if (obj.get('_type') !== 'ability' && obj.get('_type') !== 'attribute') return false;
+				if (obj.get('_characterid') !== charCS.id) return false;
+				return ((obj.get('name') || '') === itemName || (obj.get('name') || '').startsWith(fields.ItemVar[0]+itemName.hyphened()));
 			});
 			if (MIobjs) _.each(MIobjs,MIobj => MIobj.remove());
 		}
@@ -3169,10 +3189,8 @@ var MagicMaster = (function() {
 				}
 				selected = (r == spellRow && c == spellCol);
 				spellName = spellTables[w].tableLookup( fields.Spells_name, r, false );
-				if (_.isUndefined(spellName)) {
-					spellTables[w].addTableRow( r );
-					spellName = '-';
-				}
+				if (_.isUndefined(spellName)) spellTables[w].addTableRow( r );
+				if (!spellName) spellName = '-';
 				spellValue = parseInt((spellTables[w].tableLookup( fields.Spells_castValue, r )),10);
 				content += (selected ? ('<span style=' + design.selected_button + '>') : ('['+(spellValue == 0 ? ('<span style=' + design.dark_button + '>') : '')));
 				if (isPower && spellName != '-') {
@@ -3389,14 +3407,11 @@ var MagicMaster = (function() {
 
 		if (spellButton >= 0) {
 			spellName = attrLookup( charCS, fields.Spells_name, fields.Spells_table, spellRow, spellCol ) || '-';
-//			log('makeCastSpellMenu: spellName = '+spellName);
 			if (spellName.replace(reIgnore,'').length) {
 				spell = getAbility( magicDB, spellName, charCS );
 				learnText = (learn ? '&#123;{Learn=Try to [Learn this spell]&#40;!magic --learn-spell '+tokenID+'|'+spellName+'&#41;&#125;&#125;' : '');
-//				log('makeCastSpellMenu: get spell '+spell.obj[1].name+', learnText = '+learnText);
 			} else {
 				spellButton = -1;
-//				log('makeCastSpellMenu: rejected invalid spellName');
 			}
 		} else {
 			spellName = '';
@@ -3407,8 +3422,6 @@ var MagicMaster = (function() {
 				+ (((spellButton < 0) || submitted) ? '</span>' : '](!magic --button '+ storeCmd +'|'+ tokenID +'|'+ spellButton +'|'+ spellRow +'|'+ spellCol +'|'+ charged
 				+'&#13;'+(spell.api ? '' : sendToWho(charCS,senderId,false,true))+'&#37;{' + spell.dB + '|' + spellName.hyphened() + '}' + learnText + ')' )
 				+ '}}';
-				
-//		log('makeCastSpellMenu: content = '+content);
 				
 		sendResponse( charCS, content, senderId, flags.feedbackName, flags.feedbackImg, tokenID );
 		return;
@@ -3651,7 +3664,6 @@ var MagicMaster = (function() {
 					};
 					content += '['+actionText+' '+displayMI+'](!magic --button '+ submitAction +'|'+ tokenID +'|'+ MIrowref
 																+'&#13;'+(magicItem.api ? '' : sendToWho(charCS,senderId,false,true))+'&#37;{'+magicItem.dB+'|'+(changedMI.hyphened())+'})';
-//					log('makeViewUseMI: use button = '+content);
 				} else {
 					content	+= '<span style='+design.grey_button+'>'+actionText+' Magic Item</span>';
 				}
@@ -6731,9 +6743,7 @@ var MagicMaster = (function() {
 			return;
 		}
 		var putCmd = resolveData( slotTrueName, fields.MagicItemDB, reItemData, charCS, {put:reSpellSpecs.put}, MIrowref ).parsed.put;
-//		log('handleRemoveMI: putCmd exists = '+!!putCmd+' && '+putCmd.length);
 		if (!!putCmd && !!putCmd.length) {
-//			log('handleRemoveMI: found put command = '+putCmd+'\nWhich parses to '+parseStr(putCmd).replace(/@{\s*selected\s*\|\s*token_id\s*}/ig,tokenID).replace(/{\s*selected\s*\|/ig,'{'+charCS.get('name')+'|'));
 			pickPutCmd( putCmd, tokenID, charCS, 'magic handleRemoveMI' );
 		};
 		
@@ -7247,6 +7257,68 @@ var MagicMaster = (function() {
 		}
 	};
 	
+	/*
+	 * Copy a character to a new character sheet e.g. to dump corrupted attributes
+	 */
+	 
+	var handleCleanCS = function( charCS, silent=false ) {
+		
+		var newCS = createObj( 'character', {
+						name: (charCS.get('name')),
+						avatar: charCS.get('avatar'),
+						inplayerjournals: charCS.get('inplayerjournals'),
+						controlledby: charCS.get('controlledby')
+			});
+		charCS.get('bio', function(bio) {
+			newCS.set('bio',bio);
+		});
+		charCS.get('gmnotes',function(gmnotes) {
+			newCS.set('gmnotes',gmnotes);
+		});
+		
+		var objList = filterObjs( obj => {
+				let type = obj.get('type');
+				if (type === 'graphic' && obj.get('subtype') === 'token') {
+					if (obj.get('represents') !== charCS.id) return false;
+					obj.set('represents',newCS.id);
+					return false;
+				}
+				if (type !== 'attribute' && type !== 'ability') return false;
+				if (obj.get('characterid') !== charCS.id) return false;
+				if (obj.get('name').length && obj.get('name') != 'Untitled') {
+					if (type !== 'ability') {
+						createObj( 'attribute', {
+							characterid: newCS.id,
+							name: obj.get('name'),
+							current: obj.get('current'),
+							max: obj.get('max')
+						});
+					} else {
+						createObj( 'ability', {
+							characterid: newCS.id,
+							name: obj.get('name'),
+							description: obj.get('description'),
+							action: obj.get('action'),
+							istokenaction: obj.get('istokenaction')
+						});
+					};
+				};
+				return true;
+			});
+		
+		// Remove all objects on objList
+		// then remove charCS
+		
+		for (const obj of objList) {
+			obj.remove();
+		}
+		charCS.remove();
+		
+		if (!silent) sendFeedback('&{template:'+fields.messageTemplate+'}{{name='+newCS.get('name')+' has been cleaned}}{{desc=The character sheet for '+newCS.get('name')+' has been cleaned of any corrupted attributes or abilities.}}');
+		
+		return newCS;
+	}
+			
 	/*
 	 * Handle changes to the Strength of a character, which is not 
 	 * a linear progression due to Exceptional Strength
@@ -8109,7 +8181,6 @@ var MagicMaster = (function() {
 				sendWait(senderId,0);
 			} else {
 				sendDebug('doSearchForMIs: Not found trapMacro');
-//				log('doSearchForMIs: Not found trapMacro');
 				MIBagSecurity = 1;
 			}
 		}
@@ -8868,9 +8939,12 @@ var MagicMaster = (function() {
 		}	
 		
 		var msg = '&{template:'+fields.messageTemplate+'}{{name=' + (args[2] || '') + '}}{{desc=' + parseStr(args[3] || '',msgReplacers) + '}}';
+		const reVals = /\^\^(\d+)\^\^/;
+		const valRes = ( a, v ) => args[v] || '';
 		const reAttrs = /\^\^([^\|\^]+)\|?(max|current)?\|?([^\|\^]+)?\^\^/i;
 		const attrRes = ( a, v, m = 'current', d = '0' ) => attrLookup( charCS, [v,m,d] ) || '';
 		
+		while (reVals.test(msg)) msg = msg.replace(reVals,valRes);
 		if (!!charCS) while (reAttrs.test(msg)) msg = msg.replace(reAttrs,attrRes);
 		
 		switch (cmd.toLowerCase()) {
@@ -8894,6 +8968,7 @@ var MagicMaster = (function() {
 			break;
 		}
 		if (args[4] && args[4].length && args[4][0] === '!') {
+			while (reVals.test(args[4])) args[4] = args[4].replace(reVals,valRes);
 			sendAPI( parseStr(args[4],msgReplacers), senderId );
 		}
 	}
@@ -8926,7 +9001,41 @@ var MagicMaster = (function() {
 		return;
 	}
 		
+	/*
+	 * Create a clean new character sheet for a selected token, dropping 
+	 * all illegal or badly formatted attributes, but keeping everything
+	 * else. Note: the object ID of the character sheet will change as 
+	 * a totally new sheet object is created and valid objects transferred
+	 * to it.
+	 */
+	 
+	var doCleanCS = function( args, selected ) {
+		
+		if (!args) args=[];
+		if (!args[0] && selected && selected.length) {
+			args[0] = selected[0]._id;
+		} else if (!args[0]) {
+			sendDebug('doCopyCS: Invalid arguments');
+			sendResponseError(senderId,'Valid token not specified');
+			return;
+		};
 
+		var tokenID = args[0],
+			silent = (args[1] || '').toUpperCase() === 'SILENT',
+			curToken = getObj( 'graphic', tokenID ),
+			charCS = getCharacter( tokenID );
+			
+		if (!curToken || !charCS) {
+			sendDebug('doCopyCS: Invalid tokenID: ' + tokenID);
+			sendResponseError(senderId,'Invalid token specified');
+			return;
+		}
+		
+		handleCleanCS( charCS, silent );
+		handleCStidy( [curToken], false );
+		return;
+	}
+		
 	/*
 	 * check for correct syntax of a 'write database' command, then
 	 * call the function to write the specified character sheet database
@@ -9720,6 +9829,9 @@ var MagicMaster = (function() {
 						break;
 					case 'tidy':
 						doTidyCS(arg,selected);
+						break;
+					case 'clean':
+						doCleanCS(arg,selected);
 						break;
 					case 'message':
 						doMessage(arg,selected,senderId);

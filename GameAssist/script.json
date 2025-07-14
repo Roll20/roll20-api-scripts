@@ -1,0 +1,26 @@
+{
+  "name": "GameAssist",
+  "script": "GameAssist.js",
+  "version": "0.1.1.2",
+  "previousversions": ["0.1.1.1", "0.1.1.0"],
+  "description": "GameAssist is a modular Roll20 API automation suite for D&D 5E (2014 Character Sheet).\n\nFeatures:\n- Crit fumble handling\n- NPC death auto-marking\n- Concentration tracking\n- Automatic HP rolling\n- Enable/disable modules in-game\n- Stable event queue\n- In-chat configuration\n\nAPI Commands:\n!ga-enable, !ga-disable, !ga-config, !npc-hp-all, !npc-hp-selected, !npc-death-report, !concentration, !cc, !critfail, !critfumble\n\nRequirements:\n- TokenMod API (strongly recommended)\n- Rollable tables for CritFumble (see README)\n\nSetup and documentation:\ngithub.com/Mord-Eagle/GameAssist\nREADME: https://github.com/Mord-Eagle/GameAssist#readme\n\nCompatible with D&D 5E (2014) sheet. For setup, troubleshooting, and latest updates, see the README. Please report bugs and feature requests via GitHub Issues.",
+  "authors": "Mord Eagle",
+  "roll20userid": "10646976",
+  "modifies": [],
+  "conflicts": [
+    "Other scripts that modify NPC HP or use bar1_value"
+  ],
+  "useroptions": [],
+  "commands": [
+    "!ga-enable",
+    "!ga-disable",
+    "!ga-config",
+    "!npc-hp-all",
+    "!npc-hp-selected",
+    "!npc-death-report",
+    "!concentration",
+    "!cc",
+    "!critfail",
+    "!critfumble"
+  ]
+}
