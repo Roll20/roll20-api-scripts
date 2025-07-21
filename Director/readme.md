@@ -57,11 +57,11 @@ Highlights can be dragged manually, or previewed using `Shift+Z`.
 
 - **Title**: Click to rename  
 - **Bottom-right icons**:
-  - ``expanding arrows icon`` = Set as Backdrop  
+  - `expanding arrows icon` = Set as Backdrop  
   - `overlapping rectangles icon` = Set as Highlight  
-  - `music not icon` = Assign currently playing track  
+  - `music note icon` = Assign currently playing track. This track will auto play whenever the image becomes a backdrop image.
 - In **Edit Mode**:
-  - Move
+  - Move an image up or down. Although the backdrop image always goes to the top
   - Recapture
   - Delete
 
