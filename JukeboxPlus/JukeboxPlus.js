@@ -12,10 +12,13 @@ API_Meta.JukeboxPlus = {
 
 
 // Jukebox Plus Plus (Fully Enhanced UI with Album/Playlist Toggle, Track Tagging, and Layout Fixes)
+// Changelong
+// 1.0.0 Original
+// 1.0.1 Added min/Max intervals, bug fixes, and simple Director integration.
 on('ready', () =>
 {
     
-    const version = '1.0.0'; //version number set here
+    const version = '1.0.1'; //version number set here
     log('-=> Jukebox Plus v' + version + ' is loaded. Command !jb creates control handout and provides link. Click that to open.');
 
     const HANDOUT_NAME = 'Jukebox Plus';
@@ -92,9 +95,9 @@ if (!state[STATE_KEY].mixSession) {
     //tracklistScroll: 'max-height:600px !important; overflow-y: scroll; overflow-x: hidden;',
 
     // Header and Title
-    header: 'font-family: Nunito, Arial, sans-serif; font-weight:bold; text-align:left; font-size:20px; padding:4px; color:#222; background:#aaa; border-bottom:1px solid #ccc;',
+    header: 'font-family: Nunito, Arial, sans-serif; font-weight:bold; text-align:left; font-size:20px; padding:4px; color:#222; background:#cc9393; border-bottom:1px solid #ccc;',
     gear: 'float:right; cursor:pointer; color:#666;',
-    trackCount: 'color:#666; float:right; font-size:12px; display: inline-block; margin-right:15px; margin-top:5px;',
+    trackCount: 'color:#333; float:right; font-size:12px; display: inline-block; margin-right:15px; margin-top:5px;',
 
     // Buttons & Controls
     button: 'display:block; margin-bottom:4px; width:100%; font-size:11px; background:#e0e0e0; color:#333; border:1px solid #bbb;',
@@ -102,12 +105,13 @@ if (!state[STATE_KEY].mixSession) {
     utilitySubButton: 'font-size:11px; padding:1px 5px; background:#aaa; color:#333; border:1px solid #999; border-radius:3px; margin:-1px -1px 0px 3px; float:right; text-decoration:none;',
     utilityButton: 'width:90%;display:inline-block; font-size:12px; padding:4px 6px; background:#ddd; color:#222; border:1px solid #bbb; border-radius:4px; text-align:center; margin-top:6px; text-decoration:none;',
     settingsButton: 'width:90%;display:inline-block; font-size:12px; padding:4px 6px; background:transparent; color:#333; text-align:center; margin-top:6px; text-decoration:none;',
+        forceTextColor: 'color:#222',
 
     // *** Updated header buttons to match cssDark measurements but cssLight colors from utility buttons ***
-    headerButtonContainer: 'float:right; display:inline-block; font-size:12px; padding:4px 6px; border:1px solid #bbb; border-radius:4px; text-decoration:none; margin-top:-2px; margin-right:4px; background:#ddd; color:#333;',
-    headerButton: 'float:right; font-size:12px; padding:4px 6px; border:1px solid #bbb; border-radius:4px; text-decoration:none; margin-top:-2px; margin-right:4px; background:#ddd; color:#222;',
-    headerSubButton: 'font-size:11px; padding:1px 6px; border:1px solid #999; border-radius:3px; text-decoration:none; margin-top:-2px; background:#aaa; color:#333;',
-    headerSubButtonAcive: 'font-size:11px; padding:1px 6px; border:1px solid #999; border-radius:3px; text-decoration:none; margin-top:-2px; background:#C27575; color:#333;',
+    headerButtonContainer: 'float:right; display:inline-block; font-size:12px; padding:4px 6px; border:1px solid #666; border-radius:4px; text-decoration:none; margin-top:-2px; margin-right:4px; background:#ddd; color:#333;',
+    headerButton: 'float:right; font-size:12px; padding:4px 6px; border:1px solid #666; border-radius:4px; text-decoration:none; margin-top:-2px; margin-right:4px; background:#ddd; color:#222;',
+    headerSubButton:       'font-size:11px; padding:1px 6px; border:1px solid #999; border-radius:3px; text-decoration:none; margin-top:-2px; background:#aaa; color:#333;',
+    headerSubButtonActive: 'font-size:11px; padding:1px 6px; border:1px solid #333; border-radius:3px; text-decoration:none; margin-top:-2px; background:#C27575; color:#333;',
 
     nowPlayingButton: 'color:#444; padding:2px 4px; display:block; text-decoration:none; background:#eee; border-radius:4px; margin-top:6px;',
     refreshButton: 'font-size:10px; margin-top:8px; display:block; color:#0066cc; text-decoration:underline; cursor:pointer;',
@@ -151,6 +155,7 @@ if (!state[STATE_KEY].mixSession) {
     albumEditLink: 'font-size:10px; margin-left:4px; vertical-align:middle; color:#666;',
     descEditLink: 'font-size:10px; color:#888; font-style:italic; margin-left:6px; cursor:pointer;',
     code: 'display:inline-block; font-size:0.75em; font-family:monospace; font-weight:bold; color:222; background-color:#ddd; padding:1px 4px; margin-left:4px; border-radius:3px; user-select:none;',
+volumeControl: 'font-size:10px; color:#888; text-decoration:none; margin-left:8px; margin-top:4px; cursor:pointer;',
 
     // Images
     image: 'width:100px; height:100px; background:#eee; text-align:center; font-size:11px; color:#999; border:1px solid #bbb; float:left; margin-right:8px; object-fit:cover; object-position:center center; display:block;',
@@ -175,7 +180,7 @@ if (!state[STATE_KEY].mixSession) {
         //tracklistScroll: 'max-height:600px !important; overflow-y: scroll; overflow-x: hidden;',
 
         // Header and Title
-        header: 'font-family: Nunito, Arial, sans-serif; font-weight:bold; text-align:left; font-size:20px; padding:4px; color:#ddd; background:#2a2a2a; border-bottom:1px solid #444;',
+        header: 'font-family: Nunito, Arial, sans-serif; font-weight:bold; text-align:left; font-size:20px; padding:4px; color:#ddd; background:#542d2d; border-bottom:1px solid #444;',
         gear: 'float:right; cursor:pointer; color:#aaa;',
         trackCount: 'color:#888; float:right; font-size:12px; display: inline-block; margin-right:15px; margin-top:5px;',
 
@@ -188,8 +193,10 @@ if (!state[STATE_KEY].mixSession) {
         headerButtonContainer: 'float:right; display:inline-block; font-size:12px; padding:4px 6px; background:#555; color:#ddd; border:1px solid #444; border-radius:4px; text-decoration:none; margin-top:-2px; margin-right:4px;',
         headerButton: 'float:right; font-size:12px; padding:4px 6px; background:#555; color:#ddd; border:1px solid #444; border-radius:4px; text-decoration:none; margin-top:-2px; margin-right:4px;',
         headerSubButton: 'font-size:11px; padding:1px 6px; background:#444; color:#ddd; border:1px solid #444; border-radius:2px; text-decoration:none; margin-top:-2px;',
+        headerSubButtonActive: 'font-size:11px; padding:1px 6px; border:1px solid #333; border-radius:3px; text-decoration:none; margin-top:-2px; background:#C27575; color:#333;',
         nowPlayingButton: 'color:#ccc; padding:2px 4px; display:block; text-decoration:none; background:#444; border-radius:4px; margin-top:6px;',
         refreshButton: 'font-size:10px; margin-top:8px; display:block; color:#66aaff; text-decoration:underline; cursor:pointer;',
+        forceTextColor: 'color:#ddd',
 
         //announce styles
         announceButton: 'color:#888; font-size:10px; padding:0px 4px; display:inline-block; text-decoration:none; margin-top:4px;',
@@ -230,6 +237,7 @@ if (!state[STATE_KEY].mixSession) {
         albumEditLink: 'font-size:10px; margin-left:4px; vertical-align:middle; color:#aaa;',
         descEditLink: 'font-size:10px; color:#888; font-style:italic; margin-left:6px; cursor:pointer;',
         code: 'display:inline-block; font-size:0.75em; font-family:monospace; font-weight:bold; color:eee; background-color:#444; padding:1px 4px 0px 4px; margin-left:4px; border-radius:3px; user-select:none;',
+volumeControl: 'font-size:10px; color:#888; text-decoration:none; margin: 0px 6px; cursor:pointer;',
 
         // Images
         image: 'width:100px; height:100px; background:#444; text-align:center; font-size:11px; color:#999; border:1px solid #666; float:left; margin-right:8px; object-fit:cover; object-position:center center; display:block;',
@@ -250,6 +258,20 @@ if (!state[STATE_KEY].mixSession) {
 
 // Initiatlizes the ID of the currently scheduled timeout used for managing the Mix playback mode.
 let mixTimeoutId = null;
+
+const getDirectorHandoutLink = () => {
+  if (typeof API_Meta !== 'undefined' &&
+      API_Meta.Director &&
+      typeof API_Meta.Director.offset === 'number') {
+    
+    const handout = findObjs({ type: 'handout', name: 'Director' })[0];
+    if (handout) {
+      const url = `http://journal.roll20.net/handout/${handout.id}`;
+      return `<a href="${url}" style="${css.headerButton}"><span style="${css.forceTextColor}">Direct</span></a>`;
+    }
+  }
+  return '';
+};
 
 
 
@@ -420,6 +442,22 @@ const helpHTML = `
               <a style="${css.utilityButton}">↻ Refresh</a>
             </div> Rebuilds the interface if something breaks.
 
+<div style="width: 170px; text-align:left;">
+  <div style="${css.utilityContainer}">Mix Rate</strong>
+    <a style="${css.utilitySubButton}">60s</a>
+    <a style="${css.utilitySubButton}">10s</a>
+    <a style="${css.utilitySubButton}">↻</a>
+  </div>
+</div>
+These buttons adjust how often tracks are played when using the <b>Mix</b> function in <b>Play All</b>.<br>
+<ul style="margin-left:15px; padding-left:15px; list-style-type:disc;">
+  <li><b>Maximum</b> — the longest delay allowed between playing non-looping tracks.</li>
+  <li><b>Minimum</b> — the shortest delay allowed between playing non-looping tracks.</li>
+  <li><b>Reset</b> — restores the default 10–60 second interval.</li>
+</ul>
+These values only apply when using <b>Mix</b> mode. Looping tracks are not affected.
+
+
             <div style="width: 170px; text-align:left;">
               <div style="${css.utilityContainer}">Backup</strong>
                 <a style="${css.utilitySubButton}">make</a>
@@ -579,6 +617,34 @@ let sequentialPlayState = {
     active: false,
     loop: false // <--- New!
 };
+
+// Returns your internal metadata object from `data.tracks`
+const findInternalTrack = (idOrName) => {
+    return data.tracks[idOrName] || Object.values(data.tracks)
+        .find(t => t.title === idOrName);
+};
+
+// Returns the actual live Roll20 jukeboxtrack object
+const findLiveTrack = (trackId) => {
+    return findObjs({ _type: 'jukeboxtrack', _id: trackId })[0];
+};
+
+data.settings.playAllMode = data.settings.playAllMode || null;
+
+
+// Convert linear slider percentage (0–100) to Roll20 volume curve (0–100)
+const sliderPercentToStoredVolume = (p) => {
+    return Math.round((Math.pow(p / 100, 2)) * 100);
+};
+
+// Convert stored volume value (0–100) to slider percent (0–100)
+const storedVolumeToSliderPercent = (v) => {
+    return Math.round(Math.sqrt((v || 0) / 100) * 100);
+};
+
+
+// Non-state variable for timer handlers
+let mixAccentTimerHandles = [];
 
 
 // Returns the list of tracks currently visible based on view mode (albums, playlists, now playing) and sorting preferences.
@@ -766,8 +832,7 @@ const buildTrackRow = (track) =>
         `<div style="${css.desc}"><a href="!jb edit ${track.id} description ?{New description|}" style="${css.descEditLink}">click to add description</a></div>`;
 
     // Live state of the jukebox track
-    const actualTrack = getAllTracks()
-        .find(t => t.id === track.id);
+    const actualTrack = findLiveTrack(track.id);
     const isPlaying = actualTrack && actualTrack.get("playing");
     const isLooping = actualTrack && actualTrack.get("loop");
 
@@ -805,20 +870,22 @@ const buildTrackRow = (track) =>
         <a href="!jb announce ${track.id}" style="${css.announceButton}">➤</a>
       </div>
       <span style="${css.controls}">
+        <a href="!jb volume ${track.id} ?{Set volume 0–100|${storedVolumeToSliderPercent(actualTrack?.get('volume') ?? 100)}}" title="Set volume" style="${css.volumeControl}">v.${storedVolumeToSliderPercent(actualTrack?.get('volume') ?? 100)}% </a>
         <a href="!jb play ${track.id}" title="Play"><img src="${playImg}" alt="Play" style="${css.controlButtonImg}"></a>
         <a href="!jb loop ${track.id}" title="Loop"><img src="${loopImg}" alt="Loop" style="${css.controlButtonImg}"></a>
         <a href="!jb isolate ${track.id}" title="Isolate"><img src="${icons.isolate}" alt="Isolate" style="${css.controlButtonImg}"></a>
         <a href="!jb stop ${track.id}" title="Stop"><img src="${icons.stop}" alt="Stop" style="${css.controlButtonImg}"></a>
-      </span>
+     </span>
     </div>
     ${desc}
+
     <div style="${css.tags}">
       ${
         (track.albums || []).map(name =>
           `<span style="${css.albumTag}">
             <a href="!jb jump album ${encodeURIComponent(name)}" title="Jump to album view" style="text-decoration:none; color:inherit;">${esc(name)}</a>
             &nbsp;|&nbsp;
-            <a href="!jb edit ${track.id} albums remove ${encodeURIComponent(name)}" ...>x</a>
+<a href="!jb edit ${track.id} albums remove ${encodeURIComponent(name)}" style="text-decoration:none; color:inherit;">x</a>
           </span>`
         ).join(' ')
       }
@@ -829,6 +896,7 @@ const buildTrackRow = (track) =>
 </div>
 `;
 };
+
 
 
     
@@ -914,8 +982,9 @@ const updateInterface = () =>
     </div>
   `;
 
-    const isAnyTrackPlaying = getAllTracks()
-        .some(t => t.get('playing'));
+const isAnyTrackPlaying = findObjs({ _type: 'jukeboxtrack' })
+    .some(t => t.get('playing'));
+
 
     const sidebarList = (() =>
     {
@@ -976,12 +1045,12 @@ getSortedAlbumNames().forEach(albumName => {
                 matchesView = plist.includes(track.id);
             }
 
-            if(data.settings.nowPlayingOnly)
-            {
-                const t = getAllTracks()
-                    .find(t => t.id === track.id);
-                return matchesView && t && t.get('playing');
-            }
+if(data.settings.nowPlayingOnly)
+{
+    const t = findLiveTrack(track.id);
+    return matchesView && t && t.get('playing');
+}
+
 
             return matchesView;
         });
@@ -996,11 +1065,11 @@ const trackList = getVisibleTrackList().map(buildTrackRow).join('');
   Settings ${data.settings.settingsExpanded ? '▴' : '▾'}
 </a>`;
 
-    const utilityButtons = data.settings.settingsExpanded ? `
+ const utilityButtons = data.settings.settingsExpanded ? `
   ${utilityToggleButton}
   <div style="${css.utilityContainer}">
     Edit Albums
-    <a href="!jb add album ?{Album Name}" style="${css.utilitySubButton}">+</a>
+    <a href="!jb add album ?{Album Name}" title="Add a new album to your collection" style="${css.utilitySubButton}">+</a>
     <a href="!jb remove-album ?{Choose Album to Delete|${
       (() => {
         const names = Object.keys(data.albums);
@@ -1010,60 +1079,107 @@ const trackList = getVisibleTrackList().map(buildTrackRow).join('');
           return names.join('|');
         }
       })()
-    }}" style="${css.utilitySubButton}">–</a>
-    <a href="!jb rename-album ?{Album to Rename|${Object.keys(data.albums).join('|')}} ?{New Album Name}" style="${css.utilitySubButton}">✎</a>
-  </div>
-  
-    <div style="${css.utilityContainer}">
-    A–Z
-    <a href="!jb sort-tracks" style="${css.utilitySubButton}">tracks</a>
-    <a href="!jb sort-albums" style="${css.utilitySubButton}">albums</a>
+    }}" title="Delete an existing album" style="${css.utilitySubButton}">–</a>
+    <a href="!jb rename-album ?{Album to Rename|${Object.keys(data.albums).join('|')}} ?{New Album Name}" title="Rename an existing album" style="${css.utilitySubButton}">✎</a>
   </div>
 
-  <a href="!jb refresh" style="${css.utilityButton}">↻ Refresh</a>
-  
+  <div style="${css.utilityContainer}">
+    A–Z
+    <a href="!jb sort-tracks" title="Sort tracks alphabetically within albums" style="${css.utilitySubButton}">tracks</a>
+    <a href="!jb sort-albums" title="Sort albums alphabetically in the sidebar" style="${css.utilitySubButton}">albums</a>
+  </div>
+
+  <div style="${css.utilityContainer}">
+    Mix Rate
+    <a href="!jb set-mix-max ?{Maximum mix interval (in seconds)|${data.settings.mixMaxInterval || 60}}" title="Maximum mix interval (in seconds)" style="${css.utilitySubButton}">${data.settings.mixMaxInterval || 60}s</a>
+    <a href="!jb set-mix-min ?{Minimum mix interval (in seconds)|${data.settings.mixMinInterval || 10}}" title="Minimum mix interval (in seconds)" style="${css.utilitySubButton}">${data.settings.mixMinInterval || 10}s</a>
+    <a href="!jb reset-mix-interval" title="Reset to default Mix timing (10–60s)" style="${css.utilitySubButton}">↻</a>
+  </div>
+
+  <a href="!jb refresh" title="Reload playlists, albums, and track data" style="${css.utilityButton}">↻ Refresh</a>
+
   <div style="${css.utilityContainer}">
     Mode
-    <a href="!jb mode light" style="${css.utilitySubButton}">light</a>
-    <a href="!jb mode dark" style="${css.utilitySubButton}">dark</a>
+    <a href="!jb mode light" title="Switch to light interface theme" style="${css.utilitySubButton}">light</a>
+    <a href="!jb mode dark" title="Switch to dark interface theme" style="${css.utilitySubButton}">dark</a>
   </div>
 
   <div style="${css.utilityContainer}">
     Backup
-    <a href="!jb backup" style="${css.utilitySubButton}">make</a>
+    <a href="!jb backup" title="Save a backup copy of current Jukebox data" style="${css.utilitySubButton}">make</a>
     <a href="!jb restore ?{Which backup?|${(
       findObjs({ _type: 'handout' })
         .map(h => h.get('name'))
         .filter(name => /^Jukebox Backup \d{3}$/.test(name))
         .sort()
         .join('|')
-    )}}" style="${css.utilitySubButton}">restore</a>
+    )}}" title="Restore data from a previous backup" style="${css.utilitySubButton}">restore</a>
   </div>
 ` : utilityToggleButton;
 
+
     const html = `
-  <table style="width:100%; border-collapse:collapse;">
-    <tr>
-      <td colspan="2" style="${css.header}">
-        Jukebox Plus
-        <a href="!jb ${data.settings.helpVisible ? 'help close' : 'help'}" style="${css.headerButton}">
-          ${data.settings.helpVisible ? 'Return to Player' : 'Help'}
+ <table style="width:100%; border-collapse:collapse;">
+  <tr>
+    <td colspan="2" style="${css.header}">
+      Jukebox Plus
+
+      <a href="!jb ${data.settings.helpVisible ? 'help close' : 'help'}" 
+         title="${data.settings.helpVisible ? 'Return to the track player interface' : 'Show help and instructions'}"
+         style="${css.headerButton}">
+        ${data.settings.helpVisible ? 'Return to Player' : 'Help'}
+      </a>
+
+      <a href="!jb find ?{search term}" 
+         title="Search for tracks by name or description. Enter 'd' to find all duplicates." 
+         style="${css.headerButton}">
+        Find
+      </a>
+        ${getDirectorHandoutLink()}
+
+      <a href="!jb stopall" 
+         title="Stop all currently playing tracks and end any active play modes" 
+         style="${css.headerButton}">
+        Stop All
+      </a>
+
+      <div style="${css.headerButtonContainer}">Loop All
+        <a href="!jb unloopall" 
+           title="Disable looping on all visible tracks" 
+           style="${css.headerSubButton}">
+          Off
         </a>
-        <a href="!jb find ?{search term}" style="${css.headerButton}">Find Tracks</a>
-        <a href="!jb stopall" style="${css.headerButton}">Stop All</a>
+        <a href="!jb loopall" 
+           title="Enable looping on all visible tracks" 
+           style="${css.headerSubButton}">
+          On
+        </a>
+      </div>
 
-        <div style = "${css.headerButtonContainer}">Loop All
-        <a href="!jb unloopall" style="${css.headerSubButton}">Off</a>
-        <a href="!jb loopall" style="${css.headerSubButton}">On</a>
-        </div>
+      <div style="${css.headerButtonContainer}">Play All 
+        <a href="!jb playall" 
+           title="Play all visible tracks at once (up to 5 simultaneously)" 
+           style="${data.settings.playAllMode === 'together' ? css.headerSubButtonActive : css.headerSubButton}">
+          Together
+        </a>
+        <a href="!jb playall-seq" 
+           title="Play all visible tracks one after another, once through" 
+           style="${data.settings.playAllMode === 'sequential' ? css.headerSubButtonActive : css.headerSubButton}">
+          In Order
+        </a>
+        <a href="!jb playall-seq-loop" 
+           title="Play all visible tracks in sequence, looping continuously" 
+           style="${data.settings.playAllMode === 'loop' ? css.headerSubButtonActive : css.headerSubButton}">
+          Loop
+        </a>
+        <a href="!jb mix" 
+           title="Start mix mode: loop some tracks and randomly play others" 
+           style="${data.settings.playAllMode === 'mix' ? css.headerSubButtonActive : css.headerSubButton}">
+          Mix
+        </a>
+      </div>
 
-        <div style = "${css.headerButtonContainer}">Play All 
-        <a href="!jb playall" style="${css.headerSubButton}">Together</a>
-        <a href="!jb playall-seq" style="${css.headerSubButton}">In Order</a>
-        <a href="!jb playall-seq-loop" style="${css.headerSubButton}">Loop</a>
-        <a href="!jb mix" style="${css.headerSubButton}">Mix</a>
-        
-        </div>
+
         
         
         
@@ -1142,7 +1258,8 @@ on('change:jukeboxtrack', (obj, prev) => {
 
             // Play next track in sequence
             const nextId = sequentialPlayState.trackIds[sequentialPlayState.currentIndex];
-            const nextTrack = getAllTracks().find(t => t.id === nextId);
+            const nextTrack = findLiveTrack(nextId);
+
             if (nextTrack) {
                 nextTrack.set('softstop', false); // Reset in case it was marked finished before
                 nextTrack.set('playing', true);
@@ -1183,7 +1300,56 @@ on('change:jukeboxtrack', (obj, prev) => {
                 .find(t => t.title === idOrName);
         };
 
-    // Sends a link to the Jukebox Plus handout when no specific command is given
+ 
+
+
+    // Controls playback of a single track: play, stop, loop toggle, or isolate (stop others)
+if (["play", "loop", "stop", "isolate"].includes(command)) {
+    const idOrName = args.join(' ').trim();
+
+    const internal = findInternalTrack(idOrName);
+    if (!internal) {
+        sendStyledMessage('Warning', `Track not found: ${idOrName}`);
+        return updateInterface();
+    }
+
+    const actual = findLiveTrack(internal.id);
+    if (!actual) {
+        sendStyledMessage(
+            'Track Not Playable',
+            `<b>"${esc(internal.title)}"</b><br><br>This track is listed in your saved data, but no matching Roll20 jukebox track exists.<br><br>This can happen if the track was deleted, if it was imported from another game, or if its ID changed. If you are sure this track no longer exists or is needed, you can remove it from your saved data.<br><br><a href="!jb delete-track ${internal.id}" style="${css.headerButton}">Remove this broken track</a><br>`,
+            false
+        );
+        return updateInterface();
+    }
+
+    if (command === "play") {
+        actual.set("playing", true);
+        const flags = getTrackFlags(internal);
+        if (flags.announce) {
+            const descHtml = flags.includeDesc ? `<div style="${css.announceDesc}">${esc(internal.description || '')}</div>` : '';
+            const imageHtml = internal.image
+                ? `<img src="${internal.image}" style="width:100%; max-width:100%; height:auto;">`
+                : '';
+            const messageHtml = `${imageHtml}<div style="${css.announceTitle}">${esc(internal.title)}</div>${descHtml}`;
+            sendStyledMessage('Now Playing', messageHtml, true);
+        }
+    }
+
+    if (command === "stop") actual.set("playing", false);
+    if (command === "loop") actual.set("loop", !actual.get("loop"));
+
+    if (command === "isolate") {
+        getAllTracks().forEach(t => t.set("playing", t.id === internal.id));
+    }
+
+    updateInterface();
+}
+
+
+
+
+   // Sends a link to the Jukebox Plus handout when no specific command is given
        if(command === '')
         {
             sendHandoutLink();
@@ -1204,57 +1370,6 @@ on('change:jukeboxtrack', (obj, prev) => {
                 updateInterface();
             }
             return;
-        }
-
-
-    // Controls playback of a single track: play, stop, loop toggle, or isolate (stop others)
-        if(["play", "loop", "stop", "isolate"].includes(command))
-        {
-            const idOrName = args.join(' ')
-                .trim();
-            const track = findTrackByIdOrName(idOrName);
-            if(track)
-            {
-                const actual = getAllTracks()
-                    .find(t => t.id === track.id);
-                if(actual)
-                {
-if (command === "play") {
-    actual.set("playing", true);
-    const flags = getTrackFlags(track);
-    if (flags.announce) {
-        const descHtml = flags.includeDesc ? `<div style="${css.announceDesc}">${esc(track.description || '')}</div>` : '';
-        const imageHtml = track.image ?
-            `<img src="${track.image}" style="width:100%; max-width:100%; height:auto;">` :
-            '';
-        const messageHtml = `${imageHtml}<div style="${css.announceTitle}">${esc(track.title)}</div>${descHtml}`;
-        sendStyledMessage('Now Playing', messageHtml, true);
-    }
-}
-if(command === "stop") actual.set("playing", false);
-                    if(command === "loop") actual.set("loop", !actual.get("loop"));
-                    if(command === "isolate")
-                    {
-                        getAllTracks()
-                            .forEach(t => t.set("playing", t.id === track.id));
-                    }
-                }
-                else
-                {
-sendStyledMessage(
-    'Track Not Playable',
-    `<b>"${esc(track.title)}"</b><br><br>This track is listed in your saved data, but no matching Roll20 jukebox track exists.<br><br>This can happen if the track was deleted, if it was imported from another game, or if its ID changed. If you are sure this track no longer exists or needed, you can remove it from your saved data.<br><br><a href="!jb delete-track ${track.id}" style="${css.headerButton}">Remove this broken track</a><br>`,
-    false
-);
-                }
-            }
-            else
-            {
-                sendStyledMessage('Warning', 'Track not found: ' + idOrName);
-            }
-
-            // Refresh the interface to show correct play/loop icons
-            updateInterface();
         }
 
 
@@ -1304,6 +1419,7 @@ if(command === 'playall')
     {
         sendStyledMessage('Notice', 'Only the first 5 tracks were played to avoid clutter.');
     }
+data.settings.playAllMode = 'together'; // ✅ Add this line
 
     updateInterface();
 }
@@ -1314,7 +1430,8 @@ if (command === 'playall-seq') {
     const max = 20;
 
     const actualTracks = visibleTracks
-        .map(t => getAllTracks().find(j => j.id === t.id))
+        .map(t => findLiveTrack(t.id))
+
         .filter(Boolean)
         .slice(0, max);
 
@@ -1333,6 +1450,8 @@ if (command === 'playall-seq') {
     firstTrack.set('softstop', false);
     firstTrack.set('playing', true);
 
+data.settings.playAllMode = 'sequential'; // ✅ Add this line
+
     updateInterface();
 }
 
@@ -1343,7 +1462,7 @@ if(command === 'playall-seq-loop') {
 
     const max = 20;
     const actualTracks = visibleTracks
-        .map(t => getAllTracks().find(j => j.id === t.id))
+        .map(t => findLiveTrack(t.id))
         .filter(Boolean)
         .slice(0, max);
 
@@ -1364,12 +1483,44 @@ if(command === 'playall-seq-loop') {
     firstTrack.set('softstop', false); // ensure it will start
     firstTrack.set('playing', true);
 
+data.settings.playAllMode = 'loop'; // ✅ Add this line
 
     updateInterface();
 }
 
 // Global timer variable, declared once outside the command handler
 let mixAccentTimer = null;
+
+//Sets minimum interval between accent tracks during mix play
+if (command === 'set-mix-min') {
+    const sec = parseInt(args[0], 10);
+    if (!isNaN(sec) && sec >= 1 && sec <= 3600) {
+        data.settings.mixMinInterval = sec;
+        updateInterface();
+    } else {
+        sendStyledMessage('Error', 'Invalid minimum interval (1–3600 seconds only).');
+    }
+}
+
+//Sets maximum interval between accent tracks during mix play
+if (command === 'set-mix-max') {
+    const sec = parseInt(args[0], 10);
+    if (!isNaN(sec) && sec >= 1 && sec <= 3600) {
+        data.settings.mixMaxInterval = sec;
+        updateInterface();
+    } else {
+        sendStyledMessage('Error', 'Invalid maximum interval (1–3600 seconds only).');
+    }
+}
+
+//Re-sets interval between accent tracks during mix play to defaults
+if (command === 'reset-mix-interval') {
+    data.settings.mixMinInterval = 10;
+    data.settings.mixMaxInterval = 60;
+    updateInterface();
+}
+
+
 
     // Starts a "mix" mode: plays looping tracks continuously and plays non-looping tracks randomly at intervals
 if (command === 'mix') {
@@ -1378,14 +1529,17 @@ if (command === 'mix') {
         return;
     }
 
-    // Cancel existing timer
+    // Clear any legacy or active mix timers
+    mixAccentTimerHandles.forEach(id => clearTimeout(id));
+    mixAccentTimerHandles = [];
+
     if (mixAccentTimer) {
         clearTimeout(mixAccentTimer);
         mixAccentTimer = null;
     }
 
-    // Don't store timer in state!
-    state.GraphicJukebox.mixSession = null;
+    // Stop all playing tracks
+    getAllTracks().forEach(t => t.set('playing', false));
 
     const visibleTracks = getVisibleTrackList();
     const max = 20;
@@ -1402,41 +1556,37 @@ if (command === 'mix') {
     const loopingTracks = actualTracks.filter(t => t.get('loop'));
     const nonLoopingTracks = actualTracks.filter(t => !t.get('loop'));
 
-    // Stop all tracks
-    getAllTracks().forEach(t => t.set('playing', false));
-
-    // Start looping tracks
+    // Start looping tracks immediately
     loopingTracks.forEach(t => {
         t.set('softstop', false);
         t.set('playing', true);
     });
 
-    // Save only IDs in state (no timer)
-    state.GraphicJukebox.mixSession = {
-        tracks: nonLoopingTracks.map(t => t.id)
-    };
+    // Store mode flag (safe)
+    data.settings.playAllMode = 'mix';
 
-    // Inner accent track loop
-    const playRandomAccent = () => {
-        const mix = state.GraphicJukebox.mixSession;
-        if (!mix || !Array.isArray(mix.tracks) || mix.tracks.length === 0) return;
+    // Use configured or default mix intervals
+    const minDelay = (data.settings.mixMinInterval || 10) * 1000;
+    const maxDelay = (data.settings.mixMaxInterval || 60) * 1000;
 
-        const randomId = mix.tracks[Math.floor(Math.random() * mix.tracks.length)];
-        const track = getAllTracks().find(t => t.id === randomId);
-        if (track) {
-            track.set('softstop', false);
-            track.set('playing', true);
-        }
+    // Set up individual repeating accent timers
+    nonLoopingTracks.forEach(track => {
+        const playAccent = () => {
+            const liveTrack = findLiveTrack(track.id);
+            if (liveTrack) {
+                liveTrack.set('softstop', false);
+                liveTrack.set('playing', true);
+            }
 
-        // Re-schedule next play
-        if (state.GraphicJukebox.mixSession) {
-            const nextInterval = 10000 + Math.floor(Math.random() * 50000);
-            mixAccentTimer = setTimeout(playRandomAccent, nextInterval);
-        }
-    };
+            const nextDelay = minDelay + Math.floor(Math.random() * (maxDelay - minDelay));
+            const timerId = setTimeout(playAccent, nextDelay);
+            mixAccentTimerHandles.push(timerId);
+        };
 
-    // First call after short delay
-    mixAccentTimer = setTimeout(playRandomAccent, 3000);
+        const initialDelay = 3000 + Math.floor(Math.random() * 5000);
+        const timerId = setTimeout(playAccent, initialDelay);
+        mixAccentTimerHandles.push(timerId);
+    });
 
     updateInterface();
 }
@@ -1444,18 +1594,29 @@ if (command === 'mix') {
 
     // Stops all playing tracks and cancels any active mix timer
 if (command === 'stopall') {
+    // Stop all tracks
     getAllTracks().forEach(t => t.set('playing', false));
 
-    // Cancel mix timer if active
+    // Cancel legacy single mix timer if active
     if (mixAccentTimer) {
         clearTimeout(mixAccentTimer);
         mixAccentTimer = null;
     }
 
+    // Cancel all individual mix timers if present
+    if (Array.isArray(mixAccentTimerHandles)) {
+        mixAccentTimerHandles.forEach(id => clearTimeout(id));
+        mixAccentTimerHandles = [];
+    }
+
+    // Clear session state and mode flag
     state.GraphicJukebox.mixSession = null;
+    data.settings.playAllMode = null;
 
     updateInterface();
 }
+
+
 
 
 
@@ -1669,14 +1830,14 @@ if(command === 'delete-track') {
     // Announces a track with formatted message including image/color/description based on flags
 if (command === 'announce') {
     const idOrName = args.join(' ').trim();
-    const track = findTrackByIdOrName(idOrName);
+    const track = findInternalTrack(idOrName);
 
     if (!track) {
         sendStyledMessage('Warning', 'Track not found.');
         return;
     }
 
-    const actual = getAllTracks().find(t => t.id === track.id);
+    const actual = findLiveTrack(track.id);
     if (!actual) {
         sendStyledMessage('Warning', 'Track ID found but not playable: ' + track.title);
         return;
@@ -1740,7 +1901,6 @@ if (command === 'announce') {
 
 
 
-
     // Switches view mode between albums and playlists
         if(command === 'view')
         {
@@ -1751,6 +1911,24 @@ if (command === 'announce') {
                 updateInterface();
             }
         }
+
+
+
+if (command === 'volume' && args.length === 2) {
+    const trackId = args[0];
+    const sliderPercent = parseInt(args[1], 10);
+    const t = findLiveTrack(trackId);
+
+    if (t && !isNaN(sliderPercent) && sliderPercent >= 0 && sliderPercent <= 100) {
+        const volume = sliderPercentToStoredVolume(sliderPercent);
+        t.set('volume', volume);
+        updateInterface();
+    }
+    return;
+}
+
+
+
 
     // Sets view to show only currently playing tracks
         if(command === 'view' && args[0] === 'nowplaying')
@@ -2142,7 +2320,7 @@ data.trackOrder = duplicates
     data.settings.selectedAlbum = 'Found';
 
     updateInterface();
-    sendStyledMessage('Find Tracks', `Found ${matches.length} track${matches.length !== 1 ? 's' : ''} matching "${searchTerm}"`, false);
+    //sendStyledMessage('Find Tracks', `Found ${matches.length} track${matches.length !== 1 ? 's' : ''} matching "${searchTerm}"`, false);
 }
 
 
