@@ -2,6 +2,8 @@
 
 **Director** is a script for supporting "theater of the mind"-style play in Roll20. It provides an interface for managing scenes, images, audio, and game assets — all organized within a persistent handout.
 
+[Here is a video](https://youtu.be/TMYzFNTkiNU?si=yexMBPtz0sXNdx_o) that provides a demo of the script.
+
 ---
 
 ## Interface Overview
