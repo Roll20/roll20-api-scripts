@@ -119,8 +119,8 @@ Click [`Settings ▾`] to expand the utility tools. Includes:
 [`↻ Refresh`] — Rebuilds the interface if something breaks
 
 ### Mix Rate
-[`Mix Rate:`][`60s`][`10s`][`↻`]  
-- Set the **maximum** and **minimum** interval (in seconds) between randomly played tracks when using [`Mix`] mode  
+[`Mix Rate:`][`↻`][`10s`][`60s`] 
+- Set the **minimum** and **maximum** interval (in seconds) between randomly played tracks when using [`Mix`] mode  
 - Click `↻` to reset to the default range (10–60 seconds)  
 - These settings affect how frequently non-looping tracks are triggered in a mixed soundscape  
 - Looping tracks are not affected by this timing
