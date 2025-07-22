@@ -1315,3 +1315,7 @@ JukeboxPlus:
 isBeacon:
   - "isBeacon"
   - "Utility"
+
+Director:
+  - "Director"
+  - "Utility"
