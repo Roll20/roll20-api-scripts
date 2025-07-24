@@ -35,6 +35,7 @@ At the top right of the interface:
 **Stop All** — Stops all currently playing tracks. Also use to stop a Mix.  
 **Find** — Search all track names and descriptions for the keyword. All matching tracks will be assigned to a temporary album called **Found**. You can then switch to the Found album to quickly view the results. To clear the results, simply delete the Found album using the Utility panel.  
 If you input `"d"` as the search term, it will create a temporary playlist of any duplicate tracks, grouped by name.  
+Find also accepts grep searchs if enclosed by slashes.
 **Help** — Displays this help page. Click **Return to Player** to return.
 
 ---
