@@ -14,11 +14,12 @@ API_Meta.JukeboxPlus = {
 // Jukebox Plus Plus (Fully Enhanced UI with Album/Playlist Toggle, Track Tagging, and Layout Fixes)
 // Changelong
 // 1.0.0 Original
-// 1.0.1 Added min/Max intervals, bug fixes, and simple Director integration.
+// 1.0.1 Added Min/Max intervals, bug fixes, and simple Director integration.
+// 1.0.2 Internal css restructuring for easier updates, Find function now accepts Regex
 on('ready', () =>
 {
     
-    const version = '1.0.1'; //version number set here
+    const version = '1.0.2'; //version number set here
     log('-=> Jukebox Plus v' + version + ' is loaded. Command !jb creates control handout and provides link. Click that to open.');
 
     const HANDOUT_NAME = 'Jukebox Plus';
@@ -86,169 +87,216 @@ if (!state[STATE_KEY].mixSession) {
     };
 
     // Define both style sets
- const cssLight = {
+
+
+
+
+
+const cssDark = {
     // Layout Containers
-    sidebar: 'font-family: Nunito, Arial, sans-serif; background:#f5f5f5; vertical-align:top; padding:6px; border-right:1px solid #ccc; width:215px;',
-    tracklist: 'font-family: Nunito, Arial, sans-serif; padding:8px; vertical-align:top; width:100%; background:#ffffff;',
-    toggleWrap: 'display:block; margin-bottom:8px;width:160px;',
-    //deprecated
-    //tracklistScroll: 'max-height:600px !important; overflow-y: scroll; overflow-x: hidden;',
+    sidebar: 'background:#222; border-right:1px solid #444; width:200px; padding:6px; vertical-align:top; font-family: Nunito, Arial, sans-serif;',
+    tracklist: 'background:#1e1e1e; width:100%; padding:8px; vertical-align:top; font-family: Nunito, Arial, sans-serif;',
+    toggleWrap: 'margin-bottom:8px;width:160px; display:block;',
 
     // Header and Title
-    header: 'font-family: Nunito, Arial, sans-serif; font-weight:bold; text-align:left; font-size:20px; padding:4px; color:#222; background:#cc9393; border-bottom:1px solid #ccc;',
-    gear: 'float:right; cursor:pointer; color:#666;',
-    trackCount: 'color:#333; float:right; font-size:12px; display: inline-block; margin-right:15px; margin-top:5px;',
+    header: 'color:#ddd; background:#542d2d; border-bottom:1px solid #444; padding:4px; text-align:left; font-size:20px; font-weight:bold; font-family: Nunito, Arial, sans-serif;',
+    gear: 'color:#aaa; float:right; cursor:pointer;',
+    trackCount: 'color:#888; margin-right:15px; margin-top:5px; font-size:12px; float:right; display: inline-block;',
 
     // Buttons & Controls
-    button: 'display:block; margin-bottom:4px; width:100%; font-size:11px; background:#e0e0e0; color:#333; border:1px solid #bbb;',
-    utilityContainer: 'width:90%; font-size:12px; padding:4px 6px; background:#ddd; color:#333; border:1px solid #bbb; border-radius:4px; margin-top:6px; position:relative;',
-    utilitySubButton: 'font-size:11px; padding:1px 5px; background:#aaa; color:#333; border:1px solid #999; border-radius:3px; margin:-1px -1px 0px 3px; float:right; text-decoration:none;',
-    utilityButton: 'width:90%;display:inline-block; font-size:12px; padding:4px 6px; background:#ddd; color:#222; border:1px solid #bbb; border-radius:4px; text-align:center; margin-top:6px; text-decoration:none;',
-    settingsButton: 'width:90%;display:inline-block; font-size:12px; padding:4px 6px; background:transparent; color:#333; text-align:center; margin-top:6px; text-decoration:none;',
-        forceTextColor: 'color:#222',
-
-    // *** Updated header buttons to match cssDark measurements but cssLight colors from utility buttons ***
-    headerButtonContainer: 'float:right; display:inline-block; font-size:12px; padding:4px 6px; border:1px solid #666; border-radius:4px; text-decoration:none; margin-top:-2px; margin-right:4px; background:#ddd; color:#333;',
-    headerButton: 'float:right; font-size:12px; padding:4px 6px; border:1px solid #666; border-radius:4px; text-decoration:none; margin-top:-2px; margin-right:4px; background:#ddd; color:#222;',
-    headerSubButton:       'font-size:11px; padding:1px 6px; border:1px solid #999; border-radius:3px; text-decoration:none; margin-top:-2px; background:#aaa; color:#333;',
-    headerSubButtonActive: 'font-size:11px; padding:1px 6px; border:1px solid #333; border-radius:3px; text-decoration:none; margin-top:-2px; background:#C27575; color:#333;',
-
-    nowPlayingButton: 'color:#444; padding:2px 4px; display:block; text-decoration:none; background:#eee; border-radius:4px; margin-top:6px;',
-    refreshButton: 'font-size:10px; margin-top:8px; display:block; color:#0066cc; text-decoration:underline; cursor:pointer;',
+    button: 'background:#333; color:#ccc; border:1px solid #555; width:100%; margin-bottom:4px; display:block; font-size:11px;',
+    utilityContainer: 'background:#555; color:#ddd; border:1px solid #444; border-radius:4px; width:90%; padding:4px 6px; margin-top:6px; position:relative; font-size:12px;',
+    utilitySubButton: 'background:#444; color:#ccc; border:1px solid #444; border-radius:3px; padding:1px 5px; margin:-1px -1px 0px 3px; float:right; font-size:11px; text-decoration:none;',
+    utilityButton: 'background:#555; color:#ddd; border:1px solid #444; border-radius:4px; width:90%; margin-top:6px; display:inline-block; padding:4px 6px; font-size:12px; text-align:center; text-decoration:none;',
+    settingsButton: 'background:transparent; color:#ddd; width:90%; margin-top:6px; display:inline-block; padding:4px 6px; font-size:12px; text-align:center; text-decoration:none;',
+    headerButtonContainer: 'background:#1a2833; color:#ddd; border:1px solid #888; border-radius:4px; margin-top:-2px; margin-right:6px; position:relative; top:3px; float:right; display:inline-block; padding:4px 6px; font-size:12px; text-decoration:none;',
+    headerButton: 'color:#ddd!important; background:#1a2833; border:1px solid #888; border-radius:4px; margin-top:-2px; margin-right:6px; padding:4px 6px; font-size:12px; float:right; text-decoration:none; position:relative; top:3px;',
+    headerSubButton: 'background:#0e161c; color:#ddd; border:1px solid #444; border-radius:2px; margin-left:2px; margin-top:-2px; padding:1px 6px; font-size:11px; text-decoration:none;',
+    headerSubButtonActive: 'background:#C27575; color:#333; border:1px solid #333; border-radius:3px; margin-top:-2px; padding:1px 6px; font-size:11px; text-decoration:none;',
+    nowPlayingButton: 'background:#444; color:#ccc; border-radius:4px; margin-top:6px; padding:2px 4px; display:block; text-decoration:none;',
+    refreshButton: 'color:#66aaff; margin-top:8px; display:block; font-size:10px; text-decoration:underline; cursor:pointer;',
+    forceTextColor: 'color:#ddd',
 
     //announce styles
-    announceButton: 'color:#888; font-size:10px; padding:0px 4px; display:inline-block; text-decoration:none; margin-top:4px;',
-    announceTitle: 'display:inline-block; font-size:16px; rexr-align:center; font-weight:bold; color:#333; margin-top:4px;',
-    announceDesc: 'margin-top:4px; font-size:11px; color:#555; line-height:15px;',
+    announceButton: 'color:#888; padding:0px 4px; margin-top:4px; font-size:10px; display:inline-block; text-decoration:none;',
+    announceTitle: 'color:#ccc; margin-top:4px; font-size:16px; font-weight:bold; display:inline-block;',
+    announceDesc: 'color:#aaa; margin-top:4px; font-size:11px; line-height:15px;',
 
     // Sidebar Links & Rules
-    sidebarRule: 'border:0; border-top:1px solid #ccc; margin:20px 0 3px 0;',
-    sidebarLink: 'color:#444; padding:2px 4px; display:block; text-decoration:none;',
-    albumSelectedLink: 'background:#c22929; color:#fff; padding:2px 4px; display:block; border-radius:4px; text-decoration:none;',
-    playlistSelectedLink: 'background:#2d5da6; color:#fff; padding:2px 4px; display:block; border-radius:4px; text-decoration:none;',
+    sidebarRule: 'border:0; border-top:1px solid #444; margin:20px 0 3px 0;',
+    sidebarLink: 'color:#ccc; padding:2px 4px; display:block; text-decoration:none;',
+    albumSelectedLink: 'background:#993333; color:#eee; border-radius:4px; padding:2px 4px; display:block; text-decoration:none;',
+    playlistSelectedLink: 'background:#334477; color:#eee; border-radius:4px; padding:2px 4px; display:block; text-decoration:none;',
 
     // Album/Playlist Tags
     tags: 'margin-top:4px; margin-left:38px; display:block;',
-    albumTag: 'display:inline-block; background:#c22929; color:#fff; border-radius:4px; padding:2px 6px; font-size:10px; margin-right:2px; vertical-align:middle;',
-    playlistTag: 'display:inline-block; background:#2d5da6; color:#fff; border-radius:4px; padding:2px 6px; font-size:10px; margin-right:2px; vertical-align:middle;',
-    tagRemove: 'color:#fff; margin-left:2px; cursor:pointer;',
+    albumTag: 'background:#993333; color:#eee; border-radius:4px; padding:2px 6px; margin-right:2px; font-size:10px; display:inline-block; vertical-align:middle;',
+    playlistTag: 'background:#334477; color:#eee; border-radius:4px; padding:2px 6px; margin-right:2px; font-size:10px; display:inline-block; vertical-align:middle;',
+    tagRemove: 'color:#eee; margin-left:2px; cursor:pointer;',
 
     // Toggle Buttons
-    toggleButton: 'display:inline-block; width:45%; padding:6px 0; font-weight:bold; border:1px solid #bbb; border-radius:4px; text-align:center; margin-right:4px;',
-    toggleActiveAlbums: 'background:#c22929; color:#fff;',
-    toggleActivePlaylists: 'background:#2d5da6; color:#fff;',
-    toggleInactive: 'background:#bbb; color:#666;',
+    toggleButton: 'border:1px solid #555; border-radius:4px; width:45%; margin-right:4px; padding:6px 0; font-weight:bold; display:inline-block; text-align:center;',
+    toggleActiveAlbums: 'background:#993333; color:#eee;',
+    toggleActivePlaylists: 'background:#334477; color:#eee;',
+    toggleInactive: 'background:#444; color:#aaa;',
 
-    // Message styles
-    messageContainer: 'font-family: Nunito, Arial, sans-serif; background-color:#ccc; color:#111; padding:10px; position:relative; top:-15px; left:-5px; border: solid 1px #555; border-radius:5px;',
-    messageTitle: 'padding: 3px 0px; background-color:#444; border-radius:4px; color:#ddd; font-size:16px; text-transform: capitalize; text-align:center; margin-bottom:13px;',
-    messageButton: 'display:inline-block; background:#aaa; color:#111; border: solid 1px #666;border-radius:4px; padding:2px 6px; margin-right:2px; vertical-align:middle;',
-    descHelp: 'margin-top:4px; font-size:15px; color:#222;',
+    //Chat message Styles
+    messageContainer: 'background-color:#222; color:#ccc; Border: solid 1px #444; border-radius:5px; padding:10px; position:relative; top:-15px; left:-5px; font-family: Nunito, Arial, sans-serif;',
+    messageTitle: 'color:#ddd; margin-bottom:13px; font-size:16px; text-transform: capitalize; text-align:center;',
+    messageButton: 'background:#444; color:#ccc; border-radius:4px; padding:2px 6px; margin-right:2px; display:inline-block; vertical-align:middle',
+    descHelp: 'color:#eee; margin-top:4px; font-size:15px;',
 
     // Track Item Styles
-    track: 'border-bottom:1px solid #ccc; padding:6px 0; display:table; width:100%; color:#333;',
-    trackTitle: 'display:inline-block; font-size:18px; font-weight:bold; color:#333;',
+    track: 'color:#ccc; border-bottom:1px solid #444; padding:6px 0; display:table; width:100%;',
+    trackTitle: 'color:#ccc;margin-top:2px; font-size:18px; font-weight:bold; display:inline-block;',
     controls: 'float:right; margin-top:-2px;',
-    controlButtonImg: 'width:16px; height:16px; margin: 0px 2px; vertical-align:middle; cursor:pointer;',
-    desc: 'margin-top:4px; font-size:13px; color:#666; margin-left:38px;',
-    vol: 'font-size:11px; margin-top:4px; color:#999; margin-left:108px;',
-    albumEditLink: 'font-size:10px; margin-left:4px; vertical-align:middle; color:#666;',
-    descEditLink: 'font-size:10px; color:#888; font-style:italic; margin-left:6px; cursor:pointer;',
-    code: 'display:inline-block; font-size:0.75em; font-family:monospace; font-weight:bold; color:222; background-color:#ddd; padding:1px 4px; margin-left:4px; border-radius:3px; user-select:none;',
-volumeControl: 'font-size:10px; color:#888; text-decoration:none; margin-left:8px; margin-top:4px; cursor:pointer;',
+    controlButtonImg: 'width:16px; height:16px; margin: 4px 2px; vertical-align:middle; cursor:pointer;',
+    desc: 'color:#aaa; margin-top:4px; margin-left:38px; font-size:13px;',
+    vol: 'color:#999; margin-top:4px; margin-left:108px; font-size:11px;',
+    albumEditLink: 'color:#aaa; margin-left:4px; font-size:10px; vertical-align:middle;',
+    descEditLink: 'color:#888; margin-left:6px; font-size:10px; font-style:italic; cursor:pointer;',
+    code: 'color:eee; background-color:#444; border-radius:3px; padding:1px 4px 0px 4px; margin-left:4px; display:inline-block; font-size:0.75em; font-family:monospace; font-weight:bold; user-select:none;',
+    volumeControl: 'color:#888; margin: 0px 6px; font-size:10px; text-decoration:none; cursor:pointer;',
 
     // Images
-    image: 'width:100px; height:100px; background:#eee; text-align:center; font-size:11px; color:#999; border:1px solid #bbb; float:left; margin-right:8px; object-fit:cover; object-position:center center; display:block;',
-    imageDiv: 'width:100px; height:100px; background-size:cover; background-position:center; border:1px solid #bbb; margin-right:8px; float:left; display:block;',
-    imagePlaceholder: 'width:100px; background:#eee; color:#999; text-align:center; font-size:11px; border:1px solid #bbb; margin-right:8px; float:left; display:block; padding-top:35px; height:65px; line-height:18px;',
+    image: 'background:#444; color:#999; border:1px solid #666; width:100px; height:100px; margin-right:8px; text-align:center; font-size:11px; float:left; object-fit:cover; object-position:center center; display:block;',
+    imageDiv: 'border:1px solid #666; width:100px; height:100px; margin-right:8px; background-size:cover; background-position:center; float:left; display:block;',
+    imagePlaceholder: 'background:#444; color:#999; border:1px solid #666; width:100px; margin-right:8px; text-align:center; font-size:11px; float:left; padding-top:35px; height:65px; line-height:18px; display:block;',
 
     // Album specific
-    albumImage: 'width:80px; height:80px; object-fit:cover; border:1px solid #bbb; margin-right:8px;',
-    albumHeaderDesc: 'font-size:12px; color:#666;',
-    addAlbum: 'font-size:10px; margin-top:8px; display:block; color:#666;'
+    albumImage: 'border:1px solid #666; width:80px; height:80px; margin-right:8px; object-fit:cover;',
+    albumHeaderDesc: 'color:#bbb; font-size:12px;',
+    addAlbum: 'color:#ccc; margin-top:8px; display:block; font-size:10px;'
+};
+
+
+const lightModeOverrides = {
+    // Layout Containers
+    sidebar: { background: '#f5f5f5', "border-right": '1px solid #ccc' },
+    tracklist: { background: '#ffffff' },
+
+    // Header and Title
+    header: { color: '#222', background: '#cc9393', "border-bottom": '1px solid #ccc' },
+    gear: { color: '#666' },
+    trackCount: { color: '#333' },
+
+    // Buttons & Controls
+    button: { background: '#e0e0e0', color: '#333', border: '1px solid #bbb' },
+    utilityContainer: { background: '#ddd', color: '#333', border: '1px solid #bbb' },
+    utilitySubButton: { background: '#aaa', color: '#333', border: '1px solid #999' },
+    utilityButton: { background: '#ddd', color: '#222', border: '1px solid #bbb' },
+    settingsButton: { color: '#333' },
+    forceTextColor: { color: '#222' },
+
+    // *** Updated header buttons to match cssDark measurements but cssLight colors from utility buttons ***
+    headerButtonContainer: { border: '1px solid #666', background: '#ddd', color: '#333' },
+    headerButton: { border: '1px solid #666', background: '#ddd', color: '#222' },
+    headerSubButton: { border: '1px solid #999', background: '#aaa', color: '#333' },
+    headerSubButtonActive: { border: '1px solid #333', background: '#C27575', color: '#333' },
+
+    nowPlayingButton: { color: '#444', background: '#eee' },
+    refreshButton: { color: '#0066cc' },
+
+    //announce styles
+    announceButton: { color: '#888' },
+    announceTitle: { color: '#333' },
+    announceDesc: { color: '#555' },
+
+    // Sidebar Links & Rules
+    sidebarRule: { border: '0', "border-top": '1px solid #ccc' },
+    sidebarLink: { color: '#444' },
+    albumSelectedLink: { background: '#c22929', color: '#fff' },
+    playlistSelectedLink: { background: '#2d5da6', color: '#fff' },
+
+    // Album/Playlist Tags
+    albumTag: { background: '#c22929', color: '#fff' },
+    playlistTag: { background: '#2d5da6', color: '#fff' },
+    tagRemove: { color: '#fff' },
+
+    // Toggle Buttons
+    toggleActiveAlbums: { background: '#c22929', color: '#fff' },
+    toggleActivePlaylists: { background: '#2d5da6', color: '#fff' },
+    toggleInactive: { background: '#bbb', color: '#666' },
+
+    // Message styles
+    messageContainer: { backgroundColor: '#ccc', color: '#111', border: 'solid 1px #555' },
+    messageTitle: { backgroundColor: '#444', color: '#ddd' },
+    messageButton: { background: '#aaa', color: '#111', border: 'solid 1px #666' },
+
+    // Track Item Styles
+    track: { "border-bottom": '1px solid #ccc', color: '#333' },
+    trackTitle: { color: '#333' },
+    desc: { color: '#666' },
+    vol: { color: '#999' },
+    albumEditLink: { color: '#666' },
+    descEditLink: { color: '#888' },
+    code: { color: '222', backgroundColor: '#ddd' },
+    volumeControl: { color: '#888' },
+
+    // Images
+    image: { background: '#eee', color: '#999', border: '1px solid #bbb' },
+    imageDiv: { border: '1px solid #bbb' },
+    imagePlaceholder: { background: '#eee', color: '#999', border: '1px solid #bbb' },
+
+    // Album specific
+    albumImage: { border: '1px solid #bbb' },
+    albumHeaderDesc: { color: '#666' },
+    addAlbum: { color: '#666' }
 };
 
 
 
 
-    const cssDark = {
-        // Layout Containers
-        sidebar: 'font-family: Nunito, Arial, sans-serif; background:#222; vertical-align:top; padding:6px; border-right:1px solid #444; width:200px;',
-        tracklist: 'font-family: Nunito, Arial, sans-serif; padding:8px; vertical-align:top; width:100%; background:#1e1e1e;',
-        toggleWrap: 'display:block; margin-bottom:8px;width:160px;',
-        //deprecated
-        //tracklistScroll: 'max-height:600px !important; overflow-y: scroll; overflow-x: hidden;',
+const generateCssLightFromDark = (cssDark, overrides) => {
+  const result = {};
 
-        // Header and Title
-        header: 'font-family: Nunito, Arial, sans-serif; font-weight:bold; text-align:left; font-size:20px; padding:4px; color:#ddd; background:#542d2d; border-bottom:1px solid #444;',
-        gear: 'float:right; cursor:pointer; color:#aaa;',
-        trackCount: 'color:#888; float:right; font-size:12px; display: inline-block; margin-right:15px; margin-top:5px;',
+  const replaceColors = (styleStr, override) => {
+    const props = styleStr.split(';').map(p => p.trim()).filter(Boolean);
+    const mapped = {};
 
-        // Buttons & Controls
-        button: 'display:block; margin-bottom:4px; width:100%; font-size:11px; background:#333; color:#ccc; border:1px solid #555;',
-        utilityContainer: 'width:90%; font-size:12px; padding:4px 6px; background:#555; color:#ddd; border:1px solid #444; border-radius:4px; margin-top:6px; position:relative;',
-        utilitySubButton: 'font-size:11px; padding:1px 5px; background:#444; color:#ccc; border:1px solid #444; border-radius:3px; margin:-1px -1px 0px 3px; float:right; text-decoration:none;',
-        utilityButton: 'width:90%;display:inline-block; font-size:12px; padding:4px 6px; background:#555; color:#ddd; border:1px solid #444; border-radius:4px; text-align:center; margin-top:6px; text-decoration:none;',
-        settingsButton: 'width:90%;display:inline-block; font-size:12px; padding:4px 6px; background:transparent; color:#ddd; text-align:center; margin-top:6px; text-decoration:none;',
-        headerButtonContainer: 'float:right; display:inline-block; font-size:12px; padding:4px 6px; background:#555; color:#ddd; border:1px solid #444; border-radius:4px; text-decoration:none; margin-top:-2px; margin-right:4px;',
-        headerButton: 'float:right; font-size:12px; padding:4px 6px; background:#555; color:#ddd; border:1px solid #444; border-radius:4px; text-decoration:none; margin-top:-2px; margin-right:4px;',
-        headerSubButton: 'font-size:11px; padding:1px 6px; background:#444; color:#ddd; border:1px solid #444; border-radius:2px; text-decoration:none; margin-top:-2px;',
-        headerSubButtonActive: 'font-size:11px; padding:1px 6px; border:1px solid #333; border-radius:3px; text-decoration:none; margin-top:-2px; background:#C27575; color:#333;',
-        nowPlayingButton: 'color:#ccc; padding:2px 4px; display:block; text-decoration:none; background:#444; border-radius:4px; margin-top:6px;',
-        refreshButton: 'font-size:10px; margin-top:8px; display:block; color:#66aaff; text-decoration:underline; cursor:pointer;',
-        forceTextColor: 'color:#ddd',
+    // Convert dark mode CSS string into key-value pairs
+    props.forEach(p => {
+      const [key, value] = p.split(':').map(s => s.trim());
+      mapped[key] = value;
+    });
 
-        //announce styles
-        announceButton: 'color:#888; font-size:10px; padding:0px 4px; display:inline-block; text-decoration:none; margin-top:4px;',
-        announceTitle: 'display:inline-block; font-size:16px; font-weight:bold; color:#ccc; margin-top:4px;',
-        announceDesc: 'margin-top:4px; font-size:11px; color:#aaa; line-height:15px;',
+    // Apply color/background/border overrides
+    if (override) {
+      if (override.color) mapped.color = override.color;
+      if (override.background) mapped.background = override.background;
+      if (override.border) {
+        // Override just the relevant border (most are single sides)
+        const sides = ['border', 'border-top', 'border-right', 'border-bottom', 'border-left'];
+        const borderKey = sides.find(k => Object.keys(mapped).includes(k)) || 'border';
+        mapped[borderKey] = override.border;
+      }
+    }
 
-        // Sidebar Links & Rules
-        sidebarRule: 'border:0; border-top:1px solid #444; margin:20px 0 3px 0;',
-        sidebarLink: 'color:#ccc; padding:2px 4px; display:block; text-decoration:none;',
-        albumSelectedLink: 'background:#993333; color:#eee; padding:2px 4px; display:block; border-radius:4px; text-decoration:none;',
-        playlistSelectedLink: 'background:#334477; color:#eee; padding:2px 4px; display:block; border-radius:4px; text-decoration:none;',
+    // Rebuild into CSS string
+    return Object.entries(mapped).map(([k, v]) => `${k}:${v}`).join('; ') + ';';
+  };
 
-        // Album/Playlist Tags
-        tags: 'margin-top:4px; margin-left:38px; display:block;',
-        albumTag: 'display:inline-block; background:#993333; color:#eee; border-radius:4px; padding:2px 6px; font-size:10px; margin-right:2px; vertical-align:middle;',
-        playlistTag: 'display:inline-block; background:#334477; color:#eee; border-radius:4px; padding:2px 6px; font-size:10px; margin-right:2px; vertical-align:middle;',
-        tagRemove: 'color:#eee; margin-left:2px; cursor:pointer;',
+  // Handle all style keys (excluding badgeColors)
+  for (const key in cssDark) {
+    if (key === 'badgeColors') continue;
+    const override = overrides[key];
+    result[key] = replaceColors(cssDark[key], override);
+  }
 
-        // Toggle Buttons
-        toggleButton: 'display:inline-block; width:45%; padding:6px 0; font-weight:bold; border:1px solid #555; border-radius:4px; text-align:center; margin-right:4px;',
-        toggleActiveAlbums: 'background:#993333; color:#eee;',
-        toggleActivePlaylists: 'background:#334477; color:#eee;',
-        toggleInactive: 'background:#444; color:#aaa;',
+  // Copy and override badgeColors
+  result.badgeColors = {
+    ...(cssDark.badgeColors || {}),
+    ...(overrides.badgeColors || {})
+  };
 
-        //Chat message Styles
-        messageContainer: 'font-family: Nunito, Arial, sans-serif;  background-color:#222; color:#ccc; padding:10px; position:relative; top:-15px; left:-5px; Border: solid 1px #444; border-radius:5px',
-        messageTitle: 'color:#ddd; font-size:16px; text-transform: capitalize; text-align:center;margin-bottom:13px;',
-        messageButton: 'display:inline-block; background:#444; color:#ccc; border-radius:4px; padding:2px 6px; margin-right:2px; vertical-align:middle',
-        descHelp: 'margin-top:4px; font-size:15px; color:#eee; ',
+  return result;
+};
 
-        // Track Item Styles
-        track: 'border-bottom:1px solid #444; padding:6px 0; display:table; width:100%; color:#ccc;',
-        trackTitle: 'display:inline-block; font-size:18px; font-weight:bold; color:#ccc;margin-top:2px;',
-        controls: 'float:right; margin-top:-2px;',
-        controlButtonImg: 'width:16px; height:16px; margin: 4px 2px; vertical-align:middle; cursor:pointer;',
-        desc: 'margin-top:4px; font-size:13px; color:#aaa; margin-left:38px;',
-        vol: 'font-size:11px; margin-top:4px; color:#999; margin-left:108px;',
-        albumEditLink: 'font-size:10px; margin-left:4px; vertical-align:middle; color:#aaa;',
-        descEditLink: 'font-size:10px; color:#888; font-style:italic; margin-left:6px; cursor:pointer;',
-        code: 'display:inline-block; font-size:0.75em; font-family:monospace; font-weight:bold; color:eee; background-color:#444; padding:1px 4px 0px 4px; margin-left:4px; border-radius:3px; user-select:none;',
-volumeControl: 'font-size:10px; color:#888; text-decoration:none; margin: 0px 6px; cursor:pointer;',
+const cssLight = generateCssLightFromDark(cssDark, lightModeOverrides);
 
-        // Images
-        image: 'width:100px; height:100px; background:#444; text-align:center; font-size:11px; color:#999; border:1px solid #666; float:left; margin-right:8px; object-fit:cover; object-position:center center; display:block;',
-        imageDiv: 'width:100px; height:100px; background-size:cover; background-position:center; border:1px solid #666; margin-right:8px; float:left; display:block;',
-        imagePlaceholder: 'width:100px; background:#444; color:#999; text-align:center; font-size:11px; border:1px solid #666; margin-right:8px; float:left; display:block; padding-top:35px; height:65px; line-height:18px;',
 
-        // Album specific
-        albumImage: 'width:80px; height:80px; object-fit:cover; border:1px solid #666; margin-right:8px;',
-        albumHeaderDesc: 'font-size:12px; color:#bbb;',
-        addAlbum: 'font-size:10px; margin-top:8px; display:block; color:#ccc;'
-    };
+
+
 
 
     // Set active theme styles and icons based on saved mode
@@ -2233,9 +2281,9 @@ data.albumSortOrder = data.albumSortOrder.map(n => n === oldName ? newName : n);
 
     // Finds tracks by a search term, marking matches into a special 'Found' or 'Duplicates' album
 if (command === 'find') {
-    const searchTerm = args.join(' ').toLowerCase().trim();
+    const rawSearchTerm = args.join(' ').trim();
 
-    if (!searchTerm) {
+    if (!rawSearchTerm) {
         sendStyledMessage('Find Tracks', 'You must provide a search term.', false);
         return;
     }
@@ -2252,7 +2300,7 @@ if (command === 'find') {
         }
     });
 
-    if (searchTerm === 'd') {
+    if (rawSearchTerm.toLowerCase() === 'd') {
         // Special case: Find tracks with duplicate names
         const nameMap = {};
         Object.values(data.tracks).forEach(track => {
@@ -2282,14 +2330,11 @@ if (command === 'find') {
         data.settings.viewMode = 'albums';
         data.settings.selectedAlbum = 'Duplicates';
 
-
-// Sort tracklist by title (case-insensitive)
-data.trackOrder = duplicates
-    .slice()
-    .sort((a, b) => a.title.toLowerCase().localeCompare(b.title.toLowerCase()))
-    .map(track => track.id);
-
-
+        // Sort tracklist by title (case-insensitive)
+        data.trackOrder = duplicates
+            .slice()
+            .sort((a, b) => a.title.toLowerCase().localeCompare(b.title.toLowerCase()))
+            .map(track => track.id);
 
         updateInterface();
         sendStyledMessage('Find Duplicates', `Found ${duplicates.length} duplicate track${duplicates.length !== 1 ? 's' : ''}.`, false);
@@ -2299,11 +2344,33 @@ data.trackOrder = duplicates
     // Normal search mode
     data.albums['Found'] = true;
 
-    const matches = Object.values(data.tracks).filter(track => {
-        const title = track.title?.toLowerCase() || '';
-        const desc = track.description?.toLowerCase() || '';
-        return title.includes(searchTerm) || desc.includes(searchTerm);
-    });
+    let matches;
+    let isRegex = rawSearchTerm.startsWith('/') && rawSearchTerm.lastIndexOf('/') > 0;
+
+    if (isRegex) {
+        try {
+            const lastSlash = rawSearchTerm.lastIndexOf('/');
+            const pattern = rawSearchTerm.slice(1, lastSlash);
+            const flags = rawSearchTerm.slice(lastSlash + 1);
+            const regex = new RegExp(pattern, flags);
+
+            matches = Object.values(data.tracks).filter(track => {
+                const title = track.title || '';
+                const desc = track.description || '';
+                return regex.test(title) || regex.test(desc);
+            });
+        } catch (e) {
+            sendStyledMessage('Find Tracks', `Invalid regular expression: <code>${esc(rawSearchTerm)}</code>`, false);
+            return;
+        }
+    } else {
+        const term = rawSearchTerm.toLowerCase();
+        matches = Object.values(data.tracks).filter(track => {
+            const title = track.title?.toLowerCase() || '';
+            const desc = track.description?.toLowerCase() || '';
+            return title.includes(term) || desc.includes(term);
+        });
+    }
 
     matches.forEach(track => {
         if (!track.albums.includes('Found')) {
@@ -2312,7 +2379,7 @@ data.trackOrder = duplicates
     });
 
     if (matches.length === 0) {
-        sendStyledMessage('Find Tracks', `No tracks matched the search: "${searchTerm}"`, false);
+        sendStyledMessage('Find Tracks', `No tracks matched the search: "${esc(rawSearchTerm)}"`, false);
         return;
     }
 
@@ -2320,7 +2387,6 @@ data.trackOrder = duplicates
     data.settings.selectedAlbum = 'Found';
 
     updateInterface();
-    //sendStyledMessage('Find Tracks', `Found ${matches.length} track${matches.length !== 1 ? 's' : ''} matching "${searchTerm}"`, false);
 }
 
 
