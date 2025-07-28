@@ -15,9 +15,14 @@ API_Meta.Director = {
 on('ready', () =>
 {
     
-    const version = '1.0.0'; //version number set here
+    const version = '1.0.1'; //version number set here
     log('-=> Director v' + version + ' is loaded. Command !director creates control handout and provides link. Click that to open.');
-    
+
+//Changelog:
+//1.0.0 Debut script
+//1.0.1 Grid Mode, fallback image system for Marketplace images
+
+
 // == Director Script ==
 // Globals
 const scriptName = 'Director';
@@ -51,7 +56,7 @@ const updateState = (st) => {
   
 const cssDark = {
   // === Layout: Header, Sidebar, Columns ===
-  header: 'color:#ddd; background:##2d4354; border-bottom:1px solid #444; font-family: Nunito, Arial, sans-serif; font-weight:bold; text-align:left; font-size:20px; padding:4px;',
+  header: 'color:#ddd; background:#2d4354; border-bottom:1px solid #444; font-family: Nunito, Arial, sans-serif; font-weight:bold; text-align:left; font-size:20px; padding:4px;',
   sidebar: 'color:#ddd; background:#222; border-right:1px solid #444; width:150px; font-family: Nunito, Arial, sans-serif; vertical-align:top; padding:8px;',
   images: 'color:#ddd; background:#1e1e1e; border-right:1px solid #444; width:210px; font-family: Nunito, Arial, sans-serif; vertical-align:top; padding:8px;',
   items: 'color:#ddd; background:#1e1e1e; font-family: Nunito, Arial, sans-serif; vertical-align:top; padding:8px;',
@@ -59,6 +64,8 @@ const cssDark = {
   helpContainer: 'background:transparent;padding:16px; font-size:13px; line-height:1.5; max-height:800px; overflow-y:auto;',
 
   // === Buttons: Headers, Utility, Scene ===
+  headerContainer: 'color:#ddd!important; background:#1a2833; border:1px solid #888; border-radius:4px; margin-top:-2px; margin-left:6px; padding:2px 6px; font-size:12px; float:right; text-decoration:none; position:relative; top:3px;',
+  headerSubButton: 'color:#ddd!important; background:#2B3D4F; border:1px solid #888; border-radius:4px; margin:1px 0px 0px 4px; padding:1px 6px 0px 6px; font-size:12px; text-decoration:none; display:inline-block;',
   headerButton: 'color:#ddd!important; background:##1a2833; border:1px solid #888; border-radius:4px; margin-top:-2px; margin-left:6px; padding:4px 6px; font-size:12px; float:right; text-decoration:none; position:relative; top:3px;',
   settingsButton: 'color:#ddd; background:transparent; width:90%; margin-top:6px; padding:4px 6px; font-size:12px; display:inline-block; text-align:center; text-decoration:none;',
   utilityButton: 'color:#ddd; background:#555; border:1px solid #777; border-radius:4px; width:90%; margin-top:6px; padding:4px 6px; font-size:12px; display:inline-block; text-align:center; text-decoration:none;',
@@ -124,6 +131,8 @@ const lightModeOverrides = {
   items: { color: '#222', background: '#bbb' },
   columnHeader: { color: '#222', background: '#999', border: '1px solid #666' },
 
+  headerContainer: { color: '#222', background: '#e0e0e0', border: '1px solid #888' },
+  headerSubButton: { color: '#222', background: '#C2C3C4', border: '1px solid #888' },
   headerButton: { color: '#222', background: '#e0e0e0', border: '1px solid #888' },
   settingsButton: { color: '#222' },
   utilityButton: { color: '#222', background: '#ccc', border: '1px solid #666' },
@@ -297,42 +306,6 @@ const generateRowID = () => {
   return `${Date.now()}_${Math.floor(Math.random() * 100000)}`;
 };
 
-// Add a new scene with name under an act
-const addNewSceneWithName = (actName, sceneName) => {
-  if (!actName || !sceneName) return;
-  const st = getState();
-  if (!st.acts[actName]) {
-    st.acts[actName] = { scenes: {} };
-  }
-  if (!st.acts[actName].scenes) {
-    st.acts[actName].scenes = {};
-  }
-  if (!st.acts[actName].scenes[sceneName]) {
-    st.acts[actName].scenes[sceneName] = {
-      images: [],
-      items: [],
-      backdropId: null,
-    };
-  }
-};
-
-const addNewScene = (actName) => {
-  // Placeholder; you can add user prompt logic here if desired.
-  const sceneName = 'New Scene'; // Default name placeholder
-  addNewSceneWithName(actName, sceneName);
-};
-
-const addNewAct = (actName) => {
-  if (!actName || !actName.trim()) return;
-  const st = getState();
-  if (st.acts[actName]) return;
-  st.acts[actName] = { scenes: {} };
-  if (!st.actsExpanded) st.actsExpanded = {};
-  st.actsExpanded[actName] = true;
-};
-
-
-
 
 
 const deleteScene = (actName, sceneName) => {
@@ -407,12 +380,6 @@ const deleteAct = (actName) => {
 };
 
 
-
-const toggleActExpansion = (actName) => {
-  const st = getState();
-  if (!st.actsExpanded) st.actsExpanded = {};
-  st.actsExpanded[actName] = !st.actsExpanded[actName];
-};
 
 // Backup and restore
 const makeBackup = () => {
@@ -567,7 +534,7 @@ const handleCaptureImage = (msg) => {
     title: 'New Image'
   });
 
-  sendStyledMessage('Image Captured', `Image added to scene "${sceneName}" as a highlight.`);
+  //sendStyledMessage('Image Captured', `Image added to scene "${sceneName}" as a highlight.`);
   updateHandout();
 };
 
@@ -633,6 +600,62 @@ const isDirectorGraphic = (graphic) =>
   graphic.get('aura2_radius') === '';
 
 
+
+const FALLBACK_IMG = 'https://files.d20.io/images/450376099/-A1LbVK3RyZu-huOhIlTSw/original.png?1753641861';
+
+const getSafeImgsrc = (imgsrc) => imgsrc.includes('/marketplace/') ? FALLBACK_IMG : imgsrc;
+
+
+
+
+
+
+const enableDynamicLighting = (pageId) => {
+  const page = getObj('page', pageId);
+  if (!page) {
+    return sendStyledMessage('Dynamic Lighting', 'Page not found.');
+  }
+
+  page.set({
+    dynamic_lighting_enabled: true,
+    daylight_mode_enabled: true,
+    daylightModeOpacity: 1,  // 1 = 100%
+    explorer_mode: 'off',
+    lightupdatedrop: true,
+    lightrestrictmove: true,
+    force_lighting_refresh: true,
+    fog_opacity: 0,
+    lightupdatedrop: true
+  });
+
+  //sendStyledMessage('Dynamic Lighting', `Dynamic Lighting enabled for page "${page.get('name')}".`);
+};
+
+
+
+const disableDynamicLighting = (pageId) => {
+  const page = getObj('page', pageId);
+  if (!page) {
+    return sendStyledMessage('Dynamic Lighting', 'Page not found.');
+  }
+
+  page.set({
+    dynamic_lighting_enabled: false,
+    daylight_mode_enabled: false,
+    explorer_mode: 'off',
+    force_lighting_refresh: true
+  });
+
+  //sendStyledMessage('Dynamic Lighting', `Dynamic Lighting disabled for page "${page.get('name')}".`);
+};
+
+
+
+
+
+
+
+
 const handleSetScene = (playerid) => {
   const st = getState();
   const currentScene = st.activeScene;
@@ -656,6 +679,11 @@ const handleSetScene = (playerid) => {
   if (!/stage|scene|theater|theatre/.test(pageName)) {
     return sendStyledMessage('Set Scene', `Current page "${page.get('name')}" must contain:<br><i>stage, scene, theater, or theatre</i>.<br><br>Skipping scene setup.`);
   }
+
+
+
+disableDynamicLighting(pageId);
+
 
   page.set({
     showgrid: false,
@@ -703,14 +731,14 @@ const handleSetScene = (playerid) => {
     });
     tagGraphicAsDirector(backdrop);
 
-    if (backdropImg.trackId) {
-      const track = getObj('jukeboxtrack', backdropImg.trackId);
-      if (track) {
-        track.set('playing', true);
-      } else {
-        log(`[Director] Backdrop track ID "${backdropImg.trackId}" not found.`);
-      }
-    }
+if (backdropImg.trackId && !st.settings.muteBackdropAudio) {
+  const track = getObj('jukeboxtrack', backdropImg.trackId);
+  if (track && !track.get('playing')) {
+    track.set('playing', true);
+  } else if (!track) {
+    log(`[Director] Backdrop track ID "${backdropImg.trackId}" not found.`);
+  }
+}
 
     st.lastSetScene = currentScene;
   }
@@ -789,12 +817,18 @@ const handleSetScene = (playerid) => {
     if (btn.type === 'variant') {
       try {
         const props = { ...btn.tokenProps };
+
+/*
         if (!props || !props.imgsrc) {
           log(`[Director] Invalid tokenProps for variant "${btn.name}". Skipping.`);
           return placeNextToken();
         }
+        */
+        if (!props || !props.imgsrc) {
+        props.imgsrc = getSafeImgsrc(cleanImg(props.imgsrc))||FALLBACK_IMG;
+}
 
-        props.imgsrc = cleanImg(props.imgsrc);
+        props.imgsrc = getSafeImgsrc(cleanImg(props.imgsrc));
         props._pageid = pageId;
         props.layer = 'objects';
 
@@ -813,7 +847,7 @@ const handleSetScene = (playerid) => {
         const props = JSON.parse(blob);
         if (!props || !props.imgsrc) return placeNextToken();
 
-        props.imgsrc = cleanImg(props.imgsrc);
+        props.imgsrc = getSafeImgsrc(cleanImg(props.imgsrc));
         props._pageid = pageId;
         props.layer = 'objects';
 
@@ -833,7 +867,17 @@ const handleSetScene = (playerid) => {
 const wipeScene = (sceneName, playerid) => {
   const pageId = getPageForPlayer(playerid);  // This returns what the GM is *currently viewing*
   if (!pageId) {
-    return sendStyledMessage('Wipe Scene', 'No valid page found for your view.');
+    // Count total number of pages in the game
+    const allPages = findObjs({ _type: 'page' });
+    const pageCount = allPages.length;
+    // Base message
+    let msg = 'No valid page found for your view. Director-controlled pages must contain:<br><i>stage, scene, theater, or theatre</i> in the title.';
+    // Add extra paragraph if only one page exists. This is for new games, since the GM must have manually switched to a page at least once.
+    if (pageCount === 1) {
+      msg += `<br><br><b>Also:</b> If this is a new game, you must have changed pages at least once, as the GM.`;
+    }
+
+    return sendStyledMessage('Wipe Scene', msg);
   }
 
   const page = getObj('page', pageId);
@@ -851,8 +895,229 @@ const wipeScene = (sceneName, playerid) => {
     if (isDirectorGraphic(g)) g.remove();
   });
 
+  const paths = findObjs({ _type: 'pathv2', _pageid: pageId, layer: 'walls' });
+  paths.forEach(p => {
+    if (p.get('stroke') === '#84d162') p.remove();
+  });
+
+disableDynamicLighting(pageId);
+
+
   //sendStyledMessage('Wipe Scene', `All Director graphics cleared from page "${page.get('name')}".`);
 };
+
+
+
+
+
+
+
+
+
+
+const handleSetGrid = (playerid) => {
+  const st = getState();
+  const currentScene = st.activeScene;
+
+  if (!currentScene)
+    return sendStyledMessage('Set Grid', 'No active scene is selected.');
+
+  wipeScene(st.lastSetScene, playerid);
+
+  let pageId = getPageForPlayer(playerid);
+  if (!pageId) pageId = Campaign().get('playerpageid');
+
+  const page = getObj('page', pageId);
+  if (!page)
+    return sendStyledMessage('Set Grid', 'No valid player page found, including fallback.');
+
+enableDynamicLighting(pageId);
+
+
+  let act, scene;
+  for (const a of Object.values(st.acts)) {
+    if (a.scenes?.[currentScene]) {
+      act = a;
+      scene = a.scenes[currentScene];
+      break;
+    }
+  }
+
+  if (!scene)
+    return sendStyledMessage('Set Grid', 'Active scene data not found.');
+
+  const validImages = (scene.images || []).filter(img => img.url && img.url.startsWith('https://'));
+
+  if (!validImages.length)
+    return sendStyledMessage('Set Grid', 'No image assets found for grid placement.');
+
+  if (validImages.length > 6)
+    return sendStyledMessage('Set Grid', 'Grid layout only supports up to 6 images.');
+
+  const pageWidth = page.get('width') * 70;
+  const pageHeight = page.get('height') * 70 - 105;
+
+  const imgCount = validImages.length;
+  const gridCells = (imgCount <= 2) ? 2 : (imgCount <= 4) ? 4 : 6;
+  const rows = (gridCells === 2) ? 1 : 2;
+  const cols = (gridCells === 2) ? 2 : (gridCells === 4) ? 2 : 3;
+
+  const cellWidth = Math.floor(pageWidth / cols);
+  const cellHeight = Math.floor(pageHeight / rows);
+
+  const margin = 70;
+  const maxImgWidth = cellWidth - 2 * margin;
+  const maxImgHeight = cellHeight - 2 * margin;
+
+  if (maxImgWidth <= 0 || maxImgHeight <= 0) {
+    return sendStyledMessage('Set Grid', 'Grid layout failed: Page is too small to fit all images with required spacing. Resize the page or reduce the number of images and try again.');
+  }
+
+  const positions = [];
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      positions.push({
+        x: c * cellWidth + cellWidth / 2,
+        y: r * cellHeight + 105 + cellHeight / 2
+      });
+    }
+  }
+
+  validImages.forEach((img, i) => {
+    if (i >= positions.length) return;
+
+    const pos = positions[i];
+    const dims = getScaledToFit(img.ratio || 1, maxImgWidth, maxImgHeight);
+    const cleanUrl = cleanImg(img.url);
+    if (!cleanUrl) return;
+
+    const g = createObj('graphic', {
+      _pageid: pageId,
+      layer: 'map',
+      imgsrc: cleanUrl,
+      left: pos.x,
+      top: pos.y,
+      width: dims.w,
+      height: dims.h,
+      isdrawing: true,
+      name: img.title || `Image ${i + 1}`,
+      showname: false,
+      showplayers_name: false,
+    });
+
+    if (!g) return;
+
+    tagGraphicAsDirector(g);
+
+    createObj('pathv2', {
+      _pageid: pageId,
+      layer: 'walls',
+      stroke: '#84d162',
+      stroke_width: 5,
+      fill: 'transparent',
+      shape: 'rec',
+      points: JSON.stringify([
+        [0, 0],
+        [cellWidth, cellHeight]
+      ]),
+      x: pos.x,
+      y: pos.y,
+      barrierType: 'wall',
+      controlledby: ''
+    });
+  });
+
+  st.lastSetScene = currentScene;
+
+  // --- Character Tokens ---
+  const charItems = (st.items?.buttons || []).filter(btn =>
+    btn.scene === currentScene &&
+    (
+      (btn.type === 'character' && btn.refId) ||
+      (btn.type === 'variant')
+    )
+  );
+
+  let tokenTop = 105;
+  let tokenLeft = pageWidth + 70;
+  let currentColumnMaxWidth = 70;
+
+  const placeNextToken = () => {
+    if (!charItems.length) return;
+
+    const btn = charItems.shift();
+
+    const handlePlacement = (props, name) => {
+      const tokenWidth = props.width || 70;
+      const tokenHeight = props.height || 70;
+
+      // Wrap to next column if vertical space exceeded
+      if (tokenTop + tokenHeight > pageHeight - 50) {
+        tokenTop = 105;
+        tokenLeft += currentColumnMaxWidth + 70;
+        currentColumnMaxWidth = tokenWidth;
+      } else {
+        currentColumnMaxWidth = Math.max(currentColumnMaxWidth, tokenWidth);
+      }
+
+      props.left = tokenLeft + tokenWidth / 2;
+      props.top = tokenTop + tokenHeight / 2;
+
+      const token = createObj('graphic', props);
+      tagGraphicAsDirector(token);
+
+      tokenTop += tokenHeight + 20;
+    };
+
+    if (btn.type === 'variant') {
+      try {
+        const props = { ...btn.tokenProps };
+
+/*
+        if (!props || !props.imgsrc) {
+          log(`[Director] Invalid tokenProps for variant "${btn.name}". Skipping.`);
+          return placeNextToken();
+        }
+        */
+        if (!props || !props.imgsrc) {
+        props.imgsrc = getSafeImgsrc(cleanImg(props.imgsrc))||FALLBACK_IMG;
+}
+
+        props.imgsrc = getSafeImgsrc(cleanImg(props.imgsrc));
+        props._pageid = pageId;
+        props.layer = 'objects';
+
+        handlePlacement(props, btn.name);
+      } catch (e) {
+        log(`[Director] Error placing variant "${btn.name}": ${e.message}`);
+      }
+      return setTimeout(placeNextToken, 0);
+    }
+
+    const char = getObj('character', btn.refId);
+    if (!char) return placeNextToken();
+
+    char.get('_defaulttoken', (blob) => {
+      try {
+        const props = JSON.parse(blob);
+        if (!props || !props.imgsrc) return placeNextToken();
+
+        props.imgsrc = getSafeImgsrc(cleanImg(props.imgsrc));
+        props._pageid = pageId;
+        props.layer = 'objects';
+
+        handlePlacement(props, char.get('name'));
+      } catch (e) {
+        log(`[Director] Error parsing default token for ${char.get('name')}: ${e}`);
+      }
+      setTimeout(placeNextToken, 0);
+    });
+  };
+
+  placeNextToken();
+  updateHandout();
+};
+
 
 
 
@@ -1033,13 +1298,21 @@ const renderHelpHtml = (css) => `
   <br>
 
   <h3>Header Buttons</h3>
-  <h4>Set Scene</h4>
-  <p><span style="${css.headerButton}; float:none; position:relative;">Set the Scene</span> populates the tabletop with:
+  <h4>Set Scene as: </h4>
+  <p><span style="${css.headerSubButton}; float:none; position:relative;">Scene</span> populates the tabletop with:
     <ul>
       <li>Backdrop image (Map Layer)</li>
       <li>Highlight images (Object Layer, left-aligned off page edge)</li>
       <li>Character and variant tokens (Object Layer, right-aligned off page edge)</li>
       <li>Starts assigned track (if set)</li>
+    </ul>
+  </p>
+    <p><span style="${css.headerSubButton}; float:none; position:relative;">Grid</span> populates the tabletop with:
+    <ul>
+      <li>up to six images, arranged as grid (Map Layer)</li>
+      <li>Surrounds each image with dynamic lighting barrier and turns on dynamic lighting with Daylight Mode</li>
+      <li>Top strip of page is not part of grid (for holding player tokens)</li>
+      <li>Character and variant tokens (Object Layer, right-aligned off page edge)</li>
     </ul>
   </p>
   <p>Only works if the current page name contains: <i>scene, stage, theater, theatre</i></p>
@@ -1104,7 +1377,9 @@ const renderFilterBarInline = (css) => {
   const tracks = findObjs({ _type: 'jukeboxtrack' }).sort((a, b) => a.get('title').localeCompare(b.get('title')));
 
   const buildOpts = (objs, labelFn = o => o.get('name')) =>
-    objs.map(o => `${labelFn(o)},${o.id}`).join('|');
+    objs.map(o => `${labelFn(o).replace(/"/g, "&quot;")},${o.id}`).join('|');
+    // Suggested replacement for following line to catch names with double quotes.
+    //objs.map(o => `${labelFn(o)},${o.id}`).join('|');
 
   const charOpts = buildOpts(characters);
   const handoutOpts = buildOpts(handouts);
@@ -1481,28 +1756,6 @@ const isTrackPlaying = (id) => {
 
 
 
-const debugDefaultToken = (characterName) => {
-  const char = findObjs({ _type: 'character', name: characterName })[0];
-  if (!char) {
-    log(`[Debug] Character not found: ${characterName}`);
-    return;
-  }
-
-};
-
-
-
-on('chat:message', msg => {
-  if (msg.type === 'api' && msg.content === '!debug-sashara') {
-    debugDefaultToken('Sashara');
-  }
-});
-
-
-
-
-
-
 
 // --- Handout Update ---
 const updateHandout = () => {
@@ -1698,11 +1951,20 @@ const imagesHTML = (() => {
         <tr>
           <td colspan="3" style="${css.header}">
             Director
-<a href="!director --set-scene" 
-   style="${css.headerButton}" 
-   title="Place the Current Scene's Images and Characters on the Map">
-  Set the Scene
+
+<div    style="${css.headerContainer}">
+Set as 
+<a href="!director --set-grid" 
+   style="${css.headerSubButton}" 
+   title="Place all Current Scene's Images on the page in a grid. All Characters are off to the right.">
+  Grid
 </a>
+<a href="!director --set-scene" 
+   style="${css.headerSubButton}" 
+   title="Place the Current Scene's Images and Characters on the Map">
+  Scene
+</a>
+</div>
 <a href="!director --wipe-scene" 
    style="${css.headerButton}" 
    title="Clear Map of Images and Characters">
@@ -1890,6 +2152,13 @@ case 'add-item': {
       const rawProps = token.toJSON();
       const cleanedProps = sanitizeTokenProps(rawProps);
 
+      // Marketplace image check (non-blocking)
+      const imgsrc = token.get('imgsrc') || '';
+      if (imgsrc.includes('/marketplace/')) {
+    sendStyledMessage('Marketplace Image Detected', 'This asset uses a marketplace image and may not render correctly on the VTT. A fallback will be used at placement.');
+        log(`⚠️ This asset uses a marketplace image and may not render correctly on the VTT. A fallback will be used at placement.`);
+      }
+log ("imgsrc = " + imgsrc);
       st.items.buttons.push({
         id: generateUUID(),
         type: 'variant',
@@ -1905,7 +2174,7 @@ case 'add-item': {
     updateHandout();
 
     if (created.length) {
-      sendStyledMessage('Director', `Created ${created.length} variant button${created.length > 1 ? 's' : ''}:<br>${created.join(', ')}`);
+      //sendStyledMessage('Director', `Created ${created.length} variant button${created.length > 1 ? 's' : ''}:<br>${created.join(', ')}`);
     } else {
       sendStyledMessage('Director', 'No valid tokens were selected.');
     }
@@ -2015,6 +2284,21 @@ case 'add-character': {
   if (!char) {
     sendStyledMessage('Director', `Character ID "${charId}" not found.`);
     break;
+  }
+
+  // Check for marketplace image (non-blocking)
+  const defaultToken = char.get('defaulttoken');
+  if (defaultToken) {
+    try {
+      const tokenObj = JSON.parse(defaultToken);
+      const imgsrc = tokenObj.imgsrc || '';
+      if (imgsrc.includes('/marketplace/')) {
+    sendStyledMessage('Marketplace Image Detected', 'This asset uses a marketplace image and may not render correctly on the VTT. A fallback will be used at placement.');
+        log(`This asset uses a marketplace image and may not render correctly on the VTT. A fallback will be used at placement.`);
+      }
+    } catch (e) {
+      log(`⚠️ Unable to parse default token for character ID ${charId}`);
+    }
   }
 
   const st = getState();
@@ -2193,6 +2477,13 @@ case 'define-variant': {
   if (!token) {
     sendStyledMessage('Director', 'Selected token could not be found.');
     break;
+  }
+
+  // Marketplace image check (non-blocking)
+  const imgsrc = token.get('imgsrc') || '';
+  if (imgsrc.includes('/marketplace/')) {
+    sendStyledMessage('Marketplace Image Detected', 'This asset uses a marketplace image and may not render correctly on the VTT. A fallback will be used at placement.');
+    log(`This asset uses a marketplace image and may not render correctly on the VTT. A fallback will be used at placement.`);
   }
 
   const variantBtn = createVariantButtonFromToken(token, getActiveScene());
@@ -2444,6 +2735,14 @@ case 'set-backdrop': {
     break;
   }
 
+  const existingPaths = findObjs({ _type: 'pathv2', _pageid: pid, layer: 'walls' });
+  const blockingPaths = existingPaths.filter(p => p.get('stroke') === '#84d162');
+  if (blockingPaths.length > 0) {
+    sendStyledMessage('Set Backdrop', `Cannot set backdrop. Please wipe the scene and use the Set as Scene command in order to use backdrops.`);
+    break;
+  }
+
+
   const pageWidth = page.get('width') * 70;
   const pageHeight = page.get('height') * 70;
   const centerX = pageWidth / 2;
@@ -2515,7 +2814,9 @@ case 'wipe-scene': {
   break;
 }
 
-
+case 'set-grid':
+  handleSetGrid(playerid);
+  break;
 
 
       case 'open-handout': {
@@ -2811,9 +3112,7 @@ case 'new-image': {
   }
 
   if (!msg.selected || msg.selected.length !== 1) {
-const urlButton = `<a href="!director --add-image-url|?{Enter a valid image URL}" style="${css.utilitySubButton}">Enter URL</a>`;
-
-    //const urlButton = `[Enter URL](~${msg.who}|!director --add-image-url ?{Enter a valid image URL})`;
+    const urlButton = `<a href="!director --add-image-url|?{Enter a valid image URL}" style="${css.utilitySubButton}">Enter URL</a>`;
     sendStyledMessage('Director', `Please select exactly one graphic to add as an image.<br><br>Alternatively, you may press this button and enter a valid URL.<br>Image URLs must be of graphics in a user library.<br>${urlButton}<br>`);
     break;
   }
@@ -2825,6 +3124,13 @@ const urlButton = `<a href="!director --add-image-url|?{Enter a valid image URL}
   }
 
   const url = token.get('imgsrc').replace(/(thumb|med|original)/, 'max');
+
+  // Warn if marketplace asset
+  if (url.includes('/marketplace/')) {
+    sendStyledMessage('Marketplace Image Detected', 'Image URL references a marketplace asset and will be skipped when setting the scene.');
+    log(`Image URL includes a marketplace asset and will be skipped when setting the scene.`);
+  }
+
   const width = token.get('width');
   const height = token.get('height');
   const ratio = height / width;
@@ -2851,13 +3157,16 @@ case 'add-image-url': {
     break;
   }
 
-
   if (!val || !/^https:\/\/(s3\.amazonaws\.com|files\.d20\.io)\/.*\.(png|jpe?g|gif|webm)(\?.*)?$/.test(val)) {
     sendStyledMessage('Director', 'Invalid image URL. Must be a Roll20-hosted image (e.g., uploaded to your user library, a character bio, or a forum post).');
     break;
   }
 
-
+  // Warn if using marketplace asset
+  if (val.includes('/marketplace/')) {
+    sendStyledMessage('Marketplace Image Detected', 'Image URL references a marketplace asset and will be skipped when setting the scene.');
+    log(`Image URL includes a marketplace asset and will be skipped when setting the scene.`);
+  }
 
   const id = generateRowID();
 
@@ -3204,6 +3513,58 @@ case 'make-help-handout': {
   sendStyledMessage('Director', `[Open the Help Handout](http://journal.roll20.net/handout/${handout.id})`);
   break;
 }
+
+
+
+case 'checkwall': {
+  sendStyledMessage('Director', `Open Checkwall.`);
+
+  const pageId = getPageForPlayer(playerid);
+  const page = getObj('page', pageId);
+
+  if (!page) {
+    sendStyledMessage('Director', `❌ No valid page found.`);
+    return;
+  }
+
+  sendStyledMessage('Director', `✅ Page: <b>${page.get('name')}</b>`);
+
+  // Static triangle with known good coordinates
+  const wall = createObj('pathv2', {
+    _pageid: pageId,
+    shape: 'pol',
+    points: JSON.stringify([
+      [0, 0],
+      [0, 70],
+      [70, 0],
+      [0, 0]
+    ]),
+    fill: 'transparent',
+    stroke: '#FF0000',
+    stroke_width: 5,
+    x: 140,  // Placed slightly off origin so it's visible
+    y: 140,
+    layer: 'walls',
+    barrierType: 'wall'
+  });
+
+  if (!wall) {
+    log("❌ PathV2 wall creation failed");
+    sendStyledMessage('Director', `❌ Path creation failed.`);
+  } else {
+    log("✅ PathV2 wall created successfully");
+    sendStyledMessage('Director', `✅ Wall created at (140, 140).`);
+  }
+
+  sendStyledMessage('Director', `Close Checkwall.`);
+  break;
+}
+
+
+
+
+
+
 
 
       case 'refresh': {
