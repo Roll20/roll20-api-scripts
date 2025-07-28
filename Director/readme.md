@@ -112,16 +112,23 @@ You can also click the `magnifying glass icon` icon to filter items by type.
 
 ## Header Buttons
 
-### Set the Scene
+### Set Scene as:
 
-`Set the Scene` places all scene elements on the tabletop:
+**Scene** places the following on the tabletop:
 
-- Backdrop (Map Layer)
-- Highlights (Object Layer, off-page)
-- Items (Object Layer, off-page right)
-- Starts assigned track (if any)
+- Backdrop image (Map Layer)  
+- Highlight images (Object Layer, left-aligned off page edge)  
+- Character and variant tokens (Object Layer, right-aligned off page edge)  
+- Starts assigned track (if set)
 
-> _Only works on pages named:_ `scene`, `stage`, `theater`, or `theatre`
+**Grid** places the following on the tabletop:
+
+- Up to six images, arranged in a grid (Map Layer)  
+- Surrounds each image with dynamic lighting barriers and turns on dynamic lighting with Daylight Mode  
+- Top strip of the page is reserved (for holding player tokens)  
+- Character and variant tokens (Object Layer, right-aligned off page edge)
+
+> _Only works if the current page name contains:_ `scene`, `stage`, `theater`, or `theatre`
 
 ### Wipe the Scene
 
