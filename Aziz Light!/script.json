@@ -1,0 +1,17 @@
+{
+    "name": "Aziz Light",
+    "script": "aziz-light.js",
+    "version": "1.0.0",
+    "description": "This script allows you to quickly set and move the daylight brightness using dynamic lighting to different levels, making it easy to macro light levels and mimic time passing.",
+    "authors": "orbotik",
+    "roll20userid": "12231884",
+    "useroptions": [],
+    "dependencies": [],
+    "modifies": {
+        "page.daylightModeOpacity": "read,write",
+        "page.showlighting": "read,write",
+        "page.daylight_mode_enabled": "read,write"
+    },
+    "conflicts": [],
+    "previousversions": []
+}
