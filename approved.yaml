@@ -1319,3 +1319,8 @@ isBeacon:
 Director:
   - "Director"
   - "Utility"
+
+AzizLight:
+  - "Aziz Light!"
+  - "Utility"
+  
