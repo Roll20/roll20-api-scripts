@@ -1,7 +1,7 @@
 {
     "name": "Daggerheart Fear AutoTracker",
     "script": "daggerheart-fear.js",
-    "version": "1.0.8",
+    "version": "1.0.9",
     "description": "This fear tracker listens for duality rolls from Demiplane-linked character sheets and bumps up a game fear counter everytime someone rolls with fear. It sends notices to all players showing the new fear value either as player-enabled whispers or chat announcements (or none), and can even update text objects on the maps with fear values!",
     "authors": "orbotik",
     "roll20userid": "12231884",
@@ -15,5 +15,5 @@
         "text.text": "write"
     },
     "conflicts": [],
-    "previousversions": []
+    "previousversions": ["1.0.8"]
 }
