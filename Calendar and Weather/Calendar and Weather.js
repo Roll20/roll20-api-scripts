@@ -254,17 +254,17 @@ on('ready', () => {
       return `${moonIcons[phase] || "🌑"} ${name}: ${tPhase(phase)}`;
     }).join("<br>");
 
-    let html = `<div style="${chatStyle}">`;
-    html += `<div style="${styleTitle}">${t('weather')}</div>`;
-    html += `<div><b>${t('date')}:</b> ${lang() === 'fr' ? `${dayName} ${c.day} ${monthName} ${c.year}` : `${monthName} ${c.day}, ${c.year} (${dayName})`}</div>`;
-    html += `<div style="${styleSection}">${t('season')}:</div> ${seasonIcons[season]} ${tSeason(season)}`;
-    html += `${hr}<div style="${styleSection}">${t('moon')}:</div><div>${moon}</div>${hr}`;
-    html += `<div style="${styleSection}">${t('climate')}:</div> ${climateIcons[state.WeatherMod.selectedClimate]} ${tClimate(state.WeatherMod.selectedClimate)}`;
-    html += `<div><b>${t('temperature')}:</b> ${temp}°C ${tempIcon(temp)}</div>`;
-    html += `<div><b>${t('humidity')}:</b> ${humidity}${humidity !== "-" ? "%" : ""} ${humidity !== "-" ? humidityIcon(humidity) : ""}</div>`;
-    html += `<div><b>${t('wind')}:</b> ${tWindForce(windForce.name)} (${windSpeed} km/h) ${t('windFrom')} ${tWindDir(windOrigin)} ${windSpeedIcon(windSpeed)}</div>`;
-    html += `<div><b>${t('precipitation')}:</b> ${precipStrength}</div>`;
-    html += `</div>`;
+    let html = `<div style="${chatStyle}">`
+      +`<div style="${styleTitle}">${t('weather')}</div>`
+      +`<div><b>${t('date')}:</b> ${lang() === 'fr' ? `${dayName} ${c.day} ${monthName} ${c.year}` : `${monthName} ${c.day}, ${c.year} (${dayName})`}</div>`
+      +`<div style="${styleSection}">${t('season')}:</div> ${seasonIcons[season]} ${tSeason(season)}`
+      +`${hr}<div style="${styleSection}">${t('moon')}:</div><div>${moon}</div>${hr}`
+      +`<div style="${styleSection}">${t('climate')}:</div> ${climateIcons[state.WeatherMod.selectedClimate]} ${tClimate(state.WeatherMod.selectedClimate)}`
+      +`<div><b>${t('temperature')}:</b> ${temp}°C ${tempIcon(temp)}</div>`
+      +`<div><b>${t('humidity')}:</b> ${humidity}${humidity !== "-" ? "%" : ""} ${humidity !== "-" ? humidityIcon(humidity) : ""}</div>`
+      +`<div><b>${t('wind')}:</b> ${tWindForce(windForce.name)} (${windSpeed} km/h) ${t('windFrom')} ${tWindDir(windOrigin)} ${windSpeedIcon(windSpeed)}</div>`
+      +`<div><b>${t('precipitation')}:</b> ${precipStrength}</div>`
+      +`</div>`;
     return html;
   };
 
@@ -279,74 +279,73 @@ on('ready', () => {
 
   // Styled menus
   const showGMMainMenu = () => {
-    const s = state.WeatherMod;
-    const climates = Object.keys(WeatherConfig.climates).map(climate =>
-      `<a style="${btnStyle}" href="!weather setgm climate ${climate}">${climateIcons[climate]} ${tClimate(climate)}</a>`
-    ).join(" ");
+      const s = state.WeatherMod;
+      const climates = Object.keys(WeatherConfig.climates).map(climate =>
+        `<a style="${btnStyle}" href="!weather setgm climate ${climate}">${climateIcons[climate]} ${tClimate(climate)}</a>`
+      ).join(" ");
+      
+      const html = `<div style="${chatStyle}">`
+        +`<div style="${styleTitle}">${t('weather')}</div>${hr}`
+        +`<div style="${styleSection}">${t('climate')}:</div> ${climateIcons[s.selectedClimate]} ${tClimate(s.selectedClimate)}<br>`
+        +`${btnGroup(climates)}${hr}`
+        +`<div style="${styleSection}">${t('language')}:</div> ${s.language.toUpperCase()}<br>`
+        +`${btnGroup(`<a style="${btnStyle}" href="!weather lang en">EN</a> <a style="${btnStyle}" href="!weather lang fr">FR</a>`)}${hr}`
+        +`${btnGroup(`<a style="${btnStyle}" href="!weather menu-date">📅 ${t('date')}</a>`)}`
+        +`${btnGroup(`<a style="${btnStyle}" href="!weather menu-manual">🛠 ${t('manual')}</a>`)}`
+        +`${btnGroup(`<a style="${btnStyle}" href="!weather menu-profiles">💾 ${t('profiles')}</a>`)}`
+        +`${btnGroup(`<a style="${btnStyle}" href="!weather report">🌦 ${t('generate')}</a>`)}`
+        +`${btnGroup(`<a style="${btnStyle}" href="!weather showplayers">📣 ${t('weather')} → Players</a>`)}`
+        +`</div>`;
+      sendChat("WeatherMod", `/w gm ${html}`);
+    };
 
-    const html = `<div style="${chatStyle}">
-      <div style="${styleTitle}">${t('weather')}</div>${hr}
-      <div style="${styleSection}">${t('climate')}:</div> ${climateIcons[s.selectedClimate]} ${tClimate(s.selectedClimate)}<br>
-      ${btnGroup(climates)}${hr}
-      <div style="${styleSection}">${t('language')}:</div> ${s.language.toUpperCase()}<br>
-      ${btnGroup(`<a style="${btnStyle}" href="!weather lang en">EN</a> <a style="${btnStyle}" href="!weather lang fr">FR</a>`)}${hr}
-      ${btnGroup(`<a style="${btnStyle}" href="!weather menu-date">📅 ${t('date')}</a>`)}
-      ${btnGroup(`<a style="${btnStyle}" href="!weather menu-manual">🛠 ${t('manual')}</a>`)}
-      ${btnGroup(`<a style="${btnStyle}" href="!weather menu-profiles">💾 ${t('profiles')}</a>`)}
-      ${btnGroup(`<a style="${btnStyle}" href="!weather report">🌦 ${t('generate')}</a>`)}
-      ${btnGroup(`<a style="${btnStyle}" href="!weather showplayers">📣 ${t('weather')} → Players</a>`)}
-    </div>`;
-    sendChat("WeatherMod", `/w gm ${html}`);
-  };
+    const showDateMenu = () => {
+      const c = state.WeatherMod.calendar;
+      const months = CalendarConfig.months.map((m, i) =>
+        `<a style="${btnStyle}" href="!weather setgm month ${i}">${m.name}</a>`
+      ).join(" ");
+      const html = `<div style="${chatStyle}">`
+        +`<div style="${styleTitle}">${t('date')}</div>${hr}`
+        +`${btnGroup(`<a style="${btnStyle}" href="!weather setgm day ?{${t('setDay')}|${c.day}}">${t('setDay')}</a> <a style="${btnStyle}" href="!weather setgm year ?{${t('setYear')}|${c.year}}">${t('setYear')}</a>`)}`
+        +`${hr}${btnGroup(months)}${hr}`
+        +`${btnGroup(`<a style="${btnStyle}" href="!weather menu">⬅️ ${t('back')}</a>`)}`
+        +`</div>`;
+      sendChat("WeatherMod", `/w gm ${html}`);
+    };
 
-  const showDateMenu = () => {
-    const c = state.WeatherMod.calendar;
-    const months = CalendarConfig.months.map((m, i) =>
-      `<a style="${btnStyle}" href="!weather setgm month ${i}">${m.name}</a>`
-    ).join(" ");
-    const html = `<div style="${chatStyle}">
-      <div style="${styleTitle}">${t('date')}</div>${hr}
-      ${btnGroup(`<a style="${btnStyle}" href="!weather setgm day ?{${t('setDay')}|${c.day}}">${t('setDay')}</a> <a style="${btnStyle}" href="!weather setgm year ?{${t('setYear')}|${c.year}}">${t('setYear')}</a>`)}
-      ${hr}${btnGroup(months)}${hr}
-      ${btnGroup(`<a style="${btnStyle}" href="!weather menu">⬅️ ${t('back')}</a>`)}
-    </div>`;
-    sendChat("WeatherMod", `/w gm ${html}`);
-  };
+    const showManualWeatherMenu = () => {
+      const manual = state.WeatherMod.settings.manualWeather;
+      const weatherTypes = ['clear', 'rain', 'snow', 'thunderstorm'].map(type =>
+        `<a style="${btnStyle}" href="!weather setgm weathertype ${type}">${skyIcons[type]} ${t(type)}</a>`
+      ).join(" ");
+      const windDirs = ['north', 'east', 'south', 'west'].map(dir =>
+        `<a style="${btnStyle}" href="!weather setgm winddir ${dir}">${tWindDir(dir)}</a>`
+      ).join(" ");
 
-  const showManualWeatherMenu = () => {
-    const manual = state.WeatherMod.settings.manualWeather;
-    const weatherTypes = ['clear', 'rain', 'snow', 'thunderstorm'].map(type =>
-      `<a style="${btnStyle}" href="!weather setgm weathertype ${type}">${skyIcons[type]} ${t(type)}</a>`
-    ).join(" ");
-    const windDirs = ['north', 'east', 'south', 'west'].map(dir =>
-      `<a style="${btnStyle}" href="!weather setgm winddir ${dir}">${tWindDir(dir)}</a>`
-    ).join(" ");
+      const html = `<div style="${chatStyle}">`
+        +`<div style="${styleTitle}">${t('manual')}</div>${hr}`
+        +`<div style="${styleSection}">${t('manualMode')}:</div> <a style="${btnStyle}" href="!weather setgm manual ${state.WeatherMod.settings.useManualWeather ? "off" : "on"}">${state.WeatherMod.settings.useManualWeather ? "🟢" : "🔴"} ${state.WeatherMod.settings.useManualWeather ? t('yes') : t('no')}</a><br><br>`
+        +`<div style="${styleSection}">${t('precipitation')}:</div>${btnGroup(weatherTypes)}<br>`
+        +`<div><b>${t('temperature')}:</b> <a style="${btnStyle}" href="!weather setgm temp ?{${t('temperature')}|${manual.temperature}}">${manual.temperature}°C</a></div>`
+        +`<div><b>${t('windSpeed')}:</b> <a style="${btnStyle}" href="!weather setgm windspeed ?{${t('wind')}|${manual.windSpeed}}">${manual.windSpeed} km/h</a></div>`
+        +`<div><b>${t('windFrom')}:</b> ${btnGroup(windDirs)}</div>`
+        +`<div><b>${t('humidityShort')}:</b> <a style="${btnStyle}" href="!weather setgm humidity ?{${t('humidity')}|${manual.humidity !== undefined ? manual.humidity : 50}}">${manual.humidity !== undefined ? manual.humidity : 50}%</a></div>`
+        +`${hr}${btnGroup(`<a style="${btnStyle}" href="!weather menu">⬅️ ${t('back')}</a>`)}`
+        +`</div>`;
+      sendChat("WeatherMod", `/w gm ${html}`);
+    };
 
-    const html = `<div style="${chatStyle}">
-      <div style="${styleTitle}">${t('manual')}</div>${hr}
-      <div style="${styleSection}">${t('manualMode')}:</div> <a style="${btnStyle}" href="!weather setgm manual ${state.WeatherMod.settings.useManualWeather ? "off" : "on"}">${state.WeatherMod.settings.useManualWeather ? "🟢" : "🔴"} ${state.WeatherMod.settings.useManualWeather ? t('yes') : t('no')}</a><br><br>
-      <div style="${styleSection}">${t('precipitation')}:</div>${btnGroup(weatherTypes)}<br>
-      <div><b>${t('temperature')}:</b> <a style="${btnStyle}" href="!weather setgm temp ?{${t('temperature')}|${manual.temperature}}">${manual.temperature}°C</a></div>
-      <div><b>${t('windSpeed')}:</b> <a style="${btnStyle}" href="!weather setgm windspeed ?{${t('wind')}|${manual.windSpeed}}">${manual.windSpeed} km/h</a></div>
-      <div><b>${t('windFrom')}:</b> ${btnGroup(windDirs)}</div>
-      <div><b>${t('humidityShort')}:</b> <a style="${btnStyle}" href="!weather setgm humidity ?{${t('humidity')}|${manual.humidity !== undefined ? manual.humidity : 50}}">${manual.humidity !== undefined ? manual.humidity : 50}%</a></div>
-      ${hr}${btnGroup(`<a style="${btnStyle}" href="!weather menu">⬅️ ${t('back')}</a>`)}
-    </div>`;
-    sendChat("WeatherMod", `/w gm ${html}`);
-  };
-
-  const showProfilesMenu = () => {
-    const html = `<div style="${chatStyle}">
-      <div style="${styleTitle}">${t('profiles')}</div>${hr}
-      ${btnGroup(`
-        <a style="${btnStyle}" href="!weather save ?{Profile name}">${t('saveProfile')}</a><br>
-        <a style="${btnStyle}" href="!weather load ?{Profile name}">${t('loadProfile')}</a><br>
-        <a style="${btnStyle}" href="!weather export ?{Profile name}">${t('exportProfile')}</a><br>
-        <a style="${btnStyle}" href="!weather import ?{Profile name}">${t('importProfile')}</a><br>`)}
-      ${hr}${btnGroup(`<a style="${btnStyle}" href="!weather menu">⬅️ ${t('back')}</a>`)}
-    </div>`;
-    sendChat("WeatherMod", `/w gm ${html}`);
-  };
+    const showProfilesMenu = () => {
+      const html = `<div style="${chatStyle}">`
+        +`<div style="${styleTitle}">${t('profiles')}</div>${hr}`
+        +`${btnGroup(`<a style="${btnStyle}" href="!weather save ?{Profile name}">${t('saveProfile')}</a><br>`
+        +`<a style="${btnStyle}" href="!weather load ?{Profile name}">${t('loadProfile')}</a><br>`
+        +`<a style="${btnStyle}" href="!weather export ?{Profile name}">${t('exportProfile')}</a><br>`
+        +`<a style="${btnStyle}" href="!weather import ?{Profile name}">${t('importProfile')}</a><br>`)}`;
+        +`${hr}${btnGroup(`<a style="${btnStyle}" href="!weather menu">⬅️ ${t('back')}</a>`)}`
+        +`</div>`;
+      sendChat("WeatherMod", `/w gm ${html}`);
+    };
 
   // Weather profiles
   const saveWeatherProfile = (name) => {
@@ -579,3 +578,4 @@ on('ready', () => {
     }
   });
 });
+
