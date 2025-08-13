@@ -15,12 +15,13 @@ API_Meta.Director = {
 on('ready', () =>
 {
     
-    const version = '1.0.1'; //version number set here
+    const version = '1.0.2'; //version number set here
     log('-=> Director v' + version + ' is loaded. Command !director creates control handout and provides link. Click that to open.');
 
 //Changelog:
 //1.0.0 Debut script
 //1.0.1 Grid Mode, fallback image system for Marketplace images
+//1.0.2 Expanded Grid Mode up to 9x9 and tighterned spacing, added Star system
 
 
 // == Director Script ==
@@ -80,12 +81,15 @@ const cssDark = {
   actContainer: 'color:#ddd; background:#555; border:1px solid #444; border-radius:4px; width:120px; min-height:18px; margin-top:0px; padding:4px 25px 4px 6px; font-size:12px; display:inline-block; position:relative;',
 
   // === Items and Item Buttons ===
-  itemButton: 'color:#eee!important; background:#555; border:1px solid #666; width:98%;  margin:3px 0 0 0; padding:3px 6px 3px 0px; font-size:12px; border-radius:4px; display:inline-block; text-align:left; text-decoration:none;',
+  itemButton: 'color:#eee!important; background:#555; border:1px solid #666; width:calc(100%-6px); margin:3px 0 0 0; padding:3px 6px 3px 0px; font-size:12px; border-radius:4px; display:block; text-align:left; text-decoration:none;',
   itemBadge: 'color:#111; background:#999; border-radius:3px; width:20px; max-height:20px; margin:0px 2px; padding-top:2px; font-size:12px; font-weight:bold; text-align:center; display:inline-block; cursor:pointer; text-decoration:none;',
   itemAddBadge: 'color:#111; background:indianred; border-radius:3px; width:20px; max-height:20px; margin:0px 2px; padding-top:2px; font-size:12px; font-weight:bold; text-align:center; display:inline-block; cursor:pointer; text-decoration:none;',
   editIcon: 'color:#eee; font-size:12px; margin:0px 4px; display:inline-block; float:right; cursor:pointer;',
   utilityEditButton: 'color: #333; background: crimson; padding: 0 2px; border-radius: 3px; min-width:12px; margin-left:2px; margin-bottom:-19px; padding-top:2px; font-family: Pictos; font-size: 12px; text-align:center; float:right; position:relative; top:-22px; right:4px;',
   utilityEditButtonOverlay: 'color: #333; background: crimson; padding: 0 4px; border-radius: 3px; min-width: 12px; margin-left: 4px; padding-top: 2px; font-family: Pictos; font-size: 20px; text-align: center; cursor: pointer; float: none; position: relative; top: 0; right: 0; margin-bottom: 0; z-index: 11;',
+starred: `color: gold; font-weight: bold; font-size: 18px; text-decoration: none; user-select: none; cursor: pointer; position: absolute; top: 3px; right: 8px; margin: 0;`,
+unstarred: `color: gray; font-weight: normal; font-size: 18px; text-decoration: none; user-select: none; cursor: pointer; position: absolute; top: 3px; right: 8px; margin: 0;`,
+
 
   // === Message UI ===
   messageContainer: 'color:#ccc; background-color:#222; border:1px solid #444; border-radius:5px; padding:10px; font-family: Nunito, Arial, sans-serif; position:relative; top:-15px; left:-5px;',
@@ -147,6 +151,9 @@ const lightModeOverrides = {
 
   itemButton: { color: '#111', background: '#ddd', border: '1px solid #666' },
   editIcon: { color: '#666' },
+starred: { color: 'darkorange' },
+unstarred:  { color: '#bbb' },
+
 
   messageContainer: { color: '#222', background: '#f9f9f9', border: '1px solid #ccc' },
   messageTitle: { color: '#222' },
@@ -429,12 +436,19 @@ const repairAllOrders = () => {
   st.actsOrder = Object.keys(st.acts || {});
   log(`Repaired actsOrder: ${JSON.stringify(st.actsOrder)}`);
 
-  // Repair scenesOrder for each act
+  // Repair scenesOrder for each act and initialize starredAssets for each scene
   for (const actName of st.actsOrder) {
     const act = st.acts[actName];
     if (act && act.scenes) {
       act.scenesOrder = Object.keys(act.scenes);
       log(`Repaired scenesOrder for act "${actName}": ${JSON.stringify(act.scenesOrder)}`);
+
+      for (const sceneName of act.scenesOrder) {
+        const scene = act.scenes[sceneName];
+        if (!scene.starredAssets) {
+          scene.starredAssets = {};
+        }
+      }
     }
   }
 
@@ -787,80 +801,80 @@ if (backdropImg.trackId && !st.settings.muteBackdropAudio) {
   let tokenLeft = pageWidth + 70;
   let currentColumnMaxWidth = 70;
 
-  const placeNextToken = () => {
-    if (!charItems.length) return;
+const placeNextToken = () => {
+  if (!charItems.length) {
+    updateHandout();
+    highlightStarredTokens(currentScene, pageId); // ✅ Now runs after tokens are placed
+    return;
+  }
 
-    const btn = charItems.shift();
+  const btn = charItems.shift();
 
-    const handlePlacement = (props, name) => {
-      const tokenWidth = props.width || 70;
-      const tokenHeight = props.height || 70;
+  const handlePlacement = (props, name) => {
+    const tokenWidth = props.width || 70;
+    const tokenHeight = props.height || 70;
 
-      // Wrap to next column if vertical space exceeded
-      if (tokenTop + tokenHeight > pageHeight - 50) {
-        tokenTop = 105;
-        tokenLeft += currentColumnMaxWidth + 70;
-        currentColumnMaxWidth = tokenWidth;
-      } else {
-        currentColumnMaxWidth = Math.max(currentColumnMaxWidth, tokenWidth);
-      }
-
-      props.left = tokenLeft + tokenWidth / 2;
-      props.top = tokenTop + tokenHeight / 2;
-
-      const token = createObj('graphic', props);
-      tagGraphicAsDirector(token);
-
-      tokenTop += tokenHeight + 20;
-    };
-
-    if (btn.type === 'variant') {
-      try {
-        const props = { ...btn.tokenProps };
-
-/*
-        if (!props || !props.imgsrc) {
-          log(`[Director] Invalid tokenProps for variant "${btn.name}". Skipping.`);
-          return placeNextToken();
-        }
-        */
-        if (!props || !props.imgsrc) {
-        props.imgsrc = getSafeImgsrc(cleanImg(props.imgsrc))||FALLBACK_IMG;
-}
-
-        props.imgsrc = getSafeImgsrc(cleanImg(props.imgsrc));
-        props._pageid = pageId;
-        props.layer = 'objects';
-
-        handlePlacement(props, btn.name);
-      } catch (e) {
-        log(`[Director] Error placing variant "${btn.name}": ${e.message}`);
-      }
-      return setTimeout(placeNextToken, 0);
+    if (tokenTop + tokenHeight > pageHeight - 50) {
+      tokenTop = 105;
+      tokenLeft += currentColumnMaxWidth + 70;
+      currentColumnMaxWidth = tokenWidth;
+    } else {
+      currentColumnMaxWidth = Math.max(currentColumnMaxWidth, tokenWidth);
     }
 
-    const char = getObj('character', btn.refId);
-    if (!char) return placeNextToken();
+    props.left = tokenLeft + tokenWidth / 2;
+    props.top = tokenTop + tokenHeight / 2;
 
-    char.get('_defaulttoken', (blob) => {
-      try {
-        const props = JSON.parse(blob);
-        if (!props || !props.imgsrc) return placeNextToken();
+    const token = createObj('graphic', props);
+    tagGraphicAsDirector(token);
 
-        props.imgsrc = getSafeImgsrc(cleanImg(props.imgsrc));
-        props._pageid = pageId;
-        props.layer = 'objects';
-
-        handlePlacement(props, char.get('name'));
-      } catch (e) {
-        log(`[Director] Error parsing default token for ${char.get('name')}: ${e}`);
-      }
-      setTimeout(placeNextToken, 0);
-    });
+    tokenTop += tokenHeight + 20;
   };
+
+  if (btn.type === 'variant') {
+    try {
+      const props = { ...btn.tokenProps };
+      if (!props || !props.imgsrc) {
+        props.imgsrc = getSafeImgsrc(cleanImg(props.imgsrc)) || FALLBACK_IMG;
+      }
+      props.imgsrc = getSafeImgsrc(cleanImg(props.imgsrc));
+      props._pageid = pageId;
+      props.layer = 'objects';
+
+      handlePlacement(props, btn.name);
+    } catch (e) {
+      log(`[Director] Error placing variant "${btn.name}": ${e.message}`);
+    }
+    return setTimeout(placeNextToken, 0);
+  }
+
+  const char = getObj('character', btn.refId);
+  if (!char) return placeNextToken();
+
+  char.get('_defaulttoken', (blob) => {
+    try {
+      const props = JSON.parse(blob);
+      if (!props || !props.imgsrc) return placeNextToken();
+
+      props.imgsrc = getSafeImgsrc(cleanImg(props.imgsrc));
+      props._pageid = pageId;
+      props.layer = 'objects';
+
+      handlePlacement(props, char.get('name'));
+      //log (char.get('name') + ":props = " + JSON.stringify(props));
+      
+    } catch (e) {
+      log(`[Director] Error parsing default token for ${char.get('name')}: ${e}`);
+    }
+    setTimeout(placeNextToken, 0);
+  });
+};
 
   placeNextToken();
   updateHandout();
+
+
+ highlightStarredTokens(currentScene, pageId);
 };
 
 
@@ -900,6 +914,14 @@ const wipeScene = (sceneName, playerid) => {
     if (p.get('stroke') === '#84d162') p.remove();
   });
 
+
+// Remove all gold stroke paths on GM layer for this page
+const goldPaths = findObjs({ _type: 'pathv2', _pageid: pageId, layer: 'gmlayer' })
+  .filter(p => p.get('stroke') === 'gold');
+goldPaths.forEach(p => p.remove());
+
+
+
 disableDynamicLighting(pageId);
 
 
@@ -931,8 +953,7 @@ const handleSetGrid = (playerid) => {
   if (!page)
     return sendStyledMessage('Set Grid', 'No valid player page found, including fallback.');
 
-enableDynamicLighting(pageId);
-
+  enableDynamicLighting(pageId);
 
   let act, scene;
   for (const a of Object.values(st.acts)) {
@@ -951,23 +972,53 @@ enableDynamicLighting(pageId);
   if (!validImages.length)
     return sendStyledMessage('Set Grid', 'No image assets found for grid placement.');
 
-  if (validImages.length > 6)
-    return sendStyledMessage('Set Grid', 'Grid layout only supports up to 6 images.');
+  const layouts = [
+    [1,1], [1,2], [2,1],
+    [1,3], [3,1],
+    [2,2],
+    [2,3], [3,2],
+    [3,3],
+    [4,2], [2,4]
+  ];
+
+  const maxImages = 9; // maximum images supported
+
+  const imgCount = Math.min(validImages.length, maxImages);
+
+  if (validImages.length > maxImages) {
+    sendStyledMessage('Set Grid', `Too many images (${validImages.length}) to fit grid; only the first ${maxImages} will be placed.`);
+  }
 
   const pageWidth = page.get('width') * 70;
   const pageHeight = page.get('height') * 70 - 105;
 
-  const imgCount = validImages.length;
-  const gridCells = (imgCount <= 2) ? 2 : (imgCount <= 4) ? 4 : 6;
-  const rows = (gridCells === 2) ? 1 : 2;
-  const cols = (gridCells === 2) ? 2 : (gridCells === 4) ? 2 : 3;
+  const isWide = pageWidth > pageHeight;
+  const isTall = pageHeight > pageWidth;
+
+  // Fix: Always include 2x2 layout if exactly 4 images to get perfect fit
+  let filteredLayouts = layouts.filter(([c, r]) => {
+    if (imgCount === 4 && c === 2 && r === 2) {
+      return true;
+    }
+    if (isWide) return c > r;
+    if (isTall) return r > c;
+    return true;
+  });
+
+  filteredLayouts.sort((a,b) => (a[0]*a[1]) - (b[0]*b[1]));
+  let chosenLayout = filteredLayouts.find(([c, r]) => c*r >= imgCount);
+
+  if (!chosenLayout) chosenLayout = [3,3];
+
+  const [cols, rows] = chosenLayout;
+  const gridCells = cols * rows;
 
   const cellWidth = Math.floor(pageWidth / cols);
   const cellHeight = Math.floor(pageHeight / rows);
 
-  const margin = 70;
-  const maxImgWidth = cellWidth - 2 * margin;
-  const maxImgHeight = cellHeight - 2 * margin;
+  const gridImageMargin = 35;
+  const maxImgWidth = cellWidth - 2 * gridImageMargin;
+  const maxImgHeight = cellHeight - 2 * gridImageMargin;
 
   if (maxImgWidth <= 0 || maxImgHeight <= 0) {
     return sendStyledMessage('Set Grid', 'Grid layout failed: Page is too small to fit all images with required spacing. Resize the page or reduce the number of images and try again.');
@@ -983,9 +1034,7 @@ enableDynamicLighting(pageId);
     }
   }
 
-  validImages.forEach((img, i) => {
-    if (i >= positions.length) return;
-
+  validImages.slice(0, imgCount).forEach((img, i) => {
     const pos = positions[i];
     const dims = getScaledToFit(img.ratio || 1, maxImgWidth, maxImgHeight);
     const cleanUrl = cleanImg(img.url);
@@ -1029,7 +1078,7 @@ enableDynamicLighting(pageId);
 
   st.lastSetScene = currentScene;
 
-  // --- Character Tokens ---
+  // --- Character Tokens (unchanged) ---
   const charItems = (st.items?.buttons || []).filter(btn =>
     btn.scene === currentScene &&
     (
@@ -1051,7 +1100,6 @@ enableDynamicLighting(pageId);
       const tokenWidth = props.width || 70;
       const tokenHeight = props.height || 70;
 
-      // Wrap to next column if vertical space exceeded
       if (tokenTop + tokenHeight > pageHeight - 50) {
         tokenTop = 105;
         tokenLeft += currentColumnMaxWidth + 70;
@@ -1072,17 +1120,9 @@ enableDynamicLighting(pageId);
     if (btn.type === 'variant') {
       try {
         const props = { ...btn.tokenProps };
-
-/*
         if (!props || !props.imgsrc) {
-          log(`[Director] Invalid tokenProps for variant "${btn.name}". Skipping.`);
-          return placeNextToken();
+          props.imgsrc = getSafeImgsrc(cleanImg(props.imgsrc)) || FALLBACK_IMG;
         }
-        */
-        if (!props || !props.imgsrc) {
-        props.imgsrc = getSafeImgsrc(cleanImg(props.imgsrc))||FALLBACK_IMG;
-}
-
         props.imgsrc = getSafeImgsrc(cleanImg(props.imgsrc));
         props._pageid = pageId;
         props.layer = 'objects';
@@ -1107,6 +1147,10 @@ enableDynamicLighting(pageId);
         props.layer = 'objects';
 
         handlePlacement(props, char.get('name'));
+        
+              log(char.get('name')+": props = " + props);
+
+        
       } catch (e) {
         log(`[Director] Error parsing default token for ${char.get('name')}: ${e}`);
       }
@@ -1293,7 +1337,11 @@ const renderHelpHtml = (css) => `
 
   <p><b>Filter:</b> Click the
     <span style="${css.itemAddBadge}; float:none; position:relative;">🔍</span>
-    button to filter items by type.
+    button to filter items by type. The filter button supersedes the Star Filter button
+  </p>
+  <p>
+  <b>Star system:</b> Use stars to link specific characters to a backdrop image. For instance, if a scene has several shops, you can star each proprietor for their shop image. When that image is the backdrop, the linked characters’ tokens are highlighted in gold in the token list. This feature is disabled in Grid mode.<br>
+  The Star Filter button in the header will filter to show only starred items. To temporarily show all characters without turning off the star filter, use the filter button to show all Characters.
   </p>
   <br>
 
@@ -1304,15 +1352,17 @@ const renderHelpHtml = (css) => `
       <li>Backdrop image (Map Layer)</li>
       <li>Highlight images (Object Layer, left-aligned off page edge)</li>
       <li>Character and variant tokens (Object Layer, right-aligned off page edge)</li>
+      <li>Any tokens that are starred for the current backdrop image are highlighted</li>
       <li>Starts assigned track (if set)</li>
     </ul>
   </p>
     <p><span style="${css.headerSubButton}; float:none; position:relative;">Grid</span> populates the tabletop with:
     <ul>
-      <li>up to six images, arranged as grid (Map Layer)</li>
+      <li>up to nine images, arranged as grid (Map Layer)</li>
       <li>Surrounds each image with dynamic lighting barrier and turns on dynamic lighting with Daylight Mode</li>
       <li>Top strip of page is not part of grid (for holding player tokens)</li>
       <li>Character and variant tokens (Object Layer, right-aligned off page edge)</li>
+      <li>Star system is suppressed in Grid mode, since there are no single backdrops</li>
     </ul>
   </p>
   <p>Only works if the current page name contains: <i>scene, stage, theater, theatre</i></p>
@@ -1363,11 +1413,150 @@ const getJukeboxPlusHandoutLink = () => {
 };
 
 
+
+// Create or refresh GM-layer rectangle highlights for starred tokens for the given scene/page.
+// - sceneName: name of the scene in state
+// - pageId: the page to inspect and on which to create gmlayer highlights
+const highlightStarredTokens = (sceneName, pageId) => {
+  if (!sceneName || !pageId) return;
+  const st = getState();
+  st.starHighlights = st.starHighlights || {};
+
+  // Find scene object
+  let scene = null;
+  for (const act of Object.values(st.acts || {})) {
+    if (act.scenes?.[sceneName]) {
+      scene = act.scenes[sceneName];
+      break;
+    }
+  }
+  if (!scene) {
+    st.starHighlights[pageId] = st.starHighlights[pageId] || [];
+    updateState(st);
+    return;
+  }
+
+  // Remove prior highlights
+  const oldHighlights = st.starHighlights[pageId] || [];
+  oldHighlights.forEach(id => {
+    const p = getObj('pathv2', id);
+    if (p) p.remove();
+  });
+  st.starHighlights[pageId] = [];
+
+  // Only starred for current backdrop
+  const backdropId = scene.backdropId;
+  if (!backdropId) {
+    updateState(st);
+    return;
+  }
+  const starredList = scene.starredAssets?.[backdropId] || [];
+  if (!Array.isArray(starredList) || !starredList.length) {
+    updateState(st);
+    return;
+  }
+
+  const pageGraphics = findObjs({ _type: 'graphic', _pageid: pageId });
+  const newHighlightIds = [];
+
+  const padding = 12;
+  const strokeColor = 'gold';
+  const fillColor = 'transparent';
+  const strokeWidth = 4;
+
+  const findButtonById = id => (st.items?.buttons || []).find(b => b.id === id);
+
+  starredList.forEach(btnId => {
+    const btn = findButtonById(btnId);
+    if (!btn) return;
+
+    let matched = [];
+
+    if (btn.type === 'character' && btn.refId) {
+      const charObj = getObj('character', btn.refId);
+      if (charObj) {
+        const charName = (charObj.get('name') || '').toLowerCase();
+        matched = pageGraphics.filter(g => {
+          try {
+            if (g.get('layer') !== 'objects') return false;
+            const repId = g.get('represents');
+            if (!repId) return false;
+            const repChar = getObj('character', repId);
+            if (!repChar) return false;
+            return (repChar.get('name') || '').toLowerCase() === charName;
+          } catch {
+            return false;
+          }
+        });
+      }
+    }
+
+    if (btn.type === 'variant') {
+      const btnNameLower = (btn.name || '').toLowerCase();
+      matched = pageGraphics.filter(g => {
+        try {
+          return (
+            g.get('layer') === 'objects' &&
+            (g.get('name') || '').toLowerCase() === btnNameLower
+          );
+        } catch {
+          return false;
+        }
+      });
+    }
+
+    if (!matched.length) return;
+
+    matched.forEach(g => {
+      try {
+        const gw = (g.get('width') || 70) + padding;
+        const gh = (g.get('height') || 70) + padding;
+        const gx = g.get('left');
+        const gy = g.get('top');
+
+        const path = createObj('pathv2', {
+          _pageid: pageId,
+          layer: 'gmlayer',
+          stroke: strokeColor,
+          stroke_width: strokeWidth,
+          fill: fillColor,
+          shape: 'rec',
+          points: JSON.stringify([[0,0],[gw,gh]]),
+          x: gx,
+          y: gy,
+          rotation: 0
+        });
+
+        if (path) newHighlightIds.push(path.id);
+      } catch (e) {
+        log(`[Director] highlightStarredTokens: failed to create highlight for btn ${btnId}: ${e.message}`);
+      }
+    });
+  });
+
+  st.starHighlights[pageId] = newHighlightIds;
+  updateState(st);
+};
+
+
+
+
+
+
 const renderFilterBarInline = (css) => {
   const st = getState();
   const activeFilter = st.items?.filter || 'all';
+  const starMode = st.items?.starMode || false;
   const mode = st.settings?.mode || 'light';
   const borderColor = mode === 'dark' ? '#eee' : '#444';
+
+  // Determine if grid mode is active by checking for DL paths on GM page
+  const pid = Campaign().get('playerpageid');
+  let gridModeActive = false;
+  if (pid) {
+    const existingPaths = findObjs({ _type: 'pathv2', _pageid: pid, layer: 'walls' });
+    gridModeActive = existingPaths.some(p => p.get('stroke') === '#84d162');
+  }
 
   // Build dynamic option strings
   const characters = findObjs({ _type: 'character' }).sort((a, b) => a.get('name').localeCompare(b.get('name')));
@@ -1378,8 +1567,6 @@ const renderFilterBarInline = (css) => {
 
   const buildOpts = (objs, labelFn = o => o.get('name')) =>
     objs.map(o => `${labelFn(o).replace(/"/g, "&quot;")},${o.id}`).join('|');
-    // Suggested replacement for following line to catch names with double quotes.
-    //objs.map(o => `${labelFn(o)},${o.id}`).join('|');
 
   const charOpts = buildOpts(characters);
   const handoutOpts = buildOpts(handouts);
@@ -1387,6 +1574,8 @@ const renderFilterBarInline = (css) => {
   const tableOpts = buildOpts(tables);
   const trackOpts = buildOpts(tracks, t => t.get('title'));
 
+  const starFilterBtn = `<a href="!director --toggle-star-filter" style="${starMode ? css.utilitySubButtonActive : css.utilitySubButtonInactive} font-size:12px; margin-right:4px;" title="Toggle Star Filter Mode">★</a>`;
+  const filterByType = (st.items.filter === "all" ? '': '<span style = "' + css.forceTextColor + 'opacity: 0.5; font-family: Arial; font-style: italic;">= ' + st.items.filter + 's</span>');
   const buttons = [
     `<a href="!director --add-handout|?{Select Handout|${handoutOpts}}" style="${css.itemBadge} background:${getBadgeColor('handout')};" title="Add Handout Button">H</a>`,
     `<a href="!director --add-character|?{Select Character|${charOpts}}" style="${css.itemBadge} background:${getBadgeColor('character')};" title="Add Character Button">C</a>`,
@@ -1395,7 +1584,10 @@ const renderFilterBarInline = (css) => {
     `<a href="!director --add-macro|?{Select Macro|${macroOpts}}" style="${css.itemBadge} background:${getBadgeColor('macro')};" title="Add Macro Button">M</a>`,
     `<a href="!director --add-table|?{Select Table|${tableOpts}}" style="${css.itemBadge} background:${getBadgeColor('table')};" title="Add Rollable Table Button">R</a>`,
     `<a href="!director --filter|?{Filter Items by Type:|Show All Types,all|Handout,handout|Character,character|Track,track|Macro,macro|Table,table}" 
-        style="${css.itemAddBadge};" title="Filter Items by Type">🔍</a>`
+        style="${css.itemAddBadge};" title="Filter Items by Type">🔍</a>
+        ${filterByType}`,
+    // Only show starFilterBtn if NOT in grid mode
+    ...(!gridModeActive ? [starFilterBtn] : [])
   ];
 
   return buttons.join('');
@@ -1409,16 +1601,57 @@ const renderItemsList = (css) => {
   const isEditMode = !!st.items?.editMode;
   const currentScene = st.activeScene;
   const activeFilter = st.items?.filter || 'all';
+  const starMode = st.items?.starMode || false;
 
+  // --- Detect grid mode by checking if any DL paths with stroke #84d162 exist on current player's page ---
+  const pid = Campaign().get('playerpageid');
+
+  let gridModeActive = false;
+  if (pid) {
+    const existingPaths = findObjs({ _type: 'pathv2', _pageid: pid, layer: 'walls' });
+    gridModeActive = existingPaths.some(p => p.get('stroke') === '#84d162');
+  }
+
+  const stData = st; // reuse state reference
+
+  // Find sceneObj and backdropId once for reuse
+  let sceneObj = null;
+  let backdropId = null;
+  if (currentScene) {
+    for (const act of Object.values(stData.acts || {})) {
+      if (act.scenes?.[currentScene]) {
+        sceneObj = act.scenes[currentScene];
+        break;
+      }
+    }
+    backdropId = sceneObj?.backdropId;
+  }
+
+  // Build set of starred assets for current scene if starMode is active
+  let starredAssetsSet = new Set();
+  if (currentScene && starMode && sceneObj && backdropId && sceneObj.starredAssets?.[backdropId]) {
+    starredAssetsSet = new Set(sceneObj.starredAssets[backdropId]);
+  }
+
+  // Filter items by scene, type, exclude 'action', and if starMode is active, filter to starred only
   const items = (st.items?.buttons || []).filter(btn => {
     const sceneMatch = btn.scene === currentScene;
-    const typeMatch = activeFilter === 'all' || 
-                      btn.type === activeFilter || 
+    const typeMatch = activeFilter === 'all' ||
+                      btn.type === activeFilter ||
                       (activeFilter === 'character' && btn.type === 'variant');
     const excludeActions = btn.type !== 'action';
-    return sceneMatch && typeMatch && excludeActions;
+
+    if (!sceneMatch || !typeMatch || !excludeActions) return false;
+
+    // Apply star filter ONLY when activeFilter is 'all'
+    if (activeFilter === 'all' && starMode) {
+      return starredAssetsSet.has(btn.id);
+    }
+
+    return true;
   });
 
+  // Fetch lookup objects for handouts, characters, macros, tables
   const handouts = findObjs({ _type: 'handout' }).sort((a, b) => a.get('name').localeCompare(b.get('name')));
   const characters = findObjs({ _type: 'character' }).sort((a, b) => a.get('name').localeCompare(b.get('name')));
   const macros = findObjs({ _type: 'macro' }).sort((a, b) => a.get('name').localeCompare(b.get('name')));
@@ -1429,6 +1662,7 @@ const renderItemsList = (css) => {
     let labelText = btn.name;
     let tooltipAttr = '';
 
+    // === existing type-based logic unchanged ===
     if (btn.type === 'action') {
       if (!btn.refId) {
         const options = characters.map(c => `${c.get('name')},${c.id}`).join('|');
@@ -1526,6 +1760,7 @@ const renderItemsList = (css) => {
       tooltipAttr = ` title="Item placeholder"`;
     }
 
+    // --- build edit controls ---
     const editControls = isEditMode
       ? `
         <a href="!director --redefine-item|${btn.id}" title="Redefine" style="${css.utilityEditButton}">${Pictos('p')}</a>
@@ -1533,11 +1768,26 @@ const renderItemsList = (css) => {
       `
       : '';
 
+    // --- compute star HTML, omit if grid mode active or in edit mode ---
+    let starHTML = '';
+    if (!gridModeActive && !isEditMode) {
+      if (!backdropId) {
+        starHTML = `<span title="Assign a backdrop image to star assets" style="color: gray; font-weight: normal; font-size: 18px; user-select: none; cursor: default; position: absolute; top: 4px; right: 6px; margin: 0;">★</span>`;
+      } else {
+        const starredList = sceneObj.starredAssets?.[backdropId] || [];
+        const isStarred = Array.isArray(starredList) && starredList.includes(btn.id);
+        starHTML = `<a href="!director --toggle-star|${btn.id}" title="${isStarred ? 'Unpin this asset from the current backdrop' : 'Pin this asset to the current backdrop'}" style="${isStarred ? css.starred : css.unstarred}">★</a>`;
+      }
+    }
+
+    // --- return the row: container is relative so star positions itself INSIDE the button area ---
     return `
-      <div style="${css.itemRow}">
-        <a href="${action}" style="${css.itemButton}"${tooltipAttr}>
-          ${getBadge(btn.type, css)} <span style="${css.forceTextColor}">${labelText}</span> ${editControls}
+      <div style="margin-bottom: 3px; position: relative; width: 100%; clear: both;">
+        <a href="${action}" style="${css.itemButton} position: relative; display: block; float: none; " ${tooltipAttr}>
+          ${getBadge(btn.type, css)} <span style="${css.forceTextColor}">${labelText}</span>
+          ${editControls}
         </a>
+        ${starHTML}
       </div>
     `;
   }).join('');
@@ -2789,6 +3039,13 @@ case 'set-backdrop': {
 
   updateState(st);
   updateHandout();
+  
+  
+  // Refresh GM-only starred-token highlights for this page/scene
+  // (creates gmlayer rects around tokens starred for the newly assigned backdrop)
+  highlightStarredTokens(currentScene, pid);
+  
+
   break;
 }
 
@@ -2834,6 +3091,79 @@ case 'set-grid':
         }
         break;
       }
+      
+      
+      case 'toggle-star-filter': {
+  const st = getState();
+  st.items = st.items || {};
+  st.items.starMode = !st.items.starMode;
+  updateState(st);
+  updateHandout();
+  break;
+}
+
+case 'toggle-star': {
+  const assetId = val; // from "!director --toggle-star|assetId"
+  if (!assetId) break;
+
+  const st = getState();
+  const currentSceneName = st.activeScene;
+  if (!currentSceneName) {
+    sendStyledMessage('Director', 'No active scene set.');
+    break;
+  }
+
+  // Find scene object
+  let sceneObj = null;
+  for (const act of Object.values(st.acts || {})) {
+    if (act.scenes?.[currentSceneName]) {
+      sceneObj = act.scenes[currentSceneName];
+      break;
+    }
+  }
+  if (!sceneObj) {
+    sendStyledMessage('Director', 'Active scene not found.');
+    break;
+  }
+
+  const backdropId = sceneObj.backdropId;
+  if (!backdropId) {
+    sendStyledMessage('Director', 'No backdrop image assigned. Assign a backdrop image before starring assets.');
+    break;
+  }
+
+  sceneObj.starredAssets = sceneObj.starredAssets || {};
+  sceneObj.starredAssets[backdropId] = sceneObj.starredAssets[backdropId] || [];
+
+  const starredList = sceneObj.starredAssets[backdropId];
+  const index = starredList.indexOf(assetId);
+  if (index === -1) {
+    starredList.push(assetId);
+    //sendStyledMessage('Director', `Starred asset ${assetId} for backdrop.`);
+  } else {
+    starredList.splice(index, 1);
+    //sendStyledMessage('Director', `Unstarred asset ${assetId} for backdrop.`);
+  }
+
+  updateState(st);
+  updateHandout();
+  
+    // Add this call to refresh GM-layer highlights immediately
+  const pid = Campaign().get('playerpageid');
+  highlightStarredTokens(currentSceneName, pid);
+  
+  break;
+}
+
+      
+      
+      
+      
+      
+      
+      
+      
+      
       
       case 'toggle-act': {
 const actName = decodeURIComponent(val);
@@ -3513,57 +3843,6 @@ case 'make-help-handout': {
   sendStyledMessage('Director', `[Open the Help Handout](http://journal.roll20.net/handout/${handout.id})`);
   break;
 }
-
-
-
-case 'checkwall': {
-  sendStyledMessage('Director', `Open Checkwall.`);
-
-  const pageId = getPageForPlayer(playerid);
-  const page = getObj('page', pageId);
-
-  if (!page) {
-    sendStyledMessage('Director', `❌ No valid page found.`);
-    return;
-  }
-
-  sendStyledMessage('Director', `✅ Page: <b>${page.get('name')}</b>`);
-
-  // Static triangle with known good coordinates
-  const wall = createObj('pathv2', {
-    _pageid: pageId,
-    shape: 'pol',
-    points: JSON.stringify([
-      [0, 0],
-      [0, 70],
-      [70, 0],
-      [0, 0]
-    ]),
-    fill: 'transparent',
-    stroke: '#FF0000',
-    stroke_width: 5,
-    x: 140,  // Placed slightly off origin so it's visible
-    y: 140,
-    layer: 'walls',
-    barrierType: 'wall'
-  });
-
-  if (!wall) {
-    log("❌ PathV2 wall creation failed");
-    sendStyledMessage('Director', `❌ Path creation failed.`);
-  } else {
-    log("✅ PathV2 wall created successfully");
-    sendStyledMessage('Director', `✅ Wall created at (140, 140).`);
-  }
-
-  sendStyledMessage('Director', `Close Checkwall.`);
-  break;
-}
-
-
-
-
-
 
 
 
