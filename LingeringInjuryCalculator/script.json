@@ -1,0 +1,15 @@
+{
+  "name": "Lingering Injury Calculator",
+  "script": "LingeringInjury.js",
+  "version": "1.1",
+  "previousversions": [
+    "1.0"
+  ],
+  "description": "<h3>Lingering Injury Calculator</h3><p>This script fully automates the process for the Lingering Injuries homebrew system, where lasting harm is determined by the severity of the blow that drops a character to 0 HP.</p><p>It works with all 13 5e damage types and calculates the injury based on your custom ruleset, whispering the result to the GM and the affected player.</p><hr><h3>How It Works</h3><p>The process is designed to be simple and requires minimal user input during combat.</p><ol><li><strong>Automatic Trigger</strong>: When a token linked to a character has its HP (Bar 1) drop from a positive value to 0 or less, the script automatically posts a message in the chat. This prompt is visible only to the GM and the player who controls that character.</li><li><strong>Player Action</strong>: The prompt instructs the player to make a Constitution Saving Throw as per the rules.</li><li><strong>Calculate the Injury</strong>: Once the save is rolled, the GM or player must select the character's token and use the following chat command to get the injury result:</li></ol><blockquote><code>!li &lt;damage_type&gt; &lt;constitution_save_result&gt;</code></blockquote><ul><li><strong>&lt;damage_type&gt;</strong>: The type of damage that caused the injury (e.g., <code>slashing</code>, <code>fire</code>, <code>psychic</code>).</li><li><strong>&lt;constitution_save_result&gt;</strong>: The final number from the character's Constitution saving throw.</li></ul><p><strong>Example Command:</strong> <code>!li slashing 14</code></p><hr><h3>The Calculation</h3><p>The script uses the system's core formula to determine the outcome:</p><p><code>Injury Score = (Damage dealt below 0 HP) - (Constitution Save Result)</code></p><p>Based on the final Injury Score, the script determines the correct severity category (1-5), randomly rolls a d4 for the specific effect from your custom tables, and displays the full injury description in a neatly formatted whisper.</p>",
+  "author": "NesscentDM (and Gemini)",
+  "roll20userid": "YourTurnToRole",
+  "useroptions": [],
+  "dependencies": [],
+  "modifies": {},
+  "conflicts": []
+}
