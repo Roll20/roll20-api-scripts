@@ -1,0 +1,14 @@
+[script.json](https://github.com/user-attachments/files/21764973/script.json)
+{
+  "name": "Nebula's 2E Quick Reference",
+  "script": "2eNebRef.js",
+  "version": "1.0",
+  "previousversions": [],
+  "description": "Adds haunts commands like !hauntXXXX and !tiltlist to Roll20.",
+  "authors": "Nebula",
+  "roll20userid": "000000",
+  "useroptions": [],
+  "dependencies": [],
+  "modifies": {},
+  "conflicts": []
+}
