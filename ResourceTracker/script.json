@@ -7,7 +7,7 @@
     "description": "an API script for tracking per-character consumables—arrows, javelins, wand charges, spell slots, ki, etc. GMs (and optionally players) can create, spend, recover, and reset resources via chat commands, with updates whispered to the character’s controllers and mirrored to the GM. It supports auto-spend from real sheet rolls (map an attack name to a resource), plays nicely with ScriptCards (underscore-friendly args), and keeps token bars in sync—even when linked to Character Attributes. Features include per-resource rest tags (short/long), a recover action with break chance, an enable/disable switch, and player access modes (none | partial | full) for table safety.",
     "authors": "Joe Simmons",
     "roll20userid": "2447959",
-    "patreon": "https://www.patreon.com/c/joeuser"
+    "patreon": "https://www.patreon.com/c/joeuser",
    "useroptions": [
   {
     "name": "enabled_on_boot",
