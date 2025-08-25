@@ -31,7 +31,7 @@ on('ready', () => {
       return null;
     };
 
-    // Names-only whispering
+    // Names-only whispering with public fallback for players
     const whisperTo = (who, html) => {
       const q = String.fromCharCode(34); // "
       const target = (!who || who==='gm') ? 'gm' : (q + String(who).replace(/"/g,'\\"') + q);
@@ -42,6 +42,26 @@ on('ready', () => {
       }
       sendChat(MOD, msg, null, { noarchive: true });
     };
+    
+    // Public message for players (more visible than whispers)
+    const sendToPlayer = (who, html) => {
+      if (!who || who === 'gm') {
+        whisperTo('gm', html);
+        return;
+      }
+      
+      // For players, send a public message with their name highlighted
+      const playerName = who.replace(/"/g, '');
+      const publicMsg = `${H(`<span style="color: #ffd700; font-weight: bold;">@${playerName}</span> ${html}`)}`;
+      
+      // Debug logging
+      if (state[MOD] && state[MOD].debug) {
+        log(`${MOD} sendToPlayer: ${who} -> ${publicMsg}`);
+      }
+      
+      sendChat(MOD, publicMsg, null, { noarchive: true });
+    };
+    
     const whisperGM = (html)=> whisperTo('gm', html);
 
     // ---------- state ----------
@@ -57,6 +77,7 @@ on('ready', () => {
       if (!s.config.playerMode)                      s.config.playerMode = 'partial'; // none|partial|full
       s.config.notifyMode = 'names'; // names-only delivery transport
       if (!s.config.playerNotify)                    s.config.playerNotify = 'all'; // all|recover|none
+      if (!s.config.playerDelivery)                  s.config.playerDelivery = 'public'; // public|whisper
       if (typeof s.enabled !== 'boolean')            s.enabled = firstRun ? false : true;
       if (!s.created)                                s.created = (new Date()).toISOString();
       if (typeof s.debug !== 'boolean')              s.debug = false;
@@ -75,12 +96,24 @@ on('ready', () => {
         .split(',')
         .map(s=>s.trim())
         .filter(Boolean);
+      
+      // Debug logging
+      if (state[MOD] && state[MOD].debug) {
+        log(`${MOD} controllerPlayers: char=${ch.get('name')}, controlledby=${ch.get('controlledby')}, ctl=${ctl.join(',')}`);
+      }
+      
       ctl.forEach(x=>{
         if (x === 'all') { out.hasAll = true; return; }
         const p = /^[A-Za-z0-9_-]{20,}$/.test(x) ? getObj('player', x) : null;
         if (p) out.players.push(p);
         else out.players.push({ id: null, get: (k)=> (k==='displayname' ? x : '') });
       });
+      
+      // Debug logging
+      if (state[MOD] && state[MOD].debug) {
+        log(`${MOD} controllerPlayers result: players=${out.players.map(p => p.get ? p.get('displayname') : p.get('displayname')).join(',')}, hasAll=${out.hasAll}`);
+      }
+      
       return out;
     };
 
@@ -101,7 +134,27 @@ on('ready', () => {
       }
       recips.add('gm');
       const line = `${ch.get('name')}: ${htmlLine}`;
-      recips.forEach(t => whisperTo(t, line));
+      
+      // Debug logging
+      if (state[MOD] && state[MOD].debug) {
+        log(`${MOD} notifyByKind: kind=${kind}, recips=${Array.from(recips).join(',')}, delivery=${assertState().config.playerDelivery}`);
+      }
+      
+      // Send to each recipient with appropriate method
+      const deliveryMode = assertState().config.playerDelivery || 'public';
+      recips.forEach(t => {
+        if (t === 'gm') {
+          whisperTo('gm', line);
+        } else {
+          // For players, use configured delivery method
+          if (deliveryMode === 'whisper') {
+            whisperTo(t, line);
+          } else {
+            // Default to public messages for better visibility
+            sendToPlayer(t, line);
+          }
+        }
+      });
     };
 
     // ---------- character context ----------
@@ -277,7 +330,7 @@ on('ready', () => {
       assertState, isGM,
       resolveCtx, getAnyTokenForChar, getAllTokensForChar, charData, charAuto,
       resourceLine, ensureLinkAndSync,
-      clean, toInt, getKV, syncBar,
+      clean, toInt, getKV, syncBar, unq,
       getCharIdFromRoll, getAttackNameFromRoll, resolveSpendTarget,
       whisperGM, esc,
       controllerPlayers, playerAllowed, notifyByKind, shouldPlayerSee
@@ -362,9 +415,9 @@ on('ready', () => {
       // HELP
       if(!sub || sub==='help' || sub==='?'){
         return RT.whisperGM([
-          `<b>${RT.CMD}</b> — v${RT.VERSION} (enabled=${st.enabled ? 'yes':'no'}, playerMode=${st.config.playerMode}, autospend=${st.config.autospend?'on':'off'}, debug=${st.debug?'on':'off'}, notify=names, playerNotify=${st.config.playerNotify})`,
-          `<u>Admin</u> — ${RT.CMD} enable | ${RT.CMD} disable | ${RT.CMD} status | ${RT.CMD} debug on|off | ${RT.CMD} config autospend on|off | ${RT.CMD} config playermode none|partial|full | ${RT.CMD} config recover &lt;0..100&gt; | ${RT.CMD} config notify all|recover|none`,
-          `<u>GM/Player</u> — create/use/add/set/delete/thresh/resttag/reset/list/menu/linkbar/recover; alias/automap; diag.`
+          `<b>${RT.CMD}</b> — v${RT.VERSION} (enabled=${st.enabled ? 'yes':'no'}, playerMode=${st.config.playerMode}, autospend=${st.config.autospend?'on':'off'}, debug=${st.debug?'on':'off'}, notify=names, playerNotify=${st.config.playerNotify}, delivery=${st.config.playerDelivery})`,
+          `<u>Admin</u> — ${RT.CMD} enable | ${RT.CMD} disable | ${RT.CMD} status | ${RT.CMD} debug on|off | ${RT.CMD} config autospend on|off | ${RT.CMD} config playermode none|partial|full | ${RT.CMD} config recover &lt;0..100&gt; | ${RT.CMD} config notify all|recover|none | ${RT.CMD} config delivery public|whisper`,
+          `<u>GM/Player</u> — create/use/add/set/delete/thresh/resttag/reset/list/menu/linkbar/recover; alias/automap; diag; test.`
         ].join('<br/>'));
       }
 
@@ -385,15 +438,25 @@ on('ready', () => {
         recips.add('gm');
         if (msg.playerid) { const p = getObj('player', msg.playerid); if (p) recips.add(p.get('displayname')); }
         RT.whisperGM(`<u>Diag ${RT.esc(ctx.ch.get('name'))}</u><br/>ControlledBy: ${players.map(p=>p.get('displayname')).join(', ')}${hasAll?' (all)':''}<br/>Recipients now (mode=${st.config.playerNotify}): ${Array.from(recips).join(', ')}`);
-        RT.notifyByKind(ctx.ch, `Diag test line — you should see this if your mode allows it.`, msg.playerid, 'info');
-        return;
-      }
+                 RT.notifyByKind(ctx.ch, `Diag test line — you should see this if your mode allows it.`, msg.playerid, 'info');
+         return;
+       }
+       
+       // TEST - Simple test to see if notifications work
+       if(sub==='test'){ if(!isGM) return;
+         const ctx = RT.resolveCtx(msg, parts);
+         if(!ctx) return RT.whisperGM(`Select a represented token or add char="Name".`);
+         
+         RT.whisperGM(`Testing notifications for ${ctx.ch.get('name')}...`);
+         RT.notifyByKind(ctx.ch, `This is a TEST message to see if players can see it.`, msg.playerid, 'info');
+         return;
+       }
 
       // ADMIN
       if(sub==='enable'){ if(!isGM) return; st.enabled = true; RT.whisperGM('Enabled.'); return; }
       if(sub==='disable'){ if(!isGM) return; st.enabled = false; RT.whisperGM('Disabled.'); return; }
       if(sub==='status'){ if(!isGM) return;
-        return RT.whisperGM(`Status: enabled=${st.enabled?'yes':'no'}, playerMode=${st.config.playerMode}, autospend=${st.config.autospend?'on':'off'}, recoverDefault=${st.config.recoverBreak}%, notify=names, playerNotify=${st.config.playerNotify}, debug=${st.debug?'on':'off'}`);
+        return RT.whisperGM(`Status: enabled=${st.enabled?'yes':'no'}, playerMode=${st.config.playerMode}, autospend=${st.config.autospend?'on':'off'}, recoverDefault=${st.config.recoverBreak}%, notify=names, playerNotify=${st.config.playerNotify}, delivery=${st.config.playerDelivery}, debug=${st.debug?'on':'off'}`);
       }
       if(sub==='config'){
         if(!isGM) return;
@@ -418,7 +481,14 @@ on('ready', () => {
           RT.whisperGM(`Player notification mode set to <b>${v}</b>.`);
           return;
         }
-        return RT.whisperGM(`Usage: ${RT.CMD} config autospend on|off | ${RT.CMD} config playermode none|partial|full | ${RT.CMD} config recover 0..100 | ${RT.CMD} config notify all|recover|none`);
+        if(key==='delivery'){
+          const v = (arg2||'').toLowerCase();
+          if(!/^(public|whisper)$/.test(v)) return RT.whisperGM(`Usage: ${RT.CMD} config delivery public|whisper (cur=${st.config.playerDelivery})`);
+          st.config.playerDelivery = v;
+          RT.whisperGM(`Player delivery method set to <b>${v}</b>.`);
+          return;
+        }
+        return RT.whisperGM(`Usage: ${RT.CMD} config autospend on|off | ${RT.CMD} config playermode none|partial|full | ${RT.CMD} config recover 0..100 | ${RT.CMD} config notify all|recover|none | ${RT.CMD} config delivery public|whisper`);
       }
 
       // Character context + perms
@@ -444,8 +514,8 @@ on('ready', () => {
           let curArg = null, restArg = 'none';
           for (let i = 4; i < rawParts.length; i++) {
             const p0 = RT.clean(String(rawParts[i]||''));
-            if (/^rest[=|]/i.test(p0)) restArg = unq(p0.split(/[=|]/)[1] || 'none');
-            else { const maybe = parseInt(unq(p0),10); if(Number.isFinite(maybe)) curArg = maybe; }
+            if (/^rest[=|]/i.test(p0)) restArg = RT.unq(p0.split(/[=|]/)[1] || 'none');
+            else { const maybe = parseInt(RT.unq(p0),10); if(Number.isFinite(maybe)) curArg = maybe; }
           }
           if(!name || !Number.isFinite(max)) return RT.whisperGM(`Usage: ${RT.CMD} create &lt;name&gt; &lt;max&gt; [current] [rest=none|short|long] [char=...]`);
           const d = RT.charData(ctx.ch.id);
