@@ -1,0 +1,63 @@
+{
+    "$schema": "https://github.com/Roll20/roll20-api-scripts/master/_Example%20Script%20-%20Check%20for%20formatting%20details/script.schema.json",
+    "name": "ResourceTracker",
+    "script": "ResourceTracker.js",
+    "version": "0.5.6",
+    "previousversions": [],
+    "description": "an API script for tracking per-character consumables—arrows, javelins, wand charges, spell slots, ki, etc. GMs (and optionally players) can create, spend, recover, and reset resources via chat commands, with updates whispered to the character’s controllers and mirrored to the GM. It supports auto-spend from real sheet rolls (map an attack name to a resource), plays nicely with ScriptCards (underscore-friendly args), and keeps token bars in sync—even when linked to Character Attributes. Features include per-resource rest tags (short/long), a recover action with break chance, an enable/disable switch, and player access modes (none | partial | full) for table safety.",
+    "authors": "Joe Simmons",
+    "roll20userid": "2447959",
+    "patreon": "https://www.patreon.com/c/joeuser",
+   "useroptions": [
+  {
+    "name": "enabled_on_boot",
+    "type": "checkbox",
+    "value": "true",
+    "checked": "checked",
+    "description": "Start ResourceTracker enabled when the API sandbox boots."
+  },
+  {
+    "name": "player_mode",
+    "type": "select",
+    "options": ["none", "partial", "full"],
+    "default": "partial",
+    "description": "Player access level: none (no API), partial (use/list/menu/recover), or full (all char-scoped verbs)."
+  },
+  {
+    "name": "autospend",
+    "type": "checkbox",
+    "value": "true",
+    "checked": "checked",
+    "description": "Automatically spend mapped resources on real sheet rolls."
+  },
+  {
+    "name": "recover_break",
+    "type": "number",
+    "default": "2",
+    "description": "Default break chance (0–100) for !res recover."
+  }
+  ],
+    "dependencies": [],
+    "optional": ["ScriptCards"],
+    "modifies": {
+    "state.ResourceTracker": "read,write",
+
+    "graphic.represents": "read",
+    "character.controlledby": "read",
+
+    "token.bar1_link": "read",
+    "token.bar2_link": "read",
+    "token.bar3_link": "read",
+
+    "token.bar1_value": "write",
+    "token.bar1_max":   "write",
+    "token.bar2_value": "write",
+    "token.bar2_max":   "write",
+    "token.bar3_value": "write",
+    "token.bar3_max":   "write",
+
+    "attribute.current": "write",
+    "attribute.max":     "write"
+  },
+    "conflicts": []
+}
