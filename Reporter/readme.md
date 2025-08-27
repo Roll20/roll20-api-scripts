@@ -13,7 +13,7 @@ Queries are constructed using
 
 `t|attribute` to poll a token attribute
 
-`c|attribute` to poll a character sheet attribute
+`c|attribute` to poll a character sheet attribute. . To get the Max value of an attribute, use the format: `c|attribute,max`
 
 **Examples**
 
