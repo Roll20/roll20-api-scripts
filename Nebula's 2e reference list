@@ -1,0 +1,960 @@
+// 2eNebulaRef Script
+// Version: 1.0
+// Author: Nebula
+// License: MIT
+// Description: Adds haunts commands like !hauntXXXX and !searchhaunts to Roll20.
+
+// === Quick Reference Dictionary ===
+// Type !termXXXX to get the associated text back in chat
+//   !tiltarmwrack -> Returns arm wrack Tilt description
+//   !conaddicted  -> Returns addicted Condition description
+//   !tiltlist     -> Lists all Tilts
+//   !conlist      -> Lists all Conditions
+//   !hauntdescent -> Returns Descent block from book
+//   !hauntlist    -> Lists all Haunts.
+// Requires Roll20 Pro (API access)
+
+
+on('ready', function() {
+    log("Loading NEB2e Script...");
+
+
+const dictionary = {
+    //Personal Tilts
+    "!tiltarmwrack": `Your arm has been incapacitated by pain or injury.`,
+    "!tiltbeatendown": `Your will or capacity to keep fighting has been exhausted.`,
+    "!tiltbleeding": `You're weakening from bleeding out.`,
+    "!tiltblind": `Your vision has been impaired or stripped.`,
+    "!tiltburning": `You're on fire. You quickly amass lethal damage because fire bad.`,
+    "!tiltcameprepared": `You know where an opening is and knows best when to exploit it.`,
+    "!tiltdeafened": `Your hearing has been impaired or stripped.`,
+    "!tiltdrugged": `You're suffering the numbing mental and physical effects of a narcotic.`,
+    "!tiltimmobilized": `You're restrained or held in place, incapacitating you and leaving you open.`,
+    "!tiltinsane": `A panic attack or severe psychotic break provokes extreme, irrational behavior.`,
+    "!tiltinsensate": `You've been overwhelmed and psychically incapacitated, leaving you open.`,
+    "!tiltknockeddown": `You've been swept to the ground, disrupting your action and forcing you prone.`,
+    "!tiltlegwrack": `Your leg has been severely weakened or incapacitated by pain or injury.`,
+    "!tiltpiercedarmor": `Your armor has been damaged or ruptured.`,
+    "!tiltpinned": `Your flesh or clothes have been pinned to an object, holding you in place.`,
+    "!tiltpoisoned": `You're being harmed by a fast-acting toxin.`,
+    "!tiltsick": `You're impaired and weakened by disease.`,
+    "!tiltstunned": `You're dazed and briefly incapacitated.`,
+    "!tiltfleshtoosolid": `You're so immersed in dream that you take physical instead of dream damage.`,
+    "!tiltnimbus": `You're subject to a mage's unique Immediate Nimbus, imposing a resonance that applies dice modifiers to certain Attributes or dice tricks to certain Skills.`,
+
+    //Environmental Tilts
+    "!tiltavalanche": `Tumbling hazards buffet you along and quickly inflict lethal damage.`,
+    "!tiltblazinglight": `Eye-searing brightness impairs vision.`,
+    "!tiltblizzard": `Thick snowfall impairs vision and movement.`,
+    "!tiltcrowded": `Bodies press in on all sides, missed attacks have a chance to hit others.`,
+    "!tiltcrowdedtactic": `Like above more but in public, with folk with Phones.`,
+    "!tiltdetritus": `Sharp and jagged ground, move slow or fall over and get cut up by the Ground.`,
+    "!tiltearthquake": `Brief physical havoc quickly inflicts lethal damage, or bashing on a successful Stamina + Athletics roll.`,
+    "!tiltextremecold": `Frostbite conditions disrupt natural healing and gradually accrue action penalties and lethal damage.`,
+    "!tiltextremeheat": `Sweltering, dry conditions disrupt natural healing and gradually accrue action penalties and lethal damage.`,
+    "!tiltdrowning": `You're submerged and quickly accrue bashing damage from suffocation.`,
+    "!tiltfilth": `Stratified filth covers the ground, gain the sick Tilt if Wounded.`,
+    "!tiltflooded": `High water levels disrupt movement or submerge those present.`,
+    "!tiltheavyrain": `Severe storm weather impairs vision and hearing.`,
+    "!tiltheavywinds": `Hurricanes winds impair hearing and movement, and threaten bashing damage from debris.`,
+    "!tiltice": `Slick footing strips traction and endangers movement.`,
+    "!tiltinferno": `Shit's on fire. You might choke if you don't burn up first.`,
+    "!tiltmovingterrain": `The ground is moving and shaking, making it hard to stand or act. Often used for Vehicles.`,
+    "!tiltpoorlight": `Darkness impairs vision.`,
+    "!tiltriot": `Unpredictable violence erupts, and jostling and trampling poses a risk of bashing damage.`,
+    "!tiltswarm": `A horde of small but hostile creatures inflicts bashing damage each turn, and resists attacks that don't saturate an area.`,
+    "!tilttightspace": `Hard to properly fight, good luck using anything larger than a shotgun.`,
+    "!tiltunstableterrain": `The ground could give away at any moment, don't put too much pressure on it, or you might have quite the drop.`,
+    "!tilturbancollapse": `The building is coming down, and characters may fall, be struck, or be crushed and trapped.`,
+    "!tiltviscous": `Passage through the area is difficult, requiring successful rolls to make progress through it.`,
+
+    //Supernatural Tilts
+    "!tiltboneyard": `A Sin-Eater haunts this place, bringing it to life and aware.`,
+    "!tiltlair": `You're exposed to the particular ruining conditions of a primordial Beast's Lair.`,
+    "!tiltlightning": `A supernaturally conjured storm which seeks victims.`,
+    "!tiltomen": `Unnatural plague weather sears flesh or boils blood.`,
+    "!tiltshatteredtime": `Time is injured here, causing causal slants and random modifiers to appropriate derived traits.`,
+    "!tiltzombies": `There are too many zombies to wade through. Lose your Speed Factor bonus. Each turn in the horde not running at full tilt provokes an attack from the horde.`,
+
+    //Conditions
+    "!conaddicted": `Your character is addicted to something, such as a substance or destructive behavior.`,
+    "!conaddled": `Your memories are jumbled and confused.`,
+    "!conagoraphobic": `You avoid open spaces and crowds.`,
+    "!conamnesia": `You've lost a large swath of memory.`,
+    "!conapprehensive": `Your character is convinced something bad is about to happen to them.`,
+    "!conavarice": `Your lust for wealth and/or power is insatiable.`,
+    "!conbroken": `Your will is broken and you back down from everything.`,
+    "!concaptivated": `You're heavily preoccupied with something and can't split your attention.`,
+    "!concompetitive": `You are driven to assert your dominance and superiority.`,
+    "!conconfused": `You can't think straight.`,
+    "!concowed": `Someone has weakened you through a display of dominance.`,
+    "!condelusional": `Paranoid delusions dominate your behavior.`,
+    "!condemoralized": `Failure dampens your fighting initiative.`,
+    "!condeprived": `You're weakened by an unfed addiction.`,
+    "!condetached": `You've run with occult circles for so long you've forgotten how to interact with humans.`,
+    "!condisoriented": `You've lost equilibrium and need an opportunity to recenter.`,
+    "!condissociation": `Surreality plagues you with doubts of your own experiences.`,
+    "!condistracted": `You're buffeted from all sides, splitting your attention terribly.`,
+    "!condoubtful": `You've lost confidence in all but your most secure actions.`,
+    "!conemboldened": `An uninhibited atmosphere makes you impulsive and prone to temptation.`,
+    "!confaith": `Your trust in the next world can be exploited by angelic forces.`,
+    "!confirsttrimester": `You experience flulike symptoms and vivid dreams that are signs of early pregnancy.`,
+    "!consecondtrimester": `You feel more creative, but worry as something grows within you.`,
+    "!conthirdtrimester": `Your body and brain prepare for giving birth, enhancing perception but causing distraction.`,
+    "!confixated": `You are intently focused on a single thought or command.`,
+    "!confrightened": `You're terrified and moved to panic and flee.`,
+    "!confugue": `You've shied away from trauma by shutting out the experience.`,
+    "!conguilty": `Feelings of remorse leave you emotionally vulnerable.`,
+    "!coninformed": `You're equipped to tackle a given subject.`,
+    "!coninspired": `The spirit moves you to confident action.`,
+    "!conlost": `You've lost your sense of place and need to reorient.`,
+    "!conlosttracker": `Frustrations in the hunt leave your tracking skills sloppy and halfhearted.`,
+    "!conmadness": `Unnatural horror has shattered your ability to process life.`,
+    "!conoblivious": `You are absent-minded, not paying attention to things going on around you.`,
+    "!conobsession": `Something controls your attention and distracts from all else.`,
+    "!conparanoid": `Supernatural fear diminishes your ability to trust and depend on others.`,
+    "!conreckless": `You are incapable of considering the consequences of your actions.`,
+    "!conscarred": `You have been left psychologically scarred after being violently bitten by a vampire.`,
+    "!conshaken": `You're shocked or defrayed, unsteadying your hand.`,
+    "!consleepwalking": `Sleep and wakefulness blur, and you suffer from lost time and poor recollection.`,
+    "!conspooked": `Otherworldly wonder moves you unwisely.`,
+    "!consteadfast": `Your resolve to act is steeled and ready.`,
+    "!constoic": `Distance and emotional guard ease lies, but inhibit perspective and passion.`,
+    "!constrained": `You've held back the shock of witnessing supernatural sorcery, but the pressure remains.`,
+    "!conswooned": `You're charmed or bedazzled by a particular person.`,
+    "!conviolent": `Violence is second nature to you, causing you to lash out at others.`,
+    "!conwanton": `You are easily given to bouts of excessive indulgence.`,
+    "!conwithdrawn": `Doubt and insecurity drive you inward, sapping the will to action.`,
+    
+    //Phys Cons
+    "!conagonized": `You suffer extreme pain and are unable to think clearly.`,
+    "!conarmdisability": `At least one arm is either chronically or permanently nonfunctional.`,
+    "!conblind": `You've lost or can't exercise your sense of sight.`,
+    "!conchronicagony": `You're vulnerable to incapacitating pain spells.`,
+    "!conchronicsickness": `Sickness or poison lingers in you, aggravated by stress.`,
+    "!condeaf": `Your hearing is severely impaired.`,
+    "!condisabled": `You can't effectively walk on your own power.`,
+    "!condrained": `You're weak and woozy from blood loss.`,
+    "!coneasyprey": `You've left a strong trail for a hunter to follow and exploit.`,
+    "!conenergized": `A chemically induced rush.`,
+    "!conexhausted": `You've run ragged on the edge of unconsciousness.`,
+    "!confatigued": `You've pushed yourself too far, and your fatigue hangs over you constantly.`,
+    "!conpfragile": `You're using equipment not sturdy enough to endure continued use.`,
+    "!conintoxicated": `Your discretion is dulled by altered consciousness.`,
+    "!coninvisiblepredator": `You've skulked on the hunt, leaving nary a trace of your approach.`,
+    "!conlegdisability": `At least one leg is either chronically or permanently nonfunctional.`,
+    "!conlethargic": `Fatigue tires you so heavily you cannot muster Willpower.`,
+    "!conmute": `You cannot speak or use your voice.`,
+    "!connumb": `Detachment from the world dulls the feeling in your body.`,
+    "!consickly": `Disease is making its way through your system.`,
+    "!constumbled": `A complication has arisen to interrupt an ongoing project.`,
+    "!conuntraceable": `You've thoroughly covered any trail a hunter might use to find you.`,
+    "!convolatile": `You're using unstable equipment prone to backfiring.`,
+    
+    //Social Cons
+    "!conbonded": `You've established trust with a particular animal.`,
+    "!conconnected": `You've made inroads with a particular group of people.`,
+    "!conembarrassingsecret": `There are skeletons in your closet to exploit.`,
+    "!conflagged": `Something has alerted the location's security, and they're on your trail.`,
+    "!conhunted": `Dangerous enemies have your trail.`,
+    "!conleveraged": `A particular character is holding something over your head to compel you.`,
+    "!connotoriety": `Odius blame follows you, whether true or not.`,
+    
+    //Gensupernat Cons
+    "!conaccursedknowledge": `You have acquired forbidden knowledge, trading sanity for power.`,
+    "!condissonanttuning": `Your soul resonates with the Lie, amplifying its effects on Supernal phenomena.`,
+    "!condormantsovereign": `The Mummy watching over your cult has difficulty awakening due to challenges faced in Duat.`,
+    "!conemanation": `The oppressive presence of one of the Judges of Duat, centered upon a focal vessel.`,
+    "!conenervated": `You are in the second stage of soul loss, further diminishing your will.`,
+    "!confamilyties": `You've united your power in concert with a Primordial Beast.`,
+    "!congoblinqueen": `Your fractured goblin nature has stranded you in the Hedge and attracted followers.`,
+    "!congoingwestward": `Your nature as an immortal has buckled, and the debility of age encroaches.`,
+    "!conhedgedenizen": `Dealings with goblins have made you a goblin yourself, with limited ability to leave the Hedge.`,
+    "!conidentitycrisis": `Your identity and memories have become intertwined with those of others, leaving you unsure of who you really are.`,
+    "!conmonstrousservant": `You have managed to gain control of a Geryo for a period.`,
+    "!conominous": `Your presence is marked by phantasms and ill omens.`,
+    "!consibylstongue": `Supernatural revelations can only be shared in High Speech, or by spending Willpower, through riddles or allegory.`,
+    "!consoulshocked": `Your sense of self is healing after experiencing death outside the body.`,
+    "!consoulless": `Your soul has been stripped from you, gradually sapping your will.`,
+    "!conthrall": `You have succumbed to the effects of soullessness, a mere shell of who you once were.`,
+    "!conunintendedmedium": `A lingering ghost or spirit is able to subject you to harrowing visions.`,
+
+    //Shows of Power cons
+    "!conabruption": `Your supernatural prowess is severely hobbled by a dominant outside force.`,
+    "!conawestruck": `You are cowed by the visage of the figure before you, forcing you to grovel.`,
+    "!conberserk": `Supernatural influence drives you to unthinking violence.`,
+    "!conbestial": `Supernatural urges provoke animalistic fight-or-flight instincts.`,
+    "!conbloodsiblings": `Your fate has been bound by obligation to aid another, regardless of your will.`,
+    "!concharmed": `You're temporarily bewitched by vampiric Majesty.`,
+    "!concharmedluck": `You benefit from a blessing of luck and turns of fortune.`,
+    "!concoerced": `You've been coerced by a Devotion to do a task or suffer damage.`,
+    "!concrown": `You have become a vessel to focus the will and power of one of the Judges of Duat.`,
+    "!concursed": `A supernatural curse dooms your efforts in a given field.`,
+    "!condeaddreamer": `Prophetic and terrifying dreams guide you towards a specific task.`,
+    "!condespondent": `Dire Wolf's aura causes you to lose hope and fight with minimal effort.`,
+    "!condominated": `A vampire has temporarily stolen your will with a given command.`,
+    "!conenslaved": `A vampire has you well helplessly in her thrall.`,
+    "!conenscrolled": `You've fallen in thrall to a supernatural being.`,
+    "!conenthralled": `A vampire has bewitched you with a fanatical devotion to him.`,
+    "!coneuphoric": `Rabid Wolf's aura maddens you into fighting only for the werewolf's sport.`,
+    "!confalsememories": `Supernatural forces have overwritten your memories of an event.`,
+    "!confrantic": `Rabid Wolf's aura panics you into using your energy meaninglessly.`,
+    "!conghostmarked": `Supernatural power has transformed your body with a mark of death.`,
+    "!conimpassionedshade": `Infusion of a mission which preserves an ephemeral entity in Twilight.`,
+    "!coninstinctive": `Dire Wolf's aura reduces your thought to its basest instincts.`,
+    "!conisolated": `The Elodoth aura has drawn you out, away from allies.`,
+    "!conlured": `Hunting magic draws you to blindly wander into a likely trap.`,
+    "!conmanic": `Supernatural power has made you focused and obsessive to the point of over-exertion.`,
+    "!conmelancholic": `Supernatural power has made you melancholic. You struggle to do even minor tasks.`,
+    "!conmesmerized": `You're temporarily vulnerable to a vampire's commands.`,
+    "!conmoontaint": `A werewolf's bite brings the change upon you against your will.`,
+    "!conmystified": `The Ithaeur aura shies you away from the opposite side of the Gauntlet.`,
+    "!conravaged": `Fae predation has scarred your heart and mind, leaving you a ghost of your former self.`,
+    "!conrelentless": `Your instincts drive you inexorably in the direction of your quarry.`,
+    "!conresigned": `The Cahalith aura goads you into facing death recklessly.`,
+    "!conshadowparanoia": `Supernatural fear builds into a violent, irrational panic.`,
+    "!consubservient": `A vampire is temporarily pressing down on your will to resist.`,
+    "!consurrounded": `Silver Wolf's aura deludes others into conspiracy against you.`,
+    "!conswaggering": `The Rahu aura lulls you into overlooking the need for preparation or aid.`,
+    "!conunaware": `The Irraka aura reduces your attention to the world around you.`,
+    "!convocalization": `You've been cursed with harrowing sounds and voices.`,
+    "!conwracked": `Silver Wolf's aura afflicts you with unceasing pain.`,
+    
+    //blood fuckers, i mean suckers. Damn it.
+    // Kindred Conditions
+    "!condependent": `You're obsessed with a vessel you've fed from, as if suffering a second-stage Vinculum.`,
+    "!conecstatic": `Blood sorcery has pleased the Beast's appetites.`,
+    "!conhumbled": `Your will as a monster shrinks from divine judgment.`,
+    "!conjaded": `Your detachment from the concerns of Humanity baits out the Beast.`,
+    "!conlanguid": `The loss of worldly Touchstones has you feeling the weight of ages and the call of torpor.`,
+    "!conoathbreaker": `You suffer censure from the Invictus for breaking a blood oath.`,
+    "!conprimevaltruths": `Occult revelations disgust you until you face them down.`,
+    "!conraptured": `Religious fervor makes riding the wave easier.`,
+    "!consated": `The Beast is appeased enough to make frenzy less threatening.`,
+    "!containted": `A soul consumed through diablerie still struggles from within you.`,
+    "!contempted": `Resisting a frenzy has tested your will to resist the next.`,
+
+    // Elder Conditions
+    "!conanchoredheart": `You are deeply invested in a particular mortal.`,
+    "!conbeastsbargain": `You feed at any available safe opportunity, placating your inner Beast.`,
+    "!conbelovedenemy": `You have a nemesis whom you can't bring yourself to kill.`,
+    "!conchildrenoftheblood": `A revenant of your creation haunts your steps.`,
+    "!concrushed": `The incredible weight of centuries bears down upon you.`,
+    "!concurated": `You possess a communal ghoul as part of a bargain.`,
+    "!conforgotten": `Your solitude has estranged you from those you know, who now find it difficult and require much effort to remember or even recognize you.`,
+    "!conimmutableheart": `You are fully invested in a particular mortal institute or way of life.`,
+    "!conimprisonedecho": `Your Ka is temporarily trapped within a mirror.`,
+    "!conleveraged": `Your ghoul is a dedicated servant, but knows your deepest secrets, and leverages this fact to demand certain favors and concessions.`,
+    "!conlivinglegend": `You are immortalized in a popular piece of vampire "fiction", to the consternation of your fellow Kindred.`,
+    "!conlostlineage": `You hail from a clan or bloodline that has long since been lost to the ages.`,
+    "!conquietecho": `Your Ka is calmed, able to walk outside its usual confined without drawing attention.`,
+    "!consynchronized": `You have drunk too deeply from your victim, taking their injuries and conditions upon yourself.`,
+    "!convitaesresoluteness": `Your addiction to vitae lessens the effect of Languid, so long as your addiction is fed.`,
+    "!conweakvitae": `Your vitae has thinned to the point you can no longer create a new vampire; any attempts only produces a revenant.`,
+
+    // Danse Macabre Conditions
+    "!conaudience": `There are eavesdroppers and witnesses to your exchange.`,
+    "!concrowddarling": `You have charmed the audience to your side.`,
+    "!condansemacabre": `You are being observed by the upper echelons of vampire society.`,
+    "!condisgraced": `You have fallen from grace, and face existence as a pariah.`,
+    
+    //furry conditions
+    //// Uratha Conditions
+    "!conban": `You are compelled to obey one of the taboos of the Shadow.`,
+    "!conessenceoverload": `The imbalance of your bodily Essence has tied its loss to injury.`,
+    "!conshadowlashed": `Errors on a Rite have invited the disdain of the spirit world.`,
+    "!consiskurdah": `You are empowered by the Sacred Hunt to bring a chosen prey low.`,
+    "!consymbolicfocus": `The power of a Rite still flows through you, enhancing spirit displays.`,
+
+    // Lunacy Conditions
+    "!conatavism": `The Lunacy stirs you into unreasoning violence.`,
+    "!condelusion": `The Lunacy drives you into unthinking retreat.`,
+    "!conenraptured": `An abnormal response to Lunacy stirs you to worship.`,
+    "!conreception": `The Lunacy leaves you unwittingly open to the spirit world.`,
+
+    // Renown Conditions
+    "!concunning": `Your Cunning waxes in a display that invites response.`,
+    "!conglorious": `Your Glory waxes in a display that invites response.`,
+    "!conhonorable": `Your Honor waxes in a display that invites response.`,
+    "!conpure": `Your Purity waxes in a display that invites response.`,
+    "!conwise": `Your Wisdom waxes in a display that invites response.`,
+    
+    //Jinx Flingers. Alister cuff my beloved
+    // Awakened Conditions
+    "!condefeated": `A rival has won magical advantage over you in the Duel Arcane.`,
+    "!condegeneratemana": `You can no longer regenerate mana without performing an Act of Hubris.`,
+    "!conmagehumbled": `Someone stands to you as a valuable reminder of the power of humanity.`,
+    "!conmagehunter": `You are obsessed with hunting and destroying magic in all its forms.`,
+    "!conmegalomaniacal": `You are blinded by hubris.`,
+    "!conmysterycommands": `You receive the arcane will of the Exarchs.`,
+    "!conrampant": `Your spellcasting is ruled by a cavalier, reckless attitude.`,
+    "!consupernalharrowing": `Your soul has been contaminated by a Harrowed Banisher.`,
+    "!containtedaspiration": `One or more of your Aspirations have been tainted by an Abyssal curse.`,
+    "!contriumphant": `You carry your victory in the Dual Arcane with you in Awakened society.`,
+
+    // Paradox Conditions
+    "!conabyssalbacklash": `A Paradox casts a shadow over you, threatening to break through on the next spell that gives it an opening.`,
+    "!conabyssaldebilitation": `You are hampered as a result of exposing your soul to the Abyss.`,
+    "!conabyssalimago": `A Paradox intrudes upon the spells you envision, compelling dangerous Reach.`,
+    "!conabyssalnimbus": `A Paradox has leaked across your Nimbus and invites Abyssal manifestations.`,
+    "!conmonster": `A Paradox has mutated an animal into a miserable, fearsome nemesis.`,
+    "!conunclean": `A Paradox has turned your magical tools and methods against you.`,
+    
+    //Pretty much a zombie
+    // Created Conditions
+    "!conbrandedthrong": `Your bond with your throng allows Pyros to flow, and its balance dampens the destructive aspect of your Azoth.`,
+    "!condisconnected": `Frustration in your Pilgrimage causes you to shrink from human interaction.`,
+    "!contormented": `Pain and suffering have severely imbalanced your alchemical humours.`,
+
+    // Disquiet Conditions
+    "!condisquieted": `A Promethean’s presence increasingly distracts and overwhelms you over progressive stages.`,
+    "!conmurderous": `Pandoran Disquiet taints your instincts with predatory violence.`,
+    "!constricken": `Pandoran Disquiet infests you with horror and fright.`,
+    "!conterrified": `Pandoran Disquiet whips you into panicked retreat.`,
+
+    // Refinement Conditions
+    "!conanalyst": `The Refinement of Impurity. Exploiting a Vice when Social Maneuvering is twice as effective.`,
+    "!condestructive": `The Refinement of Flux. Spend Pyros to ignore Durability or Armor equal to your Azoth.`,
+    "!conenraged": `The Refinement of Torment. Recover Pyros from your Torment Anchor.`,
+    "!conintense": `The Refinement of Ephemera. Spend Pyros to open a Door at the cost of Disquiet.`,
+    "!conintrospective": `The Refinement of Source. Suffer bashing damage to squeeze out a point of Pyros as an instant action.`,
+    "!conmasked": `The Refinement of Mortality. Spend Pyros to delay the onset of Disquiet.`,
+    "!conpatient": `The Refinement of Self. Spend Pyros to raise your Azoth in Doors.`,
+    "!conresourceful": `The Refinement of Pyros. Spend Pyros to increase a tool’s equipment bonus temporarily.`,
+    "!consensitive": `The Refinement of Mystery. Spend Pyros to identify the supernatural.`,
+    "!contenacious": `The Refinement of Corpus. Spend Pyros to increase the number of rolls you can commit to an extended action.`,
+    "!conturnedIn": `The Refinement of Aid. Spend Pyros to sense the way to your throngmates.`,
+
+    // Transmutation Complications
+    "!conalienated": `The charge of Deception has distanced you from your fellow Prometheans.`,
+    "!conatavistic": `The charge of Metamorphosis has overwhelmed your composure.`,
+    "!conburnout": `The charge of Vulcanus has painfully overstocked your inner fire.`,
+    "!concallous": `The charge of Mesmerism has sapped your empathy.`,
+    "!condegaussed": `The charge of Electrification disrupts local electromagnetics.`,
+    "!conephemeralanchor": `The charge of Spiritus invites ephemeral activity around you.`,
+    "!confavelledvessel": `The charge of Alchemicus interferes with your ability to channel Pyros.`,
+    "!confragile": `The charge of Contamination has weakened your body.`,
+    "!congreedybrand": `The charge of Benefice draws out and wastes throngmates' Pyros.`,
+    "!conhyperextended": `The charge of Vitality overtaxes your body’s abilities.`,
+    "!conirritable": `The charge of Disquietism saps your self-control.`,
+    "!conkinesthesia": `The charge of Corporem interferes with abstract thought.`,
+    "!conpreckless": `The charge of Luciferius renders you un-cautious and impulsive.`,
+    "!conregressive": `The charge of Saturninus pulls your grip on human motives and behavior.`,
+    "!consynesthesia": `The charge of Sensorium overwhelms your ability to distinguish sensory input.`,
+    
+    //Ghostbusters! who ya gonna call
+    // Bound Conditions
+    "!conbonding": `Your relationship with your geist benefits from weathering a crisis point.`,
+    "!condead": `Your body lies dead, unleashing your geist.`,
+    "!condefiant": `You’ve broken the Old Laws, and their keeper knows it.`,
+    "!conechoes": `Your geist’s Remembrance Traits jumble in your mind.`,
+    "!conferrybound": `You may navigate passengers across the Underworld’s rivers so long as you collect the proper price.`,
+    "!conflatlining": `Your Synergy has been broken, and your geist rebels.`,
+    "!confragmented": `Dead waters have washed away your definition and identity.`,
+    "!conindebted": `Neglecting a Touchstone has uncentered you spiritually.`,
+    "!conlawbreaker": `A Dominion spites and curses you for breaking the Old Laws.`,
+    "!conmementocollector": `Other Sin-Eaters are impressed!`,
+    "!conmemorybleed": `Your identity begins to blur with that of your non-personal Memories.`,
+    "!conregalia": `A krewe has bestowed you with a special crown blessing.`,
+    "!contheophany": `The confidence and celebration of a krewe that has changed the world.`,
+    "!conunleashed": `The geist materializes, temporarily unmoored from its Bound.`,
+    "!conwavering": `You have offended your geist and it demands recompense before it will cooperate.`,
+    "!conweakenedbond": `Unleashing your geist has temporarily displaced your power.`,
+
+    // Haunt Conditions
+    "!conactor": `You have been bound to participate in a ghostly recapitulation of events.`,
+    "!conboneyard": `The Bound’s consciousness haunts the location, seeping awareness into every corner and object.`,
+    "!concaul": `You’ve invited your geist into your flesh to transform your shape.`,
+    "!concurse": `A Sin-Eater haunts you with cursed fortune.`,
+    "!condirge": `The song of the Bound moves you and impels you.`,
+    "!conmarionette": `You are strung by the Plasm of a manipulative Bound.`,
+    "!conmaw": `You’ve become an uncontrollable nexus for the Underworld’s endless hunger.`,
+    "!conmemoria": `Memories of death and the dead play out in visions.`,
+    "!conoracle": `You have left your body to seek answers as a spectral traveller.`,  
+    "!conrage": `You wield ghostly malice to smite your foes.`,
+    "!conservant": `An engine of Plasm controls your body.`,
+    "!conshroud": `Your body interweaves with your geist, ghostly and gauzy.`,
+    "!contomb": `You have molded memories of something lost into a perfect replica.`,
+    "!convoid": `You have opened the wake of a black and hungry nothingness.`,
+    "!convoidstorm": `The Underworld’s hunger reaches through you to sap energy from the world.`,
+    "!conwell": `Your self and memories flow like the dead rivers.`,
+    
+    //I am not doing hunter smh, smd.
+    // Bondage is love, Wraps are life
+    // Arisen Conditions
+    "!condisembodied": `You walk as a ghost through Twilight.`,
+    "!condisinterned": `Your tomb has been ransacked or ruined.`,
+    "!conforgottenskill": `Buried expertise waits to be unearthed from within your memory.`,
+    "!conmemorybleed": `You have fused into the soul of another, and your identities blur together.`,
+
+    // Cult Conditions
+    "!coneffortless": `Your cult produces greater results in its efforts.`,
+    "!confarreaching": `Your cult has made successful inroads with important figures.`,
+    "!conhaphazard": `Your cult is disorganized, reducing their effectiveness.`,
+    "!conheresy": `Your cult has been infiltrated by a contradictory, potentially blasphemous belief.`,
+    "!conirongrasp": `Your grip on your cult is absolute.`,
+    "!conisolated": `Your cult is insular, even going so far as to reject outside assistance.`,
+    "!conmismanaged": `Your cult's effectiveness is stymied by ineffective elements within it.`,
+    "!conshakenfaith": `The cult's resolve is shaken, questioning its leadership or doctrines.`,
+    "!conzealous": `Your cult is more dedicated to its mission than most, operating more effectively.`,
+
+    // Sybaris Conditions
+    "!conuneasesybaris": `Stage one. Dread unsettles you without a supernatural power to turn to.`,
+    "!conterrorsybaris": `Stage two. Contact with a mummy seizes you with fear.`,
+    "!condesecrationsybaris": `Stage three. Unholy terror invites the will of Duat.`,
+
+    // Rewards and Punishments of Duat
+    "!conaccelerateddescent": `Duat pulls more eagerly at your Sekhem.`,
+    "!conauspiciousdescent": `Your Sekhem weathers the Descent longer.`,
+    "!conblessedminions": `Your cultists are inspired by your accomplishments.`,
+    "!condamagedpillar": `You cannot draw power from one of the Pillars of your soul.`,
+    "!condevouringurge": `Amnutt the Devourer speaks to you, and only sacrifice will buy her silence.`,
+    "!condriven": `Your surety in your ambition is a great well of strength.`,
+    "!conechoesofscent": `Your clarity and Memory lift up the power of your soul.`,
+    "!congeometricalignment": `Sekhem's flow preserves your tomb from disruption.`,
+    "!congracefuldescent": `Your overflowing Sekhem staves off your Descent.`,
+    "!conluminouspillars": `Your soul shines strong and resists depletion.`,
+    "!conmegalomaniacal": `Your failures in the trials of Duat have left you with cold, single-minded focus.`,
+    "!conprecipitousdescent": `The Descent wears down your Sekhem more quickly.`,
+    "!conrepression": `Your failures in the trials of Duat have hollowed out portions of your knowledge.`,
+
+    // Timeless Conditions
+    "!conalternativecurrent": `Time around you is taking a divergent current.`,
+    "!condejavu": `You stand where different currents of possibility converge on a single event.`,
+    "!coneddy": `You wade through sluggish waters which can be outpaced.`,
+    "!conmirage": `You recognize patterns in the tides which echo past and future events.`,
+    "!conrip": `You can take precise stock from your position amid rapid timetables.`,
+    "!conwhirlpool": `Caught in a swirl of recurring events, you can grab hold of casual fixtures.`,
+    
+    //Edgelords or gooners, no in-between i swear
+    // Unchained Conditions
+    "!conaethericbleed": `Exertion in demonic form has you releasing accumulated Aether.`,
+    "!conbetrayed": `Someone you trusted has sided with the God-Machine against you.`,
+    "!conblackballed": `The heat you've drawn makes you a liability for nearby demons.`,
+    "!conblown": `One of your Covers is useless, and the God-Machine is now actively targeting it.`,
+    "!conburncoded": `You have been infected with malware, compromising your Cover.`,
+    "!condemonicdisconnect": `You've failed to maintain human empathy while in your demonic form.`,
+    "!condemonicrage": `Pain and frustration suffered in demonic form provoke frenzied violence.`,
+    "!conflagged": `The agents of the God-Machine have their attentions directed your way.`,
+    "!conhunted": `Your actions have alerted the God-Machine to your presence.`,
+    "!conimplanted": `You have a weird gadget implanted in your body and this is not normal.`,
+    "!conimpostor": `You've let the lies of Legend pile up.`,
+    "!conmemoryhole": `Errors in god-hacking have disrupted your access to a particular Skill.`,
+    "!conoffthemachine": `The demon has god-hacked to disguise her fallen nature within a project.`,
+    "!conoverclocked": `You've stored more Aether than your body can normally process at once, and must soon vent the excess.`,
+    "!conphantompain": `Your focus is disrupted by the gnawing feeling of a missing demonic form ability.`,
+    "!conpluggedin": `You've jacked an angel's Cover, and the God-Machine is watching you as if you were that angel.`,
+    "!consurveilled": `Agents of the God-Machine are compiling intelligence to identify you.`,
+
+    // Agenda Conditions
+    "!conangelempathy": `The Integrator Agenda. Resolve to understand and exploit the angelic mindset.`,
+    "!conaneyefordisorder": `The Saboteur Agenda. Resolve to intuit the best course of action to upend a system into chaos.`,  
+    "!coniknowsomeone": `The Tempter Agenda. Resolve to make the right connections to fit in anywhere.`,
+    "!conpreparedforanything": `The Inquisitor Agenda. Resolve to make an instant logical connection or breakthrough.`,
+    "!conuncalled": `You are not a member of any Agenda.`,
+
+    // Demon-Blooded Conditions
+    "!conactivated": `The God-Machine has broken your Cipher. You have four Key Embeds and three Interlocks, but once per session, the God-Machine may act through you.`,
+    "!concatalogued": `The God-Machine is probing your Cipher. You have two Key Embeds and an Interlock, but the God-Machine is watching your status.`,
+    "!conexamined": `The God-Machine has accessed your Cipher. You have three Key Embeds and two Interlocks, but you're scrutinized enough to pose demons a risk of compromise through you.`,
+    "!connoted": `The God-Machine is looking for your Cipher. You have one Key Embed.`,
+    
+    ///////////////////////////////////////////////////////////////////////
+    
+    //HAUNTS BITCHES! BOO
+    
+    //boneyard
+    "!hauntraisetheboneyard": `Cost: 1–3 Plasm (see Area)
+Area: Determined by Plasm spent:
+1 Plasm — Several rooms, or a single floor of a house
+2 Plasm — A ballroom or small house
+3 Plasm — A large house or building
+
+Action: Instant to infuse environment; contested by Composure + Synergy to influence targets within the Boneyard; contested by Synergy + Boneyard to seize control of another Sin-Eater’s Boneyard.
+Dice Pool: Synergy + Boneyard
+
+Roll Results:
+  Success — The area becomes infused with the Sin-Eater’s consciousness per point of Plasm spent, giving it the Boneyard Environmental Tilt. While the Boneyard exists, the Sin-Eater may roll Synergy + Boneyard contested by Composure + Synergy to impose the Guilty, Shaken, or Spooked Condition on a target within the Boneyard.
+  Exceptional — When the Haunt ends without resolving, the Sin-Eater regains half the Plasm spent on Raise the Boneyard.
+  Failure — The Sin-Eater fails to establish their domain.
+  Dramatic — The Sin-Eater invests too much of themselves within the Boneyard and binds themselves to it. They gain the Lost Condition for the rest of the chapter whenever navigating anywhere but back to the place they tried to create the Boneyard.`,
+
+    
+    
+    
+    "!haunteyesinthepaintings": `The Sin-Eater can project her awareness to any point within the Boneyard, allowing her to listen, look, or even taste the situation as if she were there herself. She can place her perceptions in places her physical form could never reach or fit into, like the eyes of a painting hanging high above a fireplace.
+
+This extrasensory perception leaves a telltale sign of the Sin-Eater’s presence, such as ripples in water. In a Boneyard unlocked with the Primeval Key, bird or insect song may accompany her awareness, while with the Sanguine Key, electronic voice phenomena of her voice may occur.
+
+Prying Eye’s Boneyard focuses on reinforcing and strengthening the Boneyard through the infusion of Plasm, allowing it to spread and refining the Sin-Eater’s ability to sense those moving through it.
+
+Enhancements:
+  1 Plasm — Transfer perception to any location within the Boneyard, experiencing all senses as if physically present. Returning perception to the body costs no Plasm. This Enhancement may be applied more than once.`,
+  
+ 
+ 
+"!hauntnoescape": `The Boneyard is vast and inescapable. The environment becomes infused with the same will as its master, preventing those that have entered the Boneyard from escaping again. Doors made from flimsy particle board stand up to the strength of professional athletes. Hallways that once led to exits lead back to the rooms from which the victim just fled. Power lines tear themselves free and fall across footpaths while trees uproot, blocking entire roads to the outside world. Boneyards created with the Pyreflame Key may fill with phantasmal infernos that drive their victims back from exits while those created with the Primordial Key may find any attempt to leave the house defeated by a vicious murder of crows.
+
+Enhancements
+Free: The Sin-Eater may spend up to 5 Plasm on Raise the Boneyard. Raise the Boneyard affects an area determined
+by Plasm spent: 
+1 A small warehouse or parking lot
+2 A large warehouse or supermarket
+3 A small factory or shopping mall
+4 A large factory or city block
+5 A university campus, small town, or city neighborhood
+1-5 Plasm: Any attempt to leave the area of the Boneyard suffers a penalty equal to Plasm spent, and any attempt, no matter how seemingly trivial, requires an action.`,
+
+"!hauntearthquakeweather": `The Sin-Eater floods the domain with their Plasm, allowing them to warp and contort the physical landscape to their will. Air grows blazing hot then cold enough to freeze skin to metal, rains of blood pour indoors, or the whole house rattles in an unseen wind. These manifestations only grow more violent when the Boneyard is unlocked with a Key. Phantom faces and hands strain against solid walls within a Boneyard unlocked by the Key of Grave Dirt, manifestations of those that have been smothered under the shale and dirt of the world. The Key of Disease causes the odor of rot to fill the air of its Boneyards as the walls begin to drip with tainted blood.
+This aspect of the Boneyard is as much a tool of intimidation as it is a weapon. When a Sin-Eater lets themselves go on a victim it is a promise that no matter how many walls or locks they put between them and their enemies they will never be safe. Those Sin-Eaters that prefer the less violent approach to the problem find that the aspect makes them especially adept at driving out troublesome mortals that are a threat to local ghosts or just making sure that the living stay that way by keeping them away from a particularly dangerous shade.
+Enhancements
+3 Plasm: Create an Environmental Tilt in the Boneyard with a Severity equal to the Bound’s dots in Boneyard. Choose from the following: Blizzard, Extreme Heat, Extreme Cold, Heavy Winds, Heavy Rain, Ice, or Earthquake. The Bound can end any Tilt she creates as a reflexive action. This enhancement may be applied more than once.`,
+
+"!hauntthenewlaw": `A Sin-Eater’s Boneyard can be a place of absolute safety for the dead that come to them looking for solace, or it may be a nearly impenetrable fortress for those trying to enter it without their permission. Under the Bound’s rule nothing happens within the Boneyard of which its master doesn’t approve. When the Boneyard is created, the Sin-Eater may create a single rule they consider inviolable, and their Boneyard enforces its owner’s will on the land. Plasmic chains weigh down the limbs of offending ghosts, or flakes of their Corpus fall away and turn into ghostly butterflies or maggots to warn their master of the offense. Boneyards created with the Key of Cold Wind create horrific wailing winds that warn those within the Boneyard of what fate awaits those that violate its masters laws, while those invoked with the Key of Disease cause the air around those foolish enough to violate the Boneyards laws to fill with the sickly sweet odor of rot. Some who use this power see it as a necessary tool to have a true neutral ground for negotiations between two parties, while other Sin-Eaters just feel they’re doing the right thing.
+Enhancements
+2 Plasm: The Bound states a rule that must be followed by all that enter the Boneyard. A target that violates the rules of the Boneyard gains the Defiant Condition (p. 299) for the duration of the Boneyard. Any roll to violate the law of the Boneyard receives a penalty equal to half of the Sin-Eater’s Synergy. Those entering the Boneyard do not automatically know the rules. This Enhancement may be applied more than once, but only when the Boneyard is created.
+2 Plasm: The Bound gains the rote action quality to all rolls to punish occupants of the Boneyard that break her law and counts as a Bane for all ghosts that violate the rule.`,
+  
+  
+  //CAUL
+  
+"!hauntextrudethecaul": `Cost: 1–5 Plasm
+Action: Instant
+Dice Pool: Synergy + Caul
+Roll Results:
+  Success — The Sin-Eater dons the Caul, becoming one with her geist. She gains the Caul Condition, with a number of charges equal to the Plasm spent.
+  Exceptional — When the Haunt ends without resolving, the Sin-Eater regains half the Plasm spent on Extrude the Caul.
+  Failure — The Sin-Eater fails to entice the geist into her body.
+  Dramatic — The merging of Plasm and flesh goes horrifically wrong as bodies distort and fail to come together. The geist pulls away, trapping the Sin-Eater in Twilight for the duration of the scene.`,
+
+"!hauntcoldflesh": `The Sin-Eater’s skin quivers and grows cold as she takes on the pallor of a cadaver. Plasm seeps instead of blood; flames sizzle as she walks through them; toxins barely register. This is the shared remembrance of death between the Bound and her geist, turned into grim resilience.
+
+Enhancements:
+  3 Plasm — Gain general Armor equal to Caul dots, and Ballistic Armor equal to half Caul (rounded up).`,
+
+"!hauntvitiate": `Communion with the geist loosens the Bound’s shape. Arms elongate for a quadrupedal gait, skin unzips to reveal wings, the body swells grotesquely, or scuttles like a corpse-spider. These transformations unsettle even the dead; for the living, witnessing this is often a breaking point.
+
+Enhancements:
+  Free — The Caul Condition has two charges per Plasm spent on Extrude the Caul.
+  1–4 Plasm — Body swells; gain Size equal to Plasm spent. For every 2 Size gained, also gain +1 Strength.
+  1 Plasm — Warp into a scuttling form: move at 2× normal Speed on the ground; climb walls and ceilings at normal Speed.
+  1 Plasm — The next unarmed attack inflicts lethal damage. (May be applied more than once.)
+  2 Plasm — Grow wings; fly at normal Speed.
+  4 Plasm — Become a swarm of tiny animals or a viscous mass capable of seeping through any crack that admits light. Passing through cracks takes one turn per point of Size.`,
+
+"!hauntdisarticulation": `The Bound spews impossible unlife: homunculi bud from shed limbs, ephemeral flesh, or even stone-like or paper-like matter. A Grave Dirt Caul births desiccated wraiths that trail dust-like Plasm; a Blood-keyed Caul knits monstrosities from enamel, cloth, and gear bound with dried sinew.
+
+Enhancements:
+  1–5 Plasm — Create a homunculus with Health equal to Plasm spent. It follows simple commands (“Carry this,” “Kill her,” “Guard that”). Dice pools: (2 × Plasm spent) for physical actions; chance die for social and mental actions. Commanding any number of homunculi is an instant action. May be applied more than once, up to a maximum number equal to the Sin-Eater’s Synergy.`,
+  
+ "!hauntthehungrydead": `Death is emptiness — hunger, need, and raw yearning. By channeling their geist as a conduit to that void, the Bound can fill it with the lives of others. Their jaw distends grotesquely, or flesh unfolds like a flytrap, swallowing the victim whole. While the memory is fresh, the Bound can mimic the form and abilities of their meal.
+
+Enhancements:
+  (Victim’s Size) Plasm — Wholly consume a recently-dead being or recently-incapacitated ghost of Size ≤ 7. If consumed via ectophagia, this costs no Plasm.
+
+Caul Condition Additions (last until Caul ends or another Caul Enhancement is used; using another Enhancement ends this mimicry permanently):
+  • Spend 1 charge — Mimic the appearance of the consumed victim for 5 minutes (extend by spending more charges). If the victim was a ghost, appear as they did in life.
+  • Spend 1 charge — Use the Attributes and Skills of the consumed victim for a single action. If the victim was a ghost, use the ghost’s relevant Attribute + Rank.`,
+  
+    //The Curse
+"!hauntlaythecurse": `Lay the Curse (•)
+Requirement: The Sin-Eater must touch the victim to lay the Curse.
+Cost: 1-4 Plasm
+Action: Instant and contested
+Dice Pool: Synergy + Curse vs. Resolve + Synergy
+Roll Results
+Success: The victim is plagued with bad luck. She gains the Curse Condition, with a number of charges equal to the Plasm spent.
+Exceptional: When the Haunt ends without resolving, the Sin-Eater regains half the Plasm spent on Lay the Curse.
+Removing a Curse
+Any Sin-Eater who knows the Curse can remove hexes inflicted by other Bound. They must find the Curse’s mark on the victim, then wipe it clean, passing the power back through their geist into the Underworld. It only takes a few minutes, but most don’t like to admit that it’s possible — doing so only proves that other Bound can remove their own Curses.
+A Sin-Eater removing another’s Curse rolls Synergy + Curse vs. the original Sin-Eater’s Synergy + Curse. On a success, resolve the Cursed Condition. On an exceptional success, the Sin-Eater removing the Curse also takes a Beat.
+Dismissing your own Curse is a reflexive action.
+Failure: The Curse does not manifest.
+Dramatic: The Bound leaves a trace of Plasm on the victim, but not in the way he intended. The victim regains a point of Willpower; the Sin-Eater suffers the effects of the Curse until the end of the scene.`,
+
+
+"!hauntgremlin": `Gremlin (••)
+For people suffering under the Curse of the Gremlin, technology just doesn’t work. Computers flake out and crash, ATMs eat cards, cars won’t start, and forget trying to pay for anything with a credit card. Even simple tools like knives or hammers twist in her hand. If someone else try to use the same computer or car, it works just fine when the victim isn’t around — it’s very much her problem to deal with. A Sin-Eater who infuses this Curse with Plasm can prevent her victim from making fire, or even extinguish fires in her vicinity — bad news for someone with a gas stove. Even living off the grid is no protection for someone who cannot make fire.
+While anyone can evade the Gremlin Curse for a while if she can work out what’s going on and has friends who are willing to help her out, relying on other people to interface with the modern world for too long is a surefire way to strain friendships and drive acquaintances away.
+Enhancement
+2 Plasm: Add one of the following effects to the options available from the Curse Condition. This Enhancement may be applied more than once.
+• A piece of equipment goes haywire. Its equipment bonus becomes a penalty for the rest of the scene when the Cursed character uses it. For a second charge, the equipment inflicts damage equal to its equipment bonus the next time the Cursed character tries to use it.
+• The victim cannot start fires for the rest of the scene, and any fires she has lit during the scene extinguish themselves.`,
+
+"!hauntmalady": `Malady (•••)
+The Sin-Eater’s Curses grow in strength, becoming more prominent in the victim’s life. What was once just a split grocery bag becomes a dropped pickle jar that bursts into 100 razor-sharp glass shards, lacerating the victim’s leg. Tripping over a paving stone tears ligaments in the victim’s ankle. If unlocked with the Primeval Key, she may be savaged by a stray dog, while the Key of Stillness means she does not hear an oncoming bus until it is too late. All Keys except the Key of Chance shape the misfortune that befalls the hex’s victim; the Bastard’s Key instead adds even more randomness to events.
+Enhancements
+Free: The Curse Condition has two charges per Plasm spent on Lay the Curse.
+2 Plasm: Add one of the following effects to the options available from the Curse Condition. This Enhancement may be applied more than once.
+• The victim suffers 3 points of lethal damage, then the Curse Condition resolves.
+• Inflict one of the following Tilts: Arm Wrack, Blinded, Deafened, Insane, Knocked Down, Leg Wrack, Poisoned, or Sick. The effects of the Tilt last until the end of the scene.`,
+
+"!hauntexhaustion": `Exhaustion (••••)
+This Curse inflicts the victim with both physical and psychological exhaustion. He can’t sleep, but is never truly awake. He always feels too cold, even at noon in the Sahara. Doing anything takes a toll, but staying in bed is just as tiring, and when he does go out his limbs feel like they’re filled with concrete. He feels sullen and bitter when he feels anything at all, no longer able to find joy in life, and it’s worse when he’s around people who don’t understand what he’s feeling or why. For people who already suffer from mood disorders, the curse of exhaustion magnifies any extant depression, while those who have never felt the black dog’s touch finally understand. The combination of depression and exhaustion leads some to self-harm, or even suicide.
+Enhancements
+2 Plasm: Add one of the following effects to the options available from the Curse Condition. This Enhancement may be applied more than once.
+• Turn the victim’s next Social roll into a chance die.
+• Prevent the victim from gaining Willpower from one event.`,
+
+"!hauntforgotten": `Forgotten (•••••)
+While the victims of other aspects of the Curse can write off what happens as bad luck or happenstance, perhaps never knowing that their foul moods and terrible luck are the result of supernatural intervention, a victim of the Forgotten Curse knows full well what’s happening to him. It’s as if the world simply writes him out of existence. People ignore him unless he grabs them or screams at them. In a club, his wife hits on another man until the victim reminds her that he’s sitting next to her — then she shrugs and goes right back to flirting. Old friends forget to invite him to social functions, then look at him in the street like a stranger. His bank accounts close, his house may be repossessed, and even when he does manage to speak to someone they soon forget everything he says. Particularly cruel Sin-Eaters pair this disconnection with the mundane world with a touch of the Underworld, leaving the victim unable to differentiate living and dead even as he remains incapable of making anyone see or hear him.
+The victim becomes a ranting, raving lunatic, having to dodge invisible people and conversing in a language that only he understands.
+While the effects of this Curse are temporary, the longer-term consequences are not. He may no longer see the dead as real, but he’s spent days, weeks, or even months not knowing who can see whom around him. He’ll likely never fully trust that he is no longer under the Curse.
+Enhancement
+3 Plasm: Add one of the following effects to the options available from the Curse Condition, each of which lasts for the rest of the scene. This Enhancement may be applied more than once.
+• The character must spend a Willpower point to have anyone other than the Sin-Eater who cursed him register his presence.
+• Block one of the victim’s Social Merits.
+• The victim can see, touch, and interact with ghosts as though they were living.`,
+
+
+//Dirge
+
+"!hauntsingthedirge": `Sing the Dirge (•)
+Requirement: You must sing a haunting, wordless song at conversational volume or louder. You must also choose a simple emotional state or action the Dirge urges its targets toward (e.g. “calm,” “stop fighting,” or “come to me”).
+Cost: 1–5 Plasm
+Action: Instant and contested
+Subjects: (Plasm spent) targets who can hear the Sin-Eater.
+Dice Pool: Synergy + Dirge vs. Composure + Synergy.
+Roll Results
+Success: The subject gains the Dirge Condition.
+Exceptional: When the Haunt ends without resolving, the Sin-Eater regains half the Plasm spent on Sing the Dirge.
+Failure: The target is no more touched by the Sin-Eater’s music than they are by elevator Muzak.
+Dramatic: The listener isn’t moved by the song in the slightest and becomes unreceptive to the Sin-Eater’s power. The Bound takes a –3 penalty to using the Dirge on the target for the rest of the story.`,
+
+"!hauntpaean": `Paean (••)
+Music exists in the Underworld, but not like the Dirge. For the dead, when a Sin-Eater sings it is transcendent, a reminder of all the things death strips away in one wonderful package. It is the feeling of breathing, the sensation of sun on skin, and the warmth of intertwined fingers. All the Keys shape the memories remembered of sensations now denied to the dead of sustenance, companionship, and belonging.
+For the living to experience this level of the Dirge is to remember the dead as if he stood right beside him. A Sin-Eater can rekindle that fire within the living, reminding them of how they felt and what those individuals meant to them. For some it can be jarring to so deeply remember again somebody she hadn’t thought of in years.
+Sin-Eaters use this aspect for a variety of things — trying to keep a ghost from sinking into the great below a little longer or aiding them in resolving an Anchor that wouldn’t be right for the krewe to do itself. Some less-scrupulous Bound use it in a trading game, as there is a lot of information about the Underworld they don’t know and a few extra days where a granddaughter can remember their Oma is a desirable fix no matter the shade.
+Enhancements
+1–5 Plasm: The Sin-Eater distributes Essence equal to Plasm spent to any ghosts with the Dirge Condition.
+2 Plasm: A living character with the Dirge Condition also gains the Inspired Condition. This Enhancement may be applied more than once.`,
+
+"!hauntcommunion": `Communion (•••)
+The Sin-Eater’s song transcends language, speaking directly to the heart. With this level of mastery they may express themselves with a purity of purpose, moving others to act with nothing but the power of their song. Additionally, the power of the Sin-Eater’s Dirge grows, allowing her to reach large crowds with her song.
+Enhancements
+Free: Sing the Dirge affects anyone capable of hearing within an area determined by Plasm spent. If rolling for each target becomes unfeasible, contest the power with the highest Composure + Synergy of all targets.
+Plasm Spent Area
+1 — A small room
+2 — A large room
+3 — Several rooms, or a single floor of a house
+4 — A ballroom or small house
+5 — A large house or building
+2 Plasm: The Sin-Eater has a Perfect social impression, and may roll Synergy + Dirge to open Doors in a Social Maneuver, against any character with the Dirge Condition.`,
+
+"!hauntexaltation": `Exaltation (••••)
+All Haunts are ultimately derived from the Underworld and thus from death. The music of the Dirge allows the Sin-Eater to project the serenity and grace of a peaceful death onto those who hear the song, or invoke shattering grief of a life snatched away. Through her song, a wielder of the Dirge can let a shade communicate through the grief or rage that anchors them in the afterlife. With the Sin-Eater’s presence, communities of the dead can even work up the courage to face off against the likes of one of the Reapers.
+Enhancement
+2 Plasm: The Sin-Eater removes (without resolving) one of the following Conditions from a subject with the Dirge Condition: Beaten Down, Broken, Deprived, Guilty, Madness, Obsession, Shaken, or Spooked. Persistent Conditions are suppressed until the Dirge Condition ends. This Enhancement may be applied more than once.
+3 Plasm: The Sin-Eater gives one of the following Conditions to a subject with the Dirge Condition: Beaten Down, Connected, Deprived, Guilty, Inspired, Obsession, Shaken, Spooked, or Swooning. This Enhancement may be applied more than once.`,
+
+"!hauntvisitation": `Visitation (•••••)
+The Bound’s song is otherworldly even by the standards of ghosts. Sometimes this particular talent is called the Voice of Orpheus. A Sin-Eater who has mastered the Dirge has the power to bring forth those ghosts unwilling or unable to enter the physical world on their own. Her song ties unbound ghosts to objects and just as easily creates Plasmic flesh for the dead, bringing them fully into the world. Some Sin-Eaters use this aspect to allow a final meeting among family or lovers. Others realize there are few problems that can’t be solved by sufficient amounts of ghosts, and Sin-Eaters are rarely lacking in ethereal accompaniment.
+Some Bound have found less-compassionate uses for this aspect of the Dirge. By invoking this power, they can tie unwilling ghosts to sights of their greatest crimes to atone for what they have done. Some use it to steal the bodies of the living, handing over a mortal life for a day to the ghost willing to pay the body trader what they desire.
+Enhancement
+1–5 Plasm: The Sin-Eater spends Plasm equal to the Rank of a ghost with the Dirge Condition. That target gains a Manifestation Condition of the Sin-Eater’s choice. This Enhancement may be applied more than once.`,
+
+//Marionette
+
+"!hauntstringthemarionette": `String the Marionette (•)
+Cost: 1-3 Plasm
+Dice Pool: Synergy + Marionette
+Action: Instant against unattended objects or animals, contested by Stamina + Synergy against conscious humans or other animals.
+Roll Results
+Success: A target creature or object of (Plasm spent) Size gains the Marionette Condition.
+Exceptional: When the Haunt ends without resolving, the Sin-Eater regains half the Plasm spent on String the Marionette.
+Failure: Tendrils of Plasm fail to take hold.
+Dramatic: The tendrils of Plasm latch on to the target, but tear off, leaving a thick layer of ectoplasmic slime behind. For the rest of the story, attempts to use the Marionette on the same target fail automatically.`,
+
+"!hauntswarm": `Swarm (••)
+The Sin-Eater’s tendrils of Plasm stretch out and latch on to more than one object, allowing her to puppeteer multiple objects at the same time. Powerful Bound can fling rooms full of people around with wild abandon, or create whirlwinds of flying knives, commanding them all with one mind. She retains as much control over every puppeteered creature as she has over a single target.
+Sin-Eaters who develop more control over the Marionette can use this ability to affect more than one target at once.
+Enhancements
+2 Plasm: String the Marionette affects a number of targets equal to the Sin-Eater’s Marionette dots. Multiple targets may be commanded as a single instant action, as long as all of them do the same thing (e.g. several dolls all pointing at the same character, multiple televisions turning on at once). Attacking with multiple Puppets halves the target’s Defense.`,
+
+"!hauntphantomstrength": `Phantom Strength (•••)
+The Sin-Eater’s control over the Marionette expands. Her Plasmic tendrils grow stronger, able to lift and move larger objects and bend them to her will. While previously she could lift a cop’s gun from its holster and shoot it, now she can manipulate the policeman directly. She can rip open a car like a tin can or slam a door as someone tries to walk through it. Using this ability with Swarm allows her to puppeteer multiple people at once, making entire groups dance to her own tune or hefting multiple large objects.
+A Sin-Eater can, with the investment of enough Plasm, wrest control of cars and trucks, flinging them around without regard for the desires of the driver. Such showy displays are beneath most Sin-Eaters, who instead use Phantom Strength to take control of a car in far subtler ways, suddenly jerking the steering right as her target tries to negotiate a dangerous bend, or stomping on the gas rather than the brakes so her puppeteered SUV plows into a crowded street and leaves the driver at the tender mercies of human authorities.
+Enhancements
+Free: String the Marionette affects targets of Size up to (Marionette + [2 × Plasm spent])
+2 Plasm: The next attempt to resist the Sin-Eater’s control of a puppet suffers a −3 penalty. This Enhancement may be applied more than once, but only once per action.`,
+
+"!hauntservant": `Servant (••••)
+By infusing Plasm into an animal, object, person, or a recently dead body, the Sin-Eater can use the target as a semi-independent servant. Unlike other uses of the Marionette, creatures raised in this way remain under her control but do not require her focus — tendrils of Plasm flow into the brain of the puppet, allowing her to give simple commands that the victim cannot resist. The Marionette does not bring dead creatures back to life; even the most powerful Bound can only raise a corpse to obey simple commands rather than a replica of whoever the person was when he was alive, and she cannot stave off the effects of decay.
+Enhancements
+2 Plasm: Replace the Marionette Condition on a single target you control with the Servant Condition. This Enhancement may be applied more than once.
+4 Plasm: The Servant Condition (on all targets) ends without resolving after 24 hours. This Enhancement may be applied more than once.`,
+
+"!haunttraitorflesh": `Traitor Flesh (•••••)
+One of the most invasive and terrifying uses of the Marionette, Traitor Flesh reaches deep within a living person’s body and takes total control. The Sin-Eater can pilot another person, leaving the victim watching helplessly as his body does whatever the Bound wants. She could make him strangle his husband, stab his child — or go through a perfectly normal day, but with the Sin-Eater in the driving seat. Traitor Flesh is a means for the Sin-Eater to control another person’s every move, and it is a profoundly horrifying experience for the victim.
+Anyone possessed by the Traitor Flesh remains fully aware of everything going on around them. No matter what tricks or Keys the Sin-Eater uses, she can’t prevent her victim from the feeling of total violation as his body does things without him wanting — and doesn’t do things that he desperately needs it to.
+Enhancements
+2 Plasm: The next time a sapient Marionette takes lethal damage or suffers a breaking point, they do not resolve the Condition. This Enhancement may be applied more than once.
+3 Plasm: The next time a Marionette tries to fight against something the Sin-Eater wants to do, he suffers 2 lethal damage. This Enhancement may be applied more than once, but only once per attempted resistance.`,
+
+
+//Memoria
+
+"!hauntrecallthememoria": `Requirement: You must be at the site of a traumatic death, or in the presence of a ghost’s Anchor that relates to the memory, and you must know at least three details of the memory you’re trying to invoke (e.g. the name of the dead, the date and time of the event, the killer’s identity, the specific murder weapon, etc.). The memory must be of a ghost’s death, or of a significant event that led up to the death. 
+
+Cost: 1-5 Plasm  
+Action: Instant  
+Dice Pool: Synergy + Memoria  
+
+Roll Results  
+• Success: The Sin-Eater is able to find a memory of the event in question. She gains the Memoria Condition for the scene with a number of charges equal to Plasm spent during activation.  
+• Exceptional: When the Haunt ends without resolving, the Sin-Eater regains half the Plasm spent on Recall the Memoria.  
+• Failure: The Bound gains no insight into the past they didn’t already know.  
+• Dramatic: The Sin-Eater becomes trapped in the vision, unable to interact with the real world.`,
+
+"!hauntdenouement": `The dénouement is often the end of a film, the point of revelation that will tie the story together with a satisfactory revelation. Whatever Bound popularized the name for this aspect of the Memoria clearly had a dark sense of humor. The Sin-Eater can weave their Plasm into illusionary duplicates of the memory as it was recorded. A condemned hospital wing is restored to the way it was in 1980, or a burnt-out Victorian manor is restored to its pristine condition at the end of the war. These scenes are populated by illusionary actors that were present at the time, reliving the moment as if the viewers weren’t even present. Though these illusions look solid, they are no more real than a trick of light. A person attempting to walk down the illusionary grand staircase will plummet to the ground below if the stairs have rotted away over the years, and a knife in the memory is no more tangible then a shade.  
+
+Enhancements  
+1-5 Plasm: The visions of the past are clearly visible to anyone present, though nothing in the scene can be interacted with and only the Sin-Eater receives the Memoria Condition. Characters may attempt a reflexive Wits + Composure action to recognize the scene’s intangibility before inadvertently harming themselves. The Plasm cost depends on the size of the scene to be recreated:  
+
+Plasm Spent | Area  
+1 — A small room  
+2 — A large room  
+3 — Several rooms, or a single floor of a house  
+4 — A ballroom or small house  
+5 — A large house or building`,
+
+"!hauntmemoryinabottle": `Once a Sin-Eater has found a memory, they can keep the vision for later viewing by storing its essence in a container, pulling the delicate strands loose from their Anchor and placing the imbued Plasm somewhere safe. The type of vessel doesn’t particularly matter — some Bound use ritually prepared containers carved with mystical runes, while those who buy less into the entire mysticism angle might just use empty plastic soda bottles. The Plasmic memories stored within the container can be drunk or eaten, allowing another to experience the memories as if they had activated the Memoria at the place that spawned it.  
+
+The uses of a stored memory vary from individual Sin-Eater to individual Sin-Eater. Some cities have a thriving trade of stored memories, using them as a sort of esoteric currency or part of an inter-krewe exchange for locations that some krewes just can’t gain access to. In some places the Bound keep collections of memories hoping to find the ghosts they belong to someday, just in case they can one day make it right or find living family that need to know what has happened to their missing loved ones. Then there are Sin-Eaters who have learned that these sorts of memories make damn fine weapons and if he bottles one up he’s made a nasty surprise for somebody he doesn’t like.  
+
+Enhancements  
+• Free: The Memoria Condition has two charges per Plasm spent on Recall the Memoria.  
+• 3 Plasm: The Sin-Eater resolves the Memoria Condition and fills a container with Plasm charged with the memory itself. Anyone who consumes this Plasm gains the Memoria Condition, with as many charges as it originally had when placed in the container. Sin-Eaters don’t gain Plasm from this; the metaphysical energy of the Plasm is tied up in the memory. While the memory is bottled, attempts to invoke it through Recall the Memoria fail automatically. If the container is destroyed or the Plasm poured out, the memory is lost forever.`,
+
+"!hauntmysteryplay": `The Sin-Eater can drag others into the visions created by Dénouement. The actor becomes bound to a role in the vision, their mannerisms and posture changing to take on the qualities of someone else. Some Sin-Eaters use this to clear out the living in a hurry — after having been drafted into a grim tableau of the past, regular people tend to run. More vengeful Bound use this aspect of the Memoria to give a grim lesson to those that have committed wrongs in the past. People drawn into an illusion experience it as if it were a dream, feeling the hunger, the frustration, and even the pain.  
+
+This aspect of the Haunt may look as if a death mask of solid Plasm has been affixed to victim’s face. Unlocked with the Tearstained Key it may appear as a frozen brand clinging to frostbitten skin, while with the Stigmatic Key it appears as though blood staining their hands forms shackles that bind an actor to their past. The use of this aspect also allows the dead to be infused with the Sin-Eater’s Plasm and reclaim their original role in the memory.  
+
+Enhancements  
+1-5 Plasm: Draw one target per Plasm spent into the illusionary scenario. They gain the Actor Condition. Unwilling participants may contest the roll with Resolve + Synergy. The Sin-Eater cannot create more Actors than there were people present in the actual memory.`,
+
+"!hauntBreaktheCycle": `History and truth rarely do more than intersect. With this ability the Sin-Eater can empower the actors of the illusion, allowing them to generate entirely new psychodramas from stale old psychodramas. They can recast a victim, allowing them to stand up to his tormenter, say no, and this time finally leave. They can try to prevent a confrontation between two brothers from escalating to violence and, for one, his accidental death.  
+
+These additions can be to aid either the living or the dead, giving them a chance for closure or just really messing with the head of someone the Sin-Eater hates. Another use of Break the Cycle is attempting to try out counterfactuals, trying to find some piece of information the Sin-Eater’s missed about the man who will someday die and become the Doe-Eyed Beauty, or the right combination of words that will get a daughter to forgive a mother.  
+
+Enhancements  
+2 Plasm: Add the following effects to the Actor Condition for all Actors in the scene:  
+• The character may go “off-script” with a reflexive Resolve + Synergy roll, making actions or statements that are not part of the original memory and altering its outcome.  
+• When the Actor Condition resolves, the target immediately resolves another Condition related to a breaking point or other trauma related to the memory.  
+• A ghost that resolves the Actor Condition may immediately resolve an Anchor relevant to the memory.  
+• A Rank 1 ghost that resolves the Actor Condition rises to Rank 2.`,
+
+
+//Oracle
+
+"!hauntconsulttheoracle": `Cost: 1-4 Plasm
+Action: Instant
+Dice Pool: Oracle + Synergy
+Roll Results:
+  Success — The Sin-Eater gains the Oracle Condition with a number of charges equal to Plasm spent.
+  Exceptional — When the Haunt ends without resolving, the Sin-Eater regains half the Plasm spent on Consult the Oracle.
+  Failure — The Sin-Eater comes out of his trance unharmed and unfortunately alive. The Oracle is not activated.
+  Dramatic — The Bound’s spirit breaks free of the Plasmic bonds that connect it to his body and becomes lost. The Sin-Eater gains the Dead Condition.`,
+
+"!hauntwanderingshade": `The Oracle gives the Bound insights into the connections of life and death, but they must still be present at the scene of the crime. For some Sin-Eaters this simply isn’t enough, and they learn to project their spirit far beyond themselves to hunt down information. Some krewes use this to do as much good as they can across their territory, tracking down ghosts that would never have been able to approach the Sin-Eaters normally. Other Bound use this aspect for personal gain, searching for weak links across a city to enrich themselves.
+At this level the Oracle may learn information from across the region, learning of events that might be happening miles away from where the Sin-Eater currently lies dead and cold. The ghost is too weak to survive crossing over into the Underworld unless the Bound uses the Haunt while already past an Avernian Gate. When the Oracle is able to answer a question it doesn’t come as a direct answer but flashes of insight or experiences that lead the Sin-Eater on to what will help them gain their desires.
+Enhancements:
+  1 Plasm — Add the following questions to the Oracle Condition’s list of questions:
+    • What is the biggest threat to me and mine? The revving of a diesel truck engine and the sight of a license plate as someone new drives into town.
+    • Who is most in need our aid? The sight of an emaciated man ringed by a circle of salt.
+    • Who is guilty of crimes against the dead? The scent of begonias and powdered bone accompanied with the vision of a dinner table strewn with ectoplasmic flesh.
+    • What has been forgotten here? The sound of trickling water turning into a roaring river from behind a cement wall in the local morgue.`,
+
+"!hauntspiritreading": `Assuming an ephemeral form aids the Sin-Eater in understanding the invisible cues between ghosts that inform their nature. They see the way the Candle Man shields flames from cold breezes and the way the Doe-Eyed Beauty shies away from unpaved paths instinctively. The clarity of vision unfettered by flesh allows them to probe more deeply and more broadly.
+Sin-Eaters often use this aspect of the Oracle to assist the dead with resolving their Anchors or to learn more of their nature. Less community-minded Bound often hunt down Anchors of the dead they want a favor from, threatening to put the torch to it or throwing their body to the dogs. When unlocked with the Pyre Flame Key these clues often appear in the Bound’s vision as brands seared into the Corpus of the ghost, while the Key of Beasts gives its users a literal nose for it, smelling out the limitations in their target.
+Enhancements:
+  Free — The Oracle Condition has two charges per Plasm spent on Consult the Oracle.
+  2 Plasm — Add the following questions to the Oracle Condition’s list of questions:
+    • What is the Ban of [a ghost I know]? The patter of rainfall. The sharp medicinal smell of quinine.
+    • What is the Bane of [a ghost I know]? The touch of silk that burns like fire. Salt, bright and terrible as uranium.
+    • What ties [a ghost I know] to the mortal plane? A wedding ring heavy as a millstone. Chains studded with photographs of the same person, from infancy to manhood.`,
+
+"!hauntdescent": `Using this power, the wandering spectre is released deep into the Underworld, left to naturally descend as if the Bound had died and been snared in the cruel system of death.
+The ghost is unharmed by the descent into the Lower Mysteries, too far gone to be worth the energy of preying on by most denizens of the Underworld and already descending deeper just as the Reapers desire. Some Bound share rumors, though, of carelessly leaving a doppelgänger behind, wordlessly screaming at a toll it can’t afford, or endlessly toiling under the arcane laws of some cruel Dominion.
+Enhancements:
+  3 Plasm — The Sin-Eater can answer a single question about the Underworld. This Enhancement may be applied more than once.
+Sample Questions:
+  • Does one of Irkalla’s Gates bar travel deeper through this Avernian Gate? The rattling of ancient coins. A hawker’s call for trade of descendants in exchange for passage.
+  • What are the laws of this Domain? A vision of the Domain’s stone slate.
+  • Does this Ferryman trade fairly? The rushing cry of someone falling through the false bottom of a vessel.`,
+  
+  
+"!hauntnekyia": `nekyia (•••••)
+The Underworld is old, certainly older than anything still alive or any ghost that the Bound have ever encountered. It is older than the Kerberoi or the laws they slavishly enforce, more ancient then the alien Chthonians that crawl and scurry through its tunnels. It is the place of things that have been, so it is little wonder to the most powerful practitioners of the Oracle that even the scars of future events can be scavenged and intuited from the ancient place.
+
+The process of divining the future for Sin-Eaters is never encountered the same way twice. Most practitioners of the Oracle could hardly explain if their subterranean dream quests are entirely real or just the product of the fraying Plasmic connection between the Sin-Eater and his spectre. Some of the Bound describe their ghosts entering the Underworld in vast boneyards of ylem where shattered artifacts of the Sin-Eater’s own life are laid out in front of them. Others talk of being consumed by the very walls of the Underworld, only to find themselves in cavities filled with slumbering, unliving things that whisper what will be to the trapped ghost. The experiences go on — ghostly actors, drinking from secret wells of stagnating river waters, grisly fates chiseled into the wall, or passing conversations with long-lost family members. However the Underworld journey manifests, when the Sin-Eater returns to his body he comes back wiser of the future.
+
+Sin-Eaters react very differently to the ability to stare into the future. Many Bound can fall into the trap of obsessive cross-referencing, trying each and every variable against the future to avoid a tragic end. Others, disgusted at the process of receiving the information, seek to use the aspect as little as possible, seeing the information as unreliable at best. Some Sin-Eaters worry, for if their struggles really are the true path to fixing the Underworld, how could their futures be so easily seen in its broken cycles?
+
+Enhancements
+4 Plasm: The Sin-Eater may answer a single question about future events.
+
+Sample Questions:
+• Who amongst my krewe will betray me? The cheap stink of the signature cologne of a member of the krewe. A vision of one of the celebrants placing a death masque over their face.
+• What trial awaits us in the Underworld? The vision of a great obsidian gate layered in the flayed skin of traveling ghosts. The sound of one of the Kerberoi reciting the Old Laws over and over again.
+• When will our enemies be at their weakest? The sounds of heavy bass and the taste of cheap whiskey. A “get well soon” card and a novelty stuffed animal.
+• Is this course of action going to get me killed all over again? The warm blush of a gunshot wound to the stomach. A vision of the Sin-Eater being torn apart by angry shades.`,
+
+//Rage
+
+"!hauntventtherage": `Cost: 1-4 Plasm
+Action: Instant
+Dice Pool: Synergy + Rage
+
+Success: The Sin-Eater gains the Rage Condition.
+Exceptional: When the Haunt ends without resolving, the Sin-Eater regains half the Plasm spent on Vent the Rage.
+Failure: The Plasm coalesces around the Sin-Eater’s body but does not solidify.
+Dramatic: The Plasm running through the Sin-Eater’s body tears out of her skin, shredding her flesh. The Sin-Eater suffers one point of lethal damage, plus another for each Enhancement she applied. These injuries cannot be downgraded with Plasm.`,
+
+"!hauntblackironblade": `Plasm infused into the Rage allows a Sin-Eater to deal horrific injuries to her victims. Those Sin-Eaters who manifest the Rage through gross physical transformations change their limbs into blades of black iron or pillars of obsidian. The fires unlocked with the Burning Key are a conflagration compared to a candle flame, while the Key of Stillness grips the victim’s heart with ice-cold fingers and grows cataracts over his eyes in a second. Some use the Rage to cripple their enemies, pulverizing arms and legs or clawing out eyes.
+This is the first way that Sin-Eaters learn to focus the Rage for it is the most obvious expression of Rage itself. The Haunt is an expression of the Bound’s anger and need to hurt — the best way to express that is by making her attacks hurt more, and quickening her enemy’s demise.
+
+Enhancement
+2 Plasm: The next time the Sin-Eater inflicts damage, he also inflicts one of the following Tilts: Arm Wrack, Blinded, Deafened, Knocked Down, Leg Wrack, or Poisoned. This Enhancement may be applied multiple times.`,
+
+"!hauntmaelstrom": `The Sin-Eater lashes out at her foe at a distance. Some of the Bound simply strike their victims down without apparent cause; a Sin-Eater who unlocks the Rage with the Key of Deep Waters may flood her victim’s lungs with water, while one who uses the Key of Pyre-Flame causes her opponent to spontaneously combust. Others have an obvious component to their attacks: vomiting swarms of venomous insects, forging Plasm into blood-stained knives that fly through the air, or summoning spectral crows to claw at their victims.
+Some Bound do not use intermediaries to wound their foes at range, instead warping their bodies in new ways. Arms and legs disjoint and lengthen into flailing whips, flesh imbued with Plasm tearing to reveal black bone and pulsing muscle. Barbed hooks of rusty iron shoot from the Bound’s chest and face, connected by whips of sinew to her bloody flesh.
+
+Enhancements
+Free: The Sin-Eater may make unarmed ranged attacks out to 30 yards.
+2 Plasm: The Sin-Eater’s next unarmed ranged attack is treated as a medium-burst autofire attack (p. 159). This Enhancement may be applied more than once.`,
+
+"!hauntshatter": `The Rage is a manifestation of pain and hatred, but it is not limited to the Sin-Eater sprouting wicked claws or otherwise physically striking her opponent. Her hatred can take many forms, attacking the victim’s mind as much as his body. She might create a mask of a man’s dead wife from Plasm that screams all of his hidden fears back at him or send spectral rats to bite the flesh of a woman with musophobia. Less creative Sin-Eaters simply make the manifestations of the Rage visible to their victim or to everyone in the vicinity, showing them the true horror of a raging Sin-Eater. The terrifying wounds inflicted by this Rage can easily rot the flesh from a limb or rot eyes to nothingness, even though the victim can still feel and see as though (relatively) undamaged.
+This power enhances the Rage such that it has lasting effects on the victim’s mind as well as his body. Certainly, wounds caused by other forms of the Rage take time to heal, but the psychological injuries can last years — or for the rest of the poor bastard’s life.
+
+Enhancements
+3 Plasm: The Sin-Eater’s next unarmed attack inflicts aggravated damage. This Enhancement may be applied more than once.
+2 Plasm: The next character who suffers a breaking point caused by taking damage from the Rage gains the Fugue Condition. This Enhancement may be applied more than once.`,
+
+"!hauntbreakingtheworld": `The Sin-Eater lets out an ungodly shriek that twists the world around her. The Plasm exuded by her cry infuses the whole area. One Sin-Eater’s Rage coats all of the nearby surfaces in thick, slippery ichor, while another rives spectral chains that make the very ground shake, and a third vomits hundreds of gallons of brackish water to flood the area. Some Sin-Eaters don’t go for such showy displays, instead infusing the very air with Plasm to summon buffeting winds or drop the temperature enough to cause a blizzard even in a Texan summer.
+The Sin-Eater strides through the chaos she has created untouched, while her enemies and allies both must deal with the consequences of her wrath. This Rage makes her the ultimate killer, the yeti in the snows or Jenny Greenteeth in the flooded desert.
+
+Enhancement
+4 Plasm: The environment in the scene suffers one of the following Tilts: Blizzard, Earthquake, Flooded, Heavy Rain, Heavy Winds, or Ice, even if it is otherwise unlikely for the location (e.g. Heavy Rain while indoors). Where the Tilt requires a severity, use the Rage’s weapon modifier. The Sin-Eater is immune to this Tilt.`,
+
+//Shroud
+
+"!hauntdontheshroud": `Cost: 1-4 Plasm
+Action: Instant
+Dice Pool: Synergy + Shroud
+
+Success: The Sin-Eater coats himself in a thin layer of Plasm containing the essence of his geist. He gains the Shroud Condition, with a number of charges equal to the Plasm spent.
+Exceptional: When the Haunt ends without resolving, the Sin-Eater regains half the Plasm spent on Don the Shroud.
+Failure: Plasm fails to coalesce around the Sin-Eater.
+Dramatic: The coating of Plasm seals the Sin-Eater’s face, leaving him unable to see, hear, or even breathe. He will suffocate unless he takes an instant action to clear the ooze from his airway.`,
+
+"!hauntvisionofmist": `Enshrouded in her geist, the Sin-Eater remembers what it is to be dead. She becomes a phantasm in the mist, half-glimpsed and barely there. While her flesh still anchors her to the living world, she touches it only lightly.
+
+Enhancements
+1 Plasm: Your body registers no temperature, and you don’t set off motion detectors, laser tripwires, or similar sensors.
+2 Plasm: You can hover and fly in any direction at half your Speed.`,
+
+"!haunthauntingpresence": `Entwined with her geist, the Sin-Eater can influence the world around her in the same fashion as a ghost. While she lurks in Twilight, she may project her image to the living, discorporate in a burst of Plasm, or even manipulate the minds and bodies of the living.
+
+Enhancements
+Free: Spending a charge on the Shroud Condition allows the Sin-Eater to spend (Shroud rating) minutes in Twilight.
+3 Plasm: The Sin-Eater gains one of the following Manifestation effects or Numina, usable while she is in Twilight:
+• Discorporate (In lieu of ghostly hibernation, the Sin-Eater reforms in a gout of Plasm 24 hours later at the last place she died. She reforms with no Plasm.)
+• Fetter
+• Image
+• Possess
+• Sign (Numen)
+• Hallucination (Numen)
+This Enhancement may be applied more than once.
+In all cases, the Sin-Eater rolls Synergy + Shroud and spends Plasm instead of Essence.`,
+
+"!hauntharrow": `As easily as the Bound slips between Twilight and the material, that journey is denied to others. With this power the Bound may drag others across the veil and into Twilight, whether to give tragic lovers one last night together or to hand a murderer over to the tender mercies of the dead.
+
+Enhancements
+2 Plasm: Add the following effect to the options available from the Shroud Condition:
+• Bring another person you are holding on to with you into Twilight. If they’re resisting, you must grapple them (p. 158) first.`,
+
+"!hauntshrouddeddescent": `The Bound can use the ghostly nature inherent in this Haunt to slip between the Underworld and the land of the living. She can make this passing without an open Avernian Gate, and as long as she has an idea of where she is going, she can emerge in any place that has a strong emotional tie — either somewhere she has lived for more than a year, or a place of a major life event (such as her death). If she has no real destination in mind, she emerges in a random point of the Upper Reaches, or near to the last place she entered the Underworld if she is returning to the living world. The Key unlocking this Haunt colors her travel, with the Stigmatic Key seeing the Bound dissolve into a pool of blood, while the Key of Cold Wind has her blow away into fragments as she crosses.
+Some Sin-Eaters use this ability for fast travel, dipping into the Underworld and reemerging at their childhood home or first apartment after graduation. Other Bound believe that doing so profanes their duty to the dead — or at least makes them more likely to draw the attention of dangerous Underworld dwellers.
+
+Enhancements
+3 Plasm: Add the following effect to the options available from the Shroud Condition:
+• Cross into or out of the Upper Reaches of the Underworld. For an additional charge, you may bring one person you’re holding into (but not out of) the Underworld. If they’re resisting, you must grapple them (p. 158) first.`,
+
+//tomb
+
+"!hauntopenthetomb": `open the tomb (•)
+Requirement: The subject must come from an object that has been destroyed or a dead person or animal.
+Cost: 1-4 Plasm
+Action: Instant
+Subject: A piece of one object or creature whose original Size was up to (Tomb + Plasm spent).
+Dice Pool: Synergy + Tomb
+Roll Results
+Success: The subject gains the Tomb Condition.
+Exceptional: When the Haunt ends without resolving, the Sin-Eater regains half the Plasm spent on Open the Tomb.
+Failure: Plasm fails to coalesce.
+Dramatic: The Sin-Eater’s memories grow
+clouded as she struggles to differentiate what is and what
+was. She can remember faces, but has no idea to whom
+they belong; she remembers an address but has no idea
+that it’s her home. She suffers the Addled Condition.`, 
+
+"!hauntheadstone": `headstone (••)
+The headstone is not the dead. It is a reminder, a symbol of the life that is no longer, a convenient repository for the memories and the grief of the living. With this power, the Sin-Eater applies that same metaphysical connection to the Tomb. Now, a representation, or an object linked to the thing she wants to recreate, is enough. With the jacket of a dead biker, a Sin-Eater can recreate the deceased’s treasured Ducati, while a photograph of a long-dead child suffices to give her a semblance of form.
+Enhancements
+2 Plasm: The Sin-Eater may use Open the Tomb on a representation of an object or creature (e.g. a photograph or recording), or on an object closely linked to it (e.g. a man’s wedding ring or the keys to a house). The representation must still be of a specific object or person — a drawing of “a policeman” won’t work. In the case of a representation, the Plasmic recreation represents the object as it is depicted. This Enhancement must be applied when Open the Tomb is activated.`, 
+
+"!hauntemptygraves": `empty graves (•••)
+The Bound feel loss even more keenly than most people, seeing as they do what happens to the dead. Some Sin-Eaters, especially those who have watched their family and friends die, long for just a little more time. Others use Empty Graves to put others off their guard — making a facsimile of a mob boss’ dead husband in order to get close to her, or bringing an assassin’s victims back to life. Still others use their ability to create replicas of people to capitalize on others’ grief. Offering a grieving son another day with his father is a powerful gift — and one for which, many people will pay handsomely. Most are so grateful they don’t even bother asking if it’s really their father looking out from behind his eyes.
+Enhancements
+Free: The Tomb creates objects with Size equal to ([Tomb + Plasm spent] × 2). In addition, the Tomb Condition no longer ends with the passage of time.
+Free: Replicas of living beings are capable of following simple instructions. They have their original Physical Attributes and Skills, but all Social and Mental actions are reduced to a chance die.
+3 Plasm: The Plasmic replica created by Open the Tomb has the Open Condition. For replicas of people or animals, the ghost of the original can Possess the replica, even if the ghost doesn’t have the Possess Manifestation.`, 
+
+"!hauntstygiantreasures": `stygian treasures (••••)
+The Tomb restores objects touched by death to how they were in life, but that isn’t enough for some of the Bound. The shadows that gather when the Tomb is unlocked, can bring a touch of the Underworld with them — if the Sin-Eater is willing to invest the Plasm. A reconstituted Dodge Charger makes ghosts visible when they’re caught in its high beams, while the cellphone of a murdered child allows the user to speak to ghosts when they dial.
+By calling on its Chthonic Power, the Sin-Eater may recreate things far larger than she could before.
+Enhancements
+2 Plasm: Pick one of the following effects for the item.
+This Enhancement can be purchased multiple times, but it must be applied when Open the Tomb is activated.
+• Anyone using the object can see the dead.
+• Anyone using the object can hear the dead.
+• Anyone using the object can speak to the dead.
+• The object can communicate between the living world and the Underworld.`, 
+
+"!hauntterracottasoldiers": `terra cotta soldiers (•••••)
+The dead are often buried with symbolic representations of the things they will need in the next life, from joss paper money to ushabti servants. Imbued with the magic of funerary rites and the laws of the Underworld, those signifiers would become the signified in the afterlife, giving the deceased a leg up in the land of the dead. Rather than restoring that which has been destroyed, this level of the Tomb allows the Sin-Eater to reach into that same semiotic space and spin truth from metaphor
+Enhancement
+1-5 Plasm: The Sin-Eater may use Open the Tomb on a wholly symbolic representation of a person, animal, or object, creating a piece of equipment or an appropriate Merit (e.g. Retainer, Library, etc.). The Plasm cost of this Enhancement is equal to the cost of the Merit or the Availability of the object. This Enhancement must be applied at the same time Open the Tomb is activated.`,
+
+
+
+
+};
+
+
+    on("chat:message", function(msg) {
+        if (msg.type === "api") {
+        const key = msg.content.trim().toLowerCase();
+
+            if (key === "!tiltlist") {
+             const tiltKeys = Object.keys(dictionary).filter(k => k.startsWith("!tilt")).sort().join(", ");
+             sendChat("Reference", "/w " + msg.who + " Available Tilts: " + tiltKeys);
+              return;
+          }
+          if (key === "!conlist") {
+             const conKeys = Object.keys(dictionary).filter(k => k.startsWith("!con")).sort().join(", ");
+              sendChat("Reference", "/w " + msg.who + " Available Conditions: " + conKeys);
+             return;
+          }
+          if (key === "!hauntlist") {
+             const hauntKeys = Object.keys(dictionary).filter(k => k.startsWith("!haunt")).sort().join(", ");
+             sendChat("Reference", "/w " + msg.who + " Available Haunts: " + hauntKeys);
+             return;
+          } 
+        if (dictionary[key]) {
+            sendChat("Reference", dictionary[key]);
+        }
+    }
+});
+});
