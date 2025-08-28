@@ -1328,3 +1328,6 @@ daggerheart-fear:
   - "Daggerheart Fear AutoTracker"
   - "Utility"
   
+ResourceTracker:
+  - "ResourceTracker"
+  - "Utility"
