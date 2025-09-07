@@ -105,7 +105,8 @@ API_Meta.AttackMaster={offset:Number.MAX_SAFE_INTEGER,lineCount:-1};
  * v5.0.0  28/07/2025  Tidy corrupted fighting styles tables. Fixed issues with the temporary mods functions,
  *                     especially around temp mods to HP. Added ^^targetid^^ attribute to those that
  *                     can be used in attack macro definitions. Fixed some rare attack macro bugs.
- * v5.0.1  06/08/2025  Fix issues with ammo allocation for ranged weapons
+ * v5.0.1  06/08/2025  Fix issues with ammo allocation for ranged weapons. Fixed fighting styles 
+ *                     parsing and enactment.
  */
  
 var attackMaster = (function() {	// eslint-disable-line no-unused-vars
@@ -1834,10 +1835,11 @@ var attackMaster = (function() {	// eslint-disable-line no-unused-vars
 				let styleData = styleObj.data(/}}\s*styledata\s*=(.*?){{/im);
 				if (_.isUndefined( styleData )) return;
 				
-				let styleProf = (parseInt(fightStyles.tableLookup( fields.Style_proficiency, r ) || 1) || 1);
-				if (styleProf) {
+				let styleProf = Math.min((styleData.length-1),Math.max(0,((parseInt(fightStyles.tableLookup( fields.Style_proficiency, r ) || 0) || 0)-1)));
+				if (!_.isUndefined(styleProf) && styleData[styleProf]) {
 					let benefits = styleData[styleProf][0];
 					styleBenefits.push(benefits);
+					let styleDef = (styleData[0] && styleData[0].length) ? parseData( styleData[0][0], reStyleData ) : {};
 					for (let i=0; !_.isUndefined(inHandName = InHandTable.tableLookup( fields.InHand_name, i, false )); i++) {
 						let inHand = InHandTable.tableLookup( fields.InHand_trueName, i ) || inHandName;
 						spell = melee = ranged = shield = throwing = false;
@@ -1859,7 +1861,6 @@ var attackMaster = (function() {	// eslint-disable-line no-unused-vars
 									wst.push(c[4].dbName());
 								}
 								prime = both = offhand = true;
-								let styleDef = parseData( styleData[0][0], reStyleData );
 								if (i == 0 && styleDef.prime) {
 									prime = (spell && styleDef.prime.includes('spell'))
 										 || (melee && styleDef.prime.includes('melee'))
@@ -8555,10 +8556,10 @@ var attackMaster = (function() {	// eslint-disable-line no-unused-vars
 						if (isGM) doIndexDB(arg);
 						break;
 					case 'disp-config':
-						sendAPI('!rpgm '+senderId+' --disp-config', senderId);
+						sendAPI('!magic '+senderId+' --disp-config', senderId);
 						break;
 					case 'options':
-						sendAPI('!rpgm '+senderId+' --options '+arg.join('|'), senderId);
+						sendAPI('!magic '+senderId+' --options '+arg.join('|'), senderId);
 						break;
 					case 'config':
 						if (isGM) doConfig(arg, senderId);
