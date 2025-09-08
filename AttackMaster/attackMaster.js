@@ -106,7 +106,8 @@ API_Meta.AttackMaster={offset:Number.MAX_SAFE_INTEGER,lineCount:-1};
  *                     especially around temp mods to HP. Added ^^targetid^^ attribute to those that
  *                     can be used in attack macro definitions. Fixed some rare attack macro bugs.
  * v5.0.1  06/08/2025  Fix issues with ammo allocation for ranged weapons. Fixed fighting styles 
- *                     parsing and enactment.
+ *                     parsing and enactment. Fix situational mod for save vs. dodgeable attack.
+ *                     Fix changing ring table update.
  */
  
 var attackMaster = (function() {	// eslint-disable-line no-unused-vars
@@ -4142,9 +4143,9 @@ var attackMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * Dynamically build the ability macro for a saving throw
 	 */
 	 
-	var buildRogueRoll = function( tokenID, charCS, sitMod, skillType, skillObj, isGM, whoRolls ) {
+	const buildRogueRoll = function( tokenID, charCS, sitMod, skillType, skillObj, isGM, whoRolls ) {
 		
-		var target;
+		let target;
 		if (!_.isObject(skillObj)) {
 			target = skillObj;
 			skillObj = rogueSkills[skillType];
@@ -4154,19 +4155,20 @@ var attackMaster = (function() {	// eslint-disable-line no-unused-vars
 		
 		sitMod = parseInt(sitMod);
 		target = Math.max(state.attackMaster.thieveCrit,(sitMod+target));
-		var	name = getObj('graphic',tokenID).get('name'),
+	  const name = getObj('graphic',tokenID).get('name'),
 			advantage = parseInt((attrLookup(charCS,[fields.Magical_advantages[0]+tokenID,fields.Magical_advantages[1]])+'/////').split('/')[5]) || 0,
 			roll2Txt = !advantage ? '' : (advantage > 0 ? advTxt : disTxt),
 			adTitle = !advantage ? '' : (advantage > 0 ? withAdv : withDis),
 			keepCmd = (advantage < 0 ? 'kh1' : 'kl1'),
-			roll = ((whoRolls === SkillRoll.PCROLLS || skillObj.gmrolls) ? skillObj.roll : '?{Enter the roll result (or submit to roll)|'+skillObj.roll+'}'),
 			roll2 = ((whoRolls === SkillRoll.PCROLLS || skillObj.gmrolls) ? skillObj.roll : '?{Enter the '+roll2Txt+' roll result (or submit to roll)|'+skillObj.roll+'}'),
-			roll = !advantage ? roll :  ` [[{ ${roll},${roll2} }${keepCmd}]]`,
+			roll = ((whoRolls === SkillRoll.PCROLLS || skillObj.gmrolls) ? skillObj.roll : '?{Enter the roll result (or submit to roll)|'+skillObj.roll+'}'),
 			skillMods =	skillObj.factors.map((mod,i) => {
 							let val = attrLookup( charCS, [mod,'current'] ) || 0;
 							return val + ' from ' + thiefSkillFactors[i].toLowerCase();
-						}),
-			content = ((isGM || (state.MagicMaster.gmRolls && skillObj.gmrolls)) ? '/w gm ' : '')
+						});
+		roll = !advantage ? roll :  ` [[{ ${roll},${roll2} }${keepCmd}]]`;
+
+		let	content = ((isGM || (state.MagicMaster.gmRolls && skillObj.gmrolls)) ? '/w gm ' : '')
 					+ '&{template:'+fields.menuTemplate+'}{{name='+name+' Skill check vs '+skillObj.name.dispName()+adTitle+'}}'
 					+ '{{Skill Check=Rolling [[ [['+roll+']][Dice Roll]]]<br>vs. [[0+'+target+']] target}}'
 					+ '{{Result=Skill Check<='+target+'}}'
@@ -4175,12 +4177,12 @@ var attackMaster = (function() {	// eslint-disable-line no-unused-vars
 					+ '{{desc=**'+name+'\'s target**[[0+'+target+']] made up of '+skillMods.join(', ')+', and [[0+'+sitMod+']] adjustment for the situation.'
 					+ ((state.attackMaster.thieveCrit > 0) ? ('<br><b>Note:</b> a critical success roll of '+state.attackMaster.thieveCrit+'% applies to skill checks (set by GM in RPGM config)') : '')
 					+ '}}';
-			if (!isGM && state.MagicMaster.gmRolls && skillObj.gmrolls) {
-				content += '\n&{template:'+fields.messageTemplate+'}'
-						+  '{{title='+name+' Skill check<br>vs '+skillObj.name.dispName()+'}}'
-						+  '{{desc=The GM is making this roll and will let you know the outcome}}';
-			};
-//			log('buildRogueRoll: skill type '+skillType+', obj.roll = '+skillObj.roll+', dice = '+roll);
+		if (!isGM && state.MagicMaster.gmRolls && skillObj.gmrolls) {
+			content += '\n&{template:'+fields.messageTemplate+'}'
+					+  '{{title='+name+' Skill check<br>vs '+skillObj.name.dispName()+'}}'
+					+  '{{desc=The GM is making this roll and will let you know the outcome}}';
+		};
+//		log('buildRogueRoll: skill type '+skillType+', obj.roll = '+skillObj.roll+', dice = '+roll);
 		
 		setAbility(charCS,'Do-not-use-'+skillObj.name.replace(/_/g,'-')+'-check',content);
 		return;
@@ -5267,7 +5269,7 @@ var attackMaster = (function() {	// eslint-disable-line no-unused-vars
 				+  '{{desc1=Select a button above to roll a saving throw or '
 				+  '[Add Situational Modifier](!attk --save '+tokenID+'|?{What type of attack to save against'
 															 +'&#124;Weak Poison,?{Enter DM\'s adjustment for Weak Poison&amp;#124;0&amp;#125;&amp;#124;Weak poison'
-															 +'&#124;Dodgeable ranged attack,[[([[0+'+attrLookup(charCS,fields.Dex_acBonus)+']])*-1]]&amp;#124;Dodgeable ranged attack'
+															 +'&#124;Dodgeable ranged attack,&#91;&#91;&#40;[[0+'+attrLookup(charCS,fields.Dex_acBonus)+']]&#41;&#42;-1&#93;&#93;&amp;#124;Dodgeable ranged attack'
 															 +'&#124;Mental Attack,'+attrLookup(charCS,fields.Wisdom_defAdj)+'&amp;#124;Mental attack'
 															 +'&#124;Physical damage attack,?{Enter your magical armour plusses&amp;#124;0&amp;#125;&amp;#124;Physical attack'
 															 +'&#124;Fire or acid attack,?{Enter your magical armour plusses&amp;#124;0&amp;#125;&amp;#124;Fire or acid'
@@ -6029,7 +6031,7 @@ var attackMaster = (function() {	// eslint-disable-line no-unused-vars
 		if (!isNaN(selection)) {
 			let index, table, rowID,
 				MItables = getTableGroupField( charCS, {}, fieldGroups.MI, 'name' );
-				MItables = getTableGroupField( charCS, {}, fieldGroups.MI, 'trueName' );
+			MItables = getTableGroupField( charCS, MItables, fieldGroups.MI, 'trueName' );
 			ring = tableGroupLookup( MItables, 'name', selection ) || '-';
 			trueRing = tableGroupLookup( MItables, 'trueName', selection ) || ring;
 			[index,table,rowID] = tableGroupIndex( MItables, selection );
