@@ -11,7 +11,7 @@ API_Meta.autoButtons = { offset: Number.MAX_SAFE_INTEGER, lineCount: -1 };
 (() => {
 
   const scriptName = `autoButtons`,
-      scriptVersion = `0.9.0`,
+      scriptVersion = `0.9.1`,
       mathOpsZeroPatch = true,
       debugLevel = 2;
   let undoUninstall = null,
@@ -196,7 +196,7 @@ API_Meta.autoButtons = { offset: Number.MAX_SAFE_INTEGER, lineCount: -1 };
       const gmOnly = Config.getSetting('gmOnly') ? true : false
       const activeButtons = Config.getSetting(`enabledButtons`) || [];
       let name = beaconRoll
-          ? Helpers.findBeaconName(msg.content)
+          ? Helpers.findBeaconName(msg.content, beaconSheetName)
           : Helpers.findName(msg.content);
       const damageType = beaconRoll
           ? Helpers.findBeaconDamageType(msg.content, beaconSheetName)
@@ -304,15 +304,17 @@ API_Meta.autoButtons = { offset: Number.MAX_SAFE_INTEGER, lineCount: -1 };
       templates: {
         nameGroupRegex: /^<rolltemplate\sclass="([\w-]+)/,
         nameTriggerRegex: /^dnd-2024/,
-        damageGroupRegex: /class="header__subtitle">([^<]+)/,
-        damageTriggerRegex: new RegExp(dndDamageTypes.reduce((output, type, index) => {
+        damageGroupRegex: /"header__title\sheader__title--([\w_-]+)/,
+        damageTriggerRegex: /damage/,
+        damageResultGroupRegex: /data-result="(\d+)/,
+        damageNameRegex: /header__title--damage">([^<]+)/,
+        damageTypeRegex: new RegExp(dndDamageTypes.reduce((output, type, index) => {
           return`${output}${index === 0
               ? `\(${type}|`
               : index === dndDamageTypes.length - 1
                   ? `${type}\)`
                   : `${type}|`}`;
-        }, ''), 'i'),
-        damageResultGroupRegex: /data-result="(\d+)/,
+        }, '') + '\\s*<div class="damage-breakdown__total"', 'i'),
         damageFields: ['damage'],
         critFields: ['crit'],
         upcastDamage: [],
@@ -732,13 +734,15 @@ API_Meta.autoButtons = { offset: Number.MAX_SAFE_INTEGER, lineCount: -1 };
       return name ? name[1] : 'Apply:';
     }
 
-    static findBeaconName(msgContent) {
-      const name = msgContent.match(/class="header__title">([^<]+)/)?.[1];
-      return name ?? 'Apply:';
+    static findBeaconName(msgContent, beaconSheetName) {
+      const name = (msgContent.match(beaconPreset[beaconSheetName]?.templates?.damageNameRegex)?.[1] ?? '')
+          .replace(/\s*damage\s*$/i, '');
+
+      return name || 'Apply';
     }
 
     static findBeaconDamageType(msgContent, beaconSheetName) {
-      return msgContent.match(beaconPreset[beaconSheetName]?.templates?.damageGroupRegex)?.[1] ?? '';
+      return msgContent.match(beaconPreset[beaconSheetName]?.templates?.damageTypeRegex)?.[1] ?? '';
     }
 
     // sendChat shortcut
