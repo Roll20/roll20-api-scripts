@@ -1,7 +1,7 @@
 {
   "name": "autoButtons",
   "script": "autoButtons.js",
-  "version": "0.9.0",
+  "version": "0.9.1",
   "description": "*autoButtons* automatically generates damage buttons after a damage roll to streamline the application of damage to a single token. Pre-configured for DnD5e by Roll20, but is highly configurable for use with other sheets.\r\rSee the main [autoButtons thread](https://app.roll20.net/forum/permalink/10766392/) for documentation.",
   "authors": "oosh",
   "roll20userid": "4775411",
@@ -11,5 +11,5 @@
     "state.autoButtons": "read,write"
   },
   "conflicts": [],
-  "previousversions": ["0.8.9"]
+  "previousversions": ["0.8.9", "0.9.0"]
 }
