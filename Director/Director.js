@@ -15,14 +15,15 @@ API_Meta.Director = {
 on('ready', () =>
 {
     
-    const version = '1.0.3'; //version number set here
+    const version = '1.0.4'; //version number set here
     log('-=> Director v' + version + ' is loaded. Command !director creates control handout and provides link. Click that to open.');
 
 //Changelog:
 //1.0.0 Debut script
 //1.0.1 Grid Mode, fallback image system for Marketplace images
 //1.0.2 Expanded Grid Mode up to 9x9 and tighterned spacing, added Star system
-//1.0.3 Added search function for scenes and images
+//1.0.3 Fixed bugs where new install would crash trying to read st.items when undefined
+//1.0.4 Added search function for scenes and images
 
 
 // == Director Script ==
