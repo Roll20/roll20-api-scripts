@@ -22,8 +22,7 @@ on('ready', () =>
 //1.0.0 Debut script
 //1.0.1 Grid Mode, fallback image system for Marketplace images
 //1.0.2 Expanded Grid Mode up to 9x9 and tighterned spacing, added Star system
-//1.0.3 Added search function for scenes and images
-
+//1.0.3 Fixed bugs where new install would crash trying to read st.items when undefined
 
 // == Director Script ==
 // Globals
@@ -88,19 +87,14 @@ const cssDark = {
   editIcon: 'color:#eee; font-size:12px; margin:0px 4px; display:inline-block; float:right; cursor:pointer;',
   utilityEditButton: 'color: #333; background: crimson; padding: 0 2px; border-radius: 3px; min-width:12px; margin-left:2px; margin-bottom:-19px; padding-top:2px; font-family: Pictos; font-size: 12px; text-align:center; float:right; position:relative; top:-22px; right:4px;',
   utilityEditButtonOverlay: 'color: #333; background: crimson; padding: 0 4px; border-radius: 3px; min-width: 12px; margin-left: 4px; padding-top: 2px; font-family: Pictos; font-size: 20px; text-align: center; cursor: pointer; float: none; position: relative; top: 0; right: 0; margin-bottom: 0; z-index: 11;',
-  starred: `color: gold; font-weight: bold; font-size: 18px; text-decoration: none; user-select: none; cursor: pointer; position: absolute; top: 3px; right: 8px; margin: 0;`,
-  unstarred: `color: gray; font-weight: normal; font-size: 18px; text-decoration: none; user-select: none; cursor: pointer; position: absolute; top: 3px; right: 8px; margin: 0;`,
+starred: `color: gold; font-weight: bold; font-size: 18px; text-decoration: none; user-select: none; cursor: pointer; position: absolute; top: 3px; right: 8px; margin: 0;`,
+unstarred: `color: gray; font-weight: normal; font-size: 18px; text-decoration: none; user-select: none; cursor: pointer; position: absolute; top: 3px; right: 8px; margin: 0;`,
 
 
   // === Message UI ===
   messageContainer: 'color:#ccc; background-color:#222; border:1px solid #444; border-radius:5px; padding:10px; font-family: Nunito, Arial, sans-serif; position:relative; top:-15px; left:-5px;',
   messageTitle: 'color:#ddd; font-size:16px; text-transform:capitalize; text-align:center; margin-bottom:13px;',
   messageButton: 'color:#ccc; background:#444; border-radius:4px; padding:2px 6px; margin-right:2px; display:inline-block; vertical-align:middle;',
-  searchScenesResultsButton: 'color:#ccc; background:#444; width:80%; border: 1px #444 solid; border-radius:4px; padding:1px 3px; margin:2px; display:inline-block; vertical-align:middle;font-size:11px',
-  searchResultsButton: 'color:#ccc; background:#444; border: 1px #444 solid; border-radius:4px; padding:1px 3px; margin:2px; display:inline-block; vertical-align:middle;font-size:11px',
-  searchImageResultsBlock:  'background:#222; border: 1px #444 solid; border-radius:2px; padding:4px; margin:6px 0px 0px 0px; display:block;',
-  searchResultsColumnHeader: 'color:#ddd; background:#333; width:92%; margin:25px 0px 5px 0px; padding:6px 8px; font-weight:bold; font-size:15px;display:block',
-
 
   // === Images ===
   imageContainer: 'margin-bottom:2px; clear:both; overflow:hidden;',
@@ -164,15 +158,6 @@ unstarred:  { color: '#bbb' },
   messageContainer: { color: '#222', background: '#f9f9f9', border: '1px solid #ccc' },
   messageTitle: { color: '#222' },
   messageButton: { color: '#222', background: '#ddd' },
-  searchScenesResultsButton: { color: '#222', background: '#f9f9f9'},
-  searchResultsButton: { color: '#222', background: '#f9f9f9',},
-  searchImageResultsBlock: { color: '#222', background: '#ddd',},
-  searchResultsColumnHeader: { color: '#222', background: '#f9f9f9', },
-
-
-
-
-
 
   imageBoxWrapper: { background: '#fff', border: '1px solid #ccc' },
   imageDiv: { border: '1px solid #ccc' },
@@ -1245,8 +1230,6 @@ const renderHelpHtml = (css) => `
   <p>Acts group together related scenes. Use the
     <span style="${css.utilitySubButton}; float:none; position:relative;">+ Add Act</span>
     button to create an act.</p>
-    <p>Click the <span style="${css.utilitySubButton}; float:none; position:relative;">${Pictos('s')}</span> button in the column header to search for a scene or image by name. Enter a partial or similar term to quickly locate what you need.</p>
-
   <p>In <b>Edit Mode</b>, act-level options include:
     <ul>
       <li>Rename or delete the act</li>
@@ -2257,7 +2240,6 @@ ${getJukeboxPlusHandoutLink()}
             <div style="${css.columnHeader}">
               Acts
               <a href="!director --new-act|?{Act name}" style="${css.utilitySubButton}">+ Add Act</a>
-        <a href="!director --search|?{Search term}" style="${css.utilitySubButton}" title="Search for Scene or Image">${Pictos('s')}</a>
             </div>
             <div>${actsHtml}</div>
 
@@ -2286,7 +2268,6 @@ ${getJukeboxPlusHandoutLink()}
 <div style="${css.columnHeader}">
   Images
   <a href="!director --new-image" style="${css.utilitySubButton}" title="Add a new image to this scene">+ Add Image</a>
-  <a href="!director --search|?{Search term}" style="${css.utilitySubButton}" title="Search for Scene or Image">${Pictos('s')}</a>
   <a href="!director --toggle-mute" 
      style="${css.utilitySubButton}; background-color: ${st.settings.muteBackdropAudio ? 'red' : css.utilitySubButtonBackground};"
      title="${st.settings.muteBackdropAudio ? 'Unmute Automatic Backdrop Audio' : 'Mute Automatic Backdrop Audio'}">
@@ -2476,133 +2457,6 @@ case 'toggle-edit-mode': {
   updateHandout();
   break;
 }
-
-
-case 'expand-act-only': {
-    const actName = decodeURIComponent(val);
-    st.actsExpanded = st.actsExpanded || {};
-
-    // Collapse all acts except the target
-    Object.keys(st.actsExpanded).forEach(key => {
-        st.actsExpanded[key] = (key === actName);
-    });
-
-    // Make sure target act exists
-    if (!(actName in st.actsExpanded)) {
-        st.actsExpanded[actName] = true;
-    }
-
-    updateHandout();
-    break;
-}
-
-
-case 'search': {
-    const searchTerm = val?.trim().toLowerCase();
-    if (!searchTerm) {
-        sendStyledMessage('Director', 'Please provide a search term.');
-        break;
-    }
-
-    const searchWords = searchTerm.split(/\s+/); // split search into words
-
-    const st = getState();
-    const actsObj = st.acts || {};
-    const results = [];
-
-    // Helper function: returns true if all words appear in the text
-    const fuzzyMatch = (text) => {
-        text = text.toLowerCase();
-        return searchWords.every(w => text.includes(w));
-    };
-
-    // Iterate acts
-    for (const actKey in actsObj) {
-        const act = actsObj[actKey];
-        const actTitle = act.name || actKey;
-
-        if (fuzzyMatch(actTitle)) {
-            results.push({ type: 'act', actId: actKey, title: actTitle });
-        }
-
-        const scenesObj = act.scenes || {};
-        for (const sceneKey in scenesObj) {
-            const scene = scenesObj[sceneKey];
-            const sceneTitle = scene.name || sceneKey;
-
-            if (fuzzyMatch(sceneTitle)) {
-                results.push({ type: 'scene', actId: actKey, sceneId: sceneKey, title: sceneTitle });
-            }
-
-            const images = Array.isArray(scene.images) ? scene.images : [];
-            for (const img of images) {
-                const imageTitle = img.title || '[No title]';
-                if (fuzzyMatch(imageTitle)) {
-                    results.push({
-                        type: 'image',
-                        actId: actKey,
-                        sceneId: sceneKey,
-                        sceneTitle: sceneTitle, 
-                        imageId: img.id,
-                        imageUrl: img.url,
-                        title: imageTitle
-                    });
-                }
-            }
-        }
-    }
-
-    if (!results.length) {
-        sendStyledMessage('Director', `No matches found for "${val}".`);
-        break;
-    }
-
-    const css = getCSS();
-
-    // Separate results into scenes and images
-    const sceneResults = results.filter(r => r.type === 'scene');
-    const imageResults = results.filter(r => r.type === 'image');
-
-    // Build Scenes section
-    const scenesSection = sceneResults.map(r => {
-        const cmd = `!director --expand-act-only|${encodeURIComponent(r.actId)}&#010;!director --set-active-scene|${encodeURIComponent(r.actId)}|${encodeURIComponent(r.sceneId)}`;
-        const setBtn = `<a href="!director --set-active-scene|${encodeURIComponent(r.actId)}|${encodeURIComponent(r.sceneId)}&#010;!director --set-scene" style="${css.searchResultsButton}">set</a>`;
-        return `<a href="${cmd}" style="${css.searchScenesResultsButton}">${r.title}</a> ${setBtn}`;
-    }).join('<br>');
-
-    // Build Images section
-const imagesSection = imageResults.map(r => {
-    const setCmd = `!director --expand-act-only|${encodeURIComponent(r.actId)}&#010;` +
-                   `!director --set-active-scene|${encodeURIComponent(r.actId)}|${encodeURIComponent(r.sceneId)}&#010;` +
-                   `!director --set-backdrop|${r.imageId}&#010;` + 
-                   `!director --set-scene`;
-    const setBtn = `<a href="${setCmd}" style="${css.searchResultsButton}">set</a>`;
-    const revealCmd = `!director --expand-act-only|${encodeURIComponent(r.actId)}&#010;` +
-                      `!director --set-active-scene|${encodeURIComponent(r.actId)}|${encodeURIComponent(r.sceneId)}&#010;` +
-                      `!director --set-backdrop|${r.imageId}`;
-    const revealBtn = `<a href="${revealCmd}" style="${css.searchResultsButton}">Reveal</a>`;
-    const sceneCmd = `!director --expand-act-only|${encodeURIComponent(r.actId)}&#010;` +
-                     `!director --set-active-scene|${encodeURIComponent(r.actId)}|${encodeURIComponent(r.sceneId)}`;
-    const sceneBtn = `<a href="${sceneCmd}" style="${css.searchResultsButton}">${r.sceneTitle}</a>`;
-
-    // Clickable image with transparent background, no border/padding, cropped 70x70
-    const imgPreview = `<a href="${setCmd}" style="display:block;width:70px;height:70px;overflow:hidden;float:left;margin-right:10px;background:transparent;border:none;padding:0;"><img src="${r.imageUrl}" style="height:100%;width:auto;display:block;margin:auto;"></a>`;
-
-    return `<div style="${css.searchImageResultsBlock}">${imgPreview}<div style="margin-left:80px;"><div style="font-weight:bold;">${r.title}</div><div>${sceneBtn}</div><div>${revealBtn} ${setBtn}</div></div></div>`;
-}).join('');
-
-    // Combine sections with headers
-    const message = `<div><div style = "${css.searchResultsColumnHeader}">Scenes</div><div style="${css.searchImageResultsBlock}">${scenesSection}</div></div><div style="margin-top:10px;"><div style = "${css.searchResultsColumnHeader}">Images</div>${imagesSection}</div>`;
-
-    sendStyledMessage(`Search results for "${val}":`, message);
-    break;
-}
-
-
-
-
-
-
 
 
 
@@ -3649,7 +3503,7 @@ case 'add-image-url': {
   st.acts[activeAct].scenes[sceneName].images.push({
     id,
     url: val,
-    ratio: 0.56, // defaults to 16:9
+    ratio: 1, // fallback; user may want to edit later
     type: 'highlight',
     title: 'New Image'
   });
