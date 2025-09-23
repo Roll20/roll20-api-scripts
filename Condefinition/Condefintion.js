@@ -759,7 +759,7 @@ const marketButtons = markerExists("Hexed3")
     }
 
 
-    const version = '1.0.2';
+    const version = '1.0.3';
     log('Condefinitions v' + version + ' is ready! --offset ' + API_Meta.Condefinition.offset + ' for the D&D 5th Edition by Roll20 Sheet. Command is !condef-help');
     loadConditionsFromHandout();
 
