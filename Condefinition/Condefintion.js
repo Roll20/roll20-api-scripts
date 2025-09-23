@@ -717,9 +717,10 @@ const marketButtons = markerExists("Hexed3")
 
         marketButtons +
 
-         `<br>` +`<B>Modify for Condition Sync?</B>` + `<br>` +
+         `<br>` +
+        /*    `<B>Modify for Condition Sync?</B>` + `<br>` +
         makeGenericButton("Use Condition-Sync Marker Names", "!condef-sheetmarkers") + `<br><br>` +
-
+        */
         `<B>Edit Manually from Handout</B>` + `<br>` +
         makeGenericButton("Open Handout", getHandoutURL("Condefinitions")) +
         `<br><br>` +
