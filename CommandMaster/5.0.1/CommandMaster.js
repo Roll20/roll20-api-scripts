@@ -145,7 +145,7 @@ API_Meta.CommandMaster={offset:Number.MAX_SAFE_INTEGER,lineCount:-1};
  *                     Extended Drag & Drop "random" item to add item class specification as in
  *                     "random(item-class):qty". Added --restock command to support trader inventory
  *                     restocking. Fixed evalAttr issue with unbracketed calculations.
- * v5.0.1  23/09/2025  Fixed non-responsive [Add all Owned Weapons] button on Add Profiienies dialog.
+ * v5.0.1  23/09/2025  Fixed non-responsive [Add all Owned Weapons] button on Add Proficiencies dialog.
  */
  
 var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
@@ -6031,7 +6031,7 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 		var from = args[0] || '',
 			func = args[1] || '',
 			funcTrue = ['initialise','abilities','add-spells','add-profs','set-prof','set-all-prof','register','edit','debug','help'].includes(func.toLowerCase()),
-			cmd = '!'+from+' --hsr cmd'+((func && func.length) ? ('|'+func+'|'+funcTrue) : '');
+			cmd = '!'+from+' --noWaitMsg --hsr cmd'+((func && func.length) ? ('|'+func+'|'+funcTrue) : '');
 			
 		sendAPI(cmd);
 		return;
@@ -6206,6 +6206,8 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 				case 'debug':
 					doSetDebug(arg,senderId);
 					break;
+				case 'nowaitmsg':
+					break;
 				default:
 					showHelp(); 
 					sendFeedback('<span style="color: red;">Invalid command " <b>'+msg.content+'</b> "</span>',flags.feedbackName,flags.feedbackImg);
@@ -6260,7 +6262,7 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 			sendDebug('senderId is defined as ' + getObj('player',senderId).get('_displayname'));
 		};
 		
-		if (!flags.noWaitMsg) sendWait(senderId,1,'commandMaster');
+		if (!flags.noWaitMsg && !args[0].toLowerCase().startsWith('nowaitmsg')) sendWait(senderId,1,'commandMaster');
 		
 		_.each(args, function(e) {
 			setTimeout( doCommandCmd, (1*t++), e, selected, senderId, isGM );
