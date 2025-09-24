@@ -112,14 +112,16 @@ API_Meta.MagicMaster={offset:Number.MAX_SAFE_INTEGER,lineCount:-1};
  *                     Updated --change-attr command to have a '=' qualifier to set temporary attribute 
  *                     value to a specific number. Created itemSlotData() utility function to replace faulty
  *                     slotCounts{} object and add qty & weight counts.
+ * v5.0.1  24/09/2025  Added the --noWaitMsg command to silence the immediate "Please Wait, gathering data..."
+ *                     messages.
  */
  
 var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	'use strict';
-	var version = '5.0.0',
+	var version = '5.0.1',
 		author = 'RED',
 		pending = null;
-	const lastUpdate = 1756894380;
+	const lastUpdate = 1758722202;
 		
 	/*
 	 * Define redirections for functions moved to the RPGMaster library
@@ -10659,6 +10661,8 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 					case 'skip':
 						// RED: v4.1 added to allow viewed abilities to not execute certain live commands
 						break;
+					case 'nowaitmsg':
+						break;
 					default:
 						sendFeedback('<span style="color: red;">Invalid command " <b>'+msg.content+'</b> "</span>',flags.feedbackName);
 						showHelp(isGM); 
@@ -10713,7 +10717,7 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 		
 		var isGM = (playerIsGM(senderId) || state.MagicMaster.debug === senderId);
 			
-		if (!flags.noWaitMsg) sendWait(senderId,50,'magicMaster');
+		if (!flags.noWaitMsg && !args[0].toLowerCase().startsWith('nowaitmsg')) sendWait(senderId,1,'magicMaster');
 		
 		_.each(args, function(e) {
 			setTimeout( doMagicCmd, (1*t++), e, selected, senderId, isGM );
@@ -10729,6 +10733,7 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	 
 	var cmdMasterRegister = function() {
 		var cmd = fields.commandMaster
+				+ ' --noWaitMsg'
 				+ ' --register Cast_MU_spell|Cast a Wizard spell|magic|~~cast-spell|MU%%`{selected|token_id}'
 				+ ' --register Cast_PR_spell|Cast a Priest spell|magic|~~cast-spell|PR%%`{selected|token_id}'
 				+ ' --register Cast_spell|Ask for which type of spell to cast|magic|~~cast-spell|MU-PR%%`{selected|token_id}'
