@@ -4552,6 +4552,8 @@ var initMaster = (function() {		// eslint-disable-line no-unused-vars
 						// RED: v1.207 allow anyone to set debug and who to send debug messages to
 						doSetDebug(argString,senderId);
 						break;
+					case 'nowaitmsg':
+						break;
 					default:
 						sendFeedback('<span style="color: red;">Invalid command " <b>'+msg.content+'</b> "</span>',flags.feedbackName,flags.feedbackImg);
 						showHelp(); 
@@ -4603,7 +4605,7 @@ var initMaster = (function() {		// eslint-disable-line no-unused-vars
 		let senderMod = args.shift().split(' ');
 		if (senderMod.length > 1) senderId = fixSenderId( [senderMod[1]], selected, senderId );
 		
-		if (!flags.noWaitMsg) {
+		if (!flags.noWaitMsg && !args[0].toLowerCase().startsWith('nowaitmsg')) {
 			sendWait(senderId,1,'initMaster');
 		}
 		
@@ -4622,6 +4624,7 @@ var initMaster = (function() {		// eslint-disable-line no-unused-vars
 	 
 	var cmdMasterRegister = function() {
 		var cmd = fields.commandMaster
+				+ ' --noWaitMsg'
 				+ ' --register Do_Initiative|Specify what character will do in current round and roll initiative|init|~~menu|`{selected|token_id}'
 				+ ' --register Complex_Monster_Init|Specify initiative for a Monster that can have both inate and weapon attacks|init|~~monmenu|`{selected|token_id}'
 				+ ' --register Monster_Init|Specify simple monster initiative|init|~~monster|`{selected|token_id}'
