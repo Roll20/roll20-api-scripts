@@ -8604,6 +8604,8 @@ var attackMaster = (function() {	// eslint-disable-line no-unused-vars
 						// RED: v1.207 allow anyone to set debug and who to send debug messages to
 						doSetDebug(argString,senderId);
 						break;
+					case 'nowaitmsg':
+						break;
 					default:
 						showHelp(); 
 						sendFeedback('<span style="color: red;">Invalid command " <b>'+msg.content+'</b> "</span>',flags.feedbackName,flags.feedbackImg);
@@ -8651,7 +8653,7 @@ var attackMaster = (function() {	// eslint-disable-line no-unused-vars
 		} else {
 			sendDebug('senderId is defined as ' + getObj('player',senderId).get('_displayname'));
 		};
-		if (!flags.noWaitMsg) sendWait(senderId,1,'attkMaster');
+		if (!flags.noWaitMsg && !args[0].toLowerCase().startsWith('nowaitmsg')) sendWait(senderId,1,'attkMaster');
 		
 		_.each(args, function(e) {
 			setTimeout( doAttkCmd, (1*t++), e, selected, senderId, isGM );
@@ -8669,6 +8671,7 @@ var attackMaster = (function() {	// eslint-disable-line no-unused-vars
 	 
 	var cmdMasterRegister = function() {
 		var cmd = fields.commandMaster
+				+ ' --noWaitMsg'
 				+ ' --register Attack_hit|Do an attack where Roll20 rolls the dice|attk|~~attk-hit|`{selected|token_id}'
 				+ ' --register Attack_roll|Do an attack where player rolls the dice|attk|~~attk-roll|`{selected|token_id}'
 				+ ' --register Attack_target|Do an attack with full target statistics (GM-only)|attk|~~attk-target|`{selected|token_id}'
