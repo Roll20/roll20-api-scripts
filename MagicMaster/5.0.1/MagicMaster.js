@@ -121,7 +121,7 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	var version = '5.0.1',
 		author = 'RED',
 		pending = null;
-	const lastUpdate = 1758722202;
+	const lastUpdate = 1758783460;
 		
 	/*
 	 * Define redirections for functions moved to the RPGMaster library
@@ -1486,7 +1486,7 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	 **/
 	 
 	var issueHandshakeQuery = function( api, cmd ) {
-		var handshake = '!'+api+' --hsq magic'+((cmd && cmd.length) ? ('|'+cmd) : '');
+		var handshake = '!'+api+' --noWaitMsg --hsq magic'+((cmd && cmd.length) ? ('|'+cmd) : '');
 		sendAPI(handshake);
 		return;
 	};
@@ -10393,7 +10393,7 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 			func = args[1] || '',
 			funcTrue = ['spellmenu','mem-spell','view-spell','cast-spell','cast-again','mimenu','edit-mi','view-mi','use-mi','mi-charges','mi-power','touch','rest','gm-edit-mi','search','pickorput','lightsources',
 						'light','changelight','help','check-db','debug'].includes(func.toLowerCase()),
-			cmd = '!'+from+' --hsr magic'+((func && func.length) ? ('|'+func+'|'+funcTrue) : '');
+			cmd = '!'+from+' --noWaitMsg --hsr magic'+((func && func.length) ? ('|'+func+'|'+funcTrue) : '');
 			
 		sendAPI(cmd);
 		return;
