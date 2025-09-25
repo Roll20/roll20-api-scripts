@@ -66,7 +66,8 @@ API_Meta.InitMaster={offset:Number.MAX_SAFE_INTEGER,lineCount:-1};
  *                     weapon attacks for creatures that can do both. Fixed errors in parsing initiative
  *                     modifiers with the --set-mods command.
  * v5.0.1  21/09/2025  Fixed initiative menu for using a magic item or equipment.
- * v5.0.2  23/09/2025  Added error message if weapon selected for initiative is not found in-hand.
+ * v5.0.2  23/09/2025  Added error message if weapon selected for initiative is not found in-hand. Added
+ *                     --noWaitMsg command to suppress spurious Please Wait messages.
  */
 
 var initMaster = (function() {		// eslint-disable-line no-unused-vars
@@ -74,7 +75,7 @@ var initMaster = (function() {		// eslint-disable-line no-unused-vars
 	var version = '5.0.2',
 		author = 'Richerd @ Damery',
 		pending = null;
-    const lastUpdate = 1758697790;
+    const lastUpdate = 1758783460;
 
 	/*
 	 * Define redirections for functions moved to the RPGMaster library
@@ -1023,7 +1024,7 @@ var initMaster = (function() {		// eslint-disable-line no-unused-vars
 	 
 	var issueHandshakeQuery = function( api, cmd ) {
 		sendDebug('InitMaster issuing handshake to '+api+((cmd && cmd.length) ? (' for command '+cmd) : ''));
-		var handshake = '!'+api+' --hsq init'+((cmd && cmd.length) ? ('|'+cmd) : '');
+		var handshake = '!'+api+' --noWaitMsg --hsq init'+((cmd && cmd.length) ? ('|'+cmd) : '');
 		sendAPI(handshake);
 		return;
 	};
@@ -4370,7 +4371,7 @@ var initMaster = (function() {		// eslint-disable-line no-unused-vars
 			func = args[1] || '',
 			funcTrue = ['init','type','menu','monmenu','weapon','monster','complex','muspell','prspell','power','mibag','thief','other','maint','check-tracker','list-pcs',
 						'end-of-day','help','debug'].includes(func.toLowerCase()),
-			cmd = '!'+from+' --hsr init'+((func && func.length) ? ('|'+func+'|'+funcTrue) : '');
+			cmd = '!'+from+' --noWaitMsg --hsr init'+((func && func.length) ? ('|'+func+'|'+funcTrue) : '');
 
 		sendDebug('InitMaster recieved handshake query from '+from+((func && func.length) ? (' checking command '+func+' so responding '+funcTrue) : (' and responding')));
 		sendRmAPI(cmd);
