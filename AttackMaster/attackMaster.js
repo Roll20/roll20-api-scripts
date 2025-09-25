@@ -109,7 +109,8 @@ API_Meta.AttackMaster={offset:Number.MAX_SAFE_INTEGER,lineCount:-1};
  *                     parsing and enactment. Fix situational mod for save vs. dodgeable attack.
  *                     Fix changing ring table update.
  * v5.0.2  13/09/2025  Fixed assignment to a constant in buildRogueRoll().
- * v5.0.3  23/09/2025  Corrected Two Weapon Style Specialisation to not apply for ranged weapons.
+ * v5.0.3  23/09/2025  Corrected Two Weapon Style Specialisation to not apply for ranged weapons. Added
+ *                     --noWaitMsg command to suppress spurious Please Wait messages.
  */
  
 var attackMaster = (function() {	// eslint-disable-line no-unused-vars
@@ -117,7 +118,7 @@ var attackMaster = (function() {	// eslint-disable-line no-unused-vars
 	var version = '5.0.3',
 		author = 'Richard @ Damery',
 		pending = null;
-    const lastUpdate = 1758697790;
+    const lastUpdate = 1758783460;
 
 	/*
 	 * Define redirections for functions moved to the RPGMaster library
@@ -1108,7 +1109,7 @@ var attackMaster = (function() {	// eslint-disable-line no-unused-vars
 	 **/
 	 
 	var issueHandshakeQuery = function( api, cmd ) {
-		var handshake = '!'+api+' --hsq attk'+((cmd && cmd.length) ? ('|'+cmd) : '');
+		var handshake = '!'+api+' --noWaitMsg --hsq attk'+((cmd && cmd.length) ? ('|'+cmd) : '');
 		sendAPI(handshake);
 		if (_.isUndefined(apiCommands[api])) apiCommands[api] = {};
 		apiCommands[api].exists = false;
@@ -3004,17 +3005,17 @@ var attackMaster = (function() {	// eslint-disable-line no-unused-vars
 								acValues.armour.magic = parseInt(acData.adj||0)!==0;
 							}
 							acValues = _.omit( acValues, function(item,iClass) {
-								let itemRules = item.data.rules.toLowerCase();
+								const itemRules = item.data.rules.toLowerCase().replace(/[_\s]/g, '').split('|').map(r => r.replace(/\-/g,(match,i,s)=>(i>0?'':match)));
 									
-								if (itemClass === 'armour' && acValues.armour.magic && item.data.rules.includes('-magic')) {
+								if (itemClass === 'armour' && acValues.armour.magic && itemRules.includes('-magic')) {
 									armourMsg.push(item.name+' cannot be used alongside magical armour');
 									return true;
 								}
-								if (itemClass === 'armour' && (item.data.rules.includes('-'+itemSuperType) || (item.data.rules.includes('-acall') && !item.data.rules.includes('+'+itemSuperType)))) {
+								if (itemClass === 'armour' && (itemRules.includes('-'+itemSuperType) || (itemRules.includes('-acall') && !itemRules.includes('+'+itemSuperType)))) {
 									armourMsg.push(item.name+' cannot be used alongside '+acValues.armour.specs[4]);
 									return true;
 								}
-								if (item.data.rules.includes('-'+itemClass)) {
+								if (itemRules.includes('-'+itemClass)) {
 									armourMsg.push(item.name+' cannot be used alongside '+itemName);
 									return true;
 								}
@@ -8333,7 +8334,7 @@ var attackMaster = (function() {	// eslint-disable-line no-unused-vars
 		var from = args[0] || '',
 			func = args[1] || '',
 			funcTrue = ['menu','other-menu','attk-hit','attk-roll','attk-target','weapon','dance','mod-weapon','quiet-modweap','ammo','setammo','checkac','save','help','check-db','debug'].includes(func.toLowerCase()),
-			cmd = '!'+from+' --hsr attk'+((func && func.length) ? ('|'+func+'|'+funcTrue) : '');
+			cmd = '!'+from+' --noWaitMsg --hsr attk'+((func && func.length) ? ('|'+func+'|'+funcTrue) : '');
 			
 		sendAPI(cmd);
 		return;
