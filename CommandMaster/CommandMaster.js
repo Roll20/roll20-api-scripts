@@ -146,6 +146,7 @@ API_Meta.CommandMaster={offset:Number.MAX_SAFE_INTEGER,lineCount:-1};
  *                     "random(item-class):qty". Added --restock command to support trader inventory
  *                     restocking. Fixed evalAttr issue with unbracketed calculations.
  * v5.0.1  23/09/2025  Fixed non-responsive [Add all Owned Weapons] button on Add Proficiencies dialog.
+ *                     Added --noWaitMsg command to suppress spurious Please Wait messages.
  */
  
 var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
@@ -153,7 +154,7 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 	var version = '5.0.1',
 		author = 'RED',
 		pending = null;
-	const lastUpdate = 1758697790;
+	const lastUpdate = 1758783460;
 
 	/*
 	 * Define redirections for functions moved to the RPGMaster library
@@ -1301,7 +1302,7 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 	 **/
 	 
 	var issueHandshakeQuery = function( api, cmd ) {
-		var handshake = '!'+api+' --hsq cmd'+((cmd && cmd.length) ? ('|'+cmd) : '');
+		var handshake = '!'+api+' --noWaitMsg --hsq cmd'+((cmd && cmd.length) ? ('|'+cmd) : '');
 		sendAPI(handshake);
 		if (_.isUndefined(apiCommands[api])) apiCommands[api] = {};
 		apiCommands[api].exists = false;
