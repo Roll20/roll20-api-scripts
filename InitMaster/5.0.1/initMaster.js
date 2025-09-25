@@ -66,16 +66,14 @@ API_Meta.InitMaster={offset:Number.MAX_SAFE_INTEGER,lineCount:-1};
  *                     weapon attacks for creatures that can do both. Fixed errors in parsing initiative
  *                     modifiers with the --set-mods command.
  * v5.0.1  21/09/2025  Fixed initiative menu for using a magic item or equipment.
- * v5.0.2  23/09/2025  Added error message if weapon selected for initiative is not found in-hand. Added
- *                     --noWaitMsg command to suppress spurious Please Wait messages.
  */
 
 var initMaster = (function() {		// eslint-disable-line no-unused-vars
 	'use strict'; 
-	var version = '5.0.2',
+	var version = '5.0.1',
 		author = 'Richerd @ Damery',
 		pending = null;
-    const lastUpdate = 1758783460;
+    const lastUpdate = 1758462661;
 
 	/*
 	 * Define redirections for functions moved to the RPGMaster library
@@ -1024,7 +1022,7 @@ var initMaster = (function() {		// eslint-disable-line no-unused-vars
 	 
 	var issueHandshakeQuery = function( api, cmd ) {
 		sendDebug('InitMaster issuing handshake to '+api+((cmd && cmd.length) ? (' for command '+cmd) : ''));
-		var handshake = '!'+api+' --noWaitMsg --hsq init'+((cmd && cmd.length) ? ('|'+cmd) : '');
+		var handshake = '!'+api+' --hsq init'+((cmd && cmd.length) ? ('|'+cmd) : '');
 		sendAPI(handshake);
 		return;
 	};
@@ -1153,12 +1151,7 @@ var initMaster = (function() {		// eslint-disable-line no-unused-vars
 	var setAttkCount = function( charCS, weapon, attkCount ) {
 		let InHandTable = getTableField( charCS, {}, fields.InHand_table, fields.InHand_miName );
 		InHandTable = getTableField( charCS, InHandTable, fields.InHand_table, fields.InHand_attkCount );
-		const index = InHandTable.tableFind( fields.InHand_miName, weapon );
-		if (_.isUndefined(index)) {
-			sendError('Weapon '+weapon+' not found in-hand. Use the *Change Weapon* dialog to take the weapon in-hand');
-		} else {
-			InHandTable.tableSet( fields.InHand_attkCount, index, attkCount);
-		};
+		InHandTable.tableSet( fields.InHand_attkCount, InHandTable.tableFind( fields.InHand_miName, weapon ), attkCount);
 	};
 	
 	/*
@@ -4371,7 +4364,7 @@ var initMaster = (function() {		// eslint-disable-line no-unused-vars
 			func = args[1] || '',
 			funcTrue = ['init','type','menu','monmenu','weapon','monster','complex','muspell','prspell','power','mibag','thief','other','maint','check-tracker','list-pcs',
 						'end-of-day','help','debug'].includes(func.toLowerCase()),
-			cmd = '!'+from+' --noWaitMsg --hsr init'+((func && func.length) ? ('|'+func+'|'+funcTrue) : '');
+			cmd = '!'+from+' --hsr init'+((func && func.length) ? ('|'+func+'|'+funcTrue) : '');
 
 		sendDebug('InitMaster recieved handshake query from '+from+((func && func.length) ? (' checking command '+func+' so responding '+funcTrue) : (' and responding')));
 		sendRmAPI(cmd);
@@ -4553,8 +4546,6 @@ var initMaster = (function() {		// eslint-disable-line no-unused-vars
 						// RED: v1.207 allow anyone to set debug and who to send debug messages to
 						doSetDebug(argString,senderId);
 						break;
-					case 'nowaitmsg':
-						break;
 					default:
 						sendFeedback('<span style="color: red;">Invalid command " <b>'+msg.content+'</b> "</span>',flags.feedbackName,flags.feedbackImg);
 						showHelp(); 
@@ -4606,7 +4597,7 @@ var initMaster = (function() {		// eslint-disable-line no-unused-vars
 		let senderMod = args.shift().split(' ');
 		if (senderMod.length > 1) senderId = fixSenderId( [senderMod[1]], selected, senderId );
 		
-		if (!flags.noWaitMsg && !args[0].toLowerCase().startsWith('nowaitmsg')) {
+		if (!flags.noWaitMsg) {
 			sendWait(senderId,1,'initMaster');
 		}
 		
@@ -4625,7 +4616,6 @@ var initMaster = (function() {		// eslint-disable-line no-unused-vars
 	 
 	var cmdMasterRegister = function() {
 		var cmd = fields.commandMaster
-				+ ' --noWaitMsg'
 				+ ' --register Do_Initiative|Specify what character will do in current round and roll initiative|init|~~menu|`{selected|token_id}'
 				+ ' --register Complex_Monster_Init|Specify initiative for a Monster that can have both inate and weapon attacks|init|~~monmenu|`{selected|token_id}'
 				+ ' --register Monster_Init|Specify simple monster initiative|init|~~monster|`{selected|token_id}'
