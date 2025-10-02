@@ -1,0 +1,35 @@
+{
+  "name": "lib-smart-attributes",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "src/index.ts",
+  "types": "0.0.1/index.d.ts",
+  "scripts": {
+    "lint": "eslint",
+    "lint:fix": "eslint --fix",
+    "build": "rollup --config rollup.config.ts --configPlugin typescript --configImportAttributesKey with",
+    "start": "rollup --config rollup.config.ts --configPlugin typescript --configImportAttributesKey with --watch",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "test:watch": "vitest --watch"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "@eslint/js": "^9.36.0",
+    "@roll20/api-types": "../.types",
+    "@rollup/plugin-node-resolve": "^16.0.1",
+    "@rollup/plugin-typescript": "^12.1.4",
+    "@stylistic/eslint-plugin": "^5.4.0",
+    "eslint": "^9.36.0",
+    "rollup": "^4.52.3",
+    "rollup-plugin-delete": "^3.0.1",
+    "ts-node": "^10.9.2",
+    "tslib": "^2.8.1",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.45.0",
+    "vitest": "^3.2.4"
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "name": "libSmartAttributes",
+  "version": "0.0.1",
+  "description": "libSmartAttributes provides an interface for managing beacon attributes in a slightly smarter way.",
+  "authors": "GUD Team",
+  "roll20userid": "8705027",
+  "dependencies": [],
+  "modifies": {},
+  "conflicts": [],
+  "script": "libSmartAttributes.js",
+  "useroptions": [],
+  "previousversions": []
+}
