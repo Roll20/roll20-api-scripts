@@ -1,0 +1,13 @@
+{
+  "name": "APISmartAttributes",
+  "version": "0.0.1",
+  "description": "APISmartAttributes provides an interface for managing beacon attributes in a slightly smarter way.",
+  "authors": "GUD Team",
+  "roll20userid": "",
+  "dependencies": [],
+  "modifies": {},
+  "conflicts": [],
+  "script": "APISmartAttributes.js",
+  "useroptions": [],
+  "previousversions": []
+}

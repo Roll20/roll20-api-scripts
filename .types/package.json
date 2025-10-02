@@ -1,0 +1,7 @@
+{
+  "private": true,
+  "name": "@roll20/api-types",
+  "version": "1.0.0",
+  "types": "index.d.ts",
+  "main": "index.d.ts"
+}
