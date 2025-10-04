@@ -1,7 +1,7 @@
 {
     "$schema": "https://github.com/Roll20/roll20-api-scripts/master/_Example%20Script%20-%20Check%20for%20formatting%20details/script.schema.json",
     "name": "TokenGroups",
-    "script": "TokenGroups.js",
+    "script": "0.7.0/TokenGroups.js",
     "version": "0.7.0",
     "previousversions": [],
     "description": "An API Script to create and manage named groups of tokens on a page, then apply actions (like switching layers) to the whole group at once. Includes GM-only tools to list groups across pages, find where a group lives, and purge deleted token IDs. Enhanced with ScriptCards integration for better formatting and menus.",
