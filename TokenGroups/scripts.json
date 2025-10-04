@@ -1,0 +1,45 @@
+{
+    "$schema": "https://github.com/Roll20/roll20-api-scripts/master/_Example%20Script%20-%20Check%20for%20formatting%20details/script.schema.json",
+    "name": "TokenGroups",
+    "script": "0.7.0/TokenGroups.js",
+    "version": "0.7.0",
+    "previousversions": [],
+    "description": "An API Script to create and manage named groups of tokens on a page, then apply actions (like switching layers) to the whole group at once. Includes GM-only tools to list groups across pages, find where a group lives, and purge deleted token IDs. Enhanced with ScriptCards integration for better formatting and menus.",
+    "authors": "Joe Simmons",
+    "roll20userid": "2447959",
+    "patreon": "https://www.patreon.com/c/joeuser",
+    "useroptions": [
+        {
+            "name": "enabled_on_boot",
+            "type": "checkbox",
+            "value": "true",
+            "checked": "checked",
+            "description": "Start TokenGroups enabled when the API sandbox boots."
+        },
+        {
+            "name": "render_mode",
+            "type": "select",
+            "options": ["html", "sc"],
+            "default": "sc",
+            "description": "Render mode: html (basic HTML) or sc (ScriptCards enhanced formatting)."
+        },
+        {
+            "name": "auto_menu",
+            "type": "checkbox",
+            "value": "false",
+            "checked": "",
+            "description": "Automatically show menu when creating/updating groups."
+        }
+    ],
+    "dependencies": [],
+    "optional": ["ScriptCards"],
+    "modifies": {
+        "graphic.represents": "read",
+        "graphic.layer": "write",
+        "graphic.visible": "write",
+        "graphic.controlledby": "read",
+        "page.id": "read",
+        "page.name": "read"
+    },
+    "conflicts": []
+}
