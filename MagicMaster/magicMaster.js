@@ -114,14 +114,15 @@ API_Meta.MagicMaster={offset:Number.MAX_SAFE_INTEGER,lineCount:-1};
  *                     slotCounts{} object and add qty & weight counts.
  * v5.0.1  24/09/2025  Added the --noWaitMsg command to silence the immediate "Please Wait, gathering data..."
  *                     messages.
+ * v5.0.2  05/10/2025  Add (temporary?) fix to API button cmd / macro pair action.
  */
  
 var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	'use strict';
-	var version = '5.0.1',
+	var version = '5.0.2',
 		author = 'RED',
 		pending = null;
-	const lastUpdate = 1758783460;
+	const lastUpdate = 1759674157;
 		
 	/*
 	 * Define redirections for functions moved to the RPGMaster library
@@ -2872,9 +2873,9 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * whether empty slots '-' are included.
 	 */
 
-	var makeMIbuttons = function( tokenID, senderId, miField, qtyField, cmd, extension='', MIrowref=-1, disable0=true, includeEmpty=false, showTypes=false, showMagic=true, pickID, putID, buy='', refuse='' ) {
-		
 	/* Note: if buy is true or has a string value, disable0 refers to cost rather than quantity (zero quantity is always not shown if buy is true). This ensures all owned goods can be sold. */
+
+	var makeMIbuttons = function( tokenID, senderId, miField, qtyField, cmd, extension='', MIrowref=-1, disable0=true, includeEmpty=false, showTypes=false, showMagic=true, pickID, putID, buy='', refuse='' ) {
 		
 		return new Promise(resolve => {
 			
@@ -2955,7 +2956,8 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 							content += (highlight || makeGrey) ? ('<span style=' + (highlight ? design.selected_button : design.grey_button) + '>') : '['; 
 							content += (mi !== '-' ? (qty + ((qty != maxQty && isGM) ? '/'+maxQty : '') + ' ' + miText.replace(/\-/g,' ')) : '-');
 							if (mi != '-') slotsUsed++;
-							if (isView && mi.replace(reIgnore,'').length) {
+							let extIsAbility = isView && mi.replace(reIgnore,'').length;
+							if (extIsAbility) {
 								if (ItemsTable.tableLookup( fields[fieldGroups[table].prefix+'reveal'], i ) == 'view') mi = trueMI;
 								let hide = !miObj.obj ? '' : resolveData( mi, fields.MagicItemDB, reItemData, pickCS, {hide:reSpellSpecs.hide}, i, Items[table].rowID(i) ).parsed.hide,
 									reveal = (mi !== trueMI) && !!miObj.obj && hide && hide.length && hide !== 'hide';
@@ -2971,7 +2973,7 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 									miObj.obj[0].set('action',action);
 								}
 							}
-							content += (highlight || makeGrey) ? '</span>' : '](!magic --button '+ cmd +'|'+ tokenID +'|'+ rowNo + extension +')';
+							content += (highlight || makeGrey) ? '</span>' : '](!'+(!extIsAbility ? '' : ('&#13;'+extension+'&#13;'))+'magic --button '+ cmd +'|'+ tokenID +'|'+ rowNo + (!extIsAbility ? extension : '')+')';
 							buttonNo++;
 							sectHead = '';
 						};
@@ -3203,7 +3205,7 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 						content += (buttonID == selectedButton ? '<span style=' + design.selected_button + '>' : ((submitted || disabled) ? '<span style=' + design.grey_button + '>' : '['));
 						content += ((spellType.includes('POWER') && spellValue) ? (spellValue + ' ') : '') + (spellName || '-');
 //						content += (((buttonID == selectedButton) || submitted || disabled) ? '</span>' : '](!magic --button '+ command +'|'+ tokenID +'|'+ buttonID +'|'+ r +'|'+ c + (!isView ? '' : (' --display-ability '+tokenID+'|'+spellDB+'|'+spellName + extension)) + ')');
-						content += ((buttonID == selectedButton) || submitted || disabled) ? '</span>' : ('](!magic --button '+ command +'|'+ tokenID +'|'+ buttonID +'|'+ r +'|'+ c + extension + (!isView ? '' : '&#13;'+sendToWho(charCS,senderId,false,true)+'&#37;{' + spell.dB + '|' + changedSpell.hyphened() + '}')+')');
+						content += ((buttonID == selectedButton) || submitted || disabled) ? '</span>' : ('](!'+(!isView ? '' : '&#13;'+sendToWho(charCS,senderId,false,true)+'&#37;{' + spell.dB + '|' + changedSpell.hyphened() + '}&#13;') + 'magic --button '+ command +'|'+ tokenID +'|'+ buttonID +'|'+ r +'|'+ c + extension + +')');
 					}
 					buttonID++;
 				});
@@ -3250,7 +3252,8 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 						let	spellValue = parseInt((spellTables[w].tableLookup( fields.Spells_castValue, r )),10),
 							disabled = (miStore ? (spellValue != 0) : (spellValue == 0));
 						if (!noDash || spellName != '-') {
-							if (isView && spellName.replace(reIgnore,'').length) {
+							let isExtAbility = isView && spellName.replace(reIgnore,'').length;
+							if (isExtAbility) {
 								magicDB = spellTables[w].tableLookup( fields.Spells_db,r );
 								if (!magicDB || magicDB == spellName) {
 									magicDB = findPower(charCS,spellName).dB;
@@ -3261,11 +3264,11 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 								spell = getAbility( magicDB, spellName, charCS );
 								if (!!spell.obj) spell.obj = greyOutButtons( tokenID, charCS, spell.obj, (renamed ? changedSpell : ''), ('[Return to menu](!magic --button '+viewCmd+'|'+tokenID+'|'+buttonID +'|'+ r +'|'+ c +')') );
 //								extension = `${!learn ? '' : ` --message ${tokenID}|Learn Spell|Try to &#91;Learn this spell&#93;&#40;!magic ~~learn-spell ${tokenID}¦${spellName}&#41;`}&#13;${(spell.api ? '' : toWho)}&#37;{${spell.dB}|${spellName}}`;
-								extension = `$&#13;${toWho}&#37;{${spell.dB}|${changedSpell}}`;
+								extension = `$&#13;${toWho}&#37;{${spell.dB}|${changedSpell}}&#13;!`;
 							}
 							content += (buttonID == selectedButton ? '<span style=' + design.selected_button + '>' : ((submitted || disabled || (lv > maxLevel)) ? '<span style=' + design.grey_button + '>' : '['));
 							content += ((spellType.includes('POWER') && spellValue) ? (spellValue + ' ') : '') + spellName.dispName();
-							content += (((buttonID == selectedButton) || submitted || disabled || (lv > maxLevel)) ? '</span>' : '](!magic --button '+ command +'|'+ tokenID +'|'+ buttonID +'|'+ r +'|'+ c + extension +')');
+							content += (((buttonID == selectedButton) || submitted || disabled || (lv > maxLevel)) ? '</span>' : '](!' + (!isExtAbility ? '' : extension) + 'magic --button '+ command +'|'+ tokenID +'|'+ buttonID +'|'+ r +'|'+ c + (isExtAbility ? '' : extension) +')');
 						}
 					}
 					buttonID++;
@@ -3540,9 +3543,8 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 		content += '{{desc2=3.Once both spell and '+(isAny ? 'optionally ' : '')+'slot selected\n'
 				+  ((canStore && (spellButton >= 0) && (isAdd || isAny || MIbutton >= 0)) ? '[' : '<span style='+design.grey_button+'>')
 				+  ((isAdd || isAny) && MIbutton < 0 ? 'Add ' : 'Store ')+spellName
-				+  ((canStore && (spellButton >= 0)) ? (((isAdd || isAny) && MIbutton<0) ? ('](!magic --button ADD_TO_SPELLS|'+tokenID+'|'+itemRef+'|'+command+'|1|STORE-MI-SPELL|'+spellName+'|'+wisLevel+'||'+MIspellName+'|'+spellRow+'|'+spellCol+')')
-																			  : ('](!magic --button '+(isMU ? BT.MISTORE_MUSPELL : BT.MISTORE_PRSPELL)+extra+'|'+tokenID+'|'+MIbutton+'|'+MIrow+'|'+MIcol+'|'+spellButton+'|'+spellRow+'|'+spellCol+')'))
-													 : '</span>')
+				+  ((canStore && (spellButton >= 0)) ? (((isAdd || isAny) && MIbutton<0) ? ('](!magic --button ADD_TO_SPELLS|'+tokenID+'|'+itemRef+'|'+command+'|1|STORE-MI-SPELL|'+spellName+'|'+wisLevel+'||'+MIspellName+'|'+spellRow+'|'+spellCol+')') : ('](!magic --button '+(isMU ? BT.MISTORE_MUSPELL : BT.MISTORE_PRSPELL)+extra+'|'+tokenID+'|'+MIbutton+'|'+MIrow+'|'+MIcol+'|'+spellButton+'|'+spellRow+'|'+spellCol+')'))
+										   : '</span>')
 				+  ((spellButton >= 0 && MIbutton >= 0 && !canStore) ? ' Spells don\'t match. Must be the same\n' : '')
 				+  ' or switch to ['+(isMU ? 'Priest' : 'Wizard')+'](!magic --mem-spell MI-'+(isMU ? 'PR' : 'MU')+extra+'|'+tokenID+') spells'
 				+  '}}';
@@ -3654,8 +3656,8 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 		content += '}}{{desc1=Select '+magicWord+' above, then '
 				+ (((spellButton < 0) || submitted) ? '<span style=' + design.grey_button + '>' : '[')
 				+ 'Cast '+(spellName.length > 0 ? spellName : magicWord)
-				+ (((spellButton < 0) || submitted) ? '</span>' : '](!magic --button '+ storeCmd +'|'+ tokenID +'|'+ spellButton +'|'+ spellRow +'|'+ spellCol +'|'+ charged
-				+'&#13;'+(spell.api ? '' : sendToWho(charCS,senderId,false,true))+'&#37;{' + spell.dB + '|' + spellName.hyphened() + '}' + learnText + ')' )
+				+ (((spellButton < 0) || submitted) ? '</span>' : '](!&#13;'+(spell.api ? '' : sendToWho(charCS,senderId,false,true))+'&#37;{' + spell.dB + '|' + spellName.hyphened() + '}' + learnText + '&#13;'
+				+ '!magic --button '+ storeCmd +'|'+ tokenID +'|'+ spellButton +'|'+ spellRow +'|'+ spellCol +'|'+ charged + ')')
 				+ '}}';
 				
 		sendResponse( charCS, content, senderId, flags.feedbackName, flags.feedbackImg, tokenID );
@@ -3748,8 +3750,8 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 			macroDB = isPower ? fields.PowersDB : (isMU ? fields.MU_SpellsDB : (isPR ? fields.PR_SpellsDB : fields.MagicItemDB)),
 			spell = getAbility( macroDB, spellName, charCS ),
 			content = '&{template:'+fields.menuTemplate+'}{{name='+args[5]+'}}'
-					+ '{{desc=[Use another charge?](!magic --button '+ args[0] +'|'+ args[1] +'|'+ args[2] +'|'+ args[3] +'|'+ args[4]
-					+ '&#13;'+(spell.api ? '' : sendToWho(charCS,senderId,false,true))+'&#37;{' + spell.dB + '|' + (args[5].hyphened()) + '})}}';
+					+ '{{desc=[Use another charge?](!&#13;'+(spell.api ? '' : sendToWho(charCS,senderId,false,true))+'&#37;{' + spell.dB + '|' + (args[5].hyphened()) + '}&#13;'
+					+ '!magic --button '+ args[0] +'|'+ args[1] +'|'+ args[2] +'|'+ args[3] +'|'+ args[4]+ ')}}';
 		
 		if (charCS) {
 			sendResponse( charCS, content, senderId, flags.feedbackName, flags.feedbackImg, args[1] );
@@ -3824,7 +3826,7 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	/*
 	 * Create a menu to view or use a magic item
 	 */
- 
+
 	async function makeViewUseMI( args, senderId, menuType ) {
 		
 		try {
@@ -3913,8 +3915,7 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 							setAbility( charCS, changedMI, magicItem.obj[0].get('action').replace(/\}\}$/m,'}}'+'{{Learn=Try to [Learn this spell](!magic &#45;-learn-spell '+tokenID+'|'+learn+')}}'));
 						};
 					};
-					content += '['+actionText+' '+displayMI+'](!magic --button '+ submitAction +'|'+ tokenID +'|'+ MIrowref
-																+'&#13;'+((magicItem.api && !isView) ? '' : sendToWho(charCS,senderId,false,true))+'&#37;{'+magicItem.dB+'|'+(changedMI.hyphened())+'})';
+					content += '['+actionText+' '+displayMI+'](!&#13;'+((magicItem.api && !isView) ? '' : sendToWho(charCS,senderId,false,true))+'&#37;{'+magicItem.dB+'|'+(changedMI.hyphened())+'}&#13;!magic --button '+ submitAction +'|'+ tokenID +'|'+ MIrowref +')';
 				} else {
 					content	+= '<span style='+design.grey_button+'>'+actionText+' Magic Item</span>';
 				}
@@ -5187,11 +5188,12 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	
 	/*
 	 * Review a chosen spell description
+	 * Stubbed out as greyOutButtons now deals with this
 	 */
 	 
 	var handleReviewSpell = function( args, senderId ) {
 		
-		var cmd = args[0].toUpperCase(),
+/*		var cmd = args[0].toUpperCase(),
 			isMU = cmd.includes('MU'),
 			isPR = cmd.includes('PR'),
 			isMI = cmd.includes('MI'),
@@ -5238,6 +5240,7 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 		args[0] = followOn;
 //		msg = '[Return to menu](!magic --button '+args.join('|')+')';
 //		setTimeout(() => sendResponse( charCS, msg, senderId, flags.feedbackName, flags.feedbackImg, tokenID ),500);
+*/
 		return;
 	}
 	
@@ -6116,8 +6119,7 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 			args.shift();
 			content = '&{template:'+fields.menuTemplate+'}{{name='+itemDesc+'\'s '+powerDesc+' power}}'
 					+ '{{desc='+tokenName+' is about to use **'+itemDesc+'\'s** '+powerDesc+' power.  Is this correct?}}'
-					+ '{{desc1=[Use '+powerDesc+'](!magic --button '+ BT.MI_POWER_USED +'|'+ args.join('|')
-					+ '&#13;'+(powerLib.api ? '' : toWho)+'&#37;{'+powerLib.dB +'|'+ (power.hyphened()) +'})'
+					+ '{{desc1=[Use '+powerDesc+'](!&#13;'+(powerLib.api ? '' : toWho)+'&#37;{'+powerLib.dB +'|'+ (power.hyphened()) +'}&#13;!magic --button '+ BT.MI_POWER_USED +'|'+ args.join('|')+ ')'
 					+ ' or [Return to '+itemDesc+'](!&#13;'+(magicItem.api ? '' : toWho)+'&#37;{'+magicItem.dB+'|'+item+'})\nOr just do something else}}';
 			sendResponse(charCS,content,senderId, flags.feedbackName, flags.feedbackImg, tokenID);
 		}
