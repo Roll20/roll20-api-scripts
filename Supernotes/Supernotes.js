@@ -113,13 +113,13 @@ let Supernotes_Templates = {
     },
 
     gothic: {
-        boxcode: `<div style='color: #fff; background-image: url(https://i.imgur.com/cLCx0Ih.jpg); background-repeat: repeat; background-color: transparent; display: block; box-shadow: 0 0 3px #fff; text-align: left; font-size: 14px; padding: 12px 12px 12px 12px; margin-bottom: 2px; font-family: Palatino, serif; white-space: pre-wrap;'>`,
+        boxcode: `<div style='color: #fff; background-image: url(https://files.d20.io/images/459209465/bJ0zt44EhbkzDr-mo9X8lA/original.jpg); background-repeat: repeat; background-color: transparent; display: block; box-shadow: 0 0 3px #fff; text-align: left; font-size: 14px; padding: 12px 12px 12px 12px; margin-bottom: 2px; font-family: Palatino, serif; white-space: pre-wrap;'>`,
         titlecode: `<div style='font-weight:bold; color: #fff; background-color:#transparent; margin-bottom:0px; padding:3px;font-size: 18px; font-family: Luminari, palatino, Georgia, serif; text-align:center'>`,
-        textcode: `</div><img style='margin-bottom:12px;' src='https://i.imgur.com/j8SCVod.png'><div style='padding:3px; margin-bottom:0px; font-family: palatino, serif; text-shadow: 0 0 1px #000; line-height: 19px;'>`,
+        textcode: `</div><img style='margin-bottom:12px;' src='https://files.d20.io/images/459209460/b2DE-w5ANclivwN3EISjeQ/original.png'><div style='padding:3px; margin-bottom:0px; font-family: palatino, serif; text-shadow: 0 0 1px #000; line-height: 19px;'>`,
         buttonwrapper: `<div style='display:block; margin-top:12px;text-align:center;'>`,
         buttonstyle: `style='display:inline-block; color:#ccc; background-color: transparent;padding: 0px; border: none'`,
         playerbuttonstyle: `style='display:inline-block; color:#ccc; font-size:12px; font-weight:normal; background-color: transparent;padding: 0px; border: none;'`,
-        buttondivider: `<img style='margin:0px 4px 0px 4px; width:14px;' src='https://i.imgur.com/RGoRhcK.png'>`,
+        buttondivider: `<img style='margin:0px 4px 0px 4px; width:14px;' src='https://files.d20.io/images/459209528/6mdldZcTCKMNLwC1UHZ7Lw/original.png'>`,
         handoutbuttonstyle: `style='display:inline-block; color:#ccc; font-size:12px; font-weight:normal; background-color: transparent; padding: 0px; border: none;'`,
         whisperStyle: `'background-color:#2b2130; color:#ddd; display:block; border-width: 1px; border-style: solid; border-color:#a3a681; padding:5px'`,
         whisperbuttonstyle: `style='display:inline-block; color:#aaa; background-color: transparent;padding: 0px; border: none'`,
@@ -127,13 +127,13 @@ let Supernotes_Templates = {
     },
 
     western: {
-        boxcode: `<div style='color: #000; border: 1px solid #000; border-radius: 2px; box-shadow: 0px 0px 20px 0px #000 inset; background-image: url(https://i.imgur.com/GKuncRd.jpg); background-repeat: repeat; background-color: transparent; display: block; text-align: left; font-size: 16px; padding: 12px 10px 12px 10px; margin-bottom: 2px; font-family: "Times New Roman", serif; white-space: pre-wrap;'>`,
+        boxcode: `<div style='color: #000; border: 1px solid #000; border-radius: 2px; box-shadow: 0px 0px 20px 0px #000 inset; background-image: url(https://files.d20.io/images/459209462/iw8RdsL5EVwrQkXPVR5nRQ/original.jpg); background-repeat: repeat; background-color: transparent; display: block; text-align: left; font-size: 16px; padding: 12px 10px 12px 10px; margin-bottom: 2px; font-family: "Times New Roman", serif; white-space: pre-wrap;'>`,
         titlecode: `<div style='font-weight:bold; color: #932; background-color:#transparent; margin-bottom:0px; padding:3px;font-size: 22px;   font-family: Rye, "Times New Roman", serif; text-align:center'>`,
-        textcode: `</div><div style='text-align:center;'><img style='margin-bottom:12px;' src='https://i.imgur.com/fFFX0wW.png'></div><div style='padding:3px; margin-bottom:0px; font-family: "IM Fell DW Pica", "Times New Roman", serif; line-height: 19px;'>`,
+        textcode: `</div><div style='text-align:center;'><img style='margin-bottom:12px;' src='https://files.d20.io/images/459209467/C0vr5RYuiDwvdCfFJiXmCg/original.png'></div><div style='padding:3px; margin-bottom:0px; font-family: "IM Fell DW Pica", "Times New Roman", serif; line-height: 19px;'>`,
         buttonwrapper: `<div style='display:block; margin-top:12px;text-align:center;'>`,
         buttonstyle: `style='display:inline-block; color:#000; background-color: transparent;padding: 0px; border: none'`,
         playerbuttonstyle: `style='display:inline-block; color:#7e2d40; background-color: transparent;padding: 0px; border: none'`,
-        buttondivider: `<img style='margin:0px 4px 0px 4px; width:20px;' src='https://i.imgur.com/x41nAwF.png'>`,
+        buttondivider: `<img style='margin:0px 4px 0px 4px; width:20px;' src='https://files.d20.io/images/459209588/xw0q8Qvdx1MCsWHP1XNmnw/original.png'>`,
         handoutbuttonstyle: `style='display:inline-block; color:#7e2d40; background-color: transparent;padding: 0px; border: none'`,
         whisperStyle: `'background-color:#382d1d; color:#ebcfa9; font-style: italic; display:block; border-width: 1px; border-style: solid; border-color:#a3a681; padding:5px; margin-top:5px'`,
         whisperbuttonstyle: `style='display:inline-block; color:#fabe69; background-color: transparent;padding: 0px; border: none'`,
@@ -141,13 +141,13 @@ let Supernotes_Templates = {
     },
 
     dragon: {
-        boxcode: `<div style='color: #000; border: 1px solid #b5ac89; box-shadow: 2px 2px 4px #000, 0px 0px 20px 0px #d9bea0 inset; background-image: url(https://i.imgur.com/YoWsOow.jpg); background-size: auto; background-repeat: repeat-y;  background-color: #e6daae; display: block; text-align: left; font-size: 14px; line-height: 16px;padding: 12px 10px 8px 10px; margin-bottom: 2px; font-family: ""Times New Roman", serif; white-space: pre-wrap;'>`,
+        boxcode: `<div style='color: #000; border: 1px solid #b5ac89; box-shadow: 2px 2px 4px #000, 0px 0px 20px 0px #d9bea0 inset; background-image: url(https://files.d20.io/images/459209594/g3-JSA2fW8dUWSyWbIG3bQ/original.jpg); background-size: auto; background-repeat: repeat-y;  background-color: #e6daae; display: block; text-align: left; font-size: 14px; line-height: 16px;padding: 12px 10px 8px 10px; margin-bottom: 2px; font-family: ""Times New Roman", serif; white-space: pre-wrap;'>`,
         titlecode: `<div style='font-weight:bold; color: #0e3365; text-transform: uppercase; background-color:#transparent; margin-bottom:2px;  border-bottom: 2px solid #0e3365; padding:3px 3ps 0px 3px;font-size: 20px; font-family: Luminari,"times new roman", times, baskerville, serif; text-align:right'>`,
         textcode: `</div><div style='padding:3px; margin-bottom:0px; font-family: Georgia, serif; line-height: 19px;'>`,
         buttonwrapper: `<div style='display:block; margin-top:14px ;text-align:center;font-family: Luminari,"times new roman"'>`,
         buttonstyle: `style='display:inline-block; color:#0e3365; background-color: transparent;padding: 0px; border: none'`,
         playerbuttonstyle: `style='display:inline-block; color: #0e3365; font-size:14px; background-color: transparent;padding: 0px; border: none'`,
-        buttondivider: " &nbsp;&bull;&nbsp; ", //`<img style='margin:0px 4px 0px 4px; width:20px;' src='https://i.imgur.com/x41nAwF.png'>`,
+        buttondivider: " &nbsp;&bull;&nbsp; ", //`<img style='margin:0px 4px 0px 4px; width:20px;' src='https://files.d20.io/images/459209588/xw0q8Qvdx1MCsWHP1XNmnw/original.png'>`,
         handoutbuttonstyle: `style='display:inline-block; color: #0e3365; font-size:14px; background-color: transparent;padding: 0px; border: none'`,
         whisperStyle: `'display:block; border-width: 5px 0px 5px 0px; border-style: solid; border-color:#58170D; padding:5px; margin-top:9px;'`,
         whisperbuttonstyle: `style='display:inline-block; color:#0e3365; background-color: transparent;padding: 0px; border: none'`,
@@ -157,13 +157,13 @@ let Supernotes_Templates = {
 
 
     wizard: {
-        boxcode: `<div style='color: #000; border: 1px solid #b5ac89; box-shadow: 2px 2px 4px #000, 0px 0px 20px 0px #d9bea0 inset; background-image: url(https://i.imgur.com/fYJp37l.jpg); background-repeat: repeat; background-color: #e6daae; display: block; text-align: left; font-size: 14px; padding: 12px 10px 8px 10px; margin-bottom: 2px; font-family: "Times New Roman", serif; white-space: pre-wrap;'>`,
+        boxcode: `<div style='color: #000; border: 1px solid #b5ac89; box-shadow: 2px 2px 4px #000, 0px 0px 20px 0px #d9bea0 inset; background-image: url(https://files.d20.io/images/459209464/Gvxg3OZzRhp_4sK7NnZhXw/original.jpg); background-repeat: repeat; background-color: #e6daae; display: block; text-align: left; font-size: 14px; padding: 12px 10px 8px 10px; margin-bottom: 2px; font-family: "Times New Roman", serif; white-space: pre-wrap;'>`,
         titlecode: `<div style='font-weight:bold; color: #58170D; font-variant: small-caps; background-color:#transparent; margin-bottom:0px;  border-bottom: 2px solid #c9ad6a; padding:3px;font-size: 22px; font-family: "times new roman", times, baskerville, garamond, serif; text-align:left'>`,
         textcode: `</div><div style='padding:3px; margin-bottom:0px; font-family: Georgia, serif; line-height: 19px;'>`,
         buttonwrapper: `<div style='display:block; border-top: solid 1px #000; background-color: #E0E5C1; margin-top:12px ;text-align:center;font-family:arial, sans-serif'>`,
         buttonstyle: `style='display:inline-block; color:#58170D; background-color: transparent;padding: 0px; border: none'`,
         playerbuttonstyle: `style='display:inline-block; color: #000; font-size:12px; background-color: transparent;padding: 0px; border: none'`,
-        buttondivider: " &nbsp;&bull;&nbsp; ", //`<img style='margin:0px 4px 0px 4px; width:20px;' src='https://i.imgur.com/x41nAwF.png'>`,
+        buttondivider: " &nbsp;&bull;&nbsp; ", //`<img style='margin:0px 4px 0px 4px; width:20px;' src='https://files.d20.io/images/459209588/xw0q8Qvdx1MCsWHP1XNmnw/original.png'>`,
         handoutbuttonstyle: `style='display:inline-block; color: #000; font-size:12px; background-color: transparent;padding: 0px; border: none'`,
         whisperStyle: `'background-color:#E0E5C1; color:#000; display:block; border-width: 1px; border-width: 1px 0px 1px 0px; border-style: solid; border-color:#58170D; padding:5px'`,
         whisperbuttonstyle: `style='display:inline-block; color:#58170D; background-color: transparent;padding: 0px; border: none'`,
@@ -177,7 +177,7 @@ path: {
     buttonwrapper: `<div style='display:block; background-color: transparent; margin-top:12px ;text-align:center;font-family:arial, sans-serif'>`,
     buttonstyle: `style='display:inline-block; color:#5e0000; font-weight:bold; background-color: transparent; padding: 0px; border: none'`,
     playerbuttonstyle: `style='display:inline-block; color: #eee; font-size:12px; background-color: #5e0000; padding: 0px 4px 0px 4px; border-style:solid; border-width: 2px 4px 2px 4px; border-color: #d9c484; text-transformation: all-caps; font-family: "gin", impact, "Arial Bold Condensed", sans-serif;'`,
-    buttondivider: " &nbsp;&nbsp; ", //`<img style='margin:0px 4px 0px 4px; width:20px;' src='https://i.imgur.com/x41nAwF.png'>`,
+    buttondivider: " &nbsp;&nbsp; ", //`<img style='margin:0px 4px 0px 4px; width:20px;' src='https://files.d20.io/images/459209588/xw0q8Qvdx1MCsWHP1XNmnw/original.png'>`,
     handoutbuttonstyle: `style='display:inline-block; color: #eee; font-size:12px; background-color: #5e0000; padding: 0px 4px 0px 4px; border-style:solid; border-width: 2px 4px 2px 4px; border-color: #d9c484; text-transformation: all-caps; font-family: "gin", impact, "Arial Bold Condensed", sans-serif;'`,
     whisperStyle: `'background-color:#dbd1bc; color:#000; display:block; border-width: 1px; margin-top:15px; padding:5px; font-size: 15px; font-family: "Good OT", arial, sans-serif;'`,
     whisperbuttonstyle: `style='display:inline-block; color:#58170D; background-color: transparent; font-weight:bold; padding: 0px; border: none'`,
@@ -185,7 +185,7 @@ path: {
 },
 
 apoc: {
-        boxcode: `<div style='color: 000; background-image: url(https://i.imgur.com/vql1NqV.jpg); background-size: 100%; background-repeat: repeat-y; background-color: transparent; display: block; box-shadow: 0 0 3px #fff; text-align: left; font-size: 17px; padding: 0px; margin-bottom: 2px; font-family: "Shadows Into Light", Monaco,"Courier New", monospace; white-space: pre-wrap;'>`,
+        boxcode: `<div style='color: 000; background-image: url(https://files.d20.io/images/459209592/o4Ohe8PlNabBNbpXmyy09Q/original.jpg); background-size: 100%; background-repeat: repeat-y; background-color: transparent; display: block; box-shadow: 0 0 3px #fff; text-align: left; font-size: 17px; padding: 0px; margin-bottom: 2px; font-family: "Shadows Into Light", Monaco,"Courier New", monospace; white-space: pre-wrap;'>`,
         titlecode: `<div style='font-weight:bold; color: #000; background-color:transparent; margin:20px 24px 0px 24px; padding:12px 3px 8px 3px;font-size: 18px; font-family: "IM Fell DW Pica", verdana, tahoma, sans-serif; text-align:center'>`,
         textcode: `</div><div><div style='padding:0px 3px 0px 3px; margin:0px 24px 0px 24px; color: #000;font-family: "Shadows Into Light", Monaco,"Courier New", monospace; line-height: 26px;'>`,
         buttonwrapper: `<div style='display:block; margin-top:12px;text-align:center;'>`,
@@ -195,11 +195,11 @@ apoc: {
         handoutbuttonstyle: `style='display:inline-block; color:#000; font-size:14px; font-weight:normal; background-color: transparent; padding: 0px; border: none;'`,
         whisperStyle: `'background-color:#403f3d; color:#ddd; display:block; padding:5px !important; margin:5px; font-family: "Shadows Into Light", Monaco,"Courier New", monospace !important; '`,
         whisperbuttonstyle: `style='display:inline-block; color:#bbb; background-color: transparent;padding: 0px; border: none'`,
-        footer: `<img style = 'margin: 0px !important; padding:0px;width:100%' src = 'https://i.imgur.com/ssWzyQy.png'>`
+        footer: `<img style = 'margin: 0px !important; padding:0px;width:100%' src = 'https://files.d20.io/images/459209596/RSmUyGMLL-vQ04zCmmWPGQ/original.png'>`
     },
     
     roman: {
-        boxcode: `<div style='color: 000; background-image: url(https://i.imgur.com/aSthlxE.png); background-size: 100%; background-repeat: repeat-y; background-color: transparent; display: block; box-shadow: 0 0 3px #fff; text-align: left; font-size: 17px; padding: 0px; margin-bottom: 2px; font-family: "Shadows Into Light", Monaco,"Courier New", monospace; white-space: pre-wrap;'><div style = 'display:block; text-align:center;'><img style='margin-bottom:-25px; margin-top:0px; text-align:center;' src='https://i.imgur.com/oS3hgTt.png'></div>`,
+        boxcode: `<div style='color: 000; background-image: url(https://files.d20.io/images/459209470/FuYxzu3hsKZZe7vP6czucg/original.png); background-size: 100%; background-repeat: repeat-y; background-color: transparent; display: block; box-shadow: 0 0 3px #fff; text-align: left; font-size: 17px; padding: 0px; margin-bottom: 2px; font-family: "Shadows Into Light", Monaco,"Courier New", monospace; white-space: pre-wrap;'><div style = 'display:block; text-align:center;'><img style='margin-bottom:-25px; margin-top:0px; text-align:center;' src='https://files.d20.io/images/459209530/dIxYg78Hg-J_cM6IC9AJcw/original.png'></div>`,
         titlecode: `<div style='font-weight:bold; color: #666; background-color:transparent; margin:20px 12px 0px 12px; padding:12px 3px 8px 3px;font-weight: 900; font-size: 24px; line-height:24px; text-transform: uppercase; text-shadow: -1px -1px rgba(0,0,0,0.5), 1px 1px rgba(255,255,255,0.5); font-family: "Crimson Text", times,"Times New Roman", serif; text-align:center'>`,
         textcode: `</div><div><div style='padding:0px 3px 0px 3px; margin:0px 12px 0px 12px; color: #333; font-weight: 900; font-size: 13px; text-transform: uppercase; text-shadow: -1px -1px rgba(0,0,0,0.25), 1px 1px rgba(255,255,255,0.5); font-family: "Crimson Text", times,"Times New Roman", serif; line-height: 20px;'>`,
         buttonwrapper: `<div style='display:block; margin: 12px -10px 0px -10px; text-align:center;'>`,
@@ -207,13 +207,13 @@ apoc: {
         playerbuttonstyle: `style='display:inline-block; color:#000; font-size:12px; font-weight:normal; background-color: transparent;padding: 0px; border: none;'`,
         buttondivider: " | ",
         handoutbuttonstyle: `style='display:inline-block; color:#000; font-size:12px; font-weight:normal; background-color: transparent; padding: 0px; border: none;'`,
-        whisperStyle: `'background-image: url(https://i.imgur.com/SkkPm0h.jpg); background-repeat: no-repeat; background-size: 100% 100%; background-color:#403f3d; color:#ddd; display:block; padding:8px !important; margin:5px 0px; text-shadow: none; line-height:16px;'`,
+        whisperStyle: `'background-image: url(https://files.d20.io/images/459209597/cdZeKGAy2_NKcU1Wjkjeew/original.jpg); background-repeat: no-repeat; background-size: 100% 100%; background-color:#403f3d; color:#ddd; display:block; padding:8px !important; margin:5px 0px; text-shadow: none; line-height:16px;'`,
         whisperbuttonstyle: `style='display:inline-block; color:#bbaa55; font-weight: bolder !important; background-color: transparent;padding: 0px; border: none'`,
-        footer: `<img style = 'margin: 0px !important; padding:0px;width:100%' src = 'https://i.imgur.com/0h3lMRE.png'>`
+        footer: `<img style = 'margin: 0px !important; padding:0px;width:100%' src = 'https://files.d20.io/images/459209476/2ievKCGQVkd4dB0n-lNV4Q/original.png'>`
     },
 
     notebook: {
-        boxcode: `<div style='color: 000; border-radius:10px; background-image: url(https://i.imgur.com/2tWlJSg.jpg); background-size: auto; background-repeat: repeat-y; background-color: transparent; display: block; box-shadow: 0 0 3px #fff; line-height 16px; text-align: left; font-size: 14px; padding: 8px 8px 8px 30px; margin-bottom: 2px; font-family: "Patrick Hand", Monaco,"Courier New", monospace; white-space: pre-wrap;'>`,
+        boxcode: `<div style='color: 000; border-radius:10px; background-image: url(https://files.d20.io/images/459209466/589jHGhTwYfL3aaKtyRfNg/original.jpg); background-size: auto; background-repeat: repeat-y; background-color: transparent; display: block; box-shadow: 0 0 3px #fff; line-height 16px; text-align: left; font-size: 14px; padding: 8px 8px 8px 30px; margin-bottom: 2px; font-family: "Patrick Hand", Monaco,"Courier New", monospace; white-space: pre-wrap;'>`,
         titlecode: `<div style='font-weight:bold; font-style: italic; font-weight:bolder; color: #000; background-color:transparent; margin-bottom:0px; padding:3px;font-size: 20px; Monaco,"Courier New", monospace; text-align:center'>`,
         textcode: `</div><div><div style='padding:3px; margin:7px 0px 0px 10px; color: #000;font-family: "Patrick Hand", Monaco,"Courier New", monospace; line-height: 16px;'>`,
         buttonwrapper: `<div style='display:block; margin:12px 0px 0px -9px; text-align:center;'>`,
@@ -227,13 +227,13 @@ apoc: {
     },
 
     steam: {
-        boxcode: `<div style='color: #000; background-image: linear-gradient(to bottom right,#e3b76f,#ebcc99,#b28f57); background-color: transparent; display: block; box-shadow: 0 0 3px #fff; text-align: left; font-size: 14px; padding: 1px 10px 2px 10px; margin-top:30px; margin-bottom: 2px; font-family: 'Gill Sans', sans-serif; white-space: pre-wrap;'><div style = 'display:block; text-align:center;'><img style='margin-bottom:0px; margin-top:-30px; text-align:center;' src='https://i.imgur.com/NucuvsF.png'></div>`,
+        boxcode: `<div style='color: #000; background-image: linear-gradient(to bottom right,#e3b76f,#ebcc99,#b28f57); background-color: transparent; display: block; box-shadow: 0 0 3px #fff; text-align: left; font-size: 14px; padding: 1px 10px 2px 10px; margin-top:30px; margin-bottom: 2px; font-family: 'Gill Sans', sans-serif; white-space: pre-wrap;'><div style = 'display:block; text-align:center;'><img style='margin-bottom:0px; margin-top:-30px; text-align:center;' src='https://files.d20.io/images/459209527/5g5sThb_gqMLy_GUtrfsPw/original.png'></div>`,
         titlecode: `<div style='font-weight:bold; color: #000; text-align:center; background-color:#transparent; margin-bottom:0px; padding:3px;font-size: 18px; font-family: 'Gill Sans', sans-serif; text-align:center'>`,
         textcode: "</div><div><div style='padding:3px;margin-bottom:0px;text-shadow: 0 0 1px #000;line-height:19px;font-family: 'Gill Sans', sans-serif;'>",
         buttonwrapper: `<div style='display:block; margin-top:12px;text-align:center;'>`,
         buttonstyle: `style='display:inline-block; color:#056b20; background-color: transparent;padding: 0px; border: none'`,
         playerbuttonstyle: `style='display:inline-block; color:#056b20; font-size:12px; font-weight:normal; background-color: transparent;padding: 0px; border: none;'`,
-        buttondivider: `<img style='margin:0px 4px 0px 4px; width:30px;' src='https://i.imgur.com/jiyBaoz.png'>`,
+        buttondivider: `<img style='margin:0px 4px 0px 4px; width:30px;' src='https://files.d20.io/images/459209526/yH-u99jJ6ozufcxqs6B1UA/original.png'>`,
         handoutbuttonstyle: `style='display:inline-block; color:#056b20; font-size:12px; font-weight:normal; background-color: transparent; padding: 0px; border: none;'`,
         whisperStyle: `'background-color:#2b2130; color:#fbfcf0; display:block; border-width: 1px; border-style: solid; border-color:#a3a681; padding:5px'`,
         whisperbuttonstyle: `style='display:inline-block; color:#fff; background-color: transparent;padding: 0px; border: none'`,
@@ -241,13 +241,13 @@ apoc: {
     },
 
     treasure: {
-        boxcode: `<div style='color: #eee;  background-image: linear-gradient(to bottom right,#e3b76f,#ebcc99,#b28f57); background-color: transparent; display: block; box-shadow: 0 0 3px #fff; text-align: left; font-size: 14px; padding: 1px 10px 2px 10px; margin-top:30px; margin-bottom: 2px; font-family: Tahoma, sans-serif; white-space: pre-wrap;'><div style = 'display:block; text-align:center;'><img style='margin-bottom:0px; margin-top:-30px; text-align:center;' src='https://i.imgur.com/NPrhhwN.png'></div>`,
+        boxcode: `<div style='color: #eee;  background-image: linear-gradient(to bottom right,#e3b76f,#ebcc99,#b28f57); background-color: transparent; display: block; box-shadow: 0 0 3px #fff; text-align: left; font-size: 14px; padding: 1px 10px 2px 10px; margin-top:30px; margin-bottom: 2px; font-family: Tahoma, sans-serif; white-space: pre-wrap;'><div style = 'display:block; text-align:center;'><img style='margin-bottom:0px; margin-top:-30px; text-align:center;' src='https://files.d20.io/images/459209531/PE_vEh7o1tWVK-10KNAeHg/original.png'></div>`,
         titlecode: `<div style='font-weight:bold; color: #401e00; text-align:center; background-color:#transparent; margin-bottom:0px; padding:3px;font-size: 18px; font-family: "Goblin One", sans-serif; text-align:center'>`,
         textcode: "</div><div style='padding:3px;margin-bottom:0px;text-shadow: 0 0 1px #111;line-height:19px;color:#111;'>",
         buttonwrapper: `<div style='display:block; margin-top:12px;text-align:center;'>`,
         buttonstyle: `style='display:inline-block; color:#8a4100; background-color: transparent;padding: 0px; border: none'`,
         playerbuttonstyle: `style='display:inline-block; color:#634401; font-size:14px; font-weight:normal; background-color: transparent;padding: 0px; border: none;'`,
-        buttondivider: `<img style='margin:0px 4px 0px 4px; width:30px;' src='https://i.imgur.com/Gl0bnca.png'>`,
+        buttondivider: `<img style='margin:0px 4px 0px 4px; width:30px;' src='https://files.d20.io/images/459209461/emYYjkEI73UBCR4iXfTG9g/original.png'>`,
         handoutbuttonstyle: `style='display:inline-block; color:#401e00; font-size:14px; font-weight:normal; background-color: transparent; padding: 0px; border: none;'`,
         whisperStyle: `'background-color:#401e00; color:#eee; font-family: Tahoma, serif;  display:block; border-width: 1px; border-style: solid; border-color:#a3a681; margin-top:10px;padding:5px'`,
         whisperbuttonstyle: `style='display:inline-block; color:#e3b76f; background-color: transparent;padding: 0px; border: none'`,
@@ -261,7 +261,7 @@ choices: {
         buttonwrapper: `<div style='display:block; color: #eada8d; background-image: linear-gradient(to bottom,#261d22,#472a53); background-color: transparent; margin:12px -12px -12px -12px; padding: 10px; text-align:center;font-family: "minion", "minion pro", merriweather, baskerville, garamond, serif;'>`,
         buttonstyle: `style='display:inline-block; color:#eee; hover: yellow; background-color: transparent;padding: 0px; border: none; '`,
         playerbuttonstyle: `style='display:inline-block; color: #eee; font-size:16px; font-family: "Minion", "Minion Pro", serif; background-color: transparent;padding: 0px; border: none'`,
-        buttondivider: " &nbsp;&FilledSmallSquare;&nbsp; ", //`<img style='margin:0px 4px 0px 4px; width:20px;' src='https://i.imgur.com/x41nAwF.png'>`,
+        buttondivider: " &nbsp;&FilledSmallSquare;&nbsp; ", //`<img style='margin:0px 4px 0px 4px; width:20px;' src='https://files.d20.io/images/459209588/xw0q8Qvdx1MCsWHP1XNmnw/original.png'>`,
         handoutbuttonstyle: `style='display:inline-block; color: #eee; font-size:16px; font-family: "Minion", "Minion Pro", serif; background-color: transparent;padding: 0px; border: none'`,
         whisperStyle: `'background-image: linear-gradient(to bottom,#4b443d,#3f3732,#4b443d); background-color: transparent; color:#f8e8a6; display:block; border-width: 1px; border: 1px solid #4f4841; margin: 20px, -12px, 15px, -12px; padding:10px, 10px'`,
         whisperbuttonstyle: `style='display:inline-block; color:#eee; background-color: transparent;padding: 0px; border: none'`,
@@ -274,7 +274,7 @@ gate3: {
         buttonwrapper: `<div style='display:block; color: #bc8e1d; background-image: linear-gradient(to bottom,#261d22,#472a53); background-color: transparent; margin:12px -12px -12px -12px; padding: 10px; border-radius: 0px 0px 18px 18px; text-align:center;font-family: "Minion", "Minion Pro", serif;'>`,
         buttonstyle: `style='display:inline-block; color:#eada8d; background-color: transparent;padding: 0px; border: none; '`,
         playerbuttonstyle: `style='display:inline-block; color: #eee; font-size:16px; font-family: "Minion", "Minion Pro", serif; background-color: transparent;padding: 0px; border: none'`,
-        buttondivider: " &nbsp;&FilledSmallSquare;&nbsp; ", //`<img style='margin:0px 4px 0px 4px; width:20px;' src='https://i.imgur.com/x41nAwF.png'>`,
+        buttondivider: " &nbsp;&FilledSmallSquare;&nbsp; ", //`<img style='margin:0px 4px 0px 4px; width:20px;' src='https://files.d20.io/images/459209588/xw0q8Qvdx1MCsWHP1XNmnw/original.png'>`,
         handoutbuttonstyle: `style='display:inline-block; color: #eee; font-size:16px; font-family: "Minion", "Minion Pro", serif; background-color: transparent;padding: 0px; border: none'`,
         whisperStyle: `'background-image: linear-gradient(to bottom,#4b443d,#3f3732,#4b443d); background-color: transparent; color:#f8e8a6; display:block; border-width: 1px; border: 1px solid #4f4841; margin: 20px, -12px, 15px, -12px; padding:10px, 10px'`,
         whisperbuttonstyle: `style='display:inline-block; color:#eee; background-color: transparent;padding: 0px; border: none'`,
@@ -283,7 +283,7 @@ gate3: {
 
 
     crt: {
-        boxcode: `<div style='color: #0eb350; font-weight: bold; border: 1px solid #0eb350; border-radius: 12px; background-image: url("https://i.imgur.com/DTYvEus.png"); background-image: repeat; background-color: #0a2b07; box-shadow: 0 0 3px #000; display: block; text-align: left; font-size: 18px; padding: 5px; margin-bottom: 2px; font-family: Monaco, monospace; white-space: pre-wrap;'>`,
+        boxcode: `<div style='color: #0eb350; font-weight: bold; border: 1px solid #0eb350; border-radius: 12px; background-image: url("https://files.d20.io/images/459209468/jLXM3JXfaD7FL36c6RFC4Q/original.png"); background-image: repeat; background-color: #0a2b07; box-shadow: 0 0 3px #000; display: block; text-align: left; font-size: 18px; padding: 5px; margin-bottom: 2px; font-family: Monaco, monospace; white-space: pre-wrap;'>`,
         titlecode: `<div style='color: #000; text-shadow: 0.5px 0.5px 0.5px #0a7a37; background-color: #0eb350; box-shadow: 0 0 3px #0eb350; display: block; text-align: left; font-size: 16px; padding: 5px; margin: 5px 3px 3px 3px; font-family: 'Courier New', monospace; white-space: pre-wrap;'>`,
         textcode: "</div><div style='font-size: 14px !important; font-family: Monaco, monospace; padding:3px;'>",
         buttonwrapper: `<div style='display:block'>`,
@@ -297,7 +297,7 @@ gate3: {
     },
 
     news: {
-        boxcode: `<div style='color: #444; background-image: url("https://i.imgur.com/Jws5NQS.png"); background-image: repeat; box-shadow: 5px 5px 3px #000; display: block; text-align: justify; font-size: 18px; padding: 5px; margin-bottom: 2px; font-family: Monaco, monospace; white-space: pre-wrap;'>`,
+        boxcode: `<div style='color: #444; background-image: url("https://files.d20.io/images/459209532/psepbax2MooUvZ273m0BtQ/original.png"); background-image: repeat; box-shadow: 5px 5px 3px #000; display: block; text-align: justify; font-size: 18px; padding: 5px; margin-bottom: 2px; font-family: Monaco, monospace; white-space: pre-wrap;'>`,
         titlecode: `<div style='color: #444; text-align:center; display: block; border: 0px 0px 1px 0px solid #444; font-size: 24px; padding: 5px; margin: 5px 3px 3px 3px; line-height:26px; font-family: Anton; text-transform: uppercase; white-space: pre-wrap;'>`,
         textcode: `</div><div style='font-size: 16px !important; margin:5px 0px 5px 0px;  line-height:19px; font-family: "Times New Roman", serif; padding:3px;'>`,
         buttonwrapper: `<div style='display:block'>`,
@@ -311,7 +311,7 @@ gate3: {
     },
 
     scroll: {
-        boxcode: `<div style='color: #000; background-image: url(https://i.imgur.com/8Mm94QY.png); background-size: 100% 100%; background-color: transparent; display: block; text-align: left; font-size: 14px; padding: 5px 8px 8px 5px; margin-bottom: 2px; font-family: 'Times New Roman', serif; white-space: pre-wrap;'>`,
+        boxcode: `<div style='color: #000; background-image: url(https://files.d20.io/images/459209486/IvS93nnQHpzNqcPwum44og/original.png); background-size: 100% 100%; background-color: transparent; display: block; text-align: left; font-size: 14px; padding: 5px 8px 8px 5px; margin-bottom: 2px; font-family: 'Times New Roman', serif; white-space: pre-wrap;'>`,
         titlecode: `<div style='color: #58170D; background-color: transparent: display: block; text-align: Center; line-height:24px; font-size: 24px; padding: 5px; margin: 5px 3px 0px 3px; font-family: Luminari,"Times New Roman", serif; white-space: pre-wrap;'>`,
         textcode: `</div><div><div style='text-align:center; font-size: 14px !important; font-family: "Times New Roman", serif; padding:3px;'>`,
         buttonwrapper: `<div style='display:block'>`,
@@ -325,7 +325,7 @@ gate3: {
     },
     
     scroll2: {
-        boxcode: `<div style='color: #000; background-image: url(https://i.imgur.com/R8W7TAC.png); background-size: 100%; background-repeat: repeat-y; background-color: transparent; display: block; text-align: left; font-size: 14px; margin-top:30px; margin-bottom: 2px; padding:0px 5px 0px 5px;font-family: 'Gill Sans', sans-serif; white-space: pre-wrap;'><div style = 'display:block; text-align:center;'><img style='margin-bottom:0px; margin-top:-30px; text-align:center;  background-size: 100%; ' src='https://i.imgur.com/jnbV00f.png'></div>`,
+        boxcode: `<div style='color: #000; background-image: url(https://files.d20.io/images/459209540/G34O1t42pKh2eI9rffzolg/original.png); background-size: 100%; background-repeat: repeat-y; background-color: transparent; display: block; text-align: left; font-size: 14px; margin-top:30px; margin-bottom: 2px; padding:0px 5px 0px 5px;font-family: 'Gill Sans', sans-serif; white-space: pre-wrap;'><div style = 'display:block; text-align:center;'><img style='margin-bottom:0px; margin-top:-30px; text-align:center;  background-size: 100%; ' src='https://files.d20.io/images/459209533/McHJox7DYx1h7_OkBsQObw/original.png'></div>`,
         titlecode: `<div style='color: #58360d; background-color: transparent: display: block; text-align: Center; line-height:24px; font-size: 24px; padding: 5px 15px 5px 10px; margin: 0px 3px 0px 3px; font-family: "Kaushan Script", Luminari,"Times New Roman", serif; white-space: pre-wrap;'>`,
         textcode: `</div><div><div style='text-align:center; font-size: 14px !important; line-height: 18px; font-family: "Della Respira", "Patrick Hand", Times New Roman", serif; padding:3px 20px 3px 20px;'>`,
         buttonwrapper: `<div style='display:block font-size: 14px !important; '>`,
@@ -335,25 +335,25 @@ gate3: {
         handoutbuttonstyle: `style='display:inline-block; font-size: 14px !important; color:#58170D; background-color: transparent;padding: 0px; border: none'`,
         whisperStyle: `'background-color:#241605; color:#eee; box-shadow: 0px 0px 5px 5px #241605; display:block; border-radius:15px; padding:5px; margin: 15px 5px 10px 5px'`,
         whisperbuttonstyle: `style='display:inline-block; color:#fcdd6d; background-color: transparent;padding: 0px; border: none'`,
-        footer: `<img style = 'margin: 0px !important; padding:0px; position:relative; top:9px; width:100%' src = 'https://i.imgur.com/TxTk1EB.png'>`
+        footer: `<img style = 'margin: 0px !important; padding:0px; position:relative; top:9px; width:100%' src = 'https://files.d20.io/images/459209591/d_akXh9AwqutbUN1x1nsIQ/original.png'>`
     },
     
     vault: {
-        boxcode: `<div style='color: #111; background-image: url(https://i.imgur.com/Y0UtYyf.png); background-size: 100%; background-repeat: repeat-y; background-color: transparent; display: block;  text-shadow: 3px 3px 15px #74a4dc, -3px -3px 15px #74a4dc, 3px -3px 15px #74a4dc, -3px 3px 15px #74a4dc; text-align: left; font-size: 14px;  margin-bottom: 2px; padding:10px 5px 5px 5px;font-family: 'Contrail One', sans-serif; white-space: pre-wrap;'>`,
-        titlecode: `<div style='color: #111; background-color: #transparent; background-image: url(https://i.imgur.com/fv9RnvZ.png);  border-radius:3px; display: block; text-align: Center; text-shadow: none; line-height:24px; font-size: 24px; padding: 5px 15px 5px 10px; margin: -5px 0px 15px 0px; font-style:bold; font-family: "Contrail One", serif; white-space: pre-wrap;'>`,
+        boxcode: `<div style='color: #111; background-image: url(https://files.d20.io/images/459209599/XOj4c3B1Y9bOiNteobKe3Q/original.png); background-size: 100%; background-repeat: repeat-y; background-color: transparent; display: block;  text-shadow: 3px 3px 15px #74a4dc, -3px -3px 15px #74a4dc, 3px -3px 15px #74a4dc, -3px 3px 15px #74a4dc; text-align: left; font-size: 14px;  margin-bottom: 2px; padding:10px 5px 5px 5px;font-family: 'Contrail One', sans-serif; white-space: pre-wrap;'>`,
+        titlecode: `<div style='color: #111; background-color: #transparent; background-image: url(https://files.d20.io/images/459209469/UA2E7Vyf-kncA8k1jUuyAg/original.png);  border-radius:3px; display: block; text-align: Center; text-shadow: none; line-height:24px; font-size: 24px; padding: 5px 15px 5px 10px; margin: -5px 0px 15px 0px; font-style:bold; font-family: "Contrail One", serif; white-space: pre-wrap;'>`,
         textcode: `</div><div><div style='text-align:left; font-size: 14px !important; line-height: 20px; font-family: "Contrail One","Della Respira", "Patrick Hand", Times New Roman", serif; padding:3px 20px 3px 20px;'>`,
         buttonwrapper: `<div style='display:block; font-size: 15px !important; text-align:center; margin:0px -15px 0px -15px;'>`,
         buttonstyle: `style='display:inline-block; color:#111; text-decoration: underline; background-color: transparent;padding: 0px; border: none'`,
         playerbuttonstyle:  `style='display:inline-block; font-size: 15px !important; color:#fef265; text-shadow: 2px 2px 2px #111; background-color: transparent;padding: 0px; border: none'`,
-        buttondivider: `&nbsp; <img style='margin:0px 4px 0px 4px; width:30px;' src='https://i.imgur.com/96UIW36.png'> &nbsp;`,
+        buttondivider: `&nbsp; <img style='margin:0px 4px 0px 4px; width:30px;' src='https://files.d20.io/images/459209455/QovgYK36q9RuOE2Lv0d2JQ/original.png'> &nbsp;`,
         handoutbuttonstyle: `style='display:inline-block; font-size: 15px !important; color:#fef265; text-shadow: 2px 2px 2px #111;background-color: transparent;padding: 0px; border: none'`,
-        whisperStyle: `'background-color: #transparent; background-image: url(https://i.imgur.com/fv9RnvZ.png); color:#111; display:block;  text-shadow: none; text-align:center; font-family: "Contrail One"; border-radius:3px; padding:5px; margin: 15px -20px 10px -20px'`,
+        whisperStyle: `'background-color: #transparent; background-image: url(https://files.d20.io/images/459209469/UA2E7Vyf-kncA8k1jUuyAg/original.png; color:#111; display:block;  text-shadow: none; text-align:center; font-family: "Contrail One"; border-radius:3px; padding:5px; margin: 15px -20px 10px -20px'`,
         whisperbuttonstyle: `style='display:inline-block; color:#284a73; background-color: transparent;padding: 0px; border: none'`,
         footer: ``
     },
     
     osrblue: {
-        boxcode: `<div style='color: #333; background-image: url(https://i.imgur.com/94Fyegx.png); box-shadow:inset 0 0 70px #f4f2db, 2px 2px 5px #111; background-size: 25%; background-repeat: repeat; background-color: transparent; display: block; font-weight: bolder; text-align: left; font-size: 14px;  margin-bottom: 2px; padding:10px 5px 5px 5px; font-family: "Courier One", courier , sans-serif; white-space: pre-wrap;'>`,
+        boxcode: `<div style='color: #333; background-image: url(https://files.d20.io/images/459209456/3MxudvaBU_ZNiVqfym2f9Q/original.png); box-shadow:inset 0 0 70px #f4f2db, 2px 2px 5px #111; background-size: 25%; background-repeat: repeat; background-color: transparent; display: block; font-weight: bolder; text-align: left; font-size: 14px;  margin-bottom: 2px; padding:10px 5px 5px 5px; font-family: "Courier One", courier , sans-serif; white-space: pre-wrap;'>`,
         titlecode: `<div style='color: #729aa5; background-color: transparent;  border-radius:3px; display: block; text-align: Center; line-height:24px; font-size: 24px; padding: 5px 15px 5px 10px; margin: -5px 0px 3px 0px; font-style:bold; font-family: Anton, serif; white-space: pre-wrap;'>`,
         textcode: `</div><div style='display:inline-block; text-align:left; font-size: 14px !important; line-height: 20px; font-weight: bolder; font-family: "Courier One", courier, "Della Respira", "Patrick Hand", Times New Roman", serif; padding:3px 20px 3px 20px;'>`,
         buttonwrapper: `<div style='display:block !important; font-size: 14px !important; text-align:center; margin:0px -20px 0px -20px;'>`,
@@ -411,7 +411,7 @@ return text;
 
     const decodeUnicode = (str) => str.replace(/%u[0-9a-fA-F]{2,4}/g, (m) => String.fromCharCode(parseInt(m.slice(2), 16)));
 
-    const version = '0.2.4';
+    const version = '0.2.5';
     log('Supernotes v' + version + ' is ready! --offset ' + API_Meta.Supernotes.offset + 'To set the template of choice or to toggle the send to players option, Use the command !gmnote --config');
 
     on('chat:message', function(msg) {
@@ -649,8 +649,8 @@ whisper = ((whisper.length>0) ? "<div style =" + whisperStyle + ">" + whisper + 
                         noteHandout = createObj('handout', {
                             name: handoutTitle,
                             archived: false,
-                            inplayerjournals: "all",
-                            controlledby: "all"
+                            inplayerjournals: "",
+                            controlledby: ""
                         });
                         let noteHandoutid = noteHandout.get("_id");
                         sendChat('Supernotes', `/w gm Supernotes has created a handout named <b>${handoutTitle}</b>. <BR>Click <a href="http://journal.roll20.net/handout/${noteHandoutid}">here</a> to open.`, null, {
