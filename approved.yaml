@@ -1331,3 +1331,7 @@ daggerheart-fear:
 ResourceTracker:
   - "ResourceTracker"
   - "Utility"
+
+TokenGroups:
+  - "TokenGroups"
+  - "Utility"
