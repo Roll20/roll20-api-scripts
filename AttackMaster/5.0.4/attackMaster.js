@@ -649,6 +649,7 @@ var attackMaster = (function() {	// eslint-disable-line no-unused-vars
 	var reACSpecs;
 	var reThiefSpecs;
 	var reModSpecs;
+	var reSaveSpecs;
 	var spellLevels;
 	var classLevels;
 	var rangedWeapMods;
@@ -1002,6 +1003,7 @@ var attackMaster = (function() {	// eslint-disable-line no-unused-vars
 			reACSpecs = RPGMap.reACSpecs;
 			reThiefSpecs = RPGMap.reThiefSpecs;
 			reModSpecs = RPGMap.reModSpecs;
+			reSaveSpecs = RPGMap.reSaveSpecs;
 			DBindex = undefined;
 			flags.noWaitMsg = true;
 			setTimeout( () => {flags.noWaitMsg = false}, 5000 );
@@ -2910,7 +2912,7 @@ var attackMaster = (function() {	// eslint-disable-line no-unused-vars
 				  adj = (parseInt(thisData.adj || 0) + (dmgType !== 'nadj' ? parseInt(thisData[dmgType] || 0) : 0)),
 				  dexAdj = Math.floor(dexBonus * parseFloat(Math.max(thisData.dexBonus,0))),
 				  curDexAdj = Math.floor(dexBonus * parseFloat(Math.max(curBest.data.dexBonus,0))),
-				  acDiff = ((curBest.data.ac || 0) - (curBest.data.adj || 0) - (curDexAdj)*dexBonus)) - (ac - adj - dexAdj);
+				  acDiff = ((curBest.data.ac || 0) - (curBest.data.adj || 0) - (curDexAdj*dexBonus)) - (ac - adj - dexAdj);
 			let   diff;
 
 			switch (priority) {
@@ -2933,7 +2935,7 @@ var attackMaster = (function() {	// eslint-disable-line no-unused-vars
 			return diff;
 		};
 		
-		const assessItem = function( itemName, itemTrueName, itemCharge, itemSpecs, itemData ) {
+		const assessItem = function( itemName, itemTrueName, itemCharge, itemSpecs, itemData ) {	// reSaveSpecs
 			
 			let ac, acData, acRules, isMod, data,
 				itemType, itemClass, itemHands, itemSuperType, itemAC, itemAdj, itemCursed, itemRules,
