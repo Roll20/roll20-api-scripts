@@ -649,6 +649,7 @@ var attackMaster = (function() {	// eslint-disable-line no-unused-vars
 	var reACSpecs;
 	var reThiefSpecs;
 	var reModSpecs;
+	var reSaveSpecs;
 	var spellLevels;
 	var classLevels;
 	var rangedWeapMods;
@@ -1002,6 +1003,7 @@ var attackMaster = (function() {	// eslint-disable-line no-unused-vars
 			reACSpecs = RPGMap.reACSpecs;
 			reThiefSpecs = RPGMap.reThiefSpecs;
 			reModSpecs = RPGMap.reModSpecs;
+			reSaveSpecs = RPGMap.reSaveSpecs;
 			DBindex = undefined;
 			flags.noWaitMsg = true;
 			setTimeout( () => {flags.noWaitMsg = false}, 5000 );
@@ -2933,7 +2935,7 @@ var attackMaster = (function() {	// eslint-disable-line no-unused-vars
 			return diff;
 		};
 		
-		const assessItem = function( itemName, itemTrueName, itemCharge, itemSpecs, itemData ) {
+		const assessItem = function( itemName, itemTrueName, itemCharge, itemSpecs, itemData ) {	// reSaveSpecs
 			
 			let ac, acData, acRules, isMod, data,
 				itemType, itemClass, itemHands, itemSuperType, itemAC, itemAdj, itemCursed, itemRules,
