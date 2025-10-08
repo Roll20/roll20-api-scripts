@@ -2910,7 +2910,7 @@ var attackMaster = (function() {	// eslint-disable-line no-unused-vars
 				  adj = (parseInt(thisData.adj || 0) + (dmgType !== 'nadj' ? parseInt(thisData[dmgType] || 0) : 0)),
 				  dexAdj = Math.floor(dexBonus * parseFloat(Math.max(thisData.dexBonus,0))),
 				  curDexAdj = Math.floor(dexBonus * parseFloat(Math.max(curBest.data.dexBonus,0))),
-				  acDiff = ((curBest.data.ac || 0) - (curBest.data.adj || 0) - (curDexAdj)*dexBonus)) - (ac - adj - dexAdj);
+				  acDiff = ((curBest.data.ac || 0) - (curBest.data.adj || 0) - (curDexAdj*dexBonus)) - (ac - adj - dexAdj);
 			let   diff;
 
 			switch (priority) {
