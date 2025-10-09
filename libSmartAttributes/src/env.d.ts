@@ -1,0 +1,1 @@
+/// <reference types="@roll20/api-types" />
