@@ -1307,66 +1307,66 @@ eote.defaults = {
             LARGE: 40
         },
         ABILITY: {
-            BLANK: "http://i.imgur.com/g3hoJRG.png",
-            A: "http://i.imgur.com/VG7HnFE.png",
-            AA: "http://i.imgur.com/ynn0deR.png",
-            S: "http://i.imgur.com/HnweiQT.png",
-            SA: "http://i.imgur.com/iVXuNKP.png",
-            SS: "http://i.imgur.com/IVDgDKo.png"
+            BLANK: "https://imgbox.com/Ru3HV158",
+            A: "https://imgbox.com/Gv5aG77l",
+            AA: "https://imgbox.com/iRdhTlMV",
+            S: "https://imgbox.com/2NSX0srz",
+            SA: "https://imgbox.com/Hh2qAJJQ",
+            SS: "https://imgbox.com/5Lqbk9R0"
         },
         BOOST: {
-            BLANK: "http://i.imgur.com/nlIAfJx.png",
-            A: "http://i.imgur.com/d6X6QEs.png",
-            AA: "http://i.imgur.com/EqMcrlF.png",
-            S: "http://i.imgur.com/vrt51oP.png",
-            SA: "http://i.imgur.com/r9xl3CP.png"
+            BLANK: "https://imgbox.com/MuNYzfJH",
+            A: "https://imgbox.com/cmDs3Vp5",
+            AA: "https://imgbox.com/Q2x3P2bm",
+            S: "https://imgbox.com/9jZucH8S",
+            SA: "https://imgbox.com/rgOuQYFI"
         },
         CHALLENGE: {
-            BLANK: "http://i.imgur.com/GInMHEN.png",
-            F: "http://i.imgur.com/zKdsTV9.png",
-            FF: "http://i.imgur.com/QcZXdpS.png",
-            FT: "http://i.imgur.com/wxV072J.png",
-            T: "http://i.imgur.com/n2rgehM.png",
-            TT: "http://i.imgur.com/SaWvZMV.png",
-            DESPAIR: "http://i.imgur.com/5EppLES.png"
+            BLANK: "https://imgbox.com/SLgqpz0j",
+            F: "https://imgbox.com/j7WiBiog",
+            FF: "https://imgbox.com/Kx7uvugS",
+            FT: "https://imgbox.com/r0ShMKIa",
+            T: "https://imgbox.com/eJKICYEe",
+            TT: "https://imgbox.com/N7mQkSw0",
+            DESPAIR: "https://imgbox.com/p8hn6E08"
         },
         DIFFICULTY: {
-            BLANK: "http://i.imgur.com/oxbKghK.png",
-            F: "http://i.imgur.com/rujbVt9.png",
-            FF: "http://i.imgur.com/VUj86X2.png",
-            FT: "http://i.imgur.com/l8rUPCX.png",
-            T: "http://i.imgur.com/2gLDiqq.png",
-            TT: "http://i.imgur.com/4wqEJsa.png"
+            BLANK: "https://imgbox.com/MnEHMk3n",
+            F: "https://imgbox.com/hfxuYNxE",
+            FF: "https://imgbox.com/BDPReTZu",
+            FT: "https://imgbox.com/SU2l5k79",
+            T: "https://imgbox.com/jGH7DmOQ",
+            TT: "https://imgbox.com/0VyzSowO"
         },
         FORCE: {
-            D: "http://i.imgur.com/8kBnDI1.png",
-            DD: "http://i.imgur.com/eki6Bnc.png",
-            L: "http://i.imgur.com/JCI7Mgm.png",
-            LL: "http://i.imgur.com/Z58SAHI.png"
+            D: "https://imgbox.com/PHAcAdmI",
+            DD: "https://imgbox.com/Yjzbiu70",
+            L: "hhttps://imgbox.com/22z7Daon",
+            LL: "https://imgbox.com/5SQR1Upe"
         },
         PROFICIENCY: {
-            BLANK: "http://i.imgur.com/4bQ0dY8.png",
-            A: "http://i.imgur.com/PU7pp3w.png",
-            S: "http://i.imgur.com/jXGG6L1.png",
-            SA: "http://i.imgur.com/oQMDNdm.png",
-            SS: "http://i.imgur.com/UDW3jYZ.png",
-            AA: "http://i.imgur.com/jUA6PVw.png",
-            TRIUMPH: "http://i.imgur.com/7zrDoEN.png"
+            BLANK: "https://imgbox.com/X1eAUiOz",
+            A: "https://imgbox.com/dgEkQKdU",
+            S: "https://imgbox.com/j5iowAdI",
+            SA: "https://imgbox.com/9lsQl9mN",
+            SS: "https://imgbox.com/2uLFZv5F",
+            AA: "https://imgbox.com/a3veSzjK",
+            TRIUMPH: "https://imgbox.com/28RgFk5K"
         },
         SETBACK: {
-            BLANK: "http://i.imgur.com/n9W07Lp.png",
-            F: "http://i.imgur.com/jMV5VOB.png",
-            T: "http://i.imgur.com/TYgM9LP.png"
+            BLANK: "https://imgbox.com/ftD9MLbf",
+            F: "https://imgbox.com/1RVuTCQS",
+            T: "https://imgbox.com/4H7OkmKK"
         },
         SYMBOLS: {
-            A: "http://i.imgur.com/Gav94H2.png",
-            S: "http://i.imgur.com/z79ieDp.png",
-            T: "http://i.imgur.com/o8EQ4z6.png",
-            F: "http://i.imgur.com/y2qABhW.png",
-            TRIUMPH: "http://i.imgur.com/1lJCfnB.png",
-            DESPAIR: "http://i.imgur.com/rOEJlCc.png",
-            L: "http://i.imgur.com/j5bV12H.png",
-            D: "http://i.imgur.com/AZ3lzVj.png"
+            A: "https://imgbox.com/2es6Pc1K",
+            S: "https://imgbox.com/LW3BwGWD",
+            T: "https://imgbox.com/PEAuuvGx",
+            F: "https://imgbox.com/uj5RMotM",
+            TRIUMPH: "https://imgbox.com/Z62eSIbO",
+            DESPAIR: "https://imgbox.com/UMrqyhFa",
+            L: "https://imgbox.com/RDR5TKiL",
+            D: "https://imgbox.com/7GmQzfdX"
         },
         SymbolicReplacement: {}
     },
@@ -4560,3 +4560,4 @@ function convertTokensToTags(skillSuggestions, symReplace) {
 on('ready', function() {
     eote.init();
 });
+
