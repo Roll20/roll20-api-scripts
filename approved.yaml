@@ -1335,3 +1335,7 @@ ResourceTracker:
 TokenGroups:
   - "TokenGroups"
   - "Utility"
+
+libUUID:
+  - "libUUID"
+  - "Utility"
