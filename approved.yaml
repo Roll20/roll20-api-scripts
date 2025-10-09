@@ -1339,3 +1339,7 @@ TokenGroups:
 libUUID:
   - "libUUID"
   - "Utility"
+
+libSmartAttributes:
+  - "libSmartAttributes"
+  - "Utility"
