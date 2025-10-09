@@ -1,0 +1,13 @@
+{
+  "name": "libUUID",
+  "version": "0.0.1",
+  "description": "Tired of copying and pasting a UUID function over and over? Me too. This script provides a couple of functions to generate UUIDs.",
+  "authors": "GUD Team",
+  "roll20userid": "8705027",
+  "dependencies": [],
+  "modifies": {},
+  "conflicts": [],
+  "script": "libUUID.js",
+  "useroptions": [],
+  "previousversions": []
+}
