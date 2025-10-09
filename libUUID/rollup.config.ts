@@ -1,4 +1,4 @@
-import { defineConfig } from "rollup"; // 💡 Import defineConfig and RollupOptions
+import { defineConfig } from "rollup";
 import typescript from "@rollup/plugin-typescript";
 import del from "rollup-plugin-delete";
 import json from "./script.json" with { type: "json" };
@@ -9,7 +9,6 @@ export default defineConfig({
 
   output: {
     file: `${json.version}/${json.name}.js`,
-    format: "iife",
     name: json.name,
     sourcemap: false,
     banner: `// ${json.name} v${json.version} by ${json.authors} | ${json.description}`,

@@ -1,4 +1,4 @@
-export default class libUUID {
+declare class libUUID {
     private static base64Chars;
     private static base;
     private static previousTime;

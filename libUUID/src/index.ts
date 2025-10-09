@@ -1,4 +1,5 @@
-export default class libUUID {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+class libUUID {
   private static base64Chars = "-0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz";
   private static base = 64;
   private static previousTime = 0;
