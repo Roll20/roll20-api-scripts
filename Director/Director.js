@@ -27,7 +27,7 @@ on('ready', () =>
         //1.0.5 Improved Backdrop user interface, Report Function, Improvements to Help Mode, fixed set bug on search and report
         //1.0.6 Added Captions, Report Count, Controls for .webm display. Settings which can be toggled show state.
         //1.0.7 bug fix on JB+ button, Corrected the captions-on test
-        //1.0.8 Added search-again button on search results, improved backup handout selection, added move up/down/rename/redfine item buttons in edit mode, improved table rolling
+        //1.0.8 Added search-again button on search results, improved backup handout selection, added move up/down/rename/redfine item buttons in edit mode, improved table rolling, Supernotes integration
 
 
         // == Director Script ==
@@ -1873,30 +1873,34 @@ const placeNextToken = () => {
 </div>
 
 <h4>Item Behavior</h4>
-<ul style="list-style: none; padding-left: 0;">
-  <li style="position: relative; padding-left: 32px; margin-bottom: 6px;">
+<ul style="list-style: none; padding-left: 0; margin-left: 10px;">
+  <li style="position: relative; padding-left: 30px; margin-bottom: 6px;">
     <div style="${css.itemBadge} background:${getBadgeColor('handout')}; position: absolute; left: 0; top: 0;">H</div>
     <b>Handouts</b>: Opens the handout
   </li>
-  <li style="position: relative; padding-left: 32px; margin-bottom: 6px;">
+  <li style="position: relative; padding-left: 30px; margin-bottom: 6px;">
     <div style="${css.itemBadge} background:${getBadgeColor('character')}; position: absolute; left: 0; top: 0;">C</div>
     <b>Characters</b>: Opens the sheet if assigned; otherwise, prompts assignment
   </li>
-  <li style="position: relative; padding-left: 32px; margin-bottom: 6px;">
+  <li style="position: relative; padding-left: 30px; margin-bottom: 6px;">
     <div style="${css.itemBadge} background:${getBadgeColor('variant')}; position: absolute; left: 0; top: 0;">V</div>
     <b>Variants</b>: Does not open — appears on scene set
   </li>
-  <li style="position: relative; padding-left: 32px; margin-bottom: 6px;">
+  <li style="position: relative; padding-left: 30px; margin-bottom: 6px;">
     <div style="${css.itemBadge} background:${getBadgeColor('track')}; position: absolute; left: 0; top: 0;">T</div>
     <b>Tracks</b>: Toggles playback if assigned; otherwise assigns currently playing track
   </li>
-  <li style="position: relative; padding-left: 32px; margin-bottom: 6px;">
+  <li style="position: relative; padding-left: 30px; margin-bottom: 6px;">
     <div style="${css.itemBadge} background:${getBadgeColor('macro')}; position: absolute; left: 0; top: 0;">M</div>
     <b>Macros</b>: Runs the macro if assigned; otherwise prompts to assign an existing macro
   </li>
-  <li style="position: relative; padding-left: 32px; margin-bottom: 6px;">
+  <li style="position: relative; padding-left: 30px; margin-bottom: 6px;">
     <div style="${css.itemBadge} background:${getBadgeColor('table')}; position: absolute; left: 0; top: 0;">R</div>
     <b>Rollable Tables</b>: Rolls the assigned table; otherwise prompts to assign one. Results are whispered to the GM
+  </li>
+  <li style="position: relative; padding-left: 30px; margin-bottom: 6px; margin-top:12px;">
+    <div style="${css.itemAddBadge} position: absolute; left: 0; top: 0;">&#8711;</div>
+    <b>Filter</b>: Filter items by type. The filter button supersedes the Star Filter button
   </li>
 </ul>
 
@@ -1913,13 +1917,11 @@ const placeNextToken = () => {
     <li><b>${Pictos('p')}</b> — Rename</li>
   </ul>
 
-  <p><b>Filter:</b> Click the
-    <span style="${css.itemAddBadge}; float:none; position:relative;">&#8711;</span>
-    button to filter items by type. The filter button supersedes the Star Filter button
-  </p>
   <p>
   <b>Star system:</b> Use stars to link specific characters to a backdrop image. For instance, if a scene has several shops, you can star each proprietor for their shop image. When that image is the backdrop, the linked characters’ tokens are highlighted in gold in the token list. This feature is disabled in Grid mode.<br>
   The Star Filter button in the header will filter to show only starred items. To temporarily show all characters without turning off the star filter, use the filter button to show all Characters.
+  </p>
+  <b>Supernotes Integration:</b> If you have installed the Supernotes Mod script, a small info button will appear on the same line as each Character or Variant in the Items listt. Clicking this will whisper the item's token notes to chat.
   </p>
   <br>
 
