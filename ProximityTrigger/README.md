@@ -268,6 +268,7 @@ For issues, questions, or contributions:
 - Include your Roll20 API console output if relevant
 
 ## Version History
+- Version 2.1.0 First published version. I initially created a script that triggered message cards when near a preset list of 'npcs' I called ProximityNPC, from there I added more commands to create npcs in state. I put my personal version into AI and asked it to remove my preset items, and refactor it to typescript as ProximityTrigger, this is the result and from my personal testing seems to have all the same working funcitonality. The original and ts can all be found here: [GitHub](https://github.com/bbarrington0099/Roll20API/tree/main)
 
 ### Version 2.1.0 (Current)
 - Comprehensive feature set with full UI
@@ -294,7 +295,7 @@ MIT License - Free to use and modify
 
 ## Credits
 
-Created by bbarr for the Roll20 community
+Created by Brandon B. for the Roll20 community - https://github.com/bbarrington0099
 
 ---
 
