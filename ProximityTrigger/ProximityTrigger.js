@@ -86,7 +86,17 @@
             `{{--cardstyles|-cl=List all card styles}} ` +
             `{{--cardstyle|-C [StyleName] [property] [value]=Edit or create a card style}} ` +
             `{{--delete|-D [Name]=Delete a monitored trigger}} ` +
-            `{{--help|-h=Show this help}}`);
+            `{{--help|-h=Show this help}} ` +
+            `{{=**Dynamic Message Content**}} ` +
+            `{{**Dice Roll Syntax**=Supported dice notation:}} ` +
+            `{{Basic Rolls=1d6, 2d20, 3d8 (XdY format)}} ` +
+            `{{With Modifiers=1d20+5, 2d6+3, 1d8-2}} ` +
+            `{{Complex=1d20+1d4+3, (2d6+2)*2, 1d100/10}} ` +
+            `{{Limits=1-100 dice, 1-1000 sides per die}} ` +
+            `{{**Character Attributes**=Supported attribute names:}} ` +
+            `{{Core Stats=hp, maxhp, ac, level, gold/gp, inspiration}} ` +
+            `{{Abilities=str/dex/con/int/wis/cha (and modifiers)}} ` +
+            `{{Examples={playerName.hp}, {monitoredName.ac}, {playerName.gold}}}`);
     }
 
     /**
@@ -278,8 +288,8 @@
         if (state.defaultImagePath && state.defaultImagePath.trim() !== '') {
             return state.defaultImagePath;
         }
-        // Final fallback
-        return '';
+        // Final fallback - return null to indicate no image
+        return null;
     }
     /**
      * Gets the effective name for a token - either the token's name or the character it represents.
@@ -994,7 +1004,7 @@
          * @param triggerDistance - Trigger distance in token body widths
          * @param tokenIds - Array of Roll20 token IDs representing this trigger
          * @param timeout - Cooldown in ms before re-triggering (0 = permanent)
-         * @param img - Portrait/image URL
+         * @param img - Portrait/image URL (null to hide image)
          * @param messages - Array of possible messages
          * @param cardStyle - Card style name for this trigger
          * @param mode - Operating mode: 'on', 'off', or 'once'
@@ -1190,8 +1200,11 @@
             case 'cardstyle':
                 // List all styles for user to pick
                 const styleList = state.cardStyles.map(s => `{{[${s.name}](!pt -e ${safeName} cardStyle ${s.name})}}`).join(' ');
+                const currStyle = npc.cardStyle || 'Default';
                 sendChat('Proximity Trigger', `/w ${who} &{template:default} ` +
-                    `{{name=Select Card Style for ${npc.name}}} ${styleList}`);
+                    `{{name=Select Card Style for ${npc.name}}} ` +
+                    `{{Current: ${currStyle}}}` +
+                    `${styleList}`);
                 break;
             case 'triggerdistance':
                 const currDist = npc.triggerDistance;
@@ -1208,14 +1221,15 @@
             case 'img':
                 const imgUrl = npc.img || 'https://raw.githubusercontent.com/bbarrington0099/Roll20API/main/ProximityTrigger/src/ProximityTrigger.png';
                 sendChat('Proximity Trigger', `/w ${who} &{template:default} {{name=Set Image URL for ${npc.name}}} ` +
-                    `{{Current: [Link](${npc.img || 'none'})}} ` +
-                    `{{New URL=[Click Here](!pt -e ${safeName} img ?{Enter new image URL|${imgUrl}})}}`);
+                    `{{Current: ${npc.img ? `[Link](${npc.img})` : `None`}}} ` +
+                    `{{New URL=[Click Here](!pt -e ${safeName} img ?{Enter new image URL ^'clear' to remove^|${imgUrl}})}}`);
                 break;
             case 'mode':
+                const modeList = ['on', 'off', 'once'].map(m => `{{[${m.toUpperCase()}](!proximitynpc -e ${toSafeName(npc.name)} mode ${m})}}`).join(" ");
                 const currMode = npc.mode || 'on';
                 sendChat('Proximity Trigger', `/w ${who} &{template:default} {{name=Set Mode for ${npc.name}}} ` +
                     `{{Current: ${currMode}}} ` +
-                    `{{New Mode=[Click Here](!pt -e ${safeName} mode ?{Enter new Mode ^on, off, once^|${currMode}})}}`);
+                    `${modeList}`);
                 break;
             default:
                 sendChat('Proximity Trigger', `/w ${who} Unknown property "${property}".`);
@@ -1260,8 +1274,9 @@
                 }
                 break;
             case 'img':
-                npc.img = value;
-                sendChat('Proximity Trigger', `/w ${who} ${npc.name} image URL updated${tokenInfo}.`);
+                const clear = value.toLowerCase().trim() === 'clear';
+                npc.img = clear ? null : value;
+                sendChat('Proximity Trigger', `/w ${who} ${clear ? 'Removed' : 'Updated'} ${npc.name} image url${clear ? '' : ` to "${value}"`}${tokenInfo}.`);
                 break;
             case 'cardstyle':
                 const style = state.cardStyles.find(s => s.name.toLowerCase() === value.toLowerCase());
@@ -1371,7 +1386,7 @@
             { name: 'Whisper', attr: 'whisper', value: cardStyle.whisper },
             { name: 'Badge', attr: 'badge', value: cardStyle.badge }
         ];
-        const propertyLinks = properties.map(prop => `{{[${prop.name}: ${prop.attr == 'badge' ? (prop.value || 'None').slice(0, 16) : (prop.value || 'None')}](!pt -C ${toSafeName(cardStyle.name)} ${prop.attr})}}`).join(' ');
+        const propertyLinks = properties.map(prop => `{{[${prop.name}: ${prop.attr == 'badge' ? (prop.value || 'None').slice(0, 16) : (prop.value || 'None')}](!pt -C ${toSafeName(cardStyle.name)} ${prop.attr})}}${prop.attr == 'badge' && prop.value ? ` {{[Link](${prop.value || 'None'})}}` : ''}`).join(' ');
         sendChat('Proximity Trigger', `/w ${who} &{template:default} {{name=Edit Card Style: ${cardStyle.name}}} ` +
             `${propertyLinks} ` +
             `{{[Delete Style](!pt -C delete ${toSafeName(cardStyle.name)})}}`);
@@ -1401,8 +1416,11 @@
                 promptMessage = 'Enter text color ^any CSS color^:';
                 break;
             case 'whisper':
-                promptMessage = 'Enter whisper mode ^\'character\', \'gm\', or \'off\'^:';
-                break;
+                const whispers = ['off', 'gm', 'character'].map(w => `{{[${w.toUpperCase()}](!pt -C ${toSafeName(cardStyle.name)} ${property} ${w})}}`).join(" ");
+                sendChat('Proximity Trigger', `/w ${who} &{template:default} {{name=Set Whisper for ${cardStyle.name}}} ` +
+                    `{{Current: ${currentValue}}} ` +
+                    `${whispers}`);
+                return;
             case 'badge':
                 promptMessage = "Enter URL for Badge Image ^'clear' to remove^:";
                 break;
@@ -1412,7 +1430,7 @@
                 return;
         }
         sendChat('Proximity Trigger', `/w ${who} &{template:default} {{name=Set ${property} for ${cardStyle.name}}} ` +
-            `{{Current: ${property == 'badge' ? (currentValue ? currentValue.slice(0, 30) : 'None') : (currentValue || '')}}} ` +
+            `{{Current: ${property == 'badge' ? currentValue ? `[Link](${currentValue || 'None'})` : `None` : (currentValue || '')}}} ` +
             `{{${promptMessage}=[Click Here](!pt -C ${toSafeName(cardStyle.name)} ${property} ?{${promptMessage}|${currentValue}})}}`);
     }
     /**
