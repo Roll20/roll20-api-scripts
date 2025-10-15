@@ -10,12 +10,19 @@ ProximityTrigger helps Game Masters create dynamic, interactive encounters and e
 
 - ✅ **Automatic Proximity Detection** - Triggers activate when tokens move within customizable range
 - ✅ **Flexible Configuration** - Set distances, timeouts, messages, and visual styles
+- ✅ **Dynamic Content Parsing** - Advanced message system with placeholders, dice rolls, character attributes, and interactive buttons
+- ✅ **Character Sheet Integration** - Access and display character attributes dynamically in messages
+- ✅ **Inline Dice Rolling** - Embed dice rolls in messages with automatic calculation and styled display
+- ✅ **Interactive Buttons** - Create clickable buttons that execute chat commands, rolls, whispers, or API commands
 - ✅ **Weighted Random Messages** - Add variety with probability-weighted message selection
 - ✅ **Beautiful Styled Cards** - Customizable message appearance with colors and whisper modes
 - ✅ **Multiple Trigger Modes** - Always on, one-time use, or disabled
 - ✅ **Multi-Token Support** - One configuration applies to multiple tokens with the same name
-- ✅ **Interactive UI** - Full chat-based configuration interface
-- ✅ **Persistent State** - All settings saved between game sessions
+- ✅ **Interactive UI** - Full chat-based configuration interface with easy-to-use menus
+- ✅ **Persistent State** - All settings saved between game sessions (including button callbacks)
+- ✅ **Per-Message Styling** - Override default card styles for individual messages
+- ✅ **Automatic Token Management** - Tokens automatically tracked when added or removed from map
+- ✅ **Manual Trigger Control** - Manually activate triggers on demand for testing or special events
 
 ## Installation
 
@@ -71,6 +78,7 @@ ProximityTrigger helps Game Masters create dynamic, interactive encounters and e
 - `bubbleColor` - Speech bubble color
 - `textColor` - Text color
 - `whisper` - Whisper mode: `off`, `character`, or `gm`
+- `badge` - Optional image URL for style badge/icon
 
 ## Usage Examples
 
@@ -119,13 +127,84 @@ Create a discovery notification:
 4. Add message: "You've discovered the Ancient Ruins!"
 5. Set card style to something distinctive
 
+### Example 5: Interactive Combat Encounter
+
+Create an NPC with dynamic combat options:
+
+1. Select the NPC token
+2. Type: `!pt -M`
+3. Add message with buttons and dice rolls:
+   - "The bandit notices you! [Attack]([[1d20+5]] to hit!) [Intimidate]([[1d20]] intimidation check!) [Talk](I mean no harm!)"
+4. Set appropriate trigger distance
+
+### Example 6: Trap with Damage Roll
+
+Create a trap that rolls damage dynamically:
+
+1. Place trap marker
+2. Type: `!pt -M Spike_Trap`
+3. Set mode to "once"
+4. Add message: "{playerName} triggered the trap! You take {2d6} piercing damage!"
+5. Set whisper to "character" so only they see the damage
+
+### Example 7: Health Check Point
+
+Create a healing station that shows current HP:
+
+1. Place marker at healing location
+2. Type: `!pt -M Healing_Shrine`
+3. Add message: "You rest at the shrine. Current HP: {playerName.hp}/{playerName.hp_max}"
+4. Add another message: "Your wounds begin to heal... [Rest 1 Hour]([[1d8+2]] HP restored) [Continue](Moving on...)"
+
 ## Message Features
 
-### Placeholders
+### Dynamic Content Parsing
 
-Use `{playerName}` in your messages to automatically insert the name of the player who triggered the event.
+ProximityTrigger includes a powerful chat parsing system that processes dynamic content in messages:
 
-Example: "Welcome, {playerName}!" becomes "Welcome, Aragorn!"
+#### Placeholders
+
+- **`{playerName}`** - Triggering player's first name
+  - Example: "Welcome, {playerName}!" becomes "Welcome, Aragorn!"
+- **`{monitoredName}`** - The trigger/NPC's name
+  - Example: "{monitoredName} greets you" becomes "Guard greets you"
+
+#### Character Attributes
+
+Access character sheet attributes dynamically:
+
+- **`{playerName.attribute}`** - Triggering player's character attribute
+  - Example: "You have {playerName.hp} HP remaining"
+- **`{monitoredName.attribute}`** - Monitored NPC's character attribute
+  - Example: "{monitoredName} has {monitoredName.AC} AC"
+- **`{CharacterName.attribute}`** - Any character's attribute by name
+  - Example: "The king's influence is {King_Roland.influence}"
+
+Attribute names are case-insensitive and support common variations (hp/HP, ac/AC, etc.)
+
+#### Dice Rolls
+
+Embed dice rolls directly in messages with automatic calculation:
+
+- **`{1d6}`** - Simple roll
+- **`{2d20+3}`** - Complex expressions with modifiers
+- **`{1d20+5-2}`** - Math operations supported
+- Rolls display as styled badges with tooltips showing individual die results
+
+Example: "You take {2d6+3} damage!" might display "You take **14** damage!"
+
+#### Interactive Buttons
+
+Create clickable buttons that execute commands:
+
+- **`[Button Text](command)`** - Creates an interactive button
+- Buttons support any chat command:
+  - **Inline rolls:** `[Attack]([[1d20+5]] attack roll)`
+  - **Whispers:** `[Secret]( /w gm Secret information)`
+  - **API commands:** `[Light](!pt -t)`
+  - **Regular chat:** `[Shout](Huzzah!)`
+
+Example message: "What do you do? [Fight](I attack with [[1d20+5]]!) [Flee](I run away!)"
 
 ### Message Weights
 
@@ -155,10 +234,16 @@ Create multiple card styles for different types of triggers:
 - **Trap**: Warning colors, GM whisper
 - **Quest**: Distinctive colors, public
 
+**Customizable Properties:**
+- Border, background, bubble, and text colors
+- Whisper mode (off/character/gm)
+- Optional badge/icon image
+
 To create a new style:
 1. Type: `!pt -C new`
 2. Enter a name
-3. Customize the colors and whisper mode
+3. Customize the colors, whisper mode, and optional badge
+4. Use `!pt --cardstyle [StyleName] [property] [value]` to edit individual properties
 
 ## Trigger Modes
 
@@ -268,26 +353,43 @@ For issues, questions, or contributions:
 - Include your Roll20 API console output if relevant
 
 ## Version History
-- Version 2.1.0 First published version. I initially created a script that triggered message cards when near a preset list of 'npcs' I called ProximityNPC, from there I added more commands to create npcs in state. I put my personal version into AI and asked it to remove my preset items, and refactor it to typescript as ProximityTrigger, this is the result and from my personal testing seems to have all the same working funcitonality. The original and ts can all be found here: [GitHub](https://github.com/bbarrington0099/Roll20API/tree/main)
 
-### Version 2.1.0 (Current)
-- Comprehensive feature set with full UI
-- Multi-token support per trigger
-- Message management with weights
-- Card style system with customization
-- Three trigger modes (on/off/once)
-- Automatic token tracking
-- Persistent state management
+### Version 2.1.0 (Current - First Published Version)
+
+**Development Story:**
+This is the first publicly released version of ProximityTrigger. The script evolved from ProximityNPC, which I initially created to trigger message cards when player tokens approached a preset list of NPCs. As development progressed, I enhanced it with commands to create and manage triggers dynamically in state rather than hardcoding them. The script was then refactored and cleaned up to remove personal presets and made ready for community use as ProximityTrigger. All functionality from the original has been preserved and expanded.
+
+**Original Development:** The complete development history, including the original ProximityNPC version and TypeScript refactor, can be found at [GitHub](https://github.com/bbarrington0099/Roll20API/tree/main)
+
+**Features:**
+- Comprehensive feature set with full interactive UI
+- Multi-token support per trigger (one configuration applies to all tokens with same name)
+- Message management system with weights and per-message styling
+- Card style system with full customization (colors, whisper modes, badges)
+- Three trigger modes: always on, one-time use, or disabled
+- Automatic token tracking (tokens added/removed automatically)
+- Persistent state management (all settings saved between sessions)
+- Interactive chat-based configuration interface
+- **Advanced Dynamic Content Parsing:**
+  - Placeholder support: `{playerName}`, `{monitoredName}`
+  - Character attribute integration: `{playerName.hp}`, `{CharacterName.attribute}`
+  - Inline dice rolling: `{1d20+5}`, `{2d6+3}` with styled results
+  - Interactive buttons: `[Button Text](command)` supporting rolls, whispers, API commands
+  - Persistent button callback system
+- Weighted random message selection
+- Manual trigger activation capability
+- Configurable trigger distances and timeouts
 
 ### Version 2.0.0
-- Major refactor and improvements
+- Major refactor and feature additions
 - Added card styling system
-- Enhanced message system
+- Enhanced message system with weights
+- Improved configuration interface
 
 ### Version 1.0.0
-- Initial release
+- Initial release as ProximityNPC
 - Basic proximity detection
-- Simple message display
+- Simple message display with preset NPCs
 
 ## License
 
