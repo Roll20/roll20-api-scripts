@@ -115,14 +115,15 @@ API_Meta.MagicMaster={offset:Number.MAX_SAFE_INTEGER,lineCount:-1};
  * v5.0.1  24/09/2025  Added the --noWaitMsg command to silence the immediate "Please Wait, gathering data..."
  *                     messages.
  * v5.0.2  05/10/2025  Add (temporary?) fix to API button cmd / macro pair action.
+ * v5.0.3  17/10/2025  Fixed crash on calling !magic without any command
  */
  
 var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	'use strict';
-	var version = '5.0.2',
+	var version = '5.0.3',
 		author = 'RED',
 		pending = null;
-	const lastUpdate = 1759674157;
+	const lastUpdate = 1760686967;
 		
 	/*
 	 * Define redirections for functions moved to the RPGMaster library
@@ -2973,7 +2974,7 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 									miObj.obj[0].set('action',action);
 								}
 							}
-							content += (highlight || makeGrey) ? '</span>' : '](!'+(!extIsAbility ? '' : ('&#13;'+extension+'&#13;'))+'magic --button '+ cmd +'|'+ tokenID +'|'+ rowNo + (!extIsAbility ? extension : '')+')';
+							content += (highlight || makeGrey) ? '</span>' : '](!'+(!extIsAbility ? '' : ('&#13;'+extension+'&#13;!'))+'magic --button '+ cmd +'|'+ tokenID +'|'+ rowNo + (!extIsAbility ? extension : '')+')';
 							buttonNo++;
 							sectHead = '';
 						};
@@ -3205,7 +3206,7 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 						content += (buttonID == selectedButton ? '<span style=' + design.selected_button + '>' : ((submitted || disabled) ? '<span style=' + design.grey_button + '>' : '['));
 						content += ((spellType.includes('POWER') && spellValue) ? (spellValue + ' ') : '') + (spellName || '-');
 //						content += (((buttonID == selectedButton) || submitted || disabled) ? '</span>' : '](!magic --button '+ command +'|'+ tokenID +'|'+ buttonID +'|'+ r +'|'+ c + (!isView ? '' : (' --display-ability '+tokenID+'|'+spellDB+'|'+spellName + extension)) + ')');
-						content += ((buttonID == selectedButton) || submitted || disabled) ? '</span>' : ('](!'+(!isView ? '' : '&#13;'+sendToWho(charCS,senderId,false,true)+'&#37;{' + spell.dB + '|' + changedSpell.hyphened() + '}&#13;') + 'magic --button '+ command +'|'+ tokenID +'|'+ buttonID +'|'+ r +'|'+ c + extension + +')');
+						content += ((buttonID == selectedButton) || submitted || disabled) ? '</span>' : ('](!'+(!isView ? '' : '&#13;'+sendToWho(charCS,senderId,false,true)+'&#37;{' + spell.dB + '|' + changedSpell.hyphened() + '}&#13;!') + 'magic --button '+ command +'|'+ tokenID +'|'+ buttonID +'|'+ r +'|'+ c + extension + +')');
 					}
 					buttonID++;
 				});
@@ -8001,7 +8002,7 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 			return;
 		}
 
-		increment = evalAttr(((change !== '-') ? increment.slice(1) : increment),charCS) || 0;
+		increment = parseInt(evalAttr(((change !== '-') ? increment.slice(1) : increment),charCS)) || 0;
 
 		maxStrength = attrLookup( charCS, [field,'max'] );
 		if (!maxStrength || increment == 0) {
