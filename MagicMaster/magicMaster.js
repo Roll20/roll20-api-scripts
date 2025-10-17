@@ -10720,7 +10720,7 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 		
 		var isGM = (playerIsGM(senderId) || state.MagicMaster.debug === senderId);
 			
-		if (!flags.noWaitMsg && !args[0].toLowerCase().startsWith('nowaitmsg')) sendWait(senderId,1,'magicMaster');
+		if (!flags.noWaitMsg && args[0] && !args[0].toLowerCase().startsWith('nowaitmsg')) sendWait(senderId,1,'magicMaster');
 		
 		_.each(args, function(e) {
 			setTimeout( doMagicCmd, (1*t++), e, selected, senderId, isGM );
