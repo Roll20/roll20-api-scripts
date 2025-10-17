@@ -115,7 +115,8 @@ API_Meta.AttackMaster={offset:Number.MAX_SAFE_INTEGER,lineCount:-1};
  *                     Fixed scanForModifiers() priority selection and added saves as a new possible 
  *                     priority.
  * v5.0.5  14/10/2025  Fixed the error introduced to scanForModifiers() by 5.0.4! Fixed AC calc on 
- *                     changing player page and/or dropping token on map.
+ *                     changing player page and/or dropping token on map. Fixed crash if !attk called
+ *                     without a command or parameters.
  */
  
 var attackMaster = (function() {	// eslint-disable-line no-unused-vars
@@ -123,7 +124,7 @@ var attackMaster = (function() {	// eslint-disable-line no-unused-vars
 	var version = '5.0.5',
 		author = 'Richard @ Damery',
 		pending = null;
-    const lastUpdate = 1760467757;
+    const lastUpdate = 1760686967;
 
 	/*
 	 * Define redirections for functions moved to the RPGMaster library
@@ -8677,7 +8678,7 @@ var attackMaster = (function() {	// eslint-disable-line no-unused-vars
 		} else {
 			sendDebug('senderId is defined as ' + getObj('player',senderId).get('_displayname'));
 		};
-		if (!flags.noWaitMsg && !args[0].toLowerCase().startsWith('nowaitmsg')) sendWait(senderId,1,'attkMaster');
+		if (!flags.noWaitMsg && args[0] && !args[0].toLowerCase().startsWith('nowaitmsg')) sendWait(senderId,1,'attkMaster');
 		
 		_.each(args, function(e) {
 			setTimeout( doAttkCmd, (1*t++), e, selected, senderId, isGM );
