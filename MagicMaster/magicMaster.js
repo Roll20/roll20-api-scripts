@@ -115,7 +115,8 @@ API_Meta.MagicMaster={offset:Number.MAX_SAFE_INTEGER,lineCount:-1};
  * v5.0.1  24/09/2025  Added the --noWaitMsg command to silence the immediate "Please Wait, gathering data..."
  *                     messages.
  * v5.0.2  05/10/2025  Add (temporary?) fix to API button cmd / macro pair action.
- * v5.0.3  17/10/2025  Fixed crash on calling !magic without any command
+ * v5.0.3  17/10/2025  Fixed crash on calling !magic without any command. Fixed sloppy checking of spell
+ *                     schools and spheres.
  */
  
 var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
@@ -1987,9 +1988,9 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 			spell = args[5],
 			charCS = getCharacter(tokenID),
 			casterDef = caster(charCS, (isMU ? 'MU' : 'PR')),
-			reAllowedSpells = {	sps:	reClassSpecs.majorsphere,
-								spm:	reClassSpecs.minorsphere,
-								spb:	reClassSpecs.bannedsphere,
+			reAllowedSpells = {	majorsphere:	reClassSpecs.majorsphere,
+								minorsphere:	reClassSpecs.minorsphere,
+								bannedsphere:	reClassSpecs.bannedsphere,
 			},
 			allowAll = state.MagicMaster.spellRules.allowAll,
 
@@ -2018,12 +2019,12 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 		casterData = casterSpec.obj[1].body;
 		casterData = (casterData.match(reClassData) || ['',''])[1];
 		casterData = parseData( casterData, reAllowedSpells );
-		majorSpells = casterData.sps.dbName();
-		minorSpells = casterData.spm.dbName();
-		bannedSpells = casterData.spb.dbName();
+		majorSpells = casterData.sps.dbName().split('|');
+		minorSpells = casterData.spm.dbName().split('|');
+		bannedSpells = casterData.spb.dbName().split('|');
 		
 		return _.reduce( (isMU ? school : sphere), (r,s) => {
-			banned = !(s === 'any' || ((isMU || majorSpells.includes('any') || majorSpells.includes(s) || (minorSpells.includes(s) && spellData.level < 4)) && (isPR || !bannedSpells.includes(s))));
+			banned = !(s === 'any' || ((isMU || majorSpells.includes('any') || majorSpells.some(sph => s.startsWith(sph)) || (minorSpells.some(sph => s.startsWith(sph)) && level < 4)) && (isPR || !bannedSpells.includes(s))));
 			specialist = isMU && majorSpells.includes(s);
 			specStd = isMU && !majorSpells.includes('any');
 			return ((!allowAll && (!r || banned)) ? 0 : (specialist ? 3 : (specStd ? 2 : r)));
