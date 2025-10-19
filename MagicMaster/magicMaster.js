@@ -2024,7 +2024,7 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 		bannedSpells = casterData.spb.dbName().split('|');
 		
 		return _.reduce( (isMU ? school : sphere), (r,s) => {
-			banned = !(s === 'any' || ((isMU || majorSpells.includes('any') || majorSpells.some(sph => s.startsWith(sph)) || (minorSpells.some(sph => s.startsWith(sph)) && level < 4)) && (isPR || !bannedSpells.includes(s))));
+			banned = !(s === 'any' || ((isMU || majorSpells.includes('any') || majorSpells.some(sph => s.startsWith(sph)) || (minorSpells.some(sph => s.startsWith(sph)) && level < 4)) && (isPR || !bannedSpells.some(sph => s.startsWith(sph)))));
 			specialist = isMU && majorSpells.includes(s);
 			specStd = isMU && !majorSpells.includes('any');
 			return ((!allowAll && (!r || banned)) ? 0 : (specialist ? 3 : (specStd ? 2 : r)));
