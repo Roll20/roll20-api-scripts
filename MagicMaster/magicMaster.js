@@ -115,14 +115,16 @@ API_Meta.MagicMaster={offset:Number.MAX_SAFE_INTEGER,lineCount:-1};
  * v5.0.1  24/09/2025  Added the --noWaitMsg command to silence the immediate "Please Wait, gathering data..."
  *                     messages.
  * v5.0.2  05/10/2025  Add (temporary?) fix to API button cmd / macro pair action.
+ * v5.0.3  17/10/2025  Fixed crash on calling !magic without any command. Fixed sloppy checking of spell
+ *                     schools and spheres.
  */
  
 var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	'use strict';
-	var version = '5.0.2',
+	var version = '5.0.3',
 		author = 'RED',
 		pending = null;
-	const lastUpdate = 1759674157;
+	const lastUpdate = 1760686967;
 		
 	/*
 	 * Define redirections for functions moved to the RPGMaster library
@@ -1986,9 +1988,9 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 			spell = args[5],
 			charCS = getCharacter(tokenID),
 			casterDef = caster(charCS, (isMU ? 'MU' : 'PR')),
-			reAllowedSpells = {	sps:	reClassSpecs.majorsphere,
-								spm:	reClassSpecs.minorsphere,
-								spb:	reClassSpecs.bannedsphere,
+			reAllowedSpells = {	majorsphere:	reClassSpecs.majorsphere,
+								minorsphere:	reClassSpecs.minorsphere,
+								bannedsphere:	reClassSpecs.bannedsphere,
 			},
 			allowAll = state.MagicMaster.spellRules.allowAll,
 
@@ -2017,12 +2019,12 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 		casterData = casterSpec.obj[1].body;
 		casterData = (casterData.match(reClassData) || ['',''])[1];
 		casterData = parseData( casterData, reAllowedSpells );
-		majorSpells = casterData.sps.dbName();
-		minorSpells = casterData.spm.dbName();
-		bannedSpells = casterData.spb.dbName();
+		majorSpells = casterData.sps.dbName().split('|');
+		minorSpells = casterData.spm.dbName().split('|');
+		bannedSpells = casterData.spb.dbName().split('|');
 		
 		return _.reduce( (isMU ? school : sphere), (r,s) => {
-			banned = !(s === 'any' || ((isMU || majorSpells.includes('any') || majorSpells.includes(s) || (minorSpells.includes(s) && spellData.level < 4)) && (isPR || !bannedSpells.includes(s))));
+			banned = !(s === 'any' || ((isMU || majorSpells.includes('any') || majorSpells.some(sph => s.startsWith(sph)) || (minorSpells.some(sph => s.startsWith(sph)) && level < 4)) && (isPR || !bannedSpells.some(sph => s.startsWith(sph)))));
 			specialist = isMU && majorSpells.includes(s);
 			specStd = isMU && !majorSpells.includes('any');
 			return ((!allowAll && (!r || banned)) ? 0 : (specialist ? 3 : (specStd ? 2 : r)));
@@ -2973,7 +2975,7 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 									miObj.obj[0].set('action',action);
 								}
 							}
-							content += (highlight || makeGrey) ? '</span>' : '](!'+(!extIsAbility ? '' : ('&#13;'+extension+'&#13;'))+'magic --button '+ cmd +'|'+ tokenID +'|'+ rowNo + (!extIsAbility ? extension : '')+')';
+							content += (highlight || makeGrey) ? '</span>' : '](!'+(!extIsAbility ? '' : ('&#13;'+extension+'&#13;!'))+'magic --button '+ cmd +'|'+ tokenID +'|'+ rowNo + (!extIsAbility ? extension : '')+')';
 							buttonNo++;
 							sectHead = '';
 						};
@@ -3205,7 +3207,7 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 						content += (buttonID == selectedButton ? '<span style=' + design.selected_button + '>' : ((submitted || disabled) ? '<span style=' + design.grey_button + '>' : '['));
 						content += ((spellType.includes('POWER') && spellValue) ? (spellValue + ' ') : '') + (spellName || '-');
 //						content += (((buttonID == selectedButton) || submitted || disabled) ? '</span>' : '](!magic --button '+ command +'|'+ tokenID +'|'+ buttonID +'|'+ r +'|'+ c + (!isView ? '' : (' --display-ability '+tokenID+'|'+spellDB+'|'+spellName + extension)) + ')');
-						content += ((buttonID == selectedButton) || submitted || disabled) ? '</span>' : ('](!'+(!isView ? '' : '&#13;'+sendToWho(charCS,senderId,false,true)+'&#37;{' + spell.dB + '|' + changedSpell.hyphened() + '}&#13;') + 'magic --button '+ command +'|'+ tokenID +'|'+ buttonID +'|'+ r +'|'+ c + extension + +')');
+						content += ((buttonID == selectedButton) || submitted || disabled) ? '</span>' : ('](!'+(!isView ? '' : '&#13;'+sendToWho(charCS,senderId,false,true)+'&#37;{' + spell.dB + '|' + changedSpell.hyphened() + '}&#13;!') + 'magic --button '+ command +'|'+ tokenID +'|'+ buttonID +'|'+ r +'|'+ c + extension + +')');
 					}
 					buttonID++;
 				});
@@ -8001,7 +8003,7 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 			return;
 		}
 
-		increment = evalAttr(((change !== '-') ? increment.slice(1) : increment),charCS) || 0;
+		increment = parseInt(evalAttr(((change !== '-') ? increment.slice(1) : increment),charCS)) || 0;
 
 		maxStrength = attrLookup( charCS, [field,'max'] );
 		if (!maxStrength || increment == 0) {
@@ -10719,7 +10721,7 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 		
 		var isGM = (playerIsGM(senderId) || state.MagicMaster.debug === senderId);
 			
-		if (!flags.noWaitMsg && !args[0].toLowerCase().startsWith('nowaitmsg')) sendWait(senderId,1,'magicMaster');
+		if (!flags.noWaitMsg && args[0] && !args[0].toLowerCase().startsWith('nowaitmsg')) sendWait(senderId,1,'magicMaster');
 		
 		_.each(args, function(e) {
 			setTimeout( doMagicCmd, (1*t++), e, selected, senderId, isGM );
