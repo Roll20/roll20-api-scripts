@@ -1,8 +1,8 @@
 {
   "name": "Align",
   "script": "Align.js",
-  "version": "1.0.0",
-  "description": "Visually align, distribute, snap, stack, and scatter tokens on the VTT with a chat menu interface. Features include grid snapping, spacing control, z-index sorting, random scatter, undo, and edge protection.",
+  "version": "1.0.1",
+  "description": "Visually align, distribute, snap, stack, and scatter tokens on the VTT with a chat menu interface. Features include grid snapping, spacing control, z-index sorting, random scatter, undo, and edge protection. Now contains token page management",
   "authors": "Keith Curtis",
   "roll20userid": "162065",
   "dependencies": [],
