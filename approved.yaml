@@ -1343,3 +1343,7 @@ libUUID:
 libSmartAttributes:
   - "libSmartAttributes"
   - "Utility"
+
+ProximityTrigger:
+  - "ProximityTrigger"
+  - "Utility"
