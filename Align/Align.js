@@ -22,7 +22,6 @@ on('ready', () => {
 
         log(`Align v.${version} ready. Command: !align — calls up chat menu with help button`);
 
-const logMsg = (msg) => sendChat(scriptName, `/w gm <div style="position:relative;left:-20px;width:100%;border:1px solid #111;background:#ddd;color:#111;padding:6px;margin:4px;border-radius:6px;font-size:13px;line-height:1.5;">${msg}</div>`, null, {noarchive:true});
 
 
 
@@ -862,9 +861,7 @@ on('ready', () => {
     const GRID_SIZE = 10; // snapping grid for box edges
 
 
-    const logMsg = (msg) => sendChat(SCRIPTNAME, `/w gm <div style ="position:relative;left:-20px; width:100%;border:1px solid #111;background:#ddd;color:#111;padding:6px;margin:4px;border-radius:6px;font-size:13px;line-height:1.5;">${msg}</div>`);
-
-//    const logMsg = (msg) => sendChat(SCRIPTNAME, `/w gm ${msg}`);
+const logMsg = (msg) => sendChat(SCRIPTNAME, `/w gm <div style="position:relative;left:-20px;width:100%;border:1px solid #111;background:#ddd;color:#111;padding:6px;margin:4px;border-radius:6px;font-size:13px;line-height:1.5;">${msg}</div>`, null, {noarchive:true});
 
     const parseArgs = (content) => {
         const args = content.split(/\s+--/).slice(1);
