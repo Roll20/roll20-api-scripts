@@ -14,16 +14,9 @@ API_Meta.Align = {
 
 on('ready', () => {
   const scriptName = 'Align';
-  const version = '1.1.1';
-//Changelog
-//1.1.0 Added tokenpage controls by sending Igor into the field to collect body parts for assembling into a single script
-//1.1.1 Added redfining controls to tokenpage containers and cleaned up menu.
-
+  const version = '1.p.1';
 
         log(`Align v.${version} ready. Command: !align — calls up chat menu with help button`);
-
-
-
 
   // --- Initialize or restore script state ---
   if (!state.Align) state.Align = {};
@@ -420,15 +413,11 @@ content += `<br><br><div style="${CSS.title}; position: relative;">Token Page</d
     `<a style="${CSS.button}" href="!tokenpage --yoffset|-10">↑</a>` +
     `<a style="${CSS.button}" href="!tokenpage --yoffset|10">↓</a>`;
 
-content += `<br><span style="${CSS.label}">Container:</span>` +
-    `<a style="${CSS.button}" href="!tokenpage --definebox">Define</a>` +
-    `<a style="${CSS.button}" href="!tokenpage --updateboxes" title="Requires page refresh">Update</a>`;
-    
-content += `<br><span style="${CSS.label}">Label:</span>` +
-    `<a style="${CSS.button}" href="!tokenpage --definelabel">Define</a>` +
-    `<a style="${CSS.button}" href="!tokenpage --definelabelpos|above">Above</a>` +
-    `<a style="${CSS.button}" href="!tokenpage --definelabelpos|below">Below</a>`
-    ;
+content += `<span style="${CSS.label}">Define:</span>` +
+    `<a style="${CSS.button}" href="!tokenpage --definebox">Container</a>` +
+    `<a style="${CSS.button}" href="!tokenpage --definelabel">Label</a>` +
+    `<a style="${CSS.button}" href="!tokenpage --definelabelpos|above">↑</a>` +
+    `<a style="${CSS.button}" href="!tokenpage --definelabelpos|below">↓</a>`;
 
 
 
@@ -860,8 +849,7 @@ on('ready', () => {
     const DEFAULT_MARGINS = [5, 15, 15, 15]; // top, right, bottom, left (px)
     const GRID_SIZE = 10; // snapping grid for box edges
 
-
-const logMsg = (msg) => sendChat(SCRIPTNAME, `/w gm <div style="position:relative;left:-20px;width:100%;border:1px solid #111;background:#ddd;color:#111;padding:6px;margin:4px;border-radius:6px;font-size:13px;line-height:1.5;">${msg}</div>`, null, {noarchive:true});
+    const logMsg = (msg) => sendChat(SCRIPTNAME, `/w gm ${msg}`);
 
     const parseArgs = (content) => {
         const args = content.split(/\s+--/).slice(1);
@@ -940,8 +928,7 @@ const logMsg = (msg) => sendChat(SCRIPTNAME, `/w gm <div style="position:relativ
             fill: obj.get('fill') || '#fce5cd',
             fill_opacity: parseFloat(obj.get('fill_opacity')) || 0.3,
             stroke: obj.get('stroke') || '#660000',
-            stroke_width: parseFloat(obj.get('stroke_width')) || 1,
-            stroke_opacity: parseFloat(obj.get('stroke_opacity')) || 1
+            stroke_width: parseFloat(obj.get('stroke_width')) || 1
         };
         logMsg(`Box style saved.`);
     };
@@ -1016,87 +1003,11 @@ const logMsg = (msg) => sendChat(SCRIPTNAME, `/w gm <div style="position:relativ
             stroke: style.stroke,
             stroke_width: style.stroke_width,
             fill_opacity: style.fill_opacity,
-            stroke_opacity: style.stroke_opacity,
             x: left,
             y: top,
             layer: 'map'
         });
     };
-
-    // --- updateboxes command ---
-const updateMatchingBoxes = (msg) => {
-    const sel = msg.selected;
-    if (!sel || sel.length !== 1) {
-        logMsg('Please select exactly one rectangle to match from.');
-        return;
-    }
-
-    const ref = getObj(sel[0]._type, sel[0]._id);
-    if (!ref || ref.get('type') !== 'pathv2') {
-        logMsg('Selected object is not a valid rectangle (pathv2).');
-        return;
-    }
-
-    const normalizeColor = (c) => {
-        if (!c || c === 'transparent') return 'transparent';
-        c = c.trim().toLowerCase();
-        if (c.startsWith('rgba')) {
-            const nums = c.match(/\d+(\.\d+)?/g);
-            if (nums && nums.length >= 3) {
-                const [r, g, b] = nums;
-                return `#${[r, g, b]
-                    .map(n => Math.max(0, Math.min(255, Math.round(+n)))
-                    .toString(16).padStart(2, '0'))
-                    .join('')}`;
-            }
-        }
-        if (c.length === 9 && c.startsWith('#')) c = c.slice(0, 7);
-        return c;
-    };
-
-    const pageid = ref.get('_pageid');
-    const refFill = normalizeColor(ref.get('fill'));
-    const refStroke = normalizeColor(ref.get('stroke'));
-    const style = getBoxStyle();
-    const allRects = findObjs({ _pageid: pageid, _type: 'pathv2', layer: 'map' }) || [];
-    let count = 0;
-
-    allRects.forEach(r => {
-        const rFill = normalizeColor(r.get('fill'));
-        const rStroke = normalizeColor(r.get('stroke'));
-
-        if (rFill === refFill && rStroke === refStroke) {
-            r.set({
-                stroke: style.stroke,
-                fill: style.fill,
-                fill_opacity: style.fill_opacity,
-                stroke_width: style.stroke_width,
-                stroke_opacity: style.stroke_opacity
-            });
-
-            // Force visual refresh by nudging rotation slightly
-            const rot = Number(r.get('rotation')) || 0;
-            r.set('rotation', rot + 90);
-            r.set('stroke', style.stroke);
-            r.set('stroke', style.stroke);
-            r.set('stroke', style.stroke);
-            r.set('stroke', style.stroke);
-            r.set('stroke', style.stroke);
-            r.set('stroke', style.stroke);
-            r.set('stroke', style.stroke);
-            r.set('stroke', style.stroke);
-            r.set('stroke', style.stroke);
-            r.set('stroke', style.stroke);
-            r.set('stroke', style.stroke);
-            r.set('stroke', style.stroke);
-            r.set('rotation', rot);
-
-            count++;
-        }
-    });
-
-    logMsg(`Updated and refreshed ${count} matching boxes on this page. You may need to refresh this page for the boxes to display correctly.`);
-};
 
     const handleGroup = (msg, options = {}) => {
         if (!playerIsGM(msg.playerid)) { logMsg('Only the GM may run this command.'); return; }
@@ -1269,13 +1180,10 @@ const updateMatchingBoxes = (msg) => {
         if (options.definebox) return setBoxStyleFromSelection(msg);
         if (options.definelabel) return setLabelStyleFromSelection(msg);
         if (options.definelabelpos) return setDefaultLabelPosition(msg, options.definelabelpos);
-        if (options.updateboxes) return updateMatchingBoxes(msg);
         handleGroup(msg, options);
     });
 });
 
 
 
-
 { try { throw new Error(''); } catch (e) { API_Meta.Align.lineCount = (parseInt(e.stack.split(/\n/)[1].replace(/^.*:(\d+):.*$/, '$1'), 10) - API_Meta.Align.offset); } }
-
