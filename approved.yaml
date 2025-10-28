@@ -1347,3 +1347,11 @@ libSmartAttributes:
 ProximityTrigger:
   - "ProximityTrigger"
   - "Utility"
+
+EzExhaust2024:
+  - "EzExhaust2024"
+  - "Utility"
+
+GrimwildCompanion:
+  - "Grimwild Companion"
+  - "Utility"
