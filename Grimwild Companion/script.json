@@ -1,0 +1,13 @@
+{
+    "name": "Grimwild Companion",
+    "script": "GrimwildCompanion_v1.4.js",
+    "previousversions": [],  
+    "version": "1.4",
+    "description": "This API is designed to be used alongside the Grimwild Roll20 Character Sheet in order to facilitate roll functionality with enhanced designs and autocalculated results.",
+    "authors": "Ryan K.",
+    "roll20userid": "539081",
+	"useroptions": [],
+	"dependencies": [],
+	"modifies": {},
+	"conflicts": []
+}
