@@ -2,8 +2,10 @@
   "name": "lib-smart-attributes",
   "version": "1.0.0",
   "type": "module",
-  "main": "src/index.ts",
-  "types": "0.0.1/index.d.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./types": "./src/types.d.ts"
+  },
   "scripts": {
     "lint": "eslint",
     "lint:fix": "eslint --fix",
