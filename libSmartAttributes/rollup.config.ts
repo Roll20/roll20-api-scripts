@@ -9,17 +9,14 @@ export default defineConfig({
 
   output: {
     file: `${json.version}/${json.name}.js`,
-    format: "iife",
     name: json.name,
+    format: "iife",
     sourcemap: false,
     banner: `// ${json.name} v${json.version} by ${json.authors} | ${json.description}`,
   },
 
   plugins: [
     del({ targets: `${json.version}/*`, runOnce: true }),
-    typescript({
-      declaration: true,
-      declarationDir: `${json.version}`,
-    }),
+    typescript({}),
   ]
 });

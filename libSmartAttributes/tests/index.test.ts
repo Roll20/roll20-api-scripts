@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import smartAttributes from "../src/index";
+import SmartAttributes from "../src/index";
 
 // Mock Roll20 API functions
 const mockFindObjs = vi.fn();
@@ -19,7 +19,7 @@ vi.stubGlobal("getSheetItem", mockGetSheetItem);
 vi.stubGlobal("setSheetItem", mockSetSheetItem);
 vi.stubGlobal("log", mockLog);
 
-describe("smartAttributes", () => {
+describe("SmartAttributes", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -32,7 +32,7 @@ describe("smartAttributes", () => {
       const mockAttr = createMockAttribute("15");
       mockFindObjs.mockReturnValue([mockAttr]);
 
-      const result = await smartAttributes.getAttribute(characterId, attributeName);
+      const result = await SmartAttributes.getAttribute(characterId, attributeName);
 
       expect(mockFindObjs).toHaveBeenCalledWith({
         _type: "attribute",
@@ -47,7 +47,7 @@ describe("smartAttributes", () => {
       const mockAttr = createMockAttribute("20");
       mockFindObjs.mockReturnValue([mockAttr]);
 
-      const result = await smartAttributes.getAttribute(characterId, attributeName, "max");
+      const result = await SmartAttributes.getAttribute(characterId, attributeName, "max");
 
       expect(mockAttr.get).toHaveBeenCalledWith("max");
       expect(result).toBe("20");
@@ -57,7 +57,7 @@ describe("smartAttributes", () => {
       mockFindObjs.mockReturnValue([]);
       mockGetSheetItem.mockResolvedValueOnce("beacon-value");
 
-      const result = await smartAttributes.getAttribute(characterId, attributeName);
+      const result = await SmartAttributes.getAttribute(characterId, attributeName);
 
       expect(mockFindObjs).toHaveBeenCalled();
       expect(mockGetSheetItem).toHaveBeenCalledWith(characterId, attributeName);
@@ -68,7 +68,7 @@ describe("smartAttributes", () => {
       mockFindObjs.mockReturnValue([]);
       mockGetSheetItem.mockResolvedValueOnce(null).mockResolvedValueOnce("user-value");
 
-      const result = await smartAttributes.getAttribute(characterId, attributeName);
+      const result = await SmartAttributes.getAttribute(characterId, attributeName);
 
       expect(mockGetSheetItem).toHaveBeenNthCalledWith(1, characterId, attributeName);
       expect(mockGetSheetItem).toHaveBeenNthCalledWith(2, characterId, `user.${attributeName}`);
@@ -79,7 +79,7 @@ describe("smartAttributes", () => {
       mockFindObjs.mockReturnValue([]);
       mockGetSheetItem.mockResolvedValue(null);
 
-      const result = await smartAttributes.getAttribute(characterId, attributeName);
+      const result = await SmartAttributes.getAttribute(characterId, attributeName);
 
       expect(mockLog).toHaveBeenCalledWith(`Attribute ${attributeName} not found on character ${characterId}`);
       expect(result).toBeUndefined();
@@ -89,7 +89,7 @@ describe("smartAttributes", () => {
       mockFindObjs.mockReturnValue([]);
       mockGetSheetItem.mockResolvedValueOnce(0).mockResolvedValueOnce(null); // 0 is falsy, so code continues to user attr
 
-      const result = await smartAttributes.getAttribute(characterId, attributeName);
+      const result = await SmartAttributes.getAttribute(characterId, attributeName);
 
       expect(result).toBeUndefined(); // Since user attr also returns null
       expect(mockGetSheetItem).toHaveBeenCalledTimes(2);
@@ -100,7 +100,7 @@ describe("smartAttributes", () => {
       mockFindObjs.mockReturnValue([]);
       mockGetSheetItem.mockResolvedValueOnce("").mockResolvedValueOnce(null); // '' is falsy, so code continues to user attr
 
-      const result = await smartAttributes.getAttribute(characterId, attributeName);
+      const result = await SmartAttributes.getAttribute(characterId, attributeName);
 
       expect(result).toBeUndefined(); // Since user attr also returns null
       expect(mockGetSheetItem).toHaveBeenCalledTimes(2);
@@ -118,7 +118,7 @@ describe("smartAttributes", () => {
       mockAttr.set.mockReturnValue(value); // Mock set to return the new value
       mockFindObjs.mockReturnValue([mockAttr]);
 
-      const result = await smartAttributes.setAttribute(characterId, attributeName, value);
+      const result = await SmartAttributes.setAttribute(characterId, attributeName, value);
 
       expect(mockFindObjs).toHaveBeenCalledWith({
         _type: "attribute",
@@ -134,7 +134,7 @@ describe("smartAttributes", () => {
       mockAttr.set.mockReturnValue(value); // Mock set to return the new value
       mockFindObjs.mockReturnValue([mockAttr]);
 
-      const result = await smartAttributes.setAttribute(characterId, attributeName, value, "max");
+      const result = await SmartAttributes.setAttribute(characterId, attributeName, value, "max");
 
       expect(mockAttr.set).toHaveBeenCalledWith({ max: value });
       expect(result).toBe(value);
@@ -145,7 +145,7 @@ describe("smartAttributes", () => {
       mockGetSheetItem.mockResolvedValue("existing-beacon-value");
       mockSetSheetItem.mockResolvedValue("updated-value");
 
-      const result = await smartAttributes.setAttribute(characterId, attributeName, value);
+      const result = await SmartAttributes.setAttribute(characterId, attributeName, value);
 
       expect(mockGetSheetItem).toHaveBeenCalledWith(characterId, attributeName);
       expect(mockSetSheetItem).toHaveBeenCalledWith(characterId, attributeName, value);
@@ -157,7 +157,7 @@ describe("smartAttributes", () => {
       mockGetSheetItem.mockResolvedValue(null);
       mockSetSheetItem.mockResolvedValue("user-value");
 
-      const result = await smartAttributes.setAttribute(characterId, attributeName, value);
+      const result = await SmartAttributes.setAttribute(characterId, attributeName, value);
 
       expect(mockSetSheetItem).toHaveBeenCalledWith(characterId, `user.${attributeName}`, value);
       expect(result).toBe("user-value");
@@ -169,7 +169,7 @@ describe("smartAttributes", () => {
       mockGetSheetItem.mockResolvedValue(null);
       mockSetSheetItem.mockResolvedValue(complexValue);
 
-      const result = await smartAttributes.setAttribute(characterId, attributeName, complexValue);
+      const result = await SmartAttributes.setAttribute(characterId, attributeName, complexValue);
 
       expect(mockSetSheetItem).toHaveBeenCalledWith(characterId, `user.${attributeName}`, complexValue);
       expect(result).toBe(complexValue);
@@ -180,7 +180,7 @@ describe("smartAttributes", () => {
       mockGetSheetItem.mockResolvedValue(null);
       mockSetSheetItem.mockResolvedValue(null);
 
-      const result = await smartAttributes.setAttribute(characterId, attributeName, null);
+      const result = await SmartAttributes.setAttribute(characterId, attributeName, null);
 
       expect(mockSetSheetItem).toHaveBeenCalledWith(characterId, `user.${attributeName}`, null);
       expect(result).toBe(null);
@@ -191,7 +191,7 @@ describe("smartAttributes", () => {
       mockGetSheetItem.mockResolvedValue(0); // falsy but valid existing value - code treats as falsy so goes to user path
       mockSetSheetItem.mockResolvedValue("updated");
 
-      const result = await smartAttributes.setAttribute(characterId, attributeName, value);
+      const result = await SmartAttributes.setAttribute(characterId, attributeName, value);
 
       expect(mockSetSheetItem).toHaveBeenCalledWith(characterId, `user.${attributeName}`, value);
       expect(result).toBe("updated");
@@ -206,7 +206,7 @@ describe("smartAttributes", () => {
       mockFindObjs.mockReturnValue([]);
       mockGetSheetItem.mockResolvedValueOnce(0).mockResolvedValueOnce("user-value");
 
-      const result = await smartAttributes.getAttribute(characterId, attributeName);
+      const result = await SmartAttributes.getAttribute(characterId, attributeName);
 
       expect(result).toBe("user-value");
       expect(mockGetSheetItem).toHaveBeenCalledWith(characterId, attributeName);
@@ -217,7 +217,7 @@ describe("smartAttributes", () => {
       const mockAttr = createMockAttribute(42);
       mockFindObjs.mockReturnValue([mockAttr]);
 
-      const result = await smartAttributes.getAttribute(characterId, attributeName);
+      const result = await SmartAttributes.getAttribute(characterId, attributeName);
 
       expect(result).toBe(42);
     });
@@ -226,7 +226,7 @@ describe("smartAttributes", () => {
       mockFindObjs.mockReturnValue([]);
       mockGetSheetItem.mockResolvedValueOnce(true);
 
-      const result = await smartAttributes.getAttribute(characterId, attributeName);
+      const result = await SmartAttributes.getAttribute(characterId, attributeName);
 
       expect(result).toBe(true);
     });
@@ -241,12 +241,12 @@ describe("smartAttributes", () => {
       mockFindObjs.mockReturnValue([mockAttr]);
 
       // Get current value
-      const currentValue = await smartAttributes.getAttribute(characterId, attributeName);
+      const currentValue = await SmartAttributes.getAttribute(characterId, attributeName);
       expect(currentValue).toBe("10");
 
       // Set new value
       mockAttr.set.mockReturnValue("15");
-      const result = await smartAttributes.setAttribute(characterId, attributeName, "15");
+      const result = await SmartAttributes.setAttribute(characterId, attributeName, "15");
       expect(result).toBe("15");
     });
 
@@ -256,11 +256,11 @@ describe("smartAttributes", () => {
       mockSetSheetItem.mockResolvedValue("beacon-15");
 
       // Get current value
-      const currentValue = await smartAttributes.getAttribute(characterId, attributeName);
+      const currentValue = await SmartAttributes.getAttribute(characterId, attributeName);
       expect(currentValue).toBe("beacon-10");
 
       // Set new value
-      const result = await smartAttributes.setAttribute(characterId, attributeName, "beacon-15");
+      const result = await SmartAttributes.setAttribute(characterId, attributeName, "beacon-15");
       expect(result).toBe("beacon-15");
     });
 
@@ -270,11 +270,11 @@ describe("smartAttributes", () => {
       mockSetSheetItem.mockResolvedValue("new-value");
 
       // Get returns undefined
-      const currentValue = await smartAttributes.getAttribute(characterId, attributeName);
+      const currentValue = await SmartAttributes.getAttribute(characterId, attributeName);
       expect(currentValue).toBeUndefined();
 
       // But set still works by creating user attribute
-      const result = await smartAttributes.setAttribute(characterId, attributeName, "new-value");
+      const result = await SmartAttributes.setAttribute(characterId, attributeName, "new-value");
       expect(result).toBe("new-value");
       expect(mockSetSheetItem).toHaveBeenCalledWith(characterId, `user.${attributeName}`, "new-value");
     });
