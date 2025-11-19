@@ -1,6 +1,10 @@
 type AttributeType = "current" | "max";
 
-async function getAttribute(characterId: string, name: string, type: AttributeType = "current") {
+async function getAttribute(
+  characterId: string,
+  name: string,
+  type: AttributeType = "current"
+) {
   // Try for legacy attribute first
   const legacyAttr = findObjs({
     _type: "attribute",
@@ -13,19 +17,18 @@ async function getAttribute(characterId: string, name: string, type: AttributeTy
   }
 
   // Then try for the beacon computed
-  const beaconName = type === "current" ? name : `${name}_max`;
-  const beaconAttr = await getSheetItem(characterId, beaconName);
+  const beaconAttr = await getSheetItem(characterId, name, type);
   if (beaconAttr !== null && beaconAttr !== undefined) {
     return beaconAttr;
   }
 
   // Then try for the user attribute
-  const userAttr = await getSheetItem(characterId, `user.${beaconName}`);
+  const userAttr = await getSheetItem(characterId, `user.${name}`, type);
   if (userAttr !== null && userAttr !== undefined) {
     return userAttr;
   }
 
-  log(`Attribute ${beaconName} not found on character ${characterId}`);
+  log(`Attribute ${name} not found on character ${characterId}`);
   return undefined;
 };
 
@@ -34,7 +37,13 @@ type SetOptions = {
   noCreate?: boolean;
 };
 
-async function setAttribute(characterId: string, name: string, value: unknown, type: AttributeType = "current", options?: SetOptions) {
+async function setAttribute(
+  characterId: string,
+  name: string,
+  value: unknown,
+  type: AttributeType = "current",
+  options?: SetOptions
+) {
   // Try for legacy attribute first
   const legacyAttr = findObjs({
     _type: "attribute",
@@ -53,21 +62,20 @@ async function setAttribute(characterId: string, name: string, value: unknown, t
   }
 
   // Then try for the beacon computed
-  const beaconName = type === "current" ? name : `${name}_max`;
-  const beaconAttr = await getSheetItem(characterId, beaconName);
+  const beaconAttr = await getSheetItem(characterId, name, type);
   if (beaconAttr !== null && beaconAttr !== undefined) {
-    setSheetItem(characterId, beaconName, value);
+    setSheetItem(characterId, name, value);
     return;
   }
 
   // Guard against creating user attributes if noCreate is set
   if (options?.noCreate) {
-    log(`Attribute ${beaconName} not found on character ${characterId}, and noCreate option is set. Skipping creation.`);
+    log(`Attribute ${name} not found on character ${characterId}, and noCreate option is set. Skipping creation.`);
     return;
   }
 
   // Then default to a user attribute
-  setSheetItem(characterId, `user.${beaconName}`, value);
+  setSheetItem(characterId, `user.${name}`, value, type);
   return;
 };
 
@@ -85,23 +93,22 @@ async function deleteAttribute(characterId: string, name: string, type: Attribut
   }
 
   // Then try for the beacon computed
-  const beaconName = type === "current" ? name : `${name}_max`;
-  const beaconAttr = await getSheetItem(characterId, beaconName);
+  const beaconAttr = await getSheetItem(characterId, name, type);
   if (beaconAttr !== null && beaconAttr !== undefined) {
     log(`Cannot delete beacon computed attribute ${name} on character ${characterId}. Setting to undefined instead`);
-    setSheetItem(characterId, name, undefined);
+    setSheetItem(characterId, name, undefined, type);
     return;
   }
 
   // Then try for the user attribute
-  const userAttr = await getSheetItem(characterId, `user.${beaconName}`);
+  const userAttr = await getSheetItem(characterId, `user.${name}`, type);
   if (userAttr !== null && userAttr !== undefined) {
     log(`Deleting user attribute ${name} on character ${characterId}`);
-    setSheetItem(characterId, `user.${beaconName}`, undefined);
+    setSheetItem(characterId, `user.${name}`, undefined, type);
     return;
   }
 
-  log(`Attribute ${beaconName} not found on character ${characterId}, nothing to delete`);
+  log(`Attribute ${type} not found on character ${characterId}, nothing to delete`);
   return;
 };
 

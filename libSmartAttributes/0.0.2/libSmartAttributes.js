@@ -13,17 +13,16 @@ var libSmartAttributes = (function () {
             return legacyAttr.get(type);
         }
         // Then try for the beacon computed
-        const beaconName = type === "current" ? name : `${name}_max`;
-        const beaconAttr = await getSheetItem(characterId, beaconName);
+        const beaconAttr = await getSheetItem(characterId, name, type);
         if (beaconAttr !== null && beaconAttr !== undefined) {
             return beaconAttr;
         }
         // Then try for the user attribute
-        const userAttr = await getSheetItem(characterId, `user.${beaconName}`);
+        const userAttr = await getSheetItem(characterId, `user.${name}`, type);
         if (userAttr !== null && userAttr !== undefined) {
             return userAttr;
         }
-        log(`Attribute ${beaconName} not found on character ${characterId}`);
+        log(`Attribute ${name} not found on character ${characterId}`);
         return undefined;
     }
     async function setAttribute(characterId, name, value, type = "current", options) {
@@ -42,19 +41,18 @@ var libSmartAttributes = (function () {
             return;
         }
         // Then try for the beacon computed
-        const beaconName = type === "current" ? name : `${name}_max`;
-        const beaconAttr = await getSheetItem(characterId, beaconName);
+        const beaconAttr = await getSheetItem(characterId, name, type);
         if (beaconAttr !== null && beaconAttr !== undefined) {
-            setSheetItem(characterId, beaconName, value);
+            setSheetItem(characterId, name, value);
             return;
         }
         // Guard against creating user attributes if noCreate is set
         if (options?.noCreate) {
-            log(`Attribute ${beaconName} not found on character ${characterId}, and noCreate option is set. Skipping creation.`);
+            log(`Attribute ${name} not found on character ${characterId}, and noCreate option is set. Skipping creation.`);
             return;
         }
         // Then default to a user attribute
-        setSheetItem(characterId, `user.${beaconName}`, value);
+        setSheetItem(characterId, `user.${name}`, value, type);
         return;
     }
     async function deleteAttribute(characterId, name, type = "current") {
@@ -69,21 +67,20 @@ var libSmartAttributes = (function () {
             return;
         }
         // Then try for the beacon computed
-        const beaconName = type === "current" ? name : `${name}_max`;
-        const beaconAttr = await getSheetItem(characterId, beaconName);
+        const beaconAttr = await getSheetItem(characterId, name, type);
         if (beaconAttr !== null && beaconAttr !== undefined) {
             log(`Cannot delete beacon computed attribute ${name} on character ${characterId}. Setting to undefined instead`);
-            setSheetItem(characterId, name, undefined);
+            setSheetItem(characterId, name, undefined, type);
             return;
         }
         // Then try for the user attribute
-        const userAttr = await getSheetItem(characterId, `user.${beaconName}`);
+        const userAttr = await getSheetItem(characterId, `user.${name}`, type);
         if (userAttr !== null && userAttr !== undefined) {
             log(`Deleting user attribute ${name} on character ${characterId}`);
-            setSheetItem(characterId, `user.${beaconName}`, undefined);
+            setSheetItem(characterId, `user.${name}`, undefined, type);
             return;
         }
-        log(`Attribute ${beaconName} not found on character ${characterId}, nothing to delete`);
+        log(`Attribute ${type} not found on character ${characterId}, nothing to delete`);
         return;
     }
     var index = {
