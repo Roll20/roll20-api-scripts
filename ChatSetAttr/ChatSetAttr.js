@@ -67,125 +67,52 @@ var ChatSetAttr = (function (exports) {
         return `<${tagName}${attrs}>${childrenContent}</${tagName}>`;
     }
 
-    const COLOR_RED = {
-        "50": "#ffebeb",
-        "300": "#ff7474",
-        "500": "#ff2020"};
-    const COLOR_GREEN = {
-        "500": "#00e626"};
-    const COLOR_EMERALD = {
-        "50": "#e6fff5",
-        "300": "#4dffc7"};
-    const COLOR_BLUE = {
-        "50": "#e6f0ff",
-        "100": "#b3d1ff",
-        "300": "#4d94ff",
-        "400": "#1a75ff",
-        "600": "#0052b4",
-        "800": "#002952",
-        "900": "#001421",
-    };
-    const COLOR_STONE = {
-        "50": "#fafaf9",
-        "400": "#a8a29e",
-        "700": "#44403c",
-        "900": "#1c1917",
-    };
-    const COLOR_WHITE = "#ffffff";
-    const PADDING = {
-        XS: "2px",
-        SM: "4px",
-        MD: "8px"};
-    const MARGIN = {
-        SM: "4px",
-        MD: "8px"};
-    const BORDER_RADIUS = {
-        SM: "2px",
-        MD: "4px"};
-    const FONT_SIZE = {
-        SM: "0.875rem",
-        MD: "1rem",
-        LG: "1.125rem"};
-    const FONT_WEIGHT = {
-        MEDIUM: "500",
-        BOLD: "700"};
-    const WRAPPER_STYLE = s({
-        fontSize: FONT_SIZE.MD,
-    });
-    const LI_STYLE = s({
-        fontSize: FONT_SIZE.MD,
-        marginBottom: MARGIN.SM,
-    });
-    s({
-        fontSize: FONT_SIZE.LG,
-        fontWeight: FONT_WEIGHT.BOLD,
-        marginBottom: MARGIN.MD,
-    });
-    const BUTTON_STYLE = s({
-        padding: `${PADDING.SM} ${PADDING.MD}`,
-        borderRadius: BORDER_RADIUS.MD,
-        fontSize: FONT_SIZE.MD,
-        fontWeight: FONT_WEIGHT.MEDIUM,
-        color: COLOR_WHITE,
-        backgroundColor: COLOR_BLUE["600"],
+    const buttonStyleBase = {
         border: "none",
-        textDecoration: "none",
-    });
-    const PARAGRAPH_SPACING_STYLE = s({
-        marginBottom: MARGIN.MD,
-    });
+        borderRadius: "4px",
+        padding: "4px 8px",
+        backgroundColor: "#e91ea2",
+        color: "#FFFFFF",
+        cursor: "pointer",
+        fontWeight: "500",
+    };
+    const frameStyleBase = {
+        border: "1px solid rgba(59, 130, 246, 0.3)",
+        borderRadius: "8px",
+        padding: "8px",
+        backgroundColor: "rgba(59, 130, 246, 0.1)",
+    };
+    const frameStyleError = {
+        border: "1px solid rgba(239, 68, 68, 0.4)",
+        backgroundColor: "rgba(239, 68, 68, 0.1)",
+    };
+    const headerStyleBase = {
+        fontSize: "1.5em",
+        marginBottom: "0.5em",
+    };
 
-    const DELAY_WRAPPER_STYLE = s({
-        border: `1px solid ${COLOR_STONE["400"]}`,
-        borderRadius: BORDER_RADIUS.MD,
-        padding: PADDING.MD,
-        color: COLOR_STONE["900"],
-        backgroundColor: COLOR_STONE["50"],
-    });
-    const DELAY_HEADER_STYLE = s({
-        color: COLOR_STONE["700"],
-        fontSize: FONT_SIZE.LG,
-        fontWeight: "bold",
-        marginBottom: PADDING.SM,
-    });
-    const DELAY_BODY_STYLE = s({
-        fontSize: FONT_SIZE.SM,
-    });
+    const DELAY_WRAPPER_STYLE = s(frameStyleBase);
+    const DELAY_HEADER_STYLE = s(headerStyleBase);
     function createDelayMessage() {
         return (h("div", { style: DELAY_WRAPPER_STYLE },
             h("div", { style: DELAY_HEADER_STYLE }, "Long Running Query"),
-            h("div", { style: DELAY_BODY_STYLE }, "The operation is taking a long time to execute. This may be due to a large number of targets or attributes being processed. Please be patient as the operation completes.")));
+            h("div", null, "The operation is taking a long time to execute. This may be due to a large number of targets or attributes being processed. Please be patient as the operation completes.")));
     }
 
-    // #region Chat Styles
-    const CHAT_WRAPPER_STYLE = s({
-        border: `1px solid ${COLOR_EMERALD["300"]}`,
-        borderRadius: BORDER_RADIUS.MD,
-        padding: PADDING.MD,
-        backgroundColor: COLOR_EMERALD["50"],
-    });
-    const CHAT_HEADER_STYLE = s({
-        fontSize: FONT_SIZE.LG,
-        fontWeight: "bold",
-        marginBottom: PADDING.SM,
-    });
+    const CHAT_WRAPPER_STYLE = s(frameStyleBase);
+    const CHAT_HEADER_STYLE = s(headerStyleBase);
     const CHAT_BODY_STYLE = s({
-        fontSize: FONT_SIZE.SM,
+        fontSize: "14px",
+        lineHeight: "1.4",
     });
-    // #region Error Styles
     const ERROR_WRAPPER_STYLE = s({
-        border: `1px solid ${COLOR_RED["300"]}`,
-        borderRadius: BORDER_RADIUS.MD,
-        padding: PADDING.MD,
-        backgroundColor: COLOR_RED["50"],
+        ...frameStyleBase,
+        ...frameStyleError,
     });
-    const ERROR_HEADER_STYLE = s({
-        color: COLOR_RED["500"],
-        fontWeight: "bold",
-        fontSize: FONT_SIZE.LG,
-    });
+    const ERROR_HEADER_STYLE = s(headerStyleBase);
     const ERROR_BODY_STYLE = s({
-        fontSize: FONT_SIZE.SM,
+        fontSize: "14px",
+        lineHeight: "1.4",
     });
     // #region Generic Message Creation Function
     function createMessage(header, messages, styles) {
@@ -210,26 +137,12 @@ var ChatSetAttr = (function (exports) {
         });
     }
 
-    const NOTIFY_WRAPPER_STYLE = s({
-        border: `1px solid ${COLOR_BLUE["300"]}`,
-        borderRadius: BORDER_RADIUS.MD,
-        padding: PADDING.MD,
-        color: COLOR_BLUE["800"],
-        backgroundColor: COLOR_BLUE["100"],
-    });
-    const NOTIFY_HEADER_STYLE = s({
-        color: COLOR_BLUE["900"],
-        fontSize: FONT_SIZE.LG,
-        fontWeight: "bold",
-        marginBottom: PADDING.SM,
-    });
-    const NOTIFY_BODY_STYLE = s({
-        fontSize: FONT_SIZE.MD,
-    });
+    const NOTIFY_WRAPPER_STYLE = s(frameStyleBase);
+    const NOTIFY_HEADER_STYLE = s(headerStyleBase);
     function createNotifyMessage(title, content) {
         return (h("div", { style: NOTIFY_WRAPPER_STYLE },
             h("div", { style: NOTIFY_HEADER_STYLE }, title),
-            h("div", { style: NOTIFY_BODY_STYLE }, content)));
+            h("div", null, content)));
     }
 
     function getPlayerName(playerID) {
@@ -261,7 +174,7 @@ var ChatSetAttr = (function (exports) {
   <p>Thank you for installing ChatSetAttr.</p>
   <p>To get started, use the command <code>!setattr-config</code> to configure the script to your needs.</p>
   <p>For detailed documentation and examples, please use the <code>!setattr-help</code> command or click the button below:</p>
-  <p><a href="!setattrs-help" style="${BUTTON_STYLE}">Create Journal Handout</a></p>`;
+  <p><a href="!setattrs-help" style="${s(buttonStyleBase)}">Create Journal Handout</a></p>`;
         sendNotification("Welcome to ChatSetAttr!", welcomeMessage, false);
     }
 
@@ -612,21 +525,8 @@ var ChatSetAttr = (function (exports) {
         return Math.max(Math.min(currentValue, maxValue), 0);
     }
 
-    const CONFIG_WRAPPER_STYLE = s({
-        border: `1px solid ${COLOR_BLUE["300"]}`,
-        borderRadius: BORDER_RADIUS.MD,
-        padding: PADDING.MD,
-        backgroundColor: COLOR_BLUE["50"],
-    });
-    const CONFIG_HEADER_STYLE = s({
-        color: COLOR_BLUE["400"],
-        fontSize: FONT_SIZE.LG,
-        fontWeight: "bold",
-        marginBottom: PADDING.SM,
-    });
-    const CONFIG_BODY_STYLE = s({
-        fontSize: FONT_SIZE.SM,
-    });
+    const CONFIG_WRAPPER_STYLE = s(frameStyleBase);
+    const CONFIG_HEADER_STYLE = s(headerStyleBase);
     const CONFIG_TABLE_STYLE = s({
         width: "100%",
         border: "none",
@@ -634,24 +534,19 @@ var ChatSetAttr = (function (exports) {
         borderSpacing: "0 4px",
     });
     const CONFIG_ROW_STYLE = s({
-        marginBottom: PADDING.XS,
+        marginBottom: "4px",
     });
-    const CONFIG_BUTTON_SHARED = {
-        color: COLOR_WHITE,
-        border: "none",
-        borderRadius: BORDER_RADIUS.SM,
-        fontSize: FONT_SIZE.SM,
-        padding: `${PADDING.XS} ${PADDING.SM}`,
-        textAlign: "center",
-        width: "100%",
-    };
     const CONFIG_BUTTON_STYLE_ON = s({
-        backgroundColor: COLOR_GREEN["500"],
-        ...CONFIG_BUTTON_SHARED,
+        ...buttonStyleBase,
+        backgroundColor: "#16A34A",
+        color: "#FFFFFF",
+        fontWeight: "500",
     });
     const CONFIG_BUTTON_STYLE_OFF = s({
-        backgroundColor: COLOR_RED["300"],
-        ...CONFIG_BUTTON_SHARED,
+        ...buttonStyleBase,
+        backgroundColor: "#DC2626",
+        color: "#FFFFFF",
+        fontWeight: "500",
     });
     const CONFIG_CLEAR_FIX_STYLE = s({
         clear: "both",
@@ -665,7 +560,7 @@ var ChatSetAttr = (function (exports) {
         const relevantEntries = configEntries.filter(([key]) => key !== "version" && key !== "globalconfigCache" && key !== "flags");
         return (h("div", { style: CONFIG_WRAPPER_STYLE },
             h("div", { style: CONFIG_HEADER_STYLE }, "ChatSetAttr Configuration"),
-            h("div", { style: CONFIG_BODY_STYLE },
+            h("div", null,
                 h("table", { style: CONFIG_TABLE_STYLE }, relevantEntries.map(([key, value]) => (h("tr", { style: CONFIG_ROW_STYLE },
                     h("td", null,
                         h("strong", null,
@@ -1906,6 +1801,7 @@ var ChatSetAttr = (function (exports) {
                 if (isSetting) {
                     const value = results[target][name] ?? "";
                     try {
+                        console.log("Setting attribute", actualName, "on target", target, "to", value, "with type", type);
                         await libSmartAttributes.setAttribute(target, actualName, value, type, setOptions);
                     }
                     catch (error) {
@@ -1945,15 +1841,28 @@ var ChatSetAttr = (function (exports) {
         const { operation, targeting, options, changes, references, feedback, } = parseMessage(msg.content);
         // Start Timer
         startTimer("chatsetattr", 8000, () => sendDelayMessage(options.silent));
+        // Check Config and Permissions
+        const config = getConfig();
+        const isGM = playerIsGM(msg.playerid);
+        if (options.evaluate && !isGM && !config.playersCanEvaluate) {
+            return errorOut("You do not have permission to use the evaluate option.", msg.playerid, errors);
+        }
+        if (targeting.includes("party") && !isGM && !config.playersCanTargetParty) {
+            return errorOut("You do not have permission to target the party.", msg.playerid, errors);
+        }
+        if ((operation === "modattr" || operation === "modbattr") && !isGM && !config.playersCanModify) {
+            return errorOut("You do not have permission to modify attributes.", msg.playerid, errors);
+        }
         // Preprocess
         const { targets, errors: targetErrors } = generateTargets(msg, targeting);
         errors.push(...targetErrors);
+        if (targets.length === 0) {
+            return errorOut("No valid targets found.", msg.playerid, errors);
+        }
         const request = generateRequest(references, changes);
         const command = handlers[operation];
         if (!command) {
-            errors.push(`No handler found for operation: ${operation}`);
-            sendErrors(msg.playerid, "Errors", errors);
-            return;
+            return errorOut(`Invalid operation: ${operation}`, msg.playerid, errors);
         }
         // Execute
         for (const target of targets) {
@@ -1981,6 +1890,11 @@ var ChatSetAttr = (function (exports) {
         const delSetTitle = operation === "delattr" ? "Deleting Attributes" : "Setting Attributes";
         const feedbackTitle = feedback?.header ?? delSetTitle;
         sendMessages(msg.playerid, feedbackTitle, messages, feedback?.from);
+    }
+    function errorOut(errorText, playerid, errors) {
+        errors.push("No valid targets found.");
+        sendErrors(playerid, "Errors", errors);
+        clearTimer("chatsetattr");
     }
     function generateRequest(references, changes) {
         const referenceSet = new Set(references);
@@ -2037,6 +1951,14 @@ var ChatSetAttr = (function (exports) {
         });
     }
 
+    const LI_STYLE = s({
+        marginBottom: "4px",
+    });
+    const WRAPPER_STYLE = s(frameStyleBase);
+    const PARAGRAPH_SPACING_STYLE = s({
+        marginTop: "8px",
+        marginBottom: "8px",
+    });
     const v2_0 = {
         appliesTo: "<=1.10",
         version: "2.0",

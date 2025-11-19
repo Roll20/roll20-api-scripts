@@ -1,7 +1,19 @@
 import { sendNotification } from "../modules/chat";
 import { getConfig, setConfig } from "../modules/config";
-import { LI_STYLE, PARAGRAPH_SPACING_STYLE, WRAPPER_STYLE } from "../templates/styles";
+import { frameStyleBase } from "../templates/styles";
 import type { VersionObject } from "../types";
+import { s } from "../utils/chat";
+
+const LI_STYLE = s({
+  marginBottom: "4px",
+});
+
+const WRAPPER_STYLE = s(frameStyleBase);
+
+const PARAGRAPH_SPACING_STYLE = s({
+  marginTop: "8px",
+  marginBottom: "8px",
+});
 
 export const v2_0: VersionObject = {
   appliesTo: "<=1.10",

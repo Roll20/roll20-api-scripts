@@ -1,9 +1,10 @@
+import { error } from "console";
 import scriptJson from "../../script.json" assert { type: "json" };
 import type { Attribute, AttributeRecord } from "../types";
 import { getAttributes } from "./attributes";
 import { sendDelayMessage, sendErrors, sendMessages } from "./chat";
 import { handlers } from "./commands";
-import { checkConfigMessage, handleConfigCommand } from "./config";
+import { checkConfigMessage, getConfig, handleConfigCommand, hasFlag } from "./config";
 import { checkHelpMessage, handleHelpCommand } from "./help";
 import { extractMessageFromRollTemplate, parseMessage, validateMessage } from "./message";
 import { processModifications } from "./modifications";
@@ -45,15 +46,34 @@ async function acceptMessage(msg: Roll20ChatMessage) {
   // Start Timer
   startTimer("chatsetattr", 8000, () => sendDelayMessage(options.silent));
 
+  // Check Config and Permissions
+  const config = getConfig();
+  const isGM = playerIsGM(msg.playerid);
+
+  if (options.evaluate && !isGM && !config.playersCanEvaluate) {
+    return errorOut("You do not have permission to use the evaluate option.", msg.playerid, errors);
+  }
+
+  if (targeting.includes("party") && !isGM && !config.playersCanTargetParty) {
+    return errorOut("You do not have permission to target the party.", msg.playerid, errors);
+  }
+
+  if((operation === "modattr" || operation === "modbattr") && !isGM && !config.playersCanModify) {
+    return errorOut("You do not have permission to modify attributes.", msg.playerid, errors);
+  }
+
   // Preprocess
   const { targets, errors: targetErrors } = generateTargets(msg, targeting);
   errors.push(...targetErrors);
+  if (targets.length === 0) {
+    return errorOut("No valid targets found.", msg.playerid, errors);
+  }
+
   const request = generateRequest(references, changes);
   const command = handlers[operation];
+
   if (!command) {
-    errors.push(`No handler found for operation: ${operation}`);
-    sendErrors(msg.playerid, "Errors", errors);
-    return;
+    return errorOut(`Invalid operation: ${operation}`, msg.playerid, errors);
   }
 
   // Execute
@@ -88,6 +108,13 @@ async function acceptMessage(msg: Roll20ChatMessage) {
   const feedbackTitle = feedback?.header ?? delSetTitle;
   sendMessages(msg.playerid, feedbackTitle, messages, feedback?.from);
 };
+
+function errorOut(errorText: string, playerid: string, errors: string[]) {
+  errors.push("No valid targets found.");
+  sendErrors(playerid, "Errors", errors);
+  clearTimer("chatsetattr");
+}
+
 
 export function generateRequest(
   references: string[],

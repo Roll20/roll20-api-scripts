@@ -25,6 +25,7 @@ export async function getSheetItem(
   if (!attribute) {
     return undefined;
   }
+  console.log("Getting attribute", attributeName, "on character", characterId, "with type", type);
   return attribute[type];
 };
 

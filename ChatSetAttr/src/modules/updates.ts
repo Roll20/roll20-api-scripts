@@ -36,6 +36,8 @@ export async function makeUpdate(
         const value = results[target][name] ?? "";
 
         try {
+          console.log("Setting attribute", actualName, "on target", target, "to", value, "with type", type
+          );
           await libSmartAttributes.setAttribute(target, actualName, value, type, setOptions);
         } catch (error: unknown) {
           errors.push(`Failed to set attribute '${name}' on target '${target}': ${String(error)}`);

@@ -62,18 +62,18 @@ describe("messages", () => {
       const result = createChatMessage(header, messages);
 
       // Check for wrapper styles (chat-specific)
-      expect(result).toContain("border: 1px solid #4dffc7");
-      expect(result).toContain("border-radius: 4px");
+      expect(result).toContain("border: 1px solid rgba(59, 130, 246, 0.3)");
+      expect(result).toContain("border-radius: 8px");
       expect(result).toContain("padding: 8px");
-      expect(result).toContain("background-color: #e6fff5");
+      expect(result).toContain("background-color: rgba(59, 130, 246, 0.1)");
 
       // Check for header styles
-      expect(result).toContain("font-size: 1.125rem");
-      expect(result).toContain("font-weight: bold");
-      expect(result).toContain("margin-bottom: 4px");
+      expect(result).toContain("font-size: 1.5em");
+      expect(result).toContain("margin-bottom: 0.5em");
 
       // Check for body styles
-      expect(result).toContain("font-size: 0.875rem");
+      expect(result).toContain("font-size: 14px");
+      expect(result).toContain("line-height: 1.4");
 
       // Should NOT contain error-specific styles
       expect(result).not.toContain("color: #ff2020");
@@ -199,18 +199,18 @@ describe("messages", () => {
       const result = createErrorMessage(header, errors);
 
       // Check for wrapper styles (error-specific)
-      expect(result).toContain("border: 1px solid #ff7474");
-      expect(result).toContain("border-radius: 4px");
+      expect(result).toContain("border: 1px solid rgba(239, 68, 68, 0.4)");
+      expect(result).toContain("border-radius: 8px");
       expect(result).toContain("padding: 8px");
-      expect(result).toContain("background-color: #ffebeb");
+      expect(result).toContain("background-color: rgba(239, 68, 68, 0.1)");
 
       // Check for header styles (error-specific)
-      expect(result).toContain("color: #ff2020");
-      expect(result).toContain("font-weight: bold");
-      expect(result).toContain("font-size: 1.125rem");
+      expect(result).toContain("font-size: 1.5em");
+      expect(result).toContain("margin-bottom: 0.5em");
 
       // Check for body styles
-      expect(result).toContain("font-size: 0.875rem");
+      expect(result).toContain("font-size: 14px");
+      expect(result).toContain("line-height: 1.4");
 
       // Should NOT contain chat-specific styles
       expect(result).not.toContain("border: 1px solid #ccc");
@@ -285,16 +285,16 @@ describe("messages", () => {
       const errorResult = createErrorMessage(header, content);
 
       // Should have different wrapper styles
-      expect(chatResult).toContain("border: 1px solid #4dffc7");
-      expect(errorResult).toContain("border: 1px solid #ff7474");
+      expect(chatResult).toContain("border: 1px solid rgba(59, 130, 246, 0.3)");
+      expect(errorResult).toContain("border: 1px solid rgba(239, 68, 68, 0.4)");
 
-      // Should have different header styles
-      expect(chatResult).not.toContain("color: #ff2020");
-      expect(errorResult).toContain("color: #ff2020");
+      // Should have same header styles now (both use headerStyleBase)
+      expect(chatResult).toContain("font-size: 1.5em");
+      expect(errorResult).toContain("font-size: 1.5em");
 
-      // Should have different header margin (chat has margin-bottom, error doesn't)
-      expect(chatResult).toContain("margin-bottom: 4px");
-      expect(errorResult).not.toContain("margin-bottom: 4px");
+      // Should have same header margin (both use headerStyleBase)
+      expect(chatResult).toContain("margin-bottom: 0.5em");
+      expect(errorResult).toContain("margin-bottom: 0.5em");
     });
 
     it("should have the same basic structure but different styles", () => {

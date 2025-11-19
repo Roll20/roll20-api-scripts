@@ -1,40 +1,25 @@
 import { s } from "../utils/chat";
-import { BORDER_RADIUS, COLOR_EMERALD, COLOR_RED, FONT_SIZE, PADDING } from "./styles";
+import { frameStyleBase, frameStyleError, headerStyleBase } from "./styles";
 
-// #region Chat Styles
-const CHAT_WRAPPER_STYLE = s({
-  border: `1px solid ${COLOR_EMERALD["300"]}`,
-  borderRadius: BORDER_RADIUS.MD,
-  padding: PADDING.MD,
-  backgroundColor: COLOR_EMERALD["50"],
-});
+const CHAT_WRAPPER_STYLE = s(frameStyleBase);
 
-const CHAT_HEADER_STYLE = s({
-  fontSize: FONT_SIZE.LG,
-  fontWeight: "bold",
-  marginBottom: PADDING.SM,
-});
+const CHAT_HEADER_STYLE = s(headerStyleBase);
 
 const CHAT_BODY_STYLE = s({
-  fontSize: FONT_SIZE.SM,
+  fontSize: "14px",
+  lineHeight: "1.4",
 });
 
-// #region Error Styles
 const ERROR_WRAPPER_STYLE = s({
-  border: `1px solid ${COLOR_RED["300"]}`,
-  borderRadius: BORDER_RADIUS.MD,
-  padding: PADDING.MD,
-  backgroundColor: COLOR_RED["50"],
+  ...frameStyleBase,
+  ...frameStyleError,
 });
 
-const ERROR_HEADER_STYLE = s({
-  color: COLOR_RED["500"],
-  fontWeight: "bold",
-  fontSize: FONT_SIZE.LG,
-});
+const ERROR_HEADER_STYLE = s(headerStyleBase);
 
 const ERROR_BODY_STYLE = s({
-  fontSize: FONT_SIZE.SM,
+  fontSize: "14px",
+  lineHeight: "1.4",
 });
 
 // #region Message Styles Type
