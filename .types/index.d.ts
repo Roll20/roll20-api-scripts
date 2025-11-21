@@ -8,7 +8,7 @@ type Prettify<T> = {
 interface Roll20Object<T extends Record<string, any>> {
   /** The unique ID of this object */
   id: string;
-  properties: Prettify<T & { id: string }>;
+  properties: Prettify<T & { _id: string }>;
 
   /**
    * Get an attribute of the object
@@ -507,7 +507,7 @@ type FindObjsOptions = {
  *   name: "target"
  * }, {caseInsensitive: true});
  */
-declare function findObjs<T extends keyof Roll20ObjectTypeToInstance>(attrs: Partial<Roll20ObjectTypeToInstance[T]["properties"]> & { _type: T }, options?: FindObjsOptions): Roll20ObjectTypeToInstance[T][];
+declare function findObjs<T extends Roll20ObjectType>(attrs: Partial<Roll20ObjectTypeToInstance[T]["properties"]> & { _type: T }, options?: FindObjsOptions): Roll20ObjectTypeToInstance[T][];
 
 /**
  * Filters Roll20 objects by executing the callback function on each object
