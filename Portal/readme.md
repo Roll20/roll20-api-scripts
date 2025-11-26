@@ -5,10 +5,10 @@ This script manages doors and windows (“portals”), allowing you to:
 - Create portals on the map
 - Lock / unlock them
 - Toggle open/closed state
-- Set LOS and light-blocking behavior
-- Auto-orient windows by their drawn direction
-- Mirror and rotate portals
-- Bulk-select and modify portals
+- Shutter / unshutter windows
+- Hide / unhide doors
+- Convert Doors and Windows from paths or pathv2 objects
+- Bulk-select and modify portal properties
 
 **Base Command:** `!portal`
 
