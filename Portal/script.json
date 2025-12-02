@@ -1,0 +1,15 @@
+{
+  "name": "Portal",
+  "script": "Portal.js",
+  "version": "1.0.0",
+  "description": "# Portal\n\n**Portal** is a script for converting older dynamic lighting maps to modern doors and windows.\nIt also allows for bulk setting of door and window properties",
+  "authors": "keithcurtis",
+  "roll20userid": "162065",
+  "dependencies": [],
+  "modifies": {
+    "door": "read, write",
+    "window": "read, write"
+  },
+  "conflicts": [],
+  "previousversions": ["1.0.0"]
+}
