@@ -2,6 +2,7 @@ import { createDelayMessage } from "../templates/delay";
 import { createChatMessage, createErrorMessage } from "../templates/messages";
 import { createNotifyMessage } from "../templates/notification";
 import { buttonStyleBase } from "../templates/styles";
+import { createWelcomeMessage } from "../templates/welcome";
 import { s } from "../utils/chat";
 
 export function getPlayerName(playerID: string): string {
@@ -42,10 +43,6 @@ export function sendNotification(title: string, content: string, archive?: boole
 };
 
 export function sendWelcomeMessage(): void {
-  const welcomeMessage = `
-  <p>Thank you for installing ChatSetAttr.</p>
-  <p>To get started, use the command <code>!setattr-config</code> to configure the script to your needs.</p>
-  <p>For detailed documentation and examples, please use the <code>!setattr-help</code> command or click the button below:</p>
-  <p><a href="!setattrs-help" style="${s(buttonStyleBase)}">Create Journal Handout</a></p>`;
+  const welcomeMessage = createWelcomeMessage();
   sendNotification("Welcome to ChatSetAttr!", welcomeMessage, false);
 };

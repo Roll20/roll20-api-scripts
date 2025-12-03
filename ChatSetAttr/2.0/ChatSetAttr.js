@@ -71,8 +71,8 @@ var ChatSetAttr = (function (exports) {
         border: "none",
         borderRadius: "4px",
         padding: "4px 8px",
-        backgroundColor: "#e91ea2",
-        color: "#FFFFFF",
+        backgroundColor: "rgba(233, 30, 162, 1)",
+        color: "rgba(255, 255, 255, 1)",
         cursor: "pointer",
         fontWeight: "500",
     };
@@ -145,6 +145,22 @@ var ChatSetAttr = (function (exports) {
             h("div", null, content)));
     }
 
+    function createWelcomeMessage() {
+        const buttonStyle = s(buttonStyleBase);
+        return (h("div", null,
+            h("p", null, "Thank you for installing ChatSetAttr."),
+            h("p", null,
+                "To get started, use the command ",
+                h("code", null, "!setattr-config"),
+                " to configure the script to your needs."),
+            h("p", null,
+                "For detailed documentation and examples, please use the ",
+                h("code", null, "!setattr-help"),
+                " command or click the button below:"),
+            h("p", null,
+                h("a", { href: "!setattrs-help", style: buttonStyle }, "Create Journal Handout"))));
+    }
+
     function getPlayerName(playerID) {
         const player = getObj("player", playerID);
         return player?.get("_displayname") ?? "Unknown Player";
@@ -170,11 +186,7 @@ var ChatSetAttr = (function (exports) {
         sendChat("ChatSetAttr", "/w gm " + notifyMessage, undefined, { noarchive: archive });
     }
     function sendWelcomeMessage() {
-        const welcomeMessage = `
-  <p>Thank you for installing ChatSetAttr.</p>
-  <p>To get started, use the command <code>!setattr-config</code> to configure the script to your needs.</p>
-  <p>For detailed documentation and examples, please use the <code>!setattr-help</code> command or click the button below:</p>
-  <p><a href="!setattrs-help" style="${s(buttonStyleBase)}">Create Journal Handout</a></p>`;
+        const welcomeMessage = createWelcomeMessage();
         sendNotification("Welcome to ChatSetAttr!", welcomeMessage, false);
     }
 
@@ -1959,6 +1971,39 @@ var ChatSetAttr = (function (exports) {
         marginTop: "8px",
         marginBottom: "8px",
     });
+    function createVersionMessage() {
+        return (h("div", { style: WRAPPER_STYLE },
+            h("p", null,
+                h("strong", null, "ChatSetAttr has been updated to version 2.0!")),
+            h("p", null, "This update includes important changes to improve compatibility and performance."),
+            h("strong", null, "Changelog:"),
+            h("ul", null,
+                h("li", { style: LI_STYLE }, "Added compatibility for Beacon sheets, including the new Dungeons and Dragons character sheet."),
+                h("li", { style: LI_STYLE },
+                    "Added support for targeting party members with the ",
+                    h("code", null, "--party"),
+                    " flag."),
+                h("li", { style: LI_STYLE },
+                    "Added support for excluding party members when targeting selected tokens with the ",
+                    h("code", null, "--sel-noparty"),
+                    " flag."),
+                h("li", { style: LI_STYLE },
+                    "Added support for including only party members when targeting selected tokens with the ",
+                    h("code", null, "--sel-party"),
+                    " flag.")),
+            h("p", null, "Please review the updated documentation for details on these new features and how to use them."),
+            h("div", { style: PARAGRAPH_SPACING_STYLE },
+                h("strong", null,
+                    "If you encounter any bugs or issues, please report them via the ",
+                    h("a", { href: "https://help.roll20.net/hc/en-us/requests/new" }, "Roll20 Helpdesk"))),
+            h("div", { style: PARAGRAPH_SPACING_STYLE },
+                h("strong", null,
+                    "If you want to create a handout with the updated documentation, use the command ",
+                    h("code", null, "!setattrs-help"),
+                    " or click the button below"),
+                h("a", { href: "!setattrs-help" }, "Create Help Handout"))));
+    }
+
     const v2_0 = {
         appliesTo: "<=1.10",
         version: "2.0",
@@ -1970,29 +2015,7 @@ var ChatSetAttr = (function (exports) {
             setConfig(config);
             // Send message explaining update
             const title = "ChatSetAttr Updated to Version 2.0";
-            const content = `
-      <div style="${WRAPPER_STYLE}">
-        <p><strong>ChatSetAttr has been updated to version 2.0!</strong></p>
-        <p>This update includes important changes to improve compatibility and performance.</p>
-
-        <strong>Changelog:</strong>
-        <ul>
-          <li style="${LI_STYLE}">Added compatibility for Beacon sheets, including the new Dungeons and Dragons character sheet.</li>
-          <li style="${LI_STYLE}">Added support for targeting party members with the <code>--party</code> flag.</li>
-          <li style="${LI_STYLE}">Added support for excluding party members when targeting selected tokens with the <code>--sel-noparty</code> flag.</li>
-          <li style="${LI_STYLE}">Added support for including only party members when targeting selected tokens with the <code>--sel-party</code> flag.</li>
-        </ul>
-
-        <p>Please review the updated documentation for details on these new features and how to use them.</p>
-        <div style="${PARAGRAPH_SPACING_STYLE}">
-          <strong>If you encounter any bugs or issues, please report them via the <a href="https://help.roll20.net/hc/en-us/requests/new">Roll20 Helpdesk</a></strong>
-        </div>
-        <div style="${PARAGRAPH_SPACING_STYLE}">
-          <strong>If you want to create a handout with the updated documentation, use the command <code>!setattrs-help</code> or click the button below</strong>
-          <a href="!setattrs-help">Create Help Handout</a>
-        </div>
-      </div>
-    `;
+            const content = createVersionMessage();
             sendNotification(title, content, false);
         },
     };

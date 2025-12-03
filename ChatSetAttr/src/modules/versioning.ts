@@ -1,5 +1,5 @@
 import type { VersionObject } from "../types";
-import { v2_0 } from "../versions/version2";
+import { v2_0 } from "../versions/2.0.0";
 import { sendWelcomeMessage } from "./chat";
 import { getConfig, hasFlag, setConfig, setFlag } from "./config";
 

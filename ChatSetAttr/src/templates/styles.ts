@@ -2,8 +2,8 @@ export const buttonStyleBase = {
   border: "none",
   borderRadius: "4px",
   padding: "4px 8px",
-  backgroundColor: "#e91ea2",
-  color: "#FFFFFF",
+  backgroundColor: "rgba(233, 30, 162, 1)",
+  color: "rgba(255, 255, 255, 1)",
   cursor: "pointer",
   fontWeight: "500",
 };

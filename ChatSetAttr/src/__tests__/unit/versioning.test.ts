@@ -1,6 +1,6 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { checkForUpdates } from "../../modules/versioning";
-import { v2_0 } from "../../versions/version2";
+import { v2_0 } from "../../versions/2.0.0";
 import { getConfig, setConfig } from "../../modules/config";
 
 vi.mock("../../versions/version2", () => {
