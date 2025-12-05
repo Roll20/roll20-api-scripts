@@ -1,0 +1,14 @@
+{
+  "name": "Assemble",
+  "script": "Assemble.js",
+  "version": "1.0.1",
+  "description": "# Assemble\r\nThis API is designed to automate the selecting and usage of targeting groups, allowing for more streamlined abilities to be created. It fills the gap on Roll20 where the number of targeting constructions required in a command line (i.e., @{target|token_id} ) cannot both be provided and have those constructions resolve in the same message. In other words, this helps streamline the process of gathering @{target}s so that other command lines can use the collected lists. More information is in the [forum thread](https://app.roll20.net/forum/post/12577859/script-assemble).",
+  "authors": "timmaugh",
+  "roll20userid": "5962076",
+  "useroptions": [],
+  "dependencies": [],
+  "modifies": {
+  },
+  "conflicts": [],
+  "previousversions": []
+}
