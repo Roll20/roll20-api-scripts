@@ -1359,3 +1359,7 @@ GrimwildCompanion:
 Portal:
   - "Portal"
   - "Utility"
+
+Fade:
+  - "Fade"
+  - "Tokens"
