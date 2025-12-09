@@ -1,0 +1,14 @@
+{
+  "name": "Fade",
+  "script": "Fade.js",
+  "version": "1.0.0",
+  "description": "# Fade\n\nFade smoothly transitions graphics between 0% and 100% opacity over a specified time.\n\n---\n\n## Commands\n\n```\n!fade --in|<seconds>\n!fade --out|<seconds>\n!fade --in --all\n!fade --out --all\n```\n\n**<seconds>** is optional (default: 1).\n**--all** affects all graphics on the current page.\n\n### Examples\n```\n!fade --out|5      → Fade selected graphics to 0% over 5 seconds\n!fade --in|3       → Fade selected graphics to 100% over 3 seconds\n!fade --in --all   → Fade in all graphics on the page over 1 second\n```\n\n---\n\n## Features\n- All graphics fade simultaneously\n- Works on all layers\n- Ignores graphics already at target opacity\n- Silent operation (no chat spam)\n\n---\n\n## Usage Notes\n- If no graphics are selected, `--all` is required.\n- Page detection uses the player's last viewed page or the GM's active page.",
+  "authors": "Keith Curtis",
+  "roll20userid": "162065",
+  "dependencies": [],
+  "modifies": {
+    "graphic": "write"
+  },
+  "conflicts": [],
+  "previousversions": []
+}
