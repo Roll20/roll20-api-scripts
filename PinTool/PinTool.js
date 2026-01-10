@@ -760,7 +760,8 @@ The <strong>purge</strong> command removes all tokens on the map similar to the 
             return sendError("Invalid value supplied to --set.");
         }
         pins.forEach(p => p.set(updates));
-        sendStyledMessage("PinTool — Success", `Updated ${pins.length} pin(s).`);
+        
+        //sendStyledMessage("PinTool — Success", `Updated ${pins.length} pin(s).`);
     }
 
     // ============================================================
@@ -1349,3 +1350,4 @@ function handlePlace(msg, args)
 });
 
 {try{throw new Error('');}catch(e){API_Meta.PinTool.lineCount=(parseInt(e.stack.split(/\n/)[1].replace(/^.*:(\d+):.*$/,'$1'),10)-API_Meta.PinTool.offset);}}
+
