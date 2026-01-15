@@ -1367,3 +1367,7 @@ Fade:
 Assemble:
   - "Assemble"
   - "Utility"
+
+PinTool:
+  - "PinTool"
+  - "Utility"
