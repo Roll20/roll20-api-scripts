@@ -1,7 +1,7 @@
 {
   "name": "PinTool",
   "script": "PinTool.js",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "# PinTool\n\nPinTool is a GM-only Roll20 API script for creating, inspecting, converting, and managing **map pins** at scale. It can convert older token-based note workflows with Roll20’s newer map pin system, allowing structured handouts and pins to stay in sync.\n\n---\n\n## Core Capabilities\n\n- Bulk modification of map pin properties\n- Precise targeting of selected pins, all pins on a page, or explicit pin IDs\n- Conversion of legacy note tokens into structured handouts\n- Automatic placement of map pins from handout headers (player and GM)\n- Optional chat display of images referenced in notes\n\n**Base Command:** `!pintool`\n\n---\n\n## Primary Commands\n\n```\n!pintool --set\n!pintool --convert\n!pintool --place\n!pintool --purge\n!pintool --help\n```\n\n- `--set` updates one or more properties across many pins at once.\n- `--convert` extracts data from tokens representing the same character and builds or updates a handout.\n- `--place` scans a handout for headers and creates or replaces pins linked directly to those sections.\n- `--purge` removes related tokens or pins in bulk.\n\n---\n\n## Highlights\n\n- Pins created via `--place` link directly to specific headers in Notes or GM Notes.\n- Existing pins are replaced in-place, preserving their positions.\n- Conversion supports header levels, blockquotes, code blocks, and inline image links.\n- Visibility, scale, links, and sync state can all be controlled programmatically.\n\nDesigned for GMs who want more automated control over pin placement and management.",
   "authors": "Keith Curtis",
   "roll20userid": "162065",
@@ -11,5 +11,5 @@
     "pin": "write"
   },
   "conflicts": [],
-  "previousversions": []
+  "previousversions": ["1.0.0"]
 }
