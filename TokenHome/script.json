@@ -1,0 +1,14 @@
+{
+  "name": "TokenHome",
+  "script": "TokenHome.js",
+  "version": "1.0.0",
+  "description": "# TokenHome\n\nTokenHome is a GM-only Roll20 API script that allows tokens to store, recall, and manage multiple named \"home\" locations on the current page. Each location records pixel-precise X/Y coordinates and the token’s layer, enabling reliable repositioning, staging, and summoning workflows.\n\n---\n\n## Core Capabilities\n\n- Store multiple locations per token (L1, L2, L3, …)\n- Recall tokens to saved locations with layer restoration\n- Summon tokens toward a selected anchor based on proximity\n- Preserve compatibility with tokens outside page bounds\n- Automatically migrate legacy single-home token data\n- Clear individual locations or all stored data per token\n\n**Base Command:** `!home`\n\n---\n\n## Primary Commands\n\n```\n!home --set --L#\n!home --L#\n!home --summon [--L#] [--radius|#]\n!home --clear [--L#]\n!home --help\n```\n\n- `--set` stores the selected token’s current position and layer.\n- `--L#` recalls a token to a stored location.\n- `--summon` pulls tokens toward a selected anchor based on distance.\n- `--clear` removes stored location data from selected tokens.\n- `--help` opens the script’s help handout.\n\n---\n\n## Highlights\n\n- Unlimited numbered locations per token (case-insensitive).\n- Distance-based summoning can target a specific location or choose the closest.\n- Radius supports both pixel values and grid units.\n- Layer is restored on recall and summon.\n- Storage is embedded safely in GM Notes using a hidden JSON block.\n\nDesigned for GMs who want fast, reliable control over token positioning, staging, and recall without page locking or teleport hacks.",
+  "authors": "Keith Curtis, based on a Script by the Aaron",
+  "roll20userid": "162065",
+  "dependencies": [],
+  "modifies": {
+    "graphic": "write"
+  },
+  "conflicts": [],
+  "previousversions": [""]
+}
