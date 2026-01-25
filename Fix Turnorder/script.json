@@ -1,0 +1,15 @@
+{
+  "name": "FixTurnOrder",
+  "script": "FixTurnOrder.js",
+  "version": "1.0.0",
+  "description": "# FixTurnOrder\n\nFixTurnOrder is a GM-only Roll20 API script that helps clean up the Turn Order when it contains leftover token entries from other pages. This is a common issue when moving between maps and forgetting to clear the tracker.\n\n---\n\n## What It Does\n\nWhen run, the script checks the Turn Order and compares each token entry to the current player page. Any turns belonging to tokens that are not on the active page are listed in a clear chat report, grouped by the page they came from.\n\nFrom that report, the GM can:\n\n- Delete all off-page turns from a specific page at once\n- Delete individual off-page turns one by one\n\nNothing happens automatically. The script only runs when invoked, and no Turn Order entries are removed unless the GM clicks a button.\n\n---\n\n## What It Does *Not* Do\n\n- It does not monitor the game continuously\n- It does not remove turns for tokens on the current player page\n- It does not affect custom Turn Order items that are not tied to tokens (such as lair actions, round counters, or reminders)\n\n---\n\n## Usage\n\n**Base Command:** `!fixturnorder`\n\nRunning the command opens an interactive chat report with buttons to review and clean up off-page turns.\n\n---\n\nDesigned for GMs who frequently move between pages and want a quick, safe way to clean up forgotten Turn Order entries without touching custom or manual items.",
+  "authors": "Keith Curtis",
+  "roll20userid": "162065",
+  "dependencies": [],
+  "modifies": {
+    "campaign": "read",
+    "turnorder": "write"
+  },
+  "conflicts": [],
+  "previousversions": [""]
+}
