@@ -9,14 +9,17 @@ API_Meta.fixTurnOrder={offset:Number.MAX_SAFE_INTEGER,lineCount:-1};
 
 on('ready', () => {
 
-on('chat:message', (msg) => {
-    if (msg.type !== 'api') return;
-    if (!playerIsGM(msg.playerid)) return;
-
     const scriptName = 'Fix Turn Order';
     const version = '1.0.0'; //version number set here
     log('-=> Fix Turnorder v' + version + ' is loaded. Use !fixturnorder to scan for orphaned turns.');
     //1.0.0 Debut
+
+
+
+on('chat:message', (msg) => {
+    if (msg.type !== 'api') return;
+    if (!playerIsGM(msg.playerid)) return;
+
 
 
 
