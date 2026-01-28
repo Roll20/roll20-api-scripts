@@ -1,29 +1,28 @@
 // Script:   PinTool
 // By:       Keith Curtis
 // Contact:  https://app.roll20.net/users/162065/keithcurtis
-var API_Meta = API_Meta||{}; //eslint-disable-line no-var
-API_Meta.PinTool={offset:Number.MAX_SAFE_INTEGER,lineCount:-1};
-{try{throw new Error('');}catch(e){API_Meta.PinTool.offset=(parseInt(e.stack.split(/\n/)[1].replace(/^.*:(\d+):.*$/,'$1'),10)-6);}}
+var API_Meta = API_Meta || {}; //eslint-disable-line no-var
+API_Meta.PinTool = { offset: Number.MAX_SAFE_INTEGER, lineCount: -1 };
+{ try { throw new Error(''); } catch (e) { API_Meta.PinTool.offset = (parseInt(e.stack.split(/\n/)[1].replace(/^.*:(\d+):.*$/, '$1'), 10) - 6); } }
 
-on("ready", () =>
-{
+on("ready", () => {
 
-    const version = '1.0.2'; //version number set here
-    log('-=> PinTool v' + version + ' is loaded. Use !pintool --help for documentation.');
-    //1.0.2 Cleaned up Help Documentation. Added basic control panel
-    //1.0.1 Added burndown to many parts to account for timeouts - Thanks to the Aaron
-    //1.0.0 Debut
+  const version = '1.0.2'; //version number set here
+  log('-=> PinTool v' + version + ' is loaded. Use !pintool --help for documentation.');
+  //1.0.2 Cleaned up Help Documentation. Added basic control panel
+  //1.0.1 Added burndown to many parts to account for timeouts - Thanks to the Aaron
+  //1.0.0 Debut
 
 
-    // ============================================================
-    // HELPERS
-    // ============================================================
+  // ============================================================
+  // HELPERS
+  // ============================================================
 
-    const scriptName = "PinTool";
-    const PINTOOL_HELP_NAME = "Help: PinTool";
-    const PINTOOL_HELP_AVATAR = "https://files.d20.io/images/470559564/QxDbBYEhr6jLMSpm0x42lg/original.png?1767857147";
+  const scriptName = "PinTool";
+  const PINTOOL_HELP_NAME = "Help: PinTool";
+  const PINTOOL_HELP_AVATAR = "https://files.d20.io/images/470559564/QxDbBYEhr6jLMSpm0x42lg/original.png?1767857147";
 
-    const PINTOOL_HELP_TEXT = `
+  const PINTOOL_HELP_TEXT = `
 <h1>PinTool Script Help</h1>
 
 <p>
@@ -306,326 +305,311 @@ The <strong>purge</strong> command removes all tokens on the map similar to the 
 </ul>
 `;
 
-let sender;
+  let sender;
 
-    const getPageForPlayer = (playerid) =>
-    {
-        let player = getObj('player', playerid);
-        if(playerIsGM(playerid))
+  const getPageForPlayer = (playerid) => {
+    let player = getObj('player', playerid);
+    if (playerIsGM(playerid)) {
+      return player.get('lastpage') || Campaign().get('playerpageid');
+    }
+
+    let psp = Campaign().get('playerspecificpages');
+    if (psp[playerid]) {
+      return psp[playerid];
+    }
+
+    return Campaign().get('playerpageid');
+  };
+
+  function handleHelp(msg) {
+    if (msg.type !== "api") return;
+
+    let handout = findObjs(
+      {
+        _type: "handout",
+        name: PINTOOL_HELP_NAME
+      })[0];
+
+    if (!handout) {
+      handout = createObj("handout",
         {
-            return player.get('lastpage') || Campaign().get('playerpageid');
-        }
+          name: PINTOOL_HELP_NAME,
+          archived: false
+        });
+      handout.set("avatar", PINTOOL_HELP_AVATAR);
+    }
 
-        let psp = Campaign().get('playerspecificpages');
-        if(psp[playerid])
-        {
-            return psp[playerid];
-        }
+    handout.set("notes", PINTOOL_HELP_TEXT);
 
-        return Campaign().get('playerpageid');
-    };
+    const link = `http://journal.roll20.net/handout/${handout.get("_id")}`;
 
-    function handleHelp(msg)
-    {
-        if(msg.type !== "api") return;
-
-        let handout = findObjs(
-        {
-            _type: "handout",
-            name: PINTOOL_HELP_NAME
-        })[0];
-
-        if(!handout)
-        {
-            handout = createObj("handout",
-            {
-                name: PINTOOL_HELP_NAME,
-                archived: false
-            });
-            handout.set("avatar", PINTOOL_HELP_AVATAR);
-        }
-
-        handout.set("notes", PINTOOL_HELP_TEXT);
-
-        const link = `http://journal.roll20.net/handout/${handout.get("_id")}`;
-
-        const box = `
+    const box = `
 <div style="background:#111; padding:10px; border:1px solid #555; border-radius:6px; color:#eee;">
   <div style="font-size:110%; font-weight:bold; margin-bottom:5px;">PinTool Help</div>
   <a href="${link}" target="_blank" style="color:#9fd3ff; font-weight:bold;">Open Help Handout</a>
 </div>`.trim().replace(/\r?\n/g, '');
 
-        sendChat("PinTool", `/w gm ${box}`);
-    }
+    sendChat("PinTool", `/w gm ${box}`);
+  }
 
 
-function getCSS()
-{
+  function getCSS() {
     return {
-        messageContainer:
-            "background:#1e1e1e;" +
-            "border:1px solid #444;" +
-            "border-radius:6px;" +
-            "padding:8px;" +
-            "margin:4px 0;" +
-            "font-family:Arial, sans-serif;" +
-            "color:#ddd;",
+      messageContainer:
+        "background:#1e1e1e;" +
+        "border:1px solid #444;" +
+        "border-radius:6px;" +
+        "padding:8px;" +
+        "margin:4px 0;" +
+        "font-family:Arial, sans-serif;" +
+        "color:#ddd;",
 
-        messageTitle:
-            "font-weight:bold;" +
-            "font-size:14px;" +
-            "margin-bottom:6px;" +
-            "color:#fff;",
+      messageTitle:
+        "font-weight:bold;" +
+        "font-size:14px;" +
+        "margin-bottom:6px;" +
+        "color:#fff;",
 
-        messageButton:
-            "display:inline-block;" +
-            "padding:2px 6px;" +
-            "margin:2px 4px 2px 0;" +
-            "border-radius:4px;" +
-            "background:#333;" +
-            "border:1px solid #555;" +
-            "color:#9fd3ff;" +
-            "text-decoration:none;" +
-            "font-weight:bold;" +
-            "font-size:12px;" +
-            "white-space:nowrap;",
+      messageButton:
+        "display:inline-block;" +
+        "padding:2px 6px;" +
+        "margin:2px 4px 2px 0;" +
+        "border-radius:4px;" +
+        "background:#333;" +
+        "border:1px solid #555;" +
+        "color:#9fd3ff;" +
+        "text-decoration:none;" +
+        "font-weight:bold;" +
+        "font-size:12px;" +
+        "white-space:nowrap;",
 
-        sectionLabel:
-            "display:block;" +
-            "margin-top:6px;" +
-            "font-weight:bold;" +
-            "color:#ccc;",
-        
-        panel:
-            "background:#ccc;" +
-            "border:1px solid #444;" +
-            "border-radius:6px;" +
-            "padding:8px;" +
-            "margin:4px 0;" +
-            "font-family:Arial, sans-serif;" +
-            "color:#111;",
+      sectionLabel:
+        "display:block;" +
+        "margin-top:6px;" +
+        "font-weight:bold;" +
+        "color:#ccc;",
 
-    
-        panelButtonLeft:
-    "display:inline-block;" +
-    "padding:2px 6px;" +
-    "border-radius:14px 0 0 14px;" +
-    "background:#333;" +
-    "border:1px solid #555;" +
-    "border-right:none;" +
-    "color:#9fd3ff;" +
-    "text-decoration:none;" +
-    "font-size:12px;" +
-    "margin-bottom:4px;",
+      panel:
+        "background:#ccc;" +
+        "border:1px solid #444;" +
+        "border-radius:6px;" +
+        "padding:8px;" +
+        "margin:4px 0;" +
+        "font-family:Arial, sans-serif;" +
+        "color:#111;",
 
-panelButtonAll:
-    "display:inline-block;" +
-    "padding:2px 6px;" +
-    "border-radius:0 14px 14px 0;" +
-    "background:#222;" +
-    "border:1px solid #555;" +
-    "color:#9fd3ff;" +
-    "text-decoration:none;" +
-    "font-size:11px;" +
-    "font-weight:bold;" +
-    "margin-right:10px;" +
-    "margin-bottom:4px;"
+
+      panelButtonLeft:
+        "display:inline-block;" +
+        "padding:2px 6px;" +
+        "border-radius:14px 0 0 14px;" +
+        "background:#333;" +
+        "border:1px solid #555;" +
+        "border-right:none;" +
+        "color:#9fd3ff;" +
+        "text-decoration:none;" +
+        "font-size:12px;" +
+        "margin-bottom:4px;",
+
+      panelButtonAll:
+        "display:inline-block;" +
+        "padding:2px 6px;" +
+        "border-radius:0 14px 14px 0;" +
+        "background:#222;" +
+        "border:1px solid #555;" +
+        "color:#9fd3ff;" +
+        "text-decoration:none;" +
+        "font-size:11px;" +
+        "font-weight:bold;" +
+        "margin-right:10px;" +
+        "margin-bottom:4px;"
 
     };
-}
+  }
 
-function splitButton(label, command)
-{
+  function splitButton(label, command) {
     const css = getCSS();
 
     return (
-        `<a href="${command}" style="${css.panelButtonLeft}">${label}</a>` +
-        `<a href="${command} filter|all" style="${css.panelButtonAll}">++</a>`
+      `<a href="${command}" style="${css.panelButtonLeft}">${label}</a>` +
+      `<a href="${command} filter|all" style="${css.panelButtonAll}">++</a>`
     );
-}
+  }
 
-function messageButton(label, command)
-{
+  function messageButton(label, command) {
     const css = getCSS();
 
     return (
-        `<a href="${command}" style="${css.messageButton}">${label}</a>`
+      `<a href="${command}" style="${css.messageButton}">${label}</a>`
     );
-}
+  }
 
-function showControlPanel()
-{
+  function showControlPanel() {
     const css = getCSS();
 
     const panel =
-        `<div style="${css.panel}">` +
+      `<div style="${css.panel}">` +
 
-        `<div style="margin-bottom:12px;">Click on button name to affect selected pins, or "++" to apply that setting to all pins on page</div>` + 
-        
-        `<div><strong>Size</strong><br>` +
-            splitButton("Teeny", "!pintool --set scale|.25") +
-            splitButton("Tiny",  "!pintool --set scale|.5") +
-            splitButton("Sm",    "!pintool --set scale|.75") +
-            splitButton("Med",   "!pintool --set scale|1") +
-            splitButton("Lrg",   "!pintool --set scale|1.25") +
-            splitButton("Huge",  "!pintool --set scale|1.5") +
-            splitButton("Gig",   "!pintool --set scale|2") +
-        `</div>` +
+      `<div style="margin-bottom:12px;">Click on button name to affect selected pins, or "++" to apply that setting to all pins on page</div>` +
 
-        `<div style="margin-top:6px;"><strong>Visible</strong><br>` +
-            splitButton("GM Only", "!pintool --set visibleTo|") +
-            splitButton("All",     "!pintool --set visibleTo|all") +
-        `</div>` +
+      `<div><strong>Size</strong><br>` +
+      splitButton("Teeny", "!pintool --set scale|.25") +
+      splitButton("Tiny", "!pintool --set scale|.5") +
+      splitButton("Sm", "!pintool --set scale|.75") +
+      splitButton("Med", "!pintool --set scale|1") +
+      splitButton("Lrg", "!pintool --set scale|1.25") +
+      splitButton("Huge", "!pintool --set scale|1.5") +
+      splitButton("Gig", "!pintool --set scale|2") +
+      `</div>` +
 
-        `<div style="margin-top:6px;"><strong>Blockquote as player text</strong><br>` +
-            splitButton("On",  "!pintool --set autoNotesType|blockquote") +
-            splitButton("Off", "!pintool --set autoNotesType|") +
-        `</div>` +
+      `<div style="margin-top:6px;"><strong>Visible</strong><br>` +
+      splitButton("GM Only", "!pintool --set visibleTo|") +
+      splitButton("All Players", "!pintool --set visibleTo|all") +
+      `</div>` +
 
-        `<div style="margin-top:6px;"><strong>Show</strong><br>` +
-            splitButton("Text",  "!pintool --set imageDesynced|false imageVisibleTo|") +
-            splitButton("Image", "!pintool --set imageDesynced|true imageVisibleTo|all") +
-        `</div>` +
+      `<div style="margin-top:6px;"><strong>Blockquote as player text</strong><br>` +
+      splitButton("On", "!pintool --set autoNotesType|blockquote") +
+      splitButton("Off", "!pintool --set autoNotesType|") +
+      `</div>` +
 
-        `<div style="margin-top:6px;"><strong>Place Pins from Handout</strong><br>` +
-            messageButton("Place Pins from Handout",  "!pintool --place handout|?{Exact Handout Name} name|?{Choose Header Level for Map Pins|h1,h1|h2,h2|h3,h3|h4,h4}") +
-        `</div>` +
+      `<div style="margin-top:6px;"><strong>Display</strong><br>` +
+      splitButton("From Handout", "!pintool --set imageDesynced|false imageVisibleTo|") +
+      splitButton("Custom", "!pintool --set imageDesynced|true imageVisibleTo|all") +
+      `</div>` +
 
-        `<div style="margin-top:6px;"><strong>Delete All Pins on Page</strong><br>Select an example pin first.<br>` +
-            messageButton("Delete All Pins on Page",  "!pintool --purge pins") +
-        `</div>` +
+      `<div style="margin-top:6px;"><strong>Place Pins from Handout</strong><br>` +
+      messageButton("Place Pins from Handout", "!pintool --place handout|?{Exact Handout Name} name|?{Choose Header Level for Map Pins|h1,h1|h2,h2|h3,h3|h4,h4}") +
+      `</div>` +
 
-        `</div>`;
+      `<div style="margin-top:6px;"><strong>Delete All Pins on Page</strong><br>Select an example pin first.<br>` +
+      messageButton("Delete All Pins on Page", "!pintool --purge pins") +
+      `</div>` +
+
+      `</div>`;
 
     sendStyledMessage(
-        "PinTool Control Panel",
-        panel
+      "PinTool Control Panel",
+      panel
     );
-}
+  }
 
 
-    function handlePurge(msg, args)
-    {
-        if(!args.length) return;
+  function handlePurge(msg, args) {
+    if (!args.length) return;
 
-        const mode = args[0];
-        if(mode !== "tokens" && mode !== "pins") return;
+    const mode = args[0];
+    if (mode !== "tokens" && mode !== "pins") return;
 
-        const confirmed = args.includes("--confirm");
+    const confirmed = args.includes("--confirm");
 
-        // --------------------------------
-        // CONFIRM PATH (no selection)
-        // --------------------------------
-        if(confirmed)
+    // --------------------------------
+    // CONFIRM PATH (no selection)
+    // --------------------------------
+    if (confirmed) {
+      let charId, handoutId, pageId;
+
+      args.forEach(a => {
+        if (a.startsWith("char|")) charId = a.slice(5);
+        if (a.startsWith("handout|")) handoutId = a.slice(8);
+        if (a.startsWith("page|")) pageId = a.slice(5);
+      });
+
+      if (!pageId) return;
+
+      /* ===== PURGE TOKENS (CONFIRM) ===== */
+      if (mode === "tokens" && charId) {
+        const char = getObj("character", charId);
+        if (!char) return;
+
+        const charName = char.get("name") || "Unknown Character";
+
+        const targets = findObjs(
+          {
+            _type: "graphic",
+            _subtype: "token",
+            _pageid: pageId,
+            represents: charId
+          });
+
+        if (!targets.length) return;
+
+        targets.forEach(t => t.remove());
+
+        sendChat(
+          "PinTool",
+          `/w gm ✅ Deleted ${targets.length} token(s) for "${_.escape(charName)}".`
+        );
+      }
+
+      /* ===== PURGE PINS (CONFIRM) ===== */
+      if (mode === "pins" && handoutId) {
+        const handout = getObj("handout", handoutId);
+        if (!handout) return;
+
+        const handoutName = handout.get("name") || "Unknown Handout";
+
+        const targets = findObjs(
+          {
+            _type: "pin",
+            _pageid: pageId
+          }).filter(p => p.get("link") === handoutId);
+
+        if (!targets.length) return;
+
+        const count = targets.length;
+
+        const burndown = () => {
+          let p = targets.shift();
+          if (p) {
+            p.remove();
+            setTimeout(burndown, 0);
+          } else {
+            sendChat(
+              "PinTool",
+              `/w gm ✅ Deleted ${count} pin(s) linked to "${_.escape(handoutName)}".`
+            );
+          }
+        };
+        burndown();
+      }
+
+      return;
+    }
+
+    // --------------------------------
+    // INITIAL PATH (requires selection)
+    // --------------------------------
+    if (!msg.selected || msg.selected.length !== 1) return;
+
+    const sel = msg.selected[0];
+
+    /* ===============================
+       PURGE TOKENS (INITIAL)
+       =============================== */
+    if (mode === "tokens" && sel._type === "graphic") {
+      const token = getObj("graphic", sel._id);
+      if (!token) return;
+
+      const charId = token.get("represents");
+      if (!charId) return;
+
+      const pageId = token.get("_pageid");
+      const char = getObj("character", charId);
+      const charName = char?.get("name") || "Unknown Character";
+
+      const targets = findObjs(
         {
-            let charId, handoutId, pageId;
+          _type: "graphic",
+          _subtype: "token",
+          _pageid: pageId,
+          represents: charId
+        });
 
-            args.forEach(a =>
-            {
-                if(a.startsWith("char|")) charId = a.slice(5);
-                if(a.startsWith("handout|")) handoutId = a.slice(8);
-                if(a.startsWith("page|")) pageId = a.slice(5);
-            });
+      if (!targets.length) return;
 
-            if(!pageId) return;
-
-            /* ===== PURGE TOKENS (CONFIRM) ===== */
-            if(mode === "tokens" && charId)
-            {
-                const char = getObj("character", charId);
-                if(!char) return;
-
-                const charName = char.get("name") || "Unknown Character";
-
-                const targets = findObjs(
-                {
-                    _type: "graphic",
-                    _subtype: "token",
-                    _pageid: pageId,
-                    represents: charId
-                });
-
-                if(!targets.length) return;
-
-                targets.forEach(t => t.remove());
-
-                sendChat(
-                    "PinTool",
-                    `/w gm ✅ Deleted ${targets.length} token(s) for "${_.escape(charName)}".`
-                );
-            }
-
-            /* ===== PURGE PINS (CONFIRM) ===== */
-            if(mode === "pins" && handoutId)
-            {
-                const handout = getObj("handout", handoutId);
-                if(!handout) return;
-
-                const handoutName = handout.get("name") || "Unknown Handout";
-
-                const targets = findObjs(
-                {
-                    _type: "pin",
-                    _pageid: pageId
-                }).filter(p => p.get("link") === handoutId);
-
-                if(!targets.length) return;
-
-                const count = targets.length;
-
-                const burndown = () => {
-                  let p = targets.shift();
-                  if(p){
-                    p.remove();
-                    setTimeout(burndown,0);
-                  } else {
-                    sendChat(
-                      "PinTool",
-                      `/w gm ✅ Deleted ${count} pin(s) linked to "${_.escape(handoutName)}".`
-                    );
-                  }
-                };
-              burndown();
-            }
-
-            return;
-        }
-
-        // --------------------------------
-        // INITIAL PATH (requires selection)
-        // --------------------------------
-        if(!msg.selected || msg.selected.length !== 1) return;
-
-        const sel = msg.selected[0];
-
-        /* ===============================
-           PURGE TOKENS (INITIAL)
-           =============================== */
-        if(mode === "tokens" && sel._type === "graphic")
-        {
-            const token = getObj("graphic", sel._id);
-            if(!token) return;
-
-            const charId = token.get("represents");
-            if(!charId) return;
-
-            const pageId = token.get("_pageid");
-            const char = getObj("character", charId);
-            const charName = char?.get("name") || "Unknown Character";
-
-            const targets = findObjs(
-            {
-                _type: "graphic",
-                _subtype: "token",
-                _pageid: pageId,
-                represents: charId
-            });
-
-            if(!targets.length) return;
-
-            sendStyledMessage(
-                "Confirm Purge",
-                `
+      sendStyledMessage(
+        "Confirm Purge",
+        `
     <div>
         <div>
             This will permanently delete <strong>${targets.length}</strong> token(s)
@@ -645,37 +629,36 @@ function showControlPanel()
         </div>
     </div>
     `
-            );
+      );
 
-            return;
-        }
+      return;
+    }
 
-        /* ===============================
-           PURGE PINS (INITIAL)
-           =============================== */
-        if(mode === "pins" && sel._type === "pin")
+    /* ===============================
+       PURGE PINS (INITIAL)
+       =============================== */
+    if (mode === "pins" && sel._type === "pin") {
+      const pin = getObj("pin", sel._id);
+      if (!pin) return;
+
+      const handoutId = pin.get("link");
+      if (!handoutId) return;
+
+      const pageId = pin.get("_pageid");
+      const handout = getObj("handout", handoutId);
+      const handoutName = handout?.get("name") || "Unknown Handout";
+
+      const targets = findObjs(
         {
-            const pin = getObj("pin", sel._id);
-            if(!pin) return;
+          _type: "pin",
+          _pageid: pageId
+        }).filter(p => p.get("link") === handoutId);
 
-            const handoutId = pin.get("link");
-            if(!handoutId) return;
+      if (!targets.length) return;
 
-            const pageId = pin.get("_pageid");
-            const handout = getObj("handout", handoutId);
-            const handoutName = handout?.get("name") || "Unknown Handout";
-
-            const targets = findObjs(
-            {
-                _type: "pin",
-                _pageid: pageId
-            }).filter(p => p.get("link") === handoutId);
-
-            if(!targets.length) return;
-
-            sendStyledMessage(
-                "Confirm Purge",
-                `<p>This will permanently delete <strong>${targets.length}</strong> pin(s)<br>
+      sendStyledMessage(
+        "Confirm Purge",
+        `<p>This will permanently delete <strong>${targets.length}</strong> pin(s)<br>
              linked to handout <strong>${_.escape(handoutName)}</strong>.</p>
              <p><strong>This cannot be undone.</strong></p>
              <p>
@@ -683,262 +666,239 @@ function showControlPanel()
                  Click here to confirm
                </a>
              </p>`
-            );
-            return;
-        }
+      );
+      return;
+    }
+  }
+
+
+
+  function normalizeForChat(html) {
+    return String(html).replace(/\r\n|\r|\n/g, "").trim();
+  }
+
+  const sendStyledMessage = (titleOrMessage, messageOrUndefined, isPublic = false) => {
+    const css = getCSS();
+    let title, message;
+
+    if (messageOrUndefined === undefined) {
+      title = scriptName;
+      message = titleOrMessage;
+    }
+    else {
+      title = titleOrMessage || scriptName;
+      message = messageOrUndefined;
     }
 
+    message = String(message).replace(
+      /\[([^\]]+)\]\(([^)]+)\)/g,
+      (_, label, command) =>
+        `<a href="${command}" style="${css.messageButton}">${label}</a>`
+    );
 
-
-    function normalizeForChat(html)
-    {
-        return String(html).replace(/\r\n|\r|\n/g, "").trim();
-    }
-
-    const sendStyledMessage = (titleOrMessage, messageOrUndefined, isPublic = false) =>
-    {
-        const css = getCSS();
-        let title, message;
-
-        if(messageOrUndefined === undefined)
-        {
-            title = scriptName;
-            message = titleOrMessage;
-        }
-        else
-        {
-            title = titleOrMessage || scriptName;
-            message = messageOrUndefined;
-        }
-
-        message = String(message).replace(
-            /\[([^\]]+)\]\(([^)]+)\)/g,
-            (_, label, command) =>
-            `<a href="${command}" style="${css.messageButton}">${label}</a>`
-        );
-
-        const html =
-            `<div style="${css.messageContainer}">
+    const html =
+      `<div style="${css.messageContainer}">
                 <div style="${css.messageTitle}">${title}</div>
                 ${message}
             </div>`;
 
-        sendChat(
-            scriptName,
-            `${isPublic ? "" : "/w gm "}${normalizeForChat(html)}`,
-            null,
-            {
-                noarchive: true
-            }
-        );
-    };
+    sendChat(
+      scriptName,
+      `${isPublic ? "" : "/w gm "}${normalizeForChat(html)}`,
+      null,
+      {
+        noarchive: true
+      }
+    );
+  };
 
-    function sendError(msg)
-    {
-        sendStyledMessage("PinTool — Error", msg);
-    }
+  function sendError(msg) {
+    sendStyledMessage("PinTool — Error", msg);
+  }
 
-    function sendWarning(msg)
-    {
-        sendStyledMessage("PinTool — Warning", msg);
-    }
+  function sendWarning(msg) {
+    sendStyledMessage("PinTool — Warning", msg);
+  }
 
-    // ============================================================
-    // IMAGE → CHAT
-    // ============================================================
+  // ============================================================
+  // IMAGE → CHAT
+  // ============================================================
 
-    function handleImageToChat(encodedUrl)
-    {
-        let url = encodedUrl.trim().replace(/^(https?)!!!/i, (_, p) => `${p}://`);
-        if(!/^https?:\/\//i.test(url)) return sendError("Invalid image URL.");
+  function handleImageToChat(encodedUrl) {
+    let url = encodedUrl.trim().replace(/^(https?)!!!/i, (_, p) => `${p}://`);
+    if (!/^https?:\/\//i.test(url)) return sendError("Invalid image URL.");
 
     const imageHtml =
-        `<div style="text-align:center;">` +
-        `<img src="${url}" style="max-width:100%;max-height:600px;">` +
-        `<div style="margin-top:6px;">` +
-        `<a href="!pintool --imagetochatall|${encodedUrl}" ` +
-        `style="display:inline-block;padding:2px 8px;background:#444;color:#fff;border-radius:4px;text-decoration:none;">` +
-        `Send to All</a>` +
-        `</div>` +
-        `</div>`;
+      `<div style="text-align:center;">` +
+      `<img src="${url}" style="max-width:100%;max-height:600px;">` +
+      `<div style="margin-top:6px;">` +
+      `<a href="!pintool --imagetochatall|${encodedUrl}" ` +
+      `style="display:inline-block;padding:2px 8px;background:#444;color:#fff;border-radius:4px;text-decoration:none;">` +
+      `Send to All</a>` +
+      `</div>` +
+      `</div>`;
 
     sendChat("PinTool", `/w "${sender}" ${imageHtml}`,
-    null,
-    { noarchive: true });
-    }
+      null,
+      { noarchive: true });
+  }
 
 
-    function handleImageToChatAll(encodedUrl)
+  function handleImageToChatAll(encodedUrl) {
+    let url = encodedUrl.trim().replace(/^(https?)!!!/i, (_, p) => `${p}://`);
+    if (!/^https?:\/\//i.test(url)) return sendError("Invalid image URL.");
+
+    sendChat(
+      "PinTool", `<div style="text-align:center;"><img src="${url}" style="max-width:100%;max-height:600px;"></div>`,
+      null,
+      { noarchive: true });
+  }
+
+  // ============================================================
+  // SET MODE (pins)
+  // ============================================================
+
+  const PIN_SET_PROPERTIES = {
+    x: "number",
+    y: "number",
+    title: "string",
+    notes: "string",
+    image: "string",
+    tooltipImage: "string",
+    link: "string",
+    linkType: ["", "handout"],
+    subLink: "string",
+    subLinkType: ["", "headerPlayer", "headerGM"],
+    visibleTo: ["", "all"],
+    tooltipVisibleTo: ["", "all"],
+    nameplateVisibleTo: ["", "all"],
+    imageVisibleTo: ["", "all"],
+    notesVisibleTo: ["", "all"],
+    gmNotesVisibleTo: ["", "all"],
+    autoNotesType: ["", "blockquote"],
+    scale:
     {
-        let url = encodedUrl.trim().replace(/^(https?)!!!/i, (_, p) => `${p}://`);
-        if(!/^https?:\/\//i.test(url)) return sendError("Invalid image URL.");
+      min: 0.25,
+      max: 2.0
+    },
+    imageDesynced: "boolean",
+    notesDesynced: "boolean",
+    gmNotesDesynced: "boolean"
+  };
 
-        sendChat(
-            "PinTool",`<div style="text-align:center;"><img src="${url}" style="max-width:100%;max-height:600px;"></div>`,
-    null,
-    { noarchive: true });
-    }
+  function handleSet(msg, tokens) {
+    const flags = {};
+    let filterRaw = "";
 
-    // ============================================================
-    // SET MODE (pins)
-    // ============================================================
+    for (let i = 0; i < tokens.length; i++) {
+      const t = tokens[i];
+      const idx = t.indexOf("|");
+      if (idx === -1) continue;
 
-    const PIN_SET_PROPERTIES = {
-        x: "number",
-        y: "number",
-        title: "string",
-        notes: "string",
-        image: "string",
-        tooltipImage: "string",
-        link: "string",
-        linkType: ["", "handout"],
-        subLink: "string",
-        subLinkType: ["", "headerPlayer", "headerGM"],
-        visibleTo: ["", "all"],
-        tooltipVisibleTo: ["", "all"],
-        nameplateVisibleTo: ["", "all"],
-        imageVisibleTo: ["", "all"],
-        notesVisibleTo: ["", "all"],
-        gmNotesVisibleTo: ["", "all"],
-        autoNotesType: ["", "blockquote"],
-        scale:
-        {
-            min: 0.25,
-            max: 2.0
-        },
-        imageDesynced: "boolean",
-        notesDesynced: "boolean",
-        gmNotesDesynced: "boolean"
-    };
+      const key = t.slice(0, idx);
+      let val = t.slice(idx + 1);
 
-    function handleSet(msg, tokens)
-    {
-        const flags = {};
-        let filterRaw = "";
-
-        for(let i = 0; i < tokens.length; i++)
-        {
-            const t = tokens[i];
-            const idx = t.indexOf("|");
-            if(idx === -1) continue;
-
-            const key = t.slice(0, idx);
-            let val = t.slice(idx + 1);
-
-            if(key === "filter")
-            {
-                const parts = [val];
-                let j = i + 1;
-                while(j < tokens.length && !tokens[j].includes("|"))
-                {
-                    parts.push(tokens[j++]);
-                }
-                filterRaw = parts.join(" ").trim();
-                i = j - 1;
-                continue;
-            }
-
-            if(!PIN_SET_PROPERTIES.hasOwnProperty(key))
-                return sendError(`Unknown pin property, or improper capitalization: ${key}`);
-
-            const parts = [val];
-            let j = i + 1;
-            while(j < tokens.length && !tokens[j].includes("|"))
-            {
-                parts.push(tokens[j++]);
-            }
-
-            flags[key] = parts.join(" ").trim();
-            i = j - 1;
+      if (key === "filter") {
+        const parts = [val];
+        let j = i + 1;
+        while (j < tokens.length && !tokens[j].includes("|")) {
+          parts.push(tokens[j++]);
         }
+        filterRaw = parts.join(" ").trim();
+        i = j - 1;
+        continue;
+      }
 
-        if(!Object.keys(flags).length)
-            return sendError("No valid properties supplied to --set.");
+      if (!PIN_SET_PROPERTIES.hasOwnProperty(key))
+        return sendError(`Unknown pin property, or improper capitalization: ${key}`);
+
+      const parts = [val];
+      let j = i + 1;
+      while (j < tokens.length && !tokens[j].includes("|")) {
+        parts.push(tokens[j++]);
+      }
+
+      flags[key] = parts.join(" ").trim();
+      i = j - 1;
+    }
+
+    if (!Object.keys(flags).length)
+      return sendError("No valid properties supplied to --set.");
 
 
 
 
-        const pageId = getPageForPlayer(msg.playerid);
-        /*
-            (Campaign().get("playerspecificpages") || {})[msg.playerid] ||
-            Campaign().get("playerpageid");
+    const pageId = getPageForPlayer(msg.playerid);
+    /*
+        (Campaign().get("playerspecificpages") || {})[msg.playerid] ||
+        Campaign().get("playerpageid");
 */
 
-        let pins = [];
+    let pins = [];
 
-        if(!filterRaw || filterRaw === "selected")
+    if (!filterRaw || filterRaw === "selected") {
+      if (!msg.selected?.length) return sendError("No pins selected.");
+      pins = msg.selected
+        .map(s => getObj("pin", s._id))
+        .filter(p => p && p.get("_pageid") === pageId);
+    }
+    else if (filterRaw === "all") {
+      pins = findObjs(
         {
-            if(!msg.selected?.length) return sendError("No pins selected.");
-            pins = msg.selected
-                .map(s => getObj("pin", s._id))
-                .filter(p => p && p.get("_pageid") === pageId);
-        }
-        else if(filterRaw === "all")
-        {
-            pins = findObjs(
-            {
-                _type: "pin",
-                _pageid: pageId
-            });
-        }
-        else
-        {
-            pins = filterRaw.split(/\s+/)
-                .map(id => getObj("pin", id))
-                .filter(p => p && p.get("_pageid") === pageId);
-        }
-
-        if(!pins.length)
-            return sendWarning("Filter matched no pins on the current page.");
-
-        const updates = {};
-        try
-        {
-            Object.entries(flags).forEach(([key, raw]) =>
-            {
-                const spec = PIN_SET_PROPERTIES[key];
-                let value = raw;
-
-                if(spec === "boolean") value = raw === "true";
-                else if(spec === "number") value = Number(raw);
-                else if(Array.isArray(spec) && !spec.includes(value)) throw 0;
-                else if(!Array.isArray(spec) && typeof spec === "object")
-                {
-                    value = Number(raw);
-                    if(value < spec.min || value > spec.max) throw 0;
-                }
-                updates[key] = value;
-            });
-        }
-        catch
-        {
-            return sendError("Invalid value supplied to --set.");
-        }
-        pins.forEach(p => p.set(updates));
-        //sendStyledMessage("PinTool — Success", `Updated ${pins.length} pin(s).`);
+          _type: "pin",
+          _pageid: pageId
+        });
+    }
+    else {
+      pins = filterRaw.split(/\s+/)
+        .map(id => getObj("pin", id))
+        .filter(p => p && p.get("_pageid") === pageId);
     }
 
-    // ============================================================
-    // CONVERT MODE (tokens → handout)
-    // ============================================================
+    if (!pins.length)
+      return sendWarning("Filter matched no pins on the current page.");
 
-    function sendConvertHelp()
-    {
-        sendStyledMessage(
-            "PinTool — Convert",
-            "<b>Usage</b><br>!pintool --convert name|h2 title|My Handout [options]"
-        );
+    const updates = {};
+    try {
+      Object.entries(flags).forEach(([key, raw]) => {
+        const spec = PIN_SET_PROPERTIES[key];
+        let value = raw;
+
+        if (spec === "boolean") value = raw === "true";
+        else if (spec === "number") value = Number(raw);
+        else if (Array.isArray(spec) && !spec.includes(value)) throw 0;
+        else if (!Array.isArray(spec) && typeof spec === "object") {
+          value = Number(raw);
+          if (value < spec.min || value > spec.max) throw 0;
+        }
+        updates[key] = value;
+      });
     }
+    catch {
+      return sendError("Invalid value supplied to --set.");
+    }
+    pins.forEach(p => p.set(updates));
+    //sendStyledMessage("PinTool — Success", `Updated ${pins.length} pin(s).`);
+  }
 
-    // ============================================================
-    // CONVERT MODE
-    // ============================================================
+  // ============================================================
+  // CONVERT MODE (tokens → handout)
+  // ============================================================
 
-  function handleConvert(msg, tokens)
-  {
+  function sendConvertHelp() {
+    sendStyledMessage(
+      "PinTool — Convert",
+      "<b>Usage</b><br>!pintool --convert name|h2 title|My Handout [options]"
+    );
+  }
 
-    if(!tokens.length)
-    {
+  // ============================================================
+  // CONVERT MODE
+  // ============================================================
+
+  function handleConvert(msg, tokens) {
+
+    if (!tokens.length) {
       sendConvertHelp();
       return;
     }
@@ -947,11 +907,10 @@ function showControlPanel()
     const flags = {};
     const orderedSpecs = [];
 
-    for(let i = 0; i < tokens.length; i++)
-    {
+    for (let i = 0; i < tokens.length; i++) {
       const t = tokens[i];
       const idx = t.indexOf("|");
-      if(idx === -1) continue;
+      if (idx === -1) continue;
 
       const key = t.slice(0, idx).toLowerCase();
       let val = t.slice(idx + 1);
@@ -959,10 +918,9 @@ function showControlPanel()
       const parts = [val];
       let j = i + 1;
 
-      while(j < tokens.length)
-      {
+      while (j < tokens.length) {
         const next = tokens[j];
-        if(next.indexOf("|") !== -1) break;
+        if (next.indexOf("|") !== -1) break;
         parts.push(next);
         j++;
       }
@@ -978,11 +936,11 @@ function showControlPanel()
     }
 
     // ---------------- Required args ----------------
-    if(!flags.title) return sendError("--convert requires title|<string>");
-    if(!flags.name) return sendError("--convert requires name|h1–h5");
+    if (!flags.title) return sendError("--convert requires title|<string>");
+    if (!flags.name) return sendError("--convert requires name|h1–h5");
 
     const nameMatch = flags.name.match(/^h([1-5])$/i);
-    if(!nameMatch) return sendError("name must be h1 through h5");
+    if (!nameMatch) return sendError("name must be h1 through h5");
 
     const nameHeaderLevel = parseInt(nameMatch[1], 10);
     const minAllowedHeader = Math.min(nameHeaderLevel + 1, 6);
@@ -992,18 +950,17 @@ function showControlPanel()
     const replace = flags.replace === "true"; // NEW
 
     // ---------------- Token validation ----------------
-    if(!msg.selected || !msg.selected.length)
-    {
+    if (!msg.selected || !msg.selected.length) {
       sendError("Please select a token.");
       return;
     }
 
     const selectedToken = getObj("graphic", msg.selected[0]._id);
-    if(!selectedToken) return sendError("Invalid token selection.");
+    if (!selectedToken) return sendError("Invalid token selection.");
 
     const pageId = getPageForPlayer(msg.playerid);
     const charId = selectedToken.get("represents");
-    if(!charId) return sendError("Selected token does not represent a character.");
+    if (!charId) return sendError("Selected token does not represent a character.");
 
     const tokensOnPage = findObjs(
       {
@@ -1013,8 +970,7 @@ function showControlPanel()
         represents: charId
       });
 
-    if(!tokensOnPage.length)
-    {
+    if (!tokensOnPage.length) {
       sendError("No matching map tokens found.");
       return;
     }
@@ -1025,30 +981,24 @@ function showControlPanel()
         String.fromCharCode(parseInt(m.slice(2), 16))
       );
 
-    function decodeNotes(raw)
-    {
-      if(!raw) return "";
+    function decodeNotes(raw) {
+      if (!raw) return "";
       let s = decodeUnicode(raw);
-      try
-      {
+      try {
         s = decodeURIComponent(s);
       }
-      catch
-      {
-        try
-        {
+      catch {
+        try {
           s = unescape(s);
         }
-        catch (e)
-        {
-          log(e); 
+        catch (e) {
+          log(e);
         }
       }
       return s.replace(/^<div[^>]*>/i, "").replace(/<\/div>$/i, "").trim();
     }
 
-    function normalizeVisibleText(html)
-    {
+    function normalizeVisibleText(html) {
       return html
         .replace(/<br\s*\/?>/gi, "\n")
         .replace(/<\/p\s*>/gi, "\n")
@@ -1058,18 +1008,16 @@ function showControlPanel()
         .trim();
     }
 
-    function applyBlockquoteSplit(html)
-    {
+    function applyBlockquoteSplit(html) {
       const blocks = html.match(/<p[\s\S]*?<\/p>/gi);
-      if(!blocks) return `<blockquote>${html}</blockquote>`;
+      if (!blocks) return `<blockquote>${html}</blockquote>`;
 
       const idx = blocks.findIndex(
         b => normalizeVisibleText(b) === "-----"
       );
 
       // NEW: no separator → everything is player-visible
-      if(idx === -1)
-      {
+      if (idx === -1) {
         return `<blockquote>${blocks.join("")}</blockquote>`;
       }
 
@@ -1081,58 +1029,50 @@ function showControlPanel()
     }
 
 
-    function downgradeHeaders(html)
-    {
+    function downgradeHeaders(html) {
       return html
         .replace(/<\s*h[1-2]\b[^>]*>/gi, "<h3>")
         .replace(/<\s*\/\s*h[1-2]\s*>/gi, "</h3>");
     }
 
-    function encodeProtocol(url)
-    {
+    function encodeProtocol(url) {
       return url.replace(/^(https?):\/\//i, "$1!!!");
     }
 
-    function convertImages(html)
-    {
-      if(!html) return html;
+    function convertImages(html) {
+      if (!html) return html;
 
       html = html.replace(
         /\[([^\]]*)\]\((https?:\/\/[^\s)]+)\)/gi,
-        (m, alt, url) =>
-      {
-        const enc = encodeProtocol(url);
-        let out =
-          `<img src="${url}" alt="${_.escape(alt)}" style="max-height:300px;display:block;margin:0.5em auto;">`;
-        if(imagelinks)
-        {
-          out += `<br><a href="!pintool --imagetochat|${enc}">[Image]</a>`;
+        (m, alt, url) => {
+          const enc = encodeProtocol(url);
+          let out =
+            `<img src="${url}" alt="${_.escape(alt)}" style="max-height:300px;display:block;margin:0.5em auto;">`;
+          if (imagelinks) {
+            out += `<br><a href="!pintool --imagetochat|${enc}">[Image]</a>`;
+          }
+          return out;
         }
-        return out;
-      }
       );
 
-      if(imagelinks)
-      {
+      if (imagelinks) {
         html = html.replace(
           /(<img\b[^>]*\bsrc=["']([^"']+)["'][^>]*>)(?![\s\S]*?\[Image\])/gi,
           (m, img, url) =>
-          `${img}<br><a href="!pintool --imagetochat|${encodeProtocol(url)}">[Image]</a>`
+            `${img}<br><a href="!pintool --imagetochat|${encodeProtocol(url)}">[Image]</a>`
         );
       }
 
       return html;
     }
 
-    function applyFormat(content, format)
-    {
-      if(/^h[1-6]$/.test(format))
-      {
+    function applyFormat(content, format) {
+      if (/^h[1-6]$/.test(format)) {
         const lvl = Math.max(parseInt(format[1], 10), minAllowedHeader);
         return `<h${lvl}>${content}</h${lvl}>`;
       }
-      if(format === "blockquote") return `<blockquote>${content}</blockquote>`;
-      if(format === "code") return `<pre><code>${_.escape(content)}</code></pre>`;
+      if (format === "blockquote") return `<blockquote>${content}</blockquote>`;
+      if (format === "code") return `<pre><code>${_.escape(content)}</code></pre>`;
       return content;
     }
 
@@ -1155,7 +1095,7 @@ function showControlPanel()
           _type: "handout",
           name: flags.title
         })[0];
-      if(!h) h = createObj("handout",
+      if (!h) h = createObj("handout",
         {
           name: flags.title
         });
@@ -1165,21 +1105,20 @@ function showControlPanel()
 
       sendChat("PinTool", `/w gm Handout "${flags.title}" updated.`);
 
-      if(!replace) return;
+      if (!replace) return;
 
       const skipped = [];
-//        const headerRegex = new RegExp(`<h${nameHeaderLevel}>([\\s\\S]*?)<\\/h${nameHeaderLevel}>`, "gi");
-      
+      //        const headerRegex = new RegExp(`<h${nameHeaderLevel}>([\\s\\S]*?)<\\/h${nameHeaderLevel}>`, "gi");
+
       const headers = [...pinsToCreateCache];
 
       const replaceBurndown = () => {
         let header = headers.shift();
-        if( header ) {
+        if (header) {
           const headerText = _.unescape(header).trim();
           const token = tokenByName[headerText];
 
-          if(!token)
-          {
+          if (!token) {
             skipped.push(headerText);
             return;
           }
@@ -1193,8 +1132,7 @@ function showControlPanel()
             })[0];
 
 
-          if(existingPin)
-          {
+          if (existingPin) {
             existingPin.set(
               {
                 x: token.get("left"),
@@ -1205,8 +1143,7 @@ function showControlPanel()
               });
 
           }
-          else
-          {
+          else {
             // Two-step pin creation to avoid desync errors
             const pin =
 
@@ -1226,8 +1163,7 @@ function showControlPanel()
                   gmNotesDesynced: false
                 });
 
-            if(pin)
-            {
+            if (pin) {
               pin.set(
                 {
                   link: handoutId,
@@ -1236,11 +1172,10 @@ function showControlPanel()
                 });
             }
           }
-          setTimeout(replaceBurndown,0);
+          setTimeout(replaceBurndown, 0);
         } else {
 
-          if(skipped.length)
-          {
+          if (skipped.length) {
             sendStyledMessage(
               "Convert: Pins Skipped",
               `<ul>${skipped.map(s => `<li>${_.escape(s)}</li>`).join("")}</ul>`
@@ -1256,39 +1191,35 @@ function showControlPanel()
       replaceBurndown();
     };
 
-    const burndown = ()=>{
+    const burndown = () => {
       let token = workTokensOnPage.shift();
-      if(token) {
+      if (token) {
         const tokenName = token.get("name") || "";
         tokenByName[tokenName] = token; // exact string match
 
         output.push(`<h${nameHeaderLevel}>${_.escape(tokenName)}</h${nameHeaderLevel}>`);
         pinsToCreateCache.add(_.escape(tokenName));
 
-        orderedSpecs.forEach(spec =>
-          {
-            if(["name", "title", "supernotesgmtext", "imagelinks", "replace"].includes(spec.key)) return;
+        orderedSpecs.forEach(spec => {
+          if (["name", "title", "supernotesgmtext", "imagelinks", "replace"].includes(spec.key)) return;
 
-            let value = "";
-            if(spec.key === "gmnotes")
-            {
-              value = decodeNotes(token.get("gmnotes") || "");
-              if(supernotes) value = applyBlockquoteSplit(value);
-              value = downgradeHeaders(value);
-              value = convertImages(value);
-            }
-            else if(spec.key === "tooltip")
-            {
-              value = token.get("tooltip") || "";
-            }
-            else if(/^bar[1-3]_(value|max)$/.test(spec.key))
-            {
-              value = token.get(spec.key) || "";
-            }
+          let value = "";
+          if (spec.key === "gmnotes") {
+            value = decodeNotes(token.get("gmnotes") || "");
+            if (supernotes) value = applyBlockquoteSplit(value);
+            value = downgradeHeaders(value);
+            value = convertImages(value);
+          }
+          else if (spec.key === "tooltip") {
+            value = token.get("tooltip") || "";
+          }
+          else if (/^bar[1-3]_(value|max)$/.test(spec.key)) {
+            value = token.get(spec.key) || "";
+          }
 
-            if(value) output.push(applyFormat(value, spec.val));
-          });
-        setTimeout(burndown,0);
+          if (value) output.push(applyFormat(value, spec.val));
+        });
+        setTimeout(burndown, 0);
       } else {
         finishUp();
       }
@@ -1298,23 +1229,21 @@ function showControlPanel()
 
   }
 
-    // ============================================================
-    // PLACE MODE
-    // ============================================================
+  // ============================================================
+  // PLACE MODE
+  // ============================================================
 
-  function handlePlace(msg, args)
-  {
+  function handlePlace(msg, args) {
 
-    if(!args.length) return;
+    if (!args.length) return;
 
     /* ---------------- Parse args ---------------- */
     const flags = {};
 
-    for(let i = 0; i < args.length; i++)
-    {
+    for (let i = 0; i < args.length; i++) {
       const t = args[i];
       const idx = t.indexOf("|");
-      if(idx === -1) continue;
+      if (idx === -1) continue;
 
       const key = t.slice(0, idx).toLowerCase();
       let val = t.slice(idx + 1);
@@ -1322,8 +1251,7 @@ function showControlPanel()
       const parts = [val];
       let j = i + 1;
 
-      while(j < args.length && args[j].indexOf("|") === -1)
-      {
+      while (j < args.length && args[j].indexOf("|") === -1) {
         parts.push(args[j]);
         j++;
       }
@@ -1332,11 +1260,11 @@ function showControlPanel()
       i = j - 1;
     }
 
-    if(!flags.name) return sendError("--place requires name|h1–h4");
-    if(!flags.handout) return sendError("--place requires handout|<exact name>");
+    if (!flags.name) return sendError("--place requires name|h1–h4");
+    if (!flags.handout) return sendError("--place requires handout|<exact name>");
 
     const nameMatch = flags.name.match(/^h([1-4])$/i);
-    if(!nameMatch) return sendError("name must be h1 through h4");
+    if (!nameMatch) return sendError("name must be h1 through h4");
 
     const headerLevel = parseInt(nameMatch[1], 10);
     const handoutName = flags.handout;
@@ -1347,9 +1275,9 @@ function showControlPanel()
         _type: "handout",
         name: handoutName
       });
-    if(!handouts.length)
+    if (!handouts.length)
       return sendError(`No handout named "${handoutName}" found (case-sensitive).`);
-    if(handouts.length > 1)
+    if (handouts.length > 1)
       return sendError(`More than one handout named "${handoutName}" exists.`);
 
     const handout = handouts[0];
@@ -1358,11 +1286,11 @@ function showControlPanel()
     /* ---------------- Page ---------------- */
     const pageId = getPageForPlayer(msg.playerid);
 
-    if(typeof pageId === "undefined")
+    if (typeof pageId === "undefined")
       return sendError("pageId is not defined.");
 
     const page = getObj("page", pageId);
-    if(!page) return sendError("Invalid pageId.");
+    if (!page) return sendError("Invalid pageId.");
 
     const gridSize = page.get("snapping_increment") * 70 || 70;
     const maxCols = Math.floor((page.get("width") * 70) / gridSize);
@@ -1381,11 +1309,9 @@ function showControlPanel()
 
     const headers = []; // { text, subLinkType }
 
-    function extractHeaders(html, subLinkType)
-    {
+    function extractHeaders(html, subLinkType) {
       let m;
-      while((m = headerRegex.exec(html)) !== null)
-      {
+      while ((m = headerRegex.exec(html)) !== null) {
         headers.push(
           {
             text: _.unescape(m[1]).trim(),
@@ -1397,7 +1323,7 @@ function showControlPanel()
     handout.get("notes", html => extractHeaders(html, "headerPlayer"));
     handout.get("gmnotes", html => extractHeaders(html, "headerGM"));
 
-    if(!headers.length)
+    if (!headers.length)
       return sendError(`No <h${headerLevel}> headers found in handout.`);
 
     /* ---------------- Existing pins ---------------- */
@@ -1409,11 +1335,10 @@ function showControlPanel()
       });
 
     const pinByKey = {};
-    existingPins.forEach(p =>
-      {
-        const key = `${p.get("subLink")}||${p.get("subLinkType") || ""}`;
-        pinByKey[key] = p;
-      });
+    existingPins.forEach(p => {
+      const key = `${p.get("subLink")}||${p.get("subLinkType") || ""}`;
+      pinByKey[key] = p;
+    });
 
     let created = 0;
     let replaced = 0;
@@ -1421,7 +1346,7 @@ function showControlPanel()
     /* ---------------- Placement ---------------- */
     const burndown = () => {
       let h = headers.shift();
-      if(h) {
+      if (h) {
 
         const headerText = h.text;
         const subLinkType = h.subLinkType;
@@ -1430,8 +1355,7 @@ function showControlPanel()
         let x, y;
         const existing = pinByKey[key];
 
-        if(existing)
-        {
+        if (existing) {
           existing.set({
             link: handoutId,
             linkType: "handout",
@@ -1445,16 +1369,14 @@ function showControlPanel()
           });
           replaced++;
         }
-        else
-        {
+        else {
           x = startX + col * gridSize;
 
           // Stagger every other pin in the row by 20px vertically
           y = startY + row * gridSize + (col % 2 ? 20 : 0);
 
           col++;
-          if(col >= maxCols)
-          {
+          if (col >= maxCols) {
             col = 0;
             row++;
           }
@@ -1478,7 +1400,7 @@ function showControlPanel()
             });
           created++;
         }
-        setTimeout(burndown,0);
+        setTimeout(burndown, 0);
       } else {
         /* ---------------- Report ---------------- */
         sendStyledMessage(
@@ -1499,35 +1421,33 @@ function showControlPanel()
 
 
 
-    // ============================================================
-    // CHAT DISPATCH
-    // ============================================================
+  // ============================================================
+  // CHAT DISPATCH
+  // ============================================================
 
-    on("chat:message", msg =>
-    {
-        if(msg.type !== "api" || !/^!pintool\b/i.test(msg.content)) return;
-        sender = msg.who.replace(/\s\(GM\)$/, '');
-const parts = msg.content.trim().split(/\s+/);
-const cmd = parts[1]?.toLowerCase();
+  on("chat:message", msg => {
+    if (msg.type !== "api" || !/^!pintool\b/i.test(msg.content)) return;
+    sender = msg.who.replace(/\s\(GM\)$/, '');
+    const parts = msg.content.trim().split(/\s+/);
+    const cmd = parts[1]?.toLowerCase();
 
-if(parts.length === 1)
-{
-    showControlPanel();
-    return;
-}
+    if (parts.length === 1) {
+      showControlPanel();
+      return;
+    }
 
-        if(cmd === "--set") return handleSet(msg, parts.slice(2));
-        if(cmd === "--convert") return handleConvert(msg, parts.slice(2));
-        if(cmd === "--place") return handlePlace(msg, parts.slice(2));
-        if(cmd === "--purge") return handlePurge(msg, parts.slice(2));
-        if(cmd === "--help") return handleHelp(msg);
-        if(cmd?.startsWith("--imagetochat|"))
-            return handleImageToChat(parts[1].slice(14));
-        if(cmd?.startsWith("--imagetochatall|"))
-            return handleImageToChatAll(parts[1].slice(17));
+    if (cmd === "--set") return handleSet(msg, parts.slice(2));
+    if (cmd === "--convert") return handleConvert(msg, parts.slice(2));
+    if (cmd === "--place") return handlePlace(msg, parts.slice(2));
+    if (cmd === "--purge") return handlePurge(msg, parts.slice(2));
+    if (cmd === "--help") return handleHelp(msg);
+    if (cmd?.startsWith("--imagetochat|"))
+      return handleImageToChat(parts[1].slice(14));
+    if (cmd?.startsWith("--imagetochatall|"))
+      return handleImageToChatAll(parts[1].slice(17));
 
-        sendError("Unknown subcommand. Use --help.");
-    });
+    sendError("Unknown subcommand. Use --help.");
+  });
 });
 
-{try{throw new Error('');}catch(e){API_Meta.PinTool.lineCount=(parseInt(e.stack.split(/\n/)[1].replace(/^.*:(\d+):.*$/,'$1'),10)-API_Meta.PinTool.offset);}}
+{ try { throw new Error(''); } catch (e) { API_Meta.PinTool.lineCount = (parseInt(e.stack.split(/\n/)[1].replace(/^.*:(\d+):.*$/, '$1'), 10) - API_Meta.PinTool.offset); } }
