@@ -12,7 +12,10 @@ PinTool is a GM-only Roll20 API script for creating, inspecting, converting, and
 - Automatic placement of map pins from handout headers (player and GM)
 - Optional chat display of images referenced in notes
 
-**Base Command:** `!pintool`
+**Base Command:** `!pintool` opens a control panel for commonly used editing controls. Add priaru commands afterward to access specific functions.
+
+`!pintool --help` creates a handout with full documentation
+
 
 ---
 
