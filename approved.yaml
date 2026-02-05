@@ -1371,3 +1371,11 @@ Assemble:
 PinTool:
   - "PinTool"
   - "Utility"
+
+fixTurnOrder:
+  - "Fix Turn Order"
+  - "Utility"
+
+TokenHome:
+  - "TokenHome"
+  - "Utility"
