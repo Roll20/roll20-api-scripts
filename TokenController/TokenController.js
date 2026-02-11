@@ -22,6 +22,37 @@ Token Control - A Roll20 Script to move tokens along scripted paths at a variabl
           - Added Stealth Toggle
           - Added Path Layer Swapping as Stealth
           - Fixed Token Reset
+*   4.0.0 - Bug fixes and safety improvements
+*         - setPath no longer corrupts path (was storing object instead of string)
+*         - resetTokens fixed (path.forEach and clear logic)
+*         - turnorder: parse JSON and guard before accessing current[0]
+*         - moveToken: fixed pathCode undefined, pageMeta from page object when missing from cache
+*         - Path regex supports multi-digit distances ([0-9]+)
+*         - Path step logic uses pathArray.length instead of entry.length
+*         - draftPath: removed duplicate step increment
+*         - listDrafts: fixed wrong variable in message
+*         - processFollowMovement: cleanup by tokenId not list index
+*         - Chat handler requires msg.type === "api"
+*         - Null checks for tokens in pathTokens, lockTokens, listTokens, getTokensOnPath
+*         - validatePathString typo: "w/ GM" -> "/w GM"
+*         - stopPaths: createMenu() when stopping by path name
+*   4.1.0 - Fixed start location per path
+*         - Paths can have a "fixed start": tokens move there when the path is started (e.g. vehicles, chef in kitchen)
+*         - Commands: !tc setstart <pathName> (one token selected), !tc clearstart <pathName>
+*         - Menu: "Set start" / "Clear start" per path; list path shows fixed start status
+*   4.2.0 - Feature pack: live tick, cleanup, sub-steps, path options, export/import, bounds, handout refresh
+*         - Live tick: changing interval takes effect immediately (!tc tick)
+*         - Stale token cleanup each tick (removes deleted tokens from state)
+*         - Smooth movement: !tc substeps toggles sub-step movement (long segments move 1 unit per tick)
+*         - Path interval: !tc pathinterval <pathName> <ms|0> for per-path speed
+*         - Run once: !tc runonce <pathName> — path runs once then token stops
+*         - Duplicate: !tc duplicate <src> <newName>
+*         - Export/import: !tc exportpaths, !tc importpaths <json>
+*         - Max tokens: !tc maxtokens <pathName> <n|0>
+*         - Bounds check when starting path (warns if path would leave map)
+*         - Cycle toggle: !tc cycle <pathName> (cycle vs one-way)
+*         - Random start step: !tc randomstart <pathName>
+*         - Usage Guide handout content refreshed on API load when it exists
 
 # Upcomging Features:
 *   Cleaner Pathing -- Version(N.M.+)
@@ -38,13 +69,14 @@ API_Meta.TokenController = { offset: Number.MAX_SAFE_INTEGER, lineCount: -1 };
 
 const TokenController = (() => {
     const NAME = 'TokenController';
-    const VERSION = '3.0.0';
+    const VERSION = '4.2.0';
     const AUTHOR = 'Scott E. Schwarz';
     let errorMessage = "";
     let listingVars = false;
     let combatStarted = false;
     let currentCombatant = "";
     let menuShowCount = 0;
+    let pathTokensIntervalId = null;
 
     // Ready & Initialize Vars
     on('ready', function () {
@@ -96,6 +128,9 @@ const TokenController = (() => {
                 }
                 if (state[NAME].storedVariables.combatPatrol == undefined) {
                     state[NAME].storedVariables.combatPatrol = false;
+                }
+                if (state[NAME].storedVariables.subStepMovement == undefined) {
+                    state[NAME].storedVariables.subStepMovement = false;
                 }
             }
         }
@@ -183,12 +218,14 @@ const TokenController = (() => {
                 unitPx: 70,
                 rotateTokens: false,
                 combatPatrol: false,
+                subStepMovement: false,
             };
         }
 
         setupMacros();
 
-        setInterval(pathTokens, state[NAME].storedVariables.interval);
+        if (pathTokensIntervalId) clearInterval(pathTokensIntervalId);
+        pathTokensIntervalId = setInterval(pathTokens, state[NAME].storedVariables.interval);
 
         log(`${NAME} ${VERSION} by ${AUTHOR} Ready  Meta Offset : ${API_Meta.TokenController.offset}`);
         createMenu();
@@ -233,9 +270,7 @@ const TokenController = (() => {
     // Commands
     on("chat:message", function (msg) {
         try {
-            if (msg.type === "api"
-                && msg.content.toLowerCase().startsWith("!token-control")
-                || msg.content.toLowerCase().startsWith("!tc")) {
+            if (msg.type === "api" && (msg.content.toLowerCase().startsWith("!token-control") || msg.content.toLowerCase().startsWith("!tc"))) {
 
                 if (!playerIsGM(msg.playerid)) {
                     sendChat(`${NAME}`, "/w " + msg.who + " You do not have permission to use this command.");
@@ -262,10 +297,10 @@ const TokenController = (() => {
                         }
                         switch (args[2].toLowerCase()) {
                             case "paths":
-                                listPaths(args.length > 3 ? args[3] : undefined);
+                                listPaths(args.length > 3 ? args.slice(3).join(' ').trim() : undefined);
                                 break;
                             case "tokens":
-                                listTokens(args.length > 3 ? args[3] : undefined);
+                                listTokens(args.length > 3 ? args.slice(3).join(' ').trim() : undefined);
                                 break;
                             case "tick":
                                 listTick();
@@ -274,20 +309,46 @@ const TokenController = (() => {
                                 listVars();
                                 break;
                             case "draft":
-                                listDrafts(args.length > 3 ? args[3] : undefined);
+                                listDrafts(args.length > 3 ? args.slice(3).join(' ').trim() : undefined);
                                 break;
                         }
                         break;
 
                     // Path Commands
                     case "add":
-                        addPath(args[2], args[3]);
+                        if (args.length < 4) {
+                            sendChat(`${NAME}`, "/w " + msg.who + " Usage: !tc add <pathName> <pathCode>");
+                            return;
+                        }
+                        addPath(args.slice(2, -1).join(' ').trim(), args[args.length - 1]);
                         break;
                     case "set":
-                        setPath(args[2], args[3]);
+                        if (args.length < 4) {
+                            sendChat(`${NAME}`, "/w " + msg.who + " Usage: !tc set <pathName> <pathCode>");
+                            return;
+                        }
+                        setPath(args.slice(2, -1).join(' ').trim(), args[args.length - 1]);
                         break;
                     case "remove":
-                        removePath(args[2]);
+                        removePath(args.slice(2).join(' ').trim());
+                        break;
+                    case "setstart":
+                        if (args.length < 3) {
+                            sendChat(`${NAME}`, "/w " + msg.who + " Usage: !tc setstart <pathName> (with one token selected)");
+                            return;
+                        }
+                        if (!msg.selected || msg.selected.length !== 1) {
+                            sendChat(`${NAME}`, "/w " + msg.who + " Select exactly one token to use as the fixed start location.");
+                            return;
+                        }
+                        setPathStart(args.slice(2).join(' ').trim(), msg.selected[0]._id);
+                        break;
+                    case "clearstart":
+                        if (args.length < 3) {
+                            sendChat(`${NAME}`, "/w " + msg.who + " Usage: !tc clearstart <pathName>");
+                            return;
+                        }
+                        clearPathStart(args.slice(2).join(' ').trim());
                         break;
                     case "build":
                         if (args.length !== 4) {
@@ -331,10 +392,10 @@ const TokenController = (() => {
                             sendChat(`${NAME}`, "/w GM No tokens selected.");
                             return;
                         }
-                        startPath(msg.selected, args[2]);
+                        startPath(msg.selected, args.slice(2).join(' ').trim());
                         break;
                     case "stop":
-                        stopPaths(msg.selected, args.length >= 3 ? args[2] : undefined);
+                        stopPaths(msg.selected, args.length >= 3 ? args.slice(2).join(' ').trim() : undefined);
                         break;
                     case "lock":
                         lockTokens(msg.selected);
@@ -363,6 +424,9 @@ const TokenController = (() => {
                     case "usage":
                         showUsage();
                         break;
+                    case "examples":
+                        addExamplePaths();
+                        break;
                     case "rotate":
                         state[NAME].storedVariables.rotateTokens = !state[NAME].storedVariables.rotateTokens;
                         createMenu();
@@ -370,6 +434,62 @@ const TokenController = (() => {
                     case "combat":
                         state[NAME].storedVariables.combatPatrol = !state[NAME].storedVariables.combatPatrol;
                         createMenu();
+                        break;
+                    case "substeps":
+                        state[NAME].storedVariables.subStepMovement = !state[NAME].storedVariables.subStepMovement;
+                        createMenu();
+                        break;
+                    case "pathinterval":
+                        if (args.length < 4) {
+                            sendChat(`${NAME}`, "/w " + msg.who + " Usage: !tc pathinterval <pathName> <ms|0> (0 = use global)");
+                            return;
+                        }
+                        setPathInterval(args.slice(2, -1).join(' ').trim(), args[args.length - 1]);
+                        break;
+                    case "runonce":
+                        if (args.length < 3) {
+                            sendChat(`${NAME}`, "/w " + msg.who + " Usage: !tc runonce <pathName>");
+                            return;
+                        }
+                        togglePathRunOnce(args.slice(2).join(' ').trim());
+                        break;
+                    case "duplicate":
+                        if (args.length < 4) {
+                            sendChat(`${NAME}`, "/w " + msg.who + " Usage: !tc duplicate <sourcePathName> <newPathName>");
+                            return;
+                        }
+                        duplicatePath(args.slice(2, -1).join(' ').trim(), args[args.length - 1]);
+                        break;
+                    case "exportpaths":
+                        exportPaths();
+                        break;
+                    case "importpaths":
+                        if (args.length < 3) {
+                            sendChat(`${NAME}`, "/w " + msg.who + " Usage: !tc importpaths <json string> (path definitions array)");
+                            return;
+                        }
+                        importPaths(args.slice(2).join(' '));
+                        break;
+                    case "maxtokens":
+                        if (args.length < 4) {
+                            sendChat(`${NAME}`, "/w " + msg.who + " Usage: !tc maxtokens <pathName> <n|0> (0 = no limit)");
+                            return;
+                        }
+                        setPathMaxTokens(args.slice(2, -1).join(' ').trim(), args[args.length - 1]);
+                        break;
+                    case "cycle":
+                        if (args.length < 3) {
+                            sendChat(`${NAME}`, "/w " + msg.who + " Usage: !tc cycle <pathName> (toggles cycle / one-way)");
+                            return;
+                        }
+                        togglePathCycle(args.slice(2).join(' ').trim());
+                        break;
+                    case "randomstart":
+                        if (args.length < 3) {
+                            sendChat(`${NAME}`, "/w " + msg.who + " Usage: !tc randomstart <pathName> (toggles random start step)");
+                            return;
+                        }
+                        togglePathRandomStart(args.slice(2).join(' ').trim());
                         break;
                 }
             }
@@ -381,11 +501,22 @@ const TokenController = (() => {
 
     // When Roll20 combat starts
     on('change:campaign:turnorder', function (campaign, prev) {
-        const current = campaign.get('turnorder');
-        const wasEmpty = !prev || prev.length === 0 || prev === '[]';
-        const isNowActive = current && current.length > 0 && current !== '[]';
+        const rawCurrent = campaign.get('turnorder');
+        const rawPrev = (prev && typeof prev.get === 'function') ? prev.get('turnorder') : prev;
+        let current = [];
+        let prevOrder = [];
+        try {
+            current = typeof rawCurrent === 'string' ? (JSON.parse(rawCurrent || '[]') || []) : (Array.isArray(rawCurrent) ? rawCurrent : []);
+        } catch (e) { current = []; }
+        try {
+            prevOrder = typeof rawPrev === 'string' ? (JSON.parse(rawPrev || '[]') || []) : (Array.isArray(rawPrev) ? rawPrev : []);
+        } catch (e) { prevOrder = []; }
+        const wasEmpty = !prevOrder || prevOrder.length === 0;
+        const isNowActive = current && current.length > 0;
 
-        currentCombatant = current[0].id;
+        if (isNowActive && current[0] && typeof current[0] === 'object' && current[0].id) {
+            currentCombatant = current[0].id;
+        }
 
         if (combatStarted && !isNowActive) {
             combatStarted = false;
@@ -405,10 +536,28 @@ const TokenController = (() => {
         }
     });
 
+    function cleanupStaleTokens() {
+        const beforePaths = state[NAME].storedVariables.activeTokenPaths.length;
+        const beforeMemory = state[NAME].storedVariables.tokenMemory.length;
+        state[NAME].storedVariables.activeTokenPaths = state[NAME].storedVariables.activeTokenPaths.filter(
+            tp => getObj('graphic', tp.tokenId)
+        );
+        state[NAME].storedVariables.tokenMemory = state[NAME].storedVariables.tokenMemory.filter(
+            tm => getObj('graphic', tm.tokenId)
+        );
+        const removedPaths = beforePaths - state[NAME].storedVariables.activeTokenPaths.length;
+        const removedMemory = beforeMemory - state[NAME].storedVariables.tokenMemory.length;
+        if (removedPaths > 0 || removedMemory > 0) {
+            log(`${NAME}: Cleaned ${removedPaths} stale path(s) and ${removedMemory} stale memory entry(ies).`);
+        }
+    }
+
     function pathTokens(overrideCombat = false) {
         if (combatStarted && !overrideCombat) {
             return;
         }
+
+        cleanupStaleTokens();
 
         let blockIds = [];
 
@@ -450,9 +599,22 @@ const TokenController = (() => {
                 continue;
             }
 
-            const pathCode = state[NAME].storedVariables.paths[pathIndex].path;
+            const pathDef = state[NAME].storedVariables.paths[pathIndex];
+            if (pathDef.intervalOverride != null && pathDef.intervalOverride > 0) {
+                tokenPath.tickCounter = (tokenPath.tickCounter || 0) + 1;
+                const globalInterval = state[NAME].storedVariables.interval;
+                if (tokenPath.tickCounter * globalInterval < pathDef.intervalOverride) {
+                    continue;
+                }
+                tokenPath.tickCounter = 0;
+            }
 
-            const pathArray = pathCode.match(/([UDLR])([0-9])|W|S/g);
+            let pathCode = pathDef.path;
+            if (typeof pathCode !== 'string') {
+                pathCode = (pathCode && pathCode.path) ? pathCode.path : '';
+            }
+
+            const pathArray = pathCode.match(/([UDLR])([0-9]+)|W|S/g);
             if (!pathArray || pathArray.length < 1) {
                 log(`${NAME}: Error: Path code ${pathCode} is invalid - No Vector Matches.`);
                 state[NAME].storedVariables.activeTokenPaths.splice(i, 1);
@@ -486,45 +648,78 @@ const TokenController = (() => {
                 }
             }
 
-            const distance = parseInt(pathVector.substring(1));
-            if (isNaN(distance) && direction != "W" && direction != "S") {
+            const distance = (direction === 'W' || direction === 'S') ? 0 : parseInt(pathVector.substring(1), 10);
+            if (isNaN(distance) && direction !== "W" && direction !== "S") {
                 state[NAME].storedVariables.activeTokenPaths.splice(i, 1);
                 i--;
                 sendChat("GM", `Error: Path code ${pathCode} is invalid - Distance is not a number.`);
                 continue;
             }
 
-            var token = getObj("graphic", tokenPath.tokenId);
-            var left = token.get("left");
-            var top = token.get("top");
-            var rotation = token.get("rotation");
-
-            if (!moveToken(tokenPath.tokenId, direction, distance, tokenPath.pageId)) {
+            const token = getObj("graphic", tokenPath.tokenId);
+            if (!token) {
                 state[NAME].storedVariables.activeTokenPaths.splice(i, 1);
                 i--;
-                sendChat("GM", `Error: Failed to move token ${tokenPath.tokenId}.`);
+                continue;
+            }
+            const left = token.get("left");
+            const top = token.get("top");
+            const rotation = token.get("rotation");
+
+            const useSubSteps = state[NAME].storedVariables.subStepMovement && (direction === 'U' || direction === 'D' || direction === 'L' || direction === 'R') && distance > 1;
+            const entry = state[NAME].storedVariables.activeTokenPaths[i];
+            if (useSubSteps) {
+                if (entry.subStepTotal == null || entry.subStepTotal === 0) {
+                    entry.subStepTotal = distance;
+                    entry.subStep = 0;
+                }
+                const moveDist = 1;
+                if (!moveToken(tokenPath.tokenId, direction, moveDist, tokenPath.pageId, pathCode)) {
+                    state[NAME].storedVariables.activeTokenPaths.splice(i, 1);
+                    i--;
+                    sendChat("GM", `Error: Failed to move token ${tokenPath.tokenId}.`);
+                    continue;
+                }
+                processFollowMovement(tokenPath.tokenId, left, top, rotation);
+                entry.subStep = (entry.subStep || 0) + 1;
+                if (entry.subStep < entry.subStepTotal) {
+                    continue;
+                }
+                entry.subStepTotal = 0;
+                entry.subStep = 0;
+            } else {
+                if (!moveToken(tokenPath.tokenId, direction, distance, tokenPath.pageId, pathCode)) {
+                    state[NAME].storedVariables.activeTokenPaths.splice(i, 1);
+                    i--;
+                    sendChat("GM", `Error: Failed to move token ${tokenPath.tokenId}.`);
+                    continue;
+                }
+                processFollowMovement(tokenPath.tokenId, left, top, rotation);
+            }
+
+            if (pathDef.runOnce && tokenPath.step === pathArray.length - 1) {
+                state[NAME].storedVariables.activeTokenPaths.splice(i, 1);
+                i--;
                 continue;
             }
 
-            processFollowMovement(tokenPath.tokenId, left, top, rotation);
-
             if (tokenPath.isReversing) {
-                if (tokenPath.step == 0) {
+                if (tokenPath.step === 0) {
                     state[NAME].storedVariables.activeTokenPaths[i].isReversing = false;
 
-                    if (state[NAME].storedVariables.activeTokenPaths[i].length > 1) {
+                    if (pathArray.length > 1) {
                         state[NAME].storedVariables.activeTokenPaths[i].step++;
                     }
                 } else {
                     state[NAME].storedVariables.activeTokenPaths[i].step--;
                 }
             } else {
-                if (tokenPath.step == pathArray.length - 1) {
-                    if (state[NAME].storedVariables.paths[pathIndex].isCycle) {
+                if (tokenPath.step === pathArray.length - 1) {
+                    if (pathDef.isCycle) {
                         state[NAME].storedVariables.activeTokenPaths[i].step = 0;
                     } else {
                         state[NAME].storedVariables.activeTokenPaths[i].isReversing = true;
-                        if (state[NAME].storedVariables.activeTokenPaths[i].length > 1) {
+                        if (pathArray.length > 1) {
                             state[NAME].storedVariables.activeTokenPaths[i].step--;
                         }
                     }
@@ -535,7 +730,7 @@ const TokenController = (() => {
         }
     }
 
-    function moveToken(tokenId, direction, distance, pageId) {
+    function moveToken(tokenId, direction, distance, pageId, pathCodeForError) {
         let angle = 0;
         switch (direction.toUpperCase()) {
             case "U":
@@ -556,11 +751,11 @@ const TokenController = (() => {
                 toggleStealth(tokenId);
                 return true;
             default:
-                sendChat(`${NAME}`, `/w GM Error: Path code ${pathCode} is invalid - Invalid direction.`);
+                sendChat(`${NAME}`, `/w GM Error: Invalid direction "${direction}"${pathCodeForError ? ` in path "${pathCodeForError}"` : ''}.`);
                 return false;
         }
 
-        let token = getObj("graphic", tokenId);
+        const token = getObj("graphic", tokenId);
         if (!token) {
             sendChat(`${NAME}`, `/w GM Error: Token ${tokenId} not found.`);
             return false;
@@ -571,13 +766,18 @@ const TokenController = (() => {
             return true;
         }
 
-        let pageMeta = state[NAME].storedVariables.pageMetas.find(p => p.pageId == pageId);
+        let pageMeta = state[NAME].storedVariables.pageMetas.find(p => p.pageId === pageId);
         if (!pageMeta) {
-            pageMeta = token.get('_pageid');
-            if (!pageMeta) {
-                sendChat(`${NAME}`, `/w GM Error: Page ${pageId} not found. Please restart the path.`);
+            const pageIdFromToken = token.get('_pageid');
+            const page = getObj('page', pageIdFromToken);
+            if (!page) {
+                sendChat(`${NAME}`, `/w GM Error: Page not found for token. Please restart the path.`);
                 return false;
             }
+            pageMeta = {
+                pageWidth: page.get('width') * state[NAME].storedVariables.unitPx,
+                pageHeight: page.get('height') * state[NAME].storedVariables.unitPx
+            };
         }
 
         if (angle === 0 || angle === 180) {
@@ -663,81 +863,101 @@ const TokenController = (() => {
         }
 
         let usageHandout = findObjs({ type: 'handout', name: 'TokenController Usage Guide' });
-        if (!usageHandout || usageHandout.length < 1 && gmPlayers.length > 0) {
-            setupHandouts(gmPlayers[0]);
-        } else if (usageHandout.length > 1) {
-            for (let i = 1; i < usageHandout.length; i++) {
-                usageHandout[i].remove();
+        if (!usageHandout || usageHandout.length < 1) {
+            if (gmPlayers.length > 0) setupHandouts(gmPlayers[0]);
+        } else {
+            if (usageHandout.length > 1) {
+                for (let i = 1; i < usageHandout.length; i++) {
+                    usageHandout[i].remove();
+                }
+            }
+            usageHandout = findObjs({ type: 'handout', name: 'TokenController Usage Guide' });
+            if (usageHandout.length === 1) {
+                usageHandout[0].set({ notes: getUsageGuideContent() });
             }
         }
     }
 
-    function setupHandouts() {
-        // Create Handout
-        // Add usage to Handout
-        // Tell user about Handout
-
-        var handout = createObj('handout', {
-            name: 'TokenController Usage Guide',
-            inplayerjournals: 'all',
-            archived: false
-        });
-
+    function getUsageGuideContent() {
         let content = new HtmlBuilder('div');
+        content.append('.heading', 'Overview');
+        content.append('.info', [
+            'TokenController moves tokens along scripted paths (U/D/L/R directions plus W=wait, S=stealth toggle).',
+            'Open the menu with !tc or !token-control. Most actions are done from the menu or the T-Cntrl_ macros.',
+        ].join('<br>'));
+
         content.append('.heading', 'Macros');
         content.append('.info', [
-            'TokenController mostly functions via the Menu (!tc) and a few macros found on the Tokens and the DM Macro Bar.',
-            'If not present, head over to Macros Tab and add them to your bars.',
-            'Macros are always verified as existing on API restart, but not verified correct.',
-            'You can delete any Macros with the "T-Cntrl_" prefix for rebuilding.',
+            'T-Cntrl_Menu: Opens the TokenController menu (!tc).',
+            'T-Cntrl_Builder: With a token selected, starts a path draft (prompts for path name).',
+            'T-Cntrl_Follow: With a token selected and a target, makes the selected token follow the target.',
+            'Macros are recreated on API restart if missing. Delete any "T-Cntrl_" macro to force rebuild.',
         ].join('<br>'));
 
         content.append('.heading', 'Path Building');
         content.append('.info', [
-            'Select a Token on any map and click the "T-Cntrl_Builder" Macro, filling in the Path Name Popup.',
-            'The TokenController Menu now has Draft Paths with directional Buttons and "Units per Movement - Tick", as well as Set and Remove.',
-            'You can unselect the Token used to start the Draft, but you must leave it on the map until your draft is Set as a Path.',
-            'Clicking the U|D|L|R buttons, the Token will move in that direction the set amount of units in confirmation.',
-            '* Paths are not map or start-position specific, but TokenController will take some Page measurements to try not to lose your token as it paths.',
+            'Select a token and click T-Cntrl_Builder (or use the menu), then enter a path name to create a Draft.',
+            'In the menu under Draft Paths: use U, D, L, R to add movement (with units per click); W = wait, S = stealth toggle. Set saves the draft as a path; Rmv removes the draft.',
+            'Keep the draft token on the map until you click Set. Paths are grid-based and work on any map; page size is stored so tokens stay in bounds.',
+        ].join('<br>'));
+
+        content.append('.heading', 'Fixed Start Location');
+        content.append('.info', [
+            'Some paths can always start from the same spot (e.g. a chef in a kitchen, vehicles in a bay).',
+            'Set start: Select one token at the desired start position, then use that path\'s "Set start" button (or !tc setstart &lt;pathName&gt;). From then on, any token started on that path is moved there first, then runs the path.',
+            'Clear start: Use "Clear start" for that path (or !tc clearstart &lt;pathName&gt;) to go back to "start from wherever the token is."',
+            'List Paths for a path shows whether it has a fixed start and the coordinates.',
         ].join('<br>'));
 
         content.append('.heading', 'Token Controls');
         content.append('.info', [
-            'Once a Token is selected, you can set it on one or more Paths simultaneously, stacking the path shapes together for intricate patrolling.',
-            '* Click Start, Stop or Reset on the Menu under Paths',
-            '* To Stop a single path, use the Path Stop button. To stop all paths the Token is on, use the Token Stop button.',
-            '* Clicking Path Stop without a Token selected will stop all Tokens on that Path.',
-            '* Clicking Token Stop without a Token selected will stop all Tokens on all Paths.',
-
-            'Tokens can be locked in place via the Menu, or set to follow another Token by clicking the Token\'s "T-Cntrl_Follow" Macro.',
-            '* Tokens follow the Control Priority of: Locked > Follow > Path.',
-            '* Unlocking a Token will stop it from following another Token.',
-            '* Locking a Token will not remove its Paths, just prevent it from Pathing until unlocked.',
+            'Start: Select token(s), then click Start next to a path name. Tokens begin patrolling that path.',
+            'Stop: Path Stop (with or without selection) stops that path for selected tokens or all on that path. Token Stop stops all paths for selected tokens or every token.',
+            'Reset: Puts all patrolling tokens back to their starting positions and clears path/follow state.',
+            'Lock / Unlock: Locked tokens stay in place (e.g. to pause one patrol). Control order: Locked &gt; Follow &gt; Path.',
+            'Follow: Use T-Cntrl_Follow (select follower, target leader) or !tc follow &lt;followerId&gt; &lt;leaderId&gt;. Unlocking stops following.',
         ].join('<br>'));
 
-        content.append('.heading', 'Settings');
+        content.append('.heading', 'Settings (Menu)');
         content.append('.info', [
-            'Interval: Time (in milliseconds) between each movement tick.',
-            '* Default is 5000ms (5 seconds)',
-            '* Requires API restart to take effect (for now).',
-
-            'Pixels Per Unit: How many pixels a Token moves per unit of movement, based on your maps current Grid Pixel Size (standard is 70).',
+            'Interval (Tick): Time in ms between each path step. Default 5000 (5 s). Change takes effect immediately.',
+            'Pixels Per Unit: Grid movement scale (default 70). Match your map\'s grid pixel size so one path unit = one grid cell.',
+            'Rotate Tokens: When on, tokens turn to face their movement direction.',
+            'Combat Patrol: When on, patrols still advance once per turn order change during combat; when off, patrols pause when combat starts.',
         ].join('<br>'));
 
-        handout.set({
-            notes: content.toString({
-                "heading": {
-                    "font-size": "1.5em",
-                    "color": "#00f",
-                    "text-align": "center",
-                },
-                "info": {
-                    "font-size": "1em",
-                    "color": "#000",
-                    "margin-bottom": "10px",
-                }
-            }),
-        })
+        content.append('.heading', 'Commands (GM only)');
+        content.append('.info', [
+            '!tc or !token-control — menu. !tc list paths [name], !tc list tokens, !tc list draft [name], !tc list tick, !tc list vars.',
+            '!tc add &lt;name&gt; &lt;pathCode&gt; — add path (e.g. U2R2D2L2). !tc set &lt;name&gt; &lt;pathCode&gt; — update path. !tc remove &lt;name&gt;.',
+            '!tc setstart &lt;pathName&gt; — set fixed start from selected token. !tc clearstart &lt;pathName&gt; — clear fixed start.',
+            '!tc start &lt;pathName&gt;, !tc stop [pathName], !tc reset. !tc lock, !tc unlock. !tc follow &lt;followerId&gt; &lt;leaderId&gt;.',
+            '!tc tick &lt;ms&gt;, !tc unit &lt;n&gt;, !tc unitpx &lt;n&gt;, !tc rotate, !tc combat, !tc substeps, !tc usage.',
+            '!tc pathinterval &lt;pathName&gt; &lt;ms|0&gt;, !tc runonce &lt;pathName&gt;, !tc duplicate &lt;src&gt; &lt;newName&gt;, !tc exportpaths, !tc importpaths &lt;json&gt;.',
+            '!tc maxtokens &lt;pathName&gt; &lt;n|0&gt;, !tc cycle &lt;pathName&gt;, !tc randomstart &lt;pathName&gt;, !tc examples.',
+        ].join('<br>'));
+
+        return content.toString({
+            "heading": {
+                "font-size": "1.5em",
+                "color": "#00f",
+                "text-align": "center",
+            },
+            "info": {
+                "font-size": "1em",
+                "color": "#000",
+                "margin-bottom": "10px",
+            }
+        });
+    }
+
+    function setupHandouts() {
+        const handout = createObj('handout', {
+            name: 'TokenController Usage Guide',
+            inplayerjournals: 'all',
+            archived: false
+        });
+        handout.set({ notes: getUsageGuideContent() });
     }
 
     function showUsage() {
@@ -781,43 +1001,35 @@ const TokenController = (() => {
             return;
         }
 
-        state[NAME].storedVariables.paths[index].path = {
-            name: name,
-            path: pathString,
-            isCycle: testCycle(pathString)
-        };
+        state[NAME].storedVariables.paths[index].path = pathString;
+        state[NAME].storedVariables.paths[index].isCycle = testCycle(pathString);
         createMenu();
         sendChat(`${NAME}`, `/w GM Path "${name}" updated to ${pathString}.`);
     }
 
-    function testCycle(pathString) {
-        let workingString = pathString.replace("W", "");
-        let pathArray = workingString.match(/([UDLR])(\d+)/g);
+    function testCycle(pathString, silent) {
+        const workingString = (typeof pathString === 'string' ? pathString : '').replace(/W/g, "");
+        const pathArray = workingString.match(/([UDLR])(\d+)/g);
+        if (!pathArray || pathArray.length === 0) return false;
 
         let vert = 0;
         let horz = 0;
 
         for (let i = 0; i < pathArray.length; i++) {
-            let direction = pathArray[i][0];
-            let distance = parseInt(pathArray[i].substr(1));
+            const direction = pathArray[i][0];
+            const distance = parseInt(pathArray[i].substr(1), 10);
 
-            if (direction === "U") {
-                vert += distance;
-            } else if (direction === "D") {
-                vert -= distance;
-            } else if (direction === "L") {
-                horz -= distance;
-            } else if (direction === "R") {
-                horz += distance;
-            }
+            if (direction === "U") vert += distance;
+            else if (direction === "D") vert -= distance;
+            else if (direction === "L") horz -= distance;
+            else if (direction === "R") horz += distance;
         }
 
-        var isCyle = vert === 0 && horz === 0;
-        if (isCyle) {
+        const isCycle = vert === 0 && horz === 0;
+        if (isCycle && !silent) {
             sendChat('GM', `Path is a cycle: ${pathString}`);
         }
-
-        return isCyle;
+        return isCycle;
     }
 
     function removePath(name) {
@@ -838,6 +1050,277 @@ const TokenController = (() => {
         state[NAME].storedVariables.paths.splice(index, 1);
         createMenu();
         sendChat(`${NAME}`, `/w GM Path "${name}" removed.`);
+    }
+
+    function setPathStart(pathName, tokenId) {
+        if (!pathName) {
+            sendChat(`${NAME}`, "/w GM Please specify a path name.");
+            return;
+        }
+        const pathIndex = state[NAME].storedVariables.paths.findIndex(p => p.name === pathName);
+        if (pathIndex === -1) {
+            sendChat(`${NAME}`, `/w GM Path "${pathName}" not found.`);
+            return;
+        }
+        const token = getObj('graphic', tokenId);
+        if (!token) {
+            sendChat(`${NAME}`, "/w GM Token not found.");
+            return;
+        }
+        const path = state[NAME].storedVariables.paths[pathIndex];
+        path.fixedStart = true;
+        path.startLeft = token.get('left');
+        path.startTop = token.get('top');
+        path.startPageId = token.get('_pageid');
+        path.startRotation = token.get('rotation');
+        createMenu();
+        sendChat(`${NAME}`, `/w GM Path "${pathName}" now has a fixed start at this token's position. Tokens will move here when the path is started.`);
+    }
+
+    function clearPathStart(pathName) {
+        if (!pathName) {
+            sendChat(`${NAME}`, "/w GM Please specify a path name.");
+            return;
+        }
+        const pathIndex = state[NAME].storedVariables.paths.findIndex(p => p.name === pathName);
+        if (pathIndex === -1) {
+            sendChat(`${NAME}`, `/w GM Path "${pathName}" not found.`);
+            return;
+        }
+        const path = state[NAME].storedVariables.paths[pathIndex];
+        path.fixedStart = false;
+        delete path.startLeft;
+        delete path.startTop;
+        delete path.startPageId;
+        delete path.startRotation;
+        createMenu();
+        sendChat(`${NAME}`, `/w GM Path "${pathName}" now starts from wherever the token is (no fixed start).`);
+    }
+
+    function setPathInterval(pathName, msStr) {
+        const pathIndex = state[NAME].storedVariables.paths.findIndex(p => p.name === pathName);
+        if (pathIndex === -1) {
+            sendChat(`${NAME}`, `/w GM Path "${pathName}" not found.`);
+            return;
+        }
+        const path = state[NAME].storedVariables.paths[pathIndex];
+        const ms = parseInt(msStr, 10);
+        if (msStr === '0' || msStr.toLowerCase() === 'off') {
+            delete path.intervalOverride;
+            createMenu();
+            sendChat(`${NAME}`, `/w GM Path "${pathName}" now uses the global tick interval.`);
+            return;
+        }
+        if (isNaN(ms) || ms < 1) {
+            sendChat(`${NAME}`, "/w GM Please specify a positive interval in ms, or 0 to use global.");
+            return;
+        }
+        path.intervalOverride = ms;
+        createMenu();
+        sendChat(`${NAME}`, `/w GM Path "${pathName}" interval set to ${ms} ms.`);
+    }
+
+    function togglePathRunOnce(pathName) {
+        const pathIndex = state[NAME].storedVariables.paths.findIndex(p => p.name === pathName);
+        if (pathIndex === -1) {
+            sendChat(`${NAME}`, `/w GM Path "${pathName}" not found.`);
+            return;
+        }
+        const path = state[NAME].storedVariables.paths[pathIndex];
+        path.runOnce = !path.runOnce;
+        createMenu();
+        sendChat(`${NAME}`, `/w GM Path "${pathName}" run-once is now ${path.runOnce ? 'on' : 'off'}.`);
+    }
+
+    function togglePathCycle(pathName) {
+        const pathIndex = state[NAME].storedVariables.paths.findIndex(p => p.name === pathName);
+        if (pathIndex === -1) {
+            sendChat(`${NAME}`, `/w GM Path "${pathName}" not found.`);
+            return;
+        }
+        const path = state[NAME].storedVariables.paths[pathIndex];
+        path.isCycle = !path.isCycle;
+        createMenu();
+        sendChat(`${NAME}`, `/w GM Path "${pathName}" is now ${path.isCycle ? 'cycling' : 'one-way (reverse at end)'}.`);
+    }
+
+    function togglePathRandomStart(pathName) {
+        const pathIndex = state[NAME].storedVariables.paths.findIndex(p => p.name === pathName);
+        if (pathIndex === -1) {
+            sendChat(`${NAME}`, `/w GM Path "${pathName}" not found.`);
+            return;
+        }
+        const path = state[NAME].storedVariables.paths[pathIndex];
+        path.randomStart = !path.randomStart;
+        createMenu();
+        sendChat(`${NAME}`, `/w GM Path "${pathName}" random start step is now ${path.randomStart ? 'on' : 'off'}.`);
+    }
+
+    function setPathMaxTokens(pathName, nStr) {
+        const pathIndex = state[NAME].storedVariables.paths.findIndex(p => p.name === pathName);
+        if (pathIndex === -1) {
+            sendChat(`${NAME}`, `/w GM Path "${pathName}" not found.`);
+            return;
+        }
+        const path = state[NAME].storedVariables.paths[pathIndex];
+        const n = parseInt(nStr, 10);
+        if (nStr === '0' || nStr.toLowerCase() === 'off' || isNaN(n) || n < 0) {
+            delete path.maxTokens;
+            createMenu();
+            sendChat(`${NAME}`, `/w GM Path "${pathName}" has no token limit.`);
+            return;
+        }
+        path.maxTokens = n;
+        createMenu();
+        sendChat(`${NAME}`, `/w GM Path "${pathName}" max tokens set to ${n}.`);
+    }
+
+    function pathWouldLeaveBounds(pathStr, startLeft, startTop, unitPx, pageWidth, pageHeight) {
+        const pathArray = (typeof pathStr === 'string' ? pathStr : '').match(/([UDLR])([0-9]+)|W|S/g);
+        if (!pathArray || pathArray.length === 0) return false;
+        let left = startLeft;
+        let top = startTop;
+        const tokenSize = unitPx;
+        for (let i = 0; i < pathArray.length; i++) {
+            const dir = pathArray[i].charAt(0);
+            const dist = (dir === 'W' || dir === 'S') ? 0 : parseInt(pathArray[i].substring(1), 10) || 0;
+            if (dir === 'U') top -= dist * unitPx;
+            else if (dir === 'D') top += dist * unitPx;
+            else if (dir === 'L') left -= dist * unitPx;
+            else if (dir === 'R') left += dist * unitPx;
+            if (left < 0 || top < 0 || (left + tokenSize) > pageWidth || (top + tokenSize) > pageHeight) return true;
+        }
+        return false;
+    }
+
+    function exportPaths() {
+        const out = state[NAME].storedVariables.paths.map(p => {
+            const o = { name: p.name, path: typeof p.path === 'string' ? p.path : (p.path && p.path.path) || '', isCycle: !!p.isCycle };
+            if (p.fixedStart && p.startLeft != null) {
+                o.fixedStart = true;
+                o.startLeft = p.startLeft;
+                o.startTop = p.startTop;
+                o.startPageId = p.startPageId;
+                o.startRotation = p.startRotation;
+            }
+            if (p.intervalOverride != null) o.intervalOverride = p.intervalOverride;
+            if (p.runOnce != null) o.runOnce = p.runOnce;
+            if (p.maxTokens != null) o.maxTokens = p.maxTokens;
+            if (p.randomStart != null) o.randomStart = p.randomStart;
+            return o;
+        });
+        const json = JSON.stringify(out);
+        sendChat(`${NAME}`, '/w GM Paths export (copy for !tc importpaths):');
+        if (json.length > 1800) {
+            const chunkSize = 1800;
+            for (let i = 0; i < json.length; i += chunkSize) {
+                sendChat(`${NAME}`, '/w GM ' + json.substring(i, i + chunkSize));
+            }
+        } else {
+            sendChat(`${NAME}`, '/w GM ' + json);
+        }
+    }
+
+    function importPaths(jsonStr) {
+        let data;
+        try {
+            data = JSON.parse(jsonStr);
+        } catch (e) {
+            sendChat(`${NAME}`, '/w GM Invalid JSON for import.');
+            return;
+        }
+        if (!Array.isArray(data)) {
+            sendChat(`${NAME}`, '/w GM Import data must be an array of path objects.');
+            return;
+        }
+        let added = 0;
+        let skipped = 0;
+        data.forEach(p => {
+            if (!p.name || !p.path) return;
+            if (state[NAME].storedVariables.paths.find(ex => ex.name === p.name)) {
+                skipped++;
+                return;
+            }
+            const pathStr = typeof p.path === 'string' ? p.path : (p.path && p.path.path) || '';
+            const entry = { name: p.name, path: pathStr, isCycle: !!p.isCycle };
+            if (p.fixedStart && p.startLeft != null) {
+                entry.fixedStart = true;
+                entry.startLeft = p.startLeft;
+                entry.startTop = p.startTop;
+                entry.startPageId = p.startPageId;
+                entry.startRotation = p.startRotation;
+            }
+            if (p.intervalOverride != null) entry.intervalOverride = p.intervalOverride;
+            if (p.runOnce != null) entry.runOnce = p.runOnce;
+            if (p.maxTokens != null) entry.maxTokens = p.maxTokens;
+            if (p.randomStart != null) entry.randomStart = p.randomStart;
+            state[NAME].storedVariables.paths.push(entry);
+            added++;
+        });
+        createMenu();
+        sendChat(`${NAME}`, `/w GM Imported ${added} path(s), skipped ${skipped} (name already exists).`);
+    }
+
+    function duplicatePath(sourceName, newName) {
+        const pathIndex = state[NAME].storedVariables.paths.findIndex(p => p.name === sourceName);
+        if (pathIndex === -1) {
+            sendChat(`${NAME}`, `/w GM Path "${sourceName}" not found.`);
+            return;
+        }
+        if (state[NAME].storedVariables.paths.find(p => p.name === newName)) {
+            sendChat(`${NAME}`, `/w GM A path named "${newName}" already exists.`);
+            return;
+        }
+        const src = state[NAME].storedVariables.paths[pathIndex];
+        const pathStr = typeof src.path === 'string' ? src.path : (src.path && src.path.path) || '';
+        const copy = {
+            name: newName,
+            path: pathStr,
+            isCycle: !!src.isCycle,
+        };
+        if (src.fixedStart && src.startLeft != null) {
+            copy.fixedStart = true;
+            copy.startLeft = src.startLeft;
+            copy.startTop = src.startTop;
+            copy.startPageId = src.startPageId;
+            copy.startRotation = src.startRotation;
+        }
+        if (src.intervalOverride != null) copy.intervalOverride = src.intervalOverride;
+        if (src.runOnce != null) copy.runOnce = src.runOnce;
+        if (src.maxTokens != null) copy.maxTokens = src.maxTokens;
+        if (src.randomStart != null) copy.randomStart = src.randomStart;
+        state[NAME].storedVariables.paths.push(copy);
+        createMenu();
+        sendChat(`${NAME}`, `/w GM Path "${sourceName}" duplicated as "${newName}".`);
+    }
+
+    function addExamplePaths() {
+        const examples = [
+            { name: 'Square', path: 'U2R2D2L2' },
+            { name: 'Big Square', path: 'U3R3D3L3' },
+            { name: 'Horizontal', path: 'R4L4' },
+            { name: 'Vertical', path: 'U4D4' },
+            { name: 'Rectangle', path: 'U1R2D1L2' },
+            { name: 'Pause Square', path: 'U2WR2WD2WL2W' },
+            { name: 'Zigzag', path: 'U1R1U1R1D1L1D1L1' },
+            { name: 'Blinker', path: 'S' },
+            { name: 'T-Patrol', path: 'U3U0WWR2R0WWL4WWR2D3WW' },
+            { name: 'Figure-8', path: 'R2U2L2D2L2U2R2D2' },
+        ];
+        const existing = state[NAME].storedVariables.paths;
+        let added = 0;
+        examples.forEach(ex => {
+            if (!existing.find(p => p.name === ex.name)) {
+                existing.push({
+                    name: ex.name,
+                    path: ex.path,
+                    isCycle: testCycle(ex.path, true)
+                });
+                added++;
+            }
+        });
+        createMenu();
+        sendChat(`${NAME}`, `/w GM Added ${added} example path(s). ${added === 0 ? 'All example paths already exist.' : 'Paths already present were skipped.'}`);
     }
 
     function buildPath(tokenId, name) {
@@ -932,19 +1415,16 @@ const TokenController = (() => {
         }
 
         state[NAME].storedVariables.pathDrafts[draftIndex].path +=
-            (direction == "W") ? "W"
-                : (direction == "S") ? "S"
+            (direction === "W") ? "W"
+                : (direction === "S") ? "S"
                     : `${direction}${distance}`;
 
         state[NAME].storedVariables.pathDrafts[draftIndex].step++;
 
         // Move Token for Visual Verification
-        if (!moveToken(state[NAME].storedVariables.pathDrafts[draftIndex].tokenId, direction, distance)) {
+        if (!moveToken(state[NAME].storedVariables.pathDrafts[draftIndex].tokenId, direction, distance || 0)) {
             sendChat(`${NAME}`, "/w GM Failed to move token.");
         }
-
-        // Update Step
-        state[NAME].storedVariables.pathDrafts[draftIndex].step++;
 
         createMenu();
     }
@@ -1033,8 +1513,8 @@ const TokenController = (() => {
                 return false;
             }
 
-            if (direction != "U" && direction != "D" && direction != "L" && direction != "R") {
-                sendChat(`${NAME}`, "w/ GM Path must use U, D, L, or R for directions.");
+            if (direction !== "U" && direction !== "D" && direction !== "L" && direction !== "R") {
+                sendChat(`${NAME}`, "/w GM Path must use U, D, L, or R for directions.");
                 return false;
             }
         }
@@ -1050,7 +1530,14 @@ const TokenController = (() => {
                 return;
             }
 
-            sendChat(`${NAME}`, `/w GM Path "${name}" is defined as "${paths[index].path}" (Cycle: ${paths[index].isCycle}). Current Tokens on Path:<br/> ${getTokensOnPath(name)}`);
+            const p = paths[index];
+            const pathStr = typeof p.path === 'string' ? p.path : (p.path && p.path.path) || '';
+            const fixedStartInfo = p.fixedStart ? ` Fixed start: yes (${p.startLeft}, ${p.startTop})` : ' Fixed start: no (start from anywhere)';
+            const intervalInfo = p.intervalOverride ? ` Interval: ${p.intervalOverride}ms` : '';
+            const runOnceInfo = p.runOnce ? ' Run once: yes' : '';
+            const maxInfo = p.maxTokens != null ? ` Max tokens: ${p.maxTokens}` : '';
+            const randomStartInfo = p.randomStart ? ' Random start: yes' : '';
+            sendChat(`${NAME}`, `/w GM Path "${name}" is defined as "${pathStr}" (Cycle: ${p.isCycle}).${fixedStartInfo}${intervalInfo}${runOnceInfo}${maxInfo}${randomStartInfo} Current Tokens on Path:<br/> ${getTokensOnPath(name)}`);
         } else {
             sendChat(`${NAME}`, `/w GM Paths:<br/><table>${paths.map(path => `<tr><td style="margin-left: 5px">${path.name}</td><td>${path.path}</td><td>${path.isCycle}</td></tr>`).join("")}</table>`);
         }
@@ -1058,15 +1545,19 @@ const TokenController = (() => {
 
     function listTokens(name) {
         const tokens = state[NAME].storedVariables.activeTokenPaths;
-        if (tokens.length == 0) {
+        if (tokens.length === 0) {
             sendChat(`${NAME}`, "/w GM No Tokens are currently on a Path.");
             return;
         }
 
+        const tokenRow = (token) => {
+            const obj = getObj('graphic', token.tokenId);
+            return `<tr><td style="margin-left: 5px">-- ${obj ? obj.get('name') : token.tokenId}</td><td>${token.pathName}</td></tr>`;
+        };
         if (name) {
-            sendChat(`${NAME}`, `/w GM Tokens on Path "${name}":<br/> ${tokens.map(token => `<tr><td style="margin-left: 5px">-- ${getObj('graphic', token.tokenId).get('name')}</td><td>${token.pathName}</td></tr>`).join("")}`);
+            sendChat(`${NAME}`, `/w GM Tokens on Path "${name}":<br/> ${tokens.filter(t => t.pathName === name).map(tokenRow).join("")}`);
         } else {
-            sendChat(`${NAME}`, `/w GM Tokens:<br/><table>${tokens.map(token => `<tr><td style="margin-left: 5px">-- ${getObj('graphic', token.tokenId).get('name')}</td><td>${token.pathName}</td></tr>`).join("")}</table>`);
+            sendChat(`${NAME}`, `/w GM Tokens:<br/><table>${tokens.map(tokenRow).join("")}</table>`);
         }
     }
 
@@ -1084,7 +1575,8 @@ const TokenController = (() => {
             const draftIndex = state[NAME].storedVariables.pathDrafts.findIndex(draft => draft.name == name);
 
             if (draftIndex > -1) {
-                if (state[NAME].storedVariables.pathDrafts[draftIndex].tokenId == undefined || state[NAME].storedVariables.pathDrafts[draftIndex].tokenId == "") {
+                const draft = state[NAME].storedVariables.pathDrafts[draftIndex];
+                if (draft.tokenId === undefined || draft.tokenId === "") {
                     sendChat(`${NAME}`, `/w GM Draft "${draft.name}" does not have a tokenId assigned and will now be deleted.`);
                     state[NAME].storedVariables.pathDrafts.splice(draftIndex, 1);
                     return;
@@ -1111,11 +1603,14 @@ const TokenController = (() => {
             return;
         }
 
-        if (!!state[NAME].storedVariables.activeTokenPaths && (state[NAME].storedVariables.activeTokenPaths.length == 0 || state[NAME].storedVariables.activeTokenPaths.filter(token => token.pathName == name).length == 0)) {
+        if (!!state[NAME].storedVariables.activeTokenPaths && (state[NAME].storedVariables.activeTokenPaths.length === 0 || state[NAME].storedVariables.activeTokenPaths.filter(token => token.pathName === name).length === 0)) {
             return "None";
         }
 
-        return state[NAME].storedVariables.activeTokenPaths.filter(token => token.pathName == name).map(token => `-- ${(getObj('graphic', token.tokenId)).get('name')}`).join("<br/>");
+        return state[NAME].storedVariables.activeTokenPaths.filter(token => token.pathName === name).map(token => {
+            const obj = getObj('graphic', token.tokenId);
+            return `-- ${obj ? obj.get('name') : token.tokenId}`;
+        }).join("<br/>");
     }
 
     function startPath(selected, pathName) {
@@ -1129,36 +1624,67 @@ const TokenController = (() => {
             return;
         }
 
-        const pathIndex = state[NAME].storedVariables.paths.findIndex(path => path.name == pathName);
+        const pathIndex = state[NAME].storedVariables.paths.findIndex(p => p.name == pathName);
         if (pathIndex == -1) {
             sendChat(`${NAME}`, "/w GM Path not found.");
             return;
         }
 
-        if (state[NAME].storedVariables.paths[pathIndex].isCycle == undefined) {
-            state[NAME].storedVariables.paths[pathIndex].isCycle = testCycle(state[NAME].storedVariables.paths[pathIndex].path);
+        const pathDef = state[NAME].storedVariables.paths[pathIndex];
+        if (pathDef.isCycle == undefined) {
+            pathDef.isCycle = testCycle(pathDef.path, true);
         }
 
-        selected.forEach(function (selected) {
-            const token = getObj('graphic', selected._id);
+        const useFixedStart = pathDef.fixedStart === true && pathDef.startLeft != null && pathDef.startTop != null && pathDef.startPageId;
+        const pathStrForStart = typeof pathDef.path === 'string' ? pathDef.path : (pathDef.path && pathDef.path.path) || '';
+        const pathArrayForStart = pathStrForStart.match(/([UDLR])([0-9]+)|W|S/g);
+        const randomStep = (pathDef.randomStart && pathArrayForStart && pathArrayForStart.length > 1)
+            ? Math.floor(Math.random() * pathArrayForStart.length) : 0;
+
+        selected.forEach(function (sel) {
+            const countOnPath = state[NAME].storedVariables.activeTokenPaths.filter(t => t.pathName === pathName).length;
+            if (pathDef.maxTokens != null && pathDef.maxTokens > 0 && countOnPath >= pathDef.maxTokens) {
+                sendChat(`${NAME}`, `/w GM Path "${pathName}" is at max tokens (${pathDef.maxTokens}). Skipping.`);
+                return;
+            }
+
+            const token = getObj('graphic', sel._id);
             if (!token) {
                 sendChat(`${NAME}`, "/w GM Please select a token to start a path.");
                 return;
             }
 
-            const tokenLeft = token.get('left');
+            let tokenLeft, tokenTop, pageId, tokenRotation;
+
+            if (useFixedStart) {
+                // Move token to the path's fixed start position (and page if needed)
+                if (token.get('_pageid') !== pathDef.startPageId) {
+                    token.set('_pageid', pathDef.startPageId);
+                }
+                token.set({
+                    left: pathDef.startLeft,
+                    top: pathDef.startTop,
+                    rotation: pathDef.startRotation != null ? pathDef.startRotation : token.get('rotation')
+                });
+                tokenLeft = pathDef.startLeft;
+                tokenTop = pathDef.startTop;
+                pageId = pathDef.startPageId;
+                tokenRotation = pathDef.startRotation != null ? pathDef.startRotation : token.get('rotation');
+            } else {
+                tokenLeft = token.get('left');
+                tokenTop = token.get('top');
+                pageId = token.get('_pageid');
+                tokenRotation = token.get('rotation');
+            }
+
             if (tokenLeft == undefined) {
                 sendChat(`${NAME}`, "/w GM Unable to retrieve Token Left.");
                 return;
             }
-
-            const tokenTop = token.get('top');
             if (tokenTop == undefined) {
                 sendChat(`${NAME}`, "/w GM Unable to retrieve Token Top.");
                 return;
             }
-
-            const pageId = token.get('_pageid');
             if (pageId == undefined) {
                 sendChat(`${NAME}`, "/w GM Unable to retrieve Page ID from Token.");
                 return;
@@ -1217,13 +1743,23 @@ const TokenController = (() => {
                 state[NAME].storedVariables.pageMetas[pageMetaIndex].pageScaleNumber = pageScale;
             }
 
+            const pathStr = typeof pathDef.path === 'string' ? pathDef.path : (pathDef.path && pathDef.path.path) || '';
+            const pageWpx = pageWidth * state[NAME].storedVariables.unitPx;
+            const pageHpx = pageHeight * state[NAME].storedVariables.unitPx;
+            if (pathStr && pathWouldLeaveBounds(pathStr, tokenLeft, tokenTop, state[NAME].storedVariables.unitPx, pageWpx, pageHpx)) {
+                sendChat(`${NAME}`, `/w GM Warning: Path "${pathName}" may leave the map from this start position. Token still added.`);
+            }
+
             state[NAME].storedVariables.activeTokenPaths.push({
-                tokenId: selected._id,
+                tokenId: sel._id,
                 pathName: pathName,
-                step: 0,
+                step: randomStep,
+                subStep: 0,
+                subStepTotal: 0,
+                tickCounter: 0,
                 initialLeft: tokenLeft,
                 initialTop: tokenTop,
-                initialRotation: token.get('rotation'),
+                initialRotation: tokenRotation,
                 isReversing: false,
                 pageId: pageId,
             });
@@ -1266,8 +1802,9 @@ const TokenController = (() => {
             return;
         }
 
-        if (name != undefined && name != "") {
-            state[NAME].storedVariables.activeTokenPaths = state[NAME].storedVariables.activeTokenPaths.filter(token => token.pathName != name);
+        if (name !== undefined && name !== "") {
+            state[NAME].storedVariables.activeTokenPaths = state[NAME].storedVariables.activeTokenPaths.filter(token => token.pathName !== name);
+            createMenu();
             sendChat(`${NAME}`, `/w GM Tokens on Path "${name}" have stopped moving.`);
         }
     }
@@ -1278,16 +1815,17 @@ const TokenController = (() => {
             return;
         }
 
-        selected.forEach(function (selected) {
-            const token = getObj('graphic', selected._id);
+        let lockReadout = "Locked the following tokens:<br/>";
+        selected.forEach(function (sel) {
+            const token = getObj('graphic', sel._id);
+            if (!token) return;
+
             token.set('status_red', true);
 
-            var lockReadout = "Locked the following tokens:<br/>";
-
-            const index = state[NAME].storedVariables.tokenMemory.findIndex(token => token.tokenId == selected._id);
-            if (index == -1) {
+            const index = state[NAME].storedVariables.tokenMemory.findIndex(t => t.tokenId === sel._id);
+            if (index === -1) {
                 state[NAME].storedVariables.tokenMemory.push({
-                    tokenId: selected._id,
+                    tokenId: sel._id,
                     pageId: token.get('_pageid'),
                     rotation: token.get('rotation'),
                     left: token.get('left'),
@@ -1380,18 +1918,17 @@ const TokenController = (() => {
     }
 
     function processFollowMovement(leaderId, left, top, rotation) {
-        var listOfFollowers = state[NAME].storedVariables.tokenMemory.filter(token => token.followingTokenId == leaderId);
-        var cleanupIndices = [];
+        const listOfFollowers = state[NAME].storedVariables.tokenMemory.filter(token => token.followingTokenId === leaderId);
+        const tokenIdsToRemove = [];
 
         for (let i = 0; i < listOfFollowers.length; i++) {
             if (listOfFollowers[i].isLocked) {
-                return;
+                continue;
             }
 
             const follower = getObj('graphic', listOfFollowers[i].tokenId);
             if (!follower) {
-                sendChat(`${NAME}`, `/w GM Follower Token "${listOfFollowers[i].tokenId}" not found.`);
-                cleanupIndices.push(i);
+                tokenIdsToRemove.push(listOfFollowers[i].tokenId);
                 continue;
             }
 
@@ -1402,8 +1939,8 @@ const TokenController = (() => {
             });
         }
 
-        if (cleanupIndices.length > 0) {
-            state[NAME].storedVariables.tokenMemory = state[NAME].storedVariables.tokenMemory.filter((_, index) => !cleanupIndices.includes(index));
+        if (tokenIdsToRemove.length > 0) {
+            state[NAME].storedVariables.tokenMemory = state[NAME].storedVariables.tokenMemory.filter(t => !tokenIdsToRemove.includes(t.tokenId));
         }
     }
 
@@ -1420,6 +1957,8 @@ const TokenController = (() => {
         }
 
         state[NAME].storedVariables.interval = intervalNumber < 10 ? intervalNumber * 1000 : intervalNumber;
+        if (pathTokensIntervalId) clearInterval(pathTokensIntervalId);
+        pathTokensIntervalId = setInterval(pathTokens, state[NAME].storedVariables.interval);
         createMenu();
         if (intervalNumber < 2000 && intervalNumber > 10) {
             let dangerBody = new HtmlBuilder('.danger');
@@ -1444,28 +1983,27 @@ const TokenController = (() => {
     }
 
     function resetTokens() {
-        state[NAME].storedVariables.activeTokenPaths.forEach(function (path) {
-            path.forEach(function (token) {
-                const tokenObj = getObj('graphic', token.tokenId);
-                tokenObj.set('left', token.initialLeft);
-                tokenObj.set('top', token.initialTop);
-                tokenObj.set('rotation', token.initialRotation);
+        state[NAME].storedVariables.activeTokenPaths.forEach(function (pathEntry) {
+            const tokenObj = getObj('graphic', pathEntry.tokenId);
+            if (tokenObj) {
+                tokenObj.set('left', pathEntry.initialLeft);
+                tokenObj.set('top', pathEntry.initialTop);
+                tokenObj.set('rotation', pathEntry.initialRotation);
                 tokenObj.set('layer', 'objects');
-            });
+            }
         });
-
-        for (let i = 0; i < state[NAME].storedVariables.activeTokenPaths.length; i++) {
-            state[NAME].storedVariables.activeTokenPaths[i] = [];
-        }
+        state[NAME].storedVariables.activeTokenPaths = [];
 
         if (state[NAME].storedVariables.tokenMemory.length > 0) {
             state[NAME].storedVariables.tokenMemory.filter(tm => tm.isFollowing).forEach(function (token) {
                 const tokenObj = getObj('graphic', token.tokenId);
-                tokenObj.set('left', token.left);
-                tokenObj.set('top', token.top);
-                tokenObj.set('rotation', token.rotation);
-                tokenObj.set('status_red', false);
-                tokenObj.set('layer', 'objects');
+                if (tokenObj) {
+                    tokenObj.set('left', token.left);
+                    tokenObj.set('top', token.top);
+                    tokenObj.set('rotation', token.rotation);
+                    tokenObj.set('status_red', false);
+                    tokenObj.set('layer', 'objects');
+                }
             });
         }
 
@@ -1480,7 +2018,10 @@ const TokenController = (() => {
         menu.append('.menuHeader', 'Token Controls');
 
         let content = menu.append('div');
-        content.append('.menuLabel', '[Usage](!tc usage)');
+        let topRow = content.append('table');
+        let tr = topRow.append('tr');
+        tr.append('td', '[Usage](!tc usage)');
+        tr.append('td', `[\`\`Add examples\`\`](!tc examples)`);
         content.append('.subLabel', '!tc may be used in place of !token-control');
 
         content.append('.menuLabel', 'Paths');
@@ -1496,6 +2037,9 @@ const TokenController = (() => {
             row.append('td', `[\`\`Start\`\`](!tc Start ${path.name})`);
             row.append('td', `[\`\`Stop\`\`](!tc Stop ${path.name})`);
             row.append('td', `[\`\`Reset\`\`](!tc Reset ${path.name})`);
+            row.append('td', path.fixedStart
+                ? `[\`\`Clear start\`\`](!tc clearstart ${path.name})`
+                : `[\`\`Set start\`\`](!tc setstart ${path.name})`);
             row.append('td', `[\`\`Remove\`\`](!tc Remove ${path.name})`);
         }
 
@@ -1557,6 +2101,12 @@ const TokenController = (() => {
         table = content.append('table');
         row = table.append('tr');
         row.append('td', `[\`\`Toggle ${state[NAME].storedVariables.combatPatrol ? 'Off' : 'On'}\`\`](!tc combat)`);
+
+        content.append('.menuLabel', 'Smooth movement (sub-steps)');
+        content.append('.subLabel', 'When on, long moves (e.g. U3) are done 1 unit per tick for smoother motion.');
+        table = content.append('table');
+        row = table.append('tr');
+        row.append('td', `[\`\`Toggle ${state[NAME].storedVariables.subStepMovement ? 'Off' : 'On'}\`\`](!tc substeps)`);
 
         if (listingVars) {
             content.append('.menuLabel', 'Variables');
