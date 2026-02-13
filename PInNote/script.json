@@ -1,0 +1,15 @@
+{
+  "name": "PinNote",
+  "script": "PinNote.js",
+  "version": "1.0.0",
+  "description": "# PinNote\n\nPinNote sends information from linked or custom map pins to chat using any Supernotes template. Supernotes must be installed for this script to function.\n\n---\n\n## Arguments\n\nArguments are case-insensitive and use the format:\n\n```\n--key|value\n```\n\n---\n\n### --to|<target>\n\nControls where the message is sent.\n\n#### --to|pc\n\nSends a public message to chat.\n\n- GM notes are never included.\n\n---\n\n#### --to|gm\n\nWhispers the message to the GM only.\n\n- GM notes are included.\n\n---\n\n#### --to|self\n\nWhispers the message to the invoking player.\n\n- GM notes are included only if the invoker is a GM.\n\n---\n\nIf a non-GM runs the command, --to is ignored and treated as pc.\n\n---\n\n### --template|<name> (optional)\n\nSelects a Supernotes display template.\n\n- If omitted or invalid, the generic template is used silently.\n\n---\n\n## Examples\n\n```\n!pinnote\n!pinnote --to|gm\n!pinnote --to|self --template|dark\n!pinnote --template|wizard\n```\n\n---\n\n## Requirements\n\n- Exactly one map pin must be selected.\n  - If none are selected, the script reports an error.\n  - If multiple are selected, only the first pin is used.\n\n- The pin may be a linked pin or a custom pin.\n  - If linked to a handout, the script pulls the relevant section from the handout.\n  - If custom, the script uses the Notes field of the pin.\n\n- A custom pin must contain notes.\n  - If the Notes field is empty, nothing is sent and an error is shown.\n\n- Supernotes must be installed.\n  - If missing, the script exits and notifies the GM.\n\n---\n\nType **!pinnote** in chat to use the script.",
+  "authors": "Keith Curtis",
+  "roll20userid": "162065",
+  "dependencies": ["Supernotes"],
+  "modifies": {
+    "pin": "read",
+    "handout": "read"
+  },
+  "conflicts": [],
+  "previousversions": ["1.0.0"]
+}
