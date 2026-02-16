@@ -1,14 +1,7 @@
-var API_Meta = API_Meta || {};
-API_Meta.Supernotes = {
-    offset: Number.MAX_SAFE_INTEGER,
-    lineCount: -1
-}; {
-    try {
-        throw new Error('');
-    } catch (e) {
-        API_Meta.Supernotes.offset = (parseInt(e.stack.split(/\n/)[1].replace(/^.*:(\d+):.*$/, '$1'), 10) - (7));
-    }
-}
+var API_Meta = API_Meta||{};
+API_Meta.Supernotes={offset:Number.MAX_SAFE_INTEGER,lineCount:-1};
+{try{throw new Error('');}catch(e){API_Meta.Supernotes.offset=(parseInt(e.stack.split(/\n/)[1].replace(/^.*:(\d+):.*$/,'$1'),10)-3);}}
+
 
 // Supernotes_Templates can be called by other scripts. At this point ScriptCards is the only One Click script that does this.
 let Supernotes_Templates = {
@@ -385,6 +378,337 @@ on('ready', function() {
 });
 
 on('ready', () => {
+    
+    
+    /* =========================================================
+ * Supernotes Help Handout Builder
+ * ========================================================= */
+
+const buildSupernotesHelp = () => {
+
+    const HANDOUT_NAME = "Help: Supernotes";
+    const HANDOUT_AVATAR = "https://files.d20.io/images/470559564/QxDbBYEhr6jLMSpm0x42lg/original.png?1767857147"; // change if desired
+
+const helpHtml = `
+<h1>Supernotes</h1>
+<p><span style="font-weight:normal;">Documentation for v.${version}</span></p>
+
+<hr>
+
+<h2>Overview</h2>
+
+<p>
+Supernotes pulls content from a token’s <em>GM Notes</em> field and from other character fields not normally accessible to macros.
+If a token represents a character, you may retrieve:
+</p>
+
+<ul>
+<li>Character GM Notes</li>
+<li>Character Bio</li>
+<li>Character Avatar</li>
+<li>Bio images (single, indexed, or all)</li>
+<li>Token tooltip</li>
+<li>Token image</li>
+</ul>
+
+<p>
+Notes may be whispered to the GM, sent to all players, whispered to the sender, or written directly to a named handout.
+A footer button may optionally appear on GM whispers, allowing the note to be forwarded to players.
+</p>
+
+<p>
+Images, API command buttons, links, markdown image syntax <code>[x](imageURL)</code>, and most special characters pass through correctly in both chat and handouts.
+</p>
+
+
+<p><strong>Special Control Character for Inline GMnotes</strong></p>
+<strong>-----</strong></p>
+<p>Five dashes placed in the gmnotes of a token indicate that any following content is trested as gm-only text when sent to chat.
+</p>
+
+<hr>
+
+<h2>Commands</h2>
+
+<p><strong>!gmnote</strong> 
+Whispers note to GM.</p>
+
+<p><strong>!pcnote</strong> 
+Sends note to all players.</p>
+
+<p><strong>!selfnote</strong> 
+Whispers note to the command sender.</p>
+
+<hr>
+
+<h2>Parameters</h2>
+
+<h3>Sources</h3>
+<ul>
+<li><strong>--token</strong>  
+Pull from selected token GM Notes (default). Token does not require a character.</li>
+
+<li><strong>--charnote</strong>  
+Pull from represented character GM Notes.</li>
+
+<li><strong>--bio</strong>  
+Pull from character Bio field.</li>
+
+<li><strong>--avatar</strong>  
+Return character Avatar image.</li>
+
+<li><strong>--image</strong>  
+Return first Bio image.</li>
+
+<li><strong>--images</strong>  
+Return all Bio images.</li>
+
+<li><strong>--image[number]</strong>  
+Return indexed Bio image (e.g. --image1, --image2).</li>
+
+<li><strong>--tooltip</strong>  
+Return selected token tooltip.</li>
+
+<li><strong>--tokenimage</strong>  
+Return selected token image.</li>
+
+<li><strong>--card</strong>  
+Return token image and gmnotes in one report.</li>
+
+</ul>
+
+<h3>Options</h3>
+
+<ul>
+<li><strong>--notitle</strong>  
+Suppress title in chat output. May be added to any command in any order.</li>
+
+<li><strong>--idTOKENID</strong>  
+Read notes from specific token ID. No space after --id. Example: <code>!gmnote --id-1234567890abcdef</code></li>
+
+<li><strong>--handout|Handout Name|</strong>  
+Send output to named handout instead of chat.  
+Creates the handout if it does not exist.  
+Content above the automatic horizontal rule remains persistent.</li>
+
+
+<li><strong>--help</strong>  
+Displays help.</li>
+
+<li><strong>--config</strong>  
+Opens configuration dialog.</li>
+</ul>
+
+<hr>
+
+<h2>Examples</h2>
+
+<pre><code>!pcnote --bio</code></pre>
+<p>Sends selected character Bio to all players.</p>
+
+<pre><code>!gmnote --charnote</code></pre>
+<p>Whispers character GM Notes to GM.</p>
+
+<pre><code>!pcnote --image --notitle</code></pre>
+<p>Sends first image without revealing title.</p>
+
+<hr>
+
+<h2>Templates</h2>
+
+<p>
+Add a template using:
+</p>
+
+<pre><code>--template|templatename</code></pre>
+
+<p>
+Example:
+</p>
+
+<pre><code>!gmnote --template|crt
+!pcnote --template|notebook --bio
+!pcnote --template|faraway --tokenimage</code></pre>
+
+<p>
+All templates include inline buttons and support Send to Players and Make Handout.
+Handouts use Roll20’s native styling for cross-platform reliability.
+</p>
+
+<hr>
+
+<h3>Available Templates</h3>
+
+<table style="width:100%; border-collapse:collapse; text-align:center;" border="1">
+<tr>
+<td><img src="${HANDOUT_AVATAR}" width="80"><br><strong>generic</strong><br>Minimal presentation</td>
+<td><img src="${HANDOUT_AVATAR}" width="80"><br><strong>dark</strong><br>Inverted generic</td>
+<td><img src="${HANDOUT_AVATAR}" width="80"><br><strong>crt</strong><br>Retro greenscreen</td>
+</tr>
+
+<tr>
+<td><img src="${HANDOUT_AVATAR}" width="80"><br><strong>notebook</strong><br>Modern supernatural</td>
+<td><img src="${HANDOUT_AVATAR}" width="80"><br><strong>gothic</strong><br>Noir horror</td>
+<td><img src="${HANDOUT_AVATAR}" width="80"><br><strong>apoc</strong><br>Post-apocalyptic</td>
+</tr>
+
+<tr>
+<td><img src="${HANDOUT_AVATAR}" width="80"><br><strong>scroll</strong><br>Fantasy parchment</td>
+<td><img src="${HANDOUT_AVATAR}" width="80"><br><strong>scroll2</strong><br>Even scrollier</td>
+<td><img src="${HANDOUT_AVATAR}" width="80"><br><strong>lcars</strong><br>Starship interface</td>
+</tr>
+
+<tr>
+<td><img src="${HANDOUT_AVATAR}" width="80"><br><strong>faraway</strong><br>Space opera</td>
+<td><img src="${HANDOUT_AVATAR}" width="80"><br><strong>steam</strong><br>Steampunk brass</td>
+<td><img src="${HANDOUT_AVATAR}" width="80"><br><strong>western</strong><br>Frontier theme</td>
+</tr>
+
+<tr>
+<td><img src="${HANDOUT_AVATAR}" width="80"><br><strong>dragon</strong><br>Three-fivey style</td>
+<td><img src="${HANDOUT_AVATAR}" width="80"><br><strong>wizard</strong><br>Fifth edition flavor</td>
+<td><img src="${HANDOUT_AVATAR}" width="80"><br><strong>strange</strong><br>Bikes & mystery</td>
+</tr>
+
+<tr>
+<td><img src="${HANDOUT_AVATAR}" width="80"><br><strong>gate3</strong><br>GOTY-inspired</td>
+<td><img src="${HANDOUT_AVATAR}" width="80"><br><strong>choices</strong><br>Alternate GOTY style</td>
+<td><img src="${HANDOUT_AVATAR}" width="80"><br><strong>roll20light</strong><br>Authority feel</td>
+</tr>
+
+<tr>
+<td><img src="${HANDOUT_AVATAR}" width="80"><br><strong>roll20dark</strong><br>Authority, darker</td>
+<td><img src="${HANDOUT_AVATAR}" width="80"><br><strong>news</strong><br>Bleeding newsprint</td>
+<td><img src="${HANDOUT_AVATAR}" width="80"><br><strong>treasure</strong><br>Loot listing</td>
+</tr>
+
+<tr>
+<td><img src="${HANDOUT_AVATAR}" width="80"><br><strong>vault</strong><br>Comforting shelter</td>
+<td><img src="${HANDOUT_AVATAR}" width="80"><br><strong>path</strong><br>PF2 Adventure Path</td>
+<td><img src="${HANDOUT_AVATAR}" width="80"><br><strong>osrblue</strong><br>Yellowed graph paper</td>
+</tr>
+
+<tr>
+<td><img src="${HANDOUT_AVATAR}" width="80"><br><strong>roman</strong><br>Bonus classical style</td>
+<td></td>
+<td></td>
+</tr>
+</table>
+
+<hr>
+
+<h2>Script Synergy</h2>
+
+<p>
+Templates are exposed under the object <strong>Supernotes_Templates</strong> for use in other scripts such as <i>ScriptCards </i> and  <i>PinNote </i>.
+Supernotes also integrates amny of it functions with  <i>Reporter </i>.
+</p>
+<p>
+For the convenience of coders who wish to integrate their scripts to use Supernotes, the CSS for the tempaltes is exposed to the global space as <code>Supernotes_Templates.templatename</code>. These can be found at the top of the script. Contact <a href="https://app.roll20.net/users/162065/keithcurtis">keithcurtis</a> if anything is unclear.
+</p>
+
+
+<hr>
+
+<h2>Configuration</h2>
+
+<p>
+On installation, Supernotes defaults to the Default roll template.
+The configuration dialog allows you to:
+</p>
+
+<ul>
+<li>Select a sheet roll template</li>
+<li>Toggle the “Send to Players” footer button</li>
+</ul>
+
+<p>
+Supported sheet templates include:
+</p>
+
+<ul>
+<li>Default Template</li>
+<li>D&amp;D 5th Edition by Roll20</li>
+<li>5e Shaped</li>
+<li>Pathfinder by Roll20</li>
+<li>Pathfinder Community</li>
+<li>Pathfinder 2e by Roll20</li>
+<li>Starfinder</li>
+</ul>
+
+<hr>
+
+<h3>Troubleshooting</h3>
+
+<p>
+If you experience template issues or configuration problems, you may use the buttons below to restore default behavior or re-open the configuration dialog.
+</p>
+
+<div style="margin:10px 0;">
+
+
+<a href="!gmnote --config|default"
+style="display:inline-block;
+padding:6px 10px;
+margin-right:8px;
+background:#444;
+color:#FFF;
+text-decoration:none;
+border-radius:4px;">
+Restore Default Template
+</a>
+
+<a href="!gmnote --config"
+style="display:inline-block;
+padding:6px 10px;
+background:#666;
+color:#FFF;
+text-decoration:none;
+border-radius:4px;">
+Re-Run Configuration
+</a>
+
+</div>
+
+<p style="font-size:0.9em;">
+<em>Restore Default Template</em> resets Supernotes to the Default roll template.<br>
+<em>Re-Run Configuration</em> opens the configuration dialog to select a sheet template and toggle footer options.
+</p>
+
+`;
+
+
+    // Find existing handout
+    let handout = findObjs({
+        _type: "handout",
+        name: HANDOUT_NAME
+    })[0];
+
+    // Create if missing
+    if (!handout) {
+        handout = createObj("handout", {
+            name: HANDOUT_NAME,
+            archived: false
+        });
+    }
+
+    // Always overwrite content + avatar
+    handout.set({
+        notes: helpHtml,
+        avatar: HANDOUT_AVATAR
+    });
+
+    const link = `http://journal.roll20.net/handout/${handout.get("_id")}`;
+
+    const box =
+        `<div style="background:#111; padding:10px; border:1px solid #555; border-radius:6px; color:#eee;">` +
+        `<div style="font-size:110%; font-weight:bold; margin-bottom:5px;">Supernotes Help</div>` +
+        `<a href="${link}" target="_blank" style="color:#00d4ff; font-weight:bold;">Open Help Handout</a>` +
+        `</div>`;
+
+    sendChat("Supernotes", `/w gm ${box}`, null, { noarchive: true });
+};
+
 
     function parseMarkdown(markdownText) {
         const htmlText = markdownText
@@ -405,14 +729,29 @@ function cleanText(text,buttonStyle){
                             text = ((undefined !== text) ? text.replace(/\[([^\]]*?)\]\(([^\)]*?)\)(?<!\.jpg\)|\.png\)|\.gif\)|\.webm\)|\.jpeg\))/gim, "<a " + buttonStyle + "href='$2'>$1</a>").replace(/<p>/gm, "").replace(/<\/p>/gm, "<BR>").replace("padding:5px'></div><div>", "padding:5px'>") : "");
                         text = text.replace('<a href=\"http://journal.roll20.net', '<a ' + buttonStyle + ' href=\"http://journal.roll20.net').replace('<a href=\"https://app.roll20.net', '<a ' + buttonStyle + ' href=\"https://app.roll20.net');
                         text = text.replace('<a href=\"http', '<a ' + buttonStyle + ' href=\"http');
+                        text = text    // Convert real newline characters to <BR>
+    .replace(/\r?\n+/g, "<BR>")
+    // Normalize mixed <br>, <br/>, <BR/> variations to <BR>
+    .replace(/<\s*br\s*\/?\s*>/gi, "<BR>")
+    // Remove accidental duplicate <BR><BR><BR> etc
+    .replace(/(<BR>\s*){2,}/g, "<BR>")
+    .trim();
+                        
 return text;
 }
 
 
+
     const decodeUnicode = (str) => str.replace(/%u[0-9a-fA-F]{2,4}/g, (m) => String.fromCharCode(parseInt(m.slice(2), 16)));
 
-    const version = '0.2.5';
+    const version = '0.2.6';
     log('Supernotes v' + version + ' is ready! --offset ' + API_Meta.Supernotes.offset + 'To set the template of choice or to toggle the send to players option, Use the command !gmnote --config');
+//Changelong
+// 0.2.6 Reworked and updated Help system to use handout. Fixed logic issue Card output.
+// 0.2.5 fixed trailing space problem in command line, fixed linebreak issue.
+
+
+
 
     on('chat:message', function(msg) {
         if ('api' === msg.type && msg.content.match(/^!(gm|pc|self)note\b/)) {
@@ -465,7 +804,7 @@ sendChat ("notes","success. Virtual token id is " + virtualTokenID);
             }
 
             let secondOption = '';
-            let args = msg.content.split(/\s+--/);
+            let args = msg.content.trim().split(/\s+--/);
 
             let customTemplate = '';
             let option = '';
@@ -634,7 +973,6 @@ whisper= whisper.replace(/<\/span><BR>/i,"")
                         handoutButton = ((undefined !== handoutButton) ? handoutButton.replace(/\[([^\]]*?)\]\(([^\)]*?)\)(?<!\.jpg\)|\.png\)|\.gif\)|\.webm\)|\.jpeg\))/gim, "<a " + buttonstyle + "href='$2'>$1</a>") : "");
 whisper = ((whisper.length>0) ? "<div style =" + whisperStyle + ">" + whisper + "</div>" : "");
 //log ("whisper = " + whisper);
-
                         return sendChat(whom, messagePrefix + '&{template:' + template + '}{{' + title + '=' + whom + '}} {{' + theText + '=' + message + whisper + playerButton + handoutButton + '}}');
                     }
 
@@ -871,11 +1209,10 @@ message = message.replace(/201px/,newHeight+'px');
                 }
             } else {
                 if (option !== undefined && option.includes('help')) {
-                    message = 'Supernotes pulls the contents from a token&#39;s GM Notes field. If the token represents a character, you can optionally pull in the Bio or GM notes from the character, as well as the avatar, or extract just the image from the bio field. The user can decide whether to whisper the notes to the GM or broadcast them to all players. Finally, there is the option to add a footer to notes whispered to the GM. This footer creates a chat button to give the option of sending the notes on to the players.<BR>This script as written is optimized for the D&amp;D 5th Edition by Roll20 sheet, but can be adapted easily suing the Configuration section below.<BR><BR><b>Commands:</b><BR><b>!gmnote</b> whispers the note to the GM<BR><b>!pcnote</b> sends the note to all players<BR><BR><b>Paramaters</b><BR><div style ="text-indent: -1em;margin-left: 1em;"><em>--token</em> Pulls notes from the selected token&#39;s gm notes field. This is optional. If it is missing, the script assumes --token<BR></div><div style ="text-indent: -1em;margin-left: 1em;"><em>--charnote</em> Pulls notes from the gm notes field of the character assigned to a token.<BR></div><div style ="text-indent: -1em;margin-left: 1em;"><em>--bio</em> Pulls notes from the bio field of the character assigned to a token.<BR></div><div style ="text-indent: -1em;margin-left: 1em;"><em>--avatar</em> Pulls the image from the avatar field of the character assigned to a token.<BR></div><div style ="text-indent: -1em;margin-left: 1em;"><em>--image</em> Pulls first image from the bio field of the character assigned to a token, if any exists. Otherwise returns notice that no artwork is available<BR></div><div style ="text-indent: -1em;margin-left: 1em;"><em>--images</em> Pulls all images from the bio field of the character assigned to a token, if any exist. Otherwise returns notice that no artwork is available<BR></div><div style ="text-indent: -1em;margin-left: 1em;"><em>--image[number]</em> Pulls indexed image from the bio field of the character assigned to a token, if any exist. <em>--image1</em> will pull the first image, <em>--image2</em> the second and so on. Otherwise returns first image if available. If no images are available, returns notice that no artwork is available.<BR></div><div style ="text-indent: -1em;margin-left: 1em;"><em>--template[templatename]</em> Instead of using the configured sheet roll template, you can choose from between more than 10 custom templates that  cover most common genres. Add the template command directly after the main prompt, followed by any of the regular parameters above. The current choices are: <BR></div><div style="text-indent:-1em; margin-left: 2em"><em>generic.</em> Just the facts, ma&#39;am. Nothing fancy here.<BR></div><div style="text-indent:-1em; margin-left: 2em"><em>dark.</em> As above, but in reverse.<BR></div><div style="text-indent:-1em; margin-left: 2em"><em>crt.</em> Retro greenscreen for hacking and cyberpunk. Or for reports on that xenomorph hiding on your ship.<BR></div><div style="text-indent:-1em; margin-left: 2em"><em>notebook.</em> You know, for kids. Who like to ride bikes. Maybe they attend a school and fight vampires or rescue lost extraterrestrials<BR></div><div style="text-indent:-1em; margin-left: 2em"><em>gothic.</em> Classic noire horror for contending with Universal monsters or maybe contending with elder gods.<BR></div><div style="text-indent:-1em; margin-left: 2em"><em>apoc.</em> Messages scrawled on a wall. Crumbling and ancient, like the world that was.<BR></div><div style="text-indent:-1em; margin-left: 2em"><em>scroll.</em> High fantasy. Or low fantasy—we don&#39;t judge.<BR></div><div style="text-indent:-1em; margin-left: 2em"><em>lcars.</em> For opening hailing frequencies and to boldly split infinitives that no one has split before!<BR></div><div style="text-indent:-1em; margin-left: 2em"><em>faraway.</em> No animated title crawl, but still has that space wizard feel.<BR></div><div style="text-indent:-1em; margin-left: 2em"><em>steam.</em> Gears and brass have changed my life.<BR></div><div style="text-indent:-1em; margin-left: 2em"><em>western.</em> Return with us now to those thrilling days of yesteryear!<BR><BR></div><div style ="text-indent: -1em;margin-left: 1em;"><em>--help</em> Displays help.<BR></div><div style ="text-indent: -1em;margin-left: 1em;"><em>--config</em> Returns a configuration dialog box that allows you to set which sheet&#39;s roll template to use, and to toggle the &quot;Send to Players&quot; footer.</div><BR><BR><b>Configuration</b><BR>When first installed, Supernotes is configured for the default roll template. It will display a config dialog box at startup that will allow you to choose a roll template based on your character sheet of choice, as well as the option  to toggle whether you want the &quot;Send to Players&quot; footer button to appear.<BR>You will need to edit the code of the script to create a custom configuration. The pre-installed sheets are:<BR><div style ="margin-left:10px;">Default Template<BR>D&amp;D 5th Edition by Roll20<BR>5e Shaped<BR>Pathfinder by Roll20<BR>Pathfinder Community<BR>Pathfinder 2e by Roll20<BR>Starfinder<BR>Call of Cthulhu 7th Edition by Roll20</div>';
-                    sendMessage('Supernotes', messagePrefix, template, title, theText, message, false);
-
+    buildSupernotesHelp();
+    return;
                 } else {
-                    if (!(option + '').match(/^(bio|charnote|tokenimage|tooltip|avatar|imag(e|es|e[1-9]))/)) {
+                    if (!(option + '').match(/^(card|bio|charnote|tokenimage|tooltip|avatar|imag(e|es|e[1-9]))/)) {
                         option = 'token';
                     }
 
@@ -902,7 +1239,73 @@ message = message.replace(/201px/,newHeight+'px');
 
 
 
-                    if (option === 'tooltip') {
+if (option === 'card') {
+
+    (theToken || []).forEach(sel => {
+
+        const o = getObj('graphic', sel._id);
+        if (!o) return;
+
+        const tokenID = o.id;
+        const tokenName = o.get('name') || '';
+        const rawGM = o.get('gmnotes') || '';
+
+        // Always assign whom deterministically
+        whom = tokenName;
+
+        // Decode GM notes safely
+        let decodedGM = rawGM ? unescape(decodeUnicode(rawGM)) : '';
+
+        // Apply regex filtering if present
+        if (decodedGM && regex) {
+            decodedGM = _.filter(
+                decodedGM.split(/(?:[\n\r]+|<br\/?>)/),
+                l => regex.test(l)
+            ).join('\r');
+        }
+
+        message = decodedGM || '';
+
+        // Crop GM-only content for player/self notes
+        if (command === '!pcnote' || command === '!selfnote') {
+            if (message.includes("-----")) {
+                message = message.split('-----')[0];
+            }
+        }
+
+        // Apply notitle
+        if (notitle) {
+            whom = '';
+        }
+
+        // Inject token image if message isn't an image URL
+        if (!/\.(png|jpg|jpeg|gif)/i.test(message)) {
+
+            let styledTokenImage = `<img src="${tokenImage}" style="position:relative; top:-15px; float:right; width:100px; margin:0px 0px 3px 5px;">`;
+
+            if (!message) {
+                message = `<br><br>`;
+            }
+
+            message = styledTokenImage + message;
+        }
+
+        sendMessage(
+            whom,
+            messagePrefix,
+            template,
+            title,
+            theText,
+            message,
+            tokenID,
+            playerButton,
+            handoutButton
+        );
+
+    });
+
+                    } else {
+                        if (option === 'tooltip') {
                         (theToken || [])
                         .map(o => getObj('graphic', o._id))
                             .filter(g => undefined !== g)
@@ -1064,7 +1467,10 @@ message = message.replace(/201px/,newHeight+'px');
                                         (theToken || [])
                                         .map(o => getObj('graphic', o._id))
                                             .filter(g => undefined !== g)
-                                            .filter((o) => o.get('gmnotes').length > 0)
+                                            .filter((o) => {
+    const gm = (o && o.get) ? o.get('gmnotes') : '';
+    return !!(gm && gm.length > 0);
+})
                                             .forEach(o => {
                                                 if (regex) {
                                                     message = _.filter(unescape(decodeUnicode(o.get('gmnotes'))).split(/(?:[\n\r]+|<br\/?>)/), (l) => regex.test(l)).join('\r');
@@ -1100,6 +1506,7 @@ message = message.replace(/201px/,newHeight+'px');
                                                                         `message =${message}`
                                                                     ].forEach(m => log(m));
                                                                     */
+                                }
                                 }
                             }
                         }
