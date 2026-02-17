@@ -1379,3 +1379,8 @@ fixTurnOrder:
 TokenHome:
   - "TokenHome"
   - "Utility"
+
+PInNote:
+  - "PinNote"
+  - "Utility"
+  
