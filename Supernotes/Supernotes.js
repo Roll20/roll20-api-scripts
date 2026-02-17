@@ -541,72 +541,59 @@ Handouts use Roll20’s native styling for cross-platform reliability.
 
 <table style="width:100%; border-collapse:collapse; text-align:center;" border="1">
 <tr>
-<td><img src="${HANDOUT_AVATAR}" width="80"><br><strong>generic</strong><br>Minimal presentation</td>
-<td><img src="${HANDOUT_AVATAR}" width="80"><br><strong>dark</strong><br>Inverted generic</td>
-<td><img src="${HANDOUT_AVATAR}" width="80"><br><strong>crt</strong><br>Retro greenscreen</td>
+<td><strong>generic</strong><div style="height:56px;">Just the facts, Ma'am. Nothing fancy here.</div><img src="https://files.d20.io/images/476231246/MaSnkvfTSYeLPhB1k1eFIw/original.png?1771312278"></td>
+<td><strong>dark</strong><div style="height:56px;">As previous, but in reverse.</div><img src="https://files.d20.io/images/476231238/FXv82QZA8nwQwK2caOafXQ/original.png?1771312271"></td>
+<td><strong>crt</strong><div style="height:56px;">Retro greenscreen for hacking and cyberpunk. Or for reports on that xenomorph hiding on your ship.</div><img src="https://files.d20.io/images/476231240/xlxLWtDh3sZsLiaTmZdDvw/original.png?1771312272"></td>
 </tr>
 
 <tr>
-<td><img src="${HANDOUT_AVATAR}" width="80"><br><strong>notebook</strong><br>Modern supernatural</td>
-<td><img src="${HANDOUT_AVATAR}" width="80"><br><strong>gothic</strong><br>Noir horror</td>
-<td><img src="${HANDOUT_AVATAR}" width="80"><br><strong>apoc</strong><br>Post-apocalyptic</td>
+<td><strong>notebook</strong><div style="height:56px;">You know, for kids. Who like to ride bikes. Maybe they attend a school and solve mysteries.</div><img src="https://files.d20.io/images/476232399/DDyCwJrsCrDzxszjfuIqGQ/original.png?1771314689"></td>
+<td><strong>gothic</strong><div style="height:56px;">Classic noire horror for contending with Universal monsters or maybe contending with elder gods.</div><img src="https://files.d20.io/images/476231248/eU24AoZbEVnq11joMJbO_w/original.png?1771312278"></td>
+<td><strong>apoc</strong><div style="height:56px;">Messages scrawled on a wall. Crumbling and ancient, like the world that was.</div><img src="https://files.d20.io/images/476231241/HM9xFCyKe-mQQMHoA9QV0A/original.png?1771312274"></td>
 </tr>
 
 <tr>
-<td><img src="${HANDOUT_AVATAR}" width="80"><br><strong>scroll</strong><br>Fantasy parchment</td>
-<td><img src="${HANDOUT_AVATAR}" width="80"><br><strong>scroll2</strong><br>Even scrollier</td>
-<td><img src="${HANDOUT_AVATAR}" width="80"><br><strong>lcars</strong><br>Starship interface</td>
+<td><strong>scroll</strong><div style="height:56px;">High fantasy. Or low fantasy—we don't judge.</div><img src="https://files.d20.io/images/476231262/KEWXfStDBX82ce_PXgC4IA/original.png?1771312292"></td>
+<td><strong>scroll2</strong><div style="height:56px;">An alternative to scroll, thats even scrollier.</div><img src="https://files.d20.io/images/476231263/fJqZlxUUL2wMtELdlNv0vA/original.png?1771312291"></td>
+<td><strong>lcars</strong><div style="height:56px;">For opening hailing frequencies and to boldly split infinitives that no one has split before!</div><img src="https://files.d20.io/images/476231251/ZGlO2nETmK7GdrkY1zumnQ/original.png?1771312280"></td>
 </tr>
 
 <tr>
-<td><img src="${HANDOUT_AVATAR}" width="80"><br><strong>faraway</strong><br>Space opera</td>
-<td><img src="${HANDOUT_AVATAR}" width="80"><br><strong>steam</strong><br>Steampunk brass</td>
-<td><img src="${HANDOUT_AVATAR}" width="80"><br><strong>western</strong><br>Frontier theme</td>
+<td><strong>faraway</strong><div style="height:56px;">No animated title crawl, but still has that space wizard feel.</div><img src="https://files.d20.io/images/476231245/lY3_AuI9XmbogxHBhnQrEQ/original.png?1771312276"></td>
+<td><strong>steam</strong><div style="height:56px;">Gears and brass have changed my life.</div><img src="https://files.d20.io/images/476231264/woEpZs-31xlsK8SnAVmZ1Q/original.png?1771312292"></td>
+<td><strong>western</strong><div style="height:56px;">Return with us now to those thrilling days of yesteryear.</div><img src="https://files.d20.io/images/476231271/aDY3SfSfpbggLzIgCi-g9g/original.png?1771312299"></td>
 </tr>
 
 <tr>
-<td><img src="${HANDOUT_AVATAR}" width="80"><br><strong>dragon</strong><br>Three-fivey style</td>
-<td><img src="${HANDOUT_AVATAR}" width="80"><br><strong>wizard</strong><br>Fifth edition flavor</td>
-<td><img src="${HANDOUT_AVATAR}" width="80"><br><strong>strange</strong><br>Bikes & mystery</td>
+<td><strong>dragon</strong><div style="height:56px;">Three-fivey style</div><img src="https://files.d20.io/images/476231237/90_t4YIPvWhSaZPdytxLGA/original.png?1771312272"></td>
+<td><strong>wizard</strong><div style="height:56px;">A fifth edition of templates.</div><img src="https://files.d20.io/images/476231274/GA3WOxhk4ZBINMO_l93low/original.png?1771312299"></td>
+<td><strong>strange</strong><div style="height:56px;">Other kids who ride bikes and play D&amp;D.</div><img src="https://files.d20.io/images/476231265/2P75LynFj6QfgIQvXiA3Ow/original.png?1771312292"></td>
 </tr>
 
 <tr>
-<td><img src="${HANDOUT_AVATAR}" width="80"><br><strong>gate3</strong><br>GOTY-inspired</td>
-<td><img src="${HANDOUT_AVATAR}" width="80"><br><strong>choices</strong><br>Alternate GOTY style</td>
-<td><img src="${HANDOUT_AVATAR}" width="80"><br><strong>roll20light</strong><br>Authority feel</td>
+<td><strong>gate3</strong><div style="height:56px;">For folks who like the GOTY based on D&amp;D.</div><img src="https://files.d20.io/images/476231247/gVC235_6Fgn4XCyCJfn-hg/original.png?1771312279"></td>
+<td><strong>choices</strong><div style="height:56px;">A second gate-y style, suitable for for the same crowd.</div><img src="https://files.d20.io/images/476231239/CbVwgDupLta21aSna-ntSw/original.png?1771312270"></td>
+<td><strong>roll20light</strong><div style="height:56px;">for when you want your notes to have the feeling of authority</div><img src="https://files.d20.io/images/476231259/iTXk_nSdNYvTWLIV9KubSA/original.png?1771312286"></td>
 </tr>
 
 <tr>
-<td><img src="${HANDOUT_AVATAR}" width="80"><br><strong>roll20dark</strong><br>Authority, darker</td>
-<td><img src="${HANDOUT_AVATAR}" width="80"><br><strong>news</strong><br>Bleeding newsprint</td>
-<td><img src="${HANDOUT_AVATAR}" width="80"><br><strong>treasure</strong><br>Loot listing</td>
+<td><strong>roll20dark</strong><div style="height:56px;">As before, but.... dark</div><img src="https://files.d20.io/images/476231258/DCdbh_mFj3LtnMxmwj3FwA/original.png?1771312287"></td>
+<td><strong>news</strong><div style="height:56px;">Extra! Extra! Read all about it! The ink bleeds through from the other side of the newsprint.</div><img src="https://files.d20.io/images/476231254/Qkrunhj637kmQ3l3BKFtMw/original.png?1771312282"></td>
+<td><strong>treasure</strong><div style="height:56px;">For listing all that loot.</div><img src="https://files.d20.io/images/476231268/7B11wl4kxn41lv8CtoXG3Q/original.png?1771312294"></td>
 </tr>
 
 <tr>
-<td><img src="${HANDOUT_AVATAR}" width="80"><br><strong>vault</strong><br>Comforting shelter</td>
-<td><img src="${HANDOUT_AVATAR}" width="80"><br><strong>path</strong><br>PF2 Adventure Path</td>
-<td><img src="${HANDOUT_AVATAR}" width="80"><br><strong>osrblue</strong><br>Yellowed graph paper</td>
+<td><strong>vault</strong><div style="height:56px;">A comforting style for sheltered people.</div><img src="https://files.d20.io/images/476231270/orY8UFw30iCPkZOvgPDIrA/original.png?1771312299"></td>
+<td><strong>path</strong><div style="height:56px;">A style that works well with PF2 Adventure Paths</div><img src="https://files.d20.io/images/476231257/lFaSgWDZJivDtn9WkogS5w/original.png?1771312286"></td>
+<td><strong>osrblue</strong><div style="height:56px;">Gygax-approved. Maybe. The graph paper even has yellowed edges</div><img src="https://files.d20.io/images/476231255/mpuSIYbfrYnCR9cxwJeK7g/original.png?1771312285"></td>
 </tr>
 
 <tr>
-<td><img src="${HANDOUT_AVATAR}" width="80"><br><strong>roman</strong><br>Bonus classical style</td>
+<td><strong>roman</strong><div style="height:56px;">Hail Caesar!</div><img src="https://files.d20.io/images/476231260/GEUPPczk_lEx9JE6wxq0Cw/original.png?1771312288"></td>
 <td></td>
 <td></td>
 </tr>
 </table>
-
-<hr>
-
-<h2>Script Synergy</h2>
-
-<p>
-Templates are exposed under the object <strong>Supernotes_Templates</strong> for use in other scripts such as <i>ScriptCards </i> and  <i>PinNote </i>.
-Supernotes also integrates amny of it functions with  <i>Reporter </i>.
-</p>
-<p>
-For the convenience of coders who wish to integrate their scripts to use Supernotes, the CSS for the tempaltes is exposed to the global space as <code>Supernotes_Templates.templatename</code>. These can be found at the top of the script. Contact <a href="https://app.roll20.net/users/162065/keithcurtis">keithcurtis</a> if anything is unclear.
-</p>
-
 
 <hr>
 
