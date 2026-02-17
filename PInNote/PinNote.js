@@ -9,9 +9,10 @@ API_Meta.PinNote={offset:Number.MAX_SAFE_INTEGER,lineCount:-1};
 (() => {
     'use strict';
 
-    const version = '1.0.0'; //version number set here
+    const version = '1.0.1'; //version number set here
     log('-=> PinNote v' + version + ' is loaded.');
     //Changelog
+    //1.0.1 gmtext fix
     //1.0.0 Debut 
 
 
@@ -42,6 +43,17 @@ API_Meta.PinNote={offset:Number.MAX_SAFE_INTEGER,lineCount:-1};
             '</div>'
         );
     };
+
+
+const normalizeHTML = (html) => {
+    if (!html) return html;
+
+    return html
+        .replace(/\r\n/g, '')   // Windows line endings
+        .replace(/\n/g, '')     // Unix line endings
+        .replace(/\r/g, '');    // Old Mac line endings
+};
+
 
     /* ============================================================
      * HEADER COLOR ENFORCEMENT
@@ -273,7 +285,8 @@ API_Meta.PinNote={offset:Number.MAX_SAFE_INTEGER,lineCount:-1};
                 template.footer +
                 '</div>';
 
-            sendChat(sender, whisperPrefix + html);
+           sendChat(sender, whisperPrefix + normalizeHTML(html));
+
             return;
         }
 
@@ -337,7 +350,8 @@ API_Meta.PinNote={offset:Number.MAX_SAFE_INTEGER,lineCount:-1};
             template.footer +
             '</div>';
 
-        sendChat(sender, whisperPrefix + html);
+        sendChat(sender, whisperPrefix + normalizeHTML(html));
+
     });
 
 })();
