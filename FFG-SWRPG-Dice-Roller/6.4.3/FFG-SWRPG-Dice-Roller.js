@@ -1,6 +1,6 @@
 /*
  Current Version: 6.4.3
- Last updated: 03.15.2018
+ Last updated: 21.02.2026
  Character Sheet and Script Maintained by: Samuel T.
  Older Verions: https://github.com/dayst/StarWarsEdgeOfTheEmpire_Dice
  Credits:
@@ -40,6 +40,7 @@
  Optgroups for dropdowns
  API Chat Commands
  Dice Downgrade fix by Bast L.
+ Image links updated for UK users by Hannah Eliz and Flo Wild
  Settings:
  Log
  * default: 'on' and 'single'
@@ -1341,7 +1342,7 @@ eote.defaults = {
         FORCE: {
             D: "https://imgbox.com/PHAcAdmI",
             DD: "https://imgbox.com/Yjzbiu70",
-            L: "hhttps://imgbox.com/22z7Daon",
+            L: "https://imgbox.com/22z7Daon",
             LL: "https://imgbox.com/5SQR1Upe"
         },
         PROFICIENCY: {
