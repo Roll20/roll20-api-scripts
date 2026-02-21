@@ -1355,3 +1355,31 @@ EzExhaust2024:
 GrimwildCompanion:
   - "Grimwild Companion"
   - "Utility"
+
+Portal:
+  - "Portal"
+  - "Utility"
+
+Fade:
+  - "Fade"
+  - "Tokens"
+
+Assemble:
+  - "Assemble"
+  - "Utility"
+
+PinTool:
+  - "PinTool"
+  - "Utility"
+
+fixTurnOrder:
+  - "Fix Turn Order"
+  - "Utility"
+
+TokenHome:
+  - "TokenHome"
+  - "Utility"
+
+PInNote:
+  - "PinNote"
+  - "Utility"

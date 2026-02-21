@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "type": "module",
   "main": "src/index.ts",
-  "types": "0.0.1/index.d.ts",
+  "types": "src/index.d.ts",
   "scripts": {
     "lint": "eslint",
     "lint:fix": "eslint --fix",
