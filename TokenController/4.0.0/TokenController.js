@@ -69,8 +69,8 @@ API_Meta.TokenController = { offset: Number.MAX_SAFE_INTEGER, lineCount: -1 };
 
 const TokenController = (() => {
     const NAME = 'TokenController';
-    const VERSION = '4.2.0';
-    const AUTHOR = 'Scott E. Schwarz';
+    const VERSION = '4.0.1';
+    const AUTHOR = 'Developesque';
     let errorMessage = "";
     let listingVars = false;
     let combatStarted = false;
@@ -229,10 +229,14 @@ const TokenController = (() => {
 
         log(`${NAME} ${VERSION} by ${AUTHOR} Ready  Meta Offset : ${API_Meta.TokenController.offset}`);
         createMenu();
+
+        on('chat:message', chatHandler);
+        on('change:graphic', graphicHandler);
+        on('change:campaign:turnorder', turnorderHandler);
     });
 
     // Token Destruction
-    on("change:graphic", function (obj, prev) {
+    const graphicHandler = function (obj, prev) {
         if (obj.get("_subtype") !== "token") {
             return;
         }
@@ -265,10 +269,47 @@ const TokenController = (() => {
                 rotation: obj.get('rotation')
             });
         });
-    });
+    };
 
+    // When Roll20 combat starts
+    const turnorderHandler = function (campaign, prev) {
+        const rawCurrent = campaign.get('turnorder');
+        const rawPrev = (prev && typeof prev.get === 'function') ? prev.get('turnorder') : prev;
+        let current = [];
+        let prevOrder = [];
+        try {
+            current = typeof rawCurrent === 'string' ? (JSON.parse(rawCurrent || '[]') || []) : (Array.isArray(rawCurrent) ? rawCurrent : []);
+        } catch (e) { current = []; }
+        try {
+            prevOrder = typeof rawPrev === 'string' ? (JSON.parse(rawPrev || '[]') || []) : (Array.isArray(rawPrev) ? rawPrev : []);
+        } catch (e) { prevOrder = []; }
+        const wasEmpty = !prevOrder || prevOrder.length === 0;
+        const isNowActive = current && current.length > 0;
+
+        if (isNowActive && current[0] && typeof current[0] === 'object' && current[0].id) {
+            currentCombatant = current[0].id;
+        }
+
+        if (combatStarted && !isNowActive) {
+            combatStarted = false;
+            //sendChat('System', '🏆 Combat has ended!');
+            return;
+        }
+
+        if (combatStarted && state[NAME].storedVariables.combatPatrol) {
+            pathTokens(true);
+        }
+
+        // When Roll20 combat starts
+        if (!combatStarted && !wasEmpty && isNowActive) {
+            combatStarted = true;
+            //sendChat('System', '⚔️ Combat has started!');
+            sendChat(`${NAME}`, `/w GM ⚔️ Patrols have been stopped! Combat Patrolling is ${state[NAME].storedVariables.combatPatrol ? "enabled" : "disabled"}`);
+        }
+    };
+    
     // Commands
-    on("chat:message", function (msg) {
+    const chatHandler = function (msg) {
         try {
             if (msg.type === "api" && (msg.content.toLowerCase().startsWith("!token-control") || msg.content.toLowerCase().startsWith("!tc"))) {
 
@@ -497,44 +538,7 @@ const TokenController = (() => {
             log(` ${NAME}  Error: ${err}<br/>${errorMessage}`);
             errorMessage = "";
         }
-    });
-
-    // When Roll20 combat starts
-    on('change:campaign:turnorder', function (campaign, prev) {
-        const rawCurrent = campaign.get('turnorder');
-        const rawPrev = (prev && typeof prev.get === 'function') ? prev.get('turnorder') : prev;
-        let current = [];
-        let prevOrder = [];
-        try {
-            current = typeof rawCurrent === 'string' ? (JSON.parse(rawCurrent || '[]') || []) : (Array.isArray(rawCurrent) ? rawCurrent : []);
-        } catch (e) { current = []; }
-        try {
-            prevOrder = typeof rawPrev === 'string' ? (JSON.parse(rawPrev || '[]') || []) : (Array.isArray(rawPrev) ? rawPrev : []);
-        } catch (e) { prevOrder = []; }
-        const wasEmpty = !prevOrder || prevOrder.length === 0;
-        const isNowActive = current && current.length > 0;
-
-        if (isNowActive && current[0] && typeof current[0] === 'object' && current[0].id) {
-            currentCombatant = current[0].id;
-        }
-
-        if (combatStarted && !isNowActive) {
-            combatStarted = false;
-            //sendChat('System', '🏆 Combat has ended!');
-            return;
-        }
-
-        if (combatStarted && state[NAME].storedVariables.combatPatrol) {
-            pathTokens(true);
-        }
-
-        // When Roll20 combat starts
-        if (!combatStarted && !wasEmpty && isNowActive) {
-            combatStarted = true;
-            //sendChat('System', '⚔️ Combat has started!');
-            sendChat(`${NAME}`, `/w GM ⚔️ Patrols have been stopped! Combat Patrolling is ${state[NAME].storedVariables.combatPatrol ? "enabled" : "disabled"}`);
-        }
-    });
+    };
 
     function cleanupStaleTokens() {
         const beforePaths = state[NAME].storedVariables.activeTokenPaths.length;
