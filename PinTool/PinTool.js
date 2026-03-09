@@ -370,7 +370,8 @@ and follows the same targeting rules as the <code>--set</code> command.
 <h3>Image Transfer Behavior</h3>
 
 <ul>
-  <li>Exactly <strong>one pin</strong> and <strong>one graphic</strong> must be selected.</li>
+  <li>if transferring graphic image to pin Exactly <strong>one graphic</strong> and <strong>any number of pins</strong> must be selected.</li>
+  <li>if transferring pin image to graphic Exactly <strong>one pin</strong> and <strong>any number of graphic</strong> must be selected.</li>
   <li>The direction of transfer is determined by the command argument.</li>
   <li>No filter options apply to image transfers.</li>
   <li>If the required objects are not selected, the command aborts with an error.</li>
@@ -1368,6 +1369,7 @@ ${splitButton("Change Keyword", "!pintool --library")}
                             "y",
                             "notes",
                             "gmNotes",
+                            "iconText",
                             "y",
                             "y",
                             "_pageid"
@@ -1836,10 +1838,7 @@ if(key === "customizationType")
                     }
 
                     p.set(updates);
-                    p.set(
-                    {
-                        layer: p.get("layer")
-                    });
+                    //p.set({ layer: p.get("layer")});
 
                 });
 
@@ -1890,84 +1889,107 @@ function handleTransform(msg, argString)
     const tokens = argString.split(/\s+/);
     const transformType = tokens[0].toLowerCase();
 
-    // ------------------------------------------------------------
-    // Image Transfer (graphic <-> pin)
-    // ------------------------------------------------------------
+// ------------------------------------------------------------
+// Image Transfer (graphic <-> pin)
+// ------------------------------------------------------------
 
-    if(transformType.startsWith("imageto|"))
+if(transformType.startsWith("imageto|"))
+{
+    const direction = transformType.split("|")[1];
+
+    if(!msg.selected || !msg.selected.length)
     {
-        const direction = transformType.split("|")[1];
+        return sendStyledMessage(
+            "Image Transfer",
+            "Usage: !pintool --transform imageto|pin OR imageto|graphic<br>" +
+            "Select one source object and one or more targets."
+        );
+    }
 
-        if(!msg.selected || msg.selected.length !== 2)
+    let graphics = [];
+    let pins = [];
+
+    msg.selected.forEach(s =>
+    {
+        const obj = getObj(s._type, s._id);
+        if(!obj) return;
+
+        if(s._type === "graphic") graphics.push(obj);
+        if(s._type === "pin") pins.push(obj);
+    });
+
+    // ------------------------------------------------
+    // Graphic → Pins
+    // ------------------------------------------------
+    if(direction === "pin")
+    {
+        if(graphics.length !== 1 || pins.length < 1)
         {
             return sendStyledMessage(
                 "Image Transfer",
-                "Usage: !pintool --transform imageto|pin OR imageto|graphic<br>" +
-                "Select exactly <b>one pin</b> and <b>one graphic</b>."
+                "To transfer an image to pins:<br>" +
+                "Select <b>exactly one graphic</b> and <b>one or more pins</b>."
             );
         }
 
-        let graphic = null;
-        let pin = null;
+        const img = graphics[0].get("imgsrc");
 
-        msg.selected.forEach(s =>
-        {
-            const obj = getObj(s._type, s._id);
-            if(!obj) return;
-
-            if(s._type === "graphic") graphic = obj;
-            if(s._type === "pin") pin = obj;
-        });
-
-        if(!graphic || !pin)
+        if(!img)
         {
             return sendStyledMessage(
                 "Image Transfer",
-                "Selection must contain exactly <b>one pin</b> and <b>one graphic</b>."
+                "The selected graphic does not contain a usable image."
             );
         }
 
-        if(direction === "pin")
+        pins.forEach(p =>
         {
-            const img = graphic.get("imgsrc");
-
-            if(!img)
-            {
-                return sendStyledMessage(
-                    "Image Transfer",
-                    "The selected graphic does not contain a usable image."
-                );
-            }
-
-            pin.set({
+            p.set({
                 pinImage: img,
                 customizationType: "image"
             });
+        });
 
-            return;
-        }
-
-        if(direction === "graphic")
-        {
-            const img = pin.get("pinImage");
-
-            if(!img)
-            {
-                return sendStyledMessage(
-                    "Image Transfer",
-                    "The selected pin does not contain a stored image."
-                );
-            }
-
-            graphic.set("imgsrc", img);
-            return;
-        }
-
-        return sendStyledMessage(
-            "Image Transfer",
-            "Usage: !pintool --transform imageto|pin OR imageto|graphic"
-        );
+        return;
     }
+
+    // ------------------------------------------------
+    // Pin → Graphics
+    // ------------------------------------------------
+    if(direction === "graphic")
+    {
+        if(pins.length !== 1 || graphics.length < 1)
+        {
+            return sendStyledMessage(
+                "Image Transfer",
+                "To transfer an image to graphics:<br>" +
+                "Select <b>exactly one pin</b> and <b>one or more graphics</b>."
+            );
+        }
+
+        const img = pins[0].get("pinImage");
+
+        if(!img)
+        {
+            return sendStyledMessage(
+                "Image Transfer",
+                "The selected pin does not contain a stored image."
+            );
+        }
+
+        graphics.forEach(g =>
+        {
+            g.set("imgsrc", img);
+        });
+
+        return;
+    }
+
+    return sendStyledMessage(
+        "Image Transfer",
+        "Usage: !pintool --transform imageto|pin OR imageto|graphic"
+    );
+}
 
     // ------------------------------------------------------------
     // Existing Transform Logic
@@ -2060,7 +2082,7 @@ function handleTransform(msg, argString)
             });
 
             // force refresh
-            p.set({ layer: p.get("layer") });
+            //p.set({ layer: p.get("layer") });
         });
 
         if(queue.length)
