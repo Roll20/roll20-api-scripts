@@ -75,7 +75,7 @@ var moveLighting = moveLighting || (function(){
 	
 	checkInstall = function()
 	{
-	    var script_version = "0.1.4.NRO";
+	    var script_version = "0.1.5";
         if( ! state.moveLighting ) {
                 state.moveLighting = {
                     version: script_version,
