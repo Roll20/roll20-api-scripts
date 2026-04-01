@@ -1,4 +1,8 @@
 # COFantasy: Historique des changements (depuis la version 1.0)
+## 3.16
+* Support minimal pour le combat de masse.
+* Support pour la dague Croc du Dragon
+
 ## 3.15
 ### Capacités
 * Implémentaion d'un prédicat pour Autorité naturelle.
