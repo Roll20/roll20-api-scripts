@@ -1,7 +1,7 @@
 {
   "name": "AutoLinker",
   "script": "AutoLinker.js",
-  "version": "1.0.0",
+  "version": "1.0.1",
  "description": "# Autolinker\n\n## Purpose\n\nAutolinker converts bracketed shorthand written in the Notes or GMNotes fields of handouts and characters into clickable Roll20 journal or compendium links when the entry is saved. This extends the basic linking functions built into Roll20.\n\n## General Usage\n\nThese formats may be used in the Notes or GMNotes fields of any handout or character.\n\nNote: The script runs after a save event. Because the handout may refresh before processing finishes, you may need to close and reopen the handout (or click Edit again) to see the updated links.\n\n## Journal Links\n\n[goblin|Jimmy]\n\nCreates a link to the handout or character named goblin, displayed as Jimmy.\n\nIf no display text is provided, standard Roll20 journal linking rules apply.\n\n## Compendium Links\n\n[5e:fireball]\n\nLinks to the D&D 5e compendium entry for fireball.\n\n[5e:wall of fire|the wall]\n\nLinks to the D&D 5e compendium entry for wall of fire, displayed as the wall.\n\n### Supported Compendium Prefixes\n\n- 5e: — D&D 5th Edition\n- pf2: — Pathfinder 2nd Edition\n\n## Handout Header Linking\n\nHeader links apply to handouts only and use the # character.\n\n### Link to a Header in Another Handout\n\n[Dungeon of Doom#6. Zombie Chorus|See Room 6]\n\nLinks to the header 6. Zombie Chorus in the handout Dungeon of Doom, displayed as See Room 6.\n\n### Link to a Header in the Same Handout\n\n[#6. Zombie Chorus|See Room 6]\n\nLinks to the header 6. Zombie Chorus in the current handout, displayed as See Room 6.\n\n### Omit Display Text\n\n[#6. Zombie Chorus]\n\nIf no display text is supplied, the header text is used as the link text.",
   "authors": "Keith Curtis",
   "roll20userid": "162065",
@@ -12,6 +12,6 @@
   },
   "conflicts": [],
   "previousversions": [
-    "1.0.0"
+    "1.0.0", "1.0.1"
   ]
 }
