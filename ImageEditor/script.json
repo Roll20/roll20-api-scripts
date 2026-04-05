@@ -1,0 +1,14 @@
+{
+  "name": "Image Editor",
+  "script": "ImageEditor.js",
+  "version": "1.0.0",
+  "description": "Provides a graphical interface for editing images inside Roll20 handouts, including layout, styling, and attributes without manual HTML editing.",
+  "authors": "Keith Curtis",
+  "roll20userid": "162065",
+  "modifies": {
+    "handout": "read,write"
+  },
+  "dependencies": [],
+  "conflicts": [],
+  "previousversions": ["1.0.0"]
+}
