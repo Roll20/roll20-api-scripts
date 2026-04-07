@@ -1380,10 +1380,26 @@ TokenHome:
   - "TokenHome"
   - "Utility"
 
-PInNote:
+PinNote:
   - "PinNote"
   - "Utility"
 
 AutoLinker:
   - "AutoLinker"
+  - "Utility"
+
+FormatTable:
+  - "Format Table"
+  - "Utility"
+
+ImageEditor:
+  - "Image Editor"
+  - "Utility"
+
+TokenReference:
+  - "TokenReference"
+  - "Utility"
+
+Wiki:
+  - "Wiki"
   - "Utility"
