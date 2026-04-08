@@ -481,7 +481,6 @@
     function resolveTypeConfig(oCharacter) {
         const isPlayer = oCharacter && oCharacter.get('controlledby') !== '';
         if (isPlayer) {
-            const player = getObj('player', oCharacter.get('controlledby'));
             return {
                 gm:        state.HealthColors.GM_PCNames,
                 pc:        state.HealthColors.PCNames,
