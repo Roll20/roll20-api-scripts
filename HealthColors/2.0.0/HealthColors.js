@@ -171,33 +171,39 @@
    * @property {number}   angle          - Fallback emission angle in degrees.
    * @property {number}   angleRandom    - Fallback angular spread.
    * @property {number}   emissionRate   - Fallback particles emitted per frame.
-   * @property {number[]} startColour    - Fallback RGBA start colour (opaque white).
-   * @property {number[]} endColour      - Fallback RGBA end colour (opaque black).
+   * @property {number[]} startColor    - Fallback RGBA start color (opaque white).
+   * @property {number[]} endColor      - Fallback RGBA end color (opaque black).
    * @property {{x:number,y:number}} gravity - Fallback gravity (none).
    */
   const FX_PARAM_DEFAULTS = {
     maxParticles: 100,
     duration: 100,
-    size: 100,
-    sizeRandom: 100,
-    lifeSpan: 100,
-    lifeSpanRandom: 100,
-    speed: 0,
-    speedRandom: 0,
+    size: 15,
+    sizeRandom: 5,
+    lifeSpan: 50,
+    lifeSpanRandom: 20,
+    speed: 1,
+    speedRandom: 1,
     angle: 0,
     angleRandom: 0,
-    emissionRate: 100,
-    startColour: [255, 255, 255, 1],
+    emissionRate: 10,
+    startColour: [128, 128, 128, 1],
+    startColor: [128, 128, 128, 1],
     endColour: [0, 0, 0, 1],
+    endColor: [0, 0, 0, 1],
+    startColourRandom: [0, 0, 0, 0],
+    startColorRandom: [0, 0, 0, 0],
+    endColourRandom: [0, 0, 0, 0],
+    endColorRandom: [0, 0, 0, 0],
     gravity: { x: 0, y: 0 },
   };
 
   // ————— UTILITIES —————
   /**
-   * Converts a health percentage (0–100+) to a red-amber-green hex colour.
+   * Converts a health percentage (0–100+) to a red-amber-green hex color.
    * Values above 100% return blue; 100% is treated as 99% to keep green.
    * @param {number} pct - Health percentage.
-   * @returns {string} A 6-digit hex colour string, e.g. '#FF0000'.
+   * @returns {string} A 6-digit hex color string, e.g. '#FF0000'.
    */
   function percentToHex(pct) {
     if (pct > 100) return "#0000FF";
