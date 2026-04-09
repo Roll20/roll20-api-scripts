@@ -342,13 +342,12 @@
   }
 
   /**
-   * Applies a health colour to a token via aura or tint depending on configuration.
-   * When in tint mode, sets tint_color. When in aura mode, sets both aura radii and colours.
-   * On a forced update ('YES'), clears the opposing colour first to avoid artefacts.
+   * Applies a health color to a token via aura or tint depending on configuration.
+   * When in tint mode, sets tint_color. When in aura mode, sets both aura radii and colors.
+   * On a forced update ('YES'), clears the opposing color first to avoid artifacts.
    * @param {object} obj         - Roll20 token object.
    * @param {number} sizeSet     - Base aura size from state (e.g. 0.7).
-   * @param {string} markerColor - Hex colour string derived from health percentage.
-   * @param {string} pColor      - Player/owner colour used for the secondary aura ring.
+   * @param {string} markerColor - Hex color string derived from health percentage.
    */
   function tokenSet(obj, sizeSet, markerColor) {
     const page = getObj("page", obj.get("pageid"));
@@ -726,7 +725,7 @@
   }
 
   /**
-   * Forces a health-colour update on all currently selected tokens.
+   * Forces a health-color update on all currently selected tokens.
    * Whispers the list of updated token names to the GM.
    * @param {object} msg - Roll20 chat message object with a populated `selected` array.
    */
