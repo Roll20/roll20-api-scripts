@@ -1122,13 +1122,15 @@
     const percLabel = `${s.auraPercPC}/${s.auraPerc}`;
     const healBtnStyle = `background-color:#${s.HealFX}`;
     const hurtBtnStyle = `background-color:#${s.HurtFX}`;
+    const aura1Style = `background-color:#${s.Aura1Color}`;
+    const aura2Style = `background-color:#${s.Aura2Color}`;
     const deadFxCmd = `!aura deadfx ?{Sound Name?|${s.auraDeadFX}}`;
     const html = [
       `<div style="${wrapStyle}">`,
       `<u><big>HealthColors Version: ${VERSION}</u></big><br>`,
       hr,
       `Is On: ${toggleBtn(s.auraColorOn, "!aura on")}<br>`,
-      `Bar: ${makeBtn(s.auraBar, "!aura bar ?{Bar|1|2|3}")}<br>`,
+      `Health Bar: ${makeBtn(s.auraBar, "!aura bar ?{Bar|1|2|3}")}<br>`,
       `Use Tint: ${toggleBtn(s.auraTint, "!aura tint")}<br>`,
       `Percentage(PC/NPC): ${makeBtn(percLabel, "!aura perc ?{PCPercent?|100} ?{NPCPercent?|100}")}<br>`,
       hr,
@@ -1143,10 +1145,15 @@
       `PC Sees all PC Names: ${nameBtn(s.PCNames, "!aura pcpc ?{Setting|Yes|No|Off}")}<br>`,
       `PC Sees all NPC Names: ${nameBtn(s.NPCNames, "!aura pcnpc ?{Setting|Yes|No|Off}")}<br>`,
       hr,
-      `Aura 1 Radius: ${makeBtn(s.AuraSize, "!aura size ?{Size?|0.7}")}<br>`,
+      `Aura 1 Radius (ft): ${makeBtn(s.AuraSize, "!aura size ?{Size?|0.7}")}<br>`,
+      `Aura 1 Shape: ${makeBtn(s.Aura1Shape, "!aura a1shape ?{Shape?|Circle|Square}")}<br>`,
+      `Aura 1 Color (Tint): ${makeBtn(s.Aura1Color, "!aura a1tint ?{Color?|00FF00}", aura1Style)}<br>`,
+      `Aura 2 Radius (ft): ${makeBtn(String(s.Aura2Size), "!aura a2size ?{Size?|5}")}<br>`,
+      `Aura 2 Shape: ${makeBtn(s.Aura2Shape, "!aura a2shape ?{Shape?|Square|Circle}")}<br>`,
+      `Aura 2 Color (Tint): ${makeBtn(s.Aura2Color, "!aura a2tint ?{Color?|806600}", aura2Style)}<br>`,
       `One Offs: ${toggleBtn(s.OneOff, "!aura ONEOFF")}<br>`,
       `FX: ${toggleBtn(s.FX, "!aura FX")}<br>`,
-      `HealFX Color: ${makeBtn(s.HealFX, "!aura HEAL ?{Color?|00FF00}", healBtnStyle)}<br>`,
+      `HealFX Color: ${makeBtn(s.HealFX, "!aura HEAL ?{Color?|FDDC5C}", healBtnStyle)}<br>`,
       `HurtFX Color: ${makeBtn(s.HurtFX, "!aura HURT ?{Color?|FF0000}", hurtBtnStyle)}<br>`,
       `DeathSFX: ${makeBtn(s.auraDeadFX.substring(0, 4), deadFxCmd)}<br>`,
       hr,
