@@ -1049,6 +1049,32 @@
   }
 
   /**
+   * Builds a non-interactive styled value pill for read-only output panels.
+   * @param {string} label           - Display text.
+   * @param {string} [extraStyle=''] - Additional inline CSS to append to base style.
+   * @returns {string} A styled span element.
+   */
+  function makePill(label, extraStyle = "") {
+    const base = [
+      "display:inline-block",
+      "padding-top:1px",
+      "text-align:center",
+      "font-size:9pt",
+      "min-width:48px",
+      "height:14px",
+      "border:1px solid black",
+      "margin:1px",
+      "background-color:#6FAEC7",
+      "border-radius:4px",
+      "box-shadow:1px 1px 1px #707070",
+      "line-height:14px",
+      "padding-left:4px",
+      "padding-right:4px",
+    ].join(";");
+    return `<span style="${base};${extraStyle}">${label}</span>`;
+  }
+
+  /**
    * Builds a toggle-style button that shows red when the value is false/off.
    * @param {boolean} value - Current boolean state (true = on/green, false = off/red).
    * @param {string}  href  - Roll20 API command to execute on click.
@@ -1130,12 +1156,85 @@
     sendChat(SCRIPT_NAME, `/w GM <b><br>${html}`);
   }
 
+  /**
+   * Renders the current settings panel publicly in game chat.
+   * Used after setting-changing commands so players/DMs can see active config.
+   */
+  function showSettingsInGameChat() {
+    const s = state.HealthColors;
+    const hr = `<hr style='background-color:#000;margin:5px;border-width:0;color:#000;height:1px;'/>`;
+    const wrapStyle = [
+      "border-radius:8px",
+      "padding:5px",
+      "font-size:9pt",
+      "text-shadow:-1px -1px #222,1px -1px #222,-1px 1px #222,1px 1px #222,2px 2px #222",
+      "box-shadow:3px 3px 1px #707070",
+      "background-image:-webkit-linear-gradient(left,#76ADD6 0%,#a7c7dc 100%)",
+      "color:#FFF",
+      "border:2px solid black",
+      "text-align:right",
+      "vertical-align:middle",
+    ].join(";");
+
+    const percLabel = `${s.auraPercPC}/${s.auraPerc}`;
+    const noStyle = "background-color:#A84D4D";
+    const offStyle = "background-color:#D6D6D6";
+    const pickNameStyle = (value) => {
+      if (value === "No") return noStyle;
+      if (value === "Off") return offStyle;
+      return "";
+    };
+    const healStyle = `background-color:#${s.HealFX}`;
+    const hurtStyle = `background-color:#${s.HurtFX}`;
+    const aura1Style = `background-color:#${s.Aura1Color}`;
+    const aura2Style = `background-color:#${s.Aura2Color}`;
+    const html = [
+      `<div style="${wrapStyle}">`,
+      `<u><big>HealthColors Settings: ${VERSION}</u></big><br>`,
+      hr,
+      `Is On: ${makePill(s.auraColorOn ? "Yes" : "No", s.auraColorOn ? "" : "background-color:#A84D4D")}<br>`,
+      `Bar: ${makePill(s.auraBar)}<br>`,
+      `Use Tint: ${makePill(s.auraTint ? "Yes" : "No", s.auraTint ? "" : "background-color:#A84D4D")}<br>`,
+      `Percentage(PC/NPC): ${makePill(percLabel)}<br>`,
+      hr,
+      `Show PC Health: ${makePill(s.PCAura ? "Yes" : "No", s.PCAura ? "" : "background-color:#A84D4D")}<br>`,
+      `Show NPC Health: ${makePill(s.NPCAura ? "Yes" : "No", s.NPCAura ? "" : "background-color:#A84D4D")}<br>`,
+      `Show Dead PC: ${makePill(s.auraDeadPC ? "Yes" : "No", s.auraDeadPC ? "" : "background-color:#A84D4D")}<br>`,
+      `Show Dead NPC: ${makePill(s.auraDead ? "Yes" : "No", s.auraDead ? "" : "background-color:#A84D4D")}<br>`,
+      hr,
+      `GM Sees all PC Names: ${makePill(s.GM_PCNames, pickNameStyle(s.GM_PCNames))}<br>`,
+      `GM Sees all NPC Names: ${makePill(s.GM_NPCNames, pickNameStyle(s.GM_NPCNames))}<br>`,
+      hr,
+      `PC Sees all PC Names: ${makePill(s.PCNames, pickNameStyle(s.PCNames))}<br>`,
+      `PC Sees all NPC Names: ${makePill(s.NPCNames, pickNameStyle(s.NPCNames))}<br>`,
+      hr,
+      `Aura 1 Radius: ${makePill(String(s.AuraSize))}<br>`,
+      `Aura 1 Shape: ${makePill(s.Aura1Shape)}<br>`,
+      `Aura 1 Tint: ${makePill(s.Aura1Color, aura1Style)}<br>`,
+      `Aura 2 Radius: ${makePill(String(s.Aura2Size))}<br>`,
+      `Aura 2 Shape: ${makePill(s.Aura2Shape)}<br>`,
+      `Aura 2 Tint: ${makePill(s.Aura2Color, aura2Style)}<br>`,
+      `One Offs: ${makePill(s.OneOff ? "Yes" : "No", s.OneOff ? "" : "background-color:#A84D4D")}<br>`,
+      `FX: ${makePill(s.FX ? "Yes" : "No", s.FX ? "" : "background-color:#A84D4D")}<br>`,
+      `HealFX Color: ${makePill(s.HealFX, healStyle)}<br>`,
+      `HurtFX Color: ${makePill(s.HurtFX, hurtStyle)}<br>`,
+      `DeathSFX: ${makePill(s.auraDeadFX)}<br>`,
+      hr,
+      `</div>`,
+    ].join("");
+
+    sendChat(SCRIPT_NAME, `<b><br>${html}`);
+  }
+
   // ————— CHAT HANDLER —————
   /**
    * Processes incoming Roll20 chat messages to handle !aura commands.
    * GM-only: non-GMs receive an access-denied whisper.
-   * Routes each subcommand (ON, BAR, TINT, PERC, PC, NPC, etc.) to the
-   * appropriate state mutation then refreshes the menu.
+   * Routes each subcommand (ON/OFF, BAR, TINT, PERC, PC, NPC, etc.) to the
+   * appropriate state mutation then refreshes the menu. BAR validates 1/2/3,
+   * whispers confirmation, and triggers immediate full sync.
+   * When a setting changes, also posts a read-only settings snapshot to game chat.
+   * Use `!aura settings` to output the current settings snapshot on demand.
    * @param {object} msg - Roll20 chat message object.
    */
   function handleInput(msg) {
