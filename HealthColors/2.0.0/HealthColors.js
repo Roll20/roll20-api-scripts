@@ -588,6 +588,111 @@
         definition: DEFAULT_HEAL_FX,
       });
     }
+    syncDefaultFxObjects();
+  }
+
+  /**
+   * Builds the normalized default Hurt/Heal definition payload used for
+   * campaign custom FX objects.
+   * @param {boolean} isHeal - True for Heal profile, false for Hurt profile.
+   * @param {object} baseDef - Existing definition to merge into.
+   * @returns {object} Updated definition with normalized color/profile fields.
+   */
+  function buildDefaultFxDefinition(isHeal, baseDef) {
+    const def = { ...baseDef };
+    const rgb = hexToRgb(
+      isHeal ? state.HealthColors.HealFX : state.HealthColors.HurtFX,
+    );
+    def.startColour = rgb;
+    def.startColor = rgb;
+    def.endColour = rgb;
+    def.endColor = rgb;
+    def.startColourRandom = [0, 0, 0, 0];
+    def.startColorRandom = [0, 0, 0, 0];
+    def.endColourRandom = [0, 0, 0, 0];
+    def.endColorRandom = [0, 0, 0, 0];
+
+    // Keep the vivid profile that reads clearly in live play.
+    if (isHeal) {
+      def.maxParticles = 220;
+      def.emissionRate = 260;
+      def.size = 12;
+      def.sizeRandom = 4;
+      def.lifeSpan = 40;
+      def.lifeSpanRandom = 6;
+      def.speed = 0.8;
+      def.speedRandom = 1;
+    } else {
+      def.maxParticles = 200;
+      def.emissionRate = 180;
+      def.size = 10;
+      def.sizeRandom = 2;
+      def.lifeSpan = 22;
+      def.lifeSpanRandom = 3;
+      def.speed = 8;
+      def.speedRandom = 2;
+    }
+    return def;
+  }
+
+  /**
+   * Applies current Heal/Hurt colors and profile tuning to campaign default
+   * custom FX objects. This is called on install/reset and when color settings
+   * change so runtime spawns can use stable pre-synced definitions.
+   */
+  function syncDefaultFxObjects() {
+    const fxHurt = findObjs(
+      { _type: "custfx", name: "-DefaultHurt" },
+      { caseInsensitive: true },
+    )[0];
+    const fxHeal = findObjs(
+      { _type: "custfx", name: "-DefaultHeal" },
+      { caseInsensitive: true },
+    )[0];
+    if (fxHeal) {
+      const base = getFxDefinition(fxHeal) || DEFAULT_HEAL_FX;
+      fxHeal.set({ definition: buildDefaultFxDefinition(true, base) });
+    }
+    if (fxHurt) {
+      const base = getFxDefinition(fxHurt) || DEFAULT_HURT_FX;
+      fxHurt.set({ definition: buildDefaultFxDefinition(false, base) });
+    }
+  }
+
+  /**
+   * Recreates HealthColors default custom FX objects in the campaign.
+   * Useful when legacy/stale custfx definitions exist from older script versions.
+   */
+  function resetDefaultFxObjects() {
+    const existing = findObjs(
+      { _type: "custfx" },
+      { caseInsensitive: true },
+    ).filter((fx) => /-Default(Hurt|Heal)/i.test(fx.get("name") || ""));
+    existing.forEach((fx) => fx.remove());
+    gmWhisper("Recreating Default Hurt/Heal FX");
+    checkInstall();
+  }
+
+  /**
+   * Resets all persisted HealthColors settings back to DEFAULTS.
+   * Keeps schema/version metadata aligned to current script constants.
+   */
+  function resetAllSettingsToDefaults() {
+    state.HealthColors = {
+      schemaVersion: SCHEMA_VERSION,
+      version: VERSION,
+      ...DEFAULTS,
+    };
+  }
+
+  /**
+   * Restores all state defaults, rebuilds default FX objects, and force-syncs tokens.
+   */
+  function runResetAllFlow() {
+    resetAllSettingsToDefaults();
+    gmWhisper("RESET ALL: defaults restored + default FX + force update");
+    resetDefaultFxObjects();
+    menuForceUpdate();
   }
 
   // ————— TOKEN LOGIC —————
@@ -597,6 +702,7 @@
    * Returns null if any value is missing or non-numeric.
    * @param {object} obj  - Roll20 token graphic object.
    * @param {object} prev - Snapshot of the token's previous attribute values.
+   * @param {string} [update] - Pass 'YES' when called from a forced refresh.
    * @returns {{ maxValue: number, curValue: number, prevValue: string|number,
    *             percReal: number, markerColor: string }|null}
    */
