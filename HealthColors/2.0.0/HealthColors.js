@@ -7,7 +7,7 @@
 // GitHub:  https://github.com/dxwarlock/Roll20/blob/master/Public/HeathColors
 // Roll20:  https://app.roll20.net/forum/post/4630083/script-aura-slash-tint-healthcolor
 
-/* global createObj TokenMod spawnFxWithDefinition getObj state playerIsGM sendChat findObjs log on */
+/* global createObj TokenMod spawnFxWithDefinition spawnFx getObj state playerIsGM sendChat findObjs log on */
 
 (() => {
   "use strict";
@@ -212,26 +212,30 @@
     const b = 0;
     const g = p < 50 ? Math.floor(255 * (p / 50)) : 255;
     const r = p < 50 ? 255 : Math.floor(255 * ((50 - (p % 50)) / 50));
-    // Bitwise shift used intentionally to build a 6-digit hex colour
+    // Bitwise shift used intentionally to build a 6-digit hex color
     // eslint-disable-next-line no-bitwise
     return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
   }
 
   /**
-   * Parses a hex colour string into an RGBA array suitable for Roll20 FX definitions.
+   * Parses a hex color string into an RGBA array suitable for Roll20 FX definitions.
    * Returns [0,0,0,0] when the input is invalid.
-   * @param {string} hex - Hex colour string with or without leading '#'.
+   * @param {string} hex - Hex color string with or without leading '#'.
    * @returns {number[]} Array of [r, g, b, a] where a is always 1.0 on success.
    */
   function hexToRgb(hex) {
-    const parts = /^#?([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})$/.exec(
-      hex || "",
+    const cleanHex = (hex || "").replace("#", "").trim();
+    const parts = /^([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})$/.exec(
+      cleanHex,
     );
     if (parts) {
       const rgb = parts.slice(1).map((d) => Number.parseInt(d, 16));
       rgb.push(1);
       return rgb;
     }
+    // Log invalid hex attempts if they appear non-empty
+    if (cleanHex)
+      log(`${SCRIPT_NAME}: hexToRgb received invalid hex: "${hex}"`);
     return [0, 0, 0, 0];
   }
 
@@ -423,6 +427,43 @@
    */
   function spawnFX(scale, hitSize, left, top, fx, pageId) {
     const m = { ...FX_PARAM_DEFAULTS, ...fx };
+
+    // Prefer colours from the incoming partial `fx` first (nullish), then merged `m`.
+    // Order matters: after merge, `m.startColour` can still be FX_PARAM_DEFAULTS grey
+    // while the real colour only exists on `fx.startColor` (Roll20 / heal seed used
+    // American keys only). Using `||` on `m` alone would always pick the grey default.
+    const pick = (obj, keys) => {
+      if (!obj) return undefined;
+      for (const key of keys) {
+        const v = obj[key];
+        if (v !== undefined && v !== null) return v;
+      }
+      return undefined;
+    };
+    const startKeys = [
+      "startColour",
+      "startColor",
+      "startcolour",
+      "startcolor",
+    ];
+    const endKeys = ["endColour", "endColor", "endcolour", "endcolor"];
+    const startRndKeys = [
+      "startColourRandom",
+      "startColorRandom",
+      "startcolourrandom",
+      "startcolorrandom",
+    ];
+    const endRndKeys = [
+      "endColourRandom",
+      "endColorRandom",
+      "endcolourrandom",
+      "endcolorrandom",
+    ];
+    const startClr = pick(fx, startKeys) ?? pick(m, startKeys);
+    const endClr = pick(fx, endKeys) ?? pick(m, endKeys);
+    const startClrRnd = pick(fx, startRndKeys) ?? pick(m, startRndKeys);
+    const endClrRnd = pick(fx, endRndKeys) ?? pick(m, endRndKeys);
+
     spawnFxWithDefinition(
       left,
       top,
@@ -438,17 +479,51 @@
         angle: m.angle,
         angleRandom: m.angleRandom,
         emissionRate: m.emissionRate * hitSize * 2,
-        startColour: m.startColour,
-        endColour: m.endColour,
+        startColour: startClr,
+        startColor: startClr,
+        endColour: endClr,
+        endColor: endClr,
+        startColourRandom: startClrRnd,
+        startColorRandom: startClrRnd,
+        endColourRandom: endClrRnd,
+        endColorRandom: endClrRnd,
         gravity: { x: m.gravity.x * scale, y: m.gravity.y * scale },
       },
       pageId,
     );
   }
 
+  /**
+   * Safely reads a Roll20 custfx definition and returns a plain mutable object.
+   * Roll20 may return the definition as either an object or a JSON string.
+   * @param {object} fxObj - Roll20 custfx object.
+   * @returns {object|null} Parsed FX definition object, or null if unavailable/invalid.
+   */
+  function getFxDefinition(fxObj) {
+    if (!fxObj) return null;
+
+    const raw = fxObj.get("definition");
+    if (!raw) return null;
+
+    if (typeof raw === "string") {
+      try {
+        return JSON.parse(raw);
+      } catch (err) {
+        log(`${SCRIPT_NAME}: Failed to parse FX definition: ${err.message}`);
+        return null;
+      }
+    }
+
+    if (typeof raw === "object") {
+      return JSON.parse(JSON.stringify(raw));
+    }
+
+    return null;
+  }
+
   // ————— STATE / INSTALL —————
   /**
-   * Initialises or migrates persisted state, applies all default values, registers
+   * Initializes or migrates persisted state, applies all default values, registers
    * the TokenMod observer if available, and creates the default Hurt/Heal FX objects
    * if they do not already exist in the campaign.
    * Safe to call multiple times (e.g. after a state reset).
