@@ -1258,70 +1258,146 @@
     }
 
     const option = (parts[1] || "MENU").toUpperCase();
+    let changedSetting = false;
     if (option !== "MENU") gmWhisper("UPDATING TOKENS...");
 
     switch (option) {
       case "MENU":
         break;
+      case "SETTINGS":
+        showSettingsInGameChat();
+        return;
       case "ON":
-        state.HealthColors.auraColorOn = !state.HealthColors.auraColorOn;
+        state.HealthColors.auraColorOn = true;
+        changedSetting = true;
+        break;
+      case "OFF":
+        state.HealthColors.auraColorOn = false;
+        changedSetting = true;
         break;
       case "BAR":
-        state.HealthColors.auraBar = `bar${parts[2]}`;
+        if (/^[123]$/.test(parts[2] || "")) {
+          state.HealthColors.auraBar = `bar${parts[2]}`;
+          changedSetting = true;
+          gmWhisper(`Health bar set to ${state.HealthColors.auraBar}. Forcing sync...`);
+          menuForceUpdate();
+        } else {
+          gmWhisper(
+            `Invalid bar "${parts[2] || ""}". Use !aura bar 1, !aura bar 2, or !aura bar 3.`,
+          );
+        }
         break;
       case "TINT":
         state.HealthColors.auraTint = !state.HealthColors.auraTint;
+        changedSetting = true;
         break;
       case "PERC":
         state.HealthColors.auraPercPC = Number.parseInt(parts[2], 10);
         state.HealthColors.auraPerc = Number.parseInt(parts[3], 10);
+        changedSetting = true;
         break;
       case "PC":
         state.HealthColors.PCAura = !state.HealthColors.PCAura;
+        changedSetting = true;
         break;
       case "NPC":
         state.HealthColors.NPCAura = !state.HealthColors.NPCAura;
+        changedSetting = true;
         break;
       case "GMNPC":
         state.HealthColors.GM_NPCNames = parts[2];
+        changedSetting = true;
         break;
       case "GMPC":
         state.HealthColors.GM_PCNames = parts[2];
+        changedSetting = true;
         break;
       case "PCNPC":
         state.HealthColors.NPCNames = parts[2];
+        changedSetting = true;
         break;
       case "PCPC":
         state.HealthColors.PCNames = parts[2];
+        changedSetting = true;
         break;
       case "DEAD":
         state.HealthColors.auraDead = !state.HealthColors.auraDead;
+        changedSetting = true;
         break;
       case "DEADPC":
         state.HealthColors.auraDeadPC = !state.HealthColors.auraDeadPC;
+        changedSetting = true;
         break;
       case "DEADFX":
         state.HealthColors.auraDeadFX = parts[2];
+        changedSetting = true;
         break;
       case "SIZE":
         state.HealthColors.AuraSize = Number.parseFloat(parts[2]);
+        changedSetting = true;
+        break;
+      case "A1SHAPE":
+        state.HealthColors.Aura1Shape = normalizeShape(
+          parts[2],
+          state.HealthColors.Aura1Shape,
+        );
+        changedSetting = true;
+        break;
+      case "A1TINT":
+        state.HealthColors.Aura1Color = normalizeHex6(
+          parts[2],
+          state.HealthColors.Aura1Color,
+        );
+        changedSetting = true;
+        break;
+      case "A2SIZE":
+        state.HealthColors.Aura2Size = Number.parseFloat(parts[2]);
+        changedSetting = true;
+        break;
+      case "A2SHAPE":
+        state.HealthColors.Aura2Shape = normalizeShape(
+          parts[2],
+          state.HealthColors.Aura2Shape,
+        );
+        changedSetting = true;
+        break;
+      case "A2TINT":
+        state.HealthColors.Aura2Color = normalizeHex6(
+          parts[2],
+          state.HealthColors.Aura2Color,
+        );
+        changedSetting = true;
         break;
       case "ONEOFF":
         state.HealthColors.OneOff = !state.HealthColors.OneOff;
+        changedSetting = true;
         break;
       case "FX":
         state.HealthColors.FX = !state.HealthColors.FX;
+        changedSetting = true;
         break;
       case "HEAL":
         state.HealthColors.HealFX = parts[2].toUpperCase();
+        syncDefaultFxObjects();
+        changedSetting = true;
         break;
       case "HURT":
         state.HealthColors.HurtFX = parts[2].toUpperCase();
+        syncDefaultFxObjects();
+        changedSetting = true;
         break;
       case "RESET":
         delete state.HealthColors;
         gmWhisper("STATE RESET");
         checkInstall();
+        changedSetting = true;
+        break;
+      case "RESET-FX":
+        resetDefaultFxObjects();
+        break;
+      case "RESET-ALL":
+        runResetAllFlow();
+        changedSetting = true;
         break;
       case "FORCEALL":
         menuForceUpdate();
@@ -1331,12 +1407,16 @@
         return;
     }
 
-    showMenu();
+    if (changedSetting) {
+      showSettingsInGameChat();
+    } else {
+      showMenu();
+    }
   }
 
   // ————— OUTSIDE API —————
   /**
-   * Public entry point for external scripts to request a token colour update.
+   * Public entry point for external scripts to request a token color update.
    * Validates that the object is a graphic before delegating to handleToken.
    * @param {object} obj  - Roll20 object to update.
    * @param {object} prev - Previous attribute snapshot (passed through to handleToken).
