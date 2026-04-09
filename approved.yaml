@@ -1393,11 +1393,11 @@ FormatTable:
   - "Utility"
 
 ImageEditor:
-  - "Image Editor"
+  - "ImageEditor"
   - "Utility"
 
 TokenReference:
-  - "TokenReference"
+  - "Token Reference"
   - "Utility"
 
 Wiki:
