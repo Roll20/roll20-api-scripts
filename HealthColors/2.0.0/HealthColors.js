@@ -249,6 +249,31 @@
     return Math.floor(Math.random() * (max - min + 1)) + min;
   }
 
+  /**
+   * Normalizes a 6-digit hex color string (without '#').
+   * Returns fallback when input is invalid.
+   * @param {string} value    - Candidate hex string.
+   * @param {string} fallback - Fallback value when invalid.
+   * @returns {string} Uppercase 6-digit hex.
+   */
+  function normalizeHex6(value, fallback) {
+    const cleaned = (value || "").replace("#", "").trim().toUpperCase();
+    return /^[0-9A-F]{6}$/.test(cleaned) ? cleaned : fallback;
+  }
+
+  /**
+   * Normalizes an aura shape label to supported display values.
+   * @param {string} value    - Candidate shape value.
+   * @param {string} fallback - Fallback shape.
+   * @returns {string} One of Circle|Square.
+   */
+  function normalizeShape(value, fallback) {
+    const shape = (value || "").trim().toUpperCase();
+    if (shape === "CIRCLE") return "Circle";
+    if (shape === "SQUARE") return "Square";
+    return fallback;
+  }
+
   // ————— WHISPER GM (declared early; used by checkInstall) —————
   /**
    * Sends a styled whisper message to the GM.
