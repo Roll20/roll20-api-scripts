@@ -799,44 +799,103 @@
    */
   function buildFXList(isHeal, useBlood) {
     const fxArray = [];
+
     if (isHeal) {
       const aFX = findObjs(
         { _type: "custfx", name: "-DefaultHeal" },
         { caseInsensitive: true },
       )[0];
-      if (aFX) {
-        const def = aFX.get("definition");
-        def.startColour = hexToRgb(state.HealthColors.HealFX);
+      const def = getFxDefinition(aFX);
+
+      if (def) {
+        const healRgb = hexToRgb(state.HealthColors.HealFX);
+        def.startColour = healRgb;
+        def.startColor = healRgb;
+        def.endColour = healRgb;
+        def.endColor = healRgb;
+        def.startColourRandom = [0, 0, 0, 0];
+        def.startColorRandom = [0, 0, 0, 0];
+        def.endColourRandom = [0, 0, 0, 0];
+        def.endColorRandom = [0, 0, 0, 0];
         fxArray.push(def);
       }
+
       return fxArray;
     }
+
     const aFX = findObjs(
       { _type: "custfx", name: "-DefaultHurt" },
       { caseInsensitive: true },
     )[0];
-    if (!aFX) return fxArray;
-    const def = aFX.get("definition");
+    const def = getFxDefinition(aFX);
+
+    if (!def) return fxArray;
+
     if (useBlood === "DEFAULT" || useBlood === undefined) {
-      def.startColour = hexToRgb(state.HealthColors.HurtFX);
+      const hurtRgb = hexToRgb(state.HealthColors.HurtFX);
+      def.startColour = hurtRgb;
+      def.startColor = hurtRgb;
+      def.endColour = hurtRgb;
+      def.endColor = hurtRgb;
+      def.startColourRandom = [0, 0, 0, 0];
+      def.startColorRandom = [0, 0, 0, 0];
+      def.endColourRandom = [0, 0, 0, 0];
+      def.endColorRandom = [0, 0, 0, 0];
       fxArray.push(def);
     } else {
       const hurtRgb = hexToRgb(useBlood);
+
       if (hurtRgb.some((v) => v !== 0)) {
         def.startColour = hurtRgb;
+        def.startColor = hurtRgb;
+        def.endColour = hurtRgb;
+        def.endColor = hurtRgb;
+        def.startColourRandom = [0, 0, 0, 0];
+        def.startColorRandom = [0, 0, 0, 0];
+        def.endColourRandom = [0, 0, 0, 0];
+        def.endColorRandom = [0, 0, 0, 0];
         fxArray.push(def);
       } else {
         useBlood.split(",").forEach((fxName) => {
           const custom = findObjs(
-            { _type: "custfx", name: fxName },
+            { _type: "custfx", name: fxName.trim() },
             { caseInsensitive: true },
           )[0];
-          if (custom) fxArray.push(custom.get("definition"));
-          else gmWhisper(`No FX with name ${fxName}`);
+          const customDef = getFxDefinition(custom);
+
+          if (customDef) {
+            fxArray.push(customDef);
+          } else {
+            gmWhisper(`No FX with name ${fxName}`);
+          }
         });
       }
     }
+
     return fxArray;
+  }
+
+  /**
+   * Workaround path: update default custfx definitions, then spawn by saved FX id.
+   * This avoids client-side issues seen in some sandboxes with spawnFxWithDefinition.
+   * Applies only to DEFAULT heal/hurt colors; custom named FX still use definition spawn.
+   * Also tightens particle profile settings to keep color visibility consistent.
+   * @param {object} obj      - Roll20 token graphic object.
+   * @param {boolean} isHeal  - True when HP increased.
+   * @param {string|undefined} useBlood - Per-character blood override.
+   * @returns {boolean} True when the fallback path handled spawning.
+   */
+  function spawnDefaultFxById(obj, isHeal, useBlood) {
+    if (!(useBlood === "DEFAULT" || useBlood === undefined)) return false;
+    const fxName = isHeal ? "-DefaultHeal" : "-DefaultHurt";
+    const aFX = findObjs(
+      { _type: "custfx", name: fxName },
+      { caseInsensitive: true },
+    )[0];
+    if (!aFX) return false;
+
+    spawnFx(obj.get("left"), obj.get("top"), aFX.id, obj.get("pageid"));
+    return true;
   }
 
   /**
@@ -867,6 +926,7 @@
     const hitSize =
       Math.max(Math.min((amount / maxValue) * 4, 1), 0.2) *
       (randomInt(60, 100) / 100);
+    if (spawnDefaultFxById(obj, isHeal, useBlood)) return;
     buildFXList(isHeal, useBlood).forEach((fx) =>
       spawnFX(
         scale,
