@@ -941,8 +941,9 @@
 
   /**
    * Core token handler — called on token change, token add, and forced updates.
-   * Delegates to specialised helpers for health reading, type resolution,
+   * Delegates to specialized helpers for health reading, type resolution,
    * aura management, and FX spawning.
+   * Clears aura/tint when the selected health bar has no max value.
    * @param {object} obj      - The Roll20 token graphic object.
    * @param {object} prev     - Snapshot of the token's previous attribute values.
    * @param {string} [update] - Pass 'YES' to indicate a forced refresh (suppresses FX).
@@ -959,6 +960,11 @@
       return;
     if (obj.get("represents") === "" && state.HealthColors.OneOff !== true)
       return;
+    const barUsed = state.HealthColors.auraBar;
+    if (obj.get(`${barUsed}_max`) === "") {
+      clearAuras(obj);
+      return;
+    }
 
     const health = getBarHealth(obj, prev, update);
     if (!health) return;
@@ -979,19 +985,16 @@
 
   // ————— FORCE UPDATE —————
   /**
-   * Forces a re-evaluation of every token on the objects layer that has a populated
-   * health bar, processing them one at a time via a setTimeout drain queue to avoid
+   * Forces a re-evaluation of every token on the objects layer,
+   * processing them one at a time via a setTimeout drain queue to avoid
    * blocking the Roll20 sandbox event loop.
    */
   function menuForceUpdate() {
-    const barUsed = state.HealthColors.auraBar;
     const workQueue = findObjs({
       type: "graphic",
       subtype: "token",
       layer: "objects",
-    }).filter(
-      (o) => o.get(`${barUsed}_max`) !== "" && o.get(`${barUsed}_value`) !== "",
-    );
+    });
     sendChat("Fixing Tokens", `/w gm Fixing ${workQueue.length} Tokens`);
     const drainQueue = () => {
       const token = workQueue.shift();
