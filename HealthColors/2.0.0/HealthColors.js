@@ -15,18 +15,18 @@
   // ————— CONSTANTS —————
   const VERSION = "2.0.0";
   const SCRIPT_NAME = "HealthColors";
-  const SCHEMA_VERSION = "1.0.3";
-  const UPDATED = "2026-04-08 04:00";
+  const SCHEMA_VERSION = "1.1.0";
+  const UPDATED = "2026-04-09 16:00 UTC";
 
   // ————— DEFAULTS —————
   /**
    * Default values written into `state.HealthColors` on first install or after a reset.
    * Every key maps directly to a property used at runtime — changing a value here changes
-   * the out-of-the-box behaviour for new or reset campaigns.
+   * the out-of-the-box behavior for new or reset campaigns.
    *
    * @property {boolean} auraColorOn  - Master on/off switch for the whole script.
    * @property {string}  auraBar      - Which token bar to read HP from ('bar1'|'bar2'|'bar3').
-   * @property {boolean} auraTint     - When true, colours the token tint instead of the aura rings.
+   * @property {boolean} auraTint     - When true, colors the token tint instead of the aura rings.
    * @property {number}  auraPercPC   - HP % threshold below which the PC aura activates (0–100).
    * @property {number}  auraPerc     - HP % threshold below which the NPC aura activates (0–100).
    * @property {boolean} PCAura       - Whether to show a health aura on player-character tokens.
