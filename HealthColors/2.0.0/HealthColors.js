@@ -38,10 +38,15 @@
    * @property {string}  GM_NPCNames  - GM visibility of NPC token names ('Yes'|'No'|'Off').
    * @property {string}  NPCNames     - Player visibility of NPC token names ('Yes'|'No'|'Off').
    * @property {number}  AuraSize     - Base aura radius before page-scale is applied.
+   * @property {string}  Aura1Shape   - Display/default Aura 1 shape shown in output.
+   * @property {string}  Aura1Color   - Display/default Aura 1 tint shown in output.
+   * @property {number}  Aura2Size    - Display/default Aura 2 radius shown in output.
+   * @property {string}  Aura2Shape   - Display/default Aura 2 shape shown in output.
+   * @property {string}  Aura2Color   - Display/default Aura 2 tint value shown in output.
    * @property {boolean} OneOff       - When true, tokens without a linked character also get auras.
    * @property {boolean} FX           - Whether to spawn particle FX on HP changes.
-   * @property {string}  HealFX       - Hex colour (no '#') used for the healing particle effect.
-   * @property {string}  HurtFX       - Hex colour (no '#') used for the hurt/damage particle effect.
+   * @property {string}  HealFX       - Hex color (no '#') used for the healing particle effect.
+   * @property {string}  HurtFX       - Hex color (no '#') used for the hurt/damage particle effect.
    * @property {string}  auraDeadFX   - Jukebox track name to play on death, or 'None' to disable.
    */
   const DEFAULTS = {
@@ -59,9 +64,14 @@
     GM_NPCNames: "Yes",
     NPCNames: "Yes",
     AuraSize: 0.7,
+    Aura1Shape: "Circle",
+    Aura1Color: "00FF00",
+    Aura2Size: 5,
+    Aura2Shape: "Square",
+    Aura2Color: "806600",
     OneOff: false,
     FX: true,
-    HealFX: "00FF00",
+    HealFX: "FDDC5C",
     HurtFX: "FF0000",
     auraDeadFX: "None",
   };
