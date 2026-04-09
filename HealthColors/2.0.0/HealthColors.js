@@ -1,11 +1,10 @@
-// ================================
-// === HealthColors v2.0.0      ===
-// === Authors: DXWarlock       ===
-// ===          MidNiteShadow7  ===
-// ================================
-// Profile: https://app.roll20.net/users/262130/dxwarlock
-// GitHub:  https://github.com/dxwarlock/Roll20/blob/master/Public/HeathColors
-// Roll20:  https://app.roll20.net/forum/post/4630083/script-aura-slash-tint-healthcolor
+// ===========================
+// === HealthColors v2.0.0 ===
+// ===========================
+
+// AUTHORS:
+//  - DXWarlock: https://app.roll20.net/users/262130/dxwarlock
+//  - MidNiteShadow7: https://app.roll20.net/users/16506286/midniteshadow7
 
 /* global createObj TokenMod spawnFxWithDefinition spawnFx getObj state playerIsGM sendChat findObjs log on */
 
