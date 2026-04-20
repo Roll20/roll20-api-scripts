@@ -5,6 +5,19 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [2.0.1] – 2026-04-20
+
+### Fixed
+- Corrected behavior for tokens with health below zero to ensure the "dead" marker is applied consistently.
+- Clamped negative health values to zero for accurate color mapping and consistent visual feedback.
+- Refactored `applyAuraAndDead` to separate dead-marker logic from aura updates, ensuring proper handling of edge cases.
+
+### Changed
+- Updated `percentToHex` to normalize input values, preventing invalid color calculations.
+- Improved code readability and maintainability by restructuring health percentage calculations.
+
+---
+
 ## [2.0.0] – 2026-04-08
 
 Major modernization and stability refactor of the entire script, consolidating performance improvements, critical bug fixes, and new user control features. This version represents a complete overhaul from the v1.6.x series.
