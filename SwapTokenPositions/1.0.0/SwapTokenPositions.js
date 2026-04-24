@@ -14,7 +14,7 @@
  * @lastUpdated 2026-04-24
  * @license MIT
  */
-const SwapTokenPositions = (() => {
+const SwapTokenPositionsMod = (() => {
   "use strict";
 
   /**
