@@ -1,0 +1,66 @@
+{
+  "name": "SwapTokenPositions",
+  "script": "SwapTokenPositions.js",
+  "version": "1.0.0",
+  "description": "Allows GMs and players to quickly swap the positions of two selected tokens on the same page.\r\n\r\nFor instructions see the *Help: SwapTokenPositions* Handout in game, or run `!swap-tokens --help` in game, or visit [SwapTokenPositions Forum Thread](https://app.roll20.net/forum/post/xxxxxxxx/swap-token-positions-api-script).",
+  "authors": "MidNiteShadow7",
+  "roll20userid": "16506286",
+  "useroptions": [
+    {
+      "name": "duration",
+      "type": "number",
+      "default": "2",
+      "description": "The duration of the animation in seconds (1-10)."
+    },
+    {
+      "name": "mode",
+      "type": "select",
+      "options": ["beams", "transport"],
+      "default": "transport",
+      "description": "The animation style to use."
+    },
+    {
+      "name": "beam-fx",
+      "type": "select",
+      "options": [
+        "none",
+        "beam-magic",
+        "beam-acid",
+        "beam-charm",
+        "beam-fire",
+        "beam-frost",
+        "beam-holy",
+        "beam-death"
+      ],
+      "default": "beam-magic",
+      "description": "The default beam FX type."
+    },
+    {
+      "name": "burst-fx",
+      "type": "select",
+      "options": [
+        "none",
+        "burst-holy",
+        "burst-magic",
+        "burst-fire",
+        "burst-acid",
+        "burst-frost",
+        "burst-smoke",
+        "explode-fire",
+        "explode-holy",
+        "burn-fire",
+        "burn-holy"
+      ],
+      "default": "burst-magic",
+      "description": "The default burst FX type."
+    }
+  ],
+  "dependencies": [],
+  "modifies": {
+    "state.SwapTokenPositions": "read,write",
+    "graphic.left": "read,write",
+    "graphic.top": "read,write"
+  },
+  "conflicts": [],
+  "previousversions": []
+}
