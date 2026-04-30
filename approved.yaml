@@ -1383,3 +1383,7 @@ TokenHome:
 PInNote:
   - "PinNote"
   - "Utility"
+
+AutoLinker:
+  - "AutoLinker"
+  - "Utility"
