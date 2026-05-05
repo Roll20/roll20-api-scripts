@@ -162,6 +162,8 @@ const TRANSLATION = {
       details: "Dettagli",
       description: "Descrizione",
       scenario: "Scenario",
+      gameSystem: "Game System",
+      duration: "Duration",
     },
     dur: {
       untilRemoved: "Fino alla rimozione",
@@ -186,6 +188,7 @@ const TRANSLATION = {
       reinstallHandout: "Reinstalla documento",
       showHelp: "Mostra aiuto",
       reorderConditions: "Riordina righe condizioni",
+      reportToken: "Report Token Conditions",
     },
     title: {
       menu: "Menu",
@@ -208,6 +211,7 @@ const TRANSLATION = {
       moveToken: "{name} — Spostare il token?",
       scriptReady: "Script pronto",
       conditionReorder: "Ordine di turno modificato",
+      tokenReport: "Token Condition Report",
     },
     heading: {
       quickActions: "Azioni rapide",
@@ -219,6 +223,8 @@ const TRANSLATION = {
       promptUi: "Interfaccia procedura guidata",
       examples: "Esempi",
       summary: "Riepilogo",
+      appliedTo: "Conditions Applied To",
+      appliedBy: "Conditions Applied By",
     },
     msg: {
       noActive: "Nessuna condizione attiva è tracciata.",
@@ -226,7 +232,7 @@ const TRANSLATION = {
       unknownConfig:
         "Opzione di configurazione sconosciuta. Usa --config per visualizzare le impostazioni supportate.",
       macroReinstalled:
-        "Le macro {wizard} e {multiTarget} sono state reinstallate per tutti i GM attivi.",
+        "Le macro {wizard}, {multiTarget} e {reportToken} sono state reinstallate per tutti i GM attivi.",
       handoutReinstalled:
         "Il documento di aiuto {handout} è stato reinstallato.",
       duplicate:
@@ -303,6 +309,11 @@ const TRANSLATION = {
         "L'ordine di turno è cambiato e {count} riga/righe di condizione tracciata/e potrebbe/potrebbero essere fuori posto. Clicca sotto per riposizionarle dopo i rispettivi token assegnati.",
       conditionsReordered:
         "Le righe delle condizioni sono state riposizionate dopo i rispettivi token assegnati.",
+      noTokensSelectedReport:
+        "Select at least one token on the board before using --report-token.",
+      noConditionsAppliedTo: "{name} has no active conditions applied to it.",
+      noConditionsAppliedBy:
+        "{name} has no active conditions applied to others.",
     },
     removal: {
       conditionField: "Condizione",
@@ -349,6 +360,10 @@ const TRANSLATION = {
         [
           "!condition-tracker --multi-target",
           "Applica una condizione a più token contemporaneamente. Disponibile anche come macro ConditionTrackerMultiTarget.",
+        ],
+        [
+          "!condition-tracker --report-token",
+          "Select one or more tokens first, then run this command to get a GM whisper listing every condition applied to and by each selected token. Also available as the ConditionTrackerReportToken macro.",
         ],
         [
           "!condition-tracker --menu",
@@ -406,6 +421,10 @@ const TRANSLATION = {
         [
           "--reinstall-handout",
           "Ricrea o aggiorna il documento di aiuto localizzato",
+        ],
+        [
+          "--report-token",
+          "Whisper a GM-only condition report for each selected token (conditions applied to and by it)",
         ],
         [
           "--lang &lt;locale&gt;",
@@ -492,6 +511,11 @@ const TRANSLATION = {
           "subjectPromptBypass",
           "true / false",
           "Salta il passaggio facoltativo del token soggetto per gli effetti Incantesimo / Abilità / Altro",
+        ],
+        [
+          "suppressPublicChat",
+          "true / false",
+          "Sopprimi tutti gli annunci pubblici in chat (messaggi di applicazione e rimozione). I sussurri del GM non sono interessati.",
         ],
         [
           "healthBar",

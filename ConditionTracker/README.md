@@ -60,9 +60,11 @@ All commands are GM-only except `--help`.
 - `!condition-tracker --reinstall-handout`
 - `!condition-tracker --config`
 - `!condition-tracker --config marker Grappled=grab`
+- `!condition-tracker --config gameSystem <id>`
 - `!condition-tracker --config useMarkers true|false`
 - `!condition-tracker --config icons true|false`
 - `!condition-tracker --config subjectPromptBypass true|false`
+- `!condition-tracker --config suppressPublicChat true|false`
 - `!condition-tracker --config healthBar bar1_value|bar2_value|bar3_value`
 - `!condition-tracker --config language <locale>`
 - `!condition-tracker --config reset`
@@ -159,18 +161,70 @@ Use `!condition-tracker --config reset` to restore all configurable settings and
 
 | Option                | Values                                     | Description                                                                       |
 | --------------------- | ------------------------------------------ | --------------------------------------------------------------------------------- |
+| `gameSystem`          | System id (e.g. `dnd5e`, `pathfinder2e`)   | Set the active game system. Changes the condition list and resets markers to system defaults. See [Supported Game Systems](#supported-game-systems) for all valid ids. |
 | `useMarkers`          | `true` / `false`                           | Apply Roll20 status markers to tokens when a condition is added                   |
 | `useIcons`            | `true` / `false`                           | Show short icon codes (e.g. `[G]`) instead of emoji in Turn Tracker rows          |
 | `subjectPromptBypass` | `true` / `false`                           | Skip the optional subject-token step for Spell / Ability / Other effects          |
+| `suppressPublicChat`  | `true` / `false`                           | Suppress all public chat announcements (apply and remove messages). GM whispers are unaffected. |
 | `healthBar`           | `bar1_value` / `bar2_value` / `bar3_value` | Token bar to watch; when it reaches 0 the GM is prompted to clean up conditions   |
 | `language`            | Any supported locale                       | Output language for chat messages and the help handout                            |
 | `marker`              | `<Condition>=<marker name>`                | Override the status marker for a specific condition (e.g. `marker Grappled=grab`) |
 
 `subjectPromptBypass` defaults to `false`. Set `!condition-tracker --config subjectPromptBypass true` to skip the Subject prompt for custom effects and force Subject to None. For one-off runs, use `--subjectPromptBypass true|false` directly on the command.
 
+Changing `gameSystem` also resets all token marker mappings to the new system's defaults. Active conditions are preserved.
+
 Changing `language` updates both chat output and the generated help handout immediately.
 
 Use `--lang <locale>` on any apply command to emit a second announcement in an additional locale (bilingual mode), without changing the saved language setting.
+
+## Supported Game Systems
+
+Use `!condition-tracker --config gameSystem <id>` to switch the active game system. The in-game help card and generated handout also list all ids.
+
+| System ID        | Game System                                 |
+| ---------------- | ------------------------------------------- |
+| `dnd5e`          | Dungeons & Dragons 5th Edition              |
+| `dnd4e`          | Dungeons & Dragons 4th Edition              |
+| `dnd35`          | Dungeons & Dragons 3.5 Edition              |
+| `pathfinder1e`   | Pathfinder First Edition                    |
+| `pathfinder2e`   | Pathfinder Second Edition                   |
+| `starfinder`     | Starfinder                                  |
+| `13thage`        | 13th Age                                    |
+| `sotdl`          | Shadow of the Demon Lord                    |
+| `cyphersystem`   | Cypher System                               |
+| `dcc`            | Dungeon Crawl Classics                      |
+| `ose`            | Old-School Essentials                       |
+| `bfrpg`          | Basic Fantasy RPG                           |
+| `knave`          | Knave                                       |
+| `intotheodd`     | Into the Odd                                |
+| `cairn`          | Cairn                                       |
+| `wwn`            | Worlds Without Number                       |
+| `swn`            | Stars Without Number                        |
+| `callofcthulhu`  | Call of Cthulhu                             |
+| `deltagreen`     | Delta Green                                 |
+| `vaesen`         | Vaesen                                      |
+| `brp`            | Basic Role-Playing                          |
+| `vtm`            | Vampire: The Masquerade                     |
+| `wta`            | Werewolf: The Apocalypse                    |
+| `mta`            | Mage: The Ascension                         |
+| `htr`            | Hunter: The Reckoning                       |
+| `ctd`            | Changeling: The Dreaming                    |
+| `alienrpg`       | Alien RPG                                   |
+| `mothership`     | Mothership RPG                              |
+| `traveller`      | Traveller                                   |
+| `cyberpunkred`   | Cyberpunk Red                               |
+| `shadowrun`      | Shadowrun                                   |
+| `genesys`        | Genesys                                     |
+| `starwarsffg`    | Star Wars Roleplaying Game (FFG)            |
+| `cortexprime`    | Cortex Prime                                |
+| `gurps`          | GURPS                                       |
+| `herosystem`     | Hero System                                 |
+| `savageworlds`   | Savage Worlds Adventure Edition             |
+| `wfrp4e`         | Warhammer Fantasy Roleplay 4e               |
+| `wh40k`          | Warhammer 40,000 RPG                        |
+| `whaos`          | Warhammer Age of Sigmar: Soulbound          |
+| `generic`        | Generic / Other                             |
 
 ## Translations
 

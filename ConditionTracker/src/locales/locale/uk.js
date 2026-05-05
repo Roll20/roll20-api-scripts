@@ -161,6 +161,8 @@ const TRANSLATION = {
       details: "Подробиці",
       description: "Опис",
       scenario: "Сценарій",
+      gameSystem: "Game System",
+      duration: "Duration",
     },
     dur: {
       untilRemoved: "Доки не видалено",
@@ -185,6 +187,7 @@ const TRANSLATION = {
       reinstallHandout: "Перевстановити довідник",
       showHelp: "Показати довідку",
       reorderConditions: "Переупорядкувати рядки умов",
+      reportToken: "Report Token Conditions",
     },
     title: {
       menu: "Меню",
@@ -207,6 +210,7 @@ const TRANSLATION = {
       moveToken: "{name} — перемістити токен?",
       scriptReady: "Скрипт готовий",
       conditionReorder: "Порядок ходів змінено",
+      tokenReport: "Token Condition Report",
     },
     heading: {
       quickActions: "Швидкі дії",
@@ -218,6 +222,8 @@ const TRANSLATION = {
       promptUi: "Інтерфейс майстра",
       examples: "Приклади",
       summary: "Підсумок",
+      appliedTo: "Conditions Applied To",
+      appliedBy: "Conditions Applied By",
     },
     msg: {
       noActive: "Активні стани не відстежуються.",
@@ -225,7 +231,7 @@ const TRANSLATION = {
       unknownConfig:
         "Невідома опція налаштування. Використайте --config, щоб переглянути підтримувані налаштування.",
       macroReinstalled:
-        "Макроси {wizard} і {multiTarget} перевстановлено для всіх поточних GM-гравців.",
+        "Макроси {wizard}, {multiTarget} і {reportToken} перевстановлено для всіх поточних GM-гравців.",
       handoutReinstalled: "Довідник {handout} перевстановлено.",
       duplicate:
         "Такий самий набір джерела, суб'єкта, цілі, стану й тексту вже активний.",
@@ -297,6 +303,11 @@ const TRANSLATION = {
         "Порядок ходів змінився, і {count} відстежуваний рядок/рядків умов може бути тепер не на місці. Натисніть нижче, щоб відновити їх після призначених токенів.",
       conditionsReordered:
         "Рядки умов були переміщені після призначених токенів.",
+      noTokensSelectedReport:
+        "Select at least one token on the board before using --report-token.",
+      noConditionsAppliedTo: "{name} has no active conditions applied to it.",
+      noConditionsAppliedBy:
+        "{name} has no active conditions applied to others.",
     },
     removal: {
       conditionField: "Стан",
@@ -343,6 +354,10 @@ const TRANSLATION = {
         [
           "!condition-tracker --multi-target",
           "Застосувати один стан до кількох токенів одночасно. Також доступний як макрос ConditionTrackerMultiTarget.",
+        ],
+        [
+          "!condition-tracker --report-token",
+          "Select one or more tokens first, then run this command to get a GM whisper listing every condition applied to and by each selected token. Also available as the ConditionTrackerReportToken macro.",
         ],
         [
           "!condition-tracker --menu",
@@ -394,6 +409,10 @@ const TRANSLATION = {
         [
           "--reinstall-handout",
           "Повторно створити або оновити локалізований довідник",
+        ],
+        [
+          "--report-token",
+          "Whisper a GM-only condition report for each selected token (conditions applied to and by it)",
         ],
         [
           "--lang &lt;locale&gt;",
@@ -477,6 +496,11 @@ const TRANSLATION = {
           "subjectPromptBypass",
           "true / false",
           "Пропускати необов'язковий крок вибору суб'єкта для ефектів Spell / Ability / Other",
+        ],
+        [
+          "suppressPublicChat",
+          "true / false",
+          "Придушити всі публічні повідомлення чату (повідомлення про застосування та видалення). Шепіт GM не зачіпається.",
         ],
         [
           "healthBar",

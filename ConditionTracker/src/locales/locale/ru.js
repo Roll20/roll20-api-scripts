@@ -163,6 +163,8 @@ const TRANSLATION = {
       details: "Подробности",
       description: "Описание",
       scenario: "Сценарий",
+      gameSystem: "Game System",
+      duration: "Duration",
     },
     dur: {
       untilRemoved: "До удаления",
@@ -187,6 +189,7 @@ const TRANSLATION = {
       reinstallHandout: "Переустановить хэндаут",
       showHelp: "Показать справку",
       reorderConditions: "Переупорядочить строки состояний",
+      reportToken: "Report Token Conditions",
     },
     title: {
       menu: "Меню",
@@ -209,6 +212,7 @@ const TRANSLATION = {
       moveToken: "{name} — Переместить жетон?",
       scriptReady: "Скрипт готов",
       conditionReorder: "Порядок ходов изменён",
+      tokenReport: "Token Condition Report",
     },
     heading: {
       quickActions: "Быстрые действия",
@@ -220,6 +224,8 @@ const TRANSLATION = {
       promptUi: "Интерфейс мастера",
       examples: "Примеры",
       summary: "Итог",
+      appliedTo: "Conditions Applied To",
+      appliedBy: "Conditions Applied By",
     },
     msg: {
       noActive: "Активных состояний не отслеживается.",
@@ -227,7 +233,7 @@ const TRANSLATION = {
       unknownConfig:
         "Неизвестный параметр конфигурации. Используйте --config для просмотра поддерживаемых настроек.",
       macroReinstalled:
-        "Макросы {wizard} и {multiTarget} были переустановлены для всех текущих игроков с ролью ДМ.",
+        "Макросы {wizard}, {multiTarget} и {reportToken} были переустановлены для всех текущих игроков с ролью ДМ.",
       handoutReinstalled: "Справочный хэндаут {handout} был переустановлен.",
       duplicate:
         "Точное сочетание источника, субъекта, цели, состояния и произвольного текста уже активно.",
@@ -300,6 +306,11 @@ const TRANSLATION = {
         "Порядок ходов изменился, и {count} отслеживаемая (отслеживаемых) строка состояний может быть не на своём месте. Нажмите ниже, чтобы восстановить их после назначенных жетонов.",
       conditionsReordered:
         "Строки состояний были перемещены после назначенных им жетонов.",
+      noTokensSelectedReport:
+        "Select at least one token on the board before using --report-token.",
+      noConditionsAppliedTo: "{name} has no active conditions applied to it.",
+      noConditionsAppliedBy:
+        "{name} has no active conditions applied to others.",
     },
     removal: {
       conditionField: "Состояние",
@@ -346,6 +357,10 @@ const TRANSLATION = {
         [
           "!condition-tracker --multi-target",
           "Применить одно состояние к нескольким жетонам одновременно. Также доступен как макрос ConditionTrackerMultiTarget.",
+        ],
+        [
+          "!condition-tracker --report-token",
+          "Select one or more tokens first, then run this command to get a GM whisper listing every condition applied to and by each selected token. Also available as the ConditionTrackerReportToken macro.",
         ],
         [
           "!condition-tracker --menu",
@@ -400,6 +415,10 @@ const TRANSLATION = {
         [
           "--reinstall-handout",
           "Пересоздать или обновить локализованный справочный хэндаут",
+        ],
+        [
+          "--report-token",
+          "Whisper a GM-only condition report for each selected token (conditions applied to and by it)",
         ],
         [
           "--lang &lt;язык&gt;",
@@ -486,6 +505,11 @@ const TRANSLATION = {
           "subjectPromptBypass",
           "true / false",
           "Пропустить необязательный шаг выбора субъекта для эффектов Заклинание / Умение / Другое",
+        ],
+        [
+          "suppressPublicChat",
+          "true / false",
+          "Скрыть все публичные объявления в чате (сообщения о применении и снятии). Шёпот GM не затрагивается.",
         ],
         [
           "healthBar",

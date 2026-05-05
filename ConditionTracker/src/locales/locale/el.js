@@ -165,6 +165,8 @@ const TRANSLATION = {
       details: "Λεπτομέρειες",
       description: "Περιγραφή",
       scenario: "Σενάριο",
+      gameSystem: "Game System",
+      duration: "Duration",
     },
     dur: {
       untilRemoved: "Μέχρι αφαίρεσης",
@@ -189,6 +191,7 @@ const TRANSLATION = {
       reinstallHandout: "Επανεγκατάσταση Handout",
       showHelp: "Εμφάνιση Βοήθειας",
       reorderConditions: "Αναδιάταξη Σειρών Κατάστασης",
+      reportToken: "Report Token Conditions",
     },
     title: {
       menu: "Μενού",
@@ -211,6 +214,7 @@ const TRANSLATION = {
       moveToken: "{name} — Μετακίνηση Token;",
       scriptReady: "Το Script Είναι Έτοιμο",
       conditionReorder: "Η Σειρά Πρωτοβουλίας Άλλαξε",
+      tokenReport: "Token Condition Report",
     },
     heading: {
       quickActions: "Γρήγορες Ενέργειες",
@@ -222,6 +226,8 @@ const TRANSLATION = {
       promptUi: "Διεπαφή Οδηγού",
       examples: "Παραδείγματα",
       summary: "Σύνοψη",
+      appliedTo: "Conditions Applied To",
+      appliedBy: "Conditions Applied By",
     },
     msg: {
       noActive: "Δεν παρακολουθούνται ενεργές καταστάσεις.",
@@ -229,7 +235,7 @@ const TRANSLATION = {
       unknownConfig:
         "Άγνωστη επιλογή ρύθμισης. Χρησιμοποιήστε --config για να δείτε τις υποστηριζόμενες ρυθμίσεις.",
       macroReinstalled:
-        "Τα macros {wizard} και {multiTarget} επανεγκαταστάθηκαν για όλους τους τρέχοντες παίκτες-DM.",
+        "Τα macros {wizard}, {multiTarget} και {reportToken} επανεγκαταστάθηκαν για όλους τους τρέχοντες παίκτες-DM.",
       handoutReinstalled: "Το handout βοήθειας {handout} επανεγκαταστάθηκε.",
       duplicate:
         "Αυτός ακριβώς ο συνδυασμός πηγής, υποκειμένου, στόχου, κατάστασης και προσαρμοσμένου κειμένου είναι ήδη ενεργός.",
@@ -302,6 +308,11 @@ const TRANSLATION = {
         "Η σειρά πρωτοβουλίας άλλαξε και {count} παρακολουθούμενη/ες σειρά/ές κατάστασης μπορεί να είναι εκτός θέσης. Κάντε κλικ παρακάτω για να τις επαναφέρετε μετά τα αντίστοιχα tokens.",
       conditionsReordered:
         "Οι σειρές κατάστασης επανατοποθετήθηκαν μετά τα αντίστοιχα tokens.",
+      noTokensSelectedReport:
+        "Select at least one token on the board before using --report-token.",
+      noConditionsAppliedTo: "{name} has no active conditions applied to it.",
+      noConditionsAppliedBy:
+        "{name} has no active conditions applied to others.",
     },
     removal: {
       conditionField: "Κατάσταση",
@@ -348,6 +359,10 @@ const TRANSLATION = {
         [
           "!condition-tracker --multi-target",
           "Εφαρμογή μιας κατάστασης σε πολλά tokens ταυτόχρονα. Διατίθεται επίσης ως macro ConditionTrackerMultiTarget.",
+        ],
+        [
+          "!condition-tracker --report-token",
+          "Select one or more tokens first, then run this command to get a GM whisper listing every condition applied to and by each selected token. Also available as the ConditionTrackerReportToken macro.",
         ],
         [
           "!condition-tracker --menu",
@@ -405,6 +420,10 @@ const TRANSLATION = {
         [
           "--reinstall-handout",
           "Εκ νέου δημιουργία ή ενημέρωση του τοπικοποιημένου handout βοήθειας",
+        ],
+        [
+          "--report-token",
+          "Whisper a GM-only condition report for each selected token (conditions applied to and by it)",
         ],
         [
           "--lang &lt;locale&gt;",
@@ -491,6 +510,11 @@ const TRANSLATION = {
           "subjectPromptBypass",
           "true / false",
           "Παράλειψη του προαιρετικού βήματος υποκειμένου για εφέ Ξόρκι / Ικανότητα / Άλλο",
+        ],
+        [
+          "suppressPublicChat",
+          "true / false",
+          "Απόκρυψη όλων των δημόσιων ανακοινώσεων στο chat (μηνύματα εφαρμογής και αφαίρεσης). Τα ψιθύρια του GM δεν επηρεάζονται.",
         ],
         [
           "healthBar",

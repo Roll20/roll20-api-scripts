@@ -157,6 +157,8 @@ const TRANSLATION = {
       details: "詳細",
       description: "説明",
       scenario: "シナリオ",
+      gameSystem: "Game System",
+      duration: "Duration",
     },
     dur: {
       untilRemoved: "削除されるまで",
@@ -181,6 +183,7 @@ const TRANSLATION = {
       reinstallHandout: "ハンドアウトを再インストール",
       showHelp: "ヘルプを表示",
       reorderConditions: "状態行を並び替え",
+      reportToken: "Report Token Conditions",
     },
     title: {
       menu: "メニュー",
@@ -203,6 +206,7 @@ const TRANSLATION = {
       moveToken: "{name} — トークンを移動しますか？",
       scriptReady: "スクリプト準備完了",
       conditionReorder: "ターン順序変更",
+      tokenReport: "Token Condition Report",
     },
     heading: {
       quickActions: "クイックアクション",
@@ -214,6 +218,8 @@ const TRANSLATION = {
       promptUi: "ウィザードUI",
       examples: "例",
       summary: "まとめ",
+      appliedTo: "Conditions Applied To",
+      appliedBy: "Conditions Applied By",
     },
     msg: {
       noActive: "追跡中のアクティブな状態はありません。",
@@ -221,7 +227,7 @@ const TRANSLATION = {
       unknownConfig:
         "不明な設定オプションです。--configを使用してサポートされている設定を確認してください。",
       macroReinstalled:
-        "{wizard}および{multiTarget}マクロが現在のすべてのGMプレイヤーに再インストールされました。",
+        "{wizard}、{multiTarget}および{reportToken}マクロが現在のすべてのGMプレイヤーに再インストールされました。",
       handoutReinstalled:
         "ヘルプハンドアウト{handout}が再インストールされました。",
       duplicate:
@@ -297,6 +303,11 @@ const TRANSLATION = {
         "ターン順序が変更され、追跡中の{count}件の状態行が正しい位置にない可能性があります。割り当てられたトークンの後に復元するには以下をクリックしてください。",
       conditionsReordered:
         "状態行が割り当てられたトークンの後に再配置されました。",
+      noTokensSelectedReport:
+        "Select at least one token on the board before using --report-token.",
+      noConditionsAppliedTo: "{name} has no active conditions applied to it.",
+      noConditionsAppliedBy:
+        "{name} has no active conditions applied to others.",
     },
     removal: {
       conditionField: "状態",
@@ -345,6 +356,10 @@ const TRANSLATION = {
           "1つの状態を複数のトークンに同時に適用します。ConditionTrackerMultiTargetマクロとしても利用できます。",
         ],
         [
+          "!condition-tracker --report-token",
+          "Select one or more tokens first, then run this command to get a GM whisper listing every condition applied to and by each selected token. Also available as the ConditionTrackerReportToken macro.",
+        ],
+        [
           "!condition-tracker --menu",
           "状態の適用・確認・削除ボタンを含むメインメニューを開きます。",
         ],
@@ -388,6 +403,10 @@ const TRANSLATION = {
         [
           "--reinstall-handout",
           "ローカライズされたヘルプハンドアウトを再作成または更新",
+        ],
+        [
+          "--report-token",
+          "Whisper a GM-only condition report for each selected token (conditions applied to and by it)",
         ],
         [
           "--lang &lt;ロケール&gt;",
@@ -468,6 +487,11 @@ const TRANSLATION = {
           "subjectPromptBypass",
           "true / false",
           "呪文・能力・その他の効果でオプションの対象トークン手順をスキップする",
+        ],
+        [
+          "suppressPublicChat",
+          "true / false",
+          "すべての公開チャット告知（適用・削除メッセージ）を非表示にします。GMのウィスパーは影響を受けません。",
         ],
         [
           "healthBar",

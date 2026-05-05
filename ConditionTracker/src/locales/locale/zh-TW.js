@@ -159,6 +159,8 @@ const TRANSLATION = {
       details: "詳細資料",
       description: "描述",
       scenario: "情境",
+      gameSystem: "Game System",
+      duration: "Duration",
     },
     dur: {
       untilRemoved: "直到移除",
@@ -183,6 +185,7 @@ const TRANSLATION = {
       reinstallHandout: "重新安裝講義",
       showHelp: "顯示說明",
       reorderConditions: "重新排列狀態列",
+      reportToken: "Report Token Conditions",
     },
     title: {
       menu: "選單",
@@ -205,6 +208,7 @@ const TRANSLATION = {
       moveToken: "{name} — 移動 Token？",
       scriptReady: "腳本已就緒",
       conditionReorder: "行動順序已變更",
+      tokenReport: "Token Condition Report",
     },
     heading: {
       quickActions: "快速動作",
@@ -216,13 +220,15 @@ const TRANSLATION = {
       promptUi: "精靈介面",
       examples: "範例",
       summary: "摘要",
+      appliedTo: "Conditions Applied To",
+      appliedBy: "Conditions Applied By",
     },
     msg: {
       noActive: "目前沒有追蹤中的狀態。",
       configReset: "設定已重設為模組預設值。",
       unknownConfig: "未知的設定選項。使用 --config 查看支援的設定。",
       macroReinstalled:
-        "{wizard} 和 {multiTarget} 巨集已為目前所有 GM 玩家重新安裝。",
+        "{wizard}、{multiTarget} 和 {reportToken} 巨集已為目前所有 GM 玩家重新安裝。",
       handoutReinstalled: "說明講義 {handout} 已重新安裝。",
       duplicate: "相同的來源、主體、目標、狀態和自訂文字已經存在。",
       noTargets: "未指定多目標套用的目標 Token。",
@@ -283,6 +289,11 @@ const TRANSLATION = {
       conditionReorder:
         "行動順序已變更，{count} 個追蹤中的狀態列可能已不在正確位置。點擊下方將其還原至指定代幣之後。",
       conditionsReordered: "狀態列已重新排列至其指定代幣之後。",
+      noTokensSelectedReport:
+        "Select at least one token on the board before using --report-token.",
+      noConditionsAppliedTo: "{name} has no active conditions applied to it.",
+      noConditionsAppliedBy:
+        "{name} has no active conditions applied to others.",
     },
     removal: {
       conditionField: "狀態",
@@ -329,6 +340,10 @@ const TRANSLATION = {
           "同時將一個狀態套用到多個 Token。也可使用 ConditionTrackerMultiTarget 巨集。",
         ],
         [
+          "!condition-tracker --report-token",
+          "Select one or more tokens first, then run this command to get a GM whisper listing every condition applied to and by each selected token. Also available as the ConditionTrackerReportToken macro.",
+        ],
+        [
           "!condition-tracker --menu",
           "開啟主要管理選單，可套用、檢視或移除狀態。",
         ],
@@ -355,6 +370,10 @@ const TRANSLATION = {
         ["--reorder-conditions", "手動將狀態列重新排列到輪序中其對應代幣之後"],
         ["--reinstall-macro", "重新建立或更新 GM 巨集"],
         ["--reinstall-handout", "重新建立或更新本地化說明講義"],
+        [
+          "--report-token",
+          "Whisper a GM-only condition report for each selected token (conditions applied to and by it)",
+        ],
         ["--lang &lt;locale&gt;", "以額外語言環境輸出此指令訊息（雙語模式）"],
         ["--help", "在聊天中顯示簡短說明卡"],
       ],
@@ -413,6 +432,11 @@ const TRANSLATION = {
           "subjectPromptBypass",
           "true / false",
           "略過 Spell / Ability / Other 效果的可選主體 Token 步驟",
+        ],
+        [
+          "suppressPublicChat",
+          "true / false",
+          "隱藏所有公開聊天公告（施加與移除訊息）。GM 的私訊不受影響。",
         ],
         [
           "healthBar",

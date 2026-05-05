@@ -162,6 +162,8 @@ const TRANSLATION = {
       details: "Detaljer",
       description: "Beskrivning",
       scenario: "Scenario",
+      gameSystem: "Game System",
+      duration: "Duration",
     },
     dur: {
       untilRemoved: "Tills borttagen",
@@ -186,6 +188,7 @@ const TRANSLATION = {
       reinstallHandout: "Installera om handout",
       showHelp: "Visa hjälp",
       reorderConditions: "Ordna om tillståndsrader",
+      reportToken: "Report Token Conditions",
     },
     title: {
       menu: "Meny",
@@ -208,6 +211,7 @@ const TRANSLATION = {
       moveToken: "{name} — Flytta token?",
       scriptReady: "Skript redo",
       conditionReorder: "Turordning ändrad",
+      tokenReport: "Token Condition Report",
     },
     heading: {
       quickActions: "Snabbåtgärder",
@@ -219,6 +223,8 @@ const TRANSLATION = {
       promptUi: "Guide-gränssnitt",
       examples: "Exempel",
       summary: "Sammanfattning",
+      appliedTo: "Conditions Applied To",
+      appliedBy: "Conditions Applied By",
     },
     msg: {
       noActive: "Inga aktiva tillstånd spåras.",
@@ -226,7 +232,7 @@ const TRANSLATION = {
       unknownConfig:
         "Okänt konfigurationsalternativ. Använd --config för att visa stödda inställningar.",
       macroReinstalled:
-        "Makrona {wizard} och {multiTarget} har installerats om för alla nuvarande GM-spelare.",
+        "Makrona {wizard}, {multiTarget} och {reportToken} har installerats om för alla nuvarande GM-spelare.",
       handoutReinstalled: "Hjälp-handouten {handout} har installerats om.",
       duplicate:
         "Exakt den kombinationen av källa, subjekt, mål, tillstånd och anpassad text är redan aktiv.",
@@ -297,6 +303,11 @@ const TRANSLATION = {
         "Turordningen ändrades och {count} spårad(e) tillståndsrad(er) kan nu vara felplacerade. Klicka nedan för att återställa dem efter sina tilldelade tokens.",
       conditionsReordered:
         "Tillståndsrader har ompositionerats efter sina tilldelade tokens.",
+      noTokensSelectedReport:
+        "Select at least one token on the board before using --report-token.",
+      noConditionsAppliedTo: "{name} has no active conditions applied to it.",
+      noConditionsAppliedBy:
+        "{name} has no active conditions applied to others.",
     },
     removal: {
       conditionField: "Tillstånd",
@@ -343,6 +354,10 @@ const TRANSLATION = {
         [
           "!condition-tracker --multi-target",
           "Applicera ett tillstånd på flera tokens samtidigt. Finns även som makrot ConditionTrackerMultiTarget.",
+        ],
+        [
+          "!condition-tracker --report-token",
+          "Select one or more tokens first, then run this command to get a GM whisper listing every condition applied to and by each selected token. Also available as the ConditionTrackerReportToken macro.",
         ],
         [
           "!condition-tracker --menu",
@@ -397,6 +412,10 @@ const TRANSLATION = {
         [
           "--reinstall-handout",
           "Återskapa eller uppdatera det lokaliserade hjälp-handouten",
+        ],
+        [
+          "--report-token",
+          "Whisper a GM-only condition report for each selected token (conditions applied to and by it)",
         ],
         [
           "--lang &lt;locale&gt;",
@@ -483,6 +502,11 @@ const TRANSLATION = {
           "subjectPromptBypass",
           "true / false",
           "Hoppa över det valfria subjektsteget för Besvärjelse / Förmåga / Andra effekter",
+        ],
+        [
+          "suppressPublicChat",
+          "true / false",
+          "Dölj alla offentliga chattmeddelanden (tillämpnings- och borttagningsmeddelanden). GM-viskning påverkas inte.",
         ],
         [
           "healthBar",

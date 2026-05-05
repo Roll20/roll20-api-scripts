@@ -1,12 +1,61 @@
 {
   "name": "Condition Tracker",
   "script": "ConditionTracker.js",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "previousversions": [],
   "description": "Track token conditions and custom effects as separate Roll20 Turn Tracker rows.",
   "authors": "MidNiteShadow7",
   "roll20userid": "16506286",
   "useroptions": [
+    {
+      "name": "gameSystem",
+      "type": "select",
+      "options": [
+        "dnd5e",
+        "dnd4e",
+        "dnd35",
+        "pathfinder1e",
+        "pathfinder2e",
+        "starfinder",
+        "13thage",
+        "sotdl",
+        "cyphersystem",
+        "dcc",
+        "ose",
+        "bfrpg",
+        "knave",
+        "intotheodd",
+        "cairn",
+        "wwn",
+        "swn",
+        "callofcthulhu",
+        "deltagreen",
+        "vaesen",
+        "brp",
+        "vtm",
+        "wta",
+        "mta",
+        "htr",
+        "ctd",
+        "alienrpg",
+        "mothership",
+        "traveller",
+        "cyberpunkred",
+        "shadowrun",
+        "genesys",
+        "starwarsffg",
+        "cortexprime",
+        "gurps",
+        "herosystem",
+        "savageworlds",
+        "wfrp4e",
+        "wh40k",
+        "whaos",
+        "generic"
+      ],
+      "default": "dnd5e",
+      "description": "Active game system. Determines the condition list and default status marker assignments. Changing this via --config gameSystem also resets markers to the new system's defaults. Default: dnd5e."
+    },
     {
       "name": "useMarkers",
       "type": "checkbox",
@@ -27,13 +76,15 @@
       "description": "Skip the optional subject-token step for Spell, Ability, and Other effects. Default: disabled."
     },
     {
+      "name": "suppressPublicChat",
+      "type": "checkbox",
+      "value": "true",
+      "description": "Suppress all public chat announcements when conditions are applied or removed. GM whispers are unaffected. Default: disabled."
+    },
+    {
       "name": "healthBar",
       "type": "select",
-      "options": [
-        "bar1_value",
-        "bar2_value",
-        "bar3_value"
-      ],
+      "options": ["bar1_value", "bar2_value", "bar3_value"],
       "default": "bar1_value",
       "description": "Token bar to watch for 0 HP cleanup prompts. Default: bar1_value."
     },

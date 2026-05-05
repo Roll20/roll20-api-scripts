@@ -161,6 +161,8 @@ const TRANSLATION = {
       details: "Detalles",
       description: "Descripción",
       scenario: "Escenario",
+      gameSystem: "Game System",
+      duration: "Duration",
     },
     dur: {
       untilRemoved: "Hasta retirar",
@@ -185,6 +187,7 @@ const TRANSLATION = {
       reinstallHandout: "Reinstalar folleto",
       showHelp: "Mostrar ayuda",
       reorderConditions: "Reordenar filas de condición",
+      reportToken: "Report Token Conditions",
     },
     title: {
       menu: "Menú",
@@ -207,6 +210,7 @@ const TRANSLATION = {
       moveToken: "{name} — ¿Mover ficha?",
       scriptReady: "Script listo",
       conditionReorder: "Orden de turno cambiado",
+      tokenReport: "Token Condition Report",
     },
     heading: {
       quickActions: "Acciones rápidas",
@@ -218,6 +222,8 @@ const TRANSLATION = {
       promptUi: "Interfaz del asistente",
       examples: "Ejemplos",
       summary: "Resumen",
+      appliedTo: "Conditions Applied To",
+      appliedBy: "Conditions Applied By",
     },
     msg: {
       noActive: "No se están rastreando condiciones activas.",
@@ -225,7 +231,7 @@ const TRANSLATION = {
       unknownConfig:
         "Opción de configuración desconocida. Usa --config para ver los ajustes disponibles.",
       macroReinstalled:
-        "Las macros {wizard} y {multiTarget} se han reinstalado para todos los GM actuales.",
+        "Las macros {wizard}, {multiTarget} y {reportToken} se han reinstalado para todos los GM actuales.",
       handoutReinstalled: "El folleto de ayuda {handout} se reinstaló.",
       duplicate:
         "Esa combinación exacta de fuente, sujeto, objetivo, condición y texto personalizado ya está activa.",
@@ -302,6 +308,11 @@ const TRANSLATION = {
         "El orden de turno ha cambiado y {count} fila(s) de condición rastreada(s) puede(n) estar fuera de lugar. Haz clic abajo para restaurarlas después de sus tokens asignados.",
       conditionsReordered:
         "Las filas de condición han sido reposicionadas después de sus tokens asignados.",
+      noTokensSelectedReport:
+        "Select at least one token on the board before using --report-token.",
+      noConditionsAppliedTo: "{name} has no active conditions applied to it.",
+      noConditionsAppliedBy:
+        "{name} has no active conditions applied to others.",
     },
     removal: {
       conditionField: "Condición",
@@ -348,6 +359,10 @@ const TRANSLATION = {
         [
           "!condition-tracker --multi-target",
           "Aplicar una condición a varias fichas simultáneamente. También disponible como macro ConditionTrackerMultiTarget.",
+        ],
+        [
+          "!condition-tracker --report-token",
+          "Select one or more tokens first, then run this command to get a GM whisper listing every condition applied to and by each selected token. Also available as the ConditionTrackerReportToken macro.",
         ],
         [
           "!condition-tracker --menu",
@@ -402,6 +417,10 @@ const TRANSLATION = {
         [
           "--reinstall-handout",
           "Recrear o actualizar el folleto de ayuda localizado",
+        ],
+        [
+          "--report-token",
+          "Whisper a GM-only condition report for each selected token (conditions applied to and by it)",
         ],
         [
           "--lang &lt;locale&gt;",
@@ -488,6 +507,11 @@ const TRANSLATION = {
           "subjectPromptBypass",
           "true / false",
           "Omitir el paso de sujeto opcional para efectos Conjuro / Habilidad / Otro",
+        ],
+        [
+          "suppressPublicChat",
+          "true / false",
+          "Suprimir todos los anuncios públicos de chat (mensajes de aplicación y eliminación). Los susurros del DJ no se ven afectados.",
         ],
         [
           "healthBar",

@@ -161,6 +161,8 @@ const TRANSLATION = {
       details: "Szczegóły",
       description: "Opis",
       scenario: "Scenariusz",
+      gameSystem: "Game System",
+      duration: "Duration",
     },
     dur: {
       untilRemoved: "Do usunięcia",
@@ -185,6 +187,7 @@ const TRANSLATION = {
       reinstallHandout: "Zainstaluj ponownie handout",
       showHelp: "Pokaż pomoc",
       reorderConditions: "Zmień kolejność wierszy stanów",
+      reportToken: "Report Token Conditions",
     },
     title: {
       menu: "Menu",
@@ -207,6 +210,7 @@ const TRANSLATION = {
       moveToken: "{name} — Przenieść żeton?",
       scriptReady: "Skrypt gotowy",
       conditionReorder: "Kolejność tur zmieniona",
+      tokenReport: "Token Condition Report",
     },
     heading: {
       quickActions: "Szybkie akcje",
@@ -218,6 +222,8 @@ const TRANSLATION = {
       promptUi: "Interfejs kreatora",
       examples: "Przykłady",
       summary: "Podsumowanie",
+      appliedTo: "Conditions Applied To",
+      appliedBy: "Conditions Applied By",
     },
     msg: {
       noActive: "Nie są śledzone żadne aktywne stany.",
@@ -225,7 +231,7 @@ const TRANSLATION = {
       unknownConfig:
         "Nieznana opcja konfiguracji. Użyj --config, aby wyświetlić obsługiwane ustawienia.",
       macroReinstalled:
-        "Makra {wizard} i {multiTarget} zostały ponownie zainstalowane dla wszystkich obecnych graczy z rolą MG.",
+        "Makra {wizard}, {multiTarget} i {reportToken} zostały ponownie zainstalowane dla wszystkich obecnych graczy z rolą MG.",
       handoutReinstalled:
         "Handout pomocy {handout} został ponownie zainstalowany.",
       duplicate:
@@ -300,6 +306,11 @@ const TRANSLATION = {
         "Kolejność tur zmieniła się i {count} śledzony (śledzonych) wiersz stanów może być teraz poza kolejnością. Kliknij poniżej, aby przywrócić je po przypisanych żetonach.",
       conditionsReordered:
         "Wiersze stanów zostały przesunięte po ich przypisanych żetonach.",
+      noTokensSelectedReport:
+        "Select at least one token on the board before using --report-token.",
+      noConditionsAppliedTo: "{name} has no active conditions applied to it.",
+      noConditionsAppliedBy:
+        "{name} has no active conditions applied to others.",
     },
     removal: {
       conditionField: "Stan",
@@ -346,6 +357,10 @@ const TRANSLATION = {
         [
           "!condition-tracker --multi-target",
           "Zastosuj jeden stan do kilku żetonów jednocześnie. Dostępny również jako makro ConditionTrackerMultiTarget.",
+        ],
+        [
+          "!condition-tracker --report-token",
+          "Select one or more tokens first, then run this command to get a GM whisper listing every condition applied to and by each selected token. Also available as the ConditionTrackerReportToken macro.",
         ],
         [
           "!condition-tracker --menu",
@@ -397,6 +412,10 @@ const TRANSLATION = {
         [
           "--reinstall-handout",
           "Utwórz ponownie lub zaktualizuj zlokalizowany handout pomocy",
+        ],
+        [
+          "--report-token",
+          "Whisper a GM-only condition report for each selected token (conditions applied to and by it)",
         ],
         [
           "--lang &lt;język&gt;",
@@ -483,6 +502,11 @@ const TRANSLATION = {
           "subjectPromptBypass",
           "true / false",
           "Pomiń opcjonalny krok wyboru podmiotu dla efektów Zaklęcie / Zdolność / Inne",
+        ],
+        [
+          "suppressPublicChat",
+          "true / false",
+          "Pomiń wszystkie publiczne ogłoszenia na czacie (wiadomości o dodaniu i usunięciu). Szepty GM nie są objęte.",
         ],
         [
           "healthBar",

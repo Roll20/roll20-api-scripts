@@ -22,10 +22,12 @@ export const STATE_KEY = SCRIPT_NAME.replaceAll(/\s+/g, "");
 export const HANDOUT_NAME = `${SCRIPT_NAME} — Help & Reference`;
 export const MACRO_NAME = `${STATE_KEY}Wizard`;
 export const MACRO_NAME_MULTI_TARGET = `${STATE_KEY}MultiTarget`;
+export const MACRO_NAME_REPORT_TOKEN = `${STATE_KEY}ReportToken`;
 export const COMMAND = "!condition-tracker";
 export const COMMAND_HELP = `${COMMAND} --help`;
 export const COMMAND_PROMPT = `${COMMAND} --prompt`;
 export const COMMAND_MULTI_TARGET = `${COMMAND} --multi-target`;
+export const COMMAND_REPORT_TOKEN = `${COMMAND} --report-token`;
 export const TURN_ORDER_PREFIX = `${STATE_KEY}:`;
 export const TOKEN_MARKER_SEPARATOR = ",";
 export const EMPTY_TURN_ORDER = "[]";
@@ -35,153 +37,27 @@ export const DURATION_UNTIL_REMOVED = "untilRemoved";
 export const DURATION_TURN_END = "turnEnd";
 export const DURATION_ROUNDS = "rounds";
 export const MENU_REMOVE = "remove";
+export const DEFAULT_MACRO_BODY = `${COMMAND_PROMPT}`;
+export const DEFAULT_MULTI_TARGET_MACRO_BODY = `${COMMAND_MULTI_TARGET}`;
+export const DEFAULT_REPORT_TOKEN_MACRO_BODY = `${COMMAND_REPORT_TOKEN}`;
+
+// Canonical custom-effect-type keys — stable across all game systems.
+// System profiles choose which subset to surface in the wizard UI.
 export const CONDITION_OTHER = "Other";
 export const CONDITION_SPELL = "Spell";
 export const CONDITION_ABILITY = "Ability";
 export const CONDITION_ADVANTAGE = "Advantage";
 export const CONDITION_DISADVANTAGE = "Disadvantage";
-export const DEFAULT_MACRO_BODY = `${COMMAND_PROMPT}`;
-export const DEFAULT_MULTI_TARGET_MACRO_BODY = `${COMMAND_MULTI_TARGET}`;
 
-export const DEFAULT_MARKERS = Object.freeze({
-  Grappled: "grab",
-  Restrained: "padlock",
-  Prone: "back-pain",
-  Poisoned: "chemical-bolt",
-  Stunned: "pummeled",
-  Blinded: "bleeding-eye",
-  Charmed: "chained-heart",
-  Frightened: "screaming",
-  Incapacitated: "interdiction",
-  Invisible: "ninja-mask",
-  Paralyzed: "frozen-orb",
-  Petrified: "fossil",
-  Unconscious: "sleepy",
-  Spell: "lightning-helix",
-  Ability: "fist",
-  Advantage: "three-leaves",
-  Disadvantage: "broken-heart",
-});
-
-export const CONDITION_DATA = Object.freeze({
-  Grappled: { past: "grappled", verb: "grapples", icon: "[G]", emoji: "🤛" },
-  Restrained: {
-    past: "restrained",
-    verb: "restrains",
-    icon: "[R]",
-    emoji: "🔒",
-  },
-  Prone: {
-    past: "knocked prone",
-    verb: "knocks",
-    suffix: "prone",
-    icon: "[P]",
-    emoji: "🛌",
-  },
-  Poisoned: { past: "poisoned", verb: "poisons", icon: "[Psn]", emoji: "☠️" },
-  Stunned: { past: "stunned", verb: "stuns", icon: "[Stn]", emoji: "😵" },
-  Blinded: { past: "blinded", verb: "blinds", icon: "[B]", emoji: "🙈" },
-  Charmed: { past: "charmed", verb: "charms", icon: "[C]", emoji: "😍" },
-  Frightened: {
-    past: "frightened",
-    verb: "frightens",
-    icon: "[F]",
-    emoji: "😱",
-  },
-  Incapacitated: {
-    past: "incapacitated",
-    verb: "incapacitates",
-    icon: "[I]",
-    emoji: "🚫",
-  },
-  Invisible: {
-    past: "invisible",
-    verb: "makes",
-    suffix: "invisible",
-    icon: "[Inv]",
-    emoji: "🥷",
-  },
-  Paralyzed: {
-    past: "paralyzed",
-    verb: "paralyzes",
-    icon: "[Pz]",
-    emoji: "❄️",
-  },
-  Petrified: {
-    past: "petrified",
-    verb: "petrifies",
-    icon: "[Pet]",
-    emoji: "🪨",
-  },
-  Unconscious: {
-    past: "unconscious",
-    verb: "knocks",
-    suffix: "unconscious",
-    icon: "[U]",
-    emoji: "💤",
-  },
-  Spell: {
-    past: "affected by a spell",
-    verb: "casts a spell on",
-    icon: "[Spl]",
-    emoji: "🔮",
-  },
-  Ability: {
-    past: "affected by an ability",
-    verb: "uses an ability on",
-    icon: "[Abl]",
-    emoji: "🎯",
-  },
-  Advantage: {
-    past: "has advantage",
-    verb: "grants advantage to",
-    icon: "[Adv]",
-    emoji: "🍀",
-    noBy: true,
-  },
-  Disadvantage: {
-    past: "has disadvantage",
-    verb: "imposes disadvantage on",
-    icon: "[Dis]",
-    emoji: "⬇️",
-    noBy: true,
-  },
-});
-
-export const STANDARD_CONDITIONS = Object.freeze(
-  [
-    "Grappled",
-    "Restrained",
-    "Prone",
-    "Poisoned",
-    "Stunned",
-    "Blinded",
-    "Charmed",
-    "Frightened",
-    "Incapacitated",
-    "Invisible",
-    "Paralyzed",
-    "Petrified",
-    "Unconscious",
-  ].sort((a, b) => a.localeCompare(b)),
+// Full set of all canonical custom-effect-type keys (used for validation).
+export const CANONICAL_CUSTOM_TYPES = Object.freeze(
+  new Set([CONDITION_SPELL, CONDITION_ABILITY, CONDITION_ADVANTAGE, CONDITION_DISADVANTAGE, CONDITION_OTHER]),
 );
-export const CUSTOM_EFFECT_TYPES = Object.freeze([
-  CONDITION_SPELL,
-  CONDITION_ABILITY,
-  CONDITION_ADVANTAGE,
-  CONDITION_DISADVANTAGE,
-  CONDITION_OTHER,
-]);
-export const CUSTOM_EFFECT_TYPE_SET = Object.freeze(
-  new Set(CUSTOM_EFFECT_TYPES),
-);
-export const CUSTOM_TEXT_CONDITIONS = Object.freeze(
+
+// Custom types that always require free-text input via --other.
+export const CANONICAL_TEXT_CONDITIONS = Object.freeze(
   new Set([CONDITION_SPELL, CONDITION_ABILITY, CONDITION_OTHER]),
 );
-export const CONDITION_CHOICES = Object.freeze([
-  ...STANDARD_CONDITIONS,
-  ...CUSTOM_EFFECT_TYPES,
-]);
 
 export const DURATION_OPTIONS = Object.freeze([
   "Until removed",

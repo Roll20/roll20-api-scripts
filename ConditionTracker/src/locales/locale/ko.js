@@ -162,6 +162,8 @@ const TRANSLATION = {
       details: "상세 내용",
       description: "설명",
       scenario: "시나리오",
+      gameSystem: "Game System",
+      duration: "Duration",
     },
     dur: {
       untilRemoved: "제거될 때까지",
@@ -186,6 +188,7 @@ const TRANSLATION = {
       reinstallHandout: "유인물 재설치",
       showHelp: "도움말 표시",
       reorderConditions: "조건 행 재정렬",
+      reportToken: "Report Token Conditions",
     },
     title: {
       menu: "메뉴",
@@ -208,6 +211,7 @@ const TRANSLATION = {
       moveToken: "{name} — 토큰을 이동하시겠습니까?",
       scriptReady: "스크립트 준비됨",
       conditionReorder: "턴 순서 변경됨",
+      tokenReport: "Token Condition Report",
     },
     heading: {
       quickActions: "빠른 작업",
@@ -219,6 +223,8 @@ const TRANSLATION = {
       promptUi: "프롬프트 UI",
       examples: "예시",
       summary: "요약",
+      appliedTo: "Conditions Applied To",
+      appliedBy: "Conditions Applied By",
     },
     msg: {
       noActive: "추적 중인 활성 상태가 없습니다.",
@@ -226,7 +232,7 @@ const TRANSLATION = {
       unknownConfig:
         "알 수 없는 설정 옵션입니다. --config 를 사용하여 지원되는 설정을 확인하세요.",
       macroReinstalled:
-        "{wizard} 및 {multiTarget} 매크로가 모든 현재 GM 플레이어를 위해 재설치되었습니다.",
+        "{wizard}, {multiTarget} 및 {reportToken} 매크로가 모든 현재 GM 플레이어를 위해 재설치되었습니다.",
       handoutReinstalled: "도움말 유인물 {handout}이(가) 재설치되었습니다.",
       duplicate:
         "동일한 시전자, 주체, 대상, 상태 및 사용자 정의 텍스트가 이미 활성화되어 있습니다.",
@@ -298,6 +304,11 @@ const TRANSLATION = {
       conditionReorder:
         "턴 순서가 변경되어 {count}개의 추적된 조건 행이 잘못된 위치에 있을 수 있습니다. 아래를 클릭하여 지정된 토큰 뒤에 복원하세요.",
       conditionsReordered: "조건 행이 지정된 토큰 뒤로 재배치되었습니다.",
+      noTokensSelectedReport:
+        "Select at least one token on the board before using --report-token.",
+      noConditionsAppliedTo: "{name} has no active conditions applied to it.",
+      noConditionsAppliedBy:
+        "{name} has no active conditions applied to others.",
     },
     removal: {
       conditionField: "상태",
@@ -345,6 +356,10 @@ const TRANSLATION = {
           "여러 토큰에 하나의 상태를 동시에 적용합니다. ConditionTrackerMultiTarget 매크로로도 사용할 수 있습니다.",
         ],
         [
+          "!condition-tracker --report-token",
+          "Select one or more tokens first, then run this command to get a GM whisper listing every condition applied to and by each selected token. Also available as the ConditionTrackerReportToken macro.",
+        ],
+        [
           "!condition-tracker --menu",
           "상태를 적용, 검토 또는 제거할 수 있는 버튼이 있는 메인 관리 메뉴를 엽니다.",
         ],
@@ -380,6 +395,10 @@ const TRANSLATION = {
         ],
         ["--reinstall-macro", "GM 매크로 재생성 또는 업데이트"],
         ["--reinstall-handout", "현지화된 도움말 유인물 재생성 또는 업데이트"],
+        [
+          "--report-token",
+          "Whisper a GM-only condition report for each selected token (conditions applied to and by it)",
+        ],
         [
           "--lang &lt;로케일&gt;",
           "이 명령어의 메시지를 추가 로케일로 출력 (이중 언어 모드)",
@@ -465,6 +484,11 @@ const TRANSLATION = {
           "subjectPromptBypass",
           "true / false",
           "주문 / 능력 / 기타 효과에 대해 선택적인 주체 토큰 단계를 건너뜁니다.",
+        ],
+        [
+          "suppressPublicChat",
+          "true / false",
+          "모든 공개 채팅 알림(적용 및 제거 메시지)을 억제합니다. GM 속삭임은 영향을 받지 않습니다.",
         ],
         [
           "healthBar",

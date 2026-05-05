@@ -160,6 +160,8 @@ const TRANSLATION = {
       details: "פרטים",
       description: "תיאור",
       scenario: "תרחיש",
+      gameSystem: "Game System",
+      duration: "Duration",
     },
     dur: {
       untilRemoved: "עד להסרה",
@@ -184,6 +186,7 @@ const TRANSLATION = {
       reinstallHandout: "התקן דף עזרה מחדש",
       showHelp: "הצג עזרה",
       reorderConditions: "סדר מחדש שורות תנאי",
+      reportToken: "Report Token Conditions",
     },
     title: {
       menu: "תפריט",
@@ -206,6 +209,7 @@ const TRANSLATION = {
       moveToken: "{name} — להעביר אסימון?",
       scriptReady: "הסקריפט מוכן",
       conditionReorder: "סדר התורות השתנה",
+      tokenReport: "Token Condition Report",
     },
     heading: {
       quickActions: "פעולות מהירות",
@@ -217,6 +221,8 @@ const TRANSLATION = {
       promptUi: "ממשק אשף",
       examples: "דוגמאות",
       summary: "סיכום",
+      appliedTo: "Conditions Applied To",
+      appliedBy: "Conditions Applied By",
     },
     msg: {
       noActive: "אין מצבים פעילים במעקב.",
@@ -224,7 +230,7 @@ const TRANSLATION = {
       unknownConfig:
         "אפשרות הגדרה לא מוכרת. השתמש ב־--config להצגת ההגדרות הנתמכות.",
       macroReinstalled:
-        "המאקרואים {wizard} ו־{multiTarget} הותקנו מחדש לכל שחקני ה־GM הנוכחיים.",
+        "המאקרואים {wizard}, {multiTarget} ו־{reportToken} הותקנו מחדש לכל שחקני ה־GM הנוכחיים.",
       handoutReinstalled: "דף העזרה {handout} הותקן מחדש.",
       duplicate: "אותו מקור, נושא, יעד, מצב וטקסט מותאם כבר פעילים.",
       noTargets: "לא צוינו אסימוני יעד להחלה מרובת יעדים.",
@@ -288,6 +294,11 @@ const TRANSLATION = {
       conditionReorder:
         "סדר התורות השתנה ו-{count} שורת/שורות תנאי עקובות עשויות להיות כעת במיקום שגוי. לחץ למטה כדי לשחזר אותן אחרי הטוקנים שהוקצו להן.",
       conditionsReordered: "שורות התנאי מוקמו מחדש אחרי הטוקנים שהוקצו להן.",
+      noTokensSelectedReport:
+        "Select at least one token on the board before using --report-token.",
+      noConditionsAppliedTo: "{name} has no active conditions applied to it.",
+      noConditionsAppliedBy:
+        "{name} has no active conditions applied to others.",
     },
     removal: {
       conditionField: "מצב",
@@ -334,6 +345,10 @@ const TRANSLATION = {
           "החלת מצב אחד על כמה אסימונים בו־זמנית.",
         ],
         [
+          "!condition-tracker --report-token",
+          "Select one or more tokens first, then run this command to get a GM whisper listing every condition applied to and by each selected token. Also available as the ConditionTrackerReportToken macro.",
+        ],
+        [
           "!condition-tracker --menu",
           "פתיחת תפריט הניהול הראשי להחלה, בדיקה או הסרה של מצבים.",
         ],
@@ -363,6 +378,10 @@ const TRANSLATION = {
         ],
         ["--reinstall-macro", "יצירה או עדכון של מאקרואים ל־GM"],
         ["--reinstall-handout", "יצירה או עדכון של דף העזרה המקומי"],
+        [
+          "--report-token",
+          "Whisper a GM-only condition report for each selected token (conditions applied to and by it)",
+        ],
         ["--lang &lt;locale&gt;", "פלט נוסף באזור שפה אחר"],
         ["--help", "הצגת כרטיס עזרה קצר בצ׳אט"],
       ],
@@ -410,6 +429,11 @@ const TRANSLATION = {
           "subjectPromptBypass",
           "true / false",
           "דילוג על שלב הנושא האופציונלי",
+        ],
+        [
+          "suppressPublicChat",
+          "true / false",
+          "דכא את כל הודעות הצ'אט הציבוריות (הודעות החלה והסרה). לחישות ה-GM אינן מושפעות.",
         ],
         [
           "healthBar",

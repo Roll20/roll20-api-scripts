@@ -4,8 +4,8 @@
  * ------------------------------------------------
  * Name: Condition Tracker
  * Script: ConditionTracker.js
- * Version: 1.0.0
- * Built: 2026-04-30T12:20:54.036Z
+ * Version: 1.1.0
+ * Built: 2026-05-05T02:30:07.260Z
  */
 const ConditionTrackerMod = (() => {
   'use strict';
@@ -259,8 +259,8 @@ const ConditionTrackerMod = (() => {
   ).join(' / ');
 
   const SCRIPT_NAME = 'Condition Tracker';
-  const SCRIPT_VERSION = '1.0.0';
-  const SCRIPT_LAST_UPDATED = '2026-04-30T12:20:54.036Z';
+  const SCRIPT_VERSION = '1.1.0';
+  const SCRIPT_LAST_UPDATED = '2026-05-05T02:30:07.260Z';
 
   const COLOR_BG_SOFT_BLACK = '#0A0A12';
   const COLOR_TEXT_ARCANE_SILVER = '#E6DFFF';
@@ -275,9 +275,11 @@ const ConditionTrackerMod = (() => {
   const HANDOUT_NAME = `${SCRIPT_NAME} — Help & Reference`;
   const MACRO_NAME = `${STATE_KEY}Wizard`;
   const MACRO_NAME_MULTI_TARGET = `${STATE_KEY}MultiTarget`;
+  const MACRO_NAME_REPORT_TOKEN = `${STATE_KEY}ReportToken`;
   const COMMAND = '!condition-tracker';
   const COMMAND_PROMPT = `${COMMAND} --prompt`;
   const COMMAND_MULTI_TARGET = `${COMMAND} --multi-target`;
+  const COMMAND_REPORT_TOKEN = `${COMMAND} --report-token`;
   const TURN_ORDER_PREFIX = `${STATE_KEY}:`;
   const TOKEN_MARKER_SEPARATOR = ',';
   const EMPTY_TURN_ORDER = '[]';
@@ -287,148 +289,33 @@ const ConditionTrackerMod = (() => {
   const DURATION_TURN_END = 'turnEnd';
   const DURATION_ROUNDS = 'rounds';
   const MENU_REMOVE = 'remove';
+  const DEFAULT_MACRO_BODY = `${COMMAND_PROMPT}`;
+  const DEFAULT_MULTI_TARGET_MACRO_BODY = `${COMMAND_MULTI_TARGET}`;
+  const DEFAULT_REPORT_TOKEN_MACRO_BODY = `${COMMAND_REPORT_TOKEN}`;
+
+  // Canonical custom-effect-type keys — stable across all game systems.
+  // System profiles choose which subset to surface in the wizard UI.
   const CONDITION_OTHER = 'Other';
   const CONDITION_SPELL = 'Spell';
   const CONDITION_ABILITY = 'Ability';
   const CONDITION_ADVANTAGE = 'Advantage';
   const CONDITION_DISADVANTAGE = 'Disadvantage';
-  const DEFAULT_MACRO_BODY = `${COMMAND_PROMPT}`;
-  const DEFAULT_MULTI_TARGET_MACRO_BODY = `${COMMAND_MULTI_TARGET}`;
 
-  const DEFAULT_MARKERS = Object.freeze({
-    Grappled: 'grab',
-    Restrained: 'padlock',
-    Prone: 'back-pain',
-    Poisoned: 'chemical-bolt',
-    Stunned: 'pummeled',
-    Blinded: 'bleeding-eye',
-    Charmed: 'chained-heart',
-    Frightened: 'screaming',
-    Incapacitated: 'interdiction',
-    Invisible: 'ninja-mask',
-    Paralyzed: 'frozen-orb',
-    Petrified: 'fossil',
-    Unconscious: 'sleepy',
-    Spell: 'lightning-helix',
-    Ability: 'fist',
-    Advantage: 'three-leaves',
-    Disadvantage: 'broken-heart',
-  });
-
-  const CONDITION_DATA = Object.freeze({
-    Grappled: { past: 'grappled', verb: 'grapples', icon: '[G]', emoji: '🤛' },
-    Restrained: {
-      past: 'restrained',
-      verb: 'restrains',
-      icon: '[R]',
-      emoji: '🔒',
-    },
-    Prone: {
-      past: 'knocked prone',
-      verb: 'knocks',
-      suffix: 'prone',
-      icon: '[P]',
-      emoji: '🛌',
-    },
-    Poisoned: { past: 'poisoned', verb: 'poisons', icon: '[Psn]', emoji: '☠️' },
-    Stunned: { past: 'stunned', verb: 'stuns', icon: '[Stn]', emoji: '😵' },
-    Blinded: { past: 'blinded', verb: 'blinds', icon: '[B]', emoji: '🙈' },
-    Charmed: { past: 'charmed', verb: 'charms', icon: '[C]', emoji: '😍' },
-    Frightened: {
-      past: 'frightened',
-      verb: 'frightens',
-      icon: '[F]',
-      emoji: '😱',
-    },
-    Incapacitated: {
-      past: 'incapacitated',
-      verb: 'incapacitates',
-      icon: '[I]',
-      emoji: '🚫',
-    },
-    Invisible: {
-      past: 'invisible',
-      verb: 'makes',
-      suffix: 'invisible',
-      icon: '[Inv]',
-      emoji: '🥷',
-    },
-    Paralyzed: {
-      past: 'paralyzed',
-      verb: 'paralyzes',
-      icon: '[Pz]',
-      emoji: '❄️',
-    },
-    Petrified: {
-      past: 'petrified',
-      verb: 'petrifies',
-      icon: '[Pet]',
-      emoji: '🪨',
-    },
-    Unconscious: {
-      past: 'unconscious',
-      verb: 'knocks',
-      suffix: 'unconscious',
-      icon: '[U]',
-      emoji: '💤',
-    },
-    Spell: {
-      past: 'affected by a spell',
-      verb: 'casts a spell on',
-      icon: '[Spl]',
-      emoji: '🔮',
-    },
-    Ability: {
-      past: 'affected by an ability',
-      verb: 'uses an ability on',
-      icon: '[Abl]',
-      emoji: '🎯',
-    },
-    Advantage: {
-      past: 'has advantage',
-      verb: 'grants advantage to',
-      icon: '[Adv]',
-      emoji: '🍀',
-      noBy: true,
-    },
-    Disadvantage: {
-      past: 'has disadvantage',
-      verb: 'imposes disadvantage on',
-      icon: '[Dis]',
-      emoji: '⬇️',
-      noBy: true,
-    },
-  });
-
-  const STANDARD_CONDITIONS = Object.freeze(
-    [
-      'Grappled',
-      'Restrained',
-      'Prone',
-      'Poisoned',
-      'Stunned',
-      'Blinded',
-      'Charmed',
-      'Frightened',
-      'Incapacitated',
-      'Invisible',
-      'Paralyzed',
-      'Petrified',
-      'Unconscious',
-    ].sort((a, b) => a.localeCompare(b)),
+  // Full set of all canonical custom-effect-type keys (used for validation).
+  const CANONICAL_CUSTOM_TYPES = Object.freeze(
+    new Set([
+      CONDITION_SPELL,
+      CONDITION_ABILITY,
+      CONDITION_ADVANTAGE,
+      CONDITION_DISADVANTAGE,
+      CONDITION_OTHER,
+    ]),
   );
-  const CUSTOM_EFFECT_TYPES = Object.freeze([
-    CONDITION_SPELL,
-    CONDITION_ABILITY,
-    CONDITION_ADVANTAGE,
-    CONDITION_DISADVANTAGE,
-    CONDITION_OTHER,
-  ]);
-  const CUSTOM_EFFECT_TYPE_SET = Object.freeze(new Set(CUSTOM_EFFECT_TYPES));
-  const CUSTOM_TEXT_CONDITIONS = Object.freeze(
+
+  // Custom types that always require free-text input via --other.
+  const CANONICAL_TEXT_CONDITIONS = Object.freeze(
     new Set([CONDITION_SPELL, CONDITION_ABILITY, CONDITION_OTHER]),
   );
-  Object.freeze([...STANDARD_CONDITIONS, ...CUSTOM_EFFECT_TYPES]);
 
   const DURATION_OPTIONS = Object.freeze([
     'Until removed',
@@ -610,6 +497,8 @@ const ConditionTrackerMod = (() => {
         details: 'Besonderhede',
         description: 'Beskrywing',
         scenario: 'Scenario',
+        gameSystem: 'Game System',
+        duration: 'Duration',
       },
       dur: {
         untilRemoved: 'Tot verwydering',
@@ -634,6 +523,7 @@ const ConditionTrackerMod = (() => {
         reinstallHandout: 'Herinstalleer Handout',
         showHelp: 'Wys Hulp',
         reorderConditions: 'Herrangskik Toestandrye',
+        reportToken: 'Report Token Conditions',
       },
       title: {
         menu: 'Kieslys',
@@ -656,6 +546,7 @@ const ConditionTrackerMod = (() => {
         moveToken: '{name} — Verskuif Token?',
         scriptReady: 'Skrip Gereed',
         conditionReorder: 'Beurtorde Verander',
+        tokenReport: 'Token Condition Report',
       },
       heading: {
         quickActions: 'Vinnige Aksies',
@@ -667,6 +558,8 @@ const ConditionTrackerMod = (() => {
         promptUi: 'Towenaar-koppelvlak',
         examples: 'Voorbeelde',
         summary: 'Opsomming',
+        appliedTo: 'Conditions Applied To',
+        appliedBy: 'Conditions Applied By',
       },
       msg: {
         noActive: 'Geen aktiewe toestande word gevolg nie.',
@@ -674,7 +567,7 @@ const ConditionTrackerMod = (() => {
         unknownConfig:
           'Onbekende konfigurasieopsie. Gebruik --config om ondersteunde instellings te sien.',
         macroReinstalled:
-          'Die {wizard}- en {multiTarget}-makros is herinstalleer vir alle huidige GM-spelers.',
+          'Die {wizard}- en {multiTarget}- en {reportToken}-makros is herinstalleer vir alle huidige GM-spelers.',
         handoutReinstalled: 'Die hulp-handout {handout} is herinstalleer.',
         duplicate:
           'Hierdie presiese kombinasie van bron, onderwerp, teiken, toestand en aangepaste teks is reeds aktief.',
@@ -749,6 +642,11 @@ const ConditionTrackerMod = (() => {
           'Die beurtorde het verander en {count} gevolge toestandry(e) mag nou buite plek wees. Klik hieronder om hulle ná hul toegewysde tokens te herstel.',
         conditionsReordered:
           'Toestandrye is herposisioneer ná hul toegewysde tokens.',
+        noTokensSelectedReport:
+          'Select at least one token on the board before using --report-token.',
+        noConditionsAppliedTo: '{name} has no active conditions applied to it.',
+        noConditionsAppliedBy:
+          '{name} has no active conditions applied to others.',
       },
       removal: {
         conditionField: 'Toestand',
@@ -795,6 +693,10 @@ const ConditionTrackerMod = (() => {
           [
             '!condition-tracker --multi-target',
             'Pas een toestand gelyktydig op verskeie tokens toe. Ook beskikbaar as die ConditionTrackerMultiTarget-makro.',
+          ],
+          [
+            '!condition-tracker --report-token',
+            'Select one or more tokens first, then run this command to get a GM whisper listing every condition applied to and by each selected token. Also available as the ConditionTrackerReportToken macro.',
           ],
           [
             '!condition-tracker --menu',
@@ -852,6 +754,10 @@ const ConditionTrackerMod = (() => {
           [
             '--reinstall-handout',
             'Herskep of dateer die gelokaliseerde hulp-handout op',
+          ],
+          [
+            '--report-token',
+            'Whisper a GM-only condition report for each selected token (conditions applied to and by it)',
           ],
           [
             '--lang &lt;lokaal&gt;',
@@ -938,6 +844,11 @@ const ConditionTrackerMod = (() => {
             'subjectPromptBypass',
             'true / false',
             'Slaan die opsionele onderwerp-tokenstap oor vir Towerspreuk / Vermoë / Ander effekte',
+          ],
+          [
+            'suppressPublicChat',
+            'true / false',
+            'Onderdruk alle openbare kletsboodskappe (toepassing en verwydering). GM-fluisterings word nie beïnvloed nie.',
           ],
           [
             'healthBar',
@@ -1136,6 +1047,8 @@ const ConditionTrackerMod = (() => {
         details: 'Detalls',
         description: 'Descripció',
         scenario: 'Escenari',
+        gameSystem: 'Game System',
+        duration: 'Duration',
       },
       dur: {
         untilRemoved: "Fins que s'elimini",
@@ -1160,6 +1073,7 @@ const ConditionTrackerMod = (() => {
         reinstallHandout: 'Reinstal·la el fullet',
         showHelp: "Mostra l'ajuda",
         reorderConditions: 'Reordena les files de condicions',
+        reportToken: 'Report Token Conditions',
       },
       title: {
         menu: 'Menú',
@@ -1182,6 +1096,7 @@ const ConditionTrackerMod = (() => {
         moveToken: '{name} — Mou el testimoni?',
         scriptReady: 'Script llest',
         conditionReorder: 'Ordre de torn modificat',
+        tokenReport: 'Token Condition Report',
       },
       heading: {
         quickActions: 'Accions ràpides',
@@ -1193,6 +1108,8 @@ const ConditionTrackerMod = (() => {
         promptUi: "Interfície de l'assistent",
         examples: 'Exemples',
         summary: 'Resum',
+        appliedTo: 'Conditions Applied To',
+        appliedBy: 'Conditions Applied By',
       },
       msg: {
         noActive: 'No hi ha cap condició activa en seguiment.',
@@ -1200,7 +1117,7 @@ const ConditionTrackerMod = (() => {
         unknownConfig:
           'Opció de configuració desconeguda. Usa --config per veure els paràmetres disponibles.',
         macroReinstalled:
-          "Les macros {wizard} i {multiTarget} s'han reinstal·lat per a tots els MJ actius.",
+          "Les macros {wizard}, {multiTarget} i {reportToken} s'han reinstal·lat per a tots els MJ actius.",
         handoutReinstalled: "El fullet d'ajuda {handout} s'ha reinstal·lat.",
         duplicate:
           "Aquesta combinació d'origen, subjecte, destinatari, condició i text personalitzat ja és activa.",
@@ -1278,6 +1195,11 @@ const ConditionTrackerMod = (() => {
           "L'ordre de torn ha canviat i {count} fila(es) de condició seguida(es) pot estar fora de lloc. Fes clic a continuació per restaurar-les després dels seus testimonis assignats.",
         conditionsReordered:
           "Les files de condicions s'han reposicionat després dels seus testimonis assignats.",
+        noTokensSelectedReport:
+          'Select at least one token on the board before using --report-token.',
+        noConditionsAppliedTo: '{name} has no active conditions applied to it.',
+        noConditionsAppliedBy:
+          '{name} has no active conditions applied to others.',
       },
       removal: {
         conditionField: 'Condició',
@@ -1325,6 +1247,10 @@ const ConditionTrackerMod = (() => {
           [
             '!condition-tracker --multi-target',
             'Aplica una condició a diversos testimonis simultàniament. També disponible com a macro ConditionTrackerMultiTarget.',
+          ],
+          [
+            '!condition-tracker --report-token',
+            'Select one or more tokens first, then run this command to get a GM whisper listing every condition applied to and by each selected token. Also available as the ConditionTrackerReportToken macro.',
           ],
           [
             '!condition-tracker --menu',
@@ -1382,6 +1308,10 @@ const ConditionTrackerMod = (() => {
           [
             '--reinstall-handout',
             "Torna a crear o actualitza el fullet d'ajuda localitzat",
+          ],
+          [
+            '--report-token',
+            'Whisper a GM-only condition report for each selected token (conditions applied to and by it)',
           ],
           [
             '--lang &lt;locale&gt;',
@@ -1468,6 +1398,11 @@ const ConditionTrackerMod = (() => {
             'subjectPromptBypass',
             'true / false',
             'Omet el pas del testimoni subjecte opcional per als efectes Encanteri / Habilitat / Altres',
+          ],
+          [
+            'suppressPublicChat',
+            'true / false',
+            "Suprimeix tots els anuncis públics de xat (missatges d'aplicació i eliminació). Els xiuxiuejos del DJ no es veuen afectats.",
           ],
           [
             'healthBar',
@@ -1663,6 +1598,8 @@ const ConditionTrackerMod = (() => {
         details: '詳細資料',
         description: '描述',
         scenario: '情境',
+        gameSystem: 'Game System',
+        duration: 'Duration',
       },
       dur: {
         untilRemoved: '直到移除',
@@ -1687,6 +1624,7 @@ const ConditionTrackerMod = (() => {
         reinstallHandout: '重新安裝講義',
         showHelp: '顯示說明',
         reorderConditions: '重新排列狀態列',
+        reportToken: 'Report Token Conditions',
       },
       title: {
         menu: '選單',
@@ -1709,6 +1647,7 @@ const ConditionTrackerMod = (() => {
         moveToken: '{name} — 移動 Token？',
         scriptReady: '腳本已就緒',
         conditionReorder: '行動順序已變更',
+        tokenReport: 'Token Condition Report',
       },
       heading: {
         quickActions: '快速動作',
@@ -1720,13 +1659,15 @@ const ConditionTrackerMod = (() => {
         promptUi: '精靈介面',
         examples: '範例',
         summary: '摘要',
+        appliedTo: 'Conditions Applied To',
+        appliedBy: 'Conditions Applied By',
       },
       msg: {
         noActive: '目前沒有追蹤中的狀態。',
         configReset: '設定已重設為模組預設值。',
         unknownConfig: '未知的設定選項。使用 --config 查看支援的設定。',
         macroReinstalled:
-          '{wizard} 和 {multiTarget} 巨集已為目前所有 GM 玩家重新安裝。',
+          '{wizard}、{multiTarget} 和 {reportToken} 巨集已為目前所有 GM 玩家重新安裝。',
         handoutReinstalled: '說明講義 {handout} 已重新安裝。',
         duplicate: '相同的來源、主體、目標、狀態和自訂文字已經存在。',
         noTargets: '未指定多目標套用的目標 Token。',
@@ -1787,6 +1728,11 @@ const ConditionTrackerMod = (() => {
         conditionReorder:
           '行動順序已變更，{count} 個追蹤中的狀態列可能已不在正確位置。點擊下方將其還原至指定代幣之後。',
         conditionsReordered: '狀態列已重新排列至其指定代幣之後。',
+        noTokensSelectedReport:
+          'Select at least one token on the board before using --report-token.',
+        noConditionsAppliedTo: '{name} has no active conditions applied to it.',
+        noConditionsAppliedBy:
+          '{name} has no active conditions applied to others.',
       },
       removal: {
         conditionField: '狀態',
@@ -1833,6 +1779,10 @@ const ConditionTrackerMod = (() => {
             '同時將一個狀態套用到多個 Token。也可使用 ConditionTrackerMultiTarget 巨集。',
           ],
           [
+            '!condition-tracker --report-token',
+            'Select one or more tokens first, then run this command to get a GM whisper listing every condition applied to and by each selected token. Also available as the ConditionTrackerReportToken macro.',
+          ],
+          [
             '!condition-tracker --menu',
             '開啟主要管理選單，可套用、檢視或移除狀態。',
           ],
@@ -1868,6 +1818,10 @@ const ConditionTrackerMod = (() => {
           ],
           ['--reinstall-macro', '重新建立或更新 GM 巨集'],
           ['--reinstall-handout', '重新建立或更新本地化說明講義'],
+          [
+            '--report-token',
+            'Whisper a GM-only condition report for each selected token (conditions applied to and by it)',
+          ],
           ['--lang &lt;locale&gt;', '以額外語言環境輸出此指令訊息（雙語模式）'],
           ['--help', '在聊天中顯示簡短說明卡'],
         ],
@@ -1929,6 +1883,11 @@ const ConditionTrackerMod = (() => {
             'subjectPromptBypass',
             'true / false',
             '略過 Spell / Ability / Other 效果的可選主體 Token 步驟',
+          ],
+          [
+            'suppressPublicChat',
+            'true / false',
+            '隱藏所有公開聊天公告（施加與移除訊息）。GM 的私訊不受影響。',
           ],
           [
             'healthBar',
@@ -2152,6 +2111,8 @@ const ConditionTrackerMod = (() => {
         details: 'Podrobnosti',
         description: 'Popis',
         scenario: 'Scénář',
+        gameSystem: 'Game System',
+        duration: 'Duration',
       },
       dur: {
         untilRemoved: 'Do odebrání',
@@ -2176,6 +2137,7 @@ const ConditionTrackerMod = (() => {
         reinstallHandout: 'Přeinstalovat příručku',
         showHelp: 'Zobrazit nápovědu',
         reorderConditions: 'Přeuspořádat řádky stavů',
+        reportToken: 'Report Token Conditions',
       },
       title: {
         menu: 'Nabídka',
@@ -2198,6 +2160,7 @@ const ConditionTrackerMod = (() => {
         moveToken: '{name} — Přesunout žeton?',
         scriptReady: 'Skript připraven',
         conditionReorder: 'Pořadí tahů změněno',
+        tokenReport: 'Token Condition Report',
       },
       heading: {
         quickActions: 'Rychlé akce',
@@ -2209,6 +2172,8 @@ const ConditionTrackerMod = (() => {
         promptUi: 'Rozhraní průvodce',
         examples: 'Příklady',
         summary: 'Souhrn',
+        appliedTo: 'Conditions Applied To',
+        appliedBy: 'Conditions Applied By',
       },
       msg: {
         noActive: 'Nejsou sledovány žádné aktivní stavy.',
@@ -2216,7 +2181,7 @@ const ConditionTrackerMod = (() => {
         unknownConfig:
           'Neznámá možnost konfigurace. Použijte --config pro zobrazení podporovaných nastavení.',
         macroReinstalled:
-          'Makra {wizard} a {multiTarget} byla přeinstalována pro všechny aktuální hráče s GM rolí.',
+          'Makra {wizard}, {multiTarget} a {reportToken} byla přeinstalována pro všechny aktuální hráče s GM rolí.',
         handoutReinstalled: 'Pomocná příručka {handout} byla přeinstalována.',
         duplicate:
           'Tato přesná kombinace zdroje, subjektu, cíle, stavu a vlastního textu je již aktivní.',
@@ -2290,6 +2255,11 @@ const ConditionTrackerMod = (() => {
           'Pořadí tahů se změnilo a {count} sledovaný (sledovaných) řádek stavů může být mimo pořadí. Klikněte níže pro jejich obnovení za přiřazené žetony.',
         conditionsReordered:
           'Řádky stavů byly přesunuty za jejich přiřazené žetony.',
+        noTokensSelectedReport:
+          'Select at least one token on the board before using --report-token.',
+        noConditionsAppliedTo: '{name} has no active conditions applied to it.',
+        noConditionsAppliedBy:
+          '{name} has no active conditions applied to others.',
       },
       removal: {
         conditionField: 'Stav',
@@ -2336,6 +2306,10 @@ const ConditionTrackerMod = (() => {
           [
             '!condition-tracker --multi-target',
             'Uplatnit jeden stav na více žetonů současně. Dostupné také jako makro ConditionTrackerMultiTarget.',
+          ],
+          [
+            '!condition-tracker --report-token',
+            'Select one or more tokens first, then run this command to get a GM whisper listing every condition applied to and by each selected token. Also available as the ConditionTrackerReportToken macro.',
           ],
           [
             '!condition-tracker --menu',
@@ -2390,6 +2364,10 @@ const ConditionTrackerMod = (() => {
           [
             '--reinstall-handout',
             'Znovu vytvořit nebo aktualizovat lokalizovanou pomocnou příručku',
+          ],
+          [
+            '--report-token',
+            'Whisper a GM-only condition report for each selected token (conditions applied to and by it)',
           ],
           [
             '--lang &lt;jazyk&gt;',
@@ -2473,6 +2451,11 @@ const ConditionTrackerMod = (() => {
             'subjectPromptBypass',
             'true / false',
             'Přeskočit volitelný krok výběru subjektu pro efekty Kouzlo / Schopnost / Jiné',
+          ],
+          [
+            'suppressPublicChat',
+            'true / false',
+            'Potlač všechna veřejná oznámení v chatu (zprávy o přidání a odebrání). Šepoty GM nejsou ovlivněny.',
           ],
           [
             'healthBar',
@@ -2672,6 +2655,8 @@ const ConditionTrackerMod = (() => {
         details: 'Detaljer',
         description: 'Beskrivelse',
         scenario: 'Scenarie',
+        gameSystem: 'Game System',
+        duration: 'Duration',
       },
       dur: {
         untilRemoved: 'Indtil fjernet',
@@ -2696,6 +2681,7 @@ const ConditionTrackerMod = (() => {
         reinstallHandout: 'Geninstaller handout',
         showHelp: 'Vis hjælp',
         reorderConditions: 'Omarranger tilstandsrækker',
+        reportToken: 'Report Token Conditions',
       },
       title: {
         menu: 'Menu',
@@ -2718,6 +2704,7 @@ const ConditionTrackerMod = (() => {
         moveToken: '{name} — Flyt token?',
         scriptReady: 'Script klar',
         conditionReorder: 'Turrækkefølge ændret',
+        tokenReport: 'Token Condition Report',
       },
       heading: {
         quickActions: 'Hurtighandlinger',
@@ -2729,6 +2716,8 @@ const ConditionTrackerMod = (() => {
         promptUi: 'Guide-brugerflade',
         examples: 'Eksempler',
         summary: 'Oversigt',
+        appliedTo: 'Conditions Applied To',
+        appliedBy: 'Conditions Applied By',
       },
       msg: {
         noActive: 'Ingen aktive tilstande spores.',
@@ -2736,7 +2725,7 @@ const ConditionTrackerMod = (() => {
         unknownConfig:
           'Ukendt konfigurationsindstilling. Brug --config for at se understøttede indstillinger.',
         macroReinstalled:
-          'Makroerne {wizard} og {multiTarget} er geninstalleret for alle nuværende GM-spillere.',
+          'Makroerne {wizard}, {multiTarget} og {reportToken} er geninstalleret for alle nuværende GM-spillere.',
         handoutReinstalled: 'Hjælpe-handouttet {handout} er geninstalleret.',
         duplicate:
           'Den præcise kombination af kilde, subjekt, mål, tilstand og brugerdefineret tekst er allerede aktiv.',
@@ -2811,6 +2800,11 @@ const ConditionTrackerMod = (() => {
           'Turrækkefølgen ændrede sig, og {count} sporet tilstandsrække(r) kan nu være fejlplaceret. Klik nedenfor for at gendanne dem efter deres tildelte tokens.',
         conditionsReordered:
           'Tilstandsrækker er omplaceret efter deres tildelte tokens.',
+        noTokensSelectedReport:
+          'Select at least one token on the board before using --report-token.',
+        noConditionsAppliedTo: '{name} has no active conditions applied to it.',
+        noConditionsAppliedBy:
+          '{name} has no active conditions applied to others.',
       },
       removal: {
         conditionField: 'Tilstand',
@@ -2857,6 +2851,10 @@ const ConditionTrackerMod = (() => {
           [
             '!condition-tracker --multi-target',
             'Anvend én tilstand på flere tokens samtidig. Også tilgængelig som makroen ConditionTrackerMultiTarget.',
+          ],
+          [
+            '!condition-tracker --report-token',
+            'Select one or more tokens first, then run this command to get a GM whisper listing every condition applied to and by each selected token. Also available as the ConditionTrackerReportToken macro.',
           ],
           [
             '!condition-tracker --menu',
@@ -2908,6 +2906,10 @@ const ConditionTrackerMod = (() => {
           [
             '--reinstall-handout',
             'Genopret eller opdater det lokaliserede hjælpe-handout',
+          ],
+          [
+            '--report-token',
+            'Whisper a GM-only condition report for each selected token (conditions applied to and by it)',
           ],
           [
             '--lang &lt;locale&gt;',
@@ -2994,6 +2996,11 @@ const ConditionTrackerMod = (() => {
             'subjectPromptBypass',
             'true / false',
             'Spring det valgfrie subjekttrin over for Besværgelse / Evne / Andre effekter',
+          ],
+          [
+            'suppressPublicChat',
+            'true / false',
+            'Undertryk alle offentlige chatbeskeder (anvend og fjern beskeder). GM-hvisker påvirkes ikke.',
           ],
           [
             'healthBar',
@@ -3195,6 +3202,8 @@ const ConditionTrackerMod = (() => {
         details: 'Details',
         description: 'Beschrijving',
         scenario: 'Scenario',
+        gameSystem: 'Game System',
+        duration: 'Duration',
       },
       dur: {
         untilRemoved: 'Tot verwijdering',
@@ -3219,6 +3228,7 @@ const ConditionTrackerMod = (() => {
         reinstallHandout: 'Handout Herinstalleren',
         showHelp: 'Toon Help',
         reorderConditions: 'Conditierijen Herordenen',
+        reportToken: 'Report Token Conditions',
       },
       title: {
         menu: 'Menu',
@@ -3241,6 +3251,7 @@ const ConditionTrackerMod = (() => {
         moveToken: '{name} — Token Verplaatsen?',
         scriptReady: 'Script Gereed',
         conditionReorder: 'Beurtenvolgorde Gewijzigd',
+        tokenReport: 'Token Condition Report',
       },
       heading: {
         quickActions: 'Snelle Acties',
@@ -3252,6 +3263,8 @@ const ConditionTrackerMod = (() => {
         promptUi: 'Wizard-interface',
         examples: 'Voorbeelden',
         summary: 'Samenvatting',
+        appliedTo: 'Conditions Applied To',
+        appliedBy: 'Conditions Applied By',
       },
       msg: {
         noActive: 'Er worden geen actieve condities bijgehouden.',
@@ -3259,7 +3272,7 @@ const ConditionTrackerMod = (() => {
         unknownConfig:
           'Onbekende configuratieoptie. Gebruik --config om ondersteunde instellingen te bekijken.',
         macroReinstalled:
-          "De {wizard}- en {multiTarget}-macro's zijn herinstalleerd voor alle huidige GM-spelers.",
+          "De {wizard}-, {multiTarget}- en {reportToken}-macro's zijn herinstalleerd voor alle huidige GM-spelers.",
         handoutReinstalled: 'De help-handout {handout} is herinstalleerd.',
         duplicate:
           'Deze exacte combinatie van bron, onderwerp, doel, conditie en aangepaste tekst is al actief.',
@@ -3335,6 +3348,11 @@ const ConditionTrackerMod = (() => {
           'De beurtenvolgorde is gewijzigd en {count} bijgehouden conditierij(en) staan mogelijk op de verkeerde plek. Klik hieronder om ze te herstellen na hun toegewezen tokens.',
         conditionsReordered:
           'Conditierijen zijn hergeplaatst na hun toegewezen tokens.',
+        noTokensSelectedReport:
+          'Select at least one token on the board before using --report-token.',
+        noConditionsAppliedTo: '{name} has no active conditions applied to it.',
+        noConditionsAppliedBy:
+          '{name} has no active conditions applied to others.',
       },
       removal: {
         conditionField: 'Conditie',
@@ -3381,6 +3399,10 @@ const ConditionTrackerMod = (() => {
           [
             '!condition-tracker --multi-target',
             'Pas één conditie tegelijkertijd toe op meerdere tokens. Ook beschikbaar als de ConditionTrackerMultiTarget-macro.',
+          ],
+          [
+            '!condition-tracker --report-token',
+            'Select one or more tokens first, then run this command to get a GM whisper listing every condition applied to and by each selected token. Also available as the ConditionTrackerReportToken macro.',
           ],
           [
             '!condition-tracker --menu',
@@ -3435,6 +3457,10 @@ const ConditionTrackerMod = (() => {
           [
             '--reinstall-handout',
             'Maak de gelokaliseerde help-handout opnieuw aan of werk deze bij',
+          ],
+          [
+            '--report-token',
+            'Whisper a GM-only condition report for each selected token (conditions applied to and by it)',
           ],
           [
             '--lang &lt;locale&gt;',
@@ -3521,6 +3547,11 @@ const ConditionTrackerMod = (() => {
             'subjectPromptBypass',
             'true / false',
             'Sla de optionele onderwerptokenstap over voor Spreuk / Vaardigheid / Overige effecten',
+          ],
+          [
+            'suppressPublicChat',
+            'true / false',
+            'Onderdruk alle openbare chatberichten (toepassen en verwijderen berichten). GM-fluisteringen worden niet beïnvloed.',
           ],
           [
             'healthBar',
@@ -3632,6 +3663,7 @@ const ConditionTrackerMod = (() => {
       },
     },
     condNames: {
+      // D&D 5e
       Grappled: 'Grappled',
       Restrained: 'Restrained',
       Prone: 'Prone',
@@ -3645,6 +3677,127 @@ const ConditionTrackerMod = (() => {
       Paralyzed: 'Paralyzed',
       Petrified: 'Petrified',
       Unconscious: 'Unconscious',
+      // D&D 4e (additional)
+      Dazed: 'Dazed',
+      Deafened: 'Deafened',
+      Dominated: 'Dominated',
+      Dying: 'Dying',
+      Immobilized: 'Immobilized',
+      Marked: 'Marked',
+      Slowed: 'Slowed',
+      Weakened: 'Weakened',
+      // D&D 3.5 / Pathfinder 1e (additional)
+      Confused: 'Confused',
+      Cowering: 'Cowering',
+      Dazzled: 'Dazzled',
+      Disabled: 'Disabled',
+      Exhausted: 'Exhausted',
+      Fascinated: 'Fascinated',
+      Fatigued: 'Fatigued',
+      'Flat-Footed': 'Flat-Footed',
+      Helpless: 'Helpless',
+      Nauseated: 'Nauseated',
+      Panicked: 'Panicked',
+      Pinned: 'Pinned',
+      Shaken: 'Shaken',
+      Sickened: 'Sickened',
+      Staggered: 'Staggered',
+      // Pathfinder 2e (additional)
+      Clumsy: 'Clumsy',
+      Concealed: 'Concealed',
+      Controlled: 'Controlled',
+      Doomed: 'Doomed',
+      Drained: 'Drained',
+      Encumbered: 'Encumbered',
+      Enfeebled: 'Enfeebled',
+      Fleeing: 'Fleeing',
+      Grabbed: 'Grabbed',
+      Hidden: 'Hidden',
+      'Off-Guard': 'Off-Guard',
+      Quickened: 'Quickened',
+      Stupefied: 'Stupefied',
+      Undetected: 'Undetected',
+      Wounded: 'Wounded',
+      // Starfinder (additional)
+      Asleep: 'Asleep',
+      Bleeding: 'Bleeding',
+      Burning: 'Burning',
+      Dead: 'Dead',
+      'Off-Kilter': 'Off-Kilter',
+      'Off-Target': 'Off-Target',
+      Overburdened: 'Overburdened',
+      Stable: 'Stable',
+      // Savage Worlds
+      'Bleeding Out': 'Bleeding Out',
+      Bound: 'Bound',
+      Distracted: 'Distracted',
+      // Call of Cthulhu
+      Berserk: 'Berserk',
+      'Indefinite Insanity': 'Indefinite Insanity',
+      Injured: 'Injured',
+      Mania: 'Mania',
+      Phobia: 'Phobia',
+      'Seriously Wounded': 'Seriously Wounded',
+      'Temporary Insanity': 'Temporary Insanity',
+      // WFRP 4e
+      Ablaze: 'Ablaze',
+      Broken: 'Broken',
+      Surprised: 'Surprised',
+      // Pathfinder 1e (additional)
+      Bleed: 'Bleed',
+      'Energy Drained': 'Energy Drained',
+      Entangled: 'Entangled',
+      // 13th Age
+      Fear: 'Fear',
+      Hampered: 'Hampered',
+      'Ongoing Damage': 'Ongoing Damage',
+      Vulnerable: 'Vulnerable',
+      // OSR / Old-School
+      Diseased: 'Diseased',
+      Held: 'Held',
+      // Shadow of the Demon Lord
+      Compelled: 'Compelled',
+      Impaired: 'Impaired',
+      // Mothership / Alien RPG
+      Panicking: 'Panicking',
+      // Genesys / Star Wars FFG
+      Disoriented: 'Disoriented',
+      Ensnared: 'Ensnared',
+      Strained: 'Strained',
+      // Cortex Prime
+      Afraid: 'Afraid',
+      Angry: 'Angry',
+      Corrupted: 'Corrupted',
+      Harmed: 'Harmed',
+      Hungry: 'Hungry',
+      Infected: 'Infected',
+      Isolated: 'Isolated',
+      // Vampire: The Masquerade
+      'Blood Bound': 'Blood Bound',
+      Entranced: 'Entranced',
+      Frenzied: 'Frenzied',
+      Torpor: 'Torpor',
+      // Werewolf / Shadowrun / Soulbound
+      'Knocked Down': 'Knocked Down',
+      // Mage: The Ascension
+      Paradox: 'Paradox',
+      'Willpower Spent': 'Willpower Spent',
+      // Changeling: The Dreaming
+      Bedlam: 'Bedlam',
+      'Chimera-Touched': 'Chimera-Touched',
+      // Cyberpunk Red
+      'Mortally Wounded': 'Mortally Wounded',
+      // BRP
+      Insane: 'Insane',
+      // Cypher System
+      Debilitated: 'Debilitated',
+      // Into the Odd / Cairn
+      Deprived: 'Deprived',
+      // Warhammer 40k
+      Shocked: 'Shocked',
+      // Warhammer Age of Sigmar
+      Intoxicated: 'Intoxicated',
+      // Custom effect types (canonical keys — display names may be overridden per system)
       Spell: 'Spell',
       Ability: 'Ability',
       Advantage: 'Advantage',
@@ -3722,6 +3875,8 @@ const ConditionTrackerMod = (() => {
         details: 'Details',
         description: 'Description',
         scenario: 'Scenario',
+        gameSystem: 'Game System',
+        duration: 'Duration',
       },
       dur: {
         untilRemoved: 'Until removed',
@@ -3746,6 +3901,7 @@ const ConditionTrackerMod = (() => {
         reinstallHandout: 'Reinstall Handout',
         showHelp: 'Show Help',
         reorderConditions: 'Reorder Condition Rows',
+        reportToken: 'Report Token Conditions',
       },
       title: {
         menu: 'Menu',
@@ -3768,6 +3924,7 @@ const ConditionTrackerMod = (() => {
         moveToken: '{name} — Move Token?',
         scriptReady: 'Script Ready',
         conditionReorder: 'Turn Order Changed',
+        tokenReport: 'Token Condition Report',
       },
       heading: {
         quickActions: 'Quick Actions',
@@ -3779,6 +3936,8 @@ const ConditionTrackerMod = (() => {
         promptUi: 'Prompt UI',
         examples: 'Examples',
         summary: 'Summary',
+        appliedTo: 'Conditions Applied To',
+        appliedBy: 'Conditions Applied By',
       },
       msg: {
         noActive: 'No active conditions are tracked.',
@@ -3786,7 +3945,7 @@ const ConditionTrackerMod = (() => {
         unknownConfig:
           'Unknown config option. Use --config to view supported settings.',
         macroReinstalled:
-          'The {wizard} and {multiTarget} macros have been reinstalled for all current GM players.',
+          'The {wizard}, {multiTarget}, and {reportToken} macros have been reinstalled for all current GM players.',
         handoutReinstalled: 'The help handout {handout} has been reinstalled.',
         duplicate:
           'That exact source, subject, target, condition, and custom text is already active.',
@@ -3803,6 +3962,10 @@ const ConditionTrackerMod = (() => {
         sourceTokenNotFound: 'Source token could not be found.',
         targetTokenNotFound: 'Target token could not be found.',
         subjectTokenNotFound: 'Subject token could not be found.',
+        invalidGameSystem:
+          'Invalid game system. Use --config gameSystem &lt;id&gt;. Supported systems:',
+        gameSystemSet:
+          'Game system set to {system}. Markers have been reset to system defaults.',
         invalidCondition:
           'Condition must be one of the predefined conditions or Other.',
         subjectOnlyCustom:
@@ -3860,6 +4023,11 @@ const ConditionTrackerMod = (() => {
           'The turn order changed and {count} tracked condition row(s) may now be out of place. Click below to restore them after their assigned tokens.',
         conditionsReordered:
           'Condition rows have been repositioned after their assigned tokens.',
+        noTokensSelectedReport:
+          'Select at least one token on the board before using --report-token.',
+        noConditionsAppliedTo: '{name} has no active conditions applied to it.',
+        noConditionsAppliedBy:
+          '{name} has no active conditions applied to others.',
       },
       removal: {
         conditionField: 'Condition',
@@ -3887,12 +4055,12 @@ const ConditionTrackerMod = (() => {
     },
     handout: {
       versionLabel: 'Version',
-      subtitle: 'D&D 5e Status Effect Manager',
+      subtitle: 'Multi-System Status Effect Manager',
       footerNote:
         'This handout is automatically created and updated each time the script loads.',
       overview: {
         heading: 'Overview',
-        body: 'Condition Tracker manages D&D 5e status conditions and custom effects as labelled rows in the Roll20 Turn Tracker. Apply conditions to tokens, track durations by initiative order, and automatically remove expired effects when a turn ends. All commands are GM-only and can be triggered from chat or via the installed macros.',
+        body: 'Condition Tracker manages status conditions and custom effects as labelled rows in the Roll20 Turn Tracker. Apply conditions to tokens, track durations by initiative order, and automatically remove expired effects when a turn ends. Supports multiple game systems — set the game system once and the tracker uses the right condition list automatically. All commands are GM-only and can be triggered from chat or via the installed macros.',
       },
       quickStart: {
         heading: 'Quick Start',
@@ -3906,6 +4074,10 @@ const ConditionTrackerMod = (() => {
           [
             '!condition-tracker --multi-target',
             'Apply one condition to several tokens simultaneously. Also available as the ConditionTrackerMultiTarget macro.',
+          ],
+          [
+            '!condition-tracker --report-token',
+            'Select one or more tokens first, then run this command to get a GM whisper listing every condition applied to and by each selected token. Also available as the ConditionTrackerReportToken macro.',
           ],
           [
             '!condition-tracker --menu',
@@ -3962,6 +4134,10 @@ const ConditionTrackerMod = (() => {
             'Recreate or update the localized help handout',
           ],
           [
+            '--report-token',
+            'Whisper a GM-only condition report for each selected token (conditions applied to and by it)',
+          ],
+          [
             '--lang &lt;locale&gt;',
             "Output this command's messages in an additional locale (bilingual mode)",
           ],
@@ -3969,8 +4145,9 @@ const ConditionTrackerMod = (() => {
         ],
       },
       standardConditions: {
-        heading: 'Standard Conditions (D&amp;D 5e)',
+        heading: 'Standard Conditions ({system})',
         colCondition: 'Condition',
+        none: 'No standard conditions defined for this game system. Use the Other custom effect type for free-text effects.',
       },
       customEffects: {
         heading: 'Custom Effect Types',
@@ -4033,6 +4210,11 @@ const ConditionTrackerMod = (() => {
         colDesc: 'Description',
         rows: [
           [
+            'gameSystem',
+            'dnd5e / pathfinder2e / ...',
+            'Set the active game system. This changes the condition list and resets markers to system defaults. See the Game Systems section for all valid ids.',
+          ],
+          [
             'useMarkers',
             'true / false',
             'Apply Roll20 status markers to tokens when a condition is added',
@@ -4046,6 +4228,11 @@ const ConditionTrackerMod = (() => {
             'subjectPromptBypass',
             'true / false',
             'Skip the optional subject-token step for Spell / Ability / Other effects',
+          ],
+          [
+            'suppressPublicChat',
+            'true / false',
+            'Suppress all public chat announcements (apply and remove messages). GM whispers are unaffected.',
           ],
           [
             'healthBar',
@@ -4064,10 +4251,18 @@ const ConditionTrackerMod = (() => {
           ],
         ],
       },
+      gameSystems: {
+        heading: 'Supported Game Systems',
+        intro:
+          "Use !condition-tracker --config gameSystem &lt;id&gt; to switch systems. Switching resets token marker mappings to the new system's defaults. Your active conditions are preserved.",
+        colId: 'System ID',
+        colName: 'Game System',
+      },
       defaultMarkers: {
         heading: 'Default Status Markers',
         colCondition: 'Condition',
         colMarker: 'Marker Name',
+        none: 'No default markers are defined for this game system.',
       },
       availableLocales: {
         heading: 'Available Translations',
@@ -4243,6 +4438,8 @@ const ConditionTrackerMod = (() => {
         details: 'Tiedot',
         description: 'Kuvaus',
         scenario: 'Tilanne',
+        gameSystem: 'Game System',
+        duration: 'Duration',
       },
       dur: {
         untilRemoved: 'Kunnes poistetaan',
@@ -4267,6 +4464,7 @@ const ConditionTrackerMod = (() => {
         reinstallHandout: 'Asenna handout uudelleen',
         showHelp: 'Näytä ohje',
         reorderConditions: 'Järjestä tilarivit uudelleen',
+        reportToken: 'Report Token Conditions',
       },
       title: {
         menu: 'Valikko',
@@ -4289,6 +4487,7 @@ const ConditionTrackerMod = (() => {
         moveToken: '{name} — siirretäänkö token?',
         scriptReady: 'Skripti valmis',
         conditionReorder: 'Vuorojärjestys muuttui',
+        tokenReport: 'Token Condition Report',
       },
       heading: {
         quickActions: 'Pikavalinnat',
@@ -4300,6 +4499,8 @@ const ConditionTrackerMod = (() => {
         promptUi: 'Ohjatun toiminnon käyttöliittymä',
         examples: 'Esimerkit',
         summary: 'Yhteenveto',
+        appliedTo: 'Conditions Applied To',
+        appliedBy: 'Conditions Applied By',
       },
       msg: {
         noActive: 'Aktiivisia tiloja ei seurata.',
@@ -4307,7 +4508,7 @@ const ConditionTrackerMod = (() => {
         unknownConfig:
           'Tuntematon asetusvaihtoehto. Käytä --config nähdäksesi tuetut asetukset.',
         macroReinstalled:
-          'Makrot {wizard} ja {multiTarget} on asennettu uudelleen kaikille nykyisille GM-pelaajille.',
+          'Makrot {wizard}, {multiTarget} ja {reportToken} on asennettu uudelleen kaikille nykyisille GM-pelaajille.',
         handoutReinstalled: 'Ohje-handout {handout} on asennettu uudelleen.',
         duplicate:
           'Täsmälleen sama lähde, kohde, tila ja mukautettu teksti on jo aktiivinen.',
@@ -4381,6 +4582,11 @@ const ConditionTrackerMod = (() => {
           'Vuorojärjestys muuttui ja {count} seurattu tilarivi voi nyt olla väärässä paikassa. Palauta ne klikkaamalla alla niille kuuluvien tokeneiden jälkeen.',
         conditionsReordered:
           'Tilarivit on sijoitettu uudelleen niille kuuluvien tokeneiden jälkeen.',
+        noTokensSelectedReport:
+          'Select at least one token on the board before using --report-token.',
+        noConditionsAppliedTo: '{name} has no active conditions applied to it.',
+        noConditionsAppliedBy:
+          '{name} has no active conditions applied to others.',
       },
       removal: {
         conditionField: 'Tila',
@@ -4427,6 +4633,10 @@ const ConditionTrackerMod = (() => {
           [
             '!condition-tracker --multi-target',
             'Sovella yksi tila useisiin tokeneihin samanaikaisesti. Saatavilla myös ConditionTrackerMultiTarget-makrona.',
+          ],
+          [
+            '!condition-tracker --report-token',
+            'Select one or more tokens first, then run this command to get a GM whisper listing every condition applied to and by each selected token. Also available as the ConditionTrackerReportToken macro.',
           ],
           [
             '!condition-tracker --menu',
@@ -4478,6 +4688,10 @@ const ConditionTrackerMod = (() => {
           [
             '--reinstall-handout',
             'Luo lokalisoitu ohje-handout uudelleen tai päivitä se',
+          ],
+          [
+            '--report-token',
+            'Whisper a GM-only condition report for each selected token (conditions applied to and by it)',
           ],
           [
             '--lang &lt;locale&gt;',
@@ -4564,6 +4778,11 @@ const ConditionTrackerMod = (() => {
             'subjectPromptBypass',
             'true / false',
             'Ohita valinnainen kohde-tokenin vaihe Loitsu / Kyky / Muu -vaikutuksille',
+          ],
+          [
+            'suppressPublicChat',
+            'true / false',
+            'Estä kaikki julkiset chat-ilmoitukset (lisäys- ja poistoviestit). GM-kuiskaukset eivät vaikutu.',
           ],
           [
             'healthBar',
@@ -4764,6 +4983,8 @@ const ConditionTrackerMod = (() => {
         details: 'Détails',
         description: 'Description',
         scenario: 'Scénario',
+        gameSystem: 'Game System',
+        duration: 'Duration',
       },
       dur: {
         untilRemoved: 'Jusqu’à suppression',
@@ -4788,6 +5009,7 @@ const ConditionTrackerMod = (() => {
         reinstallHandout: 'Réinstaller le livret',
         showHelp: 'Afficher l’aide',
         reorderConditions: 'Réorganiser les lignes de condition',
+        reportToken: 'Report Token Conditions',
       },
       title: {
         menu: 'Menu',
@@ -4810,6 +5032,7 @@ const ConditionTrackerMod = (() => {
         moveToken: '{name} — Déplacer le jeton ?',
         scriptReady: 'Script prêt',
         conditionReorder: 'Ordre de tour modifié',
+        tokenReport: 'Token Condition Report',
       },
       heading: {
         quickActions: 'Actions rapides',
@@ -4821,6 +5044,8 @@ const ConditionTrackerMod = (() => {
         promptUi: 'Interface de l’assistant',
         examples: 'Exemples',
         summary: 'Résumé',
+        appliedTo: 'Conditions Applied To',
+        appliedBy: 'Conditions Applied By',
       },
       msg: {
         noActive: 'Aucune condition active n’est suivie.',
@@ -4828,7 +5053,7 @@ const ConditionTrackerMod = (() => {
         unknownConfig:
           'Option de configuration inconnue. Utilisez --config pour voir les paramètres disponibles.',
         macroReinstalled:
-          'Les macros {wizard} et {multiTarget} ont été réinstallées pour tous les MJ actifs.',
+          'Les macros {wizard}, {multiTarget} et {reportToken} ont été réinstallées pour tous les MJ actifs.',
         handoutReinstalled: 'Le livret d’aide {handout} a été réinstallé.',
         duplicate:
           'Cette combinaison source, sujet, cible, condition et texte personnalisé est déjà active.',
@@ -4905,6 +5130,11 @@ const ConditionTrackerMod = (() => {
           "L'ordre de tour a changé et {count} ligne(s) de condition suivie(s) peut être mal placée. Cliquez ci-dessous pour les restaurer après leurs tokens assignés.",
         conditionsReordered:
           'Les lignes de condition ont été repositionnées après leurs tokens assignés.',
+        noTokensSelectedReport:
+          'Select at least one token on the board before using --report-token.',
+        noConditionsAppliedTo: '{name} has no active conditions applied to it.',
+        noConditionsAppliedBy:
+          '{name} has no active conditions applied to others.',
       },
       removal: {
         conditionField: 'Condition',
@@ -4951,6 +5181,10 @@ const ConditionTrackerMod = (() => {
           [
             '!condition-tracker --multi-target',
             'Appliquer une condition à plusieurs jetons simultanément. Disponible aussi via la macro ConditionTrackerMultiTarget.',
+          ],
+          [
+            '!condition-tracker --report-token',
+            'Select one or more tokens first, then run this command to get a GM whisper listing every condition applied to and by each selected token. Also available as the ConditionTrackerReportToken macro.',
           ],
           [
             '!condition-tracker --menu',
@@ -5008,6 +5242,10 @@ const ConditionTrackerMod = (() => {
           [
             '--reinstall-handout',
             'Recréer ou mettre à jour le livret d’aide localisé',
+          ],
+          [
+            '--report-token',
+            'Whisper a GM-only condition report for each selected token (conditions applied to and by it)',
           ],
           [
             '--lang &lt;locale&gt;',
@@ -5094,6 +5332,11 @@ const ConditionTrackerMod = (() => {
             'subjectPromptBypass',
             'true / false',
             'Ignorer l’étape sujet optionnelle pour les effets Sort / Capacité / Autre',
+          ],
+          [
+            'suppressPublicChat',
+            'true / false',
+            'Supprimer toutes les annonces publiques de chat (messages d’application et de suppression). Les chuchotements du MJ ne sont pas affectés.',
           ],
           [
             'healthBar',
@@ -5294,6 +5537,8 @@ const ConditionTrackerMod = (() => {
         details: 'Details',
         description: 'Beschreibung',
         scenario: 'Szenario',
+        gameSystem: 'Game System',
+        duration: 'Duration',
       },
       dur: {
         untilRemoved: 'Bis zur Entfernung',
@@ -5318,6 +5563,7 @@ const ConditionTrackerMod = (() => {
         reinstallHandout: 'Handout neu installieren',
         showHelp: 'Hilfe anzeigen',
         reorderConditions: 'Bedingungszeilen neu anordnen',
+        reportToken: 'Report Token Conditions',
       },
       title: {
         menu: 'Menü',
@@ -5340,6 +5586,7 @@ const ConditionTrackerMod = (() => {
         moveToken: '{name} — Token verschieben?',
         scriptReady: 'Skript bereit',
         conditionReorder: 'Rundenreihenfolge geändert',
+        tokenReport: 'Token Condition Report',
       },
       heading: {
         quickActions: 'Schnellaktionen',
@@ -5351,6 +5598,8 @@ const ConditionTrackerMod = (() => {
         promptUi: 'Assistent-Oberfläche',
         examples: 'Beispiele',
         summary: 'Zusammenfassung',
+        appliedTo: 'Conditions Applied To',
+        appliedBy: 'Conditions Applied By',
       },
       msg: {
         noActive: 'Es werden keine aktiven Zustände verfolgt.',
@@ -5358,7 +5607,7 @@ const ConditionTrackerMod = (() => {
         unknownConfig:
           'Unbekannte Konfigurationsoption. Verwende --config, um unterstützte Einstellungen anzuzeigen.',
         macroReinstalled:
-          'Die Makros {wizard} und {multiTarget} wurden für alle aktuellen GM-Spieler neu installiert.',
+          'Die Makros {wizard}, {multiTarget} und {reportToken} wurden für alle aktuellen GM-Spieler neu installiert.',
         handoutReinstalled:
           'Das Hilfe-Handout {handout} wurde neu installiert.',
         duplicate:
@@ -5435,6 +5684,11 @@ const ConditionTrackerMod = (() => {
           'Die Rundenreihenfolge wurde geändert und {count} verfolgte Bedingungszeile(n) könnte(n) nun falsch platziert sein. Klicke unten, um sie hinter ihre zugewiesenen Tokens zu verschieben.',
         conditionsReordered:
           'Bedingungszeilen wurden hinter ihre zugewiesenen Tokens verschoben.',
+        noTokensSelectedReport:
+          'Select at least one token on the board before using --report-token.',
+        noConditionsAppliedTo: '{name} has no active conditions applied to it.',
+        noConditionsAppliedBy:
+          '{name} has no active conditions applied to others.',
       },
       removal: {
         conditionField: 'Zustand',
@@ -5481,6 +5735,10 @@ const ConditionTrackerMod = (() => {
           [
             '!condition-tracker --multi-target',
             'Einen Zustand gleichzeitig auf mehrere Tokens anwenden. Auch als Makro ConditionTrackerMultiTarget verfügbar.',
+          ],
+          [
+            '!condition-tracker --report-token',
+            'Select one or more tokens first, then run this command to get a GM whisper listing every condition applied to and by each selected token. Also available as the ConditionTrackerReportToken macro.',
           ],
           [
             '!condition-tracker --menu',
@@ -5535,6 +5793,10 @@ const ConditionTrackerMod = (() => {
           [
             '--reinstall-handout',
             'Lokalisiertes Hilfe-Handout neu erstellen oder aktualisieren',
+          ],
+          [
+            '--report-token',
+            'Whisper a GM-only condition report for each selected token (conditions applied to and by it)',
           ],
           [
             '--lang &lt;Locale&gt;',
@@ -5621,6 +5883,11 @@ const ConditionTrackerMod = (() => {
             'subjectPromptBypass',
             'true / false',
             'Den optionalen Subjektschritt für Zauber / Fähigkeit / Sonstiges überspringen',
+          ],
+          [
+            'suppressPublicChat',
+            'true / false',
+            'Alle öffentlichen Chat-Ankündigungen (Hinzufügen und Entfernen) unterdrücken. GM-Flüstermeldungen sind nicht betroffen.',
           ],
           [
             'healthBar',
@@ -5823,6 +6090,8 @@ const ConditionTrackerMod = (() => {
         details: 'Λεπτομέρειες',
         description: 'Περιγραφή',
         scenario: 'Σενάριο',
+        gameSystem: 'Game System',
+        duration: 'Duration',
       },
       dur: {
         untilRemoved: 'Μέχρι αφαίρεσης',
@@ -5847,6 +6116,7 @@ const ConditionTrackerMod = (() => {
         reinstallHandout: 'Επανεγκατάσταση Handout',
         showHelp: 'Εμφάνιση Βοήθειας',
         reorderConditions: 'Αναδιάταξη Σειρών Κατάστασης',
+        reportToken: 'Report Token Conditions',
       },
       title: {
         menu: 'Μενού',
@@ -5869,6 +6139,7 @@ const ConditionTrackerMod = (() => {
         moveToken: '{name} — Μετακίνηση Token;',
         scriptReady: 'Το Script Είναι Έτοιμο',
         conditionReorder: 'Η Σειρά Πρωτοβουλίας Άλλαξε',
+        tokenReport: 'Token Condition Report',
       },
       heading: {
         quickActions: 'Γρήγορες Ενέργειες',
@@ -5880,6 +6151,8 @@ const ConditionTrackerMod = (() => {
         promptUi: 'Διεπαφή Οδηγού',
         examples: 'Παραδείγματα',
         summary: 'Σύνοψη',
+        appliedTo: 'Conditions Applied To',
+        appliedBy: 'Conditions Applied By',
       },
       msg: {
         noActive: 'Δεν παρακολουθούνται ενεργές καταστάσεις.',
@@ -5887,7 +6160,7 @@ const ConditionTrackerMod = (() => {
         unknownConfig:
           'Άγνωστη επιλογή ρύθμισης. Χρησιμοποιήστε --config για να δείτε τις υποστηριζόμενες ρυθμίσεις.',
         macroReinstalled:
-          'Τα macros {wizard} και {multiTarget} επανεγκαταστάθηκαν για όλους τους τρέχοντες παίκτες-DM.',
+          'Τα macros {wizard}, {multiTarget} και {reportToken} επανεγκαταστάθηκαν για όλους τους τρέχοντες παίκτες-DM.',
         handoutReinstalled: 'Το handout βοήθειας {handout} επανεγκαταστάθηκε.',
         duplicate:
           'Αυτός ακριβώς ο συνδυασμός πηγής, υποκειμένου, στόχου, κατάστασης και προσαρμοσμένου κειμένου είναι ήδη ενεργός.',
@@ -5961,6 +6234,11 @@ const ConditionTrackerMod = (() => {
           'Η σειρά πρωτοβουλίας άλλαξε και {count} παρακολουθούμενη/ες σειρά/ές κατάστασης μπορεί να είναι εκτός θέσης. Κάντε κλικ παρακάτω για να τις επαναφέρετε μετά τα αντίστοιχα tokens.',
         conditionsReordered:
           'Οι σειρές κατάστασης επανατοποθετήθηκαν μετά τα αντίστοιχα tokens.',
+        noTokensSelectedReport:
+          'Select at least one token on the board before using --report-token.',
+        noConditionsAppliedTo: '{name} has no active conditions applied to it.',
+        noConditionsAppliedBy:
+          '{name} has no active conditions applied to others.',
       },
       removal: {
         conditionField: 'Κατάσταση',
@@ -6007,6 +6285,10 @@ const ConditionTrackerMod = (() => {
           [
             '!condition-tracker --multi-target',
             'Εφαρμογή μιας κατάστασης σε πολλά tokens ταυτόχρονα. Διατίθεται επίσης ως macro ConditionTrackerMultiTarget.',
+          ],
+          [
+            '!condition-tracker --report-token',
+            'Select one or more tokens first, then run this command to get a GM whisper listing every condition applied to and by each selected token. Also available as the ConditionTrackerReportToken macro.',
           ],
           [
             '!condition-tracker --menu',
@@ -6064,6 +6346,10 @@ const ConditionTrackerMod = (() => {
           [
             '--reinstall-handout',
             'Εκ νέου δημιουργία ή ενημέρωση του τοπικοποιημένου handout βοήθειας',
+          ],
+          [
+            '--report-token',
+            'Whisper a GM-only condition report for each selected token (conditions applied to and by it)',
           ],
           [
             '--lang &lt;locale&gt;',
@@ -6150,6 +6436,11 @@ const ConditionTrackerMod = (() => {
             'subjectPromptBypass',
             'true / false',
             'Παράλειψη του προαιρετικού βήματος υποκειμένου για εφέ Ξόρκι / Ικανότητα / Άλλο',
+          ],
+          [
+            'suppressPublicChat',
+            'true / false',
+            'Απόκρυψη όλων των δημόσιων ανακοινώσεων στο chat (μηνύματα εφαρμογής και αφαίρεσης). Τα ψιθύρια του GM δεν επηρεάζονται.',
           ],
           [
             'healthBar',
@@ -6346,6 +6637,8 @@ const ConditionTrackerMod = (() => {
         details: 'פרטים',
         description: 'תיאור',
         scenario: 'תרחיש',
+        gameSystem: 'Game System',
+        duration: 'Duration',
       },
       dur: {
         untilRemoved: 'עד להסרה',
@@ -6370,6 +6663,7 @@ const ConditionTrackerMod = (() => {
         reinstallHandout: 'התקן דף עזרה מחדש',
         showHelp: 'הצג עזרה',
         reorderConditions: 'סדר מחדש שורות תנאי',
+        reportToken: 'Report Token Conditions',
       },
       title: {
         menu: 'תפריט',
@@ -6392,6 +6686,7 @@ const ConditionTrackerMod = (() => {
         moveToken: '{name} — להעביר אסימון?',
         scriptReady: 'הסקריפט מוכן',
         conditionReorder: 'סדר התורות השתנה',
+        tokenReport: 'Token Condition Report',
       },
       heading: {
         quickActions: 'פעולות מהירות',
@@ -6403,6 +6698,8 @@ const ConditionTrackerMod = (() => {
         promptUi: 'ממשק אשף',
         examples: 'דוגמאות',
         summary: 'סיכום',
+        appliedTo: 'Conditions Applied To',
+        appliedBy: 'Conditions Applied By',
       },
       msg: {
         noActive: 'אין מצבים פעילים במעקב.',
@@ -6410,7 +6707,7 @@ const ConditionTrackerMod = (() => {
         unknownConfig:
           'אפשרות הגדרה לא מוכרת. השתמש ב־--config להצגת ההגדרות הנתמכות.',
         macroReinstalled:
-          'המאקרואים {wizard} ו־{multiTarget} הותקנו מחדש לכל שחקני ה־GM הנוכחיים.',
+          'המאקרואים {wizard}, {multiTarget} ו־{reportToken} הותקנו מחדש לכל שחקני ה־GM הנוכחיים.',
         handoutReinstalled: 'דף העזרה {handout} הותקן מחדש.',
         duplicate: 'אותו מקור, נושא, יעד, מצב וטקסט מותאם כבר פעילים.',
         noTargets: 'לא צוינו אסימוני יעד להחלה מרובת יעדים.',
@@ -6474,6 +6771,11 @@ const ConditionTrackerMod = (() => {
         conditionReorder:
           'סדר התורות השתנה ו-{count} שורת/שורות תנאי עקובות עשויות להיות כעת במיקום שגוי. לחץ למטה כדי לשחזר אותן אחרי הטוקנים שהוקצו להן.',
         conditionsReordered: 'שורות התנאי מוקמו מחדש אחרי הטוקנים שהוקצו להן.',
+        noTokensSelectedReport:
+          'Select at least one token on the board before using --report-token.',
+        noConditionsAppliedTo: '{name} has no active conditions applied to it.',
+        noConditionsAppliedBy:
+          '{name} has no active conditions applied to others.',
       },
       removal: {
         conditionField: 'מצב',
@@ -6520,6 +6822,10 @@ const ConditionTrackerMod = (() => {
             'החלת מצב אחד על כמה אסימונים בו־זמנית.',
           ],
           [
+            '!condition-tracker --report-token',
+            'Select one or more tokens first, then run this command to get a GM whisper listing every condition applied to and by each selected token. Also available as the ConditionTrackerReportToken macro.',
+          ],
+          [
             '!condition-tracker --menu',
             'פתיחת תפריט הניהול הראשי להחלה, בדיקה או הסרה של מצבים.',
           ],
@@ -6549,6 +6855,10 @@ const ConditionTrackerMod = (() => {
           ],
           ['--reinstall-macro', 'יצירה או עדכון של מאקרואים ל־GM'],
           ['--reinstall-handout', 'יצירה או עדכון של דף העזרה המקומי'],
+          [
+            '--report-token',
+            'Whisper a GM-only condition report for each selected token (conditions applied to and by it)',
+          ],
           ['--lang &lt;locale&gt;', 'פלט נוסף באזור שפה אחר'],
           ['--help', 'הצגת כרטיס עזרה קצר בצ׳אט'],
         ],
@@ -6600,6 +6910,11 @@ const ConditionTrackerMod = (() => {
             'subjectPromptBypass',
             'true / false',
             'דילוג על שלב הנושא האופציונלי',
+          ],
+          [
+            'suppressPublicChat',
+            'true / false',
+            "דכא את כל הודעות הצ'אט הציבוריות (הודעות החלה והסרה). לחישות ה-GM אינן מושפעות.",
           ],
           [
             'healthBar',
@@ -6798,6 +7113,8 @@ const ConditionTrackerMod = (() => {
         details: 'Részletek',
         description: 'Leírás',
         scenario: 'Forgatókönyv',
+        gameSystem: 'Game System',
+        duration: 'Duration',
       },
       dur: {
         untilRemoved: 'Eltávolításig',
@@ -6822,6 +7139,7 @@ const ConditionTrackerMod = (() => {
         reinstallHandout: 'Handout újratelepítése',
         showHelp: 'Súgó megjelenítése',
         reorderConditions: 'Állapotsorok átrendezése',
+        reportToken: 'Report Token Conditions',
       },
       title: {
         menu: 'Menü',
@@ -6844,6 +7162,7 @@ const ConditionTrackerMod = (() => {
         moveToken: '{name} — token áthelyezése?',
         scriptReady: 'Szkript kész',
         conditionReorder: 'Körsorend megváltozott',
+        tokenReport: 'Token Condition Report',
       },
       heading: {
         quickActions: 'Gyorsműveletek',
@@ -6855,6 +7174,8 @@ const ConditionTrackerMod = (() => {
         promptUi: 'Varázsló felülete',
         examples: 'Példák',
         summary: 'Összefoglalás',
+        appliedTo: 'Conditions Applied To',
+        appliedBy: 'Conditions Applied By',
       },
       msg: {
         noActive: 'Nincs aktív követett állapot.',
@@ -6862,7 +7183,7 @@ const ConditionTrackerMod = (() => {
         unknownConfig:
           'Ismeretlen beállítási lehetőség. Használja a --config parancsot a támogatott beállítások megtekintéséhez.',
         macroReinstalled:
-          'A(z) {wizard} és {multiTarget} makrók újra lettek telepítve az összes jelenlegi GM-játékos számára.',
+          'A(z) {wizard}, {multiTarget} és {reportToken} makrók újra lettek telepítve az összes jelenlegi GM-játékos számára.',
         handoutReinstalled: 'A(z) {handout} súgó-handout újra lett telepítve.',
         duplicate:
           'Pontosan ugyanez a forrás, alany, célpont, állapot és egyéni szöveg már aktív.',
@@ -6938,6 +7259,11 @@ const ConditionTrackerMod = (() => {
           'A körsorend megváltozott, és {count} követett állapotsor lehet rossz helyen. Kattintson alább a visszaállításhoz a hozzárendelt tokenek után.',
         conditionsReordered:
           'Az állapotsorok vissza lettek helyezve a hozzárendelt tokenek mögé.',
+        noTokensSelectedReport:
+          'Select at least one token on the board before using --report-token.',
+        noConditionsAppliedTo: '{name} has no active conditions applied to it.',
+        noConditionsAppliedBy:
+          '{name} has no active conditions applied to others.',
       },
       removal: {
         conditionField: 'Állapot',
@@ -6984,6 +7310,10 @@ const ConditionTrackerMod = (() => {
           [
             '!condition-tracker --multi-target',
             'Egy állapot alkalmazása több tokenre egyszerre. Elérhető ConditionTrackerMultiTarget makróként is.',
+          ],
+          [
+            '!condition-tracker --report-token',
+            'Select one or more tokens first, then run this command to get a GM whisper listing every condition applied to and by each selected token. Also available as the ConditionTrackerReportToken macro.',
           ],
           [
             '!condition-tracker --menu',
@@ -7041,6 +7371,10 @@ const ConditionTrackerMod = (() => {
           [
             '--reinstall-handout',
             'A lokalizált súgó-handout újralétrehozása vagy frissítése',
+          ],
+          [
+            '--report-token',
+            'Whisper a GM-only condition report for each selected token (conditions applied to and by it)',
           ],
           [
             '--lang &lt;locale&gt;',
@@ -7127,6 +7461,11 @@ const ConditionTrackerMod = (() => {
             'subjectPromptBypass',
             'true / false',
             'Az opcionális alany-token lépés kihagyása Varázslat / Képesség / Egyéb hatásoknál',
+          ],
+          [
+            'suppressPublicChat',
+            'true / false',
+            'Az összes nyilvános csevegési bejelentés (alkalmazás és eltávolítás) elnyomása. A GM-suttogások nem érintettek.',
           ],
           [
             'healthBar',
@@ -7326,6 +7665,8 @@ const ConditionTrackerMod = (() => {
         details: 'Dettagli',
         description: 'Descrizione',
         scenario: 'Scenario',
+        gameSystem: 'Game System',
+        duration: 'Duration',
       },
       dur: {
         untilRemoved: 'Fino alla rimozione',
@@ -7350,6 +7691,7 @@ const ConditionTrackerMod = (() => {
         reinstallHandout: 'Reinstalla documento',
         showHelp: 'Mostra aiuto',
         reorderConditions: 'Riordina righe condizioni',
+        reportToken: 'Report Token Conditions',
       },
       title: {
         menu: 'Menu',
@@ -7372,6 +7714,7 @@ const ConditionTrackerMod = (() => {
         moveToken: '{name} — Spostare il token?',
         scriptReady: 'Script pronto',
         conditionReorder: 'Ordine di turno modificato',
+        tokenReport: 'Token Condition Report',
       },
       heading: {
         quickActions: 'Azioni rapide',
@@ -7383,6 +7726,8 @@ const ConditionTrackerMod = (() => {
         promptUi: 'Interfaccia procedura guidata',
         examples: 'Esempi',
         summary: 'Riepilogo',
+        appliedTo: 'Conditions Applied To',
+        appliedBy: 'Conditions Applied By',
       },
       msg: {
         noActive: 'Nessuna condizione attiva è tracciata.',
@@ -7391,7 +7736,7 @@ const ConditionTrackerMod = (() => {
         unknownConfig:
           'Opzione di configurazione sconosciuta. Usa --config per visualizzare le impostazioni supportate.',
         macroReinstalled:
-          'Le macro {wizard} e {multiTarget} sono state reinstallate per tutti i GM attivi.',
+          'Le macro {wizard}, {multiTarget} e {reportToken} sono state reinstallate per tutti i GM attivi.',
         handoutReinstalled:
           'Il documento di aiuto {handout} è stato reinstallato.',
         duplicate:
@@ -7469,6 +7814,11 @@ const ConditionTrackerMod = (() => {
           "L'ordine di turno è cambiato e {count} riga/righe di condizione tracciata/e potrebbe/potrebbero essere fuori posto. Clicca sotto per riposizionarle dopo i rispettivi token assegnati.",
         conditionsReordered:
           'Le righe delle condizioni sono state riposizionate dopo i rispettivi token assegnati.',
+        noTokensSelectedReport:
+          'Select at least one token on the board before using --report-token.',
+        noConditionsAppliedTo: '{name} has no active conditions applied to it.',
+        noConditionsAppliedBy:
+          '{name} has no active conditions applied to others.',
       },
       removal: {
         conditionField: 'Condizione',
@@ -7516,6 +7866,10 @@ const ConditionTrackerMod = (() => {
           [
             '!condition-tracker --multi-target',
             'Applica una condizione a più token contemporaneamente. Disponibile anche come macro ConditionTrackerMultiTarget.',
+          ],
+          [
+            '!condition-tracker --report-token',
+            'Select one or more tokens first, then run this command to get a GM whisper listing every condition applied to and by each selected token. Also available as the ConditionTrackerReportToken macro.',
           ],
           [
             '!condition-tracker --menu',
@@ -7573,6 +7927,10 @@ const ConditionTrackerMod = (() => {
           [
             '--reinstall-handout',
             'Ricrea o aggiorna il documento di aiuto localizzato',
+          ],
+          [
+            '--report-token',
+            'Whisper a GM-only condition report for each selected token (conditions applied to and by it)',
           ],
           [
             '--lang &lt;locale&gt;',
@@ -7659,6 +8017,11 @@ const ConditionTrackerMod = (() => {
             'subjectPromptBypass',
             'true / false',
             'Salta il passaggio facoltativo del token soggetto per gli effetti Incantesimo / Abilità / Altro',
+          ],
+          [
+            'suppressPublicChat',
+            'true / false',
+            'Sopprimi tutti gli annunci pubblici in chat (messaggi di applicazione e rimozione). I sussurri del GM non sono interessati.',
           ],
           [
             'healthBar',
@@ -7853,6 +8216,8 @@ const ConditionTrackerMod = (() => {
         details: '詳細',
         description: '説明',
         scenario: 'シナリオ',
+        gameSystem: 'Game System',
+        duration: 'Duration',
       },
       dur: {
         untilRemoved: '削除されるまで',
@@ -7877,6 +8242,7 @@ const ConditionTrackerMod = (() => {
         reinstallHandout: 'ハンドアウトを再インストール',
         showHelp: 'ヘルプを表示',
         reorderConditions: '状態行を並び替え',
+        reportToken: 'Report Token Conditions',
       },
       title: {
         menu: 'メニュー',
@@ -7899,6 +8265,7 @@ const ConditionTrackerMod = (() => {
         moveToken: '{name} — トークンを移動しますか？',
         scriptReady: 'スクリプト準備完了',
         conditionReorder: 'ターン順序変更',
+        tokenReport: 'Token Condition Report',
       },
       heading: {
         quickActions: 'クイックアクション',
@@ -7910,6 +8277,8 @@ const ConditionTrackerMod = (() => {
         promptUi: 'ウィザードUI',
         examples: '例',
         summary: 'まとめ',
+        appliedTo: 'Conditions Applied To',
+        appliedBy: 'Conditions Applied By',
       },
       msg: {
         noActive: '追跡中のアクティブな状態はありません。',
@@ -7917,7 +8286,7 @@ const ConditionTrackerMod = (() => {
         unknownConfig:
           '不明な設定オプションです。--configを使用してサポートされている設定を確認してください。',
         macroReinstalled:
-          '{wizard}および{multiTarget}マクロが現在のすべてのGMプレイヤーに再インストールされました。',
+          '{wizard}、{multiTarget}および{reportToken}マクロが現在のすべてのGMプレイヤーに再インストールされました。',
         handoutReinstalled:
           'ヘルプハンドアウト{handout}が再インストールされました。',
         duplicate:
@@ -7993,6 +8362,11 @@ const ConditionTrackerMod = (() => {
           'ターン順序が変更され、追跡中の{count}件の状態行が正しい位置にない可能性があります。割り当てられたトークンの後に復元するには以下をクリックしてください。',
         conditionsReordered:
           '状態行が割り当てられたトークンの後に再配置されました。',
+        noTokensSelectedReport:
+          'Select at least one token on the board before using --report-token.',
+        noConditionsAppliedTo: '{name} has no active conditions applied to it.',
+        noConditionsAppliedBy:
+          '{name} has no active conditions applied to others.',
       },
       removal: {
         conditionField: '状態',
@@ -8041,6 +8415,10 @@ const ConditionTrackerMod = (() => {
             '1つの状態を複数のトークンに同時に適用します。ConditionTrackerMultiTargetマクロとしても利用できます。',
           ],
           [
+            '!condition-tracker --report-token',
+            'Select one or more tokens first, then run this command to get a GM whisper listing every condition applied to and by each selected token. Also available as the ConditionTrackerReportToken macro.',
+          ],
+          [
             '!condition-tracker --menu',
             '状態の適用・確認・削除ボタンを含むメインメニューを開きます。',
           ],
@@ -8084,6 +8462,10 @@ const ConditionTrackerMod = (() => {
           [
             '--reinstall-handout',
             'ローカライズされたヘルプハンドアウトを再作成または更新',
+          ],
+          [
+            '--report-token',
+            'Whisper a GM-only condition report for each selected token (conditions applied to and by it)',
           ],
           [
             '--lang &lt;ロケール&gt;',
@@ -8164,6 +8546,11 @@ const ConditionTrackerMod = (() => {
             'subjectPromptBypass',
             'true / false',
             '呪文・能力・その他の効果でオプションの対象トークン手順をスキップする',
+          ],
+          [
+            'suppressPublicChat',
+            'true / false',
+            'すべての公開チャット告知（適用・削除メッセージ）を非表示にします。GMのウィスパーは影響を受けません。',
           ],
           [
             'healthBar',
@@ -8364,6 +8751,8 @@ const ConditionTrackerMod = (() => {
         details: '상세 내용',
         description: '설명',
         scenario: '시나리오',
+        gameSystem: 'Game System',
+        duration: 'Duration',
       },
       dur: {
         untilRemoved: '제거될 때까지',
@@ -8388,6 +8777,7 @@ const ConditionTrackerMod = (() => {
         reinstallHandout: '유인물 재설치',
         showHelp: '도움말 표시',
         reorderConditions: '조건 행 재정렬',
+        reportToken: 'Report Token Conditions',
       },
       title: {
         menu: '메뉴',
@@ -8410,6 +8800,7 @@ const ConditionTrackerMod = (() => {
         moveToken: '{name} — 토큰을 이동하시겠습니까?',
         scriptReady: '스크립트 준비됨',
         conditionReorder: '턴 순서 변경됨',
+        tokenReport: 'Token Condition Report',
       },
       heading: {
         quickActions: '빠른 작업',
@@ -8421,6 +8812,8 @@ const ConditionTrackerMod = (() => {
         promptUi: '프롬프트 UI',
         examples: '예시',
         summary: '요약',
+        appliedTo: 'Conditions Applied To',
+        appliedBy: 'Conditions Applied By',
       },
       msg: {
         noActive: '추적 중인 활성 상태가 없습니다.',
@@ -8428,7 +8821,7 @@ const ConditionTrackerMod = (() => {
         unknownConfig:
           '알 수 없는 설정 옵션입니다. --config 를 사용하여 지원되는 설정을 확인하세요.',
         macroReinstalled:
-          '{wizard} 및 {multiTarget} 매크로가 모든 현재 GM 플레이어를 위해 재설치되었습니다.',
+          '{wizard}, {multiTarget} 및 {reportToken} 매크로가 모든 현재 GM 플레이어를 위해 재설치되었습니다.',
         handoutReinstalled: '도움말 유인물 {handout}이(가) 재설치되었습니다.',
         duplicate:
           '동일한 시전자, 주체, 대상, 상태 및 사용자 정의 텍스트가 이미 활성화되어 있습니다.',
@@ -8501,6 +8894,11 @@ const ConditionTrackerMod = (() => {
         conditionReorder:
           '턴 순서가 변경되어 {count}개의 추적된 조건 행이 잘못된 위치에 있을 수 있습니다. 아래를 클릭하여 지정된 토큰 뒤에 복원하세요.',
         conditionsReordered: '조건 행이 지정된 토큰 뒤로 재배치되었습니다.',
+        noTokensSelectedReport:
+          'Select at least one token on the board before using --report-token.',
+        noConditionsAppliedTo: '{name} has no active conditions applied to it.',
+        noConditionsAppliedBy:
+          '{name} has no active conditions applied to others.',
       },
       removal: {
         conditionField: '상태',
@@ -8548,6 +8946,10 @@ const ConditionTrackerMod = (() => {
             '여러 토큰에 하나의 상태를 동시에 적용합니다. ConditionTrackerMultiTarget 매크로로도 사용할 수 있습니다.',
           ],
           [
+            '!condition-tracker --report-token',
+            'Select one or more tokens first, then run this command to get a GM whisper listing every condition applied to and by each selected token. Also available as the ConditionTrackerReportToken macro.',
+          ],
+          [
             '!condition-tracker --menu',
             '상태를 적용, 검토 또는 제거할 수 있는 버튼이 있는 메인 관리 메뉴를 엽니다.',
           ],
@@ -8585,6 +8987,10 @@ const ConditionTrackerMod = (() => {
           [
             '--reinstall-handout',
             '현지화된 도움말 유인물 재생성 또는 업데이트',
+          ],
+          [
+            '--report-token',
+            'Whisper a GM-only condition report for each selected token (conditions applied to and by it)',
           ],
           [
             '--lang &lt;로케일&gt;',
@@ -8671,6 +9077,11 @@ const ConditionTrackerMod = (() => {
             'subjectPromptBypass',
             'true / false',
             '주문 / 능력 / 기타 효과에 대해 선택적인 주체 토큰 단계를 건너뜁니다.',
+          ],
+          [
+            'suppressPublicChat',
+            'true / false',
+            '모든 공개 채팅 알림(적용 및 제거 메시지)을 억제합니다. GM 속삭임은 영향을 받지 않습니다.',
           ],
           [
             'healthBar',
@@ -8869,6 +9280,8 @@ const ConditionTrackerMod = (() => {
         details: 'Szczegóły',
         description: 'Opis',
         scenario: 'Scenariusz',
+        gameSystem: 'Game System',
+        duration: 'Duration',
       },
       dur: {
         untilRemoved: 'Do usunięcia',
@@ -8893,6 +9306,7 @@ const ConditionTrackerMod = (() => {
         reinstallHandout: 'Zainstaluj ponownie handout',
         showHelp: 'Pokaż pomoc',
         reorderConditions: 'Zmień kolejność wierszy stanów',
+        reportToken: 'Report Token Conditions',
       },
       title: {
         menu: 'Menu',
@@ -8915,6 +9329,7 @@ const ConditionTrackerMod = (() => {
         moveToken: '{name} — Przenieść żeton?',
         scriptReady: 'Skrypt gotowy',
         conditionReorder: 'Kolejność tur zmieniona',
+        tokenReport: 'Token Condition Report',
       },
       heading: {
         quickActions: 'Szybkie akcje',
@@ -8926,6 +9341,8 @@ const ConditionTrackerMod = (() => {
         promptUi: 'Interfejs kreatora',
         examples: 'Przykłady',
         summary: 'Podsumowanie',
+        appliedTo: 'Conditions Applied To',
+        appliedBy: 'Conditions Applied By',
       },
       msg: {
         noActive: 'Nie są śledzone żadne aktywne stany.',
@@ -8933,7 +9350,7 @@ const ConditionTrackerMod = (() => {
         unknownConfig:
           'Nieznana opcja konfiguracji. Użyj --config, aby wyświetlić obsługiwane ustawienia.',
         macroReinstalled:
-          'Makra {wizard} i {multiTarget} zostały ponownie zainstalowane dla wszystkich obecnych graczy z rolą MG.',
+          'Makra {wizard}, {multiTarget} i {reportToken} zostały ponownie zainstalowane dla wszystkich obecnych graczy z rolą MG.',
         handoutReinstalled:
           'Handout pomocy {handout} został ponownie zainstalowany.',
         duplicate:
@@ -9008,6 +9425,11 @@ const ConditionTrackerMod = (() => {
           'Kolejność tur zmieniła się i {count} śledzony (śledzonych) wiersz stanów może być teraz poza kolejnością. Kliknij poniżej, aby przywrócić je po przypisanych żetonach.',
         conditionsReordered:
           'Wiersze stanów zostały przesunięte po ich przypisanych żetonach.',
+        noTokensSelectedReport:
+          'Select at least one token on the board before using --report-token.',
+        noConditionsAppliedTo: '{name} has no active conditions applied to it.',
+        noConditionsAppliedBy:
+          '{name} has no active conditions applied to others.',
       },
       removal: {
         conditionField: 'Stan',
@@ -9054,6 +9476,10 @@ const ConditionTrackerMod = (() => {
           [
             '!condition-tracker --multi-target',
             'Zastosuj jeden stan do kilku żetonów jednocześnie. Dostępny również jako makro ConditionTrackerMultiTarget.',
+          ],
+          [
+            '!condition-tracker --report-token',
+            'Select one or more tokens first, then run this command to get a GM whisper listing every condition applied to and by each selected token. Also available as the ConditionTrackerReportToken macro.',
           ],
           [
             '!condition-tracker --menu',
@@ -9105,6 +9531,10 @@ const ConditionTrackerMod = (() => {
           [
             '--reinstall-handout',
             'Utwórz ponownie lub zaktualizuj zlokalizowany handout pomocy',
+          ],
+          [
+            '--report-token',
+            'Whisper a GM-only condition report for each selected token (conditions applied to and by it)',
           ],
           [
             '--lang &lt;język&gt;',
@@ -9191,6 +9621,11 @@ const ConditionTrackerMod = (() => {
             'subjectPromptBypass',
             'true / false',
             'Pomiń opcjonalny krok wyboru podmiotu dla efektów Zaklęcie / Zdolność / Inne',
+          ],
+          [
+            'suppressPublicChat',
+            'true / false',
+            'Pomiń wszystkie publiczne ogłoszenia na czacie (wiadomości o dodaniu i usunięciu). Szepty GM nie są objęte.',
           ],
           [
             'healthBar',
@@ -9390,6 +9825,8 @@ const ConditionTrackerMod = (() => {
         details: 'Detalhes',
         description: 'Descrição',
         scenario: 'Cenário',
+        gameSystem: 'Game System',
+        duration: 'Duration',
       },
       dur: {
         untilRemoved: 'Até ser removido',
@@ -9414,6 +9851,7 @@ const ConditionTrackerMod = (() => {
         reinstallHandout: 'Reinstalar documento',
         showHelp: 'Mostrar ajuda',
         reorderConditions: 'Reordenar linhas de condições',
+        reportToken: 'Report Token Conditions',
       },
       title: {
         menu: 'Menu',
@@ -9436,6 +9874,7 @@ const ConditionTrackerMod = (() => {
         moveToken: '{name} — Mover ficha?',
         scriptReady: 'Script pronto',
         conditionReorder: 'Ordem de turno alterada',
+        tokenReport: 'Token Condition Report',
       },
       heading: {
         quickActions: 'Acções rápidas',
@@ -9447,6 +9886,8 @@ const ConditionTrackerMod = (() => {
         promptUi: 'Interface do assistente',
         examples: 'Exemplos',
         summary: 'Resumo',
+        appliedTo: 'Conditions Applied To',
+        appliedBy: 'Conditions Applied By',
       },
       msg: {
         noActive: 'Não há condições activas a ser rastreadas.',
@@ -9454,7 +9895,7 @@ const ConditionTrackerMod = (() => {
         unknownConfig:
           'Opção de configuração desconhecida. Utilize --config para ver as definições suportadas.',
         macroReinstalled:
-          'As macros {wizard} e {multiTarget} foram reinstaladas para todos os mestres activos.',
+          'As macros {wizard}, {multiTarget} e {reportToken} foram reinstaladas para todos os mestres activos.',
         handoutReinstalled: 'O documento de ajuda {handout} foi reinstalado.',
         duplicate:
           'Esta combinação exacta de origem, sujeito, alvo, condição e texto personalizado já está activa.',
@@ -9531,6 +9972,11 @@ const ConditionTrackerMod = (() => {
           'A ordem de turno foi alterada e {count} linha(s) de condição rastreada(s) pode(m) estar fora do lugar. Clique abaixo para as restaurar após as fichas atribuídas.',
         conditionsReordered:
           'As linhas de condições foram reposicionadas após as fichas atribuídas.',
+        noTokensSelectedReport:
+          'Select at least one token on the board before using --report-token.',
+        noConditionsAppliedTo: '{name} has no active conditions applied to it.',
+        noConditionsAppliedBy:
+          '{name} has no active conditions applied to others.',
       },
       removal: {
         conditionField: 'Condição',
@@ -9577,6 +10023,10 @@ const ConditionTrackerMod = (() => {
           [
             '!condition-tracker --multi-target',
             'Aplique uma condição a várias fichas simultaneamente. Disponível também como macro ConditionTrackerMultiTarget.',
+          ],
+          [
+            '!condition-tracker --report-token',
+            'Select one or more tokens first, then run this command to get a GM whisper listing every condition applied to and by each selected token. Also available as the ConditionTrackerReportToken macro.',
           ],
           [
             '!condition-tracker --menu',
@@ -9634,6 +10084,10 @@ const ConditionTrackerMod = (() => {
           [
             '--reinstall-handout',
             'Recriar ou actualizar o documento de ajuda localizado',
+          ],
+          [
+            '--report-token',
+            'Whisper a GM-only condition report for each selected token (conditions applied to and by it)',
           ],
           [
             '--lang &lt;locale&gt;',
@@ -9720,6 +10174,11 @@ const ConditionTrackerMod = (() => {
             'subjectPromptBypass',
             'true / false',
             'Ignorar o passo opcional da ficha sujeito para efeitos de Feitiço / Habilidade / Outro',
+          ],
+          [
+            'suppressPublicChat',
+            'true / false',
+            'Suprimir todos os anúncios públicos no chat (mensagens de aplicação e remoção). Os sussurros do Mestre não são afetados.',
           ],
           [
             'healthBar',
@@ -9919,6 +10378,8 @@ const ConditionTrackerMod = (() => {
         details: 'Detalhes',
         description: 'Descrição',
         scenario: 'Cenário',
+        gameSystem: 'Game System',
+        duration: 'Duration',
       },
       dur: {
         untilRemoved: 'Até ser removido',
@@ -9943,6 +10404,7 @@ const ConditionTrackerMod = (() => {
         reinstallHandout: 'Reinstalar livreto',
         showHelp: 'Mostrar ajuda',
         reorderConditions: 'Reordenar linhas de condição',
+        reportToken: 'Report Token Conditions',
       },
       title: {
         menu: 'Menu',
@@ -9965,6 +10427,7 @@ const ConditionTrackerMod = (() => {
         moveToken: '{name} — Mover ficha?',
         scriptReady: 'Script pronto',
         conditionReorder: 'Ordem de turno alterada',
+        tokenReport: 'Token Condition Report',
       },
       heading: {
         quickActions: 'Ações rápidas',
@@ -9976,6 +10439,8 @@ const ConditionTrackerMod = (() => {
         promptUi: 'Interface do assistente',
         examples: 'Exemplos',
         summary: 'Resumo',
+        appliedTo: 'Conditions Applied To',
+        appliedBy: 'Conditions Applied By',
       },
       msg: {
         noActive: 'Nenhuma condição ativa está sendo rastreada.',
@@ -9983,7 +10448,7 @@ const ConditionTrackerMod = (() => {
         unknownConfig:
           'Opção de configuração desconhecida. Use --config para ver as configurações disponíveis.',
         macroReinstalled:
-          'As macros {wizard} e {multiTarget} foram reinstaladas para todos os GMs atuais.',
+          'As macros {wizard}, {multiTarget} e {reportToken} foram reinstaladas para todos os GMs atuais.',
         handoutReinstalled: 'O livreto de ajuda {handout} foi reinstalado.',
         duplicate:
           'Essa combinação exata de origem, sujeito, alvo, condição e texto personalizado já está ativa.',
@@ -10056,6 +10521,11 @@ const ConditionTrackerMod = (() => {
           'A ordem de turno mudou e {count} linha(s) de condição rastreada(s) pode(m) estar fora do lugar. Clique abaixo para restaurá-las após os tokens atribuídos.',
         conditionsReordered:
           'As linhas de condição foram reposicionadas após seus tokens atribuídos.',
+        noTokensSelectedReport:
+          'Select at least one token on the board before using --report-token.',
+        noConditionsAppliedTo: '{name} has no active conditions applied to it.',
+        noConditionsAppliedBy:
+          '{name} has no active conditions applied to others.',
       },
       removal: {
         conditionField: 'Condição',
@@ -10102,6 +10572,10 @@ const ConditionTrackerMod = (() => {
           [
             '!condition-tracker --multi-target',
             'Aplicar uma condição a várias fichas simultaneamente. Também disponível como macro ConditionTrackerMultiTarget.',
+          ],
+          [
+            '!condition-tracker --report-token',
+            'Select one or more tokens first, then run this command to get a GM whisper listing every condition applied to and by each selected token. Also available as the ConditionTrackerReportToken macro.',
           ],
           [
             '!condition-tracker --menu',
@@ -10156,6 +10630,10 @@ const ConditionTrackerMod = (() => {
           [
             '--reinstall-handout',
             'Recriar ou atualizar o livreto de ajuda localizado',
+          ],
+          [
+            '--report-token',
+            'Whisper a GM-only condition report for each selected token (conditions applied to and by it)',
           ],
           [
             '--lang &lt;locale&gt;',
@@ -10242,6 +10720,11 @@ const ConditionTrackerMod = (() => {
             'subjectPromptBypass',
             'true / false',
             'Ignorar a etapa de sujeito opcional para efeitos Magia / Habilidade / Outro',
+          ],
+          [
+            'suppressPublicChat',
+            'true / false',
+            'Suprimir todos os anúncios públicos no chat (mensagens de aplicação e remoção). Os sussurros do Mestre não são afetados.',
           ],
           [
             'healthBar',
@@ -10443,6 +10926,8 @@ const ConditionTrackerMod = (() => {
         details: 'Подробности',
         description: 'Описание',
         scenario: 'Сценарий',
+        gameSystem: 'Game System',
+        duration: 'Duration',
       },
       dur: {
         untilRemoved: 'До удаления',
@@ -10467,6 +10952,7 @@ const ConditionTrackerMod = (() => {
         reinstallHandout: 'Переустановить хэндаут',
         showHelp: 'Показать справку',
         reorderConditions: 'Переупорядочить строки состояний',
+        reportToken: 'Report Token Conditions',
       },
       title: {
         menu: 'Меню',
@@ -10489,6 +10975,7 @@ const ConditionTrackerMod = (() => {
         moveToken: '{name} — Переместить жетон?',
         scriptReady: 'Скрипт готов',
         conditionReorder: 'Порядок ходов изменён',
+        tokenReport: 'Token Condition Report',
       },
       heading: {
         quickActions: 'Быстрые действия',
@@ -10500,6 +10987,8 @@ const ConditionTrackerMod = (() => {
         promptUi: 'Интерфейс мастера',
         examples: 'Примеры',
         summary: 'Итог',
+        appliedTo: 'Conditions Applied To',
+        appliedBy: 'Conditions Applied By',
       },
       msg: {
         noActive: 'Активных состояний не отслеживается.',
@@ -10507,7 +10996,7 @@ const ConditionTrackerMod = (() => {
         unknownConfig:
           'Неизвестный параметр конфигурации. Используйте --config для просмотра поддерживаемых настроек.',
         macroReinstalled:
-          'Макросы {wizard} и {multiTarget} были переустановлены для всех текущих игроков с ролью ДМ.',
+          'Макросы {wizard}, {multiTarget} и {reportToken} были переустановлены для всех текущих игроков с ролью ДМ.',
         handoutReinstalled: 'Справочный хэндаут {handout} был переустановлен.',
         duplicate:
           'Точное сочетание источника, субъекта, цели, состояния и произвольного текста уже активно.',
@@ -10581,6 +11070,11 @@ const ConditionTrackerMod = (() => {
           'Порядок ходов изменился, и {count} отслеживаемая (отслеживаемых) строка состояний может быть не на своём месте. Нажмите ниже, чтобы восстановить их после назначенных жетонов.',
         conditionsReordered:
           'Строки состояний были перемещены после назначенных им жетонов.',
+        noTokensSelectedReport:
+          'Select at least one token on the board before using --report-token.',
+        noConditionsAppliedTo: '{name} has no active conditions applied to it.',
+        noConditionsAppliedBy:
+          '{name} has no active conditions applied to others.',
       },
       removal: {
         conditionField: 'Состояние',
@@ -10627,6 +11121,10 @@ const ConditionTrackerMod = (() => {
           [
             '!condition-tracker --multi-target',
             'Применить одно состояние к нескольким жетонам одновременно. Также доступен как макрос ConditionTrackerMultiTarget.',
+          ],
+          [
+            '!condition-tracker --report-token',
+            'Select one or more tokens first, then run this command to get a GM whisper listing every condition applied to and by each selected token. Also available as the ConditionTrackerReportToken macro.',
           ],
           [
             '!condition-tracker --menu',
@@ -10684,6 +11182,10 @@ const ConditionTrackerMod = (() => {
           [
             '--reinstall-handout',
             'Пересоздать или обновить локализованный справочный хэндаут',
+          ],
+          [
+            '--report-token',
+            'Whisper a GM-only condition report for each selected token (conditions applied to and by it)',
           ],
           [
             '--lang &lt;язык&gt;',
@@ -10770,6 +11272,11 @@ const ConditionTrackerMod = (() => {
             'subjectPromptBypass',
             'true / false',
             'Пропустить необязательный шаг выбора субъекта для эффектов Заклинание / Умение / Другое',
+          ],
+          [
+            'suppressPublicChat',
+            'true / false',
+            'Скрыть все публичные объявления в чате (сообщения о применении и снятии). Шёпот GM не затрагивается.',
           ],
           [
             'healthBar',
@@ -10969,6 +11476,8 @@ const ConditionTrackerMod = (() => {
         details: 'Detalles',
         description: 'Descripción',
         scenario: 'Escenario',
+        gameSystem: 'Game System',
+        duration: 'Duration',
       },
       dur: {
         untilRemoved: 'Hasta retirar',
@@ -10993,6 +11502,7 @@ const ConditionTrackerMod = (() => {
         reinstallHandout: 'Reinstalar folleto',
         showHelp: 'Mostrar ayuda',
         reorderConditions: 'Reordenar filas de condición',
+        reportToken: 'Report Token Conditions',
       },
       title: {
         menu: 'Menú',
@@ -11015,6 +11525,7 @@ const ConditionTrackerMod = (() => {
         moveToken: '{name} — ¿Mover ficha?',
         scriptReady: 'Script listo',
         conditionReorder: 'Orden de turno cambiado',
+        tokenReport: 'Token Condition Report',
       },
       heading: {
         quickActions: 'Acciones rápidas',
@@ -11026,6 +11537,8 @@ const ConditionTrackerMod = (() => {
         promptUi: 'Interfaz del asistente',
         examples: 'Ejemplos',
         summary: 'Resumen',
+        appliedTo: 'Conditions Applied To',
+        appliedBy: 'Conditions Applied By',
       },
       msg: {
         noActive: 'No se están rastreando condiciones activas.',
@@ -11034,7 +11547,7 @@ const ConditionTrackerMod = (() => {
         unknownConfig:
           'Opción de configuración desconocida. Usa --config para ver los ajustes disponibles.',
         macroReinstalled:
-          'Las macros {wizard} y {multiTarget} se han reinstalado para todos los GM actuales.',
+          'Las macros {wizard}, {multiTarget} y {reportToken} se han reinstalado para todos los GM actuales.',
         handoutReinstalled: 'El folleto de ayuda {handout} se reinstaló.',
         duplicate:
           'Esa combinación exacta de fuente, sujeto, objetivo, condición y texto personalizado ya está activa.',
@@ -11113,6 +11626,11 @@ const ConditionTrackerMod = (() => {
           'El orden de turno ha cambiado y {count} fila(s) de condición rastreada(s) puede(n) estar fuera de lugar. Haz clic abajo para restaurarlas después de sus tokens asignados.',
         conditionsReordered:
           'Las filas de condición han sido reposicionadas después de sus tokens asignados.',
+        noTokensSelectedReport:
+          'Select at least one token on the board before using --report-token.',
+        noConditionsAppliedTo: '{name} has no active conditions applied to it.',
+        noConditionsAppliedBy:
+          '{name} has no active conditions applied to others.',
       },
       removal: {
         conditionField: 'Condición',
@@ -11160,6 +11678,10 @@ const ConditionTrackerMod = (() => {
           [
             '!condition-tracker --multi-target',
             'Aplicar una condición a varias fichas simultáneamente. También disponible como macro ConditionTrackerMultiTarget.',
+          ],
+          [
+            '!condition-tracker --report-token',
+            'Select one or more tokens first, then run this command to get a GM whisper listing every condition applied to and by each selected token. Also available as the ConditionTrackerReportToken macro.',
           ],
           [
             '!condition-tracker --menu',
@@ -11214,6 +11736,10 @@ const ConditionTrackerMod = (() => {
           [
             '--reinstall-handout',
             'Recrear o actualizar el folleto de ayuda localizado',
+          ],
+          [
+            '--report-token',
+            'Whisper a GM-only condition report for each selected token (conditions applied to and by it)',
           ],
           [
             '--lang &lt;locale&gt;',
@@ -11300,6 +11826,11 @@ const ConditionTrackerMod = (() => {
             'subjectPromptBypass',
             'true / false',
             'Omitir el paso de sujeto opcional para efectos Conjuro / Habilidad / Otro',
+          ],
+          [
+            'suppressPublicChat',
+            'true / false',
+            'Suprimir todos los anuncios públicos de chat (mensajes de aplicación y eliminación). Los susurros del DJ no se ven afectados.',
           ],
           [
             'healthBar',
@@ -11498,6 +12029,8 @@ const ConditionTrackerMod = (() => {
         details: 'Detaljer',
         description: 'Beskrivning',
         scenario: 'Scenario',
+        gameSystem: 'Game System',
+        duration: 'Duration',
       },
       dur: {
         untilRemoved: 'Tills borttagen',
@@ -11522,6 +12055,7 @@ const ConditionTrackerMod = (() => {
         reinstallHandout: 'Installera om handout',
         showHelp: 'Visa hjälp',
         reorderConditions: 'Ordna om tillståndsrader',
+        reportToken: 'Report Token Conditions',
       },
       title: {
         menu: 'Meny',
@@ -11544,6 +12078,7 @@ const ConditionTrackerMod = (() => {
         moveToken: '{name} — Flytta token?',
         scriptReady: 'Skript redo',
         conditionReorder: 'Turordning ändrad',
+        tokenReport: 'Token Condition Report',
       },
       heading: {
         quickActions: 'Snabbåtgärder',
@@ -11555,6 +12090,8 @@ const ConditionTrackerMod = (() => {
         promptUi: 'Guide-gränssnitt',
         examples: 'Exempel',
         summary: 'Sammanfattning',
+        appliedTo: 'Conditions Applied To',
+        appliedBy: 'Conditions Applied By',
       },
       msg: {
         noActive: 'Inga aktiva tillstånd spåras.',
@@ -11562,7 +12099,7 @@ const ConditionTrackerMod = (() => {
         unknownConfig:
           'Okänt konfigurationsalternativ. Använd --config för att visa stödda inställningar.',
         macroReinstalled:
-          'Makrona {wizard} och {multiTarget} har installerats om för alla nuvarande GM-spelare.',
+          'Makrona {wizard}, {multiTarget} och {reportToken} har installerats om för alla nuvarande GM-spelare.',
         handoutReinstalled: 'Hjälp-handouten {handout} har installerats om.',
         duplicate:
           'Exakt den kombinationen av källa, subjekt, mål, tillstånd och anpassad text är redan aktiv.',
@@ -11635,6 +12172,11 @@ const ConditionTrackerMod = (() => {
           'Turordningen ändrades och {count} spårad(e) tillståndsrad(er) kan nu vara felplacerade. Klicka nedan för att återställa dem efter sina tilldelade tokens.',
         conditionsReordered:
           'Tillståndsrader har ompositionerats efter sina tilldelade tokens.',
+        noTokensSelectedReport:
+          'Select at least one token on the board before using --report-token.',
+        noConditionsAppliedTo: '{name} has no active conditions applied to it.',
+        noConditionsAppliedBy:
+          '{name} has no active conditions applied to others.',
       },
       removal: {
         conditionField: 'Tillstånd',
@@ -11681,6 +12223,10 @@ const ConditionTrackerMod = (() => {
           [
             '!condition-tracker --multi-target',
             'Applicera ett tillstånd på flera tokens samtidigt. Finns även som makrot ConditionTrackerMultiTarget.',
+          ],
+          [
+            '!condition-tracker --report-token',
+            'Select one or more tokens first, then run this command to get a GM whisper listing every condition applied to and by each selected token. Also available as the ConditionTrackerReportToken macro.',
           ],
           [
             '!condition-tracker --menu',
@@ -11735,6 +12281,10 @@ const ConditionTrackerMod = (() => {
           [
             '--reinstall-handout',
             'Återskapa eller uppdatera det lokaliserade hjälp-handouten',
+          ],
+          [
+            '--report-token',
+            'Whisper a GM-only condition report for each selected token (conditions applied to and by it)',
           ],
           [
             '--lang &lt;locale&gt;',
@@ -11821,6 +12371,11 @@ const ConditionTrackerMod = (() => {
             'subjectPromptBypass',
             'true / false',
             'Hoppa över det valfria subjektsteget för Besvärjelse / Förmåga / Andra effekter',
+          ],
+          [
+            'suppressPublicChat',
+            'true / false',
+            'Dölj alla offentliga chattmeddelanden (tillämpnings- och borttagningsmeddelanden). GM-viskning påverkas inte.',
           ],
           [
             'healthBar',
@@ -12017,6 +12572,8 @@ const ConditionTrackerMod = (() => {
         details: 'Ayrıntılar',
         description: 'Açıklama',
         scenario: 'Senaryo',
+        gameSystem: 'Game System',
+        duration: 'Duration',
       },
       dur: {
         untilRemoved: 'Kaldırılana kadar',
@@ -12041,6 +12598,7 @@ const ConditionTrackerMod = (() => {
         reinstallHandout: 'El İlanını Yeniden Yükle',
         showHelp: 'Yardımı Göster',
         reorderConditions: 'Durum Satırlarını Yeniden Sırala',
+        reportToken: 'Report Token Conditions',
       },
       title: {
         menu: 'Menü',
@@ -12063,6 +12621,7 @@ const ConditionTrackerMod = (() => {
         moveToken: '{name} — Token Taşınsın mı?',
         scriptReady: 'Betik Hazır',
         conditionReorder: 'Tur Sırası Değişti',
+        tokenReport: 'Token Condition Report',
       },
       heading: {
         quickActions: 'Hızlı İşlemler',
@@ -12074,6 +12633,8 @@ const ConditionTrackerMod = (() => {
         promptUi: 'Sihirbaz Arayüzü',
         examples: 'Örnekler',
         summary: 'Özet',
+        appliedTo: 'Conditions Applied To',
+        appliedBy: 'Conditions Applied By',
       },
       msg: {
         noActive: 'Takip edilen aktif durum yok.',
@@ -12081,7 +12642,7 @@ const ConditionTrackerMod = (() => {
         unknownConfig:
           'Bilinmeyen yapılandırma seçeneği. Desteklenen ayarları görüntülemek için --config kullanın.',
         macroReinstalled:
-          '{wizard} ve {multiTarget} makroları tüm mevcut GM oyuncuları için yeniden yüklendi.',
+          '{wizard}, {multiTarget} ve {reportToken} makroları tüm mevcut GM oyuncuları için yeniden yüklendi.',
         handoutReinstalled: 'Yardım el ilanı {handout} yeniden yüklendi.',
         duplicate: 'Aynı kaynak, özne, hedef, durum ve özel metin zaten aktif.',
         noTargets: 'Çoklu hedef uygulaması için hedef token belirtilmedi.',
@@ -12153,6 +12714,11 @@ const ConditionTrackerMod = (() => {
           'Tur sırası değişti ve {count} takip edilen durum satırı artık yanlış yerde olabilir. Bunları atanmış tokenlarının arkasına taşımak için aşağıya tıklayın.',
         conditionsReordered:
           'Durum satırları atanmış tokenlarının arkasına yeniden konumlandırıldı.',
+        noTokensSelectedReport:
+          'Select at least one token on the board before using --report-token.',
+        noConditionsAppliedTo: '{name} has no active conditions applied to it.',
+        noConditionsAppliedBy:
+          '{name} has no active conditions applied to others.',
       },
       removal: {
         conditionField: 'Durum',
@@ -12198,6 +12764,10 @@ const ConditionTrackerMod = (() => {
           [
             '!condition-tracker --multi-target',
             'Bir durumu aynı anda birden fazla tokena uygulayın. ConditionTrackerMultiTarget makrosu olarak da kullanılabilir.',
+          ],
+          [
+            '!condition-tracker --report-token',
+            'Select one or more tokens first, then run this command to get a GM whisper listing every condition applied to and by each selected token. Also available as the ConditionTrackerReportToken macro.',
           ],
           [
             '!condition-tracker --menu',
@@ -12252,6 +12822,10 @@ const ConditionTrackerMod = (() => {
           [
             '--reinstall-handout',
             'Yerelleştirilmiş yardım el ilanını yeniden oluştur veya güncelle',
+          ],
+          [
+            '--report-token',
+            'Whisper a GM-only condition report for each selected token (conditions applied to and by it)',
           ],
           [
             '--lang &lt;yerel ayar&gt;',
@@ -12335,6 +12909,11 @@ const ConditionTrackerMod = (() => {
             'subjectPromptBypass',
             'true / false',
             'Büyü / Yetenek / Diğer efektler için isteğe bağlı özne-token adımını atla',
+          ],
+          [
+            'suppressPublicChat',
+            'true / false',
+            'Tüm genel sohbet duyurularını (uygulama ve kaldırma mesajları) gizle. GM fısıltıları etkilenmez.',
           ],
           [
             'healthBar',
@@ -12532,6 +13111,8 @@ const ConditionTrackerMod = (() => {
         details: 'Подробиці',
         description: 'Опис',
         scenario: 'Сценарій',
+        gameSystem: 'Game System',
+        duration: 'Duration',
       },
       dur: {
         untilRemoved: 'Доки не видалено',
@@ -12556,6 +13137,7 @@ const ConditionTrackerMod = (() => {
         reinstallHandout: 'Перевстановити довідник',
         showHelp: 'Показати довідку',
         reorderConditions: 'Переупорядкувати рядки умов',
+        reportToken: 'Report Token Conditions',
       },
       title: {
         menu: 'Меню',
@@ -12578,6 +13160,7 @@ const ConditionTrackerMod = (() => {
         moveToken: '{name} — перемістити токен?',
         scriptReady: 'Скрипт готовий',
         conditionReorder: 'Порядок ходів змінено',
+        tokenReport: 'Token Condition Report',
       },
       heading: {
         quickActions: 'Швидкі дії',
@@ -12589,6 +13172,8 @@ const ConditionTrackerMod = (() => {
         promptUi: 'Інтерфейс майстра',
         examples: 'Приклади',
         summary: 'Підсумок',
+        appliedTo: 'Conditions Applied To',
+        appliedBy: 'Conditions Applied By',
       },
       msg: {
         noActive: 'Активні стани не відстежуються.',
@@ -12596,7 +13181,7 @@ const ConditionTrackerMod = (() => {
         unknownConfig:
           'Невідома опція налаштування. Використайте --config, щоб переглянути підтримувані налаштування.',
         macroReinstalled:
-          'Макроси {wizard} і {multiTarget} перевстановлено для всіх поточних GM-гравців.',
+          'Макроси {wizard}, {multiTarget} і {reportToken} перевстановлено для всіх поточних GM-гравців.',
         handoutReinstalled: 'Довідник {handout} перевстановлено.',
         duplicate:
           "Такий самий набір джерела, суб'єкта, цілі, стану й тексту вже активний.",
@@ -12668,6 +13253,11 @@ const ConditionTrackerMod = (() => {
           'Порядок ходів змінився, і {count} відстежуваний рядок/рядків умов може бути тепер не на місці. Натисніть нижче, щоб відновити їх після призначених токенів.',
         conditionsReordered:
           'Рядки умов були переміщені після призначених токенів.',
+        noTokensSelectedReport:
+          'Select at least one token on the board before using --report-token.',
+        noConditionsAppliedTo: '{name} has no active conditions applied to it.',
+        noConditionsAppliedBy:
+          '{name} has no active conditions applied to others.',
       },
       removal: {
         conditionField: 'Стан',
@@ -12714,6 +13304,10 @@ const ConditionTrackerMod = (() => {
           [
             '!condition-tracker --multi-target',
             'Застосувати один стан до кількох токенів одночасно. Також доступний як макрос ConditionTrackerMultiTarget.',
+          ],
+          [
+            '!condition-tracker --report-token',
+            'Select one or more tokens first, then run this command to get a GM whisper listing every condition applied to and by each selected token. Also available as the ConditionTrackerReportToken macro.',
           ],
           [
             '!condition-tracker --menu',
@@ -12768,6 +13362,10 @@ const ConditionTrackerMod = (() => {
           [
             '--reinstall-handout',
             'Повторно створити або оновити локалізований довідник',
+          ],
+          [
+            '--report-token',
+            'Whisper a GM-only condition report for each selected token (conditions applied to and by it)',
           ],
           [
             '--lang &lt;locale&gt;',
@@ -12851,6 +13449,11 @@ const ConditionTrackerMod = (() => {
             'subjectPromptBypass',
             'true / false',
             "Пропускати необов'язковий крок вибору суб'єкта для ефектів Spell / Ability / Other",
+          ],
+          [
+            'suppressPublicChat',
+            'true / false',
+            'Придушити всі публічні повідомлення чату (повідомлення про застосування та видалення). Шепіт GM не зачіпається.',
           ],
           [
             'healthBar',
@@ -13127,6 +13730,4102 @@ const ConditionTrackerMod = (() => {
     return data || null;
   }
 
+  /** @type {import('./index.js').GameSystemProfile} */
+  const dnd5eProfile = Object.freeze({
+    SYSTEM_ID: 'dnd5e',
+    SYSTEM_NAME: 'D&D 5th Edition',
+
+    STANDARD_CONDITIONS: Object.freeze(
+      [
+        'Grappled',
+        'Restrained',
+        'Prone',
+        'Poisoned',
+        'Stunned',
+        'Blinded',
+        'Charmed',
+        'Frightened',
+        'Incapacitated',
+        'Invisible',
+        'Paralyzed',
+        'Petrified',
+        'Unconscious',
+      ].sort((a, b) => a.localeCompare(b)),
+    ),
+
+    CONDITION_DATA: Object.freeze({
+      Grappled: {
+        past: 'grappled',
+        verb: 'grapples',
+        icon: '[G]',
+        emoji: '🤛',
+      },
+      Restrained: {
+        past: 'restrained',
+        verb: 'restrains',
+        icon: '[R]',
+        emoji: '🔒',
+      },
+      Prone: {
+        past: 'knocked prone',
+        verb: 'knocks',
+        suffix: 'prone',
+        icon: '[P]',
+        emoji: '🛌',
+      },
+      Poisoned: {
+        past: 'poisoned',
+        verb: 'poisons',
+        icon: '[Psn]',
+        emoji: '☠️',
+      },
+      Stunned: { past: 'stunned', verb: 'stuns', icon: '[Stn]', emoji: '😵' },
+      Blinded: { past: 'blinded', verb: 'blinds', icon: '[B]', emoji: '🙈' },
+      Charmed: { past: 'charmed', verb: 'charms', icon: '[C]', emoji: '😍' },
+      Frightened: {
+        past: 'frightened',
+        verb: 'frightens',
+        icon: '[F]',
+        emoji: '😱',
+      },
+      Incapacitated: {
+        past: 'incapacitated',
+        verb: 'incapacitates',
+        icon: '[I]',
+        emoji: '🚫',
+      },
+      Invisible: {
+        past: 'invisible',
+        verb: 'makes',
+        suffix: 'invisible',
+        icon: '[Inv]',
+        emoji: '🥷',
+      },
+      Paralyzed: {
+        past: 'paralyzed',
+        verb: 'paralyzes',
+        icon: '[Pz]',
+        emoji: '❄️',
+      },
+      Petrified: {
+        past: 'petrified',
+        verb: 'petrifies',
+        icon: '[Pet]',
+        emoji: '🪨',
+      },
+      Unconscious: {
+        past: 'unconscious',
+        verb: 'knocks',
+        suffix: 'unconscious',
+        icon: '[U]',
+        emoji: '💤',
+      },
+      Spell: {
+        past: 'affected by a spell',
+        verb: 'casts a spell on',
+        icon: '[Spl]',
+        emoji: '🔮',
+      },
+      Ability: {
+        past: 'affected by an ability',
+        verb: 'uses an ability on',
+        icon: '[Abl]',
+        emoji: '🎯',
+      },
+      Advantage: {
+        past: 'has advantage',
+        verb: 'grants advantage to',
+        icon: '[Adv]',
+        emoji: '🍀',
+        noBy: true,
+      },
+      Disadvantage: {
+        past: 'has disadvantage',
+        verb: 'imposes disadvantage on',
+        icon: '[Dis]',
+        emoji: '⬇️',
+        noBy: true,
+      },
+    }),
+
+    DEFAULT_MARKERS: Object.freeze({
+      Grappled: 'grab',
+      Restrained: 'padlock',
+      Prone: 'back-pain',
+      Poisoned: 'chemical-bolt',
+      Stunned: 'pummeled',
+      Blinded: 'bleeding-eye',
+      Charmed: 'chained-heart',
+      Frightened: 'screaming',
+      Incapacitated: 'interdiction',
+      Invisible: 'ninja-mask',
+      Paralyzed: 'frozen-orb',
+      Petrified: 'fossil',
+      Unconscious: 'sleepy',
+      Spell: 'lightning-helix',
+      Ability: 'fist',
+      Advantage: 'three-leaves',
+      Disadvantage: 'broken-heart',
+    }),
+
+    CUSTOM_EFFECT_TYPES: Object.freeze([
+      'Spell',
+      'Ability',
+      'Advantage',
+      'Disadvantage',
+      'Other',
+    ]),
+    CUSTOM_EFFECT_LABELS: Object.freeze({}),
+  });
+
+  /** @type {import('./index.js').GameSystemProfile} */
+  const dnd4eProfile = Object.freeze({
+    SYSTEM_ID: 'dnd4e',
+    SYSTEM_NAME: 'D&D 4th Edition',
+
+    STANDARD_CONDITIONS: Object.freeze(
+      [
+        'Blinded',
+        'Dazed',
+        'Deafened',
+        'Dominated',
+        'Dying',
+        'Immobilized',
+        'Invisible',
+        'Marked',
+        'Petrified',
+        'Prone',
+        'Restrained',
+        'Slowed',
+        'Stunned',
+        'Unconscious',
+        'Weakened',
+      ].sort((a, b) => a.localeCompare(b)),
+    ),
+
+    CONDITION_DATA: Object.freeze({
+      Blinded: { past: 'blinded', verb: 'blinds', icon: '[B]', emoji: '🙈' },
+      Dazed: { past: 'dazed', verb: 'dazes', icon: '[Dz]', emoji: '😵' },
+      Deafened: {
+        past: 'deafened',
+        verb: 'deafens',
+        icon: '[Df]',
+        emoji: '🙉',
+      },
+      Dominated: {
+        past: 'dominated',
+        verb: 'dominates',
+        icon: '[Dom]',
+        emoji: '🧠',
+      },
+      Dying: {
+        past: 'dying',
+        verb: 'knocks',
+        suffix: 'dying',
+        icon: '[Dy]',
+        emoji: '💀',
+      },
+      Immobilized: {
+        past: 'immobilized',
+        verb: 'immobilizes',
+        icon: '[Imm]',
+        emoji: '⛓️',
+      },
+      Invisible: {
+        past: 'invisible',
+        verb: 'makes',
+        suffix: 'invisible',
+        icon: '[Inv]',
+        emoji: '🥷',
+      },
+      Marked: { past: 'marked', verb: 'marks', icon: '[Mk]', emoji: '🎯' },
+      Petrified: {
+        past: 'petrified',
+        verb: 'petrifies',
+        icon: '[Pet]',
+        emoji: '🪨',
+      },
+      Prone: {
+        past: 'knocked prone',
+        verb: 'knocks',
+        suffix: 'prone',
+        icon: '[P]',
+        emoji: '🛌',
+      },
+      Restrained: {
+        past: 'restrained',
+        verb: 'restrains',
+        icon: '[R]',
+        emoji: '🔒',
+      },
+      Slowed: { past: 'slowed', verb: 'slows', icon: '[Sl]', emoji: '🐢' },
+      Stunned: { past: 'stunned', verb: 'stuns', icon: '[Stn]', emoji: '😵‍💫' },
+      Unconscious: {
+        past: 'unconscious',
+        verb: 'knocks',
+        suffix: 'unconscious',
+        icon: '[U]',
+        emoji: '💤',
+      },
+      Weakened: {
+        past: 'weakened',
+        verb: 'weakens',
+        icon: '[Wk]',
+        emoji: '💪',
+      },
+      // "Spell" canonical key — displayed as "Power" via CUSTOM_EFFECT_LABELS
+      Spell: {
+        past: 'affected by a power',
+        verb: 'uses a power on',
+        icon: '[Pwr]',
+        emoji: '🔮',
+      },
+      Ability: {
+        past: 'affected by an ability',
+        verb: 'uses an ability on',
+        icon: '[Abl]',
+        emoji: '⚡',
+      },
+    }),
+
+    DEFAULT_MARKERS: Object.freeze({
+      Blinded: 'bleeding-eye',
+      Dazed: 'pummeled',
+      Deafened: 'edge-crack',
+      Dominated: 'chained-heart',
+      Dying: 'skull',
+      Immobilized: 'padlock',
+      Invisible: 'ninja-mask',
+      Marked: 'overdrive',
+      Petrified: 'fossil',
+      Prone: 'back-pain',
+      Restrained: 'grab',
+      Slowed: 'snail',
+      Stunned: 'frozen-orb',
+      Unconscious: 'sleepy',
+      Weakened: 'half-heart',
+      Spell: 'lightning-helix',
+      Ability: 'fist',
+    }),
+
+    CUSTOM_EFFECT_TYPES: Object.freeze(['Spell', 'Ability', 'Other']),
+    // "Spell" canonical key is labelled "Power" in D&D 4e
+    CUSTOM_EFFECT_LABELS: Object.freeze({ Spell: 'Power' }),
+  });
+
+  /** @type {import('./index.js').GameSystemProfile} */
+  const dnd35Profile = Object.freeze({
+    SYSTEM_ID: 'dnd35',
+    SYSTEM_NAME: 'D&D 3.5 Edition',
+
+    STANDARD_CONDITIONS: Object.freeze(
+      [
+        'Blinded',
+        'Confused',
+        'Cowering',
+        'Dazed',
+        'Dazzled',
+        'Deafened',
+        'Disabled',
+        'Dying',
+        'Exhausted',
+        'Fascinated',
+        'Fatigued',
+        'Flat-Footed',
+        'Frightened',
+        'Grappled',
+        'Helpless',
+        'Invisible',
+        'Nauseated',
+        'Panicked',
+        'Paralyzed',
+        'Petrified',
+        'Pinned',
+        'Prone',
+        'Shaken',
+        'Sickened',
+        'Staggered',
+        'Stunned',
+        'Unconscious',
+      ].sort((a, b) => a.localeCompare(b)),
+    ),
+
+    CONDITION_DATA: Object.freeze({
+      Blinded: { past: 'blinded', verb: 'blinds', icon: '[B]', emoji: '🙈' },
+      Confused: {
+        past: 'confused',
+        verb: 'confuses',
+        icon: '[Con]',
+        emoji: '🤪',
+      },
+      Cowering: {
+        past: 'cowering',
+        verb: 'causes',
+        suffix: 'to cower',
+        icon: '[Cwr]',
+        emoji: '😰',
+      },
+      Dazed: { past: 'dazed', verb: 'dazes', icon: '[Dz]', emoji: '😵' },
+      Dazzled: { past: 'dazzled', verb: 'dazzles', icon: '[Dzl]', emoji: '✨' },
+      Deafened: {
+        past: 'deafened',
+        verb: 'deafens',
+        icon: '[Df]',
+        emoji: '🙉',
+      },
+      Disabled: {
+        past: 'disabled',
+        verb: 'disables',
+        icon: '[Dis]',
+        emoji: '🚑',
+      },
+      Dying: {
+        past: 'dying',
+        verb: 'knocks',
+        suffix: 'dying',
+        icon: '[Dy]',
+        emoji: '💀',
+      },
+      Exhausted: {
+        past: 'exhausted',
+        verb: 'exhausts',
+        icon: '[Ex]',
+        emoji: '😩',
+      },
+      Fascinated: {
+        past: 'fascinated',
+        verb: 'fascinates',
+        icon: '[Fas]',
+        emoji: '🌀',
+      },
+      Fatigued: {
+        past: 'fatigued',
+        verb: 'fatigues',
+        icon: '[Fat]',
+        emoji: '😫',
+      },
+      'Flat-Footed': {
+        past: 'flat-footed',
+        verb: 'catches',
+        suffix: 'flat-footed',
+        icon: '[FF]',
+        emoji: '👟',
+      },
+      Frightened: {
+        past: 'frightened',
+        verb: 'frightens',
+        icon: '[Fr]',
+        emoji: '😱',
+      },
+      Grappled: {
+        past: 'grappled',
+        verb: 'grapples',
+        icon: '[G]',
+        emoji: '🤛',
+      },
+      Helpless: {
+        past: 'helpless',
+        verb: 'renders',
+        suffix: 'helpless',
+        icon: '[Hlp]',
+        emoji: '🙏',
+      },
+      Invisible: {
+        past: 'invisible',
+        verb: 'makes',
+        suffix: 'invisible',
+        icon: '[Inv]',
+        emoji: '🥷',
+      },
+      Nauseated: {
+        past: 'nauseated',
+        verb: 'nauseates',
+        icon: '[Naus]',
+        emoji: '🤢',
+      },
+      Panicked: {
+        past: 'panicked',
+        verb: 'causes',
+        suffix: 'to panic',
+        icon: '[Pan]',
+        emoji: '😨',
+      },
+      Paralyzed: {
+        past: 'paralyzed',
+        verb: 'paralyzes',
+        icon: '[Pz]',
+        emoji: '❄️',
+      },
+      Petrified: {
+        past: 'petrified',
+        verb: 'petrifies',
+        icon: '[Pet]',
+        emoji: '🪨',
+      },
+      Pinned: { past: 'pinned', verb: 'pins', icon: '[Pin]', emoji: '📌' },
+      Prone: {
+        past: 'knocked prone',
+        verb: 'knocks',
+        suffix: 'prone',
+        icon: '[P]',
+        emoji: '🛌',
+      },
+      Shaken: { past: 'shaken', verb: 'shakes', icon: '[Shk]', emoji: '😨' },
+      Sickened: {
+        past: 'sickened',
+        verb: 'sickens',
+        icon: '[Sk]',
+        emoji: '🤢',
+      },
+      Staggered: {
+        past: 'staggered',
+        verb: 'staggers',
+        icon: '[Stg]',
+        emoji: '🥴',
+      },
+      Stunned: { past: 'stunned', verb: 'stuns', icon: '[Stn]', emoji: '😵' },
+      Unconscious: {
+        past: 'unconscious',
+        verb: 'knocks',
+        suffix: 'unconscious',
+        icon: '[U]',
+        emoji: '💤',
+      },
+      Spell: {
+        past: 'affected by a spell',
+        verb: 'casts a spell on',
+        icon: '[Spl]',
+        emoji: '🔮',
+      },
+      Ability: {
+        past: 'affected by an ability',
+        verb: 'uses an ability on',
+        icon: '[Abl]',
+        emoji: '🎯',
+      },
+    }),
+
+    DEFAULT_MARKERS: Object.freeze({
+      Blinded: 'bleeding-eye',
+      Confused: 'interdiction',
+      Cowering: 'screaming',
+      Dazed: 'pummeled',
+      Dazzled: 'edge-crack',
+      Deafened: 'edge-crack',
+      Disabled: 'half-heart',
+      Dying: 'skull',
+      Exhausted: 'sleepy',
+      Fascinated: 'chained-heart',
+      Fatigued: 'half-heart',
+      'Flat-Footed': 'overdrive',
+      Frightened: 'screaming',
+      Grappled: 'grab',
+      Helpless: 'frozen-orb',
+      Invisible: 'ninja-mask',
+      Nauseated: 'chemical-bolt',
+      Panicked: 'screaming',
+      Paralyzed: 'frozen-orb',
+      Petrified: 'fossil',
+      Pinned: 'padlock',
+      Prone: 'back-pain',
+      Shaken: 'half-heart',
+      Sickened: 'chemical-bolt',
+      Staggered: 'pummeled',
+      Stunned: 'pummeled',
+      Unconscious: 'sleepy',
+      Spell: 'lightning-helix',
+      Ability: 'fist',
+    }),
+
+    CUSTOM_EFFECT_TYPES: Object.freeze(['Spell', 'Ability', 'Other']),
+    CUSTOM_EFFECT_LABELS: Object.freeze({}),
+  });
+
+  /** @type {import('./index.js').GameSystemProfile} */
+  const pathfinder1eProfile = Object.freeze({
+    SYSTEM_ID: 'pathfinder1e',
+    SYSTEM_NAME: 'Pathfinder First Edition',
+
+    STANDARD_CONDITIONS: Object.freeze(
+      [
+        'Bleed',
+        'Blinded',
+        'Broken',
+        'Confused',
+        'Cowering',
+        'Dazed',
+        'Dazzled',
+        'Deafened',
+        'Disabled',
+        'Dying',
+        'Energy Drained',
+        'Entangled',
+        'Exhausted',
+        'Fascinated',
+        'Fatigued',
+        'Flat-Footed',
+        'Frightened',
+        'Grappled',
+        'Helpless',
+        'Invisible',
+        'Nauseated',
+        'Panicked',
+        'Paralyzed',
+        'Petrified',
+        'Pinned',
+        'Prone',
+        'Shaken',
+        'Sickened',
+        'Staggered',
+        'Stunned',
+        'Unconscious',
+      ].sort((a, b) => a.localeCompare(b)),
+    ),
+
+    CONDITION_DATA: Object.freeze({
+      Bleed: {
+        past: 'bleeding',
+        verb: 'causes',
+        suffix: 'to bleed',
+        icon: '[Bld]',
+        emoji: '🩸',
+      },
+      Blinded: { past: 'blinded', verb: 'blinds', icon: '[B]', emoji: '🙈' },
+      Broken: { past: 'broken', verb: 'breaks', icon: '[Brk]', emoji: '💔' },
+      Confused: {
+        past: 'confused',
+        verb: 'confuses',
+        icon: '[Con]',
+        emoji: '🤪',
+      },
+      Cowering: {
+        past: 'cowering',
+        verb: 'causes',
+        suffix: 'to cower',
+        icon: '[Cwr]',
+        emoji: '😰',
+      },
+      Dazed: { past: 'dazed', verb: 'dazes', icon: '[Dz]', emoji: '😵' },
+      Dazzled: { past: 'dazzled', verb: 'dazzles', icon: '[Dzl]', emoji: '✨' },
+      Deafened: {
+        past: 'deafened',
+        verb: 'deafens',
+        icon: '[Df]',
+        emoji: '🙉',
+      },
+      Disabled: {
+        past: 'disabled',
+        verb: 'disables',
+        icon: '[Dis]',
+        emoji: '🚑',
+      },
+      Dying: {
+        past: 'dying',
+        verb: 'knocks',
+        suffix: 'dying',
+        icon: '[Dy]',
+        emoji: '💀',
+      },
+      'Energy Drained': {
+        past: 'energy drained',
+        verb: 'drains',
+        icon: '[ED]',
+        emoji: '🌑',
+      },
+      Entangled: {
+        past: 'entangled',
+        verb: 'entangles',
+        icon: '[Ent]',
+        emoji: '🕸️',
+      },
+      Exhausted: {
+        past: 'exhausted',
+        verb: 'exhausts',
+        icon: '[Ex]',
+        emoji: '😩',
+      },
+      Fascinated: {
+        past: 'fascinated',
+        verb: 'fascinates',
+        icon: '[Fas]',
+        emoji: '🌀',
+      },
+      Fatigued: {
+        past: 'fatigued',
+        verb: 'fatigues',
+        icon: '[Fat]',
+        emoji: '😫',
+      },
+      'Flat-Footed': {
+        past: 'flat-footed',
+        verb: 'catches',
+        suffix: 'flat-footed',
+        icon: '[FF]',
+        emoji: '👟',
+      },
+      Frightened: {
+        past: 'frightened',
+        verb: 'frightens',
+        icon: '[Fr]',
+        emoji: '😱',
+      },
+      Grappled: {
+        past: 'grappled',
+        verb: 'grapples',
+        icon: '[G]',
+        emoji: '🤛',
+      },
+      Helpless: {
+        past: 'helpless',
+        verb: 'renders',
+        suffix: 'helpless',
+        icon: '[Hlp]',
+        emoji: '🙏',
+      },
+      Invisible: {
+        past: 'invisible',
+        verb: 'makes',
+        suffix: 'invisible',
+        icon: '[Inv]',
+        emoji: '🥷',
+      },
+      Nauseated: {
+        past: 'nauseated',
+        verb: 'nauseates',
+        icon: '[Naus]',
+        emoji: '🤢',
+      },
+      Panicked: {
+        past: 'panicked',
+        verb: 'causes',
+        suffix: 'to panic',
+        icon: '[Pan]',
+        emoji: '😨',
+      },
+      Paralyzed: {
+        past: 'paralyzed',
+        verb: 'paralyzes',
+        icon: '[Pz]',
+        emoji: '❄️',
+      },
+      Petrified: {
+        past: 'petrified',
+        verb: 'petrifies',
+        icon: '[Pet]',
+        emoji: '🪨',
+      },
+      Pinned: { past: 'pinned', verb: 'pins', icon: '[Pin]', emoji: '📌' },
+      Prone: {
+        past: 'knocked prone',
+        verb: 'knocks',
+        suffix: 'prone',
+        icon: '[P]',
+        emoji: '🛌',
+      },
+      Shaken: { past: 'shaken', verb: 'shakes', icon: '[Shk]', emoji: '😨' },
+      Sickened: {
+        past: 'sickened',
+        verb: 'sickens',
+        icon: '[Sk]',
+        emoji: '🤢',
+      },
+      Staggered: {
+        past: 'staggered',
+        verb: 'staggers',
+        icon: '[Stg]',
+        emoji: '🥴',
+      },
+      Stunned: { past: 'stunned', verb: 'stuns', icon: '[Stn]', emoji: '😵' },
+      Unconscious: {
+        past: 'unconscious',
+        verb: 'knocks',
+        suffix: 'unconscious',
+        icon: '[U]',
+        emoji: '💤',
+      },
+      Spell: {
+        past: 'affected by a spell',
+        verb: 'casts a spell on',
+        icon: '[Spl]',
+        emoji: '🔮',
+      },
+      Ability: {
+        past: 'affected by an ability',
+        verb: 'uses an ability on',
+        icon: '[Abl]',
+        emoji: '🎯',
+      },
+    }),
+
+    DEFAULT_MARKERS: Object.freeze({
+      Bleed: 'bleeding-eye',
+      Blinded: 'bleeding-eye',
+      Broken: 'broken-heart',
+      Confused: 'interdiction',
+      Cowering: 'screaming',
+      Dazed: 'pummeled',
+      Dazzled: 'edge-crack',
+      Deafened: 'edge-crack',
+      Disabled: 'half-heart',
+      Dying: 'skull',
+      'Energy Drained': 'death-zone',
+      Entangled: 'cobweb',
+      Exhausted: 'sleepy',
+      Fascinated: 'chained-heart',
+      Fatigued: 'half-heart',
+      'Flat-Footed': 'overdrive',
+      Frightened: 'screaming',
+      Grappled: 'grab',
+      Helpless: 'frozen-orb',
+      Invisible: 'ninja-mask',
+      Nauseated: 'chemical-bolt',
+      Panicked: 'screaming',
+      Paralyzed: 'frozen-orb',
+      Petrified: 'fossil',
+      Pinned: 'padlock',
+      Prone: 'back-pain',
+      Shaken: 'half-heart',
+      Sickened: 'chemical-bolt',
+      Staggered: 'pummeled',
+      Stunned: 'pummeled',
+      Unconscious: 'sleepy',
+      Spell: 'lightning-helix',
+      Ability: 'fist',
+    }),
+
+    CUSTOM_EFFECT_TYPES: Object.freeze(['Spell', 'Ability', 'Other']),
+    CUSTOM_EFFECT_LABELS: Object.freeze({}),
+  });
+
+  /** @type {import('./index.js').GameSystemProfile} */
+  const pathfinder2eProfile = Object.freeze({
+    SYSTEM_ID: 'pathfinder2e',
+    SYSTEM_NAME: 'Pathfinder 2nd Edition',
+
+    STANDARD_CONDITIONS: Object.freeze(
+      [
+        'Blinded',
+        'Clumsy',
+        'Concealed',
+        'Confused',
+        'Controlled',
+        'Dazzled',
+        'Deafened',
+        'Doomed',
+        'Drained',
+        'Dying',
+        'Encumbered',
+        'Enfeebled',
+        'Fascinated',
+        'Fatigued',
+        'Fleeing',
+        'Frightened',
+        'Grabbed',
+        'Hidden',
+        'Immobilized',
+        'Invisible',
+        'Off-Guard',
+        'Paralyzed',
+        'Petrified',
+        'Prone',
+        'Quickened',
+        'Restrained',
+        'Sickened',
+        'Slowed',
+        'Stunned',
+        'Stupefied',
+        'Unconscious',
+        'Undetected',
+        'Wounded',
+      ].sort((a, b) => a.localeCompare(b)),
+    ),
+
+    CONDITION_DATA: Object.freeze({
+      Blinded: { past: 'blinded', verb: 'blinds', icon: '[B]', emoji: '🙈' },
+      Clumsy: {
+        past: 'clumsy',
+        verb: 'makes',
+        suffix: 'clumsy',
+        icon: '[Cl]',
+        emoji: '🤦',
+      },
+      Concealed: {
+        past: 'concealed',
+        verb: 'conceals',
+        icon: '[Cnc]',
+        emoji: '🌫️',
+      },
+      Confused: {
+        past: 'confused',
+        verb: 'confuses',
+        icon: '[Con]',
+        emoji: '🤪',
+      },
+      Controlled: {
+        past: 'controlled',
+        verb: 'controls',
+        icon: '[Ctrl]',
+        emoji: '🧠',
+      },
+      Dazzled: { past: 'dazzled', verb: 'dazzles', icon: '[Dzl]', emoji: '✨' },
+      Deafened: {
+        past: 'deafened',
+        verb: 'deafens',
+        icon: '[Df]',
+        emoji: '🙉',
+      },
+      Doomed: { past: 'doomed', verb: 'dooms', icon: '[Dm]', emoji: '💀' },
+      Drained: { past: 'drained', verb: 'drains', icon: '[Dr]', emoji: '🩸' },
+      Dying: {
+        past: 'dying',
+        verb: 'knocks',
+        suffix: 'dying',
+        icon: '[Dy]',
+        emoji: '☠️',
+      },
+      Encumbered: {
+        past: 'encumbered',
+        verb: 'encumbers',
+        icon: '[Enc]',
+        emoji: '🎒',
+      },
+      Enfeebled: {
+        past: 'enfeebled',
+        verb: 'enfeebles',
+        icon: '[Enf]',
+        emoji: '💪',
+      },
+      Fascinated: {
+        past: 'fascinated',
+        verb: 'fascinates',
+        icon: '[Fas]',
+        emoji: '🌀',
+      },
+      Fatigued: {
+        past: 'fatigued',
+        verb: 'fatigues',
+        icon: '[Fat]',
+        emoji: '😫',
+      },
+      Fleeing: {
+        past: 'fleeing',
+        verb: 'causes',
+        suffix: 'to flee',
+        icon: '[Fle]',
+        emoji: '🏃',
+      },
+      Frightened: {
+        past: 'frightened',
+        verb: 'frightens',
+        icon: '[Fr]',
+        emoji: '😱',
+      },
+      Grabbed: { past: 'grabbed', verb: 'grabs', icon: '[Gr]', emoji: '🤛' },
+      Hidden: { past: 'hidden', verb: 'hides', icon: '[Hid]', emoji: '🕵️' },
+      Immobilized: {
+        past: 'immobilized',
+        verb: 'immobilizes',
+        icon: '[Imm]',
+        emoji: '⛓️',
+      },
+      Invisible: {
+        past: 'invisible',
+        verb: 'makes',
+        suffix: 'invisible',
+        icon: '[Inv]',
+        emoji: '🥷',
+      },
+      'Off-Guard': {
+        past: 'off-guard',
+        verb: 'catches',
+        suffix: 'off-guard',
+        icon: '[OG]',
+        emoji: '🛡️',
+      },
+      Paralyzed: {
+        past: 'paralyzed',
+        verb: 'paralyzes',
+        icon: '[Pz]',
+        emoji: '❄️',
+      },
+      Petrified: {
+        past: 'petrified',
+        verb: 'petrifies',
+        icon: '[Pet]',
+        emoji: '🪨',
+      },
+      Prone: {
+        past: 'knocked prone',
+        verb: 'knocks',
+        suffix: 'prone',
+        icon: '[P]',
+        emoji: '🛌',
+      },
+      Quickened: {
+        past: 'quickened',
+        verb: 'quickens',
+        icon: '[Qck]',
+        emoji: '⚡',
+      },
+      Restrained: {
+        past: 'restrained',
+        verb: 'restrains',
+        icon: '[R]',
+        emoji: '🔒',
+      },
+      Sickened: {
+        past: 'sickened',
+        verb: 'sickens',
+        icon: '[Sk]',
+        emoji: '🤢',
+      },
+      Slowed: { past: 'slowed', verb: 'slows', icon: '[Sl]', emoji: '🐢' },
+      Stunned: { past: 'stunned', verb: 'stuns', icon: '[Stn]', emoji: '😵' },
+      Stupefied: {
+        past: 'stupefied',
+        verb: 'stupefies',
+        icon: '[Stu]',
+        emoji: '🤯',
+      },
+      Unconscious: {
+        past: 'unconscious',
+        verb: 'knocks',
+        suffix: 'unconscious',
+        icon: '[U]',
+        emoji: '💤',
+      },
+      Undetected: {
+        past: 'undetected',
+        verb: 'makes',
+        suffix: 'undetected',
+        icon: '[Und]',
+        emoji: '👻',
+      },
+      Wounded: { past: 'wounded', verb: 'wounds', icon: '[Wnd]', emoji: '🩹' },
+      Spell: {
+        past: 'affected by a spell',
+        verb: 'casts a spell on',
+        icon: '[Spl]',
+        emoji: '🔮',
+      },
+      Ability: {
+        past: 'affected by an ability',
+        verb: 'uses an ability on',
+        icon: '[Abl]',
+        emoji: '🎯',
+      },
+    }),
+
+    DEFAULT_MARKERS: Object.freeze({
+      Blinded: 'bleeding-eye',
+      Clumsy: 'back-pain',
+      Concealed: 'ninja-mask',
+      Confused: 'interdiction',
+      Controlled: 'chained-heart',
+      Dazzled: 'edge-crack',
+      Deafened: 'edge-crack',
+      Doomed: 'skull',
+      Drained: 'half-heart',
+      Dying: 'skull',
+      Encumbered: 'grab',
+      Enfeebled: 'half-heart',
+      Fascinated: 'chained-heart',
+      Fatigued: 'sleepy',
+      Fleeing: 'screaming',
+      Frightened: 'screaming',
+      Grabbed: 'grab',
+      Hidden: 'ninja-mask',
+      Immobilized: 'padlock',
+      Invisible: 'ninja-mask',
+      'Off-Guard': 'overdrive',
+      Paralyzed: 'frozen-orb',
+      Petrified: 'fossil',
+      Prone: 'back-pain',
+      Quickened: 'lightning-helix',
+      Restrained: 'padlock',
+      Sickened: 'chemical-bolt',
+      Slowed: 'snail',
+      Stunned: 'pummeled',
+      Stupefied: 'interdiction',
+      Unconscious: 'sleepy',
+      Undetected: 'ninja-mask',
+      Wounded: 'half-heart',
+      Spell: 'lightning-helix',
+      Ability: 'fist',
+    }),
+
+    // PF2e has no Advantage/Disadvantage mechanic
+    CUSTOM_EFFECT_TYPES: Object.freeze(['Spell', 'Ability', 'Other']),
+    CUSTOM_EFFECT_LABELS: Object.freeze({}),
+  });
+
+  /** @type {import('./index.js').GameSystemProfile} */
+  const starfinderProfile = Object.freeze({
+    SYSTEM_ID: 'starfinder',
+    SYSTEM_NAME: 'Starfinder',
+
+    STANDARD_CONDITIONS: Object.freeze(
+      [
+        'Asleep',
+        'Bleeding',
+        'Blinded',
+        'Burning',
+        'Confused',
+        'Cowering',
+        'Dazzled',
+        'Dead',
+        'Deafened',
+        'Dying',
+        'Encumbered',
+        'Exhausted',
+        'Fascinated',
+        'Fatigued',
+        'Flat-Footed',
+        'Frightened',
+        'Grappled',
+        'Helpless',
+        'Nauseated',
+        'Off-Kilter',
+        'Off-Target',
+        'Overburdened',
+        'Panicked',
+        'Paralyzed',
+        'Pinned',
+        'Prone',
+        'Shaken',
+        'Sickened',
+        'Stable',
+        'Staggered',
+        'Stunned',
+        'Unconscious',
+      ].sort((a, b) => a.localeCompare(b)),
+    ),
+
+    CONDITION_DATA: Object.freeze({
+      Asleep: {
+        past: 'asleep',
+        verb: 'puts',
+        suffix: 'to sleep',
+        icon: '[Asl]',
+        emoji: '💤',
+      },
+      Bleeding: {
+        past: 'bleeding',
+        verb: 'causes',
+        suffix: 'to bleed',
+        icon: '[Bld]',
+        emoji: '🩸',
+      },
+      Blinded: { past: 'blinded', verb: 'blinds', icon: '[B]', emoji: '🙈' },
+      Burning: {
+        past: 'burning',
+        verb: 'sets',
+        suffix: 'on fire',
+        icon: '[Burn]',
+        emoji: '🔥',
+      },
+      Confused: {
+        past: 'confused',
+        verb: 'confuses',
+        icon: '[Con]',
+        emoji: '🤪',
+      },
+      Cowering: {
+        past: 'cowering',
+        verb: 'causes',
+        suffix: 'to cower',
+        icon: '[Cwr]',
+        emoji: '😰',
+      },
+      Dazzled: { past: 'dazzled', verb: 'dazzles', icon: '[Dzl]', emoji: '✨' },
+      Dead: { past: 'dead', verb: 'kills', icon: '[†]', emoji: '💀' },
+      Deafened: {
+        past: 'deafened',
+        verb: 'deafens',
+        icon: '[Df]',
+        emoji: '🙉',
+      },
+      Dying: {
+        past: 'dying',
+        verb: 'knocks',
+        suffix: 'dying',
+        icon: '[Dy]',
+        emoji: '☠️',
+      },
+      Encumbered: {
+        past: 'encumbered',
+        verb: 'encumbers',
+        icon: '[Enc]',
+        emoji: '🎒',
+      },
+      Exhausted: {
+        past: 'exhausted',
+        verb: 'exhausts',
+        icon: '[Ex]',
+        emoji: '😩',
+      },
+      Fascinated: {
+        past: 'fascinated',
+        verb: 'fascinates',
+        icon: '[Fas]',
+        emoji: '🌀',
+      },
+      Fatigued: {
+        past: 'fatigued',
+        verb: 'fatigues',
+        icon: '[Fat]',
+        emoji: '😫',
+      },
+      'Flat-Footed': {
+        past: 'flat-footed',
+        verb: 'catches',
+        suffix: 'flat-footed',
+        icon: '[FF]',
+        emoji: '👟',
+      },
+      Frightened: {
+        past: 'frightened',
+        verb: 'frightens',
+        icon: '[Fr]',
+        emoji: '😱',
+      },
+      Grappled: {
+        past: 'grappled',
+        verb: 'grapples',
+        icon: '[G]',
+        emoji: '🤛',
+      },
+      Helpless: {
+        past: 'helpless',
+        verb: 'renders',
+        suffix: 'helpless',
+        icon: '[Hlp]',
+        emoji: '🙏',
+      },
+      Nauseated: {
+        past: 'nauseated',
+        verb: 'nauseates',
+        icon: '[Naus]',
+        emoji: '🤢',
+      },
+      'Off-Kilter': {
+        past: 'off-kilter',
+        verb: 'knocks',
+        suffix: 'off-kilter',
+        icon: '[OK]',
+        emoji: '🌀',
+      },
+      'Off-Target': {
+        past: 'off-target',
+        verb: 'knocks',
+        suffix: 'off-target',
+        icon: '[OT]',
+        emoji: '🎯',
+      },
+      Overburdened: {
+        past: 'overburdened',
+        verb: 'overburdens',
+        icon: '[OB]',
+        emoji: '🏋️',
+      },
+      Panicked: {
+        past: 'panicked',
+        verb: 'causes',
+        suffix: 'to panic',
+        icon: '[Pan]',
+        emoji: '😨',
+      },
+      Paralyzed: {
+        past: 'paralyzed',
+        verb: 'paralyzes',
+        icon: '[Pz]',
+        emoji: '❄️',
+      },
+      Pinned: { past: 'pinned', verb: 'pins', icon: '[Pin]', emoji: '📌' },
+      Prone: {
+        past: 'knocked prone',
+        verb: 'knocks',
+        suffix: 'prone',
+        icon: '[P]',
+        emoji: '🛌',
+      },
+      Shaken: { past: 'shaken', verb: 'shakes', icon: '[Shk]', emoji: '😨' },
+      Sickened: {
+        past: 'sickened',
+        verb: 'sickens',
+        icon: '[Sk]',
+        emoji: '🤢',
+      },
+      Stable: {
+        past: 'stable',
+        verb: 'stabilizes',
+        icon: '[Stb]',
+        emoji: '⚕️',
+      },
+      Staggered: {
+        past: 'staggered',
+        verb: 'staggers',
+        icon: '[Stg]',
+        emoji: '🥴',
+      },
+      Stunned: { past: 'stunned', verb: 'stuns', icon: '[Stn]', emoji: '😵' },
+      Unconscious: {
+        past: 'unconscious',
+        verb: 'knocks',
+        suffix: 'unconscious',
+        icon: '[U]',
+        emoji: '💤',
+      },
+      Spell: {
+        past: 'affected by a spell',
+        verb: 'casts a spell on',
+        icon: '[Spl]',
+        emoji: '🔮',
+      },
+      Ability: {
+        past: 'affected by an ability',
+        verb: 'uses an ability on',
+        icon: '[Abl]',
+        emoji: '🎯',
+      },
+    }),
+
+    DEFAULT_MARKERS: Object.freeze({
+      Asleep: 'sleepy',
+      Bleeding: 'half-heart',
+      Blinded: 'bleeding-eye',
+      Burning: 'lightning-helix',
+      Confused: 'interdiction',
+      Cowering: 'screaming',
+      Dazzled: 'edge-crack',
+      Dead: 'skull',
+      Deafened: 'edge-crack',
+      Dying: 'skull',
+      Encumbered: 'grab',
+      Exhausted: 'sleepy',
+      Fascinated: 'chained-heart',
+      Fatigued: 'half-heart',
+      'Flat-Footed': 'overdrive',
+      Frightened: 'screaming',
+      Grappled: 'grab',
+      Helpless: 'frozen-orb',
+      Nauseated: 'chemical-bolt',
+      'Off-Kilter': 'back-pain',
+      'Off-Target': 'overdrive',
+      Overburdened: 'pummeled',
+      Panicked: 'screaming',
+      Paralyzed: 'frozen-orb',
+      Pinned: 'padlock',
+      Prone: 'back-pain',
+      Shaken: 'half-heart',
+      Sickened: 'chemical-bolt',
+      Stable: 'green',
+      Staggered: 'pummeled',
+      Stunned: 'pummeled',
+      Unconscious: 'sleepy',
+      Spell: 'lightning-helix',
+      Ability: 'fist',
+    }),
+
+    CUSTOM_EFFECT_TYPES: Object.freeze(['Spell', 'Ability', 'Other']),
+    CUSTOM_EFFECT_LABELS: Object.freeze({}),
+  });
+
+  /** @type {import('./index.js').GameSystemProfile} */
+  const thirteenthAgeProfile = Object.freeze({
+    SYSTEM_ID: '13thage',
+    SYSTEM_NAME: '13th Age',
+
+    STANDARD_CONDITIONS: Object.freeze(
+      [
+        'Confused',
+        'Dazed',
+        'Fear',
+        'Hampered',
+        'Helpless',
+        'Ongoing Damage',
+        'Stunned',
+        'Vulnerable',
+        'Weakened',
+      ].sort((a, b) => a.localeCompare(b)),
+    ),
+
+    CONDITION_DATA: Object.freeze({
+      Confused: {
+        past: 'confused',
+        verb: 'confuses',
+        icon: '[Con]',
+        emoji: '🤪',
+      },
+      Dazed: { past: 'dazed', verb: 'dazes', icon: '[Dz]', emoji: '😵' },
+      Fear: { past: 'feared', verb: 'frightens', icon: '[Fr]', emoji: '😱' },
+      Hampered: {
+        past: 'hampered',
+        verb: 'hampers',
+        icon: '[Ham]',
+        emoji: '🦶',
+      },
+      Helpless: {
+        past: 'helpless',
+        verb: 'renders',
+        suffix: 'helpless',
+        icon: '[Hlp]',
+        emoji: '🙏',
+      },
+      'Ongoing Damage': {
+        past: 'taking ongoing damage',
+        verb: 'deals ongoing damage to',
+        icon: '[OD]',
+        emoji: '⚡',
+      },
+      Stunned: { past: 'stunned', verb: 'stuns', icon: '[Stn]', emoji: '😵' },
+      Vulnerable: {
+        past: 'vulnerable',
+        verb: 'renders',
+        suffix: 'vulnerable',
+        icon: '[Vuln]',
+        emoji: '🛡️',
+      },
+      Weakened: {
+        past: 'weakened',
+        verb: 'weakens',
+        icon: '[Wk]',
+        emoji: '💪',
+      },
+      Spell: {
+        past: 'affected by a spell',
+        verb: 'casts a spell on',
+        icon: '[Spl]',
+        emoji: '🔮',
+      },
+      Ability: {
+        past: 'affected by an ability',
+        verb: 'uses an ability on',
+        icon: '[Abl]',
+        emoji: '🎯',
+      },
+    }),
+
+    DEFAULT_MARKERS: Object.freeze({
+      Confused: 'interdiction',
+      Dazed: 'pummeled',
+      Fear: 'screaming',
+      Hampered: 'back-pain',
+      Helpless: 'frozen-orb',
+      'Ongoing Damage': 'lightning-helix',
+      Stunned: 'pummeled',
+      Vulnerable: 'broken-heart',
+      Weakened: 'half-heart',
+      Spell: 'aura',
+      Ability: 'fist',
+    }),
+
+    CUSTOM_EFFECT_TYPES: Object.freeze(['Spell', 'Ability', 'Other']),
+    CUSTOM_EFFECT_LABELS: Object.freeze({}),
+  });
+
+  /** @type {import('./index.js').GameSystemProfile} */
+  const dccProfile = Object.freeze({
+    SYSTEM_ID: 'dcc',
+    SYSTEM_NAME: 'Dungeon Crawl Classics',
+
+    STANDARD_CONDITIONS: Object.freeze(
+      [
+        'Blinded',
+        'Deafened',
+        'Diseased',
+        'Frightened',
+        'Paralyzed',
+        'Petrified',
+        'Poisoned',
+        'Unconscious',
+      ].sort((a, b) => a.localeCompare(b)),
+    ),
+
+    CONDITION_DATA: Object.freeze({
+      Blinded: { past: 'blinded', verb: 'blinds', icon: '[B]', emoji: '🙈' },
+      Deafened: {
+        past: 'deafened',
+        verb: 'deafens',
+        icon: '[Df]',
+        emoji: '🙉',
+      },
+      Diseased: {
+        past: 'diseased',
+        verb: 'infects',
+        icon: '[Di]',
+        emoji: '🦠',
+      },
+      Frightened: {
+        past: 'frightened',
+        verb: 'frightens',
+        icon: '[Fr]',
+        emoji: '😱',
+      },
+      Paralyzed: {
+        past: 'paralyzed',
+        verb: 'paralyzes',
+        icon: '[Pz]',
+        emoji: '❄️',
+      },
+      Petrified: {
+        past: 'petrified',
+        verb: 'petrifies',
+        icon: '[Pet]',
+        emoji: '🪨',
+      },
+      Poisoned: {
+        past: 'poisoned',
+        verb: 'poisons',
+        icon: '[Psn]',
+        emoji: '☠️',
+      },
+      Unconscious: {
+        past: 'unconscious',
+        verb: 'knocks',
+        suffix: 'unconscious',
+        icon: '[U]',
+        emoji: '💤',
+      },
+      Spell: {
+        past: 'affected by a spell',
+        verb: 'casts a spell on',
+        icon: '[Spl]',
+        emoji: '🔮',
+      },
+      Ability: {
+        past: 'affected by an ability',
+        verb: 'uses an ability on',
+        icon: '[Abl]',
+        emoji: '🎯',
+      },
+    }),
+
+    DEFAULT_MARKERS: Object.freeze({
+      Blinded: 'bleeding-eye',
+      Deafened: 'edge-crack',
+      Diseased: 'chemical-bolt',
+      Frightened: 'screaming',
+      Paralyzed: 'frozen-orb',
+      Petrified: 'fossil',
+      Poisoned: 'chemical-bolt',
+      Unconscious: 'sleepy',
+      Spell: 'lightning-helix',
+      Ability: 'fist',
+    }),
+
+    CUSTOM_EFFECT_TYPES: Object.freeze(['Spell', 'Ability', 'Other']),
+    CUSTOM_EFFECT_LABELS: Object.freeze({}),
+  });
+
+  /** @type {import('./index.js').GameSystemProfile} */
+  const oseProfile = Object.freeze({
+    SYSTEM_ID: 'ose',
+    SYSTEM_NAME: 'Old-School Essentials',
+
+    STANDARD_CONDITIONS: Object.freeze(
+      [
+        'Blinded',
+        'Charmed',
+        'Confused',
+        'Frightened',
+        'Held',
+        'Paralyzed',
+        'Petrified',
+        'Poisoned',
+        'Stunned',
+      ].sort((a, b) => a.localeCompare(b)),
+    ),
+
+    CONDITION_DATA: Object.freeze({
+      Blinded: { past: 'blinded', verb: 'blinds', icon: '[B]', emoji: '🙈' },
+      Charmed: { past: 'charmed', verb: 'charms', icon: '[C]', emoji: '💫' },
+      Confused: {
+        past: 'confused',
+        verb: 'confuses',
+        icon: '[Con]',
+        emoji: '🤪',
+      },
+      Frightened: {
+        past: 'frightened',
+        verb: 'frightens',
+        icon: '[Fr]',
+        emoji: '😱',
+      },
+      Held: { past: 'held', verb: 'holds', icon: '[H]', emoji: '🔒' },
+      Paralyzed: {
+        past: 'paralyzed',
+        verb: 'paralyzes',
+        icon: '[Pz]',
+        emoji: '❄️',
+      },
+      Petrified: {
+        past: 'petrified',
+        verb: 'petrifies',
+        icon: '[Pet]',
+        emoji: '🪨',
+      },
+      Poisoned: {
+        past: 'poisoned',
+        verb: 'poisons',
+        icon: '[Psn]',
+        emoji: '☠️',
+      },
+      Stunned: { past: 'stunned', verb: 'stuns', icon: '[Stn]', emoji: '😵' },
+      Spell: {
+        past: 'affected by a spell',
+        verb: 'casts a spell on',
+        icon: '[Spl]',
+        emoji: '🔮',
+      },
+      Ability: {
+        past: 'affected by an ability',
+        verb: 'uses an ability on',
+        icon: '[Abl]',
+        emoji: '🎯',
+      },
+    }),
+
+    DEFAULT_MARKERS: Object.freeze({
+      Blinded: 'bleeding-eye',
+      Charmed: 'chained-heart',
+      Confused: 'interdiction',
+      Frightened: 'screaming',
+      Held: 'padlock',
+      Paralyzed: 'frozen-orb',
+      Petrified: 'fossil',
+      Poisoned: 'chemical-bolt',
+      Stunned: 'pummeled',
+      Spell: 'lightning-helix',
+      Ability: 'fist',
+    }),
+
+    CUSTOM_EFFECT_TYPES: Object.freeze(['Spell', 'Ability', 'Other']),
+    CUSTOM_EFFECT_LABELS: Object.freeze({}),
+  });
+
+  /** @type {import('./index.js').GameSystemProfile} */
+  const bfrpgProfile = Object.freeze({
+    SYSTEM_ID: 'bfrpg',
+    SYSTEM_NAME: 'Basic Fantasy RPG',
+
+    STANDARD_CONDITIONS: Object.freeze(
+      [
+        'Blinded',
+        'Charmed',
+        'Confused',
+        'Frightened',
+        'Held',
+        'Paralyzed',
+        'Poisoned',
+        'Unconscious',
+      ].sort((a, b) => a.localeCompare(b)),
+    ),
+
+    CONDITION_DATA: Object.freeze({
+      Blinded: { past: 'blinded', verb: 'blinds', icon: '[B]', emoji: '🙈' },
+      Charmed: { past: 'charmed', verb: 'charms', icon: '[C]', emoji: '💫' },
+      Confused: {
+        past: 'confused',
+        verb: 'confuses',
+        icon: '[Con]',
+        emoji: '🤪',
+      },
+      Frightened: {
+        past: 'frightened',
+        verb: 'frightens',
+        icon: '[Fr]',
+        emoji: '😱',
+      },
+      Held: { past: 'held', verb: 'holds', icon: '[H]', emoji: '🔒' },
+      Paralyzed: {
+        past: 'paralyzed',
+        verb: 'paralyzes',
+        icon: '[Pz]',
+        emoji: '❄️',
+      },
+      Poisoned: {
+        past: 'poisoned',
+        verb: 'poisons',
+        icon: '[Psn]',
+        emoji: '☠️',
+      },
+      Unconscious: {
+        past: 'unconscious',
+        verb: 'knocks',
+        suffix: 'unconscious',
+        icon: '[U]',
+        emoji: '💤',
+      },
+      Spell: {
+        past: 'affected by a spell',
+        verb: 'casts a spell on',
+        icon: '[Spl]',
+        emoji: '🔮',
+      },
+      Ability: {
+        past: 'affected by an ability',
+        verb: 'uses an ability on',
+        icon: '[Abl]',
+        emoji: '🎯',
+      },
+    }),
+
+    DEFAULT_MARKERS: Object.freeze({
+      Blinded: 'bleeding-eye',
+      Charmed: 'chained-heart',
+      Confused: 'interdiction',
+      Frightened: 'screaming',
+      Held: 'padlock',
+      Paralyzed: 'frozen-orb',
+      Poisoned: 'chemical-bolt',
+      Unconscious: 'sleepy',
+      Spell: 'lightning-helix',
+      Ability: 'fist',
+    }),
+
+    CUSTOM_EFFECT_TYPES: Object.freeze(['Spell', 'Ability', 'Other']),
+    CUSTOM_EFFECT_LABELS: Object.freeze({}),
+  });
+
+  /** @type {import('./index.js').GameSystemProfile} */
+  const sotdlProfile = Object.freeze({
+    SYSTEM_ID: 'sotdl',
+    SYSTEM_NAME: 'Shadow of the Demon Lord',
+
+    STANDARD_CONDITIONS: Object.freeze(
+      [
+        'Blinded',
+        'Compelled',
+        'Dazed',
+        'Deafened',
+        'Diseased',
+        'Fatigued',
+        'Frightened',
+        'Helpless',
+        'Immobilized',
+        'Impaired',
+        'Poisoned',
+        'Prone',
+        'Slowed',
+        'Stunned',
+        'Unconscious',
+      ].sort((a, b) => a.localeCompare(b)),
+    ),
+
+    CONDITION_DATA: Object.freeze({
+      Blinded: { past: 'blinded', verb: 'blinds', icon: '[B]', emoji: '🙈' },
+      Compelled: {
+        past: 'compelled',
+        verb: 'compels',
+        icon: '[Cmp]',
+        emoji: '🎭',
+      },
+      Dazed: { past: 'dazed', verb: 'dazes', icon: '[Dz]', emoji: '😵' },
+      Deafened: {
+        past: 'deafened',
+        verb: 'deafens',
+        icon: '[Df]',
+        emoji: '🙉',
+      },
+      Diseased: {
+        past: 'diseased',
+        verb: 'infects',
+        icon: '[Di]',
+        emoji: '🦠',
+      },
+      Fatigued: {
+        past: 'fatigued',
+        verb: 'fatigues',
+        icon: '[Fat]',
+        emoji: '😫',
+      },
+      Frightened: {
+        past: 'frightened',
+        verb: 'frightens',
+        icon: '[Fr]',
+        emoji: '😱',
+      },
+      Helpless: {
+        past: 'helpless',
+        verb: 'renders',
+        suffix: 'helpless',
+        icon: '[Hlp]',
+        emoji: '🙏',
+      },
+      Immobilized: {
+        past: 'immobilized',
+        verb: 'immobilizes',
+        icon: '[Im]',
+        emoji: '🔗',
+      },
+      Impaired: {
+        past: 'impaired',
+        verb: 'impairs',
+        icon: '[Imp]',
+        emoji: '⚠️',
+      },
+      Poisoned: {
+        past: 'poisoned',
+        verb: 'poisons',
+        icon: '[Psn]',
+        emoji: '☠️',
+      },
+      Prone: {
+        past: 'knocked prone',
+        verb: 'knocks',
+        suffix: 'prone',
+        icon: '[P]',
+        emoji: '🛌',
+      },
+      Slowed: { past: 'slowed', verb: 'slows', icon: '[Sl]', emoji: '🐌' },
+      Stunned: { past: 'stunned', verb: 'stuns', icon: '[Stn]', emoji: '😵' },
+      Unconscious: {
+        past: 'unconscious',
+        verb: 'knocks',
+        suffix: 'unconscious',
+        icon: '[U]',
+        emoji: '💤',
+      },
+      Spell: {
+        past: 'affected by a spell',
+        verb: 'casts a spell on',
+        icon: '[Spl]',
+        emoji: '🔮',
+      },
+      Ability: {
+        past: 'affected by an ability',
+        verb: 'uses an ability on',
+        icon: '[Abl]',
+        emoji: '🎯',
+      },
+    }),
+
+    DEFAULT_MARKERS: Object.freeze({
+      Blinded: 'bleeding-eye',
+      Compelled: 'chained-heart',
+      Dazed: 'pummeled',
+      Deafened: 'edge-crack',
+      Diseased: 'chemical-bolt',
+      Fatigued: 'half-heart',
+      Frightened: 'screaming',
+      Helpless: 'frozen-orb',
+      Immobilized: 'padlock',
+      Impaired: 'interdiction',
+      Poisoned: 'chemical-bolt',
+      Prone: 'back-pain',
+      Slowed: 'snail',
+      Stunned: 'pummeled',
+      Unconscious: 'sleepy',
+      Spell: 'lightning-helix',
+      Ability: 'fist',
+    }),
+
+    CUSTOM_EFFECT_TYPES: Object.freeze(['Spell', 'Ability', 'Other']),
+    CUSTOM_EFFECT_LABELS: Object.freeze({}),
+  });
+
+  /** @type {import('./index.js').GameSystemProfile} */
+  const wwnProfile = Object.freeze({
+    SYSTEM_ID: 'wwn',
+    SYSTEM_NAME: 'Worlds Without Number',
+
+    STANDARD_CONDITIONS: Object.freeze(
+      [
+        'Blinded',
+        'Dazed',
+        'Deafened',
+        'Diseased',
+        'Incapacitated',
+        'Paralyzed',
+        'Poisoned',
+        'Prone',
+        'Stunned',
+      ].sort((a, b) => a.localeCompare(b)),
+    ),
+
+    CONDITION_DATA: Object.freeze({
+      Blinded: { past: 'blinded', verb: 'blinds', icon: '[B]', emoji: '🙈' },
+      Dazed: { past: 'dazed', verb: 'dazes', icon: '[Dz]', emoji: '😵' },
+      Deafened: {
+        past: 'deafened',
+        verb: 'deafens',
+        icon: '[Df]',
+        emoji: '🙉',
+      },
+      Diseased: {
+        past: 'diseased',
+        verb: 'infects',
+        icon: '[Di]',
+        emoji: '🦠',
+      },
+      Incapacitated: {
+        past: 'incapacitated',
+        verb: 'incapacitates',
+        icon: '[Inc]',
+        emoji: '🚫',
+      },
+      Paralyzed: {
+        past: 'paralyzed',
+        verb: 'paralyzes',
+        icon: '[Pz]',
+        emoji: '❄️',
+      },
+      Poisoned: {
+        past: 'poisoned',
+        verb: 'poisons',
+        icon: '[Psn]',
+        emoji: '☠️',
+      },
+      Prone: {
+        past: 'knocked prone',
+        verb: 'knocks',
+        suffix: 'prone',
+        icon: '[P]',
+        emoji: '🛌',
+      },
+      Stunned: { past: 'stunned', verb: 'stuns', icon: '[Stn]', emoji: '😵' },
+      Spell: {
+        past: 'affected by a spell',
+        verb: 'casts a spell on',
+        icon: '[Spl]',
+        emoji: '🔮',
+      },
+      Ability: {
+        past: 'affected by an ability',
+        verb: 'uses an ability on',
+        icon: '[Abl]',
+        emoji: '🎯',
+      },
+    }),
+
+    DEFAULT_MARKERS: Object.freeze({
+      Blinded: 'bleeding-eye',
+      Dazed: 'pummeled',
+      Deafened: 'edge-crack',
+      Diseased: 'chemical-bolt',
+      Incapacitated: 'interdiction',
+      Paralyzed: 'frozen-orb',
+      Poisoned: 'chemical-bolt',
+      Prone: 'back-pain',
+      Stunned: 'pummeled',
+      Spell: 'lightning-helix',
+      Ability: 'fist',
+    }),
+
+    CUSTOM_EFFECT_TYPES: Object.freeze(['Spell', 'Ability', 'Other']),
+    CUSTOM_EFFECT_LABELS: Object.freeze({}),
+  });
+
+  /** @type {import('./index.js').GameSystemProfile} */
+  const callOfCthulhuProfile = Object.freeze({
+    SYSTEM_ID: 'callofcthulhu',
+    SYSTEM_NAME: 'Call of Cthulhu 7e',
+
+    STANDARD_CONDITIONS: Object.freeze(
+      [
+        'Berserk',
+        'Dying',
+        'Indefinite Insanity',
+        'Injured',
+        'Mania',
+        'Phobia',
+        'Seriously Wounded',
+        'Temporary Insanity',
+        'Unconscious',
+      ].sort((a, b) => a.localeCompare(b)),
+    ),
+
+    CONDITION_DATA: Object.freeze({
+      Berserk: {
+        past: 'berserk',
+        verb: 'drives',
+        suffix: 'berserk',
+        icon: '[Brs]',
+        emoji: '😡',
+      },
+      Dying: {
+        past: 'dying',
+        verb: 'reduces',
+        suffix: 'to dying',
+        icon: '[Dy]',
+        emoji: '💀',
+      },
+      'Indefinite Insanity': {
+        past: 'indefinitely insane',
+        verb: 'drives',
+        suffix: 'indefinitely insane',
+        icon: '[II]',
+        emoji: '🤯',
+      },
+      Injured: { past: 'injured', verb: 'injures', icon: '[Inj]', emoji: '🩹' },
+      Mania: {
+        past: 'gripped by mania',
+        verb: 'triggers mania in',
+        icon: '[Man]',
+        emoji: '😤',
+      },
+      Phobia: {
+        past: 'gripped by a phobia',
+        verb: 'triggers a phobia in',
+        icon: '[Phb]',
+        emoji: '😱',
+      },
+      'Seriously Wounded': {
+        past: 'seriously wounded',
+        verb: 'seriously wounds',
+        icon: '[SW]',
+        emoji: '🩸',
+      },
+      'Temporary Insanity': {
+        past: 'temporarily insane',
+        verb: 'drives',
+        suffix: 'temporarily insane',
+        icon: '[TI]',
+        emoji: '🌀',
+      },
+      Unconscious: {
+        past: 'unconscious',
+        verb: 'knocks',
+        suffix: 'unconscious',
+        icon: '[U]',
+        emoji: '💤',
+      },
+      // "Spell" = Mythos spells; "Ability" canonical key labelled "Skill"
+      Spell: {
+        past: 'affected by a mythos spell',
+        verb: 'casts a mythos spell on',
+        icon: '[Spl]',
+        emoji: '🔮',
+      },
+      Ability: {
+        past: 'affected by a skill effect',
+        verb: 'uses a skill on',
+        icon: '[Skl]',
+        emoji: '🎯',
+      },
+    }),
+
+    DEFAULT_MARKERS: Object.freeze({
+      Berserk: 'screaming',
+      Dying: 'skull',
+      'Indefinite Insanity': 'interdiction',
+      Injured: 'half-heart',
+      Mania: 'chained-heart',
+      Phobia: 'screaming',
+      'Seriously Wounded': 'half-heart',
+      'Temporary Insanity': 'frozen-orb',
+      Unconscious: 'sleepy',
+      Spell: 'lightning-helix',
+      Ability: 'fist',
+    }),
+
+    CUSTOM_EFFECT_TYPES: Object.freeze(['Spell', 'Ability', 'Other']),
+    // CoC uses "Skill" instead of the generic "Ability" label
+    CUSTOM_EFFECT_LABELS: Object.freeze({ Ability: 'Skill' }),
+  });
+
+  /** @type {import('./index.js').GameSystemProfile} */
+  const deltaGreenProfile = Object.freeze({
+    SYSTEM_ID: 'deltagreen',
+    SYSTEM_NAME: 'Delta Green',
+
+    STANDARD_CONDITIONS: Object.freeze(
+      [
+        'Berserk',
+        'Broken',
+        'Dying',
+        'Injured',
+        'Seriously Wounded',
+        'Temporary Insanity',
+        'Unconscious',
+      ].sort((a, b) => a.localeCompare(b)),
+    ),
+
+    CONDITION_DATA: Object.freeze({
+      Berserk: {
+        past: 'berserk',
+        verb: 'sends',
+        suffix: 'berserk',
+        icon: '[Bsk]',
+        emoji: '😤',
+      },
+      Broken: { past: 'broken', verb: 'breaks', icon: '[Brk]', emoji: '💔' },
+      Dying: {
+        past: 'dying',
+        verb: 'knocks',
+        suffix: 'dying',
+        icon: '[Dy]',
+        emoji: '☠️',
+      },
+      Injured: { past: 'injured', verb: 'injures', icon: '[Inj]', emoji: '🩹' },
+      'Seriously Wounded': {
+        past: 'seriously wounded',
+        verb: 'seriously wounds',
+        icon: '[SW]',
+        emoji: '🩸',
+      },
+      'Temporary Insanity': {
+        past: 'temporarily insane',
+        verb: 'drives',
+        suffix: 'temporarily insane',
+        icon: '[TI]',
+        emoji: '🌀',
+      },
+      Unconscious: {
+        past: 'unconscious',
+        verb: 'knocks',
+        suffix: 'unconscious',
+        icon: '[U]',
+        emoji: '💤',
+      },
+      Ability: {
+        past: 'affected by a skill',
+        verb: 'uses a skill on',
+        icon: '[Skl]',
+        emoji: '🎯',
+      },
+    }),
+
+    DEFAULT_MARKERS: Object.freeze({
+      Berserk: 'screaming',
+      Broken: 'broken-heart',
+      Dying: 'dead',
+      Injured: 'half-heart',
+      'Seriously Wounded': 'skull',
+      'Temporary Insanity': 'interdiction',
+      Unconscious: 'sleepy',
+      Ability: 'fist',
+    }),
+
+    CUSTOM_EFFECT_TYPES: Object.freeze(['Ability', 'Other']),
+    CUSTOM_EFFECT_LABELS: Object.freeze({ Ability: 'Skill' }),
+  });
+
+  /** @type {import('./index.js').GameSystemProfile} */
+  const vaesenProfile = Object.freeze({
+    SYSTEM_ID: 'vaesen',
+    SYSTEM_NAME: 'Vaesen',
+
+    STANDARD_CONDITIONS: Object.freeze(
+      ['Broken', 'Dying', 'Frightened', 'Injured'].sort((a, b) =>
+        a.localeCompare(b),
+      ),
+    ),
+
+    CONDITION_DATA: Object.freeze({
+      Broken: { past: 'broken', verb: 'breaks', icon: '[Brk]', emoji: '💔' },
+      Dying: {
+        past: 'dying',
+        verb: 'knocks',
+        suffix: 'dying',
+        icon: '[Dy]',
+        emoji: '☠️',
+      },
+      Frightened: {
+        past: 'frightened',
+        verb: 'frightens',
+        icon: '[Fr]',
+        emoji: '😱',
+      },
+      Injured: { past: 'injured', verb: 'injures', icon: '[Inj]', emoji: '🩹' },
+      Ability: {
+        past: 'affected by a skill',
+        verb: 'uses a skill on',
+        icon: '[Skl]',
+        emoji: '🎯',
+      },
+    }),
+
+    DEFAULT_MARKERS: Object.freeze({
+      Broken: 'broken-heart',
+      Dying: 'dead',
+      Frightened: 'screaming',
+      Injured: 'half-heart',
+      Ability: 'fist',
+    }),
+
+    CUSTOM_EFFECT_TYPES: Object.freeze(['Ability', 'Other']),
+    CUSTOM_EFFECT_LABELS: Object.freeze({ Ability: 'Skill' }),
+  });
+
+  /** @type {import('./index.js').GameSystemProfile} */
+  const mothershipProfile = Object.freeze({
+    SYSTEM_ID: 'mothership',
+    SYSTEM_NAME: 'Mothership RPG',
+
+    STANDARD_CONDITIONS: Object.freeze(
+      ['Bleeding', 'Dead', 'Dying', 'Panicking', 'Unconscious', 'Wounded'].sort(
+        (a, b) => a.localeCompare(b),
+      ),
+    ),
+
+    CONDITION_DATA: Object.freeze({
+      Bleeding: {
+        past: 'bleeding',
+        verb: 'causes',
+        suffix: 'to bleed',
+        icon: '[Bld]',
+        emoji: '🩸',
+      },
+      Dead: { past: 'dead', verb: 'kills', icon: '[X]', emoji: '💀' },
+      Dying: {
+        past: 'dying',
+        verb: 'knocks',
+        suffix: 'dying',
+        icon: '[Dy]',
+        emoji: '☠️',
+      },
+      Panicking: {
+        past: 'panicking',
+        verb: 'causes',
+        suffix: 'to panic',
+        icon: '[Pan]',
+        emoji: '😨',
+      },
+      Unconscious: {
+        past: 'unconscious',
+        verb: 'knocks',
+        suffix: 'unconscious',
+        icon: '[U]',
+        emoji: '💤',
+      },
+      Wounded: { past: 'wounded', verb: 'wounds', icon: '[W]', emoji: '🤕' },
+      Ability: {
+        past: 'affected by an ability',
+        verb: 'uses an ability on',
+        icon: '[Abl]',
+        emoji: '🎯',
+      },
+    }),
+
+    DEFAULT_MARKERS: Object.freeze({
+      Bleeding: 'bleeding-eye',
+      Dead: 'skull',
+      Dying: 'dead',
+      Panicking: 'screaming',
+      Unconscious: 'sleepy',
+      Wounded: 'half-heart',
+      Ability: 'fist',
+    }),
+
+    CUSTOM_EFFECT_TYPES: Object.freeze(['Ability', 'Other']),
+    CUSTOM_EFFECT_LABELS: Object.freeze({}),
+  });
+
+  /** @type {import('./index.js').GameSystemProfile} */
+  const genesysProfile = Object.freeze({
+    SYSTEM_ID: 'genesys',
+    SYSTEM_NAME: 'Genesys',
+
+    STANDARD_CONDITIONS: Object.freeze(
+      [
+        'Disoriented',
+        'Ensnared',
+        'Immobilized',
+        'Prone',
+        'Staggered',
+        'Strained',
+      ].sort((a, b) => a.localeCompare(b)),
+    ),
+
+    CONDITION_DATA: Object.freeze({
+      Disoriented: {
+        past: 'disoriented',
+        verb: 'disorients',
+        icon: '[Dis]',
+        emoji: '😵',
+      },
+      Ensnared: {
+        past: 'ensnared',
+        verb: 'ensnares',
+        icon: '[Ens]',
+        emoji: '🕸️',
+      },
+      Immobilized: {
+        past: 'immobilized',
+        verb: 'immobilizes',
+        icon: '[Im]',
+        emoji: '🔗',
+      },
+      Prone: {
+        past: 'knocked prone',
+        verb: 'knocks',
+        suffix: 'prone',
+        icon: '[P]',
+        emoji: '🛌',
+      },
+      Staggered: {
+        past: 'staggered',
+        verb: 'staggers',
+        icon: '[Stg]',
+        emoji: '🥴',
+      },
+      Strained: {
+        past: 'strained',
+        verb: 'strains',
+        icon: '[Str]',
+        emoji: '😓',
+      },
+      Ability: {
+        past: 'affected by an ability',
+        verb: 'uses an ability on',
+        icon: '[Abl]',
+        emoji: '🎯',
+      },
+    }),
+
+    DEFAULT_MARKERS: Object.freeze({
+      Disoriented: 'interdiction',
+      Ensnared: 'cobweb',
+      Immobilized: 'padlock',
+      Prone: 'back-pain',
+      Staggered: 'pummeled',
+      Strained: 'half-heart',
+      Ability: 'fist',
+    }),
+
+    CUSTOM_EFFECT_TYPES: Object.freeze(['Ability', 'Other']),
+    CUSTOM_EFFECT_LABELS: Object.freeze({}),
+  });
+
+  /** @type {import('./index.js').GameSystemProfile} */
+  const cortexPrimeProfile = Object.freeze({
+    SYSTEM_ID: 'cortexprime',
+    SYSTEM_NAME: 'Cortex Prime',
+
+    STANDARD_CONDITIONS: Object.freeze(
+      [
+        'Afraid',
+        'Angry',
+        'Corrupted',
+        'Exhausted',
+        'Harmed',
+        'Hungry',
+        'Infected',
+        'Isolated',
+        'Panicked',
+        'Poisoned',
+      ].sort((a, b) => a.localeCompare(b)),
+    ),
+
+    CONDITION_DATA: Object.freeze({
+      Afraid: { past: 'afraid', verb: 'frightens', icon: '[Afr]', emoji: '😨' },
+      Angry: { past: 'angry', verb: 'angers', icon: '[Ang]', emoji: '😠' },
+      Corrupted: {
+        past: 'corrupted',
+        verb: 'corrupts',
+        icon: '[Cor]',
+        emoji: '☠️',
+      },
+      Exhausted: {
+        past: 'exhausted',
+        verb: 'exhausts',
+        icon: '[Ex]',
+        emoji: '😩',
+      },
+      Harmed: { past: 'harmed', verb: 'harms', icon: '[Hrm]', emoji: '🤕' },
+      Hungry: {
+        past: 'hungry',
+        verb: 'causes',
+        suffix: 'to hunger',
+        icon: '[Hgr]',
+        emoji: '🍖',
+      },
+      Infected: {
+        past: 'infected',
+        verb: 'infects',
+        icon: '[Inf]',
+        emoji: '🦠',
+      },
+      Isolated: {
+        past: 'isolated',
+        verb: 'isolates',
+        icon: '[Iso]',
+        emoji: '🏝️',
+      },
+      Panicked: {
+        past: 'panicked',
+        verb: 'causes',
+        suffix: 'to panic',
+        icon: '[Pan]',
+        emoji: '😱',
+      },
+      Poisoned: {
+        past: 'poisoned',
+        verb: 'poisons',
+        icon: '[Psn]',
+        emoji: '☠️',
+      },
+      Ability: {
+        past: 'affected by an ability',
+        verb: 'uses an ability on',
+        icon: '[Abl]',
+        emoji: '🎯',
+      },
+    }),
+
+    DEFAULT_MARKERS: Object.freeze({
+      Afraid: 'screaming',
+      Angry: 'screaming',
+      Corrupted: 'death-zone',
+      Exhausted: 'sleepy',
+      Harmed: 'half-heart',
+      Hungry: 'half-heart',
+      Infected: 'chemical-bolt',
+      Isolated: 'interdiction',
+      Panicked: 'screaming',
+      Poisoned: 'chemical-bolt',
+      Ability: 'fist',
+    }),
+
+    CUSTOM_EFFECT_TYPES: Object.freeze(['Ability', 'Other']),
+    CUSTOM_EFFECT_LABELS: Object.freeze({}),
+  });
+
+  /** @type {import('./index.js').GameSystemProfile} */
+  const vtmProfile = Object.freeze({
+    SYSTEM_ID: 'vtm',
+    SYSTEM_NAME: 'Vampire: The Masquerade',
+
+    STANDARD_CONDITIONS: Object.freeze(
+      [
+        'Blinded',
+        'Blood Bound',
+        'Dominated',
+        'Entranced',
+        'Frenzied',
+        'Paralyzed',
+        'Torpor',
+        'Wounded',
+      ].sort((a, b) => a.localeCompare(b)),
+    ),
+
+    CONDITION_DATA: Object.freeze({
+      Blinded: { past: 'blinded', verb: 'blinds', icon: '[B]', emoji: '🙈' },
+      'Blood Bound': {
+        past: 'blood bound',
+        verb: 'blood bonds',
+        icon: '[BB]',
+        emoji: '🩸',
+      },
+      Dominated: {
+        past: 'dominated',
+        verb: 'dominates',
+        icon: '[Dom]',
+        emoji: '👁️',
+      },
+      Entranced: {
+        past: 'entranced',
+        verb: 'entrances',
+        icon: '[Ent]',
+        emoji: '🌀',
+      },
+      Frenzied: {
+        past: 'frenzied',
+        verb: 'sends',
+        suffix: 'into frenzy',
+        icon: '[Frz]',
+        emoji: '🐺',
+      },
+      Paralyzed: {
+        past: 'paralyzed',
+        verb: 'paralyzes',
+        icon: '[Pz]',
+        emoji: '❄️',
+      },
+      Torpor: {
+        past: 'in torpor',
+        verb: 'sends',
+        suffix: 'into torpor',
+        icon: '[Tor]',
+        emoji: '💀',
+      },
+      Wounded: { past: 'wounded', verb: 'wounds', icon: '[W]', emoji: '🤕' },
+      Ability: {
+        past: 'affected by a discipline',
+        verb: 'uses a discipline on',
+        icon: '[Dis]',
+        emoji: '🎯',
+      },
+    }),
+
+    DEFAULT_MARKERS: Object.freeze({
+      Blinded: 'bleeding-eye',
+      'Blood Bound': 'chained-heart',
+      Dominated: 'aura',
+      Entranced: 'chained-heart',
+      Frenzied: 'screaming',
+      Paralyzed: 'frozen-orb',
+      Torpor: 'sleepy',
+      Wounded: 'half-heart',
+      Ability: 'fist',
+    }),
+
+    CUSTOM_EFFECT_TYPES: Object.freeze(['Ability', 'Other']),
+    CUSTOM_EFFECT_LABELS: Object.freeze({ Ability: 'Discipline' }),
+  });
+
+  /** @type {import('./index.js').GameSystemProfile} */
+  const wtaProfile = Object.freeze({
+    SYSTEM_ID: 'wta',
+    SYSTEM_NAME: 'Werewolf: The Apocalypse',
+
+    STANDARD_CONDITIONS: Object.freeze(
+      ['Frenzied', 'Injured', 'Knocked Down', 'Paralyzed', 'Wounded'].sort(
+        (a, b) => a.localeCompare(b),
+      ),
+    ),
+
+    CONDITION_DATA: Object.freeze({
+      Frenzied: {
+        past: 'frenzied',
+        verb: 'sends',
+        suffix: 'into frenzy',
+        icon: '[Frz]',
+        emoji: '🐺',
+      },
+      Injured: { past: 'injured', verb: 'injures', icon: '[Inj]', emoji: '🩹' },
+      'Knocked Down': {
+        past: 'knocked down',
+        verb: 'knocks',
+        suffix: 'down',
+        icon: '[KD]',
+        emoji: '⬇️',
+      },
+      Paralyzed: {
+        past: 'paralyzed',
+        verb: 'paralyzes',
+        icon: '[Pz]',
+        emoji: '❄️',
+      },
+      Wounded: { past: 'wounded', verb: 'wounds', icon: '[W]', emoji: '🤕' },
+      Ability: {
+        past: 'affected by a gift',
+        verb: 'uses a gift on',
+        icon: '[Gft]',
+        emoji: '🎯',
+      },
+    }),
+
+    DEFAULT_MARKERS: Object.freeze({
+      Frenzied: 'screaming',
+      Injured: 'half-heart',
+      'Knocked Down': 'back-pain',
+      Paralyzed: 'frozen-orb',
+      Wounded: 'skull',
+      Ability: 'fist',
+    }),
+
+    CUSTOM_EFFECT_TYPES: Object.freeze(['Ability', 'Other']),
+    CUSTOM_EFFECT_LABELS: Object.freeze({ Ability: 'Gift' }),
+  });
+
+  /** @type {import('./index.js').GameSystemProfile} */
+  const mtaProfile = Object.freeze({
+    SYSTEM_ID: 'mta',
+    SYSTEM_NAME: 'Mage: The Ascension',
+
+    STANDARD_CONDITIONS: Object.freeze(
+      [
+        'Blinded',
+        'Controlled',
+        'Paradox',
+        'Unconscious',
+        'Willpower Spent',
+      ].sort((a, b) => a.localeCompare(b)),
+    ),
+
+    CONDITION_DATA: Object.freeze({
+      Blinded: { past: 'blinded', verb: 'blinds', icon: '[B]', emoji: '🙈' },
+      Controlled: {
+        past: 'controlled',
+        verb: 'controls',
+        icon: '[Ctrl]',
+        emoji: '🎭',
+      },
+      Paradox: {
+        past: 'paradox affected',
+        verb: 'inflicts paradox on',
+        icon: '[Prx]',
+        emoji: '♾️',
+      },
+      Unconscious: {
+        past: 'unconscious',
+        verb: 'knocks',
+        suffix: 'unconscious',
+        icon: '[U]',
+        emoji: '💤',
+      },
+      'Willpower Spent': {
+        past: 'willpower spent',
+        verb: 'drains willpower from',
+        icon: '[WP]',
+        emoji: '💧',
+      },
+      Ability: {
+        past: 'affected by a sphere effect',
+        verb: 'uses a sphere effect on',
+        icon: '[Sph]',
+        emoji: '🎯',
+      },
+    }),
+
+    DEFAULT_MARKERS: Object.freeze({
+      Blinded: 'bleeding-eye',
+      Controlled: 'chained-heart',
+      Paradox: 'interdiction',
+      Unconscious: 'sleepy',
+      'Willpower Spent': 'half-heart',
+      Ability: 'aura',
+    }),
+
+    CUSTOM_EFFECT_TYPES: Object.freeze(['Ability', 'Other']),
+    CUSTOM_EFFECT_LABELS: Object.freeze({ Ability: 'Sphere' }),
+  });
+
+  /** @type {import('./index.js').GameSystemProfile} */
+  const htrProfile = Object.freeze({
+    SYSTEM_ID: 'htr',
+    SYSTEM_NAME: 'Hunter: The Reckoning',
+
+    STANDARD_CONDITIONS: Object.freeze(
+      [
+        'Blinded',
+        'Controlled',
+        'Frightened',
+        'Injured',
+        'Paralyzed',
+        'Unconscious',
+      ].sort((a, b) => a.localeCompare(b)),
+    ),
+
+    CONDITION_DATA: Object.freeze({
+      Blinded: { past: 'blinded', verb: 'blinds', icon: '[B]', emoji: '🙈' },
+      Controlled: {
+        past: 'controlled',
+        verb: 'controls',
+        icon: '[Ctrl]',
+        emoji: '🎭',
+      },
+      Frightened: {
+        past: 'frightened',
+        verb: 'frightens',
+        icon: '[Fr]',
+        emoji: '😱',
+      },
+      Injured: { past: 'injured', verb: 'injures', icon: '[Inj]', emoji: '🩹' },
+      Paralyzed: {
+        past: 'paralyzed',
+        verb: 'paralyzes',
+        icon: '[Pz]',
+        emoji: '❄️',
+      },
+      Unconscious: {
+        past: 'unconscious',
+        verb: 'knocks',
+        suffix: 'unconscious',
+        icon: '[U]',
+        emoji: '💤',
+      },
+      Ability: {
+        past: 'affected by an edge',
+        verb: 'uses an edge on',
+        icon: '[Edg]',
+        emoji: '🎯',
+      },
+    }),
+
+    DEFAULT_MARKERS: Object.freeze({
+      Blinded: 'bleeding-eye',
+      Controlled: 'chained-heart',
+      Frightened: 'screaming',
+      Injured: 'half-heart',
+      Paralyzed: 'frozen-orb',
+      Unconscious: 'sleepy',
+      Ability: 'fist',
+    }),
+
+    CUSTOM_EFFECT_TYPES: Object.freeze(['Ability', 'Other']),
+    CUSTOM_EFFECT_LABELS: Object.freeze({ Ability: 'Edge' }),
+  });
+
+  /** @type {import('./index.js').GameSystemProfile} */
+  const ctdProfile = Object.freeze({
+    SYSTEM_ID: 'ctd',
+    SYSTEM_NAME: 'Changeling: The Dreaming',
+
+    STANDARD_CONDITIONS: Object.freeze(
+      [
+        'Bedlam',
+        'Blinded',
+        'Chimera-Touched',
+        'Dazed',
+        'Paralyzed',
+        'Unconscious',
+      ].sort((a, b) => a.localeCompare(b)),
+    ),
+
+    CONDITION_DATA: Object.freeze({
+      Bedlam: {
+        past: 'in bedlam',
+        verb: 'sends',
+        suffix: 'into bedlam',
+        icon: '[Bdm]',
+        emoji: '🌀',
+      },
+      Blinded: { past: 'blinded', verb: 'blinds', icon: '[B]', emoji: '🙈' },
+      'Chimera-Touched': {
+        past: 'chimera-touched',
+        verb: 'touches with chimera',
+        icon: '[CT]',
+        emoji: '✨',
+      },
+      Dazed: { past: 'dazed', verb: 'dazes', icon: '[Dz]', emoji: '😵' },
+      Paralyzed: {
+        past: 'paralyzed',
+        verb: 'paralyzes',
+        icon: '[Pz]',
+        emoji: '❄️',
+      },
+      Unconscious: {
+        past: 'unconscious',
+        verb: 'knocks',
+        suffix: 'unconscious',
+        icon: '[U]',
+        emoji: '💤',
+      },
+      Ability: {
+        past: 'affected by an art',
+        verb: 'uses an art on',
+        icon: '[Art]',
+        emoji: '🎯',
+      },
+    }),
+
+    DEFAULT_MARKERS: Object.freeze({
+      Bedlam: 'interdiction',
+      Blinded: 'bleeding-eye',
+      'Chimera-Touched': 'fluffy-wing',
+      Dazed: 'pummeled',
+      Paralyzed: 'frozen-orb',
+      Unconscious: 'sleepy',
+      Ability: 'three-leaves',
+    }),
+
+    CUSTOM_EFFECT_TYPES: Object.freeze(['Ability', 'Other']),
+    CUSTOM_EFFECT_LABELS: Object.freeze({ Ability: 'Art' }),
+  });
+
+  /** @type {import('./index.js').GameSystemProfile} */
+  const shadowrunProfile = Object.freeze({
+    SYSTEM_ID: 'shadowrun',
+    SYSTEM_NAME: 'Shadowrun',
+
+    STANDARD_CONDITIONS: Object.freeze(
+      [
+        'Disoriented',
+        'Fatigued',
+        'Immobilized',
+        'Knocked Down',
+        'Paralyzed',
+        'Stunned',
+        'Unconscious',
+      ].sort((a, b) => a.localeCompare(b)),
+    ),
+
+    CONDITION_DATA: Object.freeze({
+      Disoriented: {
+        past: 'disoriented',
+        verb: 'disorients',
+        icon: '[Dis]',
+        emoji: '😵',
+      },
+      Fatigued: {
+        past: 'fatigued',
+        verb: 'fatigues',
+        icon: '[Fat]',
+        emoji: '😫',
+      },
+      Immobilized: {
+        past: 'immobilized',
+        verb: 'immobilizes',
+        icon: '[Im]',
+        emoji: '🔗',
+      },
+      'Knocked Down': {
+        past: 'knocked down',
+        verb: 'knocks',
+        suffix: 'down',
+        icon: '[KD]',
+        emoji: '⬇️',
+      },
+      Paralyzed: {
+        past: 'paralyzed',
+        verb: 'paralyzes',
+        icon: '[Pz]',
+        emoji: '❄️',
+      },
+      Stunned: { past: 'stunned', verb: 'stuns', icon: '[Stn]', emoji: '😵' },
+      Unconscious: {
+        past: 'unconscious',
+        verb: 'knocks',
+        suffix: 'unconscious',
+        icon: '[U]',
+        emoji: '💤',
+      },
+      Spell: {
+        past: 'affected by a spell',
+        verb: 'casts a spell on',
+        icon: '[Spl]',
+        emoji: '🔮',
+      },
+      Ability: {
+        past: 'affected by a power',
+        verb: 'uses a power on',
+        icon: '[Pwr]',
+        emoji: '🎯',
+      },
+    }),
+
+    DEFAULT_MARKERS: Object.freeze({
+      Disoriented: 'interdiction',
+      Fatigued: 'half-heart',
+      Immobilized: 'padlock',
+      'Knocked Down': 'back-pain',
+      Paralyzed: 'frozen-orb',
+      Stunned: 'pummeled',
+      Unconscious: 'sleepy',
+      Spell: 'lightning-helix',
+      Ability: 'fist',
+    }),
+
+    CUSTOM_EFFECT_TYPES: Object.freeze(['Spell', 'Ability', 'Other']),
+    CUSTOM_EFFECT_LABELS: Object.freeze({ Ability: 'Power' }),
+  });
+
+  /** @type {import('./index.js').GameSystemProfile} */
+  const cyberpunkRedProfile = Object.freeze({
+    SYSTEM_ID: 'cyberpunkred',
+    SYSTEM_NAME: 'Cyberpunk Red',
+
+    STANDARD_CONDITIONS: Object.freeze(
+      [
+        'Blinded',
+        'Deafened',
+        'Mortally Wounded',
+        'Seriously Wounded',
+        'Stunned',
+        'Unconscious',
+      ].sort((a, b) => a.localeCompare(b)),
+    ),
+
+    CONDITION_DATA: Object.freeze({
+      Blinded: { past: 'blinded', verb: 'blinds', icon: '[B]', emoji: '🙈' },
+      Deafened: {
+        past: 'deafened',
+        verb: 'deafens',
+        icon: '[Df]',
+        emoji: '🙉',
+      },
+      'Mortally Wounded': {
+        past: 'mortally wounded',
+        verb: 'mortally wounds',
+        icon: '[MW]',
+        emoji: '💀',
+      },
+      'Seriously Wounded': {
+        past: 'seriously wounded',
+        verb: 'seriously wounds',
+        icon: '[SW]',
+        emoji: '🩸',
+      },
+      Stunned: { past: 'stunned', verb: 'stuns', icon: '[Stn]', emoji: '😵' },
+      Unconscious: {
+        past: 'unconscious',
+        verb: 'knocks',
+        suffix: 'unconscious',
+        icon: '[U]',
+        emoji: '💤',
+      },
+      Ability: {
+        past: 'affected by a netrunner ability',
+        verb: 'uses an ability on',
+        icon: '[Abl]',
+        emoji: '🎯',
+      },
+    }),
+
+    DEFAULT_MARKERS: Object.freeze({
+      Blinded: 'bleeding-eye',
+      Deafened: 'edge-crack',
+      'Mortally Wounded': 'skull',
+      'Seriously Wounded': 'half-heart',
+      Stunned: 'pummeled',
+      Unconscious: 'sleepy',
+      Ability: 'fist',
+    }),
+
+    CUSTOM_EFFECT_TYPES: Object.freeze(['Ability', 'Other']),
+    CUSTOM_EFFECT_LABELS: Object.freeze({}),
+  });
+
+  /** @type {import('./index.js').GameSystemProfile} */
+  const travellerProfile = Object.freeze({
+    SYSTEM_ID: 'traveller',
+    SYSTEM_NAME: 'Traveller',
+
+    STANDARD_CONDITIONS: Object.freeze(
+      ['Bleeding', 'Incapacitated', 'Stunned', 'Unconscious'].sort((a, b) =>
+        a.localeCompare(b),
+      ),
+    ),
+
+    CONDITION_DATA: Object.freeze({
+      Bleeding: {
+        past: 'bleeding',
+        verb: 'causes',
+        suffix: 'to bleed',
+        icon: '[Bld]',
+        emoji: '🩸',
+      },
+      Incapacitated: {
+        past: 'incapacitated',
+        verb: 'incapacitates',
+        icon: '[Inc]',
+        emoji: '🚫',
+      },
+      Stunned: { past: 'stunned', verb: 'stuns', icon: '[Stn]', emoji: '😵' },
+      Unconscious: {
+        past: 'unconscious',
+        verb: 'knocks',
+        suffix: 'unconscious',
+        icon: '[U]',
+        emoji: '💤',
+      },
+      Ability: {
+        past: 'affected by an ability',
+        verb: 'uses an ability on',
+        icon: '[Abl]',
+        emoji: '🎯',
+      },
+    }),
+
+    DEFAULT_MARKERS: Object.freeze({
+      Bleeding: 'bleeding-eye',
+      Incapacitated: 'interdiction',
+      Stunned: 'pummeled',
+      Unconscious: 'sleepy',
+      Ability: 'fist',
+    }),
+
+    CUSTOM_EFFECT_TYPES: Object.freeze(['Ability', 'Other']),
+    CUSTOM_EFFECT_LABELS: Object.freeze({}),
+  });
+
+  /** @type {import('./index.js').GameSystemProfile} */
+  const starsWithoutNumberProfile = Object.freeze({
+    SYSTEM_ID: 'swn',
+    SYSTEM_NAME: 'Stars Without Number',
+
+    STANDARD_CONDITIONS: Object.freeze(
+      [
+        'Blinded',
+        'Dazed',
+        'Deafened',
+        'Diseased',
+        'Incapacitated',
+        'Paralyzed',
+        'Poisoned',
+      ].sort((a, b) => a.localeCompare(b)),
+    ),
+
+    CONDITION_DATA: Object.freeze({
+      Blinded: { past: 'blinded', verb: 'blinds', icon: '[B]', emoji: '🙈' },
+      Dazed: { past: 'dazed', verb: 'dazes', icon: '[Dz]', emoji: '😵' },
+      Deafened: {
+        past: 'deafened',
+        verb: 'deafens',
+        icon: '[Df]',
+        emoji: '🙉',
+      },
+      Diseased: {
+        past: 'diseased',
+        verb: 'infects',
+        icon: '[Di]',
+        emoji: '🦠',
+      },
+      Incapacitated: {
+        past: 'incapacitated',
+        verb: 'incapacitates',
+        icon: '[Inc]',
+        emoji: '🚫',
+      },
+      Paralyzed: {
+        past: 'paralyzed',
+        verb: 'paralyzes',
+        icon: '[Pz]',
+        emoji: '❄️',
+      },
+      Poisoned: {
+        past: 'poisoned',
+        verb: 'poisons',
+        icon: '[Psn]',
+        emoji: '☠️',
+      },
+      Spell: {
+        past: 'affected by a psionic power',
+        verb: 'uses a psionic power on',
+        icon: '[Psi]',
+        emoji: '🔮',
+      },
+      Ability: {
+        past: 'affected by an ability',
+        verb: 'uses an ability on',
+        icon: '[Abl]',
+        emoji: '🎯',
+      },
+    }),
+
+    DEFAULT_MARKERS: Object.freeze({
+      Blinded: 'bleeding-eye',
+      Dazed: 'pummeled',
+      Deafened: 'edge-crack',
+      Diseased: 'chemical-bolt',
+      Incapacitated: 'interdiction',
+      Paralyzed: 'frozen-orb',
+      Poisoned: 'chemical-bolt',
+      Spell: 'psi',
+      Ability: 'fist',
+    }),
+
+    CUSTOM_EFFECT_TYPES: Object.freeze(['Spell', 'Ability', 'Other']),
+    CUSTOM_EFFECT_LABELS: Object.freeze({ Spell: 'Psionic' }),
+  });
+
+  /** @type {import('./index.js').GameSystemProfile} */
+  const alienRpgProfile = Object.freeze({
+    SYSTEM_ID: 'alienrpg',
+    SYSTEM_NAME: 'Alien RPG',
+
+    STANDARD_CONDITIONS: Object.freeze(
+      ['Broken', 'Dying', 'Panicking', 'Unconscious'].sort((a, b) =>
+        a.localeCompare(b),
+      ),
+    ),
+
+    CONDITION_DATA: Object.freeze({
+      Broken: { past: 'broken', verb: 'breaks', icon: '[Brk]', emoji: '💔' },
+      Dying: {
+        past: 'dying',
+        verb: 'knocks',
+        suffix: 'dying',
+        icon: '[Dy]',
+        emoji: '☠️',
+      },
+      Panicking: {
+        past: 'panicking',
+        verb: 'causes',
+        suffix: 'to panic',
+        icon: '[Pan]',
+        emoji: '😨',
+      },
+      Unconscious: {
+        past: 'unconscious',
+        verb: 'knocks',
+        suffix: 'unconscious',
+        icon: '[U]',
+        emoji: '💤',
+      },
+      Ability: {
+        past: 'affected by an ability',
+        verb: 'uses an ability on',
+        icon: '[Abl]',
+        emoji: '🎯',
+      },
+    }),
+
+    DEFAULT_MARKERS: Object.freeze({
+      Broken: 'broken-heart',
+      Dying: 'dead',
+      Panicking: 'screaming',
+      Unconscious: 'sleepy',
+      Ability: 'fist',
+    }),
+
+    CUSTOM_EFFECT_TYPES: Object.freeze(['Ability', 'Other']),
+    CUSTOM_EFFECT_LABELS: Object.freeze({}),
+  });
+
+  /** @type {import('./index.js').GameSystemProfile} */
+  const starWarsFfgProfile = Object.freeze({
+    SYSTEM_ID: 'starwarsffg',
+    SYSTEM_NAME: 'Star Wars RPG (FFG)',
+
+    STANDARD_CONDITIONS: Object.freeze(
+      [
+        'Disoriented',
+        'Ensnared',
+        'Immobilized',
+        'Prone',
+        'Staggered',
+        'Strained',
+      ].sort((a, b) => a.localeCompare(b)),
+    ),
+
+    CONDITION_DATA: Object.freeze({
+      Disoriented: {
+        past: 'disoriented',
+        verb: 'disorients',
+        icon: '[Dis]',
+        emoji: '😵',
+      },
+      Ensnared: {
+        past: 'ensnared',
+        verb: 'ensnares',
+        icon: '[Ens]',
+        emoji: '🕸️',
+      },
+      Immobilized: {
+        past: 'immobilized',
+        verb: 'immobilizes',
+        icon: '[Im]',
+        emoji: '🔗',
+      },
+      Prone: {
+        past: 'knocked prone',
+        verb: 'knocks',
+        suffix: 'prone',
+        icon: '[P]',
+        emoji: '🛌',
+      },
+      Staggered: {
+        past: 'staggered',
+        verb: 'staggers',
+        icon: '[Stg]',
+        emoji: '🥴',
+      },
+      Strained: {
+        past: 'strained',
+        verb: 'strains',
+        icon: '[Str]',
+        emoji: '😓',
+      },
+      Ability: {
+        past: 'affected by a talent',
+        verb: 'uses a talent on',
+        icon: '[Tal]',
+        emoji: '🎯',
+      },
+    }),
+
+    DEFAULT_MARKERS: Object.freeze({
+      Disoriented: 'interdiction',
+      Ensnared: 'cobweb',
+      Immobilized: 'padlock',
+      Prone: 'back-pain',
+      Staggered: 'pummeled',
+      Strained: 'half-heart',
+      Ability: 'fist',
+    }),
+
+    CUSTOM_EFFECT_TYPES: Object.freeze(['Ability', 'Other']),
+    CUSTOM_EFFECT_LABELS: Object.freeze({ Ability: 'Talent' }),
+  });
+
+  /** @type {import('./index.js').GameSystemProfile} */
+  const gurpsProfile = Object.freeze({
+    SYSTEM_ID: 'gurps',
+    SYSTEM_NAME: 'GURPS',
+
+    STANDARD_CONDITIONS: Object.freeze(
+      ['Berserk', 'Confused', 'Dazed', 'Dying', 'Stunned', 'Unconscious'].sort(
+        (a, b) => a.localeCompare(b),
+      ),
+    ),
+
+    CONDITION_DATA: Object.freeze({
+      Berserk: {
+        past: 'berserk',
+        verb: 'sends',
+        suffix: 'berserk',
+        icon: '[Bsk]',
+        emoji: '😤',
+      },
+      Confused: {
+        past: 'confused',
+        verb: 'confuses',
+        icon: '[Con]',
+        emoji: '🤪',
+      },
+      Dazed: { past: 'dazed', verb: 'dazes', icon: '[Dz]', emoji: '😵' },
+      Dying: {
+        past: 'dying',
+        verb: 'knocks',
+        suffix: 'dying',
+        icon: '[Dy]',
+        emoji: '☠️',
+      },
+      Stunned: { past: 'stunned', verb: 'stuns', icon: '[Stn]', emoji: '😵' },
+      Unconscious: {
+        past: 'unconscious',
+        verb: 'knocks',
+        suffix: 'unconscious',
+        icon: '[U]',
+        emoji: '💤',
+      },
+      Spell: {
+        past: 'affected by a spell',
+        verb: 'casts a spell on',
+        icon: '[Spl]',
+        emoji: '🔮',
+      },
+      Ability: {
+        past: 'affected by an ability',
+        verb: 'uses an ability on',
+        icon: '[Abl]',
+        emoji: '🎯',
+      },
+    }),
+
+    DEFAULT_MARKERS: Object.freeze({
+      Berserk: 'screaming',
+      Confused: 'interdiction',
+      Dazed: 'pummeled',
+      Dying: 'dead',
+      Stunned: 'pummeled',
+      Unconscious: 'sleepy',
+      Spell: 'lightning-helix',
+      Ability: 'fist',
+    }),
+
+    CUSTOM_EFFECT_TYPES: Object.freeze(['Spell', 'Ability', 'Other']),
+    CUSTOM_EFFECT_LABELS: Object.freeze({}),
+  });
+
+  /** @type {import('./index.js').GameSystemProfile} */
+  const savageWorldsProfile = Object.freeze({
+    SYSTEM_ID: 'savageworlds',
+    SYSTEM_NAME: 'Savage Worlds Adventure Edition',
+
+    STANDARD_CONDITIONS: Object.freeze(
+      [
+        'Bleeding Out',
+        'Bound',
+        'Distracted',
+        'Entangled',
+        'Exhausted',
+        'Fatigued',
+        'Incapacitated',
+        'Shaken',
+        'Stunned',
+        'Vulnerable',
+      ].sort((a, b) => a.localeCompare(b)),
+    ),
+
+    CONDITION_DATA: Object.freeze({
+      'Bleeding Out': {
+        past: 'bleeding out',
+        verb: 'causes',
+        suffix: 'to bleed out',
+        icon: '[BO]',
+        emoji: '🩸',
+      },
+      Bound: { past: 'bound', verb: 'binds', icon: '[Bnd]', emoji: '⛓️' },
+      Distracted: {
+        past: 'distracted',
+        verb: 'distracts',
+        icon: '[Dis]',
+        emoji: '😶',
+      },
+      Entangled: {
+        past: 'entangled',
+        verb: 'entangles',
+        icon: '[Ent]',
+        emoji: '🕸️',
+      },
+      Exhausted: {
+        past: 'exhausted',
+        verb: 'exhausts',
+        icon: '[Ex]',
+        emoji: '😩',
+      },
+      Fatigued: {
+        past: 'fatigued',
+        verb: 'fatigues',
+        icon: '[Fat]',
+        emoji: '😫',
+      },
+      Incapacitated: {
+        past: 'incapacitated',
+        verb: 'incapacitates',
+        icon: '[Inc]',
+        emoji: '🚫',
+      },
+      Shaken: { past: 'shaken', verb: 'shakes', icon: '[Shk]', emoji: '😨' },
+      Stunned: { past: 'stunned', verb: 'stuns', icon: '[Stn]', emoji: '😵' },
+      Vulnerable: {
+        past: 'vulnerable',
+        verb: 'makes',
+        suffix: 'vulnerable',
+        icon: '[Vul]',
+        emoji: '🎯',
+      },
+      // "Spell" canonical key — displayed as "Power" via CUSTOM_EFFECT_LABELS
+      Spell: {
+        past: 'affected by a power',
+        verb: 'uses a power on',
+        icon: '[Pwr]',
+        emoji: '🔮',
+      },
+      // "Ability" canonical key — displayed as "Edge" via CUSTOM_EFFECT_LABELS
+      Ability: {
+        past: 'affected by an edge',
+        verb: 'uses an edge on',
+        icon: '[Edge]',
+        emoji: '⚡',
+      },
+    }),
+
+    DEFAULT_MARKERS: Object.freeze({
+      'Bleeding Out': 'half-heart',
+      Bound: 'padlock',
+      Distracted: 'overdrive',
+      Entangled: 'grab',
+      Exhausted: 'sleepy',
+      Fatigued: 'half-heart',
+      Incapacitated: 'skull',
+      Shaken: 'pummeled',
+      Stunned: 'frozen-orb',
+      Vulnerable: 'back-pain',
+      Spell: 'lightning-helix',
+      Ability: 'fist',
+    }),
+
+    CUSTOM_EFFECT_TYPES: Object.freeze(['Spell', 'Ability', 'Other']),
+    // SWADE terminology: "Spell" → "Power", "Ability" → "Edge"
+    CUSTOM_EFFECT_LABELS: Object.freeze({ Spell: 'Power', Ability: 'Edge' }),
+  });
+
+  /** @type {import('./index.js').GameSystemProfile} */
+  const brpProfile = Object.freeze({
+    SYSTEM_ID: 'brp',
+    SYSTEM_NAME: 'Basic Role-Playing',
+
+    STANDARD_CONDITIONS: Object.freeze(
+      [
+        'Bleeding',
+        'Dying',
+        'Fatigued',
+        'Insane',
+        'Poisoned',
+        'Unconscious',
+        'Wounded',
+      ].sort((a, b) => a.localeCompare(b)),
+    ),
+
+    CONDITION_DATA: Object.freeze({
+      Bleeding: {
+        past: 'bleeding',
+        verb: 'causes',
+        suffix: 'to bleed',
+        icon: '[Bld]',
+        emoji: '🩸',
+      },
+      Dying: {
+        past: 'dying',
+        verb: 'knocks',
+        suffix: 'dying',
+        icon: '[Dy]',
+        emoji: '☠️',
+      },
+      Fatigued: {
+        past: 'fatigued',
+        verb: 'fatigues',
+        icon: '[Fat]',
+        emoji: '😫',
+      },
+      Insane: {
+        past: 'insane',
+        verb: 'drives',
+        suffix: 'insane',
+        icon: '[Ins]',
+        emoji: '🌀',
+      },
+      Poisoned: {
+        past: 'poisoned',
+        verb: 'poisons',
+        icon: '[Psn]',
+        emoji: '☠️',
+      },
+      Unconscious: {
+        past: 'unconscious',
+        verb: 'knocks',
+        suffix: 'unconscious',
+        icon: '[U]',
+        emoji: '💤',
+      },
+      Wounded: { past: 'wounded', verb: 'wounds', icon: '[W]', emoji: '🤕' },
+      Spell: {
+        past: 'affected by a spell',
+        verb: 'casts a spell on',
+        icon: '[Spl]',
+        emoji: '🔮',
+      },
+      Ability: {
+        past: 'affected by a skill',
+        verb: 'uses a skill on',
+        icon: '[Skl]',
+        emoji: '🎯',
+      },
+    }),
+
+    DEFAULT_MARKERS: Object.freeze({
+      Bleeding: 'bleeding-eye',
+      Dying: 'dead',
+      Fatigued: 'half-heart',
+      Insane: 'interdiction',
+      Poisoned: 'chemical-bolt',
+      Unconscious: 'sleepy',
+      Wounded: 'half-heart',
+      Spell: 'lightning-helix',
+      Ability: 'fist',
+    }),
+
+    CUSTOM_EFFECT_TYPES: Object.freeze(['Spell', 'Ability', 'Other']),
+    CUSTOM_EFFECT_LABELS: Object.freeze({ Ability: 'Skill' }),
+  });
+
+  /** @type {import('./index.js').GameSystemProfile} */
+  const heroSystemProfile = Object.freeze({
+    SYSTEM_ID: 'herosystem',
+    SYSTEM_NAME: 'Hero System',
+
+    STANDARD_CONDITIONS: Object.freeze(
+      [
+        'Blinded',
+        'Confused',
+        'Dazed',
+        'Entangled',
+        'Stunned',
+        'Unconscious',
+      ].sort((a, b) => a.localeCompare(b)),
+    ),
+
+    CONDITION_DATA: Object.freeze({
+      Blinded: { past: 'blinded', verb: 'blinds', icon: '[B]', emoji: '🙈' },
+      Confused: {
+        past: 'confused',
+        verb: 'confuses',
+        icon: '[Con]',
+        emoji: '🤪',
+      },
+      Dazed: { past: 'dazed', verb: 'dazes', icon: '[Dz]', emoji: '😵' },
+      Entangled: {
+        past: 'entangled',
+        verb: 'entangles',
+        icon: '[Ent]',
+        emoji: '🕸️',
+      },
+      Stunned: { past: 'stunned', verb: 'stuns', icon: '[Stn]', emoji: '😵' },
+      Unconscious: {
+        past: 'unconscious',
+        verb: 'knocks',
+        suffix: 'unconscious',
+        icon: '[U]',
+        emoji: '💤',
+      },
+      Ability: {
+        past: 'affected by a power',
+        verb: 'uses a power on',
+        icon: '[Pwr]',
+        emoji: '🎯',
+      },
+    }),
+
+    DEFAULT_MARKERS: Object.freeze({
+      Blinded: 'bleeding-eye',
+      Confused: 'interdiction',
+      Dazed: 'pummeled',
+      Entangled: 'cobweb',
+      Stunned: 'pummeled',
+      Unconscious: 'sleepy',
+      Ability: 'fist',
+    }),
+
+    CUSTOM_EFFECT_TYPES: Object.freeze(['Ability', 'Other']),
+    CUSTOM_EFFECT_LABELS: Object.freeze({ Ability: 'Power' }),
+  });
+
+  /** @type {import('./index.js').GameSystemProfile} */
+  const cypherSystemProfile = Object.freeze({
+    SYSTEM_ID: 'cyphersystem',
+    SYSTEM_NAME: 'Cypher System',
+
+    STANDARD_CONDITIONS: Object.freeze(
+      ['Dazed', 'Debilitated', 'Impaired'].sort((a, b) => a.localeCompare(b)),
+    ),
+
+    CONDITION_DATA: Object.freeze({
+      Dazed: { past: 'dazed', verb: 'dazes', icon: '[Dz]', emoji: '😵' },
+      Debilitated: {
+        past: 'debilitated',
+        verb: 'debilitates',
+        icon: '[Dbl]',
+        emoji: '💔',
+      },
+      Impaired: {
+        past: 'impaired',
+        verb: 'impairs',
+        icon: '[Imp]',
+        emoji: '⚠️',
+      },
+      Ability: {
+        past: 'affected by an ability',
+        verb: 'uses an ability on',
+        icon: '[Abl]',
+        emoji: '🎯',
+      },
+    }),
+
+    DEFAULT_MARKERS: Object.freeze({
+      Dazed: 'pummeled',
+      Debilitated: 'skull',
+      Impaired: 'half-heart',
+      Ability: 'fist',
+    }),
+
+    CUSTOM_EFFECT_TYPES: Object.freeze(['Ability', 'Other']),
+    CUSTOM_EFFECT_LABELS: Object.freeze({}),
+  });
+
+  /** @type {import('./index.js').GameSystemProfile} */
+  const knaveProfile = Object.freeze({
+    SYSTEM_ID: 'knave',
+    SYSTEM_NAME: 'Knave',
+
+    STANDARD_CONDITIONS: Object.freeze(
+      ['Blinded', 'Frightened', 'Paralyzed', 'Poisoned'].sort((a, b) =>
+        a.localeCompare(b),
+      ),
+    ),
+
+    CONDITION_DATA: Object.freeze({
+      Blinded: { past: 'blinded', verb: 'blinds', icon: '[B]', emoji: '🙈' },
+      Frightened: {
+        past: 'frightened',
+        verb: 'frightens',
+        icon: '[Fr]',
+        emoji: '😱',
+      },
+      Paralyzed: {
+        past: 'paralyzed',
+        verb: 'paralyzes',
+        icon: '[Pz]',
+        emoji: '❄️',
+      },
+      Poisoned: {
+        past: 'poisoned',
+        verb: 'poisons',
+        icon: '[Psn]',
+        emoji: '☠️',
+      },
+      Spell: {
+        past: 'affected by a spell',
+        verb: 'casts a spell on',
+        icon: '[Spl]',
+        emoji: '🔮',
+      },
+    }),
+
+    DEFAULT_MARKERS: Object.freeze({
+      Blinded: 'bleeding-eye',
+      Frightened: 'screaming',
+      Paralyzed: 'frozen-orb',
+      Poisoned: 'chemical-bolt',
+      Spell: 'lightning-helix',
+    }),
+
+    CUSTOM_EFFECT_TYPES: Object.freeze(['Spell', 'Other']),
+    CUSTOM_EFFECT_LABELS: Object.freeze({}),
+  });
+
+  /** @type {import('./index.js').GameSystemProfile} */
+  const intoTheOddProfile = Object.freeze({
+    SYSTEM_ID: 'intotheodd',
+    SYSTEM_NAME: 'Into the Odd',
+
+    STANDARD_CONDITIONS: Object.freeze(
+      ['Blinded', 'Deprived', 'Stunned', 'Unconscious'].sort((a, b) =>
+        a.localeCompare(b),
+      ),
+    ),
+
+    CONDITION_DATA: Object.freeze({
+      Blinded: { past: 'blinded', verb: 'blinds', icon: '[B]', emoji: '🙈' },
+      Deprived: {
+        past: 'deprived',
+        verb: 'deprives',
+        icon: '[Dep]',
+        emoji: '🌑',
+      },
+      Stunned: { past: 'stunned', verb: 'stuns', icon: '[Stn]', emoji: '😵' },
+      Unconscious: {
+        past: 'unconscious',
+        verb: 'knocks',
+        suffix: 'unconscious',
+        icon: '[U]',
+        emoji: '💤',
+      },
+    }),
+
+    DEFAULT_MARKERS: Object.freeze({
+      Blinded: 'bleeding-eye',
+      Deprived: 'half-heart',
+      Stunned: 'pummeled',
+      Unconscious: 'sleepy',
+    }),
+
+    CUSTOM_EFFECT_TYPES: Object.freeze(['Other']),
+    CUSTOM_EFFECT_LABELS: Object.freeze({}),
+  });
+
+  /** @type {import('./index.js').GameSystemProfile} */
+  const cairnProfile = Object.freeze({
+    SYSTEM_ID: 'cairn',
+    SYSTEM_NAME: 'Cairn',
+
+    STANDARD_CONDITIONS: Object.freeze(
+      ['Blinded', 'Deprived', 'Panicked', 'Unconscious'].sort((a, b) =>
+        a.localeCompare(b),
+      ),
+    ),
+
+    CONDITION_DATA: Object.freeze({
+      Blinded: { past: 'blinded', verb: 'blinds', icon: '[B]', emoji: '🙈' },
+      Deprived: {
+        past: 'deprived',
+        verb: 'deprives',
+        icon: '[Dep]',
+        emoji: '🌑',
+      },
+      Panicked: {
+        past: 'panicked',
+        verb: 'causes',
+        suffix: 'to panic',
+        icon: '[Pan]',
+        emoji: '😨',
+      },
+      Unconscious: {
+        past: 'unconscious',
+        verb: 'knocks',
+        suffix: 'unconscious',
+        icon: '[U]',
+        emoji: '💤',
+      },
+    }),
+
+    DEFAULT_MARKERS: Object.freeze({
+      Blinded: 'bleeding-eye',
+      Deprived: 'half-heart',
+      Panicked: 'screaming',
+      Unconscious: 'sleepy',
+    }),
+
+    CUSTOM_EFFECT_TYPES: Object.freeze(['Other']),
+    CUSTOM_EFFECT_LABELS: Object.freeze({}),
+  });
+
+  /** @type {import('./index.js').GameSystemProfile} */
+  const wh40kProfile = Object.freeze({
+    SYSTEM_ID: 'wh40k',
+    SYSTEM_NAME: 'Warhammer 40,000 RPG',
+
+    STANDARD_CONDITIONS: Object.freeze(
+      [
+        'Burning',
+        'Fatigued',
+        'Frightened',
+        'Poisoned',
+        'Prone',
+        'Restrained',
+        'Shocked',
+        'Stunned',
+        'Unconscious',
+        'Wounded',
+      ].sort((a, b) => a.localeCompare(b)),
+    ),
+
+    CONDITION_DATA: Object.freeze({
+      Burning: {
+        past: 'burning',
+        verb: 'sets',
+        suffix: 'on fire',
+        icon: '[Brn]',
+        emoji: '🔥',
+      },
+      Fatigued: {
+        past: 'fatigued',
+        verb: 'fatigues',
+        icon: '[Fat]',
+        emoji: '😫',
+      },
+      Frightened: {
+        past: 'frightened',
+        verb: 'frightens',
+        icon: '[Fr]',
+        emoji: '😱',
+      },
+      Poisoned: {
+        past: 'poisoned',
+        verb: 'poisons',
+        icon: '[Psn]',
+        emoji: '☠️',
+      },
+      Prone: {
+        past: 'knocked prone',
+        verb: 'knocks',
+        suffix: 'prone',
+        icon: '[P]',
+        emoji: '🛌',
+      },
+      Restrained: {
+        past: 'restrained',
+        verb: 'restrains',
+        icon: '[R]',
+        emoji: '🔒',
+      },
+      Shocked: { past: 'shocked', verb: 'shocks', icon: '[Shk]', emoji: '⚡' },
+      Stunned: { past: 'stunned', verb: 'stuns', icon: '[Stn]', emoji: '😵' },
+      Unconscious: {
+        past: 'unconscious',
+        verb: 'knocks',
+        suffix: 'unconscious',
+        icon: '[U]',
+        emoji: '💤',
+      },
+      Wounded: { past: 'wounded', verb: 'wounds', icon: '[W]', emoji: '🤕' },
+      Spell: {
+        past: 'affected by a psychic power',
+        verb: 'uses a psychic power on',
+        icon: '[Psy]',
+        emoji: '🔮',
+      },
+      Ability: {
+        past: 'affected by a talent',
+        verb: 'uses a talent on',
+        icon: '[Tal]',
+        emoji: '🎯',
+      },
+    }),
+
+    DEFAULT_MARKERS: Object.freeze({
+      Burning: 'half-haze',
+      Fatigued: 'half-heart',
+      Frightened: 'screaming',
+      Poisoned: 'chemical-bolt',
+      Prone: 'back-pain',
+      Restrained: 'padlock',
+      Shocked: 'lightning-helix',
+      Stunned: 'pummeled',
+      Unconscious: 'sleepy',
+      Wounded: 'half-heart',
+      Spell: 'aura',
+      Ability: 'fist',
+    }),
+
+    CUSTOM_EFFECT_TYPES: Object.freeze(['Spell', 'Ability', 'Other']),
+    CUSTOM_EFFECT_LABELS: Object.freeze({
+      Spell: 'Psychic Power',
+      Ability: 'Talent',
+    }),
+  });
+
+  /** @type {import('./index.js').GameSystemProfile} */
+  const whaosProfile = Object.freeze({
+    SYSTEM_ID: 'whaos',
+    SYSTEM_NAME: 'Warhammer Age of Sigmar: Soulbound',
+
+    STANDARD_CONDITIONS: Object.freeze(
+      [
+        'Burning',
+        'Dazed',
+        'Ensnared',
+        'Exhausted',
+        'Frightened',
+        'Intoxicated',
+        'Knocked Down',
+        'Poisoned',
+        'Stunned',
+        'Unconscious',
+      ].sort((a, b) => a.localeCompare(b)),
+    ),
+
+    CONDITION_DATA: Object.freeze({
+      Burning: {
+        past: 'burning',
+        verb: 'sets',
+        suffix: 'on fire',
+        icon: '[Brn]',
+        emoji: '🔥',
+      },
+      Dazed: { past: 'dazed', verb: 'dazes', icon: '[Dz]', emoji: '😵' },
+      Ensnared: {
+        past: 'ensnared',
+        verb: 'ensnares',
+        icon: '[Ens]',
+        emoji: '🕸️',
+      },
+      Exhausted: {
+        past: 'exhausted',
+        verb: 'exhausts',
+        icon: '[Ex]',
+        emoji: '😩',
+      },
+      Frightened: {
+        past: 'frightened',
+        verb: 'frightens',
+        icon: '[Fr]',
+        emoji: '😱',
+      },
+      Intoxicated: {
+        past: 'intoxicated',
+        verb: 'intoxicates',
+        icon: '[Int]',
+        emoji: '🍺',
+      },
+      'Knocked Down': {
+        past: 'knocked down',
+        verb: 'knocks',
+        suffix: 'down',
+        icon: '[KD]',
+        emoji: '⬇️',
+      },
+      Poisoned: {
+        past: 'poisoned',
+        verb: 'poisons',
+        icon: '[Psn]',
+        emoji: '☠️',
+      },
+      Stunned: { past: 'stunned', verb: 'stuns', icon: '[Stn]', emoji: '😵' },
+      Unconscious: {
+        past: 'unconscious',
+        verb: 'knocks',
+        suffix: 'unconscious',
+        icon: '[U]',
+        emoji: '💤',
+      },
+      Spell: {
+        past: 'affected by a spell',
+        verb: 'casts a spell on',
+        icon: '[Spl]',
+        emoji: '🔮',
+      },
+      Ability: {
+        past: 'affected by a miracle',
+        verb: 'uses a miracle on',
+        icon: '[Mir]',
+        emoji: '🎯',
+      },
+    }),
+
+    DEFAULT_MARKERS: Object.freeze({
+      Burning: 'half-haze',
+      Dazed: 'pummeled',
+      Ensnared: 'cobweb',
+      Exhausted: 'sleepy',
+      Frightened: 'screaming',
+      Intoxicated: 'drink-me',
+      'Knocked Down': 'back-pain',
+      Poisoned: 'chemical-bolt',
+      Stunned: 'pummeled',
+      Unconscious: 'sleepy',
+      Spell: 'lightning-helix',
+      Ability: 'three-leaves',
+    }),
+
+    CUSTOM_EFFECT_TYPES: Object.freeze(['Spell', 'Ability', 'Other']),
+    CUSTOM_EFFECT_LABELS: Object.freeze({ Ability: 'Miracle' }),
+  });
+
+  /** @type {import('./index.js').GameSystemProfile} */
+  const wfrp4eProfile = Object.freeze({
+    SYSTEM_ID: 'wfrp4e',
+    SYSTEM_NAME: 'Warhammer Fantasy Roleplay 4e',
+
+    STANDARD_CONDITIONS: Object.freeze(
+      [
+        'Ablaze',
+        'Bleeding',
+        'Blinded',
+        'Broken',
+        'Deafened',
+        'Entangled',
+        'Fatigued',
+        'Prone',
+        'Stunned',
+        'Surprised',
+      ].sort((a, b) => a.localeCompare(b)),
+    ),
+
+    CONDITION_DATA: Object.freeze({
+      Ablaze: {
+        past: 'ablaze',
+        verb: 'sets',
+        suffix: 'ablaze',
+        icon: '[Abl]',
+        emoji: '🔥',
+      },
+      Bleeding: {
+        past: 'bleeding',
+        verb: 'causes',
+        suffix: 'to bleed',
+        icon: '[Bld]',
+        emoji: '🩸',
+      },
+      Blinded: { past: 'blinded', verb: 'blinds', icon: '[B]', emoji: '🙈' },
+      Broken: { past: 'broken', verb: 'breaks', icon: '[Brk]', emoji: '💔' },
+      Deafened: {
+        past: 'deafened',
+        verb: 'deafens',
+        icon: '[Df]',
+        emoji: '🙉',
+      },
+      Entangled: {
+        past: 'entangled',
+        verb: 'entangles',
+        icon: '[Ent]',
+        emoji: '🕸️',
+      },
+      Fatigued: {
+        past: 'fatigued',
+        verb: 'fatigues',
+        icon: '[Fat]',
+        emoji: '😫',
+      },
+      Prone: {
+        past: 'knocked prone',
+        verb: 'knocks',
+        suffix: 'prone',
+        icon: '[P]',
+        emoji: '🛌',
+      },
+      Stunned: { past: 'stunned', verb: 'stuns', icon: '[Stn]', emoji: '😵' },
+      Surprised: {
+        past: 'surprised',
+        verb: 'surprises',
+        icon: '[Surp]',
+        emoji: '😲',
+      },
+      Spell: {
+        past: 'affected by a spell',
+        verb: 'casts a spell on',
+        icon: '[Spl]',
+        emoji: '🔮',
+      },
+      // "Ability" canonical key — displayed as "Talent" in WFRP4e
+      Ability: {
+        past: 'affected by a talent',
+        verb: 'uses a talent on',
+        icon: '[Tal]',
+        emoji: '⚡',
+      },
+    }),
+
+    DEFAULT_MARKERS: Object.freeze({
+      Ablaze: 'lightning-helix',
+      Bleeding: 'half-heart',
+      Blinded: 'bleeding-eye',
+      Broken: 'screaming',
+      Deafened: 'edge-crack',
+      Entangled: 'grab',
+      Fatigued: 'sleepy',
+      Prone: 'back-pain',
+      Stunned: 'pummeled',
+      Surprised: 'overdrive',
+      Spell: 'lightning-helix',
+      Ability: 'fist',
+    }),
+
+    CUSTOM_EFFECT_TYPES: Object.freeze(['Spell', 'Ability', 'Other']),
+    // WFRP uses "Talent" instead of the generic "Ability" label
+    CUSTOM_EFFECT_LABELS: Object.freeze({ Ability: 'Talent' }),
+  });
+
+  /**
+   * Generic / Other profile for games without a predefined condition set.
+   * Only the universal custom effect types (Spell, Ability, Other) are available;
+   * GMs apply effects via the "Other" free-text type or through custom markers.
+   *
+   * @type {import('./index.js').GameSystemProfile}
+   */
+  const genericProfile = Object.freeze({
+    SYSTEM_ID: 'generic',
+    SYSTEM_NAME: 'Generic / Other',
+
+    STANDARD_CONDITIONS: Object.freeze([]),
+
+    CONDITION_DATA: Object.freeze({
+      Spell: {
+        past: 'affected by a spell',
+        verb: 'casts a spell on',
+        icon: '[Spl]',
+        emoji: '🔮',
+      },
+      Ability: {
+        past: 'affected by an ability',
+        verb: 'uses an ability on',
+        icon: '[Abl]',
+        emoji: '🎯',
+      },
+    }),
+
+    DEFAULT_MARKERS: Object.freeze({}),
+
+    CUSTOM_EFFECT_TYPES: Object.freeze(['Spell', 'Ability', 'Other']),
+    CUSTOM_EFFECT_LABELS: Object.freeze({}),
+  });
+
+  /**
+   * @typedef {object} ConditionData
+   * @property {string} past - Past-tense description (e.g. "grappled").
+   * @property {string} verb - Action verb for "[source] [verb] [target]" messages (e.g. "grapples").
+   * @property {string} [suffix] - Optional suffix for "verb target suffix" phrasing (e.g. "prone").
+   * @property {string} icon - Short text icon used in icon-mode Turn Tracker rows (e.g. "[G]").
+   * @property {string} emoji - Emoji used in Turn Tracker rows and GM whispers (e.g. "🤛").
+   * @property {boolean} [noBy] - When true, omit the "by [source]" clause from removal messages.
+   */
+
+  /**
+   * @typedef {object} GameSystemProfile
+   * @property {string} SYSTEM_ID - Canonical system id used in config and `--config gameSystem` commands.
+   * @property {string} SYSTEM_NAME - Human-readable system display name.
+   * @property {readonly string[]} STANDARD_CONDITIONS - Alphabetically sorted list of standard condition names for the wizard.
+   * @property {Readonly<Record<string, ConditionData>>} CONDITION_DATA - Per-condition display data keyed by condition name.
+   * @property {Readonly<Record<string, string>>} DEFAULT_MARKERS - Default Roll20 status marker names keyed by condition name.
+   * @property {readonly string[]} CUSTOM_EFFECT_TYPES - Ordered canonical custom-effect-type keys shown in the wizard.
+   * @property {Readonly<Record<string, string>>} CUSTOM_EFFECT_LABELS - Display label overrides for canonical type keys (e.g. { Spell: "Power" }).
+   */
+
+  const DEFAULT_GAME_SYSTEM = 'dnd5e';
+
+  const GAME_SYSTEM_DEFINITIONS = Object.freeze([
+    // D&D family
+    {
+      id: 'dnd5e',
+      name: 'Dungeons & Dragons 5th Edition',
+      profile: dnd5eProfile,
+    },
+    {
+      id: 'dnd4e',
+      name: 'Dungeons & Dragons 4th Edition',
+      profile: dnd4eProfile,
+    },
+    {
+      id: 'dnd35',
+      name: 'Dungeons & Dragons 3.5 Edition',
+      profile: dnd35Profile,
+    },
+    // Pathfinder / Starfinder
+    {
+      id: 'pathfinder1e',
+      name: 'Pathfinder First Edition',
+      profile: pathfinder1eProfile,
+    },
+    {
+      id: 'pathfinder2e',
+      name: 'Pathfinder Second Edition',
+      profile: pathfinder2eProfile,
+    },
+    { id: 'starfinder', name: 'Starfinder', profile: starfinderProfile },
+    // D&D-adjacent fantasy
+    { id: '13thage', name: '13th Age', profile: thirteenthAgeProfile },
+    { id: 'sotdl', name: 'Shadow of the Demon Lord', profile: sotdlProfile },
+    { id: 'cyphersystem', name: 'Cypher System', profile: cypherSystemProfile },
+    // OSR / Old-School
+    { id: 'dcc', name: 'Dungeon Crawl Classics', profile: dccProfile },
+    { id: 'ose', name: 'Old-School Essentials', profile: oseProfile },
+    { id: 'bfrpg', name: 'Basic Fantasy RPG', profile: bfrpgProfile },
+    { id: 'knave', name: 'Knave', profile: knaveProfile },
+    { id: 'intotheodd', name: 'Into the Odd', profile: intoTheOddProfile },
+    { id: 'cairn', name: 'Cairn', profile: cairnProfile },
+    { id: 'wwn', name: 'Worlds Without Number', profile: wwnProfile },
+    {
+      id: 'swn',
+      name: 'Stars Without Number',
+      profile: starsWithoutNumberProfile,
+    },
+    // Horror / Investigative
+    {
+      id: 'callofcthulhu',
+      name: 'Call of Cthulhu',
+      profile: callOfCthulhuProfile,
+    },
+    { id: 'deltagreen', name: 'Delta Green', profile: deltaGreenProfile },
+    { id: 'vaesen', name: 'Vaesen', profile: vaesenProfile },
+    { id: 'brp', name: 'Basic Role-Playing', profile: brpProfile },
+    // World of Darkness
+    { id: 'vtm', name: 'Vampire: The Masquerade', profile: vtmProfile },
+    { id: 'wta', name: 'Werewolf: The Apocalypse', profile: wtaProfile },
+    { id: 'mta', name: 'Mage: The Ascension', profile: mtaProfile },
+    { id: 'htr', name: 'Hunter: The Reckoning', profile: htrProfile },
+    { id: 'ctd', name: 'Changeling: The Dreaming', profile: ctdProfile },
+    // Sci-Fi / Cyberpunk
+    { id: 'alienrpg', name: 'Alien RPG', profile: alienRpgProfile },
+    { id: 'mothership', name: 'Mothership RPG', profile: mothershipProfile },
+    { id: 'traveller', name: 'Traveller', profile: travellerProfile },
+    { id: 'cyberpunkred', name: 'Cyberpunk Red', profile: cyberpunkRedProfile },
+    { id: 'shadowrun', name: 'Shadowrun', profile: shadowrunProfile },
+    // Narrative / Cinematic
+    { id: 'genesys', name: 'Genesys', profile: genesysProfile },
+    {
+      id: 'starwarsffg',
+      name: 'Star Wars Roleplaying Game (FFG)',
+      profile: starWarsFfgProfile,
+    },
+    { id: 'cortexprime', name: 'Cortex Prime', profile: cortexPrimeProfile },
+    // Classless / Universal
+    { id: 'gurps', name: 'GURPS', profile: gurpsProfile },
+    { id: 'herosystem', name: 'Hero System', profile: heroSystemProfile },
+    {
+      id: 'savageworlds',
+      name: 'Savage Worlds Adventure Edition',
+      profile: savageWorldsProfile,
+    },
+    // Warhammer
+    {
+      id: 'wfrp4e',
+      name: 'Warhammer Fantasy Roleplay 4e',
+      profile: wfrp4eProfile,
+    },
+    { id: 'wh40k', name: 'Warhammer 40,000 RPG', profile: wh40kProfile },
+    {
+      id: 'whaos',
+      name: 'Warhammer Age of Sigmar: Soulbound',
+      profile: whaosProfile,
+    },
+    // Fallback
+    { id: 'generic', name: 'Generic / Other', profile: genericProfile },
+  ]);
+
+  const VALID_GAME_SYSTEMS = Object.freeze(
+    new Set(GAME_SYSTEM_DEFINITIONS.map((def) => def.id)),
+  );
+
+  const GAME_SYSTEMS_LABEL = GAME_SYSTEM_DEFINITIONS.map((def) => `${def.id} — ${def.name}`).join(' / ');
+
+  /**
+   * Returns the system profile for the given system id.
+   * Falls back to the D&D 5e profile when the id is unrecognised.
+   *
+   * @param {string} systemId Game system id.
+   * @returns {object} System profile.
+   */
+  function getSystemProfile(systemId) {
+    const def = GAME_SYSTEM_DEFINITIONS.find((d) => d.id === systemId);
+    return def ? def.profile : dnd5eProfile;
+  }
+
   /**
    * Returns true when a value is neither undefined nor null.
    *
@@ -13290,18 +17989,22 @@ const ConditionTrackerMod = (() => {
   const GLOBAL_CONFIG_KEY = STATE_KEY.toLowerCase();
 
   /**
-   * Creates a fresh default configuration object.
+   * Creates a fresh default configuration object for the given game system.
    *
+   * @param {string} [gameSystem] Game system id. Defaults to dnd5e.
    * @returns {object} Default configuration.
    */
-  function createDefaultConfig() {
+  function createDefaultConfig(gameSystem = DEFAULT_GAME_SYSTEM) {
+    const profile = getSystemProfile(gameSystem);
     return {
+      gameSystem,
       useMarkers: true,
       useIcons: false,
       subjectPromptBypass: false,
+      suppressPublicChat: false,
       healthBar: VALID_HEALTH_BARS[0],
       language: DEFAULT_LOCALE,
-      markers: { ...DEFAULT_MARKERS },
+      markers: { ...profile.DEFAULT_MARKERS },
     };
   }
 
@@ -13362,16 +18065,21 @@ const ConditionTrackerMod = (() => {
 
   /**
    * Merges a possibly incomplete config object with defaults.
+   * Defaults (including markers) are derived from the config's game system.
    *
    * @param {object} config The current config.
    * @returns {object} A complete config.
    */
   function mergeConfig(config) {
-    const defaults = createDefaultConfig();
     const nextConfig = isRecord(config) ? config : {};
+    const systemId = VALID_GAME_SYSTEMS.has(nextConfig.gameSystem)
+      ? nextConfig.gameSystem
+      : DEFAULT_GAME_SYSTEM;
+    const defaults = createDefaultConfig(systemId);
     const markers = isRecord(nextConfig.markers) ? nextConfig.markers : {};
 
     return {
+      gameSystem: systemId,
       useMarkers:
         typeof nextConfig.useMarkers === 'boolean'
           ? nextConfig.useMarkers
@@ -13384,6 +18092,10 @@ const ConditionTrackerMod = (() => {
         typeof nextConfig.subjectPromptBypass === 'boolean'
           ? nextConfig.subjectPromptBypass
           : defaults.subjectPromptBypass,
+      suppressPublicChat:
+        typeof nextConfig.suppressPublicChat === 'boolean'
+          ? nextConfig.suppressPublicChat
+          : defaults.suppressPublicChat,
       healthBar: VALID_HEALTH_BARS.includes(nextConfig.healthBar)
         ? nextConfig.healthBar
         : defaults.healthBar,
@@ -13430,6 +18142,12 @@ const ConditionTrackerMod = (() => {
     const config = getConfig();
     const nextConfig = { ...config };
 
+    if (VALID_GAME_SYSTEMS.has(options.gameSystem)) {
+      const profile = getSystemProfile(options.gameSystem);
+      nextConfig.gameSystem = options.gameSystem;
+      nextConfig.markers = { ...profile.DEFAULT_MARKERS };
+    }
+
     nextConfig.useMarkers = parseBooleanOption(
       options.useMarkers,
       config.useMarkers,
@@ -13438,6 +18156,10 @@ const ConditionTrackerMod = (() => {
     nextConfig.subjectPromptBypass = parseBooleanOption(
       options.subjectPromptBypass,
       config.subjectPromptBypass,
+    );
+    nextConfig.suppressPublicChat = parseBooleanOption(
+      options.suppressPublicChat,
+      config.suppressPublicChat,
     );
 
     if (VALID_HEALTH_BARS.includes(options.healthBar)) {
@@ -13449,12 +18171,13 @@ const ConditionTrackerMod = (() => {
       nextConfig.language = language;
     }
 
-    const nextMarkers = { ...config.markers };
-    Object.keys(DEFAULT_MARKERS).forEach((condition) => {
+    const profile = getSystemProfile(nextConfig.gameSystem);
+    const nextMarkers = { ...nextConfig.markers };
+    Object.keys(profile.DEFAULT_MARKERS).forEach((condition) => {
       const markerValue = getMarkerOption(options, condition);
       nextMarkers[condition] = parseMarkerOption(
         markerValue,
-        nextMarkers[condition] || DEFAULT_MARKERS[condition],
+        nextMarkers[condition] || profile.DEFAULT_MARKERS[condition],
       );
     });
     nextConfig.markers = nextMarkers;
@@ -13684,6 +18407,18 @@ const ConditionTrackerMod = (() => {
   }
 
   /**
+   * Returns all active conditions where a token is the source.
+   *
+   * @param {string} sourceTokenId The source token id.
+   * @returns {object[]} Matching active conditions.
+   */
+  function getActiveBySource(sourceTokenId) {
+    return filterActiveConditions(
+      (condition) => condition.sourceTokenId === sourceTokenId,
+    );
+  }
+
+  /**
    * Updates runtime turn tracker bookkeeping.
    *
    * @param {string} firstTurnId The current first turn id.
@@ -13710,6 +18445,7 @@ const ConditionTrackerMod = (() => {
   const MACRO_DEFINITIONS = [
     { name: MACRO_NAME, body: DEFAULT_MACRO_BODY },
     { name: MACRO_NAME_MULTI_TARGET, body: DEFAULT_MULTI_TARGET_MACRO_BODY },
+    { name: MACRO_NAME_REPORT_TOKEN, body: DEFAULT_REPORT_TOKEN_MACRO_BODY },
   ];
 
   /**
@@ -13857,6 +18593,387 @@ const ConditionTrackerMod = (() => {
     return getGmPlayerIds();
   }
 
+  /**
+   * Returns the system profile for the currently configured game system.
+   *
+   * @returns {object} Active system profile.
+   */
+  function activeProfile() {
+    return getSystemProfile(getConfig().gameSystem);
+  }
+
+  /**
+   * Returns true when a condition is any canonical custom effect type.
+   * This covers all systems — the wizard limits which types are shown per system.
+   *
+   * @param {string} condition Canonical condition.
+   * @returns {boolean}
+   */
+  function isCustomEffectType(condition) {
+    return CANONICAL_CUSTOM_TYPES.has(condition);
+  }
+
+  /**
+   * Returns true when a condition requires free-text details via --other.
+   *
+   * @param {string} condition Canonical condition.
+   * @returns {boolean}
+   */
+  function isCustomTextCondition(condition) {
+    return CANONICAL_TEXT_CONDITIONS.has(condition);
+  }
+
+  /**
+   * Returns the canonical condition label for user input.
+   * Checks canonical custom types first, then the active system's standard conditions.
+   *
+   * @param {string} value The condition label from chat.
+   * @returns {string} The canonical label or an empty string.
+   */
+  function getCanonicalCondition(value) {
+    const key = normalizeKey(value);
+
+    for (const type of CANONICAL_CUSTOM_TYPES) {
+      if (normalizeKey(type) === key) {
+        return type;
+      }
+    }
+
+    for (const condition of activeProfile().STANDARD_CONDITIONS) {
+      if (normalizeKey(condition) === key) {
+        return condition;
+      }
+    }
+
+    return '';
+  }
+
+  /**
+   * Returns the display name for a condition in the given locale.
+   * Checks the system profile's custom-effect label overrides first, then the
+   * locale's condNames table, then falls back to the condition key itself.
+   *
+   * @param {string} condition Canonical condition.
+   * @param {object} profile Active system profile.
+   * @param {string} locale Locale string.
+   * @returns {string} Display name.
+   */
+  function getConditionDisplayName(condition, profile, locale) {
+    const labels = profile?.CUSTOM_EFFECT_LABELS;
+    if (labels?.[condition]) return labels[condition];
+    const key = `condNames.${condition}`;
+    const val = t(key, locale);
+    return val === key ? condition : val;
+  }
+
+  /**
+   * Returns the past-tense effect text for a condition in the given locale.
+   *
+   * @param {string} condition The canonical condition.
+   * @param {string} locale Locale string.
+   * @returns {string} The past-tense effect text.
+   */
+  function getLocalizedPast(condition, locale) {
+    const localData = getConditionLocalData(condition, locale);
+    if (localData?.past) return localData.past;
+    const data = activeProfile().CONDITION_DATA[condition];
+    return data ? data.past : toText(condition).toLowerCase();
+  }
+
+  /**
+   * Returns the emoji for a condition, used in Turn Tracker and GM whispers.
+   *
+   * @param {string} condition Canonical condition.
+   * @returns {string} Emoji character.
+   */
+  function getConditionEmoji(condition) {
+    const data = activeProfile().CONDITION_DATA[condition];
+    return data ? data.emoji : '✨';
+  }
+
+  /**
+   * Builds the Turn Tracker display text in the given locale.
+   * All values are plain text (no HTML).
+   *
+   * @param {object} details Display details.
+   * @param {string} details.condition Canonical condition.
+   * @param {string} details.customText Custom effect text.
+   * @param {string} details.sourceName Source token name.
+   * @param {string} details.targetName Target token name.
+   * @param {boolean} [details.isSelfTarget] Whether source and target are the same token.
+   * @param {string} [details.subjectName] Subject name for advantage types.
+   * @param {string} [locale] Output locale.
+   * @returns {string} Turn Tracker display text.
+   */
+  function buildDisplayText(details, locale) {
+    const emoji = getConditionEmoji(details.condition);
+
+    if (isCustomTextCondition(details.condition)) {
+      return t('templates.display.custom', locale, {
+        emoji,
+        target: details.targetName,
+        effect: details.customText,
+        source: details.sourceName,
+      });
+    }
+
+    if (isAdvantageType(details.condition)) {
+      const subject = toText(details.subjectName)
+        ? ` (${details.subjectName})`
+        : '';
+      const tplKey =
+        details.condition === CONDITION_DISADVANTAGE
+          ? 'templates.display.disadvantage'
+          : 'templates.display.advantage';
+      return t(tplKey, locale, {
+        emoji,
+        source: details.sourceName,
+        target: details.targetName,
+        subject,
+      });
+    }
+
+    const localData = getConditionLocalData(details.condition, locale);
+    const data = localData || activeProfile().CONDITION_DATA[details.condition];
+
+    if (data?.noBy) {
+      return t('templates.display.noBy', locale, {
+        emoji,
+        target: details.targetName,
+        past: data.past,
+        source: details.sourceName,
+      });
+    }
+
+    if (details.isSelfTarget) {
+      return t('templates.display.self', locale, {
+        emoji,
+        target: details.targetName,
+        past: getLocalizedPast(details.condition, locale),
+      });
+    }
+
+    return t('templates.display.standard', locale, {
+      emoji,
+      target: details.targetName,
+      past: getLocalizedPast(details.condition, locale),
+      source: details.sourceName,
+    });
+  }
+
+  /**
+   * Builds the public application announcement in the given locale.
+   * HTML-unsafe names are wrapped in pre-built HTML spans by the caller;
+   * verb/suffix values are passed pre-escaped.
+   *
+   * @param {object} details Display details.
+   * @param {string} details.condition Canonical condition.
+   * @param {string} details.customText Custom effect text.
+   * @param {string} details.sourceName Source token name.
+   * @param {string} details.targetName Target token name.
+   * @param {string} [details.sourceTokenId] Source token id.
+   * @param {string} [details.targetTokenId] Target token id.
+   * @param {string} [details.subjectName] Subject name.
+   * @param {boolean} details.useIcons Whether icons are enabled.
+   * @param {string} [locale] Output locale.
+   * @returns {string} Public chat text.
+   */
+  function buildApplyMessage(details, locale) {
+    const prefix = buildIconPrefix(details.condition, details.useIcons);
+    const src = actorSpan(details.sourceName);
+    const tgt = actorSpan(details.targetName);
+
+    if (isCustomTextCondition(details.condition)) {
+      return (
+        prefix +
+        t('templates.apply.custom', locale, {
+          source: src,
+          effect: effectSpan(details.customText),
+          target: tgt,
+        })
+      );
+    }
+
+    if (isAdvantageType(details.condition)) {
+      const subject = toText(details.subjectName)
+        ? ` (${escapeHtml(details.subjectName)})`
+        : '';
+      const tplKey =
+        details.condition === CONDITION_DISADVANTAGE
+          ? 'templates.apply.disadvantage'
+          : 'templates.apply.advantage';
+      return prefix + t(tplKey, locale, { source: src, target: tgt, subject });
+    }
+
+    const localData = getConditionLocalData(details.condition, locale);
+    const data = localData || activeProfile().CONDITION_DATA[details.condition];
+
+    if (isSelfTarget(details)) {
+      return (
+        prefix +
+        t('templates.apply.self', locale, {
+          target: tgt,
+          past: escapeHtml(getLocalizedPast(details.condition, locale)),
+        })
+      );
+    }
+
+    if (data?.suffix) {
+      return (
+        prefix +
+        t('templates.apply.withSuffix', locale, {
+          source: src,
+          verb: escapeHtml(data.verb),
+          target: tgt,
+          suffix: escapeHtml(data.suffix),
+        })
+      );
+    }
+
+    return (
+      prefix +
+      t('templates.apply.standard', locale, {
+        source: src,
+        verb: escapeHtml(data?.verb || 'affects'),
+        target: tgt,
+      })
+    );
+  }
+
+  /**
+   * Builds the public removal announcement in the given locale.
+   *
+   * @param {object} condition Active condition record.
+   * @param {boolean} useIcons Whether icons are enabled.
+   * @param {string} [locale] Output locale.
+   * @returns {string} Public chat text.
+   */
+  function buildRemovalMessage(condition, useIcons, locale) {
+    const prefix = buildIconPrefix(condition.condition, useIcons);
+    const src = actorSpan(condition.sourceName);
+    const tgt = actorSpan(condition.targetName);
+
+    if (isCustomTextCondition(condition.condition)) {
+      return (
+        prefix +
+        t('templates.remove.custom', locale, {
+          target: tgt,
+          effect: effectSpan(condition.customText),
+        })
+      );
+    }
+
+    if (isAdvantageType(condition.condition)) {
+      const subject = toText(condition.subjectName)
+        ? ` (${escapeHtml(condition.subjectName)})`
+        : '';
+      const tplKey =
+        condition.condition === CONDITION_DISADVANTAGE
+          ? 'templates.remove.disadvantage'
+          : 'templates.remove.advantage';
+      return prefix + t(tplKey, locale, { source: src, target: tgt, subject });
+    }
+
+    const localData = getConditionLocalData(condition.condition, locale);
+    const data =
+      localData || activeProfile().CONDITION_DATA[condition.condition];
+
+    if (data?.noBy) {
+      return (
+        prefix +
+        t('templates.remove.noBy', locale, {
+          target: tgt,
+          past: escapeHtml(data.past),
+        })
+      );
+    }
+
+    if (isSelfTarget(condition)) {
+      return (
+        prefix +
+        t('templates.remove.self', locale, {
+          target: tgt,
+          past: escapeHtml(getLocalizedPast(condition.condition, locale)),
+        })
+      );
+    }
+
+    return (
+      prefix +
+      t('templates.remove.standard', locale, {
+        target: tgt,
+        past: escapeHtml(getLocalizedPast(condition.condition, locale)),
+        source: src,
+      })
+    );
+  }
+
+  /**
+   * Returns a configured icon prefix when enabled.
+   *
+   * @param {string} condition The canonical condition.
+   * @param {boolean} useIcons Whether icons are enabled.
+   * @returns {string} Icon prefix or an empty string.
+   */
+  function buildIconPrefix(condition, useIcons) {
+    if (!useIcons) {
+      return '';
+    }
+
+    const data = activeProfile().CONDITION_DATA[condition];
+    if (!data) {
+      return '[*] ';
+    }
+
+    return `${data.icon} `;
+  }
+
+  /**
+   * Returns true for Advantage/Disadvantage conditions.
+   *
+   * @param {string} condition Canonical condition.
+   * @returns {boolean} True for advantage-style effects.
+   */
+  function isAdvantageType(condition) {
+    return (
+      condition === CONDITION_ADVANTAGE || condition === CONDITION_DISADVANTAGE
+    );
+  }
+
+  /**
+   * Returns true when a condition source and target are the same token.
+   *
+   * @param {object} details Display details.
+   * @returns {boolean} True for self-targeted condition application.
+   */
+  function isSelfTarget(details) {
+    const sourceTokenId = toText(details.sourceTokenId);
+    const targetTokenId = toText(details.targetTokenId);
+    return Boolean(
+      sourceTokenId && targetTokenId && sourceTokenId === targetTokenId,
+    );
+  }
+
+  /**
+   * Wraps an actor name in a coloured bold span.
+   *
+   * @param {string} name Actor name.
+   * @returns {string} HTML span.
+   */
+  function actorSpan(name) {
+    return `<span style="color:#5B21B6;font-weight:bold">${escapeHtml(name)}</span>`;
+  }
+
+  /**
+   * Wraps an effect label in a coloured italic span.
+   *
+   * @param {string} label Effect label.
+   * @returns {string} HTML span.
+   */
+  function effectSpan(label) {
+    return `<span style="color:#FF4D6D;font-style:italic">${escapeHtml(label)}</span>`;
+  }
+
   const STYLE = {
     outer:
       "font-family:'Georgia',serif;background-color:#0A0A12;color:#E6DFFF;padding:24px;border-radius:8px;",
@@ -13951,35 +19068,36 @@ const ConditionTrackerMod = (() => {
   }
 
   /**
-   * Builds the standard D&D conditions table.
+   * Builds the standard conditions table for the active game system.
    *
+   * @param {object} profile Active system profile.
    * @param {string} colLabel Header label for condition columns.
    * @param {string} locale Locale code.
    * @returns {string} Condition table HTML.
    */
-  function buildConditionTable(colLabel, locale) {
-    const standardConditions = [
-      'Blinded',
-      'Charmed',
-      'Frightened',
-      'Grappled',
-      'Incapacitated',
-      'Invisible',
-      'Paralyzed',
-      'Petrified',
-      'Poisoned',
-      'Prone',
-      'Restrained',
-      'Stunned',
-      'Unconscious',
-    ];
-    const left = standardConditions.slice(0, 7);
-    const right = standardConditions.slice(7);
+  function buildConditionTable(profile, colLabel, locale) {
+    const conditions = profile.STANDARD_CONDITIONS;
+    if (conditions.length === 0) {
+      const bg = row(true);
+      const msg = escapeHtml(t('handout.standardConditions.none', locale));
+      return `<table style="${STYLE.tableSmall}"><tbody><tr><td style="padding:7px 10px;color:#B8AFCF;background-color:${bg};" colspan="2">${msg}</td></tr></tbody></table>`;
+    }
+    const half = Math.ceil(conditions.length / 2);
+    const left = conditions.slice(0, half);
+    const right = conditions.slice(half);
     const maxRows = Math.max(left.length, right.length);
     const rows = [];
     for (let i = 0; i < maxRows; i++) {
-      const l = left[i] ? `${CONDITION_DATA[left[i]].emoji} ${left[i]}` : '';
-      const r = right[i] ? `${CONDITION_DATA[right[i]].emoji} ${right[i]}` : '';
+      const lc = left[i];
+      const rc = right[i];
+      const lData = lc ? profile.CONDITION_DATA[lc] : null;
+      const rData = rc ? profile.CONDITION_DATA[rc] : null;
+      const l = lc
+        ? `${lData ? lData.emoji : '✨'} ${getConditionDisplayName(lc, profile, locale)}`
+        : '';
+      const r = rc
+        ? `${rData ? rData.emoji : '✨'} ${getConditionDisplayName(rc, profile, locale)}`
+        : '';
       const bg = row(i % 2 === 0);
       rows.push(
         `<tr><td style="padding:7px 10px;color:#E6DFFF;background-color:${bg};">${escapeHtml(l)}</td>` +
@@ -13993,23 +19111,30 @@ const ConditionTrackerMod = (() => {
   }
 
   /**
-   * Builds the default status marker mapping table.
+   * Builds the default status marker mapping table for the active game system.
    *
+   * @param {object} profile Active system profile.
    * @param {string} colCondition Condition column label.
    * @param {string} colMarker Marker column label.
    * @param {string} locale Locale code.
    * @returns {string} Marker table HTML.
    */
-  function buildMarkersTable(colCondition, colMarker, locale) {
-    const entries = Object.entries(DEFAULT_MARKERS);
+  function buildMarkersTable(profile, colCondition, colMarker, locale) {
+    const entries = Object.entries(profile.DEFAULT_MARKERS);
+    if (entries.length === 0) {
+      const bg = row(true);
+      const msg = escapeHtml(t('handout.defaultMarkers.none', locale));
+      return `<table style="${STYLE.tableSmall}"><tbody><tr><td style="padding:7px 10px;color:#B8AFCF;background-color:${bg};" colspan="2">${msg}</td></tr></tbody></table>`;
+    }
     const rows = entries
       .map(([condition, marker], i) => {
-        const data = CONDITION_DATA[condition];
+        const data = profile.CONDITION_DATA[condition];
         const emoji = data ? data.emoji : '';
         const bg = row(i % 2 === 0);
+        const label = getConditionDisplayName(condition, profile, locale);
         return (
           `<tr>` +
-          `<td style="padding:6px 10px;color:#E6DFFF;background-color:${bg};">${escapeHtml(emoji)} ${escapeHtml(condition)}</td>` +
+          `<td style="padding:6px 10px;color:#E6DFFF;background-color:${bg};">${escapeHtml(emoji)} ${escapeHtml(label)}</td>` +
           `<td style="padding:6px 10px;font-family:monospace;color:#B8AFCF;background-color:${bg};">${escapeHtml(marker)}</td>` +
           `</tr>`
         );
@@ -14202,6 +19327,30 @@ const ConditionTrackerMod = (() => {
   }
 
   /**
+   * Builds the supported game systems table.
+   *
+   * @param {string} locale Locale code.
+   * @returns {string} Game systems table HTML.
+   */
+  function buildGameSystemsTable(locale) {
+    const rows = GAME_SYSTEM_DEFINITIONS.map((def, i) => {
+      const bg = row(i % 2 === 0);
+      return (
+        `<tr>` +
+        `<td style="padding:6px 10px;font-family:monospace;color:#E9D5FF;background-color:${bg};">${escapeHtml(def.id)}</td>` +
+        `<td style="padding:6px 10px;color:#B8AFCF;background-color:${bg};">${escapeHtml(def.name)}</td>` +
+        `</tr>`
+      );
+    }).join('');
+    return (
+      `<table style="${STYLE.tableSmall}"><thead><tr style="${STYLE.thRow}">` +
+      `<th style="${getThStyle(locale)}width:35%;">${escapeHtml(t('handout.gameSystems.colId', locale))}</th>` +
+      `<th style="${getThStyle(locale)}">${escapeHtml(t('handout.gameSystems.colName', locale))}</th>` +
+      `</tr></thead><tbody>${rows}</tbody></table>`
+    );
+  }
+
+  /**
    * Generates the full help handout HTML for the given locale.
    *
    * @param {string} [locale] Output locale.
@@ -14211,13 +19360,17 @@ const ConditionTrackerMod = (() => {
     const lang = getLocale(locale);
     const version = SCRIPT_VERSION;
     const directionStyle = getDirectionStyle$1(lang);
+    const config = getConfig();
+    const profile = getSystemProfile(config.gameSystem);
+
     /**
-     * Looks up a handout string for the active locale.
+     * Looks up a handout string for the active locale, with optional interpolation vars.
      *
      * @param {string} key Handout translation key.
+     * @param {object} [vars] Interpolation variables.
      * @returns {string} Translated text.
      */
-    const hs = (key) => t(`handout.${key}`, lang);
+    const hs = (key, vars) => t(`handout.${key}`, lang, vars);
     /**
      * Looks up raw handout data for the active locale.
      *
@@ -14237,23 +19390,28 @@ const ConditionTrackerMod = (() => {
     const commandsRef = buildCommandsReferenceSection(hs, hr, lang);
 
     const standardConds = `
-    <h2 style="${STYLE.h2}">${hs('standardConditions.heading')}</h2>
-    ${buildConditionTable(hs('standardConditions.colCondition'), lang)}`;
+    <h2 style="${STYLE.h2}">${hs('standardConditions.heading', { system: profile.SYSTEM_NAME })}</h2>
+    ${buildConditionTable(profile, hs('standardConditions.colCondition'), lang)}`;
 
     const customEffects = buildCustomEffectsSection(hs, hr, lang);
 
     const durationOpts = buildDurationOptionsSection(hs, hr, lang);
 
-    const config = buildConfigurationSection(hs, hr, lang);
+    const configSection = buildConfigurationSection(hs, hr, lang);
 
-    const markers = `
-    <h2 style="${STYLE.h2}">${hs('defaultMarkers.heading')}</h2>
-    ${buildMarkersTable(hs('defaultMarkers.colCondition'), hs('defaultMarkers.colMarker'), lang)}`;
+    const gameSystems = `
+    <h2 style="${STYLE.h2}">${hs('gameSystems.heading')}</h2>
+    <p style="${STYLE.intro}">${hs('gameSystems.intro')}</p>
+    ${buildGameSystemsTable(lang)}`;
 
     const availableLocales = `
     <h2 style="${STYLE.h2}">${hs('availableLocales.heading')}</h2>
     <p style="${STYLE.intro}">${hs('availableLocales.intro')}</p>
     ${buildLocalesTable(lang)}`;
+
+    const markers = `
+    <h2 style="${STYLE.h2}">${hs('defaultMarkers.heading')}</h2>
+    ${buildMarkersTable(profile, hs('defaultMarkers.colCondition'), hs('defaultMarkers.colMarker'), lang)}`;
 
     const footer = `
     <div style="${STYLE.footer}">
@@ -14266,7 +19424,7 @@ const ConditionTrackerMod = (() => {
       <h1 style="${STYLE.h1}">${SCRIPT_NAME}</h1>
       <p style="${STYLE.subtitle}">${hs('versionLabel')} ${version} &nbsp;•&nbsp; ${hs('subtitle')}</p>
     </div>
-    ${overview}${quickStart}${commandsRef}${standardConds}${customEffects}${durationOpts}${config}${availableLocales}${markers}${footer}
+    ${overview}${quickStart}${commandsRef}${standardConds}${customEffects}${durationOpts}${configSection}${gameSystems}${availableLocales}${markers}${footer}
   </div>`;
   }
 
@@ -14301,357 +19459,6 @@ const ConditionTrackerMod = (() => {
         ? ` Removed ${duplicates.length} duplicate(s).`
         : '';
     log(`${SCRIPT_NAME}: Help handout updated.${cleanupNote}`);
-  }
-
-  /**
-   * Returns true when a condition is a custom effect type (not a standard D&D condition).
-   *
-   * @param {string} condition Canonical condition.
-   * @returns {boolean}
-   */
-  function isCustomEffectType(condition) {
-    return CUSTOM_EFFECT_TYPE_SET.has(condition);
-  }
-
-  /**
-   * Returns true when a condition requires free-text details via --other.
-   *
-   * @param {string} condition Canonical condition.
-   * @returns {boolean}
-   */
-  function isCustomTextCondition(condition) {
-    return CUSTOM_TEXT_CONDITIONS.has(condition);
-  }
-
-  /**
-   * Returns the canonical condition label for user input.
-   *
-   * @param {string} value The condition label from chat.
-   * @returns {string} The canonical label or an empty string.
-   */
-  function getCanonicalCondition(value) {
-    const key = normalizeKey(value);
-
-    for (const type of CUSTOM_EFFECT_TYPE_SET) {
-      if (normalizeKey(type) === key) {
-        return type;
-      }
-    }
-
-    for (const condition of STANDARD_CONDITIONS) {
-      if (normalizeKey(condition) === key) {
-        return condition;
-      }
-    }
-
-    return '';
-  }
-
-  /**
-   * Returns the past-tense effect text for a condition in the given locale.
-   *
-   * @param {string} condition The canonical condition.
-   * @param {string} locale Locale string.
-   * @returns {string} The past-tense effect text.
-   */
-  function getLocalizedPast(condition, locale) {
-    const localData = getConditionLocalData(condition, locale);
-    if (localData?.past) return localData.past;
-    const data = CONDITION_DATA[condition];
-    return data ? data.past : toText(condition).toLowerCase();
-  }
-
-  /**
-   * Returns the emoji for a condition, used in Turn Tracker and GM whispers.
-   *
-   * @param {string} condition Canonical condition.
-   * @returns {string} Emoji character.
-   */
-  function getConditionEmoji(condition) {
-    const data = CONDITION_DATA[condition];
-    return data ? data.emoji : '✨';
-  }
-
-  /**
-   * Builds the Turn Tracker display text in the given locale.
-   * All values are plain text (no HTML).
-   *
-   * @param {object} details Display details.
-   * @param {string} details.condition Canonical condition.
-   * @param {string} details.customText Custom effect text.
-   * @param {string} details.sourceName Source token name.
-   * @param {string} details.targetName Target token name.
-   * @param {boolean} [details.isSelfTarget] Whether source and target are the same token.
-   * @param {string} [details.subjectName] Subject name for advantage types.
-   * @param {string} [locale] Output locale.
-   * @returns {string} Turn Tracker display text.
-   */
-  function buildDisplayText(details, locale) {
-    const emoji = getConditionEmoji(details.condition);
-
-    if (isCustomTextCondition(details.condition)) {
-      return t('templates.display.custom', locale, {
-        emoji,
-        target: details.targetName,
-        effect: details.customText,
-        source: details.sourceName,
-      });
-    }
-
-    if (isAdvantageType(details.condition)) {
-      const subject = toText(details.subjectName)
-        ? ` (${details.subjectName})`
-        : '';
-      const tplKey =
-        details.condition === CONDITION_DISADVANTAGE
-          ? 'templates.display.disadvantage'
-          : 'templates.display.advantage';
-      return t(tplKey, locale, {
-        emoji,
-        source: details.sourceName,
-        target: details.targetName,
-        subject,
-      });
-    }
-
-    const localData = getConditionLocalData(details.condition, locale);
-    const data = localData || CONDITION_DATA[details.condition];
-
-    if (data?.noBy) {
-      return t('templates.display.noBy', locale, {
-        emoji,
-        target: details.targetName,
-        past: data.past,
-        source: details.sourceName,
-      });
-    }
-
-    if (details.isSelfTarget) {
-      return t('templates.display.self', locale, {
-        emoji,
-        target: details.targetName,
-        past: getLocalizedPast(details.condition, locale),
-      });
-    }
-
-    return t('templates.display.standard', locale, {
-      emoji,
-      target: details.targetName,
-      past: getLocalizedPast(details.condition, locale),
-      source: details.sourceName,
-    });
-  }
-
-  /**
-   * Builds the public application announcement in the given locale.
-   * HTML-unsafe names are wrapped in pre-built HTML spans by the caller;
-   * verb/suffix values are passed pre-escaped.
-   *
-   * @param {object} details Display details.
-   * @param {string} details.condition Canonical condition.
-   * @param {string} details.customText Custom effect text.
-   * @param {string} details.sourceName Source token name.
-   * @param {string} details.targetName Target token name.
-   * @param {string} [details.sourceTokenId] Source token id.
-   * @param {string} [details.targetTokenId] Target token id.
-   * @param {string} [details.subjectName] Subject name.
-   * @param {boolean} details.useIcons Whether icons are enabled.
-   * @param {string} [locale] Output locale.
-   * @returns {string} Public chat text.
-   */
-  function buildApplyMessage(details, locale) {
-    const prefix = buildIconPrefix(details.condition, details.useIcons);
-    const src = actorSpan(details.sourceName);
-    const tgt = actorSpan(details.targetName);
-
-    if (isCustomTextCondition(details.condition)) {
-      return (
-        prefix +
-        t('templates.apply.custom', locale, {
-          source: src,
-          effect: effectSpan(details.customText),
-          target: tgt,
-        })
-      );
-    }
-
-    if (isAdvantageType(details.condition)) {
-      const subject = toText(details.subjectName)
-        ? ` (${escapeHtml(details.subjectName)})`
-        : '';
-      const tplKey =
-        details.condition === CONDITION_DISADVANTAGE
-          ? 'templates.apply.disadvantage'
-          : 'templates.apply.advantage';
-      return prefix + t(tplKey, locale, { source: src, target: tgt, subject });
-    }
-
-    const localData = getConditionLocalData(details.condition, locale);
-    const data = localData || CONDITION_DATA[details.condition];
-
-    if (isSelfTarget(details)) {
-      return (
-        prefix +
-        t('templates.apply.self', locale, {
-          target: tgt,
-          past: escapeHtml(getLocalizedPast(details.condition, locale)),
-        })
-      );
-    }
-
-    if (data?.suffix) {
-      return (
-        prefix +
-        t('templates.apply.withSuffix', locale, {
-          source: src,
-          verb: escapeHtml(data.verb),
-          target: tgt,
-          suffix: escapeHtml(data.suffix),
-        })
-      );
-    }
-
-    return (
-      prefix +
-      t('templates.apply.standard', locale, {
-        source: src,
-        verb: escapeHtml(data.verb),
-        target: tgt,
-      })
-    );
-  }
-
-  /**
-   * Builds the public removal announcement in the given locale.
-   *
-   * @param {object} condition Active condition record.
-   * @param {boolean} useIcons Whether icons are enabled.
-   * @param {string} [locale] Output locale.
-   * @returns {string} Public chat text.
-   */
-  function buildRemovalMessage(condition, useIcons, locale) {
-    const prefix = buildIconPrefix(condition.condition, useIcons);
-    const src = actorSpan(condition.sourceName);
-    const tgt = actorSpan(condition.targetName);
-
-    if (isCustomTextCondition(condition.condition)) {
-      return (
-        prefix +
-        t('templates.remove.custom', locale, {
-          target: tgt,
-          effect: effectSpan(condition.customText),
-        })
-      );
-    }
-
-    if (isAdvantageType(condition.condition)) {
-      const subject = toText(condition.subjectName)
-        ? ` (${escapeHtml(condition.subjectName)})`
-        : '';
-      const tplKey =
-        condition.condition === CONDITION_DISADVANTAGE
-          ? 'templates.remove.disadvantage'
-          : 'templates.remove.advantage';
-      return prefix + t(tplKey, locale, { source: src, target: tgt, subject });
-    }
-
-    const localData = getConditionLocalData(condition.condition, locale);
-    const data = localData || CONDITION_DATA[condition.condition];
-
-    if (data?.noBy) {
-      return (
-        prefix +
-        t('templates.remove.noBy', locale, {
-          target: tgt,
-          past: escapeHtml(data.past),
-        })
-      );
-    }
-
-    if (isSelfTarget(condition)) {
-      return (
-        prefix +
-        t('templates.remove.self', locale, {
-          target: tgt,
-          past: escapeHtml(getLocalizedPast(condition.condition, locale)),
-        })
-      );
-    }
-
-    return (
-      prefix +
-      t('templates.remove.standard', locale, {
-        target: tgt,
-        past: escapeHtml(getLocalizedPast(condition.condition, locale)),
-        source: src,
-      })
-    );
-  }
-
-  /**
-   * Returns a configured icon prefix when enabled.
-   *
-   * @param {string} condition The canonical condition.
-   * @param {boolean} useIcons Whether icons are enabled.
-   * @returns {string} Icon prefix or an empty string.
-   */
-  function buildIconPrefix(condition, useIcons) {
-    if (!useIcons) {
-      return '';
-    }
-
-    const data = CONDITION_DATA[condition];
-    if (!data) {
-      return '[*] ';
-    }
-
-    return `${data.icon} `;
-  }
-
-  /**
-   * Returns true for Advantage/Disadvantage conditions.
-   *
-   * @param {string} condition Canonical condition.
-   * @returns {boolean} True for advantage-style effects.
-   */
-  function isAdvantageType(condition) {
-    return (
-      condition === CONDITION_ADVANTAGE || condition === CONDITION_DISADVANTAGE
-    );
-  }
-
-  /**
-   * Returns true when a condition source and target are the same token.
-   *
-   * @param {object} details Display details.
-   * @returns {boolean} True for self-targeted condition application.
-   */
-  function isSelfTarget(details) {
-    const sourceTokenId = toText(details.sourceTokenId);
-    const targetTokenId = toText(details.targetTokenId);
-    return Boolean(
-      sourceTokenId && targetTokenId && sourceTokenId === targetTokenId,
-    );
-  }
-
-  /**
-   * Wraps an actor name in a coloured bold span.
-   *
-   * @param {string} name Actor name.
-   * @returns {string} HTML span.
-   */
-  function actorSpan(name) {
-    return `<span style="color:#5B21B6;font-weight:bold">${escapeHtml(name)}</span>`;
-  }
-
-  /**
-   * Wraps an effect label in a coloured italic span.
-   *
-   * @param {string} label Effect label.
-   * @returns {string} HTML span.
-   */
-  function effectSpan(label) {
-    return `<span style="color:#FF4D6D;font-style:italic">${escapeHtml(label)}</span>`;
   }
 
   const DEFAULT_WHISPER_TARGET = 'gm';
@@ -14753,11 +19560,13 @@ const ConditionTrackerMod = (() => {
 
   /**
    * Sends a public chat message as raw HTML.
+   * Skipped when suppressPublicChat is enabled in config.
    *
    * @param {string} html Trusted HTML message body.
    * @returns {void}
    */
   function announceHtml(html) {
+    if (getConfig().suppressPublicChat) return;
     sendChat(SCRIPT_NAME, html);
   }
 
@@ -16295,6 +21104,20 @@ const ConditionTrackerMod = (() => {
   }
 
   /**
+   * Validates a game system id.
+   *
+   * @param {string} value Game system id string.
+   * @returns {object} Validation result.
+   */
+  function validateGameSystem(value) {
+    const text = toText(value).trim();
+    if (!VALID_GAME_SYSTEMS.has(text)) {
+      return invalid(t('ui.msg.invalidGameSystem', getConfig().language));
+    }
+    return { valid: true, value: text };
+  }
+
+  /**
    * Validates a locale string.
    *
    * @param {string} value Locale string.
@@ -17024,7 +21847,7 @@ const ConditionTrackerMod = (() => {
   /**
    * Whispers condition selection buttons in a two-column layout.
    *
-   * Left column: standard D&D conditions. Right column: custom effect types.
+   * Left column: system standard conditions. Right column: system custom effect types.
    * All buttons advance the wizard to the target/subject step.
    *
    * @param {string} playerId GM player id.
@@ -17032,15 +21855,23 @@ const ConditionTrackerMod = (() => {
    * @returns {void}
    */
   function showConditionStep(playerId, args) {
-    const locale = getConfig().language;
+    const config = getConfig();
+    const locale = config.language;
+    const profile = getSystemProfile(config.gameSystem);
     const base = buildWizardBase(args);
 
-    const standardButtons = STANDARD_CONDITIONS.map((c) =>
-      buildButton(t(`condNames.${c}`, locale), `${base} --condition ${c}`),
+    const standardButtons = profile.STANDARD_CONDITIONS.map((c) =>
+      buildButton(
+        getConditionDisplayName(c, profile, locale),
+        `${base} --condition ${c}`,
+      ),
     );
 
-    const customButtons = CUSTOM_EFFECT_TYPES.map((c) =>
-      buildButton(t(`condNames.${c}`, locale), `${base} --condition ${c}`),
+    const customButtons = profile.CUSTOM_EFFECT_TYPES.map((c) =>
+      buildButton(
+        getConditionDisplayName(c, profile, locale),
+        `${base} --condition ${c}`,
+      ),
     );
 
     const tableRows = buildTwoColumnRows(standardButtons, customButtons);
@@ -17406,6 +22237,11 @@ const ConditionTrackerMod = (() => {
 
     if (args['reinstall-handout']) {
       handleReinstallHandout(msg.playerid);
+      return;
+    }
+
+    if (args['report-token'] !== undefined) {
+      handleReportToken(msg);
       return;
     }
 
@@ -17788,6 +22624,11 @@ const ConditionTrackerMod = (() => {
       return;
     }
 
+    if (option === 'suppressPublicChat') {
+      updateBooleanConfig(playerId, 'suppressPublicChat', value);
+      return;
+    }
+
     if (option === 'healthBar') {
       updateHealthBarConfig(playerId, value);
       return;
@@ -17795,6 +22636,11 @@ const ConditionTrackerMod = (() => {
 
     if (option === 'language') {
       updateLocaleConfig(playerId, value);
+      return;
+    }
+
+    if (option === 'gameSystem') {
+      updateGameSystemConfig(playerId, value);
       return;
     }
 
@@ -17859,6 +22705,55 @@ const ConditionTrackerMod = (() => {
     );
 
     installHandout(result.value);
+  }
+
+  /**
+   * Updates the active game system, resetting markers to the new system's defaults.
+   *
+   * @param {string} playerId GM player id.
+   * @param {string} value Game system id.
+   * @returns {void}
+   */
+  function updateGameSystemConfig(playerId, value) {
+    const result = validateGameSystem(value);
+    if (!result.valid) {
+      const locale = getConfig().language;
+      whisperWarning(playerId, [
+        t('ui.msg.invalidGameSystem', locale),
+        htmlTable(
+          [t('ui.col.option', locale), t('ui.col.description', locale)],
+          gameSystemTableRows(),
+        ),
+      ]);
+      return;
+    }
+
+    const config = getConfig();
+    const profile = getSystemProfile(result.value);
+    applyConfigUpdate(
+      playerId,
+      (cfg) => {
+        cfg.gameSystem = result.value;
+        cfg.markers = { ...profile.DEFAULT_MARKERS };
+      },
+      t('ui.msg.gameSystemSet', config.language, { system: result.value }),
+    );
+    installHandout(getConfig().language);
+  }
+
+  /**
+   * Builds display rows for the supported game systems table.
+   *
+   * Each row contains the system id as a code span and the human-readable name.
+   * Used in both the invalid-system warning and the --help output.
+   *
+   * @returns {string[][]} Two-column table rows: [[id, name], ...].
+   */
+  function gameSystemTableRows() {
+    return GAME_SYSTEM_DEFINITIONS.map((def) => [
+      code(def.id),
+      escapeHtml(def.name),
+    ]);
   }
 
   /**
@@ -17979,6 +22874,7 @@ const ConditionTrackerMod = (() => {
 
     const cmdPrompt = `${COMMAND} --prompt`;
     const cmdMultiTarget = `${COMMAND} --multi-target`;
+    const cmdReportToken = COMMAND_REPORT_TOKEN;
     const cmdRemoveMenu = `${COMMAND} --menu remove`;
     const cmdConfig = `${COMMAND} --config`;
     const cmdCleanup = `${COMMAND} --cleanup`;
@@ -17999,6 +22895,10 @@ const ConditionTrackerMod = (() => {
           [
             code(cmdMultiTarget),
             buildButton(t('ui.btn.openMultiTarget', locale), cmdMultiTarget),
+          ],
+          [
+            code(cmdReportToken),
+            buildButton(t('ui.btn.reportToken', locale), cmdReportToken),
           ],
           [
             code(cmdRemoveMenu),
@@ -18068,22 +22968,33 @@ const ConditionTrackerMod = (() => {
   function showConfig(playerId) {
     const config = getConfig();
     const locale = config.language;
-    const markerRows = [];
-    for (const condition of STANDARD_CONDITIONS) {
-      markerRows.push([
-        escapeHtml(condition),
-        code(config.markers[condition] || '(none)'),
-      ]);
-    }
+    const profile = getSystemProfile(config.gameSystem);
+    const allConditions = [
+      ...profile.STANDARD_CONDITIONS,
+      ...profile.CUSTOM_EFFECT_TYPES,
+    ];
+    const markerRows = allConditions.map((condition) => [
+      escapeHtml(getConditionDisplayName(condition, profile, locale)),
+      code(config.markers[condition] || '(none)'),
+    ]);
+
+    const systemDef = GAME_SYSTEM_DEFINITIONS.find(
+      (d) => d.id === config.gameSystem,
+    );
+    const systemLabel = systemDef
+      ? `${config.gameSystem} — ${systemDef.name}`
+      : config.gameSystem;
 
     whisper(playerId, t('ui.title.config', locale), [
       heading(t('ui.heading.settings', locale)),
       htmlTable(
         [t('ui.col.option', locale), t('ui.col.value', locale)],
         [
+          ['gameSystem', code(systemLabel)],
           ['useMarkers', code(String(config.useMarkers))],
           ['useIcons', code(String(config.useIcons))],
           ['subjectPromptBypass', code(String(config.subjectPromptBypass))],
+          ['suppressPublicChat', code(String(config.suppressPublicChat))],
           ['healthBar', code(config.healthBar)],
           ['language', code(config.language)],
         ],
@@ -18154,6 +23065,16 @@ const ConditionTrackerMod = (() => {
         configTableRows,
       ),
       sectionSpacer(),
+      heading(t('handout.gameSystems.heading', locale)),
+      t('handout.gameSystems.intro', locale),
+      htmlTable(
+        [
+          t('handout.gameSystems.colId', locale),
+          t('handout.gameSystems.colName', locale),
+        ],
+        gameSystemTableRows(),
+      ),
+      sectionSpacer(),
       heading(t('handout.availableLocales.heading', locale)),
       t('handout.availableLocales.intro', locale),
       htmlTable(
@@ -18213,6 +23134,111 @@ const ConditionTrackerMod = (() => {
         ],
       ),
     ]);
+  }
+
+  /**
+   * Builds body lines for one token's condition report.
+   *
+   * Produces two sections: conditions applied to the token (it is the target)
+   * and conditions applied by the token to others (it is the source but not
+   * the target, so self-target conditions appear only in the first section).
+   *
+   * @param {string} tokenId Token id.
+   * @param {string} tokenName Token display name.
+   * @param {string} locale Output locale.
+   * @returns {(string|object)[]} Body lines for the report.
+   */
+  function buildTokenReportSections(tokenId, tokenName, locale) {
+    const appliedTo = getActiveByTarget(tokenId);
+    const appliedBy = getActiveBySource(tokenId).filter(
+      (c) => c.targetTokenId !== tokenId,
+    );
+
+    const lines = [heading(tokenName)];
+
+    lines.push(heading(t('ui.heading.appliedTo', locale)));
+    if (appliedTo.length === 0) {
+      lines.push(
+        t('ui.msg.noConditionsAppliedTo', locale, { name: tokenName }),
+      );
+    } else {
+      lines.push(
+        htmlTable(
+          [t('ui.col.condition', locale), t('ui.col.duration', locale)],
+          appliedTo.map((c) => [
+            escapeHtml(c.displayText),
+            escapeHtml(formatDuration(c.duration, locale)),
+          ]),
+        ),
+      );
+    }
+
+    lines.push(heading(t('ui.heading.appliedBy', locale)));
+    if (appliedBy.length === 0) {
+      lines.push(
+        t('ui.msg.noConditionsAppliedBy', locale, { name: tokenName }),
+      );
+    } else {
+      lines.push(
+        htmlTable(
+          [t('ui.col.condition', locale), t('ui.col.duration', locale)],
+          appliedBy.map((c) => [
+            escapeHtml(c.displayText),
+            escapeHtml(formatDuration(c.duration, locale)),
+          ]),
+        ),
+      );
+    }
+
+    return lines;
+  }
+
+  /**
+   * Whispers a GM-only condition report for each selected token.
+   *
+   * Lists conditions applied to and applied by each token. Requires at least
+   * one token to be selected. Output is sent only to the requesting GM.
+   *
+   * @param {object} msg Roll20 chat message.
+   * @returns {void}
+   */
+  function handleReportToken(msg) {
+    const locale = getConfig().language;
+    const selected = Array.isArray(msg.selected) ? msg.selected : [];
+
+    if (selected.length === 0) {
+      whisperWarning(msg.playerid, t('ui.msg.noTokensSelectedReport', locale));
+      return;
+    }
+
+    const tokenIds = selected.map((s) => toText(s._id)).filter(Boolean);
+    if (tokenIds.length === 0) {
+      whisperWarning(msg.playerid, t('ui.msg.invalidIds', locale));
+      return;
+    }
+
+    const bodyLines = [];
+    let tokenCount = 0;
+
+    for (const tokenId of tokenIds) {
+      const token = getGraphicToken(tokenId);
+      if (!token) continue;
+
+      if (tokenCount > 0) {
+        bodyLines.push(sectionSpacer());
+      }
+
+      const tokenName = getTokenName(token);
+      bodyLines.push(...buildTokenReportSections(tokenId, tokenName, locale));
+      tokenCount += 1;
+    }
+
+    if (tokenCount === 0) {
+      whisperWarning(msg.playerid, t('ui.msg.reSelectTokens', locale));
+      return;
+    }
+
+    whisper(msg.playerid, t('ui.title.tokenReport', locale), bodyLines);
   }
 
   /**
@@ -18493,7 +23519,7 @@ const ConditionTrackerMod = (() => {
   }
 
   /**
-   * Reinstalls the ConditionTrackerWizard macro for all current GM players.
+   * Reinstalls all GM macros for all current GM players.
    *
    * @param {string} playerId GM player id.
    * @returns {void}
@@ -18507,6 +23533,7 @@ const ConditionTrackerMod = (() => {
       t('ui.msg.macroReinstalled', locale, {
         wizard: MACRO_NAME,
         multiTarget: MACRO_NAME_MULTI_TARGET,
+        reportToken: MACRO_NAME_REPORT_TOKEN,
       }),
     );
   }

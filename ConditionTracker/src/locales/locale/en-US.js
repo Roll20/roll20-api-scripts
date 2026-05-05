@@ -75,6 +75,7 @@ const TRANSLATION = {
     },
   },
   condNames: {
+    // D&D 5e
     Grappled: "Grappled",
     Restrained: "Restrained",
     Prone: "Prone",
@@ -88,6 +89,127 @@ const TRANSLATION = {
     Paralyzed: "Paralyzed",
     Petrified: "Petrified",
     Unconscious: "Unconscious",
+    // D&D 4e (additional)
+    Dazed: "Dazed",
+    Deafened: "Deafened",
+    Dominated: "Dominated",
+    Dying: "Dying",
+    Immobilized: "Immobilized",
+    Marked: "Marked",
+    Slowed: "Slowed",
+    Weakened: "Weakened",
+    // D&D 3.5 / Pathfinder 1e (additional)
+    Confused: "Confused",
+    Cowering: "Cowering",
+    Dazzled: "Dazzled",
+    Disabled: "Disabled",
+    Exhausted: "Exhausted",
+    Fascinated: "Fascinated",
+    Fatigued: "Fatigued",
+    "Flat-Footed": "Flat-Footed",
+    Helpless: "Helpless",
+    Nauseated: "Nauseated",
+    Panicked: "Panicked",
+    Pinned: "Pinned",
+    Shaken: "Shaken",
+    Sickened: "Sickened",
+    Staggered: "Staggered",
+    // Pathfinder 2e (additional)
+    Clumsy: "Clumsy",
+    Concealed: "Concealed",
+    Controlled: "Controlled",
+    Doomed: "Doomed",
+    Drained: "Drained",
+    Encumbered: "Encumbered",
+    Enfeebled: "Enfeebled",
+    Fleeing: "Fleeing",
+    Grabbed: "Grabbed",
+    Hidden: "Hidden",
+    "Off-Guard": "Off-Guard",
+    Quickened: "Quickened",
+    Stupefied: "Stupefied",
+    Undetected: "Undetected",
+    Wounded: "Wounded",
+    // Starfinder (additional)
+    Asleep: "Asleep",
+    Bleeding: "Bleeding",
+    Burning: "Burning",
+    Dead: "Dead",
+    "Off-Kilter": "Off-Kilter",
+    "Off-Target": "Off-Target",
+    Overburdened: "Overburdened",
+    Stable: "Stable",
+    // Savage Worlds
+    "Bleeding Out": "Bleeding Out",
+    Bound: "Bound",
+    Distracted: "Distracted",
+    // Call of Cthulhu
+    Berserk: "Berserk",
+    "Indefinite Insanity": "Indefinite Insanity",
+    Injured: "Injured",
+    Mania: "Mania",
+    Phobia: "Phobia",
+    "Seriously Wounded": "Seriously Wounded",
+    "Temporary Insanity": "Temporary Insanity",
+    // WFRP 4e
+    Ablaze: "Ablaze",
+    Broken: "Broken",
+    Surprised: "Surprised",
+    // Pathfinder 1e (additional)
+    Bleed: "Bleed",
+    "Energy Drained": "Energy Drained",
+    Entangled: "Entangled",
+    // 13th Age
+    Fear: "Fear",
+    Hampered: "Hampered",
+    "Ongoing Damage": "Ongoing Damage",
+    Vulnerable: "Vulnerable",
+    // OSR / Old-School
+    Diseased: "Diseased",
+    Held: "Held",
+    // Shadow of the Demon Lord
+    Compelled: "Compelled",
+    Impaired: "Impaired",
+    // Mothership / Alien RPG
+    Panicking: "Panicking",
+    // Genesys / Star Wars FFG
+    Disoriented: "Disoriented",
+    Ensnared: "Ensnared",
+    Strained: "Strained",
+    // Cortex Prime
+    Afraid: "Afraid",
+    Angry: "Angry",
+    Corrupted: "Corrupted",
+    Harmed: "Harmed",
+    Hungry: "Hungry",
+    Infected: "Infected",
+    Isolated: "Isolated",
+    // Vampire: The Masquerade
+    "Blood Bound": "Blood Bound",
+    Entranced: "Entranced",
+    Frenzied: "Frenzied",
+    Torpor: "Torpor",
+    // Werewolf / Shadowrun / Soulbound
+    "Knocked Down": "Knocked Down",
+    // Mage: The Ascension
+    Paradox: "Paradox",
+    "Willpower Spent": "Willpower Spent",
+    // Changeling: The Dreaming
+    Bedlam: "Bedlam",
+    "Chimera-Touched": "Chimera-Touched",
+    // Cyberpunk Red
+    "Mortally Wounded": "Mortally Wounded",
+    // BRP
+    Insane: "Insane",
+    // Cypher System
+    Debilitated: "Debilitated",
+    // Into the Odd / Cairn
+    Deprived: "Deprived",
+    // Warhammer 40k
+    Shocked: "Shocked",
+    // Warhammer Age of Sigmar
+    Intoxicated: "Intoxicated",
+    // Custom effect types (canonical keys — display names may be overridden per system)
     Spell: "Spell",
     Ability: "Ability",
     Advantage: "Advantage",
@@ -164,6 +286,8 @@ const TRANSLATION = {
       details: "Details",
       description: "Description",
       scenario: "Scenario",
+      gameSystem: "Game System",
+      duration: "Duration",
     },
     dur: {
       untilRemoved: "Until removed",
@@ -188,6 +312,7 @@ const TRANSLATION = {
       reinstallHandout: "Reinstall Handout",
       showHelp: "Show Help",
       reorderConditions: "Reorder Condition Rows",
+      reportToken: "Report Token Conditions",
     },
     title: {
       menu: "Menu",
@@ -210,6 +335,7 @@ const TRANSLATION = {
       moveToken: "{name} — Move Token?",
       scriptReady: "Script Ready",
       conditionReorder: "Turn Order Changed",
+      tokenReport: "Token Condition Report",
     },
     heading: {
       quickActions: "Quick Actions",
@@ -221,6 +347,8 @@ const TRANSLATION = {
       promptUi: "Prompt UI",
       examples: "Examples",
       summary: "Summary",
+      appliedTo: "Conditions Applied To",
+      appliedBy: "Conditions Applied By",
     },
     msg: {
       noActive: "No active conditions are tracked.",
@@ -228,7 +356,7 @@ const TRANSLATION = {
       unknownConfig:
         "Unknown config option. Use --config to view supported settings.",
       macroReinstalled:
-        "The {wizard} and {multiTarget} macros have been reinstalled for all current GM players.",
+        "The {wizard}, {multiTarget}, and {reportToken} macros have been reinstalled for all current GM players.",
       handoutReinstalled: "The help handout {handout} has been reinstalled.",
       duplicate:
         "That exact source, subject, target, condition, and custom text is already active.",
@@ -245,6 +373,9 @@ const TRANSLATION = {
       sourceTokenNotFound: "Source token could not be found.",
       targetTokenNotFound: "Target token could not be found.",
       subjectTokenNotFound: "Subject token could not be found.",
+      invalidGameSystem:
+        "Invalid game system. Use --config gameSystem &lt;id&gt;. Supported systems:",
+      gameSystemSet: "Game system set to {system}. Markers have been reset to system defaults.",
       invalidCondition:
         "Condition must be one of the predefined conditions or Other.",
       subjectOnlyCustom:
@@ -300,6 +431,11 @@ const TRANSLATION = {
         "The turn order changed and {count} tracked condition row(s) may now be out of place. Click below to restore them after their assigned tokens.",
       conditionsReordered:
         "Condition rows have been repositioned after their assigned tokens.",
+      noTokensSelectedReport:
+        "Select at least one token on the board before using --report-token.",
+      noConditionsAppliedTo: "{name} has no active conditions applied to it.",
+      noConditionsAppliedBy:
+        "{name} has no active conditions applied to others.",
     },
     removal: {
       conditionField: "Condition",
@@ -326,12 +462,12 @@ const TRANSLATION = {
   },
   handout: {
     versionLabel: "Version",
-    subtitle: "D&D 5e Status Effect Manager",
+    subtitle: "Multi-System Status Effect Manager",
     footerNote:
       "This handout is automatically created and updated each time the script loads.",
     overview: {
       heading: "Overview",
-      body: "Condition Tracker manages D&D 5e status conditions and custom effects as labelled rows in the Roll20 Turn Tracker. Apply conditions to tokens, track durations by initiative order, and automatically remove expired effects when a turn ends. All commands are GM-only and can be triggered from chat or via the installed macros.",
+      body: "Condition Tracker manages status conditions and custom effects as labelled rows in the Roll20 Turn Tracker. Apply conditions to tokens, track durations by initiative order, and automatically remove expired effects when a turn ends. Supports multiple game systems — set the game system once and the tracker uses the right condition list automatically. All commands are GM-only and can be triggered from chat or via the installed macros.",
     },
     quickStart: {
       heading: "Quick Start",
@@ -345,6 +481,10 @@ const TRANSLATION = {
         [
           "!condition-tracker --multi-target",
           "Apply one condition to several tokens simultaneously. Also available as the ConditionTrackerMultiTarget macro.",
+        ],
+        [
+          "!condition-tracker --report-token",
+          "Select one or more tokens first, then run this command to get a GM whisper listing every condition applied to and by each selected token. Also available as the ConditionTrackerReportToken macro.",
         ],
         [
           "!condition-tracker --menu",
@@ -401,6 +541,10 @@ const TRANSLATION = {
           "Recreate or update the localized help handout",
         ],
         [
+          "--report-token",
+          "Whisper a GM-only condition report for each selected token (conditions applied to and by it)",
+        ],
+        [
           "--lang &lt;locale&gt;",
           "Output this command's messages in an additional locale (bilingual mode)",
         ],
@@ -408,8 +552,9 @@ const TRANSLATION = {
       ],
     },
     standardConditions: {
-      heading: "Standard Conditions (D&amp;D 5e)",
+      heading: "Standard Conditions ({system})",
       colCondition: "Condition",
+      none: "No standard conditions defined for this game system. Use the Other custom effect type for free-text effects.",
     },
     customEffects: {
       heading: "Custom Effect Types",
@@ -472,6 +617,11 @@ const TRANSLATION = {
       colDesc: "Description",
       rows: [
         [
+          "gameSystem",
+          "dnd5e / pathfinder2e / ...",
+          "Set the active game system. This changes the condition list and resets markers to system defaults. See the Game Systems section for all valid ids.",
+        ],
+        [
           "useMarkers",
           "true / false",
           "Apply Roll20 status markers to tokens when a condition is added",
@@ -485,6 +635,11 @@ const TRANSLATION = {
           "subjectPromptBypass",
           "true / false",
           "Skip the optional subject-token step for Spell / Ability / Other effects",
+        ],
+        [
+          "suppressPublicChat",
+          "true / false",
+          "Suppress all public chat announcements (apply and remove messages). GM whispers are unaffected.",
         ],
         [
           "healthBar",
@@ -503,10 +658,18 @@ const TRANSLATION = {
         ],
       ],
     },
+    gameSystems: {
+      heading: "Supported Game Systems",
+      intro:
+        "Use !condition-tracker --config gameSystem &lt;id&gt; to switch systems. Switching resets token marker mappings to the new system's defaults. Your active conditions are preserved.",
+      colId: "System ID",
+      colName: "Game System",
+    },
     defaultMarkers: {
       heading: "Default Status Markers",
       colCondition: "Condition",
       colMarker: "Marker Name",
+      none: "No default markers are defined for this game system.",
     },
     availableLocales: {
       heading: "Available Translations",

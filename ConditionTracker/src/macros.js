@@ -1,8 +1,10 @@
 import {
   DEFAULT_MACRO_BODY,
   DEFAULT_MULTI_TARGET_MACRO_BODY,
+  DEFAULT_REPORT_TOKEN_MACRO_BODY,
   MACRO_NAME,
   MACRO_NAME_MULTI_TARGET,
+  MACRO_NAME_REPORT_TOKEN,
   SCRIPT_NAME,
 } from "./constants.js";
 import { getGmPlayerIds, queryObjects } from "./utils.js";
@@ -10,6 +12,7 @@ import { getGmPlayerIds, queryObjects } from "./utils.js";
 const MACRO_DEFINITIONS = [
   { name: MACRO_NAME, body: DEFAULT_MACRO_BODY },
   { name: MACRO_NAME_MULTI_TARGET, body: DEFAULT_MULTI_TARGET_MACRO_BODY },
+  { name: MACRO_NAME_REPORT_TOKEN, body: DEFAULT_REPORT_TOKEN_MACRO_BODY },
 ];
 
 /**

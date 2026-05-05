@@ -161,6 +161,8 @@ const TRANSLATION = {
       details: "Részletek",
       description: "Leírás",
       scenario: "Forgatókönyv",
+      gameSystem: "Game System",
+      duration: "Duration",
     },
     dur: {
       untilRemoved: "Eltávolításig",
@@ -185,6 +187,7 @@ const TRANSLATION = {
       reinstallHandout: "Handout újratelepítése",
       showHelp: "Súgó megjelenítése",
       reorderConditions: "Állapotsorok átrendezése",
+      reportToken: "Report Token Conditions",
     },
     title: {
       menu: "Menü",
@@ -207,6 +210,7 @@ const TRANSLATION = {
       moveToken: "{name} — token áthelyezése?",
       scriptReady: "Szkript kész",
       conditionReorder: "Körsorend megváltozott",
+      tokenReport: "Token Condition Report",
     },
     heading: {
       quickActions: "Gyorsműveletek",
@@ -218,6 +222,8 @@ const TRANSLATION = {
       promptUi: "Varázsló felülete",
       examples: "Példák",
       summary: "Összefoglalás",
+      appliedTo: "Conditions Applied To",
+      appliedBy: "Conditions Applied By",
     },
     msg: {
       noActive: "Nincs aktív követett állapot.",
@@ -225,7 +231,7 @@ const TRANSLATION = {
       unknownConfig:
         "Ismeretlen beállítási lehetőség. Használja a --config parancsot a támogatott beállítások megtekintéséhez.",
       macroReinstalled:
-        "A(z) {wizard} és {multiTarget} makrók újra lettek telepítve az összes jelenlegi GM-játékos számára.",
+        "A(z) {wizard}, {multiTarget} és {reportToken} makrók újra lettek telepítve az összes jelenlegi GM-játékos számára.",
       handoutReinstalled: "A(z) {handout} súgó-handout újra lett telepítve.",
       duplicate:
         "Pontosan ugyanez a forrás, alany, célpont, állapot és egyéni szöveg már aktív.",
@@ -301,6 +307,11 @@ const TRANSLATION = {
         "A körsorend megváltozott, és {count} követett állapotsor lehet rossz helyen. Kattintson alább a visszaállításhoz a hozzárendelt tokenek után.",
       conditionsReordered:
         "Az állapotsorok vissza lettek helyezve a hozzárendelt tokenek mögé.",
+      noTokensSelectedReport:
+        "Select at least one token on the board before using --report-token.",
+      noConditionsAppliedTo: "{name} has no active conditions applied to it.",
+      noConditionsAppliedBy:
+        "{name} has no active conditions applied to others.",
     },
     removal: {
       conditionField: "Állapot",
@@ -347,6 +358,10 @@ const TRANSLATION = {
         [
           "!condition-tracker --multi-target",
           "Egy állapot alkalmazása több tokenre egyszerre. Elérhető ConditionTrackerMultiTarget makróként is.",
+        ],
+        [
+          "!condition-tracker --report-token",
+          "Select one or more tokens first, then run this command to get a GM whisper listing every condition applied to and by each selected token. Also available as the ConditionTrackerReportToken macro.",
         ],
         [
           "!condition-tracker --menu",
@@ -401,6 +416,10 @@ const TRANSLATION = {
         [
           "--reinstall-handout",
           "A lokalizált súgó-handout újralétrehozása vagy frissítése",
+        ],
+        [
+          "--report-token",
+          "Whisper a GM-only condition report for each selected token (conditions applied to and by it)",
         ],
         [
           "--lang &lt;locale&gt;",
@@ -484,6 +503,11 @@ const TRANSLATION = {
           "subjectPromptBypass",
           "true / false",
           "Az opcionális alany-token lépés kihagyása Varázslat / Képesség / Egyéb hatásoknál",
+        ],
+        [
+          "suppressPublicChat",
+          "true / false",
+          "Az összes nyilvános csevegési bejelentés (alkalmazás és eltávolítás) elnyomása. A GM-suttogások nem érintettek.",
         ],
         [
           "healthBar",

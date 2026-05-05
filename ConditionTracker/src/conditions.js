@@ -1,22 +1,32 @@
 import {
+  CANONICAL_CUSTOM_TYPES,
+  CANONICAL_TEXT_CONDITIONS,
   CONDITION_ADVANTAGE,
   CONDITION_DISADVANTAGE,
-  CONDITION_DATA,
-  CUSTOM_EFFECT_TYPE_SET,
-  CUSTOM_TEXT_CONDITIONS,
-  STANDARD_CONDITIONS,
 } from "./constants.js";
 import { getConditionLocalData, t } from "./i18n.js";
+import { getConfig } from "./state.js";
+import { getSystemProfile } from "./systems/index.js";
 import { escapeHtml, normalizeKey, toText } from "./utils.js";
 
 /**
- * Returns true when a condition is a custom effect type (not a standard D&D condition).
+ * Returns the system profile for the currently configured game system.
+ *
+ * @returns {object} Active system profile.
+ */
+function activeProfile() {
+  return getSystemProfile(getConfig().gameSystem);
+}
+
+/**
+ * Returns true when a condition is any canonical custom effect type.
+ * This covers all systems — the wizard limits which types are shown per system.
  *
  * @param {string} condition Canonical condition.
  * @returns {boolean}
  */
 export function isCustomEffectType(condition) {
-  return CUSTOM_EFFECT_TYPE_SET.has(condition);
+  return CANONICAL_CUSTOM_TYPES.has(condition);
 }
 
 /**
@@ -26,11 +36,12 @@ export function isCustomEffectType(condition) {
  * @returns {boolean}
  */
 export function isCustomTextCondition(condition) {
-  return CUSTOM_TEXT_CONDITIONS.has(condition);
+  return CANONICAL_TEXT_CONDITIONS.has(condition);
 }
 
 /**
  * Returns the canonical condition label for user input.
+ * Checks canonical custom types first, then the active system's standard conditions.
  *
  * @param {string} value The condition label from chat.
  * @returns {string} The canonical label or an empty string.
@@ -38,19 +49,37 @@ export function isCustomTextCondition(condition) {
 export function getCanonicalCondition(value) {
   const key = normalizeKey(value);
 
-  for (const type of CUSTOM_EFFECT_TYPE_SET) {
+  for (const type of CANONICAL_CUSTOM_TYPES) {
     if (normalizeKey(type) === key) {
       return type;
     }
   }
 
-  for (const condition of STANDARD_CONDITIONS) {
+  for (const condition of activeProfile().STANDARD_CONDITIONS) {
     if (normalizeKey(condition) === key) {
       return condition;
     }
   }
 
   return "";
+}
+
+/**
+ * Returns the display name for a condition in the given locale.
+ * Checks the system profile's custom-effect label overrides first, then the
+ * locale's condNames table, then falls back to the condition key itself.
+ *
+ * @param {string} condition Canonical condition.
+ * @param {object} profile Active system profile.
+ * @param {string} locale Locale string.
+ * @returns {string} Display name.
+ */
+export function getConditionDisplayName(condition, profile, locale) {
+  const labels = profile?.CUSTOM_EFFECT_LABELS;
+  if (labels?.[condition]) return labels[condition];
+  const key = `condNames.${condition}`;
+  const val = t(key, locale);
+  return val === key ? condition : val;
 }
 
 /**
@@ -63,7 +92,7 @@ export function getCanonicalCondition(value) {
 function getLocalizedPast(condition, locale) {
   const localData = getConditionLocalData(condition, locale);
   if (localData?.past) return localData.past;
-  const data = CONDITION_DATA[condition];
+  const data = activeProfile().CONDITION_DATA[condition];
   return data ? data.past : toText(condition).toLowerCase();
 }
 
@@ -74,7 +103,7 @@ function getLocalizedPast(condition, locale) {
  * @returns {string} Emoji character.
  */
 export function getConditionEmoji(condition) {
-  const data = CONDITION_DATA[condition];
+  const data = activeProfile().CONDITION_DATA[condition];
   return data ? data.emoji : "✨";
 }
 
@@ -121,7 +150,7 @@ export function buildDisplayText(details, locale) {
   }
 
   const localData = getConditionLocalData(details.condition, locale);
-  const data = localData || CONDITION_DATA[details.condition];
+  const data = localData || activeProfile().CONDITION_DATA[details.condition];
 
   if (data?.noBy) {
     return t("templates.display.noBy", locale, {
@@ -193,7 +222,7 @@ export function buildApplyMessage(details, locale) {
   }
 
   const localData = getConditionLocalData(details.condition, locale);
-  const data = localData || CONDITION_DATA[details.condition];
+  const data = localData || activeProfile().CONDITION_DATA[details.condition];
 
   if (isSelfTarget(details)) {
     return (
@@ -221,7 +250,7 @@ export function buildApplyMessage(details, locale) {
     prefix +
     t("templates.apply.standard", locale, {
       source: src,
-      verb: escapeHtml(data.verb),
+      verb: escapeHtml(data?.verb || "affects"),
       target: tgt,
     })
   );
@@ -262,7 +291,7 @@ export function buildRemovalMessage(condition, useIcons, locale) {
   }
 
   const localData = getConditionLocalData(condition.condition, locale);
-  const data = localData || CONDITION_DATA[condition.condition];
+  const data = localData || activeProfile().CONDITION_DATA[condition.condition];
 
   if (data?.noBy) {
     return (
@@ -306,7 +335,7 @@ function buildIconPrefix(condition, useIcons) {
     return "";
   }
 
-  const data = CONDITION_DATA[condition];
+  const data = activeProfile().CONDITION_DATA[condition];
   if (!data) {
     return "[*] ";
   }

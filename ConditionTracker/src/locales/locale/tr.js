@@ -159,6 +159,8 @@ const TRANSLATION = {
       details: "Ayrıntılar",
       description: "Açıklama",
       scenario: "Senaryo",
+      gameSystem: "Game System",
+      duration: "Duration",
     },
     dur: {
       untilRemoved: "Kaldırılana kadar",
@@ -183,6 +185,7 @@ const TRANSLATION = {
       reinstallHandout: "El İlanını Yeniden Yükle",
       showHelp: "Yardımı Göster",
       reorderConditions: "Durum Satırlarını Yeniden Sırala",
+      reportToken: "Report Token Conditions",
     },
     title: {
       menu: "Menü",
@@ -205,6 +208,7 @@ const TRANSLATION = {
       moveToken: "{name} — Token Taşınsın mı?",
       scriptReady: "Betik Hazır",
       conditionReorder: "Tur Sırası Değişti",
+      tokenReport: "Token Condition Report",
     },
     heading: {
       quickActions: "Hızlı İşlemler",
@@ -216,6 +220,8 @@ const TRANSLATION = {
       promptUi: "Sihirbaz Arayüzü",
       examples: "Örnekler",
       summary: "Özet",
+      appliedTo: "Conditions Applied To",
+      appliedBy: "Conditions Applied By",
     },
     msg: {
       noActive: "Takip edilen aktif durum yok.",
@@ -223,7 +229,7 @@ const TRANSLATION = {
       unknownConfig:
         "Bilinmeyen yapılandırma seçeneği. Desteklenen ayarları görüntülemek için --config kullanın.",
       macroReinstalled:
-        "{wizard} ve {multiTarget} makroları tüm mevcut GM oyuncuları için yeniden yüklendi.",
+        "{wizard}, {multiTarget} ve {reportToken} makroları tüm mevcut GM oyuncuları için yeniden yüklendi.",
       handoutReinstalled: "Yardım el ilanı {handout} yeniden yüklendi.",
       duplicate: "Aynı kaynak, özne, hedef, durum ve özel metin zaten aktif.",
       noTargets: "Çoklu hedef uygulaması için hedef token belirtilmedi.",
@@ -294,6 +300,11 @@ const TRANSLATION = {
         "Tur sırası değişti ve {count} takip edilen durum satırı artık yanlış yerde olabilir. Bunları atanmış tokenlarının arkasına taşımak için aşağıya tıklayın.",
       conditionsReordered:
         "Durum satırları atanmış tokenlarının arkasına yeniden konumlandırıldı.",
+      noTokensSelectedReport:
+        "Select at least one token on the board before using --report-token.",
+      noConditionsAppliedTo: "{name} has no active conditions applied to it.",
+      noConditionsAppliedBy:
+        "{name} has no active conditions applied to others.",
     },
     removal: {
       conditionField: "Durum",
@@ -339,6 +350,10 @@ const TRANSLATION = {
         [
           "!condition-tracker --multi-target",
           "Bir durumu aynı anda birden fazla tokena uygulayın. ConditionTrackerMultiTarget makrosu olarak da kullanılabilir.",
+        ],
+        [
+          "!condition-tracker --report-token",
+          "Select one or more tokens first, then run this command to get a GM whisper listing every condition applied to and by each selected token. Also available as the ConditionTrackerReportToken macro.",
         ],
         [
           "!condition-tracker --menu",
@@ -393,6 +408,10 @@ const TRANSLATION = {
         [
           "--reinstall-handout",
           "Yerelleştirilmiş yardım el ilanını yeniden oluştur veya güncelle",
+        ],
+        [
+          "--report-token",
+          "Whisper a GM-only condition report for each selected token (conditions applied to and by it)",
         ],
         [
           "--lang &lt;yerel ayar&gt;",
@@ -476,6 +495,11 @@ const TRANSLATION = {
           "subjectPromptBypass",
           "true / false",
           "Büyü / Yetenek / Diğer efektler için isteğe bağlı özne-token adımını atla",
+        ],
+        [
+          "suppressPublicChat",
+          "true / false",
+          "Tüm genel sohbet duyurularını (uygulama ve kaldırma mesajları) gizle. GM fısıltıları etkilenmez.",
         ],
         [
           "healthBar",

@@ -160,6 +160,8 @@ const TRANSLATION = {
       details: "Tiedot",
       description: "Kuvaus",
       scenario: "Tilanne",
+      gameSystem: "Game System",
+      duration: "Duration",
     },
     dur: {
       untilRemoved: "Kunnes poistetaan",
@@ -184,6 +186,7 @@ const TRANSLATION = {
       reinstallHandout: "Asenna handout uudelleen",
       showHelp: "Näytä ohje",
       reorderConditions: "Järjestä tilarivit uudelleen",
+      reportToken: "Report Token Conditions",
     },
     title: {
       menu: "Valikko",
@@ -206,6 +209,7 @@ const TRANSLATION = {
       moveToken: "{name} — siirretäänkö token?",
       scriptReady: "Skripti valmis",
       conditionReorder: "Vuorojärjestys muuttui",
+      tokenReport: "Token Condition Report",
     },
     heading: {
       quickActions: "Pikavalinnat",
@@ -217,6 +221,8 @@ const TRANSLATION = {
       promptUi: "Ohjatun toiminnon käyttöliittymä",
       examples: "Esimerkit",
       summary: "Yhteenveto",
+      appliedTo: "Conditions Applied To",
+      appliedBy: "Conditions Applied By",
     },
     msg: {
       noActive: "Aktiivisia tiloja ei seurata.",
@@ -224,7 +230,7 @@ const TRANSLATION = {
       unknownConfig:
         "Tuntematon asetusvaihtoehto. Käytä --config nähdäksesi tuetut asetukset.",
       macroReinstalled:
-        "Makrot {wizard} ja {multiTarget} on asennettu uudelleen kaikille nykyisille GM-pelaajille.",
+        "Makrot {wizard}, {multiTarget} ja {reportToken} on asennettu uudelleen kaikille nykyisille GM-pelaajille.",
       handoutReinstalled: "Ohje-handout {handout} on asennettu uudelleen.",
       duplicate:
         "Täsmälleen sama lähde, kohde, tila ja mukautettu teksti on jo aktiivinen.",
@@ -296,6 +302,11 @@ const TRANSLATION = {
         "Vuorojärjestys muuttui ja {count} seurattu tilarivi voi nyt olla väärässä paikassa. Palauta ne klikkaamalla alla niille kuuluvien tokeneiden jälkeen.",
       conditionsReordered:
         "Tilarivit on sijoitettu uudelleen niille kuuluvien tokeneiden jälkeen.",
+      noTokensSelectedReport:
+        "Select at least one token on the board before using --report-token.",
+      noConditionsAppliedTo: "{name} has no active conditions applied to it.",
+      noConditionsAppliedBy:
+        "{name} has no active conditions applied to others.",
     },
     removal: {
       conditionField: "Tila",
@@ -342,6 +353,10 @@ const TRANSLATION = {
         [
           "!condition-tracker --multi-target",
           "Sovella yksi tila useisiin tokeneihin samanaikaisesti. Saatavilla myös ConditionTrackerMultiTarget-makrona.",
+        ],
+        [
+          "!condition-tracker --report-token",
+          "Select one or more tokens first, then run this command to get a GM whisper listing every condition applied to and by each selected token. Also available as the ConditionTrackerReportToken macro.",
         ],
         [
           "!condition-tracker --menu",
@@ -393,6 +408,10 @@ const TRANSLATION = {
         [
           "--reinstall-handout",
           "Luo lokalisoitu ohje-handout uudelleen tai päivitä se",
+        ],
+        [
+          "--report-token",
+          "Whisper a GM-only condition report for each selected token (conditions applied to and by it)",
         ],
         [
           "--lang &lt;locale&gt;",
@@ -479,6 +498,11 @@ const TRANSLATION = {
           "subjectPromptBypass",
           "true / false",
           "Ohita valinnainen kohde-tokenin vaihe Loitsu / Kyky / Muu -vaikutuksille",
+        ],
+        [
+          "suppressPublicChat",
+          "true / false",
+          "Estä kaikki julkiset chat-ilmoitukset (lisäys- ja poistoviestit). GM-kuiskaukset eivät vaikutu.",
         ],
         [
           "healthBar",

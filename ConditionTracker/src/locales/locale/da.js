@@ -163,6 +163,8 @@ const TRANSLATION = {
       details: "Detaljer",
       description: "Beskrivelse",
       scenario: "Scenarie",
+      gameSystem: "Game System",
+      duration: "Duration",
     },
     dur: {
       untilRemoved: "Indtil fjernet",
@@ -187,6 +189,7 @@ const TRANSLATION = {
       reinstallHandout: "Geninstaller handout",
       showHelp: "Vis hjælp",
       reorderConditions: "Omarranger tilstandsrækker",
+      reportToken: "Report Token Conditions",
     },
     title: {
       menu: "Menu",
@@ -209,6 +212,7 @@ const TRANSLATION = {
       moveToken: "{name} — Flyt token?",
       scriptReady: "Script klar",
       conditionReorder: "Turrækkefølge ændret",
+      tokenReport: "Token Condition Report",
     },
     heading: {
       quickActions: "Hurtighandlinger",
@@ -220,6 +224,8 @@ const TRANSLATION = {
       promptUi: "Guide-brugerflade",
       examples: "Eksempler",
       summary: "Oversigt",
+      appliedTo: "Conditions Applied To",
+      appliedBy: "Conditions Applied By",
     },
     msg: {
       noActive: "Ingen aktive tilstande spores.",
@@ -227,7 +233,7 @@ const TRANSLATION = {
       unknownConfig:
         "Ukendt konfigurationsindstilling. Brug --config for at se understøttede indstillinger.",
       macroReinstalled:
-        "Makroerne {wizard} og {multiTarget} er geninstalleret for alle nuværende GM-spillere.",
+        "Makroerne {wizard}, {multiTarget} og {reportToken} er geninstalleret for alle nuværende GM-spillere.",
       handoutReinstalled: "Hjælpe-handouttet {handout} er geninstalleret.",
       duplicate:
         "Den præcise kombination af kilde, subjekt, mål, tilstand og brugerdefineret tekst er allerede aktiv.",
@@ -299,6 +305,11 @@ const TRANSLATION = {
         "Turrækkefølgen ændrede sig, og {count} sporet tilstandsrække(r) kan nu være fejlplaceret. Klik nedenfor for at gendanne dem efter deres tildelte tokens.",
       conditionsReordered:
         "Tilstandsrækker er omplaceret efter deres tildelte tokens.",
+      noTokensSelectedReport:
+        "Select at least one token on the board before using --report-token.",
+      noConditionsAppliedTo: "{name} has no active conditions applied to it.",
+      noConditionsAppliedBy:
+        "{name} has no active conditions applied to others.",
     },
     removal: {
       conditionField: "Tilstand",
@@ -345,6 +356,10 @@ const TRANSLATION = {
         [
           "!condition-tracker --multi-target",
           "Anvend én tilstand på flere tokens samtidig. Også tilgængelig som makroen ConditionTrackerMultiTarget.",
+        ],
+        [
+          "!condition-tracker --report-token",
+          "Select one or more tokens first, then run this command to get a GM whisper listing every condition applied to and by each selected token. Also available as the ConditionTrackerReportToken macro.",
         ],
         [
           "!condition-tracker --menu",
@@ -396,6 +411,10 @@ const TRANSLATION = {
         [
           "--reinstall-handout",
           "Genopret eller opdater det lokaliserede hjælpe-handout",
+        ],
+        [
+          "--report-token",
+          "Whisper a GM-only condition report for each selected token (conditions applied to and by it)",
         ],
         [
           "--lang &lt;locale&gt;",
@@ -482,6 +501,11 @@ const TRANSLATION = {
           "subjectPromptBypass",
           "true / false",
           "Spring det valgfrie subjekttrin over for Besværgelse / Evne / Andre effekter",
+        ],
+        [
+          "suppressPublicChat",
+          "true / false",
+          "Undertryk alle offentlige chatbeskeder (anvend og fjern beskeder). GM-hvisker påvirkes ikke.",
         ],
         [
           "healthBar",

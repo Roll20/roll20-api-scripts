@@ -164,6 +164,8 @@ const TRANSLATION = {
       details: "Détails",
       description: "Description",
       scenario: "Scénario",
+      gameSystem: "Game System",
+      duration: "Duration",
     },
     dur: {
       untilRemoved: "Jusqu’à suppression",
@@ -188,6 +190,7 @@ const TRANSLATION = {
       reinstallHandout: "Réinstaller le livret",
       showHelp: "Afficher l’aide",
       reorderConditions: "Réorganiser les lignes de condition",
+      reportToken: "Report Token Conditions",
     },
     title: {
       menu: "Menu",
@@ -210,6 +213,7 @@ const TRANSLATION = {
       moveToken: "{name} — Déplacer le jeton ?",
       scriptReady: "Script prêt",
       conditionReorder: "Ordre de tour modifié",
+      tokenReport: "Token Condition Report",
     },
     heading: {
       quickActions: "Actions rapides",
@@ -221,6 +225,8 @@ const TRANSLATION = {
       promptUi: "Interface de l’assistant",
       examples: "Exemples",
       summary: "Résumé",
+      appliedTo: "Conditions Applied To",
+      appliedBy: "Conditions Applied By",
     },
     msg: {
       noActive: "Aucune condition active n’est suivie.",
@@ -228,7 +234,7 @@ const TRANSLATION = {
       unknownConfig:
         "Option de configuration inconnue. Utilisez --config pour voir les paramètres disponibles.",
       macroReinstalled:
-        "Les macros {wizard} et {multiTarget} ont été réinstallées pour tous les MJ actifs.",
+        "Les macros {wizard}, {multiTarget} et {reportToken} ont été réinstallées pour tous les MJ actifs.",
       handoutReinstalled: "Le livret d’aide {handout} a été réinstallé.",
       duplicate:
         "Cette combinaison source, sujet, cible, condition et texte personnalisé est déjà active.",
@@ -304,6 +310,11 @@ const TRANSLATION = {
         "L'ordre de tour a changé et {count} ligne(s) de condition suivie(s) peut être mal placée. Cliquez ci-dessous pour les restaurer après leurs tokens assignés.",
       conditionsReordered:
         "Les lignes de condition ont été repositionnées après leurs tokens assignés.",
+      noTokensSelectedReport:
+        "Select at least one token on the board before using --report-token.",
+      noConditionsAppliedTo: "{name} has no active conditions applied to it.",
+      noConditionsAppliedBy:
+        "{name} has no active conditions applied to others.",
     },
     removal: {
       conditionField: "Condition",
@@ -350,6 +361,10 @@ const TRANSLATION = {
         [
           "!condition-tracker --multi-target",
           "Appliquer une condition à plusieurs jetons simultanément. Disponible aussi via la macro ConditionTrackerMultiTarget.",
+        ],
+        [
+          "!condition-tracker --report-token",
+          "Select one or more tokens first, then run this command to get a GM whisper listing every condition applied to and by each selected token. Also available as the ConditionTrackerReportToken macro.",
         ],
         [
           "!condition-tracker --menu",
@@ -404,6 +419,10 @@ const TRANSLATION = {
         [
           "--reinstall-handout",
           "Recréer ou mettre à jour le livret d’aide localisé",
+        ],
+        [
+          "--report-token",
+          "Whisper a GM-only condition report for each selected token (conditions applied to and by it)",
         ],
         [
           "--lang &lt;locale&gt;",
@@ -490,6 +509,11 @@ const TRANSLATION = {
           "subjectPromptBypass",
           "true / false",
           "Ignorer l’étape sujet optionnelle pour les effets Sort / Capacité / Autre",
+        ],
+        [
+          "suppressPublicChat",
+          "true / false",
+          "Supprimer toutes les annonces publiques de chat (messages d’application et de suppression). Les chuchotements du MJ ne sont pas affectés.",
         ],
         [
           "healthBar",

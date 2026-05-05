@@ -10,6 +10,7 @@ import {
 } from "./conditions.js";
 import { normalizeLocale, SUPPORTED_LOCALE_LIST, t } from "./i18n.js";
 import { getConfig } from "./state.js";
+import { VALID_GAME_SYSTEMS } from "./systems/index.js";
 import { getGraphicToken, toText } from "./utils.js";
 
 /**
@@ -122,6 +123,20 @@ export function validateHealthBar(value) {
     return invalid(t("ui.msg.invalidHealthBar", locale));
   }
 
+  return { valid: true, value: text };
+}
+
+/**
+ * Validates a game system id.
+ *
+ * @param {string} value Game system id string.
+ * @returns {object} Validation result.
+ */
+export function validateGameSystem(value) {
+  const text = toText(value).trim();
+  if (!VALID_GAME_SYSTEMS.has(text)) {
+    return invalid(t("ui.msg.invalidGameSystem", getConfig().language));
+  }
   return { valid: true, value: text };
 }
 

@@ -114,21 +114,25 @@ export function rawHtml(value) {
 
 /**
  * Sends a public chat message (plain text, HTML-escaped).
+ * Skipped when suppressPublicChat is enabled in config.
  *
  * @param {string} message Message body.
  * @returns {void}
  */
 export function announce(message) {
+  if (getConfig().suppressPublicChat) return;
   sendChat(SCRIPT_NAME, escapeHtml(message));
 }
 
 /**
  * Sends a public chat message as raw HTML.
+ * Skipped when suppressPublicChat is enabled in config.
  *
  * @param {string} html Trusted HTML message body.
  * @returns {void}
  */
 export function announceHtml(html) {
+  if (getConfig().suppressPublicChat) return;
   sendChat(SCRIPT_NAME, html);
 }
 

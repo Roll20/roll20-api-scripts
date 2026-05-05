@@ -160,6 +160,8 @@ const TRANSLATION = {
       details: "Podrobnosti",
       description: "Popis",
       scenario: "Scénář",
+      gameSystem: "Game System",
+      duration: "Duration",
     },
     dur: {
       untilRemoved: "Do odebrání",
@@ -184,6 +186,7 @@ const TRANSLATION = {
       reinstallHandout: "Přeinstalovat příručku",
       showHelp: "Zobrazit nápovědu",
       reorderConditions: "Přeuspořádat řádky stavů",
+      reportToken: "Report Token Conditions",
     },
     title: {
       menu: "Nabídka",
@@ -206,6 +209,7 @@ const TRANSLATION = {
       moveToken: "{name} — Přesunout žeton?",
       scriptReady: "Skript připraven",
       conditionReorder: "Pořadí tahů změněno",
+      tokenReport: "Token Condition Report",
     },
     heading: {
       quickActions: "Rychlé akce",
@@ -217,6 +221,8 @@ const TRANSLATION = {
       promptUi: "Rozhraní průvodce",
       examples: "Příklady",
       summary: "Souhrn",
+      appliedTo: "Conditions Applied To",
+      appliedBy: "Conditions Applied By",
     },
     msg: {
       noActive: "Nejsou sledovány žádné aktivní stavy.",
@@ -224,7 +230,7 @@ const TRANSLATION = {
       unknownConfig:
         "Neznámá možnost konfigurace. Použijte --config pro zobrazení podporovaných nastavení.",
       macroReinstalled:
-        "Makra {wizard} a {multiTarget} byla přeinstalována pro všechny aktuální hráče s GM rolí.",
+        "Makra {wizard}, {multiTarget} a {reportToken} byla přeinstalována pro všechny aktuální hráče s GM rolí.",
       handoutReinstalled: "Pomocná příručka {handout} byla přeinstalována.",
       duplicate:
         "Tato přesná kombinace zdroje, subjektu, cíle, stavu a vlastního textu je již aktivní.",
@@ -295,6 +301,11 @@ const TRANSLATION = {
         "Pořadí tahů se změnilo a {count} sledovaný (sledovaných) řádek stavů může být mimo pořadí. Klikněte níže pro jejich obnovení za přiřazené žetony.",
       conditionsReordered:
         "Řádky stavů byly přesunuty za jejich přiřazené žetony.",
+      noTokensSelectedReport:
+        "Select at least one token on the board before using --report-token.",
+      noConditionsAppliedTo: "{name} has no active conditions applied to it.",
+      noConditionsAppliedBy:
+        "{name} has no active conditions applied to others.",
     },
     removal: {
       conditionField: "Stav",
@@ -341,6 +352,10 @@ const TRANSLATION = {
         [
           "!condition-tracker --multi-target",
           "Uplatnit jeden stav na více žetonů současně. Dostupné také jako makro ConditionTrackerMultiTarget.",
+        ],
+        [
+          "!condition-tracker --report-token",
+          "Select one or more tokens first, then run this command to get a GM whisper listing every condition applied to and by each selected token. Also available as the ConditionTrackerReportToken macro.",
         ],
         [
           "!condition-tracker --menu",
@@ -395,6 +410,10 @@ const TRANSLATION = {
         [
           "--reinstall-handout",
           "Znovu vytvořit nebo aktualizovat lokalizovanou pomocnou příručku",
+        ],
+        [
+          "--report-token",
+          "Whisper a GM-only condition report for each selected token (conditions applied to and by it)",
         ],
         [
           "--lang &lt;jazyk&gt;",
@@ -478,6 +497,11 @@ const TRANSLATION = {
           "subjectPromptBypass",
           "true / false",
           "Přeskočit volitelný krok výběru subjektu pro efekty Kouzlo / Schopnost / Jiné",
+        ],
+        [
+          "suppressPublicChat",
+          "true / false",
+          "Potlač všechna veřejná oznámení v chatu (zprávy o přidání a odebrání). Šepoty GM nejsou ovlivněny.",
         ],
         [
           "healthBar",

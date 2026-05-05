@@ -160,6 +160,8 @@ const TRANSLATION = {
       details: "Detalls",
       description: "Descripció",
       scenario: "Escenari",
+      gameSystem: "Game System",
+      duration: "Duration",
     },
     dur: {
       untilRemoved: "Fins que s'elimini",
@@ -184,6 +186,7 @@ const TRANSLATION = {
       reinstallHandout: "Reinstal·la el fullet",
       showHelp: "Mostra l'ajuda",
       reorderConditions: "Reordena les files de condicions",
+      reportToken: "Report Token Conditions",
     },
     title: {
       menu: "Menú",
@@ -206,6 +209,7 @@ const TRANSLATION = {
       moveToken: "{name} — Mou el testimoni?",
       scriptReady: "Script llest",
       conditionReorder: "Ordre de torn modificat",
+      tokenReport: "Token Condition Report",
     },
     heading: {
       quickActions: "Accions ràpides",
@@ -217,6 +221,8 @@ const TRANSLATION = {
       promptUi: "Interfície de l'assistent",
       examples: "Exemples",
       summary: "Resum",
+      appliedTo: "Conditions Applied To",
+      appliedBy: "Conditions Applied By",
     },
     msg: {
       noActive: "No hi ha cap condició activa en seguiment.",
@@ -224,7 +230,7 @@ const TRANSLATION = {
       unknownConfig:
         "Opció de configuració desconeguda. Usa --config per veure els paràmetres disponibles.",
       macroReinstalled:
-        "Les macros {wizard} i {multiTarget} s'han reinstal·lat per a tots els MJ actius.",
+        "Les macros {wizard}, {multiTarget} i {reportToken} s'han reinstal·lat per a tots els MJ actius.",
       handoutReinstalled: "El fullet d'ajuda {handout} s'ha reinstal·lat.",
       duplicate:
         "Aquesta combinació d'origen, subjecte, destinatari, condició i text personalitzat ja és activa.",
@@ -302,6 +308,11 @@ const TRANSLATION = {
         "L'ordre de torn ha canviat i {count} fila(es) de condició seguida(es) pot estar fora de lloc. Fes clic a continuació per restaurar-les després dels seus testimonis assignats.",
       conditionsReordered:
         "Les files de condicions s'han reposicionat després dels seus testimonis assignats.",
+      noTokensSelectedReport:
+        "Select at least one token on the board before using --report-token.",
+      noConditionsAppliedTo: "{name} has no active conditions applied to it.",
+      noConditionsAppliedBy:
+        "{name} has no active conditions applied to others.",
     },
     removal: {
       conditionField: "Condició",
@@ -348,6 +359,10 @@ const TRANSLATION = {
         [
           "!condition-tracker --multi-target",
           "Aplica una condició a diversos testimonis simultàniament. També disponible com a macro ConditionTrackerMultiTarget.",
+        ],
+        [
+          "!condition-tracker --report-token",
+          "Select one or more tokens first, then run this command to get a GM whisper listing every condition applied to and by each selected token. Also available as the ConditionTrackerReportToken macro.",
         ],
         [
           "!condition-tracker --menu",
@@ -405,6 +420,10 @@ const TRANSLATION = {
         [
           "--reinstall-handout",
           "Torna a crear o actualitza el fullet d'ajuda localitzat",
+        ],
+        [
+          "--report-token",
+          "Whisper a GM-only condition report for each selected token (conditions applied to and by it)",
         ],
         [
           "--lang &lt;locale&gt;",
@@ -491,6 +510,11 @@ const TRANSLATION = {
           "subjectPromptBypass",
           "true / false",
           "Omet el pas del testimoni subjecte opcional per als efectes Encanteri / Habilitat / Altres",
+        ],
+        [
+          "suppressPublicChat",
+          "true / false",
+          "Suprimeix tots els anuncis públics de xat (missatges d'aplicació i eliminació). Els xiuxiuejos del DJ no es veuen afectats.",
         ],
         [
           "healthBar",

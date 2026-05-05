@@ -1,23 +1,24 @@
 import {
   COMMAND,
+  COMMAND_REPORT_TOKEN,
   COLOR_BG_SOFT_BLACK,
   COLOR_HEADER_DARK,
   COLOR_HEADER_LIGHT,
-  CUSTOM_EFFECT_TYPES,
   DURATION_OPTIONS,
   DURATION_UNTIL_REMOVED,
   MACRO_NAME,
   MACRO_NAME_MULTI_TARGET,
+  MACRO_NAME_REPORT_TOKEN,
   HANDOUT_NAME,
   MENU_REMOVE,
   SCRIPT_NAME,
   SCRIPT_VERSION,
-  STANDARD_CONDITIONS,
 } from "./constants.js";
 import {
   buildApplyMessage,
   buildDisplayText,
   getCanonicalCondition,
+  getConditionDisplayName,
   isCustomEffectType,
   isCustomTextCondition,
 } from "./conditions.js";
@@ -43,9 +44,15 @@ import {
   findActiveCondition,
   someActiveCondition,
   getConfig,
+  getActiveBySource,
   getActiveByTarget,
   setConfig,
 } from "./state.js";
+import {
+  GAME_SYSTEM_DEFINITIONS,
+  VALID_GAME_SYSTEM_LIST,
+  getSystemProfile,
+} from "./systems/index.js";
 import {
   escapeHtml,
   getGraphicToken,
@@ -66,6 +73,7 @@ import {
 import {
   validateApplyArgs,
   validateBoolean,
+  validateGameSystem,
   validateHealthBar,
   validateLocale,
   validateMarkerConfig,
@@ -654,7 +662,7 @@ function showMultiTargetStep(playerId, args) {
 /**
  * Whispers condition selection buttons in a two-column layout.
  *
- * Left column: standard D&D conditions. Right column: custom effect types.
+ * Left column: system standard conditions. Right column: system custom effect types.
  * All buttons advance the wizard to the target/subject step.
  *
  * @param {string} playerId GM player id.
@@ -662,15 +670,17 @@ function showMultiTargetStep(playerId, args) {
  * @returns {void}
  */
 function showConditionStep(playerId, args) {
-  const locale = getConfig().language;
+  const config = getConfig();
+  const locale = config.language;
+  const profile = getSystemProfile(config.gameSystem);
   const base = buildWizardBase(args);
 
-  const standardButtons = STANDARD_CONDITIONS.map((c) =>
-    buildButton(t(`condNames.${c}`, locale), `${base} --condition ${c}`),
+  const standardButtons = profile.STANDARD_CONDITIONS.map((c) =>
+    buildButton(getConditionDisplayName(c, profile, locale), `${base} --condition ${c}`),
   );
 
-  const customButtons = CUSTOM_EFFECT_TYPES.map((c) =>
-    buildButton(t(`condNames.${c}`, locale), `${base} --condition ${c}`),
+  const customButtons = profile.CUSTOM_EFFECT_TYPES.map((c) =>
+    buildButton(getConditionDisplayName(c, profile, locale), `${base} --condition ${c}`),
   );
 
   const tableRows = buildTwoColumnRows(standardButtons, customButtons);
@@ -1032,6 +1042,11 @@ export function routeCommand(msg, args) {
 
   if (args["reinstall-handout"]) {
     handleReinstallHandout(msg.playerid);
+    return;
+  }
+
+  if (args["report-token"] !== undefined) {
+    handleReportToken(msg);
     return;
   }
 
@@ -1412,6 +1427,11 @@ export function handleConfig(playerId, configText) {
     return;
   }
 
+  if (option === "suppressPublicChat") {
+    updateBooleanConfig(playerId, "suppressPublicChat", value);
+    return;
+  }
+
   if (option === "healthBar") {
     updateHealthBarConfig(playerId, value);
     return;
@@ -1419,6 +1439,11 @@ export function handleConfig(playerId, configText) {
 
   if (option === "language") {
     updateLocaleConfig(playerId, value);
+    return;
+  }
+
+  if (option === "gameSystem") {
+    updateGameSystemConfig(playerId, value);
     return;
   }
 
@@ -1483,6 +1508,55 @@ export function updateLocaleConfig(playerId, value) {
   );
 
   installHandout(result.value);
+}
+
+/**
+ * Updates the active game system, resetting markers to the new system's defaults.
+ *
+ * @param {string} playerId GM player id.
+ * @param {string} value Game system id.
+ * @returns {void}
+ */
+export function updateGameSystemConfig(playerId, value) {
+  const result = validateGameSystem(value);
+  if (!result.valid) {
+    const locale = getConfig().language;
+    whisperWarning(playerId, [
+      t("ui.msg.invalidGameSystem", locale),
+      htmlTable(
+        [t("ui.col.option", locale), t("ui.col.description", locale)],
+        gameSystemTableRows(),
+      ),
+    ]);
+    return;
+  }
+
+  const config = getConfig();
+  const profile = getSystemProfile(result.value);
+  applyConfigUpdate(
+    playerId,
+    (cfg) => {
+      cfg.gameSystem = result.value;
+      cfg.markers = { ...profile.DEFAULT_MARKERS };
+    },
+    t("ui.msg.gameSystemSet", config.language, { system: result.value }),
+  );
+  installHandout(getConfig().language);
+}
+
+/**
+ * Builds display rows for the supported game systems table.
+ *
+ * Each row contains the system id as a code span and the human-readable name.
+ * Used in both the invalid-system warning and the --help output.
+ *
+ * @returns {string[][]} Two-column table rows: [[id, name], ...].
+ */
+function gameSystemTableRows() {
+  return GAME_SYSTEM_DEFINITIONS.map((def) => [
+    code(def.id),
+    escapeHtml(def.name),
+  ]);
 }
 
 /**
@@ -1603,6 +1677,7 @@ export function showMenu(playerId, menu) {
 
   const cmdPrompt = `${COMMAND} --prompt`;
   const cmdMultiTarget = `${COMMAND} --multi-target`;
+  const cmdReportToken = COMMAND_REPORT_TOKEN;
   const cmdRemoveMenu = `${COMMAND} --menu remove`;
   const cmdConfig = `${COMMAND} --config`;
   const cmdCleanup = `${COMMAND} --cleanup`;
@@ -1623,6 +1698,10 @@ export function showMenu(playerId, menu) {
         [
           code(cmdMultiTarget),
           buildButton(t("ui.btn.openMultiTarget", locale), cmdMultiTarget),
+        ],
+        [
+          code(cmdReportToken),
+          buildButton(t("ui.btn.reportToken", locale), cmdReportToken),
         ],
         [
           code(cmdRemoveMenu),
@@ -1692,22 +1771,26 @@ export function showRemovalMenu(playerId) {
 export function showConfig(playerId) {
   const config = getConfig();
   const locale = config.language;
-  const markerRows = [];
-  for (const condition of STANDARD_CONDITIONS) {
-    markerRows.push([
-      escapeHtml(condition),
-      code(config.markers[condition] || "(none)"),
-    ]);
-  }
+  const profile = getSystemProfile(config.gameSystem);
+  const allConditions = [...profile.STANDARD_CONDITIONS, ...profile.CUSTOM_EFFECT_TYPES];
+  const markerRows = allConditions.map((condition) => [
+    escapeHtml(getConditionDisplayName(condition, profile, locale)),
+    code(config.markers[condition] || "(none)"),
+  ]);
+
+  const systemDef = GAME_SYSTEM_DEFINITIONS.find((d) => d.id === config.gameSystem);
+  const systemLabel = systemDef ? `${config.gameSystem} — ${systemDef.name}` : config.gameSystem;
 
   whisper(playerId, t("ui.title.config", locale), [
     heading(t("ui.heading.settings", locale)),
     htmlTable(
       [t("ui.col.option", locale), t("ui.col.value", locale)],
       [
+        ["gameSystem", code(systemLabel)],
         ["useMarkers", code(String(config.useMarkers))],
         ["useIcons", code(String(config.useIcons))],
         ["subjectPromptBypass", code(String(config.subjectPromptBypass))],
+        ["suppressPublicChat", code(String(config.suppressPublicChat))],
         ["healthBar", code(config.healthBar)],
         ["language", code(config.language)],
       ],
@@ -1778,6 +1861,16 @@ export function showHelp(playerId) {
       configTableRows,
     ),
     sectionSpacer(),
+    heading(t("handout.gameSystems.heading", locale)),
+    t("handout.gameSystems.intro", locale),
+    htmlTable(
+      [
+        t("handout.gameSystems.colId", locale),
+        t("handout.gameSystems.colName", locale),
+      ],
+      gameSystemTableRows(),
+    ),
+    sectionSpacer(),
     heading(t("handout.availableLocales.heading", locale)),
     t("handout.availableLocales.intro", locale),
     htmlTable(
@@ -1837,6 +1930,107 @@ export function whisperApplySummary(
       ],
     ),
   ]);
+}
+
+/**
+ * Builds body lines for one token's condition report.
+ *
+ * Produces two sections: conditions applied to the token (it is the target)
+ * and conditions applied by the token to others (it is the source but not
+ * the target, so self-target conditions appear only in the first section).
+ *
+ * @param {string} tokenId Token id.
+ * @param {string} tokenName Token display name.
+ * @param {string} locale Output locale.
+ * @returns {(string|object)[]} Body lines for the report.
+ */
+function buildTokenReportSections(tokenId, tokenName, locale) {
+  const appliedTo = getActiveByTarget(tokenId);
+  const appliedBy = getActiveBySource(tokenId).filter(
+    (c) => c.targetTokenId !== tokenId,
+  );
+
+  const lines = [heading(tokenName)];
+
+  lines.push(heading(t("ui.heading.appliedTo", locale)));
+  if (appliedTo.length === 0) {
+    lines.push(t("ui.msg.noConditionsAppliedTo", locale, { name: tokenName }));
+  } else {
+    lines.push(
+      htmlTable(
+        [t("ui.col.condition", locale), t("ui.col.duration", locale)],
+        appliedTo.map((c) => [
+          escapeHtml(c.displayText),
+          escapeHtml(formatDuration(c.duration, locale)),
+        ]),
+      ),
+    );
+  }
+
+  lines.push(heading(t("ui.heading.appliedBy", locale)));
+  if (appliedBy.length === 0) {
+    lines.push(t("ui.msg.noConditionsAppliedBy", locale, { name: tokenName }));
+  } else {
+    lines.push(
+      htmlTable(
+        [t("ui.col.condition", locale), t("ui.col.duration", locale)],
+        appliedBy.map((c) => [
+          escapeHtml(c.displayText),
+          escapeHtml(formatDuration(c.duration, locale)),
+        ]),
+      ),
+    );
+  }
+
+  return lines;
+}
+
+/**
+ * Whispers a GM-only condition report for each selected token.
+ *
+ * Lists conditions applied to and applied by each token. Requires at least
+ * one token to be selected. Output is sent only to the requesting GM.
+ *
+ * @param {object} msg Roll20 chat message.
+ * @returns {void}
+ */
+export function handleReportToken(msg) {
+  const locale = getConfig().language;
+  const selected = Array.isArray(msg.selected) ? msg.selected : [];
+
+  if (selected.length === 0) {
+    whisperWarning(msg.playerid, t("ui.msg.noTokensSelectedReport", locale));
+    return;
+  }
+
+  const tokenIds = selected.map((s) => toText(s._id)).filter(Boolean);
+  if (tokenIds.length === 0) {
+    whisperWarning(msg.playerid, t("ui.msg.invalidIds", locale));
+    return;
+  }
+
+  const bodyLines = [];
+  let tokenCount = 0;
+
+  for (const tokenId of tokenIds) {
+    const token = getGraphicToken(tokenId);
+    if (!token) continue;
+
+    if (tokenCount > 0) {
+      bodyLines.push(sectionSpacer());
+    }
+
+    const tokenName = getTokenName(token);
+    bodyLines.push(...buildTokenReportSections(tokenId, tokenName, locale));
+    tokenCount += 1;
+  }
+
+  if (tokenCount === 0) {
+    whisperWarning(msg.playerid, t("ui.msg.reSelectTokens", locale));
+    return;
+  }
+
+  whisper(msg.playerid, t("ui.title.tokenReport", locale), bodyLines);
 }
 
 /**
@@ -2107,7 +2301,7 @@ function handleReorderConditions(playerId) {
 }
 
 /**
- * Reinstalls the ConditionTrackerWizard macro for all current GM players.
+ * Reinstalls all GM macros for all current GM players.
  *
  * @param {string} playerId GM player id.
  * @returns {void}
@@ -2121,6 +2315,7 @@ export function handleReinstallMacro(playerId) {
     t("ui.msg.macroReinstalled", locale, {
       wizard: MACRO_NAME,
       multiTarget: MACRO_NAME_MULTI_TARGET,
+      reportToken: MACRO_NAME_REPORT_TOKEN,
     }),
   );
 }

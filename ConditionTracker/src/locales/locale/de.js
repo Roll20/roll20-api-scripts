@@ -162,6 +162,8 @@ const TRANSLATION = {
       details: "Details",
       description: "Beschreibung",
       scenario: "Szenario",
+      gameSystem: "Game System",
+      duration: "Duration",
     },
     dur: {
       untilRemoved: "Bis zur Entfernung",
@@ -186,6 +188,7 @@ const TRANSLATION = {
       reinstallHandout: "Handout neu installieren",
       showHelp: "Hilfe anzeigen",
       reorderConditions: "Bedingungszeilen neu anordnen",
+      reportToken: "Report Token Conditions",
     },
     title: {
       menu: "Menü",
@@ -208,6 +211,7 @@ const TRANSLATION = {
       moveToken: "{name} — Token verschieben?",
       scriptReady: "Skript bereit",
       conditionReorder: "Rundenreihenfolge geändert",
+      tokenReport: "Token Condition Report",
     },
     heading: {
       quickActions: "Schnellaktionen",
@@ -219,6 +223,8 @@ const TRANSLATION = {
       promptUi: "Assistent-Oberfläche",
       examples: "Beispiele",
       summary: "Zusammenfassung",
+      appliedTo: "Conditions Applied To",
+      appliedBy: "Conditions Applied By",
     },
     msg: {
       noActive: "Es werden keine aktiven Zustände verfolgt.",
@@ -226,7 +232,7 @@ const TRANSLATION = {
       unknownConfig:
         "Unbekannte Konfigurationsoption. Verwende --config, um unterstützte Einstellungen anzuzeigen.",
       macroReinstalled:
-        "Die Makros {wizard} und {multiTarget} wurden für alle aktuellen GM-Spieler neu installiert.",
+        "Die Makros {wizard}, {multiTarget} und {reportToken} wurden für alle aktuellen GM-Spieler neu installiert.",
       handoutReinstalled: "Das Hilfe-Handout {handout} wurde neu installiert.",
       duplicate:
         "Diese exakte Kombination aus Quelle, Subjekt, Ziel, Zustand und benutzerdefiniertem Text ist bereits aktiv.",
@@ -300,6 +306,11 @@ const TRANSLATION = {
         "Die Rundenreihenfolge wurde geändert und {count} verfolgte Bedingungszeile(n) könnte(n) nun falsch platziert sein. Klicke unten, um sie hinter ihre zugewiesenen Tokens zu verschieben.",
       conditionsReordered:
         "Bedingungszeilen wurden hinter ihre zugewiesenen Tokens verschoben.",
+      noTokensSelectedReport:
+        "Select at least one token on the board before using --report-token.",
+      noConditionsAppliedTo: "{name} has no active conditions applied to it.",
+      noConditionsAppliedBy:
+        "{name} has no active conditions applied to others.",
     },
     removal: {
       conditionField: "Zustand",
@@ -346,6 +357,10 @@ const TRANSLATION = {
         [
           "!condition-tracker --multi-target",
           "Einen Zustand gleichzeitig auf mehrere Tokens anwenden. Auch als Makro ConditionTrackerMultiTarget verfügbar.",
+        ],
+        [
+          "!condition-tracker --report-token",
+          "Select one or more tokens first, then run this command to get a GM whisper listing every condition applied to and by each selected token. Also available as the ConditionTrackerReportToken macro.",
         ],
         [
           "!condition-tracker --menu",
@@ -400,6 +415,10 @@ const TRANSLATION = {
         [
           "--reinstall-handout",
           "Lokalisiertes Hilfe-Handout neu erstellen oder aktualisieren",
+        ],
+        [
+          "--report-token",
+          "Whisper a GM-only condition report for each selected token (conditions applied to and by it)",
         ],
         [
           "--lang &lt;Locale&gt;",
@@ -486,6 +505,11 @@ const TRANSLATION = {
           "subjectPromptBypass",
           "true / false",
           "Den optionalen Subjektschritt für Zauber / Fähigkeit / Sonstiges überspringen",
+        ],
+        [
+          "suppressPublicChat",
+          "true / false",
+          "Alle öffentlichen Chat-Ankündigungen (Hinzufügen und Entfernen) unterdrücken. GM-Flüstermeldungen sind nicht betroffen.",
         ],
         [
           "healthBar",

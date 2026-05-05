@@ -162,6 +162,8 @@ const TRANSLATION = {
       details: "Details",
       description: "Beschrijving",
       scenario: "Scenario",
+      gameSystem: "Game System",
+      duration: "Duration",
     },
     dur: {
       untilRemoved: "Tot verwijdering",
@@ -186,6 +188,7 @@ const TRANSLATION = {
       reinstallHandout: "Handout Herinstalleren",
       showHelp: "Toon Help",
       reorderConditions: "Conditierijen Herordenen",
+      reportToken: "Report Token Conditions",
     },
     title: {
       menu: "Menu",
@@ -208,6 +211,7 @@ const TRANSLATION = {
       moveToken: "{name} — Token Verplaatsen?",
       scriptReady: "Script Gereed",
       conditionReorder: "Beurtenvolgorde Gewijzigd",
+      tokenReport: "Token Condition Report",
     },
     heading: {
       quickActions: "Snelle Acties",
@@ -219,6 +223,8 @@ const TRANSLATION = {
       promptUi: "Wizard-interface",
       examples: "Voorbeelden",
       summary: "Samenvatting",
+      appliedTo: "Conditions Applied To",
+      appliedBy: "Conditions Applied By",
     },
     msg: {
       noActive: "Er worden geen actieve condities bijgehouden.",
@@ -226,7 +232,7 @@ const TRANSLATION = {
       unknownConfig:
         "Onbekende configuratieoptie. Gebruik --config om ondersteunde instellingen te bekijken.",
       macroReinstalled:
-        "De {wizard}- en {multiTarget}-macro's zijn herinstalleerd voor alle huidige GM-spelers.",
+        "De {wizard}-, {multiTarget}- en {reportToken}-macro's zijn herinstalleerd voor alle huidige GM-spelers.",
       handoutReinstalled: "De help-handout {handout} is herinstalleerd.",
       duplicate:
         "Deze exacte combinatie van bron, onderwerp, doel, conditie en aangepaste tekst is al actief.",
@@ -302,6 +308,11 @@ const TRANSLATION = {
         "De beurtenvolgorde is gewijzigd en {count} bijgehouden conditierij(en) staan mogelijk op de verkeerde plek. Klik hieronder om ze te herstellen na hun toegewezen tokens.",
       conditionsReordered:
         "Conditierijen zijn hergeplaatst na hun toegewezen tokens.",
+      noTokensSelectedReport:
+        "Select at least one token on the board before using --report-token.",
+      noConditionsAppliedTo: "{name} has no active conditions applied to it.",
+      noConditionsAppliedBy:
+        "{name} has no active conditions applied to others.",
     },
     removal: {
       conditionField: "Conditie",
@@ -348,6 +359,10 @@ const TRANSLATION = {
         [
           "!condition-tracker --multi-target",
           "Pas één conditie tegelijkertijd toe op meerdere tokens. Ook beschikbaar als de ConditionTrackerMultiTarget-macro.",
+        ],
+        [
+          "!condition-tracker --report-token",
+          "Select one or more tokens first, then run this command to get a GM whisper listing every condition applied to and by each selected token. Also available as the ConditionTrackerReportToken macro.",
         ],
         [
           "!condition-tracker --menu",
@@ -402,6 +417,10 @@ const TRANSLATION = {
         [
           "--reinstall-handout",
           "Maak de gelokaliseerde help-handout opnieuw aan of werk deze bij",
+        ],
+        [
+          "--report-token",
+          "Whisper a GM-only condition report for each selected token (conditions applied to and by it)",
         ],
         [
           "--lang &lt;locale&gt;",
@@ -488,6 +507,11 @@ const TRANSLATION = {
           "subjectPromptBypass",
           "true / false",
           "Sla de optionele onderwerptokenstap over voor Spreuk / Vaardigheid / Overige effecten",
+        ],
+        [
+          "suppressPublicChat",
+          "true / false",
+          "Onderdruk alle openbare chatberichten (toepassen en verwijderen berichten). GM-fluisteringen worden niet beïnvloed.",
         ],
         [
           "healthBar",

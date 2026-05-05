@@ -1,28 +1,36 @@
 import {
   DEFAULT_LOCALE,
-  DEFAULT_MARKERS,
   SCRIPT_VERSION,
   STATE_KEY,
   VALID_HEALTH_BARS,
 } from "./constants.js";
 import { normalizeLocale } from "./i18n.js";
+import {
+  DEFAULT_GAME_SYSTEM,
+  VALID_GAME_SYSTEMS,
+  getSystemProfile,
+} from "./systems/index.js";
 import { isRecord } from "./utils.js";
 
 const GLOBAL_CONFIG_KEY = STATE_KEY.toLowerCase();
 
 /**
- * Creates a fresh default configuration object.
+ * Creates a fresh default configuration object for the given game system.
  *
+ * @param {string} [gameSystem] Game system id. Defaults to dnd5e.
  * @returns {object} Default configuration.
  */
-export function createDefaultConfig() {
+export function createDefaultConfig(gameSystem = DEFAULT_GAME_SYSTEM) {
+  const profile = getSystemProfile(gameSystem);
   return {
+    gameSystem,
     useMarkers: true,
     useIcons: false,
     subjectPromptBypass: false,
+    suppressPublicChat: false,
     healthBar: VALID_HEALTH_BARS[0],
     language: DEFAULT_LOCALE,
-    markers: { ...DEFAULT_MARKERS },
+    markers: { ...profile.DEFAULT_MARKERS },
   };
 }
 
@@ -83,16 +91,21 @@ export function ensureState() {
 
 /**
  * Merges a possibly incomplete config object with defaults.
+ * Defaults (including markers) are derived from the config's game system.
  *
  * @param {object} config The current config.
  * @returns {object} A complete config.
  */
 export function mergeConfig(config) {
-  const defaults = createDefaultConfig();
   const nextConfig = isRecord(config) ? config : {};
+  const systemId = VALID_GAME_SYSTEMS.has(nextConfig.gameSystem)
+    ? nextConfig.gameSystem
+    : DEFAULT_GAME_SYSTEM;
+  const defaults = createDefaultConfig(systemId);
   const markers = isRecord(nextConfig.markers) ? nextConfig.markers : {};
 
   return {
+    gameSystem: systemId,
     useMarkers:
       typeof nextConfig.useMarkers === "boolean"
         ? nextConfig.useMarkers
@@ -105,6 +118,10 @@ export function mergeConfig(config) {
       typeof nextConfig.subjectPromptBypass === "boolean"
         ? nextConfig.subjectPromptBypass
         : defaults.subjectPromptBypass,
+    suppressPublicChat:
+      typeof nextConfig.suppressPublicChat === "boolean"
+        ? nextConfig.suppressPublicChat
+        : defaults.suppressPublicChat,
     healthBar: VALID_HEALTH_BARS.includes(nextConfig.healthBar)
       ? nextConfig.healthBar
       : defaults.healthBar,
@@ -151,6 +168,12 @@ export function applyGlobalConfig() {
   const config = getConfig();
   const nextConfig = { ...config };
 
+  if (VALID_GAME_SYSTEMS.has(options.gameSystem)) {
+    const profile = getSystemProfile(options.gameSystem);
+    nextConfig.gameSystem = options.gameSystem;
+    nextConfig.markers = { ...profile.DEFAULT_MARKERS };
+  }
+
   nextConfig.useMarkers = parseBooleanOption(
     options.useMarkers,
     config.useMarkers,
@@ -159,6 +182,10 @@ export function applyGlobalConfig() {
   nextConfig.subjectPromptBypass = parseBooleanOption(
     options.subjectPromptBypass,
     config.subjectPromptBypass,
+  );
+  nextConfig.suppressPublicChat = parseBooleanOption(
+    options.suppressPublicChat,
+    config.suppressPublicChat,
   );
 
   if (VALID_HEALTH_BARS.includes(options.healthBar)) {
@@ -170,12 +197,13 @@ export function applyGlobalConfig() {
     nextConfig.language = language;
   }
 
-  const nextMarkers = { ...config.markers };
-  Object.keys(DEFAULT_MARKERS).forEach((condition) => {
+  const profile = getSystemProfile(nextConfig.gameSystem);
+  const nextMarkers = { ...nextConfig.markers };
+  Object.keys(profile.DEFAULT_MARKERS).forEach((condition) => {
     const markerValue = getMarkerOption(options, condition);
     nextMarkers[condition] = parseMarkerOption(
       markerValue,
-      nextMarkers[condition] || DEFAULT_MARKERS[condition],
+      nextMarkers[condition] || profile.DEFAULT_MARKERS[condition],
     );
   });
   nextConfig.markers = nextMarkers;
@@ -401,6 +429,18 @@ export function removeActiveCondition(conditionId) {
 export function getActiveByTarget(targetTokenId) {
   return filterActiveConditions(
     (condition) => condition.targetTokenId === targetTokenId,
+  );
+}
+
+/**
+ * Returns all active conditions where a token is the source.
+ *
+ * @param {string} sourceTokenId The source token id.
+ * @returns {object[]} Matching active conditions.
+ */
+export function getActiveBySource(sourceTokenId) {
+  return filterActiveConditions(
+    (condition) => condition.sourceTokenId === sourceTokenId,
   );
 }
 
