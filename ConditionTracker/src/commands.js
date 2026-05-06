@@ -1,6 +1,7 @@
 import {
   COMMAND,
   COMMAND_REPORT_TOKEN,
+  COMMAND_SAVED,
   COLOR_BG_SOFT_BLACK,
   COLOR_HEADER_DARK,
   COLOR_HEADER_LIGHT,
@@ -9,6 +10,7 @@ import {
   MACRO_NAME,
   MACRO_NAME_MULTI_TARGET,
   MACRO_NAME_REPORT_TOKEN,
+  MACRO_NAME_SAVED,
   HANDOUT_NAME,
   MENU_REMOVE,
   SCRIPT_NAME,
@@ -82,6 +84,8 @@ import {
 import { runCleanup } from "./cleanup.js";
 import { installMacro } from "./macros.js";
 import { installHandout } from "./handout.js";
+import { handleSaved } from "./savedEffectsCommands.js";
+import { getSavedEffectsForToken } from "./savedEffects.js";
 import {
   getLocale,
   getLocalizedLanguageName,
@@ -112,7 +116,7 @@ const SECTION_HEADING_STYLE = [
  * @param {string} text Heading text.
  * @returns {object} Trusted HTML line.
  */
-function heading(text) {
+export function heading(text) {
   return rawHtml(
     `<div style="${SECTION_HEADING_STYLE}">${escapeHtml(text)}</div>`,
   );
@@ -1050,6 +1054,11 @@ export function routeCommand(msg, args) {
     return;
   }
 
+  if (args.saved !== undefined) {
+    handleSaved(msg, args);
+    return;
+  }
+
   if (args.config) {
     handleConfig(msg.playerid, args.config);
     return;
@@ -1678,6 +1687,7 @@ export function showMenu(playerId, menu) {
   const cmdPrompt = `${COMMAND} --prompt`;
   const cmdMultiTarget = `${COMMAND} --multi-target`;
   const cmdReportToken = COMMAND_REPORT_TOKEN;
+  const cmdSaved = COMMAND_SAVED;
   const cmdRemoveMenu = `${COMMAND} --menu remove`;
   const cmdConfig = `${COMMAND} --config`;
   const cmdCleanup = `${COMMAND} --cleanup`;
@@ -1702,6 +1712,10 @@ export function showMenu(playerId, menu) {
         [
           code(cmdReportToken),
           buildButton(t("ui.btn.reportToken", locale), cmdReportToken),
+        ],
+        [
+          code(cmdSaved),
+          buildButton(t("ui.btn.savedEffects", locale), cmdSaved),
         ],
         [
           code(cmdRemoveMenu),
@@ -1958,10 +1972,11 @@ function buildTokenReportSections(tokenId, tokenName, locale) {
   } else {
     lines.push(
       htmlTable(
-        [t("ui.col.condition", locale), t("ui.col.duration", locale)],
+        [t("ui.col.condition", locale), t("ui.col.duration", locale), ""],
         appliedTo.map((c) => [
           escapeHtml(c.displayText),
           escapeHtml(formatDuration(c.duration, locale)),
+          buildButton("🗑", `${COMMAND} --remove ${c.id}`),
         ]),
       ),
     );
@@ -1973,11 +1988,35 @@ function buildTokenReportSections(tokenId, tokenName, locale) {
   } else {
     lines.push(
       htmlTable(
-        [t("ui.col.condition", locale), t("ui.col.duration", locale)],
+        [t("ui.col.condition", locale), t("ui.col.duration", locale), ""],
         appliedBy.map((c) => [
           escapeHtml(c.displayText),
           escapeHtml(formatDuration(c.duration, locale)),
+          buildButton("🗑", `${COMMAND} --remove ${c.id}`),
         ]),
+      ),
+    );
+  }
+
+  const savedEffects = getSavedEffectsForToken(tokenId);
+  lines.push(heading(t("ui.heading.savedEffectsFor", locale, { name: tokenName })));
+  if (savedEffects.length === 0) {
+    lines.push(t("ui.msg.noSavedEffects", locale, { name: tokenName }));
+  } else {
+    lines.push(
+      htmlTable(
+        [t("ui.saved.field.gmLabel", locale), t("ui.saved.field.visibility", locale), ""],
+        savedEffects.map((effect) => {
+          const label = effect.gmLabel || effect.condition || "";
+          const snoozedLabel = effect.snooze
+            ? `${label} (${t("ui.saved.snoozed", locale)})`
+            : label;
+          return [
+            escapeHtml(snoozedLabel),
+            escapeHtml(t(`ui.saved.visibility.${effect.visibility}`, locale)),
+            buildButton("🗑", `${COMMAND} --saved remove ${effect.id}`),
+          ];
+        }),
       ),
     );
   }
@@ -2316,6 +2355,7 @@ export function handleReinstallMacro(playerId) {
       wizard: MACRO_NAME,
       multiTarget: MACRO_NAME_MULTI_TARGET,
       reportToken: MACRO_NAME_REPORT_TOKEN,
+      saved: MACRO_NAME_SAVED,
     }),
   );
 }

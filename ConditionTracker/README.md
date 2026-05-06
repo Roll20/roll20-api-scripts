@@ -1,19 +1,21 @@
 # Condition Tracker
 
-**Condition Tracker** is a Roll20 API Mod for GMs who want to track token-focused conditions and custom effects as separate Turn Tracker rows. It applies configured token markers, announces changes in chat, stores active effects in `state.ConditionTracker`, and removes effects manually, through cleanup, on duration expiry, or when a tracked target reaches 0 HP.
+**Condition Tracker** is a Roll20 API Mod for GMs who want to track token-focused conditions and custom effects as separate Turn Tracker rows. It applies configured token markers, announces changes in chat, stores active effects and saved long-term effects in `state.ConditionTracker`, and removes effects manually, through cleanup, on duration expiry, on token deletion, or when a tracked target reaches 0 HP.
 
 ## Features
 
 - Applies standard D&D-style conditions to target tokens with `!condition-tracker`.
 - Supports custom effect types: **Spell**, **Ability**, **Advantage**, **Disadvantage**, and **Other** (Booming Blade, Hunter's Mark, Hex, concentration effects, homebrew conditions, etc.).
 - Multi-target wizard (`--multi-target`): select tokens on the board before running the macro to apply a condition to all of them at once.
+- Token report (`--report-token`): select one or more tokens and receive a GM-only summary of conditions applied to and by each token.
+- Saved effects (`--saved`): manage persistent long-term effects (curses, diseases, hidden debuffs) with public, masked, and GM-only visibility.
 - Adds custom Turn Tracker rows directly beneath the affected target token when possible.
 - Applies and safely removes configured token markers.
 - Prevents exact duplicate conditions while allowing the same condition from different sources.
 - Tracks durations including until removed, end of target/source next turn, and numeric round counts.
 - Provides GM-only chat menus, a removal menu, configuration commands, and cleanup tools.
 - Automatically prunes conditions when a source or target token is deleted.
-- Creates or updates the `ConditionTrackerWizard` and `ConditionTrackerMultiTarget` GM macros on install.
+- Creates or updates the `ConditionTrackerWizard`, `ConditionTrackerMultiTarget`, `ConditionTrackerReportToken`, and `ConditionTrackerSaved` GM macros on install.
 - Multi-language output with localized chat, wizard, help, and handout content. Set with `--config language` or use `--lang` for per-command bilingual output.
 - Uses a modular source tree and Rollup build to generate a paste-ready Roll20 script.
 
@@ -56,8 +58,17 @@ All commands are GM-only except `--help`.
 - `!condition-tracker --lang <locale>`
 - `!condition-tracker --remove <condition_id>`
 - `!condition-tracker --cleanup`
+- `!condition-tracker --reorder-conditions`
 - `!condition-tracker --reinstall-macro`
 - `!condition-tracker --reinstall-handout`
+- `!condition-tracker --report-token`
+- `!condition-tracker --saved`
+- `!condition-tracker --saved add`
+- `!condition-tracker --saved edit <saved_id>`
+- `!condition-tracker --saved remove <saved_id>`
+- `!condition-tracker --saved promote <saved_id> --visibility public|masked|gm`
+- `!condition-tracker --saved snooze <saved_id> --scope turn|rounds|combat --rounds <n>`
+- `!condition-tracker --saved snooze-clear <saved_id>`
 - `!condition-tracker --config`
 - `!condition-tracker --config marker Grappled=grab`
 - `!condition-tracker --config gameSystem <id>`
@@ -107,12 +118,14 @@ The main menu (`!condition-tracker --menu`) contains an **Open Wizard** button t
 
 ## Macro Usage
 
-Roll20 Mods cannot create true native dialogs, so Condition Tracker uses macros and chat menus. On install, the mod creates or updates two GM macros:
+Roll20 Mods cannot create true native dialogs, so Condition Tracker uses macros and chat menus. On install, the mod creates or updates four GM macros:
 
 - **`ConditionTrackerWizard`** (`!condition-tracker --prompt`) — launches the step-by-step condition wizard. No token selection required beforehand.
 - **`ConditionTrackerMultiTarget`** (`!condition-tracker --multi-target`) — select one or more tokens on the board first, then run the macro. The wizard applies the chosen condition to all selected tokens at once.
+- **`ConditionTrackerReportToken`** (`!condition-tracker --report-token`) — select one or more tokens first, then run to get a GM whisper listing all conditions applied to and by each selected token.
+- **`ConditionTrackerSaved`** (`!condition-tracker --saved`) — select a token first, then run to view/manage saved long-term effects for that token.
 
-If either macro is missing, use `!condition-tracker --reinstall-macro` to recreate both for all current GM players.
+If any macro is missing, use `!condition-tracker --reinstall-macro` to recreate all four for all current GM players.
 
 If the help handout is missing, duplicated, or out of date, use `!condition-tracker --reinstall-handout` to recreate/update the localized handout.
 
@@ -159,16 +172,16 @@ Condition Tracker stores configuration in `state.ConditionTracker.config`.
 
 Use `!condition-tracker --config reset` to restore all configurable settings and marker mappings back to the mod defaults.
 
-| Option                | Values                                     | Description                                                                       |
-| --------------------- | ------------------------------------------ | --------------------------------------------------------------------------------- |
+| Option                | Values                                     | Description                                                                                                                                                            |
+| --------------------- | ------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `gameSystem`          | System id (e.g. `dnd5e`, `pathfinder2e`)   | Set the active game system. Changes the condition list and resets markers to system defaults. See [Supported Game Systems](#supported-game-systems) for all valid ids. |
-| `useMarkers`          | `true` / `false`                           | Apply Roll20 status markers to tokens when a condition is added                   |
-| `useIcons`            | `true` / `false`                           | Show short icon codes (e.g. `[G]`) instead of emoji in Turn Tracker rows          |
-| `subjectPromptBypass` | `true` / `false`                           | Skip the optional subject-token step for Spell / Ability / Other effects          |
-| `suppressPublicChat`  | `true` / `false`                           | Suppress all public chat announcements (apply and remove messages). GM whispers are unaffected. |
-| `healthBar`           | `bar1_value` / `bar2_value` / `bar3_value` | Token bar to watch; when it reaches 0 the GM is prompted to clean up conditions   |
-| `language`            | Any supported locale                       | Output language for chat messages and the help handout                            |
-| `marker`              | `<Condition>=<marker name>`                | Override the status marker for a specific condition (e.g. `marker Grappled=grab`) |
+| `useMarkers`          | `true` / `false`                           | Apply Roll20 status markers to tokens when a condition is added                                                                                                        |
+| `useIcons`            | `true` / `false`                           | Show short icon codes (e.g. `[G]`) instead of emoji in Turn Tracker rows                                                                                               |
+| `subjectPromptBypass` | `true` / `false`                           | Skip the optional subject-token step for Spell / Ability / Other effects                                                                                               |
+| `suppressPublicChat`  | `true` / `false`                           | Suppress all public chat announcements (apply and remove messages). GM whispers are unaffected.                                                                        |
+| `healthBar`           | `bar1_value` / `bar2_value` / `bar3_value` | Token bar to watch; when it reaches 0 the GM is prompted to clean up conditions                                                                                        |
+| `language`            | Any supported locale                       | Output language for chat messages and the help handout                                                                                                                 |
+| `marker`              | `<Condition>=<marker name>`                | Override the status marker for a specific condition (e.g. `marker Grappled=grab`)                                                                                      |
 
 `subjectPromptBypass` defaults to `false`. Set `!condition-tracker --config subjectPromptBypass true` to skip the Subject prompt for custom effects and force Subject to None. For one-off runs, use `--subjectPromptBypass true|false` directly on the command.
 
@@ -178,53 +191,65 @@ Changing `language` updates both chat output and the generated help handout imme
 
 Use `--lang <locale>` on any apply command to emit a second announcement in an additional locale (bilingual mode), without changing the saved language setting.
 
+## Saved Effects
+
+Saved effects let you track long-term status outside normal combat rows while still keeping a token-linked record.
+
+- `public`: full label is visible in Turn Tracker and public chat when promoted.
+- `masked`: a vague public label is visible; full details remain GM-only.
+- `gm`: no Turn Tracker row is created; reminders are whispered to the GM when that token reaches the top of initiative.
+
+Use `!condition-tracker --saved add` to create effects and `!condition-tracker --saved promote <saved_id> --visibility ...` to copy one into active tracking. Promotions copy saved effects; they do not remove the saved record.
+
+Use `!condition-tracker --saved snooze ...` to suppress GM reminders for a turn, a number of rounds, or the current combat.
+
 ## Supported Game Systems
 
 Use `!condition-tracker --config gameSystem <id>` to switch the active game system. The in-game help card and generated handout also list all ids.
 
-| System ID        | Game System                                 |
-| ---------------- | ------------------------------------------- |
-| `dnd5e`          | Dungeons & Dragons 5th Edition              |
-| `dnd4e`          | Dungeons & Dragons 4th Edition              |
-| `dnd35`          | Dungeons & Dragons 3.5 Edition              |
-| `pathfinder1e`   | Pathfinder First Edition                    |
-| `pathfinder2e`   | Pathfinder Second Edition                   |
-| `starfinder`     | Starfinder                                  |
-| `13thage`        | 13th Age                                    |
-| `sotdl`          | Shadow of the Demon Lord                    |
-| `cyphersystem`   | Cypher System                               |
-| `dcc`            | Dungeon Crawl Classics                      |
-| `ose`            | Old-School Essentials                       |
-| `bfrpg`          | Basic Fantasy RPG                           |
-| `knave`          | Knave                                       |
-| `intotheodd`     | Into the Odd                                |
-| `cairn`          | Cairn                                       |
-| `wwn`            | Worlds Without Number                       |
-| `swn`            | Stars Without Number                        |
-| `callofcthulhu`  | Call of Cthulhu                             |
-| `deltagreen`     | Delta Green                                 |
-| `vaesen`         | Vaesen                                      |
-| `brp`            | Basic Role-Playing                          |
-| `vtm`            | Vampire: The Masquerade                     |
-| `wta`            | Werewolf: The Apocalypse                    |
-| `mta`            | Mage: The Ascension                         |
-| `htr`            | Hunter: The Reckoning                       |
-| `ctd`            | Changeling: The Dreaming                    |
-| `alienrpg`       | Alien RPG                                   |
-| `mothership`     | Mothership RPG                              |
-| `traveller`      | Traveller                                   |
-| `cyberpunkred`   | Cyberpunk Red                               |
-| `shadowrun`      | Shadowrun                                   |
-| `genesys`        | Genesys                                     |
-| `starwarsffg`    | Star Wars Roleplaying Game (FFG)            |
-| `cortexprime`    | Cortex Prime                                |
-| `gurps`          | GURPS                                       |
-| `herosystem`     | Hero System                                 |
-| `savageworlds`   | Savage Worlds Adventure Edition             |
-| `wfrp4e`         | Warhammer Fantasy Roleplay 4e               |
-| `wh40k`          | Warhammer 40,000 RPG                        |
-| `whaos`          | Warhammer Age of Sigmar: Soulbound          |
-| `generic`        | Generic / Other                             |
+| System ID       | Game System                        |
+| --------------- | ---------------------------------- |
+| `dnd5e`         | Dungeons & Dragons 5th Edition     |
+| `dnd4e`         | Dungeons & Dragons 4th Edition     |
+| `dnd35`         | Dungeons & Dragons 3.5 Edition     |
+| `pathfinder1e`  | Pathfinder First Edition           |
+| `pathfinder2e`  | Pathfinder Second Edition          |
+| `starfinder`    | Starfinder                         |
+| `13thage`       | 13th Age                           |
+| `sotdl`         | Shadow of the Demon Lord           |
+| `cyphersystem`  | Cypher System                      |
+| `dcc`           | Dungeon Crawl Classics             |
+| `ose`           | Old-School Essentials              |
+| `bfrpg`         | Basic Fantasy RPG                  |
+| `knave`         | Knave                              |
+| `intotheodd`    | Into the Odd                       |
+| `cairn`         | Cairn                              |
+| `wwn`           | Worlds Without Number              |
+| `swn`           | Stars Without Number               |
+| `callofcthulhu` | Call of Cthulhu                    |
+| `deltagreen`    | Delta Green                        |
+| `vaesen`        | Vaesen                             |
+| `brp`           | Basic Role-Playing                 |
+| `vtm`           | Vampire: The Masquerade            |
+| `wta`           | Werewolf: The Apocalypse           |
+| `mta`           | Mage: The Ascension                |
+| `htr`           | Hunter: The Reckoning              |
+| `ctd`           | Changeling: The Dreaming           |
+| `alienrpg`      | Alien RPG                          |
+| `mothership`    | Mothership RPG                     |
+| `traveller`     | Traveller                          |
+| `cyberpunkred`  | Cyberpunk Red                      |
+| `shadowrun`     | Shadowrun                          |
+| `genesys`       | Genesys                            |
+| `starwarsffg`   | Star Wars Roleplaying Game (FFG)   |
+| `cortexprime`   | Cortex Prime                       |
+| `gurps`         | GURPS                              |
+| `herosystem`    | Hero System                        |
+| `savageworlds`  | Savage Worlds Adventure Edition    |
+| `wfrp4e`        | Warhammer Fantasy Roleplay 4e      |
+| `wh40k`         | Warhammer 40,000 RPG               |
+| `whaos`         | Warhammer Age of Sigmar: Soulbound |
+| `generic`       | Generic / Other                    |
 
 ## Translations
 
@@ -307,7 +332,7 @@ Durations are updated when the Turn Tracker advances from one token to another. 
 
 `!condition-tracker --cleanup` removes state entries whose source or target token no longer exists, removes orphaned Turn Tracker rows created by Condition Tracker, reconciles active state with the current Turn Tracker, and removes unused markers where safe. Cleanup details are whispered to the GM.
 
-Token deletion is also handled proactively: when a tracked source or target token is deleted, related conditions are immediately pruned from state and their custom Turn Tracker rows are removed.
+Token deletion is also handled proactively: when a tracked source or target token is deleted, related active conditions are immediately pruned from state, related custom Turn Tracker rows are removed, and any saved effects for that token are removed.
 
 When the configured health bar reaches 0 or below for a tracked target, all active conditions on that target are removed, public removal messages are announced, Turn Tracker rows are removed, markers are removed when safe, and cleanup details are whispered to the GM.
 

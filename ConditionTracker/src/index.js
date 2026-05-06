@@ -1,47 +1,57 @@
-import {
-  COMMAND,
-  SCRIPT_LAST_UPDATED,
-  SCRIPT_NAME,
-  SCRIPT_VERSION,
-  TOKEN_MARKER_SEPARATOR,
-} from "./constants.js";
-import {
-  applyGlobalConfig,
-  ensureState,
-  getActiveConditions,
-  partitionActiveConditions,
-  getConfig,
-  setActiveConditions,
-  updateTurnRuntime,
-} from "./state.js";
-import { t } from "./i18n.js";
-import { installMacro } from "./macros.js";
-import { installHandout } from "./handout.js";
+import { buildButton, whisper } from './chat.js';
 import {
   handleInput,
   isPlayerToken,
   promptZeroHpConditionRemoval,
   removeExpiredConditions,
   showMenu,
-} from "./commands.js";
-import { buildButton, whisper } from "./chat.js";
-import { decrementDuration } from "./durations.js";
+} from './commands.js';
+import {
+  COMMAND,
+  SCRIPT_LAST_UPDATED,
+  SCRIPT_NAME,
+  SCRIPT_VERSION,
+  TOKEN_MARKER_SEPARATOR,
+} from './constants.js';
+import { decrementDuration } from './durations.js';
+import { installHandout } from './handout.js';
+import { t } from './i18n.js';
+import { installMacro } from './macros.js';
 import {
   containsMarker,
   getTokenMarkers,
   removeMarkerIfUnused,
-} from "./markers.js";
-import { getGmPlayerIds, getTokenName, toText } from "./utils.js";
+} from './markers.js';
 import {
-  getCurrentTurnTokenId,
-  getConditionRowIdSet,
-  getTokenRowIds,
+  clearCombatSnoozes,
+  removeSavedEffectsForToken,
+} from './savedEffects.js';
+import { processSavedEffectReminders } from './savedEffectsCommands.js';
+import {
+  applyGlobalConfig,
+  ensureState,
+  getActiveConditions,
+  getConfig,
+  partitionActiveConditions,
+  setActiveConditions,
+  updateTurnRuntime,
+} from './state.js';
+import {
   findMisplacedConditionIds,
+  getConditionRowIdSet,
+  getCurrentTurnTokenId,
+  getTokenRowIds,
   getTurnSignature,
   migrateTurnOrderRows,
   removeConditionRows,
   updateConditionRow,
-} from "./turnOrder.js";
+} from './turnOrder.js';
+import {
+  getGmPlayerIds,
+  getGraphicToken,
+  getTokenName,
+  toText,
+} from './utils.js';
 
 /**
  * Initializes state, macros, and runtime turn bookkeeping.
@@ -69,8 +79,8 @@ function checkInstall() {
   for (const gmId of gmIds) {
     whisper(
       gmId,
-      t("ui.title.scriptReady", locale),
-      t("ui.msg.scriptReady", locale, {
+      t('ui.title.scriptReady', locale),
+      t('ui.msg.scriptReady', locale, {
         name: SCRIPT_NAME,
         version: SCRIPT_VERSION,
       }),
@@ -95,8 +105,8 @@ function handleTokenChange(token, previous) {
         .filter(Boolean);
       const currMarkers = getTokenMarkers(token);
       if (
-        containsMarker(currMarkers, "dead") &&
-        !containsMarker(prevMarkers, "dead")
+        containsMarker(currMarkers, 'dead') &&
+        !containsMarker(prevMarkers, 'dead')
       ) {
         const targetName = getTokenName(token);
         promptZeroHpConditionRemoval(token, targetName, isPlayerToken(token));
@@ -136,10 +146,14 @@ function handleTokenChange(token, previous) {
  */
 function handleTokenDestroy(token) {
   try {
-    const tokenId = token?.id || "";
+    const tokenId = token?.id || '';
     if (!tokenId) {
       return;
     }
+
+    // Always prune saved effects for deleted tokens, even when no active
+    // turn-tracked conditions are linked to that token.
+    removeSavedEffectsForToken(tokenId);
 
     const { matched: removed, unmatched: kept } = partitionActiveConditions(
       (condition) =>
@@ -200,6 +214,11 @@ function handleTurnOrderChange() {
       promptConditionReorder(getPrimaryGmId(), currentMisplacedIds.length);
     }
 
+    // When the turn order becomes empty, combat has ended — clear combat snoozes
+    if (currentTokenIds.length === 0) {
+      clearCombatSnoozes();
+    }
+
     if (!previousFirstTurnId || previousFirstTurnId === currentFirstTurnId) {
       return;
     }
@@ -210,6 +229,19 @@ function handleTurnOrderChange() {
       updateConditionRow(condition);
     }
     removeExpiredConditions(getPrimaryGmId(), expired);
+
+    // Fire GM reminders for hidden saved effects on the token now at the top
+    if (currentFirstTurnId) {
+      const topToken = getGraphicToken(currentFirstTurnId);
+      if (topToken) {
+        const topTokenName = getTokenName(topToken);
+        processSavedEffectReminders(
+          currentFirstTurnId,
+          topTokenName,
+          currentSignature,
+        );
+      }
+    }
   } catch (error) {
     log(`${SCRIPT_NAME} duration error: ${error.message}`);
   }
@@ -290,10 +322,10 @@ function arraysEqual(a, b) {
  */
 function promptConditionReorder(gmId, count) {
   const locale = getConfig().language;
-  whisper(gmId, t("ui.title.conditionReorder", locale), [
-    t("ui.msg.conditionReorder", locale, { count }),
+  whisper(gmId, t('ui.title.conditionReorder', locale), [
+    t('ui.msg.conditionReorder', locale, { count }),
     buildButton(
-      t("ui.btn.reorderConditions", locale),
+      t('ui.btn.reorderConditions', locale),
       `${COMMAND} --reorder-conditions`,
     ),
   ]);
@@ -362,7 +394,7 @@ function isAnchoredTo(condition, tokenId) {
  * @returns {string} GM player id or an empty string.
  */
 function getPrimaryGmId() {
-  return getGmPlayerIds()[0] || "";
+  return getGmPlayerIds()[0] || '';
 }
 
 /**
@@ -371,11 +403,11 @@ function getPrimaryGmId() {
  * @returns {void}
  */
 function registerEventHandlers() {
-  on("ready", checkInstall);
-  on("chat:message", handleInput);
-  on("change:graphic", handleTokenChange);
-  on("destroy:graphic", handleTokenDestroy);
-  on("change:campaign:turnorder", handleTurnOrderChange);
+  on('ready', checkInstall);
+  on('chat:message', handleInput);
+  on('change:graphic', handleTokenChange);
+  on('destroy:graphic', handleTokenDestroy);
+  on('change:campaign:turnorder', handleTurnOrderChange);
 }
 
 registerEventHandlers();

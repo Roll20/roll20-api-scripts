@@ -86,6 +86,10 @@ export function ensureState() {
     trackerState.runtime = createRuntimeState();
   }
 
+  if (!isRecord(trackerState.savedEffects)) {
+    trackerState.savedEffects = {};
+  }
+
   return trackerState;
 }
 

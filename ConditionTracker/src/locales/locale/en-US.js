@@ -313,6 +313,13 @@ const TRANSLATION = {
       showHelp: "Show Help",
       reorderConditions: "Reorder Condition Rows",
       reportToken: "Report Token Conditions",
+      savedEffects: "Saved Effects",
+      addSavedEffect: "Add Saved Effect",
+      editSaved: "Edit",
+      removeSaved: "Remove",
+      promoteSaved: "Add to Turn Tracker",
+      snoozeSaved: "Snooze",
+      clearSnooze: "Clear Snooze",
     },
     title: {
       menu: "Menu",
@@ -336,6 +343,14 @@ const TRANSLATION = {
       scriptReady: "Script Ready",
       conditionReorder: "Turn Order Changed",
       tokenReport: "Token Condition Report",
+      savedEffects: "Saved Effects",
+      savedAdd: "Add Saved Effect",
+      savedEdit: "Edit Saved Effect",
+      savedRemoved: "Saved Effect Removed",
+      savedPromoted: "Add to Turn Tracker",
+      savedSnoozed: "Reminder Snoozed",
+      savedSnoozeCleared: "Snooze Cleared",
+      hiddenEffects: "Hidden Effects — {name}",
     },
     heading: {
       quickActions: "Quick Actions",
@@ -349,6 +364,11 @@ const TRANSLATION = {
       summary: "Summary",
       appliedTo: "Conditions Applied To",
       appliedBy: "Conditions Applied By",
+      savedEffectsFor: "Saved Effects for {name}",
+      visibility: "Visibility",
+      snoozeOptions: "Snooze Reminder",
+      promoteOptions: "Promote to Turn Tracker",
+      editActions: "Edit Actions",
     },
     msg: {
       noActive: "No active conditions are tracked.",
@@ -356,7 +376,7 @@ const TRANSLATION = {
       unknownConfig:
         "Unknown config option. Use --config to view supported settings.",
       macroReinstalled:
-        "The {wizard}, {multiTarget}, and {reportToken} macros have been reinstalled for all current GM players.",
+        "The {wizard}, {multiTarget}, {reportToken}, and {saved} macros have been reinstalled for all current GM players.",
       handoutReinstalled: "The help handout {handout} has been reinstalled.",
       duplicate:
         "That exact source, subject, target, condition, and custom text is already active.",
@@ -436,6 +456,28 @@ const TRANSLATION = {
       noConditionsAppliedTo: "{name} has no active conditions applied to it.",
       noConditionsAppliedBy:
         "{name} has no active conditions applied to others.",
+      noSavedEffects: "No saved effects stored for {name}.",
+      noTokenSelectedSaved:
+        "Select a token on the board before using --saved.",
+      savedEffectAdded: "Saved effect added for {name}.",
+      savedEffectUpdated: "Saved effect updated.",
+      savedEffectRemoved: "Saved effect removed.",
+      savedEffectNotFound: "Saved effect not found.",
+      savedInvalidVisibility:
+        "Invalid visibility. Use public, masked, or gm.",
+      savedConditionRequired:
+        "Condition type is required. Use --condition &lt;type&gt;.",
+      savedPromotedPublic: "Effect added to Turn Tracker as public.",
+      savedPromotedMasked:
+        "Effect added to Turn Tracker as masked — players see: {publicLabel}.",
+      savedPromotedGm:
+        "Effect is GM-only — no Turn Tracker row will be created. The reminder system will surface it when this token reaches the top of the turn order.",
+      savedSnoozed: "Reminder snoozed: {scope}.",
+      savedSnoozeCleared: "Snooze cleared.",
+      hiddenEffectsReminder: "Hidden effects are active on {name}.",
+      visibilityPublicHint: "full label visible to all",
+      visibilityMaskedHint: "vague label shown to players",
+      visibilityGmHint: "GM whisper only, no Turn Tracker row",
     },
     removal: {
       conditionField: "Condition",
@@ -448,6 +490,32 @@ const TRANSLATION = {
       rowRemoved: "Removed",
       rowMissing: "Already missing",
       manualReason: "Manual removal",
+    },
+    saved: {
+      visibility: {
+        public: "Public",
+        masked: "Masked",
+        gm: "GM Only",
+      },
+      snooze: {
+        thisTurn: "This Turn",
+        oneRound: "1 Round",
+        threeRounds: "3 Rounds",
+        thisCombat: "This Combat",
+        rounds: "{n} round(s)",
+      },
+      field: {
+        gmLabel: "GM Label",
+        publicLabel: "Public Label",
+        visibility: "Visibility",
+        source: "Source",
+        condition: "Condition",
+      },
+      prompt: {
+        enterGmLabel: "Full effect description (GM only)",
+        enterPublicLabel: "Vague label shown to players",
+      },
+      snoozed: "snoozed",
     },
     cleanup: {
       orphaned: "Orphaned condition entries",
@@ -485,6 +553,10 @@ const TRANSLATION = {
         [
           "!condition-tracker --report-token",
           "Select one or more tokens first, then run this command to get a GM whisper listing every condition applied to and by each selected token. Also available as the ConditionTrackerReportToken macro.",
+        ],
+        [
+          "!condition-tracker --saved",
+          "Select a token first, then run this command to view and manage saved long-term effects (curses, diseases, hidden debuffs, etc.) for that token. Also available as the ConditionTrackerSaved macro.",
         ],
         [
           "!condition-tracker --menu",
@@ -543,6 +615,34 @@ const TRANSLATION = {
         [
           "--report-token",
           "Whisper a GM-only condition report for each selected token (conditions applied to and by it)",
+        ],
+        [
+          "--saved",
+          "View saved long-term effects for the selected token (select token first)",
+        ],
+        [
+          "--saved add",
+          "Add a saved effect (curse, disease, etc.) to the selected token",
+        ],
+        [
+          "--saved edit &lt;id&gt;",
+          "Edit an existing saved effect by id",
+        ],
+        [
+          "--saved remove &lt;id&gt;",
+          "Remove a saved effect by id",
+        ],
+        [
+          "--saved promote &lt;id&gt; --visibility public|masked|gm",
+          "Copy a saved effect into the Turn Tracker (public/masked) or mark it as GM-only active",
+        ],
+        [
+          "--saved snooze &lt;id&gt; --scope turn|rounds|combat --rounds &lt;n&gt;",
+          "Snooze a saved-effect reminder for the current turn, N rounds, or this combat",
+        ],
+        [
+          "--saved snooze-clear &lt;id&gt;",
+          "Clear an active snooze on a saved effect",
         ],
         [
           "--lang &lt;locale&gt;",
@@ -607,6 +707,45 @@ const TRANSLATION = {
           "Fixed countdown; one decrement per anchor-token turn-end",
         ],
       ],
+    },
+    savedEffects: {
+      heading: "Saved Effects",
+      intro:
+        "Saved effects let you store long-term conditions outside the Turn Tracker — curses, diseases, poisons, hidden debuffs, and other non-combat conditions. They persist in script state and can be optionally copied into the Turn Tracker when combat begins.",
+      visibility: {
+        heading: "Visibility Modes",
+        rows: [
+          [
+            "public",
+            "Full effect label is visible in the Turn Tracker and public chat.",
+          ],
+          [
+            "masked",
+            "A vague public label is shown to players; full details are GM-only.",
+          ],
+          [
+            "gm",
+            "No Turn Tracker row. Full details are stored in state and whispered to the GM when the affected token reaches the top of initiative.",
+          ],
+        ],
+      },
+      commands: {
+        heading: "Saved Effects Commands",
+        intro: "All --saved commands are GM-only. Select a token before running --saved or --saved add.",
+        rows: [
+          ["!condition-tracker --saved", "View saved effects for the selected token."],
+          ["!condition-tracker --saved add", "Launch the add-saved-effect wizard."],
+          ["!condition-tracker --saved edit &lt;id&gt;", "Edit labels or visibility for an existing saved effect."],
+          ["!condition-tracker --saved remove &lt;id&gt;", "Permanently remove a saved effect."],
+          ["!condition-tracker --saved promote &lt;id&gt; --visibility public|masked|gm", "Copy a saved effect into the Turn Tracker (public or masked) or confirm it is GM-only tracked."],
+          ["!condition-tracker --saved snooze &lt;id&gt; --scope turn|rounds|combat --rounds &lt;n&gt;", "Snooze a GM reminder for this turn, N rounds, or this combat."],
+          ["!condition-tracker --saved snooze-clear &lt;id&gt;", "Clear an active snooze so reminders resume immediately."],
+        ],
+      },
+      reminders: {
+        heading: "GM Reminders",
+        body: "When a token with gm or masked saved effects reaches the top of the Turn Tracker, the GM receives a whisper listing the hidden effects with action buttons. Duplicate reminders within the same turn are suppressed. Use the Snooze buttons to suppress reminders for a turn, a number of rounds, or for the remainder of the current combat.",
+      },
     },
     configuration: {
       heading: "Configuration",

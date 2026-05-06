@@ -37,9 +37,26 @@ export const DURATION_UNTIL_REMOVED = "untilRemoved";
 export const DURATION_TURN_END = "turnEnd";
 export const DURATION_ROUNDS = "rounds";
 export const MENU_REMOVE = "remove";
+export const COMMAND_SAVED = `${COMMAND} --saved`;
+export const MACRO_NAME_SAVED = `${STATE_KEY}Saved`;
 export const DEFAULT_MACRO_BODY = `${COMMAND_PROMPT}`;
 export const DEFAULT_MULTI_TARGET_MACRO_BODY = `${COMMAND_MULTI_TARGET}`;
 export const DEFAULT_REPORT_TOKEN_MACRO_BODY = `${COMMAND_REPORT_TOKEN}`;
+export const DEFAULT_SAVED_MACRO_BODY = COMMAND_SAVED;
+
+export const SAVED_VISIBILITY_PUBLIC = "public";
+export const SAVED_VISIBILITY_MASKED = "masked";
+export const SAVED_VISIBILITY_GM = "gm";
+export const VALID_SAVED_VISIBILITIES = Object.freeze(
+  new Set([SAVED_VISIBILITY_PUBLIC, SAVED_VISIBILITY_MASKED, SAVED_VISIBILITY_GM]),
+);
+
+export const SAVED_SNOOZE_TURN = "turn";
+export const SAVED_SNOOZE_ROUNDS = "rounds";
+export const SAVED_SNOOZE_COMBAT = "combat";
+export const VALID_SNOOZE_SCOPES = Object.freeze(
+  new Set([SAVED_SNOOZE_TURN, SAVED_SNOOZE_ROUNDS, SAVED_SNOOZE_COMBAT]),
+);
 
 // Canonical custom-effect-type keys — stable across all game systems.
 // System profiles choose which subset to surface in the wizard UI.

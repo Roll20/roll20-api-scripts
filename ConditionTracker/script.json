@@ -228,7 +228,6 @@
     "Campaign.turnorder": "read,write",
     "Campaign.playerpageid": "read",
     "graphic._pageid": "read",
-    "graphic.subtype": "read",
     "graphic.statusmarkers": "read,write",
     "graphic.bar1_value": "read",
     "graphic.bar2_value": "read",

@@ -83,6 +83,60 @@ When adding or editing translations:
 5. Run `npm run format` and `npm run build`.
 6. In Roll20, verify `!condition-tracker --config language <locale>`, `!condition-tracker --help`, and `!condition-tracker --reinstall-handout`.
 
+## Saved Effects Architecture
+
+The saved-effects feature is split into two source files to keep state CRUD separate from command/UI concerns.
+
+### `src/savedEffects.js` — State layer
+
+Owns all reads and writes to `state.ConditionTracker.savedEffects`, which is a plain object keyed by `targetTokenId`. Each value is an array of saved-effect records with this shape:
+
+```js
+{
+  id,               // "ct_<8-char hex>" — unique across all effects
+  visibility,       // "public" | "masked" | "gm"
+  condition,        // condition type string (e.g. "Curse", "Disease")
+  other,            // free-form description
+  targetTokenId,    // Roll20 token id of the affected token
+  targetCharacterId,
+  sourceTokenId,
+  publicLabel,      // shown to players in masked mode
+  gmLabel,          // full GM-only description
+  snooze,           // null | { scope, snoozedOnTurnKey, roundsRemaining }
+  lastReminderTurnKey,
+  createdAt,
+  updatedAt,
+}
+```
+
+Key exported functions: `createSavedEffect`, `getSavedEffectsForToken`, `getAllSavedEffects`, `findSavedEffect`, `addSavedEffect`, `updateSavedEffect`, `removeSavedEffect`, `removeSavedEffectsForToken`, `clearCombatSnoozes`.
+
+### `src/savedEffectsCommands.js` — Command and UI layer
+
+Handles all `--saved` sub-commands and the GM reminder system.
+
+- `handleSaved(msg, args)` — main dispatcher; parses the subcommand from `args.saved`
+- `showSavedMenu(playerId, tokenId, tokenName)` — lists saved effects with inline action buttons
+- `processSavedEffectReminders(tokenId, tokenName, turnKey)` — called from `handleTurnOrderChange()` in `index.js` each time a new token reaches the top of initiative; suppresses duplicates via `shouldShowReminder()`
+
+**Promotion** copies a saved effect into the Turn Tracker by calling `buildActiveConditionFromSaved()`, which mirrors `buildConditionRecord()` in `commands.js` but is local to `savedEffectsCommands.js` to avoid a circular import (`commands.js` imports `handleSaved`; `savedEffectsCommands.js` must not import back into `commands.js`).
+
+**Snooze logic** (`shouldShowReminder`):
+- `scope: "turn"` — stores the current turn key; clears when the key changes.
+- `scope: "rounds"` — stores a remaining-rounds counter; decrements each new-first-turn tick.
+- `scope: "combat"` — persists until `clearCombatSnoozes()` is called when the Turn Tracker empties.
+
+### Integration points
+
+| Location | What was added |
+|---|---|
+| `src/state.js` `ensureState()` | Initializes `savedEffects: {}` on first run |
+| `src/index.js` `handleTurnOrderChange()` | Calls `processSavedEffectReminders` on new-first-turn; calls `clearCombatSnoozes` when tracker empties |
+| `src/index.js` `handleTokenDestroy()` | Calls `removeSavedEffectsForToken` |
+| `src/commands.js` `routeCommand()` | Routes `args.saved` to `handleSaved` |
+| `src/commands.js` `showMenu()` | Adds Saved Effects button to the main menu |
+| `src/macros.js` | Adds `ConditionTrackerSaved` to `MACRO_DEFINITIONS` |
+
 ## Updating Version Metadata
 
 If behavior changes for a release:

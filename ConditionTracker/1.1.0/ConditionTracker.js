@@ -5,7 +5,7 @@
  * Name: Condition Tracker
  * Script: ConditionTracker.js
  * Version: 1.1.0
- * Built: 2026-05-05T02:30:07.260Z
+ * Built: 2026-05-06T01:04:24.879Z
  */
 const ConditionTrackerMod = (() => {
   'use strict';
@@ -260,7 +260,7 @@ const ConditionTrackerMod = (() => {
 
   const SCRIPT_NAME = 'Condition Tracker';
   const SCRIPT_VERSION = '1.1.0';
-  const SCRIPT_LAST_UPDATED = '2026-05-05T02:30:07.260Z';
+  const SCRIPT_LAST_UPDATED = '2026-05-06T01:04:24.879Z';
 
   const COLOR_BG_SOFT_BLACK = '#0A0A12';
   const COLOR_TEXT_ARCANE_SILVER = '#E6DFFF';
@@ -289,9 +289,30 @@ const ConditionTrackerMod = (() => {
   const DURATION_TURN_END = 'turnEnd';
   const DURATION_ROUNDS = 'rounds';
   const MENU_REMOVE = 'remove';
+  const COMMAND_SAVED = `${COMMAND} --saved`;
+  const MACRO_NAME_SAVED = `${STATE_KEY}Saved`;
   const DEFAULT_MACRO_BODY = `${COMMAND_PROMPT}`;
   const DEFAULT_MULTI_TARGET_MACRO_BODY = `${COMMAND_MULTI_TARGET}`;
   const DEFAULT_REPORT_TOKEN_MACRO_BODY = `${COMMAND_REPORT_TOKEN}`;
+  const DEFAULT_SAVED_MACRO_BODY = COMMAND_SAVED;
+
+  const SAVED_VISIBILITY_PUBLIC = 'public';
+  const SAVED_VISIBILITY_MASKED = 'masked';
+  const SAVED_VISIBILITY_GM = 'gm';
+  const VALID_SAVED_VISIBILITIES = Object.freeze(
+    new Set([
+      SAVED_VISIBILITY_PUBLIC,
+      SAVED_VISIBILITY_MASKED,
+      SAVED_VISIBILITY_GM,
+    ]),
+  );
+
+  const SAVED_SNOOZE_TURN = 'turn';
+  const SAVED_SNOOZE_ROUNDS = 'rounds';
+  const SAVED_SNOOZE_COMBAT = 'combat';
+  const VALID_SNOOZE_SCOPES = Object.freeze(
+    new Set([SAVED_SNOOZE_TURN, SAVED_SNOOZE_ROUNDS, SAVED_SNOOZE_COMBAT]),
+  );
 
   // Canonical custom-effect-type keys — stable across all game systems.
   // System profiles choose which subset to surface in the wizard UI.
@@ -524,6 +545,13 @@ const ConditionTrackerMod = (() => {
         showHelp: 'Wys Hulp',
         reorderConditions: 'Herrangskik Toestandrye',
         reportToken: 'Report Token Conditions',
+        savedEffects: 'Saved Effects',
+        addSavedEffect: 'Add Saved Effect',
+        editSaved: 'Edit',
+        removeSaved: 'Remove',
+        promoteSaved: 'Add to Turn Tracker',
+        snoozeSaved: 'Snooze',
+        clearSnooze: 'Clear Snooze',
       },
       title: {
         menu: 'Kieslys',
@@ -534,7 +562,8 @@ const ConditionTrackerMod = (() => {
         applied: 'Toegepas',
         removed: 'Toestand Verwyder',
         cleanup: 'Opruiming Voltooi',
-        macroReinstalled: 'Makro Herinstalleer',
+        macroReinstalled:
+          'The {wizard}, {multiTarget}, {reportToken}, and {saved} macros have been reinstalled for all current GM players.',
         handoutReinstalled: 'Handout Herinstalleer',
         warning: 'Waarskuwing',
         error: 'Fout',
@@ -547,6 +576,14 @@ const ConditionTrackerMod = (() => {
         scriptReady: 'Skrip Gereed',
         conditionReorder: 'Beurtorde Verander',
         tokenReport: 'Token Condition Report',
+        savedEffects: 'Saved Effects',
+        savedAdd: 'Add Saved Effect',
+        savedEdit: 'Edit Saved Effect',
+        savedRemoved: 'Saved Effect Removed',
+        savedPromoted: 'Add to Turn Tracker',
+        savedSnoozed: 'Reminder Snoozed',
+        savedSnoozeCleared: 'Snooze Cleared',
+        hiddenEffects: 'Hidden Effects — {name}',
       },
       heading: {
         quickActions: 'Vinnige Aksies',
@@ -560,6 +597,11 @@ const ConditionTrackerMod = (() => {
         summary: 'Opsomming',
         appliedTo: 'Conditions Applied To',
         appliedBy: 'Conditions Applied By',
+        savedEffectsFor: 'Saved Effects for {name}',
+        visibility: 'Visibility',
+        snoozeOptions: 'Snooze Reminder',
+        promoteOptions: 'Promote to Turn Tracker',
+        editActions: 'Edit Actions',
       },
       msg: {
         noActive: 'Geen aktiewe toestande word gevolg nie.',
@@ -647,6 +689,28 @@ const ConditionTrackerMod = (() => {
         noConditionsAppliedTo: '{name} has no active conditions applied to it.',
         noConditionsAppliedBy:
           '{name} has no active conditions applied to others.',
+        noSavedEffects: 'No saved effects stored for {name}.',
+        noTokenSelectedSaved:
+          'Select a token on the board before using --saved.',
+        savedEffectAdded: 'Saved effect added for {name}.',
+        savedEffectUpdated: 'Saved effect updated.',
+        savedEffectRemoved: 'Saved effect removed.',
+        savedEffectNotFound: 'Saved effect not found.',
+        savedInvalidVisibility:
+          'Invalid visibility. Use public, masked, or gm.',
+        savedConditionRequired:
+          'Condition type is required. Use --condition <type>.',
+        savedPromotedPublic: 'Effect added to Turn Tracker as public.',
+        savedPromotedMasked:
+          'Effect added to Turn Tracker as masked — players see: {publicLabel}.',
+        savedPromotedGm:
+          'Effect is GM-only — no Turn Tracker row will be created. The reminder system will surface it when this token reaches the top of the turn order.',
+        savedSnoozed: 'Reminder snoozed: {scope}.',
+        savedSnoozeCleared: 'Snooze cleared.',
+        hiddenEffectsReminder: 'Hidden effects are active on {name}.',
+        visibilityPublicHint: 'full label visible to all',
+        visibilityMaskedHint: 'vague label shown to players',
+        visibilityGmHint: 'GM whisper only, no Turn Tracker row',
       },
       removal: {
         conditionField: 'Toestand',
@@ -659,6 +723,32 @@ const ConditionTrackerMod = (() => {
         rowRemoved: 'Verwyder',
         rowMissing: 'Reeds ontbreek',
         manualReason: 'Handmatige verwydering',
+      },
+      saved: {
+        visibility: {
+          public: 'Public',
+          masked: 'Masked',
+          gm: 'GM Only',
+        },
+        snooze: {
+          thisTurn: 'This Turn',
+          oneRound: '1 Round',
+          threeRounds: '3 Rounds',
+          thisCombat: 'This Combat',
+          rounds: '{n} round(s)',
+        },
+        field: {
+          gmLabel: 'GM Label',
+          publicLabel: 'Public Label',
+          visibility: 'Visibility',
+          source: 'Source',
+          condition: 'Condition',
+        },
+        prompt: {
+          enterGmLabel: 'Full effect description (GM only)',
+          enterPublicLabel: 'Vague label shown to players',
+        },
+        snoozed: 'snoozed',
       },
       cleanup: {
         orphaned: 'Weesagtige toestandinskrywings',
@@ -821,6 +911,67 @@ const ConditionTrackerMod = (() => {
             'Vaste aftelrekening; een vermindering per ankerteken-beurt-einde',
           ],
         ],
+      },
+      savedEffects: {
+        heading: 'Saved Effects',
+        intro:
+          'Saved effects let you store long-term conditions outside the Turn Tracker — curses, diseases, poisons, hidden debuffs, and other non-combat conditions. They persist in script state and can be optionally copied into the Turn Tracker when combat begins.',
+        visibility: {
+          heading: 'Visibility Modes',
+          rows: [
+            [
+              'public',
+              'Full effect label is visible in the Turn Tracker and public chat.',
+            ],
+            [
+              'masked',
+              'A vague public label is shown to players; full details are GM-only.',
+            ],
+            [
+              'gm',
+              'No Turn Tracker row. Full details are stored in state and whispered to the GM when the affected token reaches the top of initiative.',
+            ],
+          ],
+        },
+        commands: {
+          heading: 'Saved Effects Commands',
+          intro:
+            'All --saved commands are GM-only. Select a token before running --saved or --saved add.',
+          rows: [
+            [
+              '!condition-tracker --saved',
+              'View saved effects for the selected token.',
+            ],
+            [
+              '!condition-tracker --saved add',
+              'Launch the add-saved-effect wizard.',
+            ],
+            [
+              '!condition-tracker --saved edit <id>',
+              'Edit labels or visibility for an existing saved effect.',
+            ],
+            [
+              '!condition-tracker --saved remove <id>',
+              'Permanently remove a saved effect.',
+            ],
+            [
+              '!condition-tracker --saved promote <id> --visibility public|masked|gm',
+              'Copy a saved effect into the Turn Tracker (public or masked) or confirm it is GM-only tracked.',
+            ],
+            [
+              '!condition-tracker --saved snooze <id> --scope turn|rounds|combat --rounds <n>',
+              'Snooze a GM reminder for this turn, N rounds, or this combat.',
+            ],
+            [
+              '!condition-tracker --saved snooze-clear <id>',
+              'Clear an active snooze so reminders resume immediately.',
+            ],
+          ],
+        },
+        reminders: {
+          heading: 'GM Reminders',
+          body: 'When a token with gm or masked saved effects reaches the top of the Turn Tracker, the GM receives a whisper listing the hidden effects with action buttons. Duplicate reminders within the same turn are suppressed. Use the Snooze buttons to suppress reminders for a turn, a number of rounds, or for the remainder of the current combat.',
+        },
       },
       configuration: {
         heading: 'Konfigurasie',
@@ -1074,6 +1225,13 @@ const ConditionTrackerMod = (() => {
         showHelp: "Mostra l'ajuda",
         reorderConditions: 'Reordena les files de condicions',
         reportToken: 'Report Token Conditions',
+        savedEffects: 'Saved Effects',
+        addSavedEffect: 'Add Saved Effect',
+        editSaved: 'Edit',
+        removeSaved: 'Remove',
+        promoteSaved: 'Add to Turn Tracker',
+        snoozeSaved: 'Snooze',
+        clearSnooze: 'Clear Snooze',
       },
       title: {
         menu: 'Menú',
@@ -1084,7 +1242,8 @@ const ConditionTrackerMod = (() => {
         applied: 'Aplicat',
         removed: 'Condició eliminada',
         cleanup: 'Neteja completada',
-        macroReinstalled: 'Macro reinstal·lada',
+        macroReinstalled:
+          'The {wizard}, {multiTarget}, {reportToken}, and {saved} macros have been reinstalled for all current GM players.',
         handoutReinstalled: 'Fullet reinstal·lat',
         warning: 'Avís',
         error: 'Error',
@@ -1097,6 +1256,14 @@ const ConditionTrackerMod = (() => {
         scriptReady: 'Script llest',
         conditionReorder: 'Ordre de torn modificat',
         tokenReport: 'Token Condition Report',
+        savedEffects: 'Saved Effects',
+        savedAdd: 'Add Saved Effect',
+        savedEdit: 'Edit Saved Effect',
+        savedRemoved: 'Saved Effect Removed',
+        savedPromoted: 'Add to Turn Tracker',
+        savedSnoozed: 'Reminder Snoozed',
+        savedSnoozeCleared: 'Snooze Cleared',
+        hiddenEffects: 'Hidden Effects — {name}',
       },
       heading: {
         quickActions: 'Accions ràpides',
@@ -1110,6 +1277,11 @@ const ConditionTrackerMod = (() => {
         summary: 'Resum',
         appliedTo: 'Conditions Applied To',
         appliedBy: 'Conditions Applied By',
+        savedEffectsFor: 'Saved Effects for {name}',
+        visibility: 'Visibility',
+        snoozeOptions: 'Snooze Reminder',
+        promoteOptions: 'Promote to Turn Tracker',
+        editActions: 'Edit Actions',
       },
       msg: {
         noActive: 'No hi ha cap condició activa en seguiment.',
@@ -1200,6 +1372,28 @@ const ConditionTrackerMod = (() => {
         noConditionsAppliedTo: '{name} has no active conditions applied to it.',
         noConditionsAppliedBy:
           '{name} has no active conditions applied to others.',
+        noSavedEffects: 'No saved effects stored for {name}.',
+        noTokenSelectedSaved:
+          'Select a token on the board before using --saved.',
+        savedEffectAdded: 'Saved effect added for {name}.',
+        savedEffectUpdated: 'Saved effect updated.',
+        savedEffectRemoved: 'Saved effect removed.',
+        savedEffectNotFound: 'Saved effect not found.',
+        savedInvalidVisibility:
+          'Invalid visibility. Use public, masked, or gm.',
+        savedConditionRequired:
+          'Condition type is required. Use --condition <type>.',
+        savedPromotedPublic: 'Effect added to Turn Tracker as public.',
+        savedPromotedMasked:
+          'Effect added to Turn Tracker as masked — players see: {publicLabel}.',
+        savedPromotedGm:
+          'Effect is GM-only — no Turn Tracker row will be created. The reminder system will surface it when this token reaches the top of the turn order.',
+        savedSnoozed: 'Reminder snoozed: {scope}.',
+        savedSnoozeCleared: 'Snooze cleared.',
+        hiddenEffectsReminder: 'Hidden effects are active on {name}.',
+        visibilityPublicHint: 'full label visible to all',
+        visibilityMaskedHint: 'vague label shown to players',
+        visibilityGmHint: 'GM whisper only, no Turn Tracker row',
       },
       removal: {
         conditionField: 'Condició',
@@ -1212,6 +1406,32 @@ const ConditionTrackerMod = (() => {
         rowRemoved: 'Eliminat',
         rowMissing: 'Ja absent',
         manualReason: 'Eliminació manual',
+      },
+      saved: {
+        visibility: {
+          public: 'Public',
+          masked: 'Masked',
+          gm: 'GM Only',
+        },
+        snooze: {
+          thisTurn: 'This Turn',
+          oneRound: '1 Round',
+          threeRounds: '3 Rounds',
+          thisCombat: 'This Combat',
+          rounds: '{n} round(s)',
+        },
+        field: {
+          gmLabel: 'GM Label',
+          publicLabel: 'Public Label',
+          visibility: 'Visibility',
+          source: 'Source',
+          condition: 'Condition',
+        },
+        prompt: {
+          enterGmLabel: 'Full effect description (GM only)',
+          enterPublicLabel: 'Vague label shown to players',
+        },
+        snoozed: 'snoozed',
       },
       cleanup: {
         orphaned: 'Entrades de condició òrfenes',
@@ -1375,6 +1595,67 @@ const ConditionTrackerMod = (() => {
             'Compte enrere fix; un decrement per fi de torn del testimoni ancla',
           ],
         ],
+      },
+      savedEffects: {
+        heading: 'Saved Effects',
+        intro:
+          'Saved effects let you store long-term conditions outside the Turn Tracker — curses, diseases, poisons, hidden debuffs, and other non-combat conditions. They persist in script state and can be optionally copied into the Turn Tracker when combat begins.',
+        visibility: {
+          heading: 'Visibility Modes',
+          rows: [
+            [
+              'public',
+              'Full effect label is visible in the Turn Tracker and public chat.',
+            ],
+            [
+              'masked',
+              'A vague public label is shown to players; full details are GM-only.',
+            ],
+            [
+              'gm',
+              'No Turn Tracker row. Full details are stored in state and whispered to the GM when the affected token reaches the top of initiative.',
+            ],
+          ],
+        },
+        commands: {
+          heading: 'Saved Effects Commands',
+          intro:
+            'All --saved commands are GM-only. Select a token before running --saved or --saved add.',
+          rows: [
+            [
+              '!condition-tracker --saved',
+              'View saved effects for the selected token.',
+            ],
+            [
+              '!condition-tracker --saved add',
+              'Launch the add-saved-effect wizard.',
+            ],
+            [
+              '!condition-tracker --saved edit <id>',
+              'Edit labels or visibility for an existing saved effect.',
+            ],
+            [
+              '!condition-tracker --saved remove <id>',
+              'Permanently remove a saved effect.',
+            ],
+            [
+              '!condition-tracker --saved promote <id> --visibility public|masked|gm',
+              'Copy a saved effect into the Turn Tracker (public or masked) or confirm it is GM-only tracked.',
+            ],
+            [
+              '!condition-tracker --saved snooze <id> --scope turn|rounds|combat --rounds <n>',
+              'Snooze a GM reminder for this turn, N rounds, or this combat.',
+            ],
+            [
+              '!condition-tracker --saved snooze-clear <id>',
+              'Clear an active snooze so reminders resume immediately.',
+            ],
+          ],
+        },
+        reminders: {
+          heading: 'GM Reminders',
+          body: 'When a token with gm or masked saved effects reaches the top of the Turn Tracker, the GM receives a whisper listing the hidden effects with action buttons. Duplicate reminders within the same turn are suppressed. Use the Snooze buttons to suppress reminders for a turn, a number of rounds, or for the remainder of the current combat.',
+        },
       },
       configuration: {
         heading: 'Configuració',
@@ -1625,6 +1906,13 @@ const ConditionTrackerMod = (() => {
         showHelp: '顯示說明',
         reorderConditions: '重新排列狀態列',
         reportToken: 'Report Token Conditions',
+        savedEffects: 'Saved Effects',
+        addSavedEffect: 'Add Saved Effect',
+        editSaved: 'Edit',
+        removeSaved: 'Remove',
+        promoteSaved: 'Add to Turn Tracker',
+        snoozeSaved: 'Snooze',
+        clearSnooze: 'Clear Snooze',
       },
       title: {
         menu: '選單',
@@ -1635,7 +1923,8 @@ const ConditionTrackerMod = (() => {
         applied: '已套用',
         removed: '狀態已移除',
         cleanup: '清理完成',
-        macroReinstalled: '巨集已重新安裝',
+        macroReinstalled:
+          'The {wizard}, {multiTarget}, {reportToken}, and {saved} macros have been reinstalled for all current GM players.',
         handoutReinstalled: '講義已重新安裝',
         warning: '警告',
         error: '錯誤',
@@ -1648,6 +1937,14 @@ const ConditionTrackerMod = (() => {
         scriptReady: '腳本已就緒',
         conditionReorder: '行動順序已變更',
         tokenReport: 'Token Condition Report',
+        savedEffects: 'Saved Effects',
+        savedAdd: 'Add Saved Effect',
+        savedEdit: 'Edit Saved Effect',
+        savedRemoved: 'Saved Effect Removed',
+        savedPromoted: 'Add to Turn Tracker',
+        savedSnoozed: 'Reminder Snoozed',
+        savedSnoozeCleared: 'Snooze Cleared',
+        hiddenEffects: 'Hidden Effects — {name}',
       },
       heading: {
         quickActions: '快速動作',
@@ -1661,6 +1958,11 @@ const ConditionTrackerMod = (() => {
         summary: '摘要',
         appliedTo: 'Conditions Applied To',
         appliedBy: 'Conditions Applied By',
+        savedEffectsFor: 'Saved Effects for {name}',
+        visibility: 'Visibility',
+        snoozeOptions: 'Snooze Reminder',
+        promoteOptions: 'Promote to Turn Tracker',
+        editActions: 'Edit Actions',
       },
       msg: {
         noActive: '目前沒有追蹤中的狀態。',
@@ -1733,6 +2035,28 @@ const ConditionTrackerMod = (() => {
         noConditionsAppliedTo: '{name} has no active conditions applied to it.',
         noConditionsAppliedBy:
           '{name} has no active conditions applied to others.',
+        noSavedEffects: 'No saved effects stored for {name}.',
+        noTokenSelectedSaved:
+          'Select a token on the board before using --saved.',
+        savedEffectAdded: 'Saved effect added for {name}.',
+        savedEffectUpdated: 'Saved effect updated.',
+        savedEffectRemoved: 'Saved effect removed.',
+        savedEffectNotFound: 'Saved effect not found.',
+        savedInvalidVisibility:
+          'Invalid visibility. Use public, masked, or gm.',
+        savedConditionRequired:
+          'Condition type is required. Use --condition <type>.',
+        savedPromotedPublic: 'Effect added to Turn Tracker as public.',
+        savedPromotedMasked:
+          'Effect added to Turn Tracker as masked — players see: {publicLabel}.',
+        savedPromotedGm:
+          'Effect is GM-only — no Turn Tracker row will be created. The reminder system will surface it when this token reaches the top of the turn order.',
+        savedSnoozed: 'Reminder snoozed: {scope}.',
+        savedSnoozeCleared: 'Snooze cleared.',
+        hiddenEffectsReminder: 'Hidden effects are active on {name}.',
+        visibilityPublicHint: 'full label visible to all',
+        visibilityMaskedHint: 'vague label shown to players',
+        visibilityGmHint: 'GM whisper only, no Turn Tracker row',
       },
       removal: {
         conditionField: '狀態',
@@ -1745,6 +2069,32 @@ const ConditionTrackerMod = (() => {
         rowRemoved: '已移除',
         rowMissing: '已不存在',
         manualReason: '手動移除',
+      },
+      saved: {
+        visibility: {
+          public: 'Public',
+          masked: 'Masked',
+          gm: 'GM Only',
+        },
+        snooze: {
+          thisTurn: 'This Turn',
+          oneRound: '1 Round',
+          threeRounds: '3 Rounds',
+          thisCombat: 'This Combat',
+          rounds: '{n} round(s)',
+        },
+        field: {
+          gmLabel: 'GM Label',
+          publicLabel: 'Public Label',
+          visibility: 'Visibility',
+          source: 'Source',
+          condition: 'Condition',
+        },
+        prompt: {
+          enterGmLabel: 'Full effect description (GM only)',
+          enterPublicLabel: 'Vague label shown to players',
+        },
+        snoozed: 'snoozed',
       },
       cleanup: {
         orphaned: '孤立狀態項目',
@@ -1822,6 +2172,28 @@ const ConditionTrackerMod = (() => {
             '--report-token',
             'Whisper a GM-only condition report for each selected token (conditions applied to and by it)',
           ],
+          [
+            '--saved',
+            'View saved long-term effects for the selected token (select token first)',
+          ],
+          [
+            '--saved add',
+            'Add a saved effect (curse, disease, etc.) to the selected token',
+          ],
+          ['--saved edit <id>', 'Edit an existing saved effect by id'],
+          ['--saved remove <id>', 'Remove a saved effect by id'],
+          [
+            '--saved promote <id> --visibility public|masked|gm',
+            'Copy a saved effect into the Turn Tracker (public/masked) or mark it as GM-only active',
+          ],
+          [
+            '--saved snooze <id> --scope turn|rounds|combat --rounds <n>',
+            'Snooze a saved-effect reminder for the current turn, N rounds, or this combat',
+          ],
+          [
+            '--saved snooze-clear <id>',
+            'Clear an active snooze on a saved effect',
+          ],
           ['--lang &lt;locale&gt;', '以額外語言環境輸出此指令訊息（雙語模式）'],
           ['--help', '在聊天中顯示簡短說明卡'],
         ],
@@ -1860,6 +2232,67 @@ const ConditionTrackerMod = (() => {
             '固定倒數；每次錨定 Token 回合結束遞減一次',
           ],
         ],
+      },
+      savedEffects: {
+        heading: 'Saved Effects',
+        intro:
+          'Saved effects let you store long-term conditions outside the Turn Tracker — curses, diseases, poisons, hidden debuffs, and other non-combat conditions. They persist in script state and can be optionally copied into the Turn Tracker when combat begins.',
+        visibility: {
+          heading: 'Visibility Modes',
+          rows: [
+            [
+              'public',
+              'Full effect label is visible in the Turn Tracker and public chat.',
+            ],
+            [
+              'masked',
+              'A vague public label is shown to players; full details are GM-only.',
+            ],
+            [
+              'gm',
+              'No Turn Tracker row. Full details are stored in state and whispered to the GM when the affected token reaches the top of initiative.',
+            ],
+          ],
+        },
+        commands: {
+          heading: 'Saved Effects Commands',
+          intro:
+            'All --saved commands are GM-only. Select a token before running --saved or --saved add.',
+          rows: [
+            [
+              '!condition-tracker --saved',
+              'View saved effects for the selected token.',
+            ],
+            [
+              '!condition-tracker --saved add',
+              'Launch the add-saved-effect wizard.',
+            ],
+            [
+              '!condition-tracker --saved edit <id>',
+              'Edit labels or visibility for an existing saved effect.',
+            ],
+            [
+              '!condition-tracker --saved remove <id>',
+              'Permanently remove a saved effect.',
+            ],
+            [
+              '!condition-tracker --saved promote <id> --visibility public|masked|gm',
+              'Copy a saved effect into the Turn Tracker (public or masked) or confirm it is GM-only tracked.',
+            ],
+            [
+              '!condition-tracker --saved snooze <id> --scope turn|rounds|combat --rounds <n>',
+              'Snooze a GM reminder for this turn, N rounds, or this combat.',
+            ],
+            [
+              '!condition-tracker --saved snooze-clear <id>',
+              'Clear an active snooze so reminders resume immediately.',
+            ],
+          ],
+        },
+        reminders: {
+          heading: 'GM Reminders',
+          body: 'When a token with gm or masked saved effects reaches the top of the Turn Tracker, the GM receives a whisper listing the hidden effects with action buttons. Duplicate reminders within the same turn are suppressed. Use the Snooze buttons to suppress reminders for a turn, a number of rounds, or for the remainder of the current combat.',
+        },
       },
       configuration: {
         heading: '設定',
@@ -2138,6 +2571,13 @@ const ConditionTrackerMod = (() => {
         showHelp: 'Zobrazit nápovědu',
         reorderConditions: 'Přeuspořádat řádky stavů',
         reportToken: 'Report Token Conditions',
+        savedEffects: 'Saved Effects',
+        addSavedEffect: 'Add Saved Effect',
+        editSaved: 'Edit',
+        removeSaved: 'Remove',
+        promoteSaved: 'Add to Turn Tracker',
+        snoozeSaved: 'Snooze',
+        clearSnooze: 'Clear Snooze',
       },
       title: {
         menu: 'Nabídka',
@@ -2148,7 +2588,8 @@ const ConditionTrackerMod = (() => {
         applied: 'Uplatněno',
         removed: 'Stav odebrán',
         cleanup: 'Vyčištění dokončeno',
-        macroReinstalled: 'Makro přeinstalováno',
+        macroReinstalled:
+          'The {wizard}, {multiTarget}, {reportToken}, and {saved} macros have been reinstalled for all current GM players.',
         handoutReinstalled: 'Příručka přeinstalována',
         warning: 'Varování',
         error: 'Chyba',
@@ -2161,6 +2602,14 @@ const ConditionTrackerMod = (() => {
         scriptReady: 'Skript připraven',
         conditionReorder: 'Pořadí tahů změněno',
         tokenReport: 'Token Condition Report',
+        savedEffects: 'Saved Effects',
+        savedAdd: 'Add Saved Effect',
+        savedEdit: 'Edit Saved Effect',
+        savedRemoved: 'Saved Effect Removed',
+        savedPromoted: 'Add to Turn Tracker',
+        savedSnoozed: 'Reminder Snoozed',
+        savedSnoozeCleared: 'Snooze Cleared',
+        hiddenEffects: 'Hidden Effects — {name}',
       },
       heading: {
         quickActions: 'Rychlé akce',
@@ -2174,6 +2623,11 @@ const ConditionTrackerMod = (() => {
         summary: 'Souhrn',
         appliedTo: 'Conditions Applied To',
         appliedBy: 'Conditions Applied By',
+        savedEffectsFor: 'Saved Effects for {name}',
+        visibility: 'Visibility',
+        snoozeOptions: 'Snooze Reminder',
+        promoteOptions: 'Promote to Turn Tracker',
+        editActions: 'Edit Actions',
       },
       msg: {
         noActive: 'Nejsou sledovány žádné aktivní stavy.',
@@ -2260,6 +2714,28 @@ const ConditionTrackerMod = (() => {
         noConditionsAppliedTo: '{name} has no active conditions applied to it.',
         noConditionsAppliedBy:
           '{name} has no active conditions applied to others.',
+        noSavedEffects: 'No saved effects stored for {name}.',
+        noTokenSelectedSaved:
+          'Select a token on the board before using --saved.',
+        savedEffectAdded: 'Saved effect added for {name}.',
+        savedEffectUpdated: 'Saved effect updated.',
+        savedEffectRemoved: 'Saved effect removed.',
+        savedEffectNotFound: 'Saved effect not found.',
+        savedInvalidVisibility:
+          'Invalid visibility. Use public, masked, or gm.',
+        savedConditionRequired:
+          'Condition type is required. Use --condition <type>.',
+        savedPromotedPublic: 'Effect added to Turn Tracker as public.',
+        savedPromotedMasked:
+          'Effect added to Turn Tracker as masked — players see: {publicLabel}.',
+        savedPromotedGm:
+          'Effect is GM-only — no Turn Tracker row will be created. The reminder system will surface it when this token reaches the top of the turn order.',
+        savedSnoozed: 'Reminder snoozed: {scope}.',
+        savedSnoozeCleared: 'Snooze cleared.',
+        hiddenEffectsReminder: 'Hidden effects are active on {name}.',
+        visibilityPublicHint: 'full label visible to all',
+        visibilityMaskedHint: 'vague label shown to players',
+        visibilityGmHint: 'GM whisper only, no Turn Tracker row',
       },
       removal: {
         conditionField: 'Stav',
@@ -2272,6 +2748,32 @@ const ConditionTrackerMod = (() => {
         rowRemoved: 'Odebráno',
         rowMissing: 'Již chybí',
         manualReason: 'Ruční odebrání',
+      },
+      saved: {
+        visibility: {
+          public: 'Public',
+          masked: 'Masked',
+          gm: 'GM Only',
+        },
+        snooze: {
+          thisTurn: 'This Turn',
+          oneRound: '1 Round',
+          threeRounds: '3 Rounds',
+          thisCombat: 'This Combat',
+          rounds: '{n} round(s)',
+        },
+        field: {
+          gmLabel: 'GM Label',
+          publicLabel: 'Public Label',
+          visibility: 'Visibility',
+          source: 'Source',
+          condition: 'Condition',
+        },
+        prompt: {
+          enterGmLabel: 'Full effect description (GM only)',
+          enterPublicLabel: 'Vague label shown to players',
+        },
+        snoozed: 'snoozed',
       },
       cleanup: {
         orphaned: 'Osiřelé záznamy stavů',
@@ -2428,6 +2930,67 @@ const ConditionTrackerMod = (() => {
             'Pevný odpočet; jedno snížení za konec tahu kotevního žetonu',
           ],
         ],
+      },
+      savedEffects: {
+        heading: 'Saved Effects',
+        intro:
+          'Saved effects let you store long-term conditions outside the Turn Tracker — curses, diseases, poisons, hidden debuffs, and other non-combat conditions. They persist in script state and can be optionally copied into the Turn Tracker when combat begins.',
+        visibility: {
+          heading: 'Visibility Modes',
+          rows: [
+            [
+              'public',
+              'Full effect label is visible in the Turn Tracker and public chat.',
+            ],
+            [
+              'masked',
+              'A vague public label is shown to players; full details are GM-only.',
+            ],
+            [
+              'gm',
+              'No Turn Tracker row. Full details are stored in state and whispered to the GM when the affected token reaches the top of initiative.',
+            ],
+          ],
+        },
+        commands: {
+          heading: 'Saved Effects Commands',
+          intro:
+            'All --saved commands are GM-only. Select a token before running --saved or --saved add.',
+          rows: [
+            [
+              '!condition-tracker --saved',
+              'View saved effects for the selected token.',
+            ],
+            [
+              '!condition-tracker --saved add',
+              'Launch the add-saved-effect wizard.',
+            ],
+            [
+              '!condition-tracker --saved edit <id>',
+              'Edit labels or visibility for an existing saved effect.',
+            ],
+            [
+              '!condition-tracker --saved remove <id>',
+              'Permanently remove a saved effect.',
+            ],
+            [
+              '!condition-tracker --saved promote <id> --visibility public|masked|gm',
+              'Copy a saved effect into the Turn Tracker (public or masked) or confirm it is GM-only tracked.',
+            ],
+            [
+              '!condition-tracker --saved snooze <id> --scope turn|rounds|combat --rounds <n>',
+              'Snooze a GM reminder for this turn, N rounds, or this combat.',
+            ],
+            [
+              '!condition-tracker --saved snooze-clear <id>',
+              'Clear an active snooze so reminders resume immediately.',
+            ],
+          ],
+        },
+        reminders: {
+          heading: 'GM Reminders',
+          body: 'When a token with gm or masked saved effects reaches the top of the Turn Tracker, the GM receives a whisper listing the hidden effects with action buttons. Duplicate reminders within the same turn are suppressed. Use the Snooze buttons to suppress reminders for a turn, a number of rounds, or for the remainder of the current combat.',
+        },
       },
       configuration: {
         heading: 'Konfigurace',
@@ -2682,6 +3245,13 @@ const ConditionTrackerMod = (() => {
         showHelp: 'Vis hjælp',
         reorderConditions: 'Omarranger tilstandsrækker',
         reportToken: 'Report Token Conditions',
+        savedEffects: 'Saved Effects',
+        addSavedEffect: 'Add Saved Effect',
+        editSaved: 'Edit',
+        removeSaved: 'Remove',
+        promoteSaved: 'Add to Turn Tracker',
+        snoozeSaved: 'Snooze',
+        clearSnooze: 'Clear Snooze',
       },
       title: {
         menu: 'Menu',
@@ -2692,7 +3262,8 @@ const ConditionTrackerMod = (() => {
         applied: 'Anvendt',
         removed: 'Tilstand fjernet',
         cleanup: 'Oprydning fuldført',
-        macroReinstalled: 'Makro geninstalleret',
+        macroReinstalled:
+          'The {wizard}, {multiTarget}, {reportToken}, and {saved} macros have been reinstalled for all current GM players.',
         handoutReinstalled: 'Handout geninstalleret',
         warning: 'Advarsel',
         error: 'Fejl',
@@ -2705,6 +3276,14 @@ const ConditionTrackerMod = (() => {
         scriptReady: 'Script klar',
         conditionReorder: 'Turrækkefølge ændret',
         tokenReport: 'Token Condition Report',
+        savedEffects: 'Saved Effects',
+        savedAdd: 'Add Saved Effect',
+        savedEdit: 'Edit Saved Effect',
+        savedRemoved: 'Saved Effect Removed',
+        savedPromoted: 'Add to Turn Tracker',
+        savedSnoozed: 'Reminder Snoozed',
+        savedSnoozeCleared: 'Snooze Cleared',
+        hiddenEffects: 'Hidden Effects — {name}',
       },
       heading: {
         quickActions: 'Hurtighandlinger',
@@ -2718,6 +3297,11 @@ const ConditionTrackerMod = (() => {
         summary: 'Oversigt',
         appliedTo: 'Conditions Applied To',
         appliedBy: 'Conditions Applied By',
+        savedEffectsFor: 'Saved Effects for {name}',
+        visibility: 'Visibility',
+        snoozeOptions: 'Snooze Reminder',
+        promoteOptions: 'Promote to Turn Tracker',
+        editActions: 'Edit Actions',
       },
       msg: {
         noActive: 'Ingen aktive tilstande spores.',
@@ -2805,6 +3389,28 @@ const ConditionTrackerMod = (() => {
         noConditionsAppliedTo: '{name} has no active conditions applied to it.',
         noConditionsAppliedBy:
           '{name} has no active conditions applied to others.',
+        noSavedEffects: 'No saved effects stored for {name}.',
+        noTokenSelectedSaved:
+          'Select a token on the board before using --saved.',
+        savedEffectAdded: 'Saved effect added for {name}.',
+        savedEffectUpdated: 'Saved effect updated.',
+        savedEffectRemoved: 'Saved effect removed.',
+        savedEffectNotFound: 'Saved effect not found.',
+        savedInvalidVisibility:
+          'Invalid visibility. Use public, masked, or gm.',
+        savedConditionRequired:
+          'Condition type is required. Use --condition <type>.',
+        savedPromotedPublic: 'Effect added to Turn Tracker as public.',
+        savedPromotedMasked:
+          'Effect added to Turn Tracker as masked — players see: {publicLabel}.',
+        savedPromotedGm:
+          'Effect is GM-only — no Turn Tracker row will be created. The reminder system will surface it when this token reaches the top of the turn order.',
+        savedSnoozed: 'Reminder snoozed: {scope}.',
+        savedSnoozeCleared: 'Snooze cleared.',
+        hiddenEffectsReminder: 'Hidden effects are active on {name}.',
+        visibilityPublicHint: 'full label visible to all',
+        visibilityMaskedHint: 'vague label shown to players',
+        visibilityGmHint: 'GM whisper only, no Turn Tracker row',
       },
       removal: {
         conditionField: 'Tilstand',
@@ -2817,6 +3423,32 @@ const ConditionTrackerMod = (() => {
         rowRemoved: 'Fjernet',
         rowMissing: 'Allerede manglende',
         manualReason: 'Manuel fjernelse',
+      },
+      saved: {
+        visibility: {
+          public: 'Public',
+          masked: 'Masked',
+          gm: 'GM Only',
+        },
+        snooze: {
+          thisTurn: 'This Turn',
+          oneRound: '1 Round',
+          threeRounds: '3 Rounds',
+          thisCombat: 'This Combat',
+          rounds: '{n} round(s)',
+        },
+        field: {
+          gmLabel: 'GM Label',
+          publicLabel: 'Public Label',
+          visibility: 'Visibility',
+          source: 'Source',
+          condition: 'Condition',
+        },
+        prompt: {
+          enterGmLabel: 'Full effect description (GM only)',
+          enterPublicLabel: 'Vague label shown to players',
+        },
+        snoozed: 'snoozed',
       },
       cleanup: {
         orphaned: 'Forladte tilstandsposter',
@@ -2973,6 +3605,67 @@ const ConditionTrackerMod = (() => {
             'Fast nedtælling; ét trin per ankertokens turslut',
           ],
         ],
+      },
+      savedEffects: {
+        heading: 'Saved Effects',
+        intro:
+          'Saved effects let you store long-term conditions outside the Turn Tracker — curses, diseases, poisons, hidden debuffs, and other non-combat conditions. They persist in script state and can be optionally copied into the Turn Tracker when combat begins.',
+        visibility: {
+          heading: 'Visibility Modes',
+          rows: [
+            [
+              'public',
+              'Full effect label is visible in the Turn Tracker and public chat.',
+            ],
+            [
+              'masked',
+              'A vague public label is shown to players; full details are GM-only.',
+            ],
+            [
+              'gm',
+              'No Turn Tracker row. Full details are stored in state and whispered to the GM when the affected token reaches the top of initiative.',
+            ],
+          ],
+        },
+        commands: {
+          heading: 'Saved Effects Commands',
+          intro:
+            'All --saved commands are GM-only. Select a token before running --saved or --saved add.',
+          rows: [
+            [
+              '!condition-tracker --saved',
+              'View saved effects for the selected token.',
+            ],
+            [
+              '!condition-tracker --saved add',
+              'Launch the add-saved-effect wizard.',
+            ],
+            [
+              '!condition-tracker --saved edit <id>',
+              'Edit labels or visibility for an existing saved effect.',
+            ],
+            [
+              '!condition-tracker --saved remove <id>',
+              'Permanently remove a saved effect.',
+            ],
+            [
+              '!condition-tracker --saved promote <id> --visibility public|masked|gm',
+              'Copy a saved effect into the Turn Tracker (public or masked) or confirm it is GM-only tracked.',
+            ],
+            [
+              '!condition-tracker --saved snooze <id> --scope turn|rounds|combat --rounds <n>',
+              'Snooze a GM reminder for this turn, N rounds, or this combat.',
+            ],
+            [
+              '!condition-tracker --saved snooze-clear <id>',
+              'Clear an active snooze so reminders resume immediately.',
+            ],
+          ],
+        },
+        reminders: {
+          heading: 'GM Reminders',
+          body: 'When a token with gm or masked saved effects reaches the top of the Turn Tracker, the GM receives a whisper listing the hidden effects with action buttons. Duplicate reminders within the same turn are suppressed. Use the Snooze buttons to suppress reminders for a turn, a number of rounds, or for the remainder of the current combat.',
+        },
       },
       configuration: {
         heading: 'Konfiguration',
@@ -3229,6 +3922,13 @@ const ConditionTrackerMod = (() => {
         showHelp: 'Toon Help',
         reorderConditions: 'Conditierijen Herordenen',
         reportToken: 'Report Token Conditions',
+        savedEffects: 'Saved Effects',
+        addSavedEffect: 'Add Saved Effect',
+        editSaved: 'Edit',
+        removeSaved: 'Remove',
+        promoteSaved: 'Add to Turn Tracker',
+        snoozeSaved: 'Snooze',
+        clearSnooze: 'Clear Snooze',
       },
       title: {
         menu: 'Menu',
@@ -3239,7 +3939,8 @@ const ConditionTrackerMod = (() => {
         applied: 'Toegepast',
         removed: 'Conditie Verwijderd',
         cleanup: 'Opruiming Voltooid',
-        macroReinstalled: 'Macro Herinstalleerd',
+        macroReinstalled:
+          'The {wizard}, {multiTarget}, {reportToken}, and {saved} macros have been reinstalled for all current GM players.',
         handoutReinstalled: 'Handout Herinstalleerd',
         warning: 'Waarschuwing',
         error: 'Fout',
@@ -3252,6 +3953,14 @@ const ConditionTrackerMod = (() => {
         scriptReady: 'Script Gereed',
         conditionReorder: 'Beurtenvolgorde Gewijzigd',
         tokenReport: 'Token Condition Report',
+        savedEffects: 'Saved Effects',
+        savedAdd: 'Add Saved Effect',
+        savedEdit: 'Edit Saved Effect',
+        savedRemoved: 'Saved Effect Removed',
+        savedPromoted: 'Add to Turn Tracker',
+        savedSnoozed: 'Reminder Snoozed',
+        savedSnoozeCleared: 'Snooze Cleared',
+        hiddenEffects: 'Hidden Effects — {name}',
       },
       heading: {
         quickActions: 'Snelle Acties',
@@ -3265,6 +3974,11 @@ const ConditionTrackerMod = (() => {
         summary: 'Samenvatting',
         appliedTo: 'Conditions Applied To',
         appliedBy: 'Conditions Applied By',
+        savedEffectsFor: 'Saved Effects for {name}',
+        visibility: 'Visibility',
+        snoozeOptions: 'Snooze Reminder',
+        promoteOptions: 'Promote to Turn Tracker',
+        editActions: 'Edit Actions',
       },
       msg: {
         noActive: 'Er worden geen actieve condities bijgehouden.',
@@ -3353,6 +4067,28 @@ const ConditionTrackerMod = (() => {
         noConditionsAppliedTo: '{name} has no active conditions applied to it.',
         noConditionsAppliedBy:
           '{name} has no active conditions applied to others.',
+        noSavedEffects: 'No saved effects stored for {name}.',
+        noTokenSelectedSaved:
+          'Select a token on the board before using --saved.',
+        savedEffectAdded: 'Saved effect added for {name}.',
+        savedEffectUpdated: 'Saved effect updated.',
+        savedEffectRemoved: 'Saved effect removed.',
+        savedEffectNotFound: 'Saved effect not found.',
+        savedInvalidVisibility:
+          'Invalid visibility. Use public, masked, or gm.',
+        savedConditionRequired:
+          'Condition type is required. Use --condition <type>.',
+        savedPromotedPublic: 'Effect added to Turn Tracker as public.',
+        savedPromotedMasked:
+          'Effect added to Turn Tracker as masked — players see: {publicLabel}.',
+        savedPromotedGm:
+          'Effect is GM-only — no Turn Tracker row will be created. The reminder system will surface it when this token reaches the top of the turn order.',
+        savedSnoozed: 'Reminder snoozed: {scope}.',
+        savedSnoozeCleared: 'Snooze cleared.',
+        hiddenEffectsReminder: 'Hidden effects are active on {name}.',
+        visibilityPublicHint: 'full label visible to all',
+        visibilityMaskedHint: 'vague label shown to players',
+        visibilityGmHint: 'GM whisper only, no Turn Tracker row',
       },
       removal: {
         conditionField: 'Conditie',
@@ -3365,6 +4101,32 @@ const ConditionTrackerMod = (() => {
         rowRemoved: 'Verwijderd',
         rowMissing: 'Al ontbrekend',
         manualReason: 'Handmatige verwijdering',
+      },
+      saved: {
+        visibility: {
+          public: 'Public',
+          masked: 'Masked',
+          gm: 'GM Only',
+        },
+        snooze: {
+          thisTurn: 'This Turn',
+          oneRound: '1 Round',
+          threeRounds: '3 Rounds',
+          thisCombat: 'This Combat',
+          rounds: '{n} round(s)',
+        },
+        field: {
+          gmLabel: 'GM Label',
+          publicLabel: 'Public Label',
+          visibility: 'Visibility',
+          source: 'Source',
+          condition: 'Condition',
+        },
+        prompt: {
+          enterGmLabel: 'Full effect description (GM only)',
+          enterPublicLabel: 'Vague label shown to players',
+        },
+        snoozed: 'snoozed',
       },
       cleanup: {
         orphaned: 'Verweesde conditie-items',
@@ -3524,6 +4286,67 @@ const ConditionTrackerMod = (() => {
             'Vaste aftelling; één vermindering per beurteindigng van het ankertoken',
           ],
         ],
+      },
+      savedEffects: {
+        heading: 'Saved Effects',
+        intro:
+          'Saved effects let you store long-term conditions outside the Turn Tracker — curses, diseases, poisons, hidden debuffs, and other non-combat conditions. They persist in script state and can be optionally copied into the Turn Tracker when combat begins.',
+        visibility: {
+          heading: 'Visibility Modes',
+          rows: [
+            [
+              'public',
+              'Full effect label is visible in the Turn Tracker and public chat.',
+            ],
+            [
+              'masked',
+              'A vague public label is shown to players; full details are GM-only.',
+            ],
+            [
+              'gm',
+              'No Turn Tracker row. Full details are stored in state and whispered to the GM when the affected token reaches the top of initiative.',
+            ],
+          ],
+        },
+        commands: {
+          heading: 'Saved Effects Commands',
+          intro:
+            'All --saved commands are GM-only. Select a token before running --saved or --saved add.',
+          rows: [
+            [
+              '!condition-tracker --saved',
+              'View saved effects for the selected token.',
+            ],
+            [
+              '!condition-tracker --saved add',
+              'Launch the add-saved-effect wizard.',
+            ],
+            [
+              '!condition-tracker --saved edit <id>',
+              'Edit labels or visibility for an existing saved effect.',
+            ],
+            [
+              '!condition-tracker --saved remove <id>',
+              'Permanently remove a saved effect.',
+            ],
+            [
+              '!condition-tracker --saved promote <id> --visibility public|masked|gm',
+              'Copy a saved effect into the Turn Tracker (public or masked) or confirm it is GM-only tracked.',
+            ],
+            [
+              '!condition-tracker --saved snooze <id> --scope turn|rounds|combat --rounds <n>',
+              'Snooze a GM reminder for this turn, N rounds, or this combat.',
+            ],
+            [
+              '!condition-tracker --saved snooze-clear <id>',
+              'Clear an active snooze so reminders resume immediately.',
+            ],
+          ],
+        },
+        reminders: {
+          heading: 'GM Reminders',
+          body: 'When a token with gm or masked saved effects reaches the top of the Turn Tracker, the GM receives a whisper listing the hidden effects with action buttons. Duplicate reminders within the same turn are suppressed. Use the Snooze buttons to suppress reminders for a turn, a number of rounds, or for the remainder of the current combat.',
+        },
       },
       configuration: {
         heading: 'Configuratie',
@@ -3902,6 +4725,13 @@ const ConditionTrackerMod = (() => {
         showHelp: 'Show Help',
         reorderConditions: 'Reorder Condition Rows',
         reportToken: 'Report Token Conditions',
+        savedEffects: 'Saved Effects',
+        addSavedEffect: 'Add Saved Effect',
+        editSaved: 'Edit',
+        removeSaved: 'Remove',
+        promoteSaved: 'Add to Turn Tracker',
+        snoozeSaved: 'Snooze',
+        clearSnooze: 'Clear Snooze',
       },
       title: {
         menu: 'Menu',
@@ -3925,6 +4755,14 @@ const ConditionTrackerMod = (() => {
         scriptReady: 'Script Ready',
         conditionReorder: 'Turn Order Changed',
         tokenReport: 'Token Condition Report',
+        savedEffects: 'Saved Effects',
+        savedAdd: 'Add Saved Effect',
+        savedEdit: 'Edit Saved Effect',
+        savedRemoved: 'Saved Effect Removed',
+        savedPromoted: 'Add to Turn Tracker',
+        savedSnoozed: 'Reminder Snoozed',
+        savedSnoozeCleared: 'Snooze Cleared',
+        hiddenEffects: 'Hidden Effects — {name}',
       },
       heading: {
         quickActions: 'Quick Actions',
@@ -3938,6 +4776,11 @@ const ConditionTrackerMod = (() => {
         summary: 'Summary',
         appliedTo: 'Conditions Applied To',
         appliedBy: 'Conditions Applied By',
+        savedEffectsFor: 'Saved Effects for {name}',
+        visibility: 'Visibility',
+        snoozeOptions: 'Snooze Reminder',
+        promoteOptions: 'Promote to Turn Tracker',
+        editActions: 'Edit Actions',
       },
       msg: {
         noActive: 'No active conditions are tracked.',
@@ -3945,7 +4788,7 @@ const ConditionTrackerMod = (() => {
         unknownConfig:
           'Unknown config option. Use --config to view supported settings.',
         macroReinstalled:
-          'The {wizard}, {multiTarget}, and {reportToken} macros have been reinstalled for all current GM players.',
+          'The {wizard}, {multiTarget}, {reportToken}, and {saved} macros have been reinstalled for all current GM players.',
         handoutReinstalled: 'The help handout {handout} has been reinstalled.',
         duplicate:
           'That exact source, subject, target, condition, and custom text is already active.',
@@ -4028,6 +4871,28 @@ const ConditionTrackerMod = (() => {
         noConditionsAppliedTo: '{name} has no active conditions applied to it.',
         noConditionsAppliedBy:
           '{name} has no active conditions applied to others.',
+        noSavedEffects: 'No saved effects stored for {name}.',
+        noTokenSelectedSaved:
+          'Select a token on the board before using --saved.',
+        savedEffectAdded: 'Saved effect added for {name}.',
+        savedEffectUpdated: 'Saved effect updated.',
+        savedEffectRemoved: 'Saved effect removed.',
+        savedEffectNotFound: 'Saved effect not found.',
+        savedInvalidVisibility:
+          'Invalid visibility. Use public, masked, or gm.',
+        savedConditionRequired:
+          'Condition type is required. Use --condition &lt;type&gt;.',
+        savedPromotedPublic: 'Effect added to Turn Tracker as public.',
+        savedPromotedMasked:
+          'Effect added to Turn Tracker as masked — players see: {publicLabel}.',
+        savedPromotedGm:
+          'Effect is GM-only — no Turn Tracker row will be created. The reminder system will surface it when this token reaches the top of the turn order.',
+        savedSnoozed: 'Reminder snoozed: {scope}.',
+        savedSnoozeCleared: 'Snooze cleared.',
+        hiddenEffectsReminder: 'Hidden effects are active on {name}.',
+        visibilityPublicHint: 'full label visible to all',
+        visibilityMaskedHint: 'vague label shown to players',
+        visibilityGmHint: 'GM whisper only, no Turn Tracker row',
       },
       removal: {
         conditionField: 'Condition',
@@ -4040,6 +4905,32 @@ const ConditionTrackerMod = (() => {
         rowRemoved: 'Removed',
         rowMissing: 'Already missing',
         manualReason: 'Manual removal',
+      },
+      saved: {
+        visibility: {
+          public: 'Public',
+          masked: 'Masked',
+          gm: 'GM Only',
+        },
+        snooze: {
+          thisTurn: 'This Turn',
+          oneRound: '1 Round',
+          threeRounds: '3 Rounds',
+          thisCombat: 'This Combat',
+          rounds: '{n} round(s)',
+        },
+        field: {
+          gmLabel: 'GM Label',
+          publicLabel: 'Public Label',
+          visibility: 'Visibility',
+          source: 'Source',
+          condition: 'Condition',
+        },
+        prompt: {
+          enterGmLabel: 'Full effect description (GM only)',
+          enterPublicLabel: 'Vague label shown to players',
+        },
+        snoozed: 'snoozed',
       },
       cleanup: {
         orphaned: 'Orphaned condition entries',
@@ -4078,6 +4969,10 @@ const ConditionTrackerMod = (() => {
           [
             '!condition-tracker --report-token',
             'Select one or more tokens first, then run this command to get a GM whisper listing every condition applied to and by each selected token. Also available as the ConditionTrackerReportToken macro.',
+          ],
+          [
+            '!condition-tracker --saved',
+            'Select a token first, then run this command to view and manage saved long-term effects (curses, diseases, hidden debuffs, etc.) for that token. Also available as the ConditionTrackerSaved macro.',
           ],
           [
             '!condition-tracker --menu',
@@ -4136,6 +5031,28 @@ const ConditionTrackerMod = (() => {
           [
             '--report-token',
             'Whisper a GM-only condition report for each selected token (conditions applied to and by it)',
+          ],
+          [
+            '--saved',
+            'View saved long-term effects for the selected token (select token first)',
+          ],
+          [
+            '--saved add',
+            'Add a saved effect (curse, disease, etc.) to the selected token',
+          ],
+          ['--saved edit &lt;id&gt;', 'Edit an existing saved effect by id'],
+          ['--saved remove &lt;id&gt;', 'Remove a saved effect by id'],
+          [
+            '--saved promote &lt;id&gt; --visibility public|masked|gm',
+            'Copy a saved effect into the Turn Tracker (public/masked) or mark it as GM-only active',
+          ],
+          [
+            '--saved snooze &lt;id&gt; --scope turn|rounds|combat --rounds &lt;n&gt;',
+            'Snooze a saved-effect reminder for the current turn, N rounds, or this combat',
+          ],
+          [
+            '--saved snooze-clear &lt;id&gt;',
+            'Clear an active snooze on a saved effect',
           ],
           [
             '--lang &lt;locale&gt;',
@@ -4200,6 +5117,67 @@ const ConditionTrackerMod = (() => {
             'Fixed countdown; one decrement per anchor-token turn-end',
           ],
         ],
+      },
+      savedEffects: {
+        heading: 'Saved Effects',
+        intro:
+          'Saved effects let you store long-term conditions outside the Turn Tracker — curses, diseases, poisons, hidden debuffs, and other non-combat conditions. They persist in script state and can be optionally copied into the Turn Tracker when combat begins.',
+        visibility: {
+          heading: 'Visibility Modes',
+          rows: [
+            [
+              'public',
+              'Full effect label is visible in the Turn Tracker and public chat.',
+            ],
+            [
+              'masked',
+              'A vague public label is shown to players; full details are GM-only.',
+            ],
+            [
+              'gm',
+              'No Turn Tracker row. Full details are stored in state and whispered to the GM when the affected token reaches the top of initiative.',
+            ],
+          ],
+        },
+        commands: {
+          heading: 'Saved Effects Commands',
+          intro:
+            'All --saved commands are GM-only. Select a token before running --saved or --saved add.',
+          rows: [
+            [
+              '!condition-tracker --saved',
+              'View saved effects for the selected token.',
+            ],
+            [
+              '!condition-tracker --saved add',
+              'Launch the add-saved-effect wizard.',
+            ],
+            [
+              '!condition-tracker --saved edit &lt;id&gt;',
+              'Edit labels or visibility for an existing saved effect.',
+            ],
+            [
+              '!condition-tracker --saved remove &lt;id&gt;',
+              'Permanently remove a saved effect.',
+            ],
+            [
+              '!condition-tracker --saved promote &lt;id&gt; --visibility public|masked|gm',
+              'Copy a saved effect into the Turn Tracker (public or masked) or confirm it is GM-only tracked.',
+            ],
+            [
+              '!condition-tracker --saved snooze &lt;id&gt; --scope turn|rounds|combat --rounds &lt;n&gt;',
+              'Snooze a GM reminder for this turn, N rounds, or this combat.',
+            ],
+            [
+              '!condition-tracker --saved snooze-clear &lt;id&gt;',
+              'Clear an active snooze so reminders resume immediately.',
+            ],
+          ],
+        },
+        reminders: {
+          heading: 'GM Reminders',
+          body: 'When a token with gm or masked saved effects reaches the top of the Turn Tracker, the GM receives a whisper listing the hidden effects with action buttons. Duplicate reminders within the same turn are suppressed. Use the Snooze buttons to suppress reminders for a turn, a number of rounds, or for the remainder of the current combat.',
+        },
       },
       configuration: {
         heading: 'Configuration',
@@ -4465,6 +5443,13 @@ const ConditionTrackerMod = (() => {
         showHelp: 'Näytä ohje',
         reorderConditions: 'Järjestä tilarivit uudelleen',
         reportToken: 'Report Token Conditions',
+        savedEffects: 'Saved Effects',
+        addSavedEffect: 'Add Saved Effect',
+        editSaved: 'Edit',
+        removeSaved: 'Remove',
+        promoteSaved: 'Add to Turn Tracker',
+        snoozeSaved: 'Snooze',
+        clearSnooze: 'Clear Snooze',
       },
       title: {
         menu: 'Valikko',
@@ -4475,7 +5460,8 @@ const ConditionTrackerMod = (() => {
         applied: 'Sovellettu',
         removed: 'Tila poistettu',
         cleanup: 'Siivous valmis',
-        macroReinstalled: 'Makro asennettu uudelleen',
+        macroReinstalled:
+          'The {wizard}, {multiTarget}, {reportToken}, and {saved} macros have been reinstalled for all current GM players.',
         handoutReinstalled: 'Handout asennettu uudelleen',
         warning: 'Varoitus',
         error: 'Virhe',
@@ -4488,6 +5474,14 @@ const ConditionTrackerMod = (() => {
         scriptReady: 'Skripti valmis',
         conditionReorder: 'Vuorojärjestys muuttui',
         tokenReport: 'Token Condition Report',
+        savedEffects: 'Saved Effects',
+        savedAdd: 'Add Saved Effect',
+        savedEdit: 'Edit Saved Effect',
+        savedRemoved: 'Saved Effect Removed',
+        savedPromoted: 'Add to Turn Tracker',
+        savedSnoozed: 'Reminder Snoozed',
+        savedSnoozeCleared: 'Snooze Cleared',
+        hiddenEffects: 'Hidden Effects — {name}',
       },
       heading: {
         quickActions: 'Pikavalinnat',
@@ -4501,6 +5495,11 @@ const ConditionTrackerMod = (() => {
         summary: 'Yhteenveto',
         appliedTo: 'Conditions Applied To',
         appliedBy: 'Conditions Applied By',
+        savedEffectsFor: 'Saved Effects for {name}',
+        visibility: 'Visibility',
+        snoozeOptions: 'Snooze Reminder',
+        promoteOptions: 'Promote to Turn Tracker',
+        editActions: 'Edit Actions',
       },
       msg: {
         noActive: 'Aktiivisia tiloja ei seurata.',
@@ -4587,6 +5586,28 @@ const ConditionTrackerMod = (() => {
         noConditionsAppliedTo: '{name} has no active conditions applied to it.',
         noConditionsAppliedBy:
           '{name} has no active conditions applied to others.',
+        noSavedEffects: 'No saved effects stored for {name}.',
+        noTokenSelectedSaved:
+          'Select a token on the board before using --saved.',
+        savedEffectAdded: 'Saved effect added for {name}.',
+        savedEffectUpdated: 'Saved effect updated.',
+        savedEffectRemoved: 'Saved effect removed.',
+        savedEffectNotFound: 'Saved effect not found.',
+        savedInvalidVisibility:
+          'Invalid visibility. Use public, masked, or gm.',
+        savedConditionRequired:
+          'Condition type is required. Use --condition <type>.',
+        savedPromotedPublic: 'Effect added to Turn Tracker as public.',
+        savedPromotedMasked:
+          'Effect added to Turn Tracker as masked — players see: {publicLabel}.',
+        savedPromotedGm:
+          'Effect is GM-only — no Turn Tracker row will be created. The reminder system will surface it when this token reaches the top of the turn order.',
+        savedSnoozed: 'Reminder snoozed: {scope}.',
+        savedSnoozeCleared: 'Snooze cleared.',
+        hiddenEffectsReminder: 'Hidden effects are active on {name}.',
+        visibilityPublicHint: 'full label visible to all',
+        visibilityMaskedHint: 'vague label shown to players',
+        visibilityGmHint: 'GM whisper only, no Turn Tracker row',
       },
       removal: {
         conditionField: 'Tila',
@@ -4599,6 +5620,32 @@ const ConditionTrackerMod = (() => {
         rowRemoved: 'Poistettu',
         rowMissing: 'Jo puuttuu',
         manualReason: 'Manuaalinen poisto',
+      },
+      saved: {
+        visibility: {
+          public: 'Public',
+          masked: 'Masked',
+          gm: 'GM Only',
+        },
+        snooze: {
+          thisTurn: 'This Turn',
+          oneRound: '1 Round',
+          threeRounds: '3 Rounds',
+          thisCombat: 'This Combat',
+          rounds: '{n} round(s)',
+        },
+        field: {
+          gmLabel: 'GM Label',
+          publicLabel: 'Public Label',
+          visibility: 'Visibility',
+          source: 'Source',
+          condition: 'Condition',
+        },
+        prompt: {
+          enterGmLabel: 'Full effect description (GM only)',
+          enterPublicLabel: 'Vague label shown to players',
+        },
+        snoozed: 'snoozed',
       },
       cleanup: {
         orphaned: 'Orpoja tilamerkintöjä',
@@ -4755,6 +5802,67 @@ const ConditionTrackerMod = (() => {
             'Kiinteä laskuri; yksi pienennys ankkuri-tokenin vuoron päättyessä',
           ],
         ],
+      },
+      savedEffects: {
+        heading: 'Saved Effects',
+        intro:
+          'Saved effects let you store long-term conditions outside the Turn Tracker — curses, diseases, poisons, hidden debuffs, and other non-combat conditions. They persist in script state and can be optionally copied into the Turn Tracker when combat begins.',
+        visibility: {
+          heading: 'Visibility Modes',
+          rows: [
+            [
+              'public',
+              'Full effect label is visible in the Turn Tracker and public chat.',
+            ],
+            [
+              'masked',
+              'A vague public label is shown to players; full details are GM-only.',
+            ],
+            [
+              'gm',
+              'No Turn Tracker row. Full details are stored in state and whispered to the GM when the affected token reaches the top of initiative.',
+            ],
+          ],
+        },
+        commands: {
+          heading: 'Saved Effects Commands',
+          intro:
+            'All --saved commands are GM-only. Select a token before running --saved or --saved add.',
+          rows: [
+            [
+              '!condition-tracker --saved',
+              'View saved effects for the selected token.',
+            ],
+            [
+              '!condition-tracker --saved add',
+              'Launch the add-saved-effect wizard.',
+            ],
+            [
+              '!condition-tracker --saved edit <id>',
+              'Edit labels or visibility for an existing saved effect.',
+            ],
+            [
+              '!condition-tracker --saved remove <id>',
+              'Permanently remove a saved effect.',
+            ],
+            [
+              '!condition-tracker --saved promote <id> --visibility public|masked|gm',
+              'Copy a saved effect into the Turn Tracker (public or masked) or confirm it is GM-only tracked.',
+            ],
+            [
+              '!condition-tracker --saved snooze <id> --scope turn|rounds|combat --rounds <n>',
+              'Snooze a GM reminder for this turn, N rounds, or this combat.',
+            ],
+            [
+              '!condition-tracker --saved snooze-clear <id>',
+              'Clear an active snooze so reminders resume immediately.',
+            ],
+          ],
+        },
+        reminders: {
+          heading: 'GM Reminders',
+          body: 'When a token with gm or masked saved effects reaches the top of the Turn Tracker, the GM receives a whisper listing the hidden effects with action buttons. Duplicate reminders within the same turn are suppressed. Use the Snooze buttons to suppress reminders for a turn, a number of rounds, or for the remainder of the current combat.',
+        },
       },
       configuration: {
         heading: 'Asetukset',
@@ -5010,6 +6118,13 @@ const ConditionTrackerMod = (() => {
         showHelp: 'Afficher l’aide',
         reorderConditions: 'Réorganiser les lignes de condition',
         reportToken: 'Report Token Conditions',
+        savedEffects: 'Saved Effects',
+        addSavedEffect: 'Add Saved Effect',
+        editSaved: 'Edit',
+        removeSaved: 'Remove',
+        promoteSaved: 'Add to Turn Tracker',
+        snoozeSaved: 'Snooze',
+        clearSnooze: 'Clear Snooze',
       },
       title: {
         menu: 'Menu',
@@ -5020,7 +6135,8 @@ const ConditionTrackerMod = (() => {
         applied: 'Appliqué',
         removed: 'Condition supprimée',
         cleanup: 'Nettoyage terminé',
-        macroReinstalled: 'Macro réinstallée',
+        macroReinstalled:
+          'The {wizard}, {multiTarget}, {reportToken}, and {saved} macros have been reinstalled for all current GM players.',
         handoutReinstalled: 'Livret réinstallé',
         warning: 'Avertissement',
         error: 'Erreur',
@@ -5033,6 +6149,14 @@ const ConditionTrackerMod = (() => {
         scriptReady: 'Script prêt',
         conditionReorder: 'Ordre de tour modifié',
         tokenReport: 'Token Condition Report',
+        savedEffects: 'Saved Effects',
+        savedAdd: 'Add Saved Effect',
+        savedEdit: 'Edit Saved Effect',
+        savedRemoved: 'Saved Effect Removed',
+        savedPromoted: 'Add to Turn Tracker',
+        savedSnoozed: 'Reminder Snoozed',
+        savedSnoozeCleared: 'Snooze Cleared',
+        hiddenEffects: 'Hidden Effects — {name}',
       },
       heading: {
         quickActions: 'Actions rapides',
@@ -5046,6 +6170,11 @@ const ConditionTrackerMod = (() => {
         summary: 'Résumé',
         appliedTo: 'Conditions Applied To',
         appliedBy: 'Conditions Applied By',
+        savedEffectsFor: 'Saved Effects for {name}',
+        visibility: 'Visibility',
+        snoozeOptions: 'Snooze Reminder',
+        promoteOptions: 'Promote to Turn Tracker',
+        editActions: 'Edit Actions',
       },
       msg: {
         noActive: 'Aucune condition active n’est suivie.',
@@ -5135,6 +6264,28 @@ const ConditionTrackerMod = (() => {
         noConditionsAppliedTo: '{name} has no active conditions applied to it.',
         noConditionsAppliedBy:
           '{name} has no active conditions applied to others.',
+        noSavedEffects: 'No saved effects stored for {name}.',
+        noTokenSelectedSaved:
+          'Select a token on the board before using --saved.',
+        savedEffectAdded: 'Saved effect added for {name}.',
+        savedEffectUpdated: 'Saved effect updated.',
+        savedEffectRemoved: 'Saved effect removed.',
+        savedEffectNotFound: 'Saved effect not found.',
+        savedInvalidVisibility:
+          'Invalid visibility. Use public, masked, or gm.',
+        savedConditionRequired:
+          'Condition type is required. Use --condition <type>.',
+        savedPromotedPublic: 'Effect added to Turn Tracker as public.',
+        savedPromotedMasked:
+          'Effect added to Turn Tracker as masked — players see: {publicLabel}.',
+        savedPromotedGm:
+          'Effect is GM-only — no Turn Tracker row will be created. The reminder system will surface it when this token reaches the top of the turn order.',
+        savedSnoozed: 'Reminder snoozed: {scope}.',
+        savedSnoozeCleared: 'Snooze cleared.',
+        hiddenEffectsReminder: 'Hidden effects are active on {name}.',
+        visibilityPublicHint: 'full label visible to all',
+        visibilityMaskedHint: 'vague label shown to players',
+        visibilityGmHint: 'GM whisper only, no Turn Tracker row',
       },
       removal: {
         conditionField: 'Condition',
@@ -5147,6 +6298,32 @@ const ConditionTrackerMod = (() => {
         rowRemoved: 'Supprimé',
         rowMissing: 'Déjà absent',
         manualReason: 'Suppression manuelle',
+      },
+      saved: {
+        visibility: {
+          public: 'Public',
+          masked: 'Masked',
+          gm: 'GM Only',
+        },
+        snooze: {
+          thisTurn: 'This Turn',
+          oneRound: '1 Round',
+          threeRounds: '3 Rounds',
+          thisCombat: 'This Combat',
+          rounds: '{n} round(s)',
+        },
+        field: {
+          gmLabel: 'GM Label',
+          publicLabel: 'Public Label',
+          visibility: 'Visibility',
+          source: 'Source',
+          condition: 'Condition',
+        },
+        prompt: {
+          enterGmLabel: 'Full effect description (GM only)',
+          enterPublicLabel: 'Vague label shown to players',
+        },
+        snoozed: 'snoozed',
       },
       cleanup: {
         orphaned: 'Entrées de condition orphelines',
@@ -5309,6 +6486,67 @@ const ConditionTrackerMod = (() => {
             'Compte à rebours fixe ; un décrément par fin de tour du jeton ancre',
           ],
         ],
+      },
+      savedEffects: {
+        heading: 'Saved Effects',
+        intro:
+          'Saved effects let you store long-term conditions outside the Turn Tracker — curses, diseases, poisons, hidden debuffs, and other non-combat conditions. They persist in script state and can be optionally copied into the Turn Tracker when combat begins.',
+        visibility: {
+          heading: 'Visibility Modes',
+          rows: [
+            [
+              'public',
+              'Full effect label is visible in the Turn Tracker and public chat.',
+            ],
+            [
+              'masked',
+              'A vague public label is shown to players; full details are GM-only.',
+            ],
+            [
+              'gm',
+              'No Turn Tracker row. Full details are stored in state and whispered to the GM when the affected token reaches the top of initiative.',
+            ],
+          ],
+        },
+        commands: {
+          heading: 'Saved Effects Commands',
+          intro:
+            'All --saved commands are GM-only. Select a token before running --saved or --saved add.',
+          rows: [
+            [
+              '!condition-tracker --saved',
+              'View saved effects for the selected token.',
+            ],
+            [
+              '!condition-tracker --saved add',
+              'Launch the add-saved-effect wizard.',
+            ],
+            [
+              '!condition-tracker --saved edit <id>',
+              'Edit labels or visibility for an existing saved effect.',
+            ],
+            [
+              '!condition-tracker --saved remove <id>',
+              'Permanently remove a saved effect.',
+            ],
+            [
+              '!condition-tracker --saved promote <id> --visibility public|masked|gm',
+              'Copy a saved effect into the Turn Tracker (public or masked) or confirm it is GM-only tracked.',
+            ],
+            [
+              '!condition-tracker --saved snooze <id> --scope turn|rounds|combat --rounds <n>',
+              'Snooze a GM reminder for this turn, N rounds, or this combat.',
+            ],
+            [
+              '!condition-tracker --saved snooze-clear <id>',
+              'Clear an active snooze so reminders resume immediately.',
+            ],
+          ],
+        },
+        reminders: {
+          heading: 'GM Reminders',
+          body: 'When a token with gm or masked saved effects reaches the top of the Turn Tracker, the GM receives a whisper listing the hidden effects with action buttons. Duplicate reminders within the same turn are suppressed. Use the Snooze buttons to suppress reminders for a turn, a number of rounds, or for the remainder of the current combat.',
+        },
       },
       configuration: {
         heading: 'Configuration',
@@ -5564,6 +6802,13 @@ const ConditionTrackerMod = (() => {
         showHelp: 'Hilfe anzeigen',
         reorderConditions: 'Bedingungszeilen neu anordnen',
         reportToken: 'Report Token Conditions',
+        savedEffects: 'Saved Effects',
+        addSavedEffect: 'Add Saved Effect',
+        editSaved: 'Edit',
+        removeSaved: 'Remove',
+        promoteSaved: 'Add to Turn Tracker',
+        snoozeSaved: 'Snooze',
+        clearSnooze: 'Clear Snooze',
       },
       title: {
         menu: 'Menü',
@@ -5574,7 +6819,8 @@ const ConditionTrackerMod = (() => {
         applied: 'Angewendet',
         removed: 'Zustand entfernt',
         cleanup: 'Bereinigung abgeschlossen',
-        macroReinstalled: 'Makro neu installiert',
+        macroReinstalled:
+          'The {wizard}, {multiTarget}, {reportToken}, and {saved} macros have been reinstalled for all current GM players.',
         handoutReinstalled: 'Handout neu installiert',
         warning: 'Warnung',
         error: 'Fehler',
@@ -5587,6 +6833,14 @@ const ConditionTrackerMod = (() => {
         scriptReady: 'Skript bereit',
         conditionReorder: 'Rundenreihenfolge geändert',
         tokenReport: 'Token Condition Report',
+        savedEffects: 'Saved Effects',
+        savedAdd: 'Add Saved Effect',
+        savedEdit: 'Edit Saved Effect',
+        savedRemoved: 'Saved Effect Removed',
+        savedPromoted: 'Add to Turn Tracker',
+        savedSnoozed: 'Reminder Snoozed',
+        savedSnoozeCleared: 'Snooze Cleared',
+        hiddenEffects: 'Hidden Effects — {name}',
       },
       heading: {
         quickActions: 'Schnellaktionen',
@@ -5600,6 +6854,11 @@ const ConditionTrackerMod = (() => {
         summary: 'Zusammenfassung',
         appliedTo: 'Conditions Applied To',
         appliedBy: 'Conditions Applied By',
+        savedEffectsFor: 'Saved Effects for {name}',
+        visibility: 'Visibility',
+        snoozeOptions: 'Snooze Reminder',
+        promoteOptions: 'Promote to Turn Tracker',
+        editActions: 'Edit Actions',
       },
       msg: {
         noActive: 'Es werden keine aktiven Zustände verfolgt.',
@@ -5689,6 +6948,28 @@ const ConditionTrackerMod = (() => {
         noConditionsAppliedTo: '{name} has no active conditions applied to it.',
         noConditionsAppliedBy:
           '{name} has no active conditions applied to others.',
+        noSavedEffects: 'No saved effects stored for {name}.',
+        noTokenSelectedSaved:
+          'Select a token on the board before using --saved.',
+        savedEffectAdded: 'Saved effect added for {name}.',
+        savedEffectUpdated: 'Saved effect updated.',
+        savedEffectRemoved: 'Saved effect removed.',
+        savedEffectNotFound: 'Saved effect not found.',
+        savedInvalidVisibility:
+          'Invalid visibility. Use public, masked, or gm.',
+        savedConditionRequired:
+          'Condition type is required. Use --condition <type>.',
+        savedPromotedPublic: 'Effect added to Turn Tracker as public.',
+        savedPromotedMasked:
+          'Effect added to Turn Tracker as masked — players see: {publicLabel}.',
+        savedPromotedGm:
+          'Effect is GM-only — no Turn Tracker row will be created. The reminder system will surface it when this token reaches the top of the turn order.',
+        savedSnoozed: 'Reminder snoozed: {scope}.',
+        savedSnoozeCleared: 'Snooze cleared.',
+        hiddenEffectsReminder: 'Hidden effects are active on {name}.',
+        visibilityPublicHint: 'full label visible to all',
+        visibilityMaskedHint: 'vague label shown to players',
+        visibilityGmHint: 'GM whisper only, no Turn Tracker row',
       },
       removal: {
         conditionField: 'Zustand',
@@ -5701,6 +6982,32 @@ const ConditionTrackerMod = (() => {
         rowRemoved: 'Entfernt',
         rowMissing: 'Bereits fehlend',
         manualReason: 'Manuelle Entfernung',
+      },
+      saved: {
+        visibility: {
+          public: 'Public',
+          masked: 'Masked',
+          gm: 'GM Only',
+        },
+        snooze: {
+          thisTurn: 'This Turn',
+          oneRound: '1 Round',
+          threeRounds: '3 Rounds',
+          thisCombat: 'This Combat',
+          rounds: '{n} round(s)',
+        },
+        field: {
+          gmLabel: 'GM Label',
+          publicLabel: 'Public Label',
+          visibility: 'Visibility',
+          source: 'Source',
+          condition: 'Condition',
+        },
+        prompt: {
+          enterGmLabel: 'Full effect description (GM only)',
+          enterPublicLabel: 'Vague label shown to players',
+        },
+        snoozed: 'snoozed',
       },
       cleanup: {
         orphaned: 'Verwaiste Zustandseinträge',
@@ -5860,6 +7167,67 @@ const ConditionTrackerMod = (() => {
             'Fester Countdown; ein Dekrement pro Zugende des Ankertokens',
           ],
         ],
+      },
+      savedEffects: {
+        heading: 'Saved Effects',
+        intro:
+          'Saved effects let you store long-term conditions outside the Turn Tracker — curses, diseases, poisons, hidden debuffs, and other non-combat conditions. They persist in script state and can be optionally copied into the Turn Tracker when combat begins.',
+        visibility: {
+          heading: 'Visibility Modes',
+          rows: [
+            [
+              'public',
+              'Full effect label is visible in the Turn Tracker and public chat.',
+            ],
+            [
+              'masked',
+              'A vague public label is shown to players; full details are GM-only.',
+            ],
+            [
+              'gm',
+              'No Turn Tracker row. Full details are stored in state and whispered to the GM when the affected token reaches the top of initiative.',
+            ],
+          ],
+        },
+        commands: {
+          heading: 'Saved Effects Commands',
+          intro:
+            'All --saved commands are GM-only. Select a token before running --saved or --saved add.',
+          rows: [
+            [
+              '!condition-tracker --saved',
+              'View saved effects for the selected token.',
+            ],
+            [
+              '!condition-tracker --saved add',
+              'Launch the add-saved-effect wizard.',
+            ],
+            [
+              '!condition-tracker --saved edit <id>',
+              'Edit labels or visibility for an existing saved effect.',
+            ],
+            [
+              '!condition-tracker --saved remove <id>',
+              'Permanently remove a saved effect.',
+            ],
+            [
+              '!condition-tracker --saved promote <id> --visibility public|masked|gm',
+              'Copy a saved effect into the Turn Tracker (public or masked) or confirm it is GM-only tracked.',
+            ],
+            [
+              '!condition-tracker --saved snooze <id> --scope turn|rounds|combat --rounds <n>',
+              'Snooze a GM reminder for this turn, N rounds, or this combat.',
+            ],
+            [
+              '!condition-tracker --saved snooze-clear <id>',
+              'Clear an active snooze so reminders resume immediately.',
+            ],
+          ],
+        },
+        reminders: {
+          heading: 'GM Reminders',
+          body: 'When a token with gm or masked saved effects reaches the top of the Turn Tracker, the GM receives a whisper listing the hidden effects with action buttons. Duplicate reminders within the same turn are suppressed. Use the Snooze buttons to suppress reminders for a turn, a number of rounds, or for the remainder of the current combat.',
+        },
       },
       configuration: {
         heading: 'Konfiguration',
@@ -6117,6 +7485,13 @@ const ConditionTrackerMod = (() => {
         showHelp: 'Εμφάνιση Βοήθειας',
         reorderConditions: 'Αναδιάταξη Σειρών Κατάστασης',
         reportToken: 'Report Token Conditions',
+        savedEffects: 'Saved Effects',
+        addSavedEffect: 'Add Saved Effect',
+        editSaved: 'Edit',
+        removeSaved: 'Remove',
+        promoteSaved: 'Add to Turn Tracker',
+        snoozeSaved: 'Snooze',
+        clearSnooze: 'Clear Snooze',
       },
       title: {
         menu: 'Μενού',
@@ -6127,7 +7502,8 @@ const ConditionTrackerMod = (() => {
         applied: 'Εφαρμόστηκε',
         removed: 'Κατάσταση Αφαιρέθηκε',
         cleanup: 'Εκκαθάριση Ολοκληρώθηκε',
-        macroReinstalled: 'Το Macro Επανεγκαταστάθηκε',
+        macroReinstalled:
+          'The {wizard}, {multiTarget}, {reportToken}, and {saved} macros have been reinstalled for all current GM players.',
         handoutReinstalled: 'Το Handout Επανεγκαταστάθηκε',
         warning: 'Προειδοποίηση',
         error: 'Σφάλμα',
@@ -6140,6 +7516,14 @@ const ConditionTrackerMod = (() => {
         scriptReady: 'Το Script Είναι Έτοιμο',
         conditionReorder: 'Η Σειρά Πρωτοβουλίας Άλλαξε',
         tokenReport: 'Token Condition Report',
+        savedEffects: 'Saved Effects',
+        savedAdd: 'Add Saved Effect',
+        savedEdit: 'Edit Saved Effect',
+        savedRemoved: 'Saved Effect Removed',
+        savedPromoted: 'Add to Turn Tracker',
+        savedSnoozed: 'Reminder Snoozed',
+        savedSnoozeCleared: 'Snooze Cleared',
+        hiddenEffects: 'Hidden Effects — {name}',
       },
       heading: {
         quickActions: 'Γρήγορες Ενέργειες',
@@ -6153,6 +7537,11 @@ const ConditionTrackerMod = (() => {
         summary: 'Σύνοψη',
         appliedTo: 'Conditions Applied To',
         appliedBy: 'Conditions Applied By',
+        savedEffectsFor: 'Saved Effects for {name}',
+        visibility: 'Visibility',
+        snoozeOptions: 'Snooze Reminder',
+        promoteOptions: 'Promote to Turn Tracker',
+        editActions: 'Edit Actions',
       },
       msg: {
         noActive: 'Δεν παρακολουθούνται ενεργές καταστάσεις.',
@@ -6239,6 +7628,28 @@ const ConditionTrackerMod = (() => {
         noConditionsAppliedTo: '{name} has no active conditions applied to it.',
         noConditionsAppliedBy:
           '{name} has no active conditions applied to others.',
+        noSavedEffects: 'No saved effects stored for {name}.',
+        noTokenSelectedSaved:
+          'Select a token on the board before using --saved.',
+        savedEffectAdded: 'Saved effect added for {name}.',
+        savedEffectUpdated: 'Saved effect updated.',
+        savedEffectRemoved: 'Saved effect removed.',
+        savedEffectNotFound: 'Saved effect not found.',
+        savedInvalidVisibility:
+          'Invalid visibility. Use public, masked, or gm.',
+        savedConditionRequired:
+          'Condition type is required. Use --condition <type>.',
+        savedPromotedPublic: 'Effect added to Turn Tracker as public.',
+        savedPromotedMasked:
+          'Effect added to Turn Tracker as masked — players see: {publicLabel}.',
+        savedPromotedGm:
+          'Effect is GM-only — no Turn Tracker row will be created. The reminder system will surface it when this token reaches the top of the turn order.',
+        savedSnoozed: 'Reminder snoozed: {scope}.',
+        savedSnoozeCleared: 'Snooze cleared.',
+        hiddenEffectsReminder: 'Hidden effects are active on {name}.',
+        visibilityPublicHint: 'full label visible to all',
+        visibilityMaskedHint: 'vague label shown to players',
+        visibilityGmHint: 'GM whisper only, no Turn Tracker row',
       },
       removal: {
         conditionField: 'Κατάσταση',
@@ -6251,6 +7662,32 @@ const ConditionTrackerMod = (() => {
         rowRemoved: 'Αφαιρέθηκε',
         rowMissing: 'Ήδη απούσα',
         manualReason: 'Χειροκίνητη αφαίρεση',
+      },
+      saved: {
+        visibility: {
+          public: 'Public',
+          masked: 'Masked',
+          gm: 'GM Only',
+        },
+        snooze: {
+          thisTurn: 'This Turn',
+          oneRound: '1 Round',
+          threeRounds: '3 Rounds',
+          thisCombat: 'This Combat',
+          rounds: '{n} round(s)',
+        },
+        field: {
+          gmLabel: 'GM Label',
+          publicLabel: 'Public Label',
+          visibility: 'Visibility',
+          source: 'Source',
+          condition: 'Condition',
+        },
+        prompt: {
+          enterGmLabel: 'Full effect description (GM only)',
+          enterPublicLabel: 'Vague label shown to players',
+        },
+        snoozed: 'snoozed',
       },
       cleanup: {
         orphaned: 'Ορφανές καταχωρήσεις κατάστασης',
@@ -6413,6 +7850,67 @@ const ConditionTrackerMod = (() => {
             'Σταθερή αντίστροφη μέτρηση· μία μείωση ανά τέλος σειράς του token-αγκύρου',
           ],
         ],
+      },
+      savedEffects: {
+        heading: 'Saved Effects',
+        intro:
+          'Saved effects let you store long-term conditions outside the Turn Tracker — curses, diseases, poisons, hidden debuffs, and other non-combat conditions. They persist in script state and can be optionally copied into the Turn Tracker when combat begins.',
+        visibility: {
+          heading: 'Visibility Modes',
+          rows: [
+            [
+              'public',
+              'Full effect label is visible in the Turn Tracker and public chat.',
+            ],
+            [
+              'masked',
+              'A vague public label is shown to players; full details are GM-only.',
+            ],
+            [
+              'gm',
+              'No Turn Tracker row. Full details are stored in state and whispered to the GM when the affected token reaches the top of initiative.',
+            ],
+          ],
+        },
+        commands: {
+          heading: 'Saved Effects Commands',
+          intro:
+            'All --saved commands are GM-only. Select a token before running --saved or --saved add.',
+          rows: [
+            [
+              '!condition-tracker --saved',
+              'View saved effects for the selected token.',
+            ],
+            [
+              '!condition-tracker --saved add',
+              'Launch the add-saved-effect wizard.',
+            ],
+            [
+              '!condition-tracker --saved edit <id>',
+              'Edit labels or visibility for an existing saved effect.',
+            ],
+            [
+              '!condition-tracker --saved remove <id>',
+              'Permanently remove a saved effect.',
+            ],
+            [
+              '!condition-tracker --saved promote <id> --visibility public|masked|gm',
+              'Copy a saved effect into the Turn Tracker (public or masked) or confirm it is GM-only tracked.',
+            ],
+            [
+              '!condition-tracker --saved snooze <id> --scope turn|rounds|combat --rounds <n>',
+              'Snooze a GM reminder for this turn, N rounds, or this combat.',
+            ],
+            [
+              '!condition-tracker --saved snooze-clear <id>',
+              'Clear an active snooze so reminders resume immediately.',
+            ],
+          ],
+        },
+        reminders: {
+          heading: 'GM Reminders',
+          body: 'When a token with gm or masked saved effects reaches the top of the Turn Tracker, the GM receives a whisper listing the hidden effects with action buttons. Duplicate reminders within the same turn are suppressed. Use the Snooze buttons to suppress reminders for a turn, a number of rounds, or for the remainder of the current combat.',
+        },
       },
       configuration: {
         heading: 'Ρυθμίσεις',
@@ -6664,6 +8162,13 @@ const ConditionTrackerMod = (() => {
         showHelp: 'הצג עזרה',
         reorderConditions: 'סדר מחדש שורות תנאי',
         reportToken: 'Report Token Conditions',
+        savedEffects: 'Saved Effects',
+        addSavedEffect: 'Add Saved Effect',
+        editSaved: 'Edit',
+        removeSaved: 'Remove',
+        promoteSaved: 'Add to Turn Tracker',
+        snoozeSaved: 'Snooze',
+        clearSnooze: 'Clear Snooze',
       },
       title: {
         menu: 'תפריט',
@@ -6674,7 +8179,8 @@ const ConditionTrackerMod = (() => {
         applied: 'הוחל',
         removed: 'מצב הוסר',
         cleanup: 'הניקוי הושלם',
-        macroReinstalled: 'המאקרו הותקן מחדש',
+        macroReinstalled:
+          'The {wizard}, {multiTarget}, {reportToken}, and {saved} macros have been reinstalled for all current GM players.',
         handoutReinstalled: 'דף העזרה הותקן מחדש',
         warning: 'אזהרה',
         error: 'שגיאה',
@@ -6687,6 +8193,14 @@ const ConditionTrackerMod = (() => {
         scriptReady: 'הסקריפט מוכן',
         conditionReorder: 'סדר התורות השתנה',
         tokenReport: 'Token Condition Report',
+        savedEffects: 'Saved Effects',
+        savedAdd: 'Add Saved Effect',
+        savedEdit: 'Edit Saved Effect',
+        savedRemoved: 'Saved Effect Removed',
+        savedPromoted: 'Add to Turn Tracker',
+        savedSnoozed: 'Reminder Snoozed',
+        savedSnoozeCleared: 'Snooze Cleared',
+        hiddenEffects: 'Hidden Effects — {name}',
       },
       heading: {
         quickActions: 'פעולות מהירות',
@@ -6700,6 +8214,11 @@ const ConditionTrackerMod = (() => {
         summary: 'סיכום',
         appliedTo: 'Conditions Applied To',
         appliedBy: 'Conditions Applied By',
+        savedEffectsFor: 'Saved Effects for {name}',
+        visibility: 'Visibility',
+        snoozeOptions: 'Snooze Reminder',
+        promoteOptions: 'Promote to Turn Tracker',
+        editActions: 'Edit Actions',
       },
       msg: {
         noActive: 'אין מצבים פעילים במעקב.',
@@ -6776,6 +8295,28 @@ const ConditionTrackerMod = (() => {
         noConditionsAppliedTo: '{name} has no active conditions applied to it.',
         noConditionsAppliedBy:
           '{name} has no active conditions applied to others.',
+        noSavedEffects: 'No saved effects stored for {name}.',
+        noTokenSelectedSaved:
+          'Select a token on the board before using --saved.',
+        savedEffectAdded: 'Saved effect added for {name}.',
+        savedEffectUpdated: 'Saved effect updated.',
+        savedEffectRemoved: 'Saved effect removed.',
+        savedEffectNotFound: 'Saved effect not found.',
+        savedInvalidVisibility:
+          'Invalid visibility. Use public, masked, or gm.',
+        savedConditionRequired:
+          'Condition type is required. Use --condition <type>.',
+        savedPromotedPublic: 'Effect added to Turn Tracker as public.',
+        savedPromotedMasked:
+          'Effect added to Turn Tracker as masked — players see: {publicLabel}.',
+        savedPromotedGm:
+          'Effect is GM-only — no Turn Tracker row will be created. The reminder system will surface it when this token reaches the top of the turn order.',
+        savedSnoozed: 'Reminder snoozed: {scope}.',
+        savedSnoozeCleared: 'Snooze cleared.',
+        hiddenEffectsReminder: 'Hidden effects are active on {name}.',
+        visibilityPublicHint: 'full label visible to all',
+        visibilityMaskedHint: 'vague label shown to players',
+        visibilityGmHint: 'GM whisper only, no Turn Tracker row',
       },
       removal: {
         conditionField: 'מצב',
@@ -6788,6 +8329,32 @@ const ConditionTrackerMod = (() => {
         rowRemoved: 'הוסר',
         rowMissing: 'כבר חסר',
         manualReason: 'הסרה ידנית',
+      },
+      saved: {
+        visibility: {
+          public: 'Public',
+          masked: 'Masked',
+          gm: 'GM Only',
+        },
+        snooze: {
+          thisTurn: 'This Turn',
+          oneRound: '1 Round',
+          threeRounds: '3 Rounds',
+          thisCombat: 'This Combat',
+          rounds: '{n} round(s)',
+        },
+        field: {
+          gmLabel: 'GM Label',
+          publicLabel: 'Public Label',
+          visibility: 'Visibility',
+          source: 'Source',
+          condition: 'Condition',
+        },
+        prompt: {
+          enterGmLabel: 'Full effect description (GM only)',
+          enterPublicLabel: 'Vague label shown to players',
+        },
+        snoozed: 'snoozed',
       },
       cleanup: {
         orphaned: 'רשומות מצב יתומות',
@@ -6859,6 +8426,28 @@ const ConditionTrackerMod = (() => {
             '--report-token',
             'Whisper a GM-only condition report for each selected token (conditions applied to and by it)',
           ],
+          [
+            '--saved',
+            'View saved long-term effects for the selected token (select token first)',
+          ],
+          [
+            '--saved add',
+            'Add a saved effect (curse, disease, etc.) to the selected token',
+          ],
+          ['--saved edit <id>', 'Edit an existing saved effect by id'],
+          ['--saved remove <id>', 'Remove a saved effect by id'],
+          [
+            '--saved promote <id> --visibility public|masked|gm',
+            'Copy a saved effect into the Turn Tracker (public/masked) or mark it as GM-only active',
+          ],
+          [
+            '--saved snooze <id> --scope turn|rounds|combat --rounds <n>',
+            'Snooze a saved-effect reminder for the current turn, N rounds, or this combat',
+          ],
+          [
+            '--saved snooze-clear <id>',
+            'Clear an active snooze on a saved effect',
+          ],
           ['--lang &lt;locale&gt;', 'פלט נוסף באזור שפה אחר'],
           ['--help', 'הצגת כרטיס עזרה קצר בצ׳אט'],
         ],
@@ -6891,6 +8480,67 @@ const ConditionTrackerMod = (() => {
           ['סוף התור הבא של המקור', 'פג בסוף התור הבא של אסימון המקור'],
           ['1 / 2 / 3 / 10 סיבובים', 'ספירה קבועה לאחור'],
         ],
+      },
+      savedEffects: {
+        heading: 'Saved Effects',
+        intro:
+          'Saved effects let you store long-term conditions outside the Turn Tracker — curses, diseases, poisons, hidden debuffs, and other non-combat conditions. They persist in script state and can be optionally copied into the Turn Tracker when combat begins.',
+        visibility: {
+          heading: 'Visibility Modes',
+          rows: [
+            [
+              'public',
+              'Full effect label is visible in the Turn Tracker and public chat.',
+            ],
+            [
+              'masked',
+              'A vague public label is shown to players; full details are GM-only.',
+            ],
+            [
+              'gm',
+              'No Turn Tracker row. Full details are stored in state and whispered to the GM when the affected token reaches the top of initiative.',
+            ],
+          ],
+        },
+        commands: {
+          heading: 'Saved Effects Commands',
+          intro:
+            'All --saved commands are GM-only. Select a token before running --saved or --saved add.',
+          rows: [
+            [
+              '!condition-tracker --saved',
+              'View saved effects for the selected token.',
+            ],
+            [
+              '!condition-tracker --saved add',
+              'Launch the add-saved-effect wizard.',
+            ],
+            [
+              '!condition-tracker --saved edit <id>',
+              'Edit labels or visibility for an existing saved effect.',
+            ],
+            [
+              '!condition-tracker --saved remove <id>',
+              'Permanently remove a saved effect.',
+            ],
+            [
+              '!condition-tracker --saved promote <id> --visibility public|masked|gm',
+              'Copy a saved effect into the Turn Tracker (public or masked) or confirm it is GM-only tracked.',
+            ],
+            [
+              '!condition-tracker --saved snooze <id> --scope turn|rounds|combat --rounds <n>',
+              'Snooze a GM reminder for this turn, N rounds, or this combat.',
+            ],
+            [
+              '!condition-tracker --saved snooze-clear <id>',
+              'Clear an active snooze so reminders resume immediately.',
+            ],
+          ],
+        },
+        reminders: {
+          heading: 'GM Reminders',
+          body: 'When a token with gm or masked saved effects reaches the top of the Turn Tracker, the GM receives a whisper listing the hidden effects with action buttons. Duplicate reminders within the same turn are suppressed. Use the Snooze buttons to suppress reminders for a turn, a number of rounds, or for the remainder of the current combat.',
+        },
       },
       configuration: {
         heading: 'הגדרות',
@@ -7140,6 +8790,13 @@ const ConditionTrackerMod = (() => {
         showHelp: 'Súgó megjelenítése',
         reorderConditions: 'Állapotsorok átrendezése',
         reportToken: 'Report Token Conditions',
+        savedEffects: 'Saved Effects',
+        addSavedEffect: 'Add Saved Effect',
+        editSaved: 'Edit',
+        removeSaved: 'Remove',
+        promoteSaved: 'Add to Turn Tracker',
+        snoozeSaved: 'Snooze',
+        clearSnooze: 'Clear Snooze',
       },
       title: {
         menu: 'Menü',
@@ -7150,7 +8807,8 @@ const ConditionTrackerMod = (() => {
         applied: 'Alkalmazva',
         removed: 'Állapot eltávolítva',
         cleanup: 'Tisztítás kész',
-        macroReinstalled: 'Makró újratelepítve',
+        macroReinstalled:
+          'The {wizard}, {multiTarget}, {reportToken}, and {saved} macros have been reinstalled for all current GM players.',
         handoutReinstalled: 'Handout újratelepítve',
         warning: 'Figyelmeztetés',
         error: 'Hiba',
@@ -7163,6 +8821,14 @@ const ConditionTrackerMod = (() => {
         scriptReady: 'Szkript kész',
         conditionReorder: 'Körsorend megváltozott',
         tokenReport: 'Token Condition Report',
+        savedEffects: 'Saved Effects',
+        savedAdd: 'Add Saved Effect',
+        savedEdit: 'Edit Saved Effect',
+        savedRemoved: 'Saved Effect Removed',
+        savedPromoted: 'Add to Turn Tracker',
+        savedSnoozed: 'Reminder Snoozed',
+        savedSnoozeCleared: 'Snooze Cleared',
+        hiddenEffects: 'Hidden Effects — {name}',
       },
       heading: {
         quickActions: 'Gyorsműveletek',
@@ -7176,6 +8842,11 @@ const ConditionTrackerMod = (() => {
         summary: 'Összefoglalás',
         appliedTo: 'Conditions Applied To',
         appliedBy: 'Conditions Applied By',
+        savedEffectsFor: 'Saved Effects for {name}',
+        visibility: 'Visibility',
+        snoozeOptions: 'Snooze Reminder',
+        promoteOptions: 'Promote to Turn Tracker',
+        editActions: 'Edit Actions',
       },
       msg: {
         noActive: 'Nincs aktív követett állapot.',
@@ -7264,6 +8935,28 @@ const ConditionTrackerMod = (() => {
         noConditionsAppliedTo: '{name} has no active conditions applied to it.',
         noConditionsAppliedBy:
           '{name} has no active conditions applied to others.',
+        noSavedEffects: 'No saved effects stored for {name}.',
+        noTokenSelectedSaved:
+          'Select a token on the board before using --saved.',
+        savedEffectAdded: 'Saved effect added for {name}.',
+        savedEffectUpdated: 'Saved effect updated.',
+        savedEffectRemoved: 'Saved effect removed.',
+        savedEffectNotFound: 'Saved effect not found.',
+        savedInvalidVisibility:
+          'Invalid visibility. Use public, masked, or gm.',
+        savedConditionRequired:
+          'Condition type is required. Use --condition <type>.',
+        savedPromotedPublic: 'Effect added to Turn Tracker as public.',
+        savedPromotedMasked:
+          'Effect added to Turn Tracker as masked — players see: {publicLabel}.',
+        savedPromotedGm:
+          'Effect is GM-only — no Turn Tracker row will be created. The reminder system will surface it when this token reaches the top of the turn order.',
+        savedSnoozed: 'Reminder snoozed: {scope}.',
+        savedSnoozeCleared: 'Snooze cleared.',
+        hiddenEffectsReminder: 'Hidden effects are active on {name}.',
+        visibilityPublicHint: 'full label visible to all',
+        visibilityMaskedHint: 'vague label shown to players',
+        visibilityGmHint: 'GM whisper only, no Turn Tracker row',
       },
       removal: {
         conditionField: 'Állapot',
@@ -7276,6 +8969,32 @@ const ConditionTrackerMod = (() => {
         rowRemoved: 'Eltávolítva',
         rowMissing: 'Már hiányzik',
         manualReason: 'Kézi eltávolítás',
+      },
+      saved: {
+        visibility: {
+          public: 'Public',
+          masked: 'Masked',
+          gm: 'GM Only',
+        },
+        snooze: {
+          thisTurn: 'This Turn',
+          oneRound: '1 Round',
+          threeRounds: '3 Rounds',
+          thisCombat: 'This Combat',
+          rounds: '{n} round(s)',
+        },
+        field: {
+          gmLabel: 'GM Label',
+          publicLabel: 'Public Label',
+          visibility: 'Visibility',
+          source: 'Source',
+          condition: 'Condition',
+        },
+        prompt: {
+          enterGmLabel: 'Full effect description (GM only)',
+          enterPublicLabel: 'Vague label shown to players',
+        },
+        snoozed: 'snoozed',
       },
       cleanup: {
         orphaned: 'Árva állapotbejegyzések',
@@ -7438,6 +9157,67 @@ const ConditionTrackerMod = (() => {
             'Rögzített visszaszámlálás; egy csökkentés a horgony token körének végén',
           ],
         ],
+      },
+      savedEffects: {
+        heading: 'Saved Effects',
+        intro:
+          'Saved effects let you store long-term conditions outside the Turn Tracker — curses, diseases, poisons, hidden debuffs, and other non-combat conditions. They persist in script state and can be optionally copied into the Turn Tracker when combat begins.',
+        visibility: {
+          heading: 'Visibility Modes',
+          rows: [
+            [
+              'public',
+              'Full effect label is visible in the Turn Tracker and public chat.',
+            ],
+            [
+              'masked',
+              'A vague public label is shown to players; full details are GM-only.',
+            ],
+            [
+              'gm',
+              'No Turn Tracker row. Full details are stored in state and whispered to the GM when the affected token reaches the top of initiative.',
+            ],
+          ],
+        },
+        commands: {
+          heading: 'Saved Effects Commands',
+          intro:
+            'All --saved commands are GM-only. Select a token before running --saved or --saved add.',
+          rows: [
+            [
+              '!condition-tracker --saved',
+              'View saved effects for the selected token.',
+            ],
+            [
+              '!condition-tracker --saved add',
+              'Launch the add-saved-effect wizard.',
+            ],
+            [
+              '!condition-tracker --saved edit <id>',
+              'Edit labels or visibility for an existing saved effect.',
+            ],
+            [
+              '!condition-tracker --saved remove <id>',
+              'Permanently remove a saved effect.',
+            ],
+            [
+              '!condition-tracker --saved promote <id> --visibility public|masked|gm',
+              'Copy a saved effect into the Turn Tracker (public or masked) or confirm it is GM-only tracked.',
+            ],
+            [
+              '!condition-tracker --saved snooze <id> --scope turn|rounds|combat --rounds <n>',
+              'Snooze a GM reminder for this turn, N rounds, or this combat.',
+            ],
+            [
+              '!condition-tracker --saved snooze-clear <id>',
+              'Clear an active snooze so reminders resume immediately.',
+            ],
+          ],
+        },
+        reminders: {
+          heading: 'GM Reminders',
+          body: 'When a token with gm or masked saved effects reaches the top of the Turn Tracker, the GM receives a whisper listing the hidden effects with action buttons. Duplicate reminders within the same turn are suppressed. Use the Snooze buttons to suppress reminders for a turn, a number of rounds, or for the remainder of the current combat.',
+        },
       },
       configuration: {
         heading: 'Beállítások',
@@ -7692,6 +9472,13 @@ const ConditionTrackerMod = (() => {
         showHelp: 'Mostra aiuto',
         reorderConditions: 'Riordina righe condizioni',
         reportToken: 'Report Token Conditions',
+        savedEffects: 'Saved Effects',
+        addSavedEffect: 'Add Saved Effect',
+        editSaved: 'Edit',
+        removeSaved: 'Remove',
+        promoteSaved: 'Add to Turn Tracker',
+        snoozeSaved: 'Snooze',
+        clearSnooze: 'Clear Snooze',
       },
       title: {
         menu: 'Menu',
@@ -7702,7 +9489,8 @@ const ConditionTrackerMod = (() => {
         applied: 'Applicato',
         removed: 'Condizione rimossa',
         cleanup: 'Pulizia completata',
-        macroReinstalled: 'Macro reinstallata',
+        macroReinstalled:
+          'The {wizard}, {multiTarget}, {reportToken}, and {saved} macros have been reinstalled for all current GM players.',
         handoutReinstalled: 'Documento reinstallato',
         warning: 'Avviso',
         error: 'Errore',
@@ -7715,6 +9503,14 @@ const ConditionTrackerMod = (() => {
         scriptReady: 'Script pronto',
         conditionReorder: 'Ordine di turno modificato',
         tokenReport: 'Token Condition Report',
+        savedEffects: 'Saved Effects',
+        savedAdd: 'Add Saved Effect',
+        savedEdit: 'Edit Saved Effect',
+        savedRemoved: 'Saved Effect Removed',
+        savedPromoted: 'Add to Turn Tracker',
+        savedSnoozed: 'Reminder Snoozed',
+        savedSnoozeCleared: 'Snooze Cleared',
+        hiddenEffects: 'Hidden Effects — {name}',
       },
       heading: {
         quickActions: 'Azioni rapide',
@@ -7728,6 +9524,11 @@ const ConditionTrackerMod = (() => {
         summary: 'Riepilogo',
         appliedTo: 'Conditions Applied To',
         appliedBy: 'Conditions Applied By',
+        savedEffectsFor: 'Saved Effects for {name}',
+        visibility: 'Visibility',
+        snoozeOptions: 'Snooze Reminder',
+        promoteOptions: 'Promote to Turn Tracker',
+        editActions: 'Edit Actions',
       },
       msg: {
         noActive: 'Nessuna condizione attiva è tracciata.',
@@ -7819,6 +9620,28 @@ const ConditionTrackerMod = (() => {
         noConditionsAppliedTo: '{name} has no active conditions applied to it.',
         noConditionsAppliedBy:
           '{name} has no active conditions applied to others.',
+        noSavedEffects: 'No saved effects stored for {name}.',
+        noTokenSelectedSaved:
+          'Select a token on the board before using --saved.',
+        savedEffectAdded: 'Saved effect added for {name}.',
+        savedEffectUpdated: 'Saved effect updated.',
+        savedEffectRemoved: 'Saved effect removed.',
+        savedEffectNotFound: 'Saved effect not found.',
+        savedInvalidVisibility:
+          'Invalid visibility. Use public, masked, or gm.',
+        savedConditionRequired:
+          'Condition type is required. Use --condition <type>.',
+        savedPromotedPublic: 'Effect added to Turn Tracker as public.',
+        savedPromotedMasked:
+          'Effect added to Turn Tracker as masked — players see: {publicLabel}.',
+        savedPromotedGm:
+          'Effect is GM-only — no Turn Tracker row will be created. The reminder system will surface it when this token reaches the top of the turn order.',
+        savedSnoozed: 'Reminder snoozed: {scope}.',
+        savedSnoozeCleared: 'Snooze cleared.',
+        hiddenEffectsReminder: 'Hidden effects are active on {name}.',
+        visibilityPublicHint: 'full label visible to all',
+        visibilityMaskedHint: 'vague label shown to players',
+        visibilityGmHint: 'GM whisper only, no Turn Tracker row',
       },
       removal: {
         conditionField: 'Condizione',
@@ -7831,6 +9654,32 @@ const ConditionTrackerMod = (() => {
         rowRemoved: 'Rimosso',
         rowMissing: 'Già assente',
         manualReason: 'Rimozione manuale',
+      },
+      saved: {
+        visibility: {
+          public: 'Public',
+          masked: 'Masked',
+          gm: 'GM Only',
+        },
+        snooze: {
+          thisTurn: 'This Turn',
+          oneRound: '1 Round',
+          threeRounds: '3 Rounds',
+          thisCombat: 'This Combat',
+          rounds: '{n} round(s)',
+        },
+        field: {
+          gmLabel: 'GM Label',
+          publicLabel: 'Public Label',
+          visibility: 'Visibility',
+          source: 'Source',
+          condition: 'Condition',
+        },
+        prompt: {
+          enterGmLabel: 'Full effect description (GM only)',
+          enterPublicLabel: 'Vague label shown to players',
+        },
+        snoozed: 'snoozed',
       },
       cleanup: {
         orphaned: 'Voci di condizione orfane',
@@ -7994,6 +9843,67 @@ const ConditionTrackerMod = (() => {
             'Conto alla rovescia fisso; un decremento per ogni fine turno del token ancora',
           ],
         ],
+      },
+      savedEffects: {
+        heading: 'Saved Effects',
+        intro:
+          'Saved effects let you store long-term conditions outside the Turn Tracker — curses, diseases, poisons, hidden debuffs, and other non-combat conditions. They persist in script state and can be optionally copied into the Turn Tracker when combat begins.',
+        visibility: {
+          heading: 'Visibility Modes',
+          rows: [
+            [
+              'public',
+              'Full effect label is visible in the Turn Tracker and public chat.',
+            ],
+            [
+              'masked',
+              'A vague public label is shown to players; full details are GM-only.',
+            ],
+            [
+              'gm',
+              'No Turn Tracker row. Full details are stored in state and whispered to the GM when the affected token reaches the top of initiative.',
+            ],
+          ],
+        },
+        commands: {
+          heading: 'Saved Effects Commands',
+          intro:
+            'All --saved commands are GM-only. Select a token before running --saved or --saved add.',
+          rows: [
+            [
+              '!condition-tracker --saved',
+              'View saved effects for the selected token.',
+            ],
+            [
+              '!condition-tracker --saved add',
+              'Launch the add-saved-effect wizard.',
+            ],
+            [
+              '!condition-tracker --saved edit <id>',
+              'Edit labels or visibility for an existing saved effect.',
+            ],
+            [
+              '!condition-tracker --saved remove <id>',
+              'Permanently remove a saved effect.',
+            ],
+            [
+              '!condition-tracker --saved promote <id> --visibility public|masked|gm',
+              'Copy a saved effect into the Turn Tracker (public or masked) or confirm it is GM-only tracked.',
+            ],
+            [
+              '!condition-tracker --saved snooze <id> --scope turn|rounds|combat --rounds <n>',
+              'Snooze a GM reminder for this turn, N rounds, or this combat.',
+            ],
+            [
+              '!condition-tracker --saved snooze-clear <id>',
+              'Clear an active snooze so reminders resume immediately.',
+            ],
+          ],
+        },
+        reminders: {
+          heading: 'GM Reminders',
+          body: 'When a token with gm or masked saved effects reaches the top of the Turn Tracker, the GM receives a whisper listing the hidden effects with action buttons. Duplicate reminders within the same turn are suppressed. Use the Snooze buttons to suppress reminders for a turn, a number of rounds, or for the remainder of the current combat.',
+        },
       },
       configuration: {
         heading: 'Configurazione',
@@ -8243,6 +10153,13 @@ const ConditionTrackerMod = (() => {
         showHelp: 'ヘルプを表示',
         reorderConditions: '状態行を並び替え',
         reportToken: 'Report Token Conditions',
+        savedEffects: 'Saved Effects',
+        addSavedEffect: 'Add Saved Effect',
+        editSaved: 'Edit',
+        removeSaved: 'Remove',
+        promoteSaved: 'Add to Turn Tracker',
+        snoozeSaved: 'Snooze',
+        clearSnooze: 'Clear Snooze',
       },
       title: {
         menu: 'メニュー',
@@ -8253,7 +10170,8 @@ const ConditionTrackerMod = (() => {
         applied: '適用済み',
         removed: '状態削除済み',
         cleanup: 'クリーンアップ完了',
-        macroReinstalled: 'マクロ再インストール済み',
+        macroReinstalled:
+          'The {wizard}, {multiTarget}, {reportToken}, and {saved} macros have been reinstalled for all current GM players.',
         handoutReinstalled: 'ハンドアウト再インストール済み',
         warning: '警告',
         error: 'エラー',
@@ -8266,6 +10184,14 @@ const ConditionTrackerMod = (() => {
         scriptReady: 'スクリプト準備完了',
         conditionReorder: 'ターン順序変更',
         tokenReport: 'Token Condition Report',
+        savedEffects: 'Saved Effects',
+        savedAdd: 'Add Saved Effect',
+        savedEdit: 'Edit Saved Effect',
+        savedRemoved: 'Saved Effect Removed',
+        savedPromoted: 'Add to Turn Tracker',
+        savedSnoozed: 'Reminder Snoozed',
+        savedSnoozeCleared: 'Snooze Cleared',
+        hiddenEffects: 'Hidden Effects — {name}',
       },
       heading: {
         quickActions: 'クイックアクション',
@@ -8279,6 +10205,11 @@ const ConditionTrackerMod = (() => {
         summary: 'まとめ',
         appliedTo: 'Conditions Applied To',
         appliedBy: 'Conditions Applied By',
+        savedEffectsFor: 'Saved Effects for {name}',
+        visibility: 'Visibility',
+        snoozeOptions: 'Snooze Reminder',
+        promoteOptions: 'Promote to Turn Tracker',
+        editActions: 'Edit Actions',
       },
       msg: {
         noActive: '追跡中のアクティブな状態はありません。',
@@ -8367,6 +10298,28 @@ const ConditionTrackerMod = (() => {
         noConditionsAppliedTo: '{name} has no active conditions applied to it.',
         noConditionsAppliedBy:
           '{name} has no active conditions applied to others.',
+        noSavedEffects: 'No saved effects stored for {name}.',
+        noTokenSelectedSaved:
+          'Select a token on the board before using --saved.',
+        savedEffectAdded: 'Saved effect added for {name}.',
+        savedEffectUpdated: 'Saved effect updated.',
+        savedEffectRemoved: 'Saved effect removed.',
+        savedEffectNotFound: 'Saved effect not found.',
+        savedInvalidVisibility:
+          'Invalid visibility. Use public, masked, or gm.',
+        savedConditionRequired:
+          'Condition type is required. Use --condition <type>.',
+        savedPromotedPublic: 'Effect added to Turn Tracker as public.',
+        savedPromotedMasked:
+          'Effect added to Turn Tracker as masked — players see: {publicLabel}.',
+        savedPromotedGm:
+          'Effect is GM-only — no Turn Tracker row will be created. The reminder system will surface it when this token reaches the top of the turn order.',
+        savedSnoozed: 'Reminder snoozed: {scope}.',
+        savedSnoozeCleared: 'Snooze cleared.',
+        hiddenEffectsReminder: 'Hidden effects are active on {name}.',
+        visibilityPublicHint: 'full label visible to all',
+        visibilityMaskedHint: 'vague label shown to players',
+        visibilityGmHint: 'GM whisper only, no Turn Tracker row',
       },
       removal: {
         conditionField: '状態',
@@ -8379,6 +10332,32 @@ const ConditionTrackerMod = (() => {
         rowRemoved: '削除済み',
         rowMissing: 'すでに存在しない',
         manualReason: '手動削除',
+      },
+      saved: {
+        visibility: {
+          public: 'Public',
+          masked: 'Masked',
+          gm: 'GM Only',
+        },
+        snooze: {
+          thisTurn: 'This Turn',
+          oneRound: '1 Round',
+          threeRounds: '3 Rounds',
+          thisCombat: 'This Combat',
+          rounds: '{n} round(s)',
+        },
+        field: {
+          gmLabel: 'GM Label',
+          publicLabel: 'Public Label',
+          visibility: 'Visibility',
+          source: 'Source',
+          condition: 'Condition',
+        },
+        prompt: {
+          enterGmLabel: 'Full effect description (GM only)',
+          enterPublicLabel: 'Vague label shown to players',
+        },
+        snoozed: 'snoozed',
       },
       cleanup: {
         orphaned: '孤立した状態エントリ',
@@ -8523,6 +10502,67 @@ const ConditionTrackerMod = (() => {
             '固定カウントダウン。アンカートークンのターン終了ごとに1減少',
           ],
         ],
+      },
+      savedEffects: {
+        heading: 'Saved Effects',
+        intro:
+          'Saved effects let you store long-term conditions outside the Turn Tracker — curses, diseases, poisons, hidden debuffs, and other non-combat conditions. They persist in script state and can be optionally copied into the Turn Tracker when combat begins.',
+        visibility: {
+          heading: 'Visibility Modes',
+          rows: [
+            [
+              'public',
+              'Full effect label is visible in the Turn Tracker and public chat.',
+            ],
+            [
+              'masked',
+              'A vague public label is shown to players; full details are GM-only.',
+            ],
+            [
+              'gm',
+              'No Turn Tracker row. Full details are stored in state and whispered to the GM when the affected token reaches the top of initiative.',
+            ],
+          ],
+        },
+        commands: {
+          heading: 'Saved Effects Commands',
+          intro:
+            'All --saved commands are GM-only. Select a token before running --saved or --saved add.',
+          rows: [
+            [
+              '!condition-tracker --saved',
+              'View saved effects for the selected token.',
+            ],
+            [
+              '!condition-tracker --saved add',
+              'Launch the add-saved-effect wizard.',
+            ],
+            [
+              '!condition-tracker --saved edit <id>',
+              'Edit labels or visibility for an existing saved effect.',
+            ],
+            [
+              '!condition-tracker --saved remove <id>',
+              'Permanently remove a saved effect.',
+            ],
+            [
+              '!condition-tracker --saved promote <id> --visibility public|masked|gm',
+              'Copy a saved effect into the Turn Tracker (public or masked) or confirm it is GM-only tracked.',
+            ],
+            [
+              '!condition-tracker --saved snooze <id> --scope turn|rounds|combat --rounds <n>',
+              'Snooze a GM reminder for this turn, N rounds, or this combat.',
+            ],
+            [
+              '!condition-tracker --saved snooze-clear <id>',
+              'Clear an active snooze so reminders resume immediately.',
+            ],
+          ],
+        },
+        reminders: {
+          heading: 'GM Reminders',
+          body: 'When a token with gm or masked saved effects reaches the top of the Turn Tracker, the GM receives a whisper listing the hidden effects with action buttons. Duplicate reminders within the same turn are suppressed. Use the Snooze buttons to suppress reminders for a turn, a number of rounds, or for the remainder of the current combat.',
+        },
       },
       configuration: {
         heading: '設定',
@@ -8778,6 +10818,13 @@ const ConditionTrackerMod = (() => {
         showHelp: '도움말 표시',
         reorderConditions: '조건 행 재정렬',
         reportToken: 'Report Token Conditions',
+        savedEffects: 'Saved Effects',
+        addSavedEffect: 'Add Saved Effect',
+        editSaved: 'Edit',
+        removeSaved: 'Remove',
+        promoteSaved: 'Add to Turn Tracker',
+        snoozeSaved: 'Snooze',
+        clearSnooze: 'Clear Snooze',
       },
       title: {
         menu: '메뉴',
@@ -8788,7 +10835,8 @@ const ConditionTrackerMod = (() => {
         applied: '적용됨',
         removed: '상태 제거됨',
         cleanup: '정리 완료',
-        macroReinstalled: '매크로 재설치됨',
+        macroReinstalled:
+          'The {wizard}, {multiTarget}, {reportToken}, and {saved} macros have been reinstalled for all current GM players.',
         handoutReinstalled: '유인물 재설치됨',
         warning: '경고',
         error: '오류',
@@ -8801,6 +10849,14 @@ const ConditionTrackerMod = (() => {
         scriptReady: '스크립트 준비됨',
         conditionReorder: '턴 순서 변경됨',
         tokenReport: 'Token Condition Report',
+        savedEffects: 'Saved Effects',
+        savedAdd: 'Add Saved Effect',
+        savedEdit: 'Edit Saved Effect',
+        savedRemoved: 'Saved Effect Removed',
+        savedPromoted: 'Add to Turn Tracker',
+        savedSnoozed: 'Reminder Snoozed',
+        savedSnoozeCleared: 'Snooze Cleared',
+        hiddenEffects: 'Hidden Effects — {name}',
       },
       heading: {
         quickActions: '빠른 작업',
@@ -8814,6 +10870,11 @@ const ConditionTrackerMod = (() => {
         summary: '요약',
         appliedTo: 'Conditions Applied To',
         appliedBy: 'Conditions Applied By',
+        savedEffectsFor: 'Saved Effects for {name}',
+        visibility: 'Visibility',
+        snoozeOptions: 'Snooze Reminder',
+        promoteOptions: 'Promote to Turn Tracker',
+        editActions: 'Edit Actions',
       },
       msg: {
         noActive: '추적 중인 활성 상태가 없습니다.',
@@ -8899,6 +10960,28 @@ const ConditionTrackerMod = (() => {
         noConditionsAppliedTo: '{name} has no active conditions applied to it.',
         noConditionsAppliedBy:
           '{name} has no active conditions applied to others.',
+        noSavedEffects: 'No saved effects stored for {name}.',
+        noTokenSelectedSaved:
+          'Select a token on the board before using --saved.',
+        savedEffectAdded: 'Saved effect added for {name}.',
+        savedEffectUpdated: 'Saved effect updated.',
+        savedEffectRemoved: 'Saved effect removed.',
+        savedEffectNotFound: 'Saved effect not found.',
+        savedInvalidVisibility:
+          'Invalid visibility. Use public, masked, or gm.',
+        savedConditionRequired:
+          'Condition type is required. Use --condition <type>.',
+        savedPromotedPublic: 'Effect added to Turn Tracker as public.',
+        savedPromotedMasked:
+          'Effect added to Turn Tracker as masked — players see: {publicLabel}.',
+        savedPromotedGm:
+          'Effect is GM-only — no Turn Tracker row will be created. The reminder system will surface it when this token reaches the top of the turn order.',
+        savedSnoozed: 'Reminder snoozed: {scope}.',
+        savedSnoozeCleared: 'Snooze cleared.',
+        hiddenEffectsReminder: 'Hidden effects are active on {name}.',
+        visibilityPublicHint: 'full label visible to all',
+        visibilityMaskedHint: 'vague label shown to players',
+        visibilityGmHint: 'GM whisper only, no Turn Tracker row',
       },
       removal: {
         conditionField: '상태',
@@ -8911,6 +10994,32 @@ const ConditionTrackerMod = (() => {
         rowRemoved: '제거됨',
         rowMissing: '이미 누락됨',
         manualReason: '수동 제거',
+      },
+      saved: {
+        visibility: {
+          public: 'Public',
+          masked: 'Masked',
+          gm: 'GM Only',
+        },
+        snooze: {
+          thisTurn: 'This Turn',
+          oneRound: '1 Round',
+          threeRounds: '3 Rounds',
+          thisCombat: 'This Combat',
+          rounds: '{n} round(s)',
+        },
+        field: {
+          gmLabel: 'GM Label',
+          publicLabel: 'Public Label',
+          visibility: 'Visibility',
+          source: 'Source',
+          condition: 'Condition',
+        },
+        prompt: {
+          enterGmLabel: 'Full effect description (GM only)',
+          enterPublicLabel: 'Vague label shown to players',
+        },
+        snoozed: 'snoozed',
       },
       cleanup: {
         orphaned: '연결이 끊긴 상태 항목',
@@ -9054,6 +11163,67 @@ const ConditionTrackerMod = (() => {
             '고정된 카운트다운; 고정 토큰의 턴 종료 시마다 1씩 감소합니다.',
           ],
         ],
+      },
+      savedEffects: {
+        heading: 'Saved Effects',
+        intro:
+          'Saved effects let you store long-term conditions outside the Turn Tracker — curses, diseases, poisons, hidden debuffs, and other non-combat conditions. They persist in script state and can be optionally copied into the Turn Tracker when combat begins.',
+        visibility: {
+          heading: 'Visibility Modes',
+          rows: [
+            [
+              'public',
+              'Full effect label is visible in the Turn Tracker and public chat.',
+            ],
+            [
+              'masked',
+              'A vague public label is shown to players; full details are GM-only.',
+            ],
+            [
+              'gm',
+              'No Turn Tracker row. Full details are stored in state and whispered to the GM when the affected token reaches the top of initiative.',
+            ],
+          ],
+        },
+        commands: {
+          heading: 'Saved Effects Commands',
+          intro:
+            'All --saved commands are GM-only. Select a token before running --saved or --saved add.',
+          rows: [
+            [
+              '!condition-tracker --saved',
+              'View saved effects for the selected token.',
+            ],
+            [
+              '!condition-tracker --saved add',
+              'Launch the add-saved-effect wizard.',
+            ],
+            [
+              '!condition-tracker --saved edit <id>',
+              'Edit labels or visibility for an existing saved effect.',
+            ],
+            [
+              '!condition-tracker --saved remove <id>',
+              'Permanently remove a saved effect.',
+            ],
+            [
+              '!condition-tracker --saved promote <id> --visibility public|masked|gm',
+              'Copy a saved effect into the Turn Tracker (public or masked) or confirm it is GM-only tracked.',
+            ],
+            [
+              '!condition-tracker --saved snooze <id> --scope turn|rounds|combat --rounds <n>',
+              'Snooze a GM reminder for this turn, N rounds, or this combat.',
+            ],
+            [
+              '!condition-tracker --saved snooze-clear <id>',
+              'Clear an active snooze so reminders resume immediately.',
+            ],
+          ],
+        },
+        reminders: {
+          heading: 'GM Reminders',
+          body: 'When a token with gm or masked saved effects reaches the top of the Turn Tracker, the GM receives a whisper listing the hidden effects with action buttons. Duplicate reminders within the same turn are suppressed. Use the Snooze buttons to suppress reminders for a turn, a number of rounds, or for the remainder of the current combat.',
+        },
       },
       configuration: {
         heading: '설정',
@@ -9307,6 +11477,13 @@ const ConditionTrackerMod = (() => {
         showHelp: 'Pokaż pomoc',
         reorderConditions: 'Zmień kolejność wierszy stanów',
         reportToken: 'Report Token Conditions',
+        savedEffects: 'Saved Effects',
+        addSavedEffect: 'Add Saved Effect',
+        editSaved: 'Edit',
+        removeSaved: 'Remove',
+        promoteSaved: 'Add to Turn Tracker',
+        snoozeSaved: 'Snooze',
+        clearSnooze: 'Clear Snooze',
       },
       title: {
         menu: 'Menu',
@@ -9317,7 +11494,8 @@ const ConditionTrackerMod = (() => {
         applied: 'Zastosowano',
         removed: 'Stan usunięty',
         cleanup: 'Czyszczenie zakończone',
-        macroReinstalled: 'Makro zainstalowane ponownie',
+        macroReinstalled:
+          'The {wizard}, {multiTarget}, {reportToken}, and {saved} macros have been reinstalled for all current GM players.',
         handoutReinstalled: 'Handout zainstalowany ponownie',
         warning: 'Ostrzeżenie',
         error: 'Błąd',
@@ -9330,6 +11508,14 @@ const ConditionTrackerMod = (() => {
         scriptReady: 'Skrypt gotowy',
         conditionReorder: 'Kolejność tur zmieniona',
         tokenReport: 'Token Condition Report',
+        savedEffects: 'Saved Effects',
+        savedAdd: 'Add Saved Effect',
+        savedEdit: 'Edit Saved Effect',
+        savedRemoved: 'Saved Effect Removed',
+        savedPromoted: 'Add to Turn Tracker',
+        savedSnoozed: 'Reminder Snoozed',
+        savedSnoozeCleared: 'Snooze Cleared',
+        hiddenEffects: 'Hidden Effects — {name}',
       },
       heading: {
         quickActions: 'Szybkie akcje',
@@ -9343,6 +11529,11 @@ const ConditionTrackerMod = (() => {
         summary: 'Podsumowanie',
         appliedTo: 'Conditions Applied To',
         appliedBy: 'Conditions Applied By',
+        savedEffectsFor: 'Saved Effects for {name}',
+        visibility: 'Visibility',
+        snoozeOptions: 'Snooze Reminder',
+        promoteOptions: 'Promote to Turn Tracker',
+        editActions: 'Edit Actions',
       },
       msg: {
         noActive: 'Nie są śledzone żadne aktywne stany.',
@@ -9430,6 +11621,28 @@ const ConditionTrackerMod = (() => {
         noConditionsAppliedTo: '{name} has no active conditions applied to it.',
         noConditionsAppliedBy:
           '{name} has no active conditions applied to others.',
+        noSavedEffects: 'No saved effects stored for {name}.',
+        noTokenSelectedSaved:
+          'Select a token on the board before using --saved.',
+        savedEffectAdded: 'Saved effect added for {name}.',
+        savedEffectUpdated: 'Saved effect updated.',
+        savedEffectRemoved: 'Saved effect removed.',
+        savedEffectNotFound: 'Saved effect not found.',
+        savedInvalidVisibility:
+          'Invalid visibility. Use public, masked, or gm.',
+        savedConditionRequired:
+          'Condition type is required. Use --condition <type>.',
+        savedPromotedPublic: 'Effect added to Turn Tracker as public.',
+        savedPromotedMasked:
+          'Effect added to Turn Tracker as masked — players see: {publicLabel}.',
+        savedPromotedGm:
+          'Effect is GM-only — no Turn Tracker row will be created. The reminder system will surface it when this token reaches the top of the turn order.',
+        savedSnoozed: 'Reminder snoozed: {scope}.',
+        savedSnoozeCleared: 'Snooze cleared.',
+        hiddenEffectsReminder: 'Hidden effects are active on {name}.',
+        visibilityPublicHint: 'full label visible to all',
+        visibilityMaskedHint: 'vague label shown to players',
+        visibilityGmHint: 'GM whisper only, no Turn Tracker row',
       },
       removal: {
         conditionField: 'Stan',
@@ -9442,6 +11655,32 @@ const ConditionTrackerMod = (() => {
         rowRemoved: 'Usunięto',
         rowMissing: 'Już brakuje',
         manualReason: 'Ręczne usunięcie',
+      },
+      saved: {
+        visibility: {
+          public: 'Public',
+          masked: 'Masked',
+          gm: 'GM Only',
+        },
+        snooze: {
+          thisTurn: 'This Turn',
+          oneRound: '1 Round',
+          threeRounds: '3 Rounds',
+          thisCombat: 'This Combat',
+          rounds: '{n} round(s)',
+        },
+        field: {
+          gmLabel: 'GM Label',
+          publicLabel: 'Public Label',
+          visibility: 'Visibility',
+          source: 'Source',
+          condition: 'Condition',
+        },
+        prompt: {
+          enterGmLabel: 'Full effect description (GM only)',
+          enterPublicLabel: 'Vague label shown to players',
+        },
+        snoozed: 'snoozed',
       },
       cleanup: {
         orphaned: 'Osierocone wpisy stanów',
@@ -9598,6 +11837,67 @@ const ConditionTrackerMod = (() => {
             'Stały odliczanie; jedno zmniejszenie na koniec tury żetonu kotwicy',
           ],
         ],
+      },
+      savedEffects: {
+        heading: 'Saved Effects',
+        intro:
+          'Saved effects let you store long-term conditions outside the Turn Tracker — curses, diseases, poisons, hidden debuffs, and other non-combat conditions. They persist in script state and can be optionally copied into the Turn Tracker when combat begins.',
+        visibility: {
+          heading: 'Visibility Modes',
+          rows: [
+            [
+              'public',
+              'Full effect label is visible in the Turn Tracker and public chat.',
+            ],
+            [
+              'masked',
+              'A vague public label is shown to players; full details are GM-only.',
+            ],
+            [
+              'gm',
+              'No Turn Tracker row. Full details are stored in state and whispered to the GM when the affected token reaches the top of initiative.',
+            ],
+          ],
+        },
+        commands: {
+          heading: 'Saved Effects Commands',
+          intro:
+            'All --saved commands are GM-only. Select a token before running --saved or --saved add.',
+          rows: [
+            [
+              '!condition-tracker --saved',
+              'View saved effects for the selected token.',
+            ],
+            [
+              '!condition-tracker --saved add',
+              'Launch the add-saved-effect wizard.',
+            ],
+            [
+              '!condition-tracker --saved edit <id>',
+              'Edit labels or visibility for an existing saved effect.',
+            ],
+            [
+              '!condition-tracker --saved remove <id>',
+              'Permanently remove a saved effect.',
+            ],
+            [
+              '!condition-tracker --saved promote <id> --visibility public|masked|gm',
+              'Copy a saved effect into the Turn Tracker (public or masked) or confirm it is GM-only tracked.',
+            ],
+            [
+              '!condition-tracker --saved snooze <id> --scope turn|rounds|combat --rounds <n>',
+              'Snooze a GM reminder for this turn, N rounds, or this combat.',
+            ],
+            [
+              '!condition-tracker --saved snooze-clear <id>',
+              'Clear an active snooze so reminders resume immediately.',
+            ],
+          ],
+        },
+        reminders: {
+          heading: 'GM Reminders',
+          body: 'When a token with gm or masked saved effects reaches the top of the Turn Tracker, the GM receives a whisper listing the hidden effects with action buttons. Duplicate reminders within the same turn are suppressed. Use the Snooze buttons to suppress reminders for a turn, a number of rounds, or for the remainder of the current combat.',
+        },
       },
       configuration: {
         heading: 'Konfiguracja',
@@ -9852,6 +12152,13 @@ const ConditionTrackerMod = (() => {
         showHelp: 'Mostrar ajuda',
         reorderConditions: 'Reordenar linhas de condições',
         reportToken: 'Report Token Conditions',
+        savedEffects: 'Saved Effects',
+        addSavedEffect: 'Add Saved Effect',
+        editSaved: 'Edit',
+        removeSaved: 'Remove',
+        promoteSaved: 'Add to Turn Tracker',
+        snoozeSaved: 'Snooze',
+        clearSnooze: 'Clear Snooze',
       },
       title: {
         menu: 'Menu',
@@ -9862,7 +12169,8 @@ const ConditionTrackerMod = (() => {
         applied: 'Aplicado',
         removed: 'Condição removida',
         cleanup: 'Limpeza concluída',
-        macroReinstalled: 'Macro reinstalada',
+        macroReinstalled:
+          'The {wizard}, {multiTarget}, {reportToken}, and {saved} macros have been reinstalled for all current GM players.',
         handoutReinstalled: 'Documento reinstalado',
         warning: 'Aviso',
         error: 'Erro',
@@ -9875,6 +12183,14 @@ const ConditionTrackerMod = (() => {
         scriptReady: 'Script pronto',
         conditionReorder: 'Ordem de turno alterada',
         tokenReport: 'Token Condition Report',
+        savedEffects: 'Saved Effects',
+        savedAdd: 'Add Saved Effect',
+        savedEdit: 'Edit Saved Effect',
+        savedRemoved: 'Saved Effect Removed',
+        savedPromoted: 'Add to Turn Tracker',
+        savedSnoozed: 'Reminder Snoozed',
+        savedSnoozeCleared: 'Snooze Cleared',
+        hiddenEffects: 'Hidden Effects — {name}',
       },
       heading: {
         quickActions: 'Acções rápidas',
@@ -9888,6 +12204,11 @@ const ConditionTrackerMod = (() => {
         summary: 'Resumo',
         appliedTo: 'Conditions Applied To',
         appliedBy: 'Conditions Applied By',
+        savedEffectsFor: 'Saved Effects for {name}',
+        visibility: 'Visibility',
+        snoozeOptions: 'Snooze Reminder',
+        promoteOptions: 'Promote to Turn Tracker',
+        editActions: 'Edit Actions',
       },
       msg: {
         noActive: 'Não há condições activas a ser rastreadas.',
@@ -9977,6 +12298,28 @@ const ConditionTrackerMod = (() => {
         noConditionsAppliedTo: '{name} has no active conditions applied to it.',
         noConditionsAppliedBy:
           '{name} has no active conditions applied to others.',
+        noSavedEffects: 'No saved effects stored for {name}.',
+        noTokenSelectedSaved:
+          'Select a token on the board before using --saved.',
+        savedEffectAdded: 'Saved effect added for {name}.',
+        savedEffectUpdated: 'Saved effect updated.',
+        savedEffectRemoved: 'Saved effect removed.',
+        savedEffectNotFound: 'Saved effect not found.',
+        savedInvalidVisibility:
+          'Invalid visibility. Use public, masked, or gm.',
+        savedConditionRequired:
+          'Condition type is required. Use --condition <type>.',
+        savedPromotedPublic: 'Effect added to Turn Tracker as public.',
+        savedPromotedMasked:
+          'Effect added to Turn Tracker as masked — players see: {publicLabel}.',
+        savedPromotedGm:
+          'Effect is GM-only — no Turn Tracker row will be created. The reminder system will surface it when this token reaches the top of the turn order.',
+        savedSnoozed: 'Reminder snoozed: {scope}.',
+        savedSnoozeCleared: 'Snooze cleared.',
+        hiddenEffectsReminder: 'Hidden effects are active on {name}.',
+        visibilityPublicHint: 'full label visible to all',
+        visibilityMaskedHint: 'vague label shown to players',
+        visibilityGmHint: 'GM whisper only, no Turn Tracker row',
       },
       removal: {
         conditionField: 'Condição',
@@ -9989,6 +12332,32 @@ const ConditionTrackerMod = (() => {
         rowRemoved: 'Removido',
         rowMissing: 'Já ausente',
         manualReason: 'Remoção manual',
+      },
+      saved: {
+        visibility: {
+          public: 'Public',
+          masked: 'Masked',
+          gm: 'GM Only',
+        },
+        snooze: {
+          thisTurn: 'This Turn',
+          oneRound: '1 Round',
+          threeRounds: '3 Rounds',
+          thisCombat: 'This Combat',
+          rounds: '{n} round(s)',
+        },
+        field: {
+          gmLabel: 'GM Label',
+          publicLabel: 'Public Label',
+          visibility: 'Visibility',
+          source: 'Source',
+          condition: 'Condition',
+        },
+        prompt: {
+          enterGmLabel: 'Full effect description (GM only)',
+          enterPublicLabel: 'Vague label shown to players',
+        },
+        snoozed: 'snoozed',
       },
       cleanup: {
         orphaned: 'Entradas de condição órfãs',
@@ -10151,6 +12520,67 @@ const ConditionTrackerMod = (() => {
             'Contagem decrescente fixa; um decréscimo por fim de turno da ficha âncora',
           ],
         ],
+      },
+      savedEffects: {
+        heading: 'Saved Effects',
+        intro:
+          'Saved effects let you store long-term conditions outside the Turn Tracker — curses, diseases, poisons, hidden debuffs, and other non-combat conditions. They persist in script state and can be optionally copied into the Turn Tracker when combat begins.',
+        visibility: {
+          heading: 'Visibility Modes',
+          rows: [
+            [
+              'public',
+              'Full effect label is visible in the Turn Tracker and public chat.',
+            ],
+            [
+              'masked',
+              'A vague public label is shown to players; full details are GM-only.',
+            ],
+            [
+              'gm',
+              'No Turn Tracker row. Full details are stored in state and whispered to the GM when the affected token reaches the top of initiative.',
+            ],
+          ],
+        },
+        commands: {
+          heading: 'Saved Effects Commands',
+          intro:
+            'All --saved commands are GM-only. Select a token before running --saved or --saved add.',
+          rows: [
+            [
+              '!condition-tracker --saved',
+              'View saved effects for the selected token.',
+            ],
+            [
+              '!condition-tracker --saved add',
+              'Launch the add-saved-effect wizard.',
+            ],
+            [
+              '!condition-tracker --saved edit <id>',
+              'Edit labels or visibility for an existing saved effect.',
+            ],
+            [
+              '!condition-tracker --saved remove <id>',
+              'Permanently remove a saved effect.',
+            ],
+            [
+              '!condition-tracker --saved promote <id> --visibility public|masked|gm',
+              'Copy a saved effect into the Turn Tracker (public or masked) or confirm it is GM-only tracked.',
+            ],
+            [
+              '!condition-tracker --saved snooze <id> --scope turn|rounds|combat --rounds <n>',
+              'Snooze a GM reminder for this turn, N rounds, or this combat.',
+            ],
+            [
+              '!condition-tracker --saved snooze-clear <id>',
+              'Clear an active snooze so reminders resume immediately.',
+            ],
+          ],
+        },
+        reminders: {
+          heading: 'GM Reminders',
+          body: 'When a token with gm or masked saved effects reaches the top of the Turn Tracker, the GM receives a whisper listing the hidden effects with action buttons. Duplicate reminders within the same turn are suppressed. Use the Snooze buttons to suppress reminders for a turn, a number of rounds, or for the remainder of the current combat.',
+        },
       },
       configuration: {
         heading: 'Configuração',
@@ -10405,6 +12835,13 @@ const ConditionTrackerMod = (() => {
         showHelp: 'Mostrar ajuda',
         reorderConditions: 'Reordenar linhas de condição',
         reportToken: 'Report Token Conditions',
+        savedEffects: 'Saved Effects',
+        addSavedEffect: 'Add Saved Effect',
+        editSaved: 'Edit',
+        removeSaved: 'Remove',
+        promoteSaved: 'Add to Turn Tracker',
+        snoozeSaved: 'Snooze',
+        clearSnooze: 'Clear Snooze',
       },
       title: {
         menu: 'Menu',
@@ -10415,7 +12852,8 @@ const ConditionTrackerMod = (() => {
         applied: 'Aplicado',
         removed: 'Condição removida',
         cleanup: 'Limpeza concluída',
-        macroReinstalled: 'Macro reinstalada',
+        macroReinstalled:
+          'The {wizard}, {multiTarget}, {reportToken}, and {saved} macros have been reinstalled for all current GM players.',
         handoutReinstalled: 'Livreto reinstalado',
         warning: 'Aviso',
         error: 'Erro',
@@ -10428,6 +12866,14 @@ const ConditionTrackerMod = (() => {
         scriptReady: 'Script pronto',
         conditionReorder: 'Ordem de turno alterada',
         tokenReport: 'Token Condition Report',
+        savedEffects: 'Saved Effects',
+        savedAdd: 'Add Saved Effect',
+        savedEdit: 'Edit Saved Effect',
+        savedRemoved: 'Saved Effect Removed',
+        savedPromoted: 'Add to Turn Tracker',
+        savedSnoozed: 'Reminder Snoozed',
+        savedSnoozeCleared: 'Snooze Cleared',
+        hiddenEffects: 'Hidden Effects — {name}',
       },
       heading: {
         quickActions: 'Ações rápidas',
@@ -10441,6 +12887,11 @@ const ConditionTrackerMod = (() => {
         summary: 'Resumo',
         appliedTo: 'Conditions Applied To',
         appliedBy: 'Conditions Applied By',
+        savedEffectsFor: 'Saved Effects for {name}',
+        visibility: 'Visibility',
+        snoozeOptions: 'Snooze Reminder',
+        promoteOptions: 'Promote to Turn Tracker',
+        editActions: 'Edit Actions',
       },
       msg: {
         noActive: 'Nenhuma condição ativa está sendo rastreada.',
@@ -10526,6 +12977,28 @@ const ConditionTrackerMod = (() => {
         noConditionsAppliedTo: '{name} has no active conditions applied to it.',
         noConditionsAppliedBy:
           '{name} has no active conditions applied to others.',
+        noSavedEffects: 'No saved effects stored for {name}.',
+        noTokenSelectedSaved:
+          'Select a token on the board before using --saved.',
+        savedEffectAdded: 'Saved effect added for {name}.',
+        savedEffectUpdated: 'Saved effect updated.',
+        savedEffectRemoved: 'Saved effect removed.',
+        savedEffectNotFound: 'Saved effect not found.',
+        savedInvalidVisibility:
+          'Invalid visibility. Use public, masked, or gm.',
+        savedConditionRequired:
+          'Condition type is required. Use --condition <type>.',
+        savedPromotedPublic: 'Effect added to Turn Tracker as public.',
+        savedPromotedMasked:
+          'Effect added to Turn Tracker as masked — players see: {publicLabel}.',
+        savedPromotedGm:
+          'Effect is GM-only — no Turn Tracker row will be created. The reminder system will surface it when this token reaches the top of the turn order.',
+        savedSnoozed: 'Reminder snoozed: {scope}.',
+        savedSnoozeCleared: 'Snooze cleared.',
+        hiddenEffectsReminder: 'Hidden effects are active on {name}.',
+        visibilityPublicHint: 'full label visible to all',
+        visibilityMaskedHint: 'vague label shown to players',
+        visibilityGmHint: 'GM whisper only, no Turn Tracker row',
       },
       removal: {
         conditionField: 'Condição',
@@ -10538,6 +13011,32 @@ const ConditionTrackerMod = (() => {
         rowRemoved: 'Removido',
         rowMissing: 'Já ausente',
         manualReason: 'Remoção manual',
+      },
+      saved: {
+        visibility: {
+          public: 'Public',
+          masked: 'Masked',
+          gm: 'GM Only',
+        },
+        snooze: {
+          thisTurn: 'This Turn',
+          oneRound: '1 Round',
+          threeRounds: '3 Rounds',
+          thisCombat: 'This Combat',
+          rounds: '{n} round(s)',
+        },
+        field: {
+          gmLabel: 'GM Label',
+          publicLabel: 'Public Label',
+          visibility: 'Visibility',
+          source: 'Source',
+          condition: 'Condition',
+        },
+        prompt: {
+          enterGmLabel: 'Full effect description (GM only)',
+          enterPublicLabel: 'Vague label shown to players',
+        },
+        snoozed: 'snoozed',
       },
       cleanup: {
         orphaned: 'Entradas de condição órfãs',
@@ -10697,6 +13196,67 @@ const ConditionTrackerMod = (() => {
             'Contagem regressiva fixa; um decremento por cada fim de turno da âncora',
           ],
         ],
+      },
+      savedEffects: {
+        heading: 'Saved Effects',
+        intro:
+          'Saved effects let you store long-term conditions outside the Turn Tracker — curses, diseases, poisons, hidden debuffs, and other non-combat conditions. They persist in script state and can be optionally copied into the Turn Tracker when combat begins.',
+        visibility: {
+          heading: 'Visibility Modes',
+          rows: [
+            [
+              'public',
+              'Full effect label is visible in the Turn Tracker and public chat.',
+            ],
+            [
+              'masked',
+              'A vague public label is shown to players; full details are GM-only.',
+            ],
+            [
+              'gm',
+              'No Turn Tracker row. Full details are stored in state and whispered to the GM when the affected token reaches the top of initiative.',
+            ],
+          ],
+        },
+        commands: {
+          heading: 'Saved Effects Commands',
+          intro:
+            'All --saved commands are GM-only. Select a token before running --saved or --saved add.',
+          rows: [
+            [
+              '!condition-tracker --saved',
+              'View saved effects for the selected token.',
+            ],
+            [
+              '!condition-tracker --saved add',
+              'Launch the add-saved-effect wizard.',
+            ],
+            [
+              '!condition-tracker --saved edit <id>',
+              'Edit labels or visibility for an existing saved effect.',
+            ],
+            [
+              '!condition-tracker --saved remove <id>',
+              'Permanently remove a saved effect.',
+            ],
+            [
+              '!condition-tracker --saved promote <id> --visibility public|masked|gm',
+              'Copy a saved effect into the Turn Tracker (public or masked) or confirm it is GM-only tracked.',
+            ],
+            [
+              '!condition-tracker --saved snooze <id> --scope turn|rounds|combat --rounds <n>',
+              'Snooze a GM reminder for this turn, N rounds, or this combat.',
+            ],
+            [
+              '!condition-tracker --saved snooze-clear <id>',
+              'Clear an active snooze so reminders resume immediately.',
+            ],
+          ],
+        },
+        reminders: {
+          heading: 'GM Reminders',
+          body: 'When a token with gm or masked saved effects reaches the top of the Turn Tracker, the GM receives a whisper listing the hidden effects with action buttons. Duplicate reminders within the same turn are suppressed. Use the Snooze buttons to suppress reminders for a turn, a number of rounds, or for the remainder of the current combat.',
+        },
       },
       configuration: {
         heading: 'Configuração',
@@ -10953,6 +13513,13 @@ const ConditionTrackerMod = (() => {
         showHelp: 'Показать справку',
         reorderConditions: 'Переупорядочить строки состояний',
         reportToken: 'Report Token Conditions',
+        savedEffects: 'Saved Effects',
+        addSavedEffect: 'Add Saved Effect',
+        editSaved: 'Edit',
+        removeSaved: 'Remove',
+        promoteSaved: 'Add to Turn Tracker',
+        snoozeSaved: 'Snooze',
+        clearSnooze: 'Clear Snooze',
       },
       title: {
         menu: 'Меню',
@@ -10963,7 +13530,8 @@ const ConditionTrackerMod = (() => {
         applied: 'Применено',
         removed: 'Состояние удалено',
         cleanup: 'Очистка завершена',
-        macroReinstalled: 'Макрос переустановлен',
+        macroReinstalled:
+          'The {wizard}, {multiTarget}, {reportToken}, and {saved} macros have been reinstalled for all current GM players.',
         handoutReinstalled: 'Хэндаут переустановлен',
         warning: 'Предупреждение',
         error: 'Ошибка',
@@ -10976,6 +13544,14 @@ const ConditionTrackerMod = (() => {
         scriptReady: 'Скрипт готов',
         conditionReorder: 'Порядок ходов изменён',
         tokenReport: 'Token Condition Report',
+        savedEffects: 'Saved Effects',
+        savedAdd: 'Add Saved Effect',
+        savedEdit: 'Edit Saved Effect',
+        savedRemoved: 'Saved Effect Removed',
+        savedPromoted: 'Add to Turn Tracker',
+        savedSnoozed: 'Reminder Snoozed',
+        savedSnoozeCleared: 'Snooze Cleared',
+        hiddenEffects: 'Hidden Effects — {name}',
       },
       heading: {
         quickActions: 'Быстрые действия',
@@ -10989,6 +13565,11 @@ const ConditionTrackerMod = (() => {
         summary: 'Итог',
         appliedTo: 'Conditions Applied To',
         appliedBy: 'Conditions Applied By',
+        savedEffectsFor: 'Saved Effects for {name}',
+        visibility: 'Visibility',
+        snoozeOptions: 'Snooze Reminder',
+        promoteOptions: 'Promote to Turn Tracker',
+        editActions: 'Edit Actions',
       },
       msg: {
         noActive: 'Активных состояний не отслеживается.',
@@ -11075,6 +13656,28 @@ const ConditionTrackerMod = (() => {
         noConditionsAppliedTo: '{name} has no active conditions applied to it.',
         noConditionsAppliedBy:
           '{name} has no active conditions applied to others.',
+        noSavedEffects: 'No saved effects stored for {name}.',
+        noTokenSelectedSaved:
+          'Select a token on the board before using --saved.',
+        savedEffectAdded: 'Saved effect added for {name}.',
+        savedEffectUpdated: 'Saved effect updated.',
+        savedEffectRemoved: 'Saved effect removed.',
+        savedEffectNotFound: 'Saved effect not found.',
+        savedInvalidVisibility:
+          'Invalid visibility. Use public, masked, or gm.',
+        savedConditionRequired:
+          'Condition type is required. Use --condition <type>.',
+        savedPromotedPublic: 'Effect added to Turn Tracker as public.',
+        savedPromotedMasked:
+          'Effect added to Turn Tracker as masked — players see: {publicLabel}.',
+        savedPromotedGm:
+          'Effect is GM-only — no Turn Tracker row will be created. The reminder system will surface it when this token reaches the top of the turn order.',
+        savedSnoozed: 'Reminder snoozed: {scope}.',
+        savedSnoozeCleared: 'Snooze cleared.',
+        hiddenEffectsReminder: 'Hidden effects are active on {name}.',
+        visibilityPublicHint: 'full label visible to all',
+        visibilityMaskedHint: 'vague label shown to players',
+        visibilityGmHint: 'GM whisper only, no Turn Tracker row',
       },
       removal: {
         conditionField: 'Состояние',
@@ -11087,6 +13690,32 @@ const ConditionTrackerMod = (() => {
         rowRemoved: 'Удалено',
         rowMissing: 'Уже отсутствует',
         manualReason: 'Ручное удаление',
+      },
+      saved: {
+        visibility: {
+          public: 'Public',
+          masked: 'Masked',
+          gm: 'GM Only',
+        },
+        snooze: {
+          thisTurn: 'This Turn',
+          oneRound: '1 Round',
+          threeRounds: '3 Rounds',
+          thisCombat: 'This Combat',
+          rounds: '{n} round(s)',
+        },
+        field: {
+          gmLabel: 'GM Label',
+          publicLabel: 'Public Label',
+          visibility: 'Visibility',
+          source: 'Source',
+          condition: 'Condition',
+        },
+        prompt: {
+          enterGmLabel: 'Full effect description (GM only)',
+          enterPublicLabel: 'Vague label shown to players',
+        },
+        snoozed: 'snoozed',
       },
       cleanup: {
         orphaned: 'Осиротевшие записи состояний',
@@ -11249,6 +13878,67 @@ const ConditionTrackerMod = (() => {
             'Фиксированный обратный отсчёт; одно уменьшение за конец хода опорного жетона',
           ],
         ],
+      },
+      savedEffects: {
+        heading: 'Saved Effects',
+        intro:
+          'Saved effects let you store long-term conditions outside the Turn Tracker — curses, diseases, poisons, hidden debuffs, and other non-combat conditions. They persist in script state and can be optionally copied into the Turn Tracker when combat begins.',
+        visibility: {
+          heading: 'Visibility Modes',
+          rows: [
+            [
+              'public',
+              'Full effect label is visible in the Turn Tracker and public chat.',
+            ],
+            [
+              'masked',
+              'A vague public label is shown to players; full details are GM-only.',
+            ],
+            [
+              'gm',
+              'No Turn Tracker row. Full details are stored in state and whispered to the GM when the affected token reaches the top of initiative.',
+            ],
+          ],
+        },
+        commands: {
+          heading: 'Saved Effects Commands',
+          intro:
+            'All --saved commands are GM-only. Select a token before running --saved or --saved add.',
+          rows: [
+            [
+              '!condition-tracker --saved',
+              'View saved effects for the selected token.',
+            ],
+            [
+              '!condition-tracker --saved add',
+              'Launch the add-saved-effect wizard.',
+            ],
+            [
+              '!condition-tracker --saved edit <id>',
+              'Edit labels or visibility for an existing saved effect.',
+            ],
+            [
+              '!condition-tracker --saved remove <id>',
+              'Permanently remove a saved effect.',
+            ],
+            [
+              '!condition-tracker --saved promote <id> --visibility public|masked|gm',
+              'Copy a saved effect into the Turn Tracker (public or masked) or confirm it is GM-only tracked.',
+            ],
+            [
+              '!condition-tracker --saved snooze <id> --scope turn|rounds|combat --rounds <n>',
+              'Snooze a GM reminder for this turn, N rounds, or this combat.',
+            ],
+            [
+              '!condition-tracker --saved snooze-clear <id>',
+              'Clear an active snooze so reminders resume immediately.',
+            ],
+          ],
+        },
+        reminders: {
+          heading: 'GM Reminders',
+          body: 'When a token with gm or masked saved effects reaches the top of the Turn Tracker, the GM receives a whisper listing the hidden effects with action buttons. Duplicate reminders within the same turn are suppressed. Use the Snooze buttons to suppress reminders for a turn, a number of rounds, or for the remainder of the current combat.',
+        },
       },
       configuration: {
         heading: 'Конфигурация',
@@ -11503,6 +14193,13 @@ const ConditionTrackerMod = (() => {
         showHelp: 'Mostrar ayuda',
         reorderConditions: 'Reordenar filas de condición',
         reportToken: 'Report Token Conditions',
+        savedEffects: 'Saved Effects',
+        addSavedEffect: 'Add Saved Effect',
+        editSaved: 'Edit',
+        removeSaved: 'Remove',
+        promoteSaved: 'Add to Turn Tracker',
+        snoozeSaved: 'Snooze',
+        clearSnooze: 'Clear Snooze',
       },
       title: {
         menu: 'Menú',
@@ -11513,7 +14210,8 @@ const ConditionTrackerMod = (() => {
         applied: 'Aplicado',
         removed: 'Condición eliminada',
         cleanup: 'Limpieza completada',
-        macroReinstalled: 'Macro reinstalada',
+        macroReinstalled:
+          'The {wizard}, {multiTarget}, {reportToken}, and {saved} macros have been reinstalled for all current GM players.',
         handoutReinstalled: 'Folleto reinstalado',
         warning: 'Advertencia',
         error: 'Error',
@@ -11526,6 +14224,14 @@ const ConditionTrackerMod = (() => {
         scriptReady: 'Script listo',
         conditionReorder: 'Orden de turno cambiado',
         tokenReport: 'Token Condition Report',
+        savedEffects: 'Saved Effects',
+        savedAdd: 'Add Saved Effect',
+        savedEdit: 'Edit Saved Effect',
+        savedRemoved: 'Saved Effect Removed',
+        savedPromoted: 'Add to Turn Tracker',
+        savedSnoozed: 'Reminder Snoozed',
+        savedSnoozeCleared: 'Snooze Cleared',
+        hiddenEffects: 'Hidden Effects — {name}',
       },
       heading: {
         quickActions: 'Acciones rápidas',
@@ -11539,6 +14245,11 @@ const ConditionTrackerMod = (() => {
         summary: 'Resumen',
         appliedTo: 'Conditions Applied To',
         appliedBy: 'Conditions Applied By',
+        savedEffectsFor: 'Saved Effects for {name}',
+        visibility: 'Visibility',
+        snoozeOptions: 'Snooze Reminder',
+        promoteOptions: 'Promote to Turn Tracker',
+        editActions: 'Edit Actions',
       },
       msg: {
         noActive: 'No se están rastreando condiciones activas.',
@@ -11631,6 +14342,28 @@ const ConditionTrackerMod = (() => {
         noConditionsAppliedTo: '{name} has no active conditions applied to it.',
         noConditionsAppliedBy:
           '{name} has no active conditions applied to others.',
+        noSavedEffects: 'No saved effects stored for {name}.',
+        noTokenSelectedSaved:
+          'Select a token on the board before using --saved.',
+        savedEffectAdded: 'Saved effect added for {name}.',
+        savedEffectUpdated: 'Saved effect updated.',
+        savedEffectRemoved: 'Saved effect removed.',
+        savedEffectNotFound: 'Saved effect not found.',
+        savedInvalidVisibility:
+          'Invalid visibility. Use public, masked, or gm.',
+        savedConditionRequired:
+          'Condition type is required. Use --condition <type>.',
+        savedPromotedPublic: 'Effect added to Turn Tracker as public.',
+        savedPromotedMasked:
+          'Effect added to Turn Tracker as masked — players see: {publicLabel}.',
+        savedPromotedGm:
+          'Effect is GM-only — no Turn Tracker row will be created. The reminder system will surface it when this token reaches the top of the turn order.',
+        savedSnoozed: 'Reminder snoozed: {scope}.',
+        savedSnoozeCleared: 'Snooze cleared.',
+        hiddenEffectsReminder: 'Hidden effects are active on {name}.',
+        visibilityPublicHint: 'full label visible to all',
+        visibilityMaskedHint: 'vague label shown to players',
+        visibilityGmHint: 'GM whisper only, no Turn Tracker row',
       },
       removal: {
         conditionField: 'Condición',
@@ -11643,6 +14376,32 @@ const ConditionTrackerMod = (() => {
         rowRemoved: 'Eliminado',
         rowMissing: 'Ya faltaba',
         manualReason: 'Eliminación manual',
+      },
+      saved: {
+        visibility: {
+          public: 'Public',
+          masked: 'Masked',
+          gm: 'GM Only',
+        },
+        snooze: {
+          thisTurn: 'This Turn',
+          oneRound: '1 Round',
+          threeRounds: '3 Rounds',
+          thisCombat: 'This Combat',
+          rounds: '{n} round(s)',
+        },
+        field: {
+          gmLabel: 'GM Label',
+          publicLabel: 'Public Label',
+          visibility: 'Visibility',
+          source: 'Source',
+          condition: 'Condition',
+        },
+        prompt: {
+          enterGmLabel: 'Full effect description (GM only)',
+          enterPublicLabel: 'Vague label shown to players',
+        },
+        snoozed: 'snoozed',
       },
       cleanup: {
         orphaned: 'Entradas de condición huérfanas',
@@ -11803,6 +14562,67 @@ const ConditionTrackerMod = (() => {
             'Cuenta regresiva fija; un decremento por cada fin de turno del ancla',
           ],
         ],
+      },
+      savedEffects: {
+        heading: 'Saved Effects',
+        intro:
+          'Saved effects let you store long-term conditions outside the Turn Tracker — curses, diseases, poisons, hidden debuffs, and other non-combat conditions. They persist in script state and can be optionally copied into the Turn Tracker when combat begins.',
+        visibility: {
+          heading: 'Visibility Modes',
+          rows: [
+            [
+              'public',
+              'Full effect label is visible in the Turn Tracker and public chat.',
+            ],
+            [
+              'masked',
+              'A vague public label is shown to players; full details are GM-only.',
+            ],
+            [
+              'gm',
+              'No Turn Tracker row. Full details are stored in state and whispered to the GM when the affected token reaches the top of initiative.',
+            ],
+          ],
+        },
+        commands: {
+          heading: 'Saved Effects Commands',
+          intro:
+            'All --saved commands are GM-only. Select a token before running --saved or --saved add.',
+          rows: [
+            [
+              '!condition-tracker --saved',
+              'View saved effects for the selected token.',
+            ],
+            [
+              '!condition-tracker --saved add',
+              'Launch the add-saved-effect wizard.',
+            ],
+            [
+              '!condition-tracker --saved edit <id>',
+              'Edit labels or visibility for an existing saved effect.',
+            ],
+            [
+              '!condition-tracker --saved remove <id>',
+              'Permanently remove a saved effect.',
+            ],
+            [
+              '!condition-tracker --saved promote <id> --visibility public|masked|gm',
+              'Copy a saved effect into the Turn Tracker (public or masked) or confirm it is GM-only tracked.',
+            ],
+            [
+              '!condition-tracker --saved snooze <id> --scope turn|rounds|combat --rounds <n>',
+              'Snooze a GM reminder for this turn, N rounds, or this combat.',
+            ],
+            [
+              '!condition-tracker --saved snooze-clear <id>',
+              'Clear an active snooze so reminders resume immediately.',
+            ],
+          ],
+        },
+        reminders: {
+          heading: 'GM Reminders',
+          body: 'When a token with gm or masked saved effects reaches the top of the Turn Tracker, the GM receives a whisper listing the hidden effects with action buttons. Duplicate reminders within the same turn are suppressed. Use the Snooze buttons to suppress reminders for a turn, a number of rounds, or for the remainder of the current combat.',
+        },
       },
       configuration: {
         heading: 'Configuración',
@@ -12056,6 +14876,13 @@ const ConditionTrackerMod = (() => {
         showHelp: 'Visa hjälp',
         reorderConditions: 'Ordna om tillståndsrader',
         reportToken: 'Report Token Conditions',
+        savedEffects: 'Saved Effects',
+        addSavedEffect: 'Add Saved Effect',
+        editSaved: 'Edit',
+        removeSaved: 'Remove',
+        promoteSaved: 'Add to Turn Tracker',
+        snoozeSaved: 'Snooze',
+        clearSnooze: 'Clear Snooze',
       },
       title: {
         menu: 'Meny',
@@ -12066,7 +14893,8 @@ const ConditionTrackerMod = (() => {
         applied: 'Applicerad',
         removed: 'Tillstånd borttaget',
         cleanup: 'Rensning slutförd',
-        macroReinstalled: 'Makro ominstallerat',
+        macroReinstalled:
+          'The {wizard}, {multiTarget}, {reportToken}, and {saved} macros have been reinstalled for all current GM players.',
         handoutReinstalled: 'Handout ominstallerat',
         warning: 'Varning',
         error: 'Fel',
@@ -12079,6 +14907,14 @@ const ConditionTrackerMod = (() => {
         scriptReady: 'Skript redo',
         conditionReorder: 'Turordning ändrad',
         tokenReport: 'Token Condition Report',
+        savedEffects: 'Saved Effects',
+        savedAdd: 'Add Saved Effect',
+        savedEdit: 'Edit Saved Effect',
+        savedRemoved: 'Saved Effect Removed',
+        savedPromoted: 'Add to Turn Tracker',
+        savedSnoozed: 'Reminder Snoozed',
+        savedSnoozeCleared: 'Snooze Cleared',
+        hiddenEffects: 'Hidden Effects — {name}',
       },
       heading: {
         quickActions: 'Snabbåtgärder',
@@ -12092,6 +14928,11 @@ const ConditionTrackerMod = (() => {
         summary: 'Sammanfattning',
         appliedTo: 'Conditions Applied To',
         appliedBy: 'Conditions Applied By',
+        savedEffectsFor: 'Saved Effects for {name}',
+        visibility: 'Visibility',
+        snoozeOptions: 'Snooze Reminder',
+        promoteOptions: 'Promote to Turn Tracker',
+        editActions: 'Edit Actions',
       },
       msg: {
         noActive: 'Inga aktiva tillstånd spåras.',
@@ -12177,6 +15018,28 @@ const ConditionTrackerMod = (() => {
         noConditionsAppliedTo: '{name} has no active conditions applied to it.',
         noConditionsAppliedBy:
           '{name} has no active conditions applied to others.',
+        noSavedEffects: 'No saved effects stored for {name}.',
+        noTokenSelectedSaved:
+          'Select a token on the board before using --saved.',
+        savedEffectAdded: 'Saved effect added for {name}.',
+        savedEffectUpdated: 'Saved effect updated.',
+        savedEffectRemoved: 'Saved effect removed.',
+        savedEffectNotFound: 'Saved effect not found.',
+        savedInvalidVisibility:
+          'Invalid visibility. Use public, masked, or gm.',
+        savedConditionRequired:
+          'Condition type is required. Use --condition <type>.',
+        savedPromotedPublic: 'Effect added to Turn Tracker as public.',
+        savedPromotedMasked:
+          'Effect added to Turn Tracker as masked — players see: {publicLabel}.',
+        savedPromotedGm:
+          'Effect is GM-only — no Turn Tracker row will be created. The reminder system will surface it when this token reaches the top of the turn order.',
+        savedSnoozed: 'Reminder snoozed: {scope}.',
+        savedSnoozeCleared: 'Snooze cleared.',
+        hiddenEffectsReminder: 'Hidden effects are active on {name}.',
+        visibilityPublicHint: 'full label visible to all',
+        visibilityMaskedHint: 'vague label shown to players',
+        visibilityGmHint: 'GM whisper only, no Turn Tracker row',
       },
       removal: {
         conditionField: 'Tillstånd',
@@ -12189,6 +15052,32 @@ const ConditionTrackerMod = (() => {
         rowRemoved: 'Borttagen',
         rowMissing: 'Redan saknad',
         manualReason: 'Manuell borttagning',
+      },
+      saved: {
+        visibility: {
+          public: 'Public',
+          masked: 'Masked',
+          gm: 'GM Only',
+        },
+        snooze: {
+          thisTurn: 'This Turn',
+          oneRound: '1 Round',
+          threeRounds: '3 Rounds',
+          thisCombat: 'This Combat',
+          rounds: '{n} round(s)',
+        },
+        field: {
+          gmLabel: 'GM Label',
+          publicLabel: 'Public Label',
+          visibility: 'Visibility',
+          source: 'Source',
+          condition: 'Condition',
+        },
+        prompt: {
+          enterGmLabel: 'Full effect description (GM only)',
+          enterPublicLabel: 'Vague label shown to players',
+        },
+        snoozed: 'snoozed',
       },
       cleanup: {
         orphaned: 'Övergivna tillståndsposter',
@@ -12348,6 +15237,67 @@ const ConditionTrackerMod = (() => {
             'Fast nedräkning; ett steg per ankertokenens turslut',
           ],
         ],
+      },
+      savedEffects: {
+        heading: 'Saved Effects',
+        intro:
+          'Saved effects let you store long-term conditions outside the Turn Tracker — curses, diseases, poisons, hidden debuffs, and other non-combat conditions. They persist in script state and can be optionally copied into the Turn Tracker when combat begins.',
+        visibility: {
+          heading: 'Visibility Modes',
+          rows: [
+            [
+              'public',
+              'Full effect label is visible in the Turn Tracker and public chat.',
+            ],
+            [
+              'masked',
+              'A vague public label is shown to players; full details are GM-only.',
+            ],
+            [
+              'gm',
+              'No Turn Tracker row. Full details are stored in state and whispered to the GM when the affected token reaches the top of initiative.',
+            ],
+          ],
+        },
+        commands: {
+          heading: 'Saved Effects Commands',
+          intro:
+            'All --saved commands are GM-only. Select a token before running --saved or --saved add.',
+          rows: [
+            [
+              '!condition-tracker --saved',
+              'View saved effects for the selected token.',
+            ],
+            [
+              '!condition-tracker --saved add',
+              'Launch the add-saved-effect wizard.',
+            ],
+            [
+              '!condition-tracker --saved edit <id>',
+              'Edit labels or visibility for an existing saved effect.',
+            ],
+            [
+              '!condition-tracker --saved remove <id>',
+              'Permanently remove a saved effect.',
+            ],
+            [
+              '!condition-tracker --saved promote <id> --visibility public|masked|gm',
+              'Copy a saved effect into the Turn Tracker (public or masked) or confirm it is GM-only tracked.',
+            ],
+            [
+              '!condition-tracker --saved snooze <id> --scope turn|rounds|combat --rounds <n>',
+              'Snooze a GM reminder for this turn, N rounds, or this combat.',
+            ],
+            [
+              '!condition-tracker --saved snooze-clear <id>',
+              'Clear an active snooze so reminders resume immediately.',
+            ],
+          ],
+        },
+        reminders: {
+          heading: 'GM Reminders',
+          body: 'When a token with gm or masked saved effects reaches the top of the Turn Tracker, the GM receives a whisper listing the hidden effects with action buttons. Duplicate reminders within the same turn are suppressed. Use the Snooze buttons to suppress reminders for a turn, a number of rounds, or for the remainder of the current combat.',
+        },
       },
       configuration: {
         heading: 'Konfiguration',
@@ -12599,6 +15549,13 @@ const ConditionTrackerMod = (() => {
         showHelp: 'Yardımı Göster',
         reorderConditions: 'Durum Satırlarını Yeniden Sırala',
         reportToken: 'Report Token Conditions',
+        savedEffects: 'Saved Effects',
+        addSavedEffect: 'Add Saved Effect',
+        editSaved: 'Edit',
+        removeSaved: 'Remove',
+        promoteSaved: 'Add to Turn Tracker',
+        snoozeSaved: 'Snooze',
+        clearSnooze: 'Clear Snooze',
       },
       title: {
         menu: 'Menü',
@@ -12609,7 +15566,8 @@ const ConditionTrackerMod = (() => {
         applied: 'Uygulandı',
         removed: 'Durum Kaldırıldı',
         cleanup: 'Temizlik Tamamlandı',
-        macroReinstalled: 'Makro Yeniden Yüklendi',
+        macroReinstalled:
+          'The {wizard}, {multiTarget}, {reportToken}, and {saved} macros have been reinstalled for all current GM players.',
         handoutReinstalled: 'El İlanı Yeniden Yüklendi',
         warning: 'Uyarı',
         error: 'Hata',
@@ -12622,6 +15580,14 @@ const ConditionTrackerMod = (() => {
         scriptReady: 'Betik Hazır',
         conditionReorder: 'Tur Sırası Değişti',
         tokenReport: 'Token Condition Report',
+        savedEffects: 'Saved Effects',
+        savedAdd: 'Add Saved Effect',
+        savedEdit: 'Edit Saved Effect',
+        savedRemoved: 'Saved Effect Removed',
+        savedPromoted: 'Add to Turn Tracker',
+        savedSnoozed: 'Reminder Snoozed',
+        savedSnoozeCleared: 'Snooze Cleared',
+        hiddenEffects: 'Hidden Effects — {name}',
       },
       heading: {
         quickActions: 'Hızlı İşlemler',
@@ -12635,6 +15601,11 @@ const ConditionTrackerMod = (() => {
         summary: 'Özet',
         appliedTo: 'Conditions Applied To',
         appliedBy: 'Conditions Applied By',
+        savedEffectsFor: 'Saved Effects for {name}',
+        visibility: 'Visibility',
+        snoozeOptions: 'Snooze Reminder',
+        promoteOptions: 'Promote to Turn Tracker',
+        editActions: 'Edit Actions',
       },
       msg: {
         noActive: 'Takip edilen aktif durum yok.',
@@ -12719,6 +15690,28 @@ const ConditionTrackerMod = (() => {
         noConditionsAppliedTo: '{name} has no active conditions applied to it.',
         noConditionsAppliedBy:
           '{name} has no active conditions applied to others.',
+        noSavedEffects: 'No saved effects stored for {name}.',
+        noTokenSelectedSaved:
+          'Select a token on the board before using --saved.',
+        savedEffectAdded: 'Saved effect added for {name}.',
+        savedEffectUpdated: 'Saved effect updated.',
+        savedEffectRemoved: 'Saved effect removed.',
+        savedEffectNotFound: 'Saved effect not found.',
+        savedInvalidVisibility:
+          'Invalid visibility. Use public, masked, or gm.',
+        savedConditionRequired:
+          'Condition type is required. Use --condition <type>.',
+        savedPromotedPublic: 'Effect added to Turn Tracker as public.',
+        savedPromotedMasked:
+          'Effect added to Turn Tracker as masked — players see: {publicLabel}.',
+        savedPromotedGm:
+          'Effect is GM-only — no Turn Tracker row will be created. The reminder system will surface it when this token reaches the top of the turn order.',
+        savedSnoozed: 'Reminder snoozed: {scope}.',
+        savedSnoozeCleared: 'Snooze cleared.',
+        hiddenEffectsReminder: 'Hidden effects are active on {name}.',
+        visibilityPublicHint: 'full label visible to all',
+        visibilityMaskedHint: 'vague label shown to players',
+        visibilityGmHint: 'GM whisper only, no Turn Tracker row',
       },
       removal: {
         conditionField: 'Durum',
@@ -12731,6 +15724,32 @@ const ConditionTrackerMod = (() => {
         rowRemoved: 'Kaldırıldı',
         rowMissing: 'Zaten eksik',
         manualReason: 'Manuel kaldırma',
+      },
+      saved: {
+        visibility: {
+          public: 'Public',
+          masked: 'Masked',
+          gm: 'GM Only',
+        },
+        snooze: {
+          thisTurn: 'This Turn',
+          oneRound: '1 Round',
+          threeRounds: '3 Rounds',
+          thisCombat: 'This Combat',
+          rounds: '{n} round(s)',
+        },
+        field: {
+          gmLabel: 'GM Label',
+          publicLabel: 'Public Label',
+          visibility: 'Visibility',
+          source: 'Source',
+          condition: 'Condition',
+        },
+        prompt: {
+          enterGmLabel: 'Full effect description (GM only)',
+          enterPublicLabel: 'Vague label shown to players',
+        },
+        snoozed: 'snoozed',
       },
       cleanup: {
         orphaned: 'Sahipsiz durum girişleri',
@@ -12886,6 +15905,67 @@ const ConditionTrackerMod = (() => {
             'Sabit geri sayım; çapa token tur sonunda bir azalma',
           ],
         ],
+      },
+      savedEffects: {
+        heading: 'Saved Effects',
+        intro:
+          'Saved effects let you store long-term conditions outside the Turn Tracker — curses, diseases, poisons, hidden debuffs, and other non-combat conditions. They persist in script state and can be optionally copied into the Turn Tracker when combat begins.',
+        visibility: {
+          heading: 'Visibility Modes',
+          rows: [
+            [
+              'public',
+              'Full effect label is visible in the Turn Tracker and public chat.',
+            ],
+            [
+              'masked',
+              'A vague public label is shown to players; full details are GM-only.',
+            ],
+            [
+              'gm',
+              'No Turn Tracker row. Full details are stored in state and whispered to the GM when the affected token reaches the top of initiative.',
+            ],
+          ],
+        },
+        commands: {
+          heading: 'Saved Effects Commands',
+          intro:
+            'All --saved commands are GM-only. Select a token before running --saved or --saved add.',
+          rows: [
+            [
+              '!condition-tracker --saved',
+              'View saved effects for the selected token.',
+            ],
+            [
+              '!condition-tracker --saved add',
+              'Launch the add-saved-effect wizard.',
+            ],
+            [
+              '!condition-tracker --saved edit <id>',
+              'Edit labels or visibility for an existing saved effect.',
+            ],
+            [
+              '!condition-tracker --saved remove <id>',
+              'Permanently remove a saved effect.',
+            ],
+            [
+              '!condition-tracker --saved promote <id> --visibility public|masked|gm',
+              'Copy a saved effect into the Turn Tracker (public or masked) or confirm it is GM-only tracked.',
+            ],
+            [
+              '!condition-tracker --saved snooze <id> --scope turn|rounds|combat --rounds <n>',
+              'Snooze a GM reminder for this turn, N rounds, or this combat.',
+            ],
+            [
+              '!condition-tracker --saved snooze-clear <id>',
+              'Clear an active snooze so reminders resume immediately.',
+            ],
+          ],
+        },
+        reminders: {
+          heading: 'GM Reminders',
+          body: 'When a token with gm or masked saved effects reaches the top of the Turn Tracker, the GM receives a whisper listing the hidden effects with action buttons. Duplicate reminders within the same turn are suppressed. Use the Snooze buttons to suppress reminders for a turn, a number of rounds, or for the remainder of the current combat.',
+        },
       },
       configuration: {
         heading: 'Yapılandırma',
@@ -13138,6 +16218,13 @@ const ConditionTrackerMod = (() => {
         showHelp: 'Показати довідку',
         reorderConditions: 'Переупорядкувати рядки умов',
         reportToken: 'Report Token Conditions',
+        savedEffects: 'Saved Effects',
+        addSavedEffect: 'Add Saved Effect',
+        editSaved: 'Edit',
+        removeSaved: 'Remove',
+        promoteSaved: 'Add to Turn Tracker',
+        snoozeSaved: 'Snooze',
+        clearSnooze: 'Clear Snooze',
       },
       title: {
         menu: 'Меню',
@@ -13148,7 +16235,8 @@ const ConditionTrackerMod = (() => {
         applied: 'Застосовано',
         removed: 'Стан видалено',
         cleanup: 'Очищення завершено',
-        macroReinstalled: 'Макрос перевстановлено',
+        macroReinstalled:
+          'The {wizard}, {multiTarget}, {reportToken}, and {saved} macros have been reinstalled for all current GM players.',
         handoutReinstalled: 'Довідник перевстановлено',
         warning: 'Попередження',
         error: 'Помилка',
@@ -13161,6 +16249,14 @@ const ConditionTrackerMod = (() => {
         scriptReady: 'Скрипт готовий',
         conditionReorder: 'Порядок ходів змінено',
         tokenReport: 'Token Condition Report',
+        savedEffects: 'Saved Effects',
+        savedAdd: 'Add Saved Effect',
+        savedEdit: 'Edit Saved Effect',
+        savedRemoved: 'Saved Effect Removed',
+        savedPromoted: 'Add to Turn Tracker',
+        savedSnoozed: 'Reminder Snoozed',
+        savedSnoozeCleared: 'Snooze Cleared',
+        hiddenEffects: 'Hidden Effects — {name}',
       },
       heading: {
         quickActions: 'Швидкі дії',
@@ -13174,6 +16270,11 @@ const ConditionTrackerMod = (() => {
         summary: 'Підсумок',
         appliedTo: 'Conditions Applied To',
         appliedBy: 'Conditions Applied By',
+        savedEffectsFor: 'Saved Effects for {name}',
+        visibility: 'Visibility',
+        snoozeOptions: 'Snooze Reminder',
+        promoteOptions: 'Promote to Turn Tracker',
+        editActions: 'Edit Actions',
       },
       msg: {
         noActive: 'Активні стани не відстежуються.',
@@ -13258,6 +16359,28 @@ const ConditionTrackerMod = (() => {
         noConditionsAppliedTo: '{name} has no active conditions applied to it.',
         noConditionsAppliedBy:
           '{name} has no active conditions applied to others.',
+        noSavedEffects: 'No saved effects stored for {name}.',
+        noTokenSelectedSaved:
+          'Select a token on the board before using --saved.',
+        savedEffectAdded: 'Saved effect added for {name}.',
+        savedEffectUpdated: 'Saved effect updated.',
+        savedEffectRemoved: 'Saved effect removed.',
+        savedEffectNotFound: 'Saved effect not found.',
+        savedInvalidVisibility:
+          'Invalid visibility. Use public, masked, or gm.',
+        savedConditionRequired:
+          'Condition type is required. Use --condition <type>.',
+        savedPromotedPublic: 'Effect added to Turn Tracker as public.',
+        savedPromotedMasked:
+          'Effect added to Turn Tracker as masked — players see: {publicLabel}.',
+        savedPromotedGm:
+          'Effect is GM-only — no Turn Tracker row will be created. The reminder system will surface it when this token reaches the top of the turn order.',
+        savedSnoozed: 'Reminder snoozed: {scope}.',
+        savedSnoozeCleared: 'Snooze cleared.',
+        hiddenEffectsReminder: 'Hidden effects are active on {name}.',
+        visibilityPublicHint: 'full label visible to all',
+        visibilityMaskedHint: 'vague label shown to players',
+        visibilityGmHint: 'GM whisper only, no Turn Tracker row',
       },
       removal: {
         conditionField: 'Стан',
@@ -13270,6 +16393,32 @@ const ConditionTrackerMod = (() => {
         rowRemoved: 'Видалено',
         rowMissing: 'Уже відсутній',
         manualReason: 'Ручне видалення',
+      },
+      saved: {
+        visibility: {
+          public: 'Public',
+          masked: 'Masked',
+          gm: 'GM Only',
+        },
+        snooze: {
+          thisTurn: 'This Turn',
+          oneRound: '1 Round',
+          threeRounds: '3 Rounds',
+          thisCombat: 'This Combat',
+          rounds: '{n} round(s)',
+        },
+        field: {
+          gmLabel: 'GM Label',
+          publicLabel: 'Public Label',
+          visibility: 'Visibility',
+          source: 'Source',
+          condition: 'Condition',
+        },
+        prompt: {
+          enterGmLabel: 'Full effect description (GM only)',
+          enterPublicLabel: 'Vague label shown to players',
+        },
+        snoozed: 'snoozed',
       },
       cleanup: {
         orphaned: 'Осиротілі записи станів',
@@ -13426,6 +16575,67 @@ const ConditionTrackerMod = (() => {
             'Фіксований відлік; одне зменшення на завершення ходу опорного токена',
           ],
         ],
+      },
+      savedEffects: {
+        heading: 'Saved Effects',
+        intro:
+          'Saved effects let you store long-term conditions outside the Turn Tracker — curses, diseases, poisons, hidden debuffs, and other non-combat conditions. They persist in script state and can be optionally copied into the Turn Tracker when combat begins.',
+        visibility: {
+          heading: 'Visibility Modes',
+          rows: [
+            [
+              'public',
+              'Full effect label is visible in the Turn Tracker and public chat.',
+            ],
+            [
+              'masked',
+              'A vague public label is shown to players; full details are GM-only.',
+            ],
+            [
+              'gm',
+              'No Turn Tracker row. Full details are stored in state and whispered to the GM when the affected token reaches the top of initiative.',
+            ],
+          ],
+        },
+        commands: {
+          heading: 'Saved Effects Commands',
+          intro:
+            'All --saved commands are GM-only. Select a token before running --saved or --saved add.',
+          rows: [
+            [
+              '!condition-tracker --saved',
+              'View saved effects for the selected token.',
+            ],
+            [
+              '!condition-tracker --saved add',
+              'Launch the add-saved-effect wizard.',
+            ],
+            [
+              '!condition-tracker --saved edit <id>',
+              'Edit labels or visibility for an existing saved effect.',
+            ],
+            [
+              '!condition-tracker --saved remove <id>',
+              'Permanently remove a saved effect.',
+            ],
+            [
+              '!condition-tracker --saved promote <id> --visibility public|masked|gm',
+              'Copy a saved effect into the Turn Tracker (public or masked) or confirm it is GM-only tracked.',
+            ],
+            [
+              '!condition-tracker --saved snooze <id> --scope turn|rounds|combat --rounds <n>',
+              'Snooze a GM reminder for this turn, N rounds, or this combat.',
+            ],
+            [
+              '!condition-tracker --saved snooze-clear <id>',
+              'Clear an active snooze so reminders resume immediately.',
+            ],
+          ],
+        },
+        reminders: {
+          heading: 'GM Reminders',
+          body: 'When a token with gm or masked saved effects reaches the top of the Turn Tracker, the GM receives a whisper listing the hidden effects with action buttons. Duplicate reminders within the same turn are suppressed. Use the Snooze buttons to suppress reminders for a turn, a number of rounds, or for the remainder of the current combat.',
+        },
       },
       configuration: {
         heading: 'Налаштування',
@@ -18060,6 +21270,10 @@ const ConditionTrackerMod = (() => {
       trackerState.runtime = createRuntimeState();
     }
 
+    if (!isRecord(trackerState.savedEffects)) {
+      trackerState.savedEffects = {};
+    }
+
     return trackerState;
   }
 
@@ -18442,155 +21656,413 @@ const ConditionTrackerMod = (() => {
       : [];
   }
 
-  const MACRO_DEFINITIONS = [
-    { name: MACRO_NAME, body: DEFAULT_MACRO_BODY },
-    { name: MACRO_NAME_MULTI_TARGET, body: DEFAULT_MULTI_TARGET_MACRO_BODY },
-    { name: MACRO_NAME_REPORT_TOKEN, body: DEFAULT_REPORT_TOKEN_MACRO_BODY },
-  ];
+  const DEFAULT_WHISPER_TARGET = 'gm';
+
+  const CHAT_CARD_STYLE = [
+    'width:100%',
+    'border-radius:4px',
+    `box-shadow:1px 1px 1px ${COLOR_TEXT_DIM_SILVER}`,
+    'text-align:left',
+    'vertical-align:middle',
+    'margin:0px auto',
+    `border:1px solid ${COLOR_BG_SOFT_BLACK}`,
+    `color:${COLOR_TEXT_ARCANE_SILVER}`,
+    `background-image:-webkit-linear-gradient(-45deg,${COLOR_ACCENT_DARK} 0%,${COLOR_ACCENT_LIGHT} 100%)`,
+    'overflow:hidden',
+  ].join(';');
+
+  const CHAT_HEADER_STYLE = [
+    `background:${COLOR_HEADER_LIGHT}`,
+    `color:${COLOR_HEADER_DARK}`,
+    'padding:2px 5px',
+    `border-bottom:1px solid ${COLOR_BG_SOFT_BLACK}`,
+    'font-variant:small-caps',
+    'font-weight:bold',
+    'text-align:center',
+  ].join(';');
+
+  const CHAT_CONTENT_STYLE = 'padding:3px 8px';
+
+  const TABLE_HEADER_STYLE = [
+    'text-align:left',
+    'padding:2px 4px',
+    `border-bottom:1px solid ${COLOR_TEXT_ARCANE_SILVER}`,
+  ].join(';');
+
+  const CHAT_BUTTON_STYLE = [
+    `background:${COLOR_ACCENT_DARK}`,
+    `color:${COLOR_TEXT_WHITE}`,
+    'padding:2px 6px',
+    'border-radius:4px',
+    'text-decoration:none',
+  ].join(';');
+
+  const CHAT_HEADER_SCRIPT_READY = 'Script Ready';
+
+  const CHAT_HEADER_WARNING_STYLE = [
+    'background:#FEF3C7',
+    'color:#92400E',
+    'padding:2px 5px',
+    'border-bottom:1px solid #92400E',
+    'font-variant:small-caps',
+    'font-weight:bold',
+    'text-align:center',
+  ].join(';');
 
   /**
-   * Installs or updates all GM-facing macros for all current GMs.
+   * Builds inline text direction styles for the active chat locale.
    *
+   * @param {string} locale Locale code.
+   * @returns {string} Inline CSS direction and alignment.
+   */
+  function getDirectionStyle$1(locale) {
+    return isRtlLocale(locale)
+      ? 'direction:rtl;text-align:right'
+      : 'direction:ltr;text-align:left';
+  }
+
+  /**
+   * Returns the table header style adjusted for locale direction.
+   *
+   * @param {string} locale Locale code.
+   * @returns {string} Inline CSS for table headers.
+   */
+  function getTableHeaderStyle(locale) {
+    return isRtlLocale(locale)
+      ? TABLE_HEADER_STYLE.replace('text-align:left', 'text-align:right')
+      : TABLE_HEADER_STYLE;
+  }
+
+  const CHAT_HEADER_ERROR_STYLE = [
+    'background:#FEE2E2',
+    'color:#991B1B',
+    'padding:2px 5px',
+    'border-bottom:1px solid #991B1B',
+    'font-variant:small-caps',
+    'font-weight:bold',
+    'text-align:center',
+  ].join(';');
+
+  /**
+   * Marks a string as trusted HTML for controlled chat rendering.
+   *
+   * @param {string} value Trusted HTML fragment.
+   * @returns {object} Trusted HTML wrapper.
+   */
+  function rawHtml(value) {
+    return { __trustedHtml: String(value) };
+  }
+
+  /**
+   * Sends a public chat message as raw HTML.
+   * Skipped when suppressPublicChat is enabled in config.
+   *
+   * @param {string} html Trusted HTML message body.
    * @returns {void}
    */
-  function installMacro() {
-    const gmIds = getGmIds();
-    if (!gmIds.length) {
-      log(
-        `${SCRIPT_NAME} macro install skipped: no GM player id is currently available.`,
-      );
-      return;
-    }
-
-    const gmIdSet = new Set(gmIds);
-    let createdCount = 0;
-    let updatedCount = 0;
-    let removedCount = 0;
-
-    for (const macroDef of MACRO_DEFINITIONS) {
-      const macrosByOwner = groupMacrosByOwner(
-        queryObjects({ _type: 'macro', name: macroDef.name }),
-      );
-
-      for (const gmId of gmIds) {
-        const result = syncGmMacro(
-          gmId,
-          macrosByOwner.get(gmId) || [],
-          gmId,
-          macroDef,
-        );
-        createdCount += result.created;
-        updatedCount += result.updated;
-        removedCount += result.removed;
-      }
-
-      removedCount += removeOrphanedMacros(macrosByOwner, gmIdSet);
-    }
-
-    logInstallResult(createdCount, updatedCount, removedCount);
+  function announceHtml(html) {
+    if (getConfig().suppressPublicChat) return;
+    sendChat(SCRIPT_NAME, html);
   }
 
   /**
-   * Groups existing macros by their owner player id.
+   * Whispers a message to a GM or player.
    *
-   * @param {object[]} macros Roll20 macro objects.
-   * @returns {Map<string, object[]>} Macros keyed by owner player id.
-   */
-  function groupMacrosByOwner(macros) {
-    const byOwner = new Map();
-    for (const macro of macros) {
-      const ownerId = macro.get('playerid') || '';
-      if (!byOwner.has(ownerId)) {
-        byOwner.set(ownerId, []);
-      }
-      byOwner.get(ownerId).push(macro);
-    }
-    return byOwner;
-  }
-
-  /**
-   * Creates or updates one named macro for a GM, removing any duplicates.
-   *
-   * @param {string} gmId GM player id.
-   * @param {object[]} ownerMacros Existing macros owned by this GM for this definition.
-   * @param {string} visibleTo Comma-separated GM ids for visibility.
-   * @param {{name: string, body: string}} macroDef Macro name and action body.
-   * @returns {{created: number, updated: number, removed: number}} Counts.
-   */
-  function syncGmMacro(gmId, ownerMacros, visibleTo, macroDef) {
-    if (ownerMacros.length === 0) {
-      createObj('macro', {
-        playerid: gmId,
-        name: macroDef.name,
-        action: macroDef.body,
-        visibleto: visibleTo,
-        istokenaction: false,
-      });
-      return { created: 1, updated: 0, removed: 0 };
-    }
-
-    const [primaryMacro, ...duplicates] = ownerMacros;
-    primaryMacro.set({
-      action: macroDef.body,
-      visibleto: visibleTo,
-      istokenaction: false,
-    });
-
-    for (const duplicate of duplicates) {
-      duplicate.remove();
-    }
-
-    return { created: 0, updated: 1, removed: duplicates.length };
-  }
-
-  /**
-   * Removes macros owned by players who are no longer GMs.
-   *
-   * @param {Map<string, object[]>} macrosByOwner Macros keyed by owner player id.
-   * @param {Set<string>} gmIdSet Current GM player ids.
-   * @returns {number} Number of macros removed.
-   */
-  function removeOrphanedMacros(macrosByOwner, gmIdSet) {
-    let removed = 0;
-    for (const [ownerId, orphans] of macrosByOwner) {
-      if (gmIdSet.has(ownerId)) continue;
-      for (const orphan of orphans) {
-        orphan.remove();
-        removed += 1;
-      }
-    }
-    return removed;
-  }
-
-  /**
-   * Logs the result of a macro install/update pass.
-   *
-   * @param {number} createdCount Macros created.
-   * @param {number} updatedCount Macros updated.
-   * @param {number} removedCount Macros removed.
+   * @param {string} playerId Player id.
+   * @param {string} title Message title.
+   * @param {string|string[]} body Message body lines.
    * @returns {void}
    */
-  function logInstallResult(createdCount, updatedCount, removedCount) {
-    const cleanupNote =
-      removedCount > 0 ? ` Cleaned up ${removedCount} duplicate macro(s).` : '';
-    if (createdCount > 0) {
-      log(
-        `${SCRIPT_NAME}: Macros installed (created ${createdCount}).${cleanupNote}`,
-      );
-    } else {
-      log(
-        `${SCRIPT_NAME}: Macros updated (updated ${updatedCount}).${cleanupNote}`,
-      );
+  function whisper(playerId, title, body) {
+    whisperWithBox(playerId, body, (lines) => buildBox(title, lines));
+  }
+
+  /**
+   * Whispers a message to every GM in the game.
+   *
+   * @param {string} title Message title.
+   * @param {string|string[]} body Message body lines.
+   * @returns {void}
+   */
+  function whisperGms(title, body) {
+    const gmIds = getGmPlayerIds();
+    for (const gmId of gmIds) {
+      whisper(gmId, title, body);
     }
   }
 
   /**
-   * Returns all current GM player ids.
+   * Builds a styled chat box.
    *
-   * @returns {string[]} GM player ids.
+   * @param {string} title Message title.
+   * @param {string[]} lines Message body lines.
+   * @returns {string} Chat HTML.
    */
-  function getGmIds() {
-    return getGmPlayerIds();
+  function buildBox(title, lines) {
+    const safeTitle = escapeHtml(title);
+    const locale = getConfig().language;
+    const headerLabel =
+      toText(title) === CHAT_HEADER_SCRIPT_READY ||
+      toText(title) === t('ui.title.scriptReady', locale)
+        ? `😎 ${safeTitle} 😎`
+        : `ℹ️ ${safeTitle}`;
+    return buildStyledBox(lines, CHAT_HEADER_STYLE, headerLabel, locale);
+  }
+
+  /**
+   * Builds a styled warning chat box.
+   *
+   * @param {string[]} lines Message body lines.
+   * @returns {string} Chat HTML.
+   */
+  function buildWarningBox(lines, locale) {
+    return buildStyledBox(
+      lines,
+      CHAT_HEADER_WARNING_STYLE,
+      `⚠️ ${escapeHtml(t('ui.title.warning', locale))}`,
+      locale,
+    );
+  }
+
+  /**
+   * Builds a styled error chat box.
+   *
+   * @param {string[]} lines Message body lines.
+   * @returns {string} Chat HTML.
+   */
+  function buildErrorBox(lines, locale) {
+    return buildStyledBox(
+      lines,
+      CHAT_HEADER_ERROR_STYLE,
+      `❌ ${escapeHtml(t('ui.title.error', locale))}`,
+      locale,
+    );
+  }
+
+  /**
+   * Whispers a warning message to a GM or player.
+   *
+   * @param {string} playerId Player id.
+   * @param {string|string[]} body Message body lines.
+   * @returns {void}
+   */
+  function whisperWarning(playerId, body) {
+    whisperWithBox(playerId, body, (lines, locale) =>
+      buildWarningBox(lines, locale),
+    );
+  }
+
+  /**
+   * Whispers an error message to a GM or player.
+   *
+   * @param {string} playerId Player id.
+   * @param {string|string[]} body Message body lines.
+   * @returns {void}
+   */
+  function whisperError(playerId, body) {
+    whisperWithBox(playerId, body, (lines, locale) =>
+      buildErrorBox(lines, locale),
+    );
+  }
+
+  /**
+   * Builds one of the styled chat card variants.
+   *
+   * @param {string[]} lines Message body lines.
+   * @param {string} headerStyle Header style string.
+   * @param {string} headerText Header label.
+   * @param {string} locale Locale for text direction.
+   * @returns {string} Chat HTML.
+   */
+  function buildStyledBox(lines, headerStyle, headerText, locale) {
+    const body = buildBody(lines);
+    const directionStyle = getDirectionStyle$1(locale);
+    const logo = `<div style="text-align:center;padding:6px 0 4px;"><img src="${LOGO_URL_256}" style="height:48px;width:auto;" alt="${SCRIPT_NAME} logo" title="${SCRIPT_NAME}" /></div>`;
+    const header = `<div style="${headerStyle}">${headerText}</div>`;
+    const content = `<div style="${CHAT_CONTENT_STYLE};${directionStyle}">${body}</div>`;
+    return `<div style="${CHAT_CARD_STYLE};${directionStyle}">${logo}${header}${content}</div>`;
+  }
+
+  /**
+   * Normalizes whisper input, builds a box, and sends it.
+   *
+   * @param {string} playerId Player id.
+   * @param {string|string[]} body Message body lines.
+   * @param {(lines: string[], locale: string) => string} boxBuilder Chat box builder.
+   * @returns {void}
+   */
+  function whisperWithBox(playerId, body, boxBuilder) {
+    const lines = normalizeBodyLines(body);
+    const locale = getConfig().language;
+    const html = boxBuilder(lines, locale);
+    sendWhisperHtml(playerId, html);
+  }
+
+  /**
+   * Sends prebuilt whisper HTML to a player or GM target.
+   *
+   * @param {string} playerId Player id.
+   * @param {string} html Prebuilt chat card HTML.
+   * @returns {void}
+   */
+  function sendWhisperHtml(playerId, html) {
+    const target = getWhisperTarget(playerId);
+    sendChat(SCRIPT_NAME, `/w "${target}" ${html}`);
+  }
+
+  /**
+   * Normalizes whisper body input to a string array.
+   *
+   * @param {string|string[]} body Message body lines.
+   * @returns {string[]} Body lines array.
+   */
+  function normalizeBodyLines(body) {
+    return Array.isArray(body) ? body : [body];
+  }
+
+  /**
+   * Builds escaped chat body HTML.
+   *
+   * @param {string[]} lines Body lines.
+   * @returns {string} Body HTML.
+   */
+  function buildBody(lines) {
+    const parts = [];
+    for (const line of lines) {
+      const content = formatChatLine(line);
+      parts.push(`<div>${content}</div>`);
+    }
+
+    return parts.join('');
+  }
+
+  /**
+   * Formats one line for chat body rendering.
+   *
+   * @param {*} line Chat line value.
+   * @returns {string} Escaped or trusted HTML content.
+   */
+  function formatChatLine(line) {
+    if (isTrustedHtmlLine(line)) {
+      return getTrustedHtml(line);
+    }
+
+    return escapeHtml(line);
+  }
+
+  /**
+   * Returns true for internally generated chat HTML fragments.
+   *
+   * @param {*} line Chat line value.
+   * @returns {boolean} True when the line is trusted HTML.
+   */
+  function isTrustedHtmlLine(line) {
+    return (
+      Boolean(line) && typeof line === 'object' && hasValue(line.__trustedHtml)
+    );
+  }
+
+  /**
+   * Returns the HTML payload from a trusted chat line.
+   *
+   * @param {*} line Chat line value.
+   * @returns {string} Trusted HTML.
+   */
+  function getTrustedHtml(line) {
+    if (line === null || line === undefined) return '';
+    if (typeof line === 'object') {
+      return hasValue(line.__trustedHtml) ? String(line.__trustedHtml) : '';
+    }
+    return String(line);
+  }
+
+  /**
+   * Returns true when a value exists.
+   *
+   * @param {*} value The value to inspect.
+   * @returns {boolean} True when the value is neither undefined nor null.
+   */
+  function hasValue(value) {
+    return value !== undefined && value !== null;
+  }
+
+  /**
+   * Builds a Roll20 API command button.
+   *
+   * @param {string} label Button label.
+   * @param {string} command Command text.
+   * @returns {string} Button HTML.
+   */
+  function buildButton(label, command) {
+    return rawHtml(
+      `<a style="${CHAT_BUTTON_STYLE}" href="${escapeHtml(command)}">${escapeHtml(label)}</a>`,
+    );
+  }
+
+  /**
+   * Builds a remove button for an active condition.
+   *
+   * @param {object} condition Active condition record.
+   * @returns {string} Button HTML.
+   */
+  function buildRemoveButton(condition) {
+    return buildButton(
+      `Remove: ${condition.displayText}`,
+      `${COMMAND} --remove ${condition.id}`,
+    );
+  }
+
+  /**
+   * Creates a compact HTML table for chat output.
+   *
+   * @param {string[]} headers Column labels.
+   * @param {string[][]} rows Table rows with trusted cell HTML.
+   * @returns {object} Trusted HTML line.
+   */
+  function htmlTable(headers, rows) {
+    const locale = getConfig().language;
+    const tableHeaderStyle = getTableHeaderStyle(locale);
+    const directionStyle = getDirectionStyle$1(locale);
+    const headerCells = headers
+      .map(
+        (header) =>
+          `<th style="${tableHeaderStyle}"><strong>${escapeHtml(header)}</strong></th>`,
+      )
+      .join('');
+
+    const bodyRows = rows
+      .map(
+        (cells) =>
+          `<tr>${cells
+            .map(
+              (cell) =>
+                `<td style="padding:2px 4px;vertical-align:top;${directionStyle}">${getTrustedHtml(cell)}</td>`,
+            )
+            .join('')}</tr>`,
+      )
+      .join('');
+
+    return rawHtml(
+      `<table style="width:100%;border-collapse:collapse;${directionStyle}"><thead><tr>${headerCells}</tr></thead><tbody>${bodyRows}</tbody></table>`,
+    );
+  }
+
+  /**
+   * Resolves a player whisper target.
+   *
+   * @param {string} playerId Player id.
+   * @returns {string} Display name suitable for /w.
+   */
+  function getWhisperTarget(playerId) {
+    const player = getObj('player', playerId);
+    const displayName = player
+      ? toText(player.get('_displayname')).replaceAll('"', '')
+      : '';
+    if (displayName) {
+      return displayName;
+    }
+
+    return DEFAULT_WHISPER_TARGET;
   }
 
   /**
@@ -18972,902 +22444,6 @@ const ConditionTrackerMod = (() => {
    */
   function effectSpan(label) {
     return `<span style="color:#FF4D6D;font-style:italic">${escapeHtml(label)}</span>`;
-  }
-
-  const STYLE = {
-    outer:
-      "font-family:'Georgia',serif;background-color:#0A0A12;color:#E6DFFF;padding:24px;border-radius:8px;",
-    header:
-      'background:linear-gradient(135deg,#5B21B6 0%,#FF4D6D 100%);padding:18px 24px;border-radius:6px;margin-bottom:24px;text-align:center;',
-    h1: "color:#FFFFFF;margin:0;font-size:1.6em;font-family:'Georgia',serif;letter-spacing:1px;",
-    subtitle:
-      'color:#E9D5FF;margin:6px 0 0;font-size:0.85em;letter-spacing:0.5px;',
-    h2: "color:#FF4D6D;font-family:'Georgia',serif;border-bottom:1px solid #5B21B6;padding-bottom:6px;margin-top:24px;",
-    h2first:
-      "color:#FF4D6D;font-family:'Georgia',serif;border-bottom:1px solid #5B21B6;padding-bottom:6px;margin-top:0;",
-    body: 'color:#B8AFCF;line-height:1.6;margin-top:0;',
-    intro: 'color:#B8AFCF;font-size:0.9em;margin-top:0;',
-    table:
-      'width:100%;border-collapse:collapse;font-size:0.9em;margin-bottom:8px;',
-    tableSmall: 'width:100%;border-collapse:collapse;font-size:0.85em;',
-    thRow: 'background-color:#1E40AF;',
-    th: 'padding:7px 10px;text-align:left;color:#E9D5FF;font-weight:bold;',
-    spacer: 'padding:3px;',
-    footer:
-      'margin-top:28px;padding-top:14px;border-top:1px solid #5B21B6;text-align:center;color:#B8AFCF;font-size:0.8em;',
-    footerP: 'margin:0;line-height:1.8;',
-    code: 'background-color:#1a1a2e;padding:1px 4px;border-radius:2px;',
-  };
-
-  /**
-   * Returns the alternating row background color.
-   *
-   * @param {boolean} even Whether the row is even.
-   * @returns {string} Hex color for the row background.
-   */
-  function row(even) {
-    return even ? '#12122a' : '#0e0e22';
-  }
-
-  /**
-   * Builds inline text direction styles for localized handouts.
-   *
-   * @param {string} locale Locale code.
-   * @returns {string} Inline CSS direction and alignment.
-   */
-  function getDirectionStyle$1(locale) {
-    return isRtlLocale(locale)
-      ? 'direction:rtl;text-align:right;'
-      : 'direction:ltr;text-align:left;';
-  }
-
-  /**
-   * Returns the localized table header style.
-   *
-   * @param {string} locale Locale code.
-   * @returns {string} Inline CSS for table headers.
-   */
-  function getThStyle(locale) {
-    return isRtlLocale(locale)
-      ? STYLE.th.replace('text-align:left', 'text-align:right')
-      : STYLE.th;
-  }
-
-  /**
-   * Builds a two-column or three-column handout table.
-   *
-   * @param {string[]} headers Table header labels.
-   * @param {string[][]} rows Table rows.
-   * @param {string[]} [widths] Optional column widths.
-   * @param {string} locale Locale code.
-   * @returns {string} Table HTML.
-   */
-  function buildTable(headers, rows, widths, locale) {
-    const thCells = headers
-      .map((h, i) => {
-        const w = widths?.[i] ? `width:${widths[i]};` : '';
-        return `<th style="${getThStyle(locale)}${w}">${h}</th>`;
-      })
-      .join('');
-    const bodyRows = rows
-      .map((cells, ri) => {
-        const bg = row(ri % 2 === 0);
-        const tds = cells
-          .map((cell, ci) => {
-            const isFirst = ci === 0;
-            const style = isFirst
-              ? `padding:6px 10px;font-family:monospace;color:#E9D5FF;background-color:${bg};`
-              : `padding:6px 10px;color:#B8AFCF;background-color:${bg};`;
-            return `<td style="${style}">${cell}</td>`;
-          })
-          .join('');
-        return `<tr>${tds}</tr>`;
-      })
-      .join('');
-    return `<table style="${STYLE.tableSmall}"><thead><tr style="${STYLE.thRow}">${thCells}</tr></thead><tbody>${bodyRows}</tbody></table>`;
-  }
-
-  /**
-   * Builds the standard conditions table for the active game system.
-   *
-   * @param {object} profile Active system profile.
-   * @param {string} colLabel Header label for condition columns.
-   * @param {string} locale Locale code.
-   * @returns {string} Condition table HTML.
-   */
-  function buildConditionTable(profile, colLabel, locale) {
-    const conditions = profile.STANDARD_CONDITIONS;
-    if (conditions.length === 0) {
-      const bg = row(true);
-      const msg = escapeHtml(t('handout.standardConditions.none', locale));
-      return `<table style="${STYLE.tableSmall}"><tbody><tr><td style="padding:7px 10px;color:#B8AFCF;background-color:${bg};" colspan="2">${msg}</td></tr></tbody></table>`;
-    }
-    const half = Math.ceil(conditions.length / 2);
-    const left = conditions.slice(0, half);
-    const right = conditions.slice(half);
-    const maxRows = Math.max(left.length, right.length);
-    const rows = [];
-    for (let i = 0; i < maxRows; i++) {
-      const lc = left[i];
-      const rc = right[i];
-      const lData = lc ? profile.CONDITION_DATA[lc] : null;
-      const rData = rc ? profile.CONDITION_DATA[rc] : null;
-      const l = lc
-        ? `${lData ? lData.emoji : '✨'} ${getConditionDisplayName(lc, profile, locale)}`
-        : '';
-      const r = rc
-        ? `${rData ? rData.emoji : '✨'} ${getConditionDisplayName(rc, profile, locale)}`
-        : '';
-      const bg = row(i % 2 === 0);
-      rows.push(
-        `<tr><td style="padding:7px 10px;color:#E6DFFF;background-color:${bg};">${escapeHtml(l)}</td>` +
-          `<td style="padding:7px 10px;color:#E6DFFF;background-color:${bg};">${escapeHtml(r)}</td></tr>`,
-      );
-    }
-
-    const thStyle = `${getThStyle(locale)}width:50%;`;
-    const safeLabel = escapeHtml(colLabel);
-    return `<table style="${STYLE.tableSmall}"><thead><tr style="${STYLE.thRow}"><th style="${thStyle}">${safeLabel}</th><th style="${thStyle}">${safeLabel}</th></tr></thead><tbody>${rows.join('')}</tbody></table>`;
-  }
-
-  /**
-   * Builds the default status marker mapping table for the active game system.
-   *
-   * @param {object} profile Active system profile.
-   * @param {string} colCondition Condition column label.
-   * @param {string} colMarker Marker column label.
-   * @param {string} locale Locale code.
-   * @returns {string} Marker table HTML.
-   */
-  function buildMarkersTable(profile, colCondition, colMarker, locale) {
-    const entries = Object.entries(profile.DEFAULT_MARKERS);
-    if (entries.length === 0) {
-      const bg = row(true);
-      const msg = escapeHtml(t('handout.defaultMarkers.none', locale));
-      return `<table style="${STYLE.tableSmall}"><tbody><tr><td style="padding:7px 10px;color:#B8AFCF;background-color:${bg};" colspan="2">${msg}</td></tr></tbody></table>`;
-    }
-    const rows = entries
-      .map(([condition, marker], i) => {
-        const data = profile.CONDITION_DATA[condition];
-        const emoji = data ? data.emoji : '';
-        const bg = row(i % 2 === 0);
-        const label = getConditionDisplayName(condition, profile, locale);
-        return (
-          `<tr>` +
-          `<td style="padding:6px 10px;color:#E6DFFF;background-color:${bg};">${escapeHtml(emoji)} ${escapeHtml(label)}</td>` +
-          `<td style="padding:6px 10px;font-family:monospace;color:#B8AFCF;background-color:${bg};">${escapeHtml(marker)}</td>` +
-          `</tr>`
-        );
-      })
-      .join('');
-    return (
-      `<table style="${STYLE.tableSmall}"><thead><tr style="${STYLE.thRow}">` +
-      `<th style="${getThStyle(locale)}width:50%;">${escapeHtml(colCondition)}</th>` +
-      `<th style="${getThStyle(locale)}">${escapeHtml(colMarker)}</th>` +
-      `</tr></thead><tbody>${rows}</tbody></table>`
-    );
-  }
-
-  /**
-   * Builds the quick-start command table.
-   *
-   * @param {string} colCommand Command column label.
-   * @param {string} colDesc Description column label.
-   * @param {string[][]} rows Quick-start rows.
-   * @returns {string} Quick-start table HTML.
-   */
-  function buildQuickStartTable(colCommand, colDesc, rows) {
-    const bodyRows = rows
-      .map(([cmd, desc], i) => {
-        const bg = row(i % 2 === 0);
-        return (
-          `<tr>` +
-          `<td style="padding:7px 10px;background-color:${bg};border-radius:4px;font-family:monospace;color:#E9D5FF;white-space:nowrap;width:45%;">${cmd}</td>` +
-          `<td style="padding:7px 10px;color:#B8AFCF;background-color:${bg};">${desc}</td>` +
-          `<tr><td colspan="2" style="${STYLE.spacer}"></td></tr>`
-        );
-      })
-      .join('');
-    return `<table style="${STYLE.table}"><tbody>${bodyRows}</tbody></table>`;
-  }
-
-  /**
-   * Builds a Twemoji asset URL for a locale flag.
-   *
-   * @param {string} flag Unicode regional-indicator flag.
-   * @returns {string} SVG asset URL or an empty string.
-   */
-  function flagAssetUrl$1(flag) {
-    const codepoints = Array.from(String(flag || '').trim())
-      .map((character) => character.codePointAt(0).toString(16))
-      .join('-');
-    return codepoints
-      ? `https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/${codepoints}.svg`
-      : '';
-  }
-
-  /**
-   * Builds an accessible flag image label for a locale.
-   *
-   * @param {object} locale Locale metadata.
-   * @returns {string} Trusted locale flag HTML.
-   */
-  function buildLocaleFlag(locale) {
-    const label = escapeHtml(locale.flagLabel || locale.name);
-    const url = flagAssetUrl$1(locale.flag);
-    if (!url) {
-      return '';
-    }
-    return `<img src="${escapeHtml(url)}" alt="${label}" title="${label}" style="width:1.1em;height:1.1em;vertical-align:-0.15em;margin-right:4px;" />`;
-  }
-
-  /**
-   * Builds a display label for a locale in the current handout language.
-   *
-   * @param {object} locale Locale metadata.
-   * @param {string} displayLocale Locale to use for the language name.
-   * @returns {string} Locale label HTML.
-   */
-  function buildLocaleLabel(locale, displayLocale) {
-    return `${buildLocaleFlag(locale)} ${escapeHtml(locale.code)} — ${escapeHtml(getLocalizedLanguageName(locale.code, displayLocale))}`;
-  }
-
-  /**
-   * Builds the available translations table.
-   *
-   * @param {string} locale Locale code for table direction.
-   * @returns {string} Locale table HTML.
-   */
-  function buildLocalesTable(locale) {
-    const rows = LOCALE_DEFINITIONS.map((definition) => [
-      `<span style="${STYLE.code}">${escapeHtml(definition.code)}</span>`,
-      buildLocaleLabel(definition, locale),
-    ]);
-    return buildTable(
-      [
-        t('handout.availableLocales.colLocale', locale),
-        t('handout.availableLocales.colLanguage', locale),
-      ],
-      rows,
-      ['24%', '76%'],
-      locale,
-    );
-  }
-
-  /**
-   * Builds the command reference section.
-   *
-   * @param {(key: string) => string} hs Handout string lookup.
-   * @param {(key: string) => *} hr Handout raw value lookup.
-   * @param {string} locale Locale code.
-   * @returns {string} Section HTML.
-   */
-  function buildCommandsReferenceSection(hs, hr, locale) {
-    const rows = hr('commandsRef.rows');
-    return `<h2 style="${STYLE.h2}">${hs('commandsRef.heading')}</h2>
-    ${buildTable([hs('commandsRef.colFlag'), hs('commandsRef.colDesc')], rows, ['42%'], locale)}`;
-  }
-
-  /**
-   * Builds the custom effect type section.
-   *
-   * @param {(key: string) => string} hs Handout string lookup.
-   * @param {(key: string) => *} hr Handout raw value lookup.
-   * @param {string} locale Locale code.
-   * @returns {string} Section HTML.
-   */
-  function buildCustomEffectsSection(hs, hr, locale) {
-    const rows = hr('customEffects.rows');
-    return `<h2 style="${STYLE.h2}">${hs('customEffects.heading')}</h2>
-    ${buildTable([hs('customEffects.colType'), hs('customEffects.colNotes')], rows, ['30%'], locale)}`;
-  }
-
-  /**
-   * Builds the duration option section.
-   *
-   * @param {(key: string) => string} hs Handout string lookup.
-   * @param {(key: string) => *} hr Handout raw value lookup.
-   * @param {string} locale Locale code.
-   * @returns {string} Section HTML.
-   */
-  function buildDurationOptionsSection(hs, hr, locale) {
-    const rows = hr('durationOptions.rows');
-    return `<h2 style="${STYLE.h2}">${hs('durationOptions.heading')}</h2>
-    <p style="${STYLE.intro}">${hs('durationOptions.intro')}</p>
-    ${buildTable([hs('durationOptions.colOption'), hs('durationOptions.colBehaviour')], rows, ['40%'], locale)}`;
-  }
-
-  /**
-   * Builds the configuration section.
-   *
-   * @param {(key: string) => string} hs Handout string lookup.
-   * @param {(key: string) => *} hr Handout raw value lookup.
-   * @param {string} locale Locale code.
-   * @returns {string} Section HTML.
-   */
-  function buildConfigurationSection(hs, hr, locale) {
-    const rows = hr('configuration.rows');
-    const threeCol = rows
-      .map(([opt, vals, desc], i) => {
-        const bg = row(i % 2 === 0);
-        return (
-          `<tr>` +
-          `<td style="padding:6px 10px;font-family:monospace;color:#E9D5FF;background-color:${bg};">${opt}</td>` +
-          `<td style="padding:6px 10px;color:#B8AFCF;background-color:${bg};">${vals}</td>` +
-          `<td style="padding:6px 10px;color:#B8AFCF;background-color:${bg};">${desc}</td>` +
-          `</tr>`
-        );
-      })
-      .join('');
-    return (
-      `<h2 style="${STYLE.h2}">${hs('configuration.heading')}</h2>
-    <p style="${STYLE.intro}">${hs('configuration.intro')}</p>
-    <table style="${STYLE.tableSmall}"><thead><tr style="${STYLE.thRow}">` +
-      `<th style="${getThStyle(locale)}width:30%;">${hs('configuration.colOption')}</th>` +
-      `<th style="${getThStyle(locale)}width:25%;">${hs('configuration.colValues')}</th>` +
-      `<th style="${getThStyle(locale)}">${hs('configuration.colDesc')}</th>` +
-      `</tr></thead><tbody>${threeCol}</tbody></table>`
-    );
-  }
-
-  /**
-   * Applies all handout fields that Condition Tracker owns.
-   *
-   * @param {object} handout Roll20 handout object.
-   * @param {string} html Handout notes HTML.
-   * @returns {void}
-   */
-  function updateHandoutObject(handout, html) {
-    handout.set({
-      name: HANDOUT_NAME,
-      inplayerjournals: '',
-      controlledby: '',
-    });
-    handout.set('notes', html);
-  }
-
-  /**
-   * Builds the supported game systems table.
-   *
-   * @param {string} locale Locale code.
-   * @returns {string} Game systems table HTML.
-   */
-  function buildGameSystemsTable(locale) {
-    const rows = GAME_SYSTEM_DEFINITIONS.map((def, i) => {
-      const bg = row(i % 2 === 0);
-      return (
-        `<tr>` +
-        `<td style="padding:6px 10px;font-family:monospace;color:#E9D5FF;background-color:${bg};">${escapeHtml(def.id)}</td>` +
-        `<td style="padding:6px 10px;color:#B8AFCF;background-color:${bg};">${escapeHtml(def.name)}</td>` +
-        `</tr>`
-      );
-    }).join('');
-    return (
-      `<table style="${STYLE.tableSmall}"><thead><tr style="${STYLE.thRow}">` +
-      `<th style="${getThStyle(locale)}width:35%;">${escapeHtml(t('handout.gameSystems.colId', locale))}</th>` +
-      `<th style="${getThStyle(locale)}">${escapeHtml(t('handout.gameSystems.colName', locale))}</th>` +
-      `</tr></thead><tbody>${rows}</tbody></table>`
-    );
-  }
-
-  /**
-   * Generates the full help handout HTML for the given locale.
-   *
-   * @param {string} [locale] Output locale.
-   * @returns {string} HTML string.
-   */
-  function buildHandoutHtml(locale) {
-    const lang = getLocale(locale);
-    const version = SCRIPT_VERSION;
-    const directionStyle = getDirectionStyle$1(lang);
-    const config = getConfig();
-    const profile = getSystemProfile(config.gameSystem);
-
-    /**
-     * Looks up a handout string for the active locale, with optional interpolation vars.
-     *
-     * @param {string} key Handout translation key.
-     * @param {object} [vars] Interpolation variables.
-     * @returns {string} Translated text.
-     */
-    const hs = (key, vars) => t(`handout.${key}`, lang, vars);
-    /**
-     * Looks up raw handout data for the active locale.
-     *
-     * @param {string} key Handout translation key.
-     * @returns {*} Raw translated value.
-     */
-    const hr = (key) => tRaw(`handout.${key}`, lang);
-
-    const overview = `
-    <h2 style="${STYLE.h2first}">${hs('overview.heading')}</h2>
-    <p style="${STYLE.body}">${hs('overview.body')}</p>`;
-
-    const quickStart = `
-    <h2 style="${STYLE.h2}">${hs('quickStart.heading')}</h2>
-    ${buildQuickStartTable(hs('quickStart.colCommand'), hs('quickStart.colDesc'), hr('quickStart.rows'))}`;
-
-    const commandsRef = buildCommandsReferenceSection(hs, hr, lang);
-
-    const standardConds = `
-    <h2 style="${STYLE.h2}">${hs('standardConditions.heading', { system: profile.SYSTEM_NAME })}</h2>
-    ${buildConditionTable(profile, hs('standardConditions.colCondition'), lang)}`;
-
-    const customEffects = buildCustomEffectsSection(hs, hr, lang);
-
-    const durationOpts = buildDurationOptionsSection(hs, hr, lang);
-
-    const configSection = buildConfigurationSection(hs, hr, lang);
-
-    const gameSystems = `
-    <h2 style="${STYLE.h2}">${hs('gameSystems.heading')}</h2>
-    <p style="${STYLE.intro}">${hs('gameSystems.intro')}</p>
-    ${buildGameSystemsTable(lang)}`;
-
-    const availableLocales = `
-    <h2 style="${STYLE.h2}">${hs('availableLocales.heading')}</h2>
-    <p style="${STYLE.intro}">${hs('availableLocales.intro')}</p>
-    ${buildLocalesTable(lang)}`;
-
-    const markers = `
-    <h2 style="${STYLE.h2}">${hs('defaultMarkers.heading')}</h2>
-    ${buildMarkersTable(profile, hs('defaultMarkers.colCondition'), hs('defaultMarkers.colMarker'), lang)}`;
-
-    const footer = `
-    <div style="${STYLE.footer}">
-      <p style="${STYLE.footerP}">${SCRIPT_NAME} ${version} &nbsp;•&nbsp; ${hs('footerNote')}</p>
-    </div>`;
-
-    return `<div style="${STYLE.outer}${directionStyle}">
-    <div style="${STYLE.header}">
-      <img src="${LOGO_URL_512}" style="max-width:220px;height:auto;margin-bottom:10px;display:block;margin-left:auto;margin-right:auto;" alt="${SCRIPT_NAME} logo" title="${SCRIPT_NAME}" />
-      <h1 style="${STYLE.h1}">${SCRIPT_NAME}</h1>
-      <p style="${STYLE.subtitle}">${hs('versionLabel')} ${version} &nbsp;•&nbsp; ${hs('subtitle')}</p>
-    </div>
-    ${overview}${quickStart}${commandsRef}${standardConds}${customEffects}${durationOpts}${configSection}${gameSystems}${availableLocales}${markers}${footer}
-  </div>`;
-  }
-
-  /**
-   * Creates the help handout on first run, or updates its notes on every subsequent startup.
-   * Duplicate handouts with the same name are removed.
-   *
-   * @param {string} [locale] Output locale.
-   * @returns {void}
-   */
-  function installHandout(locale) {
-    const html = buildHandoutHtml(locale);
-    const existing = queryObjects({ _type: 'handout', name: HANDOUT_NAME });
-
-    if (existing.length === 0) {
-      const handout = createObj('handout', {
-        name: HANDOUT_NAME,
-      });
-      updateHandoutObject(handout, html);
-      log(`${SCRIPT_NAME}: Help handout created.`);
-      return;
-    }
-
-    const [primary, ...duplicates] = existing;
-    updateHandoutObject(primary, html);
-    for (const dup of duplicates) {
-      dup.remove();
-    }
-
-    const cleanupNote =
-      duplicates.length > 0
-        ? ` Removed ${duplicates.length} duplicate(s).`
-        : '';
-    log(`${SCRIPT_NAME}: Help handout updated.${cleanupNote}`);
-  }
-
-  const DEFAULT_WHISPER_TARGET = 'gm';
-
-  const CHAT_CARD_STYLE = [
-    'width:100%',
-    'border-radius:4px',
-    `box-shadow:1px 1px 1px ${COLOR_TEXT_DIM_SILVER}`,
-    'text-align:left',
-    'vertical-align:middle',
-    'margin:0px auto',
-    `border:1px solid ${COLOR_BG_SOFT_BLACK}`,
-    `color:${COLOR_TEXT_ARCANE_SILVER}`,
-    `background-image:-webkit-linear-gradient(-45deg,${COLOR_ACCENT_DARK} 0%,${COLOR_ACCENT_LIGHT} 100%)`,
-    'overflow:hidden',
-  ].join(';');
-
-  const CHAT_HEADER_STYLE = [
-    `background:${COLOR_HEADER_LIGHT}`,
-    `color:${COLOR_HEADER_DARK}`,
-    'padding:2px 5px',
-    `border-bottom:1px solid ${COLOR_BG_SOFT_BLACK}`,
-    'font-variant:small-caps',
-    'font-weight:bold',
-    'text-align:center',
-  ].join(';');
-
-  const CHAT_CONTENT_STYLE = 'padding:3px 8px';
-
-  const TABLE_HEADER_STYLE = [
-    'text-align:left',
-    'padding:2px 4px',
-    `border-bottom:1px solid ${COLOR_TEXT_ARCANE_SILVER}`,
-  ].join(';');
-
-  const CHAT_BUTTON_STYLE = [
-    `background:${COLOR_ACCENT_DARK}`,
-    `color:${COLOR_TEXT_WHITE}`,
-    'padding:2px 6px',
-    'border-radius:4px',
-    'text-decoration:none',
-  ].join(';');
-
-  const CHAT_HEADER_SCRIPT_READY = 'Script Ready';
-
-  const CHAT_HEADER_WARNING_STYLE = [
-    'background:#FEF3C7',
-    'color:#92400E',
-    'padding:2px 5px',
-    'border-bottom:1px solid #92400E',
-    'font-variant:small-caps',
-    'font-weight:bold',
-    'text-align:center',
-  ].join(';');
-
-  /**
-   * Builds inline text direction styles for the active chat locale.
-   *
-   * @param {string} locale Locale code.
-   * @returns {string} Inline CSS direction and alignment.
-   */
-  function getDirectionStyle(locale) {
-    return isRtlLocale(locale)
-      ? 'direction:rtl;text-align:right'
-      : 'direction:ltr;text-align:left';
-  }
-
-  /**
-   * Returns the table header style adjusted for locale direction.
-   *
-   * @param {string} locale Locale code.
-   * @returns {string} Inline CSS for table headers.
-   */
-  function getTableHeaderStyle(locale) {
-    return isRtlLocale(locale)
-      ? TABLE_HEADER_STYLE.replace('text-align:left', 'text-align:right')
-      : TABLE_HEADER_STYLE;
-  }
-
-  const CHAT_HEADER_ERROR_STYLE = [
-    'background:#FEE2E2',
-    'color:#991B1B',
-    'padding:2px 5px',
-    'border-bottom:1px solid #991B1B',
-    'font-variant:small-caps',
-    'font-weight:bold',
-    'text-align:center',
-  ].join(';');
-
-  /**
-   * Marks a string as trusted HTML for controlled chat rendering.
-   *
-   * @param {string} value Trusted HTML fragment.
-   * @returns {object} Trusted HTML wrapper.
-   */
-  function rawHtml(value) {
-    return { __trustedHtml: String(value) };
-  }
-
-  /**
-   * Sends a public chat message as raw HTML.
-   * Skipped when suppressPublicChat is enabled in config.
-   *
-   * @param {string} html Trusted HTML message body.
-   * @returns {void}
-   */
-  function announceHtml(html) {
-    if (getConfig().suppressPublicChat) return;
-    sendChat(SCRIPT_NAME, html);
-  }
-
-  /**
-   * Whispers a message to a GM or player.
-   *
-   * @param {string} playerId Player id.
-   * @param {string} title Message title.
-   * @param {string|string[]} body Message body lines.
-   * @returns {void}
-   */
-  function whisper(playerId, title, body) {
-    whisperWithBox(playerId, body, (lines) => buildBox(title, lines));
-  }
-
-  /**
-   * Whispers a message to every GM in the game.
-   *
-   * @param {string} title Message title.
-   * @param {string|string[]} body Message body lines.
-   * @returns {void}
-   */
-  function whisperGms(title, body) {
-    const gmIds = getGmPlayerIds();
-    for (const gmId of gmIds) {
-      whisper(gmId, title, body);
-    }
-  }
-
-  /**
-   * Builds a styled chat box.
-   *
-   * @param {string} title Message title.
-   * @param {string[]} lines Message body lines.
-   * @returns {string} Chat HTML.
-   */
-  function buildBox(title, lines) {
-    const safeTitle = escapeHtml(title);
-    const locale = getConfig().language;
-    const headerLabel =
-      toText(title) === CHAT_HEADER_SCRIPT_READY ||
-      toText(title) === t('ui.title.scriptReady', locale)
-        ? `😎 ${safeTitle} 😎`
-        : `ℹ️ ${safeTitle}`;
-    return buildStyledBox(lines, CHAT_HEADER_STYLE, headerLabel, locale);
-  }
-
-  /**
-   * Builds a styled warning chat box.
-   *
-   * @param {string[]} lines Message body lines.
-   * @returns {string} Chat HTML.
-   */
-  function buildWarningBox(lines, locale) {
-    return buildStyledBox(
-      lines,
-      CHAT_HEADER_WARNING_STYLE,
-      `⚠️ ${escapeHtml(t('ui.title.warning', locale))}`,
-      locale,
-    );
-  }
-
-  /**
-   * Builds a styled error chat box.
-   *
-   * @param {string[]} lines Message body lines.
-   * @returns {string} Chat HTML.
-   */
-  function buildErrorBox(lines, locale) {
-    return buildStyledBox(
-      lines,
-      CHAT_HEADER_ERROR_STYLE,
-      `❌ ${escapeHtml(t('ui.title.error', locale))}`,
-      locale,
-    );
-  }
-
-  /**
-   * Whispers a warning message to a GM or player.
-   *
-   * @param {string} playerId Player id.
-   * @param {string|string[]} body Message body lines.
-   * @returns {void}
-   */
-  function whisperWarning(playerId, body) {
-    whisperWithBox(playerId, body, (lines, locale) =>
-      buildWarningBox(lines, locale),
-    );
-  }
-
-  /**
-   * Whispers an error message to a GM or player.
-   *
-   * @param {string} playerId Player id.
-   * @param {string|string[]} body Message body lines.
-   * @returns {void}
-   */
-  function whisperError(playerId, body) {
-    whisperWithBox(playerId, body, (lines, locale) =>
-      buildErrorBox(lines, locale),
-    );
-  }
-
-  /**
-   * Builds one of the styled chat card variants.
-   *
-   * @param {string[]} lines Message body lines.
-   * @param {string} headerStyle Header style string.
-   * @param {string} headerText Header label.
-   * @param {string} locale Locale for text direction.
-   * @returns {string} Chat HTML.
-   */
-  function buildStyledBox(lines, headerStyle, headerText, locale) {
-    const body = buildBody(lines);
-    const directionStyle = getDirectionStyle(locale);
-    const logo = `<div style="text-align:center;padding:6px 0 4px;"><img src="${LOGO_URL_256}" style="height:48px;width:auto;" alt="${SCRIPT_NAME} logo" title="${SCRIPT_NAME}" /></div>`;
-    const header = `<div style="${headerStyle}">${headerText}</div>`;
-    const content = `<div style="${CHAT_CONTENT_STYLE};${directionStyle}">${body}</div>`;
-    return `<div style="${CHAT_CARD_STYLE};${directionStyle}">${logo}${header}${content}</div>`;
-  }
-
-  /**
-   * Normalizes whisper input, builds a box, and sends it.
-   *
-   * @param {string} playerId Player id.
-   * @param {string|string[]} body Message body lines.
-   * @param {(lines: string[], locale: string) => string} boxBuilder Chat box builder.
-   * @returns {void}
-   */
-  function whisperWithBox(playerId, body, boxBuilder) {
-    const lines = normalizeBodyLines(body);
-    const locale = getConfig().language;
-    const html = boxBuilder(lines, locale);
-    sendWhisperHtml(playerId, html);
-  }
-
-  /**
-   * Sends prebuilt whisper HTML to a player or GM target.
-   *
-   * @param {string} playerId Player id.
-   * @param {string} html Prebuilt chat card HTML.
-   * @returns {void}
-   */
-  function sendWhisperHtml(playerId, html) {
-    const target = getWhisperTarget(playerId);
-    sendChat(SCRIPT_NAME, `/w "${target}" ${html}`);
-  }
-
-  /**
-   * Normalizes whisper body input to a string array.
-   *
-   * @param {string|string[]} body Message body lines.
-   * @returns {string[]} Body lines array.
-   */
-  function normalizeBodyLines(body) {
-    return Array.isArray(body) ? body : [body];
-  }
-
-  /**
-   * Builds escaped chat body HTML.
-   *
-   * @param {string[]} lines Body lines.
-   * @returns {string} Body HTML.
-   */
-  function buildBody(lines) {
-    const parts = [];
-    for (const line of lines) {
-      const content = formatChatLine(line);
-      parts.push(`<div>${content}</div>`);
-    }
-
-    return parts.join('');
-  }
-
-  /**
-   * Formats one line for chat body rendering.
-   *
-   * @param {*} line Chat line value.
-   * @returns {string} Escaped or trusted HTML content.
-   */
-  function formatChatLine(line) {
-    if (isTrustedHtmlLine(line)) {
-      return getTrustedHtml(line);
-    }
-
-    return escapeHtml(line);
-  }
-
-  /**
-   * Returns true for internally generated chat HTML fragments.
-   *
-   * @param {*} line Chat line value.
-   * @returns {boolean} True when the line is trusted HTML.
-   */
-  function isTrustedHtmlLine(line) {
-    return (
-      Boolean(line) && typeof line === 'object' && hasValue(line.__trustedHtml)
-    );
-  }
-
-  /**
-   * Returns the HTML payload from a trusted chat line.
-   *
-   * @param {*} line Chat line value.
-   * @returns {string} Trusted HTML.
-   */
-  function getTrustedHtml(line) {
-    if (line === null || line === undefined) return '';
-    if (typeof line === 'object') {
-      return hasValue(line.__trustedHtml) ? String(line.__trustedHtml) : '';
-    }
-    return String(line);
-  }
-
-  /**
-   * Returns true when a value exists.
-   *
-   * @param {*} value The value to inspect.
-   * @returns {boolean} True when the value is neither undefined nor null.
-   */
-  function hasValue(value) {
-    return value !== undefined && value !== null;
-  }
-
-  /**
-   * Builds a Roll20 API command button.
-   *
-   * @param {string} label Button label.
-   * @param {string} command Command text.
-   * @returns {string} Button HTML.
-   */
-  function buildButton(label, command) {
-    return rawHtml(
-      `<a style="${CHAT_BUTTON_STYLE}" href="${escapeHtml(command)}">${escapeHtml(label)}</a>`,
-    );
-  }
-
-  /**
-   * Builds a remove button for an active condition.
-   *
-   * @param {object} condition Active condition record.
-   * @returns {string} Button HTML.
-   */
-  function buildRemoveButton(condition) {
-    return buildButton(
-      `Remove: ${condition.displayText}`,
-      `${COMMAND} --remove ${condition.id}`,
-    );
-  }
-
-  /**
-   * Creates a compact HTML table for chat output.
-   *
-   * @param {string[]} headers Column labels.
-   * @param {string[][]} rows Table rows with trusted cell HTML.
-   * @returns {object} Trusted HTML line.
-   */
-  function htmlTable(headers, rows) {
-    const locale = getConfig().language;
-    const tableHeaderStyle = getTableHeaderStyle(locale);
-    const directionStyle = getDirectionStyle(locale);
-    const headerCells = headers
-      .map(
-        (header) =>
-          `<th style="${tableHeaderStyle}"><strong>${escapeHtml(header)}</strong></th>`,
-      )
-      .join('');
-
-    const bodyRows = rows
-      .map(
-        (cells) =>
-          `<tr>${cells
-            .map(
-              (cell) =>
-                `<td style="padding:2px 4px;vertical-align:top;${directionStyle}">${getTrustedHtml(cell)}</td>`,
-            )
-            .join('')}</tr>`,
-      )
-      .join('');
-
-    return rawHtml(
-      `<table style="width:100%;border-collapse:collapse;${directionStyle}"><thead><tr>${headerCells}</tr></thead><tbody>${bodyRows}</tbody></table>`,
-    );
-  }
-
-  /**
-   * Resolves a player whisper target.
-   *
-   * @param {string} playerId Player id.
-   * @returns {string} Display name suitable for /w.
-   */
-  function getWhisperTarget(playerId) {
-    const player = getObj('player', playerId);
-    const displayName = player
-      ? toText(player.get('_displayname')).replaceAll('"', '')
-      : '';
-    if (displayName) {
-      return displayName;
-    }
-
-    return DEFAULT_WHISPER_TARGET;
   }
 
   /**
@@ -21273,6 +23849,1971 @@ const ConditionTrackerMod = (() => {
     ]);
   }
 
+  const MACRO_DEFINITIONS = [
+    { name: MACRO_NAME, body: DEFAULT_MACRO_BODY },
+    { name: MACRO_NAME_MULTI_TARGET, body: DEFAULT_MULTI_TARGET_MACRO_BODY },
+    { name: MACRO_NAME_REPORT_TOKEN, body: DEFAULT_REPORT_TOKEN_MACRO_BODY },
+    { name: MACRO_NAME_SAVED, body: DEFAULT_SAVED_MACRO_BODY },
+  ];
+
+  /**
+   * Installs or updates all GM-facing macros for all current GMs.
+   *
+   * @returns {void}
+   */
+  function installMacro() {
+    const gmIds = getGmIds();
+    if (!gmIds.length) {
+      log(
+        `${SCRIPT_NAME} macro install skipped: no GM player id is currently available.`,
+      );
+      return;
+    }
+
+    const gmIdSet = new Set(gmIds);
+    let createdCount = 0;
+    let updatedCount = 0;
+    let removedCount = 0;
+
+    for (const macroDef of MACRO_DEFINITIONS) {
+      const macrosByOwner = groupMacrosByOwner(
+        queryObjects({ _type: 'macro', name: macroDef.name }),
+      );
+
+      for (const gmId of gmIds) {
+        const result = syncGmMacro(
+          gmId,
+          macrosByOwner.get(gmId) || [],
+          gmId,
+          macroDef,
+        );
+        createdCount += result.created;
+        updatedCount += result.updated;
+        removedCount += result.removed;
+      }
+
+      removedCount += removeOrphanedMacros(macrosByOwner, gmIdSet);
+    }
+
+    logInstallResult(createdCount, updatedCount, removedCount);
+  }
+
+  /**
+   * Groups existing macros by their owner player id.
+   *
+   * @param {object[]} macros Roll20 macro objects.
+   * @returns {Map<string, object[]>} Macros keyed by owner player id.
+   */
+  function groupMacrosByOwner(macros) {
+    const byOwner = new Map();
+    for (const macro of macros) {
+      const ownerId = macro.get('playerid') || '';
+      if (!byOwner.has(ownerId)) {
+        byOwner.set(ownerId, []);
+      }
+      byOwner.get(ownerId).push(macro);
+    }
+    return byOwner;
+  }
+
+  /**
+   * Creates or updates one named macro for a GM, removing any duplicates.
+   *
+   * @param {string} gmId GM player id.
+   * @param {object[]} ownerMacros Existing macros owned by this GM for this definition.
+   * @param {string} visibleTo Comma-separated GM ids for visibility.
+   * @param {{name: string, body: string}} macroDef Macro name and action body.
+   * @returns {{created: number, updated: number, removed: number}} Counts.
+   */
+  function syncGmMacro(gmId, ownerMacros, visibleTo, macroDef) {
+    if (ownerMacros.length === 0) {
+      createObj('macro', {
+        playerid: gmId,
+        name: macroDef.name,
+        action: macroDef.body,
+        visibleto: visibleTo,
+        istokenaction: false,
+      });
+      return { created: 1, updated: 0, removed: 0 };
+    }
+
+    const [primaryMacro, ...duplicates] = ownerMacros;
+    primaryMacro.set({
+      action: macroDef.body,
+      visibleto: visibleTo,
+      istokenaction: false,
+    });
+
+    for (const duplicate of duplicates) {
+      duplicate.remove();
+    }
+
+    return { created: 0, updated: 1, removed: duplicates.length };
+  }
+
+  /**
+   * Removes macros owned by players who are no longer GMs.
+   *
+   * @param {Map<string, object[]>} macrosByOwner Macros keyed by owner player id.
+   * @param {Set<string>} gmIdSet Current GM player ids.
+   * @returns {number} Number of macros removed.
+   */
+  function removeOrphanedMacros(macrosByOwner, gmIdSet) {
+    let removed = 0;
+    for (const [ownerId, orphans] of macrosByOwner) {
+      if (gmIdSet.has(ownerId)) continue;
+      for (const orphan of orphans) {
+        orphan.remove();
+        removed += 1;
+      }
+    }
+    return removed;
+  }
+
+  /**
+   * Logs the result of a macro install/update pass.
+   *
+   * @param {number} createdCount Macros created.
+   * @param {number} updatedCount Macros updated.
+   * @param {number} removedCount Macros removed.
+   * @returns {void}
+   */
+  function logInstallResult(createdCount, updatedCount, removedCount) {
+    const cleanupNote =
+      removedCount > 0 ? ` Cleaned up ${removedCount} duplicate macro(s).` : '';
+    if (createdCount > 0) {
+      log(
+        `${SCRIPT_NAME}: Macros installed (created ${createdCount}).${cleanupNote}`,
+      );
+    } else {
+      log(
+        `${SCRIPT_NAME}: Macros updated (updated ${updatedCount}).${cleanupNote}`,
+      );
+    }
+  }
+
+  /**
+   * Returns all current GM player ids.
+   *
+   * @returns {string[]} GM player ids.
+   */
+  function getGmIds() {
+    return getGmPlayerIds();
+  }
+
+  const STYLE = {
+    outer:
+      "font-family:'Georgia',serif;background-color:#0A0A12;color:#E6DFFF;padding:24px;border-radius:8px;",
+    header:
+      'background:linear-gradient(135deg,#5B21B6 0%,#FF4D6D 100%);padding:18px 24px;border-radius:6px;margin-bottom:24px;text-align:center;',
+    h1: "color:#FFFFFF;margin:0;font-size:1.6em;font-family:'Georgia',serif;letter-spacing:1px;",
+    subtitle:
+      'color:#E9D5FF;margin:6px 0 0;font-size:0.85em;letter-spacing:0.5px;',
+    h2: "color:#FF4D6D;font-family:'Georgia',serif;border-bottom:1px solid #5B21B6;padding-bottom:6px;margin-top:24px;",
+    h2first:
+      "color:#FF4D6D;font-family:'Georgia',serif;border-bottom:1px solid #5B21B6;padding-bottom:6px;margin-top:0;",
+    body: 'color:#B8AFCF;line-height:1.6;margin-top:0;',
+    intro: 'color:#B8AFCF;font-size:0.9em;margin-top:0;',
+    table:
+      'width:100%;border-collapse:collapse;font-size:0.9em;margin-bottom:8px;',
+    tableSmall: 'width:100%;border-collapse:collapse;font-size:0.85em;',
+    thRow: 'background-color:#1E40AF;',
+    th: 'padding:7px 10px;text-align:left;color:#E9D5FF;font-weight:bold;',
+    spacer: 'padding:3px;',
+    footer:
+      'margin-top:28px;padding-top:14px;border-top:1px solid #5B21B6;text-align:center;color:#B8AFCF;font-size:0.8em;',
+    footerP: 'margin:0;line-height:1.8;',
+    code: 'background-color:#1a1a2e;padding:1px 4px;border-radius:2px;',
+  };
+
+  /**
+   * Returns the alternating row background color.
+   *
+   * @param {boolean} even Whether the row is even.
+   * @returns {string} Hex color for the row background.
+   */
+  function row(even) {
+    return even ? '#12122a' : '#0e0e22';
+  }
+
+  /**
+   * Builds inline text direction styles for localized handouts.
+   *
+   * @param {string} locale Locale code.
+   * @returns {string} Inline CSS direction and alignment.
+   */
+  function getDirectionStyle(locale) {
+    return isRtlLocale(locale)
+      ? 'direction:rtl;text-align:right;'
+      : 'direction:ltr;text-align:left;';
+  }
+
+  /**
+   * Returns the localized table header style.
+   *
+   * @param {string} locale Locale code.
+   * @returns {string} Inline CSS for table headers.
+   */
+  function getThStyle(locale) {
+    return isRtlLocale(locale)
+      ? STYLE.th.replace('text-align:left', 'text-align:right')
+      : STYLE.th;
+  }
+
+  /**
+   * Builds a two-column or three-column handout table.
+   *
+   * @param {string[]} headers Table header labels.
+   * @param {string[][]} rows Table rows.
+   * @param {string[]} [widths] Optional column widths.
+   * @param {string} locale Locale code.
+   * @returns {string} Table HTML.
+   */
+  function buildTable(headers, rows, widths, locale) {
+    const thCells = headers
+      .map((h, i) => {
+        const w = widths?.[i] ? `width:${widths[i]};` : '';
+        return `<th style="${getThStyle(locale)}${w}">${h}</th>`;
+      })
+      .join('');
+    const bodyRows = rows
+      .map((cells, ri) => {
+        const bg = row(ri % 2 === 0);
+        const tds = cells
+          .map((cell, ci) => {
+            const isFirst = ci === 0;
+            const style = isFirst
+              ? `padding:6px 10px;font-family:monospace;color:#E9D5FF;background-color:${bg};`
+              : `padding:6px 10px;color:#B8AFCF;background-color:${bg};`;
+            return `<td style="${style}">${cell}</td>`;
+          })
+          .join('');
+        return `<tr>${tds}</tr>`;
+      })
+      .join('');
+    return `<table style="${STYLE.tableSmall}"><thead><tr style="${STYLE.thRow}">${thCells}</tr></thead><tbody>${bodyRows}</tbody></table>`;
+  }
+
+  /**
+   * Builds the standard conditions table for the active game system.
+   *
+   * @param {object} profile Active system profile.
+   * @param {string} colLabel Header label for condition columns.
+   * @param {string} locale Locale code.
+   * @returns {string} Condition table HTML.
+   */
+  function buildConditionTable(profile, colLabel, locale) {
+    const conditions = profile.STANDARD_CONDITIONS;
+    if (conditions.length === 0) {
+      const bg = row(true);
+      const msg = escapeHtml(t('handout.standardConditions.none', locale));
+      return `<table style="${STYLE.tableSmall}"><tbody><tr><td style="padding:7px 10px;color:#B8AFCF;background-color:${bg};" colspan="2">${msg}</td></tr></tbody></table>`;
+    }
+    const half = Math.ceil(conditions.length / 2);
+    const left = conditions.slice(0, half);
+    const right = conditions.slice(half);
+    const maxRows = Math.max(left.length, right.length);
+    const rows = [];
+    for (let i = 0; i < maxRows; i++) {
+      const lc = left[i];
+      const rc = right[i];
+      const lData = lc ? profile.CONDITION_DATA[lc] : null;
+      const rData = rc ? profile.CONDITION_DATA[rc] : null;
+      const l = lc
+        ? `${lData ? lData.emoji : '✨'} ${getConditionDisplayName(lc, profile, locale)}`
+        : '';
+      const r = rc
+        ? `${rData ? rData.emoji : '✨'} ${getConditionDisplayName(rc, profile, locale)}`
+        : '';
+      const bg = row(i % 2 === 0);
+      rows.push(
+        `<tr><td style="padding:7px 10px;color:#E6DFFF;background-color:${bg};">${escapeHtml(l)}</td>` +
+          `<td style="padding:7px 10px;color:#E6DFFF;background-color:${bg};">${escapeHtml(r)}</td></tr>`,
+      );
+    }
+
+    const thStyle = `${getThStyle(locale)}width:50%;`;
+    const safeLabel = escapeHtml(colLabel);
+    return `<table style="${STYLE.tableSmall}"><thead><tr style="${STYLE.thRow}"><th style="${thStyle}">${safeLabel}</th><th style="${thStyle}">${safeLabel}</th></tr></thead><tbody>${rows.join('')}</tbody></table>`;
+  }
+
+  /**
+   * Builds the default status marker mapping table for the active game system.
+   *
+   * @param {object} profile Active system profile.
+   * @param {string} colCondition Condition column label.
+   * @param {string} colMarker Marker column label.
+   * @param {string} locale Locale code.
+   * @returns {string} Marker table HTML.
+   */
+  function buildMarkersTable(profile, colCondition, colMarker, locale) {
+    const entries = Object.entries(profile.DEFAULT_MARKERS);
+    if (entries.length === 0) {
+      const bg = row(true);
+      const msg = escapeHtml(t('handout.defaultMarkers.none', locale));
+      return `<table style="${STYLE.tableSmall}"><tbody><tr><td style="padding:7px 10px;color:#B8AFCF;background-color:${bg};" colspan="2">${msg}</td></tr></tbody></table>`;
+    }
+    const rows = entries
+      .map(([condition, marker], i) => {
+        const data = profile.CONDITION_DATA[condition];
+        const emoji = data ? data.emoji : '';
+        const bg = row(i % 2 === 0);
+        const label = getConditionDisplayName(condition, profile, locale);
+        return (
+          `<tr>` +
+          `<td style="padding:6px 10px;color:#E6DFFF;background-color:${bg};">${escapeHtml(emoji)} ${escapeHtml(label)}</td>` +
+          `<td style="padding:6px 10px;font-family:monospace;color:#B8AFCF;background-color:${bg};">${escapeHtml(marker)}</td>` +
+          `</tr>`
+        );
+      })
+      .join('');
+    return (
+      `<table style="${STYLE.tableSmall}"><thead><tr style="${STYLE.thRow}">` +
+      `<th style="${getThStyle(locale)}width:50%;">${escapeHtml(colCondition)}</th>` +
+      `<th style="${getThStyle(locale)}">${escapeHtml(colMarker)}</th>` +
+      `</tr></thead><tbody>${rows}</tbody></table>`
+    );
+  }
+
+  /**
+   * Builds the quick-start command table.
+   *
+   * @param {string} colCommand Command column label.
+   * @param {string} colDesc Description column label.
+   * @param {string[][]} rows Quick-start rows.
+   * @returns {string} Quick-start table HTML.
+   */
+  function buildQuickStartTable(colCommand, colDesc, rows) {
+    const bodyRows = rows
+      .map(([cmd, desc], i) => {
+        const bg = row(i % 2 === 0);
+        return (
+          `<tr>` +
+          `<td style="padding:7px 10px;background-color:${bg};border-radius:4px;font-family:monospace;color:#E9D5FF;white-space:nowrap;width:45%;">${cmd}</td>` +
+          `<td style="padding:7px 10px;color:#B8AFCF;background-color:${bg};">${desc}</td>` +
+          `<tr><td colspan="2" style="${STYLE.spacer}"></td></tr>`
+        );
+      })
+      .join('');
+    return `<table style="${STYLE.table}"><tbody>${bodyRows}</tbody></table>`;
+  }
+
+  /**
+   * Builds a Twemoji asset URL for a locale flag.
+   *
+   * @param {string} flag Unicode regional-indicator flag.
+   * @returns {string} SVG asset URL or an empty string.
+   */
+  function flagAssetUrl$1(flag) {
+    const codepoints = Array.from(String(flag || '').trim())
+      .map((character) => character.codePointAt(0).toString(16))
+      .join('-');
+    return codepoints
+      ? `https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/${codepoints}.svg`
+      : '';
+  }
+
+  /**
+   * Builds an accessible flag image label for a locale.
+   *
+   * @param {object} locale Locale metadata.
+   * @returns {string} Trusted locale flag HTML.
+   */
+  function buildLocaleFlag(locale) {
+    const label = escapeHtml(locale.flagLabel || locale.name);
+    const url = flagAssetUrl$1(locale.flag);
+    if (!url) {
+      return '';
+    }
+    return `<img src="${escapeHtml(url)}" alt="${label}" title="${label}" style="width:1.1em;height:1.1em;vertical-align:-0.15em;margin-right:4px;" />`;
+  }
+
+  /**
+   * Builds a display label for a locale in the current handout language.
+   *
+   * @param {object} locale Locale metadata.
+   * @param {string} displayLocale Locale to use for the language name.
+   * @returns {string} Locale label HTML.
+   */
+  function buildLocaleLabel(locale, displayLocale) {
+    return `${buildLocaleFlag(locale)} ${escapeHtml(locale.code)} — ${escapeHtml(getLocalizedLanguageName(locale.code, displayLocale))}`;
+  }
+
+  /**
+   * Builds the available translations table.
+   *
+   * @param {string} locale Locale code for table direction.
+   * @returns {string} Locale table HTML.
+   */
+  function buildLocalesTable(locale) {
+    const rows = LOCALE_DEFINITIONS.map((definition) => [
+      `<span style="${STYLE.code}">${escapeHtml(definition.code)}</span>`,
+      buildLocaleLabel(definition, locale),
+    ]);
+    return buildTable(
+      [
+        t('handout.availableLocales.colLocale', locale),
+        t('handout.availableLocales.colLanguage', locale),
+      ],
+      rows,
+      ['24%', '76%'],
+      locale,
+    );
+  }
+
+  /**
+   * Builds the command reference section.
+   *
+   * @param {(key: string) => string} hs Handout string lookup.
+   * @param {(key: string) => *} hr Handout raw value lookup.
+   * @param {string} locale Locale code.
+   * @returns {string} Section HTML.
+   */
+  function buildCommandsReferenceSection(hs, hr, locale) {
+    const rows = hr('commandsRef.rows');
+    return `<h2 style="${STYLE.h2}">${hs('commandsRef.heading')}</h2>
+    ${buildTable([hs('commandsRef.colFlag'), hs('commandsRef.colDesc')], rows, ['42%'], locale)}`;
+  }
+
+  /**
+   * Builds the custom effect type section.
+   *
+   * @param {(key: string) => string} hs Handout string lookup.
+   * @param {(key: string) => *} hr Handout raw value lookup.
+   * @param {string} locale Locale code.
+   * @returns {string} Section HTML.
+   */
+  function buildCustomEffectsSection(hs, hr, locale) {
+    const rows = hr('customEffects.rows');
+    return `<h2 style="${STYLE.h2}">${hs('customEffects.heading')}</h2>
+    ${buildTable([hs('customEffects.colType'), hs('customEffects.colNotes')], rows, ['30%'], locale)}`;
+  }
+
+  /**
+   * Builds the duration option section.
+   *
+   * @param {(key: string) => string} hs Handout string lookup.
+   * @param {(key: string) => *} hr Handout raw value lookup.
+   * @param {string} locale Locale code.
+   * @returns {string} Section HTML.
+   */
+  function buildDurationOptionsSection(hs, hr, locale) {
+    const rows = hr('durationOptions.rows');
+    return `<h2 style="${STYLE.h2}">${hs('durationOptions.heading')}</h2>
+    <p style="${STYLE.intro}">${hs('durationOptions.intro')}</p>
+    ${buildTable([hs('durationOptions.colOption'), hs('durationOptions.colBehaviour')], rows, ['40%'], locale)}`;
+  }
+
+  /**
+   * Builds the configuration section.
+   *
+   * @param {(key: string) => string} hs Handout string lookup.
+   * @param {(key: string) => *} hr Handout raw value lookup.
+   * @param {string} locale Locale code.
+   * @returns {string} Section HTML.
+   */
+  function buildConfigurationSection(hs, hr, locale) {
+    const rows = hr('configuration.rows');
+    const threeCol = rows
+      .map(([opt, vals, desc], i) => {
+        const bg = row(i % 2 === 0);
+        return (
+          `<tr>` +
+          `<td style="padding:6px 10px;font-family:monospace;color:#E9D5FF;background-color:${bg};">${opt}</td>` +
+          `<td style="padding:6px 10px;color:#B8AFCF;background-color:${bg};">${vals}</td>` +
+          `<td style="padding:6px 10px;color:#B8AFCF;background-color:${bg};">${desc}</td>` +
+          `</tr>`
+        );
+      })
+      .join('');
+    return (
+      `<h2 style="${STYLE.h2}">${hs('configuration.heading')}</h2>
+    <p style="${STYLE.intro}">${hs('configuration.intro')}</p>
+    <table style="${STYLE.tableSmall}"><thead><tr style="${STYLE.thRow}">` +
+      `<th style="${getThStyle(locale)}width:30%;">${hs('configuration.colOption')}</th>` +
+      `<th style="${getThStyle(locale)}width:25%;">${hs('configuration.colValues')}</th>` +
+      `<th style="${getThStyle(locale)}">${hs('configuration.colDesc')}</th>` +
+      `</tr></thead><tbody>${threeCol}</tbody></table>`
+    );
+  }
+
+  /**
+   * Applies all handout fields that Condition Tracker owns.
+   *
+   * @param {object} handout Roll20 handout object.
+   * @param {string} html Handout notes HTML.
+   * @returns {void}
+   */
+  function updateHandoutObject(handout, html) {
+    handout.set({
+      name: HANDOUT_NAME,
+      inplayerjournals: '',
+      controlledby: '',
+    });
+    handout.set('notes', html);
+  }
+
+  /**
+   * Builds the supported game systems table.
+   *
+   * @param {string} locale Locale code.
+   * @returns {string} Game systems table HTML.
+   */
+  function buildGameSystemsTable(locale) {
+    const rows = GAME_SYSTEM_DEFINITIONS.map((def, i) => {
+      const bg = row(i % 2 === 0);
+      return (
+        `<tr>` +
+        `<td style="padding:6px 10px;font-family:monospace;color:#E9D5FF;background-color:${bg};">${escapeHtml(def.id)}</td>` +
+        `<td style="padding:6px 10px;color:#B8AFCF;background-color:${bg};">${escapeHtml(def.name)}</td>` +
+        `</tr>`
+      );
+    }).join('');
+    return (
+      `<table style="${STYLE.tableSmall}"><thead><tr style="${STYLE.thRow}">` +
+      `<th style="${getThStyle(locale)}width:35%;">${escapeHtml(t('handout.gameSystems.colId', locale))}</th>` +
+      `<th style="${getThStyle(locale)}">${escapeHtml(t('handout.gameSystems.colName', locale))}</th>` +
+      `</tr></thead><tbody>${rows}</tbody></table>`
+    );
+  }
+
+  /**
+   * Generates the full help handout HTML for the given locale.
+   *
+   * @param {string} [locale] Output locale.
+   * @returns {string} HTML string.
+   */
+  function buildHandoutHtml(locale) {
+    const lang = getLocale(locale);
+    const version = SCRIPT_VERSION;
+    const directionStyle = getDirectionStyle(lang);
+    const config = getConfig();
+    const profile = getSystemProfile(config.gameSystem);
+
+    /**
+     * Looks up a handout string for the active locale, with optional interpolation vars.
+     *
+     * @param {string} key Handout translation key.
+     * @param {object} [vars] Interpolation variables.
+     * @returns {string} Translated text.
+     */
+    const hs = (key, vars) => t(`handout.${key}`, lang, vars);
+    /**
+     * Looks up raw handout data for the active locale.
+     *
+     * @param {string} key Handout translation key.
+     * @returns {*} Raw translated value.
+     */
+    const hr = (key) => tRaw(`handout.${key}`, lang);
+
+    const overview = `
+    <h2 style="${STYLE.h2first}">${hs('overview.heading')}</h2>
+    <p style="${STYLE.body}">${hs('overview.body')}</p>`;
+
+    const quickStart = `
+    <h2 style="${STYLE.h2}">${hs('quickStart.heading')}</h2>
+    ${buildQuickStartTable(hs('quickStart.colCommand'), hs('quickStart.colDesc'), hr('quickStart.rows'))}`;
+
+    const commandsRef = buildCommandsReferenceSection(hs, hr, lang);
+
+    const standardConds = `
+    <h2 style="${STYLE.h2}">${hs('standardConditions.heading', { system: profile.SYSTEM_NAME })}</h2>
+    ${buildConditionTable(profile, hs('standardConditions.colCondition'), lang)}`;
+
+    const customEffects = buildCustomEffectsSection(hs, hr, lang);
+
+    const durationOpts = buildDurationOptionsSection(hs, hr, lang);
+
+    const configSection = buildConfigurationSection(hs, hr, lang);
+
+    const gameSystems = `
+    <h2 style="${STYLE.h2}">${hs('gameSystems.heading')}</h2>
+    <p style="${STYLE.intro}">${hs('gameSystems.intro')}</p>
+    ${buildGameSystemsTable(lang)}`;
+
+    const availableLocales = `
+    <h2 style="${STYLE.h2}">${hs('availableLocales.heading')}</h2>
+    <p style="${STYLE.intro}">${hs('availableLocales.intro')}</p>
+    ${buildLocalesTable(lang)}`;
+
+    const markers = `
+    <h2 style="${STYLE.h2}">${hs('defaultMarkers.heading')}</h2>
+    ${buildMarkersTable(profile, hs('defaultMarkers.colCondition'), hs('defaultMarkers.colMarker'), lang)}`;
+
+    const footer = `
+    <div style="${STYLE.footer}">
+      <p style="${STYLE.footerP}">${SCRIPT_NAME} ${version} &nbsp;•&nbsp; ${hs('footerNote')}</p>
+    </div>`;
+
+    return `<div style="${STYLE.outer}${directionStyle}">
+    <div style="${STYLE.header}">
+      <img src="${LOGO_URL_512}" style="max-width:220px;height:auto;margin-bottom:10px;display:block;margin-left:auto;margin-right:auto;" alt="${SCRIPT_NAME} logo" title="${SCRIPT_NAME}" />
+      <h1 style="${STYLE.h1}">${SCRIPT_NAME}</h1>
+      <p style="${STYLE.subtitle}">${hs('versionLabel')} ${version} &nbsp;•&nbsp; ${hs('subtitle')}</p>
+    </div>
+    ${overview}${quickStart}${commandsRef}${standardConds}${customEffects}${durationOpts}${configSection}${gameSystems}${availableLocales}${markers}${footer}
+  </div>`;
+  }
+
+  /**
+   * Creates the help handout on first run, or updates its notes on every subsequent startup.
+   * Duplicate handouts with the same name are removed.
+   *
+   * @param {string} [locale] Output locale.
+   * @returns {void}
+   */
+  function installHandout(locale) {
+    const html = buildHandoutHtml(locale);
+    const existing = queryObjects({ _type: 'handout', name: HANDOUT_NAME });
+
+    if (existing.length === 0) {
+      const handout = createObj('handout', {
+        name: HANDOUT_NAME,
+      });
+      updateHandoutObject(handout, html);
+      log(`${SCRIPT_NAME}: Help handout created.`);
+      return;
+    }
+
+    const [primary, ...duplicates] = existing;
+    updateHandoutObject(primary, html);
+    for (const dup of duplicates) {
+      dup.remove();
+    }
+
+    const cleanupNote =
+      duplicates.length > 0
+        ? ` Removed ${duplicates.length} duplicate(s).`
+        : '';
+    log(`${SCRIPT_NAME}: Help handout updated.${cleanupNote}`);
+  }
+
+  /**
+   * @typedef {object} SavedEffect
+   * @property {string} id Unique identifier prefixed with "ct_".
+   * @property {"public"|"masked"|"gm"} visibility Visibility mode.
+   * @property {string} condition Canonical condition type key.
+   * @property {string} other Custom effect free-text (for Spell / Ability / Other types).
+   * @property {string} targetTokenId Target token id.
+   * @property {string} targetCharacterId Target character id (for future relinking).
+   * @property {string} sourceTokenId Source token id, may be empty.
+   * @property {string} sourceCharacterId Source character id, may be empty.
+   * @property {string} subjectTokenId Subject token id, may be empty.
+   * @property {object} duration Duration object.
+   * @property {string} publicLabel Vague public label shown in Turn Tracker for masked effects.
+   * @property {string} gmLabel Full GM-only description.
+   * @property {object|null} snooze Active snooze state, or null when not snoozed.
+   * @property {string} lastReminderTurnKey Turn signature when the GM reminder was last shown.
+   * @property {number} createdAt Creation epoch timestamp.
+   * @property {number} updatedAt Last update epoch timestamp.
+   */
+
+  /**
+   * Returns the savedEffects map from state, initialising it if absent.
+   *
+   * @returns {object} savedEffects map keyed by targetTokenId.
+   */
+  function getSavedEffectsMap() {
+    const trackerState = ensureState();
+    if (!isRecord(trackerState.savedEffects)) {
+      trackerState.savedEffects = {};
+    }
+    return trackerState.savedEffects;
+  }
+
+  /**
+   * Creates a new saved-effect record with all required fields populated.
+   *
+   * @param {object} fields Effect field overrides.
+   * @returns {SavedEffect} Fully initialised saved-effect record.
+   */
+  function createSavedEffect(fields) {
+    const now = Date.now();
+    return {
+      id: createId(),
+      visibility: fields.visibility || SAVED_VISIBILITY_GM,
+      condition: fields.condition || 'Other',
+      other: fields.other || '',
+      targetTokenId: fields.targetTokenId || '',
+      targetCharacterId: fields.targetCharacterId || '',
+      sourceTokenId: fields.sourceTokenId || '',
+      sourceCharacterId: fields.sourceCharacterId || '',
+      subjectTokenId: fields.subjectTokenId || '',
+      duration: isRecord(fields.duration)
+        ? fields.duration
+        : { type: DURATION_UNTIL_REMOVED },
+      publicLabel: fields.publicLabel || '',
+      gmLabel: fields.gmLabel || fields.other || '',
+      snooze: null,
+      lastReminderTurnKey: '',
+      createdAt: now,
+      updatedAt: now,
+    };
+  }
+
+  /**
+   * Returns all saved effects stored for a specific target token.
+   *
+   * @param {string} targetTokenId Target token id.
+   * @returns {SavedEffect[]} Saved effects for that token.
+   */
+  function getSavedEffectsForToken(targetTokenId) {
+    const list = getSavedEffectsMap()[targetTokenId];
+    return Array.isArray(list) ? list : [];
+  }
+
+  /**
+   * Returns all saved effects across every token.
+   *
+   * @returns {SavedEffect[]} All saved effects in state.
+   */
+  function getAllSavedEffects() {
+    const effects = [];
+    for (const list of Object.values(getSavedEffectsMap())) {
+      if (Array.isArray(list)) {
+        effects.push(...list);
+      }
+    }
+    return effects;
+  }
+
+  /**
+   * Finds a saved effect by its unique id, searching all token buckets.
+   *
+   * @param {string} id Saved-effect id.
+   * @returns {SavedEffect|null} Matching effect, or null when not found.
+   */
+  function findSavedEffect(id) {
+    for (const list of Object.values(getSavedEffectsMap())) {
+      if (!Array.isArray(list)) continue;
+      const effect = list.find((e) => e.id === id);
+      if (effect) return effect;
+    }
+    return null;
+  }
+
+  /**
+   * Adds a saved effect to persistent state.
+   *
+   * @param {SavedEffect} effect Saved-effect record.
+   * @returns {SavedEffect} The saved effect.
+   */
+  function addSavedEffect(effect) {
+    const map = getSavedEffectsMap();
+    const tokenId = effect.targetTokenId;
+    if (!Array.isArray(map[tokenId])) {
+      map[tokenId] = [];
+    }
+    map[tokenId].push(effect);
+    return effect;
+  }
+
+  /**
+   * Applies a partial update to an existing saved effect.
+   *
+   * @param {string} id Saved-effect id.
+   * @param {object} updates Fields to merge onto the existing record.
+   * @returns {SavedEffect|null} Updated record, or null when not found.
+   */
+  function updateSavedEffect(id, updates) {
+    const map = getSavedEffectsMap();
+    for (const list of Object.values(map)) {
+      if (!Array.isArray(list)) continue;
+      const idx = list.findIndex((e) => e.id === id);
+      if (idx !== -1) {
+        list[idx] = { ...list[idx], ...updates, updatedAt: Date.now() };
+        return list[idx];
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Removes a saved effect from state by id.
+   *
+   * @param {string} id Saved-effect id.
+   * @returns {SavedEffect|null} The removed record, or null when not found.
+   */
+  function removeSavedEffect(id) {
+    const map = getSavedEffectsMap();
+    for (const [tokenId, list] of Object.entries(map)) {
+      if (!Array.isArray(list)) continue;
+      const idx = list.findIndex((e) => e.id === id);
+      if (idx !== -1) {
+        const [removed] = list.splice(idx, 1);
+        if (list.length === 0) {
+          delete map[tokenId];
+        }
+        return removed;
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Removes all saved effects whose target token matches the given id.
+   *
+   * Called when a token is destroyed so orphaned saved effects are cleaned up.
+   *
+   * @param {string} tokenId Target token id.
+   * @returns {number} Number of effects removed.
+   */
+  function removeSavedEffectsForToken(tokenId) {
+    const map = getSavedEffectsMap();
+    const list = map[tokenId];
+    if (!Array.isArray(list)) return 0;
+    const count = list.length;
+    delete map[tokenId];
+    return count;
+  }
+
+  /**
+   * Clears combat-scoped snoozes from all saved effects.
+   *
+   * Called when the Turn Tracker becomes empty (combat ends) so effects
+   * snoozed for "this combat" resume reminders at the start of the next combat.
+   *
+   * @returns {number} Number of snoozes cleared.
+   */
+  function clearCombatSnoozes() {
+    let cleared = 0;
+    for (const effect of getAllSavedEffects()) {
+      if (effect.snooze?.scope === 'combat') {
+        updateSavedEffect(effect.id, { snooze: null });
+        cleared += 1;
+      }
+    }
+    return cleared;
+  }
+
+  const SECTION_HEADING_STYLE$1 = [
+    `background:${COLOR_HEADER_LIGHT}`,
+    `color:${COLOR_HEADER_DARK}`,
+    `border-left:4px solid ${COLOR_BG_SOFT_BLACK}`,
+    `border-bottom:1px solid ${COLOR_BG_SOFT_BLACK}`,
+    `box-shadow:inset 0 -1px 0 ${COLOR_BG_SOFT_BLACK}`,
+    `text-transform:uppercase`,
+    `letter-spacing:0.06em`,
+    `font-size:11px`,
+    `font-weight:bold`,
+    `padding:3px 6px`,
+    `margin:2px 0`,
+  ].join(';');
+
+  /**
+   * Builds an in-card section heading.
+   *
+   * @param {string} text Heading text.
+   * @returns {object} Trusted HTML line.
+   */
+  function heading$1(text) {
+    return rawHtml(
+      `<div style="${SECTION_HEADING_STYLE$1}">${escapeHtml(text)}</div>`,
+    );
+  }
+
+  /**
+   * Wraps text in chat-safe code tags.
+   *
+   * @param {string} text Text to render as code.
+   * @returns {string} HTML fragment.
+   */
+  function code$1(text) {
+    return `<code>${escapeHtml(text)}</code>`;
+  }
+
+  /**
+   * Builds a Roll20 command string with the script prefix.
+   *
+   * @param {string[]} parts Parts after the base command.
+   * @returns {string} Joined command string.
+   */
+  function buildCmd(parts) {
+    return [COMMAND, ...parts].join(' ');
+  }
+
+  /**
+   * Parses the --saved argument value into subcommand and id parts.
+   *
+   * The parser collapses all tokens after --saved up to the next flag into a
+   * single string, so "edit ct_abc123" arrives as one value.
+   *
+   * @param {string|true} savedValue Raw value of args.saved.
+   * @returns {{ sub: string, id: string }} Subcommand name and optional id.
+   */
+  function parseSavedSub(savedValue) {
+    if (savedValue === true || !savedValue) return { sub: 'view', id: '' };
+    const parts = toText(savedValue).split(/\s+/);
+    return { sub: parts[0] || 'view', id: parts.slice(1).join(' ') };
+  }
+
+  /**
+   * Returns the localised label for a visibility mode.
+   *
+   * @param {string} visibility Visibility mode key.
+   * @param {string} locale Locale code.
+   * @returns {string} Localised label.
+   */
+  function visibilityLabel(visibility, locale) {
+    const key = `ui.saved.visibility.${visibility}`;
+    return t(key, locale);
+  }
+
+  /**
+   * Returns the localised badge string for a visibility mode, e.g. "[GM Only]".
+   *
+   * @param {string} visibility Visibility mode key.
+   * @param {string} locale Locale code.
+   * @returns {string} Badge text.
+   */
+  function visibilityBadge(visibility, locale) {
+    return `[${visibilityLabel(visibility, locale)}]`;
+  }
+
+  /**
+   * Builds the display label for a saved effect shown to the GM.
+   *
+   * @param {SavedEffect} effect Saved-effect record.
+   * @returns {string} Effect label for GM display.
+   */
+  function effectGmLabel(effect) {
+    return effect.gmLabel || effect.other || effect.condition;
+  }
+
+  /**
+   * Builds the public label for a saved effect (what players see in the Turn Tracker).
+   *
+   * @param {SavedEffect} effect Saved-effect record.
+   * @returns {string} Effect label for public display.
+   */
+  function effectPublicLabel(effect) {
+    if (effect.visibility === SAVED_VISIBILITY_MASKED && effect.publicLabel) {
+      return effect.publicLabel;
+    }
+    return effectGmLabel(effect);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Main dispatcher
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Routes a --saved command to the correct handler.
+   *
+   * @param {object} msg Roll20 chat message.
+   * @param {object} args Parsed command arguments.
+   * @returns {void}
+   */
+  function handleSaved(msg, args) {
+    const { sub, id } = parseSavedSub(args.saved);
+    const playerId = msg.playerid;
+    const locale = getConfig().language;
+
+    switch (sub) {
+      case 'add':
+        handleSavedAdd(playerId, msg, args);
+        return;
+
+      case 'edit': {
+        if (!id) {
+          whisperWarning(playerId, t('ui.msg.savedEffectNotFound', locale));
+          return;
+        }
+        handleSavedEdit(playerId, id, args);
+        return;
+      }
+
+      case 'remove': {
+        if (!id) {
+          whisperWarning(playerId, t('ui.msg.savedEffectNotFound', locale));
+          return;
+        }
+        executeSavedRemove(playerId, id);
+        return;
+      }
+
+      case 'promote': {
+        if (!id) {
+          whisperWarning(playerId, t('ui.msg.savedEffectNotFound', locale));
+          return;
+        }
+        const visibility = toText(args.visibility);
+        if (visibility && VALID_SAVED_VISIBILITIES.has(visibility)) {
+          executeSavedPromote(playerId, id, visibility);
+        } else {
+          showSavedPromoteMenu(playerId, id);
+        }
+        return;
+      }
+
+      case 'snooze': {
+        if (!id) {
+          whisperWarning(playerId, t('ui.msg.savedEffectNotFound', locale));
+          return;
+        }
+        const scope = toText(args.scope);
+        if (scope && VALID_SNOOZE_SCOPES.has(scope)) {
+          const count = Number(toText(args.rounds)) || 0;
+          executeSavedSnooze(
+            playerId,
+            id,
+            scope,
+            count,
+            getTurnKeyFromArgs(args),
+          );
+        } else {
+          showSavedSnoozeMenu(playerId, id);
+        }
+        return;
+      }
+
+      case 'snooze-clear': {
+        if (!id) {
+          whisperWarning(playerId, t('ui.msg.savedEffectNotFound', locale));
+          return;
+        }
+        executeSnoozeClear(playerId, id);
+        return;
+      }
+
+      case 'view':
+      default:
+        showSavedMenuForMessage(playerId, msg);
+    }
+  }
+
+  /**
+   * Returns the turn key embedded in args, or an empty string when absent.
+   *
+   * @param {object} args Parsed command arguments.
+   * @returns {string} Turn key.
+   */
+  function getTurnKeyFromArgs(args) {
+    return toText(args['turn-key']);
+  }
+
+  // ---------------------------------------------------------------------------
+  // View: list saved effects for the selected token
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Shows the saved-effects menu for the token selected in the GM's message.
+   *
+   * Falls back to a prompt when no token is selected or provided via --token.
+   *
+   * @param {string} playerId GM player id.
+   * @param {object} msg Roll20 chat message.
+   * @returns {void}
+   */
+  function showSavedMenuForMessage(playerId, msg) {
+    const locale = getConfig().language;
+    const tokenId = resolveTargetToken(msg);
+    if (!tokenId) {
+      whisperWarning(playerId, t('ui.msg.noTokenSelectedSaved', locale));
+      return;
+    }
+    const token = getGraphicToken(tokenId);
+    const tokenName = token ? getTokenName(token) : tokenId;
+    showSavedMenu(playerId, tokenId, tokenName);
+  }
+
+  /**
+   * Resolves the target token id from selected tokens or from --token arg.
+   *
+   * @param {object} msg Roll20 chat message.
+   * @returns {string} Token id or empty string.
+   */
+  function resolveTargetToken(msg) {
+    const selected = Array.isArray(msg.selected) ? msg.selected : [];
+    if (selected.length > 0) {
+      return toText(selected[0]._id) || '';
+    }
+    return toText(msg._args?.token || '');
+  }
+
+  /**
+   * Whispers a GM card listing saved effects for a token with action buttons.
+   *
+   * @param {string} playerId GM player id.
+   * @param {string} tokenId Target token id.
+   * @param {string} tokenName Token display name.
+   * @returns {void}
+   */
+  function showSavedMenu(playerId, tokenId, tokenName) {
+    const locale = getConfig().language;
+    const effects = getSavedEffectsForToken(tokenId);
+    const addCmd = buildCmd([`--saved add --token ${tokenId}`]);
+
+    const body = [
+      heading$1(t('ui.heading.savedEffectsFor', locale, { name: tokenName })),
+      buildButton(t('ui.btn.addSavedEffect', locale), addCmd),
+    ];
+
+    if (effects.length === 0) {
+      body.push(t('ui.msg.noSavedEffects', locale, { name: tokenName }));
+    } else {
+      for (const effect of effects) {
+        body.push(rawHtml('<br>'));
+        body.push(...buildEffectCard(effect, locale));
+      }
+    }
+
+    whisper(playerId, t('ui.title.savedEffects', locale), body);
+  }
+
+  /**
+   * Builds the card lines for a single saved effect with action buttons.
+   *
+   * @param {SavedEffect} effect Saved-effect record.
+   * @param {string} locale Locale code.
+   * @returns {(string|object)[]} Body lines.
+   */
+  function buildEffectCard(effect, locale) {
+    const label = effectGmLabel(effect);
+    const badge = visibilityBadge(effect.visibility, locale);
+    const snoozeInfo = effect.snooze
+      ? ` (${t('ui.saved.snoozed', locale)})`
+      : '';
+    const titleLine = rawHtml(
+      `<strong>${escapeHtml(label)}</strong> <em>${escapeHtml(badge)}${escapeHtml(snoozeInfo)}</em>`,
+    );
+
+    const editCmd = buildCmd([`--saved edit ${effect.id}`]);
+    const removeCmd = buildCmd([`--saved remove ${effect.id}`]);
+    const promoteCmd = buildCmd([`--saved promote ${effect.id}`]);
+    const snoozeCmd = buildCmd([`--saved snooze ${effect.id}`]);
+
+    const buttons = rawHtml(
+      [
+        buildButton(t('ui.btn.promoteSaved', locale), promoteCmd).__trustedHtml,
+        buildButton(t('ui.btn.editSaved', locale), editCmd).__trustedHtml,
+        buildButton(t('ui.btn.removeSaved', locale), removeCmd).__trustedHtml,
+        buildButton(t('ui.btn.snoozeSaved', locale), snoozeCmd).__trustedHtml,
+      ].join(' '),
+    );
+
+    return [titleLine, buttons];
+  }
+
+  // ---------------------------------------------------------------------------
+  // Add: wizard to create a new saved effect
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Entry point for the --saved add wizard.
+   *
+   * If a condition is already provided advances to the visibility step;
+   * otherwise shows the condition picker.
+   *
+   * @param {string} playerId GM player id.
+   * @param {object} msg Roll20 chat message.
+   * @param {object} args Parsed command arguments.
+   * @returns {void}
+   */
+  function handleSavedAdd(playerId, msg, args) {
+    const locale = getConfig().language;
+
+    // Resolve target token: prefer --token arg, then selected token
+    const tokenIdFromArg = toText(args.token);
+    const tokenId =
+      tokenIdFromArg ||
+      (Array.isArray(msg.selected) && msg.selected.length > 0
+        ? toText(msg.selected[0]._id)
+        : '');
+
+    if (!tokenId) {
+      whisperWarning(playerId, t('ui.msg.noTokenSelectedSaved', locale));
+      return;
+    }
+
+    const conditionRaw = toText(args.condition);
+
+    // All fields supplied — persist the effect
+    if (
+      conditionRaw &&
+      (toText(args.visibility) ||
+        toText(args.other) ||
+        toText(args['gm-label']))
+    ) {
+      executeSavedAdd(playerId, args, tokenId);
+      return;
+    }
+
+    // Condition known but labels/visibility not yet collected
+    if (conditionRaw) {
+      showSavedAddDetailsStep(playerId, tokenId, conditionRaw, locale);
+      return;
+    }
+
+    // Step 1: condition picker
+    showSavedConditionStep(playerId, tokenId, locale);
+  }
+
+  /**
+   * Whispers the condition picker for the add-saved wizard.
+   *
+   * @param {string} playerId GM player id.
+   * @param {string} tokenId Target token id.
+   * @param {string} locale Locale code.
+   * @returns {void}
+   */
+  function showSavedConditionStep(playerId, tokenId, locale) {
+    const config = getConfig();
+    const profile = getSystemProfile(config.gameSystem);
+
+    const standardButtons = profile.STANDARD_CONDITIONS.map((c) =>
+      buildButton(
+        c,
+        buildCmd([`--saved add --token ${tokenId} --condition ${c}`]),
+      ),
+    );
+
+    const customButtons = profile.CUSTOM_EFFECT_TYPES.map((c) =>
+      buildButton(
+        c,
+        buildCmd([`--saved add --token ${tokenId} --condition ${c}`]),
+      ),
+    );
+
+    const tableRows = buildTwoColumnRows$1(standardButtons, customButtons);
+
+    whisper(playerId, t('ui.title.savedAdd', locale), [
+      htmlTable(
+        [t('ui.col.conditions', locale), t('ui.col.customEffects', locale)],
+        tableRows,
+      ),
+    ]);
+  }
+
+  /**
+   * Whispers visibility buttons, each embedding appropriate query prompts for
+   * the GM to fill in labels and effect text.
+   *
+   * @param {string} playerId GM player id.
+   * @param {string} tokenId Target token id.
+   * @param {string} condition Canonical condition.
+   * @param {string} locale Locale code.
+   * @returns {void}
+   */
+  function showSavedAddDetailsStep(playerId, tokenId, condition, locale) {
+    const needsText = isCustomTextCondition(condition);
+
+    const otherPart = needsText
+      ? `--other ?{${t('ui.saved.prompt.enterGmLabel', locale)}|}`
+      : `--other ""`;
+
+    const publicCmd = buildCmd([
+      `--saved add --token ${tokenId}`,
+      `--condition ${condition}`,
+      `--visibility public`,
+      otherPart,
+      `--gm-label ?{${t('ui.saved.prompt.enterGmLabel', locale)}|}`,
+    ]);
+
+    const maskedCmd = buildCmd([
+      `--saved add --token ${tokenId}`,
+      `--condition ${condition}`,
+      `--visibility masked`,
+      otherPart,
+      `--gm-label ?{${t('ui.saved.prompt.enterGmLabel', locale)}|}`,
+      `--public-label ?{${t('ui.saved.prompt.enterPublicLabel', locale)}|}`,
+    ]);
+
+    const gmCmd = buildCmd([
+      `--saved add --token ${tokenId}`,
+      `--condition ${condition}`,
+      `--visibility gm`,
+      otherPart,
+      `--gm-label ?{${t('ui.saved.prompt.enterGmLabel', locale)}|}`,
+    ]);
+
+    whisper(playerId, t('ui.title.savedAdd', locale), [
+      heading$1(t('ui.heading.visibility', locale)),
+      buildButton(
+        `${t('ui.saved.visibility.public', locale)} — ${t('ui.msg.visibilityPublicHint', locale)}`,
+        publicCmd,
+      ),
+      buildButton(
+        `${t('ui.saved.visibility.masked', locale)} — ${t('ui.msg.visibilityMaskedHint', locale)}`,
+        maskedCmd,
+      ),
+      buildButton(
+        `${t('ui.saved.visibility.gm', locale)} — ${t('ui.msg.visibilityGmHint', locale)}`,
+        gmCmd,
+      ),
+    ]);
+  }
+
+  /**
+   * Persists a new saved effect from fully-resolved --saved add arguments.
+   *
+   * @param {string} playerId GM player id.
+   * @param {object} args Parsed command arguments.
+   * @param {string} tokenId Target token id.
+   * @returns {void}
+   */
+  function executeSavedAdd(playerId, args, tokenId) {
+    const locale = getConfig().language;
+    const condition = toText(args.condition);
+
+    if (!condition) {
+      whisperWarning(playerId, t('ui.msg.savedConditionRequired', locale));
+      return;
+    }
+
+    const visibility = toText(args.visibility) || SAVED_VISIBILITY_GM;
+    if (!VALID_SAVED_VISIBILITIES.has(visibility)) {
+      whisperWarning(playerId, t('ui.msg.savedInvalidVisibility', locale));
+      return;
+    }
+
+    const other = toText(args.other);
+    const gmLabel = toText(args['gm-label']) || other || condition;
+    const publicLabel = toText(args['public-label']) || gmLabel;
+
+    const token = getGraphicToken(tokenId);
+    const targetCharacterId = token ? toText(token.get('represents')) : '';
+
+    const sourceTokenId = toText(args.source);
+    const sourceToken = sourceTokenId ? getGraphicToken(sourceTokenId) : null;
+    const sourceCharacterId = sourceToken
+      ? toText(sourceToken.get('represents'))
+      : '';
+
+    const effect = createSavedEffect({
+      visibility,
+      condition,
+      other,
+      targetTokenId: tokenId,
+      targetCharacterId,
+      sourceTokenId,
+      sourceCharacterId,
+      gmLabel,
+      publicLabel,
+      duration: { type: DURATION_UNTIL_REMOVED },
+    });
+
+    addSavedEffect(effect);
+
+    const tokenName = token ? getTokenName(token) : tokenId;
+    whisper(
+      playerId,
+      t('ui.title.savedEffects', locale),
+      t('ui.msg.savedEffectAdded', locale, { name: tokenName }),
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // Edit
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Shows an edit menu for an existing saved effect.
+   *
+   * When update args are present (e.g. --gm-label, --public-label, --visibility)
+   * applies them immediately instead of showing the menu.
+   *
+   * @param {string} playerId GM player id.
+   * @param {string} effectId Saved-effect id.
+   * @param {object} args Parsed command arguments.
+   * @returns {void}
+   */
+  function handleSavedEdit(playerId, effectId, args) {
+    const locale = getConfig().language;
+    const effect = findSavedEffect(effectId);
+    if (!effect) {
+      whisperWarning(playerId, t('ui.msg.savedEffectNotFound', locale));
+      return;
+    }
+
+    const hasUpdate =
+      args['gm-label'] !== undefined ||
+      args['public-label'] !== undefined ||
+      args.visibility !== undefined ||
+      args.other !== undefined;
+
+    if (hasUpdate) {
+      const updates = {};
+      if (args['gm-label'] !== undefined)
+        updates.gmLabel = toText(args['gm-label']);
+      if (args['public-label'] !== undefined)
+        updates.publicLabel = toText(args['public-label']);
+      if (args.other !== undefined) updates.other = toText(args.other);
+      if (args.visibility !== undefined) {
+        const v = toText(args.visibility);
+        if (VALID_SAVED_VISIBILITIES.has(v)) {
+          updates.visibility = v;
+        } else {
+          whisperWarning(playerId, t('ui.msg.savedInvalidVisibility', locale));
+          return;
+        }
+      }
+      updateSavedEffect(effectId, updates);
+      whisper(
+        playerId,
+        t('ui.title.savedEdit', locale),
+        t('ui.msg.savedEffectUpdated', locale),
+      );
+      return;
+    }
+
+    showSavedEditMenu(playerId, effect, locale);
+  }
+
+  /**
+   * Whispers an edit-options card for a saved effect.
+   *
+   * @param {string} playerId GM player id.
+   * @param {SavedEffect} effect Saved-effect record.
+   * @param {string} locale Locale code.
+   * @returns {void}
+   */
+  function showSavedEditMenu(playerId, effect, locale) {
+    const gmLabelCmd = buildCmd([
+      `--saved edit ${effect.id}`,
+      `--gm-label ?{${t('ui.saved.prompt.enterGmLabel', locale)}|${escapeQueryDefault(effect.gmLabel)}}`,
+    ]);
+
+    const publicLabelCmd = buildCmd([
+      `--saved edit ${effect.id}`,
+      `--public-label ?{${t('ui.saved.prompt.enterPublicLabel', locale)}|${escapeQueryDefault(effect.publicLabel)}}`,
+    ]);
+
+    const visPublicCmd = buildCmd([
+      `--saved edit ${effect.id} --visibility ${SAVED_VISIBILITY_PUBLIC}`,
+    ]);
+    const visMaskedCmd = buildCmd([
+      `--saved edit ${effect.id} --visibility ${SAVED_VISIBILITY_MASKED}`,
+    ]);
+    const visGmCmd = buildCmd([
+      `--saved edit ${effect.id} --visibility ${SAVED_VISIBILITY_GM}`,
+    ]);
+
+    whisper(playerId, t('ui.title.savedEdit', locale), [
+      heading$1(effectGmLabel(effect)),
+      htmlTable(
+        [t('ui.col.field', locale), t('ui.col.value', locale)],
+        [
+          [t('ui.saved.field.gmLabel', locale), code$1(effect.gmLabel || '')],
+          [
+            t('ui.saved.field.publicLabel', locale),
+            code$1(effect.publicLabel || ''),
+          ],
+          [
+            t('ui.saved.field.visibility', locale),
+            code$1(visibilityLabel(effect.visibility, locale)),
+          ],
+        ],
+      ),
+      rawHtml('<br>'),
+      heading$1(t('ui.heading.editActions', locale)),
+      buildButton(`${t('ui.saved.field.gmLabel', locale)}: ?{…}`, gmLabelCmd),
+      buildButton(
+        `${t('ui.saved.field.publicLabel', locale)}: ?{…}`,
+        publicLabelCmd,
+      ),
+      rawHtml('<br>'),
+      heading$1(t('ui.heading.visibility', locale)),
+      buildButton(t('ui.saved.visibility.public', locale), visPublicCmd),
+      buildButton(t('ui.saved.visibility.masked', locale), visMaskedCmd),
+      buildButton(t('ui.saved.visibility.gm', locale), visGmCmd),
+    ]);
+  }
+
+  /**
+   * Escapes a string to be safe as the default value in a Roll20 query prompt.
+   *
+   * @param {string} text Raw text.
+   * @returns {string} Escaped text.
+   */
+  function escapeQueryDefault(text) {
+    return toText(text)
+      .replaceAll('|', '')
+      .replaceAll('}', '')
+      .replaceAll('{', '');
+  }
+
+  // ---------------------------------------------------------------------------
+  // Remove
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Removes a saved effect by id and confirms to the GM.
+   *
+   * @param {string} playerId GM player id.
+   * @param {string} effectId Saved-effect id.
+   * @returns {void}
+   */
+  function executeSavedRemove(playerId, effectId) {
+    const locale = getConfig().language;
+    const removed = removeSavedEffect(effectId);
+    if (!removed) {
+      whisperWarning(playerId, t('ui.msg.savedEffectNotFound', locale));
+      return;
+    }
+    whisper(
+      playerId,
+      t('ui.title.savedRemoved', locale),
+      t('ui.msg.savedEffectRemoved', locale),
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // Promote
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Shows a card with promote-visibility buttons for a saved effect.
+   *
+   * @param {string} playerId GM player id.
+   * @param {string} effectId Saved-effect id.
+   * @returns {void}
+   */
+  function showSavedPromoteMenu(playerId, effectId) {
+    const locale = getConfig().language;
+    const effect = findSavedEffect(effectId);
+    if (!effect) {
+      whisperWarning(playerId, t('ui.msg.savedEffectNotFound', locale));
+      return;
+    }
+
+    const publicCmd = buildCmd([
+      `--saved promote ${effectId} --visibility ${SAVED_VISIBILITY_PUBLIC}`,
+    ]);
+    const maskedCmd = buildCmd([
+      `--saved promote ${effectId} --visibility ${SAVED_VISIBILITY_MASKED}`,
+    ]);
+    const gmCmd = buildCmd([
+      `--saved promote ${effectId} --visibility ${SAVED_VISIBILITY_GM}`,
+    ]);
+
+    whisper(playerId, t('ui.title.savedPromoted', locale), [
+      heading$1(effectGmLabel(effect)),
+      heading$1(t('ui.heading.promoteOptions', locale)),
+      buildButton(t('ui.saved.visibility.public', locale), publicCmd),
+      buildButton(t('ui.saved.visibility.masked', locale), maskedCmd),
+      buildButton(t('ui.saved.visibility.gm', locale), gmCmd),
+    ]);
+  }
+
+  /**
+   * Promotes a saved effect to the Turn Tracker (or marks it GM-only active).
+   *
+   * Public: creates a Turn Tracker row using the full GM label.
+   * Masked: creates a Turn Tracker row using the public label.
+   * GM: no Turn Tracker row — the reminder system surfaces it to the GM.
+   *
+   * @param {string} playerId GM player id.
+   * @param {string} effectId Saved-effect id.
+   * @param {string} visibility Promotion visibility ("public"|"masked"|"gm").
+   * @param {object} _args Parsed command arguments (reserved for future use).
+   * @returns {void}
+   */
+  function executeSavedPromote(playerId, effectId, visibility, _args) {
+    const locale = getConfig().language;
+    const effect = findSavedEffect(effectId);
+    if (!effect) {
+      whisperWarning(playerId, t('ui.msg.savedEffectNotFound', locale));
+      return;
+    }
+
+    if (visibility === SAVED_VISIBILITY_GM) {
+      // No Turn Tracker row — remind GM via the reminder system
+      updateSavedEffect(effectId, { visibility: SAVED_VISIBILITY_GM });
+      whisper(
+        playerId,
+        t('ui.title.savedPromoted', locale),
+        t('ui.msg.savedPromotedGm', locale),
+      );
+      return;
+    }
+
+    // Build a condition record and insert it into the Turn Tracker
+    const condition = buildActiveConditionFromSaved(effect, visibility);
+    if (!condition) {
+      whisperError(playerId, t('ui.msg.tokenNotFound', locale));
+      return;
+    }
+
+    addActiveCondition(condition);
+    const insertResult = insertConditionRow(condition);
+
+    // Apply marker if configured
+    const config = getConfig();
+    if (config.useMarkers && condition.marker) {
+      const targetToken = getGraphicToken(effect.targetTokenId);
+      if (targetToken) {
+        applyMarker(targetToken, condition.marker);
+      }
+    }
+
+    const msg =
+      visibility === SAVED_VISIBILITY_MASKED
+        ? t('ui.msg.savedPromotedMasked', locale, {
+            publicLabel: escapeHtml(effectPublicLabel(effect)),
+          })
+        : t('ui.msg.savedPromotedPublic', locale);
+
+    whisper(playerId, t('ui.title.savedPromoted', locale), [
+      msg,
+      insertResult.appended
+        ? t('ui.apply.turnAppended', locale)
+        : t('ui.apply.turnInserted', locale),
+    ]);
+  }
+
+  /**
+   * Builds a minimal active-condition record from a saved effect for Turn Tracker insertion.
+   *
+   * @param {SavedEffect} effect Saved-effect record.
+   * @param {string} visibility Promotion visibility mode.
+   * @returns {object|null} Active condition record, or null when the target token is missing.
+   */
+  function buildActiveConditionFromSaved(effect, visibility) {
+    const targetToken = getGraphicToken(effect.targetTokenId);
+    if (!targetToken) return null;
+
+    const config = getConfig();
+    const targetName = getTokenName(targetToken);
+    const sourceToken = effect.sourceTokenId
+      ? getGraphicToken(effect.sourceTokenId)
+      : null;
+    const sourceName = sourceToken ? getTokenName(sourceToken) : targetName;
+
+    const displayText =
+      visibility === SAVED_VISIBILITY_MASKED && effect.publicLabel
+        ? effect.publicLabel
+        : effectGmLabel(effect);
+
+    const marker = toText(config.markers[effect.condition]) || '';
+
+    const id = createId();
+
+    return {
+      id,
+      sourceTokenId: effect.sourceTokenId || effect.targetTokenId,
+      subjectTokenId: effect.subjectTokenId || '',
+      targetTokenId: effect.targetTokenId,
+      sourceName,
+      subjectName: '',
+      targetName,
+      condition: effect.condition,
+      customText: effect.other || '',
+      displayText,
+      marker,
+      turnOrderCustomId: id,
+      duration: effect.duration || { type: DURATION_UNTIL_REMOVED },
+      createdAt: Date.now(),
+    };
+  }
+
+  // ---------------------------------------------------------------------------
+  // Snooze
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Shows a snooze-options card for a saved effect.
+   *
+   * @param {string} playerId GM player id.
+   * @param {string} effectId Saved-effect id.
+   * @returns {void}
+   */
+  function showSavedSnoozeMenu(playerId, effectId) {
+    const locale = getConfig().language;
+    const effect = findSavedEffect(effectId);
+    if (!effect) {
+      whisperWarning(playerId, t('ui.msg.savedEffectNotFound', locale));
+      return;
+    }
+
+    const snoozeCmd = (scope, rounds) => {
+      const parts = [`--saved snooze ${effectId} --scope ${scope}`];
+      if (rounds) parts.push(`--rounds ${rounds}`);
+      return buildCmd(parts);
+    };
+
+    const clearCmd = buildCmd([`--saved snooze-clear ${effectId}`]);
+
+    whisper(playerId, t('ui.title.savedSnoozed', locale), [
+      heading$1(effectGmLabel(effect)),
+      heading$1(t('ui.heading.snoozeOptions', locale)),
+      buildButton(
+        t('ui.saved.snooze.thisTurn', locale),
+        snoozeCmd(SAVED_SNOOZE_TURN, 0),
+      ),
+      buildButton(
+        t('ui.saved.snooze.oneRound', locale),
+        snoozeCmd(SAVED_SNOOZE_ROUNDS, 1),
+      ),
+      buildButton(
+        t('ui.saved.snooze.threeRounds', locale),
+        snoozeCmd(SAVED_SNOOZE_ROUNDS, 3),
+      ),
+      buildButton(
+        t('ui.saved.snooze.thisCombat', locale),
+        snoozeCmd(SAVED_SNOOZE_COMBAT, 0),
+      ),
+      buildButton(t('ui.btn.clearSnooze', locale), clearCmd),
+    ]);
+  }
+
+  /**
+   * Applies a snooze to a saved effect.
+   *
+   * @param {string} playerId GM player id.
+   * @param {string} effectId Saved-effect id.
+   * @param {string} scope Snooze scope: "turn" | "rounds" | "combat".
+   * @param {number} rounds Round count (used for rounds scope).
+   * @param {string} [turnKey] Current turn signature (used for turn-scope snooze).
+   * @returns {void}
+   */
+  function executeSavedSnooze(playerId, effectId, scope, rounds, turnKey) {
+    const locale = getConfig().language;
+    const effect = findSavedEffect(effectId);
+    if (!effect) {
+      whisperWarning(playerId, t('ui.msg.savedEffectNotFound', locale));
+      return;
+    }
+
+    let snooze;
+    if (scope === SAVED_SNOOZE_TURN) {
+      snooze = { scope: SAVED_SNOOZE_TURN, snoozedOnTurnKey: turnKey || '' };
+    } else if (scope === SAVED_SNOOZE_ROUNDS) {
+      snooze = {
+        scope: SAVED_SNOOZE_ROUNDS,
+        roundsRemaining: rounds > 0 ? rounds : 1,
+      };
+    } else {
+      snooze = { scope: SAVED_SNOOZE_COMBAT };
+    }
+
+    updateSavedEffect(effectId, { snooze });
+
+    const scopeLabel =
+      scope === SAVED_SNOOZE_ROUNDS
+        ? t('ui.saved.snooze.rounds', locale, { n: snooze.roundsRemaining })
+        : scope === SAVED_SNOOZE_TURN
+          ? t('ui.saved.snooze.thisTurn', locale)
+          : t('ui.saved.snooze.thisCombat', locale);
+
+    whisper(
+      playerId,
+      t('ui.title.savedSnoozed', locale),
+      t('ui.msg.savedSnoozed', locale, { scope: scopeLabel }),
+    );
+  }
+
+  /**
+   * Clears the snooze on a saved effect.
+   *
+   * @param {string} playerId GM player id.
+   * @param {string} effectId Saved-effect id.
+   * @returns {void}
+   */
+  function executeSnoozeClear(playerId, effectId) {
+    const locale = getConfig().language;
+    const effect = findSavedEffect(effectId);
+    if (!effect) {
+      whisperWarning(playerId, t('ui.msg.savedEffectNotFound', locale));
+      return;
+    }
+    updateSavedEffect(effectId, { snooze: null });
+    whisper(
+      playerId,
+      t('ui.title.savedSnoozeCleared', locale),
+      t('ui.msg.savedSnoozeCleared', locale),
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // GM reminder system
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Returns true when a saved-effect reminder should be shown for the given turn key.
+   *
+   * Handles all snooze scopes and mutates snooze state when scopes expire.
+   *
+   * @param {SavedEffect} effect Saved-effect record.
+   * @param {string} turnKey Current turn signature.
+   * @returns {boolean} True when the reminder should fire.
+   */
+  function shouldShowReminder(effect, turnKey) {
+    if (!effect.snooze) return true;
+
+    const { scope } = effect.snooze;
+
+    if (scope === SAVED_SNOOZE_COMBAT) {
+      return false;
+    }
+
+    if (scope === SAVED_SNOOZE_TURN) {
+      if (effect.snooze.snoozedOnTurnKey === turnKey) {
+        return false;
+      }
+      // Different turn — snooze expired
+      updateSavedEffect(effect.id, { snooze: null });
+      return true;
+    }
+
+    if (scope === SAVED_SNOOZE_ROUNDS) {
+      const remaining = effect.snooze.roundsRemaining || 0;
+      if (remaining > 0) {
+        updateSavedEffect(effect.id, {
+          snooze: { ...effect.snooze, roundsRemaining: remaining - 1 },
+        });
+        return false;
+      }
+      // Expired
+      updateSavedEffect(effect.id, { snooze: null });
+      return true;
+    }
+
+    return true;
+  }
+
+  /**
+   * Fires GM reminders for any hidden (gm or masked) saved effects on the token
+   * that just reached the top of the Turn Tracker.
+   *
+   * Deduplicates using lastReminderTurnKey so the same reminder is never shown
+   * twice for the same top-of-turn state.
+   *
+   * @param {string} tokenId Token id now at the top of the turn order.
+   * @param {string} tokenName Token display name.
+   * @param {string} turnKey Current turn-order signature.
+   * @returns {void}
+   */
+  function processSavedEffectReminders(tokenId, tokenName, turnKey) {
+    const effects = getSavedEffectsForToken(tokenId);
+    if (effects.length === 0) return;
+
+    const locale = getConfig().language;
+    const gmIds = getGmPlayerIds();
+    if (!gmIds.length) return;
+
+    const remindable = [];
+
+    for (const effect of effects) {
+      // Public effects are visible in the Turn Tracker — no separate reminder needed
+      if (effect.visibility === SAVED_VISIBILITY_PUBLIC) continue;
+
+      // Duplicate prevention for the same turn tick
+      if (effect.lastReminderTurnKey === turnKey) continue;
+
+      if (!shouldShowReminder(effect, turnKey)) continue;
+
+      remindable.push(effect);
+    }
+
+    if (remindable.length === 0) return;
+
+    // Stamp turn key so this batch is not repeated
+    for (const effect of remindable) {
+      updateSavedEffect(effect.id, { lastReminderTurnKey: turnKey });
+    }
+
+    const bodyLines = buildReminderCard(remindable, tokenName, locale);
+    const primaryGmId = gmIds[0];
+    whisper(
+      primaryGmId,
+      t('ui.title.hiddenEffects', locale, { name: tokenName }),
+      bodyLines,
+    );
+  }
+
+  /**
+   * Builds the body lines for a GM reminder card listing hidden saved effects.
+   *
+   * @param {SavedEffect[]} effects Effects to include in the card.
+   * @param {string} tokenName Token display name.
+   * @param {string} locale Locale code.
+   * @returns {(string|object)[]} Body lines.
+   */
+  function buildReminderCard(effects, tokenName, locale) {
+    const lines = [
+      t('ui.msg.hiddenEffectsReminder', locale, { name: tokenName }),
+    ];
+
+    for (const effect of effects) {
+      lines.push(rawHtml('<br>'));
+      lines.push(heading$1(effectGmLabel(effect)));
+
+      const rows = [
+        [
+          t('ui.saved.field.visibility', locale),
+          escapeHtml(visibilityLabel(effect.visibility, locale)),
+        ],
+      ];
+
+      if (effect.visibility === SAVED_VISIBILITY_MASKED && effect.publicLabel) {
+        rows.push([
+          t('ui.saved.field.publicLabel', locale),
+          escapeHtml(effect.publicLabel),
+        ]);
+      }
+
+      if (effect.sourceTokenId) {
+        const srcToken = getGraphicToken(effect.sourceTokenId);
+        const srcName = srcToken
+          ? getTokenName(srcToken)
+          : effect.sourceTokenId;
+        rows.push([t('ui.saved.field.source', locale), escapeHtml(srcName)]);
+      }
+
+      lines.push(
+        htmlTable(
+          [t('ui.col.field', locale), t('ui.col.details', locale)],
+          rows,
+        ),
+      );
+
+      const promoteCmd = buildCmd([`--saved promote ${effect.id}`]);
+      const editCmd = buildCmd([`--saved edit ${effect.id}`]);
+      const removeCmd = buildCmd([`--saved remove ${effect.id}`]);
+      const snoozeCmd = buildCmd([`--saved snooze ${effect.id}`]);
+
+      lines.push(
+        rawHtml(
+          [
+            buildButton(t('ui.btn.promoteSaved', locale), promoteCmd)
+              .__trustedHtml,
+            buildButton(t('ui.btn.editSaved', locale), editCmd).__trustedHtml,
+            buildButton(t('ui.btn.removeSaved', locale), removeCmd)
+              .__trustedHtml,
+            buildButton(t('ui.btn.snoozeSaved', locale), snoozeCmd)
+              .__trustedHtml,
+          ].join(' '),
+        ),
+      );
+    }
+
+    return lines;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Shared helpers
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Builds rows for a two-column button table with blank-cell padding.
+   *
+   * @param {(string|object)[]} leftButtons Left-column button items.
+   * @param {(string|object)[]} rightButtons Right-column button items.
+   * @returns {(string|object)[][]} Table rows.
+   */
+  function buildTwoColumnRows$1(leftButtons, rightButtons) {
+    const maxRows = Math.max(leftButtons.length, rightButtons.length);
+    const tableRows = [];
+    for (let i = 0; i < maxRows; i += 1) {
+      tableRows.push([
+        i < leftButtons.length ? leftButtons[i] : '',
+        i < rightButtons.length ? rightButtons[i] : '',
+      ]);
+    }
+    return tableRows;
+  }
+
   const SUBJECT_NONE = '__none__';
 
   const SECTION_HEADING_STYLE = [
@@ -22245,6 +26786,11 @@ const ConditionTrackerMod = (() => {
       return;
     }
 
+    if (args.saved !== undefined) {
+      handleSaved(msg, args);
+      return;
+    }
+
     if (args.config) {
       handleConfig(msg.playerid, args.config);
       return;
@@ -22875,6 +27421,7 @@ const ConditionTrackerMod = (() => {
     const cmdPrompt = `${COMMAND} --prompt`;
     const cmdMultiTarget = `${COMMAND} --multi-target`;
     const cmdReportToken = COMMAND_REPORT_TOKEN;
+    const cmdSaved = COMMAND_SAVED;
     const cmdRemoveMenu = `${COMMAND} --menu remove`;
     const cmdConfig = `${COMMAND} --config`;
     const cmdCleanup = `${COMMAND} --cleanup`;
@@ -22899,6 +27446,10 @@ const ConditionTrackerMod = (() => {
           [
             code(cmdReportToken),
             buildButton(t('ui.btn.reportToken', locale), cmdReportToken),
+          ],
+          [
+            code(cmdSaved),
+            buildButton(t('ui.btn.savedEffects', locale), cmdSaved),
           ],
           [
             code(cmdRemoveMenu),
@@ -23164,10 +27715,11 @@ const ConditionTrackerMod = (() => {
     } else {
       lines.push(
         htmlTable(
-          [t('ui.col.condition', locale), t('ui.col.duration', locale)],
+          [t('ui.col.condition', locale), t('ui.col.duration', locale), ''],
           appliedTo.map((c) => [
             escapeHtml(c.displayText),
             escapeHtml(formatDuration(c.duration, locale)),
+            buildButton('🗑', `${COMMAND} --remove ${c.id}`),
           ]),
         ),
       );
@@ -23181,11 +27733,41 @@ const ConditionTrackerMod = (() => {
     } else {
       lines.push(
         htmlTable(
-          [t('ui.col.condition', locale), t('ui.col.duration', locale)],
+          [t('ui.col.condition', locale), t('ui.col.duration', locale), ''],
           appliedBy.map((c) => [
             escapeHtml(c.displayText),
             escapeHtml(formatDuration(c.duration, locale)),
+            buildButton('🗑', `${COMMAND} --remove ${c.id}`),
           ]),
+        ),
+      );
+    }
+
+    const savedEffects = getSavedEffectsForToken(tokenId);
+    lines.push(
+      heading(t('ui.heading.savedEffectsFor', locale, { name: tokenName })),
+    );
+    if (savedEffects.length === 0) {
+      lines.push(t('ui.msg.noSavedEffects', locale, { name: tokenName }));
+    } else {
+      lines.push(
+        htmlTable(
+          [
+            t('ui.saved.field.gmLabel', locale),
+            t('ui.saved.field.visibility', locale),
+            '',
+          ],
+          savedEffects.map((effect) => {
+            const label = effect.gmLabel || effect.condition || '';
+            const snoozedLabel = effect.snooze
+              ? `${label} (${t('ui.saved.snoozed', locale)})`
+              : label;
+            return [
+              escapeHtml(snoozedLabel),
+              escapeHtml(t(`ui.saved.visibility.${effect.visibility}`, locale)),
+              buildButton('🗑', `${COMMAND} --saved remove ${effect.id}`),
+            ];
+          }),
         ),
       );
     }
@@ -23534,6 +28116,7 @@ const ConditionTrackerMod = (() => {
         wizard: MACRO_NAME,
         multiTarget: MACRO_NAME_MULTI_TARGET,
         reportToken: MACRO_NAME_REPORT_TOKEN,
+        saved: MACRO_NAME_SAVED,
       }),
     );
   }
@@ -23652,6 +28235,10 @@ const ConditionTrackerMod = (() => {
         return;
       }
 
+      // Always prune saved effects for deleted tokens, even when no active
+      // turn-tracked conditions are linked to that token.
+      removeSavedEffectsForToken(tokenId);
+
       const { matched: removed, unmatched: kept } = partitionActiveConditions(
         (condition) =>
           condition.sourceTokenId === tokenId ||
@@ -23711,6 +28298,11 @@ const ConditionTrackerMod = (() => {
         promptConditionReorder(getPrimaryGmId(), currentMisplacedIds.length);
       }
 
+      // When the turn order becomes empty, combat has ended — clear combat snoozes
+      if (currentTokenIds.length === 0) {
+        clearCombatSnoozes();
+      }
+
       if (!previousFirstTurnId || previousFirstTurnId === currentFirstTurnId) {
         return;
       }
@@ -23721,6 +28313,19 @@ const ConditionTrackerMod = (() => {
         updateConditionRow(condition);
       }
       removeExpiredConditions(getPrimaryGmId(), expired);
+
+      // Fire GM reminders for hidden saved effects on the token now at the top
+      if (currentFirstTurnId) {
+        const topToken = getGraphicToken(currentFirstTurnId);
+        if (topToken) {
+          const topTokenName = getTokenName(topToken);
+          processSavedEffectReminders(
+            currentFirstTurnId,
+            topTokenName,
+            currentSignature,
+          );
+        }
+      }
     } catch (error) {
       log(`${SCRIPT_NAME} duration error: ${error.message}`);
     }
