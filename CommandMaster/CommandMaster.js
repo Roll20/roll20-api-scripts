@@ -149,14 +149,19 @@ API_Meta.CommandMaster={offset:Number.MAX_SAFE_INTEGER,lineCount:-1};
  *                     Added --noWaitMsg command to suppress spurious Please Wait messages.
  * v5.0.2  17/10/2025  Fixed crash on calling !cmd without a command
  * v5.0.3  23/10/2025  Fixed Priest class issue with bulk spell allocation
+ * v5.1.0  14/09/2025  Fix running makeConvertItemsMenu() for use with multiple selected tokens.
+ * v5.3.0  23/12/2025  Added creature magic resistance definitions. Added NPC definition data tag maa to 
+ *                     force a dexterity adjustment to ranged weapon attacks. Updated resolveData() and
+ *                     attrLookup() to use objects for optional parameters. Added Advantage/Disadvantage
+ *                     DM macro button.
  */
  
-var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
+const CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 	'use strict'; 
-	var version = '5.0.3',
+	var version = '5.3.0',
 		author = 'RED',
 		pending = null;
-	const lastUpdate = 1761228496;
+	const lastUpdate = 1777318205;
 
 	/*
 	 * Define redirections for functions moved to the RPGMaster library
@@ -165,7 +170,7 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 	const getRPGMap = (...a) => libRPGMaster.getRPGMap(...a);
 	const getHandoutIDs = (...a) => libRPGMaster.getHandoutIDs(...a);
 	const setAttr = (...a) => libRPGMaster.setAttr(...a);
-	const attrLookup = (...a) => libRPGMaster.attrLookup(...a);
+	const attrLookup = (...a) => libRPGMaster.newAttrLookup(...a);
 	const getTableField = (...t) => libRPGMaster.getTableField(...t);
 	const getTable = (...t) => libRPGMaster.getTable(...t);
 	const getLvlTable = (...t) => libRPGMaster.getLvlTable(...t);
@@ -204,8 +209,9 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 	const convertMoney = (...a) => libRPGMaster.convertMoney(...a);
 	const updateCoins = (...a) => libRPGMaster.updateCoins(...a);
 	const spendMoney = (...a) => libRPGMaster.spendMoney(...a);
+	const setCoin = (...a) => libRPGMaster.setCoin(...a);
 	const parseData = (...a) => libRPGMaster.parseData(...a);
-	const resolveData = (...a) => libRPGMaster.resolveData(...a);
+	const resolveData = (...a) => libRPGMaster.newResolveData(...a);
 	const caster = (...a) => libRPGMaster.caster(...a);
 	const findPower = (...a) => libRPGMaster.findPower(...a);
 	const handleSetNPCAttributes = (...a) => libRPGMaster.handleSetNPCAttributes(...a);
@@ -285,20 +291,17 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 	
 	const handouts = Object.freeze({
 	CommandMaster_Help:	{name:'CommandMaster Help',
-						 version:4.02,
+						 version:4.03,
 						 avatar:'https://s3.amazonaws.com/files.d20.io/images/257656656/ckSHhNht7v3u60CRKonRTg/thumb.png?1638050703',
 						 bio:'<div style="font-weight: bold; text-align: center; border-bottom: 2px solid black;">'
-							+'<span style="font-weight: bold; font-size: 125%">CommandMaster Help v4.02</span>'
+							+'<span style="font-weight: bold; font-size: 125%">CommandMaster Help v4.03</span>'
 							+'</div>'
 							+'<div style="padding-left: 5px; padding-right: 5px; overflow: hidden;">'
 							+'<h1>Command Master API</h1>'
 							+'<h4>for CommandMaster  v'+version+' and later</h4>'
 
 							+'<h3><span style='+design.selected_button+'>New:</span> in this Help Handout</h3>'
-							+'<p><span style='+design.selected_button+'>New:</span> Added <i>Drag & Drop</i> NPC Service Providers</p>'
-							+'<p><span style='+design.selected_button+'>New:</span> Added --restock command to restock inventories for <i>Drag & Drop</i> Service Providers</p>'
-							+'<p><span style='+design.selected_button+'>Updated:</span> Enhanced the --set-prof command to manage weapon proficiency slots and training sequence</p>'
-							+'<p><span style='+design.selected_button+'>Updated:</span> Enhanced the --add-profs command to work as a display for players</p>'
+							+'<p><span style='+design.selected_button+'>New:</span> Added --add-treasure command to use DMG treasure tables to add random treasure to a character sheet.</p>'
 
 							+'<p>The CommandMaster API is part of the RPGMaster suite of APIs for Roll20, and manages the initialisation of a Campaign to use the RPGMaster APIs, communication and command syntax updates between the APIs and, most importantly for the DM, easy menu-driven setup of Tokens and Character Sheets to work with the APIs.</p>'
 							+'<h2>Syntax of CommandMaster calls</h2>'
@@ -320,14 +323,14 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 							+'<p>Any API command can be registered with CommandMaster using the <b>--register</b> command.  This will allow the command registered to be added as a Token Action Button to Character Sheets by the   abilities command, and to be optionally updated in all Character Sheets wherever used should the details of the registration change.</p>'
 							+'<h3>Editing Character Sheet abilities</h3>'
 							+'<p><b>Danger:</b> this command is very powerful, and can ruin your campaign if mis-used!  The <b>--edit</b> command can be used to change any string in Character Sheet ability macros to any other string, using \'escaped\' characters to replace even the most complex strings.  However, use with care!</p>'
-							+'<h3><span style='+design.selected_button+'>Updated:</span> <i>Drag & Drop</i> Services, NPCs and Creatures</h3>'
+							+'<h3><i>Drag & Drop</i> Services, NPCs and Creatures</h3>'
 							+'<p>CommandMaster can combine all its capabilities for managing character sheets to automatically populate a blank character sheet with data specific to an NPC of a particular race, class and level; an NPC Service Provider of services such as an Inn, a General Stores, or a Weapon Training School; or to make that character sheet represent a creature from <i>The Monsterous Compendium</i>. Data held in the <b>Race-DB-NPCs</b>, <b>Race-DB-Services</b> and <b>Race-DB-Creatures</b> databases is used to configure the blank character sheet, and the GM or game creator can add their own bespoke NPC, Service and creature definitions to their own databases to enhance and extend those provided in the same fashion as with other RPGMaster databases and APIs.  See the <i>Class Database Help</i> and <i>Race & Creature Database Help</i> handouts for more information.</p>'
 							+'<p>To create a <i>Drag & Drop</i> NPC, Service or Creature, add a blank character sheet to the Journal using the standard Roll20 [Character+] button at the top of the Roll20 Journal. Give the sheet a name and an image as desired, then close it. Drag the blank sheet onto the map surface to drop a token, select the token just dropped, and down the bottom of the Chat Window a dialog will have appeared, with options to select the [NPC], [Service] or [Creature] for the sheet. Use the buttons to select the NPC, Service or Creature you want from the Roll Queries that appear on screen, which may also ask for further information (such as level of the NPC, the profit margin for the Service, or age of the creature etc). <b>Be patient and wait for the API to set the character sheet up!</b> This is one of the most complex things you can ask RPGMaster APIs to do - just think how long it would take you to set up a character sheet manually... Once complete, a number of dialogs will appear in the Chat Window describing the characteristics of the NPC, Service or creature created. It is then necessary to click away from the token (de-select it) and then select it again to refresh the Action Buttons for the token. The token and character sheet can then be immediately used in play as that NPC, Service Provider or Creature.</p>'
 							+'<p>It is possible to re-write any character sheet as a different NPC, Service or Creature using the GM\'s [Token Setup] macro-menu button, or using the <b>!cmd --abilities</b> command, with the token representing the character sheet selected, and selecting the [Choose Race/Class] function on the displayed dialog. This displays the same dialog for selecting [NPC], [Service] or [Creature] as described above. The GM will be prompted for confirmation of over-writing an already populated sheet.</p>'
 							+'<h3><i>Drag & Drop</i> Containers</h3>'
 							+'<p><i>Drag & Drop</i> Containers work in a similar fashion to other <i>Drag & Drop</i> functions for setting up character sheets. Drop a blank character sheet onto a map to drop a token, ensure that token is selected, then go to the dialog that appears at the bottom of the Chat Window. Select the [Container] button, and a list of various types of container appears as a Roll Query from which you can select a type.  Then a new dialog appears in the Chat Window asking you to specify the characteristics of the container to create.  The container can have a lock of various types (e.g. a combination lock, a password lock, a simple key lock, etc.), and can be trapped with various types of trap (such as a poison dart trap, an explosive runes trap, etc).</p>'
 							+'<p>The types of container, and the macros used to drive the container\'s actions, are all defined in the <i>Locks-Traps-DB</i>. As with other RPGMaster databases, the GM or game creator can add their own containers, locks and traps by adding their own database. Refer to the <i>Locks and Traps Help</i> handout to get more information.</p>'
-							+'<h3>span style='+design.selected_button+'>Updated:</span> Weapon Proficiencies</h3>'
+							+'<h3><span style='+design.selected_button+'>Updated:</span> Weapon Proficiencies</h3>'
 							+'<p>New facilities have been provided to more effectively aid the GM and the players in managing character weapon proficiencies. Using the new Trading system (see the <i>MagicMaster Help</i> handout), Player Characters and NPCs can buy training to gain proficiency, specialisation and mastery in use of weapons. Gaining proficiencies is limited by numbers of slots, which can be automatically calculated by the APIs or left to numbers of slots set on the character sheet, depending on the RPGMaster configuration flags. Another configuration flag controls if weapon specialisation is limited to one weapon, or can be applied more widely.</p>'
 							+'<p>Fighting Styles are also supported, and can have slots allocated to them to become specialised (independently of weapon specialisation limits) or masterful in these fighting styles. Benefits of the style specialisation are applied appropriately.</p>'
 							+'<p>The Proficiencies tab on the character sheet has always been used by the RPGMaster APIs to drive the bonuses and penalties for use of various weapons. However, management of the tab has been improved for the GM, and the players also now have access to display the weapon proficiency table with a token selected under the [Other Actions] action button.</p>'
@@ -344,11 +347,12 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 							+'--check-chars<br>'
 							+'--class-menu [token_id]<br>'
 							+'--add-spells [POWERS/MUSPELLS/PRSPELLS] | [level]<br>'
-							+'<span style='+design.selected_button+'>Updated:</span>--add-profs [DISPLAY]<br>'
-							+'<span style='+design.selected_button+'>Updated:</span>--set-prof [~][NOT-PROF/PROFICIENT/SPECIALIST/MASTERY] | weapon | weapon-type<br>'
+							+'--add-profs [DISPLAY]<br>'
+							+'--set-prof [~][NOT-PROF/PROFICIENT/SPECIALIST/MASTERY] | weapon | weapon-type<br>'
 							+'--set-all-prof<br>'
+							+'<span style='+design.selected_button+'>New:</span>--add-treasure [token_id]|treasure types|[multiplier]<br>'
 							+'--token-img [token_id]<br>'
-							+'<span style='+design.selected_button+'>New:</span>--restock [token_id]</pre>'
+							+'--restock [token_id]</pre>'
 							+'<h3>3. Command and Ability maintenance</h3>'
 							+'<pre>--register action|description|api-call|api-command|parameters<br>'
 							+'--edit old-string | new-string</pre>'
@@ -406,13 +410,13 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 							+'<pre>--add-spells [POWERS/MUSPELLS/PRSPELLS] | [level]</pre>'
 							+'<p>Displays a menu allowing spells in the Spells Databases to be added to the Character Sheet(s) represented by the selected Token(s).  If no spell type and/or spell level is specified, the initial menu shown is for Level 1 Wizard spells (MUSPELLS). Buttons are shown on the menu that allow navigation to other levels, spell types and powers.  For <i>Priests</i>, a button is also provided to add every spell allowed for the Priest\'s Class to their spellbooks at all levels (of course, they will only be able to memorise those that their experience level allows them to). For all Character Classes that have <i>Powers</i> (or Power-like capabilities, such as Priestly <i>Turn Undead</i> or Paladin <i>Lay on Hands</i>), there is a button on the <i>Powers</i> menu to add Powers that the character\'s Class can have.</p>'
 							+'<p><b>Note:</b> adding spells / powers to a sheet does not mean the Character can immediately use them.  They must be <i>memorised</i> first.  Use the commands in the <b>MagicMaster API</b> to memorise spells and powers.</p>'
-							+'<h3>2.7 <span style='+design.selected_button+'>Updated:</span> Choose weapon proficiencies</h3>'
+							+'<h3>2.7 Choose weapon proficiencies</h3>'
 							+'<pre>--add-profs [DISPLAY]</pre>'
 							+'<p>Displays a menu from which to display or select proficiencies and level of proficiency for any weapons in the Weapon Databases for the Character Sheet(s) represented by the selected tokens.  Also provides a button for making the Character proficient in all weapons carried (i.e. those currently in their Item table).</p>'
 							+'<p>All current proficiencies are displayed, with the proficiency level of each. If the optional DISPLAY parameter is used, or the command is used by anyone other than a GM, that is all this command displays. Used by the GM, the dialog can change or remove proficiencies.  It is also now possible for the GM to select proficiencies in <b>Fighting Styles</b> as introduced by <i>The Complete Fighter\'s Handbook</i>: these can be found under the <i>Choose Style</i> button, and can also be set as Proficient or Specialised.  Selecting a Fighting Style proficiency grants benefits as defined in the Handbook, or as modified by the DM - see the <i>Styles Database Help</i> handout for more information.</p>'
 							+'<p>RPGMaster configuration options (accessed via the <b>!attk --config</b> command) control if numbers of slots are controlled by the RPGMaster system, or are read from the character sheet. Another option restricts weapon specialisation / mastery to just one weapon (as per the AD&D 2e rules) or removes this restriction, perhaps for high level campaigns.</p>'
 							+'<p><b>Note:</b> this does more than just entering the weapon in the proficiency table.  It adds the <i>weapon group</i> that the weapon belongs to as a field to the table (see weapon database help handouts for details), to manage <i>related weapon</i> attacks, as well as linking to fighting styles and providing information for style validity with weapons in use.</p>'
-							+'<h3>2.8 <span style='+design.selected_button+'>Updated:</span> Set weapon proficiencies</h3>'
+							+'<h3>2.8 Set weapon proficiencies</h3>'
 							+'<pre>--set-prof  [~][NOT-PROF/PROFICIENT/SPECIALIST/MASTERY] | weapon or fighting-style | weapon-type </pre>'
 							+'<p>Attempts to set a specific weapon proficiency to a named level.  If the proficiency level is omitted, PROFICIENT is assumed. If the proficiency level is preceeded by a tilde (\'~\') checks on the validity of the proficiency level requested (such as number of slots available, previous proficiency level attained etc.) are ignored. The checks are also controlled by an RPGMaster configuration option.</p>'
 							+'<p>If the proficiency requested is not preceeded by a tilde, the API works as if the character is undergoing training - that is, they need to start as Proficient, then be trained to be a Specialist, before being trained to gain Mastery. Also, the character will have a limited number of weapon proficiency slots, set by their class and level (see the <i>Class Database Help</i> handout), which are consumed by gaining proficiency levels. Different weapons (such as bows) may use more slots than others (see <i>Item Database Help</i> handout). Using the tilde will override these checks and just set the proficiencies as requested - the DM proficiency tools use the tilde in the command to achieve this.</p>'
@@ -424,10 +428,16 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 							+'<p>Adds all currently carried weapons (those in the Items table) to PROFICIENT, saving them and their <i>weapon group</i> to the weapon proficiency table.  Those weapons found that are already in the table are reset to PROFICIENT (overwriting any existing different proficiency level).  Any other proficiencies already in the table are not altered.</p>'
 							+'<p><b>Note:</b> this command always adds a weapon proficiency called <i>innate</i>.  This proficiency is used for attacks with innate weapons, such as claws and bites, but also for spells that require a <i>touch attack</i>.  Indeed, to make this even more specific, the weapons database distributed with the AttackMaster and MagicMaster APIs includes a weapon called <i>Touch</i>.</p>'
 							+'<p><b>Tip:</b> if using the <b>MagicMaster API</b> then running the <b>!magic --gm-edit-mi</b> command and adding weapons before running this command can speed up setting up character sheets.</p>'
-							+'<h3>2.10 Change container images & variables</h3>'
+							+'<h3><span style='+design.selected_button+'>New:</span> 2.10 Add Treasure using DMG Treasure Tables</h3>'
+							+'<pre>--add-treasure [token_id]|[treasure types]|[multiplier]</pre>'
+							+'<p>Takes an optional token ID (defaults to currently selected token), an optional treasure qty/type string (displays menu if not provided), and an optional multiplier (defaults to 1).</p>'
+							+'<p>The Dungeon Master\'s Guide includes tables to randomly generate various types of treasure, and creature specifications in the Monsterous Compendium include the descriptors as to which random tables to use and to what quantity. This command uses these tables (held in the RPGMaster databases) to generate random treasure.</p>'
+							+'<p>Treasure Types as a string consists of one or more letters which match DMG Table 84 rows. Each letter in the string can (optionally) be preceeded by a number whih as a quantity multiplier for the next letter (defaults to 1). For example, the string "2L5NV" would generate two lots of treasure type L, five lots of treasure type N, and one lot of treasure type V.</p>'
+							+'<p>The multiplier is a general overall multiplier that will apply to the Treasure Type string.</p>'
+							+'<h3>2.11 Change container images & variables</h3>'
 							+'<pre>--token-img [token_id]</pre>'
 							+'<p>Displays a menu for changing the images and variables used for containers. The optional token_id (defaults to the selected token) must represent a character sheet, and the dialog expects it to be a character sheet of a container, potentially one set up using the <i>Drag & Drop</i> container functionality. Containers set up using <i>Drag & Drop</i> will have information about the use of images and variables in the "Bio" tab of the Character Sheet.</p>'
-							+'<h3><span style='+design.selected_button+'>New:</span> 2.11 Restock items</h3>'
+							+'<h3>2.12 Restock items</h3>'
 							+'<pre>--restock [token_id]</pre>'
 							+'<p>For <i>Drag & Drop</i> NPCs, Service Providers and Creatures, this command will re-apply the Item rules specified in their database specification to restock their items held. This is especially useful for Traders, such as the Inn, the General Store and the Forge, as well as for Training Schools, such as the Sword Master School or Archery School, where training coarses can get fully booked!</p>'
 							+'<p><b>Warning:</b> This command first deletes all the held items in the character sheet represented by the selected token(s) before generating new entries.  Be sure you want to do this before using. For Service Providers, executing a <i>rest</i> for them (using an action button or the <b>!magic --rest</b> command) will automatically call the --restock command.</p>'
@@ -978,6 +988,11 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 		REVIEW_ITEM:		'REVIEW_ITEM',
 		ITEMCONV_MENU:		'ITEMCONV_MENU',
 		TOKEN_IMG:			'TOKEN_IMG',
+		EDITATTK_SPEED:		'EDITATTK_SPEED',
+		EDITATTK_DMG:		'EDITATTK_DMG',
+		EDITATTK_TYPE:		'EDITATTK_TYPE',
+		EDITATTK_NAME:		'EDITATTK_NAME',
+		EDITATTK_CONFIRM:	'EDITATTK_CONFIRM',
 	});
 		
 	/*
@@ -1012,7 +1027,7 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 	const reItemData = /}}[\s\w\-]*?(?<!tohit|dmg|ammo|range)data\s*?=\s*?\[.+?\][\s,]*?{{/im;
 
 	
-	const	replacers = [
+	const	replacers = Object.freeze([
 			[/\\api;?/g, "!"],
 			[/\\lbrc;?/g, "{"],
 			[/\\rbrc;?/g, "}"],
@@ -1037,15 +1052,15 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 			[/\\rpar;?/g, ")"],
 			[/\\cr;?/g, "\n"],
 			[/\\comma;?/g, ","],
-		];
+		]);
 		
-	const encoders = [
+	const encoders = Object.freeze([
 			[/\r?\n/gm,'\\n'],
 			[/'/gm,"\\'"],
 			[/&/gm,"\\\\amp;"],
 			[/>/gm,"\\\\gt;"],
 			[/</gm,"\\\\lt;"]
-		];
+		]);
 
 	const reRepeatingTable = /^(repeating_.*)_\$(\d+)_.*$/;
 
@@ -1104,6 +1119,12 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 		noWaitMsg: true,
 	};
 	
+	var	attacks = {
+		attk1: false,
+		attk2: false,
+		attk3: false,
+	};
+	
 	var parsedCmds = false,
 		apiCommands = {},
 		apiDBs = {magic:false,attk:false},
@@ -1115,8 +1136,9 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 		checkForChangedCmds = false,
 		msg_orig = {},
 		time = Date.now();
-		
-	var CommandMaster_tmp = (function() {
+
+/*		
+	const CommandMaster_tmp = (function() {
 		var templates = {
 			button: _.template('<a style="display: inline-block; font-size: 100%; color: black; padding: 3px 3px 3px 3px; margin: 2px 2px 2px 2px; border: 1px solid black; border-radius: 0.5em; font-weight: bold; text-shadow: -1px -1px 1px #FFF, 1px -1px 1px #FFF, -1px 1px 1px #FFF, 1px 1px 1px #FFF; background-color: #C7D0D2;" href="<%= command %>"><%= text %></a>'),
 			confirm_box: _.template('<div style="font-weight: bold; background-color: #FFF; text-align: center; box-shadow: rgba(0,0,0,0.4) 3px 3px; border-radius: 1em; border: 1px solid black; margin: 5px 5px 5px 5px; padding: 2px 2px 2px 2px;">'
@@ -1164,7 +1186,7 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 	/**
 	 * Init
 	 */
-	var init = function() {
+	const init = function() {
 		try {
 			if (!state.CommandMaster)
 				{state.CommandMaster = {};}
@@ -1203,7 +1225,7 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 			
 			DBindex = undefined;
 			flags.noWaitMsg = true;
-			setTimeout( () => {flags.noWaitMsg = false}, 5000 );
+			setTimeout( () => {flags.noWaitMsg = false}, 10000 );
 
 			if (_.isUndefined(state.RPGMaster.tokenFields)) {
 				state.RPGMaster.tokenFields = [fields.AC[0],fields.Thac0_base[0],fields.HP[0]];
@@ -1237,7 +1259,7 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * by Joe Singhaus and C Levett.
 	**/
 
-	var processInlinerolls = function (msg) {
+	const processInlinerolls = function (msg) {
 		if (msg.inlinerolls && msg.inlinerolls.length) {
 			return msg.inlinerolls.map(v => {
 				const ti = v.results.rolls.filter(v2 => v2.table)
@@ -1265,12 +1287,9 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 			if (playerIsGM(state.CommandMaster.debug)) {
 				log('CommandMaster Debug: '+msg);
 			} else {
-				var player = getObj('player',state.CommandMaster.debug),
-					to;
-				if (player) {
-					to = '/w "' + player.get('_displayname') + '" ';
-				} else 
-					{throw ('sendDebug could not find player');}
+				const player = getObj('player',state.CommandMaster.debug);
+				if (!player) throw ('sendDebug could not find player');
+				const to = '/w "' + player.get('_displayname') + '" ';
 				if (!msg)
 					{msg = 'No debug msg';}
 				sendChat('CommandMaster Debug',to + '<span style="color: red; font-weight: bold;">'+msg+'</span>',null,(flags.archive ? null:{noarchive:true})); 
@@ -1278,17 +1297,12 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 		};
 	}; 
 	
-	var doSetDebug = function(args,senderId) {
-		var player = getObj('player',senderId),
-			playerName;
-		if (player) {
-			playerName = player.get('_displayname');
-		}
-		else 
-			{throw ('doSetDebug could not find player: ' + args);}
+	const doSetDebug = function(args,senderId) {
+		const player = getObj('player',senderId);
+		if (!player) throw ('doSetDebug could not find player: ' + args);
 		if (!!args && args.indexOf('off') != 0) {
 			state.CommandMaster.debug = senderId;
-			sendResponseError(senderId,'CommandMaster Debug set on for ' + playerName,'CommandMaster Debug');
+			sendResponseError(senderId,'CommandMaster Debug set on for ' + player.get('_displayname'),'CommandMaster Debug');
 			sendDebug('Debugging turned on');
 		} else {
 			sendResponseError(senderId,'CommandMaster Debugging turned off','CommandMaster Debug');
@@ -1320,8 +1334,7 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 			players = findObjs({ _type:'player' });
 
 		if (players.length !== 0) {
-			if (!_.isUndefined(playerGM = _.find(players, function(p) {
-				var player = p;
+			if (!_.isUndefined(playerGM = _.find(players, function(player) {
 				if (player) {
 					if (playerIsGM(player.id)) {
 						state.CommandMaster.gmID = player.id;
@@ -1340,7 +1353,7 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * i.e. which versions of MagicMaster it is matched to
 	 */
 
-	var csVer = (charCS) => parseFloat(((attrLookup( charCS, fields.msVersion ) || '1.5').match(/^\d+\.?\d*/) || ['1.5'])[0]) || 1.5;
+	const csVer = (charCS) => parseFloat(((attrLookup( charCS, fields.msVersion ) || '1.5').match(/^\d+\.?\d*/) || ['1.5'])[0]) || 1.5;
 	
 /* ------------------------------------------------ Database & Handout Functions -------------------------------------------- */
 	
@@ -1369,7 +1382,7 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * Function to return an object specifying what APIs have 
 	 * registered with CommandMaster.
 	 */
-	 
+/*	 
 	var getRegistrations = function() {
 		return registeredAPI;
 	}
@@ -1378,7 +1391,7 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * Escape a string to use as a RegExp
 	 */
 	
-	var escapeRegExp = function(string) {
+	const escapeRegExp = function(string) {
 		return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
 	}
 	
@@ -1386,14 +1399,14 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * Function to replace special characters in a string
 	 */
 	 
-	var parseStr=function(str=''){
+	const parseStr=function(str=''){
 		return replacers.reduce((m, rep) => m.replace(rep[0], rep[1]), str);
 	}
 
 	/*
 	 * Function to encode special characters in a string
 	 */
-	 
+/*	 
 	var encodeStr=function(str){
 		return encoders.reduce((m, rep) => m.replace(rep[0], rep[1]), str);
 	}
@@ -1402,8 +1415,8 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * Clean an image to make it suitable for a token
 	 */
 	
-	var getCleanImgsrc = function (imgsrc) {
-		var parts = imgsrc.match(/(.*\/images\/.*)(thumb|med|original|max)([^\?]*)(\?[^?]+)?$/);
+	const getCleanImgsrc = function (imgsrc) {
+		const parts = imgsrc.match(/(.*\/images\/.*)(thumb|med|original|max)([^\?]*)(\?[^?]+)?$/);
 		if(parts) {
 			return parts[1]+'thumb'+parts[3]+(parts[4]?parts[4]:`?${Math.round(Math.random()*9999999)}`);
 		}
@@ -1415,8 +1428,8 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * the correct string for the API call.
 	 */
 	 
-	var parseCmd = function( api, action ) {
-		var cmdSpec = _.find(registeredCmds,obj => ((obj.api == api) && (obj.action == action)));
+	const parseCmd = function( api, action ) {
+		const cmdSpec = _.find(registeredCmds,obj => ((obj.api == api) && (obj.action == action)));
 		return (cmdSpec ? parseStr('!'+api+' '+cmdSpec.cmd+' '+cmdSpec.params) : 'Undefined');
 	}
 
@@ -1424,33 +1437,32 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * Find any abilities that match the definition passed in
 	 */
 	 
-	var findAbilities = function( api, action, selected ) {
+	const findAbilities = function( api, action, selected ) {
 		
-		var cmdStr = parseCmd( api, action ).replace('$$',''),
-			searchStr = new RegExp(escapeRegExp(cmdStr)+'\\s*\\)|'+escapeRegExp(cmdStr)+'\\s*$','img'),
-			charIDs = [],
-			abilityObjs;
+		const cmdStr = parseCmd( api, action ).replace('$$',''),
+			  searchStr = new RegExp(escapeRegExp(cmdStr)+'\\s*\\)|'+escapeRegExp(cmdStr)+'\\s*$','img');
+			  
+		let	charIDs = [];
 
 		_.each( selected, s => charIDs.push(getObj('graphic',s._id).get('represents')));
 		charIDs = charIDs.filter( c => !!c );
 
-		abilityObjs = filterObjs(function(obj) {
+		return filterObjs(function(obj) {
 			return ((obj.get('type') == 'ability')
 						&& charIDs.includes(obj.get('characterid'))
 						&& searchStr.test(obj.get('action')));
 		});
-		return abilityObjs;
 	}
 	
 	/*
 	 * Remove all blanked lines from a table
 	 */
 	 
-	var removeBlankLines = function( table ) {
+	const removeBlankLines = function( table ) {
 		return new Promise(resolve => {
 			try {
-				var prefix = table.fieldGroup,
-					row, count = 0;
+				const prefix = table.fieldGroup;
+				let	row, count = 0;
 				if (!prefix) return table;
 				while (!_.isUndefined(row = table.tableFind( fields[prefix+'name'], '-', false))) {
 					table = table.delTableRow( row, false, 1000 );
@@ -1469,14 +1481,15 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 	/*
 	 * Create a list of weapons from the character's magic item bag
 	 */
-	 
-	var listWeaponTypes = function( weapObj, weaponList=[] ) {
-		let weaponSpecs = weapObj.specs();
+ 
+	const listWeaponTypes = function( weapObj, weaponList=[] ) {
+		const weaponSpecs = weapObj.specs();
 		if (!!weaponSpecs) {
+			let types, superTypes;
 			weaponSpecs.forEach( spec => {
 				if (!spec[2].toLowerCase().includes('melee') && !spec[2].toLowerCase().includes('ranged')) return;
-				let types = spec[1].split('|'),
-					superTypes = spec[4].split('|');
+				types = spec[1].split('|');
+				superTypes = spec[4].split('|');
 				for (let j=0; j<Math.max(types.length,superTypes.length); j++) {
 					weaponList.push({weapon:types[Math.min(j,types.length-1)],weapType:superTypes[Math.min(j,superTypes.length-1)]});
 				}
@@ -1485,11 +1498,10 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 		return weaponList;
 	};
 	
-	var weaponLookup = function( charCS ) {
+	const weaponLookup = function( charCS ) {
 		
-		var item, itemDef,
-			weapProf, weapType,
-			MagicItems = getTableGroupField( charCS, {}, fieldGroups.MI, 'name' ),
+		const MagicItems = getTableGroupField( charCS, {}, fieldGroups.MI, 'name' );
+		let item, itemDef,
 			weaponList = [],
 			i = 0;
 									   
@@ -1510,14 +1522,12 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * to increase to the next level and in total
 	 */
 	
-	var calcSlots = function( charCS, weapon, profLvl, isStyle=false ) {
-		let weapData = resolveData( weapon, (!isStyle ? fields.MagicItemDB : fields.StylesDB), reItemData, charCS, {slots:reWeapSpecs.slots} ).parsed;
-		let profIndex = profLvl === 'MASTERY' ? 2 : (profLvl === 'SPECIALIST' ? 1 : 0);
-		let slotList = ((weapData ? weapData.slots : '1')+'|1|1|1').split('|').slice(0,profIndex+1);
-		let neededSlots = parseInt(slotList[profIndex]);
-//			log('calcSlots: weapData.slots = '+(weapData ? weapData.slots : '1')+', split = '+((weapData ? weapData.slots : '1')+'|1|1|1').split('|')+', sliced = '+slotList);
-//			log('calcSlots: profIndex = '+profIndex+', slotList.length = '+(!slotList ? 'undefined' : slotList.length)+', slotList = '+slotList);
-		let weapSlots = !profIndex ? neededSlots : parseInt(slotList.reduce((a,c)=>(parseInt(a) || 0)+(parseInt(c) || 0)));
+	const calcSlots = function( charCS, weapon, profLvl, isStyle=false ) {
+		const weapData = resolveData( weapon, (!isStyle ? fields.MagicItemDB : fields.StylesDB), reItemData, charCS, {slots:reWeapSpecs.slots} ).parsed,
+			  profIndex = profLvl === 'MASTERY' ? 2 : (profLvl === 'SPECIALIST' ? 1 : 0),
+			  slotList = ((weapData ? weapData.slots : '1')+'|1|1|1').split('|').slice(0,profIndex+1),
+			  neededSlots = parseInt(slotList[profIndex]),
+			  weapSlots = !profIndex ? neededSlots : parseInt(slotList.reduce((a,c)=>(parseInt(a) || 0)+(parseInt(c) || 0)));
 		return [neededSlots,weapSlots];
 	};
 	
@@ -1526,15 +1536,16 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * return how many are left
 	 */
 	
-	var countUsedSlots = function( charCS, ProfTable, totalSlots ) {
-		let usedSlots = 0;
+	const countUsedSlots = function( charCS, ProfTable, totalSlots ) {
+		let usedSlots = 0,
+			proficiency, slots, isStyle, inc, profLvl;
 		for (let i=0; i < ProfTable.sortKeys.length; i++) {
-			let proficiency = ProfTable.tableLookup( fields.WP_name, i );
+			proficiency = ProfTable.tableLookup( fields.WP_name, i );
 			if (proficiency && proficiency != '-') {
-				let slots = parseInt(ProfTable.tableLookup( fields.WP_slots, i, false ));
+				slots = parseInt(ProfTable.tableLookup( fields.WP_slots, i, false ));
 				if (_.isUndefined(slots) || isNaN(slots) || state.attackMaster.weapRules.slots) {
-					let isStyle = ProfTable.tableLookup( fields.WP_type, i ).dbName() === 'fightingstyle';
-					let inc, profLvl;
+					isStyle = ProfTable.tableLookup( fields.WP_type, i ).dbName() === 'fightingstyle';
+					inc, profLvl;
 					profLvl = ProfTable.tableLookup( fields.WP_mastery, i ) == '1' ? 'MASTERY' : (ProfTable.tableLookup( fields.WP_specialist, i ) == '1' ? 'SPECIALIST' : 'PROFICIENT');
 					[inc,slots] = calcSlots( charCS, proficiency, profLvl, isStyle );
 					ProfTable = ProfTable.tableSet( fields.WP_slots, i, slots );
@@ -1550,18 +1561,18 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * Create a list of Proficiency buttons for the currently selected token.
 	 * Selecting a button will call a handler to remove the proficiency.
 	 */
-	 
-	var getProfButtons = function( selected, isDisplay ) {
+ 
+	const getProfButtons = function( selected, isDisplay ) {
 		
-		var	charCS = getCharacter(selected[0]._id, true);
+		const charCS = getCharacter(selected[0]._id, true);
 		
 		if (!charCS) return {profs:[], types:[]};
 		
-		var	ProfTable = getTable( charCS, fieldGroups.WPROF ),
-			profs = [], 
+		const ProfTable = getTable( charCS, fieldGroups.WPROF );
+		
+		let	profs = [], 
 			types = [],
 			styles = [],
-			list = '',
 			row, wpProf, wpType, wpName = '';
 			
 		for (row=ProfTable.table[1]; !_.isUndefined(wpName = ProfTable.tableLookup( fields.WP_name, row, false )); row++) {
@@ -1582,7 +1593,7 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 				};
 			}
 		}
-		list = profs.map(p => p[0]+p[1]).join();
+		const list = profs.map(p => p[0]+p[1]).join();
 		profs= _.chain(profs)
 				.compact()
 				.sort((a,b)=>{
@@ -1622,64 +1633,19 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 		return {profs:profs, list:list, types:types, styles:styles};
 	}
 
-	/*
-	 * Find and return the powers for a specified class
-	 * defined in the Class Databases.
-	 */
-	 
-	var ClassPowers = function( charCS ) {
-		
-		var powers = [],
-			content = '&{template:'+fields.menuTemplate+'}{{name='+charCS.get('name')+'\'s Powers}}'
-					+ '{{desc='+charCS.get('name')+' has been granted the following powers (if any)}}';
-		
-		for (const c in classLevels) {
-			charClass = attrLookup( charCS, classLevels[c][0] ) || '';
-			classSpec = abilityLookup( fields.ClassDB, charClass, charCS, true );
-			if (!classSpec.obj) {
-				charClass = primeClasses[c];
-				classSpec = abilityLookup( fields.ClassDB, charClass, charCS );
-			}
-			if (classSpec.obj) {
-				dbCS = findObjs({ type:'character', name:classSpec.dB });
-				if (dbCS && dbCS.length) {
-					dbCS = dbCS[0];
-					charPowers = attrLookup( dbCS, [fields.ItemPowersList[0]+charClass,fields.ItemPowersList[1]] );
-					if (charPowers && charPowers.length) {
-						powers.push(charPowers.replace(/,/g,'|'));
-					}
-				}
-				content += '{{'+charClass+'='+(charPowers || '').replace(/,/g,', ')+'}}';
-			}
-		}
-		setAttr( charCS, [fields.Spellbook[0]+spellLevels.pw[1].book,fields.Spellbook[1]], powers.join('|') );
-		sendFeedback( content,flags.feedbackName,flags.feedbackImg );
-		return;
-	}
-	
-	/*
-	 * Determine the class or classes of the character, and 
-	 * the level of each
-	 *
-	 */
-	 
-	var getCharLevels = function( charCS ) {
-		return _.filter( fields, (elem,l) => {return l.toLowerCase().includes('_level')})
-					.filter( elem => {return 0 < (attrLookup( charCS, elem ) || 0)});
-	}
-	
 	/**
 	 * Parse the currently stored registered API commands
 	 **/
 	 
-	var parseStoredCmds = function( commands ) {
+	const parseStoredCmds = function( commands ) {
 
+		let args, action, desc, api, cmd;
 		_.each( commands, (cmdStr,key) => {
-			var args = (cmdStr || '').split('|'),
-				action = args.shift(),
-				desc = args.shift(),
-				api = args.shift(),
-				cmd = args.shift();
+			args = (cmdStr || '').split('|'),
+			action = args.shift(),
+			desc = args.shift(),
+			api = args.shift(),
+			cmd = args.shift();
 
 			registeredCmds.push({
 				action:		action,
@@ -1704,18 +1670,21 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * ready to be checked against the RPGMaster databases.
 	 */
 
-	var spells2Convert = function( args, selected ) {
+	const spells2Convert = function( args, selected ) {
 		
-		var tokenID,
+		let tokenID,
 			charCS,
 			names,
 			Spells,
+			castObj,
+			spellbook,
 			blank = false;
 			
-		var pushNames = function(Spells, lvl, lvlField, nameField, names) {
+		const pushNames = function(Spells, lvl, lvlField, nameField, names) {
+			let name;
 			for (let r=Spells.table[1]; r<Spells.sortKeys.length; r++) {
 				if ((Spells.tableLookup( lvlField, r ) || lvl) != lvl) continue;
-				let name = (Spells.tableLookup( nameField, r ) || '').trim();
+				name = (Spells.tableLookup( nameField, r ) || '').trim();
 				if (!names.includes(name) && name !== '-') {
 					names.push(name);
 				}
@@ -1732,7 +1701,7 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 			tokenID = e._id;
 			charCS = getCharacter( tokenID );
 			_.each( spellLevels, (levels,castType) => {
-				let castObj = caster( charCS, castType );
+				castObj = caster( charCS, castType );
 				_.each( levels, (col, l) => {
 					names = [];
 					if (!l || !['mu','pr','pw'].includes(castType)) return;
@@ -1757,9 +1726,9 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 //										.split( /(?:\|\s*|\,\s*|$)/m )
 //										.filter(s => !!s)
 //										.map(s => s.substring(0,80).trim());
-					let spellbook = '';
+					spellbook = '';
 					setAttr( charCS, [fields.Spellbook[0]+col.book,fields.Spellbook[1]], _.uniq(names.concat(spellbook).sort(),true).join('|') );
-					log('spells2convert: setting spellbook '+fields.Spellbook[0]+col.book+' to be '+_.uniq(names.concat(spellbook).sort(),true).join('|'));
+//					log('spells2convert: setting spellbook '+fields.Spellbook[0]+col.book+' to be '+_.uniq(names.concat(spellbook).sort(),true).join('|'));
 				});
 			});
 		});
@@ -1768,13 +1737,13 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 	/*
 	 * Set up container variables
 	 */
-	
-	var setVars = function(charCS,data,field,prefix,total,change=false) {
+
+	const setVars = function(charCS,data,field,prefix,total,change=false) {
 		
-		var i;
+		let v, i;
 		for (i=1; !_.isUndefined(data[field+i]) && i <= 9; i++) {
 			if (change) {
-				let v = data[field+i].split('%%');
+				v = data[field+i].split('%%');
 				setAttr( charCS, [(prefix+i),'max'], parseStr(v[1] || (field+i)) );
 				v.splice(1,1);
 				v = v.map(s => parseStr(s));
@@ -1784,14 +1753,13 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 			};
 		};
 		setAttr( charCS, total, i-1 );
-		log('setVars: total = '+(i-1));
 	};
 	
 	/*
 	 * Set container images
 	 */
 	
-	var setImgs = function(tokenObj,charCS,parsedData,change=false) {
+	const setImgs = function(tokenObj,charCS,parsedData,change=false) {
 		
 		const convertFt = {
 					ft:		1,
@@ -1805,12 +1773,12 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 					sq:		1,
 		};
 		
-		var parseImgs = function(charCS,data,field,prefix,total,change) {
-			var i;
+		const parseImgs = function(charCS,data,field,prefix,total,change) {
+			let i, v, s;
 			for (i=1; (!_.isUndefined(data[prefix+i]) && data[prefix+i].trim().length) && i <= 9; i++) {
 				if (change) {
-					let v = data[prefix+i].split('%%'),
-						s = v[0].split('|');
+					v = data[prefix+i].split('%%'),
+					s = v[0].split('|');
 					setAttr( charCS, [(field+i+'-size'),'current'], (s[1] || 70) );
 					setAttr( charCS, [(field+i+'-size'),'max'], (s[2] || s[1] || 70) );
 					setAttr( charCS, [(field+i),'current'], getCleanImgsrc(s[0]) );
@@ -1823,15 +1791,15 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 		parseImgs(charCS,parsedData,fields.Lock_imgPrefix[0],fields.Token_lockImgPrefix[0],fields.Lock_imgs,change);
 		parseImgs(charCS,parsedData,fields.Trap_imgPrefix[0],fields.Token_trapImgPrefix[0],fields.Trap_imgs,change);
 		
-		let pageObj = getObj('page',tokenObj.get('_pageid')),
-			scale = pageObj.get('scale_number'),
-			ftSize = convertFt[pageObj.get('scale_units')] || 1,
-			pixelRatio = scale * ftSize / 5;
-		
-		let curClosed = [attrLookup( charCS, fields.Token_closedImg ),attrLookup( charCS, fields.Token_closedImgW ),attrLookup( charCS, fields.Token_closedImgH )],
-			curOpen = [attrLookup( charCS, fields.Token_openImg ),attrLookup( charCS, fields.Token_openImgW ),attrLookup( charCS, fields.Token_openImgH )],
-			closedImg = (parsedData.cimg || (!curClosed[0] ? design.closed_img : curClosed.join('|'))).split('|'),
-			openImg = (parsedData.oimg || (!curOpen[0] ? design.open_img : curOpen.join('|'))).split('|');
+		const pageObj = getObj('page',tokenObj.get('_pageid')),
+			  scale = pageObj.get('scale_number'),
+			  ftSize = convertFt[pageObj.get('scale_units')] || 1,
+			  pixelRatio = scale * ftSize / 5,
+			  curClosed = [attrLookup( charCS, fields.Token_closedImg ),attrLookup( charCS, fields.Token_closedImgW ),attrLookup( charCS, fields.Token_closedImgH )],
+			  curOpen = [attrLookup( charCS, fields.Token_openImg ),attrLookup( charCS, fields.Token_openImgW ),attrLookup( charCS, fields.Token_openImgH )],
+			  openImg = (parsedData.oimg || (!curOpen[0] ? design.open_img : curOpen.join('|'))).split('|');
+
+		let	closedImg = (parsedData.cimg || (!curClosed[0] ? design.closed_img : curClosed.join('|'))).split('|');
 			
 		if (change) {
 			setAttr( charCS, fields.Token_closedImg, getCleanImgsrc(closedImg[0]) );
@@ -1852,9 +1820,6 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 						  fliph:true,
 						  rotation:180
 			});
-//			tokenObj.set('width',parseInt(closedImg[1] || 70));
-//			tokenObj.set('height',parseInt(closedImg[2] || closedImg[1] || 70));
-//			tokenObj.set('imgsrc',getCleanImgsrc(closedImg[0]));
 		}
 		return closedImg;
 	};
@@ -1865,23 +1830,22 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * container, and create a Bio tab description.
 	 */
 
-	var parseDesc = function( charCS, senderId ) {
+	const parseDesc = function( charCS, senderId ) {
 		
-		var race = attrLookup( charCS, fields.Race ) || 'Human',
-			raceObj = getAbility( fields.RaceDB, race, charCS ),
-			classObjs = classObjects( charCS, senderId ),
-			gender = attrLookup( charCS, fields.Gender ),
-			lock = attrLookup( charCS, fields.Container_lock ) || '',
-			lockObj = lock ? getAbility( fields.AbilitiesDB, lock, charCS ) : {},
-			trap = attrLookup( charCS, fields.Container_trap ) || '',
-			trapObj = trap ? getAbility( fields.AbilitiesDB, trap, charCS ) : {},
-			bio = '',
-			GMbio = '',
-			bioPart, GMpart;
+		const raceObj = getAbility( fields.RaceDB, (attrLookup( charCS, fields.Race ) || 'Human'), charCS ),
+			  classObjs = classObjects( charCS, senderId ),
+			  gender = attrLookup( charCS, fields.Gender ),
+			  lock = attrLookup( charCS, fields.Container_lock ) || '',
+			  lockObj = lock ? getAbility( fields.AbilitiesDB, lock, charCS ) : {},
+			  trap = attrLookup( charCS, fields.Container_trap ) || '',
+			  trapObj = trap ? getAbility( fields.AbilitiesDB, trap, charCS ) : {};
+			  
+		let	bio = '',
+			GMbio = '';
 			
 		var createBio = function( charCS, bioObj, partName, onlyGM=false ) {
 			if (!bioObj.obj) return ['',''];
-
+			
 			var descObj = _.object([...bioObj.obj[1].body.replace(/[\r\n]/g,'').matchAll(/\{\{([^{}]+?)=(.*?)\}\}/g)].map(v => v.slice(1))),
 				content = '',
 				GMcontent = '';
@@ -1904,6 +1868,7 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 //					t = t.replace(/\*\*\*(.*?)\*\*\*/img,'<b><i>$1</i></b>');
 //					t = t.replace(/\*\*(.*?)\*\*/img,'<b>$1</b>');
 //					t = t.replace(/\*(.*?)\*/img,'<i>$1</i>');
+					log('CreateBio: dealing with '+k+', which is '+t);
 					descObj[k] = t;
 					if (!t || !t.length) return;
 					if (!onlyGM && k.toLowerCase().startsWith('section')) {
@@ -1934,8 +1899,8 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 			
 		charCS.get('bio', bio => {
 			bio = (bio.match(/[^]*~~~ Place your own text above this line ~~~/im) || ['~~~ Place your own text above this line ~~~'])[0];
-		
-			[bioPart,GMpart] = createBio( charCS, raceObj, "Race" );
+			
+			let [bioPart,GMpart] = createBio( charCS, raceObj, "Race" );
 			bio += bioPart;
 			GMbio += GMpart;
 			
@@ -1968,12 +1933,13 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 	/*
 	 * Blank the item bag (except coins) ready for restocking
 	 */
-	
-	var blankItems = function( charCS ) {
-		var Items = getTableGroup( charCS, fieldGroups.MI );
+
+	const blankItems = function( charCS ) {
+		const Items = getTableGroup( charCS, fieldGroups.MI );
+		let	i;
 		for (const table in Items) {
 			if (table.dbName() === 'coins') continue;
-			for (let i=0; i<Items[table].sortKeys.length; i++) {
+			for (i=0; i<Items[table].sortKeys.length; i++) {
 				Items[table] = Items[table].addTableRow( i );
 			}
 		}
@@ -1986,11 +1952,12 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * either specified or randomly.
 	 */
 	 
-	var handleNPCthiefSkillPoints = function( charCS, senderId ) {
+	const handleNPCthiefSkillPoints = function( charCS, senderId ) {
 		
-		var raceData = resolveData( attrLookup( charCS, fields.Race ), fields.RaceDB, reRaceData, charCS ).attrs,
-			classes = classObjects( charCS, senderId ),
-			rogue = _.find( classes, c => c.base === 'rogue' ),
+		const classes = classObjects( charCS, senderId ),
+			  rogue = _.some( classes, c => c.base === 'rogue' );
+
+		let raceData = resolveData( attrLookup( charCS, fields.Race ), fields.RaceDB, reRaceData, charCS ).attrs,
 			keys = [],
 			capacity = 100;
 			
@@ -2005,32 +1972,29 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 		if (rogue) {
 			let totalPoints = rogueLevelPoints( charCS, classes );
 			raceData = _.mapObject( raceData, (val,key) => evalAttr(val,charCS) );
-			let divider = _.reduce(raceData, (tot,val) => parseInt(tot) + parseInt(val));
-//			log('handleNPCthiefSkillPoints: totalPoints = '+totalPoints+', divider = '+divider);
+			const divider = _.reduce(raceData, (tot,val) => parseInt(tot) + parseInt(val));
 			keys = [];
-			let maxPoints = totalPoints;
+			let maxPoints = totalPoints,
+				value, curVal;
 			_.each( rogueSkills, skill => {
 				if (totalPoints <= 0 || keys.includes(skill.factors[6])) return;
-				let value = divider > 0 ? Math.floor(maxPoints*(raceData[skill.factors[6]] || 0)/divider) : 0;
+				value = divider > 0 ? Math.floor(maxPoints*(raceData[skill.factors[6]] || 0)/divider) : 0;
 				setAttr( charCS, [skill.factors[6],'current'], value );
 				totalPoints -= value;
 				keys.push(skill.factors[6]);
-//				log('handleNPCthiefSkillPoints: initial allocation for '+skill.factors[6]+' is '+value+', leaving a remaining '+totalPoints);
 			});
-//			log('handleNPCthiefSkillPoints: completed initial alloation leaving a remaining '+totalPoints);
 			while (totalPoints > 0 && capacity > 0) {
 				keys = [];
 				maxPoints = Math.ceil(totalPoints/4);
 				capacity = 0;
 				_.each( rogueSkills, skill => {
 					if (totalPoints <= 0 || keys.includes(skill.factors[6])) return;
-					let curVal = parseInt(attrLookup(charCS,[skill.factors[6],'current']) || 0);
-					let value = Math.min(totalPoints,(randomInteger(Math.ceil(maxPoints))),(100-curVal));
+					curVal = parseInt(attrLookup(charCS,[skill.factors[6],'current']) || 0);
+					value = Math.min(totalPoints,(randomInteger(Math.ceil(maxPoints))),(100-curVal));
 					setAttr( charCS, [skill.factors[6],'current'], parseInt(value)+curVal );
 					totalPoints -= value;
 					capacity += 100-curVal;
 					keys.push(skill.factors[6]);
-//					log('handleNPCthiefSkillPoints: remaining allocation for '+skill.factors[6]+' is '+value+', leaving a remaining '+totalPoints);
 				});
 			};
 		};
@@ -2041,14 +2005,14 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * race definition
 	 **/
 
-	var setCreatureAttrs = function( cmd, charCS, senderId, creature, token, qualifier=[] ) { 
+	const setCreatureAttrs = function( cmd, charCS, senderId, creature, token, qualifier=[] ) {	// isTurnable
 	
-		var raceData, attrData,
-			raceDesc, i,
-			tokenObj = getObj('graphic',token._id),
-			isReset = cmd.toUpperCase() === BT.RESET_CONTAINER,
-			isCreature = !isReset && cmd.toUpperCase() !== BT.CONTAINER;
+		const isReset = cmd.toUpperCase() === BT.RESET_CONTAINER,
+			  isCreature = !isReset && cmd.toUpperCase() !== BT.CONTAINER,
+			  tokenObj = getObj('graphic',token._id);
 			
+		let raceData, attrData;
+		
 		async function addPowersAndItems( charCS, token, isCreature, senderId, qualifier ) {
 			if (await handleAddAllPowers( [BT.RACE], 'PW', [token], senderId )) {
 				handleSetAbility( ['',BT.AB_SILENT,'Use Power',std.use_power.api,std.use_power.action,'2.Use Power','replace'], [token] );
@@ -2067,7 +2031,7 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 						  + await handleAddAllItems( token, charCS, senderId, 'ac', qualifier )
 						  + await handleAddAllItems( token, charCS, senderId, 'mi', qualifier )) || '').trim();
 			if (content && content.length) sendFeedback( '&{template:'+fields.menuTemplate+'}{{title=Items added to '+charCS.get('name')+'}}' + content );
-			var Items = getTableGroup( charCS, fieldGroups.MI );
+			const Items = getTableGroup( charCS, fieldGroups.MI );
 			for (const table in Items) {
 				if (table.dbName() === 'coins') continue;
 				Items[table] = await removeBlankLines( Items[table] );
@@ -2075,14 +2039,14 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 		};
 		
 		if (creature && creature.trim().length) {
-			
-			let dataObj = resolveData( creature, fields.RaceDB, /}}\s*?racedata\s*?=\s*\[.*?\],?{{/im, null, reClassSpecs, null, null, qualifier );
+			const dataObj = resolveData( creature, fields.RaceDB, /}}\s*?racedata\s*?=\s*\[.*?\],?{{/im, null, reClassSpecs, {quals:qualifier} );
 			raceData = dataObj.parsed; attrData = dataObj.attrs; // rawData = dataObj.raw;
 			if (!raceData || !attrData) return;
 			setAttr( charCS, fields.Race, creature );
-		}
-		
-		if (isCreature) {
+		} else {
+			setAttr( charCS, fields.Race, '' );
+		};
+		if (creature && creature.trim().length && isCreature) {
 			
 			if (!creature || !creature.trim().length) return;
 			
@@ -2091,18 +2055,26 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 				setAttr( charCS, c[1], '' );
 			});
 
-			let hd = attrData.hd.match(/(\(.+?\)|\d+)(?:d\d+)?([-+]\d+(?:d\d+)?(?:[-+]\d+)?)?(?:r(\d+))?/i) || ['','1','0',''];
-			let hpExtra = (hd[2] || '0').match(/([-+]\d+)(?:d(\d+))?([-+]\d+)?/);
-			let age = (attrData.age.split(':') || ['','']);
-			let str = evalAttr(attrData.str,charCS);
-			let monInt = evalAttr(attrData.intel,charCS);
-			let attrRoll = state.attackMaster.attrRoll;
-			let attrRestrict = state.attackMaster.attrRestrict;
+			let   hd = attrData.hd.match(/(\(.+?\)|\d+)(?:d\d+)?([-+]\d+(?:d\d+)?(?:[-+]\d+)?)?(?:r(\d+))?/i) || ['','1','0',''],
+				  str = evalAttr(attrData.str,charCS);
+			const hpExtra = (hd[2] || attrData.hdx || '0').match(/([-+]\d+)(?:d(\d+))?([-+]\d+)?/),
+				  hdReroll = (parseInt(hd[3] || attrData.hdr) || ''),
+				  age = (attrData.age.split(':') || ['','']),
+				  monInt = evalAttr(attrData.intel,charCS),
+				  attrRoll = state.attackMaster.attrRoll,
+				  attrRestrict = state.attackMaster.attrRestrict,
+				  originalMR = evalAttr(attrData.mr,charCS);
 			if (str == 18 && attrData.exstr) str = String(str) + '(' + evalAttr(attrData.exstr,charCS) + ')';
 			setAttr( charCS, fields.Monster_int, monInt );
 			setAttr( charCS, fields.Age, age[0] );
 			setAttr( charCS, fields.AgeVal, (_.isUndefined(age[1]) ? age[0] : evalAttr(age[1]) ));
-			setAttr( charCS, fields.MonsterAC, evalAttr(parseStr(attrData.cac || '10'),charCS) );
+			let calcCac = evalAttr(parseStr(attrData.cac) || 10);
+			const cacVal = String(calcCac).match(/([^\[\]]+)\s*?([^\[]?\[[^\[].*\])?/i);
+//			log('setCreatureAttrs: attrData.cac = '+attrData.cac+', calCac = '+calcCac+', cacVal = '+cacVal);
+//			log('setCreatureAttrs: attrData.cac = '+attrData.cac+', calcCac = '+calcCac+', isNaN = '+isNaN(parseInt(cacVal[1])));
+			if (isNaN(parseInt(cacVal[1]))) calcCac = 10;
+			setAttr( charCS, fields.MonsterAC,calcCac,charCS);
+			setAttr( charCS, fields.Armour_normal, evalAttr(parseStr(attrData.cac || '10'),charCS) );
 			setAttr( charCS, fields.Monster_mov, attrData.mov+(attrData.fly ? ', FL'+attrData.fly : '')+(attrData.swim ? ', SW'+attrData.swim : '') );
 			setAttr( charCS, fields.MonsterThac0, evalAttr(attrData.thac0,charCS) );
 			setAttr( charCS, fields.Thac0_base, evalAttr(attrData.thac0,charCS) );
@@ -2116,7 +2088,8 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 			setAttr( charCS, fields.Monster_dmg2, parseStr(attrData.attk2.replace(/:/g,',')) );
 			setAttr( charCS, fields.Monster_dmg3, parseStr(attrData.attk3.replace(/:/g,',')) );
 			setAttr( charCS, fields.Monster_attks, (((attrData.attk1 && attrData.attk1.length) ? 1 : 0) + ((attrData.attk2 && attrData.attk2.length) ? 1 : 0) + ((attrData.attk3 && attrData.attk3.length) ? 1 : 0)) );
-			setAttr( charCS, fields.Monster_mr, evalAttr(attrData.mr,charCS) );
+			setAttr( charCS, fields.MagicResist, originalMR );
+			setAttr( charCS, fields.MagicOriginalResist, originalMR );
 			setAttr( charCS, fields.Attk_specials, parseStr(attrData.attkmsg) );
 			setAttr( charCS, fields.Dmg_specials, parseStr(attrData.dmgmsg) );
 			setAttr( charCS, fields.Monster_speed, evalAttr(attrData.speed,charCS) );
@@ -2132,15 +2105,17 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 			setAttr( charCS, fields.Charisma, evalAttr((attrData.chr || (!attrRoll ? '' : (attrRestrict ? '7:15' : '3d6'))),charCS));
 			setAttr( charCS, fields.ItemContainerHide, 1 );
 			setAttr( charCS, fields.ItemContainerType, (monInt > 1 || attrLookup( charCS, fields.Intelligence ) > 1) ? 7 : 1 );
+			setAttr( charCS, fields.NPC_Dex_missile, evalAttr(attrData.maa,charCS) );
+			setAttr( charCS, fields.Monster_treasure, attrData.treasure || '' );
+			if (raceData.undead && raceData.undead.length) setAttr( charCS, fields.Monster_isTurnable, (creature+':'+raceData.undead) || '' );
 			
 			if (!attrData.hp && hd && hd.length) {
 				hd[2] = ((hpExtra && hpExtra.length >= 2 && parseInt(hpExtra[2])) ? (rollDice( hpExtra[1], hpExtra[2], 0 ) + parseInt(hpExtra[3] || 0)) : parseInt(hd[2] || 0));
-				let res = evalAttr(hd[1],charCS);
-				attrData.hp = rollDice( res, 8, hd[3] ) + hd[2]; 
+				attrData.hp = rollDice( evalAttr(hd[1],charCS), 8, hdReroll ) + hd[2]; 
 			}
 			setAttr( charCS, fields.Monster_hitDice, (evalAttr((hd[1]||'1'),charCS)) );
 			setAttr( charCS, fields.Monster_hpExtra, (hd[2]||'0') );
-			setAttr( charCS, fields.Monster_hdReroll, (hd[3]||'') );
+			setAttr( charCS, fields.Monster_hdReroll, hdReroll );
 			if (attrData.hp) {
 				attrData.hp = evalAttr(attrData.hp,charCS);
 				setAttr( charCS, fields.HP, attrData.hp );
@@ -2158,13 +2133,13 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 			};
 			spendMoney( charCS, 0-(parseFloat(evalAttr(attrData.money,charCS)) || 0) );  // negative spend adds coins to creature
 			
-			setAttr( charCS, fields.Race, raceData.name );
+//			setAttr( charCS, fields.Race, raceData.name );
 			setAttr( charCS, fields.Gender, 'Creature' );
 			if (attrData.lv) {
-				let classData = (attrData.cl || 'F:Warrior').split('/').map( c => c.split(':') );
-				let levels = attrData.lv.split('/');
-				let isCaster = false;
-				let classField, levelField;
+				const classData = (attrData.cl || 'F:Warrior').split('/').map( c => c.split(':') ),
+					  levels = attrData.lv.split('/');
+				let   isCaster = false,
+					  classField, levelField;
 				_.each( classData, (c,k) => {
 					switch (c[0].toUpperCase()) {
 					case 'MU':
@@ -2200,7 +2175,7 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 				};
 			};
 			if (!attrData.thac0) {
-				let thac0 = handleGetBaseThac0( charCS );
+				const thac0 = handleGetBaseThac0( charCS );
 				setAttr( charCS, fields.Thac0_base, thac0 );
 				setAttr( charCS, fields.MonsterThac0, thac0 );
 			};
@@ -2221,9 +2196,7 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 			
 			
 		} else {
-			_.each( findObjs({_characterid:charCS.id, _type:'ability'}), ab => {
-				ab.set('istokenaction',((ab.get('action').match(reAction) || [0,0])[1] == 1));
-			});
+			_.each( findObjs({_characterid:charCS.id, _type:'ability'}), ab => ab.set('istokenaction',((ab.get('action').match(reAction) || [0,0])[1] == 1)));
 			if (creature && creature.trim().length) {
 				setAttr( charCS, fields.Container, creature);
 				setAttr( charCS, fields.ItemContainerSize, parseInt(evalAttr(raceData.slots,charCS)) || fields.MIRowsStandard );
@@ -2267,28 +2240,29 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 	/*
 	 * Display a menu to add spells and powers to the spellbooks of a character
 	 */
-	 
+
 	async function makeSpellsMenu( args, selected, senderId, msg ) {
 		
 		try {
 			const reActionButton = /((?<!}}\w+?=)\[(?!view))([^\}]+?)\]\((.+?\))(\s|,|\.|}}|\\|&|%|:)/img;
 			const grey_action = '&lt;span style="display: inline-block; background-color: lightgrey; border: 1px solid black; padding: 4px; color: dimgrey; font-weight: extra-light;"&gt;$2&lt;/span&gt;$4';
 
-			var cmd = args[0].toUpperCase(),
-				level = parseInt(args[1]) || 1,
-				spellName = args[2],
-				tokenID = selected ? selected[0]._id : undefined,
-				charCS = tokenID ? getCharacter(tokenID) : undefined,
-				isMU = cmd.includes('MU'),
-				isPR = cmd.includes('PR'),
-				isPower = cmd.includes('POWER'),
-				spell = (spellName || '').hyphened(),
+			let cmd = args[0].toUpperCase(),
 				curSpells = '',
 				pwrPrefix = '',
 				word = 'spell',
-				nextLevel, rootDB, listAttr, listType, spellObj, cmdStr, desc, content;
+				rootDB, listAttr, listType, spellObj, desc, content;
+
+			const level = parseInt(args[1]) || 1,
+				  spellName = args[2],
+				  tokenID = selected ? selected[0]._id : undefined,
+				  charCS = tokenID ? getCharacter(tokenID) : undefined,
+				  isMU = cmd.includes('MU'),
+				  isPR = cmd.includes('PR'),
+				  isPower = cmd.includes('POWER'),
+				  spell = (spellName || '').hyphened();
 				
-			var setVal = ( str, field, param='current' ) => attrLookup( charCS, [field,param] );
+			const setVal = ( str, field, param='current' ) => attrLookup( charCS, [field,param] );
 				
 			if (isPower) {
 				desc = 'Powers';
@@ -2319,7 +2293,7 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 				}
 			}
 			args[0] = cmd;
-			cmdStr = args.join('|');
+			const cmdStr = args.join('|');
 
 			if (charCS) {
 				setAttr( charCS, fields.Casting_name, charCS.get('name'));
@@ -2334,7 +2308,8 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 					
 			if (spell) {
 				spellObj = getAbility( rootDB, spell, charCS );
-				if (!state.MagicMaster.viewActions && spellObj.obj) spellObj.obj = greyOutButtons( tokenID, charCS, spellObj.obj, '', ('[Return to menu](!cmd --add-spells '+cmdStr+')') );
+//				log('makeSpellsMenu: spellObj.obj[1] = '+(!!spellObj && spellObj.obj && spellObj.obj[1]));
+				if (!state.MagicMaster.viewActions && spellObj.obj) spellObj = greyOutButtons( tokenID, charCS, spellObj, '', ('[Return to menu](!cmd --add-spells '+cmdStr+')') );
 				content += '...Optionally [Review '+spellName+'](!&#13;'+sendToWho(charCS,senderId,false,true)+(spellObj.api ? '&#13;' : '')+'&#37;{'+spellObj.dB+'|'+spell.hyphened()+'})';
 			} else {
 				content += '...Optionally <span style='+design.grey_button+'>Review the chosen '+word+'</span>';
@@ -2371,11 +2346,11 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 	/*
 	 * Create a menu to allow the DM to set Character weapon proficiencies
 	 */
-	 
+
 	async function makeProficienciesMenu( args, selected, senderId, msg ) {
 		
 		try {
-			var tokenID, charCS;
+			let tokenID, charCS;
 			
 			if (selected && selected.length) {
 				tokenID = selected[0]._id,
@@ -2384,20 +2359,20 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 			
 			if (!charCS) return;
 			
-			var	isDisplay = !playerIsGM(senderId) || (args[0] || '').toUpperCase() === 'DISPLAY', 
-				weapon = args[1] || '',
-				meleeWeapon = args[2] || false,
-				weapType = args[3] || '',
-				style = (weapType || '').toLowerCase().includes('style'),
-				masterRange = apiCommands['attk'].exists ? state.attackMaster.weapRules.masterRange : true,
-				buttons, weapObj,
-				weapons = getMagicList( fields.WeaponDB, miTypeLists, 'weapon', senderId, null, null, null, true ),
-				styles = getMagicList( fields.StylesDB, miTypeLists, 'style', senderId ),
-				content = '&{template:' + fields.menuTemplate + '}';
+			const isDisplay = !playerIsGM(senderId) || (args[0] || '').toUpperCase() === 'DISPLAY', 
+				  weapon = args[1] || '',
+				  meleeWeapon = args[2] || false,
+				  weapType = args[3] || '',
+				  style = (weapType || '').toLowerCase().includes('style'),
+				  masterRange = apiCommands['attk'].exists ? state.attackMaster.weapRules.masterRange : true,
+				  weapons = getMagicList( fields.WeaponDB, miTypeLists, 'weapon', senderId, null, null, null, true ),
+				  styles = getMagicList( fields.StylesDB, miTypeLists, 'style', senderId );
+
+			let	content = '&{template:' + fields.menuTemplate + '}',
+				totalSlots;
 				
-			var attrValue = (m, p1) => parseInt(attrLookup(charCS,[p1,'current'])) || 0;
+			const attrValue = (m, p1) => parseInt(attrLookup(charCS,[p1,'current'])) || 0;
 			
-			let totalSlots;
 			if (state.attackMaster.weapRules.slots) {
 				totalSlots = classObjects( charCS, senderId, {slots:reClassSpecs.slots} ).reduce((a,c) => (parseInt(a) + parseInt(evalAttr((c.classData.slots.replace(/\^\^level\^\^/ig,c.level).replace(/\^\^(\w+?)\^\^/g,attrValue)),charCS))),0);
 				setAttr( charCS, fields.WeapProfSlots, totalSlots );
@@ -2417,7 +2392,7 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 						+ 'and optionally ';
 						
 				if (weapon) {
-					let weapObj = getAbility( (style ? fields.StylesDB : fields.WeaponDB), weapon, charCS, true );
+					const weapObj = getAbility( (style ? fields.StylesDB : fields.WeaponDB), weapon, charCS, true );
 					content += '[Review '+weapon+'](!cmd --button '+(style?'REVIEW_STYLE':'REVIEW_PROF')+'|'+weapon
 							+  '&#13;&#47;w gm &#37;{' + weapObj.dB + '|'+(weapon.hyphened())+'})}}'
 							+  '{{Section=Level of '+weapon+' Proficiency\n'
@@ -2435,7 +2410,7 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 							+  '<span style=' + design.grey_button + '>Mastery</span>'
 				}
 			};
-			buttons = getProfButtons( selected, isDisplay );
+			const buttons = getProfButtons( selected, isDisplay );
 			setAttr( charCS, fields.ProfList, buttons.list );
 			content += '}}{{Section1=**Weapon Proficiencies**\n'
 					+  (buttons.profs || 'None') + '}}'
@@ -2465,7 +2440,8 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 	async function makeClassMenu( args, selected, senderId, isGM, msg='' ) {
 		
 		try {
-			var chosen = (args[1] || '').split('%%').shift(),
+			
+			let	chosen = (args[1] || '').split('%%').shift(),
 				base = args[2] || 'Warrior',
 				fighter_class='Warrior', fighter_level=0, fighter_default='',
 				wizard_class='Wizard', wizard_level=0, wizard_default='',
@@ -2514,22 +2490,23 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 				break;
 			};
 			
-			var	fighter_classes = getMagicList( fields.ClassDB, clTypeLists, 'warrior', senderId, 'Warrior|Fighter|Paladin|Ranger', true, 'Specify class' ),
-				fighter_def = abilityLookup( fields.ClassDB, fighter_class, charCS, true ),
-				wizard_classes = getMagicList( fields.ClassDB, clTypeLists, 'wizard', senderId, 'Wizard|Mage|Abjurer|Conjurer|Diviner|Enchanter|Illusionist|Invoker|Necromancer|Transmuter', true, 'Specify class' ),
-				wizard_def = abilityLookup( fields.ClassDB, wizard_class, charCS, true ),
-				priest_classes = getMagicList( fields.ClassDB, clTypeLists, 'priest', senderId, 'Priest|Cleric|Druid', true, 'Specify class' ),
-				priest_def = abilityLookup( fields.ClassDB, priest_class, charCS, true ),
-				rogue_classes = getMagicList( fields.ClassDB, clTypeLists, 'rogue', senderId, 'Rogue|Thief|Bard|Assassin', true, 'Specify class' ),
-				rogue_def = abilityLookup( fields.ClassDB, rogue_class, charCS, true ),
-				psion_classes = getMagicList( fields.ClassDB, clTypeLists, 'psion', senderId, 'Psionicist|Psion', true, 'Specify class' ),
-				psion_def = abilityLookup( fields.ClassDB, psion_class, charCS, true ),
-				races = getMagicList( fields.RaceDB, clTypeLists, 'humanoid', senderId, 'Human|Dwarf|Elf|Gnome|Half-Elf|Halfling|Half-Orc', false, 'Specify race' ),
-				creatures = getMagicList( fields.RaceDB, clTypeLists, 'creature', senderId, '-', true, 'Specify creature', true ),
-				npcs = getMagicList( fields.RaceDB, clTypeLists, 'npc', senderId, '-', true, 'Specify NPC', races.split('|').map(m=>m.substring(0,m.indexOf(','))) ),
-				services = getMagicList( fields.RaceDB, clTypeLists, 'service', senderId, '-', false, 'Specify a service' ),
-				containers = getMagicList( fields.RaceDB, clTypeLists, 'container', senderId, '-' );
-	//			race_def = abilityLookup( fields.RaceDB, race, charCS, true );
+			const fighter_classes = getMagicList( fields.ClassDB, clTypeLists, 'warrior', senderId, 'Warrior|Fighter|Paladin|Ranger', true, 'Specify class' ),
+				  fighter_def = abilityLookup( fields.ClassDB, fighter_class, charCS, true ),
+				  wizard_classes = getMagicList( fields.ClassDB, clTypeLists, 'wizard', senderId, 'Wizard|Mage|Abjurer|Conjurer|Diviner|Enchanter|Illusionist|Invoker|Necromancer|Transmuter', true, 'Specify class' ),
+				  wizard_def = abilityLookup( fields.ClassDB, wizard_class, charCS, true ),
+				  priest_classes = getMagicList( fields.ClassDB, clTypeLists, 'priest', senderId, 'Priest|Cleric|Druid', true, 'Specify class' ),
+				  priest_def = abilityLookup( fields.ClassDB, priest_class, charCS, true ),
+				  rogue_classes = getMagicList( fields.ClassDB, clTypeLists, 'rogue', senderId, 'Rogue|Thief|Bard|Assassin', true, 'Specify class' ),
+				  rogue_def = abilityLookup( fields.ClassDB, rogue_class, charCS, true ),
+				  psion_classes = getMagicList( fields.ClassDB, clTypeLists, 'psion', senderId, 'Psionicist|Psion', true, 'Specify class' ),
+				  psion_def = abilityLookup( fields.ClassDB, psion_class, charCS, true ),
+				  races = getMagicList( fields.RaceDB, clTypeLists, 'humanoid', senderId, 'Human|Dwarf|Elf|Gnome|Half-Elf|Halfling|Half-Orc', false, 'Specify race' ),
+				  creatures = getMagicList( fields.RaceDB, clTypeLists, 'creature', senderId, '-', true, 'Specify creature', true ),
+				  npcs = getMagicList( fields.RaceDB, clTypeLists, 'npc', senderId, '-', true, 'Specify NPC', races.split('|').map(m=>m.substring(0,m.indexOf(','))) ),
+				  services = getMagicList( fields.RaceDB, clTypeLists, 'service', senderId, '-', false, 'Specify a service' ),
+				  containers = getMagicList( fields.RaceDB, clTypeLists, 'container', senderId, '-' );
+				  
+//			log('makeClassMenu: npcs list = '+npcs);
 				
 			if (!fighter_level) {
 				fighter_class = '<span style='+design.dark_button+'>'+fighter_class+'</span>';
@@ -2564,7 +2541,7 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 				base = 'Human';
 			}
 			
-			let content = '&{template:'+fields.menuTemplate+'}{{name=Review & Set\nRace and Classes}}'
+			const content = '&{template:'+fields.menuTemplate+'}{{name=Review & Set\nRace and Classes}}'
 						+ (msg ? ('='+msg) : '')
 						+ '{{desc=Drop down lists show Races, Creatures, Containers and Classes defined in the Databases.  If not shown in a list, choose "Other" and it can be typed in at the next prompt.  Any class *can* be in any class field (even if not in the list for that field), especially to support multi-class characters.  Classes not found in the Class database will get the defaults for the field: Unrecognised Classes in the *Wizard* or *Priest* lines default to Wizard or Priest spellcasting rules.}}'
 						+ '{{desc1=Currently a'+('aeiouAEIOU'.includes(race[0])?'n':'')+' **'+race+'**\nChange to\n'
@@ -2584,6 +2561,9 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 			} else {
 				sendResponse( charCS, content, null, flags.feedbackName, flags.feedbackImg, tokenID );
 			}
+			if (!charCS) {
+				sendError('No token selected, or token does not represent a valid character sheet. Please select a valid one before proceeding');
+			};
 			return;
 		} catch (e) {
 			sendCatchError('CommandMaster',msg_orig[senderId],e);
@@ -2593,14 +2573,15 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 	/*
 	 * Handle a request to review a class definition
 	 */
-	 
-	var makeClassReviewDialogue = function( args, selected, isGM ) {
+
+	const makeClassReviewDialogue = function( args, selected, isGM ) {
 		
-		var chosen = args[1] || '',
-			base = args[2] || '',
-			classMenu = (args[3] || '') == 'true',
-			isClass = base.toLowerCase() != 'human',
-			tokenID, charCS,
+		const chosen = args[1] || '',
+			  base = args[2] || '',
+			  classMenu = (args[3] || '') == 'true',
+			  isClass = base.toLowerCase() != 'human';
+			  
+		let	tokenID, charCS,
 			content = '';
 		
 		if (selected && selected.length) {
@@ -2610,9 +2591,9 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 
 		if (!charCS || !chosen.length) return;
 		
-		var type = isClass ? 'Class' : 'Race',
-			dB = isClass ? fields.ClassDB : fields.RaceDB,
-			def = getAbility( dB, chosen, charCS );
+		const type = isClass ? 'Class' : 'Race',
+			  dB = isClass ? fields.ClassDB : fields.RaceDB,
+			  def = getAbility( dB, chosen, charCS );
 			
 		if (def.obj) {
 			content = def.obj[1].body;
@@ -2642,19 +2623,10 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 	 
 	var makeChangeImagesMenu = function( args, senderId, msg='' ) {
 		
-		var tokenID = args[0],
-			charCS = getCharacter(args[0]),
-			name = charCS.get('name'),
-			trapType = attrLookup( charCS, fields.Container_trap ),
-			lockType = attrLookup( charCS, fields.Container_lock ),
-			trapVars = parseInt(attrLookup( charCS, fields.Trap_vars )) || 0,
-			lockVars = parseInt(attrLookup( charCS, fields.Lock_vars )) || 0,
-			closedImg = attrLookup( charCS, fields.Token_closedImg ),
-			openImg = attrLookup( charCS, fields.Token_openImg ),
-			lockImgs = parseInt(attrLookup( charCS, fields.Lock_imgs )) || 0,
-			trapImgs = parseInt(attrLookup( charCS, fields.Trap_imgs )) || 0;
+		const tokenID = args[0],
+			  charCS = getCharacter(args[0]);
 			
-		var splitVariable = function( remVar ) {
+		const splitVariable = function( remVar ) {
 			let splitVar = [];
 			remVar = String(remVar);
 			while (remVar && remVar.length > 29) {
@@ -2665,27 +2637,29 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 			return splitVar.join(' ');
 		};
 		
-		var getVars = function( charCS, varCount, prefix ) {
-			var varText = '',
-				list = '';
+		const getVars = function( charCS, varCount, prefix ) {
+			let varText = '',
+				list = '',
+				vObj, v, c;
 			for (let i = 1; i <= varCount; i++) {
-				let vObj = attrLookup(charCS, [prefix+i,null]);
+				vObj = attrLookup(charCS, [prefix+i,null]);
 				if (!vObj) continue;
-				let v = vObj.get('max'), c = vObj.get('current');
+				v = vObj.get('max'), c = vObj.get('current');
 				if (v.toLowerCase().includes('creature')) list = getMagicList( fields.RaceDB, clTypeLists, ['creature','npc'], senderId, '-', true, 'Specify creature or NPC', true );
 				varText += '<tr><td style="text-align:left">['+v+'](!cmd --button '+BT.TOKEN_IMG+'|'+tokenID+'|'+prefix+i+'|?{Enter '+v+'|'+list+'})</td><td style="text-align:left"><b>'+splitVariable(c.trim())+'</b></td></tr>';
 			}
 			return varText;
 		};
 
-		var createImgTable = function( charCS, tokenID ) {
+		const createImgTable = function( charCS, tokenID ) {
 
-			var getImgs = function( charCS, tokenID, imgCount, cmd, prefix ) {
-				let buttons = [];
+			const getImgs = function( charCS, tokenID, imgCount, cmd, prefix ) {
+				let buttons = [],
+					imgObj, sizeObj, height;
 				for (let i = 1; i <= imgCount; i++) {
-					let imgObj = attrLookup(charCS,[prefix+i,null]);
-					let sizeObj = attrLookup(charCS,[prefix+i+'-size',null]);
-					let height = Math.floor(70 * (sizeObj ? ((parseInt(sizeObj.get('max')) || 70) / (parseInt(sizeObj.get('current')) || 70)) : 1));
+					imgObj = attrLookup(charCS,[prefix+i,null]);
+					sizeObj = attrLookup(charCS,[prefix+i+'-size',null]);
+					height = Math.floor(70 * (sizeObj ? ((parseInt(sizeObj.get('max')) || 70) / (parseInt(sizeObj.get('current')) || 70)) : 1));
 					imgObj && imgObj.get('current').trim().length ? imgObj : undefined;
 					buttons.push([(imgObj?('['+imgObj.get('max')+'](!cmd --button '+cmd+'|'+tokenID+'|'+prefix+i+')'):' '),(imgObj?('<img src="'+imgObj.get('current')+'" alt="'+imgObj.get('max')+'" width="70" height="'+height+'">') : '')]);
 				};
@@ -2703,10 +2677,18 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 			return tableTxt + '</table>';
 		};
 		
+		const trapType = attrLookup( charCS, fields.Container_trap ),
+			  lockType = attrLookup( charCS, fields.Container_lock );
 		if (!trapType) setAttr( charCS, fields.Container_trap, (trapType = 'No-Trap'));
 		if (!lockType) setAttr( charCS, fields.Container_lock, (lockType = 'No-Lock'));
 				
-		var content = '&{template:RPGMdefault}{{name='+name+'\'s Images}}'+(msg ? ('{{Section='+msg+'}}') : '')
+		const name = charCS.get('name'),
+			  lockImgs = parseInt(attrLookup( charCS, fields.Lock_imgs )) || 0,
+			  trapImgs = parseInt(attrLookup( charCS, fields.Trap_imgs )) || 0,
+			  openImg = attrLookup( charCS, fields.Token_openImg ),
+			  closedImg = attrLookup( charCS, fields.Token_closedImg );
+
+		let content = '&{template:RPGMdefault}{{name='+name+'\'s Images}}'+(msg ? ('{{Section='+msg+'}}') : '')
 					+ '{{subtitle=Change Images}}{{Use=Selecting a button below will change that stored image to be the same as the currently selected token image}}'
 					+ '{{Section1=<table><tr><td>[Closed container](!cmd --button '+BT.TOKEN_IMG+'|'+tokenID+'|'+fields.Token_closedImg[0]+')</td><td>[Open container](!cmd --button '+BT.TOKEN_IMG+'|'+tokenID+'|'+fields.Token_openImg[0]+')</td></tr>'
 					+ '<tr><td>'+(closedImg ? ('<img src="'+closedImg+'" alt="Closed container">') : '')+'</td>'
@@ -2722,10 +2704,12 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 				+  '<table><tr><td>Lock is ['+lockType+'](!cmd --button '+BT.LOCKTYPE+'|'+tokenID+'|?{Choose a lock type (or n0 lock&#41;|'+getMagicList(fields.AbilitiesDB,miTypeLists,'lock',senderId,'None')+'})</td>'
 				+  '<td>Trap is ['+trapType+'](!cmd --button '+BT.TRAPTYPE+'|'+tokenID+'|?{Choose a trap type (or no trap&#41;|'+getMagicList(fields.AbilitiesDB,miTypeLists,'trap',senderId,'None')+'})</td></tr></table>}}';
 				
+		const trapVars = parseInt(attrLookup( charCS, fields.Trap_vars )) || 0;
 		if (trapVars && trapVars != 0) {
 			content += '{{Section4=**Trap Variables**<br>For use in macros determining the action needed to open a trapped container. See the description of each container for details of how these should be set.<br>'
 					+ '<table style="text-align:left">'+getVars( charCS, trapVars, fields.Trap_varPrefix[0] )+'</table>}}';
 		}
+		const lockVars = parseInt(attrLookup( charCS, fields.Lock_vars )) || 0;
 		if (lockVars && lockVars != 0) {
 			content += '{{Section5=**Lock Variables**<br>For use in macros determining the action needed to open a locked container. See the description of each container for details of how these should be set.<br>'
 					+ '<table style="text-align:left">'+getVars( charCS, lockVars, fields.Lock_varPrefix[0] )+'</table>}}';
@@ -2742,38 +2726,36 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * API scripts; (2) a more complex menu allowing Ability macros to be set 
 	 * using commands registered by any API script.
 	 */
-	 
-	var makeAbilitiesMenu = function( args, selected ) {
+
+	const makeAbilitiesMenu = function( args, selected ) {
 		
-		var menuType = args[0] || BT.AB_SIMPLE,
-			regs = registeredAPI,
-			cmds,
-			content,
-			selButton = '<span style=' + design.selected_button + '>',
-			pc,
-			dm,
-			players = findObjs({type: 'player'}).map(p => (p.get('_displayname') + ',' + p.id)),
-			charIDs = [],
-			buttonType = function( buttonName, buttonCmd, api, action, question, defaultAns ) {
-				let abilityObjs = findAbilities( api, action, selected );
-				abilities[buttonName] = abilities[buttonName] || (abilityObjs && abilityObjs.length);
-				let	buttonText = (abilities[buttonName] ? selButton : '[')
-							   + buttonName
-							   + (abilities[buttonName] ? '</span>' : '](!cmd --button '+buttonCmd+'|'+menuType+'|'+buttonName+'|'+api+'|'+action+'|&#63;{'+question+'&#124;'+defaultAns+'})');
-				return buttonText;
-			};
+		if (!args) args = [];
+		
+		const menuType = args[0] || BT.AB_SIMPLE,
+			  regs = registeredAPI,
+			  selButton = '<span style=' + design.selected_button + '>',
+			  players = findObjs({type: 'player'}).map(p => (p.get('_displayname') + ',' + p.id));
+			  
+		let	pc = true,
+			dm = true;
 			
-		if (!selected || !selected.length) {
-			pc = dm = true;
-		} else {
-			let tokens = selected.map( s => getObj('graphic',s._id) );
+		const buttonType = function( buttonName, buttonCmd, api, action, question, defaultAns ) {
+			const abilityObjs = findAbilities( api, action, selected );
+			abilities[buttonName] = abilities[buttonName] || (abilityObjs && abilityObjs.length);
+			return (abilities[buttonName] ? selButton : '[')
+					+ buttonName
+					+ (abilities[buttonName] ? '</span>' : '](!cmd --button '+buttonCmd+'|'+menuType+'|'+buttonName+'|'+api+'|'+action+'|&#63;{'+question+'&#124;'+defaultAns+'})');
+		};
+			
+		if (selected && selected.length) {
+			const tokens = selected.map( s => getObj('graphic',s._id) );
 			pc = _.some( tokens, t => (!!t.get('showplayers_name') || (!!t.get('represents') && !!getObj('character',t.get('represents')).get('controlledby').trim().length)));
 			dm = _.some( tokens, t => (!t.get('showplayers_name') || (!t.get('represents') || !getObj('character',t.get('represents')).get('controlledby').trim().length)));
 		}
 			
-		content = '&{template:'+fields.menuTemplate+'}{{name=Assign Abilities}}'
-				+ '{{desc=Click a button to add an Ability Action Button to the character sheets of the selected tokens.  More than one token can be selected at the same time.}}'
-				+ '{{desc1=<table><tr><td style="width:100px;">Ability</td><td>Description</td></tr>';
+		let content = '&{template:'+fields.menuTemplate+'}{{name=Assign Abilities}}'
+					+ '{{desc=Click a button to add an Ability Action Button to the character sheets of the selected tokens.  More than one token can be selected at the same time.}}'
+					+ '{{desc1=<table><tr><td style="width:100px;">Ability</td><td>Description</td></tr>';
 				
 		switch (menuType.toUpperCase()) {
 			
@@ -2804,7 +2786,6 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 			break;
 		
 		default:
-			sendDebug('makeAbilitiesMenu: invalid menu type given');
 			sendError('Internal CommandMaster error');
 			return;
 		}
@@ -2814,7 +2795,8 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 				+  '<tr><td colspan="2">[Check Who Controls What](!cmd --check-chars)</td></tr>'
 				+  '<tr><td width="50%">[Choose Race/Class](!cmd --button '+BT.AB_CLASSES+')</td><td width="50%">[Set Saving Throws](!attk --check-saves |'+menuType+'|0)</td></tr>'
 				+  '<tr><td width="50%">[Add to Spellbook](!cmd --add-spells MUSPELLS)</td><td width="50%">[Add to Proficiencies](!cmd --add-profs)</td></tr>'
-				+  '<tr><td width="50%">[Copy Token Image](!cmd --copy-img '+selected[0]._id+')</td><td width="50%">[Manage Token Bars](!cmd --button '+BT.AB_MANAGE_TOKEN+'|'+menuType+')</td></tr>'
+				+  '<tr><td width="50%">'+(!selected || !selected.length ? ('<span style='+design.grey_button+'>') : '[')+'Copy Token Image'+(!selected || !selected.length ? '</span>' : ('](!cmd --copy-img '+selected[0]._id+')'))
+				+  '</td><td width="50%">[Manage Token Bars](!cmd --button '+BT.AB_MANAGE_TOKEN+'|'+menuType+')</td></tr>'
 				+  '<tr><td colspan="2">**Convert Character Sheet to RPGMaster**</td></tr>'
 				+  '<tr><td width="50%">[Convert Items](!cmd --conv-items)</td><td width="50%">[Convert Spells](!cmd --conv-spells)</td></tr>'
 				+  '</table></div>}}';
@@ -2829,10 +2811,9 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * adding action abilities to tokens.
 	 */
 	 
-	var makeAskReplace = function( args ) {
+	const makeAskReplace = function( args ) {
 		args.shift();
-		var buttonName = args[1],
-			content = '&{template:'+fields.menuTemplate+'}{{name=Replace existing '+buttonName+' Abilities?}}'
+		const content = '&{template:'+fields.menuTemplate+'}{{name=Replace existing '+args[1]+' Abilities?}}'
 					+ '{{desc=The selected ability already exists on one or more of the selected token(s).  Replacing or Removing them is NOT recommended.'
 					+ ' Selecting *Do Nothing* will still add the ability to those tokens that do not have it.   Are you sure you want to replace or remove existing abilities?}}'
 					+ '{{desc1=[ Replace ]('+fields.commandMaster+' --button '+BT.AB_REPLACE+'|'+args.join('|')+'|replace)'
@@ -2848,8 +2829,8 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * string replace with confirmation set on.
 	 */
 	 
-	var makeCheckReplace = function( args, charName, abilityName ) {
-		var content = '&{template:'+fields.menuTemplate+'}{{name=Replace '+charName+' '+abilityName+' Ability String?}}'
+	const makeCheckReplace = function( args, charName, abilityName ) {
+		const content = '&{template:'+fields.menuTemplate+'}{{name=Replace '+charName+' '+abilityName+' Ability String?}}'
 					+ '{{desc=The ability **'+abilityName+'** on character sheet **'+charName+'** has the string '+args[1]+' which will be replaced with '+args[2]+'.'
 					+ '  Are you sure you want to replace this string in this ability?}}'
 					+ '{{desc1=[ Yes ]('+fields.commandMaster+' --button '+BT.STR_REPLACE+'|'+args[1]+'|'+args[2]+'|true|true)'
@@ -2867,10 +2848,10 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * ways of fixing the issues, where possible.
 	 */
 	 
-	async function makeCheckNamesMenu(args,silent=false) {
+	async function makeCheckNamesMenu(args,silent=false) { // senderId
 		
 		try {
-			var chosen = args[0],
+			let chosen = args[0],
 				msg = args[1];
 
 			silent = silent || (args[2] || '').toUpperCase() == 'SILENT';
@@ -2881,51 +2862,61 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 							 token:'\\lbrak;Change the token name\\rbrak;\\lpar;^^command^^\\rpar; to remove any illegal characters - it may be that any character sheet that the token represents may need its name changing as well',
 							};
 			
-			var listProblemNames = function( args, objType, field, errMsg ) {
-				
-				var replacements = [[/\"/g,'&#34;'],
-									[/\$/g,'&#36;'],
-									[/\%/g,'&#37;'],
-									[/\'/g,'&#39;'],
-									[/\(/g,'&#40;'],
-									[/\)/g,'&#41;'],
-									[/\?/g,'&#63;'],
-									[/\@/g,'&#64;'],
-									[/\[/g,'&#91;'],
-									[/\\/g,'&#92;'],
-									[/\]/g,'&#93;'],
-									[/\{/g,'&#123;'],
-									[/\|/g,'&#124;'],
-									[/\}/g,'&#125;'],
-								  ],
-					list = findObjs({type:objType}),
-					chosen = args[0],
-					buttons = '';
-				
-				_.each( list, o => {
-					let name = o.get(field);
-					if (name && reInvalid.test(name)) {
-						let legal = name.replace(reInvalid,''),
-							selected = legal == chosen;
-						_.each( replacements, r => name = name.replace(r[0],r[1]) );
-						let msg = errMsg.replace('^^command^^',('\\api;cmd ~~button '+BT.CHANGE_NAME+'\\vbar;\\ques;{Set the name to \\vbar;'+legal+'}\\vbar;\\vbar;'+objType+'\\vbar;'+o.id+'\\vbar;'+field));
-						buttons += (selected ? ('<span style='+design.selected_button+'>') : '[')
-								+  name
-								+  (selected ? ('</span>') : ('](!cmd --check-names '+legal+'|'+msg+')'));
+			const listProblemNames = function( args, objType, field, errMsg ) {
+				return new Promise(resolve => {
+					let buttons = '';
+					try {
+						const list = findObjs({type:objType}),
+							  chosen = args[0],
+							  replacements = [[/\"/g,'&#34;'],
+											  [/\$/g,'&#36;'],
+											  [/\%/g,'&#37;'],
+											  [/\'/g,'&#39;'],
+											  [/\(/g,'&#40;'],
+											  [/\)/g,'&#41;'],
+											  [/\?/g,'&#63;'],
+											  [/\@/g,'&#64;'],
+											  [/\[/g,'&#91;'],
+											  [/\\/g,'&#92;'],
+											  [/\]/g,'&#93;'],
+											  [/\{/g,'&#123;'],
+											  [/\|/g,'&#124;'],
+											  [/\}/g,'&#125;'],
+											 ];
+						let	name, legal, selected, msg;
+						
+						_.each( list, o => {
+							name = o.get(field);
+							if (name && reInvalid.test(name)) {
+								legal = name.replace(reInvalid,'');
+								selected = legal == chosen;
+								_.each( replacements, r => name = name.replace(r[0],r[1]) );
+								msg = errMsg.replace('^^command^^',('\\api;cmd ~~button '+BT.CHANGE_NAME+'\\vbar;\\ques;{Set the name to \\vbar;'+legal+'}\\vbar;\\vbar;'+objType+'\\vbar;'+o.id+'\\vbar;'+field));
+								buttons += (selected ? ('<span style='+design.selected_button+'>') : '[')
+										+  name
+										+  (selected ? ('</span>') : ('](!cmd --check-names '+legal+'|'+msg+')'));
+							}
+						});
+					} catch (e) {
+						sendCatchError('AttackMaster',msg_orig[senderId],e);
+						errFlag = true;
+					} finally {
+						setTimeout(() => {
+							resolve(buttons || 'None');
+						}, 10);
 					}
 				});
-				return buttons || 'None';
 			}
 			
-			var illegalPlayers = listProblemNames(args,'player','_displayname',errMsgs.player),
-				illegalChars = listProblemNames(args,'character','name',errMsgs.character),
-				illegalTokens = listProblemNames(args,'graphic','name',errMsgs.token);
+			const illegalPlayers = await listProblemNames(args,'player','_displayname',errMsgs.player),
+				  illegalChars = await listProblemNames(args,'character','name',errMsgs.character),
+				  illegalTokens = await listProblemNames(args,'graphic','name',errMsgs.token);
 				
 			if (silent && illegalPlayers === 'None' && illegalChars ==='None' && illegalTokens === 'None') {
-				sendWait(findTheGM(),0);
+				sendWait(findTheGM(),0,'Cmd makeCheckNamesMenu');
 				return;
 			}
-			var	content = '&{template:'+fields.menuTemplate+'}{{name=Detected Possible Problems}}'
+			const content = '&{template:'+fields.menuTemplate+'}{{name=Detected Possible Problems}}'
 						+ '{{Section1=**Player Names**\n'+illegalPlayers+'}}'
 						+ '{{Section3=**Character Names**\n'+illegalChars+'}}'
 						+ '{{Section4=**Token Names**\n'+illegalTokens+'}}'
@@ -2937,7 +2928,7 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 						
 			sendFeedback( content );
 		} catch (e) {
-			sendCatchError('CommandMaster',msg_orig[senderId],e);
+			sendCatchError('CommandMaster',null,e);
 		}
 	}
 	
@@ -2950,25 +2941,26 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 	async function makeConvertItemsMenu( args, selected = [], senderId ) {
 		
 		try {
-			var cmd = args[0] || '',
-				toConvert = args[1] || '',
+			const cmd = args[0] || '',
+				  tablesToConvert = {full:['MELEE','RANGED','DMG','AMMO','WEAP','MONWEAP','GEAR','STORED','POTIONS','DUSTS','MISC','WANDS','SCROLLS','TREASURE','COINS','WPROF'],
+									 sort:['GEAR','STORED','POTIONS','DUSTS','MISC','WANDS','SCROLLS','TREASURE','COINS']
+									},
+				  quantifiedTables = ['WEAP','AMMO','STORED','GEAR','POTIONS','DUSTS','MISC','WANDS','SCOLLS','TREASURE','COINS'];
+				
+			let	toConvert = args[1] || '',
 				replaceWith = (args[2] || '').replace(/\s/g,'-'),
 				setQty = parseInt(args[3]),
-				tokenID, charCS,
-				miList = [],
-				blank = true,
 				notRPGM = false,
-				tablesToConvert = {	full:['MELEE','RANGED','DMG','AMMO','WEAP','MONWEAP','GEAR','STORED','POTIONS','DUSTS','MISC','WANDS','SCROLLS','TREASURE','COINS','WPROF'],
-									sort:['GEAR','STORED','POTIONS','DUSTS','MISC','WANDS','SCROLLS','TREASURE','COINS']
-								  },
-				quantifiedTables = ['WEAP','AMMO','STORED','GEAR','POTIONS','DUSTS','MISC','WANDS','SCOLLS','TREASURE','COINS'],
-				msg, content, Items;
+				tokenID, charCS,
+				msg, content, Items, r,
+				name, def, qty, specs, Profs, row;
 				
-			var updateItemAttr = function( charCS, item, f='', t='' ) {
+			const updateItemAttr = function( charCS, item, f='', t='' ) {
 				
+				let attrName;
 				filterObjs( obj => {
 					if (obj.get('type') !== 'attribute' || obj.get('characterid') !== charCS.id) return false;
-					let attrName = obj.get('name');
+					attrName = obj.get('name');
 					if (attrName.startsWith('-') || attrName.startsWith('ct-')) return false;
 					if (attrName.startsWith((fields.ItemVar[0]+item+'+'+f+'-'))) {
 						obj.set('name', attrName.replace('+'+f+'-','+'+t+'-'));
@@ -2988,11 +2980,12 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 				});
 			};
 				
-			var storeItem = function( Items, from, fromName, fromTable, toName, speed, qty ) {   // tableLookup
+			const storeItem = function( Items, from, fromName, fromTable, toName, speed, qty ) {
+
 				if (fromName !== toName) [from,fromTable] = tableGroupFind( Items, 'name', fromName );
-				let toObj = abilityLookup( fields.MagicItemDB, toName, charCS ),
-					toTable = !toObj.obj ? 'GEAR' : (getItemTable( toObj.obj[1].type ) || 'GEAR'),
-					to, toValues, fromValues;
+				const toObj = abilityLookup( fields.MagicItemDB, toName, charCS ),
+					  toTable = !toObj.obj ? 'GEAR' : (getItemTable( toObj.obj[1].type ) || 'GEAR');
+				let	to, toValues, fromValues;
 				do {
 					to = from;
 					if (fromTable !== toTable) to = Items[toTable].tableFind( fields[Items[toTable].fieldGroup+'name'], '-' );
@@ -3050,14 +3043,14 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 				if (!charCS) return;
 				if (isNaN(setQty)) setQty = 1;
 				if (toConvert.length && replaceWith.length && cmd === BT.STORE_ITEM) {
-					let r = abilityLookup( fields.MagicItemDB, replaceWith, null, true, false );
+					r = abilityLookup( fields.MagicItemDB, replaceWith, null, true, false );
 					if (r.obj) {
 						if (toConvert !== replaceWith) {
 							Items = getTableGroup( charCS, fieldGroups.MI );
 							[Items] = storeItem( Items, null, toConvert, null, replaceWith, r.obj[1].ct, setQty );
-							let specs = r.specs();
-							let Profs = getTable( charCS, fieldGroups.WPROF );
-							let row = Profs.tableFind( fields.WP_name, toConvert );
+							specs = r.specs();
+							Profs = getTable( charCS, fieldGroups.WPROF );
+							row = Profs.tableFind( fields.WP_name, toConvert );
 							while (!_.isUndefined(row)) {
 								Profs = Profs.tableSet( fields.WP_name, row, replaceWith );
 								Profs = Profs.tableSet( fields.WP_type, row, specs[0][4] );
@@ -3065,42 +3058,50 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 							}
 						}
 					}
+//					msg = toConvert + ' has been replaced with ' + replaceWith;
+//					toConvert = replaceWith = '';
+//					setQty = 1;
+	//				sendAPI( '!attk --check-ac '+tokenID+'|' );
+					sendAPI( '!attk --check-ac '+tokenID+'|silent' );
+				};
+			});
+			if (selected.length) {
+				if (cmd === BT.STORE_ITEM) {
 					msg = toConvert + ' has been replaced with ' + replaceWith;
 					toConvert = replaceWith = '';
 					setQty = 1;
-	//				sendAPI( '!attk --check-ac '+tokenID+'|' );
-					sendAPI( '!attk --check-ac '+tokenID+'|silent' );
 				} else if (cmd === BT.FROMITEM) {
 					msg = 'Selected to replace '+toConvert;
 				} else if (cmd === BT.TOITEM) {
 					msg = 'Selected to convert to '+replaceWith;
 				};
-			});
+			};
 
 			if (!cmd.length || cmd === BT.SORT_ITEMS) {
 				if (!_.size(selected)) {
-					let curToken = getObj('graphic',toConvert);
+					const curToken = getObj('graphic',toConvert);
 					if (!_.isUndefined(curToken)) selected[0] = curToken;
 				};
+				let msVersion, Weaps, toType;
 				for (const e of selected) {
 					tokenID = e._id || e.id;
 					charCS = getCharacter(tokenID);
 					if (!charCS) return;
-					let msVersion = attrLookup(charCS,fields.msVersion);
+					msVersion = attrLookup(charCS,fields.msVersion);
 					notRPGM = notRPGM || !msVersion;
 					Items = getTableGroup( charCS, fieldGroups.MI );
 					_.each( tablesToConvert[(!msVersion ? 'full' : 'sort')], type => {
-						let Weaps = getTable( charCS, fieldGroups[type] );
+						Weaps = getTable( charCS, fieldGroups[type] );
 						if (_.isUndefined(Weaps)) return;
-						for (let r=Weaps.table[1]; r<Weaps.sortKeys.length; r++) {
-							let name = Weaps.tableLookup( fields[Weaps.fieldGroup+'name'], r );
-							let def = abilityLookup( fields.MagicItemDB, name, charCS, true, false );
-							let qty = (quantifiedTables.includes(type)) ? (Weaps.tableLookup( fields[Weaps.fieldGroup+'qty'], r ) || 1) : 1;
+						for (r=Weaps.table[1]; r<Weaps.sortKeys.length; r++) {
+							name = Weaps.tableLookup( fields[Weaps.fieldGroup+'name'], r );
+							def = abilityLookup( fields.MagicItemDB, name, charCS, true, false );
+							qty = (quantifiedTables.includes(type)) ? (Weaps.tableLookup( fields[Weaps.fieldGroup+'qty'], r ) || 1) : 1;
 							if (name && name !== '-') {
 								if (type !== 'WPROF') {
-									let toType = type;
+									toType = type;
 									[Items,toType] = storeItem( Items, r, name, type, name, (def.obj ? def.obj[1].ct : 5), qty );
-									if (blank && type !== toType) {
+									if (type !== toType) {
 										Weaps = Weaps.addTableRow(r);
 									};
 								} else if (!!def.obj) {
@@ -3121,19 +3122,27 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 				};
 			};
 
+			let miList = [];
 			_.each( selected, e => {
 				tokenID = e._id;
 				charCS = getCharacter(tokenID);
 				if (!charCS) return;
 				_.each( ['GEAR','POTIONS','DUSTS','MISC','WANDS','SCROLLS','TREASURE','COINS','WPROF'], type => {
 					Items = getTable( charCS, fieldGroups[type] );
-					for (let r=Items.table[1]; r<Items.sortKeys.length; r++) {
-						let name = Items.tableLookup( fields[Items.fieldGroup+'name'], r );
-						let def = abilityLookup( fields.MagicItemDB, name, charCS, true, false );
-						let qty = (type === 'WPROF') ? 0 : (Items.tableLookup( fields.Items_qty, r ) || 1);
-						if ((!def.obj) && name && name !== '-' && (name || '').toLowerCase() !== 'innate') {
-							miList.push({name:name,qty:qty});
-						}
+					for (r=Items.table[1]; r<Items.sortKeys.length; r++) {
+						name = Items.tableLookup( fields[Items.fieldGroup+'name'], r );
+						if (name && name !== '-' && (name || '').toLowerCase() !== 'innate') {
+							def = abilityLookup( fields.MagicItemDB, name, charCS, true, false );
+							if (type !== 'WPROF') {
+								qty = (Items.tableLookup( fields.Items_qty, r ) || 1);
+							} else {
+								if (!def.obj) def = abilityLookup( fields.StylesDB, name, charCS, true, false );
+								qty = 0;
+							};
+							if (!def.obj) {
+								miList.push({name:name,qty:qty});
+							};
+						};
 					};
 				});
 			});
@@ -3141,10 +3150,10 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 			
 			content = '&{template:'+fields.menuTemplate+'}{{name=Unknown Items}}';
 			if (!miList.length) {
-				content += '{{Section1=All equipment is fully specified and supported by the RPGMaster databases. Use *Attk Menu / Change Weapon* dialogue (or *!attk --weapon* command)'
-						+  'to take weapons in-hand ready to do attacks.}}';
-				if (notRPGM) sendFeedback( content );
-			} else {
+				content += '{{Section1=All equipment is fully specified and supported by the RPGMaster databases, and sorted into appropriate tables. Use *Attk Menu / Change Weapon* dialogue (or *!attk --weapon* command)'
+						+  ' to take weapons in-hand ready to do attacks.}}';
+				sendFeedback( content );
+			} else if (miList.length) {
 				content += (msg && msg.length ? '{{Section='+msg+'}}' : '')
 						+ '{{Section1=The items of equipment listed below have not been found in the RPGMaster databases. Please replace where possible with equivalent database items, so that the APIs deliver you '
 						+ 'the best possible game-play experience. Select an item from the list, and a replacement using one of the item type buttons below, then convert it using the [Convert] button. Those left as '
@@ -3156,14 +3165,14 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 				});
 				content += ('Add Item' !== toConvert ? ('[Add Item](!cmd --button '+BT.FROMITEM+'|Add Item|'+replaceWith+'|0})') : ('<span style=' + design.selected_button + '>Add Item</span>'));
 
-				let weapons = getMagicList(fields.MagicItemDB,miTypeLists,'weapon',senderId),
-					ammo = getMagicList(fields.MagicItemDB,miTypeLists,'ammo',senderId),
-					armour = getMagicList(fields.MagicItemDB,miTypeLists,'armour',senderId),
-					potions = getMagicList(fields.MagicItemDB,miTypeLists,'potion',senderId),
-					scrolls = getMagicList(fields.MagicItemDB,miTypeLists,'scroll',senderId),
-					rods = getMagicList(fields.MagicItemDB,miTypeLists,'rod',senderId),
-					rings = getMagicList(fields.MagicItemDB,miTypeLists,'ring',senderId),
-					misc = getMagicList(fields.MagicItemDB,miTypeLists,'miscellaneous',senderId);
+				const weapons = getMagicList(fields.MagicItemDB,miTypeLists,'weapon',senderId),
+					  ammo = getMagicList(fields.MagicItemDB,miTypeLists,'ammo',senderId),
+					  armour = getMagicList(fields.MagicItemDB,miTypeLists,'armour',senderId),
+					  potions = getMagicList(fields.MagicItemDB,miTypeLists,'potion',senderId),
+					  scrolls = getMagicList(fields.MagicItemDB,miTypeLists,'scroll',senderId),
+					  rods = getMagicList(fields.MagicItemDB,miTypeLists,'rod',senderId),
+					  rings = getMagicList(fields.MagicItemDB,miTypeLists,'ring',senderId),
+					  misc = getMagicList(fields.MagicItemDB,miTypeLists,'miscellaneous',senderId);
 				
 				content += '}}{{Section4=**Lists of Possible Replacements**}}'
 						+ '{{Section5=[Weapon](!cmd --button '+BT.TOITEM+'|'+toConvert+'|?{Weapon to store|'+weapons+'}|'+setQty+')'
@@ -3190,28 +3199,27 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * a character sheet against the RPGMaster databases, and then replace 
 	 * any not found in the databases with appropriate alternatives.
 	 */
-	
-	var spells2Conv = {
+
+	const spells2Conv = {
 		mu: [],
 		pr: [],
 		pw: [],
 	}
-	
+/
 	async function makeConvertSpellsMenu( args, selected, senderId ) {
 		
 		try {
-			var cmd = args[0] || '',
-				castType = args[1] || '',
-				fromLevel = parseInt(args[2]) || 1,
+			const cmd = args[0] || '',
+				  castType = args[1] || '',
+				  isPower = castType === 'pw',
+				  isWizard = castType === 'mu';
+
+			let	fromLevel = parseInt(args[2]) || 1,
 				fromName = args[3] || '',
 				toType = args[4] || '',
 				toLevel = parseInt(args[5]) || 1,
 				toName = (args[6] || '').replace(/\s/g,'-'),
 				msg = args[7],
-				isPower = castType === 'pw',
-				isWizard = castType === 'mu',
-				powerType = '',
-				powerDB = '',
 				content, tokenID, charCS;
 				
 			if (cmd === BT.FROMSPELL) {
@@ -3221,14 +3229,14 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 			msg = msg || (cmd === BT.FROMSPELL ? ('Selected '+fromName+' to convert') : (cmd === BT.TOSPELL ? ('Selected '+toName+' as a replacement') : (cmd === BT.CONVSPELL ? ('Converting '+fromName+' to '+toName) : '')));
 
 			if (!(spells2Conv.mu.length || spells2Conv.pr.length || spells2Conv.pw.length)) {
+				let def, spellbook;
 				_.each( selected, e => {
 					tokenID = e._id;
 					charCS = getCharacter( tokenID );
 					_.each( spellLevels, (levels,c) => {
 						_.each( levels, (col, l) => {
 							if (!l || !['mu','pr','pw'].includes(c)) return;
-							let def,
-								spellbook = (attrLookup( charCS, [fields.Spellbook[0]+col.book,fields.Spellbook[1]] ) || '').split('|');
+							spellbook = (attrLookup( charCS, [fields.Spellbook[0]+col.book,fields.Spellbook[1]] ) || '').split('|');
 							_.each(spellbook, spell => {
 								if (!spell || !spell.length) return;
 								def = ((c === 'pw') ? findPower( charCS, spell, true, false ) : abilityLookup( ((c === 'mu') ? fields.MU_SpellsDB : fields.PR_SpellsDB), spell, null, true, false ));
@@ -3248,11 +3256,12 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 				toName = '';
 			} else if (fromName.length && toName.length && cmd === BT.CONVSPELL) {
 				toName = (isPower && toType !== 'pw') ? (toType.toUpperCase()+'-'+toName) : toName;
-				let spellObj = (isPower ? findPower( null, toName, true, false ) : abilityLookup( (isWizard ? fields.MU_SpellsDB : fields.PR_SpellsDB), toName, null, true, false ));
+				const spellObj = (isPower ? findPower( null, toName, true, false ) : abilityLookup( (isWizard ? fields.MU_SpellsDB : fields.PR_SpellsDB), toName, null, true, false ));
+				let	spellbook, spellSpecs, spellData, altTable, values;
 				_.each( selected, e => {
 					tokenID = e._id;
 					charCS = getCharacter( tokenID );
-					let spellbook = '|'+(attrLookup( charCS, [fields.Spellbook[0]+spellLevels[castType][fromLevel].book, fields.Spellbook[1]] ) || '')+'|';
+					spellbook = '|'+(attrLookup( charCS, [fields.Spellbook[0]+spellLevels[castType][fromLevel].book, fields.Spellbook[1]] ) || '')+'|';
 					spellbook = spellbook.replace('|'+fromName+'|',(!isPower && fromLevel !== toLevel ? '|' : '|'+toName+'|'));
 					setAttr( charCS, [fields.Spellbook[0]+spellLevels[castType][fromLevel].book, fields.Spellbook[1]], _.uniq(spellbook.split('|').filter(s => !!s).sort(),true).join('|') );
 					if (!isPower && fromLevel !== toLevel) {
@@ -3262,9 +3271,9 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 						}
 						setAttr( charCS, [fields.Spellbook[0]+spellLevels[castType][toLevel].book, fields.Spellbook[1]], spellbook.split('|').filter(s => !!s).sort().join('|') );
 					};
-					let altTable = getTable( charCS, (isPower ? fieldGroups.ALTPWR : (isWizard ? fieldGroups.ALTWIZ : fieldGroups.ALTPRI )));
+					altTable = getTable( charCS, (isPower ? fieldGroups.ALTPWR : (isWizard ? fieldGroups.ALTWIZ : fieldGroups.ALTPRI )));
 					if (altTable) {
-						let values = altTable.copyValues();
+						values = altTable.copyValues();
 						if (isPower) {
 							values[fields.AltPowers_name[0]][fields.AltPowers_name[1]] = toName;
 							values[fields.AltPowers_castValue[0]][fields.AltPowers_castValue[1]] = 0;
@@ -3276,9 +3285,8 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 							values[fields.AltSpells_memorized[0]][fields.AltSpells_memorized[1]] = 0;
 							values[fields.AltSpells_effect[0]][fields.AltSpells_effect[1]] = '!magic --cast-spell MU-PR|'+tokenID;
 							if (spellObj.obj) {
-								let spellSpecs = spellObj.specs();
-								let spellData = spellObj.data();
-								spellData = parseData( spellData, reSpellSpecs );
+								spellSpecs = spellObj.specs();
+								spellData = parseData( spellObj.data(), reSpellSpecs );
 								values[fields.AltSpells_level[0]][fields.AltSpells_level[1]] = toLevel;
 								values[fields.AltSpells_school[0]][fields.AltSpells_school[1]] = spellSpecs[0][4];
 								values[fields.AltSpells_speed[0]][fields.AltSpells_speed[1]] = spellData.speed;
@@ -3321,9 +3329,9 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 				if (c === 'pr') content += '}}{{Section4=**Powers to replace**\n';
 			});
 			
-			let muSpells = getMagicList( fields.MU_SpellsDB, spTypeLists, 'muspelll'+toLevel, senderId ),
-				prSpells = getMagicList( fields.PR_SpellsDB, spTypeLists, 'prspelll'+toLevel, senderId ),
-				powers = getMagicList( fields.PowersDB, spTypeLists, 'power', senderId );
+			const muSpells = getMagicList( fields.MU_SpellsDB, spTypeLists, 'muspelll'+toLevel, senderId ),
+				  prSpells = getMagicList( fields.PR_SpellsDB, spTypeLists, 'prspelll'+toLevel, senderId ),
+				  powers = getMagicList( fields.PowersDB, spTypeLists, 'power', senderId );
 			
 			content += '}}{{Section5=**Spell Database Lists**\n'
 					+  '*Can access other levels from drop down lists*\n'
@@ -3344,9 +3352,9 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 	/*
 	 * Make a simple message confirming a canceled action
 	 */
-	 
-	var makeMsg = function(title,msg) {
-		var content = '&{template:'+fields.messageTemplate+'}{{name='+title+'}}'
+
+	const makeMsg = function(title,msg) {
+		const content = '&{template:'+fields.messageTemplate+'}{{name='+title+'}}'
 					+ '{{desc='+msg+'}}';
 	   sendFeedback(content,flags.feedbackName,flags.feedbackImg);
 	   return;
@@ -3356,11 +3364,10 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * Display a menu of actions to manage token bars
 	 */
 	 
-	var makeMngTokenBarsMenu = function( args ) {
+	const makeMngTokenBarsMenu = function( args ) {
 		
-		var menuType = args[1];
-	 
-		var content = '&{template:'+fields.menuTemplate+'}{{name=Manage Token Bars}}'
+		const menuType = args[1],
+			  content = '&{template:'+fields.menuTemplate+'}{{name=Manage Token Bars}}'
 					+ '{{Section=Use the following buttons to manage the mapping and values represented by token bars}}'
 					+ '{{Section1=Current default mappings are:\n'
 					+ '<span style="color:green">bar1 (green)</span> = '+state.RPGMaster.tokenFields[0]+'\n'
@@ -3380,9 +3387,9 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * Display a dialogue showing current token bar settings
 	 */
 	 
-	 var makeTokenBarDisplay = function(tokenID,abMenu) {
+	const makeTokenBarDisplay = function(tokenID,abMenu) {
 	 
-		var content = '&{template:'+fields.menuTemplate+'}{{name=Default Token Bars}}{{desc=The following fields have been set as the default fields for the token bars. '
+		const content = '&{template:'+fields.menuTemplate+'}{{name=Default Token Bars}}{{desc=The following fields have been set as the default fields for the token bars. '
 					+ 'These will be set when using the [Set Token Bars] button, and for *Drag & Drop* creatures. Note that previously vacant bars have been set to recommended '
 					+ 'values: in order for RPGMaster spell efects to work best (especially for spells vs. creature mobs) , default token bars should include **Thac0_base, AC & HP**.}}'
 					+ '{{desc1=<span style="color:green">bar1 (green)</span> = '+state.RPGMaster.tokenFields[0]+'\n'
@@ -3394,6 +3401,41 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 		sendFeedback( content );
 	 };
 
+	/*
+	 * Display a dialog to manage adding treasure to a 
+	 * character sheet using the standard GM treasure tables.
+	 */
+	
+	const makeAddTreasure = function( tokenID, charCS, retMenu, addedTreasure, senderId ) {
+		
+		if (!charCS) {
+			sendError( 'Selected token does not represent a character sheet');
+			return;
+		};
+		
+		const dispTreasure = addedTreasure.split('%%').map(t => '{{'+t+'}}').join('');
+		
+		const creatureName = (attrLookup( charCS, fields.Race) || 'creature'),
+			  treasure = (creatureName !== 'creature') ? resolveData( creatureName, fields.RaceDB, reRaceData, charCS, {cattr: reClassSpecs.cattr} ).attrs.treasure : '',
+			  tresMatch = treasure.toUpperCase().match(/^([\.\w]*)(?:\(([\.\w]+)\))?\s*$/) || ['','',''],
+			  tresTypes = tresMatch[1] || 'None',
+			  lairTypes = tresMatch[2] || '',
+			  dispTres = tresTypes.replace(/([\d\.]*)([A-Za-z])/g,(m,p1,p2) => ((p1.length ? p1+'x' : '')+p2+',')).split(',').filter(t=>!!t).join(', '),
+			  dispLair = lairTypes ? lairTypes.replace(/([\d\.]*)([A-Za-z])/g,(m,p1,p2) => ((p1.length ? p1+'x' : '')+p2+',')).split(',').filter(t=>!!t).join(', ') : lairTypes;
+			  
+		const content = '&{template:'+fields.menuTemplate+'}{{name=Add Treasure by Tables}}'
+					  + '{{Section=Use the buttons below to add treasure to the '+creatureName+' represented by the selected token,'
+					  + ' using the standard random treasure Table 84 given in the Dungeon Master\'s Guide. Lair types normally are added to a ontainer in the lair}}'
+					  + '{{Section1=**'+creatureName+'** has treasure types:\nIndividual: '+dispTres+(lairTypes ? ('\nIn lair: '+dispLair) : '')+'}}'
+					  + '{{Section2=<table><tr><td>[Add Treasure\nType A-Z](!cmd --addTreasure '+tokenID+'|&#63;{Add which treasure type &#40;table 84&#41;?|A|B|C|D|E|F|G|H|I|J|K|L|M|N|O|P|Q|R|S|T|U|V|W|X|Y|Z}'
+					  + '|&#63;{Multiplier?|1|2|3|4|5|6|7|8|9|10|20|30|40|50|100}|'+retMenu+'|'+addedTreasure+')</td>'
+					  + '<td>'+(tresMatch[1]?('[Add types\n'+dispTres+']'):('[Add Many Types]'))+'(!cmd --addTreasure '+tokenID+'|'+(tresMatch[1]||'&#63;{Type list of treasure types e.g. 5J1M2P}')+'|1|'+retMenu+'|'+addedTreasure+')</td>'
+					  + '<td>'+(lairTypes?('[Add Lair\n'+dispLair+'](!cmd --addTreasure '+tokenID+'|'+lairTypes+'|1|'+retMenu+'|'+addedTreasure+')'):'')+'</td></tr></table>}}'
+					  + dispTreasure
+					  + (retMenu ? ('{{desc1=[Return to Main Menu](!magic --gm-edit-mi '+tokenID+')}}') : '');
+					  
+		sendFeedback(content);
+	};
 
 // --------------------------------------------------------------- Button press Handlers ----------------------------------------------
 
@@ -3401,18 +3443,18 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * Handle reviewing a spell conversion
 	 */
 	 
-	var handleConvSpellReview = function( args ) {
+	const handleConvSpellReview = function( args ) {
 		
-		var spellType = args[4] || '',
-			spell = args[6] || '',
-			dB = (spellType === 'mu' ? fields.MU_SpellsDB : (spellType === 'pr' ? fields.PR_SpellsDB : fields.PowersDB)),
-			def = abilityLookup( dB, spell );
+		const spellType = args[4] || '',
+			  spell = args[6] || '',
+			  dB = (spellType === 'mu' ? fields.MU_SpellsDB : (spellType === 'pr' ? fields.PR_SpellsDB : fields.PowersDB)),
+			  def = abilityLookup( dB, spell );
 			
 		if (!!def.obj) {
 			args[0] = BT.SPELLCONV_MENU;
-			let content = def.obj[1].body
-						+ '&#13;&#47;w gm &{template:'+fields.messageTemplate+'}{{name=Spell convertion menu}}'
-						+  '{{desc=[Return to Spell Conversion Menu](!cmd --button '+args.join('|')+')}}';
+			const content = def.obj[1].body
+						  + '&#13;&#47;w gm &{template:'+fields.messageTemplate+'}{{name=Spell convertion menu}}'
+						  +  '{{desc=[Return to Spell Conversion Menu](!cmd --button '+args.join('|')+')}}';
 			sendFeedback( content );
 		};
 	};
@@ -3421,15 +3463,15 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * Handle reviewing an item of equipment conversion
 	 */
 	 
-	var handleConvItemReview = function( args ) {
+	const handleConvItemReview = function( args ) {
 		
-		var item = args[2] || '',
-			def = getAbility( fields.MagicItemDB, item, null, false, true );  // rootDB, name, charCS, silent, isGM, trueName
+		const item = args[2] || '',
+			  def = getAbility( fields.MagicItemDB, item, null, false, true );  // rootDB, name, charCS, silent, isGM, trueName
 			
 		if (!!def.obj) {
 			args[0] = BT.ITEMCONV_MENU;
-			let content = def.obj[1].body
-						+ '{{desc9=[Return to Item Conversion Menu](!cmd --button '+args.join('|')+')}}';
+			const content = def.obj[1].body
+						  + '{{desc9=[Return to Item Conversion Menu](!cmd --button '+args.join('|')+')}}';
 			sendFeedback( content );
 		};
 	};
@@ -3441,13 +3483,13 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 	async function handleAddSpell( args, selected, senderId ) {
 		
 		try {
-			var cmd = args[0].toUpperCase(),
-				level = parseInt(args[1]) || 1,
-				spell = args[2],
-				isMU = cmd.includes('MU'),
-				isPR = cmd.includes('PR'),
-				isPower = cmd.includes('POWER'),
-				charCS, listAttr, spellList, msg;
+			const cmd = args[0].toUpperCase(),
+				  level = parseInt(args[1]) || 1,
+				  spell = args[2],
+				  isMU = cmd.includes('MU'),
+				  isPower = cmd.includes('POWER');
+				  
+			let	charCS, listAttr, spellList, msg;
 				
 			if (isPower) {
 				msg = 'Added '+spell+' to Powers';
@@ -3479,18 +3521,16 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * a spellbook
 	 */
 	 
-	var handleReviewSpell = function( args ) {
+	const handleReviewSpell = function( args ) {
 		
-		var cmd = args[0].toUpperCase(),
-			isMU = cmd.includes('MU'),
-			isPR = cmd.includes('PR'),
-			isPower = cmd.includes('POWER'),
-			cmdStr,content;
+		const cmd = args[0].toUpperCase(),
+			  isMU = cmd.includes('MU'),
+			  isPower = cmd.includes('POWER');
 
 		args[0] = isPower ? 'POWERS' : (isMU ? 'MUSPELLS' : 'PRSPELLS');
-		cmdStr = args.join('|');
-		content = '&{template:'+fields.messageTemplate+'}{{name=Return to Menu}}'
-				+ '{{desc=[Return to Menu](!cmd --add-spells '+cmdStr+') or do something else}}';
+		const cmdStr = args.join('|'),
+			  content = '&{template:'+fields.messageTemplate+'}{{name=Return to Menu}}'
+					  + '{{desc=[Return to Menu](!cmd --add-spells '+cmdStr+') or do something else}}';
 		sendFeedback(content,flags.feedbackName,flags.feedbackImg);
 	}
 	
@@ -3499,7 +3539,7 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * known spells, using the lists pf Spheres known in
 	 * the Class Database
 	 */
-	 
+
 	async function handleAddAllPRspells( args, selected, senderId ) {
 		
 		try {
@@ -3507,7 +3547,7 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 				charCS, specs, classes,
 				priestClass, classData,
 				majorSpheres, minorSpheres,
-				sphere, spell;
+				sphere, spell, spellType, spellData, spellName;
 			
 			_.each( selected, t => {
 				spellBook = [];
@@ -3521,27 +3561,28 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 					classData = (classData.match(/}}\s*ClassData\s*=(.*?){{/im) || ['',''])[1];
 					classData = classData ? [...('['+classData+']').matchAll(/\[[^\]]+?\]/g)] : [];
 					for (const d of classData) {
-						let data = parseData( d[0], reClassSpecs ),
-							spellType = data.spellLevels ? data.spellLevels.split('|')[3] : '';
-						if (!data.cl || !data.cl.length) {
+						spellData = parseData( d[0], reClassSpecs );
+						spellType = spellData.spellLevels ? spellData.spellLevels.split('|')[3] : '';
+						if (!spellData.cl || !spellData.cl.length) {
 							if ((c.base == 'priest' && spellType != 'MU') || spellType == 'PR') {
-								majorSpheres.push(data.sps.dbName());
-								minorSpheres.push(data.spm.dbName());
+								majorSpheres.push(spellData.sps.dbName());
+								minorSpheres.push(spellData.spm.dbName());
 								for (let s=1; s<spellLevels.pr.length; s++) {
-									if (data['xspell'+s] && data['xspell'+s].length) {
+									if (spellData['xspell'+s] && spellData['xspell'+s].length) {
 										if (_.isUndefined(extraSpells[s])) extraSpells[s]=[];
-										extraSpells[s].push(data['xspell'+s]);
+										extraSpells[s].push(spellData['xspell'+s]);
 									}
 								}
 							}
 						}
 					}
 				}
-				majorSpheres = _.uniq(majorSpheres.join('|').split('|').sort(),true);
-				minorSpheres = _.uniq(minorSpheres.join('|').split('|').sort(),true);
-
+				majorSpheres = _.uniq(majorSpheres.join('|').split('|').sort(),true).filter(s=>!!s);
+				minorSpheres = _.uniq(minorSpheres.join('|').split('|').sort(),true).filter(s=>!!s);
+				
 				_.each( DBindex.pr_spells_db, spellRef => {
-					let spellData, spellName;
+					spellData = undefined;
+					spellName = '';
 					if (spellRef[0].length) {
 						spell = getObj('ability',spellRef[0]);
 						if (spell) {
@@ -3583,46 +3624,50 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 			sendCatchError('CommandMaster',msg_orig[senderId],e);
 		}
 	};
-	
+
 	/*
 	 * Handle adding all standard powers of a particular class 
 	 * to a Character Sheet
 	 */
-	 
+ 
 	async function handleAddAllPowers( args, type, selected, senderId, silent=false ) {
 		
 		if (!['MU','PR','PW','AB'].includes(type = type.toUpperCase()))
 			{sendError('Invalid type specified when adding powers',msg_orig[senderId]);return;}
 			
 		var tokenID, tokenObj, charCS, content, found = false,
-			classes, race, raceObj, dataObj, parsedData,
+			race, raceObj, dataObj, parsedData, roller,
+			lock, oldLock, lockObj, trap, oldTrap, trapObj,
+			abObj, specs, rootDB, powerList, foundThese,
 			racePowers = [], abAction = [], powers = [[],[]],
 			spellType = type.toLowerCase(),
 			typeText = {AB:'Actions',PW:'Powers',MU:'Wizard Spells',PR:'Priest Spells'};
 			
-		var getClassPowers = function( charCS, senderId, powers, type ) { 
-			let classes = classObjects(charCS,senderId);	
+		const getClassPowers = function( charCS, senderId, powers, type ) { 
+			const classes = classObjects(charCS,senderId);
+			let	p, power, level;
 			for (const c of classes) {
 				if (c.dB[0] !== fields.ClassDB[0]) continue;
 				for (const d of c.rawData) {
-					let power = parseData( d[0], reSpellSpecs );
+					power = parseData( d[0], reSpellSpecs );
 					if (power.spell.toUpperCase() === type) {
-						let level = (type === 'PW') ? 1 : (parseInt(power.level) || 1);
+						level = (type === 'PW') ? 1 : (parseInt(power.level) || 1);
 						if (!powers[level]) powers[level] = [];
 						powers[level].push(power.name);
 					}
 				};
-				let p = powers;
+				p = powers;
 				if (!silent && powers.length) content += '{{'+c.obj[1].name.dispName()+'='+(_.flatten(p).join(', ') || 'None')+'}}';
 			};
 			return powers;
 		};
 
-		var getRacePowers = function( racePowers, powers, actions, type, raceData, specs ) {
+		const getRacePowers = function( racePowers, powers, actions, type, raceData, specs ) {
+			let power, level;
 			for (const d of raceData) {
-				let power = parseData( d[0], specs );
+				power = parseData( d[0], specs );
 				if (power.spell.toUpperCase() === type) {
-					let level = (type === 'PW') ? 1 : (parseInt(power.level) || 1);
+					level = (type === 'PW') ? 1 : (parseInt(power.level) || 1);
 					racePowers.push(power.name);
 					if (!powers[level]) powers[level] = [];
 					powers[level].push(power.name);
@@ -3636,18 +3681,18 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 			return [racePowers,powers,actions];
 		};
 		
-		var setPowersOrSpells = function(rootDB,charCS,powers,level,type,senderId) {
+		const setPowersOrSpells = function(rootDB,charCS,powers,level,type,senderId) {
 						
 			return new Promise(resolve => {
 				try {
-					let	randomString = ( m, val, term ) => ('random|'.repeat(evalAttr(val,charCS))+term);
-					let spells = powers[level].join('|').toLowerCase().dispName().replace(/random:([-\+\*\/\=\^vfcd\d\.;\(\)]+)([\s\|,\]]?)/i,randomString).split('|');
+					const randomString = ( m, val, term ) => ('random|'.repeat(evalAttr(val,charCS))+term);
+					let spells = powers[level].join('|').toLowerCase().replace(/random:([-\+\*\/\=\^vfcd\d\.;\(\)]+)([\s\|,\]]?)/i,randomString).split('|');
 					if (spells.includes('random')) {
-						let listType = type === 'pw' ? 'power' : (type === 'mu' ? 'muspelll'+level : 'prspelll'+level);
-						let spellList = _.uniq(getMagicList( rootDB, spTypeLists, listType, senderId ).toLowerCase().split(/\,|\|/));
+						const listType = type === 'pw' ? 'power' : (type === 'mu' ? 'muspelll'+level : 'prspelll'+level),
+							  spellList = _.uniq(getMagicList( rootDB, spTypeLists, listType, senderId ).toLowerCase().split(/\,|\|/));
 						spells = spells.map( s => (s !== 'random' ? s : (!spellList.length ? '' : spellList[randomInteger(spellList.length)])) ).filter(s=>!!s).sort();
 					};
-					spells = _.uniq(spells.sort(),true);
+					spells = _.uniq(spells.sort(),true).map(s => s.dispName());
 					powers[level] = spells;
 					if (spells.join('').length) setAttr( charCS, [fields.Spellbook[0]+spellLevels[(type)][level].book, fields.Spellbook[1] ], (spells.join('|').hyphened() || '') );
 					return powers;
@@ -3678,13 +3723,13 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 			dataObj = resolveData( race, fields.RaceDB, /}}\s*RaceData\s*=(.*?){{/im );
 			parsedData = dataObj.parsed;
 			[racePowers,powers,abAction] = getRacePowers( racePowers, powers, abAction, type, dataObj.raw, reSpellSpecs );
-
+			
 			if (type === 'AB') {
-				let roller = '',
-					lock = attrLookup( charCS, fields.Container_lock ) || parsedData.lock,
-					oldLock = attrLookup( charCS, fields.Old_lock ) || '';
+				roller = '';
+				lock = attrLookup( charCS, fields.Container_lock ) || parsedData.lock;
+				oldLock = attrLookup( charCS, fields.Old_lock ) || '';
 				if (lock) {
-					let	lockObj = abilityLookup( fields.AbilitiesDB, lock, charCS );
+					lockObj = abilityLookup( fields.AbilitiesDB, lock, charCS );
 					if (lockObj.obj) {
 						dataObj = resolveData( lock, fields.AbilitiesDB, /abilitydata=([^\{]*)/im );
 						parsedData = dataObj.parsed;
@@ -3697,11 +3742,11 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 					};
 				};
 						
-				let trap = attrLookup( charCS, fields.Container_trap ) || parsedData.trap,
-					oldTrap = attrLookup( charCS, fields.Old_trap ) || '';
+				trap = attrLookup( charCS, fields.Container_trap ) || parsedData.trap;
+				oldTrap = attrLookup( charCS, fields.Old_trap ) || '';
 				roller = '';
 				if (trap) {
-					let	trapObj = abilityLookup( fields.AbilitiesDB, trap, charCS );
+					trapObj = abilityLookup( fields.AbilitiesDB, trap, charCS );
 					if (trapObj.obj) {
 						dataObj = resolveData( roller+trap, fields.AbilitiesDB, /abilitydata=([^\{]*)/im );
 						parsedData = dataObj.parsed;
@@ -3719,12 +3764,12 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 				
 				_.each (powers[1].join('|').split('|'),(ab,i) => {
 					if (!!ab) {
-						let abObj = abilityLookup( fields.AbilitiesDB, ab, null, true, false );
+						abObj = abilityLookup( fields.AbilitiesDB, ab, null, true, false );
 						if (!abObj.obj) {
 							if (!ab.includes('GM-Roll-')) sendError('Specified ability macro "'+ab+'" does not exist in the databases',msg_orig[senderId]);
 							return;
 						};
-						let specs = abObj.specs();
+						specs = abObj.specs();
 						if (!specs || !specs[0][4]) {sendError('Specified ability macro "'+ab+'" has an incorrectly formatted database entry',msg_orig[senderId]);return;}
 						
 						setAbility( charCS, specs[0][4], abObj.obj[1].body.replace(/\^\^chest\^\^/img,charCS.get('name'))
@@ -3735,7 +3780,7 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 				});
 			} else {
 				if (spellType !== 'pr') _.each( spellLevels[spellType], s => setAttr( charCS, [fields.Spellbook[0]+s.book, fields.Spellbook[1] ], '' ) );
-				let rootDB = spellType === 'pw' ? fields.PowersDB : (spellType === 'mu' ? fields.MU_SpellsDB : fields.PR_SpellsDB);
+				rootDB = spellType === 'pw' ? fields.PowersDB : (spellType === 'mu' ? fields.MU_SpellsDB : fields.PR_SpellsDB);
 				for (let k=0; k < powers.length; k++) {
 					if (k < spellLevels[spellType].length && !_.isUndefined(powers[k]) && powers[k].length) {
 						powers = await setPowersOrSpells(rootDB,charCS,powers,k,spellType,senderId);
@@ -3743,8 +3788,8 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 				};
 			};
 			
-			let powerList = _.uniq(powers.flat().join('|').split('|').filter(ab=>!!ab));
-			let foundThese = !!powerList.length;
+			powerList = _.uniq(powers.flat().join('|').split('|').filter(ab=>!!ab));
+			foundThese = !!powerList.length;
 			found = found || foundThese;
 
 			if (!silent && foundThese) {
@@ -3758,31 +3803,199 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 		}
 		return found;
 	};
+
+	/*
+	 * equip an item to the specified charater sheet
+	 */
 	
+	const equipWeap = function( charCS, senderId, Items, weap, token, hand='item', costs='' ) {		// senderId
+		const hands = {prime:[0,BT.CS_RIGHT],offhand:[1,BT.CS_LEFT],both:[2,BT.CS_BOTH]},
+			  mi_db = fields.MagicItemDB.toLowerCase().replace(/-/g,'_'),
+			  reLooksLike = /Looks\s?Like=/im,
+			  reNotAttkData = /}}[\s\w\-]*?(?<!tohit|dmg|ammo|range)data\s*?=(.+?){{/im,
+			  reDataSpec = {trueName:reSpellSpecs.trueName,cost:reSpellSpecs.cost,hide:reSpellSpecs.hide,reveal:reSpellSpecs.reveal};
+
+		let   otherHand = parseInt(hand) || 3,
+			  queries = [],
+			  badTypes = [],
+			  matchList = [],
+			  listType = '',
+			  wType='unharged',
+			  randomString = ( m, p, val, term ) => (('random'+p+'|').repeat(parseInt(evalAttr(val,charCS)))+term),
+			  nameList = '',
+			  wObj, wParsed, wData, wClasses, obj, objIndex, typeList, found,
+			  itemList, itemName, index, table, qty, qtyVal,
+			  values, trueName, hide, rev, firstIndex, p, cmd,
+			  isStackable;
+
+		const itemClasses = function(body) {
+			let objType = [],
+				specs = body.match(/}}\s*?specs\s*?=(.*?){{/im);
+			if (!!specs && specs.length) {
+				specs = specs ? [...('['+specs[0]+']').matchAll(/\[\s*\w[-\+\s\w\|]*?\s*,\s*(\w[-\s\w\|]*?\w)\s*,\s*[\s\w\|]*?\w\s*,\s*(\w[-\+\s\w\|]*?\w)\s*(?:,\s*\w[-\+\s\w\|]*?\w\s*)?\]/g)] : [];
+				for (let i=0; i < specs.length; i++) {
+					objType.push(specs[i][1]);
+					objType.push(specs[i][2]);
+				}
+			};
+			return _.uniq(objType.join('|').dbName().split('|'));
+		};
+
+		if (_.isUndefined(weap) || !weap.length) return Items;
+		
+		weap = weap.replace(/random([^:]*?):([-\+\*\/\=\^vfcd\d\.;\(\)]*)([\s\|,\]]?)/ig,randomString);
+		
+		weap = weap.split('|')
+				   .map((n,i) => {
+					   return {name:n.match(/^\w[\w\d\+\-\s]+/),
+							   type:(n.match(/[^:]\s*\((\w[\w\d\+\-\s\/]+?)\)/)||['',''])[1].dbName(),
+							   prof:(n.match(/\<\s*([\w\-]+)/) || ['',''])[1],
+							   cost:costs[i],
+							   qty:(n.match(/\:\s*([-\+\*\/\=\^vfcd\d\.;\(\)]+)([\s\|,\]]?)/i) || ['',''])[1],
+							   queries:[...('['+n+']').matchAll(/\^\^([\w\d\+-]+)\=(.+?)\^\^/g)], };
+					});
+					
+		_.each(weap, w => {
+			if (!w.name) return;
+			w.name = w.name[0].trim();
+			if (w.name.toLowerCase() === 'money') {
+				spendMoney( charCS, 0-(parseFloat(evalAttr(String(w.qty).trim(),charCS)) || 0));  // negative spend adds coins to creature / container
+				return;
+			} else if (w.name.toLowerCase() === 'random') {
+				if (hand.startsWith('item')) {
+					if (listType !== (w.type || 'All')) {
+						if (_.isUndefined(itemList)) itemList = _.keys(DBindex[mi_db]);
+						matchList = (!w.type) ? itemList : itemList.filter( k => {
+							objIndex = DBindex[mi_db][k];
+							if (!(objIndex && objIndex.length)) return false;
+							typeList = w.type.dbName().split('/'); 
+							found = dbNames[objIndex[2]] && _.some((dbNames[objIndex[2]].db[objIndex[3]].type || '').dbName().split('|'),(t) => typeList.includes(t));
+							if (!found && dbNames[objIndex[2]]) {
+								found = _.some(itemClasses( dbNames[objIndex[2]].db[objIndex[3]].body ),(t) => typeList.includes(t));
+							};
+							if (!found && objIndex[0].length) {
+								obj = getObj('ability',objIndex[0]);
+								if (!obj) return false;
+								found = _.some(itemClasses(obj.get('action')),(t) => typeList.includes(t));
+							};
+							return found;
+						});
+						if (!matchList || !matchList.length) {
+							if (!badTypes.includes(w.type)) {
+								badTypes.push(w.type)
+								sendError('There are no items of type '+w.type+' in the databases');
+							};
+							return;
+						};
+						listType = w.type || 'All';
+					};
+					do {
+						do {
+							itemName = matchList[randomInteger(matchList.length)];
+							wObj = abilityLookup( fields.MagicItemDB, itemName );
+						} while (!wObj.obj || !wObj.obj[1] || !wObj.obj[1].type || /dmitem|format|hide|services/i.test(wObj.obj[1].type));
+						w.name = wObj.obj[1].name;
+						wParsed = resolveData(w.name,fields.MagicItemDB,reNotAttkData,charCS,{qty:reEquipSpecs.qty,query:reSpellSpecs.query}).parsed;
+						w.qty = String(wParsed.qty || 1);
+					} while (!!wParsed.query && wParsed.query.length);
+				} else {
+					sendFeedback('&{template:'+fields.RPGMwarning+'}{{title=Random '+hand+' not valid}}{{desc=Random is only valid to use as an item. Please correct the definition of the creature or NPC.}}');
+					w.name = '-';
+				};
+			} else {
+				wObj = abilityLookup( fields.MagicItemDB, w.name );
+			};
+			if (!wObj.obj) return;
+			wData = resolveData( w.name, wObj.dB, reItemData, charCS, reSpellSpecs ).parsed;
+			typeList = listWeaponTypes( wObj );
+			wClasses = (wObj.specs() || [['','','','','']]).reduce((a,b) => a.concat(b[2].dbName().split('|')), [])
+//			speed = wData.speed || 0;
+			wType = wData.type || 'uncharged';
+			isStackable = stackable.includes(wType.toLowerCase()) || !splitable.includes(wType.toLowerCase());
+			table = getItemTable( wObj.obj[1].type );
+			qty = (String(w.qty).trim() || '1');
+			qtyVal = parseInt(evalAttr(qty,charCS));
+
+			index = isStackable ? Items[table].tableFind( fields[fieldGroups[table].prefix+'name'], w.name ) : undefined;
+			if (!_.isUndefined(index) && isStackable) {
+				qtyVal += parseInt(Items[table].tableLookup( fields[fieldGroups[table].prefix+'qty'] ) | 1);
+			};
+			if (_.isUndefined(index)) index = Items[table].tableFind( fields[fieldGroups[table].prefix+'name'], '-' );
+			if (_.isUndefined(index)) index = Items[table].addTableRow().sortKeys.length - 1;
+
+			trueName = wData.truename || w.name;
+			hide = (wData.hide.length && wData.hide !== 'nohide' && wData.hide !== 'reveal');
+			rev = hide ? (wData.reveal || '') : '';
+			if (_.isUndefined(w.cost) || !w.cost.length) w.cost = wData.cost;
+			firstIndex = index;
+			
+			if (!qtyVal) return;
+			
+			if (!hide && !wClasses.includes('services') && (hide = randomInteger(10) === 1)) {wData.hide = 'hide'; rev = 'use';}
+			if (hide) w.name = wData.hide === 'hide' ? getShownType( wObj, indexTableGroup(Items, table, index) ) : wData.hide;
+			
+			p = Items[table].fieldGroup;
+			values = initValues(p);
+
+			values.valLine(p,'name',w.name)
+				  .valLine(p,'trueName',trueName)
+				  .valLine(p,'speed',wData.speed || 0)
+				  .valLine(p,'trueSpeed',wData.speed || 0)
+				  .valLine(p,'type',wType)
+				  .valLine(p,'trueType',wType)
+				  .valLine(p,'qty',(isStackable ? qtyVal : 1))
+				  .valLine(p,'trueQty',(isStackable ? qtyVal : 1))
+				  .valLine(p,'cost',parseFloat(evalAttr(w.cost)) || 0)
+				  .valLine(p,'reveal',rev);
+			
+			for (let i=0; i<(isStackable ? 1 : Math.min(5,qtyVal)); i++) {
+				Items[table] = Items[table].addTableRow( index, values );
+				if (!!w.queries) w.queries.forEach( q => {
+					return ((!_.isUndefined(q) && q.length > 2) ? setAttr( charCS, [fields.ItemVar[0]+w.name.hyphened()+'+'+index+'-'+q[1],'current'], q[2] ) : q );
+				});
+				index = Items[table].tableFind( fields[fieldGroups[table].prefix+'name'], '-' );
+				if (_.isUndefined(index)) index = Items[table].addTableRow().sortKeys.length - 1;
+			};
+
+			if (!hand.dbName().startsWith('item') && typeList.length) typeList.forEach( t => handleAddProf( ['~'+(w.prof || 'PROFICIENT'), t.weapon, t.weapType], [token], senderId, true ));
+			if (w.name !== '-' && !hand.dbName().startsWith('item')) {
+				if (_.isUndefined(hands[hand])) {
+					hand = otherHand++;
+					cmd = BT.CS_HAND;
+				} else {
+					cmd = hands[hand][1];
+					hand = hands[hand][0];
+				}
+				sendAPI(fields.attackMaster+' --button '+cmd+'|'+charCS.id+'|'+indexTableGroup( Items, table, firstIndex )+'|'+hand+'||silent');
+			}
+			if (w.name !== '-') nameList = nameList + (!!nameList ? ', ' : '') + w.name;
+		});
+		return [Items,nameList];
+	};
+						
 	/*
 	 * Handle adding any default weapons specified for a Class or Race 
 	 * to the character sheet, and equip if instructed to do so
 	 */
-	 
-	var handleAddAllItems = function( token, charCS, senderId, type='wp', qualifier=[] ) {  // containerCS
+ 
+	var handleAddAllItems = function( token, charCS, senderId, type='wp', qualifier=[] ) {
 		
 		return new Promise(resolve => {
+			let content = '';
 			try {
-				var weapData = [],
-					names = '',
-					content = '';
-					
-				var getWeaps = function( charCS, dB, weapons, name, type, level=0 ) {
-					let rawData = resolveData( name, dB, /}}\s*(?:Class|Race)Data\s*=(.*?){{/im, null, null, null, null, qualifier, true, [], '', false ).raw,
-						age = parseInt(attrLookup( charCS, fields.AgeVal )),
-						noOtherWeaps = ((parseInt(parseData( rawData[0][0], {numpowers:reClassSpecs.numpowers} ).numpowers) || 0) < 0);
+				const getWeaps = function( charCS, dB, weapons, name, type, level=0 ) {
+					const rawData = resolveData( name, dB, /}}\s*(?:Class|Race)Data\s*=(.*?){{/im, null, null, {quals:qualifier} ).raw,
+						  age = parseInt(attrLookup( charCS, fields.AgeVal ));
 					if (!rawData || !rawData[0] || !rawData[0][0]) {
 //						sendError('Class or Race "'+name+'" not found when assigning items to a *Drag & Drop* NPC or Creature');
 						return [weapons,false];
 					};
+					const numWeaps = parseData( rawData[0][0], {numpowers:reClassSpecs.numpowers} ).numpowers,
+						  noOtherWeaps = ((parseInt(numWeaps[0] === '=' ? numWeaps.slice(1) : numWeaps) || 0) < 0);
 					if (noOtherWeaps) weapons = [];
+					let weap;
 					_.each( rawData, d => {
-						let weap = parseData( d[0], reEquipSpecs );
+						weap = parseData( d[0], reEquipSpecs );
 						if (weap.spell.dbName() == type && (!weap.age || !age || age >= (parseInt(weap.age) || 0)) && (!weap.lv || !level || level >= (parseInt(weap.lv) || 0))) {
 																								   
 							weapons.push(weap);
@@ -3791,176 +4004,12 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 					return [weapons,noOtherWeaps];
 				};
 				
-				var equipWeap = function( charCS, Items, weap, hand='item', speed=5 ) {  // length
-					const hands = {prime:[0,BT.CS_RIGHT],offhand:[1,BT.CS_LEFT],both:[2,BT.CS_BOTH]};
-					const mi_db = fields.MagicItemDB.toLowerCase().replace(/-/g,'_');
-					const reLooksLike = /Looks\s?Like=/im;
-					const reNotAttkData = /}}[\s\w\-]*?(?<!tohit|dmg|ammo|range)data\s*?=(.+?){{/im;
-					const reDataSpec = {trueName:reSpellSpecs.trueName,cost:reSpellSpecs.cost,hide:reSpellSpecs.hide,reveal:reSpellSpecs.reveal};
-					let   otherHand = parseInt(hand) || 3;
-					let   queries = [];
-					let	  badTypes = [];
-					let	  itemList;
-					let	  wObj;
-					let   matchList = [];
-					let   listType = '';
-					let	  wType='unharged';
-					let   wCost = 0;
-					let   randomString = ( m, p, val, term ) => (('random'+p+'|').repeat(parseInt(evalAttr(val,charCS)))+term);
-					let	  nameList = '';
-
-					var itemClasses = function(body) {
-						let objType = [],
-							specs = body.match(/}}\s*?specs\s*?=(.*?){{/im);
-						if (!!specs && specs.length) {
-							specs = specs ? [...('['+specs[0]+']').matchAll(/\[\s*\w[-\+\s\w\|]*?\s*,\s*(\w[-\s\w\|]*?\w)\s*,\s*[\s\w\|]*?\w\s*,\s*(\w[-\+\s\w\|]*?\w)\s*(?:,\s*\w[-\+\s\w\|]*?\w\s*)?\]/g)] : [];
-							for (let i=0; i < specs.length; i++) {
-								objType.push(specs[i][1]);
-								objType.push(specs[i][2]);
-							}
-						};
-						return _.uniq(objType.join('|').dbName().split('|'));
-					};
-
-					if (_.isUndefined(weap) || !weap.length) return Items;
-					
-					weap = weap.replace(/random([^:]*?):([-\+\*\/\=\^vfcd\d\.;\(\)]*)([\s\|,\]]?)/ig,randomString);
-					
-					weap = weap.split('|')
-							   .map(n => {
-								   return {name:n.match(/^\w[\w\d\+\-\s]+/), type:(n.match(/[^:]\s*\((\w[\w\d\+\-\s\/]+?)\)/)||['',''])[1].dbName(), prof:(n.match(/\<\s*([\w\-]+)/) || ['',''])[1], qty:(n.match(/\:\s*([-\+\*\/\=\^vfcd\d\.;\(\)]+)([\s\|,\]]?)/i) || ['',''])[1], queries:[...('['+n+']').matchAll(/\^\^([\w\d\+-]+)\=(.+?)\^\^/g)], };
-								});
-								
-					_.each(weap, w => {
-						if (!w.name) return;
-						w.name = w.name[0].trim();
-						if (w.name.toLowerCase() === 'money') {
-							spendMoney( charCS, 0-(parseFloat(evalAttr(String(w.qty).trim(),charCS)) || 0));  // negative spend adds coins to creature / container
-							return;
-						} else if (w.name.toLowerCase() === 'random') {
-							if (hand.startsWith('item')) {
-								let wParsed;
-								if (listType !== (w.type || 'All')) {
-									if (_.isUndefined(itemList)) itemList = _.keys(DBindex[mi_db]);
-									matchList = (!w.type) ? itemList : itemList.filter( k => {
-										let objIndex = DBindex[mi_db][k];
-										if (!(objIndex && objIndex.length)) return false;
-										let typeList = w.type.dbName().split('/'); 
-										let found = dbNames[objIndex[2]] && _.some((dbNames[objIndex[2]].db[objIndex[3]].type || '').dbName().split('|'),(t) => typeList.includes(t));
-										if (!found && dbNames[objIndex[2]]) {
-											found = _.some(itemClasses( dbNames[objIndex[2]].db[objIndex[3]].body ),(t) => typeList.includes(t));
-										};
-										if (!found && objIndex[0].length) {
-											let obj = getObj('ability',objIndex[0]);
-											if (!obj) return false;
-											found = _.some(itemClasses(obj.get('action')),(t) => typeList.includes(t));
-										};
-										return found;
-									});
-									if (!matchList || !matchList.length) {
-										if (!badTypes.includes(w.type)) {
-											badTypes.push(w.type)
-											sendError('There are no items of type '+w.type+' in the databases');
-										};
-										return;
-									};
-									listType = w.type || 'All';
-								};
-								do {
-									do {
-										let itemName = matchList[randomInteger(matchList.length)];
-										wObj = abilityLookup( fields.MagicItemDB, itemName );
-									} while (!wObj.obj || !wObj.obj[1] || !wObj.obj[1].type || /dmitem|format|hide|services/i.test(wObj.obj[1].type));
-									w.name = wObj.obj[1].name;
-									wParsed = resolveData(w.name,fields.MagicItemDB,reNotAttkData,charCS,{qty:reEquipSpecs.qty,query:reSpellSpecs.query}).parsed;
-									w.qty = String(wParsed.qty || 1);
-								} while (!!wParsed.query && wParsed.query.length);
-							} else {
-								sendFeedback('&{template:'+fields.RPGMwarning+'}{{title=Random '+hand+' not valid}}{{desc=Random is only valid to use as an item. Please correct the definition of the creature or NPC.}}');
-								w.name = '-';
-							};
-						} else {
-							wObj = abilityLookup( fields.MagicItemDB, w.name );
-						};
-						let index, table;
-//						[index,table] = tableGroupFind( Items, 'name', w.name );
-						if (!wObj.obj) return;
-						let wData = resolveData( w.name, wObj.dB, reItemData, charCS, reSpellSpecs ).parsed;
-						let typeList = listWeaponTypes( wObj );
-						let wClasses = (wObj.specs() || [['','','','','']]).reduce((a,b) => a.concat(b[2].dbName().split('|')), [])
-						speed = wData.speed || 0;
-						wType = wData.type || 'uncharged';
-						let isStackable = stackable.includes(wType.toLowerCase()) || !splitable.includes(wType.toLowerCase());
-						table = getItemTable( wObj.obj[1].type );
-						let qty = (String(w.qty).trim() || '1');
-						let qtyVal = parseInt(evalAttr(qty,charCS));
-
-						index = isStackable ? Items[table].tableFind( fields[fieldGroups[table].prefix+'name'], w.name ) : undefined;
-						if (!_.isUndefined(index) && isStackable) {
-							qtyVal += parseInt(Items[table].tableLookup( fields[fieldGroups[table].prefix+'qty'] ) | 1);
-//							log('equipWeap: equipping '+w.name+' which is stackable so adding '+w.qty+' resulting in '+qtyVal);
-						};
-						if (_.isUndefined(index)) index = Items[table].tableFind( fields[fieldGroups[table].prefix+'name'], '-' );
-						if (_.isUndefined(index)) index = Items[table].addTableRow().sortKeys.length - 1;
-
-//						log('equipWeap: wObj.obj[1].type = '+wObj.obj[1].type+', table = '+table+', index = '+index);
-
-						let values = Items[table].copyValues();
-						let trueName = wData.truename || w.name;
-						let hide = (wData.hide.length && wData.hide !== 'nohide' && wData.hide !== 'reveal');
-						let rev = hide ? (wData.reveal || '') : '';
-						let firstIndex = index;
-						
-						if (!qtyVal) return;
-						
-						if (!hide && !wClasses.includes('services') && (hide = randomInteger(10) === 1)) {wData.hide = 'hide'; rev = 'use';}
-						if (hide) w.name = wData.hide === 'hide' ? getShownType( wObj, indexTableGroup(Items, table, index) ) : wData.hide;
-						
-						let p = Items[table].fieldGroup;
-						let valLine = (p,t,v) => {values[fields[p+t][0]][fields[p+t][1]] = v};
-
-						valLine(p,'name',w.name);
-						valLine(p,'trueName',trueName);
-						valLine(p,'speed',speed);
-						valLine(p,'trueSpeed',speed);
-						valLine(p,'type',wType);
-						valLine(p,'trueType',wType);
-						valLine(p,'qty',(isStackable ? qtyVal : 1));
-						valLine(p,'trueQty',(isStackable ? qtyVal : 1));
-						valLine(p,'cost',evalAttr(wData.cost));
-						valLine(p,'reveal',rev);
-//						valLine(p,'weight',wData.weight);
-						
-						for (let i=0; i<(isStackable ? 1 : Math.min(5,qtyVal)); i++) {
-							Items[table] = Items[table].addTableRow( index, values );
-							if (!!w.queries) w.queries.forEach( q => {
-	//							log('equipWeap: saving '+q[2]+' to '+fields.ItemVar[0]+w.name.hyphened()+'+'+index+'-'+q[1]);
-								return ((!_.isUndefined(q) && q.length > 2) ? setAttr( charCS, [fields.ItemVar[0]+w.name.hyphened()+'+'+index+'-'+q[1],'current'], q[2] ) : q );
-							});
-							index = Items[table].tableFind( fields[fieldGroups[table].prefix+'name'], '-' );
-							if (_.isUndefined(index)) index = Items[table].addTableRow().sortKeys.length - 1;
-						};
-
-						if (type === 'wp' && typeList.length) typeList.forEach( t => handleAddProf( ['~'+(w.prof || 'PROFICIENT'), t.weapon, t.weapType], [token], senderId, true ));
-						if (w.name !== '-' && !hand.dbName().startsWith('item')) {
-							let cmd;
-							if (_.isUndefined(hands[hand])) {
-								hand = otherHand++;
-								cmd = BT.CS_HAND;
-							} else {
-								cmd = hands[hand][1];
-								hand = hands[hand][0];
-							}
-							sendAPI(fields.attackMaster+' --button '+cmd+'|'+charCS.id+'|'+indexTableGroup( Items, table, firstIndex )+'|'+hand+'||silent');
-						}
-						if (w.name !== '-') nameList = nameList + (!!nameList ? ', ' : '') + w.name;
-					});
-					return [Items,nameList];
-				};
-						
 				type = type.dbName();
-				let typeText = type == 'ac' ? 'armour' : (type == 'mi' ? 'items' : 'equipment'),
-					noOtherWeaps = false;
+				const typeText = type == 'ac' ? 'armour' : (type == 'mi' ? 'items' : 'equipment');
+				let	noOtherWeaps = false,
+					weapData = [],
+					names = '';
+					
 				
 				_.each( classObjects( charCS, senderId ), c => {
 					if (!noOtherWeaps) [weapData,noOtherWeaps] = getWeaps( charCS, fields.ClassDB, weapData, c.name, type, c.level );
@@ -3981,8 +4030,7 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 					});
 					
 					if (weapData.items.length) {
-						let weapInfo;
-						[Items,names] = equipWeap( charCS, Items, weapData.items, 'items', weapData.speed );
+						[Items,names] = equipWeap( charCS, senderId, Items, weapData.items, token, 'items' );
 						content += '{{Added to '+typeText+'='+names+'}}';
 					}
 					if (type === 'wp') {
@@ -3991,19 +4039,19 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 							InHand = InHand.addTableRow( r );
 						}
 						if (weapData.prime.length) {
-							[Items,names] = equipWeap( charCS, Items, weapData.prime, 'prime', weapData.speed );
+							[Items,names] = equipWeap( charCS, senderId, Items, weapData.prime, token, 'prime' );
 							content += '{{Primary Weapon='+names+'}}';
 						}
 						if (weapData.offhand.length) {
-							[Items,names] = equipWeap( charCS, Items, weapData.offhand, 'offhand', weapData.speed );
+							[Items,names] = equipWeap( charCS, senderId, Items, weapData.offhand, token, 'offhand' );
 							content += '{{Offhand Weapon='+names+'}}';
 						}
 						if (weapData.both.length) {
-							[Items,names] = equipWeap( charCS, Items, weapData.both, 'both', weapData.speed );
+							[Items,names] = equipWeap( charCS, senderId, Items, weapData.both, token, 'both' );
 							content += '{{Two Handed Weapon='+names+'}}';
 						}
 						if (weapData.other.length) {
-							[Items,names] = equipWeap( charCS, Items, weapData.other, weapData.hand, weapData.speed );
+							[Items,names] = equipWeap( charCS, senderId, Items, weapData.other, token, weapData.hand );
 							content += '{{Added to Other hands='+names+'}}';
 						}
 						handleAddProf( ['~PROFICIENT', 'Innate', 'Innate'], [token], senderId );
@@ -4026,8 +4074,9 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 	async function handleDoRestock( args, selected, senderId ) {
 		
 		try {
-			var tokenID = args[0],
-				charCS = getCharacter(tokenID);
+			const tokenID = args[0];
+			let	  charCS = getCharacter(tokenID),
+				  Items;
 			
 			if (!!tokenID && !!charCS) selected = [{_id:tokenID}];
 			
@@ -4043,11 +4092,11 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 				};
 				
 				blankItems( charCS );
-				let content = ((await handleAddAllItems( tokenID, charCS, senderId, 'wp' )
-							  + await handleAddAllItems( tokenID, charCS, senderId, 'ac' )
-							  + await handleAddAllItems( tokenID, charCS, senderId, 'mi' )) || '').trim();
+				const content = ((await handleAddAllItems( t, charCS, senderId, 'wp' )
+							  + await handleAddAllItems( t, charCS, senderId, 'ac' )
+							  + await handleAddAllItems( t, charCS, senderId, 'mi' )) || '').trim();
 				if (content && content.length) sendFeedback( '&{template:'+fields.menuTemplate+'}{{title=Items restocked to '+charCS.get('name')+'}}' + content );
-				var Items = getTableGroup( charCS, fieldGroups.MI );
+				Items = getTableGroup( charCS, fieldGroups.MI );
 				for (const table in Items) {
 					if (table.dbName() === 'coins') continue;
 					Items[table] = await removeBlankLines( Items[table] );
@@ -4058,30 +4107,228 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 			sendCatchError('CommandMaster',msg_orig[senderId],e);
 		}
 	};
+	
+	/*
+	 * Handle giving a creature or NPC items, money & treasure using 
+	 * the DMG treasure table
+	 */
+	 
+	const handleTreasureTables = function( charCS, token, senderId, treasureTypes='', multiplier=1, msgs='' ) {
 		
+		const reTypeSpecs = {
+			name:		reSpellSpecs.name,
+			copper:		{field:'copper',def:0,re:/[\[,\s]cp:(.*?)[,\s\]]/i},
+			silver:		{field:'silver',def:0,re:/[\[,\s]sp:(.*?)[,\s\]]/i},
+			electrum:	{field:'electrum',def:0,re:/[\[,\s]ep:(.*?)[,\s\]]/i},
+			gold:		{field:'gold',def:0,re:/[\[,\s]gp:(.*?)[,\s\]]/i},
+			platinum:	{field:'platinum',def:0,re:/[\[,\s]pp:(.*?)[,\s\]]/i},
+			gems:		{field:'gems',def:0,re:/[\[,\s]gems:(.*?)[,\s\]]/i},
+			art:		{field:'art',def:0,re:/[\[,\s]art:(.*?)[,\s\]]/i},
+			items:		{field:'items',def:0,re:/[\[,\s]mi:(.*?)[,\s\]]/i},
+			type:		reSpellSpecs.type,
+			chance:		{field:'chance',def:1,re:/[\[,\s]%:\s*(\d+?)[,\s\]]/i},
+			table:		{field:'tab',def:'',re:/[\[,\s]tab:\s*(\w+?)[,\s\]]/i},
+			to:			{field:'to',def:0,re:/[\[,\s]to:(.*?)[,\s\]]/i},
+			up:			{field:'up',def:'',re:/[\[,\s]up:\s*([-\w]+?)[,\s\]]/i},
+			down:		{field:'down',def:'',re:/[\[,\s]down:\s*([-\w]+?)[,\s\]]/i},
+		};
+		
+		const cascade = function( charCS, tableName ) {
+			let rows = [];
+			const tableData = resolveData( tableName, fields.TableDB, reItemData, charCS, reTypeSpecs );
+			if (!tableData || !tableData.raw || !tableData.raw[0] || !tableData.raw[0][0].trim().length) {
+				sendError(`Badly defined treasure table ${tableName}`);
+				return [undefined,undefined];
+			}
+			for (let t of tableData.raw) {
+				rows.push(parseData( t[0], reTypeSpecs ));
+			}
+			rows.shift();
+			let roll = rows.reduce((t,w) => t+(parseInt(w.chance) || 1),0);
+			if (roll > 1) roll = randomInteger(roll);
+			let percent = 0;
+			const row = rows.find(w => {
+				percent += (parseInt(w.chance) || 1);
+				return roll <= percent;
+			});
+			return (!!row.tab && row.tab.length) ? cascade( charCS, `Table-${row.tab}-${row.name}` ) : [row,tableData.parsed];
+		};
+
+		let root, rootTable, typeData, val, item, info, artName, mis,
+			treasure = (getMagicList(fields.MagicItemDB,miTypeLists,'treasure',senderId) || '').split('|'),
+			num = 0,
+			coinsFound = false,
+			itemList = [],
+			costList = [],
+			msgObj = {coins:'',gems:[],art:[],items:[]},
+			coinMsg = {copper:	parseInt(attrLookup(charCS,fields.Money_copper)),
+					   silver:	parseInt(attrLookup(charCS,fields.Money_silver)),
+					   electrum:parseInt(attrLookup(charCS,fields.Money_electrum)),
+					   gold:	parseInt(attrLookup(charCS,fields.Money_gold)),
+					   platinum:parseInt(attrLookup(charCS,fields.Money_platinum))},
+			coinVals= {copper:0.01,silver:0.1,electrum:0.2,gold:1,platinum:5};
+					   
+		for (let i=0; i < treasureTypes.length; i++) {
+			num = parseFloat(treasureTypes.slice(i));
+			if (!isNaN(num)) {
+				multiplier = num;
+				i+=(String(num).length-1);
+				continue;
+			}
+			root = 'Table84-Treasure-Type-'+treasureTypes[i];
+			rootTable = abilityLookup( fields.TableDB, root );
+			if (!rootTable) continue;
+			typeData = resolveData( root, rootTable.dB, reItemData, charCS, reTypeSpecs ).parsed;
+			
+//			Deal with amounts of coins granted as treasure
+
+			for (const coin in coinMsg) {
+				val = parseInt(evalAttr(typeData[coin]) || 0);
+				if (!!val) {
+					coinMsg[coin] += Math.round(val*multiplier);
+					coinsFound = true;
+				};
+			};
+			
+//			Add gems, and use the variation table to adjust randomly
+
+			val = parseInt(evalAttr(typeData.gems) || 0) * multiplier;
+			
+			for (let i=0; i<val; i++) {
+				[item,info] = cascade( charCS, 'Table-85-Gems' );
+				if (_.isUndefined(item)) continue;
+				let [variation,varInfo] = cascade( charCS, 'Table-86-Gem-Variations' );
+				if (_.isUndefined(variation)) continue;
+				if (variation.to != 1 && variation.to != 6) {
+					item.gp = evalAttr(`(${item.gp})*(${variation.gp})`);
+				} else if (variation.to == 1) {
+					do {
+						if (info.up && info.up.toLowerCase().startsWith('table')) {
+							[item,info] = cascade( charCS, info.up );
+							if (_.isUndefined(item)) continue;
+						} else {
+							item.gp = evalAttr(`v(100000,(${item.gp})*(${info.up}))`);
+						};
+					} while (randomInteger(6) === 1);				
+				} else if (variation.to != 0) {
+					do {
+						if (info.down && info.down.toLowerCase().startsWith('table')) {
+							[item,info] = cascade( charCS, info.down );
+							if (_.isUndefined(item)) continue;
+						} else {
+							item.gp = evalAttr(`^(0.1,(${item.gp})*(${info.down}))`);
+						};
+					} while (randomInteger(variation.to) === variation.to);					
+				};
+				itemList.push(item.name);
+				costList.push(item.gp);
+				msgObj.gems.push(item.name);
+			}
+			
+//			Add "art" items (jewelry, rings, necklaces etc)
+			
+			val = parseInt(evalAttr(typeData.art) || 0) * multiplier;
+			for (let i=0; i<val; i++) {
+				[item,info] = cascade( charCS, 'Table-87-Art-Items' );
+				if (_.isUndefined(item)) continue;
+				artName = treasure.filter(t => item.name === (abilityLookup( fields.MagicItemDB, t ).specs() || ['','','','',''])[4]);
+				if (artName && artName.length) {
+					itemFound = ((artName.length === 1) ? artName[0] : artName[randomInteger(artName.length)-1]);
+					itemList.push(itemFound);
+					costList.push(parseFloat(evalAttr(item.gp)) || 10);
+					msgObj.art.push(itemFound);
+				}
+			};
+			
+//			Add "magic items" of the type and quantity specified
+
+			mis = (typeData.items || '').split('|');
+			val = parseInt(evalAttr(mis.shift()) || 0) * multiplier;
+			for (let i=0; i<val; i++) {
+				for (const miType of mis) {
+					switch (miType) {
+					case 'potion': 	[item,info] = cascade( charCS, 'Table-89-Potions+Oils' ); break;
+					case 'scroll': 	[item,info] = cascade( charCS, 'Table-90-Scrolls' ); break;
+					case 'ring':	[item,info] = cascade( charCS, 'Table-91-Rings' ); break;
+					case 'rod':		[item,info] = cascade( charCS, 'Table-92-Rods' ); break;
+					case 'staff':	[item,info] = cascade( charCS, 'Table-93-Staves' ); break;
+					case 'wand':	[item,info] = cascade( charCS, 'Table-94-Wands' ); break;
+					case 'book':
+					case 'tome':	[item,info] = cascade( charCS, 'Table-95-Books+Tomes' ); break;
+					case 'jewel':
+					case 'jewelry':	[item,info] = cascade( charCS, 'Table-96-Jewels+Jewelry' ); break;
+					case 'cloak':
+					case 'robe':	[item,info] = cascade( charCS, 'Table-97-Cloaks+Robes' ); break;
+					case 'boots':
+					case 'gloves':	[item,info] = cascade( charCS, 'Table-98-Boots+Gloves' ); break;
+					case 'girdle':
+					case 'helm':	[item,info] = cascade( charCS, 'Table-99-Girdles+Helms' ); break;
+					case 'bag':
+					case 'bottle':	[item,info] = cascade( charCS, 'Table-100-Bags+Bottles' ); break;
+					case 'dust':
+					case 'stone':	[item,info] = cascade( charCS, 'Table-101-Dusts+Stones' ); break;
+					case 'items':
+					case 'tools':	[item,info] = cascade( charCS, 'Table-102-Items+Tools' ); break;
+					case 'instrument':[item,info] = cascade( charCS, 'Table-103-Musical-Instruments' ); break;
+					case 'wierd':	[item,info] = cascade( charCS, 'Table-104-The-Wierd-Stuff' ); break;
+					case 'armour':
+					case 'armor':
+					case 'shield':	[item,info] = cascade( charCS, 'Table-105-Armour+Shields' ); break;
+					case 'weapon':	[item,info] = cascade( charCS, 'Table-108-Magical-Weapons' ); break;
+					case 'any':
+					default:		[item,info] = cascade( charCS, 'Table-88-Magical-Items' ); break;
+					};
+					if (_.isUndefined(item)) continue;
+					itemList.push(item.name);
+					costList.push(undefined);
+					msgObj.items.push(item.name);
+				};
+			};
+			multiplier = 1;
+		};		
+				
+		if (coinsFound) {
+			let Coins = getTable( charCS, fieldGroups.COINS );
+			for (const coin in coinMsg) {
+				setCoin( Coins, (coin+' coin').dispName().hyphened(), coinMsg[coin], coinMsg[coin] );
+			};
+			Coins.removeBlankLines();
+		};
+		if (itemList.length) {
+			let Items = getTableGroup( charCS, fieldGroups.MI ), names;
+			[Items,names] = equipWeap( charCS, senderId, Items, itemList.join('|'), token, 'items', costList );
+		};
+		msgs = (coinsFound ? ('Coins='+_.map( coinMsg, (v,k) => (v != 0 ? k+' '+v : '')).filter(v => !!v).join(', ')+'%%') : '')
+			 + (msgObj.gems.length ? ('Gems=' + msgObj.gems.join(', ')+'%%') : '')
+			 + (msgObj.art.length ? ('Items=' + msgObj.art.join(', ')+'%%') : '')
+			 + (msgObj.items.length ? ('Magic Items=' + msgObj.items.join(', ')) : '');
+		return msgs;
+	};
+
 	/*
 	 * Handle selecting a new lock or trap for a container
 	 */
 	 
 	async function handleChangeLockOrTrap( args, senderId ) {
 		
-		var cmd = args[0],
-			tokenID = args[1],
-			value = args[2],
-			silent = (args[3] || '').toLowerCase() === 'silent',
-			isLock = cmd !== BT.TRAPTYPE,
-			msg = '',
-			attrData,
-			charCS = getCharacter(tokenID);
+		const cmd = args[0],
+			  tokenID = args[1],
+			  value = args[2],
+			  silent = (args[3] || '').toLowerCase() === 'silent',
+			  isLock = cmd !== BT.TRAPTYPE,
+			  charCS = getCharacter(tokenID);
+			  
+		let	msg = '',
+			attrData;
 			
 		if (!charCS) {
 			sendError('No token selected, or the selected token does not represent a container',msg_orig[senderId]);
 			return;
 		};
 		
-		if (silent) sendWait(senderId,0);
+		if (silent) sendWait(senderId,0,'Cmd handleChangeLockOrTrap');
 		
-		var abObj = abilityLookup( fields.AbilitiesDB, value, charCS );
+		const abObj = abilityLookup( fields.AbilitiesDB, value, charCS );
 		if (!abObj.obj) {
 			msg = 'The '+(isLock ? 'lock' : 'trap')+' '+value+' does not appear in the databases. Please select a different one';
 			sendError(msg);
@@ -4107,20 +4354,18 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * selected character
 	 */
 	 
-	var handleChooseProf = function( args, selected, senderId ) {
+	const handleChooseProf = function( args, selected, senderId ) {
 		
-		var weapon = args[1],
-			weap = abilityLookup( fields.WeaponDB, weapon ),
-			weapProf = '',
+		const weapon = args[1],
+			  weap = abilityLookup( fields.WeaponDB, weapon );
+			  
+		let	weapProf = '',
 			mastery = false,
 			weapType = '',
 			weapClass = [];
 			
 		if (weap.obj) {
-			let weaponSpecs = weap.specs();
-//				specs = weap.obj[1].body,
-//				weaponSpecs = specs.match(/}}\s*specs\s*=(.*?){{/im);
-//			weaponSpecs = weaponSpecs ? [...('['+weaponSpecs[0]+']').matchAll(/\[\s*?(\w[\s\|\w\-]*?)\s*?,\s*?(\w[-\s\w\|]*?\w)\s*?,\s*?(\w[\s\w]*?\w)\s*?,\s*?(\w[\s\|\w\-]*?\w)\s*?\]/g)] : [];
+			const weaponSpecs = weap.specs();
 			for (let i=0; i<weaponSpecs.length; i++) {
 				weapProf = weapProf || weaponSpecs[i][1];
 				mastery = mastery || weaponSpecs[i][2].toLowerCase().includes('melee');
@@ -4128,9 +4373,9 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 				weapType = weapType || weaponSpecs[i][4];
 			}
 		} else {
-			let style = abilityLookup( fields.StylesDB, weapon );
+			const style = abilityLookup( fields.StylesDB, weapon );
 			if (style.obj) {
-				let styleSpecs = style.specs();
+				const styleSpecs = style.specs();
 				weapProf = weapon;
 				weapType = styleSpecs[0][4];
 				mastery = resolveData( weapon, fields.StylesDB, reItemData ).raw.length > 2;
@@ -4144,45 +4389,47 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * Handle adding a weapon proficiency to a character sheet
 	 */
 	 
-	var handleAddProf = function( args, selected, senderId, silent=false ) { // resolveData
+	var handleAddProf = function( args, selected, senderId, silent=false ) {
 		
-		var	weapLevel = (args[0] || '').toUpperCase(),
-			weapon = args[1] || '',
-			weapType = args[2] || '',
-			silent = silent || ((args[3] || '') === 'silent'),
-			tokenID = args[4],
-			isTraining = weapLevel[0] !== '~',
-			weapText = weapon.dispName(),
-			charCS, row, neededSlots, weapSlots;
+		let	weapLevel = (args[0] || '').toUpperCase(),
+			charCS, row, neededSlots, weapSlots,
+			msg = '',
+			levelText = '',
+			curProf = 'NOT-PROF',
+			ProfTable, StyleTable, weapProf, styleObj,
+			isStyle, charName, curSlots, totalSlots, usedSlots,
+			failTrainingReason, specList, specialist, curSpecialist;
 			
-		var tidyStyles = function( Styles ) {
-//			log('tidyStyles: called');
+		const weapon = args[1] || '',
+			  weapType = args[2] || '',
+			  tokenID = args[4],
+			  weapText = weapon.dispName(),
+			  isTraining = weapLevel[0] !== '~';
+		
+		const tidyStyles = function( Styles ) {
 			for (let i=0; i < Styles.sortKeys.length; i++) {
 				let style = abilityLookup( fields.StylesDB, Styles.tableLookup( fields.Style_name, i ), charCS, false, false );
-//				log('tidyStyles: checking row '+i+', name '+Styles.tableLookup( fields.Style_name, i )+', style '+(!!style && !!style.obj ? style.obj[1].name : 'undefined'));
 				if (!!style && !!style.obj && (style.obj[1].type || '').dbName() !== 'style') Styles = Styles.addTableRow( i );
 			};
 			return Styles;
 		};
-		var attrValue = (m, p1) => parseInt(attrLookup(charCS,[p1,'current'])) || 0;
+		const attrValue = (m, p1) => parseInt(attrLookup(charCS,[p1,'current'])) || 0;
 
+		silent = silent || ((args[3] || '') === 'silent');
 		if (!isTraining) weapLevel = weapLevel.slice(1);
 		
 		if (tokenID && tokenID.length) selected = [{_id:tokenID}]
 			
 		_.each( selected, e => {
-			let msg = '',
-				levelText = '',
-				curProf = 'NOT-PROF';
 			charCS = getCharacter( e._id, true );
 			if (charCS) {
-				let ProfTable = getTable( charCS, fieldGroups.WPROF ),
-					StyleTable = tidyStyles( getTable( charCS, fieldGroups.STYLES ) ),
-					weapProf = ProfTable.copyValues(),
-					styleObj = abilityLookup( fields.StylesDB, weapon, charCS, false, false ),
-					isStyle = (!!styleObj && styleObj.obj && styleObj.obj[1].type.dbName().includes('style')),
-					charName = charCS.get('name'),
-					curSlots = 0;
+				ProfTable = getTable( charCS, fieldGroups.WPROF ),
+				StyleTable = tidyStyles( getTable( charCS, fieldGroups.STYLES ) ),
+				weapProf = ProfTable.copyValues(),
+				styleObj = abilityLookup( fields.StylesDB, weapon, charCS, false, false ),
+				isStyle = (!!styleObj && styleObj.obj && styleObj.obj[1].type.dbName().includes('style')),
+				charName = charCS.get('name'),
+				curSlots = 0;
 					
 				if (_.isUndefined(row = ProfTable.tableFind( fields.WP_name, weapon ))) {
 					if (_.isUndefined(row = ProfTable.tableFind( fields.WP_name, '-' ))) {
@@ -4192,7 +4439,6 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 					curProf = ProfTable.tableLookup( fields.WP_mastery, row ) == '1' ? 'MASTERY' : (ProfTable.tableLookup( fields.WP_specialist, row ) == '1' ? 'SPECIALIST' : (ProfTable.tableLookup( fields.WP_expert, row ) == '1' ? 'PROFICIENT' : 'NOT-PROF'));
 					curSlots = parseInt(ProfTable.tableLookup( fields.WP_slots, row )) || 1;
 				};
-				let totalSlots;
 				if (state.attackMaster.weapRules.slots) {
 					totalSlots = classObjects( charCS, senderId, {slots:reClassSpecs.slots} ).reduce((a,c) => (parseInt(a) + parseInt(evalAttr((c.classData.slots.replace(/\^\^level\^\^/ig,c.level).replace(/\^\^(\w+?)\^\^/g,attrValue)),charCS))),0);
 					setAttr( charCS, fields.WeapProfSlots, totalSlots );
@@ -4209,11 +4455,8 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 					countUsedSlots( charCS, ProfTable, attrLookup( charCS, fields.WeapProfSlotTotal ));
 					return;
 				} else if (isTraining) {
-					let failTrainingReason,
-						specList = ProfTable.tableFindAll( fields.WP_specialist, '1' ) || [],
-						curSpecialist = ProfTable.tableLookup( fields.WP_name, specList.find( s => !StyleTable.tableFind( fields.Style_name, ProfTable.tableLookup( fields.WP_name, s )))); 
-//						curSpecialist = ProfTable.tableLookup( fields.WP_name, specList.find( s => {log('handleAddProf: s='+s+', weap='+ProfTable.tableLookup( fields.WP_name, s )+', style='+StyleTable.tableFind( fields.Style_name, ProfTable.tableLookup( fields.WP_name, s )));return !StyleTable.tableFind( fields.Style_name, ProfTable.tableLookup( fields.WP_name, s ));}));
-//					log('handleAddProf: specList = '+specList+', curSpecialist = '+curSpecialist+', oneSpecialist = '+state.attackMaster.weapRules.oneSpecialist+', weapon = '+weapon+', weapLevel = '+weapLevel+', tableFind = '+ProfTable.tableFind( fields.WP_specialist, '1' )+', tableLookup = '+ProfTable.tableLookup( fields.WP_name, ProfTable.tableFind( fields.WP_specialist, '1' )));
+					specList = ProfTable.tableFindAll( fields.WP_specialist, '1' ) || [];
+					curSpecialist = ProfTable.tableLookup( fields.WP_name, specList.find( s => !StyleTable.tableFind( fields.Style_name, ProfTable.tableLookup( fields.WP_name, s )))); 
 					if (state.attackMaster.weapRules.oneSpecialist && !_.isUndefined(curSpecialist) && curSpecialist.dbName() !== weapon.dbName() && ['SPECIALIST','MASTERY'].includes(weapLevel) ) {
 						failTrainingReason = charName + ' is already a specialist in '+curSpecialist+' and is not allowed to be specialist in more than one weapon. Hard luck - no refunds!';
 					};
@@ -4241,8 +4484,7 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 								break;
 							case 'PROFICIENT':
 								failTrainingReason = 'But '+charName+' is already Proficient in '+weapText+'! You need to buy Specialist training. Sorry, no refunds!';
-								break;
-							case 'SPECIALIST':
+								break;case 'SPECIALIST':
 								break;
 							default:
 								msg = '&{template:'+fields.warningTemplate+'}{{name=Training Incomplete}}{{desc='+charName + ' needs to be a Specialist in '+weapText+' before they can master it, so that is the level I have trained '+charName+' to. Sorry, no refuneds!}}';
@@ -4270,7 +4512,7 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 						};
 					};
 					if (!failTrainingReason) {
-						let usedSlots = countUsedSlots( charCS, ProfTable, totalSlots );
+						usedSlots = countUsedSlots( charCS, ProfTable, totalSlots );
 						[neededSlots,weapSlots] = calcSlots( charCS, weapon, weapLevel );
 						if (neededSlots > (totalSlots-usedSlots)) {
 							failTrainingReason = 'You only have '+(totalSlots-usedSlots)+' weapon proficiency slots free and you require '+neededSlots+' to gain '+weapLevel.toLowerCase()+' in '+weapon+' so you have failed your training. Sorry, no refunds!';
@@ -4318,25 +4560,24 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 		});
 		if (!silent) makeProficienciesMenu( [''], selected, senderId, 'Set '+weapon+' as '+weapLevel.toLowerCase() );
 	}
-	
+
 	/*
 	 * Handle adding all a character's weapons as Proficient
 	 */
 	 
 	async function handleAddAllProfs( args, selected, senderId, silent=false ) {
-		
 		try {
 			if (args[0] && args[0].length && !!getObj('graphic',args[0])) selected = [{_id:args[0]}];
-			var msg = 'No weapons found';
+			let msg = 'No weapons found';
 			_.each( selected, e => {
-				let charCS = getCharacter( e._id, true );
+				let charCS = getCharacter( e.id || e._id, false );
 				if (charCS) {
-					let classes = classObjects( charCS, senderId ),
-						isWarrior = classes.some( c => c.base === 'warrior' ),
-						isWizard = classes.some( c => c.base === 'wizard' ),
-						isPriest = classes.some( c => c.base === 'priest' ),
-						isRogue = classes.some( c => c.base === 'rogue' ),
-						isCreature = classes.some( c => c.base === 'creature' );
+					const classes = classObjects( charCS, senderId ),
+						  isWarrior = classes.some( c => c.base === 'warrior' ),
+						  isWizard = classes.some( c => c.base === 'wizard' ),
+						  isPriest = classes.some( c => c.base === 'priest' ),
+						  isRogue = classes.some( c => c.base === 'rogue' ),
+						  isCreature = classes.some( c => c.base === 'creature' );
 														   
 					let weapons = weaponLookup( charCS );
 
@@ -4365,10 +4606,10 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * as a proficiency
 	 */
 	 
-	var handleReviewProf = function( args, selected ) {
+	const handleReviewProf = function( args, selected ) {
 		
-		var cmdStr = args.join('|'),
-			content = '&{template:'+fields.messageTemplate+'}{{name=Return to Menu}}'
+		const cmdStr = args.join('|'),
+			  content = '&{template:'+fields.messageTemplate+'}{{name=Return to Menu}}'
 				+ '{{desc=[Return to Menu](!cmd --add-profs '+cmdStr+') or do something else}}';
 		setTimeout( sendFeedback, 2000, content,flags.feedbackName,flags.feedbackImg );
 	}
@@ -4376,16 +4617,16 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 	/*
 	 * Handle the selection of a class and level
 	 */
-	 
+ 
 	async function handleClassSelection( args, selected, senderId, isGM ) {
 		
 		try {
 			var errFlag = false;
 			
-			sendWait( senderId, 1 );
-			var checkOverwrite = function( tokenID, charCS, args ) {
+			sendWait( senderId, 1, 'Cmd handleClassSelection' );
+			const checkOverwrite = function( tokenID, charCS, args ) {
 				args[0] = ([BT.CREATURE,BT.NPC,BT.SERVICE].includes(args[0].toUpperCase()) ? BT.CREATURE_CKD : BT.CONTAINER_CKD);
-				let content = '&{template:'+fields.warningTemplate+'}{{title=Overwrite '+charCS.get('name')+'?}}'
+				const content = '&{template:'+fields.warningTemplate+'}{{title=Overwrite '+charCS.get('name')+'?}}'
 							+ '{{desc=You are about to overwrite the Character Sheet for '+charCS.get('name')+'. '
 							+ 'Are you sure this is what you want to do?\n'
 							+ '[Yes Continue](!cmd --button '+args.join('|').replace(/\)/g,'&#41;')+') [No Cancel](!magic --message gm|'+tokenID+'|Cancelled|The operation has been cancelled)}}';
@@ -4393,21 +4634,19 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 				return;
 			};
 		
- 			var setClassAndRace = function( cmd, args, token, value, senderId, qualifier ) {
+ 			const setClassAndRace = function( cmd, args, token, value, senderId, qualifier ) {
 				
 				let errFlag = false;
 				return new Promise(resolve => {
 					try {
-						let charCS = getCharacter( token._id );
+						const charCS = getCharacter( token._id );
 						if (!charCS) return;
 						
+						if (qualifier && qualifier.length) setAttr( charCS, fields.CreatureQualifier, qualifier );
+
 						cmd = cmd.toUpperCase();
 						
-						let baseThac0val,
-							container = cmd === BT.CONTAINER,
-							isResetContainer = cmd === BT.RESET_CONTAINER;
-						
-						switch (cmd.toUpperCase()) {
+						switch (cmd) {
 						case BT.CLASS_F:
 							setAttr( charCS, fields.Fighter_class, value );
 							break;
@@ -4454,11 +4693,11 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 						case BT.SERVICE:
 						case BT.CREATURE:
 						case BT.CONTAINER:
-							let pc = charCS.get('controlledby').split(',');
-							let race = attrLookup( charCS, fields.Race );
-							let gender = (attrLookup( charCS, fields.Gender ) || '').dbName();
-							let classObjs = classObjects( charCS );
-							let defClass = (classObjs.length == 1 && classObjs[0].name == 'creature' && classObjs[0].level == 0);
+							const pc = charCS.get('controlledby').split(','),
+								  race = attrLookup( charCS, fields.Race ),
+								  gender = (attrLookup( charCS, fields.Gender ) || '').dbName(),
+								  classObjs = classObjects( charCS ),
+								  defClass = (classObjs.length == 1 && classObjs[0].name == 'creature' && classObjs[0].level == 0);
 							
 							if ((race && race.length && gender !== 'container') || !defClass || (pc && (pc.length > 1 || pc[0].length) && !pc.includes('all'))) {
 								checkOverwrite( token._id, charCS, args );
@@ -4467,16 +4706,15 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 							}
 						case BT.CREATURE_CKD:
 						case BT.CONTAINER_CKD:
-							let currentRace = attrLookup( charCS, fields.Race ) || '';
-							let currentClass = classObjects( charCS, senderId );
-							let newToken = (currentRace == '' && currentClass.length == 1 && currentClass[0].name == 'creature' && currentClass[0].level == 0);
+							const currentRace = attrLookup( charCS, fields.Race ) || '',
+								  currentClass = classObjects( charCS, senderId ),
+								  newToken = (currentRace == '' && currentClass.length == 1 && currentClass[0].name == 'creature' && currentClass[0].level == 0);
 							setCreatureAttrs( cmd, charCS, senderId, value, token, qualifier );
-							if (!newToken && !isResetContainer) break;
+							if (!newToken && !cmd === BT.RESET_CONTAINER) break;
 							handleSetTokenBars( [''], [token], senderId, true );
 							setDefaultTokenForCharacter( charCS, getObj('graphic',token._id) );
 							break;
 						default:
-							sendDebug( 'handleClassSelection: invalid class selection command '+cmd);
 							sendError( 'Internal CommandMaster Error' );
 							break;
 						};
@@ -4486,6 +4724,7 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 								handleCheckWeapons( token._id, charCS );
 							}
 							handleCheckSaves( null, senderId, [token], true );
+							sendAPI( fields.attackMaster + ' --checkmods '+token._id+'|quiet' );
 							displayClassLevel( charCS );
 						};
 						parseDesc( charCS, senderId );
@@ -4501,27 +4740,26 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 			};
 			
 			async function classAndRace( cmd, args, token, value, senderId, selected, msg, qualifier ) {
-				let errFlag = await setClassAndRace( cmd, args, token, value, senderId, qualifier );
+				const errFlag = await setClassAndRace( cmd, args, token, value, senderId, qualifier );
 				if (!errFlag && selected.length === 1) makeClassMenu( args, selected, senderId, true, msg );
 			};
 			
-			if (!args[3] && (!selected || !selected.length)) return;
-			
-			var cmd = args[0],
-				qualifier = args[1].split('%%'),
-				tokenID = args[3],
-				msg = '',
-				ability = true,
-				dB = fields.ClassDB,
-				valObj,
-				value = qualifier.shift(),
-				charCS = getCharacter( tokenID );
+			const cmd = args[0],
+				  tokenID = args[3],
+				  charCS = getCharacter( tokenID );
 				
 			if (!charCS && (!selected || !selected.length)) {
 				sendResponseError(senderId,messages.noToken);
 				return;
 			}
 			
+			let	qualifier = args[1].split('%%'),
+				msg = '',
+				ability = true,
+				dB = fields.ClassDB;
+				
+			const value = qualifier.shift();
+				
 			if (!qualifier.length) {
 				qualifier = (attrLookup( charCS, fields.NPCqualifier ) || '').split('%%');
 				qualifier.shift();
@@ -4590,7 +4828,6 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 				dB = fields.RaceDB;
 				break;
 			default:
-				sendDebug( 'handleClassSelection: invalid class selection command '+cmd);
 				sendError( 'Internal CommandMaster Error' );
 				return;
 			}
@@ -4608,7 +4845,7 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 			errFlag = true;
 		}
 	};
-	
+
 	/*
 	 * Handle any changed API commands registered with CommandMaster 
 	 * by other API scripts.  Search the Ability macros for the 
@@ -4618,7 +4855,7 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 	 
 	var handleChangedCmds = function() {
 		
-		var searchStrs = [],
+		let searchStrs = [],
 			reOld,oldStr,newStr,
 			changedAbilities;
 
@@ -4641,14 +4878,15 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 			log('handleChangedCmds nothing changed');
 			return;
 		}
+		let changed, charID, charCS, action;
 		changedAbilities = filterObjs(function(obj){
-			let changed = false;
+			changed = false;
 			if (obj.get('type') != 'ability') {return changed;}
-			let charID=obj.get('characterid');
+			charID=obj.get('characterid');
 			if (!charID) {return changed;}
-			let charCS=getObj('character',charID);
+			charCS=getObj('character',charID);
 			if (!charCS) {return changed;}
-			let action=obj.get('action');
+			action=obj.get('action');
 			_.each(searchStrs,str=>{
 				if (str.oldStr.test(action)) {
 					log('handleChangedCmds database or character '+charCS.get('name')+' ability '+obj.get('name')+' updated to '+str.newStr);
@@ -4672,16 +4910,14 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 	async function handleEditAbilities( args, firstFind ) {
 		
 		try {
-			var oldStr = args[1],
-				newStr = args[2],
-				selected = args[3],
-				changeNext = args[4],
+			const oldStr=parseStr(args[1]),
+				  newStr=parseStr(args[2]).replace('$$',''),
+				  dbVersion = /v\d+\.\d+/i;
+				  
+			let	selected = (_.isUndefined(args[3]) || String(args[3]).toLowerCase() !== 'false'),
+				changeNext = (!(_.isUndefined(args[4]) || String(args[4]).toLowerCase() !== 'true')),
 				endOfSearch = true,
-				dbVersion = /v\d+\.\d+/i,
-				reOld;
-			
-			changeNext = (!(_.isUndefined(changeNext) || String(changeNext).toLowerCase() !== 'true'));
-			selected = (_.isUndefined(selected) || String(selected).toLowerCase() !== 'false');
+				reOld, changed, charID, charCS, action, charName, abilityName;
 			
 			if (!changeNext && !selected) {
 				makeMsg('Cancelled','OK, cancelled');
@@ -4690,8 +4926,6 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 				makeMsg('Skipping', 'OK, skipped that one');
 			}
 			
-			newStr=parseStr(newStr).replace('$$','');
-			oldStr=parseStr(oldStr);
 			if (oldStr.endsWith('$$')) {
 				oldStr=escapeRegExp(oldStr.replace('$$',''));
 				reOld=new RegExp(oldStr+'\\)|'+oldStr+'$','img');
@@ -4700,16 +4934,16 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 			};
 
 			filterObjs(function(obj){
-				let changed = false;
+				changed = false;
 				if (!changeNext && !selected) {return false;}
 				if (obj.get('type') != 'ability') {return false;}
-				let charID=obj.get('characterid');
+				charID=obj.get('characterid');
 				if (!charID) {return false;}
-				let charCS=getObj('character',charID);
+				charCS=getObj('character',charID);
 				if (!charCS) {return false;}
-				let action=obj.get('action'),
-					charName = charCS.get('name'),
-					abilityName = obj.get('name');
+				action=obj.get('action');
+				charName = charCS.get('name');
+				abilityName = obj.get('name');
 				if (dbVersion.test(charName)) {
 					dbVersion.test(''); //reset the test to start from beginning of next string
 					return false;
@@ -4748,8 +4982,7 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 			sendCatchError('CommandMaster',null,e,'CommandMaster handleEditAbilities()');
 		}
 	}
-		
-	
+
 	/*
 	 * Handle setting ability macros selected in a menu 
 	 * for all currently selected tokens.
@@ -4757,19 +4990,17 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 	 
 	var handleSetAbility = function( args, selected ) {
 		
-		var menuType = args[1],
-			buttonName = args[2],
-			api = args[3],
-			action = args[4],
-			ability = args[5],
-			replaceAbility = args[6],
-			cmdStr = parseCmd( api, action ).replace('$$',''),
-			searchStr = new RegExp(escapeRegExp(cmdStr)+'\\s*\\)|'+escapeRegExp(cmdStr)+'\\s*$','img'),
-			curToken, charCS,
-			abilityObjs,
-			charIDs = [];
+		const menuType = args[1],
+			  buttonName = args[2],
+			  api = args[3],
+			  action = args[4],
+			  ability = args[5],
+			  replaceAbility = args[6],
+			  cmdStr = parseCmd( api, action ).replace('$$',''),
+			  abilityObjs = findAbilities( api, action, selected );
+			  
+		let	charIDs = [];
 			
-		abilityObjs = findAbilities( api, action, selected );
 		_.each( selected, s => charIDs.push(getObj('graphic',s._id).get('represents')));
 		charIDs = charIDs.filter( c => !!c );
 		
@@ -4802,45 +5033,51 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * Handle the setting of base saving throws based on 
 	 * the level(s) of the character - best save wins
 	 */
-	 
+ 
 	async function handleSetSaves( args, selected, senderId ) {
 		
 		try {
-			var abMenu = args[1],
-				setLevel = parseInt(args[2] || 0),
-				raceMods,
+			const abMenu = args[1];
+			
+			let	raceMods, tokenID, charCS,
+				tokenName, 
+				fighterLevel, wizardLevel, priestLevel, rogueLevel,
+				race, constitution,
+				monsterHD, monsterHDplus, monsterIntField, monsterIntNum, monsterInt, monsterLevel,
+				warriorSaves, wizardSaves, priestSaves, rogueSaves, 
+				ppdSave, rswSave, ppSave, bSave, sSave,
 				content = '&{template:'+fields.menuTemplate+'}{{name=Set Base Saves}}'
 						+ '{{=Based on their level(s) and race(s), base saves have been set to}}';
 			
 			_.each( selected, curToken => {
 				
-				var	tokenID = curToken._id,
-					charCS = getCharacter( tokenID );
+				tokenID = curToken._id;
+				charCS = getCharacter( tokenID );
 					
 				if (!tokenID || !charCS) {return};
 				
-				var	tokenName = getObj('graphic',tokenID).get('name'),
-					fighterLevel = attrLookup( charCS, fields.Fighter_level ) || 0,
-					wizardLevel = attrLookup( charCS, fields.Wizard_level ) || 0,
-					priestLevel = attrLookup( charCS, fields.Priest_level ) || 0,
-					rogueLevel = attrLookup( charCS, fields.Rogue_level ) || 0,
-					race = (attrLookup( charCS, fields.Race ) || 'human').dbName(),
-					constitution = attrLookup( charCS, fields.Constitution ) || 0,
-					monsterHD = parseInt(attrLookup( charCS, fields.Monster_hitDice )) || 0,
-					monsterHPplus = parseInt(attrLookup( charCS, fields.Monster_hpExtra )) || 0,
-					monsterIntField = attrLookup( charCS, fields.Monster_int ) || '',
-					monsterIntNum = (monsterIntField.match(/\d+/)||["1"])[0],
-					monsterInt = monsterIntField.toLowerCase().includes('non') ? 0 : monsterIntNum,
-					monsterLevel = Math.ceil((monsterHD + Math.ceil(monsterHPplus/4)) / (monsterInt != 0 ? 1 : 2)),  // Calculation based on p65 of DMG
-					warriorSaves = baseSaves.Warrior[saveLevels.Warrior[Math.min(Math.max(fighterLevel,monsterLevel),saveLevels.Warrior.length-1)]],
-					wizardSaves = baseSaves.Wizard[saveLevels.Wizard[Math.min(wizardLevel,saveLevels.Wizard.length-1)]],
-					priestSaves = baseSaves.Priest[saveLevels.Priest[Math.min(priestLevel,saveLevels.Priest.length-1)]],
-					rogueSaves = baseSaves.Rogue[saveLevels.Rogue[Math.min(rogueLevel,saveLevels.Rogue.length-1)]],
-					ppdSave = Math.min(warriorSaves[0],wizardSaves[0],priestSaves[0],rogueSaves[0]),
-					rswSave = Math.min(warriorSaves[1],wizardSaves[1],priestSaves[1],rogueSaves[1]),
-					ppSave = Math.min(warriorSaves[2],wizardSaves[2],priestSaves[2],rogueSaves[2]),
-					bSave = Math.min(warriorSaves[3],wizardSaves[3],priestSaves[3],rogueSaves[3]),
-					sSave = Math.min(warriorSaves[4],wizardSaves[4],priestSaves[4],rogueSaves[4]);
+				tokenName = getObj('graphic',tokenID).get('name');
+				fighterLevel = attrLookup( charCS, fields.Fighter_level ) || 0;
+				wizardLevel = attrLookup( charCS, fields.Wizard_level ) || 0;
+				priestLevel = attrLookup( charCS, fields.Priest_level ) || 0;
+				rogueLevel = attrLookup( charCS, fields.Rogue_level ) || 0;
+				race = (attrLookup( charCS, fields.Race ) || 'human').dbName();
+				constitution = attrLookup( charCS, fields.Constitution ) || 0;
+				monsterHD = parseInt(attrLookup( charCS, fields.Monster_hitDice )) || 0;
+				monsterHPplus = parseInt(attrLookup( charCS, fields.Monster_hpExtra )) || 0;
+				monsterIntField = attrLookup( charCS, fields.Monster_int ) || '';
+				monsterIntNum = (monsterIntField.match(/\d+/)||["1"])[0];
+				monsterInt = monsterIntField.toLowerCase().includes('non') ? 0 : monsterIntNum;
+				monsterLevel = Math.ceil((monsterHD + Math.ceil(monsterHPplus/4)) / (monsterInt != 0 ? 1 : 2));  // Calculation based on p65 of DMG
+				warriorSaves = baseSaves.Warrior[saveLevels.Warrior[Math.min(Math.max(fighterLevel,monsterLevel),saveLevels.Warrior.length-1)]];
+				wizardSaves = baseSaves.Wizard[saveLevels.Wizard[Math.min(wizardLevel,saveLevels.Wizard.length-1)]];
+				priestSaves = baseSaves.Priest[saveLevels.Priest[Math.min(priestLevel,saveLevels.Priest.length-1)]];
+				rogueSaves = baseSaves.Rogue[saveLevels.Rogue[Math.min(rogueLevel,saveLevels.Rogue.length-1)]];
+				ppdSave = Math.min(warriorSaves[0],wizardSaves[0],priestSaves[0],rogueSaves[0]);
+				rswSave = Math.min(warriorSaves[1],wizardSaves[1],priestSaves[1],rogueSaves[1]);
+				ppSave = Math.min(warriorSaves[2],wizardSaves[2],priestSaves[2],rogueSaves[2]);
+				bSave = Math.min(warriorSaves[3],wizardSaves[3],priestSaves[3],rogueSaves[3]);
+				sSave = Math.min(warriorSaves[4],wizardSaves[4],priestSaves[4],rogueSaves[4]);
 					
 				if (_.isUndefined(raceSaveMods[race])) {
 					raceMods = raceSaveMods.human;
@@ -4884,7 +5121,7 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 			sendCatchError('CommandMaster',msg_orig[senderId],e);
 		}
 	};
-	
+
 	/*
 	 * Handle setting the visibility of the token name 
 	 * to the Players, which effects how RoundMaster
@@ -4892,18 +5129,20 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * actions when it is their turn.
 	 */
 	 
-	var handleTokenNameVisibility = function( args, selected ) {
+	const handleTokenNameVisibility = function( args, selected ) {
 		
-		var cmd = args[0],
-			abMenu = args[1],
-			playerID = args[3] || '',
-			tokens = [];
+		const cmd = args[0],
+			  abMenu = args[1],
+			  playerID = args[3] || '';
+			  
+		let	tokens = [],
+			curToken, charCS;
 		
 		_.each( selected, sel => {
-			let curToken = getObj('graphic',sel._id);
+			curToken = getObj('graphic',sel._id);
 			curToken.set('showplayers_name',(cmd == BT.AB_PC));
 			curToken.set('showplayers_bar3',(cmd == BT.AB_PC));
-			let charCS = getObj('character',curToken.get('represents'));
+			charCS = getObj('character',curToken.get('represents'));
 			if (charCS) {
 				charCS.set('controlledby',playerID);
 				charCS.set('inplayerjournals',playerID);
@@ -4929,14 +5168,15 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 			if (!args) args = [];
 			if (!selected) selected = [];
 
-			var cmd = args[0] || '',
-				abMenu = args[1] || BT.AB_SIMPLE,
-				tokenID = (selected && selected.length ? selected[0]._id : ''),
-				primaryFields = [fields.AC[0],fields.Thac0_base[0],fields.HP[0]],
+			const cmd = args[0] || '',
+				  abMenu = args[1] || BT.AB_SIMPLE,
+				  tokenID = (selected && selected.length ? selected[0]._id : '');
+				  
+			let	primaryFields = [fields.AC[0],fields.Thac0_base[0],fields.HP[0]],
 				curToken, charCS;
 				
-			var getBarName = function( token, charCS, bar, setBar=false ) {
-				var nameObj = getObj('attribute',token.get(bar+'_link')),
+			const getBarName = function( token, charCS, bar, setBar=false ) {
+				let nameObj = getObj('attribute',token.get(bar+'_link')),
 					name;
 				if (!!nameObj) {
 					name = nameObj.get('name');
@@ -5007,21 +5247,22 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 	 
 	var handleSetTokenBars = function( args, selected, senderId, silent=false ) {
 		
-		var cmd = args[0],
-			abMenu = args[1],
-			content = '',
+		const cmd = args[0],
+			  abMenu = args[1];
+			  
+		let	content = '',
 			allTokens = false,
 			names = [],
 			linked = '',
 			not = '',
 			setCmd = BT.AB_TOKEN_SET_ALL;
 			
-		var setBars = function(cmd, senderId, content, token, allTokens, silent) {
+		const setBars = function(cmd, senderId, content, token, allTokens, silent) {
 			return new Promise(resolve => {
 				try {
-					var tokenID = token._id || token.id,
-						curToken = getObj('graphic',tokenID),
-						charCS = getCharacter(tokenID);
+					const tokenID = token._id || token.id,
+						  curToken = getObj('graphic',tokenID),
+						  charCS = getCharacter(tokenID);
 						
 					if (charCS) {
 						let bar1obj, bar2obj, bar3obj;
@@ -5038,15 +5279,15 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 							monsterThac0val = parseInt(attrLookup(charCS,fields.MonsterThac0)),
 							baseThac0val = parseInt(attrLookup(charCS,fields.Thac0_base));
 
-						if (isNaN(ACval) || String(ACval).trim() == '') ACval = 10;
 						if (isNaN(monsterACval) || String(monsterACval).trim() == '') monsterACval = 10;
+						if (isNaN(ACval) || String(ACval).trim() == '') ACval = monsterACval;
 						if (isNaN(thac0val) || String(thac0val).trim() == '') thac0val = 20;
 						if (isNaN(monsterThac0val) || String(monsterThac0val).trim() == '') monsterThac0val = 20;
 						if (isNaN(baseThac0val) || String(baseThac0val).trim() == '') baseThac0val = 20;
 						
 						ACval = (!ACval || !monsterACval) ? (ACval + monsterACval) : Math.min(monsterACval,ACval);
 						thac0val = Math.min(monsterThac0val,thac0val,baseThac0val,handleGetBaseThac0( charCS ));
-
+						
 						if (AC) {
 							AC.set('current',ACval);
 						} else {
@@ -5131,7 +5372,7 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 			content += '{{desc2=For all tokens';
 			if (cmd === BT.AB_TOKEN_SET_LINKED) content += ' with linked bars';
 			content += '}}';
-			if (silent) sendWait(findTheGM(),0);
+			if (silent) sendWait(findTheGM(),0,'Cmd handleSetTokenBars');
 		}
 		
 		_.each( selected, token => {
@@ -5148,13 +5389,13 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 	/*
 	 * Handle switching char sheet control between DM & Players
 	 */
-	 
-	var handleSetCSctrl = function( args, senderId ) {
+ 
+	const handleSetCSctrl = function( args, senderId ) {
 		
-		var charID = args[1],
-			playerID = args[2] || '',
-			charCS = getObj('character',charID),
-			tokens = findObjs({type:'graphic',subtype:'token',represents:charID});
+		const charID = args[1],
+			  playerID = args[2] || '',
+			  charCS = getObj('character',charID),
+			  tokens = findObjs({type:'graphic',subtype:'token',represents:charID});
 		
 		charCS.set('inplayerjournals',playerID);
 		charCS.set('controlledby',playerID);
@@ -5166,17 +5407,18 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 	/* 
 	 * Handle changing all illegal character and token names to valid ones
 	 */
-	 
-	var handleChangeAllNames = function( args ) {
+
+	const handleChangeAllNames = function( args ) {
 		
+		let name = '';
 		_.each( findObjs({type:'character'}), o => {
-			let name = o.get('name');
+			name = o.get('name');
 			if (name && reInvalid.test(name)) {
 				o.set('name',name.replace(reInvalid,''));
 			};
 		});
 		_.each( findObjs({type:'graphic'}), o => {
-			let name = o.get('name');
+			name = o.get('name');
 			if (name && reInvalid.test(name)) {
 				o.set('name',name.replace(reInvalid,''));
 			};
@@ -5188,8 +5430,8 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 	/*
 	 * Handle changing a name that has been found to be illegal
 	 */
-	
-	var handleChangeObjName = function( args ) {
+
+	const handleChangeObjName = function( args ) {
 		
 		if (args[2] != 'player') {
 			let obj = getObj(args[2],args[3]);
@@ -5205,16 +5447,14 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * Change the stored images for a trapped/locked container
 	 */
 	 
-	var handleChangeImages = function( args, selected, senderId ) {
+	const handleChangeImages = function( args, selected, senderId ) {
 		
 		if (!args) return;
 
-		var cmd = args[0],
-			tokenID = args[1],
-			imgType = args[2] || 'closed-img',
-			qualifier = args[3] || '',
-			value = qualifier.split('%%')[0],
-			charCS = getCharacter(tokenID);
+		const charCS = getCharacter(args[1]),
+			  imgType = args[2] || 'closed-img',
+			  qualifier = args[3] || '',
+			  value = qualifier.split('%%')[0];
 			
 		if (!charCS) {
 			sendError( 'Invalid container token specified for setting the '+imgType+' image for a trapped / locked container', msg_orig[senderId] );
@@ -5225,9 +5465,10 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 			return;
 		};
 		
-		var	curToken = getObj('graphic',selected[0]._id),
-			curImg = !!curToken ? curToken.get('imgsrc') : (imgType === 'open-img' ? design.open_img : (imgType === 'closed-img' ? design.closed_img : '')),
-			storeMsg = 'The stored '+imgType+' for the trapped / locked container '+charCS.get('name')+' has been successfully changed';
+		const curToken = getObj('graphic',selected[0]._id),
+			  curImg = !!curToken ? curToken.get('imgsrc') : (imgType === 'open-img' ? design.open_img : (imgType === 'closed-img' ? design.closed_img : ''));
+			  
+		let	storeMsg = 'The stored '+imgType+' for the trapped / locked container '+charCS.get('name')+' has been successfully changed';
 			
 		if (imgType.includes('img')) {
 			if (curImg.includes('marketplace')) {
@@ -5248,30 +5489,30 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 		makeChangeImagesMenu( args, senderId, storeMsg);
 		return;
 	}
-	
+
 	/*
 	 * handle setting a class if converting a sheet with an 
 	 * undefined character class set on it.
 	 */
 	 
-	var handleConvertClass = function( args, selected, senderId ) {
+	const handleConvertClass = function( args, selected, senderId ) {
 		
-		var cmd = args[0],
-			charID = args[1],
-			sheetIndex = args[2],
-			curClass = args[3],
-			curLevel = args[4],
-			newClass = args[5],
-			charCS = getObj( 'character', charID ),
-			classObj, baseClass, classIndex;
+		const cmd = args[0],
+			  charID = args[1],
+			  sheetIndex = args[2],
+			  curClass = args[3],
+			  curLevel = args[4],
+			  charCS = getObj( 'character', charID );
+			  
+		let	newClass = args[5],
+			baseClass, classIndex;
 			
 		if (!charCS) {
 			sendError('handleConvertClass: invalid character ID');
 			return;
 		}
 		if (cmd === BT.SET_CLASS) {
-			classObj = abilityLookup( fields.ClassDB, newClass );
-			baseClass = clTypeLists[classObj.type];
+			baseClass = clTypeLists[abilityLookup( fields.ClassDB, newClass ).type];
 		} else {
 			baseClass = newClass;
 			newClass = curClass;
@@ -5287,18 +5528,273 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 			setAttr( charCS, classMap[sheetIndex][0], newClass );
 		}
 	};
-			
-			
 	
+	/*
+	 * Update a creature attack field with GM-supplied data
+	 */
+	 
+	const handleAttkUpdate = function( args, senderId ) {
+		
+		const cmd = args[0],
+			  tokenID = args[1],
+			  attkNo = args[2],
+			  values = args.slice(3).join(),
+			  charCS = getCharacter(tokenID);
+
+		switch (String(attkNo)) {
+		case '1': setAttr( charCS, fields.Monster_dmg1, values ); break;
+		case '2': setAttr( charCS, fields.Monster_dmg2, values ); break;
+		case '3': setAttr( charCS, fields.Monster_dmg3, values ); break;
+		}
+		handleEncodeCreature( args, senderId );
+		return;
+	};
+	
+	/*
+	 * Encode a character sheet as a "Drag & Drop" creature
+	 * in a custom database.
+	 */
+	 
+	const handleEncodeCreature = function( args, senderId ) {	// indexOf
+		
+		const cmd = args[0],
+			  tokenID = args[1],
+			  attkNo = args[2],
+			  values = args.slice(3),
+			  charCS = getCharacter(tokenID);
+			  
+//		log('handleEncodeCreature: at start, args = '+args+', values = '+values);
+			  
+		const classFields = {
+			specAttk:	['spattk',fields.Monster_spAttk],
+			specDef:	['spdef',fields.Monster_spDef],
+			monMR:		['mr',fields.Monster_mr],
+			alignment:	['align',fields.Alignment],
+			race:		['race',fields.Race],
+		};	
+
+		const creatureFields = {
+			monInt:		['int',fields.Monster_int],
+			monAC:		['cac',fields.MonsterAC],
+			monMove:	['mov',fields.Monster_mov],
+			monHD:		['hd',fields.Monster_hitDice],
+			monExtra:	['hdx',fields.Monster_hpExtra],
+			monReroll:	['hdr',fields.Monster_hdReroll],
+			monThac0:	['thac0',fields.MonsterThac0],
+			monDmg1:	['attk1',fields.Monster_dmg1],
+			monDmg2:	['attk2',fields.Monster_dmg2],
+			monDmg3:	['attk3',fields.Monster_dmg3],
+			monSize:	['size',fields.Monster_size],
+			monSpeed:	['sp',fields.Monster_speed],
+			monRegen:	['regen',fields.Regenerate],
+			monTreasure:['tr',fields.Monster_treasure],
+		};
+		
+		const clTable = {
+			warrior:	'F',
+			wizard:		'MU',
+			priest:		'PR',
+			rogue:		'RO',
+			psion:		'PS',
+			creature:	'F',
+		};
+		
+		const checkAttk = function( charCS, attkNo, attk, defTxt='Claw', defType='S' ) {
+			let attkData = String(attrLookup( charCS, attk )),
+				dmg = '1d6', txt = defTxt;
+			if (!attkData) return true;
+			attkData = attkData.split(',');
+//			log('checkAttk: attkNo '+attkNo+' = attkData ['+attkData+']');
+			if (/\d+d\d+/i.test(attkData[0])) {
+				dmg = attkData[0];
+				txt = attkData[1] || defTxt;
+			} else if (/\d+d\d+/i.test(attkData[1])) {
+				dmg = attkData[1];
+				txt = attkData[0] || defTxt;
+			}
+			const speed = attkData[2] || '0';
+			const type = attkData[3] || defType;
+			const content = '&{template:'+fields.menuTemplate+'}{{title=Creature Attack '+attkNo+'}}'
+						  + '{{desc=Check these details for creature attack '+attkNo+' and use the edit links as required.\n'
+						  + 'Attack name = '+txt+' _Edit_(!cmd --button '+BT.EDITATTK_NAME+'|'+tokenID+'|'+attkNo+'|'+dmg+'|?{Enter text for attack '+attkNo+'|'+txt+'}|'+speed+'|'+type+')\n'
+						  + 'Attack damage = '+dmg+' _Edit_(!cmd --button '+BT.EDITATTK_DMG+'|'+tokenID+'|'+attkNo+'|?{Enter dice roll for attack '+attkNo+'|'+dmg+'}|'+txt+'|'+speed+'|'+type+')\n'
+						  + 'Attack speed = '+speed+' _Edit_(!cmd --button '+BT.EDITATTK_SPEED+'|'+tokenID+'|'+attkNo+'|'+dmg+'|'+txt+'|?{Enter speed for attack '+attkNo+'|'+speed+'}|'+type+')\n'
+						  + 'Attack type = '+(type === 'P' ? 'Piercing' : (type === 'B' ? 'Bludgeoning' : (type === 'S' ? 'Slashing' : 'Unknown')))+' _Edit_(!cmd --button '+BT.EDITATTK_TYPE+'|'+tokenID+'|'+attkNo+'|'+dmg+'|'+txt+'|'+speed+'|?{Enter type for attack '+attkNo+'|Slashing,S|Piercing,P|Bludgeoning,B})\n'
+						  + '[Confirm](!cmd --button '+BT.EDITATTK_CONFIRM+'|'+tokenID+'|'+attkNo+'|'+dmg+'|'+txt+'|'+speed+'|'+type+')}}';
+			sendFeedback(content);
+			return false;
+		};
+		
+		const creature = charCS.get('name'),
+			  specs = '['+creature+',CreatureRace,0H,Creature]';
+		
+		if (cmd == BT.EDITATTK_CONFIRM) {
+			switch (String(attkNo)) {
+			case '1': attacks.attk1 = values; break;
+			case '2': attacks.attk2 = values; break;
+			case '3': attacks.attk3 = values; break;
+			default: log('Invalid attack number '+attkNo);
+			};
+//			log('handleEncodeCreature: attack '+attkNo+' confirmed, values = '+values+', attacks[attk'+attkNo+'] = '+attacks['attk'+attkNo]);
+		};
+		
+		let attkMsg = [];
+		if (!attacks.attk1) {if (!(attacks.attk1 = checkAttk( charCS, 1, fields.Monster_dmg1, 'Right Claw', 'S' ))) return;};
+		if (!attacks.attk2) {if (!(attacks.attk2 = checkAttk( charCS, 2, fields.Monster_dmg2, 'Left Claw', 'S' ))) return;};
+		if (!attacks.attk3) {if (!(attacks.attk3 = checkAttk( charCS, 3, fields.Monster_dmg3, 'Bite', 'P' ))) return;};
+		
+		if (attacks.attk1 && attacks.attk1 !== true) attkMsg.push(attacks.attk1[1]+' doing '+attacks.attk1[0]+' damage');
+		if (attacks.attk2 && attacks.attk2 !== true) attkMsg.push(attacks.attk2[1]+' doing '+attacks.attk2[0]+' damage');
+		if (attacks.attk3 && attacks.attk3 !== true) attkMsg.push(attacks.attk3[1]+' doing '+attacks.attk3[0]+' damage');
+
+		const classes = classObjects( charCS, senderId );
+		
+		let attrData = [],
+			classData = [],
+			levelData = [];
+		_.each( creatureFields, v => attrData.push( v[0]+'='+attrLookup( charCS, v[1] ) ));
+		_.each( classes, c => {
+			if (c.base.dbName() != 'creature') {
+				classData.push(clTable[c.base]+':'+c.name);
+				levelData.push(c.level);
+			}
+		});
+		if (classData && classData.length) {
+			attrData.push('cl='+classData.join('/'));
+			attrData.push('lv='+levelData.join('/'));
+		};
+		
+
+		let creatureData = [('w:'+creature),('cattr:'+attrData.join('|').replace(/,/g,':'))];
+		_.each( classFields, v => creatureData.push( v[0]+':'+attrLookup( charCS, v[1] ) ));
+		
+		let turnData = attrLookup( charCS, fields.Monster_isTurnable ),
+			undeadHDadj = 0;
+		if (turnData && turnData.length) {
+			if (!/:[-\+]\d+/i.test(turnData)) {
+				turnData = 'u:+0';
+			} else {
+				undeadHDadj = turnData.match(/:([-\+]\d+)/i)[1];
+				turnData = 'u:'+undeadHDadj;
+			};
+			creatureData.push(turnData);
+		};
+		
+		const Proficiencies = getTable( charCS, fieldGroups.WPROF );
+		let profArray = [],
+			name, expert, special, master;
+		for (let row=0; row<Proficiencies.sortKeys.length; row++) {
+			name = Proficiencies.tableLookup( fields.WP_name, row );
+			expert = Proficiencies.tableLookup( fields.WP_expert, row );
+			special = Proficiencies.tableLookup( fields.WP_specialist, row );
+			master = Proficiencies.tableLookup( fields.WP_mastery, row );
+			profArray.push( [name,expert,special,master] );
+		};
+		
+		const Items = getTableGroup( charCS, fieldGroups.MI );
+		let itemArray = [],
+			qty, prof;
+		for (const table in Items) {
+			const prefix = Items[table].fieldGroup;
+			for (let row=0; row<Items[table].sortKeys.length; row++) {
+				name = Items[table].tableLookup( fields[prefix+'trueName'], row );
+//				log('handleEncodeCreature: name = '+name+', !name.dbName() = '+!name.dbName()+', normal name = '+Items[table].tableLookup( fields[prefix+'name'], row ));
+				if (!(name.dbName()) || !(name.dbName().length)) name = Items[table].tableLookup( fields[prefix+'name'], row ); 
+				qty = Items[table].tableLookup( fields[prefix+'trueQty'], row );
+				prof = profArray.find( (p) => p[0].dbName() == name.dbName() );
+				prof = (_.isUndefined(prof)) ? '' : (prof[3] != 0 ? '<Mastery' : (prof[2] != 0 ? '<Specialist' : (prof[1] == 0 ? '<Not' : '')));
+				itemArray.push(name+':'+qty+prof);
+			};
+		};
+		
+		const spellArray = {
+				mu:[],
+				pr:[],
+				pw:[],
+		};
+		let spells = '';
+		for (const level of spellLevels.mu) {
+			if (String(level.base) != 0) {
+				spells = (attrLookup( charCS, [fields.MUSpellbook[0]+level.book,fields.MUSpellbook[1]] ) || '').trim();
+				if (spells.length) spellArray.mu.push(spells);
+			}
+		};
+		for (const level of spellLevels.pr) {
+			if (String(level.base) != 0) {
+				spells = (attrLookup( charCS, [fields.PRSpellbook[0]+level.book,fields.PRSpellbook[1]] ) || '').trim();
+				if (spells.length) spellArray.pr.push(spells);
+			}
+		};
+		for (const level of spellLevels.pw) {
+			if (String(level.base) != 0) {
+				spells = (attrLookup( charCS, [fields.Spellbook[0]+level.book,fields.Spellbook[1]] ) || '').trim();
+				if (spells.length) spellArray.pw.push(spells);
+			}
+		};
+		
+		if (itemArray.length || spellArray.mu.length || spellArray.pr.length || spellArray.pw.length) creatureData.push('ns:1');
+		creatureData = '['+creatureData.join(',')+']';
+		if (itemArray.length) creatureData += ',[cl:MI,items:'+itemArray.join('|')+']';
+		for (let level=0; level<spellArray.mu.length; level++) {
+			if (spellArray.mu[level] && spellArray.mu[level].length) creatureData += '[cl:MU,lv:'+(level+1)+',w:'+spellArray.mu[level]+']';
+		}
+		for (let level=0; level<spellArray.pr.length; level++) {
+			if (spellArray.pr[level] && spellArray.pr[level].length) creatureData += '[cl:PR,lv:'+(level+1)+',w:'+spellArray.pr[level]+']';
+		}
+		for (let level=0; level<spellArray.pw.length; level++) {
+			if (spellArray.pw[level] && spellArray.pw[level].length) creatureData += '[cl:PW,w:'+spellArray.pr[level]+']';
+		}
+		
+		let creatureBio = '';
+			charCS.get('bio', b => creatureBio = b || '');
+		const endBio = creatureBio.indexOf('~~~ Place your own text above this line ~~~');
+		creatureBio = endBio >= 0 ? creatureBio.slice(0,endBio) : creatureBio;
+		
+		let specAttk = (attrLookup( charCS, classFields.specAttk[1] ) || '').trim(),
+			specDef = (attrLookup( charCS, classFields.specDef[1] ) || '').trim(),
+			regenerate = (attrLookup( charCS, creatureFields.monRegen[1] ) || ''),
+			spellCasting = [];
+		if (spellArray.mu.length) spellCasting.push('Wizard');
+		if (spellArray.pr.length) spellCasting.push('Priest');
+		
+		let macro = '&{template:'+fields.defaultTemplate+'}{{title='+creature+'}}Specs='+specs
+			  + '{{subtitle=Creature}}RaceData='+creatureData
+			  + '{{Section=**Attributes**}}{{Intelligence='+attrLookup(charCS,fields.Monster_int)+'}}{{AC='+attrLookup(charCS,fields.MonsterAC)+'}}{{Alignment='+attrLookup(charCS,fields.Alignment)+'}}'
+			  + '{{Move='+attrLookup(charCS,fields.Monster_mov)+'}}{{Hit Dice='+attrLookup(charCS,fields.Monster_hitDice)+'+'+attrLookup(charCS,fields.Monster_hpExtra)+' HD}}'
+			  + '{{THAC0='+attrLookup(charCS,fields.MonsterThac0)+'}}{{Attacks='+attkMsg.join('\n')+'}}{{Size='+attrLookup(charCS,fields.Monster_size)+'}}'
+			  + ((turnData && turnData.length) ? ('{{Undead=An undead creature turnable as '+((parseInt(attrLookup(charCS,fields.Monster_hitDice))||1)+parseInt(undeadHDadj))+'HD}}') : '')
+			  + '{{Section2=**Powers**}}{{Section3='+(spellArray.pw.length ? spellArray.pw.join(', ') : 'None')+'}}'
+			  + '{{Section4=**Special Advantages**}}'
+			  + ((spellCasting.length) ? ('{{Spell casting='+spellCasting.join(' and ')+' spells}}') : '')
+			  + ((specAttk) ? ('{{Special Attacks='+specAttk+'}}') : '')
+			  + ((specDef) ? ('{{Special Defences='+specDef+'}}') : '')
+			  + ((regenerate>0) ? ('{{Regenerate=Regenerates at '+regenerate+'HP per round (depending on granted regenerate power)}}') : '')
+			  + ((!spellCasting.length && !specAttk.length && !specDef.length) ? '{{Section5=None}}' : '')
+			  + '{{Section6=**Special Disadvantages**}}{{Section7=Unknown}}'
+			  + '{{Section9=**Description**}}{{desc8='+creatureBio+'}}';
+		
+		let creatureDB = findObjs({type:'character',name:'Race-DB-Custom-Creatures'});
+		if (_.isUndefined(creatureDB) || !creatureDB.length) {
+			creatureDB = createObj('character',{name:'Race-DB-Custom-Creatures'});
+		} else {
+			creatureDB = creatureDB[0];
+		};
+		
+		setAbility( creatureDB, creature, macro );
+		sendFeedback(macro);
+		sendAPI( fields.magicMaster+' --check-db Race-DB-Custom-Creatures', senderId );
+		return;
+	};
+
 // ------------------------------------------------------------- Command Action Functions ---------------------------------------------
 
 	/**
 	 * Show help message
 	 */ 
 
-	var showHelp = function() {
-		var handoutIDs = getHandoutIDs();
-		var content = '&{template:'+fields.menuTemplate+'}{{title=CommandMaster Help}}{{CommandMaster Help=For help on using CommandMaster, and the !cmd commands, [**Click Here**]('+fields.journalURL+handoutIDs.CommandMasterHelp+')}}{{Class Database=For help on using and adding to the Class Database, [**Click Here**]('+fields.journalURL+handoutIDs.ClassRaceDatabaseHelp+')}}{{Character Sheet Setup=For help on setting up character sheets for use with RPGMaster APIs, [**Click Here**]('+fields.journalURL+handoutIDs.RPGMasterCharSheetSetup+')}}{{RPGMaster Templates=For help using RPGMaster Roll Templates, [**Click Here**]('+fields.journalURL+handoutIDs.RPGMasterLibraryHelp+')}}';
+	const showHelp = function() {
+		const handoutIDs = getHandoutIDs();
+		const content = '&{template:'+fields.menuTemplate+'}{{title=CommandMaster Help}}{{CommandMaster Help=For help on using CommandMaster, and the !cmd commands, [**Click Here**]('+fields.journalURL+handoutIDs.CommandMasterHelp+')}}{{Class Database=For help on using and adding to the Class Database, [**Click Here**]('+fields.journalURL+handoutIDs.ClassRaceDatabaseHelp+')}}{{Character Sheet Setup=For help on setting up character sheets for use with RPGMaster APIs, [**Click Here**]('+fields.journalURL+handoutIDs.RPGMasterCharSheetSetup+')}}{{RPGMaster Templates=For help using RPGMaster Roll Templates, [**Click Here**]('+fields.journalURL+handoutIDs.RPGMasterLibraryHelp+')}}';
 
 		sendFeedback(content,flags.feedbackName,flags.feedbackImg); 
 	};
@@ -5323,19 +5819,19 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 			parseStoredCmds( state.CommandMaster.cmds );
 		}
 	
-		var args = argStr.split('|');
+		let args = argStr.split('|');
 		if (!args || args.length < 4) {
-			sendDebug('doRegistration: Invalid number of arguments');
 			sendError('Invalid CommandMaster syntax');
 			return;
 		};
 		
-		var action = args.shift(),
+		const action = args.shift(),
 			desc = args.shift(),
 			api = args.shift(),
 			cmd = args.shift(),
-			newParams = args.join('|').replace(/%%/g,'|'),
-			cmdObj = [];
+			newParams = args.join('|').replace(/%%/g,'|');
+			
+		let	cmdObj = [];
 
 		registeredAPI[api] = true;
 
@@ -5384,42 +5880,46 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 	 
 	var doInitialise = function(senderID) {
 		
-		var macro, newMacro, player;
+		let macro, newMacro;
 
 		macro = findObjs({ type: 'macro', name: 'Maint-Menu'},{caseInsensitive:true});
-		if (!macro || !macro.length || !macro[0]) {
+		if (!macro || !macro.length || _.isUndefined(macro[0])) {
 			newMacro = createObj('macro',{name:'Maint-Menu',action:'!init --maint',playerid:senderID});
 		}
 		macro = findObjs({ type: 'macro', name: 'Token-setup'},{caseInsensitive:true});
-		if (!macro || !macro.length || !macro[0]) {
+		if (!macro || !macro.length || _.isUndefined(macro[0])) {
 			newMacro = createObj('macro',{name:'Token-setup',action:'!cmd --abilities',playerid:senderID});
 		}
 		macro = findObjs({ type: 'macro', name: 'Add-Items'},{caseInsensitive:true});
-		if (!macro || !macro.length || !macro[0]) {
+		if (!macro || !macro.length || _.isUndefined(macro[0])) {
 			newMacro = createObj('macro',{name:'Add-Items',action:'!magic --gm-edit-mi @{selected|token_id}',playerid:senderID});
 		}
 		macro = findObjs({ type: 'macro', name: 'End-of-Day'},{caseInsensitive:true});
-		if (!macro || !macro.length || !macro[0]) {
+		if (!macro || !macro.length || _.isUndefined(macro[0])) {
 			newMacro = createObj('macro',{name:'End-of-Day',action:'!init --end-of-day',playerid:senderID});
 		}
 		macro = findObjs({ type: 'macro', name: 'Initiative-menu'},{caseInsensitive:true});
-		if (!macro || !macro.length || !macro[0]) {
+		if (!macro || !macro.length || _.isUndefined(macro[0])) {
 			newMacro = createObj('macro',{name:'Initiative-menu',action:'!init --init',playerid:senderID});
 		}
 		macro = findObjs({ type: 'macro', name: 'Check-tracker'},{caseInsensitive:true});
-		if (!macro || !macro.length || !macro[0]) {
+		if (!macro || !macro.length || _.isUndefined(macro[0])) {
 			newMacro = createObj('macro',{name:'Check-tracker',action:'!init --check-tracker',playerid:senderID});
 		}
 		macro = findObjs({ type: 'macro', name: 'Config-RPGM'},{caseInsensitive:true});
-		if (!macro || !macro.length || !macro[0]) {
+		if (!macro || !macro.length || _.isUndefined(macro[0])) {
 			newMacro = createObj('macro',{name:'Config-RPGM',action:'!magic --config',playerid:senderID});
 		}
 		macro = findObjs({ type: 'macro', name: 'Reset-Chest'},{caseInsensitive:true});
-		if (!macro || !macro.length || !macro[0]) {
+		if (!macro || !macro.length || _.isUndefined(macro[0])) {
 			newMacro = createObj('macro',{name:'Reset-Chest',action:'%{selected|Reset}',playerid:senderID});
 		}
+		macro = findObjs({ type: 'macro', name: 'Dis/Advantage'},{caseInsensitive:true});
+		if (!macro || !macro.length || _.isUndefined(macro[0])) {
+			newMacro = createObj('macro',{name:'Dis/Advantage',action:'!attk --advantage @{selected|token_id}',playerid:senderID});
+		}
 		if (!!newMacro) {
-			player = findObjs({ type: 'player', id: senderID });
+			const player = findObjs({ type: 'player', id: senderID });
 			if (player && player[0]) {
 				player[0].set('showmacrobar',true);
 			} else {
@@ -5431,14 +5931,32 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 	}
 
 	/*
+	 * Present a menu from which the GM can give a 
+	 * trapped / locked container new images to use
+	 */
+	 
+	const doChangeImages = function( args, selected, senderId ) {
+		
+		if (!args) args = [];
+		if (!args[0] && selected && selected.length) {
+			args[0] = selected[0]._id;
+		};
+		if (!getCharacter(args[0])) {
+			sendError( 'Invalid token selected for setting the '+imgType+' image for a trapped / locked container', msg_orig[senderId] );
+		} else {
+			makeChangeImagesMenu( args, senderId );
+		};
+		return;
+	}
+	
+	/*
 	 * Display a menu of ability button options
 	 */
  
-	var doAbilityMenu = function(args, selected, senderId) {
+	const doAbilityMenu = function(args, selected, senderId) {
 		
 		if (!selected || !selected.length) return;
-		var tokenID = selected[0]._id,
-			charCS = getCharacter(tokenID);
+		const charCS = getCharacter(selected[0]._id);
 			
 		if (!charCS) {
 			sendError('The selected token does not represent a character sheet',msg_orig[senderId]);
@@ -5461,7 +5979,7 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * selected characters
 	 */
  
-	var doAddSpells = function(args, selected, senderId) {
+	const doAddSpells = function(args, selected, senderId) {
 		
 		if (!selected || !selected.length) {
 			sendError('No tokens selected');
@@ -5479,7 +5997,7 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * Set a weapon proficiency to a specified level
 	 */
 	
-	var doSetProf = function(args, selected, senderId) {
+	const doSetProf = function(args, selected, senderId) {
 		if ((!args[4] || !args[4].length) && (!selected || !selected.length)) {
 			sendError('No tokens selected');
 		} else {
@@ -5492,7 +6010,7 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * Set all owned weapons proficiency as proficient
 	 */
 	
-	var doSetAllProf = function(args, selected, senderId) {
+	const doSetAllProf = function(args, selected, senderId) {
 		if ((!args[0] || !args[0].length) && (!selected || !selected.length)) {
 			sendError('No tokens selected');
 		} else {
@@ -5506,7 +6024,7 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * add to the selected characterSet
 	 */
 	 
-	var doAddProfs = function(args, selected, senderId) {
+	const doAddProfs = function(args, selected, senderId) {
 		if (!selected || !selected.length) {
 			sendError('No tokens selected');
 		} else {
@@ -5522,9 +6040,8 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * to all abilities without asking.
 	 */
 
-	var doEditAbilities = function(args) {
+	const doEditAbilities = function(args) {
 		if (!args || args.length < 2) {
-			sendDebug('doEditAbilities: Invalid number of arguments');
 			sendError('Invalid CommandMaster syntax');
 			return;
 		};
@@ -5545,7 +6062,7 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * a retailer when doing a Rest.
 	 */
 	 
-	var doRestock = function( args, selected, senderId ) {
+	const doRestock = function( args, selected, senderId ) {
 		
 		handleDoRestock( args, selected, senderId );
 	};
@@ -5559,13 +6076,15 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 	async function doCheckCharSetup(senderId) {
 		
 		try {
-			var dmCtrl			= [],
+			let dmCtrl			= [],
 				playerCtrl		= [],
 				allCtrl			= [],
 				playerCreature	= [],
-				content = '',
-				players = [],
-				makeButton = function( text, cmd, selected=false ) {
+				content			= '',
+				players 		= [],
+				name, level, creature, pc, allPlayers, player;
+
+			const makeButton = function( text, cmd, selected=false ) {
 							return ((selected ? ('<span style='+design.selected_button+'>') : '[')
 								+ text
 								+ (selected ? '</span>' : (']('+cmd+')')));
@@ -5577,13 +6096,13 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 					return;
 				}
 				if (obj.get('type') != 'character') return false;
-				let name = obj.get('name');
-				let level = characterLevel(obj);
+				name = obj.get('name');
+				level = characterLevel(obj);
 				if (!level) return;
-				let creature = !!parseInt((attrLookup( obj, fields.Monster_hitDice ) || 0),10);
-				let pc = obj.get('controlledby').split(',');
-				let allPlayers = pc.includes('all');
-				let player = pc && (pc.length > 1 || pc[0].length);
+				creature = !!parseInt((attrLookup( obj, fields.Monster_hitDice ) || 0),10);
+				pc = obj.get('controlledby').split(',');
+				allPlayers = pc.includes('all');
+				player = pc && (pc.length > 1 || pc[0].length);
 				if (!player) dmCtrl.push([name,obj.id]);
 				if (!creature && player && !allPlayers) playerCtrl.push([name,obj.id]);
 				if (allPlayers) allCtrl.push([name,obj.id]);
@@ -5618,11 +6137,9 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * review and/or change those shown
 	 */
 
-	var doChooseClass = function(args, selected, senderId, isGM) {
+	const doChooseClass = function(args, selected, senderId, isGM) {
 		
-		var curToken = getObj('graphic',args[0]);
-		
-		if (curToken) {
+		if (getObj('graphic',args[0])) {
 			selected = [{_id:args[0]}]
 		}
 		makeClassMenu(args,selected,senderId,isGM);
@@ -5633,11 +6150,11 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * Reset a chest to its original closed condition
 	 */
 	 
-	var doResetChest = function(args, selected, senderId, isGM) {
+	const doResetChest = function(args, selected, senderId, isGM) {
 		
-		var tokenID = args[0],
-			chestToken = getObj('graphic',tokenID),
-			chestCS = getCharacter(tokenID);
+		const tokenID = args[0],
+			  chestToken = getObj('graphic',tokenID),
+			  chestCS = getCharacter(tokenID);
 			
 		if (!chestCS) {
 			sendError('The token you requested to reset is not a valid container',msg_orig[senderId]);
@@ -5645,10 +6162,10 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 		}
 		handleClassSelection( [BT.CONTAINER,'','',tokenID], selected, senderId, isGM );
 
-		let defImg = design.closed_img.split('|'),
-			img = attrLookup(chestCS,fields.Token_closedImg) || defImg[0],
-			width = attrLookup(chestCS,fields.Token_closedImgW) || defImg[1] || 70,
-			height = attrLookup(chestCS,fields.Token_closedImgH) || defImg[2] || width;
+		const defImg = design.closed_img.split('|'),
+			  img = attrLookup(chestCS,fields.Token_closedImg) || defImg[0],
+			  width = attrLookup(chestCS,fields.Token_closedImgW) || defImg[1] || 70,
+			  height = attrLookup(chestCS,fields.Token_closedImgH) || defImg[2] || width;
 
 		if (chestToken) {
 			chestToken.set('width',parseInt(width));
@@ -5656,7 +6173,7 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 			chestToken.set('imgsrc',getCleanImgsrc(img) );
 		}
 		setAttr(chestCS,fields.ItemContainerType,4);
-		sendWait(senderId,0);
+		sendWait(senderId,0,'Cmd doResetChest');
 		return;
 	}
 	
@@ -5664,60 +6181,43 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * Copy an image from one token to another
 	 */
 	 
-	var doCopyImage = function( args, selected, senderId ) {
+	const doCopyImage = function( args, selected, senderId ) {
 		
-		if (!args) return;
+		if (!args) args = [];
 		
-		var toObj = getObj('graphic',args[0]),
-			fromObj = getObj('graphic',args[1]) || getObj('graphic',selected[0]._id);
-			
+		let toObj, fromObj,
+			fromID = (args[1] || ((selected && selected.length) ? selected[0]._id : undefined));
+		
+		if (args[0] && fromID) {
+			toObj = getObj('graphic',args[0]);
+			fromObj = getObj('graphic',fromID);
+		}
 		if (!fromObj || !toObj) {
-			sendError( 'Invalid token(s) selected for token image copy. Select the token to receive the new image, use the "Token Setup" command, select the token to take the image from, and then execute the copy command.', msg_orig[senderId] );
+			sendFeedback( '&{template:'+fields.warningTemplate+'}{{name=Invalid token(s) selected for token image copy}}{{desc=Select the token to receive the new image, use the "Token Setup" command, select the token to take the image from, and then execute the copy command.}}');
 			return;
 		}
 		
-		var fromImg = fromObj.get('imgsrc').toLowerCase();
+		const fromImg = fromObj.get('imgsrc').toLowerCase();
 		if (fromImg.includes('marketplace')) {
 			sendFeedback(messages.imgMsg);
-//			sendFeedback('&{template:'+fields.warningTemplate+'}{{name=Can\'t Copy Marketplace Image}}{{desc=Unfortunately, it is not possible to use a token image quick copy to copy an image from a token with a marketplace image. Please select a token with an image from your own image library.}}');
 			return;
 		}
 		toObj.set('imgsrc',getCleanImgsrc(fromObj.get('imgsrc')));
 		toObj.set('width',fromObj.get('width'));
 		toObj.set('height',fromObj.get('height'));
 		
-		var charCS = getCharacter(args[0]);
+		const charCS = getCharacter(args[0]);
 		if (charCS) {
 			setDefaultTokenForCharacter( charCS, toObj );
 		}
 		return;
 	};
 
-	
-	/*
-	 * Present a menu from which the GM can give a 
-	 * trapped / locked container new images to use
-	 */
-	 
-	var doChangeImages = function( args, selected, senderId ) {
-		
-		if (!args) args = [];
-		if (!args[0] && selected && selected.length) {
-			args[0] = selected[0]._id;
-		};
-		if (!getCharacter(args[0])) {
-			sendError( 'Invalid token selected for setting the '+imgType+' image for a trapped / locked container', msg_orig[senderId] );
-		} else {
-			makeChangeImagesMenu( args, senderId );
-		};
-		return;
-	}
-	
 	/*
 	 * Display a menu of token bar management buttons
 	 */
 	 
-	var doManageTokenBars = function( args ) {
+	const doManageTokenBars = function( args ) {
 		makeMngTokenBarsMenu( args );
 	}
 	
@@ -5726,15 +6226,14 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * to a format suitable for use with the APIs
 	 */
 	 
-	var doConvertSpells = function( args, selected, senderId ) {
+	const doConvertSpells = function( args, selected, senderId ) {
 		
 		if (!args) args = [];
 		if (!args[0] && selected && selected.length) {
 			args[0] = selected[0]._id;
 		}
-		var tokenID = args[0],
-			doIt = (args[1] || '') === 'true',
-			charCS = getCharacter(tokenID);
+		const charCS = getCharacter(args[0]),
+			  doIt = (args[1] || '') === 'true';
 			
 		if (!charCS) {
 			sendFeedback( '&{template:'+warningTemplate+'}{{name=Invalid Token}}{{desc=No token selected or the token does not have an associated Character Sheet}}' );
@@ -5757,15 +6256,15 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * to a format suitable for use with the APIs
 	 */
 	 
-	var doConvertItems = function( args, selected = [], senderId ) {
+	const doConvertItems = function( args, selected = [], senderId ) {
 		
 		if (!args) args = [];
 		if (!args[0] && selected && selected.length) {
 			args[0] = selected[0]._id;
 		}
-		var tokenID = args[0],
-			doIt = (args[1] || '') === 'true',
-			charCS = getCharacter(tokenID);
+		const tokenID = args[0],
+			  doIt = (args[1] || '') === 'true',
+			  charCS = getCharacter(tokenID);
 			
 		if (!charCS) {
 			sendFeedback( '&{template:'+warningTemplate+'}{{name=Invalid Token}}{{desc=No token selected or the token does not have an associated Character Sheet}}' );
@@ -5786,18 +6285,72 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 	};
 	
 	/*
+	 * Handle a command to add treasure as specified by the DMG 
+	 * treasure tables to a character sheet
+	 */
+	 
+	const doAllocateTreasure = function( args, selected = [], senderId ) {
+		
+		if (!args) args = [];
+		if (!args[0] && selected && selected.length) {
+			args[0] = selected[0]._id;
+		}
+		const tokenID = args[0],
+			  treasureTypes = args[1] || '',
+			  multiplier = parseInt(args[2]) || 1,
+			  retMenu = args[3] || '',
+			  charCS = getCharacter(tokenID);
+		let	allocatedTreasure = args[4] || '';
+			
+		if (!charCS) {
+			sendError( 'No token selected or the selected token does not represent a valid character sheet.' );
+			return;
+		}
+		if (treasureTypes) {
+			allocatedTreasure = handleTreasureTables( charCS, selected[0], senderId, treasureTypes, multiplier );
+		};
+		makeAddTreasure( tokenID, charCS, retMenu, allocatedTreasure, senderId );
+	};
+	
+	/*
+	 * Respond to a command to encode a character sheet and add 
+	 * it to the Creature database in a custom db file.
+	 */
+	 
+	const doEncodeCreature = function( args, selected, senderId ) {
+		
+		if (!args) args = [];
+		if (!args[0] && selected && selected.length) {
+			args[0] = selected[0]._id;
+		}
+		const tokenID = args[0],
+			  charCS = getCharacter(tokenID);
+		
+		if (!charCS) {
+			sendError( 'No token selected or the selected token does not represent a valid character sheet.' );
+			return;
+		}
+		
+		attacks.attk1 = false;
+		attacks.attk2 = false;
+		attacks.attk3 = false;
+		args.unshift('');
+		handleEncodeCreature( args, senderId );
+		return;
+	};
+	
+	/*
 	 * Handle a button press, and redirect to the correct handler
 	 */
 
-	var doButton = function( args, isGM, selected, senderId ) {
+	const doButton = function( args, isGM, selected, senderId ) {
 		
 		if (! args || args.length < 1) {
-			sendDebug('doButton: Invalid number of arguments');
 			sendError('Invalid CommandMaster syntax');
 			return;
 		};
 		
-		var	handler = args[0];
+		const handler = args[0];
 			
 		switch (handler.toUpperCase()) {
 
@@ -5953,13 +6506,21 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 		case BT.STORE_ITEM:
 		case BT.SORT_ITEMS:
 		
-			log('commandMaster doButton: called with handler '+handler+' so converting items');
 			makeConvertItemsMenu( args, selected, senderId );
 			break;
 			
 		case BT.REVIEW_ITEM:
 		
 			handleConvItemReview( args );
+			break;
+			
+		case BT.EDITATTK_DMG:
+		case BT.EDITATTK_NAME:
+		case BT.EDITATTK_TYPE:
+		case BT.EDITATTK_SPEED:
+		case BT.EDITATTK_CONFIRM:
+		
+			handleAttkUpdate( args, senderId );
 			break;
 			
 		case 'MUSPELLS':
@@ -6006,19 +6567,18 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 			break;
 			
 		default :
-			sendDebug('doButton: Invalid button type');
 			sendError('Invalid CommandMaster syntax');
 		};
 
 	};
-	
+
 /* ------------------------------------- Handle handshakes -------------------------------- */
 	 
 	/**
 	 * Handle a database indexing handshake
 	 **/
 	 
-	var doIndexDB = function( args ) {
+	const doIndexDB = function( args ) {
 		
 		apiDBs[args[0]] = true;
 		updateDBindex();
@@ -6029,12 +6589,12 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * Handle handshake request
 	 **/
 	 
-	var doHsQueryResponse = function(args) {
+	const doHsQueryResponse = function(args) {
 		if (!args) return;
-		var from = args[0] || '',
-			func = args[1] || '',
-			funcTrue = ['initialise','abilities','add-spells','add-profs','set-prof','set-all-prof','register','edit','debug','help'].includes(func.toLowerCase()),
-			cmd = '!'+from+' --noWaitMsg --hsr cmd'+((func && func.length) ? ('|'+func+'|'+funcTrue) : '');
+		const from = args[0] || '',
+			  func = args[1] || '',
+			  funcTrue = ['initialise','abilities','add-spells','add-profs','set-prof','set-all-prof','register','edit','debug','help'].includes(func.toLowerCase()),
+			  cmd = '!'+from+' --nowaitmsg --hsr cmd'+((func && func.length) ? ('|'+func+'|'+funcTrue) : '');
 			
 		sendAPI(cmd);
 		return;
@@ -6043,15 +6603,15 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 	/**
 	 * Handle the response to a handshake query
 	 **/
-	 
-	var doHandleHsResponse = function(args) {
+ 
+	const doHandleHsResponse = function(args) {
 		if (!args) {
 			sendError('Invalid handshake response received');
 			return;
 		}
-		var from = args[0] || '',
-			func = args[1] || '',
-			funcExists = (!!args[2]) || false;
+		const from = args[0] || '',
+			  func = args[1] || '',
+			  funcExists = (!!args[2]) || false;
 		
 		if (!apiCommands[from]) {
 			apiCommands[from] = {};
@@ -6067,11 +6627,10 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * Handle Pending Requests
 	 */
 
-	var doRelay = function(args,senderId) {
+	const doRelay = function(args,senderId) {
 		if (!args) 
 			{return;}
-		var carry,
-			hash; 
+		let carry, hash; 
 		args = args.split(' %% '); 
 		if (!args) { log(args); return; }
 		hash = args[0];
@@ -6102,17 +6661,16 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * some of the limitations of Roll20 asynchronous processing
 	 */ 
 
-	var handleChatMessage = function(msg) { 
-		var args = processInlinerolls(msg),
+	const handleChatMessage = function(msg) { 
+		let args = processInlinerolls(msg),
 			senderId = findThePlayer(msg.who),
-			selected = msg.selected,
 			isGM = (playerIsGM(senderId) || state.CommandMaster.debug === senderId),
-			changedCmds = false,
-			t = 2,
-			curToken, npc, val;
+			t = 2;
+
+		const selected = msg.selected;
 			
-		var doCommandCmd = function( e, selected, senderId, isGM ) {
-			var arg = e, i=arg.indexOf(' '), cmd, argString;
+		const doCommandCmd = function( e, selected, senderId, isGM ) {
+			let arg = e, i=arg.indexOf(' '), cmd, argString;
 			sendDebug('Processing arg: '+arg);
 			
 			cmd = (i<0 ? arg : arg.substring(0,i)).trim().toLowerCase();
@@ -6152,6 +6710,9 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 				case 'addprofs':
 					doAddProfs(arg,selected,senderId);
 					break;
+				case 'addtreasure':
+					doAllocateTreasure(arg,selected,senderId);
+					break;
 				case 'setprof':
 					if (isGM) doSetProf(arg,selected,senderId);
 					break;
@@ -6165,8 +6726,11 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 					if (isGM) doConvertSpells(arg,selected,senderId);
 					break;
 				case 'convitems':
-					log('commandMaster handleChatMessage: processing a --conv-items command');
+//					log('commandMaster handleChatMessage: processing a --conv-items command');
 					if (isGM) doConvertItems(arg,selected,senderId);
+					break;
+				case 'encodecreature':
+					if (isGM) doEncodeCreature(arg,selected,senderId);
 					break;
 				case 'tokendefaults':
 					if (isGM) doManageTokenBars( arg );
@@ -6249,7 +6813,7 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 		time = Date.now();
 
 		args = args.split(' --');
-		let senderMod = args.shift().split(' ');
+		const senderMod = args.shift().split(' ');
 		if (senderMod.length > 1) senderId = fixSenderId( [senderMod[1]], selected, senderId );
 
 		if (_.isUndefined(senderId) || _.isUndefined(getObj('player',senderId))) {
@@ -6265,7 +6829,7 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 			sendDebug('senderId is defined as ' + getObj('player',senderId).get('_displayname'));
 		};
 		
-		if (!flags.noWaitMsg && args[0] && !args[0].toLowerCase().startsWith('nowaitmsg')) sendWait(senderId,1,'commandMaster');
+		if (!flags.noWaitMsg && args[0] && !args[0].toLowerCase().startsWith('nowaitmsg')) sendWait(senderId,1,'Cmd cmd '+args[0].split(' ')[0]);
 		
 		_.each(args, function(e) {
 			setTimeout( doCommandCmd, (1*t++), e, selected, senderId, isGM );
@@ -6279,7 +6843,7 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * If new, then pop up the class/race/creature dialog
 	 */
 
-	var handleNewToken = function(obj,prev) {
+	const handleNewToken = function(obj,prev) {
 		
 		try {
 //			log('cmd handleNewToken: called');
@@ -6291,12 +6855,12 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 				{return;}
 				
 			if (obj.get('_subtype') == 'token') {
-				let charCS = getCharacter(obj.id);
+				const charCS = getCharacter(obj.id);
 				if (charCS) {
-					let race = attrLookup( charCS, fields.Race );
-					let classObjs = classObjects( charCS );
-					let defClass = (classObjs.length == 1 && classObjs[0].name == 'creature' && classObjs[0].level == 0);
-					let container = (attrLookup(charCS, fields.Gender) || '').dbName() === 'container';
+					const race = attrLookup( charCS, fields.Race ),
+						  classObjs = classObjects( charCS ),
+						  defClass = (classObjs.length == 1 && classObjs[0].name == 'creature' && classObjs[0].level == 0),
+						  container = (attrLookup(charCS, fields.Gender) || '').dbName() === 'container';
 					if ((!race || !race.length) && defClass && !obj.get('isdrawing')) {
 						sendAPI(fields.commandMaster+' --class-menu '+obj.id);
 					} else if (((race || '').dbName() === 'magicitem') || container) {
@@ -6318,22 +6882,21 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * ability macros with the new name.
 	 */
 
-	var handleChangedChar = function(obj,prev) {
+	const handleChangedChar = function(obj,prev) {
 		
 		try {
-//			log('cmd handleChangedChar: called');
 			if (!obj)
 				{return;}
 				
 			if (obj.get('name') == prev['name'])
 				{return;}
 				
-			let charCS = obj;
+			const charCS = obj;
 			if (charCS) {
-				let race = attrLookup( charCS, fields.Race );
-				let container = (attrLookup(charCS, fields.Gender) || '').dbName() === 'container';
+				const race = attrLookup( charCS, fields.Race ),
+					  container = (attrLookup(charCS, fields.Gender) || '').dbName() === 'container';
 				if (container && prev['name']) {
-					let token = findObjs({ _type:'graphic', _subtype:'token', represents:charCS.id});
+					const token = findObjs({ _type:'graphic', _subtype:'token', represents:charCS.id});
 					if (token && token.length) {
 						setCreatureAttrs( BT.CONTAINER, charCS, findTheGM(), race, {_id:token[0].id} );
 					};
@@ -6350,25 +6913,27 @@ var CommandMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * container image / token.
 	 */
 	 
-	var handleRotation = function(obj,prev) {
+	const handleRotation = function(obj,prev) {
 		
 		try {
 			if (!obj) return;
-			let charCS = getCharacter( obj.id );
+			const charCS = getCharacter( obj.id );
 			if (!charCS || attrLookup( charCS, fields.Gender ).toLowerCase() !== 'container') return;
 			setAttr( charCS, fields.Token_closedRot, obj.get('rotation') );
 			setAttr( charCS, fields.Token_openRot, obj.get('rotation') );
+//			const openImg = attrLookup( charCS, fields.openFlag );
+			const ratio = parseInt( attrLookup( charCS, fields.Token_openImgW ) || 1 ) / parseInt( attrLookup( charCS, fields.Token_closedImgW ) || 1 );
+//			setAttr( charCS, fields.Token_closedImgW, openImg( obj.get('width') *  );
 		} catch (e) {
 			sendCatchError('CommandMaster',null,e,'CommandMaster handleChangedChar()');
 		}
 		return;
 	}
 			
-
 	/**
 	 * Register and bind event handlers
 	 */ 
-	var registerAPI = function() {
+	const registerAPI = function() {
 		on('chat:message',handleChatMessage);
 		on('change:graphic:name',handleNewToken);
 		on('change:graphic:rotation',handleRotation);

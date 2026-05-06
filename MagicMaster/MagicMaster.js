@@ -117,14 +117,21 @@ API_Meta.MagicMaster={offset:Number.MAX_SAFE_INTEGER,lineCount:-1};
  * v5.0.2  05/10/2025  Add (temporary?) fix to API button cmd / macro pair action.
  * v5.0.3  17/10/2025  Fixed crash on calling !magic without any command. Fixed sloppy checking of spell
  *                     schools and spheres.
+ * v5.1.0  25/09/2025  Converted var declarations to use let and const where possible. Tried to enhance
+ *                     speed of algorithms.
+ * v5.2.0  18/11/2025  Added selection of multiple items to pick, put, buy or sell with traders and 
+ *                     containers. Used new hyperlink RPGM template syntax to add hyperlinks to select
+ *                     all of a type of item, or all items in the container.
+ * v5.3.0  23/12/2025  Added encumbrance. Updated attrLookup() and resolveData() to use objects for 
+ *                     optional parameters. Fixed viewing spell storing MIs in innanimate containers.
  */
  
-var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
+const MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	'use strict';
-	var version = '5.0.3',
-		author = 'RED',
-		pending = null;
-	const lastUpdate = 1760686967;
+	const version = '5.3.0';
+	const author = 'RED';
+	let   pending = null;
+	const lastUpdate = 1777318205;
 		
 	/*
 	 * Define redirections for functions moved to the RPGMaster library
@@ -133,7 +140,7 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	const getRPGMap = (...a) => libRPGMaster.getRPGMap(...a);
 	const getHandoutIDs = (...a) => libRPGMaster.getHandoutIDs(...a);
 	const setAttr = (...a) => libRPGMaster.setAttr(...a);
-	const attrLookup = (...a) => libRPGMaster.attrLookup(...a);
+	const attrLookup = (...a) => libRPGMaster.newAttrLookup(...a);
 	const setAbility = (...a) => libRPGMaster.setAbility(...a);
 	const miSpellLookup = (...a) => libRPGMaster.miSpellLookup(...a);
 	const abilityLookup = (...a) => libRPGMaster.abilityLookup(...a);
@@ -179,7 +186,7 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	const parseClassDB = (...a) => libRPGMaster.parseClassDB(...a);
 	const parseData = (...a) => libRPGMaster.parseData(...a);
 	const parseStr = (...a) => libRPGMaster.parseStr(...a);
-	const resolveData = (...a) => libRPGMaster.resolveData(...a);
+	const resolveData = (...a) => libRPGMaster.newResolveData(...a);
 	const getSetPlayerConfig = (...a) => libRPGMaster.getSetPlayerConfig(...a);
 	const makeConfigMenu = (...a) => libRPGMaster.makeConfigMenu(...a);
 	const sendToWho = (...m) => libRPGMaster.sendToWho(...m);
@@ -240,7 +247,7 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * are used.
 	 */
 	
-	const design = {
+	const design = Object.freeze({
 		turncolor: '#D8F9FF',
 		roundcolor: '#363574',
 		statuscolor: '#F0D6FF',
@@ -252,15 +259,15 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 		apply_icon: 'https://s3.amazonaws.com/files.d20.io/images/11407460/cmCi3B1N0s9jU6ul079JeA/thumb.png?1439137300',
 		bag_icon: 'https://s3.amazonaws.com/files.d20.io/images/335981697/ocKqy1UIfPMSD-TYEO6oXA/thumb.png?1680722832',
 		info_msg: '<div style="color:green;font-weight:bold;border:2px solid black;background-color:white;border-radius:1em;padding:1em;">',
-		grey_button: '"display: inline-block; background-color: lightgrey; border: 1px solid black; padding: 4px; color: dimgrey; font-weight: extra-light;"',
-		dark_button: '"display: inline-block; background-color: lightgrey; border: 1px solid black; padding: 4px; color: black; font-weight: normal;"',
-		selected_button: '"display: inline-block; background-color: white; border: 1px solid red; padding: 4px; color: red; font-weight: bold;"',
-		green_button: '"display: inline-block; background-color: white; border: 1px solid lime; padding: 4px; color: darkgreen; font-weight: bold;"',
+		grey_button: '"background-color: lightgrey; display: inline-block; border: 1px solid black; border-radius: 5px ; color: gray; font-weight: extra-light; padding: 1px 5px;"',
+		dark_button: '"background-color: lightgrey; display: inline-block; border: 1px solid black; border-radius: 5px ; color: black; font-weight: normal; padding: 1px 5px;"',
+		selected_button: '"display: inline-block; background-color: white; border: 1px solid red;   border-radius: 5px ; color: red;     font-weight: bold; padding: 1px 5px;"',
+		green_button: '"display: inline-block; background-color: white;     border: 1px solid lime;  border-radius: 5px ; color: darkgreen; font-weight: bold; padding: 1px 5px;"',
 		boxed_number: '"display: inline-block; background-color: yellow; border: 1px solid blue; padding: 2px; color: black; font-weight: bold;"',
 		success_box: '"display: inline-block; background-color: yellow; border: 1px solid lime; padding: 2px; color: green; font-weight: bold;"',
 		failure_box: '"display: inline-block; background-color: yellow; border: 1px solid red; padding: 2px; color: maroon; font-weight: bold;"',
 //		grey_action: '&lt;span style="display: inline-block; background-color: lightgrey; border: 1px solid black; padding: 4px; color: dimgrey; font-weight: extra-light;"&gt;$2&lt;/span&gt;$4',
-	};
+	});
 	
 	/*
 	 * MagicMaster related help handout information.
@@ -268,20 +275,20 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	
 	const handouts = Object.freeze({
 	MagicMaster_Help:	{name:'MagicMaster Help',
-						 version:3.11,
+						 version:3.13,
 						 avatar:'https://s3.amazonaws.com/files.d20.io/images/257656656/ckSHhNht7v3u60CRKonRTg/thumb.png?1638050703',
 						 bio:'<div style="font-weight: bold; text-align: center; border-bottom: 2px solid black;">'
-							+'<span style="font-weight: bold; font-size: 125%">MagicMaster Help v3.11</span>'
+							+'<span style="font-weight: bold; font-size: 125%">MagicMaster Help v3.13</span>'
 							+'</div>'
 							+'<div style="padding-left: 5px; padding-right: 5px; overflow: hidden;">'
 							+'<h1>MagicMaster API v'+version+'</h1>'
 							+'<h4>and later</h4>'
 							+'<br>'
 							+'<h3><span style='+design.selected_button+'>New:</span>  in this Help Handout</h3>'
-							+'<p><span style='+design.selected_button+'>New:</span> The ability to buy and sell with Traders</p>'
-							+'<p><span style='+design.selected_button+'>New:</span> Services such as purchaseable weapon proficiency training</p>'
-							+'<p><span style='+design.selected_button+'>New:</span> --clean command to fix any (rare) corrupted character sheets</p>'
-							+'<p><span style='+design.selected_button+'>New:</span> Use of character sheet fields in RPGM maths</p>'
+							+'<p><span style='+design.selected_button+'>New:</span> Ability to select multiple items to buy or sell</p>'
+							+'<p><span style='+design.selected_button+'>New:</span> Ability to pick up, loot or store multiple items at the same time</p>'
+							+'<p><span style='+design.selected_button+'>Updated:</span> --mi-charges can take API commands as success and/or fail parameters</p>'
+							+'<p><span style='+design.selected_button+'>New:</span> Calculation of encumbrance (configurable) and --check-move command</p>'
 							+'<br>'
 							+'<p>The MagicMaster API provides functions to manage all types of magic, including Wizard & Priest spell use and effects; Character, NPC & Monster Powers; and discovery, looting, use and cursing of Magic Items.  All magical aspects can work with the <b>RoundMaster API</b> to implement token markers that show and measure durations, and produce actual effects that can change token or character sheet attributes temporarily for the duration of the spell or permanently if so desired.  They can also work with the <b>InitiativeMaster API</b> to provide menus of initiative choices and correctly adjust individual initiative rolls, including effects of Haste and Slow and similar spells.  This API can also interact with the <b>MoneyMaster API</b> (under development) to factor in the passing of time, the cost of spell material use, the cost of accommodation for resting, and the cost of training for leveling up as a spell caster (Wizard, Priest or any other).</p>'
 							+'<h2>Syntax of MagicMaster calls</h2>'
@@ -305,14 +312,17 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 							+'<p>The Ability Macros for spells and powers include descriptions of the spell they represent (limited, I\'m afraid, to avoid copyright issues), and also can optionally have API Buttons embedded in them which, if selected by the Player, can enact the actions of the spell or power.  The API Buttons call one or more of the API commands listed in this document, or commands provided by other APIs.  This is most powerful when combined with the <b>RoundMaster API</b> to implement token statuses and status markers with durations and effect macros, enabling the spells & powers to make temporary (or permanent, if desired) changes to the targeted creature\'s token and character sheet attributes.</p>'
 							+'<p>The best way to learn about these capabilities is to look at example spell definitions in the databases and use those spells or powers to see what they do.</p>'
 							+'<h3>Types of Item Provided</h3>'
-							+'<p>The Item database is currently split into twelve parts: Weapons, Ammunition, Armour, Equipment, Lights, Potions, Scrolls & Spellbooks, Treasure, Wands Staves & Rods, Rings, Miscellaneous, custom items of all these types, and now <span style='+design.selected_button+'>New:</span> Services.  More might be added in future releases, and any DM can add more databases with their own items.</p>'
+							+'<p>The Item database is currently split into twelve parts: Weapons, Ammunition, Armour, Equipment, Lights, Potions, Scrolls & Spellbooks, Treasure, Wands Staves & Rods, Rings, Miscellaneous, custom items of all these types, and now Services.  More might be added in future releases, and any DM can add more databases with their own items.</p>'
 							+'<p>Many magic items have actions that they can perform in the same way as Spells & Powers, using API Buttons in their macros that call MagicMaster API commands, or commands from other APIs.  As with spells & powers, this is most powerful when combined with the capabilities of the <b>RoundMaster API</b>.</p>'
 							+'<p>Items can have stored spells (like Rings of Spell Storing) and the spells can be cast from them, and/or can have powers that can be consumed and are refreshed each day.  Again, using the RoundMaster API, the spells and powers can have temporary or permanent effects on Tokens and Character Sheets, if desired. Some items can even store other items, such as a <i>Bag of Holding</i>.</p>'
 							+'<h3>Adding Items to the Character</h3>'
 							+'<p>Classes are set using the <b>CommandMaster API</b> or via the <b>AttackMaster !attk --other-menu</b> menu (or can be set manually on the Character Sheet).  Classes can be those provided in the Class-DB, or any other class.  Class names that are not in the database will adopt the attributes of the standard classes depending on the character sheet field the class name and level are entered into: <i>Warrior, Wizard, Priest, Rogue,</i> and <i>Psion</i>.  Depending on the settings selected by the GM under the <b>--config</b> menu, the choise of class will restrict or grant the character\'s ability to use certain items and cast certain spells.</p>'
 							+'<p>The MagicMaster API provides commands to perform menu-driven addition of items to the Character Sheet.  Using these commands will set up all the necessary fields so that the Player can use the items with the other APIs - if using MagicMaster then items should not be added directly to the Character Sheet.</p>'
 							+'<p>Items can also be acquired by finding them in chests or on tables (simply tokens with images of chests or tables that represent Character Sheets with items added to them) that can be looted, or even dead bodies of NPCs that have been killed in battle.  MagicMaster provides commands that support a menu-driven way to perform looting.  Characters, especially Rogues, can even try to Pick Pockets to take items from NPCs (or even other Characters...), though failure may alert the DM (or other Player) to the attempt.  Containers can even be trapped, with magical consequences if the trap goes off!  On the other hand, Characters can also put items away into chests or onto tables or other storage places, or give them to other Characters or NPCs.</p>'
-							+'<h3><span style='+design.selected_button+'>New:</span> Trading Items & Services</h3>'
+							+'<h3><span style='+design.selected_button+'>New:</span>Encumbrance</h3>'
+							+'<p>Almost all items weigh something, and there is a limit to what a character of a particular strength can carry. When items are added to a character, NPC, creature, or other container the total weight carried is calculated, including the weight of items in bags carried. This weight can be displayed by viewing the item list. As this weight increases, it can "encumber" the carrier - slowing movement, impacting the ability to fight and reducing their ability to dodge so impacting AC. The degree of encumbrance is tracked by the API and the appropriate penalties applied (unless disabled by the GM using a configuration option). The <i>Attk Menu > Check Movement</i> dialog (or <b>!magic --check-move</b> command) will display how the encumbrance is calculated from carried items and current modifications to movement (<i>AttackMaster API</i> is required).</p>'
+							+'<p>While some magical items may have a weight that needs to be born by the carrier, they may not "encumber" the carrier or impact movement, attacks or AC. Magical armour has this effect. Data in the MI database sets the weights and encumbrance values for each item. See the <i>Items Database Help</i> handout for more information.</p>'
+							+'<h3>Trading Items & Services</h3>'
 							+'<p>From v4.1 of the RPGMaster suite, characters can be defined as Traders, with the ability to buy & sell items in their inventories. This even includes <i>Drag & Drop</i> Innkeepers, Shopkeepers, and Blacksmiths in their Forge (and many others listed under the [Services] button on the <i>Drag & Drop</i> dialog), from which Player Characters (and others) can buy equipment and items from as well as sell items to in exchange for money. Training Schools also exist that sell training in weapon proficiencies and even levelling up. See the <i>Class Database Help</i> and <i>Race & Creature Database Help</i> handouts for more information.</p>'
 							+'<p>All items in the API databases have been given monetary values, based on the rules stated in the DMG and the <i>Dungeon Master Option: High Level Campaigns</i> for the cost of creating the items (sometimes adjusted for game balance). This cost is then adjusted by each Trader depending on the trading margin each has defined using their buy: and sell: data tag formulas. This means the same item can be offered at different prices by two different traders: indeed, many margin calculations are based on a degree of variability based on a dice roll so the price of an item from a single Trader can vary over time. The trading system also allows the Trader (or the GM or player controlling the Trader) to haggle a price with the player controlling the PC.</p>'
 							+'<p>A coin system is now included for each character consisting of numbers of Platinum, Gold, Electrum, Silver and Copper Coin items being held in each character\'s inventory. The quantity of these coins are automatically reflected to the Currency fields on the character sheet. The coin numbers are updated as trades are made: Traders cannot go "overdrawn" with negative numbers of coins (to ensure there is a balance of buying & selling to preserve game balance), but player characters and other NPCs are not prevented from doing so - the DM should keep an eye on borrowing levels and impose penalties (such as interest charges) for excessive overdrafts. Coins can be stored into and recovered (or looted) from containers (such as chests, or perhaps containers called "bank accounts").</p>'
@@ -349,29 +359,30 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 							+'--view-mi [token_id]<br>'
 							+'--use-mi [token_id]<br>'
 							+'--add-mi [token_id]|(mi-to-replace/row#)|mi-to-add|quantity|hand#|[NOCURSE]|[SILENT]<br>'
-							+'--mi-charges token_id|value|[mi_name]|[maximum]|[charge_override]<br>'
+							+'--mi-charges token_id|value|[mi_name]|[maximum]|[charge_override]|[success]|[fail]<br>'
 							+'--mi-power token_id|power_name|mi_name|[casting-level]<br>'
 							+'--store-spells token_id|mi-name<br>'
 							+'--mem-spell (MI-MU/MI-PR)[-ANY/-ADD/-CHANGE]|[token_id]|[mi-name]<br>'
 							+'--view-spell (MI/MI-MU/MI-PR/MI-POWER)|[token_id]|[mi-name]<br>'
 							+'--cast-spell (MI/MI-POWER)|[token_id]|[casting_level]|[casting_name]|[CHARGED]|[mi-name]<br>'
-							+'--learn-spell [token_id]|spell_name</pre>'
+							+'--learn-spell [token_id]|spell_name<br>'
+							+'<span style='+design.selected_button+'>New:</span>--check-move [token_id]|[SILENT]</pre>'
 							+'<h3>3.Spell, power & magic item effects and resting</h3>'
 							+'<pre>!rounds --target CASTER|caster_token_id|caster_token_id|spell_name|duration|increment|[msg]|[marker]<br>'
 							+'!rounds --target (SINGLE/AREA)|caster_token_id|target_token_id|spell_name|duration|increment|[msg]|[marker]<br>'
 							+'--touch token_id|effect-name|duration|per-round|message|marker<br>'
 							+'--level-change [token_id]|[# of levels]|[HP change]|[class]<br>'
 							+'--change-attr [token_id]|change|[field]|[SILENT]<br>'
-							+'<span style='+design.selected_button+'>Updated:</span> --rest [token_id]|[SHORT/LONG]|[MU/PR/MU-PR/POWER/MI/MI-POWER]|[timescale / spellname]<br>'
+							+'--rest [token_id]|[SHORT/LONG]|[MU/PR/MU-PR/POWER/MI/MI-POWER]|[timescale / spellname]<br>'
 							+'--mi-rest [token_id]|mi_name|[charges]|[power_name]<br>'
 							+'--query-qty [token_id]|(MU/PR/POWER/MI/MIPOWER)|item|[SILENT]</pre>'
 							+'<h3>4.Treasure & Item container management</h3>'
-							+'<pre><span style='+design.selected_button+'>Updated:</span> --gm-edit-mi [token_id]<br>'
+							+'<pre>--gm-edit-mi [token_id]<br>'
 							+'--find-traps token_id|pick_id|put_id<br>'
-							+'<span style='+design.selected_button+'>Updated:</span>--search token_id|pick_id|put_id<br>'
+							+'--search token_id|pick_id|put_id<br>'
 							+'--pickorput token_id|pick_id|put_id|[SHORT/LONG]<br>'
-							+'<span style='+design.selected_button+'>New:</span> --buy token_id|pick_id|put_id<br>'
-							+'<span style='+design.selected_button+'>New:</span> --sell token_id|pick_id|put_id</pre>'
+							+'--buy token_id|pick_id|put_id<br>'
+							+'--sell token_id|pick_id|put_id</pre>'
 							+'<h3>5.Light source management</h3>'
 							+'<pre>--lightsources [token_id]<br>'
 							+'--light token_id|(NONE/WEAPON/TORCH/HOODED/CONTLIGHT/BULLSEYE/BEACON)</pre>'
@@ -380,8 +391,8 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 							+'--message [who|][token_id]|title|message|[command]|[var1]|[var2]...<br>'
 							+'--display-ability [who|][token_id]|database|db_item|[dice_roll1]|[dice_roll2]|[target_id]<br>'
 							+'--tidy [token_id]|[SILENT]<br>'
-							+'<span style='+design.selected_button+'>New:</span> --clean [token_id]|[SILENT]<br>'
-							+'<span style='+design.selected_button+'>Update:</span>--config [FANCY-MENUS/SPECIALIST-RULES/SPELL-NUM/ALL-SPELLS/ALL-POWERS/CUSTOM-SPELLS/AUTO-HIDE/REVEAL/VIEW-ACTION/ALPHA-LISTS/GM-ROLLS] | [TRUE/FALSE]<br>'
+							+'--clean [token_id]|[SILENT]<br>'
+							+'<span style='+design.selected_button+'>Updated:</span>--config [FANCY-MENUS/SPECIALIST-RULES/SPELL-NUM/ALL-SPELLS/ALL-POWERS/CUSTOM-SPELLS/AUTO-HIDE/REVEAL/VIEW-ACTION/ALPHA-LISTS/GM-ROLLS] | [TRUE/FALSE]<br>'
 							+'--check-db [db-name]<br>'
 							+'--extract-db [db-name]<br>'
 							+'--handshake from | [cmd]<br>'
@@ -454,17 +465,18 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 							+'<p>This command can be used to add a named item from the databases to a character, NPC, creature or other container without going through other dialogs to select the item. It will add the item to a numbered row in the equipment list or, more usefully, replace a named item that already exists in the list (or \'-\' to find an empty row). If the item is one that can be taken in-hand (e.g. a weapon or a shield, or a magic item like a wand or staff), the optional \'hand number\' can be used to specify which hand to take it in. 0=prime hand,1=offhand,2=both,3 onwards for other hands, or just \'=\' (or blank) means replace in-hand if mi-to-replace is in-hand or worn as a ring - if the item is not one that can be held the item will not be taken in-hand. If the item to be replaced is cursed, it <i>will not be replaced</i> and an error message will be displayed unless the NOCURSE option is used. Finally, the command will pop up the edit-mi dialog or the gm-edit-mi dialog (if NOCURSE is specified) showing the resulting equipment list unless the SILENT flag is also used.</p>'
 							+'<p>The quantity can be a number to set the amount of the item to add. If preceeded by an operator (such as \'+\', \'-\', \'*\', or \'/\'), the quantity will modify the quantity of the item replaced (up to the maximum quantity of the replaced item). If the quantity is just \'=\' the quantity will set to the same as the replaced item, or 1 for an added item, or if the item to be replaced is not found and quantity is \'=\', the item will not be added.</p>'
 							+'<h3>2.6 Add, set or deduct Magic Item charges</h3>'
-							+'<pre>--mi-charges token_id|[+/-/0]value|[mi_name]|[maximum]|[charge_override]</pre>'
-							+'<p>Takes a mandatory token ID, a mandatory value preceeded by an optional + or -, an optional magic item name, an optional maximum value, and an optional magic item charge type override as arguments.</p>'
-							+'<p>Does not display anything but alters the number of current or recoverable charges on an item.  By default, alters the last magic item used by the character, or will affect the named magic item.  Warning: a character can have two items of the same name, and there is no guarantee which will be affected if the name is used.</p>'
+							+'<pre><span style='+design.selected_button+'>Updated:</span> --mi-charges token_id|[+/-/0]value|[mi_name]|[maximum]|[charge_override]|[success]|[fail]</pre>'
+							+'<p>Takes a mandatory token ID, a mandatory value preceeded by an optional + or -, an optional magic item name, an optional maximum value, an optional magic item charge type override, a success message or ccommand, and a fail message or command as arguments.</p>'
+							+'<p>Alters the number of current or recoverable charges on an item.  By default, alters the last magic item used by the character, or will affect the named magic item.  Warning: a character can have two items of the same name, and there is no guarantee which will be affected if the name is used.</p>'
 							+'<p>Remember: using a Charged, Recharging, Rechargeable or Self-Charging Magic Item will automatically use 1 charge on use (unless the ItemData specification includes the field <b>c:0</b>, in which case no charges will automatically be deducted on use). If the c: tag is not used, or is anything other than 0, then charges will be deducted (default 1 charge) on use of the item.  In addition, that one charge deduction always happens - if an effect of a Magic Item uses 2 charges, only 1 more needs to be deducted.</p>'
 							+'<p><b>Note:</b> \'-\' reduces <i>current</i> remaining charges, \'+\' adds to the <i>maximum</i> recoverable charges, no + or - sets the <i>maximum</i> recoverable charges, and \'0\' (or starting with 0 e.g. \'01\') the item will <i>recharge</i> to the set or current maximum.  This command <i>cannot</i> otherwise be used to increase the current remaining charges <i>unless</i> the item is of type <i>absorbing</i>.</p>'
 							+'<p>Using minus \'-\' before the value will deduct charges from the current quantity/charges: e.g. if using an optional power of the item that uses more than 1 charge.  Using + before the value will add the value to the number of recoverable charges (overnight or rechargeable to), up to any specified maximum (often used for magic items that regain variable numbers of charges overnight).  Just using the value without + or - will just set the number of recoverable charges to the given value.  This command is not required to recharge self-charging items but can be used to change the maximum number of charges they will self-charge up to.</p>'
 							+'<p><b>Absorbing items</b> can gain charges in use from other sources, so the <b>--mi-charges</b> command works differently: \'-\' reduces <i>both current and maximum charges</i> and \'+\' only increases <i>current charges</i> (but only to maximum and not beyond). Using neither \'-\' or \'+\' will set the <i>current</i> charges (but, again, only up to the maximum).</p>'
 							+'<p>The <i>charge-override</i> can be used to temporarily change the charge behaviour of the magic item. Specifying an override will cause the magic item to behave as if its charging type was that of the override only for this call.  Thus charges could be deducted from an <i>uncharged</i> item by overriding by <i>rechargeable</i> or <i>charged</i>.</p>'
+							+'<p><span style='+design.selected_button+'>Updated:</span> If the command is able to sucessfully change the number of charges and the item remains in existance, the optional *success* command will be executed or message displayed. If not, if the item "expires" with no remaining charges, or if the command fails for any other reason an optional *fail* command will be executed or message displayed.</p>'
 							+'<h3>2.7 Use a Magic Item power</h3>'
 							+'<pre>--mi-power token_id|[type-]power_name|mi_name|[casting-level]</pre>'
-							+'<p>Takes a mandatory token ID, mandatory power name (optionally prefixed by a power type), mandatory magic item name (<mark style="color:green">New</mark> which can be several names separated by forward slash), and an optional casting level as parameters.</p>'
+							+'<p>Takes a mandatory token ID, mandatory power name (optionally prefixed by a power type), mandatory magic item name (which can be several names separated by forward slash), and an optional casting level as parameters.</p>'
 							+'<p>Magic Items, especially artefacts, can have their own powers that can be used a specified number of times a day, or at will.  This command can be used in API buttons in the Magic Item macro to call on that power.  The power name and the magic item name (or names, especially where items that change with use have powers) must be specified to select the right power.  If a casting level is specified, any relevant impacts on use of the power will be taken into account: it is often the case that magic items use powers at specific levels. If not specified, the item using Character\'s level is used (user does not need to be a spell caster).</p>'
 							+'<p>Generally, magic item powers have unique names, though they do not have to.  Such magic items require specific setting up by the DM - see later sections. However, powers can have a prefix that indicates a power type that specifies the power is in fact a Wizard spell (MU-), a Priest spell (PR-), or a Magic Item (MI-) or (for completeness) confirmed as a Power (PW-). Specifying a power type prefix means the appropriate database types will be searched for the named power - thus (for instance) a Wizard or Priest spell can be specified as a Magic Item power without having to program a duplicate in the Powers Databases. If no power type prefix is specified, the system will first search for a matching power in the Powers Databases (both API-supplied and user-supplied), then all Wizard spell databases, then Priest spell databases, then all Magic Item databases, and finally the character sheet of the creature wielding the Magic Item.</p>'
 							+'<h3>2.8 Add spells to a spell-storing Magic Item</h3>'
@@ -495,6 +507,14 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 							+'<li>Check that the spell is of a level the character can cast;</li>'
 							+'<li>Present a dialog to the player to roll "Spell Knowledge" with a target pre-adjusted for specialism;</li>'
 							+'<li>If all of the above checks are passed, add the spell to the character\'s correct level of spellbook.</li></ul>'
+							+'<h3>2.12 <span style='+design.selected_button+'>New:</span>Check Weights and Encumbrance</h3>'
+							+'<pre>--check-move [token_id]|[SILENT]</pre>'
+							+'<p>Takes an optional token_id which defaults to that of the currently selected token, followed by an optional litteral command of SILENCE (case insensitive).</p>'
+							+'<p>This command calculates the weight and encumbrance of items listed as carried on the character sheet represented by the itentified token. This includes the weight contained in any items classified as bags (such as backpacks) modified by the weight and encumbrance specification of the bag (e.g. a Bag of Holding will only weigh a set amount regardless of what it contains). Items (including bags) can have a different encumbrance from their weight (e.g. magical armour has a weight but no encumbrance). These values are specified in the item specification in the MI databases (see the <i>Item Database Help</i> handout).</p>'
+							+'<p>Items carried can also modify the calculated movement. For example, Boots of Speed will always set the movement rate to 12 regardless of encumbrance, though if weight carried exceeds the maximum possible for the strength of the character the GM may say movement should be zero despite the boots (the API does not restrict Boots of Speed).</p>'
+							+'<p>If the <i>AttackMaster API</i> is loaded and SILENT is not specified, a dialog will appear displaying all elements that make up the calculation of weight, encumbrance and movement. The effect on attacks will also be applied to that character/NPC/Creature.</p>'
+							+'<p>If the <i>RoundMaster API</i> is loaded and the character is calculated as being encumbered to any degree, a status will be placed on the identified token indicating the encumbrance and resulting movement limit, and the effect on AC will automatically be applied.</p>'
+							+'<p>While weight and encumbrance will always be calculated, their effects on attacks and AC can be disabled by the GM using a configuration option. The <i>AttacksMaster API</i> and <i>RoundMaster API</i> are required for full functionality of Encumbrance.</p>'
 							+'<br>'
 							+'<h2>3.Spell, power & magic item effects and resting</h2>'
 							+'<p>If this API is used in conjunction with the RoundMaster API, Magic Items, Spells & Powers can all place status markers on tokens, and also cause real Effects to alter token & character sheet attributes and behaviours: when cast; during each round of their duration; and when they expire.  See the RoundMaster documentation for further information, especially on Effects and the Effects Database.</p>'
@@ -513,7 +533,8 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 							+'<h3>3.2 Cast a spell that requires a "touch" attack roll</h3>'
 							+'<pre>--touch token_id|effect-name|duration|per-round|[message]|[marker]</pre>'
 							+'<p>Takes mandatory token ID, effect name, duration of the effect, an increment to the duration per round (often -1), an optional message each round for the targeted token, and an optional status marker to use (if not supplied, the DM or user will be asked to select one).</p>'
-							+'<p>Note: this command requires RoundMaster API to also be loaded, but is a !magic command.</p>'
+							+'<p>Note: this command requires <i>RoundMaster API</i> to also be loaded, but this is a !magic command.</p>'
+							+'<p><b>Note:</b> This is a legacy command that has been superceeded by "Touch" being able to be taken in-hand as a weapon. It is retained for backwards compatability.</p>'
 							+'<p>Sets up the Character represented by the specified token ready for an "Attack Roll" to deliver a touch attack for a spell or power or magic item use that requires an attack.  The parameters are those that will be passed to the <b>!rounds --target</b> command if the attack is successful (see above).</p>'
 							+'<p>To use this command, add it as part of a spell, power or MI macro in the appropriate database, before or after the body of the macro text (it does not matter which, as long as it is on a separate line in the macro - the Player will not see the command).  Then include in the macro (in a place the Player will see it and be able to click it) an API Button call [Button name](~Selected|To-Hit-Spell) which will run the Ability "To-Hit-Spell" on the Character\'s sheet (which has just been newly written there or updated by the <b>--touch</b> command).</p>'
 							+'<p>Thus, when the Player casts the Character\'s spell, power or MI, they can then press the API Button when the macro runs and the attack roll will be made.  If successful, the Player can then use the button that appears to mark the target token and apply the spell effect to the target.</p>'
@@ -528,7 +549,7 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 							+'<p>Mainly used to support magical effects and creature attacks that drain or add to attributes such as Strength, this command specifically deals with aspects such as Exceptional Strength, remembering if a Character has exceptional strength as a characteristic and taking it into account as the value is changed. Going up or down from the original rolled value and then back the other way will include as a step the exceptional, percentage value.  If the change requested would take the value past the original rolled value, the change will only go as far as the original value, whatever change was requested. However, the change can then continue with subsequent calls to beyond the original value with subsequent calls.</p>'
 							+'<p>The optional operator before the increment will work in (hopefully) an obvious way: \'+\' adds to the attribute value, \'-\' subtracts, \'*\' multiplies (e.g. *2 will double the current attribute value), \'/\' will divide (e.g. /2 halves it), and \'=\' sets the value to that given.  The value in each case can be a formula using RPGM maths operators.<p>'
 							+'<p><b>Note:</b>Should the rolled value need to change permanently to a new rolled value, the <i>change</i> value of 0 (zero) will reset the remembered original rolled value to the current value of the attribute - this is not needed the first time the command is used on a character sheet, which will trigger this value to be remembered for the first time.</p>'
-							+'<h3>3.5 <span style='+design.selected_button+'>Updated:</span> Perform Short or Long Rests</h3>'
+							+'<h3>3.5 Perform Short or Long Rests</h3>'
 							+'<pre>--rest [token_id]|[SHORT/LONG]|[MU/PR/MU-PR/POWER/MI/MI-POWER]|[timescale/spellname]</pre>'
 							+'<p>Takes an optional token ID (if not specified, uses the selected token), an optional rest type, short or long, an optional magic type to regain charges for, and an optional timescale for days passing OR an optional spell or power name to individually rest.</p>'
 							+'<p>Most magic requires the character to rest periodically to study spell books, rememorise spells, and regain powers and charges of magic items.  This command implements both Short and Long rests.</p>'
@@ -538,7 +559,7 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 							+'<p>A Long rest can only be undertaken if certain conditions are met: either the optional Timescale (in days) must be specified as 1 or more days, or the Character Sheet must have a Roll20 attribute called Timescale, current, set to a value of 1 or more (can be set by <b>InitiativeMaster API --end-of-day</b> command).  An internal date system is incremented: an attribute on the Character Sheet called In-Game-Day is incremented by the Timescale, and Timescale is then set to 0.</p>'
 							+'<p>If the <b>InitiativeMaster API</b> is being used, the system will interact with the "End of Day" command to allow rests to be coordinated with the choice of accommodation (and its cost...!) or with earnings made for the day\'s adventuring.</p>'
 							+'<p>Instead of the timescale parameter, a spell or power name can be provided as the 4th parameter. In this case, all memorised instances of that specific spell or power (depending on the magic type selected) will be "rested".</p>'
-							+'<p><span style='+design.selected_button+'>New:</span><b>Warning:</b> Undertaking a rest of either type on a Trader (see "Adding Items to the Character" above) will "restock" the Trader\'s inventory, which first empties all previously held items of all types <i>except coins</i>, and then restocks the inventory using the original definition of the Trader\'s items in the relevant database. If the Trader has items in their inventory that they want to keep, it is recommended that they use a <i>Drag & Drop</i> container to store those items in to keep them safe.</p>'
+							+'<p><b>Warning:</b> Undertaking a rest of either type on a Trader (see "Adding Items to the Character" above) will "restock" the Trader\'s inventory, which first empties all previously held items of all types <i>except coins</i>, and then restocks the inventory using the original definition of the Trader\'s items in the relevant database. If the Trader has items in their inventory that they want to keep, it is recommended that they use a <i>Drag & Drop</i> container to store those items in to keep them safe.</p>'
 							+'<h3>3.6 Perform a Single Item Rest</h3>'
 							+'<pre>--mi-rest [token_id]|mi_name|[charges]|[power_name]</pre>'
 							+'<p>Takes an optional Token ID (defaults to the selected token), a mandatory magic item name (case insensitive), an optional number of charges to recharge to, and an optional power name (case insensitive).</p>'
@@ -549,7 +570,7 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 							+'<p>Some spells, powers, and magic items need to know how many charges they have left in order to impact the effect they have.  The quantity is difficult to find from the table entry in macro code unless the row number is known, so this command finds the item for the macro and saves the current quantity in the character sheet attribute that can be accessed using @{selected|spellcharges}. Generally a call to this command should be outside of any roll template so that the command runs before the roll template is displayed and any API buttons become available.</p>'
 							+'<br>'
 							+'<h2>4.Treasure & Item container management</h2>'
-							+'<h3><span style='+design.selected_button+'>Updated:</span> 4.1 DM/GM version of Magic Item management</h3>'
+							+'<h3>4.1 DM/GM version of Magic Item management</h3>'
 							+'<pre>--gm-edit-mi [token_id]</pre>'
 							+'<p>Takes an optional token ID. If token ID is not specified, uses the selected token.</p>'
 							+'<p>This command opens a menu showing all the items in the Items table of the character sheet associated with the specified token.  Unlike the Player version of the command (--edit-mi), this command shows all attributes of every magic item, including those of hidden and cursed items, and also offers an additional lists of "DM Only" items from the item databases, tradeable services, treasure items and other lists restricted to GM use.</p>'
@@ -567,7 +588,7 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 							+'	<tr><th scope="row">Reset Qty to Max:</th><td>Allows the DM to reset the quantity of the selected Bag slot to the actual (max) values.</td></tr>'
 							+'	<tr><th scope="row">Reveal Now:</th><td>Only available when a hidden item is selected. Reveals the item, setting the displayed name to the actual name, which will function as the revealed item from that point on.</td></tr>'
 							+'  <tr><th scope="row">Reveal MI:</th><td>Allows selection of when a hidden item is revealed: MANUALLY by DM (the default) using the Reveal Now button; on VIEWING the item; or on USING the item; or on a long REST. From the point the item is revealed onwards, the item will behave as the revealed item.</td></tr>'
-							+'	<tr><th scope="row"><span style='+design.selected_button+'>Update:</span><br>Edit Treasure:</th><td>Mainly for use on Magic Item containers, such as Treasure Chests, but also useful for NPCs and Monsters.  Allows the DM to add text only treasure descriptions to the container.  The displayed menu allows [Add], [Edit], and [Delete] functions to manage multiple lines/rows of treasure description. This is less useful now: instead consider adding items from the [Treasure] and [Coins] lists to the container, which are then saleable to Traders for money.</td></tr>'
+							+'	<tr><th scope="row"><br>Edit Treasure:</th><td>Mainly for use on Magic Item containers, such as Treasure Chests, but also useful for NPCs and Monsters.  Allows the DM to add text only treasure descriptions to the container.  The displayed menu allows [Add], [Edit], and [Delete] functions to manage multiple lines/rows of treasure description. This is less useful now: instead consider adding items from the [Treasure] and [Coins] lists to the container, which are then saleable to Traders for money.</td></tr>'
 							+'	<tr><th scope="row">Container Type:</th><td>Sets the type of the Magic Item container or Bag.  Available choices are: Untrapped container, Trapped container, Force to be an Inanimate Container, Force to be a Sentient creature. If searched,  Inanimate objects can be looted without penalty;  Sentient beings require a Pick Pockets check; Trapped containers call a Trap ability macro on the container\'s character sheet to determine the effect.  See the <b>--search</b> command below.</td></tr>'
 							+'	<tr><th scope="row">Container Size:</th><td>Sets the maximum number of items that can be stored in the selected Character\'s/containers bag.  The default is 18 items, though identical items can be stacked.</td></tr>'
 							+'	<tr><th scope="row">Show As:</th><td>Sets what level of item description a Player sees when looting a container. Either "Show as Item Types" (e.g. potion, scroll, melee weapon, etc), or "Show as Item Names" (default) which shows the display names of the items. Once picked up from the container, will always show their display names.</td></tr>'
@@ -577,7 +598,7 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 							+'<p>Takes a mandatory token ID of the character\'s token, mandatory token ID of the token to check for traps, mandatory token ID of the token doing the checking.</p>'
 							+'<p>This command will check a token for any traps. If the container represented by the token was created using the <i>Drag & Drop</i> container system (see <b>CommandMaster API</b> documentaion for details of the <i>Drag & Drop</i> container system) this command will start the selected container\'s <i>"Find & Remove Traps"</i> programmed sequence, with a (small) chance of the trap (if any) being triggered. If the trap is successfully removed, the container may still be locked but will no longer be trapped. If the token represents any other type of character, container, creature or object a standard <i>"Find/Remove Traps"</i> sequence will ensue, resulting in the party (and the GM) being alerted to the success or otherwise of the outcome.</p>'
 							+'<p>In either case, the default approach to the <i>Find Traps</i> roll is that the GM is asked to make it - being presented with a drop-down list of options that includes (a) just rolling 1d100 against the character\'s chance, (b) forcing a successful roll (e.g. if they were meant to find it), and (c) forcing a failure to find a trap (e.g. if there is no trap to be found). The GM can use the <b>!magic --config</b> command to change this action so that the player always rolls to <i>Find Traps</i>, though this might result in an indication for a (non-<i>Drag & Drop</i>) container indicating success for a container that is not trapped!</p>'
-							+'<h3><span style='+design.selected_button+'>Updated:</span> 4.3 Searching/Storing tokens with Items and Treasure</h3>'
+							+'<h3>4.3 Searching/Storing tokens with Items and Treasure</h3>'
 							+'<pre>--search token_id|pick_id|put_id</pre>'
 							+'<p>Takes a mandatory token ID of the character\'s token, mandatory token ID of the token to search and pick up items from, mandatory token ID of the token to put picked up items into.</p>'
 							+'<p>This command can be used to pick the pockets of an NPC or even another Player Character, as well as to loot magic item and treasure containers such as Chests and dead bodies.  It can also be used for putting stuff away, storing items from the character\'s Item Bag into a container, for instance if the MI Bag is getting too full (it is limited to the number of items specified via the --gm-edit-mi menu, though similar items can be stacked). The effect of this command depends on the type of the container: intelligent characters, NPCs and creatures (even if only with animal intelligence of 1) are considered sentient unless they are dead (Hit Points equal to or less than zero). The trapped container status is set by any <i>Drag & Drop</i> container, or via the GM\'s [Add Items] button or <b>!magic --gm-edit-mi</b> command. All other containers (tokens with character sheets) are considered inanimate and untrapped. Any status can also be overridden if so desired by resetting the container type using the <i>Add Items</i> dialog to set the type to a different value - a sentient creature can be forced to be inanimate (i.e. does not need a <i>pick pockets</i> roll), and visa-versa (e.g. luggage Terry Pratchett style).</p>'
@@ -587,13 +608,13 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 							+'	<tr><th scope="row">Sentient Creature:</th><td>if searching, a Pick Pockets check is undertaken - the Player is asked to roll a dice and enter the result (or Roll20 can do it for them), which is compared to the Pick Pockets score on their character sheet.  If successful, a message is displayed in the same way as an Inanimate object.  If unsuccessful, a further check is made against the level of the being targeted to see if they notice, and the DM is informed either way.  The DM can then take whatever action they believe is needed. Of course, you can always freely <i>give/store</i> items to another creature.</td></tr>'
 							+'	<tr><th scope="row">Trapped container:</th><td>Traps can be as simple or as complex as the DM desires.  Traps may be nothing more than a lock that requires a Player to say they have a specific key, or a combination that has to be chosen from a list, and nothing happens if it is wrong other than the items in the container not being displayed.  Or setting a trap off can have damaging consequences for the character searching or the whole party.  It can just be a /whisper gm message to let the DM know that the trapped container has been searched.  Searching a trapped container with this command calls an ability macro called "Trap-@{container_name|version}" on the container\'s character sheet: if this does not exist, it calls an ability macro just called "Trap".  The first version allows the Trap macro to change the behaviour on subsequent calls to the Trap functionality (if using the ChatSetAttr API to change the version attribute), for instance to allow the chest to open normally once the trap has been defused or expended.  This functionality requires confidence in Roll20 macro programming.<br><b>Important Note:</b> all Character Sheets representing Trapped containers <b><u><i>must</i></u></b> have their <i>\'ControlledBy\'</i> value (found under the [Edit] button at the top right of each sheet) set to <i>\'All Players\'</i>.  Otherwise, Players will not be able to run the macros contained in them that operate the trap!</td></tr>'
 							+'</table>'
-							+'<p><span style='+design.selected_button+'>Updated:</span><b>Note:</b> Some items are not stackable - they are single items with charges such as a wand or rod, or a spell-storing item which must retain its uniqueness so the spells remain associated. Previously, non-stackable items like these needed to have unique names in the container to retain their unique identity. However, this is strictly speaking no longer the case - the APIs now use unique object identifiers "under the hood". However, you may want to give similar items different names in order to differentiate them,</p>'
+							+'<p><b>Note:</b> Some items are not stackable - they are single items with charges such as a wand or rod, or a spell-storing item which must retain its uniqueness so the spells remain associated. Previously, non-stackable items like these needed to have unique names in the container to retain their unique identity. However, this is strictly speaking no longer the case - the APIs now use unique object identifiers "under the hood". However, you may want to give similar items different names in order to differentiate them,</p>'
 							+'<h3>4.4 Looting and storing without searching a container</h3>'
 							+'<pre>--pickorput token_id|pick_id|put_id|[SHORT/LONG]</pre>'
 							+'<p>Takes a mandatory token ID for the Player\'s character, a mandatory token ID for the token to pick items from, a mandatory token ID for the token to put items in to, and an optional argument specifying whether to use a long or a short menu.</p>'
 							+'<p>This command displays a menu from which items on the character sheet associated with the Pick token can be selected to put in the character sheet associated with the Put token.  The Player character\'s token can be either the Put token (if picking up items from a container) or the Pick token (if storing items from their sheet into the container).  The other token can be another Player Character (useful for one character giving a magic item to another character) or any other selectable token with a character sheet.  No traps or sentient being checks are made by this command - this allows the DM to allow Players to bypass the searching functionality when looting a container or storing items in it.  Note: the Player\'s Magic Item menu (accessed via the <b>--mimenu</b> command) does not have an option to loot without searching.</p>'
 							+'<p>There are two forms of this menu - the Long form displays all items in the container as individual buttons for the Player to select from, and a single button to store the item: this is generally OK when looting containers with not much in them.  The Short form of the menu shows only two buttons: one button which, when clicked, brings up a pick list of all the items in the Pick container, and another button to store the item in the Put container: this is generally best for when a character is storing something from their character sheet items into a chest or other container, or giving an MI to another character, as a character\'s sheet often has many items in it which can make a Long menu very long.  Each type of menu has a button on it to switch to the other type of menu without re-issuing the command.  If not specified in the command, the type of menu the Player last used in this campaign is remembered and used by the system.</p>'
-							+'<h3><span style='+design.selected_button+'>New:</span> 4.5 Buying and Selling</h3>'
+							+'<h3>4.5 Buying and Selling</h3>'
 							+'<pre>--buy token_id|pick_id|put_id<br>'
 							+'--sell token_id|pick_id|put_id</pre>'
 							+'<p>Takes a mandatory token ID for the player\'s character, a mandatory token ID for the token to pick items from, and a mandatory token ID for the token to put items in to.</p>'
@@ -646,13 +667,13 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 							+'<p>This command takes an optional token_id. If not specified, the command will act on the character sheets represented by all currently selected tokens.</p>'
 							+'<p>This command tidies up the character sheet, removing Spell and Magic Item attribute and ability objects that are no longer for items held, and for spells no longer in any spell book.  Attack ability objects will also all be removed.  All of these will be recreated as and when these items, spells or attacks are again picked up, added to spell books, or used for attacks. This simplifies and speeds up the system, removing redundant processing and memory usage.</p>'
 							+'<p><b>Note:</b> this command is automatically run whenever the DM moves the "Player Ribbon" to a new map page, for every token on that map page that represents a character sheet, and also whenever a character token is dragged onto the active Player page. This continually tidies the system while not imposing a heavy overhead on processing.</p>'
-							+'<h3>6.5 <span style='+design.selected_button+'>New:</span> Recover a corrupt character sheet</h3>'
+							+'<h3>6.5 Recover a corrupt character sheet</h3>'
 							+'<pre>--clean [token_id]|[SILENT]</pre>'
 							+'<p>Takes an optional token ID (uses selected token if not specified), and an optional SILENT argument to supress messages.</p>'
 							+'<p>Very rarely, a character sheet can become corrupt, for instance so that attributes become read-only for no apparent reason.  This command creates an identical copy of the character sheet with all attributes, abilities and table entries copied across. It then updates all tokens that did point to the previous sheet to use the new one, and then deletes the original, corrupt sheet. Finally, it conducts a --tidy command on the new sheet.</p>'
 							+'<p><b>Warning:</b> this is a radical solution and there may well have been a valid reason why the original character sheet became corrupted. It is recommended that all options are explored before using a --clean command.</p>'
-							+'<h3>6.6<span style='+design.selected_button+'>Update:</span> Configure API behavior</h3>'
-							+'<pre>--config [FANCY-MENUS/SPECIALIST-RULES/SPELL-NUM/ALL-SPELLS/ALL-POWERS/CUSTOM-SPELLS/AUTO-HIDE/ALPHA-LISTS/GM-ROLLS] | [TRUE/FALSE]</pre>'
+							+'<h3>6.6 <span style='+design.selected_button+'>Updated:</span>Configure API behavior</h3>'
+							+'<pre>--config [FANCY-MENUS/SPECIALIST-RULES/SPELL-NUM/ALL-SPELLS/ALL-POWERS/CUSTOM-SPELLS/AUTO-HIDE/ALPHA-LISTS/GM-ROLLS/ENCUMBRANCE] | [TRUE/FALSE]</pre>'
 							+'<p>Takes two optional arguments, the first a switchable flag name, and the second TRUE or FALSE.</p>'
 							+'<p>Allows configuration of several API behaviors.  If no arguments given, displays menu for DM to select configuration.  Parameters have the following effects:</p>'
 							+'<table>'
@@ -664,10 +685,11 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 							+'	<tr><th scope="row">ALL-POWERS</th><td>Class powers not restricted by level</td><td>Class powers <i>are</i> restricted by level as per spec</td></tr>'
 							+'	<tr><th scope="row">CUSTOM-SPELLS</th><td>No distributed custom spells/items allowed (but CS DB allowed)</td><td>All custom spells and items allowed</td></tr>'
 							+'	<tr><th scope="row">AUTO-HIDE</th><td>Items defined to be hideable will be automatically hidden when added to containers</td><td>Hideable items must be hidden manually if desired</td></tr>'
-							+'	<tr><th scope="row"><mark style="color:red">REVEAL</mark></th><td>Auto-hidden items will reveal themselves when used</td><td>The GM will need to reveal auto-hidden items manually</td></tr>'
-							+'	<tr><th scope="row"><mark style="color:red">VIEW-ACTION</mark></th><td>Action API buttons on items/spells clickable when viewed</td><td>Action API buttons greyed out when viewed</td></tr>'
+							+'	<tr><th scope="row">REVEAL</th><td>Auto-hidden items will reveal themselves when used</td><td>The GM will need to reveal auto-hidden items manually</td></tr>'
+							+'	<tr><th scope="row">VIEW-ACTION</th><td>Action API buttons on items/spells clickable when viewed</td><td>Action API buttons greyed out when viewed</td></tr>'
 							+'	<tr><th scope="row">ALPHA-LISTS</th><td>Long lists will automatically be split into alpha lists</td><td>Whole long lists will be displayed for selection</td></tr>'
 							+'	<tr><th scope="row">GM-ROLLS</th><td>GM is asked to roll thievish skill-based chances when using Find Traps</td><td>Player rolls skill-based chances for Find Traps</td></tr>'
+							+'	<tr><th scope="row"><mark style="color:red">ENCUMBRANCE</mark></th><td>Encumbrance rules are applied as per PHB</td><td>Weight, Encumbrance & Move calculated but no adverse effects applied</td></tr>'
 							+'</table>'
 							+'<h3>6.7 Check database completeness & integrity (GM only)</h3>'
 							+'<pre>--check-db [ db-name ]</pre>'
@@ -709,6 +731,7 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	var reSpellSpecs;
 	var reClassSpecs;
 	var reWeapSpecs;
+	var reACSpecs;
 	var saveFormat;
 	var spellsPerLevel;
 	var casterLevels;
@@ -717,6 +740,7 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	var wisdomSpells;
 	var spellLevels;
 	var showMoreObj;
+	var encumberDef;
 
 	/*
 	 * MagicMaster specific global data tables and variables.
@@ -736,7 +760,7 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	const messages = Object.freeze({
 		header: '&{template:'+fields.menuTemplate+'} {{name=^^cname^^\'s\nMagic Item Bag}}',
 		restHeader: '&{template:'+fields.menuTemplate+'} {{name=^^cname^^ is Resting}}',
-		noChar: '&{template:'+fields.warningTemplate+'} {{name=^^cname^^\'s\nMagic Items Bag}}{{desc=^^cname^^ does not have an associated Character Sheet, and so cannot have a Magic Item Bag.}}',
+		noChar: '&{template:'+fields.warningTemplate+'} {{name=^^tname^^\'s\nMagic Items Bag}}{{desc=^^tname^^ does not have an associated Character Sheet, and so cannot have a Magic Item Bag.}}',
 		noMIBag: '&{template:'+fields.warningTemplate+'} {{name=^^cname^^\'s\nMagic Items Bag}}{{desc=^^cname^^ does not have a Magic Item bag!  Perhaps you ought to invest in one...  Go and find an appropriate vendor (ask the DM).}}',
 		oldMIBag: '&{template:'+fields.warningTemplate+'} {{name=^^cname^^\'s\nMagic Item Bag}}{{desc=^^cname^^ has an old v3 Magic Item bag, which will not hold the latest, cutting edge Magic Items!  Perhaps you ought to invest in a new one...  Go and find an appropriate vendor (ask the DM).}}',
 		cursedSlot: '&{template:'+fields.warningTemplate+'} {{name=^^cname^^\'s\nMagic Item Bag}}{{desc=Oh what a shame.  No, you can\'t overwrite a cursed item with a different item.  You\'ll need a *Remove Curse* spell or equivalent to be rid of it!}}',
@@ -753,7 +777,7 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 		longRest: 'After a good long rest, ^^cname^^ has regained their powers, read their spellbooks and rememorised their spells, and magic items that recharge have regained their charges.}}',
 		noLongRest: '&{template:'+fields.warningTemplate+'} {{name=^^cname^^ is Unable to Rest}}{{desc=I don\'t think the DM has declared it is time for a rest yet, perhaps due to system lag.}}{{desc1=[Try Again](!magic --rest ^^tid^^|long) once the DM says you can}}',
 		noMoreCharges: '&{template:'+fields.warningTemplate+'} {{name=^^cname^^ Has No Charges}}{{desc=^^cname^^ has used all the charges of the Power, Spell or Magic Item that they are using, and needs to rest before any charges are available again.}}',
-		miBagFull: '&{template:'+fields.warningTemplate+'} {{name=^^c2name^^ MI Bag Full}}{{desc=There are no slots left in the selected container for any more items to store}}',
+		miBagFull: '&{template:'+fields.warningTemplate+'} {{name=^^c2name^^ Can\'t Store That}}{{desc=There are not enough slots left to store the selected item(s)}}',
 		fixedSpell: '&{template:'+fields.warningTemplate+'} {{name=Fixed MI Spell Slot}}{{desc=The chosen slot in your spell-storing Magic Item is fixed to be the named spell. You may only refresh it with the same spell}}',
 		convertItems: '&{template:'+fields.warningTemplate+'} {{name=Converting Items Bag}}{{desc=Please wait while I convert your Items Bag to add sections and make better use of the Character Sheet}}',
 		notSpellCaster: '&{template:'+fields.warningTemplate+'} {{name=^^cname^^ is Not a Spell Caster}}{{desc=^^cname^^ may aspire to be a wonderful Wizard or powerful Priest, but has yet to fulfil those desires.  Until then, refrain from pretending - you will be found out!}}',
@@ -836,6 +860,7 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 		SLOT_MI:			'SLOT_MI',
 		SLOT_MARTIAL_MI:	'SLOT_MARTIAL_MI',
 		SLOT_ALLITEMS_MI:	'SLOT_ALLITEMS_MI',
+		CHECK_MOVE:			'CHECK_MOVE',
 		MISC_SPELL:			'MISC_SPELL',
 		MEM_MUSPELL:		'MEM_MUSPELL',
 		MEM_PRSPELL:		'MEM_PRSPELL',
@@ -935,8 +960,9 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	});
 	
 	const reIgnore = /[\s\-\_]*/gi;
-	const reCastMIspellCmd = /!magic\s+--(?:cast|view)-spell\s+MI(?:-SPELLS)?\s*\|/im;
-	const reCastMIpowerCmd = /!magic\s+--(?:cast|view)-spell\s+MI-POWERS?\s*\|/im;
+	const reCastViewMIspellCmd = /!magic\s+--(?:cast|view)-spell\s+MI(?:-SPELLS)?\s*\|/im;
+	const reCastViewMIpowerCmd = /!magic\s+--(?:cast|view)-spell\s+MI-POWERS?\s*\|/im;
+	const reCastMIspellCmd = /!magic\s+--cast-spell\s+MI(?:-SPELLS)?\s*\|/im;
 	const reLooksLike = /Looks\s?Like=/im;
 	const reInitMIqty = /}}\s*?\w*?data\s*?=.*?[\[,]\s*?qty:([d\d\+\-\*\/.]+?)[,\s\]]/im;
 	const reSpecs = /}}\s*?specs\s*?=(.*?){{/im;
@@ -956,7 +982,7 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 //	const reActionButton = /((?<!}}\w+?=|\],?|\[)\[(?!\[|view|v:))([^\}\]]+?)\]\((.+?)\)(\s|,|\.|}}|\\|&|%|:)/img;
 	const reKeepButton = /((?<!}}\w+?=|\[)\[v:)([^\]]+?)\]\((.+?\))(\s|,|\.|}}|\\|&|%|:)/img;   // '[$2]($3$4'
 	
-	const dbReplacers = [
+	const dbReplacers = Object.freeze([
 			[/\\amp;?/gm, "&"],
 			[/\\lbrak;?/gm, "["],
 			[/\\rbrak;?/gm, "]"],
@@ -969,9 +995,9 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 			[/\\gt;?/gm, ">"],
 			[/\\lt;?/gm, "<"],
 			[/¦/g, "|"],
-		];
+		]);
 		
-	const msgReplacers = [
+	const msgReplacers = Object.freeze([
 			[/\\api;?/g, "!"],
 			[/\\lbrc;?/g, "{"],
 			[/\\rbrc;?/g, "}"],
@@ -998,16 +1024,15 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 			[/&&/g, "&#47;"],
 			[/%%/g, "&#37;"],
 			[/\\fs;?/g, "\\"],
-		];
-		
+		]);
 
-	const dbEncoders = [
+	const dbEncoders = Object.freeze([
 			[/\r?\n/gm,'\\n'],
 			[/'/gm,"\\'"],
 			[/&/gm,"\\\\amp;"],
 			[/>/gm,"\\\\gt;"],
 			[/</gm,"\\\\lt;"]
-		];
+		]);
 
 	const	splitable = ['charged','uncharged','splitable','cursed','change-each','cursed+change-each'];
 	const	stackable = ['charged','uncharged','cursed','change-each','cursed+change-each'];
@@ -1037,7 +1062,7 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 		noWaitMsg: true,
 	};
 		
-	var MagicMaster_tmp = (function() {
+/*	var MagicMaster_tmp = (function() {
 		var templates = {
 			button: _.template('<a style="display: inline-block; font-size: 100%; color: black; padding: 3px 3px 3px 3px; margin: 2px 2px 2px 2px; border: 1px solid black; border-radius: 0.5em; font-weight: bold; text-shadow: -1px -1px 1px #FFF, 1px -1px 1px #FFF, -1px 1px 1px #FFF, 1px 1px 1px #FFF; background-color: #C7D0D2;" href="<%= command %>"><%= text %></a>'),
 			confirm_box: _.template('<div style="font-weight: bold; background-color: #FFF; text-align: center; box-shadow: rgba(0,0,0,0.4) 3px 3px; border-radius: 1em; border: 1px solid black; margin: 5px 5px 5px 5px; padding: 2px 2px 2px 2px;">'
@@ -1080,7 +1105,7 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 			}
 		};
 	}());
-
+*/
 	/**
 	 * Init
 	 */
@@ -1100,6 +1125,8 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 				{state.MagicMaster.reveal = false;}
 			if (_.isUndefined(state.MagicMaster.viewActions))
 				{state.MagicMaster.viewActions = false;}
+			if (_.isUndefined(state.MagicMaster.encumbrance))
+				{state.MagicMaster.encumbrance = true;}
 			if (_.isUndefined(state.MagicMaster.gmRolls))
 				{state.MagicMaster.gmRolls = true;}
 			if (_.isUndefined(state.MagicMaster.debug))
@@ -1123,6 +1150,7 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 			reSpellSpecs = RPGMap.reSpellSpecs;
 			reClassSpecs = RPGMap.reClassSpecs;
 			reWeapSpecs = RPGMap.reWeapSpecs;
+			reACSpecs = RPGMap.reACSpecs;
 			saveFormat = RPGMap.saveFormat;
 			spellsPerLevel = RPGMap.spellsPerLevel;
 			casterLevels = RPGMap.casterLevels;
@@ -1131,10 +1159,11 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 			wisdomSpells = RPGMap.wisdomSpells;
 			spellLevels = RPGMap.spellLevels;
 			showMoreObj = RPGMap.showMoreObj;
+			encumberDef = RPGMap.encumberDef;
 			DBindex = undefined;
 			flags.noWaitMsg = true;
 			reSpellSpecs.reveal.def = state.MagicMaster.reveal ? 'use' : '';
-			setTimeout( () => flags.noWaitMsg=false, 5000 );
+			setTimeout( () => flags.noWaitMsg=false, 10000 );
 
 			// RED: v2.040 check what other APIs are loaded
 			setTimeout( () => issueHandshakeQuery('rounds'), 20);
@@ -1143,140 +1172,80 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 			setTimeout( () => updateHandouts(handouts,true,findTheGM()), 30);
 			setTimeout(cmdMasterRegister, 40);
 			setTimeout( () => updateDBindex(false), 80);
-//			setTimeout( () => handleCStidy( [], true ), 5000 );
-
-//			updateCharSheets(''); // Update any out-of-date character sheets to current version
+			setTimeout(setWeights,1000);
 
 			// RED: log the version of the API Script
-
 			log('-=> MagicMaster v'+version+' <=-  ['+(new Date(lastUpdate*1000))+']');
+
 		} catch (e) {
 			log('MagicMaster Initialisation: JavaScript '+e.name+': '+e.message+' while initialising the API');
 			sendDebug('MagicMaster Initialisation: JavaScript '+e.name+': '+e.message+' while initialising the API');
 			sendCatchError('MagicMaster',null,e,'MagicMaster initialisation');
 		}
 	}; 
+		
+/* ------------------------------ Simple String Manipulation ----------------------------------- */
 	
-// ------------------------------------------------ Deal with in-line expressions --------------------------------
+	/*
+	 * Function to encode special characters in a string
+	 */
+	 
+	const encodeStr = (str,encoders=dbEncoders) => encoders.reduce((m, rep) => m.replace(rep[0], rep[1]), str);
 	
-	/**
-	 * Return the string with the roll formatted, this is accomplished by simply
-	 * surrounding roll equations with [[ ]] TODO, should be replaced with a
-	 * single regex
-	 * 
+	/*
+	 * Function to standardise two strings and compare them.
+	 */
+	 
+	const stdEqual = (strA,strB) => ((strA.dbName() || '-') === (strB.dbName() || '-'));
+
+	/*
+	 * Function to return the msVersion of the Character Sheet
+	 * i.e. which versions of MagicMaster it is matched to
 	 */
 
-	var getFormattedRoll = function(str) {
-		if (!str) {return "";}
-		var retval = str,
-			re = /\d+d\d+/,
-			idx, 
-			expr, 
-			roll, 
-			pre, 
-			post;
+	const csVer = (charCS) => parseFloat(((attrLookup( charCS, fields.msVersion ) || '1.5').match(/^\d+\.?\d*/) || ['1.5'])[0]) || 1.5;
+	
+	/*
+	 * Build an array of values to store in a table row
+	 */
+	
+//	const valLine = (a,p,t,v) => a[fields[p+t][0]][fields[p+t][1]] = v;
 
-		if ((roll=re.exec(str))) {
-			expr = getExpandedExpr(roll[0],str,roll.index);
-			idx = str.indexOf(expr);
-			pre = str.substring(0,idx);
-			post = str.substring(idx+expr.length);
-		} else { return retval;}
-		
-		return pre+"[["+expr+"]]"+getFormattedRoll(post);
-	};
+	/**
+	 * Express a cost in coins for display
+	**/
+	
+	const showCost = (cost) => '**' + Math.floor(cost) + 'GP, ' + Math.floor((cost*10)%10) + 'SP, ' + Math.floor((cost*100)%10) +'CP**';
+	
+	/*
+	 * Determine the class or classes of the character, and 
+	 * the level of each
+	 *
+	 */
+	 
+	const getCharLevels = ( charCS ) => _.filter( fields, (elem,l) => {return l.toLowerCase().includes('_level')}).filter( elem => {return 0 < (attrLookup( charCS, elem ) || 0)});
+	
+	/*
+	 * Get a caster level
+	 */
+	 
+	const casterLevel = (charCS, casterType) => caster( charCS, casterType ).clv;
 	
 	/**
-	 * Return the target expression expanded as far as it logically can span
-	 * within the provided line.
-	 * 
-	 * ie: target = 1d20
-	 *	   locHint = 4
-	 *	   line = "2+1d20+5+2d4 bla (bla 1d20+8 bla) bla (4d8...) bla bla"
-	 * 
-	 * result = 2+1d20+5+2d4
-	 */
-
-	var getExpandedExpr = function(target, line, locHint) {
-		if (!target || !line) 
-			{return;}
-		if (!locHint) 
-			{locHint = 0;}
-		var retval = target,
-			re = /\d|[\+\-]|d/,
-			loc = -1, 
-			start = 0, 
-			end = 0;
-		
-		if((loc=line.indexOf(target,locHint)) !== -1) {
-			start = loc;
-			while (start > 0) {
-				if (line[start].match(re))
-					{start--;}
-				else
-					{start++;break;}
-			}
-			end = loc;
-			while (end < line.length) {
-				if (line[end].match(re))
-					{end++;}
-				else
-					{break;}
-			}
-			retval = line.substring(start,end);
-			retval = getLegalRollExpr(retval);
-		}
-		
-		return retval;
-	};
+	 * Add a message to a character sheet Journal. Generally
+	 * used to record items picked up, put away, bought and sold
+	 * so that they can be distributed as part of treasure
+	 * at the end of the campaign.
+	 **/
 	
-	/**
-	 * Gets a legal roll expression.
-	 */
-
-	var getLegalRollExpr = function(expr) {
-		if (!expr) {return;}
-		var retval = expr,
-			stray = expr.match(/d/g),
-			valid = expr.match(/\d+d\d+/g),
-			errMsg = "Illegal expression " + expr; 
-		
-		try {
-			if (expr.match(/[^\s\d\+-d]/g) || 
-			!stray || 
-			!valid || 
-			(stray.length =! valid.length))
-				{throw errMsg;}
-
-			stray = expr.match(/\+/g);
-			valid = expr.match(/\d+\+\d+/g);
-			if ((stray !== null) && (valid !== null) && 
-			(stray.length !== valid.length))
-				{throw errMsg;}
-			stray = expr.match(/-/g);
-			valid = expr.match(/\d+-\d+/g);
-			if ((stray !== null) && (valid !== null) && 
-			(stray.length !== valid.length))
-				{throw errMsg;}
-		} catch (e) {
-			throw e;
-		}
-		
-		//check for leading, trailing, operands
-		if (retval[0].match(/\+|-/))
-			{retval = retval.substring(1);}
-		if (retval[retval.length-1].match(/\+|-/))
-				{retval = retval.substring(0,retval.length-1);}
-		
-		return retval;
-	};
+	const diaryEntry = (charCS, msg) => setAttr( charCS, fields.Diary, (attrLookup( charCS, fields.Diary ) + '\n' + String(new Date(Date.now())).substring(0,15) + ': '+msg));
 	
 	/**
 	 * In the inline roll evaluator from ChatSetAttr script v1.9
 	 * by Joe Singhaus and C Levett.
 	**/
 
-	var processInlinerolls = function (msg) {
+	const processInlinerolls = function (msg) {
 		if (msg.inlinerolls && msg.inlinerolls.length) {
 			return msg.inlinerolls.map(v => {
 				const ti = v.results.rolls.filter(v2 => v2.table)
@@ -1298,62 +1267,57 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * Function to send an API command to chat
 	 * that has '^^parameter^^' replaced by relevant names & ids
 	**/
-	var sendAPImacro = function(senderId,charID,targetID,ability,modifier) {
+	
+	const sendAPImacro = function(senderId,charID,targetID,ability,modifier) {
 
 		if (!charID || !targetID || !ability) {
 			sendDebug('sendAPImacro: a parameter is null');
 			return;
 		}
 		modifier = modifier || '';
-		var journal,
-			curToken = getObj('graphic',charID),
-			tid = charID,
-			tname = curToken.get('name'),
-			cid = curToken.get('represents'),
-			targetCS = getCharacter(targetID),
-			words;
+		const curToken = getObj('graphic',charID),
+			  tid = charID,
+			  tname = curToken.get('name'),
+			  cid = curToken.get('represents'),
+			  targetCS = getCharacter(targetID),
+			  journal = getObj( 'character', cid );
 
-		journal = getObj( 'character', cid );
 		if (targetCS && journal) {
-			var cname = journal.get('name'),
-				bar1 = curToken.get('bar1_value'),
-				bar2 = curToken.get('bar2_value'),
-				bar3 = curToken.get('bar3_value'),
-				ac = getTokenValue(curToken,fields.Token_AC,fields.AC,fields.MonsterAC,fields.Thac0_base).val,
-				thac0 = getTokenValue(curToken,fields.Token_Thac0,fields.Thac0,fields.MonsterThac0,fields.Thac0_base).val,
-				hp = getTokenValue(curToken,fields.Token_HP,fields.HP,null,fields.Thac0_base).val,
-				targetcid = targetCS.id,
-				targetchar = targetCS.get('name'),
-				targettoken = getObj('graphic',targetID).get('name'),
-				abilityMacro = findObjs({ _type : 'ability' , characterid : targetCS.id, name :  ability + modifier }, {caseInsensitive: true});
-
+			const abilityMacro = findObjs({ _type : 'ability' , characterid : targetCS.id, name :  ability + modifier }, {caseInsensitive: true});
 			if (!abilityMacro || abilityMacro == undefined || abilityMacro.length === 0) {
 				sendDebug('Not found macro ' + targetCS.get('name') + '|' + ability + modifier);
 				return;
 			}
-			if (!cname) {
-				cname = curToken.get('name');
-			}
+			const cname = journal.get('name') || curToken.get('name'),
+				  bar1 = curToken.get('bar1_value'),
+				  bar2 = curToken.get('bar2_value'),
+				  bar3 = curToken.get('bar3_value'),
+				  ac = getTokenValue(curToken,fields.Token_AC,fields.AC,fields.MonsterAC,fields.Thac0_base).val,
+				  thac0 = getTokenValue(curToken,fields.Token_Thac0,fields.Thac0,fields.MonsterThac0,fields.Thac0_base).val,
+				  hp = getTokenValue(curToken,fields.Token_HP,fields.HP,null,fields.Thac0_base).val,
+				  targetcid = targetCS.id,
+				  targetchar = targetCS.get('name'),
+				  targettoken = getObj('graphic',targetID).get('name');
+
 			if (abilityMacro.length > 0) {
-				var macroBody = abilityMacro[0].get('action');
-				
-				macroBody = macroBody.replace( /\@\{selected\|token_id}/gi, tid )
-									 .replace( /\@\{selected\|/gi, '\@{'+cname+'|' )
-									 .replace( /\^\^cname\^\^/gi , cname )
-									 .replace( /\^\^tname\^\^/gi , tname )
-									 .replace( /\^\^cid\^\^/gi , cid )
-									 .replace( /\^\^tid\^\^/gi , tid )
-									 .replace( /\^\^pid\^\^/gi , senderId )
-									 .replace( /\^\^targetchar\^\^/gi , cname )
-									 .replace( /\^\^targettoken\^\^/gi , tname )
-									 .replace( /\^\^targetcid\^\^/gi , targetcid )
-									 .replace( /\^\^targettid\^\^/gi , targetID )
-									 .replace( /\^\^bar1_current\^\^/gi , bar1 )
-									 .replace( /\^\^bar2_current\^\^/gi , bar2 )
-									 .replace( /\^\^bar3_current\^\^/gi , bar3 )
-									 .replace( /\^\^token_ac\^\^/gi , ac )
-									 .replace( /\^\^token_thac0\^\^/gi , thac0 )
-									 .replace( /\^\^token_hp\^\^/gi , hp );
+				const macroBody = abilityMacro[0].get('action')
+												 .replace( /\@\{selected\|token_id}/gi, tid )
+												 .replace( /\@\{selected\|/gi, '\@{'+cname+'|' )
+												 .replace( /\^\^cname\^\^/gi , cname )
+												 .replace( /\^\^tname\^\^/gi , tname )
+												 .replace( /\^\^cid\^\^/gi , cid )
+												 .replace( /\^\^tid\^\^/gi , tid )
+												 .replace( /\^\^pid\^\^/gi , senderId )
+												 .replace( /\^\^targetchar\^\^/gi , cname )
+												 .replace( /\^\^targettoken\^\^/gi , tname )
+												 .replace( /\^\^targetcid\^\^/gi , targetcid )
+												 .replace( /\^\^targettid\^\^/gi , targetID )
+												 .replace( /\^\^bar1_current\^\^/gi , bar1 )
+												 .replace( /\^\^bar2_current\^\^/gi , bar2 )
+												 .replace( /\^\^bar3_current\^\^/gi , bar3 )
+												 .replace( /\^\^token_ac\^\^/gi , ac )
+												 .replace( /\^\^token_thac0\^\^/gi , thac0 )
+												 .replace( /\^\^token_hp\^\^/gi , hp );
 									 
 				sendChat("character|"+cid,sendMsgToWho(journal,senderId,macroBody),null,{noarchive:!flags.archive, use3d:false});
 			}
@@ -1365,33 +1329,29 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * RED: v1.207 Send a debugging message if the debugging flag is set
 	 */ 
 	
-	var sendDebug = function(msg) {
+	const sendDebug = function(msg) {
 		if (!!state.MagicMaster.debug) {
 			if (playerIsGM(state.MagicMaster.debug)) {
 				log('MagicMaster Debug: '+msg);
 			} else {
-				var player = getObj('player',state.MagicMaster.debug),
-					to;
+				const player = getObj('player',state.MagicMaster.debug);
+				let to;
 				if (player) {
 					to = '/w "' + player.get('_displayname') + '" ';
-				} else 
-					{throw ('sendDebug could not find player');}
-				if (!msg)
-					{msg = 'No debug msg';}
+				} else {
+					throw ('sendDebug could not find player');
+				}
+				if (!msg) msg = 'No debug msg';
 				sendChat('MagicMaster Debug',to + '<span style="color: red; font-weight: bold;">'+msg+'</span>',null,{noarchive:!flags.archive, use3d:false}); 
 			};
 		};
 	}; 
 	
-	var doSetDebug = function(args,senderId) {
-		var player = getObj('player',senderId),
-			playerName;
-		if (player) {
-			playerName = player.get('_displayname');
-		}
-		else 
-			{throw ('doSetDebug could not find player: ' + args);}
-		if (!!args && args.indexOf('off') != 0) {
+	const doSetDebug = function(args,senderId) {
+		const player = getObj('player',senderId);
+		if (!player) throw ('doSetDebug could not find player: ' + args);
+		const playerName = player.get('_displayname');
+		if (!!args && args.indexOf('off') !== 0) {
 			state.MagicMaster.debug = senderId;
 			sendResponseError(senderId,'MagicMaster Debug set on for ' + playerName,'MagicMaster Debug');
 			sendDebug('Debugging turned on');
@@ -1405,70 +1365,77 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * Display a message when a character has picked up a magic item
 	 **/
 
-	var pickupMessage = function( args, miName, miType, pickedQty, fromCharges, toCharges, senderId ) {
+	const pickupMessage = function( args, miName, miType, pickedQty, fromCharges, toCharges, senderId ) {
 	
-		var buy = (args[0] || '').toUpperCase().includes('BUY'),
-			sell = (args[0] || '').toUpperCase().includes('SELL'),
-			tokenID = args[1],
-			fromID = args[3],
-			toID = args[4],
-			cost = parseFloat(args[7]),
-			charCS = getCharacter( tokenID ),
-			picking = (tokenID == toID),
-			whereStr = picking ? (' from '+getObj('graphic',fromID).get('name')) : (' to '+getObj('graphic',toID).get('name')),
-			content, pickOrPut, charges, msg;
-			
-		content = '&{template:'+fields.messageTemplate+'}{{name='+(picking?'Picking Up':'Putting Away')+' Items}}{{desc=';
-			
-		pickOrPut = sell ? 'sold ' : (buy ? 'bought ' : (picking ? 'picked up ' : 'put away '));
-		charges = picking ? toCharges : fromCharges;
+		const buy = (args[0] || '').toUpperCase().includes('BUY'),
+			  sell = (args[0] || '').toUpperCase().includes('SELL'),
+			  tokenID = args[1],
+			  fromID = args[3],
+			  toID = args[4],
+			  cost = parseFloat(args[7]),
+			  charCS = getCharacter( tokenID ),
+			  picking = (tokenID == toID),
+			  whereStr = picking ? (' from '+getObj('graphic',fromID).get('name')) : (' to '+getObj('graphic',toID).get('name')),
+			  pickOrPut = sell ? 'sold ' : (buy ? 'bought ' : (picking ? 'picked up ' : 'put away ')),
+			  charges = picking ? toCharges : fromCharges;
+		let	msg;
+		let content = '&{template:'+fields.messageTemplate+'}{{name='+(pickOrPut.dispName()+' Items')+' Items}}{{desc=';
 		
-		switch (miType.toLowerCase()) {
+		if (_.isArray(miName)) {
+			let msgArray = [];
+			msg = 'You have '+pickOrPut+' ';
+			for (let i=0; i<miName.length; i++) msgArray.push(pickedQty[i]+' '+miName[i]);
+			msg += msgArray.join(', ');
 		
-		case 'charged':
-		case 'cursed+charged':
-		case 'perm-charged':
-		case 'changing':
-		case 'change-last':
-		case 'cursed+change-last':
-		case 'change-each':
-		case 'cursed+change-each':
-		case 'discharging':
-		case 'perm-discharging':
-		case 'cursed+discharging':
-			msg = 'You have '+pickOrPut+pickedQty+' '+miName+whereStr+', and now have '+charges+' charges';
-			break;
+		} else {
 			
-		case 'cursed+rechargeable':
-		case 'cursed+selfchargeable':
-		case 'rechargeable':
-		case 'selfchargeable':
-			msg = 'You have '+pickOrPut+miName+whereStr+', a rechargeable item (if you have the skill) with '+toCharges+' charges';
-			break;
+			switch (miType.toLowerCase()) {
 			
-		case 'cursed+recharging':
-		case 'recharging':
-			msg = 'You have '+pickOrPut+miName+whereStr+', an item with a maximum of '+toCharges+' charges, which regains charges each night';
-			break;
+			case 'charged':
+			case 'cursed+charged':
+			case 'perm-charged':
+			case 'changing':
+			case 'change-last':
+			case 'cursed+change-last':
+			case 'change-each':
+			case 'cursed+change-each':
+			case 'discharging':
+			case 'perm-discharging':
+			case 'cursed+discharging':
+				msg = 'You have '+pickOrPut+pickedQty+' '+miName+whereStr+', and now have '+charges+' charges';
+				break;
+				
+			case 'cursed+rechargeable':
+			case 'cursed+selfchargeable':
+			case 'rechargeable':
+			case 'selfchargeable':
+				msg = 'You have '+pickOrPut+miName+whereStr+', a rechargeable item (if you have the skill) with '+toCharges+' charges';
+				break;
+				
+			case 'cursed+recharging':
+			case 'recharging':
+				msg = 'You have '+pickOrPut+miName+whereStr+', an item with a maximum of '+toCharges+' charges, which regains charges each night';
+				break;
+				
+			case 'cursed+absorbing':
+			case 'absorbing':
+				msg = 'You have '+pickOrPut_miName+whereStr+', a charge-absorbing item currently with '+charges+' charges, which can increase to a maximum of '+toCharges;
+				break;
+				
+			case 'cursed':
+			case 'splitable':
+			case 'uncharged':
+			case 'single-uncharged':
+			case 'cursed+uncharged':
+			case 'enable':
+			case 'disable':
+			case 'single':
 			
-		case 'cursed+absorbing':
-		case 'absorbing':
-			msg = 'You have '+pickOrPut_miName+whereStr+', a charge-absorbing item currently with '+charges+' charges, which can increase to a maximum of '+toCharges;
-			break;
-			
-		case 'cursed':
-		case 'splitable':
-		case 'uncharged':
-		case 'single-uncharged':
-		case 'cursed+uncharged':
-		case 'enable':
-		case 'disable':
-		case 'single':
-		
-		default:
-			msg = 'You have '+pickOrPut+pickedQty+' '+miName+((pickedQty>1)?'\'s':'')+whereStr+', and now have '+charges;
-			break;
-		}
+			default:
+				msg = 'You have '+pickOrPut+pickedQty+' '+miName+((pickedQty>1)?'\'s':'')+whereStr+', and now have '+charges;
+				break;
+			}
+		};
 		
 		if (cost && !isNaN(cost) && cost > 0) {
 			msg += ', at a cost of '+showCost( cost );
@@ -1488,8 +1455,8 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * specific API command is present
 	 **/
 	 
-	var issueHandshakeQuery = function( api, cmd ) {
-		var handshake = '!'+api+' --noWaitMsg --hsq magic'+((cmd && cmd.length) ? ('|'+cmd) : '');
+	const issueHandshakeQuery = function( api, cmd ) {
+		const handshake = '!'+api+' --noWaitMsg --hsq magic'+((cmd && cmd.length) ? ('|'+cmd) : '');
 		sendAPI(handshake);
 		return;
 	};
@@ -1501,31 +1468,28 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	async function updateACS( charCS, tokenID, curVer, senderId ) {
 		
 		try {
-			var charName = charCS.get('name'),
-				updated = false,
-				csv = csVer(charCS);
+			const charName = charCS.get('name'),
+				  csv = csVer(charCS);
 
-			var updateCSspellCol = function( charCS, charName, c, senderId ) {
+			const updateCSspellCol = function( charCS, charName, c, senderId ) {
 				return new Promise(resolve => {
 					try {
-						var	spellName, SpellCol,
-							updated = false,
+						let	spellName, SpellCol, msg,
 							r = 0;
+						var updated = false;
 						SpellCol = getTableField( charCS, {}, fields.Spells_table, fields.Spells_name, c );
 						SpellCol = getTableField( charCS, SpellCol, fields.Spells_table, fields.Spells_macro, c, '' );
 						SpellCol = getTableField( charCS, SpellCol, fields.Spells_table, fields.Spells_msg, c, '' );
 						while (!_.isUndefined(spellName = SpellCol.tableLookup( fields.Spells_name, r, false ))) {
 							if (spellName != '-') {
 								updated = true;
-								let msg = SpellCol.tableLookup( fields.Spells_macro, r );
-								SpellCol = SpellCol.tableSet( fields.Spells_msg, r, msg );
+								SpellCol = SpellCol.tableSet( fields.Spells_msg, r, SpellCol.tableLookup( fields.Spells_macro, r ) );
 								SpellCol = SpellCol.tableSet( fields.Spells_macro, r, (spellName != '-' ? ('%{'+charName+'|'+spellName+'}') : ''));
 							}
 							r++;
 						}
 					} catch (e) {
 						log('MagicMaster updateCharSheets: JavaScript '+e.name+': '+e.message+' while converting sheet '+charCS.get('name'));
-						sendDebug('MagicMaster updateCharSheets: JavaScript '+e.name+': '+e.message+' while converting sheet '+charCS.get('name'));
 						sendCatchError('MagicMaster',msg_orig[senderId],e);
 					} finally {
 						setTimeout(() => {
@@ -1555,16 +1519,16 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 		}
 	};
 
-	var updateCharSheets = function(args,senderId) {
+	const updateCharSheets = function(args,senderId) {
 		
 		log('updateCharSheets: a character sheet version test has been triggered');
 		
-		var curVer = parseFloat(((version || '1.5').match(/^\d+\.\d+/) || ['1.5'])[0]) || 1.5,
-			CSarray = [],
-			charObj;
+		const curVer = parseFloat(((version || '1.5').match(/^\d+\.\d+/) || ['1.5'])[0]) || 1.5;
+		let CSarray = [],
+			delay;
 		
 		if (args && args.length) {
-			charObj = getCharacter(args[0]);
+			const charObj = getCharacter(args[0]);
 			if (charObj) {
 				if (curVer > csVer(charObj)) {
 					CSarray = [{cs:charObj,tid:args[0]}];
@@ -1584,7 +1548,7 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 			});
 		};
 		for (const ct of CSarray) {
-			let delay = Math.round(1000+(Math.random() * 1000));
+			delay = Math.round(1000+(Math.random() * 1000));
 			setTimeout( updateACS, delay, ct.cs, ct.tid, curVer, senderId );
 		}
 	};
@@ -1593,13 +1557,13 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * Find the GM, generally when a player can't be found
 	 */
 	 
-	var findTheGM = function() {
-		var playerGM,
-			players = findObjs({ _type:'player' });
+	const findTheGM = function() {
+		let playerGM;
+		const players = findObjs({ _type:'player' });
 
 		if (players.length !== 0) {
 			if (!_.isUndefined(playerGM = _.find(players, function(p) {
-				var player = p;
+				const player = p;
 				if (player) {
 					if (playerIsGM(player.id)) {
 						state.MagicMaster.gmID = player.id;
@@ -1613,23 +1577,41 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 		return state.MagicMaster.gmID;
 	}
 	
-	/**
-	 * Get the configuration for the player who's ID is passed in
-	 * or, if the config is passed back in, set it in the state variable
-	 **/
-/*	 
-	var getSetPlayerConfig = function( playerID, configObj ) {
-		
-		if (!state.MagicMaster.playerConfig[playerID]) {
-			state.MagicMaster.playerConfig[playerID]={};
-		}
-		if (!_.isUndefined(configObj)) {
-			state.MagicMaster.playerConfig[playerID] = configObj;
-		};
-		return state.MagicMaster.playerConfig[playerID];
-	};
-				
 /* ------------------------------- Character Sheet Database Management -------------------------- */
+	
+	/**
+	 * Create an internal index of items in the databases 
+	 * to make searches much faster.  Index entries indexed by
+	 * database root name & short name (name in lower case with 
+	 * '-', '_' and ' ' ignored).  index[0] = abilityID,
+	 * index[1] = ct-attributeID
+	 * v3.051 Check that other database-handling APIs have finished
+	 *        updating their databases and performed a handshake
+	 **/
+	 
+	const updateDBindex = function(forceUpdate=false) {
+		
+		apiDBs.attk = !!apiDBs.attk || ('undefined' === typeof attackMaster);
+
+		DBindex = getDBindex(forceUpdate);
+		parseClassDB(forceUpdate);
+		return;
+	}
+	
+	/*
+	 * Check a character sheet database and update/create the 
+	 * required attributes from the definitions.  This should 
+	 * be run after updating or adding item or spell definitions.
+	 */
+	 
+	const checkDB = function( args ) {
+		
+		checkCSdb( args[0] );
+		
+		apiDBs.magic = true;
+		updateDBindex(true);
+		return;
+	}
 	
 	/*
 	 * Check the version of a Character Sheet database and, if 
@@ -1637,7 +1619,7 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * it to the latest version.
 	 */
 	 
-	var buildDB = function( dbFullName, dbObj, senderId, silent ) {
+	const buildDB = function( dbFullName, dbObj, senderId, silent ) {
 		
 		return new Promise(resolve => {
 			
@@ -1657,10 +1639,10 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 		});
 	};
 	
-	var copyMarkerCSdb = function( APIdbName, UserDbName, itemClass ) {
+	const copyMarkerCSdb = function( APIdbName, UserDbName, itemClass ) {
 		
 		let APIdbCS = findObjs({ _type:'character', name:APIdbName });
-		let reItemClass = new RegExp( itemClass, 'im' );
+		const reItemClass = new RegExp( itemClass, 'im' );
 		if (!APIdbCS || !APIdbCS.length) {
 			sendError(APIdbName+' not found');
 			return;
@@ -1674,12 +1656,12 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 			UserDbCS = UserDbCS[0];
 		}
 		
-		let abilities = findObjs({ _type:'ability', _characterid:APIdbCS.id })
+		const abilities = findObjs({ _type:'ability', _characterid:APIdbCS.id })
 						.filter( o => /\s--target\s|\s--touch\s/im.test(o.get('action')) )
 						.filter( o => reItemClass.test(o.get('action')));
-					
+		let UserObj;
 		_.each(abilities, a => {
-			let UserObj = findObjs({_type:'ability', _characterid:UserDbCS.id, name:a.get('name') });
+			UserObj = findObjs({_type:'ability', _characterid:UserDbCS.id, name:a.get('name') });
 			if (!UserObj || !UserObj.length) {
 				createObj( 'ability', {name: a.get('name'), action: a.get('action'), characterid: UserDbCS.id} );
 			}
@@ -1687,142 +1669,56 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 		checkDB([UserDbName]);
 		return;
 	};
-
-	/*
-	 * Check a character sheet database and update/create the 
-	 * required attributes from the definitions.  This should 
-	 * be run after updating or adding item or spell definitions.
-	 */
-	 
-	var checkDB = function( args ) {
-		
-		checkCSdb( args[0] );
-		
-		apiDBs.magic = true;
-		updateDBindex(true);
-		return;
-	}
 	
-	/**
-	 * Create an internal index of items in the databases 
-	 * to make searches much faster.  Index entries indexed by
-	 * database root name & short name (name in lower case with 
-	 * '-', '_' and ' ' ignored).  index[0] = abilityID,
-	 * index[1] = ct-attributeID
-	 * v3.051 Check that other database-handling APIs have finished
-	 *        updating their databases and performed a handshake
-	 **/
-	 
-	var updateDBindex = function(forceUpdate=false) {
-		
-		apiDBs.attk = !!apiDBs.attk || ('undefined' === typeof attackMaster);
+/* ---------------------------- Update Legacy Character Sheets ------------------------- */
 
-		DBindex = getDBindex(forceUpdate);
-		parseClassDB(forceUpdate);
-		return;
-	}
-	
+	async function setWeights() {
+		const gmID = findTheGM();
+		let delay = 50;
+		let doneList = [];
+		const charList = filterObjs( obj => {
+			if (obj.get('_type') !== 'graphic' || obj.get('subtype') !== 'token' || !obj.get('represents').length) return false;
+			const charID = obj.get('represents');
+			if (doneList.includes(charID)) return false;
+			doneList.push(charID);
+			const charCS = getObj('character',charID);
+			if (!charCS || !charCS.get('controlledby').length) return false;
+			return (!String(attrLookup( charCS, fields.Weight_total ) || '').length);
+		});
+		for (const obj of charList) {
+			const Items = getTableGroup( obj, fieldGroups.MI );
+			await itemSlotData( obj.id, Items, gmID );
+		};
+	};
+
 /* ------------------------------- Magic Utility functions ----------------------------- */
-	
-	/*
-	 * Function to replace special characters in a string
-	 */
-/*	 
-	var parseStr=function(str='',replacers=dbReplacers){
-		return replacers.reduce((m, rep) => m.replace(rep[0], rep[1]), str);
-	}
-
-	/*
-	 * Function to encode special characters in a string
-	 */
-	 
-	var encodeStr=function(str,encoders=dbEncoders){
-		return encoders.reduce((m, rep) => m.replace(rep[0], rep[1]), str);
-	}
-	
-	/*
-	 * Function to standardise two strings and compare them.
-	 */
-	 
-	var stdEqual=function(strA,strB){
-		return ((strA.dbName() || '-') === (strB.dbName() || '-'));
-	}
-
-	/*
-	 * Function to return the msVersion of the Character Sheet
-	 * i.e. which versions of MagicMaster it is matched to
-	 */
-
-	var csVer = (charCS) => parseFloat(((attrLookup( charCS, fields.msVersion ) || '1.5').match(/^\d+\.?\d*/) || ['1.5'])[0]) || 1.5;
-
-	/**
-	 * Express a cost in coins for display
-	**/
-	
-	var showCost = function( cost ) {
-		var content = '**' + Math.floor(cost) + 'GP, ' + Math.floor((cost*10)%10) + 'SP, ' + Math.floor((cost*100)%10) +'CP**';
-		return content;
-	};
-	
-	/*
-	 * Determine the class or classes of the character, and 
-	 * the level of each
-	 *
-	 */
-	 
-	var getCharLevels = function( charCS ) {
-		return _.filter( fields, (elem,l) => {return l.toLowerCase().includes('_level')})
-					.filter( elem => {return 0 < (attrLookup( charCS, elem ) || 0)});
-	}
-	
-	var casterLevel = function( charCS, casterType ) {
-		return caster( charCS, casterType ).clv;
-	}
-	
-	/**
-	 * Add a message to a character sheet Journal. Generally
-	 * used to record items picked up, put away, bought and sold
-	 * so that they can be distributed as part of treasure
-	 * at the end of the campaign.
-	 **/
-	
-	var diaryEntry = function( charCS, msg ) {
-		setAttr( charCS, fields.Diary, (attrLookup( charCS, fields.Diary ) 
-			+ '\n'
-			+ String(new Date(Date.now())).substring(0,15)
-			+ ': '+msg)
-		);
-		return;
-	};
 	
 	/**
 	 * Determine the type of caster and set the correct levels
 	 **/
 	 
-	var setCaster = function( args, msg, senderId ) {
+	const setCaster = function( args, msg, senderId ) {
 	 
-		var isPower = args[0].toUpperCase().includes('POWER'),
+		const tokenID = args[1],
+			  curToken = getObj('graphic',tokenID),
+			  charCS = getCharacter( tokenID ),
+			  itemName = args[5] || '';
+		let	isPower = args[0].toUpperCase().includes('POWER'),
 			isMU = args[0].toUpperCase().includes('MU'),
 			isMI = args[0].toUpperCase().includes('MI'),
 			isPR = args[0].toUpperCase().includes('PR'),
-			tokenID = args[1],
-			curToken = getObj('graphic',tokenID),
-			charCS = getCharacter( tokenID ),
-			level = args[2],
-			pr_level, mu_level,
-			castingName = args[3],
-//			chargedItem = (!!args[4] && args[4].toLowerCase()=='charged'),
-			itemName = args[5] || '';
+			level = parseInt(evalAttr(args[2])),
+			castingName = args[3];
 			
 		if (!charCS) {
-			sendDebug('setCaster: invalid token_id');
 			sendError('No token selected');
 			return;
 		}
 
-		mu_level = parseInt(casterLevel( charCS, 'MU' ),10);
-		pr_level = parseInt(casterLevel( charCS, 'PR' ),10);
-		
+		let mu_level = parseInt(casterLevel( charCS, 'MU' ),10);
+		let pr_level = parseInt(casterLevel( charCS, 'PR' ),10);
+		const charType = parseInt(attrLookup( charCS, fields.ItemContainerType )) || 0;
+				
 		if (isMU && isPR) {
 			isMU = !isNaN(mu_level) && mu_level > 0;
 			isPR = !isNaN(pr_level) && pr_level > 0;
@@ -1852,6 +1748,9 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 			mu_level = pr_level = level;
 		}
 		
+		if (isMI && charType !== 2 && charType !== 3 && charType !== 7) {
+			level = 1;
+		}
 		if (!level || level <= 0) {
 			sendParsedMsg( tokenID, ((mu_level || pr_level) ? messages.wrongSpellCaster : messages.notSpellCaster), senderId );
 			return;
@@ -1867,7 +1766,7 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 		setAttr( charCS, fields.Casting_name, castingName );
 		if (itemName.length) {
 			setAttr( charCS, fields.ItemChosen, itemName );
-			let item = abilityLookup( fields.MagicItemDB, itemName );
+			const item = abilityLookup( fields.MagicItemDB, itemName );
 			if (args[0].toLowerCase().includes('mi') && !!item.obj && !!item.obj[1].charge) {
 				if (chargedList.includes(item.obj[1].charge.toLowerCase())) {
 					args[0] = BT.MI_SCROLL;
@@ -1883,21 +1782,16 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * the 2E sheet L5 MU Spells start out-of-sequence at column 70
 	 */
 	 
-	var shapeSpellbook = function( charCS, spellbook ) {
+	const shapeSpellbook = function( charCS, spellbook ) {
 
-		var sheetTypes, charClass, level, maxLevel, miscSpells, noSpells,
-			specSpells = 0,
-			levelSpec = 0,
-			levelSpells = [];
-			
-		var countSpells = function( levelSpells ) {
+		const countSpells = function( levelSpells ) {
 			levelSpells[1].spells = 0;
-			let r = 0,
+			let r = 0, c = 0,
 				spellName = '',
 				hasDash = false,
 				spellTables = [];
 			do {
-				let c = levelSpells[1].base;
+				c = levelSpells[1].base;
 				for (let w = 1; (w <= fields.SpellsCols); w++) {
 					if (!spellTables[w]) {
 						spellTables[w] = getTable( charCS, fieldGroups.SPELLS, c );
@@ -1918,10 +1812,13 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 		};
 
 			
+		let	levelSpells = [];
 		if (charCS) {
-			var casterSpecs = caster( charCS, spellbook ),
-				level = casterSpecs.lv,
-				charClass = casterSpecs.ccl;
+			const casterSpecs = caster( charCS, spellbook ),
+				  charClass = casterSpecs.ccl,
+				  level = casterSpecs.lv;
+
+			let	maxLevel, miscSpells, noSpells, specSpells, levelSpec;
 				
 			switch (spellbook.toUpperCase()) {
 
@@ -1967,7 +1864,6 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 				break;
 				
 			default:
-				sendDebug('shapeSpellbook: invalid spellbook type '+spellbook+' specified');
 				sendError('Internal MagicMaster error');
 				break;
 			}
@@ -1980,55 +1876,90 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * selected to use or memorise
 	 */
 	 
-	var checkValidSpell = function( args ) {
+	const checkValidSpell = function( args ) {
 		
-		var isMU = args[0].includes('MU'),
-			isPR = args[0].includes('PR'),
-			tokenID = args[1],
-			spell = args[5],
-			charCS = getCharacter(tokenID),
-			casterDef = caster(charCS, (isMU ? 'MU' : 'PR')),
-			reAllowedSpells = {	majorsphere:	reClassSpecs.majorsphere,
-								minorsphere:	reClassSpecs.minorsphere,
-								bannedsphere:	reClassSpecs.bannedsphere,
-			},
-			allowAll = state.MagicMaster.spellRules.allowAll,
+		const isMU = args[0].includes('MU'),
+			  isPR = args[0].includes('PR'),
+			  tokenID = args[1],
+			  spell = args[5],
+			  charCS = getCharacter(tokenID),
+			  casterDef = caster(charCS, (isMU ? 'MU' : 'PR')),
+			  reAllowedSpells = {majorsphere:	reClassSpecs.majorsphere,
+								 minorsphere:	reClassSpecs.minorsphere,
+								 bannedsphere:	reClassSpecs.bannedsphere,
+			  },
+			  allowAll = state.MagicMaster.spellRules.allowAll;
 
-			spellSpec, spellData, school, sphere, level, banned, specialist, specStd,
-			casterSpec, casterData, majorSpells, minorSpells, bannedSpells;
-			
 		if (!args[5] || !args[5].length) return 1;
 		
-		spellSpec = abilityLookup( (isMU ? fields.MU_SpellsDB : fields.PR_SpellsDB), spell, charCS );
+		const spellSpec = abilityLookup( (isMU ? fields.MU_SpellsDB : fields.PR_SpellsDB), spell, charCS );
 		if (!spellSpec.obj) return 0;
-		spellData = spellSpec.obj[1].body;
-		school = spellSpec.specs();
-		school = (!school || !school[0] || !school[0][4]) ? 'Invalid' : school[0][4];
-		school = (school ||'any').dbName().split('|');
+		let spellData = spellSpec.obj[1].body;
 		spellData = (spellData.match(reSpellData) || ['',''])[1];
 		spellData = parseData( spellData, reSpellSpecs );
-		sphere = (spellData.sph || 'any').dbName().split('|');
-		level = spellData.level || 1;
-		casterSpec = abilityLookup( fields.ClassDB, casterDef.cl, charCS, true, false );
+		let school = spellSpec.specs();
+		school = (!school || !school[0] || !school[0][4]) ? 'Invalid' : school[0][4];
+		school = (school ||'any').dbName().split('|');
+		const sphere = (spellData.sph || 'any').dbName().split('|');
+		const level = spellData.level || 1;
+		let casterSpec = abilityLookup( fields.ClassDB, casterDef.cl, charCS, true, false );
 		if (!casterSpec.obj) {
 			casterSpec = abilityLookup( fields.ClassDB, casterDef.ccl, charCS );
 		}
-		let test = (spellsPerLevel[casterDef.ccl] && spellsPerLevel[casterDef.ccl][(isMU ? 'MU' : 'PR')] && spellsPerLevel[casterDef.ccl][(isMU ? 'MU' : 'PR')][level] && spellsPerLevel[casterDef.ccl][(isMU ? 'MU' : 'PR')][level][casterDef.lv]);
+		const test = (spellsPerLevel[casterDef.ccl] && spellsPerLevel[casterDef.ccl][(isMU ? 'MU' : 'PR')] && spellsPerLevel[casterDef.ccl][(isMU ? 'MU' : 'PR')][level] && spellsPerLevel[casterDef.ccl][(isMU ? 'MU' : 'PR')][level][casterDef.lv]);
 		if (!casterSpec.obj || !test) return 0;
 
-		casterData = casterSpec.obj[1].body;
+		let casterData = casterSpec.obj[1].body;
 		casterData = (casterData.match(reClassData) || ['',''])[1];
 		casterData = parseData( casterData, reAllowedSpells );
-		majorSpells = casterData.sps.dbName().split('|');
-		minorSpells = casterData.spm.dbName().split('|');
-		bannedSpells = casterData.spb.dbName().split('|');
+		const majorSpells = (casterData.sps.dbName() || '-').split('|');
+		const minorSpells = (casterData.spm.dbName() || '-').split('|');
+		const bannedSpells = (casterData.spb.dbName() || '-').split('|');
 		
+		let	banned, specialist, specStd;
 		return _.reduce( (isMU ? school : sphere), (r,s) => {
 			banned = !(s === 'any' || ((isMU || majorSpells.includes('any') || majorSpells.some(sph => s.startsWith(sph)) || (minorSpells.some(sph => s.startsWith(sph)) && level < 4)) && (isPR || !bannedSpells.some(sph => s.startsWith(sph)))));
 			specialist = isMU && majorSpells.includes(s);
 			specStd = isMU && !majorSpells.includes('any');
+//			log('checkValidSpell: r:'+r+', s:'+s+', isMU:'+isMU+', bannedSpells.some:'+bannedSpells.some(sph => s.startsWith(sph))+', specialist:'+specialist+', specStd:'+specStd+', allowAll:'+allowAll+', banned:'+banned);
+			
 			return ((!allowAll && (!r || banned)) ? 0 : (specialist ? 3 : (specStd ? 2 : r)));
 		},1);
+	}
+	
+	/**
+	 * Find an item identified as a Power, but which might actually 
+	 * be in a different database, as powers can be anything magical
+	 **/
+	 
+	const findPower = function( charCS, power ) {
+		
+		if (!power || !power.length) return abilityLookup( fields.PowersDB, '', charCS, true, false );
+	 
+		const dbList = [['PW-',fields.PowersDB],['MU-',fields.MU_SpellsDB],['PR-',fields.PR_SpellsDB],['MI-',fields.MagicItemDB]];
+		const powerType = power.substring(0,3);
+		let	powerLib;
+			
+		if (_.some(dbList,dB=>dB[0]===powerType.toUpperCase())) power = power.slice(powerType.length);
+			
+		if (!_.some(dbList, dB => {
+			if (powerType.toUpperCase() === dB[0]) {
+				powerLib = abilityLookup( dB[1], power, null, true );
+				return true;
+			} else {
+				return false;
+			}
+		})) {
+			_.some(dbList, dB => {
+				powerLib = abilityLookup( dB[1], power, null, true );
+				return !_.isUndefined(powerLib.obj);
+			});
+		};
+		if (!powerLib.obj) {
+			powerLib = abilityLookup( fields.PowersDB, power, charCS );
+		}
+		powerLib.name = power;
+		return powerLib;
 	}
 	
 	/*
@@ -2036,24 +1967,26 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * assess if the power can be used by a character of this level
 	 */
 	 
-	var checkValidPower = function( args, senderId ) {
+	const checkValidPower = function( args, senderId ) {
 		
-		var matchPower = (args[5] || '').dbName(),
-			charCS = getCharacter( args[1] ),
-			classObj = classObjects( charCS, senderId ),
-			age = parseInt(attrLookup( charCS, fields.AgeVal ) || 9999),
-			castAsLvl = -1;
+		const matchPower = (args[5] || '').dbName(),
+			  charCS = getCharacter( args[1] ),
+			  classObj = classObjects( charCS, senderId ),
+			  age = parseInt(attrLookup( charCS, fields.AgeVal ) || 9999);
+		let	castAsLvl = -1,
+			classData, powerData, powerName,
+			isClassPower, isValidPower;
 			
 		if (!matchPower || !matchPower.length || state.MagicMaster.spellRules.allowAnyPower) {log('checkValidPower: no check possible. !matchPower='+!matchPower+', matchPower.length='+matchPower.length+', !matchPower.length='+!matchPower.length+', allowAll='+state.MagicMaster.spellRules.allowAnyPower); return true;}
 			
-		let success = classObj.some( c => {
-			let classData = resolveData( c.name, c.dB, reRaceData ).raw;
+		const success = classObj.some( c => {
+			classData = resolveData( c.name, c.dB, reRaceData ).raw;
 			return _.some(classData, p => {
-				let powerData = parseData( String(p), reSpellSpecs );
-				let powerName = powerData.name.toLowerCase();
+				powerData = parseData( String(p), reSpellSpecs );
+				powerName = powerData.name.toLowerCase();
 				if (powerName.startsWith('mu-') || powerName.startsWith('pr-') || powerName.startsWith('pw-')) powerName = powerName.slice(3);
-				let isClassPower = matchPower == powerName.dbName();
-				let isValidPower = (parseInt(powerData.age) <= age && parseInt(powerData.level) <= parseInt(c.level));
+				isClassPower = matchPower == powerName.dbName();
+				isValidPower = (parseInt(powerData.age) <= age && parseInt(powerData.level) <= parseInt(c.level));
 				castAsLvl = !isClassPower ? castAsLvl : (isValidPower ? (powerData.castlvl || -1) : 0);
 				return (isClassPower && isValidPower);
 			});
@@ -2066,20 +1999,22 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * from the Powers database
 	 */
 	 
-	var getUsesPerDay = function( charCS, power, senderId ) {
+	const getUsesPerDay = function( charCS, power, senderId ) {
 		
-		var matchPower = (power || '').dbName(),
-			classObj = classObjects( charCS, senderId ),
-			foundPower, perDay;
+		const matchPower = (power || '').dbName(),
+			  classObj = classObjects( charCS, senderId );
+		let	perDay, perLevel, classData,
+			powerData, foundName,
+			isClassPower, isRacePower;
 			
-		foundPower = classObj.some( c => {
-			let classData = resolveData( c.name, c.dB, reRaceData ).raw;
+		let foundPower = classObj.some( c => {
+			classData = resolveData( c.name, c.dB, reRaceData ).raw;
 			return _.some(classData, p => {
-				let powerData = parseData( String(p), reSpellSpecs, false );
-				let foundName = ((powerData.name || '').match(/(?:MU\-|PR\-|PW\-|MI\-)?(.*)$/i) || ['',''])[1];
-				let isClassPower = matchPower == foundName.dbName();
+				powerData = parseData( String(p), reSpellSpecs, false );
+				foundName = ((powerData.name || '').match(/(?:MU\-|PR\-|PW\-|MI\-)?(.*)$/i) || ['',''])[1];
+				isClassPower = matchPower == foundName.dbName();
 				if (isClassPower) {
-					let perLevel = (powerData.perDay || '').match(/(\d+)L(\d+?)/i);
+					perLevel = (powerData.perDay || '').match(/(\d+)L(\d+?)/i);
 					if (perLevel) {
 						perDay =  perLevel[1] * Math.ceil(c.level / perLevel[2]);
 					} else {
@@ -2090,23 +2025,22 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 			});
 		});
 		if (!foundPower || _.isUndefined(perDay)) {
-			let race = attrLookup( charCS, fields.Race );
-			let raceDef = abilityLookup( fields.RaceDB, race, charCS );
+			const raceDef = abilityLookup( fields.RaceDB, attrLookup( charCS, fields.Race ), charCS );
 			if (raceDef.obj) {
-				let raceData = raceDef.data(reRaceData);
+				const raceData = raceDef.data(reRaceData);
 				foundPower = _.some(raceData, p => {
-					let powerData = parseData( String(p), reSpellSpecs, false );
-					let foundName = ((powerData.name || '').match(/(?:MU\-|PR\-|PW\-|MI\-)?(.*)$/i) || ['',''])[1];
-					let isRacePower = matchPower == foundName.dbName();
+					powerData = parseData( String(p), reSpellSpecs, false );
+					foundName = ((powerData.name || '').match(/(?:MU\-|PR\-|PW\-|MI\-)?(.*)$/i) || ['',''])[1];
+					isRacePower = matchPower == foundName.dbName();
 					if (isRacePower) perDay = powerData.perDay;
 					return (isRacePower);
 				});
 			};
 		};
 		if (!foundPower || _.isUndefined(perDay)) {
-			let powerDef = findPower( charCS, power );
+			const powerDef = findPower( charCS, power );
 			if (powerDef.obj) {
-				let powerData = powerDef.data(reSpellData);
+				powerData = powerDef.data(reSpellData);
 				powerData = powerData ? parseData( String(powerData), reSpellSpecs, false ) : powerData;
 				if (powerData) perDay = powerData.perDay;
 			};
@@ -2119,7 +2053,7 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * Return a string containing the in-game date in short or long form
 	 */
 	 
-	var inGameDate = function( inGameDay ) {
+	const inGameDate = function( inGameDay ) {
 		
 		return ['Mon','Tue','Wed','Thur','Fri','Sat','Sun'][((inGameDay%7))]+', '
 				+ (1+(inGameDay%28)) + ['st','nd','rd','th'][Math.min((((inGameDay%28)%20)),3)]+' '
@@ -2128,33 +2062,14 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	};
 
 	/*
-	 * Lookup a spell or power storing attribute in both legacy and current forms
-	 * (moved to library)
-	 */
-/*
-	 var miSpellLookup = function( charCS, miName, index, objID, attr, postfix='', spell='', def=true ) {
-		
-		if (_.isNull(postfix)) postfix = '';
-		let dashPost = postfix ? '-'+postfix : '';
-		if (_.isNull(spell)) spell = '';
-		let dashSpell = spell ? '-'+spell : '';
-		if (_.isNull(objID) || !objID) objID = index;
-		let val = attrLookup( charCS, [attr[0]+miName+dashPost+dashSpell+'+'+objID,attr[1]], null, null, null, false, false );
-		if (_.isUndefined(val)) val = attrLookup( charCS, [attr[0]+miName+dashPost+'+'+index+dashSpell,attr[1]], null, null, null, false, false );
-		if (_.isUndefined(val)) val = attrLookup( charCS, [attr[0]+miName+dashPost+dashSpell,attr[1],attr[2]], null, null, null, false, ((postfix.length || spell.length) ? false : def) );
-		if (_.isUndefined(val) && (postfix.length || spell.length)) val = attrLookup( charCS, [attr[0]+postfix+(postfix ? dashSpell : spell),attr[1],attr[2]], null, null, null, false, def );
-		return val;
-	};
-*/	
-	/*
 	 * insert a spell into an identified spellbook slot
 	 */
-	 
-	var setSpell = function( charCS, spellTables, altSpellTable, spellDB, spellName, r, c, lv, cost, msg, levelOrPerDay, castAsLvl='' ) {
+
+	const setSpell = function( charCS, spellTables, altSpellTable, spellDB, spellName, r, c, lv, cost, msg, levelOrPerDay, castAsLvl='' ) {
 		
-		var isPower = spellDB.toUpperCase().includes('POWER'),
-			isMU = spellDB.toUpperCase().includes('MU'),
-			newSpellObj, altValues, altSpellRow;
+		const isPower = spellDB.toUpperCase().includes('POWER');
+//			isMU = spellDB.toUpperCase().includes('MU'),
+		let newSpellObj, altValues, altSpellRow;
 
 		if (fields.GameVersion === 'AD&D1e') {
 			altSpellRow = altSpellTable.tableFind( (isPower ? fields.AltPowers_name : fields.AltSpells_name), (spellTables.tableLookup( fields.Spells_name, r ) || '-') );
@@ -2162,12 +2077,11 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 			altSpellRow = (parseInt(r) * fields.SpellsCols) + parseInt(c);
 		}
 		if (!isPower) {
-			newSpellObj = getAbility( spellDB, spellName, charCS, true );
+			newSpellObj = abilityLookup( spellDB, spellName, charCS, true );
 		} else {
 			newSpellObj = findPower( charCS, spellName );
 			spellDB = newSpellObj.dB;
 			spellName = newSpellObj.obj ? newSpellObj.obj[1].name : spellName;
-			if (newSpellObj.obj) getAbility( spellDB, spellName, charCS, true );
 		};
 		
 		if (!newSpellObj.obj) {
@@ -2178,17 +2092,18 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 			return spellTables.addTableRow( r );
 		}
 		
-		var	speed = newSpellObj.obj[1].ct,
-			level = parseInt(newSpellObj.obj[1].type.match(/\d+/)) || 1,
-			specs = newSpellObj.specs(),
-			data = newSpellObj.data(),
-			spellData = data ? parseData( data[0][0], reSpellSpecs ) : {},
-			values = spellTables.copyValues(),
-			csv = csVer(charCS),
-			weapon = newSpellObj.obj[1].body.match(/}}\s*tohitdata\s*=\s*\[.+?\]/im),
-			equip = (!weapon ? '' : (weapon[0].match(/[\[,\s]equip:(.+?)[,\]]/i) || ['',''])[1].toLowerCase());
+		const speed = newSpellObj.obj[1].ct,
+			  level = parseInt(newSpellObj.obj[1].type.match(/\d+/)) || 1,
+			  specs = newSpellObj.specs(),
+			  data = newSpellObj.data(),
+			  spellData = data ? parseData( data[0][0], reSpellSpecs ) : {},
+			  csv = csVer(charCS),
+			  weapon = newSpellObj.obj[1].body.match(/}}\s*tohitdata\s*=\s*\[.+?\]/im),
+			  equip = (!weapon ? '' : (weapon[0].match(/[\[,\s]equip:(.+?)[,\]]/i) || ['',''])[1].toLowerCase());
 			
-		if (!specs || !specs[0]) log('setSpell: specs = '+(specs ? (specs[0] ? specs[0] : 'specs[0] undefined, spell is '+spellName) : 'specs undefined, spell is '+spellName));
+		let	values = spellTables.copyValues();
+			
+//		if (!specs || !specs[0]) log('setSpell: specs = '+(specs ? (specs[0] ? specs[0] : 'specs[0] undefined, spell is '+spellName) : 'specs undefined, spell is '+spellName));
 			
 		values[fields.Spells_name[0]][fields.Spells_name[1]] = spellName;
 		values[fields.Spells_db[0]][fields.Spells_db[1]] = spellDB;
@@ -2235,34 +2150,167 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	}
 
 	/*
+	* Find an item table row to put an item in
+	*/
+	
+	const findPutRow = function( tokenID, pickCS, pickItems, pickRow, putCS, putItems, showTypes, buy, slotCount ) {	// addTableRow
+		let putRow = -1,
+			miTable = '',
+			pickedMI = '';
+		if (!isNaN(pickRow) && pickRow >= 0) {
+			pickedMI = tableGroupLookup( pickItems, 'name', pickRow ) || '';
+			const pickedTrueMI = (tableGroupLookup( pickItems, 'trueName', pickRow ) || '').dbName() || '-';
+			const pickedType = (tableGroupLookup( pickItems, 'type', pickRow ) || '').dbName() || '-';
+			const miTrueObj = abilityLookup( fields.MagicItemDB, pickedTrueMI, pickCS );
+			const lowerMI = pickedMI.dbName().replace(/v\d+$/,'') || '-';
+			miTable = miTrueObj.obj ? getItemTable( miTrueObj.obj[1].type ) : 'GEAR';
+			let	putItemsTable = putItems[miTable];
+			let	mi, miTrueName, miType;
+			for (let i = 0; i < putItemsTable.sortKeys.length; i++) {
+				mi = (putItemsTable.tableLookup(fields[fieldGroups[miTable].prefix+'name'],i) || '').dbName().replace(/v\d+$/,'') || '-';
+				if (_.isUndefined(mi)) break;
+				if (mi != lowerMI) continue;
+				miTrueName = (putItemsTable.tableLookup(fields[fieldGroups[miTable].prefix+'trueName'],i) || '').dbName() ||'-';
+				if (miTrueName != pickedTrueMI) continue;
+				miType = (putItemsTable.tableLookup(fields[fieldGroups[miTable].prefix+'type'],i) || pickedType);
+				if (miType.dbName() !== '' && (miType.dbName() !== pickedType || !stackable.includes(miType.toLowerCase()))) continue;
+				putRow = i;
+				break;
+			}
+			if (showTypes && !buy) {
+				const miObj = abilityLookup( fields.MagicItemDB, pickedMI, pickCS );
+				pickedMI = !miObj.obj ? pickedMI : getShownType( miObj, pickRow );
+			}
+			if (putRow < 0) {
+				const bagSize = (attrLookup( putCS, fields.ItemContainerSize ) || fields.MIRows);
+//				if (slotCount <= bagSize) {
+//					sendParsedMsg( tokenID, messages.miBagFull, senderId, '', putID );
+//					putRow = -1;
+//					miTable = pickedMI = '';
+//				} else {
+					putRow = putItemsTable.tableFind( fields[fieldGroups[miTable].prefix+'name'], '-', false );
+					if (_.isUndefined(putRow)) {
+						putItemsTable = putItemsTable.addTableRow();
+						putRow = putItemsTable.sortKeys.length-1;
+//					}
+				}
+			}
+		};
+		return [putRow,miTable,pickedMI];
+	};
+	
+	/*
+	 * Remove MI powers specified in the list, using the
+	 * row/column references saved on the character sheet
+	 */
+	 
+	const removeMIpowers = function( charCS, MIname, miRow, miRowID, powerList, powerValues ) {
+
+		let powerName = '',
+			removeList = [],
+			PowersTable = [],
+			r, c, i=0;
+			
+		powerValues = powerValues.split(',');
+		powerList = powerList.split(',');
+		MIname = MIname.hyphened();
+		while (powerList.length > 0) {
+			powerName = powerList.shift();
+			powerName = powerName.hyphened();
+			let attrObj = miSpellLookup( charCS, MIname, miRow, miRowID, [fields.MIpowerPrefix[0],null], '', powerName );
+			if (attrObj) {
+				r = attrObj.get('current');
+				c = attrObj.get('max');
+				if (!_.isUndefined(r) && !_.isUndefined(c)) {
+					if (_.isUndefined(PowersTable[c])) {
+						PowersTable[c] = getTable( charCS, fieldGroups.POWERS, c );
+					}
+					powerValues[i] = PowersTable[c].tableLookup( fields.Powers_castMax, r ) + '.' + PowersTable[c].tableLookup( fields.Powers_storedLevel, r );
+					PowersTable[c].addTableRow( r );
+				}
+				removeList.push(attrObj);
+				i++;
+			}
+		}
+		_.each(removeList,r => setTimeout( () => r.remove(), 1000 ));
+		return powerValues.join();
+	}
+	
+	/*
+	 * Remove MI spells specified in the list, using the
+	 * row/column references saved on the character sheet
+	 */
+	 
+	const removeMIspells = function( charCS, MIname, MIrow, MIrowID, spellType, spellList, spellValues ) {
+
+		let SpellsTable = [],
+			removeList = [],
+			spellQty, r, c, altSpellRow, i=0, spellRows, spellCols,
+//			attrName = fields.MIspellPrefix[0]+(MIname.replace(/\s/g,'-'))+'-'+(spellType.toLowerCase())+'+'+MIrowID,
+			altSpellTable = getLvlTable( charCS, fieldGroups.ALTWIZ, fields.MIspellLevel );
+
+		const base = shapeSpellbook( charCS, 'MI' )[1].base;
+		
+		{	// Block created to restrict scope of spellRCobj
+		
+			let spellRCobj = miSpellLookup( charCS, MIname, MIrow, MIrowID, [fields.MIspellPrefix[0],null] );
+
+			if (!spellRCobj) return undefined;
+			
+			spellRows = spellRCobj.get(fields.MIspellRows[1]).split(',');
+			spellCols = spellRCobj.get(fields.MIspellCols[1]).split(',');
+			removeList.push(spellRCobj);
+		}
+			
+		spellValues = spellValues.split(',');
+		spellList = spellList.split(',');
+		while (spellRows.length > 0 && spellCols.length > 0) {
+			r = spellRows.shift();
+			c = spellCols.shift();
+			if (!_.isUndefined(r) && !_.isUndefined(c) && parseInt(c) >= 0) {
+				altSpellRow = (parseInt(r) * fields.SpellsCols) + parseInt(c-base);
+				if (_.isUndefined(SpellsTable[c])) {
+					SpellsTable[c] = getTable( charCS, fieldGroups.SPELLS, c );
+				}
+				spellQty = SpellsTable[c].tableLookup( fields.Spells_castValue, r );
+				spellValues[i] = (spellQty <= 0 ? 0 : (SpellsTable[c].tableLookup(fields.Spells_storedLevel, r)))
+											 + '.' + (SpellsTable[c].tableLookup( fields.Spells_miSpellSet, r ));
+				
+				SpellsTable[c].addTableRow( r );
+				altSpellTable.addTableRow( altSpellRow );
+			};
+			i++;
+		}
+		_.each(removeList,r => setTimeout( () => r.remove(), 1000 ));
+		return spellValues.join();
+	};
+	
+	/*
 	 * add or remove spells/powers listed in the parameters to
 	 * the specified spell level table in the specified character sheet
 	 */
 
-	var changeMIspells = function( charCS, MIname, miRow, miRowID, listType, action, spellList, spellValues = '' ) {
+	const changeMIspells = function( charCS, MIname, miRow, miRowID, listType, action, spellList, spellValues = '' ) {
 		
-		var	isAdd = action.toUpperCase() == 'ADD',
-			c, valueItem, spellHyphen, altGroup,
-			spellDB, levelSpells,
-			spellName, spellQty,
-			toDoList = spellList,
+		
+		const isAdd = action.toUpperCase() == 'ADD';
+		let altGroup, spellDB,
+			toDoList = spellList.toLowerCase().split(','),
 			spellTables = [],
 			level = fields.MIspellLevel,
 			levelSpells = shapeSpellbook( charCS, 'MI' ),
-			rows = [],
-			cols = [];
+			valueList;
 			
 		if (!isAdd) {
 			valueList = removeMIspells( charCS, MIname, miRow, miRowID, listType, spellList, spellValues );
 			if (!_.isUndefined(valueList)) return valueList;
 		}
-
+		
 		spellList = spellList.split(',');
-		toDoList = toDoList.toLowerCase().split(',');
-		MIname = MIname.replace(/\s/g,'-');
-		var indexPrefix = fields.MIspellPrefix[0]+MIname+'-'+(listType.toLowerCase())+'+'+miRowID,
-			valueList = spellValues ? spellValues.split(',') : [],
-			altSpellTable;
+		MIname = MIname.hyphened();
+		
+		let indexPrefix = fields.MIspellPrefix[0]+MIname+'-'+(listType.toLowerCase())+'+'+miRowID;
+		valueList = spellValues ? spellValues.split(',') : [];
 
 		switch (listType.toUpperCase()) {
 		case 'MU':
@@ -2274,19 +2322,26 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 			altGroup = fieldGroups.ALTPRI;
 			break;
 		case 'POWER':
+		case 'PW':
 			spellDB = fields.PowersDB;
 			level = fields.MIpowerLevel;
 			indexPrefix = fields.MIpowerPrefix[0]+MIname+'+'+miRowID;
 			levelSpells = shapeSpellbook( charCS, 'MIPOWER' );
 			altGroup = fields.GameVersion === 'AD&D1e' ? fieldGroups.ALTPWR : undefined;
 			break;
+		default:
+			sendError('Invalid list type '+listType+' at changeMIspells');
+			return;
 		}
+		let w, c, r, valueItem, spellHyphen, spellName, spellQty, altSpellTable,
+			rows = [],
+			cols = [];
 		for (let lv=1; lv < levelSpells.length; lv++) {
 			if (altGroup) altSpellTable = getLvlTable( charCS, altGroup, (level+lv-1) );
-			let r = 0;
+			r = 0;
 			do {
-				let c = levelSpells[lv].base;
-				let w = 1;
+				c = levelSpells[lv].base;
+				w = 1;
 				do {
 					if (!spellTables[w]) {
 						spellTables[w] = getTable( charCS, fieldGroups.SPELLS, c ); 
@@ -2295,7 +2350,8 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 					if (isAdd && (_.isUndefined(spellName) || spellName === '-')) {
 						spellName = spellList.shift() || '';
 						spellHyphen = '-'+spellName.hyphened();
-						valueItem = valueList.shift().split('.');
+//						log('changeMIspells: at shift, valueList = '+valueList);
+						valueItem = (valueList.shift() || '').split('.');
 						if (listType === 'POWER') {
 							setAttr( charCS, [fields.MIpowerPrefix[0]+MIname+spellHyphen+'+'+miRowID, 'current'], r );
 							setAttr( charCS, [fields.MIpowerPrefix[0]+MIname+spellHyphen+'+'+miRowID, 'max'], c );
@@ -2333,115 +2389,61 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	};
 	
 	/*
-	 * Remove MI spells/powers specified in the list, using the
-	 * row/column references saved on the character sheet
-	 */
-	 
-	var removeMIpowers = function( charCS, MIname, miRow, miRowID, powerList, powerValues ) {
-
-		var powerName,
-			removeList = [],
-			PowersTable = [],
-			r, c, i=0;
-			
-		powerValues = powerValues.split(',');
-		powerList = powerList.split(',');
-		MIname = MIname.replace(/\s/g,'-');
-		while (powerList.length > 0) {
-			powerName = powerList.shift();
-			powerName = powerName.replace(/\s/g,'-');
-			let attrObj = miSpellLookup( charCS, MIname, miRow, miRowID, [fields.MIpowerPrefix[0],null], '', powerName );
-			if (attrObj) {
-				r = attrObj.get('current');
-				c = attrObj.get('max');
-				if (!_.isUndefined(r) && !_.isUndefined(c)) {
-					if (_.isUndefined(PowersTable[c])) {
-						PowersTable[c] = getTable( charCS, fieldGroups.POWERS, c );
-					}
-					powerValues[i] = PowersTable[c].tableLookup( fields.Powers_castMax, r ) + '.' + PowersTable[c].tableLookup( fields.Powers_storedLevel, r );
-					PowersTable[c].addTableRow( r );
-				}
-				removeList.push(attrObj);
-				i++;
-			}
-		}
-		_.each(removeList,r => r.remove());
-		return powerValues.join();
-	}
-	
-	/*
-	 * Remove MI spells/powers specified in the list, using the
-	 * row/column references saved on the character sheet
-	 */
-	 
-	var removeMIspells = function( charCS, MIname, MIrow, MIrowID, spellType, spellList, spellValues ) {
-
-		var SpellsTable = [],
-			removeList = [],
-			spellQty, r, c, altSpellRow, i=0, spellRows, spellCols,
-//			attrName = fields.MIspellPrefix[0]+(MIname.replace(/\s/g,'-'))+'-'+(spellType.toLowerCase())+'+'+MIrowID,
-			base = shapeSpellbook( charCS, 'MI' )[1].base,
-			altSpellTable = getLvlTable( charCS, fieldGroups.ALTWIZ, fields.MIspellLevel );
-
-		{	// Block created to restrict scope of spellRCobj
-		
-//			let spellRCobj = attrLookup( charCS, [attrName,null] );
-			let spellRCobj = miSpellLookup( charCS, MIname, MIrow, MIrowID, [fields.MIspellPrefix[0],null] );
-
-			if (!spellRCobj) return undefined;
-			
-			spellRows = spellRCobj.get(fields.MIspellRows[1]).split(',');
-			spellCols = spellRCobj.get(fields.MIspellCols[1]).split(',');
-			removeList.push(spellRCobj);
-		}
-			
-		spellValues = spellValues.split(',');
-		spellList = spellList.split(',');
-		while (spellRows.length > 0 && spellCols.length > 0) {
-			r = spellRows.shift();
-			c = spellCols.shift();
-			if (!_.isUndefined(r) && !_.isUndefined(c)) {
-				altSpellRow = (parseInt(r) * fields.SpellsCols) + parseInt(c-base);
-				if (_.isUndefined(SpellsTable[c])) {
-					SpellsTable[c] = getTable( charCS, fieldGroups.SPELLS, c );
-				}
-				spellQty = SpellsTable[c].tableLookup( fields.Spells_castValue, r );
-				spellValues[i] = (spellQty <= 0 ? 0 : (SpellsTable[c].tableLookup(fields.Spells_storedLevel, r)))
-											 + '.' + (SpellsTable[c].tableLookup( fields.Spells_miSpellSet, r ));
-				
-				SpellsTable[c].addTableRow( r );
-				altSpellTable.addTableRow( altSpellRow );
-			};
-			i++;
-		}
-		_.each(removeList,r => r.remove());
-		return spellValues.join();
-	};
-	
-	/*
 	 * handle removing and adding magic item spells and powers
 	 * from their defining lists
 	 * Usually used when picking up or putting away a magic item
 	 */
 
-	var moveMIspells = function( senderId, fromCS, fromIndex, fromRowID, toCS, toIndex, toRowID, itemName='', type='ALL', del=false ) { // resolveData
+	var moveMIspells = function( senderId, fromCS, fromIndex, fromRowID, toCS, toIndex, toRowID, itemName='', type='ALL', del=true ) {
 		
 		return new Promise(resolve => {
 			
 			try {
 			
-				var MIobj = getAbility( fields.MagicItemDB, itemName, toCS, true, null, null, fromIndex, fromRowID ),
-					notFrom = !fromCS && !!toCS,
-					update = (!!fromCS && !!toCS && (fromCS.id === toCS.id)),
-					oldCS = fromCS,
+				const moveSpell = function( type, listField, valuesField, indexField, removeList ) {
+					let spellObj = miSpellLookup( oldCS, MIname, oldIndex, oldID, [listField[0], null] ),
+						spellList = (!!spellObj ? (spellObj.get(listField[1]) || '') : ''),
+						spellValues = miSpellLookup( oldCS, MIname, oldIndex, oldID, valuesField ),
+						spellIndex = miSpellLookup( oldCS, MIname, oldIndex, oldID, [indexField[0],null], type );
+						
+					if (spellList.length) {
+						let miSpellValues;
+						if (!notFrom && toCS) setAttr( toCS, [listField[0]+MIname+'+'+toRowID, listField[1]], spellList );
+						setAttr( oldCS, [valuesField[0]+MIname+'+'+oldID, valuesField[1]], (miSpellValues = notFrom ? spellValues : (type !== 'PW' ? changeMIspells( fromCS, itemName, fromIndex, fromRowID, type, 'REMOVE', spellList, spellValues) : removeMIpowers( fromCS, itemName, fromIndex, fromRowID, spellList, spellValues ))));
+						if (toCS) {
+							if (spellbook) {
+								setAttr( toCS, [indexField[0]+MIname+'-'+type+'+'+toRowID,fields.MIspellRows[1]], Array(spellList.split(',').length).fill(0).map((x,i)=>i).join() );
+								setAttr( toCS, [indexField[0]+MIname+'-'+type+'+'+toRowID,fields.MIspellCols[1]], Array(spellList.split(',').length).fill(-1).join() );
+							} else {
+//								log('moveSpell: calling changeMIspells to add to MI, with list '+spellList+' and values '+miSpellValues);
+								setAttr( toCS, [valuesField[0]+MIname+'+'+toRowID, valuesField[1]], changeMIspells( toCS, itemName, toIndex, toRowID, type, 'ADD', spellList, miSpellValues ));
+							}
+						}
+					}
+					if (!update && del && !notFrom && !fromCS.get('name').startsWith('MI-DB')) {
+						if (!!spellObj) removeList.push(spellObj);
+						if (!!spellIndex) removeList.push(spellIndex);
+					}
+					return removeList;
+				};
+
+				const MIobj = getAbility( fields.MagicItemDB, itemName, toCS, true, null, null, fromIndex, fromRowID ),
+					  notFrom = !fromCS && !!toCS,
+					  update = (!!fromCS && !!toCS && (fromCS.id === toCS.id)),
+					  MIname = itemName.hyphened(),
+					  doMU = type === 'MU' || type === 'ALL',
+					  doPR = type === 'PR' || type === 'ALL',
+					  doPW = type === 'PW' || type === 'ALL',
+					  spellbook = MIobj.obj && MIobj.obj[1] && reCastViewMIspellCmd.test(MIobj.obj[1].body) && !reCastMIspellCmd.test(MIobj.obj[1].body);
+					  
+//				log('moveMIspells: spellbook = '+spellbook+', cast button = '+reCastMIspellCmd.test(MIobj.obj[1].body));
+					  
+				let	oldCS = fromCS,
 					oldIndex = fromIndex,
 					oldID = fromRowID,
-					MIname = itemName.hyphened(),
-					doMU = type === 'MU' || type === 'ALL',
-					doPR = type === 'PR' || type === 'ALL',
-					doPW = type === 'PW' || type === 'ALL',
-					removeList = [],
-					error = false;
+					removeList = [];
+
+				var	error = false;
 					
 				if (notFrom || update) {
 					if (!MIobj.obj) {
@@ -2454,75 +2456,20 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 					oldID = toRowID;
 				}
 					
-				if (doMU) {
-					let MUspellObj = miSpellLookup( oldCS, MIname, oldIndex, oldID, [fields.ItemMUspellsList[0], null] ),
-						MUspellList = (!!MUspellObj ? (MUspellObj.get(fields.ItemMUspellsList[1]) || '') : ''),
-						MUspellValues = miSpellLookup( oldCS, MIname, oldIndex, oldID, fields.ItemMUspellValues );
-						
-					if (MUspellList.length) {
-						let miSpellValues;
-						if (!notFrom && toCS) setAttr( toCS, [fields.ItemMUspellsList[0]+MIname+'+'+toRowID, fields.ItemMUspellsList[1]], MUspellList );
-						setAttr( oldCS, [fields.ItemMUspellValues[0]+MIname+'+'+oldID, fields.ItemMUspellValues[1]], (miSpellValues = notFrom ? MUspellValues : changeMIspells( fromCS, itemName, fromIndex, fromRowID, 'MU', 'REMOVE', MUspellList, MUspellValues)));
-						if (toCS) {
-							setAttr( toCS, [fields.ItemMUspellValues[0]+MIname+'+'+toRowID, fields.ItemMUspellValues[1]], changeMIspells( toCS, itemName, toIndex, toRowID, 'MU', 'ADD', MUspellList, miSpellValues ));
-						}
-					}
-					if (del && !notFrom && !fromCS.get('name').startsWith('MI-DB')) {
-						removeList.push(MUspellObj);
-						MUspellObj = miSpellLookup( oldCS, MIname, oldIndex, oldID, [fields.MIspellPrefix[0], null] );
-						if (!!MUspellObj) removeList.push(MUspellObj);
-					}
-				}
-				if (doPR) {
-					let PRspellObj = miSpellLookup( oldCS, MIname, oldIndex, oldID, [fields.ItemPRspellsList[0], null] ),
-						PRspellList = (!!PRspellObj ? (PRspellObj.get(fields.ItemPRspellsList[1]) || '') : ''),
-						PRspellValues = miSpellLookup( oldCS, MIname, oldIndex, oldID, fields.ItemPRspellValues );
-
-					if (PRspellList.length) {
-						let miSpellValues;
-						if (!notFrom && toCS) setAttr( toCS, [fields.ItemPRspellsList[0]+MIname+'+'+toRowID, fields.ItemPRspellsList[1]], PRspellList );
-						setAttr( oldCS, [fields.ItemPRspellValues[0]+MIname+'+'+oldID, fields.ItemPRspellValues[1]], (miSpellValues = notFrom ? PRspellValues : changeMIspells( fromCS, itemName, fromIndex, fromRowID, 'PR', 'REMOVE', PRspellList, PRspellValues )));
-						if (toCS) {
-							setAttr( toCS, [fields.ItemPRspellValues[0]+MIname+'+'+toRowID, fields.ItemPRspellValues[1]], changeMIspells( toCS, itemName, toIndex, toRowID, 'PR', 'ADD', PRspellList, miSpellValues ));
-						}
-					}
-					if (del && !notFrom && !fromCS.get('name').startsWith('MI-DB')) {
-						removeList.push(PRspellObj);
-						PRspellObj = miSpellLookup( oldCS, MIname, oldIndex, oldID, [fields.MIspellPrefix[0], null] );
-						if (!!PRspellObj) removeList.push(PRspellObj);
-					}
-				}
-				if (doPW) {
-					let powerObj = miSpellLookup( oldCS, MIname, oldIndex, oldID, [fields.ItemPowersList[0], null] ),
-						powerList = (!!powerObj ? (powerObj.get(fields.ItemPowersList[1]) || '') : ''),
-						powerValues = miSpellLookup( oldCS, MIname, oldIndex, oldID, fields.ItemPowerValues );
-						
-					if (powerList.length) {
-						let miSpellValues;
-						if (!notFrom && toCS) setAttr( toCS, [fields.ItemPowersList[0]+MIname+'+'+toRowID, fields.ItemPowersList[1]], powerList );
-						setAttr( oldCS, [fields.ItemPowerValues[0]+MIname+'+'+oldID, fields.ItemPowerValues[1]], (miSpellValues = notFrom ? powerValues : removeMIpowers( fromCS, itemName, fromIndex, fromRowID, powerList, powerValues )));
-						if (toCS) {
-							setAttr( toCS, [fields.ItemPowerValues[0]+MIname+'+'+toRowID, fields.ItemPowerValues[1]], changeMIspells( toCS, itemName, toIndex, toRowID, 'POWER', 'ADD', powerList, miSpellValues ));
-						}
-					}
-					if (del && !notFrom && !fromCS.get('name').startsWith('MI-DB')) {
-						removeList.push(powerObj);
-						powerObj = miSpellLookup( oldCS, MIname, oldIndex, oldID, [fields.MIpowerPrefix[0], null] );
-						if (!!powerObj) removeList.push(powerObj);
-					}
-				}
-				var queries = (resolveData(itemName,fields.MagicItemDB,reItemData,(fromCS || toCS),{query:reClassSpecs.query}).parsed.query || '').split('$$');
-				if (queries && queries.length && itemName && !notFrom && !update) {
-					if (!isNaN(fromIndex)) {
-						_.each( queries, q => {
-							let varObj;
-							let toField = [fields.ItemVar[0]+MIname+'+'+toRowID+'-'+q.split('=')[0],fields.ItemVar[1]];
-							if (toCS && !isNaN(toIndex)) setAttr( toCS, toField, (miSpellLookup( fromCS, MIname, fromIndex+'-'+q.split('=')[0], fromRowID+'-'+q.split('=')[0], fields.ItemVar ) || '') );
-							if (!_.isUndefined(varObj = miSpellLookup( fromCS, MIname, fromIndex+'-'+q.split('=')[0], fromRowID+'-'+q.split('=')[0], [fields.ItemVar[0],null] ))) removeList.push(varObj);
-						});
-					};
+				if (doMU) removeList = moveSpell( 'mu', fields.ItemMUspellsList, fields.ItemMUspellValues, fields.MIspellPrefix, removeList );
+				if (doPR) removeList = moveSpell( 'pr', fields.ItemPRspellsList, fields.ItemPRspellValues, fields.MIspellPrefix, removeList );
+				if (doPW) removeList = moveSpell( 'pw', fields.ItemPowersList, 	 fields.ItemPowerValues,   fields.MIpowerPrefix, removeList );
+					
+				const queries = (resolveData(itemName,fields.MagicItemDB,reItemData,(fromCS || toCS),{query:reClassSpecs.query}).parsed.query || '').split('$$');
+				if (queries && queries.length && itemName && !notFrom && !update && !isNaN(fromIndex)) {
+					let varObj, toField;
+					_.each( queries, q => {
+						toField = [fields.ItemVar[0]+MIname+'+'+toRowID+'-'+q.split('=')[0],fields.ItemVar[1]];
+						if (toCS && !isNaN(toIndex)) setAttr( toCS, toField, (miSpellLookup( fromCS, MIname, fromIndex+'-'+q.split('=')[0], fromRowID+'-'+q.split('=')[0], fields.ItemVar ) || '') );
+						if (!_.isUndefined(varObj = miSpellLookup( fromCS, MIname, fromIndex+'-'+q.split('=')[0], fromRowID+'-'+q.split('=')[0], [fields.ItemVar[0],null], '', '', false ))) removeList.push(varObj);
+					});
 				};
-				_.each(removeList.filter(r => !!r),r => r.remove());
+				_.each(removeList.filter(r => !!r),r => setTimeout( () => r.remove(), 1000));
 					
 			} catch (e) {
 				log('MagicMaster moveMIspells: '+e.name+': '+e.message+' while processing item '+itemName);
@@ -2537,42 +2484,6 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 			}
 		});
 	};
-		
-	/**
-	 * Find an item identified as a Power, but which might actually 
-	 * be in a different database, as powers can be anything magical
-	 **/
-	 
-	var findPower = function( charCS, power ) {
-		
-		if (!power || !power.length) return abilityLookup( fields.PowersDB, '', charCS, true, false );
-	 
-		const dbList = [['PW-',fields.PowersDB],['MU-',fields.MU_SpellsDB],['PR-',fields.PR_SpellsDB],['MI-',fields.MagicItemDB]];
-		
-		var	powerType = power.substring(0,3),
-			powerLib;
-			
-		if (_.some(dbList,dB=>dB[0]===powerType.toUpperCase())) power = power.slice(powerType.length);
-			
-		if (!_.some(dbList, dB => {
-			if (powerType.toUpperCase() === dB[0]) {
-				powerLib = abilityLookup( dB[1], power, null, true );
-				return true;
-			} else {
-				return false;
-			}
-		})) {
-			_.some(dbList, dB => {
-				powerLib = abilityLookup( dB[1], power, null, true );
-				return !_.isUndefined(powerLib.obj);
-			});
-		};
-		if (!powerLib.obj) {
-			powerLib = abilityLookup( fields.PowersDB, power, charCS );
-		}
-		powerLib.name = power;
-		return powerLib;
-	}
 	
 	/*
 	 * Check an item to see if it is a "bag" that can contain
@@ -2581,33 +2492,27 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * items.
 	 */
 	 
-	var checkForBag = function( charCS, miName, row ) {
+	const checkForBag = function( charCS, miName, row ) {
 		
-		var itemRow, rowID, table;
+		let itemRow, rowID, table;
 			
 		[itemRow,table,rowID] = tableGroupIndex( getTableGroupField( charCS, {}, fieldGroups.MI, 'name' ), row );
 
-		var bag = resolveData( miName, fields.MagicItemDB, reItemData, charCS, {bag:reSpellSpecs.bag,store:reSpellSpecs.store}, itemRow, rowID );
+		const bag = resolveData( miName, fields.MagicItemDB, reItemData, charCS, {bag:reSpellSpecs.bag,store:reSpellSpecs.store}, {row:itemRow, rowID:rowID} );
 		if (!bag.parsed.bag) return;
 		
-/*		var miObj = abilityLookup( fields.MagicItemDB, miName, charCS );
-		if (!miObj.obj) return;
-		
-		var bagData = miObj.obj[1].body.match(/}}.*?data\s*?=[^{]+?bag:(\d+).*?{{/im);
-		if (!bagData) return;
-*/
-		var bagData = parseInt(bag.parsed.bag);
-		var bagCS = findObjs({ type:"character", name:miName });
-		var itemSpecs = {name:reSpellSpecs.name,
-						 trueName:reSpellSpecs.trueName,
-						 speed:reSpellSpecs.speed,
-						 qty:reSpellSpecs.qty,
-						 spell:reSpellSpecs.type,
-						 type:reSpellSpecs.recharge,
-						 trueType:reSpellSpecs.truerc,
-						 reveal:reSpellSpecs.reveal,
-						 cost:reSpellSpecs.cost,
-						};
+		let bagCS = findObjs({ type:"character", name:miName });
+		const bagData = parseInt(bag.parsed.bag);
+		const itemSpecs = {name:reSpellSpecs.name,
+						   trueName:reSpellSpecs.trueName,
+						   speed:reSpellSpecs.speed,
+						   qty:reSpellSpecs.qty,
+						   spell:reSpellSpecs.type,
+						   type:reSpellSpecs.recharge,
+						   trueType:reSpellSpecs.trueType || reSpellSpecs.type || 'uncharged',
+						   reveal:reSpellSpecs.reveal,
+						   cost:reSpellSpecs.cost,
+						  };
 		
 		if (!bagCS || !bagCS.length) {
 
@@ -2619,34 +2524,36 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 			setAttr( bagCS, fields.Race, 'Magic Item' );
 			
 			if (bagData > 0) {
-				let Items = getTableGroup( bagCS, fieldGroups.MI );
+				let Items = getTableGroup( bagCS, fieldGroups.MI ),
+					itemClass, itemData, itemObj, p;
+				let values;
 				setAttr( bagCS, fields.ItemContainerType, (bag.parsed.store !== 'nostore' ? '1' : '-1') ); 
 				setAttr(charCS, fields.ItemOldContainerType, attrLookup(charCS, fields.ItemContainerType));
 				setAttr( bagCS, fields.ItemContainerSize, Math.max( fields.MIRowsStandard, bagData )); 
-//				bagData = miObj.data(/}}[^{]*?data\s*?=\s*?(\[[^{]+?bag\:[^{]+?\]){{/im);
 				_.each( bag.raw, item => {
-					let itemClass = 'GEAR';
-					let itemData = parseData( item[0], itemSpecs, false, charCS, miName, itemRow, rowID );
+					itemClass = 'GEAR';
+					itemData = parseData( item[0], itemSpecs, false, charCS, miName, itemRow, rowID );
 					if ((itemData.spell || '').toUpperCase() != 'MI') return;
-					let itemObj = abilityLookup( fields.MagicItemDB, (itemData.trueName || itemData.name), charCS );
+					itemObj = abilityLookup( fields.MagicItemDB, (itemData.trueName || itemData.name), charCS );
 					if (itemObj.obj) {
 						itemData.speed = itemData.speed || itemObj.obj[1].ct;
 						itemData.type = itemData.type || itemObj.obj[1].charge;
 						itemClass = getItemTable( itemObj.obj[1].type ) || 'GEAR';
 					}
-					let values = Items[itemClass].copyValues();
-					let prefix = fieldGroups[itemClass].prefix;
-					values[fields[prefix+'name'][0]][fields[prefix+'name'][1]] = itemData.name;
-					values[fields[prefix+'trueName'][0]][fields[prefix+'trueName'][1]] = (itemData.trueName || itemData.name);
-					values[fields[prefix+'speed'][0]][fields[prefix+'speed'][1]] = evalAttr(itemData.speed,charCS) || 5;
-					values[fields[prefix+'trueSpeed'][0]][fields[prefix+'trueSpeed'][1]] = evalAttr(itemData.speed,charCS) || 5;
-					values[fields[prefix+'qty'][0]][fields[prefix+'qty'][1]] = evalAttr(itemData.qty,charCS) || 1;
-					values[fields[prefix+'trueQty'][0]][fields[prefix+'trueQty'][1]] = evalAttr(itemData.qty,charCS) || 1;
-					values[fields[prefix+'cost'][0]][fields[prefix+'cost'][1]] = evalAttr(itemData.cost,charCS) || 0;
-					values[fields[prefix+'type'][0]][fields[prefix+'type'][1]] = itemData.type || 'uncharged';
-					values[fields[prefix+'trueType'][0]][fields[prefix+'trueType'][1]] = itemData.trueType || itemData.type || 'uncharged';
-					values[fields[prefix+'reveal'][0]][fields[prefix+'reveal'][1]] = itemData.reveal || '';
-					
+					p = Items[itemClass].fieldGroup;
+					values  = initValues( p );
+
+					values.valLine(p,'name',itemData.name)
+						  .valLine(p,'trueName',(itemData.trueName || itemData.name))
+						  .valLine(p,'speed',evalAttr(itemData.speed,charCS) || 5)
+						  .valLine(p,'trueSpeed',evalAttr(itemData.speed,charCS) || 5)
+						  .valLine(p,'qty',evalAttr(itemData.qty,charCS) || 1)
+						  .valLine(p,'trueQty',evalAttr(itemData.qty,charCS) || 1)
+						  .valLine(p,'cost',evalAttr(itemData.cost,charCS) || 0)
+						  .valLine(p,'type',itemData.type || 'uncharged')
+						  .valLine(p,'trueType',itemData.trueType || itemData.type || 'uncharged')
+						  .valLine(p,'reveal',itemData.reveal || '');
+
 					Items[itemClass].addTableRow( NaN, values );
 				});
 			} else {
@@ -2666,7 +2573,7 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * it no longer exists in the equipment list
 	 **/
 
-	var removeMIability = function( charCS, itemName, Items, table ) {
+	const removeMIability = function( charCS, itemName, Items, table ) {
 	
 		if (!Items.tableFind( fields[fieldGroups[table].prefix+'name'], itemName ) && !Items.tableFind( fields[fieldGroups[table].prefix+'trueName'], itemName )) {
 			let MIobjs = filterObjs( obj => {
@@ -2682,7 +2589,7 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * Parse a data item query statement and return the parsed version.
 	 **/
 	 
-	var parseQuery = function( query ) {
+	const parseQuery = function( query ) {
 		query = (query || '').split('$$').map(q => {
 			switch (q) {
 				case 'weaponMagic': q = 'weaponMagic=How magical is this weapon?|+0%%0//0|-4%%-4/Cursed/1700|-3%%-3/Cursed/1350|-2%%-2/Cursed/900|-1%%-1/Cursed/450|0%%0//0|+1%%1//500|+2%%2//1000|+3%%3//1500|+4%%4//2000|+5%%5//3000'; break;
@@ -2703,7 +2610,7 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * then send it to chat on a timeout
 	 */
 	
-	var pickPutCmd = function( cmd, tokenID, charCS, who ) {
+	const pickPutCmd = function( cmd, tokenID, charCS, who ) {
 		
 		setTimeout(() => sendAPI( cmd.replace(/&#44;/g,',')
 											  .replace(/&#91;/g,'[')
@@ -2714,33 +2621,197 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	};
 	
 	/*
-	 * Return how full a character's Item Slots are
+	 * Calculate the weight of the items in a container
 	 */
-	 
-	var itemSlotData = function( Items ) {
-		var slotCount = 0,
+
+	const calcWeight = function( charCS, Items ) {
+		
+		let slotCount = 0,
 			totalWeight = 0.0,
-			totalQty = 0;
+			totalEnc = 0.0,
+			totalQty = 0,
+			prefix, name, qty, tableWt, tableEnc, trueType, type, data, bagObj, bagData;
+			
+		if (!Items) Items = getTableGroup( charCS, fieldGroups.MI );
+
 		for (const table in Items) {
 			for (let i=0; i<Items[table].sortKeys.length; i++) {
-				let name = Items[table].tableLookup( fields[fieldGroups[table].prefix+'name'], i );
+				prefix = Items[table].fieldGroup;
+				name = Items[table].tableLookup( fields[prefix+'name'], i );
 				if (name === '-') continue;
-				let qty = parseInt(Items[table].tableLookup( fields[fieldGroups[table].prefix+'qty'], i )) || 1,
-					tableWt = Items[table].tableLookup( fields[fieldGroups[table].prefix+'weight'], i, false ),
-					trueType = Items[table].tableLookup( fields[fieldGroups[table].prefix+'trueType'], i ),
-					type = trueType || Items[table].tableLookup( fields[fieldGroups[table].prefix+'type'], i ) || 'uncharged',
-					multi = splitable.includes(type.toLowerCase());
-				if (_.isUndefined(tableWt) || !tableWt.length) {
-					tableWt = resolveData( name,fields.MagicItemDB,reItemData,Items[table].character,{weight:reSpellSpecs.weight} ).parsed.weight;
-					Items[table] = Items[table].tableSet(fields[fieldGroups[table].prefix+'weight'],i,tableWt);
-				};
-				tableWt = (parseFloat(tableWt) || 1);
-				totalWeight += !multi ? tableWt : (qty * tableWt);
+				qty = parseInt(Items[table].tableLookup( fields[prefix+'qty'], i )) || 1;
+				trueType = Items[table].tableLookup( fields[prefix+'trueType'], i );
+				type = trueType || Items[table].tableLookup( fields[prefix+'type'], i ) || 'uncharged';
+//				log('calcWeight: name = '+name+', trueType = '+trueType+', type = '+type+', splitable = '+splitable.includes(type.toLowerCase()));
+				if (!splitable.includes(type.toLowerCase())) qty = 1;
+				data = resolveData( name,fields.MagicItemDB,reItemData,Items[table].character,{weight:reACSpecs.weight,encumber:reACSpecs.encumber,bag:reSpellSpecs.bag} ).parsed;
+//				log('calcWeight: item '+name+' data.bag = '+data.bag+', test result = '+(!_.isUndefined(data.bag) && data.bag != 0));
+				if (!_.isUndefined(data.bag) && data.bag.length) {
+//					log('calcWeight: item '+name+' data.weight = '+data.weight+', data.encumber = '+data.encumber);
+					if (!data.weight && data.encumber) {
+						data.weight = data.encumber;
+					} else {
+						bagObj = (findObjs({type:'character',name:name,controlledby:charCS.get('controlledby')}) || [])[0];
+//						log('calcWeight: !!bagObj = '+!!bagObj);
+						if (bagObj) {
+	//						log('calcWeight: found bagObj and making recursive call');
+							bagData = calcWeight( bagObj );
+							data.weight = (parseFloat(data.weight) || 1) + (parseFloat(bagData.weight) || 0);
+							if (_.isUndefined(data.encumber) || !data.encumber.length) data.encumber = data.weight;
+						}
+					}
+				}
+				tableWt = parseFloat(data.weight);
+				tableEnc = parseFloat(data.encumber);
+				if (isNaN(tableWt)) tableWt = 1;
+				if (isNaN(tableEnc)) tableEnc = tableWt;
+				totalWeight += qty * tableWt;
+				totalEnc += qty * tableEnc;
 				totalQty += qty;
 				slotCount++;
+				
+				Items[table].tableSet( fields[prefix+'weight'],i,Math.ceil(qty * tableWt) );
+				Items[table].tableSet( fields[prefix+'encumbrance'],i,Math.ceil(qty * tableEnc) );
 			};
 		};
-		return {count:slotCount,qty:totalQty,weight:Math.ceil(totalWeight)};
+		return {count:slotCount,qty:totalQty,weight:Math.ceil(totalWeight),encumberWt:Math.ceil(totalEnc)};
+	};
+
+	/*
+	 * Return how full a character's Item Slots are
+	 */
+
+	const itemSlotData = function( tokenID, Items, senderId, calc=true ) {
+		
+		return new Promise(resolve => {
+			let errFlag = false,
+				count,qty,tableWt,tableEnc,encumbrance;
+			try {
+				let curToken = getObj('graphic',tokenID),
+					charCS = getCharacter( tokenID ),
+					baseMove = attrLookup( charCS, fields.BaseMove, {def:false} ),
+					name, trueType, type, data, move, moveMod, extra, weights, weightData;
+					
+				const oldEncumbrance = parseInt(attrLookup( charCS, fields.Encumbrance )) || 0;
+					
+				if (_.isUndefined(baseMove) || isNaN(baseMove) || !String(baseMove || '').length) {
+					const classObjs = classObjects( charCS, senderId, {move:reClassSpecs.move} );
+					const classMove = classObjs.reduce( (a,o) => Math.max(a,(parseInt(o.classData.move) || 0)), 0 );
+					const raceMove  = (resolveData( (attrLookup( charCS, fields.Race ) || 'Human'), fields.RaceDB, reRaceData, charCS, {move:reClassSpecs.move} ).parsed.move || 12);
+					setAttr( charCS, fields.BaseMove, Math.max(classMove,raceMove) );
+//					log('itemSlotData: raceMove = '+raceMove+', classMove = '+classMove);
+				}
+				
+				if (calc || !String(attrLookup( charCS, fields.Weight_total ) || '').length) {
+					weightData = calcWeight( charCS, Items );
+					tableWt = weightData.weight;
+					tableEnc = weightData.encumberWt;
+					count = weightData.count;
+					qty = weightData.qty;
+
+					setAttr( charCS, fields.Equip_total, 'Total Weight' );
+					setAttr( charCS, fields.Equip_totalWeight, tableWt);
+					setAttr( charCS, fields.Equip_encumberWeight, tableEnc );
+					setAttr( charCS, fields.Equip_totalFlag, 1 );
+					setAttr( charCS, fields.Weight_total, tableWt );
+					setAttr( charCS, fields.Weight_encumbrance, tableEnc);
+					setAttr( charCS, fields.Weight_count, count);
+					setAttr( charCS, fields.Weight_qty, qty);
+				} else {
+					tableWt = attrLookup( charCS, fields.Weight_total );
+					tableEnc = attrLookup( charCS, fields.Weight_encumbrance );
+					count = attrLookup( charCS, fields.Weight_count );
+					qty = attrLookup( charCS, fields.Weight_qty );
+				};
+
+				let strength = attrLookup( charCS, fields.Strength, {def:false} );
+		//		log('itemSlotData: strength = '+strength+', flag = '+state.MagicMaster.encumbrance+', Encumbrance stored field = '+attrLookup( charCS, fields.Encumbrance ));
+				if (state.MagicMaster.encumbrance && !_.isUndefined(strength)) {
+					const parsedStr = strength.match(/(\d+)(?:[\(\[](\d+)[\)\]])?/) || [null,null];
+					strength = parseInt(parsedStr[1]);
+					extra = parseInt(parsedStr[2]);
+					if (!isNaN(extra)) {
+						extra = Math.min(99,Math.max(0,extra));
+						weights = encumberDef.stepsExt[encumberDef.exceptional.findIndex(e => e >= extra)];
+					} else if (!isNaN(strength)) {
+						strength = Math.min(25,strength);
+						weights = encumberDef.stepsStr[encumberDef.strengths.findIndex(s => s >= strength)];
+					}
+		//			log('itemSlotData: strength = '+strength+', extra = '+extra+', weights = '+weights);
+					if (!_.isUndefined(weights)) {
+						for (encumbrance = 0; encumbrance < 5 && tableEnc > weights[encumbrance]; encumbrance++ );
+		//				log('itemSlotData: encumbrance = '+encumbrance+', current weight = '+tableEnc+', max weight = '+weights[encumbrance]);
+						setAttr( charCS, fields.Weight_forStr, weights.join() );
+						setAttr( charCS, fields.Weight_label, encumberDef.labels[encumbrance].dispName() );
+						setAttr( charCS, fields.Weight_ACmod, encumberDef.ac[encumbrance] );
+						baseMove = attrLookup( charCS, fields.BaseMove );
+//						let moves = encumberDef.moves[encumberDef.moves.findIndex(m => m[0] >= baseMove)];
+//						move = parseInt(encumbrance < 5 ? (moves[encumbrance] || 12) : 0);
+						move = Math.round(baseMove*([1,2/3,1/2,1/3,1/baseMove,0][encumbrance]));
+						moveMod = attrLookup( charCS, fields.MoveMod ) || '';
+						move = parseFloat(evalAttr(moveMod[0] === '=' ? moveMod.slice(1) : (isNaN(moveMod[0]) ? (move + moveMod) : (move+'+'+moveMod) ), charCS));
+//						log('itemSlotData: moveMod = '+moveMod+', move = '+move);
+						if ((Math.ceil(move) !== Math.ceil(parseFloat(attrLookup( charCS, fields.Move )))) || (encumbrance !== (parseInt(attrLookup( charCS, fields.Encumbrance )) || 99))) {
+							if (encumbrance === 0) {
+								if (oldEncumbrance !== 0) sendAPI( fields.roundMaster+' --removeTargetStatus '+tokenID+'|Encumbrance|noerror' );
+							} else {
+								sendAPI( fields.roundMaster+' --addTargetStatus '+tokenID+'|Encumbrance|$'+(encumbrance+90)+'|0|'+curToken.get('name')+' is <span style="color:'+encumberDef.colours[encumbrance]+'">'+encumberDef.labels[encumbrance]+'</span> and has a move of <span style="color:'+encumberDef.colours[encumbrance]+'">'+move+'</span>|'+encumberDef.marker[encumbrance], senderId );
+							};
+							setAttr( charCS, fields.Encumbrance, encumbrance );
+							setAttr( charCS, fields.Move, move );
+						};
+					};
+				} else if (!state.MagicMaster.encumbrance && (attrLookup( charCS, fields.Encumbrance ) != 0)) {
+		//			log('itemSlotData: flag is false but encumbered so removing status');
+					setAttr( charCS, fields.Encumbrance, 0 );
+					sendAPI( fields.roundMaster+' --removeTargetStatus '+tokenID+'|Encumbrance|noerror' );
+				};
+		//		log('itemSlotData: returning with count '+count+', weight '+Math.ceil(tableWt)+', encumberWt '+Math.ceil(tableEnc));
+			} catch (e) {
+				sendCatchError('MagicMaster',msg_orig[senderId],e);
+				errFlag = true;
+			} finally {
+				setTimeout(() => {
+					resolve({errorFlag:errFlag,count:count,qty:qty,weight:Math.ceil(tableWt),encumberWt:Math.ceil(tableEnc),encumberNum:encumbrance});
+				}, 10);
+			}
+		});
+	};
+	
+	/**
+	* Reset the chosen flags of the Items table
+	**/
+	
+	const clearItemSelection = function( charCS, Items=undefined ) {
+		if (_.isUndefined(Items)) {
+			Items = getTableGroupField( charCS, {}, fieldGroups.MI, 'name' );
+			Items = getTableGroupField( charCS, Items, fieldGroups.MI, 'chosen' );
+		};
+		let [indexes,tables] = tableGroupFind( Items, 'chosen', '1', true, true );
+		if (_.isUndefined(indexes)) return Items;
+		for (let i=0; i<indexes.length; i++) {
+			Items[tables[i]] = Items[tables[i]].tableSet( fields[fieldGroups[tables[i]].prefix+'chosen'], indexes[i], 0 );
+		};
+		return Items;
+	}
+	
+	/**
+	* Find the row and col for a named power or spell
+	**/
+	
+	const powerRowCol = function( charCS, power ) {
+		let table,row,col;
+//		log('powerRowCol: looking for '+power);
+		for (let i=0; i<fields.PowersCols; i++) {
+			col = fields.PowersBaseCol+i;
+			table = getTableField( charCS, {}, fields.Powers_table, fields.Powers_name, col );
+			row = table.tableFind( fields.Powers_name, power );
+			if (!_.isUndefined(row)) i=fields.PowersCols;
+//			log('powerRowCol: row '+row+', col '+col+', i '+i);
+		}
+		if (_.isUndefined(row)) col = undefined;
+//		log('powerRowCol: returning ['+row+','+col+']');
+		return [row,col];
 	};
 
 // ---------------------------------------------------- Make Menus ---------------------------------------------------------
@@ -2751,44 +2822,42 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * args[] is the standard action|charID|fromID|toID|fromRow|toRow
 	 **/
 	 
-	var howMany = function( args, MIname, MItype, MIqty, senderId ) {
+	const howMany = function( args, MIname, MItype, MIqty, senderId ) {
 		
-		var buy = args[0].toUpperCase().includes('BUY'),
-			sell = args[0].toUpperCase().includes('SELL'),
-			cmd = buy ? 'BUY_POPqty' : (sell ? 'SELL_POPqty' : 'POPqty'),
-			tokenID = args[1],
-			fromID = args[3],
-			toID = args[4],
-			fromRow = args[2],
-			toRow = args[5],
-			charCS = getCharacter( tokenID ),
-			content = '&{template:'+fields.messageTemplate+'}{{name=How Many Items?}}'
-					+ '{{desc=How many '+MIname+' do you want to '+(buy ? 'buy' : (sell ? 'sell' : (tokenID == toID ? 'take' : 'put away')))+'?}}'
-					+ '{{desc1=[One](!magic --button '+cmd+'|'+tokenID+'|'+fromRow+'|'+fromID+'|'+toID+'|'+toRow+'|1) or '
-					+ '[All '+MIqty+'](!magic --button '+cmd+'|'+tokenID+'|'+fromRow+'|'+fromID+'|'+toID+'|'+toRow+'|'+MIqty+') or '
-					+ '[Specify](!magic --button '+cmd+'|'+tokenID+'|'+fromRow+'|'+fromID+'|'+toID+'|'+toRow+'|&#63;{How many '+MIname+'? max '+MIqty+'}) }}';
+		const buy = args[0].toUpperCase().includes('BUY'),
+			  sell = args[0].toUpperCase().includes('SELL'),
+			  cmd = buy ? 'BUY_POPqty' : (sell ? 'SELL_POPqty' : 'POPqty'),
+			  tokenID = args[1],
+			  fromID = args[3],
+			  toID = args[4],
+			  fromRow = args[2],
+			  toRow = args[5],
+			  charCS = getCharacter( tokenID ),
+			  content = '&{template:'+fields.messageTemplate+'}{{name=How Many Items?}}'
+					  + '{{desc=How many '+MIname+' do you want to '+(buy ? 'buy' : (sell ? 'sell' : (tokenID == toID ? 'take' : 'put away')))+'?}}'
+					  + '{{desc1=[One](!magic --button '+cmd+'|'+tokenID+'|'+fromRow+'|'+fromID+'|'+toID+'|'+toRow+'|1) or '
+					  + '[All '+MIqty+'](!magic --button '+cmd+'|'+tokenID+'|'+fromRow+'|'+fromID+'|'+toID+'|'+toRow+'|'+MIqty+') or '
+					  + '[Specify](!magic --button '+cmd+'|'+tokenID+'|'+fromRow+'|'+fromID+'|'+toID+'|'+toRow+'|&#63;{How many '+MIname+'? max '+MIqty+'}) }}';
 
 		sendResponse( charCS, content, senderId, flags.feedbackName, flags.feedbackImg, tokenID );
 	}
 	
 	/*
-	 * For an item object, heck to see if it is one
+	 * For an item object, check to see if it is one
 	 * that a retailer can buy or sell
 	 */
 	 
-	var canBuyOrSell = function( miObj, bannedList=[], allowedList=[] ) {
+	const canBuyOrSell = function( miObj, bannedList=[], allowedList=[] ) {
 
-		var specs = miObj.specs(),
-			miClasses = !!specs ? specs.reduce((a,b) => a.concat(b[2].dbName().split('|')), []) : [],
-			superTypes = !!specs ? specs.reduce((a,b) => a.concat(b[4].dbName().split('|')), []) : [],
-			types = miClasses.filter(itemClass => _.isUndefined(miTypeLists[itemClass.dbName()]) || !(['weapon','ammo','armour','armor'].includes(miTypeLists[itemClass.dbName()].type)));
+		const specs = miObj.specs(),
+			  miClasses = !!specs ? specs.reduce((a,b) => a.concat(b[2].dbName().split('|')), []) : [],
+			  superTypes = !!specs ? specs.reduce((a,b) => a.concat(b[4].dbName().split('|')), []) : [];
+		let types = miClasses.filter(itemClass => _.isUndefined(miTypeLists[itemClass.dbName()]) || !(['weapon','ammo','armour','armor'].includes(miTypeLists[itemClass.dbName()].type)));
 			
 		if (!types || !types.length) {
 			types = miClasses.filter(itemClass => ['weapon','ammo','armour','armor'].includes(miTypeLists[itemClass.dbName()].type)) || ['miscellaneous'];
 		}
 		types = types.concat(miClasses,superTypes);
-
-//		log('canBuyOrSell: banned = '+bannedList.length+' |'+bannedList+'|, allowed = '+allowedList.length+' |'+allowedList+'|, miClasses = '+miClasses+', types = '+types+', returning '+(!bannedList.length && !allowedList.length) || (!bannedList.some(b => types.includes(b.dbName())) && (!allowedList || allowedList.some(a => types.includes(a.dbName())))));
 
 		return (!bannedList.length && !allowedList.length) || (!bannedList.some(b => types.includes(b.dbName())) && (!allowedList.length || allowedList.some(a => types.includes(a.dbName()))));
 	}
@@ -2799,21 +2868,24 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * whether empty slots '-' are included
 	 */
 
-	var makeMIlist = function( charCS, senderId, includeEmpty=true, disable0=true, showTypes=false, showMagic=true, putCS, buy=false, refuse='' ) { // type
+	const makeMIlist = function( charCS, senderId, includeEmpty=true, disable0=true, showTypes=false, showMagic=true, putCS, buy=false, refuse='' ) { // type
 
 		return new Promise(resolve => {
 			
 			try {
 			
-				var mi, miText, qty, rows, maxSize, specs, carried,
-					miList = '',
+				const bannedMI = (!buy || !refuse || refuse.toLowerCase() === 'none') ? [] : String(refuse).dbName().split('|'),
+					  allowedMI = (!buy || _.isBoolean(buy) || buy.toLowerCase() === 'any') ? [] : String(buy).dbName().split('|');
+				let mi, qty, rows, maxSize, specs, carried,
+					cost, miObj, type, zeroOK,
 					slotsUsed = 0,
 					lastSlot = -1,
 					Items = getTableGroupField( charCS, {}, fieldGroups.MI, 'name' ),
-					bannedMI = (!buy || !refuse || refuse.toLowerCase() === 'none') ? [] : String(refuse).dbName().split('|'),
-					allowedMI = (!buy || _.isBoolean(buy) || buy.toLowerCase() === 'any') ? [] : String(buy).dbName().split('|'),
 					types = [];
 					
+				var miList = '',
+					miText;
+
 				if (_.isUndefined(putCS)) putCS = charCS;
 					
 				Items = getTableGroupField( charCS, Items, fieldGroups.MI, 'qty' );
@@ -2832,13 +2904,13 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 						qty = Items[table].tableLookup( fields[fieldGroups[table].prefix+'qty'], i );
 						if (buy && qty == 0) continue;
 						carried = Items[table].tableLookup( fields[fieldGroups[table].prefix+'carried'], i );
-						let cost = parseFloat(evalAttr(Items[table].tableLookup( fields[fieldGroups[table].prefix+'cost'], i ),putCS)) || 0;
+						cost = parseFloat(evalAttr(Items[table].tableLookup( fields[fieldGroups[table].prefix+'cost'], i ),putCS)) || 0;
 						if (buy && disable0 && cost === 0) continue;
 						if (!carried.length || carried == 'carried') {
-							let miObj = abilityLookup( fields.MagicItemDB, mi, charCS, true );
-							let type = miObj.obj ? miObj.obj[1].type.toLowerCase() : '';
+							miObj = abilityLookup( fields.MagicItemDB, mi, charCS, true );
+							type = miObj.obj ? miObj.obj[1].type.toLowerCase() : '';
 							if (mi.length > 0 && (includeEmpty || mi != '-') && (!buy || cost !== 0) && (showMagic || !type.includes('magic'))) {
-								let zeroOK = (type.includes('selfchargeable') || type.includes('absorbing') || type.includes('recharging'));
+								zeroOK = (type.includes('selfchargeable') || type.includes('absorbing') || type.includes('recharging'));
 								if (!disable0 || zeroOK || qty > 0) {
 									if (!buy && showTypes && miObj.obj) miText = getShownType( miObj, i );
 									if (mi != '-') slotsUsed++;
@@ -2875,76 +2947,91 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * whether empty slots '-' are included.
 	 */
 
-	/* Note: if buy is true or has a string value, disable0 refers to cost rather than quantity (zero quantity is always not shown if buy is true). This ensures all owned goods can be sold. */
-
-	var makeMIbuttons = function( tokenID, senderId, miField, qtyField, cmd, extension='', MIrowref=-1, disable0=true, includeEmpty=false, showTypes=false, showMagic=true, pickID, putID, buy='', refuse='' ) {
+	const makeMIbuttons = function( tokenID, senderId, miField, qtyField, cmd, extension='', MIrowref=-1, disable0=true, includeEmpty=false, showTypes=false, showMagic=true, pickID, putID, buy='', refuse='', sectNo=2 ) {
+		
+//	 Note: if buy is true or has a string value, disable0 refers to cost rather than quantity (zero quantity is always not shown if buy is true). This ensures all owned goods can be sold.
 		
 		return new Promise(resolve => {
 			
 			try {
 			
-				var charCS = getCharacter(tokenID),
-					pickCS = !_.isUndefined(pickID) ? getCharacter(pickID) : charCS,
-					putCS = !_.isUndefined(putID) ? getCharacter(putID) : charCS,
-					isView = extension == 'viewMI',
-					buttonNo = 0,
+				const charCS = getCharacter(tokenID),
+					  pickCS = !_.isUndefined(pickID) ? getCharacter(pickID) : charCS,
+					  putCS = !_.isUndefined(putID) ? getCharacter(putID) : charCS,
+					  isView = extension == 'viewMI',
+					  isGM = playerIsGM(senderId),
+					  Items = getTableGroup( pickCS, fieldGroups.MI ),
+					  rows = _.reduce(Items,(r,i) => r+((i && i.sortKeys) ? i.sortKeys.length : 0),0),
+					  maxSize = attrLookup( pickCS, fields.ItemContainerSize ) || fields.MIRowsStandard,
+					  bannedMI = (!buy || !refuse || refuse.toLowerCase() === 'none') ? [] : String(refuse).dbName().split('|'),
+					  allowedMI = (!buy || _.isBoolean(buy) || buy.toLowerCase() === 'any') ? [] : String(buy).dbName().split('|'),
+					  playerConfig = getSetPlayerConfig( senderId ),
+					  sheetVer = csVer(pickCS),
+					  sections = {POTIONS:{n:0,name:'**Potions**'},
+								  DUSTS:{n:1,name:'**Dusts**'},
+								  WANDS:{n:2,name:'**Rings, Rods, Staves & Wands**'},
+								  SCROLLS:{n:3,name:'**Scrolls & Books**'},
+								  GEAR:{n:4,name:'**Weapons, Armour & Gear**'},
+								  MISC:{n:5,name:'**Miscellaneous**'},
+								  TREASURE:{n:6,name:'**Treasure**'},
+								  COINS:{n:7,name:'**Coins**'}};
+				let buttonNo = 0,
 					rowNo = -1,
-					isGM = playerIsGM(senderId),
 					slotsUsed = 0,
-					bannedMI = (!buy || !refuse || refuse.toLowerCase() === 'none') ? [] : String(refuse).dbName().split('|'),
-					allowedMI = (!buy || _.isBoolean(buy) || buy.toLowerCase() === 'any') ? [] : String(buy).dbName().split('|'),
 					renamed, miObj,
-					playerConfig = getSetPlayerConfig( senderId ),
-					qty, maxQty, mi, miText, type, makeGrey, Items, rows, maxSize, i,
-					content = '',
-					sections = {POTIONS:{n:2,name:'**Potions**'},
-								DUSTS:{n:3,name:'**Dusts**'},
-								WANDS:{n:4,name:'**Rings, Rods, Staves & Wands**'},
-								SCROLLS:{n:5,name:'**Scrolls & Books**'},
-								GEAR:{n:6,name:'**Weapons, Armour & Gear**'},
-								MISC:{n:7,name:'**Miscellaneous**'},
-								TREASURE:{n:8,name:'**Treasure**'},
-								COINS:{n:9,name:'**Coins**'}};
+					qty, maxQty, mi, miText, type, makeGrey, i,
+					sectHead, buttonCount, blankAvailable,
+					ItemsTable, trueMI, carried, cost, zeroOK,
+					changedMI, miClass, types, highlight, selected,
+					hide, reveal, action, extIsAbility, prefix;
+					
+				var content = '';
 				
 				if (isView) extension = '';
 				buy = !!buy;
-				var	sheetVer = csVer(pickCS);
-				
-				Items = getTableGroup( pickCS, fieldGroups.MI );
-				rows = _.reduce(Items,(r,i) => r+((i && i.sortKeys) ? i.sortKeys.length : 0),0);
-				maxSize = attrLookup( pickCS, fields.ItemContainerSize ) || fields.MIRowsStandard;
+
 				for (const table in Items) {
-					let sectHead = (sheetVer > 3.9 && playerConfig.sections !== false) ? ('}}{{Section'+sections[table].n+'='+sections[table].name+'\n') : '';
-					let buttonCount = buttonNo;
-					let blankAvailable = false;
+					
+					if (sheetVer > 3.9 && playerConfig.sections !== false) {
+						sectHead = '}}{{Section'+(sectNo+sections[table].n)+'='
+								 + (pickID && pickID.length ? (' _All_(!magic --button '+ cmd +'|'+ tokenID +'|'+ table + extension + ') ') : '')
+								 + sections[table].name+'\n';
+					} else if (rowNo >= 0) {
+						sectHead = '\n';
+					} else {
+						sectHead = '}}{{Section'+sectNo+'=';
+					};
+					buttonCount = buttonNo;
+					blankAvailable = false;
 					for (let i=0; i<Items[table].sortKeys.length; i++) {
 						rowNo++;
 						if (buy && table.dbName() === 'coins') continue;
-						let ItemsTable = Items[table];
-						miText = mi = ItemsTable.tableLookup( fields[fieldGroups[table].prefix+'name'], i, false, ['',miField] );
+						ItemsTable = Items[table];
+						prefix = fieldGroups[table].prefix;
+						miText = mi = ItemsTable.tableLookup( fields[prefix+'name'], i, false, ['',miField] );
 						if (_.isUndefined(mi)) {
 							log('makeMIbuttons: mi is undefined');
-							ItemsTable.cleanTable( fields[fieldGroups[table].prefix+'name'] );
+							ItemsTable.cleanTable( fields[prefix+'name'] );
 							break;
 						}
-						let trueMI = ItemsTable.tableLookup( fields[fieldGroups[table].prefix+'trueName'], i );
-						let carried = ItemsTable.tableLookup( fields[fieldGroups[table].prefix+'carried'], i ) || '';
-						let cost = parseFloat(evalAttr(ItemsTable.tableLookup( fields[fieldGroups[table].prefix+'cost'], i ),putCS)) || 0;
+						trueMI = ItemsTable.tableLookup( fields[prefix+'trueName'], i );
+						carried = ItemsTable.tableLookup( fields[prefix+'carried'], i ) || '';
+						cost = parseFloat(evalAttr(ItemsTable.tableLookup( fields[prefix+'cost'], i ),putCS)) || 0;
 						if (buy && disable0 && cost === 0) continue;
 						blankAvailable = blankAvailable || mi == '-';
 						if (carried.length && carried != 'carried') continue;
-						qty = ItemsTable.tableLookup( fields[fieldGroups[table].prefix+'qty'], i, true, ['',qtyField] );
-						maxQty = ItemsTable.tableLookup( fields[fieldGroups[table].prefix+'trueQty'], i );
-						type = ItemsTable.tableLookup( fields[fieldGroups[table].prefix+'type'], i ).toLowerCase();
-						let zeroOK = (type.includes('selfchargeable') || type.includes('absorbing') || type.includes('recharging'));
+						qty = ItemsTable.tableLookup( fields[prefix+'qty'], i, true, ['',qtyField] );
+						maxQty = ItemsTable.tableLookup( fields[prefix+'trueQty'], i );
+						type = ItemsTable.tableLookup( fields[prefix+'type'], i ).toLowerCase();
+						zeroOK = (type.includes('selfchargeable') || type.includes('absorbing') || type.includes('recharging'));
 						if (buy && !zeroOK && qty == 0) continue;
 						makeGrey = (!zeroOK && disable0 && qty == 0);
 						if (mi.length > 0 && (includeEmpty || mi != '-')) {
 							miObj = abilityLookup( fields.MagicItemDB, mi, pickCS, true );
 							renamed = !miObj.dB.toLowerCase().includes('-db');
-							let changedMI = renamed ? 'Display-'+mi : mi,
-								miClass = !miObj.obj ? 'miscellaneous' : getShownType( miObj, i, resolveData( trueMI, fields.MagicItemDB, reItemData, pickCS, {itemType:reSpellSpecs.itemType}, i, Items[table].rowID(i) ).parsed.itemType ),
-								types = ['-'];
+							changedMI = renamed ? 'Display-'+mi : mi;
+							miClass = !miObj.obj ? 'miscellaneous' : getShownType( miObj, i, resolveData( trueMI, fields.MagicItemDB, reItemData, pickCS, {itemType:reSpellSpecs.itemType}, {row:i, rowID:Items[table].rowID(i)} ).parsed.itemType );
+//							types = ['-'];
 							makeGrey = makeGrey || (!showMagic && (!miObj.obj || miObj.obj[1].type.toLowerCase().includes('magic')))
 												|| (buy && !canBuyOrSell( miObj, bannedMI, allowedMI ));
 							if (!buy && showTypes && miObj.obj) {
@@ -2953,29 +3040,31 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 									qty = Math.min(qty,1);
 								}
 							}
-							let highlight = rowNo == MIrowref;
+							selected = rowNo == MIrowref;
+							highlight = ItemsTable.tableLookup( fields[prefix+'chosen'], i ) == 1;
 							content += sectHead;
-							content += (highlight || makeGrey) ? ('<span style=' + (highlight ? design.selected_button : design.grey_button) + '>') : '['; 
-							content += (mi !== '-' ? (qty + ((qty != maxQty && isGM) ? '/'+maxQty : '') + ' ' + miText.replace(/\-/g,' ')) : '-');
+							content += selected ? ('<span style=' + design.selected_button + '>') : (makeGrey ? ('<span style=' + design.grey_button + '>') : '[');
+							content += highlight ? ('<span style=' + design.selected_button + '>') : '';
+							content += (mi != '-' ? (qty + ((qty != maxQty && isGM) ? '/'+maxQty : '') + ' ' + miText.replace(/\-/g,' ')) : '-');
 							if (mi != '-') slotsUsed++;
-							let extIsAbility = isView && mi.replace(reIgnore,'').length;
+							extIsAbility = isView && mi.replace(reIgnore,'').length;
 							if (extIsAbility) {
-								if (ItemsTable.tableLookup( fields[fieldGroups[table].prefix+'reveal'], i ) == 'view') mi = trueMI;
-								let hide = !miObj.obj ? '' : resolveData( mi, fields.MagicItemDB, reItemData, pickCS, {hide:reSpellSpecs.hide}, i, Items[table].rowID(i) ).parsed.hide,
-									reveal = (mi !== trueMI) && !!miObj.obj && hide && hide.length && hide !== 'hide';
+								if (ItemsTable.tableLookup( fields[prefix+'reveal'], i ) == 'view') mi = trueMI;
+								hide = !miObj.obj ? '' : resolveData( mi, fields.MagicItemDB, reItemData, pickCS, {hide:reSpellSpecs.hide}, {row:i, rowID:Items[table].rowID(i)} ).parsed.hide;
+								reveal = (mi !== trueMI) && !!miObj.obj && hide && hide.length && hide !== 'hide';
 								miObj = getAbility( fields.MagicItemDB, mi, pickCS, false, isGM, (reveal ? mi : trueMI), i, Items[table].rowID(i) );
-								if (miObj.obj) miObj.obj = greyOutButtons( tokenID, pickCS, miObj.obj, (renamed ? changedMI : ''), ('[Return to menu](!magic --button '+BT.CHOOSE_VIEW_MI+'|'+tokenID+'|'+(sheetVer < 4 ? '' : '&#64;{selected&#124;'+fields.ItemRowRef[0]+'}')+')') );
-								extension = '&#13;'+sendToWho(charCS,senderId,false,true)+(miObj.api ? '&#13;' : '')+'&#37;{'+miObj.dB+'|'+changedMI.hyphened()+'}';
+								if (miObj.obj) miObj = greyOutButtons( tokenID, pickCS, miObj, (renamed ? changedMI : ''), ('[Return to menu](!magic --button '+BT.CHOOSE_VIEW_MI+'|'+tokenID+'|'+(sheetVer < 4 ? '' : '&#64;{selected&#124;'+fields.ItemRowRef[0]+'}')+')') );
+								extension = '&#13;'+(miObj.api ? '' : sendToWho(charCS,senderId,false,true))+' &#37;{'+miObj.dB+'|'+changedMI.hyphened()+'}&#13;!';
 							} else {
 								miObj = getAbility( fields.MagicItemDB, mi, pickCS, false, isGM, trueMI, i, Items[table].rowID(i) );
-								let action = ((!miObj.obj || !miObj.obj[0]) ? '' : (miObj.obj[0].get('action') || '')).replace(reKeepButton,'[$2]($3$4');
+								action = ((!miObj.obj || !miObj.obj[0]) ? '' : (miObj.obj[0].get('action') || '')).replace(reKeepButton,'[$2]($3$4');
 								if (renamed) {
 									setAbility( pickCS, changedMI, action );
 								} else if (!!action && action.length) {
 									miObj.obj[0].set('action',action);
 								}
 							}
-							content += (highlight || makeGrey) ? '</span>' : '](!'+(!extIsAbility ? '' : ('&#13;'+extension+'&#13;!'))+'magic --button '+ cmd +'|'+ tokenID +'|'+ rowNo + (!extIsAbility ? extension : '')+')';
+							content += (selected || makeGrey) ? '</span>' : ((highlight ? '</span>' : '')+('](!'+(!extIsAbility ? '' : extension)+'magic --button '+ cmd +'|'+ tokenID +'|'+ rowNo + (!extIsAbility ? extension : '')+')'));
 							buttonNo++;
 							sectHead = '';
 						};
@@ -3003,31 +3092,28 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * can have memorised at a particular spell level.
 	 */
 	 
-	var makeNumberOfSpells = function( curToken, spellType, level, totalSpells ) {
+	const makeNumberOfSpells = function( curToken, spellType, level, totalSpells ) {
 		
-		var charCS = getCharacter(curToken.id),
-			tokenName = curToken.get('name'),
-			spellsAtLevel, spellsSpecialist, spellsWisdom, spellsMisc,
-			wisdom,
-			content = tokenName + ' can memorise ';
+		const charCS = getCharacter(curToken.id);
+		let content = curToken.get('name') + ' can memorise ';
 			
 		if (spellType == 'MI') {
 			content += 'these spells in magic items';
 		} else {
-			content += '[[[['+totalSpells+']]';
+			content += '[[ [['+totalSpells+']]';
 			if (spellType == 'MU') {
-				spellsAtLevel = parseInt(attrLookup(charCS,[fields.MUSpellNo_table[0] + level + fields.MUSpellNo_memable[0],fields.MUSpellNo_memable[1]])||0);
-				spellsSpecialist = parseInt(attrLookup(charCS,[fields.MUSpellNo_table[0] + level + fields.MUSpellNo_specialist[0],fields.MUSpellNo_specialist[1]])||0);
-				spellsMisc = !state.MagicMaster.spellRules.strictNum ? parseInt(attrLookup(charCS,[fields.MUSpellNo_table[0] + level + fields.MUSpellNo_misc[0],fields.MUSpellNo_misc[1]])||0) : 0;
+				const spellsAtLevel = parseInt(attrLookup(charCS,[fields.MUSpellNo_table[0] + level + fields.MUSpellNo_memable[0],fields.MUSpellNo_memable[1]])||0);
+				const spellsSpecialist = parseInt(attrLookup(charCS,[fields.MUSpellNo_table[0] + level + fields.MUSpellNo_specialist[0],fields.MUSpellNo_specialist[1]])||0);
+				const spellsMisc = !state.MagicMaster.spellRules.strictNum ? parseInt(attrLookup(charCS,[fields.MUSpellNo_table[0] + level + fields.MUSpellNo_misc[0],fields.MUSpellNo_misc[1]])||0) : 0;
 				content += '['+spellsAtLevel+' at level '+level+',+'+spellsSpecialist+' specialist, +'+spellsMisc+' misc]';
 			} else {
-				spellsAtLevel = parseInt(attrLookup(charCS,[fields.PRSpellNo_table[0] + level + fields.PRSpellNo_memable[0],fields.PRSpellNo_memable[1]])||0);
-				spellsWisdom = parseInt(attrLookup(charCS,[fields.PRSpellNo_table[0] + level + fields.PRSpellNo_wisdom[0],fields.PRSpellNo_wisdom[1]])||0);
-				wisdom = parseInt(attrLookup(charCS,fields.Wisdom)||0);
-				spellsMisc = !state.MagicMaster.spellRules.strictNum ? parseInt(attrLookup(charCS,[fields.PRSpellNo_table[0] + level + fields.PRSpellNo_misc[0],fields.PRSpellNo_misc[1]])||0) : 0;
+				const spellsAtLevel = parseInt(attrLookup(charCS,[fields.PRSpellNo_table[0] + level + fields.PRSpellNo_memable[0],fields.PRSpellNo_memable[1]])||0);
+				const spellsWisdom = parseInt(attrLookup(charCS,[fields.PRSpellNo_table[0] + level + fields.PRSpellNo_wisdom[0],fields.PRSpellNo_wisdom[1]])||0);
+				const wisdom = parseInt(attrLookup(charCS,fields.Wisdom)||0);
+				const spellsMisc = !state.MagicMaster.spellRules.strictNum ? parseInt(attrLookup(charCS,[fields.PRSpellNo_table[0] + level + fields.PRSpellNo_misc[0],fields.PRSpellNo_misc[1]])||0) : 0;
 				content += '['+spellsAtLevel+' at level '+level+', + '+spellsWisdom+' for wisdom '+wisdom+', + '+spellsMisc+' misc]';
 			}
-			content += ']] spells at level '+level;
+			content += ' ]] spells at level '+level;
 		}
 		return content;
 	}
@@ -3038,13 +3124,13 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * number can be edited..
 	 */
 	 
-	var makeEditNumberOfSpells = function( args, spellType, totalSpells ) {
+	const makeEditNumberOfSpells = function( args, spellType, totalSpells ) {
 		
-		var mngSpellsCmd = args[0],
-			tokenID = args[1],
-			level = args[2],
-			curToken = getObj('graphic',tokenID),
-			content = curToken.get('name') + ' can memorise ';
+		const mngSpellsCmd = args[0],
+			  tokenID = args[1],
+			  level = args[2],
+			  curToken = getObj('graphic',tokenID);
+		let content = curToken.get('name') + ' can memorise ';
 			
 		if (spellType == 'MI') {
 			content += 'these spells in this magic item';
@@ -3061,28 +3147,28 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * a particular spell class and level
 	 */
 	 
-	var makeMiscSpellsEdit = function( args, senderId ) {
+	const makeMiscSpellsEdit = function( args, senderId ) {
 		
-		var tokenID = args[1],
-			spellClass = args[2],
-			level = args[3],
-			mngSpellsCmd = args[4],
-			charCS = getCharacter(tokenID),
-			spellsAtLevel, spellsSpecialist, spellsMisc, spellsTotal, spellsWisdom, wisdom,
+		const tokenID = args[1],
+			  spellClass = args[2],
+			  level = args[3],
+			  mngSpellsCmd = args[4],
+			  charCS = getCharacter(tokenID);
+		let spellsMisc, spellsTotal,
 			content = '&{template:'+fields.messageTemplate+'}{{name=Edit Level '+level+' Misc Spells}}'
 					+ '{{desc=Here\'s how '+getObj('graphic',tokenID).get('name')+' total '+spellClass+' spells are determined.  '
 					+ 'You can adjust the Miscellaneous number by clicking on it and specifying a different value}}{{desc1=';
 
 		if (spellClass == 'MU') {
-			spellsAtLevel = (attrLookup(charCS,[fields.MUSpellNo_table[0] + level + fields.MUSpellNo_memable[0],fields.MUSpellNo_memable[1]])||0);
-			spellsSpecialist = (attrLookup(charCS,[fields.MUSpellNo_table[0] + level + fields.MUSpellNo_specialist[0],fields.MUSpellNo_specialist[1]])||0);
+			const spellsAtLevel = (attrLookup(charCS,[fields.MUSpellNo_table[0] + level + fields.MUSpellNo_memable[0],fields.MUSpellNo_memable[1]])||0);
+			const spellsSpecialist = (attrLookup(charCS,[fields.MUSpellNo_table[0] + level + fields.MUSpellNo_specialist[0],fields.MUSpellNo_specialist[1]])||0);
 			spellsMisc = (attrLookup(charCS,[fields.MUSpellNo_table[0] + level + fields.MUSpellNo_misc[0],fields.MUSpellNo_misc[1]])||0);
 			spellsTotal = (attrLookup(charCS,[fields.MUSpellNo_table[0] + level + fields.MUSpellNo_total[0],fields.MUSpellNo_total[1]])||0);
 			content += spellsAtLevel+' MU spells at level '+level+', + '+spellsSpecialist+' specialist';
 		} else {
-			spellsAtLevel = (attrLookup(charCS,[fields.PRSpellNo_table[0] + level + fields.PRSpellNo_memable[0],fields.PRSpellNo_memable[1]])||0);
-			spellsWisdom = (attrLookup(charCS,[fields.PRSpellNo_table[0] + level + fields.PRSpellNo_wisdom[0],fields.PRSpellNo_wisdom[1]])||0);
-			wisdom = (attrLookup(charCS,fields.Wisdom)||0);
+			const spellsAtLevel = (attrLookup(charCS,[fields.PRSpellNo_table[0] + level + fields.PRSpellNo_memable[0],fields.PRSpellNo_memable[1]])||0);
+			const spellsWisdom = (attrLookup(charCS,[fields.PRSpellNo_table[0] + level + fields.PRSpellNo_wisdom[0],fields.PRSpellNo_wisdom[1]])||0);
+			const wisdom = (attrLookup(charCS,fields.Wisdom)||0);
 			spellsMisc = (attrLookup(charCS,[fields.PRSpellNo_table[0] + level + fields.PRSpellNo_misc[0],fields.PRSpellNo_misc[1]])||0);
 			spellsTotal = (attrLookup(charCS,[fields.PRSpellNo_table[0] + level + fields.PRSpellNo_total[0],fields.PRSpellNo_total[1]])||0);
 			content += spellsAtLevel+' PR spells at level '+level+', + '+spellsWisdom+' for wisdom '+wisdom;
@@ -3099,59 +3185,61 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * spell row and column arrays, and the number of live spells
 	 */
 	 
-	var getStoredSpells = function( charCS, miName, miRow, miRowID ) {
+	const getStoredSpells = function( charCS, miName, miRow, miRowID ) {
+		const spellbook = miSpellLookup( charCS, miName, miRow, miRowID, fields.ItemMUspellsList ).split(',').filter(s=>!!s);
 		let spellTables = {};
 		let spellCount = 0;
 		let rows = [];
 		let cols = [];
 		rows.push((miSpellLookup( charCS, miName, miRow, miRowID, fields.MIspellRows, 'mu' ) || ''),(miSpellLookup( charCS, miName, miRow, miRowID, fields.MIspellRows, 'pr' ) || ''));
-		rows = rows.join().split(',').filter(r=>!!r);
 		cols.push((miSpellLookup( charCS, miName, miRow, miRowID, fields.MIspellCols, 'mu' ) || ''),(miSpellLookup( charCS, miName, miRow, miRowID, fields.MIspellCols, 'pr' ) || ''));
+		rows = rows.join().split(',').filter(r=>!!r);
 		cols = cols.join().split(',').filter(c=>!!c);
-		if (rows.length && cols.length) {
+		if (cols[0] && parseInt(cols[0]) < 0) {
+			spellCount = spellbook.length;
+		} else if (rows.length && cols.length) {
 			cols.forEach( (c,i) => {
 				if (_.isUndefined(spellTables[c])) spellTables[c] = getTableField( charCS, {}, fields.Spells_table, fields.Spells_castValue, c );
 				spellCount += parseInt((spellTables[c].tableLookup( fields.Spells_castValue, rows[i] )),10);
 			});
 		};
-		return {count:spellCount,rows:rows,cols:cols};
+		return {count:spellCount,rows:rows,cols:cols,spellbook:spellbook};
 	};
 
 	/*
 	 * Make a list of spells in the specified memorised/stored list
 	 */
 
-	var makeSpellList = function( senderId, tokenID, command, selectedButton, noDash = false, submitted = false, extension = '', maxLevel = 13 ) {
+	const makeSpellList = function( senderId, tokenID, command, selectedButton, noDash = false, submitted = false, extension = '', maxLevel = 13 ) {
 		
-		var isMU = command.toUpperCase().includes('MU'),
-			isPR = command.toUpperCase().includes('PR'),
-			isMI = command.toUpperCase().includes('MI'),
-			isPower = command.toUpperCase().includes('POWER'),
-			isView = command.toUpperCase().includes('VIEW'),
-			isScroll = command.toUpperCase().includes('SCROLL'),
-			isGM = playerIsGM(senderId),
-			content = '',
+		const isMU = command.toUpperCase().includes('MU'),		// toWho
+			  isPR = command.toUpperCase().includes('PR'),
+			  isMI = command.toUpperCase().includes('MI'),
+			  isPower = command.toUpperCase().includes('POWER'),
+			  isView = command.toUpperCase().includes('VIEW'),
+			  isScroll = command.toUpperCase().includes('SCROLL'),
+			  miStore = command.includes('MI_SLOT'),
+			  curToken = getObj('graphic',tokenID),
+			  charCS = getCharacter(tokenID),
+			  miName = (attrLookup( charCS, fields.ItemChosen ) || '-').hyphened(),
+			  MIbag = getTableGroup( charCS, fieldGroups.MI ),
+			  oldVer = 2.1 > csVer(charCS);
+			  
+		let	content = '',
 			viewCmd = '',
 			buttonID = 0,
 			buttonList = [],
 			spell, spellType, spellName,
-			magicDB, levelSpells, table,
-			curToken = getObj('graphic',tokenID),
-			charCS = getCharacter(tokenID),
-			miStore = command.includes('MI_SLOT'),
-			miName = attrLookup( charCS, fields.ItemChosen ) || '-',
+			magicDB, table,
 			miRow = attrLookup( charCS, fields.ItemRowRef ) || '',
-			MIbag = getTableGroup( charCS, fieldGroups.MI ),
-			oldVer = 2.1 > csVer(charCS),
 			toWho = sendToWho(charCS,senderId,false,true),
 			spellTables = [],
 			spellLevels = 0,
 			learnData = '',
 			learn = false,
 			rows = [], cols = [],
-			miRowID;
+			miRowID, isExtAbility;
 			
-		miName = miName.replace(/\s/g,'-');
 		[miRow,table,miRowID] = tableGroupIndex( MIbag, miRow );
 			
 		if (isPower && isMI) {
@@ -3169,7 +3257,7 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 			buttonList += ',' + miSpellLookup( charCS, miName, miRow, miRowID, fields.ItemPRspellsList ) || '';
 			buttonList = buttonList.dbName().split(',');
 			if (caster(charCS,'MU').clv > 0) {
-				if (abilityLookup( fields.MagicItemDB, miName, charCS ).obj) learnData = resolveData( miName, fields.MagicItemDB, reItemData, charCS, {learn:reSpellSpecs.learn}, miRow, miRowID ).parsed.learn;
+				if (abilityLookup( fields.MagicItemDB, miName, charCS ).obj) learnData = resolveData( miName, fields.MagicItemDB, reItemData, charCS, {learn:reSpellSpecs.learn}, {row:miRow, rowID:miRowID} ).parsed.learn;
 				learn = (learnData && learnData != '0' && (!isScroll || !isView));
 			};
 
@@ -3178,36 +3266,35 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 			let storedSpells = getStoredSpells( charCS, miName, miRow, miRowID );
 			rows = storedSpells.rows;
 			cols = storedSpells.cols;
+			const isSB = parseInt(cols[0]) < 0;
+			let learnText, spellDB, spellValue, disabled;
 			if (rows.length && cols.length) {
 				_.each( cols, (c,k) => {
 					let r = rows[k];
-					if (_.isUndefined(spellTables[c])) spellTables[c] = getTable( charCS, fieldGroups.SPELLS, c );
-					let spellMsg = spellTables[c].tableLookup( (oldVer ? fields.Spells_macro : fields.Spells_msg), r );
-					if (miStore) spellName = spellMsg; else spellName = spellTables[c].tableLookup( fields.Spells_name, r );
-					let	spellDB = spellTables[c].tableLookup( fields.Spells_db, r ) || fields.MU_SpellsDB,
-						spellValue = parseInt((spellTables[c].tableLookup( fields.Spells_castValue, r )),10),
-						disabled = (miStore ? (spellValue != 0) : (spellValue == 0));
-					if (!disabled) spellLevels = spellLevels + (parseInt(spellTables[c].tableLookup( fields.Spells_spellLevel, r )) || 1);
-					if (!noDash || spellName != '-') {
+					if (!isSB && _.isUndefined(spellTables[c])) spellTables[c] = getTable( charCS, fieldGroups.SPELLS, c );
+					let spellMsg = !isSB ? spellTables[c].tableLookup( (oldVer ? fields.Spells_macro : fields.Spells_msg), r ) : '';
+					if (miStore) spellName = spellMsg; else spellName = !isSB ? spellTables[c].tableLookup( fields.Spells_name, r ) : storedSpells.spellbook[r];
+					spellDB = !isSB ? (spellTables[c].tableLookup( fields.Spells_db, r ) || fields.MU_SpellsDB) : fields.MU_SpellsDB;
+					spellValue = !isSB ? parseInt((spellTables[c].tableLookup( fields.Spells_castValue, r )),10) : 1;
+					disabled = (miStore ? (spellValue != 0) : (spellValue == 0));
+					if (!disabled) spellLevels = spellLevels + (isSB ? 1 : (parseInt(spellTables[c].tableLookup( fields.Spells_spellLevel, r )) || 1));
+					if (!noDash || spellName !== '-') {
 						let renamed = !abilityLookup( spellDB, spellName ),
 							changedSpell = renamed ? 'Display-'+spellName : spellName;
 						spell = getAbility( spellDB, spellName, charCS );
 						if (!!spell.obj) {
 							if (isView) {
-								spell.obj = greyOutButtons( tokenID, charCS, spell.obj, (renamed ? changedSpell : ''), ('[Return to menu](!magic --button '+viewCmd+'|'+tokenID+'|'+buttonID +'|'+ r +'|'+ c + extension +')') );
+								spell = greyOutButtons( tokenID, charCS, spell, (renamed ? changedSpell : ''), ('[Return to menu](!magic --button '+viewCmd+'|'+tokenID+'|'+buttonID +'|'+ r +'|'+ c + extension +')') );
 							} else {
-								let action = ((!spell.obj || !spell.obj[0]) ? '' : (spell.obj[0].get('action') || '')).replace(reKeepButton,'[$2]($3$4');
-								if (renamed) {
-									spell.obj = setAbility( charCS, changedSpell, spell.obj[0].body );
-								}
+								let action = ((!spell.obj || !spell.obj[1]) ? '' : (spell.obj[1].body || '')).replace(reKeepButton,'[$2]($3$4');
+								if (learn) action = action.replace(/\}\}\s*$/m,('}}{{Learn=Try to [Learn this spell]\lpar;\api;magic ~~learn-spell '+tokenID+'¦'+(learnData != 1 ? learnData : spellName)+'\rpar;}}'));
+								spell.obj[0] = setAbility( charCS, changedSpell, action );
+								spell.dB = charCS.get('name');
 							};
-							let learnText = !learn ? '' : '{{Learn=Try to [Learn this spell](!magic --learn-spell '+tokenID+'|'+(learnData != 1 ? learnData : spellName)+')}}';
-							if (!!learn) spell.obj[0].set('action',spell.obj[0].get('action').replace(/\}\}\s*$/m,'}}'+learnText) );
 						};
 						content += (buttonID == selectedButton ? '<span style=' + design.selected_button + '>' : ((submitted || disabled) ? '<span style=' + design.grey_button + '>' : '['));
 						content += ((spellType.includes('POWER') && spellValue) ? (spellValue + ' ') : '') + (spellName || '-');
-//						content += (((buttonID == selectedButton) || submitted || disabled) ? '</span>' : '](!magic --button '+ command +'|'+ tokenID +'|'+ buttonID +'|'+ r +'|'+ c + (!isView ? '' : (' --display-ability '+tokenID+'|'+spellDB+'|'+spellName + extension)) + ')');
-						content += ((buttonID == selectedButton) || submitted || disabled) ? '</span>' : ('](!'+(!isView ? '' : '&#13;'+sendToWho(charCS,senderId,false,true)+'&#37;{' + spell.dB + '|' + changedSpell.hyphened() + '}&#13;!') + 'magic --button '+ command +'|'+ tokenID +'|'+ buttonID +'|'+ r +'|'+ c + extension + +')');
+						content += ((buttonID == selectedButton) || submitted || disabled) ? '</span>' : ('](!'+(!isView ? '' : '&#13;'+toWho+'&#37;{' + spell.dB + '|' + changedSpell.hyphened() + '}&#13;!') + 'magic --button '+ command +'|'+ tokenID +'|'+ buttonID +'|'+ r +'|'+ c + extension +')');
 					}
 					buttonID++;
 				});
@@ -3224,7 +3311,7 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 		}
 		
 		// build the Spell list
-		levelSpells = shapeSpellbook( charCS, spellType );
+		let levelSpells = shapeSpellbook( charCS, spellType );
 		
 		for (let lv = 1; lv < levelSpells.length; lv++) {
 			let r = 0;
@@ -3254,7 +3341,7 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 						let	spellValue = parseInt((spellTables[w].tableLookup( fields.Spells_castValue, r )),10),
 							disabled = (miStore ? (spellValue != 0) : (spellValue == 0));
 						if (!noDash || spellName != '-') {
-							let isExtAbility = isView && spellName.replace(reIgnore,'').length;
+							isExtAbility = isView && spellName.replace(reIgnore,'').length;
 							if (isExtAbility) {
 								magicDB = spellTables[w].tableLookup( fields.Spells_db,r );
 								if (!magicDB || magicDB == spellName) {
@@ -3263,10 +3350,9 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 								}
 								let renamed = !abilityLookup( magicDB, spellName ),
 									changedSpell = renamed ? 'Display-'+spellName : spellName;
-								spell = getAbility( magicDB, spellName, charCS );
-								if (!!spell.obj) spell.obj = greyOutButtons( tokenID, charCS, spell.obj, (renamed ? changedSpell : ''), ('[Return to menu](!magic --button '+viewCmd+'|'+tokenID+'|'+buttonID +'|'+ r +'|'+ c +')') );
-//								extension = `${!learn ? '' : ` --message ${tokenID}|Learn Spell|Try to &#91;Learn this spell&#93;&#40;!magic ~~learn-spell ${tokenID}¦${spellName}&#41;`}&#13;${(spell.api ? '' : toWho)}&#37;{${spell.dB}|${spellName}}`;
-								extension = `$&#13;${toWho}&#37;{${spell.dB}|${changedSpell}}&#13;!`;
+								spell = abilityLookup( magicDB, spellName, charCS );
+								if (!!spell.obj) spell = greyOutButtons( tokenID, charCS, spell, (renamed ? changedSpell : ''), ('[Return to menu](!magic --button '+viewCmd+'|'+tokenID+'|'+buttonID +'|'+ r +'|'+ c +')') );
+								extension = `&#13;${toWho}&#37;{${spell.dB}|${changedSpell}}&#13;!`;
 							}
 							content += (buttonID == selectedButton ? '<span style=' + design.selected_button + '>' : ((submitted || disabled || (lv > maxLevel)) ? '<span style=' + design.grey_button + '>' : '['));
 							content += ((spellType.includes('POWER') && spellValue) ? (spellValue + ' ') : '') + spellName.dispName();
@@ -3288,53 +3374,44 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * Create a menu for a player to manage their spell list.
 	 */
 
-	var makeManageSpellsMenu = function( args, senderId, msg ) {
+	const makeManageSpellsMenu = function( args, senderId, msg ) {
 		
-		var cmd = args[0].toUpperCase(),
-			isMU = cmd.includes('MU'),
-			isPR = cmd.includes('PR'),
-			isMI = cmd.includes('MI'),
-			isPower = cmd.includes('POWER'),
-			isSpell = cmd.includes('SPELL'),
-			isScroll = cmd.includes('SCROLL'),
-			isView = cmd.includes('REVIEW'),
-			isGM = args[0].includes('GM'),
-			tokenID = args[1],
-			level = parseInt((args[2]),10),
-			spellRow = args[3],
-			spellCol = args[4],
-			spellToMemorise = args[5] || '',
-			singleLevel = (args[7] || '').dbName() === 'single',
+		const cmd = args[0].toUpperCase(),
+			  isMU = cmd.includes('MU'),
+			  isPR = cmd.includes('PR'),
+			  isMI = cmd.includes('MI'),
+			  isPower = cmd.includes('POWER'),
+			  isSpell = cmd.includes('SPELL'),
+			  isScroll = cmd.includes('SCROLL'),
+			  isView = cmd.includes('REVIEW'),
+			  isGM = args[0].includes('GM'),
+			  tokenID = args[1],
+			  spellRow = args[3],
+			  spellCol = args[4],
+			  spellToMemorise = args[5] || '',
+			  singleLevel = (args[7] || '').dbName() === 'single',
+			  selectedSpell = (spellToMemorise.length > 0),
+			  selectedSlot = (spellRow >= 0 && spellCol >= 0),
+			  selectedBoth = selectedSpell && selectedSlot,
+			  curToken = getObj('graphic',tokenID),
+			  charCS = getCharacter(tokenID);
+			  
+		let level = parseInt((args[2]),10),
 			spellToDisplay = spellToMemorise,
-			curToken = getObj('graphic',tokenID),
-			charCS = getCharacter(tokenID),
 			levelSpells;
 			
 		if (!curToken || !charCS) {
-			sendDebug('makeManageSpellsMenu: invalid tokenID passed');
 			sendError('Internal MagicMaster parameter error');
 			return;
 		}
 		
-		var	spellbook,
-			spell,
-			spellName,
-			spellValue,
-			tokenName = curToken.get('name'),
-			content,
-			selectedSpell = (spellToMemorise.length > 0),
-			selectedSlot = (spellRow >= 0 && spellCol >= 0),
-			selectedBoth = selectedSpell && selectedSlot,
-			selected,
-			slotSpell = '',
+		let	spell,
 			noToMemorise = '1',
 			magicWord = 'spell',
 			spellTables = [],
 			magicDB, magicType, tableType,
 			editCmd, reviewCmd, memCmd,
-			levelLimit, nextLevel,
-			col, rep,
-			l, r, c, w;
+			levelLimit;
 		
 		if (isPower) {
 			level = 1;
@@ -3389,8 +3466,8 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 
 		levelSpells = shapeSpellbook( charCS, magicType );
 		
-		spellbook = attrLookup( charCS, [fields.Spellbook[0]+((fields.SpellsFirstColNum || levelSpells[level].book != 1) ? levelSpells[level].book : ''), fields.Spellbook[1]] ) || '';
-		content = '&{template:'+fields.menuTemplate+'}{{name=Select Slot to Use in '+tokenName+'\'s '+tableType+'s}}'
+		const spellbook = attrLookup( charCS, [fields.Spellbook[0]+((fields.SpellsFirstColNum || levelSpells[level].book != 1) ? levelSpells[level].book : ''), fields.Spellbook[1]] ) || '';
+		let content = '&{template:'+fields.menuTemplate+'}{{name=Select Slot to Use in '+curToken.get('name')+'\'s '+tableType+'s}}'
 				+ ((isPower) ? ('{{subtitle=All Powers     -1 means "At Will"}}') : ('{{subtitle=Level '+level+' spells}}'));
 				
 		if (msg && msg.length > 0) {
@@ -3403,7 +3480,7 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 			let renamed = !abilityLookup( magicDB, spellToDisplay ),
 				changedSpell = renamed ? 'Display-'+spellToDisplay : spellToDisplay;
 			spell = getAbility( magicDB, spellToDisplay, charCS );
-			if (spell.obj) spell.obj = greyOutButtons( tokenID, charCS, spell.obj, (renamed ? changedSpell : ''), ('[Return to menu](!magic --button '+reviewCmd+'|'+tokenID+'|'+level +'|'+ spellRow +'|'+ spellCol +'|'+spellToMemorise+')') );
+			if (spell.obj) spell = greyOutButtons( tokenID, charCS, spell, (renamed ? changedSpell : ''), ('[Return to menu](!magic --button '+reviewCmd+'|'+tokenID+'|'+level +'|'+ spellRow +'|'+ spellCol +'|'+spellToMemorise+')') );
 			content += '...Optionally [Review '+spellToDisplay+'](!&#13;'+sendToWho(charCS,senderId,false,true)+'&#37;{'+spell.dB+'|'+changedSpell.hyphened()+'})}}';
 		} else {
 			content += '...Optionally <span style='+design.grey_button+'>Review the '+magicWord+'</span>}}';
@@ -3413,7 +3490,8 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 		
 		// build the Spell list
 		
-		r = 0;
+		let w, c, r = 0;
+		let spellName, spellValue, selected;
 		while (levelSpells[level].spells > 0) {
 			c = levelSpells[level].base;
 			for (w = 1; (w <= fields.SpellsCols) && (levelSpells[level].spells > 0); w++) {
@@ -3439,15 +3517,9 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 			spellTables = [];
 		}
 		
-		if (level < levelLimit) {
-			nextLevel = (levelSpells[(level+1)].spells>0) ? (level+1) : 1;
-		} else {
-			nextLevel = 1;
-		}
+		const nextLevel = (level >= levelLimit) ? 1 : ((levelSpells[(level+1)].spells>0) ? (level+1) : 1);
+		const slotSpell = !selectedSlot ? '' : attrLookup( charCS, fields.Spells_name, {tableDef:fields.Spells_table, row:spellRow, col:spellCol} ) || '';
 
-		if (selectedSlot) {
-			slotSpell = attrLookup( charCS, fields.Spells_name, fields.Spells_table, spellRow, spellCol ) || '';
-		}
 		content += '}}{{desc2=...Then\n'
 				+  '3. '+(selectedBoth ? '[' : '<span style='+design.grey_button+'>')
 				+		'Memorise '+(selectedSpell ? spellToDisplay : ' the '+magicWord )
@@ -3468,43 +3540,43 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * own memorised spells.
 	 */
 	 
-	var makeStoreMIspell = function(args,senderId,msg = '') {
+	const makeStoreMIspell = function(args,senderId,msg = '') {		// isAny
 		
-		var command = (args[0] || '').toUpperCase(),
-			tokenID = args[1],
-			curToken = getObj('graphic',tokenID),
-			charCS = getCharacter(tokenID);
+		let command = (args[0] || '').toUpperCase(),
+			  tokenID = args[1],
+			  curToken = getObj('graphic',tokenID),
+			  charCS = getCharacter(tokenID);
 			
 		if (!charCS) {
-			sendDebug('makeStoreMIspell: invalid tokenID passed');
 			sendError('Internal MagicMaster error');
 			return;
 		}
 		
-		var isMU = command.includes('MU'),
-			isMI = command.includes('MI'),
+		const isMU = command.includes('MU'),
+			  isMI = command.includes('MI'),
+			  spellButton = args[(isMI ? 5 : 2)],
+			  spellRow = args[(isMI ? 6 : 3)],
+			  spellCol = args[(isMI ? 7 : 4)],
+			  MIrow = args[(isMI ? 3 : 6)],
+			  MIcol = args[(isMI ? 4 : 7)],
+			  item = attrLookup( charCS, fields.ItemChosen ) || '-',
+			  row = attrLookup( charCS, fields.ItemRowRef ) || '',
+			  itemObj = abilityLookup( fields.MagicItemDB, item, charCS ),
+			  wisLevel = casterLevel( charCS, (isMU ? 'MU' : 'PR') ),
+			  oldVer = 2.1 > csVer(charCS),
+			  tokenName = curToken.get('name');
+			
+		let	MIbutton = args[(isMI ? 2 : 5)],
 			isAdd = command.includes('ADD'),
-			isChange = command.includes('CHANGE'),
-			spellButton = args[(isMI ? 5 : 2)],
-			spellRow = args[(isMI ? 6 : 3)],
-			spellCol = args[(isMI ? 7 : 4)],
-			MIbutton = args[(isMI ? 2 : 5)],
-			MIrow = args[(isMI ? 3 : 6)],
-			MIcol = args[(isMI ? 4 : 7)],
 			isAny = command.includes('ANY') || (isAdd && MIbutton < 0),
-			item = attrLookup( charCS, fields.ItemChosen ) || '-',
-			row = attrLookup( charCS, fields.ItemRowRef ) || '',
-			itemObj = abilityLookup( fields.MagicItemDB, item, charCS ),
-			wisLevel = casterLevel( charCS, (isMU ? 'MU' : 'PR') ),
-			extra = isAdd ? '_ADD' : (isAny ? '_ANY' : ''),
+			isChange = command.includes('CHANGE'),
 			spellName = 'spell', 
 			MIspellName = '',
-			oldVer = 2.1 > csVer(charCS),
 			levelLimit = false,
-			col,
-			tokenName = curToken.get('name'),
 			table, itemRow, rowID;
 			
+		let extra = isAdd ? '_ADD' : (isAny ? '_ANY' : '');
+		
 		[itemRow,table,rowID] = tableGroupIndex( getTableGroupField( charCS, {}, fieldGroups.MI, 'name' ), row );
 
 		if (!itemObj.obj) {
@@ -3512,14 +3584,14 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 			return;
 		} else {
 			let itemData = parseData((itemObj.data()[0][0] || {}),reSpellSpecs,true,charCS,item,itemRow,rowID);
-			let storeSpells = (itemData.store || 'store').toLowerCase();
+			const storeSpells = (itemData.store || 'store').toLowerCase();
 			isAdd = isAdd || storeSpells === 'add';
 			isChange = isChange || storeSpells === 'change';
 			isAny = isAny || (storeSpells === 'any' || (isAdd && MIbutton < 0));
 			levelLimit = itemData.lvlimit == 1;
 		};
 			
-		var	memSpells, storedSpells, storedLevels, itemQty = 99;
+		let	memSpells, storedSpells, storedLevels, itemQty = 99;
 			
 		[storedSpells,storedLevels] = makeSpellList( senderId, tokenID, (isMU ? BT.MU_MI_SLOT : BT.PR_MI_SLOT)+extra, MIbutton, !isAny, false, ('|'+spellButton+'|'+spellRow+'|'+spellCol) );
 		if (levelLimit) {
@@ -3527,26 +3599,27 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 		}
 		[memSpells] = makeSpellList( senderId, tokenID, (isMU ? BT.MU_TO_STORE : BT.PR_TO_STORE)+extra, spellButton, true, false, ('|'+MIbutton+'|'+MIrow+'|'+MIcol), (itemQty - storedLevels) );
 
-		var	content = '&{template:'+fields.menuTemplate+'}{{name=Store Spell in '+tokenName+'\'s Magic Items}}'
+		let	content = '&{template:'+fields.menuTemplate+'}{{name=Store Spell in '+tokenName+'\'s Magic Items}}'
 					+ '{{subtitle=Storing ' + (isMU ? 'MU' : 'PR') + ' spells}}'
 					+ '{{desc=**1.Choose a spell to store**\n'+memSpells+'}}'
 					+ '{{desc1=**2.'+(isAny ? 'Optionally c' : 'C')+'hoose where to store it**\n'+(storedSpells || 'No spells currently stored')+'}}';
 
 		if (spellButton >= 0) {
-			spellName = attrLookup( charCS, fields.Spells_name, fields.Spells_table, spellRow, spellCol ) || '-';
+			spellName = attrLookup( charCS, fields.Spells_name, {tableDef:fields.Spells_table, row:spellRow, col:spellCol} ) || '-';
 		}
 		if (MIbutton >= 0) {
-			MIspellName = attrLookup( charCS, (oldVer ? fields.Spells_macro : fields.Spells_msg), fields.Spells_table, MIrow, MIcol ) || '-';
+			MIspellName = attrLookup( charCS, (oldVer ? fields.Spells_macro : fields.Spells_msg), {tableDef:fields.Spells_table, row:MIrow, col:MIcol} ) || '-';
 			if ((isAdd || isAny) && MIspellName === '-') MIbutton = -1;
 		}
-		var canStore = isAny || isChange || (isAdd && MIspellName === '-') || (spellName.dbName() == MIspellName.dbName()),
-			itemRef = (isNaN(parseInt(itemRow)) ? item : itemRow+'/'+item);
+		let canStore = isAny || isChange || (isAdd && MIspellName === '-') || (spellName.dbName() == MIspellName.dbName()),
+			  itemRef = (isNaN(parseInt(itemRow)) ? item : itemRow+'/'+item);
 		
 		content += '{{desc2=3.Once both spell and '+(isAny ? 'optionally ' : '')+'slot selected\n'
 				+  ((canStore && (spellButton >= 0) && (isAdd || isAny || MIbutton >= 0)) ? '[' : '<span style='+design.grey_button+'>')
 				+  ((isAdd || isAny) && MIbutton < 0 ? 'Add ' : 'Store ')+spellName
-				+  ((canStore && (spellButton >= 0)) ? (((isAdd || isAny) && MIbutton<0) ? ('](!magic --button ADD_TO_SPELLS|'+tokenID+'|'+itemRef+'|'+command+'|1|STORE-MI-SPELL|'+spellName+'|'+wisLevel+'||'+MIspellName+'|'+spellRow+'|'+spellCol+')') : ('](!magic --button '+(isMU ? BT.MISTORE_MUSPELL : BT.MISTORE_PRSPELL)+extra+'|'+tokenID+'|'+MIbutton+'|'+MIrow+'|'+MIcol+'|'+spellButton+'|'+spellRow+'|'+spellCol+')'))
-										   : '</span>')
+				+  ((canStore && (spellButton >= 0)) ? (((isAdd || isAny) && MIbutton<0) ? ('](!magic --button ADD_TO_SPELLS|'+tokenID+'|'+itemRef+'|'+command+'|1|STORE-MI-SPELL|'+spellName+'|'+wisLevel+'||'+MIspellName+'|'+spellRow+'|'+spellCol+')')
+																			  : ('](!magic --button '+(isMU ? BT.MISTORE_MUSPELL : BT.MISTORE_PRSPELL)+extra+'|'+tokenID+'|'+MIbutton+'|'+MIrow+'|'+MIcol+'|'+spellButton+'|'+spellRow+'|'+spellCol+')'))
+													 : '</span>')
 				+  ((spellButton >= 0 && MIbutton >= 0 && !canStore) ? ' Spells don\'t match. Must be the same\n' : '')
 				+  ' or switch to ['+(isMU ? 'Priest' : 'Wizard')+'](!magic --mem-spell MI-'+(isMU ? 'PR' : 'MU')+extra+'|'+tokenID+') spells'
 				+  '}}';
@@ -3560,67 +3633,64 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	/*
 	 * Create a menu for a player to cast a spell
 	 */
-	
-	var makeCastSpellMenu = function( args, senderId, submitted = false ) {
 
-		var isMU = args[0].toUpperCase().includes('MU'),
-			isMI = args[0].toUpperCase().includes('MI'),
-			isPower = args[0].toUpperCase().includes('POWER'),
-			tokenID = args[1],
-			spellButton = args[2],
-			spellRow = args[3],
-			spellCol = args[4],
-			charged = (args[5] || '').toString().toLowerCase() == 'true',
-			
-			curToken = getObj('graphic',tokenID),
-			charCS = getCharacter(tokenID),
-			magicDB,
+	const makeCastSpellMenu = function( args, senderId, submitted = false ) {
+
+		const isMU = args[0].toUpperCase().includes('MU'),
+			  isMI = args[0].toUpperCase().includes('MI'),
+			  isPower = args[0].toUpperCase().includes('POWER'),
+			  tokenID = args[1],
+			  spellButton = args[2],
+			  spellRow = args[3],
+			  spellCol = args[4],
+			  charged = (args[5] || '').toString().toLowerCase() == 'true',
+			  curToken = getObj('graphic',tokenID),
+			  charCS = getCharacter(tokenID);
+
+		if (!curToken || !charCS) {
+			sendError('Internal MagicMaster parameter error');
+			return;
+		}
+		
+		const miName = attrLookup( charCS, fields.ItemChosen ) || '',
+			  Items = getTableGroupField( charCS, {}, fieldGroups.MI, 'name' );
+		
+		let	magicDB,
 			magicWord = 'spell',
 			spell,
 			spellName = '',
-			content = '',
 			maxLevel = 13,
 			learn = false,
 			learnText = '',
-			tokenName,
 			selectCmd,
-			storeCmd;
-			
-		if (!curToken || !charCS) {
-			sendDebug('makeCastSpellMenu: invalid tokenID passed');
-			sendError('Internal MagicMaster parameter error');
-			return content;
-		}
-		
-		var miName = attrLookup( charCS, fields.ItemChosen ) || '',
+			storeCmd,
 			itemRow = parseInt(attrLookup( charCS, fields.ItemRowRef )),
-			Items = getTableGroupField( charCS, {}, fieldGroups.MI, 'name' ),
-			itemTable, itemRowID;
-//			itemTable = attrLookup( charCS, fields.ItemTableRef );
+			itemTable,
+			itemRowID;
 
 		[itemRow,itemTable,itemRowID] = tableGroupIndex( Items, itemRow );
 		if (isNaN(itemRow)) {
 			[itemRow,itemTable,itemRowID] = tableGroupFind( Items, 'name', miName );
 		};
 		
-		tokenName = curToken.get('name');
-		content = '&{template:'+fields.menuTemplate+'}{{name=';
+		let tokenName = curToken.get('name');
+		let content = '&{template:'+fields.menuTemplate+'}{{name=';
 		if (!isPower) {content += 'What Spell is ' + tokenName + ' casting?}}{{subtitle=Casting '};
 		
 		if (isPower) {
 			content += 'What Power is ' + tokenName + ' using?}}{{subtitle=Using Powers';
-			if (spellButton >= 0) {magicDB = attrLookup( charCS, fields.Spells_db, fields.Spells_table, spellRow, spellCol ) || fields.PowersDB;}
+			if (spellButton >= 0) {magicDB = attrLookup( charCS, fields.Spells_db, {tableDef:fields.Spells_table, row:spellRow, col:spellCol} ) || fields.PowersDB;}
 			magicWord = 'power';
 			selectCmd = isMI ? BT.MI_POWER : BT.POWER;
 			storeCmd = isMI ? BT.CAST_MIPOWER : BT.USE_POWER;
 		} else if (isMI) {
 			content += 'MI stored spells';
-			if (spellButton >= 0) {magicDB = attrLookup( charCS, fields.Spells_db, fields.Spells_table, spellRow, spellCol ) || fields.MU_SpellsDB;}
+			if (spellButton >= 0) {magicDB = attrLookup( charCS, fields.Spells_db, {tableDef:fields.Spells_table, row:spellRow, col:spellCol} ) || fields.MU_SpellsDB;}
 			selectCmd = charged ? BT.MI_SCROLL : BT.MI_SPELL;
 			storeCmd = charged ? BT.CAST_SCROLL : BT.CAST_MISPELL;
 			if (caster(charCS,'MU').clv > 0) {
 				let miObj = abilityLookup( fields.MagicItemDB, miName, charCS );
-				if (miObj.obj) learn = resolveData( miName, fields.MagicItemDB, reItemData, charCS, {learn:reSpellSpecs.learn}, itemRow, itemRowID ).parsed.learn == 1;
+				if (miObj.obj) learn = resolveData( miName, fields.MagicItemDB, reItemData, charCS, {learn:reSpellSpecs.learn}, {row:itemRow, rowID:itemRowID} ).parsed.learn == 1;
 			};
 		} else if (isMU) {
 			content += 'MU spells';
@@ -3642,20 +3712,18 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 			}
 		}
 
-		content += '}}{{desc=' + (makeSpellList( senderId, tokenID, selectCmd, spellButton, true, submitted, '|'+charged, maxLevel )[0]);
+		content += '}}{{section=' + (makeSpellList( senderId, tokenID, selectCmd, spellButton, true, submitted, '|'+charged, maxLevel )[0]);
 
 		if (spellButton >= 0) {
-			spellName = attrLookup( charCS, fields.Spells_name, fields.Spells_table, spellRow, spellCol ) || '-';
+			spellName = attrLookup( charCS, fields.Spells_name, {tableDef:fields.Spells_table, row:spellRow, col:spellCol} ) || '-';
 			if (spellName.replace(reIgnore,'').length) {
 				spell = getAbility( magicDB, spellName, charCS );
 				learnText = (learn ? '&#123;{Learn=Try to [Learn this spell]&#40;!magic --learn-spell '+tokenID+'|'+spellName+'&#41;&#125;&#125;' : '');
 			} else {
 				spellButton = -1;
 			}
-		} else {
-			spellName = '';
 		}
-		content += '}}{{desc1=Select '+magicWord+' above, then '
+		content += '}}{{'+(((spellButton < 0) || submitted)?'section1':'highlight1')+'=Select '+magicWord+' above, then '
 				+ (((spellButton < 0) || submitted) ? '<span style=' + design.grey_button + '>' : '[')
 				+ 'Cast '+(spellName.length > 0 ? spellName : magicWord)
 				+ (((spellButton < 0) || submitted) ? '</span>' : '](!&#13;'+(spell.api ? '' : sendToWho(charCS,senderId,false,true))+'&#37;{' + spell.dB + '|' + spellName.hyphened() + '}' + learnText + '&#13;'
@@ -3670,39 +3738,31 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * Create a menu for a player to view a character's spells
 	 */
 	
-	var makeViewMemSpells = function( args, senderId ) {
+	const makeViewMemSpells = function( args, senderId ) {
 		
-		var cmd = args[0].toUpperCase(),
-			isMU = cmd.includes('MU'),
-			isPR = cmd.includes('PR'),
-			isMI = cmd.includes('MI'),
-			isPower = cmd.includes('POWER'),
-			isScroll = cmd.includes('SCROLL'),
-			tokenID = args[1],
-			spellButton = args[2],
-			learn = (String(args[3]) || '').toUpperCase() === 'LEARN',
-			curToken = getObj('graphic',tokenID),
-			charCS = getCharacter(tokenID),
-			spell,
-			spellName = '',
-			spellValue,
-			content = '',
-			magicWord = 'spell',
+		const cmd = args[0].toUpperCase(),
+			  isMU = cmd.includes('MU'),
+			  isPR = cmd.includes('PR'),
+			  isMI = cmd.includes('MI'),
+			  isPower = cmd.includes('POWER'),
+			  isScroll = cmd.includes('SCROLL'),
+			  tokenID = args[1],
+			  spellButton = args[2],
+			  learn = (String(args[3]) || '').toUpperCase() === 'LEARN',
+			  curToken = getObj('graphic',tokenID),
+			  charCS = getCharacter(tokenID);
+			  
+		let	magicWord = 'spell',
 			magicDB, magicType, tableType,
-			col, rep,
 			viewCmd,
-			levelSpells = [],
-			levelLimit,
-			l, w, r, c,
-			buttonID = 0;
+			levelLimit;
 			
 		if (!charCS) {
-			sendDebug('makeViewMemSpells: invalid tokenID passed');
 			sendError('Internal MagicMaster parameter error');
-			return content;
+			return;
 		}
 		
-		var title = isMI ? attrLookup( charCS, fields.ItemChosen ) : curToken.get('name');
+		const title = isMI ? attrLookup( charCS, fields.ItemChosen ) : curToken.get('name');
 		if (isPower) {
 			levelLimit = 1;
 			magicType = 'POWER';
@@ -3728,11 +3788,10 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 			magicDB = fields.PR_SpellsDB;
 		}
 		
-		content = '&{template:'+fields.menuTemplate+'}{{name=View '+title+'\'s currently memorised '+magicWord+'s}}'
-				+ '{{subtitle=' + tableType + '}}'
-				+ '{{desc=' + ((makeSpellList( senderId, tokenID, viewCmd, spellButton, true ))[0] || 'No '+magicWord+'s currently memorised');
-
-		content += '}}{{desc1=Select the '+magicWord+' above that you want to view the details of.  It will not be cast and will remain in your memorised '+magicWord+' list.}}';
+		let content = '&{template:'+fields.menuTemplate+'}{{name=View '+title+'\'s currently memorised '+magicWord+'s}}'
+					+ '{{subtitle=' + tableType + '}}'
+					+ '{{desc=' + ((makeSpellList( senderId, tokenID, viewCmd, spellButton, true ))[0] || 'No '+magicWord+'s currently memorised')
+					+ '}}{{desc1=Select the '+magicWord+' above that you want to view the details of.  It will not be cast and will remain in your memorised '+magicWord+' list.}}';
 		sendResponse( charCS, content, senderId, flags.feedbackName, flags.feedbackImg, tokenID );
 	};
 	
@@ -3741,21 +3800,21 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * if they want to cast the same spell/power/MI again
 	 */
 	 
-	var makeCastAgainMenu = function( args, senderId ) {
+	const makeCastAgainMenu = function( args, senderId ) {
 		
-		var isMU = args[0].toUpperCase().includes('MU'),
-			isPR = args[0].toUpperCase().includes('PR'),
-			isMI = args[0].toUpperCase().includes('MI'),
-			isPower = args[0].toUpperCase().includes('POWER'),
-			spellName = args[5] || '-',
-			charCS = getCharacter( args[1] ),
-			macroDB = isPower ? fields.PowersDB : (isMU ? fields.MU_SpellsDB : (isPR ? fields.PR_SpellsDB : fields.MagicItemDB)),
-			spell = getAbility( macroDB, spellName, charCS ),
-			content = '&{template:'+fields.menuTemplate+'}{{name='+args[5]+'}}'
-					+ '{{desc=[Use another charge?](!&#13;'+(spell.api ? '' : sendToWho(charCS,senderId,false,true))+'&#37;{' + spell.dB + '|' + (args[5].hyphened()) + '}&#13;'
-					+ '!magic --button '+ args[0] +'|'+ args[1] +'|'+ args[2] +'|'+ args[3] +'|'+ args[4]+ ')}}';
+		const isMU = args[0].toUpperCase().includes('MU'),
+			  isPR = args[0].toUpperCase().includes('PR'),
+			  isMI = args[0].toUpperCase().includes('MI'),
+			  isPower = args[0].toUpperCase().includes('POWER'),
+			  spellName = args[5] || '-',
+			  charCS = getCharacter( args[1] );
 		
 		if (charCS) {
+			const macroDB = isPower ? fields.PowersDB : (isMU ? fields.MU_SpellsDB : (isPR ? fields.PR_SpellsDB : fields.MagicItemDB)),
+				  spell = getAbility( macroDB, spellName, charCS ),
+				  content = '&{template:'+fields.menuTemplate+'}{{name='+args[5]+'}}'
+						  + '{{desc=[Use another charge?](!&#13;'+(spell.api ? '' : sendToWho(charCS,senderId,false,true))+'&#37;{' + spell.dB + '|' + (args[5].hyphened()) + '}&#13;'
+						  + '!magic --button '+ args[0] +'|'+ args[1] +'|'+ args[2] +'|'+ args[3] +'|'+ args[4]+ ')}}';
 			sendResponse( charCS, content, senderId, flags.feedbackName, flags.feedbackImg, args[1] );
 		}
 		return;
@@ -3766,14 +3825,15 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * a short or a long rest.  The long rest option can be shown
 	 * as disabled.
 	 */
-	 
-	var makeRestSelectMenu = function( args, longRestEnabled, senderId ) {
+
+	const makeRestSelectMenu = function( args, longRestEnabled, senderId ) {
 		
-		var tokenID = args[0],
-			casterType = args[2] || 'MU+PR',
-			charCS = getCharacter(tokenID),
-			curToken = getObj('graphic',tokenID),
-			content = '&{template:'+fields.menuTemplate+'}{{name=Select Type of Rest for '+curToken.get('name')+'}}'
+		const tokenID = args[0],
+			  casterType = args[2] || 'MU+PR',
+			  charCS = getCharacter(tokenID),
+			  curToken = getObj('graphic',tokenID);
+			  
+		let content = '&{template:'+fields.menuTemplate+'}{{name=Select Type of Rest for '+curToken.get('name')+'}}'
 					+ '{{desc=[Short Rest](!magic --rest '+tokenID+'|short|'+casterType+') or '
 					+ (longRestEnabled ? '[' : '<span style='+design.grey_button+'>')
 					+ 'Long Rest'
@@ -3792,26 +3852,24 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	* Allow the player to switch from one to the other when looting
 	**/
 	
-	var makeLootMenu = function(senderId,args,menuType) {
+	const makeLootMenu = function(senderId,args,menuType) {
 		
-		var buy = (args[0] || '') === BT.BUY_TREASURE,
-			tokenID = args[1],
-			pickID = args[3],
-			putID = args[4];
-			
-		var pickCS = getCharacter( pickID ),
-			putCS = getCharacter( putID );
+		const buy = (args[0] || '') === BT.BUY_TREASURE,
+			  tokenID = args[1],
+			  pickID = args[3],
+			  putID = args[4],
+			  pickCS = getCharacter( pickID ),
+			  putCS = getCharacter( putID );
 			
 		if (!pickCS || !putCS) {
-			sendDebug( 'makeLootMenu: pickID or putID is invalid' );
 			sendError( 'Invalid make-menu call syntax' );
 			return;
 		}
 		
-		var pickName = pickCS.get('name'),
-			putName = putCS.get('name'),
-			treasure = (attrLookup( pickCS, fields.Money_treasure ) || ''),
-			content = '&{template:'+fields.menuTemplate+'}{{name=View Treasure from ' + pickName + '}}';
+		const pickName = pickCS.get('name'),
+			  treasure = (attrLookup( pickCS, fields.Money_treasure ) || '');
+
+		let	content = '&{template:'+fields.menuTemplate+'}{{name=View Treasure from ' + pickName + '}}';
 			
 		if (treasure && treasure.length > 0) {
 			content += treasure;
@@ -3828,22 +3886,21 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	/*
 	 * Create a menu to view or use a magic item
 	 */
-
+ 
 	async function makeViewUseMI( args, senderId, menuType ) {
 		
 		try {
-			var action = args[0].toUpperCase(),
-				tokenID = args[1],
-				MIrowref = args[2] || -1,
-				isGM = playerIsGM(senderId),
-				isView = action.includes('VIEW'),
-				charCS = getCharacter(tokenID),
-				learn = '',
-				playerConfig = getSetPlayerConfig( senderId ),
-				sectType;
+			const action = args[0].toUpperCase(),
+				  tokenID = args[1],
+				  MIrowref = args[2] || -1,
+				  isGM = playerIsGM(senderId),
+				  isView = action.includes('VIEW'),
+				  charCS = getCharacter(tokenID),
+				  playerConfig = getSetPlayerConfig( senderId );
+
+			let	sectType;
 
 			if (!charCS) {
-				sendDebug( 'makeViewUseMI: tokenID is invalid' );
 				sendError( 'Invalid make-menu call syntax' );
 				return;
 			}
@@ -3857,16 +3914,18 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 					menuType = 'long';
 				}
 			}
-			var shortMenu = menuType == 'short',
-				actionText = (isView ? 'View' : 'Use'),
-				selectAction = (isView ? (shortMenu ? BT.CHOOSE_VIEW_MI : BT.VIEW_MI) : BT.CHOOSE_USE_MI),
-				submitAction = (isView ? BT.VIEW_MI : BT.USE_MI),
-				Items = getTableGroup( charCS, fieldGroups.MI ),
-				content = '&{template:'+fields.menuTemplate+'}{{name='+actionText+' '+charCS.get('name')+'\'s Magic Items}}'
+			const shortMenu = menuType == 'short',
+				  actionText = (isView ? 'View' : 'Use'),
+				  selectAction = (isView ? (shortMenu ? BT.CHOOSE_VIEW_MI : BT.VIEW_MI) : BT.CHOOSE_USE_MI),
+				  submitAction = (isView ? BT.VIEW_MI : BT.USE_MI),
+				  Items = getTableGroup( charCS, fieldGroups.MI );
+				  
+			let	content = '&{template:'+fields.menuTemplate+'}{{name='+actionText+' '+charCS.get('name')+'\'s Magic Items}}'
 						+ '{{Section=Select a Magic Item below to '+actionText
 						+ (isView ? '. It will not be used and will remain in your Magic Item Bag' : ', and then press the **Use Item** button')
-						+ '. Note that some items, such as Rods, Staves or Wands, may need to be taken in-hand using *Change Weapon* and used via the *Attack* action. <a style="background: none; border: none; color:blue;" href="!magic --button '+BT.SECTIONS_OPTION+'|'+tokenID+'|'+BT.CHOOSE_VIEW_MI +'|'+tokenID+'|'+MIrowref+'">*'+sectType+' sections*</a>}}'
-						+ '{{Section0=';
+						+ '. Note that some items, such as Rods, Staves or Wands, may need to be taken in-hand using *Change Weapon* and used via the *Attack* action.';
+			if (!shortMenu) content += ' _'+sectType+' sections_(!magic --button '+BT.SECTIONS_OPTION+'|'+tokenID+'|'+BT.CHOOSE_VIEW_MI +'|'+tokenID+'|'+MIrowref+')';
+			content += '}}{{section0=';
 
 			if (shortMenu) {
 				content += '[Select a Magic Item](!magic --button '+selectAction+'|'+tokenID+'|?{Which Magic Item?';
@@ -3878,15 +3937,16 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 				content += '}}';
 			}
 			if (shortMenu || !isView) {
-				content += '{{section10=';
 				if (MIrowref >= 0) {
+					content += '{{highlight=Select above then ';
 					let selectedMI = tableGroupLookup( Items, 'name', MIrowref ),
-						displayMI = selectedMI.dispName(),
-						trueMI = tableGroupLookup( Items, 'trueName', MIrowref ),
-						trueType = tableGroupLookup( Items, 'trueType', MIrowref ).toLowerCase(),
 						reveal = tableGroupLookup( Items, 'reveal', MIrowref ).toLowerCase(),
-						qty = parseInt(tableGroupLookup( Items, 'qty', MIrowref )) || 0,
 						tableRow,tableRowID,table;
+
+					const displayMI = selectedMI.dispName(),
+						  trueMI = tableGroupLookup( Items, 'trueName', MIrowref ),
+						  trueType = tableGroupLookup( Items, 'trueType', MIrowref ).toLowerCase(),
+						  qty = parseInt(tableGroupLookup( Items, 'qty', MIrowref )) || 0;
 						
 					[tableRow,table,tableRowID] = tableGroupIndex( Items, MIrowref );
 						
@@ -3895,40 +3955,44 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 					if ((shortMenu && isView && reveal == 'view') || (!isView && (reveal == 'use' || reveal == 'view'))) {
 						selectedMI = trueMI.hyphened();
 					}
-					let hide = resolveData( selectedMI, fields.MagicItemDB, reItemData, charCS, {hide:reSpellSpecs.hide}, tableRow, tableRowID ).parsed.hide,
-						showDesc = (selectedMI !== trueMI) && hide && hide.length && hide !== 'hide',
-						renamed = !abilityLookup( fields.MagicItemDB, selectedMI ).obj,
-						magicItem = getAbility( fields.MagicItemDB, selectedMI, charCS, false, isGM, (showDesc ? selectedMI : trueMI), tableRow, tableRowID ),
-						changedMI = renamed ? 'Display-'+selectedMI : selectedMI;
+					const hide = resolveData( selectedMI, fields.MagicItemDB, reItemData, charCS, {hide:reSpellSpecs.hide}, {row:tableRow, rowID:tableRowID} ).parsed.hide,
+						  showDesc = (selectedMI !== trueMI) && hide && hide.length && hide !== 'hide',
+						  renamed = !abilityLookup( fields.MagicItemDB, selectedMI ).obj,
+						  changedMI = renamed ? 'Display-'+selectedMI : selectedMI;
+						  
+					let	magicItem = getAbility( fields.MagicItemDB, selectedMI, charCS, false, isGM, (showDesc ? selectedMI : trueMI), tableRow, tableRowID );
 						
 					if (isView && !!magicItem.obj) {
-						magicItem.obj = greyOutButtons( tokenID, charCS, magicItem.obj, (renamed ? changedMI : ''), ('[Return to menu](!magic --button '+BT.CHOOSE_VIEW_MI+'|'+tokenID+'|'+(csVer(charCS) < 4 ? '' : MIrowref)+')') );
-					} else {
-						let action =(!magicItem.obj || !magicItem.obj[0]) ? '' : (magicItem.obj[0].get('action') || '').replace(reKeepButton,'[$2]($3$4');
-						if (renamed || !magicItem.obj || !magicItem.obj[0]) {
-							setAbility( charCS, changedMI, action );
-						} else if (!!action && action.length) {
-							magicItem.obj[0].set('action',action);
-						}
-					};
-					if (magicItem.obj && caster(charCS,'MU').clv > 0) {
-						learn = resolveData( selectedMI, fields.MagicItemDB, reItemData, charCS, {learn:reSpellSpecs.learn}, tableRow, tableRowID ).parsed.learn;
-						if ((!isView && learn && learn != '0' && learn != '1' && !!abilityLookup( fields.MU_SpellsDB, learn ).obj)) {
-							setAbility( charCS, changedMI, magicItem.obj[0].get('action').replace(/\}\}$/m,'}}'+'{{Learn=Try to [Learn this spell](!magic &#45;-learn-spell '+tokenID+'|'+learn+')}}'));
+						magicItem = greyOutButtons( tokenID, charCS, magicItem, (renamed ? changedMI : ''), ('[Return to menu](!magic --button '+BT.CHOOSE_VIEW_MI+'|'+tokenID+'|'+(csVer(charCS) < 4 ? '' : MIrowref)+')') );
+					} else if (magicItem.obj && magicItem.obj[1]) {
+						if (reKeepButton.test(magicItem.obj[1].body || '')) {
+							magicItem.obj[0] = setAbility( charCS, changedMI, (magicItem.obj[1].body || '').replace(reKeepButton,'[$2]($3$4') );
+							magicItem.dB = charCS.get('name');
+							if (caster(charCS,'MU').clv > 0) {
+								const learn = resolveData( selectedMI, fields.MagicItemDB, reItemData, charCS, {learn:reSpellSpecs.learn}, {row:tableRow, rowID:tableRowID} ).parsed.learn;
+								if (learn && learn != '0' && learn != '1' && !!abilityLookup( fields.MU_SpellsDB, learn ).obj) {
+									magicItem.obj[0] = setAbility( charCS, changedMI, magicItem.obj[0].get('action').replace(/\}\}$/m,'}}'+'{{Learn=Try to [Learn this spell](!magic &#45;-learn-spell '+tokenID+'|'+learn+')}}'));
+								};
+							};
 						};
 					};
-					content += '['+actionText+' '+displayMI+'](!&#13;'+((magicItem.api && !isView) ? '' : sendToWho(charCS,senderId,false,true))+'&#37;{'+magicItem.dB+'|'+(changedMI.hyphened())+'}&#13;!magic --button '+ submitAction +'|'+ tokenID +'|'+ MIrowref +')';
+					content += '['+actionText+' '+displayMI+'](!&#13;'+((magicItem.api && !isView) ? '' : sendToWho(charCS,senderId,false,true))+'&#37;{'+magicItem.dB+'|'+(changedMI.hyphened())+'}'
+															  +'&#13;!magic --button '+ submitAction +'|'+ tokenID +'|'+ MIrowref +')';
 				} else {
-					content	+= '<span style='+design.grey_button+'>'+actionText+' Magic Item</span>';
+					content += '{{section10=Select above then <div><span style='+design.grey_button+'>'+actionText+' Magic Item</span></div>';
 				}
 				content += '}}';
 			}
 			if (isView) {
-				let slotData = itemSlotData( Items );
-				content += '{{section11=<span style="text-align: center;">[['+(attrLookup( charCS, fields.ItemContainerSize ) - slotData.count)+']] remaining slots. Total weight [['+slotData.weight+']]lbs</span>}}';
+				const slotData = await itemSlotData( tokenID, Items, senderId, false );
+//				log('makeViewUseMI: slotData = {{section11=[['+(attrLookup( charCS, fields.ItemContainerSize ) - slotData.count)+']] remaining slots. Total weight [['+slotData.weight+']]lbs}}');
+				content += '{{section11=[['+(attrLookup( charCS, fields.ItemContainerSize ) - slotData.count)+']] remaining slots. Total weight [['+slotData.weight+']]lbs}}';
 			}
 			menuType = (shortMenu ? 'long' : 'short');
-			content += '{{section12=<span style="text-align: center;">[Swap to a '+menuType+' menu](!magic --button '+(isView ? BT.VIEWMI_OPTION : BT.USEMI_OPTION)+'|'+tokenID+'|'+menuType+')</span>}}';
+			content += '{{section12= _Swap to '+menuType+' menu_(!magic --button '+(isView ? BT.VIEWMI_OPTION : BT.USEMI_OPTION)+'|'+tokenID+'|'+menuType+')}}'
+//			content += '{{section12=<span style="text-align: center;"><a style="background: none; border: none; color:red;" href="!magic --button '+(isView ? BT.VIEWMI_OPTION : BT.USEMI_OPTION)+'|'+tokenID+'|'+menuType+'">*Swap to '+menuType+' menu*</a>}}'
+			
+//			[Swap to a '+menuType+' menu](!magic --button '+(isView ? BT.VIEWMI_OPTION : BT.USEMI_OPTION)+'|'+tokenID+'|'+menuType+')</span>}}';
 					
 			sendResponse( charCS, content, senderId, flags.feedbackName, flags.feedbackImg, tokenID );
 			return;
@@ -3938,72 +4002,44 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	}
 	
 	/**
-	 * Make a menu to display when a Player selects to use
-	 * a power of a Magic Item
-	 */
-/*	 don't enable!
-	var makeUseMIpowerMenu = function( args, senderId ) {
-		
-		var tokenID = args[1],
-			powerName = args[2],
-			castLevel = args[3],
-			itemName = args[4],
-			MIlibrary = args[5],
-			power = args[6],
-			powerLib = args[7],
-			charCS = getCharacter(tokenID),
-			tokenName = getObj('graphic',tokenID).get('name'),
-			spell = getAbility( powerLib, power, charCS ),
-			item = getAbility( MIlibrary, itemName, charCS ),
-			toWho = sendToWho(charCS,senderId,false,true),
-			content = '&{template:'+fields.menuTemplate+'}{{name='+itemName+'\'s '+powerName+' power}}'
-					+ '{{desc='+tokenName+' is about to use '+itemName+'\'s '+powerName+' power.  Is this correct?}}'
-					+ '{{desc1=[Use '+powerName+'](!magic --button '+ BT.MI_POWER_USED +'|'+ tokenID +'|'+ powerName +'|'+ itemName +'|'+ castLevel
-					+ '&#13;'+(spell.api ? '' : toWho)+'&#37;{'+spell.dB +'|'+ (power.hyphened()) +'})'
-					+ ' or [Return to '+itemName+'](!&#13;'+(item.api ? '' : toWho)+'&#37;{'+MIlibrary+'|'+(itemName.hyphened())+'})\nOr just do something else}}';
-		sendResponse(charCS,content,senderId, flags.feedbackName, flags.feedbackImg, tokenID);
-		return;	
-	}
-*/			
-	
-	/**
 	* Create the Edit Magic Item Bag menu.  Allow for a short version if
 	* the Short Menus status flag is set, and highlight selected buttons
 	**/
 	
-	async function makeEditBagMenu(args,senderId,msg='') {
+	async function makeEditBagMenu(args,senderId,msg='') { 	// magicItem
 		
 		try {
-			var cmd = (args[0] || '').toUpperCase(),
-				tokenID = args[1],
-				MIrowref = args[2],
-				itemName = args[3] || '',
-				charges = args[4],
-				selectedMI = itemName.hyphened(),
-				displayMI = selectedMI,
+			const cmd = (args[0] || '').toUpperCase(),
+				  tokenID = args[1],
+				  MIrowref = args[2],
+				  itemName = args[3] || '',
+				  charges = args[4],
+				  selectedMI = itemName.hyphened(),
+				  charCS = getCharacter( tokenID ),
+				  cmdStr = args.join('|');
+				  
+			let	displayMI = selectedMI,
 				alphaLists = state.MagicMaster.alphaLists,
-				charCS = getCharacter( tokenID ),
-				cmdStr = args.join('|'),
 				tableIndex, tableRowID, table,
 				MItables = getTableGroupField( charCS, {}, fieldGroups.MI, 'name' );
-				MItables = getTableGroupField( charCS, MItables, fieldGroups.MI, 'qty' );
+				
+			MItables = getTableGroupField( charCS, MItables, fieldGroups.MI, 'qty' );
 				
 			[tableIndex,table,tableRowID] = tableGroupIndex( MItables, MIrowref );
 				
 			if (!charCS) {
-				sendDebug( 'makeEditMImenu: Invalid character ID passed' );
 				sendError( 'Invalid MagicMaster argument' );
 				return;
 			}
 			
-			var qty, mi, playerConfig, magicItem, removeMI, sectType, menuType,
-				selected = !!selectedMI && selectedMI.length > 0,
-				remove = (selectedMI.toLowerCase() == 'remove'),
-				bagSlot = !!MIrowref && parseInt(MIrowref) >= 0,
-				queries = '',
+			const selected = !!selectedMI && selectedMI.length > 0,
+				  remove = (selectedMI.toLowerCase() == 'remove'),
+				  bagSlot = !!MIrowref && parseInt(MIrowref) >= 0,
+				  playerConfig = getSetPlayerConfig( senderId );
+				  
+			let qty, mi, removeMI, sectType, menuType,
 				content = '&{template:'+fields.menuTemplate+'}{{name=Edit Magic Item Bag}}';
-
-			playerConfig = getSetPlayerConfig( senderId );
+				
 			if (playerConfig) {
 				menuType = playerConfig.editBagType;
 				alphaLists = playerConfig.alphaLists;
@@ -4012,16 +4048,17 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 				menuType = 'long';
 				sectType = 'hide';
 			}
-			var shortMenu = menuType == 'short',
-				editMartial = cmd.includes('MARTIAL'),
-				editAll = cmd.includes('ALLITEMS'),
-				optionCmd = (editMartial ? BT.EDITMARTIAL_OPTION : (editAll ? BT.EDITALLITEMS_OPTION : BT.EDITMI_OPTION)),
-				chooseCmd = (editMartial ? BT.CHOOSE_MARTIAL_MI : (editAll ? BT.CHOOSE_ALLITEMS_MI : BT.CHOOSE_MI)),
-				redoCmd   = (editMartial ? BT.REDO_MARTIAL_MI : (editAll ? BT.REDO_ALLITEMS_MI : BT.REDO_CHOOSE_MI)),
-				slotCmd   = (editMartial ? BT.SLOT_MARTIAL_MI : (editAll ? BT.SLOT_ALLITEMS_MI : BT.SLOT_MI)),
-				storeCmd  = (editMartial ? BT.STORE_MARTIAL_MI : (editAll ? BT.STORE_ALLITEMS_MI : BT.STORE_MI)),
-				reviewCmd = (editMartial ? BT.CHOOSE_MARTIAL_MI : (editAll ? BT.CHOOSE_ALLITEMS_MI : BT.CHOOSE_MI)),
-				removeCmd = (editMartial ? BT.REMOVE_MARTIAL_MI : (editAll ? BT.REMOVE_ALLITEMS_MI : BT.REMOVE_MI));
+			const shortMenu = menuType == 'short',
+				  editMartial = cmd.includes('MARTIAL'),
+				  editAll = cmd.includes('ALLITEMS'),
+				  optionCmd = (editMartial ? BT.EDITMARTIAL_OPTION : (editAll ? BT.EDITALLITEMS_OPTION : BT.EDITMI_OPTION)),
+				  chooseCmd = (editMartial ? BT.CHOOSE_MARTIAL_MI : (editAll ? BT.CHOOSE_ALLITEMS_MI : BT.CHOOSE_MI)),
+				  redoCmd   = (editMartial ? BT.REDO_MARTIAL_MI : (editAll ? BT.REDO_ALLITEMS_MI : BT.REDO_CHOOSE_MI)),
+				  slotCmd   = (editMartial ? BT.SLOT_MARTIAL_MI : (editAll ? BT.SLOT_ALLITEMS_MI : BT.SLOT_MI)),
+				  storeCmd  = (editMartial ? BT.STORE_MARTIAL_MI : (editAll ? BT.STORE_ALLITEMS_MI : BT.STORE_MI)),
+				  reviewCmd = (editMartial ? BT.CHOOSE_MARTIAL_MI : (editAll ? BT.CHOOSE_ALLITEMS_MI : BT.CHOOSE_MI)),
+				  removeCmd = (editMartial ? BT.REMOVE_MARTIAL_MI : (editAll ? BT.REMOVE_ALLITEMS_MI : BT.REMOVE_MI));
+			let	  magicItem;
 				
 			if (selected && !remove) {
 				magicItem = getAbility( fields.MagicItemDB, selectedMI, charCS, null, null, null, tableIndex, tableRowID );
@@ -4031,7 +4068,7 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 				} else {
 					let renamed = !abilityLookup( fields.MagicItemDB, selectedMI ).obj;
 					if (renamed) displayMI = 'Display-'+selectedMI;
-					magicItem.obj = greyOutButtons( tokenID, charCS, magicItem.obj, (renamed ? displayMI : ''), ('[Return to menu](!magic --button '+reviewCmd+'|'+tokenID+'|'+(csVer(charCS) < 4 ? '' : MIrowref)+'|'+selectedMI+')') );
+					magicItem = greyOutButtons( tokenID, charCS, magicItem, (renamed ? displayMI : ''), ('[Return to menu](!magic --button '+reviewCmd+'|'+tokenID+'|'+(csVer(charCS) < 4 ? '' : MIrowref)+'|'+selectedMI+')') );
 				};
 			};
 			
@@ -4040,17 +4077,17 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 			};
 			
 			if (!shortMenu || !selected) {
-				let potions = getMagicList(fields.MagicItemDB,miTypeLists,'potion',senderId,'',false,'',alphaLists),
-					scrolls = getMagicList(fields.MagicItemDB,miTypeLists,'scroll',senderId,'',false,'',alphaLists),
-					rods = getMagicList(fields.MagicItemDB,miTypeLists,'rod',senderId,'',false,'',alphaLists),
-					weapons = getMagicList(fields.MagicItemDB,miTypeLists,'weapon',senderId,'',false,'',alphaLists),
-					ammo = getMagicList(fields.MagicItemDB,miTypeLists,'ammo',senderId,'',false,'',alphaLists),
-					armour = getMagicList(fields.MagicItemDB,miTypeLists,'armour',senderId,'',false,'',alphaLists),
-					rings = getMagicList(fields.MagicItemDB,miTypeLists,'ring',senderId,'',false,'',alphaLists),
-					equip = getMagicList(fields.MagicItemDB,miTypeLists,'equipment',senderId,'',false,'',alphaLists),
-					misc = getMagicList(fields.MagicItemDB,miTypeLists,'miscellaneous',senderId,'',false,'',alphaLists);
+				const potions = getMagicList(fields.MagicItemDB,miTypeLists,'potion',senderId,'',false,'',alphaLists),
+					  scrolls = getMagicList(fields.MagicItemDB,miTypeLists,'scroll',senderId,'',false,'',alphaLists),
+					  rods = getMagicList(fields.MagicItemDB,miTypeLists,'rod',senderId,'',false,'',alphaLists),
+					  weapons = getMagicList(fields.MagicItemDB,miTypeLists,'weapon',senderId,'',false,'',alphaLists),
+					  ammo = getMagicList(fields.MagicItemDB,miTypeLists,'ammo',senderId,'',false,'',alphaLists),
+					  armour = getMagicList(fields.MagicItemDB,miTypeLists,'armour',senderId,'',false,'',alphaLists),
+					  rings = getMagicList(fields.MagicItemDB,miTypeLists,'ring',senderId,'',false,'',alphaLists),
+					  equip = getMagicList(fields.MagicItemDB,miTypeLists,'equipment',senderId,'',false,'',alphaLists),
+					  misc = getMagicList(fields.MagicItemDB,miTypeLists,'miscellaneous',senderId,'',false,'',alphaLists);
 				
-				content += '{{Section=**1.Choose what item to store** <a style="background: none; border: none; color:blue;" href="!magic --button '+BT.ALPHALIST_OPTION+'|'+tokenID+'|'+(alphaLists ? 'list':'alpha')+'|'+cmd+'">*show '+(alphaLists ? 'full' : 'alphabetic')+' lists*</a>\n'
+				content += '{{Section=**1.Choose what item to store** _show '+(alphaLists ? 'full' : 'alphabetic')+' lists_(!magic --button '+BT.ALPHALIST_OPTION+'|'+tokenID+'|'+(alphaLists ? 'list':'alpha')+'|'+cmd+')\n'
 						+  (editMartial ? '' : '[Potion](!magic --button '+chooseCmd+'|'+tokenID+'|'+MIrowref+'|?{Potion to store|'+potions+'}|'+charges+')')
 						+  (editMartial ? '' : '[Scroll](!magic --button '+chooseCmd+'|'+tokenID+'|'+MIrowref+'|?{Scroll to store|'+scrolls+'}|'+charges+')')
 						+  (editMartial ? '' : '[Rods, Staves, Wands](!magic --button '+chooseCmd+'|'+tokenID+'|'+MIrowref+'|?{Rod Staff Wand to store|'+rods+'}|'+charges+')')
@@ -4079,7 +4116,7 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 					content += '2.Select the item to **remove** ';
 				} else {
 					if (!selected) content += 'Select an Item above then\n';
-					content += '**2.Select a slot to add it to** '+(!shortMenu ? ('<a style="background: none; border: none; color:blue;" href="!magic --button '+BT.SECTIONS_OPTION+'|'+tokenID+'|'+cmdStr+'">*'+sectType+' sections*</a>') : '')+'\n';
+					content += '**2.Select a slot to add it to** '+(!shortMenu ? ('_'+sectType+' sections_(!magic --button '+BT.SECTIONS_OPTION+'|'+tokenID+'|'+cmdStr+')') : '')+'\n';
 				}
 				
 				if (shortMenu) {
@@ -4099,23 +4136,15 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 				content += '}|'+selectedMI+'|)'
 						+  ' as slot to '+(remove ? 'remove' : 'store it in')+', click to change}}';
 			}
-/*			if (!shortMenu || selected) {
-				if (!remove) {
-					if (shortMenu) {
-						content += '{{Section1=**1.Item chosen** ['+itemName+'](!magic --button '+redoCmd+'|'+tokenID+'|'+MIrowref+'), click to reselect}}';
-					}
-				} else {
-				}
-			}
-*/			
 			if (!shortMenu || (selected && bagSlot)) {
 
 				menuType = (shortMenu ? 'long' : 'short');
 				content += '{{desc2=**3.';
 				if (!remove) {
+					let queries = '';
 					qty = String(qty)+'+1';
 					if (selected) {
-						let chosenData = resolveData( selectedMI, fields.MagicItemDB, reItemData, charCS, {qty:reSpellSpecs.qty,query:reSpellSpecs.query}, tableIndex, tableRowID ).parsed;
+						let chosenData = resolveData( selectedMI, fields.MagicItemDB, reItemData, charCS, {qty:reSpellSpecs.qty,query:reSpellSpecs.query}, {row:tableIndex, rowID:tableRowID} ).parsed;
 						qty = chosenData.qty || (selectedMI.trueCompare(removeMI) ? qty : 1);
 						queries = parseQuery( chosenData.query );
 					}
@@ -4145,18 +4174,19 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * on Character Sheets.  Hidden information can be what the MI really is,
 	 * which the DM can set using this menu.
 	 */
-	 
+
 	async function makeGMonlyMImenu(args, senderId, msg) {
 
 		try {
-			var cmd = args[0],
-				tokenID = args[1],
-				MIrowref = args[2],
-				MItoStore = args[3],
-				charCS = getCharacter(tokenID),
-				cmdStr = args.join('|'),
+			const cmd = args[0],
+				  tokenID = args[1],
+				  MIrowref = args[2],
+				  charCS = getCharacter(tokenID),
+				  cmdStr = args.join('|');
+				  
+			let	MItoStore = args[3];
 				
-				ensureUnique = function( Items, name ) {
+			const ensureUnique = function( Items, name ) {
 					var count = 1,
 						newName = name,
 						table,index;
@@ -4165,82 +4195,82 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 						if (!_.isUndefined(index)) newName = name + String(count++);
 					} while (!_.isUndefined(index));
 					return newName;
-				};
+			};
 				
 			if (!charCS) {
-				sendDebug('makeGMonlyMImenu: invalid tokenID passed');
 				sendError('Internal MagicMaster error');
 				return;
 			}
 			
-			var config = getSetPlayerConfig( senderId ),
-				sectType = (config.sections !== false ? 'hide' : 'show'),
-				alphaLists = _.isUndefined(config.alphaLists) ? true : config.alphaLists,
-				qty, mi,
-				potions = getMagicList(fields.MagicItemDB,miTypeLists,'potion',senderId,'',false,'',!!alphaLists),
-				scrolls = getMagicList(fields.MagicItemDB,miTypeLists,'scroll',senderId,'',false,'',!!alphaLists),
-				rods = getMagicList(fields.MagicItemDB,miTypeLists,'rod',senderId,'',false,'',!!alphaLists),
-				weapons = getMagicList(fields.MagicItemDB,miTypeLists,'weapon',senderId,'',false,'',!!alphaLists),
-				ammo = getMagicList(fields.MagicItemDB,miTypeLists,'ammo',senderId,'',false,'',!!alphaLists),
-				armour = getMagicList(fields.MagicItemDB,miTypeLists,'armour',senderId,'',false,'',!!alphaLists),
-				rings = getMagicList(fields.MagicItemDB,miTypeLists,'ring',senderId,'',false,'',!!alphaLists),
-				misc = getMagicList(fields.MagicItemDB,miTypeLists,'miscellaneous',senderId,'',false,'',!!alphaLists),
-				equip = getMagicList(fields.MagicItemDB,miTypeLists,['equipment','light'],senderId,'',false,'',!!alphaLists),
-				treasure = getMagicList(fields.MagicItemDB,miTypeLists,'treasure',senderId,'',false,'',!!alphaLists),
-				coins = getMagicList(fields.MagicItemDB,miTypeLists,'coin',senderId,'',false,'',false),
-				gems = getMagicList(fields.MagicItemDB,miTypeLists,'gem',senderId,'',false,'',!!alphaLists),
-				services = getMagicList(fields.MagicItemDB,miTypeLists,'services',senderId,'',false,'',!!alphaLists),
-				dmitems = getMagicList(fields.MagicItemDB,miTypeLists,'dmitem',senderId,'',false,'',false),
-				content = '&{template:'+fields.menuTemplate+'}{{name=Edit '+charCS.get('name')+'\'s Magic Item Bag}}'
+			const config = getSetPlayerConfig( senderId ),
+				  sectType = (config.sections !== false ? 'hide' : 'show'),
+				  alphaLists = _.isUndefined(config.alphaLists) ? true : config.alphaLists,
+				  potions = getMagicList(fields.MagicItemDB,miTypeLists,'potion',senderId,'',false,'',!!alphaLists),
+				  scrolls = getMagicList(fields.MagicItemDB,miTypeLists,'scroll',senderId,'',false,'',!!alphaLists),
+				  rods = getMagicList(fields.MagicItemDB,miTypeLists,'rod',senderId,'',false,'',!!alphaLists),
+				  weapons = getMagicList(fields.MagicItemDB,miTypeLists,'weapon',senderId,'',false,'',!!alphaLists),
+				  ammo = getMagicList(fields.MagicItemDB,miTypeLists,'ammo',senderId,'',false,'',!!alphaLists),
+				  armour = getMagicList(fields.MagicItemDB,miTypeLists,'armour',senderId,'',false,'',!!alphaLists),
+				  rings = getMagicList(fields.MagicItemDB,miTypeLists,'ring',senderId,'',false,'',!!alphaLists),
+				  misc = getMagicList(fields.MagicItemDB,miTypeLists,'miscellaneous',senderId,'',false,'',!!alphaLists),
+				  equip = getMagicList(fields.MagicItemDB,miTypeLists,['equipment','light'],senderId,'',false,'',!!alphaLists),
+				  treasure = getMagicList(fields.MagicItemDB,miTypeLists,'treasure',senderId,'',false,'',!!alphaLists),
+				  coins = getMagicList(fields.MagicItemDB,miTypeLists,'coin',senderId,'',false,'',false),
+				  gems = getMagicList(fields.MagicItemDB,miTypeLists,'gem',senderId,'',false,'',!!alphaLists),
+				  services = getMagicList(fields.MagicItemDB,miTypeLists,'services',senderId,'',false,'',!!alphaLists),
+				  dmitems = getMagicList(fields.MagicItemDB,miTypeLists,'dmitem',senderId,'',false,'',false);
+				  
+			let	content = '&{template:'+fields.menuTemplate+'}{{name=Edit '+charCS.get('name')+'\'s Magic Item Bag}}'
 						+ (msg && msg.length ? '{{ ='+msg+'}}' : '')
-						+ '{{Section=**1. Choose something to store** <a style="background: none; border: none; color:blue;" href="!magic --button '+BT.ALPHALIST_OPTION+'|'+tokenID+'|'+(alphaLists ? 'list':'alpha')+'|GMONLY">*show '+(alphaLists ? 'complete' : 'alphabetic')+' list*</a>\n';
-						
-			content += '[Potion](!magic --button GM-MItoStore|'+tokenID+'|'+MIrowref+'|?{Which Potion?|'+potions+'})'
-					+  '[Scroll](!magic --button GM-MItoStore|'+tokenID+'|'+MIrowref+'|?{Which Scroll?|'+scrolls+'})'
-					+  '[Rods, Staves, Wands](!magic --button GM-MItoStore|'+tokenID+'|'+MIrowref+'|?{Which Rod, Staff or Wand?|'+rods+'})'
-					+  '[Weapon](!magic --button GM-MItoStore|'+tokenID+'|'+MIrowref+'|?{Which Weapon?|'+weapons+'})'
-					+  '[Ammo](!magic --button GM-MItoStore|'+tokenID+'|'+MIrowref+'|?{Which Ammo?|'+ammo+'})'
-					+  '[Armour](!magic --button GM-MItoStore|'+tokenID+'|'+MIrowref+'|?{Which piece of Armour?|'+armour+'})'
-					+  '[Ring](!magic --button GM-MItoStore|'+tokenID+'|'+MIrowref+'|?{Which Ring?|'+rings+'})'
-					+  '[Miscellaneous MI](!magic --button GM-MItoStore|'+tokenID+'|'+MIrowref+'|?{Which Misc MI?|'+misc+'})'
-					+  '[Equipment](!magic --button GM-MItoStore|'+tokenID+'|'+MIrowref+'|?{What Equipment?|'+equip+'})'
-					+  '[Treasure](!magic --button GM-MItoStore|'+tokenID+'|'+MIrowref+'|?{What Treasure?|'+treasure+'})'
-					+  '[Services](!magic --button GM-MItoStore|'+tokenID+'|'+MIrowref+'|?{What Service?|'+services+'})'
-					+  '[Coins](!magic --button GM-MItoStore|'+tokenID+'|'+MIrowref+'|?{What Coin?|'+coins+'})'
-					+  '[Gems](!magic --button GM-MItoStore|'+tokenID+'|'+MIrowref+'|?{What Gem?|'+gems+'})'
-					+  '[DM only list](!magic --button GM-MItoStore|'+tokenID+'|'+MIrowref+'|?{Which DM only item?|'+dmitems+'})}}';
-			content += '{{Section1=**2. Choose slot to edit or store in** <a style="background: none; border: none; color:blue;" href="!magic --button '+BT.SECTIONS_OPTION+'|'+tokenID+'|'+cmdStr+'">*'+sectType+' sections*</a>\n';
+						+ '{{Section=[Add from DMG Treasure Tables](!cmd --addTreasure '+tokenID+'||1|gm-only-mi|)\nor}}'
+						+ '{{Section1=**1. Choose something to store** _show '+(alphaLists ? 'complete' : 'alphabetic')+' list_(!magic --button '+BT.ALPHALIST_OPTION+'|'+tokenID+'|'+(alphaLists ? 'list':'alpha')+'|GMONLY)\n'
+						+ '[Potion](!magic --button GM-MItoStore|'+tokenID+'|'+MIrowref+'|?{Which Potion?|'+potions+'})'
+						+ '[Scroll](!magic --button GM-MItoStore|'+tokenID+'|'+MIrowref+'|?{Which Scroll?|'+scrolls+'})'
+						+ '[Rods, Staves, Wands](!magic --button GM-MItoStore|'+tokenID+'|'+MIrowref+'|?{Which Rod, Staff or Wand?|'+rods+'})'
+						+ '[Weapon](!magic --button GM-MItoStore|'+tokenID+'|'+MIrowref+'|?{Which Weapon?|'+weapons+'})'
+						+ '[Ammo](!magic --button GM-MItoStore|'+tokenID+'|'+MIrowref+'|?{Which Ammo?|'+ammo+'})'
+						+ '[Armour](!magic --button GM-MItoStore|'+tokenID+'|'+MIrowref+'|?{Which piece of Armour?|'+armour+'})'
+						+ '[Ring](!magic --button GM-MItoStore|'+tokenID+'|'+MIrowref+'|?{Which Ring?|'+rings+'})'
+						+ '[Miscellaneous MI](!magic --button GM-MItoStore|'+tokenID+'|'+MIrowref+'|?{Which Misc MI?|'+misc+'})'
+						+ '[Equipment](!magic --button GM-MItoStore|'+tokenID+'|'+MIrowref+'|?{What Equipment?|'+equip+'})'
+						+ '[Treasure](!magic --button GM-MItoStore|'+tokenID+'|'+MIrowref+'|?{What Treasure?|'+treasure+'})'
+						+ '[Services](!magic --button GM-MItoStore|'+tokenID+'|'+MIrowref+'|?{What Service?|'+services+'})'
+						+ '[Coins](!magic --button GM-MItoStore|'+tokenID+'|'+MIrowref+'|?{What Coin?|'+coins+'})'
+						+ '[Gems](!magic --button GM-MItoStore|'+tokenID+'|'+MIrowref+'|?{What Gem?|'+gems+'})'
+						+ '[DM only list](!magic --button GM-MItoStore|'+tokenID+'|'+MIrowref+'|?{Which DM only item?|'+dmitems+'})}}'
+						+ '{{Section2=**2. Choose slot to edit or store in** _'+sectType+' sections_(!magic --button '+BT.SECTIONS_OPTION+'|'+tokenID+'|'+cmdStr+')}}';
 			
-			var Items = getTableGroup( charCS, fieldGroups.MI ),
-				slotName = (MIrowref >= 0) ? tableGroupLookup( Items, 'name', MIrowref ) : '',
-				slotActualName = (MIrowref >= 0) ? tableGroupLookup( Items, 'trueName', MIrowref ) : '',
-				slotType = (MIrowref >= 0) ? tableGroupLookup( Items, 'type', MIrowref ) : '',
-				slotTrueType = (MIrowref >= 0) ? tableGroupLookup( Items, 'trueType', MIrowref ) : '',
-				slotQty = parseInt(tableGroupLookup( Items, 'qty', MIrowref )) || 0,
-				slotActualQty = parseInt(tableGroupLookup( Items, 'trueQty', MIrowref )) || 0,
-				slotCost = parseFloat(tableGroupLookup( Items, 'cost', MIrowref )) || 0,
-				slotReveal = (MIrowref >= 0) ? tableGroupLookup( Items, 'reveal', MIrowref ) : '',
-				slotCursed = slotType.toLowerCase().includes('cursed'),
+			const Items = getTableGroup( charCS, fieldGroups.MI ),
+				  slotName = (MIrowref >= 0) ? tableGroupLookup( Items, 'name', MIrowref ) : '',
+				  slotActualName = (MIrowref >= 0) ? tableGroupLookup( Items, 'trueName', MIrowref ) : '',
+				  slotType = (MIrowref >= 0) ? tableGroupLookup( Items, 'type', MIrowref ) : '',
+//				  slotTrueType = (MIrowref >= 0) ? tableGroupLookup( Items, 'trueType', MIrowref ) : '',
+				  slotQty = parseInt(tableGroupLookup( Items, 'qty', MIrowref )) || 0,
+				  slotActualQty = parseInt(tableGroupLookup( Items, 'trueQty', MIrowref )) || 0,
+				  slotCost = parseFloat(tableGroupLookup( Items, 'cost', MIrowref )) || 0,
+				  slotReveal = (MIrowref >= 0) ? tableGroupLookup( Items, 'reveal', MIrowref ) : '',
+				  slotCursed = slotType.toLowerCase().includes('cursed'),
 			
-				chosenMI = (MItoStore.length > 0),
-				chosenSlot = (MIrowref >= 0),
-				chosenBoth = (chosenMI && chosenSlot),
-				hideAvail = chosenBoth,
-				chosenEither = (chosenMI || chosenSlot),
-				hiddenMI = slotName !== slotActualName,
-				greyButton = '<span style='+design.grey_button+'>',
-				selectableSlot = chosenSlot ? '[' : greyButton,
-				selectableBoth = chosenBoth ? '[' : greyButton,
+				  chosenMI = (MItoStore.length > 0),
+				  chosenSlot = (MIrowref >= 0),
+				  chosenBoth = (chosenMI && chosenSlot),
+				  chosenEither = (chosenMI || chosenSlot),
+				  hiddenMI = slotName !== slotActualName,
+				  greyButton = '<span style='+design.grey_button+'>',
+				  selectableSlot = chosenSlot ? '[' : greyButton,
+				  selectableBoth = chosenBoth ? '[' : greyButton,
+				  selectableEither = chosenEither ? '[' : greyButton,
+				  hiddenSlot = hiddenMI ? '[' : greyButton,
+				  revealType = (!slotReveal || slotReveal.toLowerCase() === 'manual' ? 'Manually' : ('on '+slotReveal)),
+				  intelligence = Math.max( (parseInt(attrLookup( charCS, fields.Intelligence )) || 0), (parseInt(attrLookup( charCS, fields.Monster_int )) || 0)),
+				  hp = parseInt(attrLookup( charCS, fields.HP )) || 0,
+				  sentient = (intelligence > 0 && hp > 0),
+				  showTypes = parseInt(attrLookup( charCS, fields.ItemContainerHide ));
+				  
+			let hideAvail = chosenBoth,
 				hideableBoth = selectableBoth,
-				selectableEither = chosenEither ? '[' : greyButton,
-				hiddenSlot = hiddenMI ? '[' : greyButton,
-				revealType = (!slotReveal || slotReveal.toLowerCase() === 'manual' ? 'Manually' : ('on '+slotReveal)),
-				intelligence = Math.max( (parseInt(attrLookup( charCS, fields.Intelligence )) || 0), (parseInt(attrLookup( charCS, fields.Monster_int )) || 0)),
-				hp = parseInt(attrLookup( charCS, fields.HP )) || 0,
-				sentient = (intelligence > 0 && hp > 0),
 				containerNo = parseInt(attrLookup( charCS, fields.ItemContainerType )) || 0,
 				containerSize = attrLookup( charCS, fields.ItemContainerSize ),
-				showTypes = parseInt(attrLookup( charCS, fields.ItemContainerHide )),
 				spellStoring = false,
 				looksLike = false,
 				queries = '',
@@ -4249,7 +4279,8 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 			[index,table,rowID] = tableGroupIndex( Items, MIrowref );
 			
 			// build the character's visible MI Bag
-			content += await makeMIbuttons( tokenID, senderId, 'max', 'current', 'GM-MIslot', '|'+MItoStore, MIrowref, false, true );
+
+			content += await makeMIbuttons( tokenID, senderId, 'max', 'current', 'GM-MIslot', '|'+MItoStore, MIrowref, false, true, false, true, undefined, undefined, '', '', 3 );
 			content	+= '}}';
 			
 			if (hiddenMI) {
@@ -4262,16 +4293,16 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 			if (chosenSlot) {
 				slotObj = getAbility( fields.MagicItemDB, slotActualName, charCS, false, true, slotActualName, index, rowID );
 				if (!!slotObj.obj) {
-					spellStoring = reCastMIspellCmd.test(slotObj.obj[1].body) || reCastMIpowerCmd.test(slotObj.obj[1].body);
+					spellStoring = reCastViewMIspellCmd.test(slotObj.obj[1].body) || reCastViewMIpowerCmd.test(slotObj.obj[1].body);
 					looksLike = reLooksLike.test(slotObj.obj[1].body);
 					if (looksLike && !hiddenMI && !chosenMI) {
-						MItoStore = ensureUnique( Items, getShownType( slotObj, MIrowref, resolveData( slotActualName, fields.MagicItemDB, reItemData, charCS, {itemType:reSpellSpecs.itemType}, index, rowID ).parsed.itemType ));
+						MItoStore = ensureUnique( Items, getShownType( slotObj, MIrowref, resolveData( slotActualName, fields.MagicItemDB, reItemData, charCS, {itemType:reSpellSpecs.itemType}, {row:index, rowID:rowID} ).parsed.itemType ));
 						hideAvail = MItoStore !== slotName;
 						hideableBoth = hideAvail ? '[' : greyButton;
 					}
 				}
 			}
-			var storableSlot = (spellStoring && chosenSlot) ? '[' : '<span style='+design.grey_button+'>';
+			const storableSlot = (spellStoring && chosenSlot) ? '[' : '<span style='+design.grey_button+'>';
 
 			if (_.isUndefined(containerSize)) {
 				containerSize = fields.MIRowsStandard;
@@ -4304,22 +4335,24 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 			setAttr( charCS, fields.ItemContainerType, containerNo );
 			setAttr(charCS, fields.ItemOldContainerType, containerNo);
 			
-			var itemName = MItoStore;
+			const itemName = MItoStore;
 			MItoStore = (MItoStore || '').hyphened();
 			initQty = String(slotQty)+'+1';
 			if (chosenMI) {
 				itemObj = getAbility( fields.MagicItemDB, MItoStore, charCS, false, true, MItoStore, index, rowID );
 				if (itemObj.obj) {
-					chosenData = resolveData( MItoStore, fields.MagicItemDB, reItemData, charCS, {qty:reSpellSpecs.qty,query:reSpellSpecs.query}, index, rowID );
+					chosenData = resolveData( MItoStore, fields.MagicItemDB, reItemData, charCS, {qty:reSpellSpecs.qty,query:reSpellSpecs.query}, {row:index, rowID:rowID} );
 					initQty = chosenData.parsed.qty || (itemName.trueCompare(slotName) ? initQty : 1);
 					queries = parseQuery( chosenData.parsed.query );
 				}
 			};
-			var reviewItem = ((cmd !== 'GM-MItoStore' && chosenSlot) ? slotActualName : itemName),
-				reviewObj  = ((cmd !== 'GM-MItoStore' && chosenSlot) ? slotObj : itemObj),
-				renamed = !abilityLookup( fields.MagicItemDB, reviewItem ).obj,
-				changedItem = renamed ? 'Display-'+reviewItem : reviewItem;
-			if (!state.MagicMaster.viewActions && reviewObj && reviewObj.obj) reviewObj.obj = greyOutButtons( tokenID, charCS, reviewObj.obj, (renamed ? changedItem : ''), ('[Return to menu](!magic --button GM-MImenu|'+tokenID+'|'+MIrowref+'|'+MItoStore+')') );
+			const reviewItem = ((cmd !== 'GM-MItoStore' && chosenSlot) ? slotActualName : itemName),
+				  renamed = !abilityLookup( fields.MagicItemDB, reviewItem ).obj,
+				  changedItem = renamed ? 'Display-'+reviewItem : reviewItem;
+			
+			let	reviewObj  = ((cmd !== 'GM-MItoStore' && chosenSlot) ? slotObj : itemObj);
+
+			if (!state.MagicMaster.viewActions && reviewObj && reviewObj.obj) reviewObj = greyOutButtons( tokenID, charCS, reviewObj, (renamed ? changedItem : ''), ('[Return to menu](!magic --button GM-MImenu|'+tokenID+'|'+MIrowref+'|'+MItoStore+')') );
 			
 			content += '{{desc3=**3. '+selectableBoth+(chosenBoth ? ('Store '+itemName+'](!magic --button GM-StoreMI|'+tokenID+'|'+MIrowref+'|'+MItoStore+'|&#91;[?{Quantity?|'+initQty+'}]&#93;||'+queries+')') : ('Store'+(chosenSlot ? ('d '+slotActualName) : itemName)+'</span>'))+' **'
 					+  ' or '+hideableBoth+(hideAvail ? ('Hide '+slotName+' as '+itemName+'](!magic --button GM-HideMI|'+tokenID+'|'+MIrowref+'|'+MItoStore+')') : ((hiddenMI ? ('Hidden as '+slotName) : ('Hide Item'+(chosenMI?(' as '+itemName):'')))+'</span>'))+'<br>'
@@ -4335,8 +4368,7 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 					+  selectableSlot+(hiddenMI ? 'Reveal Now' : 'Reset Qty to Max')+(chosenSlot ? ('](!magic --button GM-ResetSingleMI|'+tokenID+'|'+MIrowref+') ') : '</span> ')+'<br>'
 					+  selectableSlot+'Change Cost'+(chosenSlot ? ('](!magic --button GM-SetMIcost|'+tokenID+'|'+MIrowref+'|'+MItoStore+'|?{How much should '+slotName+' now cost (currently '+slotCost+'GP&#41;?|'+slotCost+'})') : '</span>')+'<br>'
 					+  selectableSlot+'REMOVE MI'+(chosenSlot ? '](!magic --button GM-DelMI|'+tokenID+'|'+MIrowref+'|'+slotActualName+') ' : '</span> ')+'</td></tr></table>}}'
-					+  '{{desc5=or [Edit Treasure Description](!magic --button GM-TreasureMenu|'+tokenID+'|'+MIrowref+'|'+MItoStore+')\n'
-					+  '['+containerSize+' slot](!magic --button GM-SetTokenSize|'+tokenID+'|'+MIrowref+'|'+MItoStore+'|?{How many slots does this container have?&#124;'+containerSize+'&#125;)'
+					+  '{{desc5=['+containerSize+' slot](!magic --button GM-SetTokenSize|'+tokenID+'|'+MIrowref+'|'+MItoStore+'|?{How many slots does this container have?&#124;'+containerSize+'&#125;)'
 					+  '['+containerType+'](!magic  --button GM-SetTokenType|'+tokenID+'|'+MIrowref+'|'+MItoStore+'|?{What type of token is this?&#124;Untrapped Container,1&#124;Trapped container,4&#124;Force Inanimate Container,6&#124;Force Sentient Creature,7&#125;)\n'
 					+  '['+(showTypes ? 'Show as Item types' : 'Show as Item names')+'](!magic --button GM-HideAsTypes|'+tokenID+'|'+MIrowref+'|'+MItoStore+'|'+showTypes+') in container. '
 					+  '[BLANK BAG](!magic --button GM-BlankBag|'+tokenID+')'
@@ -4352,21 +4384,21 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	/*
 	 * Create the DM's Edit Treasure menu
 	 */
-	 
-	var makeEditTreasureMenu = function(args,senderId,msg) {
+ 
+	const makeEditTreasureMenu = function(args,senderId,msg) {
 		
-		var tokenID = args[1],
-			charCS = getCharacter(tokenID);
+		const tokenID = args[1],
+			  charCS = getCharacter(tokenID);
 	
 		if (!charCS) {
-			sendDebug('makeEditTreasureMenu: invalid tokenID passed');
 			sendError('Internal MagicMaster error');
 			return;
 		}
 		
-		var charName = charCS.get('name'),
-			treasure = attrLookup( charCS, fields.Money_treasure ) || '{{Treasure=None found}}',
-			content = '&{template:'+fields.menuTemplate+'}{{name=Current treasure for '+charName+'}}'
+		const charName = charCS.get('name'),
+			  treasure = attrLookup( charCS, fields.Money_treasure ) || '{{Treasure=None found}}';
+
+		let content = '&{template:'+fields.menuTemplate+'}{{name=Current treasure for '+charName+'}}'
 					+ treasure +'{{=----- End of current Treasure ----}}'
 					+ '{{desc1=[Add](!magic --button GM-AddTreasure|'+tokenID+'|?{Title for Treasure?}|?{Treasure text}) or '
 					+ '[Edit](!magic --button GM-EditTreasure|'+tokenID+') or '
@@ -4390,171 +4422,147 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	async function makeShortPOPmenu( args, senderId, buy=false, menuType ) {
 		
 		try {
-			var tokenID = args[1],
-				pickID = args[3],
-				putID = args[4],
-				pickRow = args[2] || -1,
-				putRow = args[5] || -1;
+			const tokenID = args[1],
+				  pickID = args[3],
+				  putID = args[4];
+			let	  pickRow = args[2] || -1,
+				  putRow = args[5] || -1;
 				
 			if (!pickID || !putID) {
-				sendDebug( 'makeShortPOPmenu: pickID or putID is invalid' );
 				sendError( 'Invalid make-menu call syntax' );
 				return;
 			};
 			
-			
-			var cmdStr = args.join('|'),
-				putCS = getCharacter( putID ),
-				pickCS = getCharacter( pickID ),
-				pickingUp = (tokenID == putID),
-				shortMenu = pickingUp,
-				sectType = 'hide',
-				pickOrPut = (pickingUp ? (!buy ? 'Pick up' : 'Buy') : (!buy ? 'Put away' : 'Sell')),
-				charCS = getCharacter(tokenID),
-				traderCS = pickingUp ? pickCS : putCS,
-				isGM = playerIsGM(senderId),
-				sell = buy && tokenID === pickID,
-				buy = buy && !sell,
-				reTrade = {nobuy:reClassSpecs.nobuy, nosell:reClassSpecs.nosell, tobuy:reClassSpecs.tobuy, tosell:reClassSpecs.tosell};
-			   
+			const putCS = getCharacter( putID ),
+				  pickCS = getCharacter( pickID ),
+				  pickingUp = (tokenID == putID),
+				  pickOrPut = (pickingUp ? (!buy ? 'Pick up' : 'Buy') : (!buy ? 'Put away' : 'Sell')),
+				  charCS = getCharacter(tokenID),
+				  traderCS = pickingUp ? pickCS : putCS,
+				  isGM = playerIsGM(senderId),
+				  sell = buy && tokenID === pickID,
+				  reTrade = {nobuy:reClassSpecs.nobuy, nosell:reClassSpecs.nosell, tobuy:reClassSpecs.tobuy, tosell:reClassSpecs.tosell};
+				  
 			if (!putCS || !pickCS) {
-				sendDebug( 'makeShortPOPmenu: pickID or putID is invalid' );
 				sendError( 'Invalid make-menu call syntax' );
 				return;
 			}
-			var pickCmd = sell ? BT.SELL_PICK : (buy ? BT.BUY_PICK : BT.POP_PICK),
-				storeCmd = sell ? BT.SELL_STORE : (buy ? BT.BUY_STORE : BT.POP_STORE),
-				match = '['+((attrLookup( traderCS, fields.AttrNotes ) || '').match(/n?pcdata=\[(.+?)\]/i) || ['',''])[1]+']',
-				tradeParse = parseData(match, reTrade, false),
-				tradeClass = classObjects( traderCS, senderId, reTrade )[0].classData,
-				tradingRace = resolveData( (attrLookup( traderCS, fields.Race ) || 'Human'), fields.RaceDB, reRaceData, traderCS, reTrade, '', '', [], false ).parsed,
-				noTrade = buy ? (tradeParse.nosell || tradingRace.nosell || tradeClass.nosell) : (sell ? (tradeParse.nobuy || tradingRace.nobuy || tradeClass.nobuy) : ''),
-				toTrade = buy ? (tradeParse.tosell || tradingRace.tosell || tradeClass.tosell) : (sell ? (tradeParse.tobuy || tradingRace.tobuy || tradeClass.tobuy) : '');
+
+			buy = buy && !sell;
+			   
+			const pickCmd = sell ? BT.SELL_PICK : (buy ? BT.BUY_PICK : BT.POP_PICK),
+				  storeCmd = sell ? BT.SELL_STORE : (buy ? BT.BUY_STORE : BT.POP_STORE),
+				  match = '['+((attrLookup( traderCS, fields.AttrNotes ) || '').match(/n?pcdata=\[(.+?)\]/i) || ['',''])[1]+']',
+				  tradeParse = parseData(match, reTrade, false),
+				  tradeClass = classObjects( traderCS, senderId, reTrade )[0].classData,
+				  tradingRace = resolveData( (attrLookup( traderCS, fields.Race ) || 'Human'), fields.RaceDB, reRaceData, traderCS, reTrade, {defBase:false} ).parsed,
+				  noTrade = buy ? (tradeParse.nosell || tradingRace.nosell || tradeClass.nosell) : (sell ? (tradeParse.nobuy || tradingRace.nobuy || tradeClass.nobuy) : ''),
+				  toTrade = buy ? (tradeParse.tosell || tradingRace.tosell || tradeClass.tosell) : (sell ? (tradeParse.tobuy || tradingRace.tobuy || tradeClass.tobuy) : '');
+
+			let	shortMenu = pickingUp,
+				sectType = 'hide';
+				
 			args[0] = pickCmd;
 			
-//			log('makeShortPOPmenu: match = '+match+', noTrade = '+noTrade+', toTrade = '+toTrade);
-
 			if (!menuType) {
-				var playerConfig = getSetPlayerConfig( senderId );
+				const playerConfig = getSetPlayerConfig( senderId );
 				if (playerConfig) {
 					shortMenu = !!!((pickingUp ? playerConfig.pickUpMIType : playerConfig.putAwayMIType) == 'long');
-					sectType = ((playerConfig.sections !== false || csVer(pickCS) < 4) ? 'hide' : 'show');
+					sectType = ((playerConfig.sections !== false || csVer(pickCS) < 4) ? 'Hide' : 'Show');
 				}
 			} else {
 				shortMenu = !!!(menuType.toLowerCase() == 'long');
 			}
 			menuType = shortMenu ? 'long' : 'short';
 			
-			var putName = putCS.get('name'),
-				pickName = pickCS.get('name'),
-				qty, mi, miTrueName, i,
-				pickItems = getTableGroupField( pickCS, {}, fieldGroups.MI, 'name' ),
-				bagSize = (attrLookup( putCS, fields.ItemContainerSize ) || fields.MIRows),
-				showTypes = parseInt(attrLookup( pickCS, fields.ItemContainerHide )),
-				treasure = (attrLookup( pickCS, fields.Money_treasure ) || '{{desc1=and there is no treasure here, either}}'),
+			const putName = putCS.get('name'),
+				  pickName = pickCS.get('name'),
+				  showTypes = parseInt(attrLookup( pickCS, fields.ItemContainerHide ));
+				  
+			let	treasure = (attrLookup( pickCS, fields.Money_treasure ) || '{{desc1=There is no other treasure here}}'),
 				content = '&{template:'+fields.menuTemplate+'}{{name='+((sell || buy) ? (pickName + ' sells items to '+putName) : ('Take from ' + pickName + ' to add to ' + putName + '\'s Items of Equipment'))+'}}',
-				putItems, miObj, pickedMI, pickedTrueMI, pickableQty, pickedType, miType,
-				magicItems = '', miList = '', slotsUsed, miTable;
-				
+				miTrueName, mi, pickedMI, miType, miTable,
+				fullMsg = '', magicItems = '', miList = '';
+
+			let	pickItems = getTableGroupField( pickCS, {}, fieldGroups.MI, 'name' );
 			pickItems = getTableGroupField( pickCS, pickItems, fieldGroups.MI, 'trueName' );
 			pickItems = getTableGroupField( pickCS, pickItems, fieldGroups.MI, 'qty' );
 			pickItems = getTableGroupField( pickCS, pickItems, fieldGroups.MI, 'type' );
-			putRow = -1;
-			if (pickRow >= 0) {
-				pickedMI = tableGroupLookup( pickItems, 'name', pickRow ) || '';
-				pickedTrueMI = (tableGroupLookup( pickItems, 'trueName', pickRow ) || '').dbName() || '-';
-				pickableQty = tableGroupLookup( pickItems, 'qty', pickRow ) || '';
-				pickedType = (tableGroupLookup( pickItems, 'type', pickRow ) || '').dbName() || '-';
-				let miTrueObj = abilityLookup( fields.MagicItemDB, pickedTrueMI, pickCS );
-				miTable = miTrueObj.obj ? getItemTable( miTrueObj.obj[1].type ) : 'GEAR';
-				putItems = getTableField( putCS, {}, fieldGroups[miTable].tableDef, fields[fieldGroups[miTable].prefix+'name'] );
-				putItems = getTableField( putCS, putItems, fieldGroups[miTable].tableDef, fields[fieldGroups[miTable].prefix+'trueName'] );
-				putItems = getTableField( putCS, putItems, fieldGroups[miTable].tableDef, fields[fieldGroups[miTable].prefix+'type'] );
-				let lowerMI = pickedMI.dbName().replace(/v\d+$/,'') || '-';
-				for (i = 0; i < putItems.sortKeys.length; i++) {
-					mi = (putItems.tableLookup(fields[fieldGroups[miTable].prefix+'name'],i) || '').dbName().replace(/v\d+$/,'') || '-';
-					if (_.isUndefined(mi)) break;
-					if (mi != lowerMI) continue;
-					miTrueName = (putItems.tableLookup(fields[fieldGroups[miTable].prefix+'trueName'],i) || '').dbName() ||'-';
-					if (miTrueName != pickedTrueMI) continue;
-					miType = (putItems.tableLookup(fields[fieldGroups[miTable].prefix+'type'],i) || pickedType);
-					if (miType.dbName() !== '' && (miType.dbName() !== pickedType || !stackable.includes(miType.toLowerCase()))) continue;
-					putRow = i;
-					break;
-				}
-				if (showTypes && !buy) {
-					miObj = abilityLookup( fields.MagicItemDB, pickedMI, pickCS );
-					pickedMI = !miObj.obj ? pickedMI : getShownType( miObj, pickRow );
-				}
-				if (putRow < 0) {
-					if (slotsUsed >= bagSize) {
-						sendParsedMsg( tokenID, messages.miBagFull, senderId, '', putID );
-						return;
-					} else {
-						putItems = getTable( putCS, fieldGroups[miTable] );
-						putRow = putItems.tableFind( fields[fieldGroups[miTable].prefix+'name'], '-', false );
-						if (_.isUndefined(putRow)) {
-							putItems = putItems.addTableRow();
-							putRow = putItems.sortKeys.length-1;
-						}
-					}
-				}
-			};
-			
-			var	putNameTable = getTableGroupField( putCS, {}, fieldGroups.MI, 'name' ),
-				putNameTable = getTableGroupField( putCS, putNameTable, fieldGroups.MI, 'weight' ),
-				putNameTable = getTableGroupField( putCS, putNameTable, fieldGroups.MI, 'qty' ),
-				slotData = itemSlotData(putNameTable);
+			pickItems = getTableGroupField( pickCS, pickItems, fieldGroups.MI, 'chosen' );
 
-			if (putRow >= 0) putRow = indexTableGroup( putNameTable, miTable, putRow );
-			if (pickingUp) content += treasure;
+			let	putItems = getTableGroup( putCS, fieldGroups.MI );
+			const slotData = await itemSlotData(tokenID,putItems,senderId,false);
+
+			let [foundButtons,foundTables] = tableGroupFind( pickItems, 'chosen', 1, true, true ),
+				chosen = !_.isUndefined(foundButtons) ? foundButtons.length : 0;
+			pickRow = !_.isUndefined(foundButtons) ? indexTableGroup( pickItems, foundTables[0], foundButtons[0] ) : -1;
+
+			const bagSize = parseInt(attrLookup( putCS, fields.ItemContainerSize ) || fields.MIRows);
+			if (parseInt(slotData.count)+parseInt(chosen) > bagSize) {
+				sendParsedMsg( tokenID, messages.miBagFull, senderId, '', putID );
+				foundButtons = undefined;
+				pickRow = -1;
+				fullMsg = '{{rowhighlight=mistyrose}}{{highlight=There are not enough slots left to store all the selected items}}'
+			};
+
+			[putRow,miTable,pickedMI] = findPutRow( pickID, pickCS, pickItems, pickRow, putCS, putItems, showTypes, buy, slotData.count+chosen );
 			
-			content += '{{Section='+putName+' has [['+(attrLookup( putCS, fields.ItemContainerSize ) - slotData.count)+']] remaining slots. Total weight [['+slotData.weight+']]lbs';
+			if (putRow >= 0) putRow = indexTableGroup( putItems, miTable, putRow );
 			
-			let tradeText = (toTrade ? ('\n'+(buy ? pickName : putName)+' can '+(buy ? 'sell' : 'buy')+' these: '+toTrade.replace(/\|/g,', ')+'.') : '')
-						  + (noTrade ? ('\n'+(toTrade ? 'but' : (buy ? pickName : putName))+' cannot '+(buy ? 'sell' : 'buy')+' these: '+noTrade.replace(/\|/g,', ')+'.') : '')
-						  + (((buy || sell) && !shortMenu) ? ('\nItems that can\'t be traded with this trader are grey (try someone else).') : '')
-						  + ((buy || sell) ? ('\nItems of zero value don\'t appear') : '');
+			const tradeText = (toTrade ? ('\n'+(buy ? pickName : putName)+' can '+(buy ? 'sell' : 'buy')+' these: '+toTrade.replace(/\|/g,', ')+'.') : '')
+							+ (noTrade ? ('\n'+(toTrade ? 'but' : (buy ? pickName : putName))+' cannot '+(buy ? 'sell' : 'buy')+' these: '+noTrade.replace(/\|/g,', ')+'.') : '')
+							+ (((buy || sell) && !shortMenu) ? ('\nItems that can\'t be traded with this trader are grey (try someone else).') : '')
+							+ ((buy || sell) ? ('\nItems of zero value don\'t appear') : '');
 					  
 			if (shortMenu) {
 				miList = await makeMIlist( pickCS, senderId, false, !sell, showTypes, true, putCS, toTrade || (buy || sell), noTrade || '' );
 				shortMenu = shortMenu && (miList.split('|').length > 2);
 			}
 			if (shortMenu) {
-				content += 'Press the **[Select]** button to select the item you want to '+pickOrPut+' from a list of items, '
+				content += '{{Section10=Press the **[Select]** button to select the item you want to '+pickOrPut+' from a list of items, '
 						+ 'then press the **[Store]** button to automatically put it away in an empty slot'
 						+ (buy ? 'or **[Review]** button to review before buying' : '')+'}}'
 						+ '{{Select=[Select Item to '+pickOrPut+'](!magic --button '+pickCmd+'|'+tokenID+'|?{'+pickOrPut+' which Item?'+miList+'}|'+pickID+'|'+putID+'|'+putRow+')}}'
-						+ (tradeText.length ? ('{{Trade Terms='+tradeText+'}}') : '')
-						+ '{{Store=';
+						+ (tradeText.length ? ('{{Trade Terms='+tradeText+'}}') : (pickingUp ? treasure : ''))
 			} else {
-				magicItems = await makeMIbuttons( tokenID, senderId, 'current', 'current', pickCmd, '|'+pickID+'|'+putID+'|'+putRow, pickRow, !sell, false, showTypes, true, pickID, putID, toTrade || (buy || sell), noTrade || '' );
+				magicItems = await makeMIbuttons( tokenID, senderId, 'current', 'current', pickCmd, '|'+pickID+'|'+putID+'|'+putRow, -1, !sell, false, showTypes, true, pickID, putID, toTrade || (buy || sell), noTrade || '', 2 );
 				if (magicItems && magicItems.length) {
-					content += 'Select an item you want to '+pickOrPut+(csVer(pickCS) >= 4 ? (' <a style="background: none; border: none; color:blue;" href="!magic --button '+BT.SECTIONS_OPTION+'|'+tokenID+'|'+cmdStr+'">*'+sectType+' sections*</a>') : '')+'\n'
+					content += '{{Section10=Select an item you want to '+pickOrPut+'\n'
 							+  magicItems+'}}'
-							+  (tradeText.length ? ('{{desc1=*Trade Terms: *'+tradeText+'}}') : '')
-							+  '{{desc2='
+							+  (tradeText.length ? ('{{Section11=*Trade Terms: *'+tradeText+'}}') : (pickingUp ? treasure : ''));
 				}
 			}
+			content += '{{Section12='+putName+' has [['+(attrLookup( putCS, fields.ItemContainerSize ) - slotData.count)+']] remaining slots and carries a total weight of [['+slotData.weight+']]lbs}}'
+					+  fullMsg
+					+  '{{';
+			
 			if (!shortMenu && (!magicItems || !magicItems.length)) {
 				content = messages.header + '{{desc=' + pickCS.get('name') + ' ' + messages.fruitlessSearch + treasure;
 				sendParsedMsg( tokenID, content, senderId );
 			} else {
-				content +=((pickRow >= 0 && putRow >= 0) ? '[' : '<span style='+design.grey_button+'>')
-						+ pickOrPut+' '+((pickRow >= 0) ? pickedMI : 'item')
-						+ ((pickRow >= 0 && putRow >= 0) ? ('](!magic --button '+storeCmd+'|'+tokenID+'|'+pickRow+'|'+pickID+'|'+putID+'|'+putRow+'|-1)') : '</span>' )
+//				content +=((pickRow >= 0 && putRow >= 0) ? ('Highlight='+(shortMenu?'Store ':'')+'[') : ((shortMenu?'Store=':'Section14=')+'<span style='+design.grey_button+'>'))
+//						+ pickOrPut+' '+((pickRow >= 0) ? pickedMI.dispName() : 'item')
+//						+ ((pickRow >= 0 && putRow >= 0) ? ('](!magic --button '+storeCmd+'|'+tokenID+'|'+pickRow+'|'+pickID+'|'+putID+'|'+putRow+'|-1)') : '</span>' )
+//						+ (buy || sell ? ' and store' : '')+' in a free slot';
+				content +=(!_.isUndefined(foundButtons) ? ('Highlight=') : (shortMenu?'Store=':'Section14='))
+						+ (!_.isUndefined(foundButtons) ? ((shortMenu?'Store ':'')+'[') : ('<span style='+design.grey_button+'>'))
+						+ pickOrPut+' '+( chosen > 1 ? 'selected items' : ((pickRow >= 0) ? pickedMI.dispName() : 'item'))
+						+ ((pickRow >= 0) ? ('](!magic --button '+storeCmd+'|'+tokenID+'|'+pickRow+'|'+pickID+'|'+putID+'|'+putRow+'|-1)') : '</span>' )
 						+ (buy || sell ? ' and store' : '')+' in a free slot';
 						
 				if (buy) {
-					miObj = getAbility( fields.MagicItemDB, pickedMI, charCS );
-					let renamed = !miObj || !miObj.obj,
-						changedMI = renamed ? 'Display-'+pickedMI : pickedMI;
+					let miObj = getAbility( fields.MagicItemDB, pickedMI, charCS );
+					const renamed = !miObj || !miObj.obj;
+					const changedMI = renamed ? 'Display-'+pickedMI : pickedMI;
 					args[0] = pickCmd;
-					if (miObj.obj) miObj.obj = greyOutButtons( tokenID, charCS, miObj.obj, (renamed ? changedMI : ''), ('[Return to menu](!magic --button '+(args.join('|'))+')') );
+					if (miObj.obj) miObj = greyOutButtons( tokenID, charCS, miObj, (renamed ? changedMI : ''), ('[Return to menu](!magic --button '+(args.join('|'))+')') );
 					content +='\nor '+(((pickRow >= 0 && putRow >= 0) ? '[' : '<span style='+design.grey_button+'>')+ 'Review '+((pickRow >= 0) ? pickedMI : 'item')
 							+ ((pickRow >= 0 && putRow >= 0) ? ('](!&#13;'+sendToWho(charCS,senderId,false,true)+'&#37;{'+miObj.dB+'|'+(changedMI.hyphened())+'})') : '</span>' ));
 				};
-				content += '}}{{desc3=[Use '+menuType+' menu](!magic --button '+(pickingUp ? BT.PICKMI_OPTION : BT.PUTMI_OPTION)+'|'+tokenID+'|'+menuType+'|'+pickID+'|'+putID+'|'+(buy || sell)+')}}';
+				content += '}}{{desc9=<div><table><tr><td style="text-align: left;"> _Use '+menuType+' menu_(!magic --button '+(pickingUp ? BT.PICKMI_OPTION : BT.PUTMI_OPTION)+'|'+tokenID+'|'+menuType+'|'+pickID+'|'+putID+'|'+(buy || sell)+')</td>'
+						+  '<td style="text-align: center;"> _Select Everything_(!magic --button '+pickCmd+'|'+tokenID+'|All|'+pickID+'|'+putID+'|'+putRow+')</td>'
+						+  '<td style="text-align: right;">'+(csVer(pickCS) >= 4 ? (' _'+sectType+' sections_(!magic --button '+BT.SECTIONS_OPTION+'|'+tokenID+'|'+args.join('|')+')') : '')+'</td></tr></table>'
+						+  '</div>}}';
 				sendResponse( charCS, content, senderId, flags.feedbackName, flags.feedbackImg );
 			}
 			return;
@@ -4567,64 +4575,61 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * Create the Spells menus
 	 */
 	 
-	var makeMUSpellsMenu = function( args, senderId ) {
+	const makeMUSpellsMenu = function( args, senderId ) {
 		
-		var tokenID = args[0],
-			curToken = getObj('graphic',tokenID),
-			charCS = getCharacter(tokenID);
+		const tokenID = args[0],
+			  curToken = getObj('graphic',tokenID),
+			  charCS = getCharacter(tokenID);
 			
 		if (!charCS) {
-			sendDebug('makeMUSpellsMenu: invalid tokenID parameter');
 			sendError('Invalid MagicMaster parameter');
 			return;
 		}
-		var content = '&{template:'+fields.menuTemplate+'} {{name='+curToken.get('name')+'\'s Magic User Spells menu}}'
-					+ '{{Section1=[Cast MU spell](!magic --cast-spell MU|'+tokenID+')'
-					+ '[View MU Spellbook](!magic --view-spell MU|'+tokenID+')}}'
-					+ '{{Section2=[Short Rest for L1 MU Spells](!magic --rest '+tokenID+'|short|MU)'
-					+ '[Long Rest and recover MU spells](!magic --rest '+tokenID+'|long|MU|1)'
-					+ '[Memorise MU spells](!magic --mem-spell MU|'+tokenID+')}}'
-					+ '{{Section4='+((apiCommands.rounds && apiCommands.rounds.exists) ? ('[Show an Area of Effect](!rounds --aoe '+tokenID+')\n') : ('<span style='+design.grey_button+'>Show an Area of Effect</span>'))+'}}';
+		const content = '&{template:'+fields.menuTemplate+'} {{name='+curToken.get('name')+'\'s Magic User Spells menu}}'
+					  + '{{Section1=[Cast MU spell](!magic --cast-spell MU|'+tokenID+')'
+					  + '[View MU Spellbook](!magic --view-spell MU|'+tokenID+')}}'
+					  + '{{Section2=[Short Rest for L1 MU Spells](!magic --rest '+tokenID+'|short|MU)'
+					  + '[Long Rest and recover MU spells](!magic --rest '+tokenID+'|long|MU|1)'
+					  + '[Memorise MU spells](!magic --mem-spell MU|'+tokenID+')}}'
+					  + '{{Section4='+((apiCommands.rounds && apiCommands.rounds.exists) ? ('[Show an Area of Effect](!rounds --aoe '+tokenID+')\n') : ('<span style='+design.grey_button+'>Show an Area of Effect</span>'))+'}}';
 					
 		sendResponse( charCS, content, senderId, flags.feedbackName, flags.feedbackImg, tokenID );
 		return;
 	};
 	
-	var makePRSpellsMenu = function( args, senderId ) {
+	const makePRSpellsMenu = function( args, senderId ) {
 		
-		var tokenID = args[0],
-			curToken = getObj('graphic',tokenID),
-			charCS = getCharacter(tokenID);
+		const tokenID = args[0],
+			  curToken = getObj('graphic',tokenID),
+			  charCS = getCharacter(tokenID);
 			
 		if (!charCS) {
-			sendDebug('makePRSpellsMenu: invalid tokenID parameter');
 			sendError('Invalid MagicMaster parameter');
 			return;
 		}
-		var content = '&{template:'+fields.menuTemplate+'} {{name='+curToken.get('name')+'\'s Clerical Spells menu}}'
-					+ '{{Section1=[Cast Priest spell](!magic --cast-spell PR|'+tokenID+')'
-					+ '[View Priest Spellbook](!magic --view-spell PR|'+tokenID+')}}'
-					+ '{{Section2=[Short Rest for L1 Priest Spells](!magic --rest '+tokenID+'|short|PR)'
-					+ '[Long Rest and recover Priest spells](!magic --rest '+tokenID+'|long|PR|1)'
-					+ '[Memorise Priest spells](!magic --mem-spell PR|'+tokenID+')}}'
-					+ '{{Section4='+((apiCommands.rounds && apiCommands.rounds.exists) ? ('[Show an Area of Effect](!rounds --aoe '+tokenID+')\n') : ('<span style='+design.grey_button+'>Show an Area of Effect</span>'))+'}}';
+		const content = '&{template:'+fields.menuTemplate+'} {{name='+curToken.get('name')+'\'s Clerical Spells menu}}'
+					  + '{{Section1=[Cast Priest spell](!magic --cast-spell PR|'+tokenID+')'
+					  + '[View Priest Spellbook](!magic --view-spell PR|'+tokenID+')}}'
+					  + '{{Section2=[Short Rest for L1 Priest Spells](!magic --rest '+tokenID+'|short|PR)'
+					  + '[Long Rest and recover Priest spells](!magic --rest '+tokenID+'|long|PR|1)'
+					  + '[Memorise Priest spells](!magic --mem-spell PR|'+tokenID+')}}'
+					  + '{{Section4='+((apiCommands.rounds && apiCommands.rounds.exists) ? ('[Show an Area of Effect](!rounds --aoe '+tokenID+')\n') : ('<span style='+design.grey_button+'>Show an Area of Effect</span>'))+'}}';
 					
 		sendResponse( charCS, content, senderId, flags.feedbackName, flags.feedbackImg, tokenID );
 		return;
 	};
 	
-	var makePowersMenu = function( args, senderId ) {
+	const makePowersMenu = function( args, senderId ) {
 		
-		var tokenID = args[0],
-			curToken = getObj('graphic',tokenID),
-			charCS = getCharacter(tokenID);
+		const tokenID = args[0],
+			  curToken = getObj('graphic',tokenID),
+			  charCS = getCharacter(tokenID);
 			
 		if (!charCS) {
-			sendDebug('makePowersMenu: invalid tokenID parameter');
 			sendError('Invalid MagicMaster parameter');
 			return;
 		}
-		var content = '&{template:'+fields.menuTemplate+'} {{name='+curToken.get('name')+'\'s Powers menu}}'
+		const content = '&{template:'+fields.menuTemplate+'} {{name='+curToken.get('name')+'\'s Powers menu}}'
 					+ '{{Section1=[Use Power](!magic --cast-spell POWER|'+tokenID+') '
 					+ '[View Powers](!magic --view-spell POWER|'+tokenID+')}}'
 					+ '{{Section2=[Long Rest](!magic --rest '+tokenID+'|LONG) '
@@ -4639,14 +4644,15 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * requested level drain (or boost) to be applied to.
 	 **/
 	
-	var makeLevelDrainMenu = function( args, classes, senderId, msg, totalHP ) {
+	const makeLevelDrainMenu = function( args, classes, senderId, msg, totalHP ) {
 		
-		var tokenID = args[0],
-			charCS = getCharacter(tokenID),
-			drainLevels = parseInt(args[1]) || -1,
-			absLevels = Math.abs(drainLevels),
-			multiLevels = absLevels > 1,
-			content = '&{template:'+fields.menuTemplate+'}{{title=Level '+(drainLevels > 0 ? 'Boost' : 'Drain')+'}}'+(msg ? '{{Section='+msg+'}}' : '')
+		const tokenID = args[0],
+			  charCS = getCharacter(tokenID),
+			  drainLevels = parseInt(args[1]) || -1,
+			  absLevels = Math.abs(drainLevels),
+			  multiLevels = absLevels > 1;
+			  
+		let	content = '&{template:'+fields.menuTemplate+'}{{title=Level '+(drainLevels > 0 ? 'Boost' : 'Drain')+'}}'+(msg ? '{{Section='+msg+'}}' : '')
 					+ '{{desc='+getObj('graphic',tokenID).get('name')+' is being '+(drainLevels > 0 ? 'boosted by' : 'drained of')+' '+absLevels+' level'+(multiLevels ? 's' : '')
 					+ '. You will be asked for your Constitution HP adjustment of '+attrLookup( charCS, fields.HPconAdj )+' and the HP dice roll to '+(drainLevels > 0 ? 'add.' : 'deduct - enter the value previously rolled when leveling up')
 					+ '. Which class do you want/have to '+(drainLevels > 0 ? 'gain' : 'lose')+' the '
@@ -4685,27 +4691,29 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	async function makeSpellsMenu( args, senderId, msg='' ) { 
 		
 		try {
-			var lists = args[0].toUpperCase(),
-				tokenID = args[1],
+			let lists = args[0].toUpperCase();
+			
+			const tokenID = args[1],
+				  cmd = args[3].toUpperCase(),
+				  level = parseInt(args[4]) || 1,
+				  retMenu = (args[5] || 'VIEW-ITEM').toUpperCase(),
+				  spellName = args[6].dispName(),
+				  spell = args[6].hyphened(),
+				  charCS = getCharacter(tokenID),
+				  isMU = cmd.includes('MU'),
+				  isPR = cmd.includes('PR'),
+				  isPower = cmd.includes('POWER'),
+				  storeBoth = lists.includes('BOTH'),
+				  storeSpells = lists.includes('SPELLS'),
+				  storePowers = lists.includes('POWERS'),
+				  Items = getTableGroupField( charCS, {}, fieldGroups.MI, 'name' );
+				  
+			let	curSpells = '',
 				item = args[2].hyphened(),
-				cmd = args[3].toUpperCase(),
-				level = parseInt(args[4]) || 1,
-				retMenu = (args[5] || 'VIEW-ITEM').toUpperCase(),
-				spellName = args[6].dispName(),
-				spell = args[6].hyphened(),
-				charCS = getCharacter(tokenID),
-				isMU = cmd.includes('MU'),
-				isPR = cmd.includes('PR'),
-				isPower = cmd.includes('POWER'),
-				storeBoth = lists.includes('BOTH'),
-				storeSpells = lists.includes('SPELLS'),
-				storePowers = lists.includes('POWERS'),
-				curSpells = '',
 				storedSelected = false,
-				Items = getTableGroupField( charCS, {}, fieldGroups.MI, 'name' ),
-				nextLevel, minLevel, rootDB, listAttr, listType, table,
-				storedSpellsAttr, storedLevelAttr, choice, itemRow, itemRowID, row,
-				spellObj, cmdStr, shortCmdStr, desc, question, content;
+				minLevel, rootDB, listType, table,
+				storedSpellsAttr, choice, itemRow, itemRowID, row,
+				spellObj, cmdStr, desc, question;
 
 			if (/^\d/.test(item)) {
 				row = parseInt(item); 
@@ -4719,7 +4727,6 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 				row = indexTableGroup( Items, table, itemRow );
 			};
 			if (_.isUndefined(table) || _.isUndefined(itemRow)) {
-				sendDebug('makeSpellsMenu: invalid row reference passed');
 				sendError('Internal MagicMaster error');
 				return;
 			}
@@ -4758,29 +4765,30 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 			}
 			
 			args.shift();
-			shortCmdStr = [tokenID,row+'/'+item,cmd,level,retMenu].join('|');
+			const shortCmdStr = [tokenID,row+'/'+item,cmd,level,retMenu].join('|');
 			cmdStr = shortCmdStr+'|'+spell;
 
 			if (charCS) {
 				setAttr( charCS, fields.Casting_name, charCS.get('name'));
 				setAttr( charCS, fields.CastingLevel, minLevel );
 				curSpells = miSpellLookup( charCS, item, itemRow, itemRowID, storedSpellsAttr ) || '';
-/*				if (_.isUndefined(attrLookup( charCS, pwList ))) setAttr( charCS, pwList, '' );
-				if (_.isUndefined(attrLookup( charCS, pwVals ))) setAttr( charCS, pwVals, '' );
-				if (_.isUndefined(attrLookup( charCS, muList ))) setAttr( charCS, muList, '' );
-				if (_.isUndefined(attrLookup( charCS, muVals ))) setAttr( charCS, muVals, '' );
-				if (_.isUndefined(attrLookup( charCS, prList ))) setAttr( charCS, prList, '' );
-				if (_.isUndefined(attrLookup( charCS, prVals ))) setAttr( charCS, prVals, '' );
-*/			}
+//				if (_.isUndefined(attrLookup( charCS, pwList ))) setAttr( charCS, pwList, '' );
+//				if (_.isUndefined(attrLookup( charCS, pwVals ))) setAttr( charCS, pwVals, '' );
+//				if (_.isUndefined(attrLookup( charCS, muList ))) setAttr( charCS, muList, '' );
+//				if (_.isUndefined(attrLookup( charCS, muVals ))) setAttr( charCS, muVals, '' );
+//				if (_.isUndefined(attrLookup( charCS, prList ))) setAttr( charCS, prList, '' );
+//				if (_.isUndefined(attrLookup( charCS, prVals ))) setAttr( charCS, prVals, '' );
+			}
 			
-			content = '&{template:'+fields.menuTemplate+'}{{name=Store Spells & Powers}}{{Section='+(msg||'')+'}}'
-					+ '{{Section1=**How to use this menu**\nThe [Choose] button selects a spell of the type indicated. It can then be reviewed or stored. *Powerful* items can store Wizard & Priest spells as Powers.'
-					+  ' *Spell Storing* items only store spells. To *Remove* a stored spell, select its name and the [Remove] button will appear}}'
-					+  '{{'+desc+'=';
+			let content = '&{template:'+fields.menuTemplate+'}{{name=Store Spells & Powers}}{{Section='+(msg||'')+'}}'
+						+ '{{Section1=**How to use this menu**\nThe [Choose] button selects a spell of the type indicated. It can then be reviewed or stored. *Powerful* items can store Wizard & Priest spells as Powers.'
+						+ ' *Spell Storing* items only store spells. To *Remove* a stored spell, select its name and the [Remove] button will appear}}'
+						+ '{{'+desc+'=',
+				selected = false;
 			
 			curSpells = curSpells.split(',').filter(e=>!!e);
 			for (let storedSpell of curSpells) {
-				let selected = storedSpell.dbName() === spell.dbName();
+				selected = storedSpell.dbName() === spell.dbName();
 				storedSelected = storedSelected || selected;
 				content += (selected ? ('<span style='+design.selected_button+'>'+storedSpell.dispName()+'</span>') : ('['+storedSpell.dispName()+'](!magic --button CHOOSE_'+lists+'|'+shortCmdStr+'|'+storedSpell+')'));
 			}
@@ -4843,13 +4851,14 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * usually used to set short or long menus.
 	 */
 	 
-	var handleOptionButton = function( args, senderId ) {
+	const handleOptionButton = function( args, senderId ) {
 		
-		var cmd = args[0].toUpperCase(),
-			isView = cmd.includes('VIEW'),
-			tokenID = args[1],
-			optionValue = args[2].toLowerCase(),
-			config = getSetPlayerConfig( senderId ) || {};
+		const cmd = args[0].toUpperCase(),
+			  isView = cmd.includes('VIEW'),
+			  tokenID = args[1],
+			  optionValue = args[2].toLowerCase();
+			  
+		let	config = getSetPlayerConfig( senderId ) || {};
 
 		if (cmd !== BT.SECTIONS_OPTION && !['short','long','list','alpha','full'].includes(optionValue)) {
 			sendError( 'Invalid MagicMaster menuType option.' );
@@ -4918,13 +4927,13 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * Handle specification of a different number of Misc spells 
 	 */
 	 
-	var handleSetMiscSpell = function( args, senderId ) {
+	const handleSetMiscSpell = function( args, senderId ) {
 		
-		var tokenID = args[1],
-			spellClass = args[2],
-			level = args[3],
-			noSpells = args[4] || 0,
-			charCS = getCharacter(tokenID);
+		const tokenID = args[1],
+			  spellClass = args[2],
+			  level = args[3],
+			  noSpells = args[4] || 0,
+			  charCS = getCharacter(tokenID);
 		
 		if (spellClass == 'MU') {
 			setAttr( charCS, [fields.MUSpellNo_table[0] + level + fields.MUSpellNo_misc[0],fields.MUSpellNo_misc[1]], noSpells );
@@ -4941,23 +4950,19 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	* or a power-selection button
 	**/
 	
-	var handleChooseSpell = function( args, senderId ) {
+	const handleChooseSpell = function( args, senderId ) {
 		
 		if (args[3].length == 0 || isNaN(args[3]) || args[4].length == 0 || isNaN(args[4])) {
-			sendDebug('handleChooseSpell: invalid row or column');
 			sendError('Internal MagicMaster error');
-		}
-
-		if (args[0] == BT.MI_SPELL || args[0] == BT.MI_SCROLL || args[0].toUpperCase().includes('POWER')) {
-			var charCS = getCharacter(args[1]),
-				storedLevel = attrLookup( charCS, fields.Spells_storedLevel, fields.Spells_table, args[3], args[4] );
+		} else if (args[0] == BT.MI_SPELL || args[0] == BT.MI_SCROLL || args[0].toUpperCase().includes('POWER')) {
+			const charCS = getCharacter(args[1]),
+				  storedLevel = attrLookup( charCS, fields.Spells_storedLevel, {tableDef:fields.Spells_table, row:args[3], col:args[4]} );
 			if (storedLevel && storedLevel > 0) {
 				setAttr( charCS, fields.CastingLevel, storedLevel );
 				setAttr( charCS, fields.MU_CastingLevel, storedLevel );
 				setAttr( charCS, fields.PR_CastingLevel, storedLevel );
 			}
 		}
-	
 		makeCastSpellMenu( args, senderId );
 		return;
 				
@@ -4967,60 +4972,60 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * Handle a selected spell being cast
 	 */
 
-	var handleCastSpell = function( args, senderId ) {
+	const handleCastSpell = function( args, senderId ) {
 		
+		let	db, action;
+		
+		const tokenID = args[1],
+			  rowIndex = args[3],
+			  colIndex = args[4],
+			  charCS = getCharacter(tokenID);
+			  
 		const setValue = (...a) => libRPGMaster.setAttr(...a);
-		
-		var tokenID = args[1],
-			rowIndex = args[3],
-			colIndex = args[4],
-			charCS = getCharacter(tokenID),
-			db, action,
-			delScrollSpell = function ( charCS, spellName, scrollName, scrollRow, scrollRowID, type, nameField, valueField ) {
-				spellName = spellName.dbName();
-				scrollName = scrollName.replace(/\s/g,'-');
-				var muSpellList = (miSpellLookup( charCS, scrollName, scrollRow, scrollRowID, nameField ) || '').split(','),
-					nameIndex = _.findIndex( muSpellList, e => e.dbName() == spellName );
-				if (nameIndex >= 0) {
-					var	listField = [nameField[0]+scrollName+(_.isUndefined(scrollRowID) ? '' : '+'+scrollRowID),nameField[1]],
-						valField = [valueField[0]+scrollName+(_.isUndefined(scrollRowID) ? '' : '+'+scrollRowID),valueField[1]],
-						rowField = [fields.MIspellRows[0]+scrollName+'-'+type+(_.isUndefined(scrollRowID) ? '' : '+'+scrollRowID),fields.MIspellRows[1]],
-						colField = [fields.MIspellCols[0]+scrollName+'-'+type+(_.isUndefined(scrollRowID) ? '' : '+'+scrollRowID),fields.MIspellCols[1]];
-					
-					muSpellList.splice( nameIndex, 1 );
-					setValue( charCS, listField, muSpellList.join(',') );
-					muSpellList = (miSpellLookup( charCS, scrollName, scrollRow, scrollRowID, valueField ) || '').split(',');
-					muSpellList.splice( nameIndex, 1 );
-					setValue( charCS, valField, muSpellList.join(',') );
-					muSpellList = (miSpellLookup( charCS, scrollName, scrollRow, scrollRowID, fields.MIspellRows, type ) || '').split(',');
-					muSpellList.splice( nameIndex, 1 );
-					setValue( charCS, rowField, muSpellList.join(',') );
-					muSpellList = (miSpellLookup( charCS, scrollName, scrollRow, scrollRowID, fields.MIspellCols, type ) || '').split(',');
-					muSpellList.splice( nameIndex, 1 );
-					setValue( charCS, colField, muSpellList.join(',') );
-					
-				}
-				return !muSpellList.filter(t => t.length).length;
-			};
+
+		const delScrollSpell = function ( charCS, spellName, scrollName, scrollRow, scrollRowID, type, nameField, valueField ) {
+			spellName = spellName.dbName();
+			scrollName = scrollName.replace(/\s/g,'-');
+			let muSpellList = (miSpellLookup( charCS, scrollName, scrollRow, scrollRowID, nameField ) || '').split(',');
+			const nameIndex = _.findIndex( muSpellList, e => e.dbName() == spellName );
+			if (nameIndex >= 0) {
+				const listField = [nameField[0]+scrollName+(_.isUndefined(scrollRowID) ? '' : '+'+scrollRowID),nameField[1]],
+					  valField = [valueField[0]+scrollName+(_.isUndefined(scrollRowID) ? '' : '+'+scrollRowID),valueField[1]],
+					  rowField = [fields.MIspellRows[0]+scrollName+'-'+type+(_.isUndefined(scrollRowID) ? '' : '+'+scrollRowID),fields.MIspellRows[1]],
+					  colField = [fields.MIspellCols[0]+scrollName+'-'+type+(_.isUndefined(scrollRowID) ? '' : '+'+scrollRowID),fields.MIspellCols[1]];
+				
+				muSpellList.splice( nameIndex, 1 );
+				setValue( charCS, listField, muSpellList.join(',') );
+				muSpellList = (miSpellLookup( charCS, scrollName, scrollRow, scrollRowID, valueField ) || '').split(',');
+				muSpellList.splice( nameIndex, 1 );
+				setValue( charCS, valField, muSpellList.join(',') );
+				muSpellList = (miSpellLookup( charCS, scrollName, scrollRow, scrollRowID, fields.MIspellRows, type ) || '').split(',');
+				muSpellList.splice( nameIndex, 1 );
+				setValue( charCS, rowField, muSpellList.join(',') );
+				muSpellList = (miSpellLookup( charCS, scrollName, scrollRow, scrollRowID, fields.MIspellCols, type ) || '').split(',');
+				muSpellList.splice( nameIndex, 1 );
+				setValue( charCS, colField, muSpellList.join(',') );
+				
+			}
+			return !muSpellList.filter(t => t.length).length;
+		};
 			
 		if (!charCS) {
-			sendDebug('handleCastSpell: invalid tokenID parameter');
 			sendError('Internal MagicMaster error');
 			return;
 		}
 		if (args[3].length == 0 || isNaN(args[3]) || args[4].length == 0 || isNaN(args[4])) {
-			sendDebug('handleCastSpell: invalid row or column');
 			sendError('Internal MagicMaster error');
 		}
 		
-		var oldVer = 2.1 > csVer(charCS),
-			spellTables = getTable( charCS, fieldGroups.SPELLS, colIndex ),
-			spellName = spellTables.tableLookup( fields.Spells_name, rowIndex ).hyphened(),
-			spellMsg = spellTables.tableLookup( (oldVer ? fields.Spells_macro : fields.Spells_msg), rowIndex ),
-			charName = charCS.get('name'),
+		let	spellTables = getTable( charCS, fieldGroups.SPELLS, colIndex ),
 			absorb = false,
 			miName = '',
 			Items;
+		const oldVer = 2.1 > csVer(charCS),
+			  spellName = spellTables.tableLookup( fields.Spells_name, rowIndex ).hyphened(),
+			  charName = charCS.get('name');
+		let spellMsg = spellTables.tableLookup( (oldVer ? fields.Spells_macro : fields.Spells_msg), rowIndex );
 			
 		switch (args[0].toUpperCase()) {
 		case BT.CAST_MIPOWER:
@@ -5054,10 +5059,9 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 			break;
 		}
 		
-		var	spell = getAbility( db, spellName, charCS ),
-			spellCost = ((!!spell.obj && !!spell.ct && ((args[0] === BT.CAST_MUSPELL) || (args[0] === BT.CAST_PRSPELL))) ? spell.obj[1].cost : 0),
-			totalLeft, table, itemRow, itemRowID,
-			content,
+		const spell = getAbility( db, spellName, charCS ),
+			  spellCost = ((!!spell.obj && !!spell.ct && ((args[0] === BT.CAST_MUSPELL) || (args[0] === BT.CAST_PRSPELL))) ? spell.obj[1].cost : 0);
+		let	table, itemRow, itemRowID,
 			spellValue = parseInt((spellTables.tableLookup( fields.Spells_castValue, rowIndex )),10);
 			
 		setValue( charCS, fields.SpellToMem, spellName );
@@ -5073,7 +5077,7 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 		};
 			
 		if (absorb) {
-			let level = (!spell.obj || !spell.obj[1]) ? 1 : (parseInt(spell.obj[1].type.match(/\d+/)) || 0);
+			const level = (!spell.obj || !spell.obj[1]) ? 1 : (parseInt(spell.obj[1].type.match(/\d+/)) || 0);
 			if (!isNaN(itemRow)) {
 				Items[table] = Items[table].tableSet( fields[fieldGroups[table].prefix+'qty'], itemRow, Math.max(parseInt(Items[table].tableLookup( fields[fieldGroups[table].prefix+'qty'], itemRow ) || 0)-level,0) );
 				Items[table] = Items[table].tableSet( fields[fieldGroups[table].prefix+'trueQty'], itemRow, Math.max(parseInt(Items[table].tableLookup( fields[fieldGroups[table].prefix+'trueQty'], itemRow ) || 0)-level,0) );
@@ -5102,10 +5106,10 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 			sendResponse( charCS, spellMsg, senderId, flags.feedbackName, flags.feedbackImg, tokenID );
 		}
 		
-		totalLeft = spendMoney( charCS, spellCost );
-		content = charName + ' is '+action+' [' + spellName.dispName() + '](!&#13;&#47;w gm &#37;{'+spell.dB+'|'+(spellName.hyphened())+'})'
-				+ (parseInt(spellCost || 0) ? (' at a cost of [[' + spellCost + ']]GP (leaving [[' + totalLeft + ']]GP).') : '')
-				+ '  Select ' + charName + '\'s token before pressing to see effects.';
+		const totalLeft = spendMoney( charCS, spellCost );
+		const content = charName + ' is '+action+' [' + spellName.dispName() + '](!&#13;&#47;w gm &#37;{'+spell.dB+'|'+(spellName.hyphened())+'})'
+					  + (parseInt(spellCost || 0) ? (' at a cost of [[' + spellCost + ']]GP (leaving [[' + totalLeft + ']]GP).') : '')
+					  + '  Select ' + charName + '\'s token before pressing to see effects.';
 		sendFeedback( content, flags.feedbackName, flags.feedbackImg, tokenID, charCS );
 
 		return;
@@ -5115,19 +5119,14 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * Handle targeting the effects of a spell
 	 * Moved to RoundMaster to allow passing of the PlayerID
 	 */
-	 
-	var handleSpellTargeting = function( args, isGM ) {
+
+	const handleSpellTargeting = function( args, isGM ) {
 		
-		var tokenID = args[0],
-			curToken = getObj('graphic',tokenID),
-			tokenName,
-			thac0,
-			strHitBonus,
-			content,
-			charCS = getCharacter(tokenID);
+		const tokenID = args[0],
+			  curToken = getObj('graphic',tokenID),
+			  charCS = getCharacter(tokenID);
 
 		if (!charCS) {
-			sendDebug('handleSpellTargeting: invalid tokenID parameter');
 			sendError('Internal MagicMaster error');
 			return;
 		}
@@ -5138,12 +5137,12 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 		}
 		
 		args.shift();
-		tokenName = curToken.get('name');
-		thac0 = getTokenValue( curToken, fields.Token_thac0, fields.Thac0_base, fields.MonsterThac0, fields.Thac0_base ).val || 20;
-		strHitBonus = attrLookup( charCS, fields.Strength_hit ) || 0;
-		content = (isGM ? '/w gm ' : '')+'&{template:'+fields.menuTemplate+'}{{name=Try to Touch Target}}'
-				+ '{{desc=**'+tokenName+' hits AC [[( ([['+thac0+']][Thac0]) - ([['+strHitBonus+']][Strength bonus]) - [[1d20]][Dice Roll] )]] with their spell.**}}'
-				+ '{{desc1=If hit, [Cast on them](!rounds --target SINGLE|'+tokenID+'|&#64;{target|Who to Attack with this spell?|token_id}|'+args.join('|')+')}}';
+		const tokenName = curToken.get('name'),
+			  thac0 = getTokenValue( curToken, fields.Token_thac0, fields.Thac0_base, fields.MonsterThac0, fields.Thac0_base ).val || 20,
+			  strHitBonus = attrLookup( charCS, fields.Strength_hit ) || 0,
+			  content = (isGM ? '/w gm ' : '')+'&{template:'+fields.menuTemplate+'}{{name=Try to Touch Target}}'
+					  + '{{desc=**'+tokenName+' hits AC [[( ([['+thac0+']][Thac0]) - ([['+strHitBonus+']][Strength bonus]) - [[1d20]][Dice Roll] )]] with their spell.**}}'
+					  + '{{desc1=If hit, [Cast on them](!rounds --target SINGLE|'+tokenID+'|&#64;{target|Who to Attack with this spell?|token_id}|'+args.join('|')+')}}';
 		setAbility( charCS, 'To-Hit-Spell', content );
 		return;
 		
@@ -5154,15 +5153,16 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * Used when selecting a spell or slot to memorise,
 	 * or when changing level of spell to memorise.
 	 */
-	 
-	var handleRedisplayManageSpells = function( args, senderId ) {
+ 
+	const handleRedisplayManageSpells = function( args, senderId ) {
 		
-		var isPower = args[0].toUpperCase().includes('POWER'),
-			msg = '',
-			name = getObj('graphic',args[1]).get('name');
+		const isPower = args[0].toUpperCase().includes('POWER'),
+			  name = getObj('graphic',args[1]).get('name');
+			
+		let	msg = '';
 		
 		if (args[3] > 0 && args[4] > 0 && (!args[5] || !args[5].length)) {
-			args[5] = attrLookup( getCharacter(args[1]), fields.Spells_name, fields.Spells_table, args[3], args[4] );
+			args[5] = attrLookup( getCharacter(args[1]), fields.Spells_name, {tableDef:fields.Spells_table, row:args[3], col:args[4]} );
 		}
 
 		// Check this is a spell that is of a school that can be memorised
@@ -5189,99 +5189,42 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	}
 	
 	/*
-	 * Review a chosen spell description
-	 * Stubbed out as greyOutButtons now deals with this
-	 */
-	 
-	var handleReviewSpell = function( args, senderId ) {
-		
-/*		var cmd = args[0].toUpperCase(),
-			isMU = cmd.includes('MU'),
-			isPR = cmd.includes('PR'),
-			isMI = cmd.includes('MI'),
-			isPower = cmd.includes('POWER'),
-			isSpell = cmd.includes('SPELL'),
-			isScroll = cmd.includes('SCROLL'),
-			isView = !cmd.includes('REVIEW'),
-			isGM = args[0].includes('GM'),
-			tokenID = args[1],
-			followOn,
-			msg,
-			charCS = getCharacter(tokenID);
-			
-		if (!charCS) {
-			sendDebug('handleReviewSpell: invalid tokenID parameter');
-			sendError('Internal MagicMaster error');
-			return;
-		}
-		
-		if (isMI) {
-			if (isGM) {
-				followOn = 'GM-MImenu';
-			} else if (isPower) {
-				followOn = (isView ? BT.VIEWMEM_MI_POWERS : BT.EDIT_MIPOWERS);
-			} else if (isMU) {
-				followOn = (isView ? BT.VIEWMEM_MI_MUSPELLS : BT.EDIT_MIMUSPELLS);
-			} else if (isPR) {
-				followOn = (isView ? BT.VIEWMEM_MI_PRSPELLS : BT.EDIT_MIPRSPELLS);
-			} else if (isSpell) {
-				followOn = (isView ? BT.VIEWMEM_MI_SPELLS : BT.EDIT_MISPELLS);
-			} else if (isScroll) {
-				followOn = (isView ? BT.VIEWMEM_MI_SCROLL : BT.EDIT_MISPELLS);
-			} else {
-				followOn = (isView ? BT.VIEW_MI : (args[0].includes('MARTIAL') ? BT.CHOOSE_MARTIAL_MI : (args[0].includes('ALLITEMS') ? BT.CHOOSE_ALLITEMS_MI : BT.CHOOSE_MI)));
-			}
-		} else if (isPower) {
-			followOn = (isView ? BT.VIEWMEM_POWERS : BT.EDIT_POWERS);
-		} else if (isMU) {
-			followOn = (isView ? BT.VIEWMEM_MUSPELLS : BT.EDIT_MUSPELLS);
-		} else {
-			followOn = (isView ? BT.VIEWMEM_PRSPELLS : BT.EDIT_PRSPELLS);
-		}
-		
-		args[0] = followOn;
-//		msg = '[Return to menu](!magic --button '+args.join('|')+')';
-//		setTimeout(() => sendResponse( charCS, msg, senderId, flags.feedbackName, flags.feedbackImg, tokenID ),500);
-*/
-		return;
-	}
-	
-	/*
 	 * Handle learning a spell from a spellbook or scroll
 	 */
-	 
-	var handleLearnSpell = function( args, senderId ) {
+ 
+	const handleLearnSpell = function( args, senderId ) {
 		
-		var cmd = (args[0] || ''),
-			tokenID = args[1],
-			spell = (args[2] || ''),
-			learnt = cmd.toUpperCase().includes('LEARNT'),
-			charCS = getCharacter(tokenID),
-			spellObj,spellData,level;
+		const cmd = (args[0] || ''),
+			  tokenID = args[1],
+			  spell = (args[2] || ''),
+			  learnt = cmd.toUpperCase().includes('LEARNT'),
+			  charCS = getCharacter(tokenID),
+			  spellObj = abilityLookup( fields.MU_SpellsDB, spell, charCS );
 			
-		spellObj = abilityLookup( fields.MU_SpellsDB, spell, charCS );
 		if (!spellObj.obj) {
 			sendError('The spell '+spell+' has not been found in any database.',msg_orig[senderId]);
 			return;
 		}
-		spellData = parseData((spellObj.data()[0][0] || {}),reSpellSpecs);
-		level = spellData.level;
+		const spellData = parseData((spellObj.data()[0][0] || {}),reSpellSpecs),
+			  level = spellData.level;
+			  
 		if (!level || level < 1 || level > 9) {
 			sendError('The spell '+spell+' is of an unrecognised level '+level,msg_orig[senderId]);
 			return;
 		}
 		
-		var content = '&{template:RPGMdefault}{{name=Add spell to '+charCS.get('name')+'\'s spellbook}}{{desc=',
-			name = getObj('graphic',tokenID).get('name'),
-			spellbook = [fields.Spellbook[0]+spellLevels.mu[level].book,fields.Spellbook[1]],
-			curList = (attrLookup(charCS,spellbook) || ''),
-			saveObj = saveFormat.Checks.Learn_Spell,
-			save = parseInt(attrLookup( charCS, saveObj.save ) || 0),
-			saveMod = parseInt(attrLookup( charCS, saveObj.mod ) || 0),
-			saveAdj = parseInt(attrLookup( charCS, fields.Magic_saveAdj ) || 0),
-			saveSpec = checkValidSpell( ['MU',tokenID,'','','',spell] ),
-			specMod = saveSpec > 2 ? 15 : (saveSpec > 1 ? -15 : 0),
-			learnChance = Math.max(5,Math.min((save-saveMod-saveAdj+specMod),99));
+		let content = '&{template:RPGMdefault}{{name=Add spell to '+charCS.get('name')+'\'s spellbook}}{{desc=';
+		
+		const name = getObj('graphic',tokenID).get('name'),
+			  spellbook = [fields.Spellbook[0]+spellLevels.mu[level].book,fields.Spellbook[1]],
+			  curList = (attrLookup(charCS,spellbook) || ''),
+			  saveObj = saveFormat.Checks.Learn_Spell,
+			  save = parseInt(attrLookup( charCS, saveObj.save ) || 0),
+			  saveMod = parseInt(attrLookup( charCS, saveObj.mod ) || 0),
+			  saveAdj = parseInt(attrLookup( charCS, fields.MagicSaveAdj ) || 0),
+			  saveSpec = checkValidSpell( ['MU',tokenID,'','','',spell] ),
+			  specMod = saveSpec > 2 ? 15 : (saveSpec > 1 ? -15 : 0),
+			  learnChance = Math.max(5,Math.min((save-saveMod-saveAdj+specMod),99));
 			
 		if (!saveSpec) {
 			content += 'The spell '+spell+' is of a school and/or level that '+name+' cannot learn!';
@@ -5289,7 +5232,7 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 			content += 'The spell '+spell+' is already in '+charCS.get('name')+'\'s spellbook';
 		} else if (!learnt) {
 			args.shift();
-			let checkMacro = '&{template:RPGMdefault}{{name='+name+' Check vs Learn Spell}}{{Check Throw=Rolling [[?{Learn Spell roll|'+saveObj.roll+'}cf<'+(learnChance-1)+'cs>'+learnChance+']] vs. [[0+'+learnChance+']] target}}{{Result=Check Throw<='+learnChance+'}}{{desc=**'+name+'\'s target**[[0+'+save+']] base save vs. Learn_Spell with [[0+'+specMod+']] change from specialism, [[0+'+saveMod+']] improvement from race, class & Magic Items, and [[0+'+saveAdj+']] improvement from current magic effects}}{{successcmd=!magic --button '+BT.LEARNT_MUSPELL+'|'+args.join('|')+'}}';
+			const checkMacro = '&{template:RPGMdefault}{{name='+name+' Check vs Learn Spell}}{{Check Throw=Rolling [[?{Learn Spell roll|'+saveObj.roll+'}cf<'+(learnChance-1)+'cs>'+learnChance+']] vs. [[0+'+learnChance+']] target}}{{Result=Check Throw<='+learnChance+'}}{{desc=**'+name+'\'s target**[[0+'+save+']] to Learn Spell with [[0+'+specMod+']] change from specialism, [[0+'+saveMod+']] improvement from race, class & Magic Items, and [[0+'+saveAdj+']] improvement from current magic effects}}{{successcmd=!magic --button '+BT.LEARNT_MUSPELL+'|'+args.join('|')+'}}';
 			setAbility(charCS,'Do-not-use-Learn_Spell-save',checkMacro);
 			content += 'Can you learn the spell "'+spell+'"? [Assess your chance](~'+charCS.get('name')+'|Do-not-use-Learn_Spell-save)';
 		} else {
@@ -5301,14 +5244,12 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 		return;
 	};
 			
-			
-	
 	/*
 	 * Return to the spell storing menu after a review
 	 */
-	 
-	var handleRevStore = function( args, senderId ) {	
-		let cmd = args.shift().toUpperCase();
+ 
+	const handleRevStore = function( args, senderId ) {	
+		const cmd = args.shift().toUpperCase();
 		setTimeout( () => sendFeedback( ('[Return to menu](!magic --button '+cmd.replace('REVIEW','CHOOSE')+'|'+args.join('|')+')'), flags.feedbackName ), 500);
 	}
 	
@@ -5316,31 +5257,35 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * Handle memorising a selected spell in a selected slot
 	 */
 	 
-	var handleMemoriseSpell = function( args, senderId ) {
+	const handleMemoriseSpell = function( args, senderId ) {
 		
-		var isMU = args[0].toUpperCase().includes('MU'),
-			isMI = args[0].toUpperCase().includes('MI'),
-			isPower = args[0].toUpperCase().includes('POWER'),
-			isAll = args[0].toUpperCase().includes('ALL'),
-			tokenID = args[1],
-			level = args[2],
-			row = args[3],
-			col = args[4],
-			spellName = args[5],
-			noToMemorise = parseInt((args[6]),10),
-			castAsLvl = parseInt((args[7]),10),
-			dbCS,
-			charCS = getCharacter(tokenID);
+		const isMU = args[0].toUpperCase().includes('MU'),
+			  isMI = args[0].toUpperCase().includes('MI'),
+			  isPower = args[0].toUpperCase().includes('POWER'),
+			  isAll = args[0].toUpperCase().includes('ALL'),
+			  tokenID = args[1],
+			  level = args[2],
+			  row = args[3],
+			  col = args[4],
+			  spellName = args[5],
+			  noToMemorise = parseInt((args[6]),10),
+			  castAsLvl = parseInt((args[7]),10),
+			  charCS = getCharacter(tokenID);
 			
 		if (!charCS) {
-			sendDebug('handleMemoriseSpell: invalid tokenID parameter');
 			sendError('Internal MagicMaster error');
 			return;
 		}
 		
 		if (args[3].length == 0 || isNaN(args[3]) || args[4].length == 0 || isNaN(args[4])) {
-			sendDebug('handleMemoriseSpell: invalid row or column');
-			sendError('Internal MagicMaster error');
+			row = undefined;
+			if (isPower && !!spellName && !!spellName.length) {
+				[row,col] = powerRowCol( charCS, spellName );
+			}
+			if (!isPower || _.isUndefined(row)) {
+				sendError('Internal MagicMaster error');
+				return;
+			}
 		}
 
 		if (isNaN(noToMemorise)) {
@@ -5348,9 +5293,10 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 			return;
 		}
 		
-		var rootDB = isPower ? fields.PowersDB : (isMU ? fields.MU_SpellsDB : fields.PR_SpellsDB),
-			spellTables = getTable( charCS, (isPower ? fieldGroups.POWERS : fieldGroups.SPELLS), col ),
-			base = spellLevels[(isPower ? (isMI ? 'pm' : 'pw') : (isMI ? 'mi' : (isMU ? 'mu' : 'pr')))][level].base,
+		const rootDB = isPower ? fields.PowersDB : (isMU ? fields.MU_SpellsDB : fields.PR_SpellsDB),
+			  base = spellLevels[(isPower ? (isMI ? 'pm' : 'pw') : (isMI ? 'mi' : (isMU ? 'mu' : 'pr')))][level].base;
+		
+		let spellTables = getTable( charCS, (isPower ? fieldGroups.POWERS : fieldGroups.SPELLS), col ),
 			altSpellTable;
 			
 		if (!isPower) {
@@ -5366,7 +5312,7 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 			setAttr( charCS, ['power-'+spellName, 'max'], col );
 		}
 		
-		var hand = spellTables.tableLookup( fields.Spells_equip, row );
+		const hand = spellTables.tableLookup( fields.Spells_equip, row );
 		
 		if (spellTables.tableLookup( fields.Spells_weapon, row ) === '1' && (hand)) {
 			sendAPI(fields.attackMaster+' --button '+(hand==='2'?BT.BOTH:(hand==='1'?BT.LEFT:(hand==='0'?BT.RIGHT:BT.HAND)))+'|'+tokenID+'|'+row+':'+col+'|'+hand);
@@ -5385,24 +5331,26 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	/*
 	 * Handle memorising all currently valid powers at once
 	 */
-	 
+
 	async function handleMemAllPowers( args, senderId, silent=false ) {
 		
-		var cmd = args[0],
-			isMU = cmd.toUpperCase().includes('MU'),
-			isPower = cmd.toUpperCase().includes('POWER'),
-			tokenID = args[1],
-			charCS = getCharacter( tokenID ),
-			spellTables = [],
-			db, type, txt, name, levelSpells;
+		const cmd = args[0],
+			  isMU = cmd.toUpperCase().includes('MU'),
+			  isPower = cmd.toUpperCase().includes('POWER'),
+			  tokenID = args[1],
+			  charCS = getCharacter( tokenID );
 			
-		var memSpell = function(args,charCS,db,isPower,list,i,r,c,senderId) {
+		let	spellTables = [],
+			db, type, txt, name;
+			
+		const memSpell = function(args,charCS,db,isPower,list,i,r,c,senderId) {
 			
 			return new Promise(resolve => {
-				var spellDef, clv = false;
+				let spellDef, clv = false;
 				try {
+					let k;
 					for (let j=list.length; j > 0 && !clv; j--) {
-						let k = (randomInteger(list.length)-1);
+						k = (randomInteger(list.length)-1);
 						spellDef = isPower ? findPower( charCS, list.shift() ) : abilityLookup( db, list[k] );
 						if (spellDef.obj) {
 							args[5] = spellDef.obj[1].name;
@@ -5411,12 +5359,11 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 						};
 					};
 					if (clv) {
-						let newArgs = [args[0],args[1],i,r,c,spellDef.obj[1].name,(isPower ? getUsesPerDay(charCS,spellDef.obj[1].name,senderId) : 1),clv];
+						const newArgs = [args[0],args[1],i,r,c,spellDef.obj[1].name,(isPower ? getUsesPerDay(charCS,spellDef.obj[1].name,senderId) : 1),clv];
 						handleMemoriseSpell( newArgs, senderId );
 					};
 				} catch (e) {
 					log('MagicMaster memSpell: JavaScript '+e.name+': '+e.message+' while processing sheet '+charCS.get('name'));
-					sendDebug('MagicMaster memSpell: JavaScript '+e.name+': '+e.message+' while processing sheet '+charCS.get('name'));
 					sendCatchError('MagicMaster',msg_orig[senderId],e);
 				} finally {
 					setTimeout(() => {
@@ -5441,23 +5388,24 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 			db = fields.PR_SpellsDB;
 			txt = 'priest spells';
 		}
-		levelSpells = shapeSpellbook( charCS, type );
+		const levelSpells = shapeSpellbook( charCS, type );
+		let	r = 0, storeList = false, newList = [], list = [], s = 0, c, cellExists = false, castAsLevel = false;
 		for (let i = 1; i < levelSpells.length; i++) {
-			let r = 0;
-			let storeList = false;
-			let newList = [];
-			let list = (attrLookup(charCS, [fields.Spellbook[0]+levelSpells[i].book, fields.Spellbook[1] ]) || '').split('|').filter(t=>!!t);
-			let s = (isPower) ? list.length : levelSpells[i].spells;
+			r = 0;
+			storeList = false;
+			newList = [];
+			list = (attrLookup(charCS, [fields.Spellbook[0]+levelSpells[i].book, fields.Spellbook[1] ]) || '').split('|').filter(t=>!!t);
+			s = (isPower) ? list.length : levelSpells[i].spells;
 			if (s > 0 && (!list || !list.join('').length || list.join('') == '-')) {
 				list = _.uniq(getMagicList( db, spTypeLists, (isPower ? 'power' : (isMU ? 'muspelll'+i : 'prspelll'+i)), senderId ).toLowerCase().split(/\,|\|/));
 				storeList = true;
 			};
-			let c = levelSpells[i].base;
-			let cellExists = true;
+			c = levelSpells[i].base;
+			cellExists = true;
 			while (s > 0 || cellExists) {
 				c = levelSpells[i].base;
 				for (let w = 1; (w <= fields.SpellsCols); w++) {
-					let castAsLevel = false;
+					castAsLevel = false;
 					if (!spellTables[w]) {
 						spellTables[w] = getTable( charCS, fieldGroups.SPELLS, c );
 					}
@@ -5477,7 +5425,7 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 			spellTables = [];
 		};
 		if (silent) {
-			sendWait(senderId,0);
+			sendWait(senderId,0,'Magic handleMemAllPowers');
 			return;
 		}
 		
@@ -5494,21 +5442,22 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * Handle a level change request
 	 */
 
-	var handleLevelDrain = function( args, senderId, msg = '' ) {
+	const handleLevelDrain = function( args, senderId, msg = '' ) {
 		
-		var tokenID = args[0],  // tokenID
-			charCS = getCharacter(tokenID),
-			drainLevels = parseInt(args[1]) || -1,  // +1
-			fixedClass = args[6] || '',     // ranger
-			classChosen = args[2] || fixedClass,  // ranger
-			totalLevels = parseInt(args[3]) || drainLevels,  // +1
+		const tokenID = args[0],  // tokenID
+			  charCS = getCharacter(tokenID),
+			  drainLevels = parseInt(args[1]) || -1,  // +1
+			  fixedClass = args[6] || '',     // ranger
+			  totalLevels = parseInt(args[3]) || drainLevels,  // +1
+			  classes = classObjects( charCS, senderId );
+			  
+		let	classChosen = args[2] || fixedClass,  // ranger
 			hitPoints = Math.abs(parseInt(evalAttr(args[4],charCS)) || 0),  // [[1d10]]
 			totalHP = parseInt(args[5]) || 0,	// always called = 0
 			loopCount = Math.abs(drainLevels),	// 1
 			increment = drainLevels > 0 ? 1 : -1,	//1
 			levelHP = hitPoints * increment,
-			classes = classObjects( charCS, senderId ),
-			levelField, hd, baseClass;
+			levelField, baseClass;
 			
 		const warriors = ['warrior','fighter'],
 			  wizards = ['wizard','mage','magicuser'],
@@ -5527,7 +5476,7 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 				if (psions.includes(fixedClass.dbName())) baseClass = classes.length === 1 ? (psions.includes(classes[0].name) ? classes[0].base : '') : (classes.find(c => psions.includes(c.name)) || {base:''}).base;
 			};
 			hitPoints = parseInt(hitPoints || evalAttr((classes[0].classData.hd.replace(/(\d+)(d.+)/i,'(('+String(drainLevels)+'*$1)$2)')),charCS)) || 0;
-			levelHP = hitPoints * increment;
+			levelHP = hitPoints;
 			loopCount = 1;
 			increment = increment * Math.abs(drainLevels);
 		} else if (!classChosen) {
@@ -5561,24 +5510,24 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 			}
 		}
 		
-		let hpConBonus = parseInt(attrLookup( charCS, fields.HPconAdj )) || 0;
+//		let hpConBonus = parseInt(attrLookup( charCS, fields.HPconAdj )) || 0;
 		
 		setAttr( charCS, levelField, Math.max(0,((parseInt(attrLookup( charCS, levelField ) || 1) || 1) + increment)) );
 		setAttr( charCS, fields.HP,((parseInt(attrLookup( charCS, fields.HP ) || 0) || 0) + levelHP) );
 		setAttr( charCS, fields.MaxHP, Math.max(0,((parseInt(attrLookup( charCS, fields.MaxHP ) || 0) || 0) + levelHP)) );
 		totalHP += hitPoints;
 		if (--loopCount > 0) {
-			let content = '&{template:'+fields.warningTemplate+'}{{title=Change in Level}}{{desc=Successfully '+(increment > 0 ? 'boosted' : 'drained')+' '+classChosen
-						+ ' class by one level, which in total makes '+(Math.abs(totalLevels) - loopCount)+' across all classes.'
-						+ ' A total of '+totalHP+'HP have been '+(increment > 0 ? 'gained' : 'lost')+'}}';
+			const content = '&{template:'+fields.warningTemplate+'}{{title=Change in Level}}{{desc=Successfully '+(increment > 0 ? 'boosted' : 'drained')+' '+classChosen
+						  + ' class by one level, which in total makes '+(Math.abs(totalLevels) - loopCount)+' across all classes.'
+						  + ' A total of '+totalHP+'HP have been '+(increment > 0 ? 'gained' : 'lost')+'}}';
 			sendResponse( charCS, content );
 			handleLevelDrain( [tokenID,(drainLevels-increment),'',totalLevels,0,totalHP,fixedClass], senderId, 'Successfully '+(increment > 0 ? 'boosted' : 'drained')+' '+classChosen+' class by 1 level' );
 		} else {
 			setAttr( charCS, fields.Thac0_base, handleGetBaseThac0( charCS ) );
-			let content = '&{template:'+fields.warningTemplate+'}{{title=Change in Level}}{{desc=Successfully '+(increment > 0 ? 'boosted' : 'drained')+' '+classChosen
-						+ ' class by '+((fixedClass || Math.abs(increment) > 1) ? (totalLevels+' levels') : ('one level, which in total makes '+totalLevels+' across all classes'))
-						+ ', and recalculated all saves, reassessed all weapon use and reset usable powers.'
-						+ ' A total of '+totalHP+'HP have been '+(increment > 0 ? 'gained' : 'lost')+'}}';
+			const content = '&{template:'+fields.warningTemplate+'}{{title=Change in Level}}{{desc=Successfully '+(increment > 0 ? 'boosted' : 'drained')+' '+classChosen
+						  + ' class by '+((fixedClass || Math.abs(increment) > 1) ? (totalLevels+' levels') : ('one level, which in total makes '+totalLevels+' across all classes'))
+						  + ', and recalculated all saves, reassessed all weapon use and reset usable powers.'
+						  + ' A total of '+totalHP+'HP have been '+(increment > 0 ? 'gained' : 'lost')+'}}';
 			sendResponse( charCS, content );
 			setTimeout( () => handleMemAllPowers( [BT.MEMALL_POWERS,tokenID,1,-1,-1,'',''], senderId, true ), 100);
 			setTimeout( () => handleCheckWeapons( tokenID, charCS ), 200);
@@ -5589,40 +5538,39 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	/*
 	 * Handle undertaking a short rest to recover 1st level spells
 	 */
-	 
-	var handleRest = function( args, senderId ) {
+ 
+	const handleRest = function( args, senderId ) {
 		
-		var tokenID = args[0],
-			isShort = args[1].toLowerCase().includes('short'),
-			casterType = (args[2] || 'MU+PR').toUpperCase(),
-			spellName = (args[3] || '').dbName(),
-			r, c, w,
-			col, rep;
+		const tokenID = args[0],
+			  charCS = getCharacter(tokenID),
+			  isShort = args[1].toLowerCase().includes('short'),
+			  casterType = (args[2] || 'MU+PR').toUpperCase();
+			  
+		let	spellName = (args[3] || '').dbName(),
+			r, c, w;
 			
 		if (casterType.includes('MI') && casterType.includes('POWER')) {
 			return;
 		}
-		if (!isNaN(spellName)) spellName = '';
-
-		var isMU = casterType.includes('MU'),
-			isPR = casterType.includes('PR'),
-			isMI = !isShort,
-			isPower = !isShort,
-			isMIPower = !isShort,
-			charCS = getCharacter(tokenID);
-			
 		if (!charCS) {
-			sendDebug('handleRest: invalid tokenID parameter');
 			sendError('Internal MagicMaster error');
 			return;
 		}
 		
-		var levelSpells,
+		if (!isNaN(spellName)) spellName = '';
+
+		let isMU = casterType.includes('MU'),
+			isPR = casterType.includes('PR'),
+			isMI = !isShort,
+			isPower = !isShort,
+			isMIPower = !isShort;
+			
+		let levelSpells,
 			level,
 			levelLimit,
 			restType,
-			powerQty,
 			valueObj,
+			spell,
 			spellTables = [];
 		
 		while (isMU || isPR || isPower || isMIPower) {
@@ -5644,7 +5592,7 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 							spellTables[w] = getTableField( charCS, spellTables[w], fields.Spells_table, fields.Spells_castValue, c );
 						}
 						valueObj = spellTables[w].tableLookup( fields.Spells_castValue, r, true, true );
-						let spell = spellTables[w].tableLookup( fields.Spells_name, r ) || '-';
+						spell = spellTables[w].tableLookup( fields.Spells_name, r ) || '-';
 						if (!valueObj) {
 							levelSpells[level].spells = 0;
 							break;
@@ -5684,18 +5632,18 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 		}
 		
 		if (isMI) {
-			let miBase = 0,
-				MagicItems = getTableGroup( charCS, fieldGroups.MI );
+			let MagicItems = getTableGroup( charCS, fieldGroups.MI ),
+				prefix, miSpeedObj, miQtyObj, miTrueName, miType, miReveal, ItemSpecs;
 				
 			for (const table in MagicItems) {
-				for (r = miBase; r < (MagicItems[table].sortKeys.length+miBase); r++) {
-					let prefix = fieldGroups[table].prefix;
-					let miSpeedObj = MagicItems[table].tableLookup( fields[prefix+'speed'], r, true, true ),
-						miQtyObj = MagicItems[table].tableLookup( fields[prefix+'qty'], r, true, true ),
-						miTrueName = MagicItems[table].tableLookup( fields[prefix+'trueName'], r ),
-						miType = MagicItems[table].tableLookup( fields[prefix+'type'], r ),
-						miReveal = MagicItems[table].tableLookup( fields[prefix+'reveal'], r ).toLowerCase(),
-						ItemSpecs = abilityLookup( fields.MagicItemDB, miTrueName, charCS );
+				for (r = 0; r < (MagicItems[table].sortKeys.length); r++) {
+					prefix = fieldGroups[table].prefix;
+					miSpeedObj = MagicItems[table].tableLookup( fields[prefix+'speed'], r, true, true );
+					miQtyObj = MagicItems[table].tableLookup( fields[prefix+'qty'], r, true, true );
+					miTrueName = MagicItems[table].tableLookup( fields[prefix+'trueName'], r );
+					miType = MagicItems[table].tableLookup( fields[prefix+'type'], r );
+					miReveal = MagicItems[table].tableLookup( fields[prefix+'reveal'], r ).toLowerCase();
+					ItemSpecs = abilityLookup( fields.MagicItemDB, miTrueName, charCS );
 					if (_.isUndefined(miSpeedObj) || _.isUndefined(miQtyObj)) {break;}
 					if (miTrueName && miTrueName != '-') {
 						if (miReveal == 'rest') {
@@ -5713,7 +5661,6 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 				}
 			}
 		}
-//		log('handleRest: while resting, triggering a version test of '+charCS.get('name')+'\'s character sheet');
 		updateCharSheets( args, senderId );
 		return;
 	}
@@ -5723,28 +5670,17 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * this character, and the global date if it is behind the
 	 * character date 
 	 */
-	 
-	var handleTimePassing = function( charCS, timeSpent ) {
+
+	const handleTimePassing = function( charCS, timeSpent ) {
 		
 		timeSpent = Math.ceil(timeSpent);
-		var charDay = parseInt((attrLookup( charCS, fields.CharDay ) || 0),10) + timeSpent,
-			today = parseInt((state.moneyMaster.inGameDay || 0),10),
-			globalDay = Math.max( today, charDay );
+		const charDay = parseInt((attrLookup( charCS, fields.CharDay ) || 0),10) + timeSpent,
+			  today = parseInt((state.moneyMaster.inGameDay || 0),10),
+			  globalDay = Math.max( today, charDay );
 			
 		setAttr( charCS, fields.CharDay, globalDay );
 
 		return globalDay;
-	}
-	
-	/*
-	 * Handle the selection of a magic item
-	 * to use or view
-	 */
-	 
-	var handleChooseMI = function( args, senderId ) {
-		
-		makeViewUseMI( args, senderId );
-		return;
 	}
 	
 	/*
@@ -5753,39 +5689,40 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * in the [Submit] button of the menu.
 	 */
 
-	async function handleViewUseMI( args, isSilent, senderId, charges, chargeOverride='' ) {	// get
+	async function handleViewUseMI( args, isSilent, senderId, charges, chargeOverride='' ) {	// miData
 		
-		var action = args[0].toUpperCase(),
-			tokenID = args[1],
-			MIrowref = parseInt(args[2],10),
-			charCS = getCharacter(tokenID),
-			msVersion = csVer(charCS),
-			inHand, inHandRow, content, miData,
-			index, rowID, table;
-			
+		if (isSilent) sendWait(senderId,0,'Magic handleViewUseMI');
+		
+		const action = args[0].toUpperCase(),
+			  tokenID = args[1],
+			  MIrowref = parseInt(args[2],10),
+			  charCS = getCharacter(tokenID);
+			  
+//			  msVersion = csVer(charCS),
+
 		if (!charCS) {
-			sendDebug('handleViewUseMI: invalid tokenID parameter');
 			sendError('Internal MagicMaster error');
 			return;
 		}
 		
-		var	MItables = getTableGroup( charCS, fieldGroups.MI );
+		const MItables = getTableGroup( charCS, fieldGroups.MI );
 		
-		[index,table,rowID] = tableGroupIndex( MItables, MIrowref );
+		let [index,table,rowID] = tableGroupIndex( MItables, MIrowref );
 
 		if (isNaN(MIrowref) || MIrowref < 0 || _.isUndefined(index)) {
-			sendDebug('handleViewUseMI: invalid MIrowref parameter is '+MIrowref);
 			sendError('Internal MagicMaster error');
 			return;
 		}
 		
-		var	prefix = MItables[table].fieldGroup,
-			MInameObj = MItables[table].tableLookup( fields[prefix+'name'], index, false, true ),
-			MItypeObj = MItables[table].tableLookup( fields[prefix+'type'], index, false, true ),
-			MIrevealObj = MItables[table].tableLookup( fields[prefix+'reveal'], index, false, true ),
-			MIname = MInameObj.get(fields.Items_name[1]),
-			MItrueName = MItables[table].tableLookup( fields[prefix+'trueName'], index ) || MIname,
-			MIreveal = !MIrevealObj ? '' : MIrevealObj.get(fields.Items_reveal[1]).toLowerCase();
+		const prefix = MItables[table].fieldGroup,
+			  MInameObj = MItables[table].tableLookup( fields[prefix+'name'], index, false, true ),
+			  MItypeObj = MItables[table].tableLookup( fields[prefix+'type'], index, false, true ),
+			  MIrevealObj = MItables[table].tableLookup( fields[prefix+'reveal'], index, false, true );
+			  
+		let	MIname = MInameObj.get(fields.Items_name[1]);
+		
+		const MItrueName = MItables[table].tableLookup( fields[prefix+'trueName'], index ) || MIname,
+			  MIreveal = !MIrevealObj ? '' : MIrevealObj.get(fields.Items_reveal[1]).toLowerCase();
 			
 		setAttr( charCS, fields.ItemChosen, MIname );
 		setAttr( charCS, fields.ItemRowRef, MIrowref );
@@ -5797,39 +5734,37 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 				MItypeObj.set(fields.Items_type[1], MItables[table].tableLookup( fields[prefix+'trueType'], index));
 				MIrevealObj.set(fields.Items_reveal[1], '');
 			}
-//			content = '[Return to menu](!magic --button '+BT.CHOOSE_VIEW_MI+'|'+args[1]+'|'+(msVersion < 4 ? '' : args[2])+')';
-//			setTimeout(() => sendResponse( charCS, content, senderId, flags.feedbackName, flags.feedbackImg, tokenID ),500);
 			checkForBag( charCS, MItrueName, MIrowref );
-//			if (msVersion < 4) {
-//				setTimeout( () => sendAPI('!cmd --button '+BT.SORT_ITEMS+'|'+tokenID), 1000 );
-//			};
 			return;
 		}
-		var charName = charCS.get('name'),
-			MIqtyObj = MItables[table].tableLookup( fields[prefix+'qty'], index, false, true ),
-			MIqty = MIqtyObj.get(fields.Items_qty[1]),
-			MImaxQty = MIqtyObj.get(fields.Items_trueQty[1]),
-			MItype = (chargeOverride || MItables[table].tableLookup( fields[prefix+'trueType'], index, 'uncharged' )
-									 || MItables[table].tableLookup( fields[prefix+'type'], index, 'uncharged' )).toLowerCase(),
-			MIdb = getAbility( fields.MagicItemDB, MIname, charCS, null, null, null, index, rowID ),
-			MIdbName = MIdb,
+		const MIqtyObj = MItables[table].tableLookup( fields[prefix+'qty'], index, false, true ),
+			  MIqty = MIqtyObj.get(fields.Items_qty[1]),
+			  MImaxQty = MIqtyObj.get(fields.Items_trueQty[1]),
+			  MItype = (chargeOverride || MItables[table].tableLookup( fields[prefix+'trueType'], index, 'uncharged' )
+									   || MItables[table].tableLookup( fields[prefix+'type'], index, 'uncharged' )).toLowerCase();
+									   
+		let	MIdb = getAbility( fields.MagicItemDB, MIname, charCS, null, null, null, index, rowID ),
 			MIchangeTo = '',
-			MIcVal = 1;
+			MIcVal = 1,
+			recalcWeight = false,
+			miData;
+
+		const MIdbName = MIdb;
 			
 		if (MItrueName !== MIname) MIdb = getAbility( fields.MagicItemDB, MItrueName, charCS, null, null, null, index, rowID );
 			
-		var displayChangedMI = (row, table, mi) => {
+		const displayChangedMI = (row, table, mi) => {
 			setAttr( charCS, fields.ItemRowRef, row );
 			setAttr( charCS, fields.ItemTableRef, table );
 			setAttr( charCS, fields.ItemChosen, mi );
-			let miObj = abilityLookup( fields.MagicItemDB, mi, charCS );
+			const miObj = abilityLookup( fields.MagicItemDB, mi, charCS );
 			if (String(((miObj.obj ? miObj.specs() : undefined) || [['','','','','']])[0][2]).toLowerCase().includes('hide')) {
 				doDisplayAbility( ['c',tokenID,fields.MagicItemDB,mi], null, senderId );
 			};
 		};
 
 		if (MIdb.obj) {
-			miData = resolveData( MItrueName, fields.MagicItemDB, reItemData, charCS, {charges:reSpellSpecs.charges,changeTo:reSpellSpecs.changeTo,zero:reSpellSpecs.zero}, index, rowID ).parsed;
+			miData = resolveData( MItrueName, fields.MagicItemDB, reItemData, charCS, {charges:reSpellSpecs.charges,changeTo:reSpellSpecs.changeTo,zero:reSpellSpecs.zero,on:reSpellSpecs.on}, {row:index, rowID:rowID} ).parsed;
 			MIcVal = miData.charges;
 			MIchangeTo = miData.changeTo;
 		}
@@ -5841,23 +5776,21 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 			charges = 1;
 		}
 		if (MIqty < charges) {
-			content = '&{template:'+fields.menuTemplate+'}{{name=Using '+MIname+'}}{{desc='+MIname+' does not have enough charges left to do this}}'
-					+'{{desc1=[Show '+MIname+' again](\~'+MIdbName.dB+'|'+MIname+') or do something else}}';
+			const content = '&{template:'+fields.menuTemplate+'}{{name=Using '+MIname+'}}{{desc='+MIname+' does not have enough charges left to do this}}'
+						  +'{{desc1=[Show '+MIname+' again](\~'+MIdbName.dB+'|'+MIname+') or do something else}}';
 			sendResponse( charCS, content, senderId, flags.feedbackName, flags.feedbackImg, tokenID );
 			return false;
 		}
 		
-		let item = MIname.replace(/\s/g,'-');
+//		let item = MIname.replace(/\s/g,'-');
 		
 		switch (MItype) {
 
 		case 'change-each':
 		case 'cursed+change-each':
 			if (MIchangeTo && MIchangeTo.length && charges > 0) {
-				let changeRow,trueTable,chgRowID;
-				[changeRow,trueTable,chgRowID] = tableGroupFind( MItables, 'trueName', MIchangeTo );
-				let toType = resolveData(MIchangeTo,fields.MagicItemDB,reItemData,charCS,{recharge:reSpellSpecs.recharge},changeRow,chgRowID).parsed.type;
-				if (isNaN(changeRow) || !stackable.includes(resolveData(MIchangeTo,fields.MagicItemDB,reItemData,charCS,{recharge:reSpellSpecs.recharge},changeRow,chgRowID).parsed.type.toLowerCase())) {
+				let [changeRow,trueTable,chgRowID] = tableGroupFind( MItables, 'trueName', MIchangeTo );
+				if (isNaN(changeRow) || !stackable.includes(resolveData(MIchangeTo,fields.MagicItemDB,reItemData,charCS,{recharge:reSpellSpecs.recharge},{row:changeRow,rowID:chgRowID}).parsed.type.toLowerCase())) {
 					[changeRow,trueTable] = await handleStoreMI( ['', tokenID, '', MIchangeTo, charges, 'silent' ], false, senderId );
 				} else {
 					MItables[trueTable].tableSet( fields[MItables[trueTable].fieldGroup+'qty'], changeRow, (parseInt(MItables[trueTable].tableLookup( fields[MItables[trueTable].fieldGroup+'qty'], changeRow ) || 0)+charges) );
@@ -5890,6 +5823,7 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 				MIqtyObj.set('max',(MImaxQty-charges));
 //				addMIspells( charCS, MIdb.obj[1], rowID );
 			}
+			recalcWeight = true;
 			break;
 
 		case 'selfchargeable':
@@ -5922,7 +5856,7 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 		if (MIqty > charges) checkForBag( charCS, MItrueName, MIrowref );
 		if ((MIqty - charges == 0) && miData.zero && miData.zero.length) {
 			sendAPI( parseStr(miData.zero).replace(/@{\s*selected\s*\|\s*token_id\s*}/ig,tokenID)
-										   .replace(/{\s*selected\s*\|/ig,'{'+charCS.get('name')+'|'), null, 'magic use-mi');
+										  .replace(/{\s*selected\s*\|/ig,'{'+charCS.get('name')+'|'), null, 'magic use-mi');
 		}
 		if (miData.on && miData.on.length) {
 			sendAPI( parseStr(miData.on).replace(/@{\s*selected\s*\|\s*token_id\s*}/ig,tokenID)
@@ -5937,16 +5871,16 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 		
 		setTimeout( updateCoins, 10, charCS );
 
-		if (isSilent) {
-			sendWait(senderId,0);
-		} else {
-			content = '&{template:'+fields.menuTemplate+'}{{name='+charName+' is using '+MItrueName+(MIname !== MItrueName ? (' hidden as '+MIname) : '')+'}}'
-					+ '{{desc=To see the effects, select '+charName+'\'s token and press ['+MItrueName+'](!&#13;&#47;w gm &#37;{'+MIdb.dB+'|'+(MItrueName.hyphened())+'})}}';
+		if (!isSilent) {
+			const charName = charCS.get('name');
+			const content = '&{template:'+fields.menuTemplate+'}{{name='+charName+' is using '+MItrueName+(MIname !== MItrueName ? (' hidden as '+MIname) : '')+'}}'
+						  + '{{desc=To see the effects, select '+charName+'\'s token and press ['+MItrueName+'](!&#13;&#47;w gm &#37;{'+MIdb.dB+'|'+(MItrueName.hyphened())+'})}}';
 			sendFeedback( content, flags.feedbackName, flags.feedbackImg, tokenID, charCS );
 		};
 //		if (msVersion < 4) {
 //			setTimeout( () => sendAPI('!cmd --button '+BT.SORT_ITEMS+'|'+tokenID), 1000 );
 //		};
+		if (recalcWeight) await itemSlotData( tokenID, MItables, senderId );
 		return true;
 	}
 	
@@ -5955,37 +5889,35 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * a Magic Item, and the slot in the MI spellbook
 	 * to store it in.
 	 */
-	 
-	var handleSelectMIspell = function( args, senderId ) {
+
+	const handleSelectMIspell = function( args, senderId ) {
 		
-		var tokenID = args[1],
-			charCS = getCharacter(tokenID);
+		const tokenID = args[1],
+			  charCS = getCharacter(tokenID);
 
 		if (!charCS) {
-			sendDebug('handleSelectMIspell: invalid tokenID parameter');
 			sendError('Internal MagicMaster error');
 			return;
 		}
-		var isMU = args[0].toUpperCase().includes('MU'),
-			isMI = args[0].toUpperCase().includes('MI'),
-			spellButton = args[(isMI ? 5 : 2)],
-			spellRow = args[(isMI ? 6 : 3)],
-			spellCol = args[(isMI ? 7 : 4)],
-			MIbutton = args[(isMI ? 2 : 5)],
-			MIrow = args[(isMI ? 3 : 6)],
-			MIcol = args[(isMI ? 4 : 7)],
-			spellName = '',
-			col,
-			content = '';
+		const isMU = args[0].toUpperCase().includes('MU'),
+			  isMI = args[0].toUpperCase().includes('MI'),
+			  spellButton = args[(isMI ? 5 : 2)],
+			  spellRow = args[(isMI ? 6 : 3)],
+			  spellCol = args[(isMI ? 7 : 4)],
+			  MIbutton = args[(isMI ? 2 : 5)],
+			  MIrow = args[(isMI ? 3 : 6)],
+			  MIcol = args[(isMI ? 4 : 7)];
+
+		let	content = '';
 			
 		if (spellButton >= 0) {
-			spellName = attrLookup( charCS, fields.Spells_name, fields.Spells_table, spellRow, spellCol ) || '-';
+			const spellName = attrLookup( charCS, fields.Spells_name, {tableDef:fields.Spells_table, row:spellRow, col:spellCol} ) || '-';
 			content += 'Selected '+spellName+' to store';
 		}
 		if (MIbutton >= 0) {
-			col = (fields.SpellsFirstColNum || MIcol != 1) ? MIcol : '';
-			spellName = attrLookup( charCS, fields.Spells_name, fields.Spells_table, MIrow, MIcol ) || '-';
-			content += (spellButton >= 0 ? '' : 'Selected to store') + ' in the slot for '+spellName;
+//			const col = (fields.SpellsFirstColNum || MIcol != 1) ? MIcol : '';
+			const miName = attrLookup( charCS, fields.Spells_name, {tableDef:fields.Spells_table, row:MIrow, col:MIcol} ) || '-';
+			content += (spellButton >= 0 ? '' : 'Selected to store') + ' in the slot for '+miName;
 		}
 		makeStoreMIspell( args, senderId, content );
 		return;
@@ -5995,31 +5927,30 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * Handle selecting a magic item power
 	 */
 	 
-	var handleSelectMIpower = function( args, isUse, senderId ) {  // table
+	const handleSelectMIpower = function( args, isUse, senderId ) {
 		
-		var tokenID = args[1],
-			charCS = getCharacter(tokenID);
+		const tokenID = args[1],
+			  charCS = getCharacter(tokenID);
 		if (!charCS) {
-			sendDebug('handleSelectMIpower: invalid token_id');
 			sendError('Incorrect MagicMaster syntax');
 			return;
 		}
 		
-		const dbList = [['PW-',fields.PowersDB],['MU-',fields.MU_SpellsDB],['PR-',fields.PR_SpellsDB],['MI-',fields.MagicItemDB]];
+		const dbList = [['PW-',fields.PowersDB],['MU-',fields.MU_SpellsDB],['PR-',fields.PR_SpellsDB],['MI-',fields.MagicItemDB]],
+			  itemName = (args[3] || '').split('/'),
+			  charges = parseInt(args[5] || '1'),
+			  maxChange = parseInt(args[6] || '0'),
+			  miChargeUsed = parseInt(args[7] || '0'),
+			  MIlibrary = charCS;
 		
-		var powerName = args[2] || '',
-			itemName = (args[3] || '').split('/'),
+		let powerName = args[2] || '',
 			castLevel = args[4],
-			charges = parseInt(args[5] || '1'),
-			maxChange = parseInt(args[6] || '0'),
-			miChargeUsed = parseInt(args[7] || '0'),
-			tokenName = getObj('graphic',tokenID).get('name'),
-			MIlibrary = charCS,
 			powerType = powerName.substring(0,3),
-			powerHyphen = powerName.hyphened(),
 			Items = getTableGroupField( charCS, {}, fieldGroups.MI, 'name' ),
 			item, powerObj, table, itemRow, itemRowID;
 			
+		const powerHyphen = powerName.hyphened();
+
 		if (_.some(dbList,dB=>dB[0]===powerType.toUpperCase())) {
 			powerName = powerName.slice(powerType.length);
 			if (!castLevel) castLevel = casterLevel( charCS, powerType.substring(0,2) );
@@ -6041,7 +5972,6 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 				[itemRow,table,itemRowID] = tableGroupFind( Items, 'name', item );
 			};
 			if (_.isUndefined(table) || _.isUndefined(itemRow)) {
-				sendDebug('handleSelectMIpower: invalid row reference passed');
 				sendError('Internal MagicMaster error');
 				return;
 			}
@@ -6049,23 +5979,22 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 			powerObj = miSpellLookup( MIlibrary, item, itemRow, itemRowID, [fields.MIpowerPrefix[0],null], '', powerHyphen );
 		};
 		if (!powerObj) {
-			sendDebug('handleSelectMIpower: not found item power index attribute for '+item+'-'+powerHyphen);
 			sendError('Invalid item/power combination');
 			return;
 		};
 			
-		var	powerRow = powerObj.get('current'),
-			powerCol = powerObj.get('max'),
-			magicItem = getAbility( fields.MagicItemDB, item, charCS ),
-			Powers = getTable( MIlibrary, fieldGroups.POWERS, powerCol ),
-			power = Powers.tableLookup( fields.Powers_name, powerRow, '-' ),
-			powerDB = Powers.tableLookup( fields.Powers_db, powerRow, '-' ),
+		const powerRow = powerObj.get('current'),
+			  powerCol = powerObj.get('max'),
+			  magicItem = getAbility( fields.MagicItemDB, item, charCS );
+			  
+		let	Powers = getTable( MIlibrary, fieldGroups.POWERS, powerCol ),
 			powerCount = Powers.tableLookup( fields.Powers_castValue, powerRow, 0 ),
-			toWho = sendToWho(charCS,senderId,false,true),
-			content = '',
 			powerLib;
+		
+		const power = Powers.tableLookup( fields.Powers_name, powerRow, '-' ),
+			  powerDB = Powers.tableLookup( fields.Powers_db, powerRow, '-' );
 			
-		if (powerDB != '-' && !powerType) {
+		if (powerDB !== '-' && !powerType) {
 			powerLib = abilityLookup( powerDB, power, null, true );
 		}
 		if (!powerLib || !powerLib.obj) {
@@ -6073,14 +6002,13 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 		}
 
 		if (!powerLib.obj) {
-			sendDebug('handleSelectMIpower: power ability macro not found');
 			sendError('Invalid Power definition');
 			return;
 		}
 			
 		powerLib = getAbility( powerLib.dB, power, charCS );
 		const itemDesc = item.dispName(),
-			powerDesc = powerName.dispName();
+			  powerDesc = powerName.dispName();
 			
 		if (isUse) {
 			if (powerCount > 0) {
@@ -6091,15 +6019,15 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 				}
 				Powers = Powers.tableSet( fields.Powers_castValue, powerRow, powerCount-charges );
 			}
-			content = charCS.get('name') + ' is using [' + power + '](!&#13;&#47;w gm &#37;{'+powerLib.dB+'|'+(power.hyphened())+'}). '
-					+ 'Select ' + charCS.get('name') + '\'s token before pressing to see effects.';
+			const content = charCS.get('name') + ' is using [' + power + '](!&#13;&#47;w gm &#37;{'+powerLib.dB+'|'+(power.hyphened())+'}). '
+						  + 'Select ' + charCS.get('name') + '\'s token before pressing to see effects.';
 			sendFeedback( content, flags.feedbackName, flags.feedbackImg, tokenID, charCS );
 			
 		} else if (powerCount == 0) {
-			content = '&{template:'+fields.menuTemplate+'}{{name='+itemDesc+'\'s '+powerDesc+' power}}'
-					+ '{{desc=You have already used all **'+itemDesc+'\'s** *'+powerDesc+'* charges for today.  '
-					+ 'You need to allow '+itemDesc+' to have a long rest so it can regain all its powers}}'
-					+ '{{desc1=[Redisplay '+itemDesc+'](~'+magicItem.dB+'|'+item+') or just do something else}}';
+			const content = '&{template:'+fields.menuTemplate+'}{{name='+itemDesc+'\'s '+powerDesc+' power}}'
+						  + '{{desc=You have already used all **'+itemDesc+'\'s** *'+powerDesc+'* charges for today.  '
+						  + 'You need to allow '+itemDesc+' to have a long rest so it can regain all its powers}}'
+						  + '{{desc1=[Redisplay '+itemDesc+'](~'+magicItem.dB+'|'+item+') or just do something else}}';
 			sendResponse( charCS, content, senderId, flags.feedbackName, flags.feedbackImg, tokenID );
 			if (!!miChargeUsed) {
 				Items = getTableField( charCS, {}, fieldGroups[table].tableDef, fields[fieldGroups[table].prefix+'qty'] );
@@ -6119,8 +6047,10 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 			setAttr( charCS, fields.SpellCharges, (powerCount < 0 ? powerCount : powerCount-charges) );
 			
 			args.shift();
-			content = '&{template:'+fields.menuTemplate+'}{{name='+itemDesc+'\'s '+powerDesc+' power}}'
-					+ '{{desc='+tokenName+' is about to use **'+itemDesc+'\'s** '+powerDesc+' power.  Is this correct?}}'
+			const tokenName = getObj('graphic',tokenID).get('name'),
+				  toWho = sendToWho(charCS,senderId,false,true),
+				  content = '&{template:'+fields.menuTemplate+'}{{name='+itemDesc+'\'s '+powerDesc+' power}}'
+						  + '{{desc='+tokenName+' is about to use **'+itemDesc+'\'s** '+powerDesc+' power.  Is this correct?}}'
 					+ '{{desc1=[Use '+powerDesc+'](!&#13;'+(powerLib.api ? '' : toWho)+'&#37;{'+powerLib.dB +'|'+ (power.hyphened()) +'}&#13;!magic --button '+ BT.MI_POWER_USED +'|'+ args.join('|')+ ')'
 					+ ' or [Return to '+itemDesc+'](!&#13;'+(magicItem.api ? '' : toWho)+'&#37;{'+magicItem.dB+'|'+item+'})\nOr just do something else}}';
 			sendResponse(charCS,content,senderId, flags.feedbackName, flags.feedbackImg, tokenID);
@@ -6131,21 +6061,21 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	/*
 	 * Restore the uses per day of a single power of a magic item 
 	 */
-	 
-	var handleRestoreMIpowers = function( args, senderId ) {
+
+	const handleRestoreMIpowers = function( args, senderId ) {
 		
-		var tokenID = args[0],
-			charCS = getCharacter(tokenID);
+		const tokenID = args[0],
+			  charCS = getCharacter(tokenID);
 		if (!charCS) {
-			sendDebug('handleRestoreMIpower: invalid token_id');
 			sendError('Incorrect MagicMaster syntax');
 			return;
 		}
 		
-		var itemName = args[1] || '',
-			change = '+-'.includes(args[2][0]),
-			charges = parseInt(args[2]),
-			powerName = args[3] || '',
+		const change = '+-'.includes(args[2][0]),
+			  charges = parseInt(args[2]),
+			  powerName = args[3] || '';
+
+		let itemName = args[1] || '',
 			Powers = [],
 			row, itemRow, itemRowID, table;
 			
@@ -6161,14 +6091,15 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 				row = indexTableGroup( Items, table, itemRow );
 			};
 			if (_.isUndefined(table) || _.isUndefined(itemRow)) {
-				sendDebug('makeSpellsMenu: invalid row reference passed');
 				sendError('Internal MagicMaster error');
 				return;
 			}
 			
-		var	itemHyphen = itemName.replace(/\s/g,'-'),
-			powersList = (miSpellLookup( charCS, itemHyphen, itemRow, itemRowID, fields.ItemPowersList ) || '').split(','),
-			action = ((isNaN(charges) || charges > 0) ? 'regained' : 'used');
+		const itemHyphen = itemName.replace(/\s/g,'-');
+		let	powersList = (miSpellLookup( charCS, itemHyphen, itemRow, itemRowID, fields.ItemPowersList ) || '').split(','),
+			action = ((isNaN(charges) || charges > 0) ? 'regained' : 'used'),
+			powerHyphen, powerObj, powerRow, powerCol,
+			maxCharges, curCharges;
 			
 		if (powerName && powersList.includes(powerName)) {
 			powersList = [powerName];
@@ -6179,25 +6110,24 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 		
 		_.each(powersList, powerName => {
 			
-			let	powerHyphen = powerName.replace(/\s/g,'-'),
-				powerObj = miSpellLookup( charCS, powerHyphen, itemRow, itemRowID, [fields.MIpowerPrefix[0],null], '', powerHyphen );
+			powerHyphen = powerName.replace(/\s/g,'-');
+			powerObj = miSpellLookup( charCS, powerHyphen, itemRow, itemRowID, [fields.MIpowerPrefix[0],null], '', powerHyphen );
 //				powerObj = attrLookup( charCS, [fields.MIpowerPrefix[0]+itemHyphen+'+'+itemRow+'-'+powerHyphen, null] );
 //			if (!powerObj) powerObj = attrLookup( charCS, [fields.MIpowerPrefix[0]+powerHyphen, null] );
 			if (!powerObj) {
-				sendDebug('handleRestoreMIpower: not found item power index attribute for '+itemHyphen+'-'+powerHyphen);
 				sendError('Invalid item/power combination');
 				return;
 			};
 			
-			let	powerRow = powerObj.get('current'),
-				powerCol = powerObj.get('max');
+			powerRow = powerObj.get('current');
+			powerCol = powerObj.get('max');
 				
 			if (!Powers[powerCol]) {
 				Powers[powerCol] = getTable( charCS, fieldGroups.POWERS, powerCol );
 			}
 
-			let	maxCharges = parseInt(Powers[powerCol].tableLookup( fields.Powers_castMax, powerRow, 1 ) || '1'),
-				curCharges = parseInt(Powers[powerCol].tableLookup( fields.Powers_castValue, powerRow, 1 ) || '1');
+			maxCharges = parseInt(Powers[powerCol].tableLookup( fields.Powers_castMax, powerRow, 1 ) || '1');
+			curCharges = parseInt(Powers[powerCol].tableLookup( fields.Powers_castValue, powerRow, 1 ) || '1');
 			if (change && maxCharges >= 0 && !isNaN(charges)) {
 				Powers[powerCol] = Powers[powerCol].tableSet(fields.Powers_castMax,powerRow,Math.max(0,(charges + maxCharges)));
 				Powers[powerCol] = Powers[powerCol].tableSet(fields.Powers_castValue,powerRow,Math.min(curCharges,(charges + maxCharges)));
@@ -6213,86 +6143,83 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * Handle storing a spell from a characters memorised
 	 * spells into a spell-storing magic item.
 	 */
-	 
-	var handleStoreMIspell = function( args, senderId ) {    //split
+
+	const handleStoreMIspell = function( args, senderId ) {
 		
-		var tokenID = args[1],
-			charCS = getCharacter(tokenID);
+		const tokenID = args[1],
+			  charCS = getCharacter(tokenID);
 			
 		if (!charCS) {
-			sendDebug('handleStoreMIspell: invalid tokenID parameter');
 			sendError('Internal MagicMaster error');
 			return;
 		}
-		var isMU = args[0].toUpperCase().includes('MU'),
-			isMI = args[0].toUpperCase().includes('MI'),
-			isChange = args[0].toUpperCase().includes('ANY') || args[0].toUpperCase().includes('CHANGE'),
-			MIbutton = args[2],
-			MIrow = args[3],
-			MIcol = args[4],
-			spellButton = args[5],
-			spellRow = args[6],
-			spellCol = args[7],
-			item = attrLookup( charCS, fields.ItemChosen ) || '-',
-			row = attrLookup( charCS, fields.ItemRowRef ) || '',
-			itemRow, itemRowID, itemTable;
-		
-		[itemRow,itemTable,itemRowID] = tableGroupIndex( getTableGroupField( charCS, {}, fieldGroups.MI, 'name' ), row );
+		const isMU = args[0].toUpperCase().includes('MU'),
+			  MIbutton = args[2],
+			  MIrow = args[3],
+			  MIcol = args[4],
+			  spellButton = args[5],
+			  spellRow = args[6],
+			  spellCol = args[7],
+			  item = attrLookup( charCS, fields.ItemChosen ) || '-';
+
+		let isChange = args[0].toUpperCase().includes('ANY') || args[0].toUpperCase().includes('CHANGE'),
+			[itemRow,itemTable,itemRowID] = tableGroupIndex( getTableGroupField( charCS, {}, fieldGroups.MI, 'name' ), (attrLookup( charCS, fields.ItemRowRef ) || '') );
 			
-		var	itemObj = abilityLookup( fields.MagicItemDB, item, charCS ),
-			itemData = parseData((itemObj.data()[0][0] || {}),reSpellSpecs,true,charCS,item,itemRow,itemRowID),
-			storeSpells = (itemData.store || 'store').toLowerCase(),
-			csv = csVer(charCS),
-			msgField = (csv >= 2.1 ? fields.Spells_msg : fields.Spells_macro);
+		const itemObj = abilityLookup( fields.MagicItemDB, item, charCS ),
+			  itemData = parseData((itemObj.data()[0][0] || {}),reSpellSpecs,true,charCS,item,itemRow,itemRowID),
+			  storeSpells = (itemData.store || 'store').toLowerCase(),
+			  csv = csVer(charCS),
+			  msgField = (csv >= 2.1 ? fields.Spells_msg : fields.Spells_macro);
 			
 		if (isNaN(MIbutton) || MIbutton<0 || isNaN(MIrow) || isNaN(MIcol) || isNaN(spellButton) || spellButton<0 || isNaN(spellRow) || isNaN(spellCol)) {
-			sendDebug('handleStoreMIspell: invalid button, row or col parameter');
 			sendError('Internal MagicMaster error');
 			return;
 		}
 		
 		isChange = isChange || storeSpells === 'any' || storeSpells === 'change';
+
+		let	SpellsTable = getTable( charCS, fieldGroups.SPELLS, spellCol );
 			
-		var	SpellsTable = getTable( charCS, fieldGroups.SPELLS, spellCol ),
-			MIspellsTable = getTable( charCS, fieldGroups.SPELLS, MIcol ),
-			spellName = SpellsTable.tableLookup( fields.Spells_name, spellRow ).hyphened(),
-			MIspellName = MIspellsTable.tableLookup( msgField, MIrow );
-			
+		const MIspellsTable = getTable( charCS, fieldGroups.SPELLS, MIcol ),
+			  spellName = SpellsTable.tableLookup( fields.Spells_name, spellRow ).hyphened(),
+			  MIspellName = MIspellsTable.tableLookup( msgField, MIrow );
+
 		if (!isChange && !stdEqual(spellName, MIspellName )) {
 			sendParsedMsg( tokenID, messages.fixedSpell, senderId, getObj('graphic',tokenID).get('name')+'\'s magic item');
 			makeStoreMIspell( args, senderId, 'Could not store '+spellName+' in '+getObj('graphic',tokenID).get('name')+'\'s spell storing magic item' );
 			return;
 		}
 		
-		var values = MIspellsTable.copyValues(),
-			level = attrLookup( charCS, fields.CastingLevel ),
-			spellObj = abilityLookup( (isMU ? fields.MU_SpellsDB : fields.PR_SpellsDB), spellName, charCS );
-			
+		const level = attrLookup( charCS, fields.CastingLevel ),
+			  spellObj = abilityLookup( (isMU ? fields.MU_SpellsDB : fields.PR_SpellsDB), spellName, charCS );
+			  
 		if (!spellObj.obj) {
 			sendError('Not found spell definition for '+spellName+'. Unable to store this spell');
 			return;
 		}
-		values[fields.Spells_name[0]][fields.Spells_name[1]] = spellName;
-		values[fields.Spells_db[0]][fields.Spells_db[1]] = (isMU ? fields.MU_SpellsDB : fields.PR_SpellsDB);
-		values[fields.Spells_speed[0]][fields.Spells_speed[1]] = SpellsTable.tableLookup( fields.Spells_speed, spellRow );;
-		values[fields.Spells_castValue[0]][fields.Spells_castValue[1]] = 1;
-		values[fields.Spells_castMax[0]][fields.Spells_castMax[1]] = 1;
-		values[fields.Spells_storedLevel[0]][fields.Spells_storedLevel[1]] = level;
-		values[fields.Spells_spellLevel[0]][fields.Spells_spellLevel[1]] = String((spellObj.obj[1].type.match(/\d+/) || 1));
-		values[fields.Spells_cost[0]][fields.Spells_cost[1]] = 0;
-		values[fields.Spells_msg[0]][fields.Spells_msg[1]] = spellName;
-		values[msgField[0]][msgField[1]] = spellName;
-		if (csv >= 2.1) values[fields.Spells_macro[0]][fields.Spells_macro[1]] = '%{'+charCS.get('name')+'|'+spellName+'}';
+		let p = MIspellsTable.fieldGroup;
+		let values = initValues( p );
+
+		values.valLine( p, 'name', spellName )
+			  .valLine( p, 'db', (isMU ? fields.MU_SpellsDB : fields.PR_SpellsDB) )
+			  .valLine( p, 'speed', SpellsTable.tableLookup( fields.Spells_speed, spellRow ) )
+			  .valLine( p, 'castValue', 1 )
+			  .valLine( p, 'castMax', 1 )
+			  .valLine( p, 'storedLevel', level )
+			  .valLine( p, 'spellLevel', String((spellObj.obj[1].type.match(/\d+/) || 1)) )
+			  .valLine( p, 'cost', 0 )
+			  .valLine( p, 'msg', spellName )
+			  .valLine( p, 'macro', ((csv < 2.1) ? spellName : ('%{'+charCS.get('name')+'|'+spellName+'}')) );
 		
 		MIspellsTable.addTableRow( MIrow, values );
 
 		if (SpellsTable.tableLookup( fields.Spells_castValue, spellRow ) != 0) {
 			SpellsTable = SpellsTable.tableSet( fields.Spells_castValue, spellRow, 0 );
 		}
-		let muRows = miSpellLookup( charCS, item, itemRow, itemRowID, fields.MIspellRows, '-mu' ),
-			prRows = miSpellLookup( charCS, item, itemRow, itemRowID, fields.MIspellRows, '-pr' ),
-			muCols = miSpellLookup( charCS, item, itemRow, itemRowID, fields.MIspellCols, '-mu' ),
-			prCols = miSpellLookup( charCS, item, itemRow, itemRowID, fields.MIspellCols, '-pr' ),
+		let muRows = miSpellLookup( charCS, item, itemRow, itemRowID, fields.MIspellRows, 'mu' ),
+			prRows = miSpellLookup( charCS, item, itemRow, itemRowID, fields.MIspellRows, 'pr' ),
+			muCols = miSpellLookup( charCS, item, itemRow, itemRowID, fields.MIspellCols, 'mu' ),
+			prCols = miSpellLookup( charCS, item, itemRow, itemRowID, fields.MIspellCols, 'pr' ),
 			muSpells = miSpellLookup( charCS, item, itemRow, itemRowID, fields.ItemMUspellsList ),
 			prSpells = miSpellLookup( charCS, item, itemRow, itemRowID, fields.ItemPRspellsList ),
 			muLevels = miSpellLookup( charCS, item, itemRow, itemRowID, fields.ItemMUspellValues ),
@@ -6309,6 +6236,7 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 			prLevels = (prLevels || '').split(',');
 			let index = muRows.findIndex( (e,i) => e == MIrow && muCols[i] == MIcol ),
 				muSave = false, prSave = false;
+				
 			if (index > -1 && muCols[index] === MIcol) {
 				if (!isMU) {
 					muRows.splice(index,1);
@@ -6349,7 +6277,6 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 					prSave = true;
 				}
 			};
-				
 			if (muSave) {
 				setAttr( charCS, [fields.MIspellRows[0]+item+'-mu+'+itemRowID,fields.MIspellRows[1]], muRows.join() );
 				setAttr( charCS, [fields.MIspellCols[0]+item+'-mu+'+itemRowID,fields.MIspellCols[1]], muCols.join() );
@@ -6372,31 +6299,30 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	/*
 	 * Add a selected spell or power to a spell-storing item
 	 */
-	 
+
 	async function handleChangeSpellStore( args, senderId ) {
 		
-		var del = args[0].toUpperCase().includes('DEL'),
-			pwSpell = args[0].toUpperCase().includes('PWR'),
-			tokenID = args[1],
-			item = args[2].hyphened(),
-			cmd = args[3].toUpperCase(),
-			level = parseInt(args[4]) || 1,
-			retMenu = args[5],
+		const del = args[0].toUpperCase().includes('DEL'),
+			  pwSpell = args[0].toUpperCase().includes('PWR'),
+			  tokenID = args[1],
+			  cmd = args[3].toUpperCase(),
+			  retMenu = args[5],
+			  answer1 = args[7],
+			  answer2 = args[8] || answer1,
+			  repSpell = args[9],
+			  spellRow = args[10],
+			  spellCol = args[11],
+			  rep = !!repSpell,
+			  charCS = getCharacter(tokenID),
+			  isMU = cmd.includes('MU'),
+			  isPR = cmd.includes('PR'),
+			  isPower = cmd.includes('POWER'),
+			  Items = getTableGroupField( charCS, {}, fieldGroups.MI, 'name' );
+			  
+		let	item = args[2].hyphened(),
 			spell = args[6].hyphened(),
-			answer1 = args[7],
-			answer2 = args[8] || answer1,
-			repSpell = args[9],
-			spellRow = args[10],
-			spellCol = args[11],
-			rep = !!repSpell,
-			charCS = getCharacter(tokenID),
-			maxVal = 0,
-			isMU = cmd.includes('MU'),
-			isPR = cmd.includes('PR'),
-			isPower = cmd.includes('POWER'),
-			Items = getTableGroupField( charCS, {}, fieldGroups.MI, 'name' ),
 			itemRow, itemRowID, storedSpellsAttr, storedLevelAttr, table,
-			currentList, currentValues, spellType = 'ALL';
+			spellType = 'ALL';
 			
 		if (/^\d/.test(item)) {
 			itemRow = parseInt(item); 
@@ -6409,7 +6335,6 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 			[itemRow,table,itemRowID] = tableGroupFind( Items, 'name', item );
 		};
 		if (_.isUndefined(table) || _.isUndefined(itemRow)) {
-			sendDebug('handleChangeSpellStore: invalid row reference passed');
 			sendError('Internal MagicMaster error');
 			return;
 		}
@@ -6430,13 +6355,16 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 			storedLevelAttr  = fields.ItemPRspellValues;
 		};
 		
-		await moveMIspells( senderId, charCS, itemRow, itemRowID, null, null, null, item, spellType );
+		let currentList = miSpellLookup( charCS, item, itemRow, itemRowID, storedSpellsAttr, '', '', '' ).split(',').filter(e=>!!e),
+			currentValues = miSpellLookup( charCS, item, itemRow, itemRowID, storedLevelAttr, '', '', '' ).split(',').filter(e=>!!e),
+			newList = !currentList[0];
 		
-		currentList = miSpellLookup( charCS, item, itemRow, itemRowID, storedSpellsAttr, '', '', '' ).split(',').filter(e=>!!e);
-		currentValues = miSpellLookup( charCS, item, itemRow, itemRowID, storedLevelAttr, '', '', '' ).split(',').filter(e=>!!e);
+//		await moveMIspells( senderId, charCS, itemRow, itemRowID, null, null, null, item, spellType );
+		
+//		log('handleChangeSpellStore: after moveMIspells, newList = '+newList+', currentList = '+currentList);
 		
 		if (del || rep) {
-			let index = currentList.findIndex((s,i) => (s === (rep ? repSpell : spell)) && (!rep || currentValues[i].split('.')[0] == 0));
+			const index = currentList.findIndex((s,i) => (s === (rep ? repSpell : spell)) && (!rep || currentValues[i].split('.')[0] == 0));
 			if (rep) {
 				if (index >= 0) {
 					currentList[index] = spell;
@@ -6456,8 +6384,14 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 
 		setAttr( charCS, [storedSpellsAttr[0]+item+'+'+itemRowID,storedSpellsAttr[1]], currentList.join(',') );
 		setAttr( charCS, [storedLevelAttr[0]+item+'+'+itemRowID,storedLevelAttr[1]], currentValues.join(',') );
-		await moveMIspells( senderId, null, null, null, charCS, itemRow, itemRowID, item, spellType );
+		if (newList) {
+			await moveMIspells( senderId, null, null, null, charCS, itemRow, itemRowID, item, spellType );
+		} else {
+			await moveMIspells( senderId, charCS, itemRow, itemRowID, charCS, itemRow, itemRowID, item, spellType );
+		};
 
+//		log('handleChangeSpellStore: after adding, at '+storedSpellsAttr[0]+item+'+'+itemRowID+', currentList = '+currentList+', and stored currentList = '+attrLookup( charCS, [storedSpellsAttr[0]+item+'+'+itemRowID,storedSpellsAttr[1]]));
+		
 		if (retMenu === 'STORE-MI-SPELL') {
 			let SpellsTable = getTable( charCS, fieldGroups.SPELLS, spellCol );
 			if (SpellsTable.tableLookup( fields.Spells_castValue, spellRow ) != 0) {
@@ -6476,28 +6410,27 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * handle where somehow the player has been able to select an empty slot
 	 **/
 
-	var handlePickupNothing = function( args, pickMI, putSlot, senderId, buy ) {
+	const handlePickupNothing = function( args, pickMI, putSlot, senderId, buy ) {
 		
-		var tokenID = args[1],
-			fromID = args[3],
-			toID = args[4],
-			fromRow = args[2],
-			toRow = args[5],
-			fromCS = getCharacter(fromID),
-			toCS = getCharacter(toID);
+		const tokenID = args[1],
+			  fromID = args[3],
+			  toID = args[4],
+			  fromRow = args[2],
+			  toRow = args[5],
+			  fromCS = getCharacter(fromID),
+			  toCS = getCharacter(toID);
 			
 		if (!fromCS || !toCS){
-			sendDebug('handlePickupNothing: invalid tokenID parameter');
 			sendError('Internal MagicMaster error');
 			return;
 		}
 			
-		var fromName = fromCS.get('name'),
-			toName = toCS.get('name'),
-			targetID = (tokenID == fromID) ? toID : fromID,
-			content = messages.nothingToPick + '{{desc1=Trying to pick up "'+pickMI+'" from '+fromName+' and putting in '+toName+'\'s "'+putSlot+'"}}'
-					+ '{{desc2=[Other way round](!magic --button '+(buy ? BT.BUY_STORE : BT.POP_STORE)+'|'+tokenID+'|'+toRow+'|'+toID+'|'+fromID+'|'+fromRow+'|-1)'
-					+ ' or [Pick something else](!magic --button '+(buy ? BT.BUY_POP   : BT.PICK_POP) +'|'+tokenID+'|'+targetID+')}}';
+		const fromName = fromCS.get('name'),
+			  toName = toCS.get('name'),
+			  targetID = (tokenID == fromID) ? toID : fromID,
+			  content = messages.nothingToPick + '{{desc1=Trying to pick up "'+pickMI+'" from '+fromName+' and putting in '+toName+'\'s "'+putSlot+'"}}'
+					  + '{{desc2=[Other way round](!magic --button '+(buy ? BT.BUY_STORE : BT.POP_STORE)+'|'+tokenID+'|'+toRow+'|'+toID+'|'+fromID+'|'+fromRow+'|-1)'
+					  + ' or [Pick something else](!magic --button '+(buy ? BT.BUY_POP   : BT.PICK_POP) +'|'+tokenID+'|'+targetID+')}}';
 		sendParsedMsg( tokenID, content, senderId );
 		return;		
 	};
@@ -6506,11 +6439,11 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	* Handle switching to a treasure menu
 	**/
 
-	var handleTreasure = function( args, senderId ) {
+	const handleTreasure = function( args, senderId ) {
 		
-		var tokenID = args[1],
-			charCS = getCharacter( tokenID ),
-			content = makeLootMenu( senderId, args );
+		const tokenID = args[1],
+			  charCS = getCharacter( tokenID ),
+			  content = makeLootMenu( senderId, args );
 		sendResponse( charCS, content, senderId, flags.feedbackName, flags.feedbackImg, tokenID );
 		return;
 	};
@@ -6519,32 +6452,31 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	* handle the failure of an attempt to pick pockets
 	**/
 	
-	var handlePPfailed = function( args, senderId ) {
+	const handlePPfailed = function( args, senderId ) {
 		
-		var tokenID = args[1],
-			pickID = args[2],
-			putID = args[3],
-			ppRoll = parseInt(args[4],10),
-			search = putID === tokenID,
-			targetID = search ? pickID : putID,
-			charCS = getCharacter( tokenID ),
-			targetCS = getCharacter( targetID );
+		const tokenID = args[1],
+			  pickID = args[2],
+			  putID = args[3],
+			  ppRoll = parseInt(args[4],10),
+			  search = putID === tokenID,
+			  targetID = search ? pickID : putID,
+			  charCS = getCharacter( tokenID ),
+			  targetCS = getCharacter( targetID );
 			
 		if (!tokenID || !targetID || !charCS || !targetCS) {
-			sendDebug('handlePPfailure: invalid ID argument passed');
 			sendError('Invalid MagicMaster parameter');
 			return;
 		};
 		
 		if (isNaN(ppRoll)) {
-			sendDebug('handlePPfailure: invalid ppRoll');
 			sendError('Invalid MagicMaster parameter');
 			return;
 		}
 		
-		var	charName = charCS.get('name'),
-			targetName = targetCS.get('name'),
-			targetLevel = parseInt(characterLevel( targetCS )),
+		const charName = charCS.get('name'),
+			  targetName = targetCS.get('name');
+			  
+		let	targetLevel = parseInt(characterLevel( targetCS )),
 			content = '&{template:'+fields.menuTemplate+'}{{name=Failed pick pocket attempt by '+charName+'}}';
 			
 		if (isNaN(targetLevel)) {
@@ -6563,31 +6495,68 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	};
 	
 	/**
+	* Handle toggling the selection of one or more items to pick up or
+	* put away. Can take a row number or a table name or "All" as the pick
+	* reference. 
+	**/
+
+	const handleFlagPicks = function ( args, senderId ) {
+		
+		const pickRow = args[2] || -1,
+			  pickID = args[3],
+			  charCS = getCharacter(pickID);
+			  
+		if (!charCS) throw( 'pickID does not represent a valid character' );
+		
+		let Items = getTableGroupField( charCS, {}, fieldGroups.MI, 'name' ),
+			name;
+		Items = getTableGroupField( charCS, Items, fieldGroups.MI, 'chosen' );
+		
+		if (isNaN(pickRow)) {
+			const pickedTable = pickRow.toUpperCase();
+			if (pickedTable !== 'ALL' && _.isUndefined(Items[pickedTable])) throw( 'Invalid item table type specified' );
+			for (const table in Items) {
+				if (pickedTable === table || pickedTable === 'ALL') {
+					for (let row = 0; !_.isUndefined( name = Items[table].tableLookup( fields[fieldGroups[table].prefix+'name'], row, false )); row++) {
+						if (name !== '-') {
+							Items[table].tableSet( fields[fieldGroups[table].prefix+'chosen'], row, (Items[table].tableLookup( fields[fieldGroups[table].prefix+'chosen'], row ) == 1 ? 0 : 1 ));
+						};
+					};
+				};
+			};
+		} else if (pickRow >=0) {
+			let [row,table] = tableGroupIndex( Items, pickRow );
+//			log('handleFlagPicks: row = '+row+', table = '+table+', chosen = '+Items[table].tableLookup( fields[fieldGroups[table].prefix+'chosen'], row ));
+			if (!_.isUndefined(row) && !_.isUndefined( name = Items[table].tableLookup( fields[fieldGroups[table].prefix+'name'], row, false ))) {
+				Items[table].tableSet( fields[fieldGroups[table].prefix+'chosen'], row, (Items[table].tableLookup( fields[fieldGroups[table].prefix+'chosen'], row ) == 1 ? 0 : 1 ));
+			};
+		};
+	};
+	
+	/**
 	* Handle a character picking or putting away an item to/from a store
 	* args[] is the standard action|charID|fromID|toID|fromRow|toRow|qty|cost
 	* qty -1 means not yet chosen, cost -1 means not yet agreed or no cost
 	**/
 
-	async function handlePickOrPut( args, senderId ) {	// resolveData
+	async function handlePickOrPut( args, senderId ) {
 	
 		try {
 
-			var buy = (args[0] || '').toUpperCase().includes('BUY'),
-				sell = (args[0] || '').toUpperCase().includes('SELL'),
-				offer = (args[0] || '').toUpperCase().includes('OFFER'),
-				tokenID = args[1],
-				fromRowRef = args[2],
-				fromTokenID = args[3],
-				toTokenID = args[4],
-				toRowRef = args[5],
-				qty = args[6],
-				expenditure = args[7],
-				newName = (args[8] || '').hyphened(),
-				charCS = getCharacter( tokenID ),
-				fromCS = getCharacter( fromTokenID ),
-				toCS = getCharacter( toTokenID ),
-				traderCS = buy ? fromCS : toCS,
-				parseTable = {
+			const buy = (args[0] || '').toUpperCase().includes('BUY'),
+				  sell = (args[0] || '').toUpperCase().includes('SELL'),
+				  offer = (args[0] || '').toUpperCase().includes('OFFER'),
+				  tokenID = args[1],
+				  fromRowRef = args[2],
+				  fromTokenID = args[3],
+				  toTokenID = args[4],
+				  toRowRef = args[5],
+				  newName = (args[8] || '').hyphened(),
+				  charCS = getCharacter( tokenID ),
+				  fromCS = getCharacter( fromTokenID ),
+				  toCS = getCharacter( toTokenID ),
+				  traderCS = buy ? fromCS : toCS,
+				  parseTable = {
 					itemType:reSpellSpecs.itemType,
 					hide:reSpellSpecs.hide,
 					reveal:reSpellSpecs.reveal,
@@ -6595,191 +6564,106 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 					put:reSpellSpecs.put,
 					cost:reSpellSpecs.cost,
 					weight:reSpellSpecs.weight,
-				};
+				  };
+				  
+			let	qty = args[6],
+				expenditure = args[7];
+				
+			if (isNaN(parseInt(qty))) qty = -1;
+				
+			if (!_.isUndefined(expenditure) && expenditure.length) {
+				expenditure = parseFloat(expenditure);
+			}
 			
 			if (!charCS || !fromCS || !toCS) {
-				sendDebug( 'handlePickOrPut: one or more tokenIDs do not represent valid characters' );
 				sendError('Invalid MagicMaster button arguments');
 				return;
 			}
 			if (isNaN(fromRowRef) || fromRowRef<0 || isNaN(toRowRef) || toRowRef<0) {
-				sendDebug('handlePickOrPut: invalid row or column parameter');
 				sendError('Internal MagicMaster error');
 				return;
 			}
 			
-			var toMIbag = getTableGroup( toCS, fieldGroups.MI ),
-				fromMIbag = getTableGroup( fromCS, fieldGroups.MI ),
-				toTable, toIndex, toID, fromTable, fromIndex, fromID;
-			[toIndex,toTable,toID] = tableGroupIndex( toMIbag, toRowRef );
-			[fromIndex,fromTable,fromID] = tableGroupIndex( fromMIbag, fromRowRef );
-			if (_.isUndefined(toTable) || _.isUndefined(fromTable)) {
-				sendDebug('handlePickOrPut: toRowRef extends beyond MIbag');
-				sendError('Internal MagicMaster error');
-				return;
-			};
-				
-			var	toSlotName = toMIbag[toTable].tableLookup( fields[fieldGroups[toTable].prefix+'name'], toIndex, false ),
-				toMIvalues = initValues( toMIbag[toTable].fieldGroup ),
-				toSlotTrueName, toSlotType, toSlotQty, toSlotCharges, toSlotTrueType, toSlotCost,
-				MIname = fromMIbag[fromTable].tableLookup( fields[fieldGroups[fromTable].prefix+'name'], fromIndex ),
-				MItrueName = fromMIbag[fromTable].tableLookup( fields[fieldGroups[fromTable].prefix+'trueName'], fromIndex ),
-				fromTrueName = MItrueName,
-				fromSlotType = (fromMIbag[fromTable].tableLookup( fields[fieldGroups[fromTable].prefix+'type'], fromIndex ) || '').toLowerCase(),
-				fromSlotTrueType = (fromMIbag[fromTable].tableLookup( fields[fieldGroups[fromTable].prefix+'trueType'], fromIndex ) || fromSlotType).toLowerCase(),
-				MItrueObj = getAbility( fields.MagicItemDB, MItrueName, fromCS, null, null, null, fromIndex, fromID ),
-				MIdata = resolveData( MItrueName, fields.MagicItemDB, reItemData, fromCS, parseTable, fromIndex, fromID ).parsed,
-				showType = parseInt(attrLookup( fromCS, fields.ItemContainerHide )),
-				hide = (MIdata.hide.length && MIdata.hide !== 'nohide' && MIdata.hide !== 'reveal') || (!MIdata.hide.length && (MIname === MItrueName) && state.MagicMaster.autoHide && !!MItrueObj.obj && reLooksLike.test(MItrueObj.obj[1].body)),
-				rev = hide ? (MIdata.reveal || '') : '',
-				pickPutText = (tokenID === fromTokenID) ? 'put away' : 'pick up';
-				
-			if (hide) MIname = (!MIdata.hide.length || MIdata.hide === 'hide') ? getShownType( MItrueObj, fromRowRef, MIdata.itemType ) : MIdata.hide;
-			
-			if (!_.isUndefined(toSlotName)) {
-				toSlotType = (toMIbag[toTable].tableLookup( fields[fieldGroups[toTable].prefix+'type'], toIndex ) || fromSlotType).toLowerCase();
-				toSlotTrueName = toMIbag[toTable].tableLookup( fields[fieldGroups[toTable].prefix+'trueName'], toIndex );
-				toSlotTrueType = (toMIbag[toTable].tableLookup( fields[fieldGroups[toTable].prefix+'trueType'], toIndex ) || fromSlotTrueType).toLowerCase();
-				toSlotQty = parseInt((toMIbag[toTable].tableLookup( fields[fieldGroups[toTable].prefix+'qty'], toIndex ) || 0),10);
-				toSlotCharges = parseInt((toMIbag[toTable].tableLookup( fields[fieldGroups[toTable].prefix+'trueQty'], toIndex ) || 0),10);
-				toSlotCost = toMIbag[toTable].tableLookup( fields[fieldGroups[toTable].prefix+'cost'], toIndex );
-			} else {
-				toSlotName = '-';
-				toSlotTrueName = toMIvalues[fields.Items_trueName[0]][fields.Items_trueName[1]];
-				toSlotType = toMIvalues[fields.Items_type[0]][fields.Items_type[1]];
-				toSlotTrueType = toSlotType;
-			}
+			const toMIbag = getTableGroup( toCS, fieldGroups.MI ),
+				  fromMIbag = getTableGroup( fromCS, fieldGroups.MI );
+				  
+			let	fromIndexes, fromTables, fromIDs, prefix;
+				  
+			[fromIndexes,fromTables,fromIDs] = tableGroupFind( fromMIbag, 'chosen', 1, true, true );
 
-			var sameMI = (MItrueName.toLowerCase() === toSlotTrueName.toLowerCase()) && (toSlotType === fromSlotType || !toSlotType.dbName()) && (toSlotTrueType === fromSlotTrueType || !toSlotTrueType.dbName()),
-				toSlotEmpty = toSlotName === '-';
-
-			if (((toSlotType && toSlotType.includes('cursed')) || (toSlotTrueType && toSlotTrueType.includes('cursed'))) && !sameMI && !toSlotEmpty) {
-				sendParsedMsg( tokenID, messages.cursedSlot + '{{desc1=[Select another slot](!magic --button '+BT.POP_PICK+'|'+tokenID+'|'+fromRowRef+'|'+fromTokenID+'|'+toTokenID+'|-1)}}', senderId );
-				return;
-			}
-				
-			if (((fromSlotType && fromSlotType.includes('cursed')) || (fromSlotTrueType && fromSlotTrueType.includes('cursed'))) && fromTokenID == tokenID) {
-				sendParsedMsg( tokenID, messages.cursedItem + '{{desc1=[Select another item](!magic --button '+BT.POP_PICK+'|'+tokenID+'|-1|'+fromTokenID+'|'+toTokenID+'|'+toRowRef+')}}', senderId );
-				return;
-			}
-				
-			var	MIqty = parseInt( (fromMIbag[fromTable].tableLookup( fields[fieldGroups[fromTable].prefix+'qty'], fromIndex ) || 0), 10) || 0,
-				MItrueQty = parseInt((fromMIbag[fromTable].tableLookup( fields[fieldGroups[fromTable].prefix+'trueQty'], fromIndex) || 0),10),
-				MIspeed = fromMIbag[fromTable].tableLookup( fields[fieldGroups[fromTable].prefix+'speed'], fromIndex ),
-				MItrueSpeed = fromMIbag[fromTable].tableLookup( fields[fieldGroups[fromTable].prefix+'trueSpeed'], fromIndex ),
-				MItype = fromMIbag[fromTable].tableLookup( fields[fieldGroups[fromTable].prefix+'type'], fromIndex ),
-				MIcost = evalAttr( fromMIbag[fromTable].tableLookup( fields[fieldGroups[fromTable].prefix+'cost'], fromIndex ) || 0, charCS ),
-				MIcost = MIcost != 0 ?	MIcost : (!sell ? 0 : resolveData( MItrueName, fields.MagicItemDB, reItemData, fromCS, {cost:reSpellSpecs.cost} ).parsed.cost || 0),
-				MIbaseCost = sell ? toSlotCost : MIcost,
-				MIreveal = rev || fromMIbag[fromTable].tableLookup( fields[fieldGroups[fromTable].prefix+'reveal'], fromIndex ),
-				MItrueType = fromMIbag[fromTable].tableLookup( fields[fieldGroups[fromTable].prefix+'trueType'], fromIndex ),
-				MItext = MIname,
-				MIobj = abilityLookup( fields.MagicItemDB, MIname, fromCS ),
-				MIsuperTypes = MIdata.itemType ? [MIdata.itemType.dbName()] : (MIobj.specs() || [['','','','','']]).reduce((a,b) => a.concat([b[4].dbName()]), []),
-				slotInc = 1,
-				isStackable = (stackable.includes(fromSlotType) && stdEqual( toSlotName.replace(/\-v\d+$/, ''), MIname ) && stdEqual( toSlotType, MItype ) && stdEqual( toSlotTrueName, MItrueName )),
-				finalQty, finalCharges, pickQty, charges, content;
-				
-			if (showType) {
-				MItext = !MIobj.obj ? MItext : getShownType( MIobj, fromRowRef, MIdata.itemType );
-			}
-				
-//			MIqty = isNaN(MIqty) ? 0 : MIqty;
-//			MIcost = isNaN(MIcost) ? 0 : MIcost;
-			toSlotQty = isNaN(toSlotQty) ? 0 : toSlotQty;
-			toSlotCharges = isNaN(toSlotCharges) ? 0 : toSlotCharges;
-			
-//			log('handlePickOrPut: item '+MIname+', table cost = '+fromMIbag[fromTable].tableLookup( fields[fieldGroups[fromTable].prefix+'cost'], fromIndex )+', dB cost = '+resolveData( MItrueName, fields.MagicItemDB, reItemData, fromCS, {cost:reSpellSpecs.cost} ).parsed.cost+', MIcost = '+MIcost);
-
-//			log('handlePickOrPut: singular = '+singular+', MIsuperTypes = '+MIsuperTypes+', intersection = '+_.intersection(singular,MIsuperTypes)+', specs = '+MIobj.specs());
-				
-			switch (MIqty) {
-			case 0:
-				if (!splitable.includes(fromSlotType)) {
-					qty = pickQty = 0;
-					charges = MItrueQty;
-				} else {
-					handlePickupNothing( args, MItext, toSlotName, senderId, buy );
-					return;
-				};
-				break;
-			
-			case 1:
-				qty = 1;
-				pickQty = charges = MItrueQty;
-				MIqty = 0;
-				break;
-				
-			default:
-				if (_.intersection(singular,MIsuperTypes).length || fromSlotType === 'single') {
-					qty = 1;
-					charges = pickQty = (qty >= MIqty ? MItrueQty : 1);
-					if (qty >= MIqty) MIqty = 0;
-				} else if (!splitable.includes(fromSlotType)) {
-					qty = MIqty;
-					pickQty = (recharging.includes(fromSlotType)) ? MIqty : MItrueQty;
-					charges = MItrueQty;
-					MIqty = 0;
-				} else if (qty < 0) {
-					howMany( args, MItext, fromSlotType, MIqty, senderId );
-					return;
-				} else if (qty >= MIqty) {
-					qty = MIqty;
-					pickQty = charges = MItrueQty;
-					MIqty = 0;
-				} else if (qty == 0) {
-					return;
-				} else {
-					pickQty = charges = qty * Math.ceil(MItrueQty/MIqty);
-				}
-				break;
-			}
-			finalQty = pickQty;
-			finalCharges = charges;
-			
-			if (isStackable) {
-				finalQty = (parseInt(finalQty)||0) + (parseInt(toSlotQty)||0);
-				finalCharges = (parseInt(finalCharges)||0) + (parseInt(toSlotCharges)||0);
-				slotInc = 0;
-			} else if (toSlotType !== '' && (toSlotName !== '-')) {
-				content = messages.slotFull;
-				content += '{{[Choose another slot](!magic --pickorput|'+tokenID+'|'+fromRowRef+'|'+fromTokenID+'|'+toTokenID+'|-1)}}';
-				sendParsedMsg( tokenID, content, senderId );
-				return;
-			}
-			
-			if (!_.isUndefined(expenditure)) {
-				expenditure = parseFloat(expenditure);
-			}
-			var pickPocket = (attrLookup( charCS, fields.PickPocket ) || 'false') == 'true';
+			let single = (!_.isUndefined(fromIndexes) && fromIndexes.length <= 1);
+			let miNames = [];
+			let miQtys = [];
+			const pickPocket = (attrLookup( charCS, fields.PickPocket ) || 'false') == 'true',
+				  showType = parseInt(attrLookup( fromCS, fields.ItemContainerHide ));
 	
-//			log('handlePickOrPut: pickPocket = '+pickPocket+', (buy || sell) = '+(buy || sell)+', expenditure = '+expenditure);
+			if (!pickPocket && (buy || sell) && (_.isUndefined(expenditure) || !expenditure.length) && (_.isUndefined(expenditure) || isNaN(expenditure) || offer)) {
+
+				let MIname = single ? tableGroupLookup( fromMIbag, 'name', fromRowRef ) : 'items';
+				let MIcost, MIdata, fromSlotType, fromSlotTrueType, totalQty = 0,
+					fromTable, fromIndex, fromPrefix, MIqty, MItrueName, MIobj, MIsuperTypes;
 			
-			if (!pickPocket && (buy || sell) && (_.isUndefined(expenditure) || isNaN(expenditure) || offer)) {
 				if (!offer) {
-					MIcost = !buy ? MIcost : (!MIdata.cost.includes('^^') ? MIcost : MIdata.cost);
+					expenditure = 0;
 					let notes = attrLookup( traderCS, fields.AttrNotes ),
 						match = (notes.match(/n?pcdata=(\[.+?\])/i) || ['',''])[1],
 						reTrade = {buy:reClassSpecs.buy, sell:reClassSpecs.sell},
 						tradingRace = resolveData( (attrLookup( traderCS, fields.Race ) || 'Human'), fields.RaceDB, reRaceData, traderCS, reTrade ).parsed,
 						trade = buy?'sell':'buy',
-						buyFormula = parseData(match, reTrade)[trade] || tradingRace[trade] || classObjects( traderCS, senderId, reTrade)[0].classData[trade] || (buy?'(cost*(1+((4+2d6)/100)))':'(cost*(1-((4+2d6)/100)))'),
-						replaced = buyFormula.replace(/cost/g,MIcost);
-					MIcost = evalAttr(replaced,charCS);
-					expenditure = (Math.round(100 * MIcost * ((!splitable.includes(fromSlotType) || !splitable.includes(fromSlotTrueType)) ? 1 : qty))/100);
-//					log('handlePickOrPut: notes = '+notes+', match = '+match+', parsed = '+parseData(match, reTrade)[trade]+', race = '+tradingRace[trade]+', formula = '+buyFormula+', replaced = '+replaced+', MIcost = '+MIcost+', expenditure = '+expenditure);
+						buyFormula = parseData(match, reTrade)[trade] || tradingRace[trade] || classObjects( traderCS, senderId, reTrade)[0].classData[trade] || (buy?'(cost*(1+((4+2d6)/100)))':'(cost*(1-((4+2d6)/100)))');
+
+					for (let k=0; k<fromIndexes.length; k++) {
+						fromTable = fromTables[k];
+						fromIndex = fromIndexes[k];
+						fromPrefix = fromMIbag[fromTable].fieldGroup;
+						MIqty = parseInt( (fromMIbag[fromTable].tableLookup( fields[fromPrefix+'qty'], fromIndex ) || 0), 10) || 0;
+						MItrueName = fromMIbag[fromTable].tableLookup( fields[fromPrefix+'trueName'], fromIndex );
+						MIdata = resolveData( MItrueName, fields.MagicItemDB, reItemData, fromCS, parseTable, {row:fromIndex, rowID:fromIDs[0]} ).parsed;
+						MIobj = abilityLookup( fields.MagicItemDB, MIname, fromCS );
+						MIsuperTypes = MIdata.itemType ? [MIdata.itemType.dbName()] : (MIobj.specs() || [['','','','','']]).reduce((a,b) => a.concat([b[4].dbName()]), []);
+						fromSlotType = (fromMIbag[fromTable].tableLookup( fields[fromPrefix+'type'], fromIndex ) || '').toLowerCase();
+						if (MIqty <= 1) {
+							qty = MIqty;
+						} else if (_.intersection(singular,MIsuperTypes).length || fromSlotType === 'single') {
+							qty = 1;
+						} else if (!splitable.includes(fromSlotType)) {
+							qty = MIqty;
+						} else if (qty < 0) {
+							let MItext = (!showType ? MIname : (!MIobj.obj ? MIname : getShownType( MIobj, fromRowRef, MIdata.itemType )));
+							howMany( args, MItext, fromSlotType, MIqty, senderId );
+							return;
+						};
+						MIcost = parseFloat(evalAttr((fromMIbag[fromTables[k]].tableLookup( fields[fromPrefix+'cost'], fromIndex ) || 0), fromCS));
+//						log('handlePickOrPut: cost from table = '+MIcost);
+						if (!single) qty = parseInt( fromMIbag[fromTables[k]].tableLookup( fields[fromPrefix+'qty'], fromIndex ) || 1);
+						totalQty += parseInt(qty) || 0;
+						MIcost = MIcost !== 0 ?	MIcost : (!sell ? 0 : MIdata.cost || 0);
+//						log('handlePickOrPut: MIcost (if zero) now '+MIcost);
+						MIcost = !buy ? MIcost : (!MIdata.cost.includes('^^') ? MIcost : MIdata.cost);
+//						log('handlePickOrPut: buy = '+buy+', MIdata.cost = '+MIdata.cost+', MIcost = '+MIcost);
+						buyFormula = buyFormula.replace(/cost/g,MIcost);
+//						log('handlePickOrPut: buyFormula = '+buyFormula);
+						MIcost = parseFloat(evalAttr(buyFormula,charCS)) || 0;
+//						log('handlePickOrPut: buyFormula = '+buyFormula+', replacced = '+buyFormula.replace(/cost/g,MIcost)+', evaluated = '+MIcost);
+						fromSlotType = (fromMIbag[fromTable].tableLookup( fields[fromPrefix+'type'], fromIndex ) || '').toLowerCase(),
+						fromSlotTrueType = (fromMIbag[fromTable].tableLookup( fields[fromPrefix+'trueType'], fromIndex ) || fromSlotType).toLowerCase(),
+						expenditure += (Math.round(100 * MIcost * ((!splitable.includes(fromSlotType) || !splitable.includes(fromSlotTrueType)) ? 1 : qty))/100);
+//						log('handlePickOrPut: MIcost = '+MIcost+', not splitable = '+(!splitable.includes(fromSlotType) || !splitable.includes(fromSlotTrueType))+', qty = '+qty+', expenditure = '+expenditure);
+					};
+				} else {
+					totalQty = qty;
 				};
 				if (expenditure) {
-					setAttr( charCS, ['expenditure', 'current'], expenditure );
+					setAttr( charCS, fields.Expenditure, expenditure );
 					if (args[0].toUpperCase() === BT.BUY_OFFER || args[0].toUpperCase() === BT.SELL_OFFER) {
-						content = '&{template:'+fields.menuTemplate+'}{{name='+(sell ? 'Accept Offer' : 'Pay for Goods')+'}}'
-								+ '{{desc='+traderCS.get('name')+' offers '+(sell ? 'to buy the goods from you' : 'to sell you the goods')+' for '+showCost(Math.abs(expenditure))+'.  Are you happy to '+(sell ? 'accept' : 'pay')+' this? You currently have '+(attrLookup(charCS,fields.Money_platinum) || 0)+'PP, '+(attrLookup(charCS,fields.Money_gold) || 0)+'GP, '+(attrLookup(charCS,fields.Money_electrum) || 0)+'EP, '+(attrLookup(charCS,fields.Money_silver) || 0)+'SP, and '+(attrLookup(charCS,fields.Money_copper) || 0)+'CP.}}'
-								+ '{{desc1=['+(sell ? 'Sell' : 'Buy')+' goods](!magic --button '+(sell ? BT.SELL_ITEM : (buy ? BT.BUY_ITEM : BT.PICK_ITEM))+'|'+tokenID+'|'+fromRowRef+'|'+fromTokenID+'|'+toTokenID+'|'+toRowRef+'|'+qty+'|'+expenditure+') or'
-								+ '[Choose something else](!magic --button '+(sell ? BT.SELL_POP : (buy ? BT.BUY_POP : BT.PICK_POP))+'|'+tokenID+'|'+fromTokenID+'|'+toTokenID+')}}';
+						let content = '&{template:'+fields.menuTemplate+'}{{name='+(sell ? 'Accept Offer' : 'Pay for Goods')+'}}'
+									+ '{{desc='+traderCS.get('name')+' offers '+(sell ? 'to buy the goods from you' : 'to sell you the goods')+' for '+showCost(Math.abs(expenditure))+'.  Are you happy to '+(sell ? 'accept' : 'pay')+' this? You currently have '+(attrLookup(charCS,fields.Money_platinum) || 0)+'PP, '+(attrLookup(charCS,fields.Money_gold) || 0)+'GP, '+(attrLookup(charCS,fields.Money_electrum) || 0)+'EP, '+(attrLookup(charCS,fields.Money_silver) || 0)+'SP, and '+(attrLookup(charCS,fields.Money_copper) || 0)+'CP.}}'
+									+ '{{desc1=['+(sell ? 'Sell' : 'Buy')+' goods](!magic --button '+(sell ? BT.SELL_ITEM : (buy ? BT.BUY_ITEM : BT.PICK_ITEM))+'|'+tokenID+'|'+fromRowRef+'|'+fromTokenID+'|'+toTokenID+'|'+toRowRef+'|'+totalQty+'|'+expenditure+') or'
+									+ '[Choose something else](!magic --button '+(sell ? BT.SELL_POP : (buy ? BT.BUY_POP : BT.PICK_POP))+'|'+tokenID+'|'+fromTokenID+'|'+toTokenID+')}}';
 						sendResponse( charCS, content, null, flags.feedbackName, flags.feedbackImg, tokenID );
 					} else if (sell && expenditure > spendMoney( traderCS, 0 )) {
-						content = '&{template:'+fields.warningTemplate+'}{{name=Can\'t Afford That Item}}{{desc=Unfortunately, this trader cannot afford to buy the '+MIname+'. Perhaps you have something else more affordable?'
-								+ ' Or you could buy some items from them first.}}{{desc1=[Return to inventory]('+fields.magicMaster+' --button '+BT.SELL_POP+'|'+tokenID+'|'+fromTokenID+'|'+toTokenID+')}}';
+						let content = '&{template:'+fields.warningTemplate+'}{{name=Can\'t Afford That Item}}{{desc=Unfortunately, this trader cannot afford to buy the '+MIname+'. Perhaps you have something else more affordable?'
+									+ ' Or you could buy some items from them first.}}{{desc1=[Return to inventory]('+fields.magicMaster+' --button '+BT.SELL_POP+'|'+tokenID+'|'+fromTokenID+'|'+toTokenID+')}}';
 						sendResponse( charCS, content, null, flags.feedbackName, flags.feedbackImg, tokenID );
 						content = '&{template:'+fields.warningTemplate+'}{{name=Can\'t Afford That Item}}{{desc=Unfortunately, the trader can\'t afford to buy the '+MIname+'. They could buy it for '
 								+ showCost(Math.abs(expenditure))+' but they only have '+(attrLookup(traderCS,fields.Money_platinum) || 0)+'PP, '+(attrLookup(traderCS,fields.Money_gold) || 0)+'GP, '
@@ -6787,114 +6671,221 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 								+'CP (which is equivalent to '+showCost(spendMoney(traderCS,0))+').  They\'ll need to sell some stuff first to make money.}}';
 						sendResponse( traderCS, content );
 					} else {
-						content = '&{template:'+fields.menuTemplate+'}{{name='+(sell ? 'Make Offer' : 'Set Cost')+'}}'
-								+ '{{desc=You are thinking of making an offer '+(buy ? ('to sell '+qty+' '+MIname+' to ') : ('to buy '+qty+' '+MIname+' from '))+charCS.get('name')+' for a total of '+showCost(Math.abs(expenditure))+'. Are you happy with this offer?}}'
-								+ '{{desc1=[Make the offer](!magic --button '+(sell ? BT.SELL_OFFER : BT.BUY_OFFER)+'|'+tokenID+'|'+fromRowRef+'|'+fromTokenID+'|'+toTokenID+'|'+toRowRef+'|'+qty+'|'+expenditure+')'
-								+ ' or [Haggle a price](!magic --button '+(sell ? BT.SELL_OFFER: BT.BUY_OFFER)+'|'+tokenID+'|'+fromRowRef+'|'+fromTokenID+'|'+toTokenID+'|'+toRowRef+'|'+qty+'|?{What offer do you want to make? GP|'+expenditure+'})'
-								+ ' or [Refuse to trade](!magic --message '+tokenID+'|Trade Refused|The person you are attempting to trade with has refused to '+(sell ? 'buy' : 'sell')+' you '+qty+' '+MIname+' but feel free to try a different trade --button '+(sell ? BT.SELL_POP : (buy ? BT.BUY_POP : BT.PICK_POP))+'|'+tokenID+'|'+fromTokenID+'|'+toTokenID+')}}';
+						let content = '&{template:'+fields.menuTemplate+'}{{name='+(sell ? 'Make Offer' : 'Set Cost')+'}}'
+									+ '{{desc=You are thinking of making an offer '+(buy ? ('to sell '+totalQty+' '+MIname+' to ') : ('to buy '+totalQty+' '+MIname+' from '))+charCS.get('name')+' for a total of '+showCost(Math.abs(expenditure))+'. Are you happy with this offer?}}'
+									+ '{{desc1=[Make the offer](!magic --button '+(sell ? BT.SELL_OFFER : BT.BUY_OFFER)+'|'+tokenID+'|'+fromRowRef+'|'+fromTokenID+'|'+toTokenID+'|'+toRowRef+'|'+totalQty+'|'+expenditure+')'
+									+ ' or [Haggle a price](!magic --button '+(sell ? BT.SELL_OFFER: BT.BUY_OFFER)+'|'+tokenID+'|'+fromRowRef+'|'+fromTokenID+'|'+toTokenID+'|'+toRowRef+'|'+totalQty+'|?{What offer do you want to make? GP|'+expenditure+'})'
+									+ ' or [Refuse to trade](!magic --message '+tokenID+'|Trade Refused|The person you are attempting to trade with has refused to '+(sell ? 'buy' : 'sell')+' you '+totalQty+' '+MIname+' but feel free to try a different trade --button '+(sell ? BT.SELL_POP : (buy ? BT.BUY_POP : BT.PICK_POP))+'|'+tokenID+'|'+fromTokenID+'|'+toTokenID+')}}';
 						sendResponse( traderCS, content );
 					}
 					return;
 				}
 			}
 			
-			if (!isNaN(expenditure) && expenditure != 0 && (buy || sell) ) {
-				log('handlePickOrPut: expenditure = '+expenditure);
-				spendMoney( toCS, Math.abs(expenditure), fromCS );
-			}
+			for (let i=0; i<fromIndexes.length; i++) {
 			
-/*			let dupRow;
-			dupRow = (newName !== MIname) && tableGroupFind( toMIbag, 'name', newName || MIname );
-			if (_.isUndefined(dupRow)) dupRow = (newName !== MIname) && tableGroupFind( toMIbag, 'trueName', newName || MItrueName );
+				const fromIndex = fromIndexes[i],
+					  fromTable = fromTables[i],
+					  fromPrefix = fromMIbag[fromTable].fieldGroup,
+					  fromID = fromIDs[i],
+					  MItrueName = fromMIbag[fromTable].tableLookup( fields[fromPrefix+'trueName'], fromIndex ),
+					  fromTrueName = MItrueName,
+					  fromSlotType = (fromMIbag[fromTable].tableLookup( fields[fromPrefix+'type'], fromIndex ) || '').toLowerCase(),
+					  fromSlotTrueType = (fromMIbag[fromTable].tableLookup( fields[fromPrefix+'trueType'], fromIndex ) || fromSlotType).toLowerCase(),
+					  MItrueObj = getAbility( fields.MagicItemDB, MItrueName, fromCS, null, null, null, fromIndex, fromID ),
+					  MIdata = resolveData( MItrueName, fields.MagicItemDB, reItemData, fromCS, parseTable, {row:fromIndex, rowID:fromID} ).parsed;
+					  
+				let [toIndex,toTable] = findPutRow( fromID, fromCS, fromMIbag, indexTableGroup( fromMIbag, fromTable, fromIndex ), toCS, toMIbag, showType, buy, 0 );
+				let toID = toMIbag[toTable].rowID(toIndex);
 				
-			if (!isStackable && !_.isUndefined(dupRow) && dupRow !== toRowRef) {
-				let j = 2;
-				while (!_.isUndefined(tableGroupFind( toMIbag, 'name', (MIname+' v'+j), false )[0])) {j++};
-				content = '&{template:'+fields.menuTemplate+'}{{name=Duplicate Item}}'
-						+ '{{desc=The item you have selected to '+pickPutText+' is not stackable with an item of the same name already stored}}'
-						+ '{{desc1=[Save '+MIname+' as '+(MIname+' v'+j)+'](!magic --button POPrename|'+tokenID+'|'+fromRowRef+'|'+fromTokenID+'|'+toTokenID+'|'+toRowRef+'|'+qty+'|'+expenditure+'|'+(MIname+' v'+j)+')'
-						+ '\n or [Choose a new name](!magic --button POPrename|'+tokenID+'|'+fromRowRef+'|'+fromTokenID+'|'+toTokenID+'|'+toRowRef+'|'+qty+'|'+expenditure+'|?{What new name do you want to give '+MIname+'?}) for '+MIname
-						+ '\n or [Use '+MIname+' anyway](!magic --button POPrename|'+tokenID+'|'+fromRowRef+'|'+fromTokenID+'|'+toTokenID+'|'+toRowRef+'|'+qty+'|'+expenditure+'|'+MIname+')'
-						+ '\n or [Choose something else](!magic --pickorput '+tokenID+'|'+fromTokenID+'|'+toTokenID+')}}';
-				sendResponse( charCS, content, senderId, flags.feedbackName, flags.feedbackImg, tokenID );
-				return;
-			} else if (!_.isUndefined(newName) && newName.length) {
-				if (!MIobj || !MIobj.obj) {
-					MIobj = abilityLookup( fields.MagicItemDB, MIname, fromCS );
-				}
-				if (newName !== MIname) {
-					if (MIname === MItrueName) MItrueName = newName;
-					if (MIobj.obj && MIobj.obj[0] && MIobj.obj[1]) {
-						MIobj.obj[0].set('name',newName);
-						let key = 'ababzzqqrst',
-							oldDispName = MIname.replace(/-/g,' '),
-							action = MIobj.obj[1].body.replace(new RegExp(MIname,'img'),key).replace(new RegExp(oldDispName,'img'),args[8]).replace(new RegExp(key,'img'),newName);
-						setAbility( toCS, newName, action );
-					}
-					MIname = newName;
-				};
-			};
-*/			
-			let p = fieldGroups[toTable].prefix;
-			let valLine = (p,t,v) => {toMIvalues[fields[p+t][0]][fields[p+t][1]] = v};
-
-			valLine(p,'name',MIname);
-			valLine(p,'trueName',MItrueName);
-			valLine(p,'qty',finalQty);
-			valLine(p,'trueQty',finalCharges);
-			valLine(p,'speed',MIspeed);
-			valLine(p,'trueSpeed',MItrueSpeed);
-			valLine(p,'cost',(sell ? MIbaseCost : MIcost ));
-			valLine(p,'type',MItype);
-			valLine(p,'reveal',MIreveal);
-			valLine(p,'weight',(MIdata.weight || 1));
-			valLine(p,'trueType',MItrueType);
-			
-			toMIbag[toTable].addTableRow( toIndex, toMIvalues );
-			
-			if (!newName || !newName.length || MItrueName !== MIname) {
-				MIobj = abilityLookup( fields.MagicItemDB, fromTrueName, fromCS );
-				if (MIobj.obj) {
-					setAbility( toCS, MItrueName, MIobj.obj[1].body );
+				let	toPrefix = toMIbag[toTable].fieldGroup,
+					toSlotName = toMIbag[toTable].tableLookup( fields[toPrefix+'name'], toIndex, false ),
+					toMIvalues = initValues(toPrefix),
+					toSlotTrueName, toSlotType, toSlotQty, toSlotCharges, toSlotTrueType, toSlotCost,
+					MIname = fromMIbag[fromTable].tableLookup( fields[fromPrefix+'name'], fromIndex );
+					
+				const hide = (MIdata.hide.length && MIdata.hide !== 'nohide' && MIdata.hide !== 'reveal') || (!MIdata.hide.length && (MIname === MItrueName) && state.MagicMaster.autoHide && !!MItrueObj.obj && reLooksLike.test(MItrueObj.obj[1].body)),
+					rev = hide ? (MIdata.reveal || '') : '';
+					
+				if (hide) MIname = (!MIdata.hide.length || MIdata.hide === 'hide') ? getShownType( MItrueObj, fromRowRef, MIdata.itemType ) : MIdata.hide;
+				
+				if (!_.isUndefined(toSlotName)) {
+					toSlotType = (toMIbag[toTable].tableLookup( fields[toPrefix+'type'], toIndex ) || fromSlotType).toLowerCase();
+					toSlotTrueName = toMIbag[toTable].tableLookup( fields[toPrefix+'trueName'], toIndex );
+					toSlotTrueType = (toMIbag[toTable].tableLookup( fields[toPrefix+'trueType'], toIndex ) || fromSlotTrueType).toLowerCase();
+					toSlotQty = parseInt(toMIbag[toTable].tableLookup( fields[toPrefix+'qty'], toIndex ) || 0) || 0;
+					toSlotCharges = parseInt(toMIbag[toTable].tableLookup( fields[toPrefix+'trueQty'], toIndex ) || 0) || 0;
+					toSlotCost = toMIbag[toTable].tableLookup( fields[toPrefix+'cost'], toIndex );
 				} else {
-					log('handlePickOrPut: storing '+MItrueName+' to '+toCS.get('name')+', ability not found in any database or '+fromCS.get('name'));
+					toSlotName = '-';
+					toSlotTrueName = toMIvalues[fields.Items_trueName[0]][fields.Items_trueName[1]];
+					toSlotType = toMIvalues[fields.Items_type[0]][fields.Items_type[1]];
+					toSlotTrueType = toSlotType;
 				}
-			}
-			
-			let containerType = (parseInt(attrLookup(toCS, fields.ItemContainerType) || 0) || 0);
-			containerType = (containerType == 0 ? 1 : (containerType == 2 ? 3 : containerType));
-			setAttr( toCS, fields.ItemContainerType, containerType );
-			setAttr(charCS, fields.ItemOldContainerType, containerType);
-			
-			await moveMIspells( senderId, fromCS, fromIndex, fromID, toCS, toIndex, toID, MIname );
-			if (!stdEqual(MIname,MItrueName)) {
-				await moveMIspells( senderId, fromCS, fromIndex, fromID, toCS, toIndex, toID, MItrueName );
-			}
-			checkForBag( toCS, MItrueName, toRowRef );
-			if (!!MIdata.pick && !!MIdata.pick.length) {
-				pickPutCmd( MIdata.pick, toTokenID, toCS, 'magic handlePickOrPut' );
-			};
-			if (MIqty == 0) {
-				if (!!MIdata.put && !!MIdata.put.length) {
-					pickPutCmd( MIdata.put, fromTokenID, fromCS, 'magic handlePickOrPut' );
+
+				const sameMI = (MItrueName.toLowerCase() === toSlotTrueName.toLowerCase()) && (toSlotType === fromSlotType || !toSlotType.dbName()) && (toSlotTrueType === fromSlotTrueType || !toSlotTrueType.dbName()),
+					  toSlotEmpty = toSlotName === '-';
+
+				if (((toSlotType && toSlotType.includes('cursed')) || (toSlotTrueType && toSlotTrueType.includes('cursed'))) && !sameMI && !toSlotEmpty) {
+					sendParsedMsg( tokenID, messages.cursedSlot + '{{desc1=[Select another slot](!magic --button '+BT.POP_PICK+'|'+tokenID+'|'+fromRowRef+'|'+fromTokenID+'|'+toTokenID+'|-1)}}', senderId );
+					return;
+				}
+					
+				if (((fromSlotType && fromSlotType.includes('cursed')) || (fromSlotTrueType && fromSlotTrueType.includes('cursed'))) && fromTokenID == tokenID) {
+					sendParsedMsg( tokenID, messages.cursedItem + '{{desc1=[Select another item](!magic --button '+BT.POP_PICK+'|'+tokenID+'|-1|'+fromTokenID+'|'+toTokenID+'|'+toRowRef+')}}', senderId );
+					return;
+				}
+					
+				const MItrueQty = parseInt((fromMIbag[fromTable].tableLookup( fields[fromPrefix+'trueQty'], fromIndex) || 0),10),
+					  MIspeed = fromMIbag[fromTable].tableLookup( fields[fromPrefix+'speed'], fromIndex ),
+					  MItrueSpeed = fromMIbag[fromTable].tableLookup( fields[fromPrefix+'trueSpeed'], fromIndex ),
+					  MItype = fromMIbag[fromTable].tableLookup( fields[fromPrefix+'type'], fromIndex ),
+					  MIreveal = rev || fromMIbag[fromTable].tableLookup( fields[fromPrefix+'reveal'], fromIndex ),
+					  MItrueType = fromMIbag[fromTable].tableLookup( fields[fromPrefix+'trueType'], fromIndex ),
+					  MIobj = abilityLookup( fields.MagicItemDB, MIname, fromCS ),
+					  isStackable = (stackable.includes(fromSlotType) && stdEqual( toSlotName.replace(/\-v\d+$/, ''), MIname ) && stdEqual( toSlotType, MItype ) && stdEqual( toSlotTrueName, MItrueName ));
+				
+				let	MIsuperTypes = MIdata.itemType ? [MIdata.itemType.dbName()] : (MIobj.specs() || [['','','','','']]).reduce((a,b) => a.concat([b[4].dbName()]), []),
+					MIqty = parseInt( (fromMIbag[fromTable].tableLookup( fields[fromPrefix+'qty'], fromIndex ) || 0), 10) || 0,
+					MIcost = evalAttr( fromMIbag[fromTable].tableLookup( fields[fromPrefix+'cost'], fromIndex ) || 0, charCS ),
+					MItext = MIname,
+					slotInc = 1,
+					pickQty, charges;
+
+				if (showType) {
+					MItext = !MIobj.obj ? MItext : getShownType( MIobj, fromRowRef, MIdata.itemType );
+				}
+					
+				toSlotQty = isNaN(toSlotQty) ? 0 : toSlotQty;
+				toSlotCharges = isNaN(toSlotCharges) ? 0 : toSlotCharges;
+				
+				switch (MIqty) {
+				case 0:
+					if (!splitable.includes(fromSlotType)) {
+						qty = pickQty = 0;
+						charges = MItrueQty;
+					} else if (single) {
+						handlePickupNothing( args, MItext, toSlotName, senderId, buy );
+						return;
+					} else {
+						continue;
+					}
+					break;
+				
+				case 1:
+					qty = 1;
+					pickQty = charges = MItrueQty;
+					MIqty = 0;
+					break;
+					
+				default:
+					if (_.intersection(singular,MIsuperTypes).length || fromSlotType === 'single') {
+						qty = 1;
+						charges = pickQty = (qty >= MIqty ? MItrueQty : 1);
+						if (qty >= MIqty) MIqty = 0;
+					} else if (!splitable.includes(fromSlotType)) {
+						qty = MIqty;
+						pickQty = (recharging.includes(fromSlotType)) ? MIqty : MItrueQty;
+						charges = MItrueQty;
+						MIqty = 0;
+					} else if (single && qty < 0) {
+						howMany( args, MItext, fromSlotType, MIqty, senderId );
+						return;
+					} else if (qty < 0 || qty >= MIqty) {
+						qty = MIqty;
+						pickQty = charges = MItrueQty;
+						MIqty = 0;
+					} else if (qty == 0) {
+						continue;
+					} else {
+						pickQty = charges = qty * Math.ceil(MItrueQty/MIqty);
+					}
+					break;
+				}
+				let finalQty = pickQty,
+					finalCharges = charges;
+					
+				if (isStackable) {
+					finalQty = (parseInt(finalQty)||0) + (parseInt(toSlotQty)||0);
+					finalCharges = (parseInt(finalCharges)||0) + (parseInt(toSlotCharges)||0);
+					slotInc = 0;
+				} else if (toSlotType !== '' && (toSlotName !== '-')) {
+					let content = messages.slotFull;
+					content += '{{desc9=[Choose another slot](!magic --pickorput|'+tokenID+'|'+fromRowRef+'|'+fromTokenID+'|'+toTokenID+'|-1)}}';
+					sendParsedMsg( tokenID, content, senderId );
+					return;
+				}
+
+				if (!isNaN(expenditure) && expenditure != 0 && (buy || sell) ) {
+					spendMoney( toCS, Math.abs(expenditure), fromCS );
+				}
+				
+				const MIbaseCost = sell ? toSlotCost : MIcost;
+				let p = fieldGroups[toTable].prefix;
+
+				toMIvalues.valLine(p,'name',MIname)
+						  .valLine(p,'trueName',MItrueName)
+						  .valLine(p,'qty',finalQty)
+						  .valLine(p,'trueQty',finalCharges)
+						  .valLine(p,'speed',MIspeed)
+						  .valLine(p,'trueSpeed',MItrueSpeed)
+						  .valLine(p,'cost',(sell ? MIbaseCost : MIcost ))
+						  .valLine(p,'type',MItype)
+						  .valLine(p,'reveal',MIreveal)
+						  .valLine(p,'weight',(MIdata.weight || 1))
+						  .valLine(p,'trueType',MItrueType);
+				
+				toMIbag[toTable].addTableRow( toIndex, toMIvalues );
+				
+				if (!newName || !newName.length || MItrueName !== MIname) {
+					if (MItrueObj.obj) {
+						setAbility( toCS, MItrueName, MItrueObj.obj[1].body );
+					} else {
+						log('handlePickOrPut: storing '+MItrueName+' to '+toCS.get('name')+', ability not found in any database or '+fromCS.get('name'));
+					}
+				}
+				
+				let containerType = (parseInt(attrLookup(toCS, fields.ItemContainerType) || 0) || 0);
+				containerType = (containerType == 0 ? 1 : (containerType == 2 ? 3 : containerType));
+				setAttr( toCS, fields.ItemContainerType, containerType );
+				setAttr(charCS, fields.ItemOldContainerType, containerType);
+				
+				await moveMIspells( senderId, fromCS, fromIndex, fromID, toCS, toIndex, toID, MIname );
+				if (!stdEqual(MIname,MItrueName)) {
+					await moveMIspells( senderId, fromCS, fromIndex, fromID, toCS, toIndex, toID, MItrueName );
+				}
+				checkForBag( toCS, MItrueName, toRowRef );
+				if (!!MIdata.pick && !!MIdata.pick.length) {
+					pickPutCmd( MIdata.pick, toTokenID, toCS, 'magic handlePickOrPut' );
 				};
-				fromMIbag[fromTable].addTableRow( fromIndex );	// Blanks this row of the table
-				setTimeout(() => removeMIability( fromCS, MIname, fromMIbag[fromTable], fromTable ), 100);		// Only removes ability if does not exist elsewhere in the equipment list
-				setTimeout(() => removeMIability( fromCS, MItrueName, fromMIbag[fromTable], fromTable ), 100);
-			} else {
-				fromMIbag[fromTable].tableSet( fields[fieldGroups[fromTable].prefix+'trueQty'], fromIndex, (MItrueQty - charges) );
-				fromMIbag[fromTable].tableSet( fields[fieldGroups[fromTable].prefix+'qty'], fromIndex, (MIqty - qty) );
+				if (MIqty == 0) {
+					if (!!MIdata.put && !!MIdata.put.length) {
+						pickPutCmd( MIdata.put, fromTokenID, fromCS, 'magic handlePickOrPut' );
+					};
+					fromMIbag[fromTable].addTableRow( fromIndex );	// Blanks this row of the table
+					setTimeout(() => removeMIability( fromCS, MIname, fromMIbag[fromTable], fromTable ), 100);		// Only removes ability if does not exist elsewhere in the equipment list
+					setTimeout(() => removeMIability( fromCS, MItrueName, fromMIbag[fromTable], fromTable ), 100);
+				} else {
+					fromMIbag[fromTable].tableSet( fields[fieldGroups[fromTable].prefix+'trueQty'], fromIndex, (MItrueQty - charges) );
+					fromMIbag[fromTable].tableSet( fields[fieldGroups[fromTable].prefix+'qty'], fromIndex, (MIqty - qty) );
+				};
+				if (single) pickupMessage( args, MIname, MItype, qty, (MItrueQty - qty), finalCharges, senderId );
+				miNames.push(MIname);
+				miQtys.push(qty);
+				qty = -1;
 			};
-			
-			content = fields.attackMaster + ' --checkac ' + fromTokenID + '|silent||' + senderId
+			let content = fields.attackMaster + ' --checkac ' + fromTokenID + '|silent||' + senderId
 					+ ' --checkac ' + toTokenID + '|silent||' + senderId;
 			sendAPI( content, senderId );
 			content = fields.initMaster + ' --checkinit ' + fromTokenID + '|silent'
 					+ ' --checkinit ' + toTokenID + '|silent';
 			sendAPI( content, senderId );
 			setTimeout( updateCoins, 10, charCS );
+			
+			if (!single) pickupMessage( args, miNames, null, miQtys, null, null, senderId );
+			await itemSlotData( toTokenID, toMIbag, senderId );
+			await itemSlotData( fromTokenID, fromMIbag, senderId );
 
-			pickupMessage( args, MIname, MItype, qty, (MItrueQty - qty), finalCharges, senderId );
 			return;
 		} catch (e) {
 			sendDebug('MagicMaster handlePickOrPut: JavaScript '+e.name+': '+e.message+' while searching, looting, storing, buying or selling items');
@@ -6908,29 +6899,25 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * displayed magic item bag.
 	 */
  
-	var handleSelectMI = function( args, GMonly, senderId ) {
+	const handleSelectMI = function( args, GMonly, senderId ) {
 		
-		var tokenID = args[1],
-			MIrowref = args[2],
-			MItoStore = args[3],
-			charCS = getCharacter(tokenID);
+		const tokenID = args[1],
+			  MIrowref = args[2],
+			  MItoStore = args[3],
+			  charCS = getCharacter(tokenID);
 			
 		if (!charCS) {
-			sendDebug('handleSelectMI: invalid tokenID passed');
 			sendError('Internal MagicMaster error');
 			return;
 		}
 		if (!MItoStore || MItoStore.length == 0) {
-			sendDebug('handleSelectMI: invalid Magic Item passed');
 			sendError('Internal MagicMaster error');
 			return;
 		}
 		
 		if (MItoStore.toLowerCase() != 'remove') {
-			let index,rowID,table;
-			[index,table,rowID] = tableGroupIndex( getTableGroupField( charCS, {}, fieldGroups.MI, 'name' ), MIrowref );
-//			let itemObj = abilityLookup( fields.MagicItemDB, MItoStore, charCS );
-			let itemSpeed = resolveData( MItoStore, fields.MagicItemDB, reItemData, charCS, {speed:reSpellSpecs.speed}, index, rowID ).parsed.speed;
+			let [index,table,rowID] = tableGroupIndex( getTableGroupField( charCS, {}, fieldGroups.MI, 'name' ), MIrowref );
+			let itemSpeed = resolveData( MItoStore, fields.MagicItemDB, reItemData, charCS, {speed:reSpellSpecs.speed}, {row:index, rowID:rowID} ).parsed.speed;
 			setAttr( charCS, fields.ItemCastingTime, itemSpeed );
 			setAttr( charCS, fields.ItemSelected, 1 );
 		};
@@ -6947,25 +6934,23 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * Handle selecting a slot in the displayed MI bag
 	 */
 	 
-	var handleSelectSlot = function( args, GMonly, senderId ) {
+	const handleSelectSlot = function( args, GMonly, senderId ) {
 
-		var tokenID = args[1],
-			MIrowref = args[2],
-			charCS = getCharacter(tokenID);
+		const tokenID = args[1],
+			  charCS = getCharacter(tokenID);
+			  
+		let	MIrowref = args[2];
 
 		if (!charCS) {
-			sendDebug('handleSelectSlot: invalid tokenID passed');
 			sendError('Internal MagicMaster error');
 			return;
 		}
 		if (!MIrowref || isNaN(MIrowref) || MIrowref<0) {
-			sendDebug('handleSelectSlot: invalid MI parameter passed');
 			sendError('Internal MagicMaster error');
 			return;
 		}
 		
-		var table, index,
-			MagicItems = getTableGroupField( charCS, {}, fieldGroups.MI, 'name' ),
+		let	MagicItems = getTableGroupField( charCS, {}, fieldGroups.MI, 'name' ),
 			[index,table] = tableGroupIndex( MagicItems, MIrowref );
 			
 		if (_.isUndefined(index)) {
@@ -6974,15 +6959,10 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 			MagicItems[table] = MagicItems[table].addTableRow();
 			index = MagicItems[table].sortKeys.length-1;
 			args[2] = MIrowref = indexTableGroup( MagicItems, table, index );
-//			log('handleSelectSlot: table = '+table+', index = '+index+', rowref = '+MIrowref+', name of new row = '+tableGroupLookup( MagicItems, MIrowref ));
 		};
 			
-		var	slotItem = MagicItems[table].tableLookup( fields[fieldGroups[table].prefix+'name'], index );
+		const slotItem = MagicItems[table].tableLookup( fields[fieldGroups[table].prefix+'name'], index );
 			
-//		if (MIrowref >= MagicItems.sortKeys.length) {
-//			MagicItems.addTableRow( MIrowref );
-//		}
-
 		setAttr( charCS, fields.ItemChosen, slotItem.hyphened() );
 		setAttr( charCS, fields.ItemRowRef, MIrowref );
 		setAttr( charCS, fields.Expenditure, (MagicItems[table].tableLookup( fields[fieldGroups[table].prefix+'cost'], index ) || 0 ) );
@@ -7002,38 +6982,35 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * A flag parameter determines if this is a GM-only action
 	 */
 
-	async function handleStoreMI( args, GMonly, senderId ) { //resolveData
+	async function handleStoreMI( args, GMonly, senderId ) {
 		
-		var tokenID = args[1],
-			MIrowref = String(args[2] || ''),
-			MIchosen = args[3],
-			MIqty = args[4] || '1',
-			silent = (args[5] || '').toUpperCase() === 'SILENT',
-			cmd = (args[0].toUpperCase().includes('MARTIAL') ? BT.EDIT_MARTIAL : (args[0].toUpperCase().includes('ALLITEMS') ? BT.EDIT_ALLITEMS : BT.EDIT_MI)),
-			charCS = getCharacter( tokenID ),
-			queries = args.slice(6);
+		const cmd = (args[0].toUpperCase().includes('MARTIAL') ? BT.EDIT_MARTIAL : (args[0].toUpperCase().includes('ALLITEMS') ? BT.EDIT_ALLITEMS : BT.EDIT_MI));
 			
-		if (!getObj( 'graphic', tokenID )) {
+		let tokenID = args[1],
+			MIrowref = String(args[2] || ''),
+			replace = (args[3] || '').split('/'),
+			MIqty = args[4] || '1',
+			silent = (args[5] || '').toUpperCase() === 'SILENT';
+			
+		const queries = args.slice(6),
+			  charCS = getCharacter( tokenID );
+		
+		if (!getObj( 'graphic', tokenID )) {  // i.e. if args[1] is actually a characterID
 			tokenID = undefined;
 			silent = true;
 		}
 			
 		if (!charCS) {
-			sendDebug('handleStoreMI: invalid tokenID passed');
 			sendError('Internal MagicMaster error');
 			return;
 		}
 		
-		var MItables = getTableGroup( charCS, fieldGroups.MI ),
-			inHand = MIrowref.dbName().startsWith('inhand'),
-			hand = inHand ? parseInt(MIrowref.split('/')[1] || '0') : 0,
-			replace = (MIchosen || '').split('/'),
-			MIchosen = replace[0],
-			MIreplace = replace[1],
-			isRing = MIrowref === '=',
-			repQty = '0',
-			qtyOp = isNaN(parseInt(MIqty[0])) && MIqty[0] !== '=',
-			reMIspecs = {
+		const inHand = MIrowref.dbName().startsWith('inhand'),
+			  MIchosen = replace[0],
+			  MIreplace = replace[1],
+			  isRing = MIrowref === '=',
+			  qtyOp = isNaN(parseInt(MIqty[0])) && MIqty[0] !== '=',
+			  reMIspecs = {
 				qty:reSpellSpecs.qty,
 				max:reSpellSpecs.maxQty,
 				speed:reSpellSpecs.speed,
@@ -7044,14 +7021,17 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 				pick:reSpellSpecs.pick,
 				cost:reSpellSpecs.cost,
 				weight:reSpellSpecs.weight,
-			},
+			  };
+		
+		let MItables = getTableGroup( charCS, fieldGroups.MI ),
+			repQty = '0',
 //			magicItem = abilityLookup( fields.MagicItemDB, MIchosen, charCS ),
-			typeTable='', typeIndex, selTable, selIndex, selRowID;
+			typeTable='',
+			typeIndex;
 
-		[selIndex,selTable,selRowID] = tableGroupIndex( MItables, parseInt(MIrowref) );
+		let [selIndex,selTable,selRowID] = tableGroupIndex( MItables, parseInt(MIrowref) );
 			
-		var magicItem = getAbility( fields.MagicItemDB, MIchosen, charCS, null, null, null, (isNaN(MIrowref) ? '' : selIndex), (isNaN(MIrowref) ? '' : selRowID) ),
-			MImaxQty = 0;
+		const magicItem = getAbility( fields.MagicItemDB, MIchosen, charCS, null, null, null, (isNaN(MIrowref) ? '' : selIndex), (isNaN(MIrowref) ? '' : selRowID) );
 			
 		if (!!magicItem.obj) {
 			typeTable = getItemTable( magicItem.obj[1].type );
@@ -7066,22 +7046,20 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 		};
 		if (inHand && isNaN(parseInt(MIrowref))) [selIndex,selTable,selRowID] = tableGroupFind( MItables, 'trueName', MIchosen );
 		if (isNaN(parseInt(selIndex)) || selIndex<0) {
-			let miObj = abilityLookup( fields.MagicItemDB, MIchosen );
+			const miObj = abilityLookup( fields.MagicItemDB, MIchosen );
 			selTable = getItemTable( miObj.obj[1].type );
 			selIndex = MItables[selTable].tableFind( fields[fieldGroups[selTable].prefix+'name'], '-' );
 			selRowID = MItables[selTable].rowID(selIndex);
 		};
 
 		if (queries && queries.length && queries[0].length) _.each( queries, q => setAttr( charCS, [fields.ItemVar[0]+MIchosen.hyphened()+'+'+selRowID+'-'+q.split('=')[0],fields.ItemVar[1]], (q.split('=') || ['',''])[1] ));
-		var miData = resolveData( MIchosen, fields.MagicItemDB, reItemData, charCS, reMIspecs, (isNaN(MIrowref) ? '' : selIndex ), (isNaN(MIrowref) ? '' : selRowID) ).parsed;
+		const miData = resolveData( MIchosen, fields.MagicItemDB, reItemData, charCS, reMIspecs, {row:(isNaN(MIrowref) ? '' : selIndex ), rowID:(isNaN(MIrowref) ? '' : selRowID)} ).parsed;
 
-//		log('handleStoreMI: item '+MIchosen+' has a cost of '+miData.cost+', MIrowref = '+MIrowref+', selIndex = '+selIndex+', selTable = '+selTable+', selRowID = '+selRowID);
-			
 		MIqty = Math.floor(evalAttr((qtyOp ? repQty+MIqty : (!MIqty.length ? repQty : MIqty)),charCS) || 0);
 		if (!qtyOp && MIqty == 0) {
 			MIqty = (parseInt(evalAttr(miData.qty,charCS)) || 0);
 		};
-		MImaxQty = qtyOp ? MIqty : (parseInt(evalAttr(miData.maxQty,charCS)) || MIqty);
+		const MImaxQty = qtyOp ? MIqty : (parseInt(evalAttr(miData.maxQty,charCS)) || MIqty);
 		MIqty = Math.min( MIqty, MImaxQty );
 		
 		if (selTable !== typeTable) {
@@ -7097,20 +7075,14 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 		};
 		MIrowref = indexTableGroup(MItables,selTable,selIndex);
 		
-		var prefix = MItables[selTable].fieldGroup,
-			slotName = MItables[selTable].tableLookup( fields[prefix+'name'], selIndex ),
-			slotTrueName = MItables[selTable].tableLookup( fields[prefix+'trueName'], selIndex ),
-			slotType = MItables[selTable].tableLookup( fields[prefix+'type'], selIndex ),
-			containerNo = parseInt(attrLookup( charCS, fields.ItemContainerType )) || 0,
-			values = MItables[selTable].copyValues();
-
-//		if (!magicItem.ct) {
-//			sendDebug('handleStoreMI: selected magic item speed/type not defined');
-//			sendError('Selected Magic Item not fully defined');
-//			return;
-//		}
-		
-		var midbCS, MIdisplayName;
+		const p = MItables[selTable].fieldGroup,
+			  slotName = MItables[selTable].tableLookup( fields[p+'name'], selIndex ),
+			  slotTrueName = MItables[selTable].tableLookup( fields[p+'trueName'], selIndex ),
+			  slotType = MItables[selTable].tableLookup( fields[p+'type'], selIndex ),
+			  containerNo = parseInt(attrLookup( charCS, fields.ItemContainerType )) || 0;
+			  
+		let	values = initValues( p ),
+			MIdisplayName;
 
 		if (!GMonly && slotType.toLowerCase().includes('cursed')) {
 			if (!silent) sendParsedMsg( tokenID, messages.cursedSlot + '{{desc1=[Return to menu](!magic --edit-mi '+tokenID+')}}', senderId );
@@ -7130,28 +7102,24 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 			MIdisplayName = MIchosen;
 		}
 
-		let p = MItables[selTable].fieldGroup;
-		let valLine = (p,t,v) => {values[fields[p+t][0]][fields[p+t][1]] = v};
-
-		valLine(p,'name',MIdisplayName);
-		valLine(p,'trueName',MIchosen);
-		valLine(p,'qty',MIqty);
-		valLine(p,'trueQty',MImaxQty);
-		valLine(p,'speed',miData.speed);
-		valLine(p,'trueSpeed',miData.speed);
-		valLine(p,'cost',miData.cost);
-		valLine(p,'type',miData.type);
-		valLine(p,'trueType',miData.type);
-		valLine(p,'reveal',(miData.reveal.toLowerCase() !== 'manual' ? miData.reveal : ''));
-		valLine(p,'weight',(miData.weight || 1));
+		values.valLine(p,'name',MIdisplayName)
+			  .valLine(p,'trueName',MIchosen)
+			  .valLine(p,'qty',MIqty)
+			  .valLine(p,'trueQty',MImaxQty)
+			  .valLine(p,'speed',miData.speed)
+			  .valLine(p,'trueSpeed',miData.speed)
+			  .valLine(p,'cost',miData.cost)
+			  .valLine(p,'type',miData.type)
+			  .valLine(p,'trueType',miData.type)
+			  .valLine(p,'reveal',(miData.reveal.toLowerCase() !== 'manual' ? miData.reveal : ''))
+			  .valLine(p,'weight',(miData.weight || 1));
 	
 		MItables[selTable].addTableRow( selIndex, values );
 		
 		if (isRing) {
-			let ringHand = ((attrLookup( charCS, fields.Equip_leftTrueRing ) === MIreplace) ? BT.LEFTRING : ((attrLookup( charCS, fields.Equip_rightTrueRing ) === MIreplace) ? BT.RIGHTRING : undefined));
+			const ringHand = ((attrLookup( charCS, fields.Equip_leftTrueRing ) === MIreplace) ? BT.LEFTRING : ((attrLookup( charCS, fields.Equip_rightTrueRing ) === MIreplace) ? BT.RIGHTRING : undefined));
 			if (!_.isUndefined(ringHand)) {
-				let cmdStr = (fields.attackMaster + ' --button ' + ringHand + (GMonly ? '-NOCURSE' : '') + '|' + tokenID + '|' + MIrowref + '|SILENT');
-				sendAPI( cmdStr, senderId );
+				sendAPI((fields.attackMaster + ' --button ' + ringHand + (GMonly ? '-NOCURSE' : '') + '|' + tokenID + '|' + MIrowref + '|SILENT'), senderId);
 			}
 		};
 		
@@ -7166,7 +7134,6 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 
 		await moveMIspells( senderId, null, null, null, charCS, selIndex, selRowID, MIchosen );
 		checkForBag( charCS, MIchosen, MIrowref );
-		
 		if (!!tokenID) {
 			sendAPI( (fields.attackMaster + ' --checkac ' + tokenID + '|Silent||' + senderId), senderId );
 			if (!!miData.pick && !!miData.pick.length) {
@@ -7174,12 +7141,13 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 			};
 		};
 
-		sendAPI( (fields.initMaster+' --checkinit '+tokenID+'|silent'), senderId );
+		sendAPI( (fields.initMaster+' --checkinit '+(tokenID || charCS.id)+'|silent'), senderId );
 		setTimeout( updateCoins, 10, charCS );
 
 		if (silent) {
+			const hand = inHand ? parseInt(MIrowref.split('/')[1] || '0') : 0;
 			if (tokenID && inHand && !isRing) sendAPI( (fields.attackMaster + ' --button ' + (['PRIMARY','OFFHAND','BOTH','HAND'][Math.min(hand,3)]) + '-NOCURSE|' + tokenID + '|' + MIchosen + '|' + hand + '||Silent'), senderId );
-			sendWait(senderId,0);
+			sendWait(senderId,0,'Magic handleStoreMI');
 			return [selIndex,selTable];
 		}
 		args = [cmd,tokenID,-1,''];
@@ -7189,28 +7157,30 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 		} else {
 			makeEditBagMenu( args, senderId, MIchosen+' has overwritten '+slotName );
 		}
+		await itemSlotData( tokenID, MItables, senderId );
 		return [selIndex,selTable];
 	}
 	
 	/**
 	 * Handle renaming an item. Make sure that the new name is unique
 	 **/
-	 
-	var handleRenameItem = function( args, senderId ) {
+
+	const handleRenameItem = function( args, senderId ) {
 		
-		var tokenID = args[1],
-			MIrowref = args[2],
-			MInewName = (args[4] || '').hyphened(),
-			override = String(args[5] || '').toLowerCase() === 'true',
-			charCS = getCharacter( tokenID ),
-			Items = getTableGroupField( charCS, {}, fieldGroups.MI, 'name' ),
-			table,index,rowID,
+		const tokenID = args[1],
+			  MIrowref = args[2],
+			  MInewName = (args[4] || '').hyphened(),
+			  override = String(args[5] || '').toLowerCase() === 'true',
+			  charCS = getCharacter( tokenID );
+			  
+		let	Items = getTableGroupField( charCS, {}, fieldGroups.MI, 'name' ),
 			[index,table,rowID] = tableGroupIndex( Items, MIrowref ),
-			MIoldName = tableGroupLookup( Items, 'name', MIrowref ),
-			MIhyphenOld = MIoldName.hyphened(),
 			item = getAbility( fields.MagicItemDB, MInewName, charCS, true );
 			
-		var miStoredSpell = function( charCS, oldName, newName, rowID, spell, field ) {
+		const MIoldName = tableGroupLookup( Items, 'name', MIrowref ),
+			  MIhyphenOld = MIoldName.hyphened();
+			
+		const miStoredSpell = function( charCS, oldName, newName, rowID, spell, field ) {
 			let o = attrLookup( charCS, [field[0]+oldName+'+'+rowID+'-'+spell,null] );
 			if (!o) {
 				o = attrLookup( charCS, [field[0]+oldName+'-'+spell,null] );
@@ -7231,42 +7201,44 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 			item = getAbility( fields.MagicItemDB, MIoldName, charCS, null, null, null, index, rowID );			// Check if this should actually be an abilityLookup()
 			if (!item.obj) return;
 			item.obj[0].set('name',MInewName);
-			let key = 'ababzzqqrst',
-				oldDispName = MIoldName.replace(/-/g,' '),
-				action = item.obj[1].body.replace(new RegExp(MIoldName,'img'),key).replace(new RegExp(oldDispName,'img'),args[4]).replace(new RegExp(key,'img'),MInewName);
+			const key = 'ababzzqqrst',
+				  oldDispName = MIoldName.replace(/-/g,' '),
+				  action = item.obj[1].body.replace(new RegExp(MIoldName,'img'),key).replace(new RegExp(oldDispName,'img'),args[4]).replace(new RegExp(key,'img'),MInewName);
 			setAbility( charCS, MInewName, action );
 
 			Items[table] = Items[table].tableSet( fields[fieldGroups[table].prefix+'name'], index, MInewName );
 			Items[table] = getTableField( charCS, Items[table], fieldGroups[table].tableDef, fields[fieldGroups[table].prefix+'trueName'] );
 			Items[table] = Items[table].tableSet( fields[fieldGroups[table].prefix+'trueName'], index, MInewName );
 
-			let MUspellObj = miSpellLookup( charCS, MIhyphenOld, index, rowID, [fields.ItemMUspellsList[0], null] ),
-				PRspellObj = miSpellLookup( charCS, MIhyphenOld, index, rowID, [fields.ItemPRspellsList[0], null] ),
-				powerObj = miSpellLookup( charCS, MIhyphenOld, index, rowID, [fields.ItemPowersList[0], null] );
+			const MUspellObj = miSpellLookup( charCS, MIhyphenOld, index, rowID, [fields.ItemMUspellsList[0], null] ),
+				  PRspellObj = miSpellLookup( charCS, MIhyphenOld, index, rowID, [fields.ItemPRspellsList[0], null] ),
+				  powerObj = miSpellLookup( charCS, MIhyphenOld, index, rowID, [fields.ItemPowersList[0], null] );
+
 			if (MUspellObj) {
 				MUspellObj.set('name',fields.ItemMUspellsList[0]+MInewName+'+'+rowID);
-				let spellList = MUspellObj.get('current').split(',');
+				const spellList = MUspellObj.get('current').split(',');
 				_.each(spellList,s => miStoredSpell( charCS, MIhyphenOld, MInewName, rowID, s, fields.MIspellPrefix ));
-				let spellIndexObj = miSpellLookup( charCS, MIhyphenOld, index, rowID, [fields.MIspellPrefix[0],null], 'mu' );
+				const spellIndexObj = miSpellLookup( charCS, MIhyphenOld, index, rowID, [fields.MIspellPrefix[0],null], 'mu' );
 				if (spellIndexObj) spellIndexObj.set( 'name', fields.MIspellPrefix[0]+MInewName+'-mu+'+rowID );
 			}
 			if (PRspellObj) {
 				PRspellObj.set('name',fields.ItemPRspellsList[0]+MInewName+'+'+rowID);
-				let spellList = PRspellObj.get('current').split(',');
+				const spellList = PRspellObj.get('current').split(',');
 				_.each(spellList,s => miStoredSpell( charCS, MIhyphenOld, MInewName, rowID, s, fields.MIspellPrefix ));
-				let spellIndexObj = miSpellLookup( charCS, MIhyphenOld, index, rowID, [fields.MIspellPrefix[0],null], 'pr' );
+				const spellIndexObj = miSpellLookup( charCS, MIhyphenOld, index, rowID, [fields.MIspellPrefix[0],null], 'pr' );
 				if (spellIndexObj) spellIndexObj.set( 'name', fields.MIspellPrefix[0]+MInewName+'-pr+'+rowID );
 			}
 			if (powerObj) {
 				powerObj.set('name',fields.ItemPowersList[0]+MInewName+'+'+rowID);
-				let spellList = powerObj.get('current').split(',');
+				const spellList = powerObj.get('current').split(',');
 				_.each(spellList,s => miStoredSpell( charCS, MIhyphenOld, MInewName, rowID, s, fields.MIpowerPrefix ));
-				let spellIndexObj = miSpellLookup( charCS, MIhyphenOld, index, rowID, [fields.MIspellPrefix[0],null], 'pw' );
+				const spellIndexObj = miSpellLookup( charCS, MIhyphenOld, index, rowID, [fields.MIspellPrefix[0],null], 'pw' );
 				if (spellIndexObj) spellIndexObj.set( 'name', fields.MIspellPrefix[0]+MInewName+'-pw+'+rowID );
 			}
+			let objName;
 			filterObjs( obj => {
 				if (obj.get('_type') !== 'attribute' || obj.get('_characterid') !== charCS.id) return false;
-				let objName = obj.get('name');
+				objName = obj.get('name');
 				if (objName.startsWith(fields.ItemVar[0]+MIhyphenOld+'+'+index+'-')) {
 					obj.set('name',objName.replace( MIhyphenOld, MInewName ).replace('+'+index+'-','+'+rowID+'-'));
 				} else if (objName.startsWith(fields.ItemVar[0]+MIhyphenOld+'+'+rowID)) {
@@ -7288,27 +7260,24 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * without changing what it actually is.  Only available to GM
 	 */
 
-	var handleHideMI = function( args, senderId ) {
+	const handleHideMI = function( args, senderId ) {
 		
-		var tokenID = args[1],
-			MIrowref = args[2],
-			MIchosen = args[3],
-			charCS = getCharacter(tokenID),
-			Items, newItem, reveal, table, index, rowID;
-			
+		const tokenID = args[1],
+			  MIrowref = args[2],
+			  MIchosen = args[3],
+			  charCS = getCharacter(tokenID);
+			  
 		if (!charCS) {
-			sendDebug('handleHideMI: invalid tokenID passed');
 			sendError('Internal MagicMaster error');
 			return;
 		}
 		if (isNaN(MIrowref) || MIrowref<0) {
-			sendDebug('handleHideMI: invalid row reference passed');
 			sendError('Internal MagicMaster error');
 			return;
 		}
 		
-		Items = getTableGroupField( charCS, {}, fieldGroups.MI, 'name' );
-		[index,table,rowID] = tableGroupIndex( Items, MIrowref );
+		let Items = getTableGroupField( charCS, {}, fieldGroups.MI, 'name' ),
+			[index,table,rowID] = tableGroupIndex( Items, MIrowref );
 		
 		Items = getTableField( charCS, {}, fieldGroups[table].tableDef, fields[fieldGroups[table].prefix+'name'] );
 		Items = getTableField( charCS, Items, fieldGroups[table].tableDef, fields[fieldGroups[table].prefix+'trueName'] );
@@ -7318,10 +7287,10 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 
 		Items = Items.tableSet( fields[fieldGroups[table].prefix+'name'], index, MIchosen );
 		Items = Items.tableSet( fields[fieldGroups[table].prefix+'trueType'], index, Items.tableLookup( fields[fieldGroups[table].prefix+'type'], index ) );
-		reveal = resolveData( Items.tableLookup( fields[fieldGroups[table].prefix+'trueName'], index ), fields.MagicItemDB, reItemData, charCS, {reveal:reSpellSpecs.reveal}, index, rowID ).parsed.reveal;
+		const reveal = resolveData( Items.tableLookup( fields[fieldGroups[table].prefix+'trueName'], index ), fields.MagicItemDB, reItemData, charCS, {reveal:reSpellSpecs.reveal}, {row:index, rowID:rowID} ).parsed.reveal;
 		Items = Items.tableSet( fields[fieldGroups[table].prefix+'reveal'], index, (reveal.toLowerCase() !== 'manual' ? reveal : ''));
 		
-		newItem = abilityLookup( fields.MagicItemDB, MIchosen, charCS );
+		const newItem = abilityLookup( fields.MagicItemDB, MIchosen, charCS );
 		if (newItem.obj) Items = Items.tableSet( fields[fieldGroups[table].prefix+'type'], index, newItem.obj[1].charge );
 		
 		getAbility( fields.MagicItemDB, MIchosen, charCS, true, playerIsGM(senderId), Items.tableLookup( fields[fieldGroups[table].prefix+'trueName'], index ), index, rowID );
@@ -7337,39 +7306,34 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 
 	async function handleRemoveMI( args, GMonly, senderId, silent=false, delAbility=true ) {
 		
-		var tokenID = args[1],
-			MIrowref = args[2],
-			MIchosen = args[3],
-			charCS = getCharacter(tokenID);
+		const tokenID = args[1],
+			  MIrowref = args[2],
+			  MIchosen = args[3],
+			  charCS = getCharacter(tokenID);
 			
 		if (!charCS) {
-			sendDebug('handleRemoveMI: invalid tokenID passed');
 			sendError('Internal MagicMaster error');
 			return;
 		}
 		if (isNaN(MIrowref) || MIrowref<0) {
-			sendDebug('handleRemoveMI: invalid row reference passed');
 			sendError('Internal MagicMaster error');
 			return;
 		}
 		
-		var Items = getTableGroupField( charCS, {}, fieldGroups.MI, 'name' ),
-			table,index,rowID;
-			
-		[index,table,rowID] = tableGroupIndex( Items, MIrowref );
+		let Items = getTableGroupField( charCS, {}, fieldGroups.MI, 'name' ),
+			[index,table,rowID] = tableGroupIndex( Items, MIrowref );
 		Items = getTable( charCS, fieldGroups[table] );
 		
-		var	slotType = Items.tableLookup( fields[fieldGroups[table].prefix+'type'], index ) || '',
-			slotTrueType = Items.tableLookup( fields[fieldGroups[table].prefix+'trueType'], index ) || '',
-			slotTrueName = Items.tableLookup( fields[fieldGroups[table].prefix+'trueName'], index ) || '';
+		const slotType = Items.tableLookup( fields[fieldGroups[table].prefix+'type'], index ) || '',
+			  slotTrueType = Items.tableLookup( fields[fieldGroups[table].prefix+'trueType'], index ) || '',
+			  slotTrueName = Items.tableLookup( fields[fieldGroups[table].prefix+'trueName'], index ) || '';
+
 		if (!GMonly && (slotType.toLowerCase().includes('cursed') || slotTrueType.toLowerCase().includes('cursed'))) {
 			sendParsedMsg( tokenID, messages.cursedSlot + '{{desc1=[Return to menu](!magic --edit-mi '+tokenID+')}}', senderId );
 			return;
 		}
-		var putCmd = resolveData( slotTrueName, fields.MagicItemDB, reItemData, charCS, {put:reSpellSpecs.put}, index, rowID ).parsed.put;
-		if (!!putCmd && !!putCmd.length) {
-			pickPutCmd( putCmd, tokenID, charCS, 'magic handleRemoveMI' );
-		};
+		const putCmd = resolveData( slotTrueName, fields.MagicItemDB, reItemData, charCS, {put:reSpellSpecs.put}, {row:index, rowID:rowID} ).parsed.put;
+		if (!!putCmd && !!putCmd.length) pickPutCmd( putCmd, tokenID, charCS, 'magic handleRemoveMI' );
 		
 		Items.addTableRow( index );
 		await moveMIspells( senderId, charCS, index, rowID, null, null, null, slotTrueName, 'ALL', true );
@@ -7386,7 +7350,7 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 		setTimeout( updateCoins, 10, charCS );
 
 		if (silent) {
-			sendWait(senderId,0);
+			sendWait(senderId,0,'Magic handleRemoveMI');
 			return;
 		}
 
@@ -7395,6 +7359,7 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 		} else {
 			makeEditBagMenu( args, senderId, 'Slot '+MIrowref+' has been removed' );
 		}
+		await itemSlotData( tokenID, null, senderId );
 		return;
 	};
 	
@@ -7402,35 +7367,33 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * Handle changing the type of a Magic Item.  Only available to the GM.
 	 */
 	 
-	var handleChangeMItype = function( args, senderId ) {
+	const handleChangeMItype = function( args, senderId ) {
 		
-		var tokenID = args[1],
-			MIrowref = args[2],
-			newType = args[4],
-			charCS = getCharacter(tokenID);
+		const tokenID = args[1],
+			  MIrowref = args[2],
+			  charCS = getCharacter(tokenID);
+			  
+		let	newType = args[4];
 		
 		if (!charCS) {
-			sendDebug('handleChangeMItype: invalid tokenID passed');
 			sendError('Internal MagicMaster error');
 			return;
 		}
 		if (isNaN(MIrowref) || MIrowref<0) {
-			sendDebug('handleChangeMI: invalid row reference passed');
 			sendError('Internal MagicMaster error');
 			return;
 		}
 		
-		var Items = getTableGroupField( charCS, {}, fieldGroups.MI, 'name' ),
-			table,index;
-			
-		[index,table] = tableGroupIndex( Items, MIrowref );
+		let Items = getTableGroupField( charCS, {}, fieldGroups.MI, 'name' ),
+			[index,table] = tableGroupIndex( Items, MIrowref );
+		
 		Items = getTableField( charCS, {}, fieldGroups[table].tableDef, fields[fieldGroups[table].prefix+'name'] );
 		Items = getTableField( charCS, Items, fieldGroups[table].tableDef, fields[fieldGroups[table].prefix+'trueName'] );
 		Items = getTableField( charCS, Items, fieldGroups[table].tableDef, fields[fieldGroups[table].prefix+'type'] );			
 		Items = getTableField( charCS, Items, fieldGroups[table].tableDef, fields[fieldGroups[table].prefix+'trueType'] );			
 		
-		var MIname = Items.tableLookup( fields[fieldGroups[table].prefix+'name'], index ),
-			MItrueName = Items.tableLookup( fields[fieldGroups[table].prefix+'trueName'], index );
+		const MIname = Items.tableLookup( fields[fieldGroups[table].prefix+'name'], index ),
+			  MItrueName = Items.tableLookup( fields[fieldGroups[table].prefix+'trueName'], index );
 			
 		if (newType === 'removeCurse') {
 			Items = Items.tableSet( fields[fieldGroups[table].prefix+'trueType'], index, Items.tableLookup( fields[fieldGroups[table].prefix+'type'], index ).replace(/cursed\+/i,'').replace(/cursed/i,'uncharged') );
@@ -7454,31 +7417,30 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * the displayed charges, the actual charges or both are set.
 	 */
  
-	var handleChangeMIcharges = function( args, changeType, senderId ) {
+	async function handleChangeMIcharges( args, changeType, senderId ) {
 		
-		var tokenID = args[1],
-			MIrowref = args[2],
-			MInewQty = args[4],
-			charCS = getCharacter(tokenID);
+		const tokenID = args[1],
+			  MIrowref = args[2],
+			  MInewQty = args[4],
+			  charCS = getCharacter(tokenID);
 			
 		if (!charCS) {
-			sendDebug('handleChangeMIcharges: invalid tokenID passed');
 			sendError('Internal MagicMaster error');
 			return;
 		}
 		if (isNaN(MIrowref) || MIrowref<0) {
-			sendDebug('handleChangeMIcharges: invalid row reference passed');
 			sendError('Internal MagicMaster error');
 			return;
 		}
 		
-		var MItables = getTableGroupField( charCS, {}, fieldGroups.MI, 'name' ),
-			MIname = tableGroupLookup( MItables, 'name', MIrowref ) || '-',
-			index, table;
-			MItables = getTableGroupField( charCS, MItables, fieldGroups.MI, 'qty' );
-			MItables = getTableGroupField( charCS, MItables, fieldGroups.MI, 'trueQty' );
+		let MItables = getTableGroupField( charCS, {}, fieldGroups.MI, 'name' );
+		
+		const MIname = tableGroupLookup( MItables, 'name', MIrowref ) || '-';
+		
+		MItables = getTableGroupField( charCS, MItables, fieldGroups.MI, 'qty' );
+		MItables = getTableGroupField( charCS, MItables, fieldGroups.MI, 'trueQty' );
 			
-		[index,table] = tableGroupIndex( MItables, MIrowref );
+		let	[index,table] = tableGroupIndex( MItables, MIrowref );
 
 		if (changeType == 'Displayed' || changeType == 'Both') {
 			MItables[table] = MItables[table].tableSet( fields[fieldGroups[table].prefix+'qty'], index, MInewQty );
@@ -7489,6 +7451,7 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 		setTimeout( updateCoins, 10, charCS );
 
 		makeGMonlyMImenu( ['',tokenID,-1,''], senderId, MIname+'\'s '+changeType+' quantity has been changed to '+MInewQty );
+		await itemSlotData( tokenID, null, senderId );
 		return;
 	}
 	
@@ -7496,34 +7459,30 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * Handle change the cost of an MI, to support shops and Inns
 	 */
 	 
-	var handleSetMIcost = function( args, senderId ) {
+	const handleSetMIcost = function( args, senderId ) {
 		
-		var tokenID = args[1],
-			MIrowref = args[2],
-			newMIcost = args[4],
-			charCS = getCharacter(tokenID);
+		const tokenID = args[1],
+			  MIrowref = args[2],
+			  newMIcost = args[4],
+			  charCS = getCharacter(tokenID);
 
 		if (!charCS) {
-			sendDebug('handleSetMIcost: invalid tokenID passed');
 			sendError('Internal MagicMaster error');
 			return;
 		}
 		if (isNaN(MIrowref) || MIrowref<0) {
-			sendDebug('handleSetMIcost: invalid row reference passed');
 			sendError('Internal MagicMaster error');
 			return;
 		}
 		
-		var MItables = getTableGroupField( charCS, {}, fieldGroups.MI, 'name' ),
-			index, table;
-			MItables = getTableGroupField( charCS, MItables, fieldGroups.MI, 'cost' );
-			
-		[index,table] = tableGroupIndex( MItables, MIrowref );
+		let MItables = getTableGroupField( charCS, {}, fieldGroups.MI, 'name' );
 
-		var	MIname = MItables[table].tableLookup( fields.Items_trueName, MIrowref ) || '-';
+		MItables = getTableGroupField( charCS, MItables, fieldGroups.MI, 'cost' );
+			
+		let	[index,table] = tableGroupIndex( MItables, MIrowref );
+		const	MIname = MItables[table].tableLookup( fields.Items_trueName, MIrowref ) || '-';
 
 		MItables[table].tableSet( fields.Items_cost, MIrowref, newMIcost );
-		
 		makeGMonlyMImenu( ['',tokenID,-1,''], senderId, MIname+' now costs '+newMIcost+'GP' );
 		return;
 	}
@@ -7534,14 +7493,13 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * meaning a shift() creates the follow-on command call to doButton()
 	 */
 	 
-	var handleAddMIrow = function( args, senderID ) {
+	const handleAddMIrow = function( args, senderID ) {
 		
 		args.shift();
 		
-		var tokenID = args[1],
-			index = args[2],
-			table = args[3],
-			charCS = getCharacter(tokenID);
+		const tokenID = args[1],
+			  table = args[3],
+			  charCS = getCharacter(tokenID);
 			
 		getTable(charCS, fieldGroups[table]).addTableRow();
 
@@ -7554,20 +7512,19 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * Handle blanking the selected Magic Item bag.
 	 */
 	 
-	var handleBlankMIBag = function( args ) {
+	const handleBlankMIBag = function( args ) {
 		
-		var tokenID = args[1],
-			charCS = getCharacter(tokenID);
+		const tokenID = args[1],
+			  charCS = getCharacter(tokenID);
 			
 		if (!charCS) {
-			sendDebug('handleDeleteTreasure: invalid tokenID passed');
 			sendError('Internal MagicMaster error');
 			return;
 		}
 		
-		var content = '&{template:'+fields.menuTemplate+'}{{name=TOTALLY BLANK THE MI BAG}}'
-					+ '{{desc=Are you REALLY sure you want to delete the complete MI Bag with all its contents?}}'
-					+ '{{desc1=[Yes](!magic --button GM-ConfirmedBlank|'+tokenID+'|-1|) or [No](!magic --button GM-NoBlank|'+tokenID+'|-1|)}}';
+		const content = '&{template:'+fields.menuTemplate+'}{{name=TOTALLY BLANK THE MI BAG}}'
+					  + '{{desc=Are you REALLY sure you want to delete the complete MI Bag with all its contents?}}'
+					  + '{{desc1=[Yes](!magic --button GM-ConfirmedBlank|'+tokenID+'|-1|) or [No](!magic --button GM-NoBlank|'+tokenID+'|-1|)}}';
 					
 		sendFeedback(content,flags.feedbackName,flags.feedbackImg,tokenID,charCS);
 		return;
@@ -7577,18 +7534,17 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * The GM confirmed they want to Blank the MI Bag
 	 */
 	 
-	var handleConfirmedBlank = function( args, senderId ) {
+	const handleConfirmedBlank = function( args, senderId ) {
 		
-		var tokenID = args[1],
-			charCS = getCharacter(tokenID);
+		const tokenID = args[1],
+			  charCS = getCharacter(tokenID);
 			
 		if (!charCS) {
-			sendDebug('handleConfirmedBlank: invalid tokenID passed');
 			sendError('Internal MagicMaster error');
 			return;
 		}
 		
-		var Items = getTableGroup( charCS, fieldGroups.MI );
+		let Items = getTableGroup( charCS, fieldGroups.MI );
 		for (const table in Items) {
 			if (table.dbName() === 'coins') continue;
 			for (let i=0; i<Items[table].sortKeys.length; i++) {
@@ -7597,6 +7553,7 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 		}
 		setTimeout( updateCoins, 10, charCS );
 		makeGMonlyMImenu( args, senderId, 'Magic Item Bag has been blanked' );
+		itemSlotData( tokenID, null, senderId );
 		return;
 	}
 	
@@ -7609,14 +7566,13 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * 4: A trapped container, with the trap specified in an ability macro called Trap
 	 */
 	 
-	var handleSetContainerType = function( args, senderId ) {
+	const handleSetContainerType = function( args, senderId ) {
 		
-		var tokenID = args[1],
-			tokenType = args[4],
-			charCS = getCharacter(tokenID);
+		const tokenID = args[1],
+			  tokenType = args[4],
+			  charCS = getCharacter(tokenID);
 			
 		if (!charCS) {
-			sendDebug('handleSetContainerType: invalid tokenID passed');
 			sendError('Internal MagicMaster error');
 			return;
 		}
@@ -7631,14 +7587,13 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * Handle setting the size of a container
 	 */
 	 
-	var handleSetContainerSize = function( args, senderId ) {
+	const handleSetContainerSize = function( args, senderId ) {
 		
-		var tokenID = args[1],
-			tokenSize = args[4],
-			charCS = getCharacter(tokenID);
+		const tokenID = args[1],
+			  tokenSize = args[4],
+			  charCS = getCharacter(tokenID);
 			
 		if (!charCS) {
-			sendDebug('handleSetContainerSize: invalid tokenID passed');
 			sendError('Internal MagicMaster error');
 			return;
 		}
@@ -7653,14 +7608,13 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * their name or only by their type.
 	 */
 	 
-	var handleSetShownType = function( args, senderId ) {
+	const handleSetShownType = function( args, senderId ) {
 		
-		var tokenID = args[1],
-			showTypes = !!parseInt(args[4] || 0),
-			charCS = getCharacter(tokenID);
+		const tokenID = args[1],
+			  showTypes = !!parseInt(args[4] || 0),
+			  charCS = getCharacter(tokenID);
 			
 		if (!charCS) {
-			sendDebug('handleSetShownType: invalid tokenID passed');
 			sendError('Internal MagicMaster error');
 			return;
 		}
@@ -7675,20 +7629,19 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * Only available to the GM.
 	 */
 	 
-	var handleAddTreasure = function( args, senderId ) {
+	const handleAddTreasure = function( args, senderId ) {
 		
-		var tokenID = args[1],
-			newTitle = args[2],
-			newTreasure = args[3],
-			charCS = getCharacter(tokenID);
+		const tokenID = args[1],
+			  newTitle = args[2],
+			  newTreasure = args[3],
+			  charCS = getCharacter(tokenID);
 			
 		if (!charCS) {
-			sendDebug('handleAddTreasure: invalid tokenID passed');
 			sendError('Internal MagicMaster error');
 			return;
 		}
 		
-		var curTreasure = attrLookup( charCS, fields.Money_treasure ) || '';
+		const curTreasure = attrLookup( charCS, fields.Money_treasure ) || '';
 		
 		setAttr( charCS, fields.Money_treasure, (curTreasure+'{{'+newTitle+'='+newTreasure+'}}') );
 		makeEditTreasureMenu( args, senderId, 'Treasure added' );
@@ -7699,20 +7652,19 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * Handle editing the current treasure text
 	 */
 	 
-	var handleEditTreasure = function( args ) {
+	const handleEditTreasure = function( args ) {
 		
-		var tokenID = args[1],
-			charCS = getCharacter(tokenID);
+		const tokenID = args[1],
+			  charCS = getCharacter(tokenID);
 			
 		if (!charCS) {
-			sendDebug('handleEditTreasure: invalid tokenID passed');
 			sendError('Internal MagicMaster error');
 			return;
 		}
 		
-		var curTreasure = attrLookup( charCS, fields.Money_treasure ) || '',
-			content = '&{template:'+fields.menuTemplate+'}{{name=Editing Treasure for '+charCS.get('name')+'}}{{desc=Select all the text below, copy it (using Ctrl-C) and paste it into the Chat Edit box below (using Ctrl-V).  Then edit the elements **within the {{...} } only** before hitting *Return* to set the new value.}}\n'
-					+ '/w gm !setattr --fb-from MI System --fb-header Editing treasure --replace --name '+charCS.get('name')+' --otherval|'+curTreasure;
+		const curTreasure = attrLookup( charCS, fields.Money_treasure ) || '',
+			  content = '&{template:'+fields.menuTemplate+'}{{name=Editing Treasure for '+charCS.get('name')+'}}{{desc=Select all the text below, copy it (using Ctrl-C) and paste it into the Chat Edit box below (using Ctrl-V).  Then edit the elements **within the {{...} } only** before hitting *Return* to set the new value.}}\n'
+					  + '/w gm !setattr --fb-from MI System --fb-header Editing treasure --replace --name '+charCS.get('name')+' --otherval|'+curTreasure;
 					
 		sendFeedback(content,flags.feedbackName,flags.feedbackImg,tokenID,charCS);
 		return;
@@ -7724,20 +7676,19 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * description/journal
 	 */
 	 
-	var handleDeleteTreasure = function( args ) {
+	const handleDeleteTreasure = function( args ) {
 		
-		var tokenID = args[1],
-			charCS = getCharacter(tokenID);
+		const tokenID = args[1],
+			  charCS = getCharacter(tokenID);
 
 		if (!charCS) {
-			sendDebug('handleDeleteTreasure: invalid tokenID passed');
 			sendError('Internal MagicMaster error');
 			return;
 		}
 		
-		var curTreasure = attrLookup( charCS, fields.Money_treasure ) || '',
-			content = '&{template:'+fields.menuTemplate+'}{{name=Current Treasure to Delete}}'+curTreasure+'{{desc=Are you sure you want to delete this?}}'
-					+ '{{desc1=[Yes](!magic --button GM-DelTreasure|'+tokenID+') or [No](!magic --button GM-NodelTreasure|'+tokenID+')}}';
+		const curTreasure = attrLookup( charCS, fields.Money_treasure ) || '',
+			  content = '&{template:'+fields.menuTemplate+'}{{name=Current Treasure to Delete}}'+curTreasure+'{{desc=Are you sure you want to delete this?}}'
+					  + '{{desc1=[Yes](!magic --button GM-DelTreasure|'+tokenID+') or [No](!magic --button GM-NodelTreasure|'+tokenID+')}}';
 					
 		sendFeedback(content,flags.feedbackName,flags.feedbackImg,tokenID,charCS);
 		return;
@@ -7748,10 +7699,10 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * description/journal
 	 */
 	 
-	var handleConfirmedDelTreasure = function( args, senderId ) {
+	const handleConfirmedDelTreasure = function( args, senderId ) {
 		 
-		var tokenID = args[1],
-			charCS = getCharacter(tokenID);
+		const tokenID = args[1],
+			  charCS = getCharacter(tokenID);
 			
 		setAttr( charCS, fields.Money_treasure, '' );
 		makeEditTreasureMenu( args, senderId, 'Treasure text deleted' );
@@ -7762,11 +7713,11 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * Handle a [No] button being pressed
 	 */
 	 
-	var handleNo = function( args, senderId ) {
+	const handleNo = function( args, senderId ) {
 		
-		var noType = args[0],
-			tokenID = args[1],
-			charCS = getCharacter(tokenID);
+		const noType = args[0],
+			  tokenID = args[1],
+			  charCS = getCharacter(tokenID);
 
 		switch (noType.toUpperCase()) {
 
@@ -7795,31 +7746,29 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	async function handleCStidy ( tokenList, silent=false ) {
 		
 		try {
-			var errFlag = false,
+			let errFlag = false,
 				namesList = {},
 				objList;
 				
 			log('handleCStidy: called');
 
-			var getNamesList = function( token, namesList ) {
+			const getNamesList = function( token, namesList ) {
 
 				return new Promise(resolve => {
 
 					try {
-						var Items, i, itemName, charCS, itemList,
-							errFlag = false,
+						let itemName,
 							spellsList = '';
 							
-						charCS = getCharacter(token.id);
+						const charCS = getCharacter(token.id);
 						if (!(!charCS || !_.isUndefined(namesList[charCS.id]) || charCS.get('name').toLowerCase().includes('-db'))) {
-							Items = getTableGroupField( charCS, {}, fieldGroups.MI, 'name' );
+							let	Items = getTableGroupField( charCS, {}, fieldGroups.MI, 'name' ),
+								itemList = [],
+								i = -1,
+								itemRow, itemRowID, table;
 							Items = getTableGroupField( charCS, Items, fieldGroups.MI, 'trueName' );
-							itemList = [];
-
-							i = -1;
 							while (!_.isUndefined(itemName = tableGroupLookup( Items, 'name', ++i, false ))) {
 								itemList.push(itemName,tableGroupLookup( Items, 'trueName', i ));
-								let itemRow, itemRowID, table;
 								[itemRow,table,itemRowID] = tableGroupIndex( Items, i );
 								itemName = itemName.replace(/\s/g,'-');
 								itemList = itemList.concat(miSpellLookup( charCS, itemName, itemRow, itemRowID, fields.ItemMUspellsList, '', '', '' ).split(','),
@@ -7844,7 +7793,6 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 						}
 					} catch (e) {
 						log('MagicMaster getNamesList: JavaScript '+e.name+': '+e.message+' while doing a tidy');
-						sendDebug('MagicMaster getNamesList: JavaScript '+e.name+': '+e.message+' while doing a tidy');
 						sendCatchError('MagicMaster',null,e,'MagicMaster error in handleCStidy()');
 						namesList = undefined;
 					} finally {
@@ -7856,26 +7804,25 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 			};
 						
 			if ((!tokenList || !tokenList.length) && silent) {
-				tokenList = filterObjs( obj => {
-					if (obj.get('type') !== 'graphic' || obj.get('subtype') !== 'token') return false;
-					return (!(!obj.get('represents') || !obj.get('represents').length));
-				});
-			}
+				tokenList = filterObjs( obj => (obj.get('type') === 'graphic' && obj.get('subtype') === 'token' && (!(!obj.get('represents') || !obj.get('represents').length))));
+			};
 			tokenList = tokenList.filter( n => !!n );
 			for (const token of tokenList) {
 				namesList = await getNamesList( token, namesList );
 				if (_.isUndefined(namesList)) return;
 			}
+			let charID, objName, objCurrent, objMax, foundName,
+				dbItem, attack, menuCmd, owned;
 			objList = filterObjs( obj => {
 				if (obj.get('type') != 'attribute' && obj.get('type') != 'ability') return false;
-				let charID = obj.get('characterid');
+				charID = obj.get('characterid');
 				if (_.isUndefined(namesList[charID])) return false;
-				let objName = obj.get('name'),
-					objCurrent = String(obj.get('current') || ''),
-					objMax = String(obj.get('max') || '');
+				objName = obj.get('name');
+				objCurrent = String(obj.get('current') || '');
+				objMax = String(obj.get('max') || '');
 				if (obj.get('type') !== 'ability') {
 					if (objName.startsWith('repeating_')) return false;
-					let foundName = undefined;
+					foundName = undefined;
 					if (objName.startsWith(fields.CastingTimePrefix[0])) foundName = objName.substring(fields.CastingTimePrefix[0].length)
 					else if (objName.startsWith(fields.ItemMUspellsList[0])) foundName = objName.substring(fields.ItemMUspellsList[0].length)
 					else if (objName.startsWith(fields.ItemPRspellsList[0])) foundName = objName.substring(fields.ItemPRspellsList[0].length)
@@ -7884,16 +7831,15 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 					else if (objName.startsWith(fields.MIpowerPrefix[0])) foundName = objName.substring(fields.MIpowerPrefix[0].length)
 					else if (objName.startsWith(fields.Prev_round[0])) foundName = objName
 					else if (objName.startsWith(fields.ItemVar[0])) foundName = objName.substring(fields.ItemVar[0].length,objName.lastIndexOf('+'));
-					let testVal = (!!foundName && ((!namesList[charID].some(elem => (!!elem.dbName() && foundName.dbName().includes(elem.dbName())))) || !(objCurrent+objMax).length));
-					testVal = testVal || ((objName.startsWith(fields.Magical_hitAdj[0]) || objName.startsWith(fields.Magical_dmgAdj[0])) && !parseInt(objCurrent || 0) && !parseInt(objMax || 0));
-					return testVal;
+					return (!!foundName && ((!namesList[charID].some(elem => (!!elem.dbName() && foundName.dbName().includes(elem.dbName())))) || !(objCurrent+objMax).length))
+							|| ((objName.startsWith(fields.Magical_hitAdj[0]) || objName.startsWith(fields.Magical_dmgAdj[0])) && !parseInt(objCurrent || 0) && !parseInt(objMax || 0));
 				} else {
-					let dbItem = false;
-					let attack = objName.startsWith('Do-not-use');
-					let menuCmd = obj.get('istokenaction');
-					let owned = namesList[charID].includes(objName);
-					objName = (objName || '').dbName();
+					dbItem = false;
+					attack = objName.startsWith('Do-not-use');
+					menuCmd = obj.get('istokenaction');
+					owned = namesList[charID].includes(objName);
 					if (!menuCmd && !owned && !attack) {
+						objName = (objName || '').dbName();
 						dbItem = _.some(DBindex, (d) => !_.isUndefined(d[objName]));
 					}
 					return (attack || (!menuCmd && !owned && dbItem));
@@ -7903,7 +7849,7 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 				sendFeedback( '&{template:'+fields.messageTemplate+'}{{desc='+objList.length+' objects have been removed from '+_.size(namesList)+' characters.}}' );
 			} else {
 				log(objList.length+' objects have been removed from '+_.size(namesList)+' characters.');
-				sendWait(findTheGM(),0);
+				sendWait(findTheGM(),0,'Magic handleCStidy');
 			}
 			
 			for (const obj of objList) {
@@ -7918,15 +7864,15 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	/*
 	 * Copy a character to a new character sheet e.g. to dump corrupted attributes
 	 */
-	 
-	var handleCleanCS = function( charCS, silent=false ) {
+
+	const handleCleanCS = function( charCS, silent=false ) {
 		
-		var newCS = createObj( 'character', {
+		const newCS = createObj( 'character', {
 						name: (charCS.get('name')),
 						avatar: charCS.get('avatar'),
 						inplayerjournals: charCS.get('inplayerjournals'),
 						controlledby: charCS.get('controlledby')
-			});
+		});
 		charCS.get('bio', function(bio) {
 			newCS.set('bio',bio);
 		});
@@ -7934,35 +7880,36 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 			newCS.set('gmnotes',gmnotes);
 		});
 		
-		var objList = filterObjs( obj => {
-				let type = obj.get('type');
-				if (type === 'graphic' && obj.get('subtype') === 'token') {
-					if (obj.get('represents') !== charCS.id) return false;
-					obj.set('represents',newCS.id);
-					return false;
-				}
-				if (type !== 'attribute' && type !== 'ability') return false;
-				if (obj.get('characterid') !== charCS.id) return false;
-				if (obj.get('name').length && obj.get('name') != 'Untitled') {
-					if (type !== 'ability') {
-						createObj( 'attribute', {
-							characterid: newCS.id,
-							name: obj.get('name'),
-							current: obj.get('current'),
-							max: obj.get('max')
-						});
-					} else {
-						createObj( 'ability', {
-							characterid: newCS.id,
-							name: obj.get('name'),
-							description: obj.get('description'),
-							action: obj.get('action'),
-							istokenaction: obj.get('istokenaction')
-						});
-					};
+		let type;
+		const objList = filterObjs( obj => {
+			type = obj.get('type');
+			if (type === 'graphic' && obj.get('subtype') === 'token') {
+				if (obj.get('represents') !== charCS.id) return false;
+				obj.set('represents',newCS.id);
+				return false;
+			}
+			if (type !== 'attribute' && type !== 'ability') return false;
+			if (obj.get('characterid') !== charCS.id) return false;
+			if (obj.get('name').length && obj.get('name') != 'Untitled') {
+				if (type !== 'ability') {
+					createObj( 'attribute', {
+						characterid: newCS.id,
+						name: obj.get('name'),
+						current: obj.get('current'),
+						max: obj.get('max')
+					});
+				} else {
+					createObj( 'ability', {
+						characterid: newCS.id,
+						name: obj.get('name'),
+						description: obj.get('description'),
+						action: obj.get('action'),
+						istokenaction: obj.get('istokenaction')
+					});
 				};
-				return true;
-			});
+			};
+			return true;
+		});
 		
 		// Remove all objects on objList
 		// then remove charCS
@@ -7984,44 +7931,48 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * a linear progression due to Exceptional Strength
 	 */
 	 
-	var handleStrengthChange = function( charCS, field, increment, senderId, silent=true ) {
+	async function handleStrengthChange( tokenID, field, increment, senderId, silent=true ) {	// tokenID
 		
-		var curStrength, maxStrength,
-			originalData, strData,
-			newStr, newExp,
+		let newStr, newExp,
 			original = '',
 			changeBy = 0,
 			change = (isNaN(increment[0]) ? increment[0] : '+');
 			
-		curStrength = attrLookup( charCS, [field,'current'] );
+		const charCS = getCharacter( tokenID );
+			
 		if (!charCS || !field) {
 			sendError('Invalid token or field name when handling an attribute change.');
 			return;
 		}
+		let curStrength = attrLookup( charCS, [field+'-real','current']);
+		if (!curStrength || isNaN(parseInt(curStrength))) curStrength = attrLookup( charCS, [field,'current'] );
 		if (!curStrength || isNaN(parseInt(curStrength))) {
 			sendError('Invalid '+field+' value on character sheet when handling an attribute change.');
 			return;
 		}
 
-		increment = parseInt(evalAttr(((change !== '-') ? increment.slice(1) : increment),charCS)) || 0;
+		increment = parseInt(evalAttr(((change !== '-' && isNaN(increment[0])) ? increment.slice(1) : increment),charCS)) || 0;
 
-		maxStrength = attrLookup( charCS, [field,'max'] );
-		if (!maxStrength || increment == 0) {
-			setAttr( charCS, [field,'max'], (maxStrength = curStrength) );
-		}
-		strData = curStrength.match(/(\d+)(?:\((\d+)\))?/);
+		let strData = curStrength.match(/(\-?\d+)(?:\((\d+)\))?/);
 		strData[1] = parseInt(strData[1]);
 		strData[2] = !_.isUndefined(strData[2]) ? (parseInt(strData[2]) || 100) : strData[2];
-		originalData = maxStrength.match(/(\d+)(?:\((\d+)\))?/);
+
+		let maxStrength = attrLookup( charCS, [field,'max'] );
+		if ((!maxStrength || increment == 0) && strData[1] > 0 && strData[1] < 26) {
+			setAttr( charCS, [field,'max'], (maxStrength = curStrength) );
+		}
+		let originalData = maxStrength.match(/(\d+)(?:\((\d+)\))?/);
 		originalData[1] = parseInt( originalData[1] );
 		originalData[2] = (!_.isUndefined(originalData[2])) ? (originalData[2] = parseInt(originalData[2]) || 100) : strData[2];
 			
 		if (change === '=') increment = increment - strData[1];
 
 		if (increment != 0) {
-				
+			
 			newStr = (change === '*' ? (strData[1] * increment) : ((change === '/') ? (strData[1] / increment) : (strData[1] + increment)));
+			
 			newStr = ((change === '*' && increment < 1) || (change === '/' && increment > 1) || increment < 0) ? Math.ceil(newStr) : Math.floor(newStr); 
+			
 			if (strData[2]) {
 				if (strData[1] == originalData[1] && ((increment < 0 && strData[2] > originalData[2]) || (increment > 0 && strData[2] < originalData[2]))) {
 					newStr = originalData[1];
@@ -8041,15 +7992,18 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 			changeBy = newStr - strData[1];
 			if (strData[2] && ((change == '*' && increment < 1) || (change == '/' && increment > 1) || increment < 0)) changeBy--;
 			if (newExp && ((change == '*' && increment > 1) || (change == '/' && increment < 1) || increment > 0)) changeBy++;
-			setAttr( charCS, [field,'current',,true], newStr+(!_.isUndefined(newExp) ? '('+(newExp%100?newExp:'00')+')' : '') );
+			
+			setAttr( charCS, [field+'-real','current'], newStr+(!_.isUndefined(newExp) ? '('+(newExp%100?newExp:'00')+')' : '') );
+			setAttr( charCS, [field,'current',,true], (Math.max(1,Math.min(newStr,25)))+(!_.isUndefined(newExp) ? '('+(newExp%100?newExp:'00')+')' : '') );
 		}
 		if (!silent) {
-			let content = '&{template:'+fields.warningTemplate+'}{{name='+charCS.get('name')+'\'s '+field+'}}{{desc='+charCS.get('name')+'\'s '+field
+			const content = '&{template:'+fields.warningTemplate+'}{{name='+charCS.get('name')+'\'s '+field+'}}{{desc='+charCS.get('name')+'\'s '+field
 						+ (increment != 0 ? (' has changed by '+changeBy+', to be '+original+newStr+(!_.isUndefined(newExp) ? '('+(newExp%100?newExp:'00')+')' : '')) : (' has been memorised as an original roll')) +'}}';
 			sendResponse( charCS, content, senderId, flags.feedbackName, flags.feedbackImg );
 		} else {
-			sendWait(senderId,0);
+			sendWait(senderId,0,'Magic handleStrengthChange');
 		}
+		await itemSlotData( tokenID, null, senderId, false );
 	}
 	
 	/*
@@ -8058,8 +8012,8 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * passed back by the Library output parser
 	 * to recall the message text
 	 */
-	 
-	var handleShowMore = function( args, senderId ) {
+ 
+	const handleShowMore = function( args, senderId ) {
 		
 //		log('handleShowMore: called, showMoreObj[args[1]] = '+showMoreObj[args[1]]);
 		sendAPI( showMoreObj[args[1]], senderId, '', true );
@@ -8071,11 +8025,11 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	/**
 	 * Show help message
 	 */ 
+	
+	const showHelp = function() {
 
-	var showHelp = function() {
-
-		var handoutIDs = getHandoutIDs();
-		var content = '&{template:'+fields.menuTemplate+'}{{title=MagicMaster Help}}{{MagicMaster Help=For help on using MagicMaster, and the !magic commands, [**Click Here**]('+fields.journalURL+handoutIDs.MagicMasterHelp+')}}{{Spells & Magic Items Help=For help on the Spells, Powers and Magic Items databases, [**Click Here**]('+fields.journalURL+handoutIDs.MagicDatabaseHelp+')}}{{Effects Database=For help on using and adding Effects and the Effects Database, [**Click Here**]('+fields.journalURL+handoutIDs.EffectsDatabaseHelp+')}}{{Class Database=For help on using and adding to the Class Database, [**Click Here**]('+fields.journalURL+handoutIDs.ClassRaceDatabaseHelp+')}}{{Character Sheet Setup=For help on setting up character sheets for use with RPGMaster APIs, [**Click Here**]('+fields.journalURL+handoutIDs.RPGMasterCharSheetSetup+')}}{{RPGMaster Templates=For help using RPGMaster Roll Templates, [**Click Here**]('+fields.journalURL+handoutIDs.RPGMasterLibraryHelp+')}}';
+		const handoutIDs = getHandoutIDs();
+		const content = '&{template:'+fields.menuTemplate+'}{{title=MagicMaster Help}}{{MagicMaster Help=For help on using MagicMaster, and the !magic commands, [**Click Here**]('+fields.journalURL+handoutIDs.MagicMasterHelp+')}}{{Spells & Magic Items Help=For help on the Spells, Powers and Magic Items databases, [**Click Here**]('+fields.journalURL+handoutIDs.MagicDatabaseHelp+')}}{{Effects Database=For help on using and adding Effects and the Effects Database, [**Click Here**]('+fields.journalURL+handoutIDs.EffectsDatabaseHelp+')}}{{Class Database=For help on using and adding to the Class Database, [**Click Here**]('+fields.journalURL+handoutIDs.ClassRaceDatabaseHelp+')}}{{Character Sheet Setup=For help on setting up character sheets for use with RPGMaster APIs, [**Click Here**]('+fields.journalURL+handoutIDs.RPGMasterCharSheetSetup+')}}{{RPGMaster Templates=For help using RPGMaster Roll Templates, [**Click Here**]('+fields.journalURL+handoutIDs.RPGMasterLibraryHelp+')}}';
 
 		sendFeedback(content,flags.feedbackName,flags.feedbackImg); 
 	}; 
@@ -8084,7 +8038,7 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * Handle casting a spell
 	 */
 	 
-	var doCastSpell = function( args, selected, senderId ) {
+	const doCastSpell = function( args, selected, senderId ) {
 		
 		if (!args) return;
 		if (args[0] && !args[1] && selected && selected.length) {
@@ -8095,7 +8049,7 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 			return;
 		}
 		
-		var chargedItem = (!!args[4] && args[4].toLowerCase()=='charged');
+		const chargedItem = (!!args[4] && args[4].toLowerCase()=='charged');
 
 		args = setCaster( args, messages.castSpellClass, senderId );
 		if (!args) {
@@ -8114,7 +8068,7 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * if there are any charges left
 	 */
 	 
-	var doCastAgain = function( args, senderId ) {
+	const doCastAgain = function( args, senderId ) {
 		
 		if (!args) return;
 		
@@ -8123,11 +8077,12 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 			sendResponseError(senderId,'Missing caster type or token ID');
 			return;
 		}
-		var isPower = args[0].toUpperCase().includes('POWER'),
-			isMU = args[0].toUpperCase().includes('MU'),
-			tokenID = args[1],
-			charCS = getCharacter(tokenID),
-			spellName = args[2];
+		const isPower = args[0].toUpperCase().includes('POWER'),
+			  isMU = args[0].toUpperCase().includes('MU'),
+			  tokenID = args[1],
+			  charCS = getCharacter(tokenID);
+			  
+		let	spellName = args[2];
 			
 		if (!charCS) {
 			sendDebug('doCastAgain: invalid token_id');
@@ -8135,14 +8090,11 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 			return;
 		}
 
-		var castingName = attrLookup( charCS, fields.Casting_name ),
-			castingLevel = attrLookup( charCS, fields.CastingLevel ),
-			spellRow = attrLookup( charCS, fields.SpellRowRef ),
-			spellCol = attrLookup( charCS, fields.SpellColIndex ),
-			firstColNum = isPower ? fields.PowersFirstColNum : fields.SpellsFirstColNum,
-			col = (firstColNum || spellCol != 1) ? spellCol : '',
-			rep = (isPower ? fields.Powers_table[0] : fields.Spells_table[0]) + col + '_$' + spellRow + '_',
-			spellCharges = parseInt((attrLookup( charCS, fields.Spells_castValue, (isPower ? fields.Powers_table[0] : fields.Spells_table[0]), spellRow, spellCol ) || 0),10);
+		const spellRow = attrLookup( charCS, fields.SpellRowRef ),
+			  spellCol = attrLookup( charCS, fields.SpellColIndex ),
+			  firstColNum = isPower ? fields.PowersFirstColNum : fields.SpellsFirstColNum,
+			  col = (firstColNum || spellCol != 1) ? spellCol : '',
+			  spellCharges = parseInt((attrLookup( charCS, fields.Spells_castValue, {tableDef:(isPower ? fields.Powers_table[0] : fields.Spells_table[0]), row:spellRow, col:spellCol} ) || 0),10);
 			
 		if (spellCharges <= 0) {
 			sendParsedMsg( tokenID, messages.noMoreCharges, senderId );
@@ -8166,21 +8118,19 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * Target a spell that requires a "to-hit" roll at a token
 	 */
 	 
-	var doTouch = function( args, isGM ) {
+	const doTouch = function( args, isGM ) {
 		
 		if (!args) return;
 		
 		if (args.length < 4) {
-			sendDebug('doTouch: invalid number of arguments');
 			sendError('Too few targeting arguments');
 			return;
 		}
 		
-		var tokenID = args[0],
-			charCS = getCharacter(tokenID);
+		const tokenID = args[0],
+			  charCS = getCharacter(tokenID);
 		
 		if (!charCS) {
-			sendDebug('doTouch: invalid tokenID parameter');
 			sendError('Internal MagicMaster error');
 			return;
 		}
@@ -8192,7 +8142,7 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * Create a menu to change the memorised spells for the day
 	 */
 
-	var doMemoriseSpells = function( args, selected, senderId ) {
+	const doMemoriseSpells = function( args, selected, senderId ) {
 		
 		if (!args) return;
 		if (args[0] && !args[1] && selected && selected.length) {
@@ -8208,15 +8158,14 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 			return;
 		}
 
-		var isMU = args[0].toUpperCase().includes('MU'),
-			isPR = args[0].toUpperCase().includes('PR'),
-			isPower = args[0].toUpperCase().includes('POWER'),
-			isMI = args[0].toUpperCase().includes('MI'),
-			tokenID = args[1],
-			charCS = getCharacter(tokenID),
-			classObjs = classObjects( charCS, senderId ),
-			isWiz = classObjs.some( c => c.base === 'wizard' ),
-			isPriest = classObjs.some( c => c.base === 'priest' );
+		const isMU = args[0].toUpperCase().includes('MU'),
+			  isPR = args[0].toUpperCase().includes('PR'),
+			  isMI = args[0].toUpperCase().includes('MI'),
+			  tokenID = args[1],
+			  charCS = getCharacter(tokenID),
+			  classObjs = classObjects( charCS, senderId ),
+			  isWiz = classObjs.some( c => c.base === 'wizard' ),
+			  isPriest = classObjs.some( c => c.base === 'priest' );
 			
 		if ((isMU && !isWiz) || (isPR && !isPriest) || (isMU && isPR && !(isWiz || isPriest))) {
 			sendParsedMsg( tokenID, messages.wrongSpellCaster, senderId );
@@ -8232,11 +8181,54 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	}
 	
 	/*
+	 * Change the number of power uses per day
+	 */
+	 
+	const doChangePerDay = function( args, selected, senderId ) {
+		
+		if (!args) return;
+		if (!args[0] && selected && selected.length) {
+			args[0] = selected[0]._id;
+		} else if (args.length < 3) {
+			sendError('Missing token ID or power name when trying to set power uses per day');
+			return;
+		}
+		const tokenID = args[0],
+			  power = args[1],
+			  change = args[2],
+			  charCS = getCharacter(tokenID);
+		if (!charCS) {
+			sendError('Invalid character trying to set power uses per day',msg_orig[senderId]);
+			return;
+		}
+		let [row,col] = powerRowCol( charCS, power );
+		if (_.isUndefined(row)) {
+			sendError('Invalid power name when trying to set uses per day',msg_orig[senderId]);
+			return;
+		};
+		let upd = String(attrLookup( charCS, fields.Powers_castMax, {tableDef:fields.Powers_table,row:row,col:col} ));
+		if (_.isUndefined(upd)) {
+			sendError('Invalid power object when trying to set uses per day',msg_orig[senderId]);
+			return;
+		};
+		if (change[0] === '=') {
+			upd = evalAttr(change.slice(1));
+		} else if (isNaN(parseInt(change[0]))) {
+			upd = evalAttr(upd + change);
+		} else {
+			upd = evalAttr(upd + '+' + change);
+		};
+		
+		handleMemoriseSpell([BT.MEMALL_POWERS,tokenID,1,row,col,power,upd],senderId);
+		return;
+	}
+	
+	/*
 	 * Create a menu to see what spells the character has memorised for the day,
 	 * and allow selection to see the description of each spell.
 	 */
 	 
-	var doViewMemorisedSpells = function( args, selected, senderId ) {
+	const doViewMemorisedSpells = function( args, selected, senderId ) {
 		
 		if (!args) return;
 		if (args[0] && !args[1] && selected && selected.length) {
@@ -8262,17 +8254,16 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * magic item that has stored spells
 	 */
 	 
-	var doLearnSpell = function( args, selected, senderId ) {
+	const doLearnSpell = function( args, selected, senderId ) {
 		
 		if (!args) return;
 		if (!args[0] && selected && selected.length) {
 			args[0] = selected[0]._id;
 		} else if (args.length < 2) {
-			sendDebug('doLearnSpell: invalid arguments, missing token_id or spell name');
 			sendError('Missing token ID or spell name when trying to learn a spell',msg_orig[senderId]);
 			return;
 		}
-		var charCS = getCharacter(args[0]);
+		const charCS = getCharacter(args[0]);
 		if (!charCS) {
 			sendError('Invalid character trying to learn a spell',msg_orig[senderId]);
 			return;
@@ -8287,7 +8278,7 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * possible actions are BT.VIEW_MI or BT.USE_MI
 	 */
 	 
-	var doViewUseMI = function( args, action, senderId, selected ) {
+	const doViewUseMI = function( args, action, senderId, selected ) {
 		
 		if (!args) args=[];
 		if (!args[0] && selected && selected.length) {
@@ -8298,11 +8289,10 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 			return;
 		}
 		
-		var tokenID = args[0],
-			charCS = getCharacter(tokenID);
+		const tokenID = args[0],
+			  charCS = getCharacter(tokenID);
 
 		if (!charCS) {
-			sendDebug('doViewUseMI: invalid token_id');
 			sendResponseError(senderId,'Invalid token selected');
 			return;
 		}
@@ -8320,7 +8310,7 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * or actually use the Magic Item power (isUse = true)
 	 */
 	 
-	var doSelectMIpower = function( args, isUse, senderId ) {
+	const doSelectMIpower = function( args, isUse, senderId ) {
 		
 		if (!args) return;
 		
@@ -8339,7 +8329,7 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * Restore uses per day of a specific power of a specific magic item
 	 */
 	 
-	var doRestoreMIpowers = function( args, senderId ) {
+	const doRestoreMIpowers = function( args, senderId ) {
 		
 		if (!args) return;
 		
@@ -8359,7 +8349,7 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * long rest if the DM has enabled it.
 	 */
 
-	var doRest = function( args, selected, senderId ) {
+	const doRest = function( args, selected, senderId ) {
 		
 		if (!args) args=[];
 		if (!args[0] && selected && selected.length) {
@@ -8370,18 +8360,19 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 			return;
 		}
 
-		var tokenID = args[0],
-			restType = (args[1] || 'SELECT').toUpperCase(),
-			casterType = (args[2] || 'MU+PR').toUpperCase(),
-			timeSpent = args[3];
+		const tokenID = args[0],
+			  restType = (args[1] || 'SELECT').toUpperCase(),
+			  casterType = (args[2] || 'MU+PR').toUpperCase();
+			  
+		let	timeSpent = args[3];
 			
 		if (casterType.includes('MI') && casterType.includes('POWER')) {
 			handleRest( args, senderId );
 			return;
 		}
 		
-		var	curToken = getObj('graphic',tokenID),
-			charCS = getCharacter(tokenID);
+		const curToken = getObj('graphic',tokenID),
+			  charCS = getCharacter(tokenID);
 			
 		if (!charCS) {
 			sendDebug('doRest: invalid token_id');
@@ -8394,7 +8385,7 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 		if (isNaN(timeSpent)) timeSpent = 1;
 		
 		if (restType.toUpperCase() !== 'SELECT') {
-			var charRetail = parseData('['+((attrLookup( charCS, fields.AttrNotes ) || '').match(/n?pcdata=\[(.+?)\]/im) || ['',''])[1]+']', {name:reClassSpecs.name,buy:reClassSpecs.buy,sell:reClassSpecs.sell});
+			const charRetail = parseData('['+((attrLookup( charCS, fields.AttrNotes ) || '').match(/n?pcdata=\[(.+?)\]/im) || ['',''])[1]+']', {name:reClassSpecs.name,buy:reClassSpecs.buy,sell:reClassSpecs.sell});
 			if (charRetail.buy || charRetail.sell) {
 				sendAPI( fields.commandMaster+' --restock '+tokenID, senderId );
 			};
@@ -8434,27 +8425,26 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * actual name and speed are displayed.
 	 */
 	 
-	var doResetSingleMI = function( args, senderId, selected ) {
+	const doResetSingleMI = function( args, senderId, selected ) {
 		
-		var tokenID = args[0],
-			MIrowref = args[1],
-			reveal = (args[2] || '').toLowerCase(),
-			curToken = getObj('graphic',tokenID),
-			charCS = getCharacter(tokenID),
+		const tokenID = args[0],
+			  reveal = (args[2] || '').toLowerCase(),
+			  curToken = getObj('graphic',tokenID),
+			  charCS = getCharacter(tokenID);
+		
+		let	MIrowref = args[1],
 			index = MIrowref,
-			MIname, MItrueName, item, inHandRow,
-			table, index;
+			MIname, inHandRow, table;
 			
 		if (!charCS) {
 			charCS = getObj('character',tokenID);
 		}
 		if (!charCS) {
-			sendDebug('doResetSingleMI: invalid tokenID passed');
 			sendError('Internal MagicMaster error');
 			return;
 		}
 
-		var Items = getTableGroupField( charCS, {}, fieldGroups.MI, 'name' ),
+		let Items = getTableGroupField( charCS, {}, fieldGroups.MI, 'name' ),
 			InHand = getTable( charCS, fieldGroups.INHAND );
 		
 		if (isNaN(MIrowref)) {
@@ -8465,12 +8455,11 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 			[MIrowref,table] = tableGroupIndex( Items, MIrowref );
 		}
 		if (_.isUndefined(table) || _.isUndefined(MIrowref)) {
-			sendDebug('doResetSingleMI: invalid row reference passed');
 			sendError('Internal MagicMaster error');
 			return;
 		}
 		Items = getTable( charCS, fieldGroups[table] );
-		MItrueName = Items.tableLookup( fields[Items.fieldGroup+'trueName'], MIrowref, '-' );
+		const MItrueName = Items.tableLookup( fields[Items.fieldGroup+'trueName'], MIrowref, '-' );
 		Items = Items.tableSet( fields[Items.fieldGroup+'name'], MIrowref, MItrueName );
 		Items = Items.tableSet( fields[Items.fieldGroup+'speed'], MIrowref, Items.tableLookup( fields.Items_speed, MIrowref ));
 		Items = Items.tableSet( fields[Items.fieldGroup+'type'], MIrowref, Items.tableLookup( fields.Items_trueType, MIrowref ));
@@ -8483,7 +8472,7 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 		if (MItrueName.trueCompare(attrLookup( charCS, fields.Equip_rightTrueRing ))) setAttr( charCS, fields.Equip_rightRing, MItrueName );
 		if (reveal.toLowerCase() !== 'silent') {
 			if (reveal && reveal.length) {
-				item = abilityLookup( fields.MagicItemDB, MItrueName, charCS );
+				const item = abilityLookup( fields.MagicItemDB, MItrueName, charCS );
 				doDisplayAbility( [tokenID,item.dB,index+'/'+MItrueName], senderId, selected );
 			} else if (curToken) {
 				makeGMonlyMImenu( ['',tokenID,-1,''], senderId, MItrueName+' has been reset' );
@@ -8503,60 +8492,62 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * or more increments current by the value unless the max is reached.
 	 */
 	 
-	var doChangeCharges = function( args, selected, senderId ) { //miRow
+	const doChangeCharges = function( args, selected, senderId ) {
 		
-		sendWait( senderId, 0 );
+		sendWait( senderId, 0, 'Magic doChangeCharges' );
 		if (!args) return;
 		if (!args[0] && args[1] && selected && selected.length) {
 			args[0] = selected[0]._id;
 		} else if (!args[0] || !args[1]) {
-			sendDebug('doChangeCharges: invalid arguments, missing token_id, item name or recharges');
 			sendError('Missing item name, recharges or token ID');
 			return;
 		}
-		var tokenID = args[0],
-			command = args[1][0] == '-' ? 'DEDUCT' : (args[1][0] == '+' ? 'ADD' : (args[1][0] == '0' ? 'SELFCHARGE' : 'SET')),
-			MIname = args[2],
-			maxCharges = parseInt(args[3]),
-			chargeOverride = args[4] || '',
+		const tokenID = args[0],
+			  command = args[1][0] == '-' ? 'DEDUCT' : (args[1][0] == '+' ? 'ADD' : (args[1][0] == '0' ? 'SELFCHARGE' : 'SET')),
+			  MIname = args[2],
+			  chargeOverride = args[4] || '',
+			  fail = args[6] || '',
+			  charCS = getCharacter(tokenID);
+			  
+		let	maxCharges = parseInt(args[3]),
 			success = args[5] || '',
-			fail = args[6] || '',
-			r, i, m, charges, table, rowID, MIrow,
-			charCS = getCharacter(tokenID);
+			r, i, charges, table, rowID, MIrow, Items;
 			
 		try {
-			charges = args[1].match(/[\d\/\*\+\-]+/);
+			charges = args[1]; // .match(/[\d\/\*\+\-]+/);
 			charges = Math.abs(parseFloat(evalAttr(charges,charCS)));
 		} catch {
 			charges = 0;
 		}
 		if (!charCS || isNaN(charges)) {
-			sendDebug('doNewMaxCharges: invalid token_id or charges');
 			sendError('Incorrect MagicMaster syntax');
 			return;
 		}
 		
-		var Items = getTableGroupField( charCS, {}, fieldGroups.MI, 'trueName' );
-
 		if (MIname && MIname.length>0) {
+			Items = getTableGroupField( charCS, {}, fieldGroups.MI, 'trueName' );
 			[r,table,rowID] = tableGroupFind( Items, 'trueName', MIname );
 			MIrow = indexTableGroup( Items, table, r );
-		}
+			if (_.isUndefined(r)) {
+				Items = getTableGroupField( charCS, {}, fieldGroups.MI, 'name' );
+				[r,table,rowID] = tableGroupFind( Items, 'name', MIname );
+				MIrow = indexTableGroup( Items, table, r );
+			};
+		};
 		if (_.isUndefined(r)) {
-			MIrow = attrLookup( charCS, ['MIrowref', 'current'] );
+			MIrow = attrLookup( charCS, fields.ItemRowRef );
 			[r,table,rowID] = tableGroupIndex( Items, MIrow );
 		}
 		if (_.isUndefined(r)) {
-			sendDebug('doChangeCharges: magic item "'+MIname+'" not found');
 			sendError('Magic Item "'+MIname+'" not found in '+charCS.get('name')+'\'s items');
 			return;
 		}
 		Items = getTable( charCS, fieldGroups[table] );
 		
-		var MImaxQty = Items.tableLookup( fields[Items.fieldGroup+'trueQty'], r ) || maxCharges || 1,
-			MItype = (chargeOverride || Items.tableLookup( fields[Items.fieldGroup+'trueType'], r ) || '').toLowerCase(),
-			absorbing = MItype.includes('absorbing'),
-			exploding = MItype.includes('exploding');
+		const MImaxQty = Items.tableLookup( fields[Items.fieldGroup+'trueQty'], r ) || maxCharges || 1,
+			  MItype = (chargeOverride || Items.tableLookup( fields[Items.fieldGroup+'trueType'], r ) || '').toLowerCase(),
+			  absorbing = MItype.includes('absorbing'),
+			  exploding = MItype.includes('exploding');
 			
 		switch (command.toUpperCase()) {
 		case 'ADD':
@@ -8580,7 +8571,7 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 			break;
 		case 'SELFCHARGE':
 			i = 1+(parseInt( Items.tableLookup(fields[Items.fieldGroup+'qty'], r) ) || 0);
-			m = (!isNaN(maxCharges)) ? maxCharges : (parseInt( Items.tableLookup(fields[Items.fieldGroup+'trueQty'], r) ) || 0);
+			const m = (!isNaN(maxCharges)) ? maxCharges : (parseInt( Items.tableLookup(fields[Items.fieldGroup+'trueQty'], r) ) || 0);
 			if (charges != 0 && i < m) {
 				sendAPI('!rounds --target-nosave caster|'+tokenID+'|'+MIname+'-recharge|'+charges+'|-1|'+MIname+' is recharging|stopwatch');
 			} else {
@@ -8592,10 +8583,15 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 		default:
 			log('doChangeCharges: invalid command');
 		}
-//		sendAPI(fields.attackMaster+' --setAmmo '+tokenID+'|'+MIname+'|'+Items.tableLookup( fields.Items_qty, r )+'|'+Items.tableLookup( fields.Items_trueQty, r )+'|silent');
 		
 		if (success || fail) {
-			sendResponse( charCS, '&{template:'+(success ? fields.menuTemplate : fields.warningTemplate)+'}{{name='+MIname.replace(/-/g,' ')+'}}{{desc='+(success || fail)+'}}' );
+			if (success[0] === '!') {
+				sendAPI(success,senderId);
+			} else if (fail[0] === '!') {
+				sendAPI(fail,senderId);
+			} else {
+				sendResponse( charCS, '&{template:'+(success ? fields.menuTemplate : fields.warningTemplate)+'}{{name='+MIname.replace(/-/g,' ')+'}}{{desc='+(success || fail)+'}}' );
+			};
 		}
 		return;
 	}
@@ -8609,7 +8605,7 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * if the character has both types, ask which the player wants to use.
 	 */
 	 
-	var doSpellsMenu = function( args, selected, senderId ) {
+	const doSpellsMenu = function( args, selected, senderId ) {
 		
 		if (!args) args=[];
 		if (!args[0] && selected && selected.length) {
@@ -8620,12 +8616,11 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 			return;
 		}
 		
-		var tokenID = args[0],
-			isMU = args[1] && args[1].toUpperCase().includes('MU'),
-			isPR = args[1] && args[1].toUpperCase().includes('PR'),
-			isPower = args[1] && args[1].toUpperCase().includes('POWER'),
-			curToken = getObj('graphic',tokenID),
-			charCS = getCharacter(tokenID);
+		const tokenID = args[0],
+			  isMU = args[1] && args[1].toUpperCase().includes('MU'),
+			  isPR = args[1] && args[1].toUpperCase().includes('PR'),
+			  isPower = args[1] && args[1].toUpperCase().includes('POWER'),
+			  charCS = getCharacter(tokenID);
 			
 		if (!charCS) {
 			sendDebug('doSpellsMenu: invalid token_id');
@@ -8670,7 +8665,7 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * magic item (instead of programming in the database)
 	 **/
 	 
-	var doStoreSpells = function( args, senderId ) {
+	const doStoreSpells = function( args, senderId ) {
 		
 		if (!args) return;
 		
@@ -8680,30 +8675,30 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 			return;
 		}
 		
-		var tokenID = args[0],
-			item = (args[1] || '').split('/'),
-			cmd = (args[2] || '').toUpperCase(),
-			level = args[3] || 1,
-			retMenu = args[4] || 'VIEW-ITEM',
-			charCS = getCharacter(tokenID),
-			ability, specs, isSpell, isPower;
-			
+		const tokenID = args[0],
+			  cmd = (args[2] || '').toUpperCase(),
+			  level = args[3] || 1,
+			  retMenu = args[4] || 'VIEW-ITEM',
+			  charCS = getCharacter(tokenID);
+		
 		if (!charCS) {
 			sendDebug('doStoreSpells: invalid token_id');
 			sendResponseError(senderId,'Invalid token specified');
 			return;
 		};
 		
+		let item = (args[1] || '').split('/');
+			
 		item = item.length > 1 ? item[1] : item[0];
-		ability = getAbility( fields.MagicItemDB, item, charCS );
+		const ability = getAbility( fields.MagicItemDB, item, charCS );
 		if (!ability.obj || !ability.obj.length) {
 			sendDebug('doStoreSpells: invalid item name');
 			sendResponseError(senderId,'Invalid item specified');
 			return;
 		};
-		
-		isSpell = reCastMIspellCmd.test(ability.obj[1].body);
-		isPower = reCastMIpowerCmd.test(ability.obj[1].body);
+		const isSpell = reCastViewMIspellCmd.test(ability.obj[1].body),
+			  isPower = reCastViewMIpowerCmd.test(ability.obj[1].body);
+			  
 		if (isSpell || isPower) {
 			setCaster( ['MI',tokenID,level,item], '', senderId );
 			args.unshift((isSpell && isPower) ? 'BOTH' : (isPower ? 'POWERS' : 'SPELLS'));
@@ -8728,33 +8723,30 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	* otherwise asks the GM if there is a trap.
 	**/
 	
-	var doFindTraps = function( args, senderId ) {
+	const doFindTraps = function( args, senderId ) {
 		
 		if (!args) return;
-		
-		var msg = args;
 		if (args.length != 3) {
 			sendDebug('doFindTraps: invalid number of parameters');
 			sendResponseError(senderId,'Invalid MagicMaster command syntax');
 			return;
 		}
 		
-		var tokenID = args[0],
-			pickID = args[1],
-			putID = args[2],
-			pickToken = getObj('graphic',pickID),
-			charCS = getCharacter( tokenID ),
-			putCS = getCharacter( putID ),
-			pickCS = getCharacter( pickID ),
-			content;
+		const tokenID = args[0],
+			  pickID = args[1],
+			  putID = args[2],
+			  pickToken = getObj('graphic',pickID),
+			  charCS = getCharacter( tokenID ),
+			  putCS = getCharacter( putID ),
+			  pickCS = getCharacter( pickID );
 			
 		if (!charCS || !putCS || !pickToken) {
 			sendDebug('doFindTraps: invalid ID arguments');
 			sendResponseError(senderId,'One or more invalid tokens specified');
 			return;
 		};
-		var pickName = pickToken.get('name'),
-			putName = putCS.get('name');
+		const pickName = pickToken.get('name'),
+			  putName = putCS.get('name');
 		setAttr( putCS, ['target-level', 'current'], (pickCS ? characterLevel(pickCS) : 6) );
 		setAttr( putCS, ['target-token', 'current'], pickName );
 		
@@ -8765,13 +8757,13 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 			setAttr( pickCS, fields.GM_Rolls, (state.MagicMaster.gmRolls ? 'GM-Roll-' : '') );
 			setAttr( pickCS, fields.Trap_status, (attrLookup( pickCS, fields.Trap_status ) || 'Armed'));
 			setAttr( pickCS, fields.Lock_status, (attrLookup( pickCS, fields.Lock_status ) || 'Locked'));
-			let findTraps = findObjs({_type:'ability',characterid:pickCS.id,name:'Trap-2'},{caseInsensitive:true});
+			const findTraps = findObjs({_type:'ability',characterid:pickCS.id,name:'Trap-2'},{caseInsensitive:true});
 			if (findTraps && findTraps.length) {
 				sendAPImacro( senderId, putID, pickID, findTraps[0].get('name') );
-				sendWait(senderId,0);
+				sendWait(senderId,0,'Magic doFindTraps');
 				if (csVer(pickCS) < 3.5 && ((attrLookup( pickCS, fields.Gender ) || '').dbName() === 'container')) {
-					let lock = (attrLookup( pickCS, fields.Container_lock ) || ''),
-						trap = (attrLookup( pickCS, fields.Container_trap ) || '');
+					const lock = (attrLookup( pickCS, fields.Container_lock ) || ''),
+						  trap = (attrLookup( pickCS, fields.Container_trap ) || '');
 					sendAPI( fields.commandMaster + ' --button '+BT.LOCKTYPE+'|'+pickID+'|'+lock+'|silent' );
 					sendAPI( fields.commandMaster + ' --button '+BT.TRAPTYPE+'|'+pickID+'|'+trap+'|silent' );
 					setAttr( pickCS, fields.msVersion, '3.5' );
@@ -8779,11 +8771,11 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 				return;
 			}
 		}
-		let chance = Math.max((parseInt(attrLookup( charCS, [fields.Find_Traps[0]+fields.Thief_postfix[0],fields.Find_Traps[1]] )) || 5),5);
-		content = '&{template:RPGMwarning}{{desc='+putCS.get('name')+' has just attempted to *Find Traps* on '+pickName+' which does not have a *Trap-2* or *Find Traps* macro. '
-				+ 'Their *Find/Remove Traps* chance is [['+chance+']]%}}';
+		const chance = Math.max((parseInt(attrLookup( charCS, [fields.Find_Traps[0]+fields.Thief_postfix[0],fields.Find_Traps[1]] )) || 5),5);
+		let	content = '&{template:RPGMwarning}{{desc='+putCS.get('name')+' has just attempted to *Find Traps* on '+pickName+' which does not have a *Trap-2* or *Find Traps* macro. '
+					+ 'Their *Find/Remove Traps* chance is [['+chance+']]%}}';
 		sendFeedback( content );
-		let findTrapMacro = (state.MagicMaster.gmRolls ? 'GM-Roll-' : '')+'Magic-FindTrap';
+		const findTrapMacro = (state.MagicMaster.gmRolls ? 'GM-Roll-' : '')+'Magic-FindTrap';
 		getAbility( fields.AbilitiesDB, findTrapMacro, charCS );
 		getAbility( fields.AbilitiesDB, 'Magic-NoTrap', charCS );
 		getAbility( fields.AbilitiesDB, 'Magic-NotFoundTrap', charCS );
@@ -8794,253 +8786,38 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 		content = '&{template:RPGMdefault}{{title=Find Traps}}{{desc=Do you want to search '+pickName+' for traps? Your chance of success would appear to be [['+chance+']]%, but that might alter with circumstance}}{{desc1=[Yes]('+(state.MagicMaster.gmRolls ? ('!magic --display-ability gm|'+putID+'|'+putCS.id+'|GM-Roll-Magic-FindTrap|gm{Find Traps Roll? Chance is '+chance+'%/1d100,[[1d100]]/Succeed,[[1d'+chance+']]/Fail,[['+chance+'+1d'+(99-chance)+']]}') : ('~'+putName+'|Magic-FindTrap'))+') or [No](!magic --message '+tokenID+'|Not Finding Traps|OK, having thought about your chance of success, you decide to let someone else have a go...)}}';
 		setAttr( charCS, fields.PlayerID, senderId );
 		sendResponse( charCS, content, senderId );
-
 	};
-
-	/**
-	* Function to deal with a character interacting with a target, either
-	* an inanimate chest or other MI store, or with an animate, possibly
-	* intelligent creature that might detect their action.  In either case,
-	* the target might also be trapped.
-	**/
-	
-	var doSearchForMIs = function( args, senderId, buy=false ) {
-		
-		if (!args) return;
-		
-		var msg = args;
-		if (args.length != 3) {
-			sendDebug('doSearchForMIs: invalid number of parameters');
-			sendResponseError(senderId,'Invalid MagicMaster command syntax');
-			return;
-		}
-		
-		var tokenID = args[0],
-			pickID = args[1],
-			putID = args[2],
-			search = (tokenID === putID),
-			containerID = search ? pickID : putID,
-			charCS = getCharacter( tokenID ),
-			putCS = getCharacter( putID ),
-			pickToken = getObj('graphic',pickID),
-			pickCS = getCharacter( pickID ),
-			containerCS = getCharacter( containerID ),
-			MIBagSecurity,
-			content;
-			
-		if (!charCS || !putCS) {
-			sendDebug('doSearchForMIs: invalid ID arguments');
-			sendResponseError(senderId,'One or more invalid tokens specified');
-			return;
-		};
-		
-		if (!pickCS && !!pickToken) {
-			doFindTraps( args, senderId );
-			return;
-		}
-		
-		if (csVer(containerCS) < 3.5 && ((attrLookup( containerCS, fields.Gender ) || '').dbName() === 'container')) {
-			let lock = (attrLookup( containerCS, fields.Container_lock ) || ''),
-				trap = (attrLookup( containerCS, fields.Container_trap ) || '');
-			sendAPI( fields.commandMaster + ' --button '+BT.LOCKTYPE+'|'+containerID+'|'+lock+'|silent' );
-			sendAPI( fields.commandMaster + ' --button '+BT.TRAPTYPE+'|'+containerID+'|'+trap+'|silent' );
-			setAttr( containerCS, fields.msVersion, '3.5' );
-		}
-		
-		setAttr( charCS, ['target-level', 'current'], characterLevel(pickCS) );
-		setAttr( charCS, ['target-token', 'current'], pickCS.get('name') );
-		setAttr( containerCS, ['search-id', 'current'], containerID );
-		setAttr( containerCS, fields.Container_pick, pickID );
-		setAttr( containerCS, fields.Container_put, putID );
-		setAttr( containerCS, fields.GM_Rolls, (state.MagicMaster.gmRolls ? 'GM-Roll-' : '') );
-		
-		MIBagSecurity = parseInt(attrLookup( containerCS, fields.ItemContainerType )) || 0;
-//		buy = buy || retailers.includes(attrLookup( containerCS, fields.Profession ));
-		
-		let intelligence = Math.max( (parseInt(attrLookup( containerCS, fields.Intelligence )) || 0), (parseInt(attrLookup( containerCS, fields.Monster_int )) || 0)),
-			hp = parseInt(attrLookup( containerCS, fields.HP )) || 0;
-			
-		if (buy && ((MIBagSecurity != 2 && MIBagSecurity != 3 && MIBagSecurity != 7) || hp <= 0 || intelligence <= 3)) {
-			content = '&{template:'+fields.warningTemplate+'}{{title=Not a Sentient Creature}}{{desc=Either this creature has never been sentient, or they are no longer sentient.  You cannot trade with non-sentient beings!}}';
-			sendResponse( charCS, content, senderId, flags.feedbackName, flags.feedbackImg, tokenID );
-			return;
-		} else if (buy) {
-			let	charRetail = parseData('['+((attrLookup( containerCS, fields.AttrNotes ) || '').match(/n?pcdata=\[(.+?)\]/im) || ['',''])[1]+']', {buy:reClassSpecs.buy,sell:reClassSpecs.sell}),
-				classRetail = classObjects( containerCS, senderId, {buy:reClassSpecs.buy,sell:reClassSpecs.sell})[0].classData,
-				raceRetail = resolveData( (attrLookup( containerCS, fields.Race ) || 'Human'), fields.RaceDB, reRaceData, containerCS, {buy:reClassSpecs.buy,sell:reClassSpecs.sell} ).parsed,
-				sells = !!charRetail.sell || !!classRetail.sell || !!raceRetail.sell,
-				buys = !!charRetail.buy || !!classRetail.buy || !!raceRetail.buy;
-			buy = search ? sells : buys;
-//			log('doSearchForMIs: buying from '+containerCS.get('name')+', string = '+_.pairs(parseData('['+((attrLookup( containerCS, fields.AttrNotes ).match(/n?pcdata=\[(.+?)\]/im) || ['',''])[1])+']', {buy:reClassSpecs.buy,sell:reClassSpecs.sell}))+', charRetail.buy = '+charRetail.buy+' = '+!!charRetail.buy+', buys = '+buys+', sells = '+sells+', thus buy = '+buy);
-//			log('doSearchForMIs: buys = '+buys+', char = '+charRetail.buy+', race = '+raceRetail.buy+', class = '+classRetail.buy);
-			if (!buy) {
-				content = '&{template:'+fields.menuTemplate+'}}{{title=Nothing to '+(search ? 'Buy' : 'Sell')+'}}{{desc=I\'m sorry, but I am not someone who '+(search ? 'sells' : 'buys')+' items. Perhaps you\'d do better talking to a retailer in a shop in town?}}';
-				sendResponse( charCS, content, senderId, flags.feedbackName, flags.feedbackImg, tokenID );
-				return;
-			}
-		};
-			
-		if (MIBagSecurity === 6 || buy) {
-			doPickOrPut( msg, senderId, buy );
-			return;
-		} else if (MIBagSecurity === 4 || MIBagSecurity === 5) {
-			var trapVersion = (attrLookup( containerCS, ['trap-version', 'current'] ) || 0),
-				trapName = 'trap-'+trapVersion,
-				trapMacro = findObjs({ _type : 'ability', characterid : containerCS.id, name : trapName }, {caseInsensitive: true});
-			if (!trapMacro || trapMacro.length === 0) {
-				trapName = 'Check-for-MIBag-'+trapVersion;
-				trapMacro = findObjs({ _type : 'ability', characterid : containerCS.id, name : trapName }, {caseInsensitive: true});
-			}
-			if (!trapMacro || trapMacro.length === 0) {
-				trapName = 'trap';
-				trapMacro = findObjs({ _type : 'ability', characterid : containerCS.id, name : trapName }, {caseInsensitive: true});
-			}
-			if (trapMacro && trapMacro.length) {
-				sendAPImacro( senderId, tokenID, containerID, trapName );
-				sendWait(senderId,0);
-			} else {
-				sendDebug('doSearchForMIs: Not found trapMacro');
-				MIBagSecurity = 1;
-			}
-		};
-		if (!search && MIBagSecurity < 0) {
-			sendParsedMsg( putID, messages.noStoring, senderId );
-			return;
-		} else if ((MIBagSecurity < 4 || MIBagSecurity == 7) && (!search || MIBagSecurity < 2 || hp <= 0 || intelligence <= 0)) {
-			doPickOrPut( msg, senderId );
-		} else if (MIBagSecurity < 4 || MIBagSecurity == 7) {
-			// target is a creature that might detect any snooping.
-			// A pick pockets roll is necessary
-			
-			content = '&{template:'+fields.menuTemplate+'}{{name='+charCS.get('name')+' is Picking Pockets}}'
-					+ '{{desc=Are you trying to '+(search ? 'pick ' : 'sneak something into ')+containerCS.get('name')+'\'s pocket?\n'
-					+ '[Yes](!magic --pickpockets '+tokenID+'|'+pickID+'|'+putID+'|&#91;&#91;?{Roll vs Pick Pockets|1d100}&#93;&#93;)'
-					+ ' or [No](!magic --message '+tokenID+'|Pick Pocket|OK, not making the attempt)'
-					+ '\nor I\'m trying to [buy items](!magic --buy '+tokenID+'|'+pickID+'|'+putID+') from '+containerCS.get('name')+'}}';
-
-			sendResponse( charCS, content, senderId, flags.feedbackName, flags.feedbackImg, tokenID );
-		};
-		return;
-	}
-	
-	/**
-	 * Function to display the Edit MI Bag menu
-	 */
-	 
-	var doEditMIbag = function( args, senderId, selected ) {
-		
-		if (!args) args=[];
-		if (!args[0] && selected && selected.length) {
-			args[0] = selected[0]._id;
-		} else if (!args[0]) {
-			sendDebug('doEditMIbag: invalid number of parameters');
-			sendResponseError(senderId,'Invalid MagicMaster command syntax');
-			return;
-		}
-		
-		var tokenID = args[0],
-			cmd = (_.isUndefined(args[1]) || args[1].toUpperCase() == 'MAGICAL') ? BT.EDIT_MI : (args[1].toUpperCase() == 'MARTIAL' ? BT.EDIT_MARTIAL : BT.EDIT_ALLITEMS),
-			charCS = getCharacter(tokenID);
-			
-		if (!charCS) {
-			sendDebug('doEditMIbag: invalid ID arguments');
-			sendResponseError(senderId,'Invalid token specified');
-			return;
-		};
-		
-		args = [cmd,tokenID,-1,''];
-		makeEditBagMenu( args, senderId );
-		return;
-	}
-	
-	/**
-	* Function to support picking of pockets and trapped chests, using
-	* options and ability macros set in the target character sheet.
-	**/
-	
-	var doPickPockets = function( args, senderId ) {
-		
-		if (!args) return;
-		
-		if (args.length != 4) {
-			sendDebug('doPickPockets: invalid number of parameters');
-			sendResponseError(senderId,'Invalid MagicMaster command syntax');
-			return;
-		}
-		
-		var	tokenID = args[0],
-			pickID = args[1],
-			putID = args[2],
-			ppRoll = parseInt(args[3],10),
-			search = putID === tokenID,
-			containerID = search ? pickID : putID,
-			charCS = getCharacter( tokenID );
-			
-		if (!charCS || !containerID) {
-			sendDebug('doPickPockets: invalid ID arguments');
-			sendResponseError(senderId,'One or more invalid tokens specified');
-			return;
-		};
-		
-		if (isNaN(ppRoll)) {
-			sendDebug('doPickPockets: invalid dice roll argument');
-			sendResponseError(senderId,'Invalid dice roll entered');
-			return;
-		};
-		
-		var pick_pockets = Math.max(parseInt(attrLookup( charCS, [fields.Pick_Pockets[0]+fields.Thief_postfix[0], fields.Pick_Pockets[1]] ) || 0),state.attackMaster.thieveCrit),
-			pp_target = (Math.min(Math.ceil(Math.max(pick_pockets,0)),96)),
-			content = '&{template:'+fields.menuTemplate+'}{{name='+charCS.get('name')+' is Picking Pockets '+(search ? 'for items' : 'to place items')+'}}'
-					+ '{{Target=[['+pp_target+']]}}'
-					+ '{{Rolled=[[' + ppRoll + ']]}}'
-					+ '{{Result=Rolled<=Target}}';
-		
-		if (ppRoll <= pp_target) {
-			content += '{{desc=Press [Succeeded](!magic --pickorput '+tokenID+'|'+pickID+'|'+putID+'||true) to view items to pick from}}';
-		} else {
-			args.unshift('PPfailed');
-			content += handlePPfailed( args, senderId );
-		}
-		
-		sendResponse( charCS, content, senderId, flags.feedbackName, flags.feedbackImg, tokenID );
-		return;
-	};
-
 
 	/*
 	* Function to display the menu for picking up or putting away Magic Items
 	* from one Magic Item bag into another Magic Item bag.
 	*/
 
-	var doPickOrPut = function( args, senderId, buy=false ) {
+	const doPickOrPut = function( args, senderId, buy=false ) {
 		
 		if (!args) return;
 		
 		if (args.length < 3) {
-			sendDebug('doPickOrPut: Invalid number of arguments');
 			sendError('Invalid MagicMaster command syntax');
 			return;
 		};
 
-		var tokenID = args[0],
-			pickID = args[1],
-			putID = args[2],
-			menuType = args[3],
-			pickPocket = (!buy && !!args[4] ? 'true' : 'false'),
-			charCS = getCharacter( tokenID ),
-			pickCS = getCharacter( pickID ),
-			content;
+		const tokenID = args[0],
+			  pickID = args[1],
+			  putID = args[2],
+			  pickPocket = (!buy && !!args[4] ? 'true' : 'false'),
+			  charCS = getCharacter( tokenID ),
+			  pickCS = getCharacter( pickID );
+			  
+		let	menuType = args[3];
 			
 		if (!tokenID || !putID || !pickID || !charCS || !pickCS) {
-			sendDebug('doPickOrPut: One or more IDs are invalid');
 			sendError('One or more invalid tokens specified');
 			return;
 		};
 		setAttr( charCS, fields.PickPocket, pickPocket );
 		
-		var menu,
-			playerConfig = getSetPlayerConfig( senderId ),
-			pickName = pickCS.get('name');
+		let playerConfig = getSetPlayerConfig( senderId );
 			
 		if (menuType && ['short','long'].includes(menuType.toLowerCase())) {
 			playerConfig.pickOrPutType = menuType.toLowerCase();
@@ -9059,22 +8836,149 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 		setAttr( charCS, fields.ItemCastingTime, 0 );
 		setAttr( charCS, [fields.Expenditure[0],'current'], 0 );
 		setAttr( charCS, [fields.Expenditure[0],'max'], 0 );
+
+		clearItemSelection( pickCS );
 		
 		args = ['POPmenu',tokenID,-1,pickID,putID,-1];
-		
 		makeShortPOPmenu( args, senderId, buy );
-		
 		return;
-
 	};
+
+	/**
+	* Function to deal with a character interacting with a target, either
+	* an inanimate chest or other MI store, or with an animate, possibly
+	* intelligent creature that might detect their action.  In either case,
+	* the target might also be trapped.
+	**/
 	
-	/*
-	 * Add a magic item directly to a creature or container, with 
-	 * additional options to replace another item and/or take the
-	 * added item in-hand
+	const doSearchForMIs = function( args, senderId, buy=false ) {	// get
+		
+		if (!args) return;
+		
+		const msg = args;
+		if (args.length != 3) {
+			sendDebug('doSearchForMIs: invalid number of parameters');
+			sendResponseError(senderId,'Invalid MagicMaster command syntax');
+			return;
+		}
+		
+		const tokenID = args[0],
+			  pickID = args[1],
+			  putID = args[2],
+			  search = (tokenID === putID),
+			  containerID = search ? pickID : putID,
+			  charCS = getCharacter( tokenID ),
+			  putCS = getCharacter( putID ),
+			  pickToken = getObj('graphic',pickID),
+			  pickCS = getCharacter( pickID ),
+			  containerCS = getCharacter( containerID );
+			
+		if (!charCS || !putCS) {
+			sendDebug('doSearchForMIs: invalid ID arguments');
+			sendResponseError(senderId,'One or more invalid tokens specified');
+			return;
+		};
+		
+		if (!pickCS && !!pickToken) {
+			doFindTraps( args, senderId );
+			return;
+		}
+		
+		if (!pickCS) {
+			sendDebug('doSearchForMIs: invalid ID arguments');
+			sendResponseError(senderId,'One or more invalid tokens selected');
+			return;
+		};
+			
+		
+		if (csVer(containerCS) < 3.5 && ((attrLookup( containerCS, fields.Gender ) || '').dbName() === 'container')) {
+			let lock = (attrLookup( containerCS, fields.Container_lock ) || ''),
+				trap = (attrLookup( containerCS, fields.Container_trap ) || '');
+			sendAPI( fields.commandMaster + ' --button '+BT.LOCKTYPE+'|'+containerID+'|'+lock+'|silent' );
+			sendAPI( fields.commandMaster + ' --button '+BT.TRAPTYPE+'|'+containerID+'|'+trap+'|silent' );
+			setAttr( containerCS, fields.msVersion, '3.5' );
+		}
+		
+		setAttr( charCS, ['target-level', 'current'], characterLevel(pickCS) );
+		setAttr( charCS, ['target-token', 'current'], pickCS.get('name') );
+		setAttr( containerCS, ['search-id', 'current'], containerID );
+		setAttr( containerCS, fields.Container_pick, pickID );
+		setAttr( containerCS, fields.Container_put, putID );
+		setAttr( containerCS, fields.GM_Rolls, (state.MagicMaster.gmRolls ? 'GM-Roll-' : '') );
+		
+		let MIBagSecurity = parseInt(attrLookup( containerCS, fields.ItemContainerType )) || 0;
+//		buy = buy || retailers.includes(attrLookup( containerCS, fields.Profession ));
+		
+		const intelligence = Math.max( (parseInt(attrLookup( containerCS, fields.Intelligence )) || 0), (parseInt(attrLookup( containerCS, fields.Monster_int )) || 0)),
+			  hp = parseInt(attrLookup( containerCS, fields.HP )) || 0;
+			
+		if (buy && ((MIBagSecurity != 2 && MIBagSecurity != 3 && MIBagSecurity != 7) || hp <= 0 || intelligence <= 3)) {
+			const content = '&{template:'+fields.warningTemplate+'}{{title=Not a Sentient Creature}}{{desc=Either this creature has never been sentient, or they are no longer sentient.  You cannot trade with non-sentient beings!}}';
+			sendResponse( charCS, content, senderId, flags.feedbackName, flags.feedbackImg, tokenID );
+			return;
+		} else if (buy) {
+			const charRetail = parseData('['+((attrLookup( containerCS, fields.AttrNotes ) || '').match(/n?pcdata=\[(.+?)\]/im) || ['',''])[1]+']', {buy:reClassSpecs.buy,sell:reClassSpecs.sell}),
+				  classRetail = classObjects( containerCS, senderId, {buy:reClassSpecs.buy,sell:reClassSpecs.sell})[0].classData,
+				  raceRetail = resolveData( (attrLookup( containerCS, fields.Race ) || 'Human'), fields.RaceDB, reRaceData, containerCS, {buy:reClassSpecs.buy,sell:reClassSpecs.sell} ).parsed,
+				  sells = !!charRetail.sell || !!classRetail.sell || !!raceRetail.sell,
+				  buys = !!charRetail.buy || !!classRetail.buy || !!raceRetail.buy;
+			buy = search ? sells : buys;
+			if (!buy) {
+				const content = '&{template:'+fields.menuTemplate+'}}{{title=Nothing to '+(search ? 'Buy' : 'Sell')+'}}{{desc=I\'m sorry, but I am not someone who '+(search ? 'sells' : 'buys')+' items. Perhaps you\'d do better talking to a retailer in a shop in town?}}';
+				sendResponse( charCS, content, senderId, flags.feedbackName, flags.feedbackImg, tokenID );
+				return;
+			}
+		};
+			
+		if (MIBagSecurity === 6 || buy) {
+			doPickOrPut( msg, senderId, buy );
+			return;
+		} else if (MIBagSecurity === 4 || MIBagSecurity === 5) {
+			const trapVersion = (attrLookup( containerCS, ['trap-version', 'current'] ) || 0);
+			let	trapName = 'trap-'+trapVersion,
+				trapMacro = findObjs({ _type : 'ability', characterid : containerCS.id, name : trapName }, {caseInsensitive: true});
+			if (!trapMacro || trapMacro.length === 0) {
+				trapName = 'Check-for-MIBag-'+trapVersion;
+				trapMacro = findObjs({ _type : 'ability', characterid : containerCS.id, name : trapName }, {caseInsensitive: true});
+			}
+			if (!trapMacro || trapMacro.length === 0) {
+				trapName = 'trap';
+				trapMacro = findObjs({ _type : 'ability', characterid : containerCS.id, name : trapName }, {caseInsensitive: true});
+			}
+			if (trapMacro && trapMacro.length) {
+				sendAPImacro( senderId, tokenID, containerID, trapName );
+				sendWait(senderId,0,'Magic doSearchForMIs');
+			} else {
+				sendDebug('doSearchForMIs: Not found trapMacro');
+				MIBagSecurity = 1;
+			}
+		};
+		if (!search && MIBagSecurity < 0) {
+			sendParsedMsg( putID, messages.noStoring, senderId );
+			return;
+		} else if ((MIBagSecurity < 4 || MIBagSecurity == 7) && (!search || MIBagSecurity < 2 || hp <= 0 || intelligence <= 0)) {
+			doPickOrPut( msg, senderId );
+		} else if (MIBagSecurity < 4 || MIBagSecurity == 7) {
+
+			// target is a creature that might detect any snooping.
+			// A pick pockets roll is necessary
+			
+			const content = '&{template:'+fields.menuTemplate+'}{{name='+charCS.get('name')+' is Picking Pockets}}'
+						  + '{{desc=Are you trying to '+(search ? 'pick ' : 'sneak something into ')+containerCS.get('name')+'\'s pocket?\n'
+						  + '[Yes](!magic --pickpockets '+tokenID+'|'+pickID+'|'+putID+'|&#91;&#91;?{Roll vs Pick Pockets|1d100}&#93;&#93;)'
+						  + ' or [No](!magic --message '+tokenID+'|Pick Pocket|OK, not making the attempt)'
+						  + '\nor I\'m trying to [buy items](!magic --buy '+tokenID+'|'+pickID+'|'+putID+') from '+containerCS.get('name')+'}}';
+
+			sendResponse( charCS, content, senderId, flags.feedbackName, flags.feedbackImg, tokenID );
+		};
+		return;
+	}
+	
+	/**
+	 * Function to display the Edit MI Bag menu
 	 */
-	 
-	var doAddItem = function( args, senderID, selected ) {
+
+	const doEditMIbag = function( args, senderId, selected ) {
 		
 		if (!args) args=[];
 		if (!args[0] && selected && selected.length) {
@@ -9085,21 +8989,105 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 			return;
 		}
 		
-		var tokenID = args[0],
-			miRowRef = args[1],
-			miChosen = args[2],
-			miQty = args[3] || 0,
-			miInHand = (args[4] || '='),
-			isGM = (args[5] || '').toUpperCase() === 'NOCURSE',
-			hand = '',
-			charCS = getCharacter(tokenID);
+		const tokenID = args[0],
+			  cmd = (_.isUndefined(args[1]) || args[1].toUpperCase() == 'MAGICAL') ? BT.EDIT_MI : (args[1].toUpperCase() == 'MARTIAL' ? BT.EDIT_MARTIAL : BT.EDIT_ALLITEMS),
+			  charCS = getCharacter(tokenID);
 			
+		if (!charCS) {
+			sendDebug('doEditMIbag: invalid ID arguments');
+			sendResponseError(senderId,'Invalid token specified');
+			return;
+		};
+		
+		args = [cmd,tokenID,-1,''];
+		makeEditBagMenu( args, senderId );
+		return;
+	}
+	
+	/**
+	* Function to support picking of pockets and trapped chests, using
+	* options and ability macros set in the target character sheet.
+	**/
+	
+	const doPickPockets = function( args, senderId ) {
+		
+		if (!args) return;
+		if (args.length != 4) {
+			sendDebug('doPickPockets: invalid number of parameters');
+			sendResponseError(senderId,'Invalid MagicMaster command syntax');
+			return;
+		}
+		
+		const tokenID = args[0],
+			  pickID = args[1],
+			  putID = args[2],
+			  ppRoll = parseInt(args[3],10),
+			  search = putID === tokenID,
+			  containerID = search ? pickID : putID,
+			  charCS = getCharacter( tokenID );
+			
+		if (!charCS || !containerID) {
+			sendDebug('doPickPockets: invalid ID arguments');
+			sendResponseError(senderId,'One or more invalid tokens specified');
+			return;
+		};
+		
+		if (isNaN(ppRoll)) {
+			sendDebug('doPickPockets: invalid dice roll argument');
+			sendResponseError(senderId,'Invalid dice roll entered');
+			return;
+		};
+		
+		const pick_pockets = Math.max(parseInt(attrLookup( charCS, [fields.Pick_Pockets[0]+fields.Thief_postfix[0], fields.Pick_Pockets[1]] ) || 0),state.attackMaster.thieveCrit),
+			  pp_target = (Math.min(Math.ceil(Math.max(pick_pockets,0)),96));
+		let	content = '&{template:'+fields.menuTemplate+'}{{name='+charCS.get('name')+' is Picking Pockets '+(search ? 'for items' : 'to place items')+'}}'
+					+ '{{Target=[['+pp_target+']]}}'
+					+ '{{Rolled=[[' + ppRoll + ']]}}'
+					+ '{{Result=Rolled<=Target}}';
+		
+		if (ppRoll <= pp_target) {
+			content += '{{desc=Press [Succeeded](!magic --pickorput '+tokenID+'|'+pickID+'|'+putID+'||true) to view items to pick from}}';
+		} else {
+			args.unshift('PPfailed');
+			content += handlePPfailed( args, senderId );
+		}
+		
+		sendResponse( charCS, content, senderId, flags.feedbackName, flags.feedbackImg, tokenID );
+		return;
+	};
+
+	/*
+	 * Add a magic item directly to a creature or container, with 
+	 * additional options to replace another item and/or take the
+	 * added item in-hand
+	 */
+	 
+	const doAddItem = function( args, senderID, selected ) {
+		
+		if (!args) args=[];
+		if (!args[0] && selected && selected.length) {
+			args[0] = selected[0]._id;
+		} else if (!args[0]) {
+			sendDebug('doEditMIbag: invalid number of parameters');
+			sendResponseError(senderId,'Invalid MagicMaster command syntax');
+			return;
+		}
+		
+		const tokenID = args[0],
+			  miRowRef = args[1],
+			  miChosen = args[2],
+			  isGM = (args[5] || '').toUpperCase() === 'NOCURSE',
+			  charCS = getCharacter(tokenID);
+			  
 		if (!charCS) {
 			sendDebug('doAddItem: invalid ID argument');
 			sendResponseError(senderId,'Invalid token specified');
 			return;
 		};
 		
+		let	miInHand = (args[4] || '='),
+			hand = '';
+			
 		if (miRowRef.length && isNaN(miRowRef) && miInHand === '=') {
 			hand = getTableField( charCS, {}, fields.InHand_table, fields.InHand_trueName ).tableFind( fields.InHand_trueName, miRowRef );
 			miInHand = _.isUndefined(hand) ? '' : hand;
@@ -9118,24 +9106,18 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * Handle the Config command, to configure the API
 	 */
 	 
-	var doConfig = function( args ) {
+	const doConfig = function( args ) {
 		
 		if (!args || args.length < 2) {
 			makeConfigMenu( args );
 			return;
 		}
 		
-		var flag = args[0].toLowerCase(),
-			value = args[1].toLowerCase() === 'true',
-			msg = '';
+		const flag = args[0].toLowerCase(),
+			  value = args[1].toLowerCase() === 'true';
+		let	msg = '';
 		
 		switch (flag.toLowerCase()) {
-/*		case 'fancy-menus':
-			state.MagicMaster.fancy = value;
-			if (!_.isUndefined(state.attackMaster.fancy)) state.attackMaster.fancy = value;
-			msg = value ? 'Fancy menus will be used' : 'Plain menus will be used';
-			break;
-*/			
 		case 'specialist-rules':
 			state.MagicMaster.spellRules.specMU = value;
 			msg = value ? 'Only rules-based specialists get extra spell' : 'Any specialist gets extra spell';
@@ -9188,6 +9170,11 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 			msg = value ? 'GM rolls skill-based chances' : 'Player rolls skill-based chances';
 			break;
 			
+		case 'encumbrance':
+			state.MagicMaster.encumbrance = value;
+			msg = value ? 'Encumbrance penalties applied' : 'Encumbrance ignored';
+			break;
+			
 		default:
 			sendError('Invalid Config Command syntax');
 			return;
@@ -9197,92 +9184,11 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	}
 	
 	/**
-	 * Set options for a particular player
-	 **/
-	 
-	var doSetOptions = function( args, senderId ) {
-		
-		if (!args) return;
-		
-		if (args.length != 2) {
-			sendDebug('doSetOptions: invalid argument pair.  Must be [option|value]');
-			sendError('Invalid MagicMaster command syntax');
-		}
-	
-		var option = args[0],
-			value = args[1],
-			player = getObj('player',senderId),
-			playerName, content,
-			config = getSetPlayerConfig( senderId ) || {};
-			
-		if (player) {
-			playerName = player.get('_displayname');
-		} else {
-			playerName = 'GM';
-		}
-		content = '&{template:'+fields.menuTemplate+'}{{name='+playerName+'\'s MagicMaster options}}';
-
-		switch (option.toLowerCase()) {
-		
-		case 'menutype':
-			value = value.toLowerCase();
-			if (!['short','long'].includes(value)) {
-				sendResponseError( senderId, 'Invalid menuType option.  Use short or long' );
-				return;
-			}
-			config.pickOrPutType = value;
-			getSetPlayerConfig( senderId, config );
-			content += '{{desc=Menu type set to '+value+'}}';
-			sendResponsePlayer(senderId,content);
-			config = getSetPlayerConfig( senderId );
-			break;
-			
-		case 'menudisplay':
-			value = value.toLowerCase();
-			 if (!['images','plain','dark'].includes(value)) {
-				sendResponseError( senderId, 'Invalid menuDisplay option.  Use images, plain, or dark.' );
-				return;
-			}
-			config.menuImages = (value === 'images');
-			config.menuPlain = (value === 'plain');
-			config.menuDark = (value === 'dark');
-			config = getSetPlayerConfig(senderId,config);
-			doDispConfig(senderId);
-			redisplayOutput(senderId);
-			break;
-		   
-		default:
-			sendResponseError( senderId, 'Invalid MagicMaster option. [Show Help](!magic --help)');
-			break;
-		};
-		return config;
-	};
-	
-	/**
-	 * Present a menu to select player-specific chat display options 
-	 **/
-
-	var doDispConfig = function( senderId ) {
-
-		let config = getSetPlayerConfig( senderId ) || {};
-		if (!config) config = {menuImages:state.MagicMaster.fancy, menuPlain:!state.MagicMaster.fancy, menuDark:false};
-		let player = getObj('player',senderId);
-		let content = '/w "' + player.get('_displayname') + '" ' + design.info_msg
-					+ '<table>'
-					+ '<tr><td>Menu images</td><td><a style= "width: 16px; height: 16px; border: none; background: none" title="Menus with Images" href="!magic --options menudisplay|images">'+(config.menuImages ? '\u2705' : '\u2B1C')+'</a></td></tr>'
-					+ '<tr><td>Menu plain</td><td><a style= "width: 16px; height: 16px; border: none; background: none" title="Tabulated Menus" href="!magic --options menudisplay|plain">'+(config.menuPlain ? '\u2705' : '\u2B1C')+'</a></td></tr>'
-					+ '<tr><td>Menu dark</td><td><a style= "width: 16px; height: 16px; border: none; background: none" title="Dark Mode Menus" href="!magic --options menudisplay|dark">'+(config.menuDark ? '\u2705' : '\u2B1C')+'</a></td></tr>'
-					+ '</table></div>';
-		sendAPI( content, senderId, '', true );
-		return;
-	}
-	
-	/**
 	 * Add or subtract an increment to the Strength value, 
 	 * taking into account any Exceptional Strength set
 	 **/
 	 
-	var doStrengthChange = function( args, senderId, selected ) {
+	const doStrengthChange = function( args, senderId, selected ) {
 		
 		if (!args) args=[];
 		if (!args[0] && selected && selected.length) {
@@ -9293,18 +9199,18 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 			return;
 		};
 
-		var tokenID = args[0],
-			increment = args[1],
-			field = args[2] || fields.Strength[0],
-			silent = (args[3] || 'SILENT').toUpperCase() == 'SILENT',
-			charCS = getCharacter(tokenID);
+		const tokenID = args[0],
+			  increment = args[1],
+			  field = args[2] || fields.Strength[0],
+			  silent = (args[3] || 'SILENT').toUpperCase() == 'SILENT',
+			  charCS = getCharacter(tokenID);
 			
 		if (!charCS) {
 			sendDebug('doStrengthChange: invalid ID argument');
 			sendResponseError(senderId,'One or more invalid tokens specified');
 			return;
 		};
-		handleStrengthChange( charCS, field, increment, senderId, silent );
+		handleStrengthChange( tokenID, field, increment, senderId, silent );
 		return;
 	}
 
@@ -9314,7 +9220,7 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * the class to change is not in the argument list
 	 **/
 	 
-	var doLevelChange = function( args, senderId, selected ) {
+	const doLevelChange = function( args, senderId, selected ) {
 		
 		if (!args) args=[];
 		if (!args[0] && selected && selected.length) {
@@ -9325,8 +9231,8 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 			return;
 		};
 
-		var change = (parseInt(args[1]) || -1),
-			charCS = getCharacter(args[0]);
+		const change = (parseInt(args[1]) || -1),
+			  charCS = getCharacter(args[0]);
 			
 		if (!charCS) {
 			sendDebug('doLevelChange: invalid ID argument');
@@ -9345,7 +9251,7 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * Present the Magic Item Bag menu for the tokenID passed, if it has one
 	 **/
 
-	var doMIBagMenu = function( args, senderId, selected ) {
+	const doMIBagMenu = function( args, senderId, selected ) {
 		if (!args) args=[];
 		if (!args[0] && selected && selected.length) {
 			args[0] = selected[0]._id;
@@ -9355,8 +9261,8 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 			return;
 		};
 
-		var tokenID = args[0],
-			curToken = getObj( 'graphic', tokenID );
+		const tokenID = args[0],
+			  curToken = getObj( 'graphic', tokenID );
 			
 		if (!curToken){
 			sendDebug('doMIBagMenu: Invalid tokenID: ' + tokenID);
@@ -9364,28 +9270,20 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 			return;
 		}
 		
-		var charID = curToken.get('represents'),
-			tokenName = curToken.get('name'),
-			ppt, ppTarget, ppTargetMax,
-			content, menuType,
-			charCS = getObj( 'character', charID ),
-			charName = charCS.get('name');
+		const tokenName = curToken.get('name'),
+			  charCS = getCharacter(tokenID);
 
-		ppt = (attrLookup( charCS, ['ppt', 'current'] ) || 5);
-		ppTarget = Math.min(Math.ceil(1.5*Math.max(ppt,0)),96);
-		ppTargetMax = Math.min(Math.ceil(Math.max(ppt,0)),96);
-		
-		content = '&{template:'+fields.menuTemplate+'} {{name=' + tokenName + '\'s\n'
-				+ 'Items & Equipment Menu}}'
-				+ '{{Section1=[Use a Magic Item](!magic --use-mi '+tokenID+')'
-				+ '[View your Item bag](!magic --view-mi '+tokenID+')}}'
-				+ '{{Section2=[Find Traps](!magic --find-traps '+tokenID+'|&#64;{target|Search Where?|token_id}|'+tokenID+')'
-				+ '[Search for Items & Treasure](!magic --search '+tokenID+'|&#64;{target|Search Where?|token_id}|'+tokenID+')'
-				+ '[Store Items](!magic --search '+tokenID+'|'+tokenID+'|&#64;{target|Store Where?|token_id})}}'
-				+ '{{Section3=[Buy Items from someone](!magic --buy '+tokenID+'|&#64;{target|Buy from whom?|token_id}|'+tokenID+')'
-				+ '[Sell Items to someone](!magic --sell '+tokenID+'|'+tokenID+'|&#64;{target|Store Where?|token_id})'
-				+ '[Pick someone\'s Pocket](!magic --search '+tokenID+'|&#64;{target|Pick who\'s pocket?|token_id}|'+tokenID+')}}'
-				+ '{{Section4=[Change Your Items](!magic --edit-mi '+tokenID+')}}';
+		const content = '&{template:'+fields.menuTemplate+'} {{name=' + tokenName + '\'s\n'
+					  + 'Items & Equipment Menu}}'
+					  + '{{Section1=[Use a Magic Item](!magic --use-mi '+tokenID+')'
+					  + '[View your Item bag](!magic --view-mi '+tokenID+')}}'
+					  + '{{Section2=[Find Traps](!magic --find-traps '+tokenID+'|&#64;{target|Search Where?|token_id}|'+tokenID+')'
+					  + '[Search for Items & Treasure](!magic --search '+tokenID+'|&#64;{target|Search Where?|token_id}|'+tokenID+')'
+					  + '[Store Items](!magic --search '+tokenID+'|'+tokenID+'|&#64;{target|Store Where?|token_id})}}'
+					  + '{{Section3=[Buy Items from someone](!magic --buy '+tokenID+'|&#64;{target|Buy from whom?|token_id}|'+tokenID+')'
+					  + '[Sell Items to someone](!magic --sell '+tokenID+'|'+tokenID+'|&#64;{target|Store Where?|token_id})'
+					  + '[Pick someone\'s Pocket](!magic --search '+tokenID+'|&#64;{target|Pick who\'s pocket?|token_id}|'+tokenID+')}}'
+					  + '{{Section4=[Change Your Items](!magic --edit-mi '+tokenID+')}}';
 				
 		sendResponse( charCS, content, senderId, flags.feedbackName, flags.feedbackImg, tokenID );
 	};
@@ -9402,16 +9300,21 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 		if (!args[0] && selected && selected.length) {
 			args[0] = selected[0]._id;
 		} else if (!args[0]) {
-			sendDebug('doGMonlyMImenu: Invalid number of arguments');
 			sendError('Invalid MagicMaster syntax');
 			return;
 		};
 
-		var tokenID = args[0];
+		const tokenID = args[0],
+			  charCS = getCharacter(tokenID);
 		
 		args = ['GM-MIMENU', tokenID, -1, '' ];
 		
-		makeGMonlyMImenu( args, senderId );
+		if (!!charCS) {
+			clearItemSelection( charCS );
+			makeGMonlyMImenu( args, senderId );
+		} else {
+			sendParsedMsg( tokenID, messages.noChar, senderId );
+		};
 		return;
 	}
 	
@@ -9421,39 +9324,38 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * rest, or only manually by the GM using the GM-edit-MI Reset Single
 	 * function.
 	 */
-	 
-	var doSetReveal = function( args, senderId, selected ) {
+
+	const doSetReveal = function( args, senderId, selected ) {
 		
 		if (!args) args=[];
 		if (!args[0] && selected && selected.length) {
 			args[0] = selected[0]._id;
 		} else if (!args[0]) {
-			sendDebug('doGMonlyMImenu: Invalid number of arguments');
 			sendError('Invalid MagicMaster syntax');
 			return;
 		};
 
-		var tokenID = args[0],
-			hiddenItem = args[1] || '',
-			revealType = (args[2] || '').toLowerCase(),
-			MIrowref = parseInt(args[3]),
-			dispMenu = (args[4] || '').toUpperCase() === 'MENU',
-			charCS = getCharacter(tokenID);
+		const tokenID = args[0],
+			  hiddenItem = args[1] || '',
+			  revealType = (args[2] || '').toLowerCase(),
+			  dispMenu = (args[4] || '').toUpperCase() === 'MENU',
+			  charCS = getCharacter(tokenID);
+			  
+		let	MIrowref = parseInt(args[3]);
 			
 		if (!charCS) {
-			sendDebug('doSetReveal: Invalid tokenID: ' + tokenID);
 			sendError('Invalid token specified');
 			return;
 		}
 
 		if (revealType && !['view','use','rest'].includes(revealType)) {
-			sendDebug('doSetReveal: Invalid reveal type: ' + revealType);
 			sendError('Invalid reveal type specified');
 			return;
 		}
 		
-		var Items = getTableGroupField( charCS, {}, fieldGroups.MI, 'trueName' ),
+		let Items = getTableGroupField( charCS, {}, fieldGroups.MI, 'trueName' ),
 			table;
+
 		Items = getTableGroupField( charCS, Items, fieldGroups.MI, 'name' );
 
 		if (isNaN(MIrowref)) {
@@ -9462,7 +9364,6 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 			[MIrowref,table] = tableGroupIndex( Items, MIrowref );
 		}
 		if (_.isUndefined(MIrowref) || isNaN(MIrowref)) {
-			sendDebug('doSetReveal: Item not found: ' + hiddenItem);
 			sendError('Invalid Item specified');
 			return;
 		}
@@ -9477,10 +9378,40 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	};
 	
 	/*
+	 * Display the dialog explaining the encumbrance and
+	 * move of a character/NPC.
+	 */
+	 
+	async function doCheckMove( args, senderId, selected ) {
+		
+		if (!args) args=[];
+		if (!args[0] && selected && selected.length) {
+			args[0] = selected[0]._id;
+		} else if (!args[0]) {
+			sendDebug('doCheckMove: Invalid number of arguments');
+			sendResponseError(senderId,'Valid token not specified');
+			return;
+		};
+
+		const tokenID = args[0],
+			  silent = (args[1] || '').toUpperCase() === 'SILENT',
+			  charCS = getCharacter(tokenID);
+			  
+		if (!charCS) {
+			sendResponseError(senderId,'Invalid token specified');
+			return;
+		}
+		
+		await itemSlotData( tokenID, null, senderId );
+		if (!silent) sendAPI( fields.attackMaster+' --button '+BT.CHECK_MOVE+'|'+tokenID );
+		return;
+	};
+	
+	/*
 	 * RED: v1.012 A menu to allow players to choose light sources
 	 */
 	
-	var doLightSourcesMenu = function( args, senderId, selected ) {
+	const doLightSourcesMenu = function( args, senderId, selected ) {
 
 		if (!args) args=[];
 		if (!args[0] && selected && selected.length) {
@@ -9491,156 +9422,189 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 			return;
 		};
 
-		var tokenID = args[0],
-			curToken = getObj( 'graphic', tokenID );
+		const tokenID = args[0],
+			  curToken = getObj( 'graphic', tokenID ),
+			  charCS = getCharacter( tokenID );
+		let	  lightSource = 'None';
 			
-		if (!curToken){
-			sendDebug('doLightSourcesMenu: Invalid tokenID: ' + tokenID);
-			sendResponseError(senderId,'Invalid token specified');
-			return;
-		}
-		
-		var charCS = getCharacter( tokenID );
 		if (!charCS) {
 			sendDebug('doLightSourcesMenu: Invalid tokenID: ' + tokenID);
 			sendResponseError(senderId,'Invalid token specified');
 			return;
 		}
-
-		var lightSource = attrLookup( charCS, fields.LightSource ) || 'None',
-			weaponSwitch = (lightSource == 'Weapon') ? ('<td><span style='+design.green_button+'>On</span></td><td>[Off](!magic --changelight '+tokenID+'|None)</td>')
-													 : ('<td>[On](!magic --changelight '+tokenID+'|Weapon)</td><td><span style='+design.grey_button+'>Off</span></td>'),
-			torchSwitch = (lightSource == 'Torch') ? ('<td><span style='+design.green_button+'>On</span></td><td>[Off](!magic --changelight '+tokenID+'|None)</td>')
-													 : ('<td>[On](!magic --changelight '+tokenID+'|Torch)</td><td><span style='+design.grey_button+'>Off</span></td>'),
-			hoodedSwitch = (lightSource == 'Hooded') ? ('<td><span style='+design.green_button+'>On</span></td><td>[Off](!magic --changelight '+tokenID+'|None)</td>')
-													 : ('<td>[On](!magic --changelight '+tokenID+'|Hooded)</td><td><span style='+design.grey_button+'>Off</span></td>'),
-			bullseyeSwitch = (lightSource == 'Bullseye') ? ('<td><span style='+design.green_button+'>On</span></td><td>[Off](!magic --changelight '+tokenID+'|None)</td>')
-													 : ('<td>[On](!magic --changelight '+tokenID+'|Bullseye)</td><td><span style='+design.grey_button+'>Off</span></td>'),
-			contLightSwitch = (lightSource == 'ContLight') ? ('<td><span style='+design.green_button+'>On</span></td><td>[Off](!magic --changelight '+tokenID+'|None)</td>')
-													 : ('<td>[On](!magic --changelight '+tokenID+'|ContLight)</td><td><span style='+design.grey_button+'>Off</span></td>'),
-			beaconSwitch = (lightSource == 'Beacon') ? ('<td><span style='+design.green_button+'>On</span></td><td>[Off](!magic --changelight '+tokenID+'|None)</td>')
-													 : ('<td>[On](!magic --changelight '+tokenID+'|Beacon)</td><td><span style='+design.grey_button+'>Off</span></td>'),
+		if (!curToken) {
+			curToken = charCS;
+			lightSource = attrLookup( charCS, fields.LightSource ) || 'None';
+		} else {
+			const lowLight = curToken.get('emits_low_light'),
+				  lightDist = parseInt(curToken.get('low_light_distance'));
+			lightSource = (!lightDist ? 'None' : (lightDist <= 5 ? 'Weapon' : (lightDist <= 15 ? 'Torch' : (lightDist <= 30 ? 'Hooded' : (lightDist <= 60 ? (!lowLight ? 'Bullseye' : 'ContLight') : 'Beacon')))));
+		};
 			
-			content = '&{template:'+fields.menuTemplate+'}{{name=Manage '+curToken.get('name')+'\'s Light Sources}}'
-					+ '{{desc=Current state indicated by a green button like <span style='+design.green_button+'>On</span>. '
-					+ 'Select a red button to turn the current source off and choose a different one.}}'
-					+ '{{desc1=In order of illumination<table>'
-					+ '<tr><td>Magic Weapon</td><td>5ft</td>'+weaponSwitch+'</tr>'
-					+ '<tr><td>Torch</td><td>15ft</td>'+torchSwitch+'</tr>'
-					+ '<tr><td>Hooded Lantern</td><td>30ft</td>'+hoodedSwitch+'</tr>'
-					+ '<tr><td>Bullseye Lantern</td><td>60ft beam</td>'+bullseyeSwitch+'</tr>'
-					+ '<tr><td>Cont-Light gem</td><td>60ft</td>'+contLightSwitch+'</tr>'
-					+ '<tr><td>Beacon Lantern</td><td>240ft beam</td>'+beaconSwitch+'</tr>'
-					+ '</table>}}';
+		const weaponSwitch = (lightSource === 'Weapon') ? ('<td><span style='+design.green_button+'>On</span></td><td>[Off](!magic --changelight '+tokenID+'|None)</td>')
+													   : ('<td>[On](!magic --changelight '+tokenID+'|Weapon)</td><td><span style='+design.grey_button+'>Off</span></td>'),
+			  torchSwitch = (lightSource === 'Torch') ? ('<td><span style='+design.green_button+'>On</span></td><td>[Off](!magic --changelight '+tokenID+'|None)</td>')
+													   : ('<td>[On](!magic --changelight '+tokenID+'|Torch)</td><td><span style='+design.grey_button+'>Off</span></td>'),
+			  hoodedSwitch = (lightSource === 'Hooded') ? ('<td><span style='+design.green_button+'>On</span></td><td>[Off](!magic --changelight '+tokenID+'|None)</td>')
+													   : ('<td>[On](!magic --changelight '+tokenID+'|Hooded)</td><td><span style='+design.grey_button+'>Off</span></td>'),
+			  bullseyeSwitch = (lightSource === 'Bullseye') ? ('<td><span style='+design.green_button+'>On</span></td><td>[Off](!magic --changelight '+tokenID+'|None)</td>')
+													   : ('<td>[On](!magic --changelight '+tokenID+'|Bullseye)</td><td><span style='+design.grey_button+'>Off</span></td>'),
+			  contLightSwitch = (lightSource === 'ContLight') ? ('<td><span style='+design.green_button+'>On</span></td><td>[Off](!magic --changelight '+tokenID+'|None)</td>')
+													   : ('<td>[On](!magic --changelight '+tokenID+'|ContLight)</td><td><span style='+design.grey_button+'>Off</span></td>'),
+			  beaconSwitch = (lightSource === 'Beacon') ? ('<td><span style='+design.green_button+'>On</span></td><td>[Off](!magic --changelight '+tokenID+'|None)</td>')
+													   : ('<td>[On](!magic --changelight '+tokenID+'|Beacon)</td><td><span style='+design.grey_button+'>Off</span></td>'),
+			
+			  content = '&{template:'+fields.menuTemplate+'}{{name=Manage '+(curToken.get('name'))+'\'s Light Sources}}'
+					  + '{{desc=Current state indicated by a green button like <span style='+design.green_button+'>On</span>. '
+					  + 'Select a red button to turn the current source off and choose a different one.}}'
+					  + '{{desc1=In order of illumination<table>'
+					  + '<tr><td>Magic Weapon</td><td>5ft</td>'+weaponSwitch+'</tr>'
+					  + '<tr><td>Torch</td><td>15ft</td>'+torchSwitch+'</tr>'
+					  + '<tr><td>Hooded Lantern</td><td>30ft</td>'+hoodedSwitch+'</tr>'
+					  + '<tr><td>Bullseye Lantern</td><td>60ft beam</td>'+bullseyeSwitch+'</tr>'
+					  + '<tr><td>Cont-Light gem</td><td>60ft</td>'+contLightSwitch+'</tr>'
+					  + '<tr><td>Beacon Lantern</td><td>240ft beam</td>'+beaconSwitch+'</tr>'
+					  + '</table>}}';
 					
 
 		sendResponse( charCS, content, senderId, flags.feedbackName, flags.feedbackImg, tokenID );
 		return;
 	}
 	
-	var doLightSource = function( args, dispMenu, senderId ) {
+	async function doLightSource( args, dispMenu, senderId ) {
 		
+		const changeTokenLight = function( token, newSource ) {
+
+			return new Promise(resolve => {
+				let errFlag = false;
+				try {
+//					log('changeTokenLight: called to set token '+token.get('name')+' on page '+getObj('page',token.get('_pageid')).get('name')+' to have '+newSource+' light');
+					switch (newSource.toLowerCase()) {
+					case 'weapon':
+						token.set({emits_bright_light: true, emits_low_light: true,
+							bright_light_distance: 1,  low_light_distance: 5,
+							has_directional_bright_light: false, has_directional_dim_light: false,
+							directional_bright_light_centre: 180, directional_bright_light_total: 360
+						});
+						break;
+						
+					case 'torch':
+						token.set({emits_bright_light: true, emits_low_light: true,
+							bright_light_distance: 1,  low_light_distance: 15,
+							has_directional_bright_light: false, has_directional_dim_light: false,
+							directional_bright_light_centre: 180, directional_bright_light_total: 360
+						});
+						break;
+					
+					case 'hooded':
+						token.set({emits_bright_light: true, emits_low_light: true,
+							bright_light_distance: 15, low_light_distance: 30,
+							has_directional_bright_light: false, has_directional_dim_light: false,
+							directional_bright_light_centre: 180, directional_bright_light_total: 360
+						});
+						break;
+					
+					case 'contlight':
+						token.set({emits_bright_light: true, emits_low_light: true,
+							bright_light_distance: 50, low_light_distance: 60,
+							has_directional_bright_light: false, has_directional_dim_light: false,
+							directional_bright_light_centre: 180, directional_bright_light_total: 360
+						});
+						break;
+					
+					case 'bullseye':
+						token.set({emits_bright_light: true, emits_low_light: false, 
+							bright_light_distance: 60, low_light_distance: 60,
+							has_directional_bright_light: true, has_directional_dim_light: false,
+							directional_bright_light_centre: 180, directional_bright_light_total: 19
+						});
+						break;
+					
+					case 'beacon':
+						token.set({emits_bright_light: true, emits_low_light: false, 
+							bright_light_distance: 240, low_light_distance: 240,
+							has_directional_bright_light: true, has_directional_dim_light: false,
+							directional_bright_light_centre: 180, directional_bright_light_total: 21
+						});
+						break;
+						
+					case 'none':
+					default:
+						token.set({emits_bright_light: false, emits_low_light: false,
+							bright_light_distance: 0,  low_light_distance: 0,
+							has_directional_bright_light: false, has_directional_dim_light: false,
+							directional_dim_light_centre: 180, directional_dim_light_total: 360,
+							directional_bright_light_centre: 180, directional_bright_light_total: 360
+						});
+						break;
+					};
+				} catch (e) {
+					sendCatchError('MagicMaster',msg_orig[senderId],e);
+					errFlag = true;
+				} finally {
+					setTimeout(() => {
+						resolve(errFlag);
+					}, 10);
+				}
+			});
+		};
+
 		if (!args) return;
-		
 		if (args.length != 2) {
 			sendDebug('doLightSource: Invalid number of arguments');
 			sendResponseError(senderId,'Invalid MagicMaster command syntax');
 			return;
 		};
 
-		var tokenID = args[0],
-			newSource = args[1],
-			curToken = getObj( 'graphic', tokenID );
-			
-		if (!curToken){
-			sendDebug('doLightSource: Invalid tokenID: ' + tokenID);
-			sendResponseError(senderId,'Invalid token specified');
-			return;
-		}
-		
-		var charCS = getCharacter( tokenID );
+		const tokenID = args[0],
+			  newSource = args[1],
+			  curToken = getObj( 'graphic', tokenID ),
+			  charCS = getCharacter( tokenID );
+		let	  tokenList = [],
+			  errFlag = false;
+
 		if (!charCS) {
 			sendDebug('doLightSource: Invalid tokenID: ' + tokenID);
 			sendResponseError(senderId,'Invalid token specified');
 			return;
 		}
+//		log('doLightSource: calling for '+(!curToken ? ('character '+charCS.get('name')) : ('token'+curToken.get('name')))+', lightSource '+newSource);
 
-		switch (newSource.toLowerCase()) {
-		case 'none':
-			curToken.set({emits_bright_light: false, emits_low_light: false,
-			bright_light_distance: 0,  low_light_distance: 0,
-			has_directional_bright_light: false, has_directional_dim_light: false,
-			directional_dim_light_centre: 180, directional_dim_light_total: 360,
-			directional_bright_light_centre: 180, directional_bright_light_total: 360});
-			break;
-			
-		case 'weapon':
-			curToken.set({emits_bright_light: true, emits_low_light: true,
-			bright_light_distance: 1,  low_light_distance: 5,
-			has_directional_bright_light: false, has_directional_dim_light: false,
-			directional_bright_light_centre: 180, directional_bright_light_total: 360});
-			break;
-			
-		case 'torch':
-			curToken.set({emits_bright_light: true, emits_low_light: true,
-			bright_light_distance: 1,  low_light_distance: 15,
-			has_directional_bright_light: false, has_directional_dim_light: false,
-			directional_bright_light_centre: 180, directional_bright_light_total: 360});
-			break;
+		if (!curToken){
+			tokenList = filterObjs( obj => (!(obj.get('type') !== 'graphic' || obj.get('subtype') !== 'token' || obj.get('represents') !== tokenID )));
+		} else {
+			let name = curToken.get('name'),
+				represents = curToken.get('represents');
+			tokenList = filterObjs( obj => (!(obj.get('type') !== 'graphic' || obj.get('subtype') !== 'token' || obj.get('represents') !== represents || obj.get('name') !== name)));
+//			log('doLightSource: specific token name = '+name+', tokenList has '+tokenList.length+' entries');
+		};
 		
-		case 'hooded':
-			curToken.set({emits_bright_light: true, emits_low_light: true,
-			bright_light_distance: 15, low_light_distance: 30,
-			has_directional_bright_light: false, has_directional_dim_light: false,
-			directional_bright_light_centre: 180, directional_bright_light_total: 360});
-			break;
-		
-		case 'contlight':
-			curToken.set({emits_bright_light: true, emits_low_light: true,
-			bright_light_distance: 50, low_light_distance: 60,
-			has_directional_bright_light: false, has_directional_dim_light: false,
-			directional_bright_light_centre: 180, directional_bright_light_total: 360});
-			break;
-		
-		case 'bullseye':
-			curToken.set({emits_bright_light: true, emits_low_light: false, 
-			bright_light_distance: 60, low_light_distance: 60,
-			has_directional_bright_light: true, has_directional_dim_light: false,
-			directional_bright_light_centre: 180, directional_bright_light_total: 19});
-			break;
-		
-		case 'beacon':
-			curToken.set({emits_bright_light: true, emits_low_light: false, 
-			bright_light_distance: 240, low_light_distance: 240,
-			has_directional_bright_light: true, has_directional_dim_light: false,
-			directional_bright_light_centre: 180, directional_bright_light_total: 21});
-			break;
-			
-		default:
-			sendDebug( 'doLightSource: Invalid light source type '+newSource );
-			sendResponseError(senderId,'Invalid light source specified');
-			break;
-		}
-		
+		for (const token of tokenList) {
+			errFlag = await changeTokenLight( token, newSource );
+			if (errFlag) break;
+		};
+
 		setAttr( charCS, fields.LightSource, newSource );
+		if (tokenList && tokenList.length) setDefaultTokenForCharacter( charCS, curToken || tokenList[0] );
 		
 		if (dispMenu) {
 			doLightSourcesMenu( args, senderId );
 		} else {
-			sendWait(senderId,0);
+			sendWait(senderId,0,'Magic doLightSource');
 		}
 		return;
-	}
+	};
 	
 	/*
 	 * Display a simple message to the specified range of players
 	 */
 	 
-	var doMessage = function( args, selected, senderId ) {
+	const doMessage = function( args, selected, senderId ) {
 		
+		sendWait(senderId,0,'Magic doMessage');
+
 		if (!args) args = [];
-		
-		var sel = '';
+		let sel = '';
 		if (selected && selected.length) {
 			sel = selected[0]._id;
 		}	
@@ -9651,7 +9615,7 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 			return;
 		};
 
-		var cmd = (args[0] || '-').toLowerCase(),
+		let cmd = (args[0] || '-').toLowerCase(),
 			tokenID = args[1] || sel,
 			charCS = getCharacter(tokenID),
 			isCmd = ['gm','whisper','w','character','c','standard','s','public','p'].includes(cmd);
@@ -9664,12 +9628,11 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 		}
 		cmd = cmd.toLowerCase();
 		if (!charCS && cmd !== 'gm') {
-			sendDebug( 'doMessage: tokenID is invalid' );
 			sendError( 'No token selected' );
 			return;
 		}	
 		
-		var msg = '&{template:'+fields.messageTemplate+'}{{name=' + (args[2] || '') + '}}{{desc=' + parseStr(args[3] || '',msgReplacers) + '}}';
+		let msg = '&{template:'+fields.messageTemplate+'}{{name=' + (args[2] || '') + '}}{{desc=' + parseStr(args[3] || '',msgReplacers) + '}}';
 		const reVals = /\^\^(\d+)\^\^/;
 		const valRes = ( a, v ) => args[v] || '';
 		const reAttrs = /\^\^([^\|\^]+)\|?(max|current)?\|?([^\|\^]+)?\^\^/i;
@@ -9681,7 +9644,6 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 		switch (cmd.toLowerCase()) {
 		case 'gm':
 			sendFeedback(msg);
-			sendWait(senderId,0);
 			break;
 		case 'whisper':
 		case 'w':
@@ -9713,13 +9675,12 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * for attacks.
 	 */
 	 
-	var doTidyCS = function( args, selected ) {
+	const doTidyCS = function( args, selected ) {
 		
-		var tokenList = [];
+		let tokenList = [];
 		if (args && args[0]) {
 			let token = getObj('graphic',args[0]);
 			if (!token) {
-				sendDebug('doTidyCS: Invalid tokenID argument');
 				sendError('Valid token not specified');
 				return;
 			}
@@ -9741,7 +9702,7 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * for attacks.
 	 */
 	 
-	var doCleanCS = function( args, selected ) {
+	const doCleanCS = function( args, selected ) {
 		
 		if (!args) args=[];
 		if (!args[0] && selected && selected.length) {
@@ -9752,10 +9713,10 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 			return;
 		};
 
-		var tokenID = args[0],
-			silent = (args[1] || '').toUpperCase() === 'SILENT',
-			curToken = getObj( 'graphic', tokenID ),
-			charCS = getCharacter( tokenID );
+		const tokenID = args[0],
+			  silent = (args[1] || '').toUpperCase() === 'SILENT',
+			  curToken = getObj( 'graphic', tokenID ),
+			  charCS = getCharacter( tokenID );
 			
 		if (!curToken || !charCS) {
 			sendDebug('doCopyCS: Invalid tokenID: ' + tokenID);
@@ -9775,12 +9736,13 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * to a handout in object format to be cut&pasted to an API
 	 */
 	 
-	var doWriteDB = function(args) {
+	const doWriteDB = function(args) {
 		
-		var dbName = args[0],
-			dbVersion = args[1],
-			filter = args[2] || '',
-			dbHandout;
+		const dbName = args[0],
+			  dbVersion = args[1],
+			  filter = args[2] || '';
+			  
+		let	dbHandout;
 			
 		if (dbVersion && dbVersion.length && (dbVersion !== '=') && isNaN(parseFloat(dbVersion))) {
 			sendError( 'Invalid database version number' );
@@ -9809,12 +9771,12 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	async function doUpdateDB(args, senderId, silent) {
 		
 		try {
-			var dbName = args[0],
-				forceIndexUpdate = false;
+			const dbName = args[0];
+			let	forceIndexUpdate = false;
 			
 			if (dbName && dbName.length) {
-				let dbLabel = dbName.replace(/-/g,'_');
-				let dbList = Object.keys(dbNames).filter(k => k.startsWith(dbLabel));
+				const dbLabel = dbName.replace(/-/g,'_'),
+					  dbList = Object.keys(dbNames).filter(k => k.startsWith(dbLabel));
 				if (dbList && dbList.length > 1) {
 					sendFeedback('&{template:'+fields.messageTemplate+'}{{title=Extract Database}}{{desc=Multiple databases start with '+dbName+'. [Select the one you want](!magic --extract-db ?{Choose which to extract|'+dbList.join('|')+'}) }}',senderId);
 					return;
@@ -9831,23 +9793,24 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 				sendFeedback(design.info_msg+'Updating all MagicMaster databases</div>',flags.feedbackName,flags.feedbackImg);
 				_.each( dbNames, (db,dbName) => {
 					if (db.api.includes('magic')) {
-						let dbCS = findObjs({ type:'character', name:dbName.replace(/_/g,'-') },{caseInsensitive:true});
+						const dbCS = findObjs({ type:'character', name:dbName.replace(/_/g,'-') },{caseInsensitive:true});
 						if (dbCS && dbCS.length) {
 							setAttr( dbCS[0], fields.dbVersion, 0 );
 						}
 					}
 				});
+				let result;
 				for (const name in dbNames) {
 					if (dbNames[name].api.includes('magic')) {
-						let result = await buildDB( name, dbNames[name], senderId, silent );
+						result = await buildDB( name, dbNames[name], senderId, silent );
 					}
 				}
 				forceIndexUpdate = true;
 
 			};
 			apiDBs.magic = true;
-			sendAPI('!attk --index-db magic');
-			sendAPI('!cmd --index-db magic');
+			sendAPI('!attk --nowaitmsg --index-db magic');
+			sendAPI('!cmd --nowaitmsg --index-db magic');
 			updateDBindex(forceIndexUpdate);
 			return;
 		} catch (e) {
@@ -9861,15 +9824,14 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * GMs / game creators to change markers easily
 	 */
  
-	var doExtractMarkers = function (args) {
+	const doExtractMarkers = function (args) {
 		
-		var APIdbName = args[0],
-			UserDbName = args[1],
-			itemClass = args[2] || 'specs',
-			result, dbLabel, rootDB;
+		const APIdbName = args[0],
+			  UserDbName = args[1],
+			  itemClass = args[2] || 'specs';
 		
 		if (APIdbName && APIdbName.length && UserDbName && UserDbName.length) {
-			dbLabel = UserDbName.replace(/-/g,'_');
+			const dbLabel = UserDbName.replace(/-/g,'_');
 			if (dbNames[dbLabel]) {
 				sendError(UserDbName+' is an API dataabse and cannot be overwritten');
 				return;
@@ -9888,7 +9850,7 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * the number of charges left on the specified spell, power or item
 	 */
 	 
-	var doSetCharges = function( args, selected, senderId ) {
+	const doSetCharges = function( args, selected, senderId ) {
 		
 		if (!args) args=[];
 		if ((!args[0] || !args[0].length) && selected && selected.length) {
@@ -9899,12 +9861,13 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 			return;
 		};
 
-		var tokenID = args[0],
-			type = (args[1] || 'MI').toUpperCase(),
-			item = args[2] || '-',
-			silent = ((args[3] || '').toLowerCase() === 'silent'),
-			charCS = getCharacter(tokenID),
-			qty, Tables, index;
+		const tokenID = args[0],
+			  type = (args[1] || 'MI').toUpperCase(),
+			  item = args[2] || '-',
+			  silent = ((args[3] || '').toLowerCase() === 'silent'),
+			  charCS = getCharacter(tokenID);
+			  
+		let	qty = 0;
 			
 		if (!charCS) {
 			sendDebug('doSetCharges: invalid ID argument');
@@ -9912,29 +9875,29 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 			return;
 		};
 		if (!['MU','PR','POWER','MI','MIPOWER'].includes(type)) {
-			sendDebug('doSetCharges: invalid item type '+type+'. Should be one of MU, PR, POWER, or MI');
 			sendError('Invalid item type specified');
 			return;
 		};
 		
 		if (type === 'MI') {
-			Tables = getTableGroupField( charCS, {}, fieldGroups.MI, 'trueName' );
-			[table,index] = tableGroupFind( Tables, 'trueName', item );
+			let Tables = getTableGroupField( charCS, {}, fieldGroups.MI, 'trueName' );
+			let [table,index] = tableGroupFind( Tables, 'trueName', item );
 			if (!_.isUndefined(index)) {
 				Tables = getTableField( charCS, {}, fieldGroups[table].tableDef, fields[fieldGroups[table].prefix+'qty'] );
 				qty = Tables.tableLookup( fields[fieldGroups[table].prefix+'qty'], index, false );
 			};
 		} else {
 			var levelSpells = shapeSpellbook( charCS, type );
+			let Tables, index, c, w;
 			for (let lv=1; lv < levelSpells.length && _.isUndefined(qty); lv++) {
-				let c = levelSpells[lv].base;
-				let w = 1;
+				c = levelSpells[lv].base;
+				w = 1;
 				do {
-					tables = getTableField( charCS, {}, fields.Spells_table, fields.Spells_name, c );
-					index = tables.tableFind( fields.Spells_name, item );
+					Tables = getTableField( charCS, {}, fields.Spells_table, fields.Spells_name, c );
+					index = Tables.tableFind( fields.Spells_name, item );
 					if (!_.isUndefined(index)) {
-						tables = getTableField( charCS, tables, fields.Spells_table, fields.Spells_castValue, c );
-						qty = tables.tableLookup( fields.Spells_castValue, index, false );
+						Tables = getTableField( charCS, Tables, fields.Spells_table, fields.Spells_castValue, c );
+						qty = Tables.tableLookup( fields.Spells_castValue, index, false );
 					};
 					c++;
 				} while ((w <= fields.SpellsCols) && _.isUndefined(qty));
@@ -9951,13 +9914,14 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	
 	/*
 	 * Handle a button press, and redirect to the correct handler
+	 * Note: keep as "var" to allow direct calls from code
 	 */
 
 	var doButton = function( args, senderId, selected ) {
 
 		if (!args) return;
 		
-		var	handler = args[0].toUpperCase();
+		const handler = args[0].toUpperCase();
 
 		switch (handler) {
 
@@ -10024,7 +9988,7 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 		case BT.REVIEW_MIPOWER :
 		case 'GM-REVIEWMI' :
 			 
-			handleReviewSpell( args, senderId );
+//			handleReviewSpell( args, senderId );
 			break;
 			
 		case BT.MEM_MUSPELL :
@@ -10167,12 +10131,14 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 
 		case BT.POP_PICK :
 		
+			handleFlagPicks( args, senderId );
 			makeShortPOPmenu( args, senderId, false );
 			break;
 			
 		case BT.BUY_PICK :
 		case BT.SELL_PICK :
 
+			handleFlagPicks( args, senderId );
 			makeShortPOPmenu( args, senderId, true );
 			break;
 			
@@ -10191,7 +10157,7 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 		case BT.BUY_OFFER :
 		case BT.SELL_OFFER :
 			
-			sendWait( senderId, 1 );
+			sendWait( senderId, 1, 'Magic doButton sell/buy/store' );
 			setTimeout( handlePickOrPut, 10, args, senderId );
 			break;
 			
@@ -10366,7 +10332,6 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 		
 		default:
 		
-			sendDebug( 'doButton: invalid button type specified' );
 			sendError( 'Invalid MagicMaster button call' );
 			return;
 		};
@@ -10379,7 +10344,7 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * Handle a database indexing handshake
 	 **/
 	 
-	var doIndexDB = function( args ) {
+	const doIndexDB = function( args ) {
 		
 		apiDBs[args[0]] = true;
 		updateDBindex();
@@ -10391,13 +10356,13 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * Handle handshake request
 	 **/
 	 
-	var doHsQueryResponse = function(args) {
+	const doHsQueryResponse = function(args) {
 		if (!args) return;
-		var from = args[0] || '',
-			func = args[1] || '',
-			funcTrue = ['spellmenu','mem-spell','view-spell','cast-spell','cast-again','mimenu','edit-mi','view-mi','use-mi','mi-charges','mi-power','touch','rest','gm-edit-mi','search','pickorput','lightsources',
+		const from = args[0] || '',
+			  func = args[1] || '',
+			  funcTrue = ['spellmenu','mem-spell','view-spell','cast-spell','cast-again','mimenu','edit-mi','view-mi','use-mi','mi-charges','mi-power','touch','rest','gm-edit-mi','search','pickorput','lightsources',
 						'light','changelight','help','check-db','debug'].includes(func.toLowerCase()),
-			cmd = '!'+from+' --noWaitMsg --hsr magic'+((func && func.length) ? ('|'+func+'|'+funcTrue) : '');
+			  cmd = '!'+from+' --noWaitMsg --hsr magic'+((func && func.length) ? ('|'+func+'|'+funcTrue) : '');
 			
 		sendAPI(cmd);
 		return;
@@ -10407,14 +10372,14 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * Handle the response to a handshake query
 	 **/
 	 
-	var doHandleHsResponse = function(args) {
+	const doHandleHsResponse = function(args) {
 		if (!args) {
 			sendError('Invalid handshake response received');
 			return;
 		}
-		var from = args[0] || '',
-			func = args[1] || '',
-			funcExists = (!!args[2]) || false;
+		const from = args[0] || '',
+			  func = args[1] || '',
+			  funcExists = (!!args[2]) || false;
 		
 		if (!apiCommands[from]) {
 			apiCommands[from] = {};
@@ -10430,10 +10395,10 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * Handle Pending Requests
 	 */
 
-	var doRelay = function(args,senderId) {
+	const doRelay = function(args,senderId) {
 		if (!args) return;
 		
-		var carry,
+		let carry,
 			hash; 
 		args = args.split(' %% '); 
 		if (!args) { log(args); return; }
@@ -10445,7 +10410,7 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 			carry = args[1];
 			if (carry)
 				{carry = carry.trim();}
-			var pr = findPending(hash);
+			let pr = findPending(hash);
 			if (pr) {
 				pr.doOps(carry);
 				clearPending(hash);    
@@ -10455,6 +10420,45 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 			}
 		}
 	}; 
+	
+	/**
+	* Debugging routine to get table info of an item
+	**/
+	
+	const doGetRowInfo = function(args) {			// rowID
+		const tokenID = args[0],
+			  table = args[1] || '',
+			  row = parseInt(args[2]),
+			  miName = args[3] || '',
+			  charCS = getCharacter(tokenID);
+			  
+		if (!charCS) {
+			sendError('Invalid token selected');
+			return;
+		};
+			  
+		let Items = getTableGroup( charCS, fieldGroups.MI );
+		if (!Items) {
+			sendError('Invalid table group');
+			return;
+		};
+		if (miName.length) {
+//			log('miName defined as '+miName);
+			let [miRow,miTable,miRowID] = tableGroupFind( Items, 'name', miName );
+			sendFeedback('Item '+miName+' is at row '+miRow+' of table '+miTable+', with the rowID = '+miRowID);
+		};
+		if (table.length && !isNaN(row)) {
+//			log('table is '+table+' and row is '+row);
+			sendFeedback('Table '+table+' row '+row+' has a rowID = '+Items[table].rowID(row));
+		};
+		if (!table.length && !isNaN(row)) {
+//			log('table should be empty but is '+table.length+' long as '+table+', row is '+row);
+			let [miRow,miTable,miRowID] = tableGroupIndex(Items,row);
+			sendFeedback('Group row '+row+' is in table '+miTable+' row '+miRow+', with ID '+miRowID);
+		};
+		return;
+	};
+
 
 // -------------------------------------------------------- Event Handlers --------------------------------------------------
 			
@@ -10466,13 +10470,13 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	 */ 
  
 
-	var handleChatMessage = function(msg) { 
-		var args = processInlinerolls(msg),
+	const handleChatMessage = function(msg) { 
+		let args = processInlinerolls(msg),
 			senderId = findThePlayer(msg.who),
 			selected = msg.selected,
 			t = 2;
 			
-		var doMagicCmd = function( e, selected, senderId, isGM ) {
+		const doMagicCmd = function( e, selected, senderId, isGM ) {
 			var arg = e, i=arg.indexOf(' '), cmd, argString;
 			sendDebug('Processing arg: '+arg);
 			
@@ -10504,6 +10508,9 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 					case 'learn-spell':
 						doLearnSpell(arg,selected,senderId);
 						break;
+					case 'power-per-day':
+						doChangePerDay(arg,selected,senderId);
+						break;
 					case 'mem-all-powers':
 						handleMemAllPowers([BT.MEMALL_POWERS,arg[0],1,-1,-1,'',''], senderId, true );
 						break;
@@ -10512,7 +10519,7 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 						handleMemAllPowers(arg, senderId, true );
 						break;
 					case 'touch':
-						sendWait(senderId,0);
+						sendWait(senderId,0,'Magic --touch');
 						doTouch(arg,senderId);
 						break;
 					case 'target':
@@ -10587,7 +10594,10 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 						break;
 					case 'level-change':
 						doLevelChange(arg,senderId,selected);
-						break
+						break;
+					case 'check-move':
+						doCheckMove(arg,senderId,selected);
+						break;
 					case 'lightsources':
 						doLightSourcesMenu(arg,senderId,selected);
 						break;
@@ -10606,18 +10616,18 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 					case 'message':
 						doMessage(arg,selected,senderId);
 						break;
-					case 'options':
-						doSetOptions(arg,senderId);
-						break;
 					case 'disp-config':
-						doDispConfig(senderId);
+						sendAPI('!rpgm '+senderId+' --disp-config', senderId);
+						break;
+					case 'options':
+						sendAPI('!rpgm '+senderId+' --options '+arg.join('|'), senderId);
 						break;
 					case 'write-db':
 						if (isGM) doWriteDB(arg,senderId);
 						break;
 					case 'extract-db':
 					case 'update-db':
-						sendWait( senderId, 0 );
+						sendWait( senderId, 0, 'Magic --extract-db' );
 						if (isGM) doUpdateDB(arg,senderId,false);
 						break;
 					case 'check-db':
@@ -10633,7 +10643,7 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 						if (isGM) doConfig(arg,senderId);
 						break;
 					case 'update-cs':
-						log('magicMaster handleChatMessage: something issued a --update-cs command');
+//						log('magicMaster handleChatMessage: something issued a --update-cs command');
 						if (isGM) updateCharSheets(arg,senderId);
 						break;
 					case 'handout':
@@ -10642,11 +10652,11 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 						break;
 					case 'hsq':
 					case 'handshake':
-						sendWait( senderId, 0 );
+						sendWait( senderId, 0, 'Magic --hsq' );
 						doHsQueryResponse(arg);
 						break;
 					case 'hsr':
-						sendWait( senderId, 0 );
+						sendWait( senderId, 0, 'Magic --hsr' );
 						doHandleHsResponse(arg);
 						break;
 					case 'button':
@@ -10662,10 +10672,12 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 						// RED: v1.207 allow anyone to set debug and who to send debug messages to
 						doSetDebug(argString,senderId);
 						break;
+					case 'nowaitmsg':
 					case 'skip':
 						// RED: v4.1 added to allow viewed abilities to not execute certain live commands
 						break;
-					case 'nowaitmsg':
+					case 'get-rowid':
+						doGetRowInfo(arg);
 						break;
 					default:
 						sendFeedback('<span style="color: red;">Invalid command " <b>'+msg.content+'</b> "</span>',flags.feedbackName);
@@ -10675,7 +10687,6 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 				}
 			} catch (err) {
 				log('MagicMaster handleChatMsg: JavaScript '+err.name+': '+err.message+' while processing command '+cmd+' '+argString);
-				sendDebug('MagicMaster handleChatMsg: JavaScript '+err.name+': '+err.message+' while processing command '+cmd+' '+argString);
 				sendCatchError('MagicMaster',msg_orig[senderId],err);
 			}
 		}
@@ -10704,7 +10715,7 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 		time = Date.now();
 
 		args = args.split(' --');
-		let senderMod = args.shift().split(' ');
+		const senderMod = args.shift().split(' ');
 		if (senderMod.length > 1) senderId = fixSenderId( [senderMod[1]], selected, senderId );
 		
 		if (_.isUndefined(senderId) || _.isUndefined(getObj('player',senderId))) {
@@ -10719,9 +10730,9 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 			sendDebug('senderId is defined as ' + getObj('player',senderId).get('_displayname'));
 		};
 		
-		var isGM = (playerIsGM(senderId) || state.MagicMaster.debug === senderId);
+		const isGM = (playerIsGM(senderId) || state.MagicMaster.debug === senderId);
 			
-		if (!flags.noWaitMsg && args[0] && !args[0].toLowerCase().startsWith('nowaitmsg')) sendWait(senderId,1,'magicMaster');
+		if (!flags.noWaitMsg && args[0] && !args[0].toLowerCase().startsWith('nowaitmsg')) sendWait(senderId,2,'Magic cmd '+args[0].split(' ')[0]);
 		
 		_.each(args, function(e) {
 			setTimeout( doMagicCmd, (1*t++), e, selected, senderId, isGM );
@@ -10736,8 +10747,8 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	 */
 	 
 	var cmdMasterRegister = function() {
-		var cmd = fields.commandMaster
-				+ ' --noWaitMsg'
+		const cmd = fields.commandMaster
+				+ ' --nowaitmsg'
 				+ ' --register Cast_MU_spell|Cast a Wizard spell|magic|~~cast-spell|MU%%`{selected|token_id}'
 				+ ' --register Cast_PR_spell|Cast a Priest spell|magic|~~cast-spell|PR%%`{selected|token_id}'
 				+ ' --register Cast_spell|Ask for which type of spell to cast|magic|~~cast-spell|MU-PR%%`{selected|token_id}'
@@ -10755,11 +10766,11 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * Handle a change to the page the Player ribbon is on
 	 **/
 	 
-	var handleChangePlayerPage = function(obj,prev) {
+	const handleChangePlayerPage = function(obj,prev) {
 		
 		try {
-			var page = Campaign().get('playerpageid'),
-				tokens = filterObjs( obj => {
+			const page = Campaign().get('playerpageid'),
+				  tokens = filterObjs( obj => {
 					if (obj.get('type') != 'graphic' || obj.get('subtype') != 'token') return false;
 					if (obj.get('pageid') != page) return false;
 					return (!!obj.get('represents') && !!obj.get('represents').length);
@@ -10778,7 +10789,7 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * current Player page and, if so, tidy it's character sheet.
 	 */
 	 
-	var handleChangeToken = function(obj,prev) {
+	const handleChangeToken = function(obj,prev) {
 
 		try {
 			if (!obj)
@@ -10786,7 +10797,7 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 				
 			if (obj.get('name') == prev['name'])
 				{return;}
-			
+				
 			if (obj.get('_pageid') == Campaign().get('playerpageid') && obj.get('represents') && obj.get('represents').length) {
 				handleCStidy( [obj], true );
 			}
@@ -10800,7 +10811,7 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * Set the magicMaster version of a new character sheet
 	 */
 	 
-	var handleAddCharacter = function(obj) {
+	const handleAddCharacter = function(obj) {
 
 		try {
 			if (!obj) return;
@@ -10814,10 +10825,10 @@ var MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * Set the charType of a dead creature to 6 (dead)
 	 */
 	 
-	var handleTokenDeath = function(obj,prev) {
+	const handleTokenDeath = function(obj,prev) {
 		try {
 			if (!obj) return;
-			let charCS = getCharacter( obj.id );
+			const charCS = getCharacter( obj.id );
 			if (!charCS) return;
 			if (obj.get("status_dead")) {
 				// If the token dies and is marked as "dead" by the GM

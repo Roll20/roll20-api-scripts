@@ -1,11 +1,16 @@
 // Script:   TokenHome
 // By:       Keith Curtis, based on a script by the Aaron
 // Contact:  https://app.roll20.net/users/162065/keithcurtis
-var API_Meta = API_Meta || {}; //eslint-disable-line no-var
-API_Meta.TokenHome = { offset: Number.MAX_SAFE_INTEGER, lineCount: -1 };
-{ try { throw new Error(''); } catch (e) { API_Meta.TokenHome.offset = (parseInt(e.stack.split(/\n/)[1].replace(/^.*:(\d+):.*$/, '$1'), 10) - 6); } }
 
 on('ready', () => {
+
+    'use strict';
+ 
+    const version = '1.0.1';
+    log('-=> Token Home v' + version + ' is loaded. Use !home --help for documentation');
+    // 1.0.1 Added Macro generation
+    // 1.0.0 Debut
+
 
   /*************************
    * CONFIG
@@ -40,13 +45,14 @@ const HOME_HELP_TEXT = `
 
 <p>
 The <strong>Token Home</strong> script allows tokens to store and recall multiple
-named locations on the current page.
-Each location records an X/Y position and the token’s layer.
+named locations on the current page. Each location records an X/Y position and
+the token’s layer. Tokens can be sent back to saved locations, queried, or
+summoned to a selected anchor point based on proximity.
 </p>
 
 <p>
-Tokens can be sent back to saved locations, queried, or summoned to a selected
-anchor point based on proximity.
+This script is a blow-up and glow-up of a script written for me by the Aaron,
+years ago. Anything about it that is broken is mine. :)
 </p>
 
 <ul>
@@ -65,10 +71,11 @@ anchor point based on proximity.
 
 <ul>
   <li><code>--set</code> — Store the selected token’s current position as a location.</li>
-  <li><code>--lN</code> — Recall the selected token to a stored location.</li>
+  <li><code>--L#</code> — Recall the selected token to a stored location. That's an L (upper or lower case), followed by an integer.</li>
   <li><code>--summon</code> — Pull tokens to a selected anchor based on proximity.</li>
   <li><code>--clear</code> — Remove stored location data from selected tokens.</li>
   <li><code>--help</code> — Open this help handout.</li>
+  <li><code>--macro</code> — Creates a generic chat menu macro that you can modify — Coming in the next merge.</li>
 </ul>
 
 <hr>
@@ -78,7 +85,8 @@ anchor point based on proximity.
 <p>
 Locations are identified by numbered slots:
 <code>L1</code>, <code>L2</code>, <code>L3</code>, and higher.
-There is no fixed upper limit.
+There is no fixed upper limit. This is how I use them, but you can use whatever
+location logic works for you;
 </p>
 
 <ul>
@@ -88,9 +96,7 @@ There is no fixed upper limit.
   <li><strong>L4</strong> — Commonly used for Encounter</li>
 </ul>
 
-<p>
-Each stored location records:
-</p>
+<p>Each stored location records:</p>
 
 <ul>
   <li>X position (pixels)</li>
@@ -104,7 +110,7 @@ Each stored location records:
 
 <p><strong>Format:</strong></p>
 <pre>
-!home --set --lN
+!home --set --L#
 </pre>
 
 <p>
@@ -114,7 +120,7 @@ Stores the selected token’s current position and layer into location <code>L N
 <h3>Rules</h3>
 
 <ul>
-  <li>Exactly one token must be selected</li>
+  <li>Any number of tokens can be selected</li>
   <li>Existing data for that location is overwritten</li>
   <li>Page ID is not stored</li>
 </ul>
@@ -122,9 +128,9 @@ Stores the selected token’s current position and layer into location <code>L N
 <h3>Examples</h3>
 
 <ul>
-  <li><code>!home --set --l1</code> — Set default location</li>
-  <li><code>!home --set --l2</code> — Set residence</li>
-  <li><code>!home --set --l5</code> — Set custom location</li>
+  <li><code>!home --set --L1</code> — <em>Set default location</em></li>
+  <li><code>!home --set --L2</code> — <em>Set residence</em></li>
+  <li><code>!home --set --L5</code> — <em>Set custom location</em></li>
 </ul>
 
 <hr>
@@ -133,7 +139,7 @@ Stores the selected token’s current position and layer into location <code>L N
 
 <p><strong>Format:</strong></p>
 <pre>
-!home --lN
+!home --L#
 </pre>
 
 <p>
@@ -143,7 +149,7 @@ Moves the selected token to the stored location <code>L N</code>.
 <h3>Rules</h3>
 
 <ul>
-  <li>Exactly one token must be selected</li>
+  <li>Any number of tokens can be selected</li>
   <li>If the location does not exist, the command aborts</li>
   <li>The token’s layer is restored</li>
 </ul>
@@ -151,8 +157,8 @@ Moves the selected token to the stored location <code>L N</code>.
 <h3>Examples</h3>
 
 <ul>
-  <li><code>!home --l1</code></li>
-  <li><code>!home --l3</code></li>
+  <li><code>!home --L1</code></li>
+  <li><code>!home --L3</code></li>
 </ul>
 
 <hr>
@@ -166,17 +172,23 @@ based on proximity to their stored locations.
 
 <p><strong>Format:</strong></p>
 <pre>
-!home --summon [--lN] [--r pixels or grid squares]
+!home --summon [--L#] [--r pixels or grid squares]
 </pre>
+
 <p>
-if no value is given, then pixels are assumed. Use 'g' for grid squares. <pre>--r300</pre> = 300 pixels, <pre>--r5g</pre> = 5 grid squares.
+If no value is given, pixels are assumed. Use <code>g</code> for grid squares.
 </p>
+
+<p>Examples of valid radius values:</p>
+
+<ul>
+  <li><code>--r300</code> = 300 pixels</li>
+  <li><code>--r5g</code> = 5 grid squares</li>
+</ul>
 
 <h3>Anchor Selection</h3>
 
-<p>
-Exactly one object must be selected:
-</p>
+<p>Exactly one object must be selected. That object can be a:</p>
 
 <ul>
   <li>Token (<code>graphic</code>)</li>
@@ -191,21 +203,14 @@ The selected object’s X/Y position is used as the summon target.
 <h3>Optional Arguments</h3>
 
 <ul>
-  <li>
-    <code>--lN</code><br>
-    Restrict the summon to a specific stored location.
-  </li>
-  <li>
-    <code>--r pixels</code><br>
-    Maximum distance from the anchor.
-    Default: <code>70</code>.
-  </li>
+  <li><code>--L#</code> — Restrict the summon to a specific stored location</li>
+  <li><code>--r|pixels</code> — Maximum distance from the anchor (default: 70)</li>
 </ul>
 
 <h3>Behavior</h3>
 
 <ul>
-  <li>If <code>--lN</code> is supplied, only that location is tested</li>
+  <li>If <code>--L#</code> is supplied, only that location is tested</li>
   <li>If omitted, all stored locations are considered</li>
   <li>The closest matching location is used per token</li>
   <li>Distance is measured from the stored location, not current token position</li>
@@ -216,9 +221,9 @@ The selected object’s X/Y position is used as the summon target.
 
 <ul>
   <li><code>!home --summon</code></li>
-  <li><code>!home --summon --r 210</code></li>
-  <li><code>!home --summon --l2</code></li>
-  <li><code>!home --summon --l4 --r 140</code></li>
+  <li><code>!home --summon --r|210</code></li>
+  <li><code>!home --summon --L2</code></li>
+  <li><code>!home --summon --L4 --r|140</code></li>
 </ul>
 
 <hr>
@@ -227,24 +232,31 @@ The selected object’s X/Y position is used as the summon target.
 
 <p><strong>Format:</strong></p>
 <pre>
-!home --clear [--lN]
+!home --clear [--L#]
 </pre>
 
 <ul>
-  <li>If <code>--lN</code> is supplied, only that location is removed</li>
+  <li>If <code>--L#</code> is supplied, only that location is removed</li>
   <li>If omitted, all stored locations are removed</li>
 </ul>
 
 <hr>
 
-<h2>General Rules</h2>
+<h2>Chat Menu Macro</h2>
 
-<ul>
-  <li>All commands are GM-only</li>
-  <li>Commands operate only on the current page</li>
-  <li>Tokens may be placed outside page bounds</li>
-  <li>Invalid arguments abort the command</li>
-</ul>
+<p>
+I use a macro for most of these commands, which has buttons for up to 4 locations.
+The macro labels these as default, residence, work, and encounter, but you can
+name these however you wish.
+</p>
+
+<p>You can create this sample macro with the command <code>!home --macro:</code></p>
+
+<pre>
+/w gm &amp;{template:default} {{name=Token Home}}{{Default=[Set](!home --set --l1) [Go](!home --l1) [Near](!home --summon --l1) [Radius](!home --summon --l1 --radius|?&#123;Input number of pixels})}}{{Residence=[Set](!home --set --l2) [Go](!home --l2) [Near](!home --summon --l2) [Radius](!home --summon --l2 --radius|?&#123;Input number of pixels})}}{{Work=[Set](!home --set --l3) [Go](!home --l3) [Near](!home --summon --l3) [Radius](!home --summon --l3 --radius|?&#123;Input number of pixels})}}{{Encounter=[Set](!home --set --l4) [Go](!home --l4) [Near](!home --summon --l4) [Radius](!home --summon --l4 --radius|?&#123;Input number of pixels})}}{{Summon Any=[Near](!home --summon) [Within X Pixels](!home --summon --radius|?&#123;Input number of pixels})}}
+</pre>
+<img src="https://files.d20.io/images/485725676/-y-CvAKaHHdifhVIPt-WLg/original.png">
+
 `;
 
     /*************************
@@ -456,6 +468,7 @@ ${lines}
     else if (flags.includes('convert')) mode = 'convert';
     else if (flags.includes('clear')) mode = 'clear';
     else if (flags.includes('help')) mode = 'help';
+    else if (flags.includes('macro')) mode = 'macro';
 
     let radius = DEFAULT_RADIUS;
     flags.forEach(f => {
@@ -471,6 +484,38 @@ ${lines}
 
 if (mode === 'help') {
   showHomeHelp();
+  return;
+}
+
+if (mode === 'macro') {
+
+  const MACRO_NAME = "Token Home";
+
+  const MACRO_ACTION = `/w gm &{template:default} {{name=Token Home}}{{Default=[Set](!home --set --l1) [Go](!home --l1) [Near](!home --summon --l1) [Radius](!home --summon --l1 --radius|?&#123;Input number of pixels})}}{{Residence=[Set](!home --set --l2) [Go](!home --l2) [Near](!home --summon --l2) [Radius](!home --summon --l2 --radius|?&#123;Input number of pixels})}}{{Work=[Set](!home --set --l3) [Go](!home --l3) [Near](!home --summon --l3) [Radius](!home --summon --l3 --radius|?&#123;Input number of pixels})}}{{Encounter=[Set](!home --set --l4) [Go](!home --l4) [Near](!home --summon --l4) [Radius](!home --summon --l4 --radius|?&#123;Input number of pixels})}}{{Summon Any=[Near](!home --summon) [Within X Pixels](!home --summon --radius|?&#123;Input number of pixels})}}`;
+
+  let macro = findObjs({
+    type: 'macro',
+    name: MACRO_NAME
+  })[0];
+
+  if (!macro) {
+    macro = createObj('macro', {
+      name: MACRO_NAME,
+      action: MACRO_ACTION,
+      visibleto: 'gm',
+      playerid: msg.playerid
+    });
+  } else {
+    macro.set({
+      action: MACRO_ACTION,
+      visibleto: 'gm'
+    });
+  }
+
+  sendChat('TokenHome',
+    `/w gm <div style="background:#e6e6e6;border:1px solid #b0b0b0;border-radius:6px;padding:8px 12px;font-size:13px;"><b>Token Home</b><br>Macro created/updated.</div>`
+  );
+
   return;
 }
 
@@ -541,6 +586,3 @@ if (mode === 'summon') {
     });
   });
 });
-
-
-{ try { throw new Error(''); } catch (e) { API_Meta.TokenHome.lineCount = (parseInt(e.stack.split(/\n/)[1].replace(/^.*:(\d+):.*$/, '$1'), 10) - API_Meta.TokenHome.offset); } }

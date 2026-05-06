@@ -33,6 +33,33 @@ let Supernotes_Templates = {
         footer: ""
     },
     
+    dark55: {
+        boxcode: `<div style='color: #fff; font-family: proxima-nova, "Proxima Nova", sans-serif !important; border-radius: 8px; display: block; text-align: left; font-size: 14px; padding: 5px; margin-bottom: 2px; font-weight:normal;  white-space: pre-wrap; background-image: url(https://storage.googleapis.com/roll20-cdn/advanced-sheets-production-9b1f7af9/dnd2024byroll20/assets/bg-img.jpg); background-color: #0b0b0b;'>`,
+        titlecode: `<div style='color:#fff; font-family: proxima-nova, "Proxima Nova", sans-serif !important; background-color:transparent; margin-right:3px; padding:3px; font-size:24px; line-height:26px;border-bottom: 1px solid #d72f2f; white-space: pre-wrap;'>`,
+        textcode: "</div><div><div style='padding:3px;'>",
+        buttonwrapper: `<div style='display:block; margin-top:15px; text-align: center; border-top: 1px solid #d72f2f;'>`,
+        buttonstyle: `style='display:inline-block; color:#e16363; font-weight:bold; background-color: transparent;padding: 0px; border: none'`,
+        playerbuttonstyle:  `style='display:inline-block; color:#e16363; font-weight:bolder; background-color: transparent;border-radius: 4px; margin:4px; padding: 2px 6px 2px 6px; border: none; font-family:"proxima nova", sans-serif;'`,
+        buttondivider: ' | ',
+        handoutbuttonstyle: `style='display:inline-block; color:#e16363; font-weight:bolder; background-color: transparent;border-radius: 4px; margin:4px; padding: 2px 6px 2px 6px; border: none; font-family:"proxima nova", sans-serif;'`,
+        whisperStyle: `'background-color:#none; color:#ccc; display:block; padding:5px; margin-top:20px; border-top: 1px solid #d72f2f; font-weight:normal;'`,
+        whisperbuttonstyle: `style='display:inline-block; color:#ccc; font-weight:bold; background-color: transparent;padding: 0px; border: none;`,
+        footer: ""
+    },
+
+    light55: {
+        boxcode: `<div style='color: #292218; font-family: proxima-nova, "Proxima Nova", sans-serif !important; border-radius: 8px; display: block; text-align: left; font-size: 14px; padding: 5px; margin-bottom: 2px; font-weight:normal;  white-space: pre-wrap; background-color: #eee;'>`,
+        titlecode: `<div style='color:#615139; font-family: proxima-nova, "Proxima Nova", sans-serif !important; font-weight:bold; background-color:transparent; margin-right:3px; padding:3px; font-size:24px; line-height:26px;border-bottom: 1px solid #8E5620; white-space: pre-wrap;'>`,
+        textcode: "</div><div><div style='padding:3px;'>",
+        buttonwrapper: `<div style='display:block; margin-top:15px; text-align: center; border-top: 1px solid #8E5620;'>`,
+        buttonstyle: `style='display:inline-block; color:#E16363; font-weight:bold; background-color: transparent;padding: 0px; border: none'`,
+        playerbuttonstyle:  `style='display:inline-block; color:#E16363; font-weight:bold; background-color: transparent;border-radius: 4px; margin:4px; padding: 2px 6px 2px 6px; border: none; font-family:"proxima nova", sans-serif;'`,
+        buttondivider: ' | ',
+        handoutbuttonstyle: `style='display:inline-block; color:#E16363; font-weight:bold; background-color: transparent;border-radius: 4px; margin:4px; padding: 2px 6px 2px 6px; border: none; font-family:"proxima nova", sans-serif;'`,
+        whisperStyle: `'background-color:#F1ECE6; color:#292218; display:block; padding:5px; margin-top:20px; border-top: 1px solid #8E5620; font-weight:normal;'`,
+        whisperbuttonstyle: `style='display:inline-block; color:#E16363; font-weight:bold; background-color: transparent;padding: 0px; border: none;`,
+        footer: ""
+    },
     
     roll20dark: {
         boxcode: `<div style='color: #fff; border: 1px solid #000; background-image: linear-gradient(210deg, #4c2951, #0e0d49); background-color: transparent; display: block; text-align: left; font-size: 14px; padding: 5px; margin-bottom: 2px; font-family: "proxima nova", sans-serif; white-space: pre-wrap;'>`,
@@ -590,8 +617,8 @@ Handouts use Roll20’s native styling for cross-platform reliability.
 
 <tr>
 <td><strong>roman</strong><div style="height:56px;">Hail Caesar!</div><img src="https://files.d20.io/images/476231260/GEUPPczk_lEx9JE6wxq0Cw/original.png?1771312288"></td>
-<td></td>
-<td></td>
+<td><strong>dark55</strong><div style="height:56px;">A style to complement the D&D 5.5e (2024) Sheet dark mode</div><img src="https://files.d20.io/images/485186667/f0H5QuQv4KDT9Lm8VZnzgA/original.png?1777483966"></td>
+<td><strong>light55</strong><div style="height:56px;">A style to complement the D&D 5.5e (2024) Sheet light mode</div><img src="https://files.d20.io/images/485186668/7F7nWgCIRPfs1twOmiFUMw/original.png?1777483966"></td>
 </tr>
 </table>
 
@@ -731,9 +758,10 @@ return text;
 
     const decodeUnicode = (str) => str.replace(/%u[0-9a-fA-F]{2,4}/g, (m) => String.fromCharCode(parseInt(m.slice(2), 16)));
 
-    const version = '0.2.6';
+    const version = '0.2.7';
     log('Supernotes v' + version + ' is ready! --offset ' + API_Meta.Supernotes.offset + 'To set the template of choice or to toggle the send to players option, Use the command !gmnote --config');
 //Changelong
+// 0.2.7 Added Templates for 2024 sheet, Dark and Light
 // 0.2.6 Reworked and updated Help system to use handout. Fixed logic issue Card output.
 // 0.2.5 fixed trailing space problem in command line, fixed linebreak issue.
 
@@ -901,6 +929,12 @@ sendChat ("notes","success. Virtual token id is " + virtualTokenID);
                             case "notebook":
                                 chosenTemplate = templates.notebook;
                                 break;
+                            case "dark55":
+                                chosenTemplate = templates.dark55;
+                                break;
+                            case "light55":
+                                chosenTemplate = templates.light55;
+                                break;
                             case "bob":
                                 break;
                             default:
@@ -986,7 +1020,7 @@ whisper = ((whisper.length>0) ? "<div style =" + whisperStyle + ">" + whisper + 
 
                         playerButton = '<BR><a href = "&#96;' + msg.content.replace(/!(gm|self)/, "!pc").replace(/\s(--|)handout\|.*\|/, "") + '">Send to Players in Chat</a>';
                         if (makeHandout) {
-                            handoutButton = ((playerButton) ? ' | ' : '<BR>') + '<a href = "&#96;' + '!gmnote --id' + tokenID + ' --handout|' + whom + '|">Make Handout</a>';
+                                                        handoutButton = ((playerButton) ? ' | ' : '<BR>') + '<a href = "&#96;' + '!gmnote --id' + tokenID + ' --handout|' + whom + '|">Make Handout</a>';
                         }
                         message = message.replace(/\[.*?\]\((.*?\.(jpg|jpeg|png|gif))\)/g, `<img style=" max-width:100%; max-height: 200px; float:right; padding-top:0px; margin-bottom:5px; margin-left:5px" src="$1">`);
                         message = message.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2">$1</a>');
@@ -1205,12 +1239,17 @@ message = message.replace(/201px/,newHeight+'px');
 
                     let playerButton = '';
                     if (sendToPlayers && (command === '!gmnote' || command === '!selfnote')) {
-                        playerButton = '\n[Send to Players](' + msg.content.replace(/!(gm|self)/, "!pc") + ')';
+                        
+
+                        
+                        
+                        
+                        playerButton = '\n[Send to Players](' + msg.content.replace(/!(gm|self)/, "!pc") + ' --id' + tokenID + ')';
                     }
 
                     let handoutButton = '';
                     if (makeHandout && (command.includes('gmnote') || command.includes('selfnote'))) {
-                        handoutButton = ((playerButton) ? ' | ' : '<BR>') + '[Make Handout](' + msg.content.replace(/!(pc|self)/, "!gm") + ' --handout|NamePlaceholder|)';
+                        handoutButton = ((playerButton) ? ' | ' : '<BR>') + '[Make Handout](' + msg.content.replace(/!(pc|self)/, "!gm") + ' --id' + tokenID + ' --handout|NamePlaceholder|)';
                     } else {
                         //handoutButton = '\n[Make Handout](' + msg.content.replace(/!(pc|self)/, "!gm") +')';
 

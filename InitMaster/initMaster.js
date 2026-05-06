@@ -68,15 +68,19 @@ API_Meta.InitMaster={offset:Number.MAX_SAFE_INTEGER,lineCount:-1};
  * v5.0.1  21/09/2025  Fixed initiative menu for using a magic item or equipment.
  * v5.0.2  23/09/2025  Added error message if weapon selected for initiative is not found in-hand. Added
  *                     --noWaitMsg command to suppress spurious Please Wait messages.
- * v5.0.3  17/10/2025  Fixed crash on calling !magic without a command.
+ * v5.0.3  17/10/2025  Fixed crash on calling !init without a command.
+ * v5.0.4  24/10/2025  Fixed item use initiative to use correct table row error.
+ * v5.1.0  16/11/2025  Changed var declarations to const and let where possible. Added new highlight 
+ *                     rows to highlight Submit buttons.
+ * v5.3.0  23/12/2025  Updated attrLookup() and resolveData() to use objects for optional parameters.
  */
 
-var initMaster = (function() {		// eslint-disable-line no-unused-vars
+const initMaster = (function() {		// eslint-disable-line no-unused-vars
 	'use strict'; 
-	var version = '5.0.3',
+	var version = '5.3.0',
 		author = 'Richerd @ Damery',
 		pending = null;
-    const lastUpdate = 1760686967;
+    const lastUpdate = 1777318205;
 
 	/*
 	 * Define redirections for functions moved to the RPGMaster library
@@ -84,7 +88,7 @@ var initMaster = (function() {		// eslint-disable-line no-unused-vars
 		
 	const getRPGMap = (...a) => libRPGMaster.getRPGMap(...a);
 	const setAttr = (...a) => libRPGMaster.setAttr(...a);
-	const attrLookup = (...a) => libRPGMaster.attrLookup(...a);
+	const attrLookup = (...a) => libRPGMaster.newAttrLookup(...a);
 	const evalAttr = (...a) => libRPGMaster.evalAttr(...a);
 	const abilityLookup = (...a) => libRPGMaster.abilityLookup(...a);
 	const getTableField = (...t) => libRPGMaster.getTableField(...t);
@@ -92,6 +96,7 @@ var initMaster = (function() {		// eslint-disable-line no-unused-vars
 	const getTableGroupField = (...t) => libRPGMaster.getTableGroupField(...t);
 	const tableGroupLookup = (...t) => libRPGMaster.tableGroupLookup(...t);
 	const tableGroupIndex = (...t) => libRPGMaster.tableGroupIndex(...t);
+	const indexTableGroup = (...t) => libRPGMaster.indexTableGroup(...t);
 	const tableGroupFind = (...t) => libRPGMaster.tableGroupFind(...t);
 	const initValues = (...v) => libRPGMaster.initValues(...v);
 	const updateHandouts = (...a) => libRPGMaster.updateHandouts(...a);
@@ -102,7 +107,7 @@ var initMaster = (function() {		// eslint-disable-line no-unused-vars
 	const getCharacter = (...a) => libRPGMaster.getCharacter(...a);
 	const classObjects = (...a) => libRPGMaster.classObjects(...a);
 	const classAllowedItem = (...a) => libRPGMaster.classAllowedItem(...a);
-	const resolveData = (...a) => libRPGMaster.resolveData(...a);
+	const resolveData = (...a) => libRPGMaster.newResolveData(...a);
 	const caster = (...a) => libRPGMaster.caster(...a);
 	const spendMoney = (...a) => libRPGMaster.spendMoney(...a);
     const sendToWho = (...m) => libRPGMaster.sendToWho(...m);
@@ -146,7 +151,7 @@ var initMaster = (function() {		// eslint-disable-line no-unused-vars
 	 * Define various designs for icons, buttons, etc.
 	 */
 
-	var design = {
+	const design = Object.freeze({
 		turncolor: '#D8F9FF',
 		roundcolor: '#363574',
 		statuscolor: '#F0D6FF',
@@ -162,19 +167,19 @@ var initMaster = (function() {		// eslint-disable-line no-unused-vars
 		selected_button: '"display: inline-block; background-color: white; border: 1px solid red;   border-radius: 5px ; color: red;     font-weight: bold; padding: 1px 5px;"',
 		green_button: '"display: inline-block; background-color: white;     border: 1px solid lime;  border-radius: 5px ; color: darkgreen; font-weight: bold; padding: 1px 5px;"',
 		boxed_number: '"display: inline-block; background-color: yellow; border: 1px solid blue; padding: 2px; color: black; font-weight: bold;"'
-	};
+	});
 	
 	/*
 	 * Set the default timeout for asynchronous processes
 	 */
 	 
-	var asyncTime = 50;
+	const asyncTime = 50;
 	
 	/*
 	 * InitiativeMaster related help handout information.
 	 */
 	
-	var handouts = Object.freeze({
+	const handouts = Object.freeze({
 	InitMaster_Help:	{name:'InitiativeMaster Help',
 						 version:2.08,
 						 avatar:'https://s3.amazonaws.com/files.d20.io/images/257656656/ckSHhNht7v3u60CRKonRTg/thumb.png?1638050703',
@@ -458,30 +463,25 @@ var initMaster = (function() {		// eslint-disable-line no-unused-vars
 	 * obtained from the RPGMaster Library.
 	 */
 
-	var fieldGroups;
-	var spellLevels;
-	var casterLevels;
-	var spellsPerLevel;
-	var reClassSpecs;
-	var reACSpecs;
-	var reWeapSpecs;
+	let fieldGroups;
+	let spellLevels;
+	let casterLevels;
+	let spellsPerLevel;
+	let reClassSpecs;
+	let reACSpecs;
+	let reWeapSpecs;
 	
-	var DBindex = {};
-	var initSelection = {};
+	let DBindex = {};
+	let initSelection = {};
 
-	var Init_StateEnum = Object.freeze({
+	const Init_StateEnum = Object.freeze({
 		ACTIVE: 0,
 		PAUSED: 1,
 		STOPPED: 2,
 		FROZEN: 3
 	});
 
-	var YN_Enum = Object.freeze({
-		YESNO: 'YESNO',
-		CUSTOM: 'CUSTOM',
-	});
-	
-	var MenuType = Object.freeze({
+	const MenuType = Object.freeze({
 		SIMPLE:			'SIMPLE',
 		COMPLEX:		'COMPLEX',
 		WEAPON:			'WEAPON',
@@ -501,7 +501,7 @@ var initMaster = (function() {		// eslint-disable-line no-unused-vars
 		MONSTER_MENU:	'MONSTER',
 	});
 	
-	var BT = Object.freeze({
+	const BT = Object.freeze({
 		MON_ATTACK:	'MON_ATTACK',
 		MON_INNATE:	'MON_INNATE',
 		MON_MELEE:	'MON_MELEE',
@@ -533,34 +533,34 @@ var initMaster = (function() {		// eslint-disable-line no-unused-vars
 		SECTIONS_OPTION:'SECTIONS_OPTION',
 	});
 	
-	var Caster = Object.freeze({
+	const Caster = Object.freeze({
 		WIZARD: 'WIZARD',
 		PRIEST: 'PRIEST',
 	});
 	
-	var Monster = Object.freeze({
+	const Monster = Object.freeze({
 		COMPLEX: true,
 		SIMPLE: false,
 	});
 	
-	var CharSheet = Object.freeze({
+	const CharSheet = Object.freeze({
 		MONSTER: true,
 		CHARACTER: false,
 	});
 	
-	var MenuState = Object.freeze({
+	const MenuState = Object.freeze({
 		ENABLED: false,
 		DISABLED: true,
 	});
 	
-	var Init_Messages = Object.freeze({
+	const Init_Messages = Object.freeze({
 		noChar: '/w gm &{template:'+fields.warningTemplate+'} {{name=^^tname^^\'s\nInit Master}}{{desc=^^tname^^ does not have an associated Character Sheet, and so cannot participate in Initiative.}}',
 		doneInit: '&{template:'+fields.warningTemplate+'} {{name=^^tname^^\'s\nInitiative}}{{desc=^^tname^^ has already completed initiative for this round}}{{desc1=If you want to change ^^tname^^\'s initiative, press [Redo Initiative](!init --redo ^^tid^^)}}',
         redoMsg: '&{template:'+fields.menuTemplate+'} {{name=^^tname^^\'s\nInitiative}}{{desc=Initiative has been re-enabled for ^^tname^^.  You can now select something else for them to do.}}',
 		noMUspellbook: '&{template:'+fields.warningTemplate+'} {{name=^^tname^^\'s\nInitiative}}{{desc=^^tname^^ does not have a Wizard\'s Spellbook, and so cannot plan to cast Magic User spells.  If you need one, talk to the High Wizard (or perhaps the DM)}}',
 		noPRspellbook: '&{template:'+fields.warningTemplate+'} {{name=^^tname^^\'s\nInitiative}}{{desc=^^tname^^ does not have a Priest\'s Spellbook, and so cannot plan to cast Clerical spells.  If you need one, talk to the Arch-Cleric (or perhaps the DM)}}',
 		noPowers: '&{template:'+fields.warningTemplate+'} {{name=^^tname^^\'s\nInitiative}}{{desc=^^tname^^ does not have any Powers, and so cannot start powering up.  If you want some, you better get on the good side of your god (or perhaps the DM)}}',
-		noMIBag: '&{template:'+fields.warningTemplate+'} {{name=^^tname^^\'s\nInitiative}}{{desc=^^tname^^ does not have Magic Item Bag, and thus no magic items.  You can go and buy one, and fill it on your next campaign.}}',
+		noMIBag: '&{template:'+fields.warningTemplate+'} {{name=^^tname^^\'s\nInitiative}}{{desc=^^tname^^ does not have a Magic Item Bag, and thus no magic items.  You can go and buy one, and fill it on your next campaign.}}',
 		notThief: '&{template:'+fields.warningTemplate+'} {{name=^^tname^^\'s\nInitiative}}{{desc=^^tname^^ is not a thief.  You can try these skills if you want - everyone has at least a small chance of success...  but perhaps prepare for a long stint staying at the local lord\'s pleasure!}}',
 		heavyArmour: '&{template:'+fields.warningTemplate+'} {{name=^^tname^^\'s\nInitiative}}{{desc=^^tname^^ realises that the armour they are wearing prevents them from using any thievish skills.  You will have to remove it, and then perhaps you might have a chance.  Change the armour type on the Rogue tab of your Character Sheet.}}',
 		stdInit: '&{template:'+fields.warningTemplate+'} {{name=^^tname^^\'s\nInitiative}}{{desc=Currently, the game is running on Standard AD&D Initiative rules, so it is a Party initiative roll.  You do not need to select an action.}}',
@@ -568,7 +568,7 @@ var initMaster = (function() {		// eslint-disable-line no-unused-vars
 		waitMsg: '&{template:'+fields.warningTemplate+'} {{name=Please Wait}}{{desc=Gathering data. Please wait for the menu to appear.}}',
 	});
 
-	var flags = {
+	let flags = {
 		init_state: Init_StateEnum.STOPPED,
 		feedbackName: 'initMaster',
 		feedbackImg:  'https://s3.amazonaws.com/files.d20.io/images/11514664/jfQMTRqrT75QfmaD98BQMQ/thumb.png?1439491849',
@@ -592,9 +592,9 @@ var initMaster = (function() {		// eslint-disable-line no-unused-vars
 		noWaitMsg: true,
 	};
 	
-	var apiCommands = {};
-	var initMarkers;
-	var msg_orig = {};
+	let apiCommands = {};
+	let initMarkers;
+	let msg_orig = {};
 	
 	const initMarkerRatio = 1.25;
 	
@@ -604,7 +604,7 @@ var initMaster = (function() {		// eslint-disable-line no-unused-vars
 	const reClassRaceData = /}}\s*?(?:Class|Race)Data\s*?=.*?{{/im;
 	const reNotAttackData = /}}[\s\w\-]*?(?<!tohit|dmg|ammo|range)data\s*?=(.+?){{/im;
 	
-	var	replacers = [
+	const replacers = Object.freeze([
 			[/\\lbrc;?/g, "{"],
 			[/\\rbrc;?/g, "}"],
 			[/\\gt;?/gm, ">"],
@@ -624,9 +624,9 @@ var initMaster = (function() {		// eslint-disable-line no-unused-vars
 			[/\\vbar;?/g, "|"],
 			[/\\clon;?/g, ":"],
 			[/\\amp;?/g, "&"],
-		];
+		]);
 
-	var initMaster_tmp = (function() {
+/*	var initMaster_tmp = (function() {
 		var templates = {
 			button: _.template('<a style="display: inline-block; font-size: 100%; color: black; padding: 3px 3px 3px 3px; margin: 2px 2px 2px 2px; border: 1px solid black; border-radius: 0.5em; font-weight: bold; text-shadow: -1px -1px 1px #FFF, 1px -1px 1px #FFF, -1px 1px 1px #FFF, 1px 1px 1px #FFF; background-color: #C7D0D2;" href="<%= command %>"><%= text %></a>'),
 			confirm_box: _.template('<div style="font-weight: bold; background-color: #FFF; text-align: center; box-shadow: rgba(0,0,0,0.4) 3px 3px; border-radius: 1em; border: 1px solid black; margin: 5px 5px 5px 5px; padding: 2px 2px 2px 2px;">'
@@ -669,11 +669,11 @@ var initMaster = (function() {		// eslint-disable-line no-unused-vars
 			}
 		};
 	}());
-
+*/
 	/**
 	 * Init
 	 */
-	var init = function() {
+	const init = function() {
 		try {
 			if (!state.initMaster)
 				{state.initMaster = {};}
@@ -714,7 +714,7 @@ var initMaster = (function() {		// eslint-disable-line no-unused-vars
 			reACSpecs = RPGMap.reACSpecs;
 			reWeapSpecs = RPGMap.reWeapSpecs;
 			flags.noWaitMsg = true;
-			setTimeout( () => {flags.noWaitMsg = false;}, 5000 );
+			setTimeout( () => {flags.noWaitMsg = false;}, 10000 );
 
 			// RED: v1.037 register with commandMaster
 			setTimeout( cmdMasterRegister, 30 );
@@ -743,13 +743,12 @@ var initMaster = (function() {		// eslint-disable-line no-unused-vars
      * RED: Find the GM, generally when a player can't be found
      */
      
-    var findTheGM = function() {
-	    var playerGM,
-	        players = findObjs({ _type:'player' });
+    const findTheGM = function() {
+	    let playerGM;
+	    const players = findObjs({ _type:'player' });
 
 		if (players.length !== 0) {
-		    if (!_.isUndefined(playerGM = _.find(players, function(p) {
-		        var player = p;
+		    if (!_.isUndefined(playerGM = _.find(players, function(player) {
 		        if (player) {
     		        if (playerIsGM(player.id)) {
 						state.initMaster.gmID = player.id;
@@ -761,83 +760,14 @@ var initMaster = (function() {		// eslint-disable-line no-unused-vars
             }
         }
         return state.initMaster.gmID;
-    }
+    };
 
-	/**
-	 * Return the string with the roll formatted, this is accomplished by simply
-	 * surrounding roll equations with [[ ]] TODO, should be replaced with a
-	 * single regex
-	 * 
-	 */
-	var getFormattedRoll = function(str) {
-		if (!str) {return "";}
-		var retval = str,
-			re = /\d+d\d+/,
-			idx, 
-			expr, 
-			roll, 
-			pre, 
-			post;
-
-		if ((roll=re.exec(str))) {
-			expr = getExpandedExpr(roll[0],str,roll.index);
-			idx = str.indexOf(expr);
-			pre = str.substring(0,idx);
-			post = str.substring(idx+expr.length);
-		} else { return retval;}
-		
-		return pre+"[["+expr+"]]"+getFormattedRoll(post);
-	};
-	
-	/**
-	 * Return the target expression expanded as far as it logically can span
-	 * within the provided line.
-	 * 
-	 * ie: target = 1d20
-	 *	   locHint = 4
-	 *	   line = "2+1d20+5+2d4 bla (bla 1d20+8 bla) bla (4d8...) bla bla"
-	 * 
-	 * result = 2+1d20+5+2d4
-	 */
-	var getExpandedExpr = function(target, line, locHint) {
-		if (!target || !line) 
-			{return;}
-		if (!locHint) 
-			{locHint = 0;}
-		var retval = target,
-			re = /\d|[\+\-]|d/,
-			loc = -1, 
-			start = 0, 
-			end = 0;
-		
-		if((loc=line.indexOf(target,locHint)) !== -1) {
-			start = loc;
-			while (start > 0) {
-				if (line[start].match(re))
-					{start--;}
-				else
-					{start++;break;}
-			}
-			end = loc;
-			while (end < line.length) {
-				if (line[end].match(re))
-					{end++;}
-				else
-					{break;}
-			}
-			retval = line.substring(start,end);
-			retval = getLegalRollExpr(retval);
-		}
-		
-		return retval;
-	};
-	
 	/**
 	 * Gets a legal roll expression.
 	 */
-	var getLegalRollExpr = function(expr) {
+	const getLegalRollExpr = function(expr) {
 		if (!expr) {return;}
-		var retval = expr,
+		let retval = expr,
 			stray = expr.match(/d/g),
 			valid = expr.match(/\d+d\d+/g),
 			errMsg = "Illegal expression " + expr; 
@@ -872,12 +802,77 @@ var initMaster = (function() {		// eslint-disable-line no-unused-vars
 		return retval;
 	};
 	
+	/**
+	 * Return the target expression expanded as far as it logically can span
+	 * within the provided line.
+	 * 
+	 * ie: target = 1d20
+	 *	   locHint = 4
+	 *	   line = "2+1d20+5+2d4 bla (bla 1d20+8 bla) bla (4d8...) bla bla"
+	 * 
+	 * result = 2+1d20+5+2d4
+	 */
+	const getExpandedExpr = function(target, line, locHint) {
+		if (!target || !line) 
+			{return;}
+		if (!locHint) 
+			{locHint = 0;}
+		const re = /\d|[\+\-]|d/;
+		let retval = target,
+			loc = -1, 
+			start = 0, 
+			end = 0;
+		
+		if((loc=line.indexOf(target,locHint)) !== -1) {
+			start = loc;
+			while (start > 0) {
+				if (line[start].match(re))
+					{start--;}
+				else
+					{start++;break;}
+			}
+			end = loc;
+			while (end < line.length) {
+				if (line[end].match(re))
+					{end++;}
+				else
+					{break;}
+			}
+			retval = line.substring(start,end);
+			retval = getLegalRollExpr(retval);
+		}
+		
+		return retval;
+	};
+	
+	/**
+	 * Return the string with the roll formatted, this is accomplished by simply
+	 * surrounding roll equations with [[ ]] TODO, should be replaced with a
+	 * single regex
+	 * 
+	 */
+	const getFormattedRoll = function(str) {
+		if (!str) {return "";}
+		const retval = str,
+			  re = /\d+d\d+/;
+		let	roll;
+
+		if ((roll=re.exec(str))) {
+			const expr = getExpandedExpr(roll[0],str,roll.index);
+			const idx = str.indexOf(expr);
+			const pre = str.substring(0,idx);
+			const post = str.substring(idx+expr.length);
+		} else { return retval;}
+		
+		return pre+"[["+expr+"]]"+getFormattedRoll(post);
+	};
+
     /**
      * RED: v1.190 Added in the inline roll evaluator from ChatSetAttr script v1.9
      * by Joe Singhaus and C Levett.
     **/
 
-	var processInlinerolls = function (msg) {
+	const processInlinerolls = function (msg) {
 		if (msg.inlinerolls && msg.inlinerolls.length) {
 			return msg.inlinerolls.map(v => {
 				const ti = v.results.rolls.filter(v2 => v2.table)
@@ -891,30 +886,27 @@ var initMaster = (function() {		// eslint-disable-line no-unused-vars
 		}
 	};
 
-
 	/*
 	 * Function to replace special characters in a string
 	 */
 	 
-	var parseStr=function(str){
-		return replacers.reduce((m, rep) => m.replace(rep[0], rep[1]), str);
-	}
+	const parseStr = (str) => replacers.reduce((m, rep) => m.replace(rep[0], rep[1]), str);
 
 	/*
 	 * Function to return the msVersion of the Character Sheet
 	 * i.e. which versions of MagicMaster it is matched to
 	 */
 
-	var csVer = (charCS) => parseFloat(((attrLookup( charCS, fields.msVersion ) || '1.5').match(/^\d+\.?\d*/) || ['1.5'])[0]) || 1.5;
+	const csVer = (charCS) => parseFloat(((attrLookup( charCS, fields.msVersion ) || '1.5').match(/^\d+\.?\d*/) || ['1.5'])[0]) || 1.5;
 
 	/**
 	 * Handle Pending Requests
 	 */
-	 
-	var doRelay = function(args,senderId) {
+ 
+	const doRelay = function(args,senderId) {
 		if (!args) 
 			{return;}
-		var carry,
+		let carry,
 			hash; 
 		args = args.split(' %% '); 
 		if (!args) { log(args); return; }
@@ -926,7 +918,7 @@ var initMaster = (function() {		// eslint-disable-line no-unused-vars
 			carry = args[1];
 			if (carry)
 				{carry = carry.trim();}
-			var pr = findPending(hash);
+			const pr = findPending(hash);
 			if (pr) {
 				pr.doOps(carry);
 				clearPending(hash);    
@@ -944,17 +936,16 @@ var initMaster = (function() {		// eslint-disable-line no-unused-vars
 	/**
 	 * RED: v1.207 Send a debugging message if the debugging flag is set
 	 */ 
-	var sendDebug = function(msg) {
+	 
+	const sendDebug = function(msg) {
 	    if (!!state.initMaster.debug) {
 			if (playerIsGM(state.initMaster.debug)) {
 				log('InitMaster Debug: '+msg);
 			} else {
-				var player = getObj('player',state.initMaster.debug),
-					to;
-				if (player) {
-					to = '/w "' + player.get('_displayname') + '" ';
-				} else 
+				const player = getObj('player',state.initMaster.debug);
+				if (!player)
 					{throw ('sendDebug could not find player');}
+				const to = '/w "' + player.get('_displayname') + '" ';
 				if (!msg)
 					{msg = 'No debug msg';}
 				sendChat('Init Debug',to + '<span style="color: red; font-weight: bold;">'+msg+'</span>',null,{noarchive:!flags.archive, use3d:false}); 
@@ -962,14 +953,11 @@ var initMaster = (function() {		// eslint-disable-line no-unused-vars
 	    };
 	}; 
 	
-	var doSetDebug = function(args,senderId) {
-		var player = getObj('player',senderId),
-		    playerName;
-		if (player) {
-		    playerName = player.get('_displayname');
-		}
-		else 
+	const doSetDebug = function(args,senderId) {
+		const player = getObj('player',senderId);
+		if (!player)
 			{throw ('doSetDebug could not find player: ' + args);}
+		const playerName = player.get('_displayname');
 	    if (!!args && args.indexOf('off') != 0) {
     	    state.initMaster.debug = senderId;
             sendResponseError(senderId,'Debug set on for ' + playerName,'iM Debug');
@@ -1003,6 +991,7 @@ var initMaster = (function() {		// eslint-disable-line no-unused-vars
 	/**
 	 * check if the character object exists, return first match
 	 */
+/*	 
 	var characterObjExists = function(name, type, charId) {
 		var retval = null;
 
@@ -1017,7 +1006,7 @@ var initMaster = (function() {		// eslint-disable-line no-unused-vars
 
 		return retval;
 	}; 
-	
+*/	
 	/**
 	 * Issue a handshake request to check if another API or 
 	 * specific API command is present
@@ -1025,7 +1014,7 @@ var initMaster = (function() {		// eslint-disable-line no-unused-vars
 	 
 	var issueHandshakeQuery = function( api, cmd ) {
 		sendDebug('InitMaster issuing handshake to '+api+((cmd && cmd.length) ? (' for command '+cmd) : ''));
-		var handshake = '!'+api+' --noWaitMsg --hsq init'+((cmd && cmd.length) ? ('|'+cmd) : '');
+		const handshake = '!'+api+' --noWaitMsg --hsq init'+((cmd && cmd.length) ? ('|'+cmd) : '');
 		sendAPI(handshake);
 		return;
 	};
@@ -1036,7 +1025,7 @@ var initMaster = (function() {		// eslint-disable-line no-unused-vars
 	 
 	var getPlayerCharList = function( page=false, monster=false ) {
 		
-		var charID,charCS,controlledBy,
+		let charID,charCS,controlledBy,
 			nameList = [];
 			
 		nameList =  _.chain(filterObjs(function(obj) {
@@ -1061,14 +1050,13 @@ var initMaster = (function() {		// eslint-disable-line no-unused-vars
 	* Push the previous selection into the max of each representing a second weapon
 	**/
 
-	var setInitVars = function( charCS, args, property ) {
+	const setInitVars = function( charCS, args, property ) {
 	
 		if (_.isUndefined(property)) {
 			property = 'current';
 		}
 		
 		if (property == 'current') {
-//			log('setInitVars: pushing action '+attrLookup( charCS, fields.Init_action )+' to second weapon');
 			setAttr( charCS, fields.Weapon_2ndNum, attrLookup( charCS, fields.Weapon_num ) );
 			setAttr( charCS, fields.Init_2ndAction, attrLookup( charCS, fields.Init_action ) );
 			setAttr( charCS, fields.Init_2ndSpeed, attrLookup( charCS, fields.Init_speed ) );
@@ -1078,7 +1066,6 @@ var initMaster = (function() {		// eslint-disable-line no-unused-vars
 			setAttr( charCS, fields.Init_2nd2Hweapon, attrLookup( charCS, fields.Init_2Hweapon ) );
 		}
 		
-//		log('setInitVars: setting action '+args[3]+' as primary weapon');
 		setAttr( charCS, [fields.Weapon_num[0], property], args[2]);
 		setAttr( charCS, [fields.Init_action[0], property], args[3]);
 		setAttr( charCS, [fields.Init_speed[0], property], args[4]);
@@ -1087,27 +1074,26 @@ var initMaster = (function() {		// eslint-disable-line no-unused-vars
 		setAttr( charCS, [fields.Init_2Hweapon[0], property], args[7]);
 		setAttr( charCS, [fields.Init_attacks[0], property], (args[9] || 1));
 		setAttr( charCS, [fields.Init_chosen[0], property], 1);
-		
-//		log('setInitVars: init_speed = '+args[4]);
 	};
 
 	/*
 	 * Check for a character's proficiency with a weapon type
 	 */
 
-	var proficient = function( charCS, wname, wt, wst ) {
+	const proficient = function( charCS, wname, wt, wst ) {
 		
         wname = wname ? wname.dbName() : '';
         wt = wt ? wt.dbName() : '';
         wst = wst ? wst.dbName() : '';
         
-		var i = fields.WP_table[1],
+		let i = fields.WP_table[1],
 			prof = -1,
-			WeaponProfs = getTableField( charCS, {},          fields.WP_table, fields.WP_name ),
-			WeaponProfs = getTableField( charCS, WeaponProfs, fields.WP_table, fields.WP_type ),
-			WeaponProfs = getTableField( charCS, WeaponProfs, fields.WP_table, fields.WP_specialist ),
-			WeaponProfs = getTableField( charCS, WeaponProfs, fields.WP_table, fields.WP_mastery ),
+			WeaponProfs = getTableField( charCS, {}, fields.WP_table, fields.WP_name ),
 			spec;
+			
+		WeaponProfs = getTableField( charCS, WeaponProfs, fields.WP_table, fields.WP_type );
+		WeaponProfs = getTableField( charCS, WeaponProfs, fields.WP_table, fields.WP_specialist );
+		WeaponProfs = getTableField( charCS, WeaponProfs, fields.WP_table, fields.WP_mastery );
 			
 		do {
 			let wpName = WeaponProfs.tableLookup( fields.WP_name, i, false ),
@@ -1116,9 +1102,9 @@ var initMaster = (function() {		// eslint-disable-line no-unused-vars
             wpName = wpName.dbName();
             wpType = (!!wpType ? wpType.dbName() : '');
 
-            let isType = (wpName && wpName.length && wt.includes(wpName)),
-                isSuperType = (wpType && (wst.includes(wpType))),
-                isSameName = (wpName && wpName.length && wname.includes(wpName));
+            const isType = (wpName && wpName.length && wt.includes(wpName)),
+                  isSuperType = (wpType && (wst.includes(wpType))),
+                  isSameName = (wpName && wpName.length && wname.includes(wpName));
 
 			if (isType || (!isSuperType && isSameName)) {
 				prof = 0;
@@ -1142,16 +1128,14 @@ var initMaster = (function() {		// eslint-disable-line no-unused-vars
 	 * Just get the caster level
 	 */
 	
-	var casterLevel = function( charCS, casterType ) {
-		return caster( charCS, casterType ).clv;
-	}
+	const casterLevel = ( charCS, casterType ) => caster( charCS, casterType ).clv;
 	
 	/*
 	 * If the InHand table exists, set the number of attacks
 	 * counter for the specified weapon.
 	 */
-	 
-	var setAttkCount = function( charCS, weapon, attkCount ) {
+ 
+	const setAttkCount = function( charCS, weapon, attkCount ) {
 		let InHandTable = getTableField( charCS, {}, fields.InHand_table, fields.InHand_miName );
 		InHandTable = getTableField( charCS, InHandTable, fields.InHand_table, fields.InHand_attkCount );
 		const index = InHandTable.tableFind( fields.InHand_miName, weapon );
@@ -1167,9 +1151,8 @@ var initMaster = (function() {		// eslint-disable-line no-unused-vars
 	 * so the same one is set as default next time
 	 */
 	 
-	var rememberWeapRef = function( charCS, hand, ref ) {
+	const rememberWeapRef = function( charCS, hand, ref ) {
 		if (_.isNull(ref)) ref = undefined;
-//		log('rememberWeapRef: setting hand '+hand+' to be ref = '+ref);
 		setAttr( charCS, [fields.Init_hand[0]+hand,fields.Init_hand[1]], ref );
 	};
 	
@@ -1177,29 +1160,32 @@ var initMaster = (function() {		// eslint-disable-line no-unused-vars
 	 * Create args for a weapon specification
 	 */
 	 
-	var buildWeaponArgs = function( charCS, cmd, weaponRef ) {
+	const buildWeaponArgs = function( charCS, cmd, weaponRef ) {
 		
-		var fieldObj = {
+		let	WeaponTables = getTable( charCS, (cmd.includes('MW') ? fieldGroups.MELEE : fieldGroups.RANGED ));
+		const fieldObj = {
 				melee: {name:fields.MW_name,miName:fields.MW_miName,styleSpeed:fields.MW_styleSpeed,adj:fields.MW_adj,speed:fields.MW_speed,styleAttks:fields.MW_styleAttks,noAttks:fields.MW_noAttks,preInit:fields.MW_preInit,attkRound:fields.MW_attkRound,attkCount:fields.MW_attkCount,curCount:fields.MW_curCount,twoHanded:fields.MW_twoHanded,type:fields.MW_type},		
 				ranged:{name:fields.RW_name,miName:fields.RW_miName,styleSpeed:fields.RW_styleSpeed,adj:fields.RW_adj,speed:fields.RW_speed,styleAttks:fields.RW_styleAttks,noAttks:fields.RW_noAttks,preInit:fields.RW_preInit,attkRound:fields.RW_attkRound,attkCount:fields.RW_attkCount,curCount:fields.RW_curCount,twoHanded:fields.RW_twoHanded,type:fields.RW_type}
 			},
-			attackCount, attacks,
-			WeaponTables = getTable( charCS, (cmd.includes('MW') ? fieldGroups.MELEE : fieldGroups.RANGED )),
-			attrs = ((cmd.includes('MW')) ? fieldObj.melee : fieldObj.ranged),
-			weaponName = (WeaponTables.tableLookup( attrs.miName, weaponRef ) || WeaponTables.tableLookup( attrs.name, weaponRef ) || ''),
-			weaponType = (WeaponTables.tableLookup( attrs.type, weaponRef ) || ''),
-			speedMult = Math.max(parseFloat(attrLookup( charCS, fields.initMultiplier ) || 1), 0.5),
-			styleSpeed = WeaponTables.tableLookup( attrs.styleSpeed, weaponRef) || 0,
-			weaponPlus = (parseInt(WeaponTables.tableLookup( attrs.adj, weaponRef)) || 0) * -1,
-			weapSpeed = (WeaponTables.tableLookup( attrs.speed, weaponRef) || 0) + ('-+'.includes(styleSpeed[0])?styleSpeed:'+'+styleSpeed) + (state.attackMaster.weapRules.initPlus ? (weaponPlus >= 0 ? '+' : '') + weaponPlus : '+0'),
-			styleNum = WeaponTables.tableLookup( attrs.styleAttks, weaponRef) || 0,
-			attackNum = (WeaponTables.tableLookup( attrs.noAttks, weaponRef ) || 1),
-			attackNum = (styleNum && styleNum != '0') ? '(('+attackNum+')+('+styleNum+'))' : attackNum,
-			preInit = (WeaponTables.tableLookup( attrs.preInit, weaponRef ) || 0),
-			weapSpecial = (proficient( charCS, weaponName, weaponType, '' ) > 0) ? 1 : preInit,
-			twoHanded = (WeaponTables.tableLookup( attrs.twoHanded, weaponRef ) || 0),
-			curRound = WeaponTables.tableLookup( attrs.attkRound, weaponRef ) || 0;
+			attrs = ((cmd.includes('MW')) ? fieldObj.melee : fieldObj.ranged);
 			
+		const weaponName = (WeaponTables.tableLookup( attrs.miName, weaponRef ) || WeaponTables.tableLookup( attrs.name, weaponRef ) || ''),
+			  weaponType = (WeaponTables.tableLookup( attrs.type, weaponRef ) || ''),
+			  speedMult = Math.max(parseFloat(attrLookup( charCS, fields.initMultiplier ) || 1), 0.5),
+			  styleSpeed = WeaponTables.tableLookup( attrs.styleSpeed, weaponRef) || 0,
+			  weaponPlus = (parseInt(WeaponTables.tableLookup( attrs.adj, weaponRef)) || 0) * -1,
+			  weapSpeed = (WeaponTables.tableLookup( attrs.speed, weaponRef) || 0) + ('-+'.includes(styleSpeed[0])?styleSpeed:'+'+styleSpeed) + (state.attackMaster.weapRules.initPlus ? (weaponPlus >= 0 ? '+' : '') + weaponPlus : '+0'),
+			  styleNum = WeaponTables.tableLookup( attrs.styleAttks, weaponRef) || 0,
+			  preInit = (WeaponTables.tableLookup( attrs.preInit, weaponRef ) || 0),
+			  weapSpecial = (proficient( charCS, weaponName, weaponType, '' ) > 0) ? 1 : preInit,
+			  twoHanded = (WeaponTables.tableLookup( attrs.twoHanded, weaponRef ) || 0),
+			  curRound = WeaponTables.tableLookup( attrs.attkRound, weaponRef ) || 0;
+			
+		let attackNum = (WeaponTables.tableLookup( attrs.noAttks, weaponRef ) || 1),
+			attackCount, attacks;
+			
+		attackNum = (styleNum && styleNum != '0') ? '(('+attackNum+')+('+styleNum+'))' : attackNum;
+		
 		if (_.isUndefined(WeaponTables.tableLookup( attrs.name, weaponRef, false )))
 			WeaponTables = WeaponTables.addTableRow( weaponRef );
 		if (curRound != state.initMaster.round) {
@@ -1214,37 +1200,153 @@ var initMaster = (function() {		// eslint-disable-line no-unused-vars
 		WeaponTables.tableSet( attrs.attkCount, weaponRef, (attackCount-attacks) );
 		setAttkCount( charCS, WeaponTables.tableLookup( attrs.miName, weaponRef ), (attackCount-attacks) );
 		
-//		log('buildWeaponArgs: name = '+weaponName);
-		
 		return {name:weaponName, speed:weapSpeed, mult:speedMult, attkNum:attackNum, preInit:preInit, attks:attacks, twoHanded:twoHanded, type:weaponType, special:weapSpecial};
 	}	
 
+	/*
+	 * Set up the shape of the spell book.  This is complicated due to
+	 * the 2E sheet L5 MU Spells start out-of-sequence at column 70
+	 */
+	 
+	const shapeSpellbook = function( charCS, isMU ) {
+
+		const levelSpells = (isMU ? spellLevels.mu : spellLevels.pr);
+	
+		for (let i=1; i<=(isMU ? 9 : 7); i++) {
+			if (isMU) {
+				levelSpells[i].spells  = parseInt(attrLookup(charCS,[fields.MUSpellNo_table[0] + i + fields.MUSpellNo_memable[0],fields.MUSpellNo_memable[1]])||0);
+				levelSpells[i].spells += parseInt(attrLookup(charCS,[fields.MUSpellNo_table[0] + i + fields.MUSpellNo_specialist[0],fields.MUSpellNo_specialist[1]])||0);
+				levelSpells[i].spells += parseInt(attrLookup(charCS,[fields.MUSpellNo_table[0] + i + fields.MUSpellNo_misc[0],fields.MUSpellNo_misc[1]])||0);
+			} else {
+				levelSpells[i].spells  = parseInt(attrLookup(charCS,[fields.PRSpellNo_table[0] + i + fields.PRSpellNo_memable[0],fields.PRSpellNo_memable[1]])||0);
+				levelSpells[i].spells += parseInt(attrLookup(charCS,[fields.PRSpellNo_table[0] + i + fields.PRSpellNo_wisdom[0],fields.PRSpellNo_wisdom[1]])||0);
+				levelSpells[i].spells += parseInt(attrLookup(charCS,[fields.PRSpellNo_table[0] + i + fields.PRSpellNo_misc[0],fields.PRSpellNo_misc[1]])||0);
+			}
+		}
+		return levelSpells;
+	}
+	
+	/*
+	 * Checks for the existence of magic items in the MI bag
+	 */
+ 
+	const checkForMIs = function( charCS ) {
+
+		const MagicItems = getTableGroupField( charCS, {}, fieldGroups.MI, 'name' );
+		let	i = 0;
+		let	item;
+
+		while (!_.isUndefined(item = tableGroupLookup( MagicItems, 'name', i++, false ))) {
+			if (item.length && item != '-') {return true;}
+		}
+		return false;
+	}
+	
+	/*
+	 * Checks for the existence of powers
+	 */
+	 
+	const checkForPowers = function( charCS ) {
+		let item = attrLookup( charCS, fields.Powers_name, {def:false, tableDef:fields.Powers_table, row:0, col:fields.PowersBaseCol+0} );
+		let	r,c;
+		for (r = 0; !_.isUndefined(item); r++) {
+			for (c = 0; c<fields.PowersCols && !_.isUndefined(item); c++) {
+				item = attrLookup( charCS, fields.Powers_name, {def:false, tableDef:fields.Powers_table, row:r, col:fields.PowersBaseCol+c} );
+				if (item && item.length && item != '-') {return true;}
+			}
+		}
+		return false;
+	}
+	
+	/*
+	 * Count the number of active weapons currently in-hand
+	 */
+	 
+	const countWeaponsInHand = function( charCS ) {
+		let InHandTable = getTableField( charCS, {}, fields.InHand_table, fields.InHand_name ),
+			WeapTable = getTableField( charCS, {}, fields.MW_table, fields.MW_name ),
+			meleeWeap = 0,
+			rangedWeap = 0,
+			shieldWeap = 0,
+			monAttk = parseInt(attrLookup( charCS, fields.Monster_attks, {def:false} )),
+			r = InHandTable.table[1],
+			miNames = [],
+			weapon, miName, type, weapObj;
+			
+		InHandTable = getTableField( charCS, InHandTable, fields.InHand_table, fields.InHand_miName ),
+		InHandTable = getTableField( charCS, InHandTable, fields.InHand_table, fields.InHand_type ),
+		WeapTable = getTableField( charCS, WeapTable, fields.MW_table, fields.MW_miName );
+
+		if (isNaN(monAttk) || !monAttk) {
+			monAttk  = (String(attrLookup( charCS, fields.Monster_dmg1 ) || '') !== '') ? 1 : 0;
+			monAttk += (String(attrLookup( charCS, fields.Monster_dmg2 ) || '') !== '') ? 1 : 0;
+			monAttk += (String(attrLookup( charCS, fields.Monster_dmg3 ) || '') !== '') ? 1 : 0;
+		};
+			
+		while (!_.isUndefined(weapon = InHandTable.tableLookup( fields.InHand_name, r, false ))) {
+			if (weapon != '-') {
+				miName = InHandTable.tableLookup( fields.InHand_miName, r );
+				if (miName && !miNames.includes(miName.dbName())) {
+					miNames.push(miName.dbName());
+					type = (InHandTable.tableLookup( fields.InHand_type, r ) || '').toLowerCase();
+					if (!type || !type.length) {
+						weapObj = abilityLookup( fields.WeaponDB, (InHandTable.tableLookup( fields.InHand_miName, r ) || weapon) ).obj;
+						if (weapObj) type = weapObj[1].type;
+					}
+					if (type.includes('shield')) shieldWeap++;
+					else if (type.includes('melee')) meleeWeap++;
+					if (type.includes('ranged')) rangedWeap++;
+				}
+			}
+			r++;
+		}
+		r = WeapTable.table[1];
+		while (!_.isUndefined(weapon = WeapTable.tableLookup( fields.MW_name, r, false ))) {
+			if (miNames.includes(weapon.dbName())) {
+				miNames.push(weapon.dbName());
+				miName = WeapTable.tableLookup( fields.MW_miName, r );
+				if (!miName && !miName.length) meleeWeap++;
+			}
+			r++;
+		}
+		WeapTable = getTableField( charCS, {}, fields.RW_table, fields.RW_name );
+		WeapTable = getTableField( charCS, WeapTable, fields.RW_table, fields.RW_miName );
+		r = WeapTable.table[1];
+		while (!_.isUndefined(weapon = WeapTable.tableLookup( fields.RW_name, r, false ))) {
+			if (miNames.includes(weapon.dbName())) {
+				miNames.push(weapon.dbName());
+				miName = WeapTable.tableLookup( fields.RW_miName, r );
+				if (!miName && !miName.length) rangedWeap++;
+			}
+			r++;
+		}
+		return {melee:meleeWeap, ranged:rangedWeap, shield:shieldWeap, monster:monAttk};
+	}
+
 //----------------------------------- button press handlers ------------------------------------------	
+
 	/**
 	* Handle the results of pressing a monster attack initiative button
 	* Use the simple monster initiative menu if 'monster' flag is true
 	**/
 	
-	var handleInitMonster = function( monster, charCS, args, senderId ) {
+	const handleInitMonster = function( monster, charCS, args, senderId ) {
 
-		var weapSpeed,
-			speedMult,
-			tokenID = args[1],
-			rowIndex = args[2],
-			monIndex = args[3],
-			monAttk1 = attrLookup( charCS, fields.Monster_dmg1 ),
-			monAttk2 = attrLookup( charCS, fields.Monster_dmg2 ),
-			monAttk3 = attrLookup( charCS, fields.Monster_dmg3 ),
-			buildCall = '';
+		const tokenID = args[1],
+			  rowIndex = args[2],
+			  monIndex = args[3];
+//			monAttk1 = attrLookup( charCS, fields.Monster_dmg1 ),
+//			monAttk2 = attrLookup( charCS, fields.Monster_dmg2 ),
+//			monAttk3 = attrLookup( charCS, fields.Monster_dmg3 ),
 
 		if (_.isUndefined(rowIndex)) {
 			throw new Error( 'Invalid button while handling a monster initiative selection' );
 		}
 
-		weapSpeed = (attrLookup( charCS, fields.Monster_speed ) || 0);
-		speedMult = Math.max(parseFloat(attrLookup( charCS, fields.initMultiplier ) || 1), 1);
+		const weapSpeed = (attrLookup( charCS, fields.Monster_speed ) || 0),
+			  speedMult = Math.max(parseFloat(attrLookup( charCS, fields.initMultiplier ) || 1), 1);
 		
-		buildCall = '!init --buildMenu ' + senderId 
+		const buildCall = '!init --buildMenu ' + senderId 
 				+ '|' + (monster == Monster.SIMPLE ? MenuType.SIMPLE : MenuType.COMPLEX)
 				+ '|' + tokenID
 				+ '|' + rowIndex
@@ -1267,32 +1369,28 @@ var initMaster = (function() {		// eslint-disable-line no-unused-vars
 	* Handle the results of pressing a melee weapon initiative button
 	**/
 	
-	var handleInitMW = function( charType, charCS, args, senderId ) {
+	const handleInitMW = function( charType, charCS, args, senderId ) {
 
-		var weaponName, weaponPlus, weapSpeed,
-			styleSpeed, speedMult, attackNum,
-			styleNum, preInit, attackCount,
-			curRound, attacks, twoHanded,
-			tokenID = args[1],
-			rowIndex = args[2],
-			refIndex = args[3];
+		const tokenID = args[1],
+			  rowIndex = args[2],
+			  refIndex = args[3];
 
 		if (rowIndex == undefined || refIndex == undefined) {
 			throw new Error( 'Invalid button while handling a melee attack initiative selection' );
 		}
 		
-		var weapArgs = buildWeaponArgs( charCS, BT.MELEE, refIndex ),	
-			buildCall = '!init --buildMenu ' + senderId 
-					+ '|' + (charType == CharSheet.MONSTER ? MenuType.COMPLEX : MenuType.WEAPON)
-					+ '|' + tokenID
-					+ '|' + rowIndex
-					+ '|with their ' + weapArgs.name
-					+ '|[[' + weapArgs.speed + ']]'
-					+ '|' + weapArgs.mult + '*' + weapArgs.attkNum
-					+ '|' + weapArgs.preInit
-					+ '|' + weapArgs.twoHanded
-					+ '|'
-					+ '|' + weapArgs.attks;
+		const weapArgs = buildWeaponArgs( charCS, BT.MELEE, refIndex ),	
+			  buildCall = '!init --buildMenu ' + senderId 
+						+ '|' + (charType == CharSheet.MONSTER ? MenuType.COMPLEX : MenuType.WEAPON)
+						+ '|' + tokenID
+						+ '|' + rowIndex
+						+ '|with their ' + weapArgs.name
+						+ '|[[' + weapArgs.speed + ']]'
+						+ '|' + weapArgs.mult + '*' + weapArgs.attkNum
+						+ '|' + weapArgs.preInit
+						+ '|' + weapArgs.twoHanded
+						+ '|'
+						+ '|' + weapArgs.attks;
 				
 		sendAPI( buildCall, senderId );
 		rememberWeapRef(charCS,(weapArgs.twoHanded > 0 ? 2 : 0),rowIndex);
@@ -1302,42 +1400,19 @@ var initMaster = (function() {		// eslint-disable-line no-unused-vars
 	}
 	
 	/**
-	* Handle the Two Weapons button being selected on the weapons menu
-	**/
-	
-	var handleTwoWeapons = function( charCS, args, senderId ) {
-		
-		var command = args[0],
-			tokenID = args[1],
-			rowIndex = args[2],
-			rowIndex2 = args[3],
-			refIndex = args[4],
-			refIndex2 = args[5],
-			weapon, weaponRef;
-			
-		if (rowIndex == rowIndex2)
-			{return;}
-
-		let weapArgs = buildWeaponArgs( charCS, ((rowIndex%2) > 0 ? BT.MELEE : BT.RANGED), refIndex );
-		setInitVars( charCS, [MenuType.MW_PRIME,tokenID,rowIndex,('with their '+weapArgs.name),evalAttr(weapArgs.speed,charCS),(weapArgs.mult+'*'+weapArgs.attkNum),weapArgs.preInit,'1','0',weapArgs.attks], 'current');
-		args[0] = ((rowIndex2%2) > 0 ? BT.MELEE : BT.RANGED);
-		handleSecondWeapon( charCS, args, senderId );
-	}
-	
-	/**
 	* Handle the selection of the Prime Weapon button on the Weapon menu
 	**/
 	
-	var handlePrimeWeapon = function( charCS, args, senderId ) {
+	const handlePrimeWeapon = function( charCS, args, senderId ) {
 		
-		var command = args[0],
-			tokenID = args[1],
-			rowIndex = args[2],
-			refIndex = args[3],
-			buildCall;
+		const command = args[0],
+			  tokenID = args[1],
+			  rowIndex = args[2],
+			  refIndex = args[3];
+		let	buildCall;
 			
 		if (rowIndex > 0) {
-			let weapArgs = buildWeaponArgs( charCS, command, refIndex );	
+			const weapArgs = buildWeaponArgs( charCS, command, refIndex );	
 
 			buildCall = '!init --buildMenu ' + senderId 
 					+ '|' + MenuType.MW_PRIME
@@ -1374,18 +1449,18 @@ var initMaster = (function() {		// eslint-disable-line no-unused-vars
 	* Handle selection of a weapon button on the Second Melee Weapon menu
 	**/
 	
-	var handleSecondWeapon = function( charCS, args, senderId ) {
+	const handleSecondWeapon = function( charCS, args, senderId ) {
 		
-		var command = args[0],
-			tokenID = args[1],
-			rowIndex = args[2],
-			rowIndex2 = args[3],
-			refIndex = args[4],
-			refIndex2 = args[5],
-			weapon, weaponRef;
-			
+		const command = args[0],
+			  tokenID = args[1],
+			  rowIndex = args[2],
+			  rowIndex2 = args[3],
+			  refIndex = args[4],
+			  refIndex2 = args[5];
+			  
+		let	weapon, weaponRef;
 
-			if (rowIndex == rowIndex2)
+		if (rowIndex == rowIndex2)
 			{return;}
 
 		if (parseInt(rowIndex2,10) > 0) {
@@ -1396,18 +1471,18 @@ var initMaster = (function() {		// eslint-disable-line no-unused-vars
 		    weaponRef = refIndex;
 		}
 		
-		var weapArgs = buildWeaponArgs( charCS, command, weaponRef ),	
-			buildCall = '!init --buildMenu ' + senderId 
-					+ '|' + MenuType.MW_SECOND
-					+ '|' + tokenID
-					+ '|' + weapon
-					+ '|with their ' + weapArgs.name
-					+ '|[[' + weapArgs.speed + ']]'
-					+ '|' + weapArgs.mult + '*' + weapArgs.attkNum
-					+ '|' + weapArgs.preInit
-					+ '|1'
-					+ '|' + (rowIndex2 > 0 ? rowIndex : rowIndex2)
-					+ '|' + weapArgs.attks;
+		const weapArgs = buildWeaponArgs( charCS, command, weaponRef ),	
+			  buildCall = '!init --buildMenu ' + senderId 
+						+ '|' + MenuType.MW_SECOND
+						+ '|' + tokenID
+						+ '|' + weapon
+						+ '|with their ' + weapArgs.name
+						+ '|[[' + weapArgs.speed + ']]'
+						+ '|' + weapArgs.mult + '*' + weapArgs.attkNum
+						+ '|' + weapArgs.preInit
+						+ '|1'
+						+ '|' + (rowIndex2 > 0 ? rowIndex : rowIndex2)
+						+ '|' + weapArgs.attks;
 				
 		sendAPI( buildCall, senderId );
 		rememberWeapRef(charCS,0,rowIndex2);
@@ -1417,34 +1492,53 @@ var initMaster = (function() {		// eslint-disable-line no-unused-vars
 		return;
 	}
 		
+	/**
+	* Handle the Two Weapons button being selected on the weapons menu
+	**/
 	
+	const handleTwoWeapons = function( charCS, args, senderId ) {
+		
+		const tokenID = args[1],
+			  rowIndex = args[2],
+			  rowIndex2 = args[3],
+			  refIndex = args[4];
+			
+		if (rowIndex == rowIndex2)
+			{return;}
+
+		const weapArgs = buildWeaponArgs( charCS, ((rowIndex%2) > 0 ? BT.MELEE : BT.RANGED), refIndex );
+		setInitVars( charCS, [MenuType.MW_PRIME,tokenID,rowIndex,('with their '+weapArgs.name),evalAttr(weapArgs.speed,charCS),(weapArgs.mult+'*'+weapArgs.attkNum),weapArgs.preInit,'1','0',weapArgs.attks], 'current');
+		args[0] = ((rowIndex2%2) > 0 ? BT.MELEE : BT.RANGED);
+		handleSecondWeapon( charCS, args, senderId );
+	}
+
 	/**
 	* Handle the results of pressing a ranged weapon initiative button
 	* if 'monster' is true, use a complex monster menu
 	**/
 	
-	var handleInitRW = function( charType, charCS, args, senderId ) {
+	const handleInitRW = function( charType, charCS, args, senderId ) {
 
-		var tokenID = args[1],
-			rowIndex = args[2],
-			refIndex = args[3];
+		const tokenID = args[1],
+			  rowIndex = args[2],
+			  refIndex = args[3];
 
 		if (rowIndex == undefined || refIndex == undefined) {
 			throw new Error( 'Invalid button while handling a ranged attack initiative selection' );
 		}
 		
-		var weapArgs = buildWeaponArgs( charCS, BT.RANGED, refIndex ),
-			buildCall = '!init --buildMenu ' + senderId 
-					+ '|' + (charType == CharSheet.MONSTER ? MenuType.COMPLEX : MenuType.WEAPON)
-					+ '|' + tokenID
-					+ '|' + rowIndex
-					+ '|with their ' + weapArgs.name
-					+ '|[[' + weapArgs.speed + ']]'
-					+ '|' + weapArgs.mult + '*' + weapArgs.attkNum
-					+ '|' + weapArgs.special
-					+ '|' + weapArgs.twoHanded
-					+ '|0'
-					+ '|' + weapArgs.attks;
+		const weapArgs = buildWeaponArgs( charCS, BT.RANGED, refIndex ),
+			  buildCall = '!init --buildMenu ' + senderId 
+						+ '|' + (charType == CharSheet.MONSTER ? MenuType.COMPLEX : MenuType.WEAPON)
+						+ '|' + tokenID
+						+ '|' + rowIndex
+						+ '|with their ' + weapArgs.name
+						+ '|[[' + weapArgs.speed + ']]'
+						+ '|' + weapArgs.mult + '*' + weapArgs.attkNum
+						+ '|' + weapArgs.special
+						+ '|' + weapArgs.twoHanded
+						+ '|0'
+						+ '|' + weapArgs.attks;
 
 		sendAPI( buildCall, senderId );
 		rememberWeapRef(charCS,(weapArgs.twoHanded > 0 ? 2 : 0),rowIndex);
@@ -1458,33 +1552,29 @@ var initMaster = (function() {		// eslint-disable-line no-unused-vars
 	* The 'spellCasterType' parameter determines if this is an MU or a Priest
 	**/
 	
-	var handleInitSpell = function( spellCasterType, charCS, args, senderId ) {
+	const handleInitSpell = function( spellCasterType, charCS, args, senderId ) {
 	
-		var spellName,
-			spellCastTime,
-			tokenID = args[1],
-			charButton = args[2],
-			rowIndex = args[3],
-			colIndex = args[4],
-			buildCall = '',
-			spellSpeedOverride = attrLookup( charCS, fields.SpellSpeedOR ) || '';
+		const tokenID = args[1],
+			  charButton = args[2],
+			  rowIndex = args[3],
+			  colIndex = args[4],
+			  spellSpeedOverride = attrLookup( charCS, fields.SpellSpeedOR ) || '';
 
 		if (rowIndex == undefined || colIndex == undefined) {
 			throw new Error( 'Invalid button while handling a spell-casting initiative selection' );
 		}
 
-		spellName = attrLookup( charCS, fields.Spells_name, fields.Spells_table, rowIndex, colIndex );
-		spellCastTime = (spellSpeedOverride || attrLookup( charCS, fields.Spells_speed, fields.Spells_table, rowIndex, colIndex ));
-
-		buildCall = '!init --buildMenu ' + senderId 
-				+ '|' + (spellCasterType == Caster.WIZARD ? MenuType.MUSPELL : MenuType.PRSPELL)
-				+ '|' + tokenID
-				+ '|' + charButton
-				+ '|casting ' + spellName
-				+ '|[[' + spellCastTime + ']]'
-				+ '|1'
-				+ '|0'
-				+ '|-1';
+		const spellName = attrLookup( charCS, fields.Spells_name, {tableDef:fields.Spells_table, row:rowIndex, col:colIndex} ),
+			  spellCastTime = (spellSpeedOverride || attrLookup( charCS, fields.Spells_speed, {tableDef:fields.Spells_table, row:rowIndex, col:colIndex} )),
+			  buildCall = '!init --buildMenu ' + senderId 
+						+ '|' + (spellCasterType == Caster.WIZARD ? MenuType.MUSPELL : MenuType.PRSPELL)
+						+ '|' + tokenID
+						+ '|' + charButton
+						+ '|casting ' + spellName
+						+ '|[[' + spellCastTime + ']]'
+						+ '|1'
+						+ '|0'
+						+ '|-1';
 
 		sendAPI( buildCall, senderId );
 		return;
@@ -1495,103 +1585,90 @@ var initMaster = (function() {		// eslint-disable-line no-unused-vars
     * Handle an initiative power button selection
     */
 
-	var handleInitPower = function( charCS, args, senderId ) {
+	const handleInitPower = function( charCS, args, senderId ) {
 	
-		var powerName,
-			powerCastTime,
-			tokenID = args[1],
-			charButton = args[2],
-			rowIndex = args[3],
-			colIndex = args[4],
-			buildCall = '';
+		const tokenID = args[1],
+			  charButton = args[2],
+			  rowIndex = args[3],
+			  colIndex = args[4];
 
 		if (rowIndex == undefined || colIndex == undefined) {
 			throw new Error( 'Invalid button while handling initiative selection using a Power' );
 		}
 
-		powerName = attrLookup( charCS, fields.Powers_name, fields.Powers_table, rowIndex, colIndex );
-		powerCastTime = attrLookup( charCS, fields.Powers_speed, fields.Powers_table, rowIndex, colIndex );
-
-		buildCall = '!init --buildMenu ' + senderId 
-				+ '|' + MenuType.POWER
-				+ '|' + tokenID
-				+ '|' + charButton
-				+ '|using their power ' + powerName
-				+ '|[[' + powerCastTime + ']]'
-				+ '|1'
-				+ '|0'
-				+ '|-1';
+		const powerName = attrLookup( charCS, fields.Powers_name, {tableDef:fields.Powers_table, row:rowIndex, col:colIndex} ),
+			  powerCastTime = attrLookup( charCS, fields.Powers_speed, {tableDef:fields.Powers_table, row:rowIndex, col:colIndex} ),
+			  buildCall = '!init --buildMenu ' + senderId 
+						+ '|' + MenuType.POWER
+						+ '|' + tokenID
+						+ '|' + charButton
+						+ '|using their power ' + powerName
+						+ '|[[' + powerCastTime + ']]'
+						+ '|1'
+						+ '|0'
+						+ '|-1';
 
 		sendAPI( buildCall, senderId );
 		return;
-				
 	}
 
     /**
     * Handle an initiative Magic Item button selection
     */
 
-	var handleInitMIBag = function( charCS, args, senderId ) {
+	const handleInitMIBag = function( charCS, args, senderId ) {
 	
-		var repItemField,
-			tokenID = args[1],
-			charButton = args[2],
-			rowIndex = args[3],
-			buildCall = '';
+		const tokenID = args[1],
+			  charButton = args[2],
+			  rowIndex = args[3];
 
 		if (_.isUndefined(rowIndex)) {
 			throw new Error( 'Invalid button while handling a initiative selection to use a magic item' );
 		}
-		var Items = getTableGroupField( charCS, {}, fieldGroups.MI, 'name' );
+		let Items = getTableGroupField( charCS, {}, fieldGroups.MI, 'name' );
 			Items = getTableGroupField( charCS, Items, fieldGroups.MI, 'trueSpeed' );
-		var	itemName = tableGroupLookup( Items, 'name', rowIndex ),
-			itemSpeed = tableGroupLookup( Items, 'trueSpeed', rowIndex );
-
-		buildCall = '!init --buildMenu ' + senderId 
-				+ '|' + MenuType.MIBAG
-				+ '|' + tokenID
-				+ '|' + charButton
-				+ '|using their ' + itemName
-				+ '|[[' + itemSpeed + ']]'
-				+ '|1'
-				+ '|0'
-				+ '|-1';
+			
+		const itemName = tableGroupLookup( Items, 'name', rowIndex ),
+			  itemSpeed = tableGroupLookup( Items, 'trueSpeed', rowIndex ),
+			  buildCall = '!init --buildMenu ' + senderId 
+						+ '|' + MenuType.MIBAG
+						+ '|' + tokenID
+						+ '|' + charButton
+						+ '|using their ' + itemName
+						+ '|[[' + itemSpeed + ']]'
+						+ '|1'
+						+ '|0'
+						+ '|-1';
 
 		sendAPI( buildCall, senderId );
 		return;
-				
 	}
 	
 	/**
 	 * Handle an initiative MI power button selection
 	 **/
 	 
-	var handleInitMIpower = function( charCS, args, senderId ) {
+	const handleInitMIpower = function( charCS, args, senderId ) {
 		
-		var repItemField,
-			powerName,
-			powerSpeed,
-			isMIattk = args[0] == BT.MI_ATTACK,
+		var isMIattk = args[0] == BT.MI_ATTACK,
 			tokenID = args[1],
 			charButton = args[2],
-			rowIndex = args[3],
-			buildCall = '';
+			rowIndex = args[3];
 
 		if (_.isUndefined(rowIndex)) {
 			throw new Error( 'Invalid button while handling a initiative selection for a power of a magic item' );
 		}
-		powerName = attrLookup( charCS, fields.Magic_name, fields.Magic_table, rowIndex );
-		powerSpeed = (attrLookup( charCS, fields.Magic_speed, fields.Magic_table, rowIndex ) || 0);
-
-		buildCall = '!init --buildMenu ' + senderId 
-				+ '|' + (isMIattk ? MenuType.MIATTK : MenuType.MIBAG)
-				+ '|' + tokenID
-				+ '|' + charButton
-				+ '|using their ' + powerName
-				+ '|[[' + powerSpeed + ']]'
-				+ '|1'
-				+ '|0'
-				+ '|-1';
+		const powerName = attrLookup( charCS, fields.Magic_name, {tableDef:fields.Magic_table, row:rowIndex} ),
+			  powerSpeed = (attrLookup( charCS, fields.Magic_speed, {tableDef:fields.Magic_table, row:rowIndex} ) || 0),
+			  buildCall = '!init --buildMenu ' + senderId 
+						+ '|' + (isMIattk ? MenuType.MIATTK : MenuType.MIBAG)
+						+ '|' + tokenID
+						+ '|' + charButton
+						+ '|using their ' + powerName
+						+ '|[[' + powerSpeed + ']]'
+						+ '|1'
+						+ '|0'
+						+ '|-1';
 
 		sendAPI( buildCall, senderId );
 		return;
@@ -1601,26 +1678,25 @@ var initMaster = (function() {		// eslint-disable-line no-unused-vars
     * Handle an initiative thieving skill button selection
     */
 
-	var handleInitThief = function( charCS, args, senderId ) {
+	const handleInitThief = function( charCS, args, senderId ) {
 	
-		var tokenID = args[1],
-			charButton = args[2],
-			skillName = args[3],
-			skillSpeed = args[4],
+		const tokenID = args[1],
+			  charButton = args[2],
+			  skillName = args[3],
+			  skillSpeed = args[4],
 			
-			buildCall = '!init --buildMenu ' + senderId 
-				+ '|' + MenuType.THIEF
-				+ '|' + tokenID
-				+ '|' + charButton
-				+ '|' + skillName
-				+ '|[[' + skillSpeed + ']]'
-				+ '|1'
-				+ '|0'
-				+ '|-1';
+			  buildCall = '!init --buildMenu ' + senderId 
+						+ '|' + MenuType.THIEF
+						+ '|' + tokenID
+						+ '|' + charButton
+						+ '|' + skillName
+						+ '|[[' + skillSpeed + ']]'
+						+ '|1'
+						+ '|0'
+						+ '|-1';
 
 		sendAPI( buildCall, senderId );
 		return;
-				
 	}
 
 	/**
@@ -1628,23 +1704,23 @@ var initMaster = (function() {		// eslint-disable-line no-unused-vars
 	* which appear on all menus
 	**/
 
-	var handleOtherActions = function( charCS, args, senderId ) {
+	const handleOtherActions = function( charCS, args, senderId ) {
 	
-		var tokenID = args[1],
-			selectedButton = args[2],
-			initMenu = args[3],
-			otherAction = args[4],
-			otherSpeed = args[5],
+		const tokenID = args[1],
+			  selectedButton = args[2],
+			  initMenu = args[3],
+			  otherAction = args[4],
+			  otherSpeed = args[5],
 
-			buildCall = '!init --buildMenu ' + senderId 
-				+ '|' + initMenu
-				+ '|' + tokenID
-				+ '|' + selectedButton
-				+ '|' + otherAction
-				+ '|[[' + otherSpeed + ']]'
-				+ '|1'
-				+ '|0'
-				+ '|-1';
+			  buildCall = '!init --buildMenu ' + senderId 
+						+ '|' + initMenu
+						+ '|' + tokenID
+						+ '|' + selectedButton
+						+ '|' + otherAction
+						+ '|[[' + otherSpeed + ']]'
+						+ '|1'
+						+ '|0'
+						+ '|-1';
 
 		sendAPI( buildCall, senderId );
 		return;
@@ -1655,26 +1731,22 @@ var initMaster = (function() {		// eslint-disable-line no-unused-vars
 	* prior to completion by the player
 	**/
 	
-	var handleInitCarry = function( tokenID, charCS, initMenu, senderId ) {
+	const handleInitCarry = function( tokenID, charCS, initMenu, senderId ) {
 	
-		var init_speed,
-		    buildCall;
-			
 		setAttr( charCS, fields.Init_carry, 0 );
 		setAttr( charCS, fields.Init_done, 0 );
 		setAttr( charCS, fields.Init_submitVal, 1 );
 							
-		init_speed = (attrLookup( charCS, fields.Init_speed ) || 0);
-
-		buildCall = '!init --buildMenu ' + senderId 
-				+ '|' + initMenu
-				+ '|' + tokenID
-				+ '|-1'
-				+ '| '
-				+ '|[[' + init_speed + ']]'
-				+ '|0'
-				+ '|0'
-				+ '|-1';
+		const init_speed = (attrLookup( charCS, fields.Init_speed ) || 0),
+			  buildCall = '!init --buildMenu ' + senderId 
+						+ '|' + initMenu
+						+ '|' + tokenID
+						+ '|-1'
+						+ '| '
+						+ '|[[' + init_speed + ']]'
+						+ '|0'
+						+ '|0'
+						+ '|-1';
 
 		sendAPI( buildCall, senderId );
 		return;
@@ -1685,45 +1757,41 @@ var initMaster = (function() {		// eslint-disable-line no-unused-vars
 	 * with all their weapons.
 	 */
  
-	var handleAllWeapons = function( senderId, charCS, args, base, onlyDancing ) {
+	const handleAllWeapons = function( senderId, charCS, args, base, onlyDancing ) {
 		
-		var	initCmd = args[0],
-			tokenID = args[1],
-		    rowIndex = args[2],
-		    initMenu = args[3],
-		    rowIndex2 = args[4],
-			tokenName = getObj('graphic',tokenID).get('name'),
-			entry = 0,
-			hands = parseInt(attrLookup( charCS, fields.Equip_handedness ) || 2)+entry,
-			noDancing = parseInt(attrLookup( charCS, fields.Equip_dancing ) || 0),
+		const tokenID = args[1];
+		
+		let	entry = 0,
 			attacks = [new Set()],
 			weapons = [],
 			InHandTable = getTableField( charCS, {}, fields.InHand_table, fields.InHand_miName );
 			InHandTable = getTableField( charCS, InHandTable, fields.InHand_table, fields.InHand_attkCount );
 			
-		var calcAttks = function( fieldGroup ) {
+		const calcAttks = function( fieldGroup ) {
 			
-			var WeaponTable = getTable( charCS, fieldGroup ),
+			let WeaponTable = getTable( charCS, fieldGroup ),
 				row = parseInt(WeaponTable.table[1]),
 				speedMult = Math.max(parseFloat(attrLookup( charCS, fields.initMultiplier ) || 1), 0.5),
 				init_Mod = parseInt(attrLookup( charCS, fields.initMod ) || 0),
-				prefix = fieldGroup.prefix;
+				weapon, weapMI, dancing, speed, actionNum, attackCount, actions, initiative;
+				
+			const prefix = fieldGroup.prefix;
 			
 			do {
-				var weapon = WeaponTable.tableLookup( fields[prefix+'name'], row, false ),
-					weapMI = WeaponTable.tableLookup( fields[prefix+'miName'], row ),
-					dancing= parseInt(WeaponTable.tableLookup( fields[prefix+'dancing'], row ));
+				weapon = WeaponTable.tableLookup( fields[prefix+'name'], row, false );
+				weapMI = WeaponTable.tableLookup( fields[prefix+'miName'], row );
+				dancing= parseInt(WeaponTable.tableLookup( fields[prefix+'dancing'], row ));
 				
 				if (_.isUndefined(weapon)) return;
 				if (weapon != '-' && (!onlyDancing || (!isNaN(dancing) && dancing != 0))) {
-					let speed = parseInt(WeaponTable.tableLookup( fields[prefix+'speed'], row, '0' )),
-						actionNum = WeaponTable.tableLookup( fields[prefix+'noAttks'], row, '1' ),
-						attackCount = WeaponTable.tableLookup( fields[prefix+'attkCount'], row, '0' );
+					speed = parseInt(WeaponTable.tableLookup( fields[prefix+'speed'], row, '0' ));
+					actionNum = WeaponTable.tableLookup( fields[prefix+'noAttks'], row, '1' );
+					attackCount = WeaponTable.tableLookup( fields[prefix+'attkCount'], row, '0' );
 					attackCount = eval( attackCount + '+(' + speedMult + '*' + actionNum + ')' );
-					let actions = Math.floor( attackCount );
+					actions = Math.floor( attackCount );
 					WeaponTable = WeaponTable.tableSet( fields[prefix+'attkCount'], row, (attackCount-actions));
 					InHandTable = InHandTable.tableSet(fields.InHand_attkCount, InHandTable.tableFind( fields.InHand_miName, weapMI ), (attackCount-actions));
-					let initiative = base+speed+init_Mod;
+					initiative = base+speed+init_Mod;
 					if (!weapons.includes(weapMI.dbName())) {
 						attacks.push({init:initiative,ignore:0,action:('with their '+(!!dancing ? 'dancing ' : '')+weapon),msg:(' rate '+actionNum+', speed '+speed+', modifier '+init_Mod)});
 						for (let i=2; i<=actions; i++) {
@@ -1748,38 +1816,38 @@ var initMaster = (function() {		// eslint-disable-line no-unused-vars
 		}
 		return attacks;
 	}
-	
+
 	/**
 	* Handle any Submit button being pressed to roll the initiative
 	**/
 	
-	var handleInitSubmit = function( senderId, charCS, args ) {
+	const handleInitSubmit = function( senderId, charCS, args ) {
 		
-		var	initCmd = args[0],
-			tokenID = args[1],
-		    rowIndex = args[2],
-		    initMenu = args[3],
-		    rowIndex2 = args[4],
-			base = parseInt(state.initMaster.initType == 'group' ? state.initMaster.playerRoll : randomInteger(10)),
-			actions, initiative, count;
+		const tokenID = args[1],
+		      rowIndex = args[2],
+			  initMenu = args[3];
 			
 		makeCheckInitMenu( tokenID, charCS, senderId, true );
 
-		var initSubmit = function( senderId, charCS, args ) {
-			var	initCmd = args[0],
-				tokenID = args[1],
-				rowIndex = args[2],
-				initMenu = args[3],
-				rowIndex2 = args[4],
-				base = parseInt(state.initMaster.initType == 'group' ? state.initMaster.playerRoll : randomInteger(10)),
+		const initSubmit = function( senderId, charCS, args ) {
+			const tokenID = args[1],
+				  rowIndex = args[2],
+				  initMenu = args[3],
+				  rowIndex2 = args[4],
+				  curToken = getObj('graphic',tokenID),
+				  tokenName = curToken.get('name'),
+				  submitVal = attrLookup( charCS, fields.Init_submitVal );
+				  
+			let	base = parseInt(state.initMaster.initType == 'group' ? state.initMaster.playerRoll : randomInteger(10)),
 				init_Mod = parseInt(attrLookup( charCS, fields.initMod )) || 0,
 				init_Mult = Math.max((parseFloat(attrLookup( charCS, fields.initMultiplier )) || 1),0.5),
-				actions, initiative, count,
-				curToken = getObj('graphic',tokenID),
-				charName = charCS.get('name'),
-				tokenName = curToken.get('name'),
-				submitVal = attrLookup( charCS, fields.Init_submitVal ),
-				content = fields.roundMaster;
+				init_attacks = 0,
+				init_attacks2 = 0,
+				init_action = '',
+				init_action2 = '',
+				initiative,
+				content = fields.roundMaster,
+				init_actionnum;
 
 			if (init_Mult !== 1) {
 				sendFeedback( '&{template:RPGMwarning}{{name=init_mod not 1}}{{desc='+charCS.get('name')+' has an init_mod of '+init_Mult+'}}');
@@ -1790,21 +1858,21 @@ var initMaster = (function() {		// eslint-disable-line no-unused-vars
 				return;
 			}
 			
-			actions = handleAllWeapons( senderId, charCS, args, base, (rowIndex != -2) );
+			let actions = handleAllWeapons( senderId, charCS, args, base, (rowIndex != -2) );
 
 			if ((rowIndex == 0 || rowIndex == -2) && (initMenu == MenuType.COMPLEX || initMenu == MenuType.SIMPLE || initMenu == MenuType.WEAPON)) {
 				
-				var monAttk1 = (attrLookup( charCS, fields.Monster_dmg1 ) || '').split(','),
-					monAttk2 = (attrLookup( charCS, fields.Monster_dmg2 ) || '').split(','),
-					monAttk3 = (attrLookup( charCS, fields.Monster_dmg3 ) || '').split(','),
-					monSpeed = parseInt(attrLookup( charCS, fields.Monster_speed ) || 0),
-					monSpeed1 = (parseInt((monAttk1.length > 2) ? monAttk1[2] : monSpeed) || monSpeed) / init_Mult,
-					monSpeed2 = (parseInt((monAttk2.length > 2) ? monAttk2[2] : monSpeed) || monSpeed) / init_Mult,
-					monSpeed3 = (parseInt((monAttk3.length > 2) ? monAttk3[2] : monSpeed) || monSpeed) / init_Mult,
-					monMod = parseInt(attrLookup( charCS, fields.initMod )) || 0,
-					monDmg1 = reDiceRollSpec.test(monAttk1[0]) ? monAttk1[1] : (monAttk1[0] || ''),
-					monDmg2 = reDiceRollSpec.test(monAttk2[0]) ? monAttk2[1] : (monAttk2[0] || ''),
-					monDmg3 = reDiceRollSpec.test(monAttk3[0]) ? monAttk3[1] : (monAttk3[0] || '');
+				const monAttk1 = (attrLookup( charCS, fields.Monster_dmg1 ) || '').split(','),
+					  monAttk2 = (attrLookup( charCS, fields.Monster_dmg2 ) || '').split(','),
+					  monAttk3 = (attrLookup( charCS, fields.Monster_dmg3 ) || '').split(','),
+					  monSpeed = parseInt(attrLookup( charCS, fields.Monster_speed ) || 0),
+					  monSpeed1 = (parseInt((monAttk1.length > 2) ? monAttk1[2] : monSpeed) || monSpeed), // / init_Mult,
+					  monSpeed2 = (parseInt((monAttk2.length > 2) ? monAttk2[2] : monSpeed) || monSpeed), // / init_Mult,
+					  monSpeed3 = (parseInt((monAttk3.length > 2) ? monAttk3[2] : monSpeed) || monSpeed), // / init_Mult,
+					  monMod = parseInt(attrLookup( charCS, fields.initMod )) || 0,
+					  monDmg1 = reDiceRollSpec.test(monAttk1[0]) ? monAttk1[1] : (monAttk1[0] || ''),
+					  monDmg2 = reDiceRollSpec.test(monAttk2[0]) ? monAttk2[1] : (monAttk2[0] || ''),
+					  monDmg3 = reDiceRollSpec.test(monAttk3[0]) ? monAttk3[1] : (monAttk3[0] || '');
 					
 				if (rowIndex != -2) actions = [new Set()];
 				
@@ -1822,45 +1890,58 @@ var initMaster = (function() {		// eslint-disable-line no-unused-vars
 				setAttr( charCS, fields.Init_carryPreInit, 0 );
 				setAttr( charCS, fields.Init_carry2H, 0 );
 				
+				init_action = 'attack';
+				init_actionnum = init_Mult;
+				init_attacks = parseFloat(attrLookup( charCS, fields.Init_monAttkCarry )) || 0;
+				
 				if (monAttk1[0].length && (rowIndex == -2 || rowIndex2 == 0 || rowIndex2 == 1)) {
-					actions.push({init:(base+Math.round(monSpeed1)+monMod),ignore:0,action:('with their '+monDmg1),msg:(' rate 1, speed '+Math.round(monSpeed1)+'/'+init_Mult+', modifier '+monMod)});
-					for (let i=2; i<=init_Mult; i++) {actions.push({init:(base+Math.round(i * monSpeed1)+monMod),ignore:0,action:('with their '+monDmg1),msg:''})};
+					init_attacks = init_attacks + init_Mult - Math.floor(init_attacks);
+					if (init_attacks >= 1) actions.push({init:(base+Math.round(monSpeed1)+monMod),ignore:0,action:('with their '+monDmg1),msg:(' rate '+init_Mult+', speed '+Math.round(monSpeed1)+' modifier '+monMod)});
+					for (let i=2; i<=init_attacks; i++) {actions.push({init:(base+Math.round(i * monSpeed1)+monMod),ignore:0,action:('with their '+monDmg1),msg:''})};
 				}
 				if (monAttk2[0].length && (rowIndex == -2 || rowIndex2 == 0 || rowIndex2 == 2)) {
-					actions.push({init:(base+Math.round(monSpeed2)+monMod),ignore:0,action:('with their '+monDmg2),msg:(' rate 1, speed '+Math.round(monSpeed2)+'/'+init_Mult+', modifier '+monMod)});
+					init_attacks = init_attacks + init_Mult - Math.floor(init_attacks);
+					if (init_attacks >= 1) actions.push({init:(base+Math.round(monSpeed2)+monMod),ignore:0,action:('with their '+monDmg2),msg:(' rate '+init_Mult+', speed '+Math.round(monSpeed2)+' modifier '+monMod)});
 					for (let i=2; i<=init_Mult; i++) {actions.push({init:(base+Math.round(i * monSpeed2)+monMod),ignore:0,action:('with their '+monDmg2),msg:''})};
 				}
 				if (monAttk3[0].length && (rowIndex == -2 || rowIndex2 == 0 || rowIndex2 == 3)) {
-					actions.push({init:(base+Math.round(monSpeed3)+monMod),ignore:0,action:('with their '+monDmg3),msg:(' rate 1, speed '+Math.round(monSpeed3)+'/'+init_Mult+', modifier '+monMod)});
+					init_attacks = init_attacks + init_Mult - Math.floor(init_attacks);
+					if (init_attacks >= 1) actions.push({init:(base+Math.round(monSpeed3)+monMod),ignore:0,action:('with their '+monDmg3),msg:(' rate '+init_Mult+', speed '+Math.round(monSpeed3)+' modifier '+monMod)});
 					for (let i=2; i<=init_Mult; i++) {actions.push({init:(base+Math.round(i * monSpeed3)+monMod),ignore:0,action:('with their '+monDmg3),msg:''})};
 				}
-
+				
+				setAttr( charCS, fields.Init_monAttkCarry, init_attacks );
+				
 			} else if (rowIndex != -2) {
-				var	fighterClass = (attrLookup( charCS, fields.Fighter_class ) || ''),
-					weapAttk = [MenuType.WEAPON,MenuType.TWOWEAPONS,MenuType.MW_MELEE,MenuType.MW_PRIME,MenuType.MW_SECOND].includes(initMenu),
-					init_Mod = parseInt(attrLookup( charCS, fields.initMod )) || 0,
-					init_Mult = Math.max(parseFloat(attrLookup( charCS, fields.initMultiplier ) || 1),0.5),
-					init_Done = parseInt(attrLookup( charCS, fields.Init_done ), 10),
-					init_speed = Math.max((parseInt(attrLookup( charCS, fields.Init_speed )) || 0),0),
-					init_multSpeed = weapAttk ? init_speed/init_Mult : init_speed,
-					init_action = attrLookup( charCS, fields.Init_action ),
-					init_actionnum = attrLookup( charCS, fields.Init_actNum ),
-					init_attacks = parseInt(attrLookup( charCS, fields.Init_attacks ) || 1),
-					init_preinit = attrLookup( charCS, fields.Init_preInit ),
-					init_fixinit = parseInt(attrLookup( charCS, fields.Init_fixInit ) || '0'),
-					preinit = init_fixinit || eval( init_preinit ),
-					weapno = attrLookup( charCS, fields.Weapon_num ),
-					twoHanded = attrLookup( charCS, fields.Init_2Hweapon ),
-					round = state.initMaster.round;
+				const weapAttk = false, // [MenuType.WEAPON,MenuType.TWOWEAPONS,MenuType.MW_MELEE,MenuType.MW_PRIME,MenuType.MW_SECOND].includes(initMenu),
+					  init_Mod = parseInt(attrLookup( charCS, fields.initMod )) || 0,
+					  init_Mult = Math.max(parseFloat(attrLookup( charCS, fields.initMultiplier ) || 1),0.5),
+					  init_Done = parseInt(attrLookup( charCS, fields.Init_done ), 10),
+					  init_speed = Math.max((parseInt(attrLookup( charCS, fields.Init_speed )) || 0),0),
+					  init_multSpeed = weapAttk ? init_speed/init_Mult : init_speed,
+					  init_preinit = attrLookup( charCS, fields.Init_preInit ),
+					  init_fixinit = parseInt(attrLookup( charCS, fields.Init_fixInit ) || '0'),
+					  weapno = attrLookup( charCS, fields.Weapon_num ),
+					  twoHanded = attrLookup( charCS, fields.Init_2Hweapon ),
+					  round = state.initMaster.round;
+					  
+				let	preinit = init_fixinit || eval( init_preinit ),
+					init_speed2 = 0,
+					init_multSpeed2 = 0,
+					init_actionnum2, preinit2;
 					
+				init_actionnum = attrLookup( charCS, fields.Init_actNum );
+				init_attacks = parseInt(attrLookup( charCS, fields.Init_attacks ) || 1);
+				init_action = attrLookup( charCS, fields.Init_action );
+				
 				if (initMenu == MenuType.TWOWEAPONS) {
 					
-					var init_speed2 = parseInt(attrLookup( charCS, fields.Init_2ndSpeed )) || 0,
-						init_multSpeed2 = weapAttk ? init_speed2/init_Mult : init_speed2,
-						init_action2 = attrLookup( charCS, fields.Init_2ndAction ),
-						init_actionnum2 = attrLookup( charCS, fields.Init_2ndActNum ),
-						preinit2 = init_fixinit,
-						init_attacks2 = parseInt(attrLookup( charCS, fields.Init_2ndAttacks ));
+					init_speed2 = parseInt(attrLookup( charCS, fields.Init_2ndSpeed )) || 0,
+					init_multSpeed2 = weapAttk ? init_speed2/init_Mult : init_speed2,
+					init_actionnum2 = attrLookup( charCS, fields.Init_2ndActNum ),
+					preinit2 = init_fixinit;
+					init_attacks2 = parseInt(attrLookup( charCS, fields.Init_2ndAttacks ));
+					init_action2 = attrLookup( charCS, fields.Init_2ndAction );
 					if (isNaN(init_attacks2)) init_attacks2 = 1;
 					if (flags.twoWeapSingleAttk && init_attacks2 > 1) {
 						init_attacks2 = init_Mult;
@@ -1927,20 +2008,20 @@ var initMaster = (function() {		// eslint-disable-line no-unused-vars
 				}
 						
 				for( let i=2; i<=init_attacks; i++ ) {
-					initiative = base + Math.round(i * (init_multSpeed)) + init_Mod;
+					initiative = base + Math.round(i * Math.max(1,(init_multSpeed))) + init_Mod;
 					actions.push({init:initiative,ignore:0,action:init_action,msg:''});
 				}
 				
 				if (initMenu == MenuType.TWOWEAPONS) {
 					for( let i=2; i<=init_attacks2; i++ ) {
-						initiative = base + Math.round(i * (init_multSpeed2)) + init_Mod;
+						initiative = base + Math.round(i * Math.max(1,(init_multSpeed2))) + init_Mod;
 						actions.push({init:initiative,ignore:0,action:init_action2,msg:''});
 					}
 				}
 			}
-			count = 0;
+			let count = 0;
 			actions = _.sortBy( actions, 'init' );
-			sendWait(senderId,0);
+			sendWait(senderId,0,'Init submit');
 			_.each( actions, function(act) {
 				if (_.isUndefined(act.init)) {return;}
 				content += ' --addtotracker '+tokenName+'|'+tokenID+'|'+act.init+'|'+act.ignore+'|'+act.action+'|'+act.msg;
@@ -1995,11 +2076,11 @@ var initMaster = (function() {		// eslint-disable-line no-unused-vars
 		let content = fields.attackMaster + ' --checkac ' + tokenID + '|Silent||' + senderId;
 		setTimeout( sendAPI, Math.round(60000+(Math.random()*60000)), content, senderId );
 	};
-	
+
 	/*
 	 * Handle a player setting modifications to the initiative roll factors
 	 */
-	 
+/*	 
 	var handleAdjustInitMods = function( args, senderId, silent ) {
 		
 		var cmd = args[0],
@@ -2016,127 +2097,1134 @@ var initMaster = (function() {		// eslint-disable-line no-unused-vars
 		makeCheckInitMenu( tokenID, charCS, senderId, silent, ('Set initiative speed '+(cmd === BT.INIT_ADJMOD ? 'modifier' : 'multiplier')+' to '+val) );
 		return;
 	};
-	
-	/*
-	 * Set up the shape of the spell book.  This is complicated due to
-	 * the 2E sheet L5 MU Spells start out-of-sequence at column 70
-	 */
-	 
-	var shapeSpellbook = function( charCS, isMU ) {
-
-		var levelSpells = (isMU ? spellLevels.mu : spellLevels.pr);
-	
-		for (let i=1; i<=(isMU ? 9 : 7); i++) {
-			if (isMU) {
-				levelSpells[i].spells  = parseInt(attrLookup(charCS,[fields.MUSpellNo_table[0] + i + fields.MUSpellNo_memable[0],fields.MUSpellNo_memable[1]])||0);
-				levelSpells[i].spells += parseInt(attrLookup(charCS,[fields.MUSpellNo_table[0] + i + fields.MUSpellNo_specialist[0],fields.MUSpellNo_specialist[1]])||0);
-				levelSpells[i].spells += parseInt(attrLookup(charCS,[fields.MUSpellNo_table[0] + i + fields.MUSpellNo_misc[0],fields.MUSpellNo_misc[1]])||0);
-			} else {
-				levelSpells[i].spells  = parseInt(attrLookup(charCS,[fields.PRSpellNo_table[0] + i + fields.PRSpellNo_memable[0],fields.PRSpellNo_memable[1]])||0);
-				levelSpells[i].spells += parseInt(attrLookup(charCS,[fields.PRSpellNo_table[0] + i + fields.PRSpellNo_wisdom[0],fields.PRSpellNo_wisdom[1]])||0);
-				levelSpells[i].spells += parseInt(attrLookup(charCS,[fields.PRSpellNo_table[0] + i + fields.PRSpellNo_misc[0],fields.PRSpellNo_misc[1]])||0);
-			}
-		}
-		return levelSpells;
-	}
-	
-	/*
-	 * Checks for the existence of magic items in the MI bag
-	 */
- 
-	var checkForMIs = function( charCS ) {
-
-		var MagicItems = getTableGroupField( charCS, {}, fieldGroups.MI, 'name' ),
-			i = 0,
-			item;
-
-		while (!_.isUndefined(item = tableGroupLookup( MagicItems, 'name', i++, false ))) {
-			if (item.length && item != '-') {return true;}
-		}
-		return false;
-	}
-	
-	/*
-	 * Checks for the existence of powers
-	 */
-	 
-	var checkForPowers = function( charCS ) {
-		var item = attrLookup( charCS, fields.Powers_name, fields.Powers_table, 0, fields.PowersBaseCol+0, false, false );
-		for (let r = 0; !_.isUndefined(item); r++) {
-			for (let c = 0; c<fields.PowersCols && !_.isUndefined(item); c++) {
-				item = attrLookup( charCS, fields.Powers_name, fields.Powers_table, r, fields.PowersBaseCol+c, false, false );
-				if (item && item.length && item != '-') {return true;}
-			}
-		}
-		return false;
-	}
-	
-	/*
-	 * Count the number of active weapons currently in-hand
-	 */
-	 
-	var countWeaponsInHand = function( charCS ) {
-		var InHandTable = getTableField( charCS, {}, fields.InHand_table, fields.InHand_name ),
-			InHandTable = getTableField( charCS, InHandTable, fields.InHand_table, fields.InHand_miName ),
-			InHandTable = getTableField( charCS, InHandTable, fields.InHand_table, fields.InHand_type ),
-			WeapTable = getTableField( charCS, {}, fields.MW_table, fields.MW_name ),
-			WeapTable = getTableField( charCS, WeapTable, fields.MW_table, fields.MW_miName ),
-			meleeWeap = 0,
-			rangedWeap = 0,
-			shieldWeap = 0,
-			monAttk = parseInt(attrLookup( charCS, fields.Monster_attks, null, null, null, null, false )),
-			r = InHandTable.table[1],
-			miNames = [],
-			weapon;
-			
-		if (isNaN(monAttk) || !monAttk) {
-			monAttk  = (String(attrLookup( charCS, fields.Monster_dmg1 ) || '') !== '') ? 1 : 0;
-			monAttk += (String(attrLookup( charCS, fields.Monster_dmg2 ) || '') !== '') ? 1 : 0;
-			monAttk += (String(attrLookup( charCS, fields.Monster_dmg3 ) || '') !== '') ? 1 : 0;
-		};
-			
-		while (!_.isUndefined(weapon = InHandTable.tableLookup( fields.InHand_name, r, false ))) {
-			if (weapon != '-') {
-				let miName = InHandTable.tableLookup( fields.InHand_miName, r );
-				if (miName && !miNames.includes(miName.dbName())) {
-					miNames.push(miName.dbName());
-					let type = (InHandTable.tableLookup( fields.InHand_type, r ) || '').toLowerCase();
-					if (!type || !type.length) {
-						let weapObj = abilityLookup( fields.WeaponDB, (InHandTable.tableLookup( fields.InHand_miName, r ) || weapon) ).obj;
-						if (weapObj) type = weapObj[1].type;
-					}
-					if (type.includes('shield')) shieldWeap++;
-					else if (type.includes('melee')) meleeWeap++;
-					if (type.includes('ranged')) rangedWeap++;
-				}
-			}
-			r++;
-		}
-		r = WeapTable.table[1];
-		while (!_.isUndefined(weapon = WeapTable.tableLookup( fields.MW_name, r, false ))) {
-			if (miNames.includes(weapon.dbName())) {
-				miNames.push(weapon.dbName());
-				let miName = WeapTable.tableLookup( fields.MW_miName, r );
-				if (!miName && !miName.length) meleeWeap++;
-			}
-			r++;
-		}
-		WeapTable = getTableField( charCS, {}, fields.RW_table, fields.RW_name );
-		WeapTable = getTableField( charCS, WeapTable, fields.RW_table, fields.RW_miName );
-		r = WeapTable.table[1];
-		while (!_.isUndefined(weapon = WeapTable.tableLookup( fields.RW_name, r, false ))) {
-			if (miNames.includes(weapon.dbName())) {
-				miNames.push(weapon.dbName());
-				let miName = WeapTable.tableLookup( fields.RW_miName, r );
-				if (!miName && !miName.length) rangedWeap++;
-			}
-			r++;
-		}
-		return {melee:meleeWeap, ranged:rangedWeap, shield:shieldWeap, monster:monAttk};
-	}
-	
+*/	
 // ---------------------------------- build menus to display --------------------------------------------------------	
 
+	/**
+	 * Add the Magic Item and Powers initiative buttons to a menu
+	 **/
+
+	const MIandPowers = function( tokenID, submitted, sectNo ) {
+		const charCS = getCharacter(tokenID,false),
+			  mis = checkForMIs(charCS),
+			  powers = checkForPowers(charCS);
+		let	content = '';
+			
+		if (mis || powers) {
+			content = '{{Section'+sectNo+'=**Magic Items & Powers**\n';
+			if (mis) {content += (submitted ? '<span style=' + design.grey_button + '>' : '[') + 'Use a Magic Item' + (submitted ? '</span>' : '](!init --mibag ' + tokenID + ')');}
+			if (powers) {content += (submitted ? '<span style=' + design.grey_button + '>' : '[') + 'Use Powers' + (submitted ? '</span>' : '](!init --power ' + tokenID + ')');}
+			content += '}}';
+		}
+		return content;
+	};
+
+	/**
+	 * Add Other Actions to any menu
+	 **/
+
+	const otherActions = function( initMenu, tokenID, charButton, submitted ) {
+		const content = (charButton == 101 ? '<span style=' + design.selected_button + '>' : (submitted ? '<span style=' + design.grey_button + '>' : '['))
+					  + 'Move'
+					  + ((charButton == 101 || submitted) ? '</span>' : '](!init --button ' + BT.OTHER + '|' + tokenID + '|101|' + initMenu + '|while moving|0)')
+					  + (charButton == 102 ? '<span style=' + design.selected_button + '>' : (submitted ? '<span style=' + design.grey_button + '>' : '['))
+					  + 'Change weapon'
+					  + ((charButton == 102 || submitted) ? '</span>' : '](!init --button ' + BT.OTHER + '|' + tokenID + '|102|' + initMenu + '|while changing weapon|0)')
+					  + (charButton == 103 ? '<span style=' + design.selected_button + '>' : (submitted ? '<span style=' + design.grey_button + '>' : '['))
+        			  + 'Do nothing'
+					  + ((charButton == 103 || submitted) ? '</span>' : '](!init --button ' + BT.OTHER + '|' + tokenID + '|103|' + initMenu + '|while doing nothing|0)')
+					  + (charButton == 104 ? '<span style=' + design.selected_button + '>' : (submitted ? '<span style=' + design.grey_button + '>' : '['))
+					  + 'Other'
+					  + ((charButton == 104 || submitted) ? '</span>' : '](!init --button ' + BT.OTHER + '|' + tokenID + '|104|' + initMenu + '|doing ?{Doing what?}|?{Speed?|1})');
+		return content;
+	};
+	
+	/**
+	 * Add powers of Magic Items in-hand to any menu
+	 **/
+	 
+	const inHandMIbuttons = function( tokenID, charCS, senderId, buttonID, charButton, submitted, cmd ) {
+		
+		return new Promise(resolve => {
+			let content = '';
+			try {
+				let MagicTable = getTableField( charCS, {}, fields.Magic_table, fields.Magic_name ),
+					ItemsTable = getTableGroupField( charCS, {}, fieldGroups.MI, 'name' ),
+					powerList = {},
+					magicName, miName, miQty, itemRow, itemTable;
+					
+				MagicTable = getTableField( charCS, MagicTable, fields.Magic_table, fields.Magic_miName );
+				ItemsTable = getTableGroupField( charCS, ItemsTable, fieldGroups.MI, 'trueName' );
+				ItemsTable = getTableGroupField( charCS, ItemsTable, fieldGroups.MI, 'qty' );
+				for (let r = MagicTable.table[1]; !_.isUndefined(magicName = MagicTable.tableLookup( fields.Magic_name, r, false )); r++) {
+					if (magicName != '-') {
+						miName = MagicTable.tableLookup( fields.Magic_miName, r );
+						[itemRow,itemTable] = tableGroupFind( ItemsTable, 'trueName', miName );
+						miQty = ItemsTable[itemTable].tableLookup( fields[fieldGroups[itemTable].prefix+'qty'], itemRow );
+						miName = ItemsTable[itemTable].tableLookup( fields[fieldGroups[itemTable].prefix+'name'], itemRow ) || 'Magic Item';
+						if (!powerList[miName]) powerList[miName] = {};
+						powerList[miName][magicName] = [r,(isNaN(parseInt(miQty)) ? 1 : miQty)];
+					}
+				}
+				if (_.size(powerList)) content += '{{Section0=**Magic Items in-hand**}}';
+
+				_.each(powerList, (p,n) => {
+					content += '{{'+n.dispName()+'=';
+					_.each(p, (q,m) => {
+						content += (buttonID == charButton ? '<span style=' + design.selected_button + '>' : (submitted || (q[1] <= 0) ? '<span style=' + design.grey_button + '>' : '['));
+						content += q[1] + ' ' + m;
+						content += (((buttonID == charButton) || submitted || (q[1] == 0)) ? '</span>' : '](!init --button ' + cmd + '|' + tokenID + '|' + buttonID + '|' + q[0] + ')');
+						buttonID++;
+					});
+					content += '}}';
+				});
+//				log('inHandMIbuttons: content = '+content);
+				
+			} catch (e) {
+				log('MagicMaster updateCharSheets: JavaScript '+e.name+': '+e.message+' while converting sheet '+charCS.get('name'));
+				sendDebug('MagicMaster updateCharSheets: JavaScript '+e.name+': '+e.message+' while converting sheet '+charCS.get('name'));
+				sendCatchError('InitMaster',msg_orig[senderId],e);
+			} finally {
+				setTimeout(() => {
+					resolve([content,buttonID]);
+				}, asyncTime);
+			}
+		});
+
+	}
+	
+	/*
+	 * Make monster attack buttons 
+	 */
+	 
+	const makeMonAttkButtons = function( tokenID, charCS, senderId, charButton, monButton, submitted ) {
+
+		let content = '';
+		
+		try {
+			
+			creatureAttkDefs( charCS );
+			
+			let monAttk1 = attrLookup( charCS, fields.Monster_dmg1 ),
+				monAttk2 = attrLookup( charCS, fields.Monster_dmg2 ),
+				monAttk3 = attrLookup( charCS, fields.Monster_dmg3 );
+			
+			if ((monAttk1 && monAttk2) || (monAttk1 && monAttk3) || (monAttk2 && monAttk3)) {
+				content += ((0 == charButton && 0 == monButton) ? '<span style=' + design.selected_button + '>' : (submitted ? '<span style=' + design.grey_button + '>' : '['));
+				content += 'All Innate Attks';
+				content += (((0 == charButton && 0 == monButton) || submitted) ? '</span>' : '](!init --button ' + BT.MON_INNATE + '|' + tokenID + '|0|0)\n');
+			}
+			if (monAttk1) {
+				monAttk1 = monAttk1.split(',');
+				content += ((0 == charButton && 1 == monButton) ? '<span style=' + design.selected_button + '>' : (submitted ? '<span style=' + design.grey_button + '>' : '['));
+				content += 'Creature '+ (monAttk1.length > 1 && reDiceRollSpec.test(monAttk1[0]) ? monAttk1[1] : monAttk1[0]);
+				content += (((0 == charButton && 1 == monButton) || submitted) ? '</span>' : '](!init --button ' + BT.MON_INNATE + '|' + tokenID + '|0|1)\n');
+			}
+			if (monAttk2) {
+				monAttk2 = monAttk2.split(',');
+				content += ((0 == charButton && 2 == monButton) ? '<span style=' + design.selected_button + '>' : (submitted ? '<span style=' + design.grey_button + '>' : '['));
+				content += 'Creature '+ (monAttk2.length > 1 && reDiceRollSpec.test(monAttk2[0]) ? monAttk2[1] : monAttk2[0]);
+				content += (((0 == charButton && 2 == monButton) || submitted) ? '</span>' : '](!init --button ' + BT.MON_INNATE + '|' + tokenID + '|0|2)\n');
+			}
+			if (monAttk3) {
+				monAttk3 = monAttk3.split(',');
+				content += ((0 == charButton && 3 == monButton) ? '<span style=' + design.selected_button + '>' : (submitted ? '<span style=' + design.grey_button + '>' : '['));
+				content += 'Creature '+ (monAttk3.length > 1 && reDiceRollSpec.test(monAttk3[0]) ? monAttk3[1] : monAttk3[0]);
+				content += (((0 == charButton && 3 == monButton) || submitted) ? '</span>' : '](!init --button ' + BT.MON_INNATE + '|' + tokenID + '|0|3)\n');
+			}
+			
+			content += ((content && content.length) ? '\n' : '');
+			
+		} catch (e) {
+			sendCatchError('InitMaster',msg_orig[senderId],e);
+		} finally {
+			return content;
+		}
+	};
+
+	
+	/*
+	 * Make weapon button lists
+	 */
+	
+	async function makeWeaponButtons( tokenID, senderId, charButton, submitted, MWcmd, RWcmd, sectNo, show2H=true, showDancing=true, showInHand=true, showWeapons=false, MWtable, RWtable ) {
+		let content = '';
+		try {
+			const charCS = getCharacter( tokenID,false );
+			
+			let	header = true,
+				dancingWeapons = '',
+				ItemsTable  = getTableGroupField( charCS, {}, fieldGroups.MI, 'name' );
+
+			ItemsTable  = getTableGroupField( charCS, ItemsTable, fieldGroups.MI, 'qty' );
+				
+			// build the character Melee Weapon list
+
+			const meleeWeaps = function(senderId, WeaponTable) {
+				let content = '';
+				return new Promise(resolveMelee => {
+					try {
+						if (_.isUndefined(WeaponTable)) {
+							WeaponTable = getTableField( charCS, {}, fields.MW_table, fields.MW_name );
+							WeaponTable = getTableField( charCS, WeaponTable, fields.MW_table, fields.MW_miName );
+							WeaponTable = getTableField( charCS, WeaponTable, fields.MW_table, fields.MW_twoHanded );
+							WeaponTable = getTableField( charCS, WeaponTable, fields.MW_table, fields.MW_dancing );
+							WeaponTable = getTableField( charCS, WeaponTable, fields.MW_table, fields.MW_charges );
+							WeaponTable = getTableField( charCS, WeaponTable, fields.MW_table, fields.MW_hand );
+						}
+						let a = fields.MW_table[1],
+							weapList = [];
+						for (let i = a; i < (fields.MWrows + a); i++) {
+							let w = (1 - (a * 2)) + (i * 2),
+								weapName = WeaponTable.tableLookup( fields.MW_name, i, false );
+							if (_.isUndefined(weapName)) {break;}
+							let twoHanded = WeaponTable.tableLookup( fields.MW_twoHanded, i ) != 0,
+								dancing = WeaponTable.tableLookup(fields.MW_dancing, i ) != 0;
+							if (showInHand && (weapName != '-') && (show2H || !twoHanded) && !dancing) {
+								if (header) {
+									content += '**Melee Weapons**\n';
+									header = false;
+								}
+								let miName = WeaponTable.tableLookup( fields.MW_miName, i ) || '',
+									itemIndex = attrLookup( charCS, fields.InHand_index, {tableDef:fields.InHand_table, row:WeaponTable.tableLookup( fields.MW_hand, i )});
+								let [tableIndex,table,tableRowID] = tableGroupIndex( ItemsTable, itemIndex );
+								if (showWeapons && miName && miName.length) {
+									if (weapList.includes(miName.dbName())) continue;
+									weapList.push(miName.dbName());
+									weapName = miName;
+								}
+								let	weapData = resolveData( miName, fields.WeaponDB, reNotAttackData, charCS, {chargeType:reWeapSpecs.chargeType}, {row:tableIndex, rowID:tableRowID} ),
+									weapCharged = weapData.chargeType && !(['uncharged','cursed','single-uncharged'].includes(weapData.chargeType.toLowerCase())),
+									charges = weapCharged  ? (WeaponTable.tableLookup( fields.MW_charges, i ) || 1) : 0,
+									exhausted = submitted,
+									qty = '';
+								if (charges) {
+									qty = _.isUndefined(itemIndex) ? 0 : tableGroupLookup( ItemsTable, 'qty', itemIndex ) || 0;
+									exhausted = qty < charges;
+									qty = String(qty) + ' ';
+								}
+								content += (w == charButton || exhausted ? '<span style=' + (w == charButton ? design.selected_button : design.grey_button) + '>' : '[');
+								content += qty + weapName;
+								content += (((w == charButton) || exhausted) ? '</span>' : '](!init --button ' + MWcmd + '|' + tokenID + '|' + w + '|' + i + ')');
+							} else if ((weapName != '-') && dancing) {
+								dancingWeapons += '<span style='+design.green_button+'>'+weapName+'</span>';
+							}
+						};
+						if (!header) {
+							content += '\n';
+							header = true;
+						}
+					} catch (e) {
+						sendCatchError('InitMaster',msg_orig[senderId],e);
+					} finally {
+						setTimeout(() => {
+							resolveMelee(content);
+						}, asyncTime);
+					}
+				});
+			};
+
+			// build the character Ranged Weapons list ****
+			
+			const rangedWeaps = function(senderId,WeaponTable) {
+				let content = '';
+				return new Promise(resolveRanged => {
+					try {
+						if (_.isUndefined(WeaponTable)) {
+							WeaponTable = getTableField( charCS, {}, fields.RW_table, fields.RW_name );
+							WeaponTable = getTableField( charCS, WeaponTable, fields.RW_table, fields.RW_miName, '', 1 );
+							WeaponTable = getTableField( charCS, WeaponTable, fields.RW_table, fields.RW_charges, '', 1 );
+							WeaponTable = getTableField( charCS, WeaponTable, fields.RW_table, fields.RW_twoHanded, '', 1 );
+							WeaponTable = getTableField( charCS, WeaponTable, fields.RW_table, fields.RW_dancing, '', 0 );
+						}
+						let a = fields.RW_table[1];
+						for (let i = a; i < (fields.RWrows + a); i++) {
+							let w = (2 - (a * 2)) + (i * 2),
+								weapName = WeaponTable.tableLookup( fields.RW_name, i );
+							if (_.isUndefined(weapName)) {break;}
+							let twoHanded = WeaponTable.tableLookup( fields.RW_twoHanded, i ) != 0,
+								dancing = WeaponTable.tableLookup( fields.RW_dancing, i ) != 0;
+							if (showInHand && weapName != '-' && (show2H || !twoHanded) && !dancing) {
+								if (header) {
+									content += '**Ranged weapons**\n';
+									header = false;
+								}
+								let miName = WeaponTable.tableLookup( fields.RW_miName, i ) || '',
+									[itemIndex,table,itemRowID] = tableGroupFind( ItemsTable, 'name', miName ),
+									weapData = resolveData( miName, fields.WeaponDB, reNotAttackData, charCS, {chargeType:reWeapSpecs.chargeType}, {row:itemIndex, rowID:itemRowID} ),
+									weapCharged = weapData.chargeType && !(['uncharged','cursed','single-uncharged'].includes(weapData.chargeType.toLowerCase())),
+									charges = weapCharged  ? WeaponTable.tableLookup( fields.RW_charges, i ) : 0,
+									exhausted = submitted,
+									qty = '';
+								if (charges) {
+									qty = _.isUndefined(itemIndex) ? 0 : ItemsTable[table].tableLookup( fields[fieldGroups[table].prefix+'qty'], itemIndex ) || 0;
+									exhausted = qty < charges;
+									qty = String(qty) + ' ';
+								}
+								content += (w == charButton || exhausted ? '<span style=' + (w == charButton ? design.selected_button : design.grey_button) + '>' : '[');
+								content += qty + weapName;
+								content += (((w == charButton) || exhausted) ? '</span>' : '](!init --button ' + RWcmd + '|' + tokenID + '|' + w + '|' + i + ')');
+							} else if ((weapName != '-') && dancing && !dancingWeapons.includes('>'+weapName+'<')) {
+								dancingWeapons += '<span style='+design.green_button+'>'+weapName+'</span>';
+							}
+						}
+						if (!header) {
+							content += '\n';
+						}
+					} catch (e) {
+						sendCatchError('InitMaster',msg_orig[senderId],e);
+					} finally {
+						setTimeout(() => {
+							resolveRanged(content);
+						}, asyncTime);
+					}
+				});
+			};
+			
+			content += '{{Section'+(sectNo++)+'='+await meleeWeaps(senderId,MWtable)+'}}';
+			content += '{{Section'+(sectNo++)+'='+await rangedWeaps(senderId,RWtable)+'}}';
+
+			if (dancingWeapons.length) {
+				content += '{{Section'+(sectNo++)+'=**Dancing weapons**\nAutomatic Initiative\n' + dancingWeapons + '}}';
+			}
+		} catch (e) {
+			sendCatchError('InitMaster',msg_orig[senderId],e);
+		} finally {
+			return content;
+		}
+	};
+
+    /*
+    * Create the Complex Monster Initiative menu.
+    * Highlight buttons specified with a number (-1 means no highlight)
+    */
+
+	async function makeMonsterMenu(complex,charCS,submitted,args,senderId) {
+
+		try {
+			const tokenID = args[1],
+				  charButton = args[2],
+				  monButton = args[8],
+				  tokenName = getObj( 'graphic', tokenID ).get('name');
+			
+			let content = '&{template:'+fields.menuTemplate+'}{{name=What is ' + tokenName + ' doing?}}'
+					+ '{{subtitle=Initiative for Complex Monster Attacks}}'
+					+ '{{section0=**Innate weapons**\n';
+					
+			// add buttons for innate monster attack abilities using the monster initiative modifier
+			
+			content += makeMonAttkButtons( tokenID, charCS, senderId, charButton, monButton, submitted ) + '}}';
+
+			if (complex) {
+				content += await makeWeaponButtons( tokenID, senderId, charButton, submitted, BT.MON_MELEE, BT.MON_RANGED, 1 );
+				content += MIandPowers( tokenID, submitted, 4 );			
+			}
+			content	+= '{{section5=' + otherActions( (complex ? MenuType.COMPLEX : MenuType.SIMPLE), tokenID, charButton, submitted ) + '}}';
+			if ((charButton < 0) || submitted) {
+				content += '{{section6=Select action above, then <span style=' + design.grey_button + '>Submit</span>}}';
+			} else {
+				content += '{{highlight=[Submit](!init --button ' + BT.SUBMIT + '|' + tokenID + '|' + charButton + '|' + (complex ? MenuType.COMPLEX : MenuType.SIMPLE) + '|' + monButton + ')}}';
+			};
+					
+			sendResponse( charCS, content, senderId, flags.feedbackName, flags.feedbackImg, tokenID );
+			return;
+
+		} catch (e) {
+			sendCatchError('InitMaster',msg_orig[senderId],e);
+		}
+	};
+
+    /*
+    * Create the Weapon Initiative menu.
+    * Highlight buttons specified with a number (-1 means no highlight)
+    */
+
+	async function makeWeaponMenu(charCS,submitted,args,senderId) { 
+	
+		try {
+			const isMIattk = args[0] == MenuType.MIATTK,
+				  tokenID = args[1],
+				  curToken = getObj( 'graphic', tokenID ),
+				  fighterLevel = parseInt(attrLookup( charCS, fields.Fighter_level ) || '0'),
+				  rogueLevel = parseInt(attrLookup( charCS, fields.Rogue_level ) || '0'),
+				  monsterHD = parseInt(attrLookup( charCS, fields.Monster_hitDice ) || '0'),
+				  monsterHPplus = parseInt(attrLookup( charCS, fields.Monster_hpExtra )) || 0,
+				  monsterIntField = attrLookup( charCS, fields.Monster_int ) || '',
+				  monsterInt = monsterIntField.toLowerCase().includes('non') ? 0 : (monsterIntField.match(/\d+/)||["1"])[0],
+				  monsterLevel = Math.ceil((monsterHD + Math.ceil(monsterHPplus/4)) / (monsterInt != 0 ? 1 : 2)),
+				  hands = parseInt(attrLookup( charCS, fields.Equip_handedness ) || 2 ),
+				  weapCount = countWeaponsInHand( charCS ),
+				  shieldStyle = (weapCount.melee > 0 && weapCount.shield > 0 && ((attrLookup( charCS, fields.Init_2ndShield ) || 0) > 0)) ? weapCount.shield : 0;
+
+			let	charButton = args[2],
+				monButton = args[8],
+				MW_handFields = getTableField( charCS, {}, fields.MW_table, fields.MW_name ),
+				RW_handFields = getTableField( charCS, {}, fields.RW_table, fields.RW_name ),
+				InHandField = getTableField( charCS, {}, fields.InHand_table, fields.InHand_miName ),
+				primeHand, primeRef, offHand, offRef, bothHands, bothRef, index;
+				
+			MW_handFields = getTableField( charCS, MW_handFields, fields.MW_table, fields.MW_hand );
+			MW_handFields = getTableField( charCS, MW_handFields, fields.MW_table, fields.MW_miName );
+			MW_handFields = getTableField( charCS, MW_handFields, fields.MW_table, fields.MW_twoHanded );
+			MW_handFields = getTableField( charCS, MW_handFields, fields.MW_table, fields.MW_dancing );
+			MW_handFields = getTableField( charCS, MW_handFields, fields.MW_table, fields.MW_charges );
+			RW_handFields = getTableField( charCS, RW_handFields, fields.RW_table, fields.RW_hand );
+			RW_handFields = getTableField( charCS, RW_handFields, fields.RW_table, fields.RW_miName );
+			RW_handFields = getTableField( charCS, RW_handFields, fields.RW_table, fields.RW_charges, '', 1 );
+			RW_handFields = getTableField( charCS, RW_handFields, fields.RW_table, fields.RW_twoHanded, '', 1 );
+			RW_handFields = getTableField( charCS, RW_handFields, fields.RW_table, fields.RW_dancing, '', 0 );
+			InHandField = getTableField( charCS, InHandField, fields.InHand_table, fields.InHand_name );
+
+			const getRef = function( charCS, hand, forceFind=false ) {
+				let ref = attrLookup(charCS,[fields.Init_hand[0]+hand,fields.Init_hand[1]],{def:false});
+				if (forceFind || _.isNaN(ref) || ref == '') ref = undefined;
+
+				const miName = (InHandField.tableLookup( fields.InHand_miName, hand ) || InHandField.tableLookup( fields.InHand_name, hand ) || '');
+
+				if (!_.isUndefined(index = MW_handFields.tableFind( fields.MW_hand, hand ))) {
+					ref = (1 - (fields.MW_table[1] * 2)) + (index * 2);
+				} else if (!_.isUndefined(index = RW_handFields.tableFind( fields.RW_hand, hand ))) {
+					ref = (2 - (fields.RW_table[1] * 2)) + (index * 2);
+				} else if (!!miName && miName.dbName().length && miName !== '-') {
+					if (!_.isUndefined(index = MW_handFields.tableFind( fields.MW_miName, miName ))) {
+						ref = (1 - (fields.MW_table[1] * 2)) + (index * 2);
+					} else if (!_.isUndefined(index = RW_handFields.tableFind( fields.RW_miName, miName ))) {
+						ref = (2 - (fields.RW_table[1] * 2)) + (index * 2);
+					} else if (!_.isUndefined(index = MW_handFields.tableFind( fields.MW_name, miName ))) {
+						ref = (1 - (fields.MW_table[1] * 2)) + (index * 2);
+					} else if (!_.isUndefined(index = RW_handFields.tableFind( fields.RW_name, miName ))) {
+						ref = (2 - (fields.RW_table[1] * 2)) + (index * 2);
+					};
+				};
+				if (!forceFind) rememberWeapRef(charCS,hand,ref);
+				return [index,ref];
+			};
+
+			if (!curToken) {
+				throw new Error( 'The token_id does not represent a valid token' );
+			}
+			
+			if (weapCount.melee + weapCount.ranged + shieldStyle) {
+				[primeHand,primeRef] = getRef(charCS,0);
+				[offHand,offRef] = getRef(charCS,1);
+				[bothHands,bothRef] = getRef(charCS,2);
+			}
+			const isPrime = !_.isUndefined(primeHand),
+				  isOff = !_.isUndefined(offHand),
+				  isBoth = !_.isUndefined(bothHands);
+			
+			if (((weapCount.melee + weapCount.ranged + shieldStyle) > 0) && (!charButton || !charButton.length || charButton == -1)) {
+				charButton = isBoth ? bothRef : (isPrime ? primeRef : (isOff ? offRef : charButton));
+				const charHand = isBoth ? bothHands : (isPrime ? primeHand : offHand);
+				if (!_.isUndefined(charHand)) {
+					if ((charButton%2)>0) {
+						handleInitMW( CharSheet.CHARACTER, charCS, [BT.MELEE,tokenID,charButton,charHand], senderId );
+					} else {
+						handleInitRW( CharSheet.CHARACTER, charCS, [BT.RANGED,tokenID,charButton,charHand], senderId );
+					}
+					return;
+				}
+			};
+			if (weapCount.monster > 0 && (!charButton || !charButton.length || charButton == -1)) {
+				charButton = 0;
+				monButton = weapCount.monster > 1 ? 0 : 1;
+				handleInitMonster( Monster.COMPLEX, charCS, [BT.MON_INNATE,tokenID,charButton,monButton], senderId );
+				return;
+			};
+
+			let content = '&{template:'+fields.menuTemplate+'}{{name=What is ' + curToken.get('name') + ' doing?}}'
+						+ '{{subtitle=Initiative for Weapon Attacks}}';
+					
+			// Insert buttons for powers of Magic Items that are in-hand
+
+			let	[inHandMIs,buttonID] = await inHandMIbuttons( tokenID, charCS, senderId, 0, (isMIattk ? charButton : -1), submitted, BT.MI_ATTACK );
+			content += inHandMIs;
+			charButton = isMIattk ? undefined : charButton;
+			
+			if (weapCount.melee > 1 || (weapCount.melee > 0 && shieldStyle > 0) || weapCount.monster > 1 || ((weapCount.melee+weapCount.ranged) > 0 && weapCount.monster > 0)) {
+				if ((fighterLevel || rogueLevel || monsterLevel) && isPrime && isOff) {
+					if (offRef == primeRef) [offHand,offRef] = getRef(charCS,0,true);
+					content += '{{Fighter\'s & Rogue\'s Option='
+							+  (submitted ? ('<span style=' + design.grey_button + '>') : '[')
+							+  'Two Weapons'
+							+  (submitted ? '</span>' : ('](!init --button ' + BT.TWOWEAPONS + '|' + tokenID + '|' + offRef + '|' + primeRef + '|' + offHand + '|' + primeHand + ')'))
+							+  '}}';
+				}
+				if (hands > 2 || (weapCount.monster > 0 && weapCount.melee > 0)) {
+					content += '{{Many Hands Option='
+							+  (-2 == charButton ? '<span style=' + design.selected_button + '>' : (submitted ? '<span style=' + design.grey_button + '>' : '['))
+							+  'All Weapons'
+							+  (((-2 == charButton) || submitted) ? '</span>' : '](!init --button ' + BT.ALLWEAPONS + '|' + tokenID + '|' + -2 + '|' + -2 + ')')
+							+  '}}';
+				}
+			}
+			
+			content += '{{section1='+makeMonAttkButtons( tokenID, charCS, senderId, charButton, monButton, submitted )+'}}';
+			content += await makeWeaponButtons( tokenID, senderId, charButton, submitted, BT.MELEE, BT.RANGED, 2, true, true, true, state.initMaster.weapInit, MW_handFields, RW_handFields );
+			
+			content += MIandPowers( tokenID, submitted, 5 )
+					+ '{{section6=' + otherActions( MenuType.WEAPON, tokenID, charButton, submitted ) + '}}';
+					
+			if ((charButton == -1) || submitted) {
+				content += '{{section7=Select action above, then <span style=' + design.grey_button + '>Submit</span>}}';
+			} else {
+				content += '{{highlight=[Submit](!init --button ' + BT.SUBMIT + '|' + tokenID + '|' + charButton + '|' + MenuType.WEAPON + '|' + monButton + ')}}';
+			};
+			
+			sendResponse( charCS, content, senderId, flags.feedbackName, flags.feedbackImg, tokenID );
+			return;
+		} catch (e) {
+			sendCatchError('InitMaster',msg_orig[senderId],e);
+		}
+	};
+
+    /*
+    * Create the Primary Weapon Initiative menu for 2 weapon attacks.
+    * Highlight buttons specified with a number (-1 means no highlight)
+    */
+
+	async function makePrimeWeaponMenu(charCS,submitted,args,senderId) {
+
+		try {
+			const tokenID = args[1],
+				  tokenName = getObj( 'graphic', tokenID ).get('name');
+			
+			let	content = '&{template:'+fields.menuTemplate+'}{{name=What is ' + tokenName + ' doing?}}'
+					+ '{{subtitle=Initiative for Two Weapon Attacks}}'
+					+ '{{section0=**Choose Secondary Weapon**\n'
+					+ 'or go back to [One Weapon](!init --button ' + BT.ONEWEAPON + '|' + tokenID + '|-1|-1)}}';
+					
+			content += await makeWeaponButtons( tokenID, senderId, -1, submitted, BT.MW_PRIME, BT.RW_PRIME, 1, false, null, null, state.initMaster.weapInit );
+
+			content += '{{section4=Select two weapons above, then '
+					+ '<span style=' + design.grey_button + '>Submit</span>}}';
+					
+			sendResponse( charCS, content, senderId, flags.feedbackName, flags.feedbackImg, tokenID );
+			return;
+		} catch (e) {
+			sendCatchError('InitMaster',msg_orig[senderId],e);
+		}
+	};
+
+    /*
+    * Create the Secondary Weapon Initiative menu for 2 weapon attacks.
+    * Highlight buttons specified with a number (-1 means no highlight)
+    */
+
+	const makeSecondWeaponMenu = function(charCS,submitted,args,senderId) {
+
+        const tokenID = args[1],
+			  charButton = args[2],
+			  charButton2 = args[3];
+
+		let	weapName = '',
+			weaponList = [],
+			dancingWeapons = '',
+            header = true,
+			twoHanded, dancing, weapMI, highlight, w, i, a,
+			WeaponTable = getTableField( charCS, {}, fields.MW_table, fields.MW_name );
+
+		WeaponTable = getTableField( charCS, WeaponTable, fields.MW_table, fields.MW_twoHanded, '', 0 );
+		WeaponTable = getTableField( charCS, WeaponTable, fields.MW_table, fields.MW_dancing, '', 0 );
+		WeaponTable = getTableField( charCS, WeaponTable, fields.MW_table, fields.MW_miName, '', 0 );
+            
+		let	content = '&{template:'+fields.menuTemplate+'}{{name=What is ' + getObj( 'graphic', tokenID ).get('name') + ' doing?}}'
+				+ '{{subtitle=Initiative for Two Weapon Attacks}}'
+				+ '{{section0=**Choose '+(charButton2>0 ? 'New ' : '')+'<span style='+design.green_button+'>Primary Weapon**</span>\n'
+				+ 'Change by reselecting\n'
+				+ 'Or go back to ';
+			
+		content += submitted ? '<span style=' + design.grey_button + '>' : '[';
+		content += 'One Weapon';
+		content += submitted ? '</span>' : '](!init --button ' + BT.ONEWEAPON + '|' + tokenID + '|'+ charButton + '|-1|-1)';
+		content += '}}{{section1=';
+				
+		// build the Melee Weapon list
+		
+		a = fields.MW_table[1];
+		for (i = a; i < (fields.MWrows + a); i++) {
+			w = (1 - (a * 2)) + (i * 2);
+			weapName = WeaponTable.tableLookup( fields.MW_name, i );
+			if (_.isUndefined(weapName)) {break;}
+			twoHanded = WeaponTable.tableLookup( fields.MW_twoHanded, i ) != 0;
+			dancing = WeaponTable.tableLookup( fields.MW_dancing, i ) != 0;
+			if (!twoHanded && !dancing && weapName != '-') {
+			    if (header) {
+			        content += '**1H Melee weapons**\n';
+			        header = false;
+			    }
+				weapMI = (WeaponTable.tableLookup( fields.MW_miName, i ) || weapName);
+				if (state.initMaster.weapInit) {
+					if (weapMI && weaponList.includes(weapMI.dbName())) continue;
+					weaponList.push(weapMI.dbName());
+				} else {
+					weapMI = weapName;
+				}
+				highlight = (charButton == w) ? design.green_button : ((charButton2 == w) ? design.selected_button : design.dark_button);
+				content += (!submitted) ? '[' : '';
+				content += ((w == charButton || w == charButton2 || submitted) ? ('<span style=' + highlight + '>') : '');
+				content += weapMI;
+				content += (w == charButton || w == charButton2 || submitted) ? '</span>' : '';
+				content += (!submitted) ? ('](!init --button ' + BT.MW_SECOND + '|' + tokenID + '|' + charButton + '|' + w + '|' + ((charButton-(1-(a*2)))/2) + '|' + i + ')') : '';
+			} else if ((weapName != '-') && dancing) {
+				dancingWeapons += '<span style='+(submitted ? design.grey_button : design.green_button)+'>'+weapMI+'</span>';
+			}
+		}
+
+		if (!header) {
+			content += '}}{{section2=';
+			header = true;
+		}
+
+		// build the character Ranged Weapons list
+		WeaponTable = getTableField( charCS, {}, fields.RW_table, fields.RW_name );
+		WeaponTable = getTableField( charCS, WeaponTable, fields.RW_table, fields.RW_twoHanded, '', 1 );
+		WeaponTable = getTableField( charCS, WeaponTable, fields.RW_table, fields.RW_dancing, '', 0 );
+		WeaponTable = getTableField( charCS, WeaponTable, fields.RW_table, fields.RW_miName, '', '' );
+		
+		a = fields.RW_table[1];
+		weaponList = [];
+		for (i = a; i < (fields.RWrows + a); i++) {
+			w = (2 - (a * 2)) + (i * 2);
+			weapName = WeaponTable.tableLookup( fields.RW_name, i );
+			if (_.isUndefined(weapName)) {break;}
+			twoHanded = WeaponTable.tableLookup( fields.RW_twoHanded, i ) != 0;
+			dancing = WeaponTable.tableLookup( fields.RW_dancing, i ) != 0;
+			if (!twoHanded && !dancing && weapName != '-') {
+			    if (header) {
+			        content += '**1H Ranged weapons**\n';
+			        header = false;
+			    }
+				weapMI = (WeaponTable.tableLookup( fields.RW_miName, i ) || weapName);
+				if (state.initMaster.weapInit) {
+					if (weapMI && weaponList.includes(weapMI.dbName())) continue;
+					weaponList.push(weapMI.dbName());
+				} else {
+					weapMI = weapName;
+				}
+				highlight = (charButton == w) ? design.green_button : ((charButton2 == w) ? design.selected_button : design.grey_button);
+				content += (!submitted) ? '[' : '';
+				content += ((w == charButton || w == charButton2 || submitted) ? ('<span style=' + highlight + '>') : '');
+				content += weapMI;
+				content += (w == charButton || w == charButton2 || submitted) ? '</span>' : '';
+				content += (!submitted) ? ('](!init --button ' + BT.RW_SECOND + '|' + tokenID + '|' + charButton + '|' + w + '|' + (charButton-((2-(a*2))/2)) + '|' + i + ')') : '';
+			} else if ((weapName != '-') && dancing && !dancingWeapons.includes(weapMI)) {
+				dancingWeapons += '<span style='+(submitted ? design.dark_button : design.green_button)+'>'+weapMI+'</span>';
+			}
+		};
+		if (dancingWeapons.length) {
+			if (!header) content += '}}{{section3=';
+			content += '**Dancing weapons**\nAutomatic Initiative\n' + dancingWeapons;
+		}
+		if (charButton < 1 || charButton2 < 1 || charButton == charButton2 || submitted) {
+			content += '}}{{section4=Select two weapons above, then <span style=' + design.grey_button + '>Submit</span>}}';
+		} else {
+			content += '}}{{highlight=[Submit](!init --button ' + BT.SUBMIT + '|' + tokenID + '|' + charButton + '|' + MenuType.TWOWEAPONS + '|' + charButton2 + ')}}';
+		};
+				
+		sendResponse( charCS, content, senderId, flags.feedbackName, flags.feedbackImg, tokenID );
+		return;
+	};
+
+    /*
+    * Create the spell Initiative menu.
+    * Highlight buttons specified with a number (-1 means no highlight)
+    */
+
+	async function makeSpellMenu( spellCasterType, charCS, submitted, args, senderId ) {
+
+		try {
+			const tokenID = args[1],
+				  spellButton = args[2],
+				  isMU = (spellCasterType == Caster.WIZARD),
+				  levelSpells = shapeSpellbook( charCS, isMU );
+				  
+			let	spellName = '',
+				buttonID = 0,
+				qty, l, w, r, c;
+				
+			let content = '&{template:'+fields.menuTemplate+'}{{name=What Spell is ' + getObj( 'graphic', tokenID ).get('name') + ' planning to cast?}}'
+						+ '{{subtitle=Initiative for ' + spellCasterType + ' spells}}';
+
+			// set up the shape of the spell book.  This is complicated due to
+			// the 2E sheet L5 MU Spells start out-of-sequence at column 70
+
+			// build the Spell list
+			for (l = 1; l < levelSpells.length; l++) {
+				r = 0;
+				if (levelSpells[l].spells > 0) content += '{{section'+l+'=**Level '+l+' spells**\n';
+				for (let s = levelSpells[l].spells; s > 0; s--) {
+					c = levelSpells[l].base;
+					for (w = 1; (w <= fields.SpellsCols) && (s > 0); w++) {
+						spellName = attrLookup( charCS, fields.Spells_name, {def:false, tableDef:fields.Spells_table, row:r, col:c} );
+						if (_.isUndefined(spellName)) {
+							s = 0;
+							break;
+						}
+						qty = parseInt(attrLookup( charCS, fields.Spells_castValue, {tableDef:fields.Spells_table, row:r, col:c} ) || 0);
+						content += (buttonID == spellButton ? '<span style=' + design.selected_button + '>' : (submitted || qty == 0 ? '<span style=' + design.grey_button + '>' : '['));
+						content += spellName;
+						content += (((buttonID == spellButton) || submitted || !qty) ? '</span>' : '](!init --button ' + (isMU ? BT.MU_SPELL : BT.PR_SPELL) + '|' + tokenID + '|' + buttonID + '|' + r + '|' + c + ')');
+						buttonID++;
+						c++;
+					}
+					r++;
+				}
+				if (levelSpells[l].spells > 0) content += '}}';
+			}
+
+			if (!buttonID) {
+				sendParsedMsg( tokenID, (isMU ? Init_Messages.noMUspellbook : Init_Messages.noPRspellbook), null, flags.feedbackName );
+				return;
+			}
+			
+			let sectNo = levelSpells.length+1;
+			content += await makeWeaponButtons( tokenID, senderId, -1, submitted, '', '', sectNo, true, true, false );
+			sectNo += 3;
+
+			content += MIandPowers( tokenID, submitted, sectNo++ )
+					+ '{{section'+(sectNo++)+'='+otherActions( (isMU ? MenuType.MUSPELL : MenuType.PRSPELL), tokenID, spellButton, submitted ) + '}}';
+					
+			if ((spellButton < 0) || submitted) {
+				content += '{{section'+(sectNo++)+'=Select action above, then <span style=' + design.grey_button + '>Submit</span>}}';
+			} else {
+				content += '{{highlight=[Submit](!init --button ' + BT.SUBMIT + '|' + tokenID + '|' + spellButton + '|' + (isMU ? MenuType.MUSPELL : MenuType.PRSPELL) + ')}}';
+			};
+					
+			sendResponse( charCS, content, senderId, flags.feedbackName, flags.feedbackImg, tokenID );
+			return;
+		} catch (e) {
+			sendCatchError('InitMaster',msg_orig[senderId],e);
+		}
+	};
+
+    /*
+    * Create the Magic Item Initiative menu.
+    * Highlight buttons specified with a number (-1 means no highlight)
+    */
+
+	async function makeMIBagMenu( charCS, submitted, args, senderId ) {
+
+		try {
+			const tokenID = args[1],
+				  charButton = args[2],
+				  tokenName = getObj( 'graphic', tokenID ).get('name'),
+				  sheetVer = csVer(charCS),
+				  config = getSetPlayerConfig(senderId),
+				  miTable = getTableGroupField( charCS, {}, fieldGroups.MI, 'name' ),
+				  sections = {POTIONS:{n:2,name:'**Potions**'},
+							  DUSTS:{n:3,name:'**Dusts**'},
+							  WANDS:{n:4,name:'**Rods, Staves & Wands**'},
+							  SCROLLS:{n:5,name:'**Scrolls & Books**'},
+							  GEAR:{n:6,name:'**Weapons, Armour & Gear**'},
+							  MISC:{n:7,name:'**Miscellaneous**'},
+							  TREASURE:{n:8,name:'**Treasure**'},
+							  COINS:{n:9,name:'**Coins**'}
+							 };
+				  
+			let	miName, r,
+				inBagTitle = false,
+				content = '&{template:'+fields.menuTemplate+'}{{name=What Magic Item is ' + tokenName + ' planning to use?}}'
+						+ '{{subtitle=All ' + tokenName + '\'s Magic Items}}';
+					
+			// build the in-hand Magic Item Powers list
+			
+			let [inHandMIs,buttonID] = await inHandMIbuttons( tokenID, charCS, senderId, 0, charButton, submitted, BT.MI_POWER );
+			content += inHandMIs;
+			
+			// build the Magic Item list
+			
+			let sectType = (_.isUndefined(config) || _.isUndefined(config.sections) || !!config.sections) ? 'Hide' : 'Show';
+			content += '{{section1=Items on your person _'+sectType+' sections_(!init --button '+BT.SECTIONS_OPTION+'|'+tokenID+'|buildmenu|'+senderId+'|'+args.join('|')+'||||||||)}}';
+			
+			let sectHeader = '{{Section2=Magic Items in Bag\n',
+				itemsFound = false;
+			for (const table in miTable) {
+				if (sheetVer > 3.9 && config.sections !== false) sectHeader = '{{Section'+sections[table].n+'='+sections[table].name+'\n';
+				for (r = 0; !_.isUndefined(miName = miTable[table].tableLookup( fields[fieldGroups[table].prefix+'name'], r, false )); r++) {
+					if (miName != '-') {
+						content += sectHeader
+								+ (buttonID == charButton ? ('<span style=' + design.selected_button + '>') : (submitted ? '<span style=' + design.grey_button + '>' : '['))
+								+ miName
+								+ (((buttonID == charButton) || submitted) ? '</span>' : '](!init --button ' + BT.MI_BAG + '|' + tokenID + '|' + buttonID + '|' + indexTableGroup(miTable,table,r) + ')');
+						sectHeader = '';
+						inBagTitle = true;
+					}
+					buttonID++;
+				}
+				if (inBagTitle && sheetVer > 3.9 && config.sections !== false) {
+					content += '}}';
+					inBagTitle = false;
+				};
+			};
+			if (inBagTitle) content += '}}';
+			
+			if (buttonID <= 0) {
+				sendParsedMsg( tokenID, Init_Messages.noMIBag, null, flags.feedbackName );
+				return;
+			}
+
+			content += await makeWeaponButtons( tokenID, senderId, -1, submitted, '', '', 10, true, true, false );
+			content += '{{section11=' + otherActions( MenuType.MIBAG, tokenID, charButton, submitted ) + '}}';
+			
+			if ((charButton < 0) || submitted) {
+				content += '{{section12=Select action above, then <span style=' + design.grey_button + '>Submit</span>}}';
+			} else {
+				content += '{{highlight=[Submit](!init --button ' + BT.SUBMIT + '|' + tokenID + '|' + charButton + '|' + MenuType.MIBAG + ')}}';
+			};
+					
+			sendResponse( charCS, content, senderId, flags.feedbackName, flags.feedbackImg, tokenID );
+			return;
+		} catch (e) {
+			sendCatchError('InitMaster',msg_orig[senderId],e);
+		}
+	};
+
+    /*
+    * Create the Powers Initiative menu.
+    * Highlight buttons specified with a number (-1 means no highlight)
+    */
+
+	async function makePowersMenu( charCS, submitted, args, senderId ) {
+
+		try {
+			const tokenID = args[1],
+				  charButton = args[2];
+				  
+			let	qty, powerName, w, r, c,
+				buttonID = 0;
+				
+			let	content = '&{template:'+fields.menuTemplate+'}{{name=What Power is ' + getObj( 'graphic', tokenID ).get('name') + ' planning to use?}}'
+					+ '{{subtitle=All available Powers}}'
+					+ '{{section0=';
+
+			// build the Powers list
+			
+			for (r = 0; r < fields.PowerRows; r++) {
+				c = fields.PowersBaseCol;
+				for (w = 1; w <= fields.PowersCols; w++) {
+					qty = attrLookup( charCS, fields.Spells_castValue, {tableDef:fields.Powers_table, row:r, col:c} );
+					powerName = attrLookup( charCS, fields.Powers_name, {def:false, tableDef:fields.Powers_table, row:r, col:c} );
+					if (_.isUndefined(powerName)) {break;}
+					if (powerName != '-') {
+						content += (buttonID == charButton ? '<span style=' + design.selected_button + '>' : (submitted || !qty ? '<span style=' + design.grey_button + '>' : '['));
+						content += powerName;
+						content += (((buttonID == charButton) || submitted || !qty) ? '</span>' : '](!init --button ' + BT.POWER + '|' + tokenID + '|' + buttonID + '|' + r + '|' + c + ')');
+					}
+					buttonID++;
+					c++;
+				}
+			}
+			content += '}}';
+
+			if (!buttonID) {
+				sendParsedMsg( tokenID, Init_Messages.noPowers, null, flags.feedbackName );
+				return;
+			}
+			
+			content += await makeWeaponButtons( tokenID, senderId, -1, submitted, '', '', 1, true, true, false );
+
+			content += '{{section4=' + otherActions( MenuType.POWER, tokenID, charButton, submitted ) + '}}';
+			
+			if ((charButton < 0) || submitted) {
+				content += '{{section5=Select action above, then <span style=' + design.grey_button + '>Submit</span>}}';
+			} else {
+				content += '{{highlight=[Submit](!init --button ' + BT.SUBMIT + '|' + tokenID + '|' + charButton + '|' + MenuType.POWER + ')}}';
+			};
+			sendResponse( charCS, content, senderId, flags.feedbackName, flags.feedbackImg, tokenID );
+			return;
+		} catch (e) {
+			sendCatchError('InitMaster',msg_orig[senderId],e);
+		}
+	};
+
+    /*
+    * Create the Thieving Actions Initiative menu.
+    * Highlight buttons specified with a number (-1 means no highlight)
+    */
+
+	async function makeThiefMenu( charCS, submitted, args, senderId ) {
+
+		try {
+			const tokenID = args[1],
+				  charButton = args[2],
+				  tokenName = getObj( 'graphic', tokenID ).get('name'),
+				  armourType = (attrLookup( charCS, fields.Armor_name ) || 'leather' ).toLowerCase(),
+				  level = attrLookup( charCS, fields.Rogue_level );
+
+			let	content = '',
+				armourMod,
+				ability = [];
+				
+			if (!level || level == 0) {
+				sendParsedMsg( tokenID, Init_Messages.notThief, null, flags.feedbackName );
+			}
+			
+			switch (armourType.toLowerCase().replace('armour','armor')) {
+				case 'no armor':
+				case 'none':
+					armourMod = fields.Armor_mod_none;
+					break;
+					
+				case 'light':
+				case 'leather':
+				case 'leather armor':
+					armourMod = fields.Armor_mod_leather;
+					break;
+
+				case 'studded':
+				case 'padded':
+				case 'studded armor':
+				case 'padded armor':
+				case 'studded leather':
+				case 'padded leather':
+				case 'studded leather armor':
+				case 'padded leather armor':
+					armourMod = fields.Armor_mod_studded;
+					break;
+					
+				default:
+					sendParsedMsg( tokenID, Init_Messages.heavyArmour, null, flags.feedbackName );
+					return content;
+			}
+			
+			// Get the thieving skill levels
+
+			ability.length = 9;
+			ability[0] = {name: 'Picking Pockets',skill: Math.max((attrLookup( charCS, [fields.Pick_Pockets[0]+armourMod, fields.Pick_Pockets[1]] ) || 0), 5 ), speed: '0' };
+			ability[1] = {name: 'Opening Locks', skill: Math.max((attrLookup( charCS, [fields.Open_Locks[0]+armourMod, fields.Open_Locks[1]] ) || 0), 5 ), speed: '1d8'};
+			ability[2] = {name: 'Finding Traps', skill: Math.max((attrLookup( charCS, [fields.Find_Traps[0]+armourMod, fields.Find_Traps[1]] ) || 0), 5 ), speed: '1d100'};
+			ability[3] = {name: 'Moving Silently', skill: Math.max((attrLookup( charCS, [fields.Move_Silently[0]+armourMod, fields.Move_Silently[1]] ) || 0), 5 ), speed: '0' };
+			ability[4] = {name: 'Hiding in Shadows', skill: Math.max((attrLookup( charCS, [fields.Hide_in_Shadows[0]+armourMod, fields.Hide_in_Shadows[1]] ) || 0), 5 ), speed: '0'};
+			ability[5] = {name: 'Detecting Noise', skill: Math.max((attrLookup( charCS, [fields.Detect_Noise[0]+armourMod, fields.Detect_Noise[1]] ) || 0), 5 ), speed: '1d6'};
+			ability[6] = {name: 'Climbing Walls', skill: Math.max((attrLookup( charCS, [fields.Climb_Walls[0]+armourMod, fields.Climb_Walls[1]] ) || 0), 5 ), speed: '1d10'};
+			ability[7] = {name: 'Reading Languages', skill: Math.max((attrLookup( charCS, [fields.Read_Languages[0]+armourMod, fields.Read_Languages[1]] ) || 0), 5 ), speed: '1d100'};
+			ability[8] = {name: 'Remembering Legends', skill: Math.max((attrLookup( charCS, [fields.Legend_Lore[0]+armourMod, fields.Legend_Lore[1]] ) || 0), 5 ), speed: '1d100'};
+
+			// build the thieving skills list
+			
+			content = '&{template:'+fields.menuTemplate+'}{{name=What Thieving ability is ' + tokenName + ' planning to use?}}'
+					+ '{{subtitle=' + tokenName + '\'s thieving abilities}}'
+					+ '{{section0=';
+					
+			for (let i=0; i<8; i++) {
+				content += (i == charButton ? '<span style=' + design.selected_button + '>' : (submitted ? '<span style=' + design.grey_button + '>' : '['));
+				content += ability[i].name + '(' + ability[i].skill + '%)';
+				content += (((i == charButton) || submitted) ? '</span>' : '](!init --button ' + BT.THIEF + '|' + tokenID + '|' + i + '|' + ability[i].name + ' ' + ability[i].skill + '% |' + ability[i].speed + ')');
+			}
+			content += '}}';
+			
+			content += await makeWeaponButtons( tokenID, senderId, -1, submitted, '', '', 1, true, true, false );
+			content += '{{section4=' + otherActions( MenuType.THIEF, tokenID, charButton, submitted ) + '}}';
+			
+			if ((charButton < 0) || submitted) {
+				content += '{{section5=Select action above, then <span style=' + design.grey_button + '>Submit</span>}}';
+			} else {
+				content += '{{highlight=[Submit](!init --button ' + BT.SUBMIT + '|' + tokenID + '|' + charButton + '|' + MenuType.THIEF + ')}}';
+			};
+			sendResponse( charCS, content, senderId, flags.feedbackName, flags.feedbackImg, tokenID );
+			return;
+		} catch (e) {
+			sendCatchError('InitMaster',msg_orig[senderId],e);
+		}
+	};
+	
+	/*
+	 * Make a menu of all types of actions that the character can perform, so
+	 * the Player can choose which to do Initiative with.
+	 */
+
+	const makeInitMenu = function( charCS, monster, args, senderId ) {
+		
+		const tokenID = args[1],
+			  tokenName = getObj( 'graphic', tokenID ).get('name');
+			  
+		let	content = '&{template:'+fields.menuTemplate+'}{{name=What does ' + tokenName + ' want to do?}}'
+					+ '{{subtitle=' + tokenName + '\'s possible activities}}'
+					+ '{{Section=[Attack](!init ' + (monster == CharSheet.MONSTER ? '--complex ' : '--weapon ') + tokenID + ')';
+					
+		if (casterLevel( charCS, 'MU' )) {
+			content += '[Cast MU Spell](!init --muspell ' + tokenID + ')';
+		}
+		if (casterLevel( charCS, 'PR' )) {
+			content += '[Cast PR Spell](!init --prspell ' + tokenID + ')';
+		}
+		if (checkForPowers(charCS)) {
+			content += '[Use Power](!init --power ' + tokenID + ')';
+		}
+		if (checkForMIs(charCS)) {
+			content += '[Use Magic Item](!init --mibag ' + tokenID + ')';
+		}
+		content += '[Use Thieving Skills](!init --thief ' + tokenID + ')}}';
+		content += '{{Section1='+otherActions( MenuType.OTHER, tokenID, 0, false )+'}}';
+		content += '{{Section2=[Check Initiative Modifiers](!init --checkinit '+tokenID+'||menu)}}';
+				
+		sendResponse( charCS, content, senderId, flags.feedbackName, flags.feedbackImg, tokenID );
+		return;
+	}
+	
+	async function makeOtherMenu( charCS, submitted, args, senderId ) {
+	
+		try {
+			const tokenID = args[1],
+				  charButton = args[2],
+				  tokenName = getObj( 'graphic', tokenID ).get('name'),
+				  dancers = await makeWeaponButtons( tokenID, senderId, -1, submitted, '', '', 1, true, true, false );
+
+			let	content = '&{template:'+fields.menuTemplate+'}{{name=What does ' + tokenName + ' want to do?}}'
+						+ '{{subtitle=' + tokenName + '\'s possible activities}}'
+						+ '{{section0='+ otherActions( MenuType.OTHER, tokenID, charButton, submitted )+'}}'
+						+ (dancers.length ? dancers : '');
+			if ((charButton < 0) || submitted) {
+				content += '{{section4=Select action above, then <span style=' + design.grey_button + '>Submit</span>}}';
+			} else {
+				content += '{{highlight=[Submit](!init --button ' + BT.SUBMIT + '|' + tokenID + '|' + charButton + '|' + MenuType.OTHER + ')}}';
+			};
+			
+			sendResponse( charCS, content, senderId, flags.feedbackName, flags.feedbackImg, tokenID );
+			return;
+		} catch (e) {
+			sendCatchError('InitMaster',msg_orig[senderId],e);
+		}
+	}
+
+	/*
+	 * Make a dialog to show factors that affect initiative,
+	 * and allow the player to set a manual modifier
+	 */
+	
+	var makeCheckInitMenu = function( tokenID, charCS, senderId, silent=false, msg='', menu='' ) { //specs
+		
+		const parseTable = {initmod:reClassSpecs.initmod,initmult:reClassSpecs.initmult,rules:reACSpecs.rules},
+			  classes = classObjects( charCS, senderId, parseTable ),
+			  race = (attrLookup( charCS, fields.Race ) || 'human').dbName(),
+			  tokenName = !tokenID ? charCS.get('name') : getObj('graphic',tokenID).get('name'),
+			  tid = tokenID;
+
+		let ItemNames = getTableGroupField( charCS, {}, fieldGroups.MI, 'name' ),
+			totalMod = 0,
+			eqModFlag = false,
+			totalMult = 1,
+			eqMultFlag = false,
+			content = '&{template:'+fields.menuTemplate+'}{{title=Current Initiative Modifiers\n for '+tokenName+'}}'
+					+ (!!msg && msg.length ? '{{Section='+msg+'}}' : '');
+		
+		ItemNames = getTableGroupField( charCS, ItemNames, fieldGroups.MI, 'trueName' );
+		tokenID = tokenID || charCS.id;
+		
+		const assessInit = function( name, mod, mult, remove=false ) {
+			const eqMod = mod[0] === '=',
+				  eqMult = mult[0] === '=';
+
+			mod = parseFloat( eqMod ? mod.slice(1) : mod );
+			if (eqMod && !isNaN(mod)) totalMod = eqModFlag ? Math.min(mod,totalMod) : mod;
+			eqModFlag = eqModFlag || eqMod;
+
+			mult = parseFloat( eqMult ? mult.slice(1) : mult );
+			if (eqMult && !isNaN(mult)) totalMult = eqMultFlag ? Math.max(mult,totalMult) : mult;
+			eqMultFlag = eqMultFlag || eqMult;
+			
+			const modFlag = !isNaN(mod) && (mod != 0),
+				  multFlag = !isNaN(mult) && (mult != 1);
+			if (!modFlag && !multFlag) return '';
+			let desc = '{{'+name.dispName()+'=';
+			if (modFlag) {
+				if (!eqMod) totalMod += mod;
+				desc += (eqMod ? 'Overriding ' : '')+(mod < 0 ? 'Beneficial' : 'Penalty')+' mod of '+(mod>0 ? '+' : '')+mod+(multFlag ? '\n' : '');
+			}
+			if (multFlag) {
+				if (!eqMult) totalMult *= mult;
+				desc += (eqMult ? 'Overriding ' : '')+(mult > 1 ? 'Beneficial' : 'Penalty')+' speed mult x '+mult;
+			};
+			if (remove) {
+				desc += ' \n[Remove](!init --setmods '+tokenID+'|del|'+name+'|0|1)';
+			}
+			desc += '}}';
+			return desc;
+		};
+		
+		setAttr( charCS, fields.Init_fixInit, '' );
+		
+		_.each( classes, c => {
+			content += assessInit( c.obj[1].name, c.classData.initmod, c.classData.initmult );
+		});
+		const raceData = resolveData( race, fields.RaceDB, reClassRaceData, charCS, parseTable ).parsed;
+		content += assessInit( race, raceData.initmod, raceData.initmult );
+		
+		let conflict = '',
+			itemClasses = [],
+			itemSuperTypes = [],
+			nameArray = [],
+			item = '',
+			tableIndex, tableRowID, table, trueItem,
+			itemData, itemObj, addRules, specsArray,
+			inHand, worn, adds, nameIndex;
+		for (let r = 0; !_.isUndefined(item = tableGroupLookup( ItemNames, 'name', r, false )); r++) {
+			if (item === '-') continue;
+			trueItem = tableGroupLookup( ItemNames, 'trueName', r );
+			[tableIndex,table,tableRowID] = tableGroupIndex( ItemNames, r );
+			itemData = resolveData( trueItem, fields.MagicItemDB, reNotAttackData, charCS, parseTable, {row:tableIndex, rowID:tableRowID} ).parsed;
+			itemObj = abilityLookup( fields.MagicItemDB, trueItem );
+			addRules = itemData.rules.split('|').map( r => (r[0] === '-' ? '-' : '')+r.dbName() );
+			specsArray = (!!itemObj.obj ? itemObj.specs() : ['-','-','magic','1H','-']);
+			if (itemObj.obj && !!specsArray) {
+				itemSuperTypes = _.uniq(itemSuperTypes.concat(specsArray.map( c => c[4].dbName() ).join('|').split('|')));
+				itemClasses = _.uniq(itemClasses.concat(specsArray.map( c => c[2].dbName() ).join('|').split('|')));
+			};
+			if (itemData.initmod == 0 && itemData.initmult == 1) continue;
+			inHand = !itemData.rules || !itemData.rules.includes('+inhand') || !_.isUndefined(getTableField( charCS, {}, fields.InHand_table, fields.InHand_trueName ).tableFind( fields.InHand_trueName, trueItem ));
+			worn = !itemData.rules || !itemData.rules.includes('+worn') || classAllowedItem( charCS, trueItem, specsArray[0][1].dbName(), specsArray[0][4].dbName(), 'weaps' );
+			adds = !itemData.rules || (!_.some(itemClasses,c => {conflict=c;return addRules.includes( '-'+c )}) && !_.some(itemSuperTypes,mi => {conflict=mi;return addRules.includes('-'+mi)}));
+			nameIndex = nameArray.findIndex( (n,i) => n[0] === item );
+			if (nameIndex >= 0) {
+				item += ' '+(++nameArray[nameIndex][1]);
+			} else {
+				nameArray.push([item,1]);
+			};
+			if (!inHand) {content += '{{'+item.dispName()+'=Is not in-hand so does not affect initiative}}';
+			} else if (!worn) {content += '{{'+item.dispName()+'=Is not of a usable type so does not affect initiative}}';
+			} else if (!adds) {content += '{{'+item.dispName()+'=Does not combine with '+conflict+' so does not affect initiative}}';}
+			if (!inHand || !worn || !adds) continue;
+			content += assessInit( item, itemData.initmod, itemData.initmult );
+		};
+
+		const Inits = getTable( charCS, fieldGroups.INIT );
+		const indexList = Inits.tableFindAll( fields.InitMagic_tid, [tid,''] );
+		for (const r of indexList) {
+			item = Inits.tableLookup( fields.InitMagic_name, r );
+			if (item === '-') continue;
+			if (item.length === 0) {
+				Inits = Inits.delTableRow( r );
+			} else if (Inits.tableLookup( fields.InitMagic_cmd, r ) === 'fix') {
+				let fixMod = Inits.tableLookup( fields.InitMagic_mod, r );
+				setAttr( charCS, fields.Init_fixInit, fixMod );
+				content += '{{'+item.dispName()+'=Fixed initiative of '+fixMod+'}}';
+			} else content += assessInit( item, Inits.tableLookup( fields.InitMagic_mod, r ), Inits.tableLookup( fields.InitMagic_mult, r ), true );
+		};
+		
+		totalMod += parseFloat(attrLookup( charCS, fields.InitModAdjust )) || 0;
+		totalMult *= parseFloat(attrLookup( charCS, fields.InitMultAdjust )) || 1;
+		content += '{{Manual Adjustments=[Mod Adjustment](!init --setmods '+tokenID+'|mod|&#63;{What do you want to call this modifier?|adjustment}|&#63;{What modifier should be added to initiative speed'
+				+  '(-ve beneficial?&#41;}) and'
+				+  '[Mult Adjustment](!init --setmods '+tokenID+'|mult|&#63;{What do you want to call this multiplier?|adjustment}||&#63;{What multiplier should be applied to the initiative speed (>1 beneficial&#41;?})}}';
+		
+		content += '{{Totals=Mod of **'+(totalMod > 0 ? '+' : '')+totalMod+'** and Mult of **x'+totalMult+'**}}'
+				+  '{{desc=Select button above to set a manual adjustment to these totals.\n'
+				+  '**Modifier** less than 0 is beneficial\n'
+				+  '**Multiplier** greater than 1 is beneficial}}'
+				+  (menu && menu.length ? ('{{desc1=[Return to menu](!init --'+menu+')}}') : '');
+		
+		setAttr( charCS, fields.initMod, totalMod );
+		setAttr( charCS, fields.initMultiplier, totalMult );
+		
+		if (!silent) {
+			sendResponse( charCS, content, senderId );
+		} else {
+			sendWait( senderId, 0, 'Init check' );
+		}
+		return {mod:totalMod,mult:totalMult};
+	}
+			
 	/**
 	* Select a menu to build
 	**/
@@ -2215,1223 +3303,17 @@ var initMaster = (function() {		// eslint-disable-line no-unused-vars
 		return;
 	}
 
-
-	/**
-	 * Add the Magic Item and Powers initiative buttons to a menu
-	 **/
-
-	var MIandPowers = function( tokenID, submitted ) {
-		var charCS = getCharacter(tokenID,false),
-			mis = checkForMIs(charCS),
-			powers = checkForPowers(charCS),
-			content = '';
-			
-		if (mis || powers) {
-			content = '\n**Magic Items & Powers**\n';
-			if (mis) {content += (submitted ? '<span style=' + design.grey_button + '>' : '[') + 'Use a Magic Item' + (submitted ? '</span>' : '](!init --mibag ' + tokenID + ')');}
-			if (powers) {content += (submitted ? '<span style=' + design.grey_button + '>' : '[') + 'Use Powers' + (submitted ? '</span>' : '](!init --power ' + tokenID + ')');}
-		}
-		return content;
-	};
-
-	/**
-	 * Add Other Actions to any menu
-	 **/
-
-	var otherActions = function( initMenu, tokenID, charButton, submitted ) {
-		var	content = (charButton == 101 ? '<span style=' + design.selected_button + '>' : (submitted ? '<span style=' + design.grey_button + '>' : '['))
-					+ 'Move'
-					+ ((charButton == 101 || submitted) ? '</span>' : '](!init --button ' + BT.OTHER + '|' + tokenID + '|101|' + initMenu + '|while moving|0)')
-					+ (charButton == 102 ? '<span style=' + design.selected_button + '>' : (submitted ? '<span style=' + design.grey_button + '>' : '['))
-					+ 'Change weapon'
-					+ ((charButton == 102 || submitted) ? '</span>' : '](!init --button ' + BT.OTHER + '|' + tokenID + '|102|' + initMenu + '|while changing weapon|0)')
-					+ (charButton == 103 ? '<span style=' + design.selected_button + '>' : (submitted ? '<span style=' + design.grey_button + '>' : '['))
-        			+ 'Do nothing'
-					+ ((charButton == 103 || submitted) ? '</span>' : '](!init --button ' + BT.OTHER + '|' + tokenID + '|103|' + initMenu + '|while doing nothing|0)')
-					+ (charButton == 104 ? '<span style=' + design.selected_button + '>' : (submitted ? '<span style=' + design.grey_button + '>' : '['))
-					+ 'Other'
-					+ ((charButton == 104 || submitted) ? '</span>' : '](!init --button ' + BT.OTHER + '|' + tokenID + '|104|' + initMenu + '|doing ?{Doing what?}|?{Speed?|1})');
-		return content;
-	};
-	
-	/**
-	 * Add powers of Magic Items in-hand to any menu
-	 **/
-	 
-	var inHandMIbuttons = function( tokenID, charCS, senderId, buttonID, charButton, submitted, cmd ) {
-		
-		return new Promise(resolve => {
-			try {
-				var content = '',
-					inHandTitle = false,
-					MagicTable = getTableField( charCS, {}, fields.Magic_table, fields.Magic_name ),
-					ItemsTable = getTableGroupField( charCS, {}, fieldGroups.MI, 'name' ),
-					powerList = {},
-					magicName, miName, miQty;
-					
-				MagicTable = getTableField( charCS, MagicTable, fields.Magic_table, fields.Magic_miName );
-				ItemsTable = getTableGroupField( charCS, ItemsTable, fieldGroups.MI, 'trueName' );
-				ItemsTable = getTableGroupField( charCS, ItemsTable, fieldGroups.MI, 'qty' );
-				for (let r = MagicTable.table[1]; !_.isUndefined(magicName = MagicTable.tableLookup( fields.Magic_name, r, false )); r++) {
-					if (magicName != '-') {
-						miName = MagicTable.tableLookup( fields.Magic_miName, r );
-						let itemRow, itemTable;
-						[itemRow,itemTable] = tableGroupFind( ItemsTable, 'trueName', miName );
-						miQty = ItemsTable[itemTable].tableLookup( fields[fieldGroups[itemTable].prefix+'qty'], itemRow );
-						miName = ItemsTable[itemTable].tableLookup( fields[fieldGroups[itemTable].prefix+'name'], itemRow ) || 'Magic Item';
-						if (!powerList[miName]) powerList[miName] = {};
-						powerList[miName][magicName] = [r,(isNaN(parseInt(miQty)) ? 1 : miQty)];
-					}
-				}
-				if (_.size(powerList)) content += '{{Section1=**Magic Items in-hand**}}';
-
-				_.each(powerList, (p,n) => {
-					content += '{{'+n.dispName()+'=';
-					_.each(p, (q,m) => {
-						content += (buttonID == charButton ? '<span style=' + design.selected_button + '>' : (submitted || (q[1] <= 0) ? '<span style=' + design.grey_button + '>' : '['));
-						content += q[1] + ' ' + m;
-						content += (((buttonID == charButton) || submitted || (q[1] == 0)) ? '</span>' : '](!init --button ' + cmd + '|' + tokenID + '|' + buttonID + '|' + q[0] + ')');
-						buttonID++;
-					});
-					content += '}}';
-				});
-				
-			} catch (e) {
-				log('MagicMaster updateCharSheets: JavaScript '+e.name+': '+e.message+' while converting sheet '+charCS.get('name'));
-				sendDebug('MagicMaster updateCharSheets: JavaScript '+e.name+': '+e.message+' while converting sheet '+charCS.get('name'));
-				sendCatchError('InitMaster',msg_orig[senderId],e);
-			} finally {
-				setTimeout(() => {
-					resolve([content,buttonID]);
-				}, asyncTime);
-			}
-		});
-
-	}
-	
-	/*
-	 * Make monster attack buttons 
-	 */
-	 
-	var makeMonAttkButtons = function( tokenID, charCS, senderId, charButton, monButton, submitted ) {
-		
-		var errFlag = false;
-		try {
-			
-			creatureAttkDefs( charCS );
-			
-			var content = '',
-				monAttk1 = attrLookup( charCS, fields.Monster_dmg1 ),
-				monAttk2 = attrLookup( charCS, fields.Monster_dmg2 ),
-				monAttk3 = attrLookup( charCS, fields.Monster_dmg3 );
-			
-			if ((monAttk1 && monAttk2) || (monAttk1 && monAttk3) || (monAttk2 && monAttk3)) {
-				content += ((0 == charButton && 0 == monButton) ? '<span style=' + design.selected_button + '>' : (submitted ? '<span style=' + design.grey_button + '>' : '['));
-				content += 'All Innate Attks';
-				content += (((0 == charButton && 0 == monButton) || submitted) ? '</span>' : '](!init --button ' + BT.MON_INNATE + '|' + tokenID + '|0|0)\n');
-			}
-			if (monAttk1) {
-				monAttk1 = monAttk1.split(',');
-				content += ((0 == charButton && 1 == monButton) ? '<span style=' + design.selected_button + '>' : (submitted ? '<span style=' + design.grey_button + '>' : '['));
-				content += 'Creature '+ (monAttk1.length > 1 && reDiceRollSpec.test(monAttk1[0]) ? monAttk1[1] : monAttk1[0]);
-				content += (((0 == charButton && 1 == monButton) || submitted) ? '</span>' : '](!init --button ' + BT.MON_INNATE + '|' + tokenID + '|0|1)\n');
-			}
-			if (monAttk2) {
-				monAttk2 = monAttk2.split(',');
-				content += ((0 == charButton && 2 == monButton) ? '<span style=' + design.selected_button + '>' : (submitted ? '<span style=' + design.grey_button + '>' : '['));
-				content += 'Creature '+ (monAttk2.length > 1 && reDiceRollSpec.test(monAttk2[0]) ? monAttk2[1] : monAttk2[0]);
-				content += (((0 == charButton && 2 == monButton) || submitted) ? '</span>' : '](!init --button ' + BT.MON_INNATE + '|' + tokenID + '|0|2)\n');
-			}
-			if (monAttk3) {
-				monAttk3 = monAttk3.split(',');
-				content += ((0 == charButton && 3 == monButton) ? '<span style=' + design.selected_button + '>' : (submitted ? '<span style=' + design.grey_button + '>' : '['));
-				content += 'Creature '+ (monAttk3.length > 1 && reDiceRollSpec.test(monAttk3[0]) ? monAttk3[1] : monAttk3[0]);
-				content += (((0 == charButton && 3 == monButton) || submitted) ? '</span>' : '](!init --button ' + BT.MON_INNATE + '|' + tokenID + '|0|3)\n');
-			}
-			
-			content += ((content && content.length) ? '\n' : '');
-			
-		} catch (e) {
-			sendCatchError('InitMaster',msg_orig[senderId],e);
-		} finally {
-			return content;
-		}
-	};
-
-	
-	/*
-	 * Make weapon button lists
-	 */
-	
-	async function makeWeaponButtons( tokenID, senderId, charButton, submitted, MWcmd, RWcmd, show2H=true, showDancing=true, showInHand=true, showWeapons=false, MWtable, RWtable ) {
-		
-		try {
-			var charCS = getCharacter( tokenID,false ),
-				weapName,
-				ammoRowAdj,
-				ammoPointer,
-				twoHanded,
-				dancing,
-				i, w, a,
-				header = true,
-				errFlag = false,
-				content = '',
-				weapList = [],
-				dancingWeapons = '',
-				ItemsTable  = getTableGroupField( charCS, {}, fieldGroups.MI, 'name' );
-
-				ItemsTable  = getTableGroupField( charCS, ItemsTable, fieldGroups.MI, 'qty' );
-				
-			// build the character Melee Weapon list
-
-			var meleeWeaps = function(senderId, WeaponTable) {
-				var errFlag = false;
-				return new Promise(resolveMelee => {
-					try {
-						var content = '';
-						
-						if (_.isUndefined(WeaponTable)) {
-							WeaponTable = getTableField( charCS, {}, fields.MW_table, fields.MW_name );
-							WeaponTable = getTableField( charCS, WeaponTable, fields.MW_table, fields.MW_miName );
-							WeaponTable = getTableField( charCS, WeaponTable, fields.MW_table, fields.MW_twoHanded );
-							WeaponTable = getTableField( charCS, WeaponTable, fields.MW_table, fields.MW_dancing );
-							WeaponTable = getTableField( charCS, WeaponTable, fields.MW_table, fields.MW_charges );
-							WeaponTable = getTableField( charCS, WeaponTable, fields.MW_table, fields.MW_hand );
-						}
-						let a = fields.MW_table[1];
-						for (let i = a; i < (fields.MWrows + a); i++) {
-							let w = (1 - (a * 2)) + (i * 2),
-								weapName = WeaponTable.tableLookup( fields.MW_name, i, false );
-							if (_.isUndefined(weapName)) {break;}
-							let twoHanded = WeaponTable.tableLookup( fields.MW_twoHanded, i ) != 0,
-								dancing = WeaponTable.tableLookup(fields.MW_dancing, i ) != 0;
-							if (showInHand && (weapName != '-') && (show2H || !twoHanded) && !dancing) {
-								if (header) {
-									content += '**Melee Weapons**\n';
-									header = false;
-								}
-								let miName = WeaponTable.tableLookup( fields.MW_miName, i ) || '',
-									itemIndex = attrLookup( charCS, fields.InHand_index, fields.InHand_table, WeaponTable.tableLookup( fields.MW_hand, i )),
-									tableIndex, tableRowID, table;
-								[tableIndex,table,tableRowID] = tableGroupIndex( ItemsTable, itemIndex );
-								if (showWeapons && miName && miName.length) {
-									if (weapList.includes(miName.dbName())) continue;
-									weapList.push(miName.dbName());
-									weapName = miName;
-								}
-								let	weapData = resolveData( miName, fields.WeaponDB, reNotAttackData, charCS, {chargeType:reWeapSpecs.chargeType}, tableIndex, tableRowID ),
-									weapCharged = weapData.chargeType && !(['uncharged','cursed','single-uncharged'].includes(weapData.chargeType.toLowerCase())),
-									charges = weapCharged  ? (WeaponTable.tableLookup( fields.MW_charges, i ) || 1) : 0,
-									exhausted = submitted,
-									qty = '';
-								if (charges) {
-									qty = _.isUndefined(itemIndex) ? 0 : tableGroupLookup( ItemsTable, 'qty', itemIndex ) || 0;
-									exhausted = qty < charges;
-									qty = String(qty) + ' ';
-								}
-								content += (w == charButton || exhausted ? '<span style=' + (w == charButton ? design.selected_button : design.grey_button) + '>' : '[');
-								content += qty + weapName;
-								content += (((w == charButton) || exhausted) ? '</span>' : '](!init --button ' + MWcmd + '|' + tokenID + '|' + w + '|' + i + ')');
-							} else if ((weapName != '-') && dancing) {
-								dancingWeapons += '<span style='+design.green_button+'>'+weapName+'</span>';
-							}
-						};
-						if (!header) {
-							content += '\n';
-							header = true;
-						}
-					} catch (e) {
-						sendCatchError('InitMaster',msg_orig[senderId],e);
-					} finally {
-						setTimeout(() => {
-							resolveMelee(content);
-						}, asyncTime);
-					}
-				});
-			};
-
-			// build the character Ranged Weapons list ****
-			
-			var rangedWeaps = function(senderId,WeaponTable) {
-				var errFlag = false;
-				return new Promise(resolveRanged => {
-					try {
-						var content = '';
-						
-						if (_.isUndefined(WeaponTable)) {
-							WeaponTable = getTableField( charCS, {}, fields.RW_table, fields.RW_name );
-							WeaponTable = getTableField( charCS, WeaponTable, fields.RW_table, fields.RW_miName, '', 1 );
-							WeaponTable = getTableField( charCS, WeaponTable, fields.RW_table, fields.RW_charges, '', 1 );
-							WeaponTable = getTableField( charCS, WeaponTable, fields.RW_table, fields.RW_twoHanded, '', 1 );
-							WeaponTable = getTableField( charCS, WeaponTable, fields.RW_table, fields.RW_dancing, '', 0 );
-						}
-						let a = fields.RW_table[1];
-						for (let i = a; i < (fields.RWrows + a); i++) {
-							let w = (2 - (a * 2)) + (i * 2),
-								weapName = WeaponTable.tableLookup( fields.RW_name, i );
-							if (_.isUndefined(weapName)) {break;}
-							let twoHanded = WeaponTable.tableLookup( fields.RW_twoHanded, i ) != 0,
-								dancing = WeaponTable.tableLookup( fields.RW_dancing, i ) != 0;
-							if (showInHand && weapName != '-' && (show2H || !twoHanded) && !dancing) {
-								if (header) {
-									content += '**Ranged weapons**\n';
-									header = false;
-								}
-								let miName = WeaponTable.tableLookup( fields.RW_miName, i ) || '',
-									itemIndex,itemRowID,table;
-								[itemIndex,table,itemRowID] = tableGroupFind( ItemsTable, 'name', miName );
-								let	weapData = resolveData( miName, fields.WeaponDB, reNotAttackData, charCS, {chargeType:reWeapSpecs.chargeType}, itemIndex, itemRowID ),
-									weapCharged = weapData.chargeType && !(['uncharged','cursed','single-uncharged'].includes(weapData.chargeType.toLowerCase())),
-									charges = weapCharged  ? WeaponTable.tableLookup( fields.RW_charges, i ) : 0,
-									exhausted = submitted,
-									qty = '';
-								if (charges) {
-									qty = _.isUndefined(itemIndex) ? 0 : ItemsTable[table].tableLookup( fields[fieldGroups[table].prefix+'qty'], itemIndex ) || 0;
-									exhausted = qty < charges;
-									qty = String(qty) + ' ';
-								}
-								content += (w == charButton || exhausted ? '<span style=' + (w == charButton ? design.selected_button : design.grey_button) + '>' : '[');
-								content += qty + weapName;
-								content += (((w == charButton) || exhausted) ? '</span>' : '](!init --button ' + RWcmd + '|' + tokenID + '|' + w + '|' + i + ')');
-							} else if ((weapName != '-') && dancing && !dancingWeapons.includes('>'+weapName+'<')) {
-								dancingWeapons += '<span style='+design.green_button+'>'+weapName+'</span>';
-							}
-						}
-						if (!header) {
-							content += '\n';
-						}
-					} catch (e) {
-						sendCatchError('InitMaster',msg_orig[senderId],e);
-					} finally {
-						setTimeout(() => {
-							resolveRanged(content);
-						}, asyncTime);
-					}
-				});
-			};
-			
-			content += await meleeWeaps(senderId,MWtable);
-			content += await rangedWeaps(senderId,RWtable);
-
-			if (dancingWeapons.length) {
-				content += '**Dancing weapons**\nAutomatic Initiative\n' + dancingWeapons;
-			}
-		} catch (e) {
-			sendCatchError('InitMaster',msg_orig[senderId],e);
-		} finally {
-			return content;
-		}
-	};
-
-    /*
-    * Create the Complex Monster Initiative menu.
-    * Highlight buttons specified with a number (-1 means no highlight)
-    */
-
-	async function makeMonsterMenu(complex,charCS,submitted,args,senderId) {
-
-		try {
-			var tokenID = args[1],
-				charButton = args[2],
-				monButton = args[8],
-				tokenName,
-				content;
-				
-			tokenName = getObj( 'graphic', tokenID ).get('name');
-			
-			content = '&{template:'+fields.menuTemplate+'}{{name=What is ' + tokenName + ' doing?}}'
-					+ '{{subtitle=Initiative for Complex Monster Attacks}}'
-					+ '{{desc=**Innate weapons**\n';
-					
-			// add buttons for innate monster attack abilities using the monster initiative modifier
-			
-			content += makeMonAttkButtons( tokenID, charCS, senderId, charButton, monButton, submitted );
-
-			if (complex) {
-				content += '\n'+await makeWeaponButtons( tokenID, senderId, charButton, submitted, BT.MON_MELEE, BT.MON_RANGED );
-				content += MIandPowers( tokenID, submitted );			
-			}
-			content	+= '}}'
-					+ '{{desc1=' + otherActions( (complex ? MenuType.COMPLEX : MenuType.SIMPLE), tokenID, charButton, submitted ) + '}}'
-					+ '{{desc2=Select action above, then '
-					+ (((charButton < 0) || submitted) ? '<span style=' + design.grey_button + '>' : '[')
-					+ 'Submit'
-					+ (((charButton < 0) || submitted) ? '</span>' : '](!init --button ' + BT.SUBMIT + '|' + tokenID + '|' + charButton + '|' + (complex ? MenuType.COMPLEX : MenuType.SIMPLE) + '|' + monButton + ')')
-					+ '}}';
-					
-			sendResponse( charCS, content, senderId, flags.feedbackName, flags.feedbackImg, tokenID );
-			return;
-
-		} catch (e) {
-			sendCatchError('InitMaster',msg_orig[senderId],e);
-		}
-	};
-
-    /*
-    * Create the Weapon Initiative menu.
-    * Highlight buttons specified with a number (-1 means no highlight)
-    */
-
-	async function makeWeaponMenu(charCS,submitted,args,senderId) { 
-	
-		try {
-			var isMIattk = args[0] == MenuType.MIATTK,
-				tokenID = args[1],
-				charButton = args[2],
-				monButton = args[8],
-				curToken = getObj( 'graphic', tokenID ),
-				baseMW = fields.MW_table[1],
-				baseRW = fields.RW_table[1],
-				tokenName,
-				fighterLevel = parseInt(attrLookup( charCS, fields.Fighter_level ) || '0'),
-				rogueLevel = parseInt(attrLookup( charCS, fields.Rogue_level ) || '0'),
-				monsterHD = parseInt(attrLookup( charCS, fields.Monster_hitDice ) || '0'),
-				monsterHPplus = parseInt(attrLookup( charCS, fields.Monster_hpExtra )) || 0,
-				monsterIntField = attrLookup( charCS, fields.Monster_int ) || '',
-				monsterIntNum = (monsterIntField.match(/\d+/)||["1"])[0],
-				monsterInt = monsterIntField.toLowerCase().includes('non') ? 0 : monsterIntNum,
-				monsterLevel = Math.ceil((monsterHD + Math.ceil(monsterHPplus/4)) / (monsterInt != 0 ? 1 : 2)),
-				hands = parseInt(attrLookup( charCS, fields.Equip_handedness ) || 2 ),
-				weapCount = countWeaponsInHand( charCS ),
-				shieldStyle = (weapCount.melee > 0 && weapCount.shield > 0 && ((attrLookup( charCS, fields.Init_2ndShield ) || 0) > 0)) ? weapCount.shield : 0,
-				inHandMIs = '',
-				weaponButtons,buttonID,content,
-				primeHand, primeRef, offHand, offRef, bothHands, bothRef;
-
-			var MW_handFields = getTableField( charCS, {}, fields.MW_table, fields.MW_name ),
-				MW_handFields = getTableField( charCS, MW_handFields, fields.MW_table, fields.MW_hand ),
-				MW_handFields = getTableField( charCS, MW_handFields, fields.MW_table, fields.MW_miName ),
-				MW_handFields = getTableField( charCS, MW_handFields, fields.MW_table, fields.MW_twoHanded ),
-				MW_handFields = getTableField( charCS, MW_handFields, fields.MW_table, fields.MW_dancing ),
-				MW_handFields = getTableField( charCS, MW_handFields, fields.MW_table, fields.MW_charges ),
-				RW_handFields = getTableField( charCS, {}, fields.RW_table, fields.RW_name ),
-				RW_handFields = getTableField( charCS, RW_handFields, fields.RW_table, fields.RW_hand ),
-				RW_handFields = getTableField( charCS, RW_handFields, fields.RW_table, fields.RW_miName ),
-				RW_handFields = getTableField( charCS, RW_handFields, fields.RW_table, fields.RW_charges, '', 1 ),
-				RW_handFields = getTableField( charCS, RW_handFields, fields.RW_table, fields.RW_twoHanded, '', 1 ),
-				RW_handFields = getTableField( charCS, RW_handFields, fields.RW_table, fields.RW_dancing, '', 0 ),
-				InHandField = getTableField( charCS, {}, fields.InHand_table, fields.InHand_miName ),
-				InHandField = getTableField( charCS, InHandField, fields.InHand_table, fields.InHand_name ),
-				index;
-
-			var getRef = function( charCS, hand, forceFind=false ) {
-				var ref = attrLookup(charCS,[fields.Init_hand[0]+hand,fields.Init_hand[1]],null,null,null,false,false);
-				if (forceFind || _.isNaN(ref) || ref == '') ref = undefined;
-
-				let miName = (InHandField.tableLookup( fields.InHand_miName, hand ) || InHandField.tableLookup( fields.InHand_name, hand ) || '');
-
-/*				if (!_.isUndefined(ref) && !!miName && miName.dbName().length) {
-					index = ((ref%2) > 0 ? ((ref-(1+(fields.MW_table[1]*2)))/2) : ((ref-(2+(fields.RW_table[1]*2)))/2));
-					log('getRef: early exit: miName = '+miName+', hand = '+hand+', ref defined = '+ref+', index calculates to '+index);
-					return [index,ref];
-				}
-*/				
-				if (!_.isUndefined(index = MW_handFields.tableFind( fields.MW_hand, hand ))) {
-					ref = (1 - (fields.MW_table[1] * 2)) + (index * 2);
-				} else if (!_.isUndefined(index = RW_handFields.tableFind( fields.RW_hand, hand ))) {
-					ref = (2 - (fields.RW_table[1] * 2)) + (index * 2);
-				} else if (!!miName && miName.dbName().length && miName !== '-') {
-					if (!_.isUndefined(index = MW_handFields.tableFind( fields.MW_miName, miName ))) {
-						ref = (1 - (fields.MW_table[1] * 2)) + (index * 2);
-					} else if (!_.isUndefined(index = RW_handFields.tableFind( fields.RW_miName, miName ))) {
-						ref = (2 - (fields.RW_table[1] * 2)) + (index * 2);
-					} else if (!_.isUndefined(index = MW_handFields.tableFind( fields.MW_name, miName ))) {
-						ref = (1 - (fields.MW_table[1] * 2)) + (index * 2);
-					} else if (!_.isUndefined(index = RW_handFields.tableFind( fields.RW_name, miName ))) {
-						ref = (2 - (fields.RW_table[1] * 2)) + (index * 2);
-					};
-				};
-				if (!forceFind) rememberWeapRef(charCS,hand,ref);
-				return [index,ref];
-			};
-
-			if (!curToken) {
-				throw new Error( 'The token_id does not represent a valid token' );
-			}
-			
-			if (weapCount.melee + weapCount.ranged + shieldStyle) {
-				[primeHand,primeRef] = getRef(charCS,0);
-				[offHand,offRef] = getRef(charCS,1);
-				[bothHands,bothRef] = getRef(charCS,2);
-			}
-			let isPrime = !_.isUndefined(primeHand),
-				isOff = !_.isUndefined(offHand),
-				isBoth = !_.isUndefined(bothHands);
-			
-			if (((weapCount.melee + weapCount.ranged + shieldStyle) > 0) && (!charButton || !charButton.length || charButton == -1)) {
-				charButton = isBoth ? bothRef : (isPrime ? primeRef : (isOff ? offRef : charButton));
-				let charHand = isBoth ? bothHands : (isPrime ? primeHand : offHand);
-				if (!_.isUndefined(charHand)) {
-					if ((charButton%2)>0) {
-						handleInitMW( CharSheet.CHARACTER, charCS, [BT.MELEE,tokenID,charButton,charHand], senderId );
-					} else {
-						handleInitRW( CharSheet.CHARACTER, charCS, [BT.RANGED,tokenID,charButton,charHand], senderId );
-					}
-					return;
-				}
-			};
-			if (weapCount.monster > 0 && (!charButton || !charButton.length || charButton == -1)) {
-				charButton = 0;
-				monButton = weapCount.monster > 1 ? 0 : 1;
-				handleInitMonster( Monster.COMPLEX, charCS, [BT.MON_INNATE,tokenID,charButton,monButton], senderId );
-				return;
-			};
-
-			tokenName = curToken.get('name');
-			
-			content = '&{template:'+fields.menuTemplate+'}{{name=What is ' + tokenName + ' doing?}}'
-					+ '{{subtitle=Initiative for Weapon Attacks}}';
-					
-			// Insert buttons for powers of Magic Items that are in-hand
-
-			[inHandMIs,buttonID] = await inHandMIbuttons( tokenID, charCS, senderId, 0, (isMIattk ? charButton : -1), submitted, BT.MI_ATTACK );
-			content += inHandMIs;
-			charButton = isMIattk ? undefined : charButton;
-			
-			if (weapCount.melee > 1 || (weapCount.melee > 0 && shieldStyle > 0) || weapCount.monster > 1 || ((weapCount.melee+weapCount.ranged) > 0 && weapCount.monster > 0)) {
-				if ((fighterLevel || rogueLevel || monsterLevel) && isPrime && isOff) {
-					if (offRef == primeRef) [offHand,offRef] = getRef(charCS,0,true);
-					content += '{{Fighter\'s & Rogue\'s Option='
-							+  (submitted ? ('<span style=' + design.grey_button + '>') : '[')
-							+  'Two Weapons'
-							+  (submitted ? '</span>' : ('](!init --button ' + BT.TWOWEAPONS + '|' + tokenID + '|' + offRef + '|' + primeRef + '|' + offHand + '|' + primeHand + ')'))
-							+  '}}';
-				}
-				if (hands > 2 || (weapCount.monster > 0 && weapCount.melee > 0)) {
-					content += '{{Many Hands Option='
-							+  (-2 == charButton ? '<span style=' + design.selected_button + '>' : (submitted ? '<span style=' + design.grey_button + '>' : '['))
-							+  'All Weapons'
-							+  (((-2 == charButton) || submitted) ? '</span>' : '](!init --button ' + BT.ALLWEAPONS + '|' + tokenID + '|' + -2 + '|' + -2 + ')')
-							+  '}}';
-				}
-			}
-			
-			content += '{{desc=';
-
-			content += makeMonAttkButtons( tokenID, charCS, senderId, charButton, monButton, submitted );
-			content += await makeWeaponButtons( tokenID, senderId, charButton, submitted, BT.MELEE, BT.RANGED, true, true, true, state.initMaster.weapInit, MW_handFields, RW_handFields );
-
-			content += MIandPowers( tokenID, submitted ) + '}}'
-					+ '{{desc1=' + otherActions( MenuType.WEAPON, tokenID, charButton, submitted ) + '}}'
-					+ '{{desc2=Select action above, then '
-					+ (((charButton == -1) || submitted) ? '<span style=' + design.grey_button + '>' : '[')
-					+ 'Submit'
-					+ (((charButton == -1) || submitted) ? '</span>' : '](!init --button ' + BT.SUBMIT + '|' + tokenID + '|' + charButton + '|' + MenuType.WEAPON + '|' + monButton + ')')
-					+ '}}';
-					
-			sendResponse( charCS, content, senderId, flags.feedbackName, flags.feedbackImg, tokenID );
-			return;
-		} catch (e) {
-			sendCatchError('InitMaster',msg_orig[senderId],e);
-		}
-	};
-
-    /*
-    * Create the Primary Weapon Initiative menu for 2 weapon attacks.
-    * Highlight buttons specified with a number (-1 means no highlight)
-    */
-
-	async function makePrimeWeaponMenu(charCS,submitted,args,senderId) {
-
-		try {
-			var tokenID = args[1],
-				ammoPointer = '',
-				ammoQty,
-				ammoRowAdjust,
-				weapName = '',
-				tokenName,
-				twoHanded,
-				content,
-				w, rowCount;
-				
-			tokenName = getObj( 'graphic', tokenID ).get('name');
-			
-			content = '&{template:'+fields.menuTemplate+'}{{name=What is ' + tokenName + ' doing?}}'
-					+ '{{subtitle=Initiative for Two Weapon Attacks}}'
-					+ '{{desc=**Choose Secondary Weapon**\n'
-					+ 'or go back to [One Weapon](!init --button ' + BT.ONEWEAPON + '|' + tokenID + '|-1|-1)}}';
-					
-			content += '{{desc1=' + await makeWeaponButtons( tokenID, senderId, -1, submitted, BT.MW_PRIME, BT.RW_PRIME, false, null, null, state.initMaster.weapInit );
-
-			content += '}}{{desc2=Select two weapons above, then '
-					+ '<span style=' + design.grey_button + '>Submit</span>}}';
-					
-			sendResponse( charCS, content, senderId, flags.feedbackName, flags.feedbackImg, tokenID );
-			return;
-		} catch (e) {
-			sendCatchError('InitMaster',msg_orig[senderId],e);
-		}
-	};
-
-    /*
-    * Create the Secondary Weapon Initiative menu for 2 weapon attacks.
-    * Highlight buttons specified with a number (-1 means no highlight)
-    */
-
-	var makeSecondWeaponMenu = function(charCS,submitted,args,senderId) {
-
-        var menu = args[0],
-			tokenID = args[1],
-			charButton = args[2],
-			charButton2 = args[3],
-			ammoPointer = '',
-			ammoQty,
-			weapName = '',
-			twoHanded,
-			dancing,
-			tokenName,
-			weapMI,
-			weaponList = [],
-			highlight,
-            content,
-			dancingWeapons = '',
-            header = true,
-			w, i, a,
-			rowCount,
-			WeaponTable = getTableField( charCS, {}, fields.MW_table, fields.MW_name );
-			WeaponTable = getTableField( charCS, WeaponTable, fields.MW_table, fields.MW_twoHanded, '', 0 );
-			WeaponTable = getTableField( charCS, WeaponTable, fields.MW_table, fields.MW_dancing, '', 0 );
-			WeaponTable = getTableField( charCS, WeaponTable, fields.MW_table, fields.MW_miName, '', 0 );
-            
-		tokenName = getObj( 'graphic', tokenID ).get('name');
-		
-		content = '&{template:'+fields.menuTemplate+'}{{name=What is ' + tokenName + ' doing?}}'
-				+ '{{subtitle=Initiative for Two Weapon Attacks}}'
-				+ '{{desc=**Choose '+(charButton2>0 ? 'New ' : '')+'<span style='+design.green_button+'>Primary Weapon**</span>\n'
-				+ 'Change by reselecting\n'
-				+ 'Or go back to ';
-			
-		content += submitted ? '<span style=' + design.grey_button + '>' : '[';
-		content += 'One Weapon';
-		content += submitted ? '</span>' : '](!init --button ' + BT.ONEWEAPON + '|' + tokenID + '|'+ charButton + '|-1|-1)';
-		content += '}}{{desc1=';
-				
-		// build the Melee Weapon list
-		
-		a = fields.MW_table[1];
-		for (i = a; i < (fields.MWrows + a); i++) {
-			w = (1 - (a * 2)) + (i * 2);
-			weapName = WeaponTable.tableLookup( fields.MW_name, i );
-			if (_.isUndefined(weapName)) {break;}
-			twoHanded = WeaponTable.tableLookup( fields.MW_twoHanded, i ) != 0;
-			dancing = WeaponTable.tableLookup( fields.MW_dancing, i ) != 0;
-			if (!twoHanded && !dancing && weapName != '-') {
-			    if (header) {
-			        content += '**1H Melee weapons**\n';
-			        header = false;
-			    }
-				weapMI = (WeaponTable.tableLookup( fields.MW_miName, i ) || weapName);
-				if (state.initMaster.weapInit) {
-					if (weapMI && weaponList.includes(weapMI.dbName())) continue;
-					weaponList.push(weapMI.dbName());
-				} else {
-					weapMI = weapName;
-				}
-				highlight = (charButton == w) ? design.green_button : ((charButton2 == w) ? design.selected_button : design.dark_button);
-				content += (!submitted) ? '[' : '';
-				content += ((w == charButton || w == charButton2 || submitted) ? ('<span style=' + highlight + '>') : '');
-				content += weapMI;
-				content += (w == charButton || w == charButton2 || submitted) ? '</span>' : '';
-				content += (!submitted) ? ('](!init --button ' + BT.MW_SECOND + '|' + tokenID + '|' + charButton + '|' + w + '|' + ((charButton-(1-(a*2)))/2) + '|' + i + ')') : '';
-			} else if ((weapName != '-') && dancing) {
-				dancingWeapons += '<span style='+(submitted ? design.grey_button : design.green_button)+'>'+weapMI+'</span>';
-			}
-		}
-
-		if (!header) {
-			content += '\n';
-			header = true;
-		}
-
-		// build the character Ranged Weapons list
-		WeaponTable = getTableField( charCS, {}, fields.RW_table, fields.RW_name );
-		WeaponTable = getTableField( charCS, WeaponTable, fields.RW_table, fields.RW_twoHanded, '', 1 );
-		WeaponTable = getTableField( charCS, WeaponTable, fields.RW_table, fields.RW_dancing, '', 0 );
-		WeaponTable = getTableField( charCS, WeaponTable, fields.RW_table, fields.RW_miName, '', '' );
-		
-		a = fields.RW_table[1];
-		weaponList = [];
-		for (i = a; i < (fields.RWrows + a); i++) {
-			w = (2 - (a * 2)) + (i * 2);
-			weapName = WeaponTable.tableLookup( fields.RW_name, i );
-			if (_.isUndefined(weapName)) {break;}
-			twoHanded = WeaponTable.tableLookup( fields.RW_twoHanded, i ) != 0;
-			dancing = WeaponTable.tableLookup( fields.RW_dancing, i ) != 0;
-			if (!twoHanded && !dancing && weapName != '-') {
-			    if (header) {
-			        content += '**1H Ranged weapons**\n';
-			        header = false;
-			    }
-				weapMI = (WeaponTable.tableLookup( fields.RW_miName, i ) || weapName);
-				if (state.initMaster.weapInit) {
-					if (weapMI && weaponList.includes(weapMI.dbName())) continue;
-					weaponList.push(weapMI.dbName());
-				} else {
-					weapMI = weapName;
-				}
-				highlight = (charButton == w) ? design.green_button : ((charButton2 == w) ? design.selected_button : design.grey_button);
-				content += (!submitted) ? '[' : '';
-				content += ((w == charButton || w == charButton2 || submitted) ? ('<span style=' + highlight + '>') : '');
-				content += weapMI;
-				content += (w == charButton || w == charButton2 || submitted) ? '</span>' : '';
-				content += (!submitted) ? ('](!init --button ' + BT.RW_SECOND + '|' + tokenID + '|' + charButton + '|' + w + '|' + (charButton-((2-(a*2))/2)) + '|' + i + ')') : '';
-			} else if ((weapName != '-') && dancing && !dancingWeapons.includes(weapMI)) {
-				dancingWeapons += '<span style='+(submitted ? design.dark_button : design.green_button)+'>'+weapMI+'</span>';
-			}
-		};
-		
-		if (dancingWeapons.length) {
-			content += '**Dancing weapons**\nAutomatic Initiative\n' + dancingWeapons;
-		}
-		content += '}}{{desc2=Select two weapons above, then '
-				+ ((charButton < 1 || charButton2 < 1 || charButton == charButton2 || submitted) ? '<span style=' + design.grey_button + '>' : '[')
-				+ 'Submit'
-				+ ((charButton < 1 || charButton2 < 1 || charButton == charButton2 || submitted) ? '</span>' : ('](!init --button ' + BT.SUBMIT + '|' + tokenID + '|' + charButton + '|' + MenuType.TWOWEAPONS + '|' + charButton2 + ')'))
-				+ '}}';
-				
-		sendResponse( charCS, content, senderId, flags.feedbackName, flags.feedbackImg, tokenID );
-		return;
-	};
-
-    /*
-    * Create the spell Initiative menu.
-    * Highlight buttons specified with a number (-1 means no highlight)
-    */
-
-	async function makeSpellMenu( spellCasterType, charCS, submitted, args, senderId ) {
-
-		try {
-			var tokenID = args[1],
-				spellButton = args[2],
-				spellName = '',
-				dancers,
-				qty,
-				isMU,
-				content,
-				tokenName,
-				levelSpells = [],
-				l, w, r, c,
-				buttonID = 0;
-				
-			isMU = (spellCasterType == Caster.WIZARD);
-
-			tokenName = getObj( 'graphic', tokenID ).get('name');
-			
-			content = '&{template:'+fields.menuTemplate+'}{{name=What Spell is ' + tokenName + ' planning to cast?}}'
-					+ '{{subtitle=Initiative for ' + spellCasterType + ' spells}}'
-					+ '{{desc=';
-
-			// set up the shape of the spell book.  This is complicated due to
-			// the 2E sheet L5 MU Spells start out-of-sequence at column 70
-			levelSpells = shapeSpellbook( charCS, isMU );
-
-			// build the Spell list
-			for (l = 1; l < levelSpells.length; l++) {
-				r = 0;
-				if (levelSpells[l].spells > 0) {
-					if (l != 1)
-						{content += '\n';}
-					content += '**Level '+l+' spells**\n';
-				}
-				while (levelSpells[l].spells > 0) {
-					c = levelSpells[l].base;
-					for (w = 1; (w <= fields.SpellsCols) && (levelSpells[l].spells > 0); w++) {
-						spellName = attrLookup( charCS, fields.Spells_name, fields.Spells_table, r, c, false, false );
-						if (_.isUndefined(spellName)) {
-							levelSpells[l].spells = 0;
-							break;
-						}
-						qty = parseInt(attrLookup( charCS, fields.Spells_castValue, fields.Spells_table, r, c ) || 0);
-						content += (buttonID == spellButton ? '<span style=' + design.selected_button + '>' : (submitted || qty == 0 ? '<span style=' + design.grey_button + '>' : '['));
-						content += spellName;
-						content += (((buttonID == spellButton) || submitted || !qty) ? '</span>' : '](!init --button ' + (isMU ? BT.MU_SPELL : BT.PR_SPELL) + '|' + tokenID + '|' + buttonID + '|' + r + '|' + c + ')');
-						buttonID++;
-						c++;
-						levelSpells[l].spells--;
-					}
-					r++;
-				}
-			}
-
-			if (!buttonID) {
-				sendParsedMsg( tokenID, (isMU ? Init_Messages.noMUspellbook : Init_Messages.noPRspellbook), null, flags.feedbackName );
-				return;
-			}
-			
-			dancers =  await makeWeaponButtons( tokenID, senderId, -1, submitted, '', '', true, true, false );
-
-			content += (dancers.length ? '\n'+dancers : '')
-					+  MIandPowers( tokenID, submitted ) + '}}'
-					+ '{{desc1='+otherActions( (isMU ? MenuType.MUSPELL : MenuType.PRSPELL), tokenID, spellButton, submitted ) + '}}'
-					+ '{{desc2=Select action above, then '
-					+ (((spellButton < 0) || submitted) ? '<span style=' + design.grey_button + '>' : '[')
-					+ 'Submit'
-					+ (((spellButton < 0) || submitted) ? '</span>' : '](!init --button ' + BT.SUBMIT + '|' + tokenID + '|' + spellButton + '|' + (isMU ? MenuType.MUSPELL : MenuType.PRSPELL) + ')')
-					+ '}}';
-					
-			sendResponse( charCS, content, senderId, flags.feedbackName, flags.feedbackImg, tokenID );
-			return;
-		} catch (e) {
-			sendCatchError('InitMaster',msg_orig[senderId],e);
-		}
-	};
-
-    /*
-    * Create the Magic Item Initiative menu.
-    * Highlight buttons specified with a number (-1 means no highlight)
-    */
-
-	async function makeMIBagMenu( charCS, submitted, args, senderId ) {
-
-		try {
-			var tokenID = args[1],
-				charButton = args[2],
-				tokenName,
-				miName, miTable,
-				content,
-				dancers,
-				r, rowAdj,
-				inHandTitle = false,
-				inBagTitle = false,
-				inHandMIs = '',
-				buttonID = 0,
-				sheetVer = csVer(charCS),
-				sections = {POTIONS:{n:2,name:'**Potions**'},
-							DUSTS:{n:3,name:'**Dusts**'},
-							WANDS:{n:4,name:'**Rods, Staves & Wands**'},
-							SCROLLS:{n:5,name:'**Scrolls & Books**'},
-							GEAR:{n:6,name:'**Weapons, Armour & Gear**'},
-							MISC:{n:7,name:'**Miscellaneous**'},
-							TREASURE:{n:8,name:'**Treasure**'},
-							COINS:{n:9,name:'**Coins**'}},
-				config = getSetPlayerConfig(senderId);
-				
-			tokenName = getObj( 'graphic', tokenID ).get('name');
-			
-			content = '&{template:'+fields.menuTemplate+'}{{name=What Magic Item is ' + tokenName + ' planning to use?}}'
-					+ '{{subtitle=All ' + tokenName + '\'s Magic Items}}';
-					
-			// build the in-hand Magic Item Powers list
-			
-			[inHandMIs,buttonID] = await inHandMIbuttons( tokenID, charCS, senderId, buttonID, charButton, submitted, BT.MI_POWER );
-			content += inHandMIs;
-			
-			// build the Magic Item list
-			
-			let sectType = (_.isUndefined(config) || _.isUndefined(config.sections) || !!config.sections) ? 'Hide' : 'Show';
-			content += '{{ =Items on your person <a style="background: none; border: none; color:blue;" href="!init --button '+BT.SECTIONS_OPTION+'|'+tokenID+'|buildmenu|'+senderId+'|'+args.join('|')+'||||||||">*'+sectType+' sections*</a>}}';
-			
-			var sectHeader = '{{Section2=Magic Items in Bag\n';
-			miTable = getTableGroupField( charCS, {}, fieldGroups.MI, 'name' );
-			for (const table in miTable) {
-				if (sheetVer > 3.9 && config.sections !== false) sectHeader = '{{Section'+sections[table].n+'='+sections[table].name+'\n';
-				for (r = 0; !_.isUndefined(miName = miTable[table].tableLookup( fields[fieldGroups[table].prefix+'name'], r, false )); r++) {
-					if (miName != '-') {
-						content += sectHeader
-								+ (buttonID == charButton ? ('<span style=' + design.selected_button + '>') : (submitted ? '<span style=' + design.grey_button + '>' : '['))
-								+ miName
-								+ (((buttonID == charButton) || submitted) ? '</span>' : '](!init --button ' + BT.MI_BAG + '|' + tokenID + '|' + buttonID + '|' + r + ')');
-						sectHeader = '';
-						inBagTitle = true;
-					}
-					buttonID++;
-				}
-				if (inBagTitle && sheetVer > 3.9 && config.sections !== false) {
-					content += '}}';
-					inBagTitle = false;
-				};
-			};
-			if (inBagTitle) content += '}}';
-
-			if (!buttonID) {
-				sendParsedMsg( tokenID, Init_Messages.noMIBag, null, flags.feedbackName );
-				return;
-			}
-
-			dancers =  await makeWeaponButtons( tokenID, senderId, -1, submitted, '', '', true, true, false );
-
-			content += (dancers.length ? '\n'+dancers : '')
-					+ '{{desc1=' + otherActions( MenuType.MIBAG, tokenID, charButton, submitted ) + '}}'
-					+ '{{desc2=Select action above, then '
-					+ (((charButton < 0) || submitted) ? '<span style=' + design.grey_button + '>' : '[')
-					+ 'Submit'
-					+ (((charButton < 0) || submitted) ? '</span>' : '](!init --button ' + BT.SUBMIT + '|' + tokenID + '|' + charButton + '|' + MenuType.MIBAG + ')')
-					+ '}}';
-					
-			sendResponse( charCS, content, senderId, flags.feedbackName, flags.feedbackImg, tokenID );
-			return;
-		} catch (e) {
-			sendCatchError('InitMaster',msg_orig[senderId],e);
-		}
-	};
-
-    /*
-    * Create the Powers Initiative menu.
-    * Highlight buttons specified with a number (-1 means no highlight)
-    */
-
-	async function makePowersMenu( charCS, submitted, args, senderId ) {
-
-		try {
-			var tokenID = args[1],
-				charButton = args[2],
-				spellName = '',
-				qty,
-				tokenName,
-				powerName,
-				content,
-				dancers,
-				col, rep,
-				powerRows = 0,
-				levelRows = [],
-				l, w, r, c,
-				buttonID = 0;
-				
-			tokenName = getObj( 'graphic', tokenID ).get('name');
-			
-			content = '&{template:'+fields.menuTemplate+'}{{name=What Power is ' + tokenName + ' planning to use?}}'
-					+ '{{subtitle=All available Powers}}'
-					+ '{{desc=';
-
-			// build the Powers list
-			
-			for (r = 0; r < fields.PowerRows; r++) {
-				c = fields.PowersBaseCol;
-				for (w = 1; w <= fields.PowersCols; w++) {
-					qty = attrLookup( charCS, fields.Spells_castValue, fields.Powers_table, r, c );
-					powerName = attrLookup( charCS, fields.Powers_name, fields.Powers_table, r, c, false, false );
-					if (_.isUndefined(powerName)) {break;}
-					if (powerName != '-') {
-						content += (buttonID == charButton ? '<span style=' + design.selected_button + '>' : (submitted || !qty ? '<span style=' + design.grey_button + '>' : '['));
-						content += powerName;
-						content += (((buttonID == charButton) || submitted || !qty) ? '</span>' : '](!init --button ' + BT.POWER + '|' + tokenID + '|' + buttonID + '|' + r + '|' + c + ')');
-					}
-					buttonID++;
-					c++;
-				}
-			}
-
-			if (!buttonID) {
-				sendParsedMsg( tokenID, Init_Messages.noPowers, null, flags.feedbackName );
-				return;
-			}
-			
-			dancers = await makeWeaponButtons( tokenID, senderId, -1, submitted, '', '', true, true, false );
-
-			content += (dancers.length ? '\n'+dancers : '')
-					+ '}}{{desc1=' + otherActions( MenuType.POWER, tokenID, charButton, submitted ) + '}}'
-					+ '{{desc2=Select action above, then '
-					+ (((charButton < 0) || submitted) ? '<span style=' + design.grey_button + '>' : '[')
-					+ 'Submit'
-					+ (((charButton < 0) || submitted) ? '</span>' : '](!init --button ' + BT.SUBMIT + '|' + tokenID + '|' + charButton + '|' + MenuType.POWER + ')')
-					+ '}}';
-					
-			sendResponse( charCS, content, senderId, flags.feedbackName, flags.feedbackImg, tokenID );
-			return;
-		} catch (e) {
-			sendCatchError('InitMaster',msg_orig[senderId],e);
-		}
-	};
-
-    /*
-    * Create the Thieving Actions Initiative menu.
-    * Highlight buttons specified with a number (-1 means no highlight)
-    */
-
-	async function makeThiefMenu( charCS, submitted, args, senderId ) {
-
-		try {
-			var tokenID = args[1],
-				charButton = args[2],
-				content = '',
-				dancers,
-				sheetType,
-				tokenName,
-				armourType,
-				armourMod,
-				ability = [],
-				level = attrLookup( charCS, fields.Rogue_level );
-				
-			if (!level || level == 0) {
-				sendParsedMsg( tokenID, Init_Messages.notThief, null, flags.feedbackName );
-			}
-			
-			tokenName = getObj( 'graphic', tokenID ).get('name');
-			
-			// find armour type
-			
-			armourType = (attrLookup( charCS, fields.Armor_name ) || 'leather' ).toLowerCase();
-			switch (armourType.toLowerCase().replace('armour','armor')) {
-				case 'no armor':
-				case 'none':
-					armourMod = fields.Armor_mod_none;
-					break;
-					
-				case 'light':
-				case 'leather':
-				case 'leather armor':
-					armourMod = fields.Armor_mod_leather;
-					break;
-
-				case 'studded':
-				case 'padded':
-				case 'studded armor':
-				case 'padded armor':
-				case 'studded leather':
-				case 'padded leather':
-				case 'studded leather armor':
-				case 'padded leather armor':
-					armourMod = fields.Armor_mod_studded;
-					break;
-					
-				default:
-					sendParsedMsg( tokenID, Init_Messages.heavyArmour, null, flags.feedbackName );
-					return content;
-			}
-			
-			// Get the thieving skill levels
-
-			ability.length = 9;
-			ability[0] = {name: 'Picking Pockets',skill: Math.max((attrLookup( charCS, [fields.Pick_Pockets[0]+armourMod, fields.Pick_Pockets[1]] ) || 0), 5 ), speed: '0' };
-			ability[1] = {name: 'Opening Locks', skill: Math.max((attrLookup( charCS, [fields.Open_Locks[0]+armourMod, fields.Open_Locks[1]] ) || 0), 5 ), speed: '1d8'};
-			ability[2] = {name: 'Finding Traps', skill: Math.max((attrLookup( charCS, [fields.Find_Traps[0]+armourMod, fields.Find_Traps[1]] ) || 0), 5 ), speed: '1d100'};
-			ability[3] = {name: 'Moving Silently', skill: Math.max((attrLookup( charCS, [fields.Move_Silently[0]+armourMod, fields.Move_Silently[1]] ) || 0), 5 ), speed: '0' };
-			ability[4] = {name: 'Hiding in Shadows', skill: Math.max((attrLookup( charCS, [fields.Hide_in_Shadows[0]+armourMod, fields.Hide_in_Shadows[1]] ) || 0), 5 ), speed: '0'};
-			ability[5] = {name: 'Detecting Noise', skill: Math.max((attrLookup( charCS, [fields.Detect_Noise[0]+armourMod, fields.Detect_Noise[1]] ) || 0), 5 ), speed: '1d6'};
-			ability[6] = {name: 'Climbing Walls', skill: Math.max((attrLookup( charCS, [fields.Climb_Walls[0]+armourMod, fields.Climb_Walls[1]] ) || 0), 5 ), speed: '1d10'};
-			ability[7] = {name: 'Reading Languages', skill: Math.max((attrLookup( charCS, [fields.Read_Languages[0]+armourMod, fields.Read_Languages[1]] ) || 0), 5 ), speed: '1d100'};
-			ability[8] = {name: 'Remembering Legends', skill: Math.max((attrLookup( charCS, [fields.Legend_Lore[0]+armourMod, fields.Legend_Lore[1]] ) || 0), 5 ), speed: '1d100'};
-
-			// build the thieving skills list
-			
-			content = '&{template:'+fields.menuTemplate+'}{{name=What Thieving ability is ' + tokenName + ' planning to use?}}'
-					+ '{{subtitle=' + tokenName + '\'s thieving abilities}}'
-					+ '{{desc=';
-					
-			for (let i=0; i<8; i++) {
-				content += (i == charButton ? '<span style=' + design.selected_button + '>' : (submitted ? '<span style=' + design.grey_button + '>' : '['));
-				content += ability[i].name + '(' + ability[i].skill + '%)';
-				content += (((i == charButton) || submitted) ? '</span>' : '](!init --button ' + BT.THIEF + '|' + tokenID + '|' + i + '|' + ability[i].name + ' ' + ability[i].skill + '% |' + ability[i].speed + ')');
-			}
-			
-			dancers = await makeWeaponButtons( tokenID, senderId, -1, submitted, '', '', true, true, false );
-
-			content += (dancers.length ? '\n'+dancers : '')
-					+ '}}{{desc1=' + otherActions( MenuType.THIEF, tokenID, charButton, submitted ) + '}}'
-					+ '{{desc2=Select action above, then '
-					+ (((charButton < 0) || submitted) ? '<span style=' + design.grey_button + '>' : '[')
-					+ 'Submit'
-					+ (((charButton < 0) || submitted) ? '</span>' : '](!init --button ' + BT.SUBMIT + '|' + tokenID + '|' + charButton + '|' + MenuType.THIEF + ')')
-					+ '}}';
-
-			sendResponse( charCS, content, senderId, flags.feedbackName, flags.feedbackImg, tokenID );
-			return;
-		} catch (e) {
-			sendCatchError('InitMaster',msg_orig[senderId],e);
-		}
-	};
-	
-	/*
-	 * Make a menu of all types of actions that the character can perform, so
-	 * the Player can choose which to do Initiative with.
-	 */
-
-	var makeInitMenu = function( charCS, monster, args, senderId ) {
-		
-		var tokenID = args[1],
-			tokenName = getObj( 'graphic', tokenID ).get('name'),
-//			charCS = getCharacter(tokenID,false),
-		    content = '&{template:'+fields.menuTemplate+'}{{name=What does ' + tokenName + ' want to do?}}'
-					+ '{{subtitle=' + tokenName + '\'s possible activities}}'
-					+ '{{Section=';
-					
-		content += '[Attack](!init ' + (monster == CharSheet.MONSTER ? '--complex ' : '--weapon ') + tokenID + ')';
-		if (casterLevel( charCS, 'MU' )) {
-			content += '[Cast MU Spell](!init --muspell ' + tokenID + ')';
-		}
-		if (casterLevel( charCS, 'PR' )) {
-			content += '[Cast PR Spell](!init --prspell ' + tokenID + ')';
-		}
-		if (checkForPowers(charCS)) {
-			content += '[Use Power](!init --power ' + tokenID + ')';
-		}
-		if (checkForMIs(charCS)) {
-			content += '[Use Magic Item](!init --mibag ' + tokenID + ')';
-		}
-		content += '[Use Thieving Skills](!init --thief ' + tokenID + ')}}';
-		content += '{{Section1='+otherActions( MenuType.OTHER, tokenID, 0, false )+'}}';
-		content += '{{Section2=[Check Initiative Modifiers](!init --checkinit '+tokenID+'||menu)}}';
-				
-		sendResponse( charCS, content, senderId, flags.feedbackName, flags.feedbackImg, tokenID );
-		return;
-	}
-	
-	async function makeOtherMenu( charCS, submitted, args, senderId ) {
-	
-		try {
-			var tokenID = args[1],
-				charButton = args[2],
-				tokenName = getObj( 'graphic', tokenID ).get('name'),
-				dancers = await makeWeaponButtons( tokenID, senderId, -1, submitted, '', '', true, true, false ),
-
-				content = '&{template:'+fields.menuTemplate+'}{{name=What does ' + tokenName + ' want to do?}}'
-						+ '{{subtitle=' + tokenName + '\'s possible activities}}'
-						+ '{{desc='+ otherActions( MenuType.OTHER, tokenID, charButton, submitted )
-						+ (dancers.length ? '\n'+dancers : '')
-						+ '}}{{desc1=Select action above, then '
-						+ (((charButton < 0) || submitted) ? '<span style=' + design.grey_button + '>' : '[')
-						+ 'Submit'
-						+ (((charButton < 0) || submitted) ? '</span>' : '](!init --button ' + BT.SUBMIT + '|' + tokenID + '|' + charButton + '|' + MenuType.OTHER + ')')
-						+ '}}';
-			
-			sendResponse( charCS, content, senderId, flags.feedbackName, flags.feedbackImg, tokenID );
-			return;
-		} catch (e) {
-			sendCatchError('InitMaster',msg_orig[senderId],e);
-		}
-	}
-
-	/*
-	 * Make a dialog to show factors that affect initiative,
-	 * and allow the player to set a manual modifier
-	 */
-	
-	var makeCheckInitMenu = function( tokenID, charCS, senderId, silent=false, msg='', menu='' ) { //specs
-		
-		const parseTable = {initmod:reClassSpecs.initmod,initmult:reClassSpecs.initmult,rules:reACSpecs.rules},
-			  classes = classObjects( charCS, senderId, parseTable ),
-			  race = (attrLookup( charCS, fields.Race ) || 'human').dbName(),
-			  tokenName = getObj('graphic',tokenID).get('name');
-		var ItemNames = getTableGroupField( charCS, {}, fieldGroups.MI, 'name' ),
-			ItemNames = getTableGroupField( charCS, ItemNames, fieldGroups.MI, 'trueName' ),
-			Inits = getTable( charCS, fieldGroups.INIT ),
-			totalMod = 0,
-			eqModFlag = false,
-			totalMult = 1,
-			eqMultFlag = false,
-			content = '&{template:'+fields.menuTemplate+'}{{title=Current Initiative Modifiers\n for '+tokenName+'}}'
-					+ (!!msg && msg.length ? '{{Section='+msg+'}}' : '');
-		
-		const assessInit = function( name, mod, mult, remove=false ) {
-			let eqMod = mod[0] === '=',
-				eqMult = mult[0] === '=';
-
-			mod = parseFloat( eqMod ? mod.slice(1) : mod );
-			if (eqMod && !isNaN(mod)) totalMod = eqModFlag ? Math.min(mod,totalMod) : mod;
-			eqModFlag = eqModFlag || eqMod;
-
-			mult = parseFloat( eqMult ? mult.slice(1) : mult );
-			if (eqMult && !isNaN(mult)) totalMult = eqMultFlag ? Math.max(mult,totalMult) : mult;
-			eqMultFlag = eqMultFlag || eqMult;
-			
-			let modFlag = !isNaN(mod) && (mod != 0),
-				multFlag = !isNaN(mult) && (mult != 1);
-			if (!modFlag && !multFlag) return '';
-			let desc = '{{'+name.dispName()+'=';
-			if (modFlag) {
-				if (!eqMod) totalMod += mod;
-				desc += (eqMod ? 'Overriding ' : '')+(mod < 0 ? 'Beneficial' : 'Penalty')+' mod of '+(mod>0 ? '+' : '')+mod+(multFlag ? '\n' : '');
-			}
-			if (multFlag) {
-				if (!eqMult) totalMult *= mult;
-				desc += (eqMult ? 'Overriding ' : '')+(mult > 1 ? 'Beneficial' : 'Penalty')+' speed mult x '+mult;
-			};
-			if (remove) {
-				desc += ' \n[Remove](!init --setmods '+tokenID+'|del|'+name+'|0|1)';
-			}
-			desc += '}}';
-			return desc;
-		};
-		
-		setAttr( charCS, fields.Init_fixInit, '' );
-		
-		_.each( classes, c => {
-			content += assessInit( c.obj[1].name, c.classData.initmod, c.classData.initmult );
-		});
-		let raceData = resolveData( race, fields.RaceDB, reClassRaceData, charCS, parseTable ).parsed;
-		content += assessInit( race, raceData.initmod, raceData.initmult );
-		
-		let conflict = '',
-			itemClasses = [],
-			itemSuperTypes = [],
-			nameArray = [],
-			item = '',
-			tableIndex, tableRowID, table;
-		for (let r = 0; !_.isUndefined(item = tableGroupLookup( ItemNames, 'name', r, false )); r++) {
-			if (item === '-') continue;
-			let trueItem = tableGroupLookup( ItemNames, 'trueName', r );
-			[tableIndex,table,tableRowID] = tableGroupIndex( ItemNames, r );
-			let itemData = resolveData( trueItem, fields.MagicItemDB, reNotAttackData, charCS, parseTable, tableIndex, tableRowID ).parsed,
-				itemObj = abilityLookup( fields.MagicItemDB, trueItem ),
-				addRules = itemData.rules.split('|').map( r => (r[0] === '-' ? '-' : '')+r.dbName() ),
-				specsArray = (!!itemObj.obj ? itemObj.specs() : ['-','-','magic','1H','-']);
-			if (itemObj.obj && !!specsArray) {
-				itemSuperTypes = _.uniq(itemSuperTypes.concat(specsArray.map( c => c[4].dbName() ).join('|').split('|')));
-				itemClasses = _.uniq(itemClasses.concat(specsArray.map( c => c[2].dbName() ).join('|').split('|')));
-			};
-			if (itemData.initmod == 0 && itemData.initmult == 1) continue;
-			let	inHand = !itemData.rules || !itemData.rules.includes('+inhand') || !_.isUndefined(getTableField( charCS, {}, fields.InHand_table, fields.InHand_trueName ).tableFind( fields.InHand_trueName, trueItem ));
-			let worn = !itemData.rules || !itemData.rules.includes('+worn') || classAllowedItem( charCS, trueItem, specsArray[0][1].dbName(), specsArray[0][4].dbName(), 'weaps' );
-			let adds = !itemData.rules || (!_.some(itemClasses,c => {conflict=c;return addRules.includes( '-'+c )}) && !_.some(itemSuperTypes,mi => {conflict=mi;return addRules.includes('-'+mi)}));
-			let nameIndex = nameArray.findIndex( (n,i) => n[0] === item );
-			if (nameIndex >= 0) {
-				item += ' '+(++nameArray[nameIndex][1]);
-			} else {
-				nameArray.push([item,1]);
-			};
-			if (!inHand) {content += '{{'+item.dispName()+'=Is not in-hand so does not affect initiative}}';
-			} else if (!worn) {content += '{{'+item.dispName()+'=Is not of a usable type so does not affect initiative}}';
-			} else if (!adds) {content += '{{'+item.dispName()+'=Does not combine with '+conflict+' so does not affect initiative}}';}
-			if (!inHand || !worn || !adds) continue;
-			content += assessInit( item, itemData.initmod, itemData.initmult );
-		};
-
-		for (let r = 0; !_.isUndefined(item = Inits.tableLookup( fields.InitMagic_name, r, false )); r++ ) {
-			if (item === '-') continue;
-			if (item.length === 0) {
-				Inits = Inits.delTableRow( r );
-			} else if (Inits.tableLookup( fields.InitMagic_cmd, r ) === 'fix') {
-				let fixMod = Inits.tableLookup( fields.InitMagic_mod, r );
-				setAttr( charCS, fields.Init_fixInit, fixMod );
-				content += '{{'+item.dispName()+'=Fixed initiative of '+fixMod+'}}';
-			} else content += assessInit( item, Inits.tableLookup( fields.InitMagic_mod, r ), Inits.tableLookup( fields.InitMagic_mult, r ), true );
-		};
-		
-		let modAdj = parseFloat(attrLookup( charCS, fields.InitModAdjust )) || 0,
-			modSign = (modAdj > 0 ? '+' : ''),
-			multAdj = parseFloat(attrLookup( charCS, fields.InitMultAdjust )) || 1;
-		totalMod += modAdj;
-		totalMult *= multAdj;
-		content += '{{Manual Adjustments=[Mod Adjustment](!init --setmods '+tokenID+'|mod|&#63;{What do you want to call this modifier?|adjustment}|&#63;{What modifier should be added to initiative speed (-ve beneficial?&#41;}) and'
-				+  '[Mult Adjustment](!init --setmods '+tokenID+'|mult|&#63;{What do you want to call this multiplier?|adjustment}||&#63;{What multiplier should be applied to the initiative speed (>1 beneficial&#41;?})}}';
-		
-		content += '{{Totals=Mod of **'+(totalMod > 0 ? '+' : '')+totalMod+'** and Mult of **x'+totalMult+'**}}'
-				+  '{{desc=Select button above to set a manual adjustment to these totals.\n'
-				+  '**Modifier** less than 0 is beneficial\n'
-				+  '**Multiplier** greater than 1 is beneficial}}'
-				+  (menu && menu.length ? ('{{desc1=[Return to menu](!init --'+menu+')}}') : '');
-		
-		setAttr( charCS, fields.initMod, totalMod );
-		setAttr( charCS, fields.initMultiplier, totalMult );
-		
-//		log('makeCheckInitMenu: content = '+content);
-		if (!silent) {
-			sendResponse( charCS, content, senderId );
-		} else {
-			sendWait( senderId, 0, 'init' );
-		}
-		return {mod:totalMod,mult:totalMult};
-	}
-			
 //------------------------------------- do commands --------------------------------------------
 
 	/**
 	 * Show help message
 	 */ 
-	var showHelp = function() {
+	const showHelp = function() {
 
-	var handoutIDs = getHandoutIDs();
-	var content = '&{template:'+fields.menuTemplate+'}{{title=InitiativeMaster Help}}{{InitMaster Help=For help on !init commands [**Click Here**]('+fields.journalURL+handoutIDs.InitiativeMasterHelp+')}}{{Character Sheet Setup=For help on setting up character sheets for use with RPGMaster APIs, [**Click Here**]('+fields.journalURL+handoutIDs.RPGMasterCharSheetSetup+')}}{{RPGMaster Templates=For help using RPGMaster Roll Templates, [**Click Here**]('+fields.journalURL+handoutIDs.RPGMasterLibraryHelp+')}}';
+		const handoutIDs = getHandoutIDs();
+		const content = '&{template:'+fields.menuTemplate+'}{{title=InitiativeMaster Help}}{{InitMaster Help=For help on !init commands [**Click Here**]('+fields.journalURL+handoutIDs.InitiativeMasterHelp+')}}'
+					  + '{{Character Sheet Setup=For help on setting up character sheets for use with RPGMaster APIs, [**Click Here**]('+fields.journalURL+handoutIDs.RPGMasterCharSheetSetup+')}}'
+					  + '{{RPGMaster Templates=For help using RPGMaster Roll Templates, [**Click Here**]('+fields.journalURL+handoutIDs.RPGMasterLibraryHelp+')}}';
 
 		sendFeedback(content,flags.feedbackName,flags.feedbackImg); 
 	}; 
@@ -3442,44 +3324,32 @@ var initMaster = (function() {		// eslint-disable-line no-unused-vars
      * a player to redo initiative
      **/
    
-    var doRedo = function( args, selected, senderId ) {
+    const doRedo = function( args, selected, senderId ) {
         
         if (!args)
             {return;}
-            
         if (args.length < 1) {
             sendError( 'Invalid initMaster redo command syntax',msg_orig[senderId] );
 			return;
         }
-        
-        var tidyCmd,
-            tokenName,
-            charCS,
-            prevRound,
-            tokenID = args[0],
-			silent = args[1] && args[1].toUpperCase() === 'SILENT';
+        const tokenID = args[0],
+			  silent = args[1] && args[1].toUpperCase() === 'SILENT',
+			  charCS = getCharacter( tokenID );
             
-        if (!(charCS = getCharacter( tokenID ))) {
-			if (!silent) {
-				sendError( 'The selected token does not represent a character sheet' ,msg_orig[senderId]);
-			}
+        if (!charCS) {
+			if (!silent) sendError( 'The selected token does not represent a character sheet' ,msg_orig[senderId]);
             return;
         }
-        
-        tokenName = getObj( 'graphic', tokenID ).get('name');
         setAttr( charCS, ['prev-round'+tokenID, 'current'], 0 );
-        
-        tidyCmd = fields.roundMaster+' --removefromtracker ' + tokenName + '|' + tokenID + '|0';
+        const tidyCmd = fields.roundMaster+' --removefromtracker ' + getObj( 'graphic', tokenID ).get('name') + '|' + tokenID + '|0';
         sendAPI( tidyCmd, senderId );
 		
 		if (silent) {
-			sendWait(senderId,0);
+			sendWait(senderId,0,'Init redo');
 			return;
 		}
-        
         sendParsedMsg( tokenID, Init_Messages.redoMsg, senderId, flags.feedbackName );
 		doInitMenu(args,selected,MenuType.MENU,senderId);
-        
     };
 
 
@@ -3489,7 +3359,7 @@ var initMaster = (function() {		// eslint-disable-line no-unused-vars
      * initMaster of the new round
      **/
    
-     var doIsRound = function(args,senderId) {
+     const doIsRound = function(args,senderId) {
         if (!args)
             {return;}
         
@@ -3497,15 +3367,13 @@ var initMaster = (function() {		// eslint-disable-line no-unused-vars
 			sendError('Invalid initMaster isround syntax',msg_orig[senderId]);
 			return;
         }
-        
-        var round = parseInt(args[0],10),
-            changedRound = (args[1] || false);
+        const round = parseInt(args[0],10),
+              changedRound = (args[1] || false);
 			
         if (_.isNaN(round)) {
 			sendError( 'Invalid initMaster round number',msg_orig[senderId] );
 			return;
         }
-        
         state.initMaster.round = round;
         state.initMaster.changedRound = changedRound;
         return;
@@ -3518,18 +3386,17 @@ var initMaster = (function() {		// eslint-disable-line no-unused-vars
 	* initiative menu called instead.
 	**/
 	
-	var doCarryOver = function( tokenID, charCS, initMenu, senderId ) {
+	const doCarryOver = function( tokenID, charCS, initMenu, senderId ) {
 
-		var init_speed = (attrLookup( charCS, fields.Init_carrySpeed ) || 0),
-			init_action = (attrLookup( charCS, fields.Init_carryAction ) || 'doing nothing'),
-			init_actionnum = (attrLookup( charCS, fields.Init_carryActNum ) || 1),
-			weapno = (attrLookup( charCS, fields.Init_carryWeapNum ) || 0),
-			init_preinit = (attrLookup( charCS, fields.Init_carryPreInit ) || 0),
-			changedRound = state.initMaster.changedRound,
-			round = state.initMaster.round,
-			prevRound = (attrLookup( charCS, ['prev-round'+tokenID, 'current'], null, null, null, true ) || 0),
-			init_submitVal = (changedRound || (prevRound != round) ? 1 : 0 ),
-			content;
+		const init_speed = (attrLookup( charCS, fields.Init_carrySpeed ) || 0),
+			  init_action = (attrLookup( charCS, fields.Init_carryAction ) || 'doing nothing'),
+			  init_actionnum = (attrLookup( charCS, fields.Init_carryActNum ) || 1),
+			  weapno = (attrLookup( charCS, fields.Init_carryWeapNum ) || 0),
+			  init_preinit = (attrLookup( charCS, fields.Init_carryPreInit ) || 0),
+			  changedRound = state.initMaster.changedRound,
+			  round = state.initMaster.round,
+			  prevRound = (attrLookup( charCS, ['prev-round'+tokenID, 'current'], {caseSensitive:true} ) || 0),
+			  init_submitVal = (changedRound || (prevRound != round) ? 1 : 0 );
 			
 		setAttr( charCS, fields.Init_speed, init_speed );
 		setAttr( charCS, fields.Init_action, init_action );
@@ -3540,14 +3407,14 @@ var initMaster = (function() {		// eslint-disable-line no-unused-vars
 		setAttr( charCS, fields.Init_chosen, 1 );
 		setAttr( charCS, fields.Init_done, 0 );
 
-		content = '&{template:'+fields.menuTemplate+'}'
-				+ '{{name=What is ' + getObj( 'graphic', tokenID ).get('name') + ' doing?}}'
-				+ '{{subtitle=Continue Long Action}}'
-				+ '{{desc=Continue ' + init_action + ' for '
-				+ '<span style=' + design.boxed_number + '>' + Math.ceil(init_speed/10) + '</span>'
-				+ ' more rounds or do something else?}}'
-				+ '{{desc1=[Continue](!init --button ' + BT.SUBMIT + '|' + tokenID + '|-1|' + MenuType.CARRY + ')'
-				+ ' [Something Else](!init --button ' + BT.CARRY + '|' + tokenID + '|-1|' + initMenu + ')}}';
+		const content = '&{template:'+fields.menuTemplate+'}'
+					  + '{{name=What is ' + getObj( 'graphic', tokenID ).get('name') + ' doing?}}'
+					  + '{{subtitle=Continue Long Action}}'
+					  + '{{desc=Continue ' + init_action + ' for '
+					  + '<span style=' + design.boxed_number + '>' + Math.ceil(init_speed/10) + '</span>'
+					  + ' more rounds or do something else?}}'
+					  + '{{desc1=[Continue](!init --button ' + BT.SUBMIT + '|' + tokenID + '|-1|' + MenuType.CARRY + ')'
+					  + ' [Something Else](!init --button ' + BT.CARRY + '|' + tokenID + '|-1|' + initMenu + ')}}';
 				
 		sendResponse( charCS, content, senderId, flags.feedbackName, flags.feedbackImg, tokenID );
 		return;	
@@ -3559,7 +3426,7 @@ var initMaster = (function() {		// eslint-disable-line no-unused-vars
 	* handling an action selection.
 	**/
 
-	var doBuildMenu = function( args, senderId ) {
+	const doBuildMenu = function( args, senderId ) {
 		
 		if (!args) {
 			return;
@@ -3569,16 +3436,15 @@ var initMaster = (function() {		// eslint-disable-line no-unused-vars
 			return;
 		};
 		senderId = args.shift();
-		var menu = args[0],
-			tokenID = args[1],
-			charCS;
+		const menu = args[0],
+			  tokenID = args[1],
+			  charCS = getCharacter( tokenID );
 			
-		if (!(charCS = getCharacter( tokenID ))) {
+		if (!charCS) {
 			sendError( 'The selected token does not represent a character sheet',msg_orig[senderId] );
 			return;
 		}
 		setInitVars( charCS, args, 'current');
-//		log('doBuildMenu: senderId = '+senderId+', menu = '+menu+', args = '+args);
 		buildMenu( menu, charCS, MenuState.ENABLED, args, senderId );
 		return;
 	}
@@ -3591,7 +3457,6 @@ var initMaster = (function() {		// eslint-disable-line no-unused-vars
 		
 		if (!initMenu)
 			{return;}
-			
 		if (!args) args = [];
 			
 		if (selected && selected.length) {
@@ -3604,13 +3469,12 @@ var initMaster = (function() {		// eslint-disable-line no-unused-vars
 		if (!initSelection[senderId]) initSelection[senderId] = [];
 		if ((!initMenu || initMenu === MenuType.MENU) && !initSelection[senderId].length) initSelection[senderId] = Array.from(selected);
 		
-		var tokenID = args[0],
-			curToken = getObj( 'graphic', tokenID ),
-			isGM = playerIsGM(senderId),
-			charID, charCS, foe,
-			initRoll, init_carry;
-			
-		if (!(charCS = getCharacter( tokenID ))) {
+		const tokenID = args[0],
+			  curToken = getObj( 'graphic', tokenID ),
+			  isGM = playerIsGM(senderId),
+			  charCS = getCharacter( tokenID );
+			  
+		if (!charCS) {
 			if (initSelection[senderId] && initSelection[senderId].length) {
 				(initSelection[senderId] || [0]).shift();
 				setTimeout( () => doInitMenu( args, initSelection[senderId], initMenu, senderId ), 0 );
@@ -3619,9 +3483,9 @@ var initMaster = (function() {		// eslint-disable-line no-unused-vars
 				sendError( 'The selected token does not represent a character sheet',msg_orig[senderId] );
 				return;
 			}
-		}
-		foe = charCS.get('controlledby').length == 0;
-		initRoll = foe ? state.initMaster.dmRoll : state.initMaster.playerRoll;
+		};
+		const foe = charCS.get('controlledby').length == 0,
+			  initRoll = foe ? state.initMaster.dmRoll : state.initMaster.playerRoll;
 		
 		if (state.initMaster.initType == 'standard') {
 			sendParsedMsg( tokenID, Init_Messages.stdInit, null, flags.feedbackName );
@@ -3629,22 +3493,19 @@ var initMaster = (function() {		// eslint-disable-line no-unused-vars
 		} else if (state.initMaster.initType == 'group' && isNaN(initRoll)) {
 			sendParsedMsg( tokenID, Init_Messages.notYet, null, flags.feedbackName );
 			return;
-		}
-		var content = '',
-		    charName = charCS.get('name'),
-			tokenName = curToken.get('name'),
-			changedRound = state.initMaster.changedRound,
-			roundCounter = state.initMaster.round,
-			prevRound = (attrLookup( charCS, [fields.Prev_round[0] + tokenID, fields.Prev_round[1]], null, null, null, true ) || 0),
-			init_submitVal = (changedRound || (prevRound != roundCounter) ? 1 : 0 );
+		};
+		const changedRound = state.initMaster.changedRound,
+			  roundCounter = state.initMaster.round,
+			  prevRound = (attrLookup( charCS, [fields.Prev_round[0] + tokenID, fields.Prev_round[1]], {caseSensitive:true} ) || 0),
+			  init_submitVal = (changedRound || (prevRound != roundCounter) ? 1 : 0 );
 			
 		setAttr( charCS, fields.Init_done, 0 );
 		setAttr( charCS, fields.Init_submitVal, init_submitVal );
 		
 		if (isGM && (!initMenu || initMenu === MenuType.MENU) && (!_.isUndefined(initMarkers) || (selected && selected.length))) {
 			if (!initMarkers) initMarkers = {};
-			let page = curToken.get('_pageid'),
-				size = Math.round(Math.max(curToken.get('width'),curToken.get('height')) * initMarkerRatio);
+			const page = curToken.get('_pageid'),
+				  size = Math.round(Math.max(curToken.get('width'),curToken.get('height')) * initMarkerRatio);
 			if (!initMarkers[page]) initMarkers[page] = {};
 			if (!initMarkers[page][senderId]) {
 				initMarkers[page][senderId] = createObj("graphic",{pageid:page,subtype:"token",name:'initMarker',imgsrc:design.initSelect,controlledby:senderId,layer:"gmlayer",isdrawing:true,});
@@ -3662,13 +3523,11 @@ var initMaster = (function() {		// eslint-disable-line no-unused-vars
 			return;
 		};
 		
-		init_carry = parseInt(attrLookup( charCS, fields.Init_carry ) || 0);
+		const init_carry = parseInt(attrLookup( charCS, fields.Init_carry ) || 0);
 		if (init_carry !== 0) {
-
 			doCarryOver( tokenID, charCS, initMenu, senderId );
 			return;
 		}
-
         args.unshift(initMenu);
 		args[2] = -1;
 		buildMenu( initMenu, charCS, MenuState.ENABLED, args, senderId );
@@ -3683,29 +3542,27 @@ var initMaster = (function() {		// eslint-disable-line no-unused-vars
 	 * to set manual adjustments if required.
 	 */
 	 
-	var doShowInitFactors = function( args, selected, senderId ) {
+	const doShowInitFactors = function( args, selected, senderId ) {
 		
 		if (!args) args = [];
 		
 		if (!args[0] && selected && selected.length) {
 			args[0] = selected[0]._id;
 		} else if (!args[0]) {
-			sendDebug( 'doShowInitFactors: tokenID is invalid' );
 			sendError( 'No token selected' );
 			return;
 		}
-		
-		var tokenID = args[0],
-			silent = (args[1] || '').toLowerCase() === 'silent',
-			menu = args[2],
-			charCS = getCharacter(tokenID);
-			
+		const tokenID = args[0],
+			  silent = (args[1] || '').toLowerCase() === 'silent',
+			  menu = args[2],
+			  charCS = getCharacter(tokenID),
+			  curToken = getObj('graphic',tokenID);
+
 		if (!charCS) {
 			sendError( 'Invalid token selected' );
 			return;
 		}
-			
-		makeCheckInitMenu( tokenID, charCS, senderId, silent, '', menu );
+		makeCheckInitMenu( (!curToken ? undefined : tokenID), charCS, senderId, silent, '', menu );
 		return;
 	}
 
@@ -3714,56 +3571,63 @@ var initMaster = (function() {		// eslint-disable-line no-unused-vars
 	 * of a character
 	 */
  
-	var doMagicInitEffect = function( args, selected, senderId, silent ) {
+	const doMagicInitEffect = function( args, selected, senderId, silent ) {
 		
 		if (!args) args = [];
-		
 		if (!args[0] && selected && selected.length) {
 			args[0] = selected[0]._id;
 		} else if (!args[0]) {
-			sendDebug( 'doMagicInitEffect: tokenID is invalid' );
 			sendError( 'No token selected' );
 			return;
 		}
-
-		var tokenID = args[0],
-			cmd = (args[1] || '').toLowerCase(),
-			name = args[2],
-			charCS = getCharacter(tokenID);
+		const tokenID = args[0],
+			  cmd = (args[1] || '').toLowerCase(),
+			  name = args[2],
+			  charCS = getCharacter(tokenID);
 			
 		if (!charCS) {
 			sendError( 'Invalid token selected' );
 			return;
 		}
+		if (!getObj('graphic',tokenID)) tokenID = '';
 		
-		var InitMagic = getTable( charCS, fieldGroups.INIT ),
-			initIndex = InitMagic.tableFind( fields.InitMagic_name, name ),
-			modOp = '=+-*/'.includes((args[3] || ' ')[0]),
-			modEq = (args[3] || ' ')[0] === '=' ? '=' : '',
-			multOp = '=+-*/'.includes((args[4] || ' ')[0]),
-			multEq = (args[4] || ' ')[0] === '=' ? '=' : '',
-			modVal = parseFloat(evalAttr((modOp ? args[3].slice(1) : args[3]),charCS)) || 0,
+		let InitMagic = getTable( charCS, fieldGroups.INIT ),
+			initIndex = [];
+		
+		const initIndexes = InitMagic.tableFindAll( fields.InitMagic_tid, [tokenID,''] ),
+			  modOp = '=+-*/'.includes((args[3] || ' ')[0]),
+			  modEq = (args[3] || ' ')[0] === '=' ? '=' : '',
+			  multOp = '=+-*/'.includes((args[4] || ' ')[0]),
+			  multEq = (args[4] || ' ')[0] === '=' ? '=' : '',
+			  prefix = InitMagic.fieldGroup,
+			  values = initValues( prefix ),
+			  dbname = name.dbName() || '-';
+			  
+		if (_.isUndefined(initIndexes)) {
+			initIndex = InitMagic.tableFind( fields.InitMagic_name, name );
+		} else {
+			initIndex = _.find( initIndexes, i => InitMagic.tableLookup( fields.InitMagic_name, i ).dbName() === dbname );
+		};
+
+		let	modVal = parseFloat(evalAttr((modOp ? args[3].slice(1) : args[3]),charCS)) || 0,
 			multVal = parseFloat(evalAttr((multOp ? args[4].slice(1) : args[4]),charCS)) || 1,
-			silent = silent || ((args[5] || '').toLowerCase() === 'silent'),
-			values = initValues( InitMagic.fieldGroup ),
 			msg = '';
 			
-		log('doMagicInitEffect: modOp:'+modOp+', modVal:'+modVal+', multOp:'+multOp+', multVal:'+multVal+', args = '+args);
-			
-		if (_.isUndefined(initIndex) && (modVal !== 0 || multVal !== 1)) {
+		silent = silent || ((args[5] || '').toLowerCase() === 'silent');
+		if (_.isUndefined(initIndex) && (cmd !== 'del') && (modVal !== 0 || multVal !== 1)) {
 			msg = 'Added new magic initiative effect *'+name+'* with mod '+(modVal>0 ? '+' : '')+modVal+' and mult '+'x'+multVal;
-			values[fields.InitMagic_cmd[0]][fields.InitMagic_cmd[1]] = cmd;
-			values[fields.InitMagic_name[0]][fields.InitMagic_name[1]] = name;
-			values[fields.InitMagic_mod[0]][fields.InitMagic_mod[1]] = modVal;
-			values[fields.InitMagic_mult[0]][fields.InitMagic_mult[1]] = multVal;
+			values.valLine( prefix, 'cmd', cmd )
+				  .valLine( prefix, 'tid', tokenID )
+				  .valLine( prefix, 'name', name )
+				  .valLine( prefix, 'mod', modVal )
+				  .valLine( prefix, 'mult', multVal );
 			InitMagic = InitMagic.addTableRow( initIndex, values );
-			log('doMagicInitEffect: set row '+(InitMagic.sortKeys.length-1)+', with msg '+msg);
-			log('doMagicInitEffect: stored modVal = '+InitMagic.tableLookup( fields.InitMagic_mod, (InitMagic.sortKeys.length-1)));
+//			log('doMagicInitEffect: set row '+(InitMagic.sortKeys.length-1)+', with msg '+msg);
+//			log('doMagicInitEffect: stored modVal = '+InitMagic.tableLookup( fields.InitMagic_mod, (InitMagic.sortKeys.length-1)));
 			
 		} else if (!_.isUndefined(initIndex)) {
-			log('doMagicInitEffect: updating an existing line, e.g. to delete it');
-			let curMod = InitMagic.tableLookup( fields.InitMagic_mod, initIndex ),
-				curMult = InitMagic.tableLookup( fields.InitMagic_mult, initIndex );
+			const curMod = InitMagic.tableLookup( fields.InitMagic_mod, initIndex ),
+				  curMult = InitMagic.tableLookup( fields.InitMagic_mult, initIndex );
 			modVal = modEq || !modOp ? modVal : (parseFloat(evalAttr(curMod+args[3],charCS )) || 0);
 			multVal = multEq || !multOp ? multVal : (parseFloat(evalAttr(curMult+args[3],charCS )) || 1);
 
@@ -3803,14 +3667,15 @@ var initMaster = (function() {		// eslint-disable-line no-unused-vars
 	 * Initiative as per the AD&D2e DMG 
 	 */
 	 
-	var doInitDiceRoll = function( args, msg='', senderId ) {   // button
+	const doInitDiceRoll = function( args, msg='', senderId ) {
 		
-		var playerRoll = parseInt(args[0] || NaN),
-			dmRoll = parseInt(args[1] || NaN),
-			cmd = (args[2] || '').toLowerCase(),
-			argStr = (args[0] || '') + '|' + (args[1] || ''),
-			charStr = _.pluck(state.initMaster.playerChars,'name').join(', '),
-			content = '&{template:'+fields.menuTemplate+'}'
+		const playerRoll = parseInt(args[0] || NaN),
+			  dmRoll = parseInt(args[1] || NaN),
+			  cmd = (args[2] || '').toLowerCase(),
+			  argStr = (args[0] || '') + '|' + (args[1] || ''),
+			  charStr = _.pluck(state.initMaster.playerChars,'name').join(', ');
+			  
+		let	content = '&{template:'+fields.menuTemplate+'}'
 					+ '{{name=Initiative Dice Rolls}}'
 					+ '{{subtitle=For Standard & Group Initiative}}'
 					+ (msg.length ? ('{{ ='+msg+'\n}}') : '' )
@@ -3826,7 +3691,6 @@ var initMaster = (function() {		// eslint-disable-line no-unused-vars
 			state.initMaster.playerRoll = playerRoll;
 			state.initMaster.dmRoll = dmRoll;
 			args[2] = '';
-//			doInitRoll( args, true, senderId );
 			content +='{{Section2=Ask a Player to roll 1d10 and also roll 1d10 as DM, then enter the values below\n'
 					+ '['+(isNaN(playerRoll) ? ('Enter Party Roll') : ('<span style='+design.selected_button+'>Party Rolled '+playerRoll+'</span>'))+'](!init --roll &#63;{Enter 1d10 roll|&#124;1&#124;2&#124;3&#124;4&#124;5&#124;6&#124;7&#124;8&#124;9&#124;10}|'+dmRoll+'|menu)'
 					+ '['+(isNaN(dmRoll) ? ('Enter Foes Roll') : ('<span style='+design.selected_button+'>DM Rolled '+dmRoll+'</span>'))+'](!init --roll '+playerRoll+'|&#63;{Enter 1d10 roll|&#124;1&#124;2&#124;3&#124;4&#124;5&#124;6&#124;7&#124;8&#124;9&#124;10}|menu)'
@@ -3846,7 +3710,7 @@ var initMaster = (function() {		// eslint-disable-line no-unused-vars
 		if (cmd != 'rounds' || state.initMaster.dispRollOnInit) {
 			sendFeedback( content,flags.feedbackName,flags.feedbackImg );
 		} else {
-			sendWait(senderId,0,'init');
+			sendWait(senderId,0,'Init menu');
 		}
 		return;
 	};
@@ -3856,11 +3720,11 @@ var initMaster = (function() {		// eslint-disable-line no-unused-vars
 	 * or 'group' initiative
 	 */
 	 
-	var doInitRoll = function( args, isGM, senderId ) {
+	const doInitRoll = function( args, isGM, senderId ) {
 		
-		var playerRoll = args[0] || NaN,
-			dmRoll = args[1] || NaN,
-			isMenu = ((args[2] || '') === 'menu');
+		const playerRoll = args[0] || NaN,
+			  dmRoll = args[1] || NaN,
+			  isMenu = ((args[2] || '') === 'menu');
 			
 		if (!isGM && !isNaN(state.initMaster.playerRoll)) return;
 
@@ -3872,7 +3736,7 @@ var initMaster = (function() {		// eslint-disable-line no-unused-vars
 		}
 
 		if (state.initMaster.initType == 'standard' && (!isNaN(args[0]) || !isNaN(args[1]))) {
-			let page = Campaign().get('playerpageid'),
+			const page = Campaign().get('playerpageid'),
 				tracker = Campaign().get('initiativepage'); 
 			if (page !== tracker) Campaign().set('initiativepage', page);
 			if (!tracker) sendAPI('!rounds --start start');
@@ -3887,7 +3751,7 @@ var initMaster = (function() {		// eslint-disable-line no-unused-vars
 		if (isMenu) {
 			doInitDiceRoll( args, (isNaN(playerRoll) && isNaN(dmRoll) ? '' : 'Dice Roll made'), senderId );
 		} else {
-			sendWait(senderId,0);
+			sendWait(senderId,0,'Init standard');
 		}
 		return;
 	}
@@ -3897,14 +3761,14 @@ var initMaster = (function() {		// eslint-disable-line no-unused-vars
 	 * See the DMG p55 for details of each type
 	 */
 	 
-	var doSetInitType = function( args, senderId ) {
+	const doSetInitType = function( args, senderId ) {
 		
 		if (!['standard','group','individual'].includes(args[0].toLowerCase())) {
 			sendError('Invalid initMaster initiative type',msg_orig[senderId]);
 			return;
 		}
 
-		var msg ='Set initiative type to '+args[0];
+		const msg ='Set initiative type to '+args[0];
 		
 		state.initMaster.initType = args[0].toLowerCase();
 		args.shift();
@@ -3922,10 +3786,11 @@ var initMaster = (function() {		// eslint-disable-line no-unused-vars
 	 * their initiative selections, and for "End of Day" processing.
 	 */
 	 
-	var doCharList = function( args, selected, senderId ) {
+	const doCharList = function( args, selected, senderId ) {
 		
-		var listType = (args[0] || '').toLowerCase(),
-			msg = '',
+		const listType = (args[0] || '').toLowerCase();
+		
+		let	msg = '',
 			curToken, charID, charCS;
 		
 		switch( listType.toLowerCase() ) {
@@ -3946,7 +3811,6 @@ var initMaster = (function() {		// eslint-disable-line no-unused-vars
 				if (!(curToken = getObj('graphic',token._id))) return;
 				if (!((charID=curToken.get('represents')).length)) return;
 				if (!(charCS = getObj('character',charID))) return;
-				//				if (!(charCS.get('controlledby').length)) return;
 				list.push({name:curToken.get('name'),id:curToken.id});
 			});
 			list = _.uniq(list,false,obj => obj.name);
@@ -3971,29 +3835,28 @@ var initMaster = (function() {		// eslint-disable-line no-unused-vars
 	 * who have not yet completed initiative.
 	 */
 	 
-	var doCheckTracker = function( args, senderId ) {
+	const doCheckTracker = function( args, senderId ) {
 		
-		var menuType = args[0] || '',
-			turnorder = Campaign().get('turnorder'),
-			tokenList = _.pluck(state.initMaster.playerChars,'name'),
-			msg = '',
-			token;
+		const menuType = args[0] || '';
+		let	  turnorder = Campaign().get('turnorder');
+		let	  tokenList = _.pluck(state.initMaster.playerChars,'name');
+
 		if (!turnorder) 
 			{return;} 
 		if (typeof(turnorder) === 'string') 
 			{turnorder = JSON.parse(turnorder);} 
 		
 		_.each(turnorder,turn => {
-			token = getObj('graphic',turn.id);
+			const token = getObj('graphic',turn.id);
 			if (token) tokenList = _.without(tokenList,token.get('name'));
 		});
-		msg = (tokenList.length ? (tokenList.join(', ')+' have still to complete their initiative') : 'All Players have completed initiative');
+		const msg = (tokenList.length ? (tokenList.join(', ')+' have still to complete their initiative') : 'All Players have completed initiative');
 		if (menuType.toLowerCase() === 'roll') {
 			args.shift();
 			doInitDiceRoll( args, msg, senderId );
 		} else {
-			let content = '&{template:'+fields.menuTemplate+'}{{name=Check Tracker}}{{desc=' + msg +'}}'
-					+ (tokenList.length ? '{{desc1=[Check again](!init --check-tracker)}}' : '');
+			const content = '&{template:'+fields.menuTemplate+'}{{name=Check Tracker}}{{desc=' + msg +'}}'
+						  + (tokenList.length ? '{{desc1=[Check again](!init --check-tracker)}}' : '');
 			sendFeedback( content,flags.feedbackName,flags.feedbackImg );
 		}
 		return;
@@ -4006,12 +3869,9 @@ var initMaster = (function() {		// eslint-disable-line no-unused-vars
 	 * control it via chat commands or create their own menu
 	 */
 	 
-	var doMaintMenu = function( args, selected ) {
+	const doMaintMenu = function( args, selected ) {
 		
-		var tokenID = (selected && selected[0]) ? selected[0].id : '',
-			tokenName = tokenID ? getObj('graphic',tokenID).get('name') : '';
-		
-		var	content = '&{template:'+fields.menuTemplate+'}{{name=Initiative Maintenance Menu}}'
+		const content = '&{template:'+fields.menuTemplate+'}{{name=Initiative Maintenance Menu}}'
 					+ '{{desc=**Turn Order**\n'
 					+ '[Start/Pause](!rounds --start&#13;&#47;w gm Tracker started/paused)\n'
 					+ '[Start Melee](!rounds --clearonround on --clear&#13;&#47;w gm Started Melee, Tracker will clear each round ready for next initiative)'
@@ -4044,19 +3904,18 @@ var initMaster = (function() {		// eslint-disable-line no-unused-vars
 	 * to deduct the cost from Characters
 	 */
 	 
-	var doEndOfDay = function( args, senderId ) {
+	const doEndOfDay = function( args, senderId ) {
 		
 		if (!args) args = [];
 		
-		var cmd = (args.shift() || 'ask').toLowerCase(),
+		let cmd = (args.shift() || 'ask').toLowerCase(),
 			cost = args.join('|'),
 			askToRest = cmd == 'asktorest',
 			rest = cmd == 'rest',
 			night = cmd == 'overnight',
 			foes = cmd == 'foes',
 			done = [],
-			restStr = '',
-			names, content;
+			restStr = '';
 			
 		if (!['ask','asktorest','set','overnight','rest','foes'].includes(cmd)) {
 			sendError('Invalid End of Day command.  Must be one of "Ask", "Set", "Overnight", "Rest" or "Foes"',msg_orig[senderId]);
@@ -4082,8 +3941,9 @@ var initMaster = (function() {		// eslint-disable-line no-unused-vars
 			rest = night = false;
 		}
 
-		names = _.pluck(state.initMaster.playerChars,'name');
-		content = '&{template:'+fields.menuTemplate+'}{{name=End of Day}}';
+		let names = _.pluck(state.initMaster.playerChars,'name'),
+			content = '&{template:'+fields.menuTemplate+'}{{name=End of Day}}',
+			charID, tokenName, charObj, charName, party;
 		if (rest || night || foes) {
 			cost = parseFloat(cost) || 0;
 			content += '{{desc=The following characters have '+(night ? 'overnighted ' : 'rested ')+(cost < 0 ? 'and earned ' : ' at a cost of ')+Math.abs(cost)+' gp}}{{desc1=';
@@ -4091,14 +3951,14 @@ var initMaster = (function() {		// eslint-disable-line no-unused-vars
 			filterObjs( function(obj) {
 				if (!names.length) return false;
 				if (obj.get('type') != 'graphic' || obj.get('subtype') != 'token') return false;
-				let charID = obj.get('represents');
+				charID = obj.get('represents');
 				if (!charID || !charID.length) return false;
-				let tokenName = obj.get('name');
-				let charObj = getObj('character',charID);
+				tokenName = obj.get('name');
+				charObj = getObj('character',charID);
 				if (!charObj) return false;
-				let charName = charObj.get('name');
+				charName = charObj.get('name');
 				if (done.includes(charName)) return false;
-				let party = names.includes(tokenName);
+				party = names.includes(tokenName);
 				if (!(foes ^ party)) return false;
 				done.push(charName);
 				if (rest) restStr += ' --rest '+obj.id+'|long';
@@ -4112,9 +3972,6 @@ var initMaster = (function() {		// eslint-disable-line no-unused-vars
 				setAttr( charObj, fields.Timespent, '1' );
 				setAttr( charObj, fields.CharDay, state.moneyMaster.inGameDay );
 				if (cost != 0) spendMoney( charObj, cost );
-//				setAttr( charObj, fields.Money_copper, ((parseInt(attrLookup( charObj, fields.Money_copper )||0)||0) - Math.floor((cost*100)%10)) );
-//				setAttr( charObj, fields.Money_silver, ((parseInt(attrLookup( charObj, fields.Money_silver )||0)||0) - Math.floor((cost*10)%10)) );
-//				setAttr( charObj, fields.Money_gold, ((parseInt(attrLookup( charObj, fields.Money_gold )||0)||0) - Math.floor(cost)) );
 				return true;
 			});
 			content += '}}';
@@ -4132,14 +3989,13 @@ var initMaster = (function() {		// eslint-disable-line no-unused-vars
 					+  '}}';
 		}
 		sendFeedback( content );
-//		log('doEndOfDay: rest string is '+restStr);
 		if (rest && restStr.length) sendAPI( fields.magicMaster + restStr, senderId );
 		return;
 	}
-	
-	var doEnableLongRest = function( args, selected, senderId ) {
+
+	const doEnableLongRest = function( args, selected, senderId ) {
 		
-		var names=[],
+		let names=[],
 			curToken, charID, charCS, name, content;
 		
 		if (!args) args = [];
@@ -4170,21 +4026,18 @@ var initMaster = (function() {		// eslint-disable-line no-unused-vars
 	 * Handle a button press, and redirect to the correct handler
 	 */
 
-	var doButton = function( args, senderId, selected ) {
+	const doButton = function( args, senderId, selected ) {
 		if (!args)
 			{return;}
-
 		if (args.length < 1) {
 			throw new Error('Invalid initMaster button command syntax');
 		}
 
-		var	content = '',
-		    curToken, charID, charCS,
-			setVars, 
-		    handler = args[0],
-			tokenID = args[1];
-
-		if (!(charCS = getCharacter( tokenID ))) {
+		const handler = args[0],
+			  tokenID = args[1],
+			  charCS = getCharacter( tokenID );
+		      
+		if (!charCS) {
 			throw new Error( 'initMaster button tokenID does not specify a character' );
 		}
 		switch (handler.toUpperCase()) {
@@ -4355,24 +4208,22 @@ var initMaster = (function() {		// eslint-disable-line no-unused-vars
 				throw new Error( 'doButton: invalid action name for switch - "' + handler + '"' );
 		
 		};
-
 	};
 	
-	/**
-	 * Handle a handshake from another API
-	 **/
+
+// ------------------------ Handle a handshake from another API -----------------------------
 	 
 	/**
 	 * Handle handshake request
 	 **/
 	 
-	var doHsQueryResponse = function(args) {
+	const doHsQueryResponse = function(args) {
 		if (!args) return;
-		var from = args[0] || '',
-			func = args[1] || '',
-			funcTrue = ['init','type','menu','monmenu','weapon','monster','complex','muspell','prspell','power','mibag','thief','other','maint','check-tracker','list-pcs',
+		const from = args[0] || '',
+			  func = args[1] || '',
+			  funcTrue = ['init','type','menu','monmenu','weapon','monster','complex','muspell','prspell','power','mibag','thief','other','maint','check-tracker','list-pcs',
 						'end-of-day','help','debug'].includes(func.toLowerCase()),
-			cmd = '!'+from+' --noWaitMsg --hsr init'+((func && func.length) ? ('|'+func+'|'+funcTrue) : '');
+			  cmd = '!'+from+' --hsr init'+((func && func.length) ? ('|'+func+'|'+funcTrue) : '');
 
 		sendDebug('InitMaster recieved handshake query from '+from+((func && func.length) ? (' checking command '+func+' so responding '+funcTrue) : (' and responding')));
 		sendRmAPI(cmd);
@@ -4383,13 +4234,13 @@ var initMaster = (function() {		// eslint-disable-line no-unused-vars
 	 * Handle the response to a handshake query
 	 **/
 	 
-	var doHandleHsResponse = function(args) {
+	const doHandleHsResponse = function(args) {
 		if (!args) {
 			throw new Error('Invalid handshake response received');
 		}
-		var from = args[0] || '',
-			func = args[1] || '',
-			funcExists = (!!args[2]) || false;
+		const from = args[0] || '',
+			  func = args[1] || '',
+			  funcExists = (!!args[2]) || false;
 		
 		if (!apiCommands[from]) {
 			apiCommands[from] = {};
@@ -4410,18 +4261,18 @@ var initMaster = (function() {		// eslint-disable-line no-unused-vars
 	 * This allows procedural/linear processing of activity and overcomes
 	 * some of the limitations of Roll20 asynchronous processing
 	 */ 
-	 
 
-	var handleChatMessage = function(msg) {
-		var args = processInlinerolls(msg),
+	const handleChatMessage = function(msg) {
+		let args = processInlinerolls(msg),
 			senderId = findThePlayer(msg.who),
-			selected = msg.selected,
-			roundsExists = apiCommands.rounds && apiCommands.rounds.exists,
 			isGM = (playerIsGM(senderId) || state.initMaster.debug === senderId),
 			t = 2;
 			
-		var doInitCmd = function( e, selected, senderId ) {
-			var arg = e, i=arg.indexOf(' '), cmd, argString;
+		const selected = msg.selected,
+			  roundsExists = apiCommands.rounds && apiCommands.rounds.exists;
+			
+		const doInitCmd = function( e, selected, senderId ) {
+			let arg = e, i=arg.indexOf(' '), cmd, argString;
 			sendDebug('Processing arg: '+arg);
 			
 			try {
@@ -4498,7 +4349,7 @@ var initMaster = (function() {		// eslint-disable-line no-unused-vars
 						doMagicInitEffect(arg,selected,senderId,false);
 						break;
 					case 'isround':
-						sendWait(senderId,0,'isround');
+						sendWait(senderId,0,'Init --isround');
 						if (isGM) doIsRound(arg,senderId);
 						break;
 					case 'end-of-day':
@@ -4522,16 +4373,16 @@ var initMaster = (function() {		// eslint-disable-line no-unused-vars
 						break;
 					case 'clear-markers':
 					case 'clearmarkers':
-						sendWait(senderId,0);
+						sendWait(senderId,0,'Init --clearmarkers');
 						clearInitMarkers();
 						break;
 					case 'hsq':
 					case 'handshake':
-						sendWait(senderId,0);
+						sendWait(senderId,0,'Init --hsq');
 						doHsQueryResponse(arg);
 						break;
 					case 'hsr':
-						sendWait(senderId,0);
+						sendWait(senderId,0,'Init --hsr');
 						doHandleHsResponse(arg);
 						break;
 					case 'handout':
@@ -4604,11 +4455,11 @@ var initMaster = (function() {		// eslint-disable-line no-unused-vars
 		}
 
 		args = args.split(' --');
-		let senderMod = args.shift().split(' ');
+		const senderMod = args.shift().split(' ');
 		if (senderMod.length > 1) senderId = fixSenderId( [senderMod[1]], selected, senderId );
 		
 		if (!flags.noWaitMsg && args[0] && !args[0].toLowerCase().startsWith('nowaitmsg')) {
-			sendWait(senderId,1,'initMaster');
+			sendWait(senderId,1,'init cmd '+args[0].split(' ')[0]);
 		}
 		
 		_.each(args, function(e) {
@@ -4626,7 +4477,7 @@ var initMaster = (function() {		// eslint-disable-line no-unused-vars
 	 
 	var cmdMasterRegister = function() {
 		var cmd = fields.commandMaster
-				+ ' --noWaitMsg'
+				+ ' --nowaitmsg'
 				+ ' --register Do_Initiative|Specify what character will do in current round and roll initiative|init|~~menu|`{selected|token_id}'
 				+ ' --register Complex_Monster_Init|Specify initiative for a Monster that can have both inate and weapon attacks|init|~~monmenu|`{selected|token_id}'
 				+ ' --register Monster_Init|Specify simple monster initiative|init|~~monster|`{selected|token_id}'
@@ -4645,13 +4496,14 @@ var initMaster = (function() {		// eslint-disable-line no-unused-vars
 	 * the initiative party list
 	 */
 	 
-	var handleMovePClist = function() {
+	const handleMovePClist = function() {
 		
 		try {
-			var page = Campaign().get('playerpageid'),
-				newList = [];
+			const page = Campaign().get('playerpageid');
+			let	newList = [],
+				pcToken;
 			_.each( state.initMaster.playerChars, pc => {
-				let pcToken = findObjs({_type:'graphic',_pageid:page,name:pc.name});
+				pcToken = findObjs({_type:'graphic',_pageid:page,name:pc.name});
 				if (pcToken && pcToken.length) {
 					newList.push({id:pcToken[0].id,name:pcToken[0].get('name')});
 				} else if (!_.isUndefined(getObj('graphic',pc.id)) && !_.isUndefined(pc.name)) {
@@ -4667,7 +4519,7 @@ var initMaster = (function() {		// eslint-disable-line no-unused-vars
 	/**
 	 * Register and bind event handlers
 	 */ 
-	var registerAPI = function() {
+	const registerAPI = function() {
 		on('chat:message',handleChatMessage);
 		on('change:campaign:playerpageid',handleMovePClist);
 		on('change:graphic:pageid',handleMovePClist);
