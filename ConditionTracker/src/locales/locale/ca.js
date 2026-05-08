@@ -2,76 +2,76 @@ const TRANSLATION = {
   conditions: {
     Grappled: {
       past: "agafat",
-      verb: "agafa",
+      verb: "agafa"
     },
     Restrained: {
       past: "retingut",
-      verb: "reté",
+      verb: "reté"
     },
     Prone: {
       past: "tombat",
-      verb: "tomba",
+      verb: "tomba"
     },
     Poisoned: {
       past: "enverinat",
-      verb: "enverina",
+      verb: "enverina"
     },
     Stunned: {
       past: "atordit",
-      verb: "atordeix",
+      verb: "atordeix"
     },
     Blinded: {
       past: "cec",
-      verb: "encega",
+      verb: "encega"
     },
     Charmed: {
       past: "encisat",
-      verb: "encisa",
+      verb: "encisa"
     },
     Frightened: {
       past: "espantat",
-      verb: "espanta",
+      verb: "espanta"
     },
     Incapacitated: {
       past: "incapacitat",
-      verb: "incapacita",
+      verb: "incapacita"
     },
     Invisible: {
       past: "invisible",
       verb: "torna",
-      suffix: "invisible",
+      suffix: "invisible"
     },
     Paralyzed: {
       past: "paralitzat",
-      verb: "paralitza",
+      verb: "paralitza"
     },
     Petrified: {
       past: "petrificat",
-      verb: "petrifica",
+      verb: "petrifica"
     },
     Unconscious: {
       past: "inconscient",
       verb: "deixa",
-      suffix: "inconscient",
+      suffix: "inconscient"
     },
     Spell: {
       past: "afectat per un encanteri",
-      verb: "llança un encanteri sobre",
+      verb: "llança un encanteri sobre"
     },
     Ability: {
       past: "afectat per una habilitat",
-      verb: "usa una habilitat sobre",
+      verb: "usa una habilitat sobre"
     },
     Advantage: {
       past: "té avantatge",
       verb: "atorga avantatge a",
-      noBy: true,
+      noBy: true
     },
     Disadvantage: {
       past: "té desavantatge",
       verb: "imposa desavantatge a",
-      noBy: true,
-    },
+      noBy: true
+    }
   },
   condNames: {
     Grappled: "Agafat",
@@ -91,7 +91,7 @@ const TRANSLATION = {
     Ability: "Habilitat",
     Advantage: "Avantatge",
     Disadvantage: "Desavantatge",
-    Other: "Altres",
+    Other: "Altres"
   },
   templates: {
     display: {
@@ -100,7 +100,7 @@ const TRANSLATION = {
       disadvantage: "{emoji} {source} té desavantatge contra {target}{subject}",
       noBy: "{emoji} {target} {past} ({source})",
       self: "{target} està {past}",
-      standard: "{emoji} {target} {past} per {source}",
+      standard: "{emoji} {target} {past} per {source}"
     },
     apply: {
       custom: "{source} aplica {effect} a {target}.",
@@ -108,7 +108,7 @@ const TRANSLATION = {
       disadvantage: "{source} té desavantatge contra {target}{subject}.",
       self: "{target} està {past}.",
       withSuffix: "{source} {verb} {target} {suffix}.",
-      standard: "{source} {verb} {target}.",
+      standard: "{source} {verb} {target}."
     },
     remove: {
       custom: "{target} ja no està afectat per {effect}.",
@@ -116,8 +116,8 @@ const TRANSLATION = {
       disadvantage: "{source} ja no té desavantatge contra {target}{subject}.",
       noBy: "{target} ja no {past}.",
       self: "{target} ja no està {past}.",
-      standard: "{target} ja no està {past} per {source}.",
-    },
+      standard: "{target} ja no està {past} per {source}."
+    }
   },
   ui: {
     wizard: {
@@ -135,11 +135,10 @@ const TRANSLATION = {
       noneBtn: "Cap",
       noneOrSourceBtn: "Cap o aplica a l'origen",
       subjectDesc: "Selecciona qui o què aplica l'efecte.",
-      sourceDesc:
-        "Selecciona la criatura que crea o genera la condició o l'efecte.",
+      sourceDesc: "Selecciona la criatura que crea o genera la condició o l'efecte.",
       targetDesc: "Selecciona la criatura que rebrà la condició o l'efecte.",
       otherText: "Text de condició personalitzat",
-      effectDetails: "Detalls de {condition}",
+      effectDetails: "Detalls de {condition}"
     },
     col: {
       players: "Jugadors",
@@ -160,8 +159,8 @@ const TRANSLATION = {
       details: "Detalls",
       description: "Descripció",
       scenario: "Escenari",
-      gameSystem: "Game System",
-      duration: "Duration",
+      gameSystem: "Sistema de joc",
+      duration: "Durada"
     },
     dur: {
       untilRemoved: "Fins que s'elimini",
@@ -174,7 +173,7 @@ const TRANSLATION = {
       custom: "Personalitzat",
       customPrompt: "Nombre de rondes",
       untilRemovedDisplay: "Fins que s'elimini",
-      turnsRemaining: "{n} fi(ns) de torn restant(s)",
+      turnsRemaining: "{n} fi(ns) de torn restant(s)"
     },
     btn: {
       openWizard: "Obre l'assistent",
@@ -186,14 +185,14 @@ const TRANSLATION = {
       reinstallHandout: "Reinstal·la el fullet",
       showHelp: "Mostra l'ajuda",
       reorderConditions: "Reordena les files de condicions",
-      reportToken: "Report Token Conditions",
-      savedEffects: "Saved Effects",
-      addSavedEffect: "Add Saved Effect",
-      editSaved: "Edit",
-      removeSaved: "Remove",
-      promoteSaved: "Add to Turn Tracker",
-      snoozeSaved: "Snooze",
-      clearSnooze: "Clear Snooze",
+      reportToken: "Informa de les condicions del testimoni",
+      savedEffects: "Efectes guardats",
+      addSavedEffect: "Afegeix l'efecte desat",
+      editSaved: "Edita",
+      removeSaved: "Eliminar",
+      promoteSaved: "Afegeix a Turn Tracker",
+      snoozeSaved: "Posposa",
+      clearSnooze: "Esborra la posposació"
     },
     title: {
       menu: "Menú",
@@ -204,7 +203,7 @@ const TRANSLATION = {
       applied: "Aplicat",
       removed: "Condició eliminada",
       cleanup: "Neteja completada",
-      macroReinstalled: "The {wizard}, {multiTarget}, {reportToken}, and {saved} macros have been reinstalled for all current GM players.",
+      macroReinstalled: "Macro reinstal·lada",
       handoutReinstalled: "Fullet reinstal·lat",
       warning: "Avís",
       error: "Error",
@@ -216,15 +215,15 @@ const TRANSLATION = {
       moveToken: "{name} — Mou el testimoni?",
       scriptReady: "Script llest",
       conditionReorder: "Ordre de torn modificat",
-      tokenReport: "Token Condition Report",
-      savedEffects: "Saved Effects",
-      savedAdd: "Add Saved Effect",
-      savedEdit: "Edit Saved Effect",
-      savedRemoved: "Saved Effect Removed",
-      savedPromoted: "Add to Turn Tracker",
-      savedSnoozed: "Reminder Snoozed",
-      savedSnoozeCleared: "Snooze Cleared",
-      hiddenEffects: "Hidden Effects — {name}",
+      tokenReport: "Informe de l'estat del testimoni",
+      savedEffects: "Efectes guardats",
+      savedAdd: "Afegeix l'efecte desat",
+      savedEdit: "Edita l'efecte desat",
+      savedRemoved: "S'ha eliminat l'efecte desat",
+      savedPromoted: "Afegeix a Turn Tracker",
+      savedSnoozed: "Recordatori posposat",
+      savedSnoozeCleared: "S'ha esborrat la posposació",
+      hiddenEffects: "Efectes ocults — {name}"
     },
     heading: {
       quickActions: "Accions ràpides",
@@ -236,120 +235,92 @@ const TRANSLATION = {
       promptUi: "Interfície de l'assistent",
       examples: "Exemples",
       summary: "Resum",
-      appliedTo: "Conditions Applied To",
-      appliedBy: "Conditions Applied By",
-      savedEffectsFor: "Saved Effects for {name}",
-      visibility: "Visibility",
-      snoozeOptions: "Snooze Reminder",
-      promoteOptions: "Promote to Turn Tracker",
-      editActions: "Edit Actions",
+      appliedTo: "Condicions aplicades",
+      appliedBy: "Condicions aplicades per",
+      savedEffectsFor: "Efectes desats per a {name}",
+      visibility: "Visibilitat",
+      snoozeOptions: "Recordatori de posposar",
+      promoteOptions: "Ascens a Turn Tracker",
+      editActions: "Edita accions"
     },
     msg: {
       noActive: "No hi ha cap condició activa en seguiment.",
       configReset: "Configuració restablerta als valors predeterminats.",
-      unknownConfig:
-        "Opció de configuració desconeguda. Usa --config per veure els paràmetres disponibles.",
-      macroReinstalled:
-        "Les macros {wizard}, {multiTarget} i {reportToken} s'han reinstal·lat per a tots els MJ actius.",
+      unknownConfig: "Opció de configuració desconeguda. Usa --config per veure els paràmetres disponibles.",
+      macroReinstalled: "Les macros {wizard}, {multiTarget}, {reportToken}, {saved} i {classify} s'han reinstal·lat per a tots els MJ actius.",
       handoutReinstalled: "El fullet d'ajuda {handout} s'ha reinstal·lat.",
-      duplicate:
-        "Aquesta combinació d'origen, subjecte, destinatari, condició i text personalitzat ja és activa.",
-      noTargets:
-        "No s'ha especificat cap testimoni destinatari per a l'aplicació multi-destinatari.",
-      noSelection:
-        "Selecciona almenys un testimoni al tauler abans d'usar --multi-target.",
-      invalidIds:
-        "No s'han trobat identificadors de testimoni vàlids a la selecció actual.",
-      reSelectTokens:
-        "No s'ha pogut trobar cap dels testimonis seleccionats originalment. Torna a seleccionar els testimonis i intenta-ho de nou.",
+      duplicate: "Aquesta combinació d'origen, subjecte, destinatari, condició i text personalitzat ja és activa.",
+      noTargets: "No s'ha especificat cap testimoni destinatari per a l'aplicació multi-destinatari.",
+      noSelection: "Selecciona almenys un testimoni al tauler abans d'usar --multi-target.",
+      invalidIds: "No s'han trobat identificadors de testimoni vàlids a la selecció actual.",
+      reSelectTokens: "No s'ha pogut trobar cap dels testimonis seleccionats originalment. Torna a seleccionar els testimonis i intenta-ho de nou.",
       conditionNotFound: "No s'ha trobat l'identificador de condició.",
       gmOnly: "Les ordres de Condition Tracker són exclusives del MJ.",
-      commandFailed:
-        "L'ordre no s'ha pogut completar de manera segura. Comprova la consola de l'API per obtenir detalls.",
+      commandFailed: "L'ordre no s'ha pogut completar de manera segura. Comprova la consola de l'API per obtenir detalls.",
       sourceTokenNotFound: "No s'ha trobat el testimoni origen.",
       targetTokenNotFound: "No s'ha trobat el testimoni destinatari.",
       subjectTokenNotFound: "No s'ha trobat el testimoni subjecte.",
-      invalidCondition:
-        "La condició ha de ser una de les condicions predefinides o Altres.",
-      subjectOnlyCustom:
-        "--subject només és vàlid per a Encanteri, Habilitat, Avantatge, Desavantatge i Altres.",
-      subjectBypassInvalid:
-        "--subjectPromptBypass espera true o false quan es proporciona un valor.",
-      customDetailsRequired:
-        "Es requereixen detalls de {condition}. Usa --other per proporcionar-los.",
-      markerConfigFormat:
-        "El format de configuració del marcador és: --config marker Grappled=grab",
-      markerPredefinedRequired:
-        "La configuració del marcador requereix un nom de condició predefinit.",
-      markerNameRequired:
-        "La configuració del marcador requereix un nom de marcador no buit.",
+      invalidCondition: "La condició ha de ser una de les condicions predefinides o Altres.",
+      subjectOnlyCustom: "--subject només és vàlid per a Encanteri, Habilitat, Avantatge, Desavantatge i Altres.",
+      subjectBypassInvalid: "--subjectPromptBypass espera true o false quan es proporciona un valor.",
+      customDetailsRequired: "Es requereixen detalls de {condition}. Usa --other per proporcionar-los.",
+      markerConfigFormat: "El format de configuració del marcador és: --config marker Grappled=grab",
+      markerPredefinedRequired: "La configuració del marcador requereix un nom de condició predefinit.",
+      markerNameRequired: "La configuració del marcador requereix un nom de marcador no buit.",
       markerSet: "El marcador de {condition} s'ha establert a {marker}.",
       healthBarSet: "La barra de salut s'ha establert a {bar}.",
       boolSet: "{key} s'ha establert a {value}.",
       expectedBoolean: "S'esperava true o false.",
-      invalidHealthBar:
-        "La barra de salut ha de ser bar1_value, bar2_value o bar3_value.",
+      invalidHealthBar: "La barra de salut ha de ser bar1_value, bar2_value o bar3_value.",
       markersDisabled: "Els marcadors estan desactivats.",
-      noMarkerConfigured:
-        "No hi ha cap marcador configurat per a aquesta condició.",
+      noMarkerConfigured: "No hi ha cap marcador configurat per a aquesta condició.",
       markerApplied: "Marcador aplicat: {marker}",
       markerPresent: "Marcador ja present: {marker}",
       langSet: "Idioma establert a {locale}.",
-      invalidLocale:
-        "Configuració regional no vàlida. Configuracions regionals admeses: {locales}.",
-      otherDurationRequiresRounds:
-        "La durada Altre requereix un nombre de rondes, per exemple --duration 5 rounds.",
-      invalidDuration:
-        "La durada ha de ser Fins que s'elimini, una opció de fi de torn o un nombre de rondes positiu.",
-      zeroHpNoConditions:
-        "{name} ha arribat a 0 PV i no té cap condició activa.",
-      zeroHpConditions:
-        "{name} ha arribat a 0 PV. Tria les condicions a eliminar:",
+      invalidLocale: "Configuració regional no vàlida. Configuracions regionals admeses: {locales}.",
+      otherDurationRequiresRounds: "La durada Altre requereix un nombre de rondes, per exemple --duration 5 rounds.",
+      invalidDuration: "La durada ha de ser Fins que s'elimini, una opció de fi de torn o un nombre de rondes positiu.",
+      zeroHpNoConditions: "{name} ha arribat a 0 PV i no té cap condició activa.",
+      zeroHpConditions: "{name} ha arribat a 0 PV. Tria les condicions a eliminar:",
       removeAllBtn: "Elimina totes les condicions de {name}",
       markIncapacitated: "Marca com a Incapacitat",
       removeFromTurnOrder: "Elimina de l'ordre d'iniciativa",
       alreadyIncapacitated: "{name} ja és Incapacitat.",
       tokenRemovedFromTurn: "{name} s'ha eliminat de l'ordre d'iniciativa.",
       tokenNotInTurn: "No s'ha trobat {name} a l'ordre d'iniciativa.",
-      moveTokenPrompt:
-        "Mou {name} al calque del mapa perquè romangui visible sense interferir amb altres testimonis?",
+      moveTokenPrompt: "Mou {name} al calque del mapa perquè romangui visible sense interferir amb altres testimonis?",
       moveTokenBtn: "Mou {name} al calque del mapa",
       tokenMoved: "{name} s'ha mogut al calque del mapa.",
       tokenNotFound: "No s'ha trobat el testimoni.",
       noActiveConditions: "{name} no té cap condició activa a eliminar.",
-      deadNoConditions:
-        "{name} s'ha marcat com a mort. No hi havia cap condició activa.",
+      deadNoConditions: "{name} s'ha marcat com a mort. No hi havia cap condició activa.",
       scriptReady: "{name} és actiu i estàs usant la versió {version}.",
       reachedZeroHp: "{name} ha arribat a 0 PV",
       manuallyRemoved: "s'ha eliminat manualment",
       durationExpired: "la seva durada ha expirat",
       markedAsDead: "{name} s'ha marcat com a mort",
-      conditionReorder:
-        "L'ordre de torn ha canviat i {count} fila(es) de condició seguida(es) pot estar fora de lloc. Fes clic a continuació per restaurar-les després dels seus testimonis assignats.",
-      conditionsReordered:
-        "Les files de condicions s'han reposicionat després dels seus testimonis assignats.",
-      noTokensSelectedReport:
-        "Select at least one token on the board before using --report-token.",
-      noConditionsAppliedTo: "{name} has no active conditions applied to it.",
-      noConditionsAppliedBy:
-        "{name} has no active conditions applied to others.",
-      noSavedEffects: "No saved effects stored for {name}.",
-      noTokenSelectedSaved: "Select a token on the board before using --saved.",
-      savedEffectAdded: "Saved effect added for {name}.",
-      savedEffectUpdated: "Saved effect updated.",
-      savedEffectRemoved: "Saved effect removed.",
-      savedEffectNotFound: "Saved effect not found.",
-      savedInvalidVisibility: "Invalid visibility. Use public, masked, or gm.",
+      conditionReorder: "L'ordre de torn ha canviat i {count} fila(es) de condició seguida(es) pot estar fora de lloc. Fes clic a continuació per restaurar-les després dels seus testimonis assignats.",
+      conditionsReordered: "Les files de condicions s'han reposicionat després dels seus testimonis assignats.",
+      noTokensSelectedReport: "Seleccioneu almenys un testimoni al tauler abans d'utilitzar --report-token.",
+      noConditionsAppliedTo: "{name} no té cap condició activa aplicada.",
+      noConditionsAppliedBy: "{name} no té cap condició activa aplicada als altres.",
+      noSavedEffects: "No s'ha guardat cap efecte desat per a {name}.",
+      noTokenSelectedSaved: "Seleccioneu una fitxa al tauler abans d'utilitzar --saved.",
+      savedEffectAdded: "S'ha afegit efecte desat per a {name}.",
+      savedEffectUpdated: "S'ha actualitzat l'efecte desat.",
+      savedEffectRemoved: "S'ha eliminat l'efecte desat.",
+      savedEffectNotFound: "No s'ha trobat l'efecte desat.",
+      savedInvalidVisibility: "Visibilitat no vàlida. Utilitzeu públic, emmascarat o gm.",
       savedConditionRequired: "Condition type is required. Use --condition <type>.",
-      savedPromotedPublic: "Effect added to Turn Tracker as public.",
-      savedPromotedMasked: "Effect added to Turn Tracker as masked — players see: {publicLabel}.",
-      savedPromotedGm: "Effect is GM-only — no Turn Tracker row will be created. The reminder system will surface it when this token reaches the top of the turn order.",
-      savedSnoozed: "Reminder snoozed: {scope}.",
-      savedSnoozeCleared: "Snooze cleared.",
-      hiddenEffectsReminder: "Hidden effects are active on {name}.",
-      visibilityPublicHint: "full label visible to all",
-      visibilityMaskedHint: "vague label shown to players",
-      visibilityGmHint: "GM whisper only, no Turn Tracker row",
+      savedPromotedPublic: "S'ha afegit l'efecte al Turn Tracker com a públic.",
+      savedPromotedMasked: "S'ha afegit l'efecte al Seguidor de torns com a emmascarat; els jugadors veuen: {publicLabel}.",
+      savedPromotedGm: "L'efecte és només per a GM: no es crearà cap fila de seguiment de girs. El sistema de recordatoris apareixerà quan aquesta fitxa arribi al capdamunt de l'ordre de torn.",
+      savedSnoozed: "S'ha posposat el recordatori: {scope}.",
+      savedSnoozeCleared: "S'ha esborrat la posposació.",
+      hiddenEffectsReminder: "Els efectes ocults estan actius a {name}.",
+      visibilityPublicHint: "etiqueta completa visible per a tothom",
+      visibilityMaskedHint: "etiqueta vaga mostrada als jugadors",
+      visibilityGmHint: "Només xiuxiueig de GM, sense fila Turn Tracker"
     },
     removal: {
       conditionField: "Condició",
@@ -361,54 +332,68 @@ const TRANSLATION = {
       markerRetained: "Conservat ({marker})",
       rowRemoved: "Eliminat",
       rowMissing: "Ja absent",
-      manualReason: "Eliminació manual",
+      manualReason: "Eliminació manual"
     },
     saved: {
       visibility: {
-        public: "Public",
-        masked: "Masked",
-        gm: "GM Only",
+        public: "Públic",
+        masked: "Enmascarat",
+        gm: "Només GM"
       },
       snooze: {
-        thisTurn: "This Turn",
-        oneRound: "1 Round",
-        threeRounds: "3 Rounds",
-        thisCombat: "This Combat",
-        rounds: "{n} round(s)",
+        thisTurn: "Aquest Torn",
+        oneRound: "1 Ronda",
+        threeRounds: "3 rondes",
+        thisCombat: "Aquest Combat",
+        rounds: "{n} rondes"
       },
       field: {
-        gmLabel: "GM Label",
-        publicLabel: "Public Label",
-        visibility: "Visibility",
-        source: "Source",
-        condition: "Condition",
+        gmLabel: "Etiqueta GM",
+        publicLabel: "Etiqueta pública",
+        visibility: "Visibilitat",
+        source: "Font",
+        condition: "Condició"
       },
       prompt: {
-        enterGmLabel: "Full effect description (GM only)",
-        enterPublicLabel: "Vague label shown to players",
+        enterGmLabel: "Descripció completa de l'efecte (només GM)",
+        enterPublicLabel: "Es mostra una etiqueta vaga als jugadors"
       },
-      snoozed: "snoozed",
+      snoozed: "adormit"
+    },
+    classify: {
+      title: "Classificació d'Actor",
+      showTitle: "Diagnòstic de Classificació",
+      showHeading: "Detalls de Classificació del Token",
+      resultHeading: "Substitució Aplicada",
+      noSelection: "Selecciona almenys un token al tauler abans d'usar --classify.",
+      invalidType: "Tipus de classificació no vàlid: {type}. Usa pc, npc, ignored o auto.",
+      set: "{name} → {type} (àmbit: {scope})",
+      cleared: "{name} substitució eliminada (àmbit: {scope}) — detecció automàtica restaurada.",
+      setTokenFallback: "{name} → {type} (substitució de token — cap full de personatge vinculat).",
+      clearedTokenFallback: "{name} substitució de token eliminada — detecció automàtica restaurada.",
+      fieldToken: "Token",
+      fieldType: "Classificació",
+      fieldSource: "Font",
+      fieldReason: "Motiu"
     },
     cleanup: {
       orphaned: "Entrades de condició òrfenes",
       stale: "Entrades de condició obsoletes",
       orphanedRows: "Files del registre de torns òrfenes",
-      unusedMarkers: "Marcadors no usats",
+      unusedMarkers: "Marcadors no usats"
     },
     apply: {
-      turnAppended:
-        "El destinatari no era a l'ordre d'iniciativa; la fila de condició s'ha afegit al final.",
-      turnInserted: "Fila de condició inserida sota el testimoni destinatari.",
-    },
+      turnAppended: "El destinatari no era a l'ordre d'iniciativa; la fila de condició s'ha afegit al final.",
+      turnInserted: "Fila de condició inserida sota el testimoni destinatari."
+    }
   },
   handout: {
     versionLabel: "Versió",
     subtitle: "Gestor d'estats de D&D 5e",
-    footerNote:
-      "Aquest fullet es crea i s'actualitza automàticament cada vegada que es carrega el script.",
+    footerNote: "Aquest fullet es crea i s'actualitza automàticament cada vegada que es carrega el script.",
     overview: {
       heading: "Visió general",
-      body: "Condition Tracker gestiona les condicions d'estat de D&D 5e i els efectes personalitzats com a files etiquetades al registre de torns de Roll20. Aplica condicions als testimonis, fes un seguiment de les durades per ordre d'iniciativa i elimina automàticament els efectes expirats quan acaba un torn. Totes les ordres són exclusives del MJ i es poden executar des del xat o mitjançant les macros instal·lades.",
+      body: "Condition Tracker gestiona les condicions d'estat de D&D 5e i els efectes personalitzats com a files etiquetades al registre de torns de Roll20. Aplica condicions als testimonis, fes un seguiment de les durades per ordre d'iniciativa i elimina automàticament els efectes expirats quan acaba un torn. Totes les ordres són exclusives del MJ i es poden executar des del xat o mitjançant les macros instal·lades."
     },
     quickStart: {
       heading: "Inici ràpid",
@@ -416,88 +401,109 @@ const TRANSLATION = {
       colDesc: "Descripció",
       rows: [
         [
-          "!condition-tracker --prompt",
-          "Assistent pas a pas — tria la condició, els testimonis i la durada de manera interactiva. També disponible com a macro ConditionTrackerWizard.",
+          "!seguidor de condicions --indicatiu",
+          "Assistent pas a pas — tria la condició, els testimonis i la durada de manera interactiva. També disponible com a macro ConditionTrackerWizard."
         ],
         [
           "!condition-tracker --multi-target",
-          "Aplica una condició a diversos testimonis simultàniament. També disponible com a macro ConditionTrackerMultiTarget.",
+          "Aplica una condició a diversos testimonis simultàniament. També disponible com a macro ConditionTrackerMultiTarget."
         ],
         [
           "!condition-tracker --report-token",
-          "Select one or more tokens first, then run this command to get a GM whisper listing every condition applied to and by each selected token. Also available as the ConditionTrackerReportToken macro.",
+          "Seleccioneu primer un o més fitxes i, a continuació, executeu aquesta ordre per obtenir un xiuxiueig de GM que enumera totes les condicions aplicades a cada testimoni seleccionat. També disponible com a macro ConditionTrackerReportToken."
         ],
         [
           "!condition-tracker --menu",
-          "Obre el menú principal de gestió amb botons per aplicar, revisar o eliminar condicions.",
-        ],
-      ],
+          "Obre el menú principal de gestió amb botons per aplicar, revisar o eliminar condicions."
+        ]
+      ]
     },
     commandsRef: {
       heading: "Referència d'ordres",
       colFlag: "Opció",
       colDesc: "Descripció",
       rows: [
-        ["--prompt", "Interfície de l'assistent pas a pas"],
         [
-          "--multi-target",
-          "Aplica una condició a diversos testimonis destinataris alhora",
+          "--demanada",
+          "Interfície de l'assistent pas a pas"
         ],
         [
-          "--menu",
-          "Mostra el menú principal (afegeix remove per al menú d'eliminació)",
+          "--multi-objectiu",
+          "Aplica una condició a diversos testimonis destinataris alhora"
         ],
         [
-          "--source X --target Y --condition Z",
-          "Aplica una condició directament sense l'assistent",
+          "--menú",
+          "Mostra el menú principal (afegeix remove per al menú d'eliminació)"
+        ],
+        [
+          "--source X --target Y --condició Z",
+          "Aplica una condició directament sense l'assistent"
         ],
         [
           "--duration &lt;valor&gt;",
-          "Durada per a una aplicació directa (p. ex. 2 rounds)",
+          "Durada per a una aplicació directa (p. ex. 2 rounds)"
         ],
         [
-          "--other &lt;text&gt;",
-          "Text personalitzat per als tipus d'efecte Encanteri / Habilitat / Altres",
+          "--altre <text>",
+          "Text personalitzat per als tipus d'efecte Encanteri / Habilitat / Altres"
         ],
         [
           "--remove &lt;id-condició&gt;",
-          "Elimina una condició específica pel seu identificador únic",
+          "Elimina una condició específica pel seu identificador únic"
         ],
         [
           "--config &lt;opció&gt; &lt;valor&gt;",
-          "Ajusta els paràmetres de configuració (vegeu la secció Configuració)",
+          "Ajusta els paràmetres de configuració (vegeu la secció Configuració)"
         ],
         [
           "--prompt --subjectPromptBypass true|false",
-          "Substitueix subjectPromptBypass per a aquesta ordre únicament (també admet --subject-prompt-bypass)",
+          "Substitueix subjectPromptBypass per a aquesta ordre únicament (també admet --subject-prompt-bypass)"
         ],
         [
-          "--cleanup",
-          "Reconcilia l'estat — elimina les condicions i files del registre de torns òrfenes",
+          "--neteja",
+          "Reconcilia l'estat — elimina les condicions i files del registre de torns òrfenes"
         ],
         [
-          "--reorder-conditions",
-          "Reposiciona manualment les files de condicions darrere dels seus tokens assignats a l'ordre de torns",
+          "--condicions-de-reordenar",
+          "Reposiciona manualment les files de condicions darrere dels seus tokens assignats a l'ordre de torns"
         ],
-        ["--reinstall-macro", "Torna a crear o actualitza les macros del MJ"],
+        [
+          "--reinstall-macro",
+          "Torna a crear o actualitza les macros del MJ"
+        ],
         [
           "--reinstall-handout",
-          "Torna a crear o actualitza el fullet d'ajuda localitzat",
+          "Torna a crear o actualitza el fullet d'ajuda localitzat"
         ],
         [
-          "--report-token",
-          "Whisper a GM-only condition report for each selected token (conditions applied to and by it)",
+          "--informe-token",
+          "Xiuxiueja un informe de condicions només per a GM per a cada testimoni seleccionat (condicions aplicades a i per aquest)"
         ],
         [
           "--lang &lt;locale&gt;",
-          "Mostra els missatges d'aquesta ordre en una configuració regional addicional (mode bilingüe)",
+          "Mostra els missatges d'aquesta ordre en una configuració regional addicional (mode bilingüe)"
         ],
-        ["--help", "Mostra una targeta d'ajuda breu al xat"],
-      ],
+        [
+          "--classify pc|npc|ignored",
+          "Substitueix el tipus d'actor per als tokens seleccionats — selecciona primer els tokens. L'àmbit per defecte és el personatge (escriu l'atribut ct_mod_actor_type); afegeix --scope token per emmagatzemar a l'estat de l'script"
+        ],
+        [
+          "--classify auto",
+          "Elimina la substitució del tipus d'actor i restaura la detecció automàtica per als tokens seleccionats"
+        ],
+        [
+          "--classify show",
+          "Xiuxiueja un diagnòstic de classificació per a cada token seleccionat — mostra el tipus detectat, la font de detecció i el motiu"
+        ],
+        [
+          "--help",
+          "Mostra una targeta d'ajuda breu al xat"
+        ]
+      ]
     },
     standardConditions: {
       heading: "Condicions estàndard (D&amp;D 5e)",
-      colCondition: "Condició",
+      colCondition: "Condició"
     },
     customEffects: {
       heading: "Tipus d'efectes personalitzats",
@@ -506,85 +512,211 @@ const TRANSLATION = {
       rows: [
         [
           "🔮 Encanteri",
-          "Segueix un efecte d'encanteri amb nom — se't demanarà el nom de l'encanteri",
+          "Segueix un efecte d'encanteri amb nom — se't demanarà el nom de l'encanteri"
         ],
         [
           "🎯 Habilitat",
-          "Segueix una habilitat de classe o raça amb nom — se't demanarà el nom",
+          "Segueix una habilitat de classe o raça amb nom — se't demanarà el nom"
         ],
         [
           "🍀 Avantatge",
-          "Registra un avantatge atorgat d'un testimoni a un altre; agrupat amb l'origen a la iniciativa",
+          "Registra un avantatge atorgat d'un testimoni a un altre; agrupat amb l'origen a la iniciativa"
         ],
         [
           "⬇️ Desavantatge",
-          "Registra un desavantatge imposat; agrupat amb l'origen a la iniciativa",
+          "Registra un desavantatge imposat; agrupat amb l'origen a la iniciativa"
         ],
         [
           "📝 Altres",
-          "Etiqueta personalitzada de forma lliure — se't demanarà una descripció",
-        ],
-      ],
+          "Etiqueta personalitzada de forma lliure — se't demanarà una descripció"
+        ]
+      ]
     },
     durationOptions: {
       heading: "Opcions de durada",
-      intro:
-        "El recompte restant es mostra a la columna pr del registre de torns i disminueix quan acaba el torn del testimoni ancla.",
+      intro: "El recompte restant es mostra a la columna pr del registre de torns i disminueix quan acaba el torn del testimoni ancla.",
       colOption: "Opció",
       colBehaviour: "Comportament",
       rows: [
         [
           "Fins que s'elimini",
-          "Permanent — s'ha d'eliminar manualment mitjançant el menú o --remove",
+          "Permanent — s'ha d'eliminar manualment mitjançant el menú o --remove"
         ],
         [
           "Fi del proper torn del destinatari",
-          "Expira quan acaba el proper torn del testimoni destinatari a la iniciativa",
+          "Expira quan acaba el proper torn del testimoni destinatari a la iniciativa"
         ],
         [
           "Fi del proper torn de l'origen",
-          "Expira quan acaba el proper torn del testimoni origen a la iniciativa",
+          "Expira quan acaba el proper torn del testimoni origen a la iniciativa"
         ],
         [
           "1 / 2 / 3 / 10 rondes",
-          "Compte enrere fix; un decrement per fi de torn del testimoni ancla",
-        ],
-      ],
+          "Compte enrere fix; un decrement per fi de torn del testimoni ancla"
+        ]
+      ]
     },
     savedEffects: {
-      heading: "Saved Effects",
-      intro:
-        "Saved effects let you store long-term conditions outside the Turn Tracker — curses, diseases, poisons, hidden debuffs, and other non-combat conditions. They persist in script state and can be optionally copied into the Turn Tracker when combat begins.",
+      heading: "Efectes guardats",
+      intro: "Els efectes desats us permeten emmagatzemar condicions a llarg termini fora del Turn Tracker: malediccions, malalties, verins, desavantatges ocults i altres condicions que no són de combat. Persisteixen en estat d'script i es poden copiar opcionalment al Seguidor de torns quan comença el combat.",
       visibility: {
-        heading: "Visibility Modes",
+        heading: "Modes de visibilitat",
         rows: [
-          ["public", "Full effect label is visible in the Turn Tracker and public chat."],
-          ["masked", "A vague public label is shown to players; full details are GM-only."],
-          ["gm", "No Turn Tracker row. Full details are stored in state and whispered to the GM when the affected token reaches the top of initiative."],
-        ],
+          [
+            "públic",
+            "L'etiqueta d'efecte complet és visible al Seguidor de girs i al xat públic."
+          ],
+          [
+            "emmascarat",
+            "Es mostra als jugadors una vaga etiqueta pública; Els detalls complets són només per a GM."
+          ],
+          [
+            "gm",
+            "Sense fila de seguiment de torns. Els detalls complets s'emmagatzemen en estat i es xiuxiuegen al GM quan el testimoni afectat arriba al cim de la iniciativa."
+          ]
+        ]
       },
       commands: {
-        heading: "Saved Effects Commands",
-        intro: "All --saved commands are GM-only. Select a token before running --saved or --saved add.",
+        heading: "Ordres d'efectes desades",
+        intro: "Totes les ordres --desades només són GM. Seleccioneu un testimoni abans d'executar --saved o --saved add.",
         rows: [
-          ["!condition-tracker --saved", "View saved effects for the selected token."],
-          ["!condition-tracker --saved add", "Launch the add-saved-effect wizard."],
-          ["!condition-tracker --saved edit <id>", "Edit labels or visibility for an existing saved effect."],
-          ["!condition-tracker --saved remove <id>", "Permanently remove a saved effect."],
-          ["!condition-tracker --saved promote <id> --visibility public|masked|gm", "Copy a saved effect into the Turn Tracker (public or masked) or confirm it is GM-only tracked."],
-          ["!condition-tracker --saved snooze <id> --scope turn|rounds|combat --rounds <n>", "Snooze a GM reminder for this turn, N rounds, or this combat."],
-          ["!condition-tracker --saved snooze-clear <id>", "Clear an active snooze so reminders resume immediately."],
-        ],
+          [
+            "!condition-tracker --desat",
+            "Visualitza els efectes desats per al testimoni seleccionat."
+          ],
+          [
+            "!condition-tracker --afegit guardat",
+            "Inicieu l'assistent per afegir efectes desats."
+          ],
+          [
+            "!condition-tracker --saved edit <id>",
+            "Editeu les etiquetes o la visibilitat d'un efecte desat existent."
+          ],
+          [
+            "!condition-tracker --saved remove <id>",
+            "Elimina permanentment un efecte desat."
+          ],
+          [
+            "!condition-tracker --saved promote <id> --visibility public|masked|gm",
+            "Copieu un efecte desat al Seguidor de torns (públic o emmascarat) o confirmeu que només es fa un seguiment de GM."
+          ],
+          [
+            "!condition-tracker --saved snooze <id> --scope turn|rounds|combat --rounds <n>",
+            "Posposa un recordatori de GM per a aquest torn, N rondes o aquest combat."
+          ],
+          [
+            "!condition-tracker --saved snooze-clear <id>",
+            "Esborra una repetició activa perquè els recordatoris es reprenguin immediatament."
+          ]
+        ]
       },
       reminders: {
-        heading: "GM Reminders",
-        body: "When a token with gm or masked saved effects reaches the top of the Turn Tracker, the GM receives a whisper listing the hidden effects with action buttons. Duplicate reminders within the same turn are suppressed. Use the Snooze buttons to suppress reminders for a turn, a number of rounds, or for the remainder of the current combat.",
+        heading: "Recordatoris de GM",
+        body: "Quan una fitxa amb gm o efectes desats emmascarats arriba a la part superior del seguiment de torns, el GM rep un xiuxiueig que enumera els efectes ocults amb botons d'acció. Els recordatoris duplicats dins del mateix torn es suprimeixen. Utilitzeu els botons Posposa per suprimir els recordatoris d'un torn, d'un nombre de rondes o durant la resta del combat actual."
+      }
+    },
+    actorClassification: {
+      heading: "Classificació d'Actor",
+      intro: "Condition Tracker determina automàticament si cada token és un PJ, PNJ o un objecte ignorat (agulles de mapa, decorat, plantilles d'encanteri). Els tokens no vinculats s'ignoren per defecte. Usa --classify per substituir la detecció automàtica per a qualsevol token.",
+      detectionOrder: {
+        heading: "Ordre de Detecció",
+        colStep: "Pas",
+        colCheck: "Comprovació",
+        colResult: "Resultat",
+        rows: [
+          [
+            "1",
+            "Substitució d'estat del token (--classify --scope token)",
+            "pc / npc / ignorat"
+          ],
+          [
+            "2",
+            "Atribut ct_mod_actor_type del personatge (--classify --scope character)",
+            "pc / npc / ignorat"
+          ],
+          [
+            "3",
+            "Token no vinculat — cap full de personatge",
+            "ignorat"
+          ],
+          [
+            "4",
+            "Adaptador del sistema de joc (atribut npc / is_npc)",
+            "pc / npc"
+          ],
+          [
+            "5",
+            "Escaneig d'atributs NPC genèrics (npc, is_npc, npcflag, sheet_type, character_type)",
+            "pc / npc"
+          ],
+          [
+            "6",
+            "Alternativa controlledby del personatge",
+            "pc / npc"
+          ]
+        ]
       },
+      types: {
+        heading: "Tipus de Classificació",
+        colType: "Tipus",
+        colMeaning: "Significat",
+        rows: [
+          [
+            "pc",
+            "Personatge jugador — sempre inclòs com a PJ a l'assistent i la detecció"
+          ],
+          [
+            "npc",
+            "Personatge no jugador — sempre inclòs com a PNJ"
+          ],
+          [
+            "ignorat",
+            "Mai mostrat ni rastreat — exclòs del selector de tokens de l'assistent"
+          ],
+          [
+            "desconegut",
+            "Només detecció automàtica; no s'ha pogut determinar el tipus (tractat com PNJ a l'assistent)"
+          ]
+        ]
+      },
+      commands: {
+        heading: "Ordres de Classificació",
+        intro: "Selecciona un o més tokens abans d'executar les ordres --classify.",
+        rows: [
+          [
+            "!condition-tracker --classifica l'ordinador",
+            "Marcar els tokens seleccionats com a PJs (àmbit de personatge per defecte)."
+          ],
+          [
+            "!condition-tracker --classify npc",
+            "Marcar els tokens seleccionats com a PNJs."
+          ],
+          [
+            "!condition-tracker --classificar ignorat",
+            "Excloure els tokens seleccionats de tot seguiment."
+          ],
+          [
+            "!condition-tracker --classifica automàticament",
+            "Eliminar la substitució — restaurar la detecció automàtica."
+          ],
+          [
+            "!condition-tracker --classifica l'espectacle",
+            "Mostrar el diagnòstic de classificació (tipus, font, motiu) per a cada token seleccionat."
+          ],
+          [
+            "!condition-tracker --classify pc --scope token",
+            "Substitució al nivell del token a l'estat de l'script — útil per a tokens no vinculats."
+          ],
+          [
+            "!condition-tracker --classify pc --scope character",
+            "Substitució al nivell del personatge a l'atribut ct_mod_actor_type — s'aplica a tots els tokens amb el mateix full de personatge."
+          ]
+        ]
+      }
     },
     configuration: {
       heading: "Configuració",
-      intro:
-        "Usa !condition-tracker --config &lt;opció&gt; &lt;valor&gt; o el botó Configuració del menú principal.",
+      intro: "Usa !condition-tracker --config &lt;opció&gt; &lt;valor&gt; o el botó Configuració del menú principal.",
       colOption: "Opció",
       colValues: "Valors",
       colDesc: "Descripció",
@@ -592,54 +724,53 @@ const TRANSLATION = {
         [
           "useMarkers",
           "true / false",
-          "Aplica marcadors d'estat de Roll20 als testimonis quan s'afegeix una condició",
+          "Aplica marcadors d'estat de Roll20 als testimonis quan s'afegeix una condició"
         ],
         [
           "useIcons",
-          "true / false",
-          "Mostra codis d'icona curts (p. ex. [G]) en lloc d'emojis a les files del registre de torns",
+          "vertader/fals",
+          "Mostra codis d'icona curts (p. ex. [G]) en lloc d'emojis a les files del registre de torns"
         ],
         [
           "subjectPromptBypass",
-          "true / false",
-          "Omet el pas del testimoni subjecte opcional per als efectes Encanteri / Habilitat / Altres",
+          "vertader/fals",
+          "Omet el pas del testimoni subjecte opcional per als efectes Encanteri / Habilitat / Altres"
         ],
         [
           "suppressPublicChat",
-          "true / false",
-          "Suprimeix tots els anuncis públics de xat (missatges d'aplicació i eliminació). Els xiuxiuejos del DJ no es veuen afectats.",
+          "vertader/fals",
+          "Suprimeix tots els anuncis públics de xat (missatges d'aplicació i eliminació). Els xiuxiuejos del DJ no es veuen afectats."
         ],
         [
           "healthBar",
           "bar1_value / bar2_value / bar3_value",
-          "Barra del testimoni a vigilar; quan arriba a 0 el MJ rep un avís per netejar les condicions",
+          "Barra del testimoni a vigilar; quan arriba a 0 el MJ rep un avís per netejar les condicions"
         ],
         [
           "language",
           "en-US / fr / de / es / pt-BR / ko",
-          "Idioma dels missatges del xat i del fullet d'ajuda",
+          "Idioma dels missatges del xat i del fullet d'ajuda"
         ],
         [
           "marker",
           "&lt;Condició&gt;=&lt;nom del marcador&gt;",
-          "Substitueix el marcador d'estat usat per a una condició específica (p. ex. marker Grappled=grab)",
-        ],
-      ],
+          "Substitueix el marcador d'estat usat per a una condició específica (p. ex. marker Grappled=grab)"
+        ]
+      ]
     },
     defaultMarkers: {
       heading: "Marcadors d'estat predeterminats",
       colCondition: "Condició",
-      colMarker: "Nom del marcador",
+      colMarker: "Nom del marcador"
     },
     availableLocales: {
       heading: "Traduccions disponibles",
-      intro:
-        "Usa l'opció de configuració language per establir els missatges del xat i el fullet d'ajuda en qualsevol configuració regional admesa. Els àlies curts també s'accepten per a en, zh i pt.",
-      colLocale: "Locale",
+      intro: "Usa l'opció de configuració language per establir els missatges del xat i el fullet d'ajuda en qualsevol configuració regional admesa. Els àlies curts també s'accepten per a en, zh i pt.",
+      colLocale: "Localització",
       colLanguage: "Idioma",
-      colFile: "Fitxer de traducció",
-    },
-  },
+      colFile: "Fitxer de traducció"
+    }
+  }
 };
 
 export default TRANSLATION;

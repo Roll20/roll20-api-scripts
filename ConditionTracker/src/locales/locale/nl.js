@@ -2,78 +2,78 @@ const TRANSLATION = {
   conditions: {
     Grappled: {
       past: "gegrepen",
-      verb: "grijpt",
+      verb: "grijpt"
     },
     Restrained: {
       past: "vastgebonden",
-      verb: "bindt vast",
+      verb: "bindt vast"
     },
     Prone: {
       past: "neergehaald",
       verb: "haalt",
-      suffix: "neer",
+      suffix: "neer"
     },
     Poisoned: {
       past: "vergiftigd",
-      verb: "vergiftigt",
+      verb: "vergiftigt"
     },
     Stunned: {
       past: "verdoofd",
-      verb: "verdooft",
+      verb: "verdooft"
     },
     Blinded: {
       past: "verblind",
-      verb: "verblindt",
+      verb: "verblindt"
     },
     Charmed: {
       past: "gecharmeerd",
-      verb: "charmeert",
+      verb: "charmeert"
     },
     Frightened: {
       past: "bang",
       verb: "maakt",
-      suffix: "bang",
+      suffix: "bang"
     },
     Incapacitated: {
       past: "uitgeschakeld",
-      verb: "schakelt uit",
+      verb: "schakelt uit"
     },
     Invisible: {
       past: "onzichtbaar",
       verb: "maakt",
-      suffix: "onzichtbaar",
+      suffix: "onzichtbaar"
     },
     Paralyzed: {
       past: "verlamd",
-      verb: "verlamt",
+      verb: "verlamt"
     },
     Petrified: {
       past: "versteend",
-      verb: "versteent",
+      verb: "versteent"
     },
     Unconscious: {
       past: "bewusteloos",
       verb: "maakt",
-      suffix: "bewusteloos",
+      suffix: "bewusteloos"
     },
     Spell: {
       past: "beïnvloed door een spreuk",
-      verb: "spreekt een spreuk uit over",
+      verb: "spreekt een spreuk uit over"
     },
     Ability: {
       past: "beïnvloed door een vaardigheid",
-      verb: "gebruikt een vaardigheid op",
+      verb: "gebruikt een vaardigheid op"
     },
     Advantage: {
       past: "heeft voordeel",
       verb: "geeft voordeel aan",
-      noBy: true,
+      noBy: true
     },
     Disadvantage: {
       past: "heeft nadeel",
       verb: "geeft nadeel aan",
-      noBy: true,
-    },
+      noBy: true
+    }
   },
   condNames: {
     Grappled: "Gegrepen",
@@ -93,7 +93,7 @@ const TRANSLATION = {
     Ability: "Vaardigheid",
     Advantage: "Voordeel",
     Disadvantage: "Nadeel",
-    Other: "Overig",
+    Other: "Overig"
   },
   templates: {
     display: {
@@ -102,7 +102,7 @@ const TRANSLATION = {
       disadvantage: "{emoji} {source} heeft nadeel tegen {target}{subject}",
       noBy: "{emoji} {target} {past} ({source})",
       self: "{target} is {past}",
-      standard: "{emoji} {target} {past} door {source}",
+      standard: "{emoji} {target} {past} door {source}"
     },
     apply: {
       custom: "{source} past {effect} toe op {target}.",
@@ -110,17 +110,16 @@ const TRANSLATION = {
       disadvantage: "{source} heeft nadeel tegen {target}{subject}.",
       self: "{target} is {past}.",
       withSuffix: "{source} {verb} {target} {suffix}.",
-      standard: "{source} {verb} {target}.",
+      standard: "{source} {verb} {target}."
     },
     remove: {
       custom: "{target} wordt niet langer beïnvloed door {effect}.",
       advantage: "{source} heeft niet langer voordeel tegen {target}{subject}.",
-      disadvantage:
-        "{source} heeft niet langer nadeel tegen {target}{subject}.",
+      disadvantage: "{source} heeft niet langer nadeel tegen {target}{subject}.",
       noBy: "{target} is niet langer {past}.",
       self: "{target} is niet langer {past}.",
-      standard: "{target} wordt niet langer {past} door {source}.",
-    },
+      standard: "{target} wordt niet langer {past} door {source}."
+    }
   },
   ui: {
     wizard: {
@@ -141,7 +140,7 @@ const TRANSLATION = {
       sourceDesc: "Selecteer het wezen dat de conditie of het effect creëert.",
       targetDesc: "Selecteer het wezen dat de conditie of het effect ontvangt.",
       otherText: "Aangepaste conditietekst",
-      effectDetails: "{condition}-details",
+      effectDetails: "{condition}-details"
     },
     col: {
       players: "Spelers",
@@ -162,8 +161,8 @@ const TRANSLATION = {
       details: "Details",
       description: "Beschrijving",
       scenario: "Scenario",
-      gameSystem: "Game System",
-      duration: "Duration",
+      gameSystem: "Spelsysteem",
+      duration: "Duur"
     },
     dur: {
       untilRemoved: "Tot verwijdering",
@@ -176,10 +175,10 @@ const TRANSLATION = {
       custom: "Aangepast",
       customPrompt: "Aantal rondes",
       untilRemovedDisplay: "Tot verwijdering",
-      turnsRemaining: "{n} bijgehouden beurteinde(s) resterend",
+      turnsRemaining: "{n} bijgehouden beurteinde(s) resterend"
     },
     btn: {
-      openWizard: "Open Wizard",
+      openWizard: "Wizard openen",
       openMultiTarget: "Open Multidoel-wizard",
       openRemovalList: "Open Verwijderlijst",
       showConfig: "Toon Configuratie",
@@ -188,25 +187,25 @@ const TRANSLATION = {
       reinstallHandout: "Handout Herinstalleren",
       showHelp: "Toon Help",
       reorderConditions: "Conditierijen Herordenen",
-      reportToken: "Report Token Conditions",
-      savedEffects: "Saved Effects",
-      addSavedEffect: "Add Saved Effect",
-      editSaved: "Edit",
-      removeSaved: "Remove",
-      promoteSaved: "Add to Turn Tracker",
-      snoozeSaved: "Snooze",
-      clearSnooze: "Clear Snooze",
+      reportToken: "Tokenvoorwaarden rapporteren",
+      savedEffects: "Opgeslagen effecten",
+      addSavedEffect: "Opgeslagen effect toevoegen",
+      editSaved: "Bewerking",
+      removeSaved: "Verwijderen",
+      promoteSaved: "Toevoegen aan Turn Tracker",
+      snoozeSaved: "Snoozen",
+      clearSnooze: "Snooze wissen"
     },
     title: {
       menu: "Menu",
       removalMenu: "Condition Tracker — Verwijdering",
       config: "Configuratie",
       configTracker: "Condition Tracker — Configuratie",
-      help: "Help",
+      help: "Hulp",
       applied: "Toegepast",
       removed: "Conditie Verwijderd",
       cleanup: "Opruiming Voltooid",
-      macroReinstalled: "The {wizard}, {multiTarget}, {reportToken}, and {saved} macros have been reinstalled for all current GM players.",
+      macroReinstalled: "Macro herinstalleerd",
       handoutReinstalled: "Handout Herinstalleerd",
       warning: "Waarschuwing",
       error: "Fout",
@@ -218,15 +217,15 @@ const TRANSLATION = {
       moveToken: "{name} — Token Verplaatsen?",
       scriptReady: "Script Gereed",
       conditionReorder: "Beurtenvolgorde Gewijzigd",
-      tokenReport: "Token Condition Report",
-      savedEffects: "Saved Effects",
-      savedAdd: "Add Saved Effect",
-      savedEdit: "Edit Saved Effect",
-      savedRemoved: "Saved Effect Removed",
-      savedPromoted: "Add to Turn Tracker",
-      savedSnoozed: "Reminder Snoozed",
-      savedSnoozeCleared: "Snooze Cleared",
-      hiddenEffects: "Hidden Effects — {name}",
+      tokenReport: "Tokenconditierapport",
+      savedEffects: "Opgeslagen effecten",
+      savedAdd: "Opgeslagen effect toevoegen",
+      savedEdit: "Bewerk opgeslagen effect",
+      savedRemoved: "Opgeslagen effect verwijderd",
+      savedPromoted: "Toevoegen aan Turn Tracker",
+      savedSnoozed: "Herinnering gesnoozed",
+      savedSnoozeCleared: "Snooze gewist",
+      hiddenEffects: "Verborgen effecten — {name}"
     },
     heading: {
       quickActions: "Snelle Acties",
@@ -238,118 +237,92 @@ const TRANSLATION = {
       promptUi: "Wizard-interface",
       examples: "Voorbeelden",
       summary: "Samenvatting",
-      appliedTo: "Conditions Applied To",
-      appliedBy: "Conditions Applied By",
-      savedEffectsFor: "Saved Effects for {name}",
-      visibility: "Visibility",
-      snoozeOptions: "Snooze Reminder",
-      promoteOptions: "Promote to Turn Tracker",
-      editActions: "Edit Actions",
+      appliedTo: "Voorwaarden van toepassing op",
+      appliedBy: "Voorwaarden toegepast door",
+      savedEffectsFor: "Opgeslagen effecten voor {name}",
+      visibility: "Zichtbaarheid",
+      snoozeOptions: "Snooze-herinnering",
+      promoteOptions: "Promoveren tot Turn Tracker",
+      editActions: "Acties bewerken"
     },
     msg: {
       noActive: "Er worden geen actieve condities bijgehouden.",
       configReset: "Configuratie teruggezet naar standaardwaarden.",
-      unknownConfig:
-        "Onbekende configuratieoptie. Gebruik --config om ondersteunde instellingen te bekijken.",
-      macroReinstalled:
-        "De {wizard}-, {multiTarget}- en {reportToken}-macro's zijn herinstalleerd voor alle huidige GM-spelers.",
+      unknownConfig: "Onbekende configuratieoptie. Gebruik --config om ondersteunde instellingen te bekijken.",
+      macroReinstalled: "De {wizard}-, {multiTarget}-, {reportToken}-, {saved}- en {classify}-macro's zijn herinstalleerd voor alle huidige GM-spelers.",
       handoutReinstalled: "De help-handout {handout} is herinstalleerd.",
-      duplicate:
-        "Deze exacte combinatie van bron, onderwerp, doel, conditie en aangepaste tekst is al actief.",
+      duplicate: "Deze exacte combinatie van bron, onderwerp, doel, conditie en aangepaste tekst is al actief.",
       noTargets: "Geen doeltokens opgegeven voor multidoel-toepassing.",
-      noSelection:
-        "Selecteer ten minste één token op het bord voordat je --multi-target gebruikt.",
+      noSelection: "Selecteer ten minste één token op het bord voordat je --multi-target gebruikt.",
       invalidIds: "Geen geldige token-ID's gevonden in de huidige selectie.",
-      reSelectTokens:
-        "Geen van de oorspronkelijk geselecteerde tokens kon worden gevonden. Selecteer tokens opnieuw en probeer het nogmaals.",
+      reSelectTokens: "Geen van de oorspronkelijk geselecteerde tokens kon worden gevonden. Selecteer tokens opnieuw en probeer het nogmaals.",
       conditionNotFound: "Conditie-ID niet gevonden.",
       gmOnly: "Condition Tracker-opdrachten zijn alleen voor de GM.",
-      commandFailed:
-        "De opdracht kon niet veilig worden voltooid. Controleer de API-console voor details.",
+      commandFailed: "De opdracht kon niet veilig worden voltooid. Controleer de API-console voor details.",
       sourceTokenNotFound: "Brontoken kon niet worden gevonden.",
       targetTokenNotFound: "Doeltoken kon niet worden gevonden.",
       subjectTokenNotFound: "Onderwerptoken kon niet worden gevonden.",
-      invalidCondition:
-        "Conditie moet een van de voorgedefinieerde condities of Overig zijn.",
-      subjectOnlyCustom:
-        "--subject is alleen geldig voor Spreuk, Vaardigheid, Voordeel, Nadeel en Overig.",
-      subjectBypassInvalid:
-        "--subjectPromptBypass verwacht true of false wanneer een waarde wordt opgegeven.",
-      customDetailsRequired:
-        "{condition}-details zijn vereist. Gebruik --other om deze op te geven.",
-      markerConfigFormat:
-        "Markeringsconfiguratieformaat is: --config marker Grappled=grab",
-      markerPredefinedRequired:
-        "Markeringsconfiguratie vereist een voorgedefinieerde conditienaam.",
-      markerNameRequired:
-        "Markeringsconfiguratie vereist een niet-lege markeringsnaam.",
+      invalidCondition: "Conditie moet een van de voorgedefinieerde condities of Overig zijn.",
+      subjectOnlyCustom: "--subject is alleen geldig voor Spreuk, Vaardigheid, Voordeel, Nadeel en Overig.",
+      subjectBypassInvalid: "--subjectPromptBypass verwacht true of false wanneer een waarde wordt opgegeven.",
+      customDetailsRequired: "{condition}-details zijn vereist. Gebruik --other om deze op te geven.",
+      markerConfigFormat: "Markeringsconfiguratieformaat is: --config marker Grappled=grab",
+      markerPredefinedRequired: "Markeringsconfiguratie vereist een voorgedefinieerde conditienaam.",
+      markerNameRequired: "Markeringsconfiguratie vereist een niet-lege markeringsnaam.",
       markerSet: "{condition}-markering ingesteld op {marker}.",
       healthBarSet: "Gezondheidsbalk ingesteld op {bar}.",
       boolSet: "{key} ingesteld op {value}.",
       expectedBoolean: "true of false verwacht.",
-      invalidHealthBar:
-        "Gezondheidsbalk moet bar1_value, bar2_value of bar3_value zijn.",
+      invalidHealthBar: "Gezondheidsbalk moet bar1_value, bar2_value of bar3_value zijn.",
       markersDisabled: "Markeringen zijn uitgeschakeld.",
-      noMarkerConfigured:
-        "Er is geen markering geconfigureerd voor deze conditie.",
+      noMarkerConfigured: "Er is geen markering geconfigureerd voor deze conditie.",
       markerApplied: "Markering toegepast: {marker}",
       markerPresent: "Markering al aanwezig: {marker}",
       langSet: "Taal ingesteld op {locale}.",
       invalidLocale: "Ongeldige locale. Ondersteunde locales: {locales}.",
-      otherDurationRequiresRounds:
-        "Overige duur vereist een numeriek aantal rondes, bijvoorbeeld --duration 5 rounds.",
-      invalidDuration:
-        "Duur moet Tot verwijdering, een beurteindeoptie of een positief aantal rondes zijn.",
-      zeroHpNoConditions:
-        "{name} heeft 0 LP bereikt en heeft geen actieve condities.",
-      zeroHpConditions:
-        "{name} heeft 0 LP bereikt. Kies condities om te verwijderen:",
+      otherDurationRequiresRounds: "Overige duur vereist een numeriek aantal rondes, bijvoorbeeld --duration 5 rounds.",
+      invalidDuration: "Duur moet Tot verwijdering, een beurteindeoptie of een positief aantal rondes zijn.",
+      zeroHpNoConditions: "{name} heeft 0 LP bereikt en heeft geen actieve condities.",
+      zeroHpConditions: "{name} heeft 0 LP bereikt. Kies condities om te verwijderen:",
       removeAllBtn: "Verwijder Alle Condities voor {name}",
       markIncapacitated: "Markeer als Uitgeschakeld",
       removeFromTurnOrder: "Verwijder uit Beurtenvolgorde",
       alreadyIncapacitated: "{name} is al Uitgeschakeld.",
       tokenRemovedFromTurn: "{name} is verwijderd uit de beurtenvolgorde.",
       tokenNotInTurn: "{name} werd niet gevonden in de beurtenvolgorde.",
-      moveTokenPrompt:
-        "Verplaats {name} naar de kaartlaag zodat het zichtbaar blijft maar andere tokens niet hindert?",
+      moveTokenPrompt: "Verplaats {name} naar de kaartlaag zodat het zichtbaar blijft maar andere tokens niet hindert?",
       moveTokenBtn: "Verplaats {name} naar Kaartlaag",
       tokenMoved: "{name} is verplaatst naar de kaartlaag.",
       tokenNotFound: "Token niet gevonden.",
-      noActiveConditions:
-        "{name} heeft geen actieve condities om te verwijderen.",
-      deadNoConditions:
-        "{name} is gemarkeerd als dood. Er waren geen actieve condities.",
+      noActiveConditions: "{name} heeft geen actieve condities om te verwijderen.",
+      deadNoConditions: "{name} is gemarkeerd als dood. Er waren geen actieve condities.",
       scriptReady: "{name} is actief en je gebruikt versie {version}.",
       reachedZeroHp: "{name} heeft 0 LP bereikt",
       manuallyRemoved: "het is handmatig verwijderd",
       durationExpired: "de duur is verlopen",
       markedAsDead: "{name} is gemarkeerd als dood",
-      conditionReorder:
-        "De beurtenvolgorde is gewijzigd en {count} bijgehouden conditierij(en) staan mogelijk op de verkeerde plek. Klik hieronder om ze te herstellen na hun toegewezen tokens.",
-      conditionsReordered:
-        "Conditierijen zijn hergeplaatst na hun toegewezen tokens.",
-      noTokensSelectedReport:
-        "Select at least one token on the board before using --report-token.",
-      noConditionsAppliedTo: "{name} has no active conditions applied to it.",
-      noConditionsAppliedBy:
-        "{name} has no active conditions applied to others.",
-      noSavedEffects: "No saved effects stored for {name}.",
-      noTokenSelectedSaved: "Select a token on the board before using --saved.",
-      savedEffectAdded: "Saved effect added for {name}.",
-      savedEffectUpdated: "Saved effect updated.",
-      savedEffectRemoved: "Saved effect removed.",
-      savedEffectNotFound: "Saved effect not found.",
-      savedInvalidVisibility: "Invalid visibility. Use public, masked, or gm.",
+      conditionReorder: "De beurtenvolgorde is gewijzigd en {count} bijgehouden conditierij(en) staan mogelijk op de verkeerde plek. Klik hieronder om ze te herstellen na hun toegewezen tokens.",
+      conditionsReordered: "Conditierijen zijn hergeplaatst na hun toegewezen tokens.",
+      noTokensSelectedReport: "Selecteer ten minste één token op het bord voordat u --report-token gebruikt.",
+      noConditionsAppliedTo: "Op {name} zijn geen actieve voorwaarden van toepassing.",
+      noConditionsAppliedBy: "Op {name} zijn geen actieve voorwaarden van toepassing op anderen.",
+      noSavedEffects: "Geen opgeslagen effecten opgeslagen voor {name}.",
+      noTokenSelectedSaved: "Selecteer een token op het bord voordat u --saved gebruikt.",
+      savedEffectAdded: "Opgeslagen effect toegevoegd voor {name}.",
+      savedEffectUpdated: "Opgeslagen effect bijgewerkt.",
+      savedEffectRemoved: "Opgeslagen effect verwijderd.",
+      savedEffectNotFound: "Opgeslagen effect niet gevonden.",
+      savedInvalidVisibility: "Ongeldige zichtbaarheid. Gebruik openbaar, gemaskeerd of gm.",
       savedConditionRequired: "Condition type is required. Use --condition <type>.",
-      savedPromotedPublic: "Effect added to Turn Tracker as public.",
-      savedPromotedMasked: "Effect added to Turn Tracker as masked — players see: {publicLabel}.",
-      savedPromotedGm: "Effect is GM-only — no Turn Tracker row will be created. The reminder system will surface it when this token reaches the top of the turn order.",
-      savedSnoozed: "Reminder snoozed: {scope}.",
-      savedSnoozeCleared: "Snooze cleared.",
-      hiddenEffectsReminder: "Hidden effects are active on {name}.",
-      visibilityPublicHint: "full label visible to all",
-      visibilityMaskedHint: "vague label shown to players",
-      visibilityGmHint: "GM whisper only, no Turn Tracker row",
+      savedPromotedPublic: "Effect toegevoegd aan Turn Tracker als openbaar.",
+      savedPromotedMasked: "Effect toegevoegd aan Turn Tracker als gemaskeerd — spelers zien: {publicLabel}.",
+      savedPromotedGm: "Het effect is alleen voor GM: er wordt geen Turn Tracker-rij gemaakt. Het herinneringssysteem zal het weergeven wanneer dit token de top van de speelvolgorde bereikt.",
+      savedSnoozed: "Herinnering gesnoozed: {scope}.",
+      savedSnoozeCleared: "Snooze gewist.",
+      hiddenEffectsReminder: "Verborgen effecten zijn actief op {name}.",
+      visibilityPublicHint: "volledig label zichtbaar voor iedereen",
+      visibilityMaskedHint: "vaag label getoond aan spelers",
+      visibilityGmHint: "Alleen GM-fluisteren, geen Turn Tracker-rij"
     },
     removal: {
       conditionField: "Conditie",
@@ -361,54 +334,68 @@ const TRANSLATION = {
       markerRetained: "Behouden ({marker})",
       rowRemoved: "Verwijderd",
       rowMissing: "Al ontbrekend",
-      manualReason: "Handmatige verwijdering",
+      manualReason: "Handmatige verwijdering"
     },
     saved: {
       visibility: {
-        public: "Public",
-        masked: "Masked",
-        gm: "GM Only",
+        public: "Openbaar",
+        masked: "Gemaskeerd",
+        gm: "Alleen GM"
       },
       snooze: {
-        thisTurn: "This Turn",
-        oneRound: "1 Round",
-        threeRounds: "3 Rounds",
-        thisCombat: "This Combat",
-        rounds: "{n} round(s)",
+        thisTurn: "Deze beurt",
+        oneRound: "1 Ronde",
+        threeRounds: "3 rondes",
+        thisCombat: "Dit gevecht",
+        rounds: "{n} ronde(s)"
       },
       field: {
-        gmLabel: "GM Label",
-        publicLabel: "Public Label",
-        visibility: "Visibility",
-        source: "Source",
-        condition: "Condition",
+        gmLabel: "GM-label",
+        publicLabel: "Openbaar etiket",
+        visibility: "Zichtbaarheid",
+        source: "Bron",
+        condition: "Voorwaarde"
       },
       prompt: {
-        enterGmLabel: "Full effect description (GM only)",
-        enterPublicLabel: "Vague label shown to players",
+        enterGmLabel: "Volledige effectbeschrijving (alleen GM)",
+        enterPublicLabel: "Vaag label getoond aan spelers"
       },
-      snoozed: "snoozed",
+      snoozed: "gesnoozed"
+    },
+    classify: {
+      title: "Acteurclassificatie",
+      showTitle: "Classificatiediagnostiek",
+      showHeading: "Token-classificatiedetails",
+      resultHeading: "Overschrijving Toegepast",
+      noSelection: "Selecteer ten minste één token op het bord voordat je --classify gebruikt.",
+      invalidType: "Ongeldig classificatietype: {type}. Gebruik pc, npc, ignored of auto.",
+      set: "{name} → {type} (bereik: {scope})",
+      cleared: "{name} overschrijving gewist (bereik: {scope}) — automatische detectie hersteld.",
+      setTokenFallback: "{name} → {type} (tokenoverschrijving — geen karakterblad gekoppeld).",
+      clearedTokenFallback: "{name} tokenoverschrijving gewist — automatische detectie hersteld.",
+      fieldToken: "Token",
+      fieldType: "Classificatie",
+      fieldSource: "Bron",
+      fieldReason: "Reden"
     },
     cleanup: {
       orphaned: "Verweesde conditie-items",
       stale: "Verouderde conditie-items",
       orphanedRows: "Verweesde beurtenvolgorde-rijen",
-      unusedMarkers: "Ongebruikte markeringen",
+      unusedMarkers: "Ongebruikte markeringen"
     },
     apply: {
-      turnAppended:
-        "Doel stond niet in de beurtenvolgorde; conditierij is toegevoegd.",
-      turnInserted: "Conditierij ingevoegd onder het doeltoken.",
-    },
+      turnAppended: "Doel stond niet in de beurtenvolgorde; conditierij is toegevoegd.",
+      turnInserted: "Conditierij ingevoegd onder het doeltoken."
+    }
   },
   handout: {
     versionLabel: "Versie",
     subtitle: "D&D 5e Statuseffect-beheerder",
-    footerNote:
-      "Deze handout wordt automatisch aangemaakt en bijgewerkt telkens wanneer het script wordt geladen.",
+    footerNote: "Deze handout wordt automatisch aangemaakt en bijgewerkt telkens wanneer het script wordt geladen.",
     overview: {
       heading: "Overzicht",
-      body: "Condition Tracker beheert D&D 5e-statuscondities en aangepaste effecten als gelabelde rijen in de Roll20-beurtopvolger. Pas condities toe op tokens, volg duur bij aan de hand van initiatiefvolgorde, en verwijder verlopen effecten automatisch wanneer een beurt eindigt. Alle opdrachten zijn alleen voor de GM en kunnen worden geactiveerd via de chat of de geïnstalleerde macro's.",
+      body: "Condition Tracker beheert D&D 5e-statuscondities en aangepaste effecten als gelabelde rijen in de Roll20-beurtopvolger. Pas condities toe op tokens, volg duur bij aan de hand van initiatiefvolgorde, en verwijder verlopen effecten automatisch wanneer een beurt eindigt. Alle opdrachten zijn alleen voor de GM en kunnen worden geactiveerd via de chat of de geïnstalleerde macro's."
     },
     quickStart: {
       heading: "Snel Starten",
@@ -417,84 +404,108 @@ const TRANSLATION = {
       rows: [
         [
           "!condition-tracker --prompt",
-          "Stap-voor-stap wizard — kies conditie, tokens en duur interactief. Ook beschikbaar als de ConditionTrackerWizard-macro.",
+          "Stap-voor-stap wizard — kies conditie, tokens en duur interactief. Ook beschikbaar als de ConditionTrackerWizard-macro."
         ],
         [
-          "!condition-tracker --multi-target",
-          "Pas één conditie tegelijkertijd toe op meerdere tokens. Ook beschikbaar als de ConditionTrackerMultiTarget-macro.",
+          "!condition-tracker --meerdere doelen",
+          "Pas één conditie tegelijkertijd toe op meerdere tokens. Ook beschikbaar als de ConditionTrackerMultiTarget-macro."
         ],
         [
           "!condition-tracker --report-token",
-          "Select one or more tokens first, then run this command to get a GM whisper listing every condition applied to and by each selected token. Also available as the ConditionTrackerReportToken macro.",
+          "Selecteer eerst een of meer tokens en voer vervolgens deze opdracht uit om een ​​GM-gefluister te krijgen met een lijst van alle voorwaarden die op en door elk geselecteerd token worden toegepast. Ook beschikbaar als de macro ConditionTrackerReportToken."
         ],
         [
           "!condition-tracker --menu",
-          "Open het hoofdbeheermenu met knoppen om condities toe te passen, te bekijken of te verwijderen.",
-        ],
-      ],
+          "Open het hoofdbeheermenu met knoppen om condities toe te passen, te bekijken of te verwijderen."
+        ]
+      ]
     },
     commandsRef: {
       heading: "Opdrachtenoverzicht",
       colFlag: "Vlag",
       colDesc: "Beschrijving",
       rows: [
-        ["--prompt", "Interactieve stap-voor-stap wizard-interface"],
         [
-          "--multi-target",
-          "Pas een conditie tegelijkertijd toe op meerdere doeltokens",
+          "--snel",
+          "Interactieve stap-voor-stap wizard-interface"
         ],
-        ["--menu", "Toon hoofdmenu (voeg remove toe voor verwijdermenu)"],
         [
-          "--source X --target Y --condition Z",
-          "Pas een conditie direct toe zonder de wizard",
+          "--meerdere doelen",
+          "Pas een conditie tegelijkertijd toe op meerdere doeltokens"
+        ],
+        [
+          "--menu",
+          "Toon hoofdmenu (voeg remove toe voor verwijdermenu)"
+        ],
+        [
+          "--bron X --doel Y --voorwaarde Z",
+          "Pas een conditie direct toe zonder de wizard"
         ],
         [
           "--duration &lt;waarde&gt;",
-          "Duur voor directe toepassing (bijv. 2 rounds)",
+          "Duur voor directe toepassing (bijv. 2 rounds)"
         ],
         [
           "--other &lt;tekst&gt;",
-          "Aangepaste tekst voor Spreuk / Vaardigheid / Overige effecttypen",
+          "Aangepaste tekst voor Spreuk / Vaardigheid / Overige effecttypen"
         ],
         [
           "--remove &lt;conditie-ID&gt;",
-          "Verwijder een specifieke conditie via zijn unieke ID",
+          "Verwijder een specifieke conditie via zijn unieke ID"
         ],
         [
           "--config &lt;optie&gt; &lt;waarde&gt;",
-          "Pas configuratie-instellingen aan (zie het Configuratie-gedeelte hieronder)",
+          "Pas configuratie-instellingen aan (zie het Configuratie-gedeelte hieronder)"
         ],
         [
           "--prompt --subjectPromptBypass true|false",
-          "Overschrijf subjectPromptBypass alleen voor deze opdracht (ondersteunt ook --subject-prompt-bypass)",
+          "Overschrijf subjectPromptBypass alleen voor deze opdracht (ondersteunt ook --subject-prompt-bypass)"
         ],
         [
-          "--cleanup",
-          "Herstel staat — verwijder verweesde condities en beurtenvolgorde-rijen",
+          "--opruimen",
+          "Herstel staat — verwijder verweesde condities en beurtenvolgorde-rijen"
         ],
         [
-          "--reorder-conditions",
-          "Conditierijen handmatig herpositioneren achter hun toegewezen tokens in de beurtvolgorde",
-        ],
-        ["--reinstall-macro", "Maak GM-macro's opnieuw aan of werk ze bij"],
-        [
-          "--reinstall-handout",
-          "Maak de gelokaliseerde help-handout opnieuw aan of werk deze bij",
+          "--herbestelvoorwaarden",
+          "Conditierijen handmatig herpositioneren achter hun toegewezen tokens in de beurtvolgorde"
         ],
         [
-          "--report-token",
-          "Whisper a GM-only condition report for each selected token (conditions applied to and by it)",
+          "--reinstall-macro",
+          "Maak GM-macro's opnieuw aan of werk ze bij"
+        ],
+        [
+          "--herinstalleer-hand-out",
+          "Maak de gelokaliseerde help-handout opnieuw aan of werk deze bij"
+        ],
+        [
+          "--rapport-token",
+          "Fluister een GM-only conditierapport voor elk geselecteerd token (voorwaarden toegepast op en door het token)"
         ],
         [
           "--lang &lt;locale&gt;",
-          "Geef de berichten van deze opdracht uit in een aanvullende locale (tweetalige modus)",
+          "Geef de berichten van deze opdracht uit in een aanvullende locale (tweetalige modus)"
         ],
-        ["--help", "Toon een beknopte helpkaart in de chat"],
-      ],
+        [
+          "--classify pc|npc|ignored",
+          "Het acteurtype voor geselecteerde tokens overschrijven — selecteer eerst de tokens. Standaardbereik is karakter (schrijft ct_mod_actor_type-attribuut); voeg --scope token toe om op te slaan in scriptstatus"
+        ],
+        [
+          "--classify auto",
+          "De acteurtype-overschrijving verwijderen en automatische detectie voor geselecteerde tokens herstellen"
+        ],
+        [
+          "--classify show",
+          "Een classificatiediagnostiek fluisteren voor elk geselecteerd token — toont het gedetecteerde type, detectiebron en reden"
+        ],
+        [
+          "--help",
+          "Toon een beknopte helpkaart in de chat"
+        ]
+      ]
     },
     standardConditions: {
       heading: "Standaard Condities (D&amp;D 5e)",
-      colCondition: "Conditie",
+      colCondition: "Conditie"
     },
     customEffects: {
       heading: "Aangepaste Effecttypen",
@@ -503,85 +514,211 @@ const TRANSLATION = {
       rows: [
         [
           "🔮 Spreuk",
-          "Volg een benoemd spreukeneffect — je wordt gevraagd naar de spreuknaam",
+          "Volg een benoemd spreukeneffect — je wordt gevraagd naar de spreuknaam"
         ],
         [
           "🎯 Vaardigheid",
-          "Volg een benoemde klasse- of rasvaardigheid — je wordt gevraagd naar de naam",
+          "Volg een benoemde klasse- of rasvaardigheid — je wordt gevraagd naar de naam"
         ],
         [
           "🍀 Voordeel",
-          "Registreer voordeel van het ene token naar het andere; gegroepeerd bij de bron in initiatief",
+          "Registreer voordeel van het ene token naar het andere; gegroepeerd bij de bron in initiatief"
         ],
         [
           "⬇️ Nadeel",
-          "Registreer opgelegd nadeel; gegroepeerd bij de bron in initiatief",
+          "Registreer opgelegd nadeel; gegroepeerd bij de bron in initiatief"
         ],
         [
           "📝 Overig",
-          "Vrij aangepast label — je wordt gevraagd naar een beschrijving",
-        ],
-      ],
+          "Vrij aangepast label — je wordt gevraagd naar een beschrijving"
+        ]
+      ]
     },
     durationOptions: {
       heading: "Duuropties",
-      intro:
-        "Het resterende aantal wordt weergegeven in de pr-kolom van de beurtopvolger en vermindert telkens wanneer de beurt van het ankertToken eindigt.",
+      intro: "Het resterende aantal wordt weergegeven in de pr-kolom van de beurtopvolger en vermindert telkens wanneer de beurt van het ankertToken eindigt.",
       colOption: "Optie",
       colBehaviour: "Gedrag",
       rows: [
         [
           "Tot verwijdering",
-          "Permanent — moet handmatig worden verwijderd via het menu of --remove",
+          "Permanent — moet handmatig worden verwijderd via het menu of --remove"
         ],
         [
           "Einde van de volgende beurt van het doel",
-          "Verloopt wanneer de volgende beurt van het doeltoken eindigt in het initiatief",
+          "Verloopt wanneer de volgende beurt van het doeltoken eindigt in het initiatief"
         ],
         [
           "Einde van de volgende beurt van de bron",
-          "Verloopt wanneer de volgende beurt van het brontoken eindigt in het initiatief",
+          "Verloopt wanneer de volgende beurt van het brontoken eindigt in het initiatief"
         ],
         [
           "1 / 2 / 3 / 10 rondes",
-          "Vaste aftelling; één vermindering per beurteindigng van het ankertoken",
-        ],
-      ],
+          "Vaste aftelling; één vermindering per beurteindigng van het ankertoken"
+        ]
+      ]
     },
     savedEffects: {
-      heading: "Saved Effects",
-      intro:
-        "Saved effects let you store long-term conditions outside the Turn Tracker — curses, diseases, poisons, hidden debuffs, and other non-combat conditions. They persist in script state and can be optionally copied into the Turn Tracker when combat begins.",
+      heading: "Opgeslagen effecten",
+      intro: "Met opgeslagen effecten kun je langdurige omstandigheden buiten de Turn Tracker opslaan: vloeken, ziekten, gifstoffen, verborgen debuffs en andere niet-gevechtsomstandigheden. Ze blijven in scriptstatus behouden en kunnen optioneel naar de Turn Tracker worden gekopieerd wanneer het gevecht begint.",
       visibility: {
-        heading: "Visibility Modes",
+        heading: "Zichtbaarheidsmodi",
         rows: [
-          ["public", "Full effect label is visible in the Turn Tracker and public chat."],
-          ["masked", "A vague public label is shown to players; full details are GM-only."],
-          ["gm", "No Turn Tracker row. Full details are stored in state and whispered to the GM when the affected token reaches the top of initiative."],
-        ],
+          [
+            "publiek",
+            "Label met volledig effect is zichtbaar in de Turn Tracker en de openbare chat."
+          ],
+          [
+            "gemaskerd",
+            "Spelers krijgen een vaag openbaar label te zien; volledige details zijn alleen voor GM."
+          ],
+          [
+            "gm",
+            "Geen Turn Tracker-rij. Volledige details worden in de staat opgeslagen en naar de GM gefluisterd wanneer het betreffende token de top van het initiatief bereikt."
+          ]
+        ]
       },
       commands: {
-        heading: "Saved Effects Commands",
-        intro: "All --saved commands are GM-only. Select a token before running --saved or --saved add.",
+        heading: "Opgeslagen effectopdrachten",
+        intro: "Alle --saved commando's zijn alleen voor GM. Selecteer een token voordat u --saved of --saved add uitvoert.",
         rows: [
-          ["!condition-tracker --saved", "View saved effects for the selected token."],
-          ["!condition-tracker --saved add", "Launch the add-saved-effect wizard."],
-          ["!condition-tracker --saved edit <id>", "Edit labels or visibility for an existing saved effect."],
-          ["!condition-tracker --saved remove <id>", "Permanently remove a saved effect."],
-          ["!condition-tracker --saved promote <id> --visibility public|masked|gm", "Copy a saved effect into the Turn Tracker (public or masked) or confirm it is GM-only tracked."],
-          ["!condition-tracker --saved snooze <id> --scope turn|rounds|combat --rounds <n>", "Snooze a GM reminder for this turn, N rounds, or this combat."],
-          ["!condition-tracker --saved snooze-clear <id>", "Clear an active snooze so reminders resume immediately."],
-        ],
+          [
+            "!conditie-tracker --opgeslagen",
+            "Bekijk opgeslagen effecten voor het geselecteerde token."
+          ],
+          [
+            "!condition-tracker --opgeslagen toevoeging",
+            "Start de wizard voor het toevoegen van opgeslagen effecten."
+          ],
+          [
+            "!condition-tracker --saved edit <id>",
+            "Bewerk labels of zichtbaarheid voor een bestaand opgeslagen effect."
+          ],
+          [
+            "!condition-tracker --saved remove <id>",
+            "Verwijder een opgeslagen effect definitief."
+          ],
+          [
+            "!condition-tracker --saved promote <id> --visibility public|masked|gm",
+            "Kopieer een opgeslagen effect naar de Turn Tracker (openbaar of gemaskeerd) of bevestig dat het alleen door GM wordt gevolgd."
+          ],
+          [
+            "!condition-tracker --saved snooze <id> --scope turn|rounds|combat --rounds <n>",
+            "Sluimer een GM-herinnering voor deze beurt, N rondes of dit gevecht."
+          ],
+          [
+            "!condition-tracker --saved snooze-clear <id>",
+            "Wis een actieve snooze zodat herinneringen onmiddellijk worden hervat."
+          ]
+        ]
       },
       reminders: {
-        heading: "GM Reminders",
-        body: "When a token with gm or masked saved effects reaches the top of the Turn Tracker, the GM receives a whisper listing the hidden effects with action buttons. Duplicate reminders within the same turn are suppressed. Use the Snooze buttons to suppress reminders for a turn, a number of rounds, or for the remainder of the current combat.",
+        heading: "GM-herinneringen",
+        body: "Wanneer een token met GM of gemaskeerde opgeslagen effecten de bovenkant van de Turn Tracker bereikt, ontvangt de GM een gefluister met een lijst van de verborgen effecten met actieknoppen. Dubbele herinneringen binnen dezelfde beurt worden onderdrukt. Gebruik de snooze-knoppen om herinneringen voor een beurt, een aantal rondes of voor de rest van het huidige gevecht te onderdrukken."
+      }
+    },
+    actorClassification: {
+      heading: "Acteurclassificatie",
+      intro: "Condition Tracker bepaalt automatisch of elk token een SC, NPC of genegeerd object is (kaartspelden, decor, tovertemplates). Niet-gekoppelde tokens worden standaard genegeerd. Gebruik --classify om automatische detectie voor elk token te overschrijven.",
+      detectionOrder: {
+        heading: "Detectievolgorde",
+        colStep: "Stap",
+        colCheck: "Controle",
+        colResult: "Resultaat",
+        rows: [
+          [
+            "1",
+            "Token-statusoverschrijving (--classify --scope token)",
+            "pc / npc / genegeerd"
+          ],
+          [
+            "2",
+            "Karakter ct_mod_actor_type-attribuut (--classify --scope character)",
+            "pc / npc / genegeerd"
+          ],
+          [
+            "3",
+            "Niet-gekoppeld token — geen karakterblad",
+            "genegeerd"
+          ],
+          [
+            "4",
+            "Spelsysteemadapter (npc / is_npc attribuut)",
+            "pc / npc"
+          ],
+          [
+            "5",
+            "Generieke NPC-attribuutscan (npc, is_npc, npcflag, sheet_type, character_type)",
+            "pc / npc"
+          ],
+          [
+            "6",
+            "Karakter controlledby-terugval",
+            "pc / npc"
+          ]
+        ]
       },
+      types: {
+        heading: "Classificatietypen",
+        colType: "Type",
+        colMeaning: "Betekenis",
+        rows: [
+          [
+            "pc",
+            "Spelerkarakter — altijd opgenomen als SC in de wizard en detectie"
+          ],
+          [
+            "npc",
+            "Niet-spelerkarakter — altijd opgenomen als NPC"
+          ],
+          [
+            "genegeerd",
+            "Nooit weergegeven of bijgehouden — uitgesloten van de token-kiezer van de wizard"
+          ],
+          [
+            "onbekend",
+            "Alleen automatisch gedetecteerd; type kon niet worden bepaald (als NPC behandeld in de wizard)"
+          ]
+        ]
+      },
+      commands: {
+        heading: "Classificatieopdrachten",
+        intro: "Selecteer één of meer tokens voordat je --classify-opdrachten uitvoert.",
+        rows: [
+          [
+            "!condition-tracker --classificeer pc",
+            "Geselecteerde tokens als SC's markeren (standaard bereik: karakter)."
+          ],
+          [
+            "!condition-tracker --classificeer npc",
+            "Geselecteerde tokens als NPC's markeren."
+          ],
+          [
+            "!condition-tracker --classify genegeerd",
+            "Geselecteerde tokens uitsluiten van alle tracking."
+          ],
+          [
+            "!condition-tracker --classificeer auto",
+            "Overschrijving verwijderen — automatische detectie herstellen."
+          ],
+          [
+            "!condition-tracker --classificeer show",
+            "Classificatiediagnostiek (type, bron, reden) weergeven voor elk geselecteerd token."
+          ],
+          [
+            "!condition-tracker --classify pc --scope-token",
+            "Tokenoverschrijving opgeslagen in scriptstatus — nuttig voor niet-gekoppelde tokens."
+          ],
+          [
+            "!condition-tracker --classify pc --scope karakter",
+            "Karakteroverschrijving geschreven naar ct_mod_actor_type-attribuut — geldt voor alle tokens met hetzelfde karakterblad."
+          ]
+        ]
+      }
     },
     configuration: {
       heading: "Configuratie",
-      intro:
-        "Gebruik !condition-tracker --config &lt;optie&gt; &lt;waarde&gt; of de Configuratie-knop in het hoofdmenu.",
+      intro: "Gebruik !condition-tracker --config &lt;optie&gt; &lt;waarde&gt; of de Configuratie-knop in het hoofdmenu.",
       colOption: "Optie",
       colValues: "Waarden",
       colDesc: "Beschrijving",
@@ -589,54 +726,53 @@ const TRANSLATION = {
         [
           "useMarkers",
           "true / false",
-          "Pas Roll20-statusmarkeringen toe op tokens wanneer een conditie wordt toegevoegd",
+          "Pas Roll20-statusmarkeringen toe op tokens wanneer een conditie wordt toegevoegd"
         ],
         [
           "useIcons",
-          "true / false",
-          "Toon korte pictogramcodes (bijv. [G]) in plaats van emoji in beurtopvolger-rijen",
+          "waar / onwaar",
+          "Toon korte pictogramcodes (bijv. [G]) in plaats van emoji in beurtopvolger-rijen"
         ],
         [
           "subjectPromptBypass",
-          "true / false",
-          "Sla de optionele onderwerptokenstap over voor Spreuk / Vaardigheid / Overige effecten",
+          "waar / onwaar",
+          "Sla de optionele onderwerptokenstap over voor Spreuk / Vaardigheid / Overige effecten"
         ],
         [
           "suppressPublicChat",
-          "true / false",
-          "Onderdruk alle openbare chatberichten (toepassen en verwijderen berichten). GM-fluisteringen worden niet beïnvloed.",
+          "waar / onwaar",
+          "Onderdruk alle openbare chatberichten (toepassen en verwijderen berichten). GM-fluisteringen worden niet beïnvloed."
         ],
         [
           "healthBar",
           "bar1_value / bar2_value / bar3_value",
-          "Token-balk om te bewaken; wanneer deze op 0 komt, wordt de GM gevraagd condities op te ruimen",
+          "Token-balk om te bewaken; wanneer deze op 0 komt, wordt de GM gevraagd condities op te ruimen"
         ],
         [
           "language",
           "en-US / fr / de / es / pt-BR / ko",
-          "Uitvoertaal voor chatberichten en de help-handout",
+          "Uitvoertaal voor chatberichten en de help-handout"
         ],
         [
           "marker",
           "&lt;Conditie&gt;=&lt;markeringsnaam&gt;",
-          "Overschrijf de statusmarkering voor een specifieke conditie (bijv. marker Grappled=grab)",
-        ],
-      ],
+          "Overschrijf de statusmarkering voor een specifieke conditie (bijv. marker Grappled=grab)"
+        ]
+      ]
     },
     defaultMarkers: {
       heading: "Standaard Statusmarkeringen",
       colCondition: "Conditie",
-      colMarker: "Markeringsnaam",
+      colMarker: "Markeringsnaam"
     },
     availableLocales: {
       heading: "Beschikbare Vertalingen",
-      intro:
-        "Gebruik de taalconfiguratieopties om chatberichten en de help-handout in te stellen op een ondersteunde locale. Korte aliassen worden ook geaccepteerd voor en, zh en pt.",
-      colLocale: "Locale",
+      intro: "Gebruik de taalconfiguratieopties om chatberichten en de help-handout in te stellen op een ondersteunde locale. Korte aliassen worden ook geaccepteerd voor en, zh en pt.",
+      colLocale: "Lokaal",
       colLanguage: "Taal",
-      colFile: "Vertaalbestand",
-    },
-  },
+      colFile: "Vertaalbestand"
+    }
+  }
 };
 
 export default TRANSLATION;

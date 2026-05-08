@@ -2,74 +2,74 @@ const TRANSLATION = {
   conditions: {
     Grappled: {
       past: "つかまれた",
-      verb: "つかむ",
+      verb: "つかむ"
     },
     Restrained: {
       past: "拘束された",
-      verb: "拘束する",
+      verb: "拘束する"
     },
     Prone: {
       past: "伏せ状態",
-      verb: "伏せ状態にする",
+      verb: "伏せ状態にする"
     },
     Poisoned: {
       past: "毒を受けた",
-      verb: "毒を与える",
+      verb: "毒を与える"
     },
     Stunned: {
       past: "朦朧状態",
-      verb: "朦朧状態にする",
+      verb: "朦朧状態にする"
     },
     Blinded: {
       past: "盲目状態",
-      verb: "盲目状態にする",
+      verb: "盲目状態にする"
     },
     Charmed: {
       past: "魅了状態",
-      verb: "魅了する",
+      verb: "魅了する"
     },
     Frightened: {
       past: "恐怖状態",
-      verb: "恐怖状態にする",
+      verb: "恐怖状態にする"
     },
     Incapacitated: {
       past: "無力状態",
-      verb: "無力状態にする",
+      verb: "無力状態にする"
     },
     Invisible: {
       past: "不可視状態",
-      verb: "不可視状態にする",
+      verb: "不可視状態にする"
     },
     Paralyzed: {
       past: "麻痺状態",
-      verb: "麻痺状態にする",
+      verb: "麻痺状態にする"
     },
     Petrified: {
       past: "石化状態",
-      verb: "石化状態にする",
+      verb: "石化状態にする"
     },
     Unconscious: {
       past: "気絶状態",
-      verb: "気絶状態にする",
+      verb: "気絶状態にする"
     },
     Spell: {
       past: "呪文の影響下",
-      verb: "呪文をかける",
+      verb: "呪文をかける"
     },
     Ability: {
       past: "能力の影響下",
-      verb: "能力を使う",
+      verb: "能力を使う"
     },
     Advantage: {
       past: "有利を持つ",
       verb: "有利を与える",
-      noBy: true,
+      noBy: true
     },
     Disadvantage: {
       past: "不利を持つ",
       verb: "不利を与える",
-      noBy: true,
-    },
+      noBy: true
+    }
   },
   condNames: {
     Grappled: "つかみ",
@@ -89,7 +89,7 @@ const TRANSLATION = {
     Ability: "能力",
     Advantage: "有利",
     Disadvantage: "不利",
-    Other: "その他",
+    Other: "その他"
   },
   templates: {
     display: {
@@ -98,7 +98,7 @@ const TRANSLATION = {
       disadvantage: "{emoji} {source}は{target}{subject}に対して不利を持つ",
       noBy: "{emoji} {target}は{past}（{source}）",
       self: "{target}は{past}",
-      standard: "{emoji} {target}は{source}によって{past}",
+      standard: "{emoji} {target}は{source}によって{past}"
     },
     apply: {
       custom: "{source}は{target}に{effect}を適用した。",
@@ -106,7 +106,7 @@ const TRANSLATION = {
       disadvantage: "{source}は{target}{subject}に対して不利を持つ。",
       self: "{target}は{past}。",
       withSuffix: "{source}は{target}を{suffix}状態にした（{verb}）。",
-      standard: "{source}は{target}を{verb}。",
+      standard: "{source}は{target}を{verb}。"
     },
     remove: {
       custom: "{target}はもはや{effect}の影響を受けていない。",
@@ -114,8 +114,8 @@ const TRANSLATION = {
       disadvantage: "{source}はもはや{target}{subject}に対して不利を持たない。",
       noBy: "{target}はもはや{past}ではない。",
       self: "{target}はもはや{past}ではない。",
-      standard: "{target}はもはや{source}によって{past}ではない。",
-    },
+      standard: "{target}はもはや{source}によって{past}ではない。"
+    }
   },
   ui: {
     wizard: {
@@ -136,7 +136,7 @@ const TRANSLATION = {
       sourceDesc: "状態または効果を生み出すクリーチャーを選択してください。",
       targetDesc: "状態または効果を受け取るクリーチャーを選択してください。",
       otherText: "カスタム状態テキスト",
-      effectDetails: "{condition}の詳細",
+      effectDetails: "{condition}の詳細"
     },
     col: {
       players: "プレイヤー",
@@ -157,8 +157,8 @@ const TRANSLATION = {
       details: "詳細",
       description: "説明",
       scenario: "シナリオ",
-      gameSystem: "Game System",
-      duration: "Duration",
+      gameSystem: "ゲームシステム",
+      duration: "間隔"
     },
     dur: {
       untilRemoved: "削除されるまで",
@@ -171,7 +171,7 @@ const TRANSLATION = {
       custom: "カスタム",
       customPrompt: "ラウンド数",
       untilRemovedDisplay: "削除されるまで",
-      turnsRemaining: "残りターン終了数：{n}",
+      turnsRemaining: "残りターン終了数：{n}"
     },
     btn: {
       openWizard: "ウィザードを開く",
@@ -183,14 +183,14 @@ const TRANSLATION = {
       reinstallHandout: "ハンドアウトを再インストール",
       showHelp: "ヘルプを表示",
       reorderConditions: "状態行を並び替え",
-      reportToken: "Report Token Conditions",
-      savedEffects: "Saved Effects",
-      addSavedEffect: "Add Saved Effect",
-      editSaved: "Edit",
-      removeSaved: "Remove",
-      promoteSaved: "Add to Turn Tracker",
-      snoozeSaved: "Snooze",
-      clearSnooze: "Clear Snooze",
+      reportToken: "レポートトークンの条件",
+      savedEffects: "保存されたエフェクト",
+      addSavedEffect: "保存したエフェクトを追加",
+      editSaved: "編集",
+      removeSaved: "取り除く",
+      promoteSaved: "ターントラッカーに追加",
+      snoozeSaved: "スヌーズ",
+      clearSnooze: "クリアスヌーズ"
     },
     title: {
       menu: "メニュー",
@@ -201,7 +201,7 @@ const TRANSLATION = {
       applied: "適用済み",
       removed: "状態削除済み",
       cleanup: "クリーンアップ完了",
-      macroReinstalled: "The {wizard}, {multiTarget}, {reportToken}, and {saved} macros have been reinstalled for all current GM players.",
+      macroReinstalled: "マクロ再インストール済み",
       handoutReinstalled: "ハンドアウト再インストール済み",
       warning: "警告",
       error: "エラー",
@@ -213,15 +213,15 @@ const TRANSLATION = {
       moveToken: "{name} — トークンを移動しますか？",
       scriptReady: "スクリプト準備完了",
       conditionReorder: "ターン順序変更",
-      tokenReport: "Token Condition Report",
-      savedEffects: "Saved Effects",
-      savedAdd: "Add Saved Effect",
-      savedEdit: "Edit Saved Effect",
-      savedRemoved: "Saved Effect Removed",
-      savedPromoted: "Add to Turn Tracker",
-      savedSnoozed: "Reminder Snoozed",
-      savedSnoozeCleared: "Snooze Cleared",
-      hiddenEffects: "Hidden Effects — {name}",
+      tokenReport: "トークン状態レポート",
+      savedEffects: "保存されたエフェクト",
+      savedAdd: "保存したエフェクトを追加",
+      savedEdit: "保存されたエフェクトを編集する",
+      savedRemoved: "保存されたエフェクトが削除されました",
+      savedPromoted: "ターントラッカーに追加",
+      savedSnoozed: "リマインダーがスヌーズされました",
+      savedSnoozeCleared: "スヌーズが解除されました",
+      hiddenEffects: "隠し効果 — {name}"
     },
     heading: {
       quickActions: "クイックアクション",
@@ -233,118 +233,92 @@ const TRANSLATION = {
       promptUi: "ウィザードUI",
       examples: "例",
       summary: "まとめ",
-      appliedTo: "Conditions Applied To",
-      appliedBy: "Conditions Applied By",
-      savedEffectsFor: "Saved Effects for {name}",
-      visibility: "Visibility",
-      snoozeOptions: "Snooze Reminder",
-      promoteOptions: "Promote to Turn Tracker",
-      editActions: "Edit Actions",
+      appliedTo: "適用される条件",
+      appliedBy: "適用される条件",
+      savedEffectsFor: "{name} の保存済みエフェクト",
+      visibility: "可視性",
+      snoozeOptions: "スヌーズリマインダー",
+      promoteOptions: "ターントラッカーに昇格",
+      editActions: "アクションの編集"
     },
     msg: {
       noActive: "追跡中のアクティブな状態はありません。",
       configReset: "設定がMODのデフォルトにリセットされました。",
-      unknownConfig:
-        "不明な設定オプションです。--configを使用してサポートされている設定を確認してください。",
-      macroReinstalled:
-        "{wizard}、{multiTarget}および{reportToken}マクロが現在のすべてのGMプレイヤーに再インストールされました。",
-      handoutReinstalled:
-        "ヘルプハンドアウト{handout}が再インストールされました。",
-      duplicate:
-        "同一のソース、対象、ターゲット、状態、カスタムテキストの組み合わせがすでにアクティブです。",
-      noTargets:
-        "マルチターゲット適用のためのターゲットトークンが指定されていません。",
-      noSelection:
-        "--multi-targetを使用する前に、ボード上で少なくとも1つのトークンを選択してください。",
+      unknownConfig: "不明な設定オプションです。--configを使用してサポートされている設定を確認してください。",
+      macroReinstalled: "{wizard}、{multiTarget}、{reportToken}、{saved}および{classify}マクロが現在のすべてのGMプレイヤーに再インストールされました。",
+      handoutReinstalled: "ヘルプハンドアウト{handout}が再インストールされました。",
+      duplicate: "同一のソース、対象、ターゲット、状態、カスタムテキストの組み合わせがすでにアクティブです。",
+      noTargets: "マルチターゲット適用のためのターゲットトークンが指定されていません。",
+      noSelection: "--multi-targetを使用する前に、ボード上で少なくとも1つのトークンを選択してください。",
       invalidIds: "現在の選択に有効なトークンIDが見つかりません。",
-      reSelectTokens:
-        "元々選択されたトークンが見つかりません。トークンを再選択してもう一度お試しください。",
+      reSelectTokens: "元々選択されたトークンが見つかりません。トークンを再選択してもう一度お試しください。",
       conditionNotFound: "状態IDが見つかりません。",
       gmOnly: "Condition TrackerのコマンドはGM専用です。",
-      commandFailed:
-        "コマンドを安全に完了できませんでした。詳細はAPIコンソールを確認してください。",
+      commandFailed: "コマンドを安全に完了できませんでした。詳細はAPIコンソールを確認してください。",
       sourceTokenNotFound: "ソーストークンが見つかりません。",
       targetTokenNotFound: "ターゲットトークンが見つかりません。",
       subjectTokenNotFound: "対象トークンが見つかりません。",
-      invalidCondition:
-        "状態は事前定義された状態またはその他のいずれかである必要があります。",
-      subjectOnlyCustom:
-        "--subjectは呪文、能力、有利、不利、その他にのみ有効です。",
-      subjectBypassInvalid:
-        "--subjectPromptBypassは値が指定された場合、trueまたはfalseを期待します。",
-      customDetailsRequired:
-        "{condition}の詳細が必要です。--otherを使用して指定してください。",
+      invalidCondition: "状態は事前定義された状態またはその他のいずれかである必要があります。",
+      subjectOnlyCustom: "--subjectは呪文、能力、有利、不利、その他にのみ有効です。",
+      subjectBypassInvalid: "--subjectPromptBypassは値が指定された場合、trueまたはfalseを期待します。",
+      customDetailsRequired: "{condition}の詳細が必要です。--otherを使用して指定してください。",
       markerConfigFormat: "マーカー設定の形式：--config marker Grappled=grab",
-      markerPredefinedRequired:
-        "マーカー設定には事前定義された状態名が必要です。",
+      markerPredefinedRequired: "マーカー設定には事前定義された状態名が必要です。",
       markerNameRequired: "マーカー設定には空でないマーカー名が必要です。",
       markerSet: "{condition}のマーカーを{marker}に設定しました。",
       healthBarSet: "ヘルスバーを{bar}に設定しました。",
       boolSet: "{key}を{value}に設定しました。",
       expectedBoolean: "trueまたはfalseが必要です。",
-      invalidHealthBar:
-        "ヘルスバーはbar1_value、bar2_value、またはbar3_valueである必要があります。",
+      invalidHealthBar: "ヘルスバーはbar1_value、bar2_value、またはbar3_valueである必要があります。",
       markersDisabled: "マーカーは無効になっています。",
       noMarkerConfigured: "この状態に設定されたマーカーはありません。",
       markerApplied: "マーカーを適用しました：{marker}",
       markerPresent: "マーカーはすでに存在します：{marker}",
       langSet: "言語を{locale}に設定しました。",
-      invalidLocale:
-        "無効なロケールです。サポートされているロケール：{locales}。",
-      otherDurationRequiresRounds:
-        "その他の継続時間には数値のラウンド数が必要です（例：--duration 5 rounds）。",
-      invalidDuration:
-        "継続時間は「削除されるまで」、ターン終了オプション、または正のラウンド数である必要があります。",
-      zeroHpNoConditions:
-        "{name}はHP0になりましたが、アクティブな状態はありません。",
-      zeroHpConditions:
-        "{name}はHP0になりました。削除する状態を選択してください：",
+      invalidLocale: "無効なロケールです。サポートされているロケール：{locales}。",
+      otherDurationRequiresRounds: "その他の継続時間には数値のラウンド数が必要です（例：--duration 5 rounds）。",
+      invalidDuration: "継続時間は「削除されるまで」、ターン終了オプション、または正のラウンド数である必要があります。",
+      zeroHpNoConditions: "{name}はHP0になりましたが、アクティブな状態はありません。",
+      zeroHpConditions: "{name}はHP0になりました。削除する状態を選択してください：",
       removeAllBtn: "{name}のすべての状態を削除",
       markIncapacitated: "無力状態としてマーク",
       removeFromTurnOrder: "ターン順序から削除",
       alreadyIncapacitated: "{name}はすでに無力状態です。",
       tokenRemovedFromTurn: "{name}がターン順序から削除されました。",
       tokenNotInTurn: "{name}はターン順序に見つかりませんでした。",
-      moveTokenPrompt:
-        "{name}を表示したまま他のトークンの邪魔にならないよう、マップレイヤーに移動しますか？",
+      moveTokenPrompt: "{name}を表示したまま他のトークンの邪魔にならないよう、マップレイヤーに移動しますか？",
       moveTokenBtn: "{name}をマップレイヤーに移動",
       tokenMoved: "{name}がマップレイヤーに移動されました。",
       tokenNotFound: "トークンが見つかりません。",
       noActiveConditions: "{name}には削除するアクティブな状態がありません。",
-      deadNoConditions:
-        "{name}は死亡としてマークされました。アクティブな状態はありませんでした。",
-      scriptReady:
-        "{name}はアクティブで、バージョン{version}を使用しています。",
+      deadNoConditions: "{name}は死亡としてマークされました。アクティブな状態はありませんでした。",
+      scriptReady: "{name}はアクティブで、バージョン{version}を使用しています。",
       reachedZeroHp: "{name}がHP0に達しました",
       manuallyRemoved: "手動で削除されました",
       durationExpired: "継続時間が終了しました",
       markedAsDead: "{name}が死亡としてマークされました",
-      conditionReorder:
-        "ターン順序が変更され、追跡中の{count}件の状態行が正しい位置にない可能性があります。割り当てられたトークンの後に復元するには以下をクリックしてください。",
-      conditionsReordered:
-        "状態行が割り当てられたトークンの後に再配置されました。",
-      noTokensSelectedReport:
-        "Select at least one token on the board before using --report-token.",
-      noConditionsAppliedTo: "{name} has no active conditions applied to it.",
-      noConditionsAppliedBy:
-        "{name} has no active conditions applied to others.",
-      noSavedEffects: "No saved effects stored for {name}.",
-      noTokenSelectedSaved: "Select a token on the board before using --saved.",
-      savedEffectAdded: "Saved effect added for {name}.",
-      savedEffectUpdated: "Saved effect updated.",
-      savedEffectRemoved: "Saved effect removed.",
-      savedEffectNotFound: "Saved effect not found.",
-      savedInvalidVisibility: "Invalid visibility. Use public, masked, or gm.",
+      conditionReorder: "ターン順序が変更され、追跡中の{count}件の状態行が正しい位置にない可能性があります。割り当てられたトークンの後に復元するには以下をクリックしてください。",
+      conditionsReordered: "状態行が割り当てられたトークンの後に再配置されました。",
+      noTokensSelectedReport: "--report-token を使用する前に、ボード上で少なくとも 1 つのトークンを選択してください。",
+      noConditionsAppliedTo: "{name} にはアクティブな条件が適用されていません。",
+      noConditionsAppliedBy: "{name} には、他に適用されるアクティブな条件がありません。",
+      noSavedEffects: "{name} には保存されたエフェクトが保存されていません。",
+      noTokenSelectedSaved: "--saved を使用する前に、ボード上のトークンを選択してください。",
+      savedEffectAdded: "{name} の保存済みエフェクトが追加されました。",
+      savedEffectUpdated: "保存されたエフェクトが更新されました。",
+      savedEffectRemoved: "保存されたエフェクトが削除されました。",
+      savedEffectNotFound: "保存されたエフェクトが見つかりません。",
+      savedInvalidVisibility: "無効な可視性。 public、masked、または gm を使用します。",
       savedConditionRequired: "Condition type is required. Use --condition <type>.",
-      savedPromotedPublic: "Effect added to Turn Tracker as public.",
-      savedPromotedMasked: "Effect added to Turn Tracker as masked — players see: {publicLabel}.",
-      savedPromotedGm: "Effect is GM-only — no Turn Tracker row will be created. The reminder system will surface it when this token reaches the top of the turn order.",
-      savedSnoozed: "Reminder snoozed: {scope}.",
-      savedSnoozeCleared: "Snooze cleared.",
-      hiddenEffectsReminder: "Hidden effects are active on {name}.",
-      visibilityPublicHint: "full label visible to all",
-      visibilityMaskedHint: "vague label shown to players",
-      visibilityGmHint: "GM whisper only, no Turn Tracker row",
+      savedPromotedPublic: "エフェクトがターン トラッカーにパブリックとして追加されました。",
+      savedPromotedMasked: "マスクされた効果がターン トラッカーに追加されました — プレイヤーは次を参照してください: {publicLabel}。",
+      savedPromotedGm: "効果は GM のみです。ターン トラッカー行は作成されません。このトークンがターン順序の一番上に達すると、リマインダー システムによって表示されます。",
+      savedSnoozed: "リマインダーがスヌーズされました: {scope}。",
+      savedSnoozeCleared: "スヌーズが解除されました。",
+      hiddenEffectsReminder: "隠し効果は{name}で有効になります。",
+      visibilityPublicHint: "完全なラベルは全員に表示されます",
+      visibilityMaskedHint: "プレーヤーに表示される曖昧なラベル",
+      visibilityGmHint: "GM ささやきのみ、ターントラッカー列なし"
     },
     removal: {
       conditionField: "状態",
@@ -356,54 +330,68 @@ const TRANSLATION = {
       markerRetained: "保持（{marker}）",
       rowRemoved: "削除済み",
       rowMissing: "すでに存在しない",
-      manualReason: "手動削除",
+      manualReason: "手動削除"
     },
     saved: {
       visibility: {
-        public: "Public",
-        masked: "Masked",
-        gm: "GM Only",
+        public: "公共",
+        masked: "マスクされた",
+        gm: "GMのみ"
       },
       snooze: {
-        thisTurn: "This Turn",
-        oneRound: "1 Round",
-        threeRounds: "3 Rounds",
-        thisCombat: "This Combat",
-        rounds: "{n} round(s)",
+        thisTurn: "このターン",
+        oneRound: "1ラウンド",
+        threeRounds: "3ラウンド",
+        thisCombat: "この戦闘",
+        rounds: "{n} ラウンド"
       },
       field: {
-        gmLabel: "GM Label",
-        publicLabel: "Public Label",
-        visibility: "Visibility",
-        source: "Source",
-        condition: "Condition",
+        gmLabel: "GMラベル",
+        publicLabel: "パブリックラベル",
+        visibility: "可視性",
+        source: "ソース",
+        condition: "状態"
       },
       prompt: {
-        enterGmLabel: "Full effect description (GM only)",
-        enterPublicLabel: "Vague label shown to players",
+        enterGmLabel: "完全な効果の説明 (GM のみ)",
+        enterPublicLabel: "プレイヤーに表示される曖昧なラベル"
       },
-      snoozed: "snoozed",
+      snoozed: "居眠りした"
+    },
+    classify: {
+      title: "アクター分類",
+      showTitle: "分類診断",
+      showHeading: "トークン分類の詳細",
+      resultHeading: "上書きが適用されました",
+      noSelection: "--classify を使用する前に、ボード上のトークンを少なくとも1つ選択してください。",
+      invalidType: "無効な分類タイプ: {type}。pc、npc、ignored、または auto を使用してください。",
+      set: "{name} → {type}（スコープ: {scope}）",
+      cleared: "{name} 上書きがクリアされました（スコープ: {scope}）— 自動検出が復元されました。",
+      setTokenFallback: "{name} → {type}（トークン上書き — キャラクターシートが未リンク）。",
+      clearedTokenFallback: "{name} トークン上書きがクリアされました — 自動検出が復元されました。",
+      fieldToken: "トークン",
+      fieldType: "分類",
+      fieldSource: "ソース",
+      fieldReason: "理由"
     },
     cleanup: {
       orphaned: "孤立した状態エントリ",
       stale: "古くなった状態エントリ",
       orphanedRows: "孤立したターントラッカー行",
-      unusedMarkers: "未使用のマーカー",
+      unusedMarkers: "未使用のマーカー"
     },
     apply: {
-      turnAppended:
-        "ターゲットはターン順序にありませんでした。状態行を末尾に追加しました。",
-      turnInserted: "ターゲットトークンの下に状態行を挿入しました。",
-    },
+      turnAppended: "ターゲットはターン順序にありませんでした。状態行を末尾に追加しました。",
+      turnInserted: "ターゲットトークンの下に状態行を挿入しました。"
+    }
   },
   handout: {
     versionLabel: "バージョン",
     subtitle: "D&D 5e ステータス効果マネージャー",
-    footerNote:
-      "このハンドアウトはスクリプトが読み込まれるたびに自動的に作成・更新されます。",
+    footerNote: "このハンドアウトはスクリプトが読み込まれるたびに自動的に作成・更新されます。",
     overview: {
       heading: "概要",
-      body: "Condition TrackerはD&D 5eのステータス状態およびカスタム効果を、Roll20のターントラッカー内のラベル付き行として管理します。トークンに状態を適用し、イニシアチブ順に継続時間を追跡し、ターン終了時に期限切れの効果を自動的に削除します。すべてのコマンドはGM専用で、チャットまたはインストール済みマクロから実行できます。",
+      body: "Condition TrackerはD&D 5eのステータス状態およびカスタム効果を、Roll20のターントラッカー内のラベル付き行として管理します。トークンに状態を適用し、イニシアチブ順に継続時間を追跡し、ターン終了時に期限切れの効果を自動的に削除します。すべてのコマンドはGM専用で、チャットまたはインストール済みマクロから実行できます。"
     },
     quickStart: {
       heading: "クイックスタート",
@@ -411,76 +399,109 @@ const TRANSLATION = {
       colDesc: "説明",
       rows: [
         [
-          "!condition-tracker --prompt",
-          "ステップバイステップのウィザード — 状態、トークン、継続時間をインタラクティブに選択します。ConditionTrackerWizardマクロとしても利用できます。",
+          "!condition-tracker --プロンプト",
+          "ステップバイステップのウィザード — 状態、トークン、継続時間をインタラクティブに選択します。ConditionTrackerWizardマクロとしても利用できます。"
         ],
         [
-          "!condition-tracker --multi-target",
-          "1つの状態を複数のトークンに同時に適用します。ConditionTrackerMultiTargetマクロとしても利用できます。",
+          "!condition-tracker --マルチターゲット",
+          "1つの状態を複数のトークンに同時に適用します。ConditionTrackerMultiTargetマクロとしても利用できます。"
         ],
         [
-          "!condition-tracker --report-token",
-          "Select one or more tokens first, then run this command to get a GM whisper listing every condition applied to and by each selected token. Also available as the ConditionTrackerReportToken macro.",
+          "!条件トラッカー --レポートトークン",
+          "まず 1 つ以上のトークンを選択し、次にこのコマンドを実行して、選択した各トークンに適用されるすべての条件をリストする GM ウィスパーを取得します。 ConditionTrackerReportToken マクロとしても使用できます。"
         ],
         [
           "!condition-tracker --menu",
-          "状態の適用・確認・削除ボタンを含むメインメニューを開きます。",
-        ],
-      ],
+          "状態の適用・確認・削除ボタンを含むメインメニューを開きます。"
+        ]
+      ]
     },
     commandsRef: {
       heading: "コマンドリファレンス",
       colFlag: "フラグ",
       colDesc: "説明",
       rows: [
-        ["--prompt", "インタラクティブなステップバイステップウィザードUI"],
-        ["--multi-target", "複数のターゲットトークンに状態を一括適用"],
-        ["--menu", "メインメニューを表示（削除メニューにはremoveを追加）"],
         [
-          "--source X --target Y --condition Z",
-          "ウィザードを使わずに直接状態を適用",
+          " - プロンプト",
+          "インタラクティブなステップバイステップウィザードUI"
         ],
-        ["--duration &lt;値&gt;", "直接適用時の継続時間（例：2 rounds）"],
+        [
+          "--マルチターゲット",
+          "複数のターゲットトークンに状態を一括適用"
+        ],
+        [
+          " - メニュー",
+          "メインメニューを表示（削除メニューにはremoveを追加）"
+        ],
+        [
+          "--ソース X --ターゲット Y --条件 Z",
+          "ウィザードを使わずに直接状態を適用"
+        ],
+        [
+          "--duration &lt;値&gt;",
+          "直接適用時の継続時間（例：2 rounds）"
+        ],
         [
           "--other &lt;テキスト&gt;",
-          "呪文・能力・その他の効果タイプ用のカスタムテキスト",
+          "呪文・能力・その他の効果タイプ用のカスタムテキスト"
         ],
-        ["--remove &lt;状態ID&gt;", "一意のIDで特定の状態を削除"],
+        [
+          "--remove &lt;状態ID&gt;",
+          "一意のIDで特定の状態を削除"
+        ],
         [
           "--config &lt;オプション&gt; &lt;値&gt;",
-          "設定を変更する（下記の設定セクションを参照）",
+          "設定を変更する（下記の設定セクションを参照）"
         ],
         [
           "--prompt --subjectPromptBypass true|false",
-          "このコマンドのみsubjectPromptBypassを上書き（--subject-prompt-bypassも使用可）",
+          "このコマンドのみsubjectPromptBypassを上書き（--subject-prompt-bypassも使用可）"
         ],
         [
-          "--cleanup",
-          "状態を整合する — 孤立した状態とターントラッカー行を削除",
+          " - 掃除",
+          "状態を整合する — 孤立した状態とターントラッカー行を削除"
         ],
         [
-          "--reorder-conditions",
-          "ターン順序において条件行を割り当てられたトークンの後ろに手動で再配置します",
+          "--再注文条件",
+          "ターン順序において条件行を割り当てられたトークンの後ろに手動で再配置します"
         ],
-        ["--reinstall-macro", "GMマクロを再作成または更新"],
+        [
+          "--reinstall-マクロ",
+          "GMマクロを再作成または更新"
+        ],
         [
           "--reinstall-handout",
-          "ローカライズされたヘルプハンドアウトを再作成または更新",
+          "ローカライズされたヘルプハンドアウトを再作成または更新"
         ],
         [
-          "--report-token",
-          "Whisper a GM-only condition report for each selected token (conditions applied to and by it)",
+          "--レポートトークン",
+          "選択した各トークンの GM のみの条件レポートをウィスパーします (トークンに適用される条件、およびトークンによって適用される条件)"
         ],
         [
           "--lang &lt;ロケール&gt;",
-          "このコマンドのメッセージを追加のロケールで出力（バイリンガルモード）",
+          "このコマンドのメッセージを追加のロケールで出力（バイリンガルモード）"
         ],
-        ["--help", "チャットに簡単なヘルプカードを表示"],
-      ],
+        [
+          "--classify pc|npc|ignored",
+          "選択したトークンのアクタータイプを上書きします — 先にトークンを選択してください。デフォルトのスコープはキャラクター（ct_mod_actor_type 属性を書き込む）です；--scope token を追加してスクリプト状態に保存することもできます"
+        ],
+        [
+          "--classify auto",
+          "アクタータイプの上書きを削除し、選択したトークンの自動検出を復元します"
+        ],
+        [
+          "--classify show",
+          "選択した各トークンの分類診断をウィスパーします — 検出されたタイプ、検出ソース、理由を表示します"
+        ],
+        [
+          "--help",
+          "チャットに簡単なヘルプカードを表示"
+        ]
+      ]
     },
     standardConditions: {
       heading: "標準状態（D&amp;D 5e）",
-      colCondition: "状態",
+      colCondition: "状態"
     },
     customEffects: {
       heading: "カスタム効果タイプ",
@@ -489,79 +510,211 @@ const TRANSLATION = {
       rows: [
         [
           "🔮 呪文",
-          "名前付き呪文効果を追跡します — 呪文名の入力を求められます",
+          "名前付き呪文効果を追跡します — 呪文名の入力を求められます"
         ],
         [
           "🎯 能力",
-          "名前付きクラスまたは種族能力を追跡します — 能力名の入力を求められます",
+          "名前付きクラスまたは種族能力を追跡します — 能力名の入力を求められます"
         ],
         [
           "🍀 有利",
-          "あるトークンから別のトークンへ付与された有利を記録します。イニシアチブではソースとグループ化されます",
+          "あるトークンから別のトークンへ付与された有利を記録します。イニシアチブではソースとグループ化されます"
         ],
         [
           "⬇️ 不利",
-          "課された不利を記録します。イニシアチブではソースとグループ化されます",
+          "課された不利を記録します。イニシアチブではソースとグループ化されます"
         ],
-        ["📝 その他", "自由形式のカスタムラベル — 説明の入力を求められます"],
-      ],
+        [
+          "📝 その他",
+          "自由形式のカスタムラベル — 説明の入力を求められます"
+        ]
+      ]
     },
     durationOptions: {
       heading: "継続時間オプション",
-      intro:
-        "残数はターントラッカーのpr列に表示され、アンカートークンのターン終了時に減少します。",
+      intro: "残数はターントラッカーのpr列に表示され、アンカートークンのターン終了時に減少します。",
       colOption: "オプション",
       colBehaviour: "動作",
       rows: [
-        ["削除されるまで", "恒久的 — メニューまたは--removeで手動削除が必要"],
+        [
+          "削除されるまで",
+          "恒久的 — メニューまたは--removeで手動削除が必要"
+        ],
         [
           "ターゲットの次のターン終了時",
-          "イニシアチブでターゲットトークンの次のターンが終了したときに失効",
+          "イニシアチブでターゲットトークンの次のターンが終了したときに失効"
         ],
         [
           "ソースの次のターン終了時",
-          "イニシアチブでソーストークンの次のターンが終了したときに失効",
+          "イニシアチブでソーストークンの次のターンが終了したときに失効"
         ],
         [
           "1 / 2 / 3 / 10 ラウンド",
-          "固定カウントダウン。アンカートークンのターン終了ごとに1減少",
-        ],
-      ],
+          "固定カウントダウン。アンカートークンのターン終了ごとに1減少"
+        ]
+      ]
     },
     savedEffects: {
-      heading: "Saved Effects",
-      intro:
-        "Saved effects let you store long-term conditions outside the Turn Tracker — curses, diseases, poisons, hidden debuffs, and other non-combat conditions. They persist in script state and can be optionally copied into the Turn Tracker when combat begins.",
+      heading: "保存されたエフェクト",
+      intro: "保存されたエフェクトを使用すると、呪い、病気、毒、隠れたデバフ、その他の非戦闘状態など、ターン トラッカーの外側に長期的な状態を保存できます。これらはスクリプト状態に保持され、戦闘開始時にオプションでターン トラッカーにコピーできます。",
       visibility: {
-        heading: "Visibility Modes",
+        heading: "可視性モード",
         rows: [
-          ["public", "Full effect label is visible in the Turn Tracker and public chat."],
-          ["masked", "A vague public label is shown to players; full details are GM-only."],
-          ["gm", "No Turn Tracker row. Full details are stored in state and whispered to the GM when the affected token reaches the top of initiative."],
-        ],
+          [
+            "公共",
+            "完全な効果ラベルはターン トラッカーとパブリック チャットに表示されます。"
+          ],
+          [
+            "マスクされた",
+            "曖昧な公開ラベルがプレイヤーに表示されます。詳細は GM のみに公開されています。"
+          ],
+          [
+            "GM",
+            "ターントラッカー行はありません。完全な詳細は状態に保存され、影響を受けるトークンがイニシアチブの最上位に到達したときに GM にささやかれます。"
+          ]
+        ]
       },
       commands: {
-        heading: "Saved Effects Commands",
-        intro: "All --saved commands are GM-only. Select a token before running --saved or --saved add.",
+        heading: "保存されたエフェクトコマンド",
+        intro: "すべての --saved コマンドは GM 専用です。 --saved または --saved add を実行する前にトークンを選択してください。",
         rows: [
-          ["!condition-tracker --saved", "View saved effects for the selected token."],
-          ["!condition-tracker --saved add", "Launch the add-saved-effect wizard."],
-          ["!condition-tracker --saved edit <id>", "Edit labels or visibility for an existing saved effect."],
-          ["!condition-tracker --saved remove <id>", "Permanently remove a saved effect."],
-          ["!condition-tracker --saved promote <id> --visibility public|masked|gm", "Copy a saved effect into the Turn Tracker (public or masked) or confirm it is GM-only tracked."],
-          ["!condition-tracker --saved snooze <id> --scope turn|rounds|combat --rounds <n>", "Snooze a GM reminder for this turn, N rounds, or this combat."],
-          ["!condition-tracker --saved snooze-clear <id>", "Clear an active snooze so reminders resume immediately."],
-        ],
+          [
+            "!条件トラッカー -- 保存済み",
+            "選択したトークンの保存された効果を表示します。"
+          ],
+          [
+            "!condition-tracker --saved add",
+            "保存済みエフェクトの追加ウィザードを起動します。"
+          ],
+          [
+            "!condition-tracker --saved edit <id>",
+            "既存の保存済みエフェクトのラベルまたは表示設定を編集します。"
+          ],
+          [
+            "!condition-tracker --saved remove <id>",
+            "保存したエフェクトを永久に削除します。"
+          ],
+          [
+            "!condition-tracker --saved promote <id> --visibility public|masked|gm",
+            "保存したエフェクトをターン トラッカー (パブリックまたはマスク) にコピーするか、それが GM のみで追跡されていることを確認します。"
+          ],
+          [
+            "!condition-tracker --saved snooze <id> --scope turn|rounds|combat --rounds <n>",
+            "このターン、N ラウンド、またはこの戦闘の GM リマインダーをスヌーズします。"
+          ],
+          [
+            "!condition-tracker --saved snooze-clear <id>",
+            "アクティブなスヌーズを解除すると、リマインダーがすぐに再開されます。"
+          ]
+        ]
       },
       reminders: {
-        heading: "GM Reminders",
-        body: "When a token with gm or masked saved effects reaches the top of the Turn Tracker, the GM receives a whisper listing the hidden effects with action buttons. Duplicate reminders within the same turn are suppressed. Use the Snooze buttons to suppress reminders for a turn, a number of rounds, or for the remainder of the current combat.",
+        heading: "GM リマインダー",
+        body: "GM またはマスクされた保存済み効果を持つトークンがターン トラッカーの上部に到達すると、GM はアクション ボタンで隠された効果をリストするささやき声を受け取ります。同じターン内の重複したリマインダーは抑制されます。スヌーズ ボタンを使用して、ターン、ラウンド数、または現在の戦闘の残りのリマインダーを抑制します。"
+      }
+    },
+    actorClassification: {
+      heading: "アクター分類",
+      intro: "Condition Tracker は各トークンがPC、NPC、または無視されるオブジェクト（マップピン、背景、呪文テンプレート）かどうかを自動的に判断します。リンクされていないトークンはデフォルトで無視されます。--classify を使用して、任意のトークンの自動検出を上書きしてください。",
+      detectionOrder: {
+        heading: "検出順序",
+        colStep: "ステップ",
+        colCheck: "チェック",
+        colResult: "結果",
+        rows: [
+          [
+            "1",
+            "トークン状態の上書き（--classify --scope token）",
+            "PC / NPC / 無視"
+          ],
+          [
+            "2",
+            "キャラクターの ct_mod_actor_type 属性（--classify --scope character）",
+            "PC / NPC / 無視"
+          ],
+          [
+            "3",
+            "未リンクのトークン — キャラクターシートなし",
+            "無視されました"
+          ],
+          [
+            "4",
+            "ゲームシステムアダプター（npc / is_npc 属性）",
+            "パソコン/NPC"
+          ],
+          [
+            "5",
+            "汎用NPC属性スキャン（npc、is_npc、npcflag、sheet_type、character_type）",
+            "パソコン/NPC"
+          ],
+          [
+            "6",
+            "キャラクターの controlledby フォールバック",
+            "パソコン/NPC"
+          ]
+        ]
       },
+      types: {
+        heading: "分類タイプ",
+        colType: "タイプ",
+        colMeaning: "意味",
+        rows: [
+          [
+            "パソコン",
+            "プレイヤーキャラクター — ウィザードと検出で常にPCとして含まれる"
+          ],
+          [
+            "NPC",
+            "ノンプレイヤーキャラクター — 常にNPCとして含まれる"
+          ],
+          [
+            "無視されました",
+            "表示または追跡されない — ウィザードのトークンピッカーから除外"
+          ],
+          [
+            "未知",
+            "自動検出のみ；タイプを特定できなかった（ウィザードでNPCとして扱われる）"
+          ]
+        ]
+      },
+      commands: {
+        heading: "分類コマンド",
+        intro: "--classify コマンドを実行する前に、1つ以上のトークンを選択してください。",
+        rows: [
+          [
+            "!condition-tracker --pc を分類",
+            "選択したトークンをPCとしてマークします（デフォルトスコープ：キャラクター）。"
+          ],
+          [
+            "!condition-tracker --npc を分類する",
+            "選択したトークンをNPCとしてマークします。"
+          ],
+          [
+            "!condition-tracker --classify は無視されました",
+            "選択したトークンをすべてのトラッキングから除外します。"
+          ],
+          [
+            "!condition-tracker --classify auto",
+            "上書きを削除 — 自動検出を復元します。"
+          ],
+          [
+            "!condition-tracker --classify ショー",
+            "各選択トークンの分類診断（タイプ、ソース、理由）を表示します。"
+          ],
+          [
+            "!condition-tracker --classify pc --scope トークン",
+            "スクリプト状態に保存されたトークンレベルの上書き — 未リンクのトークンに便利です。"
+          ],
+          [
+            "!condition-tracker --classify pc --scope 文字",
+            "ct_mod_actor_type 属性に書き込まれたキャラクターレベルの上書き — 同じキャラクターシートを使用するすべてのトークンに適用されます。"
+          ]
+        ]
+      }
     },
     configuration: {
       heading: "設定",
-      intro:
-        "!condition-tracker --config &lt;オプション&gt; &lt;値&gt;またはメインメニューの設定ボタンを使用してください。",
+      intro: "!condition-tracker --config &lt;オプション&gt; &lt;値&gt;またはメインメニューの設定ボタンを使用してください。",
       colOption: "オプション",
       colValues: "値",
       colDesc: "説明",
@@ -569,54 +722,53 @@ const TRANSLATION = {
         [
           "useMarkers",
           "true / false",
-          "状態追加時にトークンへRoll20ステータスマーカーを適用する",
+          "状態追加時にトークンへRoll20ステータスマーカーを適用する"
         ],
         [
           "useIcons",
-          "true / false",
-          "ターントラッカー行で絵文字の代わりに短いアイコンコード（例：[G]）を表示する",
+          "真 / 偽",
+          "ターントラッカー行で絵文字の代わりに短いアイコンコード（例：[G]）を表示する"
         ],
         [
           "subjectPromptBypass",
-          "true / false",
-          "呪文・能力・その他の効果でオプションの対象トークン手順をスキップする",
+          "真 / 偽",
+          "呪文・能力・その他の効果でオプションの対象トークン手順をスキップする"
         ],
         [
           "suppressPublicChat",
-          "true / false",
-          "すべての公開チャット告知（適用・削除メッセージ）を非表示にします。GMのウィスパーは影響を受けません。",
+          "真 / 偽",
+          "すべての公開チャット告知（適用・削除メッセージ）を非表示にします。GMのウィスパーは影響を受けません。"
         ],
         [
           "healthBar",
           "bar1_value / bar2_value / bar3_value",
-          "監視するトークンバー。0になるとGMに状態のクリーンアップを促す",
+          "監視するトークンバー。0になるとGMに状態のクリーンアップを促す"
         ],
         [
           "language",
           "en-US / fr / de / es / pt-BR / ko",
-          "チャットメッセージとヘルプハンドアウトの出力言語",
+          "チャットメッセージとヘルプハンドアウトの出力言語"
         ],
         [
           "marker",
           "&lt;状態&gt;=&lt;マーカー名&gt;",
-          "特定の状態に使用するステータスマーカーを上書き（例：marker Grappled=grab）",
-        ],
-      ],
+          "特定の状態に使用するステータスマーカーを上書き（例：marker Grappled=grab）"
+        ]
+      ]
     },
     defaultMarkers: {
       heading: "デフォルトステータスマーカー",
       colCondition: "状態",
-      colMarker: "マーカー名",
+      colMarker: "マーカー名"
     },
     availableLocales: {
       heading: "利用可能な翻訳",
-      intro:
-        "languageの設定オプションを使用して、チャットメッセージとヘルプハンドアウトをサポートされている任意のロケールに設定できます。en、zh、ptの短縮エイリアスも使用できます。",
+      intro: "languageの設定オプションを使用して、チャットメッセージとヘルプハンドアウトをサポートされている任意のロケールに設定できます。en、zh、ptの短縮エイリアスも使用できます。",
       colLocale: "ロケール",
       colLanguage: "言語",
-      colFile: "翻訳ファイル",
-    },
-  },
+      colFile: "翻訳ファイル"
+    }
+  }
 };
 
 export default TRANSLATION;

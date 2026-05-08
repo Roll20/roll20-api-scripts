@@ -376,7 +376,7 @@ const TRANSLATION = {
       unknownConfig:
         "Unknown config option. Use --config to view supported settings.",
       macroReinstalled:
-        "The {wizard}, {multiTarget}, {reportToken}, and {saved} macros have been reinstalled for all current GM players.",
+        "The {wizard}, {multiTarget}, {reportToken}, {saved}, and {classify} macros have been reinstalled for all current GM players.",
       handoutReinstalled: "The help handout {handout} has been reinstalled.",
       duplicate:
         "That exact source, subject, target, condition, and custom text is already active.",
@@ -517,6 +517,25 @@ const TRANSLATION = {
       },
       snoozed: "snoozed",
     },
+    classify: {
+      title: "Actor Classification",
+      showTitle: "Classification Diagnostic",
+      showHeading: "Token Classification Details",
+      resultHeading: "Override Applied",
+      noSelection: "Select at least one token on the board before using --classify.",
+      invalidType:
+        "Invalid classification type: {type}. Use pc, npc, ignored, or auto.",
+      set: "{name} → {type} (scope: {scope})",
+      cleared: "{name} override cleared (scope: {scope}) — automatic detection restored.",
+      setTokenFallback:
+        "{name} → {type} (token override — no character sheet linked).",
+      clearedTokenFallback:
+        "{name} token override cleared — automatic detection restored.",
+      fieldToken: "Token",
+      fieldType: "Classification",
+      fieldSource: "Source",
+      fieldReason: "Reason",
+    },
     cleanup: {
       orphaned: "Orphaned condition entries",
       stale: "Stale condition entries",
@@ -557,6 +576,10 @@ const TRANSLATION = {
         [
           "!condition-tracker --saved",
           "Select a token first, then run this command to view and manage saved long-term effects (curses, diseases, hidden debuffs, etc.) for that token. Also available as the ConditionTrackerSaved macro.",
+        ],
+        [
+          "!condition-tracker --classify show",
+          "Select one or more tokens first, then run this command to see a diagnostic whisper showing each token's actor classification, detection source, and reason. Use --classify pc|npc|ignored to override, or --classify auto to restore automatic detection. Also available as the ConditionTrackerClassify macro.",
         ],
         [
           "!condition-tracker --menu",
@@ -647,6 +670,18 @@ const TRANSLATION = {
         [
           "--lang &lt;locale&gt;",
           "Output this command's messages in an additional locale (bilingual mode)",
+        ],
+        [
+          "--classify pc|npc|ignored",
+          "Override the actor type for selected tokens — select token(s) first. Default scope is character (writes ct_mod_actor_type attribute); add --scope token to store in script state instead",
+        ],
+        [
+          "--classify auto",
+          "Remove the actor-type override and restore automatic detection for selected tokens",
+        ],
+        [
+          "--classify show",
+          "Whisper a classification diagnostic for each selected token — shows the detected type, detection source, and reason",
         ],
         ["--help", "Show a brief help card in chat"],
       ],
@@ -745,6 +780,49 @@ const TRANSLATION = {
       reminders: {
         heading: "GM Reminders",
         body: "When a token with gm or masked saved effects reaches the top of the Turn Tracker, the GM receives a whisper listing the hidden effects with action buttons. Duplicate reminders within the same turn are suppressed. Use the Snooze buttons to suppress reminders for a turn, a number of rounds, or for the remainder of the current combat.",
+      },
+    },
+    actorClassification: {
+      heading: "Actor Classification",
+      intro:
+        "Condition Tracker automatically determines whether each token is a PC, NPC, or an ignored object (map pins, scenery, spell templates). Unlinked tokens are ignored by default. Use --classify to override automatic detection for any token.",
+      detectionOrder: {
+        heading: "Detection Order",
+        colStep: "Step",
+        colCheck: "Check",
+        colResult: "Result",
+        rows: [
+          ["1", "Token state override (--classify --scope token)", "pc / npc / ignored"],
+          ["2", "Character ct_mod_actor_type attribute (--classify --scope character)", "pc / npc / ignored"],
+          ["3", "Unlinked token — no character sheet", "ignored"],
+          ["4", "Game-system sheet adapter (npc / is_npc attribute)", "pc / npc"],
+          ["5", "Generic NPC attribute scan (npc, is_npc, npcflag, sheet_type, character_type)", "pc / npc"],
+          ["6", "Character controlledby fallback", "pc / npc"],
+        ],
+      },
+      types: {
+        heading: "Classification Types",
+        colType: "Type",
+        colMeaning: "Meaning",
+        rows: [
+          ["pc", "Player character — always included as a PC in wizard and detection"],
+          ["npc", "Non-player character — always included as an NPC"],
+          ["ignored", "Never shown or tracked — excluded from the wizard token picker"],
+          ["unknown", "Auto-detected only; could not determine type (treated as NPC in wizard)"],
+        ],
+      },
+      commands: {
+        heading: "Classification Commands",
+        intro: "Select one or more tokens before running --classify commands.",
+        rows: [
+          ["!condition-tracker --classify pc", "Mark selected tokens as PCs (character scope by default)."],
+          ["!condition-tracker --classify npc", "Mark selected tokens as NPCs."],
+          ["!condition-tracker --classify ignored", "Exclude selected tokens from all tracking."],
+          ["!condition-tracker --classify auto", "Remove override — restore automatic detection."],
+          ["!condition-tracker --classify show", "Show classification diagnostic (type, source, reason) for each selected token."],
+          ["!condition-tracker --classify pc --scope token", "Token-level override stored in script state — useful for unlinked tokens."],
+          ["!condition-tracker --classify pc --scope character", "Character-level override written to the ct_mod_actor_type attribute — applies to all tokens using the same character sheet."],
+        ],
       },
     },
     configuration: {

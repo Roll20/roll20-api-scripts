@@ -4,8 +4,8 @@
  * ------------------------------------------------
  * Name: Condition Tracker
  * Script: ConditionTracker.js
- * Version: 1.1.0
- * Built: 2026-05-06T01:04:24.879Z
+ * Version: 1.1.0.beta-3.2
+ * Built: 2026-05-08T16:37:17.703Z
  */
 const ConditionTrackerMod = (() => {
   'use strict';
@@ -259,8 +259,8 @@ const ConditionTrackerMod = (() => {
   ).join(' / ');
 
   const SCRIPT_NAME = 'Condition Tracker';
-  const SCRIPT_VERSION = '1.1.0';
-  const SCRIPT_LAST_UPDATED = '2026-05-06T01:04:24.879Z';
+  const SCRIPT_VERSION = '1.1.0.beta-3.2';
+  const SCRIPT_LAST_UPDATED = '2026-05-08T16:37:17.703Z';
 
   const COLOR_BG_SOFT_BLACK = '#0A0A12';
   const COLOR_TEXT_ARCANE_SILVER = '#E6DFFF';
@@ -291,10 +291,13 @@ const ConditionTrackerMod = (() => {
   const MENU_REMOVE = 'remove';
   const COMMAND_SAVED = `${COMMAND} --saved`;
   const MACRO_NAME_SAVED = `${STATE_KEY}Saved`;
+  const COMMAND_CLASSIFY = `${COMMAND} --classify`;
+  const MACRO_NAME_CLASSIFY = `${STATE_KEY}Classify`;
   const DEFAULT_MACRO_BODY = `${COMMAND_PROMPT}`;
   const DEFAULT_MULTI_TARGET_MACRO_BODY = `${COMMAND_MULTI_TARGET}`;
   const DEFAULT_REPORT_TOKEN_MACRO_BODY = `${COMMAND_REPORT_TOKEN}`;
   const DEFAULT_SAVED_MACRO_BODY = COMMAND_SAVED;
+  const DEFAULT_CLASSIFY_MACRO_BODY = `${COMMAND_CLASSIFY} show`;
 
   const SAVED_VISIBILITY_PUBLIC = 'public';
   const SAVED_VISIBILITY_MASKED = 'masked';
@@ -456,7 +459,7 @@ const ConditionTrackerMod = (() => {
         custom: '{emoji} {target} geraak deur {effect} ({source})',
         advantage: '{emoji} {source} het voordeel teen {target}{subject}',
         disadvantage: '{emoji} {source} het nadeel teen {target}{subject}',
-        noBy: '{emoji} {target} {past} ({source})',
+        noBy: 'PLEKHOUER0TOKEN PLEKHOUER1TOKEN PLEKHOUER2TOKEN (PLEKHOUER3TOKEN)',
         self: '{target} is {past}',
         standard: '{emoji} {target} {past} deur {source}',
       },
@@ -465,8 +468,9 @@ const ConditionTrackerMod = (() => {
         advantage: '{source} het voordeel teen {target}{subject}.',
         disadvantage: '{source} het nadeel teen {target}{subject}.',
         self: '{target} is {past}.',
-        withSuffix: '{source} {verb} {target} {suffix}.',
-        standard: '{source} {verb} {target}.',
+        withSuffix:
+          'PLEKHOUER0TOKEN PLEKHOUER1TOKEN PLEKHOUER2TOKEN PLEKHOUER3TOKEN.',
+        standard: 'PLEKHOUER0TOKEN PLEKHOUER1TOKEN PLEKHOUER2TOKEN.',
       },
       remove: {
         custom: '{target} word nie meer deur {effect} geraak nie.',
@@ -518,8 +522,8 @@ const ConditionTrackerMod = (() => {
         details: 'Besonderhede',
         description: 'Beskrywing',
         scenario: 'Scenario',
-        gameSystem: 'Game System',
-        duration: 'Duration',
+        gameSystem: 'Spelstelsel',
+        duration: 'Duur',
       },
       dur: {
         untilRemoved: 'Tot verwydering',
@@ -544,14 +548,14 @@ const ConditionTrackerMod = (() => {
         reinstallHandout: 'Herinstalleer Handout',
         showHelp: 'Wys Hulp',
         reorderConditions: 'Herrangskik Toestandrye',
-        reportToken: 'Report Token Conditions',
-        savedEffects: 'Saved Effects',
-        addSavedEffect: 'Add Saved Effect',
-        editSaved: 'Edit',
-        removeSaved: 'Remove',
-        promoteSaved: 'Add to Turn Tracker',
-        snoozeSaved: 'Snooze',
-        clearSnooze: 'Clear Snooze',
+        reportToken: 'Rapporteer Token Voorwaardes',
+        savedEffects: 'Gestoorde effekte',
+        addSavedEffect: 'Voeg gestoorde effek by',
+        editSaved: 'Wysig',
+        removeSaved: 'Verwyder',
+        promoteSaved: 'Voeg by Turn Tracker',
+        snoozeSaved: 'Sluimer',
+        clearSnooze: 'Vee Sluimer uit',
       },
       title: {
         menu: 'Kieslys',
@@ -562,8 +566,7 @@ const ConditionTrackerMod = (() => {
         applied: 'Toegepas',
         removed: 'Toestand Verwyder',
         cleanup: 'Opruiming Voltooi',
-        macroReinstalled:
-          'The {wizard}, {multiTarget}, {reportToken}, and {saved} macros have been reinstalled for all current GM players.',
+        macroReinstalled: 'Makro Herinstalleer',
         handoutReinstalled: 'Handout Herinstalleer',
         warning: 'Waarskuwing',
         error: 'Fout',
@@ -575,15 +578,15 @@ const ConditionTrackerMod = (() => {
         moveToken: '{name} — Verskuif Token?',
         scriptReady: 'Skrip Gereed',
         conditionReorder: 'Beurtorde Verander',
-        tokenReport: 'Token Condition Report',
-        savedEffects: 'Saved Effects',
-        savedAdd: 'Add Saved Effect',
-        savedEdit: 'Edit Saved Effect',
-        savedRemoved: 'Saved Effect Removed',
-        savedPromoted: 'Add to Turn Tracker',
-        savedSnoozed: 'Reminder Snoozed',
-        savedSnoozeCleared: 'Snooze Cleared',
-        hiddenEffects: 'Hidden Effects — {name}',
+        tokenReport: 'Token-toestandverslag',
+        savedEffects: 'Gestoorde effekte',
+        savedAdd: 'Voeg gestoorde effek by',
+        savedEdit: 'Wysig gestoorde effek',
+        savedRemoved: 'Gestoorde effek verwyder',
+        savedPromoted: 'Voeg by Turn Tracker',
+        savedSnoozed: 'Herinnering gesluimer',
+        savedSnoozeCleared: 'Sluimer is uitgevee',
+        hiddenEffects: 'Versteekte effekte — {name}',
       },
       heading: {
         quickActions: 'Vinnige Aksies',
@@ -595,13 +598,13 @@ const ConditionTrackerMod = (() => {
         promptUi: 'Towenaar-koppelvlak',
         examples: 'Voorbeelde',
         summary: 'Opsomming',
-        appliedTo: 'Conditions Applied To',
-        appliedBy: 'Conditions Applied By',
-        savedEffectsFor: 'Saved Effects for {name}',
-        visibility: 'Visibility',
-        snoozeOptions: 'Snooze Reminder',
-        promoteOptions: 'Promote to Turn Tracker',
-        editActions: 'Edit Actions',
+        appliedTo: 'Voorwaardes van toepassing op',
+        appliedBy: 'Voorwaardes toegepas deur',
+        savedEffectsFor: 'Gestoorde effekte vir {name}',
+        visibility: 'Sigbaarheid',
+        snoozeOptions: 'Sluimerherinnering',
+        promoteOptions: 'Bevorder na Draai Tracker',
+        editActions: 'Wysig aksies',
       },
       msg: {
         noActive: 'Geen aktiewe toestande word gevolg nie.',
@@ -609,7 +612,7 @@ const ConditionTrackerMod = (() => {
         unknownConfig:
           'Onbekende konfigurasieopsie. Gebruik --config om ondersteunde instellings te sien.',
         macroReinstalled:
-          'Die {wizard}- en {multiTarget}- en {reportToken}-makros is herinstalleer vir alle huidige GM-spelers.',
+          'Die {wizard}-, {multiTarget}-, {reportToken}-, {saved}- en {classify}-makros is herinstalleer vir alle huidige GM-spelers.',
         handoutReinstalled: 'Die hulp-handout {handout} is herinstalleer.',
         duplicate:
           'Hierdie presiese kombinasie van bron, onderwerp, teiken, toestand en aangepaste teks is reeds aktief.',
@@ -685,32 +688,33 @@ const ConditionTrackerMod = (() => {
         conditionsReordered:
           'Toestandrye is herposisioneer ná hul toegewysde tokens.',
         noTokensSelectedReport:
-          'Select at least one token on the board before using --report-token.',
-        noConditionsAppliedTo: '{name} has no active conditions applied to it.',
+          'Kies ten minste een teken op die bord voordat jy --report-token gebruik.',
+        noConditionsAppliedTo:
+          '{name} het geen aktiewe voorwaardes daarop toegepas nie.',
         noConditionsAppliedBy:
-          '{name} has no active conditions applied to others.',
-        noSavedEffects: 'No saved effects stored for {name}.',
+          '{name} het geen aktiewe voorwaardes wat op ander toegepas is nie.',
+        noSavedEffects: 'Geen gestoorde effekte gestoor vir {name} nie.',
         noTokenSelectedSaved:
-          'Select a token on the board before using --saved.',
-        savedEffectAdded: 'Saved effect added for {name}.',
-        savedEffectUpdated: 'Saved effect updated.',
-        savedEffectRemoved: 'Saved effect removed.',
-        savedEffectNotFound: 'Saved effect not found.',
+          "Kies 'n teken op die bord voordat jy --save gebruik.",
+        savedEffectAdded: 'Gestoorde effek bygevoeg vir {name}.',
+        savedEffectUpdated: 'Gestoorde effek is opgedateer.',
+        savedEffectRemoved: 'Gestoorde effek is verwyder.',
+        savedEffectNotFound: 'Gestoorde effek nie gevind nie.',
         savedInvalidVisibility:
-          'Invalid visibility. Use public, masked, or gm.',
+          'Ongeldige sigbaarheid. Gebruik publiek, gemaskerde of GM.',
         savedConditionRequired:
           'Condition type is required. Use --condition <type>.',
-        savedPromotedPublic: 'Effect added to Turn Tracker as public.',
+        savedPromotedPublic: 'Effek is as publiek by Turn Tracker gevoeg.',
         savedPromotedMasked:
-          'Effect added to Turn Tracker as masked — players see: {publicLabel}.',
+          'Effek bygevoeg by Turn Tracker as gemaskerde — spelers sien: {publicLabel}.',
         savedPromotedGm:
-          'Effect is GM-only — no Turn Tracker row will be created. The reminder system will surface it when this token reaches the top of the turn order.',
-        savedSnoozed: 'Reminder snoozed: {scope}.',
-        savedSnoozeCleared: 'Snooze cleared.',
-        hiddenEffectsReminder: 'Hidden effects are active on {name}.',
-        visibilityPublicHint: 'full label visible to all',
-        visibilityMaskedHint: 'vague label shown to players',
-        visibilityGmHint: 'GM whisper only, no Turn Tracker row',
+          'Effek is slegs GM - geen Turn Tracker-ry sal geskep word nie. Die herinneringstelsel sal dit na vore kom wanneer hierdie teken die bokant van die beurtvolgorde bereik.',
+        savedSnoozed: 'Onthounota gesluimer: {scope}.',
+        savedSnoozeCleared: 'Sluimer is uitgevee.',
+        hiddenEffectsReminder: 'Versteekte effekte is aktief op {name}.',
+        visibilityPublicHint: 'volledige etiket sigbaar vir almal',
+        visibilityMaskedHint: 'vae etiket wat aan spelers gewys word',
+        visibilityGmHint: 'Slegs GM fluister, geen Turn Tracker-ry nie',
       },
       removal: {
         conditionField: 'Toestand',
@@ -726,29 +730,50 @@ const ConditionTrackerMod = (() => {
       },
       saved: {
         visibility: {
-          public: 'Public',
-          masked: 'Masked',
-          gm: 'GM Only',
+          public: 'Publiek',
+          masked: 'Gemasker',
+          gm: 'Slegs GM',
         },
         snooze: {
-          thisTurn: 'This Turn',
-          oneRound: '1 Round',
-          threeRounds: '3 Rounds',
-          thisCombat: 'This Combat',
-          rounds: '{n} round(s)',
+          thisTurn: 'Hierdie draai',
+          oneRound: '1 Rondte',
+          threeRounds: '3 Rondtes',
+          thisCombat: 'Hierdie Geveg',
+          rounds: '{n} rondte(s)',
         },
         field: {
-          gmLabel: 'GM Label',
-          publicLabel: 'Public Label',
-          visibility: 'Visibility',
-          source: 'Source',
-          condition: 'Condition',
+          gmLabel: 'GM Etiket',
+          publicLabel: 'Openbare Etiket',
+          visibility: 'Sigbaarheid',
+          source: 'Bron',
+          condition: 'Toestand',
         },
         prompt: {
-          enterGmLabel: 'Full effect description (GM only)',
-          enterPublicLabel: 'Vague label shown to players',
+          enterGmLabel: 'Volledige effekbeskrywing (slegs GM)',
+          enterPublicLabel: 'Vae etiket gewys aan spelers',
         },
-        snoozed: 'snoozed',
+        snoozed: 'gesluimer',
+      },
+      classify: {
+        title: 'Akteur-Klassifikasie',
+        showTitle: 'Klassifikasie-Diagnose',
+        showHeading: 'Token-Klassifikasie-Besonderhede',
+        resultHeading: 'Oorskrywing Toegepas',
+        noSelection:
+          'Kies ten minste een token op die bord voordat jy --classify gebruik.',
+        invalidType:
+          'Ongeldige klassifikasietipe: {type}. Gebruik pc, npc, ignored of auto.',
+        set: '{name} → {type} (omvang: {scope})',
+        cleared:
+          '{name} oorskrywing uitgevee (omvang: {scope}) — outomatiese opsporing herstel.',
+        setTokenFallback:
+          '{name} → {type} (token-oorskrywing — geen karakterblad gekoppel nie).',
+        clearedTokenFallback:
+          '{name} token-oorskrywing uitgevee — outomatiese opsporing herstel.',
+        fieldToken: 'Teken',
+        fieldType: 'Klassifikasie',
+        fieldSource: 'Bron',
+        fieldReason: 'Rede',
       },
       cleanup: {
         orphaned: 'Weesagtige toestandinskrywings',
@@ -777,16 +802,16 @@ const ConditionTrackerMod = (() => {
         colDesc: 'Beskrywing',
         rows: [
           [
-            '!condition-tracker --prompt',
+            '!toestand-spoorsnyer --prompt',
             'Stap-vir-stap towenaar — kies toestand, tokens en duur interaktief. Ook beskikbaar as die ConditionTrackerWizard-makro.',
           ],
           [
-            '!condition-tracker --multi-target',
+            '!toestand-spoorsnyer --multi-teiken',
             'Pas een toestand gelyktydig op verskeie tokens toe. Ook beskikbaar as die ConditionTrackerMultiTarget-makro.',
           ],
           [
-            '!condition-tracker --report-token',
-            'Select one or more tokens first, then run this command to get a GM whisper listing every condition applied to and by each selected token. Also available as the ConditionTrackerReportToken macro.',
+            '!toestand-spoorsnyer --verslag-token',
+            "Kies eers een of meer tekens, voer dan hierdie opdrag uit om 'n GM-fluistering te kry wat elke toestand op en deur elke geselekteerde teken lys. Ook beskikbaar as die ConditionTrackerReportToken-makro.",
           ],
           [
             '!condition-tracker --menu',
@@ -799,17 +824,17 @@ const ConditionTrackerMod = (() => {
         colFlag: 'Vlag',
         colDesc: 'Beskrywing',
         rows: [
-          ['--prompt', 'Interaktiewe stap-vir-stap towenaar-koppelvlak'],
+          ['-- prompt', 'Interaktiewe stap-vir-stap towenaar-koppelvlak'],
           [
-            '--multi-target',
+            '-- multi-teiken',
             "Pas 'n toestand op verskeie teikentoken gelyktydig toe",
           ],
           [
-            '--menu',
+            '-- spyskaart',
             'Wys hoofkieslys (voeg remove by vir verwyderingskieslys)',
           ],
           [
-            '--source X --target Y --condition Z',
+            '--bron X --teiken Y --toestand Z',
             "Pas 'n toestand direk toe sonder die towenaar",
           ],
           [
@@ -833,25 +858,37 @@ const ConditionTrackerMod = (() => {
             'Oorskryf subjectPromptBypass slegs vir hierdie opdrag (ondersteun ook --subject-prompt-bypass)',
           ],
           [
-            '--cleanup',
+            '-- skoonmaak',
             'Versoen toestand — verwyder weesagtige toestande en beurtorde-rye',
           ],
           [
-            '--reorder-conditions',
+            '--herbestel-voorwaardes',
             'Verskuif toestandrye handmatig agter hul aangewese tokens in die beurtorde',
           ],
-          ['--reinstall-macro', 'Herskep of dateer GM-makros op'],
+          ['--herinstalleer-makro', 'Herskep of dateer GM-makros op'],
           [
-            '--reinstall-handout',
+            '--herinstalleer-uitdeelstuk',
             'Herskep of dateer die gelokaliseerde hulp-handout op',
           ],
           [
-            '--report-token',
-            'Whisper a GM-only condition report for each selected token (conditions applied to and by it)',
+            '--verslag-token',
+            "Fluister 'n GM-enigste toestandverslag vir elke geselekteerde teken (toestande wat daarop toegepas word en daardeur)",
           ],
           [
             '--lang &lt;lokaal&gt;',
             "Gee hierdie opdrag se boodskappe in 'n bykomende lokaal uit (tweetalige modus)",
+          ],
+          [
+            '--classify pc|npc|ignored',
+            'Skryf die akteur-tipe vir gekose tokens oor — kies eers token(s). Standaard omvang is karakter (skryf ct_mod_actor_type-kenmerk); voeg --scope token by om in skripstatus te stoor',
+          ],
+          [
+            '--classify auto',
+            'Verwyder die akteur-tipe-oorskrywing en herstel outomatiese opsporing vir gekose tokens',
+          ],
+          [
+            '--classify show',
+            "Fluister 'n klassifikasie-diagnose vir elke gekose token — wys die bepaalde tipe, opsporingsbron en rede",
           ],
           ['--help', "Wys 'n kort hulpkaart in die klets"],
         ],
@@ -913,64 +950,150 @@ const ConditionTrackerMod = (() => {
         ],
       },
       savedEffects: {
-        heading: 'Saved Effects',
+        heading: 'Gestoorde effekte',
         intro:
-          'Saved effects let you store long-term conditions outside the Turn Tracker — curses, diseases, poisons, hidden debuffs, and other non-combat conditions. They persist in script state and can be optionally copied into the Turn Tracker when combat begins.',
+          'Gestoorde effekte laat jou toe om langtermyntoestande buite die Turn Tracker te stoor - vloeke, siektes, gifstowwe, verborge debuffs en ander nie-gevegstoestande. Hulle bly in skriftoestand en kan opsioneel na die Turn Tracker gekopieer word wanneer gevegte begin.',
         visibility: {
-          heading: 'Visibility Modes',
+          heading: 'Sigbaarheidmodusse',
           rows: [
             [
-              'public',
-              'Full effect label is visible in the Turn Tracker and public chat.',
+              'publiek',
+              'Volledige effek-etiket is sigbaar in die Turn Tracker en publieke klets.',
             ],
             [
-              'masked',
-              'A vague public label is shown to players; full details are GM-only.',
+              'gemasker',
+              "'n Vae publieke etiket word aan spelers gewys; volledige besonderhede is slegs vir GM.",
             ],
             [
               'gm',
-              'No Turn Tracker row. Full details are stored in state and whispered to the GM when the affected token reaches the top of initiative.',
+              'Geen Draai Tracker-ry nie. Volledige besonderhede word in staat gestoor en aan die GM gefluister wanneer die geaffekteerde token die toppunt van inisiatief bereik.',
             ],
           ],
         },
         commands: {
-          heading: 'Saved Effects Commands',
+          heading: 'Gestoorde effekte-opdragte',
           intro:
-            'All --saved commands are GM-only. Select a token before running --saved or --saved add.',
+            "Alle --gestoorde opdragte is slegs GM. Kies 'n teken voordat jy --gestoorde of --gestoorde byvoeging uitvoer.",
           rows: [
             [
-              '!condition-tracker --saved',
-              'View saved effects for the selected token.',
+              '!toestand-spoorsnyer --gestoor',
+              'Bekyk gestoorde effekte vir die geselekteerde teken.',
             ],
             [
-              '!condition-tracker --saved add',
-              'Launch the add-saved-effect wizard.',
+              '!condition-tracker --gestoorde byvoeging',
+              'Begin die towenaar byvoeg-gestoor-effek.',
             ],
             [
               '!condition-tracker --saved edit <id>',
-              'Edit labels or visibility for an existing saved effect.',
+              "Wysig etikette of sigbaarheid vir 'n bestaande gestoorde effek.",
             ],
             [
               '!condition-tracker --saved remove <id>',
-              'Permanently remove a saved effect.',
+              "Verwyder 'n gestoorde effek permanent.",
             ],
             [
               '!condition-tracker --saved promote <id> --visibility public|masked|gm',
-              'Copy a saved effect into the Turn Tracker (public or masked) or confirm it is GM-only tracked.',
+              "Kopieer 'n gestoorde effek na die Turn Tracker (publiek of gemaskerde) of bevestig dit is slegs GM-nagespoor.",
             ],
             [
               '!condition-tracker --saved snooze <id> --scope turn|rounds|combat --rounds <n>',
-              'Snooze a GM reminder for this turn, N rounds, or this combat.',
+              "Sluimer 'n GM-herinnering vir hierdie beurt, N rondtes of hierdie geveg.",
             ],
             [
               '!condition-tracker --saved snooze-clear <id>',
-              'Clear an active snooze so reminders resume immediately.',
+              "Maak 'n aktiewe sluimer skoon sodat onthounotas onmiddellik hervat word.",
             ],
           ],
         },
         reminders: {
-          heading: 'GM Reminders',
-          body: 'When a token with gm or masked saved effects reaches the top of the Turn Tracker, the GM receives a whisper listing the hidden effects with action buttons. Duplicate reminders within the same turn are suppressed. Use the Snooze buttons to suppress reminders for a turn, a number of rounds, or for the remainder of the current combat.',
+          heading: 'GM-herinneringe',
+          body: "Wanneer 'n teken met GM of gemaskerde gestoorde effekte die bokant van die Turn Tracker bereik, ontvang die GM 'n fluistering wat die verborge effekte met aksieknoppies lys. Duplikaatherinneringe binne dieselfde beurt word onderdruk. Gebruik die Sluimer-knoppies om herinneringe vir 'n beurt, 'n aantal rondtes of vir die res van die huidige geveg te onderdruk.",
+        },
+      },
+      actorClassification: {
+        heading: 'Akteur-Klassifikasie',
+        intro:
+          "Condition Tracker bepaal outomaties of elke token 'n SC, NPC of 'n genegeerde voorwerp is (kaartpenne, dekorstukke, towerformulie-sjablone). Ongekoppelde tokens word standaard genegeer. Gebruik --classify om outomatiese opsporing vir enige token te oorskryf.",
+        detectionOrder: {
+          heading: 'Opsporingsvolgorde',
+          colStep: 'Stap',
+          colCheck: 'Kontrole',
+          colResult: 'Resultaat',
+          rows: [
+            [
+              '1',
+              'Token-toestand-oorskrywing (--classify --scope token)',
+              'pc / npc / geïgnoreer',
+            ],
+            [
+              '2',
+              'Karakter ct_mod_actor_type-kenmerk (--classify --scope character)',
+              'pc / npc / geïgnoreer',
+            ],
+            ['3', 'Ongekoppelde token — geen karakterblad', 'geïgnoreer'],
+            ['4', 'Spelstelsel-adapter (npc / is_npc kenmerk)', 'pc / npc'],
+            [
+              '5',
+              'Generiese NPC-kenmerkskandering (npc, is_npc, npcflag, sheet_type, character_type)',
+              'pc / npc',
+            ],
+            ['6', 'Karakter controlledby-terugval', 'pc / npc'],
+          ],
+        },
+        types: {
+          heading: 'Klassifikasietipes',
+          colType: 'Tipe',
+          colMeaning: 'Betekenis',
+          rows: [
+            [
+              'rekenaar',
+              'Spelerkarakter — altyd ingesluit as SC in die towenaar en opsporing',
+            ],
+            ['npc', 'Nie-spelerkarakter — altyd ingesluit as NPC'],
+            [
+              'geïgnoreer',
+              'Nooit gewys of opgespoor nie — uitgesluit van die towenaar se token-kieser',
+            ],
+            [
+              'onbekend',
+              'Slegs outomatiese opsporing; kon nie tipe bepaal nie (as NPC in die towenaar behandel)',
+            ],
+          ],
+        },
+        commands: {
+          heading: 'Klassifikasieopdragte',
+          intro:
+            'Kies een of meer tokens voordat jy --classify-opdragte uitvoer.',
+          rows: [
+            [
+              '!toestand-spoorsnyer --klassifiseer rekenaar',
+              "Merk gekose tokens as SC's (standaard omvang: karakter).",
+            ],
+            [
+              '!condition-tracker --klassifiseer npc',
+              "Merk gekose tokens as NPC's.",
+            ],
+            [
+              '!condition-tracker --klassifiseer geïgnoreer',
+              'Sluit gekose tokens uit van alle nasporing.',
+            ],
+            [
+              '!toestand-spoorsnyer --klassifiseer outomaties',
+              'Verwyder oorskrywing — herstel outomatiese opsporing.',
+            ],
+            [
+              '!toestand-spoorsnyer --klassifiseer vertoning',
+              'Wys klassifikasie-diagnose (tipe, bron, rede) vir elke gekose token.',
+            ],
+            [
+              '!condition-tracker --klassifiseer rekenaar --scope token',
+              'Token-oorskrywing gestoor in skripstatus — nuttig vir ongekoppelde tokens.',
+            ],
+            [
+              '!condition-tracker --klassifiseer rekenaar --scope karakter',
+              'Karakter-oorskrywing geskryf na ct_mod_actor_type-kenmerk — geld vir alle tokens met dieselfde karakterblad.',
+            ],
+          ],
         },
       },
       configuration: {
@@ -988,17 +1111,17 @@ const ConditionTrackerMod = (() => {
           ],
           [
             'useIcons',
-            'true / false',
+            'waar / onwaar',
             'Wys kort ikonskodes (bv. [G]) in plaas van emoji in Beurtopvolger-rye',
           ],
           [
             'subjectPromptBypass',
-            'true / false',
+            'waar / onwaar',
             'Slaan die opsionele onderwerp-tokenstap oor vir Towerspreuk / Vermoë / Ander effekte',
           ],
           [
             'suppressPublicChat',
-            'true / false',
+            'waar / onwaar',
             'Onderdruk alle openbare kletsboodskappe (toepassing en verwydering). GM-fluisterings word nie beïnvloed nie.',
           ],
           [
@@ -1027,7 +1150,7 @@ const ConditionTrackerMod = (() => {
         heading: 'Beskikbare Vertalings',
         intro:
           "Gebruik die taal-konfigurasie-opsie om kletsberoepe en die hulp-handout op 'n ondersteunde lokaal in te stel. Kort aliasse word ook aanvaar vir en, zh en pt.",
-        colLocale: 'Locale',
+        colLocale: 'Lokaal',
         colLanguage: 'Taal',
         colFile: 'Vertaallêer',
       },
@@ -1198,8 +1321,8 @@ const ConditionTrackerMod = (() => {
         details: 'Detalls',
         description: 'Descripció',
         scenario: 'Escenari',
-        gameSystem: 'Game System',
-        duration: 'Duration',
+        gameSystem: 'Sistema de joc',
+        duration: 'Durada',
       },
       dur: {
         untilRemoved: "Fins que s'elimini",
@@ -1224,14 +1347,14 @@ const ConditionTrackerMod = (() => {
         reinstallHandout: 'Reinstal·la el fullet',
         showHelp: "Mostra l'ajuda",
         reorderConditions: 'Reordena les files de condicions',
-        reportToken: 'Report Token Conditions',
-        savedEffects: 'Saved Effects',
-        addSavedEffect: 'Add Saved Effect',
-        editSaved: 'Edit',
-        removeSaved: 'Remove',
-        promoteSaved: 'Add to Turn Tracker',
-        snoozeSaved: 'Snooze',
-        clearSnooze: 'Clear Snooze',
+        reportToken: 'Informa de les condicions del testimoni',
+        savedEffects: 'Efectes guardats',
+        addSavedEffect: "Afegeix l'efecte desat",
+        editSaved: 'Edita',
+        removeSaved: 'Eliminar',
+        promoteSaved: 'Afegeix a Turn Tracker',
+        snoozeSaved: 'Posposa',
+        clearSnooze: 'Esborra la posposació',
       },
       title: {
         menu: 'Menú',
@@ -1242,8 +1365,7 @@ const ConditionTrackerMod = (() => {
         applied: 'Aplicat',
         removed: 'Condició eliminada',
         cleanup: 'Neteja completada',
-        macroReinstalled:
-          'The {wizard}, {multiTarget}, {reportToken}, and {saved} macros have been reinstalled for all current GM players.',
+        macroReinstalled: 'Macro reinstal·lada',
         handoutReinstalled: 'Fullet reinstal·lat',
         warning: 'Avís',
         error: 'Error',
@@ -1255,15 +1377,15 @@ const ConditionTrackerMod = (() => {
         moveToken: '{name} — Mou el testimoni?',
         scriptReady: 'Script llest',
         conditionReorder: 'Ordre de torn modificat',
-        tokenReport: 'Token Condition Report',
-        savedEffects: 'Saved Effects',
-        savedAdd: 'Add Saved Effect',
-        savedEdit: 'Edit Saved Effect',
-        savedRemoved: 'Saved Effect Removed',
-        savedPromoted: 'Add to Turn Tracker',
-        savedSnoozed: 'Reminder Snoozed',
-        savedSnoozeCleared: 'Snooze Cleared',
-        hiddenEffects: 'Hidden Effects — {name}',
+        tokenReport: "Informe de l'estat del testimoni",
+        savedEffects: 'Efectes guardats',
+        savedAdd: "Afegeix l'efecte desat",
+        savedEdit: "Edita l'efecte desat",
+        savedRemoved: "S'ha eliminat l'efecte desat",
+        savedPromoted: 'Afegeix a Turn Tracker',
+        savedSnoozed: 'Recordatori posposat',
+        savedSnoozeCleared: "S'ha esborrat la posposació",
+        hiddenEffects: 'Efectes ocults — {name}',
       },
       heading: {
         quickActions: 'Accions ràpides',
@@ -1275,13 +1397,13 @@ const ConditionTrackerMod = (() => {
         promptUi: "Interfície de l'assistent",
         examples: 'Exemples',
         summary: 'Resum',
-        appliedTo: 'Conditions Applied To',
-        appliedBy: 'Conditions Applied By',
-        savedEffectsFor: 'Saved Effects for {name}',
-        visibility: 'Visibility',
-        snoozeOptions: 'Snooze Reminder',
-        promoteOptions: 'Promote to Turn Tracker',
-        editActions: 'Edit Actions',
+        appliedTo: 'Condicions aplicades',
+        appliedBy: 'Condicions aplicades per',
+        savedEffectsFor: 'Efectes desats per a {name}',
+        visibility: 'Visibilitat',
+        snoozeOptions: 'Recordatori de posposar',
+        promoteOptions: 'Ascens a Turn Tracker',
+        editActions: 'Edita accions',
       },
       msg: {
         noActive: 'No hi ha cap condició activa en seguiment.',
@@ -1289,7 +1411,7 @@ const ConditionTrackerMod = (() => {
         unknownConfig:
           'Opció de configuració desconeguda. Usa --config per veure els paràmetres disponibles.',
         macroReinstalled:
-          "Les macros {wizard}, {multiTarget} i {reportToken} s'han reinstal·lat per a tots els MJ actius.",
+          "Les macros {wizard}, {multiTarget}, {reportToken}, {saved} i {classify} s'han reinstal·lat per a tots els MJ actius.",
         handoutReinstalled: "El fullet d'ajuda {handout} s'ha reinstal·lat.",
         duplicate:
           "Aquesta combinació d'origen, subjecte, destinatari, condició i text personalitzat ja és activa.",
@@ -1368,32 +1490,33 @@ const ConditionTrackerMod = (() => {
         conditionsReordered:
           "Les files de condicions s'han reposicionat després dels seus testimonis assignats.",
         noTokensSelectedReport:
-          'Select at least one token on the board before using --report-token.',
-        noConditionsAppliedTo: '{name} has no active conditions applied to it.',
+          "Seleccioneu almenys un testimoni al tauler abans d'utilitzar --report-token.",
+        noConditionsAppliedTo: '{name} no té cap condició activa aplicada.',
         noConditionsAppliedBy:
-          '{name} has no active conditions applied to others.',
-        noSavedEffects: 'No saved effects stored for {name}.',
+          '{name} no té cap condició activa aplicada als altres.',
+        noSavedEffects: "No s'ha guardat cap efecte desat per a {name}.",
         noTokenSelectedSaved:
-          'Select a token on the board before using --saved.',
-        savedEffectAdded: 'Saved effect added for {name}.',
-        savedEffectUpdated: 'Saved effect updated.',
-        savedEffectRemoved: 'Saved effect removed.',
-        savedEffectNotFound: 'Saved effect not found.',
+          "Seleccioneu una fitxa al tauler abans d'utilitzar --saved.",
+        savedEffectAdded: "S'ha afegit efecte desat per a {name}.",
+        savedEffectUpdated: "S'ha actualitzat l'efecte desat.",
+        savedEffectRemoved: "S'ha eliminat l'efecte desat.",
+        savedEffectNotFound: "No s'ha trobat l'efecte desat.",
         savedInvalidVisibility:
-          'Invalid visibility. Use public, masked, or gm.',
+          'Visibilitat no vàlida. Utilitzeu públic, emmascarat o gm.',
         savedConditionRequired:
           'Condition type is required. Use --condition <type>.',
-        savedPromotedPublic: 'Effect added to Turn Tracker as public.',
+        savedPromotedPublic:
+          "S'ha afegit l'efecte al Turn Tracker com a públic.",
         savedPromotedMasked:
-          'Effect added to Turn Tracker as masked — players see: {publicLabel}.',
+          "S'ha afegit l'efecte al Seguidor de torns com a emmascarat; els jugadors veuen: {publicLabel}.",
         savedPromotedGm:
-          'Effect is GM-only — no Turn Tracker row will be created. The reminder system will surface it when this token reaches the top of the turn order.',
-        savedSnoozed: 'Reminder snoozed: {scope}.',
-        savedSnoozeCleared: 'Snooze cleared.',
-        hiddenEffectsReminder: 'Hidden effects are active on {name}.',
-        visibilityPublicHint: 'full label visible to all',
-        visibilityMaskedHint: 'vague label shown to players',
-        visibilityGmHint: 'GM whisper only, no Turn Tracker row',
+          "L'efecte és només per a GM: no es crearà cap fila de seguiment de girs. El sistema de recordatoris apareixerà quan aquesta fitxa arribi al capdamunt de l'ordre de torn.",
+        savedSnoozed: "S'ha posposat el recordatori: {scope}.",
+        savedSnoozeCleared: "S'ha esborrat la posposació.",
+        hiddenEffectsReminder: 'Els efectes ocults estan actius a {name}.',
+        visibilityPublicHint: 'etiqueta completa visible per a tothom',
+        visibilityMaskedHint: 'etiqueta vaga mostrada als jugadors',
+        visibilityGmHint: 'Només xiuxiueig de GM, sense fila Turn Tracker',
       },
       removal: {
         conditionField: 'Condició',
@@ -1409,29 +1532,50 @@ const ConditionTrackerMod = (() => {
       },
       saved: {
         visibility: {
-          public: 'Public',
-          masked: 'Masked',
-          gm: 'GM Only',
+          public: 'Públic',
+          masked: 'Enmascarat',
+          gm: 'Només GM',
         },
         snooze: {
-          thisTurn: 'This Turn',
-          oneRound: '1 Round',
-          threeRounds: '3 Rounds',
-          thisCombat: 'This Combat',
-          rounds: '{n} round(s)',
+          thisTurn: 'Aquest Torn',
+          oneRound: '1 Ronda',
+          threeRounds: '3 rondes',
+          thisCombat: 'Aquest Combat',
+          rounds: '{n} rondes',
         },
         field: {
-          gmLabel: 'GM Label',
-          publicLabel: 'Public Label',
-          visibility: 'Visibility',
-          source: 'Source',
-          condition: 'Condition',
+          gmLabel: 'Etiqueta GM',
+          publicLabel: 'Etiqueta pública',
+          visibility: 'Visibilitat',
+          source: 'Font',
+          condition: 'Condició',
         },
         prompt: {
-          enterGmLabel: 'Full effect description (GM only)',
-          enterPublicLabel: 'Vague label shown to players',
+          enterGmLabel: "Descripció completa de l'efecte (només GM)",
+          enterPublicLabel: 'Es mostra una etiqueta vaga als jugadors',
         },
-        snoozed: 'snoozed',
+        snoozed: 'adormit',
+      },
+      classify: {
+        title: "Classificació d'Actor",
+        showTitle: 'Diagnòstic de Classificació',
+        showHeading: 'Detalls de Classificació del Token',
+        resultHeading: 'Substitució Aplicada',
+        noSelection:
+          "Selecciona almenys un token al tauler abans d'usar --classify.",
+        invalidType:
+          'Tipus de classificació no vàlid: {type}. Usa pc, npc, ignored o auto.',
+        set: '{name} → {type} (àmbit: {scope})',
+        cleared:
+          '{name} substitució eliminada (àmbit: {scope}) — detecció automàtica restaurada.',
+        setTokenFallback:
+          '{name} → {type} (substitució de token — cap full de personatge vinculat).',
+        clearedTokenFallback:
+          '{name} substitució de token eliminada — detecció automàtica restaurada.',
+        fieldToken: 'Token',
+        fieldType: 'Classificació',
+        fieldSource: 'Font',
+        fieldReason: 'Motiu',
       },
       cleanup: {
         orphaned: 'Entrades de condició òrfenes',
@@ -1461,7 +1605,7 @@ const ConditionTrackerMod = (() => {
         colDesc: 'Descripció',
         rows: [
           [
-            '!condition-tracker --prompt',
+            '!seguidor de condicions --indicatiu',
             'Assistent pas a pas — tria la condició, els testimonis i la durada de manera interactiva. També disponible com a macro ConditionTrackerWizard.',
           ],
           [
@@ -1470,7 +1614,7 @@ const ConditionTrackerMod = (() => {
           ],
           [
             '!condition-tracker --report-token',
-            'Select one or more tokens first, then run this command to get a GM whisper listing every condition applied to and by each selected token. Also available as the ConditionTrackerReportToken macro.',
+            'Seleccioneu primer un o més fitxes i, a continuació, executeu aquesta ordre per obtenir un xiuxiueig de GM que enumera totes les condicions aplicades a cada testimoni seleccionat. També disponible com a macro ConditionTrackerReportToken.',
           ],
           [
             '!condition-tracker --menu',
@@ -1483,17 +1627,17 @@ const ConditionTrackerMod = (() => {
         colFlag: 'Opció',
         colDesc: 'Descripció',
         rows: [
-          ['--prompt', "Interfície de l'assistent pas a pas"],
+          ['--demanada', "Interfície de l'assistent pas a pas"],
           [
-            '--multi-target',
+            '--multi-objectiu',
             'Aplica una condició a diversos testimonis destinataris alhora',
           ],
           [
-            '--menu',
+            '--menú',
             "Mostra el menú principal (afegeix remove per al menú d'eliminació)",
           ],
           [
-            '--source X --target Y --condition Z',
+            '--source X --target Y --condició Z',
             "Aplica una condició directament sense l'assistent",
           ],
           [
@@ -1501,7 +1645,7 @@ const ConditionTrackerMod = (() => {
             'Durada per a una aplicació directa (p. ex. 2 rounds)',
           ],
           [
-            '--other &lt;text&gt;',
+            '--altre <text>',
             "Text personalitzat per als tipus d'efecte Encanteri / Habilitat / Altres",
           ],
           [
@@ -1517,11 +1661,11 @@ const ConditionTrackerMod = (() => {
             'Substitueix subjectPromptBypass per a aquesta ordre únicament (també admet --subject-prompt-bypass)',
           ],
           [
-            '--cleanup',
+            '--neteja',
             "Reconcilia l'estat — elimina les condicions i files del registre de torns òrfenes",
           ],
           [
-            '--reorder-conditions',
+            '--condicions-de-reordenar',
             "Reposiciona manualment les files de condicions darrere dels seus tokens assignats a l'ordre de torns",
           ],
           ['--reinstall-macro', 'Torna a crear o actualitza les macros del MJ'],
@@ -1530,12 +1674,24 @@ const ConditionTrackerMod = (() => {
             "Torna a crear o actualitza el fullet d'ajuda localitzat",
           ],
           [
-            '--report-token',
-            'Whisper a GM-only condition report for each selected token (conditions applied to and by it)',
+            '--informe-token',
+            'Xiuxiueja un informe de condicions només per a GM per a cada testimoni seleccionat (condicions aplicades a i per aquest)',
           ],
           [
             '--lang &lt;locale&gt;',
             "Mostra els missatges d'aquesta ordre en una configuració regional addicional (mode bilingüe)",
+          ],
+          [
+            '--classify pc|npc|ignored',
+            "Substitueix el tipus d'actor per als tokens seleccionats — selecciona primer els tokens. L'àmbit per defecte és el personatge (escriu l'atribut ct_mod_actor_type); afegeix --scope token per emmagatzemar a l'estat de l'script",
+          ],
+          [
+            '--classify auto',
+            "Elimina la substitució del tipus d'actor i restaura la detecció automàtica per als tokens seleccionats",
+          ],
+          [
+            '--classify show',
+            'Xiuxiueja un diagnòstic de classificació per a cada token seleccionat — mostra el tipus detectat, la font de detecció i el motiu',
           ],
           ['--help', "Mostra una targeta d'ajuda breu al xat"],
         ],
@@ -1597,64 +1753,154 @@ const ConditionTrackerMod = (() => {
         ],
       },
       savedEffects: {
-        heading: 'Saved Effects',
+        heading: 'Efectes guardats',
         intro:
-          'Saved effects let you store long-term conditions outside the Turn Tracker — curses, diseases, poisons, hidden debuffs, and other non-combat conditions. They persist in script state and can be optionally copied into the Turn Tracker when combat begins.',
+          "Els efectes desats us permeten emmagatzemar condicions a llarg termini fora del Turn Tracker: malediccions, malalties, verins, desavantatges ocults i altres condicions que no són de combat. Persisteixen en estat d'script i es poden copiar opcionalment al Seguidor de torns quan comença el combat.",
         visibility: {
-          heading: 'Visibility Modes',
+          heading: 'Modes de visibilitat',
           rows: [
             [
-              'public',
-              'Full effect label is visible in the Turn Tracker and public chat.',
+              'públic',
+              "L'etiqueta d'efecte complet és visible al Seguidor de girs i al xat públic.",
             ],
             [
-              'masked',
-              'A vague public label is shown to players; full details are GM-only.',
+              'emmascarat',
+              'Es mostra als jugadors una vaga etiqueta pública; Els detalls complets són només per a GM.',
             ],
             [
               'gm',
-              'No Turn Tracker row. Full details are stored in state and whispered to the GM when the affected token reaches the top of initiative.',
+              "Sense fila de seguiment de torns. Els detalls complets s'emmagatzemen en estat i es xiuxiuegen al GM quan el testimoni afectat arriba al cim de la iniciativa.",
             ],
           ],
         },
         commands: {
-          heading: 'Saved Effects Commands',
+          heading: "Ordres d'efectes desades",
           intro:
-            'All --saved commands are GM-only. Select a token before running --saved or --saved add.',
+            "Totes les ordres --desades només són GM. Seleccioneu un testimoni abans d'executar --saved o --saved add.",
           rows: [
             [
-              '!condition-tracker --saved',
-              'View saved effects for the selected token.',
+              '!condition-tracker --desat',
+              'Visualitza els efectes desats per al testimoni seleccionat.',
             ],
             [
-              '!condition-tracker --saved add',
-              'Launch the add-saved-effect wizard.',
+              '!condition-tracker --afegit guardat',
+              "Inicieu l'assistent per afegir efectes desats.",
             ],
             [
               '!condition-tracker --saved edit <id>',
-              'Edit labels or visibility for an existing saved effect.',
+              "Editeu les etiquetes o la visibilitat d'un efecte desat existent.",
             ],
             [
               '!condition-tracker --saved remove <id>',
-              'Permanently remove a saved effect.',
+              'Elimina permanentment un efecte desat.',
             ],
             [
               '!condition-tracker --saved promote <id> --visibility public|masked|gm',
-              'Copy a saved effect into the Turn Tracker (public or masked) or confirm it is GM-only tracked.',
+              'Copieu un efecte desat al Seguidor de torns (públic o emmascarat) o confirmeu que només es fa un seguiment de GM.',
             ],
             [
               '!condition-tracker --saved snooze <id> --scope turn|rounds|combat --rounds <n>',
-              'Snooze a GM reminder for this turn, N rounds, or this combat.',
+              'Posposa un recordatori de GM per a aquest torn, N rondes o aquest combat.',
             ],
             [
               '!condition-tracker --saved snooze-clear <id>',
-              'Clear an active snooze so reminders resume immediately.',
+              'Esborra una repetició activa perquè els recordatoris es reprenguin immediatament.',
             ],
           ],
         },
         reminders: {
-          heading: 'GM Reminders',
-          body: 'When a token with gm or masked saved effects reaches the top of the Turn Tracker, the GM receives a whisper listing the hidden effects with action buttons. Duplicate reminders within the same turn are suppressed. Use the Snooze buttons to suppress reminders for a turn, a number of rounds, or for the remainder of the current combat.',
+          heading: 'Recordatoris de GM',
+          body: "Quan una fitxa amb gm o efectes desats emmascarats arriba a la part superior del seguiment de torns, el GM rep un xiuxiueig que enumera els efectes ocults amb botons d'acció. Els recordatoris duplicats dins del mateix torn es suprimeixen. Utilitzeu els botons Posposa per suprimir els recordatoris d'un torn, d'un nombre de rondes o durant la resta del combat actual.",
+        },
+      },
+      actorClassification: {
+        heading: "Classificació d'Actor",
+        intro:
+          "Condition Tracker determina automàticament si cada token és un PJ, PNJ o un objecte ignorat (agulles de mapa, decorat, plantilles d'encanteri). Els tokens no vinculats s'ignoren per defecte. Usa --classify per substituir la detecció automàtica per a qualsevol token.",
+        detectionOrder: {
+          heading: 'Ordre de Detecció',
+          colStep: 'Pas',
+          colCheck: 'Comprovació',
+          colResult: 'Resultat',
+          rows: [
+            [
+              '1',
+              "Substitució d'estat del token (--classify --scope token)",
+              'pc / npc / ignorat',
+            ],
+            [
+              '2',
+              'Atribut ct_mod_actor_type del personatge (--classify --scope character)',
+              'pc / npc / ignorat',
+            ],
+            ['3', 'Token no vinculat — cap full de personatge', 'ignorat'],
+            [
+              '4',
+              'Adaptador del sistema de joc (atribut npc / is_npc)',
+              'pc / npc',
+            ],
+            [
+              '5',
+              "Escaneig d'atributs NPC genèrics (npc, is_npc, npcflag, sheet_type, character_type)",
+              'pc / npc',
+            ],
+            ['6', 'Alternativa controlledby del personatge', 'pc / npc'],
+          ],
+        },
+        types: {
+          heading: 'Tipus de Classificació',
+          colType: 'Tipus',
+          colMeaning: 'Significat',
+          rows: [
+            [
+              'pc',
+              "Personatge jugador — sempre inclòs com a PJ a l'assistent i la detecció",
+            ],
+            ['npc', 'Personatge no jugador — sempre inclòs com a PNJ'],
+            [
+              'ignorat',
+              "Mai mostrat ni rastreat — exclòs del selector de tokens de l'assistent",
+            ],
+            [
+              'desconegut',
+              "Només detecció automàtica; no s'ha pogut determinar el tipus (tractat com PNJ a l'assistent)",
+            ],
+          ],
+        },
+        commands: {
+          heading: 'Ordres de Classificació',
+          intro:
+            "Selecciona un o més tokens abans d'executar les ordres --classify.",
+          rows: [
+            [
+              "!condition-tracker --classifica l'ordinador",
+              'Marcar els tokens seleccionats com a PJs (àmbit de personatge per defecte).',
+            ],
+            [
+              '!condition-tracker --classify npc',
+              'Marcar els tokens seleccionats com a PNJs.',
+            ],
+            [
+              '!condition-tracker --classificar ignorat',
+              'Excloure els tokens seleccionats de tot seguiment.',
+            ],
+            [
+              '!condition-tracker --classifica automàticament',
+              'Eliminar la substitució — restaurar la detecció automàtica.',
+            ],
+            [
+              "!condition-tracker --classifica l'espectacle",
+              'Mostrar el diagnòstic de classificació (tipus, font, motiu) per a cada token seleccionat.',
+            ],
+            [
+              '!condition-tracker --classify pc --scope token',
+              "Substitució al nivell del token a l'estat de l'script — útil per a tokens no vinculats.",
+            ],
+            [
+              '!condition-tracker --classify pc --scope character',
+              "Substitució al nivell del personatge a l'atribut ct_mod_actor_type — s'aplica a tots els tokens amb el mateix full de personatge.",
+            ],
+          ],
         },
       },
       configuration: {
@@ -1672,17 +1918,17 @@ const ConditionTrackerMod = (() => {
           ],
           [
             'useIcons',
-            'true / false',
+            'vertader/fals',
             "Mostra codis d'icona curts (p. ex. [G]) en lloc d'emojis a les files del registre de torns",
           ],
           [
             'subjectPromptBypass',
-            'true / false',
+            'vertader/fals',
             'Omet el pas del testimoni subjecte opcional per als efectes Encanteri / Habilitat / Altres',
           ],
           [
             'suppressPublicChat',
-            'true / false',
+            'vertader/fals',
             "Suprimeix tots els anuncis públics de xat (missatges d'aplicació i eliminació). Els xiuxiuejos del DJ no es veuen afectats.",
           ],
           [
@@ -1711,7 +1957,7 @@ const ConditionTrackerMod = (() => {
         heading: 'Traduccions disponibles',
         intro:
           "Usa l'opció de configuració language per establir els missatges del xat i el fullet d'ajuda en qualsevol configuració regional admesa. Els àlies curts també s'accepten per a en, zh i pt.",
-        colLocale: 'Locale',
+        colLocale: 'Localització',
         colLanguage: 'Idioma',
         colFile: 'Fitxer de traducció',
       },
@@ -1879,8 +2125,8 @@ const ConditionTrackerMod = (() => {
         details: '詳細資料',
         description: '描述',
         scenario: '情境',
-        gameSystem: 'Game System',
-        duration: 'Duration',
+        gameSystem: '遊戲系統',
+        duration: '期間',
       },
       dur: {
         untilRemoved: '直到移除',
@@ -1905,14 +2151,14 @@ const ConditionTrackerMod = (() => {
         reinstallHandout: '重新安裝講義',
         showHelp: '顯示說明',
         reorderConditions: '重新排列狀態列',
-        reportToken: 'Report Token Conditions',
-        savedEffects: 'Saved Effects',
-        addSavedEffect: 'Add Saved Effect',
-        editSaved: 'Edit',
-        removeSaved: 'Remove',
-        promoteSaved: 'Add to Turn Tracker',
-        snoozeSaved: 'Snooze',
-        clearSnooze: 'Clear Snooze',
+        reportToken: '報告令牌條件',
+        savedEffects: '保存的效果',
+        addSavedEffect: '加入已儲存的效果',
+        editSaved: '編輯',
+        removeSaved: '消除',
+        promoteSaved: '新增到轉彎追蹤器',
+        snoozeSaved: '貪睡',
+        clearSnooze: '清除貪睡',
       },
       title: {
         menu: '選單',
@@ -1923,8 +2169,7 @@ const ConditionTrackerMod = (() => {
         applied: '已套用',
         removed: '狀態已移除',
         cleanup: '清理完成',
-        macroReinstalled:
-          'The {wizard}, {multiTarget}, {reportToken}, and {saved} macros have been reinstalled for all current GM players.',
+        macroReinstalled: '巨集已重新安裝',
         handoutReinstalled: '講義已重新安裝',
         warning: '警告',
         error: '錯誤',
@@ -1932,19 +2177,19 @@ const ConditionTrackerMod = (() => {
         noConditions: '沒有狀態',
         tokenMoved: 'Token 已移動',
         markedDead: '已標記為死亡',
-        zeroHp: '{name} — 0 HP',
+        zeroHp: '{name} — 0 生命值',
         moveToken: '{name} — 移動 Token？',
         scriptReady: '腳本已就緒',
         conditionReorder: '行動順序已變更',
-        tokenReport: 'Token Condition Report',
-        savedEffects: 'Saved Effects',
-        savedAdd: 'Add Saved Effect',
-        savedEdit: 'Edit Saved Effect',
-        savedRemoved: 'Saved Effect Removed',
-        savedPromoted: 'Add to Turn Tracker',
-        savedSnoozed: 'Reminder Snoozed',
-        savedSnoozeCleared: 'Snooze Cleared',
-        hiddenEffects: 'Hidden Effects — {name}',
+        tokenReport: '代幣狀況報告',
+        savedEffects: '保存的效果',
+        savedAdd: '加入已儲存的效果',
+        savedEdit: '編輯已儲存的效果',
+        savedRemoved: '已儲存的效果已刪除',
+        savedPromoted: '新增到轉彎追蹤器',
+        savedSnoozed: '提醒已延遲',
+        savedSnoozeCleared: '貪睡已清除',
+        hiddenEffects: '隱藏效果 — {name}',
       },
       heading: {
         quickActions: '快速動作',
@@ -1956,20 +2201,20 @@ const ConditionTrackerMod = (() => {
         promptUi: '精靈介面',
         examples: '範例',
         summary: '摘要',
-        appliedTo: 'Conditions Applied To',
-        appliedBy: 'Conditions Applied By',
-        savedEffectsFor: 'Saved Effects for {name}',
-        visibility: 'Visibility',
-        snoozeOptions: 'Snooze Reminder',
-        promoteOptions: 'Promote to Turn Tracker',
-        editActions: 'Edit Actions',
+        appliedTo: '適用條件',
+        appliedBy: '適用條件',
+        savedEffectsFor: '已儲存 {name} 的效果',
+        visibility: '能見度',
+        snoozeOptions: '貪睡提醒',
+        promoteOptions: '升級為轉彎追蹤器',
+        editActions: '編輯動作',
       },
       msg: {
         noActive: '目前沒有追蹤中的狀態。',
         configReset: '設定已重設為模組預設值。',
         unknownConfig: '未知的設定選項。使用 --config 查看支援的設定。',
         macroReinstalled:
-          '{wizard}、{multiTarget} 和 {reportToken} 巨集已為目前所有 GM 玩家重新安裝。',
+          '{wizard}、{multiTarget}、{reportToken}、{saved} 和 {classify} 巨集已為目前所有 GM 玩家重新安裝。',
         handoutReinstalled: '說明講義 {handout} 已重新安裝。',
         duplicate: '相同的來源、主體、目標、狀態和自訂文字已經存在。',
         noTargets: '未指定多目標套用的目標 Token。',
@@ -2031,32 +2276,29 @@ const ConditionTrackerMod = (() => {
           '行動順序已變更，{count} 個追蹤中的狀態列可能已不在正確位置。點擊下方將其還原至指定代幣之後。',
         conditionsReordered: '狀態列已重新排列至其指定代幣之後。',
         noTokensSelectedReport:
-          'Select at least one token on the board before using --report-token.',
-        noConditionsAppliedTo: '{name} has no active conditions applied to it.',
-        noConditionsAppliedBy:
-          '{name} has no active conditions applied to others.',
-        noSavedEffects: 'No saved effects stored for {name}.',
-        noTokenSelectedSaved:
-          'Select a token on the board before using --saved.',
-        savedEffectAdded: 'Saved effect added for {name}.',
-        savedEffectUpdated: 'Saved effect updated.',
-        savedEffectRemoved: 'Saved effect removed.',
-        savedEffectNotFound: 'Saved effect not found.',
-        savedInvalidVisibility:
-          'Invalid visibility. Use public, masked, or gm.',
+          '在使用 --report-token 之前，至少在板上選擇一個令牌。',
+        noConditionsAppliedTo: '{name} 沒有套用任何有效條件。',
+        noConditionsAppliedBy: '{name} 沒有適用於其他人的有效條件。',
+        noSavedEffects: '沒有為 {name} 儲存已儲存的效果。',
+        noTokenSelectedSaved: '在使用 --saved 之前選擇板上的令牌。',
+        savedEffectAdded: '為 {name} 增加了儲存的效果。',
+        savedEffectUpdated: '已儲存的效果已更新。',
+        savedEffectRemoved: '已刪除已儲存的效果。',
+        savedEffectNotFound: '未找到保存的效果。',
+        savedInvalidVisibility: '可見性無效。使用 public、masked 或 gm。',
         savedConditionRequired:
           'Condition type is required. Use --condition <type>.',
-        savedPromotedPublic: 'Effect added to Turn Tracker as public.',
+        savedPromotedPublic: '效果已作為公開添加到回合追蹤器中。',
         savedPromotedMasked:
-          'Effect added to Turn Tracker as masked — players see: {publicLabel}.',
+          '加入回合追蹤器中的效果被遮蓋 — 玩家看到：{publicLabel}。',
         savedPromotedGm:
-          'Effect is GM-only — no Turn Tracker row will be created. The reminder system will surface it when this token reaches the top of the turn order.',
-        savedSnoozed: 'Reminder snoozed: {scope}.',
-        savedSnoozeCleared: 'Snooze cleared.',
-        hiddenEffectsReminder: 'Hidden effects are active on {name}.',
-        visibilityPublicHint: 'full label visible to all',
-        visibilityMaskedHint: 'vague label shown to players',
-        visibilityGmHint: 'GM whisper only, no Turn Tracker row',
+          '效果僅限 GM — 不會建立回合追蹤器行。當該標記到達回合順序的頂部時，提醒系統將顯示它。',
+        savedSnoozed: '提醒已延遲：{scope}。',
+        savedSnoozeCleared: '貪睡清除。',
+        hiddenEffectsReminder: '隱藏效果在 {name} 上處於作用中狀態。',
+        visibilityPublicHint: '所有人都可以看到完整的標籤',
+        visibilityMaskedHint: '向玩家顯示的模糊標籤',
+        visibilityGmHint: '僅 GM 耳語，無回合追蹤行',
       },
       removal: {
         conditionField: '狀態',
@@ -2072,29 +2314,46 @@ const ConditionTrackerMod = (() => {
       },
       saved: {
         visibility: {
-          public: 'Public',
-          masked: 'Masked',
-          gm: 'GM Only',
+          public: '民眾',
+          masked: '蒙面',
+          gm: '限通用汽車',
         },
         snooze: {
-          thisTurn: 'This Turn',
-          oneRound: '1 Round',
-          threeRounds: '3 Rounds',
-          thisCombat: 'This Combat',
-          rounds: '{n} round(s)',
+          thisTurn: '本輪',
+          oneRound: '1 輪',
+          threeRounds: '3輪',
+          thisCombat: '這場戰鬥',
+          rounds: '{n} 輪',
         },
         field: {
-          gmLabel: 'GM Label',
-          publicLabel: 'Public Label',
-          visibility: 'Visibility',
-          source: 'Source',
-          condition: 'Condition',
+          gmLabel: '通用汽車標籤',
+          publicLabel: '公共標籤',
+          visibility: '能見度',
+          source: '來源',
+          condition: '狀態',
         },
         prompt: {
-          enterGmLabel: 'Full effect description (GM only)',
-          enterPublicLabel: 'Vague label shown to players',
+          enterGmLabel: '完整效果說明（僅限GM）',
+          enterPublicLabel: '向玩家顯示的模糊標籤',
         },
-        snoozed: 'snoozed',
+        snoozed: '打瞌睡',
+      },
+      classify: {
+        title: '角色分類',
+        showTitle: '分類診斷',
+        showHeading: 'Token 分類詳情',
+        resultHeading: '已套用覆寫',
+        noSelection: '使用 --classify 前，請先在版面上選取至少一個 Token。',
+        invalidType:
+          '無效的分類類型：{type}。請使用 pc、npc、ignored 或 auto。',
+        set: '{name} → {type}（範圍：{scope}）',
+        cleared: '{name} 覆寫已清除（範圍：{scope}）— 自動偵測已恢復。',
+        setTokenFallback: '{name} → {type}（Token 覆寫 — 未連結角色卡）。',
+        clearedTokenFallback: '{name} Token 覆寫已清除 — 自動偵測已恢復。',
+        fieldToken: '代幣',
+        fieldType: '分類',
+        fieldSource: '來源',
+        fieldReason: '原因',
       },
       cleanup: {
         orphaned: '孤立狀態項目',
@@ -2121,16 +2380,16 @@ const ConditionTrackerMod = (() => {
         colDesc: '描述',
         rows: [
           [
-            '!condition-tracker --prompt',
+            '!條件追蹤器--提示',
             '逐步精靈 — 互動式選擇狀態、Token 與持續時間。也可使用 ConditionTrackerWizard 巨集。',
           ],
           [
-            '!condition-tracker --multi-target',
+            '!條件追蹤器－多目標',
             '同時將一個狀態套用到多個 Token。也可使用 ConditionTrackerMultiTarget 巨集。',
           ],
           [
-            '!condition-tracker --report-token',
-            'Select one or more tokens first, then run this command to get a GM whisper listing every condition applied to and by each selected token. Also available as the ConditionTrackerReportToken macro.',
+            '!條件追蹤器--報告令牌',
+            '首先选择一个或多个令牌，然后运行此命令以获取 GM 耳语，列出每个选定令牌所应用的每个条件。也可當 ConditionTrackerReportToken 巨集。',
           ],
           [
             '!condition-tracker --menu',
@@ -2143,59 +2402,50 @@ const ConditionTrackerMod = (() => {
         colFlag: '參數',
         colDesc: '描述',
         rows: [
-          ['--prompt', '互動式逐步精靈介面'],
-          ['--multi-target', '一次將狀態套用到多個目標 Token'],
-          ['--menu', '顯示主選單（加入 remove 可開啟移除選單）'],
-          ['--source X --target Y --condition Z', '不使用精靈直接套用狀態'],
-          ['--duration &lt;value&gt;', '直接套用時的持續時間（例如 2 rounds）'],
+          [' - 迅速的', '互動式逐步精靈介面'],
+          ['--多目標', '一次將狀態套用到多個目標 Token'],
+          [' - 選單', '顯示主選單（加入 remove 可開啟移除選單）'],
+          ['--來源X --目標Y --條件Z', '不使用精靈直接套用狀態'],
+          ['--持續時間<值>', '直接套用時的持續時間（例如 2 rounds）'],
+          ['--其他<文字>', 'Spell / Ability / Other 效果類型的自訂文字'],
+          ['--remove <條件 ID>', '依唯一 ID 移除特定狀態'],
+          ['--config <選項> <值>', '調整設定（見下方設定章節）'],
           [
-            '--other &lt;text&gt;',
-            'Spell / Ability / Other 效果類型的自訂文字',
-          ],
-          ['--remove &lt;condition-id&gt;', '依唯一 ID 移除特定狀態'],
-          [
-            '--config &lt;option&gt; &lt;value&gt;',
-            '調整設定（見下方設定章節）',
-          ],
-          [
-            '--prompt --subjectPromptBypass true|false',
+            '--prompt --subjectPromptBypass true | false',
             '僅對此指令覆寫 subjectPromptBypass（也支援 --subject-prompt-bypass）',
           ],
-          ['--cleanup', '校正狀態 — 移除孤立狀態與回合追蹤列'],
+          [' - 清理', '校正狀態 — 移除孤立狀態與回合追蹤列'],
+          ['--重新排序條件', '手動將狀態列重新排列到輪序中其對應代幣之後'],
+          ['--重新安裝巨集', '重新建立或更新 GM 巨集'],
+          ['--重新安裝講義', '重新建立或更新本地化說明講義'],
           [
-            '--reorder-conditions',
-            '手動將狀態列重新排列到輪序中其對應代幣之後',
+            '--報表令牌',
+            '為每個選定的代幣產生僅 GM 的條件報告（應用於其並由其應用的條件）',
           ],
-          ['--reinstall-macro', '重新建立或更新 GM 巨集'],
-          ['--reinstall-handout', '重新建立或更新本地化說明講義'],
-          [
-            '--report-token',
-            'Whisper a GM-only condition report for each selected token (conditions applied to and by it)',
-          ],
-          [
-            '--saved',
-            'View saved long-term effects for the selected token (select token first)',
-          ],
-          [
-            '--saved add',
-            'Add a saved effect (curse, disease, etc.) to the selected token',
-          ],
-          ['--saved edit <id>', 'Edit an existing saved effect by id'],
-          ['--saved remove <id>', 'Remove a saved effect by id'],
+          ['--已儲存', '查看所選令牌保存的長期效果（首先選擇令牌）'],
+          ['--儲存新增', '將已儲存的效果（詛咒、疾病等）新增至所選標記'],
+          ['--saved edit <id>', '按 id 編輯現有已儲存效果'],
+          ['--saved remove <id>', '透過 id 刪除已儲存的效果'],
           [
             '--saved promote <id> --visibility public|masked|gm',
-            'Copy a saved effect into the Turn Tracker (public/masked) or mark it as GM-only active',
+            '將保存的效果複製到回合追蹤器（公共/屏蔽）中或將其標記為僅限 GM 激活',
           ],
           [
             '--saved snooze <id> --scope turn|rounds|combat --rounds <n>',
-            'Snooze a saved-effect reminder for the current turn, N rounds, or this combat',
+            '暫停當前回合、N 回合或本次戰鬥的已儲存效果提醒',
           ],
+          ['--saved snooze-clear <id>', '清除已儲存效果的活動暫停'],
+          ['--lang <語言環境>', '以額外語言環境輸出此指令訊息（雙語模式）'],
           [
-            '--saved snooze-clear <id>',
-            'Clear an active snooze on a saved effect',
+            '--分類 pc|npc|忽略',
+            '覆寫選取 Token 的角色類型 — 請先選取 Token。預設範圍為角色（寫入 ct_mod_actor_type 屬性）；加上 --scope token 可改為儲存在腳本狀態中',
           ],
-          ['--lang &lt;locale&gt;', '以額外語言環境輸出此指令訊息（雙語模式）'],
-          ['--help', '在聊天中顯示簡短說明卡'],
+          ['--將汽車分類', '移除角色類型覆寫，恢復選取 Token 的自動偵測'],
+          [
+            '--分類顯示',
+            '對每個選取的 Token 傳送分類診斷密語 — 顯示偵測到的類型、偵測來源與原因',
+          ],
+          [' - 幫助', '在聊天中顯示簡短說明卡'],
         ],
       },
       standardConditions: {
@@ -2207,14 +2457,14 @@ const ConditionTrackerMod = (() => {
         colType: '類型',
         colNotes: '備註',
         rows: [
-          ['🔮 Spell', '追蹤具名法術效果 — 會提示輸入法術名稱'],
-          ['🎯 Ability', '追蹤具名職業或種族能力 — 會提示輸入能力名稱'],
+          ['🔮 咒語', '追蹤具名法術效果 — 會提示輸入法術名稱'],
+          ['🎯能力', '追蹤具名職業或種族能力 — 會提示輸入能力名稱'],
           [
-            '🍀 Advantage',
+            '🍀 優勢',
             '記錄一個 Token 對另一個 Token 的優勢；在先攻中與來源分組',
           ],
-          ['⬇️ Disadvantage', '記錄劣勢；在先攻中與來源分組'],
-          ['📝 Other', '自由格式自訂標籤 — 會提示輸入描述'],
+          ['⬇️缺點', '記錄劣勢；在先攻中與來源分組'],
+          ['📝其他', '自由格式自訂標籤 — 會提示輸入描述'],
         ],
       },
       durationOptions: {
@@ -2224,74 +2474,132 @@ const ConditionTrackerMod = (() => {
         colOption: '選項',
         colBehaviour: '行為',
         rows: [
-          ['Until removed', '永久 — 必須透過選單或 --remove 手動移除'],
-          ["End of target's next turn", '目標 Token 的下一個回合結束時到期'],
-          ["End of source's next turn", '來源 Token 的下一個回合結束時到期'],
-          [
-            '1 / 2 / 3 / 10 rounds',
-            '固定倒數；每次錨定 Token 回合結束遞減一次',
-          ],
+          ['直至移除', '永久 — 必須透過選單或 --remove 手動移除'],
+          ['目標下一回合結束', '目標 Token 的下一個回合結束時到期'],
+          ['源的下一輪結束', '來源 Token 的下一個回合結束時到期'],
+          ['1 / 2 / 3 / 10 輪', '固定倒數；每次錨定 Token 回合結束遞減一次'],
         ],
       },
       savedEffects: {
-        heading: 'Saved Effects',
+        heading: '保存的效果',
         intro:
-          'Saved effects let you store long-term conditions outside the Turn Tracker — curses, diseases, poisons, hidden debuffs, and other non-combat conditions. They persist in script state and can be optionally copied into the Turn Tracker when combat begins.',
+          '保存的效果可讓您在回合追蹤器之外儲存長期條件 - 詛咒、疾病、毒藥、隱藏的減益效果和其他非戰鬥條件。它們保留在腳本狀態中，並且可以在戰鬥開始時選擇性地複製到回合追蹤器中。',
         visibility: {
-          heading: 'Visibility Modes',
+          heading: '可見性模式',
           rows: [
+            ['民眾', '完整效果標籤在回合追蹤器和公共聊天中可見。'],
+            ['蒙面的', '向玩家顯示模糊的公共標籤；完整詳細資訊僅供 GM 參考。'],
             [
-              'public',
-              'Full effect label is visible in the Turn Tracker and public chat.',
-            ],
-            [
-              'masked',
-              'A vague public label is shown to players; full details are GM-only.',
-            ],
-            [
-              'gm',
-              'No Turn Tracker row. Full details are stored in state and whispered to the GM when the affected token reaches the top of initiative.',
+              '通用汽車',
+              '無轉彎追蹤器行。完整的詳細資訊儲存在狀態中，並在受影響的代幣達到計劃頂部時向 GM 低聲傳達。',
             ],
           ],
         },
         commands: {
-          heading: 'Saved Effects Commands',
+          heading: '保存的效果命令',
           intro:
-            'All --saved commands are GM-only. Select a token before running --saved or --saved add.',
+            '所有 --saved 指令僅適用於 GM。在執行 --saved 或 --saved add 之前選擇一個令牌。',
           rows: [
-            [
-              '!condition-tracker --saved',
-              'View saved effects for the selected token.',
-            ],
-            [
-              '!condition-tracker --saved add',
-              'Launch the add-saved-effect wizard.',
-            ],
+            ['!條件追蹤器--已儲存', '查看所選標記的已儲存效果。'],
+            ['!condition-tracker --saved 添加', '啟動新增保存效果精靈。'],
             [
               '!condition-tracker --saved edit <id>',
-              'Edit labels or visibility for an existing saved effect.',
+              '編輯現有已儲存效果的標籤或可見性。',
             ],
             [
               '!condition-tracker --saved remove <id>',
-              'Permanently remove a saved effect.',
+              '永久刪除已儲存的效果。',
             ],
             [
               '!condition-tracker --saved promote <id> --visibility public|masked|gm',
-              'Copy a saved effect into the Turn Tracker (public or masked) or confirm it is GM-only tracked.',
+              '將保存的效果複製到回合追蹤器（公共或屏蔽）中，或確認它是僅 GM 追蹤的。',
             ],
             [
               '!condition-tracker --saved snooze <id> --scope turn|rounds|combat --rounds <n>',
-              'Snooze a GM reminder for this turn, N rounds, or this combat.',
+              '暫停本回合、N 輪或本次戰鬥的 GM 提醒。',
             ],
             [
               '!condition-tracker --saved snooze-clear <id>',
-              'Clear an active snooze so reminders resume immediately.',
+              '清除活動的暫停，以便立即恢復提醒。',
             ],
           ],
         },
         reminders: {
-          heading: 'GM Reminders',
-          body: 'When a token with gm or masked saved effects reaches the top of the Turn Tracker, the GM receives a whisper listing the hidden effects with action buttons. Duplicate reminders within the same turn are suppressed. Use the Snooze buttons to suppress reminders for a turn, a number of rounds, or for the remainder of the current combat.',
+          heading: '總經理提醒',
+          body: '當帶有 gm 或已儲存效果的標記到達回合追蹤器頂部時，GM 會收到一條耳語，其中列出了帶有操作按鈕的隱藏效果。同一回合內的重複提醒將會被抑制。使用「暫停」按鈕可以抑制一個回合、幾輪或當前戰鬥剩餘時間的提醒。',
+        },
+      },
+      actorClassification: {
+        heading: '角色分類',
+        intro:
+          'Condition Tracker 自動判斷每個 Token 是 PC、NPC 還是被忽略的物件（地圖標記、場景道具、法術模板）。未連結的 Token 預設為忽略。使用 --classify 可覆寫任何 Token 的自動偵測結果。',
+        detectionOrder: {
+          heading: '偵測順序',
+          colStep: '步驟',
+          colCheck: '檢查',
+          colResult: '結果',
+          rows: [
+            [
+              '1',
+              'Token 狀態覆寫（--classify --scope token）',
+              'pc / npc / 被忽略',
+            ],
+            [
+              '2',
+              '角色 ct_mod_actor_type 屬性（--classify --scope character）',
+              'pc / npc / 被忽略',
+            ],
+            ['3', '未連結 Token — 無角色卡', '被忽略'],
+            ['4', '遊戲系統適配器（npc / is_npc 屬性）', '個人電腦/NPC'],
+            [
+              '5',
+              '通用 NPC 屬性掃描（npc, is_npc, npcflag, sheet_type, character_type）',
+              '個人電腦/NPC',
+            ],
+            ['6', '角色 controlledby 備援', '個人電腦/NPC'],
+          ],
+        },
+        types: {
+          heading: '分類類型',
+          colType: '類型',
+          colMeaning: '含義',
+          rows: [
+            ['個人電腦', '玩家角色 — 在精靈和偵測中始終作為 PC 包含'],
+            ['NPC', '非玩家角色 — 始終作為 NPC 包含'],
+            ['被忽略', '從不顯示或追蹤 — 從精靈 Token 選擇器中排除'],
+            ['未知', '僅自動偵測；無法確定類型（在精靈中視為 NPC 處理）'],
+          ],
+        },
+        commands: {
+          heading: '分類指令',
+          intro: '執行 --classify 指令前，請先選取一個或多個 Token。',
+          rows: [
+            [
+              '!condition-tracker --將電腦分類',
+              '將選取的 Token 標記為 PC（預設範圍：角色）。',
+            ],
+            [
+              '!condition-tracker --對 npc 進行分類',
+              '將選取的 Token 標記為 NPC。',
+            ],
+            [
+              '!condition-tracker --classify 被忽略',
+              '從所有追蹤中排除選取的 Token。',
+            ],
+            ['!condition-tracker --將汽車分類', '移除覆寫 — 恢復自動偵測。'],
+            [
+              '!condition-tracker --分類顯示',
+              '顯示每個選取 Token 的分類診斷（類型、來源、原因）。',
+            ],
+            [
+              '!condition-tracker --classify pc --scope token',
+              'Token 層級的覆寫儲存在腳本狀態中 — 適用於未連結的 Token。',
+            ],
+            [
+              '!condition-tracker --classify pc --scope 字符',
+              '角色層級的覆寫寫入 ct_mod_actor_type 屬性 — 適用於使用相同角色卡的所有 Token。',
+            ],
+          ],
         },
       },
       configuration: {
@@ -2309,17 +2617,17 @@ const ConditionTrackerMod = (() => {
           ],
           [
             'useIcons',
-            'true / false',
+            '真/假',
             '在回合追蹤列中顯示短圖示代碼（例如 [G]）而非 emoji',
           ],
           [
             'subjectPromptBypass',
-            'true / false',
+            '真/假',
             '略過 Spell / Ability / Other 效果的可選主體 Token 步驟',
           ],
           [
             'suppressPublicChat',
-            'true / false',
+            '真/假',
             '隱藏所有公開聊天公告（施加與移除訊息）。GM 的私訊不受影響。',
           ],
           [
@@ -2544,8 +2852,8 @@ const ConditionTrackerMod = (() => {
         details: 'Podrobnosti',
         description: 'Popis',
         scenario: 'Scénář',
-        gameSystem: 'Game System',
-        duration: 'Duration',
+        gameSystem: 'Herní systém',
+        duration: 'Trvání',
       },
       dur: {
         untilRemoved: 'Do odebrání',
@@ -2570,14 +2878,14 @@ const ConditionTrackerMod = (() => {
         reinstallHandout: 'Přeinstalovat příručku',
         showHelp: 'Zobrazit nápovědu',
         reorderConditions: 'Přeuspořádat řádky stavů',
-        reportToken: 'Report Token Conditions',
-        savedEffects: 'Saved Effects',
-        addSavedEffect: 'Add Saved Effect',
-        editSaved: 'Edit',
-        removeSaved: 'Remove',
-        promoteSaved: 'Add to Turn Tracker',
-        snoozeSaved: 'Snooze',
-        clearSnooze: 'Clear Snooze',
+        reportToken: 'Podmínky tokenu hlášení',
+        savedEffects: 'Uložené efekty',
+        addSavedEffect: 'Přidat uložený efekt',
+        editSaved: 'Upravit',
+        removeSaved: 'Odstranit',
+        promoteSaved: 'Přidat do Turn Tracker',
+        snoozeSaved: 'Podřimovat',
+        clearSnooze: 'Vymazat Odložit',
       },
       title: {
         menu: 'Nabídka',
@@ -2588,8 +2896,7 @@ const ConditionTrackerMod = (() => {
         applied: 'Uplatněno',
         removed: 'Stav odebrán',
         cleanup: 'Vyčištění dokončeno',
-        macroReinstalled:
-          'The {wizard}, {multiTarget}, {reportToken}, and {saved} macros have been reinstalled for all current GM players.',
+        macroReinstalled: 'Makro přeinstalováno',
         handoutReinstalled: 'Příručka přeinstalována',
         warning: 'Varování',
         error: 'Chyba',
@@ -2601,15 +2908,15 @@ const ConditionTrackerMod = (() => {
         moveToken: '{name} — Přesunout žeton?',
         scriptReady: 'Skript připraven',
         conditionReorder: 'Pořadí tahů změněno',
-        tokenReport: 'Token Condition Report',
-        savedEffects: 'Saved Effects',
-        savedAdd: 'Add Saved Effect',
-        savedEdit: 'Edit Saved Effect',
-        savedRemoved: 'Saved Effect Removed',
-        savedPromoted: 'Add to Turn Tracker',
-        savedSnoozed: 'Reminder Snoozed',
-        savedSnoozeCleared: 'Snooze Cleared',
-        hiddenEffects: 'Hidden Effects — {name}',
+        tokenReport: 'Zpráva o stavu tokenu',
+        savedEffects: 'Uložené efekty',
+        savedAdd: 'Přidat uložený efekt',
+        savedEdit: 'Upravit uložený efekt',
+        savedRemoved: 'Uložený efekt odstraněn',
+        savedPromoted: 'Přidat do Turn Tracker',
+        savedSnoozed: 'Připomenutí odloženo',
+        savedSnoozeCleared: 'Odložit vymazáno',
+        hiddenEffects: 'Skryté efekty – {name}',
       },
       heading: {
         quickActions: 'Rychlé akce',
@@ -2621,13 +2928,13 @@ const ConditionTrackerMod = (() => {
         promptUi: 'Rozhraní průvodce',
         examples: 'Příklady',
         summary: 'Souhrn',
-        appliedTo: 'Conditions Applied To',
-        appliedBy: 'Conditions Applied By',
-        savedEffectsFor: 'Saved Effects for {name}',
-        visibility: 'Visibility',
-        snoozeOptions: 'Snooze Reminder',
-        promoteOptions: 'Promote to Turn Tracker',
-        editActions: 'Edit Actions',
+        appliedTo: 'Podmínky platné pro',
+        appliedBy: 'Podmínky uplatněné',
+        savedEffectsFor: 'Uložené efekty pro {name}',
+        visibility: 'Viditelnost',
+        snoozeOptions: 'Odložit připomenutí',
+        promoteOptions: 'Povýšit na Turn Tracker',
+        editActions: 'Upravit akce',
       },
       msg: {
         noActive: 'Nejsou sledovány žádné aktivní stavy.',
@@ -2635,7 +2942,7 @@ const ConditionTrackerMod = (() => {
         unknownConfig:
           'Neznámá možnost konfigurace. Použijte --config pro zobrazení podporovaných nastavení.',
         macroReinstalled:
-          'Makra {wizard}, {multiTarget} a {reportToken} byla přeinstalována pro všechny aktuální hráče s GM rolí.',
+          'Makra {wizard}, {multiTarget}, {reportToken}, {saved} a {classify} byla přeinstalována pro všechny aktuální hráče s GM rolí.',
         handoutReinstalled: 'Pomocná příručka {handout} byla přeinstalována.',
         duplicate:
           'Tato přesná kombinace zdroje, subjektu, cíle, stavu a vlastního textu je již aktivní.',
@@ -2710,32 +3017,32 @@ const ConditionTrackerMod = (() => {
         conditionsReordered:
           'Řádky stavů byly přesunuty za jejich přiřazené žetony.',
         noTokensSelectedReport:
-          'Select at least one token on the board before using --report-token.',
-        noConditionsAppliedTo: '{name} has no active conditions applied to it.',
+          'Před použitím --report-token vyberte alespoň jeden žeton na hrací desce.',
+        noConditionsAppliedTo: '{name} nemá žádné aktivní podmínky.',
         noConditionsAppliedBy:
-          '{name} has no active conditions applied to others.',
-        noSavedEffects: 'No saved effects stored for {name}.',
+          '{name} nemá žádné aktivní podmínky aplikované na ostatní.',
+        noSavedEffects: 'Pro {name} nejsou uloženy žádné uložené efekty.',
         noTokenSelectedSaved:
-          'Select a token on the board before using --saved.',
-        savedEffectAdded: 'Saved effect added for {name}.',
-        savedEffectUpdated: 'Saved effect updated.',
-        savedEffectRemoved: 'Saved effect removed.',
-        savedEffectNotFound: 'Saved effect not found.',
+          'Před použitím --saved vyberte žeton na hrací ploše.',
+        savedEffectAdded: 'Uložený efekt byl přidán pro {name}.',
+        savedEffectUpdated: 'Uložený efekt byl aktualizován.',
+        savedEffectRemoved: 'Uložený efekt byl odstraněn.',
+        savedEffectNotFound: 'Uložený efekt nebyl nalezen.',
         savedInvalidVisibility:
-          'Invalid visibility. Use public, masked, or gm.',
+          'Neplatná viditelnost. Použijte veřejné, maskované nebo GM.',
         savedConditionRequired:
           'Condition type is required. Use --condition <type>.',
-        savedPromotedPublic: 'Effect added to Turn Tracker as public.',
+        savedPromotedPublic: 'Efekt přidán do Turn Tracker jako veřejný.',
         savedPromotedMasked:
-          'Effect added to Turn Tracker as masked — players see: {publicLabel}.',
+          'Efekt přidán do Turn Tracker jako maskovaný – hráči vidí: {publicLabel}.',
         savedPromotedGm:
-          'Effect is GM-only — no Turn Tracker row will be created. The reminder system will surface it when this token reaches the top of the turn order.',
-        savedSnoozed: 'Reminder snoozed: {scope}.',
-        savedSnoozeCleared: 'Snooze cleared.',
-        hiddenEffectsReminder: 'Hidden effects are active on {name}.',
-        visibilityPublicHint: 'full label visible to all',
-        visibilityMaskedHint: 'vague label shown to players',
-        visibilityGmHint: 'GM whisper only, no Turn Tracker row',
+          'Efekt je pouze GM – nebude vytvořen žádný řádek Tracker. Systém připomenutí se objeví, když tento žeton dosáhne vrcholu pořadí tahu.',
+        savedSnoozed: 'Připomenutí odloženo: {scope}.',
+        savedSnoozeCleared: 'Odložení zrušeno.',
+        hiddenEffectsReminder: 'Skryté efekty jsou aktivní na {name}.',
+        visibilityPublicHint: 'celý štítek viditelný všem',
+        visibilityMaskedHint: 'nejasný štítek zobrazený hráčům',
+        visibilityGmHint: 'Pouze šepot GM, žádná řada Turn Tracker',
       },
       removal: {
         conditionField: 'Stav',
@@ -2751,29 +3058,50 @@ const ConditionTrackerMod = (() => {
       },
       saved: {
         visibility: {
-          public: 'Public',
-          masked: 'Masked',
-          gm: 'GM Only',
+          public: 'Veřejnost',
+          masked: 'Maskovaný',
+          gm: 'Pouze GM',
         },
         snooze: {
-          thisTurn: 'This Turn',
-          oneRound: '1 Round',
-          threeRounds: '3 Rounds',
-          thisCombat: 'This Combat',
-          rounds: '{n} round(s)',
+          thisTurn: 'Tato odbočka',
+          oneRound: '1 kolo',
+          threeRounds: '3 kola',
+          thisCombat: 'Tento boj',
+          rounds: '{n} kol',
         },
         field: {
-          gmLabel: 'GM Label',
+          gmLabel: 'Značka GM',
           publicLabel: 'Public Label',
-          visibility: 'Visibility',
-          source: 'Source',
-          condition: 'Condition',
+          visibility: 'Viditelnost',
+          source: 'Zdroj',
+          condition: 'Stav',
         },
         prompt: {
-          enterGmLabel: 'Full effect description (GM only)',
-          enterPublicLabel: 'Vague label shown to players',
+          enterGmLabel: 'Úplný popis efektu (pouze GM)',
+          enterPublicLabel: 'Nejasný štítek zobrazený hráčům',
         },
-        snoozed: 'snoozed',
+        snoozed: 'odložené',
+      },
+      classify: {
+        title: 'Klasifikace Postav',
+        showTitle: 'Diagnostika Klasifikace',
+        showHeading: 'Podrobnosti Klasifikace Tokenu',
+        resultHeading: 'Přepsání Použito',
+        noSelection:
+          'Před použitím --classify vyberte alespoň jeden token na hracím poli.',
+        invalidType:
+          'Neplatný typ klasifikace: {type}. Použijte pc, npc, ignored nebo auto.',
+        set: '{name} → {type} (rozsah: {scope})',
+        cleared:
+          '{name} přepsání vymazáno (rozsah: {scope}) — automatická detekce obnovena.',
+        setTokenFallback:
+          '{name} → {type} (přepsání tokenu — žádný list postavy není propojen).',
+        clearedTokenFallback:
+          '{name} přepsání tokenu vymazáno — automatická detekce obnovena.',
+        fieldToken: 'Žeton',
+        fieldType: 'Klasifikace',
+        fieldSource: 'Zdroj',
+        fieldReason: 'Důvod',
       },
       cleanup: {
         orphaned: 'Osiřelé záznamy stavů',
@@ -2811,7 +3139,7 @@ const ConditionTrackerMod = (() => {
           ],
           [
             '!condition-tracker --report-token',
-            'Select one or more tokens first, then run this command to get a GM whisper listing every condition applied to and by each selected token. Also available as the ConditionTrackerReportToken macro.',
+            'Nejprve vyberte jeden nebo více tokenů a poté spusťte tento příkaz, abyste získali GM šepot se seznamem všech podmínek aplikovaných na a každým vybraným tokenem. Dostupné také jako makro ConditionTrackerReportToken.',
           ],
           [
             '!condition-tracker --menu',
@@ -2824,14 +3152,14 @@ const ConditionTrackerMod = (() => {
         colFlag: 'Přepínač',
         colDesc: 'Popis',
         rows: [
-          ['--prompt', 'Interaktivní průvodce krok za krokem'],
-          ['--multi-target', 'Uplatnit stav na více cílových žetonů najednou'],
+          ['--pohotovost', 'Interaktivní průvodce krok za krokem'],
+          ['--multi-cíl', 'Uplatnit stav na více cílových žetonů najednou'],
           [
             '--menu',
             'Zobrazit hlavní nabídku (přidat remove pro nabídku odebrání)',
           ],
           [
-            '--source X --target Y --condition Z',
+            '--zdroj X --cíl Y --podmínka Z',
             'Uplatnit stav přímo bez průvodce',
           ],
           [
@@ -2839,7 +3167,7 @@ const ConditionTrackerMod = (() => {
             'Trvání pro přímé uplatnění (např. 2 rounds)',
           ],
           [
-            '--other &lt;text&gt;',
+            '--other <text>',
             'Vlastní text pro typy efektů Kouzlo / Schopnost / Jiné',
           ],
           [
@@ -2855,11 +3183,11 @@ const ConditionTrackerMod = (() => {
             'Přepsat subjectPromptBypass pouze pro tento příkaz (podporuje také --subject-prompt-bypass)',
           ],
           [
-            '--cleanup',
+            '-- úklid',
             'Sladit stav — odebrat osiřelé stavy a řádky sledování tahů',
           ],
           [
-            '--reorder-conditions',
+            '--změna-podmínky',
             'Ručně přemístit řádky podmínek za přiřazené tokeny v pořadí kol',
           ],
           ['--reinstall-macro', 'Znovu vytvořit nebo aktualizovat makra GM'],
@@ -2869,11 +3197,23 @@ const ConditionTrackerMod = (() => {
           ],
           [
             '--report-token',
-            'Whisper a GM-only condition report for each selected token (conditions applied to and by it)',
+            'Zašeptat zprávu o stavu pouze GM pro každý vybraný token (podmínky aplikované na token a jím použité)',
           ],
           [
             '--lang &lt;jazyk&gt;',
             'Výstup zpráv tohoto příkazu v dalším jazyce (dvojjazyčný režim)',
+          ],
+          [
+            '--classify pc|npc|ignored',
+            'Přepsat typ aktéra pro vybrané tokeny — nejprve vyberte token(y). Výchozí rozsah je postava (zapisuje atribut ct_mod_actor_type); přidejte --scope token pro uložení do stavu skriptu',
+          ],
+          [
+            '--classify auto',
+            'Odebrat přepsání typu aktéra a obnovit automatickou detekci pro vybrané tokeny',
+          ],
+          [
+            '--classify show',
+            'Přišeptat diagnostiku klasifikace pro každý vybraný token — zobrazuje zjištěný typ, zdroj detekce a důvod',
           ],
           ['--help', 'Zobrazit stručnou nápovědní kartu v chatu'],
         ],
@@ -2932,64 +3272,150 @@ const ConditionTrackerMod = (() => {
         ],
       },
       savedEffects: {
-        heading: 'Saved Effects',
+        heading: 'Uložené efekty',
         intro:
-          'Saved effects let you store long-term conditions outside the Turn Tracker — curses, diseases, poisons, hidden debuffs, and other non-combat conditions. They persist in script state and can be optionally copied into the Turn Tracker when combat begins.',
+          'Uložené efekty vám umožňují ukládat dlouhodobé podmínky mimo Turn Tracker – kletby, nemoci, jedy, skryté debuffy a další nebojové podmínky. Přetrvávají ve stavu skriptu a mohou být volitelně zkopírovány do Turn Tracker, když začíná boj.',
         visibility: {
-          heading: 'Visibility Modes',
+          heading: 'Režimy viditelnosti',
           rows: [
             [
-              'public',
-              'Full effect label is visible in the Turn Tracker and public chat.',
+              'veřejnost',
+              'Štítek plného efektu je viditelný v Turn Tracker a veřejném chatu.',
             ],
             [
-              'masked',
-              'A vague public label is shown to players; full details are GM-only.',
+              'maskovaný',
+              'Hráčům se zobrazuje vágní veřejný štítek; úplné podrobnosti jsou pouze GM.',
             ],
             [
               'gm',
-              'No Turn Tracker row. Full details are stored in state and whispered to the GM when the affected token reaches the top of initiative.',
+              'Žádný řádek Tracker. Úplné podrobnosti jsou uloženy ve stavu a šeptány GM, když postižený token dosáhne vrcholu iniciativy.',
             ],
           ],
         },
         commands: {
-          heading: 'Saved Effects Commands',
+          heading: 'Uložené příkazy efektů',
           intro:
-            'All --saved commands are GM-only. Select a token before running --saved or --saved add.',
+            'Všechny --uložené příkazy jsou pouze GM. Před spuštěním --saved nebo --saved add vyberte token.',
           rows: [
             [
-              '!condition-tracker --saved',
-              'View saved effects for the selected token.',
+              '!condition-tracker --uloženo',
+              'Zobrazit uložené efekty pro vybraný token.',
             ],
             [
               '!condition-tracker --saved add',
-              'Launch the add-saved-effect wizard.',
+              'Spusťte průvodce přidáním uloženého efektu.',
             ],
             [
               '!condition-tracker --saved edit <id>',
-              'Edit labels or visibility for an existing saved effect.',
+              'Upravit štítky nebo viditelnost pro existující uložený efekt.',
             ],
             [
               '!condition-tracker --saved remove <id>',
-              'Permanently remove a saved effect.',
+              'Trvale odstranit uložený efekt.',
             ],
             [
               '!condition-tracker --saved promote <id> --visibility public|masked|gm',
-              'Copy a saved effect into the Turn Tracker (public or masked) or confirm it is GM-only tracked.',
+              'Zkopírujte uložený efekt do Turn Tracker (veřejný nebo maskovaný) nebo potvrďte, že je sledován pouze GM.',
             ],
             [
               '!condition-tracker --saved snooze <id> --scope turn|rounds|combat --rounds <n>',
-              'Snooze a GM reminder for this turn, N rounds, or this combat.',
+              'Odložte připomenutí GM pro toto kolo, N kol nebo tento boj.',
             ],
             [
               '!condition-tracker --saved snooze-clear <id>',
-              'Clear an active snooze so reminders resume immediately.',
+              'Vymažte aktivní odložení, aby se připomenutí okamžitě obnovila.',
             ],
           ],
         },
         reminders: {
-          heading: 'GM Reminders',
-          body: 'When a token with gm or masked saved effects reaches the top of the Turn Tracker, the GM receives a whisper listing the hidden effects with action buttons. Duplicate reminders within the same turn are suppressed. Use the Snooze buttons to suppress reminders for a turn, a number of rounds, or for the remainder of the current combat.',
+          heading: 'GM upomínky',
+          body: 'Když se žeton s GM nebo maskovanými uloženými efekty dostane na vrchol Turn Tracker, GM obdrží šepot se seznamem skrytých efektů s akčními tlačítky. Duplicitní připomenutí v rámci stejného tahu jsou potlačena. Použijte tlačítka Odložit k potlačení připomenutí pro tah, určitý počet kol nebo pro zbytek aktuálního boje.',
+        },
+      },
+      actorClassification: {
+        heading: 'Klasifikace Postav',
+        intro:
+          'Condition Tracker automaticky určuje, zda je každý token HP, NPC nebo ignorovaný objekt (špendlíky mapy, kulisy, šablony kouzel). Nepropojené tokeny jsou ve výchozím nastavení ignorovány. Použijte --classify k přepsání automatické detekce pro libovolný token.',
+        detectionOrder: {
+          heading: 'Pořadí Detekce',
+          colStep: 'Krok',
+          colCheck: 'Kontrola',
+          colResult: 'Výsledek',
+          rows: [
+            [
+              '1',
+              'Přepsání stavu tokenu (--classify --scope token)',
+              'pc / npc / ignorováno',
+            ],
+            [
+              '2',
+              'Atribut ct_mod_actor_type postavy (--classify --scope character)',
+              'pc / npc / ignorováno',
+            ],
+            ['3', 'Nepropojený token — žádný list postavy', 'ignoroval'],
+            ['4', 'Adaptér herního systému (atribut npc / is_npc)', 'pc / npc'],
+            [
+              '5',
+              'Obecné skenování atributů NPC (npc, is_npc, npcflag, sheet_type, character_type)',
+              'pc / npc',
+            ],
+            ['6', 'Záložní controlledby postavy', 'pc / npc'],
+          ],
+        },
+        types: {
+          heading: 'Typy Klasifikace',
+          colType: 'Typ',
+          colMeaning: 'Význam',
+          rows: [
+            [
+              'pc',
+              'Hráčova postava — vždy zahrnuta jako HP v průvodci a detekci',
+            ],
+            ['npc', 'Neherní postava — vždy zahrnuta jako NPC'],
+            [
+              'ignoroval',
+              'Nikdy nezobrazena ani sledována — vyloučena z výběru tokenů průvodce',
+            ],
+            [
+              'neznámý',
+              'Pouze automatická detekce; typ nelze určit (v průvodci zacházeno jako s NPC)',
+            ],
+          ],
+        },
+        commands: {
+          heading: 'Příkazy Klasifikace',
+          intro:
+            'Před spuštěním příkazů --classify vyberte jeden nebo více tokenů.',
+          rows: [
+            [
+              '!condition-tracker --klasifikovat pc',
+              'Označit vybrané tokeny jako HP (výchozí rozsah: postava).',
+            ],
+            [
+              '!condition-tracker --classify npc',
+              'Označit vybrané tokeny jako NPC.',
+            ],
+            [
+              '!condition-tracker --classify ignorováno',
+              'Vyloučit vybrané tokeny ze všeho sledování.',
+            ],
+            [
+              '!condition-tracker --klasifikace auto',
+              'Odebrat přepsání — obnovit automatickou detekci.',
+            ],
+            [
+              '!condition-tracker --klasifikovat show',
+              'Zobrazit diagnostiku klasifikace (typ, zdroj, důvod) pro každý vybraný token.',
+            ],
+            [
+              '!condition-tracker --classify pc --scope token',
+              'Přepsání na úrovni tokenu ve stavu skriptu — užitečné pro nepropojené tokeny.',
+            ],
+            [
+              '!condition-tracker --classify pc --scope character',
+              'Přepsání na úrovni postavy do atributu ct_mod_actor_type — platí pro všechny tokeny používající stejný list postavy.',
+            ],
+          ],
         },
       },
       configuration: {
@@ -3007,17 +3433,17 @@ const ConditionTrackerMod = (() => {
           ],
           [
             'useIcons',
-            'true / false',
+            'pravda / nepravda',
             'Zobrazovat krátké kódy ikon (např. [G]) místo emoji v řádcích sledovače tahů',
           ],
           [
             'subjectPromptBypass',
-            'true / false',
+            'pravda / nepravda',
             'Přeskočit volitelný krok výběru subjektu pro efekty Kouzlo / Schopnost / Jiné',
           ],
           [
             'suppressPublicChat',
-            'true / false',
+            'pravda / nepravda',
             'Potlač všechna veřejná oznámení v chatu (zprávy o přidání a odebrání). Šepoty GM nejsou ovlivněny.',
           ],
           [
@@ -3046,7 +3472,7 @@ const ConditionTrackerMod = (() => {
         heading: 'Dostupné překlady',
         intro:
           'Použijte možnost konfigurace jazyka k nastavení chatových zpráv a pomocné příručky na jakýkoliv podporovaný jazyk. Pro en, zh a pt jsou také přijímány krátké aliasy.',
-        colLocale: 'Locale',
+        colLocale: 'Národní prostředí',
         colLanguage: 'Jazyk',
         colFile: 'Soubor překladu',
       },
@@ -3137,7 +3563,7 @@ const ConditionTrackerMod = (() => {
       Poisoned: 'Forgiftet',
       Stunned: 'Lammet',
       Blinded: 'Blindet',
-      Charmed: 'Charmed',
+      Charmed: 'Charmet',
       Frightened: 'Skræmt',
       Incapacitated: 'Ukampdygtig',
       Invisible: 'Usynlig',
@@ -3218,8 +3644,8 @@ const ConditionTrackerMod = (() => {
         details: 'Detaljer',
         description: 'Beskrivelse',
         scenario: 'Scenarie',
-        gameSystem: 'Game System',
-        duration: 'Duration',
+        gameSystem: 'Spil system',
+        duration: 'Varighed',
       },
       dur: {
         untilRemoved: 'Indtil fjernet',
@@ -3244,14 +3670,14 @@ const ConditionTrackerMod = (() => {
         reinstallHandout: 'Geninstaller handout',
         showHelp: 'Vis hjælp',
         reorderConditions: 'Omarranger tilstandsrækker',
-        reportToken: 'Report Token Conditions',
-        savedEffects: 'Saved Effects',
-        addSavedEffect: 'Add Saved Effect',
-        editSaved: 'Edit',
-        removeSaved: 'Remove',
-        promoteSaved: 'Add to Turn Tracker',
+        reportToken: 'Rapporter Token-betingelser',
+        savedEffects: 'Gemte effekter',
+        addSavedEffect: 'Tilføj gemt effekt',
+        editSaved: 'Redigere',
+        removeSaved: 'Fjerne',
+        promoteSaved: 'Føj til Turn Tracker',
         snoozeSaved: 'Snooze',
-        clearSnooze: 'Clear Snooze',
+        clearSnooze: 'Ryd Snooze',
       },
       title: {
         menu: 'Menu',
@@ -3262,8 +3688,7 @@ const ConditionTrackerMod = (() => {
         applied: 'Anvendt',
         removed: 'Tilstand fjernet',
         cleanup: 'Oprydning fuldført',
-        macroReinstalled:
-          'The {wizard}, {multiTarget}, {reportToken}, and {saved} macros have been reinstalled for all current GM players.',
+        macroReinstalled: 'Makro geninstalleret',
         handoutReinstalled: 'Handout geninstalleret',
         warning: 'Advarsel',
         error: 'Fejl',
@@ -3271,19 +3696,19 @@ const ConditionTrackerMod = (() => {
         noConditions: 'Ingen tilstande',
         tokenMoved: 'Token flyttet',
         markedDead: 'Markeret som død',
-        zeroHp: '{name} — 0 HP',
+        zeroHp: '{name} — 0 HK',
         moveToken: '{name} — Flyt token?',
         scriptReady: 'Script klar',
         conditionReorder: 'Turrækkefølge ændret',
-        tokenReport: 'Token Condition Report',
-        savedEffects: 'Saved Effects',
-        savedAdd: 'Add Saved Effect',
-        savedEdit: 'Edit Saved Effect',
-        savedRemoved: 'Saved Effect Removed',
-        savedPromoted: 'Add to Turn Tracker',
-        savedSnoozed: 'Reminder Snoozed',
-        savedSnoozeCleared: 'Snooze Cleared',
-        hiddenEffects: 'Hidden Effects — {name}',
+        tokenReport: 'Token tilstandsrapport',
+        savedEffects: 'Gemte effekter',
+        savedAdd: 'Tilføj gemt effekt',
+        savedEdit: 'Rediger gemt effekt',
+        savedRemoved: 'Gemt effekt er fjernet',
+        savedPromoted: 'Føj til Turn Tracker',
+        savedSnoozed: 'Påmindelse udsat',
+        savedSnoozeCleared: 'Snooze ryddet',
+        hiddenEffects: 'Skjulte effekter — {name}',
       },
       heading: {
         quickActions: 'Hurtighandlinger',
@@ -3295,13 +3720,13 @@ const ConditionTrackerMod = (() => {
         promptUi: 'Guide-brugerflade',
         examples: 'Eksempler',
         summary: 'Oversigt',
-        appliedTo: 'Conditions Applied To',
-        appliedBy: 'Conditions Applied By',
-        savedEffectsFor: 'Saved Effects for {name}',
-        visibility: 'Visibility',
-        snoozeOptions: 'Snooze Reminder',
-        promoteOptions: 'Promote to Turn Tracker',
-        editActions: 'Edit Actions',
+        appliedTo: 'Betingelser, der gælder for',
+        appliedBy: 'Betingelser anvendt af',
+        savedEffectsFor: 'Gemte effekter til {name}',
+        visibility: 'Sigtbarhed',
+        snoozeOptions: 'Snooze-påmindelse',
+        promoteOptions: 'Fremme til Turn Tracker',
+        editActions: 'Rediger handlinger',
       },
       msg: {
         noActive: 'Ingen aktive tilstande spores.',
@@ -3309,7 +3734,7 @@ const ConditionTrackerMod = (() => {
         unknownConfig:
           'Ukendt konfigurationsindstilling. Brug --config for at se understøttede indstillinger.',
         macroReinstalled:
-          'Makroerne {wizard}, {multiTarget} og {reportToken} er geninstalleret for alle nuværende GM-spillere.',
+          'Makroerne {wizard}, {multiTarget}, {reportToken}, {saved} og {classify} er geninstalleret for alle nuværende GM-spillere.',
         handoutReinstalled: 'Hjælpe-handouttet {handout} er geninstalleret.',
         duplicate:
           'Den præcise kombination af kilde, subjekt, mål, tilstand og brugerdefineret tekst er allerede aktiv.',
@@ -3385,32 +3810,32 @@ const ConditionTrackerMod = (() => {
         conditionsReordered:
           'Tilstandsrækker er omplaceret efter deres tildelte tokens.',
         noTokensSelectedReport:
-          'Select at least one token on the board before using --report-token.',
-        noConditionsAppliedTo: '{name} has no active conditions applied to it.',
+          'Vælg mindst et token på tavlen, før du bruger --report-token.',
+        noConditionsAppliedTo:
+          '{name} har ingen aktive betingelser anvendt på sig.',
         noConditionsAppliedBy:
-          '{name} has no active conditions applied to others.',
-        noSavedEffects: 'No saved effects stored for {name}.',
-        noTokenSelectedSaved:
-          'Select a token on the board before using --saved.',
-        savedEffectAdded: 'Saved effect added for {name}.',
-        savedEffectUpdated: 'Saved effect updated.',
-        savedEffectRemoved: 'Saved effect removed.',
-        savedEffectNotFound: 'Saved effect not found.',
+          '{name} har ingen aktive betingelser anvendt på andre.',
+        noSavedEffects: 'Ingen gemte effekter gemt for {name}.',
+        noTokenSelectedSaved: 'Vælg et token på brættet, før du bruger --gemt.',
+        savedEffectAdded: 'Gemt effekt tilføjet for {name}.',
+        savedEffectUpdated: 'Gemt effekt opdateret.',
+        savedEffectRemoved: 'Gemt effekt fjernet.',
+        savedEffectNotFound: 'Den gemte effekt blev ikke fundet.',
         savedInvalidVisibility:
-          'Invalid visibility. Use public, masked, or gm.',
+          'Ugyldig synlighed. Brug offentlig, maskeret eller gm.',
         savedConditionRequired:
           'Condition type is required. Use --condition <type>.',
-        savedPromotedPublic: 'Effect added to Turn Tracker as public.',
+        savedPromotedPublic: 'Effekt føjet til Turn Tracker som offentlig.',
         savedPromotedMasked:
-          'Effect added to Turn Tracker as masked — players see: {publicLabel}.',
+          'Effekt tilføjet til Turn Tracker som maskeret — spillere se: {publicLabel}.',
         savedPromotedGm:
-          'Effect is GM-only — no Turn Tracker row will be created. The reminder system will surface it when this token reaches the top of the turn order.',
-        savedSnoozed: 'Reminder snoozed: {scope}.',
-        savedSnoozeCleared: 'Snooze cleared.',
-        hiddenEffectsReminder: 'Hidden effects are active on {name}.',
-        visibilityPublicHint: 'full label visible to all',
-        visibilityMaskedHint: 'vague label shown to players',
-        visibilityGmHint: 'GM whisper only, no Turn Tracker row',
+          'Effekten er kun for GM - ingen Turn Tracker-række vil blive oprettet. Påmindelsessystemet vil vise det, når dette token når toppen af ​​turrækkefølgen.',
+        savedSnoozed: 'Påmindelsen udsat: {scope}.',
+        savedSnoozeCleared: 'Snooze ryddet.',
+        hiddenEffectsReminder: 'Skjulte effekter er aktive på {name}.',
+        visibilityPublicHint: 'fuld etiket synlig for alle',
+        visibilityMaskedHint: 'vag etiket vist til spillere',
+        visibilityGmHint: 'Kun GM hvisker, ingen Turn Tracker række',
       },
       removal: {
         conditionField: 'Tilstand',
@@ -3426,29 +3851,50 @@ const ConditionTrackerMod = (() => {
       },
       saved: {
         visibility: {
-          public: 'Public',
-          masked: 'Masked',
-          gm: 'GM Only',
+          public: 'Offentlig',
+          masked: 'Maskeret',
+          gm: 'Kun GM',
         },
         snooze: {
-          thisTurn: 'This Turn',
-          oneRound: '1 Round',
-          threeRounds: '3 Rounds',
-          thisCombat: 'This Combat',
-          rounds: '{n} round(s)',
+          thisTurn: 'Denne omgang',
+          oneRound: '1 runde',
+          threeRounds: '3 runder',
+          thisCombat: 'Denne kamp',
+          rounds: '{n} runde(r)',
         },
         field: {
-          gmLabel: 'GM Label',
-          publicLabel: 'Public Label',
-          visibility: 'Visibility',
-          source: 'Source',
-          condition: 'Condition',
+          gmLabel: 'GM-mærke',
+          publicLabel: 'Offentligt mærke',
+          visibility: 'Sigtbarhed',
+          source: 'Kilde',
+          condition: 'Tilstand',
         },
         prompt: {
-          enterGmLabel: 'Full effect description (GM only)',
-          enterPublicLabel: 'Vague label shown to players',
+          enterGmLabel: 'Fuld effektbeskrivelse (kun GM)',
+          enterPublicLabel: 'Uklar etiket vist til spillere',
         },
-        snoozed: 'snoozed',
+        snoozed: 'slumret',
+      },
+      classify: {
+        title: 'Aktørklassificering',
+        showTitle: 'Klassificeringsdiagnostik',
+        showHeading: 'Token-klassificeringsdetaljer',
+        resultHeading: 'Tilsidesættelse Anvendt',
+        noSelection:
+          'Vælg mindst ét token på brættet inden brug af --classify.',
+        invalidType:
+          'Ugyldigt klassificeringstype: {type}. Brug pc, npc, ignored eller auto.',
+        set: '{name} → {type} (omfang: {scope})',
+        cleared:
+          '{name} tilsidesættelse slettet (omfang: {scope}) — automatisk registrering gendannet.',
+        setTokenFallback:
+          '{name} → {type} (token-tilsidesættelse — intet karakterark tilknyttet).',
+        clearedTokenFallback:
+          '{name} token-tilsidesættelse slettet — automatisk registrering gendannet.',
+        fieldToken: 'Token',
+        fieldType: 'Klassificering',
+        fieldSource: 'Kilde',
+        fieldReason: 'Årsag',
       },
       cleanup: {
         orphaned: 'Forladte tilstandsposter',
@@ -3485,8 +3931,8 @@ const ConditionTrackerMod = (() => {
             'Anvend én tilstand på flere tokens samtidig. Også tilgængelig som makroen ConditionTrackerMultiTarget.',
           ],
           [
-            '!condition-tracker --report-token',
-            'Select one or more tokens first, then run this command to get a GM whisper listing every condition applied to and by each selected token. Also available as the ConditionTrackerReportToken macro.',
+            '!condition-tracker --rapport-token',
+            'Vælg først et eller flere tokens, og kør derefter denne kommando for at få en GM-hvisker med en liste over alle betingelser, der er anvendt på og af hvert valgt token. Også tilgængelig som ConditionTrackerReportToken-makroen.',
           ],
           [
             '!condition-tracker --menu',
@@ -3499,11 +3945,11 @@ const ConditionTrackerMod = (() => {
         colFlag: 'Flag',
         colDesc: 'Beskrivelse',
         rows: [
-          ['--prompt', 'Interaktiv trin-for-trin-guide'],
-          ['--multi-target', 'Anvend en tilstand på flere måltoken på én gang'],
+          ['--hurtig', 'Interaktiv trin-for-trin-guide'],
+          ['--multimål', 'Anvend en tilstand på flere måltoken på én gang'],
           ['--menu', 'Vis hovedmenu (tilføj remove for fjernelsesmenu)'],
           [
-            '--source X --target Y --condition Z',
+            '--kilde X --mål Y --betingelse Z',
             'Anvend en tilstand direkte uden guiden',
           ],
           [
@@ -3527,25 +3973,37 @@ const ConditionTrackerMod = (() => {
             'Tilsidesæt subjectPromptBypass kun for denne kommando (understøtter også --subject-prompt-bypass)',
           ],
           [
-            '--cleanup',
+            '-- oprydning',
             'Afstem tilstand — fjern forladte tilstande og tursporing-rækker',
           ],
           [
-            '--reorder-conditions',
+            '--genbestillingsbetingelser',
             'Flyt betingelsesrækker manuelt bag de tilknyttede tokens i turordenen',
           ],
-          ['--reinstall-macro', 'Genopret eller opdater GM-makroerne'],
+          ['--geninstaller-makro', 'Genopret eller opdater GM-makroerne'],
           [
-            '--reinstall-handout',
+            '--geninstaller-handout',
             'Genopret eller opdater det lokaliserede hjælpe-handout',
           ],
           [
-            '--report-token',
-            'Whisper a GM-only condition report for each selected token (conditions applied to and by it)',
+            '--rapport-token',
+            'Hvisk en GM-kun tilstandsrapport for hvert valgt token (betingelser anvendt på og af det)',
           ],
           [
             '--lang &lt;locale&gt;',
             'Udsend denne kommandos meddelelser på en yderligere locale (tosproget tilstand)',
+          ],
+          [
+            '--classify pc|npc|ignored',
+            'Tilsidesæt aktørtypen for valgte tokens — vælg token(s) først. Standardomfang er karakter (skriver ct_mod_actor_type-attribut); tilføj --scope token for at gemme i scriptstatus',
+          ],
+          [
+            '--classify auto',
+            'Fjern aktørtype-tilsidesættelsen og gendan automatisk registrering for valgte tokens',
+          ],
+          [
+            '--classify show',
+            'Hvisker en klassificeringsdiagnostik for hvert valgt token — viser den registrerede type, registreringskilde og årsag',
           ],
           ['--help', 'Vis et kort hjælpekort i chatten'],
         ],
@@ -3607,64 +4065,150 @@ const ConditionTrackerMod = (() => {
         ],
       },
       savedEffects: {
-        heading: 'Saved Effects',
+        heading: 'Gemte effekter',
         intro:
-          'Saved effects let you store long-term conditions outside the Turn Tracker — curses, diseases, poisons, hidden debuffs, and other non-combat conditions. They persist in script state and can be optionally copied into the Turn Tracker when combat begins.',
+          'Gemte effekter giver dig mulighed for at gemme langsigtede tilstande uden for Turn Tracker - forbandelser, sygdomme, giftstoffer, skjulte debuffs og andre ikke-kamptilstande. De fortsætter i script-tilstand og kan eventuelt kopieres til Turn Tracker, når kampen begynder.',
         visibility: {
-          heading: 'Visibility Modes',
+          heading: 'Synlighedstilstande',
           rows: [
             [
-              'public',
-              'Full effect label is visible in the Turn Tracker and public chat.',
+              'offentlig',
+              'Etiketten med fuld effekt er synlig i Turn Tracker og offentlig chat.',
             ],
             [
-              'masked',
-              'A vague public label is shown to players; full details are GM-only.',
+              'maskeret',
+              'En vag offentlig etiket vises til spillere; alle detaljer er kun for GM.',
             ],
             [
               'gm',
-              'No Turn Tracker row. Full details are stored in state and whispered to the GM when the affected token reaches the top of initiative.',
+              'Ingen Turn Tracker række. Alle detaljer gemmes i tilstanden og hviskes til GM, når det berørte token når toppen af ​​initiativet.',
             ],
           ],
         },
         commands: {
-          heading: 'Saved Effects Commands',
+          heading: 'Gemte effektkommandoer',
           intro:
-            'All --saved commands are GM-only. Select a token before running --saved or --saved add.',
+            'Alle --gemte kommandoer er kun GM. Vælg et token før du kører --gemt eller --gemt tilføjelse.',
           rows: [
             [
-              '!condition-tracker --saved',
-              'View saved effects for the selected token.',
+              '!condition-tracker --gemt',
+              'Se gemte effekter for det valgte token.',
             ],
             [
-              '!condition-tracker --saved add',
-              'Launch the add-saved-effect wizard.',
+              '!condition-tracker --gemte tilføjelse',
+              'Start guiden Tilføj-gemt-effekt.',
             ],
             [
               '!condition-tracker --saved edit <id>',
-              'Edit labels or visibility for an existing saved effect.',
+              'Rediger etiketter eller synlighed for en eksisterende gemt effekt.',
             ],
             [
               '!condition-tracker --saved remove <id>',
-              'Permanently remove a saved effect.',
+              'Fjern en gemt effekt permanent.',
             ],
             [
               '!condition-tracker --saved promote <id> --visibility public|masked|gm',
-              'Copy a saved effect into the Turn Tracker (public or masked) or confirm it is GM-only tracked.',
+              'Kopier en gemt effekt til Turn Tracker (offentlig eller maskeret), eller bekræft, at den kun er GM-sporet.',
             ],
             [
               '!condition-tracker --saved snooze <id> --scope turn|rounds|combat --rounds <n>',
-              'Snooze a GM reminder for this turn, N rounds, or this combat.',
+              'Udsæt en GM-påmindelse for denne tur, N runder eller denne kamp.',
             ],
             [
               '!condition-tracker --saved snooze-clear <id>',
-              'Clear an active snooze so reminders resume immediately.',
+              'Ryd en aktiv snooze, så påmindelser genoptages med det samme.',
             ],
           ],
         },
         reminders: {
-          heading: 'GM Reminders',
-          body: 'When a token with gm or masked saved effects reaches the top of the Turn Tracker, the GM receives a whisper listing the hidden effects with action buttons. Duplicate reminders within the same turn are suppressed. Use the Snooze buttons to suppress reminders for a turn, a number of rounds, or for the remainder of the current combat.',
+          heading: 'GM påmindelser',
+          body: 'Når en token med gm eller maskerede gemte effekter når toppen af ​​Turn Tracker, modtager GM en hvisken, der viser de skjulte effekter med handlingsknapper. Duplikerede påmindelser inden for samme tur undertrykkes. Brug Snooze-knapperne til at undertrykke påmindelser for en tur, et antal runder eller for resten af ​​den aktuelle kamp.',
+        },
+      },
+      actorClassification: {
+        heading: 'Aktørklassificering',
+        intro:
+          'Condition Tracker afgør automatisk, om hvert token er en SK, NPC eller et ignoreret objekt (kortpinde, scenografi, trylleformelskabeloner). Ikke-tilknyttede tokens ignoreres som standard. Brug --classify til at tilsidesætte automatisk registrering for ethvert token.',
+        detectionOrder: {
+          heading: 'Registreringsrækkefølge',
+          colStep: 'Trin',
+          colCheck: 'Kontrol',
+          colResult: 'Resultat',
+          rows: [
+            [
+              '1',
+              'Token-tilstandstilsidesættelse (--classify --scope token)',
+              'pc / npc / ignoreret',
+            ],
+            [
+              '2',
+              'Karakter ct_mod_actor_type-attribut (--classify --scope character)',
+              'pc / npc / ignoreret',
+            ],
+            ['3', 'Ikke-tilknyttet token — intet karakterark', 'ignoreret'],
+            ['4', 'Spilsystemsadapter (npc / is_npc attribut)', 'pc / npc'],
+            [
+              '5',
+              'Generisk NPC-attributscanning (npc, is_npc, npcflag, sheet_type, character_type)',
+              'pc / npc',
+            ],
+            ['6', 'Karakter controlledby-reserve', 'pc / npc'],
+          ],
+        },
+        types: {
+          heading: 'Klassificeringstyper',
+          colType: 'Type',
+          colMeaning: 'Betydning',
+          rows: [
+            [
+              'pc',
+              'Spillerkarakter — altid inkluderet som SK i guiden og registreringen',
+            ],
+            ['npc', 'Ikke-spillerkarakter — altid inkluderet som NPC'],
+            [
+              'ignoreret',
+              'Vises eller spores aldrig — udelukket fra guidens tokenvælger',
+            ],
+            [
+              'ukendt',
+              'Kun automatisk registrering; type kunne ikke bestemmes (behandles som NPC i guiden)',
+            ],
+          ],
+        },
+        commands: {
+          heading: 'Klassificeringskommandoer',
+          intro:
+            'Vælg et eller flere tokens, inden du kører --classify-kommandoer.',
+          rows: [
+            [
+              '!condition-tracker --klassificere pc',
+              "Markere valgte tokens som SK'er (standardomfang: karakter).",
+            ],
+            [
+              '!condition-tracker --klassificer npc',
+              "Markere valgte tokens som NPC'er.",
+            ],
+            [
+              '!condition-tracker --classify ignoreret',
+              'Udelukkelse af valgte tokens fra al sporing.',
+            ],
+            [
+              '!condition-tracker --klassificere auto',
+              'Fjern tilsidesættelse — gendan automatisk registrering.',
+            ],
+            [
+              '!condition-tracker --klassificere show',
+              'Vis klassificeringsdiagnostik (type, kilde, årsag) for hvert valgt token.',
+            ],
+            [
+              '!condition-tracker --klassificer pc --scope token',
+              'Token-tilsidesættelse gemt i scriptstatus — nyttigt for ikke-tilknyttede tokens.',
+            ],
+            [
+              '!condition-tracker --klassificer pc --scope karakter',
+              'Karakter-tilsidesættelse skrevet til ct_mod_actor_type-attribut — gælder for alle tokens med samme karakterark.',
+            ],
+          ],
         },
       },
       configuration: {
@@ -3682,17 +4226,17 @@ const ConditionTrackerMod = (() => {
           ],
           [
             'useIcons',
-            'true / false',
+            'sandt / falsk',
             'Vis korte ikonkoder (f.eks. [G]) i stedet for emoji i tursporing-rækker',
           ],
           [
             'subjectPromptBypass',
-            'true / false',
+            'sandt / falsk',
             'Spring det valgfrie subjekttrin over for Besværgelse / Evne / Andre effekter',
           ],
           [
             'suppressPublicChat',
-            'true / false',
+            'sandt / falsk',
             'Undertryk alle offentlige chatbeskeder (anvend og fjern beskeder). GM-hvisker påvirkes ikke.',
           ],
           [
@@ -3721,7 +4265,7 @@ const ConditionTrackerMod = (() => {
         heading: 'Tilgængelige oversættelser',
         intro:
           'Brug sprogkonfigurationsindstillingen til at indstille chatbeskeder og hjælpe-handouttet til en understøttet locale. Korte aliaser accepteres også for en, zh og pt.',
-        colLocale: 'Locale',
+        colLocale: 'Lokalitet',
         colLanguage: 'Sprog',
         colFile: 'Oversættelsesfil',
       },
@@ -3895,8 +4439,8 @@ const ConditionTrackerMod = (() => {
         details: 'Details',
         description: 'Beschrijving',
         scenario: 'Scenario',
-        gameSystem: 'Game System',
-        duration: 'Duration',
+        gameSystem: 'Spelsysteem',
+        duration: 'Duur',
       },
       dur: {
         untilRemoved: 'Tot verwijdering',
@@ -3912,7 +4456,7 @@ const ConditionTrackerMod = (() => {
         turnsRemaining: '{n} bijgehouden beurteinde(s) resterend',
       },
       btn: {
-        openWizard: 'Open Wizard',
+        openWizard: 'Wizard openen',
         openMultiTarget: 'Open Multidoel-wizard',
         openRemovalList: 'Open Verwijderlijst',
         showConfig: 'Toon Configuratie',
@@ -3921,26 +4465,25 @@ const ConditionTrackerMod = (() => {
         reinstallHandout: 'Handout Herinstalleren',
         showHelp: 'Toon Help',
         reorderConditions: 'Conditierijen Herordenen',
-        reportToken: 'Report Token Conditions',
-        savedEffects: 'Saved Effects',
-        addSavedEffect: 'Add Saved Effect',
-        editSaved: 'Edit',
-        removeSaved: 'Remove',
-        promoteSaved: 'Add to Turn Tracker',
-        snoozeSaved: 'Snooze',
-        clearSnooze: 'Clear Snooze',
+        reportToken: 'Tokenvoorwaarden rapporteren',
+        savedEffects: 'Opgeslagen effecten',
+        addSavedEffect: 'Opgeslagen effect toevoegen',
+        editSaved: 'Bewerking',
+        removeSaved: 'Verwijderen',
+        promoteSaved: 'Toevoegen aan Turn Tracker',
+        snoozeSaved: 'Snoozen',
+        clearSnooze: 'Snooze wissen',
       },
       title: {
         menu: 'Menu',
         removalMenu: 'Condition Tracker — Verwijdering',
         config: 'Configuratie',
         configTracker: 'Condition Tracker — Configuratie',
-        help: 'Help',
+        help: 'Hulp',
         applied: 'Toegepast',
         removed: 'Conditie Verwijderd',
         cleanup: 'Opruiming Voltooid',
-        macroReinstalled:
-          'The {wizard}, {multiTarget}, {reportToken}, and {saved} macros have been reinstalled for all current GM players.',
+        macroReinstalled: 'Macro herinstalleerd',
         handoutReinstalled: 'Handout Herinstalleerd',
         warning: 'Waarschuwing',
         error: 'Fout',
@@ -3952,15 +4495,15 @@ const ConditionTrackerMod = (() => {
         moveToken: '{name} — Token Verplaatsen?',
         scriptReady: 'Script Gereed',
         conditionReorder: 'Beurtenvolgorde Gewijzigd',
-        tokenReport: 'Token Condition Report',
-        savedEffects: 'Saved Effects',
-        savedAdd: 'Add Saved Effect',
-        savedEdit: 'Edit Saved Effect',
-        savedRemoved: 'Saved Effect Removed',
-        savedPromoted: 'Add to Turn Tracker',
-        savedSnoozed: 'Reminder Snoozed',
-        savedSnoozeCleared: 'Snooze Cleared',
-        hiddenEffects: 'Hidden Effects — {name}',
+        tokenReport: 'Tokenconditierapport',
+        savedEffects: 'Opgeslagen effecten',
+        savedAdd: 'Opgeslagen effect toevoegen',
+        savedEdit: 'Bewerk opgeslagen effect',
+        savedRemoved: 'Opgeslagen effect verwijderd',
+        savedPromoted: 'Toevoegen aan Turn Tracker',
+        savedSnoozed: 'Herinnering gesnoozed',
+        savedSnoozeCleared: 'Snooze gewist',
+        hiddenEffects: 'Verborgen effecten — {name}',
       },
       heading: {
         quickActions: 'Snelle Acties',
@@ -3972,13 +4515,13 @@ const ConditionTrackerMod = (() => {
         promptUi: 'Wizard-interface',
         examples: 'Voorbeelden',
         summary: 'Samenvatting',
-        appliedTo: 'Conditions Applied To',
-        appliedBy: 'Conditions Applied By',
-        savedEffectsFor: 'Saved Effects for {name}',
-        visibility: 'Visibility',
-        snoozeOptions: 'Snooze Reminder',
-        promoteOptions: 'Promote to Turn Tracker',
-        editActions: 'Edit Actions',
+        appliedTo: 'Voorwaarden van toepassing op',
+        appliedBy: 'Voorwaarden toegepast door',
+        savedEffectsFor: 'Opgeslagen effecten voor {name}',
+        visibility: 'Zichtbaarheid',
+        snoozeOptions: 'Snooze-herinnering',
+        promoteOptions: 'Promoveren tot Turn Tracker',
+        editActions: 'Acties bewerken',
       },
       msg: {
         noActive: 'Er worden geen actieve condities bijgehouden.',
@@ -3986,7 +4529,7 @@ const ConditionTrackerMod = (() => {
         unknownConfig:
           'Onbekende configuratieoptie. Gebruik --config om ondersteunde instellingen te bekijken.',
         macroReinstalled:
-          "De {wizard}-, {multiTarget}- en {reportToken}-macro's zijn herinstalleerd voor alle huidige GM-spelers.",
+          "De {wizard}-, {multiTarget}-, {reportToken}-, {saved}- en {classify}-macro's zijn herinstalleerd voor alle huidige GM-spelers.",
         handoutReinstalled: 'De help-handout {handout} is herinstalleerd.',
         duplicate:
           'Deze exacte combinatie van bron, onderwerp, doel, conditie en aangepaste tekst is al actief.',
@@ -4063,32 +4606,33 @@ const ConditionTrackerMod = (() => {
         conditionsReordered:
           'Conditierijen zijn hergeplaatst na hun toegewezen tokens.',
         noTokensSelectedReport:
-          'Select at least one token on the board before using --report-token.',
-        noConditionsAppliedTo: '{name} has no active conditions applied to it.',
+          'Selecteer ten minste één token op het bord voordat u --report-token gebruikt.',
+        noConditionsAppliedTo:
+          'Op {name} zijn geen actieve voorwaarden van toepassing.',
         noConditionsAppliedBy:
-          '{name} has no active conditions applied to others.',
-        noSavedEffects: 'No saved effects stored for {name}.',
+          'Op {name} zijn geen actieve voorwaarden van toepassing op anderen.',
+        noSavedEffects: 'Geen opgeslagen effecten opgeslagen voor {name}.',
         noTokenSelectedSaved:
-          'Select a token on the board before using --saved.',
-        savedEffectAdded: 'Saved effect added for {name}.',
-        savedEffectUpdated: 'Saved effect updated.',
-        savedEffectRemoved: 'Saved effect removed.',
-        savedEffectNotFound: 'Saved effect not found.',
+          'Selecteer een token op het bord voordat u --saved gebruikt.',
+        savedEffectAdded: 'Opgeslagen effect toegevoegd voor {name}.',
+        savedEffectUpdated: 'Opgeslagen effect bijgewerkt.',
+        savedEffectRemoved: 'Opgeslagen effect verwijderd.',
+        savedEffectNotFound: 'Opgeslagen effect niet gevonden.',
         savedInvalidVisibility:
-          'Invalid visibility. Use public, masked, or gm.',
+          'Ongeldige zichtbaarheid. Gebruik openbaar, gemaskeerd of gm.',
         savedConditionRequired:
           'Condition type is required. Use --condition <type>.',
-        savedPromotedPublic: 'Effect added to Turn Tracker as public.',
+        savedPromotedPublic: 'Effect toegevoegd aan Turn Tracker als openbaar.',
         savedPromotedMasked:
-          'Effect added to Turn Tracker as masked — players see: {publicLabel}.',
+          'Effect toegevoegd aan Turn Tracker als gemaskeerd — spelers zien: {publicLabel}.',
         savedPromotedGm:
-          'Effect is GM-only — no Turn Tracker row will be created. The reminder system will surface it when this token reaches the top of the turn order.',
-        savedSnoozed: 'Reminder snoozed: {scope}.',
-        savedSnoozeCleared: 'Snooze cleared.',
-        hiddenEffectsReminder: 'Hidden effects are active on {name}.',
-        visibilityPublicHint: 'full label visible to all',
-        visibilityMaskedHint: 'vague label shown to players',
-        visibilityGmHint: 'GM whisper only, no Turn Tracker row',
+          'Het effect is alleen voor GM: er wordt geen Turn Tracker-rij gemaakt. Het herinneringssysteem zal het weergeven wanneer dit token de top van de speelvolgorde bereikt.',
+        savedSnoozed: 'Herinnering gesnoozed: {scope}.',
+        savedSnoozeCleared: 'Snooze gewist.',
+        hiddenEffectsReminder: 'Verborgen effecten zijn actief op {name}.',
+        visibilityPublicHint: 'volledig label zichtbaar voor iedereen',
+        visibilityMaskedHint: 'vaag label getoond aan spelers',
+        visibilityGmHint: 'Alleen GM-fluisteren, geen Turn Tracker-rij',
       },
       removal: {
         conditionField: 'Conditie',
@@ -4104,29 +4648,50 @@ const ConditionTrackerMod = (() => {
       },
       saved: {
         visibility: {
-          public: 'Public',
-          masked: 'Masked',
-          gm: 'GM Only',
+          public: 'Openbaar',
+          masked: 'Gemaskeerd',
+          gm: 'Alleen GM',
         },
         snooze: {
-          thisTurn: 'This Turn',
-          oneRound: '1 Round',
-          threeRounds: '3 Rounds',
-          thisCombat: 'This Combat',
-          rounds: '{n} round(s)',
+          thisTurn: 'Deze beurt',
+          oneRound: '1 Ronde',
+          threeRounds: '3 rondes',
+          thisCombat: 'Dit gevecht',
+          rounds: '{n} ronde(s)',
         },
         field: {
-          gmLabel: 'GM Label',
-          publicLabel: 'Public Label',
-          visibility: 'Visibility',
-          source: 'Source',
-          condition: 'Condition',
+          gmLabel: 'GM-label',
+          publicLabel: 'Openbaar etiket',
+          visibility: 'Zichtbaarheid',
+          source: 'Bron',
+          condition: 'Voorwaarde',
         },
         prompt: {
-          enterGmLabel: 'Full effect description (GM only)',
-          enterPublicLabel: 'Vague label shown to players',
+          enterGmLabel: 'Volledige effectbeschrijving (alleen GM)',
+          enterPublicLabel: 'Vaag label getoond aan spelers',
         },
-        snoozed: 'snoozed',
+        snoozed: 'gesnoozed',
+      },
+      classify: {
+        title: 'Acteurclassificatie',
+        showTitle: 'Classificatiediagnostiek',
+        showHeading: 'Token-classificatiedetails',
+        resultHeading: 'Overschrijving Toegepast',
+        noSelection:
+          'Selecteer ten minste één token op het bord voordat je --classify gebruikt.',
+        invalidType:
+          'Ongeldig classificatietype: {type}. Gebruik pc, npc, ignored of auto.',
+        set: '{name} → {type} (bereik: {scope})',
+        cleared:
+          '{name} overschrijving gewist (bereik: {scope}) — automatische detectie hersteld.',
+        setTokenFallback:
+          '{name} → {type} (tokenoverschrijving — geen karakterblad gekoppeld).',
+        clearedTokenFallback:
+          '{name} tokenoverschrijving gewist — automatische detectie hersteld.',
+        fieldToken: 'Token',
+        fieldType: 'Classificatie',
+        fieldSource: 'Bron',
+        fieldReason: 'Reden',
       },
       cleanup: {
         orphaned: 'Verweesde conditie-items',
@@ -4159,12 +4724,12 @@ const ConditionTrackerMod = (() => {
             'Stap-voor-stap wizard — kies conditie, tokens en duur interactief. Ook beschikbaar als de ConditionTrackerWizard-macro.',
           ],
           [
-            '!condition-tracker --multi-target',
+            '!condition-tracker --meerdere doelen',
             'Pas één conditie tegelijkertijd toe op meerdere tokens. Ook beschikbaar als de ConditionTrackerMultiTarget-macro.',
           ],
           [
             '!condition-tracker --report-token',
-            'Select one or more tokens first, then run this command to get a GM whisper listing every condition applied to and by each selected token. Also available as the ConditionTrackerReportToken macro.',
+            'Selecteer eerst een of meer tokens en voer vervolgens deze opdracht uit om een ​​GM-gefluister te krijgen met een lijst van alle voorwaarden die op en door elk geselecteerd token worden toegepast. Ook beschikbaar als de macro ConditionTrackerReportToken.',
           ],
           [
             '!condition-tracker --menu',
@@ -4177,14 +4742,14 @@ const ConditionTrackerMod = (() => {
         colFlag: 'Vlag',
         colDesc: 'Beschrijving',
         rows: [
-          ['--prompt', 'Interactieve stap-voor-stap wizard-interface'],
+          ['--snel', 'Interactieve stap-voor-stap wizard-interface'],
           [
-            '--multi-target',
+            '--meerdere doelen',
             'Pas een conditie tegelijkertijd toe op meerdere doeltokens',
           ],
           ['--menu', 'Toon hoofdmenu (voeg remove toe voor verwijdermenu)'],
           [
-            '--source X --target Y --condition Z',
+            '--bron X --doel Y --voorwaarde Z',
             'Pas een conditie direct toe zonder de wizard',
           ],
           [
@@ -4208,25 +4773,37 @@ const ConditionTrackerMod = (() => {
             'Overschrijf subjectPromptBypass alleen voor deze opdracht (ondersteunt ook --subject-prompt-bypass)',
           ],
           [
-            '--cleanup',
+            '--opruimen',
             'Herstel staat — verwijder verweesde condities en beurtenvolgorde-rijen',
           ],
           [
-            '--reorder-conditions',
+            '--herbestelvoorwaarden',
             'Conditierijen handmatig herpositioneren achter hun toegewezen tokens in de beurtvolgorde',
           ],
           ['--reinstall-macro', "Maak GM-macro's opnieuw aan of werk ze bij"],
           [
-            '--reinstall-handout',
+            '--herinstalleer-hand-out',
             'Maak de gelokaliseerde help-handout opnieuw aan of werk deze bij',
           ],
           [
-            '--report-token',
-            'Whisper a GM-only condition report for each selected token (conditions applied to and by it)',
+            '--rapport-token',
+            'Fluister een GM-only conditierapport voor elk geselecteerd token (voorwaarden toegepast op en door het token)',
           ],
           [
             '--lang &lt;locale&gt;',
             'Geef de berichten van deze opdracht uit in een aanvullende locale (tweetalige modus)',
+          ],
+          [
+            '--classify pc|npc|ignored',
+            'Het acteurtype voor geselecteerde tokens overschrijven — selecteer eerst de tokens. Standaardbereik is karakter (schrijft ct_mod_actor_type-attribuut); voeg --scope token toe om op te slaan in scriptstatus',
+          ],
+          [
+            '--classify auto',
+            'De acteurtype-overschrijving verwijderen en automatische detectie voor geselecteerde tokens herstellen',
+          ],
+          [
+            '--classify show',
+            'Een classificatiediagnostiek fluisteren voor elk geselecteerd token — toont het gedetecteerde type, detectiebron en reden',
           ],
           ['--help', 'Toon een beknopte helpkaart in de chat'],
         ],
@@ -4288,64 +4865,150 @@ const ConditionTrackerMod = (() => {
         ],
       },
       savedEffects: {
-        heading: 'Saved Effects',
+        heading: 'Opgeslagen effecten',
         intro:
-          'Saved effects let you store long-term conditions outside the Turn Tracker — curses, diseases, poisons, hidden debuffs, and other non-combat conditions. They persist in script state and can be optionally copied into the Turn Tracker when combat begins.',
+          'Met opgeslagen effecten kun je langdurige omstandigheden buiten de Turn Tracker opslaan: vloeken, ziekten, gifstoffen, verborgen debuffs en andere niet-gevechtsomstandigheden. Ze blijven in scriptstatus behouden en kunnen optioneel naar de Turn Tracker worden gekopieerd wanneer het gevecht begint.',
         visibility: {
-          heading: 'Visibility Modes',
+          heading: 'Zichtbaarheidsmodi',
           rows: [
             [
-              'public',
-              'Full effect label is visible in the Turn Tracker and public chat.',
+              'publiek',
+              'Label met volledig effect is zichtbaar in de Turn Tracker en de openbare chat.',
             ],
             [
-              'masked',
-              'A vague public label is shown to players; full details are GM-only.',
+              'gemaskerd',
+              'Spelers krijgen een vaag openbaar label te zien; volledige details zijn alleen voor GM.',
             ],
             [
               'gm',
-              'No Turn Tracker row. Full details are stored in state and whispered to the GM when the affected token reaches the top of initiative.',
+              'Geen Turn Tracker-rij. Volledige details worden in de staat opgeslagen en naar de GM gefluisterd wanneer het betreffende token de top van het initiatief bereikt.',
             ],
           ],
         },
         commands: {
-          heading: 'Saved Effects Commands',
+          heading: 'Opgeslagen effectopdrachten',
           intro:
-            'All --saved commands are GM-only. Select a token before running --saved or --saved add.',
+            "Alle --saved commando's zijn alleen voor GM. Selecteer een token voordat u --saved of --saved add uitvoert.",
           rows: [
             [
-              '!condition-tracker --saved',
-              'View saved effects for the selected token.',
+              '!conditie-tracker --opgeslagen',
+              'Bekijk opgeslagen effecten voor het geselecteerde token.',
             ],
             [
-              '!condition-tracker --saved add',
-              'Launch the add-saved-effect wizard.',
+              '!condition-tracker --opgeslagen toevoeging',
+              'Start de wizard voor het toevoegen van opgeslagen effecten.',
             ],
             [
               '!condition-tracker --saved edit <id>',
-              'Edit labels or visibility for an existing saved effect.',
+              'Bewerk labels of zichtbaarheid voor een bestaand opgeslagen effect.',
             ],
             [
               '!condition-tracker --saved remove <id>',
-              'Permanently remove a saved effect.',
+              'Verwijder een opgeslagen effect definitief.',
             ],
             [
               '!condition-tracker --saved promote <id> --visibility public|masked|gm',
-              'Copy a saved effect into the Turn Tracker (public or masked) or confirm it is GM-only tracked.',
+              'Kopieer een opgeslagen effect naar de Turn Tracker (openbaar of gemaskeerd) of bevestig dat het alleen door GM wordt gevolgd.',
             ],
             [
               '!condition-tracker --saved snooze <id> --scope turn|rounds|combat --rounds <n>',
-              'Snooze a GM reminder for this turn, N rounds, or this combat.',
+              'Sluimer een GM-herinnering voor deze beurt, N rondes of dit gevecht.',
             ],
             [
               '!condition-tracker --saved snooze-clear <id>',
-              'Clear an active snooze so reminders resume immediately.',
+              'Wis een actieve snooze zodat herinneringen onmiddellijk worden hervat.',
             ],
           ],
         },
         reminders: {
-          heading: 'GM Reminders',
-          body: 'When a token with gm or masked saved effects reaches the top of the Turn Tracker, the GM receives a whisper listing the hidden effects with action buttons. Duplicate reminders within the same turn are suppressed. Use the Snooze buttons to suppress reminders for a turn, a number of rounds, or for the remainder of the current combat.',
+          heading: 'GM-herinneringen',
+          body: 'Wanneer een token met GM of gemaskeerde opgeslagen effecten de bovenkant van de Turn Tracker bereikt, ontvangt de GM een gefluister met een lijst van de verborgen effecten met actieknoppen. Dubbele herinneringen binnen dezelfde beurt worden onderdrukt. Gebruik de snooze-knoppen om herinneringen voor een beurt, een aantal rondes of voor de rest van het huidige gevecht te onderdrukken.',
+        },
+      },
+      actorClassification: {
+        heading: 'Acteurclassificatie',
+        intro:
+          'Condition Tracker bepaalt automatisch of elk token een SC, NPC of genegeerd object is (kaartspelden, decor, tovertemplates). Niet-gekoppelde tokens worden standaard genegeerd. Gebruik --classify om automatische detectie voor elk token te overschrijven.',
+        detectionOrder: {
+          heading: 'Detectievolgorde',
+          colStep: 'Stap',
+          colCheck: 'Controle',
+          colResult: 'Resultaat',
+          rows: [
+            [
+              '1',
+              'Token-statusoverschrijving (--classify --scope token)',
+              'pc / npc / genegeerd',
+            ],
+            [
+              '2',
+              'Karakter ct_mod_actor_type-attribuut (--classify --scope character)',
+              'pc / npc / genegeerd',
+            ],
+            ['3', 'Niet-gekoppeld token — geen karakterblad', 'genegeerd'],
+            ['4', 'Spelsysteemadapter (npc / is_npc attribuut)', 'pc / npc'],
+            [
+              '5',
+              'Generieke NPC-attribuutscan (npc, is_npc, npcflag, sheet_type, character_type)',
+              'pc / npc',
+            ],
+            ['6', 'Karakter controlledby-terugval', 'pc / npc'],
+          ],
+        },
+        types: {
+          heading: 'Classificatietypen',
+          colType: 'Type',
+          colMeaning: 'Betekenis',
+          rows: [
+            [
+              'pc',
+              'Spelerkarakter — altijd opgenomen als SC in de wizard en detectie',
+            ],
+            ['npc', 'Niet-spelerkarakter — altijd opgenomen als NPC'],
+            [
+              'genegeerd',
+              'Nooit weergegeven of bijgehouden — uitgesloten van de token-kiezer van de wizard',
+            ],
+            [
+              'onbekend',
+              'Alleen automatisch gedetecteerd; type kon niet worden bepaald (als NPC behandeld in de wizard)',
+            ],
+          ],
+        },
+        commands: {
+          heading: 'Classificatieopdrachten',
+          intro:
+            'Selecteer één of meer tokens voordat je --classify-opdrachten uitvoert.',
+          rows: [
+            [
+              '!condition-tracker --classificeer pc',
+              "Geselecteerde tokens als SC's markeren (standaard bereik: karakter).",
+            ],
+            [
+              '!condition-tracker --classificeer npc',
+              "Geselecteerde tokens als NPC's markeren.",
+            ],
+            [
+              '!condition-tracker --classify genegeerd',
+              'Geselecteerde tokens uitsluiten van alle tracking.',
+            ],
+            [
+              '!condition-tracker --classificeer auto',
+              'Overschrijving verwijderen — automatische detectie herstellen.',
+            ],
+            [
+              '!condition-tracker --classificeer show',
+              'Classificatiediagnostiek (type, bron, reden) weergeven voor elk geselecteerd token.',
+            ],
+            [
+              '!condition-tracker --classify pc --scope-token',
+              'Tokenoverschrijving opgeslagen in scriptstatus — nuttig voor niet-gekoppelde tokens.',
+            ],
+            [
+              '!condition-tracker --classify pc --scope karakter',
+              'Karakteroverschrijving geschreven naar ct_mod_actor_type-attribuut — geldt voor alle tokens met hetzelfde karakterblad.',
+            ],
+          ],
         },
       },
       configuration: {
@@ -4363,17 +5026,17 @@ const ConditionTrackerMod = (() => {
           ],
           [
             'useIcons',
-            'true / false',
+            'waar / onwaar',
             'Toon korte pictogramcodes (bijv. [G]) in plaats van emoji in beurtopvolger-rijen',
           ],
           [
             'subjectPromptBypass',
-            'true / false',
+            'waar / onwaar',
             'Sla de optionele onderwerptokenstap over voor Spreuk / Vaardigheid / Overige effecten',
           ],
           [
             'suppressPublicChat',
-            'true / false',
+            'waar / onwaar',
             'Onderdruk alle openbare chatberichten (toepassen en verwijderen berichten). GM-fluisteringen worden niet beïnvloed.',
           ],
           [
@@ -4402,7 +5065,7 @@ const ConditionTrackerMod = (() => {
         heading: 'Beschikbare Vertalingen',
         intro:
           'Gebruik de taalconfiguratieopties om chatberichten en de help-handout in te stellen op een ondersteunde locale. Korte aliassen worden ook geaccepteerd voor en, zh en pt.',
-        colLocale: 'Locale',
+        colLocale: 'Lokaal',
         colLanguage: 'Taal',
         colFile: 'Vertaalbestand',
       },
@@ -4788,7 +5451,7 @@ const ConditionTrackerMod = (() => {
         unknownConfig:
           'Unknown config option. Use --config to view supported settings.',
         macroReinstalled:
-          'The {wizard}, {multiTarget}, {reportToken}, and {saved} macros have been reinstalled for all current GM players.',
+          'The {wizard}, {multiTarget}, {reportToken}, {saved}, and {classify} macros have been reinstalled for all current GM players.',
         handoutReinstalled: 'The help handout {handout} has been reinstalled.',
         duplicate:
           'That exact source, subject, target, condition, and custom text is already active.',
@@ -4932,6 +5595,27 @@ const ConditionTrackerMod = (() => {
         },
         snoozed: 'snoozed',
       },
+      classify: {
+        title: 'Actor Classification',
+        showTitle: 'Classification Diagnostic',
+        showHeading: 'Token Classification Details',
+        resultHeading: 'Override Applied',
+        noSelection:
+          'Select at least one token on the board before using --classify.',
+        invalidType:
+          'Invalid classification type: {type}. Use pc, npc, ignored, or auto.',
+        set: '{name} → {type} (scope: {scope})',
+        cleared:
+          '{name} override cleared (scope: {scope}) — automatic detection restored.',
+        setTokenFallback:
+          '{name} → {type} (token override — no character sheet linked).',
+        clearedTokenFallback:
+          '{name} token override cleared — automatic detection restored.',
+        fieldToken: 'Token',
+        fieldType: 'Classification',
+        fieldSource: 'Source',
+        fieldReason: 'Reason',
+      },
       cleanup: {
         orphaned: 'Orphaned condition entries',
         stale: 'Stale condition entries',
@@ -4973,6 +5657,10 @@ const ConditionTrackerMod = (() => {
           [
             '!condition-tracker --saved',
             'Select a token first, then run this command to view and manage saved long-term effects (curses, diseases, hidden debuffs, etc.) for that token. Also available as the ConditionTrackerSaved macro.',
+          ],
+          [
+            '!condition-tracker --classify show',
+            "Select one or more tokens first, then run this command to see a diagnostic whisper showing each token's actor classification, detection source, and reason. Use --classify pc|npc|ignored to override, or --classify auto to restore automatic detection. Also available as the ConditionTrackerClassify macro.",
           ],
           [
             '!condition-tracker --menu',
@@ -5057,6 +5745,18 @@ const ConditionTrackerMod = (() => {
           [
             '--lang &lt;locale&gt;',
             "Output this command's messages in an additional locale (bilingual mode)",
+          ],
+          [
+            '--classify pc|npc|ignored',
+            'Override the actor type for selected tokens — select token(s) first. Default scope is character (writes ct_mod_actor_type attribute); add --scope token to store in script state instead',
+          ],
+          [
+            '--classify auto',
+            'Remove the actor-type override and restore automatic detection for selected tokens',
+          ],
+          [
+            '--classify show',
+            'Whisper a classification diagnostic for each selected token — shows the detected type, detection source, and reason',
           ],
           ['--help', 'Show a brief help card in chat'],
         ],
@@ -5177,6 +5877,96 @@ const ConditionTrackerMod = (() => {
         reminders: {
           heading: 'GM Reminders',
           body: 'When a token with gm or masked saved effects reaches the top of the Turn Tracker, the GM receives a whisper listing the hidden effects with action buttons. Duplicate reminders within the same turn are suppressed. Use the Snooze buttons to suppress reminders for a turn, a number of rounds, or for the remainder of the current combat.',
+        },
+      },
+      actorClassification: {
+        heading: 'Actor Classification',
+        intro:
+          'Condition Tracker automatically determines whether each token is a PC, NPC, or an ignored object (map pins, scenery, spell templates). Unlinked tokens are ignored by default. Use --classify to override automatic detection for any token.',
+        detectionOrder: {
+          heading: 'Detection Order',
+          colStep: 'Step',
+          colCheck: 'Check',
+          colResult: 'Result',
+          rows: [
+            [
+              '1',
+              'Token state override (--classify --scope token)',
+              'pc / npc / ignored',
+            ],
+            [
+              '2',
+              'Character ct_mod_actor_type attribute (--classify --scope character)',
+              'pc / npc / ignored',
+            ],
+            ['3', 'Unlinked token — no character sheet', 'ignored'],
+            [
+              '4',
+              'Game-system sheet adapter (npc / is_npc attribute)',
+              'pc / npc',
+            ],
+            [
+              '5',
+              'Generic NPC attribute scan (npc, is_npc, npcflag, sheet_type, character_type)',
+              'pc / npc',
+            ],
+            ['6', 'Character controlledby fallback', 'pc / npc'],
+          ],
+        },
+        types: {
+          heading: 'Classification Types',
+          colType: 'Type',
+          colMeaning: 'Meaning',
+          rows: [
+            [
+              'pc',
+              'Player character — always included as a PC in wizard and detection',
+            ],
+            ['npc', 'Non-player character — always included as an NPC'],
+            [
+              'ignored',
+              'Never shown or tracked — excluded from the wizard token picker',
+            ],
+            [
+              'unknown',
+              'Auto-detected only; could not determine type (treated as NPC in wizard)',
+            ],
+          ],
+        },
+        commands: {
+          heading: 'Classification Commands',
+          intro:
+            'Select one or more tokens before running --classify commands.',
+          rows: [
+            [
+              '!condition-tracker --classify pc',
+              'Mark selected tokens as PCs (character scope by default).',
+            ],
+            [
+              '!condition-tracker --classify npc',
+              'Mark selected tokens as NPCs.',
+            ],
+            [
+              '!condition-tracker --classify ignored',
+              'Exclude selected tokens from all tracking.',
+            ],
+            [
+              '!condition-tracker --classify auto',
+              'Remove override — restore automatic detection.',
+            ],
+            [
+              '!condition-tracker --classify show',
+              'Show classification diagnostic (type, source, reason) for each selected token.',
+            ],
+            [
+              '!condition-tracker --classify pc --scope token',
+              'Token-level override stored in script state — useful for unlinked tokens.',
+            ],
+            [
+              '!condition-tracker --classify pc --scope character',
+              'Character-level override written to the ct_mod_actor_type attribute — applies to all tokens using the same character sheet.',
+            ],
+          ],
         },
       },
       configuration: {
@@ -5416,8 +6206,8 @@ const ConditionTrackerMod = (() => {
         details: 'Tiedot',
         description: 'Kuvaus',
         scenario: 'Tilanne',
-        gameSystem: 'Game System',
-        duration: 'Duration',
+        gameSystem: 'Pelijärjestelmä',
+        duration: 'Kesto',
       },
       dur: {
         untilRemoved: 'Kunnes poistetaan',
@@ -5442,14 +6232,14 @@ const ConditionTrackerMod = (() => {
         reinstallHandout: 'Asenna handout uudelleen',
         showHelp: 'Näytä ohje',
         reorderConditions: 'Järjestä tilarivit uudelleen',
-        reportToken: 'Report Token Conditions',
-        savedEffects: 'Saved Effects',
-        addSavedEffect: 'Add Saved Effect',
-        editSaved: 'Edit',
-        removeSaved: 'Remove',
-        promoteSaved: 'Add to Turn Tracker',
-        snoozeSaved: 'Snooze',
-        clearSnooze: 'Clear Snooze',
+        reportToken: 'Ilmoita Tokenin ehdot',
+        savedEffects: 'Tallennetut tehosteet',
+        addSavedEffect: 'Lisää tallennettu tehoste',
+        editSaved: 'Muokata',
+        removeSaved: 'Poistaa',
+        promoteSaved: 'Lisää Turn Trackeriin',
+        snoozeSaved: 'Torkku',
+        clearSnooze: 'Tyhjennä Torkku',
       },
       title: {
         menu: 'Valikko',
@@ -5460,8 +6250,7 @@ const ConditionTrackerMod = (() => {
         applied: 'Sovellettu',
         removed: 'Tila poistettu',
         cleanup: 'Siivous valmis',
-        macroReinstalled:
-          'The {wizard}, {multiTarget}, {reportToken}, and {saved} macros have been reinstalled for all current GM players.',
+        macroReinstalled: 'Makro asennettu uudelleen',
         handoutReinstalled: 'Handout asennettu uudelleen',
         warning: 'Varoitus',
         error: 'Virhe',
@@ -5469,19 +6258,19 @@ const ConditionTrackerMod = (() => {
         noConditions: 'Ei tiloja',
         tokenMoved: 'Token siirretty',
         markedDead: 'Merkitty kuolleeksi',
-        zeroHp: '{name} — 0 HP',
+        zeroHp: '{name} – 0 hv',
         moveToken: '{name} — siirretäänkö token?',
         scriptReady: 'Skripti valmis',
         conditionReorder: 'Vuorojärjestys muuttui',
-        tokenReport: 'Token Condition Report',
-        savedEffects: 'Saved Effects',
-        savedAdd: 'Add Saved Effect',
-        savedEdit: 'Edit Saved Effect',
-        savedRemoved: 'Saved Effect Removed',
-        savedPromoted: 'Add to Turn Tracker',
-        savedSnoozed: 'Reminder Snoozed',
-        savedSnoozeCleared: 'Snooze Cleared',
-        hiddenEffects: 'Hidden Effects — {name}',
+        tokenReport: 'Tokenin kuntoraportti',
+        savedEffects: 'Tallennetut tehosteet',
+        savedAdd: 'Lisää tallennettu tehoste',
+        savedEdit: 'Muokkaa tallennettua tehostetta',
+        savedRemoved: 'Tallennettu tehoste poistettu',
+        savedPromoted: 'Lisää Turn Trackeriin',
+        savedSnoozed: 'Muistutus Torkutettu',
+        savedSnoozeCleared: 'Torkku poistettu',
+        hiddenEffects: 'Piilotetut tehosteet – {name}',
       },
       heading: {
         quickActions: 'Pikavalinnat',
@@ -5493,13 +6282,13 @@ const ConditionTrackerMod = (() => {
         promptUi: 'Ohjatun toiminnon käyttöliittymä',
         examples: 'Esimerkit',
         summary: 'Yhteenveto',
-        appliedTo: 'Conditions Applied To',
-        appliedBy: 'Conditions Applied By',
-        savedEffectsFor: 'Saved Effects for {name}',
-        visibility: 'Visibility',
-        snoozeOptions: 'Snooze Reminder',
-        promoteOptions: 'Promote to Turn Tracker',
-        editActions: 'Edit Actions',
+        appliedTo: 'Sovellettavat ehdot',
+        appliedBy: 'Sovellettavat ehdot',
+        savedEffectsFor: 'Tallennetut tehosteet kohteelle {name}',
+        visibility: 'Näkyvyys',
+        snoozeOptions: 'Torkkumuistutus',
+        promoteOptions: 'Siirry Turn Trackeriin',
+        editActions: 'Muokkaa toimintoja',
       },
       msg: {
         noActive: 'Aktiivisia tiloja ei seurata.',
@@ -5507,7 +6296,7 @@ const ConditionTrackerMod = (() => {
         unknownConfig:
           'Tuntematon asetusvaihtoehto. Käytä --config nähdäksesi tuetut asetukset.',
         macroReinstalled:
-          'Makrot {wizard}, {multiTarget} ja {reportToken} on asennettu uudelleen kaikille nykyisille GM-pelaajille.',
+          'Makrot {wizard}, {multiTarget}, {reportToken}, {saved} ja {classify} on asennettu uudelleen kaikille nykyisille GM-pelaajille.',
         handoutReinstalled: 'Ohje-handout {handout} on asennettu uudelleen.',
         duplicate:
           'Täsmälleen sama lähde, kohde, tila ja mukautettu teksti on jo aktiivinen.',
@@ -5582,32 +6371,32 @@ const ConditionTrackerMod = (() => {
         conditionsReordered:
           'Tilarivit on sijoitettu uudelleen niille kuuluvien tokeneiden jälkeen.',
         noTokensSelectedReport:
-          'Select at least one token on the board before using --report-token.',
-        noConditionsAppliedTo: '{name} has no active conditions applied to it.',
-        noConditionsAppliedBy:
-          '{name} has no active conditions applied to others.',
-        noSavedEffects: 'No saved effects stored for {name}.',
+          'Valitse laudalta vähintään yksi merkki ennen --report-tokenin käyttöä.',
+        noConditionsAppliedTo: '{name} ei sisällä aktiivisia ehtoja.',
+        noConditionsAppliedBy: '{name} ei sisällä muita aktiivisia ehtoja.',
+        noSavedEffects:
+          'Ei tallennettuja tehosteita tallennettuna kohteelle {name}.',
         noTokenSelectedSaved:
-          'Select a token on the board before using --saved.',
-        savedEffectAdded: 'Saved effect added for {name}.',
-        savedEffectUpdated: 'Saved effect updated.',
-        savedEffectRemoved: 'Saved effect removed.',
-        savedEffectNotFound: 'Saved effect not found.',
+          'Valitse pelilaudalta pelimerkki ennen kuin käytät --saved.',
+        savedEffectAdded: 'Tallennettu tehoste lisätty kohteelle {name}.',
+        savedEffectUpdated: 'Tallennettu tehoste päivitetty.',
+        savedEffectRemoved: 'Tallennettu tehoste poistettu.',
+        savedEffectNotFound: 'Tallennettua tehostetta ei löydy.',
         savedInvalidVisibility:
-          'Invalid visibility. Use public, masked, or gm.',
+          'Virheellinen näkyvyys. Käytä julkista, naamioitua tai gm.',
         savedConditionRequired:
           'Condition type is required. Use --condition <type>.',
-        savedPromotedPublic: 'Effect added to Turn Tracker as public.',
+        savedPromotedPublic: 'Tehoste lisättiin Turn Trackeriin julkisena.',
         savedPromotedMasked:
-          'Effect added to Turn Tracker as masked — players see: {publicLabel}.',
+          'Tehoste lisätty Turn Trackeriin maskattuina – pelaajat näkevät: {publicLabel}.',
         savedPromotedGm:
-          'Effect is GM-only — no Turn Tracker row will be created. The reminder system will surface it when this token reaches the top of the turn order.',
-        savedSnoozed: 'Reminder snoozed: {scope}.',
-        savedSnoozeCleared: 'Snooze cleared.',
-        hiddenEffectsReminder: 'Hidden effects are active on {name}.',
-        visibilityPublicHint: 'full label visible to all',
-        visibilityMaskedHint: 'vague label shown to players',
-        visibilityGmHint: 'GM whisper only, no Turn Tracker row',
+          'Vaikutus on vain GM:lle – Käännösseurantariviä ei luoda. Muistutusjärjestelmä tuo sen esiin, kun tämä merkki saavuttaa vuorottelujärjestyksen huipulle.',
+        savedSnoozed: 'Muistutus torkutettu: {scope}.',
+        savedSnoozeCleared: 'Torkku poistettu.',
+        hiddenEffectsReminder: 'Piilotetut tehosteet ovat aktiivisia {name}.',
+        visibilityPublicHint: 'koko etiketti näkyy kaikille',
+        visibilityMaskedHint: 'epämääräinen etiketti näytetään pelaajille',
+        visibilityGmHint: 'Vain GM kuiskaus, ei Turn Tracker -riviä',
       },
       removal: {
         conditionField: 'Tila',
@@ -5623,29 +6412,50 @@ const ConditionTrackerMod = (() => {
       },
       saved: {
         visibility: {
-          public: 'Public',
-          masked: 'Masked',
-          gm: 'GM Only',
+          public: 'Julkinen',
+          masked: 'Naamioitunut',
+          gm: 'Vain GM',
         },
         snooze: {
-          thisTurn: 'This Turn',
-          oneRound: '1 Round',
-          threeRounds: '3 Rounds',
-          thisCombat: 'This Combat',
-          rounds: '{n} round(s)',
+          thisTurn: 'Tämä käännös',
+          oneRound: '1 kierros',
+          threeRounds: '3 kierrosta',
+          thisCombat: 'Tämä taistelu',
+          rounds: '{n} kierrosta',
         },
         field: {
-          gmLabel: 'GM Label',
-          publicLabel: 'Public Label',
-          visibility: 'Visibility',
-          source: 'Source',
-          condition: 'Condition',
+          gmLabel: 'GM-merkki',
+          publicLabel: 'Julkinen merkki',
+          visibility: 'Näkyvyys',
+          source: 'Lähde',
+          condition: 'Kunto',
         },
         prompt: {
-          enterGmLabel: 'Full effect description (GM only)',
-          enterPublicLabel: 'Vague label shown to players',
+          enterGmLabel: 'Täydellinen tehosteen kuvaus (vain GM)',
+          enterPublicLabel: 'Epämääräinen etiketti näytetään pelaajille',
         },
-        snoozed: 'snoozed',
+        snoozed: 'torkku',
+      },
+      classify: {
+        title: 'Toimijoiden Luokittelu',
+        showTitle: 'Luokitteludiagnostiikka',
+        showHeading: 'Tunnuksen Luokittelutiedot',
+        resultHeading: 'Ohitus Sovellettu',
+        noSelection:
+          'Valitse vähintään yksi tunnus laudalta ennen --classify-käyttöä.',
+        invalidType:
+          'Virheellinen luokittelutyyppi: {type}. Käytä arvoa pc, npc, ignored tai auto.',
+        set: '{name} → {type} (laajuus: {scope})',
+        cleared:
+          '{name} ohitus poistettu (laajuus: {scope}) — automaattinen tunnistus palautettu.',
+        setTokenFallback:
+          '{name} → {type} (tunnusohitus — hahmoarkkia ei ole linkitetty).',
+        clearedTokenFallback:
+          '{name} tunnusohitus poistettu — automaattinen tunnistus palautettu.',
+        fieldToken: 'Tunnus',
+        fieldType: 'Luokittelu',
+        fieldSource: 'Lähde',
+        fieldReason: 'Syy',
       },
       cleanup: {
         orphaned: 'Orpoja tilamerkintöjä',
@@ -5674,7 +6484,7 @@ const ConditionTrackerMod = (() => {
         colDesc: 'Kuvaus',
         rows: [
           [
-            '!condition-tracker --prompt',
+            '!condition-tracker -- prompt',
             'Vaiheittainen ohjattu toiminto — valitse tila, tokenit ja kesto vuorovaikutteisesti. Saatavilla myös ConditionTrackerWizard-makrona.',
           ],
           [
@@ -5683,7 +6493,7 @@ const ConditionTrackerMod = (() => {
           ],
           [
             '!condition-tracker --report-token',
-            'Select one or more tokens first, then run this command to get a GM whisper listing every condition applied to and by each selected token. Also available as the ConditionTrackerReportToken macro.',
+            'Valitse ensin yksi tai useampi merkki ja suorita sitten tämä komento saadaksesi GM-kuiskauksen, joka luettelee kaikki ehdot, joita kullekin valitulle tunnukselle sovelletaan. Saatavilla myös ConditionTrackerReportToken-makrona.',
           ],
           [
             '!condition-tracker --menu',
@@ -5696,11 +6506,14 @@ const ConditionTrackerMod = (() => {
         colFlag: 'Lippu',
         colDesc: 'Kuvaus',
         rows: [
-          ['--prompt', 'Vuorovaikutteinen vaiheittainen ohjaustoiminto'],
-          ['--multi-target', 'Sovella tila useisiin kohde-tokeneihin kerralla'],
-          ['--menu', 'Näytä päävalikko (lisää remove poistovalikkoa varten)'],
+          ['--kehottaa', 'Vuorovaikutteinen vaiheittainen ohjaustoiminto'],
+          ['-- moni kohde', 'Sovella tila useisiin kohde-tokeneihin kerralla'],
           [
-            '--source X --target Y --condition Z',
+            '--valikko',
+            'Näytä päävalikko (lisää remove poistovalikkoa varten)',
+          ],
+          [
+            '--lähde X --kohde Y --ehto Z',
             'Sovella tila suoraan ilman ohjaustoimintoa',
           ],
           [
@@ -5712,11 +6525,11 @@ const ConditionTrackerMod = (() => {
             'Mukautettu teksti Loitsu / Kyky / Muu -vaikutustyypeille',
           ],
           [
-            '--remove &lt;condition-id&gt;',
+            '--poista <ehtotunnus>',
             'Poista tietty tila sen yksilöllisellä tunnuksella',
           ],
           [
-            '--config &lt;option&gt; &lt;value&gt;',
+            '--config <optio> <arvo>',
             'Muuta asetuksia (katso alla oleva Asetukset-osio)',
           ],
           [
@@ -5724,25 +6537,37 @@ const ConditionTrackerMod = (() => {
             'Ohita subjectPromptBypass vain tätä komentoa varten (tukee myös --subject-prompt-bypass)',
           ],
           [
-            '--cleanup',
+            '--siivous',
             'Täsmäytä tila — poista orpot tilat ja Turn Tracker -rivit',
           ],
           [
-            '--reorder-conditions',
+            '--reorder-ehdot',
             'Siirrä ehtoriviä manuaalisesti niille määrättyjen pelinappuloiden taakse vuorojärjestyksessä',
           ],
           ['--reinstall-macro', 'Luo GM-makrot uudelleen tai päivitä ne'],
           [
-            '--reinstall-handout',
+            '--reinstall-moniste',
             'Luo lokalisoitu ohje-handout uudelleen tai päivitä se',
           ],
           [
-            '--report-token',
-            'Whisper a GM-only condition report for each selected token (conditions applied to and by it)',
+            '--raportti-tunnus',
+            'Kuiskaa vain GM:n kuntoraportti jokaiselle valitulle tunnukselle (sitä koskevat ehdot)',
           ],
           [
             '--lang &lt;locale&gt;',
             'Tulosta tämän komennon viestit lisälocalella (kaksikielinen tila)',
+          ],
+          [
+            '--classify pc|npc|ignored',
+            'Ohita toimijatyypit valituille tunnuksille — valitse ensin tunnus(et). Oletuslaajuus on hahmo (kirjoittaa ct_mod_actor_type-attribuutin); lisää --scope token tallentaaksesi komentosarjan tilaan',
+          ],
+          [
+            '--classify auto',
+            'Poista toimijatyypin ohitus ja palauta automaattinen tunnistus valituille tunnuksille',
+          ],
+          [
+            '--classify show',
+            'Kuiskaa luokitteludiagnostiikka jokaiselle valitulle tunnukselle — näyttää havaitun tyypin, tunnistuslähteen ja syyn',
           ],
           ['--help', 'Näytä lyhyt ohjekortti chatissa'],
         ],
@@ -5804,64 +6629,154 @@ const ConditionTrackerMod = (() => {
         ],
       },
       savedEffects: {
-        heading: 'Saved Effects',
+        heading: 'Tallennetut tehosteet',
         intro:
-          'Saved effects let you store long-term conditions outside the Turn Tracker — curses, diseases, poisons, hidden debuffs, and other non-combat conditions. They persist in script state and can be optionally copied into the Turn Tracker when combat begins.',
+          'Tallennettujen tehosteiden avulla voit tallentaa pitkäaikaisia ​​olosuhteita Turn Trackerin ulkopuolelle – kirouksia, sairauksia, myrkkyjä, piilotettuja debuffeja ja muita ei-taisteluolosuhteita. Ne pysyvät käsikirjoitustilassa ja ne voidaan valinnaisesti kopioida Turn Trackeriin taistelun alkaessa.',
         visibility: {
-          heading: 'Visibility Modes',
+          heading: 'Näkyvyystilat',
           rows: [
             [
-              'public',
-              'Full effect label is visible in the Turn Tracker and public chat.',
+              'julkinen',
+              'Täysi tehostemerkki näkyy Turn Trackerissa ja julkisessa chatissa.',
             ],
             [
-              'masked',
-              'A vague public label is shown to players; full details are GM-only.',
+              'naamioitunut',
+              'Pelaajille näytetään epämääräinen julkinen etiketti; täydelliset tiedot ovat GM-vain.',
             ],
             [
               'gm',
-              'No Turn Tracker row. Full details are stored in state and whispered to the GM when the affected token reaches the top of initiative.',
+              'Ei Turn Tracker -riviä. Täydelliset tiedot tallennetaan tilaan ja kuiskataan GM:lle, kun kyseinen merkki saavuttaa aloitteen huipulle.',
             ],
           ],
         },
         commands: {
-          heading: 'Saved Effects Commands',
+          heading: 'Tallennetut tehostekomennot',
           intro:
-            'All --saved commands are GM-only. Select a token before running --saved or --saved add.',
+            'Kaikki --tallennetut komennot ovat GM-vain. Valitse tunnus ennen kuin suoritat --saved tai --saved add.',
           rows: [
             [
-              '!condition-tracker --saved',
-              'View saved effects for the selected token.',
+              '!condition-tracker --tallennettu',
+              'Näytä valitun tunnuksen tallennettuja tehosteita.',
             ],
             [
-              '!condition-tracker --saved add',
-              'Launch the add-saved-effect wizard.',
+              '!condition-tracker --tallennettu lisäys',
+              'Käynnistä ohjattu lisätty-tallennettu tehoste.',
             ],
             [
               '!condition-tracker --saved edit <id>',
-              'Edit labels or visibility for an existing saved effect.',
+              'Muokkaa olemassa olevan tallennetun tehosteen tunnisteita tai näkyvyyttä.',
             ],
             [
               '!condition-tracker --saved remove <id>',
-              'Permanently remove a saved effect.',
+              'Poista tallennettu tehoste pysyvästi.',
             ],
             [
               '!condition-tracker --saved promote <id> --visibility public|masked|gm',
-              'Copy a saved effect into the Turn Tracker (public or masked) or confirm it is GM-only tracked.',
+              'Kopioi tallennettu tehoste Turn Trackeriin (julkinen tai peitetty) tai vahvista, että se on vain GM-seuraama.',
             ],
             [
               '!condition-tracker --saved snooze <id> --scope turn|rounds|combat --rounds <n>',
-              'Snooze a GM reminder for this turn, N rounds, or this combat.',
+              'Torkku GM-muistutus tätä vuoroa, N kierrosta tai tätä taistelua varten.',
             ],
             [
               '!condition-tracker --saved snooze-clear <id>',
-              'Clear an active snooze so reminders resume immediately.',
+              'Tyhjennä aktiivinen torkku, jotta muistutukset jatkuvat välittömästi.',
             ],
           ],
         },
         reminders: {
-          heading: 'GM Reminders',
-          body: 'When a token with gm or masked saved effects reaches the top of the Turn Tracker, the GM receives a whisper listing the hidden effects with action buttons. Duplicate reminders within the same turn are suppressed. Use the Snooze buttons to suppress reminders for a turn, a number of rounds, or for the remainder of the current combat.',
+          heading: 'GM-muistutukset',
+          body: 'Kun gm- tai naamioituja tallennettuja tehosteita sisältävä merkki saavuttaa Turn Trackerin yläosan, GM vastaanottaa kuiskauksen, jossa luetellaan piilotetut tehosteet toimintapainikkeilla. Saman käännöksen päällekkäiset muistutukset estetään. Käytä Torkku-painikkeita estääksesi muistutukset vuorosta, useista kierroksista tai nykyisen taistelun loppuosasta.',
+        },
+      },
+      actorClassification: {
+        heading: 'Toimijoiden Luokittelu',
+        intro:
+          'Condition Tracker määrittää automaattisesti, onko jokainen tunnus PP, NPC vai ohitettu esine (karttatennät, kulissit, loitsumallit). Linkittämättömät tunnukset ohitetaan oletuksena. Käytä --classify-komentoa automaattisen tunnistuksen ohittamiseen mille tahansa tunnukselle.',
+        detectionOrder: {
+          heading: 'Tunnistusjärjestys',
+          colStep: 'Askel',
+          colCheck: 'Tarkistus',
+          colResult: 'Tulos',
+          rows: [
+            [
+              '1',
+              'Tunnuksen tilaohitus (--classify --scope token)',
+              'pc / npc / ohitettu',
+            ],
+            [
+              '2',
+              'Hahmon ct_mod_actor_type-attribuutti (--classify --scope character)',
+              'pc / npc / ohitettu',
+            ],
+            ['3', 'Linkittämätön tunnus — ei hahmoarkkia', 'huomiotta'],
+            [
+              '4',
+              'Pelisysteemin sovitin (npc / is_npc -attribuutti)',
+              'pc / npc',
+            ],
+            [
+              '5',
+              'Yleinen NPC-attribuuttiskannaus (npc, is_npc, npcflag, sheet_type, character_type)',
+              'pc / npc',
+            ],
+            ['6', 'Hahmon controlledby-varasuunnitelma', 'pc / npc'],
+          ],
+        },
+        types: {
+          heading: 'Luokittelutyypit',
+          colType: 'Tyyppi',
+          colMeaning: 'Merkitys',
+          rows: [
+            [
+              'pc',
+              'Pelaajahahmo — aina mukana PP:nä ohjurissa ja tunnistuksessa',
+            ],
+            ['npc', 'Ei-pelaajahahmo — aina mukana NPC:nä'],
+            [
+              'huomiotta',
+              'Ei koskaan näytetä tai seurata — suljettu pois ohjurin tunnusvalitsimesta',
+            ],
+            [
+              'tuntematon',
+              'Vain automaattinen tunnistus; tyyppiä ei voitu määrittää (käsitellään NPC:nä ohjurissa)',
+            ],
+          ],
+        },
+        commands: {
+          heading: 'Luokittelukomennot',
+          intro:
+            'Valitse yksi tai useampi tunnus ennen --classify-komentojen suorittamista.',
+          rows: [
+            [
+              '!condition-tracker --classify pc',
+              'Merkitse valitut tunnukset PP:ksi (oletuslaajuus: hahmo).',
+            ],
+            [
+              '!condition-tracker --classify npc',
+              'Merkitse valitut tunnukset NPC:ksi.',
+            ],
+            [
+              '!condition-tracker --classify ohitettu',
+              'Sulje valitut tunnukset pois kaikesta seurannasta.',
+            ],
+            [
+              '!condition-tracker --classify auto',
+              'Poista ohitus — palauta automaattinen tunnistus.',
+            ],
+            [
+              '!condition-tracker --classify show',
+              'Näytä luokitteludiagnostiikka (tyyppi, lähde, syy) jokaiselle valitulle tunnukselle.',
+            ],
+            [
+              '!condition-tracker --classify pc --scope token',
+              'Tunnustason ohitus komentosarjan tilassa — hyödyllinen linkittämättömille tunnuksille.',
+            ],
+            [
+              '!condition-tracker --classify pc --scope-merkki',
+              'Hahmotason ohitus kirjoitetaan ct_mod_actor_type-attribuuttiin — koskee kaikkia tunnuksia, jotka käyttävät samaa hahmoarkkia.',
+            ],
+          ],
         },
       },
       configuration: {
@@ -5879,17 +6794,17 @@ const ConditionTrackerMod = (() => {
           ],
           [
             'useIcons',
-            'true / false',
+            'tosi / epätosi',
             'Näytä lyhyet kuvakekoodit (esim. [G]) emojien sijaan Turn Tracker -riveillä',
           ],
           [
             'subjectPromptBypass',
-            'true / false',
+            'tosi / epätosi',
             'Ohita valinnainen kohde-tokenin vaihe Loitsu / Kyky / Muu -vaikutuksille',
           ],
           [
             'suppressPublicChat',
-            'true / false',
+            'tosi / epätosi',
             'Estä kaikki julkiset chat-ilmoitukset (lisäys- ja poistoviestit). GM-kuiskaukset eivät vaikutu.',
           ],
           [
@@ -5918,7 +6833,7 @@ const ConditionTrackerMod = (() => {
         heading: 'Saatavilla olevat käännökset',
         intro:
           'Käytä language-asetusta asettaaksesi chat-viestit ja ohje-handoutin mihin tahansa tuettuun localeen. Lyhyet aliakset ovat myös hyväksyttyjä muodoille en, zh ja pt.',
-        colLocale: 'Locale',
+        colLocale: 'Alue',
         colLanguage: 'Kieli',
         colFile: 'Käännöstiedosto',
       },
@@ -6078,7 +6993,7 @@ const ConditionTrackerMod = (() => {
         conditions: 'Conditions',
         customEffects: 'Effets personnalisés',
         permanentTurnEnd: 'Permanent / Fin de tour',
-        rounds: 'Rounds',
+        rounds: 'Tours',
         command: 'Commande',
         result: 'Résultat',
         field: 'Champ',
@@ -6091,17 +7006,17 @@ const ConditionTrackerMod = (() => {
         details: 'Détails',
         description: 'Description',
         scenario: 'Scénario',
-        gameSystem: 'Game System',
-        duration: 'Duration',
+        gameSystem: 'Système de jeu',
+        duration: 'Durée',
       },
       dur: {
         untilRemoved: 'Jusqu’à suppression',
         endOfTargetTurn: 'Fin du prochain tour de la cible',
         endOfSourceTurn: 'Fin du prochain tour de la source',
-        round1: '1 round',
-        round2: '2 rounds',
-        round3: '3 rounds',
-        round10: '10 rounds',
+        round1: '1 tour',
+        round2: '2 tours',
+        round3: '3 tours',
+        round10: '10 tours',
         custom: 'Personnalisé',
         customPrompt: 'Nombre de rounds',
         untilRemovedDisplay: 'Jusqu’à suppression',
@@ -6117,14 +7032,14 @@ const ConditionTrackerMod = (() => {
         reinstallHandout: 'Réinstaller le livret',
         showHelp: 'Afficher l’aide',
         reorderConditions: 'Réorganiser les lignes de condition',
-        reportToken: 'Report Token Conditions',
-        savedEffects: 'Saved Effects',
-        addSavedEffect: 'Add Saved Effect',
-        editSaved: 'Edit',
-        removeSaved: 'Remove',
-        promoteSaved: 'Add to Turn Tracker',
-        snoozeSaved: 'Snooze',
-        clearSnooze: 'Clear Snooze',
+        reportToken: 'Conditions des jetons de rapport',
+        savedEffects: 'Effets enregistrés',
+        addSavedEffect: 'Ajouter un effet enregistré',
+        editSaved: 'Modifier',
+        removeSaved: 'Retirer',
+        promoteSaved: 'Ajouter au suivi des virages',
+        snoozeSaved: 'Somnoler',
+        clearSnooze: 'Effacer la répétition',
       },
       title: {
         menu: 'Menu',
@@ -6135,8 +7050,7 @@ const ConditionTrackerMod = (() => {
         applied: 'Appliqué',
         removed: 'Condition supprimée',
         cleanup: 'Nettoyage terminé',
-        macroReinstalled:
-          'The {wizard}, {multiTarget}, {reportToken}, and {saved} macros have been reinstalled for all current GM players.',
+        macroReinstalled: 'Macro réinstallée',
         handoutReinstalled: 'Livret réinstallé',
         warning: 'Avertissement',
         error: 'Erreur',
@@ -6148,15 +7062,15 @@ const ConditionTrackerMod = (() => {
         moveToken: '{name} — Déplacer le jeton ?',
         scriptReady: 'Script prêt',
         conditionReorder: 'Ordre de tour modifié',
-        tokenReport: 'Token Condition Report',
-        savedEffects: 'Saved Effects',
-        savedAdd: 'Add Saved Effect',
-        savedEdit: 'Edit Saved Effect',
-        savedRemoved: 'Saved Effect Removed',
-        savedPromoted: 'Add to Turn Tracker',
-        savedSnoozed: 'Reminder Snoozed',
-        savedSnoozeCleared: 'Snooze Cleared',
-        hiddenEffects: 'Hidden Effects — {name}',
+        tokenReport: "Rapport sur l'état des jetons",
+        savedEffects: 'Effets enregistrés',
+        savedAdd: 'Ajouter un effet enregistré',
+        savedEdit: "Modifier l'effet enregistré",
+        savedRemoved: 'Effet enregistré supprimé',
+        savedPromoted: 'Ajouter au suivi des virages',
+        savedSnoozed: 'Rappel mis en attente',
+        savedSnoozeCleared: 'Snooze effacé',
+        hiddenEffects: 'Effets cachés — {name}',
       },
       heading: {
         quickActions: 'Actions rapides',
@@ -6168,13 +7082,13 @@ const ConditionTrackerMod = (() => {
         promptUi: 'Interface de l’assistant',
         examples: 'Exemples',
         summary: 'Résumé',
-        appliedTo: 'Conditions Applied To',
-        appliedBy: 'Conditions Applied By',
-        savedEffectsFor: 'Saved Effects for {name}',
-        visibility: 'Visibility',
-        snoozeOptions: 'Snooze Reminder',
-        promoteOptions: 'Promote to Turn Tracker',
-        editActions: 'Edit Actions',
+        appliedTo: 'Conditions applicables à',
+        appliedBy: 'Conditions appliquées par',
+        savedEffectsFor: 'Effets enregistrés pour {name}',
+        visibility: 'Visibilité',
+        snoozeOptions: 'Rappel de répétition',
+        promoteOptions: 'Promouvoir Turn Tracker',
+        editActions: 'Modifier les actions',
       },
       msg: {
         noActive: 'Aucune condition active n’est suivie.',
@@ -6182,7 +7096,7 @@ const ConditionTrackerMod = (() => {
         unknownConfig:
           'Option de configuration inconnue. Utilisez --config pour voir les paramètres disponibles.',
         macroReinstalled:
-          'Les macros {wizard}, {multiTarget} et {reportToken} ont été réinstallées pour tous les MJ actifs.',
+          'Les macros {wizard}, {multiTarget}, {reportToken}, {saved} et {classify} ont été réinstallées pour tous les MJ actifs.',
         handoutReinstalled: 'Le livret d’aide {handout} a été réinstallé.',
         duplicate:
           'Cette combinaison source, sujet, cible, condition et texte personnalisé est déjà active.',
@@ -6260,32 +7174,32 @@ const ConditionTrackerMod = (() => {
         conditionsReordered:
           'Les lignes de condition ont été repositionnées après leurs tokens assignés.',
         noTokensSelectedReport:
-          'Select at least one token on the board before using --report-token.',
-        noConditionsAppliedTo: '{name} has no active conditions applied to it.',
+          "Sélectionnez au moins un jeton sur le tableau avant d'utiliser --report-token.",
+        noConditionsAppliedTo: "{name} n'est soumis à aucune condition active.",
         noConditionsAppliedBy:
-          '{name} has no active conditions applied to others.',
-        noSavedEffects: 'No saved effects stored for {name}.',
+          "{name} n'a aucune condition active appliquée aux autres.",
+        noSavedEffects: "Aucun effet enregistré n'est stocké pour {name}.",
         noTokenSelectedSaved:
-          'Select a token on the board before using --saved.',
-        savedEffectAdded: 'Saved effect added for {name}.',
-        savedEffectUpdated: 'Saved effect updated.',
-        savedEffectRemoved: 'Saved effect removed.',
-        savedEffectNotFound: 'Saved effect not found.',
+          "Sélectionnez un jeton sur le tableau avant d'utiliser --saved.",
+        savedEffectAdded: 'Effet enregistré ajouté pour {name}.',
+        savedEffectUpdated: 'Effet enregistré mis à jour.',
+        savedEffectRemoved: 'Effet enregistré supprimé.',
+        savedEffectNotFound: 'Effet enregistré introuvable.',
         savedInvalidVisibility:
-          'Invalid visibility. Use public, masked, or gm.',
+          'Visibilité invalide. Utilisez public, masqué ou gm.',
         savedConditionRequired:
           'Condition type is required. Use --condition <type>.',
-        savedPromotedPublic: 'Effect added to Turn Tracker as public.',
+        savedPromotedPublic: 'Effet ajouté à Turn Tracker en tant que public.',
         savedPromotedMasked:
-          'Effect added to Turn Tracker as masked — players see: {publicLabel}.',
+          'Effet ajouté à Turn Tracker comme masqué — les joueurs voient : {publicLabel}.',
         savedPromotedGm:
-          'Effect is GM-only — no Turn Tracker row will be created. The reminder system will surface it when this token reaches the top of the turn order.',
-        savedSnoozed: 'Reminder snoozed: {scope}.',
-        savedSnoozeCleared: 'Snooze cleared.',
-        hiddenEffectsReminder: 'Hidden effects are active on {name}.',
-        visibilityPublicHint: 'full label visible to all',
-        visibilityMaskedHint: 'vague label shown to players',
-        visibilityGmHint: 'GM whisper only, no Turn Tracker row',
+          "L'effet est réservé au GM : aucune ligne Turn Tracker ne sera créée. Le système de rappel le fera apparaître lorsque ce jeton atteindra le haut de l'ordre du tour.",
+        savedSnoozed: 'Rappel mis en attente : {scope}.',
+        savedSnoozeCleared: 'Snooze effacé.',
+        hiddenEffectsReminder: 'Les effets cachés sont actifs sur {name}.',
+        visibilityPublicHint: 'étiquette complète visible par tous',
+        visibilityMaskedHint: 'étiquette vague montrée aux joueurs',
+        visibilityGmHint: 'GM murmure uniquement, pas de ligne Turn Tracker',
       },
       removal: {
         conditionField: 'Condition',
@@ -6301,29 +7215,50 @@ const ConditionTrackerMod = (() => {
       },
       saved: {
         visibility: {
-          public: 'Public',
-          masked: 'Masked',
-          gm: 'GM Only',
+          public: 'Publique',
+          masked: 'Masqué',
+          gm: 'GM seulement',
         },
         snooze: {
-          thisTurn: 'This Turn',
-          oneRound: '1 Round',
-          threeRounds: '3 Rounds',
-          thisCombat: 'This Combat',
-          rounds: '{n} round(s)',
+          thisTurn: 'Ce tour',
+          oneRound: '1 tour',
+          threeRounds: '3 tours',
+          thisCombat: 'Ce combat',
+          rounds: '{n} tour(s)',
         },
         field: {
-          gmLabel: 'GM Label',
-          publicLabel: 'Public Label',
-          visibility: 'Visibility',
+          gmLabel: 'Étiquette GM',
+          publicLabel: 'Marque publique',
+          visibility: 'Visibilité',
           source: 'Source',
           condition: 'Condition',
         },
         prompt: {
-          enterGmLabel: 'Full effect description (GM only)',
-          enterPublicLabel: 'Vague label shown to players',
+          enterGmLabel: "Description complète de l'effet (GM uniquement)",
+          enterPublicLabel: 'Étiquette vague montrée aux joueurs',
         },
-        snoozed: 'snoozed',
+        snoozed: 'mis en veille',
+      },
+      classify: {
+        title: 'Classification des Acteurs',
+        showTitle: 'Diagnostic de Classification',
+        showHeading: 'Détails de Classification du Token',
+        resultHeading: 'Substitution Appliquée',
+        noSelection:
+          "Sélectionne au moins un token sur le plateau avant d'utiliser --classify.",
+        invalidType:
+          'Type de classification invalide : {type}. Utilise pc, npc, ignored ou auto.',
+        set: '{name} → {type} (portée : {scope})',
+        cleared:
+          '{name} substitution supprimée (portée : {scope}) — détection automatique restaurée.',
+        setTokenFallback:
+          '{name} → {type} (substitution de token — aucune fiche de personnage liée).',
+        clearedTokenFallback:
+          '{name} substitution de token supprimée — détection automatique restaurée.',
+        fieldToken: 'Jeton',
+        fieldType: 'Classification',
+        fieldSource: 'Source',
+        fieldReason: 'Raison',
       },
       cleanup: {
         orphaned: 'Entrées de condition orphelines',
@@ -6361,7 +7296,7 @@ const ConditionTrackerMod = (() => {
           ],
           [
             '!condition-tracker --report-token',
-            'Select one or more tokens first, then run this command to get a GM whisper listing every condition applied to and by each selected token. Also available as the ConditionTrackerReportToken macro.',
+            "Sélectionnez d'abord un ou plusieurs jetons, puis exécutez cette commande pour obtenir un murmure GM répertoriant toutes les conditions appliquées à et par chaque jeton sélectionné. Également disponible sous forme de macro ConditionTrackerReportToken.",
           ],
           [
             '!condition-tracker --menu',
@@ -6374,9 +7309,9 @@ const ConditionTrackerMod = (() => {
         colFlag: 'Option',
         colDesc: 'Description',
         rows: [
-          ['--prompt', 'Interface de l’assistant pas à pas'],
+          ['--rapide', 'Interface de l’assistant pas à pas'],
           [
-            '--multi-target',
+            '--multi-cible',
             'Appliquer une condition à plusieurs jetons cibles',
           ],
           [
@@ -6384,7 +7319,7 @@ const ConditionTrackerMod = (() => {
             'Afficher le menu principal (ajouter remove pour le menu de suppression)',
           ],
           [
-            '--source X --target Y --condition Z',
+            '--source X --cible Y --condition Z',
             'Appliquer une condition directement sans l’assistant',
           ],
           [
@@ -6404,29 +7339,41 @@ const ConditionTrackerMod = (() => {
             'Modifier les paramètres de configuration',
           ],
           [
-            '--prompt --subjectPromptBypass true|false',
+            '--prompt --subjectPromptBypass vrai|faux',
             'Remplacer subjectPromptBypass pour cette commande uniquement (prend aussi en charge --subject-prompt-bypass)',
           ],
           [
-            '--cleanup',
+            '--nettoyage',
             'Nettoyer l’état — supprimer les conditions et lignes orphelines',
           ],
           [
-            '--reorder-conditions',
+            '--conditions de réapprovisionnement',
             'Repositionner manuellement les lignes de condition après leurs jetons assignés dans l’ordre d’initiative',
           ],
-          ['--reinstall-macro', 'Recréer ou mettre à jour les macros MJ'],
+          ['--réinstaller-macro', 'Recréer ou mettre à jour les macros MJ'],
           [
-            '--reinstall-handout',
+            '--réinstaller-document',
             'Recréer ou mettre à jour le livret d’aide localisé',
           ],
           [
-            '--report-token',
-            'Whisper a GM-only condition report for each selected token (conditions applied to and by it)',
+            '--jeton de rapport',
+            'Chuchotez un rapport de condition réservé au GM pour chaque jeton sélectionné (conditions appliquées à et par celui-ci)',
           ],
           [
             '--lang &lt;locale&gt;',
             'Afficher les messages de cette commande dans une locale supplémentaire (mode bilingue)',
+          ],
+          [
+            '--classify pc|npc|ignored',
+            'Remplacer le type d’acteur pour les tokens sélectionnés — sélectionner d’abord les tokens. La portée par défaut est le personnage (écrit l’attribut ct_mod_actor_type) ; ajouter --scope token pour stocker dans l’état du script',
+          ],
+          [
+            '--classify auto',
+            'Supprimer la substitution du type d’acteur et restaurer la détection automatique pour les tokens sélectionnés',
+          ],
+          [
+            '--classify show',
+            'Chuchoter un diagnostic de classification pour chaque token sélectionné — montre le type détecté, la source de détection et la raison',
           ],
           ['--help', 'Afficher une carte d’aide rapide dans le chat'],
         ],
@@ -6437,8 +7384,8 @@ const ConditionTrackerMod = (() => {
       },
       customEffects: {
         heading: 'Types d’effets personnalisés',
-        colType: 'Type',
-        colNotes: 'Notes',
+        colType: 'Taper',
+        colNotes: 'Remarques',
         rows: [
           [
             '🔮 Sort',
@@ -6482,70 +7429,160 @@ const ConditionTrackerMod = (() => {
             'Expire à la fin du prochain tour du jeton source dans l’initiative',
           ],
           [
-            '1 / 2 / 3 / 10 rounds',
+            '1/2/3/10 tours',
             'Compte à rebours fixe ; un décrément par fin de tour du jeton ancre',
           ],
         ],
       },
       savedEffects: {
-        heading: 'Saved Effects',
+        heading: 'Effets enregistrés',
         intro:
-          'Saved effects let you store long-term conditions outside the Turn Tracker — curses, diseases, poisons, hidden debuffs, and other non-combat conditions. They persist in script state and can be optionally copied into the Turn Tracker when combat begins.',
+          "Les effets enregistrés vous permettent de stocker des conditions à long terme en dehors du Turn Tracker : malédictions, maladies, poisons, affaiblissements cachés et autres conditions hors combat. Ils persistent dans l'état de script et peuvent éventuellement être copiés dans le Turn Tracker lorsque le combat commence.",
         visibility: {
-          heading: 'Visibility Modes',
+          heading: 'Modes de visibilité',
           rows: [
             [
-              'public',
-              'Full effect label is visible in the Turn Tracker and public chat.',
+              'publique',
+              'L’étiquette d’effet complet est visible dans Turn Tracker et dans le chat public.',
             ],
             [
-              'masked',
-              'A vague public label is shown to players; full details are GM-only.',
+              'masqué',
+              'Une vague étiquette publique est montrée aux joueurs ; tous les détails sont réservés au GM.',
             ],
             [
               'gm',
-              'No Turn Tracker row. Full details are stored in state and whispered to the GM when the affected token reaches the top of initiative.',
+              "Aucune ligne Turn Tracker. Tous les détails sont stockés dans l'état et chuchotés au MJ lorsque le jeton concerné atteint le sommet de l'initiative.",
             ],
           ],
         },
         commands: {
-          heading: 'Saved Effects Commands',
+          heading: "Commandes d'effets enregistrés",
           intro:
-            'All --saved commands are GM-only. Select a token before running --saved or --saved add.',
+            "Toutes les commandes --saved sont réservées à GM. Sélectionnez un jeton avant d'exécuter --saved ou --saved add.",
           rows: [
             [
-              '!condition-tracker --saved',
-              'View saved effects for the selected token.',
+              '!condition-tracker --sauvé',
+              'Afficher les effets enregistrés pour le jeton sélectionné.',
             ],
             [
-              '!condition-tracker --saved add',
-              'Launch the add-saved-effect wizard.',
+              '!condition-tracker --ajout enregistré',
+              "Lancez l'assistant d'ajout d'effet enregistré.",
             ],
             [
               '!condition-tracker --saved edit <id>',
-              'Edit labels or visibility for an existing saved effect.',
+              "Modifiez les étiquettes ou la visibilité d'un effet enregistré existant.",
             ],
             [
               '!condition-tracker --saved remove <id>',
-              'Permanently remove a saved effect.',
+              'Supprimer définitivement un effet enregistré.',
             ],
             [
               '!condition-tracker --saved promote <id> --visibility public|masked|gm',
-              'Copy a saved effect into the Turn Tracker (public or masked) or confirm it is GM-only tracked.',
+              "Copiez un effet enregistré dans le Turn Tracker (public ou masqué) ou confirmez qu'il est suivi uniquement par GM.",
             ],
             [
               '!condition-tracker --saved snooze <id> --scope turn|rounds|combat --rounds <n>',
-              'Snooze a GM reminder for this turn, N rounds, or this combat.',
+              'Répétez un rappel de MJ pour ce tour, N rounds ou ce combat.',
             ],
             [
               '!condition-tracker --saved snooze-clear <id>',
-              'Clear an active snooze so reminders resume immediately.',
+              'Supprimez une répétition active pour que les rappels reprennent immédiatement.',
             ],
           ],
         },
         reminders: {
-          heading: 'GM Reminders',
-          body: 'When a token with gm or masked saved effects reaches the top of the Turn Tracker, the GM receives a whisper listing the hidden effects with action buttons. Duplicate reminders within the same turn are suppressed. Use the Snooze buttons to suppress reminders for a turn, a number of rounds, or for the remainder of the current combat.',
+          heading: 'Rappels du directeur général',
+          body: "Lorsqu'un jeton avec un GM ou des effets masqués enregistrés atteint le haut du Turn Tracker, le GM reçoit un murmure répertoriant les effets cachés avec des boutons d'action. Les rappels en double au cours du même tour sont supprimés. Utilisez les boutons Snooze pour supprimer les rappels pour un tour, un certain nombre de rounds ou pour le reste du combat en cours.",
+        },
+      },
+      actorClassification: {
+        heading: 'Classification des Acteurs',
+        intro:
+          "Condition Tracker détermine automatiquement si chaque token est un PJ, PNJ ou un objet ignoré (épingles de carte, décors, gabarits de sort). Les tokens non liés sont ignorés par défaut. Utilise --classify pour remplacer la détection automatique pour n'importe quel token.",
+        detectionOrder: {
+          heading: 'Ordre de Détection',
+          colStep: 'Étape',
+          colCheck: 'Vérification',
+          colResult: 'Résultat',
+          rows: [
+            [
+              '1',
+              "Substitution d'état du token (--classify --scope token)",
+              'pc / npc / ignoré',
+            ],
+            [
+              '2',
+              'Attribut ct_mod_actor_type du personnage (--classify --scope character)',
+              'pc / npc / ignoré',
+            ],
+            ['3', 'Token non lié — aucune fiche de personnage', 'ignoré'],
+            [
+              '4',
+              'Adaptateur de système de jeu (attribut npc / is_npc)',
+              'PC / PNJ',
+            ],
+            [
+              '5',
+              "Scan d'attributs NPC génériques (npc, is_npc, npcflag, sheet_type, character_type)",
+              'PC / PNJ',
+            ],
+            ['6', 'Repli controlledby du personnage', 'PC / PNJ'],
+          ],
+        },
+        types: {
+          heading: 'Types de Classification',
+          colType: 'Taper',
+          colMeaning: 'Signification',
+          rows: [
+            [
+              'ordinateur',
+              "Personnage joueur — toujours inclus comme PJ dans l'assistant et la détection",
+            ],
+            ['PNJ', 'Personnage non joueur — toujours inclus comme PNJ'],
+            [
+              'ignoré',
+              "Jamais affiché ni suivi — exclu du sélecteur de tokens de l'assistant",
+            ],
+            [
+              'inconnu',
+              "Détection automatique uniquement ; type indéterminé (traité comme PNJ dans l'assistant)",
+            ],
+          ],
+        },
+        commands: {
+          heading: 'Commandes de Classification',
+          intro:
+            "Sélectionne un ou plusieurs tokens avant d'exécuter les commandes --classify.",
+          rows: [
+            [
+              '!condition-tracker --classify pc',
+              'Marquer les tokens sélectionnés comme PJ (portée personnage par défaut).',
+            ],
+            [
+              '!condition-tracker --classify npc',
+              'Marquer les tokens sélectionnés comme PNJ.',
+            ],
+            [
+              '!condition-tracker --classify ignoré',
+              'Exclure les tokens sélectionnés de tout suivi.',
+            ],
+            [
+              '!condition-tracker --classifier automatiquement',
+              'Supprimer la substitution — restaurer la détection automatique.',
+            ],
+            [
+              '!condition-tracker --classify afficher',
+              'Afficher le diagnostic de classification (type, source, raison) pour chaque token sélectionné.',
+            ],
+            [
+              '!condition-tracker --classify pc --scope jeton',
+              "Substitution au niveau du token dans l'état du script — utile pour les tokens non liés.",
+            ],
+            [
+              '!condition-tracker --classify pc --scope caractère',
+              "Substitution au niveau du personnage dans l'attribut ct_mod_actor_type — s'applique à tous les tokens partageant la même fiche.",
+            ],
+          ],
         },
       },
       configuration: {
@@ -6563,17 +7600,17 @@ const ConditionTrackerMod = (() => {
           ],
           [
             'useIcons',
-            'true / false',
+            'vrai / faux',
             'Afficher des codes d’icônes courts (ex. [G]) dans les lignes du suivi d’initiative',
           ],
           [
             'subjectPromptBypass',
-            'true / false',
+            'vrai / faux',
             'Ignorer l’étape sujet optionnelle pour les effets Sort / Capacité / Autre',
           ],
           [
             'suppressPublicChat',
-            'true / false',
+            'vrai / faux',
             'Supprimer toutes les annonces publiques de chat (messages d’application et de suppression). Les chuchotements du MJ ne sont pas affectés.',
           ],
           [
@@ -6602,7 +7639,7 @@ const ConditionTrackerMod = (() => {
         heading: 'Traductions disponibles',
         intro:
           "Utilisez l'option de configuration language pour définir les messages de chat et le livret d'aide sur n'importe quelle locale prise en charge. Les alias courts sont également acceptés pour en, zh et pt.",
-        colLocale: 'Locale',
+        colLocale: 'Lieu',
         colLanguage: 'Langue',
         colFile: 'Fichier de traduction',
       },
@@ -6719,8 +7756,9 @@ const ConditionTrackerMod = (() => {
         advantage: '{source} hat Vorteil gegen {target}{subject}.',
         disadvantage: '{source} hat Nachteil gegen {target}{subject}.',
         self: '{target} ist {past}.',
-        withSuffix: '{source} {verb} {target} {suffix}.',
-        standard: '{source} {verb} {target}.',
+        withSuffix:
+          'PLATZHALTER0TOKEN PLATZHALTER1TOKEN PLATZHALTER2TOKEN PLATZHALTER3TOKEN.',
+        standard: 'PLATZHALTER0TOKEN PLATZHALTER1TOKEN PLATZHALTER2TOKEN.',
       },
       remove: {
         custom: '{target} ist nicht mehr von {effect} betroffen.',
@@ -6775,8 +7813,8 @@ const ConditionTrackerMod = (() => {
         details: 'Details',
         description: 'Beschreibung',
         scenario: 'Szenario',
-        gameSystem: 'Game System',
-        duration: 'Duration',
+        gameSystem: 'Spielsystem',
+        duration: 'Dauer',
       },
       dur: {
         untilRemoved: 'Bis zur Entfernung',
@@ -6801,14 +7839,14 @@ const ConditionTrackerMod = (() => {
         reinstallHandout: 'Handout neu installieren',
         showHelp: 'Hilfe anzeigen',
         reorderConditions: 'Bedingungszeilen neu anordnen',
-        reportToken: 'Report Token Conditions',
-        savedEffects: 'Saved Effects',
-        addSavedEffect: 'Add Saved Effect',
-        editSaved: 'Edit',
-        removeSaved: 'Remove',
-        promoteSaved: 'Add to Turn Tracker',
-        snoozeSaved: 'Snooze',
-        clearSnooze: 'Clear Snooze',
+        reportToken: 'Token-Bedingungen melden',
+        savedEffects: 'Gespeicherte Effekte',
+        addSavedEffect: 'Gespeicherten Effekt hinzufügen',
+        editSaved: 'Bearbeiten',
+        removeSaved: 'Entfernen',
+        promoteSaved: 'Zum Turn Tracker hinzufügen',
+        snoozeSaved: 'Schlummern',
+        clearSnooze: 'Schlummerfunktion löschen',
       },
       title: {
         menu: 'Menü',
@@ -6819,8 +7857,7 @@ const ConditionTrackerMod = (() => {
         applied: 'Angewendet',
         removed: 'Zustand entfernt',
         cleanup: 'Bereinigung abgeschlossen',
-        macroReinstalled:
-          'The {wizard}, {multiTarget}, {reportToken}, and {saved} macros have been reinstalled for all current GM players.',
+        macroReinstalled: 'Makro neu installiert',
         handoutReinstalled: 'Handout neu installiert',
         warning: 'Warnung',
         error: 'Fehler',
@@ -6832,15 +7869,15 @@ const ConditionTrackerMod = (() => {
         moveToken: '{name} — Token verschieben?',
         scriptReady: 'Skript bereit',
         conditionReorder: 'Rundenreihenfolge geändert',
-        tokenReport: 'Token Condition Report',
-        savedEffects: 'Saved Effects',
-        savedAdd: 'Add Saved Effect',
-        savedEdit: 'Edit Saved Effect',
-        savedRemoved: 'Saved Effect Removed',
-        savedPromoted: 'Add to Turn Tracker',
-        savedSnoozed: 'Reminder Snoozed',
-        savedSnoozeCleared: 'Snooze Cleared',
-        hiddenEffects: 'Hidden Effects — {name}',
+        tokenReport: 'Token-Zustandsbericht',
+        savedEffects: 'Gespeicherte Effekte',
+        savedAdd: 'Gespeicherten Effekt hinzufügen',
+        savedEdit: 'Gespeicherten Effekt bearbeiten',
+        savedRemoved: 'Gespeicherter Effekt entfernt',
+        savedPromoted: 'Zum Turn Tracker hinzufügen',
+        savedSnoozed: 'Erinnerung im Schlummermodus',
+        savedSnoozeCleared: 'Schlummerfunktion gelöscht',
+        hiddenEffects: 'Versteckte Effekte – {name}',
       },
       heading: {
         quickActions: 'Schnellaktionen',
@@ -6852,13 +7889,13 @@ const ConditionTrackerMod = (() => {
         promptUi: 'Assistent-Oberfläche',
         examples: 'Beispiele',
         summary: 'Zusammenfassung',
-        appliedTo: 'Conditions Applied To',
-        appliedBy: 'Conditions Applied By',
-        savedEffectsFor: 'Saved Effects for {name}',
-        visibility: 'Visibility',
-        snoozeOptions: 'Snooze Reminder',
-        promoteOptions: 'Promote to Turn Tracker',
-        editActions: 'Edit Actions',
+        appliedTo: 'Bedingungen, auf die zugegriffen wird',
+        appliedBy: 'Es gelten die Bedingungen von',
+        savedEffectsFor: 'Gespeicherte Effekte für {name}',
+        visibility: 'Sichtweite',
+        snoozeOptions: 'Schlummererinnerung',
+        promoteOptions: 'Zum Turn Tracker hochstufen',
+        editActions: 'Aktionen bearbeiten',
       },
       msg: {
         noActive: 'Es werden keine aktiven Zustände verfolgt.',
@@ -6866,7 +7903,7 @@ const ConditionTrackerMod = (() => {
         unknownConfig:
           'Unbekannte Konfigurationsoption. Verwende --config, um unterstützte Einstellungen anzuzeigen.',
         macroReinstalled:
-          'Die Makros {wizard}, {multiTarget} und {reportToken} wurden für alle aktuellen GM-Spieler neu installiert.',
+          'Die Makros {wizard}, {multiTarget}, {reportToken}, {saved} und {classify} wurden für alle aktuellen GM-Spieler neu installiert.',
         handoutReinstalled:
           'Das Hilfe-Handout {handout} wurde neu installiert.',
         duplicate:
@@ -6944,32 +7981,35 @@ const ConditionTrackerMod = (() => {
         conditionsReordered:
           'Bedingungszeilen wurden hinter ihre zugewiesenen Tokens verschoben.',
         noTokensSelectedReport:
-          'Select at least one token on the board before using --report-token.',
-        noConditionsAppliedTo: '{name} has no active conditions applied to it.',
+          'Wählen Sie mindestens einen Token auf der Tafel aus, bevor Sie --report-token verwenden.',
+        noConditionsAppliedTo:
+          'Auf {name} wurden keine aktiven Bedingungen angewendet.',
         noConditionsAppliedBy:
-          '{name} has no active conditions applied to others.',
-        noSavedEffects: 'No saved effects stored for {name}.',
+          'Für {name} gelten keine aktiven Bedingungen für andere.',
+        noSavedEffects: 'Keine gespeicherten Effekte für {name} gespeichert.',
         noTokenSelectedSaved:
-          'Select a token on the board before using --saved.',
-        savedEffectAdded: 'Saved effect added for {name}.',
-        savedEffectUpdated: 'Saved effect updated.',
-        savedEffectRemoved: 'Saved effect removed.',
-        savedEffectNotFound: 'Saved effect not found.',
+          'Wählen Sie einen Token auf der Tafel aus, bevor Sie --saved verwenden.',
+        savedEffectAdded: 'Gespeicherter Effekt für {name} hinzugefügt.',
+        savedEffectUpdated: 'Gespeicherter Effekt aktualisiert.',
+        savedEffectRemoved: 'Gespeicherter Effekt entfernt.',
+        savedEffectNotFound: 'Gespeicherter Effekt nicht gefunden.',
         savedInvalidVisibility:
-          'Invalid visibility. Use public, masked, or gm.',
+          'Ungültige Sichtbarkeit. Verwenden Sie „public“, „masked“ oder „gm“.',
         savedConditionRequired:
           'Condition type is required. Use --condition <type>.',
-        savedPromotedPublic: 'Effect added to Turn Tracker as public.',
+        savedPromotedPublic:
+          'Effekt als öffentlich zum Turn Tracker hinzugefügt.',
         savedPromotedMasked:
-          'Effect added to Turn Tracker as masked — players see: {publicLabel}.',
+          'Effekt als maskiert zum Turn Tracker hinzugefügt – Spieler sehen: {publicLabel}.',
         savedPromotedGm:
-          'Effect is GM-only — no Turn Tracker row will be created. The reminder system will surface it when this token reaches the top of the turn order.',
-        savedSnoozed: 'Reminder snoozed: {scope}.',
-        savedSnoozeCleared: 'Snooze cleared.',
-        hiddenEffectsReminder: 'Hidden effects are active on {name}.',
-        visibilityPublicHint: 'full label visible to all',
-        visibilityMaskedHint: 'vague label shown to players',
-        visibilityGmHint: 'GM whisper only, no Turn Tracker row',
+          'Der Effekt gilt nur für GM – es wird keine Turn-Tracker-Zeile erstellt. Das Erinnerungssystem zeigt es an, wenn dieser Spielstein die Spitze der Zugreihenfolge erreicht.',
+        savedSnoozed: 'Erinnerung zurückgestellt: {scope}.',
+        savedSnoozeCleared: 'Schlummerfunktion gelöscht.',
+        hiddenEffectsReminder: 'Versteckte Effekte sind am {name} aktiv.',
+        visibilityPublicHint: 'Vollständiges Etikett für alle sichtbar',
+        visibilityMaskedHint:
+          'Den Spielern wird eine vage Beschriftung angezeigt',
+        visibilityGmHint: 'Nur GM-Flüstern, keine Turn-Tracker-Reihe',
       },
       removal: {
         conditionField: 'Zustand',
@@ -6985,29 +8025,51 @@ const ConditionTrackerMod = (() => {
       },
       saved: {
         visibility: {
-          public: 'Public',
-          masked: 'Masked',
-          gm: 'GM Only',
+          public: 'Öffentlich',
+          masked: 'Maskiert',
+          gm: 'Nur GM',
         },
         snooze: {
-          thisTurn: 'This Turn',
-          oneRound: '1 Round',
-          threeRounds: '3 Rounds',
-          thisCombat: 'This Combat',
-          rounds: '{n} round(s)',
+          thisTurn: 'Diese Runde',
+          oneRound: '1 Runde',
+          threeRounds: '3 Runden',
+          thisCombat: 'Dieser Kampf',
+          rounds: '{n} Runde(n)',
         },
         field: {
-          gmLabel: 'GM Label',
-          publicLabel: 'Public Label',
-          visibility: 'Visibility',
-          source: 'Source',
-          condition: 'Condition',
+          gmLabel: 'GM-Label',
+          publicLabel: 'Öffentliches Label',
+          visibility: 'Sichtweite',
+          source: 'Quelle',
+          condition: 'Zustand',
         },
         prompt: {
-          enterGmLabel: 'Full effect description (GM only)',
-          enterPublicLabel: 'Vague label shown to players',
+          enterGmLabel: 'Vollständige Effektbeschreibung (nur GM)',
+          enterPublicLabel:
+            'Den Spielern wird eine vage Beschriftung angezeigt',
         },
-        snoozed: 'snoozed',
+        snoozed: 'schlief',
+      },
+      classify: {
+        title: 'Akteur-Klassifizierung',
+        showTitle: 'Klassifizierungsdiagnose',
+        showHeading: 'Token-Klassifizierungsdetails',
+        resultHeading: 'Überschreibung angewendet',
+        noSelection:
+          'Wähle vor der Verwendung von --classify mindestens ein Token aus.',
+        invalidType:
+          'Ungültiger Klassifizierungstyp: {type}. Verwende pc, npc, ignored oder auto.',
+        set: '{name} → {type} (Bereich: {scope})',
+        cleared:
+          '{name} Überschreibung gelöscht (Bereich: {scope}) — automatische Erkennung wiederhergestellt.',
+        setTokenFallback:
+          '{name} → {type} (Token-Überschreibung — kein Charakterbogen verknüpft).',
+        clearedTokenFallback:
+          '{name} Token-Überschreibung gelöscht — automatische Erkennung wiederhergestellt.',
+        fieldToken: 'Token',
+        fieldType: 'Klassifizierung',
+        fieldSource: 'Quelle',
+        fieldReason: 'Grund',
       },
       cleanup: {
         orphaned: 'Verwaiste Zustandseinträge',
@@ -7045,7 +8107,7 @@ const ConditionTrackerMod = (() => {
           ],
           [
             '!condition-tracker --report-token',
-            'Select one or more tokens first, then run this command to get a GM whisper listing every condition applied to and by each selected token. Also available as the ConditionTrackerReportToken macro.',
+            'Wählen Sie zuerst einen oder mehrere Token aus und führen Sie dann diesen Befehl aus, um eine GM-Flüstermeldung zu erhalten, in der alle Bedingungen aufgeführt sind, die auf und von jedem ausgewählten Token angewendet werden. Auch als ConditionTrackerReportToken-Makro verfügbar.',
           ],
           [
             '!condition-tracker --menu',
@@ -7061,7 +8123,7 @@ const ConditionTrackerMod = (() => {
           ['--prompt', 'Schritt-für-Schritt-Assistent-Oberfläche'],
           ['--multi-target', 'Zustand auf mehrere Ziel-Tokens anwenden'],
           [
-            '--menu',
+            '--Speisekarte',
             'Hauptmenü anzeigen (remove für Entfernungsmenü hinzufügen)',
           ],
           [
@@ -7103,11 +8165,23 @@ const ConditionTrackerMod = (() => {
           ],
           [
             '--report-token',
-            'Whisper a GM-only condition report for each selected token (conditions applied to and by it)',
+            'Flüstern Sie einen Nur-GM-Zustandsbericht für jeden ausgewählten Token (auf ihn angewendete und von ihm angewendete Bedingungen)',
           ],
           [
             '--lang &lt;Locale&gt;',
             'Nachrichten dieses Befehls in einer zusätzlichen Locale ausgeben (zweisprachiger Modus)',
+          ],
+          [
+            '--classify pc|npc|ignored',
+            'Akteurtyp für ausgewählte Tokens überschreiben — zuerst Token auswählen. Standardbereich ist Charakter (schreibt ct_mod_actor_type-Attribut); --scope token hinzufügen, um stattdessen im Skriptstatus zu speichern',
+          ],
+          [
+            '--classify auto',
+            'Akteurtyp-Überschreibung entfernen und automatische Erkennung für ausgewählte Tokens wiederherstellen',
+          ],
+          [
+            '--classify show',
+            'Klassifizierungsdiagnose für jedes ausgewählte Token einflüstern — zeigt erkannten Typ, Erkennungsquelle und Grund',
           ],
           ['--help', 'Kurze Hilfekarte im Chat anzeigen'],
         ],
@@ -7169,64 +8243,150 @@ const ConditionTrackerMod = (() => {
         ],
       },
       savedEffects: {
-        heading: 'Saved Effects',
+        heading: 'Gespeicherte Effekte',
         intro:
-          'Saved effects let you store long-term conditions outside the Turn Tracker — curses, diseases, poisons, hidden debuffs, and other non-combat conditions. They persist in script state and can be optionally copied into the Turn Tracker when combat begins.',
+          'Mit gespeicherten Effekten können Sie langfristige Zustände außerhalb des Turn Trackers speichern – Flüche, Krankheiten, Gifte, versteckte Schwächungen und andere nicht kampfbezogene Zustände. Sie verbleiben im Skriptstatus und können optional in den Turn Tracker kopiert werden, wenn der Kampf beginnt.',
         visibility: {
-          heading: 'Visibility Modes',
+          heading: 'Sichtbarkeitsmodi',
           rows: [
             [
-              'public',
-              'Full effect label is visible in the Turn Tracker and public chat.',
+              'öffentlich',
+              'Die vollständige Effektbezeichnung ist im Turn Tracker und im öffentlichen Chat sichtbar.',
             ],
             [
-              'masked',
-              'A vague public label is shown to players; full details are GM-only.',
+              'maskiert',
+              'Den Spielern wird ein vages öffentliches Label angezeigt; Alle Details sind nur für GM verfügbar.',
             ],
             [
-              'gm',
-              'No Turn Tracker row. Full details are stored in state and whispered to the GM when the affected token reaches the top of initiative.',
+              'GM',
+              'Keine Turn-Tracker-Reihe. Alle Details werden im Status gespeichert und an den GM geflüstert, wenn der betroffene Spielstein die Spitze der Initiative erreicht.',
             ],
           ],
         },
         commands: {
-          heading: 'Saved Effects Commands',
+          heading: 'Gespeicherte Effektbefehle',
           intro:
-            'All --saved commands are GM-only. Select a token before running --saved or --saved add.',
+            'Alle --saved-Befehle sind nur GM. Wählen Sie ein Token aus, bevor Sie --saved oder --saved add ausführen.',
           rows: [
             [
               '!condition-tracker --saved',
-              'View saved effects for the selected token.',
+              'Gespeicherte Effekte für das ausgewählte Token anzeigen.',
             ],
             [
               '!condition-tracker --saved add',
-              'Launch the add-saved-effect wizard.',
+              'Starten Sie den Assistenten zum Hinzufügen gespeicherter Effekte.',
             ],
             [
               '!condition-tracker --saved edit <id>',
-              'Edit labels or visibility for an existing saved effect.',
+              'Bearbeiten Sie Beschriftungen oder Sichtbarkeit für einen vorhandenen gespeicherten Effekt.',
             ],
             [
               '!condition-tracker --saved remove <id>',
-              'Permanently remove a saved effect.',
+              'Einen gespeicherten Effekt dauerhaft entfernen.',
             ],
             [
               '!condition-tracker --saved promote <id> --visibility public|masked|gm',
-              'Copy a saved effect into the Turn Tracker (public or masked) or confirm it is GM-only tracked.',
+              'Kopieren Sie einen gespeicherten Effekt in den Turn Tracker (öffentlich oder maskiert) oder bestätigen Sie, dass er nur von GM verfolgt wird.',
             ],
             [
               '!condition-tracker --saved snooze <id> --scope turn|rounds|combat --rounds <n>',
-              'Snooze a GM reminder for this turn, N rounds, or this combat.',
+              'Schalten Sie eine GM-Erinnerung für diesen Zug, N Runden oder diesen Kampf aus.',
             ],
             [
               '!condition-tracker --saved snooze-clear <id>',
-              'Clear an active snooze so reminders resume immediately.',
+              'Löschen Sie eine aktive Schlummerfunktion, damit die Erinnerungen sofort fortgesetzt werden.',
             ],
           ],
         },
         reminders: {
-          heading: 'GM Reminders',
-          body: 'When a token with gm or masked saved effects reaches the top of the Turn Tracker, the GM receives a whisper listing the hidden effects with action buttons. Duplicate reminders within the same turn are suppressed. Use the Snooze buttons to suppress reminders for a turn, a number of rounds, or for the remainder of the current combat.',
+          heading: 'GM-Erinnerungen',
+          body: 'Wenn ein Spielstein mit GM oder maskierten gespeicherten Effekten den oberen Rand des Spielzug-Trackers erreicht, erhält der GM ein Flüstern, das die versteckten Effekte mit Aktionsschaltflächen auflistet. Doppelte Erinnerungen innerhalb derselben Runde werden unterdrückt. Verwenden Sie die Snooze-Tasten, um Erinnerungen für eine Runde, mehrere Runden oder für den Rest des aktuellen Kampfes zu unterdrücken.',
+        },
+      },
+      actorClassification: {
+        heading: 'Akteur-Klassifizierung',
+        intro:
+          'Condition Tracker erkennt automatisch, ob ein Token ein SC, NSC oder ein ignoriertes Objekt (Kartenpins, Kulissen, Zaubertemplates) ist. Nicht verknüpfte Tokens werden standardmäßig ignoriert. Verwende --classify, um die automatische Erkennung für beliebige Tokens zu überschreiben.',
+        detectionOrder: {
+          heading: 'Erkennungsreihenfolge',
+          colStep: 'Schritt',
+          colCheck: 'Prüfung',
+          colResult: 'Ergebnis',
+          rows: [
+            [
+              '1',
+              'Token-Zustandsüberschreibung (--classify --scope token)',
+              'PC / NPC / ignoriert',
+            ],
+            [
+              '2',
+              'Charakter ct_mod_actor_type-Attribut (--classify --scope character)',
+              'PC / NPC / ignoriert',
+            ],
+            ['3', 'Nicht verknüpftes Token — kein Charakterbogen', 'ignoriert'],
+            ['4', 'Spielsystem-Adapter (npc / is_npc Attribut)', 'PC / NPC'],
+            [
+              '5',
+              'Generische NSC-Attributsuche (npc, is_npc, npcflag, sheet_type, character_type)',
+              'PC / NPC',
+            ],
+            ['6', 'Charakter controlledby-Fallback', 'PC / NPC'],
+          ],
+        },
+        types: {
+          heading: 'Klassifizierungstypen',
+          colType: 'Typ',
+          colMeaning: 'Bedeutung',
+          rows: [
+            [
+              'Stk',
+              'Spielercharakter — immer als SC im Assistenten und bei der Erkennung',
+            ],
+            ['NPC', 'Nicht-Spieler-Charakter — immer als NSC'],
+            [
+              'ignoriert',
+              'Wird nie angezeigt oder verfolgt — aus dem Token-Picker des Assistenten ausgeschlossen',
+            ],
+            [
+              'unbekannt',
+              'Nur automatisch erkannt; Typ konnte nicht bestimmt werden (als NSC im Assistenten behandelt)',
+            ],
+          ],
+        },
+        commands: {
+          heading: 'Klassifizierungsbefehle',
+          intro:
+            'Wähle ein oder mehrere Tokens aus, bevor du --classify-Befehle verwendest.',
+          rows: [
+            [
+              '!condition-tracker --classify pc',
+              'Ausgewählte Tokens als SCs markieren (Standardbereich: Charakter).',
+            ],
+            [
+              '!condition-tracker --classify npc',
+              'Ausgewählte Tokens als NSCs markieren.',
+            ],
+            [
+              '!condition-tracker --classify ignoriert',
+              'Ausgewählte Tokens von der gesamten Verfolgung ausschließen.',
+            ],
+            [
+              '!condition-tracker --classify auto',
+              'Überschreibung entfernen — automatische Erkennung wiederherstellen.',
+            ],
+            [
+              '!condition-tracker --classify show',
+              'Klassifizierungsdiagnose (Typ, Quelle, Grund) für jedes ausgewählte Token anzeigen.',
+            ],
+            [
+              '!condition-tracker --classify pc --scope token',
+              'Token-Ebenen-Überschreibung im Skriptstatus — nützlich für nicht verknüpfte Tokens.',
+            ],
+            [
+              '!condition-tracker --classify pc --scope Zeichen',
+              'Charakter-Ebenen-Überschreibung in das ct_mod_actor_type-Attribut — gilt für alle Tokens mit demselben Charakterbogen.',
+            ],
+          ],
         },
       },
       configuration: {
@@ -7244,17 +8404,17 @@ const ConditionTrackerMod = (() => {
           ],
           [
             'useIcons',
-            'true / false',
+            'wahr / falsch',
             'Kurze Symbolcodes (z. B. [G]) statt Emojis in Rundentracker-Zeilen anzeigen',
           ],
           [
             'subjectPromptBypass',
-            'true / false',
+            'wahr / falsch',
             'Den optionalen Subjektschritt für Zauber / Fähigkeit / Sonstiges überspringen',
           ],
           [
             'suppressPublicChat',
-            'true / false',
+            'wahr / falsch',
             'Alle öffentlichen Chat-Ankündigungen (Hinzufügen und Entfernen) unterdrücken. GM-Flüstermeldungen sind nicht betroffen.',
           ],
           [
@@ -7283,7 +8443,7 @@ const ConditionTrackerMod = (() => {
         heading: 'Verfügbare Übersetzungen',
         intro:
           'Verwende die Konfigurationsoption language, um Chat-Nachrichten und das Hilfe-Handout auf eine unterstützte Locale einzustellen. Kurze Aliase werden auch für en, zh und pt akzeptiert.',
-        colLocale: 'Locale',
+        colLocale: 'Gebietsschema',
         colLanguage: 'Sprache',
         colFile: 'Übersetzungsdatei',
       },
@@ -7458,8 +8618,8 @@ const ConditionTrackerMod = (() => {
         details: 'Λεπτομέρειες',
         description: 'Περιγραφή',
         scenario: 'Σενάριο',
-        gameSystem: 'Game System',
-        duration: 'Duration',
+        gameSystem: 'Σύστημα παιχνιδιού',
+        duration: 'Διάρκεια',
       },
       dur: {
         untilRemoved: 'Μέχρι αφαίρεσης',
@@ -7484,14 +8644,14 @@ const ConditionTrackerMod = (() => {
         reinstallHandout: 'Επανεγκατάσταση Handout',
         showHelp: 'Εμφάνιση Βοήθειας',
         reorderConditions: 'Αναδιάταξη Σειρών Κατάστασης',
-        reportToken: 'Report Token Conditions',
-        savedEffects: 'Saved Effects',
-        addSavedEffect: 'Add Saved Effect',
-        editSaved: 'Edit',
-        removeSaved: 'Remove',
-        promoteSaved: 'Add to Turn Tracker',
-        snoozeSaved: 'Snooze',
-        clearSnooze: 'Clear Snooze',
+        reportToken: 'Αναφορά Προϋποθέσεων Token',
+        savedEffects: 'Αποθηκευμένα εφέ',
+        addSavedEffect: 'Προσθήκη Αποθηκευμένου Εφέ',
+        editSaved: 'Εκδίδω',
+        removeSaved: 'Αφαιρώ',
+        promoteSaved: 'Προσθήκη στο Turn Tracker',
+        snoozeSaved: 'Υπνάκος',
+        clearSnooze: 'Εκκαθάριση αναβολής',
       },
       title: {
         menu: 'Μενού',
@@ -7502,8 +8662,7 @@ const ConditionTrackerMod = (() => {
         applied: 'Εφαρμόστηκε',
         removed: 'Κατάσταση Αφαιρέθηκε',
         cleanup: 'Εκκαθάριση Ολοκληρώθηκε',
-        macroReinstalled:
-          'The {wizard}, {multiTarget}, {reportToken}, and {saved} macros have been reinstalled for all current GM players.',
+        macroReinstalled: 'Macro Επανεγκαταστάθηκε',
         handoutReinstalled: 'Το Handout Επανεγκαταστάθηκε',
         warning: 'Προειδοποίηση',
         error: 'Σφάλμα',
@@ -7515,15 +8674,15 @@ const ConditionTrackerMod = (() => {
         moveToken: '{name} — Μετακίνηση Token;',
         scriptReady: 'Το Script Είναι Έτοιμο',
         conditionReorder: 'Η Σειρά Πρωτοβουλίας Άλλαξε',
-        tokenReport: 'Token Condition Report',
-        savedEffects: 'Saved Effects',
-        savedAdd: 'Add Saved Effect',
-        savedEdit: 'Edit Saved Effect',
-        savedRemoved: 'Saved Effect Removed',
-        savedPromoted: 'Add to Turn Tracker',
-        savedSnoozed: 'Reminder Snoozed',
-        savedSnoozeCleared: 'Snooze Cleared',
-        hiddenEffects: 'Hidden Effects — {name}',
+        tokenReport: 'Αναφορά κατάστασης διακριτικού',
+        savedEffects: 'Αποθηκευμένα εφέ',
+        savedAdd: 'Προσθήκη Αποθηκευμένου Εφέ',
+        savedEdit: 'Επεξεργασία αποθηκευμένου εφέ',
+        savedRemoved: 'Το αποθηκευμένο εφέ καταργήθηκε',
+        savedPromoted: 'Προσθήκη στο Turn Tracker',
+        savedSnoozed: 'Η υπενθύμιση αναβλήθηκε',
+        savedSnoozeCleared: 'Η αναβολή διαγράφηκε',
+        hiddenEffects: 'Κρυφά εφέ — {name}',
       },
       heading: {
         quickActions: 'Γρήγορες Ενέργειες',
@@ -7535,13 +8694,13 @@ const ConditionTrackerMod = (() => {
         promptUi: 'Διεπαφή Οδηγού',
         examples: 'Παραδείγματα',
         summary: 'Σύνοψη',
-        appliedTo: 'Conditions Applied To',
-        appliedBy: 'Conditions Applied By',
-        savedEffectsFor: 'Saved Effects for {name}',
-        visibility: 'Visibility',
-        snoozeOptions: 'Snooze Reminder',
-        promoteOptions: 'Promote to Turn Tracker',
-        editActions: 'Edit Actions',
+        appliedTo: 'Όροι που ισχύουν για',
+        appliedBy: 'Όροι που ισχύουν από',
+        savedEffectsFor: 'Αποθηκευμένα εφέ για {name}',
+        visibility: 'Ορατότητα',
+        snoozeOptions: 'Αναβολή υπενθύμισης',
+        promoteOptions: 'Προώθηση στο Turn Tracker',
+        editActions: 'Επεξεργασία ενεργειών',
       },
       msg: {
         noActive: 'Δεν παρακολουθούνται ενεργές καταστάσεις.',
@@ -7549,7 +8708,7 @@ const ConditionTrackerMod = (() => {
         unknownConfig:
           'Άγνωστη επιλογή ρύθμισης. Χρησιμοποιήστε --config για να δείτε τις υποστηριζόμενες ρυθμίσεις.',
         macroReinstalled:
-          'Τα macros {wizard}, {multiTarget} και {reportToken} επανεγκαταστάθηκαν για όλους τους τρέχοντες παίκτες-DM.',
+          'Τα macros {wizard}, {multiTarget}, {reportToken}, {saved} και {classify} επανεγκαταστάθηκαν για όλους τους τρέχοντες παίκτες-DM.',
         handoutReinstalled: 'Το handout βοήθειας {handout} επανεγκαταστάθηκε.',
         duplicate:
           'Αυτός ακριβώς ο συνδυασμός πηγής, υποκειμένου, στόχου, κατάστασης και προσαρμοσμένου κειμένου είναι ήδη ενεργός.',
@@ -7624,32 +8783,32 @@ const ConditionTrackerMod = (() => {
         conditionsReordered:
           'Οι σειρές κατάστασης επανατοποθετήθηκαν μετά τα αντίστοιχα tokens.',
         noTokensSelectedReport:
-          'Select at least one token on the board before using --report-token.',
-        noConditionsAppliedTo: '{name} has no active conditions applied to it.',
+          'Επιλέξτε τουλάχιστον ένα διακριτικό στον πίνακα πριν χρησιμοποιήσετε το --report-token.',
+        noConditionsAppliedTo: 'Το {name} δεν έχει ενεργές συνθήκες.',
         noConditionsAppliedBy:
-          '{name} has no active conditions applied to others.',
-        noSavedEffects: 'No saved effects stored for {name}.',
+          'Ο {name} δεν έχει ενεργές συνθήκες που να ισχύουν για άλλους.',
+        noSavedEffects: 'Δεν έχουν αποθηκευτεί αποθηκευμένα εφέ για {name}.',
         noTokenSelectedSaved:
-          'Select a token on the board before using --saved.',
-        savedEffectAdded: 'Saved effect added for {name}.',
-        savedEffectUpdated: 'Saved effect updated.',
-        savedEffectRemoved: 'Saved effect removed.',
-        savedEffectNotFound: 'Saved effect not found.',
+          'Επιλέξτε ένα διακριτικό στον πίνακα πριν χρησιμοποιήσετε το --saved.',
+        savedEffectAdded: 'Προστέθηκε αποθηκευμένο εφέ για {name}.',
+        savedEffectUpdated: 'Το αποθηκευμένο εφέ ενημερώθηκε.',
+        savedEffectRemoved: 'Το αποθηκευμένο εφέ καταργήθηκε.',
+        savedEffectNotFound: 'Το αποθηκευμένο εφέ δεν βρέθηκε.',
         savedInvalidVisibility:
-          'Invalid visibility. Use public, masked, or gm.',
+          'Μη έγκυρη ορατότητα. Χρησιμοποιήστε δημόσια, με μάσκα ή gm.',
         savedConditionRequired:
           'Condition type is required. Use --condition <type>.',
-        savedPromotedPublic: 'Effect added to Turn Tracker as public.',
+        savedPromotedPublic: 'Το εφέ προστέθηκε στο Turn Tracker ως δημόσιο.',
         savedPromotedMasked:
-          'Effect added to Turn Tracker as masked — players see: {publicLabel}.',
+          'Το εφέ προστέθηκε στο Turn Tracker ως καλυμμένο — οι παίκτες βλέπουν: {publicLabel}.',
         savedPromotedGm:
-          'Effect is GM-only — no Turn Tracker row will be created. The reminder system will surface it when this token reaches the top of the turn order.',
-        savedSnoozed: 'Reminder snoozed: {scope}.',
-        savedSnoozeCleared: 'Snooze cleared.',
-        hiddenEffectsReminder: 'Hidden effects are active on {name}.',
-        visibilityPublicHint: 'full label visible to all',
-        visibilityMaskedHint: 'vague label shown to players',
-        visibilityGmHint: 'GM whisper only, no Turn Tracker row',
+          'Το εφέ είναι μόνο για GM — δεν θα δημιουργηθεί σειρά Turn Tracker. Το σύστημα υπενθύμισης θα εμφανιστεί όταν αυτό το διακριτικό φτάσει στην κορυφή της σειράς στροφής.',
+        savedSnoozed: 'Η υπενθύμιση αναβλήθηκε: {scope}.',
+        savedSnoozeCleared: 'Η αναβολή διαγράφηκε.',
+        hiddenEffectsReminder: 'Τα κρυφά εφέ είναι ενεργά στις {name}.',
+        visibilityPublicHint: 'πλήρης ετικέτα ορατή σε όλους',
+        visibilityMaskedHint: 'ασαφής ετικέτα που εμφανίζεται στους παίκτες',
+        visibilityGmHint: 'GM whisper μόνο, χωρίς σειρά Turn Tracker',
       },
       removal: {
         conditionField: 'Κατάσταση',
@@ -7665,29 +8824,50 @@ const ConditionTrackerMod = (() => {
       },
       saved: {
         visibility: {
-          public: 'Public',
-          masked: 'Masked',
-          gm: 'GM Only',
+          public: 'Κοινό',
+          masked: 'Μεταμφιεσμένος',
+          gm: 'Μόνο GM',
         },
         snooze: {
-          thisTurn: 'This Turn',
-          oneRound: '1 Round',
-          threeRounds: '3 Rounds',
-          thisCombat: 'This Combat',
-          rounds: '{n} round(s)',
+          thisTurn: 'Αυτή η στροφή',
+          oneRound: '1 Γύρος',
+          threeRounds: '3 Γύροι',
+          thisCombat: 'Αυτή η Μάχη',
+          rounds: '{n} γύροι',
         },
         field: {
-          gmLabel: 'GM Label',
-          publicLabel: 'Public Label',
-          visibility: 'Visibility',
-          source: 'Source',
-          condition: 'Condition',
+          gmLabel: 'Ετικέτα GM',
+          publicLabel: 'Δημόσια ετικέτα',
+          visibility: 'Ορατότητα',
+          source: 'Πηγή',
+          condition: 'Κατάσταση',
         },
         prompt: {
-          enterGmLabel: 'Full effect description (GM only)',
-          enterPublicLabel: 'Vague label shown to players',
+          enterGmLabel: 'Πλήρης περιγραφή εφέ (μόνο GM)',
+          enterPublicLabel: 'Αόριστη ετικέτα που εμφανίζεται στους παίκτες',
         },
-        snoozed: 'snoozed',
+        snoozed: 'αναβολή',
+      },
+      classify: {
+        title: 'Ταξινόμηση Ηθοποιών',
+        showTitle: 'Διαγνωστικό Ταξινόμησης',
+        showHeading: 'Λεπτομέρειες Ταξινόμησης Token',
+        resultHeading: 'Εφαρμόστηκε Παράκαμψη',
+        noSelection:
+          'Επίλεξε τουλάχιστον ένα token στον χάρτη πριν χρησιμοποιήσεις --classify.',
+        invalidType:
+          'Μη έγκυρος τύπος ταξινόμησης: {type}. Χρησιμοποίησε pc, npc, ignored ή auto.',
+        set: '{name} → {type} (εύρος: {scope})',
+        cleared:
+          '{name} παράκαμψη διαγράφηκε (εύρος: {scope}) — αποκαταστάθηκε αυτόματη ανίχνευση.',
+        setTokenFallback:
+          '{name} → {type} (παράκαμψη token — δεν υπάρχει συνδεδεμένο φύλλο χαρακτήρα).',
+        clearedTokenFallback:
+          '{name} παράκαμψη token διαγράφηκε — αποκαταστάθηκε αυτόματη ανίχνευση.',
+        fieldToken: 'Ενδειξη',
+        fieldType: 'Ταξινόμηση',
+        fieldSource: 'Πηγή',
+        fieldReason: 'Αιτία',
       },
       cleanup: {
         orphaned: 'Ορφανές καταχωρήσεις κατάστασης',
@@ -7716,16 +8896,16 @@ const ConditionTrackerMod = (() => {
         colDesc: 'Περιγραφή',
         rows: [
           [
-            '!condition-tracker --prompt',
+            '!condition-tracker --προτροπή',
             'Οδηγός βήμα-βήμα — επιλέξτε κατάσταση, tokens και διάρκεια διαδραστικά. Διατίθεται επίσης ως macro ConditionTrackerWizard.',
           ],
           [
-            '!condition-tracker --multi-target',
+            '!condition-tracker --πολλαπλών στόχων',
             'Εφαρμογή μιας κατάστασης σε πολλά tokens ταυτόχρονα. Διατίθεται επίσης ως macro ConditionTrackerMultiTarget.',
           ],
           [
             '!condition-tracker --report-token',
-            'Select one or more tokens first, then run this command to get a GM whisper listing every condition applied to and by each selected token. Also available as the ConditionTrackerReportToken macro.',
+            'Επιλέξτε πρώτα ένα ή περισσότερα διακριτικά και, στη συνέχεια, εκτελέστε αυτήν την εντολή για να λάβετε ένα GM whisper που αναφέρει κάθε συνθήκη που εφαρμόζεται και από κάθε επιλεγμένο διακριτικό. Διατίθεται επίσης ως μακροεντολή ConditionTrackerReportToken.',
           ],
           [
             '!condition-tracker --menu',
@@ -7738,17 +8918,17 @@ const ConditionTrackerMod = (() => {
         colFlag: 'Σημαία',
         colDesc: 'Περιγραφή',
         rows: [
-          ['--prompt', 'Διαδραστικός οδηγός βήμα-βήμα'],
+          ['--ταχύς', 'Διαδραστικός οδηγός βήμα-βήμα'],
           [
-            '--multi-target',
+            '--πολλαπλών στόχων',
             'Εφαρμογή κατάστασης σε πολλά tokens-στόχους ταυτόχρονα',
           ],
           [
-            '--menu',
+            '--μενού',
             'Εμφάνιση κύριου μενού (προσθέστε remove για μενού αφαίρεσης)',
           ],
           [
-            '--source X --target Y --condition Z',
+            '--πηγή X --στόχος Υ --συνθήκη Ζ',
             'Εφαρμογή κατάστασης απευθείας χωρίς τον οδηγό',
           ],
           [
@@ -7760,11 +8940,11 @@ const ConditionTrackerMod = (() => {
             'Προσαρμοσμένο κείμενο για τύπους εφέ Ξόρκι / Ικανότητα / Άλλο',
           ],
           [
-            '--remove &lt;condition-id&gt;',
+            '--αφαίρεση <condition-id>',
             'Αφαίρεση συγκεκριμένης κατάστασης με το μοναδικό της ID',
           ],
           [
-            '--config &lt;option&gt; &lt;value&gt;',
+            '--config <επιλογή> <τιμή>',
             'Προσαρμογή ρυθμίσεων (βλ. ενότητα Ρυθμίσεων παρακάτω)',
           ],
           [
@@ -7772,25 +8952,40 @@ const ConditionTrackerMod = (() => {
             'Παράκαμψη subjectPromptBypass μόνο για αυτήν την εντολή (υποστηρίζεται επίσης --subject-prompt-bypass)',
           ],
           [
-            '--cleanup',
+            '-- καθάρισμα',
             'Εναρμόνιση κατάστασης — αφαίρεση ορφανών καταστάσεων και σειρών Turn Tracker',
           ],
           [
-            '--reorder-conditions',
+            '--επαναπαραγγελία-προϋποθέσεις',
             'Χειροκίνητη επανατοποθέτηση γραμμών συνθηκών μετά τα εκχωρημένα τεκμήρια στη σειρά στροφών',
           ],
-          ['--reinstall-macro', 'Εκ νέου δημιουργία ή ενημέρωση των GM macros'],
           [
-            '--reinstall-handout',
+            '--Επανεγκατάσταση-μακροεντολή',
+            'Εκ νέου δημιουργία ή ενημέρωση των GM macros',
+          ],
+          [
+            '--Επανεγκατάσταση-φυλλάδιο',
             'Εκ νέου δημιουργία ή ενημέρωση του τοπικοποιημένου handout βοήθειας',
           ],
           [
-            '--report-token',
-            'Whisper a GM-only condition report for each selected token (conditions applied to and by it)',
+            '---αναφορά',
+            'Ψιθυρίστε μια αναφορά κατάστασης μόνο για GM για κάθε επιλεγμένο διακριτικό (συνθήκες που εφαρμόζονται σε αυτό και από αυτό)',
           ],
           [
             '--lang &lt;locale&gt;',
             'Εξαγωγή μηνυμάτων αυτής της εντολής σε πρόσθετη locale (δίγλωσση λειτουργία)',
+          ],
+          [
+            '--classify pc|npc|ignored',
+            'Παράκαμψη τύπου ηθοποιού για επιλεγμένα tokens — επίλεξε πρώτα token(s). Το προεπιλεγμένο εύρος είναι χαρακτήρας (γράφει ιδιότητα ct_mod_actor_type)· πρόσθεσε --scope token για αποθήκευση στην κατάσταση script',
+          ],
+          [
+            '--classify auto',
+            'Αφαίρεση παράκαμψης τύπου ηθοποιού και επαναφορά αυτόματης ανίχνευσης για επιλεγμένα tokens',
+          ],
+          [
+            '--classify show',
+            'Ψίθυρος διαγνωστικού ταξινόμησης για κάθε επιλεγμένο token — εμφανίζει τον εντοπισμένο τύπο, πηγή ανίχνευσης και αιτία',
           ],
           ['--help', 'Εμφάνιση σύντομης κάρτας βοήθειας στο chat'],
         ],
@@ -7852,64 +9047,154 @@ const ConditionTrackerMod = (() => {
         ],
       },
       savedEffects: {
-        heading: 'Saved Effects',
+        heading: 'Αποθηκευμένα εφέ',
         intro:
-          'Saved effects let you store long-term conditions outside the Turn Tracker — curses, diseases, poisons, hidden debuffs, and other non-combat conditions. They persist in script state and can be optionally copied into the Turn Tracker when combat begins.',
+          'Τα αποθηκευμένα εφέ σάς επιτρέπουν να αποθηκεύετε μακροπρόθεσμες συνθήκες έξω από το Turn Tracker — κατάρες, ασθένειες, δηλητήρια, κρυφές εκτοπίσεις και άλλες μη μαχητικές συνθήκες. Διατηρούνται στην κατάσταση του σεναρίου και μπορούν προαιρετικά να αντιγραφούν στο Turn Tracker όταν ξεκινήσει η μάχη.',
         visibility: {
-          heading: 'Visibility Modes',
+          heading: 'Λειτουργίες ορατότητας',
           rows: [
             [
-              'public',
-              'Full effect label is visible in the Turn Tracker and public chat.',
+              'κοινό',
+              'Η ετικέτα πλήρους εφέ είναι ορατή στο Turn Tracker και στη δημόσια συνομιλία.',
             ],
             [
-              'masked',
-              'A vague public label is shown to players; full details are GM-only.',
+              'μεταμφιεσμένος',
+              'Μια ασαφής δημόσια ετικέτα εμφανίζεται στους παίκτες. Οι πλήρεις λεπτομέρειες είναι μόνο για GM.',
             ],
             [
               'gm',
-              'No Turn Tracker row. Full details are stored in state and whispered to the GM when the affected token reaches the top of initiative.',
+              'No Turn Tracker σειρά. Οι πλήρεις λεπτομέρειες αποθηκεύονται σε κατάσταση και ψιθυρίζονται στον GM όταν το επηρεαζόμενο διακριτικό φτάσει στην κορυφή της πρωτοβουλίας.',
             ],
           ],
         },
         commands: {
-          heading: 'Saved Effects Commands',
+          heading: 'Εντολές Αποθηκευμένων Εφέ',
           intro:
-            'All --saved commands are GM-only. Select a token before running --saved or --saved add.',
+            'Όλες οι ---αποθηκευμένες εντολές είναι μόνο GM. Επιλέξτε ένα διακριτικό πριν εκτελέσετε --saved ή --saved add.',
           rows: [
             [
-              '!condition-tracker --saved',
-              'View saved effects for the selected token.',
+              '!condition-tracker --σώθηκε',
+              'Προβολή αποθηκευμένων εφέ για το επιλεγμένο διακριτικό.',
             ],
             [
-              '!condition-tracker --saved add',
-              'Launch the add-saved-effect wizard.',
+              '!condition-tracker --αποθηκεύτηκε προσθήκη',
+              'Εκκινήστε τον οδηγό προσθήκης-αποθηκευμένου εφέ.',
             ],
             [
               '!condition-tracker --saved edit <id>',
-              'Edit labels or visibility for an existing saved effect.',
+              'Επεξεργαστείτε ετικέτες ή ορατότητα για ένα υπάρχον αποθηκευμένο εφέ.',
             ],
             [
               '!condition-tracker --saved remove <id>',
-              'Permanently remove a saved effect.',
+              'Καταργήστε οριστικά ένα αποθηκευμένο εφέ.',
             ],
             [
               '!condition-tracker --saved promote <id> --visibility public|masked|gm',
-              'Copy a saved effect into the Turn Tracker (public or masked) or confirm it is GM-only tracked.',
+              'Αντιγράψτε ένα αποθηκευμένο εφέ στο Turn Tracker (δημόσιο ή με μάσκα) ή επιβεβαιώστε ότι παρακολουθείται μόνο για GM.',
             ],
             [
               '!condition-tracker --saved snooze <id> --scope turn|rounds|combat --rounds <n>',
-              'Snooze a GM reminder for this turn, N rounds, or this combat.',
+              'Αναβολή υπενθύμισης GM για αυτήν τη στροφή, N γύρους ή αυτήν τη μάχη.',
             ],
             [
               '!condition-tracker --saved snooze-clear <id>',
-              'Clear an active snooze so reminders resume immediately.',
+              'Διαγράψτε μια ενεργή αναβολή, ώστε οι υπενθυμίσεις να συνεχιστούν αμέσως.',
             ],
           ],
         },
         reminders: {
-          heading: 'GM Reminders',
-          body: 'When a token with gm or masked saved effects reaches the top of the Turn Tracker, the GM receives a whisper listing the hidden effects with action buttons. Duplicate reminders within the same turn are suppressed. Use the Snooze buttons to suppress reminders for a turn, a number of rounds, or for the remainder of the current combat.',
+          heading: 'Υπενθυμίσεις GM',
+          body: 'Όταν ένα διακριτικό με gm ή καλυμμένα αποθηκευμένα εφέ φτάσει στην κορυφή του Turn Tracker, ο GM λαμβάνει έναν ψίθυρο που αναφέρει τα κρυφά εφέ με κουμπιά ενεργειών. Οι διπλές υπενθυμίσεις εντός της ίδιας σειράς αποκρύπτονται. Χρησιμοποιήστε τα κουμπιά Αναβολή για να αποκρύψετε υπενθυμίσεις για μια στροφή, έναν αριθμό γύρων ή για το υπόλοιπο της τρέχουσας μάχης.',
+        },
+      },
+      actorClassification: {
+        heading: 'Ταξινόμηση Ηθοποιών',
+        intro:
+          'Το Condition Tracker προσδιορίζει αυτόματα αν κάθε token είναι ΠΧ, ΜΠΧ ή αγνοούμενο αντικείμενο (καρφίτσες χάρτη, σκηνικά, πρότυπα ξορκιών). Μη συνδεδεμένα tokens αγνοούνται εξ ορισμού. Χρησιμοποίησε --classify για να παρακάμψεις την αυτόματη ανίχνευση για οποιοδήποτε token.',
+        detectionOrder: {
+          heading: 'Σειρά Ανίχνευσης',
+          colStep: 'Βήμα',
+          colCheck: 'Έλεγχος',
+          colResult: 'Αποτέλεσμα',
+          rows: [
+            [
+              '1',
+              'Παράκαμψη κατάστασης token (--classify --scope token)',
+              'pc / npc / αγνοήθηκε',
+            ],
+            [
+              '2',
+              'Ιδιότητα ct_mod_actor_type χαρακτήρα (--classify --scope character)',
+              'pc / npc / αγνοήθηκε',
+            ],
+            ['3', 'Μη συνδεδεμένο token — χωρίς φύλλο χαρακτήρα', 'αγνόησε'],
+            [
+              '4',
+              'Προσαρμογέας συστήματος παιχνιδιού (ιδιότητα npc / is_npc)',
+              'pc / npc',
+            ],
+            [
+              '5',
+              'Γενική σάρωση ιδιοτήτων ΜΠΧ (npc, is_npc, npcflag, sheet_type, character_type)',
+              'pc / npc',
+            ],
+            ['6', 'Εναλλακτικό controlledby χαρακτήρα', 'pc / npc'],
+          ],
+        },
+        types: {
+          heading: 'Τύποι Ταξινόμησης',
+          colType: 'Τύπος',
+          colMeaning: 'Σημασία',
+          rows: [
+            [
+              'pc',
+              'Χαρακτήρας παίκτη — πάντα συμπεριλαμβάνεται ως ΠΧ στον οδηγό και την ανίχνευση',
+            ],
+            ['npc', 'Μη παίκτης χαρακτήρας — πάντα συμπεριλαμβάνεται ως ΜΠΧ'],
+            [
+              'αγνόησε',
+              'Ποτέ δεν εμφανίζεται ή παρακολουθείται — αποκλείεται από τον επιλογέα token του οδηγού',
+            ],
+            [
+              'άγνωστος',
+              'Μόνο αυτόματη ανίχνευση· δεν ήταν δυνατός ο προσδιορισμός τύπου (αντιμετωπίζεται ως ΜΠΧ στον οδηγό)',
+            ],
+          ],
+        },
+        commands: {
+          heading: 'Εντολές Ταξινόμησης',
+          intro:
+            'Επίλεξε ένα ή περισσότερα tokens πριν εκτελέσεις εντολές --classify.',
+          rows: [
+            [
+              '!condition-tracker --ταξινόμηση pc',
+              'Σήμανση επιλεγμένων tokens ως ΠΧ (προεπιλεγμένο εύρος: χαρακτήρας).',
+            ],
+            [
+              '!condition-tracker --ταξινόμηση npc',
+              'Σήμανση επιλεγμένων tokens ως ΜΠΧ.',
+            ],
+            [
+              '!condition-tracker --ταξινόμηση αγνοήθηκε',
+              'Αποκλεισμός επιλεγμένων tokens από όλη την παρακολούθηση.',
+            ],
+            [
+              '!condition-tracker --ταξινόμηση auto',
+              'Αφαίρεση παράκαμψης — επαναφορά αυτόματης ανίχνευσης.',
+            ],
+            [
+              '!condition-tracker --ταξινόμηση εμφάνιση',
+              'Εμφάνιση διαγνωστικού ταξινόμησης (τύπος, πηγή, αιτία) για κάθε επιλεγμένο token.',
+            ],
+            [
+              '!condition-tracker --ταξινόμηση pc --scope token',
+              'Παράκαμψη επιπέδου token στην κατάσταση script — χρήσιμο για μη συνδεδεμένα tokens.',
+            ],
+            [
+              '!condition-tracker --ταξινόμηση pc --χαρακτήρα πεδίου',
+              'Παράκαμψη επιπέδου χαρακτήρα στην ιδιότητα ct_mod_actor_type — ισχύει για όλα τα tokens με το ίδιο φύλλο χαρακτήρα.',
+            ],
+          ],
         },
       },
       configuration: {
@@ -7927,17 +9212,17 @@ const ConditionTrackerMod = (() => {
           ],
           [
             'useIcons',
-            'true / false',
+            'αληθινό / ψευδές',
             'Εμφάνιση σύντομων κωδικών εικονιδίων (π.χ. [G]) αντί emoji στις σειρές Turn Tracker',
           ],
           [
             'subjectPromptBypass',
-            'true / false',
+            'αληθινό / ψευδές',
             'Παράλειψη του προαιρετικού βήματος υποκειμένου για εφέ Ξόρκι / Ικανότητα / Άλλο',
           ],
           [
             'suppressPublicChat',
-            'true / false',
+            'αληθινό / ψευδές',
             'Απόκρυψη όλων των δημόσιων ανακοινώσεων στο chat (μηνύματα εφαρμογής και αφαίρεσης). Τα ψιθύρια του GM δεν επηρεάζονται.',
           ],
           [
@@ -7966,7 +9251,7 @@ const ConditionTrackerMod = (() => {
         heading: 'Διαθέσιμες Μεταφράσεις',
         intro:
           'Χρησιμοποιήστε την επιλογή ρύθμισης language για να ορίσετε τα μηνύματα chat και το handout βοήθειας σε οποιαδήποτε υποστηριζόμενη locale. Σύντομα ψευδώνυμα γίνονται επίσης δεκτά για en, zh και pt.',
-        colLocale: 'Locale',
+        colLocale: 'Μικρός λοβός',
         colLanguage: 'Γλώσσα',
         colFile: 'Αρχείο Μετάφρασης',
       },
@@ -8135,8 +9420,8 @@ const ConditionTrackerMod = (() => {
         details: 'פרטים',
         description: 'תיאור',
         scenario: 'תרחיש',
-        gameSystem: 'Game System',
-        duration: 'Duration',
+        gameSystem: 'מערכת משחק',
+        duration: 'מֶשֶׁך',
       },
       dur: {
         untilRemoved: 'עד להסרה',
@@ -8161,14 +9446,14 @@ const ConditionTrackerMod = (() => {
         reinstallHandout: 'התקן דף עזרה מחדש',
         showHelp: 'הצג עזרה',
         reorderConditions: 'סדר מחדש שורות תנאי',
-        reportToken: 'Report Token Conditions',
-        savedEffects: 'Saved Effects',
-        addSavedEffect: 'Add Saved Effect',
-        editSaved: 'Edit',
-        removeSaved: 'Remove',
-        promoteSaved: 'Add to Turn Tracker',
-        snoozeSaved: 'Snooze',
-        clearSnooze: 'Clear Snooze',
+        reportToken: 'דיווח על תנאי אסימון',
+        savedEffects: 'אפקטים שמורים',
+        addSavedEffect: 'הוסף אפקט שמור',
+        editSaved: 'לַעֲרוֹך',
+        removeSaved: 'לְהַסִיר',
+        promoteSaved: 'הוסף ל-Tur Tracker',
+        snoozeSaved: 'נִמנוּם',
+        clearSnooze: 'נקה נודניק',
       },
       title: {
         menu: 'תפריט',
@@ -8179,8 +9464,7 @@ const ConditionTrackerMod = (() => {
         applied: 'הוחל',
         removed: 'מצב הוסר',
         cleanup: 'הניקוי הושלם',
-        macroReinstalled:
-          'The {wizard}, {multiTarget}, {reportToken}, and {saved} macros have been reinstalled for all current GM players.',
+        macroReinstalled: 'מאקרו הותקן מחדש',
         handoutReinstalled: 'דף העזרה הותקן מחדש',
         warning: 'אזהרה',
         error: 'שגיאה',
@@ -8192,15 +9476,15 @@ const ConditionTrackerMod = (() => {
         moveToken: '{name} — להעביר אסימון?',
         scriptReady: 'הסקריפט מוכן',
         conditionReorder: 'סדר התורות השתנה',
-        tokenReport: 'Token Condition Report',
-        savedEffects: 'Saved Effects',
-        savedAdd: 'Add Saved Effect',
-        savedEdit: 'Edit Saved Effect',
-        savedRemoved: 'Saved Effect Removed',
-        savedPromoted: 'Add to Turn Tracker',
-        savedSnoozed: 'Reminder Snoozed',
-        savedSnoozeCleared: 'Snooze Cleared',
-        hiddenEffects: 'Hidden Effects — {name}',
+        tokenReport: 'דוח מצב אסימון',
+        savedEffects: 'אפקטים שמורים',
+        savedAdd: 'הוסף אפקט שמור',
+        savedEdit: 'ערוך אפקט שמור',
+        savedRemoved: 'אפקט שמור הוסר',
+        savedPromoted: 'הוסף ל-Tur Tracker',
+        savedSnoozed: 'התזכורת נודניק',
+        savedSnoozeCleared: 'נודניק נמחק',
+        hiddenEffects: 'אפקטים נסתרים - {name}',
       },
       heading: {
         quickActions: 'פעולות מהירות',
@@ -8212,13 +9496,13 @@ const ConditionTrackerMod = (() => {
         promptUi: 'ממשק אשף',
         examples: 'דוגמאות',
         summary: 'סיכום',
-        appliedTo: 'Conditions Applied To',
-        appliedBy: 'Conditions Applied By',
-        savedEffectsFor: 'Saved Effects for {name}',
-        visibility: 'Visibility',
-        snoozeOptions: 'Snooze Reminder',
-        promoteOptions: 'Promote to Turn Tracker',
-        editActions: 'Edit Actions',
+        appliedTo: 'תנאים החלים על',
+        appliedBy: 'התנאים החלים על ידי',
+        savedEffectsFor: 'אפקטים שמורים עבור {name}',
+        visibility: 'רְאוּת',
+        snoozeOptions: 'תזכורת נודניק',
+        promoteOptions: 'קדם ל-Turn Tracker',
+        editActions: 'ערוך פעולות',
       },
       msg: {
         noActive: 'אין מצבים פעילים במעקב.',
@@ -8226,7 +9510,7 @@ const ConditionTrackerMod = (() => {
         unknownConfig:
           'אפשרות הגדרה לא מוכרת. השתמש ב־--config להצגת ההגדרות הנתמכות.',
         macroReinstalled:
-          'המאקרואים {wizard}, {multiTarget} ו־{reportToken} הותקנו מחדש לכל שחקני ה־GM הנוכחיים.',
+          'המאקרואים {wizard}, {multiTarget}, {reportToken}, {saved} ו־{classify} הותקנו מחדש לכל שחקני ה־GM הנוכחיים.',
         handoutReinstalled: 'דף העזרה {handout} הותקן מחדש.',
         duplicate: 'אותו מקור, נושא, יעד, מצב וטקסט מותאם כבר פעילים.',
         noTargets: 'לא צוינו אסימוני יעד להחלה מרובת יעדים.',
@@ -8291,32 +9575,30 @@ const ConditionTrackerMod = (() => {
           'סדר התורות השתנה ו-{count} שורת/שורות תנאי עקובות עשויות להיות כעת במיקום שגוי. לחץ למטה כדי לשחזר אותן אחרי הטוקנים שהוקצו להן.',
         conditionsReordered: 'שורות התנאי מוקמו מחדש אחרי הטוקנים שהוקצו להן.',
         noTokensSelectedReport:
-          'Select at least one token on the board before using --report-token.',
-        noConditionsAppliedTo: '{name} has no active conditions applied to it.',
-        noConditionsAppliedBy:
-          '{name} has no active conditions applied to others.',
-        noSavedEffects: 'No saved effects stored for {name}.',
-        noTokenSelectedSaved:
-          'Select a token on the board before using --saved.',
-        savedEffectAdded: 'Saved effect added for {name}.',
-        savedEffectUpdated: 'Saved effect updated.',
-        savedEffectRemoved: 'Saved effect removed.',
-        savedEffectNotFound: 'Saved effect not found.',
+          'בחר לפחות אסימון אחד בלוח לפני השימוש ב--report-token.',
+        noConditionsAppliedTo: '{name} לא הוחלו עליו תנאים פעילים.',
+        noConditionsAppliedBy: 'ל-{name} לא הוחלו תנאים פעילים על אחרים.',
+        noSavedEffects: 'אין אפקטים שמורים שמורים עבור {name}.',
+        noTokenSelectedSaved: 'בחר אסימון על הלוח לפני השימוש ב--sved.',
+        savedEffectAdded: 'אפקט שמור נוסף עבור {name}.',
+        savedEffectUpdated: 'אפקט שמור עודכן.',
+        savedEffectRemoved: 'האפקט השמור הוסר.',
+        savedEffectNotFound: 'האפקט השמור לא נמצא.',
         savedInvalidVisibility:
-          'Invalid visibility. Use public, masked, or gm.',
+          'ראות לא חוקית. השתמש ציבורי, רעולי פנים או GM.',
         savedConditionRequired:
           'Condition type is required. Use --condition <type>.',
-        savedPromotedPublic: 'Effect added to Turn Tracker as public.',
+        savedPromotedPublic: 'אפקט נוסף ל-Turn Tracker כציבורי.',
         savedPromotedMasked:
-          'Effect added to Turn Tracker as masked — players see: {publicLabel}.',
+          'אפקט נוסף ל-Turn Tracker כמסווה - שחקנים רואים: {publicLabel}.',
         savedPromotedGm:
-          'Effect is GM-only — no Turn Tracker row will be created. The reminder system will surface it when this token reaches the top of the turn order.',
-        savedSnoozed: 'Reminder snoozed: {scope}.',
-        savedSnoozeCleared: 'Snooze cleared.',
-        hiddenEffectsReminder: 'Hidden effects are active on {name}.',
-        visibilityPublicHint: 'full label visible to all',
-        visibilityMaskedHint: 'vague label shown to players',
-        visibilityGmHint: 'GM whisper only, no Turn Tracker row',
+          'ההשפעה היא GM בלבד - לא תיווצר שורה של Tracker Turner. מערכת התזכורת תעלה אותו כשאסימון זה יגיע לראש סדר התור.',
+        savedSnoozed: 'התזכורת הושהה: {scope}.',
+        savedSnoozeCleared: 'נודניק נמחק.',
+        hiddenEffectsReminder: 'אפקטים נסתרים פעילים ב-{name}.',
+        visibilityPublicHint: 'תווית מלאה גלויה לכל',
+        visibilityMaskedHint: 'תווית מעורפלת שמוצגת לשחקנים',
+        visibilityGmHint: 'לוחשת GM בלבד, ללא שורה של מסלול מעקב',
       },
       removal: {
         conditionField: 'מצב',
@@ -8332,29 +9614,48 @@ const ConditionTrackerMod = (() => {
       },
       saved: {
         visibility: {
-          public: 'Public',
-          masked: 'Masked',
-          gm: 'GM Only',
+          public: 'פּוּמְבֵּי',
+          masked: 'מוּסוֶה',
+          gm: 'GM בלבד',
         },
         snooze: {
-          thisTurn: 'This Turn',
-          oneRound: '1 Round',
-          threeRounds: '3 Rounds',
-          thisCombat: 'This Combat',
-          rounds: '{n} round(s)',
+          thisTurn: 'התור הזה',
+          oneRound: '1 סיבוב',
+          threeRounds: '3 סיבובים',
+          thisCombat: 'הקרב הזה',
+          rounds: '{n} סבבים',
         },
         field: {
-          gmLabel: 'GM Label',
-          publicLabel: 'Public Label',
-          visibility: 'Visibility',
-          source: 'Source',
-          condition: 'Condition',
+          gmLabel: 'תווית GM',
+          publicLabel: 'תווית ציבורית',
+          visibility: 'רְאוּת',
+          source: 'מָקוֹר',
+          condition: 'מַצָב',
         },
         prompt: {
-          enterGmLabel: 'Full effect description (GM only)',
-          enterPublicLabel: 'Vague label shown to players',
+          enterGmLabel: 'תיאור האפקט המלא (GM בלבד)',
+          enterPublicLabel: 'תווית מעורפלת מוצגת לשחקנים',
         },
-        snoozed: 'snoozed',
+        snoozed: 'נודניק',
+      },
+      classify: {
+        title: 'סיווג שחקנים',
+        showTitle: 'אבחון סיווג',
+        showHeading: 'פרטי סיווג אסימון',
+        resultHeading: 'עקיפה הוחלה',
+        noSelection: 'בחר לפחות אסימון אחד על הלוח לפני השימוש ב-‎--classify.',
+        invalidType:
+          'סוג סיווג לא חוקי: {type}. השתמש ב-pc,‏ npc,‏ ignored או auto.',
+        set: '{name} → {type} (תחום: {scope})',
+        cleared: '{name} עקיפה נמחקה (תחום: {scope}) — זיהוי אוטומטי שוחזר.',
+        setTokenFallback:
+          '{name} → {type} (עקיפת אסימון — לא מקושר לגיליון דמות).',
+        clearedTokenFallback:
+          '{name} עקיפת אסימון נמחקה — זיהוי אוטומטי שוחזר.',
+        fieldToken: 'אסימון',
+        fieldType: 'סיווג',
+        fieldSource: 'מקור',
+        fieldReason: 'סיבה',
       },
       cleanup: {
         orphaned: 'רשומות מצב יתומות',
@@ -8390,7 +9691,7 @@ const ConditionTrackerMod = (() => {
           ],
           [
             '!condition-tracker --report-token',
-            'Select one or more tokens first, then run this command to get a GM whisper listing every condition applied to and by each selected token. Also available as the ConditionTrackerReportToken macro.',
+            'בחר תחילה אסימון אחד או יותר, ולאחר מכן הפעל את הפקודה הזו כדי לקבל לחישה של GM המפרטת כל תנאי שהוחל על ועל ידי כל אסימון שנבחר. זמין גם כמאקרו ConditionTrackerReportToken.',
           ],
           [
             '!condition-tracker --menu',
@@ -8403,53 +9704,59 @@ const ConditionTrackerMod = (() => {
         colFlag: 'דגל',
         colDesc: 'תיאור',
         rows: [
-          ['--prompt', 'ממשק אשף אינטראקטיבי'],
-          ['--multi-target', 'החלת מצב על כמה יעדים'],
-          ['--menu', 'הצגת התפריט הראשי'],
-          ['--source X --target Y --condition Z', 'החלת מצב ישירות ללא אשף'],
-          ['--duration &lt;value&gt;', 'משך להחלה ישירה'],
-          ['--other &lt;text&gt;', 'טקסט מותאם לאפקטים מותאמים'],
-          ['--remove &lt;condition-id&gt;', 'הסרת מצב לפי מזהה'],
-          ['--config &lt;option&gt; &lt;value&gt;', 'עדכון הגדרות'],
+          ['--לְעוֹרֵר', 'ממשק אשף אינטראקטיבי'],
+          ['-- רב יעדים', 'החלת מצב על כמה יעדים'],
+          ['--תַפרִיט', 'הצגת התפריט הראשי'],
+          ['--מקור X --יעד Y --תנאי Z', 'החלת מצב ישירות ללא אשף'],
+          ['--duration <value>', 'משך להחלה ישירה'],
+          ['--אחר <טקסט>', 'טקסט מותאם לאפקטים מותאמים'],
+          ['--הסר את <condition-id>', 'הסרת מצב לפי מזהה'],
+          ['--config <אופציה> <ערך>', 'עדכון הגדרות'],
           [
             '--prompt --subjectPromptBypass true|false',
             'עקיפת שלב הנושא לפקודה זו בלבד',
           ],
-          ['--cleanup', 'ניקוי רשומות ושורות יתומות'],
+          ['--ניקוי', 'ניקוי רשומות ושורות יתומות'],
           [
-            '--reorder-conditions',
+            '-- תנאי הזמנה מחדש',
             'מיקום מחדש ידני של שורות תנאי אחרי הטוקנים המוקצים בסדר התורות',
           ],
-          ['--reinstall-macro', 'יצירה או עדכון של מאקרואים ל־GM'],
-          ['--reinstall-handout', 'יצירה או עדכון של דף העזרה המקומי'],
+          ['---reinstall-macro', 'יצירה או עדכון של מאקרואים ל־GM'],
+          ['--התקן מחדש נדב', 'יצירה או עדכון של דף העזרה המקומי'],
           [
-            '--report-token',
-            'Whisper a GM-only condition report for each selected token (conditions applied to and by it)',
+            '--דוח-אסימון',
+            'לחשו דוח מצב של GM בלבד עבור כל אסימון שנבחר (תנאים שהוחלו עליו ועל ידו)',
           ],
           [
-            '--saved',
-            'View saved long-term effects for the selected token (select token first)',
+            '-- נשמר',
+            'הצג אפקטים ארוכי טווח שמורים עבור האסימון שנבחר (בחר אסימון תחילה)',
           ],
-          [
-            '--saved add',
-            'Add a saved effect (curse, disease, etc.) to the selected token',
-          ],
-          ['--saved edit <id>', 'Edit an existing saved effect by id'],
-          ['--saved remove <id>', 'Remove a saved effect by id'],
+          ['--הוספה נשמרת', "הוסף אפקט שמור (קללה, מחלה וכו') לאסימון שנבחר"],
+          ['--saved edit <id>', 'ערוך אפקט שמור קיים לפי מזהה'],
+          ['--saved remove <id>', 'הסר אפקט שמור לפי מזהה'],
           [
             '--saved promote <id> --visibility public|masked|gm',
-            'Copy a saved effect into the Turn Tracker (public/masked) or mark it as GM-only active',
+            'העתק אפקט שמור ל-Turn Tracker (ציבורי/מסוכה) או סמן אותו כפעיל ל-GM בלבד',
           ],
           [
             '--saved snooze <id> --scope turn|rounds|combat --rounds <n>',
-            'Snooze a saved-effect reminder for the current turn, N rounds, or this combat',
+            'נודניק תזכורת עם אפקט שמורה לפנייה הנוכחית, N סיבובים או הקרב הזה',
+          ],
+          ['--saved snooze-clear <id>', 'נקה נודניק פעיל על אפקט שמור'],
+          ['--lang <locale>', 'פלט נוסף באזור שפה אחר'],
+          [
+            '--סיווג pc|npc|התעלם',
+            'עקוף את סוג השחקן עבור אסימונים נבחרים — בחר תחילה אסימון(ים). ברירת המחדל של התחום היא דמות (כותב תכונת ct_mod_actor_type); הוסף --scope token לשמירה בסטטוס הסקריפט',
           ],
           [
-            '--saved snooze-clear <id>',
-            'Clear an active snooze on a saved effect',
+            '--לסווג אוטומטי',
+            'הסר את עקיפת סוג השחקן ושחזר זיהוי אוטומטי עבור אסימונים נבחרים',
           ],
-          ['--lang &lt;locale&gt;', 'פלט נוסף באזור שפה אחר'],
-          ['--help', 'הצגת כרטיס עזרה קצר בצ׳אט'],
+          [
+            '--לסווג מופע',
+            'לחוש אבחון סיווג עבור כל אסימון נבחר — מציג את הסוג שזוהה, מקור הזיהוי והסיבה',
+          ],
+          ['--עֶזרָה', 'הצגת כרטיס עזרה קצר בצ׳אט'],
         ],
       },
       standardConditions: {
@@ -8482,64 +9789,140 @@ const ConditionTrackerMod = (() => {
         ],
       },
       savedEffects: {
-        heading: 'Saved Effects',
+        heading: 'אפקטים שמורים',
         intro:
-          'Saved effects let you store long-term conditions outside the Turn Tracker — curses, diseases, poisons, hidden debuffs, and other non-combat conditions. They persist in script state and can be optionally copied into the Turn Tracker when combat begins.',
+          'אפקטים שמורים מאפשרים לך לאחסן תנאים ארוכי טווח מחוץ ל-Turn Tracker - קללות, מחלות, רעלים, הרחקות נסתרות ומצבים אחרים שאינם קרביים. הם נמשכים במצב סקריפט וניתן להעתיק אותם ל-Turn Tracker כאשר הלחימה מתחילה.',
         visibility: {
-          heading: 'Visibility Modes',
+          heading: 'מצבי נראות',
           rows: [
             [
-              'public',
-              'Full effect label is visible in the Turn Tracker and public chat.',
+              'פּוּמְבֵּי',
+              "תווית האפקט המלא גלויה ב-Turn Tracker ובצ'אט הציבורי.",
             ],
             [
-              'masked',
-              'A vague public label is shown to players; full details are GM-only.',
+              'מוּסוֶה',
+              'תווית ציבורית מעורפלת מוצגת לשחקנים; הפרטים המלאים הם GM בלבד.',
             ],
             [
               'gm',
-              'No Turn Tracker row. Full details are stored in state and whispered to the GM when the affected token reaches the top of initiative.',
+              'אין שורה של מעקב אחר סיבובים. הפרטים המלאים מאוחסנים במצב ונלחשים ל-GM כאשר האסימון המושפע מגיע לראש היוזמה.',
             ],
           ],
         },
         commands: {
-          heading: 'Saved Effects Commands',
+          heading: 'פקודות אפקטים שמורות',
           intro:
-            'All --saved commands are GM-only. Select a token before running --saved or --saved add.',
+            'כל הפקודות שנשמרו הן ל-GM בלבד. בחר אסימון לפני הפעלת הוספה --שמורה או --שמורה.',
           rows: [
             [
-              '!condition-tracker --saved',
-              'View saved effects for the selected token.',
+              '!condition-tracker --שמר',
+              'הצג אפקטים שמורים עבור האסימון שנבחר.',
             ],
-            [
-              '!condition-tracker --saved add',
-              'Launch the add-saved-effect wizard.',
-            ],
+            ['!condition-tracker --שמר הוספה', 'הפעל את אשף ההוספה-שמור-אפקט.'],
             [
               '!condition-tracker --saved edit <id>',
-              'Edit labels or visibility for an existing saved effect.',
+              'ערוך תוויות או נראות עבור אפקט שמור קיים.',
             ],
             [
               '!condition-tracker --saved remove <id>',
-              'Permanently remove a saved effect.',
+              'הסר לצמיתות אפקט שמור.',
             ],
             [
               '!condition-tracker --saved promote <id> --visibility public|masked|gm',
-              'Copy a saved effect into the Turn Tracker (public or masked) or confirm it is GM-only tracked.',
+              'העתק אפקט שמור ל-Turn Tracker (ציבורי או רעולי פנים) או אשר שהוא במעקב GM בלבד.',
             ],
             [
               '!condition-tracker --saved snooze <id> --scope turn|rounds|combat --rounds <n>',
-              'Snooze a GM reminder for this turn, N rounds, or this combat.',
+              'נודניק תזכורת GM עבור התור הזה, N סיבובים או הקרב הזה.',
             ],
             [
               '!condition-tracker --saved snooze-clear <id>',
-              'Clear an active snooze so reminders resume immediately.',
+              'נקה נודניק פעיל כדי שהתזכורות יתחדשו מיד.',
             ],
           ],
         },
         reminders: {
-          heading: 'GM Reminders',
-          body: 'When a token with gm or masked saved effects reaches the top of the Turn Tracker, the GM receives a whisper listing the hidden effects with action buttons. Duplicate reminders within the same turn are suppressed. Use the Snooze buttons to suppress reminders for a turn, a number of rounds, or for the remainder of the current combat.',
+          heading: 'תזכורות GM',
+          body: "כאשר אסימון עם GM או אפקטים שמורים במסכה מגיע לראש ה-Turn Tracker, ה-GM מקבל לחישה המפרטת את האפקטים הנסתרים עם כפתורי פעולה. תזכורות כפולות באותו תור נדחקות. השתמש בלחצני 'נודניק' כדי לדכא תזכורות עבור תור, מספר סיבובים או לשארית הקרב הנוכחי.",
+        },
+      },
+      actorClassification: {
+        heading: 'סיווג שחקנים',
+        intro:
+          'Condition Tracker קובע אוטומטית אם כל אסימון הוא דמות שחקן, דמות שאינה שחקן, או אובייקט מתעלם (סיכות מפה, תפאורה, תבניות לחשים). אסימונים לא מקושרים מתעלמים מהם כברירת מחדל. השתמש ב-‎--classify כדי לעקוף את הזיהוי האוטומטי עבור כל אסימון.',
+        detectionOrder: {
+          heading: 'סדר זיהוי',
+          colStep: 'שלב',
+          colCheck: 'בדיקה',
+          colResult: 'תוצאה',
+          rows: [
+            [
+              '1',
+              'עקיפת מצב אסימון (--classify --scope token)',
+              'pc / npc / התעלמו',
+            ],
+            [
+              '2',
+              'תכונת ct_mod_actor_type של דמות (--classify --scope character)',
+              'pc / npc / התעלמו',
+            ],
+            ['3', 'אסימון לא מקושר — אין גיליון דמות', 'התעלמו'],
+            ['4', 'מתאם מערכת המשחק (תכונת npc / is_npc)', 'pc / npc'],
+            [
+              '5',
+              'סריקת תכונות NPC כלליות (npc, is_npc, npcflag, sheet_type, character_type)',
+              'pc / npc',
+            ],
+            ['6', 'גיבוי controlledby של דמות', 'pc / npc'],
+          ],
+        },
+        types: {
+          heading: 'סוגי סיווג',
+          colType: 'סוג',
+          colMeaning: 'משמעות',
+          rows: [
+            ['PC', 'דמות שחקן — תמיד נכללת כ-PC באשף ובזיהוי'],
+            ['npc', 'דמות שאינה שחקן — תמיד נכללת כ-NPC'],
+            [
+              'התעלמו',
+              'לעולם אינה מוצגת או עוקבת — מוחרגת מבוחר האסימונים של האשף',
+            ],
+            [
+              'לֹא יְדוּעַ',
+              'זיהוי אוטומטי בלבד; לא ניתן לקבוע את הסוג (מטופל כ-NPC באשף)',
+            ],
+          ],
+        },
+        commands: {
+          heading: 'פקודות סיווג',
+          intro: 'בחר אסימון אחד או יותר לפני הפעלת פקודות --classify.',
+          rows: [
+            [
+              '!condition-tracker --סיווג מחשב',
+              'סמן אסימונים נבחרים כ-PC (תחום דמות כברירת מחדל).',
+            ],
+            ['!condition-tracker --סיווג npc', 'סמן אסימונים נבחרים כ-NPC.'],
+            [
+              'התעלמו מ-!condition-tracker --classify',
+              'הוצא אסימונים נבחרים מכל מעקב.',
+            ],
+            [
+              '!condition-tracker --סיווג אוטומטי',
+              'הסר עקיפה — שחזר זיהוי אוטומטי.',
+            ],
+            [
+              '!condition-tracker --סיווג מופע',
+              'הצג אבחון סיווג (סוג, מקור, סיבה) עבור כל אסימון נבחר.',
+            ],
+            [
+              '!condition-tracker --סיווג pc --scope token',
+              'עקיפה ברמת האסימון השמורה בסטטוס הסקריפט — שימושית לאסימונים לא מקושרים.',
+            ],
+            [
+              '!condition-tracker --סיווג pc --תו היקף',
+              'עקיפה ברמת הדמות הכתובה לתכונת ct_mod_actor_type — חלה על כל האסימונים עם אותו גיליון דמות.',
+            ],
+          ],
         },
       },
       configuration: {
@@ -8555,15 +9938,11 @@ const ConditionTrackerMod = (() => {
             'true / false',
             'החלת סמני סטטוס של Roll20 על אסימונים',
           ],
-          ['useIcons', 'true / false', 'הצגת קודי אייקון קצרים במקום אימוג׳י'],
-          [
-            'subjectPromptBypass',
-            'true / false',
-            'דילוג על שלב הנושא האופציונלי',
-          ],
+          ['useIcons', 'נכון/שקר', 'הצגת קודי אייקון קצרים במקום אימוג׳י'],
+          ['subjectPromptBypass', 'נכון/שקר', 'דילוג על שלב הנושא האופציונלי'],
           [
             'suppressPublicChat',
-            'true / false',
+            'נכון/שקר',
             "דכא את כל הודעות הצ'אט הציבוריות (הודעות החלה והסרה). לחישות ה-GM אינן מושפעות.",
           ],
           [
@@ -8592,7 +9971,7 @@ const ConditionTrackerMod = (() => {
         heading: 'תרגומים זמינים',
         intro:
           "השתמש באפשרות הגדרת language כדי לקבוע את הודעות הצ'אט וחוברת העזרה בכל locale נתמך. כינויים קצרים מקובלים גם עבור en, zh ו-pt.",
-        colLocale: 'Locale',
+        colLocale: 'מקום',
         colLanguage: 'שפה',
         colFile: 'קובץ תרגום',
       },
@@ -8763,8 +10142,8 @@ const ConditionTrackerMod = (() => {
         details: 'Részletek',
         description: 'Leírás',
         scenario: 'Forgatókönyv',
-        gameSystem: 'Game System',
-        duration: 'Duration',
+        gameSystem: 'Játékrendszer',
+        duration: 'Időtartam',
       },
       dur: {
         untilRemoved: 'Eltávolításig',
@@ -8789,14 +10168,14 @@ const ConditionTrackerMod = (() => {
         reinstallHandout: 'Handout újratelepítése',
         showHelp: 'Súgó megjelenítése',
         reorderConditions: 'Állapotsorok átrendezése',
-        reportToken: 'Report Token Conditions',
-        savedEffects: 'Saved Effects',
-        addSavedEffect: 'Add Saved Effect',
-        editSaved: 'Edit',
-        removeSaved: 'Remove',
-        promoteSaved: 'Add to Turn Tracker',
-        snoozeSaved: 'Snooze',
-        clearSnooze: 'Clear Snooze',
+        reportToken: 'Jelentés Token feltételek',
+        savedEffects: 'Mentett effektusok',
+        addSavedEffect: 'Mentett effektus hozzáadása',
+        editSaved: 'Szerkesztés',
+        removeSaved: 'Távolítsa el',
+        promoteSaved: 'Hozzáadás a Turn Trackerhez',
+        snoozeSaved: 'Szundikálás',
+        clearSnooze: 'Szundi törlése',
       },
       title: {
         menu: 'Menü',
@@ -8807,8 +10186,7 @@ const ConditionTrackerMod = (() => {
         applied: 'Alkalmazva',
         removed: 'Állapot eltávolítva',
         cleanup: 'Tisztítás kész',
-        macroReinstalled:
-          'The {wizard}, {multiTarget}, {reportToken}, and {saved} macros have been reinstalled for all current GM players.',
+        macroReinstalled: 'Makró újratelepítve',
         handoutReinstalled: 'Handout újratelepítve',
         warning: 'Figyelmeztetés',
         error: 'Hiba',
@@ -8820,15 +10198,15 @@ const ConditionTrackerMod = (() => {
         moveToken: '{name} — token áthelyezése?',
         scriptReady: 'Szkript kész',
         conditionReorder: 'Körsorend megváltozott',
-        tokenReport: 'Token Condition Report',
-        savedEffects: 'Saved Effects',
-        savedAdd: 'Add Saved Effect',
-        savedEdit: 'Edit Saved Effect',
-        savedRemoved: 'Saved Effect Removed',
-        savedPromoted: 'Add to Turn Tracker',
-        savedSnoozed: 'Reminder Snoozed',
-        savedSnoozeCleared: 'Snooze Cleared',
-        hiddenEffects: 'Hidden Effects — {name}',
+        tokenReport: 'Token állapotjelentés',
+        savedEffects: 'Mentett effektusok',
+        savedAdd: 'Mentett effektus hozzáadása',
+        savedEdit: 'Mentett effektus szerkesztése',
+        savedRemoved: 'Mentett effektus eltávolítva',
+        savedPromoted: 'Hozzáadás a Turn Trackerhez',
+        savedSnoozed: 'Emlékeztető elhalasztva',
+        savedSnoozeCleared: 'Szundi törölve',
+        hiddenEffects: 'Rejtett effektusok – {name}',
       },
       heading: {
         quickActions: 'Gyorsműveletek',
@@ -8840,13 +10218,13 @@ const ConditionTrackerMod = (() => {
         promptUi: 'Varázsló felülete',
         examples: 'Példák',
         summary: 'Összefoglalás',
-        appliedTo: 'Conditions Applied To',
-        appliedBy: 'Conditions Applied By',
-        savedEffectsFor: 'Saved Effects for {name}',
-        visibility: 'Visibility',
-        snoozeOptions: 'Snooze Reminder',
-        promoteOptions: 'Promote to Turn Tracker',
-        editActions: 'Edit Actions',
+        appliedTo: 'Alkalmazott feltételek',
+        appliedBy: 'Alkalmazott feltételek',
+        savedEffectsFor: 'Mentett effektusok a következőhöz: {name}',
+        visibility: 'Láthatóság',
+        snoozeOptions: 'Szundi emlékeztető',
+        promoteOptions: 'Előléptetés a Turn Tracker használatára',
+        editActions: 'Műveletek szerkesztése',
       },
       msg: {
         noActive: 'Nincs aktív követett állapot.',
@@ -8854,7 +10232,7 @@ const ConditionTrackerMod = (() => {
         unknownConfig:
           'Ismeretlen beállítási lehetőség. Használja a --config parancsot a támogatott beállítások megtekintéséhez.',
         macroReinstalled:
-          'A(z) {wizard}, {multiTarget} és {reportToken} makrók újra lettek telepítve az összes jelenlegi GM-játékos számára.',
+          'A(z) {wizard}, {multiTarget}, {reportToken}, {saved} és {classify} makrók újra lettek telepítve az összes jelenlegi GM-játékos számára.',
         handoutReinstalled: 'A(z) {handout} súgó-handout újra lett telepítve.',
         duplicate:
           'Pontosan ugyanez a forrás, alany, célpont, állapot és egyéni szöveg már aktív.',
@@ -8931,32 +10309,34 @@ const ConditionTrackerMod = (() => {
         conditionsReordered:
           'Az állapotsorok vissza lettek helyezve a hozzárendelt tokenek mögé.',
         noTokensSelectedReport:
-          'Select at least one token on the board before using --report-token.',
-        noConditionsAppliedTo: '{name} has no active conditions applied to it.',
+          'A --report-token használata előtt válassz legalább egy tokent a táblán.',
+        noConditionsAppliedTo: 'A {name} nem alkalmaz aktív feltételeket.',
         noConditionsAppliedBy:
-          '{name} has no active conditions applied to others.',
-        noSavedEffects: 'No saved effects stored for {name}.',
+          'A {name} nem rendelkezik más aktív feltételekkel.',
+        noSavedEffects: 'Nincsenek mentett effektusok a következőhöz: {name}.',
         noTokenSelectedSaved:
-          'Select a token on the board before using --saved.',
-        savedEffectAdded: 'Saved effect added for {name}.',
-        savedEffectUpdated: 'Saved effect updated.',
-        savedEffectRemoved: 'Saved effect removed.',
-        savedEffectNotFound: 'Saved effect not found.',
+          'A --saved használata előtt válassz ki egy tokent a táblán.',
+        savedEffectAdded: 'Mentett effektus hozzáadva a következőhöz: {name}.',
+        savedEffectUpdated: 'A mentett effektus frissítve.',
+        savedEffectRemoved: 'A mentett hatás eltávolítva.',
+        savedEffectNotFound: 'A mentett hatás nem található.',
         savedInvalidVisibility:
-          'Invalid visibility. Use public, masked, or gm.',
+          'Érvénytelen láthatóság. Használja nyilvános, maszkos vagy gm.',
         savedConditionRequired:
           'Condition type is required. Use --condition <type>.',
-        savedPromotedPublic: 'Effect added to Turn Tracker as public.',
+        savedPromotedPublic:
+          'Az effektus hozzáadva a Turn Trackerhez nyilvánosként.',
         savedPromotedMasked:
-          'Effect added to Turn Tracker as masked — players see: {publicLabel}.',
+          'A Turn Trackerhez maszkoltként hozzáadott effektus – a játékosok ezt látják: {publicLabel}.',
         savedPromotedGm:
-          'Effect is GM-only — no Turn Tracker row will be created. The reminder system will surface it when this token reaches the top of the turn order.',
-        savedSnoozed: 'Reminder snoozed: {scope}.',
-        savedSnoozeCleared: 'Snooze cleared.',
-        hiddenEffectsReminder: 'Hidden effects are active on {name}.',
-        visibilityPublicHint: 'full label visible to all',
-        visibilityMaskedHint: 'vague label shown to players',
-        visibilityGmHint: 'GM whisper only, no Turn Tracker row',
+          'A hatás csak a GM-re vonatkozik – nem jön létre Kanyarkövető sor. Az emlékeztető rendszer akkor jeleníti meg, amikor ez a token eléri a körsorrend tetejét.',
+        savedSnoozed: 'Emlékeztető elhalasztva: {scope}.',
+        savedSnoozeCleared: 'A szundi törölve.',
+        hiddenEffectsReminder:
+          'A rejtett effektusok aktívak a következőn: {name}.',
+        visibilityPublicHint: 'a teljes címke mindenki számára látható',
+        visibilityMaskedHint: 'homályos címke látható a játékosoknak',
+        visibilityGmHint: 'Csak GM suttogás, nincs kanyarkövető sor',
       },
       removal: {
         conditionField: 'Állapot',
@@ -8972,29 +10352,50 @@ const ConditionTrackerMod = (() => {
       },
       saved: {
         visibility: {
-          public: 'Public',
-          masked: 'Masked',
-          gm: 'GM Only',
+          public: 'Nyilvános',
+          masked: 'Álarcos',
+          gm: 'Csak GM',
         },
         snooze: {
-          thisTurn: 'This Turn',
-          oneRound: '1 Round',
-          threeRounds: '3 Rounds',
-          thisCombat: 'This Combat',
-          rounds: '{n} round(s)',
+          thisTurn: 'Ez a kör',
+          oneRound: '1 forduló',
+          threeRounds: '3 kör',
+          thisCombat: 'Ezt a harcot',
+          rounds: '{n} kör',
         },
         field: {
-          gmLabel: 'GM Label',
+          gmLabel: 'GM címke',
           publicLabel: 'Public Label',
-          visibility: 'Visibility',
-          source: 'Source',
-          condition: 'Condition',
+          visibility: 'Láthatóság',
+          source: 'Forrás',
+          condition: 'Állapot',
         },
         prompt: {
-          enterGmLabel: 'Full effect description (GM only)',
-          enterPublicLabel: 'Vague label shown to players',
+          enterGmLabel: 'Teljes hatás leírás (csak GM)',
+          enterPublicLabel: 'Homályos címke látható a játékosoknak',
         },
-        snoozed: 'snoozed',
+        snoozed: 'szundikált',
+      },
+      classify: {
+        title: 'Szereplők Osztályozása',
+        showTitle: 'Osztályozási Diagnosztika',
+        showHeading: 'Token Osztályozási Részletek',
+        resultHeading: 'Felülbírálás Alkalmazva',
+        noSelection:
+          'Válassz ki legalább egy tokent a táblán a --classify használata előtt.',
+        invalidType:
+          'Érvénytelen osztályozási típus: {type}. Használj pc, npc, ignored vagy auto értéket.',
+        set: '{name} → {type} (hatókör: {scope})',
+        cleared:
+          '{name} felülbírálás törölve (hatókör: {scope}) — az automatikus észlelés visszaállítva.',
+        setTokenFallback:
+          '{name} → {type} (token felülbírálás — nincs karakterlap csatolva).',
+        clearedTokenFallback:
+          '{name} token felülbírálás törölve — az automatikus észlelés visszaállítva.',
+        fieldToken: 'Jelképes',
+        fieldType: 'Osztályozás',
+        fieldSource: 'Forrás',
+        fieldReason: 'Ok',
       },
       cleanup: {
         orphaned: 'Árva állapotbejegyzések',
@@ -9032,7 +10433,7 @@ const ConditionTrackerMod = (() => {
           ],
           [
             '!condition-tracker --report-token',
-            'Select one or more tokens first, then run this command to get a GM whisper listing every condition applied to and by each selected token. Also available as the ConditionTrackerReportToken macro.',
+            'Először válasszon ki egy vagy több tokent, majd futtassa ezt a parancsot, hogy megkapja a GM suttogást, amely felsorolja az egyes kiválasztott tokenekre alkalmazott összes feltételt. ConditionTrackerReportToken makróként is elérhető.',
           ],
           [
             '!condition-tracker --menu',
@@ -9045,17 +10446,17 @@ const ConditionTrackerMod = (() => {
         colFlag: 'Kapcsoló',
         colDesc: 'Leírás',
         rows: [
-          ['--prompt', 'Interaktív lépésről lépésre haladó varázsló'],
+          ['--gyors', 'Interaktív lépésről lépésre haladó varázsló'],
           [
-            '--multi-target',
+            '--több célpont',
             'Állapot alkalmazása több célpont tokenre egyszerre',
           ],
           [
-            '--menu',
+            '--menü',
             'Főmenü megjelenítése (add remove az eltávolítási menühöz)',
           ],
           [
-            '--source X --target Y --condition Z',
+            '--forrás X --cél Y --feltétel Z',
             'Állapot közvetlen alkalmazása varázsló nélkül',
           ],
           [
@@ -9067,23 +10468,23 @@ const ConditionTrackerMod = (() => {
             'Egyéni szöveg Varázslat / Képesség / Egyéb hatástípusokhoz',
           ],
           [
-            '--remove &lt;condition-id&gt;',
+            '--remove <feltétel-azonosító>',
             'Adott állapot eltávolítása az egyedi azonosítójával',
           ],
           [
-            '--config &lt;option&gt; &lt;value&gt;',
+            '--config <beállítás> <érték>',
             'Konfigurációs beállítások módosítása (lásd lent a Beállítások részt)',
           ],
           [
-            '--prompt --subjectPromptBypass true|false',
+            '--prompt --subjectPromptBypass igaz|hamis',
             'A subjectPromptBypass felülbírálása csak erre a parancsra (a --subject-prompt-bypass is támogatott)',
           ],
           [
-            '--cleanup',
+            '--takarítás',
             'Állapot egyeztetése — árva állapotok és Turn Tracker sorok eltávolítása',
           ],
           [
-            '--reorder-conditions',
+            '--reorder-feltételek',
             'Feltétel sorok kézi átrendezése a hozzárendelt tokenek mögé a körsorrendben',
           ],
           ['--reinstall-macro', 'GM makrók újralétrehozása vagy frissítése'],
@@ -9092,12 +10493,24 @@ const ConditionTrackerMod = (() => {
             'A lokalizált súgó-handout újralétrehozása vagy frissítése',
           ],
           [
-            '--report-token',
-            'Whisper a GM-only condition report for each selected token (conditions applied to and by it)',
+            '--jelentés-token',
+            'Suttogjon egy csak GM állapotjelentést minden kiválasztott tokenhez (a rájuk és általa alkalmazott feltételek)',
           ],
           [
             '--lang &lt;locale&gt;',
             'A parancs üzeneteinek kimenete egy további locale-n (kétnyelvű mód)',
+          ],
+          [
+            '--classify pc|npc|ignored',
+            'Felülbírálja a kiválasztott tokenek szereplő típusát — először válaszd ki a token(eket). Az alapértelmezett hatókör a karakter (ct_mod_actor_type attribútumot ír); add hozzá a --scope token paramétert a script állapotban való tároláshoz',
+          ],
+          [
+            '--classify auto',
+            'Eltávolítja a szereplő típus felülbírálást és visszaállítja az automatikus észlelést a kiválasztott tokeneknél',
+          ],
+          [
+            '--classify show',
+            'Osztályozási diagnosztikát suttog minden kiválasztott tokenre — mutatja az észlelt típust, az észlelési forrást és az okot',
           ],
           ['--help', 'Rövid súgókártya megjelenítése a chatben'],
         ],
@@ -9159,64 +10572,158 @@ const ConditionTrackerMod = (() => {
         ],
       },
       savedEffects: {
-        heading: 'Saved Effects',
+        heading: 'Mentett effektusok',
         intro:
-          'Saved effects let you store long-term conditions outside the Turn Tracker — curses, diseases, poisons, hidden debuffs, and other non-combat conditions. They persist in script state and can be optionally copied into the Turn Tracker when combat begins.',
+          'A mentett effektusok segítségével hosszú távú körülményeket tárolhatsz a Turn Trackeren kívül – átkokat, betegségeket, mérgeket, rejtett debuffokat és egyéb, nem harci körülményeket. Szkript állapotban megmaradnak, és opcionálisan bemásolhatók a Turn Trackerbe, amikor a harc elkezdődik.',
         visibility: {
-          heading: 'Visibility Modes',
+          heading: 'Láthatósági módok',
           rows: [
             [
-              'public',
-              'Full effect label is visible in the Turn Tracker and public chat.',
+              'nyilvános',
+              'A teljes hatáscímke látható a Turn Trackerben és a nyilvános csevegésben.',
             ],
             [
-              'masked',
-              'A vague public label is shown to players; full details are GM-only.',
+              'álarcos',
+              'Egy homályos nyilvános címkét mutatnak a játékosoknak; a részletek csak a GM-re vonatkoznak.',
             ],
             [
               'gm',
-              'No Turn Tracker row. Full details are stored in state and whispered to the GM when the affected token reaches the top of initiative.',
+              'Nincs Turn Tracker sor. A teljes részletet a rendszer állapotában tárolja, és azt suttogja a GM-nek, amikor az érintett token eléri a kezdeményezés csúcsát.',
             ],
           ],
         },
         commands: {
-          heading: 'Saved Effects Commands',
+          heading: 'Mentett effektus-parancsok',
           intro:
-            'All --saved commands are GM-only. Select a token before running --saved or --saved add.',
+            'Minden --mentett parancs csak GM-re vonatkozik. Válasszon ki egy tokent a --saved vagy a --saved add futtatása előtt.',
           rows: [
             [
-              '!condition-tracker --saved',
-              'View saved effects for the selected token.',
+              '!condition-tracker --mentve',
+              'A kiválasztott token mentett effektusainak megtekintése.',
             ],
             [
-              '!condition-tracker --saved add',
-              'Launch the add-saved-effect wizard.',
+              '!condition-tracker --mentve add',
+              'Indítsa el a hozzáadott-mentett effektus varázslót.',
             ],
             [
               '!condition-tracker --saved edit <id>',
-              'Edit labels or visibility for an existing saved effect.',
+              'Meglévő mentett effektusok címkéinek vagy láthatóságának szerkesztése.',
             ],
             [
               '!condition-tracker --saved remove <id>',
-              'Permanently remove a saved effect.',
+              'Véglegesen távolítsa el a mentett effektust.',
             ],
             [
               '!condition-tracker --saved promote <id> --visibility public|masked|gm',
-              'Copy a saved effect into the Turn Tracker (public or masked) or confirm it is GM-only tracked.',
+              'Másoljon egy mentett effektust a Turn Trackerbe (nyilvános vagy maszkolt), vagy erősítse meg, hogy csak GM követi-e.',
             ],
             [
               '!condition-tracker --saved snooze <id> --scope turn|rounds|combat --rounds <n>',
-              'Snooze a GM reminder for this turn, N rounds, or this combat.',
+              'Szundítson GM emlékeztetőt erre a körre, N körre vagy erre a harcra.',
             ],
             [
               '!condition-tracker --saved snooze-clear <id>',
-              'Clear an active snooze so reminders resume immediately.',
+              'Törölje az aktív elhalasztást, hogy az emlékeztetők azonnal folytatódjanak.',
             ],
           ],
         },
         reminders: {
-          heading: 'GM Reminders',
-          body: 'When a token with gm or masked saved effects reaches the top of the Turn Tracker, the GM receives a whisper listing the hidden effects with action buttons. Duplicate reminders within the same turn are suppressed. Use the Snooze buttons to suppress reminders for a turn, a number of rounds, or for the remainder of the current combat.',
+          heading: 'GM emlékeztetők',
+          body: 'Amikor egy gm vagy maszkolt mentett effektusokat tartalmazó token eléri a Turn Tracker tetejét, a GM suttogást kap, amely felsorolja a rejtett effektusokat akciógombokkal. Az ugyanazon a körön belüli ismétlődő emlékeztetőket elnyomja. A Szundi gombokkal elnyomhatja az emlékeztetőket egy körre, több körre vagy az aktuális harc hátralévő részére.',
+        },
+      },
+      actorClassification: {
+        heading: 'Szereplők Osztályozása',
+        intro:
+          'A Condition Tracker automatikusan meghatározza, hogy minden token játékos karakter, nem-játékos karakter vagy figyelmen kívül hagyott objektum-e (térkép gombostűk, díszletek, varázslat sablonok). A nem csatolt tokenek alapértelmezés szerint figyelmen kívül maradnak. Használd a --classify parancsot az automatikus észlelés felülbírálásához.',
+        detectionOrder: {
+          heading: 'Észlelési Sorrend',
+          colStep: 'Lépés',
+          colCheck: 'Ellenőrzés',
+          colResult: 'Eredmény',
+          rows: [
+            [
+              '1',
+              'Token állapot felülbírálás (--classify --scope token)',
+              'pc / npc / figyelmen kívül hagyva',
+            ],
+            [
+              '2',
+              'Karakter ct_mod_actor_type attribútum (--classify --scope character)',
+              'pc / npc / figyelmen kívül hagyva',
+            ],
+            [
+              '3',
+              'Nem csatolt token — nincs karakterlap',
+              'figyelmen kívül hagyva',
+            ],
+            [
+              '4',
+              'Játékrendszer-adapter (npc / is_npc attribútum)',
+              'pc / npc',
+            ],
+            [
+              '5',
+              'Általános NPC attribútum pásztázás (npc, is_npc, npcflag, sheet_type, character_type)',
+              'pc / npc',
+            ],
+            ['6', 'Karakter controlledby tartalék', 'pc / npc'],
+          ],
+        },
+        types: {
+          heading: 'Osztályozási Típusok',
+          colType: 'Típus',
+          colMeaning: 'Jelentés',
+          rows: [
+            [
+              'pc',
+              'Játékos karakter — mindig JK-ként szerepel a varázslóban és az észlelésben',
+            ],
+            ['npc', 'Nem-játékos karakter — mindig NJK-ként szerepel'],
+            [
+              'figyelmen kívül hagyva',
+              'Soha nem jelenik meg vagy követi — ki van zárva a varázsló token-választójából',
+            ],
+            [
+              'ismeretlen',
+              'Csak automatikus észlelés; nem sikerült meghatározni a típust (NJK-ként kezelve a varázslóban)',
+            ],
+          ],
+        },
+        commands: {
+          heading: 'Osztályozási Parancsok',
+          intro:
+            'Válassz ki egy vagy több tokent a --classify parancsok futtatása előtt.',
+          rows: [
+            [
+              '!condition-tracker --classify pc',
+              'Kiválasztott tokenek JK-ként jelölése (alapértelmezett hatókör: karakter).',
+            ],
+            [
+              '!condition-tracker --classify npc',
+              'Kiválasztott tokenek NJK-ként jelölése.',
+            ],
+            [
+              '!condition-tracker --classify figyelmen kívül hagyva',
+              'Kiválasztott tokenek kizárása minden követésből.',
+            ],
+            [
+              '!condition-tracker --classify auto',
+              'Felülbírálás eltávolítása — automatikus észlelés visszaállítása.',
+            ],
+            [
+              '!condition-tracker --classify show',
+              'Osztályozási diagnosztika megjelenítése (típus, forrás, ok) minden kiválasztott tokenre.',
+            ],
+            [
+              '!condition-tracker --classify pc --scope token',
+              'Token szintű felülbírálás a script állapotában — hasznos nem csatolt tokenekhez.',
+            ],
+            [
+              '!condition-tracker --classify pc --scope karakter',
+              'Karakter szintű felülbírálás a ct_mod_actor_type attribútumba írva — érvényes az összes tokennél, amely ugyanazt a karakterlapot használja.',
+            ],
+          ],
         },
       },
       configuration: {
@@ -9234,17 +10741,17 @@ const ConditionTrackerMod = (() => {
           ],
           [
             'useIcons',
-            'true / false',
+            'igaz / hamis',
             'Rövid ikonkódok megjelenítése (pl. [G]) emoji helyett a Turn Tracker sorokban',
           ],
           [
             'subjectPromptBypass',
-            'true / false',
+            'igaz / hamis',
             'Az opcionális alany-token lépés kihagyása Varázslat / Képesség / Egyéb hatásoknál',
           ],
           [
             'suppressPublicChat',
-            'true / false',
+            'igaz / hamis',
             'Az összes nyilvános csevegési bejelentés (alkalmazás és eltávolítás) elnyomása. A GM-suttogások nem érintettek.',
           ],
           [
@@ -9273,7 +10780,7 @@ const ConditionTrackerMod = (() => {
         heading: 'Elérhető fordítások',
         intro:
           'Használja a language konfigurációs beállítást a chat-üzenetek és a súgó-handout bármely támogatott locale-re állításához. Rövid álnevek is elfogadottak en, zh és pt esetén.',
-        colLocale: 'Locale',
+        colLocale: 'Nyelv',
         colLanguage: 'Nyelv',
         colFile: 'Fordítási fájl',
       },
@@ -9381,7 +10888,7 @@ const ConditionTrackerMod = (() => {
         custom: '{emoji} {target} influenzato da {effect} ({source})',
         advantage: '{emoji} {source} ha vantaggio contro {target}{subject}',
         disadvantage: '{emoji} {source} ha svantaggio contro {target}{subject}',
-        noBy: '{emoji} {target} {past} ({source})',
+        noBy: 'SEGNAPOSTO0TOKEN SEGNAPOSTO1TOKEN SEGNAPOSTO2TOKEN (SEGNAPOSTO3TOKEN)',
         self: '{target} è {past}',
         standard: '{emoji} {target} {past} da {source}',
       },
@@ -9390,8 +10897,9 @@ const ConditionTrackerMod = (() => {
         advantage: '{source} ha vantaggio contro {target}{subject}.',
         disadvantage: '{source} ha svantaggio contro {target}{subject}.',
         self: '{target} è {past}.',
-        withSuffix: '{source} {verb} {target} {suffix}.',
-        standard: '{source} {verb} {target}.',
+        withSuffix:
+          'SEGNAPOSTO0TOKEN SEGNAPOSTO1TOKEN SEGNAPOSTO2TOKEN SEGNAPOSTO3TOKEN.',
+        standard: 'SEGNAPOSTO0TOKEN SEGNAPOSTO1TOKEN SEGNAPOSTO2TOKEN.',
       },
       remove: {
         custom: '{target} non è più influenzato da {effect}.',
@@ -9445,14 +10953,14 @@ const ConditionTrackerMod = (() => {
         details: 'Dettagli',
         description: 'Descrizione',
         scenario: 'Scenario',
-        gameSystem: 'Game System',
-        duration: 'Duration',
+        gameSystem: 'Sistema di gioco',
+        duration: 'Durata',
       },
       dur: {
         untilRemoved: 'Fino alla rimozione',
         endOfTargetTurn: 'Fine del prossimo turno del bersaglio',
         endOfSourceTurn: 'Fine del prossimo turno della sorgente',
-        round1: '1 round',
+        round1: '1 giro',
         round2: '2 round',
         round3: '3 round',
         round10: '10 round',
@@ -9471,14 +10979,14 @@ const ConditionTrackerMod = (() => {
         reinstallHandout: 'Reinstalla documento',
         showHelp: 'Mostra aiuto',
         reorderConditions: 'Riordina righe condizioni',
-        reportToken: 'Report Token Conditions',
-        savedEffects: 'Saved Effects',
-        addSavedEffect: 'Add Saved Effect',
-        editSaved: 'Edit',
-        removeSaved: 'Remove',
-        promoteSaved: 'Add to Turn Tracker',
-        snoozeSaved: 'Snooze',
-        clearSnooze: 'Clear Snooze',
+        reportToken: 'Segnala le condizioni dei token',
+        savedEffects: 'Effetti salvati',
+        addSavedEffect: 'Aggiungi effetto salvato',
+        editSaved: 'Modificare',
+        removeSaved: 'Rimuovere',
+        promoteSaved: 'Aggiungi al contagiri',
+        snoozeSaved: 'Posticipare',
+        clearSnooze: 'Cancella Posticipa',
       },
       title: {
         menu: 'Menu',
@@ -9489,8 +10997,7 @@ const ConditionTrackerMod = (() => {
         applied: 'Applicato',
         removed: 'Condizione rimossa',
         cleanup: 'Pulizia completata',
-        macroReinstalled:
-          'The {wizard}, {multiTarget}, {reportToken}, and {saved} macros have been reinstalled for all current GM players.',
+        macroReinstalled: 'Macro reinstallata',
         handoutReinstalled: 'Documento reinstallato',
         warning: 'Avviso',
         error: 'Errore',
@@ -9502,15 +11009,15 @@ const ConditionTrackerMod = (() => {
         moveToken: '{name} — Spostare il token?',
         scriptReady: 'Script pronto',
         conditionReorder: 'Ordine di turno modificato',
-        tokenReport: 'Token Condition Report',
-        savedEffects: 'Saved Effects',
-        savedAdd: 'Add Saved Effect',
-        savedEdit: 'Edit Saved Effect',
-        savedRemoved: 'Saved Effect Removed',
-        savedPromoted: 'Add to Turn Tracker',
-        savedSnoozed: 'Reminder Snoozed',
-        savedSnoozeCleared: 'Snooze Cleared',
-        hiddenEffects: 'Hidden Effects — {name}',
+        tokenReport: 'Rapporto sulle condizioni dei token',
+        savedEffects: 'Effetti salvati',
+        savedAdd: 'Aggiungi effetto salvato',
+        savedEdit: 'Modifica effetto salvato',
+        savedRemoved: 'Effetto salvato rimosso',
+        savedPromoted: 'Aggiungi al contagiri',
+        savedSnoozed: 'Promemoria posticipato',
+        savedSnoozeCleared: 'Posticipa cancellato',
+        hiddenEffects: 'Effetti nascosti — {name}',
       },
       heading: {
         quickActions: 'Azioni rapide',
@@ -9522,13 +11029,13 @@ const ConditionTrackerMod = (() => {
         promptUi: 'Interfaccia procedura guidata',
         examples: 'Esempi',
         summary: 'Riepilogo',
-        appliedTo: 'Conditions Applied To',
-        appliedBy: 'Conditions Applied By',
-        savedEffectsFor: 'Saved Effects for {name}',
-        visibility: 'Visibility',
-        snoozeOptions: 'Snooze Reminder',
-        promoteOptions: 'Promote to Turn Tracker',
-        editActions: 'Edit Actions',
+        appliedTo: 'Condizioni applicate',
+        appliedBy: 'Condizioni applicate da',
+        savedEffectsFor: 'Effetti salvati per {name}',
+        visibility: 'Visibilità',
+        snoozeOptions: 'Promemoria posticipazione',
+        promoteOptions: 'Promuovi a Turn Tracker',
+        editActions: 'Modifica azioni',
       },
       msg: {
         noActive: 'Nessuna condizione attiva è tracciata.',
@@ -9537,7 +11044,7 @@ const ConditionTrackerMod = (() => {
         unknownConfig:
           'Opzione di configurazione sconosciuta. Usa --config per visualizzare le impostazioni supportate.',
         macroReinstalled:
-          'Le macro {wizard}, {multiTarget} e {reportToken} sono state reinstallate per tutti i GM attivi.',
+          'Le macro {wizard}, {multiTarget}, {reportToken}, {saved} e {classify} sono state reinstallate per tutti i GM attivi.',
         handoutReinstalled:
           'Il documento di aiuto {handout} è stato reinstallato.',
         duplicate:
@@ -9616,32 +11123,32 @@ const ConditionTrackerMod = (() => {
         conditionsReordered:
           'Le righe delle condizioni sono state riposizionate dopo i rispettivi token assegnati.',
         noTokensSelectedReport:
-          'Select at least one token on the board before using --report-token.',
-        noConditionsAppliedTo: '{name} has no active conditions applied to it.',
+          'Seleziona almeno un token sul tabellone prima di utilizzare --report-token.',
+        noConditionsAppliedTo: 'A {name} non sono applicate condizioni attive.',
         noConditionsAppliedBy:
-          '{name} has no active conditions applied to others.',
-        noSavedEffects: 'No saved effects stored for {name}.',
+          '{name} non ha condizioni attive applicate ad altri.',
+        noSavedEffects: 'Nessun effetto salvato memorizzato per {name}.',
         noTokenSelectedSaved:
-          'Select a token on the board before using --saved.',
-        savedEffectAdded: 'Saved effect added for {name}.',
-        savedEffectUpdated: 'Saved effect updated.',
-        savedEffectRemoved: 'Saved effect removed.',
-        savedEffectNotFound: 'Saved effect not found.',
+          'Seleziona un token sul tabellone prima di utilizzare --saved.',
+        savedEffectAdded: 'Effetto salvato aggiunto per {name}.',
+        savedEffectUpdated: 'Effetto salvato aggiornato.',
+        savedEffectRemoved: 'Effetto salvato rimosso.',
+        savedEffectNotFound: 'Effetto salvato non trovato.',
         savedInvalidVisibility:
-          'Invalid visibility. Use public, masked, or gm.',
+          'Visibilità non valida. Utilizza pubblico, mascherato o gm.',
         savedConditionRequired:
           'Condition type is required. Use --condition <type>.',
-        savedPromotedPublic: 'Effect added to Turn Tracker as public.',
+        savedPromotedPublic: 'Effetto aggiunto al Turn Tracker come pubblico.',
         savedPromotedMasked:
-          'Effect added to Turn Tracker as masked — players see: {publicLabel}.',
+          'Effetto aggiunto a Turn Tracker come mascherato: i giocatori vedono: {publicLabel}.',
         savedPromotedGm:
-          'Effect is GM-only — no Turn Tracker row will be created. The reminder system will surface it when this token reaches the top of the turn order.',
-        savedSnoozed: 'Reminder snoozed: {scope}.',
-        savedSnoozeCleared: 'Snooze cleared.',
-        hiddenEffectsReminder: 'Hidden effects are active on {name}.',
-        visibilityPublicHint: 'full label visible to all',
-        visibilityMaskedHint: 'vague label shown to players',
-        visibilityGmHint: 'GM whisper only, no Turn Tracker row',
+          "L'effetto è solo per il GM: non verrà creata alcuna riga di indicatori di turno. Il sistema di promemoria verrà visualizzato quando questo gettone raggiunge la parte superiore dell'ordine di turno.",
+        savedSnoozed: 'Promemoria posticipato: {scope}.',
+        savedSnoozeCleared: 'La funzione Snooze è stata cancellata.',
+        hiddenEffectsReminder: 'Gli effetti nascosti sono attivi su {name}.',
+        visibilityPublicHint: 'etichetta completa visibile a tutti',
+        visibilityMaskedHint: 'etichetta vaga mostrata ai giocatori',
+        visibilityGmHint: 'Solo sussurro del GM, nessuna riga di Turn Tracker',
       },
       removal: {
         conditionField: 'Condizione',
@@ -9657,29 +11164,50 @@ const ConditionTrackerMod = (() => {
       },
       saved: {
         visibility: {
-          public: 'Public',
-          masked: 'Masked',
-          gm: 'GM Only',
+          public: 'Pubblico',
+          masked: 'Mascherato',
+          gm: 'Solo GM',
         },
         snooze: {
-          thisTurn: 'This Turn',
-          oneRound: '1 Round',
-          threeRounds: '3 Rounds',
-          thisCombat: 'This Combat',
-          rounds: '{n} round(s)',
+          thisTurn: 'Questo turno',
+          oneRound: '1 giro',
+          threeRounds: '3 turni',
+          thisCombat: 'Questo combattimento',
+          rounds: '{n} round(i)',
         },
         field: {
-          gmLabel: 'GM Label',
-          publicLabel: 'Public Label',
-          visibility: 'Visibility',
-          source: 'Source',
-          condition: 'Condition',
+          gmLabel: 'Etichetta GM',
+          publicLabel: 'Etichetta pubblica',
+          visibility: 'Visibilità',
+          source: 'Fonte',
+          condition: 'Condizione',
         },
         prompt: {
-          enterGmLabel: 'Full effect description (GM only)',
-          enterPublicLabel: 'Vague label shown to players',
+          enterGmLabel: "Descrizione completa dell'effetto (solo GM)",
+          enterPublicLabel: 'Etichetta vaga mostrata ai giocatori',
         },
-        snoozed: 'snoozed',
+        snoozed: 'posticipato',
+      },
+      classify: {
+        title: 'Classificazione degli Attori',
+        showTitle: 'Diagnostica di Classificazione',
+        showHeading: 'Dettagli Classificazione Token',
+        resultHeading: 'Sovrascrittura Applicata',
+        noSelection:
+          'Seleziona almeno un token sulla plancia prima di usare --classify.',
+        invalidType:
+          'Tipo di classificazione non valido: {type}. Usa pc, npc, ignored o auto.',
+        set: '{name} → {type} (ambito: {scope})',
+        cleared:
+          '{name} sovrascrittura rimossa (ambito: {scope}) — rilevamento automatico ripristinato.',
+        setTokenFallback:
+          '{name} → {type} (sovrascrittura token — nessuna scheda personaggio collegata).',
+        clearedTokenFallback:
+          '{name} sovrascrittura token rimossa — rilevamento automatico ripristinato.',
+        fieldToken: 'Gettone',
+        fieldType: 'Classificazione',
+        fieldSource: 'Fonte',
+        fieldReason: 'Motivo',
       },
       cleanup: {
         orphaned: 'Voci di condizione orfane',
@@ -9709,7 +11237,7 @@ const ConditionTrackerMod = (() => {
         colDesc: 'Descrizione',
         rows: [
           [
-            '!condition-tracker --prompt',
+            '!condizione-tracker --prompt',
             'Procedura guidata passo dopo passo — scegli condizione, token e durata in modo interattivo. Disponibile anche come macro ConditionTrackerWizard.',
           ],
           [
@@ -9718,7 +11246,7 @@ const ConditionTrackerMod = (() => {
           ],
           [
             '!condition-tracker --report-token',
-            'Select one or more tokens first, then run this command to get a GM whisper listing every condition applied to and by each selected token. Also available as the ConditionTrackerReportToken macro.',
+            'Seleziona prima uno o più token, quindi esegui questo comando per ricevere un sussurro dal GM che elenca tutte le condizioni applicate a e da ciascun token selezionato. Disponibile anche come macro ConditionTrackerReportToken.',
           ],
           [
             '!condition-tracker --menu',
@@ -9728,12 +11256,15 @@ const ConditionTrackerMod = (() => {
       },
       commandsRef: {
         heading: 'Riferimento comandi',
-        colFlag: 'Flag',
+        colFlag: 'Bandiera',
         colDesc: 'Descrizione',
         rows: [
-          ['--prompt', 'Interfaccia della procedura guidata passo dopo passo'],
           [
-            '--multi-target',
+            '--richiesta',
+            'Interfaccia della procedura guidata passo dopo passo',
+          ],
+          [
+            '--multi-bersaglio',
             'Applica una condizione a più token bersaglio contemporaneamente',
           ],
           [
@@ -9741,7 +11272,7 @@ const ConditionTrackerMod = (() => {
             'Mostra il menu principale (aggiungi remove per il menu di rimozione)',
           ],
           [
-            '--source X --target Y --condition Z',
+            '--source X --target Y --condizione Z',
             'Applica una condizione direttamente senza la procedura guidata',
           ],
           [
@@ -9765,25 +11296,37 @@ const ConditionTrackerMod = (() => {
             'Sostituisci subjectPromptBypass solo per questo comando (supporta anche --subject-prompt-bypass)',
           ],
           [
-            '--cleanup',
+            '--ripulire',
             'Riconcilia lo stato — rimuovi condizioni e righe del registro dei turni orfane',
           ],
           [
-            '--reorder-conditions',
+            '--condizioni-di-riordino',
             "Riposizionare manualmente le righe di condizione dopo i token assegnati nell'ordine dei turni",
           ],
-          ['--reinstall-macro', 'Ricrea o aggiorna le macro del GM'],
+          ['--reinstalla-macro', 'Ricrea o aggiorna le macro del GM'],
           [
-            '--reinstall-handout',
+            '--dispensa-di-reinstallazione',
             'Ricrea o aggiorna il documento di aiuto localizzato',
           ],
           [
-            '--report-token',
-            'Whisper a GM-only condition report for each selected token (conditions applied to and by it)',
+            '--token-report',
+            'Sussurra un rapporto sulle condizioni riservato al GM per ciascun gettone selezionato (condizioni applicate a e da esso)',
           ],
           [
             '--lang &lt;locale&gt;',
             'Mostra i messaggi di questo comando in una lingua aggiuntiva (modalità bilingue)',
+          ],
+          [
+            '--classify pc|npc|ignored',
+            "Sovrascrive il tipo di attore per i token selezionati — seleziona prima i token. L'ambito predefinito è il personaggio (scrive l'attributo ct_mod_actor_type); aggiungi --scope token per archiviare nello stato dello script",
+          ],
+          [
+            '--classify auto',
+            'Rimuove la sovrascrittura del tipo di attore e ripristina il rilevamento automatico per i token selezionati',
+          ],
+          [
+            '--classify show',
+            'Sussurra una diagnostica di classificazione per ogni token selezionato — mostra il tipo rilevato, la fonte di rilevamento e il motivo',
           ],
           ['--help', 'Mostra una scheda di aiuto rapida nella chat'],
         ],
@@ -9845,64 +11388,158 @@ const ConditionTrackerMod = (() => {
         ],
       },
       savedEffects: {
-        heading: 'Saved Effects',
+        heading: 'Effetti salvati',
         intro:
-          'Saved effects let you store long-term conditions outside the Turn Tracker — curses, diseases, poisons, hidden debuffs, and other non-combat conditions. They persist in script state and can be optionally copied into the Turn Tracker when combat begins.',
+          'Gli effetti salvati ti consentono di memorizzare condizioni a lungo termine al di fuori del Turn Tracker: maledizioni, malattie, veleni, debuff nascosti e altre condizioni non di combattimento. Persistono nello stato dello script e possono essere facoltativamente copiati nel Turn Tracker quando inizia il combattimento.',
         visibility: {
-          heading: 'Visibility Modes',
+          heading: 'Modalità di visibilità',
           rows: [
             [
-              'public',
-              'Full effect label is visible in the Turn Tracker and public chat.',
+              'pubblico',
+              "L'etichetta con effetto completo è visibile nel Turn Tracker e nella chat pubblica.",
             ],
             [
-              'masked',
-              'A vague public label is shown to players; full details are GM-only.',
+              'mascherato',
+              'Ai giocatori viene mostrata una vaga etichetta pubblica; i dettagli completi sono solo GM.',
             ],
             [
-              'gm',
-              'No Turn Tracker row. Full details are stored in state and whispered to the GM when the affected token reaches the top of initiative.',
+              'gr',
+              "Nessuna riga del contagiri. I dettagli completi vengono memorizzati nello stato e sussurrati al GM quando il segnalino interessato raggiunge il massimo dell'iniziativa.",
             ],
           ],
         },
         commands: {
-          heading: 'Saved Effects Commands',
+          heading: 'Comandi degli effetti salvati',
           intro:
-            'All --saved commands are GM-only. Select a token before running --saved or --saved add.',
+            'Tutti i comandi --saved sono solo GM. Seleziona un token prima di eseguire --saved o --saved add.',
           rows: [
             [
-              '!condition-tracker --saved',
-              'View saved effects for the selected token.',
+              '!condizione-tracker --salvato',
+              'Visualizza gli effetti salvati per il token selezionato.',
             ],
             [
               '!condition-tracker --saved add',
-              'Launch the add-saved-effect wizard.',
+              'Avvia la procedura guidata per aggiungere effetti salvati.',
             ],
             [
               '!condition-tracker --saved edit <id>',
-              'Edit labels or visibility for an existing saved effect.',
+              'Modifica le etichette o la visibilità per un effetto salvato esistente.',
             ],
             [
               '!condition-tracker --saved remove <id>',
-              'Permanently remove a saved effect.',
+              'Rimuovi permanentemente un effetto salvato.',
             ],
             [
               '!condition-tracker --saved promote <id> --visibility public|masked|gm',
-              'Copy a saved effect into the Turn Tracker (public or masked) or confirm it is GM-only tracked.',
+              'Copia un effetto salvato nel Contaturni (pubblico o mascherato) o conferma che sia tracciato solo dal GM.',
             ],
             [
               '!condition-tracker --saved snooze <id> --scope turn|rounds|combat --rounds <n>',
-              'Snooze a GM reminder for this turn, N rounds, or this combat.',
+              'Posticipa un promemoria del GM per questo turno, N round o questo combattimento.',
             ],
             [
               '!condition-tracker --saved snooze-clear <id>',
-              'Clear an active snooze so reminders resume immediately.',
+              'Cancella un posticipo attivo in modo che i promemoria riprendano immediatamente.',
             ],
           ],
         },
         reminders: {
-          heading: 'GM Reminders',
-          body: 'When a token with gm or masked saved effects reaches the top of the Turn Tracker, the GM receives a whisper listing the hidden effects with action buttons. Duplicate reminders within the same turn are suppressed. Use the Snooze buttons to suppress reminders for a turn, a number of rounds, or for the remainder of the current combat.',
+          heading: 'Promemoria del GM',
+          body: 'Quando un gettone con GM o effetti salvati mascherati raggiunge la parte superiore del Turn Tracker, il GM riceve un sussurro che elenca gli effetti nascosti con pulsanti di azione. I promemoria duplicati nello stesso turno vengono soppressi. Utilizza i pulsanti Posticipa per sopprimere i promemoria per un turno, un numero di round o per il resto del combattimento corrente.',
+        },
+      },
+      actorClassification: {
+        heading: 'Classificazione degli Attori',
+        intro:
+          'Condition Tracker determina automaticamente se ogni token è un PG, PNG o un oggetto ignorato (spilli mappa, scenografia, modelli di incantesimo). I token non collegati vengono ignorati per impostazione predefinita. Usa --classify per sovrascrivere il rilevamento automatico per qualsiasi token.',
+        detectionOrder: {
+          heading: 'Ordine di Rilevamento',
+          colStep: 'Passaggio',
+          colCheck: 'Controllo',
+          colResult: 'Risultato',
+          rows: [
+            [
+              '1',
+              'Sovrascrittura di stato token (--classify --scope token)',
+              'pc/npc/ignorato',
+            ],
+            [
+              '2',
+              'Attributo ct_mod_actor_type del personaggio (--classify --scope character)',
+              'pc/npc/ignorato',
+            ],
+            [
+              '3',
+              'Token non collegato — nessuna scheda personaggio',
+              'ignorato',
+            ],
+            [
+              '4',
+              'Adattatore sistema di gioco (attributo npc / is_npc)',
+              'pc/npc',
+            ],
+            [
+              '5',
+              'Scansione attributi NPC generici (npc, is_npc, npcflag, sheet_type, character_type)',
+              'pc/npc',
+            ],
+            ['6', 'Fallback controlledby del personaggio', 'pc/npc'],
+          ],
+        },
+        types: {
+          heading: 'Tipi di Classificazione',
+          colType: 'Tipo',
+          colMeaning: 'Significato',
+          rows: [
+            [
+              'pc',
+              "Personaggio giocante — sempre incluso come PG nell'assistente e nel rilevamento",
+            ],
+            ['npc', 'Personaggio non giocante — sempre incluso come PNG'],
+            [
+              'ignorato',
+              "Mai mostrato o tracciato — escluso dal selettore token dell'assistente",
+            ],
+            [
+              'sconosciuto',
+              "Solo rilevamento automatico; tipo non determinabile (trattato come PNG nell'assistente)",
+            ],
+          ],
+        },
+        commands: {
+          heading: 'Comandi di Classificazione',
+          intro:
+            'Seleziona uno o più token prima di eseguire i comandi --classify.',
+          rows: [
+            [
+              '!condition-tracker --classifica pc',
+              'Segna i token selezionati come PG (ambito personaggio per impostazione predefinita).',
+            ],
+            [
+              '!condition-tracker --classify npc',
+              'Segna i token selezionati come PNG.',
+            ],
+            [
+              '!condition-tracker --classify ignorato',
+              'Escludi i token selezionati da qualsiasi tracciamento.',
+            ],
+            [
+              '!condition-tracker --classify auto',
+              'Rimuovi la sovrascrittura — ripristina il rilevamento automatico.',
+            ],
+            [
+              '!condition-tracker --classifica spettacolo',
+              'Mostra la diagnostica di classificazione (tipo, fonte, motivo) per ogni token selezionato.',
+            ],
+            [
+              '!condition-tracker --classify pc --scope token',
+              'Sovrascrittura a livello token nello stato script — utile per token non collegati.',
+            ],
+            [
+              '!condition-tracker --classify pc --scope carattere',
+              "Sovrascrittura a livello personaggio nell'attributo ct_mod_actor_type — si applica a tutti i token con la stessa scheda personaggio.",
+            ],
+          ],
         },
       },
       configuration: {
@@ -9920,17 +11557,17 @@ const ConditionTrackerMod = (() => {
           ],
           [
             'useIcons',
-            'true / false',
+            'vero/falso',
             'Mostra codici icona brevi (es. [G]) invece di emoji nelle righe del Registro dei Turni',
           ],
           [
             'subjectPromptBypass',
-            'true / false',
+            'vero/falso',
             'Salta il passaggio facoltativo del token soggetto per gli effetti Incantesimo / Abilità / Altro',
           ],
           [
             'suppressPublicChat',
-            'true / false',
+            'vero/falso',
             'Sopprimi tutti gli annunci pubblici in chat (messaggi di applicazione e rimozione). I sussurri del GM non sono interessati.',
           ],
           [
@@ -10126,8 +11763,8 @@ const ConditionTrackerMod = (() => {
         details: '詳細',
         description: '説明',
         scenario: 'シナリオ',
-        gameSystem: 'Game System',
-        duration: 'Duration',
+        gameSystem: 'ゲームシステム',
+        duration: '間隔',
       },
       dur: {
         untilRemoved: '削除されるまで',
@@ -10152,14 +11789,14 @@ const ConditionTrackerMod = (() => {
         reinstallHandout: 'ハンドアウトを再インストール',
         showHelp: 'ヘルプを表示',
         reorderConditions: '状態行を並び替え',
-        reportToken: 'Report Token Conditions',
-        savedEffects: 'Saved Effects',
-        addSavedEffect: 'Add Saved Effect',
-        editSaved: 'Edit',
-        removeSaved: 'Remove',
-        promoteSaved: 'Add to Turn Tracker',
-        snoozeSaved: 'Snooze',
-        clearSnooze: 'Clear Snooze',
+        reportToken: 'レポートトークンの条件',
+        savedEffects: '保存されたエフェクト',
+        addSavedEffect: '保存したエフェクトを追加',
+        editSaved: '編集',
+        removeSaved: '取り除く',
+        promoteSaved: 'ターントラッカーに追加',
+        snoozeSaved: 'スヌーズ',
+        clearSnooze: 'クリアスヌーズ',
       },
       title: {
         menu: 'メニュー',
@@ -10170,8 +11807,7 @@ const ConditionTrackerMod = (() => {
         applied: '適用済み',
         removed: '状態削除済み',
         cleanup: 'クリーンアップ完了',
-        macroReinstalled:
-          'The {wizard}, {multiTarget}, {reportToken}, and {saved} macros have been reinstalled for all current GM players.',
+        macroReinstalled: 'マクロ再インストール済み',
         handoutReinstalled: 'ハンドアウト再インストール済み',
         warning: '警告',
         error: 'エラー',
@@ -10183,15 +11819,15 @@ const ConditionTrackerMod = (() => {
         moveToken: '{name} — トークンを移動しますか？',
         scriptReady: 'スクリプト準備完了',
         conditionReorder: 'ターン順序変更',
-        tokenReport: 'Token Condition Report',
-        savedEffects: 'Saved Effects',
-        savedAdd: 'Add Saved Effect',
-        savedEdit: 'Edit Saved Effect',
-        savedRemoved: 'Saved Effect Removed',
-        savedPromoted: 'Add to Turn Tracker',
-        savedSnoozed: 'Reminder Snoozed',
-        savedSnoozeCleared: 'Snooze Cleared',
-        hiddenEffects: 'Hidden Effects — {name}',
+        tokenReport: 'トークン状態レポート',
+        savedEffects: '保存されたエフェクト',
+        savedAdd: '保存したエフェクトを追加',
+        savedEdit: '保存されたエフェクトを編集する',
+        savedRemoved: '保存されたエフェクトが削除されました',
+        savedPromoted: 'ターントラッカーに追加',
+        savedSnoozed: 'リマインダーがスヌーズされました',
+        savedSnoozeCleared: 'スヌーズが解除されました',
+        hiddenEffects: '隠し効果 — {name}',
       },
       heading: {
         quickActions: 'クイックアクション',
@@ -10203,13 +11839,13 @@ const ConditionTrackerMod = (() => {
         promptUi: 'ウィザードUI',
         examples: '例',
         summary: 'まとめ',
-        appliedTo: 'Conditions Applied To',
-        appliedBy: 'Conditions Applied By',
-        savedEffectsFor: 'Saved Effects for {name}',
-        visibility: 'Visibility',
-        snoozeOptions: 'Snooze Reminder',
-        promoteOptions: 'Promote to Turn Tracker',
-        editActions: 'Edit Actions',
+        appliedTo: '適用される条件',
+        appliedBy: '適用される条件',
+        savedEffectsFor: '{name} の保存済みエフェクト',
+        visibility: '可視性',
+        snoozeOptions: 'スヌーズリマインダー',
+        promoteOptions: 'ターントラッカーに昇格',
+        editActions: 'アクションの編集',
       },
       msg: {
         noActive: '追跡中のアクティブな状態はありません。',
@@ -10217,7 +11853,7 @@ const ConditionTrackerMod = (() => {
         unknownConfig:
           '不明な設定オプションです。--configを使用してサポートされている設定を確認してください。',
         macroReinstalled:
-          '{wizard}、{multiTarget}および{reportToken}マクロが現在のすべてのGMプレイヤーに再インストールされました。',
+          '{wizard}、{multiTarget}、{reportToken}、{saved}および{classify}マクロが現在のすべてのGMプレイヤーに再インストールされました。',
         handoutReinstalled:
           'ヘルプハンドアウト{handout}が再インストールされました。',
         duplicate:
@@ -10294,32 +11930,34 @@ const ConditionTrackerMod = (() => {
         conditionsReordered:
           '状態行が割り当てられたトークンの後に再配置されました。',
         noTokensSelectedReport:
-          'Select at least one token on the board before using --report-token.',
-        noConditionsAppliedTo: '{name} has no active conditions applied to it.',
+          '--report-token を使用する前に、ボード上で少なくとも 1 つのトークンを選択してください。',
+        noConditionsAppliedTo:
+          '{name} にはアクティブな条件が適用されていません。',
         noConditionsAppliedBy:
-          '{name} has no active conditions applied to others.',
-        noSavedEffects: 'No saved effects stored for {name}.',
+          '{name} には、他に適用されるアクティブな条件がありません。',
+        noSavedEffects: '{name} には保存されたエフェクトが保存されていません。',
         noTokenSelectedSaved:
-          'Select a token on the board before using --saved.',
-        savedEffectAdded: 'Saved effect added for {name}.',
-        savedEffectUpdated: 'Saved effect updated.',
-        savedEffectRemoved: 'Saved effect removed.',
-        savedEffectNotFound: 'Saved effect not found.',
+          '--saved を使用する前に、ボード上のトークンを選択してください。',
+        savedEffectAdded: '{name} の保存済みエフェクトが追加されました。',
+        savedEffectUpdated: '保存されたエフェクトが更新されました。',
+        savedEffectRemoved: '保存されたエフェクトが削除されました。',
+        savedEffectNotFound: '保存されたエフェクトが見つかりません。',
         savedInvalidVisibility:
-          'Invalid visibility. Use public, masked, or gm.',
+          '無効な可視性。 public、masked、または gm を使用します。',
         savedConditionRequired:
           'Condition type is required. Use --condition <type>.',
-        savedPromotedPublic: 'Effect added to Turn Tracker as public.',
+        savedPromotedPublic:
+          'エフェクトがターン トラッカーにパブリックとして追加されました。',
         savedPromotedMasked:
-          'Effect added to Turn Tracker as masked — players see: {publicLabel}.',
+          'マスクされた効果がターン トラッカーに追加されました — プレイヤーは次を参照してください: {publicLabel}。',
         savedPromotedGm:
-          'Effect is GM-only — no Turn Tracker row will be created. The reminder system will surface it when this token reaches the top of the turn order.',
-        savedSnoozed: 'Reminder snoozed: {scope}.',
-        savedSnoozeCleared: 'Snooze cleared.',
-        hiddenEffectsReminder: 'Hidden effects are active on {name}.',
-        visibilityPublicHint: 'full label visible to all',
-        visibilityMaskedHint: 'vague label shown to players',
-        visibilityGmHint: 'GM whisper only, no Turn Tracker row',
+          '効果は GM のみです。ターン トラッカー行は作成されません。このトークンがターン順序の一番上に達すると、リマインダー システムによって表示されます。',
+        savedSnoozed: 'リマインダーがスヌーズされました: {scope}。',
+        savedSnoozeCleared: 'スヌーズが解除されました。',
+        hiddenEffectsReminder: '隠し効果は{name}で有効になります。',
+        visibilityPublicHint: '完全なラベルは全員に表示されます',
+        visibilityMaskedHint: 'プレーヤーに表示される曖昧なラベル',
+        visibilityGmHint: 'GM ささやきのみ、ターントラッカー列なし',
       },
       removal: {
         conditionField: '状態',
@@ -10335,29 +11973,50 @@ const ConditionTrackerMod = (() => {
       },
       saved: {
         visibility: {
-          public: 'Public',
-          masked: 'Masked',
-          gm: 'GM Only',
+          public: '公共',
+          masked: 'マスクされた',
+          gm: 'GMのみ',
         },
         snooze: {
-          thisTurn: 'This Turn',
-          oneRound: '1 Round',
-          threeRounds: '3 Rounds',
-          thisCombat: 'This Combat',
-          rounds: '{n} round(s)',
+          thisTurn: 'このターン',
+          oneRound: '1ラウンド',
+          threeRounds: '3ラウンド',
+          thisCombat: 'この戦闘',
+          rounds: '{n} ラウンド',
         },
         field: {
-          gmLabel: 'GM Label',
-          publicLabel: 'Public Label',
-          visibility: 'Visibility',
-          source: 'Source',
-          condition: 'Condition',
+          gmLabel: 'GMラベル',
+          publicLabel: 'パブリックラベル',
+          visibility: '可視性',
+          source: 'ソース',
+          condition: '状態',
         },
         prompt: {
-          enterGmLabel: 'Full effect description (GM only)',
-          enterPublicLabel: 'Vague label shown to players',
+          enterGmLabel: '完全な効果の説明 (GM のみ)',
+          enterPublicLabel: 'プレイヤーに表示される曖昧なラベル',
         },
-        snoozed: 'snoozed',
+        snoozed: '居眠りした',
+      },
+      classify: {
+        title: 'アクター分類',
+        showTitle: '分類診断',
+        showHeading: 'トークン分類の詳細',
+        resultHeading: '上書きが適用されました',
+        noSelection:
+          '--classify を使用する前に、ボード上のトークンを少なくとも1つ選択してください。',
+        invalidType:
+          '無効な分類タイプ: {type}。pc、npc、ignored、または auto を使用してください。',
+        set: '{name} → {type}（スコープ: {scope}）',
+        cleared:
+          '{name} 上書きがクリアされました（スコープ: {scope}）— 自動検出が復元されました。',
+        setTokenFallback:
+          '{name} → {type}（トークン上書き — キャラクターシートが未リンク）。',
+        clearedTokenFallback:
+          '{name} トークン上書きがクリアされました — 自動検出が復元されました。',
+        fieldToken: 'トークン',
+        fieldType: '分類',
+        fieldSource: 'ソース',
+        fieldReason: '理由',
       },
       cleanup: {
         orphaned: '孤立した状態エントリ',
@@ -10386,16 +12045,16 @@ const ConditionTrackerMod = (() => {
         colDesc: '説明',
         rows: [
           [
-            '!condition-tracker --prompt',
+            '!condition-tracker --プロンプト',
             'ステップバイステップのウィザード — 状態、トークン、継続時間をインタラクティブに選択します。ConditionTrackerWizardマクロとしても利用できます。',
           ],
           [
-            '!condition-tracker --multi-target',
+            '!condition-tracker --マルチターゲット',
             '1つの状態を複数のトークンに同時に適用します。ConditionTrackerMultiTargetマクロとしても利用できます。',
           ],
           [
-            '!condition-tracker --report-token',
-            'Select one or more tokens first, then run this command to get a GM whisper listing every condition applied to and by each selected token. Also available as the ConditionTrackerReportToken macro.',
+            '!条件トラッカー --レポートトークン',
+            'まず 1 つ以上のトークンを選択し、次にこのコマンドを実行して、選択した各トークンに適用されるすべての条件をリストする GM ウィスパーを取得します。 ConditionTrackerReportToken マクロとしても使用できます。',
           ],
           [
             '!condition-tracker --menu',
@@ -10408,11 +12067,17 @@ const ConditionTrackerMod = (() => {
         colFlag: 'フラグ',
         colDesc: '説明',
         rows: [
-          ['--prompt', 'インタラクティブなステップバイステップウィザードUI'],
-          ['--multi-target', '複数のターゲットトークンに状態を一括適用'],
-          ['--menu', 'メインメニューを表示（削除メニューにはremoveを追加）'],
           [
-            '--source X --target Y --condition Z',
+            ' - プロンプト',
+            'インタラクティブなステップバイステップウィザードUI',
+          ],
+          ['--マルチターゲット', '複数のターゲットトークンに状態を一括適用'],
+          [
+            ' - メニュー',
+            'メインメニューを表示（削除メニューにはremoveを追加）',
+          ],
+          [
+            '--ソース X --ターゲット Y --条件 Z',
             'ウィザードを使わずに直接状態を適用',
           ],
           ['--duration &lt;値&gt;', '直接適用時の継続時間（例：2 rounds）'],
@@ -10430,25 +12095,37 @@ const ConditionTrackerMod = (() => {
             'このコマンドのみsubjectPromptBypassを上書き（--subject-prompt-bypassも使用可）',
           ],
           [
-            '--cleanup',
+            ' - 掃除',
             '状態を整合する — 孤立した状態とターントラッカー行を削除',
           ],
           [
-            '--reorder-conditions',
+            '--再注文条件',
             'ターン順序において条件行を割り当てられたトークンの後ろに手動で再配置します',
           ],
-          ['--reinstall-macro', 'GMマクロを再作成または更新'],
+          ['--reinstall-マクロ', 'GMマクロを再作成または更新'],
           [
             '--reinstall-handout',
             'ローカライズされたヘルプハンドアウトを再作成または更新',
           ],
           [
-            '--report-token',
-            'Whisper a GM-only condition report for each selected token (conditions applied to and by it)',
+            '--レポートトークン',
+            '選択した各トークンの GM のみの条件レポートをウィスパーします (トークンに適用される条件、およびトークンによって適用される条件)',
           ],
           [
             '--lang &lt;ロケール&gt;',
             'このコマンドのメッセージを追加のロケールで出力（バイリンガルモード）',
+          ],
+          [
+            '--classify pc|npc|ignored',
+            '選択したトークンのアクタータイプを上書きします — 先にトークンを選択してください。デフォルトのスコープはキャラクター（ct_mod_actor_type 属性を書き込む）です；--scope token を追加してスクリプト状態に保存することもできます',
+          ],
+          [
+            '--classify auto',
+            'アクタータイプの上書きを削除し、選択したトークンの自動検出を復元します',
+          ],
+          [
+            '--classify show',
+            '選択した各トークンの分類診断をウィスパーします — 検出されたタイプ、検出ソース、理由を表示します',
           ],
           ['--help', 'チャットに簡単なヘルプカードを表示'],
         ],
@@ -10504,64 +12181,158 @@ const ConditionTrackerMod = (() => {
         ],
       },
       savedEffects: {
-        heading: 'Saved Effects',
+        heading: '保存されたエフェクト',
         intro:
-          'Saved effects let you store long-term conditions outside the Turn Tracker — curses, diseases, poisons, hidden debuffs, and other non-combat conditions. They persist in script state and can be optionally copied into the Turn Tracker when combat begins.',
+          '保存されたエフェクトを使用すると、呪い、病気、毒、隠れたデバフ、その他の非戦闘状態など、ターン トラッカーの外側に長期的な状態を保存できます。これらはスクリプト状態に保持され、戦闘開始時にオプションでターン トラッカーにコピーできます。',
         visibility: {
-          heading: 'Visibility Modes',
+          heading: '可視性モード',
           rows: [
             [
-              'public',
-              'Full effect label is visible in the Turn Tracker and public chat.',
+              '公共',
+              '完全な効果ラベルはターン トラッカーとパブリック チャットに表示されます。',
             ],
             [
-              'masked',
-              'A vague public label is shown to players; full details are GM-only.',
+              'マスクされた',
+              '曖昧な公開ラベルがプレイヤーに表示されます。詳細は GM のみに公開されています。',
             ],
             [
-              'gm',
-              'No Turn Tracker row. Full details are stored in state and whispered to the GM when the affected token reaches the top of initiative.',
+              'GM',
+              'ターントラッカー行はありません。完全な詳細は状態に保存され、影響を受けるトークンがイニシアチブの最上位に到達したときに GM にささやかれます。',
             ],
           ],
         },
         commands: {
-          heading: 'Saved Effects Commands',
+          heading: '保存されたエフェクトコマンド',
           intro:
-            'All --saved commands are GM-only. Select a token before running --saved or --saved add.',
+            'すべての --saved コマンドは GM 専用です。 --saved または --saved add を実行する前にトークンを選択してください。',
           rows: [
             [
-              '!condition-tracker --saved',
-              'View saved effects for the selected token.',
+              '!条件トラッカー -- 保存済み',
+              '選択したトークンの保存された効果を表示します。',
             ],
             [
               '!condition-tracker --saved add',
-              'Launch the add-saved-effect wizard.',
+              '保存済みエフェクトの追加ウィザードを起動します。',
             ],
             [
               '!condition-tracker --saved edit <id>',
-              'Edit labels or visibility for an existing saved effect.',
+              '既存の保存済みエフェクトのラベルまたは表示設定を編集します。',
             ],
             [
               '!condition-tracker --saved remove <id>',
-              'Permanently remove a saved effect.',
+              '保存したエフェクトを永久に削除します。',
             ],
             [
               '!condition-tracker --saved promote <id> --visibility public|masked|gm',
-              'Copy a saved effect into the Turn Tracker (public or masked) or confirm it is GM-only tracked.',
+              '保存したエフェクトをターン トラッカー (パブリックまたはマスク) にコピーするか、それが GM のみで追跡されていることを確認します。',
             ],
             [
               '!condition-tracker --saved snooze <id> --scope turn|rounds|combat --rounds <n>',
-              'Snooze a GM reminder for this turn, N rounds, or this combat.',
+              'このターン、N ラウンド、またはこの戦闘の GM リマインダーをスヌーズします。',
             ],
             [
               '!condition-tracker --saved snooze-clear <id>',
-              'Clear an active snooze so reminders resume immediately.',
+              'アクティブなスヌーズを解除すると、リマインダーがすぐに再開されます。',
             ],
           ],
         },
         reminders: {
-          heading: 'GM Reminders',
-          body: 'When a token with gm or masked saved effects reaches the top of the Turn Tracker, the GM receives a whisper listing the hidden effects with action buttons. Duplicate reminders within the same turn are suppressed. Use the Snooze buttons to suppress reminders for a turn, a number of rounds, or for the remainder of the current combat.',
+          heading: 'GM リマインダー',
+          body: 'GM またはマスクされた保存済み効果を持つトークンがターン トラッカーの上部に到達すると、GM はアクション ボタンで隠された効果をリストするささやき声を受け取ります。同じターン内の重複したリマインダーは抑制されます。スヌーズ ボタンを使用して、ターン、ラウンド数、または現在の戦闘の残りのリマインダーを抑制します。',
+        },
+      },
+      actorClassification: {
+        heading: 'アクター分類',
+        intro:
+          'Condition Tracker は各トークンがPC、NPC、または無視されるオブジェクト（マップピン、背景、呪文テンプレート）かどうかを自動的に判断します。リンクされていないトークンはデフォルトで無視されます。--classify を使用して、任意のトークンの自動検出を上書きしてください。',
+        detectionOrder: {
+          heading: '検出順序',
+          colStep: 'ステップ',
+          colCheck: 'チェック',
+          colResult: '結果',
+          rows: [
+            [
+              '1',
+              'トークン状態の上書き（--classify --scope token）',
+              'PC / NPC / 無視',
+            ],
+            [
+              '2',
+              'キャラクターの ct_mod_actor_type 属性（--classify --scope character）',
+              'PC / NPC / 無視',
+            ],
+            [
+              '3',
+              '未リンクのトークン — キャラクターシートなし',
+              '無視されました',
+            ],
+            [
+              '4',
+              'ゲームシステムアダプター（npc / is_npc 属性）',
+              'パソコン/NPC',
+            ],
+            [
+              '5',
+              '汎用NPC属性スキャン（npc、is_npc、npcflag、sheet_type、character_type）',
+              'パソコン/NPC',
+            ],
+            ['6', 'キャラクターの controlledby フォールバック', 'パソコン/NPC'],
+          ],
+        },
+        types: {
+          heading: '分類タイプ',
+          colType: 'タイプ',
+          colMeaning: '意味',
+          rows: [
+            [
+              'パソコン',
+              'プレイヤーキャラクター — ウィザードと検出で常にPCとして含まれる',
+            ],
+            ['NPC', 'ノンプレイヤーキャラクター — 常にNPCとして含まれる'],
+            [
+              '無視されました',
+              '表示または追跡されない — ウィザードのトークンピッカーから除外',
+            ],
+            [
+              '未知',
+              '自動検出のみ；タイプを特定できなかった（ウィザードでNPCとして扱われる）',
+            ],
+          ],
+        },
+        commands: {
+          heading: '分類コマンド',
+          intro:
+            '--classify コマンドを実行する前に、1つ以上のトークンを選択してください。',
+          rows: [
+            [
+              '!condition-tracker --pc を分類',
+              '選択したトークンをPCとしてマークします（デフォルトスコープ：キャラクター）。',
+            ],
+            [
+              '!condition-tracker --npc を分類する',
+              '選択したトークンをNPCとしてマークします。',
+            ],
+            [
+              '!condition-tracker --classify は無視されました',
+              '選択したトークンをすべてのトラッキングから除外します。',
+            ],
+            [
+              '!condition-tracker --classify auto',
+              '上書きを削除 — 自動検出を復元します。',
+            ],
+            [
+              '!condition-tracker --classify ショー',
+              '各選択トークンの分類診断（タイプ、ソース、理由）を表示します。',
+            ],
+            [
+              '!condition-tracker --classify pc --scope トークン',
+              'スクリプト状態に保存されたトークンレベルの上書き — 未リンクのトークンに便利です。',
+            ],
+            [
+              '!condition-tracker --classify pc --scope 文字',
+              'ct_mod_actor_type 属性に書き込まれたキャラクターレベルの上書き — 同じキャラクターシートを使用するすべてのトークンに適用されます。',
+            ],
+          ],
         },
       },
       configuration: {
@@ -10579,17 +12350,17 @@ const ConditionTrackerMod = (() => {
           ],
           [
             'useIcons',
-            'true / false',
+            '真 / 偽',
             'ターントラッカー行で絵文字の代わりに短いアイコンコード（例：[G]）を表示する',
           ],
           [
             'subjectPromptBypass',
-            'true / false',
+            '真 / 偽',
             '呪文・能力・その他の効果でオプションの対象トークン手順をスキップする',
           ],
           [
             'suppressPublicChat',
-            'true / false',
+            '真 / 偽',
             'すべての公開チャット告知（適用・削除メッセージ）を非表示にします。GMのウィスパーは影響を受けません。',
           ],
           [
@@ -10736,8 +12507,9 @@ const ConditionTrackerMod = (() => {
         disadvantage:
           '{source} 이(가) {target}{subject} 에 대해 불이익을 가짐.',
         self: '{target} 이(가) {past}.',
-        withSuffix: '{source} {verb} {target} {suffix}.',
-        standard: '{source} {verb} {target}.',
+        withSuffix:
+          '자리 표시자0토큰 자리 표시자1토큰 자리 표시자2토큰 자리 표시자3토큰.',
+        standard: '자리 표시자0토큰 자리 표시자1토큰 자리 표시자2토큰.',
       },
       remove: {
         custom: '{target} 에게 적용된 {effect} 효과가 종료됨.',
@@ -10791,8 +12563,8 @@ const ConditionTrackerMod = (() => {
         details: '상세 내용',
         description: '설명',
         scenario: '시나리오',
-        gameSystem: 'Game System',
-        duration: 'Duration',
+        gameSystem: '게임 시스템',
+        duration: '지속',
       },
       dur: {
         untilRemoved: '제거될 때까지',
@@ -10817,14 +12589,14 @@ const ConditionTrackerMod = (() => {
         reinstallHandout: '유인물 재설치',
         showHelp: '도움말 표시',
         reorderConditions: '조건 행 재정렬',
-        reportToken: 'Report Token Conditions',
-        savedEffects: 'Saved Effects',
-        addSavedEffect: 'Add Saved Effect',
-        editSaved: 'Edit',
-        removeSaved: 'Remove',
-        promoteSaved: 'Add to Turn Tracker',
-        snoozeSaved: 'Snooze',
-        clearSnooze: 'Clear Snooze',
+        reportToken: '보고서 토큰 조건',
+        savedEffects: '저장된 효과',
+        addSavedEffect: '저장된 효과 추가',
+        editSaved: '편집하다',
+        removeSaved: '제거하다',
+        promoteSaved: '턴 트래커에 추가',
+        snoozeSaved: '선잠',
+        clearSnooze: '스누즈 지우기',
       },
       title: {
         menu: '메뉴',
@@ -10835,8 +12607,7 @@ const ConditionTrackerMod = (() => {
         applied: '적용됨',
         removed: '상태 제거됨',
         cleanup: '정리 완료',
-        macroReinstalled:
-          'The {wizard}, {multiTarget}, {reportToken}, and {saved} macros have been reinstalled for all current GM players.',
+        macroReinstalled: '매크로 재설치됨',
         handoutReinstalled: '유인물 재설치됨',
         warning: '경고',
         error: '오류',
@@ -10844,19 +12615,19 @@ const ConditionTrackerMod = (() => {
         noConditions: '상태 없음',
         tokenMoved: '토큰 이동됨',
         markedDead: '사망으로 표시됨',
-        zeroHp: '{name} — 0 HP',
+        zeroHp: '자리 표시자0TOKEN — 0 HP',
         moveToken: '{name} — 토큰을 이동하시겠습니까?',
         scriptReady: '스크립트 준비됨',
         conditionReorder: '턴 순서 변경됨',
-        tokenReport: 'Token Condition Report',
-        savedEffects: 'Saved Effects',
-        savedAdd: 'Add Saved Effect',
-        savedEdit: 'Edit Saved Effect',
-        savedRemoved: 'Saved Effect Removed',
-        savedPromoted: 'Add to Turn Tracker',
-        savedSnoozed: 'Reminder Snoozed',
-        savedSnoozeCleared: 'Snooze Cleared',
-        hiddenEffects: 'Hidden Effects — {name}',
+        tokenReport: '토큰 상태 보고서',
+        savedEffects: '저장된 효과',
+        savedAdd: '저장된 효과 추가',
+        savedEdit: '저장된 효과 편집',
+        savedRemoved: '저장된 효과가 제거되었습니다.',
+        savedPromoted: '턴 트래커에 추가',
+        savedSnoozed: '알림이 일시 중지되었습니다.',
+        savedSnoozeCleared: '다시 알림이 해제되었습니다.',
+        hiddenEffects: '숨겨진 효과 — {name}',
       },
       heading: {
         quickActions: '빠른 작업',
@@ -10868,13 +12639,13 @@ const ConditionTrackerMod = (() => {
         promptUi: '프롬프트 UI',
         examples: '예시',
         summary: '요약',
-        appliedTo: 'Conditions Applied To',
-        appliedBy: 'Conditions Applied By',
-        savedEffectsFor: 'Saved Effects for {name}',
-        visibility: 'Visibility',
-        snoozeOptions: 'Snooze Reminder',
-        promoteOptions: 'Promote to Turn Tracker',
-        editActions: 'Edit Actions',
+        appliedTo: '적용되는 조건',
+        appliedBy: '적용 조건',
+        savedEffectsFor: '{name}에 대해 저장된 효과',
+        visibility: '시계',
+        snoozeOptions: '스누즈 알림',
+        promoteOptions: '턴 트래커로 승격',
+        editActions: '작업 편집',
       },
       msg: {
         noActive: '추적 중인 활성 상태가 없습니다.',
@@ -10882,7 +12653,7 @@ const ConditionTrackerMod = (() => {
         unknownConfig:
           '알 수 없는 설정 옵션입니다. --config 를 사용하여 지원되는 설정을 확인하세요.',
         macroReinstalled:
-          '{wizard}, {multiTarget} 및 {reportToken} 매크로가 모든 현재 GM 플레이어를 위해 재설치되었습니다.',
+          '{wizard}, {multiTarget}, {reportToken}, {saved} 및 {classify} 매크로가 모든 현재 GM 플레이어를 위해 재설치되었습니다.',
         handoutReinstalled: '도움말 유인물 {handout}이(가) 재설치되었습니다.',
         duplicate:
           '동일한 시전자, 주체, 대상, 상태 및 사용자 정의 텍스트가 이미 활성화되어 있습니다.',
@@ -10956,32 +12727,32 @@ const ConditionTrackerMod = (() => {
           '턴 순서가 변경되어 {count}개의 추적된 조건 행이 잘못된 위치에 있을 수 있습니다. 아래를 클릭하여 지정된 토큰 뒤에 복원하세요.',
         conditionsReordered: '조건 행이 지정된 토큰 뒤로 재배치되었습니다.',
         noTokensSelectedReport:
-          'Select at least one token on the board before using --report-token.',
-        noConditionsAppliedTo: '{name} has no active conditions applied to it.',
+          '--report-token을 사용하기 전에 보드에서 하나 이상의 토큰을 선택하세요.',
+        noConditionsAppliedTo: '{name}에는 적용된 활성 조건이 없습니다.',
         noConditionsAppliedBy:
-          '{name} has no active conditions applied to others.',
-        noSavedEffects: 'No saved effects stored for {name}.',
+          '{name}에는 다른 사람에게 적용된 활성 조건이 없습니다.',
+        noSavedEffects: '{name}에 대해 저장된 효과가 없습니다.',
         noTokenSelectedSaved:
-          'Select a token on the board before using --saved.',
-        savedEffectAdded: 'Saved effect added for {name}.',
-        savedEffectUpdated: 'Saved effect updated.',
-        savedEffectRemoved: 'Saved effect removed.',
-        savedEffectNotFound: 'Saved effect not found.',
+          '--saved를 사용하기 전에 보드에서 토큰을 선택하세요.',
+        savedEffectAdded: '{name}에 저장된 효과가 추가되었습니다.',
+        savedEffectUpdated: '저장된 효과가 업데이트되었습니다.',
+        savedEffectRemoved: '저장된 효과가 제거되었습니다.',
+        savedEffectNotFound: '저장된 효과를 찾을 수 없습니다.',
         savedInvalidVisibility:
-          'Invalid visibility. Use public, masked, or gm.',
+          '공개 상태가 잘못되었습니다. 공개, 마스크 또는 GM을 사용하세요.',
         savedConditionRequired:
           'Condition type is required. Use --condition <type>.',
-        savedPromotedPublic: 'Effect added to Turn Tracker as public.',
+        savedPromotedPublic: 'Turn Tracker에 효과가 공개로 추가되었습니다.',
         savedPromotedMasked:
-          'Effect added to Turn Tracker as masked — players see: {publicLabel}.',
+          'Turn Tracker에 마스크된 효과가 추가되었습니다. 플레이어는 다음을 볼 수 있습니다: {publicLabel}.',
         savedPromotedGm:
-          'Effect is GM-only — no Turn Tracker row will be created. The reminder system will surface it when this token reaches the top of the turn order.',
-        savedSnoozed: 'Reminder snoozed: {scope}.',
-        savedSnoozeCleared: 'Snooze cleared.',
-        hiddenEffectsReminder: 'Hidden effects are active on {name}.',
-        visibilityPublicHint: 'full label visible to all',
-        visibilityMaskedHint: 'vague label shown to players',
-        visibilityGmHint: 'GM whisper only, no Turn Tracker row',
+          '효과는 GM 전용입니다. 턴 추적기 행이 생성되지 않습니다. 이 토큰이 턴 순서의 맨 위에 도달하면 알림 시스템이 이를 표시합니다.',
+        savedSnoozed: '알림이 일시 중지되었습니다: {scope}.',
+        savedSnoozeCleared: '일시중지가 해제되었습니다.',
+        hiddenEffectsReminder: '{name}에 숨겨진 효과가 활성화되어 있습니다.',
+        visibilityPublicHint: '모든 사람에게 전체 라벨 표시',
+        visibilityMaskedHint: '플레이어에게 표시되는 모호한 라벨',
+        visibilityGmHint: 'GM 속삭임만 가능, 턴 추적기 행 없음',
       },
       removal: {
         conditionField: '상태',
@@ -10997,29 +12768,50 @@ const ConditionTrackerMod = (() => {
       },
       saved: {
         visibility: {
-          public: 'Public',
-          masked: 'Masked',
-          gm: 'GM Only',
+          public: '공공의',
+          masked: '가면을 쓴',
+          gm: 'GM 전용',
         },
         snooze: {
-          thisTurn: 'This Turn',
-          oneRound: '1 Round',
-          threeRounds: '3 Rounds',
-          thisCombat: 'This Combat',
-          rounds: '{n} round(s)',
+          thisTurn: '이번 턴',
+          oneRound: '1라운드',
+          threeRounds: '3라운드',
+          thisCombat: '이 전투',
+          rounds: '{n} 라운드',
         },
         field: {
-          gmLabel: 'GM Label',
-          publicLabel: 'Public Label',
-          visibility: 'Visibility',
-          source: 'Source',
-          condition: 'Condition',
+          gmLabel: 'GM 라벨',
+          publicLabel: '공개 라벨',
+          visibility: '시계',
+          source: '원천',
+          condition: '상태',
         },
         prompt: {
-          enterGmLabel: 'Full effect description (GM only)',
-          enterPublicLabel: 'Vague label shown to players',
+          enterGmLabel: '전체 효과 설명(GM만 해당)',
+          enterPublicLabel: '플레이어에게 표시되는 모호한 라벨',
         },
-        snoozed: 'snoozed',
+        snoozed: '잠을 잤다',
+      },
+      classify: {
+        title: '배우 분류',
+        showTitle: '분류 진단',
+        showHeading: '토큰 분류 세부 정보',
+        resultHeading: '재정의 적용됨',
+        noSelection:
+          '--classify를 사용하기 전에 보드에서 최소 하나의 토큰을 선택하세요.',
+        invalidType:
+          '유효하지 않은 분류 유형: {type}. pc, npc, ignored 또는 auto를 사용하세요.',
+        set: '{name} → {type} (범위: {scope})',
+        cleared:
+          '{name} 재정의가 삭제되었습니다 (범위: {scope}) — 자동 감지가 복원되었습니다.',
+        setTokenFallback:
+          '{name} → {type} (토큰 재정의 — 연결된 캐릭터 시트 없음).',
+        clearedTokenFallback:
+          '{name} 토큰 재정의가 삭제되었습니다 — 자동 감지가 복원되었습니다.',
+        fieldToken: '토큰',
+        fieldType: '분류',
+        fieldSource: '출처',
+        fieldReason: '이유',
       },
       cleanup: {
         orphaned: '연결이 끊긴 상태 항목',
@@ -11047,16 +12839,16 @@ const ConditionTrackerMod = (() => {
         colDesc: '설명',
         rows: [
           [
-            '!condition-tracker --prompt',
+            '!조건 추적기 --프롬프트',
             '단계별 위저드 — 대화형으로 상태, 토큰 및 지속 시간을 선택합니다. ConditionTrackerWizard 매크로로도 사용할 수 있습니다.',
           ],
           [
-            '!condition-tracker --multi-target',
+            '!조건 추적기 --다중 대상',
             '여러 토큰에 하나의 상태를 동시에 적용합니다. ConditionTrackerMultiTarget 매크로로도 사용할 수 있습니다.',
           ],
           [
-            '!condition-tracker --report-token',
-            'Select one or more tokens first, then run this command to get a GM whisper listing every condition applied to and by each selected token. Also available as the ConditionTrackerReportToken macro.',
+            '!조건 추적기 --보고서 토큰',
+            '먼저 하나 이상의 토큰을 선택한 다음 이 명령을 실행하면 선택된 각 토큰에 적용되는 모든 조건을 나열하는 GM 귓속말을 얻을 수 있습니다. ConditionTrackerReportToken 매크로로도 사용 가능합니다.',
           ],
           [
             '!condition-tracker --menu',
@@ -11069,16 +12861,16 @@ const ConditionTrackerMod = (() => {
         colFlag: '플래그',
         colDesc: '설명',
         rows: [
-          ['--prompt', '대화형 단계별 위저드 UI'],
-          ['--multi-target', '여러 대상 토큰에 동시에 상태 적용'],
-          ['--menu', '메인 메뉴 표시 (제거 메뉴의 경우 remove 추가)'],
-          ['--source X --target Y --condition Z', '위저드 없이 직접 상태 적용'],
+          ['--즉각적인', '대화형 단계별 위저드 UI'],
+          ['--다중 대상', '여러 대상 토큰에 동시에 상태 적용'],
+          ['--메뉴', '메인 메뉴 표시 (제거 메뉴의 경우 remove 추가)'],
+          ['--소스 X --대상 Y --조건 Z', '위저드 없이 직접 상태 적용'],
           ['--duration &lt;값&gt;', '직접 적용 시 지속 시간 (예: 2 rounds)'],
           [
             '--other &lt;텍스트&gt;',
             '주문 / 능력 / 기타 효과 유형에 대한 사용자 정의 텍스트',
           ],
-          ['--remove &lt;condition-id&gt;', '고유 ID로 특정 상태 제거'],
+          ['--remove <조건 ID>', '고유 ID로 특정 상태 제거'],
           [
             '--config &lt;옵션&gt; &lt;값&gt;',
             '구성 설정 조정 (아래 설정 섹션 참조)',
@@ -11087,23 +12879,32 @@ const ConditionTrackerMod = (() => {
             '--prompt --subjectPromptBypass true|false',
             '이 명령어에 대해서만 subjectPromptBypass 재정의 (--subject-prompt-bypass 도 지원)',
           ],
-          ['--cleanup', '상태 조정 — 연결이 끊긴 상태 및 턴 추적기 행 제거'],
+          ['--대청소', '상태 조정 — 연결이 끊긴 상태 및 턴 추적기 행 제거'],
           [
-            '--reorder-conditions',
+            '--재주문 조건',
             '턴 순서에서 조건 행을 할당된 토큰 뒤로 수동으로 재배치',
           ],
-          ['--reinstall-macro', 'GM 매크로 재생성 또는 업데이트'],
+          ['--재설치-매크로', 'GM 매크로 재생성 또는 업데이트'],
+          ['--재설치-유인물', '현지화된 도움말 유인물 재생성 또는 업데이트'],
           [
-            '--reinstall-handout',
-            '현지화된 도움말 유인물 재생성 또는 업데이트',
-          ],
-          [
-            '--report-token',
-            'Whisper a GM-only condition report for each selected token (conditions applied to and by it)',
+            '--보고서 토큰',
+            '선택한 각 토큰에 대해 GM 전용 조건 보고서를 속삭입니다(에 적용되는 조건).',
           ],
           [
             '--lang &lt;로케일&gt;',
             '이 명령어의 메시지를 추가 로케일로 출력 (이중 언어 모드)',
+          ],
+          [
+            '--classify pc|npc|ignored',
+            '선택한 토큰의 배우 유형을 재정의합니다 — 먼저 토큰을 선택하세요. 기본 범위는 캐릭터(ct_mod_actor_type 속성 작성)입니다; --scope token을 추가하면 스크립트 상태에 저장됩니다',
+          ],
+          [
+            '--classify auto',
+            '배우 유형 재정의를 제거하고 선택한 토큰의 자동 감지를 복원합니다',
+          ],
+          [
+            '--classify show',
+            '선택한 각 토큰의 분류 진단을 귓속말합니다 — 감지된 유형, 감지 출처, 이유를 표시합니다',
           ],
           ['--help', '채팅에 간단한 도움말 카드 표시'],
         ],
@@ -11165,64 +12966,144 @@ const ConditionTrackerMod = (() => {
         ],
       },
       savedEffects: {
-        heading: 'Saved Effects',
+        heading: '저장된 효과',
         intro:
-          'Saved effects let you store long-term conditions outside the Turn Tracker — curses, diseases, poisons, hidden debuffs, and other non-combat conditions. They persist in script state and can be optionally copied into the Turn Tracker when combat begins.',
+          '저장된 효과를 사용하면 저주, 질병, 독, 숨겨진 디버프 및 기타 비전투 조건과 같은 장기 조건을 Turn Tracker 외부에 저장할 수 있습니다. 스크립트 상태로 유지되며 전투가 시작될 때 선택적으로 Turn Tracker에 복사할 수 있습니다.',
         visibility: {
-          heading: 'Visibility Modes',
+          heading: '가시성 모드',
           rows: [
             [
-              'public',
-              'Full effect label is visible in the Turn Tracker and public chat.',
+              '공공의',
+              '전체 효과 라벨은 Turn Tracker 및 공개 채팅에 표시됩니다.',
             ],
             [
-              'masked',
-              'A vague public label is shown to players; full details are GM-only.',
+              '가면을 쓴',
+              '모호한 공개 라벨이 플레이어에게 표시됩니다. 자세한 내용은 GM에게만 해당됩니다.',
             ],
             [
-              'gm',
-              'No Turn Tracker row. Full details are stored in state and whispered to the GM when the affected token reaches the top of initiative.',
+              'GM',
+              '회전 추적기 행이 없습니다. 전체 세부 정보는 상태에 저장되고 영향을 받은 토큰이 이니셔티브의 최고 수준에 도달하면 GM에게 속삭입니다.',
             ],
           ],
         },
         commands: {
-          heading: 'Saved Effects Commands',
+          heading: '저장된 효과 명령',
           intro:
-            'All --saved commands are GM-only. Select a token before running --saved or --saved add.',
+            '모든 --saved 명령은 GM 전용입니다. --saved 또는 --saved add를 실행하기 전에 토큰을 선택하십시오.',
           rows: [
             [
-              '!condition-tracker --saved',
-              'View saved effects for the selected token.',
+              '!조건 추적기 --저장됨',
+              '선택한 토큰에 대해 저장된 효과를 봅니다.',
             ],
             [
-              '!condition-tracker --saved add',
-              'Launch the add-saved-effect wizard.',
+              '!조건 추적기 --saved 추가',
+              '저장된 효과 추가 마법사를 시작합니다.',
             ],
             [
               '!condition-tracker --saved edit <id>',
-              'Edit labels or visibility for an existing saved effect.',
+              '기존에 저장된 효과의 라벨 또는 가시성을 편집합니다.',
             ],
             [
               '!condition-tracker --saved remove <id>',
-              'Permanently remove a saved effect.',
+              '저장된 효과를 영구적으로 제거합니다.',
             ],
             [
               '!condition-tracker --saved promote <id> --visibility public|masked|gm',
-              'Copy a saved effect into the Turn Tracker (public or masked) or confirm it is GM-only tracked.',
+              '저장된 효과를 Turn Tracker(공개 또는 마스크)에 복사하거나 GM 전용 추적인지 확인하세요.',
             ],
             [
               '!condition-tracker --saved snooze <id> --scope turn|rounds|combat --rounds <n>',
-              'Snooze a GM reminder for this turn, N rounds, or this combat.',
+              '이번 턴, N 라운드 또는 이번 전투에 대해 GM 알림을 일시 중지합니다.',
             ],
             [
               '!condition-tracker --saved snooze-clear <id>',
-              'Clear an active snooze so reminders resume immediately.',
+              '알림이 즉시 다시 시작되도록 활성 일시 중지를 취소하세요.',
             ],
           ],
         },
         reminders: {
-          heading: 'GM Reminders',
-          body: 'When a token with gm or masked saved effects reaches the top of the Turn Tracker, the GM receives a whisper listing the hidden effects with action buttons. Duplicate reminders within the same turn are suppressed. Use the Snooze buttons to suppress reminders for a turn, a number of rounds, or for the remainder of the current combat.',
+          heading: 'GM 알림',
+          body: 'GM 또는 마스크된 저장된 효과가 있는 토큰이 턴 추적기의 상단에 도달하면 GM은 액션 버튼과 함께 숨겨진 효과를 나열하는 속삭임을 받습니다. 같은 차례에 중복된 알림은 표시되지 않습니다. 일시 중지 버튼을 사용하여 한 턴, 라운드 수 또는 현재 전투의 나머지 기간에 대한 알림을 억제합니다.',
+        },
+      },
+      actorClassification: {
+        heading: '배우 분류',
+        intro:
+          'Condition Tracker는 각 토큰이 PC, NPC인지 아니면 무시할 오브젝트(맵 핀, 배경, 마법 템플릿)인지를 자동으로 판단합니다. 연결되지 않은 토큰은 기본적으로 무시됩니다. --classify를 사용하여 모든 토큰의 자동 감지를 재정의하세요.',
+        detectionOrder: {
+          heading: '감지 순서',
+          colStep: '단계',
+          colCheck: '확인',
+          colResult: '결과',
+          rows: [
+            [
+              '1',
+              '토큰 상태 재정의 (--classify --scope token)',
+              'pc / npc / 무시됨',
+            ],
+            [
+              '2',
+              '캐릭터 ct_mod_actor_type 속성 (--classify --scope character)',
+              'pc / npc / 무시됨',
+            ],
+            ['3', '연결되지 않은 토큰 — 캐릭터 시트 없음', '무시됨'],
+            ['4', '게임 시스템 어댑터 (npc / is_npc 속성)', 'PC / NPC'],
+            [
+              '5',
+              '일반 NPC 속성 스캔 (npc, is_npc, npcflag, sheet_type, character_type)',
+              'PC / NPC',
+            ],
+            ['6', '캐릭터 controlledby 폴백', 'PC / NPC'],
+          ],
+        },
+        types: {
+          heading: '분류 유형',
+          colType: '유형',
+          colMeaning: '의미',
+          rows: [
+            ['PC', '플레이어 캐릭터 — 위저드와 감지에서 항상 PC로 포함'],
+            ['NPC', '비플레이어 캐릭터 — 항상 NPC로 포함'],
+            [
+              '무시됨',
+              '표시되거나 추적되지 않음 — 위저드 토큰 선택기에서 제외',
+            ],
+            [
+              '알려지지 않은',
+              '자동 감지만 가능; 유형을 확인할 수 없음 (위저드에서 NPC로 처리)',
+            ],
+          ],
+        },
+        commands: {
+          heading: '분류 명령',
+          intro:
+            '--classify 명령을 실행하기 전에 하나 이상의 토큰을 선택하세요.',
+          rows: [
+            [
+              '!condition-tracker --PC 분류',
+              '선택한 토큰을 PC로 표시합니다 (기본 범위: 캐릭터).',
+            ],
+            ['!조건 추적기 --npc 분류', '선택한 토큰을 NPC로 표시합니다.'],
+            [
+              '!condition-tracker --classify 무시됨',
+              '선택한 토큰을 모든 추적에서 제외합니다.',
+            ],
+            [
+              '!condition-tracker --자동 분류',
+              '재정의를 제거합니다 — 자동 감지를 복원합니다.',
+            ],
+            [
+              '!조건 추적기 --분류 표시',
+              '각 선택한 토큰의 분류 진단(유형, 출처, 이유)을 표시합니다.',
+            ],
+            [
+              '!condition-tracker --classify pc --scope 토큰',
+              '스크립트 상태에 저장된 토큰 수준 재정의 — 연결되지 않은 토큰에 유용합니다.',
+            ],
+            [
+              '!condition-tracker --classify pc --범위 문자',
+              'ct_mod_actor_type 속성에 기록된 캐릭터 수준 재정의 — 동일한 캐릭터 시트를 사용하는 모든 토큰에 적용됩니다.',
+            ],
+          ],
         },
       },
       configuration: {
@@ -11240,17 +13121,17 @@ const ConditionTrackerMod = (() => {
           ],
           [
             'useIcons',
-            'true / false',
+            '참/거짓',
             '턴 추적기 행에 이모지 대신 짧은 아이콘 코드(예: [G])를 표시합니다.',
           ],
           [
             'subjectPromptBypass',
-            'true / false',
+            '참/거짓',
             '주문 / 능력 / 기타 효과에 대해 선택적인 주체 토큰 단계를 건너뜁니다.',
           ],
           [
             'suppressPublicChat',
-            'true / false',
+            '참/거짓',
             '모든 공개 채팅 알림(적용 및 제거 메시지)을 억제합니다. GM 속삭임은 영향을 받지 않습니다.',
           ],
           [
@@ -11386,7 +13267,7 @@ const ConditionTrackerMod = (() => {
         advantage: '{emoji} {source} ma ułatwienie przeciwko {target}{subject}',
         disadvantage:
           '{emoji} {source} ma utrudnienie przeciwko {target}{subject}',
-        noBy: '{emoji} {target} {past} ({source})',
+        noBy: 'MIEJSCE0TOKEN MIEJSCE1TOKEN MIEJSCE2TOKEN ({source})',
         self: '{target} jest {past}',
         standard: '{emoji} {target} {past} przez {source}',
       },
@@ -11395,8 +13276,9 @@ const ConditionTrackerMod = (() => {
         advantage: '{source} ma ułatwienie przeciwko {target}{subject}.',
         disadvantage: '{source} ma utrudnienie przeciwko {target}{subject}.',
         self: '{target} jest {past}.',
-        withSuffix: '{source} {verb} {target} {suffix}.',
-        standard: '{source} {verb} {target}.',
+        withSuffix:
+          'MIEJSCE0TOKEN POSIADACZ MIEJSCA1TOKEN POSIADACZ MIEJSCA2TOKEN POSIADACZ MIEJSCA3TOKEN.',
+        standard: 'MIEJSCE0TOKEN MIEJSCE1TOKEN MIEJSCE2TOKEN.',
       },
       remove: {
         custom: '{target} nie jest już pod wpływem {effect}.',
@@ -11450,8 +13332,8 @@ const ConditionTrackerMod = (() => {
         details: 'Szczegóły',
         description: 'Opis',
         scenario: 'Scenariusz',
-        gameSystem: 'Game System',
-        duration: 'Duration',
+        gameSystem: 'System gry',
+        duration: 'Czas trwania',
       },
       dur: {
         untilRemoved: 'Do usunięcia',
@@ -11476,14 +13358,14 @@ const ConditionTrackerMod = (() => {
         reinstallHandout: 'Zainstaluj ponownie handout',
         showHelp: 'Pokaż pomoc',
         reorderConditions: 'Zmień kolejność wierszy stanów',
-        reportToken: 'Report Token Conditions',
-        savedEffects: 'Saved Effects',
-        addSavedEffect: 'Add Saved Effect',
-        editSaved: 'Edit',
-        removeSaved: 'Remove',
-        promoteSaved: 'Add to Turn Tracker',
-        snoozeSaved: 'Snooze',
-        clearSnooze: 'Clear Snooze',
+        reportToken: 'Zgłoś warunki tokena',
+        savedEffects: 'Zapisane efekty',
+        addSavedEffect: 'Dodaj zapisany efekt',
+        editSaved: 'Redagować',
+        removeSaved: 'Usunąć',
+        promoteSaved: 'Dodaj do śledzenia skrętów',
+        snoozeSaved: 'Drzemka',
+        clearSnooze: 'Wyczyść opcję Drzemka',
       },
       title: {
         menu: 'Menu',
@@ -11494,8 +13376,7 @@ const ConditionTrackerMod = (() => {
         applied: 'Zastosowano',
         removed: 'Stan usunięty',
         cleanup: 'Czyszczenie zakończone',
-        macroReinstalled:
-          'The {wizard}, {multiTarget}, {reportToken}, and {saved} macros have been reinstalled for all current GM players.',
+        macroReinstalled: 'Makro zainstalowane ponownie',
         handoutReinstalled: 'Handout zainstalowany ponownie',
         warning: 'Ostrzeżenie',
         error: 'Błąd',
@@ -11507,15 +13388,15 @@ const ConditionTrackerMod = (() => {
         moveToken: '{name} — Przenieść żeton?',
         scriptReady: 'Skrypt gotowy',
         conditionReorder: 'Kolejność tur zmieniona',
-        tokenReport: 'Token Condition Report',
-        savedEffects: 'Saved Effects',
-        savedAdd: 'Add Saved Effect',
-        savedEdit: 'Edit Saved Effect',
-        savedRemoved: 'Saved Effect Removed',
-        savedPromoted: 'Add to Turn Tracker',
-        savedSnoozed: 'Reminder Snoozed',
-        savedSnoozeCleared: 'Snooze Cleared',
-        hiddenEffects: 'Hidden Effects — {name}',
+        tokenReport: 'Raport o stanie tokena',
+        savedEffects: 'Zapisane efekty',
+        savedAdd: 'Dodaj zapisany efekt',
+        savedEdit: 'Edytuj zapisany efekt',
+        savedRemoved: 'Zapisany efekt został usunięty',
+        savedPromoted: 'Dodaj do śledzenia skrętów',
+        savedSnoozed: 'Przypomnienie zostało odłożone',
+        savedSnoozeCleared: 'Drzemka wyczyszczona',
+        hiddenEffects: 'Ukryte efekty — {name}',
       },
       heading: {
         quickActions: 'Szybkie akcje',
@@ -11527,13 +13408,13 @@ const ConditionTrackerMod = (() => {
         promptUi: 'Interfejs kreatora',
         examples: 'Przykłady',
         summary: 'Podsumowanie',
-        appliedTo: 'Conditions Applied To',
-        appliedBy: 'Conditions Applied By',
-        savedEffectsFor: 'Saved Effects for {name}',
-        visibility: 'Visibility',
-        snoozeOptions: 'Snooze Reminder',
-        promoteOptions: 'Promote to Turn Tracker',
-        editActions: 'Edit Actions',
+        appliedTo: 'Obowiązujące warunki',
+        appliedBy: 'Warunki stosowane przez',
+        savedEffectsFor: 'Zapisane efekty dla {name}',
+        visibility: 'Widoczność',
+        snoozeOptions: 'Przypomnienie o drzemce',
+        promoteOptions: 'Promuj narzędzie do śledzenia skrętów',
+        editActions: 'Edytuj akcje',
       },
       msg: {
         noActive: 'Nie są śledzone żadne aktywne stany.',
@@ -11541,7 +13422,7 @@ const ConditionTrackerMod = (() => {
         unknownConfig:
           'Nieznana opcja konfiguracji. Użyj --config, aby wyświetlić obsługiwane ustawienia.',
         macroReinstalled:
-          'Makra {wizard}, {multiTarget} i {reportToken} zostały ponownie zainstalowane dla wszystkich obecnych graczy z rolą MG.',
+          'Makra {wizard}, {multiTarget}, {reportToken}, {saved} i {classify} zostały ponownie zainstalowane dla wszystkich obecnych graczy z rolą MG.',
         handoutReinstalled:
           'Handout pomocy {handout} został ponownie zainstalowany.',
         duplicate:
@@ -11617,32 +13498,33 @@ const ConditionTrackerMod = (() => {
         conditionsReordered:
           'Wiersze stanów zostały przesunięte po ich przypisanych żetonach.',
         noTokensSelectedReport:
-          'Select at least one token on the board before using --report-token.',
-        noConditionsAppliedTo: '{name} has no active conditions applied to it.',
+          'Wybierz co najmniej jeden token na planszy przed użyciem --report-token.',
+        noConditionsAppliedTo:
+          '{name} nie ma zastosowanych żadnych aktywnych warunków.',
         noConditionsAppliedBy:
-          '{name} has no active conditions applied to others.',
-        noSavedEffects: 'No saved effects stored for {name}.',
-        noTokenSelectedSaved:
-          'Select a token on the board before using --saved.',
-        savedEffectAdded: 'Saved effect added for {name}.',
-        savedEffectUpdated: 'Saved effect updated.',
-        savedEffectRemoved: 'Saved effect removed.',
-        savedEffectNotFound: 'Saved effect not found.',
+          '{name} nie ma aktywnych warunków zastosowanych do innych.',
+        noSavedEffects: 'Brak zapisanych efektów dla {name}.',
+        noTokenSelectedSaved: 'Wybierz żeton na planszy przed użyciem --saved.',
+        savedEffectAdded: 'Zapisany efekt dodano dla {name}.',
+        savedEffectUpdated: 'Zapisany efekt został zaktualizowany.',
+        savedEffectRemoved: 'Zapisany efekt został usunięty.',
+        savedEffectNotFound: 'Nie znaleziono zapisanego efektu.',
         savedInvalidVisibility:
-          'Invalid visibility. Use public, masked, or gm.',
+          'Nieprawidłowa widoczność. Użyj publicznego, zamaskowanego lub gm.',
         savedConditionRequired:
           'Condition type is required. Use --condition <type>.',
-        savedPromotedPublic: 'Effect added to Turn Tracker as public.',
+        savedPromotedPublic:
+          'Efekt dodany do narzędzia Turn Tracker jako publiczny.',
         savedPromotedMasked:
-          'Effect added to Turn Tracker as masked — players see: {publicLabel}.',
+          'Efekt dodany do modułu śledzenia tur jako zamaskowany — gracze widzą: {publicLabel}.',
         savedPromotedGm:
-          'Effect is GM-only — no Turn Tracker row will be created. The reminder system will surface it when this token reaches the top of the turn order.',
-        savedSnoozed: 'Reminder snoozed: {scope}.',
-        savedSnoozeCleared: 'Snooze cleared.',
-        hiddenEffectsReminder: 'Hidden effects are active on {name}.',
-        visibilityPublicHint: 'full label visible to all',
-        visibilityMaskedHint: 'vague label shown to players',
-        visibilityGmHint: 'GM whisper only, no Turn Tracker row',
+          'Efekt jest dostępny tylko dla GM – nie zostanie utworzony żaden wiersz śledzenia tur. System przypomnień wykryje go, gdy ten żeton osiągnie szczyt kolejności tury.',
+        savedSnoozed: 'Przypomnienie odłożone: {scope}.',
+        savedSnoozeCleared: 'Opcja drzemki została wyczyszczona.',
+        hiddenEffectsReminder: 'Ukryte efekty są aktywne w {name}.',
+        visibilityPublicHint: 'pełna etykieta widoczna dla wszystkich',
+        visibilityMaskedHint: 'niejasna etykieta pokazywana graczom',
+        visibilityGmHint: 'Tylko szept GM, bez wiersza śledzenia skrętów',
       },
       removal: {
         conditionField: 'Stan',
@@ -11658,29 +13540,50 @@ const ConditionTrackerMod = (() => {
       },
       saved: {
         visibility: {
-          public: 'Public',
-          masked: 'Masked',
-          gm: 'GM Only',
+          public: 'Publiczny',
+          masked: 'Zamaskowany',
+          gm: "Tylko GM'a",
         },
         snooze: {
-          thisTurn: 'This Turn',
-          oneRound: '1 Round',
-          threeRounds: '3 Rounds',
-          thisCombat: 'This Combat',
-          rounds: '{n} round(s)',
+          thisTurn: 'Ta tura',
+          oneRound: '1 runda',
+          threeRounds: '3 rundy',
+          thisCombat: 'Ta walka',
+          rounds: '{n} rundy',
         },
         field: {
-          gmLabel: 'GM Label',
-          publicLabel: 'Public Label',
-          visibility: 'Visibility',
-          source: 'Source',
-          condition: 'Condition',
+          gmLabel: 'Etykieta GM',
+          publicLabel: 'Etykieta publiczna',
+          visibility: 'Widoczność',
+          source: 'Źródło',
+          condition: 'Stan',
         },
         prompt: {
-          enterGmLabel: 'Full effect description (GM only)',
-          enterPublicLabel: 'Vague label shown to players',
+          enterGmLabel: 'Pełny opis efektu (tylko GM)',
+          enterPublicLabel: 'Niejasna etykieta pokazywana graczom',
         },
-        snoozed: 'snoozed',
+        snoozed: 'zdrzemnął się',
+      },
+      classify: {
+        title: 'Klasyfikacja Aktorów',
+        showTitle: 'Diagnostyka Klasyfikacji',
+        showHeading: 'Szczegóły Klasyfikacji Tokena',
+        resultHeading: 'Nadpisanie Zastosowane',
+        noSelection:
+          'Wybierz co najmniej jeden token na planszy przed użyciem --classify.',
+        invalidType:
+          'Nieprawidłowy typ klasyfikacji: {type}. Użyj pc, npc, ignored lub auto.',
+        set: '{name} → {type} (zakres: {scope})',
+        cleared:
+          '{name} nadpisanie usunięte (zakres: {scope}) — automatyczne wykrywanie przywrócone.',
+        setTokenFallback:
+          '{name} → {type} (nadpisanie tokena — brak powiązanej karty postaci).',
+        clearedTokenFallback:
+          '{name} nadpisanie tokena usunięte — automatyczne wykrywanie przywrócone.',
+        fieldToken: 'Znak',
+        fieldType: 'Klasyfikacja',
+        fieldSource: 'Źródło',
+        fieldReason: 'Powód',
       },
       cleanup: {
         orphaned: 'Osierocone wpisy stanów',
@@ -11718,7 +13621,7 @@ const ConditionTrackerMod = (() => {
           ],
           [
             '!condition-tracker --report-token',
-            'Select one or more tokens first, then run this command to get a GM whisper listing every condition applied to and by each selected token. Also available as the ConditionTrackerReportToken macro.',
+            'Najpierw wybierz jeden lub więcej tokenów, a następnie uruchom to polecenie, aby uzyskać szeptem GM listę wszystkich warunków zastosowanych do i przez każdy wybrany token. Dostępne również jako makro ConditionTrackerReportToken.',
           ],
           [
             '!condition-tracker --menu',
@@ -11731,11 +13634,11 @@ const ConditionTrackerMod = (() => {
         colFlag: 'Flaga',
         colDesc: 'Opis',
         rows: [
-          ['--prompt', 'Interaktywny kreator krok po kroku'],
-          ['--multi-target', 'Zastosuj stan do wielu żetonów celu naraz'],
+          ['--podpowiedź', 'Interaktywny kreator krok po kroku'],
+          ['--wiele celów', 'Zastosuj stan do wielu żetonów celu naraz'],
           ['--menu', 'Pokaż główne menu (dodaj remove dla menu usuwania)'],
           [
-            '--source X --target Y --condition Z',
+            '--źródło X --cel Y --warunek Z',
             'Zastosuj stan bezpośrednio bez kreatora',
           ],
           [
@@ -11755,29 +13658,41 @@ const ConditionTrackerMod = (() => {
             'Dostosuj ustawienia konfiguracji (patrz sekcja Konfiguracja poniżej)',
           ],
           [
-            '--prompt --subjectPromptBypass true|false',
+            '--prompt --subjectPromptBypass prawda|fałsz',
             'Nadpisz subjectPromptBypass tylko dla tego polecenia (obsługuje również --subject-prompt-bypass)',
           ],
           [
-            '--cleanup',
+            '--posprzątać',
             'Uzgodnij stan — usuń osierocone stany i wiersze Śledzika Tur',
           ],
           [
-            '--reorder-conditions',
+            '--warunki ponownego zamówienia',
             'Ręcznie przenieść wiersze warunków za przypisane tokeny w kolejności tur',
           ],
-          ['--reinstall-macro', 'Utwórz ponownie lub zaktualizuj makra MG'],
+          ['--reinstall-makro', 'Utwórz ponownie lub zaktualizuj makra MG'],
           [
-            '--reinstall-handout',
+            '--reinstall-ulotka',
             'Utwórz ponownie lub zaktualizuj zlokalizowany handout pomocy',
           ],
           [
-            '--report-token',
-            'Whisper a GM-only condition report for each selected token (conditions applied to and by it)',
+            '--token raportu',
+            'Szepnij raport o stanie tylko dla GM dla każdego wybranego tokena (warunki zastosowane do niego i przez niego)',
           ],
           [
             '--lang &lt;język&gt;',
             'Wyświetl wiadomości tego polecenia w dodatkowym języku (tryb dwujęzyczny)',
+          ],
+          [
+            '--classify pc|npc|ignored',
+            'Nadpisz typ aktora dla wybranych tokenów — najpierw wybierz token(y). Domyślny zakres to postać (zapisuje atrybut ct_mod_actor_type); dodaj --scope token, aby zapisać w stanie skryptu',
+          ],
+          [
+            '--classify auto',
+            'Usuń nadpisanie typu aktora i przywróć automatyczne wykrywanie dla wybranych tokenów',
+          ],
+          [
+            '--classify show',
+            'Wyszeptaj diagnostykę klasyfikacji dla każdego wybranego tokena — pokazuje wykryty typ, źródło wykrywania i powód',
           ],
           ['--help', 'Pokaż krótką kartę pomocy w czacie'],
         ],
@@ -11839,64 +13754,150 @@ const ConditionTrackerMod = (() => {
         ],
       },
       savedEffects: {
-        heading: 'Saved Effects',
+        heading: 'Zapisane efekty',
         intro:
-          'Saved effects let you store long-term conditions outside the Turn Tracker — curses, diseases, poisons, hidden debuffs, and other non-combat conditions. They persist in script state and can be optionally copied into the Turn Tracker when combat begins.',
+          'Zapisane efekty umożliwiają przechowywanie długoterminowych warunków poza modułem śledzenia tur — klątw, chorób, trucizn, ukrytych osłabień i innych warunków niezwiązanych z walką. Zachowują się one w stanie skryptu i opcjonalnie można je skopiować do modułu śledzenia tur po rozpoczęciu walki.',
         visibility: {
-          heading: 'Visibility Modes',
+          heading: 'Tryby widoczności',
           rows: [
             [
-              'public',
-              'Full effect label is visible in the Turn Tracker and public chat.',
+              'publiczny',
+              'Etykieta pełnego efektu jest widoczna w narzędziu do śledzenia zwrotów i czacie publicznym.',
             ],
             [
-              'masked',
-              'A vague public label is shown to players; full details are GM-only.',
+              'zamaskowany',
+              'Graczom wyświetlana jest niejasna publiczna etykieta; pełne szczegóły są dostępne wyłącznie dla GM.',
             ],
             [
               'gm',
-              'No Turn Tracker row. Full details are stored in state and whispered to the GM when the affected token reaches the top of initiative.',
+              'Brak wiersza śledzenia skrętu. Pełne szczegóły są przechowywane w stanie i szeptane do MG, gdy dotknięty żeton osiągnie szczyt inicjatywy.',
             ],
           ],
         },
         commands: {
-          heading: 'Saved Effects Commands',
+          heading: 'Zapisane polecenia efektów',
           intro:
-            'All --saved commands are GM-only. Select a token before running --saved or --saved add.',
+            'Wszystkie polecenia --saved są dostępne tylko dla GM. Wybierz token przed uruchomieniem --saved lub --saved add.',
           rows: [
             [
-              '!condition-tracker --saved',
-              'View saved effects for the selected token.',
+              '!condition-tracker --zapisano',
+              'Zobacz zapisane efekty dla wybranego tokena.',
             ],
             [
-              '!condition-tracker --saved add',
-              'Launch the add-saved-effect wizard.',
+              '!condition-tracker --zapisany dodatek',
+              'Uruchom kreator dodawania zapisanych efektów.',
             ],
             [
               '!condition-tracker --saved edit <id>',
-              'Edit labels or visibility for an existing saved effect.',
+              'Edytuj etykiety lub widoczność istniejącego zapisanego efektu.',
             ],
             [
               '!condition-tracker --saved remove <id>',
-              'Permanently remove a saved effect.',
+              'Trwale usuń zapisany efekt.',
             ],
             [
               '!condition-tracker --saved promote <id> --visibility public|masked|gm',
-              'Copy a saved effect into the Turn Tracker (public or masked) or confirm it is GM-only tracked.',
+              'Skopiuj zapisany efekt do narzędzia Turn Tracker (publicznego lub zamaskowanego) lub potwierdź, że jest śledzony tylko przez GM.',
             ],
             [
               '!condition-tracker --saved snooze <id> --scope turn|rounds|combat --rounds <n>',
-              'Snooze a GM reminder for this turn, N rounds, or this combat.',
+              'Odłóż przypomnienie MG na tę turę, N rund lub tę walkę.',
             ],
             [
               '!condition-tracker --saved snooze-clear <id>',
-              'Clear an active snooze so reminders resume immediately.',
+              'Usuń aktywną drzemkę, aby przypomnienia zostały wznowione natychmiast.',
             ],
           ],
         },
         reminders: {
-          heading: 'GM Reminders',
-          body: 'When a token with gm or masked saved effects reaches the top of the Turn Tracker, the GM receives a whisper listing the hidden effects with action buttons. Duplicate reminders within the same turn are suppressed. Use the Snooze buttons to suppress reminders for a turn, a number of rounds, or for the remainder of the current combat.',
+          heading: 'Przypomnienia GM',
+          body: 'Kiedy żeton z MG lub zamaskowanymi zapisanymi efektami dotrze na górę paska śledzenia tur, MG otrzyma szept zawierający listę ukrytych efektów z przyciskami akcji. Zduplikowane przypomnienia w tej samej turze są pomijane. Użyj przycisków Drzemka, aby ukryć przypomnienia dotyczące tury, określonej liczby rund lub pozostałej części bieżącej walki.',
+        },
+      },
+      actorClassification: {
+        heading: 'Klasyfikacja Aktorów',
+        intro:
+          'Condition Tracker automatycznie określa, czy każdy token jest BG, NPC lub ignorowanym obiektem (piny mapy, scenografia, szablony zaklęć). Niepowiązane tokeny są domyślnie ignorowane. Użyj --classify, aby nadpisać automatyczne wykrywanie dla dowolnego tokena.',
+        detectionOrder: {
+          heading: 'Kolejność Wykrywania',
+          colStep: 'Krok',
+          colCheck: 'Sprawdzenie',
+          colResult: 'Wynik',
+          rows: [
+            [
+              '1',
+              'Nadpisanie stanu tokena (--classify --scope token)',
+              'pc / npc / ignorowane',
+            ],
+            [
+              '2',
+              'Atrybut ct_mod_actor_type postaci (--classify --scope character)',
+              'pc / npc / ignorowane',
+            ],
+            ['3', 'Niepowiązany token — brak karty postaci', 'ignorowane'],
+            ['4', 'Adapter systemu gry (atrybut npc / is_npc)', 'szt./np'],
+            [
+              '5',
+              'Skanowanie ogólnych atrybutów NPC (npc, is_npc, npcflag, sheet_type, character_type)',
+              'szt./np',
+            ],
+            ['6', 'Zapasowy controlledby postaci', 'szt./np'],
+          ],
+        },
+        types: {
+          heading: 'Typy Klasyfikacji',
+          colType: 'Typ',
+          colMeaning: 'Znaczenie',
+          rows: [
+            [
+              'szt',
+              'Postać gracza — zawsze uwzględniana jako BG w kreatorze i wykrywaniu',
+            ],
+            ['npc', 'Postać niezależna — zawsze uwzględniana jako NPC'],
+            [
+              'ignorowane',
+              'Nigdy nie wyświetlana ani śledzona — wykluczona z wyboru tokenów kreatora',
+            ],
+            [
+              'nieznany',
+              'Tylko automatyczne wykrywanie; nie można określić typu (traktowana jako NPC w kreatorze)',
+            ],
+          ],
+        },
+        commands: {
+          heading: 'Polecenia Klasyfikacji',
+          intro:
+            'Wybierz jeden lub więcej tokenów przed uruchomieniem poleceń --classify.',
+          rows: [
+            [
+              '!condition-tracker --klasyfikacja komputera',
+              'Oznacz wybrane tokeny jako BG (domyślny zakres: postać).',
+            ],
+            [
+              '!condition-tracker --classify npc',
+              'Oznacz wybrane tokeny jako NPC.',
+            ],
+            [
+              '!condition-tracker --classify zignorowany',
+              'Wyklucz wybrane tokeny ze wszystkich śledzonych.',
+            ],
+            [
+              '!condition-tracker --klasyfikacja auto',
+              'Usuń nadpisanie — przywróć automatyczne wykrywanie.',
+            ],
+            [
+              '!condition-tracker --klasyfikacja pokazu',
+              'Pokaż diagnostykę klasyfikacji (typ, źródło, powód) dla każdego wybranego tokena.',
+            ],
+            [
+              '!condition-tracker --classify pc --token zakresu',
+              'Nadpisanie na poziomie tokena w stanie skryptu — przydatne dla niepowiązanych tokenów.',
+            ],
+            [
+              '!condition-tracker --klasyfikacja komputera --znak zakresu',
+              'Nadpisanie na poziomie postaci w atrybucie ct_mod_actor_type — dotyczy wszystkich tokenów korzystających z tej samej karty postaci.',
+            ],
+          ],
         },
       },
       configuration: {
@@ -11914,17 +13915,17 @@ const ConditionTrackerMod = (() => {
           ],
           [
             'useIcons',
-            'true / false',
+            'prawda/fałsz',
             'Pokaż krótkie kody ikon (np. [G]) zamiast emoji w wierszach Śledzika Tur',
           ],
           [
             'subjectPromptBypass',
-            'true / false',
+            'prawda/fałsz',
             'Pomiń opcjonalny krok wyboru podmiotu dla efektów Zaklęcie / Zdolność / Inne',
           ],
           [
             'suppressPublicChat',
-            'true / false',
+            'prawda/fałsz',
             'Pomiń wszystkie publiczne ogłoszenia na czacie (wiadomości o dodaniu i usunięciu). Szepty GM nie są objęte.',
           ],
           [
@@ -11953,7 +13954,7 @@ const ConditionTrackerMod = (() => {
         heading: 'Dostępne tłumaczenia',
         intro:
           'Użyj opcji konfiguracji języka, aby ustawić wiadomości czatu i handout pomocy na dowolny obsługiwany język. Krótkie aliasy są również akceptowane dla en, zh i pt.',
-        colLocale: 'Locale',
+        colLocale: 'Widownia',
         colLanguage: 'Język',
         colFile: 'Plik tłumaczenia',
       },
@@ -12125,8 +14126,8 @@ const ConditionTrackerMod = (() => {
         details: 'Detalhes',
         description: 'Descrição',
         scenario: 'Cenário',
-        gameSystem: 'Game System',
-        duration: 'Duration',
+        gameSystem: 'Sistema de jogo',
+        duration: 'Duração',
       },
       dur: {
         untilRemoved: 'Até ser removido',
@@ -12151,14 +14152,14 @@ const ConditionTrackerMod = (() => {
         reinstallHandout: 'Reinstalar documento',
         showHelp: 'Mostrar ajuda',
         reorderConditions: 'Reordenar linhas de condições',
-        reportToken: 'Report Token Conditions',
-        savedEffects: 'Saved Effects',
-        addSavedEffect: 'Add Saved Effect',
-        editSaved: 'Edit',
-        removeSaved: 'Remove',
-        promoteSaved: 'Add to Turn Tracker',
-        snoozeSaved: 'Snooze',
-        clearSnooze: 'Clear Snooze',
+        reportToken: 'Reportar condições de token',
+        savedEffects: 'Efeitos salvos',
+        addSavedEffect: 'Adicionar efeito salvo',
+        editSaved: 'Editar',
+        removeSaved: 'Remover',
+        promoteSaved: 'Adicionar ao Rastreador de Turno',
+        snoozeSaved: 'Soneca',
+        clearSnooze: 'Limpar soneca',
       },
       title: {
         menu: 'Menu',
@@ -12169,8 +14170,7 @@ const ConditionTrackerMod = (() => {
         applied: 'Aplicado',
         removed: 'Condição removida',
         cleanup: 'Limpeza concluída',
-        macroReinstalled:
-          'The {wizard}, {multiTarget}, {reportToken}, and {saved} macros have been reinstalled for all current GM players.',
+        macroReinstalled: 'Macro reinstalada',
         handoutReinstalled: 'Documento reinstalado',
         warning: 'Aviso',
         error: 'Erro',
@@ -12182,15 +14182,15 @@ const ConditionTrackerMod = (() => {
         moveToken: '{name} — Mover ficha?',
         scriptReady: 'Script pronto',
         conditionReorder: 'Ordem de turno alterada',
-        tokenReport: 'Token Condition Report',
-        savedEffects: 'Saved Effects',
-        savedAdd: 'Add Saved Effect',
-        savedEdit: 'Edit Saved Effect',
-        savedRemoved: 'Saved Effect Removed',
-        savedPromoted: 'Add to Turn Tracker',
-        savedSnoozed: 'Reminder Snoozed',
-        savedSnoozeCleared: 'Snooze Cleared',
-        hiddenEffects: 'Hidden Effects — {name}',
+        tokenReport: 'Relatório de condição do token',
+        savedEffects: 'Efeitos salvos',
+        savedAdd: 'Adicionar efeito salvo',
+        savedEdit: 'Editar efeito salvo',
+        savedRemoved: 'Efeito salvo removido',
+        savedPromoted: 'Adicionar ao Rastreador de Turno',
+        savedSnoozed: 'Lembrete adiado',
+        savedSnoozeCleared: 'Soneca apagada',
+        hiddenEffects: 'Efeitos ocultos — {name}',
       },
       heading: {
         quickActions: 'Acções rápidas',
@@ -12202,13 +14202,13 @@ const ConditionTrackerMod = (() => {
         promptUi: 'Interface do assistente',
         examples: 'Exemplos',
         summary: 'Resumo',
-        appliedTo: 'Conditions Applied To',
-        appliedBy: 'Conditions Applied By',
-        savedEffectsFor: 'Saved Effects for {name}',
-        visibility: 'Visibility',
-        snoozeOptions: 'Snooze Reminder',
-        promoteOptions: 'Promote to Turn Tracker',
-        editActions: 'Edit Actions',
+        appliedTo: 'Condições aplicadas a',
+        appliedBy: 'Condições aplicadas por',
+        savedEffectsFor: 'Efeitos salvos para {name}',
+        visibility: 'Visibilidade',
+        snoozeOptions: 'Lembrete de soneca',
+        promoteOptions: 'Promover para Turn Tracker',
+        editActions: 'Editar ações',
       },
       msg: {
         noActive: 'Não há condições activas a ser rastreadas.',
@@ -12216,7 +14216,7 @@ const ConditionTrackerMod = (() => {
         unknownConfig:
           'Opção de configuração desconhecida. Utilize --config para ver as definições suportadas.',
         macroReinstalled:
-          'As macros {wizard}, {multiTarget} e {reportToken} foram reinstaladas para todos os mestres activos.',
+          'As macros {wizard}, {multiTarget}, {reportToken}, {saved} e {classify} foram reinstaladas para todos os mestres activos.',
         handoutReinstalled: 'O documento de ajuda {handout} foi reinstalado.',
         duplicate:
           'Esta combinação exacta de origem, sujeito, alvo, condição e texto personalizado já está activa.',
@@ -12294,32 +14294,33 @@ const ConditionTrackerMod = (() => {
         conditionsReordered:
           'As linhas de condições foram reposicionadas após as fichas atribuídas.',
         noTokensSelectedReport:
-          'Select at least one token on the board before using --report-token.',
-        noConditionsAppliedTo: '{name} has no active conditions applied to it.',
+          'Selecione pelo menos um token no quadro antes de usar --report-token.',
+        noConditionsAppliedTo:
+          '{name} não tem condições ativas aplicadas a ele.',
         noConditionsAppliedBy:
-          '{name} has no active conditions applied to others.',
-        noSavedEffects: 'No saved effects stored for {name}.',
+          '{name} não tem condições ativas aplicadas a outros.',
+        noSavedEffects: 'Nenhum efeito salvo armazenado para {name}.',
         noTokenSelectedSaved:
-          'Select a token on the board before using --saved.',
-        savedEffectAdded: 'Saved effect added for {name}.',
-        savedEffectUpdated: 'Saved effect updated.',
-        savedEffectRemoved: 'Saved effect removed.',
-        savedEffectNotFound: 'Saved effect not found.',
+          'Selecione um token no quadro antes de usar --saved.',
+        savedEffectAdded: 'Efeito salvo adicionado para {name}.',
+        savedEffectUpdated: 'Efeito salvo atualizado.',
+        savedEffectRemoved: 'Efeito salvo removido.',
+        savedEffectNotFound: 'Efeito salvo não encontrado.',
         savedInvalidVisibility:
-          'Invalid visibility. Use public, masked, or gm.',
+          'Visibilidade inválida. Use público, mascarado ou GM.',
         savedConditionRequired:
           'Condition type is required. Use --condition <type>.',
-        savedPromotedPublic: 'Effect added to Turn Tracker as public.',
+        savedPromotedPublic: 'Efeito adicionado ao Turn Tracker como público.',
         savedPromotedMasked:
-          'Effect added to Turn Tracker as masked — players see: {publicLabel}.',
+          'Efeito adicionado ao Turn Tracker como mascarado – os jogadores veem: {publicLabel}.',
         savedPromotedGm:
-          'Effect is GM-only — no Turn Tracker row will be created. The reminder system will surface it when this token reaches the top of the turn order.',
-        savedSnoozed: 'Reminder snoozed: {scope}.',
-        savedSnoozeCleared: 'Snooze cleared.',
-        hiddenEffectsReminder: 'Hidden effects are active on {name}.',
-        visibilityPublicHint: 'full label visible to all',
-        visibilityMaskedHint: 'vague label shown to players',
-        visibilityGmHint: 'GM whisper only, no Turn Tracker row',
+          'O efeito é apenas do GM – nenhuma linha do Turn Tracker será criada. O sistema de lembrete irá apresentá-lo quando esta ficha atingir o topo da ordem do turno.',
+        savedSnoozed: 'Lembrete adiado: {scope}.',
+        savedSnoozeCleared: 'A soneca foi apagada.',
+        hiddenEffectsReminder: 'Os efeitos ocultos estão ativos em {name}.',
+        visibilityPublicHint: 'rótulo completo visível para todos',
+        visibilityMaskedHint: 'rótulo vago mostrado aos jogadores',
+        visibilityGmHint: 'Apenas sussurro do GM, sem linha do Turn Tracker',
       },
       removal: {
         conditionField: 'Condição',
@@ -12335,29 +14336,50 @@ const ConditionTrackerMod = (() => {
       },
       saved: {
         visibility: {
-          public: 'Public',
-          masked: 'Masked',
-          gm: 'GM Only',
+          public: 'Público',
+          masked: 'Mascarado',
+          gm: 'Apenas GM',
         },
         snooze: {
-          thisTurn: 'This Turn',
-          oneRound: '1 Round',
-          threeRounds: '3 Rounds',
-          thisCombat: 'This Combat',
-          rounds: '{n} round(s)',
+          thisTurn: 'Esta vez',
+          oneRound: '1 rodada',
+          threeRounds: '3 rodadas',
+          thisCombat: 'Este combate',
+          rounds: '{n} rodada(s)',
         },
         field: {
-          gmLabel: 'GM Label',
-          publicLabel: 'Public Label',
-          visibility: 'Visibility',
-          source: 'Source',
-          condition: 'Condition',
+          gmLabel: 'Etiqueta GM',
+          publicLabel: 'Etiqueta Pública',
+          visibility: 'Visibilidade',
+          source: 'Fonte',
+          condition: 'Doença',
         },
         prompt: {
-          enterGmLabel: 'Full effect description (GM only)',
-          enterPublicLabel: 'Vague label shown to players',
+          enterGmLabel: 'Descrição completa do efeito (somente GM)',
+          enterPublicLabel: 'Rótulo vago mostrado aos jogadores',
         },
-        snoozed: 'snoozed',
+        snoozed: 'cochilou',
+      },
+      classify: {
+        title: 'Classificação de Atores',
+        showTitle: 'Diagnóstico de Classificação',
+        showHeading: 'Detalhes de Classificação do Token',
+        resultHeading: 'Substituição Aplicada',
+        noSelection:
+          'Seleciona pelo menos um token no tabuleiro antes de usar --classify.',
+        invalidType:
+          'Tipo de classificação inválido: {type}. Usa pc, npc, ignored ou auto.',
+        set: '{name} → {type} (âmbito: {scope})',
+        cleared:
+          '{name} substituição removida (âmbito: {scope}) — deteção automática restaurada.',
+        setTokenFallback:
+          '{name} → {type} (substituição de token — nenhuma ficha de personagem associada).',
+        clearedTokenFallback:
+          '{name} substituição de token removida — deteção automática restaurada.',
+        fieldToken: 'Símbolo',
+        fieldType: 'Classificação',
+        fieldSource: 'Fonte',
+        fieldReason: 'Motivo',
       },
       cleanup: {
         orphaned: 'Entradas de condição órfãs',
@@ -12395,7 +14417,7 @@ const ConditionTrackerMod = (() => {
           ],
           [
             '!condition-tracker --report-token',
-            'Select one or more tokens first, then run this command to get a GM whisper listing every condition applied to and by each selected token. Also available as the ConditionTrackerReportToken macro.',
+            'Selecione um ou mais tokens primeiro e, em seguida, execute este comando para obter um sussurro do GM listando todas as condições aplicadas a e por cada token selecionado. Também disponível como macro ConditionTrackerReportToken.',
           ],
           [
             '!condition-tracker --menu',
@@ -12408,9 +14430,9 @@ const ConditionTrackerMod = (() => {
         colFlag: 'Opção',
         colDesc: 'Descrição',
         rows: [
-          ['--prompt', 'Interface do assistente passo a passo'],
+          ['--incitar', 'Interface do assistente passo a passo'],
           [
-            '--multi-target',
+            '--multi-alvo',
             'Aplicar uma condição a várias fichas alvo de uma vez',
           ],
           [
@@ -12418,7 +14440,7 @@ const ConditionTrackerMod = (() => {
             'Mostrar o menu principal (adicione remove para o menu de remoção)',
           ],
           [
-            '--source X --target Y --condition Z',
+            '--fonte X --alvo Y --condição Z',
             'Aplicar uma condição directamente sem o assistente',
           ],
           [
@@ -12438,29 +14460,41 @@ const ConditionTrackerMod = (() => {
             'Ajustar as definições de configuração (consulte a secção Configuração)',
           ],
           [
-            '--prompt --subjectPromptBypass true|false',
+            '--prompt --subjectPromptBypass verdadeiro|falso',
             'Substituir subjectPromptBypass apenas para este comando (suporta também --subject-prompt-bypass)',
           ],
           [
-            '--cleanup',
+            '--limpar',
             'Reconciliar o estado — remover condições e linhas do registo de turnos órfãs',
           ],
           [
-            '--reorder-conditions',
+            '--reorder-condições',
             'Reposicionar manualmente as linhas de condição a seguir aos tokens atribuídos na ordem de turnos',
           ],
-          ['--reinstall-macro', 'Recriar ou actualizar as macros do Mestre'],
+          ['--reinstalar-macro', 'Recriar ou actualizar as macros do Mestre'],
           [
-            '--reinstall-handout',
+            '--reinstalar-apostila',
             'Recriar ou actualizar o documento de ajuda localizado',
           ],
           [
             '--report-token',
-            'Whisper a GM-only condition report for each selected token (conditions applied to and by it)',
+            'Sussurre um relatório de condição exclusivo do GM para cada ficha selecionada (condições aplicadas a ela e por ela)',
           ],
           [
             '--lang &lt;locale&gt;',
             'Apresentar as mensagens deste comando numa configuração regional adicional (modo bilingue)',
+          ],
+          [
+            '--classify pc|npc|ignored',
+            'Substituir o tipo de ator para os tokens selecionados — seleciona os tokens primeiro. O âmbito predefinido é o personagem (escreve o atributo ct_mod_actor_type); adiciona --scope token para armazenar no estado do script',
+          ],
+          [
+            '--classify auto',
+            'Remover a substituição do tipo de ator e restaurar a deteção automática para os tokens selecionados',
+          ],
+          [
+            '--classify show',
+            'Sussurrar um diagnóstico de classificação para cada token selecionado — mostra o tipo detetado, a fonte de deteção e o motivo',
           ],
           ['--help', 'Mostrar um cartão de ajuda rápida no chat'],
         ],
@@ -12522,64 +14556,154 @@ const ConditionTrackerMod = (() => {
         ],
       },
       savedEffects: {
-        heading: 'Saved Effects',
+        heading: 'Efeitos salvos',
         intro:
-          'Saved effects let you store long-term conditions outside the Turn Tracker — curses, diseases, poisons, hidden debuffs, and other non-combat conditions. They persist in script state and can be optionally copied into the Turn Tracker when combat begins.',
+          'Os efeitos salvos permitem armazenar condições de longo prazo fora do Turn Tracker – maldições, doenças, venenos, debuffs ocultos e outras condições que não sejam de combate. Eles persistem no estado de script e podem ser opcionalmente copiados para o Turn Tracker quando o combate começa.',
         visibility: {
-          heading: 'Visibility Modes',
+          heading: 'Modos de visibilidade',
           rows: [
             [
-              'public',
-              'Full effect label is visible in the Turn Tracker and public chat.',
+              'público',
+              'O rótulo completo do efeito é visível no Turn Tracker e no bate-papo público.',
             ],
             [
-              'masked',
-              'A vague public label is shown to players; full details are GM-only.',
+              'mascarado',
+              'Um rótulo público vago é mostrado aos jogadores; detalhes completos são apenas para GM.',
             ],
             [
-              'gm',
-              'No Turn Tracker row. Full details are stored in state and whispered to the GM when the affected token reaches the top of initiative.',
+              'GM',
+              'Nenhuma linha do Rastreador de Curva. Detalhes completos são armazenados no estado e sussurrados ao GM quando a ficha afetada atinge o topo da iniciativa.',
             ],
           ],
         },
         commands: {
-          heading: 'Saved Effects Commands',
+          heading: 'Comandos de efeitos salvos',
           intro:
-            'All --saved commands are GM-only. Select a token before running --saved or --saved add.',
+            'Todos os comandos --saved são apenas do GM. Selecione um token antes de executar --saved ou --saved add.',
           rows: [
             [
               '!condition-tracker --saved',
-              'View saved effects for the selected token.',
+              'Veja os efeitos salvos para o token selecionado.',
             ],
             [
-              '!condition-tracker --saved add',
-              'Launch the add-saved-effect wizard.',
+              '!condition-tracker --saved adicionar',
+              'Inicie o assistente para adicionar efeitos salvos.',
             ],
             [
               '!condition-tracker --saved edit <id>',
-              'Edit labels or visibility for an existing saved effect.',
+              'Edite rótulos ou visibilidade de um efeito salvo existente.',
             ],
             [
               '!condition-tracker --saved remove <id>',
-              'Permanently remove a saved effect.',
+              'Remova permanentemente um efeito salvo.',
             ],
             [
               '!condition-tracker --saved promote <id> --visibility public|masked|gm',
-              'Copy a saved effect into the Turn Tracker (public or masked) or confirm it is GM-only tracked.',
+              'Copie um efeito salvo no Turn Tracker (público ou mascarado) ou confirme se ele é rastreado apenas pelo GM.',
             ],
             [
               '!condition-tracker --saved snooze <id> --scope turn|rounds|combat --rounds <n>',
-              'Snooze a GM reminder for this turn, N rounds, or this combat.',
+              'Adie um lembrete do GM para este turno, N rodadas ou este combate.',
             ],
             [
               '!condition-tracker --saved snooze-clear <id>',
-              'Clear an active snooze so reminders resume immediately.',
+              'Limpe uma soneca ativa para que os lembretes sejam retomados imediatamente.',
             ],
           ],
         },
         reminders: {
-          heading: 'GM Reminders',
-          body: 'When a token with gm or masked saved effects reaches the top of the Turn Tracker, the GM receives a whisper listing the hidden effects with action buttons. Duplicate reminders within the same turn are suppressed. Use the Snooze buttons to suppress reminders for a turn, a number of rounds, or for the remainder of the current combat.',
+          heading: 'Lembretes GM',
+          body: 'Quando uma ficha com efeitos salvos do GM ou mascarados chega ao topo do Turn Tracker, o GM recebe um sussurro listando os efeitos ocultos com botões de ação. Lembretes duplicados no mesmo turno são suprimidos. Use os botões Soneca para suprimir lembretes de um turno, de uma série de rodadas ou do restante do combate atual.',
+        },
+      },
+      actorClassification: {
+        heading: 'Classificação de Atores',
+        intro:
+          'O Condition Tracker determina automaticamente se cada token é um PJ, PNJ ou objeto ignorado (alfinetes de mapa, cenário, moldes de magia). Tokens não associados são ignorados por predefinição. Usa --classify para substituir a deteção automática em qualquer token.',
+        detectionOrder: {
+          heading: 'Ordem de Deteção',
+          colStep: 'Passo',
+          colCheck: 'Verificação',
+          colResult: 'Resultado',
+          rows: [
+            [
+              '1',
+              'Substituição de estado do token (--classify --scope token)',
+              'pc/npc/ignorado',
+            ],
+            [
+              '2',
+              'Atributo ct_mod_actor_type do personagem (--classify --scope character)',
+              'pc/npc/ignorado',
+            ],
+            ['3', 'Token não associado — sem ficha de personagem', 'ignorado'],
+            [
+              '4',
+              'Adaptador do sistema de jogo (atributo npc / is_npc)',
+              'computador/npc',
+            ],
+            [
+              '5',
+              'Análise de atributos NPC genéricos (npc, is_npc, npcflag, sheet_type, character_type)',
+              'computador/npc',
+            ],
+            ['6', 'Alternativa controlledby do personagem', 'computador/npc'],
+          ],
+        },
+        types: {
+          heading: 'Tipos de Classificação',
+          colType: 'Tipo',
+          colMeaning: 'Significado',
+          rows: [
+            [
+              'computador',
+              'Personagem jogador — sempre incluído como PJ no assistente e na deteção',
+            ],
+            ['NPC', 'Personagem não jogador — sempre incluído como PNJ'],
+            [
+              'ignorado',
+              'Nunca exibido ou rastreado — excluído do seletor de tokens do assistente',
+            ],
+            [
+              'desconhecido',
+              'Apenas deteção automática; tipo não pôde ser determinado (tratado como PNJ no assistente)',
+            ],
+          ],
+        },
+        commands: {
+          heading: 'Comandos de Classificação',
+          intro:
+            'Seleciona um ou mais tokens antes de executar os comandos --classify.',
+          rows: [
+            [
+              '!condition-tracker --classify pc',
+              'Marcar os tokens selecionados como PJs (âmbito de personagem por predefinição).',
+            ],
+            [
+              '!condition-tracker --classify npc',
+              'Marcar os tokens selecionados como PNJs.',
+            ],
+            [
+              '!condition-tracker --classify ignorado',
+              'Excluir os tokens selecionados de todo rastreamento.',
+            ],
+            [
+              '!condition-tracker --classify auto',
+              'Remover a substituição — restaurar a deteção automática.',
+            ],
+            [
+              '!condition-tracker --classify mostrar',
+              'Mostrar o diagnóstico de classificação (tipo, fonte, motivo) para cada token selecionado.',
+            ],
+            [
+              '!condition-tracker --classify pc --scope token',
+              'Substituição ao nível do token no estado do script — útil para tokens não associados.',
+            ],
+            [
+              '!condition-tracker --classify pc --scope caractere',
+              'Substituição ao nível do personagem no atributo ct_mod_actor_type — aplica-se a todos os tokens com a mesma ficha de personagem.',
+            ],
+          ],
         },
       },
       configuration: {
@@ -12597,17 +14721,17 @@ const ConditionTrackerMod = (() => {
           ],
           [
             'useIcons',
-            'true / false',
+            'verdadeiro/falso',
             'Mostrar códigos de ícone curtos (ex. [G]) em vez de carinhas nas linhas do Registo de Turnos',
           ],
           [
             'subjectPromptBypass',
-            'true / false',
+            'verdadeiro/falso',
             'Ignorar o passo opcional da ficha sujeito para efeitos de Feitiço / Habilidade / Outro',
           ],
           [
             'suppressPublicChat',
-            'true / false',
+            'verdadeiro/falso',
             'Suprimir todos os anúncios públicos no chat (mensagens de aplicação e remoção). Os sussurros do Mestre não são afetados.',
           ],
           [
@@ -12636,7 +14760,7 @@ const ConditionTrackerMod = (() => {
         heading: 'Traduções disponíveis',
         intro:
           'Utilize a opção de configuração language para definir as mensagens do chat e o documento de ajuda para qualquer configuração regional suportada. Os aliases curtos também são aceites para en, zh e pt.',
-        colLocale: 'Locale',
+        colLocale: 'Localidade',
         colLanguage: 'Idioma',
         colFile: 'Ficheiro de tradução',
       },
@@ -12808,8 +14932,8 @@ const ConditionTrackerMod = (() => {
         details: 'Detalhes',
         description: 'Descrição',
         scenario: 'Cenário',
-        gameSystem: 'Game System',
-        duration: 'Duration',
+        gameSystem: 'Sistema de jogo',
+        duration: 'Duração',
       },
       dur: {
         untilRemoved: 'Até ser removido',
@@ -12834,14 +14958,14 @@ const ConditionTrackerMod = (() => {
         reinstallHandout: 'Reinstalar livreto',
         showHelp: 'Mostrar ajuda',
         reorderConditions: 'Reordenar linhas de condição',
-        reportToken: 'Report Token Conditions',
-        savedEffects: 'Saved Effects',
-        addSavedEffect: 'Add Saved Effect',
-        editSaved: 'Edit',
-        removeSaved: 'Remove',
-        promoteSaved: 'Add to Turn Tracker',
-        snoozeSaved: 'Snooze',
-        clearSnooze: 'Clear Snooze',
+        reportToken: 'Reportar condições de token',
+        savedEffects: 'Efeitos salvos',
+        addSavedEffect: 'Adicionar efeito salvo',
+        editSaved: 'Editar',
+        removeSaved: 'Remover',
+        promoteSaved: 'Adicionar ao Rastreador de Turno',
+        snoozeSaved: 'Soneca',
+        clearSnooze: 'Limpar soneca',
       },
       title: {
         menu: 'Menu',
@@ -12852,8 +14976,7 @@ const ConditionTrackerMod = (() => {
         applied: 'Aplicado',
         removed: 'Condição removida',
         cleanup: 'Limpeza concluída',
-        macroReinstalled:
-          'The {wizard}, {multiTarget}, {reportToken}, and {saved} macros have been reinstalled for all current GM players.',
+        macroReinstalled: 'Macro reinstalada',
         handoutReinstalled: 'Livreto reinstalado',
         warning: 'Aviso',
         error: 'Erro',
@@ -12865,15 +14988,15 @@ const ConditionTrackerMod = (() => {
         moveToken: '{name} — Mover ficha?',
         scriptReady: 'Script pronto',
         conditionReorder: 'Ordem de turno alterada',
-        tokenReport: 'Token Condition Report',
-        savedEffects: 'Saved Effects',
-        savedAdd: 'Add Saved Effect',
-        savedEdit: 'Edit Saved Effect',
-        savedRemoved: 'Saved Effect Removed',
-        savedPromoted: 'Add to Turn Tracker',
-        savedSnoozed: 'Reminder Snoozed',
-        savedSnoozeCleared: 'Snooze Cleared',
-        hiddenEffects: 'Hidden Effects — {name}',
+        tokenReport: 'Relatório de condição do token',
+        savedEffects: 'Efeitos salvos',
+        savedAdd: 'Adicionar efeito salvo',
+        savedEdit: 'Editar efeito salvo',
+        savedRemoved: 'Efeito salvo removido',
+        savedPromoted: 'Adicionar ao Rastreador de Turno',
+        savedSnoozed: 'Lembrete adiado',
+        savedSnoozeCleared: 'Soneca apagada',
+        hiddenEffects: 'Efeitos ocultos — {name}',
       },
       heading: {
         quickActions: 'Ações rápidas',
@@ -12885,13 +15008,13 @@ const ConditionTrackerMod = (() => {
         promptUi: 'Interface do assistente',
         examples: 'Exemplos',
         summary: 'Resumo',
-        appliedTo: 'Conditions Applied To',
-        appliedBy: 'Conditions Applied By',
-        savedEffectsFor: 'Saved Effects for {name}',
-        visibility: 'Visibility',
-        snoozeOptions: 'Snooze Reminder',
-        promoteOptions: 'Promote to Turn Tracker',
-        editActions: 'Edit Actions',
+        appliedTo: 'Condições aplicadas a',
+        appliedBy: 'Condições aplicadas por',
+        savedEffectsFor: 'Efeitos salvos para {name}',
+        visibility: 'Visibilidade',
+        snoozeOptions: 'Lembrete de soneca',
+        promoteOptions: 'Promover para Turn Tracker',
+        editActions: 'Editar ações',
       },
       msg: {
         noActive: 'Nenhuma condição ativa está sendo rastreada.',
@@ -12899,7 +15022,7 @@ const ConditionTrackerMod = (() => {
         unknownConfig:
           'Opção de configuração desconhecida. Use --config para ver as configurações disponíveis.',
         macroReinstalled:
-          'As macros {wizard}, {multiTarget} e {reportToken} foram reinstaladas para todos os GMs atuais.',
+          'As macros {wizard}, {multiTarget}, {reportToken}, {saved} e {classify} foram reinstaladas para todos os GMs atuais.',
         handoutReinstalled: 'O livreto de ajuda {handout} foi reinstalado.',
         duplicate:
           'Essa combinação exata de origem, sujeito, alvo, condição e texto personalizado já está ativa.',
@@ -12973,32 +15096,33 @@ const ConditionTrackerMod = (() => {
         conditionsReordered:
           'As linhas de condição foram reposicionadas após seus tokens atribuídos.',
         noTokensSelectedReport:
-          'Select at least one token on the board before using --report-token.',
-        noConditionsAppliedTo: '{name} has no active conditions applied to it.',
+          'Selecione pelo menos um token no quadro antes de usar --report-token.',
+        noConditionsAppliedTo:
+          '{name} não tem condições ativas aplicadas a ele.',
         noConditionsAppliedBy:
-          '{name} has no active conditions applied to others.',
-        noSavedEffects: 'No saved effects stored for {name}.',
+          '{name} não tem condições ativas aplicadas a outros.',
+        noSavedEffects: 'Nenhum efeito salvo armazenado para {name}.',
         noTokenSelectedSaved:
-          'Select a token on the board before using --saved.',
-        savedEffectAdded: 'Saved effect added for {name}.',
-        savedEffectUpdated: 'Saved effect updated.',
-        savedEffectRemoved: 'Saved effect removed.',
-        savedEffectNotFound: 'Saved effect not found.',
+          'Selecione um token no quadro antes de usar --saved.',
+        savedEffectAdded: 'Efeito salvo adicionado para {name}.',
+        savedEffectUpdated: 'Efeito salvo atualizado.',
+        savedEffectRemoved: 'Efeito salvo removido.',
+        savedEffectNotFound: 'Efeito salvo não encontrado.',
         savedInvalidVisibility:
-          'Invalid visibility. Use public, masked, or gm.',
+          'Visibilidade inválida. Use público, mascarado ou GM.',
         savedConditionRequired:
           'Condition type is required. Use --condition <type>.',
-        savedPromotedPublic: 'Effect added to Turn Tracker as public.',
+        savedPromotedPublic: 'Efeito adicionado ao Turn Tracker como público.',
         savedPromotedMasked:
-          'Effect added to Turn Tracker as masked — players see: {publicLabel}.',
+          'Efeito adicionado ao Turn Tracker como mascarado – os jogadores veem: {publicLabel}.',
         savedPromotedGm:
-          'Effect is GM-only — no Turn Tracker row will be created. The reminder system will surface it when this token reaches the top of the turn order.',
-        savedSnoozed: 'Reminder snoozed: {scope}.',
-        savedSnoozeCleared: 'Snooze cleared.',
-        hiddenEffectsReminder: 'Hidden effects are active on {name}.',
-        visibilityPublicHint: 'full label visible to all',
-        visibilityMaskedHint: 'vague label shown to players',
-        visibilityGmHint: 'GM whisper only, no Turn Tracker row',
+          'O efeito é apenas do GM – nenhuma linha do Turn Tracker será criada. O sistema de lembrete irá apresentá-lo quando esta ficha atingir o topo da ordem do turno.',
+        savedSnoozed: 'Lembrete adiado: {scope}.',
+        savedSnoozeCleared: 'A soneca foi apagada.',
+        hiddenEffectsReminder: 'Os efeitos ocultos estão ativos em {name}.',
+        visibilityPublicHint: 'rótulo completo visível para todos',
+        visibilityMaskedHint: 'rótulo vago mostrado aos jogadores',
+        visibilityGmHint: 'Apenas sussurro do GM, sem linha do Turn Tracker',
       },
       removal: {
         conditionField: 'Condição',
@@ -13014,29 +15138,50 @@ const ConditionTrackerMod = (() => {
       },
       saved: {
         visibility: {
-          public: 'Public',
-          masked: 'Masked',
-          gm: 'GM Only',
+          public: 'Público',
+          masked: 'Mascarado',
+          gm: 'Apenas GM',
         },
         snooze: {
-          thisTurn: 'This Turn',
-          oneRound: '1 Round',
-          threeRounds: '3 Rounds',
-          thisCombat: 'This Combat',
-          rounds: '{n} round(s)',
+          thisTurn: 'Esta vez',
+          oneRound: '1 rodada',
+          threeRounds: '3 rodadas',
+          thisCombat: 'Este combate',
+          rounds: '{n} rodada(s)',
         },
         field: {
-          gmLabel: 'GM Label',
-          publicLabel: 'Public Label',
-          visibility: 'Visibility',
-          source: 'Source',
-          condition: 'Condition',
+          gmLabel: 'Etiqueta GM',
+          publicLabel: 'Etiqueta Pública',
+          visibility: 'Visibilidade',
+          source: 'Fonte',
+          condition: 'Doença',
         },
         prompt: {
-          enterGmLabel: 'Full effect description (GM only)',
-          enterPublicLabel: 'Vague label shown to players',
+          enterGmLabel: 'Descrição completa do efeito (somente GM)',
+          enterPublicLabel: 'Rótulo vago mostrado aos jogadores',
         },
-        snoozed: 'snoozed',
+        snoozed: 'cochilou',
+      },
+      classify: {
+        title: 'Classificação de Atores',
+        showTitle: 'Diagnóstico de Classificação',
+        showHeading: 'Detalhes de Classificação do Token',
+        resultHeading: 'Substituição Aplicada',
+        noSelection:
+          'Selecione pelo menos um token no tabuleiro antes de usar --classify.',
+        invalidType:
+          'Tipo de classificação inválido: {type}. Use pc, npc, ignored ou auto.',
+        set: '{name} → {type} (escopo: {scope})',
+        cleared:
+          '{name} substituição removida (escopo: {scope}) — detecção automática restaurada.',
+        setTokenFallback:
+          '{name} → {type} (substituição de token — nenhuma ficha de personagem vinculada).',
+        clearedTokenFallback:
+          '{name} substituição de token removida — detecção automática restaurada.',
+        fieldToken: 'Símbolo',
+        fieldType: 'Classificação',
+        fieldSource: 'Fonte',
+        fieldReason: 'Motivo',
       },
       cleanup: {
         orphaned: 'Entradas de condição órfãs',
@@ -13074,7 +15219,7 @@ const ConditionTrackerMod = (() => {
           ],
           [
             '!condition-tracker --report-token',
-            'Select one or more tokens first, then run this command to get a GM whisper listing every condition applied to and by each selected token. Also available as the ConditionTrackerReportToken macro.',
+            'Selecione um ou mais tokens primeiro e, em seguida, execute este comando para obter um sussurro do GM listando todas as condições aplicadas a e por cada token selecionado. Também disponível como macro ConditionTrackerReportToken.',
           ],
           [
             '!condition-tracker --menu',
@@ -13087,14 +15232,14 @@ const ConditionTrackerMod = (() => {
         colFlag: 'Opção',
         colDesc: 'Descrição',
         rows: [
-          ['--prompt', 'Interface do assistente passo a passo'],
-          ['--multi-target', 'Aplicar uma condição a várias fichas alvo'],
+          ['--incitar', 'Interface do assistente passo a passo'],
+          ['--multi-alvo', 'Aplicar uma condição a várias fichas alvo'],
           [
             '--menu',
             'Mostrar menu principal (adicionar remove para o menu de remoção)',
           ],
           [
-            '--source X --target Y --condition Z',
+            '--fonte X --alvo Y --condição Z',
             'Aplicar uma condição diretamente sem o assistente',
           ],
           [
@@ -13114,29 +15259,38 @@ const ConditionTrackerMod = (() => {
             'Ajustar opções de configuração',
           ],
           [
-            '--prompt --subjectPromptBypass true|false',
+            '--prompt --subjectPromptBypass verdadeiro|falso',
             'Substituir subjectPromptBypass somente para este comando (também aceita --subject-prompt-bypass)',
           ],
+          ['--limpar', 'Reconciliar estado — remover condições e linhas órfãs'],
           [
-            '--cleanup',
-            'Reconciliar estado — remover condições e linhas órfãs',
-          ],
-          [
-            '--reorder-conditions',
+            '--reorder-condições',
             'Reposicionar manualmente as linhas de condição após os tokens atribuídos na ordem de iniciativa',
           ],
-          ['--reinstall-macro', 'Recriar ou atualizar as macros do GM'],
+          ['--reinstalar-macro', 'Recriar ou atualizar as macros do GM'],
           [
-            '--reinstall-handout',
+            '--reinstalar-apostila',
             'Recriar ou atualizar o livreto de ajuda localizado',
           ],
           [
             '--report-token',
-            'Whisper a GM-only condition report for each selected token (conditions applied to and by it)',
+            'Sussurre um relatório de condição exclusivo do GM para cada ficha selecionada (condições aplicadas a ela e por ela)',
           ],
           [
             '--lang &lt;locale&gt;',
             'Emitir as mensagens deste comando em uma locale adicional (modo bilingüe)',
+          ],
+          [
+            '--classify pc|npc|ignored',
+            'Substituir o tipo de ator para os tokens selecionados — selecione os tokens primeiro. O escopo padrão é o personagem (grava o atributo ct_mod_actor_type); adicione --scope token para armazenar no estado do script',
+          ],
+          [
+            '--classify auto',
+            'Remover a substituição do tipo de ator e restaurar a detecção automática para os tokens selecionados',
+          ],
+          [
+            '--classify show',
+            'Sussurrar um diagnóstico de classificação para cada token selecionado — mostra o tipo detectado, a fonte de detecção e o motivo',
           ],
           ['--help', 'Mostrar um cartão de ajuda breve no chat'],
         ],
@@ -13198,64 +15352,154 @@ const ConditionTrackerMod = (() => {
         ],
       },
       savedEffects: {
-        heading: 'Saved Effects',
+        heading: 'Efeitos salvos',
         intro:
-          'Saved effects let you store long-term conditions outside the Turn Tracker — curses, diseases, poisons, hidden debuffs, and other non-combat conditions. They persist in script state and can be optionally copied into the Turn Tracker when combat begins.',
+          'Os efeitos salvos permitem armazenar condições de longo prazo fora do Turn Tracker – maldições, doenças, venenos, debuffs ocultos e outras condições que não sejam de combate. Eles persistem no estado de script e podem ser opcionalmente copiados para o Turn Tracker quando o combate começa.',
         visibility: {
-          heading: 'Visibility Modes',
+          heading: 'Modos de visibilidade',
           rows: [
             [
-              'public',
-              'Full effect label is visible in the Turn Tracker and public chat.',
+              'público',
+              'O rótulo completo do efeito é visível no Turn Tracker e no bate-papo público.',
             ],
             [
-              'masked',
-              'A vague public label is shown to players; full details are GM-only.',
+              'mascarado',
+              'Um rótulo público vago é mostrado aos jogadores; detalhes completos são apenas para GM.',
             ],
             [
-              'gm',
-              'No Turn Tracker row. Full details are stored in state and whispered to the GM when the affected token reaches the top of initiative.',
+              'GM',
+              'Nenhuma linha do Rastreador de Curva. Detalhes completos são armazenados no estado e sussurrados ao GM quando a ficha afetada atinge o topo da iniciativa.',
             ],
           ],
         },
         commands: {
-          heading: 'Saved Effects Commands',
+          heading: 'Comandos de efeitos salvos',
           intro:
-            'All --saved commands are GM-only. Select a token before running --saved or --saved add.',
+            'Todos os comandos --saved são apenas do GM. Selecione um token antes de executar --saved ou --saved add.',
           rows: [
             [
               '!condition-tracker --saved',
-              'View saved effects for the selected token.',
+              'Veja os efeitos salvos para o token selecionado.',
             ],
             [
-              '!condition-tracker --saved add',
-              'Launch the add-saved-effect wizard.',
+              '!condition-tracker --saved adicionar',
+              'Inicie o assistente para adicionar efeitos salvos.',
             ],
             [
               '!condition-tracker --saved edit <id>',
-              'Edit labels or visibility for an existing saved effect.',
+              'Edite rótulos ou visibilidade de um efeito salvo existente.',
             ],
             [
               '!condition-tracker --saved remove <id>',
-              'Permanently remove a saved effect.',
+              'Remova permanentemente um efeito salvo.',
             ],
             [
               '!condition-tracker --saved promote <id> --visibility public|masked|gm',
-              'Copy a saved effect into the Turn Tracker (public or masked) or confirm it is GM-only tracked.',
+              'Copie um efeito salvo no Turn Tracker (público ou mascarado) ou confirme se ele é rastreado apenas pelo GM.',
             ],
             [
               '!condition-tracker --saved snooze <id> --scope turn|rounds|combat --rounds <n>',
-              'Snooze a GM reminder for this turn, N rounds, or this combat.',
+              'Adie um lembrete do GM para este turno, N rodadas ou este combate.',
             ],
             [
               '!condition-tracker --saved snooze-clear <id>',
-              'Clear an active snooze so reminders resume immediately.',
+              'Limpe uma soneca ativa para que os lembretes sejam retomados imediatamente.',
             ],
           ],
         },
         reminders: {
-          heading: 'GM Reminders',
-          body: 'When a token with gm or masked saved effects reaches the top of the Turn Tracker, the GM receives a whisper listing the hidden effects with action buttons. Duplicate reminders within the same turn are suppressed. Use the Snooze buttons to suppress reminders for a turn, a number of rounds, or for the remainder of the current combat.',
+          heading: 'Lembretes GM',
+          body: 'Quando uma ficha com efeitos salvos do GM ou mascarados chega ao topo do Turn Tracker, o GM recebe um sussurro listando os efeitos ocultos com botões de ação. Lembretes duplicados no mesmo turno são suprimidos. Use os botões Soneca para suprimir lembretes de um turno, de uma série de rodadas ou do restante do combate atual.',
+        },
+      },
+      actorClassification: {
+        heading: 'Classificação de Atores',
+        intro:
+          'O Condition Tracker determina automaticamente se cada token é um PJ, PNJ ou objeto ignorado (alfinetes de mapa, cenário, moldes de magia). Tokens não vinculados são ignorados por padrão. Use --classify para substituir a detecção automática em qualquer token.',
+        detectionOrder: {
+          heading: 'Ordem de Detecção',
+          colStep: 'Passo',
+          colCheck: 'Verificação',
+          colResult: 'Resultado',
+          rows: [
+            [
+              '1',
+              'Substituição de estado do token (--classify --scope token)',
+              'pc/npc/ignorado',
+            ],
+            [
+              '2',
+              'Atributo ct_mod_actor_type do personagem (--classify --scope character)',
+              'pc/npc/ignorado',
+            ],
+            ['3', 'Token não vinculado — sem ficha de personagem', 'ignorado'],
+            [
+              '4',
+              'Adaptador do sistema de jogo (atributo npc / is_npc)',
+              'computador/npc',
+            ],
+            [
+              '5',
+              'Varredura de atributos NPC genéricos (npc, is_npc, npcflag, sheet_type, character_type)',
+              'computador/npc',
+            ],
+            ['6', 'Alternativa controlledby do personagem', 'computador/npc'],
+          ],
+        },
+        types: {
+          heading: 'Tipos de Classificação',
+          colType: 'Tipo',
+          colMeaning: 'Significado',
+          rows: [
+            [
+              'computador',
+              'Personagem jogador — sempre incluído como PJ no assistente e na detecção',
+            ],
+            ['NPC', 'Personagem não jogador — sempre incluído como PNJ'],
+            [
+              'ignorado',
+              'Nunca exibido ou rastreado — excluído do seletor de tokens do assistente',
+            ],
+            [
+              'desconhecido',
+              'Somente detecção automática; tipo não pôde ser determinado (tratado como PNJ no assistente)',
+            ],
+          ],
+        },
+        commands: {
+          heading: 'Comandos de Classificação',
+          intro:
+            'Selecione um ou mais tokens antes de executar os comandos --classify.',
+          rows: [
+            [
+              '!condition-tracker --classify pc',
+              'Marcar os tokens selecionados como PJs (escopo de personagem por padrão).',
+            ],
+            [
+              '!condition-tracker --classify npc',
+              'Marcar os tokens selecionados como PNJs.',
+            ],
+            [
+              '!condition-tracker --classify ignorado',
+              'Excluir os tokens selecionados de todo rastreamento.',
+            ],
+            [
+              '!condition-tracker --classify auto',
+              'Remover a substituição — restaurar a detecção automática.',
+            ],
+            [
+              '!condition-tracker --classify mostrar',
+              'Mostrar o diagnóstico de classificação (tipo, fonte, motivo) para cada token selecionado.',
+            ],
+            [
+              '!condition-tracker --classify pc --scope token',
+              'Substituição no nível do token no estado do script — útil para tokens não vinculados.',
+            ],
+            [
+              '!condition-tracker --classify pc --scope caractere',
+              'Substituição no nível do personagem no atributo ct_mod_actor_type — aplica-se a todos os tokens com a mesma ficha de personagem.',
+            ],
+          ],
         },
       },
       configuration: {
@@ -13273,17 +15517,17 @@ const ConditionTrackerMod = (() => {
           ],
           [
             'useIcons',
-            'true / false',
+            'verdadeiro/falso',
             'Exibir códigos de ícone curtos (ex. [G]) nas linhas do rastreador de turno',
           ],
           [
             'subjectPromptBypass',
-            'true / false',
+            'verdadeiro/falso',
             'Ignorar a etapa de sujeito opcional para efeitos Magia / Habilidade / Outro',
           ],
           [
             'suppressPublicChat',
-            'true / false',
+            'verdadeiro/falso',
             'Suprimir todos os anúncios públicos no chat (mensagens de aplicação e remoção). Os sussurros do Mestre não são afetados.',
           ],
           [
@@ -13312,7 +15556,7 @@ const ConditionTrackerMod = (() => {
         heading: 'Traduções disponíveis',
         intro:
           'Use a opção de configuração language para definir as mensagens de chat e o livreto de ajuda em qualquer locale suportado. Aliases curtos também são aceitos para en, zh e pt.',
-        colLocale: 'Locale',
+        colLocale: 'Localidade',
         colLanguage: 'Idioma',
         colFile: 'Arquivo de tradução',
       },
@@ -13486,8 +15730,8 @@ const ConditionTrackerMod = (() => {
         details: 'Подробности',
         description: 'Описание',
         scenario: 'Сценарий',
-        gameSystem: 'Game System',
-        duration: 'Duration',
+        gameSystem: 'Игровая система',
+        duration: 'Продолжительность',
       },
       dur: {
         untilRemoved: 'До удаления',
@@ -13512,14 +15756,14 @@ const ConditionTrackerMod = (() => {
         reinstallHandout: 'Переустановить хэндаут',
         showHelp: 'Показать справку',
         reorderConditions: 'Переупорядочить строки состояний',
-        reportToken: 'Report Token Conditions',
-        savedEffects: 'Saved Effects',
-        addSavedEffect: 'Add Saved Effect',
-        editSaved: 'Edit',
-        removeSaved: 'Remove',
-        promoteSaved: 'Add to Turn Tracker',
-        snoozeSaved: 'Snooze',
-        clearSnooze: 'Clear Snooze',
+        reportToken: 'Сообщить о состоянии токена',
+        savedEffects: 'Сохраненные эффекты',
+        addSavedEffect: 'Добавить сохраненный эффект',
+        editSaved: 'Редактировать',
+        removeSaved: 'Удалять',
+        promoteSaved: 'Добавить в трекер поворотов',
+        snoozeSaved: 'Вздремнуть',
+        clearSnooze: 'Очистить повтор',
       },
       title: {
         menu: 'Меню',
@@ -13530,8 +15774,7 @@ const ConditionTrackerMod = (() => {
         applied: 'Применено',
         removed: 'Состояние удалено',
         cleanup: 'Очистка завершена',
-        macroReinstalled:
-          'The {wizard}, {multiTarget}, {reportToken}, and {saved} macros have been reinstalled for all current GM players.',
+        macroReinstalled: 'Макрос переустановлен',
         handoutReinstalled: 'Хэндаут переустановлен',
         warning: 'Предупреждение',
         error: 'Ошибка',
@@ -13543,15 +15786,15 @@ const ConditionTrackerMod = (() => {
         moveToken: '{name} — Переместить жетон?',
         scriptReady: 'Скрипт готов',
         conditionReorder: 'Порядок ходов изменён',
-        tokenReport: 'Token Condition Report',
-        savedEffects: 'Saved Effects',
-        savedAdd: 'Add Saved Effect',
-        savedEdit: 'Edit Saved Effect',
-        savedRemoved: 'Saved Effect Removed',
-        savedPromoted: 'Add to Turn Tracker',
-        savedSnoozed: 'Reminder Snoozed',
-        savedSnoozeCleared: 'Snooze Cleared',
-        hiddenEffects: 'Hidden Effects — {name}',
+        tokenReport: 'Отчет о состоянии токена',
+        savedEffects: 'Сохраненные эффекты',
+        savedAdd: 'Добавить сохраненный эффект',
+        savedEdit: 'Редактировать сохраненный эффект',
+        savedRemoved: 'Сохраненный эффект удален.',
+        savedPromoted: 'Добавить в трекер поворотов',
+        savedSnoozed: 'Напоминание отложено',
+        savedSnoozeCleared: 'Повтор снят',
+        hiddenEffects: 'Скрытые эффекты — {name}',
       },
       heading: {
         quickActions: 'Быстрые действия',
@@ -13563,13 +15806,13 @@ const ConditionTrackerMod = (() => {
         promptUi: 'Интерфейс мастера',
         examples: 'Примеры',
         summary: 'Итог',
-        appliedTo: 'Conditions Applied To',
-        appliedBy: 'Conditions Applied By',
-        savedEffectsFor: 'Saved Effects for {name}',
-        visibility: 'Visibility',
-        snoozeOptions: 'Snooze Reminder',
-        promoteOptions: 'Promote to Turn Tracker',
-        editActions: 'Edit Actions',
+        appliedTo: 'Условия, применимые к',
+        appliedBy: 'Условия, применяемые',
+        savedEffectsFor: 'Сохраненные эффекты для {name}',
+        visibility: 'Видимость',
+        snoozeOptions: 'Отложить напоминание',
+        promoteOptions: 'Продвижение на Turn Tracker',
+        editActions: 'Редактировать действия',
       },
       msg: {
         noActive: 'Активных состояний не отслеживается.',
@@ -13577,7 +15820,7 @@ const ConditionTrackerMod = (() => {
         unknownConfig:
           'Неизвестный параметр конфигурации. Используйте --config для просмотра поддерживаемых настроек.',
         macroReinstalled:
-          'Макросы {wizard}, {multiTarget} и {reportToken} были переустановлены для всех текущих игроков с ролью ДМ.',
+          'Макросы {wizard}, {multiTarget}, {reportToken}, {saved} и {classify} были переустановлены для всех текущих игроков с ролью ДМ.',
         handoutReinstalled: 'Справочный хэндаут {handout} был переустановлен.',
         duplicate:
           'Точное сочетание источника, субъекта, цели, состояния и произвольного текста уже активно.',
@@ -13652,32 +15895,34 @@ const ConditionTrackerMod = (() => {
         conditionsReordered:
           'Строки состояний были перемещены после назначенных им жетонов.',
         noTokensSelectedReport:
-          'Select at least one token on the board before using --report-token.',
-        noConditionsAppliedTo: '{name} has no active conditions applied to it.',
+          'Прежде чем использовать --report-token, выберите хотя бы один жетон на доске.',
+        noConditionsAppliedTo:
+          'К {name} не применено никаких активных условий.',
         noConditionsAppliedBy:
-          '{name} has no active conditions applied to others.',
-        noSavedEffects: 'No saved effects stored for {name}.',
+          '{name} не имеет активных условий, применимых к другим.',
+        noSavedEffects: 'Для {name} сохраненных эффектов нет.',
         noTokenSelectedSaved:
-          'Select a token on the board before using --saved.',
-        savedEffectAdded: 'Saved effect added for {name}.',
-        savedEffectUpdated: 'Saved effect updated.',
-        savedEffectRemoved: 'Saved effect removed.',
-        savedEffectNotFound: 'Saved effect not found.',
+          'Прежде чем использовать --saved, выберите жетон на доске.',
+        savedEffectAdded: 'Сохраненный эффект добавлен для {name}.',
+        savedEffectUpdated: 'Сохраненный эффект обновлен.',
+        savedEffectRemoved: 'Сохраненный эффект удален.',
+        savedEffectNotFound: 'Сохраненный эффект не найден.',
         savedInvalidVisibility:
-          'Invalid visibility. Use public, masked, or gm.',
+          'Неверная видимость. Используйте общедоступный, в маске или GM.',
         savedConditionRequired:
           'Condition type is required. Use --condition <type>.',
-        savedPromotedPublic: 'Effect added to Turn Tracker as public.',
+        savedPromotedPublic:
+          'Эффект добавлен в Turn Tracker как общедоступный.',
         savedPromotedMasked:
-          'Effect added to Turn Tracker as masked — players see: {publicLabel}.',
+          'Эффект добавлен в «Отслеживание ходов» в маске — игроки видят: {publicLabel}.',
         savedPromotedGm:
-          'Effect is GM-only — no Turn Tracker row will be created. The reminder system will surface it when this token reaches the top of the turn order.',
-        savedSnoozed: 'Reminder snoozed: {scope}.',
-        savedSnoozeCleared: 'Snooze cleared.',
-        hiddenEffectsReminder: 'Hidden effects are active on {name}.',
-        visibilityPublicHint: 'full label visible to all',
-        visibilityMaskedHint: 'vague label shown to players',
-        visibilityGmHint: 'GM whisper only, no Turn Tracker row',
+          'Эффект предназначен только для GM — строка Track Tracker не будет создана. Система напоминаний покажет его, когда этот жетон достигнет вершины порядка хода.',
+        savedSnoozed: 'Напоминание отложено: {scope}.',
+        savedSnoozeCleared: 'Повтор снят.',
+        hiddenEffectsReminder: 'Скрытые эффекты активны на {name}.',
+        visibilityPublicHint: 'полная метка видна всем',
+        visibilityMaskedHint: 'неясный ярлык, показывающий игрокам',
+        visibilityGmHint: 'Только шепот GM, без строки Track Tracker',
       },
       removal: {
         conditionField: 'Состояние',
@@ -13693,29 +15938,50 @@ const ConditionTrackerMod = (() => {
       },
       saved: {
         visibility: {
-          public: 'Public',
-          masked: 'Masked',
-          gm: 'GM Only',
+          public: 'Общественный',
+          masked: 'В маске',
+          gm: 'Только ГМ',
         },
         snooze: {
-          thisTurn: 'This Turn',
-          oneRound: '1 Round',
-          threeRounds: '3 Rounds',
-          thisCombat: 'This Combat',
-          rounds: '{n} round(s)',
+          thisTurn: 'Этот поворот',
+          oneRound: '1 раунд',
+          threeRounds: '3 раунда',
+          thisCombat: 'этот бой',
+          rounds: '{n} раундов',
         },
         field: {
-          gmLabel: 'GM Label',
-          publicLabel: 'Public Label',
-          visibility: 'Visibility',
-          source: 'Source',
-          condition: 'Condition',
+          gmLabel: 'Этикетка ГМ',
+          publicLabel: 'Общественная марка',
+          visibility: 'Видимость',
+          source: 'Источник',
+          condition: 'Состояние',
         },
         prompt: {
-          enterGmLabel: 'Full effect description (GM only)',
-          enterPublicLabel: 'Vague label shown to players',
+          enterGmLabel: 'Полное описание эффекта (только GM)',
+          enterPublicLabel: 'Непонятная этикетка, показанная игрокам',
         },
-        snoozed: 'snoozed',
+        snoozed: 'отложил',
+      },
+      classify: {
+        title: 'Классификация Актёров',
+        showTitle: 'Диагностика Классификации',
+        showHeading: 'Подробности Классификации Токена',
+        resultHeading: 'Переопределение Применено',
+        noSelection:
+          'Выберите хотя бы один токен на поле перед использованием --classify.',
+        invalidType:
+          'Недопустимый тип классификации: {type}. Используйте pc, npc, ignored или auto.',
+        set: '{name} → {type} (область: {scope})',
+        cleared:
+          '{name} переопределение сброшено (область: {scope}) — автоматическое определение восстановлено.',
+        setTokenFallback:
+          '{name} → {type} (переопределение токена — лист персонажа не привязан).',
+        clearedTokenFallback:
+          '{name} переопределение токена сброшено — автоматическое определение восстановлено.',
+        fieldToken: 'Токен',
+        fieldType: 'Классификация',
+        fieldSource: 'Источник',
+        fieldReason: 'Причина',
       },
       cleanup: {
         orphaned: 'Осиротевшие записи состояний',
@@ -13744,16 +16010,16 @@ const ConditionTrackerMod = (() => {
         colDesc: 'Описание',
         rows: [
           [
-            '!condition-tracker --prompt',
+            '!условие-трекер --подсказка',
             'Пошаговый мастер — интерактивно выберите состояние, жетоны и длительность. Также доступен как макрос ConditionTrackerWizard.',
           ],
           [
-            '!condition-tracker --multi-target',
+            '!condition-tracker --многоцелевой',
             'Применить одно состояние к нескольким жетонам одновременно. Также доступен как макрос ConditionTrackerMultiTarget.',
           ],
           [
             '!condition-tracker --report-token',
-            'Select one or more tokens first, then run this command to get a GM whisper listing every condition applied to and by each selected token. Also available as the ConditionTrackerReportToken macro.',
+            'Сначала выберите один или несколько жетонов, затем запустите эту команду, чтобы получить шепот ГМ со списком всех условий, примененных к каждому выбранному жетону. Также доступен как макрос ConditionTrackerReportToken.',
           ],
           [
             '!condition-tracker --menu',
@@ -13766,13 +16032,13 @@ const ConditionTrackerMod = (() => {
         colFlag: 'Флаг',
         colDesc: 'Описание',
         rows: [
-          ['--prompt', 'Интерактивный пошаговый мастер'],
+          ['--быстрый', 'Интерактивный пошаговый мастер'],
           [
-            '--multi-target',
+            '--многоцелевой',
             'Применить состояние к нескольким жетонам цели сразу',
           ],
           [
-            '--menu',
+            '--меню',
             'Показать главное меню (добавить remove для меню удаления)',
           ],
           [
@@ -13800,25 +16066,37 @@ const ConditionTrackerMod = (() => {
             'Переопределить subjectPromptBypass только для этой команды (также поддерживает --subject-prompt-bypass)',
           ],
           [
-            '--cleanup',
+            '--очистка',
             'Согласовать состояние — удалить осиротевшие состояния и строки Трекера Ходов',
           ],
           [
-            '--reorder-conditions',
+            '--reorder-условия',
             'Вручную переместить строки условий после назначенных токенов в очереди хода',
           ],
-          ['--reinstall-macro', 'Пересоздать или обновить макросы ДМ'],
+          ['--reinstall-макрос', 'Пересоздать или обновить макросы ДМ'],
           [
-            '--reinstall-handout',
+            '--reinstall-раздаточный материал',
             'Пересоздать или обновить локализованный справочный хэндаут',
           ],
           [
-            '--report-token',
-            'Whisper a GM-only condition report for each selected token (conditions applied to and by it)',
+            '--report-токен',
+            'Шепот отчета о состоянии только для GM для каждого выбранного токена (условия, применяемые к нему и через него)',
           ],
           [
             '--lang &lt;язык&gt;',
             'Выводить сообщения этой команды на дополнительном языке (двуязычный режим)',
+          ],
+          [
+            '--classify pc|npc|ignored',
+            'Переопределить тип актёра для выбранных токенов — сначала выберите токен(ы). Область по умолчанию — персонаж (записывает атрибут ct_mod_actor_type); добавьте --scope token для сохранения в состоянии скрипта',
+          ],
+          [
+            '--classify auto',
+            'Удалить переопределение типа актёра и восстановить автоматическое определение для выбранных токенов',
+          ],
+          [
+            '--classify show',
+            'Прошептать диагностику классификации для каждого выбранного токена — показывает определённый тип, источник определения и причину',
           ],
           ['--help', 'Показать краткую справочную карточку в чате'],
         ],
@@ -13880,64 +16158,150 @@ const ConditionTrackerMod = (() => {
         ],
       },
       savedEffects: {
-        heading: 'Saved Effects',
+        heading: 'Сохраненные эффекты',
         intro:
-          'Saved effects let you store long-term conditions outside the Turn Tracker — curses, diseases, poisons, hidden debuffs, and other non-combat conditions. They persist in script state and can be optionally copied into the Turn Tracker when combat begins.',
+          'Сохраненные эффекты позволяют сохранять долгосрочные состояния за пределами счетчика ходов — проклятия, болезни, яды, скрытые дебаффы и другие небоевые состояния. Они сохраняются в состоянии сценария и могут быть дополнительно скопированы в систему отслеживания ходов в начале боя.',
         visibility: {
-          heading: 'Visibility Modes',
+          heading: 'Режимы видимости',
           rows: [
             [
-              'public',
-              'Full effect label is visible in the Turn Tracker and public chat.',
+              'общественный',
+              'Ярлык с полным эффектом отображается в трекере ходов и в общедоступном чате.',
             ],
             [
-              'masked',
-              'A vague public label is shown to players; full details are GM-only.',
+              'в маске',
+              'Игрокам показывается расплывчатый публичный ярлык; Полная информация доступна только GM.',
             ],
             [
-              'gm',
-              'No Turn Tracker row. Full details are stored in state and whispered to the GM when the affected token reaches the top of initiative.',
+              'гм',
+              'Нет строки отслеживания поворотов. Полная информация сохраняется в состоянии и передается ведущему, когда затронутый жетон достигает вершины инициативы.',
             ],
           ],
         },
         commands: {
-          heading: 'Saved Effects Commands',
+          heading: 'Сохраненные команды эффектов',
           intro:
-            'All --saved commands are GM-only. Select a token before running --saved or --saved add.',
+            'Все команды --saved доступны только GM. Выберите токен перед запуском --saved или --saved add.',
           rows: [
             [
-              '!condition-tracker --saved',
-              'View saved effects for the selected token.',
+              '!condition-tracker --сохранено',
+              'Просмотр сохраненных эффектов для выбранного токена.',
             ],
             [
-              '!condition-tracker --saved add',
-              'Launch the add-saved-effect wizard.',
+              '!condition-tracker --сохранено добавить',
+              'Запустите мастер добавления сохраненных эффектов.',
             ],
             [
               '!condition-tracker --saved edit <id>',
-              'Edit labels or visibility for an existing saved effect.',
+              'Редактируйте метки или видимость существующего сохраненного эффекта.',
             ],
             [
               '!condition-tracker --saved remove <id>',
-              'Permanently remove a saved effect.',
+              'Удаление сохраненного эффекта навсегда.',
             ],
             [
               '!condition-tracker --saved promote <id> --visibility public|masked|gm',
-              'Copy a saved effect into the Turn Tracker (public or masked) or confirm it is GM-only tracked.',
+              'Скопируйте сохраненный эффект в трекер ходов (публичный или замаскированный) или подтвердите, что он отслеживается только GM.',
             ],
             [
               '!condition-tracker --saved snooze <id> --scope turn|rounds|combat --rounds <n>',
-              'Snooze a GM reminder for this turn, N rounds, or this combat.',
+              'Отложить напоминание ГМ для этого хода, N раундов или этого боя.',
             ],
             [
               '!condition-tracker --saved snooze-clear <id>',
-              'Clear an active snooze so reminders resume immediately.',
+              'Отмените активный откладывание, чтобы напоминания возобновились немедленно.',
             ],
           ],
         },
         reminders: {
-          heading: 'GM Reminders',
-          body: 'When a token with gm or masked saved effects reaches the top of the Turn Tracker, the GM receives a whisper listing the hidden effects with action buttons. Duplicate reminders within the same turn are suppressed. Use the Snooze buttons to suppress reminders for a turn, a number of rounds, or for the remainder of the current combat.',
+          heading: 'Напоминания ГМ',
+          body: 'Когда жетон с гм или замаскированными сохраненными эффектами достигает верхней части счетчика хода, ГМ получает шепот со списком скрытых эффектов с кнопками действий. Повторяющиеся напоминания в пределах одного хода подавляются. Используйте кнопки «Отложить», чтобы отключить напоминания на ход, количество раундов или оставшуюся часть текущего боя.',
+        },
+      },
+      actorClassification: {
+        heading: 'Классификация Актёров',
+        intro:
+          'Condition Tracker автоматически определяет, является ли каждый токен ИП, НИП или игнорируемым объектом (пины карты, декорации, шаблоны заклинаний). Несвязанные токены по умолчанию игнорируются. Используйте --classify для переопределения автоматического определения для любого токена.',
+        detectionOrder: {
+          heading: 'Порядок Определения',
+          colStep: 'Шаг',
+          colCheck: 'Проверка',
+          colResult: 'Результат',
+          rows: [
+            [
+              '1',
+              'Переопределение состояния токена (--classify --scope token)',
+              'ПК / НПС / игнорируется',
+            ],
+            [
+              '2',
+              'Атрибут ct_mod_actor_type персонажа (--classify --scope character)',
+              'ПК / НПС / игнорируется',
+            ],
+            ['3', 'Несвязанный токен — нет листа персонажа', 'игнорируется'],
+            ['4', 'Адаптер системы игры (атрибут npc / is_npc)', 'ПК / НПС'],
+            [
+              '5',
+              'Сканирование универсальных атрибутов НИП (npc, is_npc, npcflag, sheet_type, character_type)',
+              'ПК / НПС',
+            ],
+            ['6', 'Запасной вариант controlledby персонажа', 'ПК / НПС'],
+          ],
+        },
+        types: {
+          heading: 'Типы Классификации',
+          colType: 'Тип',
+          colMeaning: 'Значение',
+          rows: [
+            [
+              'ПК',
+              'Игровой персонаж — всегда включается как ИП в мастере и определении',
+            ],
+            ['НПС', 'Неигровой персонаж — всегда включается как НИП'],
+            [
+              'игнорируется',
+              'Никогда не отображается и не отслеживается — исключён из выбора токенов мастера',
+            ],
+            [
+              'неизвестный',
+              'Только автоматическое определение; тип не удалось определить (обрабатывается как НИП в мастере)',
+            ],
+          ],
+        },
+        commands: {
+          heading: 'Команды Классификации',
+          intro:
+            'Выберите один или несколько токенов перед выполнением команд --classify.',
+          rows: [
+            [
+              '!condition-tracker --классифицировать компьютер',
+              'Отметить выбранные токены как ИП (область по умолчанию: персонаж).',
+            ],
+            [
+              '!condition-tracker --классифицировать NPC',
+              'Отметить выбранные токены как НИП.',
+            ],
+            [
+              '!condition-tracker --classify игнорируется',
+              'Исключить выбранные токены из всего отслеживания.',
+            ],
+            [
+              '!condition-tracker --классифицировать авто',
+              'Удалить переопределение — восстановить автоматическое определение.',
+            ],
+            [
+              '!condition-tracker --классифицировать шоу',
+              'Показать диагностику классификации (тип, источник, причина) для каждого выбранного токена.',
+            ],
+            [
+              '!condition-tracker --classify pc --scope token',
+              'Переопределение уровня токена в состоянии скрипта — полезно для несвязанных токенов.',
+            ],
+            [
+              '!condition-tracker --classify pc --scope символ',
+              'Переопределение уровня персонажа в атрибут ct_mod_actor_type — применяется ко всем токенам с тем же листом персонажа.',
+            ],
+          ],
         },
       },
       configuration: {
@@ -13955,17 +16319,17 @@ const ConditionTrackerMod = (() => {
           ],
           [
             'useIcons',
-            'true / false',
+            'правда/ложь',
             'Показывать короткие коды иконок (например, [G]) вместо эмодзи в строках Трекера Ходов',
           ],
           [
             'subjectPromptBypass',
-            'true / false',
+            'правда/ложь',
             'Пропустить необязательный шаг выбора субъекта для эффектов Заклинание / Умение / Другое',
           ],
           [
             'suppressPublicChat',
-            'true / false',
+            'правда/ложь',
             'Скрыть все публичные объявления в чате (сообщения о применении и снятии). Шёпот GM не затрагивается.',
           ],
           [
@@ -13994,7 +16358,7 @@ const ConditionTrackerMod = (() => {
         heading: 'Доступные переводы',
         intro:
           'Используйте параметр конфигурации языка, чтобы задать язык сообщений чата и справочного хэндаута. Короткие псевдонимы также принимаются для en, zh и pt.',
-        colLocale: 'Locale',
+        colLocale: 'Языковой стандарт',
         colLanguage: 'Язык',
         colFile: 'Файл перевода',
       },
@@ -14102,7 +16466,7 @@ const ConditionTrackerMod = (() => {
         advantage: '{emoji} {source} tiene ventaja contra {target}{subject}',
         disadvantage:
           '{emoji} {source} tiene desventaja contra {target}{subject}',
-        noBy: '{emoji} {target} {past} ({source})',
+        noBy: 'MARCADOR0TOKEN MARCADOR1TOKEN MARCADOR2TOKEN (MARCADOR3TOKEN)',
         self: '{target} está {past}',
         standard: '{emoji} {target} {past} por {source}',
       },
@@ -14111,8 +16475,9 @@ const ConditionTrackerMod = (() => {
         advantage: '{source} tiene ventaja contra {target}{subject}.',
         disadvantage: '{source} tiene desventaja contra {target}{subject}.',
         self: '{target} está {past}.',
-        withSuffix: '{source} {verb} {target} {suffix}.',
-        standard: '{source} {verb} {target}.',
+        withSuffix:
+          'MARCADOR0TOKEN MARCADOR1TOKEN MARCADOR2TOKEN MARCADOR3TOKEN.',
+        standard: 'MARCADOR0TOKEN MARCADOR1TOKEN MARCADOR2TOKEN.',
       },
       remove: {
         custom: '{target} ya no está afectado por {effect}.',
@@ -14166,8 +16531,8 @@ const ConditionTrackerMod = (() => {
         details: 'Detalles',
         description: 'Descripción',
         scenario: 'Escenario',
-        gameSystem: 'Game System',
-        duration: 'Duration',
+        gameSystem: 'Sistema de juego',
+        duration: 'Duración',
       },
       dur: {
         untilRemoved: 'Hasta retirar',
@@ -14192,14 +16557,14 @@ const ConditionTrackerMod = (() => {
         reinstallHandout: 'Reinstalar folleto',
         showHelp: 'Mostrar ayuda',
         reorderConditions: 'Reordenar filas de condición',
-        reportToken: 'Report Token Conditions',
-        savedEffects: 'Saved Effects',
-        addSavedEffect: 'Add Saved Effect',
-        editSaved: 'Edit',
-        removeSaved: 'Remove',
-        promoteSaved: 'Add to Turn Tracker',
-        snoozeSaved: 'Snooze',
-        clearSnooze: 'Clear Snooze',
+        reportToken: 'Informe de condiciones del token',
+        savedEffects: 'Efectos guardados',
+        addSavedEffect: 'Agregar efecto guardado',
+        editSaved: 'Editar',
+        removeSaved: 'Eliminar',
+        promoteSaved: 'Añadir al rastreador de giros',
+        snoozeSaved: 'Siesta',
+        clearSnooze: 'Borrar repetición',
       },
       title: {
         menu: 'Menú',
@@ -14210,8 +16575,7 @@ const ConditionTrackerMod = (() => {
         applied: 'Aplicado',
         removed: 'Condición eliminada',
         cleanup: 'Limpieza completada',
-        macroReinstalled:
-          'The {wizard}, {multiTarget}, {reportToken}, and {saved} macros have been reinstalled for all current GM players.',
+        macroReinstalled: 'Macro reinstalada',
         handoutReinstalled: 'Folleto reinstalado',
         warning: 'Advertencia',
         error: 'Error',
@@ -14223,15 +16587,15 @@ const ConditionTrackerMod = (() => {
         moveToken: '{name} — ¿Mover ficha?',
         scriptReady: 'Script listo',
         conditionReorder: 'Orden de turno cambiado',
-        tokenReport: 'Token Condition Report',
-        savedEffects: 'Saved Effects',
-        savedAdd: 'Add Saved Effect',
-        savedEdit: 'Edit Saved Effect',
-        savedRemoved: 'Saved Effect Removed',
-        savedPromoted: 'Add to Turn Tracker',
-        savedSnoozed: 'Reminder Snoozed',
-        savedSnoozeCleared: 'Snooze Cleared',
-        hiddenEffects: 'Hidden Effects — {name}',
+        tokenReport: 'Informe de condición del token',
+        savedEffects: 'Efectos guardados',
+        savedAdd: 'Agregar efecto guardado',
+        savedEdit: 'Editar efecto guardado',
+        savedRemoved: 'Efecto guardado eliminado',
+        savedPromoted: 'Añadir al rastreador de giros',
+        savedSnoozed: 'Recordatorio pospuesto',
+        savedSnoozeCleared: 'Posponer borrado',
+        hiddenEffects: 'Efectos ocultos: {name}',
       },
       heading: {
         quickActions: 'Acciones rápidas',
@@ -14243,13 +16607,13 @@ const ConditionTrackerMod = (() => {
         promptUi: 'Interfaz del asistente',
         examples: 'Ejemplos',
         summary: 'Resumen',
-        appliedTo: 'Conditions Applied To',
-        appliedBy: 'Conditions Applied By',
-        savedEffectsFor: 'Saved Effects for {name}',
-        visibility: 'Visibility',
-        snoozeOptions: 'Snooze Reminder',
-        promoteOptions: 'Promote to Turn Tracker',
-        editActions: 'Edit Actions',
+        appliedTo: 'Condiciones aplicadas a',
+        appliedBy: 'Condiciones aplicadas por',
+        savedEffectsFor: 'Efectos guardados para {name}',
+        visibility: 'Visibilidad',
+        snoozeOptions: 'Recordatorio de repetición',
+        promoteOptions: 'Promocionar a Turn Tracker',
+        editActions: 'Editar acciones',
       },
       msg: {
         noActive: 'No se están rastreando condiciones activas.',
@@ -14258,7 +16622,7 @@ const ConditionTrackerMod = (() => {
         unknownConfig:
           'Opción de configuración desconocida. Usa --config para ver los ajustes disponibles.',
         macroReinstalled:
-          'Las macros {wizard}, {multiTarget} y {reportToken} se han reinstalado para todos los GM actuales.',
+          'Las macros {wizard}, {multiTarget}, {reportToken}, {saved} y {classify} se han reinstalado para todos los GM actuales.',
         handoutReinstalled: 'El folleto de ayuda {handout} se reinstaló.',
         duplicate:
           'Esa combinación exacta de fuente, sujeto, objetivo, condición y texto personalizado ya está activa.',
@@ -14338,32 +16702,32 @@ const ConditionTrackerMod = (() => {
         conditionsReordered:
           'Las filas de condición han sido reposicionadas después de sus tokens asignados.',
         noTokensSelectedReport:
-          'Select at least one token on the board before using --report-token.',
-        noConditionsAppliedTo: '{name} has no active conditions applied to it.',
+          'Seleccione al menos una ficha en el tablero antes de usar --report-token.',
+        noConditionsAppliedTo: '{name} no tiene condiciones activas aplicadas.',
         noConditionsAppliedBy:
-          '{name} has no active conditions applied to others.',
-        noSavedEffects: 'No saved effects stored for {name}.',
+          '{name} no tiene condiciones activas aplicadas a otros.',
+        noSavedEffects: 'No hay efectos guardados almacenados para {name}.',
         noTokenSelectedSaved:
-          'Select a token on the board before using --saved.',
-        savedEffectAdded: 'Saved effect added for {name}.',
-        savedEffectUpdated: 'Saved effect updated.',
-        savedEffectRemoved: 'Saved effect removed.',
-        savedEffectNotFound: 'Saved effect not found.',
+          'Seleccione una ficha en el tablero antes de usar --saved.',
+        savedEffectAdded: 'Efecto guardado agregado para {name}.',
+        savedEffectUpdated: 'Efecto guardado actualizado.',
+        savedEffectRemoved: 'Se eliminó el efecto guardado.',
+        savedEffectNotFound: 'Efecto guardado no encontrado.',
         savedInvalidVisibility:
-          'Invalid visibility. Use public, masked, or gm.',
+          'Visibilidad no válida. Utilice público, enmascarado o GM.',
         savedConditionRequired:
           'Condition type is required. Use --condition <type>.',
-        savedPromotedPublic: 'Effect added to Turn Tracker as public.',
+        savedPromotedPublic: 'Efecto agregado a Turn Tracker como público.',
         savedPromotedMasked:
-          'Effect added to Turn Tracker as masked — players see: {publicLabel}.',
+          'Efecto agregado al Turn Tracker como enmascarado: los jugadores ven: {publicLabel}.',
         savedPromotedGm:
-          'Effect is GM-only — no Turn Tracker row will be created. The reminder system will surface it when this token reaches the top of the turn order.',
-        savedSnoozed: 'Reminder snoozed: {scope}.',
-        savedSnoozeCleared: 'Snooze cleared.',
-        hiddenEffectsReminder: 'Hidden effects are active on {name}.',
-        visibilityPublicHint: 'full label visible to all',
-        visibilityMaskedHint: 'vague label shown to players',
-        visibilityGmHint: 'GM whisper only, no Turn Tracker row',
+          'El efecto es solo para GM: no se creará ninguna fila del Registro de turnos. El sistema de recordatorio lo mostrará cuando esta ficha llegue a la parte superior del orden de turno.',
+        savedSnoozed: 'Recordatorio pospuesto: {scope}.',
+        savedSnoozeCleared: 'La función de repetición se borró.',
+        hiddenEffectsReminder: 'Los efectos ocultos están activos en {name}.',
+        visibilityPublicHint: 'etiqueta completa visible para todos',
+        visibilityMaskedHint: 'etiqueta vaga mostrada a los jugadores',
+        visibilityGmHint: 'Solo susurro de GM, sin fila de Turn Tracker',
       },
       removal: {
         conditionField: 'Condición',
@@ -14379,29 +16743,50 @@ const ConditionTrackerMod = (() => {
       },
       saved: {
         visibility: {
-          public: 'Public',
-          masked: 'Masked',
-          gm: 'GM Only',
+          public: 'Público',
+          masked: 'Enmascarado',
+          gm: 'Sólo GM',
         },
         snooze: {
-          thisTurn: 'This Turn',
-          oneRound: '1 Round',
-          threeRounds: '3 Rounds',
-          thisCombat: 'This Combat',
-          rounds: '{n} round(s)',
+          thisTurn: 'este turno',
+          oneRound: '1 ronda',
+          threeRounds: '3 rondas',
+          thisCombat: 'Este combate',
+          rounds: '{n} ronda(s)',
         },
         field: {
-          gmLabel: 'GM Label',
-          publicLabel: 'Public Label',
-          visibility: 'Visibility',
-          source: 'Source',
-          condition: 'Condition',
+          gmLabel: 'Etiqueta GM',
+          publicLabel: 'Etiqueta pública',
+          visibility: 'Visibilidad',
+          source: 'Fuente',
+          condition: 'Condición',
         },
         prompt: {
-          enterGmLabel: 'Full effect description (GM only)',
-          enterPublicLabel: 'Vague label shown to players',
+          enterGmLabel: 'Descripción completa del efecto (solo GM)',
+          enterPublicLabel: 'Se muestra una etiqueta vaga a los jugadores',
         },
-        snoozed: 'snoozed',
+        snoozed: 'pospuesto',
+      },
+      classify: {
+        title: 'Clasificación de Actores',
+        showTitle: 'Diagnóstico de Clasificación',
+        showHeading: 'Detalles de Clasificación del Token',
+        resultHeading: 'Anulación Aplicada',
+        noSelection:
+          'Selecciona al menos un token en el tablero antes de usar --classify.',
+        invalidType:
+          'Tipo de clasificación no válido: {type}. Usa pc, npc, ignored o auto.',
+        set: '{name} → {type} (ámbito: {scope})',
+        cleared:
+          '{name} anulación borrada (ámbito: {scope}) — detección automática restaurada.',
+        setTokenFallback:
+          '{name} → {type} (anulación de token — ninguna hoja de personaje vinculada).',
+        clearedTokenFallback:
+          '{name} anulación de token borrada — detección automática restaurada.',
+        fieldToken: 'Simbólico',
+        fieldType: 'Clasificación',
+        fieldSource: 'Fuente',
+        fieldReason: 'Razón',
       },
       cleanup: {
         orphaned: 'Entradas de condición huérfanas',
@@ -14431,16 +16816,16 @@ const ConditionTrackerMod = (() => {
         colDesc: 'Descripción',
         rows: [
           [
-            '!condition-tracker --prompt',
+            '!rastreador de condiciones --prompt',
             'Asistente paso a paso — elige condición, fichas y duración de forma interactiva. También disponible como macro ConditionTrackerWizard.',
           ],
           [
-            '!condition-tracker --multi-target',
+            '!rastreador de condiciones --multi-objetivo',
             'Aplicar una condición a varias fichas simultáneamente. También disponible como macro ConditionTrackerMultiTarget.',
           ],
           [
-            '!condition-tracker --report-token',
-            'Select one or more tokens first, then run this command to get a GM whisper listing every condition applied to and by each selected token. Also available as the ConditionTrackerReportToken macro.',
+            '!rastreador de condiciones --report-token',
+            'Primero seleccione uno o más tokens, luego ejecute este comando para obtener un susurro del GM que enumere todas las condiciones aplicadas a y por cada token seleccionado. También disponible como macro ConditionTrackerReportToken.',
           ],
           [
             '!condition-tracker --menu',
@@ -14453,14 +16838,17 @@ const ConditionTrackerMod = (() => {
         colFlag: 'Opción',
         colDesc: 'Descripción',
         rows: [
-          ['--prompt', 'Interfaz del asistente paso a paso'],
-          ['--multi-target', 'Aplicar una condición a varias fichas objetivo'],
+          ['--inmediato', 'Interfaz del asistente paso a paso'],
           [
-            '--menu',
+            '--objetivo múltiple',
+            'Aplicar una condición a varias fichas objetivo',
+          ],
+          [
+            '--menú',
             'Mostrar menú principal (añadir remove para el menú de eliminación)',
           ],
           [
-            '--source X --target Y --condition Z',
+            '--fuente X --destino Y --condición Z',
             'Aplicar una condición directamente sin el asistente',
           ],
           [
@@ -14480,29 +16868,41 @@ const ConditionTrackerMod = (() => {
             'Ajustar opciones de configuración',
           ],
           [
-            '--prompt --subjectPromptBypass true|false',
+            '--prompt --subjectPromptBypass verdadero|falso',
             'Sobrescribir subjectPromptBypass solo para este comando (también admite --subject-prompt-bypass)',
           ],
           [
-            '--cleanup',
+            '--limpieza',
             'Reconciliar estado — eliminar condiciones y filas huérfanas',
           ],
           [
-            '--reorder-conditions',
+            '--condiciones-de-reorden',
             'Reposicionar manualmente las filas de condición detrás de sus fichas asignadas en el orden de turno',
           ],
-          ['--reinstall-macro', 'Recrear o actualizar las macros del GM'],
+          ['--reinstalar-macro', 'Recrear o actualizar las macros del GM'],
           [
-            '--reinstall-handout',
+            '--reinstalar-folleto',
             'Recrear o actualizar el folleto de ayuda localizado',
           ],
           [
-            '--report-token',
-            'Whisper a GM-only condition report for each selected token (conditions applied to and by it)',
+            '--reporte-token',
+            'Susurrar un informe de condición exclusivo de GM para cada token seleccionado (condiciones aplicadas a él y por él)',
           ],
           [
             '--lang &lt;locale&gt;',
             'Emitir los mensajes de este comando en una locale adicional (modo bilingüe)',
+          ],
+          [
+            '--classify pc|npc|ignored',
+            'Anular el tipo de actor para los tokens seleccionados — selecciona los tokens primero. El ámbito por defecto es el personaje (escribe el atributo ct_mod_actor_type); añade --scope token para almacenarlo en el estado del script',
+          ],
+          [
+            '--classify auto',
+            'Eliminar la anulación del tipo de actor y restaurar la detección automática para los tokens seleccionados',
+          ],
+          [
+            '--classify show',
+            'Susurrar un diagnóstico de clasificación para cada token seleccionado — muestra el tipo detectado, la fuente de detección y la razón',
           ],
           ['--help', 'Mostrar una tarjeta de ayuda breve en el chat'],
         ],
@@ -14564,64 +16964,158 @@ const ConditionTrackerMod = (() => {
         ],
       },
       savedEffects: {
-        heading: 'Saved Effects',
+        heading: 'Efectos guardados',
         intro:
-          'Saved effects let you store long-term conditions outside the Turn Tracker — curses, diseases, poisons, hidden debuffs, and other non-combat conditions. They persist in script state and can be optionally copied into the Turn Tracker when combat begins.',
+          'Los efectos guardados te permiten almacenar condiciones a largo plazo fuera del Turn Tracker: maldiciones, enfermedades, venenos, desventajas ocultas y otras condiciones no relacionadas con el combate. Persisten en estado de secuencia de comandos y, opcionalmente, se pueden copiar en el rastreador de turnos cuando comienza el combate.',
         visibility: {
-          heading: 'Visibility Modes',
+          heading: 'Modos de visibilidad',
           rows: [
             [
-              'public',
-              'Full effect label is visible in the Turn Tracker and public chat.',
+              'público',
+              'La etiqueta del efecto completo es visible en Turn Tracker y en el chat público.',
             ],
             [
-              'masked',
-              'A vague public label is shown to players; full details are GM-only.',
+              'enmascarado',
+              'Se muestra a los jugadores una etiqueta pública vaga; todos los detalles son sólo para GM.',
             ],
             [
-              'gm',
-              'No Turn Tracker row. Full details are stored in state and whispered to the GM when the affected token reaches the top of initiative.',
+              'GM',
+              'No hay fila de seguimiento de giros. Los detalles completos se almacenan en el estado y se susurran al GM cuando el token afectado alcanza la cima de la iniciativa.',
             ],
           ],
         },
         commands: {
-          heading: 'Saved Effects Commands',
+          heading: 'Comandos de efectos guardados',
           intro:
-            'All --saved commands are GM-only. Select a token before running --saved or --saved add.',
+            'Todos los comandos --saved son solo para GM. Seleccione un token antes de ejecutar --saved o --saved add.',
           rows: [
             [
-              '!condition-tracker --saved',
-              'View saved effects for the selected token.',
+              '!rastreador de condiciones --guardado',
+              'Ver efectos guardados para el token seleccionado.',
             ],
             [
-              '!condition-tracker --saved add',
-              'Launch the add-saved-effect wizard.',
+              '!rastreador de condiciones --agregar guardado',
+              'Inicie el asistente para agregar efectos guardados.',
             ],
             [
               '!condition-tracker --saved edit <id>',
-              'Edit labels or visibility for an existing saved effect.',
+              'Edite etiquetas o visibilidad para un efecto guardado existente.',
             ],
             [
               '!condition-tracker --saved remove <id>',
-              'Permanently remove a saved effect.',
+              'Elimina permanentemente un efecto guardado.',
             ],
             [
               '!condition-tracker --saved promote <id> --visibility public|masked|gm',
-              'Copy a saved effect into the Turn Tracker (public or masked) or confirm it is GM-only tracked.',
+              'Copie un efecto guardado en el Turn Tracker (público o enmascarado) o confirme que sea rastreado solo por GM.',
             ],
             [
               '!condition-tracker --saved snooze <id> --scope turn|rounds|combat --rounds <n>',
-              'Snooze a GM reminder for this turn, N rounds, or this combat.',
+              'Posponer un recordatorio de GM para este turno, N rondas o este combate.',
             ],
             [
               '!condition-tracker --saved snooze-clear <id>',
-              'Clear an active snooze so reminders resume immediately.',
+              'Borre una repetición activa para que los recordatorios se reanuden inmediatamente.',
             ],
           ],
         },
         reminders: {
-          heading: 'GM Reminders',
-          body: 'When a token with gm or masked saved effects reaches the top of the Turn Tracker, the GM receives a whisper listing the hidden effects with action buttons. Duplicate reminders within the same turn are suppressed. Use the Snooze buttons to suppress reminders for a turn, a number of rounds, or for the remainder of the current combat.',
+          heading: 'Recordatorios de GM',
+          body: 'Cuando una ficha con un GM o efectos guardados enmascarados llega a la parte superior del Turn Tracker, el GM recibe un susurro que enumera los efectos ocultos con botones de acción. Se suprimen los recordatorios duplicados dentro del mismo turno. Utilice los botones de repetición para suprimir los recordatorios de un turno, varias rondas o el resto del combate actual.',
+        },
+      },
+      actorClassification: {
+        heading: 'Clasificación de Actores',
+        intro:
+          'Condition Tracker determina automáticamente si cada token es un PJ, PNJ u objeto ignorado (alfileres de mapa, escenografía, plantillas de hechizo). Los tokens no vinculados se ignoran por defecto. Usa --classify para anular la detección automática en cualquier token.',
+        detectionOrder: {
+          heading: 'Orden de Detección',
+          colStep: 'Paso',
+          colCheck: 'Comprobación',
+          colResult: 'Resultado',
+          rows: [
+            [
+              '1',
+              'Anulación de estado del token (--classify --scope token)',
+              'pc/npc/ignorado',
+            ],
+            [
+              '2',
+              'Atributo ct_mod_actor_type del personaje (--classify --scope character)',
+              'pc/npc/ignorado',
+            ],
+            ['3', 'Token no vinculado — sin hoja de personaje', 'ignorado'],
+            [
+              '4',
+              'Adaptador de sistema de juego (atributo npc / is_npc)',
+              'ordenador personal / PNJ',
+            ],
+            [
+              '5',
+              'Escaneo de atributos NPC genéricos (npc, is_npc, npcflag, sheet_type, character_type)',
+              'ordenador personal / PNJ',
+            ],
+            [
+              '6',
+              'Alternativa controlledby del personaje',
+              'ordenador personal / PNJ',
+            ],
+          ],
+        },
+        types: {
+          heading: 'Tipos de Clasificación',
+          colType: 'Tipo',
+          colMeaning: 'Significado',
+          rows: [
+            [
+              'ordenador personal',
+              'Personaje jugador — siempre incluido como PJ en el asistente y la detección',
+            ],
+            ['PNJ', 'Personaje no jugador — siempre incluido como PNJ'],
+            [
+              'ignorado',
+              'Nunca mostrado ni rastreado — excluido del selector de tokens del asistente',
+            ],
+            [
+              'desconocido',
+              'Solo detección automática; no se pudo determinar el tipo (tratado como PNJ en el asistente)',
+            ],
+          ],
+        },
+        commands: {
+          heading: 'Comandos de Clasificación',
+          intro:
+            'Selecciona uno o más tokens antes de ejecutar los comandos --classify.',
+          rows: [
+            [
+              '!rastreador de condiciones --clasificar pc',
+              'Marcar los tokens seleccionados como PJs (ámbito de personaje por defecto).',
+            ],
+            [
+              '!rastreador de condiciones --clasificar npc',
+              'Marcar los tokens seleccionados como PNJs.',
+            ],
+            [
+              '!rastreador de condiciones --clasificar ignorado',
+              'Excluir los tokens seleccionados de todo rastreo.',
+            ],
+            [
+              '!rastreador de condiciones --clasificar auto',
+              'Eliminar la anulación — restaurar la detección automática.',
+            ],
+            [
+              '!rastreador de condiciones --clasificar espectáculo',
+              'Mostrar el diagnóstico de clasificación (tipo, fuente, razón) para cada token seleccionado.',
+            ],
+            [
+              '!rastreador de condiciones --clasificar pc --token de alcance',
+              'Anulación a nivel de token en el estado del script — útil para tokens no vinculados.',
+            ],
+            [
+              '!rastreador de condiciones --clasificar pc --carácter de alcance',
+              'Anulación a nivel de personaje en el atributo ct_mod_actor_type — se aplica a todos los tokens con la misma hoja de personaje.',
+            ],
+          ],
         },
       },
       configuration: {
@@ -14639,17 +17133,17 @@ const ConditionTrackerMod = (() => {
           ],
           [
             'useIcons',
-            'true / false',
+            'verdadero / falso',
             'Mostrar códigos de ícono cortos (p. ej. [G]) en las filas del rastreador de turno',
           ],
           [
             'subjectPromptBypass',
-            'true / false',
+            'verdadero / falso',
             'Omitir el paso de sujeto opcional para efectos Conjuro / Habilidad / Otro',
           ],
           [
             'suppressPublicChat',
-            'true / false',
+            'verdadero / falso',
             'Suprimir todos los anuncios públicos de chat (mensajes de aplicación y eliminación). Los susurros del DJ no se ven afectados.',
           ],
           [
@@ -14849,8 +17343,8 @@ const ConditionTrackerMod = (() => {
         details: 'Detaljer',
         description: 'Beskrivning',
         scenario: 'Scenario',
-        gameSystem: 'Game System',
-        duration: 'Duration',
+        gameSystem: 'Spelsystem',
+        duration: 'Varaktighet',
       },
       dur: {
         untilRemoved: 'Tills borttagen',
@@ -14875,14 +17369,14 @@ const ConditionTrackerMod = (() => {
         reinstallHandout: 'Installera om handout',
         showHelp: 'Visa hjälp',
         reorderConditions: 'Ordna om tillståndsrader',
-        reportToken: 'Report Token Conditions',
-        savedEffects: 'Saved Effects',
-        addSavedEffect: 'Add Saved Effect',
-        editSaved: 'Edit',
-        removeSaved: 'Remove',
-        promoteSaved: 'Add to Turn Tracker',
+        reportToken: 'Rapportera tokenvillkor',
+        savedEffects: 'Sparade effekter',
+        addSavedEffect: 'Lägg till sparad effekt',
+        editSaved: 'Redigera',
+        removeSaved: 'Ta bort',
+        promoteSaved: 'Lägg till i Turn Tracker',
         snoozeSaved: 'Snooze',
-        clearSnooze: 'Clear Snooze',
+        clearSnooze: 'Rensa snooze',
       },
       title: {
         menu: 'Meny',
@@ -14893,8 +17387,7 @@ const ConditionTrackerMod = (() => {
         applied: 'Applicerad',
         removed: 'Tillstånd borttaget',
         cleanup: 'Rensning slutförd',
-        macroReinstalled:
-          'The {wizard}, {multiTarget}, {reportToken}, and {saved} macros have been reinstalled for all current GM players.',
+        macroReinstalled: 'Makro ominstallerat',
         handoutReinstalled: 'Handout ominstallerat',
         warning: 'Varning',
         error: 'Fel',
@@ -14906,15 +17399,15 @@ const ConditionTrackerMod = (() => {
         moveToken: '{name} — Flytta token?',
         scriptReady: 'Skript redo',
         conditionReorder: 'Turordning ändrad',
-        tokenReport: 'Token Condition Report',
-        savedEffects: 'Saved Effects',
-        savedAdd: 'Add Saved Effect',
-        savedEdit: 'Edit Saved Effect',
-        savedRemoved: 'Saved Effect Removed',
-        savedPromoted: 'Add to Turn Tracker',
-        savedSnoozed: 'Reminder Snoozed',
-        savedSnoozeCleared: 'Snooze Cleared',
-        hiddenEffects: 'Hidden Effects — {name}',
+        tokenReport: 'Tokens tillståndsrapport',
+        savedEffects: 'Sparade effekter',
+        savedAdd: 'Lägg till sparad effekt',
+        savedEdit: 'Redigera sparad effekt',
+        savedRemoved: 'Sparad effekt har tagits bort',
+        savedPromoted: 'Lägg till i Turn Tracker',
+        savedSnoozed: 'Påminnelse uppskjuten',
+        savedSnoozeCleared: 'Snooze rensades',
+        hiddenEffects: 'Dolda effekter — {name}',
       },
       heading: {
         quickActions: 'Snabbåtgärder',
@@ -14926,13 +17419,13 @@ const ConditionTrackerMod = (() => {
         promptUi: 'Guide-gränssnitt',
         examples: 'Exempel',
         summary: 'Sammanfattning',
-        appliedTo: 'Conditions Applied To',
-        appliedBy: 'Conditions Applied By',
-        savedEffectsFor: 'Saved Effects for {name}',
-        visibility: 'Visibility',
-        snoozeOptions: 'Snooze Reminder',
-        promoteOptions: 'Promote to Turn Tracker',
-        editActions: 'Edit Actions',
+        appliedTo: 'Villkor som tillämpas på',
+        appliedBy: 'Villkor som tillämpas av',
+        savedEffectsFor: 'Sparade effekter för {name}',
+        visibility: 'Synlighet',
+        snoozeOptions: 'Snooze-påminnelse',
+        promoteOptions: 'Befordra till Turn Tracker',
+        editActions: 'Redigera åtgärder',
       },
       msg: {
         noActive: 'Inga aktiva tillstånd spåras.',
@@ -14940,7 +17433,7 @@ const ConditionTrackerMod = (() => {
         unknownConfig:
           'Okänt konfigurationsalternativ. Använd --config för att visa stödda inställningar.',
         macroReinstalled:
-          'Makrona {wizard}, {multiTarget} och {reportToken} har installerats om för alla nuvarande GM-spelare.',
+          'Makrona {wizard}, {multiTarget}, {reportToken}, {saved} och {classify} har installerats om för alla nuvarande GM-spelare.',
         handoutReinstalled: 'Hjälp-handouten {handout} har installerats om.',
         duplicate:
           'Exakt den kombinationen av källa, subjekt, mål, tillstånd och anpassad text är redan aktiv.',
@@ -15014,32 +17507,34 @@ const ConditionTrackerMod = (() => {
         conditionsReordered:
           'Tillståndsrader har ompositionerats efter sina tilldelade tokens.',
         noTokensSelectedReport:
-          'Select at least one token on the board before using --report-token.',
-        noConditionsAppliedTo: '{name} has no active conditions applied to it.',
+          'Välj minst en token på tavlan innan du använder --report-token.',
+        noConditionsAppliedTo:
+          '{name} har inga aktiva villkor tillämpade på sig.',
         noConditionsAppliedBy:
-          '{name} has no active conditions applied to others.',
-        noSavedEffects: 'No saved effects stored for {name}.',
+          '{name} har inga aktiva villkor tillämpade på andra.',
+        noSavedEffects: 'Inga sparade effekter lagrade för {name}.',
         noTokenSelectedSaved:
-          'Select a token on the board before using --saved.',
-        savedEffectAdded: 'Saved effect added for {name}.',
-        savedEffectUpdated: 'Saved effect updated.',
-        savedEffectRemoved: 'Saved effect removed.',
-        savedEffectNotFound: 'Saved effect not found.',
+          'Välj en token på tavlan innan du använder --sparad.',
+        savedEffectAdded: 'Sparad effekt har lagts till för {name}.',
+        savedEffectUpdated: 'Sparad effekt uppdaterad.',
+        savedEffectRemoved: 'Sparad effekt har tagits bort.',
+        savedEffectNotFound: 'Den sparade effekten hittades inte.',
         savedInvalidVisibility:
-          'Invalid visibility. Use public, masked, or gm.',
+          'Ogiltig synlighet. Använd offentliga, maskerade eller gm.',
         savedConditionRequired:
           'Condition type is required. Use --condition <type>.',
-        savedPromotedPublic: 'Effect added to Turn Tracker as public.',
+        savedPromotedPublic:
+          'Effekt har lagts till i Turn Tracker som offentlig.',
         savedPromotedMasked:
-          'Effect added to Turn Tracker as masked — players see: {publicLabel}.',
+          'Effekt läggs till Turn Tracker som maskerad — spelare ser: {publicLabel}.',
         savedPromotedGm:
-          'Effect is GM-only — no Turn Tracker row will be created. The reminder system will surface it when this token reaches the top of the turn order.',
-        savedSnoozed: 'Reminder snoozed: {scope}.',
-        savedSnoozeCleared: 'Snooze cleared.',
-        hiddenEffectsReminder: 'Hidden effects are active on {name}.',
-        visibilityPublicHint: 'full label visible to all',
-        visibilityMaskedHint: 'vague label shown to players',
-        visibilityGmHint: 'GM whisper only, no Turn Tracker row',
+          'Effekten är endast GM - ingen Turn Tracker-rad kommer att skapas. Påminnelsesystemet kommer att visa det när denna token når toppen av turordningen.',
+        savedSnoozed: 'Påminnelsen pausad: {scope}.',
+        savedSnoozeCleared: 'Snooze rensades.',
+        hiddenEffectsReminder: 'Dolda effekter är aktiva på {name}.',
+        visibilityPublicHint: 'fullständig etikett synlig för alla',
+        visibilityMaskedHint: 'vag etikett som visas för spelare',
+        visibilityGmHint: 'Endast GM-viskning, ingen Turn Tracker-rad',
       },
       removal: {
         conditionField: 'Tillstånd',
@@ -15055,29 +17550,50 @@ const ConditionTrackerMod = (() => {
       },
       saved: {
         visibility: {
-          public: 'Public',
-          masked: 'Masked',
-          gm: 'GM Only',
+          public: 'Offentlig',
+          masked: 'Maskerad',
+          gm: 'Endast GM',
         },
         snooze: {
-          thisTurn: 'This Turn',
-          oneRound: '1 Round',
-          threeRounds: '3 Rounds',
-          thisCombat: 'This Combat',
-          rounds: '{n} round(s)',
+          thisTurn: 'Denna sväng',
+          oneRound: '1 omgång',
+          threeRounds: '3 omgångar',
+          thisCombat: 'Denna strid',
+          rounds: '{n} omgångar',
         },
         field: {
-          gmLabel: 'GM Label',
-          publicLabel: 'Public Label',
-          visibility: 'Visibility',
-          source: 'Source',
-          condition: 'Condition',
+          gmLabel: 'GM-etikett',
+          publicLabel: 'Offentlig etikett',
+          visibility: 'Synlighet',
+          source: 'Källa',
+          condition: 'Skick',
         },
         prompt: {
-          enterGmLabel: 'Full effect description (GM only)',
-          enterPublicLabel: 'Vague label shown to players',
+          enterGmLabel: 'Fullständig effektbeskrivning (endast GM)',
+          enterPublicLabel: 'Vaga etikett visas för spelare',
         },
         snoozed: 'snoozed',
+      },
+      classify: {
+        title: 'Aktörsklassificering',
+        showTitle: 'Klassificeringsdiagnostik',
+        showHeading: 'Token-klassificeringsdetaljer',
+        resultHeading: 'Åsidosättning Tillämpad',
+        noSelection:
+          'Välj minst en token på spelplanen innan du använder --classify.',
+        invalidType:
+          'Ogiltigt klassificeringstyp: {type}. Använd pc, npc, ignored eller auto.',
+        set: '{name} → {type} (omfång: {scope})',
+        cleared:
+          '{name} åsidosättning rensad (omfång: {scope}) — automatisk identifiering återställd.',
+        setTokenFallback:
+          '{name} → {type} (tokenåsidosättning — inget karaktärsblad länkat).',
+        clearedTokenFallback:
+          '{name} tokenåsidosättning rensad — automatisk identifiering återställd.',
+        fieldToken: 'Tecken',
+        fieldType: 'Klassificering',
+        fieldSource: 'Källa',
+        fieldReason: 'Anledning',
       },
       cleanup: {
         orphaned: 'Övergivna tillståndsposter',
@@ -15114,8 +17630,8 @@ const ConditionTrackerMod = (() => {
             'Applicera ett tillstånd på flera tokens samtidigt. Finns även som makrot ConditionTrackerMultiTarget.',
           ],
           [
-            '!condition-tracker --report-token',
-            'Select one or more tokens first, then run this command to get a GM whisper listing every condition applied to and by each selected token. Also available as the ConditionTrackerReportToken macro.',
+            '!condition-tracker --rapport-token',
+            'Välj en eller flera tokens först och kör sedan det här kommandot för att få en GM-viskning som listar alla villkor som tillämpas på och av varje vald token. Även tillgängligt som ConditionTrackerReportToken-makrot.',
           ],
           [
             '!condition-tracker --menu',
@@ -15133,9 +17649,9 @@ const ConditionTrackerMod = (() => {
             '--multi-target',
             'Applicera ett tillstånd på flera måltoken på en gång',
           ],
-          ['--menu', 'Visa huvudmeny (lägg till remove för borttagningsmenyn)'],
+          ['--meny', 'Visa huvudmeny (lägg till remove för borttagningsmenyn)'],
           [
-            '--source X --target Y --condition Z',
+            '--källa X --mål Y --villkor Z',
             'Applicera ett tillstånd direkt utan guiden',
           ],
           [
@@ -15143,7 +17659,7 @@ const ConditionTrackerMod = (() => {
             'Varaktighet för direkt applicering (t.ex. 2 rounds)',
           ],
           [
-            '--other &lt;text&gt;',
+            '--other <text>',
             'Anpassad text för Besvärjelse / Förmåga / Annan effekttyp',
           ],
           [
@@ -15159,25 +17675,37 @@ const ConditionTrackerMod = (() => {
             'Åsidosätt subjectPromptBypass enbart för detta kommando (stöder även --subject-prompt-bypass)',
           ],
           [
-            '--cleanup',
+            '--rengöring',
             'Stäm av tillstånd — ta bort övergivna tillstånd och turspårningsrader',
           ],
           [
-            '--reorder-conditions',
+            '--beställningsvillkor',
             'Flytta manuellt tillståndsrader bakom deras tilldelade tokens i turordningen',
           ],
-          ['--reinstall-macro', 'Återskapa eller uppdatera GM-makrona'],
+          ['--installera om-makro', 'Återskapa eller uppdatera GM-makrona'],
           [
-            '--reinstall-handout',
+            '--installera om-handout',
             'Återskapa eller uppdatera det lokaliserade hjälp-handouten',
           ],
           [
-            '--report-token',
-            'Whisper a GM-only condition report for each selected token (conditions applied to and by it)',
+            '--rapport-token',
+            'Viska en tillståndsrapport endast för GM för varje vald token (villkor som tillämpas på och av den)',
           ],
           [
             '--lang &lt;locale&gt;',
             'Skicka detta kommandos meddelanden på ytterligare en locale (tvåspråkigt läge)',
+          ],
+          [
+            '--classify pc|npc|ignored',
+            'Åsidosätt aktörstypen för valda tokens — välj token(s) först. Standardomfång är karaktär (skriver ct_mod_actor_type-attribut); lägg till --scope token för att spara i skriptstatus',
+          ],
+          [
+            '--classify auto',
+            'Ta bort aktörstypåsidosättningen och återställ automatisk identifiering för valda tokens',
+          ],
+          [
+            '--classify show',
+            'Viska en klassificeringsdiagnostik för varje vald token — visar detekterad typ, identifieringskälla och anledning',
           ],
           ['--help', 'Visa ett kort hjälpkort i chatten'],
         ],
@@ -15239,64 +17767,150 @@ const ConditionTrackerMod = (() => {
         ],
       },
       savedEffects: {
-        heading: 'Saved Effects',
+        heading: 'Sparade effekter',
         intro:
-          'Saved effects let you store long-term conditions outside the Turn Tracker — curses, diseases, poisons, hidden debuffs, and other non-combat conditions. They persist in script state and can be optionally copied into the Turn Tracker when combat begins.',
+          'Sparade effekter låter dig lagra långsiktiga förhållanden utanför Turn Tracker - förbannelser, sjukdomar, gifter, dolda avvärjningar och andra icke-stridsförhållanden. De kvarstår i skripttillstånd och kan valfritt kopieras till Turn Tracker när striden börjar.',
         visibility: {
-          heading: 'Visibility Modes',
+          heading: 'Synlighetslägen',
           rows: [
             [
-              'public',
-              'Full effect label is visible in the Turn Tracker and public chat.',
+              'offentlig',
+              'Full effektetikett är synlig i Turn Tracker och offentlig chatt.',
             ],
             [
-              'masked',
-              'A vague public label is shown to players; full details are GM-only.',
+              'maskerad',
+              'En vag offentlig etikett visas för spelare; fullständiga detaljer är endast för GM.',
             ],
             [
               'gm',
-              'No Turn Tracker row. Full details are stored in state and whispered to the GM when the affected token reaches the top of initiative.',
+              'Ingen svängspårningsrad. Fullständiga detaljer lagras i tillstånd och viskas till GM när den berörda token når toppen av initiativet.',
             ],
           ],
         },
         commands: {
-          heading: 'Saved Effects Commands',
+          heading: 'Sparade effektkommandon',
           intro:
-            'All --saved commands are GM-only. Select a token before running --saved or --saved add.',
+            'Alla --sparade kommandon är endast för GM. Välj en token innan du kör --sparade eller --sparade tillägg.',
           rows: [
             [
-              '!condition-tracker --saved',
-              'View saved effects for the selected token.',
+              '!condition-tracker --sparad',
+              'Visa sparade effekter för den valda token.',
             ],
             [
               '!condition-tracker --saved add',
-              'Launch the add-saved-effect wizard.',
+              'Starta guiden Lägg till sparad effekt.',
             ],
             [
               '!condition-tracker --saved edit <id>',
-              'Edit labels or visibility for an existing saved effect.',
+              'Redigera etiketter eller synlighet för en befintlig sparad effekt.',
             ],
             [
               '!condition-tracker --saved remove <id>',
-              'Permanently remove a saved effect.',
+              'Ta bort en sparad effekt permanent.',
             ],
             [
               '!condition-tracker --saved promote <id> --visibility public|masked|gm',
-              'Copy a saved effect into the Turn Tracker (public or masked) or confirm it is GM-only tracked.',
+              'Kopiera en sparad effekt till Turn Tracker (offentlig eller maskerad) eller bekräfta att den endast är GM-spårad.',
             ],
             [
               '!condition-tracker --saved snooze <id> --scope turn|rounds|combat --rounds <n>',
-              'Snooze a GM reminder for this turn, N rounds, or this combat.',
+              'Snooza en GM-påminnelse för den här svängen, N-rundorna eller den här striden.',
             ],
             [
               '!condition-tracker --saved snooze-clear <id>',
-              'Clear an active snooze so reminders resume immediately.',
+              'Rensa en aktiv snooze så att påminnelser återupptas omedelbart.',
             ],
           ],
         },
         reminders: {
-          heading: 'GM Reminders',
-          body: 'When a token with gm or masked saved effects reaches the top of the Turn Tracker, the GM receives a whisper listing the hidden effects with action buttons. Duplicate reminders within the same turn are suppressed. Use the Snooze buttons to suppress reminders for a turn, a number of rounds, or for the remainder of the current combat.',
+          heading: 'GM-påminnelser',
+          body: 'När en token med gm eller maskerade sparade effekter når toppen av Turn Tracker, får GM en viskning som listar de dolda effekterna med åtgärdsknappar. Dubblettpåminnelser inom samma sväng undertrycks. Använd Snooze-knapparna för att undertrycka påminnelser för en sväng, ett antal omgångar eller för resten av den pågående striden.',
+        },
+      },
+      actorClassification: {
+        heading: 'Aktörsklassificering',
+        intro:
+          'Condition Tracker avgör automatiskt om varje token är en SC, NPC eller ett ignorerat objekt (kartpinnar, scenografi, trollformelmallar). Ej länkade tokens ignoreras som standard. Använd --classify för att åsidosätta automatisk identifiering för valfri token.',
+        detectionOrder: {
+          heading: 'Identifieringsordning',
+          colStep: 'Steg',
+          colCheck: 'Kontroll',
+          colResult: 'Resultat',
+          rows: [
+            [
+              '1',
+              'Tokenstatusåsidosättning (--classify --scope token)',
+              'pc / npc / ignoreras',
+            ],
+            [
+              '2',
+              'Karaktär ct_mod_actor_type-attribut (--classify --scope character)',
+              'pc / npc / ignoreras',
+            ],
+            ['3', 'Ej länkad token — inget karaktärsblad', 'ignoreras'],
+            ['4', 'Spelsystemsadapter (npc / is_npc-attribut)', 'pc / npc'],
+            [
+              '5',
+              'Generisk NPC-attributsökning (npc, is_npc, npcflag, sheet_type, character_type)',
+              'pc / npc',
+            ],
+            ['6', 'Karaktär controlledby-reserv', 'pc / npc'],
+          ],
+        },
+        types: {
+          heading: 'Klassificeringstyper',
+          colType: 'Typ',
+          colMeaning: 'Betydelse',
+          rows: [
+            [
+              'st',
+              'Spelarkaraktär — inkluderas alltid som SC i guiden och identifieringen',
+            ],
+            ['npc', 'Icke-spelarkaraktär — inkluderas alltid som NPC'],
+            [
+              'ignoreras',
+              'Visas eller spåras aldrig — undantagen från guidens tokenväljare',
+            ],
+            [
+              'okänd',
+              'Endast automatisk identifiering; kunde inte fastställa typ (behandlas som NPC i guiden)',
+            ],
+          ],
+        },
+        commands: {
+          heading: 'Klassificeringskommandon',
+          intro:
+            'Välj en eller flera tokens innan du kör --classify-kommandon.',
+          rows: [
+            [
+              '!condition-tracker --klassificera pc',
+              'Markera valda tokens som SC:s (standardomfång: karaktär).',
+            ],
+            [
+              '!condition-tracker --klassificera npc',
+              'Markera valda tokens som NPC:s.',
+            ],
+            [
+              '!condition-tracker --classify ignoreras',
+              'Utesluta valda tokens från all spårning.',
+            ],
+            [
+              '!condition-tracker --klassificera auto',
+              'Ta bort åsidosättning — återställ automatisk identifiering.',
+            ],
+            [
+              '!condition-tracker --klassificera show',
+              'Visa klassificeringsdiagnostik (typ, källa, anledning) för varje vald token.',
+            ],
+            [
+              '!condition-tracker --classify pc --scope token',
+              'Tokenåsidosättning sparad i skriptstatus — användbart för ej länkade tokens.',
+            ],
+            [
+              '!condition-tracker --classify pc --scope character',
+              'Karaktärsåsidosättning skriven till ct_mod_actor_type-attribut — gäller för alla tokens med samma karaktärsblad.',
+            ],
+          ],
         },
       },
       configuration: {
@@ -15314,17 +17928,17 @@ const ConditionTrackerMod = (() => {
           ],
           [
             'useIcons',
-            'true / false',
+            'sant/falskt',
             'Visa korta ikonkoder (t.ex. [G]) istället för emoji i turspårningsrader',
           ],
           [
             'subjectPromptBypass',
-            'true / false',
+            'sant/falskt',
             'Hoppa över det valfria subjektsteget för Besvärjelse / Förmåga / Andra effekter',
           ],
           [
             'suppressPublicChat',
-            'true / false',
+            'sant/falskt',
             'Dölj alla offentliga chattmeddelanden (tillämpnings- och borttagningsmeddelanden). GM-viskning påverkas inte.',
           ],
           [
@@ -15353,7 +17967,7 @@ const ConditionTrackerMod = (() => {
         heading: 'Tillgängliga översättningar',
         intro:
           'Använd språkkonfigurationsalternativet för att ställa in chattmeddelanden och hjälp-handouten till en stödd locale. Korta alias accepteras även för en, zh och pt.',
-        colLocale: 'Locale',
+        colLocale: 'Plats',
         colLanguage: 'Språk',
         colFile: 'Översättningsfil',
       },
@@ -15522,8 +18136,8 @@ const ConditionTrackerMod = (() => {
         details: 'Ayrıntılar',
         description: 'Açıklama',
         scenario: 'Senaryo',
-        gameSystem: 'Game System',
-        duration: 'Duration',
+        gameSystem: 'Oyun Sistemi',
+        duration: 'Süre',
       },
       dur: {
         untilRemoved: 'Kaldırılana kadar',
@@ -15548,14 +18162,14 @@ const ConditionTrackerMod = (() => {
         reinstallHandout: 'El İlanını Yeniden Yükle',
         showHelp: 'Yardımı Göster',
         reorderConditions: 'Durum Satırlarını Yeniden Sırala',
-        reportToken: 'Report Token Conditions',
-        savedEffects: 'Saved Effects',
-        addSavedEffect: 'Add Saved Effect',
-        editSaved: 'Edit',
-        removeSaved: 'Remove',
-        promoteSaved: 'Add to Turn Tracker',
-        snoozeSaved: 'Snooze',
-        clearSnooze: 'Clear Snooze',
+        reportToken: 'Jeton Koşullarını Bildirin',
+        savedEffects: 'Kaydedilen Efektler',
+        addSavedEffect: 'Kayıtlı Efekt Ekle',
+        editSaved: 'Düzenlemek',
+        removeSaved: 'Kaldırmak',
+        promoteSaved: "Turn Tracker'a Ekle",
+        snoozeSaved: 'Kestirmek',
+        clearSnooze: 'Ertelemeyi Temizle',
       },
       title: {
         menu: 'Menü',
@@ -15566,8 +18180,7 @@ const ConditionTrackerMod = (() => {
         applied: 'Uygulandı',
         removed: 'Durum Kaldırıldı',
         cleanup: 'Temizlik Tamamlandı',
-        macroReinstalled:
-          'The {wizard}, {multiTarget}, {reportToken}, and {saved} macros have been reinstalled for all current GM players.',
+        macroReinstalled: 'Makro Yeniden Yüklendi',
         handoutReinstalled: 'El İlanı Yeniden Yüklendi',
         warning: 'Uyarı',
         error: 'Hata',
@@ -15579,15 +18192,15 @@ const ConditionTrackerMod = (() => {
         moveToken: '{name} — Token Taşınsın mı?',
         scriptReady: 'Betik Hazır',
         conditionReorder: 'Tur Sırası Değişti',
-        tokenReport: 'Token Condition Report',
-        savedEffects: 'Saved Effects',
-        savedAdd: 'Add Saved Effect',
-        savedEdit: 'Edit Saved Effect',
-        savedRemoved: 'Saved Effect Removed',
-        savedPromoted: 'Add to Turn Tracker',
-        savedSnoozed: 'Reminder Snoozed',
-        savedSnoozeCleared: 'Snooze Cleared',
-        hiddenEffects: 'Hidden Effects — {name}',
+        tokenReport: 'Jeton Durum Raporu',
+        savedEffects: 'Kaydedilen Efektler',
+        savedAdd: 'Kayıtlı Efekt Ekle',
+        savedEdit: 'Kaydedilen Efekti Düzenle',
+        savedRemoved: 'Kaydedilen Efekt Kaldırıldı',
+        savedPromoted: "Turn Tracker'a Ekle",
+        savedSnoozed: 'Hatırlatıcı Ertelendi',
+        savedSnoozeCleared: 'Erteleme Temizlendi',
+        hiddenEffects: 'Gizli Efektler — {name}',
       },
       heading: {
         quickActions: 'Hızlı İşlemler',
@@ -15599,13 +18212,13 @@ const ConditionTrackerMod = (() => {
         promptUi: 'Sihirbaz Arayüzü',
         examples: 'Örnekler',
         summary: 'Özet',
-        appliedTo: 'Conditions Applied To',
-        appliedBy: 'Conditions Applied By',
-        savedEffectsFor: 'Saved Effects for {name}',
-        visibility: 'Visibility',
-        snoozeOptions: 'Snooze Reminder',
-        promoteOptions: 'Promote to Turn Tracker',
-        editActions: 'Edit Actions',
+        appliedTo: 'Uygulanan Koşullar',
+        appliedBy: 'Uygulanan Koşullar',
+        savedEffectsFor: '{name} için Kaydedilen Efektler',
+        visibility: 'Görünürlük',
+        snoozeOptions: 'Hatırlatıcıyı Ertele',
+        promoteOptions: "Turn Tracker'a Yükselt",
+        editActions: 'Eylemleri Düzenle',
       },
       msg: {
         noActive: 'Takip edilen aktif durum yok.',
@@ -15613,7 +18226,7 @@ const ConditionTrackerMod = (() => {
         unknownConfig:
           'Bilinmeyen yapılandırma seçeneği. Desteklenen ayarları görüntülemek için --config kullanın.',
         macroReinstalled:
-          '{wizard}, {multiTarget} ve {reportToken} makroları tüm mevcut GM oyuncuları için yeniden yüklendi.',
+          '{wizard}, {multiTarget}, {reportToken}, {saved} ve {classify} makroları tüm mevcut GM oyuncuları için yeniden yüklendi.',
         handoutReinstalled: 'Yardım el ilanı {handout} yeniden yüklendi.',
         duplicate: 'Aynı kaynak, özne, hedef, durum ve özel metin zaten aktif.',
         noTargets: 'Çoklu hedef uygulaması için hedef token belirtilmedi.',
@@ -15686,32 +18299,33 @@ const ConditionTrackerMod = (() => {
         conditionsReordered:
           'Durum satırları atanmış tokenlarının arkasına yeniden konumlandırıldı.',
         noTokensSelectedReport:
-          'Select at least one token on the board before using --report-token.',
-        noConditionsAppliedTo: '{name} has no active conditions applied to it.',
+          "--report-token'ı kullanmadan önce panoda en az bir jeton seçin.",
+        noConditionsAppliedTo: '{name} kendisine uygulanan etkin koşul yok.',
         noConditionsAppliedBy:
-          '{name} has no active conditions applied to others.',
-        noSavedEffects: 'No saved effects stored for {name}.',
+          '{name} diğerlerine uygulanan etkin koşula sahip değil.',
+        noSavedEffects: '{name} için kayıtlı efekt yok.',
         noTokenSelectedSaved:
-          'Select a token on the board before using --saved.',
-        savedEffectAdded: 'Saved effect added for {name}.',
-        savedEffectUpdated: 'Saved effect updated.',
-        savedEffectRemoved: 'Saved effect removed.',
-        savedEffectNotFound: 'Saved effect not found.',
+          "--saved'i kullanmadan önce panoda bir jeton seçin.",
+        savedEffectAdded: '{name} için kayıtlı efekt eklendi.',
+        savedEffectUpdated: 'Kaydedilen efekt güncellendi.',
+        savedEffectRemoved: 'Kaydedilen efekt kaldırıldı.',
+        savedEffectNotFound: 'Kaydedilen efekt bulunamadı.',
         savedInvalidVisibility:
-          'Invalid visibility. Use public, masked, or gm.',
+          'Geçersiz görünürlük. Herkese açık, maskeli veya gm kullanın.',
         savedConditionRequired:
           'Condition type is required. Use --condition <type>.',
-        savedPromotedPublic: 'Effect added to Turn Tracker as public.',
+        savedPromotedPublic:
+          "Efekt Turn Tracker'a herkese açık olarak eklendi.",
         savedPromotedMasked:
-          'Effect added to Turn Tracker as masked — players see: {publicLabel}.',
+          "Efekt Turn Tracker'a maskeli olarak eklendi — oyuncular şunu görür: {publicLabel}.",
         savedPromotedGm:
-          'Effect is GM-only — no Turn Tracker row will be created. The reminder system will surface it when this token reaches the top of the turn order.',
-        savedSnoozed: 'Reminder snoozed: {scope}.',
-        savedSnoozeCleared: 'Snooze cleared.',
-        hiddenEffectsReminder: 'Hidden effects are active on {name}.',
-        visibilityPublicHint: 'full label visible to all',
-        visibilityMaskedHint: 'vague label shown to players',
-        visibilityGmHint: 'GM whisper only, no Turn Tracker row',
+          "Efekt yalnızca GM'ye özgüdür — hiçbir Dönüş Takipçisi satırı oluşturulmayacaktır. Bu jeton dönüş sırasının en üstüne ulaştığında hatırlatma sistemi yüzeye çıkacaktır.",
+        savedSnoozed: 'Hatırlatıcı ertelendi: {scope}.',
+        savedSnoozeCleared: 'Erteleme temizlendi.',
+        hiddenEffectsReminder: 'Gizli efektler {name} tarihinde etkin.',
+        visibilityPublicHint: 'tam etiket herkes tarafından görülebilir',
+        visibilityMaskedHint: 'oyunculara gösterilen belirsiz etiket',
+        visibilityGmHint: 'Yalnızca GM fısıltısı, Dönüş İzleyici sırası yok',
       },
       removal: {
         conditionField: 'Durum',
@@ -15727,29 +18341,50 @@ const ConditionTrackerMod = (() => {
       },
       saved: {
         visibility: {
-          public: 'Public',
-          masked: 'Masked',
-          gm: 'GM Only',
+          public: 'Halk',
+          masked: 'Maskeli',
+          gm: 'Yalnızca GM',
         },
         snooze: {
-          thisTurn: 'This Turn',
-          oneRound: '1 Round',
-          threeRounds: '3 Rounds',
-          thisCombat: 'This Combat',
-          rounds: '{n} round(s)',
+          thisTurn: 'Bu Dönüş',
+          oneRound: '1 Tur',
+          threeRounds: '3 Tur',
+          thisCombat: 'Bu Savaş',
+          rounds: '{n} tur(lar)',
         },
         field: {
-          gmLabel: 'GM Label',
-          publicLabel: 'Public Label',
-          visibility: 'Visibility',
-          source: 'Source',
-          condition: 'Condition',
+          gmLabel: 'GM Etiketi',
+          publicLabel: 'Genel Etiket',
+          visibility: 'Görünürlük',
+          source: 'Kaynak',
+          condition: 'Durum',
         },
         prompt: {
-          enterGmLabel: 'Full effect description (GM only)',
-          enterPublicLabel: 'Vague label shown to players',
+          enterGmLabel: 'Tam etki açıklaması (yalnızca GM)',
+          enterPublicLabel: 'Oyunculara gösterilen belirsiz etiket',
         },
-        snoozed: 'snoozed',
+        snoozed: 'ertelendi',
+      },
+      classify: {
+        title: 'Oyuncu Sınıflandırması',
+        showTitle: 'Sınıflandırma Tanılaması',
+        showHeading: 'Token Sınıflandırma Ayrıntıları',
+        resultHeading: 'Geçersiz Kılma Uygulandı',
+        noSelection:
+          '--classify kullanmadan önce tahtada en az bir token seçin.',
+        invalidType:
+          'Geçersiz sınıflandırma türü: {type}. pc, npc, ignored veya auto kullanın.',
+        set: '{name} → {type} (kapsam: {scope})',
+        cleared:
+          '{name} geçersiz kılma temizlendi (kapsam: {scope}) — otomatik algılama geri yüklendi.',
+        setTokenFallback:
+          '{name} → {type} (token geçersiz kılma — bağlı karakter sayfası yok).',
+        clearedTokenFallback:
+          '{name} token geçersiz kılma temizlendi — otomatik algılama geri yüklendi.',
+        fieldToken: 'Jeton',
+        fieldType: 'Sınıflandırma',
+        fieldSource: 'Kaynak',
+        fieldReason: 'Neden',
       },
       cleanup: {
         orphaned: 'Sahipsiz durum girişleri',
@@ -15777,16 +18412,16 @@ const ConditionTrackerMod = (() => {
         colDesc: 'Açıklama',
         rows: [
           [
-            '!condition-tracker --prompt',
+            '!koşul-takipçi --istem',
             'Adım adım sihirbaz — durumu, tokenleri ve süreyi etkileşimli olarak seçin. ConditionTrackerWizard makrosu olarak da kullanılabilir.',
           ],
           [
-            '!condition-tracker --multi-target',
+            '!durum izleyici --çoklu hedef',
             'Bir durumu aynı anda birden fazla tokena uygulayın. ConditionTrackerMultiTarget makrosu olarak da kullanılabilir.',
           ],
           [
-            '!condition-tracker --report-token',
-            'Select one or more tokens first, then run this command to get a GM whisper listing every condition applied to and by each selected token. Also available as the ConditionTrackerReportToken macro.',
+            '!koşul-izleyici --rapor-token',
+            'Önce bir veya daha fazla jeton seçin, ardından seçilen her jeton tarafından uygulanan her koşulu listeleyen bir GM fısıltısı almak için bu komutu çalıştırın. Ayrıca ConditionTrackerReportToken makrosu olarak da mevcuttur.',
           ],
           [
             '!condition-tracker --menu',
@@ -15799,14 +18434,14 @@ const ConditionTrackerMod = (() => {
         colFlag: 'Bayrak',
         colDesc: 'Açıklama',
         rows: [
-          ['--prompt', 'Etkileşimli adım adım sihirbaz arayüzü'],
+          ['--çabuk', 'Etkileşimli adım adım sihirbaz arayüzü'],
           [
-            '--multi-target',
+            '--çoklu hedef',
             'Bir durumu aynı anda birden fazla hedef tokena uygula',
           ],
-          ['--menu', 'Ana menüyü göster (kaldırma menüsü için remove ekle)'],
+          ['--menü', 'Ana menüyü göster (kaldırma menüsü için remove ekle)'],
           [
-            '--source X --target Y --condition Z',
+            '--kaynak X --hedef Y --koşul Z',
             'Sihirbaz olmadan doğrudan durum uygula',
           ],
           [
@@ -15826,29 +18461,44 @@ const ConditionTrackerMod = (() => {
             'Yapılandırma ayarlarını düzenle (aşağıdaki Yapılandırma bölümüne bakın)',
           ],
           [
-            '--prompt --subjectPromptBypass true|false',
+            '--prompt --konuPromptBypass doğru|yanlış',
             "Bu komut için subjectPromptBypass'ı geçersiz kıl (--subject-prompt-bypass da desteklenir)",
           ],
           [
-            '--cleanup',
+            '--Temizlemek',
             'Durumu uzlaştır — sahipsiz koşulları ve Tur Takibi satırlarını kaldır',
           ],
           [
-            '--reorder-conditions',
+            '--yeniden sipariş koşulları',
             'Tur sırasındaki koşul satırlarını atanmış tokenlarının arkasına manuel olarak yeniden konumlandır',
           ],
-          ['--reinstall-macro', 'GM makrolarını yeniden oluştur veya güncelle'],
           [
-            '--reinstall-handout',
+            '--makroyu yeniden yükle',
+            'GM makrolarını yeniden oluştur veya güncelle',
+          ],
+          [
+            '--yeniden yükleme bildirisi',
             'Yerelleştirilmiş yardım el ilanını yeniden oluştur veya güncelle',
           ],
           [
-            '--report-token',
-            'Whisper a GM-only condition report for each selected token (conditions applied to and by it)',
+            '--rapor-belirteci',
+            "Seçilen her jeton için yalnızca GM'ye özel bir durum raporu fısıldayın (ona ve onun tarafından uygulanan koşullar)",
           ],
           [
             '--lang &lt;yerel ayar&gt;',
             'Bu komutun mesajlarını ek bir yerel ayarda çıkart (iki dilli mod)',
+          ],
+          [
+            '--classify pc|npc|ignored',
+            'Seçili tokenlar için oyuncu türünü geçersiz kılar — önce token(ları) seçin. Varsayılan kapsam karakterdir (ct_mod_actor_type özelliğini yazar); betik durumunda depolamak için --scope token ekleyin',
+          ],
+          [
+            '--classify auto',
+            'Oyuncu türü geçersiz kılmayı kaldırır ve seçili tokenlar için otomatik algılamayı geri yükler',
+          ],
+          [
+            '--classify show',
+            'Her seçili token için sınıflandırma tanılamasını fısıldar — algılanan türü, algılama kaynağını ve nedeni gösterir',
           ],
           ['--help', 'Sohbette kısa bir yardım kartı göster'],
         ],
@@ -15907,64 +18557,161 @@ const ConditionTrackerMod = (() => {
         ],
       },
       savedEffects: {
-        heading: 'Saved Effects',
+        heading: 'Kaydedilen Efektler',
         intro:
-          'Saved effects let you store long-term conditions outside the Turn Tracker — curses, diseases, poisons, hidden debuffs, and other non-combat conditions. They persist in script state and can be optionally copied into the Turn Tracker when combat begins.',
+          "Kaydedilen efektler, Turn Tracker'ın dışındaki uzun vadeli koşulları (lanetler, hastalıklar, zehirler, gizli zayıflatıcılar ve diğer savaş dışı koşullar) saklamanıza olanak tanır. Komut dosyası durumunda kalırlar ve savaş başladığında isteğe bağlı olarak Turn Tracker'a kopyalanabilirler.",
         visibility: {
-          heading: 'Visibility Modes',
+          heading: 'Görünürlük Modları',
           rows: [
             [
-              'public',
-              'Full effect label is visible in the Turn Tracker and public chat.',
+              'halk',
+              "Tam efekt etiketi Turn Tracker'da ve genel sohbette görülebilir.",
             ],
             [
-              'masked',
-              'A vague public label is shown to players; full details are GM-only.',
+              'maskeli',
+              "Oyunculara belirsiz bir genel etiket gösterilir; tüm ayrıntılar yalnızca GM'ye aittir.",
             ],
             [
               'gm',
-              'No Turn Tracker row. Full details are stored in state and whispered to the GM when the affected token reaches the top of initiative.',
+              "Dönüş İzleyici satırı yok. Etkilenen token inisiyatifin zirvesine ulaştığında tüm ayrıntılar durumda saklanır ve GM'ye fısıldanır.",
             ],
           ],
         },
         commands: {
-          heading: 'Saved Effects Commands',
+          heading: 'Kaydedilen Efekt Komutları',
           intro:
-            'All --saved commands are GM-only. Select a token before running --saved or --saved add.',
+            "Tüm --saved komutları yalnızca GM'ye özgüdür. --saved veya --saved eklentisini çalıştırmadan önce bir belirteç seçin.",
           rows: [
             [
-              '!condition-tracker --saved',
-              'View saved effects for the selected token.',
+              '!koşul-takipçi --kaydedildi',
+              'Seçilen jeton için kayıtlı efektleri görüntüleyin.',
             ],
             [
-              '!condition-tracker --saved add',
-              'Launch the add-saved-effect wizard.',
+              '!koşul-izleyici --kaydedilmiş ekleme',
+              'Kaydedilmiş efekt ekleme sihirbazını başlatın.',
             ],
             [
               '!condition-tracker --saved edit <id>',
-              'Edit labels or visibility for an existing saved effect.',
+              'Mevcut bir kayıtlı efektin etiketlerini veya görünürlüğünü düzenleyin.',
             ],
             [
               '!condition-tracker --saved remove <id>',
-              'Permanently remove a saved effect.',
+              'Kaydedilmiş bir efekti kalıcı olarak kaldırın.',
             ],
             [
               '!condition-tracker --saved promote <id> --visibility public|masked|gm',
-              'Copy a saved effect into the Turn Tracker (public or masked) or confirm it is GM-only tracked.',
+              "Kaydedilmiş bir efekti Turn Tracker'a (genel veya maskeli) kopyalayın veya bunun yalnızca GM tarafından izlendiğini onaylayın.",
             ],
             [
               '!condition-tracker --saved snooze <id> --scope turn|rounds|combat --rounds <n>',
-              'Snooze a GM reminder for this turn, N rounds, or this combat.',
+              'Bu tur, N tur veya bu dövüş için bir GM hatırlatıcısını erteleyin.',
             ],
             [
               '!condition-tracker --saved snooze-clear <id>',
-              'Clear an active snooze so reminders resume immediately.',
+              'Hatırlatıcıların hemen devam etmesi için etkin bir ertelemeyi silin.',
             ],
           ],
         },
         reminders: {
-          heading: 'GM Reminders',
-          body: 'When a token with gm or masked saved effects reaches the top of the Turn Tracker, the GM receives a whisper listing the hidden effects with action buttons. Duplicate reminders within the same turn are suppressed. Use the Snooze buttons to suppress reminders for a turn, a number of rounds, or for the remainder of the current combat.',
+          heading: 'GM Hatırlatıcıları',
+          body: "GM veya maskelenmiş kayıtlı efektlere sahip bir jeton Turn Tracker'ın tepesine ulaştığında, GM, eylem düğmeleriyle birlikte gizli efektleri listeleyen bir fısıltı alır. Aynı sıra içinde tekrarlanan hatırlatıcılar bastırılır. Bir tur, birkaç tur veya mevcut savaşın geri kalanına ilişkin hatırlatıcıları gizlemek için Erteleme düğmelerini kullanın.",
+        },
+      },
+      actorClassification: {
+        heading: 'Oyuncu Sınıflandırması',
+        intro:
+          'Condition Tracker her tokenın bir OY (oyuncu yönetilen), OYD (oyuncu yönetilmeyen) veya yoksayılan bir nesne (harita pinleri, dekor, büyü şablonları) olup olmadığını otomatik olarak belirler. Bağlantısız tokenlar varsayılan olarak yoksayılır. Herhangi bir token için otomatik algılamayı geçersiz kılmak üzere --classify kullanın.',
+        detectionOrder: {
+          heading: 'Algılama Sırası',
+          colStep: 'Adım',
+          colCheck: 'Kontrol',
+          colResult: 'Sonuç',
+          rows: [
+            [
+              '1',
+              'Token durum geçersiz kılma (--classify --scope token)',
+              'pc / npc / göz ardı edildi',
+            ],
+            [
+              '2',
+              'Karakter ct_mod_actor_type özelliği (--classify --scope character)',
+              'pc / npc / göz ardı edildi',
+            ],
+            [
+              '3',
+              'Bağlantısız token — karakter sayfası yok',
+              'görmezden gelindi',
+            ],
+            [
+              '4',
+              'Oyun sistemi adaptörü (npc / is_npc özelliği)',
+              'bilgisayar / npc',
+            ],
+            [
+              '5',
+              'Genel NPC özellik taraması (npc, is_npc, npcflag, sheet_type, character_type)',
+              'bilgisayar / npc',
+            ],
+            ['6', 'Karakter controlledby geri dönüşü', 'bilgisayar / npc'],
+          ],
+        },
+        types: {
+          heading: 'Sınıflandırma Türleri',
+          colType: 'Tür',
+          colMeaning: 'Anlam',
+          rows: [
+            [
+              'bilgisayar',
+              'Oyuncu karakteri — sihirbazda ve algılamada her zaman OY olarak dahil edilir',
+            ],
+            [
+              'NPC',
+              'Oyuncu olmayan karakter — her zaman OYD olarak dahil edilir',
+            ],
+            [
+              'görmezden gelindi',
+              'Hiçbir zaman gösterilmez veya takip edilmez — sihirbazın token seçicisinden hariç tutulur',
+            ],
+            [
+              'bilinmiyor',
+              'Yalnızca otomatik algılama; tür belirlenemedi (sihirbazda OYD olarak işlenir)',
+            ],
+          ],
+        },
+        commands: {
+          heading: 'Sınıflandırma Komutları',
+          intro:
+            '--classify komutlarını çalıştırmadan önce bir veya daha fazla token seçin.',
+          rows: [
+            [
+              "!durum-takipçi --PC'yi sınıflandır",
+              'Seçili tokenları OY olarak işaretler (varsayılan kapsam: karakter).',
+            ],
+            [
+              "!koşul-izleyici --npc'yi sınıflandır",
+              'Seçili tokenları OYD olarak işaretler.',
+            ],
+            [
+              '!koşul-izleyici --sınıflandırma göz ardı edildi',
+              'Seçili tokenları tüm takipten hariç tutar.',
+            ],
+            [
+              '!koşul-izleyici --otomatik sınıflandırma',
+              'Geçersiz kılmayı kaldırır — otomatik algılamayı geri yükler.',
+            ],
+            [
+              '!koşul-izleyici --sınıflandırma gösterisi',
+              'Her seçili token için sınıflandırma tanılamasını (tür, kaynak, neden) gösterir.',
+            ],
+            [
+              '!koşul-izleyici --bilgisayarı sınıflandır --kapsam belirteci',
+              'Betik durumunda saklanan token düzeyinde geçersiz kılma — bağlantısız tokenlar için kullanışlıdır.',
+            ],
+            [
+              '!koşul-izleyici --bilgisayarı sınıflandır --kapsam karakteri',
+              'ct_mod_actor_type özelliğine yazılan karakter düzeyinde geçersiz kılma — aynı karakter sayfasını kullanan tüm tokenlar için geçerlidir.',
+            ],
+          ],
         },
       },
       configuration: {
@@ -15982,17 +18729,17 @@ const ConditionTrackerMod = (() => {
           ],
           [
             'useIcons',
-            'true / false',
+            'doğru / yanlış',
             'Tur Takibi satırlarında emoji yerine kısa simge kodları göster (örn. [G])',
           ],
           [
             'subjectPromptBypass',
-            'true / false',
+            'doğru / yanlış',
             'Büyü / Yetenek / Diğer efektler için isteğe bağlı özne-token adımını atla',
           ],
           [
             'suppressPublicChat',
-            'true / false',
+            'doğru / yanlış',
             'Tüm genel sohbet duyurularını (uygulama ve kaldırma mesajları) gizle. GM fısıltıları etkilenmez.',
           ],
           [
@@ -16191,8 +18938,8 @@ const ConditionTrackerMod = (() => {
         details: 'Подробиці',
         description: 'Опис',
         scenario: 'Сценарій',
-        gameSystem: 'Game System',
-        duration: 'Duration',
+        gameSystem: 'Система гри',
+        duration: 'Тривалість',
       },
       dur: {
         untilRemoved: 'Доки не видалено',
@@ -16217,14 +18964,14 @@ const ConditionTrackerMod = (() => {
         reinstallHandout: 'Перевстановити довідник',
         showHelp: 'Показати довідку',
         reorderConditions: 'Переупорядкувати рядки умов',
-        reportToken: 'Report Token Conditions',
-        savedEffects: 'Saved Effects',
-        addSavedEffect: 'Add Saved Effect',
-        editSaved: 'Edit',
-        removeSaved: 'Remove',
-        promoteSaved: 'Add to Turn Tracker',
-        snoozeSaved: 'Snooze',
-        clearSnooze: 'Clear Snooze',
+        reportToken: 'Повідомити про умови маркера',
+        savedEffects: 'Збережені ефекти',
+        addSavedEffect: 'Додати збережений ефект',
+        editSaved: 'Редагувати',
+        removeSaved: 'видалити',
+        promoteSaved: 'Додати до Turn Tracker',
+        snoozeSaved: 'Відкласти',
+        clearSnooze: 'Очистити відкладення',
       },
       title: {
         menu: 'Меню',
@@ -16235,8 +18982,7 @@ const ConditionTrackerMod = (() => {
         applied: 'Застосовано',
         removed: 'Стан видалено',
         cleanup: 'Очищення завершено',
-        macroReinstalled:
-          'The {wizard}, {multiTarget}, {reportToken}, and {saved} macros have been reinstalled for all current GM players.',
+        macroReinstalled: 'Макрос перевстановлено',
         handoutReinstalled: 'Довідник перевстановлено',
         warning: 'Попередження',
         error: 'Помилка',
@@ -16248,15 +18994,15 @@ const ConditionTrackerMod = (() => {
         moveToken: '{name} — перемістити токен?',
         scriptReady: 'Скрипт готовий',
         conditionReorder: 'Порядок ходів змінено',
-        tokenReport: 'Token Condition Report',
-        savedEffects: 'Saved Effects',
-        savedAdd: 'Add Saved Effect',
-        savedEdit: 'Edit Saved Effect',
-        savedRemoved: 'Saved Effect Removed',
-        savedPromoted: 'Add to Turn Tracker',
-        savedSnoozed: 'Reminder Snoozed',
-        savedSnoozeCleared: 'Snooze Cleared',
-        hiddenEffects: 'Hidden Effects — {name}',
+        tokenReport: 'Звіт про стан маркера',
+        savedEffects: 'Збережені ефекти',
+        savedAdd: 'Додати збережений ефект',
+        savedEdit: 'Редагувати збережений ефект',
+        savedRemoved: 'Збережений ефект видалено',
+        savedPromoted: 'Додати до Turn Tracker',
+        savedSnoozed: 'Нагадування відкладено',
+        savedSnoozeCleared: 'Відкладення видалено',
+        hiddenEffects: 'Приховані ефекти — {name}',
       },
       heading: {
         quickActions: 'Швидкі дії',
@@ -16268,13 +19014,13 @@ const ConditionTrackerMod = (() => {
         promptUi: 'Інтерфейс майстра',
         examples: 'Приклади',
         summary: 'Підсумок',
-        appliedTo: 'Conditions Applied To',
-        appliedBy: 'Conditions Applied By',
-        savedEffectsFor: 'Saved Effects for {name}',
-        visibility: 'Visibility',
-        snoozeOptions: 'Snooze Reminder',
-        promoteOptions: 'Promote to Turn Tracker',
-        editActions: 'Edit Actions',
+        appliedTo: 'Умови, що застосовуються до',
+        appliedBy: 'Умови, застосовані',
+        savedEffectsFor: 'Збережені ефекти для {name}',
+        visibility: 'Видимість',
+        snoozeOptions: 'Відкласти нагадування',
+        promoteOptions: 'Підвищити до Turn Tracker',
+        editActions: 'Редагувати дії',
       },
       msg: {
         noActive: 'Активні стани не відстежуються.',
@@ -16282,7 +19028,7 @@ const ConditionTrackerMod = (() => {
         unknownConfig:
           'Невідома опція налаштування. Використайте --config, щоб переглянути підтримувані налаштування.',
         macroReinstalled:
-          'Макроси {wizard}, {multiTarget} і {reportToken} перевстановлено для всіх поточних GM-гравців.',
+          'Макроси {wizard}, {multiTarget}, {reportToken}, {saved} і {classify} перевстановлено для всіх поточних GM-гравців.',
         handoutReinstalled: 'Довідник {handout} перевстановлено.',
         duplicate:
           "Такий самий набір джерела, суб'єкта, цілі, стану й тексту вже активний.",
@@ -16355,32 +19101,33 @@ const ConditionTrackerMod = (() => {
         conditionsReordered:
           'Рядки умов були переміщені після призначених токенів.',
         noTokensSelectedReport:
-          'Select at least one token on the board before using --report-token.',
-        noConditionsAppliedTo: '{name} has no active conditions applied to it.',
+          'Виберіть принаймні один маркер на дошці перед використанням --report-token.',
+        noConditionsAppliedTo:
+          '{name} не має активних умов, застосованих до нього.',
         noConditionsAppliedBy:
-          '{name} has no active conditions applied to others.',
-        noSavedEffects: 'No saved effects stored for {name}.',
+          '{name} не має активних умов, застосованих до інших.',
+        noSavedEffects: 'Немає збережених ефектів для {name}.',
         noTokenSelectedSaved:
-          'Select a token on the board before using --saved.',
-        savedEffectAdded: 'Saved effect added for {name}.',
-        savedEffectUpdated: 'Saved effect updated.',
-        savedEffectRemoved: 'Saved effect removed.',
-        savedEffectNotFound: 'Saved effect not found.',
+          'Виберіть маркер на дошці перед використанням --saved.',
+        savedEffectAdded: 'Збережений ефект додано для {name}.',
+        savedEffectUpdated: 'Збережений ефект оновлено.',
+        savedEffectRemoved: 'Збережений ефект видалено.',
+        savedEffectNotFound: 'Збережений ефект не знайдено.',
         savedInvalidVisibility:
-          'Invalid visibility. Use public, masked, or gm.',
+          'Недійсна видимість. Використовуйте public, masked або gm.',
         savedConditionRequired:
           'Condition type is required. Use --condition <type>.',
-        savedPromotedPublic: 'Effect added to Turn Tracker as public.',
+        savedPromotedPublic: 'Ефект додано до Turn Tracker як публічний.',
         savedPromotedMasked:
-          'Effect added to Turn Tracker as masked — players see: {publicLabel}.',
+          'Ефект додано до Turn Tracker як замаскований — гравці бачать: {publicLabel}.',
         savedPromotedGm:
-          'Effect is GM-only — no Turn Tracker row will be created. The reminder system will surface it when this token reaches the top of the turn order.',
-        savedSnoozed: 'Reminder snoozed: {scope}.',
-        savedSnoozeCleared: 'Snooze cleared.',
-        hiddenEffectsReminder: 'Hidden effects are active on {name}.',
-        visibilityPublicHint: 'full label visible to all',
-        visibilityMaskedHint: 'vague label shown to players',
-        visibilityGmHint: 'GM whisper only, no Turn Tracker row',
+          'Ефект лише для GM — рядок Turn Tracker не створюватиметься. Система нагадувань виведе його, коли цей жетон досягне верхньої частини порядку ходу.',
+        savedSnoozed: 'Нагадування відкладено: {scope}.',
+        savedSnoozeCleared: 'Відкладення видалено.',
+        hiddenEffectsReminder: 'Приховані ефекти активні на {name}.',
+        visibilityPublicHint: 'повна мітка, видима для всіх',
+        visibilityMaskedHint: 'нечітка мітка, показана гравцям',
+        visibilityGmHint: 'Тільки шепіт GM, без рядка Turn Tracker',
       },
       removal: {
         conditionField: 'Стан',
@@ -16396,29 +19143,50 @@ const ConditionTrackerMod = (() => {
       },
       saved: {
         visibility: {
-          public: 'Public',
-          masked: 'Masked',
-          gm: 'GM Only',
+          public: 'Громадський',
+          masked: 'Маскований',
+          gm: 'Тільки GM',
         },
         snooze: {
-          thisTurn: 'This Turn',
-          oneRound: '1 Round',
-          threeRounds: '3 Rounds',
-          thisCombat: 'This Combat',
-          rounds: '{n} round(s)',
+          thisTurn: 'Цей поворот',
+          oneRound: '1 раунд',
+          threeRounds: '3 раунди',
+          thisCombat: 'Цей Combat',
+          rounds: '{n} раунд(ів)',
         },
         field: {
-          gmLabel: 'GM Label',
-          publicLabel: 'Public Label',
-          visibility: 'Visibility',
-          source: 'Source',
-          condition: 'Condition',
+          gmLabel: 'Етикетка GM',
+          publicLabel: 'Публічний ярлик',
+          visibility: 'Видимість',
+          source: 'Джерело',
+          condition: 'Хвороба',
         },
         prompt: {
-          enterGmLabel: 'Full effect description (GM only)',
-          enterPublicLabel: 'Vague label shown to players',
+          enterGmLabel: 'Повний опис ефекту (лише GM)',
+          enterPublicLabel: 'Розпливчаста мітка, показана гравцям',
         },
-        snoozed: 'snoozed',
+        snoozed: 'дрімав',
+      },
+      classify: {
+        title: 'Класифікація Акторів',
+        showTitle: 'Діагностика Класифікації',
+        showHeading: 'Деталі Класифікації Токена',
+        resultHeading: 'Перевизначення Застосовано',
+        noSelection:
+          'Виберіть принаймні один токен на полі перед використанням --classify.',
+        invalidType:
+          'Недійсний тип класифікації: {type}. Використовуйте pc, npc, ignored або auto.',
+        set: '{name} → {type} (область: {scope})',
+        cleared:
+          '{name} перевизначення скинуто (область: {scope}) — автоматичне визначення відновлено.',
+        setTokenFallback:
+          "{name} → {type} (перевизначення токена — аркуш персонажа не прив'язаний).",
+        clearedTokenFallback:
+          '{name} перевизначення токена скинуто — автоматичне визначення відновлено.',
+        fieldToken: 'Токен',
+        fieldType: 'Класифікація',
+        fieldSource: 'Джерело',
+        fieldReason: 'Причина',
       },
       cleanup: {
         orphaned: 'Осиротілі записи станів',
@@ -16451,12 +19219,12 @@ const ConditionTrackerMod = (() => {
             'Покроковий майстер — виберіть стан, токени й тривалість інтерактивно. Також доступний як макрос ConditionTrackerWizard.',
           ],
           [
-            '!condition-tracker --multi-target',
+            '!condition-tracker --багатоцільовий',
             'Застосувати один стан до кількох токенів одночасно. Також доступний як макрос ConditionTrackerMultiTarget.',
           ],
           [
             '!condition-tracker --report-token',
-            'Select one or more tokens first, then run this command to get a GM whisper listing every condition applied to and by each selected token. Also available as the ConditionTrackerReportToken macro.',
+            'Спочатку виберіть один або кілька токенів, а потім запустіть цю команду, щоб отримати шепіт GM із переліком усіх умов, застосованих до кожного вибраного токена. Також доступний як макрос ConditionTrackerReportToken.',
           ],
           [
             '!condition-tracker --menu',
@@ -16469,30 +19237,30 @@ const ConditionTrackerMod = (() => {
         colFlag: 'Параметр',
         colDesc: 'Опис',
         rows: [
-          ['--prompt', 'Інтерактивний покроковий майстер'],
-          ['--multi-target', 'Застосувати стан до кількох цілей одночасно'],
+          ['-- підказка', 'Інтерактивний покроковий майстер'],
+          ['--багатоцільовий', 'Застосувати стан до кількох цілей одночасно'],
           [
-            '--menu',
+            '-- меню',
             'Показати головне меню (додайте remove для меню видалення)',
           ],
           [
-            '--source X --target Y --condition Z',
+            '--джерело X --ціль Y --умова Z',
             'Застосувати стан напряму без майстра',
           ],
           [
-            '--duration &lt;value&gt;',
+            '--duration <значення>',
             'Тривалість для прямого застосування (наприклад, 2 rounds)',
           ],
           [
-            '--other &lt;text&gt;',
+            '--other <текст>',
             'Користувацький текст для ефектів Spell / Ability / Other',
           ],
           [
-            '--remove &lt;condition-id&gt;',
+            '--remove <ідентифікатор умови>',
             'Видалити конкретний стан за його унікальним ID',
           ],
           [
-            '--config &lt;option&gt; &lt;value&gt;',
+            '--config <параметр> <значення>',
             'Змінити налаштування (див. розділ Налаштування нижче)',
           ],
           [
@@ -16500,11 +19268,11 @@ const ConditionTrackerMod = (() => {
             'Перевизначити subjectPromptBypass лише для цієї команди (також підтримує --subject-prompt-bypass)',
           ],
           [
-            '--cleanup',
+            '--прибирання',
             'Узгодити стан — видалити осиротілі стани й рядки Turn Tracker',
           ],
           [
-            '--reorder-conditions',
+            '--reorder-умови',
             'Вручну переставити рядки умов після відповідних токенів у черзі ходу',
           ],
           ['--reinstall-macro', 'Повторно створити або оновити GM-макроси'],
@@ -16514,11 +19282,23 @@ const ConditionTrackerMod = (() => {
           ],
           [
             '--report-token',
-            'Whisper a GM-only condition report for each selected token (conditions applied to and by it)',
+            'Прошепотіть звіт про умови лише GM для кожного вибраного токена (умови, застосовані до нього та ним)',
           ],
           [
             '--lang &lt;locale&gt;',
             'Вивести повідомлення цієї команди додатковою локаллю (двомовний режим)',
+          ],
+          [
+            '--classify pc|npc|ignored',
+            'Перевизначити тип актора для вибраних токенів — спочатку виберіть токен(и). Область за замовчуванням — персонаж (записує атрибут ct_mod_actor_type); додайте --scope token для збереження в стані скрипта',
+          ],
+          [
+            '--classify auto',
+            'Видалити перевизначення типу актора та відновити автоматичне визначення для вибраних токенів',
+          ],
+          [
+            '--classify show',
+            'Прошептати діагностику класифікації для кожного вибраного токена — показує визначений тип, джерело визначення та причину',
           ],
           ['--help', 'Показати коротку картку довідки в чаті'],
         ],
@@ -16533,22 +19313,22 @@ const ConditionTrackerMod = (() => {
         colNotes: 'Примітки',
         rows: [
           [
-            '🔮 Spell',
+            '🔮 Заклинання',
             'Відстежувати ефект названого закляття — буде запитано назву закляття',
           ],
           [
-            '🎯 Ability',
+            '🎯 Здатність',
             'Відстежувати названу класову або расову здібність — буде запитано назву здібності',
           ],
           [
-            '🍀 Advantage',
+            '🍀 Перевага',
             'Записати перевагу від одного токена проти іншого; групується з джерелом в ініціативі',
           ],
           [
-            '⬇️ Disadvantage',
+            '⬇️ Недолік',
             'Записати перешкоду; групується з джерелом в ініціативі',
           ],
-          ['📝 Other', 'Довільна користувацька мітка — буде запитано опис'],
+          ['📝 Інше', 'Довільна користувацька мітка — буде запитано опис'],
         ],
       },
       durationOptions: {
@@ -16559,82 +19339,168 @@ const ConditionTrackerMod = (() => {
         colBehaviour: 'Поведінка',
         rows: [
           [
-            'Until removed',
+            'До зняття',
             'Постійно — потрібно видалити вручну через меню або --remove',
           ],
           [
-            "End of target's next turn",
+            'Кінець наступного ходу цілі',
             'Завершується, коли закінчується наступний хід токена-цілі',
           ],
           [
-            "End of source's next turn",
+            'Кінець наступного ходу джерела',
             'Завершується, коли закінчується наступний хід токена-джерела',
           ],
           [
-            '1 / 2 / 3 / 10 rounds',
+            '1/2/3/10 раундів',
             'Фіксований відлік; одне зменшення на завершення ходу опорного токена',
           ],
         ],
       },
       savedEffects: {
-        heading: 'Saved Effects',
+        heading: 'Збережені ефекти',
         intro:
-          'Saved effects let you store long-term conditions outside the Turn Tracker — curses, diseases, poisons, hidden debuffs, and other non-combat conditions. They persist in script state and can be optionally copied into the Turn Tracker when combat begins.',
+          'Збережені ефекти дають змогу зберігати довгострокові умови за межами відстеження ходів — прокляття, хвороби, отрути, приховані негативні ефекти та інші небойові умови. Вони зберігаються в стані сценарію і можуть бути додатково скопійовані в Turn Tracker, коли починається бій.',
         visibility: {
-          heading: 'Visibility Modes',
+          heading: 'Режими видимості',
           rows: [
             [
-              'public',
-              'Full effect label is visible in the Turn Tracker and public chat.',
+              'громадськість',
+              'Повна мітка ефекту відображається в Turn Tracker і публічному чаті.',
             ],
             [
-              'masked',
-              'A vague public label is shown to players; full details are GM-only.',
+              'замаскований',
+              'Гравцям показується розпливчаста загальнодоступна мітка; повна інформація лише для GM.',
             ],
             [
               'gm',
-              'No Turn Tracker row. Full details are stored in state and whispered to the GM when the affected token reaches the top of initiative.',
+              'Немає рядка Turn Tracker. Повна інформація зберігається в стані та повідомляється GM, коли уражений токен досягає вершини ініціативи.',
             ],
           ],
         },
         commands: {
-          heading: 'Saved Effects Commands',
+          heading: 'Збережені команди ефектів',
           intro:
-            'All --saved commands are GM-only. Select a token before running --saved or --saved add.',
+            'Усі команди --saved призначені лише для GM. Виберіть маркер перед запуском --saved або --saved add.',
           rows: [
             [
-              '!condition-tracker --saved',
-              'View saved effects for the selected token.',
+              '!condition-tracker --збережено',
+              'Переглянути збережені ефекти для вибраного маркера.',
             ],
             [
               '!condition-tracker --saved add',
-              'Launch the add-saved-effect wizard.',
+              'Запустіть майстер додавання збережених ефектів.',
             ],
             [
               '!condition-tracker --saved edit <id>',
-              'Edit labels or visibility for an existing saved effect.',
+              'Редагувати мітки або видимість наявного збереженого ефекту.',
             ],
             [
               '!condition-tracker --saved remove <id>',
-              'Permanently remove a saved effect.',
+              'Назавжди видалити збережений ефект.',
             ],
             [
               '!condition-tracker --saved promote <id> --visibility public|masked|gm',
-              'Copy a saved effect into the Turn Tracker (public or masked) or confirm it is GM-only tracked.',
+              'Скопіюйте збережений ефект у Turn Tracker (загальнодоступний або замаскований) або підтвердьте, що він відстежується лише GM.',
             ],
             [
               '!condition-tracker --saved snooze <id> --scope turn|rounds|combat --rounds <n>',
-              'Snooze a GM reminder for this turn, N rounds, or this combat.',
+              'Відкласти нагадування GM для цього ходу, N раундів або цього бою.',
             ],
             [
               '!condition-tracker --saved snooze-clear <id>',
-              'Clear an active snooze so reminders resume immediately.',
+              'Скасуйте активну затримку, щоб нагадування відновилися негайно.',
             ],
           ],
         },
         reminders: {
-          heading: 'GM Reminders',
-          body: 'When a token with gm or masked saved effects reaches the top of the Turn Tracker, the GM receives a whisper listing the hidden effects with action buttons. Duplicate reminders within the same turn are suppressed. Use the Snooze buttons to suppress reminders for a turn, a number of rounds, or for the remainder of the current combat.',
+          heading: 'Нагадування GM',
+          body: 'Коли жетон із gm або замаскованими збереженими ефектами досягає верхньої частини Turn Tracker, GM отримує шепіт із переліком прихованих ефектів із кнопками дій. Подвійні нагадування в межах однієї черги блокуються. Використовуйте кнопки «Відкласти», щоб прибрати нагадування про хід, кількість раундів або залишок поточного бою.',
+        },
+      },
+      actorClassification: {
+        heading: 'Класифікація Акторів',
+        intro:
+          "Condition Tracker автоматично визначає, чи є кожен токен ГП, НПС або ігнорованим об'єктом (шпильки карти, декорації, шаблони заклинань). Незв'язані токени ігноруються за замовчуванням. Використовуйте --classify для перевизначення автоматичного визначення для будь-якого токена.",
+        detectionOrder: {
+          heading: 'Порядок Визначення',
+          colStep: 'Крок',
+          colCheck: 'Перевірка',
+          colResult: 'Результат',
+          rows: [
+            [
+              '1',
+              'Перевизначення стану токена (--classify --scope token)',
+              'pc / npc / ігнорується',
+            ],
+            [
+              '2',
+              'Атрибут ct_mod_actor_type персонажа (--classify --scope character)',
+              'pc / npc / ігнорується',
+            ],
+            ['3', "Незв'язаний токен — немає аркуша персонажа", 'ігнорується'],
+            ['4', 'Адаптер ігрової системи (атрибут npc / is_npc)', 'pc / npc'],
+            [
+              '5',
+              'Сканування загальних атрибутів НПС (npc, is_npc, npcflag, sheet_type, character_type)',
+              'pc / npc',
+            ],
+            ['6', 'Запасний варіант controlledby персонажа', 'pc / npc'],
+          ],
+        },
+        types: {
+          heading: 'Типи Класифікації',
+          colType: 'Тип',
+          colMeaning: 'Значення',
+          rows: [
+            [
+              'шт',
+              'Ігровий персонаж — завжди включається як ГП у майстрі та визначенні',
+            ],
+            ['npc', 'Неігровий персонаж — завжди включається як НПС'],
+            [
+              'ігнорується',
+              'Ніколи не відображається і не відстежується — виключений з вибору токенів майстра',
+            ],
+            [
+              'невідомий',
+              'Тільки автоматичне визначення; тип не вдалося визначити (обробляється як НПС у майстрі)',
+            ],
+          ],
+        },
+        commands: {
+          heading: 'Команди Класифікації',
+          intro:
+            'Виберіть один або кілька токенів перед виконанням команд --classify.',
+          rows: [
+            [
+              '!condition-tracker --класифікувати ПК',
+              'Позначити вибрані токени як ГП (область за замовчуванням: персонаж).',
+            ],
+            [
+              '!condition-tracker --classify npc',
+              'Позначити вибрані токени як НПС.',
+            ],
+            [
+              '!condition-tracker --classify ігнорується',
+              'Виключити вибрані токени з усього відстеження.',
+            ],
+            [
+              '!condition-tracker --classify auto',
+              'Видалити перевизначення — відновити автоматичне визначення.',
+            ],
+            [
+              '!condition-tracker --класифікувати шоу',
+              'Показати діагностику класифікації (тип, джерело, причина) для кожного вибраного токена.',
+            ],
+            [
+              '!condition-tracker --classify pc --scope token',
+              "Перевизначення рівня токена в стані скрипта — корисно для незв'язаних токенів.",
+            ],
+            [
+              '!condition-tracker --classify pc --scope символ',
+              'Перевизначення рівня персонажа в атрибут ct_mod_actor_type — застосовується до всіх токенів з тим самим аркушем персонажа.',
+            ],
+          ],
         },
       },
       configuration: {
@@ -16652,17 +19518,17 @@ const ConditionTrackerMod = (() => {
           ],
           [
             'useIcons',
-            'true / false',
+            'правда/неправда',
             'Показувати короткі коди іконок (наприклад, [G]) замість emoji в рядках Turn Tracker',
           ],
           [
             'subjectPromptBypass',
-            'true / false',
+            'правда/неправда',
             "Пропускати необов'язковий крок вибору суб'єкта для ефектів Spell / Ability / Other",
           ],
           [
             'suppressPublicChat',
-            'true / false',
+            'правда/неправда',
             'Придушити всі публічні повідомлення чату (повідомлення про застосування та видалення). Шепіт GM не зачіпається.',
           ],
           [
@@ -21274,6 +24140,14 @@ const ConditionTrackerMod = (() => {
       trackerState.savedEffects = {};
     }
 
+    if (!isRecord(trackerState.actorOverrides)) {
+      trackerState.actorOverrides = { tokens: {} };
+    }
+
+    if (!isRecord(trackerState.actorOverrides.tokens)) {
+      trackerState.actorOverrides.tokens = {};
+    }
+
     return trackerState;
   }
 
@@ -21630,6 +24504,50 @@ const ConditionTrackerMod = (() => {
     return filterActiveConditions(
       (condition) => condition.sourceTokenId === sourceTokenId,
     );
+  }
+
+  /**
+   * Returns the token-level actor override from state, or null when absent.
+   *
+   * @param {string} tokenId Roll20 graphic id.
+   * @returns {string|null} pc, npc, ignored, or null.
+   */
+  function getActorTokenOverride(tokenId) {
+    const overrides = ensureState().actorOverrides;
+    if (!isRecord(overrides?.tokens)) return null;
+    const value = overrides.tokens[tokenId];
+    return typeof value === 'string' ? value : null;
+  }
+
+  /**
+   * Stores a token-level actor type override in state.
+   *
+   * @param {string} tokenId Roll20 graphic id.
+   * @param {string} type Actor type to store (pc, npc, or ignored).
+   * @returns {void}
+   */
+  function setActorTokenOverride(tokenId, type) {
+    const trackerState = ensureState();
+    if (!isRecord(trackerState.actorOverrides)) {
+      trackerState.actorOverrides = { tokens: {} };
+    }
+    if (!isRecord(trackerState.actorOverrides.tokens)) {
+      trackerState.actorOverrides.tokens = {};
+    }
+    trackerState.actorOverrides.tokens[tokenId] = type;
+  }
+
+  /**
+   * Removes a token-level actor type override from state.
+   *
+   * @param {string} tokenId Roll20 graphic id.
+   * @returns {void}
+   */
+  function clearActorTokenOverride(tokenId) {
+    const trackerState = ensureState();
+    if (isRecord(trackerState.actorOverrides?.tokens)) {
+      delete trackerState.actorOverrides.tokens[tokenId];
+    }
   }
 
   /**
@@ -23566,6 +26484,419 @@ const ConditionTrackerMod = (() => {
     ]);
   }
 
+  /** @type {'pc'} */
+  const ACTOR_TYPE_PC = 'pc';
+  /** @type {'npc'} */
+  const ACTOR_TYPE_NPC = 'npc';
+  /** @type {'ignored'} */
+  const ACTOR_TYPE_IGNORED = 'ignored';
+  /** @type {'unknown'} */
+  const ACTOR_TYPE_UNKNOWN = 'unknown';
+  /** @type {'auto'} */
+  const ACTOR_TYPE_AUTO = 'auto';
+
+  /** Valid types accepted by --classify (excludes unknown which is auto-detected only). */
+  const VALID_ACTOR_CLASSIFY_TYPES = Object.freeze(
+    new Set([
+      ACTOR_TYPE_PC,
+      ACTOR_TYPE_NPC,
+      ACTOR_TYPE_IGNORED,
+      ACTOR_TYPE_AUTO,
+    ]),
+  );
+
+  /** Character attribute name used for explicit character-level overrides. */
+  const ACTOR_OVERRIDE_ATTR = 'ct_mod_actor_type';
+
+  /**
+   * NPC detection adapters keyed by game system id.
+   * npcAttr: attribute name; npcValue: value that indicates NPC.
+   */
+  const SHEET_ADAPTERS = {
+    dnd5e: { npcAttr: 'npc', npcValue: '1' },
+    dnd4e: { npcAttr: 'npc', npcValue: '1' },
+    dnd35: { npcAttr: 'npc', npcValue: '1' },
+    pathfinder1e: { npcAttr: 'is_npc', npcValue: '1' },
+    pathfinder2e: { npcAttr: 'npc', npcValue: '1' },
+    starfinder: { npcAttr: 'npc', npcValue: '1' },
+  };
+
+  /** Common NPC indicator attribute names checked when no adapter matches. */
+  const GENERIC_NPC_ATTRS = [
+    'npc',
+    'is_npc',
+    'npcflag',
+    'sheet_type',
+    'character_type',
+  ];
+
+  const FINAL_TYPES = new Set([
+    ACTOR_TYPE_PC,
+    ACTOR_TYPE_NPC,
+    ACTOR_TYPE_IGNORED,
+  ]);
+
+  /**
+   * Returns true when value is a storable final classification.
+   *
+   * @param {*} value Value to test.
+   * @returns {boolean} True for pc, npc, or ignored.
+   */
+  function isFinalType(value) {
+    return FINAL_TYPES.has(String(value || '').toLowerCase());
+  }
+
+  /**
+   * Returns the current value of the ct_mod_actor_type attribute for a character,
+   * or null when the attribute is absent or set to auto.
+   *
+   * @param {string} characterId Roll20 character id.
+   * @returns {string|null} pc, npc, ignored, or null.
+   */
+  function getCharacterOverrideAttr(characterId) {
+    const attrs = queryObjects({
+      _type: 'attribute',
+      _characterid: characterId,
+      name: ACTOR_OVERRIDE_ATTR,
+    });
+    if (attrs.length === 0) return null;
+    const value = toText(attrs[0].get('current')).toLowerCase();
+    if (value === ACTOR_TYPE_AUTO) return null;
+    return isFinalType(value) ? value : null;
+  }
+
+  /**
+   * Creates or updates the ct_mod_actor_type attribute on a character.
+   *
+   * @param {string} characterId Roll20 character id.
+   * @param {string} type Actor type value to store (pc, npc, ignored, or auto).
+   * @returns {void}
+   */
+  function setCharacterOverrideAttr(characterId, type) {
+    const attrs = queryObjects({
+      _type: 'attribute',
+      _characterid: characterId,
+      name: ACTOR_OVERRIDE_ATTR,
+    });
+    if (attrs.length > 0) {
+      attrs[0].set('current', type);
+    } else {
+      createObj('attribute', {
+        _characterid: characterId,
+        name: ACTOR_OVERRIDE_ATTR,
+        current: type,
+      });
+    }
+  }
+
+  /**
+   * Removes the ct_mod_actor_type attribute from a character (resets to auto).
+   *
+   * @param {string} characterId Roll20 character id.
+   * @returns {void}
+   */
+  function clearCharacterOverrideAttr(characterId) {
+    const attrs = queryObjects({
+      _type: 'attribute',
+      _characterid: characterId,
+      name: ACTOR_OVERRIDE_ATTR,
+    });
+    for (const attr of attrs) {
+      attr.remove();
+    }
+  }
+
+  /**
+   * Returns the explicit classification for a token from overrides, or null when
+   * no override is set.
+   *
+   * Checks token-level state override first (Step 1), then the character's
+   * ct_mod_actor_type attribute (Step 2).
+   *
+   * @param {object} token Roll20 graphic token.
+   * @returns {string|null} pc, npc, ignored, or null.
+   */
+  function getExplicitClassification(token) {
+    if (!token) return null;
+
+    const tokenId = token.id;
+    if (!tokenId) return null;
+
+    const tokenOverride = getActorTokenOverride(tokenId);
+    if (tokenOverride) return tokenOverride;
+
+    const characterId = toText(token.get?.('represents'));
+    if (!characterId) return null;
+
+    return getCharacterOverrideAttr(characterId);
+  }
+
+  /**
+   * Returns true when a token is eligible for automatic classification.
+   *
+   * Unlinked tokens (no represents value) default to ignored unless explicitly
+   * overridden, so they are ineligible for automatic detection.
+   *
+   * @param {object} token Roll20 graphic token.
+   * @returns {boolean} True when eligible.
+   */
+  function isAutoEligibleToken(token) {
+    if (!token) return false;
+    return Boolean(toText(token.get?.('represents')));
+  }
+
+  /**
+   * Checks the game-system adapter attribute for the configured system.
+   * Returns pc, npc, or null when the attribute is absent.
+   *
+   * @param {string} characterId Roll20 character id.
+   * @param {string} systemId Active game system id.
+   * @returns {string|null} pc, npc, or null.
+   */
+  function classifyWithAdapter(characterId, systemId) {
+    const adapter = SHEET_ADAPTERS[systemId];
+    if (!adapter) return null;
+
+    const attrs = queryObjects({
+      _type: 'attribute',
+      _characterid: characterId,
+      name: adapter.npcAttr,
+    });
+    if (attrs.length === 0) return null;
+
+    return attrs[0].get('current') === adapter.npcValue
+      ? ACTOR_TYPE_NPC
+      : ACTOR_TYPE_PC;
+  }
+
+  /**
+   * Checks a list of common NPC indicator attributes as a system-agnostic fallback.
+   * Returns pc, npc, or null when no matching attribute is found.
+   *
+   * @param {string} characterId Roll20 character id.
+   * @returns {string|null} pc, npc, or null.
+   */
+  function classifyWithGenericAttrs(characterId) {
+    for (const attrName of GENERIC_NPC_ATTRS) {
+      const attrs = queryObjects({
+        _type: 'attribute',
+        _characterid: characterId,
+        name: attrName,
+      });
+      if (attrs.length === 0) continue;
+
+      const val = toText(attrs[0].get('current')).toLowerCase();
+      if (val === '1' || val === 'true' || val === 'npc') return ACTOR_TYPE_NPC;
+      if (
+        val === '0' ||
+        val === 'false' ||
+        val === 'pc' ||
+        val === 'character'
+      ) {
+        return ACTOR_TYPE_PC;
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Uses the character's controlledby field as a last resort.
+   * Returns pc when a non-GM player controls the character, npc otherwise.
+   *
+   * @param {object} character Roll20 character object.
+   * @returns {string} pc or npc.
+   */
+  function classifyWithControlledBy(character) {
+    const controlledBy = toText(character.get('controlledby'));
+    if (!controlledBy) return ACTOR_TYPE_NPC;
+
+    const isPlayerControlled = controlledBy
+      .split(',')
+      .map((id) => id.trim())
+      .filter((id) => id && id !== 'all')
+      .some((id) => !playerIsGM(id));
+
+    return isPlayerControlled ? ACTOR_TYPE_PC : ACTOR_TYPE_NPC;
+  }
+
+  /**
+   * Automatically classifies a linked token using adapter then generic then
+   * controlledby detection in order.
+   *
+   * @param {object} token Roll20 graphic token.
+   * @returns {string} pc, npc, ignored, or unknown.
+   */
+  function classifyAutomatically(token) {
+    const characterId = toText(token.get?.('represents'));
+    if (!characterId) return ACTOR_TYPE_IGNORED;
+
+    const character = getObj('character', characterId);
+    if (!character) return ACTOR_TYPE_UNKNOWN;
+
+    const systemId = getConfig().gameSystem;
+
+    const adapterResult = classifyWithAdapter(characterId, systemId);
+    if (adapterResult) return adapterResult;
+
+    const genericResult = classifyWithGenericAttrs(characterId);
+    if (genericResult) return genericResult;
+
+    return classifyWithControlledBy(character);
+  }
+
+  /**
+   * Classifies a token as pc, npc, ignored, or unknown.
+   *
+   * Detection order:
+   *   1. Token-level state override
+   *   2. Character ct_mod_actor_type attribute
+   *   3. Automatic eligibility (unlinked → ignored)
+   *   4. Game-system adapter attribute
+   *   5. Generic NPC attribute scan
+   *   6. controlledby fallback
+   *
+   * @param {object} token Roll20 graphic token.
+   * @returns {'pc'|'npc'|'ignored'|'unknown'} Actor classification.
+   */
+  function classifyToken(token) {
+    const explicit = getExplicitClassification(token);
+    if (explicit) return explicit;
+
+    if (!isAutoEligibleToken(token)) return ACTOR_TYPE_IGNORED;
+
+    return classifyAutomatically(token);
+  }
+
+  /**
+   * Returns classification details for the --classify show diagnostic.
+   *
+   * @param {object} token Roll20 graphic token.
+   * @param {string} tokenName Human-readable token name.
+   * @returns {{type: string, source: string, reason: string}} Classification detail.
+   */
+  function classifyTokenDetail(token, tokenName) {
+    if (!token) {
+      return {
+        type: ACTOR_TYPE_IGNORED,
+        source: 'eligibility',
+        reason: 'no token object',
+      };
+    }
+
+    const tokenId = token.id;
+    const name = tokenName || tokenId;
+
+    const tokenOverride = getActorTokenOverride(tokenId);
+    if (tokenOverride) {
+      return {
+        type: tokenOverride,
+        source: 'token override',
+        reason: `state override for token ${name}`,
+      };
+    }
+
+    const characterId = toText(token.get?.('represents'));
+
+    if (characterId) {
+      const charOverride = getCharacterOverrideAttr(characterId);
+      if (charOverride) {
+        return {
+          type: charOverride,
+          source: 'character override',
+          reason: `${ACTOR_OVERRIDE_ATTR} attribute on character`,
+        };
+      }
+    }
+
+    if (!characterId) {
+      return {
+        type: ACTOR_TYPE_IGNORED,
+        source: 'eligibility',
+        reason: 'unlinked token — no character sheet',
+      };
+    }
+
+    const character = getObj('character', characterId);
+    if (!character) {
+      return {
+        type: ACTOR_TYPE_UNKNOWN,
+        source: 'eligibility',
+        reason: 'character record not found',
+      };
+    }
+
+    const systemId = getConfig().gameSystem;
+    const adapter = SHEET_ADAPTERS[systemId];
+
+    if (adapter) {
+      const attrs = queryObjects({
+        _type: 'attribute',
+        _characterid: characterId,
+        name: adapter.npcAttr,
+      });
+      if (attrs.length > 0) {
+        const val = attrs[0].get('current');
+        const type = val === adapter.npcValue ? ACTOR_TYPE_NPC : ACTOR_TYPE_PC;
+        return {
+          type,
+          source: 'game-system adapter',
+          reason: `${adapter.npcAttr}=${val} (${systemId})`,
+        };
+      }
+    }
+
+    for (const attrName of GENERIC_NPC_ATTRS) {
+      const attrs = queryObjects({
+        _type: 'attribute',
+        _characterid: characterId,
+        name: attrName,
+      });
+      if (attrs.length === 0) continue;
+
+      const val = toText(attrs[0].get('current')).toLowerCase();
+      if (val === '1' || val === 'true' || val === 'npc') {
+        return {
+          type: ACTOR_TYPE_NPC,
+          source: 'generic attribute',
+          reason: `${attrName}=${val}`,
+        };
+      }
+      if (
+        val === '0' ||
+        val === 'false' ||
+        val === 'pc' ||
+        val === 'character'
+      ) {
+        return {
+          type: ACTOR_TYPE_PC,
+          source: 'generic attribute',
+          reason: `${attrName}=${val}`,
+        };
+      }
+    }
+
+    const controlledBy = toText(character.get('controlledby'));
+    if (controlledBy) {
+      const playerIds = controlledBy
+        .split(',')
+        .map((id) => id.trim())
+        .filter((id) => id && id !== 'all');
+      const isPlayerControlled = playerIds.some((id) => !playerIsGM(id));
+      const type = isPlayerControlled ? ACTOR_TYPE_PC : ACTOR_TYPE_NPC;
+      return {
+        type,
+        source: 'controlledby fallback',
+        reason: `character.controlledby = "${controlledBy}"`,
+      };
+    }
+
+    return {
+      type: ACTOR_TYPE_NPC,
+      source: 'final fallback',
+      reason: 'linked token, no detection data found',
+    };
+  }
+
   /**
    * Returns true when a chat sender is a GM.
    *
@@ -23854,6 +27185,7 @@ const ConditionTrackerMod = (() => {
     { name: MACRO_NAME_MULTI_TARGET, body: DEFAULT_MULTI_TARGET_MACRO_BODY },
     { name: MACRO_NAME_REPORT_TOKEN, body: DEFAULT_REPORT_TOKEN_MACRO_BODY },
     { name: MACRO_NAME_SAVED, body: DEFAULT_SAVED_MACRO_BODY },
+    { name: MACRO_NAME_CLASSIFY, body: DEFAULT_CLASSIFY_MACRO_BODY },
   ];
 
   /**
@@ -26012,81 +29344,16 @@ const ConditionTrackerMod = (() => {
   }
 
   /**
-   * Returns true when a character's sheet-level npc attribute marks it as a PC.
+   * Returns true when a token is classified as a player character.
    *
-   * Works for sheets that expose an "npc" attribute (e.g. D&D 5e OGL).
-   * Returns undefined when the attribute is absent so callers can fall back.
-   * Uses findObjs instead of getAttrByName to avoid Roll20 console errors when
-   * the attribute does not exist on the character sheet.
-   *
-   * @param {string} characterId Roll20 character id.
-   * @returns {boolean|undefined} True for PC, false for NPC, undefined if unknown.
-   */
-  function isPlayerByNpcAttribute(characterId) {
-    const attrs = queryObjects({
-      _type: 'attribute',
-      _characterid: characterId,
-      name: 'npc',
-    });
-    if (attrs.length === 0) return undefined;
-    return attrs[0].get('current') !== '1';
-  }
-
-  /**
-   * Returns true when a character's controlledby field includes at least one
-   * non-GM player.
-   *
-   * @param {object} character Roll20 character object.
-   * @returns {boolean} True for player-controlled characters.
-   */
-  function isPlayerByControlledBy(character) {
-    const controlledBy = toText(character.get('controlledby'));
-    if (!controlledBy) return false;
-    // "all" is a Roll20 sentinel meaning every player can see the sheet —
-    // it does not indicate a player character, so exclude it.
-    return controlledBy
-      .split(',')
-      .map((id) => id.trim())
-      .filter((id) => id && id !== 'all')
-      .some((id) => !playerIsGM(id));
-  }
-
-  /**
-   * Returns true when a token is directly controlled by at least one non-GM player
-   * via its token-level controlledby field.
-   *
-   * @param {object} token Roll20 graphic object.
-   * @returns {boolean} True when a non-GM player controls the token directly.
-   */
-  function isPlayerByTokenControlledBy(token) {
-    const controlledBy = toText(token.get('controlledby'));
-    if (!controlledBy) return false;
-    return controlledBy
-      .split(',')
-      .map((id) => id.trim())
-      .filter((id) => id && id !== 'all')
-      .some((id) => !playerIsGM(id));
-  }
-
-  /**
-   * Returns true when a token is linked to a player character.
-   *
-   * Checks token-level controlledby first (catches player-owned NPC stat blocks
-   * such as an Echo Knight's echo). Then falls back to sheet npc attribute and
-   * the character-level controlledby field.
+   * Delegates to classifyToken so that explicit overrides, sheet adapters, and
+   * generic attribute detection are all applied consistently.
    *
    * @param {object} token Roll20 graphic object.
    * @returns {boolean} True for player tokens.
    */
   function isPlayerToken(token) {
-    if (isPlayerByTokenControlledBy(token)) return true;
-    const characterId = toText(token.get('represents'));
-    if (!characterId) return false;
-    const character = getObj('character', characterId);
-    if (!character) return false;
-    const byAttr = isPlayerByNpcAttribute(characterId);
-    if (byAttr !== undefined) return byAttr;
-    return isPlayerByControlledBy(character);
+    return classifyToken(token) === ACTOR_TYPE_PC;
   }
 
   /**
@@ -26123,16 +29390,18 @@ const ConditionTrackerMod = (() => {
 
   /**
    * Converts one Roll20 graphic token into a token entry, or null when the
-   * token has no resolvable name or has zero HP.
+   * token has no resolvable name, has zero HP, or is classified as ignored.
    *
    * @param {object} token Roll20 graphic object.
    * @returns {{id: string, name: string, isPlayer: boolean}|null} Token entry.
    */
   function tokenToEntry(token) {
     if (hasZeroHp(token)) return null;
+    const actorType = classifyToken(token);
+    if (actorType === ACTOR_TYPE_IGNORED) return null;
     const name = getTokenDisplayName(token);
     if (!name) return null;
-    return { id: token.id, name, isPlayer: isPlayerToken(token) };
+    return { id: token.id, name, isPlayer: actorType === ACTOR_TYPE_PC };
   }
 
   /**
@@ -26791,6 +30060,11 @@ const ConditionTrackerMod = (() => {
       return;
     }
 
+    if (args.classify !== undefined) {
+      handleClassify(msg, args);
+      return;
+    }
+
     if (args.config) {
       handleConfig(msg.playerid, args.config);
       return;
@@ -27131,6 +30405,175 @@ const ConditionTrackerMod = (() => {
       whisperResult: true,
       locale,
     });
+  }
+
+  /**
+   * Applies a classify override to a single token and its linked character based
+   * on the requested scope.
+   *
+   * Returns a display-friendly summary line for the whisper confirmation.
+   *
+   * @param {object} token Roll20 graphic object.
+   * @param {string} tokenName Human-readable token name.
+   * @param {string} classifyValue Classify value: pc, npc, ignored, or auto.
+   * @param {'token'|'character'} scope Override scope.
+   * @param {string} locale Output locale.
+   * @returns {string} Human-readable result line.
+   */
+  function applyClassifyOverride(
+    token,
+    tokenName,
+    classifyValue,
+    scope,
+    locale,
+  ) {
+    const tokenId = token.id;
+    const characterId = toText(token.get('represents'));
+    const name = escapeHtml(tokenName);
+
+    if (scope === 'token') {
+      if (classifyValue === ACTOR_TYPE_AUTO) {
+        clearActorTokenOverride(tokenId);
+        return t('ui.classify.cleared', locale, { name, scope: 'token' });
+      }
+      setActorTokenOverride(tokenId, classifyValue);
+      return t('ui.classify.set', locale, {
+        name,
+        type: classifyValue,
+        scope: 'token',
+      });
+    }
+
+    // scope === 'character'
+    if (!characterId) {
+      // No linked character — fall back to token override
+      if (classifyValue === ACTOR_TYPE_AUTO) {
+        clearActorTokenOverride(tokenId);
+        return t('ui.classify.clearedTokenFallback', locale, { name });
+      }
+      setActorTokenOverride(tokenId, classifyValue);
+      return t('ui.classify.setTokenFallback', locale, {
+        name,
+        type: classifyValue,
+      });
+    }
+
+    if (classifyValue === ACTOR_TYPE_AUTO) {
+      clearCharacterOverrideAttr(characterId);
+      return t('ui.classify.cleared', locale, { name, scope: 'character' });
+    }
+    setCharacterOverrideAttr(characterId, classifyValue);
+    return t('ui.classify.set', locale, {
+      name,
+      type: classifyValue,
+      scope: 'character',
+    });
+  }
+
+  /**
+   * Whispers a classification diagnostic for each selected token.
+   *
+   * @param {string} playerId GM player id.
+   * @param {object[]} selected Roll20 selected token references.
+   * @param {string} locale Output locale.
+   * @returns {void}
+   */
+  function handleClassifyShow(playerId, selected, locale) {
+    const lines = [heading(t('ui.classify.showHeading', locale))];
+    let found = 0;
+
+    for (const sel of selected) {
+      const tokenId = toText(sel._id);
+      const token = getGraphicToken(tokenId);
+      if (!token) continue;
+
+      const tokenName = getTokenDisplayName(token);
+      const detail = classifyTokenDetail(token, tokenName);
+      lines.push(
+        htmlTable(
+          [t('ui.col.field', locale), t('ui.col.value', locale)],
+          [
+            [
+              t('ui.classify.fieldToken', locale),
+              escapeHtml(tokenName || tokenId),
+            ],
+            [t('ui.classify.fieldType', locale), escapeHtml(detail.type)],
+            [t('ui.classify.fieldSource', locale), escapeHtml(detail.source)],
+            [t('ui.classify.fieldReason', locale), escapeHtml(detail.reason)],
+          ],
+        ),
+      );
+      found += 1;
+    }
+
+    if (found === 0) {
+      whisperWarning(playerId, t('ui.msg.reSelectTokens', locale));
+      return;
+    }
+
+    whisper(playerId, t('ui.classify.showTitle', locale), lines);
+  }
+
+  /**
+   * Handles --classify commands, applying or showing actor type overrides for
+   * selected tokens.
+   *
+   * @param {object} msg Roll20 chat message.
+   * @param {object} args Parsed command arguments.
+   * @returns {void}
+   */
+  function handleClassify(msg, args) {
+    const locale = getConfig().language;
+    const classifyRaw = toText(args.classify).toLowerCase() || 'show';
+    const scopeRaw = toText(args.scope).toLowerCase() || 'character';
+    const selected = Array.isArray(msg.selected) ? msg.selected : [];
+
+    if (selected.length === 0) {
+      whisperWarning(msg.playerid, t('ui.classify.noSelection', locale));
+      return;
+    }
+
+    if (classifyRaw === 'show') {
+      handleClassifyShow(msg.playerid, selected, locale);
+      return;
+    }
+
+    if (!VALID_ACTOR_CLASSIFY_TYPES.has(classifyRaw)) {
+      whisperWarning(
+        msg.playerid,
+        t('ui.classify.invalidType', locale, { type: classifyRaw }),
+      );
+      return;
+    }
+
+    const scope = scopeRaw === 'token' ? 'token' : 'character';
+    const resultLines = [];
+
+    for (const sel of selected) {
+      const tokenId = toText(sel._id);
+      const token = getGraphicToken(tokenId);
+      if (!token) continue;
+
+      const tokenName = getTokenDisplayName(token);
+      const line = applyClassifyOverride(
+        token,
+        tokenName,
+        classifyRaw,
+        scope,
+        locale,
+      );
+      resultLines.push(line);
+    }
+
+    if (resultLines.length === 0) {
+      whisperWarning(msg.playerid, t('ui.msg.reSelectTokens', locale));
+      return;
+    }
+
+    whisper(msg.playerid, t('ui.classify.title', locale), [
+      heading(t('ui.classify.resultHeading', locale)),
+      ...resultLines.map((l) => rawHtml(`<div>${l}</div>`)),
+    ]);
   }
 
   /**
@@ -28117,6 +31560,7 @@ const ConditionTrackerMod = (() => {
         multiTarget: MACRO_NAME_MULTI_TARGET,
         reportToken: MACRO_NAME_REPORT_TOKEN,
         saved: MACRO_NAME_SAVED,
+        classify: MACRO_NAME_CLASSIFY,
       }),
     );
   }

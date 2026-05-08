@@ -2,77 +2,77 @@ const TRANSLATION = {
   conditions: {
     Grappled: {
       past: "uchvácený",
-      verb: "uchvátí",
+      verb: "uchvátí"
     },
     Restrained: {
       past: "omezený",
-      verb: "omezí",
+      verb: "omezí"
     },
     Prone: {
       past: "sražený k zemi",
       verb: "srazí",
-      suffix: "k zemi",
+      suffix: "k zemi"
     },
     Poisoned: {
       past: "otrávený",
-      verb: "otráví",
+      verb: "otráví"
     },
     Stunned: {
       past: "omráčený",
-      verb: "omráčí",
+      verb: "omráčí"
     },
     Blinded: {
       past: "oslepený",
-      verb: "oslepí",
+      verb: "oslepí"
     },
     Charmed: {
       past: "okouzlený",
-      verb: "okouzlí",
+      verb: "okouzlí"
     },
     Frightened: {
       past: "vystrašený",
-      verb: "vystraší",
+      verb: "vystraší"
     },
     Incapacitated: {
       past: "vyřazený",
-      verb: "vyřadí",
+      verb: "vyřadí"
     },
     Invisible: {
       past: "neviditelný",
       verb: "učiní",
-      suffix: "neviditelným",
+      suffix: "neviditelným"
     },
     Paralyzed: {
       past: "paralyzovaný",
-      verb: "paralyzuje",
+      verb: "paralyzuje"
     },
     Petrified: {
       past: "zkamenělý",
-      verb: "zkamení",
+      verb: "zkamení"
     },
     Unconscious: {
       past: "v bezvědomí",
       verb: "uvede",
-      suffix: "do bezvědomí",
+      suffix: "do bezvědomí"
     },
     Spell: {
       past: "ovlivněný kouzlem",
-      verb: "sesílá kouzlo na",
+      verb: "sesílá kouzlo na"
     },
     Ability: {
       past: "ovlivněný schopností",
-      verb: "použije schopnost na",
+      verb: "použije schopnost na"
     },
     Advantage: {
       past: "má výhodu",
       verb: "udělí výhodu",
-      noBy: true,
+      noBy: true
     },
     Disadvantage: {
       past: "má nevýhodu",
       verb: "udělí nevýhodu",
-      noBy: true,
-    },
+      noBy: true
+    }
   },
   condNames: {
     Grappled: "Uchvácený",
@@ -92,7 +92,7 @@ const TRANSLATION = {
     Ability: "Schopnost",
     Advantage: "Výhoda",
     Disadvantage: "Nevýhoda",
-    Other: "Jiné",
+    Other: "Jiné"
   },
   templates: {
     display: {
@@ -101,7 +101,7 @@ const TRANSLATION = {
       disadvantage: "{emoji} {source} má nevýhodu proti {target}{subject}",
       noBy: "{emoji} {target} {past} ({source})",
       self: "{target} je {past}",
-      standard: "{emoji} {target} {past} od {source}",
+      standard: "{emoji} {target} {past} od {source}"
     },
     apply: {
       custom: "{source} uplatní {effect} na {target}.",
@@ -109,7 +109,7 @@ const TRANSLATION = {
       disadvantage: "{source} má nevýhodu proti {target}{subject}.",
       self: "{target} je {past}.",
       withSuffix: "{source} {verb} {target} {suffix}.",
-      standard: "{source} {verb} {target}.",
+      standard: "{source} {verb} {target}."
     },
     remove: {
       custom: "{target} již není ovlivněný {effect}.",
@@ -117,8 +117,8 @@ const TRANSLATION = {
       disadvantage: "{source} již nemá nevýhodu proti {target}{subject}.",
       noBy: "{target} již není {past}.",
       self: "{target} již není {past}.",
-      standard: "{target} již není {past} od {source}.",
-    },
+      standard: "{target} již není {past} od {source}."
+    }
   },
   ui: {
     wizard: {
@@ -139,7 +139,7 @@ const TRANSLATION = {
       sourceDesc: "Vyberte bytost, která stav nebo efekt vytváří.",
       targetDesc: "Vyberte bytost, která stav nebo efekt obdrží.",
       otherText: "Vlastní text stavu",
-      effectDetails: "Podrobnosti {condition}",
+      effectDetails: "Podrobnosti {condition}"
     },
     col: {
       players: "Hráči",
@@ -160,8 +160,8 @@ const TRANSLATION = {
       details: "Podrobnosti",
       description: "Popis",
       scenario: "Scénář",
-      gameSystem: "Game System",
-      duration: "Duration",
+      gameSystem: "Herní systém",
+      duration: "Trvání"
     },
     dur: {
       untilRemoved: "Do odebrání",
@@ -174,7 +174,7 @@ const TRANSLATION = {
       custom: "Vlastní",
       customPrompt: "Počet kol",
       untilRemovedDisplay: "Do odebrání",
-      turnsRemaining: "Zbývá {n} konec (konců) tahu",
+      turnsRemaining: "Zbývá {n} konec (konců) tahu"
     },
     btn: {
       openWizard: "Otevřít průvodce",
@@ -186,14 +186,14 @@ const TRANSLATION = {
       reinstallHandout: "Přeinstalovat příručku",
       showHelp: "Zobrazit nápovědu",
       reorderConditions: "Přeuspořádat řádky stavů",
-      reportToken: "Report Token Conditions",
-      savedEffects: "Saved Effects",
-      addSavedEffect: "Add Saved Effect",
-      editSaved: "Edit",
-      removeSaved: "Remove",
-      promoteSaved: "Add to Turn Tracker",
-      snoozeSaved: "Snooze",
-      clearSnooze: "Clear Snooze",
+      reportToken: "Podmínky tokenu hlášení",
+      savedEffects: "Uložené efekty",
+      addSavedEffect: "Přidat uložený efekt",
+      editSaved: "Upravit",
+      removeSaved: "Odstranit",
+      promoteSaved: "Přidat do Turn Tracker",
+      snoozeSaved: "Podřimovat",
+      clearSnooze: "Vymazat Odložit"
     },
     title: {
       menu: "Nabídka",
@@ -204,7 +204,7 @@ const TRANSLATION = {
       applied: "Uplatněno",
       removed: "Stav odebrán",
       cleanup: "Vyčištění dokončeno",
-      macroReinstalled: "The {wizard}, {multiTarget}, {reportToken}, and {saved} macros have been reinstalled for all current GM players.",
+      macroReinstalled: "Makro přeinstalováno",
       handoutReinstalled: "Příručka přeinstalována",
       warning: "Varování",
       error: "Chyba",
@@ -216,15 +216,15 @@ const TRANSLATION = {
       moveToken: "{name} — Přesunout žeton?",
       scriptReady: "Skript připraven",
       conditionReorder: "Pořadí tahů změněno",
-      tokenReport: "Token Condition Report",
-      savedEffects: "Saved Effects",
-      savedAdd: "Add Saved Effect",
-      savedEdit: "Edit Saved Effect",
-      savedRemoved: "Saved Effect Removed",
-      savedPromoted: "Add to Turn Tracker",
-      savedSnoozed: "Reminder Snoozed",
-      savedSnoozeCleared: "Snooze Cleared",
-      hiddenEffects: "Hidden Effects — {name}",
+      tokenReport: "Zpráva o stavu tokenu",
+      savedEffects: "Uložené efekty",
+      savedAdd: "Přidat uložený efekt",
+      savedEdit: "Upravit uložený efekt",
+      savedRemoved: "Uložený efekt odstraněn",
+      savedPromoted: "Přidat do Turn Tracker",
+      savedSnoozed: "Připomenutí odloženo",
+      savedSnoozeCleared: "Odložit vymazáno",
+      hiddenEffects: "Skryté efekty – {name}"
     },
     heading: {
       quickActions: "Rychlé akce",
@@ -236,66 +236,51 @@ const TRANSLATION = {
       promptUi: "Rozhraní průvodce",
       examples: "Příklady",
       summary: "Souhrn",
-      appliedTo: "Conditions Applied To",
-      appliedBy: "Conditions Applied By",
-      savedEffectsFor: "Saved Effects for {name}",
-      visibility: "Visibility",
-      snoozeOptions: "Snooze Reminder",
-      promoteOptions: "Promote to Turn Tracker",
-      editActions: "Edit Actions",
+      appliedTo: "Podmínky platné pro",
+      appliedBy: "Podmínky uplatněné",
+      savedEffectsFor: "Uložené efekty pro {name}",
+      visibility: "Viditelnost",
+      snoozeOptions: "Odložit připomenutí",
+      promoteOptions: "Povýšit na Turn Tracker",
+      editActions: "Upravit akce"
     },
     msg: {
       noActive: "Nejsou sledovány žádné aktivní stavy.",
       configReset: "Konfigurace obnovena na výchozí hodnoty modulu.",
-      unknownConfig:
-        "Neznámá možnost konfigurace. Použijte --config pro zobrazení podporovaných nastavení.",
-      macroReinstalled:
-        "Makra {wizard}, {multiTarget} a {reportToken} byla přeinstalována pro všechny aktuální hráče s GM rolí.",
+      unknownConfig: "Neznámá možnost konfigurace. Použijte --config pro zobrazení podporovaných nastavení.",
+      macroReinstalled: "Makra {wizard}, {multiTarget}, {reportToken}, {saved} a {classify} byla přeinstalována pro všechny aktuální hráče s GM rolí.",
       handoutReinstalled: "Pomocná příručka {handout} byla přeinstalována.",
-      duplicate:
-        "Tato přesná kombinace zdroje, subjektu, cíle, stavu a vlastního textu je již aktivní.",
+      duplicate: "Tato přesná kombinace zdroje, subjektu, cíle, stavu a vlastního textu je již aktivní.",
       noTargets: "Pro hromadné uplatnění nebyly zadány žádné cílové žetony.",
-      noSelection:
-        "Před použitím --multi-target vyberte alespoň jeden žeton na hrací ploše.",
+      noSelection: "Před použitím --multi-target vyberte alespoň jeden žeton na hrací ploše.",
       invalidIds: "V aktuálním výběru nebyla nalezena žádná platná ID žetonů.",
-      reSelectTokens:
-        "Žádný z původně vybraných žetonů nebylo možné nalézt. Vyberte žetony znovu a zkuste to znovu.",
+      reSelectTokens: "Žádný z původně vybraných žetonů nebylo možné nalézt. Vyberte žetony znovu a zkuste to znovu.",
       conditionNotFound: "ID stavu nebylo nalezeno.",
       gmOnly: "Příkazy Condition Trackeru jsou určeny pouze pro GM.",
-      commandFailed:
-        "Příkaz nebylo možné bezpečně dokončit. Zkontrolujte konzoli API.",
+      commandFailed: "Příkaz nebylo možné bezpečně dokončit. Zkontrolujte konzoli API.",
       sourceTokenNotFound: "Zdrojový žeton nebylo možné nalézt.",
       targetTokenNotFound: "Cílový žeton nebylo možné nalézt.",
       subjectTokenNotFound: "Žeton subjektu nebylo možné nalézt.",
-      invalidCondition:
-        "Stav musí být jedním z předdefinovaných stavů nebo Jiné.",
-      subjectOnlyCustom:
-        "--subject je platný pouze pro Kouzlo, Schopnost, Výhodu, Nevýhodu a Jiné.",
-      subjectBypassInvalid:
-        "--subjectPromptBypass očekává true nebo false, pokud je zadána hodnota.",
-      customDetailsRequired:
-        "Podrobnosti {condition} jsou povinné. Použijte --other pro jejich zadání.",
-      markerConfigFormat:
-        "Formát konfigurace značky: --config marker Grappled=grab",
-      markerPredefinedRequired:
-        "Konfigurace značky vyžaduje předdefinovaný název stavu.",
+      invalidCondition: "Stav musí být jedním z předdefinovaných stavů nebo Jiné.",
+      subjectOnlyCustom: "--subject je platný pouze pro Kouzlo, Schopnost, Výhodu, Nevýhodu a Jiné.",
+      subjectBypassInvalid: "--subjectPromptBypass očekává true nebo false, pokud je zadána hodnota.",
+      customDetailsRequired: "Podrobnosti {condition} jsou povinné. Použijte --other pro jejich zadání.",
+      markerConfigFormat: "Formát konfigurace značky: --config marker Grappled=grab",
+      markerPredefinedRequired: "Konfigurace značky vyžaduje předdefinovaný název stavu.",
       markerNameRequired: "Konfigurace značky vyžaduje neprázdný název značky.",
       markerSet: "Značka {condition} nastavena na {marker}.",
       healthBarSet: "Lišta zdraví nastavena na {bar}.",
       boolSet: "{key} nastaveno na {value}.",
       expectedBoolean: "Očekáváno true nebo false.",
-      invalidHealthBar:
-        "Lišta zdraví musí být bar1_value, bar2_value nebo bar3_value.",
+      invalidHealthBar: "Lišta zdraví musí být bar1_value, bar2_value nebo bar3_value.",
       markersDisabled: "Značky jsou zakázány.",
       noMarkerConfigured: "Pro tento stav není nakonfigurována žádná značka.",
       markerApplied: "Značka uplatněna: {marker}",
       markerPresent: "Značka již přítomna: {marker}",
       langSet: "Jazyk nastaven na {locale}.",
       invalidLocale: "Neplatný jazyk. Podporované jazyky: {locales}.",
-      otherDurationRequiresRounds:
-        "Jiné trvání vyžaduje číselný počet kol, například --duration 5 rounds.",
-      invalidDuration:
-        "Trvání musí být Do odebrání, možnost konce tahu nebo kladný počet kol.",
+      otherDurationRequiresRounds: "Jiné trvání vyžaduje číselný počet kol, například --duration 5 rounds.",
+      invalidDuration: "Trvání musí být Do odebrání, možnost konce tahu nebo kladný počet kol.",
       zeroHpNoConditions: "{name} dosáhl 0 životů a nemá žádné aktivní stavy.",
       zeroHpConditions: "{name} dosáhl 0 životů. Vyberte stavy k odebrání:",
       removeAllBtn: "Odebrat všechny stavy pro {name}",
@@ -304,45 +289,39 @@ const TRANSLATION = {
       alreadyIncapacitated: "{name} je již vyřazený.",
       tokenRemovedFromTurn: "{name} byl odebrán z pořadí tahů.",
       tokenNotInTurn: "{name} nebyl nalezen v pořadí tahů.",
-      moveTokenPrompt:
-        "Přesunout {name} na vrstvu mapy, aby zůstal viditelný, ale nerušil ostatní žetony?",
+      moveTokenPrompt: "Přesunout {name} na vrstvu mapy, aby zůstal viditelný, ale nerušil ostatní žetony?",
       moveTokenBtn: "Přesunout {name} na vrstvu mapy",
       tokenMoved: "{name} byl přesunut na vrstvu mapy.",
       tokenNotFound: "Žeton nenalezen.",
       noActiveConditions: "{name} nemá žádné aktivní stavy k odebrání.",
-      deadNoConditions:
-        "{name} byl označen jako mrtvý. Nebyly aktivní žádné stavy.",
+      deadNoConditions: "{name} byl označen jako mrtvý. Nebyly aktivní žádné stavy.",
       scriptReady: "{name} je aktivní a používáte verzi {version}.",
       reachedZeroHp: "{name} dosáhl 0 životů",
       manuallyRemoved: "bylo ručně odebráno",
       durationExpired: "trvání vypršelo",
       markedAsDead: "{name} byl označen jako mrtvý",
-      conditionReorder:
-        "Pořadí tahů se změnilo a {count} sledovaný (sledovaných) řádek stavů může být mimo pořadí. Klikněte níže pro jejich obnovení za přiřazené žetony.",
-      conditionsReordered:
-        "Řádky stavů byly přesunuty za jejich přiřazené žetony.",
-      noTokensSelectedReport:
-        "Select at least one token on the board before using --report-token.",
-      noConditionsAppliedTo: "{name} has no active conditions applied to it.",
-      noConditionsAppliedBy:
-        "{name} has no active conditions applied to others.",
-      noSavedEffects: "No saved effects stored for {name}.",
-      noTokenSelectedSaved: "Select a token on the board before using --saved.",
-      savedEffectAdded: "Saved effect added for {name}.",
-      savedEffectUpdated: "Saved effect updated.",
-      savedEffectRemoved: "Saved effect removed.",
-      savedEffectNotFound: "Saved effect not found.",
-      savedInvalidVisibility: "Invalid visibility. Use public, masked, or gm.",
+      conditionReorder: "Pořadí tahů se změnilo a {count} sledovaný (sledovaných) řádek stavů může být mimo pořadí. Klikněte níže pro jejich obnovení za přiřazené žetony.",
+      conditionsReordered: "Řádky stavů byly přesunuty za jejich přiřazené žetony.",
+      noTokensSelectedReport: "Před použitím --report-token vyberte alespoň jeden žeton na hrací desce.",
+      noConditionsAppliedTo: "{name} nemá žádné aktivní podmínky.",
+      noConditionsAppliedBy: "{name} nemá žádné aktivní podmínky aplikované na ostatní.",
+      noSavedEffects: "Pro {name} nejsou uloženy žádné uložené efekty.",
+      noTokenSelectedSaved: "Před použitím --saved vyberte žeton na hrací ploše.",
+      savedEffectAdded: "Uložený efekt byl přidán pro {name}.",
+      savedEffectUpdated: "Uložený efekt byl aktualizován.",
+      savedEffectRemoved: "Uložený efekt byl odstraněn.",
+      savedEffectNotFound: "Uložený efekt nebyl nalezen.",
+      savedInvalidVisibility: "Neplatná viditelnost. Použijte veřejné, maskované nebo GM.",
       savedConditionRequired: "Condition type is required. Use --condition <type>.",
-      savedPromotedPublic: "Effect added to Turn Tracker as public.",
-      savedPromotedMasked: "Effect added to Turn Tracker as masked — players see: {publicLabel}.",
-      savedPromotedGm: "Effect is GM-only — no Turn Tracker row will be created. The reminder system will surface it when this token reaches the top of the turn order.",
-      savedSnoozed: "Reminder snoozed: {scope}.",
-      savedSnoozeCleared: "Snooze cleared.",
-      hiddenEffectsReminder: "Hidden effects are active on {name}.",
-      visibilityPublicHint: "full label visible to all",
-      visibilityMaskedHint: "vague label shown to players",
-      visibilityGmHint: "GM whisper only, no Turn Tracker row",
+      savedPromotedPublic: "Efekt přidán do Turn Tracker jako veřejný.",
+      savedPromotedMasked: "Efekt přidán do Turn Tracker jako maskovaný – hráči vidí: {publicLabel}.",
+      savedPromotedGm: "Efekt je pouze GM – nebude vytvořen žádný řádek Tracker. Systém připomenutí se objeví, když tento žeton dosáhne vrcholu pořadí tahu.",
+      savedSnoozed: "Připomenutí odloženo: {scope}.",
+      savedSnoozeCleared: "Odložení zrušeno.",
+      hiddenEffectsReminder: "Skryté efekty jsou aktivní na {name}.",
+      visibilityPublicHint: "celý štítek viditelný všem",
+      visibilityMaskedHint: "nejasný štítek zobrazený hráčům",
+      visibilityGmHint: "Pouze šepot GM, žádná řada Turn Tracker"
     },
     removal: {
       conditionField: "Stav",
@@ -354,54 +333,68 @@ const TRANSLATION = {
       markerRetained: "Zachováno ({marker})",
       rowRemoved: "Odebráno",
       rowMissing: "Již chybí",
-      manualReason: "Ruční odebrání",
+      manualReason: "Ruční odebrání"
     },
     saved: {
       visibility: {
-        public: "Public",
-        masked: "Masked",
-        gm: "GM Only",
+        public: "Veřejnost",
+        masked: "Maskovaný",
+        gm: "Pouze GM"
       },
       snooze: {
-        thisTurn: "This Turn",
-        oneRound: "1 Round",
-        threeRounds: "3 Rounds",
-        thisCombat: "This Combat",
-        rounds: "{n} round(s)",
+        thisTurn: "Tato odbočka",
+        oneRound: "1 kolo",
+        threeRounds: "3 kola",
+        thisCombat: "Tento boj",
+        rounds: "{n} kol"
       },
       field: {
-        gmLabel: "GM Label",
+        gmLabel: "Značka GM",
         publicLabel: "Public Label",
-        visibility: "Visibility",
-        source: "Source",
-        condition: "Condition",
+        visibility: "Viditelnost",
+        source: "Zdroj",
+        condition: "Stav"
       },
       prompt: {
-        enterGmLabel: "Full effect description (GM only)",
-        enterPublicLabel: "Vague label shown to players",
+        enterGmLabel: "Úplný popis efektu (pouze GM)",
+        enterPublicLabel: "Nejasný štítek zobrazený hráčům"
       },
-      snoozed: "snoozed",
+      snoozed: "odložené"
+    },
+    classify: {
+      title: "Klasifikace Postav",
+      showTitle: "Diagnostika Klasifikace",
+      showHeading: "Podrobnosti Klasifikace Tokenu",
+      resultHeading: "Přepsání Použito",
+      noSelection: "Před použitím --classify vyberte alespoň jeden token na hracím poli.",
+      invalidType: "Neplatný typ klasifikace: {type}. Použijte pc, npc, ignored nebo auto.",
+      set: "{name} → {type} (rozsah: {scope})",
+      cleared: "{name} přepsání vymazáno (rozsah: {scope}) — automatická detekce obnovena.",
+      setTokenFallback: "{name} → {type} (přepsání tokenu — žádný list postavy není propojen).",
+      clearedTokenFallback: "{name} přepsání tokenu vymazáno — automatická detekce obnovena.",
+      fieldToken: "Žeton",
+      fieldType: "Klasifikace",
+      fieldSource: "Zdroj",
+      fieldReason: "Důvod"
     },
     cleanup: {
       orphaned: "Osiřelé záznamy stavů",
       stale: "Zastaralé záznamy stavů",
       orphanedRows: "Osiřelé řádky sledování tahů",
-      unusedMarkers: "Nepoužívané značky",
+      unusedMarkers: "Nepoužívané značky"
     },
     apply: {
-      turnAppended:
-        "Cíl nebyl v pořadí tahů; řádek stavu byl připojen na konec.",
-      turnInserted: "Řádek stavu vložen pod žeton cíle.",
-    },
+      turnAppended: "Cíl nebyl v pořadí tahů; řádek stavu byl připojen na konec.",
+      turnInserted: "Řádek stavu vložen pod žeton cíle."
+    }
   },
   handout: {
     versionLabel: "Verze",
     subtitle: "Správce stavových efektů pro D&D 5e",
-    footerNote:
-      "Tato příručka je automaticky vytvářena a aktualizována při každém načtení skriptu.",
+    footerNote: "Tato příručka je automaticky vytvářena a aktualizována při každém načtení skriptu.",
     overview: {
       heading: "Přehled",
-      body: "Condition Tracker spravuje stavy D&D 5e a vlastní efekty jako pojmenované řádky ve sledovači tahů Roll20. Uplatňujte stavy na žetony, sledujte doby trvání podle iniciativního pořadí a automaticky odstraňujte vypršelé efekty na konci tahu. Všechny příkazy jsou určeny pouze pro GM a lze je spouštět z chatu nebo prostřednictvím nainstalovaných maker.",
+      body: "Condition Tracker spravuje stavy D&D 5e a vlastní efekty jako pojmenované řádky ve sledovači tahů Roll20. Uplatňujte stavy na žetony, sledujte doby trvání podle iniciativního pořadí a automaticky odstraňujte vypršelé efekty na konci tahu. Všechny příkazy jsou určeny pouze pro GM a lze je spouštět z chatu nebo prostřednictvím nainstalovaných maker."
     },
     quickStart: {
       heading: "Rychlý start",
@@ -410,84 +403,108 @@ const TRANSLATION = {
       rows: [
         [
           "!condition-tracker --prompt",
-          "Průvodce krok za krokem — interaktivně vyberte stav, žetony a dobu trvání. Dostupné také jako makro ConditionTrackerWizard.",
+          "Průvodce krok za krokem — interaktivně vyberte stav, žetony a dobu trvání. Dostupné také jako makro ConditionTrackerWizard."
         ],
         [
           "!condition-tracker --multi-target",
-          "Uplatnit jeden stav na více žetonů současně. Dostupné také jako makro ConditionTrackerMultiTarget.",
+          "Uplatnit jeden stav na více žetonů současně. Dostupné také jako makro ConditionTrackerMultiTarget."
         ],
         [
           "!condition-tracker --report-token",
-          "Select one or more tokens first, then run this command to get a GM whisper listing every condition applied to and by each selected token. Also available as the ConditionTrackerReportToken macro.",
+          "Nejprve vyberte jeden nebo více tokenů a poté spusťte tento příkaz, abyste získali GM šepot se seznamem všech podmínek aplikovaných na a každým vybraným tokenem. Dostupné také jako makro ConditionTrackerReportToken."
         ],
         [
           "!condition-tracker --menu",
-          "Otevřít hlavní nabídku správy s tlačítky pro uplatnění, prohlížení nebo odebrání stavů.",
-        ],
-      ],
+          "Otevřít hlavní nabídku správy s tlačítky pro uplatnění, prohlížení nebo odebrání stavů."
+        ]
+      ]
     },
     commandsRef: {
       heading: "Přehled příkazů",
       colFlag: "Přepínač",
       colDesc: "Popis",
       rows: [
-        ["--prompt", "Interaktivní průvodce krok za krokem"],
-        ["--multi-target", "Uplatnit stav na více cílových žetonů najednou"],
         [
-          "--menu",
-          "Zobrazit hlavní nabídku (přidat remove pro nabídku odebrání)",
+          "--pohotovost",
+          "Interaktivní průvodce krok za krokem"
         ],
         [
-          "--source X --target Y --condition Z",
-          "Uplatnit stav přímo bez průvodce",
+          "--multi-cíl",
+          "Uplatnit stav na více cílových žetonů najednou"
+        ],
+        [
+          "--menu",
+          "Zobrazit hlavní nabídku (přidat remove pro nabídku odebrání)"
+        ],
+        [
+          "--zdroj X --cíl Y --podmínka Z",
+          "Uplatnit stav přímo bez průvodce"
         ],
         [
           "--duration &lt;hodnota&gt;",
-          "Trvání pro přímé uplatnění (např. 2 rounds)",
+          "Trvání pro přímé uplatnění (např. 2 rounds)"
         ],
         [
-          "--other &lt;text&gt;",
-          "Vlastní text pro typy efektů Kouzlo / Schopnost / Jiné",
+          "--other <text>",
+          "Vlastní text pro typy efektů Kouzlo / Schopnost / Jiné"
         ],
         [
           "--remove &lt;ID stavu&gt;",
-          "Odebrat konkrétní stav podle jeho jedinečného ID",
+          "Odebrat konkrétní stav podle jeho jedinečného ID"
         ],
         [
           "--config &lt;možnost&gt; &lt;hodnota&gt;",
-          "Upravit nastavení konfigurace (viz sekce Konfigurace níže)",
+          "Upravit nastavení konfigurace (viz sekce Konfigurace níže)"
         ],
         [
           "--prompt --subjectPromptBypass true|false",
-          "Přepsat subjectPromptBypass pouze pro tento příkaz (podporuje také --subject-prompt-bypass)",
+          "Přepsat subjectPromptBypass pouze pro tento příkaz (podporuje také --subject-prompt-bypass)"
         ],
         [
-          "--cleanup",
-          "Sladit stav — odebrat osiřelé stavy a řádky sledování tahů",
+          "-- úklid",
+          "Sladit stav — odebrat osiřelé stavy a řádky sledování tahů"
         ],
         [
-          "--reorder-conditions",
-          "Ručně přemístit řádky podmínek za přiřazené tokeny v pořadí kol",
+          "--změna-podmínky",
+          "Ručně přemístit řádky podmínek za přiřazené tokeny v pořadí kol"
         ],
-        ["--reinstall-macro", "Znovu vytvořit nebo aktualizovat makra GM"],
+        [
+          "--reinstall-macro",
+          "Znovu vytvořit nebo aktualizovat makra GM"
+        ],
         [
           "--reinstall-handout",
-          "Znovu vytvořit nebo aktualizovat lokalizovanou pomocnou příručku",
+          "Znovu vytvořit nebo aktualizovat lokalizovanou pomocnou příručku"
         ],
         [
           "--report-token",
-          "Whisper a GM-only condition report for each selected token (conditions applied to and by it)",
+          "Zašeptat zprávu o stavu pouze GM pro každý vybraný token (podmínky aplikované na token a jím použité)"
         ],
         [
           "--lang &lt;jazyk&gt;",
-          "Výstup zpráv tohoto příkazu v dalším jazyce (dvojjazyčný režim)",
+          "Výstup zpráv tohoto příkazu v dalším jazyce (dvojjazyčný režim)"
         ],
-        ["--help", "Zobrazit stručnou nápovědní kartu v chatu"],
-      ],
+        [
+          "--classify pc|npc|ignored",
+          "Přepsat typ aktéra pro vybrané tokeny — nejprve vyberte token(y). Výchozí rozsah je postava (zapisuje atribut ct_mod_actor_type); přidejte --scope token pro uložení do stavu skriptu"
+        ],
+        [
+          "--classify auto",
+          "Odebrat přepsání typu aktéra a obnovit automatickou detekci pro vybrané tokeny"
+        ],
+        [
+          "--classify show",
+          "Přišeptat diagnostiku klasifikace pro každý vybraný token — zobrazuje zjištěný typ, zdroj detekce a důvod"
+        ],
+        [
+          "--help",
+          "Zobrazit stručnou nápovědní kartu v chatu"
+        ]
+      ]
     },
     standardConditions: {
       heading: "Standardní stavy (D&amp;D 5e)",
-      colCondition: "Stav",
+      colCondition: "Stav"
     },
     customEffects: {
       heading: "Vlastní typy efektů",
@@ -496,82 +513,211 @@ const TRANSLATION = {
       rows: [
         [
           "🔮 Kouzlo",
-          "Sledování pojmenovaného kouzlového efektu — budete vyzváni k zadání názvu kouzla",
+          "Sledování pojmenovaného kouzlového efektu — budete vyzváni k zadání názvu kouzla"
         ],
         [
           "🎯 Schopnost",
-          "Sledování pojmenované schopnosti třídy nebo rasy — budete vyzváni k zadání názvu",
+          "Sledování pojmenované schopnosti třídy nebo rasy — budete vyzváni k zadání názvu"
         ],
         [
           "🍀 Výhoda",
-          "Zaznamenat výhodu udělenou od jednoho žetonu druhému; seskupeno se zdrojem v iniciativě",
+          "Zaznamenat výhodu udělenou od jednoho žetonu druhému; seskupeno se zdrojem v iniciativě"
         ],
         [
           "⬇️ Nevýhoda",
-          "Zaznamenat uloženou nevýhodu; seskupeno se zdrojem v iniciativě",
+          "Zaznamenat uloženou nevýhodu; seskupeno se zdrojem v iniciativě"
         ],
-        ["📝 Jiné", "Volný vlastní popisek — budete vyzváni k zadání popisu"],
-      ],
+        [
+          "📝 Jiné",
+          "Volný vlastní popisek — budete vyzváni k zadání popisu"
+        ]
+      ]
     },
     durationOptions: {
       heading: "Možnosti trvání",
-      intro:
-        "Zbývající počet je zobrazen ve sloupci pr sledovače tahů a snižuje se, když skončí tah kotevního žetonu.",
+      intro: "Zbývající počet je zobrazen ve sloupci pr sledovače tahů a snižuje se, když skončí tah kotevního žetonu.",
       colOption: "Možnost",
       colBehaviour: "Chování",
       rows: [
         [
           "Do odebrání",
-          "Trvalé — musí být odebrán ručně přes nabídku nebo --remove",
+          "Trvalé — musí být odebrán ručně přes nabídku nebo --remove"
         ],
         [
           "Konec příštího tahu cíle",
-          "Vyprší na konci příštího tahu cílového žetonu v iniciativě",
+          "Vyprší na konci příštího tahu cílového žetonu v iniciativě"
         ],
         [
           "Konec příštího tahu zdroje",
-          "Vyprší na konci příštího tahu zdrojového žetonu v iniciativě",
+          "Vyprší na konci příštího tahu zdrojového žetonu v iniciativě"
         ],
         [
           "1 / 2 / 3 / 10 kol",
-          "Pevný odpočet; jedno snížení za konec tahu kotevního žetonu",
-        ],
-      ],
+          "Pevný odpočet; jedno snížení za konec tahu kotevního žetonu"
+        ]
+      ]
     },
     savedEffects: {
-      heading: "Saved Effects",
-      intro:
-        "Saved effects let you store long-term conditions outside the Turn Tracker — curses, diseases, poisons, hidden debuffs, and other non-combat conditions. They persist in script state and can be optionally copied into the Turn Tracker when combat begins.",
+      heading: "Uložené efekty",
+      intro: "Uložené efekty vám umožňují ukládat dlouhodobé podmínky mimo Turn Tracker – kletby, nemoci, jedy, skryté debuffy a další nebojové podmínky. Přetrvávají ve stavu skriptu a mohou být volitelně zkopírovány do Turn Tracker, když začíná boj.",
       visibility: {
-        heading: "Visibility Modes",
+        heading: "Režimy viditelnosti",
         rows: [
-          ["public", "Full effect label is visible in the Turn Tracker and public chat."],
-          ["masked", "A vague public label is shown to players; full details are GM-only."],
-          ["gm", "No Turn Tracker row. Full details are stored in state and whispered to the GM when the affected token reaches the top of initiative."],
-        ],
+          [
+            "veřejnost",
+            "Štítek plného efektu je viditelný v Turn Tracker a veřejném chatu."
+          ],
+          [
+            "maskovaný",
+            "Hráčům se zobrazuje vágní veřejný štítek; úplné podrobnosti jsou pouze GM."
+          ],
+          [
+            "gm",
+            "Žádný řádek Tracker. Úplné podrobnosti jsou uloženy ve stavu a šeptány GM, když postižený token dosáhne vrcholu iniciativy."
+          ]
+        ]
       },
       commands: {
-        heading: "Saved Effects Commands",
-        intro: "All --saved commands are GM-only. Select a token before running --saved or --saved add.",
+        heading: "Uložené příkazy efektů",
+        intro: "Všechny --uložené příkazy jsou pouze GM. Před spuštěním --saved nebo --saved add vyberte token.",
         rows: [
-          ["!condition-tracker --saved", "View saved effects for the selected token."],
-          ["!condition-tracker --saved add", "Launch the add-saved-effect wizard."],
-          ["!condition-tracker --saved edit <id>", "Edit labels or visibility for an existing saved effect."],
-          ["!condition-tracker --saved remove <id>", "Permanently remove a saved effect."],
-          ["!condition-tracker --saved promote <id> --visibility public|masked|gm", "Copy a saved effect into the Turn Tracker (public or masked) or confirm it is GM-only tracked."],
-          ["!condition-tracker --saved snooze <id> --scope turn|rounds|combat --rounds <n>", "Snooze a GM reminder for this turn, N rounds, or this combat."],
-          ["!condition-tracker --saved snooze-clear <id>", "Clear an active snooze so reminders resume immediately."],
-        ],
+          [
+            "!condition-tracker --uloženo",
+            "Zobrazit uložené efekty pro vybraný token."
+          ],
+          [
+            "!condition-tracker --saved add",
+            "Spusťte průvodce přidáním uloženého efektu."
+          ],
+          [
+            "!condition-tracker --saved edit <id>",
+            "Upravit štítky nebo viditelnost pro existující uložený efekt."
+          ],
+          [
+            "!condition-tracker --saved remove <id>",
+            "Trvale odstranit uložený efekt."
+          ],
+          [
+            "!condition-tracker --saved promote <id> --visibility public|masked|gm",
+            "Zkopírujte uložený efekt do Turn Tracker (veřejný nebo maskovaný) nebo potvrďte, že je sledován pouze GM."
+          ],
+          [
+            "!condition-tracker --saved snooze <id> --scope turn|rounds|combat --rounds <n>",
+            "Odložte připomenutí GM pro toto kolo, N kol nebo tento boj."
+          ],
+          [
+            "!condition-tracker --saved snooze-clear <id>",
+            "Vymažte aktivní odložení, aby se připomenutí okamžitě obnovila."
+          ]
+        ]
       },
       reminders: {
-        heading: "GM Reminders",
-        body: "When a token with gm or masked saved effects reaches the top of the Turn Tracker, the GM receives a whisper listing the hidden effects with action buttons. Duplicate reminders within the same turn are suppressed. Use the Snooze buttons to suppress reminders for a turn, a number of rounds, or for the remainder of the current combat.",
+        heading: "GM upomínky",
+        body: "Když se žeton s GM nebo maskovanými uloženými efekty dostane na vrchol Turn Tracker, GM obdrží šepot se seznamem skrytých efektů s akčními tlačítky. Duplicitní připomenutí v rámci stejného tahu jsou potlačena. Použijte tlačítka Odložit k potlačení připomenutí pro tah, určitý počet kol nebo pro zbytek aktuálního boje."
+      }
+    },
+    actorClassification: {
+      heading: "Klasifikace Postav",
+      intro: "Condition Tracker automaticky určuje, zda je každý token HP, NPC nebo ignorovaný objekt (špendlíky mapy, kulisy, šablony kouzel). Nepropojené tokeny jsou ve výchozím nastavení ignorovány. Použijte --classify k přepsání automatické detekce pro libovolný token.",
+      detectionOrder: {
+        heading: "Pořadí Detekce",
+        colStep: "Krok",
+        colCheck: "Kontrola",
+        colResult: "Výsledek",
+        rows: [
+          [
+            "1",
+            "Přepsání stavu tokenu (--classify --scope token)",
+            "pc / npc / ignorováno"
+          ],
+          [
+            "2",
+            "Atribut ct_mod_actor_type postavy (--classify --scope character)",
+            "pc / npc / ignorováno"
+          ],
+          [
+            "3",
+            "Nepropojený token — žádný list postavy",
+            "ignoroval"
+          ],
+          [
+            "4",
+            "Adaptér herního systému (atribut npc / is_npc)",
+            "pc / npc"
+          ],
+          [
+            "5",
+            "Obecné skenování atributů NPC (npc, is_npc, npcflag, sheet_type, character_type)",
+            "pc / npc"
+          ],
+          [
+            "6",
+            "Záložní controlledby postavy",
+            "pc / npc"
+          ]
+        ]
       },
+      types: {
+        heading: "Typy Klasifikace",
+        colType: "Typ",
+        colMeaning: "Význam",
+        rows: [
+          [
+            "pc",
+            "Hráčova postava — vždy zahrnuta jako HP v průvodci a detekci"
+          ],
+          [
+            "npc",
+            "Neherní postava — vždy zahrnuta jako NPC"
+          ],
+          [
+            "ignoroval",
+            "Nikdy nezobrazena ani sledována — vyloučena z výběru tokenů průvodce"
+          ],
+          [
+            "neznámý",
+            "Pouze automatická detekce; typ nelze určit (v průvodci zacházeno jako s NPC)"
+          ]
+        ]
+      },
+      commands: {
+        heading: "Příkazy Klasifikace",
+        intro: "Před spuštěním příkazů --classify vyberte jeden nebo více tokenů.",
+        rows: [
+          [
+            "!condition-tracker --klasifikovat pc",
+            "Označit vybrané tokeny jako HP (výchozí rozsah: postava)."
+          ],
+          [
+            "!condition-tracker --classify npc",
+            "Označit vybrané tokeny jako NPC."
+          ],
+          [
+            "!condition-tracker --classify ignorováno",
+            "Vyloučit vybrané tokeny ze všeho sledování."
+          ],
+          [
+            "!condition-tracker --klasifikace auto",
+            "Odebrat přepsání — obnovit automatickou detekci."
+          ],
+          [
+            "!condition-tracker --klasifikovat show",
+            "Zobrazit diagnostiku klasifikace (typ, zdroj, důvod) pro každý vybraný token."
+          ],
+          [
+            "!condition-tracker --classify pc --scope token",
+            "Přepsání na úrovni tokenu ve stavu skriptu — užitečné pro nepropojené tokeny."
+          ],
+          [
+            "!condition-tracker --classify pc --scope character",
+            "Přepsání na úrovni postavy do atributu ct_mod_actor_type — platí pro všechny tokeny používající stejný list postavy."
+          ]
+        ]
+      }
     },
     configuration: {
       heading: "Konfigurace",
-      intro:
-        "Použijte !condition-tracker --config &lt;možnost&gt; &lt;hodnota&gt; nebo tlačítko Konfigurace v hlavní nabídce.",
+      intro: "Použijte !condition-tracker --config &lt;možnost&gt; &lt;hodnota&gt; nebo tlačítko Konfigurace v hlavní nabídce.",
       colOption: "Možnost",
       colValues: "Hodnoty",
       colDesc: "Popis",
@@ -579,54 +725,53 @@ const TRANSLATION = {
         [
           "useMarkers",
           "true / false",
-          "Uplatnit stavové značky Roll20 na žetony při přidání stavu",
+          "Uplatnit stavové značky Roll20 na žetony při přidání stavu"
         ],
         [
           "useIcons",
-          "true / false",
-          "Zobrazovat krátké kódy ikon (např. [G]) místo emoji v řádcích sledovače tahů",
+          "pravda / nepravda",
+          "Zobrazovat krátké kódy ikon (např. [G]) místo emoji v řádcích sledovače tahů"
         ],
         [
           "subjectPromptBypass",
-          "true / false",
-          "Přeskočit volitelný krok výběru subjektu pro efekty Kouzlo / Schopnost / Jiné",
+          "pravda / nepravda",
+          "Přeskočit volitelný krok výběru subjektu pro efekty Kouzlo / Schopnost / Jiné"
         ],
         [
           "suppressPublicChat",
-          "true / false",
-          "Potlač všechna veřejná oznámení v chatu (zprávy o přidání a odebrání). Šepoty GM nejsou ovlivněny.",
+          "pravda / nepravda",
+          "Potlač všechna veřejná oznámení v chatu (zprávy o přidání a odebrání). Šepoty GM nejsou ovlivněny."
         ],
         [
           "healthBar",
           "bar1_value / bar2_value / bar3_value",
-          "Sledovaná lišta; když klesne na 0, GM je vyzván k vyčištění stavů",
+          "Sledovaná lišta; když klesne na 0, GM je vyzván k vyčištění stavů"
         ],
         [
           "language",
           "en-US / fr / de / es / pt-BR / ko",
-          "Výstupní jazyk pro chatové zprávy a pomocnou příručku",
+          "Výstupní jazyk pro chatové zprávy a pomocnou příručku"
         ],
         [
           "marker",
           "&lt;Stav&gt;=&lt;název značky&gt;",
-          "Přepsat stavovou značku použitou pro konkrétní stav (např. marker Grappled=grab)",
-        ],
-      ],
+          "Přepsat stavovou značku použitou pro konkrétní stav (např. marker Grappled=grab)"
+        ]
+      ]
     },
     defaultMarkers: {
       heading: "Výchozí stavové značky",
       colCondition: "Stav",
-      colMarker: "Název značky",
+      colMarker: "Název značky"
     },
     availableLocales: {
       heading: "Dostupné překlady",
-      intro:
-        "Použijte možnost konfigurace jazyka k nastavení chatových zpráv a pomocné příručky na jakýkoliv podporovaný jazyk. Pro en, zh a pt jsou také přijímány krátké aliasy.",
-      colLocale: "Locale",
+      intro: "Použijte možnost konfigurace jazyka k nastavení chatových zpráv a pomocné příručky na jakýkoliv podporovaný jazyk. Pro en, zh a pt jsou také přijímány krátké aliasy.",
+      colLocale: "Národní prostředí",
       colLanguage: "Jazyk",
-      colFile: "Soubor překladu",
-    },
-  },
+      colFile: "Soubor překladu"
+    }
+  }
 };
 
 export default TRANSLATION;

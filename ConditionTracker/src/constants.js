@@ -39,10 +39,13 @@ export const DURATION_ROUNDS = "rounds";
 export const MENU_REMOVE = "remove";
 export const COMMAND_SAVED = `${COMMAND} --saved`;
 export const MACRO_NAME_SAVED = `${STATE_KEY}Saved`;
+export const COMMAND_CLASSIFY = `${COMMAND} --classify`;
+export const MACRO_NAME_CLASSIFY = `${STATE_KEY}Classify`;
 export const DEFAULT_MACRO_BODY = `${COMMAND_PROMPT}`;
 export const DEFAULT_MULTI_TARGET_MACRO_BODY = `${COMMAND_MULTI_TARGET}`;
 export const DEFAULT_REPORT_TOKEN_MACRO_BODY = `${COMMAND_REPORT_TOKEN}`;
 export const DEFAULT_SAVED_MACRO_BODY = COMMAND_SAVED;
+export const DEFAULT_CLASSIFY_MACRO_BODY = `${COMMAND_CLASSIFY} show`;
 
 export const SAVED_VISIBILITY_PUBLIC = "public";
 export const SAVED_VISIBILITY_MASKED = "masked";

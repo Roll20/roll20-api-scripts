@@ -2,78 +2,78 @@ const TRANSLATION = {
   conditions: {
     Grappled: {
       past: "схвачен",
-      verb: "схватывает",
+      verb: "схватывает"
     },
     Restrained: {
       past: "опутан",
-      verb: "опутывает",
+      verb: "опутывает"
     },
     Prone: {
       past: "сбит с ног",
       verb: "сбивает",
-      suffix: "с ног",
+      suffix: "с ног"
     },
     Poisoned: {
       past: "отравлен",
-      verb: "отравляет",
+      verb: "отравляет"
     },
     Stunned: {
       past: "ошеломлен",
-      verb: "ошеломляет",
+      verb: "ошеломляет"
     },
     Blinded: {
       past: "ослеплен",
-      verb: "ослепляет",
+      verb: "ослепляет"
     },
     Charmed: {
       past: "очарован",
-      verb: "очаровывает",
+      verb: "очаровывает"
     },
     Frightened: {
       past: "испуган",
-      verb: "пугает",
+      verb: "пугает"
     },
     Incapacitated: {
       past: "недееспособен",
       verb: "делает",
-      suffix: "недееспособным",
+      suffix: "недееспособным"
     },
     Invisible: {
       past: "невидим",
       verb: "делает",
-      suffix: "невидимым",
+      suffix: "невидимым"
     },
     Paralyzed: {
       past: "парализован",
-      verb: "парализует",
+      verb: "парализует"
     },
     Petrified: {
       past: "окаменел",
-      verb: "окаменяет",
+      verb: "окаменяет"
     },
     Unconscious: {
       past: "без сознания",
       verb: "лишает",
-      suffix: "сознания",
+      suffix: "сознания"
     },
     Spell: {
       past: "под действием заклинания",
-      verb: "накладывает заклинание на",
+      verb: "накладывает заклинание на"
     },
     Ability: {
       past: "под действием умения",
-      verb: "использует умение на",
+      verb: "использует умение на"
     },
     Advantage: {
       past: "имеет преимущество",
       verb: "дает преимущество",
-      noBy: true,
+      noBy: true
     },
     Disadvantage: {
       past: "имеет помеху",
       verb: "накладывает помеху",
-      noBy: true,
-    },
+      noBy: true
+    }
   },
   condNames: {
     Grappled: "Схвачен",
@@ -93,7 +93,7 @@ const TRANSLATION = {
     Ability: "Умение",
     Advantage: "Преимущество",
     Disadvantage: "Помеха",
-    Other: "Другое",
+    Other: "Другое"
   },
   templates: {
     display: {
@@ -102,7 +102,7 @@ const TRANSLATION = {
       disadvantage: "{emoji} {source} имеет помеху против {target}{subject}",
       noBy: "{emoji} {target} {past} ({source})",
       self: "{target} {past}",
-      standard: "{emoji} {target} {past} от {source}",
+      standard: "{emoji} {target} {past} от {source}"
     },
     apply: {
       custom: "{source} накладывает {effect} на {target}.",
@@ -110,17 +110,16 @@ const TRANSLATION = {
       disadvantage: "{source} имеет помеху против {target}{subject}.",
       self: "{target} {past}.",
       withSuffix: "{source} {verb} {target} {suffix}.",
-      standard: "{source} {verb} {target}.",
+      standard: "{source} {verb} {target}."
     },
     remove: {
       custom: "{target} больше не находится под воздействием {effect}.",
-      advantage:
-        "{source} больше не имеет преимущества против {target}{subject}.",
+      advantage: "{source} больше не имеет преимущества против {target}{subject}.",
       disadvantage: "{source} больше не имеет помехи против {target}{subject}.",
       noBy: "{target} больше не {past}.",
       self: "{target} больше не {past}.",
-      standard: "{target} больше не {past} от {source}.",
-    },
+      standard: "{target} больше не {past} от {source}."
+    }
   },
   ui: {
     wizard: {
@@ -138,11 +137,10 @@ const TRANSLATION = {
       noneBtn: "Нет",
       noneOrSourceBtn: "Нет или применить к источнику",
       subjectDesc: "Выберите, кто или что вызывает эффект.",
-      sourceDesc:
-        "Выберите существо, создающее или генерирующее состояние или эффект.",
+      sourceDesc: "Выберите существо, создающее или генерирующее состояние или эффект.",
       targetDesc: "Выберите существо, которое получит состояние или эффект.",
       otherText: "Произвольный текст состояния",
-      effectDetails: "Подробности {condition}",
+      effectDetails: "Подробности {condition}"
     },
     col: {
       players: "Игроки",
@@ -163,8 +161,8 @@ const TRANSLATION = {
       details: "Подробности",
       description: "Описание",
       scenario: "Сценарий",
-      gameSystem: "Game System",
-      duration: "Duration",
+      gameSystem: "Игровая система",
+      duration: "Продолжительность"
     },
     dur: {
       untilRemoved: "До удаления",
@@ -177,7 +175,7 @@ const TRANSLATION = {
       custom: "Произвольно",
       customPrompt: "Количество раундов",
       untilRemovedDisplay: "До удаления",
-      turnsRemaining: "Осталось {n} конец (концов) хода",
+      turnsRemaining: "Осталось {n} конец (концов) хода"
     },
     btn: {
       openWizard: "Открыть мастер",
@@ -189,14 +187,14 @@ const TRANSLATION = {
       reinstallHandout: "Переустановить хэндаут",
       showHelp: "Показать справку",
       reorderConditions: "Переупорядочить строки состояний",
-      reportToken: "Report Token Conditions",
-      savedEffects: "Saved Effects",
-      addSavedEffect: "Add Saved Effect",
-      editSaved: "Edit",
-      removeSaved: "Remove",
-      promoteSaved: "Add to Turn Tracker",
-      snoozeSaved: "Snooze",
-      clearSnooze: "Clear Snooze",
+      reportToken: "Сообщить о состоянии токена",
+      savedEffects: "Сохраненные эффекты",
+      addSavedEffect: "Добавить сохраненный эффект",
+      editSaved: "Редактировать",
+      removeSaved: "Удалять",
+      promoteSaved: "Добавить в трекер поворотов",
+      snoozeSaved: "Вздремнуть",
+      clearSnooze: "Очистить повтор"
     },
     title: {
       menu: "Меню",
@@ -207,7 +205,7 @@ const TRANSLATION = {
       applied: "Применено",
       removed: "Состояние удалено",
       cleanup: "Очистка завершена",
-      macroReinstalled: "The {wizard}, {multiTarget}, {reportToken}, and {saved} macros have been reinstalled for all current GM players.",
+      macroReinstalled: "Макрос переустановлен",
       handoutReinstalled: "Хэндаут переустановлен",
       warning: "Предупреждение",
       error: "Ошибка",
@@ -219,15 +217,15 @@ const TRANSLATION = {
       moveToken: "{name} — Переместить жетон?",
       scriptReady: "Скрипт готов",
       conditionReorder: "Порядок ходов изменён",
-      tokenReport: "Token Condition Report",
-      savedEffects: "Saved Effects",
-      savedAdd: "Add Saved Effect",
-      savedEdit: "Edit Saved Effect",
-      savedRemoved: "Saved Effect Removed",
-      savedPromoted: "Add to Turn Tracker",
-      savedSnoozed: "Reminder Snoozed",
-      savedSnoozeCleared: "Snooze Cleared",
-      hiddenEffects: "Hidden Effects — {name}",
+      tokenReport: "Отчет о состоянии токена",
+      savedEffects: "Сохраненные эффекты",
+      savedAdd: "Добавить сохраненный эффект",
+      savedEdit: "Редактировать сохраненный эффект",
+      savedRemoved: "Сохраненный эффект удален.",
+      savedPromoted: "Добавить в трекер поворотов",
+      savedSnoozed: "Напоминание отложено",
+      savedSnoozeCleared: "Повтор снят",
+      hiddenEffects: "Скрытые эффекты — {name}"
     },
     heading: {
       quickActions: "Быстрые действия",
@@ -239,68 +237,51 @@ const TRANSLATION = {
       promptUi: "Интерфейс мастера",
       examples: "Примеры",
       summary: "Итог",
-      appliedTo: "Conditions Applied To",
-      appliedBy: "Conditions Applied By",
-      savedEffectsFor: "Saved Effects for {name}",
-      visibility: "Visibility",
-      snoozeOptions: "Snooze Reminder",
-      promoteOptions: "Promote to Turn Tracker",
-      editActions: "Edit Actions",
+      appliedTo: "Условия, применимые к",
+      appliedBy: "Условия, применяемые",
+      savedEffectsFor: "Сохраненные эффекты для {name}",
+      visibility: "Видимость",
+      snoozeOptions: "Отложить напоминание",
+      promoteOptions: "Продвижение на Turn Tracker",
+      editActions: "Редактировать действия"
     },
     msg: {
       noActive: "Активных состояний не отслеживается.",
       configReset: "Конфигурация сброшена до значений по умолчанию модуля.",
-      unknownConfig:
-        "Неизвестный параметр конфигурации. Используйте --config для просмотра поддерживаемых настроек.",
-      macroReinstalled:
-        "Макросы {wizard}, {multiTarget} и {reportToken} были переустановлены для всех текущих игроков с ролью ДМ.",
+      unknownConfig: "Неизвестный параметр конфигурации. Используйте --config для просмотра поддерживаемых настроек.",
+      macroReinstalled: "Макросы {wizard}, {multiTarget}, {reportToken}, {saved} и {classify} были переустановлены для всех текущих игроков с ролью ДМ.",
       handoutReinstalled: "Справочный хэндаут {handout} был переустановлен.",
-      duplicate:
-        "Точное сочетание источника, субъекта, цели, состояния и произвольного текста уже активно.",
+      duplicate: "Точное сочетание источника, субъекта, цели, состояния и произвольного текста уже активно.",
       noTargets: "Не указаны жетоны целей для применения к нескольким целям.",
-      noSelection:
-        "Выберите хотя бы один жетон на поле перед использованием --multi-target.",
-      invalidIds:
-        "В текущем выделении не найдено допустимых идентификаторов жетонов.",
-      reSelectTokens:
-        "Ни один из первоначально выбранных жетонов не найден. Выберите жетоны заново и повторите попытку.",
+      noSelection: "Выберите хотя бы один жетон на поле перед использованием --multi-target.",
+      invalidIds: "В текущем выделении не найдено допустимых идентификаторов жетонов.",
+      reSelectTokens: "Ни один из первоначально выбранных жетонов не найден. Выберите жетоны заново и повторите попытку.",
       conditionNotFound: "Идентификатор состояния не найден.",
       gmOnly: "Команды Condition Tracker доступны только для ДМ.",
-      commandFailed:
-        "Команда не могла быть безопасно выполнена. Проверьте консоль API.",
+      commandFailed: "Команда не могла быть безопасно выполнена. Проверьте консоль API.",
       sourceTokenNotFound: "Жетон источника не найден.",
       targetTokenNotFound: "Жетон цели не найден.",
       subjectTokenNotFound: "Жетон субъекта не найден.",
-      invalidCondition:
-        "Состояние должно быть одним из предопределённых состояний или Другое.",
-      subjectOnlyCustom:
-        "--subject допустим только для Заклинания, Умения, Преимущества, Помехи и Другого.",
-      subjectBypassInvalid:
-        "--subjectPromptBypass ожидает значение true или false, если значение указано.",
-      customDetailsRequired:
-        "Подробности {condition} обязательны. Используйте --other для их указания.",
-      markerConfigFormat:
-        "Формат конфигурации маркера: --config marker Grappled=grab",
-      markerPredefinedRequired:
-        "Конфигурация маркера требует предопределённого имени состояния.",
-      markerNameRequired:
-        "Конфигурация маркера требует непустого имени маркера.",
+      invalidCondition: "Состояние должно быть одним из предопределённых состояний или Другое.",
+      subjectOnlyCustom: "--subject допустим только для Заклинания, Умения, Преимущества, Помехи и Другого.",
+      subjectBypassInvalid: "--subjectPromptBypass ожидает значение true или false, если значение указано.",
+      customDetailsRequired: "Подробности {condition} обязательны. Используйте --other для их указания.",
+      markerConfigFormat: "Формат конфигурации маркера: --config marker Grappled=grab",
+      markerPredefinedRequired: "Конфигурация маркера требует предопределённого имени состояния.",
+      markerNameRequired: "Конфигурация маркера требует непустого имени маркера.",
       markerSet: "Маркер {condition} установлен на {marker}.",
       healthBarSet: "Полоса здоровья установлена на {bar}.",
       boolSet: "{key} установлено на {value}.",
       expectedBoolean: "Ожидалось true или false.",
-      invalidHealthBar:
-        "Полоса здоровья должна быть bar1_value, bar2_value или bar3_value.",
+      invalidHealthBar: "Полоса здоровья должна быть bar1_value, bar2_value или bar3_value.",
       markersDisabled: "Маркеры отключены.",
       noMarkerConfigured: "Для данного состояния не настроен маркер.",
       markerApplied: "Маркер применён: {marker}",
       markerPresent: "Маркер уже присутствует: {marker}",
       langSet: "Язык установлен на {locale}.",
       invalidLocale: "Недопустимый язык. Поддерживаемые языки: {locales}.",
-      otherDurationRequiresRounds:
-        "Длительность «Другое» требует числового количества раундов, например --duration 5 rounds.",
-      invalidDuration:
-        "Длительность должна быть «До удаления», вариантом конца хода или положительным числом раундов.",
+      otherDurationRequiresRounds: "Длительность «Другое» требует числового количества раундов, например --duration 5 rounds.",
+      invalidDuration: "Длительность должна быть «До удаления», вариантом конца хода или положительным числом раундов.",
       zeroHpNoConditions: "{name} достиг 0 ХП и не имеет активных состояний.",
       zeroHpConditions: "{name} достиг 0 ХП. Выберите состояния для удаления:",
       removeAllBtn: "Удалить все состояния для {name}",
@@ -309,45 +290,39 @@ const TRANSLATION = {
       alreadyIncapacitated: "{name} уже недееспособен.",
       tokenRemovedFromTurn: "{name} был убран из порядка ходов.",
       tokenNotInTurn: "{name} не найден в порядке ходов.",
-      moveTokenPrompt:
-        "Переместить {name} на слой карты, чтобы он оставался видимым, но не мешал другим жетонам?",
+      moveTokenPrompt: "Переместить {name} на слой карты, чтобы он оставался видимым, но не мешал другим жетонам?",
       moveTokenBtn: "Переместить {name} на слой карты",
       tokenMoved: "{name} был перемещён на слой карты.",
       tokenNotFound: "Жетон не найден.",
       noActiveConditions: "{name} не имеет активных состояний для удаления.",
-      deadNoConditions:
-        "{name} был помечен как мёртвый. Активных состояний не было.",
+      deadNoConditions: "{name} был помечен как мёртвый. Активных состояний не было.",
       scriptReady: "{name} активен, вы используете версию {version}.",
       reachedZeroHp: "{name} достиг 0 ХП",
       manuallyRemoved: "было удалено вручную",
       durationExpired: "длительность истекла",
       markedAsDead: "{name} был помечен как мёртвый",
-      conditionReorder:
-        "Порядок ходов изменился, и {count} отслеживаемая (отслеживаемых) строка состояний может быть не на своём месте. Нажмите ниже, чтобы восстановить их после назначенных жетонов.",
-      conditionsReordered:
-        "Строки состояний были перемещены после назначенных им жетонов.",
-      noTokensSelectedReport:
-        "Select at least one token on the board before using --report-token.",
-      noConditionsAppliedTo: "{name} has no active conditions applied to it.",
-      noConditionsAppliedBy:
-        "{name} has no active conditions applied to others.",
-      noSavedEffects: "No saved effects stored for {name}.",
-      noTokenSelectedSaved: "Select a token on the board before using --saved.",
-      savedEffectAdded: "Saved effect added for {name}.",
-      savedEffectUpdated: "Saved effect updated.",
-      savedEffectRemoved: "Saved effect removed.",
-      savedEffectNotFound: "Saved effect not found.",
-      savedInvalidVisibility: "Invalid visibility. Use public, masked, or gm.",
+      conditionReorder: "Порядок ходов изменился, и {count} отслеживаемая (отслеживаемых) строка состояний может быть не на своём месте. Нажмите ниже, чтобы восстановить их после назначенных жетонов.",
+      conditionsReordered: "Строки состояний были перемещены после назначенных им жетонов.",
+      noTokensSelectedReport: "Прежде чем использовать --report-token, выберите хотя бы один жетон на доске.",
+      noConditionsAppliedTo: "К {name} не применено никаких активных условий.",
+      noConditionsAppliedBy: "{name} не имеет активных условий, применимых к другим.",
+      noSavedEffects: "Для {name} сохраненных эффектов нет.",
+      noTokenSelectedSaved: "Прежде чем использовать --saved, выберите жетон на доске.",
+      savedEffectAdded: "Сохраненный эффект добавлен для {name}.",
+      savedEffectUpdated: "Сохраненный эффект обновлен.",
+      savedEffectRemoved: "Сохраненный эффект удален.",
+      savedEffectNotFound: "Сохраненный эффект не найден.",
+      savedInvalidVisibility: "Неверная видимость. Используйте общедоступный, в маске или GM.",
       savedConditionRequired: "Condition type is required. Use --condition <type>.",
-      savedPromotedPublic: "Effect added to Turn Tracker as public.",
-      savedPromotedMasked: "Effect added to Turn Tracker as masked — players see: {publicLabel}.",
-      savedPromotedGm: "Effect is GM-only — no Turn Tracker row will be created. The reminder system will surface it when this token reaches the top of the turn order.",
-      savedSnoozed: "Reminder snoozed: {scope}.",
-      savedSnoozeCleared: "Snooze cleared.",
-      hiddenEffectsReminder: "Hidden effects are active on {name}.",
-      visibilityPublicHint: "full label visible to all",
-      visibilityMaskedHint: "vague label shown to players",
-      visibilityGmHint: "GM whisper only, no Turn Tracker row",
+      savedPromotedPublic: "Эффект добавлен в Turn Tracker как общедоступный.",
+      savedPromotedMasked: "Эффект добавлен в «Отслеживание ходов» в маске — игроки видят: {publicLabel}.",
+      savedPromotedGm: "Эффект предназначен только для GM — строка Track Tracker не будет создана. Система напоминаний покажет его, когда этот жетон достигнет вершины порядка хода.",
+      savedSnoozed: "Напоминание отложено: {scope}.",
+      savedSnoozeCleared: "Повтор снят.",
+      hiddenEffectsReminder: "Скрытые эффекты активны на {name}.",
+      visibilityPublicHint: "полная метка видна всем",
+      visibilityMaskedHint: "неясный ярлык, показывающий игрокам",
+      visibilityGmHint: "Только шепот GM, без строки Track Tracker"
     },
     removal: {
       conditionField: "Состояние",
@@ -359,54 +334,68 @@ const TRANSLATION = {
       markerRetained: "Сохранено ({marker})",
       rowRemoved: "Удалено",
       rowMissing: "Уже отсутствует",
-      manualReason: "Ручное удаление",
+      manualReason: "Ручное удаление"
     },
     saved: {
       visibility: {
-        public: "Public",
-        masked: "Masked",
-        gm: "GM Only",
+        public: "Общественный",
+        masked: "В маске",
+        gm: "Только ГМ"
       },
       snooze: {
-        thisTurn: "This Turn",
-        oneRound: "1 Round",
-        threeRounds: "3 Rounds",
-        thisCombat: "This Combat",
-        rounds: "{n} round(s)",
+        thisTurn: "Этот поворот",
+        oneRound: "1 раунд",
+        threeRounds: "3 раунда",
+        thisCombat: "этот бой",
+        rounds: "{n} раундов"
       },
       field: {
-        gmLabel: "GM Label",
-        publicLabel: "Public Label",
-        visibility: "Visibility",
-        source: "Source",
-        condition: "Condition",
+        gmLabel: "Этикетка ГМ",
+        publicLabel: "Общественная марка",
+        visibility: "Видимость",
+        source: "Источник",
+        condition: "Состояние"
       },
       prompt: {
-        enterGmLabel: "Full effect description (GM only)",
-        enterPublicLabel: "Vague label shown to players",
+        enterGmLabel: "Полное описание эффекта (только GM)",
+        enterPublicLabel: "Непонятная этикетка, показанная игрокам"
       },
-      snoozed: "snoozed",
+      snoozed: "отложил"
+    },
+    classify: {
+      title: "Классификация Актёров",
+      showTitle: "Диагностика Классификации",
+      showHeading: "Подробности Классификации Токена",
+      resultHeading: "Переопределение Применено",
+      noSelection: "Выберите хотя бы один токен на поле перед использованием --classify.",
+      invalidType: "Недопустимый тип классификации: {type}. Используйте pc, npc, ignored или auto.",
+      set: "{name} → {type} (область: {scope})",
+      cleared: "{name} переопределение сброшено (область: {scope}) — автоматическое определение восстановлено.",
+      setTokenFallback: "{name} → {type} (переопределение токена — лист персонажа не привязан).",
+      clearedTokenFallback: "{name} переопределение токена сброшено — автоматическое определение восстановлено.",
+      fieldToken: "Токен",
+      fieldType: "Классификация",
+      fieldSource: "Источник",
+      fieldReason: "Причина"
     },
     cleanup: {
       orphaned: "Осиротевшие записи состояний",
       stale: "Устаревшие записи состояний",
       orphanedRows: "Осиротевшие строки отслеживания ходов",
-      unusedMarkers: "Неиспользуемые маркеры",
+      unusedMarkers: "Неиспользуемые маркеры"
     },
     apply: {
-      turnAppended:
-        "Цель не была в порядке ходов; строка состояния добавлена в конец.",
-      turnInserted: "Строка состояния вставлена ниже жетона цели.",
-    },
+      turnAppended: "Цель не была в порядке ходов; строка состояния добавлена в конец.",
+      turnInserted: "Строка состояния вставлена ниже жетона цели."
+    }
   },
   handout: {
     versionLabel: "Версия",
     subtitle: "Менеджер состояний D&D 5e",
-    footerNote:
-      "Этот хэндаут автоматически создаётся и обновляется при каждой загрузке скрипта.",
+    footerNote: "Этот хэндаут автоматически создаётся и обновляется при каждой загрузке скрипта.",
     overview: {
       heading: "Обзор",
-      body: "Condition Tracker управляет состояниями D&D 5e и пользовательскими эффектами в виде подписанных строк в Трекере Ходов Roll20. Применяйте состояния к жетонам, отслеживайте длительности по порядку инициативы и автоматически удаляйте истёкшие эффекты в конце хода. Все команды доступны только для ДМ и могут вызываться из чата или через установленные макросы.",
+      body: "Condition Tracker управляет состояниями D&D 5e и пользовательскими эффектами в виде подписанных строк в Трекере Ходов Roll20. Применяйте состояния к жетонам, отслеживайте длительности по порядку инициативы и автоматически удаляйте истёкшие эффекты в конце хода. Все команды доступны только для ДМ и могут вызываться из чата или через установленные макросы."
     },
     quickStart: {
       heading: "Быстрый старт",
@@ -414,85 +403,109 @@ const TRANSLATION = {
       colDesc: "Описание",
       rows: [
         [
-          "!condition-tracker --prompt",
-          "Пошаговый мастер — интерактивно выберите состояние, жетоны и длительность. Также доступен как макрос ConditionTrackerWizard.",
+          "!условие-трекер --подсказка",
+          "Пошаговый мастер — интерактивно выберите состояние, жетоны и длительность. Также доступен как макрос ConditionTrackerWizard."
         ],
         [
-          "!condition-tracker --multi-target",
-          "Применить одно состояние к нескольким жетонам одновременно. Также доступен как макрос ConditionTrackerMultiTarget.",
+          "!condition-tracker --многоцелевой",
+          "Применить одно состояние к нескольким жетонам одновременно. Также доступен как макрос ConditionTrackerMultiTarget."
         ],
         [
           "!condition-tracker --report-token",
-          "Select one or more tokens first, then run this command to get a GM whisper listing every condition applied to and by each selected token. Also available as the ConditionTrackerReportToken macro.",
+          "Сначала выберите один или несколько жетонов, затем запустите эту команду, чтобы получить шепот ГМ со списком всех условий, примененных к каждому выбранному жетону. Также доступен как макрос ConditionTrackerReportToken."
         ],
         [
           "!condition-tracker --menu",
-          "Открыть главное меню управления с кнопками для применения, просмотра или удаления состояний.",
-        ],
-      ],
+          "Открыть главное меню управления с кнопками для применения, просмотра или удаления состояний."
+        ]
+      ]
     },
     commandsRef: {
       heading: "Справочник команд",
       colFlag: "Флаг",
       colDesc: "Описание",
       rows: [
-        ["--prompt", "Интерактивный пошаговый мастер"],
         [
-          "--multi-target",
-          "Применить состояние к нескольким жетонам цели сразу",
+          "--быстрый",
+          "Интерактивный пошаговый мастер"
         ],
-        ["--menu", "Показать главное меню (добавить remove для меню удаления)"],
+        [
+          "--многоцелевой",
+          "Применить состояние к нескольким жетонам цели сразу"
+        ],
+        [
+          "--меню",
+          "Показать главное меню (добавить remove для меню удаления)"
+        ],
         [
           "--source X --target Y --condition Z",
-          "Применить состояние напрямую без мастера",
+          "Применить состояние напрямую без мастера"
         ],
         [
           "--duration &lt;значение&gt;",
-          "Длительность для прямого применения (например, 2 rounds)",
+          "Длительность для прямого применения (например, 2 rounds)"
         ],
         [
           "--other &lt;текст&gt;",
-          "Произвольный текст для типов эффектов Заклинание / Умение / Другое",
+          "Произвольный текст для типов эффектов Заклинание / Умение / Другое"
         ],
         [
           "--remove &lt;ID состояния&gt;",
-          "Удалить конкретное состояние по его уникальному идентификатору",
+          "Удалить конкретное состояние по его уникальному идентификатору"
         ],
         [
           "--config &lt;параметр&gt; &lt;значение&gt;",
-          "Изменить настройки конфигурации (см. раздел Конфигурация ниже)",
+          "Изменить настройки конфигурации (см. раздел Конфигурация ниже)"
         ],
         [
           "--prompt --subjectPromptBypass true|false",
-          "Переопределить subjectPromptBypass только для этой команды (также поддерживает --subject-prompt-bypass)",
+          "Переопределить subjectPromptBypass только для этой команды (также поддерживает --subject-prompt-bypass)"
         ],
         [
-          "--cleanup",
-          "Согласовать состояние — удалить осиротевшие состояния и строки Трекера Ходов",
+          "--очистка",
+          "Согласовать состояние — удалить осиротевшие состояния и строки Трекера Ходов"
         ],
         [
-          "--reorder-conditions",
-          "Вручную переместить строки условий после назначенных токенов в очереди хода",
-        ],
-        ["--reinstall-macro", "Пересоздать или обновить макросы ДМ"],
-        [
-          "--reinstall-handout",
-          "Пересоздать или обновить локализованный справочный хэндаут",
+          "--reorder-условия",
+          "Вручную переместить строки условий после назначенных токенов в очереди хода"
         ],
         [
-          "--report-token",
-          "Whisper a GM-only condition report for each selected token (conditions applied to and by it)",
+          "--reinstall-макрос",
+          "Пересоздать или обновить макросы ДМ"
+        ],
+        [
+          "--reinstall-раздаточный материал",
+          "Пересоздать или обновить локализованный справочный хэндаут"
+        ],
+        [
+          "--report-токен",
+          "Шепот отчета о состоянии только для GM для каждого выбранного токена (условия, применяемые к нему и через него)"
         ],
         [
           "--lang &lt;язык&gt;",
-          "Выводить сообщения этой команды на дополнительном языке (двуязычный режим)",
+          "Выводить сообщения этой команды на дополнительном языке (двуязычный режим)"
         ],
-        ["--help", "Показать краткую справочную карточку в чате"],
-      ],
+        [
+          "--classify pc|npc|ignored",
+          "Переопределить тип актёра для выбранных токенов — сначала выберите токен(ы). Область по умолчанию — персонаж (записывает атрибут ct_mod_actor_type); добавьте --scope token для сохранения в состоянии скрипта"
+        ],
+        [
+          "--classify auto",
+          "Удалить переопределение типа актёра и восстановить автоматическое определение для выбранных токенов"
+        ],
+        [
+          "--classify show",
+          "Прошептать диагностику классификации для каждого выбранного токена — показывает определённый тип, источник определения и причину"
+        ],
+        [
+          "--help",
+          "Показать краткую справочную карточку в чате"
+        ]
+      ]
     },
     standardConditions: {
       heading: "Стандартные состояния (D&amp;D 5e)",
-      colCondition: "Состояние",
+      colCondition: "Состояние"
     },
     customEffects: {
       heading: "Пользовательские типы эффектов",
@@ -501,85 +514,211 @@ const TRANSLATION = {
       rows: [
         [
           "🔮 Заклинание",
-          "Отслеживать именованный эффект заклинания — вам будет предложено ввести название заклинания",
+          "Отслеживать именованный эффект заклинания — вам будет предложено ввести название заклинания"
         ],
         [
           "🎯 Умение",
-          "Отслеживать именованное умение класса или расы — вам будет предложено ввести название",
+          "Отслеживать именованное умение класса или расы — вам будет предложено ввести название"
         ],
         [
           "🍀 Преимущество",
-          "Записать преимущество, предоставленное от одного жетона другому; сгруппировано с источником в инициативе",
+          "Записать преимущество, предоставленное от одного жетона другому; сгруппировано с источником в инициативе"
         ],
         [
           "⬇️ Помеха",
-          "Записать наложенную помеху; сгруппировано с источником в инициативе",
+          "Записать наложенную помеху; сгруппировано с источником в инициативе"
         ],
         [
           "📝 Другое",
-          "Произвольная пользовательская метка — вам будет предложено ввести описание",
-        ],
-      ],
+          "Произвольная пользовательская метка — вам будет предложено ввести описание"
+        ]
+      ]
     },
     durationOptions: {
       heading: "Варианты длительности",
-      intro:
-        "Оставшееся число отображается в столбце pr Трекера Ходов и уменьшается, когда заканчивается ход опорного жетона.",
+      intro: "Оставшееся число отображается в столбце pr Трекера Ходов и уменьшается, когда заканчивается ход опорного жетона.",
       colOption: "Вариант",
       colBehaviour: "Поведение",
       rows: [
         [
           "До удаления",
-          "Постоянное — должно быть удалено вручную через меню или --remove",
+          "Постоянное — должно быть удалено вручную через меню или --remove"
         ],
         [
           "Конец следующего хода цели",
-          "Истекает, когда заканчивается следующий ход жетона цели в инициативе",
+          "Истекает, когда заканчивается следующий ход жетона цели в инициативе"
         ],
         [
           "Конец следующего хода источника",
-          "Истекает, когда заканчивается следующий ход жетона источника в инициативе",
+          "Истекает, когда заканчивается следующий ход жетона источника в инициативе"
         ],
         [
           "1 / 2 / 3 / 10 раундов",
-          "Фиксированный обратный отсчёт; одно уменьшение за конец хода опорного жетона",
-        ],
-      ],
+          "Фиксированный обратный отсчёт; одно уменьшение за конец хода опорного жетона"
+        ]
+      ]
     },
     savedEffects: {
-      heading: "Saved Effects",
-      intro:
-        "Saved effects let you store long-term conditions outside the Turn Tracker — curses, diseases, poisons, hidden debuffs, and other non-combat conditions. They persist in script state and can be optionally copied into the Turn Tracker when combat begins.",
+      heading: "Сохраненные эффекты",
+      intro: "Сохраненные эффекты позволяют сохранять долгосрочные состояния за пределами счетчика ходов — проклятия, болезни, яды, скрытые дебаффы и другие небоевые состояния. Они сохраняются в состоянии сценария и могут быть дополнительно скопированы в систему отслеживания ходов в начале боя.",
       visibility: {
-        heading: "Visibility Modes",
+        heading: "Режимы видимости",
         rows: [
-          ["public", "Full effect label is visible in the Turn Tracker and public chat."],
-          ["masked", "A vague public label is shown to players; full details are GM-only."],
-          ["gm", "No Turn Tracker row. Full details are stored in state and whispered to the GM when the affected token reaches the top of initiative."],
-        ],
+          [
+            "общественный",
+            "Ярлык с полным эффектом отображается в трекере ходов и в общедоступном чате."
+          ],
+          [
+            "в маске",
+            "Игрокам показывается расплывчатый публичный ярлык; Полная информация доступна только GM."
+          ],
+          [
+            "гм",
+            "Нет строки отслеживания поворотов. Полная информация сохраняется в состоянии и передается ведущему, когда затронутый жетон достигает вершины инициативы."
+          ]
+        ]
       },
       commands: {
-        heading: "Saved Effects Commands",
-        intro: "All --saved commands are GM-only. Select a token before running --saved or --saved add.",
+        heading: "Сохраненные команды эффектов",
+        intro: "Все команды --saved доступны только GM. Выберите токен перед запуском --saved или --saved add.",
         rows: [
-          ["!condition-tracker --saved", "View saved effects for the selected token."],
-          ["!condition-tracker --saved add", "Launch the add-saved-effect wizard."],
-          ["!condition-tracker --saved edit <id>", "Edit labels or visibility for an existing saved effect."],
-          ["!condition-tracker --saved remove <id>", "Permanently remove a saved effect."],
-          ["!condition-tracker --saved promote <id> --visibility public|masked|gm", "Copy a saved effect into the Turn Tracker (public or masked) or confirm it is GM-only tracked."],
-          ["!condition-tracker --saved snooze <id> --scope turn|rounds|combat --rounds <n>", "Snooze a GM reminder for this turn, N rounds, or this combat."],
-          ["!condition-tracker --saved snooze-clear <id>", "Clear an active snooze so reminders resume immediately."],
-        ],
+          [
+            "!condition-tracker --сохранено",
+            "Просмотр сохраненных эффектов для выбранного токена."
+          ],
+          [
+            "!condition-tracker --сохранено добавить",
+            "Запустите мастер добавления сохраненных эффектов."
+          ],
+          [
+            "!condition-tracker --saved edit <id>",
+            "Редактируйте метки или видимость существующего сохраненного эффекта."
+          ],
+          [
+            "!condition-tracker --saved remove <id>",
+            "Удаление сохраненного эффекта навсегда."
+          ],
+          [
+            "!condition-tracker --saved promote <id> --visibility public|masked|gm",
+            "Скопируйте сохраненный эффект в трекер ходов (публичный или замаскированный) или подтвердите, что он отслеживается только GM."
+          ],
+          [
+            "!condition-tracker --saved snooze <id> --scope turn|rounds|combat --rounds <n>",
+            "Отложить напоминание ГМ для этого хода, N раундов или этого боя."
+          ],
+          [
+            "!condition-tracker --saved snooze-clear <id>",
+            "Отмените активный откладывание, чтобы напоминания возобновились немедленно."
+          ]
+        ]
       },
       reminders: {
-        heading: "GM Reminders",
-        body: "When a token with gm or masked saved effects reaches the top of the Turn Tracker, the GM receives a whisper listing the hidden effects with action buttons. Duplicate reminders within the same turn are suppressed. Use the Snooze buttons to suppress reminders for a turn, a number of rounds, or for the remainder of the current combat.",
+        heading: "Напоминания ГМ",
+        body: "Когда жетон с гм или замаскированными сохраненными эффектами достигает верхней части счетчика хода, ГМ получает шепот со списком скрытых эффектов с кнопками действий. Повторяющиеся напоминания в пределах одного хода подавляются. Используйте кнопки «Отложить», чтобы отключить напоминания на ход, количество раундов или оставшуюся часть текущего боя."
+      }
+    },
+    actorClassification: {
+      heading: "Классификация Актёров",
+      intro: "Condition Tracker автоматически определяет, является ли каждый токен ИП, НИП или игнорируемым объектом (пины карты, декорации, шаблоны заклинаний). Несвязанные токены по умолчанию игнорируются. Используйте --classify для переопределения автоматического определения для любого токена.",
+      detectionOrder: {
+        heading: "Порядок Определения",
+        colStep: "Шаг",
+        colCheck: "Проверка",
+        colResult: "Результат",
+        rows: [
+          [
+            "1",
+            "Переопределение состояния токена (--classify --scope token)",
+            "ПК / НПС / игнорируется"
+          ],
+          [
+            "2",
+            "Атрибут ct_mod_actor_type персонажа (--classify --scope character)",
+            "ПК / НПС / игнорируется"
+          ],
+          [
+            "3",
+            "Несвязанный токен — нет листа персонажа",
+            "игнорируется"
+          ],
+          [
+            "4",
+            "Адаптер системы игры (атрибут npc / is_npc)",
+            "ПК / НПС"
+          ],
+          [
+            "5",
+            "Сканирование универсальных атрибутов НИП (npc, is_npc, npcflag, sheet_type, character_type)",
+            "ПК / НПС"
+          ],
+          [
+            "6",
+            "Запасной вариант controlledby персонажа",
+            "ПК / НПС"
+          ]
+        ]
       },
+      types: {
+        heading: "Типы Классификации",
+        colType: "Тип",
+        colMeaning: "Значение",
+        rows: [
+          [
+            "ПК",
+            "Игровой персонаж — всегда включается как ИП в мастере и определении"
+          ],
+          [
+            "НПС",
+            "Неигровой персонаж — всегда включается как НИП"
+          ],
+          [
+            "игнорируется",
+            "Никогда не отображается и не отслеживается — исключён из выбора токенов мастера"
+          ],
+          [
+            "неизвестный",
+            "Только автоматическое определение; тип не удалось определить (обрабатывается как НИП в мастере)"
+          ]
+        ]
+      },
+      commands: {
+        heading: "Команды Классификации",
+        intro: "Выберите один или несколько токенов перед выполнением команд --classify.",
+        rows: [
+          [
+            "!condition-tracker --классифицировать компьютер",
+            "Отметить выбранные токены как ИП (область по умолчанию: персонаж)."
+          ],
+          [
+            "!condition-tracker --классифицировать NPC",
+            "Отметить выбранные токены как НИП."
+          ],
+          [
+            "!condition-tracker --classify игнорируется",
+            "Исключить выбранные токены из всего отслеживания."
+          ],
+          [
+            "!condition-tracker --классифицировать авто",
+            "Удалить переопределение — восстановить автоматическое определение."
+          ],
+          [
+            "!condition-tracker --классифицировать шоу",
+            "Показать диагностику классификации (тип, источник, причина) для каждого выбранного токена."
+          ],
+          [
+            "!condition-tracker --classify pc --scope token",
+            "Переопределение уровня токена в состоянии скрипта — полезно для несвязанных токенов."
+          ],
+          [
+            "!condition-tracker --classify pc --scope символ",
+            "Переопределение уровня персонажа в атрибут ct_mod_actor_type — применяется ко всем токенам с тем же листом персонажа."
+          ]
+        ]
+      }
     },
     configuration: {
       heading: "Конфигурация",
-      intro:
-        "Используйте !condition-tracker --config &lt;параметр&gt; &lt;значение&gt; или кнопку Конфигурация в главном меню.",
+      intro: "Используйте !condition-tracker --config &lt;параметр&gt; &lt;значение&gt; или кнопку Конфигурация в главном меню.",
       colOption: "Параметр",
       colValues: "Значения",
       colDesc: "Описание",
@@ -587,54 +726,53 @@ const TRANSLATION = {
         [
           "useMarkers",
           "true / false",
-          "Применять маркеры состояния Roll20 к жетонам при добавлении состояния",
+          "Применять маркеры состояния Roll20 к жетонам при добавлении состояния"
         ],
         [
           "useIcons",
-          "true / false",
-          "Показывать короткие коды иконок (например, [G]) вместо эмодзи в строках Трекера Ходов",
+          "правда/ложь",
+          "Показывать короткие коды иконок (например, [G]) вместо эмодзи в строках Трекера Ходов"
         ],
         [
           "subjectPromptBypass",
-          "true / false",
-          "Пропустить необязательный шаг выбора субъекта для эффектов Заклинание / Умение / Другое",
+          "правда/ложь",
+          "Пропустить необязательный шаг выбора субъекта для эффектов Заклинание / Умение / Другое"
         ],
         [
           "suppressPublicChat",
-          "true / false",
-          "Скрыть все публичные объявления в чате (сообщения о применении и снятии). Шёпот GM не затрагивается.",
+          "правда/ложь",
+          "Скрыть все публичные объявления в чате (сообщения о применении и снятии). Шёпот GM не затрагивается."
         ],
         [
           "healthBar",
           "bar1_value / bar2_value / bar3_value",
-          "Наблюдаемая полоса; когда опускается до 0, ДМ предлагается очистить состояния",
+          "Наблюдаемая полоса; когда опускается до 0, ДМ предлагается очистить состояния"
         ],
         [
           "language",
           "en-US / fr / de / es / pt-BR / ko",
-          "Язык вывода для сообщений чата и справочного хэндаута",
+          "Язык вывода для сообщений чата и справочного хэндаута"
         ],
         [
           "marker",
           "&lt;Состояние&gt;=&lt;имя маркера&gt;",
-          "Переопределить маркер состояния для конкретного состояния (например, marker Grappled=grab)",
-        ],
-      ],
+          "Переопределить маркер состояния для конкретного состояния (например, marker Grappled=grab)"
+        ]
+      ]
     },
     defaultMarkers: {
       heading: "Маркеры состояний по умолчанию",
       colCondition: "Состояние",
-      colMarker: "Имя маркера",
+      colMarker: "Имя маркера"
     },
     availableLocales: {
       heading: "Доступные переводы",
-      intro:
-        "Используйте параметр конфигурации языка, чтобы задать язык сообщений чата и справочного хэндаута. Короткие псевдонимы также принимаются для en, zh и pt.",
-      colLocale: "Locale",
+      intro: "Используйте параметр конфигурации языка, чтобы задать язык сообщений чата и справочного хэндаута. Короткие псевдонимы также принимаются для en, zh и pt.",
+      colLocale: "Языковой стандарт",
       colLanguage: "Язык",
-      colFile: "Файл перевода",
-    },
-  },
+      colFile: "Файл перевода"
+    }
+  }
 };
 
 export default TRANSLATION;

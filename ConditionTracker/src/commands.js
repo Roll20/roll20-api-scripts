@@ -11,6 +11,7 @@ import {
   MACRO_NAME_MULTI_TARGET,
   MACRO_NAME_REPORT_TOKEN,
   MACRO_NAME_SAVED,
+  MACRO_NAME_CLASSIFY,
   HANDOUT_NAME,
   MENU_REMOVE,
   SCRIPT_NAME,
@@ -41,6 +42,7 @@ import { parseCommand } from "./parser.js";
 import { removeConditionById } from "./removal.js";
 import {
   addActiveCondition,
+  clearActorTokenOverride,
   createDefaultConfig,
   ensureState,
   findActiveCondition,
@@ -48,8 +50,20 @@ import {
   getConfig,
   getActiveBySource,
   getActiveByTarget,
+  setActorTokenOverride,
   setConfig,
 } from "./state.js";
+import {
+  ACTOR_TYPE_AUTO,
+  ACTOR_TYPE_IGNORED,
+  ACTOR_TYPE_PC,
+  VALID_ACTOR_CLASSIFY_TYPES,
+  classifyToken,
+  classifyTokenDetail,
+  clearCharacterOverrideAttr,
+  setCharacterOverrideAttr,
+} from "./actorClassification.js";
+
 import {
   GAME_SYSTEM_DEFINITIONS,
   VALID_GAME_SYSTEM_LIST,
@@ -292,81 +306,16 @@ function sectionSpacer() {
 }
 
 /**
- * Returns true when a character's sheet-level npc attribute marks it as a PC.
+ * Returns true when a token is classified as a player character.
  *
- * Works for sheets that expose an "npc" attribute (e.g. D&D 5e OGL).
- * Returns undefined when the attribute is absent so callers can fall back.
- * Uses findObjs instead of getAttrByName to avoid Roll20 console errors when
- * the attribute does not exist on the character sheet.
- *
- * @param {string} characterId Roll20 character id.
- * @returns {boolean|undefined} True for PC, false for NPC, undefined if unknown.
- */
-function isPlayerByNpcAttribute(characterId) {
-  const attrs = queryObjects({
-    _type: "attribute",
-    _characterid: characterId,
-    name: "npc",
-  });
-  if (attrs.length === 0) return undefined;
-  return attrs[0].get("current") !== "1";
-}
-
-/**
- * Returns true when a character's controlledby field includes at least one
- * non-GM player.
- *
- * @param {object} character Roll20 character object.
- * @returns {boolean} True for player-controlled characters.
- */
-function isPlayerByControlledBy(character) {
-  const controlledBy = toText(character.get("controlledby"));
-  if (!controlledBy) return false;
-  // "all" is a Roll20 sentinel meaning every player can see the sheet —
-  // it does not indicate a player character, so exclude it.
-  return controlledBy
-    .split(",")
-    .map((id) => id.trim())
-    .filter((id) => id && id !== "all")
-    .some((id) => !playerIsGM(id));
-}
-
-/**
- * Returns true when a token is directly controlled by at least one non-GM player
- * via its token-level controlledby field.
- *
- * @param {object} token Roll20 graphic object.
- * @returns {boolean} True when a non-GM player controls the token directly.
- */
-function isPlayerByTokenControlledBy(token) {
-  const controlledBy = toText(token.get("controlledby"));
-  if (!controlledBy) return false;
-  return controlledBy
-    .split(",")
-    .map((id) => id.trim())
-    .filter((id) => id && id !== "all")
-    .some((id) => !playerIsGM(id));
-}
-
-/**
- * Returns true when a token is linked to a player character.
- *
- * Checks token-level controlledby first (catches player-owned NPC stat blocks
- * such as an Echo Knight's echo). Then falls back to sheet npc attribute and
- * the character-level controlledby field.
+ * Delegates to classifyToken so that explicit overrides, sheet adapters, and
+ * generic attribute detection are all applied consistently.
  *
  * @param {object} token Roll20 graphic object.
  * @returns {boolean} True for player tokens.
  */
 export function isPlayerToken(token) {
-  if (isPlayerByTokenControlledBy(token)) return true;
-  const characterId = toText(token.get("represents"));
-  if (!characterId) return false;
-  const character = getObj("character", characterId);
-  if (!character) return false;
-  const byAttr = isPlayerByNpcAttribute(characterId);
-  if (byAttr !== undefined) return byAttr;
-  return isPlayerByControlledBy(character);
+  return classifyToken(token) === ACTOR_TYPE_PC;
 }
 
 /**
@@ -403,16 +352,18 @@ function hasZeroHp(token) {
 
 /**
  * Converts one Roll20 graphic token into a token entry, or null when the
- * token has no resolvable name or has zero HP.
+ * token has no resolvable name, has zero HP, or is classified as ignored.
  *
  * @param {object} token Roll20 graphic object.
  * @returns {{id: string, name: string, isPlayer: boolean}|null} Token entry.
  */
 function tokenToEntry(token) {
   if (hasZeroHp(token)) return null;
+  const actorType = classifyToken(token);
+  if (actorType === ACTOR_TYPE_IGNORED) return null;
   const name = getTokenDisplayName(token);
   if (!name) return null;
-  return { id: token.id, name, isPlayer: isPlayerToken(token) };
+  return { id: token.id, name, isPlayer: actorType === ACTOR_TYPE_PC };
 }
 
 /**
@@ -1059,6 +1010,11 @@ export function routeCommand(msg, args) {
     return;
   }
 
+  if (args.classify !== undefined) {
+    handleClassify(msg, args);
+    return;
+  }
+
   if (args.config) {
     handleConfig(msg.playerid, args.config);
     return;
@@ -1397,6 +1353,147 @@ export function handleRemove(playerId, conditionId) {
     whisperResult: true,
     locale,
   });
+}
+
+/**
+ * Applies a classify override to a single token and its linked character based
+ * on the requested scope.
+ *
+ * Returns a display-friendly summary line for the whisper confirmation.
+ *
+ * @param {object} token Roll20 graphic object.
+ * @param {string} tokenName Human-readable token name.
+ * @param {string} classifyValue Classify value: pc, npc, ignored, or auto.
+ * @param {'token'|'character'} scope Override scope.
+ * @param {string} locale Output locale.
+ * @returns {string} Human-readable result line.
+ */
+function applyClassifyOverride(token, tokenName, classifyValue, scope, locale) {
+  const tokenId = token.id;
+  const characterId = toText(token.get('represents'));
+  const name = escapeHtml(tokenName);
+
+  if (scope === 'token') {
+    if (classifyValue === ACTOR_TYPE_AUTO) {
+      clearActorTokenOverride(tokenId);
+      return t('ui.classify.cleared', locale, { name, scope: 'token' });
+    }
+    setActorTokenOverride(tokenId, classifyValue);
+    return t('ui.classify.set', locale, { name, type: classifyValue, scope: 'token' });
+  }
+
+  // scope === 'character'
+  if (!characterId) {
+    // No linked character — fall back to token override
+    if (classifyValue === ACTOR_TYPE_AUTO) {
+      clearActorTokenOverride(tokenId);
+      return t('ui.classify.clearedTokenFallback', locale, { name });
+    }
+    setActorTokenOverride(tokenId, classifyValue);
+    return t('ui.classify.setTokenFallback', locale, { name, type: classifyValue });
+  }
+
+  if (classifyValue === ACTOR_TYPE_AUTO) {
+    clearCharacterOverrideAttr(characterId);
+    return t('ui.classify.cleared', locale, { name, scope: 'character' });
+  }
+  setCharacterOverrideAttr(characterId, classifyValue);
+  return t('ui.classify.set', locale, { name, type: classifyValue, scope: 'character' });
+}
+
+/**
+ * Whispers a classification diagnostic for each selected token.
+ *
+ * @param {string} playerId GM player id.
+ * @param {object[]} selected Roll20 selected token references.
+ * @param {string} locale Output locale.
+ * @returns {void}
+ */
+function handleClassifyShow(playerId, selected, locale) {
+  const lines = [heading(t('ui.classify.showHeading', locale))];
+  let found = 0;
+
+  for (const sel of selected) {
+    const tokenId = toText(sel._id);
+    const token = getGraphicToken(tokenId);
+    if (!token) continue;
+
+    const tokenName = getTokenDisplayName(token);
+    const detail = classifyTokenDetail(token, tokenName);
+    lines.push(
+      htmlTable(
+        [t('ui.col.field', locale), t('ui.col.value', locale)],
+        [
+          [t('ui.classify.fieldToken', locale), escapeHtml(tokenName || tokenId)],
+          [t('ui.classify.fieldType', locale), escapeHtml(detail.type)],
+          [t('ui.classify.fieldSource', locale), escapeHtml(detail.source)],
+          [t('ui.classify.fieldReason', locale), escapeHtml(detail.reason)],
+        ],
+      ),
+    );
+    found += 1;
+  }
+
+  if (found === 0) {
+    whisperWarning(playerId, t('ui.msg.reSelectTokens', locale));
+    return;
+  }
+
+  whisper(playerId, t('ui.classify.showTitle', locale), lines);
+}
+
+/**
+ * Handles --classify commands, applying or showing actor type overrides for
+ * selected tokens.
+ *
+ * @param {object} msg Roll20 chat message.
+ * @param {object} args Parsed command arguments.
+ * @returns {void}
+ */
+export function handleClassify(msg, args) {
+  const locale = getConfig().language;
+  const classifyRaw = toText(args.classify).toLowerCase() || 'show';
+  const scopeRaw = toText(args.scope).toLowerCase() || 'character';
+  const selected = Array.isArray(msg.selected) ? msg.selected : [];
+
+  if (selected.length === 0) {
+    whisperWarning(msg.playerid, t('ui.classify.noSelection', locale));
+    return;
+  }
+
+  if (classifyRaw === 'show') {
+    handleClassifyShow(msg.playerid, selected, locale);
+    return;
+  }
+
+  if (!VALID_ACTOR_CLASSIFY_TYPES.has(classifyRaw)) {
+    whisperWarning(msg.playerid, t('ui.classify.invalidType', locale, { type: classifyRaw }));
+    return;
+  }
+
+  const scope = scopeRaw === 'token' ? 'token' : 'character';
+  const resultLines = [];
+
+  for (const sel of selected) {
+    const tokenId = toText(sel._id);
+    const token = getGraphicToken(tokenId);
+    if (!token) continue;
+
+    const tokenName = getTokenDisplayName(token);
+    const line = applyClassifyOverride(token, tokenName, classifyRaw, scope, locale);
+    resultLines.push(line);
+  }
+
+  if (resultLines.length === 0) {
+    whisperWarning(msg.playerid, t('ui.msg.reSelectTokens', locale));
+    return;
+  }
+
+  whisper(
+    msg.playerid,
+    t('ui.classify.title', locale),
+    [heading(t('ui.classify.resultHeading', locale)), ...resultLines.map((l) => rawHtml(`<div>${l}</div>`))],
+  );
 }
 
 /**
@@ -2356,6 +2453,7 @@ export function handleReinstallMacro(playerId) {
       multiTarget: MACRO_NAME_MULTI_TARGET,
       reportToken: MACRO_NAME_REPORT_TOKEN,
       saved: MACRO_NAME_SAVED,
+      classify: MACRO_NAME_CLASSIFY,
     }),
   );
 }

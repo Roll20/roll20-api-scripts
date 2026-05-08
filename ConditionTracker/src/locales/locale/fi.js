@@ -2,77 +2,77 @@ const TRANSLATION = {
   conditions: {
     Grappled: {
       past: "painissa",
-      verb: "ottaa painiin",
+      verb: "ottaa painiin"
     },
     Restrained: {
       past: "sidottu",
-      verb: "sitoo",
+      verb: "sitoo"
     },
     Prone: {
       past: "kaadettu",
-      verb: "kaataa",
+      verb: "kaataa"
     },
     Poisoned: {
       past: "myrkytetty",
-      verb: "myrkyttää",
+      verb: "myrkyttää"
     },
     Stunned: {
       past: "tainnutettu",
-      verb: "tainnuttaa",
+      verb: "tainnuttaa"
     },
     Blinded: {
       past: "sokaistu",
-      verb: "sokaisee",
+      verb: "sokaisee"
     },
     Charmed: {
       past: "lumottu",
-      verb: "lumoaa",
+      verb: "lumoaa"
     },
     Frightened: {
       past: "pelästynyt",
-      verb: "pelästyttää",
+      verb: "pelästyttää"
     },
     Incapacitated: {
       past: "toimintakyvytön",
       verb: "tekee",
-      suffix: "toimintakyvyttömäksi",
+      suffix: "toimintakyvyttömäksi"
     },
     Invisible: {
       past: "näkymätön",
       verb: "tekee",
-      suffix: "näkymättömäksi",
+      suffix: "näkymättömäksi"
     },
     Paralyzed: {
       past: "halvaantunut",
-      verb: "halvaannuttaa",
+      verb: "halvaannuttaa"
     },
     Petrified: {
       past: "kivettynyt",
-      verb: "kivettää",
+      verb: "kivettää"
     },
     Unconscious: {
       past: "tajuton",
       verb: "tekee",
-      suffix: "tajuttomaksi",
+      suffix: "tajuttomaksi"
     },
     Spell: {
       past: "loitsun vaikutuksen alainen",
-      verb: "langettaa loitsun kohteeseen",
+      verb: "langettaa loitsun kohteeseen"
     },
     Ability: {
       past: "kyvyn vaikutuksen alainen",
-      verb: "käyttää kykyä kohteeseen",
+      verb: "käyttää kykyä kohteeseen"
     },
     Advantage: {
       past: "on etu",
       verb: "antaa edun",
-      noBy: true,
+      noBy: true
     },
     Disadvantage: {
       past: "on haitta",
       verb: "antaa haitan",
-      noBy: true,
-    },
+      noBy: true
+    }
   },
   condNames: {
     Grappled: "Painissa",
@@ -92,7 +92,7 @@ const TRANSLATION = {
     Ability: "Kyky",
     Advantage: "Etu",
     Disadvantage: "Haitta",
-    Other: "Muu",
+    Other: "Muu"
   },
   templates: {
     display: {
@@ -101,7 +101,7 @@ const TRANSLATION = {
       disadvantage: "{emoji} {source} on haitta {target}{subject} vastaan",
       noBy: "{emoji} {target} {past} ({source})",
       self: "{target} on {past}",
-      standard: "{emoji} {target} {past} — {source}",
+      standard: "{emoji} {target} {past} — {source}"
     },
     apply: {
       custom: "{source} soveltaa {effect} kohteeseen {target}.",
@@ -109,7 +109,7 @@ const TRANSLATION = {
       disadvantage: "{source} on haitta {target}{subject} vastaan.",
       self: "{target} on {past}.",
       withSuffix: "{source} {verb} {target} {suffix}.",
-      standard: "{source} {verb} {target}.",
+      standard: "{source} {verb} {target}."
     },
     remove: {
       custom: "{target} ei enää ole {effect} vaikutuksen alainen.",
@@ -117,8 +117,8 @@ const TRANSLATION = {
       disadvantage: "{source} ei enää ole haitta {target}{subject} vastaan.",
       noBy: "{target} ei enää ole {past}.",
       self: "{target} ei enää ole {past}.",
-      standard: "{target} ei enää ole {past} — {source}.",
-    },
+      standard: "{target} ei enää ole {past} — {source}."
+    }
   },
   ui: {
     wizard: {
@@ -139,7 +139,7 @@ const TRANSLATION = {
       sourceDesc: "Valitse olento, joka luo tai tuottaa tilan tai vaikutuksen.",
       targetDesc: "Valitse olento, joka vastaanottaa tilan tai vaikutuksen.",
       otherText: "Mukautettu tilateksti",
-      effectDetails: "{condition}-tiedot",
+      effectDetails: "{condition}-tiedot"
     },
     col: {
       players: "Pelaajat",
@@ -160,8 +160,8 @@ const TRANSLATION = {
       details: "Tiedot",
       description: "Kuvaus",
       scenario: "Tilanne",
-      gameSystem: "Game System",
-      duration: "Duration",
+      gameSystem: "Pelijärjestelmä",
+      duration: "Kesto"
     },
     dur: {
       untilRemoved: "Kunnes poistetaan",
@@ -174,7 +174,7 @@ const TRANSLATION = {
       custom: "Mukautettu",
       customPrompt: "Kierrosten määrä",
       untilRemovedDisplay: "Kunnes poistetaan",
-      turnsRemaining: "{n} jäljellä olevaa vuoron loppua",
+      turnsRemaining: "{n} jäljellä olevaa vuoron loppua"
     },
     btn: {
       openWizard: "Avaa ohjattu toiminto",
@@ -186,14 +186,14 @@ const TRANSLATION = {
       reinstallHandout: "Asenna handout uudelleen",
       showHelp: "Näytä ohje",
       reorderConditions: "Järjestä tilarivit uudelleen",
-      reportToken: "Report Token Conditions",
-      savedEffects: "Saved Effects",
-      addSavedEffect: "Add Saved Effect",
-      editSaved: "Edit",
-      removeSaved: "Remove",
-      promoteSaved: "Add to Turn Tracker",
-      snoozeSaved: "Snooze",
-      clearSnooze: "Clear Snooze",
+      reportToken: "Ilmoita Tokenin ehdot",
+      savedEffects: "Tallennetut tehosteet",
+      addSavedEffect: "Lisää tallennettu tehoste",
+      editSaved: "Muokata",
+      removeSaved: "Poistaa",
+      promoteSaved: "Lisää Turn Trackeriin",
+      snoozeSaved: "Torkku",
+      clearSnooze: "Tyhjennä Torkku"
     },
     title: {
       menu: "Valikko",
@@ -204,7 +204,7 @@ const TRANSLATION = {
       applied: "Sovellettu",
       removed: "Tila poistettu",
       cleanup: "Siivous valmis",
-      macroReinstalled: "The {wizard}, {multiTarget}, {reportToken}, and {saved} macros have been reinstalled for all current GM players.",
+      macroReinstalled: "Makro asennettu uudelleen",
       handoutReinstalled: "Handout asennettu uudelleen",
       warning: "Varoitus",
       error: "Virhe",
@@ -212,19 +212,19 @@ const TRANSLATION = {
       noConditions: "Ei tiloja",
       tokenMoved: "Token siirretty",
       markedDead: "Merkitty kuolleeksi",
-      zeroHp: "{name} — 0 HP",
+      zeroHp: "{name} – 0 hv",
       moveToken: "{name} — siirretäänkö token?",
       scriptReady: "Skripti valmis",
       conditionReorder: "Vuorojärjestys muuttui",
-      tokenReport: "Token Condition Report",
-      savedEffects: "Saved Effects",
-      savedAdd: "Add Saved Effect",
-      savedEdit: "Edit Saved Effect",
-      savedRemoved: "Saved Effect Removed",
-      savedPromoted: "Add to Turn Tracker",
-      savedSnoozed: "Reminder Snoozed",
-      savedSnoozeCleared: "Snooze Cleared",
-      hiddenEffects: "Hidden Effects — {name}",
+      tokenReport: "Tokenin kuntoraportti",
+      savedEffects: "Tallennetut tehosteet",
+      savedAdd: "Lisää tallennettu tehoste",
+      savedEdit: "Muokkaa tallennettua tehostetta",
+      savedRemoved: "Tallennettu tehoste poistettu",
+      savedPromoted: "Lisää Turn Trackeriin",
+      savedSnoozed: "Muistutus Torkutettu",
+      savedSnoozeCleared: "Torkku poistettu",
+      hiddenEffects: "Piilotetut tehosteet – {name}"
     },
     heading: {
       quickActions: "Pikavalinnat",
@@ -236,68 +236,52 @@ const TRANSLATION = {
       promptUi: "Ohjatun toiminnon käyttöliittymä",
       examples: "Esimerkit",
       summary: "Yhteenveto",
-      appliedTo: "Conditions Applied To",
-      appliedBy: "Conditions Applied By",
-      savedEffectsFor: "Saved Effects for {name}",
-      visibility: "Visibility",
-      snoozeOptions: "Snooze Reminder",
-      promoteOptions: "Promote to Turn Tracker",
-      editActions: "Edit Actions",
+      appliedTo: "Sovellettavat ehdot",
+      appliedBy: "Sovellettavat ehdot",
+      savedEffectsFor: "Tallennetut tehosteet kohteelle {name}",
+      visibility: "Näkyvyys",
+      snoozeOptions: "Torkkumuistutus",
+      promoteOptions: "Siirry Turn Trackeriin",
+      editActions: "Muokkaa toimintoja"
     },
     msg: {
       noActive: "Aktiivisia tiloja ei seurata.",
       configReset: "Asetukset palautettu oletuksiin.",
-      unknownConfig:
-        "Tuntematon asetusvaihtoehto. Käytä --config nähdäksesi tuetut asetukset.",
-      macroReinstalled:
-        "Makrot {wizard}, {multiTarget} ja {reportToken} on asennettu uudelleen kaikille nykyisille GM-pelaajille.",
+      unknownConfig: "Tuntematon asetusvaihtoehto. Käytä --config nähdäksesi tuetut asetukset.",
+      macroReinstalled: "Makrot {wizard}, {multiTarget}, {reportToken}, {saved} ja {classify} on asennettu uudelleen kaikille nykyisille GM-pelaajille.",
       handoutReinstalled: "Ohje-handout {handout} on asennettu uudelleen.",
-      duplicate:
-        "Täsmälleen sama lähde, kohde, tila ja mukautettu teksti on jo aktiivinen.",
+      duplicate: "Täsmälleen sama lähde, kohde, tila ja mukautettu teksti on jo aktiivinen.",
       noTargets: "Monikohdesovellukselle ei määritetty kohde-tokeneita.",
-      noSelection:
-        "Valitse vähintään yksi token laudalta ennen --multi-target-komennon käyttöä.",
+      noSelection: "Valitse vähintään yksi token laudalta ennen --multi-target-komennon käyttöä.",
       invalidIds: "Nykyisestä valinnasta ei löydy kelvollisia token-tunnuksia.",
-      reSelectTokens:
-        "Yhtään alun perin valituista tokeneista ei löydy. Valitse tokenit uudelleen ja yritä uudelleen.",
+      reSelectTokens: "Yhtään alun perin valituista tokeneista ei löydy. Valitse tokenit uudelleen ja yritä uudelleen.",
       conditionNotFound: "Tilatunnusta ei löydy.",
       gmOnly: "Condition Tracker -komennot ovat vain GM:n käytettävissä.",
-      commandFailed:
-        "Komentoa ei voitu suorittaa turvallisesti. Tarkista API-konsoli lisätietoja varten.",
+      commandFailed: "Komentoa ei voitu suorittaa turvallisesti. Tarkista API-konsoli lisätietoja varten.",
       sourceTokenNotFound: "Lähde-tokenia ei löydy.",
       targetTokenNotFound: "Kohde-tokenia ei löydy.",
       subjectTokenNotFound: "Kohde-tokenia ei löydy.",
-      invalidCondition:
-        "Tilan on oltava jokin ennalta määritetyistä tiloista tai Muu.",
-      subjectOnlyCustom:
-        "--subject on kelvollinen vain Loitsulle, Kyvylle, Edulle, Haitalle ja Muulle.",
-      subjectBypassInvalid:
-        "--subjectPromptBypass odottaa arvoa true tai false.",
-      customDetailsRequired:
-        "{condition}-tiedot ovat pakollisia. Käytä --other antaaksesi ne.",
-      markerConfigFormat:
-        "Merkkimäärityksen muoto: --config marker Grappled=grab",
-      markerPredefinedRequired:
-        "Merkkimääritys edellyttää ennalta määritettyä tilanimeä.",
+      invalidCondition: "Tilan on oltava jokin ennalta määritetyistä tiloista tai Muu.",
+      subjectOnlyCustom: "--subject on kelvollinen vain Loitsulle, Kyvylle, Edulle, Haitalle ja Muulle.",
+      subjectBypassInvalid: "--subjectPromptBypass odottaa arvoa true tai false.",
+      customDetailsRequired: "{condition}-tiedot ovat pakollisia. Käytä --other antaaksesi ne.",
+      markerConfigFormat: "Merkkimäärityksen muoto: --config marker Grappled=grab",
+      markerPredefinedRequired: "Merkkimääritys edellyttää ennalta määritettyä tilanimeä.",
       markerNameRequired: "Merkkimääritys edellyttää ei-tyhjää merkin nimeä.",
       markerSet: "Tilan {condition} merkiksi asetettu {marker}.",
       healthBarSet: "Elämäpalkki asetettu: {bar}.",
       boolSet: "{key} asetettu arvoon {value}.",
       expectedBoolean: "Odotettiin true tai false.",
-      invalidHealthBar:
-        "Elämäpalkin on oltava bar1_value, bar2_value tai bar3_value.",
+      invalidHealthBar: "Elämäpalkin on oltava bar1_value, bar2_value tai bar3_value.",
       markersDisabled: "Merkit ovat poistettu käytöstä.",
       noMarkerConfigured: "Tälle tilalle ei ole määritetty merkkiä.",
       markerApplied: "Merkki sovellettu: {marker}",
       markerPresent: "Merkki on jo olemassa: {marker}",
       langSet: "Kieleksi asetettu {locale}.",
       invalidLocale: "Virheellinen locale. Tuetut localet: {locales}.",
-      otherDurationRequiresRounds:
-        "Mukautettu kesto edellyttää numeerista kierrosmäärää, esim. --duration 5 rounds.",
-      invalidDuration:
-        "Keston on oltava Kunnes poistetaan, vuoron loppuvaihtoehto tai positiivinen kierrosmäärä.",
-      zeroHpNoConditions:
-        "{name} saavutti 0 HP eikä sillä ole aktiivisia tiloja.",
+      otherDurationRequiresRounds: "Mukautettu kesto edellyttää numeerista kierrosmäärää, esim. --duration 5 rounds.",
+      invalidDuration: "Keston on oltava Kunnes poistetaan, vuoron loppuvaihtoehto tai positiivinen kierrosmäärä.",
+      zeroHpNoConditions: "{name} saavutti 0 HP eikä sillä ole aktiivisia tiloja.",
       zeroHpConditions: "{name} saavutti 0 HP. Valitse poistettavat tilat:",
       removeAllBtn: "Poista kaikki {name}-tilat",
       markIncapacitated: "Merkitse toimintakyvyttömäksi",
@@ -305,45 +289,39 @@ const TRANSLATION = {
       alreadyIncapacitated: "{name} on jo toimintakyvytön.",
       tokenRemovedFromTurn: "{name} poistettiin vuorojärjestyksestä.",
       tokenNotInTurn: "{name} ei löydy vuorojärjestyksestä.",
-      moveTokenPrompt:
-        "Siirretäänkö {name} karttatasolle niin, että se pysyy näkyvänä eikä häiritse muita tokeneita?",
+      moveTokenPrompt: "Siirretäänkö {name} karttatasolle niin, että se pysyy näkyvänä eikä häiritse muita tokeneita?",
       moveTokenBtn: "Siirrä {name} karttatasolle",
       tokenMoved: "{name} siirrettiin karttatasolle.",
       tokenNotFound: "Tokenia ei löydy.",
       noActiveConditions: "{name}:llä ei ole aktiivisia tiloja poistettavaksi.",
-      deadNoConditions:
-        "{name} merkittiin kuolleeksi. Aktiivisia tiloja ei ollut.",
+      deadNoConditions: "{name} merkittiin kuolleeksi. Aktiivisia tiloja ei ollut.",
       scriptReady: "{name} on aktiivinen ja käytät versiota {version}.",
       reachedZeroHp: "{name} saavutti 0 HP",
       manuallyRemoved: "poistettiin manuaalisesti",
       durationExpired: "kesto päättyi",
       markedAsDead: "{name} merkittiin kuolleeksi",
-      conditionReorder:
-        "Vuorojärjestys muuttui ja {count} seurattu tilarivi voi nyt olla väärässä paikassa. Palauta ne klikkaamalla alla niille kuuluvien tokeneiden jälkeen.",
-      conditionsReordered:
-        "Tilarivit on sijoitettu uudelleen niille kuuluvien tokeneiden jälkeen.",
-      noTokensSelectedReport:
-        "Select at least one token on the board before using --report-token.",
-      noConditionsAppliedTo: "{name} has no active conditions applied to it.",
-      noConditionsAppliedBy:
-        "{name} has no active conditions applied to others.",
-      noSavedEffects: "No saved effects stored for {name}.",
-      noTokenSelectedSaved: "Select a token on the board before using --saved.",
-      savedEffectAdded: "Saved effect added for {name}.",
-      savedEffectUpdated: "Saved effect updated.",
-      savedEffectRemoved: "Saved effect removed.",
-      savedEffectNotFound: "Saved effect not found.",
-      savedInvalidVisibility: "Invalid visibility. Use public, masked, or gm.",
+      conditionReorder: "Vuorojärjestys muuttui ja {count} seurattu tilarivi voi nyt olla väärässä paikassa. Palauta ne klikkaamalla alla niille kuuluvien tokeneiden jälkeen.",
+      conditionsReordered: "Tilarivit on sijoitettu uudelleen niille kuuluvien tokeneiden jälkeen.",
+      noTokensSelectedReport: "Valitse laudalta vähintään yksi merkki ennen --report-tokenin käyttöä.",
+      noConditionsAppliedTo: "{name} ei sisällä aktiivisia ehtoja.",
+      noConditionsAppliedBy: "{name} ei sisällä muita aktiivisia ehtoja.",
+      noSavedEffects: "Ei tallennettuja tehosteita tallennettuna kohteelle {name}.",
+      noTokenSelectedSaved: "Valitse pelilaudalta pelimerkki ennen kuin käytät --saved.",
+      savedEffectAdded: "Tallennettu tehoste lisätty kohteelle {name}.",
+      savedEffectUpdated: "Tallennettu tehoste päivitetty.",
+      savedEffectRemoved: "Tallennettu tehoste poistettu.",
+      savedEffectNotFound: "Tallennettua tehostetta ei löydy.",
+      savedInvalidVisibility: "Virheellinen näkyvyys. Käytä julkista, naamioitua tai gm.",
       savedConditionRequired: "Condition type is required. Use --condition <type>.",
-      savedPromotedPublic: "Effect added to Turn Tracker as public.",
-      savedPromotedMasked: "Effect added to Turn Tracker as masked — players see: {publicLabel}.",
-      savedPromotedGm: "Effect is GM-only — no Turn Tracker row will be created. The reminder system will surface it when this token reaches the top of the turn order.",
-      savedSnoozed: "Reminder snoozed: {scope}.",
-      savedSnoozeCleared: "Snooze cleared.",
-      hiddenEffectsReminder: "Hidden effects are active on {name}.",
-      visibilityPublicHint: "full label visible to all",
-      visibilityMaskedHint: "vague label shown to players",
-      visibilityGmHint: "GM whisper only, no Turn Tracker row",
+      savedPromotedPublic: "Tehoste lisättiin Turn Trackeriin julkisena.",
+      savedPromotedMasked: "Tehoste lisätty Turn Trackeriin maskattuina – pelaajat näkevät: {publicLabel}.",
+      savedPromotedGm: "Vaikutus on vain GM:lle – Käännösseurantariviä ei luoda. Muistutusjärjestelmä tuo sen esiin, kun tämä merkki saavuttaa vuorottelujärjestyksen huipulle.",
+      savedSnoozed: "Muistutus torkutettu: {scope}.",
+      savedSnoozeCleared: "Torkku poistettu.",
+      hiddenEffectsReminder: "Piilotetut tehosteet ovat aktiivisia {name}.",
+      visibilityPublicHint: "koko etiketti näkyy kaikille",
+      visibilityMaskedHint: "epämääräinen etiketti näytetään pelaajille",
+      visibilityGmHint: "Vain GM kuiskaus, ei Turn Tracker -riviä"
     },
     removal: {
       conditionField: "Tila",
@@ -355,54 +333,68 @@ const TRANSLATION = {
       markerRetained: "Säilytetty ({marker})",
       rowRemoved: "Poistettu",
       rowMissing: "Jo puuttuu",
-      manualReason: "Manuaalinen poisto",
+      manualReason: "Manuaalinen poisto"
     },
     saved: {
       visibility: {
-        public: "Public",
-        masked: "Masked",
-        gm: "GM Only",
+        public: "Julkinen",
+        masked: "Naamioitunut",
+        gm: "Vain GM"
       },
       snooze: {
-        thisTurn: "This Turn",
-        oneRound: "1 Round",
-        threeRounds: "3 Rounds",
-        thisCombat: "This Combat",
-        rounds: "{n} round(s)",
+        thisTurn: "Tämä käännös",
+        oneRound: "1 kierros",
+        threeRounds: "3 kierrosta",
+        thisCombat: "Tämä taistelu",
+        rounds: "{n} kierrosta"
       },
       field: {
-        gmLabel: "GM Label",
-        publicLabel: "Public Label",
-        visibility: "Visibility",
-        source: "Source",
-        condition: "Condition",
+        gmLabel: "GM-merkki",
+        publicLabel: "Julkinen merkki",
+        visibility: "Näkyvyys",
+        source: "Lähde",
+        condition: "Kunto"
       },
       prompt: {
-        enterGmLabel: "Full effect description (GM only)",
-        enterPublicLabel: "Vague label shown to players",
+        enterGmLabel: "Täydellinen tehosteen kuvaus (vain GM)",
+        enterPublicLabel: "Epämääräinen etiketti näytetään pelaajille"
       },
-      snoozed: "snoozed",
+      snoozed: "torkku"
+    },
+    classify: {
+      title: "Toimijoiden Luokittelu",
+      showTitle: "Luokitteludiagnostiikka",
+      showHeading: "Tunnuksen Luokittelutiedot",
+      resultHeading: "Ohitus Sovellettu",
+      noSelection: "Valitse vähintään yksi tunnus laudalta ennen --classify-käyttöä.",
+      invalidType: "Virheellinen luokittelutyyppi: {type}. Käytä arvoa pc, npc, ignored tai auto.",
+      set: "{name} → {type} (laajuus: {scope})",
+      cleared: "{name} ohitus poistettu (laajuus: {scope}) — automaattinen tunnistus palautettu.",
+      setTokenFallback: "{name} → {type} (tunnusohitus — hahmoarkkia ei ole linkitetty).",
+      clearedTokenFallback: "{name} tunnusohitus poistettu — automaattinen tunnistus palautettu.",
+      fieldToken: "Tunnus",
+      fieldType: "Luokittelu",
+      fieldSource: "Lähde",
+      fieldReason: "Syy"
     },
     cleanup: {
       orphaned: "Orpoja tilamerkintöjä",
       stale: "Vanhentuneita tilamerkintöjä",
       orphanedRows: "Orpoja Turn Tracker -rivejä",
-      unusedMarkers: "Käyttämättömiä merkkejä",
+      unusedMarkers: "Käyttämättömiä merkkejä"
     },
     apply: {
-      turnAppended:
-        "Kohde ei ollut vuorojärjestyksessä; tilarivi lisättiin loppuun.",
-      turnInserted: "Tilarivi lisätty kohde-tokenin alapuolelle.",
-    },
+      turnAppended: "Kohde ei ollut vuorojärjestyksessä; tilarivi lisättiin loppuun.",
+      turnInserted: "Tilarivi lisätty kohde-tokenin alapuolelle."
+    }
   },
   handout: {
     versionLabel: "Versio",
     subtitle: "D&D 5e -tilavaikutusten hallinta",
-    footerNote:
-      "Tämä handout luodaan ja päivitetään automaattisesti aina, kun skripti latautuu.",
+    footerNote: "Tämä handout luodaan ja päivitetään automaattisesti aina, kun skripti latautuu.",
     overview: {
       heading: "Yleiskatsaus",
-      body: "Condition Tracker hallitsee D&D 5e -tiloja ja mukautettuja vaikutuksia nimettyinä riveinä Roll20:n Turn Trackerissa. Sovella tiloja tokeneihin, seuraa kestoja aloitejärjestyksessä ja poista vanhentuneet vaikutukset automaattisesti vuoron päättyessä. Kaikki komennot ovat vain GM:n käytettävissä ja ne voidaan käynnistää chatissa tai asennettujen makrojen kautta.",
+      body: "Condition Tracker hallitsee D&D 5e -tiloja ja mukautettuja vaikutuksia nimettyinä riveinä Roll20:n Turn Trackerissa. Sovella tiloja tokeneihin, seuraa kestoja aloitejärjestyksessä ja poista vanhentuneet vaikutukset automaattisesti vuoron päättyessä. Kaikki komennot ovat vain GM:n käytettävissä ja ne voidaan käynnistää chatissa tai asennettujen makrojen kautta."
     },
     quickStart: {
       heading: "Pika-aloitus",
@@ -410,82 +402,109 @@ const TRANSLATION = {
       colDesc: "Kuvaus",
       rows: [
         [
-          "!condition-tracker --prompt",
-          "Vaiheittainen ohjattu toiminto — valitse tila, tokenit ja kesto vuorovaikutteisesti. Saatavilla myös ConditionTrackerWizard-makrona.",
+          "!condition-tracker -- prompt",
+          "Vaiheittainen ohjattu toiminto — valitse tila, tokenit ja kesto vuorovaikutteisesti. Saatavilla myös ConditionTrackerWizard-makrona."
         ],
         [
           "!condition-tracker --multi-target",
-          "Sovella yksi tila useisiin tokeneihin samanaikaisesti. Saatavilla myös ConditionTrackerMultiTarget-makrona.",
+          "Sovella yksi tila useisiin tokeneihin samanaikaisesti. Saatavilla myös ConditionTrackerMultiTarget-makrona."
         ],
         [
           "!condition-tracker --report-token",
-          "Select one or more tokens first, then run this command to get a GM whisper listing every condition applied to and by each selected token. Also available as the ConditionTrackerReportToken macro.",
+          "Valitse ensin yksi tai useampi merkki ja suorita sitten tämä komento saadaksesi GM-kuiskauksen, joka luettelee kaikki ehdot, joita kullekin valitulle tunnukselle sovelletaan. Saatavilla myös ConditionTrackerReportToken-makrona."
         ],
         [
           "!condition-tracker --menu",
-          "Avaa päähallinnointi valikko, jossa on painikkeet tilojen soveltamiseen, tarkasteluun tai poistamiseen.",
-        ],
-      ],
+          "Avaa päähallinnointi valikko, jossa on painikkeet tilojen soveltamiseen, tarkasteluun tai poistamiseen."
+        ]
+      ]
     },
     commandsRef: {
       heading: "Komentoviite",
       colFlag: "Lippu",
       colDesc: "Kuvaus",
       rows: [
-        ["--prompt", "Vuorovaikutteinen vaiheittainen ohjaustoiminto"],
-        ["--multi-target", "Sovella tila useisiin kohde-tokeneihin kerralla"],
-        ["--menu", "Näytä päävalikko (lisää remove poistovalikkoa varten)"],
         [
-          "--source X --target Y --condition Z",
-          "Sovella tila suoraan ilman ohjaustoimintoa",
+          "--kehottaa",
+          "Vuorovaikutteinen vaiheittainen ohjaustoiminto"
+        ],
+        [
+          "-- moni kohde",
+          "Sovella tila useisiin kohde-tokeneihin kerralla"
+        ],
+        [
+          "--valikko",
+          "Näytä päävalikko (lisää remove poistovalikkoa varten)"
+        ],
+        [
+          "--lähde X --kohde Y --ehto Z",
+          "Sovella tila suoraan ilman ohjaustoimintoa"
         ],
         [
           "--duration &lt;arvo&gt;",
-          "Kesto suoraa soveltamista varten (esim. 2 rounds)",
+          "Kesto suoraa soveltamista varten (esim. 2 rounds)"
         ],
         [
           "--other &lt;teksti&gt;",
-          "Mukautettu teksti Loitsu / Kyky / Muu -vaikutustyypeille",
+          "Mukautettu teksti Loitsu / Kyky / Muu -vaikutustyypeille"
         ],
         [
-          "--remove &lt;condition-id&gt;",
-          "Poista tietty tila sen yksilöllisellä tunnuksella",
+          "--poista <ehtotunnus>",
+          "Poista tietty tila sen yksilöllisellä tunnuksella"
         ],
         [
-          "--config &lt;option&gt; &lt;value&gt;",
-          "Muuta asetuksia (katso alla oleva Asetukset-osio)",
+          "--config <optio> <arvo>",
+          "Muuta asetuksia (katso alla oleva Asetukset-osio)"
         ],
         [
           "--prompt --subjectPromptBypass true|false",
-          "Ohita subjectPromptBypass vain tätä komentoa varten (tukee myös --subject-prompt-bypass)",
+          "Ohita subjectPromptBypass vain tätä komentoa varten (tukee myös --subject-prompt-bypass)"
         ],
         [
-          "--cleanup",
-          "Täsmäytä tila — poista orpot tilat ja Turn Tracker -rivit",
+          "--siivous",
+          "Täsmäytä tila — poista orpot tilat ja Turn Tracker -rivit"
         ],
         [
-          "--reorder-conditions",
-          "Siirrä ehtoriviä manuaalisesti niille määrättyjen pelinappuloiden taakse vuorojärjestyksessä",
-        ],
-        ["--reinstall-macro", "Luo GM-makrot uudelleen tai päivitä ne"],
-        [
-          "--reinstall-handout",
-          "Luo lokalisoitu ohje-handout uudelleen tai päivitä se",
+          "--reorder-ehdot",
+          "Siirrä ehtoriviä manuaalisesti niille määrättyjen pelinappuloiden taakse vuorojärjestyksessä"
         ],
         [
-          "--report-token",
-          "Whisper a GM-only condition report for each selected token (conditions applied to and by it)",
+          "--reinstall-macro",
+          "Luo GM-makrot uudelleen tai päivitä ne"
+        ],
+        [
+          "--reinstall-moniste",
+          "Luo lokalisoitu ohje-handout uudelleen tai päivitä se"
+        ],
+        [
+          "--raportti-tunnus",
+          "Kuiskaa vain GM:n kuntoraportti jokaiselle valitulle tunnukselle (sitä koskevat ehdot)"
         ],
         [
           "--lang &lt;locale&gt;",
-          "Tulosta tämän komennon viestit lisälocalella (kaksikielinen tila)",
+          "Tulosta tämän komennon viestit lisälocalella (kaksikielinen tila)"
         ],
-        ["--help", "Näytä lyhyt ohjekortti chatissa"],
-      ],
+        [
+          "--classify pc|npc|ignored",
+          "Ohita toimijatyypit valituille tunnuksille — valitse ensin tunnus(et). Oletuslaajuus on hahmo (kirjoittaa ct_mod_actor_type-attribuutin); lisää --scope token tallentaaksesi komentosarjan tilaan"
+        ],
+        [
+          "--classify auto",
+          "Poista toimijatyypin ohitus ja palauta automaattinen tunnistus valituille tunnuksille"
+        ],
+        [
+          "--classify show",
+          "Kuiskaa luokitteludiagnostiikka jokaiselle valitulle tunnukselle — näyttää havaitun tyypin, tunnistuslähteen ja syyn"
+        ],
+        [
+          "--help",
+          "Näytä lyhyt ohjekortti chatissa"
+        ]
+      ]
     },
     standardConditions: {
       heading: "Vakiotilat (D&amp;D 5e)",
-      colCondition: "Tila",
+      colCondition: "Tila"
     },
     customEffects: {
       heading: "Mukautetut vaikutustyypit",
@@ -494,85 +513,211 @@ const TRANSLATION = {
       rows: [
         [
           "🔮 Loitsu",
-          "Seuraa nimettyä loitsuvaikutusta — sinulta pyydetään loitsun nimi",
+          "Seuraa nimettyä loitsuvaikutusta — sinulta pyydetään loitsun nimi"
         ],
         [
           "🎯 Kyky",
-          "Seuraa nimettyä luokka- tai rotukyvykkyyttä — sinulta pyydetään kyvyn nimi",
+          "Seuraa nimettyä luokka- tai rotukyvykkyyttä — sinulta pyydetään kyvyn nimi"
         ],
         [
           "🍀 Etu",
-          "Kirjaa etulyöntiasema, joka annetaan tokenilta toiselle; ryhmitellään lähteen kanssa aloitejärjestyksessä",
+          "Kirjaa etulyöntiasema, joka annetaan tokenilta toiselle; ryhmitellään lähteen kanssa aloitejärjestyksessä"
         ],
         [
           "⬇️ Haitta",
-          "Kirjaa asetettu haitta; ryhmitellään lähteen kanssa aloitejärjestyksessä",
+          "Kirjaa asetettu haitta; ryhmitellään lähteen kanssa aloitejärjestyksessä"
         ],
         [
           "📝 Muu",
-          "Vapaamuotoinen mukautettu tunniste — sinulta pyydetään kuvaus",
-        ],
-      ],
+          "Vapaamuotoinen mukautettu tunniste — sinulta pyydetään kuvaus"
+        ]
+      ]
     },
     durationOptions: {
       heading: "Kestovaihtoehdot",
-      intro:
-        "Jäljellä oleva laskuri näkyy Turn Trackerin pr-sarakkeessa ja pienenee ankkuri-tokenin vuoron päättyessä.",
+      intro: "Jäljellä oleva laskuri näkyy Turn Trackerin pr-sarakkeessa ja pienenee ankkuri-tokenin vuoron päättyessä.",
       colOption: "Vaihtoehto",
       colBehaviour: "Toiminta",
       rows: [
         [
           "Kunnes poistetaan",
-          "Pysyvä — on poistettava manuaalisesti valikon tai --remove-komennon kautta",
+          "Pysyvä — on poistettava manuaalisesti valikon tai --remove-komennon kautta"
         ],
         [
           "Kohteen seuraavan vuoron lopussa",
-          "Vanhenee kun kohde-tokenin seuraava vuoro päättyy aloitejärjestyksessä",
+          "Vanhenee kun kohde-tokenin seuraava vuoro päättyy aloitejärjestyksessä"
         ],
         [
           "Lähteen seuraavan vuoron lopussa",
-          "Vanhenee kun lähde-tokenin seuraava vuoro päättyy aloitejärjestyksessä",
+          "Vanhenee kun lähde-tokenin seuraava vuoro päättyy aloitejärjestyksessä"
         ],
         [
           "1 / 2 / 3 / 10 kierrosta",
-          "Kiinteä laskuri; yksi pienennys ankkuri-tokenin vuoron päättyessä",
-        ],
-      ],
+          "Kiinteä laskuri; yksi pienennys ankkuri-tokenin vuoron päättyessä"
+        ]
+      ]
     },
     savedEffects: {
-      heading: "Saved Effects",
-      intro:
-        "Saved effects let you store long-term conditions outside the Turn Tracker — curses, diseases, poisons, hidden debuffs, and other non-combat conditions. They persist in script state and can be optionally copied into the Turn Tracker when combat begins.",
+      heading: "Tallennetut tehosteet",
+      intro: "Tallennettujen tehosteiden avulla voit tallentaa pitkäaikaisia ​​olosuhteita Turn Trackerin ulkopuolelle – kirouksia, sairauksia, myrkkyjä, piilotettuja debuffeja ja muita ei-taisteluolosuhteita. Ne pysyvät käsikirjoitustilassa ja ne voidaan valinnaisesti kopioida Turn Trackeriin taistelun alkaessa.",
       visibility: {
-        heading: "Visibility Modes",
+        heading: "Näkyvyystilat",
         rows: [
-          ["public", "Full effect label is visible in the Turn Tracker and public chat."],
-          ["masked", "A vague public label is shown to players; full details are GM-only."],
-          ["gm", "No Turn Tracker row. Full details are stored in state and whispered to the GM when the affected token reaches the top of initiative."],
-        ],
+          [
+            "julkinen",
+            "Täysi tehostemerkki näkyy Turn Trackerissa ja julkisessa chatissa."
+          ],
+          [
+            "naamioitunut",
+            "Pelaajille näytetään epämääräinen julkinen etiketti; täydelliset tiedot ovat GM-vain."
+          ],
+          [
+            "gm",
+            "Ei Turn Tracker -riviä. Täydelliset tiedot tallennetaan tilaan ja kuiskataan GM:lle, kun kyseinen merkki saavuttaa aloitteen huipulle."
+          ]
+        ]
       },
       commands: {
-        heading: "Saved Effects Commands",
-        intro: "All --saved commands are GM-only. Select a token before running --saved or --saved add.",
+        heading: "Tallennetut tehostekomennot",
+        intro: "Kaikki --tallennetut komennot ovat GM-vain. Valitse tunnus ennen kuin suoritat --saved tai --saved add.",
         rows: [
-          ["!condition-tracker --saved", "View saved effects for the selected token."],
-          ["!condition-tracker --saved add", "Launch the add-saved-effect wizard."],
-          ["!condition-tracker --saved edit <id>", "Edit labels or visibility for an existing saved effect."],
-          ["!condition-tracker --saved remove <id>", "Permanently remove a saved effect."],
-          ["!condition-tracker --saved promote <id> --visibility public|masked|gm", "Copy a saved effect into the Turn Tracker (public or masked) or confirm it is GM-only tracked."],
-          ["!condition-tracker --saved snooze <id> --scope turn|rounds|combat --rounds <n>", "Snooze a GM reminder for this turn, N rounds, or this combat."],
-          ["!condition-tracker --saved snooze-clear <id>", "Clear an active snooze so reminders resume immediately."],
-        ],
+          [
+            "!condition-tracker --tallennettu",
+            "Näytä valitun tunnuksen tallennettuja tehosteita."
+          ],
+          [
+            "!condition-tracker --tallennettu lisäys",
+            "Käynnistä ohjattu lisätty-tallennettu tehoste."
+          ],
+          [
+            "!condition-tracker --saved edit <id>",
+            "Muokkaa olemassa olevan tallennetun tehosteen tunnisteita tai näkyvyyttä."
+          ],
+          [
+            "!condition-tracker --saved remove <id>",
+            "Poista tallennettu tehoste pysyvästi."
+          ],
+          [
+            "!condition-tracker --saved promote <id> --visibility public|masked|gm",
+            "Kopioi tallennettu tehoste Turn Trackeriin (julkinen tai peitetty) tai vahvista, että se on vain GM-seuraama."
+          ],
+          [
+            "!condition-tracker --saved snooze <id> --scope turn|rounds|combat --rounds <n>",
+            "Torkku GM-muistutus tätä vuoroa, N kierrosta tai tätä taistelua varten."
+          ],
+          [
+            "!condition-tracker --saved snooze-clear <id>",
+            "Tyhjennä aktiivinen torkku, jotta muistutukset jatkuvat välittömästi."
+          ]
+        ]
       },
       reminders: {
-        heading: "GM Reminders",
-        body: "When a token with gm or masked saved effects reaches the top of the Turn Tracker, the GM receives a whisper listing the hidden effects with action buttons. Duplicate reminders within the same turn are suppressed. Use the Snooze buttons to suppress reminders for a turn, a number of rounds, or for the remainder of the current combat.",
+        heading: "GM-muistutukset",
+        body: "Kun gm- tai naamioituja tallennettuja tehosteita sisältävä merkki saavuttaa Turn Trackerin yläosan, GM vastaanottaa kuiskauksen, jossa luetellaan piilotetut tehosteet toimintapainikkeilla. Saman käännöksen päällekkäiset muistutukset estetään. Käytä Torkku-painikkeita estääksesi muistutukset vuorosta, useista kierroksista tai nykyisen taistelun loppuosasta."
+      }
+    },
+    actorClassification: {
+      heading: "Toimijoiden Luokittelu",
+      intro: "Condition Tracker määrittää automaattisesti, onko jokainen tunnus PP, NPC vai ohitettu esine (karttatennät, kulissit, loitsumallit). Linkittämättömät tunnukset ohitetaan oletuksena. Käytä --classify-komentoa automaattisen tunnistuksen ohittamiseen mille tahansa tunnukselle.",
+      detectionOrder: {
+        heading: "Tunnistusjärjestys",
+        colStep: "Askel",
+        colCheck: "Tarkistus",
+        colResult: "Tulos",
+        rows: [
+          [
+            "1",
+            "Tunnuksen tilaohitus (--classify --scope token)",
+            "pc / npc / ohitettu"
+          ],
+          [
+            "2",
+            "Hahmon ct_mod_actor_type-attribuutti (--classify --scope character)",
+            "pc / npc / ohitettu"
+          ],
+          [
+            "3",
+            "Linkittämätön tunnus — ei hahmoarkkia",
+            "huomiotta"
+          ],
+          [
+            "4",
+            "Pelisysteemin sovitin (npc / is_npc -attribuutti)",
+            "pc / npc"
+          ],
+          [
+            "5",
+            "Yleinen NPC-attribuuttiskannaus (npc, is_npc, npcflag, sheet_type, character_type)",
+            "pc / npc"
+          ],
+          [
+            "6",
+            "Hahmon controlledby-varasuunnitelma",
+            "pc / npc"
+          ]
+        ]
       },
+      types: {
+        heading: "Luokittelutyypit",
+        colType: "Tyyppi",
+        colMeaning: "Merkitys",
+        rows: [
+          [
+            "pc",
+            "Pelaajahahmo — aina mukana PP:nä ohjurissa ja tunnistuksessa"
+          ],
+          [
+            "npc",
+            "Ei-pelaajahahmo — aina mukana NPC:nä"
+          ],
+          [
+            "huomiotta",
+            "Ei koskaan näytetä tai seurata — suljettu pois ohjurin tunnusvalitsimesta"
+          ],
+          [
+            "tuntematon",
+            "Vain automaattinen tunnistus; tyyppiä ei voitu määrittää (käsitellään NPC:nä ohjurissa)"
+          ]
+        ]
+      },
+      commands: {
+        heading: "Luokittelukomennot",
+        intro: "Valitse yksi tai useampi tunnus ennen --classify-komentojen suorittamista.",
+        rows: [
+          [
+            "!condition-tracker --classify pc",
+            "Merkitse valitut tunnukset PP:ksi (oletuslaajuus: hahmo)."
+          ],
+          [
+            "!condition-tracker --classify npc",
+            "Merkitse valitut tunnukset NPC:ksi."
+          ],
+          [
+            "!condition-tracker --classify ohitettu",
+            "Sulje valitut tunnukset pois kaikesta seurannasta."
+          ],
+          [
+            "!condition-tracker --classify auto",
+            "Poista ohitus — palauta automaattinen tunnistus."
+          ],
+          [
+            "!condition-tracker --classify show",
+            "Näytä luokitteludiagnostiikka (tyyppi, lähde, syy) jokaiselle valitulle tunnukselle."
+          ],
+          [
+            "!condition-tracker --classify pc --scope token",
+            "Tunnustason ohitus komentosarjan tilassa — hyödyllinen linkittämättömille tunnuksille."
+          ],
+          [
+            "!condition-tracker --classify pc --scope-merkki",
+            "Hahmotason ohitus kirjoitetaan ct_mod_actor_type-attribuuttiin — koskee kaikkia tunnuksia, jotka käyttävät samaa hahmoarkkia."
+          ]
+        ]
+      }
     },
     configuration: {
       heading: "Asetukset",
-      intro:
-        "Käytä !condition-tracker --config &lt;option&gt; &lt;value&gt; tai päävalikon Asetukset-painiketta.",
+      intro: "Käytä !condition-tracker --config &lt;option&gt; &lt;value&gt; tai päävalikon Asetukset-painiketta.",
       colOption: "Vaihtoehto",
       colValues: "Arvot",
       colDesc: "Kuvaus",
@@ -580,54 +725,53 @@ const TRANSLATION = {
         [
           "useMarkers",
           "true / false",
-          "Lisää Roll20-tilamarkerit tokeneihin, kun tila lisätään",
+          "Lisää Roll20-tilamarkerit tokeneihin, kun tila lisätään"
         ],
         [
           "useIcons",
-          "true / false",
-          "Näytä lyhyet kuvakekoodit (esim. [G]) emojien sijaan Turn Tracker -riveillä",
+          "tosi / epätosi",
+          "Näytä lyhyet kuvakekoodit (esim. [G]) emojien sijaan Turn Tracker -riveillä"
         ],
         [
           "subjectPromptBypass",
-          "true / false",
-          "Ohita valinnainen kohde-tokenin vaihe Loitsu / Kyky / Muu -vaikutuksille",
+          "tosi / epätosi",
+          "Ohita valinnainen kohde-tokenin vaihe Loitsu / Kyky / Muu -vaikutuksille"
         ],
         [
           "suppressPublicChat",
-          "true / false",
-          "Estä kaikki julkiset chat-ilmoitukset (lisäys- ja poistoviestit). GM-kuiskaukset eivät vaikutu.",
+          "tosi / epätosi",
+          "Estä kaikki julkiset chat-ilmoitukset (lisäys- ja poistoviestit). GM-kuiskaukset eivät vaikutu."
         ],
         [
           "healthBar",
           "bar1_value / bar2_value / bar3_value",
-          "Seurattava tokenpalkki; kun se tippuu 0:aan, GM:ää kehotetaan siivoamaan tilat",
+          "Seurattava tokenpalkki; kun se tippuu 0:aan, GM:ää kehotetaan siivoamaan tilat"
         ],
         [
           "language",
           "en-US / fr / de / es / pt-BR / ko",
-          "Chat-viestien ja ohje-handoutin tulostuskieli",
+          "Chat-viestien ja ohje-handoutin tulostuskieli"
         ],
         [
           "marker",
           "&lt;Condition&gt;=&lt;marker name&gt;",
-          "Korvaa tietyn tilan tilamerkki (esim. marker Grappled=grab)",
-        ],
-      ],
+          "Korvaa tietyn tilan tilamerkki (esim. marker Grappled=grab)"
+        ]
+      ]
     },
     defaultMarkers: {
       heading: "Oletustilamarkerit",
       colCondition: "Tila",
-      colMarker: "Merkin nimi",
+      colMarker: "Merkin nimi"
     },
     availableLocales: {
       heading: "Saatavilla olevat käännökset",
-      intro:
-        "Käytä language-asetusta asettaaksesi chat-viestit ja ohje-handoutin mihin tahansa tuettuun localeen. Lyhyet aliakset ovat myös hyväksyttyjä muodoille en, zh ja pt.",
-      colLocale: "Locale",
+      intro: "Käytä language-asetusta asettaaksesi chat-viestit ja ohje-handoutin mihin tahansa tuettuun localeen. Lyhyet aliakset ovat myös hyväksyttyjä muodoille en, zh ja pt.",
+      colLocale: "Alue",
       colLanguage: "Kieli",
-      colFile: "Käännöstiedosto",
-    },
-  },
+      colFile: "Käännöstiedosto"
+    }
+  }
 };
 
 export default TRANSLATION;

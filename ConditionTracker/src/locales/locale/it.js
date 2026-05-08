@@ -2,77 +2,77 @@ const TRANSLATION = {
   conditions: {
     Grappled: {
       past: "afferrato",
-      verb: "afferra",
+      verb: "afferra"
     },
     Restrained: {
       past: "trattenuto",
-      verb: "trattiene",
+      verb: "trattiene"
     },
     Prone: {
       past: "a terra",
       verb: "butta",
-      suffix: "a terra",
+      suffix: "a terra"
     },
     Poisoned: {
       past: "avvelenato",
-      verb: "avvelena",
+      verb: "avvelena"
     },
     Stunned: {
       past: "stordito",
-      verb: "stordisce",
+      verb: "stordisce"
     },
     Blinded: {
       past: "accecato",
-      verb: "acceca",
+      verb: "acceca"
     },
     Charmed: {
       past: "affascinato",
-      verb: "affascina",
+      verb: "affascina"
     },
     Frightened: {
       past: "spaventato",
-      verb: "spaventa",
+      verb: "spaventa"
     },
     Incapacitated: {
       past: "incapacitato",
-      verb: "incapacita",
+      verb: "incapacita"
     },
     Invisible: {
       past: "invisibile",
       verb: "rende",
-      suffix: "invisibile",
+      suffix: "invisibile"
     },
     Paralyzed: {
       past: "paralizzato",
-      verb: "paralizza",
+      verb: "paralizza"
     },
     Petrified: {
       past: "pietrificato",
-      verb: "pietrifica",
+      verb: "pietrifica"
     },
     Unconscious: {
       past: "privo di sensi",
       verb: "rende",
-      suffix: "privo di sensi",
+      suffix: "privo di sensi"
     },
     Spell: {
       past: "influenzato da un incantesimo",
-      verb: "lancia un incantesimo su",
+      verb: "lancia un incantesimo su"
     },
     Ability: {
       past: "influenzato da un'abilità",
-      verb: "usa un'abilità su",
+      verb: "usa un'abilità su"
     },
     Advantage: {
       past: "ha vantaggio",
       verb: "concede vantaggio a",
-      noBy: true,
+      noBy: true
     },
     Disadvantage: {
       past: "ha svantaggio",
       verb: "impone svantaggio a",
-      noBy: true,
-    },
+      noBy: true
+    }
   },
   condNames: {
     Grappled: "Afferrato",
@@ -92,24 +92,24 @@ const TRANSLATION = {
     Ability: "Abilità",
     Advantage: "Vantaggio",
     Disadvantage: "Svantaggio",
-    Other: "Altro",
+    Other: "Altro"
   },
   templates: {
     display: {
       custom: "{emoji} {target} influenzato da {effect} ({source})",
       advantage: "{emoji} {source} ha vantaggio contro {target}{subject}",
       disadvantage: "{emoji} {source} ha svantaggio contro {target}{subject}",
-      noBy: "{emoji} {target} {past} ({source})",
+      noBy: "SEGNAPOSTO0TOKEN SEGNAPOSTO1TOKEN SEGNAPOSTO2TOKEN (SEGNAPOSTO3TOKEN)",
       self: "{target} è {past}",
-      standard: "{emoji} {target} {past} da {source}",
+      standard: "{emoji} {target} {past} da {source}"
     },
     apply: {
       custom: "{source} applica {effect} a {target}.",
       advantage: "{source} ha vantaggio contro {target}{subject}.",
       disadvantage: "{source} ha svantaggio contro {target}{subject}.",
       self: "{target} è {past}.",
-      withSuffix: "{source} {verb} {target} {suffix}.",
-      standard: "{source} {verb} {target}.",
+      withSuffix: "SEGNAPOSTO0TOKEN SEGNAPOSTO1TOKEN SEGNAPOSTO2TOKEN SEGNAPOSTO3TOKEN.",
+      standard: "SEGNAPOSTO0TOKEN SEGNAPOSTO1TOKEN SEGNAPOSTO2TOKEN."
     },
     remove: {
       custom: "{target} non è più influenzato da {effect}.",
@@ -117,8 +117,8 @@ const TRANSLATION = {
       disadvantage: "{source} non ha più svantaggio contro {target}{subject}.",
       noBy: "{target} non è più {past}.",
       self: "{target} non è più {past}.",
-      standard: "{target} non è più {past} da {source}.",
-    },
+      standard: "{target} non è più {past} da {source}."
+    }
   },
   ui: {
     wizard: {
@@ -136,12 +136,10 @@ const TRANSLATION = {
       noneBtn: "Nessuno",
       noneOrSourceBtn: "Nessuno o applica alla fonte",
       subjectDesc: "Seleziona chi o cosa applica l'effetto.",
-      sourceDesc:
-        "Seleziona la creatura che crea o genera la condizione o l'effetto.",
-      targetDesc:
-        "Seleziona la creatura che riceverà la condizione o l'effetto.",
+      sourceDesc: "Seleziona la creatura che crea o genera la condizione o l'effetto.",
+      targetDesc: "Seleziona la creatura che riceverà la condizione o l'effetto.",
       otherText: "Testo condizione personalizzato",
-      effectDetails: "Dettagli {condition}",
+      effectDetails: "Dettagli {condition}"
     },
     col: {
       players: "Giocatori",
@@ -162,21 +160,21 @@ const TRANSLATION = {
       details: "Dettagli",
       description: "Descrizione",
       scenario: "Scenario",
-      gameSystem: "Game System",
-      duration: "Duration",
+      gameSystem: "Sistema di gioco",
+      duration: "Durata"
     },
     dur: {
       untilRemoved: "Fino alla rimozione",
       endOfTargetTurn: "Fine del prossimo turno del bersaglio",
       endOfSourceTurn: "Fine del prossimo turno della sorgente",
-      round1: "1 round",
+      round1: "1 giro",
       round2: "2 round",
       round3: "3 round",
       round10: "10 round",
       custom: "Personalizzato",
       customPrompt: "Numero di round",
       untilRemovedDisplay: "Fino alla rimozione",
-      turnsRemaining: "{n} fine/i turno rimanente/i",
+      turnsRemaining: "{n} fine/i turno rimanente/i"
     },
     btn: {
       openWizard: "Apri procedura guidata",
@@ -188,14 +186,14 @@ const TRANSLATION = {
       reinstallHandout: "Reinstalla documento",
       showHelp: "Mostra aiuto",
       reorderConditions: "Riordina righe condizioni",
-      reportToken: "Report Token Conditions",
-      savedEffects: "Saved Effects",
-      addSavedEffect: "Add Saved Effect",
-      editSaved: "Edit",
-      removeSaved: "Remove",
-      promoteSaved: "Add to Turn Tracker",
-      snoozeSaved: "Snooze",
-      clearSnooze: "Clear Snooze",
+      reportToken: "Segnala le condizioni dei token",
+      savedEffects: "Effetti salvati",
+      addSavedEffect: "Aggiungi effetto salvato",
+      editSaved: "Modificare",
+      removeSaved: "Rimuovere",
+      promoteSaved: "Aggiungi al contagiri",
+      snoozeSaved: "Posticipare",
+      clearSnooze: "Cancella Posticipa"
     },
     title: {
       menu: "Menu",
@@ -206,7 +204,7 @@ const TRANSLATION = {
       applied: "Applicato",
       removed: "Condizione rimossa",
       cleanup: "Pulizia completata",
-      macroReinstalled: "The {wizard}, {multiTarget}, {reportToken}, and {saved} macros have been reinstalled for all current GM players.",
+      macroReinstalled: "Macro reinstallata",
       handoutReinstalled: "Documento reinstallato",
       warning: "Avviso",
       error: "Errore",
@@ -218,15 +216,15 @@ const TRANSLATION = {
       moveToken: "{name} — Spostare il token?",
       scriptReady: "Script pronto",
       conditionReorder: "Ordine di turno modificato",
-      tokenReport: "Token Condition Report",
-      savedEffects: "Saved Effects",
-      savedAdd: "Add Saved Effect",
-      savedEdit: "Edit Saved Effect",
-      savedRemoved: "Saved Effect Removed",
-      savedPromoted: "Add to Turn Tracker",
-      savedSnoozed: "Reminder Snoozed",
-      savedSnoozeCleared: "Snooze Cleared",
-      hiddenEffects: "Hidden Effects — {name}",
+      tokenReport: "Rapporto sulle condizioni dei token",
+      savedEffects: "Effetti salvati",
+      savedAdd: "Aggiungi effetto salvato",
+      savedEdit: "Modifica effetto salvato",
+      savedRemoved: "Effetto salvato rimosso",
+      savedPromoted: "Aggiungi al contagiri",
+      savedSnoozed: "Promemoria posticipato",
+      savedSnoozeCleared: "Posticipa cancellato",
+      hiddenEffects: "Effetti nascosti — {name}"
     },
     heading: {
       quickActions: "Azioni rapide",
@@ -238,119 +236,92 @@ const TRANSLATION = {
       promptUi: "Interfaccia procedura guidata",
       examples: "Esempi",
       summary: "Riepilogo",
-      appliedTo: "Conditions Applied To",
-      appliedBy: "Conditions Applied By",
-      savedEffectsFor: "Saved Effects for {name}",
-      visibility: "Visibility",
-      snoozeOptions: "Snooze Reminder",
-      promoteOptions: "Promote to Turn Tracker",
-      editActions: "Edit Actions",
+      appliedTo: "Condizioni applicate",
+      appliedBy: "Condizioni applicate da",
+      savedEffectsFor: "Effetti salvati per {name}",
+      visibility: "Visibilità",
+      snoozeOptions: "Promemoria posticipazione",
+      promoteOptions: "Promuovi a Turn Tracker",
+      editActions: "Modifica azioni"
     },
     msg: {
       noActive: "Nessuna condizione attiva è tracciata.",
       configReset: "Configurazione ripristinata ai valori predefiniti del mod.",
-      unknownConfig:
-        "Opzione di configurazione sconosciuta. Usa --config per visualizzare le impostazioni supportate.",
-      macroReinstalled:
-        "Le macro {wizard}, {multiTarget} e {reportToken} sono state reinstallate per tutti i GM attivi.",
-      handoutReinstalled:
-        "Il documento di aiuto {handout} è stato reinstallato.",
-      duplicate:
-        "Questa combinazione esatta di sorgente, soggetto, bersaglio, condizione e testo personalizzato è già attiva.",
-      noTargets:
-        "Nessun token bersaglio specificato per l'applicazione multi-bersaglio.",
-      noSelection:
-        "Seleziona almeno un token sulla mappa prima di usare --multi-target.",
+      unknownConfig: "Opzione di configurazione sconosciuta. Usa --config per visualizzare le impostazioni supportate.",
+      macroReinstalled: "Le macro {wizard}, {multiTarget}, {reportToken}, {saved} e {classify} sono state reinstallate per tutti i GM attivi.",
+      handoutReinstalled: "Il documento di aiuto {handout} è stato reinstallato.",
+      duplicate: "Questa combinazione esatta di sorgente, soggetto, bersaglio, condizione e testo personalizzato è già attiva.",
+      noTargets: "Nessun token bersaglio specificato per l'applicazione multi-bersaglio.",
+      noSelection: "Seleziona almeno un token sulla mappa prima di usare --multi-target.",
       invalidIds: "Nessun ID token valido trovato nella selezione corrente.",
-      reSelectTokens:
-        "Nessuno dei token originariamente selezionati è stato trovato. Seleziona nuovamente i token e riprova.",
+      reSelectTokens: "Nessuno dei token originariamente selezionati è stato trovato. Seleziona nuovamente i token e riprova.",
       conditionNotFound: "ID condizione non trovato.",
       gmOnly: "I comandi di Condition Tracker sono riservati al GM.",
-      commandFailed:
-        "Il comando non è stato completato in modo sicuro. Controlla la console API per i dettagli.",
+      commandFailed: "Il comando non è stato completato in modo sicuro. Controlla la console API per i dettagli.",
       sourceTokenNotFound: "Token sorgente non trovato.",
       targetTokenNotFound: "Token bersaglio non trovato.",
       subjectTokenNotFound: "Token soggetto non trovato.",
-      invalidCondition:
-        "La condizione deve essere una delle condizioni predefinite oppure Altro.",
-      subjectOnlyCustom:
-        "--subject è valido solo per Incantesimo, Abilità, Vantaggio, Svantaggio e Altro.",
-      subjectBypassInvalid:
-        "--subjectPromptBypass richiede true o false quando viene fornito un valore.",
-      customDetailsRequired:
-        "I dettagli di {condition} sono obbligatori. Usa --other per fornirli.",
-      markerConfigFormat:
-        "Il formato di configurazione dell'indicatore è: --config marker Grappled=grab",
-      markerPredefinedRequired:
-        "La configurazione dell'indicatore richiede un nome di condizione predefinito.",
-      markerNameRequired:
-        "La configurazione dell'indicatore richiede un nome di indicatore non vuoto.",
+      invalidCondition: "La condizione deve essere una delle condizioni predefinite oppure Altro.",
+      subjectOnlyCustom: "--subject è valido solo per Incantesimo, Abilità, Vantaggio, Svantaggio e Altro.",
+      subjectBypassInvalid: "--subjectPromptBypass richiede true o false quando viene fornito un valore.",
+      customDetailsRequired: "I dettagli di {condition} sono obbligatori. Usa --other per fornirli.",
+      markerConfigFormat: "Il formato di configurazione dell'indicatore è: --config marker Grappled=grab",
+      markerPredefinedRequired: "La configurazione dell'indicatore richiede un nome di condizione predefinito.",
+      markerNameRequired: "La configurazione dell'indicatore richiede un nome di indicatore non vuoto.",
       markerSet: "Indicatore di {condition} impostato su {marker}.",
       healthBarSet: "Barra della salute impostata su {bar}.",
       boolSet: "{key} impostato su {value}.",
       expectedBoolean: "Previsto true o false.",
-      invalidHealthBar:
-        "La barra della salute deve essere bar1_value, bar2_value o bar3_value.",
+      invalidHealthBar: "La barra della salute deve essere bar1_value, bar2_value o bar3_value.",
       markersDisabled: "Gli indicatori sono disabilitati.",
-      noMarkerConfigured:
-        "Nessun indicatore configurato per questa condizione.",
+      noMarkerConfigured: "Nessun indicatore configurato per questa condizione.",
       markerApplied: "Indicatore applicato: {marker}",
       markerPresent: "Indicatore già presente: {marker}",
       langSet: "Lingua impostata su {locale}.",
       invalidLocale: "Lingua non valida. Lingue supportate: {locales}.",
-      otherDurationRequiresRounds:
-        "La durata Altro richiede un numero di round, ad esempio --duration 5 rounds.",
-      invalidDuration:
-        "La durata deve essere Fino alla rimozione, un'opzione di fine turno o un numero positivo di round.",
-      zeroHpNoConditions:
-        "{name} ha raggiunto 0 PF e non ha condizioni attive.",
-      zeroHpConditions:
-        "{name} ha raggiunto 0 PF. Scegli le condizioni da rimuovere:",
+      otherDurationRequiresRounds: "La durata Altro richiede un numero di round, ad esempio --duration 5 rounds.",
+      invalidDuration: "La durata deve essere Fino alla rimozione, un'opzione di fine turno o un numero positivo di round.",
+      zeroHpNoConditions: "{name} ha raggiunto 0 PF e non ha condizioni attive.",
+      zeroHpConditions: "{name} ha raggiunto 0 PF. Scegli le condizioni da rimuovere:",
       removeAllBtn: "Rimuovi tutte le condizioni di {name}",
       markIncapacitated: "Segna come Incapacitato",
       removeFromTurnOrder: "Rimuovi dall'ordine di iniziativa",
       alreadyIncapacitated: "{name} è già Incapacitato.",
       tokenRemovedFromTurn: "{name} è stato rimosso dall'ordine di iniziativa.",
       tokenNotInTurn: "{name} non è stato trovato nell'ordine di iniziativa.",
-      moveTokenPrompt:
-        "Sposta {name} al livello mappa in modo che rimanga visibile senza interferire con altri token?",
+      moveTokenPrompt: "Sposta {name} al livello mappa in modo che rimanga visibile senza interferire con altri token?",
       moveTokenBtn: "Sposta {name} al livello mappa",
       tokenMoved: "{name} è stato spostato al livello mappa.",
       tokenNotFound: "Token non trovato.",
       noActiveConditions: "{name} non ha condizioni attive da rimuovere.",
-      deadNoConditions:
-        "{name} è stato segnato come morto. Nessuna condizione era attiva.",
+      deadNoConditions: "{name} è stato segnato come morto. Nessuna condizione era attiva.",
       scriptReady: "{name} è attivo e stai usando la versione {version}.",
       reachedZeroHp: "{name} ha raggiunto 0 PF",
       manuallyRemoved: "è stata rimossa manualmente",
       durationExpired: "la sua durata è scaduta",
       markedAsDead: "{name} è stato segnato come morto",
-      conditionReorder:
-        "L'ordine di turno è cambiato e {count} riga/righe di condizione tracciata/e potrebbe/potrebbero essere fuori posto. Clicca sotto per riposizionarle dopo i rispettivi token assegnati.",
-      conditionsReordered:
-        "Le righe delle condizioni sono state riposizionate dopo i rispettivi token assegnati.",
-      noTokensSelectedReport:
-        "Select at least one token on the board before using --report-token.",
-      noConditionsAppliedTo: "{name} has no active conditions applied to it.",
-      noConditionsAppliedBy:
-        "{name} has no active conditions applied to others.",
-      noSavedEffects: "No saved effects stored for {name}.",
-      noTokenSelectedSaved: "Select a token on the board before using --saved.",
-      savedEffectAdded: "Saved effect added for {name}.",
-      savedEffectUpdated: "Saved effect updated.",
-      savedEffectRemoved: "Saved effect removed.",
-      savedEffectNotFound: "Saved effect not found.",
-      savedInvalidVisibility: "Invalid visibility. Use public, masked, or gm.",
+      conditionReorder: "L'ordine di turno è cambiato e {count} riga/righe di condizione tracciata/e potrebbe/potrebbero essere fuori posto. Clicca sotto per riposizionarle dopo i rispettivi token assegnati.",
+      conditionsReordered: "Le righe delle condizioni sono state riposizionate dopo i rispettivi token assegnati.",
+      noTokensSelectedReport: "Seleziona almeno un token sul tabellone prima di utilizzare --report-token.",
+      noConditionsAppliedTo: "A {name} non sono applicate condizioni attive.",
+      noConditionsAppliedBy: "{name} non ha condizioni attive applicate ad altri.",
+      noSavedEffects: "Nessun effetto salvato memorizzato per {name}.",
+      noTokenSelectedSaved: "Seleziona un token sul tabellone prima di utilizzare --saved.",
+      savedEffectAdded: "Effetto salvato aggiunto per {name}.",
+      savedEffectUpdated: "Effetto salvato aggiornato.",
+      savedEffectRemoved: "Effetto salvato rimosso.",
+      savedEffectNotFound: "Effetto salvato non trovato.",
+      savedInvalidVisibility: "Visibilità non valida. Utilizza pubblico, mascherato o gm.",
       savedConditionRequired: "Condition type is required. Use --condition <type>.",
-      savedPromotedPublic: "Effect added to Turn Tracker as public.",
-      savedPromotedMasked: "Effect added to Turn Tracker as masked — players see: {publicLabel}.",
-      savedPromotedGm: "Effect is GM-only — no Turn Tracker row will be created. The reminder system will surface it when this token reaches the top of the turn order.",
-      savedSnoozed: "Reminder snoozed: {scope}.",
-      savedSnoozeCleared: "Snooze cleared.",
-      hiddenEffectsReminder: "Hidden effects are active on {name}.",
-      visibilityPublicHint: "full label visible to all",
-      visibilityMaskedHint: "vague label shown to players",
-      visibilityGmHint: "GM whisper only, no Turn Tracker row",
+      savedPromotedPublic: "Effetto aggiunto al Turn Tracker come pubblico.",
+      savedPromotedMasked: "Effetto aggiunto a Turn Tracker come mascherato: i giocatori vedono: {publicLabel}.",
+      savedPromotedGm: "L'effetto è solo per il GM: non verrà creata alcuna riga di indicatori di turno. Il sistema di promemoria verrà visualizzato quando questo gettone raggiunge la parte superiore dell'ordine di turno.",
+      savedSnoozed: "Promemoria posticipato: {scope}.",
+      savedSnoozeCleared: "La funzione Snooze è stata cancellata.",
+      hiddenEffectsReminder: "Gli effetti nascosti sono attivi su {name}.",
+      visibilityPublicHint: "etichetta completa visibile a tutti",
+      visibilityMaskedHint: "etichetta vaga mostrata ai giocatori",
+      visibilityGmHint: "Solo sussurro del GM, nessuna riga di Turn Tracker"
     },
     removal: {
       conditionField: "Condizione",
@@ -362,54 +333,68 @@ const TRANSLATION = {
       markerRetained: "Mantenuto ({marker})",
       rowRemoved: "Rimosso",
       rowMissing: "Già assente",
-      manualReason: "Rimozione manuale",
+      manualReason: "Rimozione manuale"
     },
     saved: {
       visibility: {
-        public: "Public",
-        masked: "Masked",
-        gm: "GM Only",
+        public: "Pubblico",
+        masked: "Mascherato",
+        gm: "Solo GM"
       },
       snooze: {
-        thisTurn: "This Turn",
-        oneRound: "1 Round",
-        threeRounds: "3 Rounds",
-        thisCombat: "This Combat",
-        rounds: "{n} round(s)",
+        thisTurn: "Questo turno",
+        oneRound: "1 giro",
+        threeRounds: "3 turni",
+        thisCombat: "Questo combattimento",
+        rounds: "{n} round(i)"
       },
       field: {
-        gmLabel: "GM Label",
-        publicLabel: "Public Label",
-        visibility: "Visibility",
-        source: "Source",
-        condition: "Condition",
+        gmLabel: "Etichetta GM",
+        publicLabel: "Etichetta pubblica",
+        visibility: "Visibilità",
+        source: "Fonte",
+        condition: "Condizione"
       },
       prompt: {
-        enterGmLabel: "Full effect description (GM only)",
-        enterPublicLabel: "Vague label shown to players",
+        enterGmLabel: "Descrizione completa dell'effetto (solo GM)",
+        enterPublicLabel: "Etichetta vaga mostrata ai giocatori"
       },
-      snoozed: "snoozed",
+      snoozed: "posticipato"
+    },
+    classify: {
+      title: "Classificazione degli Attori",
+      showTitle: "Diagnostica di Classificazione",
+      showHeading: "Dettagli Classificazione Token",
+      resultHeading: "Sovrascrittura Applicata",
+      noSelection: "Seleziona almeno un token sulla plancia prima di usare --classify.",
+      invalidType: "Tipo di classificazione non valido: {type}. Usa pc, npc, ignored o auto.",
+      set: "{name} → {type} (ambito: {scope})",
+      cleared: "{name} sovrascrittura rimossa (ambito: {scope}) — rilevamento automatico ripristinato.",
+      setTokenFallback: "{name} → {type} (sovrascrittura token — nessuna scheda personaggio collegata).",
+      clearedTokenFallback: "{name} sovrascrittura token rimossa — rilevamento automatico ripristinato.",
+      fieldToken: "Gettone",
+      fieldType: "Classificazione",
+      fieldSource: "Fonte",
+      fieldReason: "Motivo"
     },
     cleanup: {
       orphaned: "Voci di condizione orfane",
       stale: "Voci di condizione obsolete",
       orphanedRows: "Righe orfane del registro dei turni",
-      unusedMarkers: "Indicatori inutilizzati",
+      unusedMarkers: "Indicatori inutilizzati"
     },
     apply: {
-      turnAppended:
-        "Il bersaglio non era nell'ordine di iniziativa; la riga della condizione è stata aggiunta in fondo.",
-      turnInserted: "Riga della condizione inserita sotto il token bersaglio.",
-    },
+      turnAppended: "Il bersaglio non era nell'ordine di iniziativa; la riga della condizione è stata aggiunta in fondo.",
+      turnInserted: "Riga della condizione inserita sotto il token bersaglio."
+    }
   },
   handout: {
     versionLabel: "Versione",
     subtitle: "Gestore effetti di stato D&D 5e",
-    footerNote:
-      "Questo documento viene creato e aggiornato automaticamente ogni volta che lo script viene caricato.",
+    footerNote: "Questo documento viene creato e aggiornato automaticamente ogni volta che lo script viene caricato.",
     overview: {
       heading: "Panoramica",
-      body: "Condition Tracker gestisce le condizioni di stato di D&D 5e e gli effetti personalizzati come righe etichettate nel Registro dei Turni di Roll20. Applica condizioni ai token, tieni traccia delle durate per ordine di iniziativa e rimuovi automaticamente gli effetti scaduti al termine di un turno. Tutti i comandi sono riservati al GM e possono essere attivati dalla chat o tramite le macro installate.",
+      body: "Condition Tracker gestisce le condizioni di stato di D&D 5e e gli effetti personalizzati come righe etichettate nel Registro dei Turni di Roll20. Applica condizioni ai token, tieni traccia delle durate per ordine di iniziativa e rimuovi automaticamente gli effetti scaduti al termine di un turno. Tutti i comandi sono riservati al GM e possono essere attivati dalla chat o tramite le macro installate."
     },
     quickStart: {
       heading: "Avvio rapido",
@@ -417,88 +402,109 @@ const TRANSLATION = {
       colDesc: "Descrizione",
       rows: [
         [
-          "!condition-tracker --prompt",
-          "Procedura guidata passo dopo passo — scegli condizione, token e durata in modo interattivo. Disponibile anche come macro ConditionTrackerWizard.",
+          "!condizione-tracker --prompt",
+          "Procedura guidata passo dopo passo — scegli condizione, token e durata in modo interattivo. Disponibile anche come macro ConditionTrackerWizard."
         ],
         [
           "!condition-tracker --multi-target",
-          "Applica una condizione a più token contemporaneamente. Disponibile anche come macro ConditionTrackerMultiTarget.",
+          "Applica una condizione a più token contemporaneamente. Disponibile anche come macro ConditionTrackerMultiTarget."
         ],
         [
           "!condition-tracker --report-token",
-          "Select one or more tokens first, then run this command to get a GM whisper listing every condition applied to and by each selected token. Also available as the ConditionTrackerReportToken macro.",
+          "Seleziona prima uno o più token, quindi esegui questo comando per ricevere un sussurro dal GM che elenca tutte le condizioni applicate a e da ciascun token selezionato. Disponibile anche come macro ConditionTrackerReportToken."
         ],
         [
           "!condition-tracker --menu",
-          "Apri il menu principale di gestione con pulsanti per applicare, rivedere o rimuovere condizioni.",
-        ],
-      ],
+          "Apri il menu principale di gestione con pulsanti per applicare, rivedere o rimuovere condizioni."
+        ]
+      ]
     },
     commandsRef: {
       heading: "Riferimento comandi",
-      colFlag: "Flag",
+      colFlag: "Bandiera",
       colDesc: "Descrizione",
       rows: [
-        ["--prompt", "Interfaccia della procedura guidata passo dopo passo"],
         [
-          "--multi-target",
-          "Applica una condizione a più token bersaglio contemporaneamente",
+          "--richiesta",
+          "Interfaccia della procedura guidata passo dopo passo"
+        ],
+        [
+          "--multi-bersaglio",
+          "Applica una condizione a più token bersaglio contemporaneamente"
         ],
         [
           "--menu",
-          "Mostra il menu principale (aggiungi remove per il menu di rimozione)",
+          "Mostra il menu principale (aggiungi remove per il menu di rimozione)"
         ],
         [
-          "--source X --target Y --condition Z",
-          "Applica una condizione direttamente senza la procedura guidata",
+          "--source X --target Y --condizione Z",
+          "Applica una condizione direttamente senza la procedura guidata"
         ],
         [
           "--duration &lt;valore&gt;",
-          "Durata per un'applicazione diretta (es. 2 rounds)",
+          "Durata per un'applicazione diretta (es. 2 rounds)"
         ],
         [
           "--other &lt;testo&gt;",
-          "Testo personalizzato per i tipi di effetto Incantesimo / Abilità / Altro",
+          "Testo personalizzato per i tipi di effetto Incantesimo / Abilità / Altro"
         ],
         [
           "--remove &lt;id-condizione&gt;",
-          "Rimuovi una condizione specifica tramite il suo ID univoco",
+          "Rimuovi una condizione specifica tramite il suo ID univoco"
         ],
         [
           "--config &lt;opzione&gt; &lt;valore&gt;",
-          "Modifica le impostazioni di configurazione (vedi sezione Configurazione)",
+          "Modifica le impostazioni di configurazione (vedi sezione Configurazione)"
         ],
         [
           "--prompt --subjectPromptBypass true|false",
-          "Sostituisci subjectPromptBypass solo per questo comando (supporta anche --subject-prompt-bypass)",
+          "Sostituisci subjectPromptBypass solo per questo comando (supporta anche --subject-prompt-bypass)"
         ],
         [
-          "--cleanup",
-          "Riconcilia lo stato — rimuovi condizioni e righe del registro dei turni orfane",
+          "--ripulire",
+          "Riconcilia lo stato — rimuovi condizioni e righe del registro dei turni orfane"
         ],
         [
-          "--reorder-conditions",
-          "Riposizionare manualmente le righe di condizione dopo i token assegnati nell'ordine dei turni",
-        ],
-        ["--reinstall-macro", "Ricrea o aggiorna le macro del GM"],
-        [
-          "--reinstall-handout",
-          "Ricrea o aggiorna il documento di aiuto localizzato",
+          "--condizioni-di-riordino",
+          "Riposizionare manualmente le righe di condizione dopo i token assegnati nell'ordine dei turni"
         ],
         [
-          "--report-token",
-          "Whisper a GM-only condition report for each selected token (conditions applied to and by it)",
+          "--reinstalla-macro",
+          "Ricrea o aggiorna le macro del GM"
+        ],
+        [
+          "--dispensa-di-reinstallazione",
+          "Ricrea o aggiorna il documento di aiuto localizzato"
+        ],
+        [
+          "--token-report",
+          "Sussurra un rapporto sulle condizioni riservato al GM per ciascun gettone selezionato (condizioni applicate a e da esso)"
         ],
         [
           "--lang &lt;locale&gt;",
-          "Mostra i messaggi di questo comando in una lingua aggiuntiva (modalità bilingue)",
+          "Mostra i messaggi di questo comando in una lingua aggiuntiva (modalità bilingue)"
         ],
-        ["--help", "Mostra una scheda di aiuto rapida nella chat"],
-      ],
+        [
+          "--classify pc|npc|ignored",
+          "Sovrascrive il tipo di attore per i token selezionati — seleziona prima i token. L'ambito predefinito è il personaggio (scrive l'attributo ct_mod_actor_type); aggiungi --scope token per archiviare nello stato dello script"
+        ],
+        [
+          "--classify auto",
+          "Rimuove la sovrascrittura del tipo di attore e ripristina il rilevamento automatico per i token selezionati"
+        ],
+        [
+          "--classify show",
+          "Sussurra una diagnostica di classificazione per ogni token selezionato — mostra il tipo rilevato, la fonte di rilevamento e il motivo"
+        ],
+        [
+          "--help",
+          "Mostra una scheda di aiuto rapida nella chat"
+        ]
+      ]
     },
     standardConditions: {
       heading: "Condizioni standard (D&amp;D 5e)",
-      colCondition: "Condizione",
+      colCondition: "Condizione"
     },
     customEffects: {
       heading: "Tipi di effetti personalizzati",
@@ -507,85 +513,211 @@ const TRANSLATION = {
       rows: [
         [
           "🔮 Incantesimo",
-          "Traccia un effetto di incantesimo nominato — ti verrà chiesto il nome dell'incantesimo",
+          "Traccia un effetto di incantesimo nominato — ti verrà chiesto il nome dell'incantesimo"
         ],
         [
           "🎯 Abilità",
-          "Traccia un'abilità di classe o razza nominata — ti verrà chiesto il nome",
+          "Traccia un'abilità di classe o razza nominata — ti verrà chiesto il nome"
         ],
         [
           "🍀 Vantaggio",
-          "Registra un vantaggio concesso da un token a un altro; raggruppato con la sorgente nell'iniziativa",
+          "Registra un vantaggio concesso da un token a un altro; raggruppato con la sorgente nell'iniziativa"
         ],
         [
           "⬇️ Svantaggio",
-          "Registra uno svantaggio imposto; raggruppato con la sorgente nell'iniziativa",
+          "Registra uno svantaggio imposto; raggruppato con la sorgente nell'iniziativa"
         ],
         [
           "📝 Altro",
-          "Etichetta personalizzata libera — ti verrà chiesta una descrizione",
-        ],
-      ],
+          "Etichetta personalizzata libera — ti verrà chiesta una descrizione"
+        ]
+      ]
     },
     durationOptions: {
       heading: "Opzioni durata",
-      intro:
-        "Il conteggio rimanente viene mostrato nella colonna pr del Registro dei Turni e si decrementa al termine del turno del token ancora.",
+      intro: "Il conteggio rimanente viene mostrato nella colonna pr del Registro dei Turni e si decrementa al termine del turno del token ancora.",
       colOption: "Opzione",
       colBehaviour: "Comportamento",
       rows: [
         [
           "Fino alla rimozione",
-          "Permanente — deve essere rimossa manualmente tramite il menu o --remove",
+          "Permanente — deve essere rimossa manualmente tramite il menu o --remove"
         ],
         [
           "Fine del prossimo turno del bersaglio",
-          "Scade al termine del prossimo turno del token bersaglio nell'iniziativa",
+          "Scade al termine del prossimo turno del token bersaglio nell'iniziativa"
         ],
         [
           "Fine del prossimo turno della sorgente",
-          "Scade al termine del prossimo turno del token sorgente nell'iniziativa",
+          "Scade al termine del prossimo turno del token sorgente nell'iniziativa"
         ],
         [
           "1 / 2 / 3 / 10 round",
-          "Conto alla rovescia fisso; un decremento per ogni fine turno del token ancora",
-        ],
-      ],
+          "Conto alla rovescia fisso; un decremento per ogni fine turno del token ancora"
+        ]
+      ]
     },
     savedEffects: {
-      heading: "Saved Effects",
-      intro:
-        "Saved effects let you store long-term conditions outside the Turn Tracker — curses, diseases, poisons, hidden debuffs, and other non-combat conditions. They persist in script state and can be optionally copied into the Turn Tracker when combat begins.",
+      heading: "Effetti salvati",
+      intro: "Gli effetti salvati ti consentono di memorizzare condizioni a lungo termine al di fuori del Turn Tracker: maledizioni, malattie, veleni, debuff nascosti e altre condizioni non di combattimento. Persistono nello stato dello script e possono essere facoltativamente copiati nel Turn Tracker quando inizia il combattimento.",
       visibility: {
-        heading: "Visibility Modes",
+        heading: "Modalità di visibilità",
         rows: [
-          ["public", "Full effect label is visible in the Turn Tracker and public chat."],
-          ["masked", "A vague public label is shown to players; full details are GM-only."],
-          ["gm", "No Turn Tracker row. Full details are stored in state and whispered to the GM when the affected token reaches the top of initiative."],
-        ],
+          [
+            "pubblico",
+            "L'etichetta con effetto completo è visibile nel Turn Tracker e nella chat pubblica."
+          ],
+          [
+            "mascherato",
+            "Ai giocatori viene mostrata una vaga etichetta pubblica; i dettagli completi sono solo GM."
+          ],
+          [
+            "gr",
+            "Nessuna riga del contagiri. I dettagli completi vengono memorizzati nello stato e sussurrati al GM quando il segnalino interessato raggiunge il massimo dell'iniziativa."
+          ]
+        ]
       },
       commands: {
-        heading: "Saved Effects Commands",
-        intro: "All --saved commands are GM-only. Select a token before running --saved or --saved add.",
+        heading: "Comandi degli effetti salvati",
+        intro: "Tutti i comandi --saved sono solo GM. Seleziona un token prima di eseguire --saved o --saved add.",
         rows: [
-          ["!condition-tracker --saved", "View saved effects for the selected token."],
-          ["!condition-tracker --saved add", "Launch the add-saved-effect wizard."],
-          ["!condition-tracker --saved edit <id>", "Edit labels or visibility for an existing saved effect."],
-          ["!condition-tracker --saved remove <id>", "Permanently remove a saved effect."],
-          ["!condition-tracker --saved promote <id> --visibility public|masked|gm", "Copy a saved effect into the Turn Tracker (public or masked) or confirm it is GM-only tracked."],
-          ["!condition-tracker --saved snooze <id> --scope turn|rounds|combat --rounds <n>", "Snooze a GM reminder for this turn, N rounds, or this combat."],
-          ["!condition-tracker --saved snooze-clear <id>", "Clear an active snooze so reminders resume immediately."],
-        ],
+          [
+            "!condizione-tracker --salvato",
+            "Visualizza gli effetti salvati per il token selezionato."
+          ],
+          [
+            "!condition-tracker --saved add",
+            "Avvia la procedura guidata per aggiungere effetti salvati."
+          ],
+          [
+            "!condition-tracker --saved edit <id>",
+            "Modifica le etichette o la visibilità per un effetto salvato esistente."
+          ],
+          [
+            "!condition-tracker --saved remove <id>",
+            "Rimuovi permanentemente un effetto salvato."
+          ],
+          [
+            "!condition-tracker --saved promote <id> --visibility public|masked|gm",
+            "Copia un effetto salvato nel Contaturni (pubblico o mascherato) o conferma che sia tracciato solo dal GM."
+          ],
+          [
+            "!condition-tracker --saved snooze <id> --scope turn|rounds|combat --rounds <n>",
+            "Posticipa un promemoria del GM per questo turno, N round o questo combattimento."
+          ],
+          [
+            "!condition-tracker --saved snooze-clear <id>",
+            "Cancella un posticipo attivo in modo che i promemoria riprendano immediatamente."
+          ]
+        ]
       },
       reminders: {
-        heading: "GM Reminders",
-        body: "When a token with gm or masked saved effects reaches the top of the Turn Tracker, the GM receives a whisper listing the hidden effects with action buttons. Duplicate reminders within the same turn are suppressed. Use the Snooze buttons to suppress reminders for a turn, a number of rounds, or for the remainder of the current combat.",
+        heading: "Promemoria del GM",
+        body: "Quando un gettone con GM o effetti salvati mascherati raggiunge la parte superiore del Turn Tracker, il GM riceve un sussurro che elenca gli effetti nascosti con pulsanti di azione. I promemoria duplicati nello stesso turno vengono soppressi. Utilizza i pulsanti Posticipa per sopprimere i promemoria per un turno, un numero di round o per il resto del combattimento corrente."
+      }
+    },
+    actorClassification: {
+      heading: "Classificazione degli Attori",
+      intro: "Condition Tracker determina automaticamente se ogni token è un PG, PNG o un oggetto ignorato (spilli mappa, scenografia, modelli di incantesimo). I token non collegati vengono ignorati per impostazione predefinita. Usa --classify per sovrascrivere il rilevamento automatico per qualsiasi token.",
+      detectionOrder: {
+        heading: "Ordine di Rilevamento",
+        colStep: "Passaggio",
+        colCheck: "Controllo",
+        colResult: "Risultato",
+        rows: [
+          [
+            "1",
+            "Sovrascrittura di stato token (--classify --scope token)",
+            "pc/npc/ignorato"
+          ],
+          [
+            "2",
+            "Attributo ct_mod_actor_type del personaggio (--classify --scope character)",
+            "pc/npc/ignorato"
+          ],
+          [
+            "3",
+            "Token non collegato — nessuna scheda personaggio",
+            "ignorato"
+          ],
+          [
+            "4",
+            "Adattatore sistema di gioco (attributo npc / is_npc)",
+            "pc/npc"
+          ],
+          [
+            "5",
+            "Scansione attributi NPC generici (npc, is_npc, npcflag, sheet_type, character_type)",
+            "pc/npc"
+          ],
+          [
+            "6",
+            "Fallback controlledby del personaggio",
+            "pc/npc"
+          ]
+        ]
       },
+      types: {
+        heading: "Tipi di Classificazione",
+        colType: "Tipo",
+        colMeaning: "Significato",
+        rows: [
+          [
+            "pc",
+            "Personaggio giocante — sempre incluso come PG nell'assistente e nel rilevamento"
+          ],
+          [
+            "npc",
+            "Personaggio non giocante — sempre incluso come PNG"
+          ],
+          [
+            "ignorato",
+            "Mai mostrato o tracciato — escluso dal selettore token dell'assistente"
+          ],
+          [
+            "sconosciuto",
+            "Solo rilevamento automatico; tipo non determinabile (trattato come PNG nell'assistente)"
+          ]
+        ]
+      },
+      commands: {
+        heading: "Comandi di Classificazione",
+        intro: "Seleziona uno o più token prima di eseguire i comandi --classify.",
+        rows: [
+          [
+            "!condition-tracker --classifica pc",
+            "Segna i token selezionati come PG (ambito personaggio per impostazione predefinita)."
+          ],
+          [
+            "!condition-tracker --classify npc",
+            "Segna i token selezionati come PNG."
+          ],
+          [
+            "!condition-tracker --classify ignorato",
+            "Escludi i token selezionati da qualsiasi tracciamento."
+          ],
+          [
+            "!condition-tracker --classify auto",
+            "Rimuovi la sovrascrittura — ripristina il rilevamento automatico."
+          ],
+          [
+            "!condition-tracker --classifica spettacolo",
+            "Mostra la diagnostica di classificazione (tipo, fonte, motivo) per ogni token selezionato."
+          ],
+          [
+            "!condition-tracker --classify pc --scope token",
+            "Sovrascrittura a livello token nello stato script — utile per token non collegati."
+          ],
+          [
+            "!condition-tracker --classify pc --scope carattere",
+            "Sovrascrittura a livello personaggio nell'attributo ct_mod_actor_type — si applica a tutti i token con la stessa scheda personaggio."
+          ]
+        ]
+      }
     },
     configuration: {
       heading: "Configurazione",
-      intro:
-        "Usa !condition-tracker --config &lt;opzione&gt; &lt;valore&gt; o il pulsante Configurazione nel menu principale.",
+      intro: "Usa !condition-tracker --config &lt;opzione&gt; &lt;valore&gt; o il pulsante Configurazione nel menu principale.",
       colOption: "Opzione",
       colValues: "Valori",
       colDesc: "Descrizione",
@@ -593,54 +725,53 @@ const TRANSLATION = {
         [
           "useMarkers",
           "true / false",
-          "Applica indicatori di stato Roll20 ai token quando viene aggiunta una condizione",
+          "Applica indicatori di stato Roll20 ai token quando viene aggiunta una condizione"
         ],
         [
           "useIcons",
-          "true / false",
-          "Mostra codici icona brevi (es. [G]) invece di emoji nelle righe del Registro dei Turni",
+          "vero/falso",
+          "Mostra codici icona brevi (es. [G]) invece di emoji nelle righe del Registro dei Turni"
         ],
         [
           "subjectPromptBypass",
-          "true / false",
-          "Salta il passaggio facoltativo del token soggetto per gli effetti Incantesimo / Abilità / Altro",
+          "vero/falso",
+          "Salta il passaggio facoltativo del token soggetto per gli effetti Incantesimo / Abilità / Altro"
         ],
         [
           "suppressPublicChat",
-          "true / false",
-          "Sopprimi tutti gli annunci pubblici in chat (messaggi di applicazione e rimozione). I sussurri del GM non sono interessati.",
+          "vero/falso",
+          "Sopprimi tutti gli annunci pubblici in chat (messaggi di applicazione e rimozione). I sussurri del GM non sono interessati."
         ],
         [
           "healthBar",
           "bar1_value / bar2_value / bar3_value",
-          "Barra del token da monitorare; quando scende a 0 il GM viene invitato a rimuovere le condizioni",
+          "Barra del token da monitorare; quando scende a 0 il GM viene invitato a rimuovere le condizioni"
         ],
         [
           "language",
           "en-US / fr / de / es / pt-BR / ko",
-          "Lingua dei messaggi nella chat e del documento di aiuto",
+          "Lingua dei messaggi nella chat e del documento di aiuto"
         ],
         [
           "marker",
           "&lt;Condizione&gt;=&lt;nome indicatore&gt;",
-          "Sostituisci l'indicatore di stato usato per una condizione specifica (es. marker Grappled=grab)",
-        ],
-      ],
+          "Sostituisci l'indicatore di stato usato per una condizione specifica (es. marker Grappled=grab)"
+        ]
+      ]
     },
     defaultMarkers: {
       heading: "Indicatori di stato predefiniti",
       colCondition: "Condizione",
-      colMarker: "Nome indicatore",
+      colMarker: "Nome indicatore"
     },
     availableLocales: {
       heading: "Traduzioni disponibili",
-      intro:
-        "Usa l'opzione di configurazione language per impostare i messaggi della chat e il documento di aiuto su qualsiasi lingua supportata. Gli alias brevi sono accettati anche per en, zh e pt.",
+      intro: "Usa l'opzione di configurazione language per impostare i messaggi della chat e il documento di aiuto su qualsiasi lingua supportata. Gli alias brevi sono accettati anche per en, zh e pt.",
       colLocale: "Locale",
       colLanguage: "Lingua",
-      colFile: "File di traduzione",
-    },
-  },
+      colFile: "File di traduzione"
+    }
+  }
 };
 
 export default TRANSLATION;

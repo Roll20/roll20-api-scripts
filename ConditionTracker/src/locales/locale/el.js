@@ -2,78 +2,78 @@ const TRANSLATION = {
   conditions: {
     Grappled: {
       past: "αρπαγμένος",
-      verb: "αρπάζει",
+      verb: "αρπάζει"
     },
     Restrained: {
       past: "περιορισμένος",
-      verb: "περιορίζει",
+      verb: "περιορίζει"
     },
     Prone: {
       past: "πεσμένος πρηνηδόν",
       verb: "ρίχνει",
-      suffix: "πρηνηδόν",
+      suffix: "πρηνηδόν"
     },
     Poisoned: {
       past: "δηλητηριασμένος",
-      verb: "δηλητηριάζει",
+      verb: "δηλητηριάζει"
     },
     Stunned: {
       past: "ζαλισμένος",
-      verb: "ζαλίζει",
+      verb: "ζαλίζει"
     },
     Blinded: {
       past: "τυφλωμένος",
-      verb: "τυφλώνει",
+      verb: "τυφλώνει"
     },
     Charmed: {
       past: "γοητευμένος",
-      verb: "γοητεύει",
+      verb: "γοητεύει"
     },
     Frightened: {
       past: "φοβισμένος",
-      verb: "φοβίζει",
+      verb: "φοβίζει"
     },
     Incapacitated: {
       past: "ανίκανος",
       verb: "καθιστά",
-      suffix: "ανίκανο",
+      suffix: "ανίκανο"
     },
     Invisible: {
       past: "αόρατος",
       verb: "καθιστά",
-      suffix: "αόρατο",
+      suffix: "αόρατο"
     },
     Paralyzed: {
       past: "παραλυμένος",
-      verb: "παραλύει",
+      verb: "παραλύει"
     },
     Petrified: {
       past: "πετρωμένος",
-      verb: "πετρώνει",
+      verb: "πετρώνει"
     },
     Unconscious: {
       past: "αναίσθητος",
       verb: "καθιστά",
-      suffix: "αναίσθητο",
+      suffix: "αναίσθητο"
     },
     Spell: {
       past: "υπό επίδραση ξορκιού",
-      verb: "ρίχνει ξόρκι σε",
+      verb: "ρίχνει ξόρκι σε"
     },
     Ability: {
       past: "υπό επίδραση ικανότητας",
-      verb: "χρησιμοποιεί ικανότητα σε",
+      verb: "χρησιμοποιεί ικανότητα σε"
     },
     Advantage: {
       past: "έχει πλεονέκτημα",
       verb: "δίνει πλεονέκτημα σε",
-      noBy: true,
+      noBy: true
     },
     Disadvantage: {
       past: "έχει μειονέκτημα",
       verb: "επιβάλλει μειονέκτημα σε",
-      noBy: true,
-    },
+      noBy: true
+    }
   },
   condNames: {
     Grappled: "Αρπαγμένος",
@@ -93,17 +93,16 @@ const TRANSLATION = {
     Ability: "Ικανότητα",
     Advantage: "Πλεονέκτημα",
     Disadvantage: "Μειονέκτημα",
-    Other: "Άλλο",
+    Other: "Άλλο"
   },
   templates: {
     display: {
       custom: "{emoji} {target} υπό επίδραση {effect} ({source})",
       advantage: "{emoji} {source} έχει πλεονέκτημα εναντίον {target}{subject}",
-      disadvantage:
-        "{emoji} {source} έχει μειονέκτημα εναντίον {target}{subject}",
+      disadvantage: "{emoji} {source} έχει μειονέκτημα εναντίον {target}{subject}",
       noBy: "{emoji} {target} {past} ({source})",
       self: "{target} είναι {past}",
-      standard: "{emoji} {target} {past} από {source}",
+      standard: "{emoji} {target} {past} από {source}"
     },
     apply: {
       custom: "{source} εφαρμόζει {effect} στον {target}.",
@@ -111,18 +110,16 @@ const TRANSLATION = {
       disadvantage: "{source} έχει μειονέκτημα εναντίον {target}{subject}.",
       self: "{target} είναι {past}.",
       withSuffix: "{source} {verb} {target} {suffix}.",
-      standard: "{source} {verb} {target}.",
+      standard: "{source} {verb} {target}."
     },
     remove: {
       custom: "{target} δεν επηρεάζεται πλέον από {effect}.",
-      advantage:
-        "{source} δεν έχει πλέον πλεονέκτημα εναντίον {target}{subject}.",
-      disadvantage:
-        "{source} δεν έχει πλέον μειονέκτημα εναντίον {target}{subject}.",
+      advantage: "{source} δεν έχει πλέον πλεονέκτημα εναντίον {target}{subject}.",
+      disadvantage: "{source} δεν έχει πλέον μειονέκτημα εναντίον {target}{subject}.",
       noBy: "{target} δεν είναι πλέον {past}.",
       self: "{target} δεν είναι πλέον {past}.",
-      standard: "{target} δεν είναι πλέον {past} από {source}.",
-    },
+      standard: "{target} δεν είναι πλέον {past} από {source}."
+    }
   },
   ui: {
     wizard: {
@@ -140,11 +137,10 @@ const TRANSLATION = {
       noneBtn: "Κανένα",
       noneOrSourceBtn: "Κανένα ή εφαρμογή στην πηγή",
       subjectDesc: "Επιλέξτε ποιος ή τι παράγει το εφέ.",
-      sourceDesc:
-        "Επιλέξτε το πλάσμα που δημιουργεί ή παράγει την κατάσταση ή το εφέ.",
+      sourceDesc: "Επιλέξτε το πλάσμα που δημιουργεί ή παράγει την κατάσταση ή το εφέ.",
       targetDesc: "Επιλέξτε το πλάσμα που θα λάβει την κατάσταση ή το εφέ.",
       otherText: "Προσαρμοσμένο κείμενο κατάστασης",
-      effectDetails: "Λεπτομέρειες {condition}",
+      effectDetails: "Λεπτομέρειες {condition}"
     },
     col: {
       players: "Παίκτες",
@@ -165,8 +161,8 @@ const TRANSLATION = {
       details: "Λεπτομέρειες",
       description: "Περιγραφή",
       scenario: "Σενάριο",
-      gameSystem: "Game System",
-      duration: "Duration",
+      gameSystem: "Σύστημα παιχνιδιού",
+      duration: "Διάρκεια"
     },
     dur: {
       untilRemoved: "Μέχρι αφαίρεσης",
@@ -179,7 +175,7 @@ const TRANSLATION = {
       custom: "Προσαρμοσμένο",
       customPrompt: "Αριθμός γύρων",
       untilRemovedDisplay: "Μέχρι αφαίρεσης",
-      turnsRemaining: "{n} εναπομείναντα τέλη σειράς",
+      turnsRemaining: "{n} εναπομείναντα τέλη σειράς"
     },
     btn: {
       openWizard: "Άνοιγμα Οδηγού",
@@ -191,14 +187,14 @@ const TRANSLATION = {
       reinstallHandout: "Επανεγκατάσταση Handout",
       showHelp: "Εμφάνιση Βοήθειας",
       reorderConditions: "Αναδιάταξη Σειρών Κατάστασης",
-      reportToken: "Report Token Conditions",
-      savedEffects: "Saved Effects",
-      addSavedEffect: "Add Saved Effect",
-      editSaved: "Edit",
-      removeSaved: "Remove",
-      promoteSaved: "Add to Turn Tracker",
-      snoozeSaved: "Snooze",
-      clearSnooze: "Clear Snooze",
+      reportToken: "Αναφορά Προϋποθέσεων Token",
+      savedEffects: "Αποθηκευμένα εφέ",
+      addSavedEffect: "Προσθήκη Αποθηκευμένου Εφέ",
+      editSaved: "Εκδίδω",
+      removeSaved: "Αφαιρώ",
+      promoteSaved: "Προσθήκη στο Turn Tracker",
+      snoozeSaved: "Υπνάκος",
+      clearSnooze: "Εκκαθάριση αναβολής"
     },
     title: {
       menu: "Μενού",
@@ -209,7 +205,7 @@ const TRANSLATION = {
       applied: "Εφαρμόστηκε",
       removed: "Κατάσταση Αφαιρέθηκε",
       cleanup: "Εκκαθάριση Ολοκληρώθηκε",
-      macroReinstalled: "The {wizard}, {multiTarget}, {reportToken}, and {saved} macros have been reinstalled for all current GM players.",
+      macroReinstalled: "Macro Επανεγκαταστάθηκε",
       handoutReinstalled: "Το Handout Επανεγκαταστάθηκε",
       warning: "Προειδοποίηση",
       error: "Σφάλμα",
@@ -221,15 +217,15 @@ const TRANSLATION = {
       moveToken: "{name} — Μετακίνηση Token;",
       scriptReady: "Το Script Είναι Έτοιμο",
       conditionReorder: "Η Σειρά Πρωτοβουλίας Άλλαξε",
-      tokenReport: "Token Condition Report",
-      savedEffects: "Saved Effects",
-      savedAdd: "Add Saved Effect",
-      savedEdit: "Edit Saved Effect",
-      savedRemoved: "Saved Effect Removed",
-      savedPromoted: "Add to Turn Tracker",
-      savedSnoozed: "Reminder Snoozed",
-      savedSnoozeCleared: "Snooze Cleared",
-      hiddenEffects: "Hidden Effects — {name}",
+      tokenReport: "Αναφορά κατάστασης διακριτικού",
+      savedEffects: "Αποθηκευμένα εφέ",
+      savedAdd: "Προσθήκη Αποθηκευμένου Εφέ",
+      savedEdit: "Επεξεργασία αποθηκευμένου εφέ",
+      savedRemoved: "Το αποθηκευμένο εφέ καταργήθηκε",
+      savedPromoted: "Προσθήκη στο Turn Tracker",
+      savedSnoozed: "Η υπενθύμιση αναβλήθηκε",
+      savedSnoozeCleared: "Η αναβολή διαγράφηκε",
+      hiddenEffects: "Κρυφά εφέ — {name}"
     },
     heading: {
       quickActions: "Γρήγορες Ενέργειες",
@@ -241,115 +237,92 @@ const TRANSLATION = {
       promptUi: "Διεπαφή Οδηγού",
       examples: "Παραδείγματα",
       summary: "Σύνοψη",
-      appliedTo: "Conditions Applied To",
-      appliedBy: "Conditions Applied By",
-      savedEffectsFor: "Saved Effects for {name}",
-      visibility: "Visibility",
-      snoozeOptions: "Snooze Reminder",
-      promoteOptions: "Promote to Turn Tracker",
-      editActions: "Edit Actions",
+      appliedTo: "Όροι που ισχύουν για",
+      appliedBy: "Όροι που ισχύουν από",
+      savedEffectsFor: "Αποθηκευμένα εφέ για {name}",
+      visibility: "Ορατότητα",
+      snoozeOptions: "Αναβολή υπενθύμισης",
+      promoteOptions: "Προώθηση στο Turn Tracker",
+      editActions: "Επεξεργασία ενεργειών"
     },
     msg: {
       noActive: "Δεν παρακολουθούνται ενεργές καταστάσεις.",
       configReset: "Οι ρυθμίσεις επαναφέρθηκαν στις προεπιλογές.",
-      unknownConfig:
-        "Άγνωστη επιλογή ρύθμισης. Χρησιμοποιήστε --config για να δείτε τις υποστηριζόμενες ρυθμίσεις.",
-      macroReinstalled:
-        "Τα macros {wizard}, {multiTarget} και {reportToken} επανεγκαταστάθηκαν για όλους τους τρέχοντες παίκτες-DM.",
+      unknownConfig: "Άγνωστη επιλογή ρύθμισης. Χρησιμοποιήστε --config για να δείτε τις υποστηριζόμενες ρυθμίσεις.",
+      macroReinstalled: "Τα macros {wizard}, {multiTarget}, {reportToken}, {saved} και {classify} επανεγκαταστάθηκαν για όλους τους τρέχοντες παίκτες-DM.",
       handoutReinstalled: "Το handout βοήθειας {handout} επανεγκαταστάθηκε.",
-      duplicate:
-        "Αυτός ακριβώς ο συνδυασμός πηγής, υποκειμένου, στόχου, κατάστασης και προσαρμοσμένου κειμένου είναι ήδη ενεργός.",
+      duplicate: "Αυτός ακριβώς ο συνδυασμός πηγής, υποκειμένου, στόχου, κατάστασης και προσαρμοσμένου κειμένου είναι ήδη ενεργός.",
       noTargets: "Δεν ορίστηκαν tokens-στόχοι για πολλαπλή εφαρμογή.",
-      noSelection:
-        "Επιλέξτε τουλάχιστον ένα token στο ταμπλό πριν χρησιμοποιήσετε --multi-target.",
+      noSelection: "Επιλέξτε τουλάχιστον ένα token στο ταμπλό πριν χρησιμοποιήσετε --multi-target.",
       invalidIds: "Δεν βρέθηκαν έγκυρα IDs tokens στην τρέχουσα επιλογή.",
-      reSelectTokens:
-        "Κανένα από τα αρχικά επιλεγμένα tokens δεν βρέθηκε. Επαναλάβετε την επιλογή tokens και προσπαθήστε ξανά.",
+      reSelectTokens: "Κανένα από τα αρχικά επιλεγμένα tokens δεν βρέθηκε. Επαναλάβετε την επιλογή tokens και προσπαθήστε ξανά.",
       conditionNotFound: "Το ID κατάστασης δεν βρέθηκε.",
       gmOnly: "Οι εντολές Condition Tracker είναι αποκλειστικά για DM.",
-      commandFailed:
-        "Η εντολή δεν μπόρεσε να ολοκληρωθεί με ασφάλεια. Ελέγξτε την κονσόλα API για λεπτομέρειες.",
+      commandFailed: "Η εντολή δεν μπόρεσε να ολοκληρωθεί με ασφάλεια. Ελέγξτε την κονσόλα API για λεπτομέρειες.",
       sourceTokenNotFound: "Το token πηγής δεν βρέθηκε.",
       targetTokenNotFound: "Το token στόχου δεν βρέθηκε.",
       subjectTokenNotFound: "Το token υποκειμένου δεν βρέθηκε.",
-      invalidCondition:
-        "Η κατάσταση πρέπει να είναι μία από τις προκαθορισμένες καταστάσεις ή Άλλο.",
-      subjectOnlyCustom:
-        "--subject ισχύει μόνο για Ξόρκι, Ικανότητα, Πλεονέκτημα, Μειονέκτημα και Άλλο.",
-      subjectBypassInvalid:
-        "--subjectPromptBypass αναμένει true ή false όταν παρέχεται τιμή.",
-      customDetailsRequired:
-        "Απαιτούνται λεπτομέρειες για {condition}. Χρησιμοποιήστε --other για να τις δώσετε.",
-      markerConfigFormat:
-        "Μορφή ρύθμισης δείκτη: --config marker Grappled=grab",
-      markerPredefinedRequired:
-        "Η ρύθμιση δείκτη απαιτεί προκαθορισμένο όνομα κατάστασης.",
+      invalidCondition: "Η κατάσταση πρέπει να είναι μία από τις προκαθορισμένες καταστάσεις ή Άλλο.",
+      subjectOnlyCustom: "--subject ισχύει μόνο για Ξόρκι, Ικανότητα, Πλεονέκτημα, Μειονέκτημα και Άλλο.",
+      subjectBypassInvalid: "--subjectPromptBypass αναμένει true ή false όταν παρέχεται τιμή.",
+      customDetailsRequired: "Απαιτούνται λεπτομέρειες για {condition}. Χρησιμοποιήστε --other για να τις δώσετε.",
+      markerConfigFormat: "Μορφή ρύθμισης δείκτη: --config marker Grappled=grab",
+      markerPredefinedRequired: "Η ρύθμιση δείκτη απαιτεί προκαθορισμένο όνομα κατάστασης.",
       markerNameRequired: "Η ρύθμιση δείκτη απαιτεί μη κενό όνομα δείκτη.",
       markerSet: "Ο δείκτης για {condition} ορίστηκε σε {marker}.",
       healthBarSet: "Η μπάρα υγείας ορίστηκε σε {bar}.",
       boolSet: "Το {key} ορίστηκε σε {value}.",
       expectedBoolean: "Αναμένεται true ή false.",
-      invalidHealthBar:
-        "Η μπάρα υγείας πρέπει να είναι bar1_value, bar2_value ή bar3_value.",
+      invalidHealthBar: "Η μπάρα υγείας πρέπει να είναι bar1_value, bar2_value ή bar3_value.",
       markersDisabled: "Οι δείκτες είναι απενεργοποιημένοι.",
       noMarkerConfigured: "Δεν έχει ρυθμιστεί δείκτης για αυτήν την κατάσταση.",
       markerApplied: "Ο δείκτης εφαρμόστηκε: {marker}",
       markerPresent: "Ο δείκτης υπάρχει ήδη: {marker}",
       langSet: "Η γλώσσα ορίστηκε σε {locale}.",
       invalidLocale: "Μη έγκυρη locale. Υποστηριζόμενες locales: {locales}.",
-      otherDurationRequiresRounds:
-        "Η προσαρμοσμένη διάρκεια απαιτεί αριθμητικό πλήθος γύρων, π.χ. --duration 5 rounds.",
-      invalidDuration:
-        "Η διάρκεια πρέπει να είναι Μέχρι αφαίρεσης, επιλογή τέλους σειράς ή θετικός αριθμός γύρων.",
-      zeroHpNoConditions:
-        "{name} έφτασε στα 0 ΒΖ και δεν έχει ενεργές καταστάσεις.",
-      zeroHpConditions:
-        "{name} έφτασε στα 0 ΒΖ. Επιλέξτε καταστάσεις για αφαίρεση:",
+      otherDurationRequiresRounds: "Η προσαρμοσμένη διάρκεια απαιτεί αριθμητικό πλήθος γύρων, π.χ. --duration 5 rounds.",
+      invalidDuration: "Η διάρκεια πρέπει να είναι Μέχρι αφαίρεσης, επιλογή τέλους σειράς ή θετικός αριθμός γύρων.",
+      zeroHpNoConditions: "{name} έφτασε στα 0 ΒΖ και δεν έχει ενεργές καταστάσεις.",
+      zeroHpConditions: "{name} έφτασε στα 0 ΒΖ. Επιλέξτε καταστάσεις για αφαίρεση:",
       removeAllBtn: "Αφαίρεση Όλων των Καταστάσεων για τον {name}",
       markIncapacitated: "Σήμανση ως Ανίκανος",
       removeFromTurnOrder: "Αφαίρεση από τη Σειρά Πρωτοβουλίας",
       alreadyIncapacitated: "{name} είναι ήδη Ανίκανος.",
       tokenRemovedFromTurn: "{name} αφαιρέθηκε από τη σειρά πρωτοβουλίας.",
       tokenNotInTurn: "{name} δεν βρέθηκε στη σειρά πρωτοβουλίας.",
-      moveTokenPrompt:
-        "Μετακίνηση του {name} στο επίπεδο χάρτη ώστε να παραμένει ορατό χωρίς να παρεμβάλλεται με άλλα tokens;",
+      moveTokenPrompt: "Μετακίνηση του {name} στο επίπεδο χάρτη ώστε να παραμένει ορατό χωρίς να παρεμβάλλεται με άλλα tokens;",
       moveTokenBtn: "Μετακίνηση {name} στο Επίπεδο Χάρτη",
       tokenMoved: "{name} μετακινήθηκε στο επίπεδο χάρτη.",
       tokenNotFound: "Το token δεν βρέθηκε.",
       noActiveConditions: "{name} δεν έχει ενεργές καταστάσεις για αφαίρεση.",
-      deadNoConditions:
-        "{name} σημειώθηκε ως νεκρός. Δεν υπήρχαν ενεργές καταστάσεις.",
+      deadNoConditions: "{name} σημειώθηκε ως νεκρός. Δεν υπήρχαν ενεργές καταστάσεις.",
       scriptReady: "{name} είναι ενεργό και χρησιμοποιείτε έκδοση {version}.",
       reachedZeroHp: "{name} έφτασε στα 0 ΒΖ",
       manuallyRemoved: "αφαιρέθηκε χειροκίνητα",
       durationExpired: "η διάρκεια έληξε",
       markedAsDead: "{name} σημειώθηκε ως νεκρός",
-      conditionReorder:
-        "Η σειρά πρωτοβουλίας άλλαξε και {count} παρακολουθούμενη/ες σειρά/ές κατάστασης μπορεί να είναι εκτός θέσης. Κάντε κλικ παρακάτω για να τις επαναφέρετε μετά τα αντίστοιχα tokens.",
-      conditionsReordered:
-        "Οι σειρές κατάστασης επανατοποθετήθηκαν μετά τα αντίστοιχα tokens.",
-      noTokensSelectedReport:
-        "Select at least one token on the board before using --report-token.",
-      noConditionsAppliedTo: "{name} has no active conditions applied to it.",
-      noConditionsAppliedBy:
-        "{name} has no active conditions applied to others.",
-      noSavedEffects: "No saved effects stored for {name}.",
-      noTokenSelectedSaved: "Select a token on the board before using --saved.",
-      savedEffectAdded: "Saved effect added for {name}.",
-      savedEffectUpdated: "Saved effect updated.",
-      savedEffectRemoved: "Saved effect removed.",
-      savedEffectNotFound: "Saved effect not found.",
-      savedInvalidVisibility: "Invalid visibility. Use public, masked, or gm.",
+      conditionReorder: "Η σειρά πρωτοβουλίας άλλαξε και {count} παρακολουθούμενη/ες σειρά/ές κατάστασης μπορεί να είναι εκτός θέσης. Κάντε κλικ παρακάτω για να τις επαναφέρετε μετά τα αντίστοιχα tokens.",
+      conditionsReordered: "Οι σειρές κατάστασης επανατοποθετήθηκαν μετά τα αντίστοιχα tokens.",
+      noTokensSelectedReport: "Επιλέξτε τουλάχιστον ένα διακριτικό στον πίνακα πριν χρησιμοποιήσετε το --report-token.",
+      noConditionsAppliedTo: "Το {name} δεν έχει ενεργές συνθήκες.",
+      noConditionsAppliedBy: "Ο {name} δεν έχει ενεργές συνθήκες που να ισχύουν για άλλους.",
+      noSavedEffects: "Δεν έχουν αποθηκευτεί αποθηκευμένα εφέ για {name}.",
+      noTokenSelectedSaved: "Επιλέξτε ένα διακριτικό στον πίνακα πριν χρησιμοποιήσετε το --saved.",
+      savedEffectAdded: "Προστέθηκε αποθηκευμένο εφέ για {name}.",
+      savedEffectUpdated: "Το αποθηκευμένο εφέ ενημερώθηκε.",
+      savedEffectRemoved: "Το αποθηκευμένο εφέ καταργήθηκε.",
+      savedEffectNotFound: "Το αποθηκευμένο εφέ δεν βρέθηκε.",
+      savedInvalidVisibility: "Μη έγκυρη ορατότητα. Χρησιμοποιήστε δημόσια, με μάσκα ή gm.",
       savedConditionRequired: "Condition type is required. Use --condition <type>.",
-      savedPromotedPublic: "Effect added to Turn Tracker as public.",
-      savedPromotedMasked: "Effect added to Turn Tracker as masked — players see: {publicLabel}.",
-      savedPromotedGm: "Effect is GM-only — no Turn Tracker row will be created. The reminder system will surface it when this token reaches the top of the turn order.",
-      savedSnoozed: "Reminder snoozed: {scope}.",
-      savedSnoozeCleared: "Snooze cleared.",
-      hiddenEffectsReminder: "Hidden effects are active on {name}.",
-      visibilityPublicHint: "full label visible to all",
-      visibilityMaskedHint: "vague label shown to players",
-      visibilityGmHint: "GM whisper only, no Turn Tracker row",
+      savedPromotedPublic: "Το εφέ προστέθηκε στο Turn Tracker ως δημόσιο.",
+      savedPromotedMasked: "Το εφέ προστέθηκε στο Turn Tracker ως καλυμμένο — οι παίκτες βλέπουν: {publicLabel}.",
+      savedPromotedGm: "Το εφέ είναι μόνο για GM — δεν θα δημιουργηθεί σειρά Turn Tracker. Το σύστημα υπενθύμισης θα εμφανιστεί όταν αυτό το διακριτικό φτάσει στην κορυφή της σειράς στροφής.",
+      savedSnoozed: "Η υπενθύμιση αναβλήθηκε: {scope}.",
+      savedSnoozeCleared: "Η αναβολή διαγράφηκε.",
+      hiddenEffectsReminder: "Τα κρυφά εφέ είναι ενεργά στις {name}.",
+      visibilityPublicHint: "πλήρης ετικέτα ορατή σε όλους",
+      visibilityMaskedHint: "ασαφής ετικέτα που εμφανίζεται στους παίκτες",
+      visibilityGmHint: "GM whisper μόνο, χωρίς σειρά Turn Tracker"
     },
     removal: {
       conditionField: "Κατάσταση",
@@ -361,54 +334,68 @@ const TRANSLATION = {
       markerRetained: "Διατηρήθηκε ({marker})",
       rowRemoved: "Αφαιρέθηκε",
       rowMissing: "Ήδη απούσα",
-      manualReason: "Χειροκίνητη αφαίρεση",
+      manualReason: "Χειροκίνητη αφαίρεση"
     },
     saved: {
       visibility: {
-        public: "Public",
-        masked: "Masked",
-        gm: "GM Only",
+        public: "Κοινό",
+        masked: "Μεταμφιεσμένος",
+        gm: "Μόνο GM"
       },
       snooze: {
-        thisTurn: "This Turn",
-        oneRound: "1 Round",
-        threeRounds: "3 Rounds",
-        thisCombat: "This Combat",
-        rounds: "{n} round(s)",
+        thisTurn: "Αυτή η στροφή",
+        oneRound: "1 Γύρος",
+        threeRounds: "3 Γύροι",
+        thisCombat: "Αυτή η Μάχη",
+        rounds: "{n} γύροι"
       },
       field: {
-        gmLabel: "GM Label",
-        publicLabel: "Public Label",
-        visibility: "Visibility",
-        source: "Source",
-        condition: "Condition",
+        gmLabel: "Ετικέτα GM",
+        publicLabel: "Δημόσια ετικέτα",
+        visibility: "Ορατότητα",
+        source: "Πηγή",
+        condition: "Κατάσταση"
       },
       prompt: {
-        enterGmLabel: "Full effect description (GM only)",
-        enterPublicLabel: "Vague label shown to players",
+        enterGmLabel: "Πλήρης περιγραφή εφέ (μόνο GM)",
+        enterPublicLabel: "Αόριστη ετικέτα που εμφανίζεται στους παίκτες"
       },
-      snoozed: "snoozed",
+      snoozed: "αναβολή"
+    },
+    classify: {
+      title: "Ταξινόμηση Ηθοποιών",
+      showTitle: "Διαγνωστικό Ταξινόμησης",
+      showHeading: "Λεπτομέρειες Ταξινόμησης Token",
+      resultHeading: "Εφαρμόστηκε Παράκαμψη",
+      noSelection: "Επίλεξε τουλάχιστον ένα token στον χάρτη πριν χρησιμοποιήσεις --classify.",
+      invalidType: "Μη έγκυρος τύπος ταξινόμησης: {type}. Χρησιμοποίησε pc, npc, ignored ή auto.",
+      set: "{name} → {type} (εύρος: {scope})",
+      cleared: "{name} παράκαμψη διαγράφηκε (εύρος: {scope}) — αποκαταστάθηκε αυτόματη ανίχνευση.",
+      setTokenFallback: "{name} → {type} (παράκαμψη token — δεν υπάρχει συνδεδεμένο φύλλο χαρακτήρα).",
+      clearedTokenFallback: "{name} παράκαμψη token διαγράφηκε — αποκαταστάθηκε αυτόματη ανίχνευση.",
+      fieldToken: "Ενδειξη",
+      fieldType: "Ταξινόμηση",
+      fieldSource: "Πηγή",
+      fieldReason: "Αιτία"
     },
     cleanup: {
       orphaned: "Ορφανές καταχωρήσεις κατάστασης",
       stale: "Παλιές καταχωρήσεις κατάστασης",
       orphanedRows: "Ορφανές σειρές Turn Tracker",
-      unusedMarkers: "Αχρησιμοποίητοι δείκτες",
+      unusedMarkers: "Αχρησιμοποίητοι δείκτες"
     },
     apply: {
-      turnAppended:
-        "Ο στόχος δεν ήταν στη σειρά πρωτοβουλίας· η σειρά κατάστασης προστέθηκε στο τέλος.",
-      turnInserted: "Η σειρά κατάστασης εισήχθη κάτω από το token στόχου.",
-    },
+      turnAppended: "Ο στόχος δεν ήταν στη σειρά πρωτοβουλίας· η σειρά κατάστασης προστέθηκε στο τέλος.",
+      turnInserted: "Η σειρά κατάστασης εισήχθη κάτω από το token στόχου."
+    }
   },
   handout: {
     versionLabel: "Έκδοση",
     subtitle: "Διαχειριστής Καταστάσεων D&D 5e",
-    footerNote:
-      "Αυτό το handout δημιουργείται και ενημερώνεται αυτόματα κάθε φορά που φορτώνει το script.",
+    footerNote: "Αυτό το handout δημιουργείται και ενημερώνεται αυτόματα κάθε φορά που φορτώνει το script.",
     overview: {
       heading: "Επισκόπηση",
-      body: "Το Condition Tracker διαχειρίζεται καταστάσεις D&D 5e και προσαρμοσμένα εφέ ως επονομαζόμενες σειρές στον Turn Tracker του Roll20. Εφαρμόστε καταστάσεις σε tokens, παρακολουθήστε διάρκειες κατά σειρά πρωτοβουλίας και αφαιρέστε αυτόματα τα εφέ που έληξαν όταν τελειώνει μια σειρά. Όλες οι εντολές είναι αποκλειστικά για DM και μπορούν να εκτελεστούν από το chat ή μέσω των εγκατεστημένων macros.",
+      body: "Το Condition Tracker διαχειρίζεται καταστάσεις D&D 5e και προσαρμοσμένα εφέ ως επονομαζόμενες σειρές στον Turn Tracker του Roll20. Εφαρμόστε καταστάσεις σε tokens, παρακολουθήστε διάρκειες κατά σειρά πρωτοβουλίας και αφαιρέστε αυτόματα τα εφέ που έληξαν όταν τελειώνει μια σειρά. Όλες οι εντολές είναι αποκλειστικά για DM και μπορούν να εκτελεστούν από το chat ή μέσω των εγκατεστημένων macros."
     },
     quickStart: {
       heading: "Γρήγορη Έναρξη",
@@ -416,88 +403,109 @@ const TRANSLATION = {
       colDesc: "Περιγραφή",
       rows: [
         [
-          "!condition-tracker --prompt",
-          "Οδηγός βήμα-βήμα — επιλέξτε κατάσταση, tokens και διάρκεια διαδραστικά. Διατίθεται επίσης ως macro ConditionTrackerWizard.",
+          "!condition-tracker --προτροπή",
+          "Οδηγός βήμα-βήμα — επιλέξτε κατάσταση, tokens και διάρκεια διαδραστικά. Διατίθεται επίσης ως macro ConditionTrackerWizard."
         ],
         [
-          "!condition-tracker --multi-target",
-          "Εφαρμογή μιας κατάστασης σε πολλά tokens ταυτόχρονα. Διατίθεται επίσης ως macro ConditionTrackerMultiTarget.",
+          "!condition-tracker --πολλαπλών στόχων",
+          "Εφαρμογή μιας κατάστασης σε πολλά tokens ταυτόχρονα. Διατίθεται επίσης ως macro ConditionTrackerMultiTarget."
         ],
         [
           "!condition-tracker --report-token",
-          "Select one or more tokens first, then run this command to get a GM whisper listing every condition applied to and by each selected token. Also available as the ConditionTrackerReportToken macro.",
+          "Επιλέξτε πρώτα ένα ή περισσότερα διακριτικά και, στη συνέχεια, εκτελέστε αυτήν την εντολή για να λάβετε ένα GM whisper που αναφέρει κάθε συνθήκη που εφαρμόζεται και από κάθε επιλεγμένο διακριτικό. Διατίθεται επίσης ως μακροεντολή ConditionTrackerReportToken."
         ],
         [
           "!condition-tracker --menu",
-          "Άνοιγμα του κύριου μενού διαχείρισης με κουμπιά για εφαρμογή, εξέταση ή αφαίρεση καταστάσεων.",
-        ],
-      ],
+          "Άνοιγμα του κύριου μενού διαχείρισης με κουμπιά για εφαρμογή, εξέταση ή αφαίρεση καταστάσεων."
+        ]
+      ]
     },
     commandsRef: {
       heading: "Αναφορά Εντολών",
       colFlag: "Σημαία",
       colDesc: "Περιγραφή",
       rows: [
-        ["--prompt", "Διαδραστικός οδηγός βήμα-βήμα"],
         [
-          "--multi-target",
-          "Εφαρμογή κατάστασης σε πολλά tokens-στόχους ταυτόχρονα",
+          "--ταχύς",
+          "Διαδραστικός οδηγός βήμα-βήμα"
         ],
         [
-          "--menu",
-          "Εμφάνιση κύριου μενού (προσθέστε remove για μενού αφαίρεσης)",
+          "--πολλαπλών στόχων",
+          "Εφαρμογή κατάστασης σε πολλά tokens-στόχους ταυτόχρονα"
         ],
         [
-          "--source X --target Y --condition Z",
-          "Εφαρμογή κατάστασης απευθείας χωρίς τον οδηγό",
+          "--μενού",
+          "Εμφάνιση κύριου μενού (προσθέστε remove για μενού αφαίρεσης)"
+        ],
+        [
+          "--πηγή X --στόχος Υ --συνθήκη Ζ",
+          "Εφαρμογή κατάστασης απευθείας χωρίς τον οδηγό"
         ],
         [
           "--duration &lt;τιμή&gt;",
-          "Διάρκεια για απευθείας εφαρμογή (π.χ. 2 rounds)",
+          "Διάρκεια για απευθείας εφαρμογή (π.χ. 2 rounds)"
         ],
         [
           "--other &lt;κείμενο&gt;",
-          "Προσαρμοσμένο κείμενο για τύπους εφέ Ξόρκι / Ικανότητα / Άλλο",
+          "Προσαρμοσμένο κείμενο για τύπους εφέ Ξόρκι / Ικανότητα / Άλλο"
         ],
         [
-          "--remove &lt;condition-id&gt;",
-          "Αφαίρεση συγκεκριμένης κατάστασης με το μοναδικό της ID",
+          "--αφαίρεση <condition-id>",
+          "Αφαίρεση συγκεκριμένης κατάστασης με το μοναδικό της ID"
         ],
         [
-          "--config &lt;option&gt; &lt;value&gt;",
-          "Προσαρμογή ρυθμίσεων (βλ. ενότητα Ρυθμίσεων παρακάτω)",
+          "--config <επιλογή> <τιμή>",
+          "Προσαρμογή ρυθμίσεων (βλ. ενότητα Ρυθμίσεων παρακάτω)"
         ],
         [
           "--prompt --subjectPromptBypass true|false",
-          "Παράκαμψη subjectPromptBypass μόνο για αυτήν την εντολή (υποστηρίζεται επίσης --subject-prompt-bypass)",
+          "Παράκαμψη subjectPromptBypass μόνο για αυτήν την εντολή (υποστηρίζεται επίσης --subject-prompt-bypass)"
         ],
         [
-          "--cleanup",
-          "Εναρμόνιση κατάστασης — αφαίρεση ορφανών καταστάσεων και σειρών Turn Tracker",
+          "-- καθάρισμα",
+          "Εναρμόνιση κατάστασης — αφαίρεση ορφανών καταστάσεων και σειρών Turn Tracker"
         ],
         [
-          "--reorder-conditions",
-          "Χειροκίνητη επανατοποθέτηση γραμμών συνθηκών μετά τα εκχωρημένα τεκμήρια στη σειρά στροφών",
-        ],
-        ["--reinstall-macro", "Εκ νέου δημιουργία ή ενημέρωση των GM macros"],
-        [
-          "--reinstall-handout",
-          "Εκ νέου δημιουργία ή ενημέρωση του τοπικοποιημένου handout βοήθειας",
+          "--επαναπαραγγελία-προϋποθέσεις",
+          "Χειροκίνητη επανατοποθέτηση γραμμών συνθηκών μετά τα εκχωρημένα τεκμήρια στη σειρά στροφών"
         ],
         [
-          "--report-token",
-          "Whisper a GM-only condition report for each selected token (conditions applied to and by it)",
+          "--Επανεγκατάσταση-μακροεντολή",
+          "Εκ νέου δημιουργία ή ενημέρωση των GM macros"
+        ],
+        [
+          "--Επανεγκατάσταση-φυλλάδιο",
+          "Εκ νέου δημιουργία ή ενημέρωση του τοπικοποιημένου handout βοήθειας"
+        ],
+        [
+          "---αναφορά",
+          "Ψιθυρίστε μια αναφορά κατάστασης μόνο για GM για κάθε επιλεγμένο διακριτικό (συνθήκες που εφαρμόζονται σε αυτό και από αυτό)"
         ],
         [
           "--lang &lt;locale&gt;",
-          "Εξαγωγή μηνυμάτων αυτής της εντολής σε πρόσθετη locale (δίγλωσση λειτουργία)",
+          "Εξαγωγή μηνυμάτων αυτής της εντολής σε πρόσθετη locale (δίγλωσση λειτουργία)"
         ],
-        ["--help", "Εμφάνιση σύντομης κάρτας βοήθειας στο chat"],
-      ],
+        [
+          "--classify pc|npc|ignored",
+          "Παράκαμψη τύπου ηθοποιού για επιλεγμένα tokens — επίλεξε πρώτα token(s). Το προεπιλεγμένο εύρος είναι χαρακτήρας (γράφει ιδιότητα ct_mod_actor_type)· πρόσθεσε --scope token για αποθήκευση στην κατάσταση script"
+        ],
+        [
+          "--classify auto",
+          "Αφαίρεση παράκαμψης τύπου ηθοποιού και επαναφορά αυτόματης ανίχνευσης για επιλεγμένα tokens"
+        ],
+        [
+          "--classify show",
+          "Ψίθυρος διαγνωστικού ταξινόμησης για κάθε επιλεγμένο token — εμφανίζει τον εντοπισμένο τύπο, πηγή ανίχνευσης και αιτία"
+        ],
+        [
+          "--help",
+          "Εμφάνιση σύντομης κάρτας βοήθειας στο chat"
+        ]
+      ]
     },
     standardConditions: {
       heading: "Τυπικές Καταστάσεις (D&amp;D 5e)",
-      colCondition: "Κατάσταση",
+      colCondition: "Κατάσταση"
     },
     customEffects: {
       heading: "Προσαρμοσμένοι Τύποι Εφέ",
@@ -506,85 +514,211 @@ const TRANSLATION = {
       rows: [
         [
           "🔮 Ξόρκι",
-          "Παρακολούθηση ονομαστού εφέ ξορκιού — θα σας ζητηθεί το όνομα του ξορκιού",
+          "Παρακολούθηση ονομαστού εφέ ξορκιού — θα σας ζητηθεί το όνομα του ξορκιού"
         ],
         [
           "🎯 Ικανότητα",
-          "Παρακολούθηση ονομαστής ικανότητας κλάσης ή φυλής — θα σας ζητηθεί το όνομά της",
+          "Παρακολούθηση ονομαστής ικανότητας κλάσης ή φυλής — θα σας ζητηθεί το όνομά της"
         ],
         [
           "🍀 Πλεονέκτημα",
-          "Καταγραφή πλεονεκτήματος που δόθηκε από ένα token σε άλλο· ομαδοποιείται με την πηγή στην πρωτοβουλία",
+          "Καταγραφή πλεονεκτήματος που δόθηκε από ένα token σε άλλο· ομαδοποιείται με την πηγή στην πρωτοβουλία"
         ],
         [
           "⬇️ Μειονέκτημα",
-          "Καταγραφή επιβληθέντος μειονεκτήματος· ομαδοποιείται με την πηγή στην πρωτοβουλία",
+          "Καταγραφή επιβληθέντος μειονεκτήματος· ομαδοποιείται με την πηγή στην πρωτοβουλία"
         ],
         [
           "📝 Άλλο",
-          "Ελεύθερη προσαρμοσμένη ετικέτα — θα σας ζητηθεί περιγραφή",
-        ],
-      ],
+          "Ελεύθερη προσαρμοσμένη ετικέτα — θα σας ζητηθεί περιγραφή"
+        ]
+      ]
     },
     durationOptions: {
       heading: "Επιλογές Διάρκειας",
-      intro:
-        "Η εναπομένουσα μέτρηση εμφανίζεται στη στήλη pr του Turn Tracker και μειώνεται όταν τελειώνει η σειρά του token-αγκύρου.",
+      intro: "Η εναπομένουσα μέτρηση εμφανίζεται στη στήλη pr του Turn Tracker και μειώνεται όταν τελειώνει η σειρά του token-αγκύρου.",
       colOption: "Επιλογή",
       colBehaviour: "Συμπεριφορά",
       rows: [
         [
           "Μέχρι αφαίρεσης",
-          "Μόνιμο — πρέπει να αφαιρεθεί χειροκίνητα μέσω του μενού ή --remove",
+          "Μόνιμο — πρέπει να αφαιρεθεί χειροκίνητα μέσω του μενού ή --remove"
         ],
         [
           "Τέλος επόμενης σειράς στόχου",
-          "Λήγει όταν τελειώσει η επόμενη σειρά του token-στόχου στην πρωτοβουλία",
+          "Λήγει όταν τελειώσει η επόμενη σειρά του token-στόχου στην πρωτοβουλία"
         ],
         [
           "Τέλος επόμενης σειράς πηγής",
-          "Λήγει όταν τελειώσει η επόμενη σειρά του token-πηγής στην πρωτοβουλία",
+          "Λήγει όταν τελειώσει η επόμενη σειρά του token-πηγής στην πρωτοβουλία"
         ],
         [
           "1 / 2 / 3 / 10 γύροι",
-          "Σταθερή αντίστροφη μέτρηση· μία μείωση ανά τέλος σειράς του token-αγκύρου",
-        ],
-      ],
+          "Σταθερή αντίστροφη μέτρηση· μία μείωση ανά τέλος σειράς του token-αγκύρου"
+        ]
+      ]
     },
     savedEffects: {
-      heading: "Saved Effects",
-      intro:
-        "Saved effects let you store long-term conditions outside the Turn Tracker — curses, diseases, poisons, hidden debuffs, and other non-combat conditions. They persist in script state and can be optionally copied into the Turn Tracker when combat begins.",
+      heading: "Αποθηκευμένα εφέ",
+      intro: "Τα αποθηκευμένα εφέ σάς επιτρέπουν να αποθηκεύετε μακροπρόθεσμες συνθήκες έξω από το Turn Tracker — κατάρες, ασθένειες, δηλητήρια, κρυφές εκτοπίσεις και άλλες μη μαχητικές συνθήκες. Διατηρούνται στην κατάσταση του σεναρίου και μπορούν προαιρετικά να αντιγραφούν στο Turn Tracker όταν ξεκινήσει η μάχη.",
       visibility: {
-        heading: "Visibility Modes",
+        heading: "Λειτουργίες ορατότητας",
         rows: [
-          ["public", "Full effect label is visible in the Turn Tracker and public chat."],
-          ["masked", "A vague public label is shown to players; full details are GM-only."],
-          ["gm", "No Turn Tracker row. Full details are stored in state and whispered to the GM when the affected token reaches the top of initiative."],
-        ],
+          [
+            "κοινό",
+            "Η ετικέτα πλήρους εφέ είναι ορατή στο Turn Tracker και στη δημόσια συνομιλία."
+          ],
+          [
+            "μεταμφιεσμένος",
+            "Μια ασαφής δημόσια ετικέτα εμφανίζεται στους παίκτες. Οι πλήρεις λεπτομέρειες είναι μόνο για GM."
+          ],
+          [
+            "gm",
+            "No Turn Tracker σειρά. Οι πλήρεις λεπτομέρειες αποθηκεύονται σε κατάσταση και ψιθυρίζονται στον GM όταν το επηρεαζόμενο διακριτικό φτάσει στην κορυφή της πρωτοβουλίας."
+          ]
+        ]
       },
       commands: {
-        heading: "Saved Effects Commands",
-        intro: "All --saved commands are GM-only. Select a token before running --saved or --saved add.",
+        heading: "Εντολές Αποθηκευμένων Εφέ",
+        intro: "Όλες οι ---αποθηκευμένες εντολές είναι μόνο GM. Επιλέξτε ένα διακριτικό πριν εκτελέσετε --saved ή --saved add.",
         rows: [
-          ["!condition-tracker --saved", "View saved effects for the selected token."],
-          ["!condition-tracker --saved add", "Launch the add-saved-effect wizard."],
-          ["!condition-tracker --saved edit <id>", "Edit labels or visibility for an existing saved effect."],
-          ["!condition-tracker --saved remove <id>", "Permanently remove a saved effect."],
-          ["!condition-tracker --saved promote <id> --visibility public|masked|gm", "Copy a saved effect into the Turn Tracker (public or masked) or confirm it is GM-only tracked."],
-          ["!condition-tracker --saved snooze <id> --scope turn|rounds|combat --rounds <n>", "Snooze a GM reminder for this turn, N rounds, or this combat."],
-          ["!condition-tracker --saved snooze-clear <id>", "Clear an active snooze so reminders resume immediately."],
-        ],
+          [
+            "!condition-tracker --σώθηκε",
+            "Προβολή αποθηκευμένων εφέ για το επιλεγμένο διακριτικό."
+          ],
+          [
+            "!condition-tracker --αποθηκεύτηκε προσθήκη",
+            "Εκκινήστε τον οδηγό προσθήκης-αποθηκευμένου εφέ."
+          ],
+          [
+            "!condition-tracker --saved edit <id>",
+            "Επεξεργαστείτε ετικέτες ή ορατότητα για ένα υπάρχον αποθηκευμένο εφέ."
+          ],
+          [
+            "!condition-tracker --saved remove <id>",
+            "Καταργήστε οριστικά ένα αποθηκευμένο εφέ."
+          ],
+          [
+            "!condition-tracker --saved promote <id> --visibility public|masked|gm",
+            "Αντιγράψτε ένα αποθηκευμένο εφέ στο Turn Tracker (δημόσιο ή με μάσκα) ή επιβεβαιώστε ότι παρακολουθείται μόνο για GM."
+          ],
+          [
+            "!condition-tracker --saved snooze <id> --scope turn|rounds|combat --rounds <n>",
+            "Αναβολή υπενθύμισης GM για αυτήν τη στροφή, N γύρους ή αυτήν τη μάχη."
+          ],
+          [
+            "!condition-tracker --saved snooze-clear <id>",
+            "Διαγράψτε μια ενεργή αναβολή, ώστε οι υπενθυμίσεις να συνεχιστούν αμέσως."
+          ]
+        ]
       },
       reminders: {
-        heading: "GM Reminders",
-        body: "When a token with gm or masked saved effects reaches the top of the Turn Tracker, the GM receives a whisper listing the hidden effects with action buttons. Duplicate reminders within the same turn are suppressed. Use the Snooze buttons to suppress reminders for a turn, a number of rounds, or for the remainder of the current combat.",
+        heading: "Υπενθυμίσεις GM",
+        body: "Όταν ένα διακριτικό με gm ή καλυμμένα αποθηκευμένα εφέ φτάσει στην κορυφή του Turn Tracker, ο GM λαμβάνει έναν ψίθυρο που αναφέρει τα κρυφά εφέ με κουμπιά ενεργειών. Οι διπλές υπενθυμίσεις εντός της ίδιας σειράς αποκρύπτονται. Χρησιμοποιήστε τα κουμπιά Αναβολή για να αποκρύψετε υπενθυμίσεις για μια στροφή, έναν αριθμό γύρων ή για το υπόλοιπο της τρέχουσας μάχης."
+      }
+    },
+    actorClassification: {
+      heading: "Ταξινόμηση Ηθοποιών",
+      intro: "Το Condition Tracker προσδιορίζει αυτόματα αν κάθε token είναι ΠΧ, ΜΠΧ ή αγνοούμενο αντικείμενο (καρφίτσες χάρτη, σκηνικά, πρότυπα ξορκιών). Μη συνδεδεμένα tokens αγνοούνται εξ ορισμού. Χρησιμοποίησε --classify για να παρακάμψεις την αυτόματη ανίχνευση για οποιοδήποτε token.",
+      detectionOrder: {
+        heading: "Σειρά Ανίχνευσης",
+        colStep: "Βήμα",
+        colCheck: "Έλεγχος",
+        colResult: "Αποτέλεσμα",
+        rows: [
+          [
+            "1",
+            "Παράκαμψη κατάστασης token (--classify --scope token)",
+            "pc / npc / αγνοήθηκε"
+          ],
+          [
+            "2",
+            "Ιδιότητα ct_mod_actor_type χαρακτήρα (--classify --scope character)",
+            "pc / npc / αγνοήθηκε"
+          ],
+          [
+            "3",
+            "Μη συνδεδεμένο token — χωρίς φύλλο χαρακτήρα",
+            "αγνόησε"
+          ],
+          [
+            "4",
+            "Προσαρμογέας συστήματος παιχνιδιού (ιδιότητα npc / is_npc)",
+            "pc / npc"
+          ],
+          [
+            "5",
+            "Γενική σάρωση ιδιοτήτων ΜΠΧ (npc, is_npc, npcflag, sheet_type, character_type)",
+            "pc / npc"
+          ],
+          [
+            "6",
+            "Εναλλακτικό controlledby χαρακτήρα",
+            "pc / npc"
+          ]
+        ]
       },
+      types: {
+        heading: "Τύποι Ταξινόμησης",
+        colType: "Τύπος",
+        colMeaning: "Σημασία",
+        rows: [
+          [
+            "pc",
+            "Χαρακτήρας παίκτη — πάντα συμπεριλαμβάνεται ως ΠΧ στον οδηγό και την ανίχνευση"
+          ],
+          [
+            "npc",
+            "Μη παίκτης χαρακτήρας — πάντα συμπεριλαμβάνεται ως ΜΠΧ"
+          ],
+          [
+            "αγνόησε",
+            "Ποτέ δεν εμφανίζεται ή παρακολουθείται — αποκλείεται από τον επιλογέα token του οδηγού"
+          ],
+          [
+            "άγνωστος",
+            "Μόνο αυτόματη ανίχνευση· δεν ήταν δυνατός ο προσδιορισμός τύπου (αντιμετωπίζεται ως ΜΠΧ στον οδηγό)"
+          ]
+        ]
+      },
+      commands: {
+        heading: "Εντολές Ταξινόμησης",
+        intro: "Επίλεξε ένα ή περισσότερα tokens πριν εκτελέσεις εντολές --classify.",
+        rows: [
+          [
+            "!condition-tracker --ταξινόμηση pc",
+            "Σήμανση επιλεγμένων tokens ως ΠΧ (προεπιλεγμένο εύρος: χαρακτήρας)."
+          ],
+          [
+            "!condition-tracker --ταξινόμηση npc",
+            "Σήμανση επιλεγμένων tokens ως ΜΠΧ."
+          ],
+          [
+            "!condition-tracker --ταξινόμηση αγνοήθηκε",
+            "Αποκλεισμός επιλεγμένων tokens από όλη την παρακολούθηση."
+          ],
+          [
+            "!condition-tracker --ταξινόμηση auto",
+            "Αφαίρεση παράκαμψης — επαναφορά αυτόματης ανίχνευσης."
+          ],
+          [
+            "!condition-tracker --ταξινόμηση εμφάνιση",
+            "Εμφάνιση διαγνωστικού ταξινόμησης (τύπος, πηγή, αιτία) για κάθε επιλεγμένο token."
+          ],
+          [
+            "!condition-tracker --ταξινόμηση pc --scope token",
+            "Παράκαμψη επιπέδου token στην κατάσταση script — χρήσιμο για μη συνδεδεμένα tokens."
+          ],
+          [
+            "!condition-tracker --ταξινόμηση pc --χαρακτήρα πεδίου",
+            "Παράκαμψη επιπέδου χαρακτήρα στην ιδιότητα ct_mod_actor_type — ισχύει για όλα τα tokens με το ίδιο φύλλο χαρακτήρα."
+          ]
+        ]
+      }
     },
     configuration: {
       heading: "Ρυθμίσεις",
-      intro:
-        "Χρησιμοποιήστε !condition-tracker --config &lt;option&gt; &lt;value&gt; ή το κουμπί Ρυθμίσεις στο κύριο μενού.",
+      intro: "Χρησιμοποιήστε !condition-tracker --config &lt;option&gt; &lt;value&gt; ή το κουμπί Ρυθμίσεις στο κύριο μενού.",
       colOption: "Επιλογή",
       colValues: "Τιμές",
       colDesc: "Περιγραφή",
@@ -592,54 +726,53 @@ const TRANSLATION = {
         [
           "useMarkers",
           "true / false",
-          "Εφαρμογή δεικτών κατάστασης Roll20 σε tokens όταν προστίθεται κατάσταση",
+          "Εφαρμογή δεικτών κατάστασης Roll20 σε tokens όταν προστίθεται κατάσταση"
         ],
         [
           "useIcons",
-          "true / false",
-          "Εμφάνιση σύντομων κωδικών εικονιδίων (π.χ. [G]) αντί emoji στις σειρές Turn Tracker",
+          "αληθινό / ψευδές",
+          "Εμφάνιση σύντομων κωδικών εικονιδίων (π.χ. [G]) αντί emoji στις σειρές Turn Tracker"
         ],
         [
           "subjectPromptBypass",
-          "true / false",
-          "Παράλειψη του προαιρετικού βήματος υποκειμένου για εφέ Ξόρκι / Ικανότητα / Άλλο",
+          "αληθινό / ψευδές",
+          "Παράλειψη του προαιρετικού βήματος υποκειμένου για εφέ Ξόρκι / Ικανότητα / Άλλο"
         ],
         [
           "suppressPublicChat",
-          "true / false",
-          "Απόκρυψη όλων των δημόσιων ανακοινώσεων στο chat (μηνύματα εφαρμογής και αφαίρεσης). Τα ψιθύρια του GM δεν επηρεάζονται.",
+          "αληθινό / ψευδές",
+          "Απόκρυψη όλων των δημόσιων ανακοινώσεων στο chat (μηνύματα εφαρμογής και αφαίρεσης). Τα ψιθύρια του GM δεν επηρεάζονται."
         ],
         [
           "healthBar",
           "bar1_value / bar2_value / bar3_value",
-          "Μπάρα token προς παρακολούθηση· όταν πέσει στο 0 ο DM ειδοποιείται να εκκαθαρίσει καταστάσεις",
+          "Μπάρα token προς παρακολούθηση· όταν πέσει στο 0 ο DM ειδοποιείται να εκκαθαρίσει καταστάσεις"
         ],
         [
           "language",
           "en-US / fr / de / es / pt-BR / ko",
-          "Γλώσσα εξόδου για μηνύματα chat και το handout βοήθειας",
+          "Γλώσσα εξόδου για μηνύματα chat και το handout βοήθειας"
         ],
         [
           "marker",
           "&lt;Condition&gt;=&lt;marker name&gt;",
-          "Αντικατάσταση του δείκτη κατάστασης για συγκεκριμένη κατάσταση (π.χ. marker Grappled=grab)",
-        ],
-      ],
+          "Αντικατάσταση του δείκτη κατάστασης για συγκεκριμένη κατάσταση (π.χ. marker Grappled=grab)"
+        ]
+      ]
     },
     defaultMarkers: {
       heading: "Προεπιλεγμένοι Δείκτες Κατάστασης",
       colCondition: "Κατάσταση",
-      colMarker: "Όνομα Δείκτη",
+      colMarker: "Όνομα Δείκτη"
     },
     availableLocales: {
       heading: "Διαθέσιμες Μεταφράσεις",
-      intro:
-        "Χρησιμοποιήστε την επιλογή ρύθμισης language για να ορίσετε τα μηνύματα chat και το handout βοήθειας σε οποιαδήποτε υποστηριζόμενη locale. Σύντομα ψευδώνυμα γίνονται επίσης δεκτά για en, zh και pt.",
-      colLocale: "Locale",
+      intro: "Χρησιμοποιήστε την επιλογή ρύθμισης language για να ορίσετε τα μηνύματα chat και το handout βοήθειας σε οποιαδήποτε υποστηριζόμενη locale. Σύντομα ψευδώνυμα γίνονται επίσης δεκτά για en, zh και pt.",
+      colLocale: "Μικρός λοβός",
       colLanguage: "Γλώσσα",
-      colFile: "Αρχείο Μετάφρασης",
-    },
-  },
+      colFile: "Αρχείο Μετάφρασης"
+    }
+  }
 };
 
 export default TRANSLATION;

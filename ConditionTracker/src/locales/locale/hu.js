@@ -2,74 +2,74 @@ const TRANSLATION = {
   conditions: {
     Grappled: {
       past: "megragadva",
-      verb: "megragadja",
+      verb: "megragadja"
     },
     Restrained: {
       past: "lefogva",
-      verb: "lefogja",
+      verb: "lefogja"
     },
     Prone: {
       past: "földre döntve",
-      verb: "földre dönti",
+      verb: "földre dönti"
     },
     Poisoned: {
       past: "megmérgezve",
-      verb: "megmérgezi",
+      verb: "megmérgezi"
     },
     Stunned: {
       past: "kábult",
-      verb: "elkábítja",
+      verb: "elkábítja"
     },
     Blinded: {
       past: "megvakítva",
-      verb: "megvakítja",
+      verb: "megvakítja"
     },
     Charmed: {
       past: "elbájolva",
-      verb: "elbájolja",
+      verb: "elbájolja"
     },
     Frightened: {
       past: "megrémülve",
-      verb: "megrémíti",
+      verb: "megrémíti"
     },
     Incapacitated: {
       past: "cselekvőképtelen",
-      verb: "cselekvőképtelenné teszi",
+      verb: "cselekvőképtelenné teszi"
     },
     Invisible: {
       past: "láthatatlan",
-      verb: "láthatatlanná teszi",
+      verb: "láthatatlanná teszi"
     },
     Paralyzed: {
       past: "megbénítva",
-      verb: "megbénítja",
+      verb: "megbénítja"
     },
     Petrified: {
       past: "kővé dermedve",
-      verb: "kővé dermeszti",
+      verb: "kővé dermeszti"
     },
     Unconscious: {
       past: "eszméletlen",
-      verb: "eszméletlenné teszi",
+      verb: "eszméletlenné teszi"
     },
     Spell: {
       past: "varázslat hatása alatt",
-      verb: "varázslatot mond",
+      verb: "varázslatot mond"
     },
     Ability: {
       past: "képesség hatása alatt",
-      verb: "képességet használ",
+      verb: "képességet használ"
     },
     Advantage: {
       past: "előnye van",
       verb: "előnyt ad",
-      noBy: true,
+      noBy: true
     },
     Disadvantage: {
       past: "hátránya van",
       verb: "hátrányt ad",
-      noBy: true,
-    },
+      noBy: true
+    }
   },
   condNames: {
     Grappled: "Megragadva",
@@ -89,7 +89,7 @@ const TRANSLATION = {
     Ability: "Képesség",
     Advantage: "Előny",
     Disadvantage: "Hátrány",
-    Other: "Egyéb",
+    Other: "Egyéb"
   },
   templates: {
     display: {
@@ -98,7 +98,7 @@ const TRANSLATION = {
       disadvantage: "{emoji} {source} hátránnyal támad {target}{subject} ellen",
       noBy: "{emoji} {target} {past} ({source})",
       self: "{target} {past}",
-      standard: "{emoji} {target} {past} — {source}",
+      standard: "{emoji} {target} {past} — {source}"
     },
     apply: {
       custom: "{source} alkalmazza a(z) {effect} hatást {target} célpontra.",
@@ -106,18 +106,16 @@ const TRANSLATION = {
       disadvantage: "{source} hátránnyal támad {target}{subject} ellen.",
       self: "{target} {past}.",
       withSuffix: "{source} {verb} {target} {suffix}.",
-      standard: "{source} {verb} {target}.",
+      standard: "{source} {verb} {target}."
     },
     remove: {
       custom: "{target} már nem áll {effect} hatása alatt.",
-      advantage:
-        "{source} már nem rendelkezik előnnyel {target}{subject} ellen.",
-      disadvantage:
-        "{source} már nem rendelkezik hátránnyal {target}{subject} ellen.",
+      advantage: "{source} már nem rendelkezik előnnyel {target}{subject} ellen.",
+      disadvantage: "{source} már nem rendelkezik hátránnyal {target}{subject} ellen.",
       noBy: "{target} már nem {past}.",
       self: "{target} már nem {past}.",
-      standard: "{target} már nem {past} — {source}.",
-    },
+      standard: "{target} már nem {past} — {source}."
+    }
   },
   ui: {
     wizard: {
@@ -135,12 +133,10 @@ const TRANSLATION = {
       noneBtn: "Egyik sem",
       noneOrSourceBtn: "Egyik sem vagy alkalmazás a forrásra",
       subjectDesc: "Válassza ki, ki vagy mi hozza létre a hatást.",
-      sourceDesc:
-        "Válassza ki azt a lényt, amely létrehozza vagy előidézi az állapotot vagy hatást.",
-      targetDesc:
-        "Válassza ki azt a lényt, amely megkapja az állapotot vagy hatást.",
+      sourceDesc: "Válassza ki azt a lényt, amely létrehozza vagy előidézi az állapotot vagy hatást.",
+      targetDesc: "Válassza ki azt a lényt, amely megkapja az állapotot vagy hatást.",
       otherText: "Egyéni állapotszöveg",
-      effectDetails: "{condition} részletei",
+      effectDetails: "{condition} részletei"
     },
     col: {
       players: "Játékosok",
@@ -161,8 +157,8 @@ const TRANSLATION = {
       details: "Részletek",
       description: "Leírás",
       scenario: "Forgatókönyv",
-      gameSystem: "Game System",
-      duration: "Duration",
+      gameSystem: "Játékrendszer",
+      duration: "Időtartam"
     },
     dur: {
       untilRemoved: "Eltávolításig",
@@ -175,7 +171,7 @@ const TRANSLATION = {
       custom: "Egyéni",
       customPrompt: "Körök száma",
       untilRemovedDisplay: "Eltávolításig",
-      turnsRemaining: "{n} fennmaradó körjegy",
+      turnsRemaining: "{n} fennmaradó körjegy"
     },
     btn: {
       openWizard: "Varázsló megnyitása",
@@ -187,14 +183,14 @@ const TRANSLATION = {
       reinstallHandout: "Handout újratelepítése",
       showHelp: "Súgó megjelenítése",
       reorderConditions: "Állapotsorok átrendezése",
-      reportToken: "Report Token Conditions",
-      savedEffects: "Saved Effects",
-      addSavedEffect: "Add Saved Effect",
-      editSaved: "Edit",
-      removeSaved: "Remove",
-      promoteSaved: "Add to Turn Tracker",
-      snoozeSaved: "Snooze",
-      clearSnooze: "Clear Snooze",
+      reportToken: "Jelentés Token feltételek",
+      savedEffects: "Mentett effektusok",
+      addSavedEffect: "Mentett effektus hozzáadása",
+      editSaved: "Szerkesztés",
+      removeSaved: "Távolítsa el",
+      promoteSaved: "Hozzáadás a Turn Trackerhez",
+      snoozeSaved: "Szundikálás",
+      clearSnooze: "Szundi törlése"
     },
     title: {
       menu: "Menü",
@@ -205,7 +201,7 @@ const TRANSLATION = {
       applied: "Alkalmazva",
       removed: "Állapot eltávolítva",
       cleanup: "Tisztítás kész",
-      macroReinstalled: "The {wizard}, {multiTarget}, {reportToken}, and {saved} macros have been reinstalled for all current GM players.",
+      macroReinstalled: "Makró újratelepítve",
       handoutReinstalled: "Handout újratelepítve",
       warning: "Figyelmeztetés",
       error: "Hiba",
@@ -217,15 +213,15 @@ const TRANSLATION = {
       moveToken: "{name} — token áthelyezése?",
       scriptReady: "Szkript kész",
       conditionReorder: "Körsorend megváltozott",
-      tokenReport: "Token Condition Report",
-      savedEffects: "Saved Effects",
-      savedAdd: "Add Saved Effect",
-      savedEdit: "Edit Saved Effect",
-      savedRemoved: "Saved Effect Removed",
-      savedPromoted: "Add to Turn Tracker",
-      savedSnoozed: "Reminder Snoozed",
-      savedSnoozeCleared: "Snooze Cleared",
-      hiddenEffects: "Hidden Effects — {name}",
+      tokenReport: "Token állapotjelentés",
+      savedEffects: "Mentett effektusok",
+      savedAdd: "Mentett effektus hozzáadása",
+      savedEdit: "Mentett effektus szerkesztése",
+      savedRemoved: "Mentett effektus eltávolítva",
+      savedPromoted: "Hozzáadás a Turn Trackerhez",
+      savedSnoozed: "Emlékeztető elhalasztva",
+      savedSnoozeCleared: "Szundi törölve",
+      hiddenEffects: "Rejtett effektusok – {name}"
     },
     heading: {
       quickActions: "Gyorsműveletek",
@@ -237,118 +233,92 @@ const TRANSLATION = {
       promptUi: "Varázsló felülete",
       examples: "Példák",
       summary: "Összefoglalás",
-      appliedTo: "Conditions Applied To",
-      appliedBy: "Conditions Applied By",
-      savedEffectsFor: "Saved Effects for {name}",
-      visibility: "Visibility",
-      snoozeOptions: "Snooze Reminder",
-      promoteOptions: "Promote to Turn Tracker",
-      editActions: "Edit Actions",
+      appliedTo: "Alkalmazott feltételek",
+      appliedBy: "Alkalmazott feltételek",
+      savedEffectsFor: "Mentett effektusok a következőhöz: {name}",
+      visibility: "Láthatóság",
+      snoozeOptions: "Szundi emlékeztető",
+      promoteOptions: "Előléptetés a Turn Tracker használatára",
+      editActions: "Műveletek szerkesztése"
     },
     msg: {
       noActive: "Nincs aktív követett állapot.",
       configReset: "A beállítások visszaálltak az alapértelmezett értékekre.",
-      unknownConfig:
-        "Ismeretlen beállítási lehetőség. Használja a --config parancsot a támogatott beállítások megtekintéséhez.",
-      macroReinstalled:
-        "A(z) {wizard}, {multiTarget} és {reportToken} makrók újra lettek telepítve az összes jelenlegi GM-játékos számára.",
+      unknownConfig: "Ismeretlen beállítási lehetőség. Használja a --config parancsot a támogatott beállítások megtekintéséhez.",
+      macroReinstalled: "A(z) {wizard}, {multiTarget}, {reportToken}, {saved} és {classify} makrók újra lettek telepítve az összes jelenlegi GM-játékos számára.",
       handoutReinstalled: "A(z) {handout} súgó-handout újra lett telepítve.",
-      duplicate:
-        "Pontosan ugyanez a forrás, alany, célpont, állapot és egyéni szöveg már aktív.",
-      noTargets:
-        "Nem adtak meg célpont tokeneket a többcélpontos alkalmazáshoz.",
-      noSelection:
-        "Jelöljön ki legalább egy tokent a táblán a --multi-target használata előtt.",
-      invalidIds:
-        "Nem találhatók érvényes token-azonosítók a jelenlegi kijelölésben.",
-      reSelectTokens:
-        "Az eredetileg kijelölt tokenek egyike sem található. Jelölje ki újra a tokeneket, és próbálja újra.",
+      duplicate: "Pontosan ugyanez a forrás, alany, célpont, állapot és egyéni szöveg már aktív.",
+      noTargets: "Nem adtak meg célpont tokeneket a többcélpontos alkalmazáshoz.",
+      noSelection: "Jelöljön ki legalább egy tokent a táblán a --multi-target használata előtt.",
+      invalidIds: "Nem találhatók érvényes token-azonosítók a jelenlegi kijelölésben.",
+      reSelectTokens: "Az eredetileg kijelölt tokenek egyike sem található. Jelölje ki újra a tokeneket, és próbálja újra.",
       conditionNotFound: "Az állapot azonosítója nem található.",
       gmOnly: "A Condition Tracker parancsai csak a GM számára érhetők el.",
-      commandFailed:
-        "A parancs nem hajtható végre biztonságosan. Ellenőrizze az API-konzolt a részletekért.",
+      commandFailed: "A parancs nem hajtható végre biztonságosan. Ellenőrizze az API-konzolt a részletekért.",
       sourceTokenNotFound: "A forrás token nem található.",
       targetTokenNotFound: "A célpont token nem található.",
       subjectTokenNotFound: "Az alany token nem található.",
-      invalidCondition:
-        "Az állapotnak az előre meghatározott állapotok egyikének vagy az Egyébnek kell lennie.",
-      subjectOnlyCustom:
-        "A --subject csak Varázslat, Képesség, Előny, Hátrány és Egyéb esetén érvényes.",
-      subjectBypassInvalid:
-        "A --subjectPromptBypass értékként true vagy false értéket vár.",
-      customDetailsRequired:
-        "A(z) {condition} részletei kötelezők. Adja meg őket a --other kapcsolóval.",
-      markerConfigFormat:
-        "Jelölő-beállítás formátuma: --config marker Grappled=grab",
-      markerPredefinedRequired:
-        "A jelölő konfigurálásához előre meghatározott állapotnév szükséges.",
-      markerNameRequired:
-        "A jelölő konfigurálásához nem üres jelölőnév szükséges.",
+      invalidCondition: "Az állapotnak az előre meghatározott állapotok egyikének vagy az Egyébnek kell lennie.",
+      subjectOnlyCustom: "A --subject csak Varázslat, Képesség, Előny, Hátrány és Egyéb esetén érvényes.",
+      subjectBypassInvalid: "A --subjectPromptBypass értékként true vagy false értéket vár.",
+      customDetailsRequired: "A(z) {condition} részletei kötelezők. Adja meg őket a --other kapcsolóval.",
+      markerConfigFormat: "Jelölő-beállítás formátuma: --config marker Grappled=grab",
+      markerPredefinedRequired: "A jelölő konfigurálásához előre meghatározott állapotnév szükséges.",
+      markerNameRequired: "A jelölő konfigurálásához nem üres jelölőnév szükséges.",
       markerSet: "A(z) {condition} jelölője {marker} értékre állítva.",
       healthBarSet: "Az életerő sáv {bar} értékre állítva.",
       boolSet: "A(z) {key} {value} értékre állítva.",
       expectedBoolean: "True vagy false értéket várunk.",
-      invalidHealthBar:
-        "Az életerő sávnak bar1_value, bar2_value vagy bar3_value értékűnek kell lennie.",
+      invalidHealthBar: "Az életerő sávnak bar1_value, bar2_value vagy bar3_value értékűnek kell lennie.",
       markersDisabled: "A jelölők le vannak tiltva.",
       noMarkerConfigured: "Ehhez az állapothoz nincs jelölő konfigurálva.",
       markerApplied: "Jelölő alkalmazva: {marker}",
       markerPresent: "A jelölő már jelen van: {marker}",
       langSet: "A nyelv {locale} értékre állítva.",
       invalidLocale: "Érvénytelen locale. Támogatott locale-k: {locales}.",
-      otherDurationRequiresRounds:
-        "Az egyéni időtartamhoz numerikus körmegjelölés szükséges, például --duration 5 rounds.",
-      invalidDuration:
-        "Az időtartamnak Eltávolításig, kör-végi beállítás vagy pozitív körszám kell lennie.",
+      otherDurationRequiresRounds: "Az egyéni időtartamhoz numerikus körmegjelölés szükséges, például --duration 5 rounds.",
+      invalidDuration: "Az időtartamnak Eltávolításig, kör-végi beállítás vagy pozitív körszám kell lennie.",
       zeroHpNoConditions: "{name} 0 ÉP-re jutott, és nincs aktív állapota.",
-      zeroHpConditions:
-        "{name} 0 ÉP-re jutott. Válassza ki az eltávolítandó állapotokat:",
+      zeroHpConditions: "{name} 0 ÉP-re jutott. Válassza ki az eltávolítandó állapotokat:",
       removeAllBtn: "Minden állapot eltávolítása ({name})",
       markIncapacitated: "Megjelölés cselekvőképtelenként",
       removeFromTurnOrder: "Eltávolítás a körsorendből",
       alreadyIncapacitated: "{name} már cselekvőképtelen.",
       tokenRemovedFromTurn: "{name} eltávolítva a körsorendből.",
       tokenNotInTurn: "{name} nem található a körsorendben.",
-      moveTokenPrompt:
-        "{name} áthelyezése a térképrétegre, hogy látható maradjon, de ne zavarja a többi tokent?",
+      moveTokenPrompt: "{name} áthelyezése a térképrétegre, hogy látható maradjon, de ne zavarja a többi tokent?",
       moveTokenBtn: "{name} áthelyezése a térképrétegre",
       tokenMoved: "{name} áthelyezve a térképrétegre.",
       tokenNotFound: "A token nem található.",
-      noActiveConditions:
-        "{name}-nek nincsenek aktív állapotai az eltávolításhoz.",
-      deadNoConditions:
-        "{name} halottnak lett jelölve. Nem volt aktív állapot.",
+      noActiveConditions: "{name}-nek nincsenek aktív állapotai az eltávolításhoz.",
+      deadNoConditions: "{name} halottnak lett jelölve. Nem volt aktív állapot.",
       scriptReady: "{name} aktív, és a(z) {version} verziót használja.",
       reachedZeroHp: "{name} elérte a 0 ÉP-t",
       manuallyRemoved: "kézzel eltávolítva",
       durationExpired: "az időtartam lejárt",
       markedAsDead: "{name} halottnak lett jelölve",
-      conditionReorder:
-        "A körsorend megváltozott, és {count} követett állapotsor lehet rossz helyen. Kattintson alább a visszaállításhoz a hozzárendelt tokenek után.",
-      conditionsReordered:
-        "Az állapotsorok vissza lettek helyezve a hozzárendelt tokenek mögé.",
-      noTokensSelectedReport:
-        "Select at least one token on the board before using --report-token.",
-      noConditionsAppliedTo: "{name} has no active conditions applied to it.",
-      noConditionsAppliedBy:
-        "{name} has no active conditions applied to others.",
-      noSavedEffects: "No saved effects stored for {name}.",
-      noTokenSelectedSaved: "Select a token on the board before using --saved.",
-      savedEffectAdded: "Saved effect added for {name}.",
-      savedEffectUpdated: "Saved effect updated.",
-      savedEffectRemoved: "Saved effect removed.",
-      savedEffectNotFound: "Saved effect not found.",
-      savedInvalidVisibility: "Invalid visibility. Use public, masked, or gm.",
+      conditionReorder: "A körsorend megváltozott, és {count} követett állapotsor lehet rossz helyen. Kattintson alább a visszaállításhoz a hozzárendelt tokenek után.",
+      conditionsReordered: "Az állapotsorok vissza lettek helyezve a hozzárendelt tokenek mögé.",
+      noTokensSelectedReport: "A --report-token használata előtt válassz legalább egy tokent a táblán.",
+      noConditionsAppliedTo: "A {name} nem alkalmaz aktív feltételeket.",
+      noConditionsAppliedBy: "A {name} nem rendelkezik más aktív feltételekkel.",
+      noSavedEffects: "Nincsenek mentett effektusok a következőhöz: {name}.",
+      noTokenSelectedSaved: "A --saved használata előtt válassz ki egy tokent a táblán.",
+      savedEffectAdded: "Mentett effektus hozzáadva a következőhöz: {name}.",
+      savedEffectUpdated: "A mentett effektus frissítve.",
+      savedEffectRemoved: "A mentett hatás eltávolítva.",
+      savedEffectNotFound: "A mentett hatás nem található.",
+      savedInvalidVisibility: "Érvénytelen láthatóság. Használja nyilvános, maszkos vagy gm.",
       savedConditionRequired: "Condition type is required. Use --condition <type>.",
-      savedPromotedPublic: "Effect added to Turn Tracker as public.",
-      savedPromotedMasked: "Effect added to Turn Tracker as masked — players see: {publicLabel}.",
-      savedPromotedGm: "Effect is GM-only — no Turn Tracker row will be created. The reminder system will surface it when this token reaches the top of the turn order.",
-      savedSnoozed: "Reminder snoozed: {scope}.",
-      savedSnoozeCleared: "Snooze cleared.",
-      hiddenEffectsReminder: "Hidden effects are active on {name}.",
-      visibilityPublicHint: "full label visible to all",
-      visibilityMaskedHint: "vague label shown to players",
-      visibilityGmHint: "GM whisper only, no Turn Tracker row",
+      savedPromotedPublic: "Az effektus hozzáadva a Turn Trackerhez nyilvánosként.",
+      savedPromotedMasked: "A Turn Trackerhez maszkoltként hozzáadott effektus – a játékosok ezt látják: {publicLabel}.",
+      savedPromotedGm: "A hatás csak a GM-re vonatkozik – nem jön létre Kanyarkövető sor. Az emlékeztető rendszer akkor jeleníti meg, amikor ez a token eléri a körsorrend tetejét.",
+      savedSnoozed: "Emlékeztető elhalasztva: {scope}.",
+      savedSnoozeCleared: "A szundi törölve.",
+      hiddenEffectsReminder: "A rejtett effektusok aktívak a következőn: {name}.",
+      visibilityPublicHint: "a teljes címke mindenki számára látható",
+      visibilityMaskedHint: "homályos címke látható a játékosoknak",
+      visibilityGmHint: "Csak GM suttogás, nincs kanyarkövető sor"
     },
     removal: {
       conditionField: "Állapot",
@@ -360,54 +330,68 @@ const TRANSLATION = {
       markerRetained: "Megőrizve ({marker})",
       rowRemoved: "Eltávolítva",
       rowMissing: "Már hiányzik",
-      manualReason: "Kézi eltávolítás",
+      manualReason: "Kézi eltávolítás"
     },
     saved: {
       visibility: {
-        public: "Public",
-        masked: "Masked",
-        gm: "GM Only",
+        public: "Nyilvános",
+        masked: "Álarcos",
+        gm: "Csak GM"
       },
       snooze: {
-        thisTurn: "This Turn",
-        oneRound: "1 Round",
-        threeRounds: "3 Rounds",
-        thisCombat: "This Combat",
-        rounds: "{n} round(s)",
+        thisTurn: "Ez a kör",
+        oneRound: "1 forduló",
+        threeRounds: "3 kör",
+        thisCombat: "Ezt a harcot",
+        rounds: "{n} kör"
       },
       field: {
-        gmLabel: "GM Label",
+        gmLabel: "GM címke",
         publicLabel: "Public Label",
-        visibility: "Visibility",
-        source: "Source",
-        condition: "Condition",
+        visibility: "Láthatóság",
+        source: "Forrás",
+        condition: "Állapot"
       },
       prompt: {
-        enterGmLabel: "Full effect description (GM only)",
-        enterPublicLabel: "Vague label shown to players",
+        enterGmLabel: "Teljes hatás leírás (csak GM)",
+        enterPublicLabel: "Homályos címke látható a játékosoknak"
       },
-      snoozed: "snoozed",
+      snoozed: "szundikált"
+    },
+    classify: {
+      title: "Szereplők Osztályozása",
+      showTitle: "Osztályozási Diagnosztika",
+      showHeading: "Token Osztályozási Részletek",
+      resultHeading: "Felülbírálás Alkalmazva",
+      noSelection: "Válassz ki legalább egy tokent a táblán a --classify használata előtt.",
+      invalidType: "Érvénytelen osztályozási típus: {type}. Használj pc, npc, ignored vagy auto értéket.",
+      set: "{name} → {type} (hatókör: {scope})",
+      cleared: "{name} felülbírálás törölve (hatókör: {scope}) — az automatikus észlelés visszaállítva.",
+      setTokenFallback: "{name} → {type} (token felülbírálás — nincs karakterlap csatolva).",
+      clearedTokenFallback: "{name} token felülbírálás törölve — az automatikus észlelés visszaállítva.",
+      fieldToken: "Jelképes",
+      fieldType: "Osztályozás",
+      fieldSource: "Forrás",
+      fieldReason: "Ok"
     },
     cleanup: {
       orphaned: "Árva állapotbejegyzések",
       stale: "Elavult állapotbejegyzések",
       orphanedRows: "Árva Turn Tracker sorok",
-      unusedMarkers: "Nem használt jelölők",
+      unusedMarkers: "Nem használt jelölők"
     },
     apply: {
-      turnAppended:
-        "A célpont nem volt a körsorendben; az állapotsor hozzáfűzve a végéhez.",
-      turnInserted: "Az állapotsor a célpont token alá lett illesztve.",
-    },
+      turnAppended: "A célpont nem volt a körsorendben; az állapotsor hozzáfűzve a végéhez.",
+      turnInserted: "Az állapotsor a célpont token alá lett illesztve."
+    }
   },
   handout: {
     versionLabel: "Verzió",
     subtitle: "D&D 5e állapothatás-kezelő",
-    footerNote:
-      "Ez a handout automatikusan létrejön és frissül minden alkalommal, amikor a szkript betöltődik.",
+    footerNote: "Ez a handout automatikusan létrejön és frissül minden alkalommal, amikor a szkript betöltődik.",
     overview: {
       heading: "Áttekintés",
-      body: "A Condition Tracker D&D 5e állapotokat és egyéni hatásokat kezel megnevezett sorokként a Roll20 Turn Trackerben. Alkalmazzon állapotokat tokenekre, kövesse nyomon az időtartamokat iniciativa-sorrend szerint, és automatikusan távolítsa el a lejárt hatásokat a kör végén. Minden parancs csak a GM számára érhető el, és chatből vagy a telepített makrók révén indítható.",
+      body: "A Condition Tracker D&D 5e állapotokat és egyéni hatásokat kezel megnevezett sorokként a Roll20 Turn Trackerben. Alkalmazzon állapotokat tokenekre, kövesse nyomon az időtartamokat iniciativa-sorrend szerint, és automatikusan távolítsa el a lejárt hatásokat a kör végén. Minden parancs csak a GM számára érhető el, és chatből vagy a telepített makrók révén indítható."
     },
     quickStart: {
       heading: "Gyors kezdés",
@@ -416,84 +400,108 @@ const TRANSLATION = {
       rows: [
         [
           "!condition-tracker --prompt",
-          "Lépésről lépésre haladó varázsló — válasszon állapotot, tokeneket és időtartamot interaktívan. Elérhető ConditionTrackerWizard makróként is.",
+          "Lépésről lépésre haladó varázsló — válasszon állapotot, tokeneket és időtartamot interaktívan. Elérhető ConditionTrackerWizard makróként is."
         ],
         [
           "!condition-tracker --multi-target",
-          "Egy állapot alkalmazása több tokenre egyszerre. Elérhető ConditionTrackerMultiTarget makróként is.",
+          "Egy állapot alkalmazása több tokenre egyszerre. Elérhető ConditionTrackerMultiTarget makróként is."
         ],
         [
           "!condition-tracker --report-token",
-          "Select one or more tokens first, then run this command to get a GM whisper listing every condition applied to and by each selected token. Also available as the ConditionTrackerReportToken macro.",
+          "Először válasszon ki egy vagy több tokent, majd futtassa ezt a parancsot, hogy megkapja a GM suttogást, amely felsorolja az egyes kiválasztott tokenekre alkalmazott összes feltételt. ConditionTrackerReportToken makróként is elérhető."
         ],
         [
           "!condition-tracker --menu",
-          "A fő kezelési menü megnyitása gombokkal az állapotok alkalmazásához, megtekintéséhez vagy eltávolításához.",
-        ],
-      ],
+          "A fő kezelési menü megnyitása gombokkal az állapotok alkalmazásához, megtekintéséhez vagy eltávolításához."
+        ]
+      ]
     },
     commandsRef: {
       heading: "Parancsreferencia",
       colFlag: "Kapcsoló",
       colDesc: "Leírás",
       rows: [
-        ["--prompt", "Interaktív lépésről lépésre haladó varázsló"],
         [
-          "--multi-target",
-          "Állapot alkalmazása több célpont tokenre egyszerre",
+          "--gyors",
+          "Interaktív lépésről lépésre haladó varázsló"
         ],
-        ["--menu", "Főmenü megjelenítése (add remove az eltávolítási menühöz)"],
         [
-          "--source X --target Y --condition Z",
-          "Állapot közvetlen alkalmazása varázsló nélkül",
+          "--több célpont",
+          "Állapot alkalmazása több célpont tokenre egyszerre"
+        ],
+        [
+          "--menü",
+          "Főmenü megjelenítése (add remove az eltávolítási menühöz)"
+        ],
+        [
+          "--forrás X --cél Y --feltétel Z",
+          "Állapot közvetlen alkalmazása varázsló nélkül"
         ],
         [
           "--duration &lt;érték&gt;",
-          "Időtartam közvetlen alkalmazáshoz (pl. 2 rounds)",
+          "Időtartam közvetlen alkalmazáshoz (pl. 2 rounds)"
         ],
         [
           "--other &lt;szöveg&gt;",
-          "Egyéni szöveg Varázslat / Képesség / Egyéb hatástípusokhoz",
+          "Egyéni szöveg Varázslat / Képesség / Egyéb hatástípusokhoz"
         ],
         [
-          "--remove &lt;condition-id&gt;",
-          "Adott állapot eltávolítása az egyedi azonosítójával",
+          "--remove <feltétel-azonosító>",
+          "Adott állapot eltávolítása az egyedi azonosítójával"
         ],
         [
-          "--config &lt;option&gt; &lt;value&gt;",
-          "Konfigurációs beállítások módosítása (lásd lent a Beállítások részt)",
+          "--config <beállítás> <érték>",
+          "Konfigurációs beállítások módosítása (lásd lent a Beállítások részt)"
         ],
         [
-          "--prompt --subjectPromptBypass true|false",
-          "A subjectPromptBypass felülbírálása csak erre a parancsra (a --subject-prompt-bypass is támogatott)",
+          "--prompt --subjectPromptBypass igaz|hamis",
+          "A subjectPromptBypass felülbírálása csak erre a parancsra (a --subject-prompt-bypass is támogatott)"
         ],
         [
-          "--cleanup",
-          "Állapot egyeztetése — árva állapotok és Turn Tracker sorok eltávolítása",
+          "--takarítás",
+          "Állapot egyeztetése — árva állapotok és Turn Tracker sorok eltávolítása"
         ],
         [
-          "--reorder-conditions",
-          "Feltétel sorok kézi átrendezése a hozzárendelt tokenek mögé a körsorrendben",
+          "--reorder-feltételek",
+          "Feltétel sorok kézi átrendezése a hozzárendelt tokenek mögé a körsorrendben"
         ],
-        ["--reinstall-macro", "GM makrók újralétrehozása vagy frissítése"],
+        [
+          "--reinstall-macro",
+          "GM makrók újralétrehozása vagy frissítése"
+        ],
         [
           "--reinstall-handout",
-          "A lokalizált súgó-handout újralétrehozása vagy frissítése",
+          "A lokalizált súgó-handout újralétrehozása vagy frissítése"
         ],
         [
-          "--report-token",
-          "Whisper a GM-only condition report for each selected token (conditions applied to and by it)",
+          "--jelentés-token",
+          "Suttogjon egy csak GM állapotjelentést minden kiválasztott tokenhez (a rájuk és általa alkalmazott feltételek)"
         ],
         [
           "--lang &lt;locale&gt;",
-          "A parancs üzeneteinek kimenete egy további locale-n (kétnyelvű mód)",
+          "A parancs üzeneteinek kimenete egy további locale-n (kétnyelvű mód)"
         ],
-        ["--help", "Rövid súgókártya megjelenítése a chatben"],
-      ],
+        [
+          "--classify pc|npc|ignored",
+          "Felülbírálja a kiválasztott tokenek szereplő típusát — először válaszd ki a token(eket). Az alapértelmezett hatókör a karakter (ct_mod_actor_type attribútumot ír); add hozzá a --scope token paramétert a script állapotban való tároláshoz"
+        ],
+        [
+          "--classify auto",
+          "Eltávolítja a szereplő típus felülbírálást és visszaállítja az automatikus észlelést a kiválasztott tokeneknél"
+        ],
+        [
+          "--classify show",
+          "Osztályozási diagnosztikát suttog minden kiválasztott tokenre — mutatja az észlelt típust, az észlelési forrást és az okot"
+        ],
+        [
+          "--help",
+          "Rövid súgókártya megjelenítése a chatben"
+        ]
+      ]
     },
     standardConditions: {
       heading: "Szabványos állapotok (D&amp;D 5e)",
-      colCondition: "Állapot",
+      colCondition: "Állapot"
     },
     customEffects: {
       heading: "Egyéni hatástípusok",
@@ -502,82 +510,211 @@ const TRANSLATION = {
       rows: [
         [
           "🔮 Varázslat",
-          "Nevesített varázslat-hatás követése — a varázslat neve bekérésre kerül",
+          "Nevesített varázslat-hatás követése — a varázslat neve bekérésre kerül"
         ],
         [
           "🎯 Képesség",
-          "Nevesített osztály- vagy fajképesség követése — a képesség neve bekérésre kerül",
+          "Nevesített osztály- vagy fajképesség követése — a képesség neve bekérésre kerül"
         ],
         [
           "🍀 Előny",
-          "Az egyik tokenről a másikra adott előny rögzítése; az iniciativában a forrással csoportosítva",
+          "Az egyik tokenről a másikra adott előny rögzítése; az iniciativában a forrással csoportosítva"
         ],
         [
           "⬇️ Hátrány",
-          "Kirótt hátrány rögzítése; az iniciativában a forrással csoportosítva",
+          "Kirótt hátrány rögzítése; az iniciativában a forrással csoportosítva"
         ],
-        ["📝 Egyéb", "Szabad formátumú egyéni címke — leírás bekérésre kerül"],
-      ],
+        [
+          "📝 Egyéb",
+          "Szabad formátumú egyéni címke — leírás bekérésre kerül"
+        ]
+      ]
     },
     durationOptions: {
       heading: "Időtartam-beállítások",
-      intro:
-        "A fennmaradó számláló a Turn Tracker pr oszlopában jelenik meg, és csökken, amikor a horgony token köre véget ér.",
+      intro: "A fennmaradó számláló a Turn Tracker pr oszlopában jelenik meg, és csökken, amikor a horgony token köre véget ér.",
       colOption: "Beállítás",
       colBehaviour: "Viselkedés",
       rows: [
         [
           "Eltávolításig",
-          "Állandó — kézzel kell eltávolítani a menü vagy a --remove parancs segítségével",
+          "Állandó — kézzel kell eltávolítani a menü vagy a --remove parancs segítségével"
         ],
         [
           "A célpont következő körének végén",
-          "Lejár, amikor a célpont token következő köre véget ér az iniciativában",
+          "Lejár, amikor a célpont token következő köre véget ér az iniciativában"
         ],
         [
           "A forrás következő körének végén",
-          "Lejár, amikor a forrás token következő köre véget ér az iniciativában",
+          "Lejár, amikor a forrás token következő köre véget ér az iniciativában"
         ],
         [
           "1 / 2 / 3 / 10 kör",
-          "Rögzített visszaszámlálás; egy csökkentés a horgony token körének végén",
-        ],
-      ],
+          "Rögzített visszaszámlálás; egy csökkentés a horgony token körének végén"
+        ]
+      ]
     },
     savedEffects: {
-      heading: "Saved Effects",
-      intro:
-        "Saved effects let you store long-term conditions outside the Turn Tracker — curses, diseases, poisons, hidden debuffs, and other non-combat conditions. They persist in script state and can be optionally copied into the Turn Tracker when combat begins.",
+      heading: "Mentett effektusok",
+      intro: "A mentett effektusok segítségével hosszú távú körülményeket tárolhatsz a Turn Trackeren kívül – átkokat, betegségeket, mérgeket, rejtett debuffokat és egyéb, nem harci körülményeket. Szkript állapotban megmaradnak, és opcionálisan bemásolhatók a Turn Trackerbe, amikor a harc elkezdődik.",
       visibility: {
-        heading: "Visibility Modes",
+        heading: "Láthatósági módok",
         rows: [
-          ["public", "Full effect label is visible in the Turn Tracker and public chat."],
-          ["masked", "A vague public label is shown to players; full details are GM-only."],
-          ["gm", "No Turn Tracker row. Full details are stored in state and whispered to the GM when the affected token reaches the top of initiative."],
-        ],
+          [
+            "nyilvános",
+            "A teljes hatáscímke látható a Turn Trackerben és a nyilvános csevegésben."
+          ],
+          [
+            "álarcos",
+            "Egy homályos nyilvános címkét mutatnak a játékosoknak; a részletek csak a GM-re vonatkoznak."
+          ],
+          [
+            "gm",
+            "Nincs Turn Tracker sor. A teljes részletet a rendszer állapotában tárolja, és azt suttogja a GM-nek, amikor az érintett token eléri a kezdeményezés csúcsát."
+          ]
+        ]
       },
       commands: {
-        heading: "Saved Effects Commands",
-        intro: "All --saved commands are GM-only. Select a token before running --saved or --saved add.",
+        heading: "Mentett effektus-parancsok",
+        intro: "Minden --mentett parancs csak GM-re vonatkozik. Válasszon ki egy tokent a --saved vagy a --saved add futtatása előtt.",
         rows: [
-          ["!condition-tracker --saved", "View saved effects for the selected token."],
-          ["!condition-tracker --saved add", "Launch the add-saved-effect wizard."],
-          ["!condition-tracker --saved edit <id>", "Edit labels or visibility for an existing saved effect."],
-          ["!condition-tracker --saved remove <id>", "Permanently remove a saved effect."],
-          ["!condition-tracker --saved promote <id> --visibility public|masked|gm", "Copy a saved effect into the Turn Tracker (public or masked) or confirm it is GM-only tracked."],
-          ["!condition-tracker --saved snooze <id> --scope turn|rounds|combat --rounds <n>", "Snooze a GM reminder for this turn, N rounds, or this combat."],
-          ["!condition-tracker --saved snooze-clear <id>", "Clear an active snooze so reminders resume immediately."],
-        ],
+          [
+            "!condition-tracker --mentve",
+            "A kiválasztott token mentett effektusainak megtekintése."
+          ],
+          [
+            "!condition-tracker --mentve add",
+            "Indítsa el a hozzáadott-mentett effektus varázslót."
+          ],
+          [
+            "!condition-tracker --saved edit <id>",
+            "Meglévő mentett effektusok címkéinek vagy láthatóságának szerkesztése."
+          ],
+          [
+            "!condition-tracker --saved remove <id>",
+            "Véglegesen távolítsa el a mentett effektust."
+          ],
+          [
+            "!condition-tracker --saved promote <id> --visibility public|masked|gm",
+            "Másoljon egy mentett effektust a Turn Trackerbe (nyilvános vagy maszkolt), vagy erősítse meg, hogy csak GM követi-e."
+          ],
+          [
+            "!condition-tracker --saved snooze <id> --scope turn|rounds|combat --rounds <n>",
+            "Szundítson GM emlékeztetőt erre a körre, N körre vagy erre a harcra."
+          ],
+          [
+            "!condition-tracker --saved snooze-clear <id>",
+            "Törölje az aktív elhalasztást, hogy az emlékeztetők azonnal folytatódjanak."
+          ]
+        ]
       },
       reminders: {
-        heading: "GM Reminders",
-        body: "When a token with gm or masked saved effects reaches the top of the Turn Tracker, the GM receives a whisper listing the hidden effects with action buttons. Duplicate reminders within the same turn are suppressed. Use the Snooze buttons to suppress reminders for a turn, a number of rounds, or for the remainder of the current combat.",
+        heading: "GM emlékeztetők",
+        body: "Amikor egy gm vagy maszkolt mentett effektusokat tartalmazó token eléri a Turn Tracker tetejét, a GM suttogást kap, amely felsorolja a rejtett effektusokat akciógombokkal. Az ugyanazon a körön belüli ismétlődő emlékeztetőket elnyomja. A Szundi gombokkal elnyomhatja az emlékeztetőket egy körre, több körre vagy az aktuális harc hátralévő részére."
+      }
+    },
+    actorClassification: {
+      heading: "Szereplők Osztályozása",
+      intro: "A Condition Tracker automatikusan meghatározza, hogy minden token játékos karakter, nem-játékos karakter vagy figyelmen kívül hagyott objektum-e (térkép gombostűk, díszletek, varázslat sablonok). A nem csatolt tokenek alapértelmezés szerint figyelmen kívül maradnak. Használd a --classify parancsot az automatikus észlelés felülbírálásához.",
+      detectionOrder: {
+        heading: "Észlelési Sorrend",
+        colStep: "Lépés",
+        colCheck: "Ellenőrzés",
+        colResult: "Eredmény",
+        rows: [
+          [
+            "1",
+            "Token állapot felülbírálás (--classify --scope token)",
+            "pc / npc / figyelmen kívül hagyva"
+          ],
+          [
+            "2",
+            "Karakter ct_mod_actor_type attribútum (--classify --scope character)",
+            "pc / npc / figyelmen kívül hagyva"
+          ],
+          [
+            "3",
+            "Nem csatolt token — nincs karakterlap",
+            "figyelmen kívül hagyva"
+          ],
+          [
+            "4",
+            "Játékrendszer-adapter (npc / is_npc attribútum)",
+            "pc / npc"
+          ],
+          [
+            "5",
+            "Általános NPC attribútum pásztázás (npc, is_npc, npcflag, sheet_type, character_type)",
+            "pc / npc"
+          ],
+          [
+            "6",
+            "Karakter controlledby tartalék",
+            "pc / npc"
+          ]
+        ]
       },
+      types: {
+        heading: "Osztályozási Típusok",
+        colType: "Típus",
+        colMeaning: "Jelentés",
+        rows: [
+          [
+            "pc",
+            "Játékos karakter — mindig JK-ként szerepel a varázslóban és az észlelésben"
+          ],
+          [
+            "npc",
+            "Nem-játékos karakter — mindig NJK-ként szerepel"
+          ],
+          [
+            "figyelmen kívül hagyva",
+            "Soha nem jelenik meg vagy követi — ki van zárva a varázsló token-választójából"
+          ],
+          [
+            "ismeretlen",
+            "Csak automatikus észlelés; nem sikerült meghatározni a típust (NJK-ként kezelve a varázslóban)"
+          ]
+        ]
+      },
+      commands: {
+        heading: "Osztályozási Parancsok",
+        intro: "Válassz ki egy vagy több tokent a --classify parancsok futtatása előtt.",
+        rows: [
+          [
+            "!condition-tracker --classify pc",
+            "Kiválasztott tokenek JK-ként jelölése (alapértelmezett hatókör: karakter)."
+          ],
+          [
+            "!condition-tracker --classify npc",
+            "Kiválasztott tokenek NJK-ként jelölése."
+          ],
+          [
+            "!condition-tracker --classify figyelmen kívül hagyva",
+            "Kiválasztott tokenek kizárása minden követésből."
+          ],
+          [
+            "!condition-tracker --classify auto",
+            "Felülbírálás eltávolítása — automatikus észlelés visszaállítása."
+          ],
+          [
+            "!condition-tracker --classify show",
+            "Osztályozási diagnosztika megjelenítése (típus, forrás, ok) minden kiválasztott tokenre."
+          ],
+          [
+            "!condition-tracker --classify pc --scope token",
+            "Token szintű felülbírálás a script állapotában — hasznos nem csatolt tokenekhez."
+          ],
+          [
+            "!condition-tracker --classify pc --scope karakter",
+            "Karakter szintű felülbírálás a ct_mod_actor_type attribútumba írva — érvényes az összes tokennél, amely ugyanazt a karakterlapot használja."
+          ]
+        ]
+      }
     },
     configuration: {
       heading: "Beállítások",
-      intro:
-        "Használja a !condition-tracker --config &lt;option&gt; &lt;value&gt; parancsot vagy a főmenü Beállítások gombját.",
+      intro: "Használja a !condition-tracker --config &lt;option&gt; &lt;value&gt; parancsot vagy a főmenü Beállítások gombját.",
       colOption: "Beállítás",
       colValues: "Értékek",
       colDesc: "Leírás",
@@ -585,54 +722,53 @@ const TRANSLATION = {
         [
           "useMarkers",
           "true / false",
-          "Roll20 állapotjelölők alkalmazása tokenekre állapot hozzáadásakor",
+          "Roll20 állapotjelölők alkalmazása tokenekre állapot hozzáadásakor"
         ],
         [
           "useIcons",
-          "true / false",
-          "Rövid ikonkódok megjelenítése (pl. [G]) emoji helyett a Turn Tracker sorokban",
+          "igaz / hamis",
+          "Rövid ikonkódok megjelenítése (pl. [G]) emoji helyett a Turn Tracker sorokban"
         ],
         [
           "subjectPromptBypass",
-          "true / false",
-          "Az opcionális alany-token lépés kihagyása Varázslat / Képesség / Egyéb hatásoknál",
+          "igaz / hamis",
+          "Az opcionális alany-token lépés kihagyása Varázslat / Képesség / Egyéb hatásoknál"
         ],
         [
           "suppressPublicChat",
-          "true / false",
-          "Az összes nyilvános csevegési bejelentés (alkalmazás és eltávolítás) elnyomása. A GM-suttogások nem érintettek.",
+          "igaz / hamis",
+          "Az összes nyilvános csevegési bejelentés (alkalmazás és eltávolítás) elnyomása. A GM-suttogások nem érintettek."
         ],
         [
           "healthBar",
           "bar1_value / bar2_value / bar3_value",
-          "A figyelendő token sáv; ha 0-ra csökken, a GM felszólítást kap az állapotok rendezésére",
+          "A figyelendő token sáv; ha 0-ra csökken, a GM felszólítást kap az állapotok rendezésére"
         ],
         [
           "language",
           "en-US / fr / de / es / pt-BR / ko",
-          "A chat-üzenetek és a súgó-handout kimeneti nyelve",
+          "A chat-üzenetek és a súgó-handout kimeneti nyelve"
         ],
         [
           "marker",
           "&lt;Condition&gt;=&lt;marker name&gt;",
-          "Egy adott állapot állapotjelölőjének felülírása (pl. marker Grappled=grab)",
-        ],
-      ],
+          "Egy adott állapot állapotjelölőjének felülírása (pl. marker Grappled=grab)"
+        ]
+      ]
     },
     defaultMarkers: {
       heading: "Alapértelmezett állapotjelölők",
       colCondition: "Állapot",
-      colMarker: "Jelölő neve",
+      colMarker: "Jelölő neve"
     },
     availableLocales: {
       heading: "Elérhető fordítások",
-      intro:
-        "Használja a language konfigurációs beállítást a chat-üzenetek és a súgó-handout bármely támogatott locale-re állításához. Rövid álnevek is elfogadottak en, zh és pt esetén.",
-      colLocale: "Locale",
+      intro: "Használja a language konfigurációs beállítást a chat-üzenetek és a súgó-handout bármely támogatott locale-re állításához. Rövid álnevek is elfogadottak en, zh és pt esetén.",
+      colLocale: "Nyelv",
       colLanguage: "Nyelv",
-      colFile: "Fordítási fájl",
-    },
-  },
+      colFile: "Fordítási fájl"
+    }
+  }
 };
 
 export default TRANSLATION;

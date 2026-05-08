@@ -2,77 +2,77 @@ const TRANSLATION = {
   conditions: {
     Grappled: {
       past: "fasthållen",
-      verb: "håller fast",
+      verb: "håller fast"
     },
     Restrained: {
       past: "hindrad",
-      verb: "hindrar",
+      verb: "hindrar"
     },
     Prone: {
       past: "liggande",
       verb: "slår",
-      suffix: "omkull",
+      suffix: "omkull"
     },
     Poisoned: {
       past: "förgiftad",
-      verb: "förgiftar",
+      verb: "förgiftar"
     },
     Stunned: {
       past: "omtöcknad",
-      verb: "omtöcknar",
+      verb: "omtöcknar"
     },
     Blinded: {
       past: "förblindad",
-      verb: "förblindar",
+      verb: "förblindar"
     },
     Charmed: {
       past: "charmad",
-      verb: "charmar",
+      verb: "charmar"
     },
     Frightened: {
       past: "skrämd",
-      verb: "skrämmer",
+      verb: "skrämmer"
     },
     Incapacitated: {
       past: "oskadliggjord",
-      verb: "oskadliggör",
+      verb: "oskadliggör"
     },
     Invisible: {
       past: "osynlig",
       verb: "gör",
-      suffix: "osynlig",
+      suffix: "osynlig"
     },
     Paralyzed: {
       past: "paralyserad",
-      verb: "paralyserar",
+      verb: "paralyserar"
     },
     Petrified: {
       past: "förstenad",
-      verb: "förstenar",
+      verb: "förstenar"
     },
     Unconscious: {
       past: "medvetslös",
       verb: "gör",
-      suffix: "medvetslös",
+      suffix: "medvetslös"
     },
     Spell: {
       past: "påverkad av en besvärjelse",
-      verb: "kastar en besvärjelse på",
+      verb: "kastar en besvärjelse på"
     },
     Ability: {
       past: "påverkad av en förmåga",
-      verb: "använder en förmåga på",
+      verb: "använder en förmåga på"
     },
     Advantage: {
       past: "har fördel",
       verb: "ger fördel till",
-      noBy: true,
+      noBy: true
     },
     Disadvantage: {
       past: "har nackdel",
       verb: "ger nackdel till",
-      noBy: true,
-    },
+      noBy: true
+    }
   },
   condNames: {
     Grappled: "Fasthållen",
@@ -92,7 +92,7 @@ const TRANSLATION = {
     Ability: "Förmåga",
     Advantage: "Fördel",
     Disadvantage: "Nackdel",
-    Other: "Annat",
+    Other: "Annat"
   },
   templates: {
     display: {
@@ -101,7 +101,7 @@ const TRANSLATION = {
       disadvantage: "{emoji} {source} har nackdel mot {target}{subject}",
       noBy: "{emoji} {target} {past} ({source})",
       self: "{target} är {past}",
-      standard: "{emoji} {target} {past} av {source}",
+      standard: "{emoji} {target} {past} av {source}"
     },
     apply: {
       custom: "{source} applicerar {effect} på {target}.",
@@ -109,7 +109,7 @@ const TRANSLATION = {
       disadvantage: "{source} har nackdel mot {target}{subject}.",
       self: "{target} är {past}.",
       withSuffix: "{source} {verb} {target} {suffix}.",
-      standard: "{source} {verb} {target}.",
+      standard: "{source} {verb} {target}."
     },
     remove: {
       custom: "{target} är inte längre påverkad av {effect}.",
@@ -117,8 +117,8 @@ const TRANSLATION = {
       disadvantage: "{source} har inte längre nackdel mot {target}{subject}.",
       noBy: "{target} är inte längre {past}.",
       self: "{target} är inte längre {past}.",
-      standard: "{target} är inte längre {past} av {source}.",
-    },
+      standard: "{target} är inte längre {past} av {source}."
+    }
   },
   ui: {
     wizard: {
@@ -136,12 +136,10 @@ const TRANSLATION = {
       noneBtn: "Ingen",
       noneOrSourceBtn: "Ingen eller applicera på källa",
       subjectDesc: "Välj vem eller vad som levererar effekten.",
-      sourceDesc:
-        "Välj det väsen som skapar/genererar tillståndet eller effekten.",
-      targetDesc:
-        "Välj det väsen som kommer att ta emot tillståndet eller effekten.",
+      sourceDesc: "Välj det väsen som skapar/genererar tillståndet eller effekten.",
+      targetDesc: "Välj det väsen som kommer att ta emot tillståndet eller effekten.",
       otherText: "Anpassad tillståndstext",
-      effectDetails: "{condition}-detaljer",
+      effectDetails: "{condition}-detaljer"
     },
     col: {
       players: "Spelare",
@@ -162,8 +160,8 @@ const TRANSLATION = {
       details: "Detaljer",
       description: "Beskrivning",
       scenario: "Scenario",
-      gameSystem: "Game System",
-      duration: "Duration",
+      gameSystem: "Spelsystem",
+      duration: "Varaktighet"
     },
     dur: {
       untilRemoved: "Tills borttagen",
@@ -176,7 +174,7 @@ const TRANSLATION = {
       custom: "Anpassad",
       customPrompt: "Antal rundor",
       untilRemovedDisplay: "Tills borttagen",
-      turnsRemaining: "{n} spårad(e) turslut återstår",
+      turnsRemaining: "{n} spårad(e) turslut återstår"
     },
     btn: {
       openWizard: "Öppna guide",
@@ -188,14 +186,14 @@ const TRANSLATION = {
       reinstallHandout: "Installera om handout",
       showHelp: "Visa hjälp",
       reorderConditions: "Ordna om tillståndsrader",
-      reportToken: "Report Token Conditions",
-      savedEffects: "Saved Effects",
-      addSavedEffect: "Add Saved Effect",
-      editSaved: "Edit",
-      removeSaved: "Remove",
-      promoteSaved: "Add to Turn Tracker",
+      reportToken: "Rapportera tokenvillkor",
+      savedEffects: "Sparade effekter",
+      addSavedEffect: "Lägg till sparad effekt",
+      editSaved: "Redigera",
+      removeSaved: "Ta bort",
+      promoteSaved: "Lägg till i Turn Tracker",
       snoozeSaved: "Snooze",
-      clearSnooze: "Clear Snooze",
+      clearSnooze: "Rensa snooze"
     },
     title: {
       menu: "Meny",
@@ -206,7 +204,7 @@ const TRANSLATION = {
       applied: "Applicerad",
       removed: "Tillstånd borttaget",
       cleanup: "Rensning slutförd",
-      macroReinstalled: "The {wizard}, {multiTarget}, {reportToken}, and {saved} macros have been reinstalled for all current GM players.",
+      macroReinstalled: "Makro ominstallerat",
       handoutReinstalled: "Handout ominstallerat",
       warning: "Varning",
       error: "Fel",
@@ -218,15 +216,15 @@ const TRANSLATION = {
       moveToken: "{name} — Flytta token?",
       scriptReady: "Skript redo",
       conditionReorder: "Turordning ändrad",
-      tokenReport: "Token Condition Report",
-      savedEffects: "Saved Effects",
-      savedAdd: "Add Saved Effect",
-      savedEdit: "Edit Saved Effect",
-      savedRemoved: "Saved Effect Removed",
-      savedPromoted: "Add to Turn Tracker",
-      savedSnoozed: "Reminder Snoozed",
-      savedSnoozeCleared: "Snooze Cleared",
-      hiddenEffects: "Hidden Effects — {name}",
+      tokenReport: "Tokens tillståndsrapport",
+      savedEffects: "Sparade effekter",
+      savedAdd: "Lägg till sparad effekt",
+      savedEdit: "Redigera sparad effekt",
+      savedRemoved: "Sparad effekt har tagits bort",
+      savedPromoted: "Lägg till i Turn Tracker",
+      savedSnoozed: "Påminnelse uppskjuten",
+      savedSnoozeCleared: "Snooze rensades",
+      hiddenEffects: "Dolda effekter — {name}"
     },
     heading: {
       quickActions: "Snabbåtgärder",
@@ -238,67 +236,51 @@ const TRANSLATION = {
       promptUi: "Guide-gränssnitt",
       examples: "Exempel",
       summary: "Sammanfattning",
-      appliedTo: "Conditions Applied To",
-      appliedBy: "Conditions Applied By",
-      savedEffectsFor: "Saved Effects for {name}",
-      visibility: "Visibility",
-      snoozeOptions: "Snooze Reminder",
-      promoteOptions: "Promote to Turn Tracker",
-      editActions: "Edit Actions",
+      appliedTo: "Villkor som tillämpas på",
+      appliedBy: "Villkor som tillämpas av",
+      savedEffectsFor: "Sparade effekter för {name}",
+      visibility: "Synlighet",
+      snoozeOptions: "Snooze-påminnelse",
+      promoteOptions: "Befordra till Turn Tracker",
+      editActions: "Redigera åtgärder"
     },
     msg: {
       noActive: "Inga aktiva tillstånd spåras.",
       configReset: "Konfigurationen återställd till standardvärden.",
-      unknownConfig:
-        "Okänt konfigurationsalternativ. Använd --config för att visa stödda inställningar.",
-      macroReinstalled:
-        "Makrona {wizard}, {multiTarget} och {reportToken} har installerats om för alla nuvarande GM-spelare.",
+      unknownConfig: "Okänt konfigurationsalternativ. Använd --config för att visa stödda inställningar.",
+      macroReinstalled: "Makrona {wizard}, {multiTarget}, {reportToken}, {saved} och {classify} har installerats om för alla nuvarande GM-spelare.",
       handoutReinstalled: "Hjälp-handouten {handout} har installerats om.",
-      duplicate:
-        "Exakt den kombinationen av källa, subjekt, mål, tillstånd och anpassad text är redan aktiv.",
+      duplicate: "Exakt den kombinationen av källa, subjekt, mål, tillstånd och anpassad text är redan aktiv.",
       noTargets: "Inga måltoken angivna för tillämpning på flera mål.",
-      noSelection:
-        "Välj minst en token på spelplanen innan du använder --multi-target.",
+      noSelection: "Välj minst en token på spelplanen innan du använder --multi-target.",
       invalidIds: "Inga giltiga token-id:n hittades i det aktuella urvalet.",
-      reSelectTokens:
-        "Ingen av de ursprungligen valda tokenerna kunde hittas. Välj tokens igen och försök på nytt.",
+      reSelectTokens: "Ingen av de ursprungligen valda tokenerna kunde hittas. Välj tokens igen och försök på nytt.",
       conditionNotFound: "Tillstånds-id hittades inte.",
       gmOnly: "Condition Tracker-kommandon är endast för GM:ar.",
-      commandFailed:
-        "Kommandot kunde inte slutföras säkert. Kontrollera API-konsolen för detaljer.",
+      commandFailed: "Kommandot kunde inte slutföras säkert. Kontrollera API-konsolen för detaljer.",
       sourceTokenNotFound: "Källtoken kunde inte hittas.",
       targetTokenNotFound: "Måltoken kunde inte hittas.",
       subjectTokenNotFound: "Subjekttoken kunde inte hittas.",
-      invalidCondition:
-        "Tillståndet måste vara ett av de fördefinierade tillstånden eller Annat.",
-      subjectOnlyCustom:
-        "--subject är endast giltigt för Besvärjelse, Förmåga, Fördel, Nackdel och Annat.",
-      subjectBypassInvalid:
-        "--subjectPromptBypass förväntar true eller false när ett värde anges.",
-      customDetailsRequired:
-        "{condition}-detaljer krävs. Använd --other för att ange dem.",
-      markerConfigFormat:
-        "Format för markörskonfiguration: --config marker Grappled=grab",
-      markerPredefinedRequired:
-        "Markörskonfiguration kräver ett fördefinierat tillståndsnamn.",
-      markerNameRequired:
-        "Markörskonfiguration kräver ett icke-tomt markörnamn.",
+      invalidCondition: "Tillståndet måste vara ett av de fördefinierade tillstånden eller Annat.",
+      subjectOnlyCustom: "--subject är endast giltigt för Besvärjelse, Förmåga, Fördel, Nackdel och Annat.",
+      subjectBypassInvalid: "--subjectPromptBypass förväntar true eller false när ett värde anges.",
+      customDetailsRequired: "{condition}-detaljer krävs. Använd --other för att ange dem.",
+      markerConfigFormat: "Format för markörskonfiguration: --config marker Grappled=grab",
+      markerPredefinedRequired: "Markörskonfiguration kräver ett fördefinierat tillståndsnamn.",
+      markerNameRequired: "Markörskonfiguration kräver ett icke-tomt markörnamn.",
       markerSet: "{condition}-markör inställd på {marker}.",
       healthBarSet: "Hälsomätare inställd på {bar}.",
       boolSet: "{key} inställd på {value}.",
       expectedBoolean: "Förväntade true eller false.",
-      invalidHealthBar:
-        "Hälsomätaren måste vara bar1_value, bar2_value eller bar3_value.",
+      invalidHealthBar: "Hälsomätaren måste vara bar1_value, bar2_value eller bar3_value.",
       markersDisabled: "Markörer är inaktiverade.",
       noMarkerConfigured: "Ingen markör är konfigurerad för detta tillstånd.",
       markerApplied: "Markör applicerad: {marker}",
       markerPresent: "Markör redan närvarande: {marker}",
       langSet: "Språk inställt på {locale}.",
       invalidLocale: "Ogiltig locale. Stödda localer: {locales}.",
-      otherDurationRequiresRounds:
-        "Annan varaktighet kräver ett numeriskt antal rundor, till exempel --duration 5 rounds.",
-      invalidDuration:
-        "Varaktigheten måste vara Tills borttagen, ett turslut-alternativ eller ett positivt antal rundor.",
+      otherDurationRequiresRounds: "Annan varaktighet kräver ett numeriskt antal rundor, till exempel --duration 5 rounds.",
+      invalidDuration: "Varaktigheten måste vara Tills borttagen, ett turslut-alternativ eller ett positivt antal rundor.",
       zeroHpNoConditions: "{name} har nått 0 HP och har inga aktiva tillstånd.",
       zeroHpConditions: "{name} har nått 0 HP. Välj tillstånd att ta bort:",
       removeAllBtn: "Ta bort alla tillstånd för {name}",
@@ -307,8 +289,7 @@ const TRANSLATION = {
       alreadyIncapacitated: "{name} är redan oskadliggjord.",
       tokenRemovedFromTurn: "{name} har tagits bort från turordningen.",
       tokenNotInTurn: "{name} hittades inte i turordningen.",
-      moveTokenPrompt:
-        "Flytta {name} till kartlagret så att den förblir synlig men inte stör andra tokens?",
+      moveTokenPrompt: "Flytta {name} till kartlagret så att den förblir synlig men inte stör andra tokens?",
       moveTokenBtn: "Flytta {name} till kartlagret",
       tokenMoved: "{name} har flyttats till kartlagret.",
       tokenNotFound: "Token hittades inte.",
@@ -319,32 +300,28 @@ const TRANSLATION = {
       manuallyRemoved: "manuellt borttagen",
       durationExpired: "varaktigheten löpte ut",
       markedAsDead: "{name} markerades som död",
-      conditionReorder:
-        "Turordningen ändrades och {count} spårad(e) tillståndsrad(er) kan nu vara felplacerade. Klicka nedan för att återställa dem efter sina tilldelade tokens.",
-      conditionsReordered:
-        "Tillståndsrader har ompositionerats efter sina tilldelade tokens.",
-      noTokensSelectedReport:
-        "Select at least one token on the board before using --report-token.",
-      noConditionsAppliedTo: "{name} has no active conditions applied to it.",
-      noConditionsAppliedBy:
-        "{name} has no active conditions applied to others.",
-      noSavedEffects: "No saved effects stored for {name}.",
-      noTokenSelectedSaved: "Select a token on the board before using --saved.",
-      savedEffectAdded: "Saved effect added for {name}.",
-      savedEffectUpdated: "Saved effect updated.",
-      savedEffectRemoved: "Saved effect removed.",
-      savedEffectNotFound: "Saved effect not found.",
-      savedInvalidVisibility: "Invalid visibility. Use public, masked, or gm.",
+      conditionReorder: "Turordningen ändrades och {count} spårad(e) tillståndsrad(er) kan nu vara felplacerade. Klicka nedan för att återställa dem efter sina tilldelade tokens.",
+      conditionsReordered: "Tillståndsrader har ompositionerats efter sina tilldelade tokens.",
+      noTokensSelectedReport: "Välj minst en token på tavlan innan du använder --report-token.",
+      noConditionsAppliedTo: "{name} har inga aktiva villkor tillämpade på sig.",
+      noConditionsAppliedBy: "{name} har inga aktiva villkor tillämpade på andra.",
+      noSavedEffects: "Inga sparade effekter lagrade för {name}.",
+      noTokenSelectedSaved: "Välj en token på tavlan innan du använder --sparad.",
+      savedEffectAdded: "Sparad effekt har lagts till för {name}.",
+      savedEffectUpdated: "Sparad effekt uppdaterad.",
+      savedEffectRemoved: "Sparad effekt har tagits bort.",
+      savedEffectNotFound: "Den sparade effekten hittades inte.",
+      savedInvalidVisibility: "Ogiltig synlighet. Använd offentliga, maskerade eller gm.",
       savedConditionRequired: "Condition type is required. Use --condition <type>.",
-      savedPromotedPublic: "Effect added to Turn Tracker as public.",
-      savedPromotedMasked: "Effect added to Turn Tracker as masked — players see: {publicLabel}.",
-      savedPromotedGm: "Effect is GM-only — no Turn Tracker row will be created. The reminder system will surface it when this token reaches the top of the turn order.",
-      savedSnoozed: "Reminder snoozed: {scope}.",
-      savedSnoozeCleared: "Snooze cleared.",
-      hiddenEffectsReminder: "Hidden effects are active on {name}.",
-      visibilityPublicHint: "full label visible to all",
-      visibilityMaskedHint: "vague label shown to players",
-      visibilityGmHint: "GM whisper only, no Turn Tracker row",
+      savedPromotedPublic: "Effekt har lagts till i Turn Tracker som offentlig.",
+      savedPromotedMasked: "Effekt läggs till Turn Tracker som maskerad — spelare ser: {publicLabel}.",
+      savedPromotedGm: "Effekten är endast GM - ingen Turn Tracker-rad kommer att skapas. Påminnelsesystemet kommer att visa det när denna token når toppen av turordningen.",
+      savedSnoozed: "Påminnelsen pausad: {scope}.",
+      savedSnoozeCleared: "Snooze rensades.",
+      hiddenEffectsReminder: "Dolda effekter är aktiva på {name}.",
+      visibilityPublicHint: "fullständig etikett synlig för alla",
+      visibilityMaskedHint: "vag etikett som visas för spelare",
+      visibilityGmHint: "Endast GM-viskning, ingen Turn Tracker-rad"
     },
     removal: {
       conditionField: "Tillstånd",
@@ -356,54 +333,68 @@ const TRANSLATION = {
       markerRetained: "Behållen ({marker})",
       rowRemoved: "Borttagen",
       rowMissing: "Redan saknad",
-      manualReason: "Manuell borttagning",
+      manualReason: "Manuell borttagning"
     },
     saved: {
       visibility: {
-        public: "Public",
-        masked: "Masked",
-        gm: "GM Only",
+        public: "Offentlig",
+        masked: "Maskerad",
+        gm: "Endast GM"
       },
       snooze: {
-        thisTurn: "This Turn",
-        oneRound: "1 Round",
-        threeRounds: "3 Rounds",
-        thisCombat: "This Combat",
-        rounds: "{n} round(s)",
+        thisTurn: "Denna sväng",
+        oneRound: "1 omgång",
+        threeRounds: "3 omgångar",
+        thisCombat: "Denna strid",
+        rounds: "{n} omgångar"
       },
       field: {
-        gmLabel: "GM Label",
-        publicLabel: "Public Label",
-        visibility: "Visibility",
-        source: "Source",
-        condition: "Condition",
+        gmLabel: "GM-etikett",
+        publicLabel: "Offentlig etikett",
+        visibility: "Synlighet",
+        source: "Källa",
+        condition: "Skick"
       },
       prompt: {
-        enterGmLabel: "Full effect description (GM only)",
-        enterPublicLabel: "Vague label shown to players",
+        enterGmLabel: "Fullständig effektbeskrivning (endast GM)",
+        enterPublicLabel: "Vaga etikett visas för spelare"
       },
-      snoozed: "snoozed",
+      snoozed: "snoozed"
+    },
+    classify: {
+      title: "Aktörsklassificering",
+      showTitle: "Klassificeringsdiagnostik",
+      showHeading: "Token-klassificeringsdetaljer",
+      resultHeading: "Åsidosättning Tillämpad",
+      noSelection: "Välj minst en token på spelplanen innan du använder --classify.",
+      invalidType: "Ogiltigt klassificeringstyp: {type}. Använd pc, npc, ignored eller auto.",
+      set: "{name} → {type} (omfång: {scope})",
+      cleared: "{name} åsidosättning rensad (omfång: {scope}) — automatisk identifiering återställd.",
+      setTokenFallback: "{name} → {type} (tokenåsidosättning — inget karaktärsblad länkat).",
+      clearedTokenFallback: "{name} tokenåsidosättning rensad — automatisk identifiering återställd.",
+      fieldToken: "Tecken",
+      fieldType: "Klassificering",
+      fieldSource: "Källa",
+      fieldReason: "Anledning"
     },
     cleanup: {
       orphaned: "Övergivna tillståndsposter",
       stale: "Inaktuella tillståndsposter",
       orphanedRows: "Övergivna turspårningsrader",
-      unusedMarkers: "Oanvända markörer",
+      unusedMarkers: "Oanvända markörer"
     },
     apply: {
-      turnAppended:
-        "Målet var inte i turordningen; tillståndsrad lades till sist.",
-      turnInserted: "Tillståndsrad infogad under måltoken.",
-    },
+      turnAppended: "Målet var inte i turordningen; tillståndsrad lades till sist.",
+      turnInserted: "Tillståndsrad infogad under måltoken."
+    }
   },
   handout: {
     versionLabel: "Version",
     subtitle: "D&D 5e-statuseffekthanterare",
-    footerNote:
-      "Detta handout skapas och uppdateras automatiskt varje gång skriptet laddas.",
+    footerNote: "Detta handout skapas och uppdateras automatiskt varje gång skriptet laddas.",
     overview: {
       heading: "Översikt",
-      body: "Condition Tracker hanterar D&D 5e-statustillstånd och anpassade effekter som märkta rader i Roll20:s turspårare. Applicera tillstånd på tokens, spåra varaktigheter efter initiativordning och ta automatiskt bort utgångna effekter när en tur slutar. Alla kommandon är GM-exklusiva och kan utlösas från chatten eller via de installerade makrona.",
+      body: "Condition Tracker hanterar D&D 5e-statustillstånd och anpassade effekter som märkta rader i Roll20:s turspårare. Applicera tillstånd på tokens, spåra varaktigheter efter initiativordning och ta automatiskt bort utgångna effekter när en tur slutar. Alla kommandon är GM-exklusiva och kan utlösas från chatten eller via de installerade makrona."
     },
     quickStart: {
       heading: "Snabbstart",
@@ -412,84 +403,108 @@ const TRANSLATION = {
       rows: [
         [
           "!condition-tracker --prompt",
-          "Steg-för-steg-guide — välj tillstånd, tokens och varaktighet interaktivt. Finns även som makrot ConditionTrackerWizard.",
+          "Steg-för-steg-guide — välj tillstånd, tokens och varaktighet interaktivt. Finns även som makrot ConditionTrackerWizard."
         ],
         [
           "!condition-tracker --multi-target",
-          "Applicera ett tillstånd på flera tokens samtidigt. Finns även som makrot ConditionTrackerMultiTarget.",
+          "Applicera ett tillstånd på flera tokens samtidigt. Finns även som makrot ConditionTrackerMultiTarget."
         ],
         [
-          "!condition-tracker --report-token",
-          "Select one or more tokens first, then run this command to get a GM whisper listing every condition applied to and by each selected token. Also available as the ConditionTrackerReportToken macro.",
+          "!condition-tracker --rapport-token",
+          "Välj en eller flera tokens först och kör sedan det här kommandot för att få en GM-viskning som listar alla villkor som tillämpas på och av varje vald token. Även tillgängligt som ConditionTrackerReportToken-makrot."
         ],
         [
           "!condition-tracker --menu",
-          "Öppna huvudmenyn med knappar för att applicera, granska eller ta bort tillstånd.",
-        ],
-      ],
+          "Öppna huvudmenyn med knappar för att applicera, granska eller ta bort tillstånd."
+        ]
+      ]
     },
     commandsRef: {
       heading: "Kommandoreferens",
       colFlag: "Flagga",
       colDesc: "Beskrivning",
       rows: [
-        ["--prompt", "Interaktiv steg-för-steg-guide"],
+        [
+          "--prompt",
+          "Interaktiv steg-för-steg-guide"
+        ],
         [
           "--multi-target",
-          "Applicera ett tillstånd på flera måltoken på en gång",
+          "Applicera ett tillstånd på flera måltoken på en gång"
         ],
-        ["--menu", "Visa huvudmeny (lägg till remove för borttagningsmenyn)"],
         [
-          "--source X --target Y --condition Z",
-          "Applicera ett tillstånd direkt utan guiden",
+          "--meny",
+          "Visa huvudmeny (lägg till remove för borttagningsmenyn)"
+        ],
+        [
+          "--källa X --mål Y --villkor Z",
+          "Applicera ett tillstånd direkt utan guiden"
         ],
         [
           "--duration &lt;värde&gt;",
-          "Varaktighet för direkt applicering (t.ex. 2 rounds)",
+          "Varaktighet för direkt applicering (t.ex. 2 rounds)"
         ],
         [
-          "--other &lt;text&gt;",
-          "Anpassad text för Besvärjelse / Förmåga / Annan effekttyp",
+          "--other <text>",
+          "Anpassad text för Besvärjelse / Förmåga / Annan effekttyp"
         ],
         [
           "--remove &lt;tillstånds-id&gt;",
-          "Ta bort ett specifikt tillstånd via dess unika id",
+          "Ta bort ett specifikt tillstånd via dess unika id"
         ],
         [
           "--config &lt;alternativ&gt; &lt;värde&gt;",
-          "Justera konfigurationsinställningar (se avsnittet Konfiguration nedan)",
+          "Justera konfigurationsinställningar (se avsnittet Konfiguration nedan)"
         ],
         [
           "--prompt --subjectPromptBypass true|false",
-          "Åsidosätt subjectPromptBypass enbart för detta kommando (stöder även --subject-prompt-bypass)",
+          "Åsidosätt subjectPromptBypass enbart för detta kommando (stöder även --subject-prompt-bypass)"
         ],
         [
-          "--cleanup",
-          "Stäm av tillstånd — ta bort övergivna tillstånd och turspårningsrader",
+          "--rengöring",
+          "Stäm av tillstånd — ta bort övergivna tillstånd och turspårningsrader"
         ],
         [
-          "--reorder-conditions",
-          "Flytta manuellt tillståndsrader bakom deras tilldelade tokens i turordningen",
-        ],
-        ["--reinstall-macro", "Återskapa eller uppdatera GM-makrona"],
-        [
-          "--reinstall-handout",
-          "Återskapa eller uppdatera det lokaliserade hjälp-handouten",
+          "--beställningsvillkor",
+          "Flytta manuellt tillståndsrader bakom deras tilldelade tokens i turordningen"
         ],
         [
-          "--report-token",
-          "Whisper a GM-only condition report for each selected token (conditions applied to and by it)",
+          "--installera om-makro",
+          "Återskapa eller uppdatera GM-makrona"
+        ],
+        [
+          "--installera om-handout",
+          "Återskapa eller uppdatera det lokaliserade hjälp-handouten"
+        ],
+        [
+          "--rapport-token",
+          "Viska en tillståndsrapport endast för GM för varje vald token (villkor som tillämpas på och av den)"
         ],
         [
           "--lang &lt;locale&gt;",
-          "Skicka detta kommandos meddelanden på ytterligare en locale (tvåspråkigt läge)",
+          "Skicka detta kommandos meddelanden på ytterligare en locale (tvåspråkigt läge)"
         ],
-        ["--help", "Visa ett kort hjälpkort i chatten"],
-      ],
+        [
+          "--classify pc|npc|ignored",
+          "Åsidosätt aktörstypen för valda tokens — välj token(s) först. Standardomfång är karaktär (skriver ct_mod_actor_type-attribut); lägg till --scope token för att spara i skriptstatus"
+        ],
+        [
+          "--classify auto",
+          "Ta bort aktörstypåsidosättningen och återställ automatisk identifiering för valda tokens"
+        ],
+        [
+          "--classify show",
+          "Viska en klassificeringsdiagnostik för varje vald token — visar detekterad typ, identifieringskälla och anledning"
+        ],
+        [
+          "--help",
+          "Visa ett kort hjälpkort i chatten"
+        ]
+      ]
     },
     standardConditions: {
       heading: "Standardtillstånd (D&amp;D 5e)",
-      colCondition: "Tillstånd",
+      colCondition: "Tillstånd"
     },
     customEffects: {
       heading: "Anpassade effekttyper",
@@ -498,85 +513,211 @@ const TRANSLATION = {
       rows: [
         [
           "🔮 Besvärjelse",
-          "Spåra en namngiven besvärjelseeffekt — du uppmanas att ange besvärjelsens namn",
+          "Spåra en namngiven besvärjelseeffekt — du uppmanas att ange besvärjelsens namn"
         ],
         [
           "🎯 Förmåga",
-          "Spåra en namngiven klass- eller rasförmåga — du uppmanas att ange förmågans namn",
+          "Spåra en namngiven klass- eller rasförmåga — du uppmanas att ange förmågans namn"
         ],
         [
           "🍀 Fördel",
-          "Registrera fördel given från en token till en annan; grupperad med källan i initiativet",
+          "Registrera fördel given från en token till en annan; grupperad med källan i initiativet"
         ],
         [
           "⬇️ Nackdel",
-          "Registrera pålagd nackdel; grupperad med källan i initiativet",
+          "Registrera pålagd nackdel; grupperad med källan i initiativet"
         ],
         [
           "📝 Annat",
-          "Fritext anpassad etikett — du uppmanas att ange en beskrivning",
-        ],
-      ],
+          "Fritext anpassad etikett — du uppmanas att ange en beskrivning"
+        ]
+      ]
     },
     durationOptions: {
       heading: "Varaktighetsalternativ",
-      intro:
-        "Det återstående antalet visas i pr-kolumnen i turspåraren och minskar när ankertokenens tur slutar.",
+      intro: "Det återstående antalet visas i pr-kolumnen i turspåraren och minskar när ankertokenens tur slutar.",
       colOption: "Alternativ",
       colBehaviour: "Beteende",
       rows: [
         [
           "Tills borttagen",
-          "Permanent — måste tas bort manuellt via menyn eller --remove",
+          "Permanent — måste tas bort manuellt via menyn eller --remove"
         ],
         [
           "Slutet av målets nästa tur",
-          "Löper ut när måltoken:s nästa tur slutar i initiativet",
+          "Löper ut när måltoken:s nästa tur slutar i initiativet"
         ],
         [
           "Slutet av källans nästa tur",
-          "Löper ut när källtoken:s nästa tur slutar i initiativet",
+          "Löper ut när källtoken:s nästa tur slutar i initiativet"
         ],
         [
           "1 / 2 / 3 / 10 rundor",
-          "Fast nedräkning; ett steg per ankertokenens turslut",
-        ],
-      ],
+          "Fast nedräkning; ett steg per ankertokenens turslut"
+        ]
+      ]
     },
     savedEffects: {
-      heading: "Saved Effects",
-      intro:
-        "Saved effects let you store long-term conditions outside the Turn Tracker — curses, diseases, poisons, hidden debuffs, and other non-combat conditions. They persist in script state and can be optionally copied into the Turn Tracker when combat begins.",
+      heading: "Sparade effekter",
+      intro: "Sparade effekter låter dig lagra långsiktiga förhållanden utanför Turn Tracker - förbannelser, sjukdomar, gifter, dolda avvärjningar och andra icke-stridsförhållanden. De kvarstår i skripttillstånd och kan valfritt kopieras till Turn Tracker när striden börjar.",
       visibility: {
-        heading: "Visibility Modes",
+        heading: "Synlighetslägen",
         rows: [
-          ["public", "Full effect label is visible in the Turn Tracker and public chat."],
-          ["masked", "A vague public label is shown to players; full details are GM-only."],
-          ["gm", "No Turn Tracker row. Full details are stored in state and whispered to the GM when the affected token reaches the top of initiative."],
-        ],
+          [
+            "offentlig",
+            "Full effektetikett är synlig i Turn Tracker och offentlig chatt."
+          ],
+          [
+            "maskerad",
+            "En vag offentlig etikett visas för spelare; fullständiga detaljer är endast för GM."
+          ],
+          [
+            "gm",
+            "Ingen svängspårningsrad. Fullständiga detaljer lagras i tillstånd och viskas till GM när den berörda token når toppen av initiativet."
+          ]
+        ]
       },
       commands: {
-        heading: "Saved Effects Commands",
-        intro: "All --saved commands are GM-only. Select a token before running --saved or --saved add.",
+        heading: "Sparade effektkommandon",
+        intro: "Alla --sparade kommandon är endast för GM. Välj en token innan du kör --sparade eller --sparade tillägg.",
         rows: [
-          ["!condition-tracker --saved", "View saved effects for the selected token."],
-          ["!condition-tracker --saved add", "Launch the add-saved-effect wizard."],
-          ["!condition-tracker --saved edit <id>", "Edit labels or visibility for an existing saved effect."],
-          ["!condition-tracker --saved remove <id>", "Permanently remove a saved effect."],
-          ["!condition-tracker --saved promote <id> --visibility public|masked|gm", "Copy a saved effect into the Turn Tracker (public or masked) or confirm it is GM-only tracked."],
-          ["!condition-tracker --saved snooze <id> --scope turn|rounds|combat --rounds <n>", "Snooze a GM reminder for this turn, N rounds, or this combat."],
-          ["!condition-tracker --saved snooze-clear <id>", "Clear an active snooze so reminders resume immediately."],
-        ],
+          [
+            "!condition-tracker --sparad",
+            "Visa sparade effekter för den valda token."
+          ],
+          [
+            "!condition-tracker --saved add",
+            "Starta guiden Lägg till sparad effekt."
+          ],
+          [
+            "!condition-tracker --saved edit <id>",
+            "Redigera etiketter eller synlighet för en befintlig sparad effekt."
+          ],
+          [
+            "!condition-tracker --saved remove <id>",
+            "Ta bort en sparad effekt permanent."
+          ],
+          [
+            "!condition-tracker --saved promote <id> --visibility public|masked|gm",
+            "Kopiera en sparad effekt till Turn Tracker (offentlig eller maskerad) eller bekräfta att den endast är GM-spårad."
+          ],
+          [
+            "!condition-tracker --saved snooze <id> --scope turn|rounds|combat --rounds <n>",
+            "Snooza en GM-påminnelse för den här svängen, N-rundorna eller den här striden."
+          ],
+          [
+            "!condition-tracker --saved snooze-clear <id>",
+            "Rensa en aktiv snooze så att påminnelser återupptas omedelbart."
+          ]
+        ]
       },
       reminders: {
-        heading: "GM Reminders",
-        body: "When a token with gm or masked saved effects reaches the top of the Turn Tracker, the GM receives a whisper listing the hidden effects with action buttons. Duplicate reminders within the same turn are suppressed. Use the Snooze buttons to suppress reminders for a turn, a number of rounds, or for the remainder of the current combat.",
+        heading: "GM-påminnelser",
+        body: "När en token med gm eller maskerade sparade effekter når toppen av Turn Tracker, får GM en viskning som listar de dolda effekterna med åtgärdsknappar. Dubblettpåminnelser inom samma sväng undertrycks. Använd Snooze-knapparna för att undertrycka påminnelser för en sväng, ett antal omgångar eller för resten av den pågående striden."
+      }
+    },
+    actorClassification: {
+      heading: "Aktörsklassificering",
+      intro: "Condition Tracker avgör automatiskt om varje token är en SC, NPC eller ett ignorerat objekt (kartpinnar, scenografi, trollformelmallar). Ej länkade tokens ignoreras som standard. Använd --classify för att åsidosätta automatisk identifiering för valfri token.",
+      detectionOrder: {
+        heading: "Identifieringsordning",
+        colStep: "Steg",
+        colCheck: "Kontroll",
+        colResult: "Resultat",
+        rows: [
+          [
+            "1",
+            "Tokenstatusåsidosättning (--classify --scope token)",
+            "pc / npc / ignoreras"
+          ],
+          [
+            "2",
+            "Karaktär ct_mod_actor_type-attribut (--classify --scope character)",
+            "pc / npc / ignoreras"
+          ],
+          [
+            "3",
+            "Ej länkad token — inget karaktärsblad",
+            "ignoreras"
+          ],
+          [
+            "4",
+            "Spelsystemsadapter (npc / is_npc-attribut)",
+            "pc / npc"
+          ],
+          [
+            "5",
+            "Generisk NPC-attributsökning (npc, is_npc, npcflag, sheet_type, character_type)",
+            "pc / npc"
+          ],
+          [
+            "6",
+            "Karaktär controlledby-reserv",
+            "pc / npc"
+          ]
+        ]
       },
+      types: {
+        heading: "Klassificeringstyper",
+        colType: "Typ",
+        colMeaning: "Betydelse",
+        rows: [
+          [
+            "st",
+            "Spelarkaraktär — inkluderas alltid som SC i guiden och identifieringen"
+          ],
+          [
+            "npc",
+            "Icke-spelarkaraktär — inkluderas alltid som NPC"
+          ],
+          [
+            "ignoreras",
+            "Visas eller spåras aldrig — undantagen från guidens tokenväljare"
+          ],
+          [
+            "okänd",
+            "Endast automatisk identifiering; kunde inte fastställa typ (behandlas som NPC i guiden)"
+          ]
+        ]
+      },
+      commands: {
+        heading: "Klassificeringskommandon",
+        intro: "Välj en eller flera tokens innan du kör --classify-kommandon.",
+        rows: [
+          [
+            "!condition-tracker --klassificera pc",
+            "Markera valda tokens som SC:s (standardomfång: karaktär)."
+          ],
+          [
+            "!condition-tracker --klassificera npc",
+            "Markera valda tokens som NPC:s."
+          ],
+          [
+            "!condition-tracker --classify ignoreras",
+            "Utesluta valda tokens från all spårning."
+          ],
+          [
+            "!condition-tracker --klassificera auto",
+            "Ta bort åsidosättning — återställ automatisk identifiering."
+          ],
+          [
+            "!condition-tracker --klassificera show",
+            "Visa klassificeringsdiagnostik (typ, källa, anledning) för varje vald token."
+          ],
+          [
+            "!condition-tracker --classify pc --scope token",
+            "Tokenåsidosättning sparad i skriptstatus — användbart för ej länkade tokens."
+          ],
+          [
+            "!condition-tracker --classify pc --scope character",
+            "Karaktärsåsidosättning skriven till ct_mod_actor_type-attribut — gäller för alla tokens med samma karaktärsblad."
+          ]
+        ]
+      }
     },
     configuration: {
       heading: "Konfiguration",
-      intro:
-        "Använd !condition-tracker --config &lt;alternativ&gt; &lt;värde&gt; eller knappen Konfiguration i huvudmenyn.",
+      intro: "Använd !condition-tracker --config &lt;alternativ&gt; &lt;värde&gt; eller knappen Konfiguration i huvudmenyn.",
       colOption: "Alternativ",
       colValues: "Värden",
       colDesc: "Beskrivning",
@@ -584,54 +725,53 @@ const TRANSLATION = {
         [
           "useMarkers",
           "true / false",
-          "Applicera Roll20-statusmarkörer på tokens när ett tillstånd läggs till",
+          "Applicera Roll20-statusmarkörer på tokens när ett tillstånd läggs till"
         ],
         [
           "useIcons",
-          "true / false",
-          "Visa korta ikonkoder (t.ex. [G]) istället för emoji i turspårningsrader",
+          "sant/falskt",
+          "Visa korta ikonkoder (t.ex. [G]) istället för emoji i turspårningsrader"
         ],
         [
           "subjectPromptBypass",
-          "true / false",
-          "Hoppa över det valfria subjektsteget för Besvärjelse / Förmåga / Andra effekter",
+          "sant/falskt",
+          "Hoppa över det valfria subjektsteget för Besvärjelse / Förmåga / Andra effekter"
         ],
         [
           "suppressPublicChat",
-          "true / false",
-          "Dölj alla offentliga chattmeddelanden (tillämpnings- och borttagningsmeddelanden). GM-viskning påverkas inte.",
+          "sant/falskt",
+          "Dölj alla offentliga chattmeddelanden (tillämpnings- och borttagningsmeddelanden). GM-viskning påverkas inte."
         ],
         [
           "healthBar",
           "bar1_value / bar2_value / bar3_value",
-          "Token-mätare att bevaka; när den når 0 uppmanas GM att rensa upp tillstånd",
+          "Token-mätare att bevaka; när den når 0 uppmanas GM att rensa upp tillstånd"
         ],
         [
           "language",
           "en-US / fr / de / es / pt-BR / ko",
-          "Utdataspråk för chattmeddelanden och hjälp-handouten",
+          "Utdataspråk för chattmeddelanden och hjälp-handouten"
         ],
         [
           "marker",
           "&lt;Tillstånd&gt;=&lt;markörnamn&gt;",
-          "Åsidosätt statusmarkören för ett specifikt tillstånd (t.ex. marker Grappled=grab)",
-        ],
-      ],
+          "Åsidosätt statusmarkören för ett specifikt tillstånd (t.ex. marker Grappled=grab)"
+        ]
+      ]
     },
     defaultMarkers: {
       heading: "Standardstatusmarkörer",
       colCondition: "Tillstånd",
-      colMarker: "Markörnamn",
+      colMarker: "Markörnamn"
     },
     availableLocales: {
       heading: "Tillgängliga översättningar",
-      intro:
-        "Använd språkkonfigurationsalternativet för att ställa in chattmeddelanden och hjälp-handouten till en stödd locale. Korta alias accepteras även för en, zh och pt.",
-      colLocale: "Locale",
+      intro: "Använd språkkonfigurationsalternativet för att ställa in chattmeddelanden och hjälp-handouten till en stödd locale. Korta alias accepteras även för en, zh och pt.",
+      colLocale: "Plats",
       colLanguage: "Språk",
-      colFile: "Översättningsfil",
-    },
-  },
+      colFile: "Översättningsfil"
+    }
+  }
 };
 
 export default TRANSLATION;

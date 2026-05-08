@@ -90,6 +90,14 @@ export function ensureState() {
     trackerState.savedEffects = {};
   }
 
+  if (!isRecord(trackerState.actorOverrides)) {
+    trackerState.actorOverrides = { tokens: {} };
+  }
+
+  if (!isRecord(trackerState.actorOverrides.tokens)) {
+    trackerState.actorOverrides.tokens = {};
+  }
+
   return trackerState;
 }
 
@@ -446,6 +454,50 @@ export function getActiveBySource(sourceTokenId) {
   return filterActiveConditions(
     (condition) => condition.sourceTokenId === sourceTokenId,
   );
+}
+
+/**
+ * Returns the token-level actor override from state, or null when absent.
+ *
+ * @param {string} tokenId Roll20 graphic id.
+ * @returns {string|null} pc, npc, ignored, or null.
+ */
+export function getActorTokenOverride(tokenId) {
+  const overrides = ensureState().actorOverrides;
+  if (!isRecord(overrides?.tokens)) return null;
+  const value = overrides.tokens[tokenId];
+  return typeof value === 'string' ? value : null;
+}
+
+/**
+ * Stores a token-level actor type override in state.
+ *
+ * @param {string} tokenId Roll20 graphic id.
+ * @param {string} type Actor type to store (pc, npc, or ignored).
+ * @returns {void}
+ */
+export function setActorTokenOverride(tokenId, type) {
+  const trackerState = ensureState();
+  if (!isRecord(trackerState.actorOverrides)) {
+    trackerState.actorOverrides = { tokens: {} };
+  }
+  if (!isRecord(trackerState.actorOverrides.tokens)) {
+    trackerState.actorOverrides.tokens = {};
+  }
+  trackerState.actorOverrides.tokens[tokenId] = type;
+}
+
+/**
+ * Removes a token-level actor type override from state.
+ *
+ * @param {string} tokenId Roll20 graphic id.
+ * @returns {void}
+ */
+export function clearActorTokenOverride(tokenId) {
+  const trackerState = ensureState();
+  if (isRecord(trackerState.actorOverrides?.tokens)) {
+    delete trackerState.actorOverrides.tokens[tokenId];
+  }
 }
 
 /**

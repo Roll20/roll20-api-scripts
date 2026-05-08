@@ -2,74 +2,74 @@ const TRANSLATION = {
   conditions: {
     Grappled: {
       past: "yakalanmış",
-      verb: "yakalar",
+      verb: "yakalar"
     },
     Restrained: {
       past: "kısıtlanmış",
-      verb: "kısıtlar",
+      verb: "kısıtlar"
     },
     Prone: {
       past: "yere düşmüş",
-      verb: "yere düşürür",
+      verb: "yere düşürür"
     },
     Poisoned: {
       past: "zehirlenmiş",
-      verb: "zehirler",
+      verb: "zehirler"
     },
     Stunned: {
       past: "sersemlemiş",
-      verb: "sersemletir",
+      verb: "sersemletir"
     },
     Blinded: {
       past: "kör olmuş",
-      verb: "kör eder",
+      verb: "kör eder"
     },
     Charmed: {
       past: "büyülenmiş",
-      verb: "büyüler",
+      verb: "büyüler"
     },
     Frightened: {
       past: "korkmuş",
-      verb: "korkutur",
+      verb: "korkutur"
     },
     Incapacitated: {
       past: "etkisiz",
-      verb: "etkisiz hale getirir",
+      verb: "etkisiz hale getirir"
     },
     Invisible: {
       past: "görünmez",
-      verb: "görünmez yapar",
+      verb: "görünmez yapar"
     },
     Paralyzed: {
       past: "felç olmuş",
-      verb: "felç eder",
+      verb: "felç eder"
     },
     Petrified: {
       past: "taşlaşmış",
-      verb: "taşlaştırır",
+      verb: "taşlaştırır"
     },
     Unconscious: {
       past: "bilinçsiz",
-      verb: "bilinçsiz bırakır",
+      verb: "bilinçsiz bırakır"
     },
     Spell: {
       past: "bir büyüden etkilenmiş",
-      verb: "üzerine büyü yapar",
+      verb: "üzerine büyü yapar"
     },
     Ability: {
       past: "bir yetenekten etkilenmiş",
-      verb: "üzerinde yetenek kullanır",
+      verb: "üzerinde yetenek kullanır"
     },
     Advantage: {
       past: "avantajı var",
       verb: "avantaj verir",
-      noBy: true,
+      noBy: true
     },
     Disadvantage: {
       past: "dezavantajı var",
       verb: "dezavantaj verir",
-      noBy: true,
-    },
+      noBy: true
+    }
   },
   condNames: {
     Grappled: "Yakalanmış",
@@ -89,17 +89,16 @@ const TRANSLATION = {
     Ability: "Yetenek",
     Advantage: "Avantaj",
     Disadvantage: "Dezavantaj",
-    Other: "Diğer",
+    Other: "Diğer"
   },
   templates: {
     display: {
       custom: "{emoji} {target} {effect} etkisi altında ({source})",
       advantage: "{emoji} {source}, {target}{subject} karşısında avantajlı",
-      disadvantage:
-        "{emoji} {source}, {target}{subject} karşısında dezavantajlı",
+      disadvantage: "{emoji} {source}, {target}{subject} karşısında dezavantajlı",
       noBy: "{emoji} {target} {past} ({source})",
       self: "{target} {past}",
-      standard: "{emoji} {target} {source} tarafından {past}",
+      standard: "{emoji} {target} {source} tarafından {past}"
     },
     apply: {
       custom: "{source}, {target} üzerine {effect} etkisi uygular.",
@@ -107,17 +106,16 @@ const TRANSLATION = {
       disadvantage: "{source}, {target}{subject} karşısında dezavantajlıdır.",
       self: "{target} {past}.",
       withSuffix: "{source} {target} {suffix} {verb}.",
-      standard: "{source} {target} {verb}.",
+      standard: "{source} {target} {verb}."
     },
     remove: {
       custom: "{target} artık {effect} etkisi altında değil.",
       advantage: "{source} artık {target}{subject} karşısında avantajlı değil.",
-      disadvantage:
-        "{source} artık {target}{subject} karşısında dezavantajlı değil.",
+      disadvantage: "{source} artık {target}{subject} karşısında dezavantajlı değil.",
       noBy: "{target} artık {past} değil.",
       self: "{target} artık {past} değil.",
-      standard: "{target} artık {source} tarafından {past} değil.",
-    },
+      standard: "{target} artık {source} tarafından {past} değil."
+    }
   },
   ui: {
     wizard: {
@@ -138,7 +136,7 @@ const TRANSLATION = {
       sourceDesc: "Durumu veya etkiyi oluşturan yaratığı seçin.",
       targetDesc: "Durumu veya etkiyi alacak yaratığı seçin.",
       otherText: "Özel durum metni",
-      effectDetails: "{condition} ayrıntıları",
+      effectDetails: "{condition} ayrıntıları"
     },
     col: {
       players: "Oyuncular",
@@ -159,8 +157,8 @@ const TRANSLATION = {
       details: "Ayrıntılar",
       description: "Açıklama",
       scenario: "Senaryo",
-      gameSystem: "Game System",
-      duration: "Duration",
+      gameSystem: "Oyun Sistemi",
+      duration: "Süre"
     },
     dur: {
       untilRemoved: "Kaldırılana kadar",
@@ -173,7 +171,7 @@ const TRANSLATION = {
       custom: "Özel",
       customPrompt: "Tur sayısı",
       untilRemovedDisplay: "Kaldırılana kadar",
-      turnsRemaining: "{n} tur sonu takibi kaldı",
+      turnsRemaining: "{n} tur sonu takibi kaldı"
     },
     btn: {
       openWizard: "Sihirbazı Aç",
@@ -185,14 +183,14 @@ const TRANSLATION = {
       reinstallHandout: "El İlanını Yeniden Yükle",
       showHelp: "Yardımı Göster",
       reorderConditions: "Durum Satırlarını Yeniden Sırala",
-      reportToken: "Report Token Conditions",
-      savedEffects: "Saved Effects",
-      addSavedEffect: "Add Saved Effect",
-      editSaved: "Edit",
-      removeSaved: "Remove",
-      promoteSaved: "Add to Turn Tracker",
-      snoozeSaved: "Snooze",
-      clearSnooze: "Clear Snooze",
+      reportToken: "Jeton Koşullarını Bildirin",
+      savedEffects: "Kaydedilen Efektler",
+      addSavedEffect: "Kayıtlı Efekt Ekle",
+      editSaved: "Düzenlemek",
+      removeSaved: "Kaldırmak",
+      promoteSaved: "Turn Tracker'a Ekle",
+      snoozeSaved: "Kestirmek",
+      clearSnooze: "Ertelemeyi Temizle"
     },
     title: {
       menu: "Menü",
@@ -203,7 +201,7 @@ const TRANSLATION = {
       applied: "Uygulandı",
       removed: "Durum Kaldırıldı",
       cleanup: "Temizlik Tamamlandı",
-      macroReinstalled: "The {wizard}, {multiTarget}, {reportToken}, and {saved} macros have been reinstalled for all current GM players.",
+      macroReinstalled: "Makro Yeniden Yüklendi",
       handoutReinstalled: "El İlanı Yeniden Yüklendi",
       warning: "Uyarı",
       error: "Hata",
@@ -215,15 +213,15 @@ const TRANSLATION = {
       moveToken: "{name} — Token Taşınsın mı?",
       scriptReady: "Betik Hazır",
       conditionReorder: "Tur Sırası Değişti",
-      tokenReport: "Token Condition Report",
-      savedEffects: "Saved Effects",
-      savedAdd: "Add Saved Effect",
-      savedEdit: "Edit Saved Effect",
-      savedRemoved: "Saved Effect Removed",
-      savedPromoted: "Add to Turn Tracker",
-      savedSnoozed: "Reminder Snoozed",
-      savedSnoozeCleared: "Snooze Cleared",
-      hiddenEffects: "Hidden Effects — {name}",
+      tokenReport: "Jeton Durum Raporu",
+      savedEffects: "Kaydedilen Efektler",
+      savedAdd: "Kayıtlı Efekt Ekle",
+      savedEdit: "Kaydedilen Efekti Düzenle",
+      savedRemoved: "Kaydedilen Efekt Kaldırıldı",
+      savedPromoted: "Turn Tracker'a Ekle",
+      savedSnoozed: "Hatırlatıcı Ertelendi",
+      savedSnoozeCleared: "Erteleme Temizlendi",
+      hiddenEffects: "Gizli Efektler — {name}"
     },
     heading: {
       quickActions: "Hızlı İşlemler",
@@ -235,67 +233,51 @@ const TRANSLATION = {
       promptUi: "Sihirbaz Arayüzü",
       examples: "Örnekler",
       summary: "Özet",
-      appliedTo: "Conditions Applied To",
-      appliedBy: "Conditions Applied By",
-      savedEffectsFor: "Saved Effects for {name}",
-      visibility: "Visibility",
-      snoozeOptions: "Snooze Reminder",
-      promoteOptions: "Promote to Turn Tracker",
-      editActions: "Edit Actions",
+      appliedTo: "Uygulanan Koşullar",
+      appliedBy: "Uygulanan Koşullar",
+      savedEffectsFor: "{name} için Kaydedilen Efektler",
+      visibility: "Görünürlük",
+      snoozeOptions: "Hatırlatıcıyı Ertele",
+      promoteOptions: "Turn Tracker'a Yükselt",
+      editActions: "Eylemleri Düzenle"
     },
     msg: {
       noActive: "Takip edilen aktif durum yok.",
       configReset: "Yapılandırma mod varsayılanlarına sıfırlandı.",
-      unknownConfig:
-        "Bilinmeyen yapılandırma seçeneği. Desteklenen ayarları görüntülemek için --config kullanın.",
-      macroReinstalled:
-        "{wizard}, {multiTarget} ve {reportToken} makroları tüm mevcut GM oyuncuları için yeniden yüklendi.",
+      unknownConfig: "Bilinmeyen yapılandırma seçeneği. Desteklenen ayarları görüntülemek için --config kullanın.",
+      macroReinstalled: "{wizard}, {multiTarget}, {reportToken}, {saved} ve {classify} makroları tüm mevcut GM oyuncuları için yeniden yüklendi.",
       handoutReinstalled: "Yardım el ilanı {handout} yeniden yüklendi.",
       duplicate: "Aynı kaynak, özne, hedef, durum ve özel metin zaten aktif.",
       noTargets: "Çoklu hedef uygulaması için hedef token belirtilmedi.",
-      noSelection:
-        "--multi-target kullanmadan önce tabloda en az bir token seçin.",
+      noSelection: "--multi-target kullanmadan önce tabloda en az bir token seçin.",
       invalidIds: "Mevcut seçimde geçerli token kimliği bulunamadı.",
-      reSelectTokens:
-        "Orijinal olarak seçilen tokenların hiçbiri bulunamadı. Tokenları yeniden seçip tekrar deneyin.",
+      reSelectTokens: "Orijinal olarak seçilen tokenların hiçbiri bulunamadı. Tokenları yeniden seçip tekrar deneyin.",
       conditionNotFound: "Durum kimliği bulunamadı.",
       gmOnly: "Condition Tracker komutları yalnızca GM'e özeldir.",
-      commandFailed:
-        "Komut güvenli şekilde tamamlanamadı. Ayrıntılar için API konsolunu kontrol edin.",
+      commandFailed: "Komut güvenli şekilde tamamlanamadı. Ayrıntılar için API konsolunu kontrol edin.",
       sourceTokenNotFound: "Kaynak token bulunamadı.",
       targetTokenNotFound: "Hedef token bulunamadı.",
       subjectTokenNotFound: "Özne token bulunamadı.",
-      invalidCondition:
-        "Durum, önceden tanımlanmış durumlardan biri veya Diğer olmalıdır.",
-      subjectOnlyCustom:
-        "--subject yalnızca Büyü, Yetenek, Avantaj, Dezavantaj ve Diğer için geçerlidir.",
-      subjectBypassInvalid:
-        "--subjectPromptBypass, bir değer sağlandığında true veya false bekler.",
-      customDetailsRequired:
-        "{condition} ayrıntıları gereklidir. Bunları sağlamak için --other kullanın.",
-      markerConfigFormat:
-        "İşaretçi yapılandırma biçimi: --config marker Grappled=grab",
-      markerPredefinedRequired:
-        "İşaretçi yapılandırması önceden tanımlanmış bir durum adı gerektirir.",
-      markerNameRequired:
-        "İşaretçi yapılandırması boş olmayan bir işaretçi adı gerektirir.",
+      invalidCondition: "Durum, önceden tanımlanmış durumlardan biri veya Diğer olmalıdır.",
+      subjectOnlyCustom: "--subject yalnızca Büyü, Yetenek, Avantaj, Dezavantaj ve Diğer için geçerlidir.",
+      subjectBypassInvalid: "--subjectPromptBypass, bir değer sağlandığında true veya false bekler.",
+      customDetailsRequired: "{condition} ayrıntıları gereklidir. Bunları sağlamak için --other kullanın.",
+      markerConfigFormat: "İşaretçi yapılandırma biçimi: --config marker Grappled=grab",
+      markerPredefinedRequired: "İşaretçi yapılandırması önceden tanımlanmış bir durum adı gerektirir.",
+      markerNameRequired: "İşaretçi yapılandırması boş olmayan bir işaretçi adı gerektirir.",
       markerSet: "{condition} işaretçisi {marker} olarak ayarlandı.",
       healthBarSet: "Sağlık çubuğu {bar} olarak ayarlandı.",
       boolSet: "{key}, {value} olarak ayarlandı.",
       expectedBoolean: "true veya false bekleniyor.",
-      invalidHealthBar:
-        "Sağlık çubuğu bar1_value, bar2_value veya bar3_value olmalıdır.",
+      invalidHealthBar: "Sağlık çubuğu bar1_value, bar2_value veya bar3_value olmalıdır.",
       markersDisabled: "İşaretçiler devre dışı.",
       noMarkerConfigured: "Bu durum için yapılandırılmış işaretçi yok.",
       markerApplied: "İşaretçi uygulandı: {marker}",
       markerPresent: "İşaretçi zaten mevcut: {marker}",
       langSet: "Dil {locale} olarak ayarlandı.",
-      invalidLocale:
-        "Geçersiz yerel ayar. Desteklenen yerel ayarlar: {locales}.",
-      otherDurationRequiresRounds:
-        "Diğer süre, sayısal bir tur sayısı gerektirir; örneğin --duration 5 rounds.",
-      invalidDuration:
-        "Süre; Kaldırılana kadar, bir tur sonu seçeneği veya pozitif bir tur sayısı olmalıdır.",
+      invalidLocale: "Geçersiz yerel ayar. Desteklenen yerel ayarlar: {locales}.",
+      otherDurationRequiresRounds: "Diğer süre, sayısal bir tur sayısı gerektirir; örneğin --duration 5 rounds.",
+      invalidDuration: "Süre; Kaldırılana kadar, bir tur sonu seçeneği veya pozitif bir tur sayısı olmalıdır.",
       zeroHpNoConditions: "{name} 0 KP'ye ulaştı ve aktif durumu yok.",
       zeroHpConditions: "{name} 0 KP'ye ulaştı. Kaldırılacak durumları seçin:",
       removeAllBtn: "{name} için Tüm Durumları Kaldır",
@@ -304,8 +286,7 @@ const TRANSLATION = {
       alreadyIncapacitated: "{name} zaten Etkisiz.",
       tokenRemovedFromTurn: "{name} tur sırasından kaldırıldı.",
       tokenNotInTurn: "{name} tur sırasında bulunamadı.",
-      moveTokenPrompt:
-        "{name} görünür kalması ancak diğer tokenlara engel olmaması için harita katmanına taşınsın mı?",
+      moveTokenPrompt: "{name} görünür kalması ancak diğer tokenlara engel olmaması için harita katmanına taşınsın mı?",
       moveTokenBtn: "{name} Harita Katmanına Taşı",
       tokenMoved: "{name} harita katmanına taşındı.",
       tokenNotFound: "Token bulunamadı.",
@@ -316,32 +297,28 @@ const TRANSLATION = {
       manuallyRemoved: "manuel olarak kaldırıldı",
       durationExpired: "süresi doldu",
       markedAsDead: "{name} ölü olarak işaretlendi",
-      conditionReorder:
-        "Tur sırası değişti ve {count} takip edilen durum satırı artık yanlış yerde olabilir. Bunları atanmış tokenlarının arkasına taşımak için aşağıya tıklayın.",
-      conditionsReordered:
-        "Durum satırları atanmış tokenlarının arkasına yeniden konumlandırıldı.",
-      noTokensSelectedReport:
-        "Select at least one token on the board before using --report-token.",
-      noConditionsAppliedTo: "{name} has no active conditions applied to it.",
-      noConditionsAppliedBy:
-        "{name} has no active conditions applied to others.",
-      noSavedEffects: "No saved effects stored for {name}.",
-      noTokenSelectedSaved: "Select a token on the board before using --saved.",
-      savedEffectAdded: "Saved effect added for {name}.",
-      savedEffectUpdated: "Saved effect updated.",
-      savedEffectRemoved: "Saved effect removed.",
-      savedEffectNotFound: "Saved effect not found.",
-      savedInvalidVisibility: "Invalid visibility. Use public, masked, or gm.",
+      conditionReorder: "Tur sırası değişti ve {count} takip edilen durum satırı artık yanlış yerde olabilir. Bunları atanmış tokenlarının arkasına taşımak için aşağıya tıklayın.",
+      conditionsReordered: "Durum satırları atanmış tokenlarının arkasına yeniden konumlandırıldı.",
+      noTokensSelectedReport: "--report-token'ı kullanmadan önce panoda en az bir jeton seçin.",
+      noConditionsAppliedTo: "{name} kendisine uygulanan etkin koşul yok.",
+      noConditionsAppliedBy: "{name} diğerlerine uygulanan etkin koşula sahip değil.",
+      noSavedEffects: "{name} için kayıtlı efekt yok.",
+      noTokenSelectedSaved: "--saved'i kullanmadan önce panoda bir jeton seçin.",
+      savedEffectAdded: "{name} için kayıtlı efekt eklendi.",
+      savedEffectUpdated: "Kaydedilen efekt güncellendi.",
+      savedEffectRemoved: "Kaydedilen efekt kaldırıldı.",
+      savedEffectNotFound: "Kaydedilen efekt bulunamadı.",
+      savedInvalidVisibility: "Geçersiz görünürlük. Herkese açık, maskeli veya gm kullanın.",
       savedConditionRequired: "Condition type is required. Use --condition <type>.",
-      savedPromotedPublic: "Effect added to Turn Tracker as public.",
-      savedPromotedMasked: "Effect added to Turn Tracker as masked — players see: {publicLabel}.",
-      savedPromotedGm: "Effect is GM-only — no Turn Tracker row will be created. The reminder system will surface it when this token reaches the top of the turn order.",
-      savedSnoozed: "Reminder snoozed: {scope}.",
-      savedSnoozeCleared: "Snooze cleared.",
-      hiddenEffectsReminder: "Hidden effects are active on {name}.",
-      visibilityPublicHint: "full label visible to all",
-      visibilityMaskedHint: "vague label shown to players",
-      visibilityGmHint: "GM whisper only, no Turn Tracker row",
+      savedPromotedPublic: "Efekt Turn Tracker'a herkese açık olarak eklendi.",
+      savedPromotedMasked: "Efekt Turn Tracker'a maskeli olarak eklendi — oyuncular şunu görür: {publicLabel}.",
+      savedPromotedGm: "Efekt yalnızca GM'ye özgüdür — hiçbir Dönüş Takipçisi satırı oluşturulmayacaktır. Bu jeton dönüş sırasının en üstüne ulaştığında hatırlatma sistemi yüzeye çıkacaktır.",
+      savedSnoozed: "Hatırlatıcı ertelendi: {scope}.",
+      savedSnoozeCleared: "Erteleme temizlendi.",
+      hiddenEffectsReminder: "Gizli efektler {name} tarihinde etkin.",
+      visibilityPublicHint: "tam etiket herkes tarafından görülebilir",
+      visibilityMaskedHint: "oyunculara gösterilen belirsiz etiket",
+      visibilityGmHint: "Yalnızca GM fısıltısı, Dönüş İzleyici sırası yok"
     },
     removal: {
       conditionField: "Durum",
@@ -353,53 +330,68 @@ const TRANSLATION = {
       markerRetained: "Tutuldu ({marker})",
       rowRemoved: "Kaldırıldı",
       rowMissing: "Zaten eksik",
-      manualReason: "Manuel kaldırma",
+      manualReason: "Manuel kaldırma"
     },
     saved: {
       visibility: {
-        public: "Public",
-        masked: "Masked",
-        gm: "GM Only",
+        public: "Halk",
+        masked: "Maskeli",
+        gm: "Yalnızca GM"
       },
       snooze: {
-        thisTurn: "This Turn",
-        oneRound: "1 Round",
-        threeRounds: "3 Rounds",
-        thisCombat: "This Combat",
-        rounds: "{n} round(s)",
+        thisTurn: "Bu Dönüş",
+        oneRound: "1 Tur",
+        threeRounds: "3 Tur",
+        thisCombat: "Bu Savaş",
+        rounds: "{n} tur(lar)"
       },
       field: {
-        gmLabel: "GM Label",
-        publicLabel: "Public Label",
-        visibility: "Visibility",
-        source: "Source",
-        condition: "Condition",
+        gmLabel: "GM Etiketi",
+        publicLabel: "Genel Etiket",
+        visibility: "Görünürlük",
+        source: "Kaynak",
+        condition: "Durum"
       },
       prompt: {
-        enterGmLabel: "Full effect description (GM only)",
-        enterPublicLabel: "Vague label shown to players",
+        enterGmLabel: "Tam etki açıklaması (yalnızca GM)",
+        enterPublicLabel: "Oyunculara gösterilen belirsiz etiket"
       },
-      snoozed: "snoozed",
+      snoozed: "ertelendi"
+    },
+    classify: {
+      title: "Oyuncu Sınıflandırması",
+      showTitle: "Sınıflandırma Tanılaması",
+      showHeading: "Token Sınıflandırma Ayrıntıları",
+      resultHeading: "Geçersiz Kılma Uygulandı",
+      noSelection: "--classify kullanmadan önce tahtada en az bir token seçin.",
+      invalidType: "Geçersiz sınıflandırma türü: {type}. pc, npc, ignored veya auto kullanın.",
+      set: "{name} → {type} (kapsam: {scope})",
+      cleared: "{name} geçersiz kılma temizlendi (kapsam: {scope}) — otomatik algılama geri yüklendi.",
+      setTokenFallback: "{name} → {type} (token geçersiz kılma — bağlı karakter sayfası yok).",
+      clearedTokenFallback: "{name} token geçersiz kılma temizlendi — otomatik algılama geri yüklendi.",
+      fieldToken: "Jeton",
+      fieldType: "Sınıflandırma",
+      fieldSource: "Kaynak",
+      fieldReason: "Neden"
     },
     cleanup: {
       orphaned: "Sahipsiz durum girişleri",
       stale: "Eski durum girişleri",
       orphanedRows: "Sahipsiz Tur Takibi satırları",
-      unusedMarkers: "Kullanılmayan işaretçiler",
+      unusedMarkers: "Kullanılmayan işaretçiler"
     },
     apply: {
       turnAppended: "Hedef tur sırasında değildi; durum satırı sona eklendi.",
-      turnInserted: "Durum satırı hedef tokenın altına eklendi.",
-    },
+      turnInserted: "Durum satırı hedef tokenın altına eklendi."
+    }
   },
   handout: {
     versionLabel: "Sürüm",
     subtitle: "D&D 5e Durum Etkisi Yöneticisi",
-    footerNote:
-      "Bu el ilanı, betik her yüklendiğinde otomatik olarak oluşturulur ve güncellenir.",
+    footerNote: "Bu el ilanı, betik her yüklendiğinde otomatik olarak oluşturulur ve güncellenir.",
     overview: {
       heading: "Genel Bakış",
-      body: "Condition Tracker, D&D 5e durum koşullarını ve özel efektleri Roll20 Tur Takibinde etiketli satırlar olarak yönetir. Tokenlara durum uygulayın, süreleri inisiyatif sırasına göre takip edin ve tur sona erdiğinde süresi dolan efektleri otomatik olarak kaldırın. Tüm komutlar yalnızca GM'e özeldir ve sohbetten veya yüklü makrolar aracılığıyla tetiklenebilir.",
+      body: "Condition Tracker, D&D 5e durum koşullarını ve özel efektleri Roll20 Tur Takibinde etiketli satırlar olarak yönetir. Tokenlara durum uygulayın, süreleri inisiyatif sırasına göre takip edin ve tur sona erdiğinde süresi dolan efektleri otomatik olarak kaldırın. Tüm komutlar yalnızca GM'e özeldir ve sohbetten veya yüklü makrolar aracılığıyla tetiklenebilir."
     },
     quickStart: {
       heading: "Hızlı Başlangıç",
@@ -407,85 +399,109 @@ const TRANSLATION = {
       colDesc: "Açıklama",
       rows: [
         [
-          "!condition-tracker --prompt",
-          "Adım adım sihirbaz — durumu, tokenleri ve süreyi etkileşimli olarak seçin. ConditionTrackerWizard makrosu olarak da kullanılabilir.",
+          "!koşul-takipçi --istem",
+          "Adım adım sihirbaz — durumu, tokenleri ve süreyi etkileşimli olarak seçin. ConditionTrackerWizard makrosu olarak da kullanılabilir."
         ],
         [
-          "!condition-tracker --multi-target",
-          "Bir durumu aynı anda birden fazla tokena uygulayın. ConditionTrackerMultiTarget makrosu olarak da kullanılabilir.",
+          "!durum izleyici --çoklu hedef",
+          "Bir durumu aynı anda birden fazla tokena uygulayın. ConditionTrackerMultiTarget makrosu olarak da kullanılabilir."
         ],
         [
-          "!condition-tracker --report-token",
-          "Select one or more tokens first, then run this command to get a GM whisper listing every condition applied to and by each selected token. Also available as the ConditionTrackerReportToken macro.",
+          "!koşul-izleyici --rapor-token",
+          "Önce bir veya daha fazla jeton seçin, ardından seçilen her jeton tarafından uygulanan her koşulu listeleyen bir GM fısıltısı almak için bu komutu çalıştırın. Ayrıca ConditionTrackerReportToken makrosu olarak da mevcuttur."
         ],
         [
           "!condition-tracker --menu",
-          "Durum uygulamak, incelemek veya kaldırmak için düğmeler içeren ana yönetim menüsünü açın.",
-        ],
-      ],
+          "Durum uygulamak, incelemek veya kaldırmak için düğmeler içeren ana yönetim menüsünü açın."
+        ]
+      ]
     },
     commandsRef: {
       heading: "Komut Referansı",
       colFlag: "Bayrak",
       colDesc: "Açıklama",
       rows: [
-        ["--prompt", "Etkileşimli adım adım sihirbaz arayüzü"],
         [
-          "--multi-target",
-          "Bir durumu aynı anda birden fazla hedef tokena uygula",
+          "--çabuk",
+          "Etkileşimli adım adım sihirbaz arayüzü"
         ],
-        ["--menu", "Ana menüyü göster (kaldırma menüsü için remove ekle)"],
         [
-          "--source X --target Y --condition Z",
-          "Sihirbaz olmadan doğrudan durum uygula",
+          "--çoklu hedef",
+          "Bir durumu aynı anda birden fazla hedef tokena uygula"
+        ],
+        [
+          "--menü",
+          "Ana menüyü göster (kaldırma menüsü için remove ekle)"
+        ],
+        [
+          "--kaynak X --hedef Y --koşul Z",
+          "Sihirbaz olmadan doğrudan durum uygula"
         ],
         [
           "--duration &lt;değer&gt;",
-          "Doğrudan uygulama için süre (örn. 2 rounds)",
+          "Doğrudan uygulama için süre (örn. 2 rounds)"
         ],
         [
           "--other &lt;metin&gt;",
-          "Büyü / Yetenek / Diğer etki türleri için özel metin",
+          "Büyü / Yetenek / Diğer etki türleri için özel metin"
         ],
         [
           "--remove &lt;durum-kimliği&gt;",
-          "Belirli bir durumu benzersiz kimliğiyle kaldır",
+          "Belirli bir durumu benzersiz kimliğiyle kaldır"
         ],
         [
           "--config &lt;seçenek&gt; &lt;değer&gt;",
-          "Yapılandırma ayarlarını düzenle (aşağıdaki Yapılandırma bölümüne bakın)",
+          "Yapılandırma ayarlarını düzenle (aşağıdaki Yapılandırma bölümüne bakın)"
         ],
         [
-          "--prompt --subjectPromptBypass true|false",
-          "Bu komut için subjectPromptBypass'ı geçersiz kıl (--subject-prompt-bypass da desteklenir)",
+          "--prompt --konuPromptBypass doğru|yanlış",
+          "Bu komut için subjectPromptBypass'ı geçersiz kıl (--subject-prompt-bypass da desteklenir)"
         ],
         [
-          "--cleanup",
-          "Durumu uzlaştır — sahipsiz koşulları ve Tur Takibi satırlarını kaldır",
+          "--Temizlemek",
+          "Durumu uzlaştır — sahipsiz koşulları ve Tur Takibi satırlarını kaldır"
         ],
         [
-          "--reorder-conditions",
-          "Tur sırasındaki koşul satırlarını atanmış tokenlarının arkasına manuel olarak yeniden konumlandır",
-        ],
-        ["--reinstall-macro", "GM makrolarını yeniden oluştur veya güncelle"],
-        [
-          "--reinstall-handout",
-          "Yerelleştirilmiş yardım el ilanını yeniden oluştur veya güncelle",
+          "--yeniden sipariş koşulları",
+          "Tur sırasındaki koşul satırlarını atanmış tokenlarının arkasına manuel olarak yeniden konumlandır"
         ],
         [
-          "--report-token",
-          "Whisper a GM-only condition report for each selected token (conditions applied to and by it)",
+          "--makroyu yeniden yükle",
+          "GM makrolarını yeniden oluştur veya güncelle"
+        ],
+        [
+          "--yeniden yükleme bildirisi",
+          "Yerelleştirilmiş yardım el ilanını yeniden oluştur veya güncelle"
+        ],
+        [
+          "--rapor-belirteci",
+          "Seçilen her jeton için yalnızca GM'ye özel bir durum raporu fısıldayın (ona ve onun tarafından uygulanan koşullar)"
         ],
         [
           "--lang &lt;yerel ayar&gt;",
-          "Bu komutun mesajlarını ek bir yerel ayarda çıkart (iki dilli mod)",
+          "Bu komutun mesajlarını ek bir yerel ayarda çıkart (iki dilli mod)"
         ],
-        ["--help", "Sohbette kısa bir yardım kartı göster"],
-      ],
+        [
+          "--classify pc|npc|ignored",
+          "Seçili tokenlar için oyuncu türünü geçersiz kılar — önce token(ları) seçin. Varsayılan kapsam karakterdir (ct_mod_actor_type özelliğini yazar); betik durumunda depolamak için --scope token ekleyin"
+        ],
+        [
+          "--classify auto",
+          "Oyuncu türü geçersiz kılmayı kaldırır ve seçili tokenlar için otomatik algılamayı geri yükler"
+        ],
+        [
+          "--classify show",
+          "Her seçili token için sınıflandırma tanılamasını fısıldar — algılanan türü, algılama kaynağını ve nedeni gösterir"
+        ],
+        [
+          "--help",
+          "Sohbette kısa bir yardım kartı göster"
+        ]
+      ]
     },
     standardConditions: {
       heading: "Standart Durumlar (D&amp;D 5e)",
-      colCondition: "Durum",
+      colCondition: "Durum"
     },
     customEffects: {
       heading: "Özel Efekt Türleri",
@@ -494,82 +510,211 @@ const TRANSLATION = {
       rows: [
         [
           "🔮 Büyü",
-          "Adlandırılmış bir büyü etkisini takip edin — büyü adı sorulacak",
+          "Adlandırılmış bir büyü etkisini takip edin — büyü adı sorulacak"
         ],
         [
           "🎯 Yetenek",
-          "Adlandırılmış bir sınıf veya ırk yeteneğini takip edin — yetenek adı sorulacak",
+          "Adlandırılmış bir sınıf veya ırk yeteneğini takip edin — yetenek adı sorulacak"
         ],
         [
           "🍀 Avantaj",
-          "Bir tokenden diğerine verilen avantajı kaydedin; inisiyatifte kaynakla gruplandırılır",
+          "Bir tokenden diğerine verilen avantajı kaydedin; inisiyatifte kaynakla gruplandırılır"
         ],
         [
           "⬇️ Dezavantaj",
-          "Uygulanan dezavantajı kaydedin; inisiyatifte kaynakla gruplandırılır",
+          "Uygulanan dezavantajı kaydedin; inisiyatifte kaynakla gruplandırılır"
         ],
-        ["📝 Diğer", "Serbest biçimli özel etiket — bir açıklama sorulacak"],
-      ],
+        [
+          "📝 Diğer",
+          "Serbest biçimli özel etiket — bir açıklama sorulacak"
+        ]
+      ]
     },
     durationOptions: {
       heading: "Süre Seçenekleri",
-      intro:
-        "Kalan sayı, Tur Takibinin pr sütununda gösterilir ve çapa tokenının turu sona erdiğinde azalır.",
+      intro: "Kalan sayı, Tur Takibinin pr sütununda gösterilir ve çapa tokenının turu sona erdiğinde azalır.",
       colOption: "Seçenek",
       colBehaviour: "Davranış",
       rows: [
         [
           "Kaldırılana kadar",
-          "Kalıcı — menü veya --remove aracılığıyla manuel olarak kaldırılmalıdır",
+          "Kalıcı — menü veya --remove aracılığıyla manuel olarak kaldırılmalıdır"
         ],
         [
           "Hedefin sonraki turunun sonu",
-          "Hedef tokenın inisiyatifteki sonraki turu sona erdiğinde sona erer",
+          "Hedef tokenın inisiyatifteki sonraki turu sona erdiğinde sona erer"
         ],
         [
           "Kaynağın sonraki turunun sonu",
-          "Kaynak tokenın inisiyatifteki sonraki turu sona erdiğinde sona erer",
+          "Kaynak tokenın inisiyatifteki sonraki turu sona erdiğinde sona erer"
         ],
         [
           "1 / 2 / 3 / 10 tur",
-          "Sabit geri sayım; çapa token tur sonunda bir azalma",
-        ],
-      ],
+          "Sabit geri sayım; çapa token tur sonunda bir azalma"
+        ]
+      ]
     },
     savedEffects: {
-      heading: "Saved Effects",
-      intro:
-        "Saved effects let you store long-term conditions outside the Turn Tracker — curses, diseases, poisons, hidden debuffs, and other non-combat conditions. They persist in script state and can be optionally copied into the Turn Tracker when combat begins.",
+      heading: "Kaydedilen Efektler",
+      intro: "Kaydedilen efektler, Turn Tracker'ın dışındaki uzun vadeli koşulları (lanetler, hastalıklar, zehirler, gizli zayıflatıcılar ve diğer savaş dışı koşullar) saklamanıza olanak tanır. Komut dosyası durumunda kalırlar ve savaş başladığında isteğe bağlı olarak Turn Tracker'a kopyalanabilirler.",
       visibility: {
-        heading: "Visibility Modes",
+        heading: "Görünürlük Modları",
         rows: [
-          ["public", "Full effect label is visible in the Turn Tracker and public chat."],
-          ["masked", "A vague public label is shown to players; full details are GM-only."],
-          ["gm", "No Turn Tracker row. Full details are stored in state and whispered to the GM when the affected token reaches the top of initiative."],
-        ],
+          [
+            "halk",
+            "Tam efekt etiketi Turn Tracker'da ve genel sohbette görülebilir."
+          ],
+          [
+            "maskeli",
+            "Oyunculara belirsiz bir genel etiket gösterilir; tüm ayrıntılar yalnızca GM'ye aittir."
+          ],
+          [
+            "gm",
+            "Dönüş İzleyici satırı yok. Etkilenen token inisiyatifin zirvesine ulaştığında tüm ayrıntılar durumda saklanır ve GM'ye fısıldanır."
+          ]
+        ]
       },
       commands: {
-        heading: "Saved Effects Commands",
-        intro: "All --saved commands are GM-only. Select a token before running --saved or --saved add.",
+        heading: "Kaydedilen Efekt Komutları",
+        intro: "Tüm --saved komutları yalnızca GM'ye özgüdür. --saved veya --saved eklentisini çalıştırmadan önce bir belirteç seçin.",
         rows: [
-          ["!condition-tracker --saved", "View saved effects for the selected token."],
-          ["!condition-tracker --saved add", "Launch the add-saved-effect wizard."],
-          ["!condition-tracker --saved edit <id>", "Edit labels or visibility for an existing saved effect."],
-          ["!condition-tracker --saved remove <id>", "Permanently remove a saved effect."],
-          ["!condition-tracker --saved promote <id> --visibility public|masked|gm", "Copy a saved effect into the Turn Tracker (public or masked) or confirm it is GM-only tracked."],
-          ["!condition-tracker --saved snooze <id> --scope turn|rounds|combat --rounds <n>", "Snooze a GM reminder for this turn, N rounds, or this combat."],
-          ["!condition-tracker --saved snooze-clear <id>", "Clear an active snooze so reminders resume immediately."],
-        ],
+          [
+            "!koşul-takipçi --kaydedildi",
+            "Seçilen jeton için kayıtlı efektleri görüntüleyin."
+          ],
+          [
+            "!koşul-izleyici --kaydedilmiş ekleme",
+            "Kaydedilmiş efekt ekleme sihirbazını başlatın."
+          ],
+          [
+            "!condition-tracker --saved edit <id>",
+            "Mevcut bir kayıtlı efektin etiketlerini veya görünürlüğünü düzenleyin."
+          ],
+          [
+            "!condition-tracker --saved remove <id>",
+            "Kaydedilmiş bir efekti kalıcı olarak kaldırın."
+          ],
+          [
+            "!condition-tracker --saved promote <id> --visibility public|masked|gm",
+            "Kaydedilmiş bir efekti Turn Tracker'a (genel veya maskeli) kopyalayın veya bunun yalnızca GM tarafından izlendiğini onaylayın."
+          ],
+          [
+            "!condition-tracker --saved snooze <id> --scope turn|rounds|combat --rounds <n>",
+            "Bu tur, N tur veya bu dövüş için bir GM hatırlatıcısını erteleyin."
+          ],
+          [
+            "!condition-tracker --saved snooze-clear <id>",
+            "Hatırlatıcıların hemen devam etmesi için etkin bir ertelemeyi silin."
+          ]
+        ]
       },
       reminders: {
-        heading: "GM Reminders",
-        body: "When a token with gm or masked saved effects reaches the top of the Turn Tracker, the GM receives a whisper listing the hidden effects with action buttons. Duplicate reminders within the same turn are suppressed. Use the Snooze buttons to suppress reminders for a turn, a number of rounds, or for the remainder of the current combat.",
+        heading: "GM Hatırlatıcıları",
+        body: "GM veya maskelenmiş kayıtlı efektlere sahip bir jeton Turn Tracker'ın tepesine ulaştığında, GM, eylem düğmeleriyle birlikte gizli efektleri listeleyen bir fısıltı alır. Aynı sıra içinde tekrarlanan hatırlatıcılar bastırılır. Bir tur, birkaç tur veya mevcut savaşın geri kalanına ilişkin hatırlatıcıları gizlemek için Erteleme düğmelerini kullanın."
+      }
+    },
+    actorClassification: {
+      heading: "Oyuncu Sınıflandırması",
+      intro: "Condition Tracker her tokenın bir OY (oyuncu yönetilen), OYD (oyuncu yönetilmeyen) veya yoksayılan bir nesne (harita pinleri, dekor, büyü şablonları) olup olmadığını otomatik olarak belirler. Bağlantısız tokenlar varsayılan olarak yoksayılır. Herhangi bir token için otomatik algılamayı geçersiz kılmak üzere --classify kullanın.",
+      detectionOrder: {
+        heading: "Algılama Sırası",
+        colStep: "Adım",
+        colCheck: "Kontrol",
+        colResult: "Sonuç",
+        rows: [
+          [
+            "1",
+            "Token durum geçersiz kılma (--classify --scope token)",
+            "pc / npc / göz ardı edildi"
+          ],
+          [
+            "2",
+            "Karakter ct_mod_actor_type özelliği (--classify --scope character)",
+            "pc / npc / göz ardı edildi"
+          ],
+          [
+            "3",
+            "Bağlantısız token — karakter sayfası yok",
+            "görmezden gelindi"
+          ],
+          [
+            "4",
+            "Oyun sistemi adaptörü (npc / is_npc özelliği)",
+            "bilgisayar / npc"
+          ],
+          [
+            "5",
+            "Genel NPC özellik taraması (npc, is_npc, npcflag, sheet_type, character_type)",
+            "bilgisayar / npc"
+          ],
+          [
+            "6",
+            "Karakter controlledby geri dönüşü",
+            "bilgisayar / npc"
+          ]
+        ]
       },
+      types: {
+        heading: "Sınıflandırma Türleri",
+        colType: "Tür",
+        colMeaning: "Anlam",
+        rows: [
+          [
+            "bilgisayar",
+            "Oyuncu karakteri — sihirbazda ve algılamada her zaman OY olarak dahil edilir"
+          ],
+          [
+            "NPC",
+            "Oyuncu olmayan karakter — her zaman OYD olarak dahil edilir"
+          ],
+          [
+            "görmezden gelindi",
+            "Hiçbir zaman gösterilmez veya takip edilmez — sihirbazın token seçicisinden hariç tutulur"
+          ],
+          [
+            "bilinmiyor",
+            "Yalnızca otomatik algılama; tür belirlenemedi (sihirbazda OYD olarak işlenir)"
+          ]
+        ]
+      },
+      commands: {
+        heading: "Sınıflandırma Komutları",
+        intro: "--classify komutlarını çalıştırmadan önce bir veya daha fazla token seçin.",
+        rows: [
+          [
+            "!durum-takipçi --PC'yi sınıflandır",
+            "Seçili tokenları OY olarak işaretler (varsayılan kapsam: karakter)."
+          ],
+          [
+            "!koşul-izleyici --npc'yi sınıflandır",
+            "Seçili tokenları OYD olarak işaretler."
+          ],
+          [
+            "!koşul-izleyici --sınıflandırma göz ardı edildi",
+            "Seçili tokenları tüm takipten hariç tutar."
+          ],
+          [
+            "!koşul-izleyici --otomatik sınıflandırma",
+            "Geçersiz kılmayı kaldırır — otomatik algılamayı geri yükler."
+          ],
+          [
+            "!koşul-izleyici --sınıflandırma gösterisi",
+            "Her seçili token için sınıflandırma tanılamasını (tür, kaynak, neden) gösterir."
+          ],
+          [
+            "!koşul-izleyici --bilgisayarı sınıflandır --kapsam belirteci",
+            "Betik durumunda saklanan token düzeyinde geçersiz kılma — bağlantısız tokenlar için kullanışlıdır."
+          ],
+          [
+            "!koşul-izleyici --bilgisayarı sınıflandır --kapsam karakteri",
+            "ct_mod_actor_type özelliğine yazılan karakter düzeyinde geçersiz kılma — aynı karakter sayfasını kullanan tüm tokenlar için geçerlidir."
+          ]
+        ]
+      }
     },
     configuration: {
       heading: "Yapılandırma",
-      intro:
-        "!condition-tracker --config &lt;seçenek&gt; &lt;değer&gt; veya ana menüdeki Yapılandırma düğmesini kullanın.",
+      intro: "!condition-tracker --config &lt;seçenek&gt; &lt;değer&gt; veya ana menüdeki Yapılandırma düğmesini kullanın.",
       colOption: "Seçenek",
       colValues: "Değerler",
       colDesc: "Açıklama",
@@ -577,54 +722,53 @@ const TRANSLATION = {
         [
           "useMarkers",
           "true / false",
-          "Bir durum eklendiğinde tokenlara Roll20 durum işaretçileri uygula",
+          "Bir durum eklendiğinde tokenlara Roll20 durum işaretçileri uygula"
         ],
         [
           "useIcons",
-          "true / false",
-          "Tur Takibi satırlarında emoji yerine kısa simge kodları göster (örn. [G])",
+          "doğru / yanlış",
+          "Tur Takibi satırlarında emoji yerine kısa simge kodları göster (örn. [G])"
         ],
         [
           "subjectPromptBypass",
-          "true / false",
-          "Büyü / Yetenek / Diğer efektler için isteğe bağlı özne-token adımını atla",
+          "doğru / yanlış",
+          "Büyü / Yetenek / Diğer efektler için isteğe bağlı özne-token adımını atla"
         ],
         [
           "suppressPublicChat",
-          "true / false",
-          "Tüm genel sohbet duyurularını (uygulama ve kaldırma mesajları) gizle. GM fısıltıları etkilenmez.",
+          "doğru / yanlış",
+          "Tüm genel sohbet duyurularını (uygulama ve kaldırma mesajları) gizle. GM fısıltıları etkilenmez."
         ],
         [
           "healthBar",
           "bar1_value / bar2_value / bar3_value",
-          "İzlenecek token çubuğu; 0'a düştüğünde GM'den durumları temizlemesi istenir",
+          "İzlenecek token çubuğu; 0'a düştüğünde GM'den durumları temizlemesi istenir"
         ],
         [
           "language",
           "en-US / fr / de / es / pt-BR / ko",
-          "Sohbet mesajları ve yardım el ilanı için çıktı dili",
+          "Sohbet mesajları ve yardım el ilanı için çıktı dili"
         ],
         [
           "marker",
           "&lt;Durum&gt;=&lt;işaretçi adı&gt;",
-          "Belirli bir durum için kullanılan durum işaretçisini geçersiz kıl (örn. marker Grappled=grab)",
-        ],
-      ],
+          "Belirli bir durum için kullanılan durum işaretçisini geçersiz kıl (örn. marker Grappled=grab)"
+        ]
+      ]
     },
     defaultMarkers: {
       heading: "Varsayılan Durum İşaretçileri",
       colCondition: "Durum",
-      colMarker: "İşaretçi Adı",
+      colMarker: "İşaretçi Adı"
     },
     availableLocales: {
       heading: "Mevcut Çeviriler",
-      intro:
-        "Sohbet mesajlarını ve yardım el ilanını desteklenen herhangi bir yerel ayara ayarlamak için language yapılandırma seçeneğini kullanın. en, zh ve pt için kısa takma adlar da kabul edilir.",
+      intro: "Sohbet mesajlarını ve yardım el ilanını desteklenen herhangi bir yerel ayara ayarlamak için language yapılandırma seçeneğini kullanın. en, zh ve pt için kısa takma adlar da kabul edilir.",
       colLocale: "Yerel Ayar",
       colLanguage: "Dil",
-      colFile: "Çeviri Dosyası",
-    },
-  },
+      colFile: "Çeviri Dosyası"
+    }
+  }
 };
 
 export default TRANSLATION;

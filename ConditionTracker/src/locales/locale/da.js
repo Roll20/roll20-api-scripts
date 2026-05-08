@@ -2,78 +2,78 @@ const TRANSLATION = {
   conditions: {
     Grappled: {
       past: "fastholdt",
-      verb: "fastholder",
+      verb: "fastholder"
     },
     Restrained: {
       past: "bundet",
-      verb: "binder",
+      verb: "binder"
     },
     Prone: {
       past: "væltet omkuld",
       verb: "vælter",
-      suffix: "omkuld",
+      suffix: "omkuld"
     },
     Poisoned: {
       past: "forgiftet",
-      verb: "forgifter",
+      verb: "forgifter"
     },
     Stunned: {
       past: "lammet",
-      verb: "lammer",
+      verb: "lammer"
     },
     Blinded: {
       past: "blindet",
-      verb: "blinder",
+      verb: "blinder"
     },
     Charmed: {
       past: "charmet",
-      verb: "charmerer",
+      verb: "charmerer"
     },
     Frightened: {
       past: "skræmt",
-      verb: "skræmmer",
+      verb: "skræmmer"
     },
     Incapacitated: {
       past: "ukampdygtig",
       verb: "gør",
-      suffix: "ukampdygtig",
+      suffix: "ukampdygtig"
     },
     Invisible: {
       past: "usynlig",
       verb: "gør",
-      suffix: "usynlig",
+      suffix: "usynlig"
     },
     Paralyzed: {
       past: "paralyseret",
-      verb: "paralyserer",
+      verb: "paralyserer"
     },
     Petrified: {
       past: "forstenet",
-      verb: "forstener",
+      verb: "forstener"
     },
     Unconscious: {
       past: "bevidstløs",
       verb: "gør",
-      suffix: "bevidstløs",
+      suffix: "bevidstløs"
     },
     Spell: {
       past: "påvirket af en besværgelse",
-      verb: "kaster en besværgelse på",
+      verb: "kaster en besværgelse på"
     },
     Ability: {
       past: "påvirket af en evne",
-      verb: "bruger en evne på",
+      verb: "bruger en evne på"
     },
     Advantage: {
       past: "har fordel",
       verb: "giver fordel til",
-      noBy: true,
+      noBy: true
     },
     Disadvantage: {
       past: "har ulempe",
       verb: "giver ulempe til",
-      noBy: true,
-    },
+      noBy: true
+    }
   },
   condNames: {
     Grappled: "Fastholdt",
@@ -82,7 +82,7 @@ const TRANSLATION = {
     Poisoned: "Forgiftet",
     Stunned: "Lammet",
     Blinded: "Blindet",
-    Charmed: "Charmed",
+    Charmed: "Charmet",
     Frightened: "Skræmt",
     Incapacitated: "Ukampdygtig",
     Invisible: "Usynlig",
@@ -93,7 +93,7 @@ const TRANSLATION = {
     Ability: "Evne",
     Advantage: "Fordel",
     Disadvantage: "Ulempe",
-    Other: "Andet",
+    Other: "Andet"
   },
   templates: {
     display: {
@@ -102,7 +102,7 @@ const TRANSLATION = {
       disadvantage: "{emoji} {source} har ulempe mod {target}{subject}",
       noBy: "{emoji} {target} {past} ({source})",
       self: "{target} er {past}",
-      standard: "{emoji} {target} {past} af {source}",
+      standard: "{emoji} {target} {past} af {source}"
     },
     apply: {
       custom: "{source} påfører {effect} på {target}.",
@@ -110,7 +110,7 @@ const TRANSLATION = {
       disadvantage: "{source} har ulempe mod {target}{subject}.",
       self: "{target} er {past}.",
       withSuffix: "{source} {verb} {target} {suffix}.",
-      standard: "{source} {verb} {target}.",
+      standard: "{source} {verb} {target}."
     },
     remove: {
       custom: "{target} er ikke længere påvirket af {effect}.",
@@ -118,8 +118,8 @@ const TRANSLATION = {
       disadvantage: "{source} har ikke længere ulempe mod {target}{subject}.",
       noBy: "{target} er ikke længere {past}.",
       self: "{target} er ikke længere {past}.",
-      standard: "{target} er ikke længere {past} af {source}.",
-    },
+      standard: "{target} er ikke længere {past} af {source}."
+    }
   },
   ui: {
     wizard: {
@@ -137,12 +137,10 @@ const TRANSLATION = {
       noneBtn: "Ingen",
       noneOrSourceBtn: "Ingen eller anvend på kilde",
       subjectDesc: "Vælg hvem eller hvad der leverer effekten.",
-      sourceDesc:
-        "Vælg den skabning, der opretter/genererer tilstanden eller effekten.",
-      targetDesc:
-        "Vælg den skabning, der vil modtage tilstanden eller effekten.",
+      sourceDesc: "Vælg den skabning, der opretter/genererer tilstanden eller effekten.",
+      targetDesc: "Vælg den skabning, der vil modtage tilstanden eller effekten.",
       otherText: "Brugerdefineret tilstandstekst",
-      effectDetails: "{condition}-detaljer",
+      effectDetails: "{condition}-detaljer"
     },
     col: {
       players: "Spillere",
@@ -163,8 +161,8 @@ const TRANSLATION = {
       details: "Detaljer",
       description: "Beskrivelse",
       scenario: "Scenarie",
-      gameSystem: "Game System",
-      duration: "Duration",
+      gameSystem: "Spil system",
+      duration: "Varighed"
     },
     dur: {
       untilRemoved: "Indtil fjernet",
@@ -177,7 +175,7 @@ const TRANSLATION = {
       custom: "Brugerdefineret",
       customPrompt: "Antal runder",
       untilRemovedDisplay: "Indtil fjernet",
-      turnsRemaining: "{n} sporing(er) af turslut tilbage",
+      turnsRemaining: "{n} sporing(er) af turslut tilbage"
     },
     btn: {
       openWizard: "Åbn guide",
@@ -189,14 +187,14 @@ const TRANSLATION = {
       reinstallHandout: "Geninstaller handout",
       showHelp: "Vis hjælp",
       reorderConditions: "Omarranger tilstandsrækker",
-      reportToken: "Report Token Conditions",
-      savedEffects: "Saved Effects",
-      addSavedEffect: "Add Saved Effect",
-      editSaved: "Edit",
-      removeSaved: "Remove",
-      promoteSaved: "Add to Turn Tracker",
+      reportToken: "Rapporter Token-betingelser",
+      savedEffects: "Gemte effekter",
+      addSavedEffect: "Tilføj gemt effekt",
+      editSaved: "Redigere",
+      removeSaved: "Fjerne",
+      promoteSaved: "Føj til Turn Tracker",
       snoozeSaved: "Snooze",
-      clearSnooze: "Clear Snooze",
+      clearSnooze: "Ryd Snooze"
     },
     title: {
       menu: "Menu",
@@ -207,7 +205,7 @@ const TRANSLATION = {
       applied: "Anvendt",
       removed: "Tilstand fjernet",
       cleanup: "Oprydning fuldført",
-      macroReinstalled: "The {wizard}, {multiTarget}, {reportToken}, and {saved} macros have been reinstalled for all current GM players.",
+      macroReinstalled: "Makro geninstalleret",
       handoutReinstalled: "Handout geninstalleret",
       warning: "Advarsel",
       error: "Fejl",
@@ -215,19 +213,19 @@ const TRANSLATION = {
       noConditions: "Ingen tilstande",
       tokenMoved: "Token flyttet",
       markedDead: "Markeret som død",
-      zeroHp: "{name} — 0 HP",
+      zeroHp: "{name} — 0 HK",
       moveToken: "{name} — Flyt token?",
       scriptReady: "Script klar",
       conditionReorder: "Turrækkefølge ændret",
-      tokenReport: "Token Condition Report",
-      savedEffects: "Saved Effects",
-      savedAdd: "Add Saved Effect",
-      savedEdit: "Edit Saved Effect",
-      savedRemoved: "Saved Effect Removed",
-      savedPromoted: "Add to Turn Tracker",
-      savedSnoozed: "Reminder Snoozed",
-      savedSnoozeCleared: "Snooze Cleared",
-      hiddenEffects: "Hidden Effects — {name}",
+      tokenReport: "Token tilstandsrapport",
+      savedEffects: "Gemte effekter",
+      savedAdd: "Tilføj gemt effekt",
+      savedEdit: "Rediger gemt effekt",
+      savedRemoved: "Gemt effekt er fjernet",
+      savedPromoted: "Føj til Turn Tracker",
+      savedSnoozed: "Påmindelse udsat",
+      savedSnoozeCleared: "Snooze ryddet",
+      hiddenEffects: "Skjulte effekter — {name}"
     },
     heading: {
       quickActions: "Hurtighandlinger",
@@ -239,114 +237,92 @@ const TRANSLATION = {
       promptUi: "Guide-brugerflade",
       examples: "Eksempler",
       summary: "Oversigt",
-      appliedTo: "Conditions Applied To",
-      appliedBy: "Conditions Applied By",
-      savedEffectsFor: "Saved Effects for {name}",
-      visibility: "Visibility",
-      snoozeOptions: "Snooze Reminder",
-      promoteOptions: "Promote to Turn Tracker",
-      editActions: "Edit Actions",
+      appliedTo: "Betingelser, der gælder for",
+      appliedBy: "Betingelser anvendt af",
+      savedEffectsFor: "Gemte effekter til {name}",
+      visibility: "Sigtbarhed",
+      snoozeOptions: "Snooze-påmindelse",
+      promoteOptions: "Fremme til Turn Tracker",
+      editActions: "Rediger handlinger"
     },
     msg: {
       noActive: "Ingen aktive tilstande spores.",
       configReset: "Konfiguration nulstillet til modstandarder.",
-      unknownConfig:
-        "Ukendt konfigurationsindstilling. Brug --config for at se understøttede indstillinger.",
-      macroReinstalled:
-        "Makroerne {wizard}, {multiTarget} og {reportToken} er geninstalleret for alle nuværende GM-spillere.",
+      unknownConfig: "Ukendt konfigurationsindstilling. Brug --config for at se understøttede indstillinger.",
+      macroReinstalled: "Makroerne {wizard}, {multiTarget}, {reportToken}, {saved} og {classify} er geninstalleret for alle nuværende GM-spillere.",
       handoutReinstalled: "Hjælpe-handouttet {handout} er geninstalleret.",
-      duplicate:
-        "Den præcise kombination af kilde, subjekt, mål, tilstand og brugerdefineret tekst er allerede aktiv.",
+      duplicate: "Den præcise kombination af kilde, subjekt, mål, tilstand og brugerdefineret tekst er allerede aktiv.",
       noTargets: "Ingen måltoken angivet til multi-mål-anvendelse.",
-      noSelection:
-        "Vælg mindst ét token på brættet, før du bruger --multi-target.",
+      noSelection: "Vælg mindst ét token på brættet, før du bruger --multi-target.",
       invalidIds: "Ingen gyldige token-id'er fundet i den aktuelle markering.",
-      reSelectTokens:
-        "Ingen af de oprindeligt valgte tokens kunne findes. Vælg tokens igen og prøv på ny.",
+      reSelectTokens: "Ingen af de oprindeligt valgte tokens kunne findes. Vælg tokens igen og prøv på ny.",
       conditionNotFound: "Tilstands-id blev ikke fundet.",
       gmOnly: "Condition Tracker-kommandoer er kun for GM'er.",
-      commandFailed:
-        "Kommandoen kunne ikke gennemføres sikkert. Tjek API-konsollen for detaljer.",
+      commandFailed: "Kommandoen kunne ikke gennemføres sikkert. Tjek API-konsollen for detaljer.",
       sourceTokenNotFound: "Kildetoken kunne ikke findes.",
       targetTokenNotFound: "Måltoken kunne ikke findes.",
       subjectTokenNotFound: "Subjekttoken kunne ikke findes.",
-      invalidCondition:
-        "Tilstanden skal være en af de foruddefinerede tilstande eller Andet.",
-      subjectOnlyCustom:
-        "--subject er kun gyldigt for Besværgelse, Evne, Fordel, Ulempe og Andet.",
-      subjectBypassInvalid:
-        "--subjectPromptBypass forventer true eller false, når en værdi angives.",
-      customDetailsRequired:
-        "{condition}-detaljer er påkrævet. Brug --other til at angive dem.",
-      markerConfigFormat:
-        "Markørkonfigurationsformat: --config marker Grappled=grab",
-      markerPredefinedRequired:
-        "Markørkonfiguration kræver et foruddefineret tilstandsnavn.",
+      invalidCondition: "Tilstanden skal være en af de foruddefinerede tilstande eller Andet.",
+      subjectOnlyCustom: "--subject er kun gyldigt for Besværgelse, Evne, Fordel, Ulempe og Andet.",
+      subjectBypassInvalid: "--subjectPromptBypass forventer true eller false, når en værdi angives.",
+      customDetailsRequired: "{condition}-detaljer er påkrævet. Brug --other til at angive dem.",
+      markerConfigFormat: "Markørkonfigurationsformat: --config marker Grappled=grab",
+      markerPredefinedRequired: "Markørkonfiguration kræver et foruddefineret tilstandsnavn.",
       markerNameRequired: "Markørkonfiguration kræver et ikke-tomt markørnavn.",
       markerSet: "{condition}-markør sat til {marker}.",
       healthBarSet: "Helsebjælke sat til {bar}.",
       boolSet: "{key} sat til {value}.",
       expectedBoolean: "Forventede true eller false.",
-      invalidHealthBar:
-        "Helsebjælken skal være bar1_value, bar2_value eller bar3_value.",
+      invalidHealthBar: "Helsebjælken skal være bar1_value, bar2_value eller bar3_value.",
       markersDisabled: "Markører er deaktiverede.",
       noMarkerConfigured: "Ingen markør er konfigureret for denne tilstand.",
       markerApplied: "Markør anvendt: {marker}",
       markerPresent: "Markør allerede til stede: {marker}",
       langSet: "Sprog sat til {locale}.",
       invalidLocale: "Ugyldig locale. Understøttede locales: {locales}.",
-      otherDurationRequiresRounds:
-        "Anden varighed kræver et numerisk rundeantal, for eksempel --duration 5 rounds.",
-      invalidDuration:
-        "Varighed skal være Indtil fjernet, en turslut-indstilling eller et positivt rundeantal.",
+      otherDurationRequiresRounds: "Anden varighed kræver et numerisk rundeantal, for eksempel --duration 5 rounds.",
+      invalidDuration: "Varighed skal være Indtil fjernet, en turslut-indstilling eller et positivt rundeantal.",
       zeroHpNoConditions: "{name} har nået 0 HP og har ingen aktive tilstande.",
-      zeroHpConditions:
-        "{name} har nået 0 HP. Vælg tilstande, der skal fjernes:",
+      zeroHpConditions: "{name} har nået 0 HP. Vælg tilstande, der skal fjernes:",
       removeAllBtn: "Fjern alle tilstande for {name}",
       markIncapacitated: "Markér som ukampdygtig",
       removeFromTurnOrder: "Fjern fra turrækkefølge",
       alreadyIncapacitated: "{name} er allerede ukampdygtig.",
       tokenRemovedFromTurn: "{name} er fjernet fra turrækkefølgen.",
       tokenNotInTurn: "{name} blev ikke fundet i turrækkefølgen.",
-      moveTokenPrompt:
-        "Flyt {name} til kortlaget, så det forbliver synligt men ikke forstyrrer andre tokens?",
+      moveTokenPrompt: "Flyt {name} til kortlaget, så det forbliver synligt men ikke forstyrrer andre tokens?",
       moveTokenBtn: "Flyt {name} til kortlaget",
       tokenMoved: "{name} er blevet flyttet til kortlaget.",
       tokenNotFound: "Token ikke fundet.",
       noActiveConditions: "{name} har ingen aktive tilstande at fjerne.",
-      deadNoConditions:
-        "{name} blev markeret som død. Ingen tilstande var aktive.",
+      deadNoConditions: "{name} blev markeret som død. Ingen tilstande var aktive.",
       scriptReady: "{name} er aktiv, og du bruger version {version}.",
       reachedZeroHp: "{name} nåede 0 HP",
       manuallyRemoved: "manuelt fjernet",
       durationExpired: "varighed udløbet",
       markedAsDead: "{name} blev markeret som død",
-      conditionReorder:
-        "Turrækkefølgen ændrede sig, og {count} sporet tilstandsrække(r) kan nu være fejlplaceret. Klik nedenfor for at gendanne dem efter deres tildelte tokens.",
-      conditionsReordered:
-        "Tilstandsrækker er omplaceret efter deres tildelte tokens.",
-      noTokensSelectedReport:
-        "Select at least one token on the board before using --report-token.",
-      noConditionsAppliedTo: "{name} has no active conditions applied to it.",
-      noConditionsAppliedBy:
-        "{name} has no active conditions applied to others.",
-      noSavedEffects: "No saved effects stored for {name}.",
-      noTokenSelectedSaved: "Select a token on the board before using --saved.",
-      savedEffectAdded: "Saved effect added for {name}.",
-      savedEffectUpdated: "Saved effect updated.",
-      savedEffectRemoved: "Saved effect removed.",
-      savedEffectNotFound: "Saved effect not found.",
-      savedInvalidVisibility: "Invalid visibility. Use public, masked, or gm.",
+      conditionReorder: "Turrækkefølgen ændrede sig, og {count} sporet tilstandsrække(r) kan nu være fejlplaceret. Klik nedenfor for at gendanne dem efter deres tildelte tokens.",
+      conditionsReordered: "Tilstandsrækker er omplaceret efter deres tildelte tokens.",
+      noTokensSelectedReport: "Vælg mindst et token på tavlen, før du bruger --report-token.",
+      noConditionsAppliedTo: "{name} har ingen aktive betingelser anvendt på sig.",
+      noConditionsAppliedBy: "{name} har ingen aktive betingelser anvendt på andre.",
+      noSavedEffects: "Ingen gemte effekter gemt for {name}.",
+      noTokenSelectedSaved: "Vælg et token på brættet, før du bruger --gemt.",
+      savedEffectAdded: "Gemt effekt tilføjet for {name}.",
+      savedEffectUpdated: "Gemt effekt opdateret.",
+      savedEffectRemoved: "Gemt effekt fjernet.",
+      savedEffectNotFound: "Den gemte effekt blev ikke fundet.",
+      savedInvalidVisibility: "Ugyldig synlighed. Brug offentlig, maskeret eller gm.",
       savedConditionRequired: "Condition type is required. Use --condition <type>.",
-      savedPromotedPublic: "Effect added to Turn Tracker as public.",
-      savedPromotedMasked: "Effect added to Turn Tracker as masked — players see: {publicLabel}.",
-      savedPromotedGm: "Effect is GM-only — no Turn Tracker row will be created. The reminder system will surface it when this token reaches the top of the turn order.",
-      savedSnoozed: "Reminder snoozed: {scope}.",
-      savedSnoozeCleared: "Snooze cleared.",
-      hiddenEffectsReminder: "Hidden effects are active on {name}.",
-      visibilityPublicHint: "full label visible to all",
-      visibilityMaskedHint: "vague label shown to players",
-      visibilityGmHint: "GM whisper only, no Turn Tracker row",
+      savedPromotedPublic: "Effekt føjet til Turn Tracker som offentlig.",
+      savedPromotedMasked: "Effekt tilføjet til Turn Tracker som maskeret — spillere se: {publicLabel}.",
+      savedPromotedGm: "Effekten er kun for GM - ingen Turn Tracker-række vil blive oprettet. Påmindelsessystemet vil vise det, når dette token når toppen af ​​turrækkefølgen.",
+      savedSnoozed: "Påmindelsen udsat: {scope}.",
+      savedSnoozeCleared: "Snooze ryddet.",
+      hiddenEffectsReminder: "Skjulte effekter er aktive på {name}.",
+      visibilityPublicHint: "fuld etiket synlig for alle",
+      visibilityMaskedHint: "vag etiket vist til spillere",
+      visibilityGmHint: "Kun GM hvisker, ingen Turn Tracker række"
     },
     removal: {
       conditionField: "Tilstand",
@@ -358,54 +334,68 @@ const TRANSLATION = {
       markerRetained: "Beholdt ({marker})",
       rowRemoved: "Fjernet",
       rowMissing: "Allerede manglende",
-      manualReason: "Manuel fjernelse",
+      manualReason: "Manuel fjernelse"
     },
     saved: {
       visibility: {
-        public: "Public",
-        masked: "Masked",
-        gm: "GM Only",
+        public: "Offentlig",
+        masked: "Maskeret",
+        gm: "Kun GM"
       },
       snooze: {
-        thisTurn: "This Turn",
-        oneRound: "1 Round",
-        threeRounds: "3 Rounds",
-        thisCombat: "This Combat",
-        rounds: "{n} round(s)",
+        thisTurn: "Denne omgang",
+        oneRound: "1 runde",
+        threeRounds: "3 runder",
+        thisCombat: "Denne kamp",
+        rounds: "{n} runde(r)"
       },
       field: {
-        gmLabel: "GM Label",
-        publicLabel: "Public Label",
-        visibility: "Visibility",
-        source: "Source",
-        condition: "Condition",
+        gmLabel: "GM-mærke",
+        publicLabel: "Offentligt mærke",
+        visibility: "Sigtbarhed",
+        source: "Kilde",
+        condition: "Tilstand"
       },
       prompt: {
-        enterGmLabel: "Full effect description (GM only)",
-        enterPublicLabel: "Vague label shown to players",
+        enterGmLabel: "Fuld effektbeskrivelse (kun GM)",
+        enterPublicLabel: "Uklar etiket vist til spillere"
       },
-      snoozed: "snoozed",
+      snoozed: "slumret"
+    },
+    classify: {
+      title: "Aktørklassificering",
+      showTitle: "Klassificeringsdiagnostik",
+      showHeading: "Token-klassificeringsdetaljer",
+      resultHeading: "Tilsidesættelse Anvendt",
+      noSelection: "Vælg mindst ét token på brættet inden brug af --classify.",
+      invalidType: "Ugyldigt klassificeringstype: {type}. Brug pc, npc, ignored eller auto.",
+      set: "{name} → {type} (omfang: {scope})",
+      cleared: "{name} tilsidesættelse slettet (omfang: {scope}) — automatisk registrering gendannet.",
+      setTokenFallback: "{name} → {type} (token-tilsidesættelse — intet karakterark tilknyttet).",
+      clearedTokenFallback: "{name} token-tilsidesættelse slettet — automatisk registrering gendannet.",
+      fieldToken: "Token",
+      fieldType: "Klassificering",
+      fieldSource: "Kilde",
+      fieldReason: "Årsag"
     },
     cleanup: {
       orphaned: "Forladte tilstandsposter",
       stale: "Forældede tilstandsposter",
       orphanedRows: "Forladte tursporing-rækker",
-      unusedMarkers: "Ubrugte markører",
+      unusedMarkers: "Ubrugte markører"
     },
     apply: {
-      turnAppended:
-        "Mål var ikke i turrækkefølgen; tilstandsrække tilføjet til sidst.",
-      turnInserted: "Tilstandsrække indsat under måltoken.",
-    },
+      turnAppended: "Mål var ikke i turrækkefølgen; tilstandsrække tilføjet til sidst.",
+      turnInserted: "Tilstandsrække indsat under måltoken."
+    }
   },
   handout: {
     versionLabel: "Version",
     subtitle: "D&D 5e-statuseffektstyring",
-    footerNote:
-      "Dette handout oprettes og opdateres automatisk, hver gang scriptet indlæses.",
+    footerNote: "Dette handout oprettes og opdateres automatisk, hver gang scriptet indlæses.",
     overview: {
       heading: "Oversigt",
-      body: "Condition Tracker styrer D&D 5e-statustilstande og brugerdefinerede effekter som mærkede rækker i Roll20's tursporing. Anvend tilstande på tokens, spor varigheder efter initiativrækkefølge, og fjern automatisk udløbne effekter, når en tur slutter. Alle kommandoer er kun tilgængelige for GM'en og kan udløses fra chatten eller via de installerede makroer.",
+      body: "Condition Tracker styrer D&D 5e-statustilstande og brugerdefinerede effekter som mærkede rækker i Roll20's tursporing. Anvend tilstande på tokens, spor varigheder efter initiativrækkefølge, og fjern automatisk udløbne effekter, når en tur slutter. Alle kommandoer er kun tilgængelige for GM'en og kan udløses fra chatten eller via de installerede makroer."
     },
     quickStart: {
       heading: "Hurtig start",
@@ -414,81 +404,108 @@ const TRANSLATION = {
       rows: [
         [
           "!condition-tracker --prompt",
-          "Trin-for-trin-guide — vælg tilstand, tokens og varighed interaktivt. Også tilgængelig som makroen ConditionTrackerWizard.",
+          "Trin-for-trin-guide — vælg tilstand, tokens og varighed interaktivt. Også tilgængelig som makroen ConditionTrackerWizard."
         ],
         [
           "!condition-tracker --multi-target",
-          "Anvend én tilstand på flere tokens samtidig. Også tilgængelig som makroen ConditionTrackerMultiTarget.",
+          "Anvend én tilstand på flere tokens samtidig. Også tilgængelig som makroen ConditionTrackerMultiTarget."
         ],
         [
-          "!condition-tracker --report-token",
-          "Select one or more tokens first, then run this command to get a GM whisper listing every condition applied to and by each selected token. Also available as the ConditionTrackerReportToken macro.",
+          "!condition-tracker --rapport-token",
+          "Vælg først et eller flere tokens, og kør derefter denne kommando for at få en GM-hvisker med en liste over alle betingelser, der er anvendt på og af hvert valgt token. Også tilgængelig som ConditionTrackerReportToken-makroen."
         ],
         [
           "!condition-tracker --menu",
-          "Åbn hovedmenuen med knapper til at anvende, gennemse eller fjerne tilstande.",
-        ],
-      ],
+          "Åbn hovedmenuen med knapper til at anvende, gennemse eller fjerne tilstande."
+        ]
+      ]
     },
     commandsRef: {
       heading: "Kommandoreference",
       colFlag: "Flag",
       colDesc: "Beskrivelse",
       rows: [
-        ["--prompt", "Interaktiv trin-for-trin-guide"],
-        ["--multi-target", "Anvend en tilstand på flere måltoken på én gang"],
-        ["--menu", "Vis hovedmenu (tilføj remove for fjernelsesmenu)"],
         [
-          "--source X --target Y --condition Z",
-          "Anvend en tilstand direkte uden guiden",
+          "--hurtig",
+          "Interaktiv trin-for-trin-guide"
+        ],
+        [
+          "--multimål",
+          "Anvend en tilstand på flere måltoken på én gang"
+        ],
+        [
+          "--menu",
+          "Vis hovedmenu (tilføj remove for fjernelsesmenu)"
+        ],
+        [
+          "--kilde X --mål Y --betingelse Z",
+          "Anvend en tilstand direkte uden guiden"
         ],
         [
           "--duration &lt;værdi&gt;",
-          "Varighed for direkte anvendelse (f.eks. 2 rounds)",
+          "Varighed for direkte anvendelse (f.eks. 2 rounds)"
         ],
         [
           "--other &lt;tekst&gt;",
-          "Brugerdefineret tekst til Besværgelse / Evne / Anden effekttype",
+          "Brugerdefineret tekst til Besværgelse / Evne / Anden effekttype"
         ],
         [
           "--remove &lt;tilstands-id&gt;",
-          "Fjern en bestemt tilstand via dens unikke id",
+          "Fjern en bestemt tilstand via dens unikke id"
         ],
         [
           "--config &lt;indstilling&gt; &lt;værdi&gt;",
-          "Juster konfigurationsindstillinger (se afsnittet Konfiguration nedenfor)",
+          "Juster konfigurationsindstillinger (se afsnittet Konfiguration nedenfor)"
         ],
         [
           "--prompt --subjectPromptBypass true|false",
-          "Tilsidesæt subjectPromptBypass kun for denne kommando (understøtter også --subject-prompt-bypass)",
+          "Tilsidesæt subjectPromptBypass kun for denne kommando (understøtter også --subject-prompt-bypass)"
         ],
         [
-          "--cleanup",
-          "Afstem tilstand — fjern forladte tilstande og tursporing-rækker",
+          "-- oprydning",
+          "Afstem tilstand — fjern forladte tilstande og tursporing-rækker"
         ],
         [
-          "--reorder-conditions",
-          "Flyt betingelsesrækker manuelt bag de tilknyttede tokens i turordenen",
-        ],
-        ["--reinstall-macro", "Genopret eller opdater GM-makroerne"],
-        [
-          "--reinstall-handout",
-          "Genopret eller opdater det lokaliserede hjælpe-handout",
+          "--genbestillingsbetingelser",
+          "Flyt betingelsesrækker manuelt bag de tilknyttede tokens i turordenen"
         ],
         [
-          "--report-token",
-          "Whisper a GM-only condition report for each selected token (conditions applied to and by it)",
+          "--geninstaller-makro",
+          "Genopret eller opdater GM-makroerne"
+        ],
+        [
+          "--geninstaller-handout",
+          "Genopret eller opdater det lokaliserede hjælpe-handout"
+        ],
+        [
+          "--rapport-token",
+          "Hvisk en GM-kun tilstandsrapport for hvert valgt token (betingelser anvendt på og af det)"
         ],
         [
           "--lang &lt;locale&gt;",
-          "Udsend denne kommandos meddelelser på en yderligere locale (tosproget tilstand)",
+          "Udsend denne kommandos meddelelser på en yderligere locale (tosproget tilstand)"
         ],
-        ["--help", "Vis et kort hjælpekort i chatten"],
-      ],
+        [
+          "--classify pc|npc|ignored",
+          "Tilsidesæt aktørtypen for valgte tokens — vælg token(s) først. Standardomfang er karakter (skriver ct_mod_actor_type-attribut); tilføj --scope token for at gemme i scriptstatus"
+        ],
+        [
+          "--classify auto",
+          "Fjern aktørtype-tilsidesættelsen og gendan automatisk registrering for valgte tokens"
+        ],
+        [
+          "--classify show",
+          "Hvisker en klassificeringsdiagnostik for hvert valgt token — viser den registrerede type, registreringskilde og årsag"
+        ],
+        [
+          "--help",
+          "Vis et kort hjælpekort i chatten"
+        ]
+      ]
     },
     standardConditions: {
       heading: "Standardtilstande (D&amp;D 5e)",
-      colCondition: "Tilstand",
+      colCondition: "Tilstand"
     },
     customEffects: {
       heading: "Brugerdefinerede effekttyper",
@@ -497,85 +514,211 @@ const TRANSLATION = {
       rows: [
         [
           "🔮 Besværgelse",
-          "Spor en navngiven besværgelseseffekt — du vil blive bedt om besværgelsens navn",
+          "Spor en navngiven besværgelseseffekt — du vil blive bedt om besværgelsens navn"
         ],
         [
           "🎯 Evne",
-          "Spor en navngiven klasse- eller raceevne — du vil blive bedt om evnens navn",
+          "Spor en navngiven klasse- eller raceevne — du vil blive bedt om evnens navn"
         ],
         [
           "🍀 Fordel",
-          "Registrer fordel givet fra ét token til et andet; grupperet med kilden i initiativet",
+          "Registrer fordel givet fra ét token til et andet; grupperet med kilden i initiativet"
         ],
         [
           "⬇️ Ulempe",
-          "Registrer pålagt ulempe; grupperet med kilden i initiativet",
+          "Registrer pålagt ulempe; grupperet med kilden i initiativet"
         ],
         [
           "📝 Andet",
-          "Friform brugerdefineret etiket — du vil blive bedt om en beskrivelse",
-        ],
-      ],
+          "Friform brugerdefineret etiket — du vil blive bedt om en beskrivelse"
+        ]
+      ]
     },
     durationOptions: {
       heading: "Varighedsindstillinger",
-      intro:
-        "Det resterende antal vises i pr-kolonnen i tursporing og nedsættes, når ankertokenets tur slutter.",
+      intro: "Det resterende antal vises i pr-kolonnen i tursporing og nedsættes, når ankertokenets tur slutter.",
       colOption: "Indstilling",
       colBehaviour: "Adfærd",
       rows: [
         [
           "Indtil fjernet",
-          "Permanent — skal fjernes manuelt via menuen eller --remove",
+          "Permanent — skal fjernes manuelt via menuen eller --remove"
         ],
         [
           "Slutningen af målets næste tur",
-          "Udløber, når måltoken's næste tur slutter i initiativet",
+          "Udløber, når måltoken's næste tur slutter i initiativet"
         ],
         [
           "Slutningen af kildens næste tur",
-          "Udløber, når kildetoken's næste tur slutter i initiativet",
+          "Udløber, når kildetoken's næste tur slutter i initiativet"
         ],
         [
           "1 / 2 / 3 / 10 runder",
-          "Fast nedtælling; ét trin per ankertokens turslut",
-        ],
-      ],
+          "Fast nedtælling; ét trin per ankertokens turslut"
+        ]
+      ]
     },
     savedEffects: {
-      heading: "Saved Effects",
-      intro:
-        "Saved effects let you store long-term conditions outside the Turn Tracker — curses, diseases, poisons, hidden debuffs, and other non-combat conditions. They persist in script state and can be optionally copied into the Turn Tracker when combat begins.",
+      heading: "Gemte effekter",
+      intro: "Gemte effekter giver dig mulighed for at gemme langsigtede tilstande uden for Turn Tracker - forbandelser, sygdomme, giftstoffer, skjulte debuffs og andre ikke-kamptilstande. De fortsætter i script-tilstand og kan eventuelt kopieres til Turn Tracker, når kampen begynder.",
       visibility: {
-        heading: "Visibility Modes",
+        heading: "Synlighedstilstande",
         rows: [
-          ["public", "Full effect label is visible in the Turn Tracker and public chat."],
-          ["masked", "A vague public label is shown to players; full details are GM-only."],
-          ["gm", "No Turn Tracker row. Full details are stored in state and whispered to the GM when the affected token reaches the top of initiative."],
-        ],
+          [
+            "offentlig",
+            "Etiketten med fuld effekt er synlig i Turn Tracker og offentlig chat."
+          ],
+          [
+            "maskeret",
+            "En vag offentlig etiket vises til spillere; alle detaljer er kun for GM."
+          ],
+          [
+            "gm",
+            "Ingen Turn Tracker række. Alle detaljer gemmes i tilstanden og hviskes til GM, når det berørte token når toppen af ​​initiativet."
+          ]
+        ]
       },
       commands: {
-        heading: "Saved Effects Commands",
-        intro: "All --saved commands are GM-only. Select a token before running --saved or --saved add.",
+        heading: "Gemte effektkommandoer",
+        intro: "Alle --gemte kommandoer er kun GM. Vælg et token før du kører --gemt eller --gemt tilføjelse.",
         rows: [
-          ["!condition-tracker --saved", "View saved effects for the selected token."],
-          ["!condition-tracker --saved add", "Launch the add-saved-effect wizard."],
-          ["!condition-tracker --saved edit <id>", "Edit labels or visibility for an existing saved effect."],
-          ["!condition-tracker --saved remove <id>", "Permanently remove a saved effect."],
-          ["!condition-tracker --saved promote <id> --visibility public|masked|gm", "Copy a saved effect into the Turn Tracker (public or masked) or confirm it is GM-only tracked."],
-          ["!condition-tracker --saved snooze <id> --scope turn|rounds|combat --rounds <n>", "Snooze a GM reminder for this turn, N rounds, or this combat."],
-          ["!condition-tracker --saved snooze-clear <id>", "Clear an active snooze so reminders resume immediately."],
-        ],
+          [
+            "!condition-tracker --gemt",
+            "Se gemte effekter for det valgte token."
+          ],
+          [
+            "!condition-tracker --gemte tilføjelse",
+            "Start guiden Tilføj-gemt-effekt."
+          ],
+          [
+            "!condition-tracker --saved edit <id>",
+            "Rediger etiketter eller synlighed for en eksisterende gemt effekt."
+          ],
+          [
+            "!condition-tracker --saved remove <id>",
+            "Fjern en gemt effekt permanent."
+          ],
+          [
+            "!condition-tracker --saved promote <id> --visibility public|masked|gm",
+            "Kopier en gemt effekt til Turn Tracker (offentlig eller maskeret), eller bekræft, at den kun er GM-sporet."
+          ],
+          [
+            "!condition-tracker --saved snooze <id> --scope turn|rounds|combat --rounds <n>",
+            "Udsæt en GM-påmindelse for denne tur, N runder eller denne kamp."
+          ],
+          [
+            "!condition-tracker --saved snooze-clear <id>",
+            "Ryd en aktiv snooze, så påmindelser genoptages med det samme."
+          ]
+        ]
       },
       reminders: {
-        heading: "GM Reminders",
-        body: "When a token with gm or masked saved effects reaches the top of the Turn Tracker, the GM receives a whisper listing the hidden effects with action buttons. Duplicate reminders within the same turn are suppressed. Use the Snooze buttons to suppress reminders for a turn, a number of rounds, or for the remainder of the current combat.",
+        heading: "GM påmindelser",
+        body: "Når en token med gm eller maskerede gemte effekter når toppen af ​​Turn Tracker, modtager GM en hvisken, der viser de skjulte effekter med handlingsknapper. Duplikerede påmindelser inden for samme tur undertrykkes. Brug Snooze-knapperne til at undertrykke påmindelser for en tur, et antal runder eller for resten af ​​den aktuelle kamp."
+      }
+    },
+    actorClassification: {
+      heading: "Aktørklassificering",
+      intro: "Condition Tracker afgør automatisk, om hvert token er en SK, NPC eller et ignoreret objekt (kortpinde, scenografi, trylleformelskabeloner). Ikke-tilknyttede tokens ignoreres som standard. Brug --classify til at tilsidesætte automatisk registrering for ethvert token.",
+      detectionOrder: {
+        heading: "Registreringsrækkefølge",
+        colStep: "Trin",
+        colCheck: "Kontrol",
+        colResult: "Resultat",
+        rows: [
+          [
+            "1",
+            "Token-tilstandstilsidesættelse (--classify --scope token)",
+            "pc / npc / ignoreret"
+          ],
+          [
+            "2",
+            "Karakter ct_mod_actor_type-attribut (--classify --scope character)",
+            "pc / npc / ignoreret"
+          ],
+          [
+            "3",
+            "Ikke-tilknyttet token — intet karakterark",
+            "ignoreret"
+          ],
+          [
+            "4",
+            "Spilsystemsadapter (npc / is_npc attribut)",
+            "pc / npc"
+          ],
+          [
+            "5",
+            "Generisk NPC-attributscanning (npc, is_npc, npcflag, sheet_type, character_type)",
+            "pc / npc"
+          ],
+          [
+            "6",
+            "Karakter controlledby-reserve",
+            "pc / npc"
+          ]
+        ]
       },
+      types: {
+        heading: "Klassificeringstyper",
+        colType: "Type",
+        colMeaning: "Betydning",
+        rows: [
+          [
+            "pc",
+            "Spillerkarakter — altid inkluderet som SK i guiden og registreringen"
+          ],
+          [
+            "npc",
+            "Ikke-spillerkarakter — altid inkluderet som NPC"
+          ],
+          [
+            "ignoreret",
+            "Vises eller spores aldrig — udelukket fra guidens tokenvælger"
+          ],
+          [
+            "ukendt",
+            "Kun automatisk registrering; type kunne ikke bestemmes (behandles som NPC i guiden)"
+          ]
+        ]
+      },
+      commands: {
+        heading: "Klassificeringskommandoer",
+        intro: "Vælg et eller flere tokens, inden du kører --classify-kommandoer.",
+        rows: [
+          [
+            "!condition-tracker --klassificere pc",
+            "Markere valgte tokens som SK'er (standardomfang: karakter)."
+          ],
+          [
+            "!condition-tracker --klassificer npc",
+            "Markere valgte tokens som NPC'er."
+          ],
+          [
+            "!condition-tracker --classify ignoreret",
+            "Udelukkelse af valgte tokens fra al sporing."
+          ],
+          [
+            "!condition-tracker --klassificere auto",
+            "Fjern tilsidesættelse — gendan automatisk registrering."
+          ],
+          [
+            "!condition-tracker --klassificere show",
+            "Vis klassificeringsdiagnostik (type, kilde, årsag) for hvert valgt token."
+          ],
+          [
+            "!condition-tracker --klassificer pc --scope token",
+            "Token-tilsidesættelse gemt i scriptstatus — nyttigt for ikke-tilknyttede tokens."
+          ],
+          [
+            "!condition-tracker --klassificer pc --scope karakter",
+            "Karakter-tilsidesættelse skrevet til ct_mod_actor_type-attribut — gælder for alle tokens med samme karakterark."
+          ]
+        ]
+      }
     },
     configuration: {
       heading: "Konfiguration",
-      intro:
-        "Brug !condition-tracker --config &lt;indstilling&gt; &lt;værdi&gt; eller knappen Konfiguration i hovedmenuen.",
+      intro: "Brug !condition-tracker --config &lt;indstilling&gt; &lt;værdi&gt; eller knappen Konfiguration i hovedmenuen.",
       colOption: "Indstilling",
       colValues: "Værdier",
       colDesc: "Beskrivelse",
@@ -583,54 +726,53 @@ const TRANSLATION = {
         [
           "useMarkers",
           "true / false",
-          "Anvend Roll20-statusmarkører på tokens, når en tilstand tilføjes",
+          "Anvend Roll20-statusmarkører på tokens, når en tilstand tilføjes"
         ],
         [
           "useIcons",
-          "true / false",
-          "Vis korte ikonkoder (f.eks. [G]) i stedet for emoji i tursporing-rækker",
+          "sandt / falsk",
+          "Vis korte ikonkoder (f.eks. [G]) i stedet for emoji i tursporing-rækker"
         ],
         [
           "subjectPromptBypass",
-          "true / false",
-          "Spring det valgfrie subjekttrin over for Besværgelse / Evne / Andre effekter",
+          "sandt / falsk",
+          "Spring det valgfrie subjekttrin over for Besværgelse / Evne / Andre effekter"
         ],
         [
           "suppressPublicChat",
-          "true / false",
-          "Undertryk alle offentlige chatbeskeder (anvend og fjern beskeder). GM-hvisker påvirkes ikke.",
+          "sandt / falsk",
+          "Undertryk alle offentlige chatbeskeder (anvend og fjern beskeder). GM-hvisker påvirkes ikke."
         ],
         [
           "healthBar",
           "bar1_value / bar2_value / bar3_value",
-          "Tokenbjælke der overvåges; når den når 0, bliver GM bedt om at rydde op i tilstande",
+          "Tokenbjælke der overvåges; når den når 0, bliver GM bedt om at rydde op i tilstande"
         ],
         [
           "language",
           "en-US / fr / de / es / pt-BR / ko",
-          "Outputsprog for chatbeskeder og hjælpe-handouttet",
+          "Outputsprog for chatbeskeder og hjælpe-handouttet"
         ],
         [
           "marker",
           "&lt;Tilstand&gt;=&lt;markørnavn&gt;",
-          "Tilsidesæt statusmarkøren for en bestemt tilstand (f.eks. marker Grappled=grab)",
-        ],
-      ],
+          "Tilsidesæt statusmarkøren for en bestemt tilstand (f.eks. marker Grappled=grab)"
+        ]
+      ]
     },
     defaultMarkers: {
       heading: "Standardstatusmarkører",
       colCondition: "Tilstand",
-      colMarker: "Markørnavn",
+      colMarker: "Markørnavn"
     },
     availableLocales: {
       heading: "Tilgængelige oversættelser",
-      intro:
-        "Brug sprogkonfigurationsindstillingen til at indstille chatbeskeder og hjælpe-handouttet til en understøttet locale. Korte aliaser accepteres også for en, zh og pt.",
-      colLocale: "Locale",
+      intro: "Brug sprogkonfigurationsindstillingen til at indstille chatbeskeder og hjælpe-handouttet til en understøttet locale. Korte aliaser accepteres også for en, zh og pt.",
+      colLocale: "Lokalitet",
       colLanguage: "Sprog",
-      colFile: "Oversættelsesfil",
-    },
-  },
+      colFile: "Oversættelsesfil"
+    }
+  }
 };
 
 export default TRANSLATION;

@@ -2,75 +2,75 @@ const TRANSLATION = {
   conditions: {
     Grappled: {
       past: "pochwycony",
-      verb: "chwyta",
+      verb: "chwyta"
     },
     Restrained: {
       past: "unieruchomiony",
-      verb: "unieruchamia",
+      verb: "unieruchamia"
     },
     Prone: {
       past: "powalony",
-      verb: "powala",
+      verb: "powala"
     },
     Poisoned: {
       past: "zatruty",
-      verb: "zatruwa",
+      verb: "zatruwa"
     },
     Stunned: {
       past: "ogłuszony",
-      verb: "ogłusza",
+      verb: "ogłusza"
     },
     Blinded: {
       past: "oślepiony",
-      verb: "oślepia",
+      verb: "oślepia"
     },
     Charmed: {
       past: "zauroczony",
-      verb: "zaurocza",
+      verb: "zaurocza"
     },
     Frightened: {
       past: "przestraszony",
-      verb: "przeraża",
+      verb: "przeraża"
     },
     Incapacitated: {
       past: "ubezwłasnowolniony",
-      verb: "ubezwłasnowalnia",
+      verb: "ubezwłasnowalnia"
     },
     Invisible: {
       past: "niewidzialny",
       verb: "czyni",
-      suffix: "niewidzialnym",
+      suffix: "niewidzialnym"
     },
     Paralyzed: {
       past: "sparaliżowany",
-      verb: "paraliżuje",
+      verb: "paraliżuje"
     },
     Petrified: {
       past: "skamieniały",
-      verb: "zamienia w kamień",
+      verb: "zamienia w kamień"
     },
     Unconscious: {
       past: "nieprzytomny",
-      verb: "pozbawia przytomności",
+      verb: "pozbawia przytomności"
     },
     Spell: {
       past: "pod wpływem zaklęcia",
-      verb: "rzuca zaklęcie na",
+      verb: "rzuca zaklęcie na"
     },
     Ability: {
       past: "pod wpływem zdolności",
-      verb: "używa zdolności na",
+      verb: "używa zdolności na"
     },
     Advantage: {
       past: "ma ułatwienie",
       verb: "daje ułatwienie",
-      noBy: true,
+      noBy: true
     },
     Disadvantage: {
       past: "ma utrudnienie",
       verb: "daje utrudnienie",
-      noBy: true,
-    },
+      noBy: true
+    }
   },
   condNames: {
     Grappled: "Pochwycony",
@@ -90,35 +90,33 @@ const TRANSLATION = {
     Ability: "Zdolność",
     Advantage: "Ułatwienie",
     Disadvantage: "Utrudnienie",
-    Other: "Inne",
+    Other: "Inne"
   },
   templates: {
     display: {
       custom: "{emoji} {target} pod wpływem {effect} ({source})",
       advantage: "{emoji} {source} ma ułatwienie przeciwko {target}{subject}",
-      disadvantage:
-        "{emoji} {source} ma utrudnienie przeciwko {target}{subject}",
-      noBy: "{emoji} {target} {past} ({source})",
+      disadvantage: "{emoji} {source} ma utrudnienie przeciwko {target}{subject}",
+      noBy: "MIEJSCE0TOKEN MIEJSCE1TOKEN MIEJSCE2TOKEN ({source})",
       self: "{target} jest {past}",
-      standard: "{emoji} {target} {past} przez {source}",
+      standard: "{emoji} {target} {past} przez {source}"
     },
     apply: {
       custom: "{source} nakłada {effect} na {target}.",
       advantage: "{source} ma ułatwienie przeciwko {target}{subject}.",
       disadvantage: "{source} ma utrudnienie przeciwko {target}{subject}.",
       self: "{target} jest {past}.",
-      withSuffix: "{source} {verb} {target} {suffix}.",
-      standard: "{source} {verb} {target}.",
+      withSuffix: "MIEJSCE0TOKEN POSIADACZ MIEJSCA1TOKEN POSIADACZ MIEJSCA2TOKEN POSIADACZ MIEJSCA3TOKEN.",
+      standard: "MIEJSCE0TOKEN MIEJSCE1TOKEN MIEJSCE2TOKEN."
     },
     remove: {
       custom: "{target} nie jest już pod wpływem {effect}.",
       advantage: "{source} nie ma już ułatwienia przeciwko {target}{subject}.",
-      disadvantage:
-        "{source} nie ma już utrudnienia przeciwko {target}{subject}.",
+      disadvantage: "{source} nie ma już utrudnienia przeciwko {target}{subject}.",
       noBy: "{target} nie jest już {past}.",
       self: "{target} nie jest już {past}.",
-      standard: "{target} nie jest już {past} przez {source}.",
-    },
+      standard: "{target} nie jest już {past} przez {source}."
+    }
   },
   ui: {
     wizard: {
@@ -136,11 +134,10 @@ const TRANSLATION = {
       noneBtn: "Żaden",
       noneOrSourceBtn: "Żaden lub zastosuj do źródła",
       subjectDesc: "Wybierz, kto lub co wywołuje efekt.",
-      sourceDesc:
-        "Wybierz stworzenie, które tworzy lub generuje stan albo efekt.",
+      sourceDesc: "Wybierz stworzenie, które tworzy lub generuje stan albo efekt.",
       targetDesc: "Wybierz stworzenie, które otrzyma stan lub efekt.",
       otherText: "Własny tekst stanu",
-      effectDetails: "Szczegóły {condition}",
+      effectDetails: "Szczegóły {condition}"
     },
     col: {
       players: "Gracze",
@@ -161,8 +158,8 @@ const TRANSLATION = {
       details: "Szczegóły",
       description: "Opis",
       scenario: "Scenariusz",
-      gameSystem: "Game System",
-      duration: "Duration",
+      gameSystem: "System gry",
+      duration: "Czas trwania"
     },
     dur: {
       untilRemoved: "Do usunięcia",
@@ -175,7 +172,7 @@ const TRANSLATION = {
       custom: "Własny",
       customPrompt: "Liczba rund",
       untilRemovedDisplay: "Do usunięcia",
-      turnsRemaining: "Pozostało {n} koniec (końców) tury",
+      turnsRemaining: "Pozostało {n} koniec (końców) tury"
     },
     btn: {
       openWizard: "Otwórz kreator",
@@ -187,14 +184,14 @@ const TRANSLATION = {
       reinstallHandout: "Zainstaluj ponownie handout",
       showHelp: "Pokaż pomoc",
       reorderConditions: "Zmień kolejność wierszy stanów",
-      reportToken: "Report Token Conditions",
-      savedEffects: "Saved Effects",
-      addSavedEffect: "Add Saved Effect",
-      editSaved: "Edit",
-      removeSaved: "Remove",
-      promoteSaved: "Add to Turn Tracker",
-      snoozeSaved: "Snooze",
-      clearSnooze: "Clear Snooze",
+      reportToken: "Zgłoś warunki tokena",
+      savedEffects: "Zapisane efekty",
+      addSavedEffect: "Dodaj zapisany efekt",
+      editSaved: "Redagować",
+      removeSaved: "Usunąć",
+      promoteSaved: "Dodaj do śledzenia skrętów",
+      snoozeSaved: "Drzemka",
+      clearSnooze: "Wyczyść opcję Drzemka"
     },
     title: {
       menu: "Menu",
@@ -205,7 +202,7 @@ const TRANSLATION = {
       applied: "Zastosowano",
       removed: "Stan usunięty",
       cleanup: "Czyszczenie zakończone",
-      macroReinstalled: "The {wizard}, {multiTarget}, {reportToken}, and {saved} macros have been reinstalled for all current GM players.",
+      macroReinstalled: "Makro zainstalowane ponownie",
       handoutReinstalled: "Handout zainstalowany ponownie",
       warning: "Ostrzeżenie",
       error: "Błąd",
@@ -217,15 +214,15 @@ const TRANSLATION = {
       moveToken: "{name} — Przenieść żeton?",
       scriptReady: "Skrypt gotowy",
       conditionReorder: "Kolejność tur zmieniona",
-      tokenReport: "Token Condition Report",
-      savedEffects: "Saved Effects",
-      savedAdd: "Add Saved Effect",
-      savedEdit: "Edit Saved Effect",
-      savedRemoved: "Saved Effect Removed",
-      savedPromoted: "Add to Turn Tracker",
-      savedSnoozed: "Reminder Snoozed",
-      savedSnoozeCleared: "Snooze Cleared",
-      hiddenEffects: "Hidden Effects — {name}",
+      tokenReport: "Raport o stanie tokena",
+      savedEffects: "Zapisane efekty",
+      savedAdd: "Dodaj zapisany efekt",
+      savedEdit: "Edytuj zapisany efekt",
+      savedRemoved: "Zapisany efekt został usunięty",
+      savedPromoted: "Dodaj do śledzenia skrętów",
+      savedSnoozed: "Przypomnienie zostało odłożone",
+      savedSnoozeCleared: "Drzemka wyczyszczona",
+      hiddenEffects: "Ukryte efekty — {name}"
     },
     heading: {
       quickActions: "Szybkie akcje",
@@ -237,70 +234,51 @@ const TRANSLATION = {
       promptUi: "Interfejs kreatora",
       examples: "Przykłady",
       summary: "Podsumowanie",
-      appliedTo: "Conditions Applied To",
-      appliedBy: "Conditions Applied By",
-      savedEffectsFor: "Saved Effects for {name}",
-      visibility: "Visibility",
-      snoozeOptions: "Snooze Reminder",
-      promoteOptions: "Promote to Turn Tracker",
-      editActions: "Edit Actions",
+      appliedTo: "Obowiązujące warunki",
+      appliedBy: "Warunki stosowane przez",
+      savedEffectsFor: "Zapisane efekty dla {name}",
+      visibility: "Widoczność",
+      snoozeOptions: "Przypomnienie o drzemce",
+      promoteOptions: "Promuj narzędzie do śledzenia skrętów",
+      editActions: "Edytuj akcje"
     },
     msg: {
       noActive: "Nie są śledzone żadne aktywne stany.",
       configReset: "Konfiguracja zresetowana do domyślnych wartości modułu.",
-      unknownConfig:
-        "Nieznana opcja konfiguracji. Użyj --config, aby wyświetlić obsługiwane ustawienia.",
-      macroReinstalled:
-        "Makra {wizard}, {multiTarget} i {reportToken} zostały ponownie zainstalowane dla wszystkich obecnych graczy z rolą MG.",
-      handoutReinstalled:
-        "Handout pomocy {handout} został ponownie zainstalowany.",
-      duplicate:
-        "Ta dokładna kombinacja źródła, podmiotu, celu, stanu i własnego tekstu jest już aktywna.",
+      unknownConfig: "Nieznana opcja konfiguracji. Użyj --config, aby wyświetlić obsługiwane ustawienia.",
+      macroReinstalled: "Makra {wizard}, {multiTarget}, {reportToken}, {saved} i {classify} zostały ponownie zainstalowane dla wszystkich obecnych graczy z rolą MG.",
+      handoutReinstalled: "Handout pomocy {handout} został ponownie zainstalowany.",
+      duplicate: "Ta dokładna kombinacja źródła, podmiotu, celu, stanu i własnego tekstu jest już aktywna.",
       noTargets: "Nie podano żetonów celu dla zastosowania wielu celów.",
-      noSelection:
-        "Wybierz przynajmniej jeden żeton na planszy przed użyciem --multi-target.",
-      invalidIds:
-        "Nie znaleziono prawidłowych identyfikatorów żetonów w bieżącym zaznaczeniu.",
-      reSelectTokens:
-        "Żaden z pierwotnie wybranych żetonów nie mógł zostać znaleziony. Wybierz żetony ponownie i spróbuj jeszcze raz.",
+      noSelection: "Wybierz przynajmniej jeden żeton na planszy przed użyciem --multi-target.",
+      invalidIds: "Nie znaleziono prawidłowych identyfikatorów żetonów w bieżącym zaznaczeniu.",
+      reSelectTokens: "Żaden z pierwotnie wybranych żetonów nie mógł zostać znaleziony. Wybierz żetony ponownie i spróbuj jeszcze raz.",
       conditionNotFound: "Nie znaleziono identyfikatora stanu.",
       gmOnly: "Polecenia Condition Trackera są dostępne tylko dla MG.",
-      commandFailed:
-        "Polecenia nie można było bezpiecznie wykonać. Sprawdź konsolę API.",
+      commandFailed: "Polecenia nie można było bezpiecznie wykonać. Sprawdź konsolę API.",
       sourceTokenNotFound: "Nie można było znaleźć żetonu źródła.",
       targetTokenNotFound: "Nie można było znaleźć żetonu celu.",
       subjectTokenNotFound: "Nie można było znaleźć żetonu podmiotu.",
-      invalidCondition:
-        "Stan musi być jednym ze wstępnie zdefiniowanych stanów lub Inne.",
-      subjectOnlyCustom:
-        "--subject jest prawidłowy tylko dla Zaklęcia, Zdolności, Ułatwienia, Utrudnienia i Innego.",
-      subjectBypassInvalid:
-        "--subjectPromptBypass oczekuje wartości true lub false, gdy wartość jest podana.",
-      customDetailsRequired:
-        "Szczegóły {condition} są wymagane. Użyj --other, aby je podać.",
-      markerConfigFormat:
-        "Format konfiguracji znacznika: --config marker Grappled=grab",
-      markerPredefinedRequired:
-        "Konfiguracja znacznika wymaga wstępnie zdefiniowanej nazwy stanu.",
-      markerNameRequired:
-        "Konfiguracja znacznika wymaga niepustej nazwy znacznika.",
+      invalidCondition: "Stan musi być jednym ze wstępnie zdefiniowanych stanów lub Inne.",
+      subjectOnlyCustom: "--subject jest prawidłowy tylko dla Zaklęcia, Zdolności, Ułatwienia, Utrudnienia i Innego.",
+      subjectBypassInvalid: "--subjectPromptBypass oczekuje wartości true lub false, gdy wartość jest podana.",
+      customDetailsRequired: "Szczegóły {condition} są wymagane. Użyj --other, aby je podać.",
+      markerConfigFormat: "Format konfiguracji znacznika: --config marker Grappled=grab",
+      markerPredefinedRequired: "Konfiguracja znacznika wymaga wstępnie zdefiniowanej nazwy stanu.",
+      markerNameRequired: "Konfiguracja znacznika wymaga niepustej nazwy znacznika.",
       markerSet: "Znacznik {condition} ustawiony na {marker}.",
       healthBarSet: "Pasek zdrowia ustawiony na {bar}.",
       boolSet: "{key} ustawione na {value}.",
       expectedBoolean: "Oczekiwano true lub false.",
-      invalidHealthBar:
-        "Pasek zdrowia musi być bar1_value, bar2_value lub bar3_value.",
+      invalidHealthBar: "Pasek zdrowia musi być bar1_value, bar2_value lub bar3_value.",
       markersDisabled: "Znaczniki są wyłączone.",
-      noMarkerConfigured:
-        "Dla tego stanu nie skonfigurowano żadnego znacznika.",
+      noMarkerConfigured: "Dla tego stanu nie skonfigurowano żadnego znacznika.",
       markerApplied: "Znacznik zastosowany: {marker}",
       markerPresent: "Znacznik już obecny: {marker}",
       langSet: "Język ustawiony na {locale}.",
       invalidLocale: "Nieprawidłowy język. Obsługiwane języki: {locales}.",
-      otherDurationRequiresRounds:
-        "Czas trwania Inne wymaga numerycznej liczby rund, na przykład --duration 5 rounds.",
-      invalidDuration:
-        "Czas trwania musi być Do usunięcia, opcją końca tury lub dodatnią liczbą rund.",
+      otherDurationRequiresRounds: "Czas trwania Inne wymaga numerycznej liczby rund, na przykład --duration 5 rounds.",
+      invalidDuration: "Czas trwania musi być Do usunięcia, opcją końca tury lub dodatnią liczbą rund.",
       zeroHpNoConditions: "{name} osiągnął 0 PŻ i nie ma aktywnych stanów.",
       zeroHpConditions: "{name} osiągnął 0 PŻ. Wybierz stany do usunięcia:",
       removeAllBtn: "Usuń wszystkie stany dla {name}",
@@ -309,45 +287,39 @@ const TRANSLATION = {
       alreadyIncapacitated: "{name} jest już ubezwłasnowolniony.",
       tokenRemovedFromTurn: "{name} został usunięty z kolejności tur.",
       tokenNotInTurn: "{name} nie został znaleziony w kolejności tur.",
-      moveTokenPrompt:
-        "Przenieść {name} na warstwę mapy, żeby pozostał widoczny, ale nie przeszkadzał innym żetonom?",
+      moveTokenPrompt: "Przenieść {name} na warstwę mapy, żeby pozostał widoczny, ale nie przeszkadzał innym żetonom?",
       moveTokenBtn: "Przenieś {name} na warstwę mapy",
       tokenMoved: "{name} został przeniesiony na warstwę mapy.",
       tokenNotFound: "Nie znaleziono żetonu.",
       noActiveConditions: "{name} nie ma aktywnych stanów do usunięcia.",
-      deadNoConditions:
-        "{name} został oznaczony jako martwy. Nie było aktywnych stanów.",
+      deadNoConditions: "{name} został oznaczony jako martwy. Nie było aktywnych stanów.",
       scriptReady: "{name} jest aktywny i używasz wersji {version}.",
       reachedZeroHp: "{name} osiągnął 0 PŻ",
       manuallyRemoved: "zostało ręcznie usunięte",
       durationExpired: "czas trwania wygasł",
       markedAsDead: "{name} został oznaczony jako martwy",
-      conditionReorder:
-        "Kolejność tur zmieniła się i {count} śledzony (śledzonych) wiersz stanów może być teraz poza kolejnością. Kliknij poniżej, aby przywrócić je po przypisanych żetonach.",
-      conditionsReordered:
-        "Wiersze stanów zostały przesunięte po ich przypisanych żetonach.",
-      noTokensSelectedReport:
-        "Select at least one token on the board before using --report-token.",
-      noConditionsAppliedTo: "{name} has no active conditions applied to it.",
-      noConditionsAppliedBy:
-        "{name} has no active conditions applied to others.",
-      noSavedEffects: "No saved effects stored for {name}.",
-      noTokenSelectedSaved: "Select a token on the board before using --saved.",
-      savedEffectAdded: "Saved effect added for {name}.",
-      savedEffectUpdated: "Saved effect updated.",
-      savedEffectRemoved: "Saved effect removed.",
-      savedEffectNotFound: "Saved effect not found.",
-      savedInvalidVisibility: "Invalid visibility. Use public, masked, or gm.",
+      conditionReorder: "Kolejność tur zmieniła się i {count} śledzony (śledzonych) wiersz stanów może być teraz poza kolejnością. Kliknij poniżej, aby przywrócić je po przypisanych żetonach.",
+      conditionsReordered: "Wiersze stanów zostały przesunięte po ich przypisanych żetonach.",
+      noTokensSelectedReport: "Wybierz co najmniej jeden token na planszy przed użyciem --report-token.",
+      noConditionsAppliedTo: "{name} nie ma zastosowanych żadnych aktywnych warunków.",
+      noConditionsAppliedBy: "{name} nie ma aktywnych warunków zastosowanych do innych.",
+      noSavedEffects: "Brak zapisanych efektów dla {name}.",
+      noTokenSelectedSaved: "Wybierz żeton na planszy przed użyciem --saved.",
+      savedEffectAdded: "Zapisany efekt dodano dla {name}.",
+      savedEffectUpdated: "Zapisany efekt został zaktualizowany.",
+      savedEffectRemoved: "Zapisany efekt został usunięty.",
+      savedEffectNotFound: "Nie znaleziono zapisanego efektu.",
+      savedInvalidVisibility: "Nieprawidłowa widoczność. Użyj publicznego, zamaskowanego lub gm.",
       savedConditionRequired: "Condition type is required. Use --condition <type>.",
-      savedPromotedPublic: "Effect added to Turn Tracker as public.",
-      savedPromotedMasked: "Effect added to Turn Tracker as masked — players see: {publicLabel}.",
-      savedPromotedGm: "Effect is GM-only — no Turn Tracker row will be created. The reminder system will surface it when this token reaches the top of the turn order.",
-      savedSnoozed: "Reminder snoozed: {scope}.",
-      savedSnoozeCleared: "Snooze cleared.",
-      hiddenEffectsReminder: "Hidden effects are active on {name}.",
-      visibilityPublicHint: "full label visible to all",
-      visibilityMaskedHint: "vague label shown to players",
-      visibilityGmHint: "GM whisper only, no Turn Tracker row",
+      savedPromotedPublic: "Efekt dodany do narzędzia Turn Tracker jako publiczny.",
+      savedPromotedMasked: "Efekt dodany do modułu śledzenia tur jako zamaskowany — gracze widzą: {publicLabel}.",
+      savedPromotedGm: "Efekt jest dostępny tylko dla GM – nie zostanie utworzony żaden wiersz śledzenia tur. System przypomnień wykryje go, gdy ten żeton osiągnie szczyt kolejności tury.",
+      savedSnoozed: "Przypomnienie odłożone: {scope}.",
+      savedSnoozeCleared: "Opcja drzemki została wyczyszczona.",
+      hiddenEffectsReminder: "Ukryte efekty są aktywne w {name}.",
+      visibilityPublicHint: "pełna etykieta widoczna dla wszystkich",
+      visibilityMaskedHint: "niejasna etykieta pokazywana graczom",
+      visibilityGmHint: "Tylko szept GM, bez wiersza śledzenia skrętów"
     },
     removal: {
       conditionField: "Stan",
@@ -359,54 +331,68 @@ const TRANSLATION = {
       markerRetained: "Zachowano ({marker})",
       rowRemoved: "Usunięto",
       rowMissing: "Już brakuje",
-      manualReason: "Ręczne usunięcie",
+      manualReason: "Ręczne usunięcie"
     },
     saved: {
       visibility: {
-        public: "Public",
-        masked: "Masked",
-        gm: "GM Only",
+        public: "Publiczny",
+        masked: "Zamaskowany",
+        gm: "Tylko GM'a"
       },
       snooze: {
-        thisTurn: "This Turn",
-        oneRound: "1 Round",
-        threeRounds: "3 Rounds",
-        thisCombat: "This Combat",
-        rounds: "{n} round(s)",
+        thisTurn: "Ta tura",
+        oneRound: "1 runda",
+        threeRounds: "3 rundy",
+        thisCombat: "Ta walka",
+        rounds: "{n} rundy"
       },
       field: {
-        gmLabel: "GM Label",
-        publicLabel: "Public Label",
-        visibility: "Visibility",
-        source: "Source",
-        condition: "Condition",
+        gmLabel: "Etykieta GM",
+        publicLabel: "Etykieta publiczna",
+        visibility: "Widoczność",
+        source: "Źródło",
+        condition: "Stan"
       },
       prompt: {
-        enterGmLabel: "Full effect description (GM only)",
-        enterPublicLabel: "Vague label shown to players",
+        enterGmLabel: "Pełny opis efektu (tylko GM)",
+        enterPublicLabel: "Niejasna etykieta pokazywana graczom"
       },
-      snoozed: "snoozed",
+      snoozed: "zdrzemnął się"
+    },
+    classify: {
+      title: "Klasyfikacja Aktorów",
+      showTitle: "Diagnostyka Klasyfikacji",
+      showHeading: "Szczegóły Klasyfikacji Tokena",
+      resultHeading: "Nadpisanie Zastosowane",
+      noSelection: "Wybierz co najmniej jeden token na planszy przed użyciem --classify.",
+      invalidType: "Nieprawidłowy typ klasyfikacji: {type}. Użyj pc, npc, ignored lub auto.",
+      set: "{name} → {type} (zakres: {scope})",
+      cleared: "{name} nadpisanie usunięte (zakres: {scope}) — automatyczne wykrywanie przywrócone.",
+      setTokenFallback: "{name} → {type} (nadpisanie tokena — brak powiązanej karty postaci).",
+      clearedTokenFallback: "{name} nadpisanie tokena usunięte — automatyczne wykrywanie przywrócone.",
+      fieldToken: "Znak",
+      fieldType: "Klasyfikacja",
+      fieldSource: "Źródło",
+      fieldReason: "Powód"
     },
     cleanup: {
       orphaned: "Osierocone wpisy stanów",
       stale: "Przestarzałe wpisy stanów",
       orphanedRows: "Osierocone wiersze śledzenia tur",
-      unusedMarkers: "Nieużywane znaczniki",
+      unusedMarkers: "Nieużywane znaczniki"
     },
     apply: {
-      turnAppended:
-        "Cel nie był w kolejności tur; wiersz stanu został dołączony na końcu.",
-      turnInserted: "Wiersz stanu wstawiony poniżej żetonu celu.",
-    },
+      turnAppended: "Cel nie był w kolejności tur; wiersz stanu został dołączony na końcu.",
+      turnInserted: "Wiersz stanu wstawiony poniżej żetonu celu."
+    }
   },
   handout: {
     versionLabel: "Wersja",
     subtitle: "Menedżer efektów statusu D&D 5e",
-    footerNote:
-      "Ten handout jest automatycznie tworzony i aktualizowany przy każdym załadowaniu skryptu.",
+    footerNote: "Ten handout jest automatycznie tworzony i aktualizowany przy każdym załadowaniu skryptu.",
     overview: {
       heading: "Przegląd",
-      body: "Condition Tracker zarządza stanami D&D 5e i własnymi efektami jako oznaczonymi wierszami w Śledzoniku Tur Roll20. Stosuj stany do żetonów, śledź czas trwania według kolejności inicjatywy i automatycznie usuwaj wygasłe efekty na końcu tury. Wszystkie polecenia są dostępne tylko dla MG i można je uruchamiać z czatu lub za pomocą zainstalowanych makr.",
+      body: "Condition Tracker zarządza stanami D&D 5e i własnymi efektami jako oznaczonymi wierszami w Śledzoniku Tur Roll20. Stosuj stany do żetonów, śledź czas trwania według kolejności inicjatywy i automatycznie usuwaj wygasłe efekty na końcu tury. Wszystkie polecenia są dostępne tylko dla MG i można je uruchamiać z czatu lub za pomocą zainstalowanych makr."
     },
     quickStart: {
       heading: "Szybki start",
@@ -415,81 +401,108 @@ const TRANSLATION = {
       rows: [
         [
           "!condition-tracker --prompt",
-          "Kreator krok po kroku — interaktywnie wybierz stan, żetony i czas trwania. Dostępny również jako makro ConditionTrackerWizard.",
+          "Kreator krok po kroku — interaktywnie wybierz stan, żetony i czas trwania. Dostępny również jako makro ConditionTrackerWizard."
         ],
         [
           "!condition-tracker --multi-target",
-          "Zastosuj jeden stan do kilku żetonów jednocześnie. Dostępny również jako makro ConditionTrackerMultiTarget.",
+          "Zastosuj jeden stan do kilku żetonów jednocześnie. Dostępny również jako makro ConditionTrackerMultiTarget."
         ],
         [
           "!condition-tracker --report-token",
-          "Select one or more tokens first, then run this command to get a GM whisper listing every condition applied to and by each selected token. Also available as the ConditionTrackerReportToken macro.",
+          "Najpierw wybierz jeden lub więcej tokenów, a następnie uruchom to polecenie, aby uzyskać szeptem GM listę wszystkich warunków zastosowanych do i przez każdy wybrany token. Dostępne również jako makro ConditionTrackerReportToken."
         ],
         [
           "!condition-tracker --menu",
-          "Otwórz główne menu zarządzania z przyciskami do stosowania, przeglądania lub usuwania stanów.",
-        ],
-      ],
+          "Otwórz główne menu zarządzania z przyciskami do stosowania, przeglądania lub usuwania stanów."
+        ]
+      ]
     },
     commandsRef: {
       heading: "Dokumentacja poleceń",
       colFlag: "Flaga",
       colDesc: "Opis",
       rows: [
-        ["--prompt", "Interaktywny kreator krok po kroku"],
-        ["--multi-target", "Zastosuj stan do wielu żetonów celu naraz"],
-        ["--menu", "Pokaż główne menu (dodaj remove dla menu usuwania)"],
         [
-          "--source X --target Y --condition Z",
-          "Zastosuj stan bezpośrednio bez kreatora",
+          "--podpowiedź",
+          "Interaktywny kreator krok po kroku"
+        ],
+        [
+          "--wiele celów",
+          "Zastosuj stan do wielu żetonów celu naraz"
+        ],
+        [
+          "--menu",
+          "Pokaż główne menu (dodaj remove dla menu usuwania)"
+        ],
+        [
+          "--źródło X --cel Y --warunek Z",
+          "Zastosuj stan bezpośrednio bez kreatora"
         ],
         [
           "--duration &lt;wartość&gt;",
-          "Czas trwania dla bezpośredniego zastosowania (np. 2 rounds)",
+          "Czas trwania dla bezpośredniego zastosowania (np. 2 rounds)"
         ],
         [
           "--other &lt;tekst&gt;",
-          "Własny tekst dla typów efektów Zaklęcie / Zdolność / Inne",
+          "Własny tekst dla typów efektów Zaklęcie / Zdolność / Inne"
         ],
         [
           "--remove &lt;ID stanu&gt;",
-          "Usuń konkretny stan według jego unikalnego identyfikatora",
+          "Usuń konkretny stan według jego unikalnego identyfikatora"
         ],
         [
           "--config &lt;opcja&gt; &lt;wartość&gt;",
-          "Dostosuj ustawienia konfiguracji (patrz sekcja Konfiguracja poniżej)",
+          "Dostosuj ustawienia konfiguracji (patrz sekcja Konfiguracja poniżej)"
         ],
         [
-          "--prompt --subjectPromptBypass true|false",
-          "Nadpisz subjectPromptBypass tylko dla tego polecenia (obsługuje również --subject-prompt-bypass)",
+          "--prompt --subjectPromptBypass prawda|fałsz",
+          "Nadpisz subjectPromptBypass tylko dla tego polecenia (obsługuje również --subject-prompt-bypass)"
         ],
         [
-          "--cleanup",
-          "Uzgodnij stan — usuń osierocone stany i wiersze Śledzika Tur",
+          "--posprzątać",
+          "Uzgodnij stan — usuń osierocone stany i wiersze Śledzika Tur"
         ],
         [
-          "--reorder-conditions",
-          "Ręcznie przenieść wiersze warunków za przypisane tokeny w kolejności tur",
-        ],
-        ["--reinstall-macro", "Utwórz ponownie lub zaktualizuj makra MG"],
-        [
-          "--reinstall-handout",
-          "Utwórz ponownie lub zaktualizuj zlokalizowany handout pomocy",
+          "--warunki ponownego zamówienia",
+          "Ręcznie przenieść wiersze warunków za przypisane tokeny w kolejności tur"
         ],
         [
-          "--report-token",
-          "Whisper a GM-only condition report for each selected token (conditions applied to and by it)",
+          "--reinstall-makro",
+          "Utwórz ponownie lub zaktualizuj makra MG"
+        ],
+        [
+          "--reinstall-ulotka",
+          "Utwórz ponownie lub zaktualizuj zlokalizowany handout pomocy"
+        ],
+        [
+          "--token raportu",
+          "Szepnij raport o stanie tylko dla GM dla każdego wybranego tokena (warunki zastosowane do niego i przez niego)"
         ],
         [
           "--lang &lt;język&gt;",
-          "Wyświetl wiadomości tego polecenia w dodatkowym języku (tryb dwujęzyczny)",
+          "Wyświetl wiadomości tego polecenia w dodatkowym języku (tryb dwujęzyczny)"
         ],
-        ["--help", "Pokaż krótką kartę pomocy w czacie"],
-      ],
+        [
+          "--classify pc|npc|ignored",
+          "Nadpisz typ aktora dla wybranych tokenów — najpierw wybierz token(y). Domyślny zakres to postać (zapisuje atrybut ct_mod_actor_type); dodaj --scope token, aby zapisać w stanie skryptu"
+        ],
+        [
+          "--classify auto",
+          "Usuń nadpisanie typu aktora i przywróć automatyczne wykrywanie dla wybranych tokenów"
+        ],
+        [
+          "--classify show",
+          "Wyszeptaj diagnostykę klasyfikacji dla każdego wybranego tokena — pokazuje wykryty typ, źródło wykrywania i powód"
+        ],
+        [
+          "--help",
+          "Pokaż krótką kartę pomocy w czacie"
+        ]
+      ]
     },
     standardConditions: {
       heading: "Standardowe stany (D&amp;D 5e)",
-      colCondition: "Stan",
+      colCondition: "Stan"
     },
     customEffects: {
       heading: "Własne typy efektów",
@@ -498,85 +511,211 @@ const TRANSLATION = {
       rows: [
         [
           "🔮 Zaklęcie",
-          "Śledź nazwany efekt zaklęcia — zostaniesz poproszony o podanie nazwy zaklęcia",
+          "Śledź nazwany efekt zaklęcia — zostaniesz poproszony o podanie nazwy zaklęcia"
         ],
         [
           "🎯 Zdolność",
-          "Śledź nazwaną zdolność klasy lub rasy — zostaniesz poproszony o podanie nazwy",
+          "Śledź nazwaną zdolność klasy lub rasy — zostaniesz poproszony o podanie nazwy"
         ],
         [
           "🍀 Ułatwienie",
-          "Zapisz ułatwienie przyznane od jednego żetonu drugiemu; zgrupowane ze źródłem w inicjatywie",
+          "Zapisz ułatwienie przyznane od jednego żetonu drugiemu; zgrupowane ze źródłem w inicjatywie"
         ],
         [
           "⬇️ Utrudnienie",
-          "Zapisz nałożone utrudnienie; zgrupowane ze źródłem w inicjatywie",
+          "Zapisz nałożone utrudnienie; zgrupowane ze źródłem w inicjatywie"
         ],
         [
           "📝 Inne",
-          "Dowolna własna etykieta — zostaniesz poproszony o podanie opisu",
-        ],
-      ],
+          "Dowolna własna etykieta — zostaniesz poproszony o podanie opisu"
+        ]
+      ]
     },
     durationOptions: {
       heading: "Opcje czasu trwania",
-      intro:
-        "Pozostała liczba jest wyświetlana w kolumnie pr Śledzika Tur i zmniejsza się, gdy kończy się tura żetonu kotwicy.",
+      intro: "Pozostała liczba jest wyświetlana w kolumnie pr Śledzika Tur i zmniejsza się, gdy kończy się tura żetonu kotwicy.",
       colOption: "Opcja",
       colBehaviour: "Zachowanie",
       rows: [
         [
           "Do usunięcia",
-          "Trwały — musi być usunięty ręcznie przez menu lub --remove",
+          "Trwały — musi być usunięty ręcznie przez menu lub --remove"
         ],
         [
           "Koniec następnej tury celu",
-          "Wygasa gdy kończy się następna tura żetonu celu w inicjatywie",
+          "Wygasa gdy kończy się następna tura żetonu celu w inicjatywie"
         ],
         [
           "Koniec następnej tury źródła",
-          "Wygasa gdy kończy się następna tura żetonu źródła w inicjatywie",
+          "Wygasa gdy kończy się następna tura żetonu źródła w inicjatywie"
         ],
         [
           "1 / 2 / 3 / 10 rund",
-          "Stały odliczanie; jedno zmniejszenie na koniec tury żetonu kotwicy",
-        ],
-      ],
+          "Stały odliczanie; jedno zmniejszenie na koniec tury żetonu kotwicy"
+        ]
+      ]
     },
     savedEffects: {
-      heading: "Saved Effects",
-      intro:
-        "Saved effects let you store long-term conditions outside the Turn Tracker — curses, diseases, poisons, hidden debuffs, and other non-combat conditions. They persist in script state and can be optionally copied into the Turn Tracker when combat begins.",
+      heading: "Zapisane efekty",
+      intro: "Zapisane efekty umożliwiają przechowywanie długoterminowych warunków poza modułem śledzenia tur — klątw, chorób, trucizn, ukrytych osłabień i innych warunków niezwiązanych z walką. Zachowują się one w stanie skryptu i opcjonalnie można je skopiować do modułu śledzenia tur po rozpoczęciu walki.",
       visibility: {
-        heading: "Visibility Modes",
+        heading: "Tryby widoczności",
         rows: [
-          ["public", "Full effect label is visible in the Turn Tracker and public chat."],
-          ["masked", "A vague public label is shown to players; full details are GM-only."],
-          ["gm", "No Turn Tracker row. Full details are stored in state and whispered to the GM when the affected token reaches the top of initiative."],
-        ],
+          [
+            "publiczny",
+            "Etykieta pełnego efektu jest widoczna w narzędziu do śledzenia zwrotów i czacie publicznym."
+          ],
+          [
+            "zamaskowany",
+            "Graczom wyświetlana jest niejasna publiczna etykieta; pełne szczegóły są dostępne wyłącznie dla GM."
+          ],
+          [
+            "gm",
+            "Brak wiersza śledzenia skrętu. Pełne szczegóły są przechowywane w stanie i szeptane do MG, gdy dotknięty żeton osiągnie szczyt inicjatywy."
+          ]
+        ]
       },
       commands: {
-        heading: "Saved Effects Commands",
-        intro: "All --saved commands are GM-only. Select a token before running --saved or --saved add.",
+        heading: "Zapisane polecenia efektów",
+        intro: "Wszystkie polecenia --saved są dostępne tylko dla GM. Wybierz token przed uruchomieniem --saved lub --saved add.",
         rows: [
-          ["!condition-tracker --saved", "View saved effects for the selected token."],
-          ["!condition-tracker --saved add", "Launch the add-saved-effect wizard."],
-          ["!condition-tracker --saved edit <id>", "Edit labels or visibility for an existing saved effect."],
-          ["!condition-tracker --saved remove <id>", "Permanently remove a saved effect."],
-          ["!condition-tracker --saved promote <id> --visibility public|masked|gm", "Copy a saved effect into the Turn Tracker (public or masked) or confirm it is GM-only tracked."],
-          ["!condition-tracker --saved snooze <id> --scope turn|rounds|combat --rounds <n>", "Snooze a GM reminder for this turn, N rounds, or this combat."],
-          ["!condition-tracker --saved snooze-clear <id>", "Clear an active snooze so reminders resume immediately."],
-        ],
+          [
+            "!condition-tracker --zapisano",
+            "Zobacz zapisane efekty dla wybranego tokena."
+          ],
+          [
+            "!condition-tracker --zapisany dodatek",
+            "Uruchom kreator dodawania zapisanych efektów."
+          ],
+          [
+            "!condition-tracker --saved edit <id>",
+            "Edytuj etykiety lub widoczność istniejącego zapisanego efektu."
+          ],
+          [
+            "!condition-tracker --saved remove <id>",
+            "Trwale usuń zapisany efekt."
+          ],
+          [
+            "!condition-tracker --saved promote <id> --visibility public|masked|gm",
+            "Skopiuj zapisany efekt do narzędzia Turn Tracker (publicznego lub zamaskowanego) lub potwierdź, że jest śledzony tylko przez GM."
+          ],
+          [
+            "!condition-tracker --saved snooze <id> --scope turn|rounds|combat --rounds <n>",
+            "Odłóż przypomnienie MG na tę turę, N rund lub tę walkę."
+          ],
+          [
+            "!condition-tracker --saved snooze-clear <id>",
+            "Usuń aktywną drzemkę, aby przypomnienia zostały wznowione natychmiast."
+          ]
+        ]
       },
       reminders: {
-        heading: "GM Reminders",
-        body: "When a token with gm or masked saved effects reaches the top of the Turn Tracker, the GM receives a whisper listing the hidden effects with action buttons. Duplicate reminders within the same turn are suppressed. Use the Snooze buttons to suppress reminders for a turn, a number of rounds, or for the remainder of the current combat.",
+        heading: "Przypomnienia GM",
+        body: "Kiedy żeton z MG lub zamaskowanymi zapisanymi efektami dotrze na górę paska śledzenia tur, MG otrzyma szept zawierający listę ukrytych efektów z przyciskami akcji. Zduplikowane przypomnienia w tej samej turze są pomijane. Użyj przycisków Drzemka, aby ukryć przypomnienia dotyczące tury, określonej liczby rund lub pozostałej części bieżącej walki."
+      }
+    },
+    actorClassification: {
+      heading: "Klasyfikacja Aktorów",
+      intro: "Condition Tracker automatycznie określa, czy każdy token jest BG, NPC lub ignorowanym obiektem (piny mapy, scenografia, szablony zaklęć). Niepowiązane tokeny są domyślnie ignorowane. Użyj --classify, aby nadpisać automatyczne wykrywanie dla dowolnego tokena.",
+      detectionOrder: {
+        heading: "Kolejność Wykrywania",
+        colStep: "Krok",
+        colCheck: "Sprawdzenie",
+        colResult: "Wynik",
+        rows: [
+          [
+            "1",
+            "Nadpisanie stanu tokena (--classify --scope token)",
+            "pc / npc / ignorowane"
+          ],
+          [
+            "2",
+            "Atrybut ct_mod_actor_type postaci (--classify --scope character)",
+            "pc / npc / ignorowane"
+          ],
+          [
+            "3",
+            "Niepowiązany token — brak karty postaci",
+            "ignorowane"
+          ],
+          [
+            "4",
+            "Adapter systemu gry (atrybut npc / is_npc)",
+            "szt./np"
+          ],
+          [
+            "5",
+            "Skanowanie ogólnych atrybutów NPC (npc, is_npc, npcflag, sheet_type, character_type)",
+            "szt./np"
+          ],
+          [
+            "6",
+            "Zapasowy controlledby postaci",
+            "szt./np"
+          ]
+        ]
       },
+      types: {
+        heading: "Typy Klasyfikacji",
+        colType: "Typ",
+        colMeaning: "Znaczenie",
+        rows: [
+          [
+            "szt",
+            "Postać gracza — zawsze uwzględniana jako BG w kreatorze i wykrywaniu"
+          ],
+          [
+            "npc",
+            "Postać niezależna — zawsze uwzględniana jako NPC"
+          ],
+          [
+            "ignorowane",
+            "Nigdy nie wyświetlana ani śledzona — wykluczona z wyboru tokenów kreatora"
+          ],
+          [
+            "nieznany",
+            "Tylko automatyczne wykrywanie; nie można określić typu (traktowana jako NPC w kreatorze)"
+          ]
+        ]
+      },
+      commands: {
+        heading: "Polecenia Klasyfikacji",
+        intro: "Wybierz jeden lub więcej tokenów przed uruchomieniem poleceń --classify.",
+        rows: [
+          [
+            "!condition-tracker --klasyfikacja komputera",
+            "Oznacz wybrane tokeny jako BG (domyślny zakres: postać)."
+          ],
+          [
+            "!condition-tracker --classify npc",
+            "Oznacz wybrane tokeny jako NPC."
+          ],
+          [
+            "!condition-tracker --classify zignorowany",
+            "Wyklucz wybrane tokeny ze wszystkich śledzonych."
+          ],
+          [
+            "!condition-tracker --klasyfikacja auto",
+            "Usuń nadpisanie — przywróć automatyczne wykrywanie."
+          ],
+          [
+            "!condition-tracker --klasyfikacja pokazu",
+            "Pokaż diagnostykę klasyfikacji (typ, źródło, powód) dla każdego wybranego tokena."
+          ],
+          [
+            "!condition-tracker --classify pc --token zakresu",
+            "Nadpisanie na poziomie tokena w stanie skryptu — przydatne dla niepowiązanych tokenów."
+          ],
+          [
+            "!condition-tracker --klasyfikacja komputera --znak zakresu",
+            "Nadpisanie na poziomie postaci w atrybucie ct_mod_actor_type — dotyczy wszystkich tokenów korzystających z tej samej karty postaci."
+          ]
+        ]
+      }
     },
     configuration: {
       heading: "Konfiguracja",
-      intro:
-        "Użyj !condition-tracker --config &lt;opcja&gt; &lt;wartość&gt; lub przycisku Konfiguracja w głównym menu.",
+      intro: "Użyj !condition-tracker --config &lt;opcja&gt; &lt;wartość&gt; lub przycisku Konfiguracja w głównym menu.",
       colOption: "Opcja",
       colValues: "Wartości",
       colDesc: "Opis",
@@ -584,54 +723,53 @@ const TRANSLATION = {
         [
           "useMarkers",
           "true / false",
-          "Zastosuj znaczniki statusu Roll20 do żetonów przy dodawaniu stanu",
+          "Zastosuj znaczniki statusu Roll20 do żetonów przy dodawaniu stanu"
         ],
         [
           "useIcons",
-          "true / false",
-          "Pokaż krótkie kody ikon (np. [G]) zamiast emoji w wierszach Śledzika Tur",
+          "prawda/fałsz",
+          "Pokaż krótkie kody ikon (np. [G]) zamiast emoji w wierszach Śledzika Tur"
         ],
         [
           "subjectPromptBypass",
-          "true / false",
-          "Pomiń opcjonalny krok wyboru podmiotu dla efektów Zaklęcie / Zdolność / Inne",
+          "prawda/fałsz",
+          "Pomiń opcjonalny krok wyboru podmiotu dla efektów Zaklęcie / Zdolność / Inne"
         ],
         [
           "suppressPublicChat",
-          "true / false",
-          "Pomiń wszystkie publiczne ogłoszenia na czacie (wiadomości o dodaniu i usunięciu). Szepty GM nie są objęte.",
+          "prawda/fałsz",
+          "Pomiń wszystkie publiczne ogłoszenia na czacie (wiadomości o dodaniu i usunięciu). Szepty GM nie są objęte."
         ],
         [
           "healthBar",
           "bar1_value / bar2_value / bar3_value",
-          "Pasek do obserwacji; gdy spadnie do 0, MG jest proszony o wyczyszczenie stanów",
+          "Pasek do obserwacji; gdy spadnie do 0, MG jest proszony o wyczyszczenie stanów"
         ],
         [
           "language",
           "en-US / fr / de / es / pt-BR / ko",
-          "Język wyjściowy dla wiadomości czatu i handoutu pomocy",
+          "Język wyjściowy dla wiadomości czatu i handoutu pomocy"
         ],
         [
           "marker",
           "&lt;Stan&gt;=&lt;nazwa znacznika&gt;",
-          "Nadpisz znacznik statusu używany dla konkretnego stanu (np. marker Grappled=grab)",
-        ],
-      ],
+          "Nadpisz znacznik statusu używany dla konkretnego stanu (np. marker Grappled=grab)"
+        ]
+      ]
     },
     defaultMarkers: {
       heading: "Domyślne znaczniki statusu",
       colCondition: "Stan",
-      colMarker: "Nazwa znacznika",
+      colMarker: "Nazwa znacznika"
     },
     availableLocales: {
       heading: "Dostępne tłumaczenia",
-      intro:
-        "Użyj opcji konfiguracji języka, aby ustawić wiadomości czatu i handout pomocy na dowolny obsługiwany język. Krótkie aliasy są również akceptowane dla en, zh i pt.",
-      colLocale: "Locale",
+      intro: "Użyj opcji konfiguracji języka, aby ustawić wiadomości czatu i handout pomocy na dowolny obsługiwany język. Krótkie aliasy są również akceptowane dla en, zh i pt.",
+      colLocale: "Widownia",
       colLanguage: "Język",
-      colFile: "Plik tłumaczenia",
-    },
-  },
+      colFile: "Plik tłumaczenia"
+    }
+  }
 };
 
 export default TRANSLATION;
