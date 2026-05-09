@@ -40,15 +40,25 @@ export function installMacro() {
 
   for (const macroDef of MACRO_DEFINITIONS) {
     const macrosByOwner = groupMacrosByOwner(queryObjects({ _type: 'macro', name: macroDef.name }));
+    let macroCreatedCount = 0;
+    let macroUpdatedCount = 0;
+    let macroRemovedCount = 0;
 
     for (const gmId of gmIds) {
       const result = syncGmMacro(gmId, macrosByOwner.get(gmId) || [], gmId, macroDef);
       createdCount += result.created;
       updatedCount += result.updated;
       removedCount += result.removed;
+      macroCreatedCount += result.created;
+      macroUpdatedCount += result.updated;
+      macroRemovedCount += result.removed;
     }
 
-    removedCount += removeOrphanedMacros(macrosByOwner, gmIdSet);
+    const orphanedCount = removeOrphanedMacros(macrosByOwner, gmIdSet);
+    removedCount += orphanedCount;
+    macroRemovedCount += orphanedCount;
+
+    logMacroSyncResult(macroDef.name, macroCreatedCount, macroUpdatedCount, macroRemovedCount);
   }
 
   logInstallResult(createdCount, updatedCount, removedCount);
@@ -141,6 +151,25 @@ function logInstallResult(createdCount, updatedCount, removedCount) {
   } else {
     log(`${SCRIPT_NAME}: Macros updated (updated ${updatedCount}).${cleanupNote}`);
   }
+}
+
+/**
+ * Logs the result of syncing one macro definition across all current GMs.
+ *
+ * @param {string} macroName Macro name.
+ * @param {number} createdCount Macros created.
+ * @param {number} updatedCount Macros updated.
+ * @param {number} removedCount Macros removed.
+ * @returns {void}
+ */
+function logMacroSyncResult(macroName, createdCount, updatedCount, removedCount) {
+  const cleanupNote = removedCount > 0 ? ` Removed ${removedCount} duplicate(s).` : '';
+  if (createdCount > 0) {
+    log(`${SCRIPT_NAME}: Macro ${macroName} installed (created ${createdCount}, updated ${updatedCount}).${cleanupNote}`);
+    return;
+  }
+
+  log(`${SCRIPT_NAME}: Macro ${macroName} updated (updated ${updatedCount}).${cleanupNote}`);
 }
 
 /**

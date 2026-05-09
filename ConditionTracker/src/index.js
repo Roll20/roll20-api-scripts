@@ -47,6 +47,7 @@ import { getGmPlayerIds, getGraphicToken, getTokenName, toText } from './utils.j
  * @returns {void}
  */
 function checkInstall() {
+  log(`${SCRIPT_NAME}: Startup started.`);
   ensureState();
   applyGlobalConfig();
   migrateTurnOrderRows();

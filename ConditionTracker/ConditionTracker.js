@@ -5,7 +5,7 @@
  * Name: Condition Tracker
  * Script: ConditionTracker.js
  * Version: 1.1.0.beta-3.2
- * Built: 2026-05-09T06:37:21.243Z
+ * Built: 2026-05-09T07:44:21.967Z
  */
 const ConditionTrackerMod = (() => {
   'use strict';
@@ -260,7 +260,7 @@ const ConditionTrackerMod = (() => {
 
   const SCRIPT_NAME = 'Condition Tracker';
   const SCRIPT_VERSION = '1.1.0.beta-3.2';
-  const SCRIPT_LAST_UPDATED = '2026-05-09T06:37:21.243Z';
+  const SCRIPT_LAST_UPDATED = '2026-05-09T07:44:21.967Z';
 
   const COLOR_BG_SOFT_BLACK = '#0A0A12';
   const COLOR_TEXT_ARCANE_SILVER = '#E6DFFF';
@@ -30600,6 +30600,9 @@ const ConditionTrackerMod = (() => {
       const macrosByOwner = groupMacrosByOwner(
         queryObjects({ _type: 'macro', name: macroDef.name }),
       );
+      let macroCreatedCount = 0;
+      let macroUpdatedCount = 0;
+      let macroRemovedCount = 0;
 
       for (const gmId of gmIds) {
         const result = syncGmMacro(
@@ -30611,9 +30614,21 @@ const ConditionTrackerMod = (() => {
         createdCount += result.created;
         updatedCount += result.updated;
         removedCount += result.removed;
+        macroCreatedCount += result.created;
+        macroUpdatedCount += result.updated;
+        macroRemovedCount += result.removed;
       }
 
-      removedCount += removeOrphanedMacros(macrosByOwner, gmIdSet);
+      const orphanedCount = removeOrphanedMacros(macrosByOwner, gmIdSet);
+      removedCount += orphanedCount;
+      macroRemovedCount += orphanedCount;
+
+      logMacroSyncResult(
+        macroDef.name,
+        macroCreatedCount,
+        macroUpdatedCount,
+        macroRemovedCount,
+      );
     }
 
     logInstallResult(createdCount, updatedCount, removedCount);
@@ -30711,6 +30726,35 @@ const ConditionTrackerMod = (() => {
         `${SCRIPT_NAME}: Macros updated (updated ${updatedCount}).${cleanupNote}`,
       );
     }
+  }
+
+  /**
+   * Logs the result of syncing one macro definition across all current GMs.
+   *
+   * @param {string} macroName Macro name.
+   * @param {number} createdCount Macros created.
+   * @param {number} updatedCount Macros updated.
+   * @param {number} removedCount Macros removed.
+   * @returns {void}
+   */
+  function logMacroSyncResult(
+    macroName,
+    createdCount,
+    updatedCount,
+    removedCount,
+  ) {
+    const cleanupNote =
+      removedCount > 0 ? ` Removed ${removedCount} duplicate(s).` : '';
+    if (createdCount > 0) {
+      log(
+        `${SCRIPT_NAME}: Macro ${macroName} installed (created ${createdCount}, updated ${updatedCount}).${cleanupNote}`,
+      );
+      return;
+    }
+
+    log(
+      `${SCRIPT_NAME}: Macro ${macroName} updated (updated ${updatedCount}).${cleanupNote}`,
+    );
   }
 
   /**
@@ -34976,6 +35020,7 @@ const ConditionTrackerMod = (() => {
    * @returns {void}
    */
   function checkInstall() {
+    log(`${SCRIPT_NAME}: Startup started.`);
     ensureState();
     applyGlobalConfig();
     migrateTurnOrderRows();
